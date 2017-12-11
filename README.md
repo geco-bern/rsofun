@@ -18,7 +18,7 @@ This describes the steps to execute a standard P-model calibration. Implemented 
 ### Summary of steps:
   1. Get forcing data
   2. Run P-model with arbitrary `q0_apparent`
-  3. Read forcing data and P-model output into common a dataframe.
+  3. Read forcing data and P-model output into a common dataframe.
   4. Perform calibration.
 
 ### 1. Get forcing data
@@ -189,7 +189,6 @@ simsuite         = "fluxnet2015"
 overwrite        = TRUE
 ##--------------------------------------------------------------------
 ## uncomment:
-# systr <- "--"  # for LINUX/UNIX
 systr <- "''"    # for Mac
 ##--------------------------------------------------------------------
 ```
@@ -211,9 +210,9 @@ cd sofun
 git checkout pnmodel
 ```
 
-Then, create soft links to input and parameter file directories by executing the Python script `linkdirs_sofun.py`. Before executing, specify the simulation suite:
+Then, create soft links to input and parameter file directories by executing the Python script `linkdirs_sofun.py`. Before executing, specify the simulation suite inside this script manually:
 ```py
-simsuite = 'global'
+simsuite = 'fluxnet2015'
 ```
 
 The following specification is required only for global simulations to link input fields (climate, fAPAR) to locations where data is read by SOFUN:
@@ -222,22 +221,23 @@ dataroot = 'your_chosen_home/data/'
 ```
 
 Then
-```py
+```bash
 python linkdirs_sofun.py
 ```
 
 #### Compile SOFUN
 
-Compilation of the P-model Fortran code for site-scale simulations is done by
-```sh
-make pmodel
-```
-This setup compiles with the open-access GNU compiler gfortran and with the (non-open access) Portland Group Fortran Compiler.
-
-Running the set of simulations for the suite `fluxnet2015` is done be simply executing the Python script (after setting manually: `py simsuite = 'fluxnet2015'`):
-```py
+Running the set of simulations for the suite `fluxnet2015` is done be simply executing the Python script (after setting manually: `simsuite = 'fluxnet2015'`):
+```bash
 python submitjobs_sofun.py
 ```
+
+This executes the following basic statements that compile and run SOFUN:
+```
+make pmodel
+echo simulation_name | ./runpmodel
+```
+This setup compiles with the open-access GNU compiler for Fortran 90 gfortran and with the (non-open access) Portland Group Fortran Compiler.
 
 * Configuration
 * Dependencies
