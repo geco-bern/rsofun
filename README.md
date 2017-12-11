@@ -23,14 +23,24 @@ This describes the steps to execute a standard P-model calibration. Implemented 
 
 ### Get forcing data
 
+Model forcing data is available on Imperial HPC's CX1 (`work/bstocker/data`) or can be downloaded or read from files using R scripts in repository [getin](https://bitbucket.org/labprentice/getin).
+
 #### fAPAR
 
+When executing the calibration on a local machine, download the data from CX1 or process new data. Do not modify the directory and file name structure from `work/bstocker/` downwards. Specify the path in the header of file XXX.
+
+**Downloading from CX1**
 Site-scale subsets from the MODIS FPAR MCD15A3H (Collection 6) data (4 days, 500 m) for all FLUXNET 2015 Tier 1 sites are available on Imperial HPC's CX1:
 `work/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/fapar_MODIS_FPAR_MCD15A3H_<sitename>_gee_subset.csv`
 
-When executing the calibration on a local machine, download the data (do not modify the directory and file name structure from `work/bstocker` downwards) and specify the path in the header of file XXX.
+**Processing new**
+Downloading this site-scale data from Google Earth Engine and interpolating to daily data is done using `get_sitesubset_gee.R` from the repository [getin](https://bitbucket.org/labprentice/getin). This uses code from repository [gee_subset](https://github.com/khufkens/gee_subset) by Koen Hufkens. Gapfilling and interpolation to daily values is done by filtering based on the MODIS quality flags (see `gapfill_modis.R` from the repository [getin](https://bitbucket.org/labprentice/getin)) and applying a spline to daily values.
 
-Downloading this site-scale data and interpolating to daily data is done using `get_sitesubset_gee.R` from the repository [getin](https://bitbucket.org/labprentice/getin). This accesses data hosted on Google Earth Enginge using the [gee_subset](https://github.com/khufkens/gee_subset) by Koen Hufkens. Gapfilling and interpolation to daily values is done by filtering based on the MODIS quality flags (see `gapfill_modis.R` from the repository [getin](https://bitbucket.org/labprentice/getin)) and applying a spline to daily values.
+Change to the directory where the [getin](https://bitbucket.org/labprentice/getin) repository is located. In the header of the R script `get_sitesubset_gee.R` (see `MANUAL SETTINGS`), set `bundle = fapar` and `simsuite = fluxnet2015`. Then execute.
+```r
+setwd("your_local_path/getin")
+source("get_sitesubset_gee.R")
+```
 
 * Configuration
 * Dependencies
