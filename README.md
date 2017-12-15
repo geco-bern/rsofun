@@ -91,7 +91,7 @@ Change to the directory to where your local clone of the [getin](https://bitbuck
 ##--------------------------------------------------------------------
 ## MANUAL SETTINGS
 ##--------------------------------------------------------------------
-myhome               = "/alphadata01/bstocker/"
+myhome               = "~/"
 simsuite             = "fluxnet2015"
 bundle               = "fapar"
 overwrite_raw        = FALSE
@@ -100,6 +100,7 @@ do_plot_interpolated = TRUE
 start_date           = "2000-01-01"
 end_date             = "2017-11-27"
 years_out            = 1980:2017   # creating SOFUN input data for these years
+python_path = "/usr/bin/python"
 ##--------------------------------------------------------------------
 ```
 
@@ -151,7 +152,7 @@ source("get_climate2.R")
 
 #### CO2
 Execute the script that places a copy of the global CO2 time series in a separate directory for each site. Necessary like this - keeping it
-flexible for cases where CO2 is manipulated per site/experiment. Adjust header:
+flexible for cases where CO2 is manipulated per site/experiment. Adjust header of `get_co2.R`:
 ```r
 ##--------------------------------------------------------------------
 ## MANUAL SETTINGS
@@ -198,6 +199,8 @@ Then run in R:
 setwd("your_chosen_home/getin")
 source("prepare_paramfils.R")
 ```
+This places simulation parameter files in directory `your_chosen_home/sofun/input_<simsuite>_sofun/run/` and site parameter files in `your_chosen_home/sofun/input_<simsuite>_sofun/site_paramfils/`. From there, they will be linked into subdirectories from where the model will be executed (see below).
+
 
 #### Set up SOFUN
 The repository [sofun](https://bitbucket.org/labprentice/sofun) contains all the model code (Fortran 90) that implements the P-model and additional levels of model integration (water balance only, closed C, closed C and N cycles, see also [here](https://stineb.github.io)).
