@@ -1,12 +1,14 @@
 get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getvars=c( "gpp", "wcont", "aet", "pet" ), add_swcvars=TRUE, overwrite=overwrite, overwrite_dosites=overwrite_dosites, outdir="./" ){
 
   # ## XXX debug------------------------------------------
-  # simsuite <- "fluxnet2015"
-  # outputset <- c( "s11", "s12", "s13" )
-  # getvars   <- c( "gpp", "wcont", "aet", "pet", "ra" )
-  # add_swcvars <- TRUE
-  # overwrite   <- TRUE
-  # overwrite_dosites <- TRUE 
+  # simsuite = "fluxnet2015"
+  # data = fluxnet
+  # outputset = c( "s14" )
+  # getvars   = c( "gpp", "wcont", "aet", "pet" )
+  # add_swcvars = TRUE
+  # overwrite   = TRUE
+  # overwrite_dosites = TRUE
+  # outdir="./"
   # ##----------------------------------------------------
 
   source( "get_fluxdata_fluxnet2015.R" )
@@ -14,6 +16,11 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
 
   avl2015 <- TRUE
   avl_mod <- rep( TRUE, length(outputset) )
+
+  norm_to_max <- function( vec ){
+    vec <- ( vec - min( vec, na.rm=TRUE ) ) / ( max( vec, na.rm=TRUE ) - min( vec, na.rm=TRUE ) )
+    return( vec )
+  }
 
   ##---------------------------------------------------------
   ## read SOFUN output data for each output set -> ddf as list
@@ -37,6 +44,10 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
       missing_mod[[ iset ]] <- c( missing_mod[[ iset ]], sitename )
     
     } else {
+
+      ## For comparison with FLUXNET 2015 data, normalise simulated soil moisture to between 0 and 1
+      print( "WARNING: Normalising simulated soil moisture to maximum (=1) for comparability with observational data.")
+      ddf_tmp <- ddf_tmp %>% mutate( wcont = wcont / max( wcont, na.rm = TRUE ) )  
 
       ## add to list
       ddf[[ iset ]] <- ddf_tmp
@@ -62,8 +73,15 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
     print( paste( "error opening", path ) )
     avl2015 <- FALSE
     missing_2015 <- c( missing_2015, sitename )
-  } 
-
+  } else {
+    ## Normalise observational soil moisture to within minimum (=0) and maximum (=1), and
+    out$obs_swc <- out$obs_swc %>% mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) )
+    
+    ## get mean soil observational moisture across different depths (if available)
+    out$obs_swc <- out$obs_swc %>%
+      mutate( soilm_obs_mean = apply( select( out$obs_swc, starts_with("SWC_F_MDS") ), 1, FUN=mean, na.rm=TRUE ) ) %>%
+      mutate( soilm_obs_mean = ifelse( is.nan(soilm_obs_mean), NA, soilm_obs_mean ) )
+  }
 
   ##---------------------------------------------------------
   ## read input data -> ddf_in
@@ -80,8 +98,6 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
   }
   if (class(ddf_inclim)=="try-error"){
     missing_inclim <- c( missing_inclim, sitename )    
-  } else {
-    ddf_inclim <- ddf_inclim %>% mutate( date = ymd(date) )
   }
   
   ## fAPAR
@@ -124,14 +140,14 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
     ##---------------------------------------------------------
     ## add ddf list to list of this site
     ##---------------------------------------------------------
-    fluxnet[[ sitename ]]$ddf <- ddf
+    data[[ sitename ]]$ddf <- ddf
 
   } else {
 
-    fluxnet[[ sitename ]]$ddf <- NA
+    data[[ sitename ]]$ddf <- NA
 
   }
 
-  return( fluxnet )
+  return( data )
 
 }

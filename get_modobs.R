@@ -16,6 +16,7 @@
 
 library(dplyr)
 library(readr)
+library(ggplot2)
 
 ##--------------------------------------------------------------------
 ## MANUAL SETTINGS
@@ -38,7 +39,12 @@ source("add_swcvars_fluxnet2015.R")
 source("get_modobs_fluxnet2015.R")
 
 siteinfo   <- read_csv( paste0( myhome, "sofun/input_fluxnet2015_sofun/siteinfo_", simsuite, "_sofun.csv" ) )
-datafilnam <- paste0( "modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v4.Rdata" )
+datafilnam <- paste0( "modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v4" )
+datafilnam_flat <- paste0( "df_modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v4" )
+
+## Exclude sites for which no fapar data is available
+df_error_fapar <- read_csv( paste0( myhome, "sofun/input_fluxnet2015_sofun/error_missing_forcingdata_MODIS_FPAR_MCD15A3H_fluxnet2015.csv" ) ) 
+siteinfo <- siteinfo %>% left_join( df_error_fapar, by="mysitename") %>% rename( error_fapar = error ) %>% filter( error_fapar == 0 )
 
 if (overwrite){
 
@@ -98,6 +104,7 @@ for (sitename in do.sites_names){
   #---------------------------------------------------------
   # Get model output and input data
   #---------------------------------------------------------
+  print( paste( "Getting data for site ", sitename ) )
   fluxnet <- get_modobs_fluxnet2015( 
                                     sitename, 
                                     simsuite          = simsuite,
@@ -110,14 +117,14 @@ for (sitename in do.sites_names){
                                     outdir            = outdir
     )  
 
-  #---------------------------------------------------------
-  # Add obs-ET-driven soil moisture data
-  #---------------------------------------------------------
-  if (add_swcvars_etbucket){
-
-    fluxnet <- add_swcvars_fluxnet2015( sitename, fluxnet=fluxnet, outdir=outdir )
-
-  }
+  # #---------------------------------------------------------
+  # # Add obs-ET-driven soil moisture data
+  # #---------------------------------------------------------
+  # if (add_swcvars_etbucket){
+  # 
+  #   fluxnet <- add_swcvars_fluxnet2015( sitename, fluxnet=fluxnet, outdir=outdir )
+  # 
+  # }
 
   # #---------------------------------------------------------
   # # Plot ET with gaps (data from FLUXNET2015) and my gap-filled ET
@@ -138,12 +145,60 @@ for (sitename in do.sites_names){
 }
 
 #---------------------------------------------------------
+# Re-arrange data into a single flat dataframe (only implemented for using single SOFUN outputset, s14)
+#---------------------------------------------------------
+print("converting to flat data frame (tibble)...")
+df_fluxnet <- tibble()
+missing_ddf <- c()
+for (sitename in do.sites_names){
+  if ( ncol(fluxnet[[sitename]]$ddf$s14)>0 ){
+
+    ## combine separate dataframes into single one 
+    df_site <-  fluxnet[[ sitename ]]$ddf$inp %>%
+      mutate( mysitename=sitename ) %>%
+      left_join( fluxnet[[ sitename ]]$ddf$obs, by = "date" ) %>%
+      left_join( fluxnet[[ sitename ]]$ddf$swc_obs, by = "date" ) %>%
+      left_join( fluxnet[[ sitename ]]$ddf[[ "s14" ]], by = "date" )
+
+    ## add mean of soil moisture across observational and model data ('soilm_mean')
+    df_site <- df_site %>% mutate( soilm_mean = apply( select( ., starts_with("SWC_F_MDS"), wcont ), 1, FUN = mean, na.rm = TRUE ) )
+
+    df_fluxnet <- df_fluxnet %>% bind_rows( df_site )
+  
+  } else {
+
+    missing_ddf <- c( missing_ddf, sitename )
+
+  }
+}
+
+
+#---------------------------------------------------------
 # Save complete data to single Rdata file
 #---------------------------------------------------------
-save( fluxnet, missing_2015, missing_mod, missing_inclim, missing_inevi, file=datafilnam )
-print("done saving.")
+print("writing to files...")
 
+## Nested data list
+save( fluxnet, missing_2015, missing_mod, missing_inclim, missing_inevi, file=paste0(datafilnam, ".Rdata") )
 
+## Flat data frame
+write_csv( df_fluxnet, path=paste0( datafilnam_flat, ".csv" ) )
+save( df_fluxnet, file=paste0( datafilnam_flat, ".Rdata" ) )
+print("... done saving.")
 
+# ## Check soil moisture data
+# plot_soilm <- function( df_site ){
+#   pl <- ggplot( df_site, aes( x=date, y=value, color=variable ) ) +
+#     geom_line( aes( y = wcont, col = "SOFUN s14") ) +
+#     geom_line( aes( y = SWC_F_MDS_1, col="SWC_F_MDS_1")) +
+#     ggtitle( sitename )
+#   plot(pl)
+# }
+# 
+# # for (sitename in unique(df_fluxnet$mysitename)){
+# #   plot_soilm( filter( df_fluxnet, mysitename==sitename ) )
+# # }
+# 
+# lapply( do.sites_names, function(x) plot_soilm( filter( df_fluxnet, mysitename==x ) ) )
 
 

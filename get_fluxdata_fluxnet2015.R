@@ -26,6 +26,15 @@ get_fluxdata_fluxnet2015 <- function( path, add_swcvars=FALSE ){
   ddf <-  read_csv( path, na="-9999", col_types = cols() ) %>%
           mutate( date = ymd( TIMESTAMP ) )
 
+  ## convert units. given in umolCO2 m-2 s-1. converted to gC m-2 d-1
+  ddf <- ddf %>% mutate(
+                        GPP_NT_VUT_REF     = as.numeric(GPP_NT_VUT_REF)     * 1e-6 * 60 * 60 * 24 * c_molmass,
+                        GPP_NT_VUT_USTAR50 = as.numeric(GPP_NT_VUT_USTAR50) * 1e-6 * 60 * 60 * 24 * c_molmass,
+                        GPP_DT_VUT_REF     = as.numeric(GPP_DT_VUT_REF)     * 1e-6 * 60 * 60 * 24 * c_molmass,
+                        GPP_DT_VUT_USTAR50 = as.numeric(GPP_DT_VUT_USTAR50) * 1e-6 * 60 * 60 * 24 * c_molmass,
+                        LE_F_MDS           = as.numeric(LE_F_MDS)                  * 60 * 60 * 24   ## W m-2 -> J m-2 d-1
+                        )
+
   ## clean data
   out_clean <- clean_fluxnet_gpp( ddf$GPP_NT_VUT_REF, ddf$GPP_DT_VUT_REF, ddf$NEE_VUT_REF_NIGHT_QC, ddf$NEE_VUT_REF_DAY_QC, cutoff=0.5 )
   ddf$GPP_NT_VUT_REF <- out_clean$gpp_nt
@@ -33,16 +42,6 @@ get_fluxdata_fluxnet2015 <- function( path, add_swcvars=FALSE ){
 
   ddf$LE_F_MDS_good <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.5 )
   ddf$LE_F_MDS      <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.2 )
-
-  ## convert units. given in umolCO2 m-2 s-1. converted to gC m-2 d-1
-  ddf <- ddf %>% mutate(
-                        GPP_NT_VUT_REF     = GPP_NT_VUT_REF     * 1e-6 * 60 * 60 * 24 * c_molmass,
-                        GPP_NT_VUT_USTAR50 = GPP_NT_VUT_USTAR50 * 1e-6 * 60 * 60 * 24 * c_molmass,
-                        GPP_DT_VUT_REF     = GPP_DT_VUT_REF     * 1e-6 * 60 * 60 * 24 * c_molmass,
-                        GPP_DT_VUT_USTAR50 = GPP_DT_VUT_USTAR50 * 1e-6 * 60 * 60 * 24 * c_molmass,
-                        LE_F_MDS           = LE_F_MDS                  * 60 * 60 * 24,  ## W m-2 -> J m-2 d-1
-                        LE_F_MDS_good      = LE_F_MDS_good             * 60 * 60 * 24   ## W m-2 -> J m-2 d-1
-                        )
 
 
   if (add_swcvars){

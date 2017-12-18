@@ -11,7 +11,7 @@ clean_fluxnet_gpp <- function( gpp_nt, gpp_dt, qflag_reichstein, qflag_lasslop, 
 
   ## Remove data points where the two flux decompositions are inconsistent,
   ## i.e. where the residual of their regression is above the 97.5% or below the 2.5% quantile. 
-  res  <- gpp_nt - gpp_dt
+  res  <- as.numeric(gpp_nt) - as.numeric(gpp_dt)
   q025 <- quantile( res, probs = 0.025, na.rm=TRUE )
   q975 <- quantile( res, probs = 0.975, na.rm=TRUE )
 
@@ -47,6 +47,7 @@ clean_fluxnet_swc <- function( swc, qflag_swc, frac_data_thresh=0.2 ){
   ##--------------------------------------------------------------------
   ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
   swc[ qflag_swc < frac_data_thresh ] <- NA
+  swc <- as.numeric( swc )
 
   return( swc )
 }
