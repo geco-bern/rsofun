@@ -4,20 +4,20 @@ This describes the steps to execute a standard P-model calibration. Implemented 
 
 ## What is this repository for?
 
-* At this stage, this repository provides the functionality to calibrate the globally uniform and temporally constant **apparent quantum yield parameter** `q0_apparent` in the P-model. 
+* At this stage, this repository provides the functionality to calibrate the globally uniform and temporally constant **apparent quantum yield parameter** `kphio_app` in the P-model. 
 * The calibration method is linear least squares.
 * The P-model provides a process-based prediction of photosynthetic parameters and light use efficiency as a function of only climate (temperature, VPD, atmospheric pressure) and CO2. In general, parameters are determined independently from data (see Wang Han et al., 2017 *Nature Plants*). For simulating gross primary productivity (GPP), the P-model requires vegetation greenness, or the fraction of absorbed photosynthetically active radiation (fAPAR), to be prescribed from data (see also [here](https://stineb.github.io/pmodel.html)). 
-* Calibrating `q0_apparent` is motivated by the fact that there remains some unclarity about how the photosynthetic quantum yield efficiency relates to the quantity quantified by fAPAR. Hence, we aim for a calibration of this parameter, *given fAPAR data*. The parameter value is to be treated temporally constant and globally uniform, applicable for C3 photosynthesis and has the same role as our $\phi_0$ parameter in the [P-model](https://stineb.github.io/pmodel.html).
+* Calibrating `kphio_app` is motivated by the fact that there remains some unclarity about how the photosynthetic quantum yield efficiency relates to the quantity quantified by fAPAR. Hence, we aim for a calibration of this parameter, *given fAPAR data*. The parameter value is to be treated temporally constant and globally uniform, applicable for C3 photosynthesis and has the same role as our $\phi_0$ parameter in the [P-model](https://stineb.github.io/pmodel.html).
 * The calibration described here as the default uses:
   - GPP based on the night-time flux decomposition (`NT_VUT_REF`) from 167 sites in the FLUXNET 2015 Tier 1 dataset. Data is read in and cleaned using XXX.
   - fAPAR quantified by MODIS FPAR MCD15A3H (Collection 6) data (4 days, 500 m). Data downloaded and interpolated to daily using XXX.
-  - `q0_apparent` minimises the sum of square model errors, daily data, filtered to exclude cold days (< 5 deg C) and days with dry soil (relative soil water content < 0.5 of maximum water holding capacity). See XXX.
+  - `kphio_app` minimises the sum of square model errors, daily data, filtered to exclude cold days (< 5 deg C) and days with dry soil (relative soil water content < 0.5 of maximum water holding capacity). See XXX.
 
 ## Setup steps
 
 ### Summary of steps:
   1. Get forcing data
-  2. Run P-model with arbitrary `q0_apparent`
+  2. Run P-model with arbitrary `kphio_app`
   3. Read forcing data and P-model output into a common dataframe.
   4. Perform calibration.
 
@@ -169,7 +169,7 @@ source("get_co2.R")
 ```
 
 
-### 2. Run P-model with arbitrary `q0_apparent`
+### 2. Run P-model with arbitrary `kphio_app`
 
 P-model simulations are done for each FLUXNET 2015 Tier 1 site separately, covering years for which data is available. After having prepared all the model forcing data by the steps described above, we now prepare the simulation and site parameter files. Here, we're conducting one simulation per site. 
 
@@ -228,7 +228,7 @@ Then
 python linkdirs_sofun.py
 ```
 
-#### Compile SOFUN
+#### Compile and run SOFUN
 
 Running the set of simulations for the suite `fluxnet2015` is done be simply executing the Python script (after setting manually: `simsuite = 'fluxnet2015'`):
 ```bash
@@ -236,11 +236,54 @@ python submitjobs_sofun.py
 ```
 
 This executes the following basic statements that compile and run SOFUN:
-```
+```bash
 make pmodel
 echo simulation_name | ./runpmodel
 ```
 This setup compiles with the open-access GNU compiler for Fortran 90 gfortran and with the (non-open access) Portland Group Fortran Compiler.
+
+SOFUN writes output into NetCDF files, one for each year and variable. For better handling, combine yearly files into a single file for each variable. Do this for a single site's output by ...
+```bash
+cd your_chosen_home/sofun
+source proc_output_sofun.sh
+proc_sitescale_site <sitename>
+```
+This loads the bash functions for output processing (`source ...`) and then processes output for a given site. For batch output processing for an entire simulation suite, set `simsuite = 'fluxnet2015'` by hand in `get_sitelist_simsuite.py`, then
+```bash
+proc_sitescale_simsuite
+```
+
+
+### 3. Read forcing data and P-model output into a common dataframe.
+
+To collect all daily forcing data and flux measurement data from the FLUXNET 2015 dataset, fAPAR forcing data, and SOFUN output data into a single data frame, use `get_modobs.R`. First adjust its header definitions:
+```r
+##--------------------------------------------------------------------
+## MANUAL SETTINGS
+##--------------------------------------------------------------------
+myhome               = "~/"
+simsuite             = "fluxnet2015"  
+outputset            = c( "s14" )
+add_swcvars          = TRUE
+add_swcvars_etbucket = FALSE
+overwrite            = TRUE
+overwrite_dosites    = TRUE 
+outdir               = "~/data/fluxnet_sofun/"
+##--------------------------------------------------------------------
+```
+
+Then run in R:
+```r
+source("get_modobs.R")
+```
+
+This performs a data "cleaning" (see `clean_fluxnet.R`), calculates additional variables (e.g. soilm_mean, soilm_obs_mean) and writes all data as an R data frame (tibble) that we're using for the calibration into the file `df_modobs_fluxnet2015_*.Rdata`.
+
+### 4. Perform calibration
+This is simple now. After writing `df_modobs_fluxnet2015.Rdata` by the previous step, we simply have to read in the data, remove cold and dry days and calibrate the apparent quantum yield efficiency parameter `kphio_app` using GPP from the FLUXNET 2015 data (`GPP_NT_VUT_REF`) and the linear regression function `lm()` using least-squares minimisation. After running SOFUN with an arbitrary parameter value `kphio_app`, the `calibrate_pmodel.R` calculates the optimised `kphio_app` to best match observations during relatively moist and warm days. SOFUN writes parameter values as meta information into NetCDF outputs. `calibrate_pmodel.R` reads this and and calculates by how much this (arbitrary) value has to be scaled to best match observations. Execute this by:
+```r
+source("calibrate_pmodel.R")
+```
 
 * Configuration
 * Dependencies
