@@ -280,26 +280,8 @@ source("get_modobs.R")
 This performs a data "cleaning" (see `clean_fluxnet.R`), calculates additional variables (e.g. soilm_mean, soilm_obs_mean) and writes all data as an R data frame (tibble) that we're using for the calibration into the file `df_modobs_fluxnet2015_*.Rdata`.
 
 ### 4. Perform calibration
-This is simple now. After writing `df_modobs_fluxnet2015.Rdata` by the previous step, we simply have to read in the data, remove cold and dry days and calibrate the apparent quantum yield efficiency parameter `kphio_app` using GPP from the FLUXNET 2015 data (`GPP_NT_VUT_REF`) and the linear regression function `lm()` using least-squares minimisation. After running SOFUN with an arbitrary parameter value `kphio_app`, the `calibrate_pmodel.R` calculates the optimised `kphio_app` to best match observations during relatively moist and warm days. SOFUN writes parameter values as meta information into NetCDF outputs. `calibrate_pmodel.R` reads this and and calculates by how much this (arbitrary) value has to be scaled to best match observations. Execute this by:
+This is simple now. After writing `df_modobs_fluxnet2015.Rdata` by the previous step, we simply have to read in the data, remove cold and dry days and calibrate the apparent quantum yield efficiency parameter `kphio_app` using GPP from the FLUXNET 2015 data (`GPP_NT_VUT_REF`) and the linear regression function `lm()` using least-squares minimisation. After running SOFUN with an arbitrary parameter value `kphio_app`, the `calibrate_pmodel.R` calculates the optimised `kphio_app` to best match observations during relatively moist and warm days. SOFUN writes parameter values as meta information into NetCDF outputs. `calibrate_pmodel.R` reads this and and calculates by how much this (arbitrary) value has to be scaled to best match observations. This is all implemented by knitting the Rmarkdown file as:
 ```r
-source("calibrate_pmodel.R")
+require(knitr)
+knit("knit_calib_pmodel.Rmd")
 ```
-
-
-
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
