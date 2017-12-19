@@ -18,9 +18,8 @@ analyse_modobs <- function( mod, obs,
   source( paste( syshome, "/.Rprofile", sep="" ) )
 
   require(Metrics)
-  require(hydroGOF)
   require(LSD)
-
+  require(hydroGOF)
   require(hexbin)
 
   ## get statistics
@@ -80,8 +79,8 @@ analyse_modobs <- function( mod, obs,
     text( x0, y0[1], paste( "bias =", format( pbias, digits = 3 ), "%" ),    adj=0.0, cex=0.8 )
     text( x0, y0[2], paste( "RMSE =", format( rmse, digits = 2 ), " (", format( prmse, digits = 2 ), "%)", sep="" ), adj=0.0, cex=0.8 )
     text( x0, y0[3], bquote( italic(R)^2 == .(format( rsq, digits = 2) ) ),  adj=0.0, cex=0.8 )
-    text( x0, y0[4], paste( "NSE =", format( nse, digits = 2 ) ),            adj=0.0, cex=0.8 )
-    text( x0, y0[5], paste( "N =", format( numb, digits = 1 ) ), adj=0.0, cex=0.8 )
+    # text( x0, y0[4], paste( "NSE =", format( nse, digits = 2 ) ),            adj=0.0, cex=0.8 )
+    text( x0, y0[4], paste( "N =", format( numb, digits = 1 ) ), adj=0.0, cex=0.8 )
 
     title( plot.title, cex.main=0.9, font=1 )
     if (!is.na(plot.fil)){
