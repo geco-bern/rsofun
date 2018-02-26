@@ -60,8 +60,8 @@ analyse_modobs <- function( mod, obs,
                 ylim=ylim,
                 ...
                 )
-    abline( c(0,0), c(1,1), col="red" )
-    if (plot.linmod) abline( linmod, col="red", lty=2 )
+    abline( c(0,0), c(1,1), col="black", lty=2 )
+    if (plot.linmod) abline( linmod, col="red", lty=1 )
 
     # mtext( paste( "RMSE =", format( rmse, digits = 3 ) ), side=3, line=0, cex=1.0, adj=0.0 )
     # mtext( bquote( R^2 == .(format( rsq, digits = 3) ) ), side=3, line=1, cex=1.0, adj=0.0 )
