@@ -1,5 +1,9 @@
 calib_pmodel <- function( df, temp_cutoff, soilm_cutoff, kphio_used ){
 
+	## Returns the optimised quantum yield efficiency parameter (kphio_opt),
+	## given modelled GPP (using arbitrary quantum yield eff. par.) and observed GPP, 
+	## both given in dataframe 'df' and named 'gpp' and 'GPP_NT_VUT_REF', resp.
+
 	require(ncdf4)
 
 	source("analyse_modobs.R")
