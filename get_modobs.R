@@ -12,11 +12,21 @@
 ## SWC : 0
 ## 
 ####################################################
-get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_swcvars_etbucket=FALSE, overwrite=TRUE, overwrite_dosites=TRUE ){
+# get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_swcvars_etbucket=FALSE, overwrite=TRUE, overwrite_dosites=TRUE ){
 
   require(dplyr)
   require(readr)
   require(ggplot2)
+
+  ## debug --------------------
+  simsuite = "fluxnet2015"
+  outputset = c( "s15" )
+  outdir = "~/data/fluxnet_sofun/" 
+  add_swcvars = TRUE
+  add_swcvars_etbucket = FALSE
+  overwrite = TRUE
+  overwrite_dosites = TRUE
+  ##---------------------------
 
   ## get from other repository 'utilities'
   source( paste0( myhome, "utilities/conv_noleap_to_ymd.R" ) )
@@ -26,8 +36,13 @@ get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_
   source("get_modobs_fluxnet2015.R")
 
   siteinfo   <- read_csv( paste0( myhome, "sofun/input_fluxnet2015_sofun/siteinfo_", simsuite, "_sofun.csv" ) )
-  datafilnam <- paste0( "modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v4" )
-  datafilnam_flat <- paste0( "df_modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v4" )
+  
+  datafilnam <- paste0( "modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v5" )
+
+  filn_ddf <- paste0( "ddf_modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v5" )
+  filn_wdf <- paste0( "wdf_modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v5" )
+  filn_mdf <- paste0( "mdf_modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v5" )
+  filn_adf <- paste0( "adf_modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v5" )
 
   ## Exclude sites for which no fapar data is available
   df_error_fapar <- read_csv( paste0( myhome, "sofun/input_fluxnet2015_sofun/error_missing_forcingdata_MODIS_FPAR_MCD15A3H_fluxnet2015.csv" ) ) 
@@ -51,6 +66,7 @@ get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_
       do.sites_eff <- do.sites
     
     } else {
+
       ## do only sites that are missing in the list 'fluxnet' loaded from 'datafilnam'
       load( datafilnam )
       allsites <- as.character( siteinfo$mysitename )[ do.sites ]
@@ -61,30 +77,8 @@ get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_
     }
 
   }
-
+  
   do.sites_names <- as.character( siteinfo$mysitename[do.sites_eff] )
-
-  # ##==========================================================
-  # ##----------------------------------------------------------
-  # ## Evaluate arguments provided by R CMD BATCH call
-  # ##----------------------------------------------------------
-  # ## First read in the arguments listed at the command line.
-  # ## Call this by 
-  # ## 'R CMD BATCH --no-save --no-restore '--args sitename="FR-Pue" nam_target="lue_obs"' profile_soilm_neuralnet.R profile_soilm_neuralnet.out &'
-  # args=(commandArgs(TRUE))
-
-  # ## args is now a list of character vectors
-  # ## First check to see if arguments are passed.
-  # ## Then cycle through each element of the list and evaluate the expressions.
-  # if (length(args)==0){
-  #   print("No arguments supplied. Provide at least sitename.")
-  # } else {
-  #   for (i in 1:length(args)){
-  #      eval( parse( text=args[[i]] ) )
-  #   }
-  # }
-  # ##----------------------------------------------------------
-  # ##<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   for (sitename in do.sites_names){
 
@@ -96,7 +90,7 @@ get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_
                                       sitename, 
                                       simsuite          = simsuite,
                                       outputset         = outputset,
-                                      data              = fluxnet,
+                                      list_modobs       = fluxnet,
                                       getvars           = c( "gpp", "wcont", "aet", "pet" ), 
                                       add_swcvars       = add_swcvars, 
                                       overwrite         = TRUE, 
@@ -135,30 +129,70 @@ get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_
   # Re-arrange data into a single flat dataframe (only implemented for using single SOFUN outputset)
   #---------------------------------------------------------
   print("converting to flat data frame (tibble)...")
-  df_fluxnet <- tibble()
-  missing_ddf <- c()
+  ddf_fluxnet <- tibble()
+  wdf_fluxnet <- tibble()
+  mdf_fluxnet <- tibble()
+  adf_fluxnet <- tibble()
+
+  ## daily
   for (sitename in do.sites_names){
     if ( ncol(fluxnet[[sitename]]$ddf[[ outputset ]])>0 ){
 
       ## combine separate dataframes into single one 
-      df_site <-  fluxnet[[ sitename ]]$ddf$inp %>%
-        mutate( mysitename=sitename ) %>%
-        left_join( fluxnet[[ sitename ]]$ddf$obs, by = "date" ) %>%
-        left_join( fluxnet[[ sitename ]]$ddf$swc_obs, by = "date" ) %>%
-        left_join( fluxnet[[ sitename ]]$ddf[[ outputset ]], by = "date" )
+      ddf_site <- fluxnet[[ sitename ]]$ddf$inp %>% mutate( mysitename=sitename ) %>%
+                                                    left_join( fluxnet[[ sitename ]]$ddf$obs, by = "date" ) %>%
+                                                    left_join( fluxnet[[ sitename ]]$ddf$swc_obs, by = "date" ) %>%
+                                                    left_join( fluxnet[[ sitename ]]$ddf[[ outputset ]], by = "date" )
 
       ## add mean of soil moisture across observational and model data ('soilm_mean')
-      df_site <- df_site %>% mutate( soilm_mean = apply( select( ., starts_with("SWC_F_MDS"), wcont ), 1, FUN = mean, na.rm = TRUE ) )
+      ddf_site <- ddf_site %>% mutate( soilm_mean = apply( select( ., starts_with("SWC_F_MDS"), wcont ), 1, FUN = mean, na.rm = TRUE ) )
 
-      df_fluxnet <- df_fluxnet %>% bind_rows( df_site )
+      ddf_fluxnet <- ddf_fluxnet %>% bind_rows( ddf_site )
     
-    } else {
-
-      missing_ddf <- c( missing_ddf, sitename )
-
     }
   }
 
+  ## weekly
+  for (sitename in do.sites_names){
+    if ( ncol(fluxnet[[sitename]]$wdf[[ outputset ]])>0 ){
+
+      ## combine separate dataframes into single one 
+      wdf_site <- fluxnet[[ sitename ]]$wdf$inp %>% mutate( mysitename=sitename ) %>%
+                                                    left_join( fluxnet[[ sitename ]]$wdf$obs, by = "date" ) %>%
+                                                    left_join( fluxnet[[ sitename ]]$wdf[[ outputset ]], by = "date" )
+
+      wdf_fluxnet <- wdf_fluxnet %>% bind_rows( wdf_site )
+    
+    }
+  }
+
+  ## monthly
+  for (sitename in do.sites_names){
+    if ( ncol(fluxnet[[sitename]]$mdf[[ outputset ]])>0 ){
+
+      ## combine separate dataframes into single one 
+      mdf_site <- fluxnet[[ sitename ]]$mdf$inp %>% mutate( mysitename=sitename ) %>%
+                                                    left_join( fluxnet[[ sitename ]]$mdf$obs, by = "date" ) %>%
+                                                    left_join( fluxnet[[ sitename ]]$mdf[[ outputset ]], by = "date" )
+
+      mdf_fluxnet <- mdf_fluxnet %>% bind_rows( mdf_site )
+    
+    }
+  }
+
+  ## annual
+  for (sitename in do.sites_names){
+    if ( ncol(fluxnet[[sitename]]$adf[[ outputset ]])>0 ){
+
+      ## combine separate dataframes into single one 
+      adf_site <- fluxnet[[ sitename ]]$adf$inp %>% mutate( mysitename=sitename ) %>%
+                                                    left_join( fluxnet[[ sitename ]]$adf$obs, by = "date" ) %>%
+                                                    left_join( fluxnet[[ sitename ]]$adf[[ outputset ]], by = "date" )
+
+      adf_fluxnet <- adf_fluxnet %>% bind_rows( adf_site )
+    
+    }
+  }
 
   #---------------------------------------------------------
   # Save complete data to single Rdata file
@@ -166,26 +200,31 @@ get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_
   print("writing to files...")
 
   ## Nested data list
-  save( fluxnet, missing_2015, missing_mod, missing_inclim, missing_inevi, file=paste0(datafilnam, ".Rdata") )
+  save( fluxnet, missing_2015, missing_mod, missing_inclim, missing_inevi, file = paste0( datafilnam, ".Rdata") )
 
-  ## Flat data frame
-  write_csv( df_fluxnet, path=paste0( datafilnam_flat, ".csv" ) )
-  save( df_fluxnet, file=paste0( datafilnam_flat, ".Rdata" ) )
+  ## Flat data frames
+  write_csv( ddf_fluxnet, path = paste0( filn_ddf, ".csv" ) )
+  write_csv( wdf_fluxnet, path = paste0( filn_wdf, ".csv" ) )
+  write_csv( mdf_fluxnet, path = paste0( filn_mdf, ".csv" ) )
+  write_csv( adf_fluxnet, path = paste0( filn_adf, ".csv" ) )
+
   print("... done saving.")
 
   # ## Check soil moisture data
-  # plot_soilm <- function( df_site ){
-  #   pl <- ggplot( df_site, aes( x=date, y=value, color=variable ) ) +
+  # plot_soilm <- function( ddf_site ){
+  #   pl <- ggplot( ddf_site, aes( x=date, y=value, color=variable ) ) +
   #     geom_line( aes( y = wcont, col = "SOFUN s14") ) +
   #     geom_line( aes( y = SWC_F_MDS_1, col="SWC_F_MDS_1")) +
   #     ggtitle( sitename )
   #   plot(pl)
   # }
   # 
-  # # for (sitename in unique(df_fluxnet$mysitename)){
-  # #   plot_soilm( filter( df_fluxnet, mysitename==sitename ) )
+  # # for (sitename in unique(ddf_fluxnet$mysitename)){
+  # #   plot_soilm( filter( ddf_fluxnet, mysitename==sitename ) )
   # # }
   # 
-  # lapply( do.sites_names, function(x) plot_soilm( filter( df_fluxnet, mysitename==x ) ) )
+  # lapply( do.sites_names, function(x) plot_soilm( filter( ddf_fluxnet, mysitename==x ) ) )
 
-}
+  ## 
+
+# }

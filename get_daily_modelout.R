@@ -1,9 +1,9 @@
 get_daily_modelout <- function( expname, dirnam_mod, vars ){
 
   # ## xxx debug >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  # expname <- "AR-SLu"
-  # dirnam_mod <- "/Users/benjaminstocker/sofun/trunk/output_nc/s14/"
-  # vars <- c("gpp","wcont")
+  # expname <- "FR-Pue"
+  # dirnam_mod <- "~/sofun/output_nc_fluxnet2015_sofun/s15/"
+  # vars <- c("gpp","wcont","aet","pet")
   # ## <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   require(ncdf4)
@@ -37,7 +37,9 @@ get_daily_modelout <- function( expname, dirnam_mod, vars ){
       ddf        <- tibble( date=time, ivar=addvar ) %>% setNames( c("date", ivar) ) %>% right_join( ddf, by = "date" )
     }
 
+  } else {
+    ddf <- NA
   }
 
-  return( ddf )  
+  return( ddf )
 }

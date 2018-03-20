@@ -1,4 +1,4 @@
-get_fluxdata_fluxnet2015 <- function( path, add_swcvars=FALSE ){
+get_fluxdata_fluxnet2015 <- function( sitename, freq="y" ){
   ##--------------------------------------------------------------------
   ## Function returns a dataframe containing all the data of flux-derived
   ## GPP for the station implicitly given by path (argument).
@@ -12,61 +12,91 @@ get_fluxdata_fluxnet2015 <- function( path, add_swcvars=FALSE ){
   ## ppfd: mol m-2 d-1 
   ##--------------------------------------------------------------------
   require(dplyr)
+  require(readr)
   require(lubridate)
 
-  source("clean_fluxnet.R")
+  # ## xxx debug -------------
+  # sitename = "FR-Pue"
+  # add_swcvars = TRUE
+  # freq = "m"
+  # ## -----------------------
 
-  ## from flux to energy conversion, umol/J (Meek et al., 1984), same as used in SPLASH (see Eq.50 in spash_doc.pdf)
-  kfFEC <- 2.04
+  if ( freq=="y" ){
+    ## Annual data
+    print( paste( "getting annual FLUXNET 2015 data for site", sitename ) )
+    dirnam_obs <- paste0( myhome, "data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/" )
+    allfiles <- list.files( dirnam_obs )
+    allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
+    allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
+    filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
+    path <- paste0( dirnam_obs, filnam_obs ) 
 
-  ## molar mass of C
-  c_molmass <- 12.0107
+  } else if ( freq=="m" ){
+    ## Monthly data
+    print( paste( "getting monthly FLUXNET 2015 data for site", sitename ) )
+    dirnam_obs <- paste0( myhome, "data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/" )
+    allfiles <- list.files( dirnam_obs )
+    allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
+    allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
+    filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
+    path <- paste0( dirnam_obs, filnam_obs ) 
 
-  ## get data
-  ddf <-  read_csv( path, na="-9999", col_types = cols() ) %>%
-          mutate( date = ymd( TIMESTAMP ) )
-
-  ## convert units. given in umolCO2 m-2 s-1. converted to gC m-2 d-1
-  ddf <- ddf %>% mutate(
-                        GPP_NT_VUT_REF     = as.numeric(GPP_NT_VUT_REF)     * 1e-6 * 60 * 60 * 24 * c_molmass,
-                        GPP_NT_VUT_USTAR50 = as.numeric(GPP_NT_VUT_USTAR50) * 1e-6 * 60 * 60 * 24 * c_molmass,
-                        GPP_DT_VUT_REF     = as.numeric(GPP_DT_VUT_REF)     * 1e-6 * 60 * 60 * 24 * c_molmass,
-                        GPP_DT_VUT_USTAR50 = as.numeric(GPP_DT_VUT_USTAR50) * 1e-6 * 60 * 60 * 24 * c_molmass,
-                        LE_F_MDS           = as.numeric(LE_F_MDS)                  * 60 * 60 * 24   ## W m-2 -> J m-2 d-1
-                        )
-
-  ## clean data
-  out_clean <- clean_fluxnet_gpp( ddf$GPP_NT_VUT_REF, ddf$GPP_DT_VUT_REF, ddf$NEE_VUT_REF_NIGHT_QC, ddf$NEE_VUT_REF_DAY_QC, cutoff=0.5 )
-  ddf$GPP_NT_VUT_REF <- out_clean$gpp_nt
-  ddf$GPP_DT_VUT_REF <- out_clean$gpp_dt
-
-  ddf$LE_F_MDS_good <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.5 )
-  ddf$LE_F_MDS      <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.2 )
-
-
-  if (add_swcvars){
-
-    full <- ddf
-    ddf  <- ddf %>% dplyr::select( date, GPP_NT_VUT_REF, GPP_NT_VUT_USTAR50, GPP_DT_VUT_REF, GPP_DT_VUT_USTAR50, LE_F_MDS, LE_F_MDS_good ) 
-
-    ## collect additional SWC variables for different depths provided for each site
-    ddf_swc <- full %>% dplyr::select( date )
-    relevant <- names(full)[(is.element( substr(names(full), start=1, stop=3), "SWC" ))]
-    swcvars <- relevant[ which( !substr( relevant, start=nchar(relevant)-1, stop=nchar(relevant) )=="QC") ]
-    swcqcvars <- relevant[ which( substr( relevant, start=nchar(relevant)-1, stop=nchar(relevant) )=="QC") ]
-    if (length(swcvars)>0){
-      for (ivar in 1:length(swcvars)){
-        ddf_swc[[ swcvars[ivar] ]] <- clean_fluxnet_swc( full[[ swcvars[ivar] ]], full[[ swcqcvars[ivar] ]] )
-      }
-    }
-    out <- list( obs=ddf, obs_swc=ddf_swc )
-  
-  } else {
-   
-    ddf <- ddf %>% dplyr::select( date, GPP_NT_VUT_REF, GPP_NT_VUT_USTAR50, GPP_DT_VUT_REF, GPP_DT_VUT_USTAR50, LE_F_MDS, LE_F_MDS_good ) 
-    out <- list( obs=ddf, obs_swc=NA )
+  } else if ( freq=="w" ){
+    ## Weekly data
+    print( paste( "getting weekly FLUXNET 2015 data for site", sitename ) )
+    dirnam_obs <- paste0( myhome, "data/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/" )
+    allfiles <- list.files( dirnam_obs )
+    allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
+    allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
+    filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
+    path <- paste0( dirnam_obs, filnam_obs ) 
 
   }
 
-  return( out )
+  if (length(filnam_obs)>0){
+
+    ## from flux to energy conversion, umol/J (Meek et al., 1984), same as used in SPLASH (see Eq.50 in spash_doc.pdf)
+    kfFEC <- 2.04
+
+    ## molar mass of C
+    c_molmass <- 12.0107
+
+    ## get data
+    df <-  read_csv( path, na="-9999", col_types = cols() )
+
+    ## get dates, their format differs slightly between temporal resolution
+    if ( freq=="y" ){
+
+      df <- df %>% mutate( year = TIMESTAMP ) %>% mutate( date = ymd( paste0( as.character(year), "-01-01" ) ) )      
+
+    } else if ( freq=="w"){
+
+      df <- df %>% mutate( date_start = ymd(TIMESTAMP_START), date_end = ymd(TIMESTAMP_END) ) %>% 
+                   mutate( date = date_start )
+
+    } else if ( freq=="m" ){
+
+      df <- df %>% mutate( year = substr( TIMESTAMP, start = 1, stop = 4 ), month = substr( TIMESTAMP, start = 5, stop = 6 ) ) %>%
+                   mutate( date = ymd( paste0( as.character(year), "-", as.character(month), "-01" ) ) )
+
+    }
+
+    ## convert units. given in umolCO2 m-2 s-1. converted to gC m-2 d-1
+    df <- df %>%  mutate(
+                          GPP_NT_VUT_REF     = as.numeric(GPP_NT_VUT_REF)    ,
+                          GPP_NT_VUT_USTAR50 = as.numeric(GPP_NT_VUT_USTAR50),
+                          GPP_DT_VUT_REF     = as.numeric(GPP_DT_VUT_REF)    ,
+                          GPP_DT_VUT_USTAR50 = as.numeric(GPP_DT_VUT_USTAR50),
+                          LE_F_MDS           = as.numeric(LE_F_MDS),             ## W m-2 -> J m-2 d-1
+                          gpp_obs            = ( GPP_NT_VUT_REF + GPP_DT_VUT_REF ) / 2  
+                          ) %>%
+                  select( date, GPP_NT_VUT_REF, GPP_NT_VUT_USTAR50, GPP_DT_VUT_REF, GPP_DT_VUT_USTAR50, LE_F_MDS, gpp_obs )
+
+  } else {
+
+    df <- NA
+
+  }
+
+  return( df )
 }

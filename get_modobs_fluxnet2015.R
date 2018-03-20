@@ -1,9 +1,10 @@
-get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getvars=c( "gpp", "wcont", "aet", "pet" ), add_swcvars=TRUE, overwrite=overwrite, overwrite_dosites=overwrite_dosites, outdir="./" ){
+get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, list_modobs=NA, getvars=c( "gpp", "wcont", "aet", "pet" ), add_swcvars=TRUE, overwrite=overwrite, overwrite_dosites=overwrite_dosites, outdir="./" ){
 
   # ## XXX debug------------------------------------------
+  # sitename = "AR-SLu"
   # simsuite = "fluxnet2015"
-  # data = fluxnet
-  # outputset = c( "s14" )
+  # list_modobs = list()
+  # outputset = c( "s15" )
   # getvars   = c( "gpp", "wcont", "aet", "pet" )
   # add_swcvars = TRUE
   # overwrite   = TRUE
@@ -11,23 +12,31 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
   # outdir="./"
   # ##----------------------------------------------------
 
+  require(dplyr)
+  require(lubridate)
+
   source( "get_fluxdata_fluxnet2015.R" )
+  source( "get_fluxdata_fluxnet2015_daily.R" )
   source( "get_meteo_fluxnet2015.R" )
+  source( "get_daily_modelout.R" )
 
   avl2015 <- TRUE
   avl_mod <- rep( TRUE, length(outputset) )
 
   norm_to_max <- function( vec ){
-    vec <- ( vec - min( vec, na.rm=TRUE ) ) / ( max( vec, na.rm=TRUE ) - min( vec, na.rm=TRUE ) )
+    vec <- vec / quantile( vec, probs=0.97, na.rm = TRUE )
     return( vec )
   }
 
-  ##---------------------------------------------------------
-  ## read SOFUN output data for each output set -> ddf as list
+  ##//////////////////////////////////////////////////////////
+  ## SOFUN output data for each output set -> ddf as list
   ##---------------------------------------------------------
   print( paste( "getting model output data ..." ) )
   site <- list()
   ddf  <- list()
+  wdf  <- list()
+  mdf  <- list()
+  adf  <- list()
 
   kdx <- 0
   for (iset in outputset){
@@ -35,11 +44,10 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
 
     dirnam_mod <- paste( myhome, "sofun/output_nc_fluxnet2015_sofun/", iset, "/", sep="" )
 
-    ddf_tmp <- try( get_daily_modelout( sitename, dirnam_mod, getvars ) )
+    ddf_tmp <- get_daily_modelout( sitename, dirnam_mod, getvars )
 
-    if (class(ddf_tmp)=="try-error") { 
+    if (is.na(ddf_tmp)) { 
     
-      print( paste( "error opening", path ) )
       avl_mod[kdx]          <- FALSE
       missing_mod[[ iset ]] <- c( missing_mod[[ iset ]], sitename )
     
@@ -53,53 +61,106 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
       ddf[[ iset ]] <- ddf_tmp
 
     }
+
+    ##---------------------------------------------------------
+    ## Aggregate to model output from daily to monthly
+    ##---------------------------------------------------------
+    mdf[[ iset ]] <- ddf[[ iset ]] %>%  group_by( month(date) ) %>%
+                                        summarise( date = min( date ),   ## 'date' is now the first day of the month
+                                                   pet = sum( pet ),
+                                                   aet = sum( aet ),
+                                                   wcont = mean( wcont ),
+                                                   gpp = sum( gpp )
+                                                  )
+
+    ##---------------------------------------------------------
+    ## Aggregate to model output from daily to weekly
+    ##---------------------------------------------------------
+    wdf[[ iset ]] <- ddf[[ iset ]] %>%  group_by( week(date) ) %>%
+                                        summarise( date = min( date ),   ## 'date' is now the first day of the week
+                                                   pet = sum( pet ),
+                                                   aet = sum( aet ),
+                                                   wcont = mean( wcont ),
+                                                   gpp = sum( gpp )
+      )
+    
+    ##---------------------------------------------------------
+    ## Aggregate to model output from daily to annual
+    ##---------------------------------------------------------
+    adf[[ iset ]] <- ddf[[ iset ]] %>%  group_by( year(date) ) %>%
+                                        summarise( date = min( date ),    ## 'date' is now the first day of the year
+                                                   pet = sum( pet ),
+                                                   aet = sum( aet ),
+                                                   wcont = mean( wcont ),
+                                                   gpp = sum( gpp )
+                                                  )
+
   }
 
 
+  ##//////////////////////////////////////////////////////////
+  ## FLUX DATA FROM FLUXNET
   ##---------------------------------------------------------
-  ## read FLUXNET 2015 data -> ddf_obs, ddf_swc_obs
+  ## Get daily FLUXNET data
   ##---------------------------------------------------------
-  print( paste( "getting FLUXNET 2015 data ..." ) )
-  dirnam_obs <- paste0( myhome, "data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" )
-  allfiles <- list.files( dirnam_obs )
-  allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
-  allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
-  filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
-  path <- paste0( dirnam_obs, filnam_obs )
+  print( paste( "getting daily FLUXNET 2015 data ..." ) )
+  ddf_obs <- get_fluxdata_fluxnet2015_daily( sitename, add_swcvars=add_swcvars )
   
-  out <- try( get_fluxdata_fluxnet2015( path, add_swcvars=add_swcvars ) ) 
-  
-  if (class(out)=="try-error") { 
-    print( paste( "error opening", path ) )
-    avl2015 <- FALSE
-    missing_2015 <- c( missing_2015, sitename )
-  } else {
+  if (any(!is.na(ddf_obs))){ 
+
     ## Normalise observational soil moisture to within minimum (=0) and maximum (=1), and
-    out$obs_swc <- out$obs_swc %>% mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) )
+    ddf_obs$obs_swc <- ddf_obs$obs_swc %>% mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) )
     
     ## get mean soil observational moisture across different depths (if available)
-    out$obs_swc <- out$obs_swc %>%
-      mutate( soilm_obs_mean = apply( select( out$obs_swc, starts_with("SWC_F_MDS") ), 1, FUN=mean, na.rm=TRUE ) ) %>%
+    ddf_obs$obs_swc <- ddf_obs$obs_swc %>%
+      mutate( soilm_obs_mean = apply( select( ddf_obs$obs_swc, starts_with("SWC_F_MDS") ), 1, FUN=mean, na.rm=TRUE ) ) %>%
       mutate( soilm_obs_mean = ifelse( is.nan(soilm_obs_mean), NA, soilm_obs_mean ) )
+  
+  } else {
+
+    print( paste( "error opening", path ) )
+    avl2015 <- FALSE
+
   }
 
   ##---------------------------------------------------------
-  ## read input data -> ddf_in
+  ## Get weekly FLUXNET data
   ##---------------------------------------------------------
-  ## climate
-  print( paste( "getting climate input data ..." ) )
-  dirnam_obs <- paste0( myhome, "data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" )
-  allfiles <- list.files( dirnam_obs )
-  allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
-  filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
-  filn <- paste0( dirnam_obs, filnam_obs )
-  if ( length(filnam_obs)>0 ){ 
-    ddf_inclim <- try( get_meteo_fluxnet2015( filn ) ) 
-  }
-  if (class(ddf_inclim)=="try-error"){
-    missing_inclim <- c( missing_inclim, sitename )    
-  }
+  print( paste( "getting weekly FLUXNET 2015 data ..." ) )
+  wdf_obs <- get_fluxdata_fluxnet2015( sitename, freq="w" ) 
   
+  ##---------------------------------------------------------
+  ## Get monthly FLUXNET data
+  ##---------------------------------------------------------
+  print( paste( "getting monthly FLUXNET 2015 data ..." ) )
+  mdf_obs <- get_fluxdata_fluxnet2015( sitename, freq="m" ) 
+  
+  ##---------------------------------------------------------
+  ## Get annual FLUXNET data
+  ##---------------------------------------------------------
+  print( paste( "getting annual FLUXNET 2015 data ..." ) )
+  adf_obs <- get_fluxdata_fluxnet2015( sitename, freq="y" ) 
+  
+
+  ##//////////////////////////////////////////////////////////
+  ## METEO DATA FROM FLUXNET
+  ##---------------------------------------------------------
+  ## daily
+  ddf_inclim <- get_meteo_fluxnet2015( sitename, freq="d" ) 
+
+  ## weekly
+  wdf_inclim <- get_meteo_fluxnet2015( sitename, freq="w" ) 
+
+  ## monhtly
+  mdf_inclim <- get_meteo_fluxnet2015( sitename, freq="m" ) 
+
+  ## annual
+  adf_inclim <- get_meteo_fluxnet2015( sitename, freq="y" ) 
+
+  
+  ##//////////////////////////////////////////////////////////
+  ## FAPAR DATA FROM MODIS
+  ##---------------------------------------------------------
   ## fAPAR
   print( paste( "getting fapar input data (MODIS FPAR) ..." ) )
   filn <- paste0( myhome, "sofun/input_fluxnet2015_sofun/sitedata/fapar/", sitename, "/dfapar_MODIS_FPAR_MCD15A3H_", sitename, "_gee_subset.csv" )
@@ -110,6 +171,17 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
     ddf_infpar <- ddf_infpar %>% rename( fpar = modisvar_interpol ) %>% select( date, fpar ) %>% mutate( date = ymd(date) )
   }
 
+  ## monthly
+  mdf_infpar <- ddf_infpar %>%  group_by( month(date) ) %>%
+                                summarise( fpar = mean( fpar ), date = min(date) ) ## 'date' is now the first day of the month
+
+  ## weekly
+  wdf_infpar <- ddf_infpar %>%  group_by( week(date) ) %>%
+                                summarise( fpar = mean( fpar ), date = min(date) ) ## 'date' is now the first day of the week
+  
+  ## annual
+  adf_infpar <- ddf_infpar %>%  group_by( year(date) ) %>%
+                                summarise( fpar = mean( fpar ), date = min(date) ) ## 'date' is now the first day of the year
 
   ##---------------------------------------------------------
   ## Check if any data is available
@@ -124,10 +196,22 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
   if (cont){
     if (avl2015){
 
-      ## add to list
-      ddf$obs     <- out$obs
+      ## add daily data to list
+      ddf$obs     <- ddf_obs$obs
       ddf$inp     <- ddf_inclim %>% left_join( ddf_infpar, by = "date" )
-      ddf$swc_obs <- out$obs_swc
+      ddf$swc_obs <- ddf_obs$obs_swc
+
+      ## add weekly data to list
+      wdf$obs     <- wdf_obs
+      wdf$inp     <- wdf_inclim %>% left_join( wdf_infpar, by = "date" )
+
+      ## add monthly data to list
+      mdf$obs     <- mdf_obs
+      mdf$inp     <- mdf_inclim %>% left_join( mdf_infpar, by = "date" )
+
+      ## add annual data to list
+      adf$obs     <- adf_obs
+      adf$inp     <- adf_inclim %>% left_join( adf_infpar, by = "date" )
 
     } else {
     
@@ -135,19 +219,37 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, data=NA, getv
       ddf$inp <- NA
       ddf$swc_obs <- NA
 
+      wdf$obs <- NA
+      wdf$inp <- NA
+      wdf$swc_obs <- NA
+
+      mdf$obs <- NA
+      mdf$inp <- NA
+      mdf$swc_obs <- NA
+
+      adf$obs <- NA
+      adf$inp <- NA
+      adf$swc_obs <- NA
+
     }
 
     ##---------------------------------------------------------
-    ## add ddf list to list of this site
+    ## add list to list of this site
     ##---------------------------------------------------------
-    data[[ sitename ]]$ddf <- ddf
+    list_modobs[[ sitename ]]$ddf <- ddf
+    list_modobs[[ sitename ]]$wdf <- wdf
+    list_modobs[[ sitename ]]$mdf <- mdf
+    list_modobs[[ sitename ]]$adf <- adf
 
   } else {
 
-    data[[ sitename ]]$ddf <- NA
+    list_modobs[[ sitename ]]$ddf <- NA
+    list_modobs[[ sitename ]]$wdf <- NA
+    list_modobs[[ sitename ]]$mdf <- NA
+    list_modobs[[ sitename ]]$adf <- NA
 
   }
 
-  return( data )
+  return( list_modobs )
 
 }
