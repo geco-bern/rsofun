@@ -9,16 +9,21 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 This document is compiled by "knitting" the Rmarkdown file `knit_calib_pmodel.Rmd`. All source code is available in the repository [calib_pmodel](https://bitbucket.org/labprentice/calib_pmodel) on bitbucket, group *labprentice* (login required). The workflow for model calibration is described below. 
 
 ## Collect data
 
 Read forcing data and P-model output into a common dataframe. To collect all daily forcing data and flux measurement data from the FLUXNET 2015 dataset, fAPAR forcing data, and SOFUN output data into a single data frame, use `get_modobs.R`. 
-Run in R:
-```{r get_modobs, eval=FALSE}
-source("get_modobs.R")
+Define ensemble name:
+```{r}
 simsuite <- "fluxnet2015"
 outputset <- c( "s15" )
+```
+
+Run in R:
+```{r get_modobs, eval=TRUE}
+source("get_modobs.R")
 get_modobs( simsuite = simsuite, outputset = outputset, outdir = "~/data/fluxnet_sofun/" )
 ```
 
@@ -29,19 +34,22 @@ This performs a data "cleaning" (see `clean_fluxnet.R`), calculates additional v
 
 After writing `df_modobs_<simsuite>_*.Rdata` by the previous step, we simply have to read in the data, remove cold and dry days and calibrate the apparent quantum yield efficiency parameter `kphio_app` using GPP from the FLUXNET 2015 data (`GPP_NT_VUT_REF`) and the linear regression function `lm()` using least-squares minimisation. After running SOFUN with an arbitrary parameter value `kphio_app`, the `calibrate_pmodel.R` calculates the optimised `kphio_app` to best match observations during relatively moist and warm days. SOFUN writes parameter values as meta information into NetCDF outputs. `calibrate_pmodel.R` reads this and and calculates by how much this (arbitrary) value has to be scaled to best match observations. These are the steps:
 
-  1. Load the calibration function
+###  1. Load the calibration function
+
 ```{r}
 source("calib_pmodel.R")
 ```
 
-  2. Load the data collected by 'get_modobs.R'
+###  2. Load the data collected by 'get_modobs.R'
+
 ```{r}
 load( paste0( "df_modobs_", simsuite, "_", outputset, "_with_SWC_v4.Rdata" ) )  # loads df_fluxnet
 ndays_0 <- nrow( df_fluxnet )
 print( paste( "total number of days, unfiltered: ", ndays_0 ) )
 ```
 
-  3. Aggregate to monthly data
+###  3. Aggregate to monthly data
+
 ```{r message=FALSE}
 require(dplyr)
 require(lubridate)
@@ -49,7 +57,8 @@ df_fluxnet <- df_fluxnet %>% group_by( mysitename, year(date), month(date) ) %>%
 														 summarise_all( mean, na.rm=TRUE )
 ```
 
-  4. Read GPP NetCDF output to get parameter value of quantum yield efficiency that was used in simulations
+###  4. Read GPP NetCDF output to get parameter value of quantum yield efficiency that was used in simulations
+
 ```{r message=FALSE}
 ## a random site
 runname <- "FR-Pue"
@@ -68,12 +77,14 @@ kphio_used   <- ncatt_get( nc, varid=0, attname="param_kphio_GrC3" )$value %>% a
 fapar_source <- ncatt_get( nc, varid=0, attname="fapar_source" )$value
 nc_close(nc)
 ```
+
 The quantum yield efficiency parameter used in simulations was:
 ```{r}
 print(kphio_used)
 ```
 
-  5. Evaluate optimised parameter for a range of soil moisture cutoffs
+###  5. Evaluate optimised parameter for a range of soil moisture cutoffs
+
 ```{r message=FALSE}
 soilm_cutoff_range <- seq(0.1, 0.9, 0.05)
 list_sens_soilm <- lapply( soilm_cutoff_range, function(x) calib_pmodel( df_fluxnet, 5.0, x, kphio_used ) )
@@ -83,7 +94,8 @@ df_sens_soilm_cutoff <- tibble( soilm_cutoff=soilm_cutoff_range, kphio_opt=kphio
 with( df_sens_soilm_cutoff, plot( soilm_cutoff, kphio_opt, pch=16, main=paste0("Sensitivity to soil moisture cutoff (temp. cutoff = 5 deg C, fAPAR data: ", fapar_source, ")"), font.main=1, cex.main=0.9 ))
 ```
 
-  6. Evaluate optimised parameter for a range of temperature cutoffs
+###  6. Evaluate optimised parameter for a range of temperature cutoffs
+
 ```{r message=FALSE}
 temp_cutoff_range <- seq(0, 20, 1)
 list_sens_temp <- lapply( temp_cutoff_range, function(x) calib_pmodel( df_fluxnet, x, 0.4, kphio_used ) )
@@ -92,6 +104,7 @@ kphio_corr <- lapply( list_sens_temp, function(x) x$kphio_corr ) %>% unlist()
 df_sens_temp_cutoff <- tibble( temp_cutoff=temp_cutoff_range, kphio_opt=kphio_opt, kphio_corr=kphio_corr )
 with( df_sens_temp_cutoff, plot( temp_cutoff, kphio_opt, pch=16, main=paste0("Sensitivity to temperature cutoff (soilm. cutoff = 0.4, fAPAR data: ", fapar_source, ")"), font.main=1, cex.main=0.9 ))
 ```
+
 Here, we chose to set the soil moisture cutoff to 0.4 and the temperature cutoff to 5$^\circ$C. The optimal quantum yield efficiency (`kphio`) is then:
 ```{r}
 out_calib <- calib_pmodel( df_fluxnet, temp_cutoff=5.0, soilm_cutoff=0.4, kphio_used=kphio_used )
@@ -102,7 +115,8 @@ This requires a correction factor to be applied to the modelled values. The corr
 print( paste( "Correction factor:", format( out_calib$kphio_corr, digits=4 ) ) )
 ```
 
-  7. Plot modelled vs. observed for given soil moisture (0.4) and temperature (5 deg C) cutoff after applying the correction factor.
+###  7. Plot modelled vs. observed for given soil moisture (0.4) and temperature (5 deg C) cutoff after applying the correction factor.
+
 ```{r message=FALSE}
 source("analyse_modobs.R")
 stats <- with( filter( df_fluxnet, temp>5 & soilm_mean>0.4), analyse_modobs( GPP_NT_VUT_REF, out_calib$kphio_corr * gpp, yintersect0=FALSE, xlab=expression( paste( "modelled GPP (gC m"^{-1}, " d"^{-1}, ")")), ylab=expression( paste( "observed GPP (gC m"^{-1}, " d"^{-1}, ")")), do.plot=TRUE ) )

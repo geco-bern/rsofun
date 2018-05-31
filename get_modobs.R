@@ -12,21 +12,21 @@
 ## SWC : 0
 ## 
 ####################################################
-# get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_swcvars_etbucket=FALSE, overwrite=TRUE, overwrite_dosites=TRUE ){
+get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_swcvars_etbucket=FALSE, overwrite=TRUE, overwrite_dosites=TRUE ){
 
   require(dplyr)
   require(readr)
   require(ggplot2)
 
-  ## debug --------------------
-  simsuite = "fluxnet2015"
-  outputset = c( "s15" )
-  outdir = "~/data/fluxnet_sofun/" 
-  add_swcvars = TRUE
-  add_swcvars_etbucket = FALSE
-  overwrite = TRUE
-  overwrite_dosites = TRUE
-  ##---------------------------
+  # ## debug --------------------
+  # simsuite = "fluxnet2015"
+  # outputset = c( "s15" )
+  # outdir = "~/data/fluxnet_sofun/" 
+  # add_swcvars = TRUE
+  # add_swcvars_etbucket = FALSE
+  # overwrite = TRUE
+  # overwrite_dosites = TRUE
+  # ##---------------------------
 
   ## get from other repository 'utilities'
   source( paste0( myhome, "utilities/conv_noleap_to_ymd.R" ) )
@@ -225,6 +225,6 @@
   # 
   # lapply( do.sites_names, function(x) plot_soilm( filter( ddf_fluxnet, mysitename==x ) ) )
 
-  ## 
+  return( list( ddf=ddf_fluxnet, wdf=wdf_fluxnet, mdf=mdf_fluxnet, adf=adf_fluxnet ) )
 
-# }
+}
