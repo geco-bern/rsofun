@@ -1,0 +1,121 @@
+---
+title: "Vignette for package rsofun"
+author: "Benjamin D. Stocker"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+# output:
+#   pdf_document:
+#     toc: true
+#     toc_depth: 2
+header-includes:
+   - \usepackage{amsmath}
+# bibliography: bibliography.bib
+---
+
+Load the package. This contains all the necessary wrapper functions to set up and run SOFUN and read its output
+```{r, eval=FALSE}
+library(rsofun)
+```
+
+# Setup
+Define data sources used for SOFUN input. This is based on keywords passed on as strings. E.g. `"fluxnet2015"` triggers specific functions that read input data from specific files, here all the site-level meteo data from FLUXNET 2015. Define the input settings as a list.
+```{r}
+settings_input <-  list( 
+  temperature             = "fluxnet2015",
+  precipitation           = "fluxnet2015",
+  vpd                     = "fluxnet2015",
+  ppfd                    = "fluxnet2015",
+  netrad                  = NA,
+  fapar                   = "MODIS_FPAR_MCD15A3H",
+  dir_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  dir_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
+  )
+```
+
+Define the simulation settings as a list.
+```{r}
+settings_sims <- list( 
+  ensemble      = TRUE,
+  simsuite      = "fluxnet2015",
+  path_siteinfo = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun/siteinfo_fluxnet2015_sofun+whc.csv",
+  lonlat        = FALSE,
+  path_output   = "/alphadata01/bstocker/sofun/output_fluxnet2015_sofun/sXXX/"
+  )
+```
+
+- `path_siteinfo`: Must contain site names in first column.
+
+Define model setup as a list.
+```{r}
+setup_sofun <- list( 
+  model      = "pmodel_simsuite", 
+  do_compile = FALSE,
+  dir        = "/alphadata01/bstocker/sofun/trunk/"
+  )
+```
+
+- `model`: compilation option and name of executable 
+- `dir`: directory of the model
+
+Define model calibration settings as a list.
+```{r, eval=FALSE}
+settings_calib <- list( 
+  par        = list( k_decay = c(1,20) ),
+  method     = "gensa",
+  targetvars = c("gpp_nt", "gpp_dt"),
+  datasource = list(  gpp_nt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+                      gpp_dt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" ),
+  varnames   = list( gpp_nt = "GPP_NT_VUT_REF", gpp_dt = "GPP_DT_VUT_REF" ),
+  datenames  = list( gpp_nt = "TIMESTAMP", gpp_dt = "TIMESTAMP" )
+  # targetvars = c("fapar"),
+  # datasource = list( fapar = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/" ),
+  # varnames   = list( fapar = "modisvar" ),
+  # datenames  = list( fapar = "date" )
+ )
+```
+
+- `par`: list of parameters to calibrate with their lower and upper boundaries
+- `targetvars`: name of variable in SOFUN output
+- `datasource`: directory where site-specific files are located, a list of paths with names corresponding to 'targetvars'. The paths are pointing to directories where site-specific files are located. The first found file is read where the site name is contained in the file name (using `grepl()`).
+- `varnames`: name of column that holds the data for the target variable in the original file.
+- `datenames`: name of column that holds the date information in the original file.
+
+
+# Execute
+
+Create run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information.
+```{r, eval=FALSE}
+settings_sims <- prepare_setup_sofun( settings = settings_sims )
+```
+
+Prepare SOFUN input (climate input, CO2, etc.), returns the path where inputs are located
+```{r, eval=FALSE}
+path_input <- prepare_input_sofun( settings = settings_input )
+```
+
+Run SOFUN with standard parameters
+```{r, eval=FALSE}
+error <- run_sofun( path_forcing, setup = setup_sofun, par = list( k_decay = 4.0 ) )
+```
+
+Calibrate SOFUN, returns calibrated parameters. Set `r setup_sofun$is_calib <- TRUE` to prevent SOFUN output to be written, calibration output written instead
+```{r, eval=FALSE}
+setup_sofun$is_calib <- TRUE
+params_opt <- calib_sofun( setup = setup_sofun, settings_calib = settings_calib, settings_sims = settings_sims )
+```
+
+Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
+```{r, eval=FALSE}
+setup_sofun$is_calib <- FALSE
+error <- run_sofun( path_forcing, setup = setup_sofun, par = params_opt )
+```
+
+Read SOFUN output
+```{r, eval=FALSE}
+out <- read_output_sofun( settings = settings_sims )
+```
+
