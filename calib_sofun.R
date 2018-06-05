@@ -90,31 +90,43 @@ get_obs_calib <- function( sitename, targetvars, datasource, date_start, date_en
 
 }
 
-
-calib_sofun <- function( setup, settings_calib, settings_sims ){
+get_obs_raw <- function( settings_calib, settings_sims ){
 
   require(readr)
   require(dplyr)
 
   ##------------------------------------------------------------
-  ## Read observational data
+  ## Read raw observational data from files.
   ## This creates a data frame (tibble) that contains
   ## a column 'date' and columns for each target variable. The number of rows
   ## corresponds to each simulation's length (number of days).
   ##------------------------------------------------------------
   ## loop over sites to get data frame with all variables
-  bysite <- lapply( settings_sims$sitenames[1:3], function(x) get_obs_calib(x, 
-                                                    targetvars = settings_calib$targetvars, 
-                                                    datasource = settings_calib$datasource,
-                                                    date_start = settings_sims$date_start[[ x ]],
-                                                    date_end   = settings_sims$date_end[[ x ]],
-                                                    varnames   = settings_calib$varnames,
-                                                    datenames  = settings_calib$datenames
-                                                    ) %>% mutate( mysitename=x ) )
+  list_bysite <- lapply( settings_sims$sitenames[1:3], function(x) get_obs_calib(x, 
+                                                        targetvars = settings_calib$targetvars, 
+                                                        datasource = settings_calib$datasource,
+                                                        date_start = settings_sims$date_start[[ x ]],
+                                                        date_end   = settings_sims$date_end[[ x ]],
+                                                        varnames   = settings_calib$varnames,
+                                                        datenames  = settings_calib$datenames
+                                                        ) %>% mutate( sitename=x ) )
                 
   ## combine dataframes from multiple sites along rows
-  obs <- bind_rows( bysite )
+  obs_raw <- bind_rows( list_bysite )
 
-  return( obs )
+  return( obs_raw )
+
+}
+
+
+calib_sofun <- function( setup, settings_calib, settings_sims ){
+
+
+  ## Collect raw observational data
+  obs_raw <- get_obs_raw( settings_calib, settings_sims )
+
+  ## Clean observational raw data for variables GPP
+  obs <- clean_obs_raw_gpp_fluxnet2015( obs_raw )
+
 
 }
