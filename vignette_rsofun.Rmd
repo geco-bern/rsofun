@@ -16,6 +16,8 @@ header-includes:
 # bibliography: bibliography.bib
 ---
 
+# Environment
+
 Load the package. This contains all the necessary wrapper functions to set up and run SOFUN and read its output. 
 ```{r, eval=FALSE}
 library(rsofun)  ## Not yet implemented
@@ -34,6 +36,7 @@ systr <- "''"    # for Mac
 ```
 
 # Setup
+## Simulation settings
 Define the simulation settings as a list.
 ```{r}
 settings_sims <- list( 
@@ -65,7 +68,7 @@ settings_sims <- list(
 - `grid`: Character string defining the type of grid used, e.g. `halfdeg` for half-degree resolution in lon. and lat. (only used if `lonlat=TRUE`).
 - `implementation`: Character string specifying whether Fortran (`implementation= "fortran"`) or Python (`implementation= "python"`) version is to be used.
 
-
+## Input settings
 Define data sources used for SOFUN input. This is based on keywords passed on as strings. E.g. `"fluxnet2015"` triggers specific functions that read input data from specific files, here all the site-level meteo data from FLUXNET 2015. Define the input settings as a list.
 ```{r}
 settings_input <-  list( 
@@ -77,10 +80,19 @@ settings_input <-  list(
   fapar                    = "MODIS_FPAR_MCD15A3H",
   path_cx1data             = "/alphadata01/bstocker/data/",
   path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
+  path_cru                 = "/alphadata01/bstocker/data/cru/ts_4.01/",
   path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
   )
 ```
 
+- `temperature`: A character string specifying the source for temperature data. Any of `"fluxnet2015"`, `"watch_wfdei"`, and/or `"cru"`. This can also be a vector of strings (e.g. `c("fluxnet2015", "watch_wfdei")`, to specify priorities: first take FLUXNET 2015 data for periods where data is available. For remaining years (given by `settings_sims$date_start` and `settings_sims$date_end`), use WATCH-WFDEI data. If `"fluxnet2015"` is specified for any of `temperature`, `precipitation`, `vpd`, `ppfd`, or `netrad`, then `path_fluxnet2015` must be specified as well in the settings.
+- `precipitation`: See `temperature`.
+- `vpd`: See `temperature`.
+- `ppfd`: See `temperature`.
+- `netrad`: See `temperature`.
+
+## Model setup
 Define model setup as a list.
 ```{r}
 setup_sofun <- list( 
@@ -92,6 +104,7 @@ setup_sofun <- list(
 - `model`: compilation option and name of executable 
 - `dir`: directory of the model
 
+## Calibration settings
 Define model calibration settings as a list.
 ```{r, eval=FALSE}
 settings_calib <- list( 
@@ -118,16 +131,19 @@ settings_calib <- list(
 
 # Workflow
 
+## Prepare simulation setup
 Create run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information.
 ```{r, eval=FALSE}
 settings_sims <- prepare_setup_sofun( settings = settings_sims )
 ```
 
+## Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`.
 ```{r, eval=FALSE}
-settings_input <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims )
+out <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims )
 ```
 
+## Run the model
 Run SOFUN with standard parameters and read output in once.
 ```{r, eval=FALSE}
 out <- runread_sofun( settings = settings_sims, setup = setup_sofun )  
