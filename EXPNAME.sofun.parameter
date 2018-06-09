@@ -1,0 +1,107 @@
+###############################################################
+# SIMULATION PARAMETERS FOR THE SOFUN MODEL
+# read in by SR getpar_siml
+#--------------------------------------------------------------
+#                                      |
+# write value behind this position:    |->
+
+# Standard site name (reading <sitename>.parameter)
+sitename                                XXXsitenameXXX
+
+# Model spinup setting
+spinup                                  .true.
+spinupyears                             XXXspinupyearsXXX
+recycle                                 XXXrecycleXXX
+
+# Start and length of simulation in years (AD)
+firstyeartrend                          XXXfirstyeartrendXXX
+nyeartrend                              XXXnyeartrendXXX
+
+# Model parameter file (not PFT-specific)
+modparfil                               params_modl.dat
+
+# input files
+input_dir                               /alphadata01/bstocker/sofun/trunk/input/
+co2_forcing_file                        XXXco2filnamXXX
+ndep_noy_forcing_file                   XXXnoydepfilnamXXX
+ndep_nhx_forcing_file                   XXXnhxdepfilnamXXX
+nfert_noy_forcing_file                  XXXnoyfertfilnamXXX
+nfert_nhx_forcing_file                  XXXnhxfertfilnamXXX
+do_grharvest_forcing_file               XXXgrharvestfilnamXXX
+
+# Select one of 'fapar3g', 'evi_modis', or 'fpar_modis' (global, not implemented), or 'dfapar_MODIS_FPAR_MCD15A3H' (site-scale)
+fapar_forcing_source                    dfapar_MODIS_FPAR_MCD15A3H
+
+# switch for applying soil moisture stress function on GPP
+soilmstress                             .false.
+
+# switches for reading data in as forcing or calculating it online
+in_ppfd                                 XXXin_ppfdXXX
+in_netrad                               XXXin_netradXXX
+
+# switches for constant environmental boundary conditions
+const_clim_year                         XXXconst_clim_yearXXX
+const_lu_year                           XXXconst_lu_yearXXX
+const_co2_year                          XXXconst_co2_yearXXX
+const_ndep_year                         XXXconst_ndep_yearXXX
+const_nfert_year                        XXXconst_nfert_yearXXX
+
+# limit period for which daily output is written
+daily_out_startyr                       XXXdaily_out_startyrXXX
+daily_out_endyr                         XXXdaily_out_endyrXXX
+
+# NetCDF output periodicity (d)
+outdt                                   1
+
+# boolean defining which PFTs to include (lpft1: pftcode=1)
+lTrE                                    XXXlTrEXXX
+lTNE                                    XXXlTNEXXX
+lTrD                                    XXXlTrDXXX
+lTND                                    XXXlTNDXXX
+lGr3                                    XXXlGr3XXX
+lGN3                                    XXXlGN3XXX
+lGr4                                    XXXlGr4XXX
+
+# Variables written to output (core)
+loutdgpp                                XXXloutdgppXXX
+loutdrd                                 XXXloutdrdXXX
+loutdtransp                             XXXloutdtranspXXX
+loutdnpp                                XXXloutdnppXXX
+loutdnup                                XXXloutdnupXXX
+loutdcex                                XXXloutdcexXXX
+loutdCleaf                              XXXloutdCleafXXX
+loutdCroot                              XXXloutdCrootXXX
+loutdClabl                              XXXloutdClablXXX
+loutdNlabl                              XXXloutdNlablXXX
+loutdClitt                              XXXloutdClittXXX
+loutdNlitt                              XXXloutdNlittXXX
+loutdCsoil                              XXXloutdCsoilXXX
+loutdNsoil                              XXXloutdNsoilXXX
+loutdlai                                XXXloutdlaiXXX
+loutdfapar                              XXXloutdfaparXXX
+loutdninorg                             .false.
+loutdtemp_soil                          XXXloutdtemp_soilXXX
+loutdtemp                               XXXloutdtempXXX
+
+# Variables written to NetCDF output (core)
+lncoutdtemp                             XXXlncoutdtempXXX
+lncoutdfapar                            XXXlncoutdfaparXXX
+lncoutdgpp                              XXXlncoutdgppXXX 
+lncoutdwaterbal                         XXXlncoutdwaterbalXXX 
+
+# Variables written to output by module
+loutplant                               XXXloutplantXXX
+loutalloc                               XXXloutallocXXX
+loutgpp                                 XXXloutgppXXX
+loutnpp                                 XXXloutnppXXX
+loutwaterbal                            XXXloutwaterbalXXX
+loutntransform                          XXXloutntransformXXX
+loutnuptake                             XXXloutnuptakeXXX
+loutlittersom                           XXXloutlittersomXXX
+loutturnover                            XXXloutturnoverXXX
+loutlanduse                             XXXloutlanduseXXX
+loutforcing                             XXXloutforcingXXX
+
+#                                      |
+# write value behind this position:    |->
+## EOF 
