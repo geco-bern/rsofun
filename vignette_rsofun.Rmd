@@ -91,6 +91,7 @@ settings_input <-  list(
 - `vpd`: See `temperature`.
 - `ppfd`: See `temperature`.
 - `netrad`: See `temperature`.
+- `fapar`: A character string specifying the type of fAPAR data used as input (e.g. `"MODIS_FPAR_MCD15A3H"`), or `NA` in case no fAPAR data is used as forcing (internally simulated fAPAR).
 
 ## Model setup
 Define model setup as a list.
@@ -132,7 +133,7 @@ settings_calib <- list(
 # Workflow
 
 ## Prepare simulation setup
-Create run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information.
+Create a run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information.
 ```{r, eval=FALSE}
 settings_sims <- prepare_setup_sofun( settings = settings_sims )
 ```
@@ -140,7 +141,7 @@ settings_sims <- prepare_setup_sofun( settings = settings_sims )
 ## Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`.
 ```{r, eval=FALSE}
-out <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims )
+inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims )
 ```
 
 ## Run the model

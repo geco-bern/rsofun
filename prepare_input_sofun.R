@@ -451,24 +451,25 @@ get_watch_daily <- function( lon, lat, elv, date_start, date_end, settings_input
 
   require(dplyr)
   require(lubridate)
+  require(purrr)
 
   ## WATCH-WFDEI data is available monthly. Create vector with all required months.
   bymonths <- seq( date_start, date_end, by = "months" )
 
   ## extract temperature data
-  ddf_temp <- lapply( as.list(bymonths), function(x) get_pointdata_temp_wfdei( lon, lat, month(x), year(x), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
+  ddf_temp <- purrr:map( as.list(bymonths), ~get_pointdata_temp_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows()
 
   ## extract precipitation data (sum of snowfall and rainfall)
-  ddf_prec <- lapply( as.list(bymonths), function(x) get_pointdata_prec_wfdei( lon, lat, month(x), year(x), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
+  ddf_prec <- purrr:map( as.list(bymonths), ~get_pointdata_prec_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows()
 
   ## extract PPFD data
-  ddf_ppfd <- lapply( as.list(bymonths), function(x) get_pointdata_ppfd_wfdei( lon, lat, month(x), year(x), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
+  ddf_ppfd <- purrr:map( as.list(bymonths), ~get_pointdata_ppfd_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows()
 
   ## extract air humidity data and calculate VPD based on temperature
-  ddf_qair <- lapply( as.list(bymonths), function(x) get_pointdata_qair_wfdei( lon, lat, month(x), year(x), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
+  ddf_qair <- purrr:map( as.list(bymonths), ~get_pointdata_qair_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows() %>%
               ## merge temperature data in here for VPD calculation
               left_join( ddf_temp, by = "date" ) %>%
@@ -646,8 +647,9 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf ){
 expand_clim_cru_monthly <- function( mdf ){
 
   require(dplyr)
+  require(purr)
 
-  ddf_yr_list <- lapply( as.list( unique( year( mdf$date ) ) ), function( x ) expand_clim_cru_monthly_byyr( x, mdf ) )
+  ddf_yr_list <- purrr::map( as.list( unique( year( mdf$date ) ) ), ~expand_clim_cru_monthly_byyr( ., mdf ) )
 
   ddf <- bind_rows( ddf_yr_list )
 
@@ -896,6 +898,7 @@ fill_gaps <- function( vec, is.prec = FALSE ){
 
 ## write output with standard formatting
 write_sofunformatted <- function( filnam, data ){
+
   if ( is.vector( data ) ){
     len <- length(data)
     formatted <- vector( "character", len )
@@ -911,13 +914,227 @@ write_sofunformatted <- function( filnam, data ){
     }
     writeLines( formatted, filnam )    
   }
+
 }
 
 
+##-----------------------------------------------------------
+## Returns a dataframe with all climate input data for one site
+## and writes this to CSV and Fortran-formatted input files
+## on the fly.
+##-----------------------------------------------------------
+prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims ){
+
+  require(purrr)
+  require(dplyr)
+
+  ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
+  ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE )
+
+  ##----------------------------------------------------------------------
+  ## Read daily FLUXNET 2015 meteo data for each site (reads all variables)
+  ## A file must be found containing the site name in the file name and located in <settings_input$path_fluxnet2015>
+  ##----------------------------------------------------------------------
+  if (any( c( 
+    "fluxnet2015" %in% settings_input$temperature, 
+    "fluxnet2015" %in% settings_input$precipitation, 
+    "fluxnet2015" %in% settings_input$vpd, 
+    "fluxnet2015" %in% settings_input$ppfd
+    ))){
+
+    ## Determine file name, given <settings_input$path_fluxnet2015>
+    ## look for data for this site in the given directory
+    filelist <- list.files(settings_input$path_fluxnet2015)
+
+    idx <- purrr::map(filelist, ~grepl(sitename, .)) %>% unlist %>% which()
+    filelist <- filelist[idx]
+    if (length(idx)>1) {
+      idx <- purrr::map(filelist, ~grepl("FULLSET", .)) %>% unlist %>% which()
+    }
+    filelist <- filelist[idx]
+    if (length(idx)>1) {
+      idx <- purrr::map(filelist, ~grepl("3.csv", .)) %>% unlist %>% which()
+    } else {
+      idx <- 1
+    }
+    filn <- filelist[idx]
+
+    ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
+    ddf_meteo_fluxnet2015 <- get_meteo_fluxnet2015( sitename, path=paste0(settings_input$path_fluxnet2015, filn), freq="d" ) %>%
+      rename( temp_fluxnet2015 = temp, 
+              prec_fluxnet2015 = prec,
+              nrad_fluxnet2015 = nrad,
+              ppfd_fluxnet2015 = ppfd,
+              vpd_fluxnet2015  = vpd, 
+              ccov_fluxnet2015 = ccov
+              )
+
+    ddf <- ddf %>% left_join( ddf_meteo_fluxnet2015, by="date" )
+
+  }
+
+  ##----------------------------------------------------------------------
+  ## Read WATCH-WFDEI data (extracting from NetCDF files for this site)
+  ##----------------------------------------------------------------------
+  if (any( c( 
+    "watch_wfdei" %in% settings_input$temperature, 
+    "watch_wfdei" %in% settings_input$precipitation, 
+    "watch_wfdei" %in% settings_input$vpd, 
+    "watch_wfdei" %in% settings_input$ppfd
+    ))){
+
+    ddf_watch <- get_watch_daily( lon = settings_sims$lon[[sitename]], 
+                                  lat = settings_sims$lat[[sitename]], 
+                                  elv = settings_sims$elv[[sitename]], 
+                                  date_start = settings_sims$date_start[[sitename]], 
+                                  date_end= settings_sims$date_end[[sitename]], 
+                                  settings_input
+                                  )
+
+    ddf <- ddf %>% left_join( ddf_watch, by="date" )
+
+  }
+
+  ##----------------------------------------------------------------------
+  ## Read CRU data (extracting from NetCDF files for this site)
+  ##----------------------------------------------------------------------
+  if (any( c( 
+    "cru" %in% settings_input$temperature, 
+    "cru" %in% settings_input$precipitation, 
+    "cru" %in% settings_input$vpd, 
+    "cru" %in% settings_input$ppfd
+    ))){
+
+    ## First get monthly data
+    mdf_cru <- get_clim_cru_monthly( lon, lat, settings = settings_input )
+
+    ## expand monthly to daily data
+    ddf_cru <- expand_clim_cru_monthly( mdf_cru )
+
+    ddf <- ddf %>% left_join( ddf_cru, by = "date" )
+
+  }
+
+  ##----------------------------------------------------------------------
+  ## Write climate data to CSV files: 
+  ## <settings_sims$path_input>/sitedata/climate/<sitename>/clim_daily_<sitename>.csv 
+  ## (may be read by Python directly???)
+  ##----------------------------------------------------------------------
+  dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
+  if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
+  filn <- paste0( dir, "/clim_daily_", sitename, ".csv" )
+  # print(paste( "writing", filn))
+  write_csv( ddf, path = filn )
+
+  ##----------------------------------------------------------------------
+  ## Write fortran-formatted ascii files with daily values for each year 
+  ## based on the CSV file written above (clim_daily_<sitename>.csv)
+  ## Necessary because reading from CSV is a pain in Fortran.
+  ##----------------------------------------------------------------------
+  if (settings_sims$implementation=="fortran"){
+
+    # print("Warning: flexible priorities for input sources not implemented. Using first FLUXNET-2015 data, then WATCH-WFDEI, then CRU" )
+
+    out <- ddf
+
+    ## temperature
+    out <- out %>%  mutate( temp = temp_fluxnet2015 )
+    if ("temp_watch" %in% names(ddf) && "temp_cru_int" %in% names(ddf) ){
+      out <- out %>% mutate( temp = ifelse( !is.na(temp), temp, ifelse( !is.na(temp_watch), temp_watch, temp_cru_int ) ) )
+    } else if ("temp_watch" %in% names(ddf)){
+      out <- out %>% mutate( temp = ifelse( !is.na(temp), temp, temp_watch ) )
+    }
+
+    ## precipitation
+    out <- out %>%  mutate( prec = prec_fluxnet2015 )
+    if ("prec_watch" %in% names(ddf) && "prec_cru_int" %in% names(ddf) ){
+      out <- out %>% mutate( prec = ifelse( !is.na(prec), prec, ifelse( !is.na(prec_watch), prec_watch, prec_cru_gen ) ) )
+    } else if ("prec_watch" %in% names(ddf)){
+      out <- out %>% mutate( prec = ifelse( !is.na(prec), prec, prec_watch ) )
+    }
+
+    ## cloud cover
+    if ( "ccov_cru_int" %in% names(ddf) ){
+      out <- out %>%  mutate( ccov = ccov_cru_int )
+    } else {
+      out <- out %>%  mutate( ccov = NA )
+    }
+    
+    ## VPD
+    out <- out %>%  mutate( vpd = vpd_fluxnet2015 )
+    if ("vpd_qair_watch_temp_watch" %in% names(ddf) && "vpd_vap_cru_temp_cru_int" %in% names(ddf) ){
+      out <- out %>% mutate( vpd = ifelse( !is.na(vpd), vpd, ifelse( !is.na(vpd_qair_watch_temp_watch), vpd_qair_watch_temp_watch, vpd_vap_cru_temp_cru_int ) ) )
+    } else if ("vpd_qair_watch_temp_watch" %in% names(ddf)){
+      out <- out %>% mutate( vpd = ifelse( !is.na(vpd), vpd, temp_watch ) )
+    }
+
+    ## ppfd
+    out <- out %>%  mutate( ppfd = ppfd_fluxnet2015 )
+    if ("ppfd_watch" %in% names(ddf) ){
+      out <- out %>% mutate( ppfd = ifelse( !is.na(ppfd), ppfd, ifelse( !is.na(ppfd_watch), ppfd_watch, NA ) ) )
+    } 
+
+    out <- out %>% mutate(  temp   = fill_gaps( temp   ),
+                            prec   = fill_gaps( prec, is.prec=TRUE ),
+                            temp   = fill_gaps( temp   ),
+                            ccov   = fill_gaps( ccov   ),
+                            vpd    = fill_gaps( vpd    ),
+                            ppfd   = fill_gaps( ppfd   )
+                            # netrad = ifelse( in_netrad, fill_gaps( netrad ), NA )
+                           ) %>% 
+                    dplyr::filter( !( month(date)==2 & mday(date)==29 ) )
+                   
+
+    for (yr in unique(year(out$date))){
+
+      sub <- dplyr::filter( out, year(date)==yr )
+
+      dirnam <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename, "/", as.character(yr), "/" )
+      if (!dir.exists(dirnam)) system( paste0( "mkdir -p ", dirnam ) )
+
+      filnam <- paste0( dirnam, "dtemp_", sitename, "_", yr, ".txt" )
+      write_sofunformatted( filnam, sub$temp )
+      
+      filnam <- paste0( dirnam, "dprec_", sitename, "_", yr, ".txt" )
+      write_sofunformatted( filnam, sub$prec )
+
+      filnam <- paste0( dirnam, "dfsun_", sitename, "_", yr, ".txt" )
+      write_sofunformatted( filnam, ( 100.0 - sub$ccov ) / 100.0 )
+
+      filnam <- paste0( dirnam, "dvpd_", sitename, "_", yr, ".txt" )
+      write_sofunformatted( filnam, sub$vpd )
+
+      filnam <- paste0( dirnam, "dppfd_", sitename, "_", yr, ".txt" )
+      write_sofunformatted( filnam, sub$ppfd )
+
+    }          
+  
+  }
+
+  return( ddf )
+
+}
+
+
+##-----------------------------------------------------------
+## Returns a dataframe with fAPAR input data for one site
+## and writes this to CSV and Fortran-formatted input files
+## on the fly.
+##-----------------------------------------------------------
+prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings_sims ){
+
+}
+
+
+
+##-----------------------------------------------------------
+## Creates all the input files/links necessary to run simulations
+##-----------------------------------------------------------
 prepare_input_sofun <- function( settings_input, settings_sims ){
 
   require(lubridate)
   require(dplyr)
+  require(purrr)
 
   if (settings_sims$lonlat){
     ##-----------------------------------------------------------
@@ -1012,198 +1229,17 @@ prepare_input_sofun <- function( settings_input, settings_sims ){
   } else {
     ##-----------------------------------------------------------
     ## Site-scale simulation(s)
+    ## Ensemble of multiple site-scale simulations that "go toghether"
+    ## In this case, <settings$name> is the name of the ensemble (e.g., "fluxnet2015")
     ##-----------------------------------------------------------
-    if (settings_sims$ensemble){
-      ##-----------------------------------------------------------
-      ## Ensemble: multiple site-scale simulations that "go toghether"
-      ## In this case, <settings$name> is the name of the ensemble (e.g., "fluxnet2015")
-      ##-----------------------------------------------------------        
-      for (sitename in settings_sims$sitenames){
+    # ddf_climate <- lapply( as.list(settings_sims$sitenames), function(x) prepare_input_sofun_climate_bysite( x, settings_input, settings_sims ) ) %>%
+    #                bind_rows()
+    ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims ) ) %>%
+                    bind_rows()
+    
 
-        ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
-        ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE )
-
-        ##----------------------------------------------------------------------
-        ## Read daily FLUXNET 2015 meteo data for each site (reads all variables)
-        ## A file must be found containing the site name in the file name and located in <settings_input$path_fluxnet2015>
-        ##----------------------------------------------------------------------
-        if (any( c( 
-          "fluxnet2015" %in% settings_input$temperature, 
-          "fluxnet2015" %in% settings_input$precipitation, 
-          "fluxnet2015" %in% settings_input$vpd, 
-          "fluxnet2015" %in% settings_input$ppfd
-          ))){
-
-          ## Determine file name, given <settings_input$path_fluxnet2015>
-          ## look for data for this site in the given directory
-          filelist <- list.files(settings_input$path_fluxnet2015)
-
-          idx <- lapply(filelist, function(x) grepl(sitename, x)) %>% unlist %>% which()
-          filelist <- filelist[idx]
-          if (length(idx)>1) {
-            idx <- lapply(filelist, function(x) grepl("FULLSET", x)) %>% unlist %>% which()
-          }
-          filelist <- filelist[idx]
-          if (length(idx)>1) {
-            idx <- lapply(filelist, function(x) grepl("3.csv", x)) %>% unlist %>% which()
-          } else {
-            idx <- 1
-          }
-          filn <- filelist[idx]
-
-          ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
-          ddf_meteo_fluxnet2015 <- get_meteo_fluxnet2015( sitename, path=paste0(settings_input$path_fluxnet2015, filn), freq="d" ) %>%
-            rename( temp_fluxnet2015 = temp, 
-                    prec_fluxnet2015 = prec,
-                    nrad_fluxnet2015 = nrad,
-                    ppfd_fluxnet2015 = ppfd,
-                    vpd_fluxnet2015  = vpd, 
-                    ccov_fluxnet2015 = ccov
-                    )
-
-          ddf <- ddf %>% left_join( ddf_meteo_fluxnet2015, by="date" )
-
-        }
-
-        ##----------------------------------------------------------------------
-        ## Read WATCH-WFDEI data (extracting from NetCDF files for this site)
-        ##----------------------------------------------------------------------
-        if (any( c( 
-          "watch_wfdei" %in% settings_input$temperature, 
-          "watch_wfdei" %in% settings_input$precipitation, 
-          "watch_wfdei" %in% settings_input$vpd, 
-          "watch_wfdei" %in% settings_input$ppfd
-          ))){
-
-          ddf_watch <- get_watch_daily( lon = settings_sims$lon[[sitename]], 
-                                        lat = settings_sims$lat[[sitename]], 
-                                        elv = settings_sims$elv[[sitename]], 
-                                        date_start = settings_sims$date_start[[sitename]], 
-                                        date_end= settings_sims$date_end[[sitename]], 
-                                        settings_input
-                                        )
-
-          ddf <- ddf %>% left_join( ddf_watch, by="date" )
-
-        }
-
-        ##----------------------------------------------------------------------
-        ## Read CRU data (extracting from NetCDF files for this site)
-        ##----------------------------------------------------------------------
-        if (any( c( 
-          "cru" %in% settings_input$temperature, 
-          "cru" %in% settings_input$precipitation, 
-          "cru" %in% settings_input$vpd, 
-          "cru" %in% settings_input$ppfd
-          ))){
-
-          ## First get monthly data
-          mdf_cru <- get_clim_cru_monthly( lon, lat, settings = settings_input )
-
-          ## expand monthly to daily data
-          ddf_cru <- expand_clim_cru_monthly( mdf_cru )
-
-          ddf <- ddf %>% left_join( ddf_cru, by = "date" )
-
-        }
-
-        ##----------------------------------------------------------------------
-        ## Write to CSV files: <settings_sims$path_input>/sitedata/climate/<sitename>/clim_daily_<sitename>.csv (may be read by Python directly)
-        ##----------------------------------------------------------------------
-        dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
-        if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
-        filn <- paste0( dir, "/clim_daily_", sitename, ".csv" )
-        print(paste( "writing", filn))
-        write_csv( ddf, path = filn )
-
-        ##----------------------------------------------------------------------
-        ## Write fortran-formatted ascii files with daily values for each year based on the CSV file written above (clim_daily_<sitename>.csv)
-        ##----------------------------------------------------------------------
-        if (settings_sims$implementation=="fortran"){
-
-          print("Warning: flexible priorities for input sources not implemented. Using first FLUXNET-2015 data, then WATCH-WFDEI, then CRU" )
-
-          out <- ddf
-
-          ## temperature
-          out <- out %>%  mutate( temp = temp_fluxnet2015 )
-          if ("temp_watch" %in% names(ddf) && "temp_cru_int" %in% names(ddf) ){
-            out <- out %>% mutate( temp = ifelse( !is.na(temp), temp, ifelse( !is.na(temp_watch), temp_watch, temp_cru_int ) ) )
-          } else if ("temp_watch" %in% names(ddf)){
-            out <- out %>% mutate( temp = ifelse( !is.na(temp), temp, temp_watch ) )
-          }
-
-          ## precipitation
-          out <- out %>%  mutate( prec = prec_fluxnet2015 )
-          if ("prec_watch" %in% names(ddf) && "prec_cru_int" %in% names(ddf) ){
-            out <- out %>% mutate( prec = ifelse( !is.na(prec), prec, ifelse( !is.na(prec_watch), prec_watch, prec_cru_gen ) ) )
-          } else if ("prec_watch" %in% names(ddf)){
-            out <- out %>% mutate( prec = ifelse( !is.na(prec), prec, prec_watch ) )
-          }
-
-          ## cloud cover
-          if ( "ccov_cru_int" %in% names(ddf) ){
-            out <- out %>%  mutate( ccov = ccov_cru_int )
-          } else {
-            out <- out %>%  mutate( ccov = NA )
-          }
-          
-          ## VPD
-          out <- out %>%  mutate( vpd = vpd_fluxnet2015 )
-          if ("vpd_qair_watch_temp_watch" %in% names(ddf) && "vpd_vap_cru_temp_cru_int" %in% names(ddf) ){
-            out <- out %>% mutate( vpd = ifelse( !is.na(vpd), vpd, ifelse( !is.na(vpd_qair_watch_temp_watch), vpd_qair_watch_temp_watch, vpd_vap_cru_temp_cru_int ) ) )
-          } else if ("vpd_qair_watch_temp_watch" %in% names(ddf)){
-            out <- out %>% mutate( vpd = ifelse( !is.na(vpd), vpd, temp_watch ) )
-          }
-
-          ## ppfd
-          out <- out %>%  mutate( ppfd = ppfd_fluxnet2015 )
-          if ("ppfd_watch" %in% names(ddf) ){
-            out <- out %>% mutate( ppfd = ifelse( !is.na(ppfd), ppfd, ifelse( !is.na(ppfd_watch), ppfd_watch, NA ) ) )
-          } 
-
-          out <- out %>% mutate(  temp   = fill_gaps( temp   ),
-                                  prec   = fill_gaps( prec, is.prec=TRUE ),
-                                  temp   = fill_gaps( temp   ),
-                                  ccov   = fill_gaps( ccov   ),
-                                  vpd    = fill_gaps( vpd    ),
-                                  ppfd   = fill_gaps( ppfd   )
-                                  # netrad = ifelse( in_netrad, fill_gaps( netrad ), NA )
-                                 ) %>% 
-                          dplyr::filter( !( month(date)==2 & mday(date)==29 ) )
-                         
-
-          for (yr in unique(year(out$date))){
-
-            sub <- dplyr::filter( out, year(date)==yr )
-
-            dirnam <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename, "/", as.character(yr), "/" )
-            if (!dir.exists(dirnam)) system( paste0( "mkdir -p ", dirnam ) )
-
-            filnam <- paste0( dirnam, "dtemp_", sitename, "_", yr, ".txt" )
-            write_sofunformatted( filnam, sub$temp )
-            
-            filnam <- paste0( dirnam, "dprec_", sitename, "_", yr, ".txt" )
-            write_sofunformatted( filnam, sub$prec )
-
-            filnam <- paste0( dirnam, "dfsun_", sitename, "_", yr, ".txt" )
-            write_sofunformatted( filnam, ( 100.0 - sub$ccov ) / 100.0 )
-
-            filnam <- paste0( dirnam, "dvpd_", sitename, "_", yr, ".txt" )
-            write_sofunformatted( filnam, sub$vpd )
-
-            filnam <- paste0( dirnam, "dppfd_", sitename, "_", yr, ".txt" )
-            write_sofunformatted( filnam, sub$ppfd )
-
-          }          
-        
-        }
-
-      }
-
-    }
   }
 
-  return("Hi there.")
+  return("Brexit.")
 
 }

@@ -104,6 +104,7 @@ prepare_setup_sofun <- function( settings ){
   require(readr)
   require(dplyr)
   require(lubridate)
+  require(purrr)
 
   if (settings$lonlat){
     ##-----------------------------------------------------------
@@ -148,13 +149,13 @@ prepare_setup_sofun <- function( settings ){
       ##--------------------------------------
       ## Start year
       year_start <- sapply( siteinfo[,1], function(x) siteinfo$year_start[ which(siteinfo[,1]==x) ] ) %>% as.list()
-      date_start <- lapply( year_start, function(x) ymd( paste0( x, "-01-01" )) )
+      date_start <- purrr::map( year_start, ~ymd( paste0( ., "-01-01" ) ) )
       sitenam_colnam <- names(siteinfo)[1]
       names(date_start) <- siteinfo[,1][[sitenam_colnam]]
 
       ## End year
       year_end <- sapply( siteinfo[,1], function(x) siteinfo$year_end[ which(siteinfo[,1]==x) ] ) %>% as.list()
-      date_end <- lapply( year_end, function(x) ymd( paste0( x, "-01-01" )) )
+      date_end <- purrr::map( year_end, ~ymd( paste0( ., "-01-01" ) ) )
       names(date_end) <- siteinfo[,1][[sitenam_colnam]]
 
       ## Longitude
@@ -189,21 +190,21 @@ prepare_setup_sofun <- function( settings ){
       print("writing site parameter files...")
       dirnam <- paste0( settings$path_input, "/site_paramfils/" )
       if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
-      settings$path_site_paramfil <- lapply( as.list(settings$sitenames), function(x) write_site_parameter_bysite( x, settings ) )
+      settings$path_site_paramfil <- purrr::map( as.list(settings$sitenames), ~write_site_parameter_bysite( ., settings ) )
       names(settings$path_site_paramfil) <- siteinfo[,1][[sitenam_colnam]]
 
       ## Write simulation parameter files for each site
       print("writing simulation parameter files...")
       dirnam <- paste0( settings$path_input, "/run/" )
       if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
-      settings$path_simulation_paramfil <- lapply( as.list(settings$sitenames), function(x) write_simulation_parameter_bysite( x, settings ) )
+      settings$path_simulation_paramfil <- purrr::map( as.list(settings$sitenames), ~write_simulation_parameter_bysite( ., settings ) )
       names(settings$path_simulation_paramfil) <- siteinfo[,1][[sitenam_colnam]]
 
       ## Write runnames (typically corresponds to site names) belonging to this ensemble into a text file 
       ## located in the run directory.
       settings$path_runnames <- paste0( settings$path_input, "run/runnames_", settings$name, ".txt" )
       zz <- file( settings$path_runnames, "w")
-      tmp <- lapply( as.list(settings$sitenames), function(x) cat( x, "\n", file=zz ) )
+      tmp <- purrr::map( as.list(settings$sitenames), ~cat( ., "\n", file=zz ) )
       close(zz)
 
       ##--------------------------------------
