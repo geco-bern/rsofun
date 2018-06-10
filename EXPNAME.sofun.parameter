@@ -21,7 +21,6 @@ nyeartrend                              XXXnyeartrendXXX
 modparfil                               params_modl.dat
 
 # input files
-input_dir                               /alphadata01/bstocker/sofun/trunk/input/
 co2_forcing_file                        XXXco2filnamXXX
 ndep_noy_forcing_file                   XXXnoydepfilnamXXX
 ndep_nhx_forcing_file                   XXXnhxdepfilnamXXX

@@ -385,7 +385,7 @@ get_pointdata_monthly_cru <- function( varnam, lon, lat, settings, yrend ){
 
   if ( length( filn )!=0 ){
 
-    cmd <- paste( "./extract_pointdata_byfil.sh ", filn, varnam, "lon", "lat", sprintf("%.2f",lon), sprintf("%.2f",lat) )
+    cmd <- paste( "./extract_pointdata_byfil.sh ", paste0( settings$path_cru, filn ), varnam, "lon", "lat", sprintf("%.2f",lon), sprintf("%.2f",lat) )
     print( paste( "executing command:", cmd ) )
     system( cmd )
     mdata <- read.table( "./out.txt" )$V1
@@ -452,7 +452,7 @@ download_watch_wfdei_from_cx1_path <- function( path, getfiles ){
   subdir <- getfiles %>% dirname() %>% unique()
   if (!dir.exists(paste0( path, "/", subdir ))) system( paste0("mkdir -p ", paste0( path, "/", subdir ) ) )
 
-  uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+  if (!exists("uname")) uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
   error <- purrr::map( as.list(getfiles[1]), ~system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, ., " ", paste0( path, subdir ) ) ) )
 
   ## Show files in directory
@@ -463,11 +463,11 @@ download_watch_wfdei_from_cx1_path <- function( path, getfiles ){
 
 
 ## Returns the file names of missing files for this year
-check_watch_wfdei_year <- function( year, var, settings_input ){
+check_watch_wfdei_year <- function( year, varnam, settings_input ){
 
   ## construct file names of all months' files (12 for each year)
-  allfiles <- purrr::map_chr( as.list(sprintf("%02d", 1:12 )), ~paste0( var, "_daily/", var, "_daily_WFDEI_", as.character(year), ., ".nc" ) )
-  avlfiles <- list.files( settings_input$path_watch_wfdei, pattern = paste0( var, "_daily_WFDEI_", as.character(year), ".*.nc"), recursive = TRUE )
+  allfiles <- purrr::map_chr( as.list(sprintf("%02d", 1:12 )), ~paste0( varnam, "_daily/", varnam, "_daily_WFDEI_", as.character(year), ., ".nc" ) )
+  avlfiles <- list.files( settings_input$path_watch_wfdei, pattern = paste0( varnam, "_daily_WFDEI_", as.character(year), ".*.nc"), recursive = TRUE )
 
   getfiles <- allfiles[!(allfiles %in% avlfiles)]
 
@@ -476,9 +476,9 @@ check_watch_wfdei_year <- function( year, var, settings_input ){
 }
 
 ##-----------------------------------------------------------
-## Manages the path specification for fluxnet data download from CX1
+## Manages the path specification for WATCH-WFDEI data download from CX1
 ##-----------------------------------------------------------
-download_watch_wfdei_from_cx1 <- function( var, settings_input, settings_sims ){
+download_watch_wfdei_from_cx1 <- function( varnam, settings_input, settings_sims ){
 
   require(rlang)
 
@@ -488,7 +488,7 @@ download_watch_wfdei_from_cx1 <- function( var, settings_input, settings_sims ){
                    by   = 1 ) %>% as.list
 
   ## Determine missing files for this variable, given start and end years of all the simulations in this ensemble
-  getfiles <- purrr::map( allyears, ~check_watch_wfdei_year( ., var, settings_input ) ) %>% unlist()
+  getfiles <- purrr::map( allyears, ~check_watch_wfdei_year( ., varnam, settings_input ) ) %>% unlist()
   
   ## Interactive part
   ans <- readline( prompt = "Do you have access to Imperial's CX1? (y/n) " )
@@ -504,10 +504,59 @@ download_watch_wfdei_from_cx1 <- function( var, settings_input, settings_sims ){
         error <- download_watch_wfdei_from_cx1_path( settings_input$path_watch_wfdei, getfiles )
       }
     } else {
-      abort( "FLUXNET 2015 data download not possible.")
+      abort( "WATCH-WFDEI data download not possible.")
     }
   } else {
-    abort( "FLUXNET 2015 data download not possible.")
+    abort( "WATCH-WFDEI data download not possible.")
+  }
+
+  return(error)
+
+}
+
+##-----------------------------------------------------------
+## Downloads CRU TS 4.01 data from CX1
+##-----------------------------------------------------------
+download_cru_from_cx1_filn <- function( varnam, settings_input, filn ){
+
+  origpath <- "/work/bstocker/labprentice/data/cru/ts_4.01/"
+  filn <-  paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc")
+  if (!dir.exists(settings_input$path_cru_ts4_01)) system(paste0("mkdir -p ", settings_input$path_cru_ts4_01))
+  if (!exists("uname")) uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+  system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, filn, " ", settings_input$path_cru_ts4_01 ) )
+
+  return(NULL)
+}
+
+##-----------------------------------------------------------
+## Manages the path specification for CRU TS 4.01 data download from CX1
+##-----------------------------------------------------------
+download_cru_from_cx1 <- function( varnam, settings_input ){
+
+  require(rlang)
+
+  ## the path of CRU TS 4.01 data on cx1
+  origpath <- "/work/bstocker/labprentice/data/cru/ts_4.01/" 
+  filn <-  paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc")
+  
+  ## Interactive part
+  ans <- readline( prompt = "Do you have access to Imperial's CX1? (y/n) " )
+  if (ans=="y"){
+    ans <- readline( prompt = "Have you connected to Imperial's VPN? (y/n) " )
+    if (ans=="y"){
+      ans <- readline( prompt = paste0("Are you still happy with downloading to ", settings_input$path_cru_ts4_01, "? (y/n)") )
+      if (ans=="y"){
+        error <- download_cru_from_cx1_filn( varnam, settings_input, filn = filn )
+      } else {
+        path <- readline( prompt = "Please specify a new path: " )
+        settings_input$path_cru_ts4_01 <- path
+        error <- download_cru_from_cx1_filn( varnam, settings_input, filn = filn )
+      }
+    } else {
+      abort( "CRU TS 4.01 data download not possible.")
+    }
+  } else {
+    abort( "CRU TS 4.01 data download not possible.")
   }
 
   return(error)
@@ -575,7 +624,7 @@ check_download_fluxnet2015 <- function( settings_input, settings_sims, sitename=
 ##--------------------------------------------------------------------------
 ## Checks if WATCH-WFDEI files are available for this variable and initiates download if not.
 ##--------------------------------------------------------------------------
-check_download_watch_wfdei <- function( var, settings_input, settings_sims ){
+check_download_watch_wfdei <- function( varnam, settings_input, settings_sims ){
 
   require(purrr)
   require(dplyr)
@@ -583,7 +632,7 @@ check_download_watch_wfdei <- function( var, settings_input, settings_sims ){
 
   ## Determine file name, given <settings_input$path_fluxnet2015>
   ## look for data in the given directory
-  filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( var, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+  filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( varnam, "_daily_WFDEI_.*.nc"), recursive = TRUE )
 
   if (length(filelist)==0){
 
@@ -592,7 +641,7 @@ check_download_watch_wfdei <- function( var, settings_input, settings_sims ){
 
     ## Search at a different location?
     path <- readline( prompt="Would you like to search for files recursively from a different directory? Enter the path from which search is to be done: ")
-    filelist <- list.files( path, pattern = paste0( var, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+    filelist <- list.files( path, pattern = paste0( varnam, "_daily_WFDEI_.*.nc"), recursive = TRUE )
 
     if (length(filelist)==0){
      
@@ -602,20 +651,20 @@ check_download_watch_wfdei <- function( var, settings_input, settings_sims ){
       
       if (ans=="y"){
       
-        filelist <- list.files( "~/", pattern = paste0( var, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+        filelist <- list.files( "~/", pattern = paste0( varnam, "_daily_WFDEI_.*.nc"), recursive = TRUE )
       
       } else {
         
         ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_watch_wfdei>
         warn( "Initiating download from Imperial CX1..." )
-        error <- download_watch_wfdei_from_cx1( var, settings_input, settings_sims )
-        filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( var, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+        error <- download_watch_wfdei_from_cx1( varnam, settings_input, settings_sims )
+        filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( varnam, "_daily_WFDEI_.*.nc"), recursive = TRUE )
       }
 
       if (length(filelist)==0){
         ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_watch_wfdei>
         warn( "Initiating download from Imperial CX1..." )
-        error <- download_watch_wfdei_from_cx1( var, settings_input, settings_sims )
+        error <- download_watch_wfdei_from_cx1( varnam, settings_input, settings_sims )
 
       }
 
@@ -624,8 +673,65 @@ check_download_watch_wfdei <- function( var, settings_input, settings_sims ){
   } 
 
   ## Check if files are now available at specified location.
-  filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( var, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+  filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( varnam, "_daily_WFDEI_.*.nc"), recursive = TRUE )
   if (length(filelist)==0) abort("Download of FLUXNET-2015_Tier1 data was not successful. No files found.")
+  
+}
+
+##--------------------------------------------------------------------------
+## Checks if CRU TS 4.01 files are available for this variable and initiates download if not.
+##--------------------------------------------------------------------------
+check_download_cru_ts4_01 <- function( varnam, settings_input, settings_sims ){
+
+  require(purrr)
+  require(dplyr)
+  require(rlang)
+
+  ## Determine file name, given <settings_input$path_fluxnet2015>
+  ## look for data in the given directory
+  filelist <- list.files( settings_input$path_cru_ts4_01, pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
+
+  if (length(filelist)==0){
+
+    ## No files found at specified location
+    warn( paste0("No files found for CRU TS 4.01 in directory ", settings_input$path_cru_ts4_01) )
+
+    ## Search at a different location?
+    path <- readline( prompt="Would you like to search for files recursively from a different directory? Enter the path from which search is to be done: ")
+    filelist <- list.files( path, pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
+
+    if (length(filelist)==0){
+     
+      ## Search from home
+      warn( paste0("Still nothing found at specified location ", path ) )
+      ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
+      
+      if (ans=="y"){
+      
+        filelist <- list.files( "~/", pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
+      
+      } else {
+        
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_cru_ts4_01>
+        warn( "Initiating download from Imperial CX1..." )
+        error <- download_cru_from_cx1( varnam, settings_input )
+        filelist <- list.files( settings_input$path_cru_ts4_01, pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
+      }
+
+      if (length(filelist)==0){
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_cru_ts4_01>
+        warn( "Initiating download from Imperial CX1..." )
+        error <- download_cru_from_cx1( varnam, settings_input )
+
+      }
+
+    }
+
+  } 
+
+  ## Check if files are now available at specified location.
+  filelist <- list.files( settings_input$path_cru_ts4_01, pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
+  if (length(filelist)==0) abort("Download of CRU TS 4.01 data was not successful. No files found.")
   
 }
 
@@ -712,7 +818,7 @@ check_download_cmip_co2 <- function( settings_input, settings_sims, sitename=NA 
   if (length(filelist)==0){
 
     ## get user name from user
-    uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+    if (!exists("uname")) uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
 
     origpath <- "/work/bstocker/labprentice/data/co2/"
 
@@ -751,23 +857,18 @@ get_watch_daily <- function( lon, lat, elv, date_start, date_end, settings_input
   bymonths <- seq( date_start, date_end, by = "months" )
 
   ## extract temperature data
-  
   ddf_temp <- purrr:map( as.list(bymonths), ~get_pointdata_temp_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows()
 
   ## extract precipitation data (sum of snowfall and rainfall)
-  
-  
   ddf_prec <- purrr:map( as.list(bymonths), ~get_pointdata_prec_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows()
 
   ## extract PPFD data
-  
   ddf_ppfd <- purrr:map( as.list(bymonths), ~get_pointdata_ppfd_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows()
 
   ## extract air humidity data and calculate VPD based on temperature
-  
   ddf_qair <- purrr:map( as.list(bymonths), ~get_pointdata_qair_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows() %>%
               ## merge temperature data in here for VPD calculation
@@ -792,55 +893,63 @@ get_watch_daily <- function( lon, lat, elv, date_start, date_end, settings_input
 ##--------------------------------------------------------------------
 ## Get monthly data from CRU
 ##--------------------------------------------------------------------
-get_clim_cru_monthly <- function( lon, lat, settings ){
+get_clim_cru_monthly <- function( lon, lat, settings, cruvars ){
 
   require(dplyr)
   require(lubridate)
 
   ## get last year for which data is available
-  filn <- list.files( settings$path_cru, pattern="tmp.dat.nc")
+  filn <- list.files( settings$path_cru_ts4_01, pattern="cld.dat.nc")
   start <- regexpr( 20, filn)[1]
   stop <- start + 3
   yrend <- substr( filn, start, stop ) %>% as.numeric %>% ifelse( length(.)==0, 2010, . )
 
-  ## air temperature
-  mdf_temp <- get_pointdata_monthly_cru( "tmp", lon, lat, settings, yrend=yrend )
+  ## cloud cover
+  mdf_ccov <- get_pointdata_monthly_cru( "cld", lon, lat, settings, yrend=yrend )
 
   ## Check if data is available at that location, otherwise use nearest gridcell
-  if (!is.data.frame(mdf_temp)){
+  if (!is.data.frame(mdf_ccov)){
     lon_look <- find_nearest_cruland_by_lat( lon, lat, paste0( settings$path_cru, filn ) )
-    mdf_temp <- get_pointdata_monthly_cru( "tmp", lon_look, lat, settings, yrend=yrend )
+    mdf_ccov <- get_pointdata_monthly_cru( "cld", lon_look, lat, settings, yrend=yrend )
   } else {
     lon_look <- lon
   }
-  mdf_temp <- mdf_temp %>% rename( temp_cru = mdata )    
-      
+  mdf_ccov <- mdf_ccov %>% rename( ccov_cru = mdata )    
+  mdf <- mdf_ccov    
+
   ## precipitation
-  mdf_prec <- get_pointdata_monthly_cru( "pre", lon_look, lat, settings, yrend=yrend ) %>% rename( prec_cru = mdata )
+  if ("prec" %in% cruvars){
+    mdf_prec <- get_pointdata_monthly_cru( "pre", lon_look, lat, settings, yrend=yrend ) %>% rename( prec_cru = mdata )
+    mdf <- mdf %>% left_join( mdf_prec, by = c("date", "year_dec") )
+  }
 
   ## wet days
-  mdf_wetd <- get_pointdata_monthly_cru( "wet", lon_look, lat, settings, yrend=yrend ) %>% rename( wetd_cru = mdata )
+  if ("wetd" %in% cruvars){
+    mdf_wetd <- get_pointdata_monthly_cru( "wet", lon_look, lat, settings, yrend=yrend ) %>% rename( wetd_cru = mdata )
+    mdf <- mdf %>% left_join( mdf_wetd, by = c("date", "year_dec") )
+  }
 
-  ## cloud cover
-  mdf_ccov <- get_pointdata_monthly_cru( "cld", lon_look, lat, settings, yrend=yrend ) %>% rename( ccov_cru = mdata )
+  ## air temperature
+  if ("temp" %in% cruvars){
+    mdf_temp <- get_pointdata_monthly_cru( "tmp", lon_look, lat, settings, yrend=yrend ) %>% rename( temp_cru = mdata )
+    mdf <- mdf %>% left_join( mdf_temp, by = c("date", "year_dec") )
+  }
 
   ## VPD 
   ## calculated as a function of vapour pressure and temperature, vapour
   ## pressure is given by CRU data.
-  mdf_vap <-  get_pointdata_monthly_cru( "vap", lon_look, lat, settings, yrend=yrend ) %>%  
-              rename( vap_cru = mdata ) %>%
-              ## merge temperature data in here for VPD calculation
-              left_join( mdf_temp, by =  c("date", "year_dec") ) %>%
-              ## calculate VPD (vap is in hPa)
-              mutate( vpd_vap_cru_temp_cru = calc_vpd( eact=1e2*vap_cru, tc=temp_cru ) ) %>% 
-              ## avoid duplicate 
-              select( -temp_cru )
+  if ("vap" %in% cruvars){
+    mdf_vap <-  get_pointdata_monthly_cru( "vap", lon_look, lat, settings, yrend=yrend ) %>%  
+                rename( vap_cru = mdata ) %>%
+                ## merge temperature data in here for VPD calculation
+                left_join( mdf_temp, by =  c("date", "year_dec") ) %>%
+                ## calculate VPD (vap is in hPa)
+                mutate( vpd_vap_cru_temp_cru = calc_vpd( eact=1e2*vap_cru, tc=temp_cru ) ) %>% 
+                ## avoid duplicate 
+                select( -temp_cru )
+    mdf <- mdf %>% left_join( mdf_vap, by = c("date", "year_dec") )
+  }
 
-  ## merge all data frames
-  mdf <- mdf_temp %>% left_join( mdf_prec, by = c("date", "year_dec") ) %>%
-                      left_join( mdf_wetd, by = c("date", "year_dec") ) %>%
-                      left_join( mdf_ccov, by = c("date", "year_dec") ) %>%
-                      left_join( mdf_vap , by = c("date", "year_dec") )
 
   return( mdf )
 
@@ -851,7 +960,7 @@ get_clim_cru_monthly <- function( lon, lat, settings ){
 ## Interpolates monthly data to daily data using polynomials or linear
 ## for a single year
 ##--------------------------------------------------------------------
-expand_clim_cru_monthly_byyr <- function( yr, mdf ){
+expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
 
   require(dplyr)
   require(lubridate)
@@ -868,74 +977,83 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf ){
   first <- mdf[1:12,] %>% select( -year_dec ) %>% mutate( date = date - years(1) )
   last  <- mdf[(nrow(mdf)-11):nrow(mdf),] %>% select( -year_dec ) %>% mutate( date = date + years(1) )
 
+  ddf <- init_dates_dataframe( yr, yr )
+
   ##--------------------------------------------------------------------
   ## air temperature: interpolate using polynomial
   ##--------------------------------------------------------------------
-  mtemp     <- dplyr::filter( mdf, year(date)==yr     )$temp_cru
-  mtemp_pvy <- dplyr::filter( mdf, year(date)==yr_pvy )$temp_cru
-  mtemp_nxt <- dplyr::filter( mdf, year(date)==yr_nxt )$temp_cru
-  if (length(mtemp_pvy)==0){
-    mtemp_pvy <- mtemp
-  }
-  if (length(mtemp_nxt)==0){
-    mtemp_nxt <- mtemp
-  }
+  if ("temp" %in% cruvars){
+    mtemp     <- dplyr::filter( mdf, year(date)==yr     )$temp_cru
+    mtemp_pvy <- dplyr::filter( mdf, year(date)==yr_pvy )$temp_cru
+    mtemp_nxt <- dplyr::filter( mdf, year(date)==yr_nxt )$temp_cru
+    if (length(mtemp_pvy)==0){
+      mtemp_pvy <- mtemp
+    }
+    if (length(mtemp_nxt)==0){
+      mtemp_nxt <- mtemp
+    }
 
-  ddf_temp <- init_dates_dataframe( yr, yr ) %>%
-              mutate( temp_cru_int = monthly2daily( mtemp, "polynom", mtemp_pvy[nmonth], mtemp_nxt[1], leapyear = leap_year(yr) ) )
+    ddf_temp <- init_dates_dataframe( yr, yr ) %>%
+                mutate( temp_cru_int = monthly2daily( mtemp, "polynom", mtemp_pvy[nmonth], mtemp_nxt[1], leapyear = leap_year(yr) ) )
+    ddf <- ddf %>% left_join( ddf_temp, by = c("date", "year_dec") )
+  }
 
   ##--------------------------------------------------------------------
   ## precipitation: interpolate using weather generator
   ##--------------------------------------------------------------------
-  mprec <- dplyr::filter( mdf, year(date)==yr )$prec_cru
-  mwetd <- dplyr::filter( mdf, year(date)==yr )$wetd_cru
+  if ("prec" %in% cruvars){
+    mprec <- dplyr::filter( mdf, year(date)==yr )$prec_cru
+    mwetd <- dplyr::filter( mdf, year(date)==yr )$wetd_cru
 
-  ddf_prec <- init_dates_dataframe( yr, yr)
-  if (any(!is.na(mprec))&&any(!is.na(mwetd))){
-    ddf_prec <- ddf_prec %>% mutate( prec_cru_gen = get_daily_prec( mprec, mwetd, leapyear = leap_year(yr) ) )
+    ddf_prec <- init_dates_dataframe( yr, yr)
+    if (any(!is.na(mprec))&&any(!is.na(mwetd))){
+      ddf_prec <- ddf_prec %>% mutate( prec_cru_gen = get_daily_prec( mprec, mwetd, leapyear = leap_year(yr) ) )
+    }
+    ddf <- ddf %>% left_join( ddf_prec, by = c("date", "year_dec") )
   }
 
   ##--------------------------------------------------------------------
   ## cloud cover: interpolate using polynomial
   ##--------------------------------------------------------------------
-  mccov     <- dplyr::filter( mdf, year(date)==yr     )$ccov_cru
-  mccov_pvy <- dplyr::filter( mdf, year(date)==yr_pvy )$ccov_cru
-  mccov_nxt <- dplyr::filter( mdf, year(date)==yr_nxt )$ccov_cru
-  if (length(mccov_pvy)==0){
-    mccov_pvy <- mccov
-  }
-  if (length(mccov_nxt)==0){
-    mccov_nxt <- mccov
-  }
+  if ("ccov" %in% cruvars){
+    mccov     <- dplyr::filter( mdf, year(date)==yr     )$ccov_cru
+    mccov_pvy <- dplyr::filter( mdf, year(date)==yr_pvy )$ccov_cru
+    mccov_nxt <- dplyr::filter( mdf, year(date)==yr_nxt )$ccov_cru
+    if (length(mccov_pvy)==0){
+      mccov_pvy <- mccov
+    }
+    if (length(mccov_nxt)==0){
+      mccov_nxt <- mccov
+    }
 
-  ddf_ccov <- init_dates_dataframe( yr, yr ) %>%
-              mutate( ccov_cru_int = monthly2daily( mccov, "polynom", mccov_pvy[nmonth], mccov_nxt[1], leapyear = leap_year(yr) ) )
+    ddf_ccov <- init_dates_dataframe( yr, yr ) %>%
+                mutate( ccov_cru_int = monthly2daily( mccov, "polynom", mccov_pvy[nmonth], mccov_nxt[1], leapyear = leap_year(yr) ) )
 
-  ## Reduce CCOV to a maximum 100%
-  ddf_ccov$ccov_cru_int[ ddf_ccov$ccov_cru_int>100.0 ] <- 100.0
+    ## Reduce CCOV to a maximum 100%
+    ddf_ccov$ccov_cru_int[ ddf_ccov$ccov_cru_int>100.0 ] <- 100.0
+    ddf <- ddf %>% left_join( ddf_ccov, by = c("date", "year_dec") )
+  }
 
   ##--------------------------------------------------------------------
   ## VPD: interpolate using polynomial
   ##--------------------------------------------------------------------
-  mvpd     <- dplyr::filter( mdf, year(date)==yr     )$vpd_vap_cru_temp_cru
-  mvpd_pvy <- dplyr::filter( mdf, year(date)==yr_pvy )$vpd_vap_cru_temp_cru
-  mvpd_nxt <- dplyr::filter( mdf, year(date)==yr_nxt )$vpd_vap_cru_temp_cru
-  if (length(mvpd_pvy)==0){
-    mvpd_pvy <- mvpd
+  if ("vap" %in% cruvars){
+    mvpd     <- dplyr::filter( mdf, year(date)==yr     )$vpd_vap_cru_temp_cru
+    mvpd_pvy <- dplyr::filter( mdf, year(date)==yr_pvy )$vpd_vap_cru_temp_cru
+    mvpd_nxt <- dplyr::filter( mdf, year(date)==yr_nxt )$vpd_vap_cru_temp_cru
+    if (length(mvpd_pvy)==0){
+      mvpd_pvy <- mvpd
+    }
+    if (length(mvpd_nxt)==0){
+      mvpd_nxt <- mvpd
+    }
+
+    ddf_vpd <- init_dates_dataframe( yr, yr ) %>%
+               mutate( vpd_vap_cru_temp_cru_int = monthly2daily( mvpd, "polynom", mvpd_pvy[nmonth], mvpd_nxt[1], leapyear = (yr %% 4 == 0) ) )
+    ddf <- ddf %>% left_join( ddf_vpd, by = c("date", "year_dec") )
   }
-  if (length(mvpd_nxt)==0){
-    mvpd_nxt <- mvpd
-  }
 
-  ddf_vpd <- init_dates_dataframe( yr, yr ) %>%
-             mutate( vpd_vap_cru_temp_cru_int = monthly2daily( mvpd, "polynom", mvpd_pvy[nmonth], mvpd_nxt[1], leapyear = (yr %% 4 == 0) ) )
-
-  ## merge all data frames
-  ddf_yr <- ddf_temp %>%  left_join( ddf_prec, by = c("date", "year_dec") ) %>%
-                          left_join( ddf_ccov, by = c("date", "year_dec") ) %>%
-                          left_join( ddf_vpd , by = c("date", "year_dec") )
-
-  return( ddf_yr )
+  return( ddf )
 
 }
 
@@ -943,12 +1061,12 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf ){
 ## Interpolates monthly data to daily data using polynomials or linear
 ## for a single year
 ##--------------------------------------------------------------------
-expand_clim_cru_monthly <- function( mdf ){
+expand_clim_cru_monthly <- function( mdf, cruvars ){
 
   require(dplyr)
-  require(purr)
+  require(purrr)
 
-  ddf_yr_list <- purrr::map( as.list( unique( year( mdf$date ) ) ), ~expand_clim_cru_monthly_byyr( ., mdf ) )
+  ddf_yr_list <- purrr::map( as.list( unique( year( mdf$date ) ) ), ~expand_clim_cru_monthly_byyr( ., mdf, cruvars ) )
 
   ddf <- bind_rows( ddf_yr_list )
 
@@ -1223,7 +1341,7 @@ write_sofunformatted <- function( filnam, data ){
 download_fluxnet2015_from_cx1_path <- function( path, sitename=NA ){
 
   ## get user name from user
-  uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+  if (!exists("uname")) uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
 
   ## the path of fluxnet daily data on cx1
   origpath <- "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/"
@@ -1288,7 +1406,7 @@ download_MODIS_FPAR_MCD15A3H_from_cx1_path <- function( path, sitename=NA ){
   error <- 0
 
   ## get user name from user
-  uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+  if (!exists("uname")) uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
 
   ## the path of fluxnet daily data on cx1
   origpath <- "/work/bstocker/labprentice/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
@@ -1425,17 +1543,30 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
   ## Read CRU data (extracting from NetCDF files for this site)
   ##----------------------------------------------------------------------
   if (any( c( 
-    "cru" %in% settings_input$temperature, 
-    "cru" %in% settings_input$precipitation, 
-    "cru" %in% settings_input$vpd, 
-    "cru" %in% settings_input$ppfd
+      "cru_ts4_01" %in% settings_input$temperature, 
+      "cru_ts4_01" %in% settings_input$precipitation, 
+      "cru_ts4_01" %in% settings_input$vpd, 
+      "cru_ts4_01" %in% settings_input$ppfd,
+      "cru_ts4_01" %in% settings_input$cloudcover
     ))){
 
+    cruvars <- c()
+    if ("cru_ts4_01" %in% settings_input$temperature)   cruvars <- c(cruvars, "temp")
+    if ("cru_ts4_01" %in% settings_input$cloudcover)    cruvars <- c(cruvars, "ccov")
+    if ("cru_ts4_01" %in% settings_input$precipitation) cruvars <- c(cruvars, "prec")
+    if ("cru_ts4_01" %in% settings_input$precipitation) cruvars <- c(cruvars, "wetd")
+    if ("cru_ts4_01" %in% settings_input$vpd)           cruvars <- c(cruvars, "vap")
+    if ("cru_ts4_01" %in% settings_input$vpd)           cruvars <- c(cruvars, "temp")
+
     ## First get monthly data
-    mdf_cru <- get_clim_cru_monthly( lon, lat, settings = settings_input )
+    mdf_cru <- get_clim_cru_monthly(  lon = settings_sims$lon[[sitename]], 
+                                      lat = settings_sims$lat[[sitename]], 
+                                      settings = settings_input, 
+                                      cruvars 
+                                      )
 
     ## expand monthly to daily data
-    ddf_cru <- expand_clim_cru_monthly( mdf_cru )
+    ddf_cru <- expand_clim_cru_monthly( mdf_cru, cruvars )
 
     ddf <- ddf %>% left_join( ddf_cru, by = "date" )
 
@@ -1755,20 +1886,21 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     ##-----------------------------------------------------------
     ## If WATCH-WFDEI data is required, make sure it's available locally
     ##-----------------------------------------------------------
-    if (any( c( 
-      "watch_wfdei" %in% settings_input$temperature, 
-      "watch_wfdei" %in% settings_input$precipitation, 
-      "watch_wfdei" %in% settings_input$vpd, 
-      "watch_wfdei" %in% settings_input$ppfd
-      ))){
+    if ("watch_wfdei" %in% settings_input$temperature)   error <- check_download_watch_wfdei( varnam = "Tair", settings_input, settings_sims )
+    if ("watch_wfdei" %in% settings_input$precipitation) error <- check_download_watch_wfdei( varnam = "Snowf_daily", settings_input, settings_sims )
+    if ("watch_wfdei" %in% settings_input$precipitation) error <- check_download_watch_wfdei( varnam = "Rainf_daily", settings_input, settings_sims )
+    if ("watch_wfdei" %in% settings_input$vpd)           error <- check_download_watch_wfdei( varnam = "Qair_daily", settings_input, settings_sims )
+    if ("watch_wfdei" %in% settings_input$ppfd)          error <- check_download_watch_wfdei( varnam = "SWdown_daily", settings_input, settings_sims )
 
-      error <- check_download_watch_wfdei( var = "Tair",         settings_input, settings_sims )
-      error <- check_download_watch_wfdei( var = "Snowf_daily",  settings_input, settings_sims )
-      error <- check_download_watch_wfdei( var = "Rainf_daily",  settings_input, settings_sims )
-      error <- check_download_watch_wfdei( var = "SWdown_daily", settings_input, settings_sims )
-      error <- check_download_watch_wfdei( var = "Qair_daily",   settings_input, settings_sims )
-
-    }
+    ##-----------------------------------------------------------
+    ## If CRU TS data is required, make sure it's available locally
+    ##-----------------------------------------------------------
+    if ("cru_ts4_01" %in% settings_input$temperature)   error <- check_download_cru_ts4_01( varnam = "tmp", settings_input, settings_sims )
+    if ("cru_ts4_01" %in% settings_input$precipitation) error <- check_download_cru_ts4_01( varnam = "wet", settings_input, settings_sims )
+    if ("cru_ts4_01" %in% settings_input$precipitation) error <- check_download_cru_ts4_01( varnam = "pre", settings_input, settings_sims )
+    if ("cru_ts4_01" %in% settings_input$vpd)           error <- check_download_cru_ts4_01( varnam = "vap", settings_input, settings_sims )
+    if ("cru_ts4_01" %in% settings_input$vpd)           error <- check_download_cru_ts4_01( varnam = "tmp", settings_input, settings_sims )
+    if ("cru_ts4_01" %in% settings_input$cloudcover)    error <- check_download_cru_ts4_01( varnam = "cld", settings_input, settings_sims )
 
     ##-----------------------------------------------------------
     ## If MODIS_FPAR_MCD15A3H data is required, make sure it's available locally    

@@ -123,7 +123,7 @@ prepare_setup_sofun <- function( settings ){
 
     ## link input directories
     system( paste0( "unlink ", settings$dir_sofun, "input/global") )
-    system( paste0( "ln -svf ", settings$path_input, "global ", settings$dir_sofun, "input/global") )
+    system( paste0( "ln -sf ", settings$path_input, "global ", settings$dir_sofun, "input/global") )
 
 
   } else {
@@ -186,18 +186,22 @@ prepare_setup_sofun <- function( settings ){
       ## Write site and simulation parameter files
       ##--------------------------------------
       ## Write site parameter files for each site
-      print("writing site parameter files...")
-      dirnam <- paste0( settings$path_input, "/site_paramfils/" )
-      if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
-      settings$path_site_paramfil <- purrr::map( as.list(settings$sitenames), ~write_site_parameter_bysite( ., settings ) )
-      names(settings$path_site_paramfil) <- siteinfo[,1][[sitenam_colnam]]
+      if (settings$write_paramfils){
+        print("writing site parameter files...")
+        dirnam <- paste0( settings$path_input, "/site_paramfils/" )
+        if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
+        settings$path_site_paramfil <- purrr::map( as.list(settings$sitenames), ~write_site_parameter_bysite( ., settings ) )
+        names(settings$path_site_paramfil) <- siteinfo[,1][[sitenam_colnam]]
+      }
 
       ## Write simulation parameter files for each site
-      print("writing simulation parameter files...")
-      dirnam <- paste0( settings$path_input, "/run/" )
-      if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
-      settings$path_simulation_paramfil <- purrr::map( as.list(settings$sitenames), ~write_simulation_parameter_bysite( ., settings ) )
-      names(settings$path_simulation_paramfil) <- siteinfo[,1][[sitenam_colnam]]
+      if (settings$write_paramfils){
+        print("writing simulation parameter files...")
+        dirnam <- paste0( settings$path_input, "/run/" )
+        if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
+        settings$path_simulation_paramfil <- purrr::map( as.list(settings$sitenames), ~write_simulation_parameter_bysite( ., settings ) )
+        names(settings$path_simulation_paramfil) <- siteinfo[,1][[sitenam_colnam]]
+      }
 
       ## Write runnames (typically corresponds to site names) belonging to this ensemble into a text file 
       ## located in the run directory.
@@ -226,19 +230,25 @@ prepare_setup_sofun <- function( settings ){
       system( paste0( "unlink ", settings$dir_sofun, "site_paramfils") )
       system( paste0( "unlink ", settings$dir_sofun, "input/sitedata") )
 
-      system( paste0( "ln -svf ", settings$path_input, "run ", settings$dir_sofun, "run") )
-      system( paste0( "ln -svf ", settings$path_input, "site_paramfils ", settings$dir_sofun, "site_paramfils") )
-      system( paste0( "ln -svf ", settings$path_input, "sitedata ", settings$dir_sofun, "input/sitedata") )
+      system( paste0( "ln -sf ", settings$path_input, "run ", settings$dir_sofun, "run") )
+      system( paste0( "ln -sf ", settings$path_input, "site_paramfils ", settings$dir_sofun, "site_paramfils") )
+      system( paste0( "ln -sf ", settings$path_input, "sitedata ", settings$dir_sofun, "input/sitedata") )
 
     }
   }
 
   ## link output directories (same for lonlat and ensemble)
-  system( paste0( "unlink ", settings$dir_sofun, "/output" ) )
-  system( paste0( "ln -svf ", settings$path_output, " ", settings$dir_sofun, "/output" ))
+  lnk <- paste0( settings$dir_sofun, "/output" )
+  src <- strsplit( settings$path_output, "/") %>% unlist() %>% paste(., collapse="/")
+  if (file.exists(lnk)) system( paste0( "unlink ", lnk ) )
+  if (!file.exists((src))) system( paste0( "mkdir -p ", src ) )
+  system( paste0( "ln -sf ", src, " ", lnk ) )
 
-  system( paste0( "unlink ", settings$dir_sofun, "/output_nc" ) )
-  system( paste0( "ln -svf ", settings$path_output, " ", settings$dir_sofun, "/output_nc" ))
+  lnk <- paste0( settings$dir_sofun, "/output_nc" )
+  src <- strsplit( settings$path_output_nc, "/") %>% unlist() %>% paste(., collapse="/")
+  if (file.exists(lnk)) system( paste0( "unlink ", lnk ) )
+  if (!file.exists((src))) system( paste0( "mkdir -p ", src ) )
+  system( paste0( "ln -sf ", src, " ", lnk ))
 
   return(settings)
 

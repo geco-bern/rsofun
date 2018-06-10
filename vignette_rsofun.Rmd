@@ -46,10 +46,12 @@ settings_sims <- list(
   name            = "fluxnet2015",
   dir_sofun       = "/alphadata01/bstocker/sofun/trunk/",
   path_output     = "/alphadata01/bstocker/sofun/output_fluxnet2015_sofun_TEST/",
+  path_output_nc  = "/alphadata01/bstocker/sofun/output_nc_fluxnet2015_sofun_TEST/",
   path_input      = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
   in_ppfd         = TRUE,
+  write_paramfils = FALSE,
   recycle         = 1,
   spinupyears     = 10,
   loutplant       = FALSE,
@@ -77,7 +79,8 @@ settings_sims <- list(
 - `lonlat`: TRUE if simulation(s) are on a spatial longitude/latitude grid (multiple gridcells in one simulation). For point-scale (site-scale) simulations, `lonlat` is FALSE.
 - `name`: a character string specifying the name of the ensemble (e.g. 'fluxnet2015') or of a single simulation.
 - `dir_sofun`: Path (character string) where the model sits (corresponding to the parent directory of the respective git repository).
-- `path_output`: Path (character string) where model output is written to.
+- `path_output`: Path (character string) where model output (ascii text files) is written to.
+- `path_output_nc`: Path (character string) where NetCDF model output is written to.
 - `path_input`: Path (character string) where model input is located. 
 - `grid`: Character string defining the type of grid used, e.g. `halfdeg` for half-degree resolution in lon. and lat. (only used if `lonlat=TRUE`).
 - `implementation`: Character string specifying whether Fortran (`implementation= "fortran"`) or Python (`implementation= "python"`) version is to be used.
@@ -96,12 +99,13 @@ settings_input <-  list(
   vpd                      = "fluxnet2015",
   ppfd                     = "fluxnet2015",
   netrad                   = NA,
+  cloudcover               = "cru_ts4_01",
   fapar                    = "MODIS_FPAR_MCD15A3H",
   co2                      = "cmip",
   path_cx1data             = "/alphadata01/bstocker/data/",
-  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpackedXXX/",
+  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
-  path_cru                 = "/alphadata01/bstocker/data/cru/ts_4.01/",
+  path_cru_ts4_01          = "/alphadata01/bstocker/data/cru/ts_4.01/",
   path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
   )
 ```
@@ -119,13 +123,15 @@ settings_input <-  list(
 Define model setup as a list.
 ```{r}
 setup_sofun <- list( 
-  model      = "pmodel_simsuite",
+  model      = "pmodel",
+  dir        = "/alphadata01/bstocker/sofun/trunk",
   do_compile = FALSE
   )
 ```
 
-- `model`: compilation option and name of executable 
-- `dir`: directory of the model
+- `model`: For Fortran version: A character string specifying the compilation option. The name of the executable is derived from this as `"run<setup_sofun$model>"`.
+- `dir`: A path (character) specifying the directory of where the executables are located (corresponds to the parent directory of the model git repository).
+- `do_compile`: If `TRUE`, the model code is compiled as `make <setup_sofun$model>`. If `FALSE`, compiled executables are used (compiled with gfortran on a Mac 64-bit).
 
 ## Calibration settings
 Define model calibration settings as a list.
