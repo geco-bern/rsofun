@@ -45,12 +45,6 @@ get_meteo_fluxnet2015 <- function( sitename, path=NA, freq="d" ){
   require(dplyr)
   require(readr)
   require(lubridate)
-
-  # ## xxx debug -------------
-  # sitename = "FR-Pue"
-  # add_swcvars = TRUE
-  # freq = "d"
-  # ## -----------------------
   
   ## from flux to energy conversion, umol/J (Meek et al., 1984), same as used in SPLASH (see Eq.50 in spash_doc.pdf)
   kfFEC <- 2.04
@@ -443,6 +437,261 @@ find_nearest_cruland_by_lat <- function( lon, lat, filn ){
   
 }
 
+##-----------------------------------------------------------
+## Downloads WATCH-WFDEI data from CX1
+##-----------------------------------------------------------
+download_watch_wfdei_from_cx1_path <- function( path, getfiles ){
+
+  ## the path of WATCH-WFDEI daily data on cx1
+  origpath <- "/work/bstocker/labprentice/data/watch_wfdei/"
+
+  ## create required directory
+  if (!dir.exists(path)) system( paste0("mkdir -p ", path ) )
+
+  ## files are in sub-directories, determine them
+  subdir <- getfiles %>% dirname() %>% unique()
+  if (!dir.exists(paste0( path, "/", subdir ))) system( paste0("mkdir -p ", paste0( path, "/", subdir ) ) )
+
+  uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+  error <- purrr::map( as.list(getfiles[1]), ~system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, ., " ", paste0( path, subdir ) ) ) )
+
+  ## Show files in directory
+  print( paste0("Files in directory: ", path) )
+  print( list.files( path ) )
+
+}
+
+
+## Returns the file names of missing files for this year
+check_watch_wfdei_year <- function( year, var, settings_input ){
+
+  ## construct file names of all months' files (12 for each year)
+  allfiles <- purrr::map_chr( as.list(sprintf("%02d", 1:12 )), ~paste0( var, "_daily/", var, "_daily_WFDEI_", as.character(year), ., ".nc" ) )
+  avlfiles <- list.files( settings_input$path_watch_wfdei, pattern = paste0( var, "_daily_WFDEI_", as.character(year), ".*.nc"), recursive = TRUE )
+
+  getfiles <- allfiles[!(allfiles %in% avlfiles)]
+
+  return(getfiles)
+
+}
+
+##-----------------------------------------------------------
+## Manages the path specification for fluxnet data download from CX1
+##-----------------------------------------------------------
+download_watch_wfdei_from_cx1 <- function( var, settings_input, settings_sims ){
+
+  require(rlang)
+
+  ## determine simulation years ocurring in this ensemble
+  allyears <- seq( from = purrr::map_dbl( settings_sims$date_start, ~year(.) ) %>% min(),
+                   to   = purrr::map_dbl( settings_sims$date_start, ~year(.) ) %>% max(),
+                   by   = 1 ) %>% as.list
+
+  ## Determine missing files for this variable, given start and end years of all the simulations in this ensemble
+  getfiles <- purrr::map( allyears, ~check_watch_wfdei_year( ., var, settings_input ) ) %>% unlist()
+  
+  ## Interactive part
+  ans <- readline( prompt = "Do you have access to Imperial's CX1? (y/n) " )
+  if (ans=="y"){
+    ans <- readline( prompt = "Have you connected to Imperial's VPN? (y/n) " )
+    if (ans=="y"){
+      ans <- readline( prompt = paste0("Are you still happy with downloading to ", settings_input$path_watch_wfdei, "? (y/n)") )
+      if (ans=="y"){
+        error <- download_watch_wfdei_from_cx1_path( settings_input$path_watch_wfdei, getfiles )
+      } else {
+        path <- readline( prompt = "Please specify a new path: " )
+        settings_input$path_watch_wfdei <- path
+        error <- download_watch_wfdei_from_cx1_path( settings_input$path_watch_wfdei, getfiles )
+      }
+    } else {
+      abort( "FLUXNET 2015 data download not possible.")
+    }
+  } else {
+    abort( "FLUXNET 2015 data download not possible.")
+  }
+
+  return(error)
+
+}
+
+##--------------------------------------------------------------------------
+## Checks if FLUXNET 2015 files are available for this variable and initiates download if now.
+##--------------------------------------------------------------------------
+check_download_fluxnet2015 <- function( settings_input, settings_sims, sitename=NA ){
+
+  require(purrr)
+  require(dplyr)
+  require(rlang)
+
+  ## Check if any data is available in the specified directory
+  filelist <- list.files( settings_input$path_fluxnet2015, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv" )
+
+  if (length(filelist)==0){
+    ## No files found at specified location
+    warn( paste0("No files found for fluxnet2015 in directory ", settings_input$path_fluxnet2015) )
+
+    ## Search at a different location?
+    path <- readline( prompt="Would you like to search for files recursively from a certain directory? Enter the path from which search is to be done: ")
+    filelist <- list.files( path, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv", recursive = TRUE )
+
+    if (length(filelist)==0){
+     
+      ## Search from home
+      warn( paste0("Still nothing found at specified location ", path ) )
+      ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
+      if (ans=="y"){
+        filelist <- list.files( "~/", pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv", recursive = TRUE )
+      } else {
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_fluxnet2015>
+        warn( "Initiating download from Imperial CX1..." )
+        error <- download_fluxnet2015_from_cx1( settings_input )
+        filelist <- list.files( settings_input$path_fluxnet2015, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv" )
+      }
+
+      if (length(filelist)==0){
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_fluxnet2015>
+        warn( "Initiating download from Imperial CX1..." )
+        error <- download_fluxnet2015_from_cx1( settings_input )
+
+      }
+
+    }
+
+  }
+
+  if (!is.na(sitename)){
+    ## Check if a file is available for a given site
+    filelist <- list.files( settings_input$path_fluxnet2015, pattern = paste0("FLX_", sitename, "_FLUXNET2015_FULLSET_DD.*.csv") )
+
+    if (length(filelist)==0){
+      ## Download missing file
+      error <- download_fluxnet2015_from_cx1_path( settings_input$path_fluxnet2015, sitename )
+    }
+
+  }
+
+}
+
+##--------------------------------------------------------------------------
+## Checks if WATCH-WFDEI files are available for this variable and initiates download if now.
+##--------------------------------------------------------------------------
+check_download_watch_wfdei <- function( var, settings_input, settings_sims ){
+
+  require(purrr)
+  require(dplyr)
+  require(rlang)
+
+  ## Determine file name, given <settings_input$path_fluxnet2015>
+  ## look for data in the given directory
+  filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( var, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+
+  if (length(filelist)==0){
+
+    ## No files found at specified location
+    warn( paste0("No files found for WATCH-WFDEI in directory ", settings_input$path_watch_wfdei) )
+
+    ## Search at a different location?
+    path <- readline( prompt="Would you like to search for files recursively from a different directory? Enter the path from which search is to be done: ")
+    filelist <- list.files( path, pattern = paste0( var, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+
+    if (length(filelist)==0){
+     
+      ## Search from home
+      warn( paste0("Still nothing found at specified location ", path ) )
+      ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
+      
+      if (ans=="y"){
+      
+        filelist <- list.files( "~/", pattern = paste0( var, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+      
+      } else {
+        
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_watch_wfdei>
+        warn( "Initiating download from Imperial CX1..." )
+        error <- download_watch_wfdei_from_cx1( var, settings_input, settings_sims )
+        filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( var, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+      }
+
+      if (length(filelist)==0){
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_watch_wfdei>
+        warn( "Initiating download from Imperial CX1..." )
+        error <- download_watch_wfdei_from_cx1( var, settings_input, settings_sims )
+
+      }
+
+    }
+
+  } 
+
+  ## Check if files are now available at specified location.
+  filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( var, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+  if (length(filelist)==0) abort("Download of FLUXNET-2015_Tier1 data was not successful. No files found.")
+  
+}
+
+
+##--------------------------------------------------------------------------
+## Checks if MODIS_FPAR_MCD15A3H files are available for this variable and initiates download if now.
+##--------------------------------------------------------------------------
+check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, sitename=NA ){
+
+  require(purrr)
+  require(dplyr)
+  require(rlang)
+
+  error <- 0
+
+  ## Determine file name, given <settings_input$path_MODIS_FPAR_MCD15A3H>
+  ## look for data for this site in the given directory
+  filelist <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = "dfapar_MODIS_FPAR_MCD15A3H_.*_gee_subset.csv" )
+
+  if (length(filelist)==0){
+
+    ## No files found at specified location
+    warn( paste0("No files found for MODIS_FPAR_MCD15A3H in directory ", settings_input$path_MODIS_FPAR_MCD15A3H) )
+
+    ## Search at a different location?
+    path <- readline( prompt="Would you like to search for files recursively from a certain directory? Enter the path from which search is to be done: ")
+    filelist <- list.files( path, pattern = "dfapar_MODIS_FPAR_MCD15A3H_.*_gee_subset.csv", recursive = TRUE )
+
+    if (length(filelist)==0){
+     
+      ## Search from home
+      warn( paste0("Still nothing found at specified location ", path ) )
+      ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
+      if (ans=="y"){
+        filelist <- list.files( "~/", pattern = "dfapar_MODIS_FPAR_MCD15A3H_.*_gee_subset.csv", recursive = TRUE )
+      } else {
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_MODIS_FPAR_MCD15A3H>
+        warn( "Initiating download from Imperial CX1..." )
+        error <- download_MODIS_FPAR_MCD15A3H_from_cx1( settings_input )
+        filelist <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = "dfapar_MODIS_FPAR_MCD15A3H_.*_gee_subset.csv" )
+      }
+
+      if (length(filelist)==0){
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_MODIS_FPAR_MCD15A3H>
+        warn( "Initiating download from Imperial CX1..." )
+        error <- download_MODIS_FPAR_MCD15A3H_from_cx1( settings_input )
+
+      }
+
+    }
+
+  }
+
+  if (!is.na(sitename)){
+    ## Check if a file is available for a given site
+    filelist <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = paste0("dfapar_MODIS_FPAR_MCD15A3H_", sitename, "_gee_subset.csv") )
+
+    if (length(filelist)==0){
+      ## Download missing file
+      error <- download_MODIS_FPAR_MCD15A3H_from_cx1_path( settings_input$path_MODIS_FPAR_MCD15A3H, sitename )
+    }
+
+  }
+  return( error )
+}
+
 ##--------------------------------------------------------------------
 ## Function returns daily data frame with columns for watch data 
 ## (temp_watch, prec_watch, vpd_qair_watch_temp_watch, [ppfd_watch])
@@ -457,18 +706,23 @@ get_watch_daily <- function( lon, lat, elv, date_start, date_end, settings_input
   bymonths <- seq( date_start, date_end, by = "months" )
 
   ## extract temperature data
+  
   ddf_temp <- purrr:map( as.list(bymonths), ~get_pointdata_temp_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows()
 
   ## extract precipitation data (sum of snowfall and rainfall)
+  
+  
   ddf_prec <- purrr:map( as.list(bymonths), ~get_pointdata_prec_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows()
 
   ## extract PPFD data
+  
   ddf_ppfd <- purrr:map( as.list(bymonths), ~get_pointdata_ppfd_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows()
 
   ## extract air humidity data and calculate VPD based on temperature
+  
   ddf_qair <- purrr:map( as.list(bymonths), ~get_pointdata_qair_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows() %>%
               ## merge temperature data in here for VPD calculation
@@ -919,6 +1173,143 @@ write_sofunformatted <- function( filnam, data ){
 
 
 ##-----------------------------------------------------------
+## Downloads fluxnet data from CX1
+##-----------------------------------------------------------
+download_fluxnet2015_from_cx1_path <- function( path, sitename=NA ){
+
+  ## get user name from user
+  uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+
+  ## the path of fluxnet daily data on cx1
+  origpath <- "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/"
+
+  if (is.na(sitename)){
+    ## Download the whole bunch
+
+    ## create required directory
+    if (!dir.exists(path)) system( paste0("mkdir -p ", path ) )
+    system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, " ", path ) )
+
+  } else {
+    ## Download only data for a specific site
+    ## get a file list of what's on CX1
+    filelist <- system( paste0( "ssh ", uname, "@login.cx1.hpc.ic.ac.uk ls ", origpath ), intern = TRUE )
+
+    ## use one file(s) for this site
+    filelist <- filelist[ grepl(sitename, filelist) ]
+    filelist <- filelist[ grepl("_FLUXNET2015_FULLSET_DD_", filelist) ]
+
+    purrr::map( as.list(filelist), ~system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, .," ", path ) ) )
+    
+  }
+
+}
+
+##-----------------------------------------------------------
+## Manages the path specification for fluxnet data download from CX1
+##-----------------------------------------------------------
+download_fluxnet2015_from_cx1 <- function( settings_input ){
+  
+  require(rlang)
+
+  ans <- readline( prompt = "Do you have access to Imperial's CX1? (y/n) " )
+  if (ans=="y"){
+    ans <- readline( prompt = "Have you connected to Imperial's VPN? (y/n) " )
+    if (ans=="y"){
+      ans <- readline( prompt = paste0("Are you still happy with downloading to ", settings_input$path_fluxnet2015, "? (y/n)") )
+      if (ans=="y"){
+        error <- download_fluxnet2015_from_cx1_path( settings_input$path_fluxnet2015 )
+      } else {
+        path <- readline( prompt = "Please specify a new path: " )
+        settings_input$path_fluxnet2015 <- path
+        error <- download_fluxnet2015_from_cx1_path( settings_input$path_fluxnet2015 )
+      }
+    } else {
+      abort( "FLUXNET 2015 data download not possible.")
+    }
+  } else {
+    abort( "FLUXNET 2015 data download not possible.")
+  }
+
+  return(error)
+
+}
+
+##-----------------------------------------------------------
+## Downloads MODIS FPAR data from CX1
+##-----------------------------------------------------------
+download_MODIS_FPAR_MCD15A3H_from_cx1_path <- function( path, sitename=NA ){
+
+  error <- 0
+
+  ## get user name from user
+  uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+
+  ## the path of fluxnet daily data on cx1
+  origpath <- "/work/bstocker/labprentice/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
+
+  if (is.na(sitename)){
+    ## Download the whole bunch
+
+    ## create required directory
+    if (!dir.exists(path)) system( paste0("mkdir -p ", path ) )
+
+    system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, " ", path ) )
+
+  } else {
+    ## Download only data for a specific site
+    ## get a file list of what's on CX1
+    filelist <- system( paste0( "ssh ", uname, "@login.cx1.hpc.ic.ac.uk ls ", origpath ), intern = TRUE )
+
+    ## use one file(s) for this site
+    filelist <- filelist[ grepl(sitename, filelist) ]
+    filelist <- filelist[ grepl("fapar_MODIS_FPAR_MCD15A3H_", filelist) ]
+
+    if (length(filelist)==0){
+      ## no data available for this site
+      error <- 1
+      warn(paste0("No MODIS_FPAR_MCD15A3H data available for site ", sitename ) )
+    } else {
+      purrr::map( as.list(filelist), ~system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, .," ", path ) ) )    
+    }
+
+  }
+  return( error )
+}
+
+
+##-----------------------------------------------------------
+## Manages the path specification for MODIS FPAR data download from CX1
+##-----------------------------------------------------------
+download_MODIS_FPAR_MCD15A3H_from_cx1 <- function( settings_input ){
+  
+  require(rlang)
+
+  ans <- readline( prompt = "Do you have access to Imperial's CX1? (y/n) " )
+  if (ans=="y"){
+    ans <- readline( prompt = "Have you connected to Imperial's VPN? (y/n) " )
+    if (ans=="y"){
+      ans <- readline( prompt = paste0("Are you still happy with downloading to ", settings_input$path_MODIS_FPAR_MCD15A3H, "? (y/n)") )
+      if (ans=="y"){
+        error <- download_MODIS_FPAR_MCD15A3H_from_cx1_path( settings_input$path_MODIS_FPAR_MCD15A3H )
+      } else {
+        path <- readline( prompt = "Please specify a new path: " )
+        settings_input$path_MODIS_FPAR_MCD15A3H <- path
+        error <- download_MODIS_FPAR_MCD15A3H_from_cx1_path( settings_input$path_MODIS_FPAR_MCD15A3H )
+      }
+    } else {
+      abort( "MODIS_FPAR_MCD15A3H data download not possible.")
+    }
+  } else {
+    abort( "MODIS_FPAR_MCD15A3H data download not possible.")
+  }
+
+  return(error)
+
+}
+
+
+##-----------------------------------------------------------
 ## Returns a dataframe with all climate input data for one site
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
@@ -927,6 +1318,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
 
   require(purrr)
   require(dplyr)
+  require(rlang)
 
   ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
   ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE )
@@ -942,25 +1334,14 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
     "fluxnet2015" %in% settings_input$ppfd
     ))){
 
-    ## Determine file name, given <settings_input$path_fluxnet2015>
-    ## look for data for this site in the given directory
-    filelist <- list.files(settings_input$path_fluxnet2015)
+    ## Make sure data is available for this site
+    error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
 
-    idx <- purrr::map(filelist, ~grepl(sitename, .)) %>% unlist %>% which()
-    filelist <- filelist[idx]
-    if (length(idx)>1) {
-      idx <- purrr::map(filelist, ~grepl("FULLSET", .)) %>% unlist %>% which()
-    }
-    filelist <- filelist[idx]
-    if (length(idx)>1) {
-      idx <- purrr::map(filelist, ~grepl("3.csv", .)) %>% unlist %>% which()
-    } else {
-      idx <- 1
-    }
-    filn <- filelist[idx]
+    ## Take only file for this site
+    filn <- list.files( settings_input$path_fluxnet2015, pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_DD.*.csv" ) )
 
     ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
-    ddf_meteo_fluxnet2015 <- get_meteo_fluxnet2015( sitename, path=paste0(settings_input$path_fluxnet2015, filn), freq="d" ) %>%
+    ddf_meteo_fluxnet2015 <- get_meteo_fluxnet2015( sitename, path = paste0(settings_input$path_fluxnet2015, filn), freq="d" ) %>%
       rename( temp_fluxnet2015 = temp, 
               prec_fluxnet2015 = prec,
               nrad_fluxnet2015 = nrad,
@@ -1015,6 +1396,9 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
 
   }
 
+  ## Add site name to dataframe (is merged by rows with ddf of other sites)
+  ddf <- ddf %>% mutate( sitename = sitename )
+
   ##----------------------------------------------------------------------
   ## Write climate data to CSV files: 
   ## <settings_sims$path_input>/sitedata/climate/<sitename>/clim_daily_<sitename>.csv 
@@ -1023,7 +1407,6 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
   dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
   filn <- paste0( dir, "/clim_daily_", sitename, ".csv" )
-  # print(paste( "writing", filn))
   write_csv( ddf, path = filn )
 
   ##----------------------------------------------------------------------
@@ -1123,6 +1506,85 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
 ##-----------------------------------------------------------
 prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings_sims ){
 
+  require(readr)
+  require(lubridate)
+
+  print(paste0("Getting fAPAR data for site ", sitename, " ..." ) )
+
+  ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
+  ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE ) %>%
+         ## Add site name to dataframe (is merged by rows with ddf of other sites)
+         mutate( sitename = sitename )
+
+  if (settings_input$fapar=="MODIS_FPAR_MCD15A3H"){
+
+    ## Make sure data is available for this site
+    error <- check_download_MODIS_FPAR_MCD15A3H( settings_input, settings_sims, sitename )
+
+    if (error!=1){
+      ## Take only file for this site
+      filn <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = paste0("dfapar_MODIS_FPAR_MCD15A3H_", sitename, "_gee_subset.csv") )
+
+      ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
+      ## IMPORTANT: This is gapfilled data. Original data is in <settings_input$path_MODIS_FPAR_MCD15A3H>/raw/
+      ## Gap-filling is done with 'getin/gapfill_modis.R'. The gapfilling step is not yet implemented within prepare_input_sofun().
+      ddf_MODIS_FPAR_MCD15A3H <- read_csv( paste0( settings_input$path_MODIS_FPAR_MCD15A3H, filn ) ) %>%
+        select( date, fapar = modisvar_interpol)
+
+      ddf <- ddf %>% left_join( ddf_MODIS_FPAR_MCD15A3H, by = "date" )
+
+    }
+
+  }
+
+  if (error!=1){
+    ##----------------------------------------------------------------------
+    ## Write fapar data to CSV files: 
+    ## <settings_sims$path_input>/sitedata/fapar/<sitename>/fapar_daily_<sitename>.csv 
+    ## (may be read by Python directly???)
+    ##----------------------------------------------------------------------
+    dir <- paste0( settings_sims$path_input, "/sitedata/fapar/", sitename )
+    if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
+    filn <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
+    write_csv( ddf, path = filn )
+
+    ##----------------------------------------------------------------------
+    ## Write fortran-formatted ascii files with daily values for each year 
+    ## based on the CSV file written above (clim_daily_<sitename>.csv)
+    ## Necessary because reading from CSV is a pain in Fortran.
+    ##----------------------------------------------------------------------
+    if (settings_sims$implementation=="fortran"){
+
+      ## get mean seasonal cycle. This is relevant for years where no MODIS data is available.
+      ddf_meandoy <- ddf %>% mutate( doy=yday(date) ) %>% group_by( doy ) %>% summarise( meandoy = mean( fapar , na.rm=TRUE ) )
+
+      ## in separate formatted file 
+      for (yr in unique(year(ddf$date))){
+
+        ## subset only this year
+        ddf_sub <- dplyr::filter( ddf, year(date)==yr ) %>% mutate( doy=yday(date) )
+
+        ## fill gaps with mean seasonal cycle (for pre-MODIS years, entire year is mean seasonal cycle)
+        if (nrow(ddf_sub)==0) ddf_sub <- init_dates_dataframe( yr, yr ) %>% mutate( fapar = NA ) %>% dplyr::filter( !( month(date)==2 & mday(date)==29 ) ) %>% mutate( doy=yday(date) )
+        ddf_sub <- ddf_sub %>% left_join( ddf_meandoy, by="doy" )
+
+        ## fill gaps with mean by DOY/MOY
+        ddf_sub$fapar[ which( is.na( ddf_sub$fapar ) ) ] <- ddf_sub$meandoy[ which( is.na( ddf_sub$fapar ) ) ]
+
+        ## define directory name for SOFUN input
+        dirnam <- paste0( settings_sims$path_input, "/sitedata/fapar/", sitename, "/", as.character(yr), "/" )
+        system( paste( "mkdir -p", dirnam ) )
+
+        ## daily
+        filnam <- paste0( dirnam, "dfapar_", sitename, "_", yr, ".txt" )
+        write_sofunformatted( filnam, ddf_sub$fapar )
+        
+      }
+    }
+  }
+
+  return(ddf)
+
 }
 
 
@@ -1130,7 +1592,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
 ##-----------------------------------------------------------
 ## Creates all the input files/links necessary to run simulations
 ##-----------------------------------------------------------
-prepare_input_sofun <- function( settings_input, settings_sims ){
+prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALSE ){
 
   require(lubridate)
   require(dplyr)
@@ -1227,19 +1689,68 @@ prepare_input_sofun <- function( settings_input, settings_sims ){
 
 
   } else {
-    ##-----------------------------------------------------------
-    ## Site-scale simulation(s)
-    ## Ensemble of multiple site-scale simulations that "go toghether"
-    ## In this case, <settings$name> is the name of the ensemble (e.g., "fluxnet2015")
-    ##-----------------------------------------------------------
-    # ddf_climate <- lapply( as.list(settings_sims$sitenames), function(x) prepare_input_sofun_climate_bysite( x, settings_input, settings_sims ) ) %>%
-    #                bind_rows()
-    ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims ) ) %>%
-                    bind_rows()
-    
+    # ##-----------------------------------------------------------
+    # ## Site-scale simulation(s)
+    # ## Ensemble of multiple site-scale simulations that "go toghether"
+    # ## In this case, <settings$name> is the name of the ensemble (e.g., "fluxnet2015")
+    # ##-----------------------------------------------------------
+    # ## If FLUXNET 2015 data is required, make sure it's available locally    
+    # ##-----------------------------------------------------------
+    # if (any( c( 
+    #   "fluxnet2015" %in% settings_input$temperature, 
+    #   "fluxnet2015" %in% settings_input$precipitation, 
+    #   "fluxnet2015" %in% settings_input$vpd, 
+    #   "fluxnet2015" %in% settings_input$ppfd
+    #   ))){
 
+    #   error <- check_download_fluxnet2015( settings_input, settings_sims )
+
+    # }
+
+    # ##-----------------------------------------------------------
+    # ## If WATCH-WFDEI data is required, make sure it's available locally
+    # ##-----------------------------------------------------------
+    # if (any( c( 
+    #   "watch_wfdei" %in% settings_input$temperature, 
+    #   "watch_wfdei" %in% settings_input$precipitation, 
+    #   "watch_wfdei" %in% settings_input$vpd, 
+    #   "watch_wfdei" %in% settings_input$ppfd
+    #   ))){
+
+    #   error <- check_download_watch_wfdei( var = "Tair",         settings_input, settings_sims )
+    #   error <- check_download_watch_wfdei( var = "Snowf_daily",  settings_input, settings_sims )
+    #   error <- check_download_watch_wfdei( var = "Rainf_daily",  settings_input, settings_sims )
+    #   error <- check_download_watch_wfdei( var = "SWdown_daily", settings_input, settings_sims )
+    #   error <- check_download_watch_wfdei( var = "Qair_daily",   settings_input, settings_sims )
+
+    # }
+
+    # ##-----------------------------------------------------------
+    # ## If MODIS_FPAR_MCD15A3H data is required, make sure it's available locally    
+    # ##-----------------------------------------------------------
+    # if (settings_input$fapar=="MODIS_FPAR_MCD15A3H") error <- check_download_MODIS_FPAR_MCD15A3H( settings_input, settings_sims )
+
+    # ##-----------------------------------------------------------
+    # ## Loop over all sites and prepare input files by site.
+    # ##-----------------------------------------------------------
+    # ## Climate input files
+    # ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims ) ) %>%
+    #                 bind_rows()
+
+    ## fAPAR input files
+    ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims ) ) %>%
+                  bind_rows()
+
+    
   }
 
-  return("Brexit.")
+  if (return_data){
+    # out <- ddf_climate %>% left_join( ddf_fapar, by=c("date", "sitename"))
+    out <- ddf_fapar
+  } else {
+    out <- "Brexit."
+  }
+
+  return(out)
 
 }

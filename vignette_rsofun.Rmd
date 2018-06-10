@@ -37,18 +37,32 @@ systr <- "''"    # for Mac
 
 # Setup
 ## Simulation settings
-Define the simulation settings as a list.
+Define the simulation settings as a list. Components of the simulation settings should specify only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (CSV file created "by hand" or some other more clever method for large ensembles - up to you.). The function `prepare_setup_sofun()` complements the simulation settings list by these additional components as lists with elements for each site, nested within the simulation settings list.
 ```{r}
 settings_sims <- list( 
-  path_siteinfo = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun/siteinfo_fluxnet2015_sofun+whc.csv",
-  ensemble      = TRUE,
-  lonlat        = FALSE,
-  name          = "fluxnet2015",
-  dir_sofun     = "/alphadata01/bstocker/sofun/trunk/",
-  path_output   = "/alphadata01/bstocker/sofun/output_fluxnet2015_sofun_TEST/",
-  path_input    = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun_TEST/",
-  grid          = NA,
-  implementation= "fortran"
+  path_siteinfo   = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun/siteinfo_fluxnet2015_sofun+whc.csv",
+  ensemble        = TRUE,
+  lonlat          = FALSE,
+  name            = "fluxnet2015",
+  dir_sofun       = "/alphadata01/bstocker/sofun/trunk/",
+  path_output     = "/alphadata01/bstocker/sofun/output_fluxnet2015_sofun_TEST/",
+  path_input      = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun_TEST/",
+  grid            = NA,
+  implementation  = "fortran",
+  in_ppfd         = TRUE,
+  recycle         = 1,
+  spinupyears     = 10,
+  loutplant       = FALSE,
+  loutgpp         = FALSE,
+  loutwaterbal    = FALSE,
+  loutdtemp_soil  = FALSE,
+  loutdgpp        = FALSE,
+  loutdrd         = FALSE,
+  loutdtransp     = FALSE,
+  lncoutdtemp     = FALSE,
+  lncoutdfapar    = FALSE,
+  lncoutdgpp      = TRUE, 
+  lncoutdwaterbal = TRUE
   )
 ```
 
@@ -67,6 +81,11 @@ settings_sims <- list(
 - `path_input`: Path (character string) where model input is located. 
 - `grid`: Character string defining the type of grid used, e.g. `halfdeg` for half-degree resolution in lon. and lat. (only used if `lonlat=TRUE`).
 - `implementation`: Character string specifying whether Fortran (`implementation= "fortran"`) or Python (`implementation= "python"`) version is to be used.
+- `in_ppfd`: Switch (`TRUE` of `FALSE`) whether PPFD should be read from data (prescribed) or simulated online using SPLASH and prescribed fractional cloud cover data.
+- `recycle`: Periodicity (integer, number of years) of repeating forcing years during spinup (e.g. if the simulation start year is 1982 and `recycle=3`, then forcing years 1979-1981 are repeated during the duration of the model spinup, so that the last year of the spinup is forcing year 1981. For `recycle=1` and simulation start year 1982, forcing year 1981 is used for all years of the model spinup. Here, 'forcing year' refers to the year AD in the climate, CO2, fAPAR, etc. data used as model forcing.
+- `spinupyears`: Integer, number of model spinup years before the transient simulation. Use `spinupyears > 0` if the model contains pool variables that that are simulated by dynamics that depend on their current state (typically soil water storage, or plant and soil carbon pools). Typically `spinupyears = 10` is sufficient to bring soil water pools to equilibrium across the globe (unless you chose a large soil water holding capacity).
+- `lout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (ascii text file for time series). To be anbandoned, only NetCDF output should be maintained.
+- `lncout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (NetCDF file).
 
 ## Input settings
 Define data sources used for SOFUN input. This is based on keywords passed on as strings. E.g. `"fluxnet2015"` triggers specific functions that read input data from specific files, here all the site-level meteo data from FLUXNET 2015. Define the input settings as a list.
@@ -79,7 +98,7 @@ settings_input <-  list(
   netrad                   = NA,
   fapar                    = "MODIS_FPAR_MCD15A3H",
   path_cx1data             = "/alphadata01/bstocker/data/",
-  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpackedXXX/",
   path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
   path_cru                 = "/alphadata01/bstocker/data/cru/ts_4.01/",
   path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
@@ -141,7 +160,7 @@ settings_sims <- prepare_setup_sofun( settings = settings_sims )
 ## Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`.
 ```{r, eval=FALSE}
-inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims )
+inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE )
 ```
 
 ## Run the model
