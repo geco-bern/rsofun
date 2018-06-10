@@ -54,7 +54,7 @@ get_meteo_fluxnet2015 <- function( sitename, path=NA, freq="d" ){
     if ( freq=="y" ){
       ## Annual data
       print( paste( "getting annual FLUXNET 2015 data for site", sitename ) )
-      dirnam_obs <- paste0( myhome, "data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/" )
+      dirnam_obs <- paste0( path_cx1data, "/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/" )
       allfiles <- list.files( dirnam_obs )
       allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
@@ -64,7 +64,7 @@ get_meteo_fluxnet2015 <- function( sitename, path=NA, freq="d" ){
     } else if ( freq=="m" ){
       ## Monthly data
       print( paste( "getting monthly FLUXNET 2015 data for site", sitename ) )
-      dirnam_obs <- paste0( myhome, "data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/" )
+      dirnam_obs <- paste0( path_cx1data, "/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/" )
       allfiles <- list.files( dirnam_obs )
       allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
@@ -74,7 +74,7 @@ get_meteo_fluxnet2015 <- function( sitename, path=NA, freq="d" ){
     } else if ( freq=="w" ){
       ## Weekly data
       print( paste( "getting weekly FLUXNET 2015 data for site", sitename ) )
-      dirnam_obs <- paste0( myhome, "data/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/" )
+      dirnam_obs <- paste0( path_cx1data, "/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/" )
       allfiles <- list.files( dirnam_obs )
       allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
@@ -84,7 +84,7 @@ get_meteo_fluxnet2015 <- function( sitename, path=NA, freq="d" ){
     } else if ( freq=="d" ){
       ## Daily data
       print( paste( "getting annual FLUXNET 2015 data for site", sitename ) )
-      dirnam_obs <- paste0( myhome, "data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" )
+      dirnam_obs <- paste0( path_cx1data, "/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" )
       allfiles <- list.files( dirnam_obs )
       allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
@@ -515,7 +515,7 @@ download_watch_wfdei_from_cx1 <- function( var, settings_input, settings_sims ){
 }
 
 ##--------------------------------------------------------------------------
-## Checks if FLUXNET 2015 files are available for this variable and initiates download if now.
+## Checks if FLUXNET 2015 files are available for this variable and initiates download if not.
 ##--------------------------------------------------------------------------
 check_download_fluxnet2015 <- function( settings_input, settings_sims, sitename=NA ){
 
@@ -573,7 +573,7 @@ check_download_fluxnet2015 <- function( settings_input, settings_sims, sitename=
 }
 
 ##--------------------------------------------------------------------------
-## Checks if WATCH-WFDEI files are available for this variable and initiates download if now.
+## Checks if WATCH-WFDEI files are available for this variable and initiates download if not.
 ##--------------------------------------------------------------------------
 check_download_watch_wfdei <- function( var, settings_input, settings_sims ){
 
@@ -631,7 +631,7 @@ check_download_watch_wfdei <- function( var, settings_input, settings_sims ){
 
 
 ##--------------------------------------------------------------------------
-## Checks if MODIS_FPAR_MCD15A3H files are available for this variable and initiates download if now.
+## Checks if MODIS_FPAR_MCD15A3H files are available for this variable and initiates download if not.
 ##--------------------------------------------------------------------------
 check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, sitename=NA ){
 
@@ -686,6 +686,51 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
     if (length(filelist)==0){
       ## Download missing file
       error <- download_MODIS_FPAR_MCD15A3H_from_cx1_path( settings_input$path_MODIS_FPAR_MCD15A3H, sitename )
+    }
+
+  }
+  return( error )
+}
+
+##--------------------------------------------------------------------------
+## Checks if CMIP CO2 files are available and initiates download if not.
+##--------------------------------------------------------------------------
+check_download_cmip_co2 <- function( settings_input, settings_sims, sitename=NA ){
+
+  require(purrr)
+  require(dplyr)
+  require(rlang)
+
+  error <- 0
+
+  ## Determine file name, given <settings_input$path_cx1data>/co2
+  ## look for data for this site in the given directory
+  filn <- "cCO2_rcp85_const850-1765.dat"
+  localdir <- paste0( settings_input$path_cx1data, "/co2/")
+  filelist <- list.files( localdir, pattern = filn )
+
+  if (length(filelist)==0){
+
+    ## get user name from user
+    uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+
+    origpath <- "/work/bstocker/labprentice/data/co2/"
+
+    ## No files found at specified location
+    warn( paste0("Downloading files for CMIP CO2 into directory: ", localdir ) )
+    system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, filn, " ", localdir ) )
+
+  }
+
+  if (!is.na(sitename)){
+    ## Check if a file is available for a given site
+    localdir_bysite <- paste0( settings_sims$path_input, "/sitedata/co2/", sitename )
+    if (!dir.exists(localdir_bysite)) system( paste0("mkdir -p ", localdir_bysite ) )
+    filelist <- list.files( localdir_bysite, pattern = filn )
+
+    if (length(filelist)==0){
+      ## link file into site-level directory
+      system( paste0( "ln -svf ", localdir, filn, " ", localdir_bysite, "/" ) )
     }
 
   }
@@ -1689,68 +1734,72 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 
 
   } else {
-    # ##-----------------------------------------------------------
-    # ## Site-scale simulation(s)
-    # ## Ensemble of multiple site-scale simulations that "go toghether"
-    # ## In this case, <settings$name> is the name of the ensemble (e.g., "fluxnet2015")
-    # ##-----------------------------------------------------------
-    # ## If FLUXNET 2015 data is required, make sure it's available locally    
-    # ##-----------------------------------------------------------
-    # if (any( c( 
-    #   "fluxnet2015" %in% settings_input$temperature, 
-    #   "fluxnet2015" %in% settings_input$precipitation, 
-    #   "fluxnet2015" %in% settings_input$vpd, 
-    #   "fluxnet2015" %in% settings_input$ppfd
-    #   ))){
+    #-----------------------------------------------------------
+    # Site-scale simulation(s)
+    # Ensemble of multiple site-scale simulations that "go toghether"
+    # In this case, <settings$name> is the name of the ensemble (e.g., "fluxnet2015")
+    #-----------------------------------------------------------
+    # If FLUXNET 2015 data is required, make sure it's available locally    
+    #-----------------------------------------------------------
+    if (any( c( 
+      "fluxnet2015" %in% settings_input$temperature, 
+      "fluxnet2015" %in% settings_input$precipitation, 
+      "fluxnet2015" %in% settings_input$vpd, 
+      "fluxnet2015" %in% settings_input$ppfd
+      ))){
 
-    #   error <- check_download_fluxnet2015( settings_input, settings_sims )
+      error <- check_download_fluxnet2015( settings_input, settings_sims )
 
-    # }
+    }
 
-    # ##-----------------------------------------------------------
-    # ## If WATCH-WFDEI data is required, make sure it's available locally
-    # ##-----------------------------------------------------------
-    # if (any( c( 
-    #   "watch_wfdei" %in% settings_input$temperature, 
-    #   "watch_wfdei" %in% settings_input$precipitation, 
-    #   "watch_wfdei" %in% settings_input$vpd, 
-    #   "watch_wfdei" %in% settings_input$ppfd
-    #   ))){
+    ##-----------------------------------------------------------
+    ## If WATCH-WFDEI data is required, make sure it's available locally
+    ##-----------------------------------------------------------
+    if (any( c( 
+      "watch_wfdei" %in% settings_input$temperature, 
+      "watch_wfdei" %in% settings_input$precipitation, 
+      "watch_wfdei" %in% settings_input$vpd, 
+      "watch_wfdei" %in% settings_input$ppfd
+      ))){
 
-    #   error <- check_download_watch_wfdei( var = "Tair",         settings_input, settings_sims )
-    #   error <- check_download_watch_wfdei( var = "Snowf_daily",  settings_input, settings_sims )
-    #   error <- check_download_watch_wfdei( var = "Rainf_daily",  settings_input, settings_sims )
-    #   error <- check_download_watch_wfdei( var = "SWdown_daily", settings_input, settings_sims )
-    #   error <- check_download_watch_wfdei( var = "Qair_daily",   settings_input, settings_sims )
+      error <- check_download_watch_wfdei( var = "Tair",         settings_input, settings_sims )
+      error <- check_download_watch_wfdei( var = "Snowf_daily",  settings_input, settings_sims )
+      error <- check_download_watch_wfdei( var = "Rainf_daily",  settings_input, settings_sims )
+      error <- check_download_watch_wfdei( var = "SWdown_daily", settings_input, settings_sims )
+      error <- check_download_watch_wfdei( var = "Qair_daily",   settings_input, settings_sims )
 
-    # }
+    }
 
-    # ##-----------------------------------------------------------
-    # ## If MODIS_FPAR_MCD15A3H data is required, make sure it's available locally    
-    # ##-----------------------------------------------------------
-    # if (settings_input$fapar=="MODIS_FPAR_MCD15A3H") error <- check_download_MODIS_FPAR_MCD15A3H( settings_input, settings_sims )
+    ##-----------------------------------------------------------
+    ## If MODIS_FPAR_MCD15A3H data is required, make sure it's available locally    
+    ##-----------------------------------------------------------
+    if (settings_input$fapar=="MODIS_FPAR_MCD15A3H") error <- check_download_MODIS_FPAR_MCD15A3H( settings_input, settings_sims )
 
-    # ##-----------------------------------------------------------
-    # ## Loop over all sites and prepare input files by site.
-    # ##-----------------------------------------------------------
-    # ## Climate input files
-    # ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims ) ) %>%
-    #                 bind_rows()
+    ##-----------------------------------------------------------
+    ## Make sure CMIP standard CO2 data is available locally    
+    ##-----------------------------------------------------------
+    if (settings_input$co2=="cmip") error <- check_download_cmip_co2( settings_input, settings_sims )
+
+    ##-----------------------------------------------------------
+    ## Loop over all sites and prepare input files by site.
+    ##-----------------------------------------------------------
+    ## Climate input files
+    ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims ) ) %>%
+                    bind_rows()
 
     ## fAPAR input files
     ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims ) ) %>%
                   bind_rows()
 
-    
+    ## CO2 file: link into site-specific input directories
+    error_list <- purrr::map( as.list(settings_sims$sitenames), ~check_download_cmip_co2( settings_input, settings_sims, . ) )
+
   }
 
   if (return_data){
-    # out <- ddf_climate %>% left_join( ddf_fapar, by=c("date", "sitename"))
-    out <- ddf_fapar
+    return( ddf_climate %>% left_join( ddf_fapar, by=c("date", "sitename")) )
   } else {
-    out <- "Brexit."
+    return("Brexit.")
   }
-
-  return(out)
 
 }

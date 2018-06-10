@@ -97,6 +97,7 @@ settings_input <-  list(
   ppfd                     = "fluxnet2015",
   netrad                   = NA,
   fapar                    = "MODIS_FPAR_MCD15A3H",
+  co2                      = "cmip",
   path_cx1data             = "/alphadata01/bstocker/data/",
   path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpackedXXX/",
   path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
@@ -111,6 +112,8 @@ settings_input <-  list(
 - `ppfd`: See `temperature`.
 - `netrad`: See `temperature`.
 - `fapar`: A character string specifying the type of fAPAR data used as input (e.g. `"MODIS_FPAR_MCD15A3H"`), or `NA` in case no fAPAR data is used as forcing (internally simulated fAPAR).
+- `co2`: A character string specifying which CO$_2$ file should be used (globally uniform and identical for each site in an ensemble). All available CO$_2$ forcing files are located on CX1 at `/work/bstocker/labprentice/data/co2/`. `co2="cmip"` specifies that the CMIP-standard CO2 file `cCO2_rcp85_const850-1765.dat` should be used.
+- `path_cx1data`: the local directory that mirrors the data directory on CX1 (very handy!).
 
 ## Model setup
 Define model setup as a list.
@@ -162,6 +165,8 @@ Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`.
 ```{r, eval=FALSE}
 inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE )
 ```
+
+# BELOW NOT YET IMPLEMENTED
 
 ## Run the model
 Run SOFUN with standard parameters and read output in once.
