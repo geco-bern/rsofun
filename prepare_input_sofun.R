@@ -1692,6 +1692,9 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
          ## Add site name to dataframe (is merged by rows with ddf of other sites)
          mutate( sitename = sitename )
 
+  ##----------------------------------------------------------------------
+  ## Download (if necessary) and read
+  ##----------------------------------------------------------------------
   if (settings_input$fapar=="MODIS_FPAR_MCD15A3H"){
 
     ## Make sure data is available for this site
@@ -1920,6 +1923,14 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
                     bind_rows()
 
     ## fAPAR input files
+    ## first, place a text file in the fapar input data directory that specifies where it's coming from (needs to be read online by Fortran)                
+    dir <- paste0( settings_sims$path_input, "/sitedata/fapar/" )
+    if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
+    zz <- file( paste0(dir, "dfapar_source.txt"), "w")
+    tmp <- cat( settings_input$fapar , "\n", file=zz )
+    close(zz)
+
+    ## prepare the fapar input files for each site
     ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims ) ) %>%
                   bind_rows()
 
