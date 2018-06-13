@@ -1,17 +1,22 @@
 ##-----------------------------------------------------------
-## Runs the model for one site.
+## Runs the model and reads output in once.
 ##-----------------------------------------------------------
-run_sofun_bysite <- function( sitename, setup ){
+runread_sofun <- function( settings, setup, par ){
 
-  cmd <- paste0( "echo ", sitename, " | ./run", setup$model )
-  system( cmd )
+  out_std <- run_sofun( settings, setup, par )
 
+  ddf_list <- read_sofun( settings, setup, par )
+
+  return(ddf_list)
 }
+
 
 ##-----------------------------------------------------------
 ## Runs the model.
 ##-----------------------------------------------------------
 run_sofun <- function( settings, setup, par ){
+  
+  require(purrr)
 
   ## change to directory from where model is executed
   here <- getwd() # save current working directory
@@ -26,39 +31,130 @@ run_sofun <- function( settings, setup, par ){
       system( cmd )
     }
 
-    ## create command as a string to execute the model from the shell
-    ## The executable, specified by <setup$model>, runs all simulations belonging to an ensemble
-    ## or single simulations in the case of global or <settings$ensemble> == FALSE.
-    ## Note that for ensemble simulations, a text file containing all runnames belonging
-    ## to this ensemble is <settings$dir_sofun>/run/runnames_<settings$name>.txt. 
-    ## This is written by prepare_setup_sofun().
-    cmd <- paste0("echo ", settings$name, " | ./run", setup$model )
+    ## Run all simulations in this ensemble as individual simulations
+    out_std <- map( as.list(settings$sitenames), ~run_sofun_bysite( ., setup ) )
 
-    system( cmd )
+    # ## create command as a string to execute the model from the shell
+    # ## The executable, specified by <setup$model>, runs all simulations belonging to an ensemble
+    # ## or single simulations in the case of global or <settings$ensemble> == FALSE.
+    # ## Note that for ensemble simulations, a text file containing all runnames belonging
+    # ## to this ensemble is <settings$dir_sofun>/run/runnames_<settings$name>.txt. 
+    # ## This is written by prepare_setup_sofun().
+    # cmd <- paste0("echo ", settings$name, " | ./run", setup$model )
+    # system( cmd )
 
   }
 
   setwd( here )
-  return(error)
+  return(out_std)
 }
+
 
 ##-----------------------------------------------------------
 ## Reads output.
 ##-----------------------------------------------------------
 read_sofun <- function( settings, setup, par ){
 
+  require(purrr)
+  require(ncdf4)
+  
+  ## First, process NetCDF which are written separately for each simulation year
+  if (settings$lonlat){
+    map( as.list(settings$sitenames), ~proc_global( ., settings$path_output_nc ) )
+  } else {
+    map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
+  }
 
-  return(out)
+  ## Open and read daily output from NetCDF file for each site
+  ddf_list <- map( as.list(settings$sitenames), ~read_ncout_sofun_daily( ., settings ) )
+  names(ddf_list) <- settings$sitenames
+
+  return(ddf_list)
 }
 
+
 ##-----------------------------------------------------------
-## Runs the model and reads output in once.
+## Runs the model for one site.
 ##-----------------------------------------------------------
-runread_sofun <- function( settings, setup, par ){
+run_sofun_bysite <- function( sitename, setup ){
 
-  error <- run_sofun( settings, setup, par )
-
-  out <- read_sofun( settings, setup, par )
-
-  return(out)
+  cmd <- paste0( "echo ", sitename, " | ./run", setup$model )
+  out_std <- system( cmd, intern = TRUE )
+  return(out_std)
 }
+
+
+##-----------------------------------------------------------
+## Processes output, combining annual files into multi-annual
+## Using CDO commands. See file 'source proc_output.sh
+##-----------------------------------------------------------
+proc_ncout_sofun_bysite <- function( sitename, path_nc ){
+  filelist <- system( paste0( "ls ", path_nc, "/", sitename, ".????.*.nc" ), intern = TRUE )
+  if (length(filelist)>0){
+    system( paste0( "./proc_output_sofun.sh ", sitename, " ", path_nc ) )
+  } else {
+    warn("Assuming that annual files have already been combined to multi-annual.")
+  }
+}
+
+  
+##-----------------------------------------------------------
+## Gets SOFUN model output for multiple variables
+##-----------------------------------------------------------
+read_ncout_sofun_daily <- function( expname, settings ){
+
+  require(ncdf4)
+  require(dplyr)
+  require(lubridate)
+
+  source( "conv_noleap_to_ymd.R" )
+
+  print(paste("Reading NetCDF for", expname ) )
+
+  ## define vector of output variable names
+  vars <- c()
+  if (settings$lncoutdgpp)      vars <- c( vars, "gpp" )
+  if (settings$lncoutdwaterbal) vars <- c( vars, "aet", "pet", "wcont" )
+  
+  ## read one file to initialise data frame and get years
+  filnam_mod <- paste0( expname, ".d.", vars[1], ".nc" )
+  path       <- paste0( settings$path_output_nc, filnam_mod )
+  
+  if (file.exists(path)){
+
+    nc         <- nc_open( path )
+    gpp        <- ncvar_get( nc, varid = vars[1] )
+    time       <- ncvar_get( nc, varid = "time" )
+    nc_close(nc)
+
+    ## convert to a ymd datetime object
+    time <- conv_noleap_to_ymd( time, since="2001-01-01" )
+
+    ddf <- tibble( date=time )
+
+    readvars <- vars
+
+    if (class(nc)!="try-error") { 
+
+      for (ivar in readvars){
+        filnam_mod <- paste0( expname, ".d.", ivar, ".nc" )
+        path       <- paste0( settings$path_output_nc, filnam_mod )
+        nc         <- nc_open( path )
+        addvar     <- ncvar_get( nc, varid = ivar )
+        ddf        <- tibble( date=time, ivar=addvar ) %>% 
+                      setNames( c("date", ivar) ) %>% 
+                      right_join( ddf, by = "date" )
+      }
+
+    }
+
+  } else {
+
+    ddf <- NA
+
+  }
+
+  return( ddf )
+}
+
+

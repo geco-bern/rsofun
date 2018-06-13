@@ -98,7 +98,7 @@ write_simulation_parameter_bysite <- function( sitename, settings ){
 ## In the Fortran version, these settings are read in run-time from parameter files (text files, 
 ## one for each site, and simulation).
 ##-----------------------------------------------------------
-prepare_setup_sofun <- function( settings ){
+prepare_setup_sofun <- function( settings, write_paramfils ){
 
   require(readr)
   require(dplyr)
@@ -191,7 +191,7 @@ prepare_setup_sofun <- function( settings ){
       ## Write site and simulation parameter files
       ##--------------------------------------
       ## Write site parameter files for each site
-      if (settings$write_paramfils){
+      if (write_paramfils){
         print("writing site parameter files...")
         dirnam <- paste0( settings$path_input, "/site_paramfils/" )
         if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
@@ -200,7 +200,7 @@ prepare_setup_sofun <- function( settings ){
       }
 
       ## Write simulation parameter files for each site
-      if (settings$write_paramfils){
+      if (write_paramfils){
         print("writing simulation parameter files...")
         dirnam <- paste0( settings$path_input, "/run/" )
         if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 

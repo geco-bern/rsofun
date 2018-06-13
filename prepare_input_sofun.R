@@ -1927,7 +1927,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     dir <- paste0( settings_sims$path_input, "/sitedata/fapar/" )
     if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
     zz <- file( paste0(dir, "dfapar_source.txt"), "w")
-    tmp <- cat( settings_input$fapar , "\n", file=zz )
+    tmp <- cat( paste0("fapar_forcing_source                    ", settings_input$fapar) , "\n", file=zz )
     close(zz)
 
     ## prepare the fapar input files for each site

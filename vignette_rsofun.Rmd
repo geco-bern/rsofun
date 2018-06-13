@@ -20,7 +20,7 @@ header-includes:
 
 Load the package. This contains all the necessary wrapper functions to set up and run SOFUN and read its output. 
 ```{r, eval=FALSE}
-library(rsofun)  ## Not yet implemented
+library(sofunr)  ## Not yet implemented
 ```
 
 For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, and `runread_sofun()`. Load the respective functions.
@@ -52,7 +52,6 @@ settings_sims <- list(
   grid            = NA,
   implementation  = "fortran",
   in_ppfd         = TRUE,
-  write_paramfils = TRUE,
   recycle         = 1,
   spinupyears     = 10,
   loutplant       = FALSE,
@@ -126,13 +125,16 @@ Define model setup as a list.
 setup_sofun <- list( 
   model      = "pmodel",
   dir        = "~/sofun/trunk",
-  do_compile = FALSE
+  do_compile = FALSE,
+  simsuite   = FALSE
   )
 ```
 
 - `model`: For Fortran version: A character string specifying the compilation option. The name of the executable is derived from this as `"run<setup_sofun$model>"`.
 - `dir`: A path (character) specifying the directory of where the executables are located (corresponds to the parent directory of the model git repository).
 - `do_compile`: If `TRUE`, the model code is compiled as `make <setup_sofun$model>`. If `FALSE`, compiled executables are used (compiled with gfortran on a Mac 64-bit).
+- `simsuite`: If `TRUE`, the SOFUN option for running an entire simulation suite (ensemble of simulations) with a single executable. (In the Fortran implementation, this this requires the main program file `sofun_simsuite.f90` to be compiled instead of `sofun.f90`). This is to be preferred over a set of individual runs submitted individually when doing calibration runs because the cost across the entire ensemble (mod-obs error) can thus be calculated online.
+
 
 ## Calibration settings
 Define model calibration settings as a list.
@@ -174,7 +176,7 @@ siteinfo <- prepare_metainfo_fluxnet2015( settings_sims = settings_sims, setting
 ## Prepare simulation setup
 Create a run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information.
 ```{r, eval=FALSE}
-settings_sims <- prepare_setup_sofun( settings = settings_sims )
+settings_sims <- prepare_setup_sofun( settings = settings_sims, write_paramfils = FALSE )
 ```
 
 ## Prepare inputs
@@ -183,14 +185,14 @@ Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. Th
 inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE )
 ```
 
-# BELOW NOT YET IMPLEMENTED
-
 ## Run the model
 Run SOFUN with standard parameters and read output in once.
 ```{r, eval=FALSE}
 out <- runread_sofun( settings = settings_sims, setup = setup_sofun )  
 # to be done: pass calibratable parameters as additional argument , par = list( k_decay = 4.0 )
 ```
+
+# BELOW NOT YET IMPLEMENTED
 
 Calibrate SOFUN, returns calibrated parameters. Set `r setup_sofun$is_calib <- TRUE` to prevent SOFUN output to be written, calibration output written instead
 ```{r, eval=FALSE}

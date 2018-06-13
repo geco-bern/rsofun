@@ -28,9 +28,6 @@ nfert_noy_forcing_file                  XXXnoyfertfilnamXXX
 nfert_nhx_forcing_file                  XXXnhxfertfilnamXXX
 do_grharvest_forcing_file               XXXgrharvestfilnamXXX
 
-# Select one of 'fapar3g', 'evi_modis', or 'fpar_modis' (global, not implemented), or 'dfapar_MODIS_FPAR_MCD15A3H' (site-scale)
-fapar_forcing_source                    dfapar_MODIS_FPAR_MCD15A3H
-
 # switch for applying soil moisture stress function on GPP
 soilmstress                             .false.
 
