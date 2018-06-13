@@ -25,6 +25,7 @@ library(rsofun)  ## Not yet implemented
 
 For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, and `runread_sofun()`. Load the respective functions.
 ```{r}
+source("prepare_metainfo_fluxnet2015.R")
 source("prepare_setup_sofun.R")
 source("prepare_input_sofun.R")
 source("runread_sofun.R")
@@ -40,18 +41,18 @@ systr <- "''"    # for Mac
 Define the simulation settings as a list. Components of the simulation settings should specify only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (CSV file created "by hand" or some other more clever method for large ensembles - up to you.). The function `prepare_setup_sofun()` complements the simulation settings list by these additional components as lists with elements for each site, nested within the simulation settings list.
 ```{r}
 settings_sims <- list( 
-  path_siteinfo   = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun/siteinfo_fluxnet2015_sofun+whc.csv",
+  path_siteinfo   = "./metainfo_fluxnet2015",
   ensemble        = TRUE,
   lonlat          = FALSE,
   name            = "fluxnet2015",
-  dir_sofun       = "/alphadata01/bstocker/sofun/trunk/",
-  path_output     = "/alphadata01/bstocker/sofun/output_fluxnet2015_sofun_TEST/",
-  path_output_nc  = "/alphadata01/bstocker/sofun/output_nc_fluxnet2015_sofun_TEST/",
-  path_input      = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun_TEST/",
+  dir_sofun       = "~/sofun/trunk/",
+  path_output     = "~/sofun/output_fluxnet2015_sofun_TEST/",
+  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun_TEST/",
+  path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
   in_ppfd         = TRUE,
-  write_paramfils = FALSE,
+  write_paramfils = TRUE,
   recycle         = 1,
   spinupyears     = 10,
   loutplant       = FALSE,
@@ -102,11 +103,11 @@ settings_input <-  list(
   cloudcover               = "cru_ts4_01",
   fapar                    = "MODIS_FPAR_MCD15A3H",
   co2                      = "cmip",
-  path_cx1data             = "/alphadata01/bstocker/data/",
-  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
-  path_cru_ts4_01          = "/alphadata01/bstocker/data/cru/ts_4.01/",
-  path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
+  path_cx1data             = "~/data/",
+  path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_watch_wfdei         = "~/data/watch_wfdei/",
+  path_cru_ts4_01          = "~/data/cru/ts_4.01/",
+  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
   )
 ```
 
@@ -124,7 +125,7 @@ Define model setup as a list.
 ```{r}
 setup_sofun <- list( 
   model      = "pmodel",
-  dir        = "/alphadata01/bstocker/sofun/trunk",
+  dir        = "~/sofun/trunk",
   do_compile = FALSE
   )
 ```
@@ -140,12 +141,12 @@ settings_calib <- list(
   par        = list( k_decay = c(1,20) ),
   method     = "gensa",
   targetvars = c("gpp_nt", "gpp_dt"),
-  datasource = list(  gpp_nt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-                      gpp_dt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" ),
+  datasource = list(  gpp_nt = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+                      gpp_dt = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" ),
   varnames   = list( gpp_nt = "GPP_NT_VUT_REF", gpp_dt = "GPP_DT_VUT_REF" ),
   datenames  = list( gpp_nt = "TIMESTAMP", gpp_dt = "TIMESTAMP" )
   # targetvars = c("fapar"),
-  # datasource = list( fapar = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/" ),
+  # datasource = list( fapar = "~/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/" ),
   # varnames   = list( fapar = "modisvar" ),
   # datenames  = list( fapar = "date" )
  )
@@ -159,6 +160,12 @@ settings_calib <- list(
 
 
 # Workflow
+
+## Prepare meta info file
+This step is either done by hand so that the file has a certain structure (for column names etc see above: `path_siteinfo`). Below is an example for creating such a meta info file (info for each site in an ensemble) for the FLUXNET 2015 Tier 1 ensemble.
+```{r, eval=FALSE}
+siteinfo <- prepare_metainfo_fluxnet2015( settings_sims = settings_sims, settings_input = settings_input, overwrite=FALSE )
+```
 
 ## Prepare simulation setup
 Create a run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information.

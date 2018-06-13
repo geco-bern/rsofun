@@ -65,8 +65,8 @@ write_simulation_parameter_bysite <- function( sitename, settings ){
               daily_out_startyr    = settings$date_start[[sitename]] %>% year(),
               daily_out_endyr      = settings$date_end[[sitename]] %>% year(),
               co2filnam            = "cCO2_rcp85_const850-1765.dat",
-              lGr3                 = settings$is_c3[[sitename]],
-              lGr4                 = settings$is_c4[[sitename]],
+              lGr3                 = ifelse( is.na( settings$c4[[sitename]] ), TRUE,  ifelse( settings$c4[[sitename]]==TRUE, FALSE, TRUE  ) ),
+              lGr4                 = ifelse( is.na( settings$c4[[sitename]] ), FALSE, ifelse( settings$c4[[sitename]]==TRUE, TRUE, FALSE  ) ),
               fapar_forcing_source = "dfapar_MODIS_FPAR_MCD15A3H",
               in_ppfd              = settings$in_ppfd,
               loutplant            = settings$loutplant,
@@ -172,6 +172,10 @@ prepare_setup_sofun <- function( settings ){
       ## Water holding capacity of the soil at the site
       whc <- sapply( siteinfo[,1], function(x) siteinfo$whc[ which(siteinfo[,1]==x) ] ) %>% as.list()
       names(whc) <- siteinfo[,1][[sitenam_colnam]]
+
+      ## Whether there are C4 grasses at the sites
+      c4 <- sapply( siteinfo[,1], function(x) siteinfo$c4[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      names(c4) <- siteinfo[,1][[sitenam_colnam]]
       
       ## Complement settings list
       settings$sitenames  <- siteinfo[,1][[sitenam_colnam]]
@@ -181,6 +185,7 @@ prepare_setup_sofun <- function( settings ){
       settings$lat        <- lat         # is a list
       settings$elv        <- elv         # is a list
       settings$whc        <- whc         # is a list
+      settings$c4         <- c4          # is a list
 
       ##--------------------------------------
       ## Write site and simulation parameter files

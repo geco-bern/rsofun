@@ -1,13 +1,12 @@
-library(dplyr)
-library(readr)
-library(tidyr)
-library(rlang)
-library(purrr)
-
-overwrite <- TRUE
 
 long_to_wide <- function( sitename, long ){
 
+  require(dplyr)
+  require(readr)
+  require(tidyr)
+  require(rlang)
+  require(purrr)
+  
   sub <- long %>% filter( SITE_ID==sitename )
     
   ## remove variable groups that have lots of duplicates w.r.t. variable
@@ -266,18 +265,38 @@ long_to_wide <- function( sitename, long ){
 
 }
 
-filn <- "siteinfo_fluxnet2015.csv"
+prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwrite=TRUE ){
 
-if ( !file.exists( filn ) || overwrite ){
+  require(dplyr)
+  require(readr)
+  require(tidyr)
+  require(rlang)
+  require(purrr)
 
   ##--------------------------------------------------------------------
-  ## read meta info file and reshape
+  ## read meta info file and reshape to wide format
   ##--------------------------------------------------------------------
-  long <- read.csv( paste0(settings_input$path_cx1data, "/FLUXNET-2015_Tier1/FLX_AA-Flx_BIF_LATEST.csv"), sep = ";" ) %>% as_tibble()
-  wide <- purrr::map( as.list(unique(long$SITE_ID)), ~long_to_wide( ., long ) ) %>% bind_rows()
-
-  siteinfo <- wide
+  widefiln <- paste0( settings_input$path_cx1data, "/FLUXNET-2015_Tier1/FLX_AA-Flx_BIF_LATEST_WIDE.csv")
+  longfiln <- paste0( settings_input$path_cx1data, "/FLUXNET-2015_Tier1/FLX_AA-Flx_BIF_LATEST.csv")
+  if (!file.exists(longfiln)){
+    warn( "FLUXNET 2015 meta info file missing." )
+    warn( paste0("Expected file path: ", longfiln) )
+    warn( "Get it from CX1 (manually) and place it at path above. See you soon.")
+    abort()
+  }
+  if (!file.exists(widefiln) || overwrite){
+    long <- read.csv( paste0( settings_input$path_cx1data, "/FLUXNET-2015_Tier1/FLX_AA-Flx_BIF_LATEST.csv"), sep = ";" ) %>% as_tibble()
+    wide <- purrr::map( as.list(unique(long$SITE_ID)), ~long_to_wide( ., long ) ) %>% 
+      bind_rows() %>% 
+      write_csv( path = widefiln )
+    siteinfo <- wide
+  } else {
+    siteinfo <- read_csv( widefiln )
+  }
   
+  ##--------------------------------------------------------------------
+  ## Complementing information on start year and end year from file names (more reliable data than in the meta info file)
+  ##--------------------------------------------------------------------
   ## rename variables (columns) where necessary
   # siteinfo <- rename( siteinfo, c( "LOCATION_ELEV"="elv", "SITE_ID"="mysitename", "LOCATION_LONG"="lon", "LOCATION_LAT"="lat",
   #   "FLUX_MEASUREMENTS_DATE_START"="year_start", "FLUX_MEASUREMENTS_DATE_END"="year_end", "IGBP"="classid" ) )
@@ -345,55 +364,79 @@ if ( !file.exists( filn ) || overwrite ){
   ## exclude sites for which no data is available
   siteinfo <- siteinfo[ which( !is.element( siteinfo$mysitename, missing_data_for_sites) ), ]
 
-  # ## keep only relevant columns
-  # siteinfo <- select( siteinfo, mysitename, lon, lat, elv, year_start, year_end, years_data, classid )
 
   ##--------------------------------------------------------------------
-  ## Get more stations which are in LaThuile (free-fair-use - FFU) dataset but not in 2015
+  ## Get C3/C4 information from an additional file
   ##--------------------------------------------------------------------
-  dataFFU <- read_csv( paste0( settings_input$path_cx1data, "/gepisat/fluxdata_free-fair-use/Fluxdata_Meta-Data.csv") )
-  dataFFU_accurate <- read_csv( paste0(settings_input$path_cx1data, "/gepisat/fluxdata_free-fair-use/CommonAnc_LATEST.csv") )
+  siteinfo <- read_delim( paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/siteinfo_fluxnet_sofun_withC3C4info.csv" ), delim = ";" ) %>%
+    select( mysitename, type ) %>%
+    right_join( siteinfo, by = "mysitename" )
+
+  ## There was an error with mutate
+  siteinfo$c4 <- ifelse( (siteinfo$type=="C4" | siteinfo$type=="C3C4" ), TRUE, FALSE )
+
+  ##--------------------------------------------------------------------
+  ## Add water holding capacity information
+  ##--------------------------------------------------------------------
+  siteinfo <- read_csv( paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/siteinfo_fluxnet2015_sofun+whc.csv" ) ) %>%
+              select( mysitename, whc ) %>%
+              right_join( siteinfo, by = "mysitename" )
+
+  # ##--------------------------------------------------------------------
+  # ## Get more stations which are in LaThuile (free-fair-use - FFU) dataset but not in 2015
+  # ##--------------------------------------------------------------------
+  # dataFFU <- read_csv( paste0( settings_input$path_cx1data, "/gepisat/fluxdata_free-fair-use/Fluxdata_Meta-Data.csv") )
+  # dataFFU_accurate <- read_csv( paste0(settings_input$path_cx1data, "/gepisat/fluxdata_free-fair-use/CommonAnc_LATEST.csv") )
   
-  ## rename variables (columns) where necessary
-  dataFFU <- dplyr::rename( dataFFU, c( elv=ele, mysitename=stationid ) )
+  # ## rename variables (columns) where necessary
+  # dataFFU <- dplyr::rename( dataFFU, c( elv=ele, mysitename=stationid ) )
   
-  for (idx in seq(dim(dataFFU)[1])){
+  # for (idx in seq(dim(dataFFU)[1])){
     
-    if ( !is.element( dataFFU$mysitename[idx], siteinfo$mysitename ) ){
+  #   if ( !is.element( dataFFU$mysitename[idx], siteinfo$mysitename ) ){
     
-      print( paste( "adding station", dataFFU$mysitename[idx] ) )
-      tmp <- siteinfo[1,]
+  #     print( paste( "adding station", dataFFU$mysitename[idx] ) )
+  #     tmp <- siteinfo[1,]
 
-      tmpFFU <- dataFFU[idx,]
-      tmpFFU_accurate <- dataFFU_accurate[ which(dataFFU_accurate$Site.ID==tmpFFU$mysitename), ]
+  #     tmpFFU <- dataFFU[idx,]
+  #     tmpFFU_accurate <- dataFFU_accurate[ which(dataFFU_accurate$Site.ID==tmpFFU$mysitename), ]
 
-      tmp$mysitename <- tmpFFU$mysitename
-      tmp$lon <-        tmpFFU_accurate$Longitude
-      tmp$lat <-        tmpFFU_accurate$Latitude
-      tmp$elv <-        ifelse( (tmpFFU_accurate$Elevation!=" TBD"), tmpFFU_accurate$Elevation, tmpFFU$elv )
-      tmp$year_start <- tmpFFU$year_start
-      tmp$year_end   <- tmpFFU$year_end
-      tmp$years_data <- tmpFFU$years_data
-      tmp$classid    <- tmpFFU$classid
+  #     tmp$mysitename <- tmpFFU$mysitename
+  #     tmp$lon <-        tmpFFU_accurate$Longitude
+  #     tmp$lat <-        tmpFFU_accurate$Latitude
+  #     tmp$elv <-        ifelse( (tmpFFU_accurate$Elevation!=" TBD"), tmpFFU_accurate$Elevation, tmpFFU$elv )
+  #     tmp$year_start <- tmpFFU$year_start
+  #     tmp$year_end   <- tmpFFU$year_end
+  #     tmp$years_data <- tmpFFU$years_data
+  #     tmp$classid    <- tmpFFU$classid
 
-      siteinfo <- rbind( siteinfo, tmp )
-    }
-  }
-  siteinfo <- siteinfo[ order(siteinfo$mysitename), ]
-
-  # ## Get more accurate lon/lat/elv info for some sites
-  # for (idx in seq(dim(siteinfo)[1])){
-  #   tmpFFU_accurate <- dataFFU_accurate[ which(dataFFU_accurate$Site.ID==siteinfo$mysitename[idx]), ]
-  #   if (dim(tmpFFU_accurate)[1]==1){
-  #     siteinfo$lon[idx] <- tmpFFU_accurate$Longitude
-  #     siteinfo$lat[idx] <- tmpFFU_accurate$Latitude
-  #     siteinfo$elv[idx] <- ifelse( !is.na(as.numeric(tmpFFU_accurate$Elevation)), tmpFFU_accurate$Elevation, siteinfo$elv[idx] )
+  #     siteinfo <- rbind( siteinfo, tmp )
   #   }
   # }
+  # siteinfo <- siteinfo[ order(siteinfo$mysitename), ]
 
-  siteinfo$elv[ siteinfo$elv==-9999 ] <- NA
-  siteinfo$elv <- as.numeric( siteinfo$elv )
+  # # ## Get more accurate lon/lat/elv info for some sites
+  # # for (idx in seq(dim(siteinfo)[1])){
+  # #   tmpFFU_accurate <- dataFFU_accurate[ which(dataFFU_accurate$Site.ID==siteinfo$mysitename[idx]), ]
+  # #   if (dim(tmpFFU_accurate)[1]==1){
+  # #     siteinfo$lon[idx] <- tmpFFU_accurate$Longitude
+  # #     siteinfo$lat[idx] <- tmpFFU_accurate$Latitude
+  # #     siteinfo$elv[idx] <- ifelse( !is.na(as.numeric(tmpFFU_accurate$Elevation)), tmpFFU_accurate$Elevation, siteinfo$elv[idx] )
+  # #   }
+  # # }
 
+  # siteinfo$elv[ siteinfo$elv==-9999 ] <- NA
+  # siteinfo$elv <- as.numeric( siteinfo$elv )
 
+  ##--------------------------------------------------------------------
+  ## write to file
+  ##--------------------------------------------------------------------
+  print( paste0("Writing (light) meta info file: ", settings_sims$path_siteinfo ) )
+  print( "Full and light meta info is returned by this function as list." )
+  light <- select( siteinfo, mysitename, lon, lat, elv, year_start, year_end, years_data, classid, whc, c4 )
+  light %>% write_csv( path = settings_sims$path_siteinfo )
+
+  return( list( full = siteinfo, light = light ) )
 }
+
 
