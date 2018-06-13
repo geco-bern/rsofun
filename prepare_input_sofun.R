@@ -452,7 +452,7 @@ download_watch_wfdei_from_cx1_path <- function( path, getfiles ){
   subdir <- getfiles %>% dirname() %>% unique()
   if (!dir.exists(paste0( path, "/", subdir ))) system( paste0("mkdir -p ", paste0( path, "/", subdir ) ) )
 
-  if (!exists("uname")) uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+  if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
   error <- purrr::map( as.list(getfiles[1]), ~system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, ., " ", paste0( path, subdir ) ) ) )
 
   ## Show files in directory
@@ -522,7 +522,7 @@ download_cru_from_cx1_filn <- function( varnam, settings_input, filn ){
   origpath <- "/work/bstocker/labprentice/data/cru/ts_4.01/"
   filn <-  paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc")
   if (!dir.exists(settings_input$path_cru_ts4_01)) system(paste0("mkdir -p ", settings_input$path_cru_ts4_01))
-  if (!exists("uname")) uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+  if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
   system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, filn, " ", settings_input$path_cru_ts4_01 ) )
 
   return(NULL)
@@ -818,7 +818,7 @@ check_download_cmip_co2 <- function( settings_input, settings_sims, sitename=NA 
   if (length(filelist)==0){
 
     ## get user name from user
-    if (!exists("uname")) uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+    if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
 
     origpath <- "/work/bstocker/labprentice/data/co2/"
 
@@ -1341,7 +1341,7 @@ write_sofunformatted <- function( filnam, data ){
 download_fluxnet2015_from_cx1_path <- function( path, sitename=NA ){
 
   ## get user name from user
-  if (!exists("uname")) uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+  if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
 
   ## the path of fluxnet daily data on cx1
   origpath <- "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/"
@@ -1406,7 +1406,7 @@ download_MODIS_FPAR_MCD15A3H_from_cx1_path <- function( path, sitename=NA ){
   error <- 0
 
   ## get user name from user
-  if (!exists("uname")) uname <- readline( prompt = "Enter your user name for logging onto CX1: " )
+  if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
 
   ## the path of fluxnet daily data on cx1
   origpath <- "/work/bstocker/labprentice/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"

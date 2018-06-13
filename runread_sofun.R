@@ -1,4 +1,14 @@
 ##-----------------------------------------------------------
+## Runs the model for one site.
+##-----------------------------------------------------------
+run_sofun_bysite <- function( sitename, setup ){
+
+  cmd <- paste0( "echo ", sitename, " | ./run", setup$model )
+  system( cmd )
+
+}
+
+##-----------------------------------------------------------
 ## Runs the model.
 ##-----------------------------------------------------------
 run_sofun <- function( settings, setup, par ){

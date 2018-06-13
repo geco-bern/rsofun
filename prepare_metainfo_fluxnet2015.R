@@ -1,5 +1,32 @@
+get_pointdata_elv_watch <- function( lon, lat, filn ){
+  ##--------------------------------------------------------------------
+  ## Extract monthly data from files for each year and attach to the 
+  ## monthly dataframe (at the right location).
+  ## Original data in K, returns data in K
+  ##--------------------------------------------------------------------
+  if ( !file.exists( filn ) ) {
+    source("download_file_cx1.R")
+    path_remote <- "/work/bstocker/labprentice/data/watch_wfdei/WFDEI-elevation.nc"
+    path_local <- filn
+    download_file_cx1( path_remote, path_local )
+  }
 
-long_to_wide <- function( sitename, long ){
+  if ( file.exists( filn ) ){
+    
+    cmd <- paste( paste0( "./extract_pointdata_byfil.sh " ), filn, "elevation", "lon", "lat", sprintf( "%.2f", lon ), sprintf( "%.2f", lat ) )
+    system( cmd )
+    out <- read.table( "./out.txt" )$V1
+
+  } else {
+
+    abort("Could not find WATCH-WFDEI elevation file nor download it.")
+
+  }
+  return( out )
+}
+
+
+long_to_wide_fluxnet2015 <- function( sitename, long ){
 
   require(dplyr)
   require(readr)
@@ -265,7 +292,7 @@ long_to_wide <- function( sitename, long ){
 
 }
 
-prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwrite=TRUE ){
+prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwrite=TRUE, filn_elv_watch=NA ){
 
   require(dplyr)
   require(readr)
@@ -286,7 +313,7 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
   }
   if (!file.exists(widefiln) || overwrite){
     long <- read.csv( paste0( settings_input$path_cx1data, "/FLUXNET-2015_Tier1/FLX_AA-Flx_BIF_LATEST.csv"), sep = ";" ) %>% as_tibble()
-    wide <- purrr::map( as.list(unique(long$SITE_ID)), ~long_to_wide( ., long ) ) %>% 
+    wide <- purrr::map( as.list(unique(long$SITE_ID)), ~long_to_wide_fluxnet2015( ., long ) ) %>% 
       bind_rows() %>% 
       write_csv( path = widefiln )
     siteinfo <- wide
@@ -381,6 +408,16 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
   siteinfo <- read_csv( paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/siteinfo_fluxnet2015_sofun+whc.csv" ) ) %>%
               select( mysitename, whc ) %>%
               right_join( siteinfo, by = "mysitename" )
+
+  ##--------------------------------------------------------------------
+  ## Add elevation information by reading from WATCH-WFDEI elevation map
+  ##--------------------------------------------------------------------
+  if (!is.na(filn_elv_watch)){
+
+    siteinfo$elv_watch <- purrr::map_dbl( as.list(1:nrow(siteinfo)), ~get_pointdata_elv_watch( siteinfo$lon[.], siteinfo$lat[.], filn_elv_watch ) )
+    siteinfo <- siteinfo %>% mutate( elv = ifelse( is.na(elv), elv_watch, elv ) )
+
+  }
 
   # ##--------------------------------------------------------------------
   # ## Get more stations which are in LaThuile (free-fair-use - FFU) dataset but not in 2015

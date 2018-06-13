@@ -164,8 +164,12 @@ settings_calib <- list(
 ## Prepare meta info file
 This step is either done by hand so that the file has a certain structure (for column names etc see above: `path_siteinfo`). Below is an example for creating such a meta info file (info for each site in an ensemble) for the FLUXNET 2015 Tier 1 ensemble.
 ```{r, eval=FALSE}
-siteinfo <- prepare_metainfo_fluxnet2015( settings_sims = settings_sims, settings_input = settings_input, overwrite=FALSE )
+siteinfo <- prepare_metainfo_fluxnet2015( settings_sims = settings_sims, settings_input = settings_input, overwrite = FALSE, filn_elv_watch = paste0( settings_input$path_cx1data, "watch_wfdei/WFDEI-elevation.nc" ) )
 ```
+
+- `overwrite`: Set to `TRUE` if meta info file in wide format is to be overwritten (original is in long format, a wide-format version is used by `prepare_metainfo_fluxnet2015()`).
+- `filn_elv_watch`: File name (full path, character string) of the WATCH-WFDEI elevation file (NetCDF format) used to complement missing elevation information.
+
 
 ## Prepare simulation setup
 Create a run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information.
@@ -174,7 +178,7 @@ settings_sims <- prepare_setup_sofun( settings = settings_sims )
 ```
 
 ## Prepare inputs
-Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`.
+Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see (here)[https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2]). 
 ```{r, eval=FALSE}
 inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE )
 ```
