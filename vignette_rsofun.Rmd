@@ -20,7 +20,7 @@ header-includes:
 
 Load the package. This contains all the necessary wrapper functions to set up and run SOFUN and read its output. 
 ```{r, eval=FALSE}
-library(sofunr)  ## Not yet implemented
+library(rsofun)  ## Not yet implemented
 ```
 
 For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, and `runread_sofun()`. Load the respective functions.
@@ -45,10 +45,10 @@ settings_sims <- list(
   ensemble        = TRUE,
   lonlat          = FALSE,
   name            = "fluxnet2015",
-  dir_sofun       = "~/sofun/trunk/",
-  path_output     = "~/sofun/output_fluxnet2015_sofun_TEST/",
-  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun_TEST/",
-  path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
+  dir_sofun       = "/alphadata01/bstocker/sofun/trunk/",
+  path_output     = "/alphadata01/bstocker/sofun/output_fluxnet2015_sofun_TEST/",
+  path_output_nc  = "/alphadata01/bstocker/sofun/output_nc_fluxnet2015_sofun_TEST/",
+  path_input      = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
   in_ppfd         = TRUE,
@@ -102,11 +102,11 @@ settings_input <-  list(
   cloudcover               = "cru_ts4_01",
   fapar                    = "MODIS_FPAR_MCD15A3H",
   co2                      = "cmip",
-  path_cx1data             = "~/data/",
-  path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_watch_wfdei         = "~/data/watch_wfdei/",
-  path_cru_ts4_01          = "~/data/cru/ts_4.01/",
-  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
+  path_cx1data             = "/alphadata01/bstocker/data/",
+  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
+  path_cru_ts4_01          = "/alphadata01/bstocker/data/cru/ts_4.01/",
+  path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
   )
 ```
 
@@ -124,7 +124,7 @@ Define model setup as a list.
 ```{r}
 setup_sofun <- list( 
   model      = "pmodel",
-  dir        = "~/sofun/trunk",
+  dir        = "/alphadata01/bstocker/sofun/trunk",
   do_compile = FALSE,
   simsuite   = FALSE
   )
@@ -143,12 +143,12 @@ settings_calib <- list(
   par        = list( k_decay = c(1,20) ),
   method     = "gensa",
   targetvars = c("gpp_nt", "gpp_dt"),
-  datasource = list(  gpp_nt = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-                      gpp_dt = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" ),
+  datasource = list(  gpp_nt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+                      gpp_dt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" ),
   varnames   = list( gpp_nt = "GPP_NT_VUT_REF", gpp_dt = "GPP_DT_VUT_REF" ),
   datenames  = list( gpp_nt = "TIMESTAMP", gpp_dt = "TIMESTAMP" )
   # targetvars = c("fapar"),
-  # datasource = list( fapar = "~/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/" ),
+  # datasource = list( fapar = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/" ),
   # varnames   = list( fapar = "modisvar" ),
   # datenames  = list( fapar = "date" )
  )
@@ -176,13 +176,13 @@ siteinfo <- prepare_metainfo_fluxnet2015( settings_sims = settings_sims, setting
 ## Prepare simulation setup
 Create a run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information.
 ```{r, eval=FALSE}
-settings_sims <- prepare_setup_sofun( settings = settings_sims, write_paramfils = FALSE )
+settings_sims <- prepare_setup_sofun( settings = settings_sims, write_paramfils = TRUE )
 ```
 
 ## Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see (here)[https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2]). 
 ```{r, eval=FALSE}
-inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE )
+inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE, overwrite = FALSE, verbose = TRUE )
 ```
 
 ## Run the model

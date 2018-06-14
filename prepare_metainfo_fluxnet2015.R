@@ -299,6 +299,8 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
   require(tidyr)
   require(rlang)
   require(purrr)
+  
+  source("download_file_cx1.R")
 
   ##--------------------------------------------------------------------
   ## read meta info file and reshape to wide format
@@ -353,7 +355,7 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
     if (dim(tmp)[1]==0) {
       missing_data_for_sites <- c( missing_data_for_sites, as.character(siteinfo$mysitename[idx]) )
     } else {
-      print(paste("overwriting for site", tmp$mysitename," with year_start, year_end", tmp$year_start, tmp$year_end  ) )
+      # print(paste("overwriting for site", tmp$mysitename," with year_start, year_end", tmp$year_start, tmp$year_end  ) )
       if (!is.na(tmp$year_start)) { siteinfo$year_start[idx] <- tmp$year_start }
       if (!is.na(tmp$year_end))   { siteinfo$year_end[idx]   <- tmp$year_end   }
     }
@@ -395,7 +397,15 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
   ##--------------------------------------------------------------------
   ## Get C3/C4 information from an additional file
   ##--------------------------------------------------------------------
-  siteinfo <- read_delim( paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/siteinfo_fluxnet_sofun_withC3C4info.csv" ), delim = ";" ) %>%
+  filn <- paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/siteinfo_fluxnet_sofun_withC3C4info.csv" )
+  if (!file.exists(filn)){
+    download_file_cx1(  path_remote = "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/siteinfo_fluxnet_sofun_withC3C4info.csv", 
+                        path_local  = paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/" )
+                        )
+  }
+
+  # siteinfo <- read_delim( filn, delim = ";" ) %>%
+  siteinfo <- read_csv( filn ) %>%
     select( mysitename, type ) %>%
     right_join( siteinfo, by = "mysitename" )
 
@@ -405,7 +415,14 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
   ##--------------------------------------------------------------------
   ## Add water holding capacity information
   ##--------------------------------------------------------------------
-  siteinfo <- read_csv( paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/siteinfo_fluxnet2015_sofun+whc.csv" ) ) %>%
+  filn <- paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/siteinfo_fluxnet2015_sofun+whc.csv" )
+  if (!file.exists(filn)){
+    download_file_cx1(  path_remote = "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/siteinfo_fluxnet2015_sofun+whc.csv", 
+                        path_local  = paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/" )
+                        )
+  }
+
+  siteinfo <- read_csv( filn ) %>%
               select( mysitename, whc ) %>%
               right_join( siteinfo, by = "mysitename" )
 
