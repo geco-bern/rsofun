@@ -1488,11 +1488,11 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
   ## path of CSV file with data for this site
   dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
-  filn <- paste0( dir, "/clim_daily_", sitename, ".csv" )
+  csvfiln <- paste0( dir, "/clim_daily_", sitename, ".csv" )
 
-  if (file.exists(filn)&&!overwrite){
+  if (file.exists(csvfiln)&&!overwrite){
 
-    ddf <- read_csv( filn )
+    ddf <- read_csv( csvfiln )
 
   } else {
 
@@ -1566,6 +1566,9 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       if ("cru_ts4_01" %in% settings_input$vpd)           cruvars <- c(cruvars, "vap")
       if ("cru_ts4_01" %in% settings_input$vpd)           cruvars <- c(cruvars, "temp")
 
+      ## xxx debug
+      cruvars <- c()
+      
       ## First get monthly data
       mdf_cru <- get_clim_cru_monthly(  lon = settings_sims$lon[[sitename]], 
                                         lat = settings_sims$lat[[sitename]], 
@@ -1574,7 +1577,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
                                         )
 
       ## expand monthly to daily data
-      ddf <- expand_clim_cru_monthly( mdf_cru, cruvars ) %>%
+      if (length(cruvars)>0) ddf <- expand_clim_cru_monthly( mdf_cru, cruvars ) %>%
         right_join( ddf, by = "date" )
 
     }
@@ -1584,7 +1587,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
     ## <settings_sims$path_input>/sitedata/climate/<sitename>/clim_daily_<sitename>.csv 
     ## (may be read by Python directly???)
     ##----------------------------------------------------------------------
-    write_csv( ddf, path = filn )
+    write_csv( ddf, path = csvfiln )
 
   }
 
@@ -1696,11 +1699,11 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
   ## File path of fAPAR CSV file for this site
   dir <- paste0( settings_sims$path_input, "/sitedata/fapar/", sitename )
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
-  filn <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
+  csvfiln <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
 
-  if (file.exists(filn)&&!overwrite){
+  if (file.exists(csvfiln)&&!overwrite){
 
-    ddf <- read_csv( filn )
+    ddf <- read_csv( csvfiln )
 
   } else {
 
@@ -1738,7 +1741,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
       ## <settings_sims$path_input>/sitedata/fapar/<sitename>/fapar_daily_<sitename>.csv 
       ## (may be read by Python directly???)
       ##----------------------------------------------------------------------
-      write_csv( ddf, path = filn )
+      write_csv( ddf, path = csvfiln )
 
       ##----------------------------------------------------------------------
       ## Write fortran-formatted ascii files with daily values for each year 
