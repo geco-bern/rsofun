@@ -33,7 +33,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
   mod <- read_fwf( outfilnam, col_positions )
   
   ## xxx try
-  # cost <- cost_rmse(0.05)
+  # cost <- cost_rmse( lapply( settings_calib$par, function(x) x$init ) %>% unlist() )
 
   ##----------------------------------------------------------------
   ## Do the calibration
@@ -45,7 +45,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
     require(GenSA)
     ptm <- proc.time()
     optim_par_gensa = GenSA(
-        par   = lapply( settings_calib$par, function(x) x$best ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
+        par   = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
         fn    = cost_rmse,
         lower = lapply( settings_calib$par, function(x) x$lower ) %>% unlist(),
         upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist(),
@@ -54,10 +54,13 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
     proc.time() - ptm
     print(optim_par_gensa$par)
 
+    ## save optimised parameters
+    settings_calib$par$kphio$opt <- optim_par_gensa$par[1]
+
   }
 
   setwd( here )
-  return( optim_par_gensa$par )
+  return( settings_calib )
 
 }
 
@@ -67,7 +70,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
 cost_rmse <- function( par ){
 
   ## execute model for this parameter set
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par ), " | ./run", model, "_simsuite"), intern = TRUE )
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par[1] ), " | ./run", model, "_simsuite"), intern = TRUE )
 
   ## read output from calibration run
   out <- read_fwf( outfilnam, col_positions )

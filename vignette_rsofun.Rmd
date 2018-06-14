@@ -141,7 +141,7 @@ Define model calibration settings as a list.
 ```{r, eval=FALSE}
 settings_calib <- list( 
   # par              = list( k_decay = list( lower=1, upper=20 ) ),
-  par              = list( kphio = list( lower=0.03, upper=0.08, best=0.05792348 ) ),
+  par              = list( kphio = list( lower=0.03, upper=0.08, init=0.05792348 ) ),
   method           = "gensa",
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
@@ -161,7 +161,7 @@ settings_calib <- list(
  )
 ```
 
-- `par`: list of parameters to calibrate with their lower and upper boundaries
+- `par`: list of parameters to calibrate with their lower and upper boundaries. This is rigid. If you chose to use different parameters or in a different order, modify code in `calib_sofun.R` (function `cost_rmse()`) and in the model source code (`sofun/src/sofun.f90`).
 - `targetvars`: name of variable in SOFUN output
 - `datasource`: directory where site-specific files are located, a list of paths with names corresponding to 'targetvars'. The paths are pointing to directories where site-specific files are located. The first found file is read where the site name is contained in the file name (using `grepl()`).
 - `varnames`: name of column that holds the data for the target variable in the original file.
@@ -196,20 +196,15 @@ inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims
 Run SOFUN with standard parameters and read output in once.
 ```{r, eval=FALSE}
 out <- runread_sofun( settings = settings_sims, setup = setup_sofun )  
-# to be done: pass calibratable parameters as additional argument , par = list( k_decay = 4.0 )
 ```
 
-# BELOW NOT YET IMPLEMENTED
-
-Calibrate SOFUN, returns calibrated parameters. Set `r setup_sofun$is_calib <- TRUE` to prevent SOFUN output to be written, calibration output written instead
+Calibrate SOFUN, returns calibrated parameters.
 ```{r, eval=FALSE}
-setup_sofun$is_calib <- TRUE
 params_opt <- calib_sofun( setup = setup_sofun, settings_calib = settings_calib, settings_sims = settings_sims )
 ```
 
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
 ```{r, eval=FALSE}
-setup_sofun$is_calib <- FALSE
 out <- runread_sofun( path_forcing, setup = setup_sofun, par = params_opt )
 ```
 
