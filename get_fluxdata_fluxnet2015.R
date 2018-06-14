@@ -1,4 +1,4 @@
-get_fluxdata_fluxnet2015 <- function( sitename, freq="y" ){
+get_obs_fluxnet2015_raw <- function( sitename, path, vars, freq="y" ){
   ##--------------------------------------------------------------------
   ## Function returns a dataframe containing all the data of flux-derived
   ## GPP for the station implicitly given by path (argument).

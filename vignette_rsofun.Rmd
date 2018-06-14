@@ -140,13 +140,18 @@ setup_sofun <- list(
 Define model calibration settings as a list.
 ```{r, eval=FALSE}
 settings_calib <- list( 
-  par        = list( k_decay = c(1,20) ),
-  method     = "gensa",
-  targetvars = c("gpp_nt", "gpp_dt"),
-  datasource = list(  gpp_nt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-                      gpp_dt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" ),
-  varnames   = list( gpp_nt = "GPP_NT_VUT_REF", gpp_dt = "GPP_DT_VUT_REF" ),
-  datenames  = list( gpp_nt = "TIMESTAMP", gpp_dt = "TIMESTAMP" )
+  par              = list( k_decay = c(1,20) ),
+  method           = "gensa",
+  targetvars       = c("gpp"),
+  datasource       = list( gpp = "fluxnet2015" ),
+  timescale        = list( gpp = "d" ),
+  path_fluxnet2015 = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/"
+
+  # targetvars = c("gpp_nt", "gpp_dt"),
+  # datasource = list(  gpp_nt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  #                     gpp_dt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" ),
+  # varnames   = list( gpp_nt = "GPP_NT_VUT_REF", gpp_dt = "GPP_DT_VUT_REF" ),
+  # datenames  = list( gpp_nt = "TIMESTAMP", gpp_dt = "TIMESTAMP" )
   # targetvars = c("fapar"),
   # datasource = list( fapar = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/" ),
   # varnames   = list( fapar = "modisvar" ),

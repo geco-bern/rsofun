@@ -18,9 +18,9 @@ clean_fluxnet_gpp <- function( gpp_nt, gpp_dt, qflag_reichstein, qflag_lasslop, 
   gpp_nt[ res > q975 | res < q025  ] <- NA
   gpp_dt[ res > q975 | res < q025  ] <- NA
 
-  ## remove negative GPP
-  gpp_nt[ which(gpp_nt<0) ] <- NA
-  gpp_dt[ which(gpp_dt<0) ] <- NA
+  # ## remove negative GPP
+  # gpp_nt[ which(gpp_nt<0) ] <- NA
+  # gpp_dt[ which(gpp_dt<0) ] <- NA
 
   return( list( gpp_nt=gpp_nt, gpp_dt=gpp_dt ) )
 }
@@ -50,29 +50,5 @@ clean_fluxnet_swc <- function( swc, qflag_swc, frac_data_thresh=0.2 ){
   swc <- as.numeric( swc )
 
   return( swc )
-}
-
-cleandata_nn <- function( data, varnam ){
-  ##------------------------------------------------
-  ## Remove cold days and days where GPP is negative
-  ##------------------------------------------------
-  require( dplyr )
-
-  if (varnam=="gpp_obs"){
-    data <- filter( data, !is.na(gpp_obs) )
-    data <- filter( data, gpp_obs > 0.0 )
-
-  } else if (varnam=="et_obs"){
-    data <- filter( data, !is.na( et_obs ) )    
-
-  } else if (varnam=="wue_obs"){
-    data <- filter( data, !is.na( wue_obs ) )    
-
-  } else if (varnam=="lue_obs"){
-    data <- filter( data, !is.na( lue_obs ) )    
-
-  }
-
-  return( data )
 }
 
