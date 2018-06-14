@@ -5,7 +5,8 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
   ##----------------------------------------------------------------
   ddf_obs <- get_obs( settings_calib, settings_sims )
 
-  ## subset and make global
+  ## subset and make global 
+  ## XXX todo: filter by low temperature and soil moisture
   obs <<- ddf_obs %>% select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
 
   ##----------------------------------------------------------------
@@ -142,19 +143,6 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
     }
 
   }
-
-  # ## loop over variables to get a data frame for each variable 
-  # byvar <- lapply( as.list(targetvars), function(x) get_obs_calib_var( x, 
-  #                                         datasource = datasource[[ x ]], 
-  #                                         sitename   = sitename, 
-  #                                         date_start = date_start, 
-  #                                         date_end   = date_end, 
-  #                                         varname    = varnames[[ x ]], 
-  #                                         datename   = datenames[[ x ]] 
-  #                                         ) )
-
-  # ## combine variable-specific dataframes along columns
-  # bysite <- join_all( byvar, by="date" )
 
   return(ddf)
 
@@ -368,77 +356,6 @@ convert_le_fluxnet2015 <- function( le ){
 
 }
 
-
-
-# ## Function returns a data frame (tibble) containing observational data for one 
-# ## variable to be used as target variables for calibration for a given site, 
-# ## covering specified dates.
-# get_obs_calib_var <- function( var, datasource, sitename, date_start, date_end, varname, datename ){
-
-#   require(readr)
-#   require(dplyr)
-#   require(lubridate)
-
-#   ## look for data for this site in the given directory
-#   filelist <- list.files(datasource)
-
-#   ## read data and change variable names to conform and filter required dates 
-#   if (grepl("gpp", var) && grepl("FLUXNET-2015_Tier1", datasource) ){
-    
-#     print("Assuming FLUXNET 2015 standard.")
-
-#     idx <- lapply(filelist, function(x) grepl(sitename, x)) %>% unlist %>% which()
-#     filelist <- filelist[idx]
-#     if (length(idx)>1) {
-#       idx <- lapply(filelist, function(x) grepl("FULLSET", x)) %>% unlist %>% which()
-#     }
-#     filelist <- filelist[idx]
-#     if (length(idx)>1) {
-#       idx <- lapply(filelist, function(x) grepl("3.csv", x)) %>% unlist %>% which()
-#     } else {
-#       idx <- 1
-#     }
-#     filn <- filelist[idx]
-
-#     ## slightly different treatment of FLUXNET (standard FLUXNET 2015) data
-#     df_byvar <- try(read_csv( paste0( datasource, filn ), na="-9999", col_types = cols() ))
-#     if (class(df_byvar)=="try-error"){
-#       df_byvar <- tibble( date=NA, var=NA )  
-#     } else {
-#       df_byvar <- df_byvar %>%  rename_( var = varname, date = datename ) %>% 
-#                                 mutate( date = ymd( date ) ) %>%
-#                                 select( date, var ) %>% 
-#                                 filter( date >= date_start & date <= date_end )
-#     }
-
-
-#   } else {
-
-#     ## determine file to be read
-#     idx <- lapply(filelist, function(x) grepl(sitename, x)) %>% unlist %>% which()
-#     if (length(idx)>1) {idx <- idx[1]; print( paste0("Using only first found file in ", datasource, "for site ", sitename) )}
-#     filn <- filelist[idx]
-    
-#     ## other data sources  
-#     df_byvar <- try( read_csv( paste0( datasource, filn ) ) )
-#     if (class(df_byvar)=="try-error"){
-#       df_byvar <- tibble( date=NA, var=NA )  
-#     } else {
-#       df_byvar <- df_byvar %>%  rename_( var = varname, date = datename ) %>% 
-#                                 select( date, var ) %>% 
-#                                 filter( date >= date_start & date <= date_end )
-#     }
-  
-#   }
-
-#   ## change column names to what it's specified
-#   colnames(df_byvar) <- c("date", var)
-  
-#   return( df_byvar )
-
-# }
-
-
 clean_fluxnet_gpp <- function( gpp_nt, gpp_dt, qflag_reichstein, qflag_lasslop, cutoff=0.80 ){
   ##--------------------------------------------------------------------
   ## Cleans daily data using criteria 1-4 as documented in Tramontana et al., 2016
@@ -459,9 +376,9 @@ clean_fluxnet_gpp <- function( gpp_nt, gpp_dt, qflag_reichstein, qflag_lasslop, 
   gpp_nt[ res > q975 | res < q025  ] <- NA
   gpp_dt[ res > q975 | res < q025  ] <- NA
 
-  # ## remove negative GPP
-  # gpp_nt[ which(gpp_nt<0) ] <- NA
-  # gpp_dt[ which(gpp_dt<0) ] <- NA
+  ## remove negative GPP
+  gpp_nt[ which(gpp_nt<0) ] <- NA
+  gpp_dt[ which(gpp_dt<0) ] <- NA
 
   return( list( gpp_nt=gpp_nt, gpp_dt=gpp_dt ) )
 }
@@ -491,30 +408,6 @@ clean_fluxnet_swc <- function( swc, qflag_swc, frac_data_thresh=0.2 ){
   swc <- as.numeric( swc )
 
   return( swc )
-}
-
-cleandata_nn <- function( data, varnam ){
-  ##------------------------------------------------
-  ## Remove cold days and days where GPP is negative
-  ##------------------------------------------------
-  require( dplyr )
-
-  if (varnam=="gpp_obs"){
-    data <- filter( data, !is.na(gpp_obs) )
-    data <- filter( data, gpp_obs > 0.0 )
-
-  } else if (varnam=="et_obs"){
-    data <- filter( data, !is.na( et_obs ) )    
-
-  } else if (varnam=="wue_obs"){
-    data <- filter( data, !is.na( wue_obs ) )    
-
-  } else if (varnam=="lue_obs"){
-    data <- filter( data, !is.na( lue_obs ) )    
-
-  }
-
-  return( data )
 }
 
 
