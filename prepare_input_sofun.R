@@ -919,35 +919,35 @@ get_clim_cru_monthly <- function( lon, lat, settings, cruvars ){
 
   ## precipitation
   if ("prec" %in% cruvars){
-    mdf_prec <- get_pointdata_monthly_cru( "pre", lon_look, lat, settings, yrend=yrend ) %>% rename( prec_cru = mdata )
-    mdf <- mdf %>% left_join( mdf_prec, by = c("date", "year_dec") )
+    mdf <- get_pointdata_monthly_cru( "pre", lon_look, lat, settings, yrend=yrend ) %>% rename( prec_cru = mdata ) %>% 
+      right_join( mdf, by = c("date", "year_dec") )
   }
 
   ## wet days
   if ("wetd" %in% cruvars){
-    mdf_wetd <- get_pointdata_monthly_cru( "wet", lon_look, lat, settings, yrend=yrend ) %>% rename( wetd_cru = mdata )
-    mdf <- mdf %>% left_join( mdf_wetd, by = c("date", "year_dec") )
+    mdf <- get_pointdata_monthly_cru( "wet", lon_look, lat, settings, yrend=yrend ) %>% rename( wetd_cru = mdata ) %>% 
+      right_join( mdf, by = c("date", "year_dec") )
   }
 
   ## air temperature
   if ("temp" %in% cruvars){
-    mdf_temp <- get_pointdata_monthly_cru( "tmp", lon_look, lat, settings, yrend=yrend ) %>% rename( temp_cru = mdata )
-    mdf <- mdf %>% left_join( mdf_temp, by = c("date", "year_dec") )
+    mdf <- get_pointdata_monthly_cru( "tmp", lon_look, lat, settings, yrend=yrend ) %>% rename( temp_cru = mdata ) %>% 
+      right_join( mdf, by = c("date", "year_dec") )
   }
 
   ## VPD 
   ## calculated as a function of vapour pressure and temperature, vapour
   ## pressure is given by CRU data.
   if ("vap" %in% cruvars){
-    mdf_vap <-  get_pointdata_monthly_cru( "vap", lon_look, lat, settings, yrend=yrend ) %>%  
+    mdf <-  get_pointdata_monthly_cru( "vap", lon_look, lat, settings, yrend=yrend ) %>%  
                 rename( vap_cru = mdata ) %>%
                 ## merge temperature data in here for VPD calculation
                 left_join( mdf_temp, by =  c("date", "year_dec") ) %>%
                 ## calculate VPD (vap is in hPa)
                 mutate( vpd_vap_cru_temp_cru = calc_vpd( eact=1e2*vap_cru, tc=temp_cru ) ) %>% 
                 ## avoid duplicate 
-                select( -temp_cru )
-    mdf <- mdf %>% left_join( mdf_vap, by = c("date", "year_dec") )
+                select( -temp_cru ) %>% 
+                right_join( mdf, by = c("date", "year_dec") )
   }
 
 
@@ -993,9 +993,9 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
       mtemp_nxt <- mtemp
     }
 
-    ddf_temp <- init_dates_dataframe( yr, yr ) %>%
-                mutate( temp_cru_int = monthly2daily( mtemp, "polynom", mtemp_pvy[nmonth], mtemp_nxt[1], leapyear = leap_year(yr) ) )
-    ddf <- ddf %>% left_join( ddf_temp, by = c("date", "year_dec") )
+    ddf <- init_dates_dataframe( yr, yr ) %>%
+           mutate( temp_cru_int = monthly2daily( mtemp, "polynom", mtemp_pvy[nmonth], mtemp_nxt[1], leapyear = leap_year(yr) ) ) %>% 
+           right_join( ddf, by = c("date", "year_dec") )
   }
 
   ##--------------------------------------------------------------------
@@ -1005,11 +1005,11 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
     mprec <- dplyr::filter( mdf, year(date)==yr )$prec_cru
     mwetd <- dplyr::filter( mdf, year(date)==yr )$wetd_cru
 
-    ddf_prec <- init_dates_dataframe( yr, yr)
     if (any(!is.na(mprec))&&any(!is.na(mwetd))){
-      ddf_prec <- ddf_prec %>% mutate( prec_cru_gen = get_daily_prec( mprec, mwetd, leapyear = leap_year(yr) ) )
+      ddf <-  init_dates_dataframe( yr, yr ) %>% 
+              mutate( prec_cru_gen = get_daily_prec( mprec, mwetd, leapyear = leap_year(yr) ) ) %>% 
+              right_join( ddf, by = c("date", "year_dec") )
     }
-    ddf <- ddf %>% left_join( ddf_prec, by = c("date", "year_dec") )
   }
 
   ##--------------------------------------------------------------------
@@ -1026,12 +1026,12 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
       mccov_nxt <- mccov
     }
 
-    ddf_ccov <- init_dates_dataframe( yr, yr ) %>%
-                mutate( ccov_cru_int = monthly2daily( mccov, "polynom", mccov_pvy[nmonth], mccov_nxt[1], leapyear = leap_year(yr) ) )
+    ddf <-  init_dates_dataframe( yr, yr ) %>%
+            mutate( ccov_cru_int = monthly2daily( mccov, "polynom", mccov_pvy[nmonth], mccov_nxt[1], leapyear = leap_year(yr) ) ) %>%
+            ## Reduce CCOV to a maximum 100%
+            mutate( ccov_cru_int = ifelse( ccov_cru_int > 100, 100, ccov_cru_int ) ) %>%
+            right_join( ddf, by = c("date", "year_dec") )
 
-    ## Reduce CCOV to a maximum 100%
-    ddf_ccov$ccov_cru_int[ ddf_ccov$ccov_cru_int>100.0 ] <- 100.0
-    ddf <- ddf %>% left_join( ddf_ccov, by = c("date", "year_dec") )
   }
 
   ##--------------------------------------------------------------------
@@ -1048,9 +1048,9 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
       mvpd_nxt <- mvpd
     }
 
-    ddf_vpd <- init_dates_dataframe( yr, yr ) %>%
-               mutate( vpd_vap_cru_temp_cru_int = monthly2daily( mvpd, "polynom", mvpd_pvy[nmonth], mvpd_nxt[1], leapyear = (yr %% 4 == 0) ) )
-    ddf <- ddf %>% left_join( ddf_vpd, by = c("date", "year_dec") )
+    ddf <- init_dates_dataframe( yr, yr ) %>%
+               mutate( vpd_vap_cru_temp_cru_int = monthly2daily( mvpd, "polynom", mvpd_pvy[nmonth], mvpd_nxt[1], leapyear = (yr %% 4 == 0) ) ) %>% 
+               right_join( ddf, by = c("date", "year_dec") )
   }
 
   return( ddf )
