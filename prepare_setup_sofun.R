@@ -1,3 +1,187 @@
+
+##-----------------------------------------------------------
+## Prepares the setup for running SOFUN with simulation settings defined by argument 'settings'. 
+## In the Fortran version, these settings are read in run-time from parameter files (text files, 
+## one for each site, and simulation).
+##-----------------------------------------------------------
+prepare_setup_sofun <- function( settings, settings_calib, write_paramfils ){
+
+  require(readr)
+  require(dplyr)
+  require(lubridate)
+  require(purrr)
+
+  if (settings$lonlat){
+    ##-----------------------------------------------------------
+    ## LONLAT: Simulation on a spatial grid (longitude/latitude)
+    ## In this case, <settings$name> is the simulation name.
+    ##-----------------------------------------------------------
+    ## Write site parameter files for each site
+    ## create new simuation parameter file for this experiment
+    dirnam <- paste0( settings$path_input, "/site_paramfils/" )
+    if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
+    settings$path_site_paramfil <- write_site_parameter_bysite( settings$name, settings )
+
+    ## Write simulation parameter files for each site
+    dirnam <- paste0( settings$path_input, "/run/" )
+    if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
+    settings$path_simulation_paramfil <- write_simulation_parameter_bysite( settings$name, settings, settings_calib )
+
+    ## link input directories
+    system( paste0( "unlink ", settings$dir_sofun, "input/global") )
+    system( paste0( "ln -sf ", settings$path_input, "global ", settings$dir_sofun, "input/global") )
+
+
+  } else {
+    ## Site-scale simulation(s)
+    
+    if (settings$ensemble){
+      ##-----------------------------------------------------------
+      ## Ensemble: multiple site-scale simulations that "go toghether"
+      ## In this case, <settings$name> is the name of the ensemble (e.g., "fluxnet2015")
+      ##-----------------------------------------------------------
+      ## Read info that varies between sites from the meta information file <settings$path_siteinfo>:
+      ## - site name, must be: column number 1 
+      ## - longitude of site, column must be named 'lon'
+      ## - latitude of site, column must be named 'lat'
+      ## - elevation of site, column must be named 'elv'
+      ## - years for which simulation is to be done (corresponding to data availability from site), 
+      ##   requires two columns named 'year_start' and 'year_end'.
+      siteinfo <- read_csv( settings$path_siteinfo )
+
+      ##--------------------------------------
+      ## Complement settings with meta info for each site
+      ##--------------------------------------
+      ## Start year
+      year_start <- sapply( siteinfo[,1], function(x) siteinfo$year_start[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      date_start <- purrr::map( year_start, ~ymd( paste0( ., "-01-01" ) ) )
+      sitenam_colnam <- names(siteinfo)[1]
+      names(date_start) <- siteinfo[,1][[sitenam_colnam]]
+
+      ## End year
+      year_end <- sapply( siteinfo[,1], function(x) siteinfo$year_end[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      date_end <- purrr::map( year_end, ~ymd( paste0( ., "-01-01" ) ) )
+      names(date_end) <- siteinfo[,1][[sitenam_colnam]]
+
+      ## Number of years
+      nyears <- sapply( siteinfo[,1], function(x) (siteinfo$year_end[ which(siteinfo[,1]==x) ] - siteinfo$year_start[ which(siteinfo[,1]==x) ] + 1) ) %>% as.list()
+      names(nyears) <- siteinfo[,1][[sitenam_colnam]]
+
+      ## Longitude
+      lon <- sapply( siteinfo[,1], function(x) siteinfo$lon[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      names(lon) <- siteinfo[,1][[sitenam_colnam]]
+
+      ## Latitude
+      lat <- sapply( siteinfo[,1], function(x) siteinfo$lat[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      names(lat) <- siteinfo[,1][[sitenam_colnam]]
+
+      ## Elevation
+      elv <- sapply( siteinfo[,1], function(x) siteinfo$elv[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      names(elv) <- siteinfo[,1][[sitenam_colnam]]
+
+      ## Water holding capacity of the soil at the site
+      whc <- sapply( siteinfo[,1], function(x) siteinfo$whc[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      names(whc) <- siteinfo[,1][[sitenam_colnam]]
+
+      ## Whether there are C4 grasses at the sites
+      c4 <- sapply( siteinfo[,1], function(x) siteinfo$c4[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      names(c4) <- siteinfo[,1][[sitenam_colnam]]
+      
+      ## Complement settings list
+      settings$sitenames  <- siteinfo[,1][[sitenam_colnam]]
+      settings$date_start <- date_start  # is a list
+      settings$date_end   <- date_end    # is a list
+      settings$nyears     <- nyears      # is a list
+      settings$lon        <- lon         # is a list
+      settings$lat        <- lat         # is a list
+      settings$elv        <- elv         # is a list
+      settings$whc        <- whc         # is a list
+      settings$c4         <- c4          # is a list
+
+      ##--------------------------------------
+      ## Write site and simulation parameter files
+      ##--------------------------------------
+      ## Write site parameter files for each site
+      if (write_paramfils){
+        print("writing site parameter files...")
+        dirnam <- paste0( settings$path_input, "/site_paramfils/" )
+        if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
+        settings$path_site_paramfil <- purrr::map( as.list(settings$sitenames), ~write_site_parameter_bysite( ., settings ) )
+        names(settings$path_site_paramfil) <- siteinfo[,1][[sitenam_colnam]]
+      }
+
+      ## Write simulation parameter files for each site
+      if (write_paramfils){
+        print("writing simulation parameter files...")
+        dirnam <- paste0( settings$path_input, "/run/" )
+        if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
+        settings$path_simulation_paramfil <- purrr::map( as.list(settings$sitenames), ~write_simulation_parameter_bysite( ., settings, settings_calib ) )
+        names(settings$path_simulation_paramfil) <- siteinfo[,1][[sitenam_colnam]]
+      }
+
+      ## Write runnames (typically corresponds to site names) belonging to this ensemble into a text file 
+      ## located in the run directory.
+      settings$path_runnames <- paste0( settings$path_input, "run/runnames_", settings$name, ".txt" )
+      zz <- file( settings$path_runnames, "w")
+      tmp <- purrr::map( as.list(settings$sitenames), ~cat( ., "\n", file=zz ) )
+      close(zz)
+
+      ## Write total number of simulation years in this ensemble to file (needed in calibration setup)
+      filn_totrunyears <- paste0( settings$path_input, "run/totrunyears_calib.txt" )
+      zz <- file( filn_totrunyears, "w")
+      tmp <- purrr::map( unlist(settings$nyears)[names(unlist(settings$nyears)) %in% settings_calib$sitenames] %>% sum(), ~cat( ., "\n", file=zz ) )
+      close(zz)
+
+      ## Write total number of calibration targets to file
+      filn_nvars_calib <- paste0( settings$path_input, "run/nvars_calib.txt" )
+      zz <- file( filn_nvars_calib, "w")
+      tmp <- cat( length( settings_calib$targetvars ), "\n", file=zz )
+      close(zz)      
+      
+      ##--------------------------------------
+      ## Link directories
+      ##--------------------------------------
+      ## use same site and simulation parameter files for cnmodel and cmodel simulations
+      if (settings$name == 'fluxnet_fixalloc'){
+        ensemble_name <- 'fluxnet_cnmodel'
+      } else if (settings$name == 'olson_cmodel'){
+        ensemble_name <- 'olson'
+      } else if (settings$name == 'campi_cmodel'){
+        ensemble_name <- 'campi'
+      } else if (settings$name == 'fluxnet2015_cmodel'){
+        ensemble_name <- 'fluxnet2015'
+      } else {
+        ensemble_name <- settings$name
+      }
+
+      system( paste0( "unlink ", settings$dir_sofun, "run") )
+      system( paste0( "unlink ", settings$dir_sofun, "site_paramfils") )
+      system( paste0( "unlink ", settings$dir_sofun, "input/sitedata") )
+
+      system( paste0( "ln -sf ", settings$path_input, "run ", settings$dir_sofun, "run") )
+      system( paste0( "ln -sf ", settings$path_input, "site_paramfils ", settings$dir_sofun, "site_paramfils") )
+      system( paste0( "ln -sf ", settings$path_input, "sitedata ", settings$dir_sofun, "input/sitedata") )
+
+    }
+  }
+
+  ## link output directories (same for lonlat and ensemble)
+  lnk <- paste0( settings$dir_sofun, "/output" )
+  src <- strsplit( settings$path_output, "/") %>% unlist() %>% paste(., collapse="/")
+  if (file.exists(lnk)) system( paste0( "unlink ", lnk ) )
+  if (!file.exists((src))) system( paste0( "mkdir -p ", src ) )
+  system( paste0( "ln -sf ", src, " ", lnk ) )
+
+  lnk <- paste0( settings$dir_sofun, "/output_nc" )
+  src <- strsplit( settings$path_output_nc, "/") %>% unlist() %>% paste(., collapse="/")
+  if (file.exists(lnk)) system( paste0( "unlink ", lnk ) )
+  if (!file.exists((src))) system( paste0( "mkdir -p ", src ) )
+  system( paste0( "ln -sf ", src, " ", lnk ))
+
+  return(settings)
+
+}
+
 ##-----------------------------------------------------------
 ## Write "site" parameter file into <settings$path_input>/site_paramfils/<settings$grid>.parameter,
 ## containing information:
@@ -43,218 +227,54 @@ write_site_parameter_bysite <- function( sitename, settings ){
 ## - switches for holding inputs constant (climate, CO2, etc.)
 ## - switches for writing variables to output files
 ##-----------------------------------------------------------
-write_simulation_parameter_bysite <- function( sitename, settings ){
+write_simulation_parameter_bysite <- function( sitename, settings_sim, settings_calib=NA ){
 
   require(lubridate)
   require(dplyr)
   
   ## create path of the simulation parameter file for this site
-  path <- paste0( settings$path_input, "/run/", sitename, ".sofun.parameter" )
+  path <- paste0( settings_sim$path_input, "/run/", sitename, ".sofun.parameter" )
 
-  if (settings$implementation=="fortran"){
+  if (settings_sim$implementation=="fortran"){
 
     source("create_simulation_parameter_file.R")
     path <- create_simulation_parameter_file( 
               path                 = path,
               simname              = sitename,
               sitename             = sitename,
-              firstyeartrend       = settings$date_start[[sitename]] %>% year(),
-              spinupyears          = settings$spinupyears,
-              nyeartrend           = settings$date_end[[sitename]] %>% year() - settings$date_start[[sitename]] %>% year() + 1,
-              recycle              = settings$recycle,
-              daily_out_startyr    = settings$date_start[[sitename]] %>% year(),
-              daily_out_endyr      = settings$date_end[[sitename]] %>% year(),
+              firstyeartrend       = settings_sim$date_start[[sitename]] %>% year(),
+              spinupyears          = settings_sim$spinupyears,
+              nyeartrend           = settings_sim$date_end[[sitename]] %>% year() - settings_sim$date_start[[sitename]] %>% year() + 1,
+              recycle              = settings_sim$recycle,
+              daily_out_startyr    = settings_sim$date_start[[sitename]] %>% year(),
+              daily_out_endyr      = settings_sim$date_end[[sitename]] %>% year(),
               co2filnam            = "cCO2_rcp85_const850-1765.dat",
-              lGr3                 = ifelse( is.na( settings$c4[[sitename]] ), TRUE,  ifelse( settings$c4[[sitename]]==TRUE, FALSE, TRUE  ) ),
-              lGr4                 = ifelse( is.na( settings$c4[[sitename]] ), FALSE, ifelse( settings$c4[[sitename]]==TRUE, TRUE, FALSE  ) ),
+              lGr3                 = ifelse( is.na( settings_sim$c4[[sitename]] ), TRUE,  ifelse( settings_sim$c4[[sitename]]==TRUE, FALSE, TRUE  ) ),
+              lGr4                 = ifelse( is.na( settings_sim$c4[[sitename]] ), FALSE, ifelse( settings_sim$c4[[sitename]]==TRUE, TRUE, FALSE  ) ),
               fapar_forcing_source = "dfapar_MODIS_FPAR_MCD15A3H",
-              in_ppfd              = settings$in_ppfd,
-              loutplant            = settings$loutplant,
-              loutgpp              = settings$loutgpp,
-              loutwaterbal         = settings$loutwaterbal,
-              loutdtemp_soil       = settings$loutdtemp_soil,
-              loutdgpp             = settings$loutdgpp,
-              loutdrd              = settings$loutdrd,
-              loutdtransp          = settings$loutdtransp,
-              lncoutdtemp          = settings$lncoutdtemp,
-              lncoutdfapar         = settings$lncoutdfapar,
-              lncoutdgpp           = settings$lncoutdgpp, 
-              lncoutdwaterbal      = settings$lncoutdwaterbal
+              in_ppfd              = settings_sim$in_ppfd,
+              loutplant            = settings_sim$loutplant,
+              loutgpp              = settings_sim$loutgpp,
+              loutwaterbal         = settings_sim$loutwaterbal,
+              loutdtemp_soil       = settings_sim$loutdtemp_soil,
+              loutdgpp             = settings_sim$loutdgpp,
+              loutdrd              = settings_sim$loutdrd,
+              loutdtransp          = settings_sim$loutdtransp,
+              lncoutdtemp          = settings_sim$lncoutdtemp,
+              lncoutdfapar         = settings_sim$lncoutdfapar,
+              lncoutdgpp           = settings_sim$lncoutdgpp, 
+              lncoutdwaterbal      = settings_sim$lncoutdwaterbal,
+              lcalibgpp            = ifelse( identical(settings_calib, NA), FALSE, ("gpp" %in% settings_calib$targetvars) ),
+              lcalibfapar          = ifelse( identical(settings_calib, NA), FALSE, ("fapar" %in% settings_calib$targetvars) ),
+              lcalibtransp         = ifelse( identical(settings_calib, NA), FALSE, ("transp" %in% settings_calib$targetvars) )
               )
 
-  } else if (settings$implementation=="python"){
+  } else if (settings_sim$implementation=="python"){
     
     print("prepare_setup_sofun.R: write_simulation_parameter_bysite(): python tbc.")
 
   }
 
   return( path )
-
-}
-
-
-##-----------------------------------------------------------
-## Prepares the setup for running SOFUN with simulation settings defined by argument 'settings'. 
-## In the Fortran version, these settings are read in run-time from parameter files (text files, 
-## one for each site, and simulation).
-##-----------------------------------------------------------
-prepare_setup_sofun <- function( settings, write_paramfils ){
-
-  require(readr)
-  require(dplyr)
-  require(lubridate)
-  require(purrr)
-
-  if (settings$lonlat){
-    ##-----------------------------------------------------------
-    ## LONLAT: Simulation on a spatial grid (longitude/latitude)
-    ## In this case, <settings$name> is the simulation name.
-    ##-----------------------------------------------------------
-    ## Write site parameter files for each site
-    ## create new simuation parameter file for this experiment
-    dirnam <- paste0( settings$path_input, "/site_paramfils/" )
-    if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
-    settings$path_site_paramfil <- write_site_parameter_bysite( settings$name, settings )
-
-    ## Write simulation parameter files for each site
-    dirnam <- paste0( settings$path_input, "/run/" )
-    if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
-    settings$path_simulation_paramfil <- write_simulation_parameter_bysite( settings$name, settings )
-
-    ## link input directories
-    system( paste0( "unlink ", settings$dir_sofun, "input/global") )
-    system( paste0( "ln -sf ", settings$path_input, "global ", settings$dir_sofun, "input/global") )
-
-
-  } else {
-    ## Site-scale simulation(s)
-    
-    if (settings$ensemble){
-      ##-----------------------------------------------------------
-      ## Ensemble: multiple site-scale simulations that "go toghether"
-      ## In this case, <settings$name> is the name of the ensemble (e.g., "fluxnet2015")
-      ##-----------------------------------------------------------
-      ## Read info that varies between sites from the meta information file <settings$path_siteinfo>:
-      ## - site name, must be: column number 1 
-      ## - longitude of site, column must be named 'lon'
-      ## - latitude of site, column must be named 'lat'
-      ## - elevation of site, column must be named 'elv'
-      ## - years for which simulation is to be done (corresponding to data availability from site), 
-      ##   requires two columns named 'year_start' and 'year_end'.
-      siteinfo <- read_csv( settings$path_siteinfo )
-
-      ##--------------------------------------
-      ## Complement settings with meta info for each site
-      ##--------------------------------------
-      ## Start year
-      year_start <- sapply( siteinfo[,1], function(x) siteinfo$year_start[ which(siteinfo[,1]==x) ] ) %>% as.list()
-      date_start <- purrr::map( year_start, ~ymd( paste0( ., "-01-01" ) ) )
-      sitenam_colnam <- names(siteinfo)[1]
-      names(date_start) <- siteinfo[,1][[sitenam_colnam]]
-
-      ## End year
-      year_end <- sapply( siteinfo[,1], function(x) siteinfo$year_end[ which(siteinfo[,1]==x) ] ) %>% as.list()
-      date_end <- purrr::map( year_end, ~ymd( paste0( ., "-01-01" ) ) )
-      names(date_end) <- siteinfo[,1][[sitenam_colnam]]
-
-      ## Longitude
-      lon <- sapply( siteinfo[,1], function(x) siteinfo$lon[ which(siteinfo[,1]==x) ] ) %>% as.list()
-      names(lon) <- siteinfo[,1][[sitenam_colnam]]
-
-      ## Latitude
-      lat <- sapply( siteinfo[,1], function(x) siteinfo$lat[ which(siteinfo[,1]==x) ] ) %>% as.list()
-      names(lat) <- siteinfo[,1][[sitenam_colnam]]
-
-      ## Elevation
-      elv <- sapply( siteinfo[,1], function(x) siteinfo$elv[ which(siteinfo[,1]==x) ] ) %>% as.list()
-      names(elv) <- siteinfo[,1][[sitenam_colnam]]
-
-      ## Water holding capacity of the soil at the site
-      whc <- sapply( siteinfo[,1], function(x) siteinfo$whc[ which(siteinfo[,1]==x) ] ) %>% as.list()
-      names(whc) <- siteinfo[,1][[sitenam_colnam]]
-
-      ## Whether there are C4 grasses at the sites
-      c4 <- sapply( siteinfo[,1], function(x) siteinfo$c4[ which(siteinfo[,1]==x) ] ) %>% as.list()
-      names(c4) <- siteinfo[,1][[sitenam_colnam]]
-      
-      ## Complement settings list
-      settings$sitenames  <- siteinfo[,1][[sitenam_colnam]]
-      settings$date_start <- date_start  # is a list
-      settings$date_end   <- date_end    # is a list
-      settings$lon        <- lon         # is a list
-      settings$lat        <- lat         # is a list
-      settings$elv        <- elv         # is a list
-      settings$whc        <- whc         # is a list
-      settings$c4         <- c4          # is a list
-
-      ##--------------------------------------
-      ## Write site and simulation parameter files
-      ##--------------------------------------
-      ## Write site parameter files for each site
-      if (write_paramfils){
-        print("writing site parameter files...")
-        dirnam <- paste0( settings$path_input, "/site_paramfils/" )
-        if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
-        settings$path_site_paramfil <- purrr::map( as.list(settings$sitenames), ~write_site_parameter_bysite( ., settings ) )
-        names(settings$path_site_paramfil) <- siteinfo[,1][[sitenam_colnam]]
-      }
-
-      ## Write simulation parameter files for each site
-      if (write_paramfils){
-        print("writing simulation parameter files...")
-        dirnam <- paste0( settings$path_input, "/run/" )
-        if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
-        settings$path_simulation_paramfil <- purrr::map( as.list(settings$sitenames), ~write_simulation_parameter_bysite( ., settings ) )
-        names(settings$path_simulation_paramfil) <- siteinfo[,1][[sitenam_colnam]]
-      }
-
-      ## Write runnames (typically corresponds to site names) belonging to this ensemble into a text file 
-      ## located in the run directory.
-      settings$path_runnames <- paste0( settings$path_input, "run/runnames_", settings$name, ".txt" )
-      zz <- file( settings$path_runnames, "w")
-      tmp <- purrr::map( as.list(settings$sitenames), ~cat( ., "\n", file=zz ) )
-      close(zz)
-
-      ##--------------------------------------
-      ## Link directories
-      ##--------------------------------------
-      ## use same site and simulation parameter files for cnmodel and cmodel simulations
-      if (settings$name == 'fluxnet_fixalloc'){
-        ensemble_name <- 'fluxnet_cnmodel'
-      } else if (settings$name == 'olson_cmodel'){
-        ensemble_name <- 'olson'
-      } else if (settings$name == 'campi_cmodel'){
-        ensemble_name <- 'campi'
-      } else if (settings$name == 'fluxnet2015_cmodel'){
-        ensemble_name <- 'fluxnet2015'
-      } else {
-        ensemble_name <- settings$name
-      }
-
-      system( paste0( "unlink ", settings$dir_sofun, "run") )
-      system( paste0( "unlink ", settings$dir_sofun, "site_paramfils") )
-      system( paste0( "unlink ", settings$dir_sofun, "input/sitedata") )
-
-      system( paste0( "ln -sf ", settings$path_input, "run ", settings$dir_sofun, "run") )
-      system( paste0( "ln -sf ", settings$path_input, "site_paramfils ", settings$dir_sofun, "site_paramfils") )
-      system( paste0( "ln -sf ", settings$path_input, "sitedata ", settings$dir_sofun, "input/sitedata") )
-
-    }
-  }
-
-  ## link output directories (same for lonlat and ensemble)
-  lnk <- paste0( settings$dir_sofun, "/output" )
-  src <- strsplit( settings$path_output, "/") %>% unlist() %>% paste(., collapse="/")
-  if (file.exists(lnk)) system( paste0( "unlink ", lnk ) )
-  if (!file.exists((src))) system( paste0( "mkdir -p ", src ) )
-  system( paste0( "ln -sf ", src, " ", lnk ) )
-
-  lnk <- paste0( settings$dir_sofun, "/output_nc" )
-  src <- strsplit( settings$path_output_nc, "/") %>% unlist() %>% paste(., collapse="/")
-  if (file.exists(lnk)) system( paste0( "unlink ", lnk ) )
-  if (!file.exists((src))) system( paste0( "mkdir -p ", src ) )
-  system( paste0( "ln -sf ", src, " ", lnk ))
-
-  return(settings)
 
 }

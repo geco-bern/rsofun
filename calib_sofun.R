@@ -1,15 +1,83 @@
 calib_sofun <- function( setup, settings_calib, settings_sims ){
 
-
-  ## Collect raw observational data. 
-  ## Returns a list of data frames with dates and observational (target) data
-  ## list of length given by length of the ensemble (number of sites).
+  ##----------------------------------------------------------------
+  ## Collect observational data used as calibration target
+  ##----------------------------------------------------------------
   ddf_obs <- get_obs( settings_calib, settings_sims )
 
-  # ## Clean observational raw data for variables GPP
-  # obs <- clean_obs_raw_gpp_fluxnet2015( obs_raw )
+  ## subset and make global
+  obs <<- ddf_obs %>% select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
 
-  return( ddf_obs )
+  ##----------------------------------------------------------------
+  ## Set up for calibration ensemble
+  ##----------------------------------------------------------------
+  ## Write run names (site names) for calibration
+  settings_calib$path_runnames <- paste0( settings$path_input, "run/runnames_calib_", settings$name, ".txt" )
+  zz <- file( settings_calib$path_runnames, "w")
+  tmp <- purrr::map( as.list(settings_calib$sitenames), ~cat( ., "\n", file=zz ) )
+  close(zz)
+
+  ## global variables (used inside cost function)
+  model    <<- setup$model
+  simsuite <<- settings_sims$name
+
+  ## save current working directory
+  here <- getwd()
+  setwd( settings$dir_sofun )
+
+  ## example run to get output file structure
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", 1.0 ), " | ./run", model, "_simsuite"), intern = TRUE )  
+  outfilnam <<- paste0( settings$dir_sofun, "output_calib/calibtargets_tmp_fluxnet2015.txt" )
+  col_positions <<- fwf_empty( outfilnam, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ), comment = "" )
+  mod <- read_fwf( outfilnam, col_positions )
+  
+  ## xxx try
+  # cost <- cost_function(1.0)
+
+  ##----------------------------------------------------------------
+  ## Do the calibration
+  ##---------------------------------------------------------------- 
+  if (settings_calib$method=="gensa"){
+    ##----------------------------------------------------------------
+    ## calibrate the model parameters using GenSA (simulated annealing)
+    ##----------------------------------------------------------------
+    require(GenSA)
+    ptm <- proc.time()
+    optim_par_gensa = GenSA(
+        par = NULL,  # initial parameter value to be generated automatically
+        fn  = cost_function,
+        lower = lapply( settings_calib$par, function(x) x$lower  ) %>% unlist(),
+        upper = lapply( settings_calib$par, function(x) x$upper  ) %>% unlist(),
+        control=list( temperature=4000, max.call=settings_calib$maxit )
+      )
+    proc.time() - ptm
+    print(optim_par_gensa$par)
+
+  }
+
+  setwd( here )
+  return( optim_par_gensa$par )
+
+}
+
+##------------------------------------------------------------
+## Generic cost function of model-observation (mis-)match
+##------------------------------------------------------------
+cost_function <- function( par ){
+
+  ## execute model for this parameter set
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par ), " | ./run", model, "_simsuite"), intern = TRUE )
+
+  ## read output from calibration run
+  out <- read_fwf( outfilnam, col_positions )
+  
+  ## Combine obs and mod by columns
+  out <- bind_cols( obs, out )
+  
+  ## Calculate cost
+  cost <- mean( abs( out$gpp_mod - out$gpp_obs ), na.rm = TRUE )
+  
+  return(cost)
 }
 
 ##------------------------------------------------------------
@@ -27,10 +95,10 @@ get_obs <- function( settings_calib, settings_sims ){
   ## corresponds to each simulation's length (number of days).
   ##------------------------------------------------------------
   ## loop over sites to get data frame with all variables
-  list_bysite <- lapply( settings_sims$sitenames[1:3], function(x) get_obs_bysite(x,
-                                                        settings_calib = settings_calib, 
-                                                        settings_sims  = settings_sims
-                                                        ) %>% mutate( sitename=x ) )
+  list_bysite <- lapply( settings_calib$sitenames, function(x) get_obs_bysite(x,
+                                                      settings_calib = settings_calib, 
+                                                      settings_sims  = settings_sims
+                                                      ) %>% mutate( sitename=x ) )
                 
   ## combine dataframes from multiple sites along rows
   ddf_obs <- bind_rows( list_bysite )
@@ -57,7 +125,8 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
     if (settings_calib$datasource$gpp=="fluxnet2015"){
 
-      ddf <- get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib, settings_sims ) 
+      ddf <- get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib, settings_sims ) %>%
+             right_join( ddf, by = "date" )
 
     }
 
@@ -67,7 +136,8 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
     if (settings_calib$datasource$wcont=="fluxnet2015"){
 
-      ddf <- get_obs_bysite_wcont_fluxnet2015( sitename, settings_calib, settings_sims ) 
+      ddf <- get_obs_bysite_wcont_fluxnet2015( sitename, settings_calib, settings_sims ) %>%
+             right_join( ddf, by = "date" )
 
     }
 
@@ -92,6 +162,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
 ##----------------------------------------------------------------------
 ## Function for reading observational GPP data from FLUXNET 2015 dataset
+## and defining calibration target (which flux decomposition method etc.)
 ##----------------------------------------------------------------------
 get_obs_bysite_gpp_fluxnet2015 <- function( sitename, settings_calib, settings_sims ){
 
@@ -155,9 +226,14 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, settings_calib, settings_s
   ddf$GPP_NT_VUT_REF <- out_clean$gpp_nt
   ddf$GPP_DT_VUT_REF <- out_clean$gpp_dt
 
-  # if (any( !(c("LE_F_MDS", "LE_F_MDS_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
+  if (any( !(c("LE_F_MDS", "LE_F_MDS_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
   # ddf$LE_F_MDS_good <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.5 )
-  # ddf$LE_F_MDS      <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.2 )
+  ddf$LE_F_MDS      <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.2 )
+
+  ## define which data is to be used as target for calibration 'gpp_obs' and 'transp_obs'
+  ddf <- ddf %>% mutate( gpp_obs = (GPP_NT_VUT_REF + GPP_DT_VUT_REF)/2.0,
+                         transp_obs = LE_F_MDS ) %>%
+                 select( date, gpp_obs, transp_obs )
 
   return(ddf)
 

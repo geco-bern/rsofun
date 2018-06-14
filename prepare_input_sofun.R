@@ -90,7 +90,7 @@ get_meteo_fluxnet2015 <- function( sitename, path=NA, freq="d" ){
   }
 
   ## rename variables and unit conversions
-  meteo <- meteo %>%  rename( temp = TA_F,
+  meteo <- meteo %>%  dplyr::rename( temp = TA_F,
                               vpd  = VPD_F,
                               prec = P_F,
                               swin = SW_IN_F
@@ -101,7 +101,7 @@ get_meteo_fluxnet2015 <- function( sitename, path=NA, freq="d" ){
                               ccov = NA,
                               nrad = ifelse( is.element( "NETRAD", names(.) ), as.numeric(NETRAD) * 60 * 60 * 24, NA ) # given in W m-2 (avg.), required in J m-2 (daily total)
                             ) %>% 
-                      select( date, temp, prec, nrad, ppfd, vpd, ccov )
+                      dplyr::select( date, temp, prec, nrad, ppfd, vpd, ccov )
 
   return( meteo )
 
@@ -819,33 +819,32 @@ get_clim_cru_monthly <- function( lon, lat, settings, cruvars ){
   yrend <- substr( filn, start, stop ) %>% as.numeric %>% ifelse( length(.)==0, 2010, . )
 
   ## cloud cover
-  mdf_ccov <- get_pointdata_monthly_cru( "cld", lon, lat, settings, yrend=yrend )
+  mdf <- get_pointdata_monthly_cru( "cld", lon, lat, settings, yrend=yrend )
 
   ## Check if data is available at that location, otherwise use nearest gridcell
-  if (!is.data.frame(mdf_ccov)){
+  if (!is.data.frame(mdf)){
     lon_look <- find_nearest_cruland_by_lat( lon, lat, paste0( settings$path_cru, filn ) )
-    mdf_ccov <- get_pointdata_monthly_cru( "cld", lon_look, lat, settings, yrend=yrend )
+    mdf <- get_pointdata_monthly_cru( "cld", lon_look, lat, settings, yrend=yrend )
   } else {
     lon_look <- lon
   }
-  mdf_ccov <- mdf_ccov %>% rename( ccov_cru = mdata )    
-  mdf <- mdf_ccov    
+  mdf <- mdf %>% dplyr::rename( ccov_cru = mdata )    
 
   ## precipitation
   if ("prec" %in% cruvars){
-    mdf <- get_pointdata_monthly_cru( "pre", lon_look, lat, settings, yrend=yrend ) %>% rename( prec_cru = mdata ) %>% 
+    mdf <- get_pointdata_monthly_cru( "pre", lon_look, lat, settings, yrend=yrend ) %>% dplyr::rename( prec_cru = mdata ) %>% 
       right_join( mdf, by = c("date", "year_dec") )
   }
 
   ## wet days
   if ("wetd" %in% cruvars){
-    mdf <- get_pointdata_monthly_cru( "wet", lon_look, lat, settings, yrend=yrend ) %>% rename( wetd_cru = mdata ) %>% 
+    mdf <- get_pointdata_monthly_cru( "wet", lon_look, lat, settings, yrend=yrend ) %>% dplyr::rename( wetd_cru = mdata ) %>% 
       right_join( mdf, by = c("date", "year_dec") )
   }
 
   ## air temperature
   if ("temp" %in% cruvars){
-    mdf <- get_pointdata_monthly_cru( "tmp", lon_look, lat, settings, yrend=yrend ) %>% rename( temp_cru = mdata ) %>% 
+    mdf <- get_pointdata_monthly_cru( "tmp", lon_look, lat, settings, yrend=yrend ) %>% dplyr::rename( temp_cru = mdata ) %>% 
       right_join( mdf, by = c("date", "year_dec") )
   }
 
@@ -854,7 +853,7 @@ get_clim_cru_monthly <- function( lon, lat, settings, cruvars ){
   ## pressure is given by CRU data.
   if ("vap" %in% cruvars){
     mdf <-  get_pointdata_monthly_cru( "vap", lon_look, lat, settings, yrend=yrend ) %>%  
-                rename( vap_cru = mdata ) %>%
+                dplyr::rename( vap_cru = mdata ) %>%
                 ## merge temperature data in here for VPD calculation
                 left_join( mdf_temp, by =  c("date", "year_dec") ) %>%
                 ## calculate VPD (vap is in hPa)
@@ -1420,9 +1419,6 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       if ("cru_ts4_01" %in% settings_input$vpd)           cruvars <- c(cruvars, "vap")
       if ("cru_ts4_01" %in% settings_input$vpd)           cruvars <- c(cruvars, "temp")
 
-      ## xxx debug
-      cruvars <- c()
-      
       ## First get monthly data
       mdf_cru <- get_clim_cru_monthly(  lon = settings_sims$lon[[sitename]], 
                                         lat = settings_sims$lat[[sitename]], 
@@ -1793,7 +1789,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     ## Loop over all sites and prepare input files by site.
     ##-----------------------------------------------------------
     ## Climate input files
-    ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite, verbose ) ) %>%
+    ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite = FALSE, verbose ) ) %>%
                     bind_rows()
 
     ## fAPAR input files

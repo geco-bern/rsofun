@@ -98,6 +98,11 @@ loutturnover                            XXXloutturnoverXXX
 loutlanduse                             XXXloutlanduseXXX
 loutforcing                             XXXloutforcingXXX
 
+# Variables used as calibration targets (written to separate output)
+lcalibgpp                               XXXlcalibgppXXX
+lcalibfapar                             XXXlcalibfaparXXX
+lcalibtransp                            XXXlcalibtranspXXX
+
 #                                      |
 # write value behind this position:    |->
 ## EOF 

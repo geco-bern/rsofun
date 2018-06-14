@@ -63,7 +63,10 @@ create_simulation_parameter_file <- function(
   lncoutdtemp          = FALSE,
   lncoutdfapar         = FALSE,
   lncoutdgpp           = FALSE,
-  lncoutdwaterbal      = FALSE
+  lncoutdwaterbal      = FALSE,
+  lcalibgpp            = FALSE,
+  lcalibtransp         = FALSE,
+  lcalibfapar          = FALSE
   ){
 
 
@@ -370,6 +373,21 @@ create_simulation_parameter_file <- function(
     system( paste0( "sed -i ", systr, " 's/XXXlncoutdwaterbalXXX/.true./g' ", path ) )
   } else {
     system( paste0( "sed -i ", systr, " 's/XXXlncoutdwaterbalXXX/.false./g' ", path ) )
+  }
+  if (lcalibgpp){
+    system( paste0( "sed -i ", systr, " 's/XXXlcalibgppXXX/.true./g' ", path ) )
+  } else {
+    system( paste0( "sed -i ", systr, " 's/XXXlcalibgppXXX/.false./g' ", path ) )
+  }
+  if (lcalibfapar){
+    system( paste0( "sed -i ", systr, " 's/XXXlcalibfaparXXX/.true./g' ", path ) )
+  } else {
+    system( paste0( "sed -i ", systr, " 's/XXXlcalibfaparXXX/.false./g' ", path ) )
+  }
+  if (lcalibtransp){
+    system( paste0( "sed -i ", systr, " 's/XXXlcalibtranspXXX/.true./g' ", path ) )
+  } else {
+    system( paste0( "sed -i ", systr, " 's/XXXlcalibtranspXXX/.false./g' ", path ) )
   }
 
   # print( paste0( "finished writing ", path ) )
