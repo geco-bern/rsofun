@@ -32,7 +32,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
   mod <- read_fwf( outfilnam, col_positions )
   
   ## xxx try
-  # cost <- cost_function(1.0)
+  # cost <- cost_rmse(0.05)
 
   ##----------------------------------------------------------------
   ## Do the calibration
@@ -44,10 +44,10 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
     require(GenSA)
     ptm <- proc.time()
     optim_par_gensa = GenSA(
-        par = NULL,  # initial parameter value to be generated automatically
-        fn  = cost_function,
-        lower = lapply( settings_calib$par, function(x) x$lower  ) %>% unlist(),
-        upper = lapply( settings_calib$par, function(x) x$upper  ) %>% unlist(),
+        par   = lapply( settings_calib$par, function(x) x$best ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
+        fn    = cost_rmse,
+        lower = lapply( settings_calib$par, function(x) x$lower ) %>% unlist(),
+        upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist(),
         control=list( temperature=4000, max.call=settings_calib$maxit )
       )
     proc.time() - ptm
@@ -63,7 +63,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
 ##------------------------------------------------------------
 ## Generic cost function of model-observation (mis-)match
 ##------------------------------------------------------------
-cost_function <- function( par ){
+cost_rmse <- function( par ){
 
   ## execute model for this parameter set
   out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par ), " | ./run", model, "_simsuite"), intern = TRUE )
@@ -74,8 +74,8 @@ cost_function <- function( par ){
   ## Combine obs and mod by columns
   out <- bind_cols( obs, out )
   
-  ## Calculate cost
-  cost <- mean( abs( out$gpp_mod - out$gpp_obs ), na.rm = TRUE )
+  ## Calculate cost (RMSE)
+  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
   
   return(cost)
 }

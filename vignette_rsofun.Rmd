@@ -140,7 +140,8 @@ setup_sofun <- list(
 Define model calibration settings as a list.
 ```{r, eval=FALSE}
 settings_calib <- list( 
-  par              = list( k_decay = list( lower=1, upper=20 ) ),
+  # par              = list( k_decay = list( lower=1, upper=20 ) ),
+  par              = list( kphio = list( lower=0.03, upper=0.08, best=0.05792348 ) ),
   method           = "gensa",
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
