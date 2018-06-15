@@ -1,11 +1,11 @@
 ##-----------------------------------------------------------
 ## Runs the model and reads output in once.
 ##-----------------------------------------------------------
-runread_sofun <- function( settings, setup, par ){
+runread_sofun <- function( settings, setup ){
 
-  out_std <- run_sofun( settings, setup, par )
+  out_std <- run_sofun( settings, setup )
 
-  ddf_list <- read_sofun( settings, setup, par )
+  ddf_list <- read_sofun( settings, setup )
 
   return(ddf_list)
 }
@@ -14,7 +14,7 @@ runread_sofun <- function( settings, setup, par ){
 ##-----------------------------------------------------------
 ## Runs the model.
 ##-----------------------------------------------------------
-run_sofun <- function( settings, setup, par ){
+run_sofun <- function( settings, setup ){
   
   require(purrr)
 
@@ -29,19 +29,12 @@ run_sofun <- function( settings, setup, par ){
     if (setup$do_compile){
       cmd <- paste0("make ", setup$model)
       system( cmd )
+    } else if (!file.exists(paste0("run", setup$model))){
+      abort(paste("Executable not available: ", paste0("run", setup$model)))
     }
 
     ## Run all simulations in this ensemble as individual simulations
     out_std <- map( as.list(settings$sitenames), ~run_sofun_bysite( ., setup ) )
-
-    # ## create command as a string to execute the model from the shell
-    # ## The executable, specified by <setup$model>, runs all simulations belonging to an ensemble
-    # ## or single simulations in the case of global or <settings$ensemble> == FALSE.
-    # ## Note that for ensemble simulations, a text file containing all runnames belonging
-    # ## to this ensemble is <settings$dir_sofun>/run/runnames_<settings$name>.txt. 
-    # ## This is written by prepare_setup_sofun().
-    # cmd <- paste0("echo ", settings$name, " | ./run", setup$model )
-    # system( cmd )
 
   }
 
@@ -53,7 +46,7 @@ run_sofun <- function( settings, setup, par ){
 ##-----------------------------------------------------------
 ## Reads output.
 ##-----------------------------------------------------------
-read_sofun <- function( settings, setup, par ){
+read_sofun <- function( settings, setup ){
 
   require(purrr)
   require(ncdf4)
@@ -80,6 +73,7 @@ run_sofun_bysite <- function( sitename, setup ){
 
   cmd <- paste0( "echo ", sitename, " | ./run", setup$model )
   out_std <- system( cmd, intern = TRUE )
+  
   return(out_std)
 }
 

@@ -159,10 +159,13 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
       system( paste0( "unlink ", settings$dir_sofun, "run") )
       system( paste0( "unlink ", settings$dir_sofun, "site_paramfils") )
       system( paste0( "unlink ", settings$dir_sofun, "input/sitedata") )
+      system( paste0( "unlink ", settings$dir_sofun, "params") )
 
       system( paste0( "ln -sf ", settings$path_input, "run ", settings$dir_sofun, "run") )
       system( paste0( "ln -sf ", settings$path_input, "site_paramfils ", settings$dir_sofun, "site_paramfils") )
       system( paste0( "ln -sf ", settings$path_input, "sitedata ", settings$dir_sofun, "input/sitedata") )
+      if (!dir.exists(paste0( settings$dir_sofun, "params"))) system( paste0( "mkdir ", settings$dir_sofun, "params"))
+      system( paste0( "cp ", settings$dir_sofun, "params_std/* ", settings$dir_sofun, "params/") )  # not linking, but copying so that files may be overwritten after calibration
 
     }
   }

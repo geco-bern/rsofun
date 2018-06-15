@@ -23,12 +23,13 @@ Load the package. This contains all the necessary wrapper functions to set up an
 library(rsofun)  ## Not yet implemented
 ```
 
-For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, and `runread_sofun()`. Load the respective functions.
+For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, `runread_sofun()` , and `update_params()`. Load the respective functions.
 ```{r}
 source("prepare_metainfo_fluxnet2015.R")
 source("prepare_setup_sofun.R")
 source("prepare_input_sofun.R")
 source("runread_sofun.R")
+source("update_params.R")
 ```
 
 Some other crap.
@@ -139,8 +140,8 @@ setup_sofun <- list(
 ## Calibration settings
 Define model calibration settings as a list.
 ```{r, eval=FALSE}
-settings_calib <- list( 
-  # par              = list( k_decay = list( lower=1, upper=20 ) ),
+settings_calib <- list(
+  name             = "kphio_gpp_fluxnet2015",
   par              = list( kphio = list( lower=0.03, upper=0.08, init=0.05792348 ) ),
   method           = "gensa",
   targetvars       = c("gpp"),
@@ -152,23 +153,19 @@ settings_calib <- list(
   filter_temp_min  = 5.0,
   filter_temp_max  = 35.0,
   filter_soilm_min = 0.5
-  # targetvars = c("gpp_nt", "gpp_dt"),
-  # datasource = list(  gpp_nt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  #                     gpp_dt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" ),
-  # varnames   = list( gpp_nt = "GPP_NT_VUT_REF", gpp_dt = "GPP_DT_VUT_REF" ),
-  # datenames  = list( gpp_nt = "TIMESTAMP", gpp_dt = "TIMESTAMP" )
-  # targetvars = c("fapar"),
-  # datasource = list( fapar = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/" ),
-  # varnames   = list( fapar = "modisvar" ),
-  # datenames  = list( fapar = "date" )
  )
 ```
 
+- `name`: A character string to define a name used for this calibration, used in file names containing calibration outputs.
 - `par`: list of parameters to calibrate with their lower and upper boundaries. This is rigid. If you chose to use different parameters or in a different order, modify code in `calib_sofun.R` (function `cost_rmse()`) and in the model source code (`sofun/src/sofun.f90`).
-- `targetvars`: name of variable in SOFUN output
-- `datasource`: directory where site-specific files are located, a list of paths with names corresponding to 'targetvars'. The paths are pointing to directories where site-specific files are located. The first found file is read where the site name is contained in the file name (using `grepl()`).
-- `varnames`: name of column that holds the data for the target variable in the original file.
-- `datenames`: name of column that holds the date information in the original file.
+- `targetvars`: Character string for name of variable in SOFUN output
+- `datasource`: Named list of character strings with data source identifiers for each calibration target variable. The list is named corresponding to variable names defined by 'targetvars'. The identifier triggers certain functions to be used for reading and processing observational data. Use, e.g., `datasource = list( gpp = "fluxnet2015" )` to specify that observational data for the target variable `"gpp"` comes from `"fluxnet2015"`.
+- `timescale`: Named list of characters specifying the time scale used for aggregating modelled and observational data in time series before calculating the cost function. For naming the list, see point above. Set, e.g., `timescale = list( gpp = "d" )` to calibrate to observational GPP aggregated to daily intervals (i.e. not aggregated). Use `"w"` for weekly, `"m"` for monthly, or `"y"` for annual (XXX NOT YET IMPLEMENTED).
+- `path_fluxnet2015`: Path (character string) for where FLUXNET 2015 data is located (data files may be in subdirectories thereof). This settings list element needs to be specified if any of `datasource` is equal "fluxnet2015".
+- `sitenames`: Vector of character strings for site names of sites' data to be used for calibration.
+- `filter_temp_min`: Minimum temperature of data used for calibration. Data points for days where air temperature is below, are removed (replaced by NA) in the observational data.
+- `filter_temp_max`: Maximum temperature of data used for calibration. Data points for days where air temperature is above, are removed (replaced by NA) in the observational data.
+- `filter_soilm_min`: Minimum soil moisture (relative, normalised to maximum of mean across multiple depths at each site) of data used for calibration. Data points for days where soil moisture is below, are removed (replaced by NA) in the observational data.
 
 
 # Workflow
@@ -208,6 +205,8 @@ settings_calib <- calib_sofun( setup = setup_sofun, settings_calib = settings_ca
 
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
 ```{r, eval=FALSE}
-out <- runread_sofun( path_forcing, setup = setup_sofun, par = params_opt )
+params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
+nothing <- update_params( params_opt )
+out <- runread_sofun( settings = settings_sims, setup = setup_sofun )
 ```
 

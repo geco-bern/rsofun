@@ -60,7 +60,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
     proc.time() - ptm
     print(optim_par_gensa$par)
 
-    filn <- "out_gensa.Rdat"
+    filn <- paste0("out_gensa_", settings_calib$name, ".Rdat")
     print( paste0( "writing output from GenSA function to ", filn ) )
     save( optim_par_gensa, file = filn )
 
@@ -75,7 +75,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
   ## Write calibrated parameters into a CSV file
   vec <- unlist( lapply( settings_calib$par, function(x) x$opt ) )
   df <- as_tibble(vec) %>% setNames( names(vec) )
-  filn <- "params_opt.csv"
+  filn <- paste0("params_opt_", settings_calib$name,".csv")
   print( paste0( "writing calibrated parameters to ", filn ) )
   write_csv( df, path = filn )
   
