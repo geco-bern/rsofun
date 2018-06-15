@@ -148,7 +148,10 @@ settings_calib <- list(
   timescale        = list( gpp = "d" ),
   path_fluxnet2015 = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/",
   maxit            = 300,
-  sitenames        = c("FR-Pue", "CH-Oe1", "AU-How")
+  sitenames        = c("FR-Pue", "CH-Oe1", "AU-How"),
+  filter_temp_min  = 5.0,
+  filter_temp_max  = 35.0,
+  filter_soilm_min = 0.5
   # targetvars = c("gpp_nt", "gpp_dt"),
   # datasource = list(  gpp_nt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   #                     gpp_dt = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" ),
@@ -198,9 +201,9 @@ Run SOFUN with standard parameters and read output in once.
 out <- runread_sofun( settings = settings_sims, setup = setup_sofun )  
 ```
 
-Calibrate SOFUN, returns calibrated parameters.
+Calibrate SOFUN, returns calibration settings, now including calibrated parameters inside the list (`settings_calib$par[[param_name]]$opt`).
 ```{r, eval=FALSE}
-params_opt <- calib_sofun( setup = setup_sofun, settings_calib = settings_calib, settings_sims = settings_sims )
+settings_calib <- calib_sofun( setup = setup_sofun, settings_calib = settings_calib, settings_sims = settings_sims )
 ```
 
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.

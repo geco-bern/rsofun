@@ -7,7 +7,12 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
 
   ## subset and make global 
   ## XXX todo: filter by low temperature and soil moisture
-  obs <<- ddf_obs %>% select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
+  obs <<- ddf_obs %>%
+    ## "filter" data, i.e. replace by NA if above/below a certaint temperature or soil moisture threshold
+    mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) ) %>% # "filtering" by minimum temperature
+    mutate( gpp_obs = ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) ) %>% # "filtering" by maximum temperature
+    mutate( gpp_obs = ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) ) %>% # "filtering" by minimum soil moisture
+    select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
 
   ##----------------------------------------------------------------
   ## Set up for calibration ensemble
@@ -27,12 +32,13 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
   setwd( settings$dir_sofun )
 
   ## example run to get output file structure
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", 1.0 ), " | ./run", model, "_simsuite"), intern = TRUE )  
+  param_init <- unlist( lapply( settings_calib$par, function(x) x$init ) )
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", param_init ), " | ./run", model, "_simsuite"), intern = TRUE )  
   outfilnam <<- paste0( settings$dir_sofun, "output_calib/calibtargets_tmp_fluxnet2015.txt" )
   col_positions <<- fwf_empty( outfilnam, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ), comment = "" )
   mod <- read_fwf( outfilnam, col_positions )
   
-  ## xxx try
+  ## xxx try one run with initial parameters using the cost function
   # cost <- cost_rmse( lapply( settings_calib$par, function(x) x$init ) %>% unlist() )
 
   ##----------------------------------------------------------------
@@ -54,12 +60,25 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
     proc.time() - ptm
     print(optim_par_gensa$par)
 
+    filn <- "out_gensa.Rdat"
+    print( paste0( "writing output from GenSA function to ", filn ) )
+    save( optim_par_gensa, file = filn )
+
     ## save optimised parameters
-    settings_calib$par$kphio$opt <- optim_par_gensa$par[1]
+    opt <- optim_par_gensa$par[1]
+    settings_calib$par$kphio$opt <- opt
 
   }
 
   setwd( here )
+
+  ## Write calibrated parameters into a CSV file
+  vec <- unlist( lapply( settings_calib$par, function(x) x$opt ) )
+  df <- as_tibble(vec) %>% setNames( names(vec) )
+  filn <- "params_opt.csv"
+  print( paste0( "writing calibrated parameters to ", filn ) )
+  write_csv( df, path = filn )
+  
   return( settings_calib )
 
 }
@@ -119,7 +138,6 @@ get_obs <- function( settings_calib, settings_sims ){
 get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
   require(plyr)
-  require(rlang)
   source("init_dates_dataframe.R")
 
   ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
@@ -157,10 +175,15 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 ##----------------------------------------------------------------------
 get_obs_bysite_gpp_fluxnet2015 <- function( sitename, settings_calib, settings_sims ){
 
-  # source("clean_fluxnet.R")
+  require(dplyr)
 
   ## Get GPP data from FLUXNET 2015 dataset
-  getvars <- c( "GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "LE_F_MDS", "LE_F_MDS_QC", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC" )
+  getvars <- c( 
+    "GPP_NT_VUT_REF", "GPP_DT_VUT_REF",                
+    "LE_F_MDS", "LE_F_MDS_QC", 
+    "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC", # quality flag that goes with GPP 
+    "TA_F" # air temperature, used for filtering
+    )
 
   ## Make sure data is available for this site
   error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
@@ -198,12 +221,15 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, settings_calib, settings_s
   ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
   ddf <- get_obs_fluxnet2015_raw( sitename, 
     path = paste0(settings_calib$path_fluxnet2015, filn), 
-    getvars = getvars, 
     freq = "d" 
-    )
+    ) %>%
 
-  ## Convert units
-  ddf <- ddf %>% 
+    ## convert to numeric (weirdly isn't always) and subset (select)
+    mutate_at( vars(one_of(getvars)), funs(as.numeric)) %>%
+    select( date, one_of(getvars), starts_with("SWC_") ) %>%  # get soil water content data for filtering later
+    mutate_at( vars(starts_with("SWC_")), funs(as.numeric) ) %>% 
+
+    ## Convert units
     ## given in umolCO2 m-2 s-1. converted to gC m-2 d-1
     mutate_at( vars(starts_with("GPP_")), funs(convert_gpp_fluxnet2015) ) %>%
 
@@ -219,12 +245,40 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, settings_calib, settings_s
 
   if (any( !(c("LE_F_MDS", "LE_F_MDS_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
   # ddf$LE_F_MDS_good <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.5 )
-  ddf$LE_F_MDS      <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.2 )
+  ddf$LE_F_MDS <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.2 )
 
-  ## define which data is to be used as target for calibration 'gpp_obs' and 'transp_obs'
-  ddf <- ddf %>% mutate( gpp_obs = (GPP_NT_VUT_REF + GPP_DT_VUT_REF)/2.0,
-                         transp_obs = LE_F_MDS ) %>%
-                 select( date, gpp_obs, transp_obs )
+  ## Soil moisture related stuff
+  tmp <- ddf %>% select( starts_with("SWC") )
+  if (ncol(tmp)>0){
+    swcvars   <- tmp %>% select( -ends_with("QC") ) %>% names()
+    swcqcvars <- tmp %>% select(  ends_with("QC") ) %>% names()
+  
+    # map( as.list(seq(length(swcvars))), ~clean_fluxnet_swc( ddf[[ swcvars[.] ]], ddf[[ swcqcvars[.] ]]) )
+    if (length(swcvars)>0){
+      for (ivar in 1:length(swcvars)){
+        ddf[[ swcvars[ivar] ]] <- clean_fluxnet_swc( ddf[[ swcvars[ivar] ]], ddf[[ swcqcvars[ivar] ]] )
+      }
+    }
+
+    ddf <- ddf %>%
+      ## get mean observational soil moisture across different depths (if available)
+      mutate( soilm_obs_mean = apply( select( ., starts_with("SWC_F_MDS") ), 1, FUN = mean, na.rm = TRUE ) ) %>%
+      mutate( soilm_obs_mean = ifelse( is.nan(soilm_obs_mean), NA, soilm_obs_mean ) ) %>%
+
+      ## Normalise mean observational soil moisture to within minimum (=0) and maximum (=1), and
+      mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) )
+
+  } else {
+    ddf <- ddf %>% mutate( soilm_obs_mean = NA )
+  }
+
+
+    ## define which data is to be used as target for calibration 'gpp_obs' and 'transp_obs'
+  ddf <- ddf %>% 
+    mutate( gpp_obs = (GPP_NT_VUT_REF + GPP_DT_VUT_REF)/2.0,
+            transp_obs = LE_F_MDS,
+            temp = TA_F ) %>%
+    select( date, gpp_obs, transp_obs, soilm_obs_mean, temp )
 
   return(ddf)
 
@@ -235,7 +289,7 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, settings_calib, settings_s
 ##----------------------------------------------------------------------
 get_obs_bysite_wcont_fluxnet2015 <- function( sitename, settings_calib, settings_sims ){
 
-  # source("clean_fluxnet.R")
+  require(dplyr)
 
   getvars <- "SWC"
 
@@ -274,9 +328,18 @@ get_obs_bysite_wcont_fluxnet2015 <- function( sitename, settings_calib, settings
   ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
   ddf <- get_obs_fluxnet2015_raw( sitename, 
     path = paste0(settings_calib$path_fluxnet2015, filn),
-    vars = getvars, 
     freq = "d" 
     )
+
+  ## convert to numeric (weirdly isn't always) and subset (select)
+  if ( identical( getvars , "SWC" ) ){
+    df <- df %>% mutate_at( vars(starts_with(getvars)), funs(as.numeric)) %>%
+                 select( date, starts_with(getvars) )
+  } else {
+    df <- df %>%  mutate_at( vars(one_of(getvars)), funs(as.numeric)) %>%
+                  select( date, one_of(getvars) )
+  }
+
 
   swcvars   <- select( vars(ddf), starts_with("SWC") ) %>% select( vars(ddf), !ends_with("QC") ) %>% names()
   swcqcvars <- select( vars(ddf), starts_with("SWC") ) %>% select( vars(ddf),  ends_with("QC") ) %>% names()
@@ -294,11 +357,10 @@ get_obs_bysite_wcont_fluxnet2015 <- function( sitename, settings_calib, settings
 }   
 
 
-get_obs_fluxnet2015_raw <- function( sitename, path, getvars, freq="d" ){
+get_obs_fluxnet2015_raw <- function( sitename, path, freq="d" ){
   ##--------------------------------------------------------------------
-  ## Function returns a dataframe containing all the data of flux-derived
-  ## GPP for the station implicitly given by path (argument).
-  ## Specific for FLUXNET 2015 data
+  ## Function returns a dataframe containing all the data of the FLUXNET 
+  ## 2015 data file of respective temporal resolution.
   ## Returns data in units given in the fluxnet 2015 dataset
   ##--------------------------------------------------------------------
   require(dplyr)
@@ -327,15 +389,6 @@ get_obs_fluxnet2015_raw <- function( sitename, path, getvars, freq="d" ){
 
     df <- df %>% mutate( date = ymd( TIMESTAMP ) )
 
-  }
-
-  ## convert to numeric (weirdly isn't always)
-  if ( identical( getvars , "SWC" ) ){
-    df <- df %>% mutate_at( vars(starts_with(getvars)), funs(as.numeric)) %>%
-                 select( date, starts_with(getvars) )
-  } else {
-    df <- df %>%  mutate_at( vars(one_of(getvars)), funs(as.numeric)) %>%
-                  select( date, one_of(getvars) )
   }
 
   return( df )
@@ -411,6 +464,11 @@ clean_fluxnet_swc <- function( swc, qflag_swc, frac_data_thresh=0.2 ){
   swc <- as.numeric( swc )
 
   return( swc )
+}
+
+norm_to_max <- function( vec ){
+  vec <- ( vec - min( vec, na.rm=TRUE ) ) / ( max( vec, na.rm=TRUE ) - min( vec, na.rm=TRUE ) )
+  return( vec )
 }
 
 
