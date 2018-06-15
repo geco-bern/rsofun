@@ -181,11 +181,13 @@ Run SOFUN with standard parameters and read output in once.
 out <- runread_sofun( settings = settings_sims, setup = setup_sofun )  
 ```
 
+## Calibrate parameters
 Calibrate SOFUN, returns calibration settings, now including calibrated parameters inside the list (`settings_calib$par[[param_name]]$opt`).
 ```r
 settings_calib <- calib_sofun( setup = setup_sofun, settings_calib = settings_calib, settings_sims = settings_sims )
 ```
 
+## Run with calibrated parameters
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
 ```r
 params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
