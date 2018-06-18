@@ -46,10 +46,10 @@ settings_sims <- list(
   ensemble        = TRUE,
   lonlat          = FALSE,
   name            = "fluxnet2015",
-  dir_sofun       = "/alphadata01/bstocker/sofun/trunk/",
-  path_output     = "/alphadata01/bstocker/sofun/output_fluxnet2015_sofun_TEST/",
-  path_output_nc  = "/alphadata01/bstocker/sofun/output_nc_fluxnet2015_sofun_TEST/",
-  path_input      = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun_TEST/",
+  dir_sofun       = "~/sofun/trunk/",
+  path_output     = "~/sofun/output_fluxnet2015_sofun_TEST/",
+  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun_TEST/",
+  path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
   in_ppfd         = TRUE,
@@ -103,11 +103,11 @@ settings_input <-  list(
   cloudcover               = "cru_ts4_01",
   fapar                    = "MODIS_FPAR_MCD15A3H",
   co2                      = "cmip",
-  path_cx1data             = "/alphadata01/bstocker/data/",
-  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
-  path_cru_ts4_01          = "/alphadata01/bstocker/data/cru/ts_4.01/",
-  path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
+  path_cx1data             = "~/data/",
+  path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_watch_wfdei         = "~/data/watch_wfdei/",
+  path_cru_ts4_01          = "~/data/cru/ts_4.01/",
+  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
   )
 ```
 
@@ -125,7 +125,7 @@ Define model setup as a list.
 ```{r}
 setup_sofun <- list( 
   model      = "pmodel",
-  dir        = "/alphadata01/bstocker/sofun/trunk",
+  dir        = "~/sofun/trunk",
   do_compile = FALSE,
   simsuite   = FALSE
   )
@@ -147,7 +147,7 @@ settings_calib <- list(
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
   timescale        = list( gpp = "d" ),
-  path_fluxnet2015 = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/",
+  path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/",
   maxit            = 300,
   sitenames        = c("FR-Pue", "CH-Oe1", "AU-How"),
   filter_temp_min  = 5.0,
@@ -183,18 +183,19 @@ siteinfo <- prepare_metainfo_fluxnet2015( settings_sims = settings_sims, setting
 ## Prepare simulation setup
 Create a run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information. Calibration settings are an optional argument. When passed on, simulation parameter files will contain information which target variables are to be written to special calibration output files (a single file written for an entire ensemble).
 ```{r, eval=FALSE}
-settings_sims <- prepare_setup_sofun( settings = settings_sims, settings_calib = settings_calib, write_paramfils = TRUE )
+settings_sims <- prepare_setup_sofun( settings = settings_sims, settings_calib = settings_calib, write_paramfils = FALSE )
 ```
 
 ## Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see (here)[https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2]). 
 ```{r, eval=FALSE}
-inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE, overwrite = TRUE, verbose = TRUE )
+inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE, overwrite = FALSE, verbose = TRUE )
 ```
 
 ## Run the model
 Run SOFUN with standard parameters and read output in once.
 ```{r, eval=FALSE}
+rm("out") # clean from workspace
 out <- runread_sofun( settings = settings_sims, setup = setup_sofun )  
 ```
 

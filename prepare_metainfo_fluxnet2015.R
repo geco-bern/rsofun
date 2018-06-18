@@ -393,7 +393,6 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
   ## exclude sites for which no data is available
   siteinfo <- siteinfo[ which( !is.element( siteinfo$mysitename, missing_data_for_sites) ), ]
 
-
   ##--------------------------------------------------------------------
   ## Get C3/C4 information from an additional file
   ##--------------------------------------------------------------------
@@ -404,8 +403,8 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
                         )
   }
 
-  # siteinfo <- read_delim( filn, delim = ";" ) %>%
-  siteinfo <- read_csv( filn ) %>%
+  siteinfo <- read_delim( filn, delim = ";" ) %>%
+  # siteinfo <- read_csv( filn ) %>%
     select( mysitename, type ) %>%
     right_join( siteinfo, by = "mysitename" )
 

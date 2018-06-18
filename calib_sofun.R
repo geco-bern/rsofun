@@ -6,7 +6,6 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
   ddf_obs <- get_obs( settings_calib, settings_sims )
 
   ## subset and make global 
-  ## XXX todo: filter by low temperature and soil moisture
   obs <<- ddf_obs %>%
     ## "filter" data, i.e. replace by NA if above/below a certaint temperature or soil moisture threshold
     mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) ) %>% # "filtering" by minimum temperature

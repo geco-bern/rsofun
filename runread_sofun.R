@@ -52,13 +52,15 @@ read_sofun <- function( settings, setup ){
   require(ncdf4)
   
   ## First, process NetCDF which are written separately for each simulation year
+  print("processing NetCDF outputs...")
   if (settings$lonlat){
-    map( as.list(settings$sitenames), ~proc_global( ., settings$path_output_nc ) )
+    tmp <- map( as.list(settings$sitenames), ~proc_global( ., settings$path_output_nc ) )
   } else {
-    map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
+    tmp <- map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
   }
 
   ## Open and read daily output from NetCDF file for each site
+  print("reading from NetCDF files...")
   ddf_list <- map( as.list(settings$sitenames), ~read_ncout_sofun_daily( ., settings ) )
   names(ddf_list) <- settings$sitenames
 
@@ -83,9 +85,11 @@ run_sofun_bysite <- function( sitename, setup ){
 ## Using CDO commands. See file 'source proc_output.sh
 ##-----------------------------------------------------------
 proc_ncout_sofun_bysite <- function( sitename, path_nc ){
+  require(rlang)
+  print(paste0("processing ", sitename, "..."))
   filelist <- system( paste0( "ls ", path_nc, "/", sitename, ".????.*.nc" ), intern = TRUE )
   if (length(filelist)>0){
-    system( paste0( "./proc_output_sofun.sh ", sitename, " ", path_nc ) )
+    system( paste0( "./proc_output_sofun.sh ", sitename, " ", path_nc, " >ncproc_", sitename, ".out", " 2>ncproc_", sitename, ".err" ) )
   } else {
     warn("Assuming that annual files have already been combined to multi-annual.")
   }

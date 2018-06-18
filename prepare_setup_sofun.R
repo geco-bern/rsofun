@@ -156,10 +156,9 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
         ensemble_name <- settings$name
       }
 
-      system( paste0( "unlink ", settings$dir_sofun, "run") )
-      system( paste0( "unlink ", settings$dir_sofun, "site_paramfils") )
-      system( paste0( "unlink ", settings$dir_sofun, "input/sitedata") )
-      system( paste0( "unlink ", settings$dir_sofun, "params") )
+      if (file.exists(paste0( "unlink ", settings$dir_sofun, "run")))            system( paste0( "unlink ", settings$dir_sofun, "run") )
+      if (file.exists(paste0( "unlink ", settings$dir_sofun, "site_paramfils"))) system( paste0( "unlink ", settings$dir_sofun, "site_paramfils") )
+      if (file.exists(paste0( "unlink ", settings$dir_sofun, "input/sitedata"))) system( paste0( "unlink ", settings$dir_sofun, "input/sitedata") )
 
       system( paste0( "ln -sf ", settings$path_input, "run ", settings$dir_sofun, "run") )
       system( paste0( "ln -sf ", settings$path_input, "site_paramfils ", settings$dir_sofun, "site_paramfils") )
