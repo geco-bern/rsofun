@@ -3,8 +3,13 @@
 ##-----------------------------------------------------------
 runread_sofun <- function( settings, setup ){
 
+  ## run simulations
   out_std <- run_sofun( settings, setup )
 
+  ## don't save standard output to save space
+  rm("out_std")
+
+  ## read output into one big list
   ddf_list <- read_sofun( settings, setup )
 
   return(ddf_list)

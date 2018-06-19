@@ -124,6 +124,7 @@ get_obs <- function( settings_calib, settings_sims ){
                 
   ## combine dataframes from multiple sites along rows
   ddf_obs <- bind_rows( list_bysite )
+  rm("list_bysite")
 
   return( ddf_obs )
 
@@ -136,8 +137,10 @@ get_obs <- function( settings_calib, settings_sims ){
 ##------------------------------------------------------------
 get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
-  require(plyr)
+  require(dplyr)
+
   source("init_dates_dataframe.R")
+  source("get_obs_bysite_gpp_fluxnet2015.R")
 
   ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
   ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE )
@@ -146,7 +149,10 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
     if (settings_calib$datasource$gpp=="fluxnet2015"){
 
-      ddf <- get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib, settings_sims ) %>%
+      ## Make sure data is available for this site
+      error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
+
+      ddf <- get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
              right_join( ddf, by = "date" )
 
     }
@@ -157,7 +163,10 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
     if (settings_calib$datasource$wcont=="fluxnet2015"){
 
-      ddf <- get_obs_bysite_wcont_fluxnet2015( sitename, settings_calib, settings_sims ) %>%
+      ## Make sure data is available for this site
+      error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
+
+      ddf <- get_obs_bysite_wcont_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
              right_join( ddf, by = "date" )
 
     }
@@ -167,307 +176,4 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
   return(ddf)
 
 }
-
-##----------------------------------------------------------------------
-## Function for reading observational GPP data from FLUXNET 2015 dataset
-## and defining calibration target (which flux decomposition method etc.)
-##----------------------------------------------------------------------
-get_obs_bysite_gpp_fluxnet2015 <- function( sitename, settings_calib, settings_sims ){
-
-  require(dplyr)
-
-  ## Get GPP data from FLUXNET 2015 dataset
-  getvars <- c( 
-    "GPP_NT_VUT_REF", "GPP_DT_VUT_REF",                
-    "LE_F_MDS", "LE_F_MDS_QC", 
-    "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC", # quality flag that goes with GPP 
-    "TA_F" # air temperature, used for filtering
-    )
-
-  ## Make sure data is available for this site
-  error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
-
-  ## Take only file for this site
-  if (settings_calib$timescale=="d"){
-    ## Daily
-    filn <- list.files( settings_calib$path_fluxnet2015, 
-      pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_DD.*.csv" ), 
-      recursive = TRUE 
-      )
-  } else  if (settings_calib$timescale=="w"){
-    ## Weekly
-    filn <- list.files( settings_calib$path_fluxnet2015, 
-      pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_WW.*.csv" ), 
-      recursive = TRUE 
-      )
-  } else  if (settings_calib$timescale=="m"){
-    ## Monthly
-    filn <- list.files( settings_calib$path_fluxnet2015, 
-      pattern = paste0(..., collapse = NULL), 
-      recursive = TRUE 
-      )
-  } else  if (settings_calib$timescale=="y"){
-    ## Annual
-    filn <- list.files( settings_calib$path_fluxnet2015, 
-      pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_YY.*.csv" ), 
-      recursive = TRUE 
-      )
-  }
-
-  if (length(filn)==0) abort(paste0("No files found for timescale ", settings_calib$timescale, "in sub-directories of ", settings_calib$path_fluxnet2015 ) )
-  if (length(filn)>1)  abort(paste0("Multiple files found for timsescale", settings_calib$timescale, "in sub-directories of ", settings_calib$path_fluxnet2015))
-  
-  ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
-  ddf <- get_obs_fluxnet2015_raw( sitename, 
-    path = paste0(settings_calib$path_fluxnet2015, filn), 
-    freq = "d" 
-    ) %>%
-
-    ## convert to numeric (weirdly isn't always) and subset (select)
-    mutate_at( vars(one_of(getvars)), funs(as.numeric)) %>%
-    select( date, one_of(getvars), starts_with("SWC_") ) %>%  # get soil water content data for filtering later
-    mutate_at( vars(starts_with("SWC_")), funs(as.numeric) ) %>% 
-
-    ## Convert units
-    ## given in umolCO2 m-2 s-1. converted to gC m-2 d-1
-    mutate_at( vars(starts_with("GPP_")), funs(convert_gpp_fluxnet2015) ) %>%
-
-    ## W m-2 -> J m-2 d-1
-    mutate_at( vars(starts_with("LE_")), funs(convert_le_fluxnet2015))
-
-
-  ## clean data
-  if (any( !(c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
-  out_clean <- clean_fluxnet_gpp( ddf$GPP_NT_VUT_REF, ddf$GPP_DT_VUT_REF, ddf$NEE_VUT_REF_NIGHT_QC, ddf$NEE_VUT_REF_DAY_QC, cutoff=0.5 )
-  ddf$GPP_NT_VUT_REF <- out_clean$gpp_nt
-  ddf$GPP_DT_VUT_REF <- out_clean$gpp_dt
-
-  if (any( !(c("LE_F_MDS", "LE_F_MDS_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
-  # ddf$LE_F_MDS_good <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.5 )
-  ddf$LE_F_MDS <- clean_fluxnet_et( ddf$LE_F_MDS, ddf$LE_F_MDS_QC, cutoff=0.2 )
-
-  ## Soil moisture related stuff
-  tmp <- ddf %>% select( starts_with("SWC") )
-  if (ncol(tmp)>0){
-    swcvars   <- tmp %>% select( -ends_with("QC") ) %>% names()
-    swcqcvars <- tmp %>% select(  ends_with("QC") ) %>% names()
-  
-    # map( as.list(seq(length(swcvars))), ~clean_fluxnet_swc( ddf[[ swcvars[.] ]], ddf[[ swcqcvars[.] ]]) )
-    if (length(swcvars)>0){
-      for (ivar in 1:length(swcvars)){
-        ddf[[ swcvars[ivar] ]] <- clean_fluxnet_swc( ddf[[ swcvars[ivar] ]], ddf[[ swcqcvars[ivar] ]] )
-      }
-    }
-
-    ddf <- ddf %>%
-      ## get mean observational soil moisture across different depths (if available)
-      mutate( soilm_obs_mean = apply( select( ., starts_with("SWC_F_MDS") ), 1, FUN = mean, na.rm = TRUE ) ) %>%
-      mutate( soilm_obs_mean = ifelse( is.nan(soilm_obs_mean), NA, soilm_obs_mean ) ) %>%
-
-      ## Normalise mean observational soil moisture to within minimum (=0) and maximum (=1), and
-      mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) )
-
-  } else {
-    ddf <- ddf %>% mutate( soilm_obs_mean = NA )
-  }
-
-
-    ## define which data is to be used as target for calibration 'gpp_obs' and 'transp_obs'
-  ddf <- ddf %>% 
-    mutate( gpp_obs = (GPP_NT_VUT_REF + GPP_DT_VUT_REF)/2.0,
-            transp_obs = LE_F_MDS,
-            temp = TA_F ) %>%
-    select( date, gpp_obs, transp_obs, soilm_obs_mean, temp )
-
-  return(ddf)
-
-}
-
-##----------------------------------------------------------------------
-## Function for reading observational GPP data from FLUXNET 2015 dataset
-##----------------------------------------------------------------------
-get_obs_bysite_wcont_fluxnet2015 <- function( sitename, settings_calib, settings_sims ){
-
-  require(dplyr)
-
-  getvars <- "SWC"
-
-  ## Make sure data is available for this site
-  error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
-
-  ## Take only file for this site
-  if (settings_calib$timescale=="d"){
-    ## Daily
-    filn <- list.files( settings_calib$path_fluxnet2015, 
-      pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_DD.*.csv" ), 
-      recursive = TRUE 
-      )
-  } else  if (settings_calib$timescale=="w"){
-    ## Weekly
-    filn <- list.files( settings_calib$path_fluxnet2015, 
-      pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_WW.*.csv" ), 
-      recursive = TRUE 
-      )
-  } else  if (settings_calib$timescale=="m"){
-    ## Monthly
-    filn <- list.files( settings_calib$path_fluxnet2015, 
-      pattern = paste0(..., collapse = NULL), 
-      recursive = TRUE 
-      )
-  } else  if (settings_calib$timescale=="y"){
-    ## Annual
-    filn <- list.files( settings_calib$path_fluxnet2015, 
-      pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_YY.*.csv" ), 
-      recursive = TRUE 
-      )
-  }
-
-  if (length(filn)==0) abort(paste0("No files found for timescale ", settings_calib$timescale, "in sub-directories of ", settings_calib$path_fluxnet2015 ) )
-
-  ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
-  ddf <- get_obs_fluxnet2015_raw( sitename, 
-    path = paste0(settings_calib$path_fluxnet2015, filn),
-    freq = "d" 
-    )
-
-  ## convert to numeric (weirdly isn't always) and subset (select)
-  if ( identical( getvars , "SWC" ) ){
-    df <- df %>% mutate_at( vars(starts_with(getvars)), funs(as.numeric)) %>%
-                 select( date, starts_with(getvars) )
-  } else {
-    df <- df %>%  mutate_at( vars(one_of(getvars)), funs(as.numeric)) %>%
-                  select( date, one_of(getvars) )
-  }
-
-
-  swcvars   <- select( vars(ddf), starts_with("SWC") ) %>% select( vars(ddf), !ends_with("QC") ) %>% names()
-  swcqcvars <- select( vars(ddf), starts_with("SWC") ) %>% select( vars(ddf),  ends_with("QC") ) %>% names()
-
-  # map( as.list(seq(length(swcvars))), ~clean_fluxnet_swc( ddf[[ swcvars[.] ]], ddf[[ swcqcvars[.] ]]) )
-
-  if (length(swcvars)>0){
-    for (ivar in 1:length(swcvars)){
-      ddf[[ swcvars[ivar] ]] <- clean_fluxnet_swc( ddf[[ swcvars[ivar] ]], ddf[[ swcqcvars[ivar] ]] )
-    }
-  }
-  
-  return(ddf)
-
-}   
-
-
-get_obs_fluxnet2015_raw <- function( sitename, path, freq="d" ){
-  ##--------------------------------------------------------------------
-  ## Function returns a dataframe containing all the data of the FLUXNET 
-  ## 2015 data file of respective temporal resolution.
-  ## Returns data in units given in the fluxnet 2015 dataset
-  ##--------------------------------------------------------------------
-  require(dplyr)
-  require(readr)
-  require(lubridate)
-
-  ## get data
-  df <-  read_csv( path, na="-9999", col_types = cols() )
-
-  ## get dates, their format differs slightly between temporal resolution
-  if ( freq=="y" ){
-
-    df <- df %>% mutate( year = TIMESTAMP ) %>% mutate( date = ymd( paste0( as.character(year), "-01-01" ) ) )      
-
-  } else if ( freq=="w"){
-
-    df <- df %>% mutate( date_start = ymd(TIMESTAMP_START), date_end = ymd(TIMESTAMP_END) ) %>% 
-                 mutate( date = date_start )
-
-  } else if ( freq=="m" ){
-
-    df <- df %>% mutate( year = substr( TIMESTAMP, start = 1, stop = 4 ), month = substr( TIMESTAMP, start = 5, stop = 6 ) ) %>%
-                 mutate( date = ymd( paste0( as.character(year), "-", as.character(month), "-01" ) ) )
-
-  } else if ( freq=="d" ){
-
-    df <- df %>% mutate( date = ymd( TIMESTAMP ) )
-
-  }
-
-  return( df )
-
-}
-
-## Converts units of GPP variables from FLUXNET 2015 to SOFUN standard
-convert_gpp_fluxnet2015 <- function( gpp ){
-  # in FLUXNET 2015 given in umolCO2 m-2 s-1. converted to gC m-2 d-1
-  c_molmass <- 12.0107  # molar mass of C
-  gpp_coverted <- gpp * 1e-6 * 60 * 60 * 24 * c_molmass
-  return(gpp_coverted)
-
-}
-
-## Converts units of latent energy (LE) variables from FLUXNET 2015 to SOFUN standard
-convert_le_fluxnet2015 <- function( le ){
-  ## W m-2 -> J m-2 d-1
-  le_converted <- le * 60 * 60 * 24
-  return(le_converted)
-
-}
-
-clean_fluxnet_gpp <- function( gpp_nt, gpp_dt, qflag_reichstein, qflag_lasslop, cutoff=0.80 ){
-  ##--------------------------------------------------------------------
-  ## Cleans daily data using criteria 1-4 as documented in Tramontana et al., 2016
-  ## gpp_nt: based on nighttime flux decomposition ("NT")
-  ## gpp_dt: based on daytime flux decomposition ("DT")
-  ##--------------------------------------------------------------------
-
-  ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
-  gpp_nt[ which(qflag_reichstein < cutoff) ] <- NA  ## based on fraction of data based on gap-filled half-hourly
-  gpp_dt[ which(qflag_lasslop    < cutoff) ] <- NA  ## based on fraction of data based on gap-filled half-hourly
-
-  ## Remove data points where the two flux decompositions are inconsistent,
-  ## i.e. where the residual of their regression is above the 97.5% or below the 2.5% quantile. 
-  res  <- as.numeric(gpp_nt) - as.numeric(gpp_dt)
-  q025 <- quantile( res, probs = 0.025, na.rm=TRUE )
-  q975 <- quantile( res, probs = 0.975, na.rm=TRUE )
-
-  gpp_nt[ res > q975 | res < q025  ] <- NA
-  gpp_dt[ res > q975 | res < q025  ] <- NA
-
-  ## remove negative GPP
-  gpp_nt[ which(gpp_nt<0) ] <- NA
-  gpp_dt[ which(gpp_dt<0) ] <- NA
-
-  return( list( gpp_nt=gpp_nt, gpp_dt=gpp_dt ) )
-}
-
-clean_fluxnet_et <- function( et, qflag_et, cutoff=0.2 ){
-  ##--------------------------------------------------------------------
-  ##--------------------------------------------------------------------
-  source( "identify_pattern.R" )
-
-  ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
-  # frac_data_thresh <- 0.2  ## fraction of data based on gap-filled half-hourly
-  et[ qflag_et < cutoff ] <- NA
-
-  if ( any(!is.na(qflag_et)) ){ et[ is.na(qflag_et) ] <- NA }
-
-  et <- identify_pattern( et )
-
-  return( et )
-}
-
-clean_fluxnet_swc <- function( swc, qflag_swc, frac_data_thresh=0.2 ){
-  ##--------------------------------------------------------------------
-  ## frac_data_thresh: fraction of data based on gap-filled half-hourly
-  ##--------------------------------------------------------------------
-  ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
-  swc[ qflag_swc < frac_data_thresh ] <- NA
-  swc <- as.numeric( swc )
-
-  return( swc )
-}
-
-norm_to_max <- function( vec ){
-  vec <- ( vec - min( vec, na.rm=TRUE ) ) / ( max( vec, na.rm=TRUE ) - min( vec, na.rm=TRUE ) )
-  return( vec )
-}
-
 

@@ -30,6 +30,7 @@ source("prepare_setup_sofun.R")
 source("prepare_input_sofun.R")
 source("runread_sofun.R")
 source("update_params.R")
+source("eval_sofun.R")
 ```
 
 Some other crap.
@@ -139,7 +140,11 @@ setup_sofun <- list(
 
 ## Calibration settings
 Define model calibration settings as a list.
-```{r, eval=FALSE}
+```{r, eval=TRUE, echo=FALSE}
+siteinfo <- prepare_metainfo_fluxnet2015( settings_sims = settings_sims, settings_input = settings_input, overwrite = FALSE, filn_elv_watch = paste0( settings_input$path_cx1data, "watch_wfdei/WFDEI-elevation.nc" ) )
+```
+
+```{r}
 settings_calib <- list(
   name             = "kphio_gpp_fluxnet2015",
   par              = list( kphio = list( lower=0.03, upper=0.08, init=0.05792348 ) ),
@@ -149,7 +154,7 @@ settings_calib <- list(
   timescale        = list( gpp = "d" ),
   path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/",
   maxit            = 300,
-  sitenames        = c("FR-Pue", "CH-Oe1", "AU-How"),
+  sitenames        = filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
   filter_temp_min  = 5.0,
   filter_temp_max  = 35.0,
   filter_soilm_min = 0.5
@@ -167,6 +172,18 @@ settings_calib <- list(
 - `filter_temp_max`: Maximum temperature of data used for calibration. Data points for days where air temperature is above, are removed (replaced by NA) in the observational data.
 - `filter_soilm_min`: Minimum soil moisture (relative, normalised to maximum of mean across multiple depths at each site) of data used for calibration. Data points for days where soil moisture is below, are removed (replaced by NA) in the observational data.
 
+## Evaluation settings
+Define model evaluation settings as a list.
+```{r}
+mylist <- read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% select( -use ) %>% unlist()
+settings_eval <- list(
+  sitenames = filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, #  dplyr::filter( successcodes, successcode==1 | successcode==2 )$mysitename,
+  sitenames_siteplots = mylist,
+  agg = 5,
+  benchmark = list( gpp="fluxnet2015" ),
+  path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/"
+  )
+```
 
 # Workflow
 
@@ -189,25 +206,28 @@ settings_sims <- prepare_setup_sofun( settings = settings_sims, settings_calib =
 ## Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see (here)[https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2]). 
 ```{r, eval=FALSE}
-inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE, overwrite = FALSE, verbose = TRUE )
+inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE, overwrite = TRUE, verbose = TRUE )
 ```
 
-## Run the model
-Run SOFUN with standard parameters and read output in once.
-```{r, eval=FALSE}
-rm("out") # clean from workspace
-out <- runread_sofun( settings = settings_sims, setup = setup_sofun )  
-```
-
+## Calibrate the model
 Calibrate SOFUN, returns calibration settings, now including calibrated parameters inside the list (`settings_calib$par[[param_name]]$opt`).
 ```{r, eval=FALSE}
 settings_calib <- calib_sofun( setup = setup_sofun, settings_calib = settings_calib, settings_sims = settings_sims )
 ```
 
+## Run the model
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
 ```{r, eval=FALSE}
 params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
 nothing <- update_params( params_opt )
 out <- runread_sofun( settings = settings_sims, setup = setup_sofun )
+```
+
+## Evaluate the model
+Evaluate SOFUN results based on calibrated parameters. The first argument is the output from `runread()` executed above. (Here, in order to avoid running all steps while knitting this RMarkdown file, we first read model outputs from a previous run.)
+```{r, eval=TRUE}
+load( "mod.Rdata" )
+out <- mod; rm("mod")
+nothing <- eval_sofun( out, settings_eval = settings_eval )
 ```
 
