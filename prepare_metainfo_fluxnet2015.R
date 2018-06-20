@@ -342,7 +342,7 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
   siteinfo$year_end   <- as.numeric( siteinfo$year_end   )
   
   ## "Manually" get year start and year end from file names
-  print( paste0("ingesting more data from files using ", settings_input$path_cx1data, "/FLUXNET-2015_Tier1/doc/filelist_DD.txt ..."))
+  # print( paste0("ingesting more data from files using ", settings_input$path_cx1data, "/FLUXNET-2015_Tier1/doc/filelist_DD.txt ..."))
   moredata <- as.data.frame( read.table( paste0( settings_input$path_cx1data, "/FLUXNET-2015_Tier1/doc/filelist_DD.txt") ) )
   colnames( moredata ) <- "filnam"
   moredata$mysitename <- substr( as.character(moredata$filnam), start=5, stop=10 )
@@ -484,8 +484,8 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
   ##--------------------------------------------------------------------
   ## write to file
   ##--------------------------------------------------------------------
-  print( paste0("Writing (light) meta info file: ", settings_sims$path_siteinfo ) )
-  print( "Full and light meta info is returned by this function as list." )
+  # print( paste0("Writing (light) meta info file: ", settings_sims$path_siteinfo ) )
+  # print( "Full and light meta info is returned by this function as list." )
   light <- select( siteinfo, mysitename, lon, lat, elv, year_start, year_end, years_data, classid, whc, c4 )
   light %>% write_csv( path = settings_sims$path_siteinfo )
 

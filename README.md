@@ -1,38 +1,49 @@
+# rsofun
 
-# Environment
+This repository contains R-wrapper functions for all the routine steps in running the SOFUN model:
+
+- setup of the environment
+- preparation of input files
+- calibrating model parameters
+- running the model
+- reading outputs into R
+- evaluating outputs (benchmarking)
+
+## Environment
 
 Load the package. This contains all the necessary wrapper functions to set up and run SOFUN and read its output. 
-```r
+```{r, eval=FALSE}
 library(rsofun)  ## Not yet implemented
 ```
 
 For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, `runread_sofun()` , and `update_params()`. Load the respective functions.
-```r
+```{r}
 source("prepare_metainfo_fluxnet2015.R")
 source("prepare_setup_sofun.R")
 source("prepare_input_sofun.R")
 source("runread_sofun.R")
 source("update_params.R")
+source("eval_sofun.R")
 ```
 
 Some other crap.
-```r
+```{r}
 systr <- "''"    # for Mac
 ```
 
-# Setup
-## Simulation settings
+## Setup
+### Simulation settings
 Define the simulation settings as a list. Components of the simulation settings should specify only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (CSV file created "by hand" or some other more clever method for large ensembles - up to you.). The function `prepare_setup_sofun()` complements the simulation settings list by these additional components as lists with elements for each site, nested within the simulation settings list.
-```r
+```{r}
 settings_sims <- list( 
   path_siteinfo   = "./metainfo_fluxnet2015",
   ensemble        = TRUE,
   lonlat          = FALSE,
   name            = "fluxnet2015",
-  dir_sofun       = "/alphadata01/bstocker/sofun/trunk/",
-  path_output     = "/alphadata01/bstocker/sofun/output_fluxnet2015_sofun_TEST/",
-  path_output_nc  = "/alphadata01/bstocker/sofun/output_nc_fluxnet2015_sofun_TEST/",
-  path_input      = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun_TEST/",
+  dir_sofun       = "~/sofun/trunk/",
+  path_output     = "~/sofun/output_fluxnet2015_sofun_TEST/",
+  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun_TEST/",
+  path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
   in_ppfd         = TRUE,
@@ -74,9 +85,9 @@ settings_sims <- list(
 - `lout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (ascii text file for time series). To be anbandoned, only NetCDF output should be maintained.
 - `lncout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (NetCDF file).
 
-## Input settings
+### Input settings
 Define data sources used for SOFUN input. This is based on keywords passed on as strings. E.g. `"fluxnet2015"` triggers specific functions that read input data from specific files, here all the site-level meteo data from FLUXNET 2015. Define the input settings as a list.
-```r
+```{r}
 settings_input <-  list( 
   temperature              = "fluxnet2015",
   precipitation            = "fluxnet2015",
@@ -86,11 +97,11 @@ settings_input <-  list(
   cloudcover               = "cru_ts4_01",
   fapar                    = "MODIS_FPAR_MCD15A3H",
   co2                      = "cmip",
-  path_cx1data             = "/alphadata01/bstocker/data/",
-  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
-  path_cru_ts4_01          = "/alphadata01/bstocker/data/cru/ts_4.01/",
-  path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
+  path_cx1data             = "~/data/",
+  path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_watch_wfdei         = "~/data/watch_wfdei/",
+  path_cru_ts4_01          = "~/data/cru/ts_4.01/",
+  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
   )
 ```
 
@@ -103,12 +114,12 @@ settings_input <-  list(
 - `co2`: A character string specifying which CO$_2$ file should be used (globally uniform and identical for each site in an ensemble). All available CO$_2$ forcing files are located on CX1 at `/work/bstocker/labprentice/data/co2/`. `co2="cmip"` specifies that the CMIP-standard CO2 file `cCO2_rcp85_const850-1765.dat` should be used.
 - `path_cx1data`: the local directory that mirrors the data directory on CX1 (very handy!).
 
-## Model setup
+### Model setup
 Define model setup as a list.
-```r
+```{r}
 setup_sofun <- list( 
   model      = "pmodel",
-  dir        = "/alphadata01/bstocker/sofun/trunk",
+  dir        = "~/sofun/trunk",
   do_compile = FALSE,
   simsuite   = FALSE
   )
@@ -120,9 +131,19 @@ setup_sofun <- list(
 - `simsuite`: If `TRUE`, the SOFUN option for running an entire simulation suite (ensemble of simulations) with a single executable. (In the Fortran implementation, this this requires the main program file `sofun_simsuite.f90` to be compiled instead of `sofun.f90`). This is to be preferred over a set of individual runs submitted individually when doing calibration runs because the cost across the entire ensemble (mod-obs error) can thus be calculated online.
 
 
-## Calibration settings
-Define model calibration settings as a list.
-```r
+### Calibration settings
+Define model calibration settings as a list. Note that in the example below, the element `sitenames` is all the sites where no C4 vegetation is present (or documented to be present). To get this information, first run::
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+siteinfo <- prepare_metainfo_fluxnet2015( 
+  settings_sims = settings_sims, 
+  settings_input = settings_input, 
+  overwrite = FALSE, 
+  filn_elv_watch = paste0( settings_input$path_cx1data, "watch_wfdei/WFDEI-elevation.nc" ) 
+  )
+```
+
+Then define the calibration settings as:
+```{r}
 settings_calib <- list(
   name             = "kphio_gpp_fluxnet2015",
   par              = list( kphio = list( lower=0.03, upper=0.08, init=0.05792348 ) ),
@@ -130,9 +151,9 @@ settings_calib <- list(
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
   timescale        = list( gpp = "d" ),
-  path_fluxnet2015 = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/",
+  path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/",
   maxit            = 300,
-  sitenames        = c("FR-Pue", "CH-Oe1", "AU-How"),
+  sitenames        = filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
   filter_temp_min  = 5.0,
   filter_temp_max  = 35.0,
   filter_soilm_min = 0.5
@@ -150,48 +171,84 @@ settings_calib <- list(
 - `filter_temp_max`: Maximum temperature of data used for calibration. Data points for days where air temperature is above, are removed (replaced by NA) in the observational data.
 - `filter_soilm_min`: Minimum soil moisture (relative, normalised to maximum of mean across multiple depths at each site) of data used for calibration. Data points for days where soil moisture is below, are removed (replaced by NA) in the observational data.
 
+### Evaluation settings
+Define model evaluation settings as a list.
+```{r}
+mylist <- read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% select( -use ) %>% unlist()
+settings_eval <- list(
+  sitenames = filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename,
+  sitenames_siteplots = mylist,
+  agg = 5,
+  benchmark = list( gpp="fluxnet2015" ),
+  path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/"
+  )
+```
 
-# Workflow
+## Workflow
 
-## Prepare meta info file
+### Prepare meta info file
 This step is either done by hand so that the file has a certain structure (for column names etc see above: `path_siteinfo`). Below is an example for creating such a meta info file (info for each site in an ensemble) for the FLUXNET 2015 Tier 1 ensemble.
-```r
-siteinfo <- prepare_metainfo_fluxnet2015( settings_sims = settings_sims, settings_input = settings_input, overwrite = FALSE, filn_elv_watch = paste0( settings_input$path_cx1data, "watch_wfdei/WFDEI-elevation.nc" ) )
+```{r, eval=FALSE}
+siteinfo <- prepare_metainfo_fluxnet2015( 
+  settings_sims = settings_sims, 
+  settings_input = settings_input, 
+  overwrite = FALSE, 
+  filn_elv_watch = paste0( settings_input$path_cx1data, "watch_wfdei/WFDEI-elevation.nc" ) 
+  )
 ```
 
 - `overwrite`: Set to `TRUE` if meta info file in wide format is to be overwritten (original is in long format, a wide-format version is used by `prepare_metainfo_fluxnet2015()`).
 - `filn_elv_watch`: File name (full path, character string) of the WATCH-WFDEI elevation file (NetCDF format) used to complement missing elevation information.
 
 
-## Prepare simulation setup
+### Prepare simulation setup
 Create a run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information. Calibration settings are an optional argument. When passed on, simulation parameter files will contain information which target variables are to be written to special calibration output files (a single file written for an entire ensemble).
-```r
-settings_sims <- prepare_setup_sofun( settings = settings_sims, settings_calib = settings_calib, write_paramfils = TRUE )
+```{r, eval=FALSE}
+settings_sims <- prepare_setup_sofun( 
+  settings = settings_sims, 
+  settings_calib = settings_calib, 
+  write_paramfils = FALSE 
+  )
 ```
 
-## Prepare inputs
+### Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see (here)[https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2]). 
-```r
-inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE, overwrite = TRUE, verbose = TRUE )
+```{r, eval=FALSE}
+inputdata <- prepare_input_sofun( 
+  settings_input = settings_input, 
+  settings_sims = settings_sims, 
+  return_data = TRUE, 
+  overwrite = TRUE, 
+  verbose = TRUE 
+  )
 ```
 
-## Run the model
-Run SOFUN with standard parameters and read output in once.
-```r
-out <- runread_sofun( settings = settings_sims, setup = setup_sofun )  
-```
-
-## Calibrate parameters
+### Calibrate the model
 Calibrate SOFUN, returns calibration settings, now including calibrated parameters inside the list (`settings_calib$par[[param_name]]$opt`).
-```r
-settings_calib <- calib_sofun( setup = setup_sofun, settings_calib = settings_calib, settings_sims = settings_sims )
+```{r, eval=FALSE}
+settings_calib <- calib_sofun( 
+  setup = setup_sofun, 
+  settings_calib = settings_calib, 
+  settings_sims = settings_sims 
+  )
 ```
 
-## Run with calibrated parameters
+### Run the model
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
-```r
+```{r, eval=FALSE}
 params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
 nothing <- update_params( params_opt )
-out <- runread_sofun( settings = settings_sims, setup = setup_sofun )
+out <- runread_sofun( 
+  settings = settings_sims, 
+  setup = setup_sofun 
+  )
+```
+
+### Evaluate the model
+Evaluate SOFUN results based on calibrated parameters. The first argument to the `eval_sofun()` function is the output from `runread()` executed above. (Here, in order to avoid running all steps while knitting this RMarkdown file, we first read model outputs from a previous run.)
+```{r, eval=FALSE}
+load( "mod.Rdata" )
+out <- mod; rm("mod")
+nothing <- eval_sofun( out, settings_eval = settings_eval )
 ```
 
