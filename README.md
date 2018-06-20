@@ -12,12 +12,12 @@ This repository contains R-wrapper functions for all the routine steps in runnin
 ## Environment
 
 Load the package. This contains all the necessary wrapper functions to set up and run SOFUN and read its output. 
-```{r, eval=FALSE}
+```r
 library(rsofun)  ## Not yet implemented
 ```
 
 For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, `runread_sofun()` , and `update_params()`. Load the respective functions.
-```{r}
+```r
 source("prepare_metainfo_fluxnet2015.R")
 source("prepare_setup_sofun.R")
 source("prepare_input_sofun.R")
@@ -26,15 +26,10 @@ source("update_params.R")
 source("eval_sofun.R")
 ```
 
-Some other crap.
-```{r}
-systr <- "''"    # for Mac
-```
-
 ## Setup
 ### Simulation settings
 Define the simulation settings as a list. Components of the simulation settings should specify only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (CSV file created "by hand" or some other more clever method for large ensembles - up to you.). The function `prepare_setup_sofun()` complements the simulation settings list by these additional components as lists with elements for each site, nested within the simulation settings list.
-```{r}
+```r
 settings_sims <- list( 
   path_siteinfo   = "./metainfo_fluxnet2015",
   ensemble        = TRUE,
@@ -87,7 +82,7 @@ settings_sims <- list(
 
 ### Input settings
 Define data sources used for SOFUN input. This is based on keywords passed on as strings. E.g. `"fluxnet2015"` triggers specific functions that read input data from specific files, here all the site-level meteo data from FLUXNET 2015. Define the input settings as a list.
-```{r}
+```r
 settings_input <-  list( 
   temperature              = "fluxnet2015",
   precipitation            = "fluxnet2015",
@@ -116,7 +111,7 @@ settings_input <-  list(
 
 ### Model setup
 Define model setup as a list.
-```{r}
+```r
 setup_sofun <- list( 
   model      = "pmodel",
   dir        = "~/sofun/trunk",
@@ -143,7 +138,7 @@ siteinfo <- prepare_metainfo_fluxnet2015(
 ```
 
 Then define the calibration settings as:
-```{r}
+```r
 settings_calib <- list(
   name             = "kphio_gpp_fluxnet2015",
   par              = list( kphio = list( lower=0.03, upper=0.08, init=0.05792348 ) ),
@@ -173,7 +168,7 @@ settings_calib <- list(
 
 ### Evaluation settings
 Define model evaluation settings as a list.
-```{r}
+```r
 mylist <- read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% select( -use ) %>% unlist()
 settings_eval <- list(
   sitenames = filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename,
@@ -188,7 +183,7 @@ settings_eval <- list(
 
 ### Prepare meta info file
 This step is either done by hand so that the file has a certain structure (for column names etc see above: `path_siteinfo`). Below is an example for creating such a meta info file (info for each site in an ensemble) for the FLUXNET 2015 Tier 1 ensemble.
-```{r, eval=FALSE}
+```r
 siteinfo <- prepare_metainfo_fluxnet2015( 
   settings_sims = settings_sims, 
   settings_input = settings_input, 
@@ -203,7 +198,7 @@ siteinfo <- prepare_metainfo_fluxnet2015(
 
 ### Prepare simulation setup
 Create a run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information. Calibration settings are an optional argument. When passed on, simulation parameter files will contain information which target variables are to be written to special calibration output files (a single file written for an entire ensemble).
-```{r, eval=FALSE}
+```r
 settings_sims <- prepare_setup_sofun( 
   settings = settings_sims, 
   settings_calib = settings_calib, 
@@ -213,7 +208,7 @@ settings_sims <- prepare_setup_sofun(
 
 ### Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see (here)[https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2]). 
-```{r, eval=FALSE}
+```r
 inputdata <- prepare_input_sofun( 
   settings_input = settings_input, 
   settings_sims = settings_sims, 
@@ -225,7 +220,7 @@ inputdata <- prepare_input_sofun(
 
 ### Calibrate the model
 Calibrate SOFUN, returns calibration settings, now including calibrated parameters inside the list (`settings_calib$par[[param_name]]$opt`).
-```{r, eval=FALSE}
+```r
 settings_calib <- calib_sofun( 
   setup = setup_sofun, 
   settings_calib = settings_calib, 
@@ -235,7 +230,7 @@ settings_calib <- calib_sofun(
 
 ### Run the model
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
-```{r, eval=FALSE}
+```r
 params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
 nothing <- update_params( params_opt )
 out <- runread_sofun( 
@@ -246,9 +241,7 @@ out <- runread_sofun(
 
 ### Evaluate the model
 Evaluate SOFUN results based on calibrated parameters. The first argument to the `eval_sofun()` function is the output from `runread()` executed above. (Here, in order to avoid running all steps while knitting this RMarkdown file, we first read model outputs from a previous run.)
-```{r, eval=FALSE}
-load( "mod.Rdata" )
-out <- mod; rm("mod")
+```r
 nothing <- eval_sofun( out, settings_eval = settings_eval )
 ```
 
