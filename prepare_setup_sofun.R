@@ -10,6 +10,39 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
   require(dplyr)
   require(lubridate)
   require(purrr)
+  require(rlang)
+
+  ## Make sure the SOFUN model directory exists
+  if (!dir.exists(settings$dir_sofun)) system( paste0( "mkdir -p ", settings$dir_sofun ) )
+  
+  ##-----------------------------------------------------------
+  ## Get SOFUN from github (necessary even if you don't compile
+  ## the code because of the parameter files)
+  ##-----------------------------------------------------------
+  if (!dir.exists(paste0(settings$dir_sofun, "params_std"))){
+    ## Assuming SOFUN has not been cloned yet. Clone it now.
+    ## First clean directory
+    system( paste0( "rm -rf ", settings$dir_sofun, "/*" ) )
+
+    ## first clone into a temporary directory
+    warn("Cloning SOFUN from github...")
+    system( paste0( "git clone https://github.com/stineb/sofun.git tmp" ) )
+    
+    ## then move all its contents to the SOFUN directory and delete the temporary directory
+    system( paste0("mv tmp/*  ", settings$dir_sofun ) )
+    system( paste0("mv tmp/.git ", settings$dir_sofun ) )
+    system( "rm -rf tmp")
+    
+    ## checkout the required branch of SOFUN, here 'pnmodel' (hard-coded)
+    here <- getwd()
+    setwd( settings$dir_sofun )
+    warn("Switching to branch pnmodel...")
+    system( "git checkout pnmodel")
+    setwd( here )
+    
+    warn("...done.")
+    if (!dir.exists(paste0(settings$dir_sofun, "params_std"))) abort("Aborting. SOFUN could not be cloned for an unknown reason.")
+  }
 
   if (settings$lonlat){
     ##-----------------------------------------------------------
@@ -155,13 +188,14 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
       } else {
         ensemble_name <- settings$name
       }
-
+      
       if (file.exists(paste0( "unlink ", settings$dir_sofun, "run")))            system( paste0( "unlink ", settings$dir_sofun, "run") )
       if (file.exists(paste0( "unlink ", settings$dir_sofun, "site_paramfils"))) system( paste0( "unlink ", settings$dir_sofun, "site_paramfils") )
       if (file.exists(paste0( "unlink ", settings$dir_sofun, "input/sitedata"))) system( paste0( "unlink ", settings$dir_sofun, "input/sitedata") )
 
       system( paste0( "ln -sf ", settings$path_input, "run ", settings$dir_sofun, "run") )
       system( paste0( "ln -sf ", settings$path_input, "site_paramfils ", settings$dir_sofun, "site_paramfils") )
+      if (!dir.exists(paste0(settings$dir_sofun, "input"))) system(paste0("mkdir -p ", settings$dir_sofun, "input"))
       system( paste0( "ln -sf ", settings$path_input, "sitedata ", settings$dir_sofun, "input/sitedata") )
       if (!dir.exists(paste0( settings$dir_sofun, "params"))) system( paste0( "mkdir ", settings$dir_sofun, "params"))
       system( paste0( "cp ", settings$dir_sofun, "params_std/* ", settings$dir_sofun, "params/") )  # not linking, but copying so that files may be overwritten after calibration

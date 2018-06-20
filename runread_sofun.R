@@ -35,7 +35,12 @@ run_sofun <- function( settings, setup ){
       cmd <- paste0("make ", setup$model)
       system( cmd )
     } else if (!file.exists(paste0("run", setup$model))){
-      abort(paste("Executable not available: ", paste0("run", setup$model)))
+
+      warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
+      download_file_cx1(  path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model),
+                          path_local = settings$dir_sofun 
+                          )
+      if (!file.exists(paste0("run", setup$model))) abort( paste( "Executable could not be downloaded: ", paste0("run", setup$model)) )
     }
 
     ## Run all simulations in this ensemble as individual simulations
