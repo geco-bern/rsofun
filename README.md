@@ -137,7 +137,8 @@ siteinfo <- prepare_metainfo_fluxnet2015(
   )
 ```
 
-Then define the calibration settings as:
+Then define the calibration settings as.
+
 ```r
 settings_calib <- list(
   name             = "kphio_gpp_fluxnet2015",
