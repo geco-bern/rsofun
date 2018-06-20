@@ -208,7 +208,7 @@ settings_sims <- prepare_setup_sofun(
 ```
 
 ### Prepare inputs
-Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see (here)[https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2]). 
+Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see [here](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2)). 
 ```r
 inputdata <- prepare_input_sofun( 
   settings_input = settings_input, 
