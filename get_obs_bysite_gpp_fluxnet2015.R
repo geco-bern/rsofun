@@ -94,17 +94,17 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
       # map( as.list(seq(length(swcvars))), ~clean_fluxnet_swc( df[[ swcvars[.] ]], df[[ swcqcvars[.] ]]) )
       if (length(swcvars)>0){
         for (ivar in 1:length(swcvars)){
-          df[[ swcvars[ivar] ]] <- clean_fluxnet_swc( df[[ swcvars[ivar] ]], df[[ swcqcvars[ivar] ]] )
+          df[[ swcvars[ivar] ]] <- clean_fluxnet_swc( df[[ swcvars[ivar] ]], df[[ swcqcvars[ivar] ]], frac_data_thresh=1.0 )
         }
       }
 
       df <- df %>%
-        ## get mean observational soil moisture across different depths (if available)
-        mutate( soilm_obs_mean = apply( select( ., starts_with("SWC_F_MDS") ), 1, FUN = mean, na.rm = TRUE ) ) %>%
-        mutate( soilm_obs_mean = ifelse( is.nan(soilm_obs_mean), NA, soilm_obs_mean ) ) %>%
-
         ## Normalise mean observational soil moisture to within minimum (=0) and maximum (=1), and
-        mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) )
+        mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) ) %>%
+
+        ## get mean observational soil moisture across different depths (if available)
+        mutate( soilm_obs_mean = apply( select( ., one_of(swcvars) ), 1, FUN = mean, na.rm = TRUE ) ) %>%
+        mutate( soilm_obs_mean = ifelse( is.nan(soilm_obs_mean), NA, soilm_obs_mean ) )
 
     } else {
       df <- df %>% mutate( soilm_obs_mean = NA )
@@ -182,11 +182,11 @@ get_obs_bysite_wcont_fluxnet2015 <- function( sitename, path_fluxnet2015, timesc
   swcvars   <- select( vars(ddf), starts_with("SWC") ) %>% select( vars(ddf), !ends_with("QC") ) %>% names()
   swcqcvars <- select( vars(ddf), starts_with("SWC") ) %>% select( vars(ddf),  ends_with("QC") ) %>% names()
 
-  # map( as.list(seq(length(swcvars))), ~clean_fluxnet_swc( ddf[[ swcvars[.] ]], ddf[[ swcqcvars[.] ]]) )
+  # map( as.list(seq(length(swcvars))), ~clean_fluxnet_swc( ddf[[ swcvars[.] ]], ddf[[ swcqcvars[.] ]], frac_data_thresh=0.5 ) )
 
   if (length(swcvars)>0){
     for (ivar in 1:length(swcvars)){
-      ddf[[ swcvars[ivar] ]] <- clean_fluxnet_swc( ddf[[ swcvars[ivar] ]], ddf[[ swcqcvars[ivar] ]] )
+      ddf[[ swcvars[ivar] ]] <- clean_fluxnet_swc( ddf[[ swcvars[ivar] ]], ddf[[ swcqcvars[ivar] ]], frac_data_thresh=0.5 )
     }
   }
   
@@ -293,12 +293,12 @@ clean_fluxnet_et <- function( et, qflag_et, cutoff=0.2 ){
   return( et )
 }
 
-clean_fluxnet_swc <- function( swc, qflag_swc, frac_data_thresh=0.2 ){
+clean_fluxnet_swc <- function( swc, qflag_swc, frac_data_thresh=1.0 ){
   ##--------------------------------------------------------------------
   ## frac_data_thresh: fraction of data based on gap-filled half-hourly
   ##--------------------------------------------------------------------
   ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
-  swc[ qflag_swc < frac_data_thresh ] <- NA
+  swc[ which( qflag_swc < frac_data_thresh ) ] <- NA
   swc <- as.numeric( swc )
 
   return( swc )

@@ -1,7 +1,7 @@
 # load( "mod.Rdata" )
 # successcodes <- read_csv( "successcodes.csv" )
 
-eval_sofun <- function( mod, settings_eval ){
+eval_sofun <- function( mod, settings_eval, settings_sims ){
 	
   require(dplyr)
   require(purrr)
@@ -91,7 +91,14 @@ eval_sofun <- function( mod, settings_eval ){
 													sitename = x ) ) %>%
 	  							bind_rows()
 
-		ndatapoints <- ddf %>% group_by( sitename ) %>% summarise( no = n() )  							
+	  ## Add forcing data to daily data frame (for neural network-based evaluation)
+	  ddf <- lapply( as.list(settings_eval$sitenames_used), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
+	         bind_rows() %>%
+	         select(-year_dec.x, -year_dec.y) %>%
+	  			 right_join( ddf, by = c("sitename", "date") )
+
+
+		# ndatapoints <- ddf %>% group_by( sitename ) %>% summarise( no = n() )  							
 
 	  ##------------------------------------------------------------
 	  ## Aggregate to multi-day periods
@@ -112,8 +119,10 @@ eval_sofun <- function( mod, settings_eval ){
 	
 		## take mean across periods
 		xdf <- ddf %>% mutate( inbin = cut( date, breaks = breaks, right = FALSE ) ) %>%
-		 							 group_by( sitename, year, inbin ) %>%
-		 							 summarise( gpp_obs = mean( gpp_obs, na.rm = TRUE ), n_obs = n() )
+		 							 group_by( sitename, inbin ) %>%
+		 							 summarise( gpp_obs_mean = mean( gpp_obs, na.rm = TRUE ), gpp_obs_min = min( gpp_obs, na.rm = TRUE ), gpp_obs_max = max( gpp_obs, na.rm = TRUE ), n_obs = sum(!is.na(gpp_obs)) ) %>%
+		               rename( gpp_obs = gpp_obs_mean ) %>%
+		               mutate( gpp_obs = ifelse(is.nan(gpp_obs), NA, gpp_obs ), gpp_obs_min = ifelse(is.infinite(gpp_obs_min), NA, gpp_obs_min ), gpp_obs_max = ifelse(is.infinite(gpp_obs_max), NA, gpp_obs_max ) )
 
 	  ##------------------------------------------------------------
 	  ## Get daily model output
@@ -154,9 +163,10 @@ eval_sofun <- function( mod, settings_eval ){
 	  xdf <- ddf_mod %>% 
 	  	# mutate( year = year(date), week = week(date) ) %>%
 	  	mutate( year = year(date), inbin = cut( date, breaks = breaks, right = FALSE ) ) %>%
-	    group_by( sitename, year, inbin ) %>%
-	  	summarise( gpp_mod = mean( gpp_mod ), n = n() ) %>%
-	  	right_join( xdf, by = c("sitename", "year", "inbin") )
+	    group_by( sitename, inbin ) %>%
+	    summarise( gpp_mod_mean = mean( gpp_mod, na.rm = TRUE ), gpp_mod_min = min( gpp_mod, na.rm = TRUE ), gpp_mod_max = max( gpp_mod, na.rm = TRUE ), n_mod = sum(!is.na(gpp_mod)) ) %>%
+	    rename( gpp_mod = gpp_mod_mean ) %>%
+	  	right_join( xdf, by = c("sitename", "inbin") )
 	  
 	  ## daily
 	  ddf <- ddf_mod %>%
@@ -231,11 +241,11 @@ eval_sofun <- function( mod, settings_eval ){
 	  ## Get mean seasonal cycle (by day of year)
     ##------------------------------------------------------------
 		meandoydf <- ddf %>%  mutate( doy = yday(date) ) %>%
-		                      filter( doy != 366 ) %>%
+		                      filter( doy != 366 ) %>% ## XXXX this is a dirty fix! better force lubridate to ignore leap years when calculating yday()
 												  mutate( gpp_obs = ifelse(is.nan(gpp_obs), NA, gpp_obs ) ) %>%
 													group_by( sitename, doy ) %>% 
-													summarise( obs_mean = mean( gpp_obs, na.rm=TRUE ), obs_min = quantile( gpp_obs, 0.25, na.rm=TRUE ), obs_max = quantile( gpp_obs, 0.75, na.rm=TRUE ),
-																		 mod_mean = mean( gpp_mod, na.rm=TRUE ), mod_min = quantile( gpp_mod, 0.25, na.rm=TRUE ), mod_max = quantile( gpp_mod, 0.75, na.rm=TRUE )
+													summarise( obs_mean = mean( gpp_obs, na.rm=TRUE ), obs_min = min( gpp_obs, na.rm=TRUE ), obs_max = max( gpp_obs, na.rm=TRUE ),
+																		 mod_mean = mean( gpp_mod, na.rm=TRUE ), mod_min = min( gpp_mod, na.rm=TRUE ), mod_max = max( gpp_mod, na.rm=TRUE )
 																		 ) %>%
 													mutate( obs_mean = interpol_lin(obs_mean), obs_min = interpol_lin(obs_min), obs_max = interpol_lin( obs_max ), site=sitename )
 
@@ -259,15 +269,13 @@ eval_sofun <- function( mod, settings_eval ){
 									  mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
 									  unnest( stats )									  
 		
-
     ##------------------------------------------------------------
 	  ## Get mean seasonal cycle (by week (or X-day period) of year)
     ##------------------------------------------------------------
 		meanxoydf <- xdf %>%  mutate( xoy = yday(inbin) ) %>%
-												  mutate( gpp_obs = ifelse(is.nan(gpp_obs), NA, gpp_obs ) ) %>%
 													group_by( sitename, xoy ) %>% 
-													summarise( obs_mean = mean( gpp_obs, na.rm=TRUE ), obs_min = quantile( gpp_obs, 0.25, na.rm=TRUE ), obs_max = quantile( gpp_obs, 0.75, na.rm=TRUE ),
-																		 mod_mean = mean( gpp_mod, na.rm=TRUE ), mod_min = quantile( gpp_mod, 0.25, na.rm=TRUE ), mod_max = quantile( gpp_mod, 0.75, na.rm=TRUE )
+													summarise( obs_mean = mean( gpp_obs, na.rm=TRUE ), obs_min = min( gpp_obs, na.rm=TRUE ), obs_max = max( gpp_obs, na.rm=TRUE ),
+																		 mod_mean = mean( gpp_mod, na.rm=TRUE ), mod_min = min( gpp_mod, na.rm=TRUE ), mod_max = max( gpp_mod, na.rm=TRUE )
 																		 ) %>%
 													mutate( obs_mean = interpol_lin(obs_mean), obs_min = interpol_lin(obs_min), obs_max = interpol_lin( obs_max ), site=sitename )
 
@@ -357,11 +365,40 @@ eval_sofun <- function( mod, settings_eval ){
 		out <- idvdf_stats %>%  mutate( purrr::map( data, ~lines( fitted ~ gpp_mod, data = ., col=rgb(1,0,0,0.1) ) ) )  # to have it sorted: %>% mutate( data = purrr::map( data, ~arrange( ., gpp_mod ) ) )
 		lines(c(-1000,5000), c(-1000,5000), lty=3 )
 		title( "IDV correlation" )
-
+		
+		##------------------------------------------------------------
+		## histogram of daily anomalies from mean seasonal cycle based on DOY
+		##------------------------------------------------------------
+		par(las=1)
+		with( idvdf, hist( gpp_obs, breaks = 20, col = rgb(0,0,0,0.3), freq = FALSE, main = "Daily anomalies", xlab = expression( paste("GPP anomaly (gC m"^-2, "d"^-1, ")" ) ) ) )
+		with( idvdf, hist( gpp_mod, breaks = 20, col = rgb(1,0,0,0.3), freq = FALSE, add = TRUE ) )
+    mtext( bquote( sigma[obs] == .(format( sd(idvdf$gpp_obs, na.rm = TRUE), digits = 3)) ), side=3, adj=0, line=0 )	
+    mtext( bquote( sigma[mod] == .(format( sd(idvdf$gpp_mod, na.rm = TRUE), digits = 3)) ), side=3, adj=0, line=-1 )	
+    legend("topright", c("observed", "modelled"), fill = c(rgb(0,0,0,0.3), rgb(1,0,0,0.3)), bty = "n")
+    
+		##------------------------------------------------------------
+		## histogram of X-daily anomalies from mean seasonal cycle based on XOY
+		##------------------------------------------------------------
+		par(las=1)
+		with( ixvdf, hist( gpp_obs, breaks = 20, col = rgb(0,0,0,0.3), freq = FALSE, main = "Anomalies in X-day periods", xlab = expression( paste("GPP anomaly (gC m"^-2, "d"^-1, ")" ) ), ylim = c(0,0.45) ) )
+		with( ixvdf, hist( gpp_mod, breaks = 20, col = rgb(1,0,0,0.3), freq = FALSE, add = TRUE ) )
+    mtext( bquote( sigma[obs] == .(format( sd(ixvdf$gpp_obs, na.rm = TRUE), digits = 3)) ), side=3, adj=0, line=0 )	
+    mtext( bquote( sigma[mod] == .(format( sd(ixvdf$gpp_mod, na.rm = TRUE), digits = 3)) ), side=3, adj=0, line=-1 )	
+    legend("topright", c("observed", "modelled"), fill = c(rgb(0,0,0,0.3), rgb(1,0,0,0.3)), bty = "n")
+    
     ##------------------------------------------------------------
     ## IXV correlation: x_(x,i) - mean_x( x_(x,i) )
     ##------------------------------------------------------------
-		with( ixvdf, plot(gpp_mod, gpp_obs, col=rgb(0,0,0,0.05), pch=16, xlim=c(-10,10), ylim=c(-10,10), ylab = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), xlab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) )  ))
+		with( ixvdf, plot(
+		  gpp_mod, 
+		  gpp_obs, 
+		  col=rgb(0,0,0,0.05), 
+		  pch=16, 
+		  xlim=c(-10,10), 
+		  ylim=c(-10,10), 
+		  ylab = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), 
+		  xlab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) )
+		  ))
 		out <- ixvdf_stats %>%  mutate( purrr::map( data, ~lines( fitted ~ gpp_mod, data = ., col=rgb(1,0,0,0.1) ) ) )  # to have it sorted: %>% mutate( data = purrr::map( data, ~arrange( ., gpp_mod ) ) )
 		lines(c(-1000,5000), c(-1000,5000), lty=3 )
 		title( "IXV correlation" )
@@ -385,6 +422,20 @@ eval_sofun <- function( mod, settings_eval ){
 		# 
 		# purrr::map( filter( meanxoydf_stats, sitename %in% settings_eval$sitenames_siteplots )$data, ~plot_by_xoy_bysite(.) )
 
+    ##------------------------------------------------------------
+    ## Daily values (absolute)
+    ##------------------------------------------------------------
+    ## observed vs. modelled
+		modobs_ddf <- with( ddf, analyse_modobs( gpp_mod, gpp_obs, heat=TRUE, ylab = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), xlab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ) ) )
+		title("Correlation of daily GPP")
+
+		##------------------------------------------------------------
+		## Aggregated values (absolute) to X-day periods
+		##------------------------------------------------------------
+		## observed vs. modelled
+		modobs_ddf <- with( xdf, analyse_modobs( gpp_mod, gpp_obs, heat=TRUE, ylab = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), xlab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ) ) )
+		title("Correlation of mean GPP in X-day periods")
+		
 	}
 
 }
@@ -431,4 +482,21 @@ interpol_lin <- function(vec){
 	return(out)
 }
 
+get_forcing_from_csv <- function( sitename, settings_sims ){
+
+	## get climate data
+  dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
+  csvfiln <- paste0( dir, "/clim_daily_", sitename, ".csv" )
+  ddf <- read_csv( csvfiln )
+
+  ## get fapar data
+  dir <- paste0( settings_sims$path_input, "/sitedata/fapar/", sitename )
+  csvfiln <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
+  ddf <- read_csv( csvfiln ) %>%
+         mutate( fapar = as.numeric(fapar)) %>%
+  			 right_join( ddf, by = "date" )
+
+  return(ddf)
+
+}
 

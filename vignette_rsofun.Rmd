@@ -256,6 +256,6 @@ Evaluate SOFUN results based on calibrated parameters. The first argument to the
 ```{r, eval=FALSE}
 load( "mod.Rdata" )
 out <- mod; rm("mod")
-nothing <- eval_sofun( out, settings_eval = settings_eval )
+nothing <- eval_sofun( out, settings_eval = settings_eval, settings_sims = settings_sims )
 ```
 
