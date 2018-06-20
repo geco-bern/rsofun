@@ -149,9 +149,9 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     ##-----------------------------------------------------------
     ## Loop over all sites and prepare input files by site.
     ##-----------------------------------------------------------
-    # ## Climate input files
-    # ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite = overwrite, verbose ) ) %>%
-    #                 bind_rows()
+    ## Climate input files
+    ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite = overwrite, verbose ) ) %>%
+                    bind_rows()
 
     ## fAPAR input files
     ## first, place a text file in the fapar input data directory that specifies where it's coming from (needs to be read online by Fortran)                
