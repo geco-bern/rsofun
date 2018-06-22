@@ -37,5 +37,7 @@ eval_response_neuralnet <- function( ddf ){
 
   ## predict values
   predicted <- predict( nn, df )
+  
+  save( nn, file file = "nn.Rdata" )
 
 }
