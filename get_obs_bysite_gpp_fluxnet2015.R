@@ -44,7 +44,7 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
   if (length(filn)==0) abort(paste0("No files found for timescale ", timescale, "in sub-directories of ", path_fluxnet2015 ) )
   if (length(filn)>1){
     filn <- filn[which(grepl("3.csv", filn))]
-    warn(paste0("Multiple files found for timsescale ", timescale, " in sub-directories of ", path_fluxnet2015, ". Taking only ", filn ) )
+    # warn(paste0("Multiple files found for timsescale ", timescale, " in sub-directories of ", path_fluxnet2015, ". Taking only ", filn ) )
   }
   
   ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
@@ -55,7 +55,7 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
 
     ## convert to numeric (weirdly isn't always) and subset (select)
     mutate_at( vars(one_of(getvars)), funs(as.numeric)) %>%
-    select( date, one_of(getvars), starts_with("SWC_") ) %>%  # get soil water content data for filtering later
+    dplyr::select( date, one_of(getvars), starts_with("SWC_") ) %>%  # get soil water content data for filtering later
     mutate_at( vars(starts_with("SWC_")), funs(as.numeric) ) %>%
 
     ## XXX THIS IS WRONG! DATA IS ALREADY GIVEN IN gC m-2 d-1
@@ -86,10 +86,10 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
     df$LE_F_MDS <- clean_fluxnet_et( df$LE_F_MDS, df$LE_F_MDS_QC, cutoff=0.2 )
 
     ## Soil moisture related stuff
-    tmp <- df %>% select( starts_with("SWC") )
+    tmp <- df %>% dplyr::select( starts_with("SWC") )
     if (ncol(tmp)>0){
-      swcvars   <- tmp %>% select( -ends_with("QC") ) %>% names()
-      swcqcvars <- tmp %>% select(  ends_with("QC") ) %>% names()
+      swcvars   <- tmp %>% dplyr::select( -ends_with("QC") ) %>% names()
+      swcqcvars <- tmp %>% dplyr::select(  ends_with("QC") ) %>% names()
     
       # map( as.list(seq(length(swcvars))), ~clean_fluxnet_swc( df[[ swcvars[.] ]], df[[ swcqcvars[.] ]]) )
       if (length(swcvars)>0){
@@ -103,7 +103,7 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
         mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) ) %>%
 
         ## get mean observational soil moisture across different depths (if available)
-        mutate( soilm_obs_mean = apply( select( ., one_of(swcvars) ), 1, FUN = mean, na.rm = TRUE ) ) %>%
+        mutate( soilm_obs_mean = apply( dplyr::select( ., one_of(swcvars) ), 1, FUN = mean, na.rm = TRUE ) ) %>%
         mutate( soilm_obs_mean = ifelse( is.nan(soilm_obs_mean), NA, soilm_obs_mean ) )
 
     } else {
@@ -119,7 +119,7 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
     mutate( gpp_obs = (GPP_NT_VUT_REF + GPP_DT_VUT_REF)/2.0,
             transp_obs = LE_F_MDS,
             temp = TA_F ) %>%
-    select( date, gpp_obs, transp_obs, soilm_obs_mean, temp )
+    dplyr::select( date, gpp_obs, transp_obs, soilm_obs_mean, temp )
 
   return(df)
 
@@ -172,15 +172,15 @@ get_obs_bysite_wcont_fluxnet2015 <- function( sitename, path_fluxnet2015, timesc
   ## convert to numeric (weirdly isn't always) and subset (select)
   if ( identical( getvars , "SWC" ) ){
     df <- df %>% mutate_at( vars(starts_with(getvars)), funs(as.numeric)) %>%
-                 select( date, starts_with(getvars) )
+                 dplyr::select( date, starts_with(getvars) )
   } else {
     df <- df %>%  mutate_at( vars(one_of(getvars)), funs(as.numeric)) %>%
-                  select( date, one_of(getvars) )
+                  dplyr::select( date, one_of(getvars) )
   }
 
 
-  swcvars   <- select( vars(ddf), starts_with("SWC") ) %>% select( vars(ddf), !ends_with("QC") ) %>% names()
-  swcqcvars <- select( vars(ddf), starts_with("SWC") ) %>% select( vars(ddf),  ends_with("QC") ) %>% names()
+  swcvars   <- dplyr::select( vars(ddf), starts_with("SWC") ) %>% dplyr::select( vars(ddf), !ends_with("QC") ) %>% names()
+  swcqcvars <- dplyr::select( vars(ddf), starts_with("SWC") ) %>% dplyr::select( vars(ddf),  ends_with("QC") ) %>% names()
 
   # map( as.list(seq(length(swcvars))), ~clean_fluxnet_swc( ddf[[ swcvars[.] ]], ddf[[ swcqcvars[.] ]], frac_data_thresh=0.5 ) )
 

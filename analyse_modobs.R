@@ -85,6 +85,6 @@ analyse_modobs <- function( mod,
   }
 
   ## return statistics  
-  out <- list( rmse=rmse, linmod=linmod, rsq=rsq, nse=nse, prmse=prmse, pbias=pbias, N=numb )
+  out <- list( rmse=rmse, linmod=linmod, rsq=rsq, nse=nse, prmse=prmse, bias=bias, slope=slope, N=numb )
   return( out )
 }
