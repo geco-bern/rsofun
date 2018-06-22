@@ -97,11 +97,11 @@ eval_response_byvar <- function( df, evalvar, predictors, varmin, varmax, nsampl
                                       q25 = quantile( gpp_nn, 0.25 ),
                                       q75 = quantile( gpp_nn, 0.75 )
                                       )
-
+                           
   ## plot
   if(!is.na(pdfname)) pdf( pdfname )
-  plot( eval_sum[[evalvar]], eval_sum$median, type = "l", col="red", ylim=c(0,10), xlab = evalvar, ylab = "GPP (gC m-2 d-1)")
-  polygon( c(eval_sum[[evalvar]], rev(eval_sum[[evalvar]])), c(eval_sum$q25, rev(eval_sum$q75)), col=rgb(0,0,0,0.2), border = NA )
-  polygon( c(eval_sum[[evalvar]], rev(eval_sum[[evalvar]])), c(eval_sum$q33, rev(eval_sum$q66)), col=rgb(0,0,0,0.2), border = NA )
+	  plot( eval_sum[[evalvar]], eval_sum$median, type = "l", col="red", ylim=c(0,10), xlab = evalvar, ylab = "GPP (gC m-2 d-1)")
+	  polygon( c(eval_sum[[evalvar]], rev(eval_sum[[evalvar]])), c(eval_sum$q25, rev(eval_sum$q75)), col=rgb(0,0,0,0.2), border = NA )
+	  polygon( c(eval_sum[[evalvar]], rev(eval_sum[[evalvar]])), c(eval_sum$q33, rev(eval_sum$q66)), col=rgb(0,0,0,0.2), border = NA )
   if(!is.na(pdfname)) dev.off()
 }
