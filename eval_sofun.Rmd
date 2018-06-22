@@ -1,0 +1,58 @@
+---
+title: "eval_sofun"
+author: "Beni Stocker"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    number_sections: true
+# output:
+#   pdf_document:
+#     toc: true
+#     toc_depth: 2
+#     number_sections: true
+header-includes:
+   - \usepackage{amsmath}
+bibliography: bibliography.bib
+csl: nature.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(captioner)
+tab_nums <- captioner( prefix = "Table S", auto_space=FALSE, style = "i" )
+fig_nums <- captioner( prefix = "Figure S", auto_space=FALSE, style = "i" )
+```
+
+# Sites and data processing
+
+```{r siteoverview, echo=FALSE, warning=FALSE, message=FALSE}
+require(readr, quietly = TRUE)
+require(dplyr, quietly = TRUE)
+siteinfo <- read_csv("siteinfo_eval.csv") %>%
+            mutate( Reference = paste0("[@", sitename ,"]") ) %>%
+            mutate( Period = paste0(as.character(year_start), "-", as.character(year_end)) ) %>% 
+            select( -year_start, -year_end )
+siteinfo %>%
+  dplyr::rename( Site=sitename, Lon.=lon, Lat.=lat, Elevation=elv, Veg.=classid, Clim.=koeppen_code, N = ndailygpp ) %>%
+  select( Site, Lon., Lat., Period, Veg., Clim., N, Reference ) %>% 
+  knitr::kable( caption = "Sites used for evaluation. Lon. is longitude, negative values indicate west longitude; Lat. is latitude, positive values indicate north latitude; Veg. is vegetation type: deciduous broadleaf forest (DBF); evergreen broadleaf forest (EBF); evergreen needleleaf forest (ENF); grassland (GRA); mixed deciduous and evergreen needleleaf forest (MF); savanna ecosystem (SAV); shrub ecosystem (SHR); wetland (WET)." )
+```
+
+```{r siteoverview_fig, echo=FALSE, warning=FALSE, message=FALSE}
+require(ncdf4, quietly = TRUE)
+ncfiln <- "../data/greve/ep_over_p_cru_ncep.nc"
+if (!file.exists(ncfiln)) {
+  epop <- array( 1, dim=c(720,360) )
+} else {
+  nc <- nc_open( ncfiln )
+  epop <- ncvar_get( nc, varid="EP_OVER_P_CRU_NCEP" )
+}
+source("plot_map_siteoverview.R")
+suppressMessages( plot_map_siteoverview( siteinfo, 1/epop ) ) # , plotfiln="fig/map_sites.pdf"
+cap_siteoverview_fig <- fig_nums( "siteoverview_fig", caption=" Geographical distribution of sites selected for the bias evaluation. Sites listed in Table S1 as group 1 are in green, sites of group 2 are in black. The color of land area represents aridity, quantified as the ratio of potential evapotranspiration over precipitation from [@greve14]" )
+```
+
+`r fig_nums("siteoverview_fig")`
