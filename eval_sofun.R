@@ -98,7 +98,21 @@ eval_sofun <- function( mod, settings_eval, settings_sims ){
 	  			 right_join( ddf, by = c("sitename", "date") )
 
 
-		# ndatapoints <- ddf %>% group_by( sitename ) %>% summarise( no = n() )  							
+	  ##------------------------------------------------------------
+	  ## Create table for overview
+	  ##------------------------------------------------------------
+	  meta <- read_csv("/alphadata01/bstocker/data/FLUXNET-2015_Tier1/meta/fluxnet_site_info_mysub.csv") %>%
+	  				dplyr::rename( sitename = fluxnetid ) %>% select( sitename, koeppen_climate ) %>%
+	          mutate( koeppen_climate = str_split( koeppen_climate, " - " ) ) %>%
+	          mutate( koeppen_code = purrr::map( koeppen_climate, 1 )) %>% 
+	          unnest( koeppen_code ) %>% 
+	          select( -koeppen_climate )
+	    
+		siteinfo <- ddf %>% group_by( sitename ) %>% summarise( ndailygpp = sum(!is.na(gpp_obs)) ) %>% 
+												right_join( rename( siteinfo$light, sitename = mysitename), by = "sitename" ) %>%
+												left_join( meta, by = "sitename")
+		
+		write_csv( siteinfo, path = "siteinfo_eval.csv" )
 
 	  ##------------------------------------------------------------
 	  ## Aggregate to multi-day periods
@@ -173,7 +187,8 @@ eval_sofun <- function( mod, settings_eval, settings_sims ){
 	    ## merge into observational data frame
 	    right_join( ddf, by = c("sitename", "date"))
 
-
+    save( adf, file = "adf.Rdata")
+    save( ddf, file = "ddf.Rdata")
 
     ##------------------------------------------------------------
 	  ## Evaluate annual values by site
@@ -302,9 +317,17 @@ eval_sofun <- function( mod, settings_eval, settings_sims ){
 	  ## Plot mean per site -> spatial correlation
     ##------------------------------------------------------------
 		par(las=1, mar=c(4,4.5,4,1))
-		stats <- with( meandf, analyse_modobs( gpp_mod, gpp_obs, heat = FALSE, col = "black", ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ) ) )
-		abline( linmod_meandf, col="red")
-    title( "Spatial correlation" )
+		stats <- with( meandf, analyse_modobs( 
+																					gpp_mod, 
+																					gpp_obs, 
+																					heat = FALSE, 
+																					col = "black", 
+																					ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), 
+																					xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ),
+																					plot.fil = "fig/modobs_spatial.pdf",
+																					plot.title = "Spatial correlation"
+																					) )
+		# abline( linmod_meandf, col="red")
     
     ##------------------------------------------------------------
     ## Combined spatial - IAV correlation
@@ -498,5 +521,11 @@ get_forcing_from_csv <- function( sitename, settings_sims ){
 
   return(ddf)
 
+}
+
+extract_koeppen_code <- function( str ){
+	require(stringr)
+	out <- str_split( str, " - ")[[1]][1]
+	return( out )
 }
 

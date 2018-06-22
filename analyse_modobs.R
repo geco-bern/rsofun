@@ -51,7 +51,7 @@ analyse_modobs <- function( mod,
                   ...
                   )      
     } else {
-      plot( mod, obs, main = main, pch = 16, ... )
+      plot( mod, obs, main = main, pch = 16, xlim = xlim, ylim = ylim, ... )
     }
     abline( c(0,0), c(1,1), col="black", lty=3 )
     if (plot.linmod) abline( linmod, col="red", lty=1 )
