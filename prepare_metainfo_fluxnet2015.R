@@ -311,7 +311,7 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
     warn( "FLUXNET 2015 meta info file missing." )
     warn( paste0("Expected file path: ", longfiln) )
     warn( "Get it from CX1 (manually) and place it at path above. See you soon.")
-    abort()
+    abort("Aborting.")
   }
   if (!file.exists(widefiln) || overwrite){
     long <- read.csv( paste0( settings_input$path_cx1data, "/FLUXNET-2015_Tier1/FLX_AA-Flx_BIF_LATEST.csv"), sep = ";" ) %>% as_tibble()
@@ -329,7 +329,7 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
   ## rename variables (columns) where necessary
   # siteinfo <- rename( siteinfo, c( "LOCATION_ELEV"="elv", "SITE_ID"="mysitename", "LOCATION_LONG"="lon", "LOCATION_LAT"="lat",
   #   "FLUX_MEASUREMENTS_DATE_START"="year_start", "FLUX_MEASUREMENTS_DATE_END"="year_end", "IGBP"="classid" ) )
-  siteinfo <- rename( siteinfo,
+  siteinfo <- dplyr::rename( siteinfo,
     elv=LOCATION_ELEV, mysitename=SITE_ID, lon=LOCATION_LONG, lat=LOCATION_LAT,
     year_start=FLUX_MEASUREMENTS_DATE_START, year_end=FLUX_MEASUREMENTS_DATE_END, classid=IGBP
     )
@@ -403,8 +403,8 @@ prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwri
                         )
   }
 
-  siteinfo <- read_delim( filn, delim = ";" ) %>%
-  # siteinfo <- read_csv( filn ) %>%
+  # siteinfo <- read_delim( filn, delim = ";" ) %>%
+  siteinfo <- read_csv( filn ) %>%
     select( mysitename, type ) %>%
     right_join( siteinfo, by = "mysitename" )
 
