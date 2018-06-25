@@ -47,10 +47,10 @@ settings_sims <- list(
   ensemble        = TRUE,
   lonlat          = FALSE,
   name            = "fluxnet2015",
-  dir_sofun       = "~/sofun/trunk/",
-  path_output     = "~/sofun/output_fluxnet2015_sofun_TEST/",
-  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun_TEST/",
-  path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
+  dir_sofun       = "/alphadata01/bstocker/sofun/trunk/",
+  path_output     = "/alphadata01/bstocker/sofun/output_fluxnet2015_sofun_TEST/",
+  path_output_nc  = "/alphadata01/bstocker/sofun/output_nc_fluxnet2015_sofun_TEST/",
+  path_input      = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
   in_ppfd         = TRUE,
@@ -104,11 +104,11 @@ settings_input <-  list(
   cloudcover               = "cru_ts4_01",
   fapar                    = "MODIS_FPAR_MCD15A3H",
   co2                      = "cmip",
-  path_cx1data             = "~/data/",
-  path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_watch_wfdei         = "~/data/watch_wfdei/",
-  path_cru_ts4_01          = "~/data/cru/ts_4.01/",
-  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
+  path_cx1data             = "/alphadata01/bstocker/data/",
+  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
+  path_cru_ts4_01          = "/alphadata01/bstocker/data/cru/ts_4.01/",
+  path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
   )
 ```
 
@@ -126,7 +126,7 @@ Define model setup as a list.
 ```{r}
 setup_sofun <- list( 
   model      = "pmodel",
-  dir        = "~/sofun/trunk",
+  dir        = "/alphadata01/bstocker/sofun/trunk",
   do_compile = FALSE,
   simsuite   = FALSE
   )
@@ -158,7 +158,7 @@ settings_calib <- list(
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
   timescale        = list( gpp = "d" ),
-  path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/",
+  path_fluxnet2015 = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/",
   maxit            = 300,
   sitenames        = filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
   filter_temp_min  = 5.0,
@@ -187,7 +187,7 @@ settings_eval <- list(
   sitenames_siteplots = mylist,
   agg = 5,
   benchmark = list( gpp="fluxnet2015" ),
-  path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/"
+  path_fluxnet2015 = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/"
   )
 ```
 
@@ -195,7 +195,7 @@ settings_eval <- list(
 
 ## Prepare meta info file
 This step is either done by hand so that the file has a certain structure (for column names etc see above: `path_siteinfo`). Below is an example for creating such a meta info file (info for each site in an ensemble) for the FLUXNET 2015 Tier 1 ensemble.
-```{r, eval=FALSE, message=FALSE}
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
 siteinfo <- prepare_metainfo_fluxnet2015( 
   settings_sims = settings_sims, 
   settings_input = settings_input, 
@@ -244,8 +244,8 @@ settings_calib <- calib_sofun(
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
 ```{r, eval=FALSE}
 params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
-nothing <- update_params( params_opt )
-out <- runread_sofun( 
+nothing <- update_params( params_opt, settings = settings_sims )
+mod <- runread_sofun( 
   settings = settings_sims, 
   setup = setup_sofun 
   )
@@ -254,8 +254,7 @@ out <- runread_sofun(
 ## Evaluate the model
 Evaluate SOFUN results based on calibrated parameters. The first argument to the `eval_sofun()` function is the output from `runread()` executed above. (Here, in order to avoid running all steps while knitting this RMarkdown file, we first read model outputs from a previous run.)
 ```{r, message = FALSE}
-load( "mod.Rdata" )
-out <- mod; rm("mod")
-metrics <- eval_sofun( out, settings_eval = settings_eval, settings_sims = settings_sims, siteinfo = siteinfo )
+# load( "mod.Rdata" )
+out_eval <- eval_sofun( mod, settings_eval = settings_eval, settings_sims = settings_sims, siteinfo = siteinfo, overwrite = TRUE )
 ```
 

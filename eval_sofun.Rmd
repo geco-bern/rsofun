@@ -26,7 +26,9 @@ tab_nums <- captioner( prefix = "Table S", auto_space=FALSE, style = "i" )
 fig_nums <- captioner( prefix = "Figure S", auto_space=FALSE, style = "i" )
 ```
 
-# Sites and data processing
+# Evaluation of GPP against FLUXNET data
+
+## Sites selection
 
 ```{r siteoverview, echo=FALSE, warning=FALSE, message=FALSE}
 require(readr, quietly = TRUE)
@@ -56,3 +58,93 @@ cap_siteoverview_fig <- fig_nums( "siteoverview_fig", caption=" Geographical dis
 ```
 
 `r fig_nums("siteoverview_fig")`
+
+## Data processing
+
+## Metrics
+
+Several performance metrics are calculated for different features of GPP variability. The performance metrics are:
+
+- R$^2$
+- RMSE
+- slope (of regression observed over modelled)
+- bias
+
+The features of variability in GPP, for which model-observation agreement is calculated, are:
+
+- mean annual values (giving "spatial" correlation)
+- annual anomalies from mean across years
+- daily values, absolute
+- mean across X-day periods, absolute
+- mean seasonal cycle (mean by day of year)
+- daily anomalies from mean seasonal cycle
+
+## Results of evaluation
+
+
+```{r, echo=FALSE, message=FALSE}
+# Generate data used for plotting and get performance metrics
+source("eval_sofun.R")
+filn <- "eval_sofun.Rdata"
+if (!file.exists(filn)){
+  out_eval <- eval_sofun( mod, settings_eval, settings_sims, siteinfo, doplot=FALSE )
+  save( out_eval, file = filn )
+} else {
+  load( filn )
+}
+```
+
+#### Annual values
+
+Annual values in modelled and simulated GPP can be decomposed into the mean annual GPP per site $\bar{X}_i$ and its anomaly from the multi-annual mean $X'_{i,t}$:
+$$
+X_{i,t} = \bar{X}_i + X'_{i,t}
+$$
+#### Spatial correlation
+
+Comparing the multi-annual mean per site in simulated and observed GPP ($\bar{X}_i$) yields a "spatial correlation".
+
+```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+plot_modobs_spatial( out_eval$data$meandf, makepdf=FALSE )
+```
+
+#### Annual GPP anomalies
+
+Comparing annual anomalies ($X'_{i,t}$) yields insight into whether the model accurately simulates interannual variability.
+
+```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+plot_modobs_anomalies_annual( out_eval$data$iavdf, out_eval$data$iavdf_stats, makepdf=FALSE )
+```
+
+### Combined spatial/annual
+
+The two above can be combined into a single plot. This shows the same as in the SI of our submitted manuscript: Figures S14 and S15 [here](http://rpubs.com/stineb/si_soilm_global).
+
+```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+plot_modobs_spatial_annual( out_eval$data$meandf, out_eval$data$linmod_meandf, out_eval$data$adf_stats, makepdf=FALSE )
+```
+
+<!-- ### Daily values -->
+
+<!-- Ignoring that we don't expect a LUE-type linear relationship between absorbed light $I_{\text{abs}}$ and GPP, we can still evaluate the daily GPP estimated by the P-model: -->
+<!-- $$ -->
+<!-- \text{GPP}(d) = \text{LUE}(m|d)\; \times \; I_{\text{abs}}(d) -->
+<!-- $$ -->
+<!-- Here, $LUE(m|d)$ is the monthly varying light use efficiency simulated by the P-model using forcing data averaged to monthly means. $m|d$ refers to the month of a given day. -->
+
+<!-- The correlation is still quite good... -->
+
+<!-- ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE} -->
+<!-- modobs_ddf <- plot_modobs_daily( out_eval$data$ddf, makepdf=FALSE, xlim=c(0,25), ylim=c(0,25) ) -->
+<!-- ``` -->
+
+<!-- ### Values aggregated to X days -->
+
+<!-- Aggregated to longer periods, the performance slightly improves. Here, I aggregated modeled and observational data to 5-days periods. -->
+
+<!-- ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE} -->
+<!-- modobs_ddf <- plot_modobs_xdaily( out_eval$data$xdf, makepdf=FALSE, xlim=c(0,20), ylim=c(0,20) ) -->
+<!-- ``` -->
+
+
+

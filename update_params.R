@@ -1,4 +1,4 @@
-update_params <- function( params_opt ){
+update_params <- function( params_opt, settings ){
   require(stringr)
   
   if ("kphio" %in% names(params_opt)){
