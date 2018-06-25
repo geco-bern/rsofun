@@ -1,7 +1,7 @@
 # load( "mod.Rdata" )
 # successcodes <- read_csv( "successcodes.csv" )
 
-eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=FALSE, doplot=FALSE ){
+eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=TRUE, doplot=FALSE ){
 	
   require(dplyr)
   require(purrr)

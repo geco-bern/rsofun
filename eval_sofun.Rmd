@@ -6,7 +6,7 @@ output:
   html_document:
     toc: true
     toc_float: true
-    toc_depth: 2
+    toc_depth: 4
     number_sections: true
 # output:
 #   pdf_document:
@@ -30,18 +30,7 @@ fig_nums <- captioner( prefix = "Figure S", auto_space=FALSE, style = "i" )
 
 ## Sites selection
 
-```{r siteoverview, echo=FALSE, warning=FALSE, message=FALSE}
-require(readr, quietly = TRUE)
-require(dplyr, quietly = TRUE)
-siteinfo <- read_csv("siteinfo_eval.csv") %>%
-            mutate( Reference = paste0("[@", sitename ,"]") ) %>%
-            mutate( Period = paste0(as.character(year_start), "-", as.character(year_end)) ) %>% 
-            select( -year_start, -year_end )
-siteinfo %>%
-  dplyr::rename( Site=sitename, Lon.=lon, Lat.=lat, Elevation=elv, Veg.=classid, Clim.=koeppen_code, N = ndailygpp ) %>%
-  select( Site, Lon., Lat., Period, Veg., Clim., N, Reference ) %>% 
-  knitr::kable( caption = "Sites used for evaluation. Lon. is longitude, negative values indicate west longitude; Lat. is latitude, positive values indicate north latitude; Veg. is vegetation type: deciduous broadleaf forest (DBF); evergreen broadleaf forest (EBF); evergreen needleleaf forest (ENF); grassland (GRA); mixed deciduous and evergreen needleleaf forest (MF); savanna ecosystem (SAV); shrub ecosystem (SHR); wetland (WET)." )
-```
+Sites used for the model evaluation are shown on the map below. An overview table is in the Appendix (last section of this document).
 
 ```{r siteoverview_fig, echo=FALSE, warning=FALSE, message=FALSE}
 require(ncdf4, quietly = TRUE)
@@ -60,6 +49,40 @@ cap_siteoverview_fig <- fig_nums( "siteoverview_fig", caption=" Geographical dis
 `r fig_nums("siteoverview_fig")`
 
 ## Data processing
+
+Daily data are used from the FLUXNET 2015 Tier 1 dataset, downloaded on 13. November, 2016. We use GPP as the mean of values based on the Nighttime Partitioning and the Daytime Partitioning method, both based on the Variable U-Star Threshold method, named `GPP_NT_VUT_REF` and `GPP_DT_VUT_REF`. In the FLUXNET 2015 dataset, daily values are sums over half-hourly data. We use only daily values where less than 50% of respective half-hourly data is gap-filled. We further removed data points where the daytime and nighttime methods (`GPP_DT_VUT_REF` and `GPP_NT_VUT_REF`, resp.) are inconsistent. I.e., the upper and lower 2.5% quantile of the difference between each method's GPP quantification. Finally, we removed all negative daily GPP values.
+
+This is implemented by the following function:
+```{r eval=FALSE}
+clean_fluxnet_gpp <- function( gpp_nt, gpp_dt, qflag_nt, qflag_dt, cutoff=0.80 ){
+  ##--------------------------------------------------------------------
+  ## Cleans daily data.
+  ## gpp_nt: based on nighttime flux decomposition ("NT")
+  ## gpp_dt: based on daytime flux decomposition ("DT")
+  ##--------------------------------------------------------------------
+
+  ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
+  gpp_nt[ which(qflag_nt < cutoff) ] <- NA  ## based on fraction of data based on gap-filled half-hourly
+  gpp_dt[ which(qflag_dt < cutoff) ] <- NA  ## based on fraction of data based on gap-filled half-hourly
+
+  ## Remove data points where the two flux decompositions are inconsistent,
+  ## i.e. where the residual of their regression is above the 97.5% or below the 2.5% quantile.
+  res  <- gpp_nt - gpp_dt
+  q025 <- quantile( res, probs = 0.025, na.rm=TRUE )
+  q975 <- quantile( res, probs = 0.975, na.rm=TRUE )
+
+  gpp_nt[ res > q975 | res < q025  ] <- NA
+  gpp_dt[ res > q975 | res < q025  ] <- NA
+
+  ## remove negative GPP
+  gpp_nt[ which(gpp_nt<0) ] <- NA
+  gpp_dt[ which(gpp_dt<0) ] <- NA
+
+  return( list( gpp_nt=gpp_nt, gpp_dt=gpp_dt ) )
+}
+```
+
+
 
 ## Metrics
 
@@ -94,17 +117,18 @@ if (!file.exists(filn)){
 }
 ```
 
-#### Annual values
+### Annual values
 
 Annual values in modelled and simulated GPP can be decomposed into the mean annual GPP per site $\bar{X}_i$ and its anomaly from the multi-annual mean $X'_{i,t}$:
 $$
 X_{i,t} = \bar{X}_i + X'_{i,t}
 $$
+
 #### Spatial correlation
 
 Comparing the multi-annual mean per site in simulated and observed GPP ($\bar{X}_i$) yields a "spatial correlation".
 
-```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
 plot_modobs_spatial( out_eval$data$meandf, makepdf=FALSE )
 ```
 
@@ -112,7 +136,7 @@ plot_modobs_spatial( out_eval$data$meandf, makepdf=FALSE )
 
 Comparing annual anomalies ($X'_{i,t}$) yields insight into whether the model accurately simulates interannual variability.
 
-```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
 plot_modobs_anomalies_annual( out_eval$data$iavdf, out_eval$data$iavdf_stats, makepdf=FALSE )
 ```
 
@@ -120,9 +144,20 @@ plot_modobs_anomalies_annual( out_eval$data$iavdf, out_eval$data$iavdf_stats, ma
 
 The two above can be combined into a single plot. This shows the same as in the SI of our submitted manuscript: Figures S14 and S15 [here](http://rpubs.com/stineb/si_soilm_global).
 
-```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
 plot_modobs_spatial_annual( out_eval$data$meandf, out_eval$data$linmod_meandf, out_eval$data$adf_stats, makepdf=FALSE )
 ```
+
+```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+successcodes <- read_csv( "successcodes.csv" )
+do.sites <- dplyr::filter( successcodes, successcode==1 | successcode==2 )$mysitename
+plot_modobs_spatial_annual( 
+  filter( out_eval$data$meandf, sitename %in% do.sites), 
+  lm( gpp_obs ~ gpp_mod, data = filter( out_eval$data$meandf, sitename %in% do.sites) ), 
+  filter( out_eval$data$adf_stats, sitename %in% do.sites), 
+  makepdf=FALSE )
+```
+
 
 <!-- ### Daily values -->
 
@@ -146,5 +181,18 @@ plot_modobs_spatial_annual( out_eval$data$meandf, out_eval$data$linmod_meandf, o
 <!-- modobs_ddf <- plot_modobs_xdaily( out_eval$data$xdf, makepdf=FALSE, xlim=c(0,20), ylim=c(0,20) ) -->
 <!-- ``` -->
 
+# Appendix
 
+```{r siteoverview, echo=FALSE, warning=FALSE, message=FALSE}
+require(readr, quietly = TRUE)
+require(dplyr, quietly = TRUE)
+siteinfo <- read_csv("siteinfo_eval.csv") %>%
+            mutate( Reference = paste0("[@", sitename ,"]") ) %>%
+            mutate( Period = paste0(as.character(year_start), "-", as.character(year_end)) ) %>% 
+            select( -year_start, -year_end )
+siteinfo %>%
+  dplyr::rename( Site=sitename, Lon.=lon, Lat.=lat, Elevation=elv, Veg.=classid, Clim.=koeppen_code, N = ndailygpp ) %>%
+  select( Site, Lon., Lat., Period, Veg., Clim., N, Reference ) %>% 
+  knitr::kable( caption = "Sites used for evaluation. Lon. is longitude, negative values indicate west longitude; Lat. is latitude, positive values indicate north latitude; Veg. is vegetation type: deciduous broadleaf forest (DBF); evergreen broadleaf forest (EBF); evergreen needleleaf forest (ENF); grassland (GRA); mixed deciduous and evergreen needleleaf forest (MF); savanna ecosystem (SAV); shrub ecosystem (SHR); wetland (WET)." )
+```
 
