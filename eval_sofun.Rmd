@@ -104,7 +104,6 @@ The features of variability in GPP, for which model-observation agreement is cal
 
 ## Results of evaluation
 
-
 ```{r, echo=FALSE, message=FALSE}
 # Generate data used for plotting and get performance metrics
 source("eval_sofun.R")
@@ -119,9 +118,9 @@ if (!file.exists(filn)){
 
 ### Annual values
 
-Annual values in modelled and simulated GPP can be decomposed into the mean annual GPP per site $\bar{X}_i$ and its anomaly from the multi-annual mean $X'_{i,t}$:
+Annual values in modelled and simulated GPP can be decomposed into the mean annual GPP per site $\overline{X}_i$ and its anomaly from the multi-annual mean $X'_{i,t}$:
 $$
-X_{i,t} = \bar{X}_i + X'_{i,t}
+X_{i,t} = \overline{X}_i + X'_{i,t}
 $$
 
 #### Spatial correlation
@@ -140,7 +139,7 @@ Comparing annual anomalies ($X'_{i,t}$) yields insight into whether the model ac
 plot_modobs_anomalies_annual( out_eval$data$iavdf, out_eval$data$iavdf_stats, makepdf=FALSE )
 ```
 
-### Combined spatial/annual
+#### Combined spatial/annual
 
 The two above can be combined into a single plot. This shows the same as in the SI of our submitted manuscript: Figures S14 and S15 [here](http://rpubs.com/stineb/si_soilm_global).
 
@@ -156,6 +155,16 @@ plot_modobs_spatial_annual(
   lm( gpp_obs ~ gpp_mod, data = filter( out_eval$data$meandf, sitename %in% do.sites) ), 
   filter( out_eval$data$adf_stats, sitename %in% do.sites), 
   makepdf=FALSE )
+```
+
+### Seasonal cycle
+
+The mean seasonal cycle is calculated as the mean by day-of-year (DOY) across multiple years.
+$$
+\overline{X_{\text{DOY}}} = \frac{1}{N_y} \sum_y X_{\text{DOY},y}
+$$
+```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
+modobs_meandoy <- plot_modobs_meandoy( out_eval$data$meandoydf, out_eval$data$meandoydf_stats, makepdf=FALSE )
 ```
 
 
