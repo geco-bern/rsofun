@@ -18,9 +18,9 @@ clean_fluxnet_gpp <- function( gpp_nt, gpp_dt, qflag_reichstein, qflag_lasslop, 
   gpp_nt[ res > q975 | res < q025  ] <- NA
   gpp_dt[ res > q975 | res < q025  ] <- NA
 
-  # ## remove negative GPP
-  # gpp_nt[ which(gpp_nt<0) ] <- NA
-  # gpp_dt[ which(gpp_dt<0) ] <- NA
+  ## remove negative GPP
+  gpp_nt[ which(gpp_nt<0) ] <- NA
+  gpp_dt[ which(gpp_dt<0) ] <- NA
 
   return( list( gpp_nt=gpp_nt, gpp_dt=gpp_dt ) )
 }

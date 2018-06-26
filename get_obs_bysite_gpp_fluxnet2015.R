@@ -72,44 +72,42 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
   #                                  mutate_at( vars( starts_with("GPP_") ), funs( "*"(.,ndaymonth)) )
   # if (timescale=="w") df <- df %>% mutate_at( vars( starts_with("GPP_") ), funs( "*"(.,7.0)) )
   
-  ## More cleaning and adding soil moisture with daily data
+  ## clean data
+  if (any( !(c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
+  out_clean <- clean_fluxnet_gpp( df$GPP_NT_VUT_REF, df$GPP_DT_VUT_REF, df$NEE_VUT_REF_NIGHT_QC, df$NEE_VUT_REF_DAY_QC, cutoff=0.5 )
+  df$GPP_NT_VUT_REF <- out_clean$gpp_nt
+  df$GPP_DT_VUT_REF <- out_clean$gpp_dt
+
+  if (any( !(c("LE_F_MDS", "LE_F_MDS_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
+  # df$LE_F_MDS_good <- clean_fluxnet_et( df$LE_F_MDS, df$LE_F_MDS_QC, cutoff=0.5 )
+  df$LE_F_MDS <- clean_fluxnet_et( df$LE_F_MDS, df$LE_F_MDS_QC, cutoff=0.2 )
+
+  ## Soil moisture related stuff for daily data
   if (timescale=="d"){
-
-    ## clean data
-    if (any( !(c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
-    out_clean <- clean_fluxnet_gpp( df$GPP_NT_VUT_REF, df$GPP_DT_VUT_REF, df$NEE_VUT_REF_NIGHT_QC, df$NEE_VUT_REF_DAY_QC, cutoff=0.5 )
-    df$GPP_NT_VUT_REF <- out_clean$gpp_nt
-    df$GPP_DT_VUT_REF <- out_clean$gpp_dt
-
-    if (any( !(c("LE_F_MDS", "LE_F_MDS_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
-    # df$LE_F_MDS_good <- clean_fluxnet_et( df$LE_F_MDS, df$LE_F_MDS_QC, cutoff=0.5 )
-    df$LE_F_MDS <- clean_fluxnet_et( df$LE_F_MDS, df$LE_F_MDS_QC, cutoff=0.2 )
-
-    ## Soil moisture related stuff
     tmp <- df %>% dplyr::select( starts_with("SWC") )
     if (ncol(tmp)>0){
       swcvars   <- tmp %>% dplyr::select( -ends_with("QC") ) %>% names()
       swcqcvars <- tmp %>% dplyr::select(  ends_with("QC") ) %>% names()
-    
+      
       # map( as.list(seq(length(swcvars))), ~clean_fluxnet_swc( df[[ swcvars[.] ]], df[[ swcqcvars[.] ]]) )
       if (length(swcvars)>0){
         for (ivar in 1:length(swcvars)){
           df[[ swcvars[ivar] ]] <- clean_fluxnet_swc( df[[ swcvars[ivar] ]], df[[ swcqcvars[ivar] ]], frac_data_thresh=1.0 )
         }
       }
-
+      
       df <- df %>%
         ## Normalise mean observational soil moisture to within minimum (=0) and maximum (=1), and
         mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) ) %>%
-
+        
         ## get mean observational soil moisture across different depths (if available)
         mutate( soilm_obs_mean = apply( dplyr::select( ., one_of(swcvars) ), 1, FUN = mean, na.rm = TRUE ) ) %>%
         mutate( soilm_obs_mean = ifelse( is.nan(soilm_obs_mean), NA, soilm_obs_mean ) )
-
+      
     } else {
       df <- df %>% mutate( soilm_obs_mean = NA )
     }
-
+    
   } else {
     df <- df %>% mutate( soilm_obs_mean = NA )
   }

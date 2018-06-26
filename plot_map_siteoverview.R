@@ -71,11 +71,7 @@ plot_map_siteoverview <- function( df, background, plotfiln=NA ){
     # growtype <- list( herb=c("GRA", "CRO"), sav=c("SAV", "WSA"), shrub=c("OSH", "CSH"), woody_dec=c("MF", "DBF"), woody_evg=c("ENF", "EBF"), wet=c("WET") )
 
     ## Sites used for the analysis
-    # with( dplyr::filter( df, group==2 ), points( lon, lat, col='black', pch=19, cex=0.5 ) )
     with( df, points( lon, lat, col='black', pch=21, bg='springgreen2', cex=0.9 ) )
-
-    # ## Sites not used for the analysis
-    # with( dplyr::filter( df, !(used) ), points( lon, lat, col='red', pch=4, cex=0.8 ) )    
 
     # legend( "left", c("Selected sites", "Not selected sites" ), pch=c( 21, 4 ), bty="n", col=c( "black", "red" ), pt.bg=c( "springgreen", "black" ), cex=1.2, box.col="white"  )
 

@@ -16,7 +16,6 @@ output:
 header-includes:
    - \usepackage{amsmath}
 bibliography: bibliography.bib
-csl: nature.csl
 ---
 
 ```{r setup, include=FALSE}
@@ -42,47 +41,32 @@ if (!file.exists(ncfiln)) {
   epop <- ncvar_get( nc, varid="EP_OVER_P_CRU_NCEP" )
 }
 source("plot_map_siteoverview.R")
-suppressMessages( plot_map_siteoverview( siteinfo, 1/epop ) ) # , plotfiln="fig/map_sites.pdf"
-cap_siteoverview_fig <- fig_nums( "siteoverview_fig", caption=" Geographical distribution of sites selected for the bias evaluation. Sites listed in Table S1 as group 1 are in green, sites of group 2 are in black. The color of land area represents aridity, quantified as the ratio of potential evapotranspiration over precipitation from [@greve14]" )
+load("siteinfo.Rdata")
+plot_map_siteoverview( siteinfo$light, 1/epop ) # , plotfiln="fig/map_sites.pdf"
+cap_siteoverview_fig <- fig_nums( "siteoverview_fig", caption=" Geographical distribution of sites selected for the bias evaluation. Sites listed in Table S1 as group 1 are in green, sites of group 2 are in black. The color of land area represents aridity, quantified as the ratio of potential evapotranspiration over precipitation from xxx" )
 ```
 
 `r fig_nums("siteoverview_fig")`
 
 ## Data processing
 
-Daily data are used from the FLUXNET 2015 Tier 1 dataset, downloaded on 13. November, 2016. We use GPP as the mean of values based on the Nighttime Partitioning and the Daytime Partitioning method, both based on the Variable U-Star Threshold method, named `GPP_NT_VUT_REF` and `GPP_DT_VUT_REF`. In the FLUXNET 2015 dataset, daily values are sums over half-hourly data. We use only daily values where less than 50% of respective half-hourly data is gap-filled. We further removed data points where the daytime and nighttime methods (`GPP_DT_VUT_REF` and `GPP_NT_VUT_REF`, resp.) are inconsistent. I.e., the upper and lower 2.5% quantile of the difference between each method's GPP quantification. Finally, we removed all negative daily GPP values.
+Daily data are used from the FLUXNET 2015 Tier 1 dataset, downloaded on 13. November, 2016. We use GPP as the mean of values based on the Nighttime Partitioning and the Daytime Partitioning method, both based on the Variable U-Star Threshold method (variables in the FLUXNET 2015 dataset named `GPP_NT_VUT_REF` and `GPP_DT_VUT_REF`). In the FLUXNET 2015 dataset, daily values are sums over half-hourly data. We use only daily values where less than 50% of respective half-hourly data is gap-filled. We further removed data points where the daytime and nighttime methods (`GPP_DT_VUT_REF` and `GPP_NT_VUT_REF`, resp.) are inconsistent. I.e., the upper and lower 2.5% quantile of the difference between each method's GPP quantification. Finally, we removed all negative daily GPP values.
 
-This is implemented by the following function:
-```{r eval=FALSE}
-clean_fluxnet_gpp <- function( gpp_nt, gpp_dt, qflag_nt, qflag_dt, cutoff=0.80 ){
-  ##--------------------------------------------------------------------
-  ## Cleans daily data.
-  ## gpp_nt: based on nighttime flux decomposition ("NT")
-  ## gpp_dt: based on daytime flux decomposition ("DT")
-  ##--------------------------------------------------------------------
+## P-model parameter calibration
 
-  ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
-  gpp_nt[ which(qflag_nt < cutoff) ] <- NA  ## based on fraction of data based on gap-filled half-hourly
-  gpp_dt[ which(qflag_dt < cutoff) ] <- NA  ## based on fraction of data based on gap-filled half-hourly
+The P-model relies on a minimum set of free parameters. Most parameters are given by known physical laws with accurately defined parameters (e.g., viscosity of water) or well-established physiological relationships with independently constrained parameters (e.g., enzyme kinetics of C3 photosynthesis). Two key free parameters are:
 
-  ## Remove data points where the two flux decompositions are inconsistent,
-  ## i.e. where the residual of their regression is above the 97.5% or below the 2.5% quantile.
-  res  <- gpp_nt - gpp_dt
-  q025 <- quantile( res, probs = 0.025, na.rm=TRUE )
-  q975 <- quantile( res, probs = 0.975, na.rm=TRUE )
+- the ratio of costs for maintaining transpiration versus carboxylation $\beta$.
+- the quantum yield efficiency $\varphi_0$.
 
-  gpp_nt[ res > q975 | res < q025  ] <- NA
-  gpp_dt[ res > q975 | res < q025  ] <- NA
+We applied a value of 146.0 for $\beta$ based on independent constraints from $\delta^{13}$C measurements on leaves (Prentice et al., 2014; Wang Han et al., 2017).
 
-  ## remove negative GPP
-  gpp_nt[ which(gpp_nt<0) ] <- NA
-  gpp_dt[ which(gpp_dt<0) ] <- NA
+$\varphi_0$ determines the fraction of absorbed light that can be used by the photosynthetic aparatus for assimilating CO$_2$. Within the P-model, this parameter acts as a linear scalar between absorbed light and GPP and therefore implies a strong sensitivity of simulated GPP to its valule. Considerable uncertainty resides in the quantification of fAPAR and some inconsistency in terms of its definition. Hence, we consider $\varphi_0$ as a free parameter that we calibrate, given the fAPAR data product used. Here, we use the MODIS FPAR MCD15A3H data product at 1 km/8 day resolution and extract values for a single pixel surrounding the flux tower location. Calibration was done ...
 
-  return( list( gpp_nt=gpp_nt, gpp_dt=gpp_dt ) )
-}
-```
+**OPEN POINT:**
+I did a such a calibration and got $\varphi_0 = 0.0579$, as described [here](http://rpubs.com/stineb/calib_pmodel). I filtered out data points taken at low temperatures ($<5^{\circ}C$) and at low soil moisture ($<0.4$ relative soil water content). The calibration target was `GPP_NT_VUT_REF`. Now, I've implemented a more flexible and capable calibration function for SOFUN, allowing for multiple parameters to be calibrated simultaneously and accounting for uncertainty in the data. This makes use of different parameter search algorithms implemented in R.
 
-
+- How to use uncertainty data from FLUXNET 2015? Just use one the nighttime partitioning and use `GPP_NT_VUT_MEAN` and `GPP_NT_VUT_SE`? Or how to account for uncertainty related to the difference between the nighttime and daytime partitioning approach? Thus: how to additionally use `GPP_DT_VUT_MEAN` and `GPP_DT_VUT_SE`?
 
 ## Metrics
 
@@ -107,13 +91,26 @@ The features of variability in GPP, for which model-observation agreement is cal
 ```{r, echo=FALSE, message=FALSE}
 # Generate data used for plotting and get performance metrics
 source("eval_sofun.R")
-filn <- "eval_sofun.Rdata"
+filn <- "out_eval.Rdata"
 if (!file.exists(filn)){
-  out_eval <- eval_sofun( mod, settings_eval, settings_sims, siteinfo, doplot=FALSE )
+  out_eval <- eval_sofun( mod, settings_eval, settings_sims, siteinfo, doplot=FALSE, overwrite = TRUE )
   save( out_eval, file = filn )
 } else {
   load( filn )
 }
+```
+
+### Overview
+
+```{r}
+library(tidyr)
+out_eval$metrics %>% 
+  bind_rows() %>% 
+  unnest() %>% 
+  mutate( level = (out_eval$metrics$gpp$mean_nt_dt_fluxnet2015 %>% names()) ) %>%
+  mutate_at( vars(one_of("rsq", "rmse", "slope", "bias")), funs(format(., digits=3))) %>%
+  dplyr::select( Level=level, N=nvals, R2=rsq, RMSE=rmse, Slope=slope, Bias=bias) %>%
+  knitr::kable( caption="Performance metrics of correlations between modelled and observed values at different temporal aggregation levels, absolute values and anomalies.")
 ```
 
 ### Annual values
@@ -125,10 +122,10 @@ $$
 
 #### Spatial correlation
 
-Comparing the multi-annual mean per site in simulated and observed GPP ($\bar{X}_i$) yields a "spatial correlation".
+Comparing the multi-annual mean per site in simulated and observed GPP ($\overline{X}_i$) yields a "spatial correlation".
 
 ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
-plot_modobs_spatial( out_eval$data$meandf, makepdf=FALSE )
+modobs_spatial <- plot_modobs_spatial( out_eval$data$meandf, makepdf=FALSE )
 ```
 
 #### Annual GPP anomalies
@@ -136,7 +133,7 @@ plot_modobs_spatial( out_eval$data$meandf, makepdf=FALSE )
 Comparing annual anomalies ($X'_{i,t}$) yields insight into whether the model accurately simulates interannual variability.
 
 ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
-plot_modobs_anomalies_annual( out_eval$data$iavdf, out_eval$data$iavdf_stats, makepdf=FALSE )
+modobs_anomalies_annual <- plot_modobs_anomalies_annual( out_eval$data$iavdf, out_eval$data$iavdf_stats, makepdf=FALSE )
 ```
 
 #### Combined spatial/annual
@@ -147,13 +144,21 @@ The two above can be combined into a single plot. This shows the same as in the 
 plot_modobs_spatial_annual( out_eval$data$meandf, out_eval$data$linmod_meandf, out_eval$data$adf_stats, makepdf=FALSE )
 ```
 
+**OPEN POINT:**
+
+For some sites, this relationship is completely off. I'll have to have a closer look to check if the data is ok.
+
+Selecting data only for sites used in the SI of our submitted manuscript (Figures S14 and S15 [see here](http://rpubs.com/stineb/si_soilm_global)), should give exactly the same figure, but it doesn't (see below). I'll have to look into what's going wrong here (thereby hopefully also resolving the open point mentioned above).
+
 ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+library(readr)
+library(dplyr)
 successcodes <- read_csv( "successcodes.csv" )
 do.sites <- dplyr::filter( successcodes, successcode==1 | successcode==2 )$mysitename
-plot_modobs_spatial_annual( 
-  filter( out_eval$data$meandf, sitename %in% do.sites), 
-  lm( gpp_obs ~ gpp_mod, data = filter( out_eval$data$meandf, sitename %in% do.sites) ), 
-  filter( out_eval$data$adf_stats, sitename %in% do.sites), 
+plot_modobs_spatial_annual(
+  filter( out_eval$data$meandf, sitename %in% do.sites),
+  lm( gpp_obs ~ gpp_mod, data = filter( out_eval$data$meandf, sitename %in% do.sites) ),
+  filter( out_eval$data$adf_stats, sitename %in% do.sites),
   makepdf=FALSE )
 ```
 
@@ -167,29 +172,99 @@ $$
 modobs_meandoy <- plot_modobs_meandoy( out_eval$data$meandoydf, out_eval$data$meandoydf_stats, makepdf=FALSE )
 ```
 
-More insights are provided by looking at the seasonal cycle explicitly. Plots for each site are given in the Appendix. Aggregating across multiple sites doesn't make much sense. However, I aggregated across climate zones
+#### Seasonal cycle by climate zones
 
-<!-- ### Daily values -->
+More insights are provided by looking at the seasonal cycle explicitly. Plots for each site are given in the Appendix. Aggregating across multiple sites doesn't make much sense. However, I aggregated across climate zones and distinguishing between respective zones on the northern and southern hemisphere.
 
-<!-- Ignoring that we don't expect a LUE-type linear relationship between absorbed light $I_{\text{abs}}$ and GPP, we can still evaluate the daily GPP estimated by the P-model: -->
-<!-- $$ -->
-<!-- \text{GPP}(d) = \text{LUE}(m|d)\; \times \; I_{\text{abs}}(d) -->
-<!-- $$ -->
-<!-- Here, $LUE(m|d)$ is the monthly varying light use efficiency simulated by the P-model using forcing data averaged to monthly means. $m|d$ refers to the month of a given day. -->
+The classification of sites into Koeppen-Geiger climate zones is based on Falge et al. 2016. [ORNL DAAC](https://doi.org/10.3334/ORNLDAAC/1530), and complemented by extracting information from a global map. A table explaining the Koeppen-Geiger codes is given below.
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+read_csv( "koeppen_legend.csv" ) %>% knitr::kable(caption = "Koeppen-Geiger climate zones.")
+```
 
-<!-- The correlation is still quite good... -->
+Insights from seasonality analysis by climate zones (results see below, red is the model, black the observations, discussing only climate zones with data from more than three sites):
 
-<!-- ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE} -->
-<!-- modobs_ddf <- plot_modobs_daily( out_eval$data$ddf, makepdf=FALSE, xlim=c(0,25), ylim=c(0,25) ) -->
-<!-- ``` -->
+- Big problems simulating GPP in the Tropics (Am, Equatorial monsoon): substantial underestimation during most of the year except a short period (Is that the dry period?). Could be related to fAPAR data contaminated by clouds except during the dry period? Unfortunately, only two sites are available in this climate zone.
+- Insufficient GPP decline during dry periods in tropical and hot climates (Aw: Equatorial savannah with dry winter, and BSh: Arid Steppe hot). This is not a surprise. The empirical soil moisture correction is **not** applied here.
+- Overestimation of GPP in arid steppes (BSk: Arid Steppe cold). Quite robust, seen at 7 sites in total. Probably, model improved by soil moisture correction.
+- In temperate and boreal regions, early-season GPP is consistently overestimated, and late-season in most cases (Cfa: Warm temperate fully humid with hot summer, Cfb: Warm temperate fully humid with warm summer, Dfb: Snow fully humid warm summer, Dfc: Snow fully humid cool summer). It looks like at cold air (or soil?) temperatures, GPP tends to be overestimated.
+- There is a general overestimation of GPP at sites in Cwcb (Warm temperate with dry winter and warm summer).
 
-<!-- ### Values aggregated to X days -->
+In brief, there is room for improvement by reducing GPP at low temperatures (sort of found before, but we never dealt with a temperature ramp, and why should we?) and low soil moisture (of course). fAPAR data in the tropics needs to be examined, otherwise, it looks like we have a problem with the Aw sites.
 
-<!-- Aggregated to longer periods, the performance slightly improves. Here, I aggregated modeled and observational data to 5-days periods. -->
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
+nothing <- plot_by_doy_allzones( out_eval$data$meandoydf_byclim_stats, makepdf=FALSE )
+```
 
-<!-- ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE} -->
-<!-- modobs_ddf <- plot_modobs_xdaily( out_eval$data$xdf, makepdf=FALSE, xlim=c(0,20), ylim=c(0,20) ) -->
-<!-- ``` -->
+
+### Daily values
+
+Ignoring that we don't expect a LUE-type linear relationship between absorbed light $I_{\text{abs}}$ and GPP, we can still evaluate the daily GPP estimated by the P-model:
+$$
+\text{GPP}(d) = \text{LUE}(m|d)\; \times \; I_{\text{abs}}(d)
+$$
+Here, $LUE(m|d)$ is the monthly varying light use efficiency simulated by the P-model using forcing data averaged to monthly means. $m|d$ refers to the month of a given day.
+
+The correlation is still quite good...
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+modobs_ddf <- plot_modobs_daily( out_eval$data$ddf, makepdf=FALSE, xlim=c(0,25), ylim=c(0,25) )
+```
+
+### Values aggregated to X days
+
+Aggregated to longer periods, the performance slightly improves. Here, I aggregated modeled and observational data to 5-days periods.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+modobs_ddf <- plot_modobs_xdaily( out_eval$data$xdf, makepdf=FALSE, xlim=c(0,20), ylim=c(0,20) )
+```
+
+- There is a pattern: Many simulated data points in the lower range tend to be too high and too low in the higher range. The lower range overestimation will definitely be improved by emprirical soil moisture, and, if applicable, a low-temperature stress function. The underestimation of values in the upper range raise a more fundamental challenge...
+- The fact that the correlation improves when aggregating daily values to 5-daily values might reflect that applying the P-model as a light use efficiency model at the daily time scale violates its basic assumption related to the acclimation time scale. Non-linearities of the light-response curve imply that the ratio of GPP to absorbed light relationship declines with increasing light levels (right?). Day-to-day variations in GPP are mainly driven by light availability (not systematically investigated). Hence, anomalies of daily GPP from its mean seasonal cycle should be larger in the P-model than in the observations. This is the case as the figures below show.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+modobs_anomalies_daily <- plot_modobs_anomalies_daily( out_eval$data$idvdf, out_eval$data$idvdf_stats, makepdf=FALSE)
+```
+Above figure shows the correlation and the distribution of anomalies in daily GPP from the respective mean seasonal cycle in the observations and in simulated values. Note that the blue lines in the first plot are the regression lines of daily anomalies for each site. The fact that their slope is consistently lower than 1, indicates that the day-to-day variability in simulated GPP is higher than in observed GPP. This is also reflected by the histogram in the second plot (note standard deviation values given in the upper left corner). 
+
+When plotting the same for values aggregated to 5-day bins, the standard deviation of simulated anomalies declines strongly and is in better agreement with the observations (see histogram), but the correlation analysis doesn't suggest a better performance. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+modobs_anomalies_xdaily <- plot_modobs_anomalies_xdaily( out_eval$data$ixvdf, out_eval$data$ixvdf_stats, makepdf=FALSE)
+```
+
+**OPEN POINT:**
+
+Would it be worth exploring this in more detail, e.g. quantifying the relationship between some metric and aggregation level, and 'some metric' being e.g. the standard deviation of anomalies, the *R*$^2$ of obs. vs. mod., or ... ?
+
+### Monthly values
+
+Anyways, the obvious next aggregation level is monthly, and the correlation increases further to a stunning *R*$^2$ of 0.69.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+modobs_mdf <- plot_modobs_monthly( out_eval$data$mdf, makepdf=FALSE )
+```
+
+### Functional relationships
+
+Functional relationships seen in the data can be extracted using Artificial Neural Networks (ANN). This is done here. First, a model is fitted to observed GPP with temperature, PPFD, VPD, fAPAR, and soil moisture as predictors. Then, functional relationships are evaluated by using the trained ANN to predict values for a synthetic datasets. The synthetic dataset is generated for each predictor value. E.g. for temperature, a sample of 50 data points is drawn from the empirical distribution of VPD, fAPAR, PPFD, and soil moisture, respectively, and 50 levels of temperature (evenly from 0-40 $^{\circ}$C) Then, the dataset is created by all combinations of these variables. Finally, functional relationship between temperature and GPP are assessed by taking the mean across all variable combination for each level of temperature separately. This approach implies that for the evaluation, correlations between predictor variables in the observational dataset are ignored.
+
+In order to improve comparability, ANNs are trained at (P-) modelled and observed GPP, and functional relationships thus derived for observed and modelled. This improves comparability and is preferred here over evaluating the model directly. As always, observations are in black and modelled in red.
+
+```{r neuralnet, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+source("eval_response_neuralnet.R")
+eval_response_neuralnet( out_eval$data$ddf, makepdf=FALSE )
+```
+		
+There are several points here:
+
+- This mixes responses at different time scales and within/across sites.
+- The functional relationships based on the ANN look surprisingly "stiff".
+- The data suggests increasing GPP across the whole temperature range, while the P-model simulates a levelling off. This could be related to the prescribed temperature sensitivity of ecosystem respiration for the flux decomposition.
+- The response to VPD looks surprisingly not like $\sim1/\sqrt{D}$ in the P-model, but in the observations although the respective equation should force it to look so. Therefore, this must have to do with how the ANNs pick up relationships and the noise and correlation structure in the data.
+
+**OPEN POINT:**
+
+Colin has shown some plots at the ICDC that apparently Trevor produced. They show something similar as I have tried here, but as I remember, there seemed to be much more fine-structure in the functional relationships. **Trevor**, how did you do that? Using GAMs (as I remember you saying once)? I don't understand however, why the ANNs look so "stiff" here...
 
 # Appendix
 
@@ -199,17 +274,19 @@ require(readr, quietly = TRUE)
 require(dplyr, quietly = TRUE)
 siteinfo <- read_csv("siteinfo_eval.csv") %>%
             mutate( Reference = paste0("[@", sitename ,"]") ) %>%
-            mutate( Period = paste0(as.character(year_start), "-", as.character(year_end)) ) %>% 
+            mutate( Period = paste0(as.character(year_start), "-", as.character(year_end)) ) %>%
             select( -year_start, -year_end )
 siteinfo %>%
   dplyr::rename( Site=sitename, Lon.=lon, Lat.=lat, Elevation=elv, Veg.=classid, Clim.=koeppen_code, N = ndailygpp ) %>%
-  select( Site, Lon., Lat., Period, Veg., Clim., N, Reference ) %>% 
+  select( Site, Lon., Lat., Period, Veg., Clim., N, Reference ) %>%
   knitr::kable( caption = "Sites used for evaluation. Lon. is longitude, negative values indicate west longitude; Lat. is latitude, positive values indicate north latitude; Veg. is vegetation type: deciduous broadleaf forest (DBF); evergreen broadleaf forest (EBF); evergreen needleleaf forest (ENF); grassland (GRA); mixed deciduous and evergreen needleleaf forest (MF); savanna ecosystem (SAV); shrub ecosystem (SHR); wetland (WET)." )
 ```
 
 
-## Mean seasonality by site
+<!-- ## Mean seasonality by site -->
 
-```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
-plot_by_doy_allsites( out_eval$data$meandoydf_stats, makepdf=FALSE )
-```
+<!-- Observed values are in black, simulated in red. The solid line in the centre of the shaded range is the mean by day of year (DOY) across multiply years, shaded ranges indicate the minimum and maximum by DOY across years. -->
+
+<!-- ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE} -->
+<!-- plot_by_doy_allsites( out_eval$data$meandoydf_stats, makepdf=FALSE ) -->
+<!-- ``` -->
