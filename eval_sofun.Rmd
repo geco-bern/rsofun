@@ -167,6 +167,7 @@ $$
 modobs_meandoy <- plot_modobs_meandoy( out_eval$data$meandoydf, out_eval$data$meandoydf_stats, makepdf=FALSE )
 ```
 
+More insights are provided by looking at the seasonal cycle explicitly. Plots for each site are given in the Appendix. Aggregating across multiple sites doesn't make much sense. However, I aggregated across climate zones
 
 <!-- ### Daily values -->
 
@@ -192,6 +193,7 @@ modobs_meandoy <- plot_modobs_meandoy( out_eval$data$meandoydf, out_eval$data$me
 
 # Appendix
 
+## Sites table
 ```{r siteoverview, echo=FALSE, warning=FALSE, message=FALSE}
 require(readr, quietly = TRUE)
 require(dplyr, quietly = TRUE)
@@ -205,3 +207,9 @@ siteinfo %>%
   knitr::kable( caption = "Sites used for evaluation. Lon. is longitude, negative values indicate west longitude; Lat. is latitude, positive values indicate north latitude; Veg. is vegetation type: deciduous broadleaf forest (DBF); evergreen broadleaf forest (EBF); evergreen needleleaf forest (ENF); grassland (GRA); mixed deciduous and evergreen needleleaf forest (MF); savanna ecosystem (SAV); shrub ecosystem (SHR); wetland (WET)." )
 ```
 
+
+## Mean seasonality by site
+
+```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
+plot_by_doy_allsites( out_eval$data$meandoydf_stats, makepdf=FALSE )
+```
