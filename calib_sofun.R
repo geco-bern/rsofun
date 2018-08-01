@@ -67,6 +67,21 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
     opt <- optim_par_gensa$par[1]
     settings_calib$par$kphio$opt <- opt
 
+  } else if (settings_calib$method=="BayesianTools"){
+    ##----------------------------------------------------------------
+    ## calibrate the model parameters using BayesianTools and 
+    ##----------------------------------------------------------------
+    require(BayesianTools)
+
+    ptm <- proc.time()
+    bt_setup    <- createBayesianSetup( cost_rmse( inverse=TRUE ), 
+                                        lower = apply( settings_calib$par, function(x) x$lower ) %>% unlist(), 
+                                        upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist() 
+                                        )
+    bt_settings <- list( iterations = settings_calib$maxit,  message = TRUE )
+    optim_par_bayesiantools <- runMCMC( bayesianSetup = bt_setup, sampler = "DEzs", settings = bt_settings )
+    proc.time() - ptm
+
   }
 
   setwd( here )
@@ -85,7 +100,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
 ##------------------------------------------------------------
 ## Generic cost function of model-observation (mis-)match
 ##------------------------------------------------------------
-cost_rmse <- function( par ){
+cost_rmse <- function( par, inverse = FALSE ){
 
   ## execute model for this parameter set
   out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par[1] ), " | ./run", model, "_simsuite"), intern = TRUE )
@@ -99,6 +114,8 @@ cost_rmse <- function( par ){
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
   
+  if (inverse) cost <- 1.0 / cost
+
   return(cost)
 }
 
