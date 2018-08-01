@@ -444,7 +444,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
 
       if (error!=1){
         ## Take only file for this site
-        filn <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = paste0("dfapar_MODIS_FPAR_MCD15A3H_", sitename, "_gee_subset.csv") )
+        filn <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = paste0("dfapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_", sitename, "_gee_subset.csv") )
 
         ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
         ## IMPORTANT: This is gapfilled data. Original data is in <settings_input$path_MODIS_FPAR_MCD15A3H>/raw/
@@ -1336,7 +1336,7 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
 
   ## Determine file name, given <settings_input$path_MODIS_FPAR_MCD15A3H>
   ## look for data for this site in the given directory
-  filelist <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = "dfapar_MODIS_FPAR_MCD15A3H_.*_gee_subset.csv" )
+  filelist <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = "dfapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_.*_gee_subset.csv" )
 
   if (length(filelist)==0){
 
@@ -1345,7 +1345,7 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
 
     ## Search at a different location?
     path <- readline( prompt="Would you like to search for files recursively from a certain directory? Enter the path from which search is to be done: ")
-    filelist <- list.files( path, pattern = "dfapar_MODIS_FPAR_MCD15A3H_.*_gee_subset.csv", recursive = TRUE )
+    filelist <- list.files( path, pattern = "dfapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_.*_gee_subset.csv", recursive = TRUE )
 
     if (length(filelist)==0){
      
@@ -1353,12 +1353,12 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
       warn( paste0("Still nothing found at specified location ", path ) )
       ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
       if (ans=="y"){
-        filelist <- list.files( "~/", pattern = "dfapar_MODIS_FPAR_MCD15A3H_.*_gee_subset.csv", recursive = TRUE )
+        filelist <- list.files( "~/", pattern = "dfapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_.*_gee_subset.csv", recursive = TRUE )
       } else {
         ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_MODIS_FPAR_MCD15A3H>
         warn( "Initiating download from Imperial CX1..." )
         error <- download_MODIS_FPAR_MCD15A3H_from_cx1( settings_input )
-        filelist <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = "dfapar_MODIS_FPAR_MCD15A3H_.*_gee_subset.csv" )
+        filelist <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = "dfapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_.*_gee_subset.csv" )
       }
 
       if (length(filelist)==0){
@@ -1374,7 +1374,7 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
 
   if (!is.na(sitename)){
     ## Check if a file is available for a given site
-    filelist <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = paste0("dfapar_MODIS_FPAR_MCD15A3H_", sitename, "_gee_subset.csv") )
+    filelist <- list.files( settings_input$path_MODIS_FPAR_MCD15A3H, pattern = paste0("dfapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_", sitename, "_gee_subset.csv") )
 
     if (length(filelist)==0){
       ## Download missing file

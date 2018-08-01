@@ -28,6 +28,7 @@ For the time being, we just go with a set of wrapper functions `prepare_setup_so
 source("prepare_metainfo_fluxnet2015.R")
 source("prepare_setup_sofun.R")
 source("prepare_input_sofun.R")
+source("calib_sofun.R")
 source("runread_sofun.R")
 source("update_params.R")
 source("eval_sofun.R")
@@ -48,8 +49,8 @@ settings_sims <- list(
   lonlat          = FALSE,
   name            = "fluxnet2015",
   dir_sofun       = "~/sofun/trunk/",
-  path_output     = "~/sofun/output_fluxnet2015_sofun/s18/",
-  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s18/",
+  path_output     = "~/sofun/output_fluxnet2015_sofun/s19/",
+  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s19/",
   path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
@@ -102,14 +103,14 @@ settings_input <-  list(
   ppfd                     = "fluxnet2015",
   netrad                   = NA,
   cloudcover               = "cru_ts4_01",
-  fapar                    = "MODIS_EVI_MOD13Q1", # "MODIS_FPAR_MCD15A3H",
+  fapar                    = "MODIS_FPAR_MCD15A3H", # "MODIS_EVI_MOD13Q1", 
   co2                      = "cmip",
   path_cx1data             = "~/data/",
   path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_watch_wfdei         = "~/data/watch_wfdei/",
   path_cru_ts4_01          = "~/data/cru/ts_4.01/",
-  # path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/"
-  path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/"
+  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/"
+  # path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/"
   )
 ```
 
@@ -158,14 +159,14 @@ siteinfo <- prepare_metainfo_fluxnet2015(
 Then define the calibration settings as:
 ```{r}
 settings_calib <- list(
-  name             = "kphio_gpp_fluxnet2015",
+  name             = "kphio_gpp_fluxnet2015_MODIS_FPAR",
   par              = list( kphio = list( lower=0.03, upper=0.12, init=0.05792348 ) ),
   method           = "gensa",
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
   timescale        = list( gpp = "d" ),
   path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/",
-  maxit            = 30,
+  maxit            = 10,
   sitenames        = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
   filter_temp_min  = 5.0,
   filter_temp_max  = 35.0,
@@ -233,7 +234,7 @@ inputdata <- prepare_input_sofun(
   settings_sims = settings_sims, 
   return_data = FALSE, 
   overwrite_climate = FALSE, 
-  overwrite_fapar = FALSE, 
+  overwrite_fapar = TRUE, 
   verbose = TRUE 
   )
 ```
@@ -250,9 +251,9 @@ settings_calib <- calib_sofun(
 
 ## Run the model
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
-```{r, eval=FALSE}
-# params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
-# nothing <- update_params( params_opt, settings = settings_sims )
+```{r, message=FALSE, eval=FALSE}
+params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
+nothing <- update_params( params_opt, settings = settings_sims )
 mod <- runread_sofun( 
   settings = settings_sims, 
   setup = setup_sofun 
