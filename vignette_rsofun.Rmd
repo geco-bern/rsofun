@@ -48,8 +48,8 @@ settings_sims <- list(
   lonlat          = FALSE,
   name            = "fluxnet2015",
   dir_sofun       = "~/sofun/trunk/",
-  path_output     = "~/sofun/output_fluxnet2015_sofun_TEST/",
-  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun_TEST/",
+  path_output     = "~/sofun/output_fluxnet2015_sofun/s18/",
+  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s18/",
   path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
@@ -102,13 +102,14 @@ settings_input <-  list(
   ppfd                     = "fluxnet2015",
   netrad                   = NA,
   cloudcover               = "cru_ts4_01",
-  fapar                    = "MODIS_FPAR_MCD15A3H",
+  fapar                    = "MODIS_EVI_MOD13Q1", # "MODIS_FPAR_MCD15A3H",
   co2                      = "cmip",
   path_cx1data             = "~/data/",
   path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_watch_wfdei         = "~/data/watch_wfdei/",
   path_cru_ts4_01          = "~/data/cru/ts_4.01/",
-  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
+  # path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/"
+  path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/"
   )
 ```
 
@@ -117,9 +118,14 @@ settings_input <-  list(
 - `vpd`: See `temperature`.
 - `ppfd`: See `temperature`.
 - `netrad`: See `temperature`.
-- `fapar`: A character string specifying the type of fAPAR data used as input (e.g. `"MODIS_FPAR_MCD15A3H"`), or `NA` in case no fAPAR data is used as forcing (internally simulated fAPAR).
+- `fapar`: A character string specifying the type of fAPAR data used as input. Implemented for use of data from CX1 are `"MODIS_FPAR_MCD15A3H"` and `"MODIS_EVI_MOD13Q1"`. Use `NA` in case no fAPAR data is used as forcing (internally simulated fAPAR).
 - `co2`: A character string specifying which CO$_2$ file should be used (globally uniform and identical for each site in an ensemble). All available CO$_2$ forcing files are located on CX1 at `/work/bstocker/labprentice/data/co2/`. `co2="cmip"` specifies that the CMIP-standard CO2 file `cCO2_rcp85_const850-1765.dat` should be used.
-- `path_cx1data`: the local directory that mirrors the data directory on CX1 (very handy!).
+- `path_cx1data`: A character string specifying the local directory that mirrors the data directory on CX1 (very handy!).
+- `path_fluxnet2015`: A character string specifying the path where standard FLUXNET 2015 CSV files are located.         
+- `path_watch_wfdei`: A character string specifying the path where standard WATCH-WFDEI NetCDF files are located.                  
+- `path_cru_ts4_01`: A character string specifying the path where standard CRU NetCDF files are located.
+- `path<fapar>`: A character string specifying the path where site-specific fapar files are located. This element is named according to the `fapar` setting (element `fapar` in the list `settings_input`). E.g., an element named `path_MODIS_FPAR_MCD15A3H` is required if `fapar = MODIS_FPAR_MCD15A3H`.
+
 
 ## Model setup
 Define model setup as a list.
@@ -153,14 +159,14 @@ Then define the calibration settings as:
 ```{r}
 settings_calib <- list(
   name             = "kphio_gpp_fluxnet2015",
-  par              = list( kphio = list( lower=0.03, upper=0.08, init=0.05792348 ) ),
+  par              = list( kphio = list( lower=0.03, upper=0.12, init=0.05792348 ) ),
   method           = "gensa",
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
   timescale        = list( gpp = "d" ),
   path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/",
-  maxit            = 300,
-  sitenames        = filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
+  maxit            = 30,
+  sitenames        = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
   filter_temp_min  = 5.0,
   filter_temp_max  = 35.0,
   filter_soilm_min = 0.5
@@ -181,7 +187,7 @@ settings_calib <- list(
 ## Evaluation settings
 Define model evaluation settings as a list.
 ```{r message=FALSE}
-mylist <- read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% select( -use ) %>% unlist()
+mylist <- read_csv("myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% select( -use ) %>% unlist()
 settings_eval <- list(
   sitenames = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename,
   sitenames_siteplots = mylist,
@@ -225,8 +231,9 @@ Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. Th
 inputdata <- prepare_input_sofun( 
   settings_input = settings_input, 
   settings_sims = settings_sims, 
-  return_data = TRUE, 
-  overwrite = FALSE, 
+  return_data = FALSE, 
+  overwrite_climate = FALSE, 
+  overwrite_fapar = FALSE, 
   verbose = TRUE 
   )
 ```

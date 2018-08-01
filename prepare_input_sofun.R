@@ -1,11 +1,13 @@
 ##-----------------------------------------------------------
 ## Creates all the input files/links necessary to run simulations
 ##-----------------------------------------------------------
-prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALSE, overwrite=FALSE, verbose=FALSE ){
+prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALSE, overwrite_climate=FALSE, overwrite_fapar=FALSE, verbose=FALSE ){
 
   require(lubridate)
   require(dplyr)
   require(purrr)
+  require(rlang)
+
   source("check_download_fluxnet2015.R")
 
   if (settings_sims$lonlat){
@@ -137,9 +139,22 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     if ("cru_ts4_01" %in% settings_input$cloudcover)    error <- check_download_cru_ts4_01( varnam = "cld", settings_input, settings_sims )
 
     ##-----------------------------------------------------------
-    ## If MODIS_FPAR_MCD15A3H data is required, make sure it's available locally    
+    ## If fapar data is required, make sure it's available locally    
     ##-----------------------------------------------------------
-    if (settings_input$fapar=="MODIS_FPAR_MCD15A3H") error <- check_download_MODIS_FPAR_MCD15A3H( settings_input, settings_sims )
+    if (settings_input$fapar=="MODIS_FPAR_MCD15A3H"){
+
+      error <- check_download_MODIS_FPAR_MCD15A3H( settings_input, settings_sims )
+
+    } else if (settings_input$fapar=="MODIS_EVI_MOD13Q1"){
+
+      error <- check_download_MODIS_EVI_MOD13Q1( settings_input, settings_sims )
+
+    } else if (is.na(settings_input$fapar)){
+
+      warn("No fapar data prepared.")
+
+    }
+
 
     ##-----------------------------------------------------------
     ## Make sure CMIP standard CO2 data is available locally    
@@ -150,7 +165,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     ## Loop over all sites and prepare input files by site.
     ##-----------------------------------------------------------
     ## Climate input files
-    ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite = overwrite, verbose ) ) %>%
+    ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite = overwrite_climate, verbose ) ) %>%
                     bind_rows()
 
     ## fAPAR input files
@@ -162,7 +177,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     close(zz)
 
     ## prepare the fapar input files for each site
-    ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite=overwrite, verbose=TRUE ) ) %>%
+    ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite=overwrite_fapar, verbose=TRUE ) ) %>%
                   bind_rows()
 
     ## CO2 file: link into site-specific input directories
@@ -397,6 +412,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
 
   require(readr)
   require(lubridate)
+
   source("init_dates_dataframe.R")
 
   if (verbose) print(paste0("Getting fAPAR data for site ", sitename, " ..." ) )
@@ -440,7 +456,26 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
 
       }
 
-    }
+    } else if (settings_input$fapar=="MODIS_EVI_MOD13Q1"){
+      
+      ## Make sure data is available for this site
+      error <- check_download_MODIS_EVI_MOD13Q1( settings_input, settings_sims, sitename )
+      
+      if (error!=1){
+        ## Take only file for this site
+        filn <- list.files( settings_input$path_MODIS_EVI_MOD13Q1, pattern = paste0("dfapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_", sitename, "_gee_subset.csv") )
+        
+        ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
+        ## IMPORTANT: This is gapfilled data. Original data is in <settings_input$path_MODIS_EVI_MOD13Q1>/raw/
+        ## Gap-filling is done with 'getin/gapfill_modis.R'. The gapfilling step is not yet implemented within prepare_input_sofun().
+        ddf <- read_csv( paste0( settings_input$path_MODIS_EVI_MOD13Q1, filn ) ) %>%
+          select( date, fapar = modisvar_interpol) %>%
+          mutate( fapar = as.numeric(fapar) ) %>%
+          right_join( ddf, by = "date" )
+        
+      }
+      
+    }    
 
     if (error!=1){
       ##----------------------------------------------------------------------
@@ -1350,6 +1385,69 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
   return( error )
 }
 
+
+##--------------------------------------------------------------------------
+## Checks if MODIS_EVI_MOD13Q1 files are available for this variable and initiates download if not.
+##--------------------------------------------------------------------------
+check_download_MODIS_EVI_MOD13Q1 <- function( settings_input, settings_sims, sitename=NA ){
+
+  require(purrr)
+  require(dplyr)
+  require(rlang)
+
+  error <- 0
+
+  ## Determine file name, given <settings_input$path_MODIS_EVI_MOD13Q1>
+  ## look for data for this site in the given directory
+  filelist <- list.files( settings_input$path_MODIS_EVI_MOD13Q1, pattern = "fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_.*_gee_subset.csv" )
+
+  if (length(filelist)==0){
+
+    ## No files found at specified location
+    warn( paste0("No files found for MODIS_EVI_MOD13Q1 in directory ", settings_input$path_MODIS_EVI_MOD13Q1) )
+
+    ## Search at a different location?
+    path <- readline( prompt="Would you like to search for files recursively from a certain directory? Enter the path from which search is to be done: ")
+    filelist <- list.files( path, pattern = "fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_.*_gee_subset.csv", recursive = TRUE )
+
+    if (length(filelist)==0){
+     
+      ## Search from home
+      warn( paste0("Still nothing found at specified location ", path ) )
+      ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
+      if (ans=="y"){
+        filelist <- list.files( "~/", pattern = "fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_.*_gee_subset.csv", recursive = TRUE )
+      } else {
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_MODIS_EVI_MOD13Q1>
+        warn( "Initiating download from Imperial CX1..." )
+        error <- download_MODIS_EVI_MOD13Q1_from_cx1( settings_input )
+        filelist <- list.files( settings_input$path_MODIS_EVI_MOD13Q1, pattern = "fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_.*_gee_subset.csv" )
+      }
+
+      if (length(filelist)==0){
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_MODIS_EVI_MOD13Q1>
+        warn( "Initiating download from Imperial CX1..." )
+        error <- download_MODIS_EVI_MOD13Q1_from_cx1( settings_input )
+
+      }
+
+    }
+
+  }
+
+  if (!is.na(sitename)){
+    ## Check if a file is available for a given site
+    filelist <- list.files( settings_input$path_MODIS_EVI_MOD13Q1, pattern = paste0("fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_", sitename, "_gee_subset.csv") )
+
+    if (length(filelist)==0){
+      ## Download missing file
+      error <- download_MODIS_EVI_MOD13Q1_from_cx1_path( settings_input$path_MODIS_EVI_MOD13Q1, sitename )
+    }
+
+  }
+  return( error )
+}
+
 ##--------------------------------------------------------------------------
 ## Checks if CMIP CO2 files are available and initiates download if not.
 ##--------------------------------------------------------------------------
@@ -1701,6 +1799,49 @@ download_MODIS_FPAR_MCD15A3H_from_cx1_path <- function( path, sitename=NA ){
 
 
 ##-----------------------------------------------------------
+## Downloads MODIS EVI data from CX1
+##-----------------------------------------------------------
+download_MODIS_EVI_MOD13Q1_from_cx1_path <- function( path, sitename=NA ){
+
+  error <- 0
+
+  ## get user name from user
+  if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
+
+  ## the path of fluxnet daily data on cx1
+  origpath <- "/work/bstocker/labprentice/data/evi_MODIS_EVI_MOD13Q1_fluxnet2015_gee_subset/"
+
+  if (is.na(sitename)){
+    ## Download the whole bunch
+
+    ## create required directory
+    if (!dir.exists(path)) system( paste0("mkdir -p ", path ) )
+
+    system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, " ", path ) )
+
+  } else {
+    ## Download only data for a specific site
+    ## get a file list of what's on CX1
+    filelist <- system( paste0( "ssh ", uname, "@login.cx1.hpc.ic.ac.uk ls ", origpath ), intern = TRUE )
+
+    ## use one file(s) for this site
+    filelist <- filelist[ grepl(sitename, filelist) ]
+    filelist <- filelist[ grepl("evi_MOD13Q1_gee_MOD13Q1_", filelist) ]
+
+    if (length(filelist)==0){
+      ## no data available for this site
+      error <- 1
+      warn(paste0("No MODIS_EVI_MOD13Q1 data available for site ", sitename ) )
+    } else {
+      purrr::map( as.list(filelist), ~system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, .," ", path ) ) )    
+    }
+
+  }
+  return( error )
+}
+
+
+##-----------------------------------------------------------
 ## Manages the path specification for MODIS FPAR data download from CX1
 ##-----------------------------------------------------------
 download_MODIS_FPAR_MCD15A3H_from_cx1 <- function( settings_input ){
@@ -1724,6 +1865,37 @@ download_MODIS_FPAR_MCD15A3H_from_cx1 <- function( settings_input ){
     }
   } else {
     abort( "MODIS_FPAR_MCD15A3H data download not possible.")
+  }
+
+  return(error)
+
+}
+
+
+##-----------------------------------------------------------
+## Manages the path specification for MODIS EVI data download from CX1
+##-----------------------------------------------------------
+download_MODIS_EVI_MOD13Q1_from_cx1 <- function( settings_input ){
+  
+  require(rlang)
+
+  ans <- readline( prompt = "Do you have access to Imperial's CX1? (y/n) " )
+  if (ans=="y"){
+    ans <- readline( prompt = "Have you connected to Imperial's VPN? (y/n) " )
+    if (ans=="y"){
+      ans <- readline( prompt = paste0("Are you still happy with downloading to ", settings_input$path_MODIS_EVI_MOD13Q1, "? (y/n)") )
+      if (ans=="y"){
+        error <- download_MODIS_EVI_MOD13Q1_from_cx1_path( settings_input$path_MODIS_EVI_MOD13Q1 )
+      } else {
+        path <- readline( prompt = "Please specify a new path: " )
+        settings_input$path_MODIS_EVI_MOD13Q1 <- path
+        error <- download_MODIS_EVI_MOD13Q1_from_cx1_path( settings_input$path_MODIS_EVI_MOD13Q1 )
+      }
+    } else {
+      abort( "MODIS_EVI_MOD13Q1 data download not possible.")
+    }
+  } else {
+    abort( "MODIS_EVI_MOD13Q1 data download not possible.")
   }
 
   return(error)

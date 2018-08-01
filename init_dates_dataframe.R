@@ -22,7 +22,7 @@ init_dates_dataframe <- function( yrstart, yrend, startmoy=1, startdoy=1, freq="
           mutate( year_dec = year(date) + (yday(date) - 1) / ndayyear ) %>% 
           select( -ndayyear )
 
-  if (noleap) ddf <- ddf %>% filter( !( month(date)==2 & mday(date)==29 ) )
+  if (noleap) ddf <- ddf %>% dplyr::filter( !( month(date)==2 & mday(date)==29 ) )
 
   return( ddf )
 

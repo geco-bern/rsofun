@@ -17,23 +17,24 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
   ## Set up for calibration ensemble
   ##----------------------------------------------------------------
   ## Write run names (site names) for calibration
-  settings_calib$path_runnames <- paste0( settings$path_input, "run/runnames_calib_", settings$name, ".txt" )
+  settings_calib$path_runnames <- paste0( settings_sims$path_input, "run/runnames_calib_", settings_sims$name, ".txt" )
   zz <- file( settings_calib$path_runnames, "w")
   tmp <- purrr::map( as.list(settings_calib$sitenames), ~cat( ., "\n", file=zz ) )
   close(zz)
 
   ## global variables (used inside cost function)
-  model    <<- setup$model
+  model    <<- paste0(setup$model, "_simsuite")
   simsuite <<- settings_sims$name
 
   ## save current working directory
   here <- getwd()
-  setwd( settings$dir_sofun )
+  setwd( settings_sims$dir_sofun )
 
   ## example run to get output file structure
   param_init <- unlist( lapply( settings_calib$par, function(x) x$init ) )
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", param_init ), " | ./run", model, "_simsuite"), intern = TRUE )  
-  outfilnam <<- paste0( settings$dir_sofun, "output_calib/calibtargets_tmp_fluxnet2015.txt" )
+  system( paste0("make ", model) )
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", param_init ), " | ./run", model ), intern = TRUE )  
+  outfilnam <<- paste0( settings_sims$dir_sofun, "output_calib/calibtargets_tmp_fluxnet2015.txt" )
   col_positions <<- fwf_empty( outfilnam, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ), comment = "" )
   mod <- read_fwf( outfilnam, col_positions )
   
@@ -103,7 +104,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
 cost_rmse <- function( par, inverse = FALSE ){
 
   ## execute model for this parameter set
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par[1] ), " | ./run", model, "_simsuite"), intern = TRUE )
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par[1] ), " | ./run", model ), intern = TRUE )
 
   ## read output from calibration run
   out <- read_fwf( outfilnam, col_positions )

@@ -1,6 +1,3 @@
-# load( "mod.Rdata" )
-# successcodes <- read_csv( "successcodes.csv" )
-
 eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=TRUE, doplot=FALSE ){
 	
   require(dplyr)
@@ -139,7 +136,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 		  ## periods should start with the 1st of January each year, otherwise can't compute mean seasonal cycle
 		  ##------------------------------------------------------------
 			# ## 8-day periods corresponding to MODIS dates (problem: doesn't start with Jan 1 each year)
-	  	#  breaks <- modisdates <- read_csv( "modisdates.csv" )$date
+	    	#  breaks <- modisdates <- read_csv( "modisdates.csv" )$date
 
 		  # ## aggregate to weeks
 		  # xdf <- ddf %>% mutate( inbin = week(date) ) %>%
