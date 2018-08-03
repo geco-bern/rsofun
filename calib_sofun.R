@@ -5,6 +5,13 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
   ##----------------------------------------------------------------
   ddf_obs <- get_obs( settings_calib, settings_sims )
 
+  # ## test plot
+  # test <- filter(ddf_obs, sitename=="FR-Pue" & year(date) %in% c(2003) )
+  # test$min <- apply( select( test, GPP_NT_VUT_REF, GPP_DT_VUT_REF, gpp_obs_gepisat ), 1, FUN = min, na.rm = TRUE )
+  # test$max <- apply( select( test, GPP_NT_VUT_REF, GPP_DT_VUT_REF, gpp_obs_gepisat ), 1, FUN = max, na.rm = TRUE )
+  # with( test, plot( date, gpp_obs, type="l" ) )
+  # with( test, polygon( c(date, rev(date)), c( min, rev(max)), border = NA, col = rgb(0,0,0,0.3) ) )
+
   ## subset and make global 
   obs <<- ddf_obs %>%
     ## "filter" data, i.e. replace by NA if above/below a certaint temperature or soil moisture threshold
@@ -159,30 +166,56 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
   source("init_dates_dataframe.R")
   source("get_obs_bysite_gpp_fluxnet2015.R")
+  source("check_download_fluxnet2015.R")
+  source("check_download_gepisat.R")
 
   ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
   ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE )
 
   if ("gpp" %in% settings_calib$targetvars){
 
-    if (settings_calib$datasource$gpp=="fluxnet2015"){
+    if ("fluxnet2015" %in% settings_calib$datasource$gpp){
 
       ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
+      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, settings_sims, sitename )
 
-      ddf <- get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
-             right_join( ddf, by = "date" )
+      ## This gets gpp_obs as mean of GPP_NT_VUT_REF and GPP_DT_VUT_REF
+      ddf <-  get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
+              rename( gpp_obs_fluxnet2015 = gpp_obs ) %>%
+              right_join( ddf, by = "date" )
 
     }
+
+    if ("gepisat" %in% settings_calib$datasource$gpp){
+
+      ## Make sure data is available for this site
+      error <- check_download_gepisat( settings_calib$path_gepisat, settings_sims, sitename )
+
+      tmp <-  get_obs_bysite_gpp_gepisat( sitename, settings_calib$path_gepisat, settings_calib$timescale )
+      
+      if (!is.null(tmp)){
+        ddf <- tmp %>%
+          rename( gpp_obs_gepisat = gpp_obs ) %>%
+          right_join( ddf, by = "date" )
+      } else {
+        ddf <- ddf %>% mutate( gpp_obs_gepisat = NA )
+      }
+
+    }
+
+    ## For now, take mean across GPP_NT_VUT_REF, GPP_DT_VUT_REF, and GePiSaT-GPP
+    # ddf$gpp_obs <- apply( dplyr::select( ddf, GPP_NT_VUT_REF, GPP_DT_VUT_REF, gpp_obs_gepisat ), 1, FUN = mean, na.rm=TRUE )
+    ddf$gpp_obs <-  apply( dplyr::select( ddf, gpp_obs_fluxnet2015, gpp_obs_gepisat ), 1, FUN = weighted.mean, c(2,1), na.rm=TRUE ) 
+    ddf <- ddf %>% mutate( gpp_obs = ifelse( is.nan(gpp_obs), NA, gpp_obs ) )
 
   }
 
   if ("wcont" %in% settings_calib$targetvars){
 
-    if (settings_calib$datasource$wcont=="fluxnet2015"){
+    if ("fluxnet2015" %in% settings_calib$datasource$wcont){
 
       ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
+      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, settings_sims, sitename )
 
       ddf <- get_obs_bysite_wcont_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
              right_join( ddf, by = "date" )

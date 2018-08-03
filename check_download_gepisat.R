@@ -1,22 +1,22 @@
 ##--------------------------------------------------------------------------
-## Checks if FLUXNET 2015 files are available for this variable and initiates download if not.
+## Checks if GePiSaT files are available for this variable and initiates download if not.
 ##--------------------------------------------------------------------------
-check_download_fluxnet2015 <- function( path, settings_sims, sitename=NA ){
+check_download_gepisat <- function( path, settings_sims, sitename=NA ){
 
   require(purrr)
   require(dplyr)
   require(rlang)
 
   ## Check if any data is available in the specified directory
-  filelist <- list.files( path, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv" )
+  filelist <- list.files( path, pattern = ".*_daily_GPP.txt" )
 
   if (length(filelist)==0){
     ## No files found at specified location
-    warn( paste0("No files found for fluxnet2015 in directory ", path) )
+    warn( paste0("No files found for GePiSaT in directory ", path) )
 
     ## Search at a different location?
     path <- readline( prompt="Would you like to search for files recursively from a certain directory? Enter the path from which search is to be done: ")
-    filelist <- list.files( path, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv", recursive = TRUE )
+    filelist <- list.files( path, pattern = ".*_daily_GPP.txt", recursive = TRUE )
 
     if (length(filelist)==0){
      
@@ -24,18 +24,18 @@ check_download_fluxnet2015 <- function( path, settings_sims, sitename=NA ){
       warn( paste0("Still nothing found at specified location ", path ) )
       ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
       if (ans=="y"){
-        filelist <- list.files( "~/", pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv", recursive = TRUE )
+        filelist <- list.files( "~/", pattern = ".*_daily_GPP.txt", recursive = TRUE )
       } else {
         ## Still no files found at specified location. Try to download from Imperial CX1 and place in <path>
         warn( "Initiating download from Imperial CX1..." )
-        error <- download_fluxnet2015_from_cx1( path )
-        filelist <- list.files( path, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv" )
+        error <- download_gepisat_from_cx1( settings_input )
+        filelist <- list.files( path, pattern = ".*_daily_GPP.txt" )
       }
 
       if (length(filelist)==0){
         ## Still no files found at specified location. Try to download from Imperial CX1 and place in <path>
         warn( "Initiating download from Imperial CX1..." )
-        error <- download_fluxnet2015_from_cx1( path )
+        error <- download_gepisat_from_cx1( settings_input )
 
       }
 
@@ -45,11 +45,11 @@ check_download_fluxnet2015 <- function( path, settings_sims, sitename=NA ){
 
   if (!is.na(sitename)){
     ## Check if a file is available for a given site
-    filelist <- list.files( path, pattern = paste0("FLX_", sitename, "_FLUXNET2015_FULLSET_DD.*.csv") )
+    filelist <- list.files( path, pattern = paste0( sitename, ".*_daily_GPP.txt" ) )
 
     if (length(filelist)==0){
       ## Download missing file
-      error <- download_fluxnet2015_from_cx1_path( path, sitename )
+      error <- download_gepisat_from_cx1_path( path, sitename )
     }
 
   }
@@ -57,9 +57,9 @@ check_download_fluxnet2015 <- function( path, settings_sims, sitename=NA ){
 }
 
 ##-----------------------------------------------------------
-## Manages the path specification for fluxnet data download from CX1
+## Manages the path specification for GePiSaT data download from CX1
 ##-----------------------------------------------------------
-download_fluxnet2015_from_cx1 <- function( path ){
+download_gepisat_from_cx1 <- function( path ){
   
   require(rlang)
 
@@ -69,16 +69,16 @@ download_fluxnet2015_from_cx1 <- function( path ){
     if (ans=="y"){
       ans <- readline( prompt = paste0("Are you still happy with downloading to ", path, "? (y/n)") )
       if (ans=="y"){
-        error <- download_fluxnet2015_from_cx1_path( path )
+        error <- download_gepisat_from_cx1_path( path )
       } else {
         path <- readline( prompt = "Please specify a new path: " )
-        error <- download_fluxnet2015_from_cx1_path( path )
+        error <- download_gepisat_from_cx1_path( path )
       }
     } else {
-      abort( "FLUXNET 2015 data download not possible.")
+      abort( "GePiSaT data download not possible.")
     }
   } else {
-    abort( "FLUXNET 2015 data download not possible.")
+    abort( "GePiSaT data download not possible.")
   }
 
   return(error)
@@ -86,15 +86,15 @@ download_fluxnet2015_from_cx1 <- function( path ){
 }
 
 ##-----------------------------------------------------------
-## Downloads fluxnet data from CX1
+## Downloads GePiSaT data from CX1
 ##-----------------------------------------------------------
-download_fluxnet2015_from_cx1_path <- function( path, sitename=NA ){
+download_gepisat_from_cx1_path <- function( path, sitename=NA ){
 
   ## get user name from user
   if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
 
-  ## the path of fluxnet daily data on cx1
-  origpath <- "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/"
+  ## the path of GePiSaT daily data on cx1
+  origpath <- "/work/bstocker/labprentice/data/gepisat/v3_fluxnet2015/daily_gpp/"
 
   if (is.na(sitename)){
     ## Download the whole bunch
@@ -110,7 +110,6 @@ download_fluxnet2015_from_cx1_path <- function( path, sitename=NA ){
 
     ## use one file(s) for this site
     filelist <- filelist[ grepl(sitename, filelist) ]
-    filelist <- filelist[ grepl("_FLUXNET2015_FULLSET_DD_", filelist) ]
 
     purrr::map( as.list(filelist), ~system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, .," ", path ) ) )
     
