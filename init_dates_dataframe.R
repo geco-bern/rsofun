@@ -20,7 +20,7 @@ init_dates_dataframe <- function( yrstart, yrend, startmoy=1, startdoy=1, freq="
   ddf <-  tibble( date=seq( from = startdate, to = enddate, by = freq ) ) %>% 
           mutate( ndayyear = ifelse( leap_year(year(date)), 366, 365  ) ) %>%
           mutate( year_dec = year(date) + (yday(date) - 1) / ndayyear ) %>% 
-          select( -ndayyear )
+          dplyr::select( -ndayyear )
 
   if (noleap) ddf <- ddf %>% dplyr::filter( !( month(date)==2 & mday(date)==29 ) )
 

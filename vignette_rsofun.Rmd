@@ -49,8 +49,8 @@ settings_sims <- list(
   lonlat          = FALSE,
   name            = "fluxnet2015",
   dir_sofun       = "~/sofun/trunk/",
-  path_output     = "~/sofun/output_fluxnet2015_sofun/s19/",
-  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s19/",
+  path_output     = "~/sofun/output_fluxnet2015_sofun/s18/",
+  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s18/",
   path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
@@ -103,14 +103,14 @@ settings_input <-  list(
   ppfd                     = "fluxnet2015",
   netrad                   = NA,
   cloudcover               = "cru_ts4_01",
-  # fapar                    = "MODIS_EVI_MOD13Q1",
-  fapar                    = "MODIS_FPAR_MCD15A3H",
+  fapar                    = "MODIS_EVI_MOD13Q1",
+  # fapar                    = "MODIS_FPAR_MCD15A3H",
   co2                      = "cmip",
   path_cx1data             = "~/data/",
   path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_watch_wfdei         = "~/data/watch_wfdei/",
   path_cru_ts4_01          = "~/data/cru/ts_4.01/",
-  # path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/"
+  path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
   path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/"
   )
 ```
@@ -172,7 +172,7 @@ settings_calib <- list(
   sitenames        = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
   filter_temp_min  = 5.0,
   filter_temp_max  = 35.0,
-  filter_soilm_min = 0.5
+  filter_soilm_min = 0.6
  )
 ```
 
@@ -191,7 +191,7 @@ settings_calib <- list(
 ## Evaluation settings
 Define model evaluation settings as a list.
 ```{r message=FALSE}
-mylist <- read_csv("myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% select( -use ) %>% unlist()
+mylist <- read_csv("myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
 settings_eval <- list(
   sitenames = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename,
   sitenames_siteplots = mylist,

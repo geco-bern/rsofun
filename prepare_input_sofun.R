@@ -243,7 +243,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
 
       ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
       ddf <- get_meteo_fluxnet2015( sitename, path = paste0(settings_input$path_fluxnet2015, filn), freq="d" ) %>%
-        select( date, one_of(fluxnetvars) ) %>% 
+        dplyr::select( date, one_of(fluxnetvars) ) %>% 
         setNames( c("date", paste0( fluxnetvars, "_fluxnet2015" ))) %>%
         right_join( ddf, by = "date" )
 
@@ -450,7 +450,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
         ## IMPORTANT: This is gapfilled data. Original data is in <settings_input$path_MODIS_FPAR_MCD15A3H>/raw/
         ## Gap-filling is done with 'getin/gapfill_modis.R'. The gapfilling step is not yet implemented within prepare_input_sofun().
         ddf <- read_csv( paste0( settings_input$path_MODIS_FPAR_MCD15A3H, filn ) ) %>%
-          select( date, fapar = modisvar_interpol) %>%
+          dplyr::select( date, fapar = modisvar_interpol) %>%
           mutate( fapar = as.numeric(fapar) ) %>%
           right_join( ddf, by = "date" )
 
@@ -469,7 +469,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
         ## IMPORTANT: This is gapfilled data. Original data is in <settings_input$path_MODIS_EVI_MOD13Q1>/raw/
         ## Gap-filling is done with 'getin/gapfill_modis.R'. The gapfilling step is not yet implemented within prepare_input_sofun().
         ddf <- read_csv( paste0( settings_input$path_MODIS_EVI_MOD13Q1, filn ) ) %>%
-          select( date, fapar = modisvar_interpol) %>%
+          dplyr::select( date, fapar = modisvar_interpol) %>%
           mutate( fapar = as.numeric(fapar) ) %>%
           right_join( ddf, by = "date" )
         
@@ -996,7 +996,7 @@ get_clim_cru_monthly <- function( lon, lat, settings, cruvars ){
                 ## calculate VPD (vap is in hPa)
                 mutate( vpd_vap_cru_temp_cru = calc_vpd( eact=1e2*vap_cru, tc=temp_cru ) ) %>% 
                 ## avoid duplicate 
-                select( -temp_cru ) %>% 
+                dplyr::select( -temp_cru ) %>% 
                 right_join( mdf, by = c("date", "year_dec") )
   }
 
@@ -1043,8 +1043,8 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
   yr_nxt <- min(endyr_cru, yr+1)
 
   ## add first and last year to head and tail of 'mdf'
-  first <- mdf[1:12,] %>% select( -year_dec ) %>% mutate( date = date - years(1) )
-  last  <- mdf[(nrow(mdf)-11):nrow(mdf),] %>% select( -year_dec ) %>% mutate( date = date + years(1) )
+  first <- mdf[1:12,] %>% dplyr::select( -year_dec ) %>% mutate( date = date - years(1) )
+  last  <- mdf[(nrow(mdf)-11):nrow(mdf),] %>% dplyr::select( -year_dec ) %>% mutate( date = date + years(1) )
 
   ddf <- init_dates_dataframe( yr, yr )
 

@@ -27,9 +27,9 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 
 	  ## get sites for which no model output is available
 	  missing_mod <- purrr::map_lgl( mod, ~identical(., NA ) ) %>% which() %>% names()
-	  settings_eval$sitenames_used <- settings_eval$sitenames[ -which( settings_eval$sitenames %in% missing_mod ) ]
+	  settings_eval$sitenames_used <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_mod))]
 	  
-	  metrics$gpp$mean_nt_dt_fluxnet2015 <- list()
+	  metrics$gpp$fluxnet2015 <- list()
 
 	  if (!file.exists("adf.Rdata")||!file.exists("ddf.Rdata")||overwrite){
 
@@ -209,8 +209,8 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 
 
 		## metrics for daily and x-daily values, all sites pooled
-    metrics$gpp$mean_nt_dt_fluxnet2015$daily_pooled  <- with( ddf, get_stats( gpp_mod, gpp_obs ) )
-    metrics$gpp$mean_nt_dt_fluxnet2015$xdaily_pooled <- with( xdf, get_stats( gpp_mod, gpp_obs ) )
+    metrics$gpp$fluxnet2015$daily_pooled  <- with( ddf, get_stats( gpp_mod, gpp_obs ) )
+    metrics$gpp$fluxnet2015$xdaily_pooled <- with( xdf, get_stats( gpp_mod, gpp_obs ) )
 
     ##------------------------------------------------------------
 	  ## Evaluate annual values by site
@@ -226,7 +226,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 		             unnest( stats )
 
 		## metrics for annual values, all sites pooled
-    metrics$gpp$mean_nt_dt_fluxnet2015$annual_pooled <- with( adf, get_stats( gpp_mod, gpp_obs ) )
+    metrics$gpp$fluxnet2015$annual_pooled <- with( adf, get_stats( gpp_mod, gpp_obs ) )
 
     ##------------------------------------------------------------
 	  ## Evaluate annual values by site
@@ -242,7 +242,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 		             unnest( stats )
 
 		## metrics for annual values, all sites pooled
-    metrics$gpp$mean_nt_dt_fluxnet2015$monthly_pooled <- with( mdf, get_stats( gpp_mod, gpp_obs ) )
+    metrics$gpp$fluxnet2015$monthly_pooled <- with( mdf, get_stats( gpp_mod, gpp_obs ) )
 
     ##------------------------------------------------------------
 	  ## Get mean annual GPP -> "spatial" data frame and evaluate it
@@ -252,7 +252,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
     														  gpp_mod = mean( gpp_mod, na.rm=TRUE ) )
 
     linmod_meandf <- lm( gpp_obs ~ gpp_mod, data = meandf ) 
-    metrics$gpp$mean_nt_dt_fluxnet2015$spatial <- with( meandf, get_stats( gpp_mod, gpp_obs ) )
+    metrics$gpp$fluxnet2015$spatial <- with( meandf, get_stats( gpp_mod, gpp_obs ) )
     
 		# ## test if identical data to previous evaluation
 		# mymeandf <- meandf
@@ -294,7 +294,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 									  mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
 									  unnest( stats )
 
-		metrics$gpp$mean_nt_dt_fluxnet2015$anomalies_annual  <- with( iavdf, get_stats( gpp_mod, gpp_obs ) )
+		metrics$gpp$fluxnet2015$anomalies_annual  <- with( iavdf, get_stats( gpp_mod, gpp_obs ) )
 		
     ##------------------------------------------------------------
 	  ## Get mean seasonal cycle (by day of year)
@@ -311,7 +311,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 		meandoydf_stats <- meandoydf %>% group_by( sitename ) %>%
 											 nest()
 
-		metrics$gpp$mean_nt_dt_fluxnet2015$meandoy  <- with( meandoydf, get_stats( mod_mean, obs_mean ) )
+		metrics$gpp$fluxnet2015$meandoy  <- with( meandoydf, get_stats( mod_mean, obs_mean ) )
 
     ## aggregate mean seasonal cycle by climate zone (koeppen-geiger) and hemisphere (pooling sites within the same climate zone)
 		meandoydf_byclim <- ddf %>% mutate( doy = yday(date) ) %>%
@@ -349,7 +349,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 									  mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
 									  unnest( stats )									  
 		
-		metrics$gpp$mean_nt_dt_fluxnet2015$anomalies_daily  <- with( idvdf, get_stats( gpp_mod, gpp_obs ) )
+		metrics$gpp$fluxnet2015$anomalies_daily  <- with( idvdf, get_stats( gpp_mod, gpp_obs ) )
 		
     ##------------------------------------------------------------
 	  ## Get mean seasonal cycle (by week (or X-day period) of year)
@@ -365,7 +365,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 		meanxoydf_stats <- meanxoydf %>% group_by( sitename ) %>%
 											 nest()
 
-		metrics$gpp$mean_nt_dt_fluxnet2015$meanxoy  <- with( meanxoydf, get_stats( mod_mean, obs_mean ) )
+		metrics$gpp$fluxnet2015$meanxoy  <- with( meanxoydf, get_stats( mod_mean, obs_mean ) )
 
     ##------------------------------------------------------------
 	  ## Get IXV (inter-day variability) as daily value minus mean by site and DOY
@@ -383,7 +383,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 									  mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
 									  unnest( stats )
 		
-		metrics$gpp$mean_nt_dt_fluxnet2015$anomalies_xdaily  <- with( ixvdf, get_stats( gpp_mod, gpp_obs ) )
+		metrics$gpp$fluxnet2015$anomalies_xdaily  <- with( ixvdf, get_stats( gpp_mod, gpp_obs ) )
 		
 
     ##------------------------------------------------------------
@@ -737,7 +737,9 @@ plot_by_doy_bysite <- function( df, makepdf=FALSE ){
 
 
 plot_by_doy_byzone <- function( df, makepdf=FALSE ){
-	if (makepdf) pdf( paste0( "fig/meandoy_byzone/meandoy_byzone_", df$climatezone[1], ".pdf" ))
+	if (makepdf) filn <- paste0( "fig/meandoy_byzone/meandoy_byzone_", df$climatezone[1], ".pdf" )
+	if (makepdf) print( paste( "Creating plot", filn ) )
+	if (makepdf) pdf( filn )
 	  par(las=1)
 	  yrange <- range( df$mod_min, df$mod_max, df$obs_min, df$obs_max, na.rm = TRUE )
 	  plot(  df$doy, df$obs_mean, type="l", ylim = yrange, ylab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ), xlab = "DOY" )

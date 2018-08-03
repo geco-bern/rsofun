@@ -1,10 +1,15 @@
-calib_sofun <- function( setup, settings_calib, settings_sims ){
+calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE ){
 
   ##----------------------------------------------------------------
   ## Collect observational data used as calibration target
   ##----------------------------------------------------------------
-  print("Collecting observational target data takes long ...")
-  ddf_obs <- get_obs( settings_calib, settings_sims )
+  if (file.exists("ddf_obs.Rdata")&!overwrite){
+    load("ddf_obs.Rdata")
+  } else {
+    print("Collecting observational target data takes long ...")
+    ddf_obs <- get_obs( settings_calib, settings_sims )
+    save( ddf_obs, file = "ddf_obs.Rdata" )
+  }
 
   # ## test plot
   # test <- filter(ddf_obs, sitename=="FR-Pue" & year(date) %in% c(2003) )
@@ -19,7 +24,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
     mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) ) %>% # "filtering" by minimum temperature
     mutate( gpp_obs = ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) ) %>% # "filtering" by maximum temperature
     mutate( gpp_obs = ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) ) %>% # "filtering" by minimum soil moisture
-    select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
+    dplyr::select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
 
   print("...done.")  
 
@@ -192,6 +197,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
   source("init_dates_dataframe.R")
   source("get_obs_bysite_gpp_fluxnet2015.R")
+  source("get_obs_bysite_gpp_gepisat.R")
   source("check_download_fluxnet2015.R")
   source("check_download_gepisat.R")
 
