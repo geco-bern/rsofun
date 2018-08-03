@@ -1,7 +1,7 @@
 ##--------------------------------------------------------------------------
 ## Checks if FLUXNET 2015 files are available for this variable and initiates download if not.
 ##--------------------------------------------------------------------------
-check_download_fluxnet2015 <- function( path, settings_sims, sitename=NA ){
+check_download_fluxnet2015 <- function( path, sitename=NA ){
 
   require(purrr)
   require(dplyr)

@@ -115,7 +115,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       "fluxnet2015" %in% settings_input$ppfd
       ))){
 
-      error <- check_download_fluxnet2015( settings_input, settings_sims )
+      error <- check_download_fluxnet2015( settings_input$path_fluxnet2015 )
 
     }
 
@@ -236,7 +236,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
     if (length(fluxnetvars)>0){
 
       ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
+      error <- check_download_fluxnet2015( settings_input$path_fluxnet2015, sitename )
 
       ## Take only file for this site
       filn <- list.files( settings_input$path_fluxnet2015, pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_DD.*.csv" ) )

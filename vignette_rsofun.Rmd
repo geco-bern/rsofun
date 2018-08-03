@@ -103,14 +103,15 @@ settings_input <-  list(
   ppfd                     = "fluxnet2015",
   netrad                   = NA,
   cloudcover               = "cru_ts4_01",
-  fapar                    = "MODIS_FPAR_MCD15A3H", # "MODIS_EVI_MOD13Q1", 
+  # fapar                    = "MODIS_EVI_MOD13Q1",
+  fapar                    = "MODIS_FPAR_MCD15A3H",
   co2                      = "cmip",
   path_cx1data             = "~/data/",
   path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_watch_wfdei         = "~/data/watch_wfdei/",
   path_cru_ts4_01          = "~/data/cru/ts_4.01/",
-  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/"
   # path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/"
+  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/"
   )
 ```
 
@@ -159,15 +160,15 @@ siteinfo <- prepare_metainfo_fluxnet2015(
 Then define the calibration settings as:
 ```{r}
 settings_calib <- list(
-  name             = "kphio_gpp_fluxnet2015_MODIS_FPAR",
-  par              = list( kphio = list( lower=0.03, upper=0.12, init=0.05792348 ) ),
-  method           = "gensa",
+  name             = paste0( "kphio_gpp_fluxnet2015_", settings_input$fapar ),
+  par              = list( kphio = list( lower=0.01, upper=0.12, init=0.04 ) ),
+  method           = "optimr",
   targetvars       = c("gpp"),
   datasource       = list( gpp = c("fluxnet2015", "gepisat") ),
   timescale        = list( gpp = "d" ),
   path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_gepisat     = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
-  maxit            = 10,
+  maxit            = 15,
   sitenames        = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
   filter_temp_min  = 5.0,
   filter_temp_max  = 35.0,
@@ -221,7 +222,7 @@ save(siteinfo, file = "siteinfo.Rdata")
 
 ## Prepare simulation setup
 Create a run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information. Calibration settings are an optional argument. When passed on, simulation parameter files will contain information which target variables are to be written to special calibration output files (a single file written for an entire ensemble).
-```{r, eval=FALSE, message=FALSE, warning=FALSE}
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
 settings_sims <- prepare_setup_sofun( 
   settings = settings_sims, 
   settings_calib = settings_calib, 
@@ -231,7 +232,7 @@ settings_sims <- prepare_setup_sofun(
 
 ## Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see [here](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2). 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 inputdata <- prepare_input_sofun( 
   settings_input = settings_input, 
   settings_sims = settings_sims, 
@@ -244,7 +245,7 @@ inputdata <- prepare_input_sofun(
 
 ## Calibrate the model
 Calibrate SOFUN, returns calibration settings, now including calibrated parameters inside the list (`settings_calib$par[[param_name]]$opt`).
-```{r, eval=FALSE}
+```{r, eval=FALSE, message=FALSE}
 settings_calib <- calib_sofun( 
   setup = setup_sofun, 
   settings_calib = settings_calib, 
@@ -257,17 +258,18 @@ Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to w
 ```{r, message=FALSE, eval=FALSE}
 params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
 nothing <- update_params( params_opt, settings = settings_sims )
+rm("mod")
 mod <- runread_sofun( 
   settings = settings_sims, 
   setup = setup_sofun 
   )
-save( mod, file="mod.Rdata" )
+save( mod, file="mod_s19.Rdata" )
 ```
 
 ## Evaluate the model
 Evaluate SOFUN results based on calibrated parameters. The first argument to the `eval_sofun()` function is the output from `runread()` executed above. (Here, in order to avoid running all steps while knitting this RMarkdown file, we first read model outputs from a previous run.)
 ```{r, message = FALSE}
-# load( "mod.Rdata" )
+# load( "mod_s18.Rdata" )
 out_eval <- eval_sofun( mod, settings_eval = settings_eval, settings_sims = settings_sims, siteinfo = siteinfo, overwrite = TRUE )
 save( out_eval, file="out_eval.Rdata" )
 ```

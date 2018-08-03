@@ -3,6 +3,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
   ##----------------------------------------------------------------
   ## Collect observational data used as calibration target
   ##----------------------------------------------------------------
+  print("Collecting observational target data takes long ...")
   ddf_obs <- get_obs( settings_calib, settings_sims )
 
   # ## test plot
@@ -19,6 +20,8 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
     mutate( gpp_obs = ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) ) %>% # "filtering" by maximum temperature
     mutate( gpp_obs = ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) ) %>% # "filtering" by minimum soil moisture
     select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
+
+  print("...done.")  
 
   ##----------------------------------------------------------------
   ## Set up for calibration ensemble
@@ -74,6 +77,29 @@ calib_sofun <- function( setup, settings_calib, settings_sims ){
     ## save optimised parameters
     opt <- optim_par_gensa$par[1]
     settings_calib$par$kphio$opt <- opt
+
+  } else if (settings_calib$method=="optimr"){
+    ##----------------------------------------------------------------
+    ## calibrate the model parameters using R optimr()
+    ##----------------------------------------------------------------
+    require(optimr)
+    ptm <- proc.time()
+    optim_par_optimr = optimr(
+        par   = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
+        fn    = cost_rmse,
+        control = list( maxit = settings_calib$maxit )
+        )
+    proc.time() - ptm
+    print(optim_par_optimr$par)
+
+    filn <- paste0("out_optimr_", settings_calib$name, ".Rdat")
+    print( paste0( "writing output from optimr function to ", filn ) )
+    save( optim_par_optimr, file = filn )
+
+    ## save optimised parameters
+    opt <- optim_par_optimr$par[1]
+    settings_calib$par$kphio$opt <- opt
+
 
   } else if (settings_calib$method=="BayesianTools"){
     ##----------------------------------------------------------------
@@ -177,7 +203,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
     if ("fluxnet2015" %in% settings_calib$datasource$gpp){
 
       ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, settings_sims, sitename )
+      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
 
       ## This gets gpp_obs as mean of GPP_NT_VUT_REF and GPP_DT_VUT_REF
       ddf <-  get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
@@ -189,7 +215,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
     if ("gepisat" %in% settings_calib$datasource$gpp){
 
       ## Make sure data is available for this site
-      error <- check_download_gepisat( settings_calib$path_gepisat, settings_sims, sitename )
+      error <- check_download_gepisat( settings_calib$path_gepisat, sitename )
 
       tmp <-  get_obs_bysite_gpp_gepisat( sitename, settings_calib$path_gepisat, settings_calib$timescale )
       
@@ -215,7 +241,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
     if ("fluxnet2015" %in% settings_calib$datasource$wcont){
 
       ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, settings_sims, sitename )
+      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
 
       ddf <- get_obs_bysite_wcont_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
              right_join( ddf, by = "date" )

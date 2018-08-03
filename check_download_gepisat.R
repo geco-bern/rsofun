@@ -1,7 +1,7 @@
 ##--------------------------------------------------------------------------
 ## Checks if GePiSaT files are available for this variable and initiates download if not.
 ##--------------------------------------------------------------------------
-check_download_gepisat <- function( path, settings_sims, sitename=NA ){
+check_download_gepisat <- function( path, sitename=NA ){
 
   require(purrr)
   require(dplyr)
