@@ -113,7 +113,7 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
   }
 
   ## define which data is to be used as target for calibration 'gpp_obs' and 'transp_obs'
-  df$gpp_obs <- apply( dplyr::select( df, GPP_NT_VUT_REF, GPP_DT_VUT_REF ), 1, FUN = mean, na.rm=TRUE )
+  df$gpp_obs <- apply( dplyr::select( df, GPP_NT_VUT_REF, GPP_DT_VUT_REF ), 1, FUN = mean, na.rm=FALSE )
 
   df <- df %>%  mutate( transp_obs = LE_F_MDS, temp = TA_F, gpp_obs = ifelse( is.nan(gpp_obs), NA, gpp_obs ) ) %>%
                 dplyr::select( date, gpp_obs, transp_obs, soilm_obs_mean, temp, GPP_NT_VUT_REF, GPP_DT_VUT_REF )

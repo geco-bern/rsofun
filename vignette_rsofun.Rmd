@@ -164,7 +164,7 @@ settings_calib <- list(
   par              = list( kphio = list( lower=0.01, upper=0.12, init=0.04 ) ),
   method           = "optimr",
   targetvars       = c("gpp"),
-  datasource       = list( gpp = c("fluxnet2015", "gepisat") ),
+  datasource       = list( gpp = "fluxnet2015" ),
   timescale        = list( gpp = "d" ),
   path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_gepisat     = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
@@ -238,7 +238,7 @@ inputdata <- prepare_input_sofun(
   settings_sims = settings_sims, 
   return_data = FALSE, 
   overwrite_climate = FALSE, 
-  overwrite_fapar = TRUE, 
+  overwrite_fapar = FALSE, 
   verbose = TRUE 
   )
 ```
@@ -263,7 +263,7 @@ mod <- runread_sofun(
   settings = settings_sims, 
   setup = setup_sofun 
   )
-save( mod, file="mod_s19.Rdata" )
+save( mod, file="mod_s18.Rdata" )
 ```
 
 ## Evaluate the model

@@ -91,9 +91,9 @@ The features of variability in GPP, for which model-observation agreement is cal
 ```{r, echo=FALSE, message=FALSE}
 # Generate data used for plotting and get performance metrics
 source("eval_sofun.R")
-filn <- "out_eval_s19.Rdata"
+filn <- "out_eval_s18.Rdata"
 overwrite <- TRUE
-load( "mod_s19.Rdata" )
+load( "mod_s18.Rdata" )
 if (!file.exists(filn)|overwrite){
   out_eval <- eval_sofun( mod, settings_eval, settings_sims, siteinfo, doplot=FALSE, overwrite = TRUE )
   save( out_eval, file = filn )
@@ -194,7 +194,7 @@ Insights from seasonality analysis by climate zones (results see below, red is t
 In brief, there is room for improvement by reducing GPP at low temperatures (sort of found before, but we never dealt with a temperature ramp, and why should we?) and low soil moisture (of course). fAPAR data in the tropics needs to be examined, otherwise, it looks like we have a problem with the Aw sites.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
-nothing <- plot_by_doy_allzones( out_eval$data$meandoydf_byclim_stats, makepdf=FALSE )
+nothing <- plot_by_doy_allzones( out_eval$data$meandoydf_byclim_stats, makepdf=TRUE )
 ```
 
 

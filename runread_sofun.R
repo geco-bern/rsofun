@@ -44,7 +44,7 @@ run_sofun <- function( settings, setup ){
     }
 
     ## Run all simulations in this ensemble as individual simulations
-    out_std <- map( as.list(settings$sitenames), ~run_sofun_bysite( ., setup ) )
+    out_std <- purrr::map( as.list(settings$sitenames), ~run_sofun_bysite( ., setup ) )
 
   }
 
@@ -64,14 +64,14 @@ read_sofun <- function( settings, setup ){
   ## First, process NetCDF which are written separately for each simulation year
   print("processing NetCDF outputs...")
   if (settings$lonlat){
-    tmp <- map( as.list(settings$sitenames), ~proc_global( ., settings$path_output_nc ) )
+    tmp <- purrr::map( as.list(settings$sitenames), ~proc_global( ., settings$path_output_nc ) )
   } else {
-    tmp <- map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
+    tmp <- purrr::map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
   }
 
   ## Open and read daily output from NetCDF file for each site
   print("reading from NetCDF files...")
-  ddf_list <- map( as.list(settings$sitenames), ~read_ncout_sofun_daily( ., settings ) )
+  ddf_list <- purrr::map( as.list(settings$sitenames), ~read_ncout_sofun_daily( ., settings ) )
   names(ddf_list) <- settings$sitenames
 
   return(ddf_list)

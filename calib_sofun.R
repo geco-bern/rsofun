@@ -235,10 +235,18 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
     }
 
-    ## For now, take mean across GPP_NT_VUT_REF, GPP_DT_VUT_REF, and GePiSaT-GPP
-    # ddf$gpp_obs <- apply( dplyr::select( ddf, GPP_NT_VUT_REF, GPP_DT_VUT_REF, gpp_obs_gepisat ), 1, FUN = mean, na.rm=TRUE )
-    ddf$gpp_obs <-  apply( dplyr::select( ddf, gpp_obs_fluxnet2015, gpp_obs_gepisat ), 1, FUN = weighted.mean, c(2,1), na.rm=TRUE ) 
-    ddf <- ddf %>% mutate( gpp_obs = ifelse( is.nan(gpp_obs), NA, gpp_obs ) )
+    if ("fluxnet2015" %in% settings_calib$datasource$gpp && "gepisat" %in% settings_calib$datasource$gpp){
+      
+      ## For now, take mean across GPP_NT_VUT_REF, GPP_DT_VUT_REF, and GePiSaT-GPP
+      ddf$gpp_obs <-  apply( dplyr::select( ddf, gpp_obs_fluxnet2015, gpp_obs_gepisat ), 1, FUN = weighted.mean, c(2,1), na.rm=TRUE ) 
+      ddf <- ddf %>% mutate( gpp_obs = ifelse( is.nan(gpp_obs), NA, gpp_obs ) )
+    
+    } else if ("fluxnet2015" %in% settings_calib$datasource$gpp){
+    
+      ## For now, take mean across GPP_NT_VUT_REF, and GPP_DT_VUT_REF
+      ddf <- ddf %>% mutate( gpp_obs = gpp_obs_fluxnet2015 )
+
+    }
 
   }
 
