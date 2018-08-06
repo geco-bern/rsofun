@@ -2,17 +2,17 @@
 title: "eval_sofun"
 author: "Beni Stocker"
 date: "`r Sys.Date()`"
-output:
-  html_document:
-    toc: true
-    toc_float: true
-    toc_depth: 4
-    number_sections: true
 # output:
-#   pdf_document:
+#   html_document:
 #     toc: true
-#     toc_depth: 2
+#     toc_float: true
+#     toc_depth: 4
 #     number_sections: true
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
 header-includes:
    - \usepackage{amsmath}
 bibliography: bibliography.bib
@@ -26,6 +26,16 @@ fig_nums <- captioner( prefix = "Figure S", auto_space=FALSE, style = "i" )
 ```
 
 # Evaluation of GPP against FLUXNET data
+
+## Evaluation settings
+Define model evaluation settings as a list.
+```{r message=FALSE}
+library(dplyr)
+library(readr)
+load("siteinfo.Rdata")
+load("settings_sims.Rdata")
+load("settings_eval.Rdata")
+```
 
 ## Sites selection
 
@@ -42,7 +52,7 @@ if (!file.exists(ncfiln)) {
 }
 source("plot_map_siteoverview.R")
 load("siteinfo.Rdata")
-plot_map_siteoverview( siteinfo$light, 1/epop ) # , plotfiln="fig/map_sites.pdf"
+plot_map_siteoverview( dplyr::filter(siteinfo$light, mysitename %in% settings_eval$sitenames ), 1/epop ) # , plotfiln="fig/map_sites.pdf"
 cap_siteoverview_fig <- fig_nums( "siteoverview_fig", caption=" Geographical distribution of sites selected for the bias evaluation. Sites listed in Table S1 as group 1 are in green, sites of group 2 are in black. The color of land area represents aridity, quantified as the ratio of potential evapotranspiration over precipitation from xxx" )
 ```
 
@@ -91,9 +101,9 @@ The features of variability in GPP, for which model-observation agreement is cal
 ```{r, echo=FALSE, message=FALSE}
 # Generate data used for plotting and get performance metrics
 source("eval_sofun.R")
-filn <- "out_eval_s18.Rdata"
+filn <- "out_eval.Rdata"
 overwrite <- TRUE
-load( "mod_s18.Rdata" )
+load( "mod.Rdata" )
 if (!file.exists(filn)|overwrite){
   out_eval <- eval_sofun( mod, settings_eval, settings_sims, siteinfo, doplot=FALSE, overwrite = TRUE )
   save( out_eval, file = filn )
@@ -109,7 +119,7 @@ library(tidyr)
 out_eval$metrics %>% 
   bind_rows() %>% 
   unnest() %>% 
-  mutate( level = (out_eval$metrics$gpp$mean_nt_dt_fluxnet2015 %>% names()) ) %>%
+  mutate( level = (out_eval$metrics$gpp$fluxnet2015 %>% names()) ) %>%
   mutate_at( vars(one_of("rsq", "rmse", "slope", "bias")), funs(format(., digits=3))) %>%
   dplyr::select( Level=level, N=nvals, R2=rsq, RMSE=rmse, Slope=slope, Bias=bias) %>%
   knitr::kable( caption="Performance metrics of correlations between modelled and observed values at different temporal aggregation levels, absolute values and anomalies.")
@@ -193,9 +203,6 @@ Insights from seasonality analysis by climate zones (results see below, red is t
 
 In brief, there is room for improvement by reducing GPP at low temperatures (sort of found before, but we never dealt with a temperature ramp, and why should we?) and low soil moisture (of course). fAPAR data in the tropics needs to be examined, otherwise, it looks like we have a problem with the Aw sites.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
-nothing <- plot_by_doy_allzones( out_eval$data$meandoydf_byclim_stats, makepdf=TRUE )
-```
 
 
 ### Daily values
@@ -246,18 +253,24 @@ Anyways, the obvious next aggregation level is monthly, and the correlation incr
 modobs_mdf <- plot_modobs_monthly( out_eval$data$mdf, makepdf=FALSE )
 ```
 
-### Functional relationships
+### Annual values
 
-Functional relationships seen in the data can be extracted using Artificial Neural Networks (ANN). This is done here. First, a model is fitted to observed GPP with temperature, PPFD, VPD, fAPAR, and soil moisture as predictors. Then, functional relationships are evaluated by using the trained ANN to predict values for a synthetic datasets. The synthetic dataset is generated for each predictor value. E.g. for temperature, a sample of 50 data points is drawn from the empirical distribution of VPD, fAPAR, PPFD, and soil moisture, respectively, and 50 levels of temperature (evenly from 0-40 $^{\circ}$C) Then, the dataset is created by all combinations of these variables. Finally, functional relationship between temperature and GPP are assessed by taking the mean across all variable combination for each level of temperature separately. This approach implies that for the evaluation, correlations between predictor variables in the observational dataset are ignored.
-
-In order to improve comparability, ANNs are trained at (P-) modelled and observed GPP, and functional relationships thus derived for observed and modelled. This improves comparability and is preferred here over evaluating the model directly. As always, observations are in black and modelled in red.
-
-```{r neuralnet, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
-source("eval_response_neuralnet.R")
-eval_response_neuralnet( out_eval$data$ddf, makepdf=FALSE )
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+modobs_adf <- plot_modobs_annual( out_eval$data$adf, makepdf=FALSE )
 ```
-		
-There are several points here:
+
+<!-- ### Functional relationships -->
+
+<!-- Functional relationships seen in the data can be extracted using Artificial Neural Networks (ANN). This is done here. First, a model is fitted to observed GPP with temperature, PPFD, VPD, fAPAR, and soil moisture as predictors. Then, functional relationships are evaluated by using the trained ANN to predict values for a synthetic datasets. The synthetic dataset is generated for each predictor value. E.g. for temperature, a sample of 50 data points is drawn from the empirical distribution of VPD, fAPAR, PPFD, and soil moisture, respectively, and 50 levels of temperature (evenly from 0-40 $^{\circ}$C) Then, the dataset is created by all combinations of these variables. Finally, functional relationship between temperature and GPP are assessed by taking the mean across all variable combination for each level of temperature separately. This approach implies that for the evaluation, correlations between predictor variables in the observational dataset are ignored. -->
+
+<!-- In order to improve comparability, ANNs are trained at (P-) modelled and observed GPP, and functional relationships thus derived for observed and modelled. This improves comparability and is preferred here over evaluating the model directly. As always, observations are in black and modelled in red. -->
+
+<!-- ```{r neuralnet, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE} -->
+<!-- source("eval_response_neuralnet.R") -->
+<!-- eval_response_neuralnet( out_eval$data$ddf, makepdf=FALSE ) -->
+<!-- ``` -->
+
+<!-- There are several points here: -->
 
 - This mixes responses at different time scales and within/across sites.
 - The functional relationships based on the ANN look surprisingly "stiff".
@@ -277,18 +290,25 @@ require(dplyr, quietly = TRUE)
 siteinfo <- read_csv("siteinfo_eval.csv") %>%
             mutate( Reference = paste0("[@", sitename ,"]") ) %>%
             mutate( Period = paste0(as.character(year_start), "-", as.character(year_end)) ) %>%
-            select( -year_start, -year_end )
+            dplyr::select( -year_start, -year_end )
 siteinfo %>%
   dplyr::rename( Site=sitename, Lon.=lon, Lat.=lat, Elevation=elv, Veg.=classid, Clim.=koeppen_code, N = ndailygpp ) %>%
-  select( Site, Lon., Lat., Period, Veg., Clim., N, Reference ) %>%
+  dplyr::select( Site, Lon., Lat., Period, Veg., Clim., N, Reference ) %>%
   knitr::kable( caption = "Sites used for evaluation. Lon. is longitude, negative values indicate west longitude; Lat. is latitude, positive values indicate north latitude; Veg. is vegetation type: deciduous broadleaf forest (DBF); evergreen broadleaf forest (EBF); evergreen needleleaf forest (ENF); grassland (GRA); mixed deciduous and evergreen needleleaf forest (MF); savanna ecosystem (SAV); shrub ecosystem (SHR); wetland (WET)." )
 ```
 
 
-<!-- ## Mean seasonality by site -->
+## Mean seasonality by climate zone
 
-<!-- Observed values are in black, simulated in red. The solid line in the centre of the shaded range is the mean by day of year (DOY) across multiply years, shaded ranges indicate the minimum and maximum by DOY across years. -->
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
+nothing <- plot_by_doy_allzones( out_eval$data$meandoydf_byclim_stats, makepdf=FALSE )
+```
 
-<!-- ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE} -->
-<!-- plot_by_doy_allsites( out_eval$data$meandoydf_stats, makepdf=FALSE ) -->
-<!-- ``` -->
+
+## Mean seasonality by site
+
+Observed values are in black, simulated in red. The solid line in the centre of the shaded range is the mean by day of year (DOY) across multiply years, shaded ranges indicate the minimum and maximum by DOY across years.
+
+```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
+plot_by_doy_allsites( out_eval$data$meandoydf_stats, makepdf=FALSE )
+```

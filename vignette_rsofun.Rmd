@@ -44,7 +44,7 @@ systr <- "''"    # for Mac
 Define the simulation settings as a list. Components of the simulation settings should specify only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (CSV file created "by hand" or some other more clever method for large ensembles - up to you.). The function `prepare_setup_sofun()` complements the simulation settings list by these additional components as lists with elements for each site, nested within the simulation settings list.
 ```{r}
 settings_sims <- list( 
-  path_siteinfo   = "./metainfo_fluxnet2015",
+  path_siteinfo   = "./metainfo_fluxnet2015.csv",
   ensemble        = TRUE,
   lonlat          = FALSE,
   name            = "fluxnet2015",
@@ -159,18 +159,37 @@ siteinfo <- prepare_metainfo_fluxnet2015(
 
 Then define the calibration settings as:
 ```{r}
+## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
+## and exclude sites where C4 vegetation is present.
+calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+              dplyr::filter( !is.na(cluster) ) %>%
+              dplyr::select( site ) %>%
+              distinct() %>%
+
+              ## additionally exclude C4
+              dplyr::filter( !(site %in% dplyr::filter(siteinfo$light, c4 )$mysitename) ) %>%
+
+              # ## use only sites from selected climate zones and in northern hemisphere
+              # left_join( read_csv( "siteinfo_eval.csv" ) %>% dplyr::select( site = sitename, lat, koeppen_code ), by = "site" ) %>%
+              # dplyr::filter( koeppen_code %in% c("Dfc", "Dfb", "Cwc", "Cfb", "Cfa" ) & lat > 0.0 ) %>%
+
+              dplyr::select( site ) %>%
+              unlist()
+
+# calibsites <- c("FR-LBr", "US-Var")
+
 settings_calib <- list(
   name             = paste0( "kphio_gpp_fluxnet2015_", settings_input$fapar ),
-  par              = list( kphio = list( lower=0.01, upper=0.12, init=0.04 ) ),
-  method           = "optimr",
+  par              = list( kphio = list( lower=0.01, upper=0.12, init=0.05 ) ),
+  method           = "linscale",
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
   timescale        = list( gpp = "d" ),
   path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_gepisat     = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
   maxit            = 15,
-  sitenames        = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
-  filter_temp_min  = 5.0,
+  sitenames        = calibsites,  # dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
+  filter_temp_min  = 15.0,
   filter_temp_max  = 35.0,
   filter_soilm_min = 0.6
  )
@@ -228,11 +247,12 @@ settings_sims <- prepare_setup_sofun(
   settings_calib = settings_calib, 
   write_paramfils = FALSE 
   )
+save( settings_sims, file = "settings_sims.Rdata" )
 ```
 
 ## Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see [here](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2). 
-```{r, eval=TRUE}
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
 inputdata <- prepare_input_sofun( 
   settings_input = settings_input, 
   settings_sims = settings_sims, 
@@ -245,17 +265,29 @@ inputdata <- prepare_input_sofun(
 
 ## Calibrate the model
 Calibrate SOFUN, returns calibration settings, now including calibrated parameters inside the list (`settings_calib$par[[param_name]]$opt`).
-```{r, eval=FALSE, message=FALSE}
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
 settings_calib <- calib_sofun( 
   setup = setup_sofun, 
   settings_calib = settings_calib, 
-  settings_sims = settings_sims 
+  settings_sims = settings_sims,
+  overwrite = TRUE
   )
 ```
 
 ## Run the model
+For testing: Run and evaluate the model only for sites used in the calibration step.
+```{r}
+settings_sims$sitenames <- settings_calib$sitenames
+settings_eval$sitenames <- settings_calib$sitenames
+siteinfo$light <- siteinfo$light %>% dplyr::filter( mysitename %in% settings_eval$sitenames )
+siteinfo$full  <- siteinfo$full  %>% dplyr::filter( mysitename %in% settings_eval$sitenames )
+save( settings_eval, file = "settings_eval.Rdata" )
+save( settings_sims, file = "settings_sims.Rdata" )
+save( siteinfo, file = "siteinfo.Rdata" )
+```
+
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
-```{r, message=FALSE, eval=FALSE}
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
 params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
 nothing <- update_params( params_opt, settings = settings_sims )
 rm("mod")
@@ -263,14 +295,16 @@ mod <- runread_sofun(
   settings = settings_sims, 
   setup = setup_sofun 
   )
-save( mod, file="mod_s18.Rdata" )
+save( mod, file="mod.Rdata" )
 ```
 
 ## Evaluate the model
 Evaluate SOFUN results based on calibrated parameters. The first argument to the `eval_sofun()` function is the output from `runread()` executed above. (Here, in order to avoid running all steps while knitting this RMarkdown file, we first read model outputs from a previous run.)
-```{r, message = FALSE}
-# load( "mod_s18.Rdata" )
-out_eval <- eval_sofun( mod, settings_eval = settings_eval, settings_sims = settings_sims, siteinfo = siteinfo, overwrite = TRUE )
-save( out_eval, file="out_eval.Rdata" )
+```{r, message = FALSE, echo=FALSE}
+knitr::knit( "eval_sofun.Rmd" )
+system("open eval_sofun.pdf")
+# load( "mod.Rdata" )
+# out_eval <- eval_sofun( mod, settings_eval = settings_eval, settings_sims = settings_sims, siteinfo = siteinfo, overwrite = TRUE )
+# save( out_eval, file="out_eval.Rdata" )
 ```
 

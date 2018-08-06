@@ -393,7 +393,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 			modobs_ddf <- plot_modobs_daily( ddf, makepdf=FALSE )
 			modobs_xdf <- plot_modobs_xdaily( xdf, makepdf=FALSE )
 			modobs_mdf <- plot_modobs_monthly( mdf, makepdf=FALSE )
-	    modobs_spatial <- plot_modobs_spatial( meandf, makepdf=TRUE )
+	    modobs_spatial <- plot_modobs_spatial( meandf, makepdf=FALSE )
 			plot_modobs_spatial_annual( meandf, linmod_meandf, adf_stats, makepdf=FALSE )
 			modobs_anomalies_annual <- plot_modobs_anomalies_annual( iavdf, iavdf_stats, makepdf=FALSE )
 		  modobs_anomalies_daily <- plot_modobs_anomalies_daily( idvdf, idvdf_stats, makepdf=FALSE)
@@ -471,41 +471,41 @@ modobs_spatial <- plot_modobs_spatial_annual <- function( meandf, linmod_meandf,
 		title( "Spatial/annual correlation" )
 	if (makepdf) dev.off()
 
-	## Histogram of slopes
-	##------------------------------------------------------------
-	## (Uncomment to plot as inset in spatial-IAV plot) 
-	# u <- par("usr")
-	# v <- c(
-	#   grconvertX(u[1:2], "user", "ndc"),
-	#   grconvertY(u[3:4], "user", "ndc")
-	# )
-	# v_orig <- v
-	# v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
-	# par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
-	if (makepdf) pdf("fig/hist_slopes_anomalies_annual.pdf")
-		hist( adf_stats$slope, xlim=c(-5,5), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 50, xlab="slope" )
-		abline( v=1.0, col="red" )
-		axis( 1, cex.axis=1.0, xlab="slope" )
-		title( "Slopes of annual regressions" )
-	if (makepdf) dev.off()
+	# ## Histogram of slopes
+	# ##------------------------------------------------------------
+	# ## (Uncomment to plot as inset in spatial-IAV plot) 
+	# # u <- par("usr")
+	# # v <- c(
+	# #   grconvertX(u[1:2], "user", "ndc"),
+	# #   grconvertY(u[3:4], "user", "ndc")
+	# # )
+	# # v_orig <- v
+	# # v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
+	# # par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
+	# if (makepdf) pdf("fig/hist_slopes_anomalies_annual.pdf")
+	# 	hist( adf_stats$slope, xlim=c(-5,5), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 50, xlab="slope" )
+	# 	abline( v=1.0, col="red" )
+	# 	axis( 1, cex.axis=1.0, xlab="slope" )
+	# 	title( "Slopes of annual regressions" )
+	# if (makepdf) dev.off()
 
-	## Histogram of R2
-	##------------------------------------------------------------
-	## (Uncomment to plot as inset in spatial-IAV plot) 
-	# u <- par("usr")
-	# v <- c(
-	#   grconvertX(u[1:2], "user", "ndc"),
-	#   grconvertY(u[3:4], "user", "ndc")
-	# )
-	# v_orig <- v
-	# v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
-	# par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
-	if (makepdf) pdf("fig/hist_r2_anomalies_annual.pdf")
-		hist( adf_stats$rsq, xlim=c(-1,1), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 12, xlab= bquote( italic(R)^2 ) )
-		abline( v=1.0, col="red" )
-		axis( 1, cex.axis=1.0, xlab = bquote( italic(R)^2 ) )
-		title( bquote( bold(Slopes ~ of ~ italic(R)^2) ) )
-	if (makepdf) dev.off()
+	# ## Histogram of R2
+	# ##------------------------------------------------------------
+	# ## (Uncomment to plot as inset in spatial-IAV plot) 
+	# # u <- par("usr")
+	# # v <- c(
+	# #   grconvertX(u[1:2], "user", "ndc"),
+	# #   grconvertY(u[3:4], "user", "ndc")
+	# # )
+	# # v_orig <- v
+	# # v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
+	# # par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
+	# if (makepdf) pdf("fig/hist_r2_anomalies_annual.pdf")
+	# 	hist( adf_stats$rsq, xlim=c(-1,1), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 12, xlab= bquote( italic(R)^2 ) )
+	# 	abline( v=1.0, col="red" )
+	# 	axis( 1, cex.axis=1.0, xlab = bquote( italic(R)^2 ) )
+	# 	title( bquote( bold(Slopes ~ of ~ italic(R)^2) ) )
+	# if (makepdf) dev.off()
 	
 }
 
@@ -619,7 +619,8 @@ plot_modobs_meandoy <- function( meandoydf, meandoydf_stats, makepdf=FALSE ){
 plot_by_doy_allsites <- function( meandoydf_stats, makepdf=FALSE ){
 	system( "mkdir -p fig/meandoy_bysite" )
 	mylist <- read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
-	tmp <- purrr::map( filter( meandoydf_stats, sitename %in% mylist )$data, ~plot_by_doy_bysite(., makepdf = makepdf) )
+	# tmp <- purrr::map( filter( meandoydf_stats, sitename %in% mylist )$data, ~plot_by_doy_bysite(., makepdf = makepdf) )
+	tmp <- purrr::map( meandoydf_stats$data, ~plot_by_doy_bysite(., makepdf = makepdf) )
 }
 
 
@@ -690,7 +691,7 @@ plot_modobs_monthly <- function( mdf, makepdf=FALSE, ... ){
 		analyse_modobs( 
 			gpp_mod, 
 			gpp_obs, 
-			heat=TRUE, 
+			heat = TRUE, 
 			ylab = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), 
 			xlab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ),
 			plot.title = "Correlation of monthly GPP",
@@ -698,6 +699,28 @@ plot_modobs_monthly <- function( mdf, makepdf=FALSE, ... ){
 		) )
 	if (makepdf) dev.off()
 	return( modobs_mdf )
+}
+
+
+##------------------------------------------------------------
+## Annual values (absolute)
+##------------------------------------------------------------
+## observed vs. modelled
+plot_modobs_annual <- function( adf, makepdf=FALSE, ... ){
+	source("analyse_modobs.R")
+	if (makepdf) pdf("fig/modobs_annual.pdf")
+	modobs_adf <- with( adf, 
+		analyse_modobs( 
+			gpp_mod, 
+			gpp_obs, 
+			heat = FALSE, 
+			ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), 
+			xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ),
+			plot.title = "Correlation of annual GPP",
+			...
+		) )
+	if (makepdf) dev.off()
+	return( modobs_adf )
 }
 
 

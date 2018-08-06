@@ -1,12 +1,14 @@
 calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE ){
 
+  require(readr)
+  
   ##----------------------------------------------------------------
   ## Collect observational data used as calibration target
   ##----------------------------------------------------------------
   if (file.exists("ddf_obs.Rdata")&!overwrite){
     load("ddf_obs.Rdata")
   } else {
-    print("Collecting observational target data takes long ...")
+    print("Collecting observational target data ...")
     ddf_obs <- get_obs( settings_calib, settings_sims )
     save( ddf_obs, file = "ddf_obs.Rdata" )
   }
@@ -18,15 +20,38 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
   # with( test, plot( date, gpp_obs, type="l" ) )
   # with( test, polygon( c(date, rev(date)), c( min, rev(max)), border = NA, col = rgb(0,0,0,0.3) ) )
 
+  # ##----------------------------------------------------------------
+  # ## Simple data filtering excluding by low soil moisture and low temperature
+  # ##----------------------------------------------------------------
+  # ## subset and make global 
+  # obs <<- ddf_obs %>%
+  #   ## "filter" data, i.e. replace by NA if above/below a certaint temperature or soil moisture threshold
+  #   mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) ) %>% # "filtering" by minimum temperature
+  #   mutate( gpp_obs = ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) ) %>% # "filtering" by maximum temperature
+  #   mutate( gpp_obs = ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) ) %>% # "filtering" by minimum soil moisture
+  #   dplyr::select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
+
+  ##----------------------------------------------------------------
+  ## More sophisticated data filtering excluding by low where soil
+  ## moisture obviously doesn't affect fluxes based on analysis by
+  ## Stocker et al. (2018) New Phytologist, and exclusing by simple
+  ## low temperature.
+  ##----------------------------------------------------------------
+  ## For calibration, use only non-drought data from sites where the flux/RS-based drought detection 
+  ## worked well (see Stocker et al., 2018 New Phytologist). This is based on the fLUE data available
+  ## through Zenodo (https://zenodo.org/record/1158524#.W2fz2dgzbUI).
+  ddf_obs <-  read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+              dplyr::filter( !is.na(cluster) ) %>%
+              dplyr::select( site, date, is_flue_drought ) %>%
+              dplyr::rename( sitename = site ) %>%
+              right_join( ddf_obs, by = c( "sitename", "date" ) )
+
   ## subset and make global 
   obs <<- ddf_obs %>%
-    ## "filter" data, i.e. replace by NA if above/below a certaint temperature or soil moisture threshold
-    mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) ) %>% # "filtering" by minimum temperature
-    mutate( gpp_obs = ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) ) %>% # "filtering" by maximum temperature
-    mutate( gpp_obs = ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) ) %>% # "filtering" by minimum soil moisture
-    dplyr::select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
-
-  print("...done.")  
+          mutate( gpp_obs = ifelse( is_flue_drought, NA, gpp_obs ) ) %>%
+          mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) ) %>% # "filtering" by minimum temperature
+          mutate( gpp_obs = ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) ) %>% # "filtering" by maximum temperature
+          dplyr::select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
 
   ##----------------------------------------------------------------
   ## Set up for calibration ensemble
@@ -75,7 +100,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
     proc.time() - ptm
     print(optim_par_gensa$par)
 
-    filn <- paste0("out_gensa_", settings_calib$name, ".Rdat")
+    filn <- paste0( here, "/out_gensa_", settings_calib$name, ".Rdat")
     print( paste0( "writing output from GenSA function to ", filn ) )
     save( optim_par_gensa, file = filn )
 
@@ -91,18 +116,18 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
     ptm <- proc.time()
     optim_par_optimr = optimr(
         par   = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
-        fn    = cost_rmse,
+        fn    = cost_mae,
         control = list( maxit = settings_calib$maxit )
         )
     proc.time() - ptm
     print(optim_par_optimr$par)
 
-    filn <- paste0("out_optimr_", settings_calib$name, ".Rdat")
+    filn <- paste0( here, "/out_optimr_", settings_calib$name, ".Rdat")
     print( paste0( "writing output from optimr function to ", filn ) )
     save( optim_par_optimr, file = filn )
 
     ## save optimised parameters
-    opt <- optim_par_optimr$par[1]
+    opt <- optim_par_optimr$par[1] %>% unname()
     settings_calib$par$kphio$opt <- opt
 
 
@@ -121,10 +146,44 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
     optim_par_bayesiantools <- runMCMC( bayesianSetup = bt_setup, sampler = "DEzs", settings = bt_settings )
     proc.time() - ptm
 
+  } else if (settings_calib$method=="linscale"){
+    ##----------------------------------------------------------------
+    ## calibrate the quantum yield efficiency parameter ('kphio') 
+    ## applied as a linear scalar to simulated GPP.
+    ##----------------------------------------------------------------
+    ## Combine obs and mod by columns and make global
+    modobs <<- bind_cols( obs, mod ) %>% 
+               mutate( gpp_mod = gpp_mod / param_init )
+
+    require(optimr)
+    ptm <- proc.time()
+    optim_par_optimr = optimr(
+        par          = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
+        fn           = cost_linscale_rmse,
+        control      = list( maxit = settings_calib$maxit )
+        )
+    proc.time() - ptm
+    print(optim_par_optimr$par)
+
+    filn <- paste0( here, "/out_optimr_", settings_calib$name, ".Rdat")
+    print( paste0( "writing output from optimr function to ", filn ) )
+    save( optim_par_optimr, file = filn )
+
+    ## save optimised parameters
+    opt <- optim_par_optimr$par[1] %>% unname()
+    settings_calib$par$kphio$opt <- opt
+
   }
 
   setwd( here )
 
+  ## check
+  modobs <- modobs %>% mutate( gpp_mod = gpp_mod * opt )
+  source("analyse_modobs.R")
+  stats <- analyse_modobs( modobs$gpp_mod, modobs$gpp_obs, heat = TRUE )
+  print("Statistics of calibrated model:")
+  print(stats)
+  
   ## Write calibrated parameters into a CSV file
   vec <- unlist( lapply( settings_calib$par, function(x) x$opt ) )
   df <- as_tibble(vec) %>% setNames( names(vec) )
@@ -137,7 +196,8 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
 }
 
 ##------------------------------------------------------------
-## Generic cost function of model-observation (mis-)match
+## Generic cost function of model-observation (mis-)match using
+## root mean square error.
 ##------------------------------------------------------------
 cost_rmse <- function( par, inverse = FALSE ){
 
@@ -154,6 +214,38 @@ cost_rmse <- function( par, inverse = FALSE ){
   cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
   
   if (inverse) cost <- 1.0 / cost
+
+  return(cost)
+}
+
+##------------------------------------------------------------
+## Cost function of linearly scaled output
+##------------------------------------------------------------
+cost_linscale_rmse <- function( par ){
+  
+  ## Calculate cost (RMSE). 'modobs' is a global variable.
+  cost <- sqrt( mean( ( par * modobs$gpp_mod - modobs$gpp_obs )^2, na.rm = TRUE ) )
+  
+  return(cost)
+}
+
+##------------------------------------------------------------
+## Generic cost function of model-observation (mis-)match using
+## mean absolute error.
+##------------------------------------------------------------
+cost_mae <- function( par ){
+
+  ## execute model for this parameter set
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par[1] ), " | ./run", model ), intern = TRUE )
+
+  ## read output from calibration run
+  out <- read_fwf( outfilnam, col_positions )
+  
+  ## Combine obs and mod by columns
+  out <- bind_cols( obs, out )
+  
+  ## Calculate cost (RMSE)
+  cost <- mean( abs( out$gpp_mod - out$gpp_obs ), na.rm = TRUE )
 
   return(cost)
 }

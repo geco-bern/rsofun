@@ -68,6 +68,7 @@ read_sofun <- function( settings, setup ){
   } else {
     tmp <- purrr::map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
   }
+  rm("tmp")
 
   ## Open and read daily output from NetCDF file for each site
   print("reading from NetCDF files...")
