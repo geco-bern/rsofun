@@ -159,29 +159,29 @@ siteinfo <- prepare_metainfo_fluxnet2015(
 
 Then define the calibration settings as:
 ```{r}
-## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
-## and exclude sites where C4 vegetation is present.
-calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
-              dplyr::filter( !is.na(cluster) ) %>%
-              dplyr::select( site ) %>%
-              distinct() %>%
+# ## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
+# ## and exclude sites where C4 vegetation is present.
+# calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+#               dplyr::filter( !is.na(cluster) ) %>%
+#               dplyr::select( site ) %>%
+#               distinct() %>%
+# 
+#               ## additionally exclude C4
+#               dplyr::filter( !(site %in% dplyr::filter(siteinfo$light, c4 )$mysitename) ) %>%
+# 
+#               # ## use only sites from selected climate zones and in northern hemisphere
+#               # left_join( read_csv( "siteinfo_eval.csv" ) %>% dplyr::select( site = sitename, lat, koeppen_code ), by = "site" ) %>%
+#               # dplyr::filter( koeppen_code %in% c("Dfc", "Dfb", "Cwc", "Cfb", "Cfa" ) & lat > 0.0 ) %>%
+# 
+#               dplyr::select( site ) %>%
+#               unlist()
 
-              ## additionally exclude C4
-              dplyr::filter( !(site %in% dplyr::filter(siteinfo$light, c4 )$mysitename) ) %>%
-
-              # ## use only sites from selected climate zones and in northern hemisphere
-              # left_join( read_csv( "siteinfo_eval.csv" ) %>% dplyr::select( site = sitename, lat, koeppen_code ), by = "site" ) %>%
-              # dplyr::filter( koeppen_code %in% c("Dfc", "Dfb", "Cwc", "Cfb", "Cfa" ) & lat > 0.0 ) %>%
-
-              dplyr::select( site ) %>%
-              unlist()
-
-# calibsites <- c("FR-LBr", "US-Var")
+calibsites <- c("FR-LBr", "US-Var", "FR-Pue", "AU-DaP", "BE-Bra")
 
 settings_calib <- list(
   name             = paste0( "kphio_gpp_fluxnet2015_", settings_input$fapar ),
   par              = list( kphio = list( lower=0.01, upper=0.12, init=0.05 ) ),
-  method           = "linscale",
+  method           = "gensa",
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
   timescale        = list( gpp = "d" ),
@@ -266,25 +266,28 @@ inputdata <- prepare_input_sofun(
 ## Calibrate the model
 Calibrate SOFUN, returns calibration settings, now including calibrated parameters inside the list (`settings_calib$par[[param_name]]$opt`).
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
-settings_calib <- calib_sofun( 
-  setup = setup_sofun, 
-  settings_calib = settings_calib, 
+settings_calib <- calib_sofun(
+  setup = setup_sofun,
+  settings_calib = settings_calib,
   settings_sims = settings_sims,
   overwrite = TRUE
   )
 ```
 
 ## Run the model
-For testing: Run and evaluate the model only for sites used in the calibration step.
-```{r}
-settings_sims$sitenames <- settings_calib$sitenames
-settings_eval$sitenames <- settings_calib$sitenames
-siteinfo$light <- siteinfo$light %>% dplyr::filter( mysitename %in% settings_eval$sitenames )
-siteinfo$full  <- siteinfo$full  %>% dplyr::filter( mysitename %in% settings_eval$sitenames )
-save( settings_eval, file = "settings_eval.Rdata" )
-save( settings_sims, file = "settings_sims.Rdata" )
-save( siteinfo, file = "siteinfo.Rdata" )
-```
+
+<!-- ### Additional testing -->
+<!-- For testing: Run and evaluate the model only for sites used in the calibration step. -->
+<!-- ```{r} -->
+<!-- settings_sims$sitenames <- settings_calib$sitenames -->
+<!-- settings_eval$sitenames <- settings_calib$sitenames -->
+<!-- siteinfo$light <- siteinfo$light %>% dplyr::filter( mysitename %in% settings_eval$sitenames ) -->
+<!-- siteinfo$full  <- siteinfo$full  %>% dplyr::filter( mysitename %in% settings_eval$sitenames ) -->
+<!-- save( settings_eval, file = "settings_eval.Rdata" ) -->
+<!-- save( settings_sims, file = "settings_sims.Rdata" ) -->
+<!-- save( siteinfo, file = "siteinfo.Rdata" ) -->
+<!-- ``` -->
+
 
 Run SOFUN with calibrated parameters. Set `r setup_sofun$is_calib <- FALSE` to write normal SOFUN output.
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
@@ -299,12 +302,15 @@ save( mod, file="mod.Rdata" )
 ```
 
 ## Evaluate the model
-Evaluate SOFUN results based on calibrated parameters. The first argument to the `eval_sofun()` function is the output from `runread()` executed above. (Here, in order to avoid running all steps while knitting this RMarkdown file, we first read model outputs from a previous run.)
-```{r, message = FALSE, echo=FALSE}
-knitr::knit( "eval_sofun.Rmd" )
-system("open eval_sofun.pdf")
-# load( "mod.Rdata" )
-# out_eval <- eval_sofun( mod, settings_eval = settings_eval, settings_sims = settings_sims, siteinfo = siteinfo, overwrite = TRUE )
-# save( out_eval, file="out_eval.Rdata" )
-```
+
+Head over to `eval_sofun.Rmd` and knit it.
+
+<!-- Evaluate SOFUN results based on calibrated parameters. The first argument to the `eval_sofun()` function is the output from `runread()` executed above. (Here, in order to avoid running all steps while knitting this RMarkdown file, we first read model outputs from a previous run.) -->
+<!-- ```{r, message = FALSE, echo=FALSE} -->
+<!-- knitr::knit( "eval_sofun.Rmd" ) -->
+<!-- system("open eval_sofun.pdf") -->
+<!-- # load( "mod.Rdata" ) -->
+<!-- # out_eval <- eval_sofun( mod, settings_eval = settings_eval, settings_sims = settings_sims, siteinfo = siteinfo, overwrite = TRUE ) -->
+<!-- # save( out_eval, file="out_eval.Rdata" ) -->
+<!-- ``` -->
 
