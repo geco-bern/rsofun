@@ -51,6 +51,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
           mutate( gpp_obs = ifelse( is_flue_drought, NA, gpp_obs ) ) %>%
           mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) ) %>% # "filtering" by minimum temperature
           mutate( gpp_obs = ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) ) %>% # "filtering" by maximum temperature
+          mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) %>% # "filtering" pre-MODIS data
           dplyr::select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
 
   ##----------------------------------------------------------------

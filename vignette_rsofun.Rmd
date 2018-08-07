@@ -49,8 +49,8 @@ settings_sims <- list(
   lonlat          = FALSE,
   name            = "fluxnet2015",
   dir_sofun       = "~/sofun/trunk/",
-  path_output     = "~/sofun/output_fluxnet2015_sofun/s18/",
-  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s18/",
+  path_output     = "~/sofun/output_fluxnet2015_sofun/s20/",
+  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s20/",
   path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
@@ -103,8 +103,9 @@ settings_input <-  list(
   ppfd                     = "fluxnet2015",
   netrad                   = NA,
   cloudcover               = "cru_ts4_01",
-  fapar                    = "MODIS_EVI_MOD13Q1",
-  # fapar                    = "MODIS_FPAR_MCD15A3H",
+  # fapar                    = "MODIS_EVI_MOD13Q1",
+  fapar                    = "MODIS_FPAR_MCD15A3H",
+  splined_fapar            = TRUE,
   co2                      = "cmip",
   path_cx1data             = "~/data/",
   path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
@@ -121,6 +122,7 @@ settings_input <-  list(
 - `ppfd`: See `temperature`.
 - `netrad`: See `temperature`.
 - `fapar`: A character string specifying the type of fAPAR data used as input. Implemented for use of data from CX1 are `"MODIS_FPAR_MCD15A3H"` and `"MODIS_EVI_MOD13Q1"`. Use `NA` in case no fAPAR data is used as forcing (internally simulated fAPAR).
+- `splined_fapar`: Logical defining whether splined fAPAR data is to be used. If `FALSE`, linearly interpolated fAPAR data is used.
 - `co2`: A character string specifying which CO$_2$ file should be used (globally uniform and identical for each site in an ensemble). All available CO$_2$ forcing files are located on CX1 at `/work/bstocker/labprentice/data/co2/`. `co2="cmip"` specifies that the CMIP-standard CO2 file `cCO2_rcp85_const850-1765.dat` should be used.
 - `path_cx1data`: A character string specifying the local directory that mirrors the data directory on CX1 (very handy!).
 - `path_fluxnet2015`: A character string specifying the path where standard FLUXNET 2015 CSV files are located.         
@@ -159,29 +161,29 @@ siteinfo <- prepare_metainfo_fluxnet2015(
 
 Then define the calibration settings as:
 ```{r}
-# ## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
-# ## and exclude sites where C4 vegetation is present.
-# calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
-#               dplyr::filter( !is.na(cluster) ) %>%
-#               dplyr::select( site ) %>%
-#               distinct() %>%
-# 
-#               ## additionally exclude C4
-#               dplyr::filter( !(site %in% dplyr::filter(siteinfo$light, c4 )$mysitename) ) %>%
-# 
-#               # ## use only sites from selected climate zones and in northern hemisphere
-#               # left_join( read_csv( "siteinfo_eval.csv" ) %>% dplyr::select( site = sitename, lat, koeppen_code ), by = "site" ) %>%
-#               # dplyr::filter( koeppen_code %in% c("Dfc", "Dfb", "Cwc", "Cfb", "Cfa" ) & lat > 0.0 ) %>%
-# 
-#               dplyr::select( site ) %>%
-#               unlist()
+## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
+## and exclude sites where C4 vegetation is present.
+calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+              dplyr::filter( !is.na(cluster) ) %>%
+              dplyr::select( site ) %>%
+              distinct() %>%
 
-calibsites <- c("FR-LBr", "US-Var", "FR-Pue", "AU-DaP", "BE-Bra")
+              ## additionally exclude C4
+              dplyr::filter( !(site %in% dplyr::filter(siteinfo$light, c4 )$mysitename) ) %>%
+
+              # ## use only sites from selected climate zones and in northern hemisphere
+              # left_join( read_csv( "siteinfo_eval.csv" ) %>% dplyr::select( site = sitename, lat, koeppen_code ), by = "site" ) %>%
+              # dplyr::filter( koeppen_code %in% c("Dfc", "Dfb", "Cwc", "Cfb", "Cfa" ) & lat > 0.0 ) %>%
+
+              dplyr::select( site ) %>%
+              unlist()
+
+# calibsites <- c("FR-LBr", "US-Var", "FR-Pue", "AU-DaP", "BE-Bra")
 
 settings_calib <- list(
   name             = paste0( "kphio_gpp_fluxnet2015_", settings_input$fapar ),
   par              = list( kphio = list( lower=0.01, upper=0.12, init=0.05 ) ),
-  method           = "gensa",
+  method           = "linscale",
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
   timescale        = list( gpp = "d" ),
@@ -252,13 +254,13 @@ save( settings_sims, file = "settings_sims.Rdata" )
 
 ## Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see [here](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2). 
-```{r, eval=FALSE, message=FALSE, warning=FALSE}
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
 inputdata <- prepare_input_sofun( 
   settings_input = settings_input, 
   settings_sims = settings_sims, 
   return_data = FALSE, 
   overwrite_climate = FALSE, 
-  overwrite_fapar = FALSE, 
+  overwrite_fapar = TRUE, 
   verbose = TRUE 
   )
 ```
@@ -303,7 +305,13 @@ save( mod, file="mod.Rdata" )
 
 ## Evaluate the model
 
-Head over to `eval_sofun.Rmd` and knit it.
+Head over to `eval_sofun.Rmd` and knit it. Save settings to files in order to read them in by eval_sofun.
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+save( settings_eval, file = "settings_eval.Rdata" )
+save( settings_sims, file = "settings_sims.Rdata" )
+save( siteinfo, file = "siteinfo.Rdata" )
+```
+
 
 <!-- Evaluate SOFUN results based on calibrated parameters. The first argument to the `eval_sofun()` function is the output from `runread()` executed above. (Here, in order to avoid running all steps while knitting this RMarkdown file, we first read model outputs from a previous run.) -->
 <!-- ```{r, message = FALSE, echo=FALSE} -->

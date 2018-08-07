@@ -173,7 +173,8 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     dir <- paste0( settings_sims$path_input, "/sitedata/fapar/" )
     if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
     zz <- file( paste0(dir, "dfapar_source.txt"), "w")
-    tmp <- cat( paste0("fapar_forcing_source                    ", settings_input$fapar) , "\n", file=zz )  # the blanks are necessary! 
+    if (settings_input$splined_fapar) {fapar_forcing_source <- paste0( settings_input$fapar, "_spl" )} else {fapar_forcing_source <- settings_input$fapar}
+    tmp <- cat( paste0("fapar_forcing_source                    ", fapar_forcing_source) , "\n", file=zz )  # the blanks are necessary! 
     close(zz)
 
     ## prepare the fapar input files for each site
@@ -449,8 +450,13 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
         ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
         ## IMPORTANT: This is gapfilled data. Original data is in <settings_input$path_MODIS_FPAR_MCD15A3H>/raw/
         ## Gap-filling is done with 'getin/gapfill_modis.R'. The gapfilling step is not yet implemented within prepare_input_sofun().
-        ddf <- read_csv( paste0( settings_input$path_MODIS_FPAR_MCD15A3H, filn ) ) %>%
-          dplyr::select( date, fapar = modisvar_interpol) %>%
+        tmp <- read_csv( paste0( settings_input$path_MODIS_FPAR_MCD15A3H, filn ) )
+        if (settings_input$splined_fapar){
+          tmp <- tmp %>% dplyr::select( date, fapar = spline )
+        } else {
+          tmp <- tmp %>% dplyr::select( date, fapar = interpl )
+        }
+        ddf <- tmp %>%
           mutate( fapar = as.numeric(fapar) ) %>%
           right_join( ddf, by = "date" )
 
@@ -468,8 +474,13 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
         ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
         ## IMPORTANT: This is gapfilled data. Original data is in <settings_input$path_MODIS_EVI_MOD13Q1>/raw/
         ## Gap-filling is done with 'getin/gapfill_modis.R'. The gapfilling step is not yet implemented within prepare_input_sofun().
-        ddf <- read_csv( paste0( settings_input$path_MODIS_EVI_MOD13Q1, filn ) ) %>%
-          dplyr::select( date, fapar = modisvar_interpol) %>%
+        tmp <- read_csv( paste0( settings_input$path_MODIS_EVI_MOD13Q1, filn ) )
+        if (settings_input$splined_fapar){
+          tmp <- tmp %>% dplyr::select( date, fapar = spline )
+        } else {
+          tmp <- tmp %>% dplyr::select( date, fapar = interpl )
+        }
+        ddf <- tmp %>%
           mutate( fapar = as.numeric(fapar) ) %>%
           right_join( ddf, by = "date" )
         
