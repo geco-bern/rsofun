@@ -145,7 +145,6 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 
 		  ## Generate vector of starting dates of X-day periods, making sure the 1st of Jan is always the start of a new period
 			listyears <- seq( ymd("1990-01-01"), ymd("2018-01-01"), by = "year" )	                 
-			ndays <- 5
 			breaks <- purrr::map( as.list(listyears), ~seq( from=., by=paste0( settings_eval$agg, " days"), length.out = ceiling(365 / settings_eval$agg)) ) %>% Reduce(c,.)
 		
 			## take mean across periods
@@ -618,9 +617,9 @@ plot_modobs_meandoy <- function( meandoydf, meandoydf_stats, makepdf=FALSE ){
 ## mean seasonal cycle by site (selected sites only)
 plot_by_doy_allsites <- function( meandoydf_stats, makepdf=FALSE ){
 	system( "mkdir -p fig/meandoy_bysite" )
-	mylist <- read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
-	# tmp <- purrr::map( filter( meandoydf_stats, sitename %in% mylist )$data, ~plot_by_doy_bysite(., makepdf = makepdf) )
-	tmp <- purrr::map( meandoydf_stats$data, ~plot_by_doy_bysite(., makepdf = makepdf) )
+	# mylist <- read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
+	mylist <- c("AU-Tum", "CA-NS3", "CA-NS6", "CA-Obs", "DE-Geb", "DE-Hai", "DE-Kli", "FI-Hyy", "FR-Fon", "FR-LBr", "FR-Pue", "IT-Cpz", "NL-Loo", "US-Ha1", "US-MMS", "US-UMB", "US-WCr")
+	tmp <- purrr::map( filter( meandoydf_stats, sitename %in% mylist )$data, ~plot_by_doy_bysite(., makepdf = makepdf) )
 }
 
 

@@ -291,6 +291,7 @@ write_simulation_parameter_bysite <- function( sitename, settings_sim, settings_
               lGr4                 = ifelse( is.na( settings_sim$c4[[sitename]] ), FALSE, ifelse( settings_sim$c4[[sitename]]==TRUE, TRUE, FALSE  ) ),
               fapar_forcing_source = "dfapar_MODIS_FPAR_MCD15A3H",
               in_ppfd              = settings_sim$in_ppfd,
+              soilmstress          = settings_sim$soilmstress,
               loutplant            = settings_sim$loutplant,
               loutgpp              = settings_sim$loutgpp,
               loutwaterbal         = settings_sim$loutwaterbal,

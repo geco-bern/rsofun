@@ -266,11 +266,11 @@ modobs_adf <- plot_modobs_annual( out_eval$data$adf, makepdf=FALSE )
 <!-- In order to improve comparability, ANNs are trained at (P-) modelled and observed GPP, and functional relationships thus derived for observed and modelled. This improves comparability and is preferred here over evaluating the model directly. As always, observations are in black and modelled in red. -->
 
 <!-- ```{r neuralnet, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE} -->
-<!-- source("eval_response_neuralnet.R") -->
-<!-- eval_response_neuralnet( out_eval$data$ddf, makepdf=FALSE ) -->
+<!-- source("eval_response_gam.R") -->
+<!-- eval_response_gam( out_eval$data$ddf, makepdf=FALSE ) -->
 <!-- ``` -->
 
-<!-- There are several points here: -->
+There are several points here:
 
 - This mixes responses at different time scales and within/across sites.
 - The functional relationships based on the ANN look surprisingly "stiff".

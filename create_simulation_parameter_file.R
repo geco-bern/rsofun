@@ -159,11 +159,11 @@ create_simulation_parameter_file <- function(
     system( paste0( "sed -i ", systr, " 's/XXXfapar_forcing_sourceXXX/NA/g' ", path ) )
   }
 
-  ## fAPAR forcing file name code ('evi_modissubset' or 'modis')
-  if (!is.na(soilmstress)){
-    system( paste0( "sed -i ", systr, " 's/XXXsoilmstressXXX/", soilmstress, "/g' ", path ) )
+  ## switch for soil moisture stress function
+  if (soilmstress){
+    system( paste0( "sed -i ", systr, " 's/XXXsoilmstressXXX/.true./g' ", path ) )
   } else {
-    system( paste0( "sed -i ", systr, " 's/XXXsoilmstressXXX/NA/g' ", path ) )
+    system( paste0( "sed -i ", systr, " 's/XXXsoilmstressXXX/.false./g' ", path ) )
   }  
 
   ## grass harvest file name

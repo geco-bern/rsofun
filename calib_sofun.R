@@ -72,10 +72,12 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
   setwd( settings_sims$dir_sofun )
 
   ## example run to get output file structure
-  param_init <- unlist( lapply( settings_calib$par, function(x) x$init ) )
+  param_init <- unlist( lapply( settings_calib$par, function(x) x$init ) ) %>% unname()
   system( paste0("make ", model) )
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", param_init ), " | ./run", model ), intern = TRUE )  
-  outfilnam <<- paste0( settings_sims$dir_sofun, "output_calib/calibtargets_tmp_fluxnet2015.txt" )
+  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", param_init ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", 0.0546875, param_init[1], param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  
+  outfilnam <<- paste0(paste0(..., collapse = NULL))
   # col_positions <<- fwf_empty( outfilnam, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ), comment = "" ) ## this caused a mean bug, 
   col_positions <<- list( begin = 4, end = 15, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ) ) ## this is how bug is fixed
   mod <- read_fwf( outfilnam, col_positions )
@@ -92,46 +94,37 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
     ##----------------------------------------------------------------
     require(GenSA)
     ptm <- proc.time()
-    optim_par_gensa = GenSA(
-        par   = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
-        fn    = cost_rmse,
-        lower = lapply( settings_calib$par, function(x) x$lower ) %>% unlist(),
-        upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist(),
-        control=list( temperature=4000, max.call=settings_calib$maxit )
-      )
+    out_optim <- GenSA(
+                        par   = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
+                        fn    = cost_rmse,
+                        lower = lapply( settings_calib$par, function(x) x$lower ) %>% unlist(),
+                        upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist(),
+                        control=list( temperature=4000, max.call=settings_calib$maxit )
+                      )
     proc.time() - ptm
-    print(optim_par_gensa$par)
+    print(out_optim$par)
 
     filn <- paste0( here, "/out_gensa_", settings_calib$name, ".Rdat")
     print( paste0( "writing output from GenSA function to ", filn ) )
-    save( optim_par_gensa, file = filn )
-
-    ## save optimised parameters
-    opt <- optim_par_gensa$par[1]
-    settings_calib$par$kphio$opt <- opt
-
+    save( out_optim, file = filn )
+    
   } else if (settings_calib$method=="optimr"){
     ##----------------------------------------------------------------
     ## calibrate the model parameters using R optimr()
     ##----------------------------------------------------------------
     require(optimr)
     ptm <- proc.time()
-    optim_par_optimr = optimr(
-        par   = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
-        fn    = cost_rmse,
-        control = list( maxit = settings_calib$maxit )
-        )
+    out_optim <- optimr(
+                        par     = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
+                        fn      = cost_rmse,
+                        control = list( maxit = settings_calib$maxit )
+                        )
     proc.time() - ptm
-    print(optim_par_optimr$par)
+    print(out_optim$par)
 
     filn <- paste0( here, "/out_optimr_", settings_calib$name, ".Rdat")
     print( paste0( "writing output from optimr function to ", filn ) )
-    save( optim_par_optimr, file = filn )
-
-    ## save optimised parameters
-    opt <- optim_par_optimr$par[1] %>% unname()
-    settings_calib$par$kphio$opt <- opt
-
+    save( out_optim, file = filn )
 
   } else if (settings_calib$method=="BayesianTools"){
     ##----------------------------------------------------------------
@@ -145,7 +138,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
                                         upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist() 
                                         )
     bt_settings <- list( iterations = settings_calib$maxit,  message = TRUE )
-    optim_par_bayesiantools <- runMCMC( bayesianSetup = bt_setup, sampler = "DEzs", settings = bt_settings )
+    out_optim <- runMCMC( bayesianSetup = bt_setup, sampler = "DEzs", settings = bt_settings )
     proc.time() - ptm
 
   } else if (settings_calib$method=="linscale"){
@@ -159,77 +152,35 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
 
     require(optimr)
     ptm <- proc.time()
-    optim_par_linscale = optimr(
-        par            = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
-        fn             = cost_linscale_rmse,
-        control        = list( maxit = settings_calib$maxit )
-        )
+    out_optim <- optimr(
+                        par     = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
+                        fn      = cost_linscale_rmse,
+                        control = list( maxit = settings_calib$maxit )
+                        )
     proc.time() - ptm
-    print(optim_par_linscale$par)
+    print(out_optim$par)
 
     filn <- paste0( here, "/out_linscale_", settings_calib$name, ".Rdat")
     print( paste0( "writing output from linscale function to ", filn ) )
-    save( optim_par_linscale, file = filn )
-
-    ## save optimised parameters
-    opt <- optim_par_linscale$par[1] %>% unname()
-    settings_calib$par$kphio$opt <- opt
+    save( out_optim, file = filn )
 
   }
 
-  # ##----------------------------------------------------------------
-  # ## xxx debug
-  # ##----------------------------------------------------------------
-  # # ## check
-  # # modobs <- modobs %>% mutate( gpp_mod = gpp_mod * opt )
-  # # source("analyse_modobs.R")
-  # # stats <- analyse_modobs( modobs$gpp_mod, modobs$gpp_obs, heat = TRUE )
-  # # print("Statistics of calibrated model:")
-  # # print(stats)
+  ## save optimised parameters
+  ## for calibrating only kphio
+  # settings_calib$par$kphio$opt <- out_optim$par[1]  
   
-  # ## Plot dependency of cost
-  # require(purrr)
-  # df_test <-  tibble( kphio = seq( 0.02, 0.12, by = 0.005 ) )
-  # df_test$cost_linscale = purrr::map( as.list(df_test$kphio), ~cost_linscale_rmse(.) ) %>% unlist()
-  # df_test$cost_simsuite = purrr::map( as.list(df_test$kphio), ~cost_rmse(.) ) %>% unlist()
-
-  # # filn <- "cost_function.pdf"
-  # # print( paste( "plotting cost function into ", filn, "..." ) )
-  # # pdf(filn)
-  # with( df_test, plot( kphio, cost_linscale, pch=16 ) )
-  # with( df_test, lines( kphio, cost_linscale ) )
-  # with( df_test, points( kphio, cost_simsuite, pch=16, col="red" ) )
-  # with( df_test, lines( kphio, cost_simsuite, col="red" ) )
-  # legend("topright", c("linscale", "cost_simsuite"), pch=16, col=c("black", "red"), bty = "n")
-  # # dev.off()
-
-  # ## shows weird deviation of cost calculated with two different approaches (scaling vs. actually executing). 
-  # ## What about underlying daily data? Should be equal with kphio = 0.06 but different with kphio = 0.08. Why?
-  # ## 0.06
-  # cost_linscale_rmse( 0.06, debug = TRUE )
-  # cost_rmse( 0.06, debug = TRUE)
-  # ddf_simsuite <- ddf_simsuite %>% rename( gpp_mod_simsuite = gpp_mod, gpp_obs_simsuite = gpp_obs )
-  # ddf_06 <- ddf_linscale %>% rename( gpp_mod_linscale = gpp_mod, gpp_obs_linscale = gpp_obs ) %>% 
-  #                 right_join( ddf_simsuite, by = "date" )
-  # with(ddf_06, plot(gpp_mod_linscale, gpp_mod_simsuite))
-
-  # ## 0.08
-  # rm("ddf_simsuite"); rm("ddf_linscale")
-  # cost_linscale_rmse( 0.08, debug = TRUE )
-  # cost_rmse( 0.08, debug = TRUE)
-  # ddf_simsuite <- ddf_simsuite %>% rename( gpp_mod_simsuite = gpp_mod, gpp_obs_simsuite = gpp_obs )
-  # ddf_08 <- ddf_linscale %>% rename( gpp_mod_linscale = gpp_mod, gpp_obs_linscale = gpp_obs ) %>% 
-  #                 right_join( ddf_simsuite, by = "date" )
-  # with(ddf_08, plot(gpp_mod_linscale, gpp_mod_simsuite))
-  # ddf_08 <- ddf_08 %>% mutate( diff = gpp_mod_linscale - gpp_mod_simsuite )
-  # with( ddf_08, plot( date, diff ) )  
-  # ##----------------------------------------------------------------
-
+  ## for calibrating temperature ramp and soil moisture stress parameters, holding kphio constant
+  settings_calib$par$temp_ramp_edge$opt <- out_optim$par[1] 
+  settings_calib$par$soilm_par_a$opt    <- out_optim$par[2] 
+  settings_calib$par$soilm_par_b$opt    <- out_optim$par[3] 
+  
   setwd( here )
 
   ## Write calibrated parameters into a CSV file
-  vec <- unlist( lapply( settings_calib$par, function(x) x$opt ) )
-  df <- as_tibble(vec) %>% setNames( names(vec) )
+  vec <- unlist( unname( lapply( settings_calib$par, function(x) x$opt  )) )
+  # df <- as_tibble(vec) %>% setNames( names(vec) )
+  df <- as_tibble(t(vec))
   filn <- paste0("params_opt_", settings_calib$name,".csv")
   print( paste0( "writing calibrated parameters to ", filn ) )
   write_csv( df, path = filn )
@@ -242,10 +193,11 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
 ## Generic cost function of model-observation (mis-)match using
 ## root mean square error.
 ##------------------------------------------------------------
-cost_rmse <- function( par, inverse = FALSE, debug = FALSE ){
+cost_rmse <- function( par, inverse = FALSE ){
 
   ## execute model for this parameter set
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par[1] ), " | ./run", model ), intern = TRUE )
+  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par[1] ), " | ./run", model ), intern = TRUE )
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", 0.0546875, par[1], par[2], par[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
 
   ## read output from calibration run
   out <- read_fwf( outfilnam, col_positions )
@@ -256,9 +208,6 @@ cost_rmse <- function( par, inverse = FALSE, debug = FALSE ){
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
   
-  ## xxx debug
-  if (debug) ddf_simsuite <<- out %>% mutate( gpp_mod = gpp_mod )
-
   if (inverse) cost <- 1.0 / cost
 
   return(cost)
@@ -267,13 +216,10 @@ cost_rmse <- function( par, inverse = FALSE, debug = FALSE ){
 ##------------------------------------------------------------
 ## Cost function of linearly scaled output
 ##------------------------------------------------------------
-cost_linscale_rmse <- function( par, debug = FALSE ){
+cost_linscale_rmse <- function( par ){
   
   ## Calculate cost (RMSE). 'modobs' is a global variable.
   cost <- sqrt( mean( ( par * modobs$gpp_mod - modobs$gpp_obs )^2, na.rm = TRUE ) )
-
-  ## xxx debug
-  if (debug) ddf_linscale <<- modobs %>% mutate( gpp_mod = gpp_mod * par )
 
   return(cost)
 }
