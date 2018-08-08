@@ -159,19 +159,19 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
       tmp <- purrr::map( as.list(settings$sitenames), ~cat( ., "\n", file=zz ) )
       close(zz)
 
-      ## Write total number of simulation years in this ensemble to file (needed in calibration setup)
-      if (!identical(settings_calib, NA)){
-        filn_totrunyears <- paste0( settings$path_input, "run/totrunyears_calib.txt" )
-        zz <- file( filn_totrunyears, "w")
-        tmp <- purrr::map( unlist(settings$nyears)[names(unlist(settings$nyears)) %in% settings_calib$sitenames] %>% sum(), ~cat( ., "\n", file=zz ) )
-        close(zz)
+      # ## Write total number of simulation years in this ensemble to file (needed in calibration setup)
+      # if (!identical(settings_calib, NA)){
+      #   filn_totrunyears <- paste0( settings$path_input, "run/totrunyears_calib.txt" )
+      #   zz <- file( filn_totrunyears, "w")
+      #   tmp <- purrr::map( unlist(settings$nyears)[names(unlist(settings$nyears)) %in% settings_calib$sitenames] %>% sum(), ~cat( ., "\n", file=zz ) )
+      #   close(zz)
 
-        ## Write total number of calibration targets to file
-        filn_nvars_calib <- paste0( settings$path_input, "run/nvars_calib.txt" )
-        zz <- file( filn_nvars_calib, "w")
-        tmp <- cat( length( settings_calib$targetvars ), "\n", file=zz )
-        close(zz)      
-      }
+      #   ## Write total number of calibration targets to file
+      #   filn_nvars_calib <- paste0( settings$path_input, "run/nvars_calib.txt" )
+      #   zz <- file( filn_nvars_calib, "w")
+      #   tmp <- cat( length( settings_calib$targetvars ), "\n", file=zz )
+      #   close(zz)      
+      # }
       
       ##--------------------------------------
       ## Link directories

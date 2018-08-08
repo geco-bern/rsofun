@@ -47,7 +47,8 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 														year = year(date),
 														sitename = x ) ) %>%
 		  							bind_rows() %>%
-		                dplyr::select(-soilm_obs_mean)
+		                dplyr::select(-soilm_obs_mean) %>%
+		                mutate( gpp_obs = ifelse( year < 2000, NA, gpp_obs ) ) # remove pre-modis data
 
 			  ##------------------------------------------------------------
 			  ## Read monthly observational data from files (from monthly files!).
@@ -60,26 +61,28 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 															timescale = "m" ) %>% 
 											mutate( year = year(date),
 															sitename = x ) ) %>%
-			  							bind_rows()
+			  							bind_rows() %>%
+			  							mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) # remove pre-modis data
 
-		  ##------------------------------------------------------------
-		  ## Read daily observational data from files (from daily files!).
-		  ##------------------------------------------------------------
-		  ## loop over sites to get data frame with all variables
-		  print("getting daily FLUXNET-2015_Tier1 data...")
-		  ddf <-  lapply( as.list(settings_eval$sitenames_used), 
-											  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
-														path_fluxnet2015 = settings_eval$path_fluxnet2015, 
-														timescale = "d" ) %>% 
-										mutate( year = year(date),
-														sitename = x ) ) %>%
-		  							bind_rows()
+			  ##------------------------------------------------------------
+			  ## Read daily observational data from files (from daily files!).
+			  ##------------------------------------------------------------
+			  ## loop over sites to get data frame with all variables
+			  print("getting daily FLUXNET-2015_Tier1 data...")
+			  ddf <-  lapply( as.list(settings_eval$sitenames_used), 
+												  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
+															path_fluxnet2015 = settings_eval$path_fluxnet2015, 
+															timescale = "d" ) %>% 
+											mutate( year = year(date),
+															sitename = x ) ) %>%
+			  							bind_rows() %>%
+			  							mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) # remove pre-modis data
 
-		  ## Add forcing data to daily data frame (for neural network-based evaluation)
-		  ddf <- lapply( as.list(settings_eval$sitenames_used), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
-		         bind_rows() %>%
-		         dplyr::select(-year_dec.x, -year_dec.y) %>%
-		  			 right_join( ddf, by = c("sitename", "date") )
+			  ## Add forcing data to daily data frame (for neural network-based evaluation)
+			  ddf <- lapply( as.list(settings_eval$sitenames_used), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
+			         bind_rows() %>%
+			         dplyr::select(-year_dec.x, -year_dec.y) %>%
+			  			 right_join( ddf, by = c("sitename", "date") )
 
 
 		  ##------------------------------------------------------------
