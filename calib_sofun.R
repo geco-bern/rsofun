@@ -24,7 +24,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
   if (!is.na(settings_calib$filter_temp_min)) ddf_obs <- ddf_obs %>% mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) )
 
   ## "filtering" by maximum temperature
-  if (!is.na(settings_calib$filter_temp_max)) ddf_obs <- ddf_obs %>% mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_max, NA, gpp_obs ) )
+  if (!is.na(settings_calib$filter_temp_max)) ddf_obs <- ddf_obs %>% mutate( gpp_obs = ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) )
           
   ## "filtering" by low soil moisture
   if (!is.na(settings_calib$filter_soilm_min)) ddf_obs <- ddf_obs %>% mutate( gpp_obs = ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) )

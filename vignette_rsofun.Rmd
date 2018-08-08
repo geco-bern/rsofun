@@ -190,7 +190,7 @@ settings_calib <- list(
   path_gepisat     = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
   maxit            = 30,
   sitenames        = calibsites,  # dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
-  filter_temp_min  = 15.0,
+  filter_temp_min  = 10.0,
   filter_temp_max  = 35.0,
   filter_soilm_min = 0.6,
   filter_drought   = FALSE
