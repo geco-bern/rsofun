@@ -181,10 +181,7 @@ calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
 
 settings_calib <- list(
   name             = paste0( "kphio_gpp_fluxnet2015_", settings_input$fapar ),
-  # par              = list( kphio = list( lower=0.01, upper=0.12, init=0.05 ) ),
-  par              = list( temp_ramp_edge = list( lower=0.01, upper=15, init=5 ),
-                           soilm_par_a = list( lower=0.0, upper=0.5, init=0.2 ),
-                           soilm_par_b = list( lower=0.0, upper=2.0, init=0.5 ) ),
+  par              = list( kphio = list( lower=0.01, upper=0.12, init=0.05 ) ),
   method           = "optimr",
   targetvars       = c("gpp"),
   datasource       = list( gpp = "fluxnet2015" ),
@@ -195,7 +192,8 @@ settings_calib <- list(
   sitenames        = calibsites,  # dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
   filter_temp_min  = 15.0,
   filter_temp_max  = 35.0,
-  filter_soilm_min = 0.6
+  filter_soilm_min = 0.6,
+  filter_drought   = FALSE
  )
 ```
 
@@ -269,7 +267,7 @@ inputdata <- prepare_input_sofun(
 
 ## Calibrate the model
 Calibrate SOFUN, returns calibration settings, now including calibrated parameters inside the list (`settings_calib$par[[param_name]]$opt`).
-```{r, eval=FALSE, message=FALSE, warning=FALSE}
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
 settings_calib <- calib_sofun(
   setup = setup_sofun,
   settings_calib = settings_calib,

@@ -14,31 +14,6 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
     save( ddf_obs, file = "ddf_obs.Rdata" )
   }
 
-  # ## test plot
-  # test <- filter(ddf_obs, sitename=="FR-Pue" & year(date) %in% c(2003) )
-  # test$min <- apply( select( test, GPP_NT_VUT_REF, GPP_DT_VUT_REF, gpp_obs_gepisat ), 1, FUN = min, na.rm = TRUE )
-  # test$max <- apply( select( test, GPP_NT_VUT_REF, GPP_DT_VUT_REF, gpp_obs_gepisat ), 1, FUN = max, na.rm = TRUE )
-  # with( test, plot( date, gpp_obs, type="l" ) )
-  # with( test, polygon( c(date, rev(date)), c( min, rev(max)), border = NA, col = rgb(0,0,0,0.3) ) )
-
-  # ##----------------------------------------------------------------
-  # ## Simple data filtering excluding by low soil moisture and low temperature
-  # ##----------------------------------------------------------------
-  # ## subset and make global 
-  # obs <<- ddf_obs %>%
-  #   ## "filter" data, i.e. replace by NA if above/below a certaint temperature or soil moisture threshold
-  #   mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) ) %>% # "filtering" by minimum temperature
-  #   mutate( gpp_obs = ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) ) %>% # "filtering" by maximum temperature
-  #   mutate( gpp_obs = ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) ) %>% # "filtering" by minimum soil moisture
-  #   dplyr::select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
-
-  ##----------------------------------------------------------------
-  ## More sophisticated data filtering excluding by low where soil
-  ## moisture obviously doesn't affect fluxes based on analysis by
-  ## Stocker et al. (2018) New Phytologist, and exclusing by simple
-  ## low temperature.
-  ##----------------------------------------------------------------
-
   ##----------------------------------------------------------------
   ## Apply filters
   ##----------------------------------------------------------------
@@ -54,7 +29,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
   ## "filtering" by low soil moisture
   if (!is.na(settings_calib$filter_soilm_min)) ddf_obs <- ddf_obs %>% mutate( gpp_obs = ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) )
   
-  ## "filtering" by whether it's drought
+  ## "filtering" by whether it's a drought based on Stocker et al. (2018) analysis
   if (settings_calib$filter_drought){
     ## For calibration, use only non-drought data from sites where the flux/RS-based drought detection 
     ## worked well (see Stocker et al., 2018 New Phytologist). This is based on the fLUE data available
@@ -105,17 +80,21 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
   outfilnam <<- paste0( settings_sims$dir_sofun, "output_calib/calibtargets_tmp_fluxnet2015.txt" )
   system( paste0("rm ", outfilnam))
   system( paste0("make ", model) )
-  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", param_init ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], param_init[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+
+  ## For calibrating quantum yield efficiency only
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
+
+  # ## For calibration temperature ramp parameters
+  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], param_init[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  
+  # ## For calibrating soil moisture stress parameters
+  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
   
   # col_positions <<- fwf_empty( outfilnam, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ), comment = "" ) ## this caused a mean bug, 
   col_positions <<- list( begin = 4, end = 15, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ) ) ## this is how bug is fixed
   mod <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
 
   if (nrow(mod)!=nrow(obs)) abort("Set overwrite to TRUE to re-read observattional data for calibration.")
-  
-  ## xxx try one run with initial parameters using the cost function
-  # cost <- cost_rmse( lapply( settings_calib$par, function(x) x$init ) %>% unlist() )
 
   ##----------------------------------------------------------------
   ## Do the calibration
@@ -200,9 +179,9 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
 
   ## save optimised parameters
   settings_calib$par$kphio$opt          <- out_optim$par[1]
-  settings_calib$par$temp_ramp_edge$opt <- out_optim$par[2] 
-  # settings_calib$par$soilm_par_a$opt    <- out_optim$par[2] 
-  # settings_calib$par$soilm_par_b$opt    <- out_optim$par[3] 
+  # settings_calib$par$temp_ramp_edge$opt <- out_optim$par[2] 
+  settings_calib$par$soilm_par_a$opt    <- out_optim$par[2] 
+  settings_calib$par$soilm_par_b$opt    <- out_optim$par[3] 
   
   setwd( here )
 
@@ -225,9 +204,15 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
 cost_rmse <- function( par, inverse = FALSE ){
 
   ## execute model for this parameter set
-  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f", par[1] ), " | ./run", model ), intern = TRUE )
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], par[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
+  ## For calibrating quantum yield efficiency only
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
 
+  # ## For calibration temperature ramp parameters
+  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], par[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  
+  # ## For calibrating soil moisture stress parameters
+  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, par[2], par[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  
   ## read output from calibration run
   out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
   
