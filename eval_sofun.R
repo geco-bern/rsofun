@@ -31,6 +31,12 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 	  
 	  metrics$gpp$fluxnet2015 <- list()
 
+	  ##------------------------------------------------------------
+	  ## Get daily model output
+	  ##------------------------------------------------------------
+	  ddf_mod <- lapply( as.list(settings_eval$sitenames_used),  function(x) dplyr::select( mod[[x]], date, gpp_mod = gpp ) %>% mutate( sitename = x ) ) %>%
+	    bind_rows()
+	  
 	  if (!file.exists("adf.Rdata")||!file.exists("ddf.Rdata")||overwrite){
 
 		  ##------------------------------------------------------------
@@ -156,12 +162,6 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, overwrite=T
 			 							 summarise( gpp_obs_mean = mean( gpp_obs, na.rm = TRUE ), gpp_obs_min = min( gpp_obs, na.rm = TRUE ), gpp_obs_max = max( gpp_obs, na.rm = TRUE ), n_obs = sum(!is.na(gpp_obs)) ) %>%
 			               dplyr::rename( gpp_obs = gpp_obs_mean ) %>%
 			               mutate( gpp_obs = ifelse(is.nan(gpp_obs), NA, gpp_obs ), gpp_obs_min = ifelse(is.infinite(gpp_obs_min), NA, gpp_obs_min ), gpp_obs_max = ifelse(is.infinite(gpp_obs_max), NA, gpp_obs_max ) )
-
-		  ##------------------------------------------------------------
-		  ## Get daily model output
-		  ##------------------------------------------------------------
-		  ddf_mod <- lapply( as.list(settings_eval$sitenames_used),  function(x) dplyr::select( mod[[x]] , date, gpp_mod = gpp ) %>% mutate( sitename = x ) ) %>%
-		    bind_rows()
 
 		  ##------------------------------------------------------------
 		  ## Aggregate model output data to annual/monthly/weekly, only for selected sites,

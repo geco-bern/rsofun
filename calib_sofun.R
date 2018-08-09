@@ -81,14 +81,17 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
   system( paste0("rm ", outfilnam))
   system( paste0("make ", model) )
 
-  ## For calibrating quantum yield efficiency only
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
+  # ## For calibrating quantum yield efficiency only
+  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
 
   # ## For calibration temperature ramp parameters
   # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], param_init[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
   
   # ## For calibrating soil moisture stress parameters
   # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+
+  ## Full stack calibration
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], param_init[2], param_init[3], param_init[4] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
   
   # col_positions <<- fwf_empty( outfilnam, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ), comment = "" ) ## this caused a mean bug, 
   col_positions <<- list( begin = 4, end = 15, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ) ) ## this is how bug is fixed
@@ -179,9 +182,9 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
 
   ## save optimised parameters
   settings_calib$par$kphio$opt          <- out_optim$par[1]
-  # settings_calib$par$temp_ramp_edge$opt <- out_optim$par[2] 
-  settings_calib$par$soilm_par_a$opt    <- out_optim$par[2] 
-  settings_calib$par$soilm_par_b$opt    <- out_optim$par[3] 
+  settings_calib$par$temp_ramp_edge$opt <- out_optim$par[2] 
+  settings_calib$par$soilm_par_a$opt    <- out_optim$par[3] 
+  settings_calib$par$soilm_par_b$opt    <- out_optim$par[4] 
   
   setwd( here )
 
@@ -204,14 +207,17 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
 cost_rmse <- function( par, inverse = FALSE ){
 
   ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
+  # ## For calibrating quantum yield efficiency only
+  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
 
   # ## For calibration temperature ramp parameters
-  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], par[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], par[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
   
   # ## For calibrating soil moisture stress parameters
-  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, par[2], par[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, par[2], par[3] ), " | ./run", model ), intern = TRUE )
+
+  ## Full stack calibration
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], par[2], par[3], par[4] ), " | ./run", model ), intern = TRUE )
   
   ## read output from calibration run
   out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
