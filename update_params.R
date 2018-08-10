@@ -1,5 +1,7 @@
 update_params <- function( params_opt, settings ){
   require(stringr)
+
+  system( paste0( "cp ", settings$dir_sofun, "params_std/* ", settings$dir_sofun, "params/") )
   
   if ("kphio" %in% names(params_opt)){
     filn <- paste0( settings$dir_sofun, "params/params_gpp_pmodel.dat") 

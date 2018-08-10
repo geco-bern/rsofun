@@ -98,7 +98,7 @@ The features of variability in GPP, for which model-observation agreement is cal
 
 ## Results of evaluation
 
-```{r, echo=FALSE, message=FALSE}
+```{r, eval=TRUE, echo=FALSE, message=FALSE}
 # Generate data used for plotting and get performance metrics
 source("eval_sofun.R")
 filn <- "out_eval.Rdata"
