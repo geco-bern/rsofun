@@ -31,19 +31,20 @@ source("eval_sofun.R")
 Define the simulation settings as a list. Components of the simulation settings should specify only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (CSV file created "by hand" or some other more clever method for large ensembles - up to you.). The function `prepare_setup_sofun()` complements the simulation settings list by these additional components as lists with elements for each site, nested within the simulation settings list.
 ```r
 settings_sims <- list( 
-  path_siteinfo   = "./metainfo_fluxnet2015",
+  path_siteinfo   = "./metainfo_fluxnet2015.csv",
   ensemble        = TRUE,
   lonlat          = FALSE,
   name            = "fluxnet2015",
   dir_sofun       = "~/sofun/trunk/",
-  path_output     = "~/sofun/output_fluxnet2015_sofun_TEST/",
-  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun_TEST/",
+  path_output     = "~/sofun/output_fluxnet2015_sofun/s21/",
+  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s21/",
   path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
   in_ppfd         = TRUE,
   recycle         = 1,
   spinupyears     = 10,
+  soilmstress     = TRUE,
   loutplant       = FALSE,
   loutgpp         = FALSE,
   loutwaterbal    = FALSE,
@@ -77,6 +78,7 @@ settings_sims <- list(
 - `in_ppfd`: Switch (`TRUE` of `FALSE`) whether PPFD should be read from data (prescribed) or simulated online using SPLASH and prescribed fractional cloud cover data.
 - `recycle`: Periodicity (integer, number of years) of repeating forcing years during spinup (e.g. if the simulation start year is 1982 and `recycle=3`, then forcing years 1979-1981 are repeated during the duration of the model spinup, so that the last year of the spinup is forcing year 1981. For `recycle=1` and simulation start year 1982, forcing year 1981 is used for all years of the model spinup. Here, 'forcing year' refers to the year AD in the climate, CO2, fAPAR, etc. data used as model forcing.
 - `spinupyears`: Integer, number of model spinup years before the transient simulation. Use `spinupyears > 0` if the model contains pool variables that that are simulated by dynamics that depend on their current state (typically soil water storage, or plant and soil carbon pools). Typically `spinupyears = 10` is sufficient to bring soil water pools to equilibrium across the globe (unless you chose a large soil water holding capacity).
+- `soilmstress`: Switch (`TRUE` of `FALSE`) defining whether soil moisture stress function is to be applied to GPP.
 - `lout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (ascii text file for time series). To be anbandoned, only NetCDF output should be maintained.
 - `lncout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (NetCDF file).
 
@@ -91,12 +93,14 @@ settings_input <-  list(
   netrad                   = NA,
   cloudcover               = "cru_ts4_01",
   fapar                    = "MODIS_FPAR_MCD15A3H",
+  splined_fapar            = TRUE,
   co2                      = "cmip",
   path_cx1data             = "~/data/",
   path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_watch_wfdei         = "~/data/watch_wfdei/",
   path_cru_ts4_01          = "~/data/cru/ts_4.01/",
-  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/"
+  path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
+  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/"
   )
 ```
 
@@ -105,9 +109,14 @@ settings_input <-  list(
 - `vpd`: See `temperature`.
 - `ppfd`: See `temperature`.
 - `netrad`: See `temperature`.
-- `fapar`: A character string specifying the type of fAPAR data used as input (e.g. `"MODIS_FPAR_MCD15A3H"`), or `NA` in case no fAPAR data is used as forcing (internally simulated fAPAR).
+- `fapar`: A character string specifying the type of fAPAR data used as input. Implemented for use of data from CX1 are `"MODIS_FPAR_MCD15A3H"` and `"MODIS_EVI_MOD13Q1"`. Use `NA` in case no fAPAR data is used as forcing (internally simulated fAPAR).
+- `splined_fapar`: Logical defining whether splined fAPAR data is to be used. If `FALSE`, linearly interpolated fAPAR data is used.
 - `co2`: A character string specifying which CO$_2$ file should be used (globally uniform and identical for each site in an ensemble). All available CO$_2$ forcing files are located on CX1 at `/work/bstocker/labprentice/data/co2/`. `co2="cmip"` specifies that the CMIP-standard CO2 file `cCO2_rcp85_const850-1765.dat` should be used.
-- `path_cx1data`: the local directory that mirrors the data directory on CX1 (very handy!).
+- `path_cx1data`: A character string specifying the local directory that mirrors the data directory on CX1 (very handy!).
+- `path_fluxnet2015`: A character string specifying the path where standard FLUXNET 2015 CSV files are located.         
+- `path_watch_wfdei`: A character string specifying the path where standard WATCH-WFDEI NetCDF files are located.                  
+- `path_cru_ts4_01`: A character string specifying the path where standard CRU NetCDF files are located.
+- `path<fapar>`: A character string specifying the path where site-specific fapar files are located. This element is named according to the `fapar` setting (element `fapar` in the list `settings_input`). E.g., an element named `path_MODIS_FPAR_MCD15A3H` is required if `fapar = MODIS_FPAR_MCD15A3H`.
 
 ### Model setup
 Define model setup as a list.
