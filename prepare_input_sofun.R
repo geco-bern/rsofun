@@ -71,7 +71,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 
     ## precipitation (rain and snow)
     dst <- 'input/global/climate/prec'
-    if (!dir.exists(dst)) system( paste0('mkdir -p ' + dst) )
+    if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
 
     src <- paste0(settings_input$path_cx1data, 'watch_wfdei/Rainf_daily/*')
     system( paste0('ln -svf ', src, ' ', dst) )
@@ -82,7 +82,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     ## humidity (specific humidity in the case of WATCH-WFDEI)
     src <- paste0(settings_input$path_cx1data, 'watch_wfdei/Qair_daily/*')
     dst <- 'input/global/climate/humd'
-    if (!dir.exists(dst)) system( paste0('mkdir -p ' + dst) )
+    if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
     system( paste0('ln -svf ', src, ' ', dst) )
 
     ## solar (shortwave) radiation
