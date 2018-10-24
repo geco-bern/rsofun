@@ -17,6 +17,7 @@ create_simulation_parameter_file <- function(
   grharvestfilnam      = NA,
   fapar_forcing_source = NA,
   soilmstress          = FALSE,
+  tempstress           = FALSE,
   const_nfert_year     = NA,
   const_clim_year      = NA,
   const_lu_year        = NA,
@@ -164,6 +165,13 @@ create_simulation_parameter_file <- function(
     system( paste0( "sed -i ", systr, " 's/XXXsoilmstressXXX/.true./g' ", path ) )
   } else {
     system( paste0( "sed -i ", systr, " 's/XXXsoilmstressXXX/.false./g' ", path ) )
+  }  
+
+  ## switch for temperature stress function
+  if (tempstress){
+    system( paste0( "sed -i ", systr, " 's/XXXtempstressXXX/.true./g' ", path ) )
+  } else {
+    system( paste0( "sed -i ", systr, " 's/XXXtempstressXXX/.false./g' ", path ) )
   }  
 
   ## grass harvest file name

@@ -292,6 +292,7 @@ write_simulation_parameter_bysite <- function( sitename, settings_sim, settings_
               fapar_forcing_source = "dfapar_MODIS_FPAR_MCD15A3H",
               in_ppfd              = settings_sim$in_ppfd,
               soilmstress          = settings_sim$soilmstress,
+              tempstress           = settings_sim$tempstress ,
               loutplant            = settings_sim$loutplant,
               loutgpp              = settings_sim$loutgpp,
               loutwaterbal         = settings_sim$loutwaterbal,

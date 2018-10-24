@@ -30,6 +30,7 @@ do_grharvest_forcing_file               XXXgrharvestfilnamXXX
 
 # switch for applying soil moisture stress function on GPP
 soilmstress                             XXXsoilmstressXXX
+tempstress                              XXXtempstressXXX
 
 # switches for reading data in as forcing or calculating it online
 in_ppfd                                 XXXin_ppfdXXX

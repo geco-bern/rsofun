@@ -58,6 +58,7 @@ settings_sims <- list(
   recycle         = 1,
   spinupyears     = 10,
   soilmstress     = TRUE,
+  tempstress      = TRUE,
   loutplant       = FALSE,
   loutgpp         = FALSE,
   loutwaterbal    = FALSE,
@@ -92,6 +93,7 @@ settings_sims <- list(
 - `recycle`: Periodicity (integer, number of years) of repeating forcing years during spinup (e.g. if the simulation start year is 1982 and `recycle=3`, then forcing years 1979-1981 are repeated during the duration of the model spinup, so that the last year of the spinup is forcing year 1981. For `recycle=1` and simulation start year 1982, forcing year 1981 is used for all years of the model spinup. Here, 'forcing year' refers to the year AD in the climate, CO2, fAPAR, etc. data used as model forcing.
 - `spinupyears`: Integer, number of model spinup years before the transient simulation. Use `spinupyears > 0` if the model contains pool variables that that are simulated by dynamics that depend on their current state (typically soil water storage, or plant and soil carbon pools). Typically `spinupyears = 10` is sufficient to bring soil water pools to equilibrium across the globe (unless you chose a large soil water holding capacity).
 - `soilmstress`: Switch (`TRUE` of `FALSE`) defining whether soil moisture stress function is to be applied to GPP.
+- `tempstress`: Switch (`TRUE` of `FALSE`) defining whether temperature stress function is to be applied to GPP.
 - `lout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (ascii text file for time series). To be anbandoned, only NetCDF output should be maintained.
 - `lncout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (NetCDF file).
 
