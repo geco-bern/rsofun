@@ -55,14 +55,40 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
     if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
     settings$path_site_paramfil <- write_site_parameter_bysite( settings$name, settings )
 
+    settings$date_start <- list( ymd( paste0( as.character( settings$firstyeartrend ), "-01-01" ) ) )  # is a list
+    names(settings$date_start) <- settings$name
+
+    settings$date_end <- list( ymd( paste0( as.character( settings$firstyeartrend + settings$nyeartrend - 1 ), "-12-31" ) ) )  # is a list
+    names(settings$date_end) <- settings$name
+
+    settings$nyears <- list( settings$nyeartrend )
+    names(settings$nyears) <- settings$name
+
+    ## change additional settings to a named list
+    settings$c3 <- list( settings$c3 )
+    names(settings$c3) <- settings$name
+
+    settings$c4 <- list( settings$c4 )
+    names(settings$c4) <- settings$name
+
     ## Write simulation parameter files for each site
     dirnam <- paste0( settings$path_input, "/run/" )
     if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
     settings$path_simulation_paramfil <- write_simulation_parameter_bysite( settings$name, settings, settings_calib = NA )
 
     ## link input directories
-    system( paste0( "unlink ", settings$dir_sofun, "input/global") )
+    if (file.exists(paste0(settings$dir_sofun, "run")))            system( paste0( "unlink ", settings$dir_sofun, "run") )
+    if (file.exists(paste0(settings$dir_sofun, "site_paramfils"))) system( paste0( "unlink ", settings$dir_sofun, "site_paramfils") )
+    if (file.exists(paste0(settings$dir_sofun, "input/global")))   system( paste0( "unlink ", settings$dir_sofun, "input/global") )
+
+    system( paste0( "ln -sf ", settings$path_input, "run ", settings$dir_sofun, "run") )
+    system( paste0( "ln -sf ", settings$path_input, "site_paramfils ", settings$dir_sofun, "site_paramfils") )
+    
+    if (!dir.exists(paste0(settings$dir_sofun, "input"))) system(paste0("mkdir -p ", settings$dir_sofun, "input"))
     system( paste0( "ln -sf ", settings$path_input, "global ", settings$dir_sofun, "input/global") )
+    
+    if (!dir.exists(paste0( settings$dir_sofun, "params"))) system( paste0( "mkdir ", settings$dir_sofun, "params"))
+    system( paste0( "cp ", settings$dir_sofun, "params_std/* ", settings$dir_sofun, "params/") )  # not linking, but copying so that files may be overwritten after calibration
 
 
   } else {
@@ -189,9 +215,9 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
         ensemble_name <- settings$name
       }
       
-      if (file.exists(paste0( "unlink ", settings$dir_sofun, "run")))            system( paste0( "unlink ", settings$dir_sofun, "run") )
-      if (file.exists(paste0( "unlink ", settings$dir_sofun, "site_paramfils"))) system( paste0( "unlink ", settings$dir_sofun, "site_paramfils") )
-      if (file.exists(paste0( "unlink ", settings$dir_sofun, "input/sitedata"))) system( paste0( "unlink ", settings$dir_sofun, "input/sitedata") )
+      if (file.exists(paste0(settings$dir_sofun, "run")))            system( paste0( "unlink ", settings$dir_sofun, "run") )
+      if (file.exists(paste0(settings$dir_sofun, "site_paramfils"))) system( paste0( "unlink ", settings$dir_sofun, "site_paramfils") )
+      if (file.exists(paste0(settings$dir_sofun, "input/sitedata"))) system( paste0( "unlink ", settings$dir_sofun, "input/sitedata") )
 
       system( paste0( "ln -sf ", settings$path_input, "run ", settings$dir_sofun, "run") )
       system( paste0( "ln -sf ", settings$path_input, "site_paramfils ", settings$dir_sofun, "site_paramfils") )
@@ -221,11 +247,20 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
 }
 
 ##-----------------------------------------------------------
-## Write "site" parameter file into <settings$path_input>/site_paramfils/<settings$grid>.parameter,
-## containing information:
+## Write "site" parameter file into <settings$path_input>/site_paramfils/<settings$grid>.parameter
+##
+## For lonlat simulations, this contains:
 ## - landmask file name
 ## - topography (elevation) file name
 ## - soil type file name
+##
+## For site-scale simulations, this contains:
+## - longitude
+## - latitude
+## - altitude (elevevation)
+## - soil code (type)
+## - whc (water holding capacity)
+##
 ## These files are given for each <settings$grid> identifier, therefore no need to specify them in the settings.
 ##-----------------------------------------------------------
 write_site_parameter_bysite <- function( sitename, settings ){
@@ -234,15 +269,22 @@ write_site_parameter_bysite <- function( sitename, settings ){
   path <- paste0( settings$path_input, "/site_paramfils/", sitename, ".parameter" )
 
   if (settings$implementation=="fortran"){
-      
-    system( paste0( "cp SITENAME.parameter ", path ) )
-    
-    ## set lon, lat and elv
-    system( paste0( "sed -i ", systr, " 's/XXXLONXXX/", format( settings$lon[[sitename]], nsmall=4 ), "/g' ", path ) )
-    system( paste0( "sed -i ", systr, " 's/XXXLATXXX/", format( settings$lat[[sitename]], nsmall=4 ), "/g' ", path ) )
-    system( paste0( "sed -i ", systr, " 's/XXXALTXXX/", format( settings$elv[[sitename]], nsmall=0 ), "/g' ", path ) )
-    system( paste0( "sed -i ", systr, " 's/XXXWHCXXX/", format( settings$whc[[sitename]], nsmall=0 ), "/g' ", path ) )
 
+    if (settings$lonlat){
+
+      system( paste0( "cp GRIDFILENAMES_", settings$grid, ".parameter ", path ) )
+
+    } else {
+
+      system( paste0( "cp SITENAME.parameter ", path ) )
+      
+      ## set lon, lat and elv
+      system( paste0( "sed -i ", systr, " 's/XXXLONXXX/", format( settings$lon[[sitename]], nsmall=4 ), "/g' ", path ) )
+      system( paste0( "sed -i ", systr, " 's/XXXLATXXX/", format( settings$lat[[sitename]], nsmall=4 ), "/g' ", path ) )
+      system( paste0( "sed -i ", systr, " 's/XXXALTXXX/", format( settings$elv[[sitename]], nsmall=0 ), "/g' ", path ) )
+      system( paste0( "sed -i ", systr, " 's/XXXWHCXXX/", format( settings$whc[[sitename]], nsmall=0 ), "/g' ", path ) )
+
+    }
 
   } else if (settings$implementation=="python"){
 
@@ -289,7 +331,7 @@ write_simulation_parameter_bysite <- function( sitename, settings_sim, settings_
               co2filnam            = "cCO2_rcp85_const850-1765.dat",
               lGr3                 = ifelse( is.na( settings_sim$c4[[sitename]] ), TRUE,  ifelse( settings_sim$c4[[sitename]]==TRUE, FALSE, TRUE  ) ),
               lGr4                 = ifelse( is.na( settings_sim$c4[[sitename]] ), FALSE, ifelse( settings_sim$c4[[sitename]]==TRUE, TRUE, FALSE  ) ),
-              fapar_forcing_source = "dfapar_MODIS_FPAR_MCD15A3H",
+              # fapar_forcing_source = ifelse( settings_sim$lonlat, settings_sim$fapar_forcing_source, NA ),
               in_ppfd              = settings_sim$in_ppfd,
               soilmstress          = settings_sim$soilmstress,
               tempstress           = settings_sim$tempstress ,

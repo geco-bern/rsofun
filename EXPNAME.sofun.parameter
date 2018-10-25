@@ -28,6 +28,9 @@ nfert_noy_forcing_file                  XXXnoyfertfilnamXXX
 nfert_nhx_forcing_file                  XXXnhxfertfilnamXXX
 do_grharvest_forcing_file               XXXgrharvestfilnamXXX
 
+# # Select one of 'fapar3g', 'evi_modis', or 'fpar_modis' (not implemented). Needed only for lonlat simulations.
+# fapar_forcing_source                    fapar3g
+
 # switch for applying soil moisture stress function on GPP
 soilmstress                             XXXsoilmstressXXX
 tempstress                              XXXtempstressXXX

@@ -32,10 +32,13 @@ run_sofun <- function( settings, setup ){
 
     ## Compile source code
     if (setup$do_compile){
+
       cmd <- paste0("make ", setup$model)
       system( cmd )
+
     } else if (!file.exists(paste0("run", setup$model))){
 
+      ## Download executable from CX1
       warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
       download_file_cx1(  path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model),
                           path_local = settings$dir_sofun 

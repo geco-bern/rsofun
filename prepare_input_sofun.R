@@ -21,84 +21,102 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     ## way is to first mirror respective directories to your local
     ## workstation from where simulation is to be executed.
     ##-----------------------------------------------------------
+
+    ## avoid returning data for lonlat simulations (too big)
+    return_data <- FALSE
+
+    dirn <- paste0(settings_sims$path_input, "global")
+    system( paste0('mkdir -p ', dirn) )
+
     ## Grid information
     ##--------------------------------------
-    dirn <- 'input/global/grid'
+    dirn <- paste0(settings_sims$path_input, "global/grid") 
     system( paste0('mkdir -p ', dirn) )
 
     ## elevation
     system( paste0( "ln -svf ", settings_input$path_cx1data, "watch_wfdei/WFDEI-elevation.nc ", dirn ) )
 
     ## land masks at 1 deg and 0.5 deg resolution
-    system( paste0( "ln -svf ", settings_input$path_cx1data, "landmasks/gicew_1x1deg.cdf ", dirn ))
-    system( paste0( "ln -svf ", settings_input$path_cx1data, "landmasks/gicew_halfdeg.cdf ", dirn ))
+    system( paste0( "ln -svf ", settings_input$path_cx1data, "landmasks/gicew_", settings_sims$grid, ".cdf ", dirn ) )      
 
-    ## CO2
+    ## CO2 (globally uniform)
     ##--------------------------------------
-    dirn <- 'input/global/co2'
-    system( paste0( "ln -svf ", settings_input$path_cx1data, "co2/cCO2_rcp85_const850-1765.dat ", dirn ))
-
-    ## fapar (fapar3g)
-    ##--------------------------------------
-    dirn <- 'input/global/fapar'
+    dirn <- paste0(settings_sims$path_input, "global/co2") 
     system( paste0('mkdir -p ', dirn) )
-    system( paste0("ln -svf ", settings_input$path_cx1data, "fAPAR/fAPAR3g_v2/fAPAR3g_v2_1982_2016_FILLED.nc ", dirn ))
+    system( paste0( "ln -svf ", settings_input$path_cx1data, "/co2/cCO2_rcp85_const850-1765.dat ", dirn ) )
 
     ## soil (necessary in Fortran implementation)
     ##--------------------------------------
-    dirn <- 'input/global/soil'
+    dirn <- paste0(settings_sims$path_input, "global/soil") 
     system( paste0('mkdir -p ', dirn) )
-    system( paste0("ln -svf ", settings_input$path_cx1data, 'soil/soilgrids/whc_soilgrids_halfdeg_FILLED.nc', dirn ) )
-    system( paste0("ln -svf ", settings_input$path_cx1data, 'soil/hwsd/soil_type_hwsd_halfdeg.cdf', dirn ) )
+    system( paste0("ln -svf ", settings_input$path_cx1data, '/soil/soilgrids/whc_soilgrids_halfdeg_FILLED.nc ', dirn ) )
+    system( paste0("ln -svf ", settings_input$path_cx1data, '/soil/hwsd/soil_type_hwsd_halfdeg.cdf ', dirn ) )
 
     ## land cover (necessary in Fortran implementation)
     ##--------------------------------------
-    dirn <- 'input/global/landcover'
+    dirn <- paste0(settings_sims$path_input, "global/landcover") 
     system( paste0('mkdir -p ', dirn) )
-    system( paste0("ln -svf ", settings_input$path_cx1data, 'landcover/modis_landcover_halfdeg_2010_FILLED.nc', dirn ) )
+    system( paste0("ln -svf ", settings_input$path_cx1data, '/landcover/modis_landcover_halfdeg_2010_FILLED.nc ', dirn ) )
 
+    ## fapar (fapar3g)
+    ##--------------------------------------
+    dirn <- paste0(settings_sims$path_input, "global/fapar") 
+    system( paste0('mkdir -p ', dirn) )
+    if (settings_input$fapar == "fAPAR3g"){
+      system( paste0("ln -svf ", settings_input$path_fAPAR3g, " ", dirn ))
+    }
 
     ## WATCH-WFDEI climate input data
     ##--------------------------------------
-    dirn <- './input/global/climate'
+    dirn <- paste0(settings_sims$path_input, "global/climate") 
     if (!dir.exists(dirn)) system( paste0('mkdir -p ', dirn) )
 
     ## temperature
-    src <- paste0(settings_input$path_cx1data, 'watch_wfdei/Tair_daily/*')
-    dst <- 'input/global/climate/temp'
-    if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
-    system( paste0('ln -svf ', src, ' ', dst) )
+    if (settings_input$temperature == "watch_wfdei"){
+      src <- paste0(settings_input$path_watch_wfdei, 'Tair_daily/*')
+      dst <- paste0( dirn, '/temp')
+      if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
+      system( paste0('ln -svf ', src, ' ', dst) )
+    }
 
     ## precipitation (rain and snow)
-    dst <- 'input/global/climate/prec'
+    dst <- paste0( dirn, '/prec' )
     if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
 
-    src <- paste0(settings_input$path_cx1data, 'watch_wfdei/Rainf_daily/*')
-    system( paste0('ln -svf ', src, ' ', dst) )
+    if (settings_input$precipitation == "watch_wfdei"){
+      src <- paste0(settings_input$path_watch_wfdei, 'Rainf_daily/*')
+      system( paste0('ln -svf ', src, ' ', dst) )
 
-    src <- paste0(settings_input$path_cx1data, 'watch_wfdei/Snowf_daily/*')
-    system( paste0('ln -svf ', src, ' ', dst) )
+      src <- paste0(settings_input$path_watch_wfdei, 'Snowf_daily/*')
+      system( paste0('ln -svf ', src, ' ', dst) )
+    }
 
-    ## humidity (specific humidity in the case of WATCH-WFDEI)
-    src <- paste0(settings_input$path_cx1data, 'watch_wfdei/Qair_daily/*')
-    dst <- 'input/global/climate/humd'
-    if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
-    system( paste0('ln -svf ', src, ' ', dst) )
+    ## vapour pressure deficit (specific humidity in the case of WATCH-WFDEI, converted online)
+    if (settings_input$vpd == "watch_wfdei"){
+      src <- paste0(settings_input$path_watch_wfdei, 'Qair_daily/*')
+      dst <- paste0( dirn, '/humd' )
+      if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
+      system( paste0('ln -svf ', src, ' ', dst) )
+    }
 
-    ## solar (shortwave) radiation
-    src <- paste0(settings_input$path_cx1data, 'watch_wfdei/SWdown_daily/*')
-    dst <- 'input/global/climate/srad'
-    if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
-    system( paste0('ln -svf ', src, ' ', dst) )
+    ## photosynthetic photon flux density (PPFD) (solar (shortwave) radiation in the case of WATCH-WFDEI, converted online)
+    if (settings_input$ppfd == "watch_wfdei"){
+      src <- paste0(settings_input$path_watch_wfdei, 'SWdown_daily/*')
+      dst <- paste0( dirn, '/srad' )
+      if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
+      system( paste0('ln -svf ', src, ' ', dst) )
+    }
 
     ## CRU climate input data (only ccov)
     ##--------------------------------------
     ## cloud cover
-    src <- paste0(settings_input$path_cx1data, 'cru/ts_3.23/cru_ts3.23.1901.2014.cld.dat.nc')
-    dst <- 'input/global/climate/ccov'
-    if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
-    system( paste0('ln -svf ', src, ' ', dst) )
-
+    if (settings_input$cloudcover == "cru"){
+      filn <- list.files( settings_input$path_cru, pattern = "*cld*" )
+      src <- paste0( settings_input$path_cru, filn )
+      dst <- paste0( dirn, '/ccov' )
+      if (!dir.exists(dst)) system( paste0('mkdir -p ', dst) )
+      system( paste0('ln -svf ', src, ' ', dst) )
+    }
 
   } else {
     #-----------------------------------------------------------
@@ -131,12 +149,12 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     ##-----------------------------------------------------------
     ## If CRU TS data is required, make sure it's available locally
     ##-----------------------------------------------------------
-    if ("cru_ts4_01" %in% settings_input$temperature)   error <- check_download_cru_ts4_01( varnam = "tmp", settings_input, settings_sims )
-    if ("cru_ts4_01" %in% settings_input$precipitation) error <- check_download_cru_ts4_01( varnam = "wet", settings_input, settings_sims )
-    if ("cru_ts4_01" %in% settings_input$precipitation) error <- check_download_cru_ts4_01( varnam = "pre", settings_input, settings_sims )
-    if ("cru_ts4_01" %in% settings_input$vpd)           error <- check_download_cru_ts4_01( varnam = "vap", settings_input, settings_sims )
-    if ("cru_ts4_01" %in% settings_input$vpd)           error <- check_download_cru_ts4_01( varnam = "tmp", settings_input, settings_sims )
-    if ("cru_ts4_01" %in% settings_input$cloudcover)    error <- check_download_cru_ts4_01( varnam = "cld", settings_input, settings_sims )
+    if ("cru" %in% settings_input$temperature)   error <- check_download_cru( varnam = "tmp", settings_input, settings_sims )
+    if ("cru" %in% settings_input$precipitation) error <- check_download_cru( varnam = "wet", settings_input, settings_sims )
+    if ("cru" %in% settings_input$precipitation) error <- check_download_cru( varnam = "pre", settings_input, settings_sims )
+    if ("cru" %in% settings_input$vpd)           error <- check_download_cru( varnam = "vap", settings_input, settings_sims )
+    if ("cru" %in% settings_input$vpd)           error <- check_download_cru( varnam = "tmp", settings_input, settings_sims )
+    if ("cru" %in% settings_input$cloudcover)    error <- check_download_cru( varnam = "cld", settings_input, settings_sims )
 
     ##-----------------------------------------------------------
     ## If fapar data is required, make sure it's available locally    
@@ -168,15 +186,6 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite = overwrite_climate, verbose ) ) %>%
                     bind_rows()
 
-    ## fAPAR input files
-    ## first, place a text file in the fapar input data directory that specifies where it's coming from (needs to be read online by Fortran)                
-    dir <- paste0( settings_sims$path_input, "/sitedata/fapar/" )
-    if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
-    zz <- file( paste0(dir, "dfapar_source.txt"), "w")
-    if (settings_input$splined_fapar) {fapar_forcing_source <- paste0( settings_input$fapar, "_spl" )} else {fapar_forcing_source <- settings_input$fapar}
-    tmp <- cat( paste0("fapar_forcing_source                    ", fapar_forcing_source) , "\n", file=zz )  # the blanks are necessary! 
-    close(zz)
-
     ## prepare the fapar input files for each site
     ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite=overwrite_fapar, verbose=TRUE ) ) %>%
                   bind_rows()
@@ -184,12 +193,29 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     ## CO2 file: link into site-specific input directories
     error_list <- purrr::map( as.list(settings_sims$sitenames), ~check_download_cmip_co2( settings_input, settings_sims, . ) )
 
+    ## fAPAR input files: see below
+
   }
 
+  ##-----------------------------------------------------------
+  ## fAPAR input files
+  ##-----------------------------------------------------------
+  ## first, place a text file in the fapar input data directory that specifies where it's coming from (needs to be read online by Fortran)                
+  dir <- paste0( settings_sims$dir_sofun, "./input" )
+  if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
+  zz <- file( paste0(dir, "/dfapar_source.txt"), "w")
+  # if (settings_input$splined_fapar) {fapar_forcing_source <- paste0( settings_input$fapar, "_spl" )} else {fapar_forcing_source <- settings_input$fapar}
+  tmp <- cat( paste0("fapar_forcing_source                    ", settings_input$fapar) , "\n", file=zz )  # the blanks are necessary! 
+  close(zz)
+
   if (return_data){
+
     return( ddf_climate %>% left_join( ddf_fapar, by=c("date", "sitename")) )
+
   } else {
+
     return("Brexit.")
+
   }
 
 }
@@ -961,7 +987,7 @@ get_clim_cru_monthly <- function( lon, lat, settings, cruvars ){
   require(lubridate)
 
   ## get last year for which data is available
-  filn <- list.files( settings$path_cru_ts4_01, pattern="cld.dat.nc")
+  filn <- list.files( settings$path_cru, pattern="cld.dat.nc")
   start <- regexpr( 20, filn)[1]
   stop <- start + 3
   yrend <- substr( filn, start, stop ) %>% as.numeric %>% ifelse( length(.)==0, 2010, . )
@@ -1176,9 +1202,9 @@ download_cru_from_cx1_filn <- function( varnam, settings_input, filn ){
 
   origpath <- "/work/bstocker/labprentice/data/cru/ts_4.01/"
   filn <-  paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc")
-  if (!dir.exists(settings_input$path_cru_ts4_01)) system(paste0("mkdir -p ", settings_input$path_cru_ts4_01))
+  if (!dir.exists(settings_input$path_cru)) system(paste0("mkdir -p ", settings_input$path_cru))
   if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
-  system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, filn, " ", settings_input$path_cru_ts4_01 ) )
+  system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, filn, " ", settings_input$path_cru ) )
 
   return(NULL)
 }
@@ -1199,12 +1225,12 @@ download_cru_from_cx1 <- function( varnam, settings_input ){
   if (ans=="y"){
     ans <- readline( prompt = "Have you connected to Imperial's VPN? (y/n) " )
     if (ans=="y"){
-      ans <- readline( prompt = paste0("Are you still happy with downloading to ", settings_input$path_cru_ts4_01, "? (y/n)") )
+      ans <- readline( prompt = paste0("Are you still happy with downloading to ", settings_input$path_cru, "? (y/n)") )
       if (ans=="y"){
         error <- download_cru_from_cx1_filn( varnam, settings_input, filn = filn )
       } else {
         path <- readline( prompt = "Please specify a new path: " )
-        settings_input$path_cru_ts4_01 <- path
+        settings_input$path_cru <- path
         error <- download_cru_from_cx1_filn( varnam, settings_input, filn = filn )
       }
     } else {
@@ -1277,9 +1303,9 @@ check_download_watch_wfdei <- function( varnam, settings_input, settings_sims ){
 }
 
 ##--------------------------------------------------------------------------
-## Checks if CRU TS 4.01 files are available for this variable and initiates download if not.
+## Checks if CRU TS files are available for this variable and initiates download if not.
 ##--------------------------------------------------------------------------
-check_download_cru_ts4_01 <- function( varnam, settings_input, settings_sims ){
+check_download_cru <- function( varnam, settings_input, settings_sims ){
 
   require(purrr)
   require(dplyr)
@@ -1287,12 +1313,12 @@ check_download_cru_ts4_01 <- function( varnam, settings_input, settings_sims ){
 
   ## Determine file name, given <settings_input$path_fluxnet2015>
   ## look for data in the given directory
-  filelist <- list.files( settings_input$path_cru_ts4_01, pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
+  filelist <- list.files( settings_input$path_cru, pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
 
   if (length(filelist)==0){
 
     ## No files found at specified location
-    warn( paste0("No files found for CRU TS 4.01 in directory ", settings_input$path_cru_ts4_01) )
+    warn( paste0("No files found for CRU TS 4.01 in directory ", settings_input$path_cru) )
 
     ## Search at a different location?
     path <- readline( prompt="Would you like to search for files recursively from a different directory? Enter the path from which search is to be done: ")
@@ -1310,14 +1336,14 @@ check_download_cru_ts4_01 <- function( varnam, settings_input, settings_sims ){
       
       } else {
         
-        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_cru_ts4_01>
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_cru>
         warn( "Initiating download from Imperial CX1..." )
         error <- download_cru_from_cx1( varnam, settings_input )
-        filelist <- list.files( settings_input$path_cru_ts4_01, pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
+        filelist <- list.files( settings_input$path_cru, pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
       }
 
       if (length(filelist)==0){
-        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_cru_ts4_01>
+        ## Still no files found at specified location. Try to download from Imperial CX1 and place in <settings_input$path_cru>
         warn( "Initiating download from Imperial CX1..." )
         error <- download_cru_from_cx1( varnam, settings_input )
 
@@ -1328,7 +1354,7 @@ check_download_cru_ts4_01 <- function( varnam, settings_input, settings_sims ){
   } 
 
   ## Check if files are now available at specified location.
-  filelist <- list.files( settings_input$path_cru_ts4_01, pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
+  filelist <- list.files( settings_input$path_cru, pattern = paste0( "cru_ts4.01.1901.2016.", varnam, ".dat.nc") )
   if (length(filelist)==0) abort("Download of CRU TS 4.01 data was not successful. No files found.")
   
 }

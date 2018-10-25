@@ -15,7 +15,7 @@ create_simulation_parameter_file <- function(
   noyfertfilnam        = NA,
   nhxfertfilnam        = NA,
   grharvestfilnam      = NA,
-  fapar_forcing_source = NA,
+  # fapar_forcing_source = NA,
   soilmstress          = FALSE,
   tempstress           = FALSE,
   const_nfert_year     = NA,
@@ -153,12 +153,12 @@ create_simulation_parameter_file <- function(
     system( paste0( "sed -i ", systr, " 's/XXXnhxfertfilnamXXX/", nhxfertfilnam, "/g' ", path ) )
   }
 
-  ## fAPAR forcing file name code ('evi_modissubset' or 'modis')
-  if (!is.na(fapar_forcing_source)){
-    system( paste0( "sed -i ", systr, " 's/XXXfapar_forcing_sourceXXX/", fapar_forcing_source, "/g' ", path ) )
-  } else {
-    system( paste0( "sed -i ", systr, " 's/XXXfapar_forcing_sourceXXX/NA/g' ", path ) )
-  }
+  # ## fAPAR forcing file name code ('evi_modissubset' or 'modis')
+  # if (!is.na(fapar_forcing_source)){
+  #   system( paste0( "sed -i ", systr, " 's/XXXfapar_forcing_sourceXXX/", fapar_forcing_source, "/g' ", path ) )
+  # } else {
+  #   system( paste0( "sed -i ", systr, " 's/XXXfapar_forcing_sourceXXX/NA/g' ", path ) )
+  # }
 
   ## switch for soil moisture stress function
   if (soilmstress){
