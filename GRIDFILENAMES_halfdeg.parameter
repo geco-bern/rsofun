@@ -1,0 +1,13 @@
+###############################################################
+# SITE-SPECIFIC PARAMETERS FOR THE SOFUN MODEL
+#--------------------------------------------------------------
+#                                      |
+# write value behind this position:    |->
+
+filnam_landmask                         gicew_halfdeg.cdf
+filnam_topography                       WFDEI-elevation.nc
+filnam_soil                             soilfile_global_halfdeg.nc
+
+#                                      |
+# write value *behind* this position:  |->
+## EOF 

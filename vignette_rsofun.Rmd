@@ -54,10 +54,10 @@ The examples shown below are for site-scale simulations, i.e., where one model r
 <!--   ensemble        = TRUE, -->
 <!--   lonlat          = FALSE, -->
 <!--   name            = "fluxnet2015", -->
-<!--   dir_sofun       = "~/sofun/trunk/", -->
-<!--   path_output     = "~/sofun/output_fluxnet2015_sofun/s21/", -->
-<!--   path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s21/", -->
-<!--   path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/", -->
+<!--   dir_sofun       = "/alphadata01/bstocker/sofun/trunk/", -->
+<!--   path_output     = "/alphadata01/bstocker/sofun/output_fluxnet2015_sofun/s21/", -->
+<!--   path_output_nc  = "/alphadata01/bstocker/sofun/output_nc_fluxnet2015_sofun/s21/", -->
+<!--   path_input      = "/alphadata01/bstocker/sofun/input_fluxnet2015_sofun_TEST/", -->
 <!--   grid            = NA, -->
 <!--   implementation  = "fortran", -->
 <!--   in_ppfd         = TRUE, -->
@@ -79,7 +79,7 @@ The examples shown below are for site-scale simulations, i.e., where one model r
 <!--   ) -->
 <!-- ``` -->
 
-<!-- - `path_siteinfo`: Path (character string) of a CSV file that contains all the information needed for defining simulations. One row for each simulation in an ensemble, typically sites. Columns are as follows: -->
+<!-- - `path_siteinfo`: Path (character string) of a CSV file that contains all the information needed for defining simulations. One row for each simulation in an ensemble, typically sites. Specifying this element is required if `ensemble = TRUE`. Columns are as follows: -->
 <!--     - site name, must be: column number 1  -->
 <!--     - longitude of site, column must be named 'lon' -->
 <!--     - latitude of site, column must be named 'lat' -->
@@ -117,12 +117,12 @@ The examples shown below are for site-scale simulations, i.e., where one model r
 <!--   fapar                    = "MODIS_FPAR_MCD15A3H", -->
 <!--   splined_fapar            = TRUE, -->
 <!--   co2                      = "cmip", -->
-<!--   path_cx1data             = "~/data/", -->
-<!--   path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/", -->
-<!--   path_watch_wfdei         = "~/data/watch_wfdei/", -->
-<!--   path_cru                 = "~/data/cru/ts_4.01/", -->
-<!--   path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/", -->
-<!--   path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/" -->
+<!--   path_cx1data             = "/alphadata01/bstocker/data/", -->
+<!--   path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/", -->
+<!--   path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/", -->
+<!--   path_cru                 = "/alphadata01/bstocker/data/cru/ts_4.01/", -->
+<!--   path_MODIS_EVI_MOD13Q1   = "/alphadata01/bstocker/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/", -->
+<!--   path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/" -->
 <!--   ) -->
 <!-- ``` -->
 
@@ -146,7 +146,7 @@ The examples shown below are for site-scale simulations, i.e., where one model r
 <!-- ```{r} -->
 <!-- setup_sofun <- list(  -->
 <!--   model      = "pmodel", -->
-<!--   dir        = "~/sofun/trunk", -->
+<!--   dir        = "/alphadata01/bstocker/sofun/trunk", -->
 <!--   do_compile = FALSE, -->
 <!--   simsuite   = FALSE -->
 <!--   ) -->
@@ -173,7 +173,7 @@ The examples shown below are for site-scale simulations, i.e., where one model r
 <!-- ```{r, eval=FALSE} -->
 <!-- ## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine, -->
 <!-- ## and exclude sites where C4 vegetation is present. -->
-<!-- calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>% -->
+<!-- calibsites <- read_csv( "/alphadata01/bstocker/data/flue/flue_stocker18nphyt.csv" ) %>% -->
 <!--               dplyr::filter( !is.na(cluster) ) %>% -->
 <!--               dplyr::select( site ) %>% -->
 <!--               distinct() %>% -->
@@ -194,8 +194,8 @@ The examples shown below are for site-scale simulations, i.e., where one model r
 <!--   targetvars       = c("gpp"), -->
 <!--   datasource       = list( gpp = "fluxnet2015" ), -->
 <!--   timescale        = list( gpp = "d" ), -->
-<!--   path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/", -->
-<!--   path_gepisat     = "~/data/gepisat/v3_fluxnet2015/daily_gpp/", -->
+<!--   path_fluxnet2015 = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/", -->
+<!--   path_gepisat     = "/alphadata01/bstocker/data/gepisat/v3_fluxnet2015/daily_gpp/", -->
 <!--   maxit            = 30, -->
 <!--   sitenames        = calibsites,  # dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites -->
 <!--   filter_temp_min  = 10.0, -->
@@ -226,8 +226,8 @@ The examples shown below are for site-scale simulations, i.e., where one model r
 <!--   sitenames_siteplots = mylist, -->
 <!--   agg = 5, -->
 <!--   benchmark = list( gpp="fluxnet2015" ), -->
-<!--   path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/", -->
-<!--   path_gepisat     = "~/data/gepisat/v3_fluxnet2015/daily_gpp" -->
+<!--   path_fluxnet2015 = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/", -->
+<!--   path_gepisat     = "/alphadata01/bstocker/data/gepisat/v3_fluxnet2015/daily_gpp" -->
 <!--   ) -->
 <!-- ``` -->
 
@@ -248,15 +248,15 @@ settings_sims <- list(
   ensemble        = FALSE,
   lonlat          = TRUE,
   name            = "global_TEST",
-  dir_sofun       = "~/sofun/trunk/",
-  path_output     = "~/sofun/output_global_TEST_sofun/",
-  path_output_nc  = "~/sofun/output_nc_global_TEST_sofun/",
-  path_input      = "~/sofun/input_global_TEST_sofun/",
+  dir_sofun       = "/alphadata01/bstocker/sofun/trunk/",
+  path_output     = "/alphadata01/bstocker/sofun/output_global_TEST_sofun/",
+  path_output_nc  = "/alphadata01/bstocker/sofun/output_nc_global_TEST_sofun/",
+  path_input      = "/alphadata01/bstocker/sofun/input_global_TEST_sofun/",
   grid            = "halfdeg",
   implementation  = "fortran",
   in_ppfd         = TRUE,
-  firstyeartrend  = 1982,
-  nyeartrend      = 35,
+  firstyeartrend  = 2000,
+  nyeartrend      = 1,
   recycle         = 1,
   spinupyears     = 10,
   soilmstress     = FALSE,
@@ -282,7 +282,7 @@ settings_sims <- list(
 
 The general difference in driving spatial simulations as opposed to site-scale simulations is that input is read not from text files (separate files for each site containing time series for each year), but from NetCDF files containing input data for each gridcell. Since these files are large, the input preparation step creates links to original files and places links in the pre-defined location (`./input/global/`) instead of writing new standardised input files as is done for the site-scale simulations. The model implements different modules for reading from specific types of NetCDF input files. Specific functions are available for reading WATCH-WFDEI climate data, CRU climate data, MODIS FPAR fAPAR data, etc. Select then accordingly by specifying elements in the list `settings_input`. 
 
-Other elements are described in tab for site-scale simulations.
+The `lonlat` setup requires additional paths to additional input datasets to be specified (see below), the information of which is provided through the meta info file for site-scale simulations. Other elements are described in tab for site-scale simulations.
 
 ```{r}
 settings_input <-  list( 
@@ -294,12 +294,25 @@ settings_input <-  list(
   cloudcover               = "cru",
   fapar                    = "fAPAR3g",
   co2                      = "cmip",
-  path_cx1data             = "~/data/",
-  path_watch_wfdei         = "~/data/watch_wfdei/",
-  path_cru                 = "~/data/cru/ts_4.01/",
-  path_fAPAR3g             = "~/data/fAPAR/fAPAR3g_v2/fAPAR3g_v2_1982_2016_FILLED.nc"
+  path_cx1data             = "/alphadata01/bstocker/data/",
+  path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
+  path_cru                 = "/alphadata01/bstocker/data/cru/ts_4.01/",
+  path_fAPAR3g             = "/alphadata01/bstocker/data/fAPAR/fAPAR3g_v2/fAPAR3g_v2_1982_2016_FILLED.nc",
+  path_soiltype            = "/alphadata01/bstocker/data/soil/hwsd/soil_type_hwsd_halfdeg.cdf",
+  path_landmask            = "/alphadata01/bstocker/data/landmasks/gicew_halfdeg.cdf",
+  path_elevation           = "/alphadata01/bstocker/data/watch_wfdei/WFDEI-elevation.nc",
+  path_whc                 = "/alphadata01/bstocker/data/soil/soilgrids/whc_soilgrids_halfdeg_FILLED.nc",
+  path_landcover           = "/alphadata01/bstocker/data/landcover/modis_landcover_halfdeg_2010_FILLED.nc",
+  path_co2                 = "/alphadata01/bstocker/data/co2/cCO2_rcp85_const850-1765.dat"
   )
 ```
+
+- `path_soiltype`: Path (character string) specifying the location of the soil type input file. The current implementation of SOFUN works with a discrete number of soil types (nine different ones) corresponding to the classes of the Harmonized World Soil Database. The values of a set of physical soil parameters are given for each soil class within SOFUN (parameter text files under `sofun/params/params_soil_sc??.dat`). Soil parameters are used within SOFUN (so far) only for the calculation of soil temperature.
+- `path_landmask`: Path (character string) specifying the location of land mask input file. This defines which gridcells are land as opposed to ice or water. SOFUN is executed only on land gridcells. SOFUN works with the land mask from [LUH](http://luh.umd.edu/data.shtml) which defines the *fraction* of each gridcell covered by ice or water. 
+- `path_elevation`: Path (character string) specifying the location of elevation input file. This contains the elevation in meters for each gridcell.
+- `path_whc`:  Path (character string) specifying the location of the input file used to define the soil water holding capacity. This is independent here from the information provided in the soil type file. 
+- `path_landcover`: Path (character string) specifying the location of the land cover input file. This information is used in SOFUN to define the sensitivity of the water stress function, distinguishing between grasses and trees.
+- `path_co2`: Path (character string) specifying the location of the co2 input file. This is a text file specifying the (globally uniform) atmospheric CO2 concentration for each year.
 
 ### Model setup
 
@@ -308,7 +321,7 @@ In this case, set `model = "gpmodel"` in order to compile the model for "lonlat"
 ```{r}
 setup_sofun <- list( 
   model      = "gpmodel",
-  dir        = "~/sofun/trunk",
+  dir        = "/alphadata01/bstocker/sofun/trunk",
   do_compile = TRUE,
   simsuite   = FALSE
   )

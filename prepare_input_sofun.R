@@ -34,35 +34,43 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     system( paste0('mkdir -p ', dirn) )
 
     ## elevation
-    system( paste0( "ln -svf ", settings_input$path_cx1data, "watch_wfdei/WFDEI-elevation.nc ", dirn ) )
+    if (!file.exists(settings_input$path_elevation)) abort("Elevation input file specified by settings_input$path_elevation is not available.")
+    system( paste0( "ln -svf ", settings_input$path_elevation, " ", dirn ) )
 
     ## land masks at 1 deg and 0.5 deg resolution
-    system( paste0( "ln -svf ", settings_input$path_cx1data, "landmasks/gicew_", settings_sims$grid, ".cdf ", dirn ) )      
+    if (!file.exists(settings_input$path_landmask)) abort("Land mask input file specified by settings_input$path_landmask is not available.")
+    system( paste0( "ln -svf ", settings_input$path_landmask, " ", dirn ) )      
 
     ## CO2 (globally uniform)
     ##--------------------------------------
     dirn <- paste0(settings_sims$path_input, "global/co2") 
     system( paste0('mkdir -p ', dirn) )
-    system( paste0( "ln -svf ", settings_input$path_cx1data, "/co2/cCO2_rcp85_const850-1765.dat ", dirn ) )
+    if (!file.exists(settings_input$path_co2)) abort("CO2 input file specified by settings_input$path_co2 is not available.")
+    system( paste0( "ln -svf ", settings_input$path_co2, " ", dirn ) )
 
     ## soil (necessary in Fortran implementation)
     ##--------------------------------------
     dirn <- paste0(settings_sims$path_input, "global/soil") 
     system( paste0('mkdir -p ', dirn) )
-    system( paste0("ln -svf ", settings_input$path_cx1data, '/soil/soilgrids/whc_soilgrids_halfdeg_FILLED.nc ', dirn ) )
-    system( paste0("ln -svf ", settings_input$path_cx1data, '/soil/hwsd/soil_type_hwsd_halfdeg.cdf ', dirn ) )
+    if (!file.exists(settings_input$path_whc)) abort("Soil water holding capacity input file specified by settings_input$path_whc is not available.")
+    system( paste0("ln -svf ", settings_input$path_whc, ' ', dirn ) )
+
+    if (!file.exists(settings_input$path_soiltype)) abort("Soil type input file specified by settings_input$path_soiltype is not available.")
+    system( paste0("ln -svf ", settings_input$path_soiltype, ' ', dirn ) )
 
     ## land cover (necessary in Fortran implementation)
     ##--------------------------------------
     dirn <- paste0(settings_sims$path_input, "global/landcover") 
     system( paste0('mkdir -p ', dirn) )
-    system( paste0("ln -svf ", settings_input$path_cx1data, '/landcover/modis_landcover_halfdeg_2010_FILLED.nc ', dirn ) )
+    if (!file.exists(settings_input$path_landcover)) abort("Land cover input file specified by settings_input$path_landcover is not available.")
+    system( paste0("ln -svf ", settings_input$path_landcover, ' ', dirn ) )
 
     ## fapar (fapar3g)
     ##--------------------------------------
     dirn <- paste0(settings_sims$path_input, "global/fapar") 
     system( paste0('mkdir -p ', dirn) )
     if (settings_input$fapar == "fAPAR3g"){
+      if (!file.exists(settings_input$path_fAPAR3g)) abort("fAPAR input file specified by settings_input$path_fAPAR3g is not available.")
       system( paste0("ln -svf ", settings_input$path_fAPAR3g, " ", dirn ))
     }
 
