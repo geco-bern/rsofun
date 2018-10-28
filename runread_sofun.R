@@ -46,14 +46,21 @@ run_sofun <- function( settings, setup ){
       if (!file.exists(paste0("run", setup$model))) abort( paste( "Executable could not be downloaded: ", paste0("run", setup$model)) )
     }
 
-    if (settings$ensemble){
-      ## Run all simulations in this ensemble as individual simulations. Runnames are given by the sitenames in the ensemble
-      out_std <- purrr::map( as.list(settings$sitenames), ~run_sofun_bysite( ., setup ) )      
-    } else {
-      ## Run single simulation. Runname is given by `settings$name`.
-      run_sofun_bysite( settings$name, setup )
-    }
+    if (settings$setup=="simple"){
 
+      system( paste0(  ) )
+
+    } else {
+
+      if (settings$ensemble){
+        ## Run all simulations in this ensemble as individual simulations. Runnames are given by the sitenames in the ensemble
+        out_std <- purrr::map( as.list(settings$sitenames), ~run_sofun_bysite( ., setup ) )      
+      } else {
+        ## Run single simulation. Runname is given by `settings$name`.
+        run_sofun_bysite( settings$name, setup )
+      }
+
+    }
 
   }
 
