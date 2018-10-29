@@ -1,44 +1,14 @@
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# Contains P model functions adopted from GePiSaT
-# ////////////////////////////////////////////////////////////////////////
-# pmodel.R 
-# __version__ 1.0
-#
-# written by Benjamin Stocker, adopted from Python code written by Tyler Davis
-# Imperial College London
-#
-# 2015-03-16 -- created
-# 2015-03-16 -- updated
-# 2015-11-23 -- checked for consistency with Fortran 90 version and added to gepisat repository
-#
-# ------------
-# description:
-# ------------
-# This collection of function implements the Global ecosystem
-# in Space and Time (GePiSaT) model of the terrestrial biosphere. 
+#////////////////////////////////////////////////////////////////////////
+# R implementation of the P-model (Prentice et al., 2014; Han et al., 2017)
 #
 # GePiSaT takes a simple approach to modelling terrestrial gross primary 
 # production (GPP) by making the use of the optimality principle of vegetation 
 # minimizing the summed costs associated with maintaining carbon fixation and 
 # water transport capabilities (Prentice et al., 2014).
 #
-# Currently this includes the following:
+# Written by Benjamin Stocker, adopted from Python code written by Tyler Davis
 #
-# ----------
-# changelog:
-# ----------
-# VERSION 1.0.0
-#  - file created [2015-03-16]
-#
-# VERSION 1.0.1
-#  - 'lue_approx' function now based on SI units.
-# 
-# VERSION 1.0.2
-#  - added functions that are used in SOFUN implementation (F90 version)
-#
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-#  Function Definitions
-# ////////////////////////////////////////////////////////////////////////
+#------------------------------------------------------------------------
 rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
   #-----------------------------------------------------------------------
   # Input:    - fpar (unitless)    : monthly fraction of absorbed photosynthetically active radiation
@@ -48,39 +18,16 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
   #           - cpalpha (unitless, within [0,1.26]) : monthly Cramer-Prentice-alpha
   #           - vpd (Pa)           : mean monthly vapor pressure -- CRU data is in hPa
   #           - elv (m)            : elevation above sea-level
-  # Output:   gpp (mol/m2/month)   : gross primary production
+  # Output:   list of 
+  #  xxxx gpp (mol/m2/month)   : gross primary production
   #-----------------------------------------------------------------------
-
   ## P-model parameters
-  kphio <- 0.0579     # quantum efficiency (Long et al., 1993)
-  kPo   <- 101325.0   # standard atmosphere, Pa (Allen, 1973)
-  kTo   <- 25.0       # base temperature, deg C (Prentice, unpublished)
-  c_molmass <- 12.0107
-
-  #-----------------------------------------------------------------------
-  # Email from Tyler (10.3.2015):
-  # I was estimating values of ?? based on the Wang Han approximation equation 
-  # of ?? using both the simplified and "more precise" expressions for ?? and ?? 
-  # (Prentice et al., 2014, Ecology Letters).  After examination, Colin and I 
-  # noticed that the value of ?? is not significantly influenced by the 
-  # expressions for ?? and ??. Since then, Colin has theorised the use of a 
-  # "ground state" universal value of ??, which is derived from the Wang Han 
-  # equation at sea level (i.e., z = 0 m and Patm = 101325 Pa), standard temp-
-  # erature (i.e., Tair = 25 deg C) and a non-influencial VPD (i.e., 
-  # D = 1000 Pa). Based on these climatological values, the following were 
-  # calculated:
-  #   a. ??* = 4.220 Pa
-  #   b. K = 70.842 Pa
-  #   c. ??* = 1.0
-  #   d. ?? = 0.767
-  #   e. ?? = 244.033
-  # Results from modelled versus "observed" monthly GPP based on the universal 
-  # value of ?? are promising. Colin and I are currently in the works on the next 
-  # set of improvements, which, as I far as I know, will be based on this uni-
-  # versal value of ??.
-  #-----------------------------------------------------------------------
+  kphio <- 0.0579       # quantum efficiency (Long et al., 1993)
+  kPo   <- 101325.0     # standard atmosphere, Pa (Allen, 1973)
+  kTo   <- 25.0         # base temperature, deg C (Prentice, unpublished)
+  c_molmass <- 12.0107  # molecular mass of carbon (g)
   # beta <- 244.033
-  beta <- 146.0
+  beta <- 146.0         # unit cost ratio (see Prentice et al.,2014)
     
   #-----------------------------------------------------------------------
   # Metabolic N ratio (N per unit Vcmax)
@@ -120,8 +67,8 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
   ## photorespiratory compensation point - Gamma-star (Pa)
   gs   <- calc_gstar_gepisat( tc )
 
-  ## function of alpha to reduce GPP in strongly water-stressed months (unitless)
-  fa   <- 1.0  #  calc_fa( cpalpha )
+  ## Empirical soil moisture stress (fraction)
+  soilmstress   <- 1.0
 
   ## Michaelis-Menten coef. (Pa)
   kmm  <- calc_k( tc, patm )
@@ -245,7 +192,7 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
               transp_unitfapar=transp_unitfapar,
               transp_unitiabs=transp_unitiabs
               )
-  
+
   return( out )
 }
 
