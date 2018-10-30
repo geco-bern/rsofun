@@ -54,7 +54,6 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
   # n_v  <- 1.0/40.96    # gN ??mol-1 s-1. Value 40.96 is 'sv' in Table 2 in Kattge et al., 2009, GCB, C3 herbaceous
   ## -- under construction
 
-
   ## absorbed photosynthetically active radiation (mol/m2)
   iabs <- fpar * ppfd
 

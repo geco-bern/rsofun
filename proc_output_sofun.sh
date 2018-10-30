@@ -12,6 +12,14 @@
 	cdo -O mergetime $2/$1.*.d.wcont.nc   $2/$1.d.wcont.nc
 	rm $2/$1.*.d.wcont.nc
 
+	## RD
+	cdo -O mergetime $2/$1.*.d.rd.nc   $2/$1.d.rd.nc
+	rm $2/$1.*.d.rd.nc
+
+	## TRANSP
+	cdo -O mergetime $2/$1.*.d.transp.nc   $2/$1.d.transp.nc
+	rm $2/$1.*.d.rd.nc
+
 	## AET
 	cdo -O mergetime $2/$1.*.d.pet.nc   $2/$1.d.pet.nc
 	rm $2/$1.*.d.pet.nc
@@ -19,6 +27,10 @@
 	## PET
 	cdo -O mergetime $2/$1.*.d.aet.nc   $2/$1.d.aet.nc
 	rm $2/$1.*.d.aet.nc
+
+	## ALPHA
+	cdo -O mergetime $2/$1.*.d.alpha.nc   $2/$1.d.alpha.nc
+	rm $2/$1.*.d.alpha.nc
 
 	## WCONT
 	cdo -O mergetime $2/$1.*.d.gpp.nc   $2/$1.d.gpp.nc
@@ -28,13 +40,13 @@
 	cdo -O mergetime $2/$1.*.d.fapar.nc   $2/$1.d.fapar.nc
 	rm $2/$1.*.d.fapar.nc
 
-	# ## PPFD
-	# cdo -O mergetime $2/$1.*.d.ppfd.nc   $2/$1.d.ppfd.nc
-	# rm $2/$1.*.d.ppfd.nc
+	## SOIL TEMPERATURE
+	cdo -O mergetime $2/$1.*.d.temp_soil.nc   $2/$1.d.temp_soil.nc
+	rm $2/$1.*.d.temp_soil.nc
 
-	# ## TEMPERATURE
-	# cdo -O mergetime $2/$1.*.d.temp.nc   $2/$1.d.temp.nc
-	# rm $2/$1.*.d.temp.nc
+	## TEMPERATURE
+	cdo -O mergetime $2/$1.*.d.temp.nc   $2/$1.d.temp.nc
+	rm $2/$1.*.d.temp.nc
 
 
 	##-------------------------------------

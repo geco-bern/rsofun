@@ -1,6 +1,6 @@
 ## Copied from https://github.com/cran/wux/blob/master/R/ReadNetCdfTimeData.R
 
-conv_noleap_to_ymd <- function(time, since, calender.days="365") {
+conv_noleap_to_ymd <- function( time, since, calender.days=365 ){
   ## Converts timesteps from NetCDF file having 365 or 360 days calendar to
   ## POSIXt class timevector. The reason for this function is, that cannot simply
   ## add the timevector to the POSIX date we wish, as this would lead to complete

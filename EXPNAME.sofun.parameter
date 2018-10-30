@@ -54,53 +54,31 @@ daily_out_endyr                         XXXdaily_out_endyrXXX
 outdt                                   1
 
 # boolean defining which PFTs to include (lpft1: pftcode=1)
-lTrE                                    XXXlTrEXXX
-lTNE                                    XXXlTNEXXX
-lTrD                                    XXXlTrDXXX
-lTND                                    XXXlTNDXXX
-lGr3                                    XXXlGr3XXX
-lGN3                                    XXXlGN3XXX
-lGr4                                    XXXlGr4XXX
+lTrE                                    .false.
+lTNE                                    .false.
+lTrD                                    .false.
+lTND                                    .false.
+lGr3                                    .true.
+lGN3                                    .false.
+lGr4                                    .false.
 
-# Variables written to output (core)
+# Module-specific booleans defining whether a set of variables is written to annual output
+loutplant                               XXXloutplantXXX
+loutgpp                                 XXXloutgppXXX
+loutwaterbal                            XXXloutwaterbalXXX
+loutforcing                             XXXloutforcingXXX
+
+# Module-specific booleans whether a single variable is written to daily output
 loutdgpp                                XXXloutdgppXXX
 loutdrd                                 XXXloutdrdXXX
 loutdtransp                             XXXloutdtranspXXX
-loutdnpp                                XXXloutdnppXXX
-loutdnup                                XXXloutdnupXXX
-loutdcex                                XXXloutdcexXXX
-loutdCleaf                              XXXloutdCleafXXX
-loutdCroot                              XXXloutdCrootXXX
-loutdClabl                              XXXloutdClablXXX
-loutdNlabl                              XXXloutdNlablXXX
-loutdClitt                              XXXloutdClittXXX
-loutdNlitt                              XXXloutdNlittXXX
-loutdCsoil                              XXXloutdCsoilXXX
-loutdNsoil                              XXXloutdNsoilXXX
-loutdlai                                XXXloutdlaiXXX
-loutdfapar                              XXXloutdfaparXXX
-loutdninorg                             .false.
-loutdtemp_soil                          XXXloutdtemp_soilXXX
+loutdwcont                              XXXloutdwcontXXX
+loutdaet                                XXXloutdaetXXX
+loutdpet                                XXXloutdpetXXX
+loutdalpha                              XXXloutdalphaXXX
 loutdtemp                               XXXloutdtempXXX
-
-# Variables written to NetCDF output (core)
-lncoutdtemp                             XXXlncoutdtempXXX
-lncoutdfapar                            XXXlncoutdfaparXXX
-lncoutdgpp                              XXXlncoutdgppXXX 
-lncoutdwaterbal                         XXXlncoutdwaterbalXXX 
-
-# Variables written to output by module
-loutplant                               XXXloutplantXXX
-loutalloc                               XXXloutallocXXX
-loutgpp                                 XXXloutgppXXX
-loutnpp                                 XXXloutnppXXX
-loutwaterbal                            XXXloutwaterbalXXX
-loutntransform                          XXXloutntransformXXX
-loutnuptake                             XXXloutnuptakeXXX
-loutlittersom                           XXXloutlittersomXXX
-loutturnover                            XXXloutturnoverXXX
-loutlanduse                             XXXloutlanduseXXX
-loutforcing                             XXXloutforcingXXX
+loutdfapar                              XXXloutdfaparXXX
+loutdtemp_soil                          XXXloutdtemp_soilXXX
 
 # Variables used as calibration targets (written to separate output)
 lcalibgpp                               XXXlcalibgppXXX

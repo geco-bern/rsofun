@@ -3,11 +3,11 @@
 ##-----------------------------------------------------------
 runread_sofun <- function( settings, setup ){
 
-  ## run simulations
-  out_std <- run_sofun( settings, setup )
-
-  ## don't save standard output to save space
-  rm("out_std")
+  # ## run simulations
+  # out_std <- run_sofun( settings, setup )
+  # 
+  # ## don't save standard output to save space
+  # rm("out_std")
 
   ## read output into one big list
   ddf_list <- read_sofun( settings, setup )
@@ -46,20 +46,12 @@ run_sofun <- function( settings, setup ){
       if (!file.exists(paste0("run", setup$model))) abort( paste( "Executable could not be downloaded: ", paste0("run", setup$model)) )
     }
 
-    if (settings$setup=="simple"){
-
-      system( paste0(  ) )
-
+    if (settings$ensemble){
+      ## Run all simulations in this ensemble as individual simulations. Runnames are given by the sitenames in the ensemble
+      out_std <- purrr::map( as.list(settings$sitenames), ~run_sofun_bysite( ., setup ) )      
     } else {
-
-      if (settings$ensemble){
-        ## Run all simulations in this ensemble as individual simulations. Runnames are given by the sitenames in the ensemble
-        out_std <- purrr::map( as.list(settings$sitenames), ~run_sofun_bysite( ., setup ) )      
-      } else {
-        ## Run single simulation. Runname is given by `settings$name`.
-        run_sofun_bysite( settings$name, setup )
-      }
-
+      ## Run single simulation. Runname is given by `settings$name`.
+      run_sofun_bysite( settings$name, setup )
     }
 
   }
@@ -76,20 +68,30 @@ read_sofun <- function( settings, setup ){
 
   require(purrr)
   require(ncdf4)
+  require(rlang)
   
   ## First, process NetCDF which are written separately for each simulation year
   print("processing NetCDF outputs...")
-  if (settings$lonlat){
-    tmp <- purrr::map( as.list(settings$sitenames), ~proc_global( ., settings$path_output_nc ) )
-  } else {
-    tmp <- purrr::map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
-  }
+  tmp <- purrr::map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
   rm("tmp")
 
   ## Open and read daily output from NetCDF file for each site
-  print("reading from NetCDF files...")
-  ddf_list <- purrr::map( as.list(settings$sitenames), ~read_ncout_sofun_daily( ., settings ) )
-  names(ddf_list) <- settings$sitenames
+  ddf_list <- list()
+
+  if (settings$setup=="lonlat"){
+    ## annual output (daily output is not read into R)
+    print("reading from annual NetCDF files...")
+    ddf_list$annual <- purrr::map( as.list(settings$sitenames), ~read_ncout_sofun_annual( ., settings ) )
+    names(ddf_list$annual) <- settings$sitenames
+    warn("read_sofun(): Daily output is not read into R.")
+  
+  } else {
+    ## daily output
+    print("reading from daily NetCDF files...")
+    ddf_list$daily <- purrr::map( as.list(settings$sitenames), ~read_ncout_sofun_daily( ., settings ) )
+    names(ddf_list$daily) <- settings$sitenames
+  
+  }
 
   return(ddf_list)
 }
@@ -122,9 +124,8 @@ proc_ncout_sofun_bysite <- function( sitename, path_nc ){
   }
 }
 
-  
 ##-----------------------------------------------------------
-## Gets SOFUN model output for multiple variables
+## Gets daily SOFUN model output for multiple variables
 ##-----------------------------------------------------------
 read_ncout_sofun_daily <- function( expname, settings ){
 
@@ -138,8 +139,16 @@ read_ncout_sofun_daily <- function( expname, settings ){
 
   ## define vector of output variable names
   vars <- c()
-  if (settings$lncoutdgpp)      vars <- c( vars, "gpp" )
-  if (settings$lncoutdwaterbal) vars <- c( vars, "aet", "pet", "wcont" )
+  if ( settings$loutdgpp) vars <- c( vars, "gpp" )
+  if ( settings$loutdrd) vars <- c( vars, "rd" )
+  if ( settings$loutdtransp) vars <- c( vars, "transp" )
+  if ( settings$loutdalpha) vars <- c( vars, "alpha" )
+  if ( settings$loutdaet) vars <- c( vars, "aet" )
+  if ( settings$loutdpet) vars <- c( vars, "pet" )
+  if ( settings$loutdwcont) vars <- c( vars, "wcont" )
+  if ( settings$loutdtemp) vars <- c( vars, "temp" )
+  if ( settings$loutdfapar) vars <- c( vars, "fapar" )
+  if ( settings$loutdtemp_soil) vars <- c( vars, "temp_soil" )
   
   ## read one file to initialise data frame and get years
   filnam_mod <- paste0( expname, ".d.", vars[1], ".nc" )
@@ -166,9 +175,9 @@ read_ncout_sofun_daily <- function( expname, settings ){
         path       <- paste0( settings$path_output_nc, filnam_mod )
         nc         <- nc_open( path )
         addvar     <- ncvar_get( nc, varid = ivar )
-        ddf        <- tibble( date=time, ivar=addvar ) %>% 
-                      setNames( c("date", ivar) ) %>% 
-                      right_join( ddf, by = "date" )
+        ddf <- tibble( date=time, ivar=addvar ) %>% 
+               setNames( c("date", ivar) ) %>% 
+               right_join( ddf, by = "date" )
       }
 
     }
@@ -182,4 +191,56 @@ read_ncout_sofun_daily <- function( expname, settings ){
   return( ddf )
 }
 
+
+##-----------------------------------------------------------
+## Gets annual SOFUN model output for multiple variables
+##-----------------------------------------------------------
+read_ncout_sofun_annual <- function( expname, settings ){
+
+  require(ncdf4)
+  require(dplyr)
+  require(lubridate)
+
+  source( "conv_noleap_to_ymd.R" )
+
+  print(paste("Reading NetCDF for", expname ) )
+
+  ## define vector of output variable names
+  vars <- c()
+  if ( settings$loutwaterbal) vars <- c( vars, "alpha", "aet", "pet" )
+  if ( settings$loutgpp) vars <- c( vars, "gpp" )
+  
+  ## read one file to initialise data frame and get years
+  filnam_mod <- paste0( expname, ".a.", vars[1], ".nc" )
+  path       <- paste0( settings$path_output_nc, filnam_mod )
+  
+  if (file.exists(path)){
+
+    adf  <- list()
+    nc         <- nc_open( path )
+    adf[["time"]] <- ncvar_get( nc, varid = "time" ) %>% conv_noleap_to_ymd( since="2001-01-01" )
+    nc_close(nc)
+    
+    readvars <- vars
+
+    if (class(nc)!="try-error") { 
+
+      for (ivar in readvars){
+        filnam_mod    <- paste0( expname, ".a.", ivar, ".nc" )
+        path          <- paste0( settings$path_output_nc, filnam_mod )
+        nc            <- nc_open( path )
+        adf[[ ivar ]] <- ncvar_get( nc, varid = ivar )
+        nc_close(nc)
+      }
+
+    }
+
+  } else {
+
+    adf <- NA
+
+  }
+
+  return( adf )
+}
 

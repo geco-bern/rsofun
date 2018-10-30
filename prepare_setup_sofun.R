@@ -15,6 +15,23 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
   ## Make sure the SOFUN model directory exists
   if (!dir.exists(settings$dir_sofun)) system( paste0( "mkdir -p ", settings$dir_sofun ) )
   
+  ## Complement output booleans as FALSE if missing
+  settings$loutplant      = ifelse( is.null(settings$loutplant), FALSE, settings$loutplant)
+  settings$loutgpp        = ifelse( is.null(settings$loutgpp), FALSE, settings$loutgpp)
+  settings$loutwaterbal   = ifelse( is.null(settings$loutwaterbal), FALSE, settings$loutwaterbal)
+  settings$loutforcing    = ifelse( is.null(settings$loutforcing), FALSE, settings$loutforcing )
+
+  settings$loutdgpp       = ifelse( is.null(settings$loutdgpp), FALSE, settings$loutdgpp)
+  settings$loutdrd        = ifelse( is.null(settings$loutdrd), FALSE, settings$loutdrd )
+  settings$loutdtransp    = ifelse( is.null(settings$loutdtransp), FALSE, settings$loutdtransp)
+  settings$loutdalpha     = ifelse( is.null(settings$loutdalpha), FALSE, settings$loutdalpha)
+  settings$loutdaet       = ifelse( is.null(settings$loutdaet), FALSE, settings$loutdaet  )
+  settings$loutdpet       = ifelse( is.null(settings$loutdpet), FALSE, settings$loutdpet  )
+  settings$loutdwcont     = ifelse( is.null(settings$loutdwcont), FALSE, settings$loutdwcont)
+  settings$loutdtemp      = ifelse( is.null(settings$loutdtemp), FALSE, settings$loutdtemp )
+  settings$loutdfapar     = ifelse( is.null(settings$loutdfapar), FALSE, settings$loutdfapar)
+  settings$loutdtemp_soil = ifelse( is.null(settings$loutdtemp_soil), FALSE, settings$loutdtemp_soil)
+
   ##-----------------------------------------------------------
   ## Get SOFUN from github (necessary even if you don't compile
   ## the code because of the parameter files)
@@ -64,6 +81,9 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
       dirnam <- paste0( settings$path_input, "/site_paramfils/" )
       if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
       settings$path_site_paramfil <- write_site_parameter_bysite( settings$name, settings )
+
+      ## In this case, the site name (used to define the run name) is name of the whole shabang
+      settings$sitenames <- settings$name
 
       settings$date_start <- list( ymd( paste0( as.character( settings$firstyeartrend ), "-01-01" ) ) )  # is a list
       names(settings$date_start) <- settings$name
@@ -344,20 +364,27 @@ write_simulation_parameter_bysite <- function( sitename, settings_sim, settings_
               lGr3                 = ifelse( is.na( settings_sim$c4[[sitename]] ), TRUE,  ifelse( settings_sim$c4[[sitename]]==TRUE, FALSE, TRUE  ) ),
               lGr4                 = ifelse( is.na( settings_sim$c4[[sitename]] ), FALSE, ifelse( settings_sim$c4[[sitename]]==TRUE, TRUE, FALSE  ) ),
               # fapar_forcing_source = ifelse( settings_sim$lonlat, settings_sim$fapar_forcing_source, NA ),
+
               in_ppfd              = settings_sim$in_ppfd,
               soilmstress          = settings_sim$soilmstress,
-              tempstress           = settings_sim$tempstress ,
+              tempstress           = settings_sim$tempstress,
+
               loutplant            = settings_sim$loutplant,
               loutgpp              = settings_sim$loutgpp,
               loutwaterbal         = settings_sim$loutwaterbal,
-              loutdtemp_soil       = settings_sim$loutdtemp_soil,
+              loutforcing          = settings_sim$loutforcing,
+
               loutdgpp             = settings_sim$loutdgpp,
               loutdrd              = settings_sim$loutdrd,
               loutdtransp          = settings_sim$loutdtransp,
-              lncoutdtemp          = settings_sim$lncoutdtemp,
-              lncoutdfapar         = settings_sim$lncoutdfapar,
-              lncoutdgpp           = settings_sim$lncoutdgpp, 
-              lncoutdwaterbal      = settings_sim$lncoutdwaterbal,
+              loutdalpha           = settings_sim$loutdalpha,
+              loutdaet             = settings_sim$loutdaet,
+              loutdpet             = settings_sim$loutdpet,
+              loutdwcont           = settings_sim$loutdwcont,
+              loutdtemp            = settings_sim$loutdtemp,
+              loutdfapar           = settings_sim$loutdfapar,
+              loutdtemp_soil       = settings_sim$loutdtemp_soil,
+
               lcalibgpp            = ifelse( identical(settings_calib, NA), FALSE, ("gpp" %in% settings_calib$targetvars) ),
               lcalibfapar          = ifelse( identical(settings_calib, NA), FALSE, ("fapar" %in% settings_calib$targetvars) ),
               lcalibtransp         = ifelse( identical(settings_calib, NA), FALSE, ("transp" %in% settings_calib$targetvars) )
