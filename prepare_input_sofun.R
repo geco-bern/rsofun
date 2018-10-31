@@ -196,7 +196,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       ##-----------------------------------------------------------
       ## Make sure CMIP standard CO2 data is available locally    
       ##-----------------------------------------------------------
-      if (settings_input$co2=="cmip") error <- check_download_cmip_co2( settings_input, settings_sims )
+      error <- check_download_co2( settings_input, settings_sims )
 
       ##-----------------------------------------------------------
       ## Loop over all sites and prepare input files by site.
@@ -210,7 +210,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
                     bind_rows()
 
       ## CO2 file: link into site-specific input directories
-      error_list <- purrr::map( as.list(settings_sims$sitenames), ~check_download_cmip_co2( settings_input, settings_sims, . ) )
+      error_list <- purrr::map( as.list(settings_sims$sitenames), ~check_download_co2( settings_input, settings_sims, . ) )
 
       ## fAPAR input files: see below
 
@@ -1508,7 +1508,7 @@ check_download_MODIS_EVI_MOD13Q1 <- function( settings_input, settings_sims, sit
 ##--------------------------------------------------------------------------
 ## Checks if CMIP CO2 files are available and initiates download if not.
 ##--------------------------------------------------------------------------
-check_download_cmip_co2 <- function( settings_input, settings_sims, sitename=NA ){
+check_download_co2 <- function( settings_input, settings_sims, sitename=NA ){
 
   require(purrr)
   require(dplyr)
@@ -1521,7 +1521,7 @@ check_download_cmip_co2 <- function( settings_input, settings_sims, sitename=NA 
     ## get user name from user
     if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
 
-    origpath <- "/work/bstocker/labprentice/data/co2/"
+    origpath <- dirname(settings_input$path_co2)
 
     ## No files found at specified location
     warn( paste0("Downloading files for CMIP CO2 into directory: ", localdir ) )

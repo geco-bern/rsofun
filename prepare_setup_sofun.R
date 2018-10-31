@@ -4,7 +4,7 @@
 ## In the Fortran version, these settings are read in run-time from parameter files (text files, 
 ## one for each site, and simulation).
 ##-----------------------------------------------------------
-prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils = TRUE ){
+prepare_setup_sofun <- function( settings, calibvars = c(), write_paramfils = TRUE ){
 
   require(readr)
   require(dplyr)
@@ -104,7 +104,7 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
       ## Write simulation parameter files for each site
       dirnam <- paste0( settings$path_input, "/run/" )
       if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
-      settings$path_simulation_paramfil <- write_simulation_parameter_bysite( settings$name, settings, settings_calib = NA )
+      settings$path_simulation_paramfil <- write_simulation_parameter_bysite( settings$name, settings, calibvars = calibvars )
 
       ## link input directories
       if (file.exists(paste0(settings$dir_sofun, "run")))            system( paste0( "unlink ", settings$dir_sofun, "run") )
@@ -203,7 +203,7 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
           print("writing simulation parameter files...")
           dirnam <- paste0( settings$path_input, "/run/" )
           if (!dir.exists(dirnam)) system( paste( "mkdir -p ", dirnam ) ) 
-          settings$path_simulation_paramfil <- purrr::map( as.list(settings$sitenames), ~write_simulation_parameter_bysite( ., settings, settings_calib ) )
+          settings$path_simulation_paramfil <- purrr::map( as.list(settings$sitenames), ~write_simulation_parameter_bysite( ., settings, calibvars = calibvars ) )
           names(settings$path_simulation_paramfil) <- siteinfo[,1][[sitenam_colnam]]
         }
 
@@ -224,7 +224,7 @@ prepare_setup_sofun <- function( settings, settings_calib = NA, write_paramfils 
         #   ## Write total number of calibration targets to file
         #   filn_nvars_calib <- paste0( settings$path_input, "run/nvars_calib.txt" )
         #   zz <- file( filn_nvars_calib, "w")
-        #   tmp <- cat( length( settings_calib$targetvars ), "\n", file=zz )
+        #   tmp <- cat( length( calibvars ), "\n", file=zz )
         #   close(zz)      
         # }
         
@@ -339,7 +339,7 @@ write_site_parameter_bysite <- function( sitename, settings ){
 ## - switches for holding inputs constant (climate, CO2, etc.)
 ## - switches for writing variables to output files
 ##-----------------------------------------------------------
-write_simulation_parameter_bysite <- function( sitename, settings_sim, settings_calib=NA ){
+write_simulation_parameter_bysite <- function( sitename, settings_sim, calibvars = c() ){
 
   require(lubridate)
   require(dplyr)
@@ -385,9 +385,9 @@ write_simulation_parameter_bysite <- function( sitename, settings_sim, settings_
               loutdfapar           = settings_sim$loutdfapar,
               loutdtemp_soil       = settings_sim$loutdtemp_soil,
 
-              lcalibgpp            = ifelse( identical(settings_calib, NA), FALSE, ("gpp" %in% settings_calib$targetvars) ),
-              lcalibfapar          = ifelse( identical(settings_calib, NA), FALSE, ("fapar" %in% settings_calib$targetvars) ),
-              lcalibtransp         = ifelse( identical(settings_calib, NA), FALSE, ("transp" %in% settings_calib$targetvars) )
+              lcalibgpp            = ("gpp" %in% calibvars),
+              lcalibfapar          = ("fapar" %in% calibvars),
+              lcalibtransp         = ("transp" %in% calibvars)
               )
 
   } else if (settings_sim$implementation=="python"){

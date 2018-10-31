@@ -28,13 +28,26 @@ fig_nums <- captioner( prefix = "Figure S", auto_space=FALSE, style = "i" )
 # Evaluation of GPP against FLUXNET data
 
 ## Evaluation settings
-Define model evaluation settings as a list.
+
+Load settings defined outside (e.g. as shown in `vignette_rsofun.Rmd`).
 ```{r message=FALSE}
 library(dplyr)
 library(readr)
 load("siteinfo.Rdata")
-load("settings_sims.Rdata")
-load("settings_eval.Rdata")
+load("settings_sims_sitescale.Rdata")
+```
+
+Define model evaluation settings as a list.
+```{r, eval=FALSE, message=FALSE}
+mylist <- read_csv("myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
+settings_eval <- list(
+  sitenames = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename,
+  sitenames_siteplots = mylist,
+  agg = 5,
+  benchmark = list( gpp="fluxnet2015" ),
+  path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/",
+  path_gepisat     = "~/data/gepisat/v3_fluxnet2015/daily_gpp"
+  )
 ```
 
 ## Sites selection
@@ -96,6 +109,7 @@ The features of variability in GPP, for which model-observation agreement is cal
 - mean seasonal cycle (mean by day of year)
 - daily anomalies from mean seasonal cycle
 
+
 ## Results of evaluation
 
 ```{r, eval=TRUE, echo=FALSE, message=FALSE}
@@ -105,7 +119,7 @@ filn <- "out_eval.Rdata"
 overwrite <- TRUE
 load( "mod.Rdata" )
 if (!file.exists(filn)|overwrite){
-  out_eval <- eval_sofun( mod, settings_eval, settings_sims, siteinfo, doplot=FALSE, overwrite = TRUE )
+  out_eval <- eval_sofun( mod, settings_eval, settings_sims_sitescale, siteinfo, doplot=FALSE, overwrite = TRUE )
   save( out_eval, file = filn )
 } else {
   load( filn )
@@ -259,16 +273,16 @@ modobs_mdf <- plot_modobs_monthly( out_eval$data$mdf, makepdf=FALSE )
 modobs_adf <- plot_modobs_annual( out_eval$data$adf, makepdf=FALSE )
 ```
 
-<!-- ### Functional relationships -->
+### Functional relationships
 
-<!-- Functional relationships seen in the data can be extracted using Artificial Neural Networks (ANN). This is done here. First, a model is fitted to observed GPP with temperature, PPFD, VPD, fAPAR, and soil moisture as predictors. Then, functional relationships are evaluated by using the trained ANN to predict values for a synthetic datasets. The synthetic dataset is generated for each predictor value. E.g. for temperature, a sample of 50 data points is drawn from the empirical distribution of VPD, fAPAR, PPFD, and soil moisture, respectively, and 50 levels of temperature (evenly from 0-40 $^{\circ}$C) Then, the dataset is created by all combinations of these variables. Finally, functional relationship between temperature and GPP are assessed by taking the mean across all variable combination for each level of temperature separately. This approach implies that for the evaluation, correlations between predictor variables in the observational dataset are ignored. -->
+Functional relationships seen in the data can be extracted using Artificial Neural Networks (ANN). This is done here. First, a model is fitted to observed GPP with temperature, PPFD, VPD, fAPAR, and soil moisture as predictors. Then, functional relationships are evaluated by using the trained ANN to predict values for a synthetic datasets. The synthetic dataset is generated for each predictor value. E.g. for temperature, a sample of 50 data points is drawn from the empirical distribution of VPD, fAPAR, PPFD, and soil moisture, respectively, and 50 levels of temperature (evenly from 0-40 $^{\circ}$C) Then, the dataset is created by all combinations of these variables. Finally, functional relationship between temperature and GPP are assessed by taking the mean across all variable combination for each level of temperature separately. This approach implies that for the evaluation, correlations between predictor variables in the observational dataset are ignored.
 
-<!-- In order to improve comparability, ANNs are trained at (P-) modelled and observed GPP, and functional relationships thus derived for observed and modelled. This improves comparability and is preferred here over evaluating the model directly. As always, observations are in black and modelled in red. -->
+In order to improve comparability, ANNs are trained at (P-) modelled and observed GPP, and functional relationships thus derived for observed and modelled. This improves comparability and is preferred here over evaluating the model directly. As always, observations are in black and modelled in red.
 
-<!-- ```{r neuralnet, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE} -->
-<!-- source("eval_response_gam.R") -->
-<!-- eval_response_gam( out_eval$data$ddf, makepdf=FALSE ) -->
-<!-- ``` -->
+```{r neuralnet, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
+source("eval_response_gam.R")
+eval_response_gam( out_eval$data$ddf, makepdf=FALSE )
+```
 
 There are several points here:
 

@@ -1,0 +1,100 @@
+---
+title: "Calibrate SOFUN"
+author: "Benjamin D. Stocker"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+# output:
+#   pdf_document:
+#     toc: true
+#     toc_depth: 2
+header-includes:
+   - \usepackage{amsmath}
+# bibliography: bibliography.bib
+---
+
+## Calibration settings
+
+First, load simulation and input settings defined outside (e.g. as shown in `vignette_rsofun.Rmd`).
+```{r message=FALSE}
+library(dplyr)
+library(readr)
+load("siteinfo.Rdata")
+load("settings_sims_sitescale.Rdata")
+load("settings_input_sitescale.Rdata")
+```
+
+Then, define model calibration settings as a list. Note that in the example below, the element `sitenames` is all the sites where no C4 vegetation is present (or documented to be present). To get this information, first run::
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
+siteinfo <- prepare_metainfo_fluxnet2015(
+  settings_sims = settings_sims,
+  settings_input = settings_input_sitescale,
+  overwrite = FALSE,
+  filn_elv_watch = paste0( settings_input_sitescale$path_cx1data, "watch_wfdei/WFDEI-elevation.nc" )
+  )
+```
+
+Then define the calibration settings as.
+```{r, eval=FALSE}
+## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
+## and exclude sites where C4 vegetation is present.
+calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+              dplyr::filter( !is.na(cluster) ) %>%
+              dplyr::select( site ) %>%
+              distinct() %>%
+
+              ## additionally exclude C4
+              dplyr::filter( !(site %in% dplyr::filter(siteinfo$light, c4 )$mysitename) ) %>%
+
+              dplyr::select( site ) %>%
+              unlist()
+
+# ## Calibration sites for TerraP, excluding CA-Obs
+# calibsites <- c("AU-Tum", "CA-NS3", "CA-NS6", "DE-Geb", "DE-Hai", "DE-Kli", "FI-Hyy", "FR-Fon", "FR-LBr", "FR-Pue", "IT-Cpz", "NL-Loo", "US-Ha1", "US-MMS", "US-UMB", "US-WCr")
+
+settings_calib <- list(
+  name             = paste0( "kphio_gpp_fluxnet2015_", settings_input_sitescale$fapar ),
+  par              = list( kphio = list( lower=0.01, upper=0.12, init=0.05 ) ),
+  method           = "optimr",
+  targetvars       = c("gpp"),
+  datasource       = list( gpp = "fluxnet2015" ),
+  timescale        = list( gpp = "d" ),
+  path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_gepisat     = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
+  maxit            = 30,
+  sitenames        = calibsites,  # dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
+  filter_temp_min  = 10.0,
+  filter_temp_max  = 35.0,
+  filter_soilm_min = 0.6,
+  filter_drought   = FALSE
+ )
+```
+
+- `name`: A character string to define a name used for this calibration, used in file names containing calibration outputs.
+- `par`: list of parameters to calibrate with their lower and upper boundaries. This is rigid. If you chose to use different parameters or in a different order, modify code in `calib_sofun.R` (function `cost_rmse()`) and in the model source code (`sofun/src/sofun.f90`).
+- `targetvars`: Character string for name of variable in SOFUN output
+- `datasource`: Named list of character strings with data source identifiers for each calibration target variable. The list is named corresponding to variable names defined by 'targetvars'. The identifier triggers certain functions to be used for reading and processing observational data. Use, e.g., `datasource = list( gpp = "fluxnet2015" )` to specify that observational data for the target variable `"gpp"` comes from `"fluxnet2015"`.
+- `timescale`: Named list of characters specifying the time scale used for aggregating modelled and observational data in time series before calculating the cost function. For naming the list, see point above. Set, e.g., `timescale = list( gpp = "d" )` to calibrate to observational GPP aggregated to daily intervals (i.e. not aggregated). Use `"w"` for weekly, `"m"` for monthly, or `"y"` for annual (XXX NOT YET IMPLEMENTED).
+- `path_fluxnet2015`: Path (character string) for where FLUXNET 2015 data is located (data files may be in subdirectories thereof). This settings list element needs to be specified if any of `datasource` is `"fluxnet2015"`.
+- `path_gepisat`: Path (character string) for where GePiSaT GPP data is located (data files may be in subdirectories thereof). This settings list element needs to be specified if any of `datasource` is `"gepisat"`.
+- `sitenames`: Vector of character strings for site names of sites' data to be used for calibration.
+- `filter_temp_min`: Minimum temperature of data used for calibration. Data points for days where air temperature is below, are removed (replaced by NA) in the observational data.
+- `filter_temp_max`: Maximum temperature of data used for calibration. Data points for days where air temperature is above, are removed (replaced by NA) in the observational data.
+- `filter_soilm_min`: Minimum soil moisture (relative, normalised to maximum of mean across multiple depths at each site) of data used for calibration. Data points for days where soil moisture is below, are removed (replaced by NA) in the observational data.
+
+
+## Calibrate the model
+
+This is shown in a separate document (`calib_sofun.Rmd`).
+Calibrate SOFUN, returns calibration settings, now including calibrated parameters inside the list (`settings_calib$par[[param_name]]$opt`).
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
+settings_calib <- calib_sofun(
+  setup = setup_sofun,
+  settings_calib = settings_calib,
+  settings_sims = settings_sims,
+  overwrite = TRUE
+  )
+```
