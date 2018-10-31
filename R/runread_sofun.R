@@ -1,6 +1,15 @@
-##-----------------------------------------------------------
-## Runs the model and reads output in once.
-##-----------------------------------------------------------
+
+#' Run SOFUN
+#'
+#' Runs the model and reads output in once.
+#'
+#' @param settings TODO
+#' @param setup TODO
+#'
+#' @return TODO
+#' @export
+#'
+# @examples
 runread_sofun <- function( settings, setup ){
 
   ## run simulations

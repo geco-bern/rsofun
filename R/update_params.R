@@ -1,3 +1,14 @@
+#' Update parameters
+#'
+#' TODO: Describe
+#'
+#' @param params_opt TODO
+#' @param settings TODO
+#'
+#' @return
+#' @export
+#'
+# @examples
 update_params <- function( params_opt, settings ){
   require(stringr)
 

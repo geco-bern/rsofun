@@ -1,9 +1,18 @@
 
-##-----------------------------------------------------------
-## Prepares the setup for running SOFUN with simulation settings defined by argument 'settings'. 
-## In the Fortran version, these settings are read in run-time from parameter files (text files, 
-## one for each site, and simulation).
-##-----------------------------------------------------------
+#' Setup SOFUN settings
+#'
+#' Prepares the setup for running SOFUN with simulation settings defined by argument 'settings'.
+#' In the Fortran version, these settings are read in run-time from parameter files (text files,
+#' one for each site, and simulation).
+#'
+#' @param settings a named list with the settings.
+#' @param calibvars TODO
+#' @param write_paramfils if \code{TRUE}, write the parameter files.
+#'
+#' @return a list with the settings.
+#' @export
+#'
+# @examples
 prepare_setup_sofun <- function( settings, calibvars = c(), write_paramfils = TRUE ){
 
   require(readr)
