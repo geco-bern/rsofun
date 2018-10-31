@@ -15,7 +15,10 @@ prepare_setup_sofun <- function( settings, calibvars = c(), write_paramfils = TR
   ## Make sure the SOFUN model directory exists
   if (!dir.exists(settings$dir_sofun)) system( paste0( "mkdir -p ", settings$dir_sofun ) )
   
-  ## Complement output booleans as FALSE if missing
+  ## Complement simulation parameter booleans as FALSE if missing
+  settings$soilmstress    = ifelse( is.null(settings$soilmstress), FALSE, settings$soilmstress)
+  settings$tempstress     = ifelse( is.null(settings$tempstress), FALSE, settings$tempstress)
+
   settings$loutplant      = ifelse( is.null(settings$loutplant), FALSE, settings$loutplant)
   settings$loutgpp        = ifelse( is.null(settings$loutgpp), FALSE, settings$loutgpp)
   settings$loutwaterbal   = ifelse( is.null(settings$loutwaterbal), FALSE, settings$loutwaterbal)

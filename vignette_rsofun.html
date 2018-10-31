@@ -559,7 +559,7 @@ save( settings_sims_sitescale, file = &quot;settings_sims_sitescale.Rdata&quot; 
 <!-- save( settings_sims, file = "settings_sims.Rdata" ) -->
 <!-- save( siteinfo, file = "siteinfo.Rdata" ) -->
 <!-- ``` -->
-<p>Run SOFUN with calibrated parameters. Set to write normal SOFUN output.</p>
+<p>Run SOFUN with calibrated parameters.</p>
 <pre class="r"><code>params_opt &lt;- read_csv( paste0(&quot;params_opt_kphio_soilm_global.csv&quot;) ) # as an example
 nothing &lt;- update_params( params_opt, settings = settings_sims )
 rm(&quot;mod&quot;)
@@ -574,6 +574,7 @@ save( mod, file=&quot;mod.Rdata&quot; )</code></pre>
 <p>This is shown in a separate document (<code>eval_sofun.Rmd</code>). Save site-scale simulation settings and the siteinfo metadata.</p>
 <pre class="r"><code>save( settings_sims_sitescale, file = &quot;settings_sims_sitescale.Rdata&quot; )
 save( settings_input_sitescale, file = &quot;settings_input_sitescale.Rdata&quot; )
+save( setup_sofun_sitescale, file = &quot;setup_sofun_sitescale.Rdata&quot; )
 save( siteinfo, file = &quot;siteinfo.Rdata&quot; )</code></pre>
 </div>
 </div>

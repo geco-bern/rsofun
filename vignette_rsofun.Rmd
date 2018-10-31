@@ -142,18 +142,13 @@ settings_sims_sitescale <- list(
   spinupyears     = 10,
   soilmstress     = TRUE,
   tempstress      = TRUE,
-  loutplant       = FALSE,
-  loutgpp         = FALSE,
-  loutwaterbal    = FALSE,
-  loutdtemp_soil  = FALSE,
-  loutdgpp        = FALSE,
-  loutdrd         = FALSE,
-  loutdtransp     = FALSE,
-  loutforcing     = FALSE,
-  loutdtemp     = FALSE,
-  loutdfapar    = FALSE,
-  loutdgpp      = TRUE,
-  loutdwaterbal = TRUE
+  loutdgpp        = TRUE,
+  loutdrd         = TRUE,
+  loutdtransp     = TRUE,
+  loutdwcont      = TRUE,
+  loutdaet        = TRUE,
+  loutdpet        = TRUE,
+  loutdalpha      = TRUE
   )
 ```
 
@@ -340,7 +335,7 @@ This setp is required only for site-scale simulations.
 
 This step is either done by hand so that the file has a certain structure (for column names etc see above: `path_siteinfo`). Below is an example for creating such a meta info file (info for each site in an ensemble) for the FLUXNET 2015 Tier 1 ensemble.
 
-```{r, eval=FALSE, message=FALSE, warning=FALSE}
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
 siteinfo <- prepare_metainfo_fluxnet2015( 
   settings_sims = settings_sims_sitescale, 
   settings_input = settings_input_sitescale, 
@@ -358,7 +353,7 @@ save(siteinfo, file = "siteinfo.Rdata")
 
 Create a run directory with all the simulation parameter files (defining simulation years, length, etc.). This returs the `settings_sims` list, complemented by additional information. Calibration settings are an optional argument. When passed on, simulation parameter files will contain information which target variables are to be written to special calibration output files (a single file written for an entire ensemble).
 
-```{r, eval=FALSE, message=FALSE, warning=FALSE}
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
 settings_sims_sitescale <- prepare_setup_sofun( 
   settings = settings_sims_sitescale, 
   calibvars = c(),
@@ -400,7 +395,7 @@ This is shown in a separate document (`calib_sofun.Rmd`).
 <!-- save( siteinfo, file = "siteinfo.Rdata" ) -->
 <!-- ``` -->
 
-Run SOFUN with calibrated parameters. Set `r setup_sofun_sitescale$is_calib <- FALSE` to write normal SOFUN output.
+Run SOFUN with calibrated parameters.
 ```{r, eval=FALSE, message=FALSE, warning=FALSE}
 params_opt <- read_csv( paste0("params_opt_kphio_soilm_global.csv") ) # as an example
 nothing <- update_params( params_opt, settings = settings_sims )
@@ -415,8 +410,9 @@ save( mod, file="mod.Rdata" )
 ## Evaluate the model
 
 This is shown in a separate document (`eval_sofun.Rmd`). Save site-scale simulation settings and the siteinfo metadata.
-```{r, eval=FALSE, message=FALSE, warning=FALSE}
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
 save( settings_sims_sitescale, file = "settings_sims_sitescale.Rdata" )
 save( settings_input_sitescale, file = "settings_input_sitescale.Rdata" )
+save( setup_sofun_sitescale, file = "setup_sofun_sitescale.Rdata" )
 save( siteinfo, file = "siteinfo.Rdata" )
 ```

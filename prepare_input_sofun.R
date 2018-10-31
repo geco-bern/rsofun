@@ -1525,7 +1525,7 @@ check_download_co2 <- function( settings_input, settings_sims, sitename=NA ){
 
     ## No files found at specified location
     warn( paste0("Downloading files for CMIP CO2 into directory: ", localdir ) )
-    system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", origpath, filn, " ", localdir ) )
+    system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", settings_input$path_co2, " ", localdir ) )
 
   }
 
@@ -1533,11 +1533,11 @@ check_download_co2 <- function( settings_input, settings_sims, sitename=NA ){
     ## Check if a file is available for a given site
     localdir_bysite <- paste0( settings_sims$path_input, "/sitedata/co2/", sitename )
     if (!dir.exists(localdir_bysite)) system( paste0("mkdir -p ", localdir_bysite ) )
-    filelist <- list.files( localdir_bysite, pattern = filn )
+    filelist <- list.files( localdir_bysite, pattern = basename(settings_input$path_co2) )
 
     if (length(filelist)==0){
       ## link file into site-level directory
-      system( paste0( "ln -svf ", localdir, filn, " ", localdir_bysite, "/" ) )
+      system( paste0( "ln -svf ", settings_input$path_co2, " ", localdir_bysite, "/" ) )
     }
 
   }
