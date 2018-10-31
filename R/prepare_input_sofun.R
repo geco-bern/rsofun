@@ -1201,8 +1201,9 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
 ##--------------------------------------------------------------------
 find_nearest_cruland_by_lat <- function( lon, lat, filn ){
 
-  library(ncdf4)
-  
+  if (!requireNamespace("ncdf4", quietly = TRUE))
+    stop("Please, install 'ncdf4' package")
+
   nc <- nc_open( filn, readunlim=FALSE )
   crufield <- ncvar_get( nc, varid="TMP" )
   lon_vec <- ncvar_get( nc, varid="LON" )
