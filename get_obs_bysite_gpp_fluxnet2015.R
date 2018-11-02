@@ -41,7 +41,7 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
       )
   }
 
-  if (length(filn)==0) abort(paste0("No files found for timescale ", timescale, "in sub-directories of ", path_fluxnet2015 ) )
+  if (length(filn)==0) abort(paste0("No files found for timescale ", timescale, " in sub-directories of ", path_fluxnet2015 ) )
   if (length(filn)>1){
     filn <- filn[which(grepl("3.csv", filn))]
     # warn(paste0("Multiple files found for timsescale ", timescale, " in sub-directories of ", path_fluxnet2015, ". Taking only ", filn ) )

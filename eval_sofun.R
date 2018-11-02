@@ -1,4 +1,4 @@
-eval_sofun <- function( mod, obs_eval = NA, settings_eval, settings_sims, siteinfo, overwrite = TRUE, doplot = FALSE ){
+eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = NA, overwrite = TRUE, doplot = FALSE ){
 	
   require(dplyr)
   require(purrr)
@@ -23,9 +23,9 @@ eval_sofun <- function( mod, obs_eval = NA, settings_eval, settings_sims, sitein
 		## - anomalies (different time scales: daily/weekly/monthly)
 		##-------------------------------------------------------
 
-	  ## get sites for which no model output is available
+	  ## get sites for which no model output is available and overwrite settings_eval$sitenames
 	  missing_mod <- purrr::map_lgl( mod, ~identical(., NA ) ) %>% which() %>% names()
-	  settings_eval$sitenames_used <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_mod))]
+	  settings_eval$sitenames <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_mod))]
 	  
 	  metrics$gpp$fluxnet2015 <- list()
 
@@ -35,7 +35,7 @@ eval_sofun <- function( mod, obs_eval = NA, settings_eval, settings_sims, sitein
 	  ##------------------------------------------------------------
 	  ## Get daily model output
 	  ##------------------------------------------------------------
-	  ddf_mod <- lapply( as.list(settings_eval$sitenames_used),  function(x) dplyr::select( mod[[x]], date, gpp_mod = gpp ) %>% mutate( sitename = x ) ) %>%
+	  ddf_mod <- lapply( as.list(settings_eval$sitenames),  function(x) dplyr::select( mod[[x]], date, gpp_mod = gpp ) %>% mutate( sitename = x ) ) %>%
 	    bind_rows()
 
     ##------------------------------------------------------------
@@ -187,7 +187,7 @@ eval_sofun <- function( mod, obs_eval = NA, settings_eval, settings_sims, sitein
 		# ## daily values seem to be identical. something wrong with aggregating model outputs to annual values?
 		# load( file="../soilm_global/data/nice_nn_agg_lue_obs_evi.Rdata" )
 		# ddf_old <- nice_agg %>% dplyr::select( sitename = mysitename, date, gpp_mod_old = gpp_pmodel )
-		# ddf_new <- lapply( as.list(settings_eval$sitenames_used),  function(x) dplyr::select( mod[[x]] , date, gpp_mod = gpp ) %>% mutate( sitename = x ) ) %>%
+		# ddf_new <- lapply( as.list(settings_eval$sitenames),  function(x) dplyr::select( mod[[x]] , date, gpp_mod = gpp ) %>% mutate( sitename = x ) ) %>%
 		#   bind_rows() %>% left_join( ddf_old, by=c("sitename", "date"))
 		# with( filter(ddf_new, sitename=="AR-Vir"), plot(gpp_mod_old, gpp_mod) )
 		# with( filter(ddf_new, sitename=="AU-ASM"), plot(gpp_mod_old, gpp_mod) )
@@ -361,10 +361,6 @@ get_obs_eval <- function( settings_eval, settings_input, settings_sims, overwrit
 	require(purrr)
 	require(lubridate)
 
-	source("get_obs_bysite_gpp_fluxnet2015.R")
-	source("get_obs_bysite_gpp_gepisat.R")
-
-
   if (settings_eval$benchmark$gpp=="fluxnet2015"){
 	  ##------------------------------------------------------------
 	  ## Read annual observational data from FLUXNET 2015 files (from annual files!).
@@ -372,10 +368,10 @@ get_obs_eval <- function( settings_eval, settings_input, settings_sims, overwrit
 	  ## loop over sites to get data frame with all variables
 	  print("getting annual FLUXNET-2015_Tier1 data...")
 	  if (!file.exists("adf_obs_eval.Rdata")||overwrite){
-		  adf <-  lapply( as.list(settings_eval$sitenames_used), 
+		  adf <-  lapply( as.list(settings_eval$sitenames),
 											  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
-														path_fluxnet2015 = settings_eval$path_fluxnet2015, 
-														timescale = "y" ) %>% 
+														path_fluxnet2015 = settings_eval$path_fluxnet2015_y,
+														timescale = "y" ) %>%
 										## Remove outliers, i.e. when data is outside 1.5 times the inter-quartile range
 										mutate( gpp_obs = remove_outliers( gpp_obs, coef=1.5 ),
 														year = year(date),
@@ -393,10 +389,10 @@ get_obs_eval <- function( settings_eval, settings_input, settings_sims, overwrit
 		## loop over sites to get data frame with all variables
 		print("getting monthly FLUXNET-2015_Tier1 data...")
 		if (!file.exists("mdf_obs_eval.Rdata")||overwrite){
-			mdf <-  lapply( as.list(settings_eval$sitenames_used), 
+			mdf <-  lapply( as.list(settings_eval$sitenames),
 											  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
-														path_fluxnet2015 = settings_eval$path_fluxnet2015, 
-														timescale = "m" ) %>% 
+														path_fluxnet2015 = settings_eval$path_fluxnet2015_m,
+														timescale = "m" ) %>%
 										mutate( year = year(date),
 														sitename = x ) ) %>%
 										bind_rows() %>%
@@ -411,10 +407,10 @@ get_obs_eval <- function( settings_eval, settings_input, settings_sims, overwrit
 		## loop over sites to get data frame with all variables
 		print("getting daily FLUXNET-2015_Tier1 data...")
 		if (!file.exists("ddf_obs_eval.Rdata")||overwrite){
-			ddf <-  lapply( as.list(settings_eval$sitenames_used), 
+			ddf <-  lapply( as.list(settings_eval$sitenames),
 											  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
-														path_fluxnet2015 = settings_eval$path_fluxnet2015, 
-														timescale = "d" ) %>% 
+														path_fluxnet2015 = settings_eval$path_fluxnet2015_d,
+														timescale = "d" ) %>%
 										mutate( year = year(date),
 														sitename = x ) ) %>%
 										bind_rows() %>%
@@ -423,22 +419,30 @@ get_obs_eval <- function( settings_eval, settings_input, settings_sims, overwrit
 			##------------------------------------------------------------
 			## Read daily observational data from GEPISAT files (only daily files!).
 			##------------------------------------------------------------
-			tmp <- lapply( as.list(settings_eval$sitenames_used),
+			tmp <- lapply( as.list(settings_eval$sitenames),
 											function(x) get_obs_bysite_gpp_gepisat( x, 
-												settings_input$path_gepisat, 
-												settings_input$timescale 
-												) )
+											  settings_eval$path_gepisat_d, 
+												timescale = "d" ) )
+			names(tmp) <- settings_eval$sitenames
 
+			missing_gepisat <- purrr::map_lgl( tmp, ~identical(., NULL ) ) %>% which() %>% names()
+			settings_eval$sitenames_gepisat <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_gepisat))]
+
+			tmp <- tmp %>% bind_rows( .id = "sitename" ) %>%
+			               mutate( year = year(date) ) %>%
+			               mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) %>%  # remove pre-modis data
+			               dplyr::rename( gpp_obs_gepisat = gpp_obs )
+			  
 			if (!is.null(tmp)){
-			  ddf <- tmp %>%
-			    rename( gpp_obs_gepisat = gpp_obs ) %>%
-			    right_join( ddf, by = "date" )
+			  ddf <- tmp %>% right_join( ddf, by = "date" )
 			} else {
 			  ddf <- ddf %>% mutate( gpp_obs_gepisat = NA )
 			}			  							
 
+			##------------------------------------------------------------
 			## Add forcing data to daily data frame (for neural network-based evaluation)
-			ddf <- lapply( as.list(settings_eval$sitenames_used), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
+			##------------------------------------------------------------
+			ddf <- lapply( as.list(settings_eval$sitenames), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
 			       bind_rows() %>%
 			       dplyr::select(-year_dec.x, -year_dec.y) %>%
 						 right_join( ddf, by = c("sitename", "date") )

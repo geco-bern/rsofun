@@ -43,6 +43,8 @@ source("prepare_input_sofun.R")
 source("runread_sofun.R")
 source("update_params.R")
 source("eval_sofun.R")
+source("get_obs_bysite_gpp_fluxnet2015.R")
+source("get_obs_bysite_gpp_gepisat.R")
 ```
 
 Define model evaluation settings as a list.
@@ -53,8 +55,11 @@ settings_eval <- list(
   sitenames_siteplots = mylist,
   agg = 5,
   benchmark = list( gpp="fluxnet2015" ),
-  path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/",
-  path_gepisat     = "~/data/gepisat/v3_fluxnet2015/daily_gpp"
+  path_fluxnet2015_d = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_fluxnet2015_w = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/",
+  path_fluxnet2015_m = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/",
+  path_fluxnet2015_y = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/",
+  path_gepisat_d   = "~/data/gepisat/v3_fluxnet2015/daily_gpp/"
   )
 ```
 
@@ -72,8 +77,8 @@ settings_sims_sitescale$path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s
 settings_sims_sitescale$soilmstress = FALSE
 settings_sims_sitescale$tempstress  = FALSE
 settings_sims_sitescale$loutdgpp    = TRUE
-settings_sims_sitescale$loutdrd     = TRUE
-settings_sims_sitescale$loutdtransp = TRUE
+settings_sims_sitescale$loutdrd     = FALSE
+settings_sims_sitescale$loutdtransp = FALSE
 settings_sims_sitescale$loutdwcont  = TRUE
 settings_sims_sitescale$loutdaet    = TRUE
 settings_sims_sitescale$loutdpet    = TRUE
@@ -102,12 +107,25 @@ inputdata <- prepare_input_sofun(
 params_opt <- read_csv( paste0("params_opt_calib_RED.csv") )
 nothing <- update_params( params_opt, settings = settings_sims_sitescale )
 
-rm("mod_RED")
+## run the model with these parameters and read output into mod_RED
 mod_RED <- runread_sofun( 
   settings = settings_sims_sitescale, 
   setup = setup_sofun_sitescale 
   )
-save( mod, file="mod_RED.Rdata" )
+save( mod_RED, file="mod_RED.Rdata" )
+
+## get sites for which no model output is available and overwrite settings_eval$sitenames
+if (!exists("mod_RED")) load("mod_RED.Rdata")
+missing_mod <- purrr::map_lgl( mod_RED$daily, ~identical(., NA ) ) %>% which() %>% names()
+settings_eval$sitenames <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_mod))]
+
+## get observational data separately and save since it's the same for multiple evaluations
+obs_eval <- get_obs_eval( settings_eval = settings_eval, settings_input = settings_input_sitescale, settings_sims = settings_sims_sitescale, overwrite = TRUE )
+save( obs_eval, file = "obs_eval.Rdata")
+
+## evaluate RED simulations
+out_eval_RED <- eval_sofun( mod_RED, settings_eval, settings_sims_sitescale, siteinfo, obs_eval = obs_eval, doplot=FALSE, overwrite = TRUE )
+save( out_eval, file = "out_eval_RED.Rdata" )
 ```
 
 

@@ -33,6 +33,8 @@ source("runread_sofun.R")
 source("update_params.R")
 source("eval_sofun.R")
 source("pmodel.R")
+source("get_obs_bysite_gpp_fluxnet2015.R")
+source("get_obs_bysite_gpp_gepisat.R")
 ```
 
 Some other crap.
@@ -132,8 +134,8 @@ settings_sims_sitescale <- list(
   setup           = "site",
   name            = "fluxnet2015",
   dir_sofun       = "~/sofun/trunk/",
-  path_output     = "~/sofun/output_fluxnet2015_sofun/s21/",
-  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s21/",
+  path_output     = "~/sofun/output_fluxnet2015_sofun/s24/",
+  path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s24/",
   path_input      = "~/sofun/input_fluxnet2015_sofun_TEST/",
   grid            = NA,
   implementation  = "fortran",
@@ -341,7 +343,7 @@ This setp is required only for site-scale simulations.
 
 This step is either done by hand so that the file has a certain structure (for column names etc see above: `path_siteinfo`). Below is an example for creating such a meta info file (info for each site in an ensemble) for the FLUXNET 2015 Tier 1 ensemble.
 
-```{r, eval=TRUE, message=FALSE, warning=FALSE}
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
 siteinfo <- prepare_metainfo_fluxnet2015( 
   settings_sims = settings_sims_sitescale, 
   settings_input = settings_input_sitescale, 
@@ -363,7 +365,7 @@ Create a run directory with all the simulation parameter files (defining simulat
 settings_sims_sitescale <- prepare_setup_sofun( 
   settings = settings_sims_sitescale, 
   calibvars = c(),
-  write_paramfils = FALSE 
+  write_paramfils = TRUE 
   )
 save( settings_sims_sitescale, file = "settings_sims_sitescale.Rdata" )
 ```
@@ -403,7 +405,7 @@ This is shown in a separate document (`calib_sofun.Rmd`).
 
 Run SOFUN with calibrated parameters.
 ```{r, eval=FALSE, message=FALSE, warning=FALSE}
-params_opt <- read_csv( paste0("params_opt_kphio_soilm_global.csv") ) # as an example
+params_opt <- read_csv( paste0("params_opt_calib_RED.csv") ) # as an example
 nothing <- update_params( params_opt, settings = settings_sims )
 rm("mod")
 mod <- runread_sofun( 

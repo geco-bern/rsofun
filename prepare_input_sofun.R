@@ -1658,14 +1658,14 @@ download_from_remote_path <- function( dir_remote, dir_local, pattern = NA, unam
       ## use only file(s) for this site
       getfiles <- getfiles[ grepl(pattern, getfiles) ]
     
-    } if (!is.na(pattern)&&!is.na(getfiles)){
+    } else if (!is.na(pattern)&&!is.na(getfiles)){
 
       abort("download_from_remote_path(): Specify only one argument of getfiles and pattern.")
 
     }
 
     ## create required directory locally
-    if (!dir.exists(dir_local)) system( paste0("mkdir -p ", dir_local ) )    
+    if (!dir.exists(dir_local)) system( paste0("mkdir -p ", dir_local ) ) 
 
     ## Check if required files are in sub-directories. If so, create them locally as on remote
     subdir <- getfiles %>% dirname() %>% unique()
