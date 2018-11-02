@@ -1,4 +1,3 @@
-
 ##-----------------------------------------------------------
 ## Prepares the setup for running SOFUN with simulation settings defined by argument 'settings'. 
 ## In the Fortran version, these settings are read in run-time from parameter files (text files, 

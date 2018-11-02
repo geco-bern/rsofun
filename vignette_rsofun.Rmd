@@ -189,16 +189,23 @@ settings_input_sitescale <-  list(
   ppfd                     = "fluxnet2015",
   netrad                   = NA,
   cloudcover               = "cru",
-  # fapar                    = "MODIS_EVI_MOD13Q1",
-  fapar                    = "MODIS_FPAR_MCD15A3H",
+  fapar                    = "MODIS_FPAR_MCD15A3H", # valid alternative: "MODIS_EVI_MOD13Q1",
   splined_fapar            = TRUE,
   path_co2                 = "~/data/co2/cCO2_rcp85_const850-1765.dat",
-  path_cx1data             = "~/data/",
   path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_watch_wfdei         = "~/data/watch_wfdei/",
   path_cru                 = "~/data/cru/ts_4.01/",
   path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
-  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/"
+  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
+  path_remote_watch_wfdei  = "/work/bstocker/labprentice/data/watch_wfdei/",
+  path_remote_co2          = "/work/bstocker/labprentice/data/co2/cCO2_rcp85_const850-1765.dat",
+  path_remote_cru          = "/work/bstocker/labprentice/data/cru/ts_4.01/",
+  path_remote_MODIS_FPAR_MCD15A3H  = "/work/bstocker/labprentice/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/",
+  path_remote_MODIS_EVI_MOD13Q1 = "/work/bstocker/labprentice/data/evi_MODIS_EVI_MOD13Q1_fluxnet2015_gee_subset/",
+  path_remote_fluxnet2015  = "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_remote_watch_wfdei  = "/work/bstocker/labprentice/data/watch_wfdei/",
+  uname_remote             = "bstocker",
+  address_remote           = "login.cx1.hpc.ic.ac.uk"
   )
 ```
 
@@ -211,7 +218,6 @@ settings_input_sitescale <-  list(
 - `fapar`: A character string specifying the type of fAPAR data used as input. Implemented for use of data from CX1 are `"MODIS_FPAR_MCD15A3H"` and `"MODIS_EVI_MOD13Q1"`. Use `NA` in case no fAPAR data is used as forcing (internally simulated fAPAR).
 - `splined_fapar`: Logical defining whether splined fAPAR data is to be used. If `FALSE`, linearly interpolated fAPAR data is used.
 - `co2`: A character string specifying which CO$_2$ file should be used (globally uniform and identical for each site in an ensemble). All available CO$_2$ forcing files are located on CX1 at `/work/bstocker/labprentice/data/co2/`. `co2="cmip"` specifies that the CMIP-standard CO2 file `cCO2_rcp85_const850-1765.dat` should be used.
-- `path_cx1data`: A character string specifying the local directory that mirrors the data directory on CX1 (very handy!).
 - `path_fluxnet2015`: A character string specifying the path where standard FLUXNET 2015 CSV files are located.
 - `path_watch_wfdei`: A character string specifying the path where standard WATCH-WFDEI NetCDF files are located.
 - `path_cru_ts4_01`: A character string specifying the path where standard CRU NetCDF files are located.
