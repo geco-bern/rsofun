@@ -2,7 +2,7 @@
 ## Function for reading observational GPP data from FLUXNET 2015 dataset
 ## and defining calibration target (which flux decomposition method etc.)
 ##----------------------------------------------------------------------
-get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescale ){
+get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescale, method = "NT" ){
 
   require(dplyr)
 
@@ -112,8 +112,20 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
     df <- df %>% mutate( soilm_obs_mean = NA )
   }
 
-  ## define which data is to be used as target for calibration 'gpp_obs' and 'transp_obs'
-  df$gpp_obs <- apply( dplyr::select( df, GPP_NT_VUT_REF, GPP_DT_VUT_REF ), 1, FUN = mean, na.rm=FALSE )
+  ## define which data is to be used as target for calibration 'gpp_obs'
+  if (identical(method, "NT")){
+    df <- df %>% mutate( gpp_obs = GPP_NT_VUT_REF )
+
+  } else if (identical(method, "DT")){
+    df <- df %>% mutate( gpp_obs = GPP_DT_VUT_REF )
+
+  } else if ( identical(method, c("DT", "NT")) || identical(method, c("NT", "DT")) ){
+    df$gpp_obs <- apply( dplyr::select( df, GPP_NT_VUT_REF, GPP_DT_VUT_REF ), 1, FUN = mean, na.rm = FALSE )
+
+  } else {
+    df <- df %>% mutate( gpp_obs = NA )
+    
+  }
 
   df <- df %>%  mutate( transp_obs = LE_F_MDS, temp = TA_F, gpp_obs = ifelse( is.nan(gpp_obs), NA, gpp_obs ) ) %>%
                 dplyr::select( date, gpp_obs, transp_obs, soilm_obs_mean, temp, GPP_NT_VUT_REF, GPP_DT_VUT_REF )

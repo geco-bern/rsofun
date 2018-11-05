@@ -8,6 +8,8 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
   require(purrr)
   require(rlang)
 
+  source("check_download_fluxnet2015.R")  # Defined in a separate file because calib_sofun() calls the same function.
+
   if (settings_sims$setup == "lonlat"){
     ##-----------------------------------------------------------
     ## LONLAT: Simulation on a spatial grid (longitude/latitude).
@@ -200,12 +202,16 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       ## Loop over all sites and prepare input files by site.
       ##-----------------------------------------------------------
       ## Climate input files
-      ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite = overwrite_climate, verbose ) ) %>%
-                      bind_rows()
+      if (overwrite_climate){
+        ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite_csv = TRUE, verbose ) ) %>%
+                        bind_rows()
+      }
 
       ## prepare the fapar input files for each site
-      ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite=overwrite_fapar, verbose=TRUE ) ) %>%
-                    bind_rows()
+      if (overwrite_fapar){
+        ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite_csv = TRUE, verbose = verbose ) ) %>%
+                      bind_rows()
+      }
 
       ## CO2 file: link into site-specific input directories
       error_list <- purrr::map( as.list(settings_sims$sitenames), ~check_download_co2( settings_input, settings_sims, . ) )
@@ -244,7 +250,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
 ##-----------------------------------------------------------
-prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite, verbose ){
+prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv, verbose ){
 
   require(purrr)
   require(dplyr)
@@ -258,7 +264,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
   csvfiln <- paste0( dir, "/clim_daily_", sitename, ".csv" )
 
-  if (file.exists(csvfiln)&&!overwrite){
+  if (file.exists(csvfiln)&&!overwrite_csv){
 
     ddf <- read_csv( csvfiln )
 
@@ -449,7 +455,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
 ##-----------------------------------------------------------
-prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings_sims, overwrite, verbose ){
+prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv, verbose ){
 
   require(readr)
   require(lubridate)
@@ -463,7 +469,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
   csvfiln <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
 
-  if (file.exists(csvfiln)&&!overwrite){
+  if (file.exists(csvfiln)&&!overwrite_csv){
 
     ddf <- read_csv( csvfiln ) %>%
       mutate( fapar = as.numeric(fapar) )
@@ -1236,7 +1242,7 @@ check_download_cru <- function( varnam, settings_input, settings_sims ){
 
   ## Determine file name, given <settings_input$path_fluxnet2015>
   ## look for data in the given directory
-  getfiles <- list.files( settings_input$path_cru, pattern = paste0( "cru_ts*.1901.2016.", varnam, ".dat.nc") )
+  getfiles <- list.files( settings_input$path_cru, pattern = paste0( varnam, ".dat.nc" ) )
 
   if (length(getfiles)==0){
 
@@ -1281,7 +1287,7 @@ check_download_cru <- function( varnam, settings_input, settings_sims ){
   } 
 
   ## Check if files are now available at specified location.
-  getfiles <- list.files( settings_input$path_cru, pattern = paste0( "cru_ts*.1901.2016.", varnam, ".dat.nc") )
+  getfiles <- list.files( settings_input$path_cru, pattern = paste0( varnam, ".dat.nc" ) )
   if (length(getfiles)==0) abort("Download of CRU data was not successful. No files found.")
   
 }
@@ -1485,66 +1491,6 @@ check_download_co2 <- function( settings_input, settings_sims, sitename = NA ){
 }
 
 
-##--------------------------------------------------------------------------
-## Checks if FLUXNET 2015 files are available for this variable and initiates download if not.
-##--------------------------------------------------------------------------
-check_download_fluxnet2015 <- function( settings_input, settings_sims, sitename = NA ){
-
-  ## Check if any data is available in the specified directory
-  filelist <- list.files( settings_input$path_fluxnet2015, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv" )
-
-  if (length(filelist)==0){
-    ## No files found at specified location
-    warn( paste0("No files found for fluxnet2015 in directory ", settings_input$path_fluxnet2015) )
-
-    ## Search at a different location?
-    settings_input$path_fluxnet2015 <- readline( prompt="Would you like to search for files recursively from a certain directory? Enter the path from which search is to be done: ")
-    filelist <- list.files( settings_input$path_fluxnet2015, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv", recursive = TRUE )
-
-    if (length(filelist)==0){
-      ## Search from home
-      warn( paste0("Still nothing found at specified location ", settings_input$path_fluxnet2015 ) )
-
-      ## Search recursively from home directory?
-      ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
-      if (ans=="y") filelist <- list.files( "~/", pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv", recursive = TRUE )
-
-      if (length(filelist)==0){
-        ## Still no files found at specified location. Try to download from remote server and place in <settings_input$path_fluxnet2015>
-        abort( "No FLUXNET 2015 files downloaded." )
-
-      } else {
-
-        if (!is.na(sitename)){
-          ## Download only data for a specific site
-          ## get a file list of what's on the remote server
-          getfiles <- system( paste0( "ssh ", settings_input$uname, "@", settings_input$address_remote, " ls ", settings_input$path_remote_fluxnet2015 ), intern = TRUE )
-
-          ## use one file(s) for this site
-          getfiles <- getfiles[ grepl(sitename, getfiles) ]
-          getfiles <- getfiles[ grepl("_FLUXNET2015_FULLSET_DD_", getfiles) ]
-        } else {
-          getfiles <- NA
-        }
-
-        ## Still no files found at specified location. Try to download from remote server and place in <settings_input$path_fluxnet2015>
-        warn( "Initiating download from remote server..." )
-        error <- download_from_remote( 
-          settings_input$path_remote_fluxnet2015,
-          settings_input$path_fluxnet2015,
-          getfiles = getfiles,
-          uname = settings_input$uname, 
-          address_remote = settings_input$address_remote 
-         )
-        getfiles <- list.files( settings_input$path_fluxnet2015, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv" )
-      }
-
-    }
-
-  }
-
-}
-
 
 ##-----------------------------------------------------------
 ## Manages the path specification for MODIS FPAR data download from CX1
@@ -1674,7 +1620,7 @@ download_from_remote_path <- function( dir_remote, dir_local, pattern = NA, unam
     if (length(getfiles)==0){
       ## no data available for this site
       error <- 1
-      warn(paste0("No files available for site ", sitename ) )
+      warn(paste0("No files available for ", dir_remote ) )
     } else {
       if (subdir==""){
         error <- purrr::map( as.list(getfiles), ~system( paste0( "rsync -avz ", uname, "@", address_remote, ":", dir_remote, .," ", dir_local ) ) )    

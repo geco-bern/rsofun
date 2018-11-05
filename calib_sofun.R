@@ -1,4 +1,4 @@
-calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE ){
+calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, ddf_obs = NA ){
 
   require(readr)
   require(rlang)
@@ -6,12 +6,9 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
   ##----------------------------------------------------------------
   ## Collect observational data used as calibration target
   ##----------------------------------------------------------------
-  if (file.exists("ddf_obs.Rdata")&!overwrite){
-    load("ddf_obs.Rdata")
-  } else {
+  if (is.na(ddf_obs)){
     print("Collecting observational target data ...")
-    ddf_obs <- get_obs( settings_calib, settings_sims )
-    save( ddf_obs, file = "ddf_obs.Rdata" )
+    ddf_obs <- get_obs( settings_calib, settings_sims, settings_input )
   }
 
   ##----------------------------------------------------------------
@@ -43,7 +40,14 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
     
   }
 
-  ## make global 
+  # ## Re-evaluate sites to be used for calibration based on whether they have at least one valid data point
+  # ## and overwrite:
+  # settings_calib$sitenames <- ddf_obs %>% group_by( sitename ) %>% summarise( npoints = sum(!is.na(gpp_obs)) ) %>%
+  #                             dplyr::filter( npoints > 0 ) %>%
+  #                             dplyr::select( sitename ) %>%
+  #                             unlist() %>% unname()
+
+  ## make global
   obs <<- ddf_obs %>% dplyr::select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
 
   ##----------------------------------------------------------------
@@ -81,18 +85,28 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
   system( paste0("rm ", outfilnam))
   system( paste0("make ", model) )
 
-  # ## For calibrating quantum yield efficiency only
-  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
-
-  # ## For calibration temperature ramp parameters
-  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], param_init[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  if (names(settings_calib$par)=="kphio"){
+    ## For calibrating quantum yield efficiency only
+    out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
+    cost_rmse <- cost_rmse_kphio
   
-  # ## For calibrating soil moisture stress parameters
-  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  } else if ( "kphio" %in% names(settings_calib$par) && "temp_ramp_edge" %in% names(settings_calib$par) && "soilm_par_a" %in% names(settings_calib$par) && "soilm_par_b" %in% names(settings_calib$par) ){  
+    ## Full stack calibration
+    out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], param_init[2], param_init[3], param_init[4] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+    cost_rmse <- cost_rmse_temp_ramp  
 
-  ## Full stack calibration
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], param_init[2], param_init[3], param_init[4] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  } else if ( "kphio" %in% names(settings_calib$par) && "temp_ramp_edge" %in% names(settings_calib$par) ){  
+    ## For calibration temperature ramp parameters
+    out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], param_init[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+    cost_rmse <- cost_rmse_soilmstress
   
+  } else if ("kphio" %in% names(settings_calib$par) && "soilm_par_a" %in% names(settings_calib$par) && "soilm_par_b" %in% names(settings_calib$par) ){
+    ## For calibrating soil moisture stress parameters
+    out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+    cost_rmse <- cost_rmse_fullstack
+
+  }
+
   # col_positions <<- fwf_empty( outfilnam, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ), comment = "" ) ## this caused a mean bug, 
   col_positions <<- list( begin = 4, end = 15, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ) ) ## this is how bug is fixed
   mod <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
@@ -204,21 +218,85 @@ calib_sofun <- function( setup, settings_calib, settings_sims, overwrite=FALSE )
 ## Generic cost function of model-observation (mis-)match using
 ## root mean square error.
 ##------------------------------------------------------------
-cost_rmse <- function( par, inverse = FALSE ){
+cost_rmse_kphio <- function( par, inverse = FALSE ){
 
   ## execute model for this parameter set
-  # ## For calibrating quantum yield efficiency only
-  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
+  ## For calibrating quantum yield efficiency only
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
 
-  # ## For calibration temperature ramp parameters
-  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], par[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
+  ## read output from calibration run
+  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
   
-  # ## For calibrating soil moisture stress parameters
-  # out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, par[2], par[3] ), " | ./run", model ), intern = TRUE )
+  ## Combine obs and mod by columns
+  out <- bind_cols( obs, out )
+  
+  ## Calculate cost (RMSE)
+  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
+  
+  if (inverse) cost <- 1.0 / cost
+
+  return(cost)
+}
+
+
+##------------------------------------------------------------
+## Generic cost function of model-observation (mis-)match using
+## root mean square error.
+##------------------------------------------------------------
+cost_rmse_temp_ramp <- function( par, inverse = FALSE ){
+
+  ## For calibration temperature ramp parameters
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], par[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
+  
+  ## read output from calibration run
+  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
+  
+  ## Combine obs and mod by columns
+  out <- bind_cols( obs, out )
+  
+  ## Calculate cost (RMSE)
+  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
+  
+  if (inverse) cost <- 1.0 / cost
+
+  return(cost)
+}
+
+
+##------------------------------------------------------------
+## Generic cost function of model-observation (mis-)match using
+## root mean square error.
+##------------------------------------------------------------
+cost_rmse_soilmstress <- function( par, inverse = FALSE ){
+
+  ## execute model for this parameter set  
+  ## For calibrating soil moisture stress parameters
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, par[2], par[3] ), " | ./run", model ), intern = TRUE )
+
+  ## read output from calibration run
+  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
+  
+  ## Combine obs and mod by columns
+  out <- bind_cols( obs, out )
+  
+  ## Calculate cost (RMSE)
+  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
+  
+  if (inverse) cost <- 1.0 / cost
+
+  return(cost)
+}
+
+
+##------------------------------------------------------------
+## Generic cost function of model-observation (mis-)match using
+## root mean square error.
+##------------------------------------------------------------
+cost_rmse_fullstack <- function( par, inverse = FALSE ){
 
   ## Full stack calibration
   out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], par[2], par[3], par[4] ), " | ./run", model ), intern = TRUE )
-  
+
   ## read output from calibration run
   out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
   
@@ -268,7 +346,7 @@ cost_mae <- function( par ){
 ##------------------------------------------------------------
 ## Gets data by looping over sites
 ##------------------------------------------------------------
-get_obs <- function( settings_calib, settings_sims ){
+get_obs <- function( settings_calib, settings_sims, settings_input ){
 
   require(readr)
   require(dplyr)
@@ -282,7 +360,8 @@ get_obs <- function( settings_calib, settings_sims ){
   ## loop over sites to get data frame with all variables
   list_bysite <- lapply( settings_calib$sitenames, function(x) get_obs_bysite(x,
                                                       settings_calib = settings_calib, 
-                                                      settings_sims  = settings_sims
+                                                      settings_sims  = settings_sims,
+                                                      settings_input = settings_input
                                                       ) %>% mutate( sitename=x ) )
                 
   ## combine dataframes from multiple sites along rows
@@ -298,9 +377,10 @@ get_obs <- function( settings_calib, settings_sims ){
 ## Function returns a data frame (tibble) containing all the observational data
 ## used as target variables for calibration for a given site, covering specified dates.
 ##------------------------------------------------------------
-get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
+get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_input ){
 
   require(dplyr)
+  require(stringr)
 
   source("init_dates_dataframe.R")
   source("get_obs_bysite_gpp_fluxnet2015.R")
@@ -313,45 +393,58 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims ){
 
   if ("gpp" %in% settings_calib$targetvars){
 
-    if ("fluxnet2015" %in% settings_calib$datasource$gpp){
+    ## Interpret benchmarking data specification
+    datasource <- str_split( settings_calib$datasource, "_" ) %>% unlist()
+
+    if ("fluxnet2015" %in% datasource){
 
       ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
+      error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
 
       ## This gets gpp_obs as mean of GPP_NT_VUT_REF and GPP_DT_VUT_REF
-      ddf <-  get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
-              rename( gpp_obs_fluxnet2015 = gpp_obs ) %>%
+      ddf <-  get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale, method = datasource[ -which( datasource=="fluxnet2015" ) ] ) %>%
               right_join( ddf, by = "date" )
 
+    } else {
+      
+      ddf <- ddf %>% mutate( gpp_obs = NA )
+      
     }
 
-    if ("gepisat" %in% settings_calib$datasource$gpp){
+    if ("Ty" %in% datasource){
 
       ## Make sure data is available for this site
       error <- check_download_gepisat( settings_calib$path_gepisat, sitename )
 
-      tmp <-  get_obs_bysite_gpp_gepisat( sitename, settings_calib$path_gepisat, settings_calib$timescale )
+      ddf_gepisat <- get_obs_bysite_gpp_gepisat( sitename, settings_calib$path_gepisat, settings_calib$timescale )
       
-      if (!is.null(tmp)){
-        ddf <- tmp %>%
-          rename( gpp_obs_gepisat = gpp_obs ) %>%
+      # ## XXX test
+      # if (any(!is.na(ddf_gepisat$gpp_obs))){
+      #   pdf( paste0("fig/gpp_gepisat/gpp_gepisat_", sitename, ".pdf"))
+      #   with(ddf_gepisat, plot( date, gpp_obs, type="l"))
+      #   title( sitename )
+      #   dev.off()
+      # }
+      
+      ## add to other data frame and take take weighted average for updated 'gpp_obs'
+      if (!is.null(ddf_gepisat)){
+        
+        ddf <- ddf_gepisat %>%
+          ## Some GPP data looks weird when its error in resp. day is zero. Exclude this data.
+          mutate( gpp_obs = ifelse( gpp_err_obs == 0.0, NA, gpp_obs ) ) %>% 
+          dplyr::rename( gpp_obs_gepisat = gpp_obs ) %>%
           right_join( ddf, by = "date" )
+        totlen <- length(datasource[ -which( datasource=="fluxnet2015" ) ])
+        if (totlen>1){
+          ddf$gpp_obs <- sum( c(ddf$gpp_obs * (totlen-1), ddf$gpp_obs_gepisat), na.rm = TRUE ) / totlen
+        } else {
+          ddf <- ddf %>% mutate( gpp_obs = gpp_obs_gepisat )
+        }
+        
       } else {
-        ddf <- ddf %>% mutate( gpp_obs_gepisat = NA )
+        ## No GePiSaT data available for this site. Consider all GPP data missing (NA).
+        ddf <- ddf %>% mutate( gpp_obs = NA )
       }
-
-    }
-
-    if ("fluxnet2015" %in% settings_calib$datasource$gpp && "gepisat" %in% settings_calib$datasource$gpp){
-      
-      ## For now, take mean across GPP_NT_VUT_REF, GPP_DT_VUT_REF, and GePiSaT-GPP
-      ddf$gpp_obs <-  apply( dplyr::select( ddf, gpp_obs_fluxnet2015, gpp_obs_gepisat ), 1, FUN = weighted.mean, c(2,1), na.rm=TRUE ) 
-      ddf <- ddf %>% mutate( gpp_obs = ifelse( is.nan(gpp_obs), NA, gpp_obs ) )
-    
-    } else if ("fluxnet2015" %in% settings_calib$datasource$gpp){
-    
-      ## For now, take mean across GPP_NT_VUT_REF, and GPP_DT_VUT_REF
-      ddf <- ddf %>% mutate( gpp_obs = gpp_obs_fluxnet2015 )
 
     }
 

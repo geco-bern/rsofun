@@ -54,7 +54,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
       summarise( gpp_mod = sum(gpp_mod), n = n() ) %>%
       mutate( gpp_mod = ifelse( n<365, NA, gpp_mod ) ) %>%
       ## merge into observational data frame
-      right_join( adf, by = c("sitename", "year"))
+      right_join( obs_eval$adf, by = c("sitename", "year"))
 
     ## monthly mean
     obs_eval$mdf <- ddf_mod %>%
@@ -62,21 +62,21 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
       group_by( sitename, year, moy ) %>%
       summarise( gpp_mod = mean(gpp_mod), n = n() ) %>%
       ## merge into observational data frame
-      right_join( mutate( mdf, moy = month(date) ), by = c("sitename", "year", "moy"))
+      right_join( mutate( obs_eval$mdf, moy = month(date) ), by = c("sitename", "year", "moy"))
 
     ## mean across multi-day period
     obs_eval$xdf <- ddf_mod %>% 
     	# mutate( year = year(date), week = week(date) ) %>%
-    	mutate( year = year(date), inbin = cut( date, breaks = breaks, right = FALSE ) ) %>%
+    	mutate( year = year(date), inbin = cut( date, breaks = obs_eval$breaks_xdf, right = FALSE ) ) %>%
       group_by( sitename, inbin ) %>%
       summarise( gpp_mod_mean = mean( gpp_mod, na.rm = TRUE ), gpp_mod_min = min( gpp_mod, na.rm = TRUE ), gpp_mod_max = max( gpp_mod, na.rm = TRUE ), n_mod = sum(!is.na(gpp_mod)) ) %>%
       dplyr::rename( gpp_mod = gpp_mod_mean ) %>%
-    	right_join( xdf, by = c("sitename", "inbin") )
+    	right_join( obs_eval$xdf, by = c("sitename", "inbin") )
     
     ## daily
     obs_eval$ddf <- ddf_mod %>%
       ## merge into observational data frame
-      right_join( ddf, by = c("sitename", "date"))
+      right_join( obs_eval$ddf, by = c("sitename", "date"))
 
     ##------------------------------------------------------------
     ## Create table for overview
@@ -85,6 +85,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     if (!file.exists(filn)||overwrite){
     	## Get additional meta information for sites: Koeppen-Geiger Class
     	## First, get this info from a separate CSV file
+      ## XXX Joan: Put this file on Zenodo and get this file along with R-package-related data download. 
       tmp <-  read_csv("~/data/FLUXNET-2015_Tier1/meta/fluxnet_site_info_mysub.csv") %>%
               dplyr::rename( sitename = fluxnetid ) %>% dplyr::select( sitename, koeppen_climate )
       
@@ -95,9 +96,9 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
   	          unnest( koeppen_code )
 
   	  ## add info: number of data points (daily GPP)
-  		siteinfo_eval <- ddf %>% group_by( sitename ) %>% summarise( ndailygpp = sum(!is.na(gpp_obs)) ) %>% 
-  												right_join( dplyr::rename( siteinfo$light, sitename = mysitename), by = "sitename" ) %>%
-  												left_join( meta, by = "sitename")
+  		siteinfo_eval <- obs_eval$ddf %>% group_by( sitename ) %>% summarise( ndailygpp = sum(!is.na(gpp_obs)) ) %>% 
+  			right_join( dplyr::rename( siteinfo$light, sitename = mysitename), by = "sitename" ) %>%
+  			left_join( meta, by = "sitename")
   		
   		legend <- tmp$koeppen_climate %>% as_tibble() %>% 
   		  filter( !is.na(value) ) %>%
@@ -148,7 +149,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     metrics$gpp$fluxnet2015$annual_pooled <- with( obs_eval$adf, get_stats( gpp_mod, gpp_obs ) )
 
     ##------------------------------------------------------------
-	  ## Evaluate annual values by site
+	  ## Evaluate monthly values by site
     ##------------------------------------------------------------
 		mdf_stats <- obs_eval$mdf %>% group_by( sitename ) %>% 
 								 nest() %>%
@@ -225,7 +226,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
 														 mod_mean = mean( gpp_mod, na.rm=TRUE ), mod_min = min( gpp_mod, na.rm=TRUE ), mod_max = max( gpp_mod, na.rm=TRUE )
 														 ) %>%
 	                mutate( obs_min = ifelse( is.infinite(obs_min), NA, obs_min ), obs_max = ifelse( is.infinite(obs_max), NA, obs_max ) ) %>%
-									mutate( obs_mean = interpol_lin(obs_mean), obs_min = interpol_lin(obs_min), obs_max = interpol_lin( obs_max ), site=sitename )
+									mutate( obs_mean_plot = interpol_lin(obs_mean), obs_min_plot = interpol_lin(obs_min), obs_max_plot = interpol_lin( obs_max ), site=sitename )
 
 		meandoydf_stats <- meandoydf %>% group_by( sitename ) %>%
 											 nest()
@@ -249,9 +250,16 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
                         	by = c("koeppen_code", "hemisphere") 
                         	)
 
-		meandoydf_byclim_stats <- meandoydf_byclim %>% group_by( koeppen_code, hemisphere ) %>%
-															nest()
-		  
+		meandoydf_byclim_stats <- meandoydf_byclim %>% 
+		                          group_by( koeppen_code, hemisphere ) %>%
+															nest() %>%
+														  mutate( linmod = purrr::map( data, ~lm( obs_mean ~ mod_mean, data = . ) ),
+														          stats  = purrr::map( data, ~get_stats( .$mod_mean, .$obs_mean ) ) ) %>%
+														  mutate( data   = purrr::map( data, ~add_fitted_alternativenames(.) ) ) %>%
+														  unnest( stats )
+		
+		metrics$gpp$fluxnet2015$meandoy_byclim  <- meandoydf_byclim_stats %>% dplyr::select( -data, -linmod )
+		
     ##------------------------------------------------------------
 	  ## Get IDV (inter-day variability) as daily value minus mean by site and DOY
     ##------------------------------------------------------------
@@ -361,125 +369,146 @@ get_obs_eval <- function( settings_eval, settings_input, settings_sims, overwrit
 	require(purrr)
 	require(lubridate)
 
-  if (settings_eval$benchmark$gpp=="fluxnet2015"){
-	  ##------------------------------------------------------------
-	  ## Read annual observational data from FLUXNET 2015 files (from annual files!).
-	  ##------------------------------------------------------------
-	  ## loop over sites to get data frame with all variables
-	  print("getting annual FLUXNET-2015_Tier1 data...")
-	  if (!file.exists("adf_obs_eval.Rdata")||overwrite){
-		  adf <-  lapply( as.list(settings_eval$sitenames),
-											  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
-														path_fluxnet2015 = settings_eval$path_fluxnet2015_y,
-														timescale = "y" ) %>%
-										## Remove outliers, i.e. when data is outside 1.5 times the inter-quartile range
-										mutate( gpp_obs = remove_outliers( gpp_obs, coef=1.5 ),
-														year = year(date),
-														sitename = x ) ) %>%
-		  							bind_rows() %>%
-		                dplyr::select(-soilm_obs_mean) %>%
-		                mutate( gpp_obs = ifelse( year < 2000, NA, gpp_obs ) ) # remove pre-modis data
-    } else {
-    	load("adf_obs_eval.Rdata")
-    }
+	if ("gpp" %in% names(settings_eval$benchmark)){
+		##------------------------------------------------------------
+		## Get observational GPP data
+		##------------------------------------------------------------
 
-		##------------------------------------------------------------
-		## Read monthly observational data from FLUXNET 2015 files (from monthly files!).
-		##------------------------------------------------------------
-		## loop over sites to get data frame with all variables
-		print("getting monthly FLUXNET-2015_Tier1 data...")
-		if (!file.exists("mdf_obs_eval.Rdata")||overwrite){
-			mdf <-  lapply( as.list(settings_eval$sitenames),
-											  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
-														path_fluxnet2015 = settings_eval$path_fluxnet2015_m,
-														timescale = "m" ) %>%
-										mutate( year = year(date),
-														sitename = x ) ) %>%
-										bind_rows() %>%
-										mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) # remove pre-modis data
-		} else {
-    	load("mdf_obs_eval.Rdata")
-    }
+		## Interpret benchmarking data specification
+		datasource <- str_split( settings_eval$benchmark$gpp, "_" ) %>% unlist()
 
-		##------------------------------------------------------------
-		## Read daily observational data from FLUXNET 2015 files (from daily files!).
-		##------------------------------------------------------------
-		## loop over sites to get data frame with all variables
-		print("getting daily FLUXNET-2015_Tier1 data...")
-		if (!file.exists("ddf_obs_eval.Rdata")||overwrite){
-			ddf <-  lapply( as.list(settings_eval$sitenames),
-											  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
-														path_fluxnet2015 = settings_eval$path_fluxnet2015_d,
-														timescale = "d" ) %>%
-										mutate( year = year(date),
-														sitename = x ) ) %>%
-										bind_rows() %>%
-										mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) # remove pre-modis data
+	  if ("fluxnet2015" %in% datasource){
+		  ##------------------------------------------------------------
+		  ## Read annual observational data from FLUXNET 2015 files (from annual files!).
+		  ##------------------------------------------------------------
+		  ## loop over sites to get data frame with all variables
+		  print("getting annual FLUXNET-2015_Tier1 data...")
+		  if (!file.exists("adf_obs_eval.Rdata")||overwrite){
+			  adf <-  lapply( as.list(settings_eval$sitenames),
+												  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
+															path_fluxnet2015 = settings_eval$path_fluxnet2015_y,
+															timescale = "y", method = datasource[ -which( datasource=="fluxnet2015" ) ] ) %>%
+											## Remove outliers, i.e. when data is outside 1.5 times the inter-quartile range
+											mutate( gpp_obs = remove_outliers( gpp_obs, coef=1.5 ),
+															year = year(date),
+															sitename = x ) ) %>%
+			  							bind_rows() %>%
+			                dplyr::select(-soilm_obs_mean) %>%
+			                mutate( gpp_obs = ifelse( year < 2000, NA, gpp_obs ) ) # remove pre-modis data
+			  save( adf, file = "adf_obs_eval.Rdata")
+	    } else {
+	    	load("adf_obs_eval.Rdata")
+	    }
 
 			##------------------------------------------------------------
-			## Read daily observational data from GEPISAT files (only daily files!).
+			## Read monthly observational data from FLUXNET 2015 files (from monthly files!).
 			##------------------------------------------------------------
-			tmp <- lapply( as.list(settings_eval$sitenames),
-											function(x) get_obs_bysite_gpp_gepisat( x, 
-											  settings_eval$path_gepisat_d, 
-												timescale = "d" ) )
-			names(tmp) <- settings_eval$sitenames
-
-			missing_gepisat <- purrr::map_lgl( tmp, ~identical(., NULL ) ) %>% which() %>% names()
-			settings_eval$sitenames_gepisat <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_gepisat))]
-
-			tmp <- tmp %>% bind_rows( .id = "sitename" ) %>%
-			               mutate( year = year(date) ) %>%
-			               mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) %>%  # remove pre-modis data
-			               dplyr::rename( gpp_obs_gepisat = gpp_obs )
-			  
-			if (!is.null(tmp)){
-			  ddf <- tmp %>% right_join( ddf, by = "date" )
+			## loop over sites to get data frame with all variables
+			print("getting monthly FLUXNET-2015_Tier1 data...")
+			if (!file.exists("mdf_obs_eval.Rdata")||overwrite){
+				mdf <-  lapply( as.list(settings_eval$sitenames),
+												  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
+															path_fluxnet2015 = settings_eval$path_fluxnet2015_m,
+															timescale = "m", method = datasource[ -which( datasource=="fluxnet2015" ) ] ) %>%
+											mutate( year = year(date),
+															sitename = x ) ) %>%
+											bind_rows() %>%
+											mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) # remove pre-modis data
+				save( mdf, file = "mdf_obs_eval.Rdata")
 			} else {
-			  ddf <- ddf %>% mutate( gpp_obs_gepisat = NA )
-			}			  							
+	    	load("mdf_obs_eval.Rdata")
+	    }
 
 			##------------------------------------------------------------
-			## Add forcing data to daily data frame (for neural network-based evaluation)
+			## Read daily observational data from FLUXNET 2015 files (from daily files!).
 			##------------------------------------------------------------
-			ddf <- lapply( as.list(settings_eval$sitenames), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
-			       bind_rows() %>%
-			       dplyr::select(-year_dec.x, -year_dec.y) %>%
-						 right_join( ddf, by = c("sitename", "date") )
+			## loop over sites to get data frame with all variables
+			print("getting daily FLUXNET-2015_Tier1 data...")
+			if (!file.exists("ddf_obs_eval.Rdata")||overwrite){
+				ddf <-  lapply( as.list(settings_eval$sitenames),
+												  	function(x) get_obs_bysite_gpp_fluxnet2015( x,
+															path_fluxnet2015 = settings_eval$path_fluxnet2015_d,
+															timescale = "d", method = datasource[ -which( datasource=="fluxnet2015" ) ] ) %>%
+											mutate( year = year(date),
+															sitename = x ) ) %>%
+											bind_rows() %>%
+											mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) # remove pre-modis data
 
-		} else {
-    	load("ddf_obs_eval.Rdata")
-    }
+				##------------------------------------------------------------
+				## Read daily observational data from GEPISAT files (only daily files!).
+				##------------------------------------------------------------
+				if ("Ty" %in% datasource){
+					ddf_gepisat <- lapply( as.list(settings_eval$sitenames),
+													function(x) get_obs_bysite_gpp_gepisat( x, 
+													  settings_eval$path_gepisat_d, 
+														timescale = "d" ) )
+					names(ddf_gepisat) <- settings_eval$sitenames
 
-	  ##------------------------------------------------------------
-	  ## Aggregate to multi-day periods
-	  ## periods should start with the 1st of January each year, otherwise can't compute mean seasonal cycle
-	  ##------------------------------------------------------------
-		if (!file.exists("xdf_obs_eval.Rdata")||overwrite){
-			# ## 8-day periods corresponding to MODIS dates (problem: doesn't start with Jan 1 each year)
-	    	#  breaks <- modisdates <- read_csv( "modisdates.csv" )$date
+					missing_gepisat <- purrr::map_lgl( ddf_gepisat, ~identical(., NULL ) ) %>% which() %>% names()
+					settings_eval$sitenames_gepisat <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_gepisat))]
 
-		  # ## aggregate to weeks
-		  # xdf <- ddf %>% mutate( inbin = week(date) ) %>%
-		  #                group_by( sitename, year, inbin ) %>%
-		  #                summarise( gpp_obs = mean( gpp_obs, na.rm=TRUE) )
+					ddf_gepisat <- ddf_gepisat %>% bind_rows( .id = "sitename" ) %>%
+					               mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) %>%  # remove pre-modis data
+					               dplyr::rename( gpp_obs_gepisat = gpp_obs )
 
-		  ## Generate vector of starting dates of X-day periods, making sure the 1st of Jan is always the start of a new period
-			listyears <- seq( ymd("1990-01-01"), ymd("2018-01-01"), by = "year" )	                 
-			breaks <- purrr::map( as.list(listyears), ~seq( from=., by=paste0( settings_eval$agg, " days"), length.out = ceiling(365 / settings_eval$agg)) ) %>% Reduce(c,.)
-		
-			## take mean across periods
-			xdf <- ddf %>% mutate( inbin = cut( date, breaks = breaks, right = FALSE ) ) %>%
-			 							 group_by( sitename, inbin ) %>%
-			 							 summarise( gpp_obs_mean = mean( gpp_obs, na.rm = TRUE ), gpp_obs_min = min( gpp_obs, na.rm = TRUE ), gpp_obs_max = max( gpp_obs, na.rm = TRUE ), n_obs = sum(!is.na(gpp_obs)) ) %>%
-			               dplyr::rename( gpp_obs = gpp_obs_mean ) %>%
-			               mutate( gpp_obs = ifelse(is.nan(gpp_obs), NA, gpp_obs ), gpp_obs_min = ifelse(is.infinite(gpp_obs_min), NA, gpp_obs_min ), gpp_obs_max = ifelse(is.infinite(gpp_obs_max), NA, gpp_obs_max ) )
+          ## add to other data frames (ddf, adf, mdf) and take take weighted average for updated 'gpp_obs'
+					if (!is.null(ddf_gepisat)){
+					  ddf <- ddf_gepisat %>% right_join( ddf, by = c("sitename", "date") )
+					  totlen <- length(datasource[ -which( datasource=="fluxnet2015" ) ])
+					  ddf$gpp_obs <- (ddf$gpp_obs * (totlen-1) + ddf$gpp_obs_gepisat) / totlen
+
+					} else {
+					  ddf <- ddf %>% mutate( gpp_obs_gepisat = NA )
+					}			  							
+				}
+
+				##------------------------------------------------------------
+				## Add forcing data to daily data frame (for neural network-based evaluation)
+				##------------------------------------------------------------
+				ddf <- lapply( as.list(settings_eval$sitenames), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
+				       bind_rows() %>%
+				       dplyr::select(-year_dec.x, -year_dec.y) %>%
+							 right_join( ddf, by = c("sitename", "date") )
+
+				save( ddf, file = "ddf_obs_eval.Rdata")
+
+			} else {
+	    	load("ddf_obs_eval.Rdata")
+	    }
+
+		  ##------------------------------------------------------------
+		  ## Aggregate to multi-day periods
+		  ## periods should start with the 1st of January each year, otherwise can't compute mean seasonal cycle
+		  ##------------------------------------------------------------
+			if (!file.exists("xdf_obs_eval.Rdata")||overwrite){
+				# ## 8-day periods corresponding to MODIS dates (problem: doesn't start with Jan 1 each year)
+		    	#  breaks <- modisdates <- read_csv( "modisdates.csv" )$date
+
+			  # ## aggregate to weeks
+			  # xdf <- ddf %>% mutate( inbin = week(date) ) %>%
+			  #                group_by( sitename, year, inbin ) %>%
+			  #                summarise( gpp_obs = mean( gpp_obs, na.rm=TRUE) )
+
+			  ## Generate vector of starting dates of X-day periods, making sure the 1st of Jan is always the start of a new period
+				listyears <- seq( ymd("1990-01-01"), ymd("2018-01-01"), by = "year" )	                 
+				breaks <- purrr::map( as.list(listyears), ~seq( from=., by=paste0( settings_eval$agg, " days"), length.out = ceiling(365 / settings_eval$agg)) ) %>% Reduce(c,.)
+			
+				## take mean across periods
+				xdf <- ddf %>% mutate( inbin = cut( date, breaks = breaks, right = FALSE ) ) %>%
+				 							 group_by( sitename, inbin ) %>%
+				 							 summarise( gpp_obs_mean = mean( gpp_obs, na.rm = TRUE ), gpp_obs_min = min( gpp_obs, na.rm = TRUE ), gpp_obs_max = max( gpp_obs, na.rm = TRUE ), n_obs = sum(!is.na(gpp_obs)) ) %>%
+				               dplyr::rename( gpp_obs = gpp_obs_mean ) %>%
+				               mutate( gpp_obs = ifelse(is.nan(gpp_obs), NA, gpp_obs ), gpp_obs_min = ifelse(is.infinite(gpp_obs_min), NA, gpp_obs_min ), gpp_obs_max = ifelse(is.infinite(gpp_obs_max), NA, gpp_obs_max ) )
+				save( xdf, breaks_xdf = xdf, file = "xdf_obs_eval.Rdata")	 
 			} else {
 				load("xdf_obs_eval.Rdata")
 			}
+	}
+
 
 	}
-	return( list( ddf=ddf, xdf=xdf, mdf=mdf, adf=adf ) )
+
+	return( list( ddf=ddf, xdf=xdf, mdf=mdf, adf=adf, breaks_xdf = breaks ) )
 }
 
 
@@ -498,6 +527,12 @@ get_stats <- function( mod, obs ){
 
 add_fitted <- function( data ){
   linmod <- lm( gpp_obs ~ gpp_mod, data = data, na.action = "na.exclude" )
+  data$fitted <- fitted( linmod )
+  return(data)  
+}
+
+add_fitted_alternativenames <- function( data ){
+  linmod <- lm( obs_mean ~ mod_mean, data = data, na.action = "na.exclude" )
   data$fitted <- fitted( linmod )
   return(data)  
 }
