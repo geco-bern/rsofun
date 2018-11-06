@@ -1,6 +1,19 @@
-##-----------------------------------------------------------
-## Creates all the input files/links necessary to run simulations
-##-----------------------------------------------------------
+
+#' Prepare the inputs for SOFUN
+#'
+#' Creates all the input files/links necessary to run simulations
+#'
+#' @param settings_input a settings list from \code{\link{prepare_setup_sofun}}.
+#' @param settings_sims TODO
+#' @param return_data if \code{TRUE}, TODO
+#' @param overwrite_climate if \code{TRUE}, TODO
+#' @param overwrite_fapar if \code{TRUE}, TODO
+#' @param verbose if \code{TRUE}, TODO
+#'
+#' @return TODO
+#' @export
+#'
+#' @examples
 prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALSE, overwrite_climate=FALSE, overwrite_fapar=FALSE, verbose=FALSE ){
 
   require(lubridate)
@@ -1110,8 +1123,9 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
 ##--------------------------------------------------------------------
 find_nearest_cruland_by_lat <- function( lon, lat, filn ){
 
-  library(ncdf4)
-  
+  if (!requireNamespace("ncdf4", quietly = TRUE))
+    stop("Please, install 'ncdf4' package")
+
   nc <- nc_open( filn, readunlim=FALSE )
   crufield <- ncvar_get( nc, varid="TMP" )
   lon_vec <- ncvar_get( nc, varid="LON" )
