@@ -3,18 +3,18 @@
 ##-----------------------------------------------------------
 runread_sofun <- function( settings, setup ){
 
-  # ## run simulations
-  # out_std <- run_sofun( settings, setup )
-  # 
-  # ## don't save standard output to save space
-  # rm("out_std")
+  ## run simulations
+  out_std <- run_sofun( settings, setup )
+  
+  ## don't save standard output to save space
+  rm("out_std")
 
   ## read output into one big list
   ddf_list <- read_sofun( settings, setup )
 
   return(ddf_list)
 }
-
+  
 
 ##-----------------------------------------------------------
 ## Runs the model.
@@ -40,9 +40,9 @@ run_sofun <- function( settings, setup ){
 
       ## Download executable from CX1
       warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
-      download_file_cx1(  path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model),
-                          path_local = settings$dir_sofun 
-                          )
+      download_from_remote(   path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model ),
+                              path_local = settings$dir_sofun 
+                              )
       if (!file.exists(paste0("run", setup$model))) abort( paste( "Executable could not be downloaded: ", paste0("run", setup$model)) )
     }
 
@@ -70,10 +70,10 @@ read_sofun <- function( settings, setup ){
   require(ncdf4)
   require(rlang)
   
-  # ## First, process NetCDF which are written separately for each simulation year
-  # print("processing NetCDF outputs...")
-  # tmp <- purrr::map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
-  # rm("tmp")
+  ## First, process NetCDF which are written separately for each simulation year
+  print("processing NetCDF outputs...")
+  tmp <- purrr::map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
+  rm("tmp")
 
   ## Open and read daily output from NetCDF file for each site
   ddf_list <- list()

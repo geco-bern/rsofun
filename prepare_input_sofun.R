@@ -1147,6 +1147,8 @@ check_download_watch_wfdei <- function( varnam, settings_input, settings_sims ){
   require(dplyr)
   require(rlang)
 
+  source("download_from_remote.R")
+
   ## Determine file name, given <settings_input$path_fluxnet2015>
   ## look for data in the given directory
   filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( varnam, "_daily_WFDEI_.*.nc"), recursive = TRUE )
@@ -1240,6 +1242,8 @@ check_download_cru <- function( varnam, settings_input, settings_sims ){
   require(dplyr)
   require(rlang)
 
+  source("download_from_remote.R")
+
   ## Determine file name, given <settings_input$path_fluxnet2015>
   ## look for data in the given directory
   getfiles <- list.files( settings_input$path_cru, pattern = paste0( varnam, ".dat.nc" ) )
@@ -1300,6 +1304,8 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
   require(purrr)
   require(dplyr)
   require(rlang)
+
+  source("download_from_remote.R")
 
   error <- 0
 
@@ -1381,6 +1387,8 @@ check_download_MODIS_EVI_MOD13Q1 <- function( settings_input, settings_sims, sit
   require(purrr)
   require(dplyr)
   require(rlang)
+
+  source("download_from_remote.R")
 
   error <- 0
 
@@ -1464,6 +1472,8 @@ check_download_co2 <- function( settings_input, settings_sims, sitename = NA ){
 
   error <- 0
 
+  source("download_from_remote.R")
+
   if (!file.exists(settings_input$path_co2)){
 
     error <- download_from_remote( settings_input$path_remote_co2, settings_input$path_co2, uname = settings_input$uname, address_remote = settings_input$address_remote )
@@ -1491,148 +1501,6 @@ check_download_co2 <- function( settings_input, settings_sims, sitename = NA ){
 }
 
 
-
-##-----------------------------------------------------------
-## Manages the path specification for MODIS FPAR data download from CX1
-##-----------------------------------------------------------
-download_from_remote <- function( dir_remote, dir_local, pattern = NA, uname = NULL, address_remote = NULL, getfiles = NA ){
-  
-  require(rlang)
-
-  ans <- readline( prompt = paste0("Are you still happy with downloading to ", dir_local, "? (y/n)") )
-  if (ans=="y"){
-    error <- download_from_remote_path( dir_remote, dir_local, pattern, uname, address_remote, getfiles )
-  } else {
-    dir_local <- readline( prompt = "Please specify a new path: " )
-    error <- download_from_remote_path( dir_remote, dir_local, pattern, uname, address_remote, getfiles )
-  }
-
-  return(error)
-
-}
-
-
-# ##-----------------------------------------------------------
-# ## Manages the path specification for fluxnet data download from CX1
-# ##-----------------------------------------------------------
-# download_fluxnet2015_from_remote <- function( path ){
-  
-#   require(rlang)
-
-#   ans <- readline( prompt = "Do you have access to Imperial's CX1? (y/n) " )
-#   if (ans=="y"){
-#     ans <- readline( prompt = "Have you connected to Imperial's VPN? (y/n) " )
-#     if (ans=="y"){
-#       ans <- readline( prompt = paste0("Are you still happy with downloading to ", path, "? (y/n)") )
-#       if (ans=="y"){
-#         error <- download_fluxnet2015_from_remote_path( path )
-#       } else {
-#         path <- readline( prompt = "Please specify a new path: " )
-#         error <- download_fluxnet2015_from_remote_path( path )
-#       }
-#     } else {
-#       abort( "FLUXNET 2015 data download not possible.")
-#     }
-#   } else {
-#     abort( "FLUXNET 2015 data download not possible.")
-#   }
-
-#   return(error)
-
-# }
-
-# ##-----------------------------------------------------------
-# ## Downloads fluxnet data from CX1
-# ##-----------------------------------------------------------
-# download_fluxnet2015_from_remote_path <- function( path, sitename=NA ){
-
-#   ## get user name from user
-#   if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
-
-#   ## the path of fluxnet daily data on cx1
-#   origpath <- "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/"
-
-#   if (is.na(sitename)){
-#     ## Download the whole bunch
-
-#     ## create required directory
-#     if (!dir.exists(path)) system( paste0("mkdir -p ", path ) )
-#     system( paste0( "rsync -avz ", uname, "@", settings_input$address_remote, ":", origpath, " ", path ) )
-
-#   } else {
-#     ## Download only data for a specific site
-#     ## get a file list of what's on CX1
-#     filelist <- system( paste0( "ssh ", uname, "@", settings_input$address_remote, " ls ", origpath ), intern = TRUE )
-
-#     ## use one file(s) for this site
-#     filelist <- filelist[ grepl(sitename, filelist) ]
-#     filelist <- filelist[ grepl("_FLUXNET2015_FULLSET_DD_", filelist) ]
-
-#     purrr::map( as.list(filelist), ~system( paste0( "rsync -avz ", uname, "@", settings_input$address_remote, ":", origpath, .," ", path ) ) )
-    
-#   }
-
-# }
-
-
-##-----------------------------------------------------------
-## Downloads all files in a given directly from remote server, or only files that contain 'pattern'
-##-----------------------------------------------------------
-download_from_remote_path <- function( dir_remote, dir_local, pattern = NA, uname = NULL, address_remote = NULL, getfiles = NA ){
-
-  error <- 0
-
-  ## get user name from user
-  if (!exists("uname") && is.null(uname)) uname <<- readline( prompt = "Enter your user name for logging onto remote server: " )
-  if (is.null(address_remote)) address_remote <<- readline( prompt = "Enter your address of remote server: " )
-
-  if (is.na(pattern) && is.na(getfiles)){
-    ## Download all files in the specified remote directory
-    ## create required directory
-    if (!dir.exists(dir_local)) system( paste0("mkdir -p ", dir_local ) )
-
-    system( paste0( "rsync -avz ", uname, "@", address_remote, ":", dir_remote, " ", dir_local ) )
-
-  } else {
-    ## Download only data for a specific site or only specific files, given their full name
-
-    if (!is.na(pattern)&&is.na(getfiles)){
-      ## Define file names of files to download, given 'pattern'
-      ## get a file list of what's on CX1
-      getfiles <- system( paste0( "ssh ", uname, "@", address_remote, " ls ", dir_remote ), intern = TRUE )
-
-      ## use only file(s) for this site
-      getfiles <- getfiles[ grepl(pattern, getfiles) ]
-    
-    } else if (!is.na(pattern)&&!is.na(getfiles)){
-
-      abort("download_from_remote_path(): Specify only one argument of getfiles and pattern.")
-
-    }
-
-    ## create required directory locally
-    if (!dir.exists(dir_local)) system( paste0("mkdir -p ", dir_local ) ) 
-
-    ## Check if required files are in sub-directories. If so, create them locally as on remote
-    subdir <- getfiles %>% dirname() %>% unique()
-    if (subdir!="" && !dir.exists(paste0( dir_local, "/", subdir ))) system( paste0("mkdir -p ", paste0( dir_local, "/", subdir ) ) )
-
-    if (length(getfiles)==0){
-      ## no data available for this site
-      error <- 1
-      warn(paste0("No files available for ", dir_remote ) )
-    } else {
-      if (subdir==""){
-        error <- purrr::map( as.list(getfiles), ~system( paste0( "rsync -avz ", uname, "@", address_remote, ":", dir_remote, .," ", dir_local ) ) )    
-      } else {
-        error <- purrr::map( as.list(getfiles[1]), ~system( paste0( "rsync -avz ", uname, "@", address_remote, ":", origpath, ., " ", paste0( dir_local, subdir ) ) ) )
-      }
-
-    }
-
-  }
-  return( error )
-}
 
 
 # ##-----------------------------------------------------------

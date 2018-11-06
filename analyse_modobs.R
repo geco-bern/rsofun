@@ -4,7 +4,8 @@ analyse_modobs <- function( mod,
                             plot.fil=NA, 
                             xlim=NA, 
                             ylim=NA, 
-                            plot.title=NA, 
+                            plot.title=NA,
+                            plot.subtitle=NA,
                             do.plot=TRUE, 
                             plot.linmod=TRUE, 
                             corner="bottomright",
@@ -78,7 +79,9 @@ analyse_modobs <- function( mod,
     # text( x0, y0[3], bquote( italic(R)^2 == .(format( rsq, digits = 2) ) ),  adj=0.0, cex=0.8 )
     # text( x0, y0[5], paste( "N =", format( numb, digits = 1 ) ), adj=0.0, cex=0.8 )
 
-    title( plot.title, cex.main=0.9, font=1 )
+    title( plot.title, cex.main = 0.9, font = 1 )
+    mtext( plot.subtitle, side = 3, line = 0.5, cex = 0.9 )
+
     if (!is.na(plot.fil)){
       dev.off()
     }

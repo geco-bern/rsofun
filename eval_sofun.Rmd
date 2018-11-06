@@ -46,16 +46,16 @@ source("eval_sofun.R")
 source("get_obs_bysite_gpp_fluxnet2015.R")
 source("get_obs_bysite_gpp_gepisat.R")
 source("remove_outliers.R")
+source("plot_eval_sofun.R")
 ```
 
-Define model evaluation settings as a list.
+Define common model evaluation settings as a list.
 ```{r, eval=FALSE, message=FALSE}
 mylist <- read_csv("myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
 settings_eval <- list(
   sitenames = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename,
   sitenames_siteplots = mylist,
   agg = 5,
-  benchmark = list( gpp = c("fluxnet2015_NT", "fluxnet2015_DT") ),
   path_fluxnet2015_d = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_fluxnet2015_w = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/",
   path_fluxnet2015_m = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/",
@@ -127,19 +127,21 @@ if (!exists("mod_RED")) load("mod_RED.Rdata")
 missing_mod <- purrr::map_lgl( mod_RED$daily, ~identical(., NA ) ) %>% which() %>% names()
 settings_eval$sitenames <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_mod))]
 
-xxx get_obs_eval(): make this dependent on target GPP data _DT, _NT, Ty
+## Define other setup-specific evaluation settings
+settings_eval$benchmark <- list( gpp = c("fluxnet2015_NT") )
 
 ## get observational data separately and save since it's the same for multiple evaluations
-obs_eval <- get_obs_eval( settings_eval = settings_eval, settings_input = settings_input_sitescale, settings_sims = settings_sims_sitescale, overwrite = TRUE )
-save( obs_eval, file = "obs_eval.Rdata")
+obs_eval_RED <- get_obs_eval( settings_eval = settings_eval, settings_input = settings_input_sitescale, settings_sims = settings_sims_sitescale, overwrite = TRUE )
+save( obs_eval_RED, file = "obs_eval_RED.Rdata")
 
 ## evaluate RED simulations
-out_eval_RED <- eval_sofun( mod_RED, settings_eval, settings_sims_sitescale, siteinfo, obs_eval = obs_eval, doplot=FALSE, overwrite = TRUE )
+if (!exists("obs_eval_RED")) load("obs_eval_RED.Rdata")
+out_eval_RED <- eval_sofun( mod_RED, settings_eval, settings_sims_sitescale, siteinfo, obs_eval = obs_eval_RED, doplot=FALSE, overwrite = TRUE )
 save( out_eval_RED, file = "out_eval_RED.Rdata" )
+
+## Plot mod-vs-obs for daily values
+modobs_ddf <- plot_modobs_daily( out_eval_RED$data$ddf, subtitle = "RED, FPARspl, NT", dir = "./fig", makepdf = TRUE )
 ```
-
-
-
 
 
 

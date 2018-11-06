@@ -132,7 +132,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     proc.time() - ptm
     print(out_optim$par)
 
-    filn <- paste0( here, "/out_gensa_", settings_calib$name, ".Rdat")
+    filn <- paste0( here, "/out_gensa_", settings_calib$name, ".Rdata")
     print( paste0( "writing output from GenSA function to ", filn ) )
     save( out_optim, file = filn )
     
@@ -150,7 +150,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     proc.time() - ptm
     print(out_optim$par)
 
-    filn <- paste0( here, "/out_optimr_", settings_calib$name, ".Rdat")
+    filn <- paste0( here, "/out_optimr_", settings_calib$name, ".Rdata")
     print( paste0( "writing output from optimr function to ", filn ) )
     save( out_optim, file = filn )
 
@@ -188,7 +188,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     proc.time() - ptm
     print(out_optim$par)
 
-    filn <- paste0( here, "/out_linscale_", settings_calib$name, ".Rdat")
+    filn <- paste0( here, "/out_linscale_", settings_calib$name, ".Rdata")
     print( paste0( "writing output from linscale function to ", filn ) )
     save( out_optim, file = filn )
 

@@ -10,8 +10,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
   source("analyse_modobs.R")
 
   metrics <- list()
-  
-	if (settings_eval$benchmark$gpp=="fluxnet2015"){
+
+  datasource <- str_split( settings_eval$benchmark$gpp, "_" ) %>% unlist()
+
+	if ("fluxnet2015" %in% datasource){
 		##-------------------------------------------------------
 		## GPP EVALUATION AGAINST FLUXNET 2015 DATA
 		## Evaluate model vs. observations for decomposed time series
@@ -29,13 +31,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
 	  
 	  metrics$gpp$fluxnet2015 <- list()
 
-	  ## Evaluation against FLUXNET 2015 data is done with daily model outputs
-	  mod <- mod$daily
-
 	  ##------------------------------------------------------------
 	  ## Get daily model output
 	  ##------------------------------------------------------------
-	  ddf_mod <- lapply( as.list(settings_eval$sitenames),  function(x) dplyr::select( mod[[x]], date, gpp_mod = gpp ) %>% mutate( sitename = x ) ) %>%
+	  ddf_mod <- lapply( as.list(settings_eval$sitenames),  function(x) dplyr::select( mod$daily[[x]], date, gpp_mod = gpp ) %>% mutate( sitename = x ) ) %>%
 	    bind_rows()
 
     ##------------------------------------------------------------
@@ -47,6 +46,8 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     ## Aggregate model output data to annual/monthly/weekly, only for selected sites,
     ## and merge into respective observational data frame 
     ##------------------------------------------------------------
+	  print("Getting model outputs...")
+
     ## annual sum
     obs_eval$adf <- ddf_mod %>%
       mutate( year = year(date) ) %>%
@@ -135,11 +136,12 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     ##------------------------------------------------------------
 	  ## Evaluate annual values by site
     ##------------------------------------------------------------
+    print("Evaluate annual values...")
 		adf_stats <- obs_eval$adf %>% group_by( sitename ) %>% 
 								 nest() %>%
-		             mutate( nyears = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ) ) %>%
-		             unnest( nyears ) %>%
-		             filter( nyears > 2 ) %>%
+		             mutate( nyears_obs = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ) ) %>%
+		             unnest( nyears_obs ) %>%
+		             filter( nyears_obs > 2 ) %>%
 		             mutate( linmod = purrr::map( data, ~lm( gpp_obs ~ gpp_mod, data = . ) ),
     		                 stats  = purrr::map( data, ~get_stats( .$gpp_mod, .$gpp_obs ) ) ) %>%
 		             mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
@@ -151,12 +153,27 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     ##------------------------------------------------------------
 	  ## Evaluate monthly values by site
     ##------------------------------------------------------------
+    print("Evaluate monthly values...")
+
+    # ## xxx debug
+    # test <- obs_eval$mdf %>% group_by( sitename ) %>% 
+    #   nest() %>%
+    #   mutate( nmonths = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ) ) %>%
+    #   unnest( nmonths ) %>%
+    #   filter( nmonths > 2 )
+    
+    # for (i in seq(157)){ 
+    #   print(test$sitename[[i]])
+    #   linmod <- lm( gpp_obs ~ gpp_mod, data = test$data[[i]] ) 
+    #   }    
+    
 		mdf_stats <- obs_eval$mdf %>% group_by( sitename ) %>% 
 								 nest() %>%
-		             mutate( nmonths = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ) ) %>%
-		             unnest( nmonths ) %>%
-		             filter( nmonths > 2 ) %>%
-		             mutate( linmod = purrr::map( data, ~lm( gpp_obs ~ gpp_mod, data = . ) ),
+		             mutate( nmonths_obs = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ),
+		             				 nmonths_mod = purrr::map( data, ~sum(!is.na( .$gpp_mod )  ) ) ) %>%
+		             unnest( nmonths_obs, nmonths_mod ) %>%
+		             filter( nmonths_obs > 2 & nmonths_mod > 0 ) %>%
+		             mutate( linmod = purrr::map( data, ~lm( gpp_obs ~ gpp_mod, data = ., na.action = na.exclude ) ),
     		                 stats  = purrr::map( data, ~get_stats( .$gpp_mod, .$gpp_obs ) ) ) %>%
 		             mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
 		             unnest( stats )
@@ -167,6 +184,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     ##------------------------------------------------------------
 	  ## Get mean annual GPP -> "spatial" data frame and evaluate it
     ##------------------------------------------------------------
+    print("Evaluate spatial values...")
     meandf <- obs_eval$adf %>% group_by( sitename ) %>%
 							summarise(  gpp_obs = mean( gpp_obs, na.rm=TRUE ),
 												  gpp_mod = mean( gpp_mod, na.rm=TRUE ) )
@@ -198,6 +216,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     ##------------------------------------------------------------
 	  ## Get IAV as annual value minus mean by site
     ##------------------------------------------------------------
+    print("Evaluate interannual variability...")
 		iavdf <- obs_eval$adf %>% left_join( dplyr::rename( meandf, gpp_mod_mean = gpp_mod, gpp_obs_mean = gpp_obs ), by = "sitename" ) %>%
 							mutate( gpp_mod = gpp_mod - gpp_mod_mean, 
 							        gpp_obs = gpp_obs - gpp_obs_mean ) %>%
@@ -206,9 +225,9 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
 		iavdf_stats <- iavdf %>% 
 									  group_by( sitename ) %>%
 									  nest() %>%
-									  mutate( nyears = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ) ) %>%
-									  unnest( nyears ) %>%
-									  filter( nyears > 2 ) %>%
+									  mutate( nyears_obs = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ), nyears_mod = purrr::map( data, ~sum(!is.na( .$gpp_mod )  ) ) ) %>%
+									  unnest( nyears_obs, nyears_mod ) %>%
+									  filter( nyears_obs > 2 & nyears_mod > 2 ) %>%
 									  mutate( linmod = purrr::map( data, ~lm( gpp_obs ~ gpp_mod, data = . ) ),
 									          stats  = purrr::map( data, ~get_stats( .$gpp_mod, .$gpp_obs ) ) ) %>%
 									  mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
@@ -219,6 +238,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     ##------------------------------------------------------------
 	  ## Get mean seasonal cycle (by day of year)
     ##------------------------------------------------------------
+		print("Evaluate mean seasonal cycle...")
 		meandoydf <- obs_eval$ddf %>%  mutate( doy = yday(date) ) %>%
 	                filter( doy != 366 ) %>% ## XXXX this is a dirty fix! better force lubridate to ignore leap years when calculating yday()
 									group_by( sitename, doy ) %>% 
@@ -234,6 +254,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
 		metrics$gpp$fluxnet2015$meandoy  <- with( meandoydf, get_stats( mod_mean, obs_mean ) )
 
     ## aggregate mean seasonal cycle by climate zone (koeppen-geiger) and hemisphere (pooling sites within the same climate zone)
+		print("Evaluate mean seasonal cycle by climate zones...")
 		meandoydf_byclim <- obs_eval$ddf %>% mutate( doy = yday(date) ) %>%
 											  left_join( dplyr::select( siteinfo_eval, sitename, lat, koeppen_code ), by = "sitename" ) %>%
 											  mutate( hemisphere = ifelse( lat>0, "north", "south" ) ) %>%
@@ -263,6 +284,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     ##------------------------------------------------------------
 	  ## Get IDV (inter-day variability) as daily value minus mean by site and DOY
     ##------------------------------------------------------------
+		print("Evaluate inter-day variability...")
 		idvdf <- obs_eval$ddf %>%  mutate( doy = yday(date) ) %>%
 	            left_join( dplyr::rename( meandoydf, gpp_mod_mean = mod_mean, gpp_obs_mean = obs_mean ), by = c("sitename", "doy") ) %>%
 							mutate( gpp_mod = gpp_mod - gpp_mod_mean, gpp_obs = gpp_obs - gpp_obs_mean ) %>%
@@ -271,6 +293,9 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
 		idvdf_stats <- idvdf %>% 
 									  group_by( sitename ) %>%
 									  nest() %>%
+									  mutate( ndays_obs = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ), ndays_mod = purrr::map( data, ~sum(!is.na( .$gpp_mod )  ) ) ) %>%
+									  unnest( ndays_obs, ndays_mod ) %>%
+									  filter( ndays_obs > 2 & ndays_mod > 2 ) %>%
 									  mutate( linmod = purrr::map( data, ~lm( gpp_obs ~ gpp_mod, data = . ) ),
 									          stats  = purrr::map( data, ~get_stats( .$gpp_mod, .$gpp_obs ) ) ) %>%
 									  mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
@@ -281,6 +306,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     ##------------------------------------------------------------
 	  ## Get mean seasonal cycle (by week (or X-day period) of year)
     ##------------------------------------------------------------
+		print("Evaluate mean seasonal cycle by X-day periods...")
 		meanxoydf <- obs_eval$xdf %>%  mutate( xoy = yday(inbin) ) %>%
 									group_by( sitename, xoy ) %>% 
 									summarise( obs_mean = mean( gpp_obs, na.rm=TRUE ), obs_min = min( gpp_obs, na.rm=TRUE ), obs_max = max( gpp_obs, na.rm=TRUE ),
@@ -297,6 +323,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
     ##------------------------------------------------------------
 	  ## Get IXV (inter-day variability) as daily value minus mean by site and DOY
     ##------------------------------------------------------------
+		print("Evaluate inter-X-day variability...")
 		ixvdf <- obs_eval$xdf %>%  mutate( xoy = yday(inbin) ) %>%
               left_join( dplyr::rename( meanxoydf, gpp_mod_mean = mod_mean, gpp_obs_mean = obs_mean ), by = c("sitename", "xoy") ) %>%
 							mutate( gpp_mod = gpp_mod - gpp_mod_mean, gpp_obs = gpp_obs - gpp_obs_mean ) %>%
@@ -305,6 +332,9 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
 		ixvdf_stats <- ixvdf %>% 
 									  group_by( sitename ) %>%
 									  nest() %>%
+									  mutate( nxdays_obs = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ), nxdays_mod = purrr::map( data, ~sum(!is.na( .$gpp_mod )  ) ) ) %>%
+									  unnest( nxdays_obs, nxdays_mod ) %>%
+									  filter( nxdays_obs > 2 & nxdays_mod > 2 ) %>%
 									  mutate( linmod = purrr::map( data, ~lm( gpp_obs ~ gpp_mod, data = . ) ),
 									          stats  = purrr::map( data, ~get_stats( .$gpp_mod, .$gpp_obs ) ) ) %>%
 									  mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
@@ -317,6 +347,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
 	  ## Plotting
     ##------------------------------------------------------------
     if (doplot){
+    	print("Plot all evaluation results...")
 			modobs_ddf <- plot_modobs_daily( obs_eval$ddf, makepdf=FALSE )
 			modobs_xdf <- plot_modobs_xdaily( obs_eval$xdf, makepdf=FALSE )
 			modobs_mdf <- plot_modobs_monthly( obs_eval$mdf, makepdf=FALSE )
