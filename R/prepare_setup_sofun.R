@@ -1,8 +1,18 @@
-##-----------------------------------------------------------
-## Prepares the setup for running SOFUN with simulation settings defined by argument 'settings'. 
-## In the Fortran version, these settings are read in run-time from parameter files (text files, 
-## one for each site, and simulation).
-##-----------------------------------------------------------
+
+#' Setup SOFUN settings
+#'
+#' Prepares the setup for running SOFUN with simulation settings defined by argument 'settings'.
+#' In the Fortran version, these settings are read in run-time from parameter files (text files,
+#' one for each site, and simulation).
+#'
+#' @param settings a named list with the settings.
+#' @param calibvars TODO
+#' @param write_paramfils if \code{TRUE}, write the parameter files.
+#'
+#' @return a list with the settings.
+#' @export
+#'
+# @examples
 prepare_setup_sofun <- function( settings, calibvars = c(), write_paramfils = TRUE ){
 
   require(readr)
@@ -14,10 +24,7 @@ prepare_setup_sofun <- function( settings, calibvars = c(), write_paramfils = TR
   ## Make sure the SOFUN model directory exists
   if (!dir.exists(settings$dir_sofun)) system( paste0( "mkdir -p ", settings$dir_sofun ) )
   
-  ## Complement simulation parameter booleans as FALSE if missing
-  settings$soilmstress    = ifelse( is.null(settings$soilmstress), FALSE, settings$soilmstress)
-  settings$tempstress     = ifelse( is.null(settings$tempstress), FALSE, settings$tempstress)
-
+  ## Complement output booleans as FALSE if missing
   settings$loutplant      = ifelse( is.null(settings$loutplant), FALSE, settings$loutplant)
   settings$loutgpp        = ifelse( is.null(settings$loutgpp), FALSE, settings$loutgpp)
   settings$loutwaterbal   = ifelse( is.null(settings$loutwaterbal), FALSE, settings$loutwaterbal)

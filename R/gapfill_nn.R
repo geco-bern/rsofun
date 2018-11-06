@@ -9,10 +9,11 @@ gapfill_nn <- function( data, predictors, nam_target, package="neuralnet" ){
   ##--------------------------------------------------------------------
 
   if (package=="neuralnet"){
+    if (!requireNamespace("neuralnet", quietly = TRUE))
+      stop("Please, install 'neuralnet' package")
     ##--------------------------------------------------------------------
     ## Using package neuralnet
     ##--------------------------------------------------------------------
-    library( neuralnet )
 
     ## identify NAs
     na_idxs <- which( is.na( data$le_f_mds ) )
@@ -54,13 +55,12 @@ gapfill_nn <- function( data, predictors, nam_target, package="neuralnet" ){
 
 
   } else if (package=="caret"){
+    if (!requireNamespace("caret", quietly = TRUE) | !requireNamespace("nnet", quietly = TRUE))
+      stop("Please, install 'caret' and 'nnet' packages")
+
     ##--------------------------------------------------------------------
     ## Using package caret
-    ##--------------------------------------------------------------------    
-    .libPaths( c( .libPaths(), "/home/bstocker/R/x86_64-pc-linux-gnu-library/3.3") )
-
-    require( caret )
-    require( nnet )
+    ##--------------------------------------------------------------------
 
     ## some predictors may be NA. Approximate by linear interpolation.
     for (ipred in predictors){
