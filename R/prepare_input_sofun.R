@@ -14,6 +14,8 @@
 #' @export
 #'
 #' @examples
+#' 
+#' 
 prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALSE, overwrite_climate=FALSE, overwrite_fapar=FALSE, verbose=FALSE ){
 
   require(lubridate)
@@ -21,7 +23,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
   require(purrr)
   require(rlang)
 
-  source("check_download_fluxnet2015.R")  # Defined in a separate file because calib_sofun() calls the same function.
+  source("../R/check_download_fluxnet2015.R")  # Defined in a separate file because calib_sofun() calls the same function.
 
   if (settings_sims$setup == "lonlat"){
     ##-----------------------------------------------------------
@@ -215,13 +217,13 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       ## Loop over all sites and prepare input files by site.
       ##-----------------------------------------------------------
       ## Climate input files
-      if (overwrite_climate){
+      if (overwrite_climate || return_data){
         ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite_csv = TRUE, verbose ) ) %>%
                         bind_rows()
       }
 
       ## prepare the fapar input files for each site
-      if (overwrite_fapar){
+      if (overwrite_fapar || return_data){
         ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite_csv = TRUE, verbose = verbose ) ) %>%
                       bind_rows()
       }
@@ -248,7 +250,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 
   if (return_data){
 
-    return( ddf_climate %>% left_join( ddf_fapar, by=c("date", "sitename")) )
+    return( ddf_climate %>% left_join( ddf_fapar, by=c("date", "sitename") ) )
 
   } else {
 
@@ -268,7 +270,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
   require(purrr)
   require(dplyr)
   require(rlang)
-  source("init_dates_dataframe.R")
+  source("../R/init_dates_dataframe.R")
 
   if (verbose) print(paste("prepare_input_sofun_climate_bysite() for site", sitename ))
 
@@ -473,7 +475,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
   require(readr)
   require(lubridate)
 
-  source("init_dates_dataframe.R")
+  source("../R/init_dates_dataframe.R")
 
   if (verbose) print(paste0("Getting fAPAR data for site ", sitename, " ..." ) )
 
@@ -906,7 +908,7 @@ get_pointdata_monthly_cru <- function( varnam, lon, lat, settings, yrend ){
 
   require(lubridate)
   require(dplyr)
-  source("init_dates_dataframe.R")
+  source("../R/init_dates_dataframe.R")
 
   filn <- list.files( settings$path_cru, pattern=paste0( varnam, ".dat.nc" ) )
 
@@ -1024,7 +1026,7 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
 
   require(dplyr)
   require(lubridate)
-  source("init_dates_dataframe.R")
+  source("../R/init_dates_dataframe.R")
 
   nmonth <- 12
 
@@ -1161,7 +1163,7 @@ check_download_watch_wfdei <- function( varnam, settings_input, settings_sims ){
   require(dplyr)
   require(rlang)
 
-  source("download_from_remote.R")
+  source("../R/download_from_remote.R")
 
   ## Determine file name, given <settings_input$path_fluxnet2015>
   ## look for data in the given directory
@@ -1256,7 +1258,7 @@ check_download_cru <- function( varnam, settings_input, settings_sims ){
   require(dplyr)
   require(rlang)
 
-  source("download_from_remote.R")
+  source("../R/download_from_remote.R")
 
   ## Determine file name, given <settings_input$path_fluxnet2015>
   ## look for data in the given directory
@@ -1319,7 +1321,7 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
   require(dplyr)
   require(rlang)
 
-  source("download_from_remote.R")
+  source("../R/download_from_remote.R")
 
   error <- 0
 
@@ -1402,7 +1404,7 @@ check_download_MODIS_EVI_MOD13Q1 <- function( settings_input, settings_sims, sit
   require(dplyr)
   require(rlang)
 
-  source("download_from_remote.R")
+  source("../R/download_from_remote.R")
 
   error <- 0
 
@@ -1486,7 +1488,7 @@ check_download_co2 <- function( settings_input, settings_sims, sitename = NA ){
 
   error <- 0
 
-  source("download_from_remote.R")
+  source("../R/download_from_remote.R")
 
   if (!file.exists(settings_input$path_co2)){
 

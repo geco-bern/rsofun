@@ -34,24 +34,24 @@ Load settings and functions defined outside (e.g. as shown in `vignette_rsofun.R
 ```{r message=FALSE}
 library(dplyr)
 library(readr)
-load("siteinfo.Rdata")
-load("settings_sims_sitescale.Rdata")
-load("settings_input_sitescale.Rdata")
-load("setup_sofun_sitescale.Rdata")
-source("prepare_setup_sofun.R")
-source("prepare_input_sofun.R")
-source("runread_sofun.R")
-source("update_params.R")
-source("eval_sofun.R")
-source("get_obs_bysite_gpp_fluxnet2015.R")
-source("get_obs_bysite_gpp_gepisat.R")
-source("remove_outliers.R")
-source("plot_eval_sofun.R")
+load("../siteinfo.Rdata")
+load("../settings_sims_sitescale.Rdata")
+load("../settings_input_sitescale.Rdata")
+load("../setup_sofun_sitescale.Rdata")
+source("../R/prepare_setup_sofun.R")
+source("../R/prepare_input_sofun.R")
+source("../R/runread_sofun.R")
+source("../R/update_params.R")
+source("../R/eval_sofun.R")
+source("../R/get_obs_bysite_gpp_fluxnet2015.R")
+source("../R/get_obs_bysite_gpp_gepisat.R")
+source("../R/remove_outliers.R")
+source("../R/plot_eval_sofun.R")
 ```
 
 Define common model evaluation settings as a list.
 ```{r, eval=FALSE, message=FALSE}
-mylist <- read_csv("myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
+mylist <- read_csv("../myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
 settings_eval <- list(
   sitenames = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename,
   sitenames_siteplots = mylist,
@@ -102,10 +102,10 @@ settings_sims_sitescale <- prepare_setup_sofun(
 settings_input_sitescale$fapar = "MODIS_FPAR_MCD15A3H"
 settings_input_sitescale$splined_fapar = TRUE
 
-inputdata <- prepare_input_sofun( 
+inputdata_FPARspl <- prepare_input_sofun( 
   settings_input = settings_input_sitescale, 
   settings_sims = settings_sims_sitescale, 
-  return_data = FALSE, 
+  return_data = TRUE, 
   overwrite_climate = FALSE, 
   overwrite_fapar = TRUE, 
   verbose = TRUE
