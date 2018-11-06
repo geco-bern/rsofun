@@ -6,8 +6,8 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
   require(tidyr)
   require(stringr)
 
-  source("remove_outliers.R")
-  source("analyse_modobs.R")
+  source("R/remove_outliers.R")
+  source("R/analyse_modobs.R")
 
   metrics <- list()
   

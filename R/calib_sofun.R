@@ -382,11 +382,11 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
   require(dplyr)
   require(stringr)
 
-  source("init_dates_dataframe.R")
-  source("get_obs_bysite_gpp_fluxnet2015.R")
-  source("get_obs_bysite_gpp_gepisat.R")
-  source("check_download_fluxnet2015.R")
-  source("check_download_gepisat.R")
+  source("R/init_dates_dataframe.R")
+  source("R/get_obs_bysite_gpp_fluxnet2015.R")
+  source("R/get_obs_bysite_gpp_gepisat.R")
+  source("R/check_download_fluxnet2015.R")
+  source("R/check_download_gepisat.R")
 
   ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
   ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE )

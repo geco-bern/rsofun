@@ -14,7 +14,7 @@ get_fluxdata_fluxnet2015_daily <- function( sitename, add_swcvars=FALSE ){
   require(dplyr)
   require(lubridate)
 
-  source("clean_fluxnet.R")
+  source("R/clean_fluxnet.R")
 
   ## determine path of file to be read
   dirnam_obs <- paste0( myhome, "data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/" )

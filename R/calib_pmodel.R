@@ -6,7 +6,7 @@ calib_pmodel <- function( df, temp_cutoff, soilm_cutoff, kphio_used ){
 
 	require(ncdf4)
 
-	source("analyse_modobs.R")
+	source("R/analyse_modobs.R")
 
 	## Get initial number of data points
 	ndays_0 <- nrow( df )

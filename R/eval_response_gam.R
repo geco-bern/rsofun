@@ -3,7 +3,7 @@ eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 5, ... ){
 	require(dplyr)
   require(mgcv)
   
-  source("analyse_modobs.R")
+  source("R/analyse_modobs.R")
   
   ## rename (should go outside this function)
   df <- df %>%  dplyr::rename( vpd = vpd_fluxnet2015, ppfd = ppfd_fluxnet2015, soilm = soilm_obs_mean ) %>%

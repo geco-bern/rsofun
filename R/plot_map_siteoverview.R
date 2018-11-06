@@ -6,7 +6,7 @@ plot_map_siteoverview <- function( df, background, plotfiln=NA ){
   require( maptools, quietly = TRUE )
   require( dplyr, quietly = TRUE )  
 
-  source("../utilities/mycolorbar.R")
+  source("R/../utilities/mycolorbar.R")
 
   ## half degree resolution
   lon <- seq(-179.75, 179.75, 0.5)

@@ -21,7 +21,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
   require(purrr)
   require(rlang)
 
-  source("check_download_fluxnet2015.R")  # Defined in a separate file because calib_sofun() calls the same function.
+  source("R/check_download_fluxnet2015.R")  # Defined in a separate file because calib_sofun() calls the same function.
 
   if (settings_sims$setup == "lonlat"){
     ##-----------------------------------------------------------
@@ -268,7 +268,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
   require(purrr)
   require(dplyr)
   require(rlang)
-  source("init_dates_dataframe.R")
+  source("R/init_dates_dataframe.R")
 
   if (verbose) print(paste("prepare_input_sofun_climate_bysite() for site", sitename ))
 
@@ -473,7 +473,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
   require(readr)
   require(lubridate)
 
-  source("init_dates_dataframe.R")
+  source("R/init_dates_dataframe.R")
 
   if (verbose) print(paste0("Getting fAPAR data for site ", sitename, " ..." ) )
 
@@ -906,7 +906,7 @@ get_pointdata_monthly_cru <- function( varnam, lon, lat, settings, yrend ){
 
   require(lubridate)
   require(dplyr)
-  source("init_dates_dataframe.R")
+  source("R/init_dates_dataframe.R")
 
   filn <- list.files( settings$path_cru, pattern=paste0( varnam, ".dat.nc" ) )
 
@@ -1024,7 +1024,7 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
 
   require(dplyr)
   require(lubridate)
-  source("init_dates_dataframe.R")
+  source("R/init_dates_dataframe.R")
 
   nmonth <- 12
 

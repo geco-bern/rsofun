@@ -358,7 +358,7 @@ write_simulation_parameter_bysite <- function( sitename, settings_sim, calibvars
 
   if (settings_sim$implementation=="fortran"){
 
-    source("create_simulation_parameter_file.R")
+    source("R/create_simulation_parameter_file.R")
     path <- create_simulation_parameter_file( 
               path                 = path,
               simname              = sitename,

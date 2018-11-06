@@ -3,7 +3,7 @@ pmodel <- function( temp, vpd, co2, ppfd, fapar, elv, implementation = "r", sofu
 
   if ( implementation %in% c("r", "R") || is.na(implementation) ){
     ## Default is running the P-model all in R
-    # source("rpmodel.R")
+    # source("R/rpmodel.R")
     out <- rpmodel( fapar, ppfd, co2, temp, cpalpha = 1.0, vpd, elv )
     out <- out$gpp
 
