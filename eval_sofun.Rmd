@@ -112,7 +112,7 @@ inputdata <- prepare_input_sofun(
   )
 
 ## update files containing parameter values read by model
-params_opt <- read_csv( paste0("params_opt_calib_RED.csv") )
+params_opt <- read_csv( paste0("params_opt_RED.csv") )
 nothing <- update_params( params_opt, settings = settings_sims_sitescale )
 
 ## run the model with these parameters and read output into mod_RED
@@ -126,6 +126,8 @@ save( mod_RED, file="mod_RED.Rdata" )
 if (!exists("mod_RED")) load("mod_RED.Rdata")
 missing_mod <- purrr::map_lgl( mod_RED$daily, ~identical(., NA ) ) %>% which() %>% names()
 settings_eval$sitenames <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_mod))]
+
+xxx get_obs_eval(): make this dependent on target GPP data _DT, _NT, Ty
 
 ## get observational data separately and save since it's the same for multiple evaluations
 obs_eval <- get_obs_eval( settings_eval = settings_eval, settings_input = settings_input_sitescale, settings_sims = settings_sims_sitescale, overwrite = TRUE )
