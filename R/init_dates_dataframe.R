@@ -5,9 +5,6 @@
 ##--------------------------------------------------------------------
 init_dates_dataframe <- function( yrstart, yrend, startmoy=1, startdoy=1, freq="days", endmoy=12, enddom=31, noleap=FALSE ){
 
-  require(dplyr)
-  require(lubridate)
-
   if (freq=="days"){
     startdate <- ymd( paste0( as.character(yrstart), "-", sprintf( "%02d", startmoy), "-01" ) ) + days( startdoy - 1 )
     enddate   <- ymd( paste0( as.character(yrend  ), "-", sprintf( "%02d", endmoy  ), "-", sprintf( "%02d", enddom  ) ) )    

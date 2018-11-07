@@ -4,8 +4,6 @@
 ##----------------------------------------------------------------------
 get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescale, method = "NT" ){
 
-  require(dplyr)
-
   ## Get GPP data from FLUXNET 2015 dataset
   getvars <- c( 
     "GPP_NT_VUT_REF", "GPP_DT_VUT_REF",                
@@ -139,8 +137,6 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
 ##----------------------------------------------------------------------
 get_obs_bysite_wcont_fluxnet2015 <- function( sitename, path_fluxnet2015, timescale ){
 
-  require(dplyr)
-
   getvars <- "SWC"
 
   ## Take only file for this site
@@ -210,10 +206,6 @@ get_obs_fluxnet2015_raw <- function( sitename, path, freq="d" ){
   ## 2015 data file of respective temporal resolution.
   ## Returns data in units given in the fluxnet 2015 dataset
   ##--------------------------------------------------------------------
-  require(dplyr)
-  require(readr)
-  require(lubridate)
-
   ## get data
   df <-  read_csv( path, na="-9999", col_types = cols() )
 
@@ -289,8 +281,6 @@ clean_fluxnet_gpp <- function( gpp_nt, gpp_dt, qflag_reichstein, qflag_lasslop, 
 clean_fluxnet_et <- function( et, qflag_et, cutoff=0.2 ){
   ##--------------------------------------------------------------------
   ##--------------------------------------------------------------------
-  source( "identify_pattern.R" )
-
   ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
   # frac_data_thresh <- 0.2  ## fraction of data based on gap-filled half-hourly
   et[ qflag_et < cutoff ] <- NA

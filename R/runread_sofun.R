@@ -30,8 +30,6 @@ runread_sofun <- function( settings, setup ){
 ##-----------------------------------------------------------
 run_sofun <- function( settings, setup ){
   
-  require(purrr)
-
   ## change to directory from where model is executed
   here <- getwd() # save current working directory
   setwd( settings$dir_sofun )
@@ -75,10 +73,6 @@ run_sofun <- function( settings, setup ){
 ##-----------------------------------------------------------
 read_sofun <- function( settings, setup ){
 
-  require(purrr)
-  require(ncdf4)
-  require(rlang)
-  
   ## First, process NetCDF which are written separately for each simulation year
   print("processing NetCDF outputs...")
   tmp <- purrr::map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
@@ -123,7 +117,6 @@ run_sofun_bysite <- function( sitename, setup ){
 ## Using CDO commands. See file 'source proc_output.sh
 ##-----------------------------------------------------------
 proc_ncout_sofun_bysite <- function( sitename, path_nc ){
-  require(rlang)
   print(paste0("processing ", sitename, "..."))
   filelist <- system( paste0( "ls ", path_nc, "/", sitename, ".????.*.nc" ), intern = TRUE )
   if (length(filelist)>0){
@@ -137,12 +130,6 @@ proc_ncout_sofun_bysite <- function( sitename, path_nc ){
 ## Gets daily SOFUN model output for multiple variables
 ##-----------------------------------------------------------
 read_ncout_sofun_daily <- function( expname, settings ){
-
-  require(ncdf4)
-  require(dplyr)
-  require(lubridate)
-
-  source( "conv_noleap_to_ymd.R" )
 
   print(paste("Reading NetCDF for", expname ) )
 
@@ -205,12 +192,6 @@ read_ncout_sofun_daily <- function( expname, settings ){
 ## Gets annual SOFUN model output for multiple variables
 ##-----------------------------------------------------------
 read_ncout_sofun_annual <- function( expname, settings ){
-
-  require(ncdf4)
-  require(dplyr)
-  require(lubridate)
-
-  source( "conv_noleap_to_ymd.R" )
 
   print(paste("Reading NetCDF for", expname ) )
 

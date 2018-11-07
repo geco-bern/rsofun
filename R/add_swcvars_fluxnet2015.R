@@ -7,10 +7,6 @@ add_swcvars_fluxnet2015 <- function( sitename, fluxnet=NA, outdir="./" ){
   # ##----------------------------------------------------
 
   syshome <- Sys.getenv( "HOME" )
-  source( paste( syshome, "/.Rprofile", sep="" ) )
-
-  source("gapfill_nn.R")
-  source("calc_soilm.R")
 
   ddf <- fluxnet[[ sitename ]]$ddf
   print(paste("gap-filling for site", sitename))

@@ -1,10 +1,6 @@
 plot_map_siteoverview <- function( df, background, plotfiln=NA ){
 
-  require( ncdf4, quietly = TRUE )
-  require( fields, quietly = TRUE )
-  require( sp, quietly = TRUE )
-  require( maptools, quietly = TRUE )
-  require( dplyr, quietly = TRUE )  
+          require( dplyr, quietly = TRUE )  
 
   source("../utilities/mycolorbar.R")
 

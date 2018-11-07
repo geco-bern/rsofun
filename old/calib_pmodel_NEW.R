@@ -1,7 +1,6 @@
 
 
 
-source("get_modobs_fluxnet2015.R")
 
 cost_function <- function( par ){
   cost = system( paste0("echo fcover ", sprintf( "%f", par ), " | ./runcmodel_simsuite | tail -n 1"), intern = TRUE)

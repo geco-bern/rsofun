@@ -18,12 +18,7 @@
 #' 
 prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALSE, overwrite_climate=FALSE, overwrite_fapar=FALSE, verbose=FALSE ){
 
-  require(lubridate)
-  require(dplyr)
-  require(purrr)
-  require(rlang)
-
-  source("../R/check_download_fluxnet2015.R")  # Defined in a separate file because calib_sofun() calls the same function.
+  source("R/check_download_fluxnet2015.R")  # Defined in a separate file because calib_sofun() calls the same function.
 
   if (settings_sims$setup == "lonlat"){
     ##-----------------------------------------------------------
@@ -267,11 +262,6 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 ##-----------------------------------------------------------
 prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv, verbose ){
 
-  require(purrr)
-  require(dplyr)
-  require(rlang)
-  source("../R/init_dates_dataframe.R")
-
   if (verbose) print(paste("prepare_input_sofun_climate_bysite() for site", sitename ))
 
   ## path of CSV file with data for this site
@@ -472,11 +462,6 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
 ##-----------------------------------------------------------
 prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv, verbose ){
 
-  require(readr)
-  require(lubridate)
-
-  source("../R/init_dates_dataframe.R")
-
   if (verbose) print(paste0("Getting fAPAR data for site ", sitename, " ..." ) )
 
   ## File path of fAPAR CSV file for this site
@@ -612,11 +597,6 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
 ##--------------------------------------------------------------------
 get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
 
-  require(dplyr)
-  require(readr)
-  require(lubridate)
-  require(rlang)
-  
   ## from flux to energy conversion, umol/J (Meek et al., 1984), same as used in SPLASH (see Eq.50 in spash_doc.pdf)
   kfFEC <- 2.04
 
@@ -712,10 +692,6 @@ get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
 ##--------------------------------------------------------------------
 get_watch_daily <- function( lon, lat, elv, date_start, date_end, settings_input ){
 
-  require(dplyr)
-  require(lubridate)
-  require(purrr)
-
   ## WATCH-WFDEI data is available monthly. Create vector with all required months.
   bymonths <- seq( date_start, date_end, by = "months" )
 
@@ -760,7 +736,6 @@ get_watch_daily <- function( lon, lat, elv, date_start, date_end, settings_input
 ##--------------------------------------------------------------------
 get_pointdata_temp_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path ){
   
-  require(lubridate)
   ndaymonth_all <- c(31,28,31,30,31,30,31,31,30,31,30,31)
   ndaymonth <- ndaymonth_all[mo]
 
@@ -791,7 +766,6 @@ get_pointdata_temp_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
 ##--------------------------------------------------------------------
 get_pointdata_prec_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path ){
 
-  require(lubridate)
   ndaymonth_all <- c(31,28,31,30,31,30,31,31,30,31,30,31)
   ndaymonth <- ndaymonth_all[mo]
   
@@ -839,7 +813,6 @@ get_pointdata_prec_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
 ##--------------------------------------------------------------------
 get_pointdata_qair_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path ){
 
-  require(lubridate)
   ndaymonth_all <- c(31,28,31,30,31,30,31,31,30,31,30,31)
   ndaymonth <- ndaymonth_all[mo]
 
@@ -870,7 +843,6 @@ get_pointdata_qair_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
 ##--------------------------------------------------------------------
 get_pointdata_ppfd_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path ){
   
-  require(lubridate)
   ndaymonth_all <- c(31,28,31,30,31,30,31,31,30,31,30,31)
   ndaymonth <- ndaymonth_all[mo]
 
@@ -906,10 +878,6 @@ get_pointdata_ppfd_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
 ##--------------------------------------------------------------------
 get_pointdata_monthly_cru <- function( varnam, lon, lat, settings, yrend ){
 
-  require(lubridate)
-  require(dplyr)
-  source("../R/init_dates_dataframe.R")
-
   filn <- list.files( settings$path_cru, pattern=paste0( varnam, ".dat.nc" ) )
 
   if ( length( filn )!=0 ){
@@ -939,9 +907,6 @@ get_pointdata_monthly_cru <- function( varnam, lon, lat, settings, yrend ){
 ## Get monthly data from CRU
 ##--------------------------------------------------------------------
 get_clim_cru_monthly <- function( lon, lat, settings, cruvars ){
-
-  require(dplyr)
-  require(lubridate)
 
   ## get last year for which data is available
   filn <- list.files( settings$path_cru, pattern="cld.dat.nc")
@@ -1006,9 +971,6 @@ get_clim_cru_monthly <- function( lon, lat, settings, cruvars ){
 ##--------------------------------------------------------------------
 expand_clim_cru_monthly <- function( mdf, cruvars ){
 
-  require(dplyr)
-  require(purrr)
-
   ddf_yr_list <- purrr::map( as.list( unique( year( mdf$date ) ) ), ~expand_clim_cru_monthly_byyr( ., mdf, cruvars ) )
 
   ddf <- bind_rows( ddf_yr_list )
@@ -1023,10 +985,6 @@ expand_clim_cru_monthly <- function( mdf, cruvars ){
 ## for a single year
 ##--------------------------------------------------------------------
 expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
-
-  require(dplyr)
-  require(lubridate)
-  source("../R/init_dates_dataframe.R")
 
   nmonth <- 12
 
@@ -1159,10 +1117,6 @@ find_nearest_cruland_by_lat <- function( lon, lat, filn ){
 ##--------------------------------------------------------------------------
 check_download_watch_wfdei <- function( varnam, settings_input, settings_sims ){
 
-  require(purrr)
-  require(dplyr)
-  require(rlang)
-
   source("../R/download_from_remote.R")
 
   ## Determine file name, given <settings_input$path_fluxnet2015>
@@ -1254,10 +1208,6 @@ check_watch_wfdei_year <- function( year, varnam, settings_input ){
 ##--------------------------------------------------------------------------
 check_download_cru <- function( varnam, settings_input, settings_sims ){
 
-  require(purrr)
-  require(dplyr)
-  require(rlang)
-
   source("../R/download_from_remote.R")
 
   ## Determine file name, given <settings_input$path_fluxnet2015>
@@ -1316,10 +1266,6 @@ check_download_cru <- function( varnam, settings_input, settings_sims ){
 ## Checks if MODIS_FPAR_MCD15A3H files are available for this variable and initiates download if not.
 ##--------------------------------------------------------------------------
 check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, sitename=NA ){
-
-  require(purrr)
-  require(dplyr)
-  require(rlang)
 
   source("../R/download_from_remote.R")
 
@@ -1400,10 +1346,6 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
 ##--------------------------------------------------------------------------
 check_download_MODIS_EVI_MOD13Q1 <- function( settings_input, settings_sims, sitename=NA ){
 
-  require(purrr)
-  require(dplyr)
-  require(rlang)
-
   source("../R/download_from_remote.R")
 
   error <- 0
@@ -1482,10 +1424,6 @@ check_download_MODIS_EVI_MOD13Q1 <- function( settings_input, settings_sims, sit
 ##--------------------------------------------------------------------------
 check_download_co2 <- function( settings_input, settings_sims, sitename = NA ){
 
-  require(purrr)
-  require(dplyr)
-  require(rlang)
-
   error <- 0
 
   source("../R/download_from_remote.R")
@@ -1523,8 +1461,6 @@ check_download_co2 <- function( settings_input, settings_sims, sitename = NA ){
 # ## Manages the path specification for CRU TS 4.01 data download from CX1
 # ##-----------------------------------------------------------
 # download_cru_from_remote <- function( varnam, settings_input ){
-
-#   require(rlang)
 
 #   # ## the path of CRU TS 4.01 data on cx1
 #   # origpath <- "/work/bstocker/labprentice/data/cru/ts_4.01/" 
@@ -1924,8 +1860,6 @@ write_sofunformatted <- function( filnam, data ){
 # ##-----------------------------------------------------------
 # download_MODIS_FPAR_MCD15A3H_from_remote <- function( settings_input ){
   
-#   require(rlang)
-
 #   ans <- readline( prompt = "Do you have access to Imperial's CX1? (y/n) " )
 #   if (ans=="y"){
 #     ans <- readline( prompt = "Have you connected to Imperial's VPN? (y/n) " )
@@ -1956,8 +1890,6 @@ write_sofunformatted <- function( filnam, data ){
 # ## Manages the path specification for WATCH-WFDEI data download from CX1
 # ##-----------------------------------------------------------
 # download_watch_wfdei_from_remote <- function( varnam, settings_input, settings_sims ){
-
-#   require(rlang)
 
 #   # ## determine simulation years ocurring in this ensemble
 #   # allyears <- seq( from = purrr::map_dbl( settings_sims$date_start, ~year(.) ) %>% min(),
@@ -2010,8 +1942,6 @@ write_sofunformatted <- function( filnam, data ){
 # ##-----------------------------------------------------------
 # download_MODIS_EVI_MOD13Q1_from_remote <- function( settings_input ){
   
-#   require(rlang)
-
 #   ans <- readline( prompt = "Do you have access to Imperial's CX1? (y/n) " )
 #   if (ans=="y"){
 #     ans <- readline( prompt = "Have you connected to Imperial's VPN? (y/n) " )

@@ -1,7 +1,5 @@
 calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, ddf_obs = NA ){
 
-  require(readr)
-  require(rlang)
   
   ##----------------------------------------------------------------
   ## Collect observational data used as calibration target
@@ -120,7 +118,6 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     ##----------------------------------------------------------------
     ## calibrate the model parameters using GenSA (simulated annealing)
     ##----------------------------------------------------------------
-    require(GenSA)
     ptm <- proc.time()
     out_optim <- GenSA(
                         par   = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
@@ -140,7 +137,6 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     ##----------------------------------------------------------------
     ## calibrate the model parameters using R optimr()
     ##----------------------------------------------------------------
-    require(optimr)
     ptm <- proc.time()
     out_optim <- optimr(
                         par     = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
@@ -158,8 +154,6 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     ##----------------------------------------------------------------
     ## calibrate the model parameters using BayesianTools and 
     ##----------------------------------------------------------------
-    require(BayesianTools)
-
     ptm <- proc.time()
     bt_setup    <- createBayesianSetup( cost_rmse( inverse=TRUE ), 
                                         lower = apply( settings_calib$par, function(x) x$lower ) %>% unlist(), 
@@ -178,7 +172,6 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     modobs <<- bind_cols( obs, mod ) %>% 
                mutate( gpp_mod = gpp_mod / param_init )
 
-    require(optimr)
     ptm <- proc.time()
     out_optim <- optimr(
                         par     = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
@@ -348,8 +341,6 @@ cost_mae <- function( par ){
 ##------------------------------------------------------------
 get_obs <- function( settings_calib, settings_sims, settings_input ){
 
-  require(readr)
-  require(dplyr)
 
   ##------------------------------------------------------------
   ## Read raw observational data from files.
@@ -378,15 +369,6 @@ get_obs <- function( settings_calib, settings_sims, settings_input ){
 ## used as target variables for calibration for a given site, covering specified dates.
 ##------------------------------------------------------------
 get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_input ){
-
-  require(dplyr)
-  require(stringr)
-
-  source("init_dates_dataframe.R")
-  source("get_obs_bysite_gpp_fluxnet2015.R")
-  source("get_obs_bysite_gpp_gepisat.R")
-  source("check_download_fluxnet2015.R")
-  source("check_download_gepisat.R")
 
   ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
   ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE )
