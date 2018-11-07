@@ -14,9 +14,6 @@
 ####################################################
 get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_swcvars_etbucket=FALSE, overwrite=TRUE, overwrite_dosites=TRUE ){
 
-  require(dplyr)
-  require(readr)
-  require(ggplot2)
 
   # ## debug --------------------
   # simsuite = "fluxnet2015"
@@ -29,12 +26,6 @@ get_modobs <- function( simsuite, outputset, outdir="./", add_swcvars=TRUE, add_
   # ##---------------------------
 
   ## get from other repository 'utilities'
-  source( paste0( myhome, "utilities/conv_noleap_to_ymd.R" ) )
-
-  source("get_daily_modelout.R")
-  source("add_swcvars_fluxnet2015.R")
-  source("get_modobs_fluxnet2015.R")
-
   siteinfo   <- read_csv( paste0( myhome, "sofun/input_fluxnet2015_sofun/siteinfo_", simsuite, "_sofun.csv" ) )
   
   datafilnam <- paste0( "modobs_fluxnet2015_", paste( outputset, collapse="_"), "_with_SWC_v5" )

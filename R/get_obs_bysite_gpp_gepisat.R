@@ -4,9 +4,7 @@
 ##----------------------------------------------------------------------
 get_obs_bysite_gpp_gepisat <- function( sitename, path_gepisat, timescale ){
 
-  require(dplyr)
-  require(rlang)
-
+    
   ## Take only file for this site
   if (timescale=="d"){
 
@@ -58,10 +56,6 @@ get_obs_gepisat_raw <- function( sitename, path, freq="d" ){
   ## data file of respective temporal resolution.
   ## Returns data in units given in the fluxnet 2015 dataset
   ##--------------------------------------------------------------------
-  require(dplyr)
-  require(readr)
-  require(lubridate)
-
   ## get data
   df <-  read_csv( path, na="-9999", col_types = cols() )
 

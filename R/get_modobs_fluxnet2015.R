@@ -12,14 +12,6 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, list_modobs=N
   # outdir="./"
   # ##----------------------------------------------------
 
-  require(dplyr)
-  require(lubridate)
-
-  source( "get_fluxdata_fluxnet2015.R" )
-  source( "get_fluxdata_fluxnet2015_daily.R" )
-  source( "get_meteo_fluxnet2015.R" )
-  source( "get_daily_modelout.R" )
-
   avl2015 <- TRUE
   avl_mod <- rep( TRUE, length(outputset) )
 

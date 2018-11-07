@@ -5,7 +5,6 @@ get_pointdata_elv_watch <- function( lon, lat, filn ){
   ## Original data in K, returns data in K
   ##--------------------------------------------------------------------
   if ( !file.exists( filn ) ) {
-    source("download_file_cx1.R")
     path_remote <- "/work/bstocker/labprentice/data/watch_wfdei/WFDEI-elevation.nc"
     path_local <- filn
     download_file_cx1( path_remote, path_local )
@@ -28,12 +27,6 @@ get_pointdata_elv_watch <- function( lon, lat, filn ){
 
 long_to_wide_fluxnet2015 <- function( sitename, long ){
 
-  require(dplyr)
-  require(readr)
-  require(tidyr)
-  require(rlang)
-  require(purrr)
-  
   sub <- long %>% filter( SITE_ID==sitename )
     
   ## remove variable groups that have lots of duplicates w.r.t. variable
@@ -294,14 +287,7 @@ long_to_wide_fluxnet2015 <- function( sitename, long ){
 
 prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwrite=TRUE, filn_elv_watch=NA ){
 
-  require(dplyr)
-  require(readr)
-  require(tidyr)
-  require(rlang)
-  require(purrr)
   
-  source("download_file_cx1.R")
-
   ##--------------------------------------------------------------------
   ## read meta info file and reshape to wide format
   ##--------------------------------------------------------------------

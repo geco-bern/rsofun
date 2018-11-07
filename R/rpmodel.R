@@ -119,10 +119,10 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
   ## and 'm'
   mprime   <- calc_mprime( m )
 
-  gpp <- iabs * kphio * fa * mprime * c_molmass # in g C m-2 s-1
+  gpp <- iabs * kphio * mprime * c_molmass # in g C m-2 s-1
 
   ## Light use efficiency (gpp per unit iabs)
-  lue <- kphio * fa * mprime
+  lue <- kphio * mprime
 
   ## leaf-internal CO2 partial pressure (Pa)
   ci <- chi * ca
@@ -166,9 +166,9 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
   ## - gs = A / (ca (1-chi))
   ## (- chi = ci / ca)
   ## => E = (1.6 A D) / (ca - ci)
-  transp           <- (1.6 * iabs * kphio * fa * m * vpd) / (ca - ci)   # gpp <- iabs * kphio * fa * m
-  transp_unitfapar <- (1.6 * ppfd * kphio * fa * m * vpd) / (ca - ci)
-  transp_unitiabs  <- (1.6 * 1.0  * kphio * fa * m * vpd) / (ca - ci)
+  transp           <- (1.6 * iabs * kphio * m * vpd) / (ca - ci)   # gpp <- iabs * kphio * m
+  transp_unitfapar <- (1.6 * ppfd * kphio * m * vpd) / (ca - ci)
+  transp_unitiabs  <- (1.6 * 1.0  * kphio * m * vpd) / (ca - ci)
 
   ## construct list for output
   out <- list( 

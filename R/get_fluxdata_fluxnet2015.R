@@ -11,9 +11,6 @@ get_obs_fluxnet2015_raw <- function( sitename, path, vars, freq="y" ){
   ## swin: J m-2 d-1
   ## ppfd: mol m-2 d-1 
   ##--------------------------------------------------------------------
-  require(dplyr)
-  require(readr)
-  require(lubridate)
 
   # ## xxx debug -------------
   # sitename = "FR-Pue"

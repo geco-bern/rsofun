@@ -1,7 +1,5 @@
 download_file_cx1 <- function( path_remote, path_local ){
 
-	require(rlang)
-
 	if (!exists("uname")) uname <<- readline( prompt = "Enter your user name for logging onto CX1: " )
 
   ans <- readline( prompt = "Do you have access to Imperial's CX1 and set up for SSH connection without password? (y/n) " )

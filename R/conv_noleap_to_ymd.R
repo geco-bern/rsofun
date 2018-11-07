@@ -27,8 +27,6 @@ conv_noleap_to_ymd <- function(time, since, calender.days="365") {
   ##   2011-12-16 | handle properly the cases of 360 days and 365 days (thm)
   ##   2014-04-09 | changed to modulo calculation due to rounding error (thm)
 
-  require(lubridate)
-
   IsLeapYear <- function(year){
     ## small helperfunction returning boolean vector leapyear true/false
     ## http://en.wikipedia.org/wiki/Leap_year
