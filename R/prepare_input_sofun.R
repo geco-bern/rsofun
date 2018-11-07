@@ -218,13 +218,13 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       ##-----------------------------------------------------------
       ## Climate input files
       if (overwrite_climate || return_data){
-        ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite_csv = TRUE, verbose ) ) %>%
+        ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite_csv = FALSE, verbose = verbose ) ) %>%
                         bind_rows()
       }
 
       ## prepare the fapar input files for each site
       if (overwrite_fapar || return_data){
-        ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite_csv = TRUE, verbose = verbose ) ) %>%
+        ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite_csv = FALSE, verbose = verbose ) ) %>%
                       bind_rows()
       }
 
@@ -250,7 +250,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 
   if (return_data){
 
-    return( ddf_climate %>% left_join( ddf_fapar, by=c("date", "sitename") ) )
+    return( ddf_climate %>% dplyr::select(-year_dec) %>% left_join( ddf_fapar, by=c("date", "sitename")) )
 
   } else {
 
@@ -265,7 +265,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
 ##-----------------------------------------------------------
-prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv, verbose ){
+prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv=FALSE, verbose=FALSE ){
 
   require(purrr)
   require(dplyr)
@@ -304,7 +304,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       ## Make sure data is available for this site
       error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
       ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
-      ddf <- get_meteo_fluxnet2015( sitename, path = paste0(settings_input$path_fluxnet2015, filn), freq="d" ) %>%
+      ddf <- get_meteo_fluxnet2015( sitename, dir = settings_input$path_fluxnet2015, freq="d" ) %>%
         dplyr::select( date, one_of(fluxnetvars) ) %>% 
         setNames( c("date", paste0( fluxnetvars, "_fluxnet2015" ))) %>%
         right_join( ddf, by = "date" )
@@ -336,20 +336,20 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
     ## Read CRU data (extracting from NetCDF files for this site)
     ##----------------------------------------------------------------------
     if (any( c( 
-      "cru_ts4_01" %in% settings_input$temperature, 
-      "cru_ts4_01" %in% settings_input$precipitation, 
-      "cru_ts4_01" %in% settings_input$vpd, 
-      "cru_ts4_01" %in% settings_input$ppfd,
-      "cru_ts4_01" %in% settings_input$cloudcover
+      "cru" %in% settings_input$temperature, 
+      "cru" %in% settings_input$precipitation, 
+      "cru" %in% settings_input$vpd, 
+      "cru" %in% settings_input$ppfd,
+      "cru" %in% settings_input$cloudcover
       ))){
 
       cruvars <- c()
-      if ("cru_ts4_01" %in% settings_input$temperature)   cruvars <- c(cruvars, "temp")
-      if ("cru_ts4_01" %in% settings_input$cloudcover)    cruvars <- c(cruvars, "ccov")
-      if ("cru_ts4_01" %in% settings_input$precipitation) cruvars <- c(cruvars, "prec")
-      if ("cru_ts4_01" %in% settings_input$precipitation) cruvars <- c(cruvars, "wetd")
-      if ("cru_ts4_01" %in% settings_input$vpd)           cruvars <- c(cruvars, "vap")
-      if ("cru_ts4_01" %in% settings_input$vpd)           cruvars <- c(cruvars, "temp")
+      if ("cru" %in% settings_input$temperature)   cruvars <- c(cruvars, "temp")
+      if ("cru" %in% settings_input$cloudcover)    cruvars <- c(cruvars, "ccov")
+      if ("cru" %in% settings_input$precipitation) cruvars <- c(cruvars, "prec")
+      if ("cru" %in% settings_input$precipitation) cruvars <- c(cruvars, "wetd")
+      if ("cru" %in% settings_input$vpd)           cruvars <- c(cruvars, "vap")
+      if ("cru" %in% settings_input$vpd)           cruvars <- c(cruvars, "temp")
 
       ## First get monthly data
       mdf_cru <- get_clim_cru_monthly(  lon = settings_sims$lon[[sitename]], 
@@ -470,7 +470,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
 ##-----------------------------------------------------------
-prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv, verbose ){
+prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv=FALSE, verbose=FALSE ){
 
   require(readr)
   require(lubridate)
@@ -486,8 +486,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
 
   if (file.exists(csvfiln)&&!overwrite_csv){
 
-    ddf <- read_csv( csvfiln ) %>%
-      mutate( fapar = as.numeric(fapar) )
+    ddf <- read_csv( csvfiln ) %>% mutate( fapar = as.numeric(fapar) )
 
   } else {
 
@@ -558,7 +557,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
       write_csv( ddf, path = csvfiln )
 
       ##----------------------------------------------------------------------
-      ## Write fortran-formatted ascii files with daily values for each year 
+      ## Write Fortran-formatted ASCII files with daily values for each year 
       ## based on the CSV file written above (clim_daily_<sitename>.csv)
       ## Necessary because reading from CSV is a pain in Fortran.
       ##----------------------------------------------------------------------
@@ -620,7 +619,7 @@ get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
   ## from flux to energy conversion, umol/J (Meek et al., 1984), same as used in SPLASH (see Eq.50 in spash_doc.pdf)
   kfFEC <- 2.04
 
-  if (is.na(dir)){
+  if (is.na(path)){
 
     if ( freq=="y" ){
       ## Annual data
@@ -651,7 +650,7 @@ get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
 
     } else if ( freq=="d" ){
       ## Daily data
-      print( paste( "getting annual FLUXNET 2015 data for site", sitename ) )
+      print( paste( "getting daily FLUXNET 2015 data for site", sitename ) )
       allfiles <- list.files( dir )
       allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]

@@ -102,7 +102,8 @@ settings_sims_sitescale <- prepare_setup_sofun(
 settings_input_sitescale$fapar = "MODIS_FPAR_MCD15A3H"
 settings_input_sitescale$splined_fapar = TRUE
 
-inputdata_FPARspl <- prepare_input_sofun( 
+## Prepare and save input data for later use
+inputdata_FPATspl <- prepare_input_sofun( 
   settings_input = settings_input_sitescale, 
   settings_sims = settings_sims_sitescale, 
   return_data = TRUE, 
@@ -131,18 +132,237 @@ settings_eval$sitenames <- settings_eval$sitenames[which(!(settings_eval$sitenam
 settings_eval$benchmark <- list( gpp = c("fluxnet2015_NT") )
 
 ## get observational data separately and save since it's the same for multiple evaluations
-obs_eval_RED <- get_obs_eval( settings_eval = settings_eval, settings_input = settings_input_sitescale, settings_sims = settings_sims_sitescale, overwrite = TRUE )
-save( obs_eval_RED, file = "obs_eval_RED.Rdata")
+obs_eval_NT <- get_obs_eval( settings_eval = settings_eval, settings_input = settings_input_sitescale, settings_sims = settings_sims_sitescale, overwrite = TRUE )
+save( obs_eval_NT, file = "obs_eval_NT.Rdata")
 
 ## evaluate RED simulations
-if (!exists("obs_eval_RED")) load("obs_eval_RED.Rdata")
-out_eval_RED <- eval_sofun( mod_RED, settings_eval, settings_sims_sitescale, siteinfo, obs_eval = obs_eval_RED, doplot=FALSE, overwrite = TRUE )
+if (!exists("obs_eval_NT")) load("obs_eval_NT.Rdata")
+out_eval_RED <- eval_sofun( mod_RED, settings_eval, settings_sims_sitescale, siteinfo, obs_eval = obs_eval_NT, doplot=FALSE, overwrite = TRUE )
 save( out_eval_RED, file = "out_eval_RED.Rdata" )
 
+if (!exists("out_eval_RED")) load("out_eval_RED.Rdata")
+row_rsqtable_RED <- bind_cols( Setup = "RED", getrow_statstable( out_eval_RED, stat = "rsq" ) )
+
 ## Plot mod-vs-obs for daily values
-modobs_ddf <- plot_modobs_daily( out_eval_RED$data$ddf, subtitle = "RED, FPARspl, NT", dir = "./fig", makepdf = TRUE )
+# if (!exists("out_eval_RED")) load("out_eval_RED.Rdata")
+# modobs_ddf_RED <- plot_modobs_daily( out_eval_RED$data$ddf, subtitle = "RED, FPARspl, NT", dir = "./fig", makepdf = TRUE )
 ```
 
+
+
+### Including empirical soil moisture and temperature stress functions (`FULL`)
+
+Run SOFUN with calibrated parameters for the simulation suite based on splined MODIS FPAR MCD15A3H fAPAR data and excluding cold (<10$^{\circ}$) and dry (relative soil moisture below XXX) days. and  `r `
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+## Define new output directory and specific simulation parameters and re-run the setup step
+settings_sims_sitescale$path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s25/"
+settings_sims_sitescale$soilmstress = TRUE
+settings_sims_sitescale$tempstress  = TRUE
+
+settings_sims_sitescale <- prepare_setup_sofun(
+  settings = settings_sims_sitescale, 
+  calibvars = c(),
+  write_paramfils = TRUE 
+  )
+
+## Define fAPAR input data and re-write input files for SOFUN - THE SAME AS ABOVE
+# settings_input_sitescale$fapar = "MODIS_FPAR_MCD15A3H"
+# settings_input_sitescale$splined_fapar = TRUE
+
+## Prepare and save input data for later use - THE SAME AS ABOVE
+# inputdata_FPATspl <- prepare_input_sofun( 
+#   settings_input = settings_input_sitescale, 
+#   settings_sims = settings_sims_sitescale, 
+#   return_data = TRUE, 
+#   overwrite_climate = FALSE, 
+#   overwrite_fapar = TRUE, 
+#   verbose = TRUE
+#   )
+
+## update files containing parameter values read by model
+params_opt <- read_csv( paste0("params_opt_FULL.csv") )
+nothing <- update_params( params_opt, settings = settings_sims_sitescale )
+
+## run the model with these parameters and read output into mod_FULL
+mod_FULL <- runread_sofun( 
+  settings = settings_sims_sitescale, 
+  setup = setup_sofun_sitescale 
+  )
+save( mod_FULL, file="mod_FULL.Rdata" )
+
+## get sites for which no model output is available and overwrite settings_eval$sitenames
+if (!exists("mod_FULL")) load("mod_FULL.Rdata")
+missing_mod <- purrr::map_lgl( mod_FULL$daily, ~identical(., NA ) ) %>% which() %>% names()
+settings_eval$sitenames <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_mod))]
+
+## Define other setup-specific evaluation settings - THE SAME AS ABOVE
+# settings_eval$benchmark <- list( gpp = c("fluxnet2015_NT") )
+
+## get observational data separately and save since it's the same for multiple evaluations - THE SAME AS ABOVE
+# obs_eval_NT <- get_obs_eval( settings_eval = settings_eval, settings_input = settings_input_sitescale, settings_sims = settings_sims_sitescale, overwrite = TRUE )
+# save( obs_eval_NT, file = "obs_eval_NT.Rdata")
+
+## evaluate FULL simulations
+if (!exists("obs_eval_NT")) load("obs_eval_NT.Rdata")
+out_eval_FULL <- eval_sofun( mod_FULL, settings_eval, settings_sims_sitescale, siteinfo, obs_eval = obs_eval_NT, doplot=FALSE, overwrite = TRUE )
+save( out_eval_FULL, file = "out_eval_FULL.Rdata" )
+
+if (!exists("out_eval_FULL")) load("out_eval_FULL.Rdata")
+row_rsqtable_FULL <- bind_cols( Setup = "FULL", getrow_statstable( out_eval_FULL, stat = "rsq" ) )
+```
+
+
+### Null model of constant LUE (`NULL`)
+
+Assume that light use efficiency (LUE) is constant and GPP is calculated as:
+$$
+\text{GPP} = \text{fAPAR} \times \text{PAR} \times \text{LUE}  
+$$
+LUE is a constant and is calibrated, given GPP data (here based on the nighttime decomposition method). fAPAR is splined MODIS FPAR MCD15A3H.
+
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+mod_NULL <- obs_eval_NT$ddf %>% 
+            dplyr::select( sitename, date, gpp_obs, ppfd_fluxnet2015, fapar ) %>% 
+            mutate( apar = ppfd_fluxnet2015 * fapar ) %>% 
+            mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) )
+
+## to fit constant LUE, fit linear model with zero intercept and just use its coefficient (slope)
+linmod <- lm( gpp_obs ~ 0 + apar, data = mod_NULL )
+
+mod_NULL <- mod_NULL %>% 
+  dplyr::select( sitename, date, apar ) %>%
+  mutate( gpp = coef(linmod) * apar ) %>%
+  dplyr::select( -apar )
+
+## change the structure to something like the one of mod_FULL and mod_RED
+tmp <- purrr::map( as.list( unique(mod_NULL$sitename)), ~filter( mod_NULL, sitename==. ) %>% dplyr::select(-sitename) )
+names(tmp) <- unique(mod_NULL$sitename)
+mod_NULL <- list()
+mod_NULL$daily <- tmp
+rm("tmp")
+
+## evaluate NULL simulations
+if (!exists("obs_eval_NT")) load("obs_eval_NT.Rdata")
+out_eval_NULL <- eval_sofun( mod_NULL, settings_eval, settings_sims_sitescale, siteinfo, obs_eval = obs_eval_NT, doplot=FALSE, overwrite = TRUE )
+save( out_eval_NULL, file = "out_eval_NULL.Rdata" )
+
+if (!exists("out_eval_NULL")) load("out_eval_NULL.Rdata")
+row_rsqtable_NULL <- bind_cols( Setup = "NULL", getrow_statstable( out_eval_NULL, stat = "rsq" ) )
+```
+
+
+### Null model of constant LUE by PFT (`NULLpft`)
+
+Here, assume a different constant LUE for each PFT, or vegetation type.
+LUE is a constant and is calibrated, given GPP data (here based on the nighttime decomposition method). fAPAR is splined MODIS FPAR MCD15A3H.
+
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+add_gpp_mod <- function( data ){
+  linmod <- lm( gpp_obs ~ 0 + apar, data = data, na.action = "na.exclude" )
+  data$gpp_mod <- coef(linmod)[["apar"]] * data$apar # fitted( linmod )
+  return(data)  
+}
+
+## Get coefficient (constant LUE) for each PFT ('classid') and use this to estimate 'gpp_mod' 
+sum_NULLpft <-  obs_eval_NT$ddf %>% 
+                dplyr::select( sitename, date, gpp_obs, ppfd_fluxnet2015, fapar ) %>% 
+                mutate( apar = ppfd_fluxnet2015 * fapar, gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) %>%
+                left_join( dplyr::rename( dplyr::select( siteinfo$light, mysitename, classid ), sitename = mysitename ), by = "sitename" ) %>%
+                group_by( classid ) %>%
+                nest() %>%
+                mutate( nobs = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ) ) %>%
+                unnest( nobs ) %>%
+                filter( nobs > 2 ) %>%
+                mutate( linmod = purrr::map( data, ~lm( gpp_obs ~ 0 + apar, data = . ) ) ) %>%
+                mutate( coef   = purrr::map( linmod, ~coef(.) ) ) %>%
+                unnest( coef ) %>%
+                mutate( data   = purrr::map( data, ~add_gpp_mod(.) ) ) %>%
+                mutate( stats  = purrr::map( data, ~get_stats( .$gpp_mod, .$gpp_obs ) ) ) %>%
+                unnest( stats )
+    		                 
+## Unnest the data again to get a long data frame                         
+mod_NULLpft <- sum_NULLpft %>% 
+                dplyr::select( data ) %>%
+                unnest( data ) %>%
+                dplyr::select( sitename, date, gpp = gpp_mod )
+
+## change the structure to something like the one of mod_FULL and mod_RED
+tmp <- purrr::map( as.list( unique(mod_NULLpft$sitename)), ~filter( mod_NULLpft, sitename==. ) %>% dplyr::select(-sitename) )
+names(tmp) <- unique(mod_NULLpft$sitename)
+mod_NULLpft <- list()
+mod_NULLpft$daily <- tmp
+rm("tmp")
+
+## evaluate NULL simulations
+if (!exists("obs_eval_NT")) load("obs_eval_NT.Rdata")
+out_eval_NULLpft <- eval_sofun( mod_NULLpft, settings_eval, settings_sims_sitescale, siteinfo, obs_eval = obs_eval_NT, doplot=FALSE, overwrite = TRUE )
+save( out_eval_NULLpft, file = "out_eval_NULLpft.Rdata" )
+
+if (!exists("out_eval_NULLpft")) load("out_eval_NULLpft.Rdata")
+row_rsqtable_NULLpft <- bind_cols( Setup = "NULLpft", getrow_statstable( out_eval_NULLpft, stat = "rsq" ) )
+```
+
+
+### Sensitivity to greenness data with interpolated FPAR data (`RED_FPARitp`)
+
+Run SOFUN with calibrated parameters for the simulation suite based on splined MODIS FPAR MCD15A3H fAPAR data and excluding cold (<10$^{\circ}$) and dry (relative soil moisture below XXX) days. and  `r `
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+## Define new output directory and specific simulation parameters and re-run the setup step
+settings_sims_sitescale$path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s26/"
+settings_sims_sitescale$soilmstress = FALSE
+settings_sims_sitescale$tempstress  = FALSE
+
+settings_sims_sitescale <- prepare_setup_sofun( 
+  settings = settings_sims_sitescale, 
+  calibvars = c(),
+  write_paramfils = TRUE 
+  )
+
+## Define fAPAR input data and re-write input files for SOFUN
+settings_input_sitescale$fapar = "MODIS_FPAR_MCD15A3H"
+settings_input_sitescale$splined_fapar = FALSE
+
+## Prepare and save input data for later use
+inputdata_FPATitpl <- prepare_input_sofun( 
+  settings_input = settings_input_sitescale, 
+  settings_sims = settings_sims_sitescale, 
+  return_data = FALSE, 
+  overwrite_climate = FALSE, 
+  overwrite_fapar = TRUE, 
+  verbose = TRUE
+  )
+
+## update files containing parameter values read by model
+params_opt <- read_csv( paste0("params_opt_RED_FPARitp.csv") )
+nothing <- update_params( params_opt, settings = settings_sims_sitescale )
+
+## run the model with these parameters and read output into mod_RED_FPARitp
+mod_RED_FPARitp <- runread_sofun( 
+  settings = settings_sims_sitescale, 
+  setup = setup_sofun_sitescale 
+  )
+save( mod_RED_FPARitp, file="mod_RED_FPARitp.Rdata" )
+
+## get sites for which no model output is available and overwrite settings_eval$sitenames
+if (!exists("mod_RED_FPARitp")) load("mod_RED_FPARitp.Rdata")
+missing_mod <- purrr::map_lgl( mod_RED_FPARitp$daily, ~identical(., NA ) ) %>% which() %>% names()
+settings_eval$sitenames <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_mod))]
+
+## Define other setup-specific evaluation settings
+settings_eval$benchmark <- list( gpp = c("fluxnet2015_NT") )
+
+## get observational data separately and save since it's the same for multiple evaluations
+obs_eval_NT <- get_obs_eval( settings_eval = settings_eval, settings_input = settings_input_sitescale, settings_sims = settings_sims_sitescale, overwrite = TRUE )
+save( obs_eval_NT, file = "obs_eval_NT.Rdata")
+
+## evaluate RED_FPARitp simulations
+if (!exists("obs_eval_NT")) load("obs_eval_NT.Rdata")
+out_eval_RED_FPARitp <- eval_sofun( mod_RED_FPARitp, settings_eval, settings_sims_sitescale, siteinfo, obs_eval = obs_eval_NT, doplot=FALSE, overwrite = TRUE )
+save( out_eval_RED_FPARitp, file = "out_eval_RED_FPARitp.Rdata" )
+
+if (!exists("out_eval_RED_FPARitp")) load("out_eval_RED_FPARitp.Rdata")
+row_rsqtable_RED_FPARitp <- bind_cols( Setup = "RED_FPARitp", getrow_statstable( out_eval_RED, stat = "rsq" ) )
+```
 
 
 <!-- ## Sites selection -->
