@@ -13,9 +13,6 @@ analyse_modobs <- function( mod,
                             main="",
                             ... ){
 
-  require(Metrics)
-  require(hydroGOF)
-  require(LSD)
 
   ## get statistics
   idxs <- which(!is.na(mod) & !is.na(obs))

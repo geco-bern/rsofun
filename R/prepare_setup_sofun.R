@@ -15,12 +15,6 @@
 # @examples
 prepare_setup_sofun <- function( settings, calibvars = c(), write_paramfils = TRUE ){
 
-  require(readr)
-  require(dplyr)
-  require(lubridate)
-  require(purrr)
-  require(rlang)
-
   ## Make sure the SOFUN model directory exists
   if (!dir.exists(settings$dir_sofun)) system( paste0( "mkdir -p ", settings$dir_sofun ) )
   
@@ -350,15 +344,11 @@ write_site_parameter_bysite <- function( sitename, settings ){
 ##-----------------------------------------------------------
 write_simulation_parameter_bysite <- function( sitename, settings_sim, calibvars = c() ){
 
-  require(lubridate)
-  require(dplyr)
-  
   ## create path of the simulation parameter file for this site
   path <- paste0( settings_sim$path_input, "/run/", sitename, ".sofun.parameter" )
 
   if (settings_sim$implementation=="fortran"){
 
-    source("R/create_simulation_parameter_file.R")
     path <- create_simulation_parameter_file( 
               path                 = path,
               simname              = sitename,

@@ -1,13 +1,4 @@
 eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = NA, overwrite = TRUE, doplot = FALSE ){
-	
-  require(dplyr)
-  require(purrr)
-  require(lubridate)
-  require(tidyr)
-  require(stringr)
-
-  source("R/remove_outliers.R")
-  source("R/analyse_modobs.R")
 
   metrics <- list()
   
@@ -115,7 +106,6 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
   		write_csv( legend, path = "koeppen_legend.csv" )
   		
   		## Second, extract the class from a global map, complement missing in above
-  		require(raster)
   		kgclass <- raster("~/data/koeppengeiger/koeppen-geiger.tif")
   		kglegend <- read_csv("~/data/koeppengeiger/koppen-geiger_legend.csv") %>% setNames( c("kgnumber", "koeppen_code_extr"))
   		siteinfo_eval <- siteinfo_eval %>% mutate( kgnumber = extract( kgclass, data.frame( x=.$lon, y=.$lat ) ) ) %>% 
@@ -365,10 +355,6 @@ eval_sofun <- function( mod, settings_eval, settings_sims, siteinfo, obs_eval = 
 
 get_obs_eval <- function( settings_eval, settings_input, settings_sims, overwrite ){
 
-	require(dplyr)
-	require(purrr)
-	require(lubridate)
-
 	if ("gpp" %in% names(settings_eval$benchmark)){
 		##------------------------------------------------------------
 		## Get observational GPP data
@@ -561,7 +547,6 @@ get_forcing_from_csv <- function( sitename, settings_sims ){
 }
 
 extract_koeppen_code <- function( str ){
-	require(stringr)
 	out <- str_split( str, " - ")[[1]][1]
 	return( out )
 }

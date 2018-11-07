@@ -3,10 +3,6 @@
 ##--------------------------------------------------------------------------
 check_download_gepisat <- function( path, sitename=NA ){
 
-  require(purrr)
-  require(dplyr)
-  require(rlang)
-
   ## Check if any data is available in the specified directory
   filelist <- list.files( path, pattern = ".*_daily_GPP.txt" )
 
@@ -60,8 +56,6 @@ check_download_gepisat <- function( path, sitename=NA ){
 ## Manages the path specification for GePiSaT data download from CX1
 ##-----------------------------------------------------------
 download_gepisat_from_cx1 <- function( path ){
-  
-  require(rlang)
 
   ans <- readline( prompt = "Do you have access to Imperial's CX1? (y/n) " )
   if (ans=="y"){

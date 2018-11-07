@@ -4,10 +4,6 @@ calib_pmodel <- function( df, temp_cutoff, soilm_cutoff, kphio_used ){
 	## given modelled GPP (using arbitrary quantum yield eff. par.) and observed GPP, 
 	## both given in dataframe 'df' and named 'gpp' and 'GPP_NT_VUT_REF', resp.
 
-	require(ncdf4)
-
-	source("R/analyse_modobs.R")
-
 	## Get initial number of data points
 	ndays_0 <- nrow( df )
 

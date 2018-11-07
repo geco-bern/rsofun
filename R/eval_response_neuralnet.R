@@ -1,11 +1,5 @@
 eval_response_neuralnet <- function( df, overwrite = FALSE, ... ){
 
-	require(caret)
-	require(nnet)
-	require(dplyr)
-  
-  source("R/analyse_modobs.R")
-  
   ## rename (should go outside this function)
   df <- df %>% rename( vpd = vpd_fluxnet2015, ppfd = ppfd_fluxnet2015, soilm = soilm_obs_mean )
   
