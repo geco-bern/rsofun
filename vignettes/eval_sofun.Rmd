@@ -145,32 +145,34 @@ settings_sims_sitescale$loutdaet    = TRUE
 settings_sims_sitescale$loutdpet    = TRUE
 settings_sims_sitescale$loutdalpha  = TRUE
 
-settings_sims_sitescale <- prepare_setup_sofun( 
-  settings = settings_sims_sitescale, 
-  calibvars = c(),
-  write_paramfils = TRUE 
-  )
 
 ## Define fAPAR input data and re-write input files for SOFUN
 settings_input_sitescale$fapar = "MODIS_FPAR_MCD15A3H"
 settings_input_sitescale$splined_fapar = TRUE
 
-## Prepare and save input data for later use
-inputdata_FPATspl <- prepare_input_sofun( 
-  settings_input = settings_input_sitescale, 
-  settings_sims = settings_sims_sitescale, 
-  return_data = TRUE, 
-  overwrite_climate = FALSE, 
-  overwrite_fapar = TRUE, 
-  verbose = TRUE
-  )
-
-## update files containing parameter values read by model
-params_opt <- read_csv( "../results/params_opt_RED.csv" )
-nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
-
 ## run the model with these parameters and read output into mod_RED
 if (!file.exists("mod_RED.Rdata")){
+
+  settings_sims_sitescale <- prepare_setup_sofun( 
+    settings = settings_sims_sitescale, 
+    calibvars = c(),
+    write_paramfils = TRUE 
+    )
+
+  ## Prepare and save input data for later use
+  inputdata_FPATspl <- prepare_input_sofun( 
+    settings_input = settings_input_sitescale, 
+    settings_sims = settings_sims_sitescale, 
+    return_data = TRUE, 
+    overwrite_climate = FALSE, 
+    overwrite_fapar = TRUE, 
+    verbose = TRUE
+    )
+
+  ## update files containing parameter values read by model
+  params_opt <- read_csv( "../results/params_opt_RED.csv" )
+  nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
+
   mod_RED <- runread_sofun( 
     settings = settings_sims_sitescale, 
     setup = setup_sofun_sitescale 
@@ -221,32 +223,33 @@ settings_sims_sitescale$path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s
 settings_sims_sitescale$soilmstress = TRUE
 settings_sims_sitescale$tempstress  = TRUE
 
-settings_sims_sitescale <- prepare_setup_sofun(
-  settings = settings_sims_sitescale, 
-  calibvars = c(),
-  write_paramfils = TRUE 
-  )
-
 ## Define fAPAR input data and re-write input files for SOFUN - THE SAME AS ABOVE
 settings_input_sitescale$fapar = "MODIS_FPAR_MCD15A3H"
 settings_input_sitescale$splined_fapar = TRUE
 
-# Prepare and save input data for later use - THE SAME AS ABOVE
-inputdata_FPATspl <- prepare_input_sofun( 
-  settings_input = settings_input_sitescale, 
-  settings_sims = settings_sims_sitescale, 
-  return_data = TRUE, 
-  overwrite_climate = FALSE, 
-  overwrite_fapar = TRUE, 
-  verbose = TRUE
-  )
-
-## update files containing parameter values read by model
-params_opt <- read_csv( "../results/params_opt_FULL.csv" )
-nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
-
 ## run the model with these parameters and read output into mod_FULL
 if (!file.exists("mod_FULL.Rdata")){
+
+  settings_sims_sitescale <- prepare_setup_sofun(
+    settings = settings_sims_sitescale, 
+    calibvars = c(),
+    write_paramfils = TRUE 
+    )
+
+  # Prepare and save input data for later use - THE SAME AS ABOVE
+  inputdata_FPATspl <- prepare_input_sofun( 
+    settings_input = settings_input_sitescale, 
+    settings_sims = settings_sims_sitescale, 
+    return_data = TRUE, 
+    overwrite_climate = FALSE, 
+    overwrite_fapar = TRUE, 
+    verbose = TRUE
+    )
+
+  ## update files containing parameter values read by model
+  params_opt <- read_csv( "../results/params_opt_FULL.csv" )
+  nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
+
   mod_FULL <- runread_sofun( 
     settings = settings_sims_sitescale, 
     setup = setup_sofun_sitescale 
@@ -387,32 +390,33 @@ settings_sims_sitescale$path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s
 settings_sims_sitescale$soilmstress = FALSE
 settings_sims_sitescale$tempstress  = FALSE
 
-settings_sims_sitescale <- prepare_setup_sofun( 
-  settings = settings_sims_sitescale, 
-  calibvars = c(),
-  write_paramfils = TRUE 
-  )
-
 ## Define fAPAR input data and re-write input files for SOFUN
 settings_input_sitescale$fapar = "MODIS_FPAR_MCD15A3H"
 settings_input_sitescale$splined_fapar = FALSE
 
-## Prepare and save input data for later use
-inputdata_FPATitpl <- prepare_input_sofun( 
-  settings_input = settings_input_sitescale, 
-  settings_sims = settings_sims_sitescale, 
-  return_data = FALSE, 
-  overwrite_climate = FALSE, 
-  overwrite_fapar = TRUE, 
-  verbose = TRUE
-  )
-
-## update files containing parameter values read by model
-params_opt <- read_csv( "../results/params_opt_RED_FPARitp.csv" )
-nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
-
 ## run the model with these parameters and read output into mod_RED_FPARitp
 if (!file.exists("mod_RED_FPARitp.Rdata")){
+
+  settings_sims_sitescale <- prepare_setup_sofun( 
+    settings = settings_sims_sitescale, 
+    calibvars = c(),
+    write_paramfils = TRUE 
+    )
+
+  ## Prepare and save input data for later use
+  inputdata_FPATitpl <- prepare_input_sofun( 
+    settings_input = settings_input_sitescale, 
+    settings_sims = settings_sims_sitescale, 
+    return_data = FALSE, 
+    overwrite_climate = FALSE, 
+    overwrite_fapar = TRUE, 
+    verbose = TRUE
+    )
+
+  ## update files containing parameter values read by model
+  params_opt <- read_csv( "../results/params_opt_RED_FPARitp.csv" )
+  nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
+
   mod_RED_FPARitp <- runread_sofun( 
     settings = settings_sims_sitescale, 
     setup = setup_sofun_sitescale 
@@ -458,32 +462,33 @@ settings_sims_sitescale$path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s
 settings_sims_sitescale$soilmstress = FALSE
 settings_sims_sitescale$tempstress  = FALSE
 
-settings_sims_sitescale <- prepare_setup_sofun( 
-  settings = settings_sims_sitescale, 
-  calibvars = c(),
-  write_paramfils = TRUE 
-  )
-
 ## Define fAPAR input data and re-write input files for SOFUN
 settings_input_sitescale$fapar = "MODIS_EVI_MOD13Q1"
 settings_input_sitescale$splined_fapar = FALSE
 
-## Prepare and save input data for later use
-inputdata_EVI <- prepare_input_sofun( 
-  settings_input = settings_input_sitescale, 
-  settings_sims = settings_sims_sitescale, 
-  return_data = FALSE, 
-  overwrite_climate = FALSE, 
-  overwrite_fapar = TRUE, 
-  verbose = FALSE
-  )
-
-## update files containing parameter values read by model
-params_opt <- read_csv( "../results/params_opt_RED_EVI.csv" )
-nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
-
 ## run the model with these parameters and read output into mod_RED_EVI
 if (!file.exists("mod_RED_EVI.Rdata")){
+
+  settings_sims_sitescale <- prepare_setup_sofun( 
+    settings = settings_sims_sitescale, 
+    calibvars = c(),
+    write_paramfils = TRUE 
+    )
+
+  ## Prepare and save input data for later use
+  inputdata_EVI <- prepare_input_sofun( 
+    settings_input = settings_input_sitescale, 
+    settings_sims = settings_sims_sitescale, 
+    return_data = FALSE, 
+    overwrite_climate = FALSE, 
+    overwrite_fapar = TRUE, 
+    verbose = FALSE
+    )
+
+  ## update files containing parameter values read by model
+  params_opt <- read_csv( "../results/params_opt_RED_EVI.csv" )
+  nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
+
   settings_sims_sitescale$loutdrd     = FALSE
   settings_sims_sitescale$loutdtransp = FALSE
   mod_RED_EVI <- runread_sofun( 
@@ -531,32 +536,33 @@ settings_sims_sitescale$path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s
 settings_sims_sitescale$soilmstress = FALSE
 settings_sims_sitescale$tempstress  = FALSE
 
-settings_sims_sitescale <- prepare_setup_sofun( 
-  settings = settings_sims_sitescale, 
-  calibvars = c(),
-  write_paramfils = FALSE
-  )
-
 ## Define fAPAR input data and re-write input files for SOFUN
 settings_input_sitescale$fapar = "MODIS_FPAR_MCD15A3H"
 settings_input_sitescale$splined_fapar = TRUE
 
-## Prepare and save input data for later use
-inputdata_FPATspl <- prepare_input_sofun( 
-  settings_input = settings_input_sitescale, 
-  settings_sims = settings_sims_sitescale, 
-  return_data = FALSE, 
-  overwrite_climate = FALSE, 
-  overwrite_fapar = TRUE, 
-  verbose = TRUE
-  )
-
-## update files containing parameter values read by model
-params_opt <- read_csv( "../results/params_opt_RED_DT.csv" )
-nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
-
 ## run the model with these parameters and read output into mod_RED_EVI
 if (!file.exists("mod_RED_DT.Rdata")){
+
+  settings_sims_sitescale <- prepare_setup_sofun( 
+    settings = settings_sims_sitescale, 
+    calibvars = c(),
+    write_paramfils = FALSE
+    )
+
+  ## Prepare and save input data for later use
+  inputdata_FPATspl <- prepare_input_sofun( 
+    settings_input = settings_input_sitescale, 
+    settings_sims = settings_sims_sitescale, 
+    return_data = FALSE, 
+    overwrite_climate = FALSE, 
+    overwrite_fapar = TRUE, 
+    verbose = TRUE
+    )
+
+  ## update files containing parameter values read by model
+  params_opt <- read_csv( "../results/params_opt_RED_DT.csv" )
+  nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
+
   settings_sims_sitescale$loutdrd     = FALSE
   settings_sims_sitescale$loutdtransp = FALSE
   mod_RED_DT <- runread_sofun( 
@@ -604,32 +610,33 @@ settings_sims_sitescale$path_output_nc  = "~/sofun/output_nc_fluxnet2015_sofun/s
 settings_sims_sitescale$soilmstress = FALSE
 settings_sims_sitescale$tempstress  = FALSE
 
-settings_sims_sitescale <- prepare_setup_sofun( 
-  settings = settings_sims_sitescale, 
-  calibvars = c(),
-  write_paramfils = FALSE
-  )
-
 ## Define fAPAR input data and re-write input files for SOFUN
 settings_input_sitescale$fapar = "MODIS_FPAR_MCD15A3H"
 settings_input_sitescale$splined_fapar = TRUE
 
-## Prepare and save input data for later use
-inputdata_FPATspl <- prepare_input_sofun( 
-  settings_input = settings_input_sitescale, 
-  settings_sims = settings_sims_sitescale, 
-  return_data = FALSE, 
-  overwrite_climate = FALSE, 
-  overwrite_fapar = TRUE, 
-  verbose = TRUE
-  )
-
-## update files containing parameter values read by model
-params_opt <- read_csv( "../results/params_opt_RED_Ty.csv" )
-nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
-
 ## run the model with these parameters and read output into mod_RED_EVI
 if (!file.exists("mod_RED_Ty.Rdata")){
+
+  settings_sims_sitescale <- prepare_setup_sofun( 
+    settings = settings_sims_sitescale, 
+    calibvars = c(),
+    write_paramfils = FALSE
+    )
+
+  ## Prepare and save input data for later use
+  inputdata_FPATspl <- prepare_input_sofun( 
+    settings_input = settings_input_sitescale, 
+    settings_sims = settings_sims_sitescale, 
+    return_data = FALSE, 
+    overwrite_climate = FALSE, 
+    overwrite_fapar = TRUE, 
+    verbose = TRUE
+    )
+
+  ## update files containing parameter values read by model
+  params_opt <- read_csv( "../results/params_opt_RED_Ty.csv" )
+  nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
+
   settings_sims_sitescale$loutdrd     = FALSE
   settings_sims_sitescale$loutdtransp = FALSE
   mod_RED_Ty <- runread_sofun( 
