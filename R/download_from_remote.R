@@ -1,3 +1,19 @@
+#' Download file from a remote server.
+#'
+#' A file is downloaded from a remote server using SSH.
+#'
+#' @param dir_remote A character string specifying the path of the directory that contains files to be downloaded from the remote server.
+#' @param dir_local A character string specifying the path of the directory that contains files to be downloaded to the local machine.
+#' @param pattern (Optional) A character string of the pattern used to filter files to be downloaded.
+#' @param uname A character string specifying the user name for the log in on the remote server.
+#' @param address_remote A character string specifying the address of the login node of the remote server.
+#' @param getfiles (Optional) A vector of character strings specifying the names of the files that are to be downloaded.
+#'
+#' @return TODO
+#' @export
+#'
+#' @examples
+#' 
 ##-----------------------------------------------------------
 ## Manages the path specification for MODIS FPAR data download from CX1
 ##-----------------------------------------------------------

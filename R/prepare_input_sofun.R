@@ -1,4 +1,3 @@
-
 #' Prepare the inputs for SOFUN
 #'
 #' Creates all the input files/links necessary to run simulations
@@ -15,10 +14,7 @@
 #'
 #' @examples
 #' 
-#' 
 prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALSE, overwrite_climate=FALSE, overwrite_fapar=FALSE, verbose=FALSE ){
-
-  source("R/check_download_fluxnet2015.R")  # Defined in a separate file because calib_sofun() calls the same function.
 
   if (settings_sims$setup == "lonlat"){
     ##-----------------------------------------------------------
@@ -162,7 +158,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
         "fluxnet2015" %in% settings_input$ppfd
         ))){
 
-        error <- check_download_fluxnet2015( settings_input, settings_sims )
+        error <- check_download_fluxnet2015( settings_input$path_fluxnet2015 )
 
       }
 
@@ -213,13 +209,13 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       ##-----------------------------------------------------------
       ## Climate input files
       if (overwrite_climate || return_data){
-        ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite_csv = FALSE, verbose = verbose ) ) %>%
+        ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite = overwrite_climate, verbose = verbose ) ) %>%
                         bind_rows()
       }
 
       ## prepare the fapar input files for each site
       if (overwrite_fapar || return_data){
-        ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite_csv = FALSE, verbose = verbose ) ) %>%
+        ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite = overwrite_fapar, verbose = verbose ) ) %>%
                       bind_rows()
       }
 
@@ -260,7 +256,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
 ##-----------------------------------------------------------
-prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv=FALSE, verbose=FALSE ){
+prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite=FALSE, verbose=FALSE ){
 
   if (verbose) print(paste("prepare_input_sofun_climate_bysite() for site", sitename ))
 
@@ -269,7 +265,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
   csvfiln <- paste0( dir, "/clim_daily_", sitename, ".csv" )
 
-  if (file.exists(csvfiln)&&!overwrite_csv){
+  if (file.exists(csvfiln)&&!overwrite){
 
     ddf <- read_csv( csvfiln )
 
@@ -292,7 +288,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
     if (length(fluxnetvars)>0){
 
       ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
+      error <- check_download_fluxnet2015( settings_input$path_fluxnet2015, sitename )
       ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
       ddf <- get_meteo_fluxnet2015( sitename, dir = settings_input$path_fluxnet2015, freq="d" ) %>%
         dplyr::select( date, one_of(fluxnetvars) ) %>% 
@@ -460,16 +456,18 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
 ##-----------------------------------------------------------
-prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv=FALSE, verbose=FALSE ){
+prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings_sims, overwrite=FALSE, verbose=FALSE ){
 
   if (verbose) print(paste0("Getting fAPAR data for site ", sitename, " ..." ) )
 
   ## File path of fAPAR CSV file for this site
   dir <- paste0( settings_sims$path_input, "/sitedata/fapar/", sitename )
+  
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
+  
   csvfiln <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
 
-  if (file.exists(csvfiln)&&!overwrite_csv){
+  if (file.exists(csvfiln)&&!overwrite){
 
     ddf <- read_csv( csvfiln ) %>% mutate( fapar = as.numeric(fapar) )
 
@@ -1116,7 +1114,7 @@ find_nearest_cruland_by_lat <- function( lon, lat, filn ){
 ##--------------------------------------------------------------------------
 check_download_watch_wfdei <- function( varnam, settings_input, settings_sims ){
 
-  source("../R/download_from_remote.R")
+  # source("../R/download_from_remote.R")
 
   ## Determine file name, given <settings_input$path_fluxnet2015>
   ## look for data in the given directory
@@ -1207,7 +1205,7 @@ check_watch_wfdei_year <- function( year, varnam, settings_input ){
 ##--------------------------------------------------------------------------
 check_download_cru <- function( varnam, settings_input, settings_sims ){
 
-  source("../R/download_from_remote.R")
+  # source("../R/download_from_remote.R")
 
   ## Determine file name, given <settings_input$path_fluxnet2015>
   ## look for data in the given directory
@@ -1266,7 +1264,7 @@ check_download_cru <- function( varnam, settings_input, settings_sims ){
 ##--------------------------------------------------------------------------
 check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, sitename=NA ){
 
-  source("../R/download_from_remote.R")
+  # source("../R/download_from_remote.R")
 
   error <- 0
 
@@ -1345,7 +1343,7 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
 ##--------------------------------------------------------------------------
 check_download_MODIS_EVI_MOD13Q1 <- function( settings_input, settings_sims, sitename=NA ){
 
-  source("../R/download_from_remote.R")
+  # source("../R/download_from_remote.R")
 
   error <- 0
 
@@ -1425,7 +1423,7 @@ check_download_co2 <- function( settings_input, settings_sims, sitename = NA ){
 
   error <- 0
 
-  source("../R/download_from_remote.R")
+  # source("../R/download_from_remote.R")
 
   if (!file.exists(settings_input$path_co2)){
 

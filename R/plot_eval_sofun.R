@@ -23,7 +23,7 @@ plot_eval_sofun <- function( out_eval, dir = NA, makepdf = TRUE ){
 ## Plot mean per site -> spatial correlation
 ##------------------------------------------------------------
 modobs_spatial <- plot_modobs_spatial <- function( meandf, dir = NA, makepdf=TRUE ){
-	source("analyse_modobs.R")
+	# source("analyse_modobs.R")
 	par(las=1, mar=c(4,4.5,4,1))
 	if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
 	if (makepdf) { filn <- paste0( dir, "/modobs_spatial.pdf" ) } else { filn <- N}
@@ -97,7 +97,7 @@ modobs_spatial <- plot_modobs_spatial_annual <- function( meandf, linmod_meandf,
 ## IAV correlation: x_(y,i) - mean_y( x_(y,i) )
 ##------------------------------------------------------------
 plot_modobs_anomalies_annual <- function( iavdf, iavdf_stats, dir = NA, makepdf=FALSE ){
-	source("analyse_modobs.R")
+	# source("analyse_modobs.R")
   if(makepdf) pdf( paste0( dir, "/modobs_anomalies_annual.pdf") )
 		par(las=1)
 		modobs_anomalies_annual <- with( iavdf, analyse_modobs(gpp_mod, 
@@ -117,7 +117,7 @@ plot_modobs_anomalies_annual <- function( iavdf, iavdf_stats, dir = NA, makepdf=
 ## IDV (interday variability) correlation: x_(d,i) - mean_d( x_(d,i) )
 ##------------------------------------------------------------
 plot_modobs_anomalies_daily <- function( idvdf, idvdf_stats, makepdf=FALSE){
-	source("analyse_modobs.R")
+	# source("analyse_modobs.R")
 	if (makepdf) pdf( paste0( dir, "/modobs_anomalies_daily.pdf" ) )
 		modobs_anomalies_daily <- with( idvdf, analyse_modobs( 
 		  gpp_mod, 
@@ -150,7 +150,7 @@ plot_modobs_anomalies_daily <- function( idvdf, idvdf_stats, makepdf=FALSE){
 ## IXV correlation: x_(x,i) - mean_x( x_(x,i) )
 ##------------------------------------------------------------
 plot_modobs_anomalies_xdaily <- function( ixvdf, ixvdf_stats, dir = NA, makepdf=FALSE ){
-	source("analyse_modobs.R")
+	# source("analyse_modobs.R")
   if (makepdf) pdf( paste0( dir, "/modobs_anomalies_xdaily.pdf" ) )
 		modobs_anomalies_xdaily <- with( ixvdf, analyse_modobs(
 		  gpp_mod, 
@@ -182,7 +182,7 @@ plot_modobs_anomalies_xdaily <- function( ixvdf, ixvdf_stats, dir = NA, makepdf=
 ##------------------------------------------------------------
 ## observed vs. modelled
 plot_modobs_meandoy <- function( meandoydf, meandoydf_stats, dir = NA, makepdf=FALSE ){
-	source("analyse_modobs.R")
+	# source("analyse_modobs.R")
 	if (makepdf) pdf( paste0( dir, "/modobs_meandoy.pdf") )
 	modobs_meandoy <- with( meandoydf, 
 		analyse_modobs( 
@@ -219,7 +219,7 @@ plot_by_doy_allzones <- function( meandoydf_byclim_stats, dir = NA, makepdf=FALS
 ##------------------------------------------------------------
 ## observed vs. modelled
 modobs_meanxoy <- plot_modobs_meanxoy <- function( meanxoydf, dir = NA, makepdf=FALSE ){
-	source("analyse_modobs.R")
+	# source("analyse_modobs.R")
 	if (makepdf) pdf( paste0( dir, "/modobs_meanxoy.pdf" ) )
 	modobs_meanxoy <- with( meanxoydf, 
 		analyse_modobs( 
@@ -247,7 +247,7 @@ plot_by_xoy_allsites <- function( meanxoydf_stats, dir = NA, makepdf=FALSE ){
 ##------------------------------------------------------------
 ## observed vs. modelled
 plot_modobs_daily <- function( ddf, subtitle, dir = NA, makepdf=FALSE, ... ){
-	source("analyse_modobs.R")
+	# source("analyse_modobs.R")
 	if (makepdf) pdf( paste0( dir, "/modobs_daily.pdf" ) )
 	modobs_ddf <- with( ddf, 
 		analyse_modobs( 
@@ -269,7 +269,7 @@ plot_modobs_daily <- function( ddf, subtitle, dir = NA, makepdf=FALSE, ... ){
 ##------------------------------------------------------------
 ## observed vs. modelled
 plot_modobs_monthly <- function( mdf, dir = NA, makepdf=FALSE, ... ){
-	source("analyse_modobs.R")
+	# source("analyse_modobs.R")
 	if (makepdf) pdf( paste0( dir, "/modobs_monthly.pdf" ) )
 	modobs_mdf <- with( mdf, 
 		analyse_modobs( 
@@ -291,7 +291,7 @@ plot_modobs_monthly <- function( mdf, dir = NA, makepdf=FALSE, ... ){
 ##------------------------------------------------------------
 ## observed vs. modelled
 plot_modobs_annual <- function( adf, dir = NA, makepdf=FALSE, ... ){
-	source("analyse_modobs.R")
+	# source("analyse_modobs.R")
 	if (makepdf) pdf( paste0( dir, "/modobs_annual.pdf" ) )
 	modobs_adf <- with( adf, 
 		analyse_modobs( 
@@ -313,7 +313,7 @@ plot_modobs_annual <- function( adf, dir = NA, makepdf=FALSE, ... ){
 ##------------------------------------------------------------
 ## observed vs. modelled
 plot_modobs_xdaily <- function( xdf, dir = NA, makepdf=FALSE, ... ){
-	source("analyse_modobs.R")
+	# source("analyse_modobs.R")
 	if (makepdf) pdf( paste0( dir, "/modobs_xdaily.pdf" ) )
 	modobs_xdf <- with( xdf, 
 		analyse_modobs( 

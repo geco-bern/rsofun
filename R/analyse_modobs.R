@@ -1,3 +1,24 @@
+#' Analyse modelled values versus observed data.
+#'
+#' Calculates a set of performance statistics and optionally creates plots of modelled versus observed values.
+#'
+#' @param mod A vector of numeric values representing modelled values. 
+#' @param obs A vector of numeric values representing observed values. 
+#' @param plot.fil A character string specifying the name of the file containing the plot.
+#' @param xlim A vector of length 2 specifying the limits of the x-axis of the plot.
+#' @param ylim A vector of length 2 specifying the limits of the y-axis of the plot.
+#' @param plot.title A character string specifying the title used for the plot.
+#' @param plot.subtitle A character string specifying the subtitle used for the plot.
+#' @param do.plot A logical value specifying whether a plot should be created.
+#' @param plot.linmod A logical value specifying whether a linear regression should be plotted.
+#' @param corner A character string specifying where performance statistics annotations should be placed. Defaults to "bottomright". Any of "bottomright", or "topleft".
+#' @param lab.xpos A numeric value specifying the location of the performance statistics annotations in x-direction. Defaults to 0.75.
+#' @param lab.ypos A numeric value specifying the location of the performance statistics annotations in y-direction. Defaults to 0.75.
+#'
+#' @export
+#'
+#' @examples
+#' 
 analyse_modobs <- function( mod, 
                             obs,
                             heat = FALSE,

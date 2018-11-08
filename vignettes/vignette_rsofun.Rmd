@@ -83,7 +83,7 @@ Run SOFUN in the simple setup.
 ```{r, eval=FALSE, message=FALSE, warning=FALSE}
 ## First update calibratable parameters.
 params_opt <- read_csv( paste0("params_opt_kphio_soilm_global.csv") ) # as an example
-nothing <- update_params( params_opt, settings = settings_sims_simple )
+nothing <- update_params( params_opt, settings_sims_simple$dir_sofun )
 
 # here <- getwd() # save current working directory
 # setwd( settings_sims_simple$dir_sofun )
@@ -406,7 +406,7 @@ This is shown in a separate document (`calib_sofun.Rmd`).
 Run SOFUN with calibrated parameters.
 ```{r, eval=FALSE, message=FALSE, warning=FALSE}
 params_opt <- read_csv( paste0("params_opt_calib_RED.csv") ) # as an example
-nothing <- update_params( params_opt, settings = settings_sims )
+nothing <- update_params( params_opt, settings_sims$dir_sofun )
 rm("mod")
 mod <- runread_sofun( 
   settings = settings_sims_sitescale, 

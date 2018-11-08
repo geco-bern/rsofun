@@ -14,7 +14,7 @@ runread_sofun <- function( settings, setup ){
 
   ## run simulations
   out_std <- run_sofun( settings, setup )
-  
+
   ## don't save standard output to save space
   rm("out_std")
 

@@ -381,7 +381,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
     if ("fluxnet2015" %in% datasource){
 
       ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_input, settings_sims, sitename )
+      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
 
       ## This gets gpp_obs as mean of GPP_NT_VUT_REF and GPP_DT_VUT_REF
       ddf <-  get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale, method = datasource[ -which( datasource=="fluxnet2015" ) ] ) %>%

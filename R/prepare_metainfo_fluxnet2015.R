@@ -286,8 +286,6 @@ long_to_wide_fluxnet2015 <- function( sitename, long ){
 }
 
 prepare_metainfo_fluxnet2015 <- function( settings_sims, settings_input, overwrite=TRUE, filn_elv_watch=NA ){
-
-  
   ##--------------------------------------------------------------------
   ## read meta info file and reshape to wide format
   ##--------------------------------------------------------------------

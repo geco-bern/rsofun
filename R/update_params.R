@@ -1,19 +1,19 @@
-#' Update parameters
+#' Updates calibratable parameters.
 #'
-#' TODO: Describe
+#' Updates the text files containing model parameters read online by SOFUN.
 #'
-#' @param params_opt TODO
-#' @param settings TODO
+#' @param params_opt A named list of calibrated parameter values with names corresponding to the SOFUN model parameter names.  
+#' @param dir_sofun A character string specifying the path of the SOFUN parent directory.
 #'
 #' @return
 #' @export
 #'
 # @examples
-update_params <- function( params_opt, settings ){
-  system( paste0( "cp ", settings$dir_sofun, "params_std/* ", settings$dir_sofun, "params/") )
+update_params <- function( params_opt, dir_sofun ){
+  system( paste0( "cp ", dir_sofun, "params_std/* ", dir_sofun, "params/") )
   
   if ("kphio" %in% names(params_opt)){
-    filn <- paste0( settings$dir_sofun, "params/params_gpp_pmodel.dat") 
+    filn <- paste0( dir_sofun, "params/params_gpp_pmodel.dat") 
     content <- readLines( filn )
     linenr <- which( grepl("kphio", content ) )
     len <- str_length(content[linenr])
@@ -23,7 +23,7 @@ update_params <- function( params_opt, settings ){
   }
 
   if ("temp_ramp_edge" %in% names(params_opt)){
-    filn <- paste0( settings$dir_sofun, "params/params_gpp_pmodel.dat") 
+    filn <- paste0( dir_sofun, "params/params_gpp_pmodel.dat") 
     content <- readLines( filn )
     linenr <- which( grepl("temp_ramp_edge", content ) )
     len <- str_length(content[linenr])
@@ -33,7 +33,7 @@ update_params <- function( params_opt, settings ){
   }
 
   if ("soilm_par_a" %in% names(params_opt)){
-    filn <- paste0( settings$dir_sofun, "params/params_gpp_pmodel.dat") 
+    filn <- paste0( dir_sofun, "params/params_gpp_pmodel.dat") 
     content <- readLines( filn )
     linenr <- which( grepl("soilm_par_a", content ) )
     len <- str_length(content[linenr])
@@ -43,7 +43,7 @@ update_params <- function( params_opt, settings ){
   }
 
   if ("soilm_par_b" %in% names(params_opt)){
-    filn <- paste0( settings$dir_sofun, "params/params_gpp_pmodel.dat") 
+    filn <- paste0( dir_sofun, "params/params_gpp_pmodel.dat") 
     content <- readLines( filn )
     linenr <- which( grepl("soilm_par_b", content ) )
     len <- str_length(content[linenr])
@@ -52,5 +52,5 @@ update_params <- function( params_opt, settings ){
     writeLines( content, con = filn )
   }
 
-  return(NULL)
+  return(paramvals)
 }
