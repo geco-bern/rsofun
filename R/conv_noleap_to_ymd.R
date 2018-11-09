@@ -1,39 +1,26 @@
-## Copied from https://github.com/cran/wux/blob/master/R/ReadNetCdfTimeData.R
-
-conv_noleap_to_ymd <- function(time, since, calender.days="365") {
-  ## Converts timesteps from NetCDF file having 365 or 360 days calendar to
-  ## POSIXt class timevector. The reason for this function is, that cannot simply
-  ## add the timevector to the POSIX date we wish, as this would lead to complete
-  ## nonsense data! Therefore we add the years and days seperately and leave out
-  ##  may 31st, july 31st aug 31st, oct 31st and dec 31st (360 days) and
-  ## march 31st if leapyear.
-  ## For 365 days calendar we leave out feb 29th if being leap year.
-  ##
-  ## Args:
-  ##   time: A vector with timesteps, which once was the time variable of a
-  ##         NetCDF file. These timesteps have to be on DAILY basis!
-  ##   since: POSIXt object, time starts with.
-  ##   calender.days: Character or numeric. Calendar type. Can be "365" or "360"
-  ##
-  ## Returns:
-  ##   POSIXct vector of dates within NetCDF file, having same length as NetCDF
-  ##   time dimension.
-  ##
-  ## History:
-  ##   2010-11-29 | Original code (thm)
-  ##   2011-12-01 | Deleted hack, which was just not correct (it shifted one day back
-  ##                ward, which for monthly data didnt matter, so data are processed
-  ##                the same way) (thm)
-  ##   2011-12-16 | handle properly the cases of 360 days and 365 days (thm)
-  ##   2014-04-09 | changed to modulo calculation due to rounding error (thm)
+#' Converts no-leapyear dates to lubridate::ymd object
+#'
+#' Converts timesteps from NetCDF file having 365 or 360 days calendar to POSIXt class timevector. 
+#' The reason for this function is, that cannot simply add the timevector to the POSIX date we wish, 
+#' as this would lead to complete nonsense data! Therefore we add the years and days seperately and 
+#' leave out  may 31st, july 31st aug 31st, oct 31st and dec 31st (360 days) and march 31st if leapyear. 
+#' For 365 days calendar we leave out feb 29th if being leap year.
+#' Taken from https://github.com/cran/wux/blob/master/R/ReadNetCdfTimeData.R
+#'
+#' @param time  A vector with timesteps, which once was the time variable of a NetCDF file. These timesteps have to be on DAILY basis!
+#' @param since POSIXt object, time starts with.
+#' @param calendar.days Character or numeric. Calendar type. Can be "365" or "360".
+#'
+#' @return lubridate::ymd vector of dates within NetCDF file, having same length as NetCDF time dimension.
+#' @export
+#' 
+conv_noleap_to_ymd <- function(time, since, calender.days="365") { 
 
   IsLeapYear <- function(year){
     ## small helperfunction returning boolean vector leapyear true/false
     ## http://en.wikipedia.org/wiki/Leap_year
     return(((year %% 4 == 0) & (year %% 100 != 0)) | (year %% 400 == 0))
   }
-
-
 
   ## convert arguments to useful format
   calender.days <- as.numeric(calender.days)

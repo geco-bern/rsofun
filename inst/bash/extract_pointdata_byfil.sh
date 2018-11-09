@@ -12,5 +12,5 @@
 
 # echo "extracting from $1, output is in out.txt"
 here=`pwd`
-ncks -s '%13.9f\n' -C -H -d $3,$5 -d $4,$6 -v $2 $1 >$here/tmp.txt
-sed '/^$/d' $here/tmp.txt >$here/out.txt
+ncks -s '%13.9f\n' -C -H -d $3,$5 -d $4,$6 -v $2 $1 >$here/tmpdir/tmp.txt
+sed '/^$/d' $here/tmp.txt >$here/tmpdir/out.txt
