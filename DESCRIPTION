@@ -4,29 +4,31 @@ Version: 0.0.0.9000
 Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
 Description: What the package does (one paragraph).
 License: What license is it under?
-Depends:
-    BayesianTools,
+Imports:
     dplyr,
-    GenSA,
     ggplot2,
-    hydroGOF,
     lubridate,
-    LSD,
-    maptools,
     Metrics,
     mgcv,
     ncdf4,
     optimr,
     purrr,
-    raster,
     readr,
     rlang,
-    sp,
     stringr,
     tidyr
 Suggests:
+    BayesianTools,
     caret,
+    GenSA,
+    gplots,
+    hydroGOF,
+    LSD,
+    maps,
+    maptools,
     neuralnet,
     nnet,
+    raster,
+    sp,
     testthat
 RoxygenNote: 5.0.1

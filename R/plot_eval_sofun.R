@@ -45,7 +45,7 @@ modobs_spatial <- plot_modobs_spatial <- function( meandf, dir = NA, makepdf=TRU
 ## Combined spatial - IAV correlation
 ##------------------------------------------------------------
 modobs_spatial <- plot_modobs_spatial_annual <- function( meandf, linmod_meandf, adf_stats, dir = NA, makepdf=FALSE ){
-  require(purrr)
+
   if (makepdf) pdf( paste0( dir, "/modobs_spatial_annual.pdf" ) )
     par(las=1, mar=c(4,4.5,4,1))
     with( meandf, plot( gpp_mod, gpp_obs, xlim = c(0,4000), ylim = c(0,4000), pch=16, col=rgb(0,0,0,0.5), type = "n", ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ) ) )
