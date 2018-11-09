@@ -30,7 +30,6 @@
 #' \describe{
 #'   \item{Code}{}
 #'   \item{Climate}{}
-#'   ...
 #' }
 #' @source Koeppen Geiger classification based on \url{https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1530} and complemented by information given in koeppen-geiger.tif.
-"metainfo_Tier1_sites_kgclimate_fluxnet2015"
+"koeppen_legend"
