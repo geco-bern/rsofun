@@ -1,9 +1,11 @@
 Package: rsofun
-Title: What the Package Does (one line, title case)
+Title: A package for handling the SOFUN model framework for simulating processes in terrestrial ecosystems. 
 Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: What license is it under?
+Authors@R: c(person("Benjamin", "Stocker", email = "benjamin.stocker@gmail.com", role = c("aut", "cre")), person("Joan", "Maspons", email = "j.maspons@creaf.uab.cat", role = c("aut")))
+Description: This package  provides functions for all the routine steps in running the SOFUN model, including setup of the model environment, preparation of input files, calibrating model parameters, running the model, reading outputs into R, and evaluating outputs (benchmarking).
+License: GNU GENERAL PUBLIC LICENSE
+SystemRequirements: This package uses bash scripts to run NCO (http://nco.sourceforge.net/) and CDO (https://code.mpimet.mpg.de/) commands.
+LazyData: true
 Imports:
     dplyr,
     ggplot2,
@@ -31,4 +33,4 @@ Suggests:
     raster,
     sp,
     testthat
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

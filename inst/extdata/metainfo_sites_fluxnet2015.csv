@@ -1,0 +1,845 @@
+siteid,fluxnetid,countryid,land_unit,status,latitude,longitude,year_began,koeppen_climate,gtopo30_elevation,igbp_land_use
+9,AR-Lac,Argentina,South America,Active,-29.264,-61.028,2004,Cfa - Warm temperate fully humid with hot summer,53,Croplands
+12,AT-Lan,Austria,Europe,Inactive,47.061221,10.963454,2005,ET - Polar tundra,1396,Evergreen Needleleaf Forest
+13,AT-Leu,Austria,Europe,Inactive,47.378036,11.16278,2005,Dfc - Snow fully humid cool summer,1133,Grasslands
+14,AT-Neu,Austria,Europe,Active,47.1166687,11.31750011,2002,Dfc - Snow fully humid cool summer,1095,Mixed Forests
+15,AT-Sch,Austria,Europe,Inactive,47.387291,11.247935,2005,Dfc - Snow fully humid cool summer,586,Cropland/Natural Vegetation Mosaic
+17,AU-Cas,Australia,Australia/Oceania,Active,-19.56666667,147.4,2000,Aw - Equatorial savannah with dry winter,5,Urban and Built-Up
+29,AU-Ctr,Australia,Australia/Oceania,Active,-16.10328,145.446858,2012,Am - Equatorial monsoon,66,Evergreen Broadleaf Forest
+30,AU-DaP,Australia,Australia/Oceania,Active,-14.0633,131.3181,2008,Aw - Equatorial savannah with dry winter,102,Savannas
+31,AU-DaS,Australia,Australia/Oceania,Active,-14.159283,131.388,2007,Aw - Equatorial savannah with dry winter,98,Savannas
+34,AU-Fac,Australia,Australia/Oceania,Inactive,-36.86686667,147.3457667,2006,Cfb - Warm temperate fully humid with warm summer,1473,Closed Shrublands
+35,AU-Fog,Australia,Australia/Oceania,Active,-12.5452,131.3072,2006,Aw - Equatorial savannah with dry winter,25,Savannas
+37,AU-How,Australia,Australia/Oceania,Active,-12.4952,131.15005,2001,Aw - Equatorial savannah with dry winter,41,Savannas
+38,AU-Jan,Australia,Australia/Oceania,Inactive,-30.07666667,144.1363889,2000,BWh - Arid desert hot,87,Open Shrublands
+40,AU-Meb,Australia,Australia/Oceania,Active,-37.730564,145.014675,2003,Cfb - Warm temperate fully humid with warm summer,107,Urban and Built-Up
+41,AU-Otw,Australia,Australia/Oceania,Active,-38.53234444,142.8168056,2007,Cfb - Warm temperate fully humid with warm summer,6,Croplands
+43,AU-Tum,Australia,Australia/Oceania,Active,-35.6566,148.1516,2001,Cfb - Warm temperate fully humid with warm summer,932,Evergreen Broadleaf Forest
+45,AU-Vir,Australia,Australia/Oceania,Inactive,-19.88333333,146.5538889,2001,Aw - Equatorial savannah with dry winter,305,Savannas
+46,AU-Wac,Australia,Australia/Oceania,Inactive,-37.429,145.18725,2005,Cfb - Warm temperate fully humid with warm summer,562,Evergreen Broadleaf Forest
+47,BE-Bra,Belgium,Europe,Active,51.30916667,4.520555556,1996,Cfb - Warm temperate fully humid with warm summer,15,Mixed Forests
+48,BE-Jal,Belgium,Europe,Active,50.56388889,6.073333333,2006,Cfb - Warm temperate fully humid with warm summer,496,Mixed Forests
+49,BE-Lon,Belgium,Europe,Active,50.551586,4.7461305,2004,Cfb - Warm temperate fully humid with warm summer,165,Croplands
+51,BE-Vie,Belgium,Europe,Active,50.305068,5.998052,1996,Cfb - Warm temperate fully humid with warm summer,491,Mixed Forests
+56,BR-Afs,Brazil,South America,Active,-23.32847222,-45.09311111,2006,Cfb - Warm temperate fully humid with warm summer,975,Evergreen Broadleaf Forest
+58,BR-Ban,Brazil,South America,Active,-9.824416667,-50.15911111,2003,Aw - Equatorial savannah with dry winter,163,Evergreen Broadleaf Forest
+60,BR-Bra,Brazil,South America,Active,-0.723708333,-48.50809722,2000,Am - Equatorial monsoon,2,Cropland/Natural Vegetation Mosaic
+"63,BR-Cax,Brazil,South America,Active,-1.719719444,-51.45898333,1999,""Af - Equatorial rainforest, fully humid"",1,Evergreen Broadleaf Forest"
+343,CN-Du1,China,Asia,Active,42.04555556,116.6713889,2005,Dwb - Snow dry winter warm summer,1278,Grasslands
+69,BR-Euc,Brazil,South America,Active,-21.5835,-47.60230556,2006,Aw - Equatorial savannah with dry winter,669,Evergreen Broadleaf Forest
+71,BR-Ji1,Brazil,South America,Active,-10.76180556,-62.35722222,1999,Aw - Equatorial savannah with dry winter,290,Savannas
+72,BR-Ji2,Brazil,South America,Active,-10.08319444,-61.93090278,1999,Aw - Equatorial savannah with dry winter,195,Evergreen Broadleaf Forest
+73,BR-Ji3,Brazil,South America,Active,-10.07805556,-61.93309722,1999,Aw - Equatorial savannah with dry winter,196,Evergreen Broadleaf Forest
+"75,BR-Ma1,Brazil,South America,Active,-2.589202778,-60.11490278,1999,""Af - Equatorial rainforest, fully humid"",91,Evergreen Broadleaf Forest"
+"76,BR-Ma2,Brazil,South America,Active,-2.609097222,-60.20929722,1999,""Af - Equatorial rainforest, fully humid"",67,Evergreen Broadleaf Forest"
+77,BR-Mtg,Brazil,South America,Active,-11.41229167,-55.32470278,1999,Aw - Equatorial savannah with dry winter,280,Evergreen Broadleaf Forest
+79,BR-Res,Brazil,South America,Active,-15.55,-47.6,1999,Aw - Equatorial savannah with dry winter,1056,Woody Savannas
+81,BR-Pan,Brazil,South America,Active,-14.84827778,-43.98797222,2005,Aw - Equatorial savannah with dry winter,465,Woody Savannas
+83,BR-Sa1,Brazil,South America,Active,-2.856666667,-54.95888889,2001,Am - Equatorial monsoon,90,Evergreen Broadleaf Forest
+84,BR-Sa2,Brazil,South America,Inactive,-3.0118955,-54.53652,1999,Am - Equatorial monsoon,37,Evergreen Broadleaf Forest
+85,BR-Sa3,Brazil,South America,Inactive,-3.01802927,-54.97143509,2000,Am - Equatorial monsoon,100,Evergreen Broadleaf Forest
+"88,BR-Sga,Brazil,South America,Active,0.212333333,-66.76473333,2004,""Af - Equatorial rainforest, fully humid"",104,Evergreen Broadleaf Forest"
+89,BR-Sp1,Brazil,South America,Active,-21.61947222,-47.64988889,1998,Aw - Equatorial savannah with dry winter,641,Evergreen Broadleaf Forest
+90,BR-Sp2,Brazil,South America,Active,-21.63705556,-47.79025,1996,Aw - Equatorial savannah with dry winter,587,Woody Savannas
+91,BR-Su1,Brazil,South America,Active,-15.95,-47.86666667,1999,Aw - Equatorial savannah with dry winter,1096,Woody Savannas
+92,BR-Su2,Brazil,South America,Active,-15.95,-47.86666667,1999,Aw - Equatorial savannah with dry winter,1096,Woody Savannas
+93,BW-Ghz,Botswana,Africa,Inactive,-22.40916667,21.71305556,2002,BSh - Arid Steppe hot,1073,Open Shrublands
+94,BW-Ma1,Botswana,Africa,Active,-19.9165,23.56033333,1999,BSh - Arid Steppe hot,,Savannas
+95,BW-Ma2,Botswana,Africa,Inactive,-19.60759167,23.28693056,,BSh - Arid Steppe hot,,Permanent Wetlands
+118,ON-JMW,Canada,North America,Active,48.133,-81.628,2006,,,
+119,CA-Cbo,Canada,North America,Active,44.3185,-79.9342,1995,Dfb - Snow fully humid warm summer,217,Mixed Forests
+"120,CA-Ca1,Canada,North America,Active,49.86725,-125.3336,1997,""Csb - Warm temperate with dry, warm summer"",313,Evergreen Needleleaf Forest"
+"121,CA-Ca2,Canada,North America,Active,49.87048,-125.29087,2000,""Csb - Warm temperate with dry, warm summer"",170,Evergreen Needleleaf Forest"
+122,CA-Ca3,Canada,North America,Active,49.53462,-124.90044,2001,Cfb - Warm temperate fully humid with warm summer,153,Evergreen Needleleaf Forest
+125,CA-Cha,Canada,North America,Inactive,45.8847,-67.3569,2003,Dfb - Snow fully humid warm summer,150,Mixed Forests
+214,US-KFS,United States,North America,Active,39.0561,-95.1907,2007,Cfa - Warm temperate fully humid with hot summer,,Cropland/Natural Vegetation Mosaic
+227,CA-Gro,Canada,North America,Active,48.2173,-82.1555,2003,Dfb - Snow fully humid warm summer,355,Mixed Forests
+233,CA-Let,Canada,North America,Active,49.70919,-112.94025,1998,Dfb - Snow fully humid warm summer,926,Grasslands
+234,CA-Man,Canada,North America,Inactive,55.88,-98.481,1994,Dfc - Snow fully humid cool summer,253,Evergreen Needleleaf Forest
+235,CA-Mer,Canada,North America,Active,45.4094,-75.5187,1998,Dfb - Snow fully humid warm summer,65,Permanent Wetlands
+239,CA-Na1,Canada,North America,Inactive,46.47384,-67.09933,2003,Dfb - Snow fully humid warm summer,325,Mixed Forests
+240,CA-Na2,Canada,North America,Inactive,46.47583333,-67.07694444,2003,Dfb - Snow fully humid warm summer,338,Mixed Forests
+244,CA-NS1,Canada,North America,Inactive,55.87916667,-98.48388889,2000,Dfc - Snow fully humid cool summer,253,Evergreen Needleleaf Forest
+245,CA-NS2,Canada,North America,Inactive,55.90583333,-98.52472222,2000,Dfc - Snow fully humid cool summer,257,Evergreen Needleleaf Forest
+246,CA-NS3,Canada,North America,Inactive,55.91166667,-98.38222222,2000,Dfc - Snow fully humid cool summer,257,Evergreen Needleleaf Forest
+247,CA-NS4,Canada,North America,Inactive,55.91166667,-98.38222222,2001,Dfc - Snow fully humid cool summer,257,Evergreen Needleleaf Forest
+248,CA-NS5,Canada,North America,Inactive,55.86305556,-98.485,2000,Dfc - Snow fully humid cool summer,254,Evergreen Needleleaf Forest
+249,CA-NS6,Canada,North America,Inactive,55.91666667,-98.96444444,2000,Dfc - Snow fully humid cool summer,245,Evergreen Needleleaf Forest
+250,CA-NS7,Canada,North America,Inactive,56.63583333,-99.94833333,1999,Dfc - Snow fully humid cool summer,291,Evergreen Needleleaf Forest
+251,CA-NS8,Canada,North America,Inactive,55.89805556,-98.21611111,2001,Dfc - Snow fully humid cool summer,276,Evergreen Needleleaf Forest
+258,CA-Oas,Canada,North America,Active,53.62889,-106.19779,1996,Dfc - Snow fully humid cool summer,580,Mixed Forests
+259,CA-Obs,Canada,North America,Active,53.98717,-105.11779,1994,Dfc - Snow fully humid cool summer,598,Evergreen Needleleaf Forest
+260,CA-Ojp,Canada,North America,Active,53.91634,-104.69203,1994,Dfc - Snow fully humid cool summer,518,Evergreen Needleleaf Forest
+268,CA-Qcu,Canada,North America,Active,49.26708,-74.03653,2001,Dfc - Snow fully humid cool summer,412,Evergreen Needleleaf Forest
+269,CA-Qfo,Canada,North America,Active,49.69247,-74.34204,2003,Dfc - Snow fully humid cool summer,390,Evergreen Needleleaf Forest
+273,CA-SF1,Canada,North America,Inactive,54.48495,-105.81735,2003,Dfc - Snow fully humid cool summer,566,Evergreen Needleleaf Forest
+276,CA-Fen,Canada,North America,Active,53.80206,-104.61798,2002,Dfc - Snow fully humid cool summer,494,Evergreen Needleleaf Forest
+277,CA-SF2,Canada,North America,Inactive,54.25392,-105.8775,2001,Dfc - Snow fully humid cool summer,511,Mixed Forests
+278,CA-SF3,Canada,North America,Inactive,54.09156,-106.00526,2002,Dfc - Snow fully humid cool summer,561,Evergreen Needleleaf Forest
+279,CA-SJ1,Canada,North America,Active,53.9084,-104.6559,2001,Dfc - Snow fully humid cool summer,520,Evergreen Needleleaf Forest
+280,CA-SJ2,Canada,North America,Active,53.9447,-104.6493,2003,Dfc - Snow fully humid cool summer,524,Evergreen Needleleaf Forest
+284,CA-SJ3,Canada,North America,Active,53.87581,-104.64529,2003,Dfc - Snow fully humid cool summer,495,Evergreen Needleleaf Forest
+287,CA-TP1,Canada,North America,Active,42.66093611,-80.55951944,2003,Dfb - Snow fully humid warm summer,197,Cropland/Natural Vegetation Mosaic
+288,CA-TP2,Canada,North America,Inactive,42.77441944,-80.458775,2003,Dfb - Snow fully humid warm summer,239,Cropland/Natural Vegetation Mosaic
+289,CA-TP3,Canada,North America,Active,42.70681111,-80.34831389,2003,Dfb - Snow fully humid warm summer,216,Mixed Forests
+290,CA-TP4,Canada,North America,Active,42.70977778,-80.3574,2003,Dfb - Snow fully humid warm summer,219,Mixed Forests
+292,CA-WP1,Canada,North America,Inactive,54.95384,-112.46698,2003,Dfc - Snow fully humid cool summer,549,Mixed Forests
+296,CG-Euc,Congo - Kinshasa,Africa,Active,-4,12,2000,Aw - Equatorial savannah with dry winter,331,Evergreen Broadleaf Forest
+304,CH-Cha,Switzerland,Europe,Active,47.21022222,8.410444444,2006,Cfb - Warm temperate fully humid with warm summer,394,Cropland/Natural Vegetation Mosaic
+306,CH-Fru,Switzerland,Europe,Active,47.11583333,8.537777778,2006,Cfb - Warm temperate fully humid with warm summer,975,Cropland/Natural Vegetation Mosaic
+308,CH-Lae,Switzerland,Europe,Active,47.47808333,8.365,2004,Cfb - Warm temperate fully humid with warm summer,645,Mixed Forests
+313,CH-Oe1,Switzerland,Europe,Active,47.28583333,7.731944444,2002,Cfb - Warm temperate fully humid with warm summer,451,Croplands
+314,CH-Oe2,Switzerland,Europe,Active,47.28630556,7.734333333,2004,Cfb - Warm temperate fully humid with warm summer,450,Croplands
+318,CH-See,Switzerland,Europe,Inactive,47.0567,8.4644,2002,Cfb - Warm temperate fully humid with warm summer,1068,Mixed Forests
+319,CH-Dav,Switzerland,Europe,Active,46.81533333,9.855916667,1997,ET - Polar tundra,1762,Evergreen Needleleaf Forest
+326,CN-Bed,China,Asia,Active,39.53055556,116.2519444,2005,Dwa - Snow dry winter hot summer,30,Croplands
+327,CN-Cha,China,Asia,Active,42.4025,128.0958333,2002,Dwb - Snow dry winter warm summer,754,Mixed Forests
+334,CN-Dan,China,Asia,Active,30.85,91.08333333,2003,ET - Polar tundra,4751,Grasslands
+335,CN-Din,China,Asia,Active,23.16666667,112.5333333,2002,Cfa - Warm temperate fully humid with hot summer,261,Evergreen Broadleaf Forest
+336,CN-Do1,China,Asia,Active,31.5167,121.9607,2004,Cfa - Warm temperate fully humid with hot summer,6,Water
+337,CN-Do2,China,Asia,Active,31.5847,121.9035,2004,Cfa - Warm temperate fully humid with hot summer,4,Woody Savannas
+338,CN-Do3,China,Asia,Active,31.5169,121.9717,2004,Cfa - Warm temperate fully humid with hot summer,6,Water
+340,CN-Dwu,China,Asia,Intermittent,45.56013889,117.0002778,2005,Dwc - Snow dry winter cool summer,875,Grasslands
+344,CN-Du2,China,Asia,Active,42.04666667,116.2836111,2005,Dwb - Snow dry winter warm summer,1331,Grasslands
+345,CN-Hab,China,Asia,Active,37.613333,101.305,2002,ET - Polar tundra,3183,Grasslands
+348,CN-Hug,China,Asia,Inactive,49.32695,120.0503833,2006,Dwc - Snow dry winter cool summer,631,Grasslands
+352,CN-Ku1,China,Asia,Active,40.53833333,108.6936111,2005,BSk - Arid Steppe cold,1023,Grasslands
+353,CN-Ku2,China,Asia,Active,40.38083333,108.5486111,2005,BSk - Arid Steppe cold,1156,Grasslands
+358,CN-Qia,China,Asia,Active,26.73333333,115.0666667,2002,Cfa - Warm temperate fully humid with hot summer,64,Woody Savannas
+375,CN-Xi1,China,Asia,Active,43.55444444,116.2797222,2005,Dwb - Snow dry winter warm summer,1293,Grasslands
+376,CN-Xsh,China,Asia,Active,21.960833,101.200278,2002,Cwa - Warm temperate with dry winter and hot summer,732,Evergreen Broadleaf Forest
+377,CN-Yuc,China,Asia,Active,36.95,116.6,,Cwa - Warm temperate with dry winter and hot summer,13,Croplands
+380,CN-Zha,China,Asia,Inactive,39,100,1992,BSk - Arid Steppe cold,1877,Grasslands
+382,CR-Lse,Costa Rica,South America,Inactive,10.42333333,-84.02111111,1998,Am - Equatorial monsoon,93,Evergreen Broadleaf Forest
+383,CR-Lin,Costa Rica,South America,Inactive,11.01667,-85.5,2005,Aw - Equatorial savannah with dry winter,310,Evergreen Broadleaf Forest
+384,CR-Sro,Costa Rica,South America,Active,10.81472,-85.615,2005,Aw - Equatorial savannah with dry winter,258,Cropland/Natural Vegetation Mosaic
+386,CZ-BK1,Czech Republic,Europe,Active,49.5021286,18.53685951,2000,Dfb - Snow fully humid warm summer,862,Evergreen Needleleaf Forest
+387,DE-Ber,Germany,Europe,Active,47.61666667,12.58333333,2002,Dfb - Snow fully humid warm summer,1360,Mixed Forests
+389,DE-Geb,Germany,Europe,Active,51.1001,10.9143,2001,Cfb - Warm temperate fully humid with warm summer,157,Croplands
+391,DE-Gri,Germany,Europe,Active,50.94946944,13.512525,2004,Cfb - Warm temperate fully humid with warm summer,377,Mixed Forests
+392,DE-Hai,Germany,Europe,Active,51.07916667,10.453,2000,Cfb - Warm temperate fully humid with warm summer,433,Mixed Forests
+394,DE-Kan,Germany,Europe,Active,53.784328,10.604899,2001,Cfb - Warm temperate fully humid with warm summer,15,Mixed Forests
+395,DE-Kli,Germany,Europe,Active,50.8928806,13.5225056,2004,Cfb - Warm temperate fully humid with warm summer,468,Croplands
+396,DE-Lnf,Germany,Europe,Inactive,51.3282167,10.3678,2012,Cfb - Warm temperate fully humid with warm summer,456,Deciduous Broadleaf Forest
+399,DE-Meh,Germany,Europe,Active,51.27530556,10.65547222,2003,Cfb - Warm temperate fully humid with warm summer,291,Croplands
+401,DE-Obe,Germany,Europe,Active,50.7836167,13.7196306,2004,Cfb - Warm temperate fully humid with warm summer,695,Evergreen Needleleaf Forest
+402,DE-Sch,Germany,Europe,Active,47.6,12.96666667,2004,Cfb - Warm temperate fully humid with warm summer,684,Evergreen Needleleaf Forest
+403,DE-Sol,Germany,Europe,Active,51.76666667,9.583333333,1995,Cfb - Warm temperate fully humid with warm summer,484,Evergreen Needleleaf Forest
+404,DE-Tha,Germany,Europe,Active,50.96361111,13.56694444,1996,Cfb - Warm temperate fully humid with warm summer,320,Evergreen Needleleaf Forest
+405,DE-Bay,Germany,Europe,Inactive,50.14194,11.86694,1996,Cfb - Warm temperate fully humid with warm summer,781,Mixed Forests
+406,DE-Wet,Germany,Europe,Active,50.4535,11.45753333,2002,Cfb - Warm temperate fully humid with warm summer,703,Evergreen Needleleaf Forest
+410,DK-Fou,Denmark,Europe,Active,56.48419952,9.587220192,2004,Cfb - Warm temperate fully humid with warm summer,55,Croplands
+413,DK-Lva,Denmark,Europe,Active,55.68330002,12.08329964,2004,Cfb - Warm temperate fully humid with warm summer,-2493,Mixed Forests
+414,DK-Ris,Denmark,Europe,Active,55.53027778,12.09722222,2004,Cfb - Warm temperate fully humid with warm summer,24,Croplands
+419,DK-Sor,Denmark,Europe,Active,55.4858694,11.6446444,1996,Cfb - Warm temperate fully humid with warm summer,35,Deciduous Broadleaf Forest
+420,DK-Sto,Denmark,Europe,Inactive,55.4833,11.6333,1998,Cfb - Warm temperate fully humid with warm summer,39,Croplands
+423,DK-Ulb,Denmark,Europe,Active,56.29102778,8.428027778,2010,Cfb - Warm temperate fully humid with warm summer,39,Mixed Forests
+435,ES-VDA,Spain,Europe,Active,42.15218,1.4485,2002,Cfb - Warm temperate fully humid with warm summer,1787,Savannas
+"437,ES-ES1,Spain,Europe,Active,39.34597222,-0.318805555,1999,""Csa - Warm temperate with dry, hot summer"",1,Permanent Wetlands"
+"438,ES-ES2,Spain,Europe,Active,39.27555556,-0.315277778,2004,""Csa - Warm temperate with dry, hot summer"",7,Croplands"
+"439,ES-LJu,Spain,Europe,Active,36.926594,-2.752115,2004,""Csa - Warm temperate with dry, hot summer"",1622,Closed Shrublands"
+"440,ES-LMa,Spain,Europe,Active,39.9415,-5.773361111,2004,""Csa - Warm temperate with dry, hot summer"",278,Closed Shrublands"
+447,FI-Hyy,Finland,Europe,Active,61.8475,24.295,1996,Dfc - Snow fully humid cool summer,185,Evergreen Needleleaf Forest
+448,FI-Jok,Finland,Europe,Inactive,60.8986,23.51345,2000,Dfc - Snow fully humid cool summer,118,Croplands
+449,FI-Kaa,Finland,Europe,Active,69.14069444,27.29502778,2000,Dfc - Snow fully humid cool summer,159,Woody Savannas
+455,FI-Alk,Finland,Europe,Active,62.183367,22.784233,2002,Dfc - Snow fully humid cool summer,165,Evergreen Needleleaf Forest
+459,FI-Sod,Finland,Europe,Active,67.36186111,26.63783333,2000,Dfc - Snow fully humid cool summer,188,Evergreen Needleleaf Forest
+461,FI-Var,Finland,Europe,Active,67.7569,29.616,2012,Dfc - Snow fully humid cool summer,308,Evergreen Needleleaf Forest
+462,FR-Aur,France,Europe,Active,43.5496,1.106148,2004,Cfb - Warm temperate fully humid with warm summer,258,Croplands
+"463,FR-Avi,France,Europe,Active,43.91608333,4.878055556,2004,""Csa - Warm temperate with dry, hot summer"",33,Croplands"
+464,FR-Bil,France,Europe,Active,44.49389,-0.95594,2004,Cfb - Warm temperate fully humid with warm summer,39,Woody Savannas
+466,FR-LBr,France,Europe,Active,44.71711,-0.7693,1996,Cfb - Warm temperate fully humid with warm summer,62,Cropland/Natural Vegetation Mosaic
+470,FR-Cou,France,Europe,Active,44.75555556,-0.555555556,2004,Cfb - Warm temperate fully humid with warm summer,14,Cropland/Natural Vegetation Mosaic
+472,FR-Fon,France,Europe,Active,48.476402,2.780142,2005,Cfb - Warm temperate fully humid with warm summer,94,Deciduous Broadleaf Forest
+474,FR-Gri,France,Europe,Active,48.84422,1.95191,2004,Cfb - Warm temperate fully humid with warm summer,117,Croplands
+476,FR-Hes,France,Europe,Active,48.67416,7.06556,1996,Cfb - Warm temperate fully humid with warm summer,293,Deciduous Broadleaf Forest
+477,FR-Lam,France,Europe,Active,43.4965,1.2379,2004,Cfb - Warm temperate fully humid with warm summer,182,Croplands
+478,FR-Lq1,France,Europe,Active,45.64305556,2.735833333,2002,Cfb - Warm temperate fully humid with warm summer,1066,Croplands
+484,FR-Lus,France,Europe,Active,46.415568,0.119218,2005,Cfb - Warm temperate fully humid with warm summer,63,Croplands
+"487,FR-Pue,France,Europe,Active,43.74139,3.595833,2000,""Csa - Warm temperate with dry, hot summer"",211,Mixed Forests"
+"498,GF-Guy,French Guiana,South America,Active,5.278771877,-52.92486191,2004,""Af - Equatorial rainforest, fully humid"",29,Evergreen Broadleaf Forest"
+"502,GR-Mog,Greece,Europe,Active,38,22.61666667,1998,""Csa - Warm temperate with dry, hot summer"",766,Woody Savannas"
+504,HU-Bug,Hungary,Europe,Active,46.69110107,19.60129929,2002,Cfb - Warm temperate fully humid with warm summer,106,Croplands
+505,HU-He1,Hungary,Europe,Active,46.955947,16.652025,1997,Cfb - Warm temperate fully humid with warm summer,243,Croplands
+506,HU-He2,Hungary,Europe,Active,46.95515,16.652661,1999,Cfb - Warm temperate fully humid with warm summer,243,Croplands
+507,HU-Mat,Hungary,Europe,Active,47.84690094,19.72599983,2004,Cfb - Warm temperate fully humid with warm summer,315,Croplands
+"511,ID-Buk,Indonesia,Asia,Inactive,-0.833333333,117.05,1999,""Af - Equatorial rainforest, fully humid"",1,Evergreen Broadleaf Forest"
+515,IE-Ca2,Ireland,Europe,Active,52.86758,-6.91117,2004,Cfb - Warm temperate fully humid with warm summer,57,Grasslands
+516,IE-Dri,Ireland,Europe,Active,51.9866944,-8.75180556,2002,Cfb - Warm temperate fully humid with warm summer,186,Grasslands
+517,IE-Kil,Ireland,Europe,Active,51.96836111,-9.900305556,2002,Cfb - Warm temperate fully humid with warm summer,169,Woody Savannas
+518,IE-Wex,Ireland,Europe,Active,52.29819444,-6.499777777,2004,Cfb - Warm temperate fully humid with warm summer,68,Grasslands
+522,IL-Yat,Israel,Asia,Active,31.34499931,35.05149841,2000,BSh - Arid Steppe hot,664,Open Shrublands
+526,IS-Gun,Iceland,Europe,Active,63.83330154,-20.2166996,1996,Cfc - Warm temperate fully humid with cool summer,65,Permanent Wetlands
+528,IT-Amp,Italy,Europe,Inactive,41.90409927,13.60515669,2002,Cfa - Warm temperate fully humid with hot summer,991,Croplands
+530,IT-Ren,Italy,Europe,Active,46.58686,11.43369,1998,Dfc - Snow fully humid cool summer,1794,Evergreen Needleleaf Forest
+"531,IT-Bon,Italy,Europe,Active,39.47777778,16.53472222,2004,""Csa - Warm temperate with dry, hot summer"",1203,Mixed Forests"
+"532,IT-BCi,Italy,Europe,Active,40.52375,14.95744444,2004,""Csa - Warm temperate with dry, hot summer"",13,Croplands"
+533,IT-PT1,Italy,Europe,Active,45.20087222,9.061038889,1998,Cfa - Warm temperate fully humid with hot summer,70,Croplands
+"534,IT-Cpz,Italy,Europe,Active,41.7052493,12.3761058,1997,""Csa - Warm temperate with dry, hot summer"",9,Evergreen Needleleaf Forest"
+535,IT-Col,Italy,Europe,Active,41.84936,13.58814,1996,Cfa - Warm temperate fully humid with hot summer,1645,Deciduous Broadleaf Forest
+"1078,US-Ton,United States,North America,Active,38.4316,-120.966,2001,""Csa - Warm temperate with dry, hot summer"",170,Woody Savannas"
+537,IT-LMa,Italy,Europe,Active,45.15258,7.58259,2001,Cfb - Warm temperate fully humid with warm summer,2857,Mixed Forests
+539,IT-Lav,Italy,Europe,Active,45.9562,11.28132,2000,Cfb - Warm temperate fully humid with warm summer,1305,Evergreen Needleleaf Forest
+541,IT-Lec,Italy,Europe,Inactive,43.30359,11.26975,2005,Cfa - Warm temperate fully humid with hot summer,260,Mixed Forests
+542,IT-Mal,Italy,Europe,Active,46.11402,11.70334,2002,ET - Polar tundra,1610,Mixed Forests
+543,IT-MBo,Italy,Europe,Active,46.014678,11.045831,2002,Dfb - Snow fully humid warm summer,1547,Grasslands
+544,IT-Neg,Italy,Europe,Active,45.74756389,12.44673056,2005,Cfb - Warm temperate fully humid with warm summer,11,Croplands
+545,IT-Non,Italy,Europe,Active,44.69019,11.09109,2000,Cfa - Warm temperate fully humid with hot summer,14,Cropland/Natural Vegetation Mosaic
+"547,IT-Pia,Italy,Europe,Inactive,42.5838694,10.0784,2002,""Csa - Warm temperate with dry, hot summer"",13,Croplands"
+"549,IT-Ro1,Italy,Europe,Active,42.40812,11.93001,2000,""Csa - Warm temperate with dry, hot summer"",153,Cropland/Natural Vegetation Mosaic"
+"550,IT-Ro2,Italy,Europe,Active,42.39026,11.92093,2002,""Csa - Warm temperate with dry, hot summer"",165,Cropland/Natural Vegetation Mosaic"
+"552,IT-SRo,Italy,Europe,Active,43.72786111,10.28444444,1999,""Csa - Warm temperate with dry, hot summer"",2,Water"
+"555,IT-Tol,Italy,Europe,Active,42.18967,11.92155,2005,""Csa - Warm temperate with dry, hot summer"",415,Mixed Forests"
+556,JP-Aka,Japan,Asia,Inactive,43.11666667,144.3666667,1998,Dfb - Snow fully humid warm summer,3,Grasslands
+557,JP-App,Japan,Asia,Active,40,141.5666667,1999,Cfb - Warm temperate fully humid with warm summer,996,Deciduous Broadleaf Forest
+558,JP-Fuj,Japan,Asia,Active,35.45136667,138.7652667,1999,Dfb - Snow fully humid warm summer,1043,Mixed Forests
+559,JP-Hac,Japan,Asia,Active,34.53333333,133.9333333,1998,Cfa - Warm temperate fully humid with hot summer,87,Cropland/Natural Vegetation Mosaic
+560,JP-Hit,Japan,Asia,Active,42.98683583,141.3852878,1999,Dfb - Snow fully humid warm summer,175,Mixed Forests
+561,JP-Hok,Japan,Asia,Active,42.699,141.571,1998,Dfb - Snow fully humid warm summer,3,Water
+563,JP-Kah,Japan,Asia,Active,33.133695,130.71187,1999,Cfa - Warm temperate fully humid with hot summer,179,Mixed Forests
+564,JP-Ksa,Japan,Asia,Inactive,36.06666667,140.25,1996,Cfa - Warm temperate fully humid with hot summer,2,Water
+565,JP-Kwa,Japan,Asia,Inactive,35.15,139.0833333,1997,Cfa - Warm temperate fully humid with hot summer,219,Urban and Built-Up
+567,JP-Onn,Japan,Asia,Inactive,43.11666667,144.3333333,2001,Dfb - Snow fully humid warm summer,8,Cropland/Natural Vegetation Mosaic
+568,JP-Shi,Japan,Asia,Active,33.44277778,135.7594444,1999,Cfa - Warm temperate fully humid with hot summer,-3680,Woody Savannas
+569,JP-Tak,Japan,Asia,Active,36.14616667,137.4231111,1993,Dfb - Snow fully humid warm summer,1355,Mixed Forests
+574,JP-Tom,Japan,Asia,Inactive,42.73697222,141.5186389,2000,Dfb - Snow fully humid warm summer,115,Cropland/Natural Vegetation Mosaic
+575,JP-Tsu,Japan,Asia,Inactive,36,140.0166667,,Cfa - Warm temperate fully humid with hot summer,13,Croplands
+576,JP-Yaw,Japan,Asia,Active,36,140.0166667,1999,Cfa - Warm temperate fully humid with hot summer,13,Croplands
+581,KR-Har,South Korea,Asia,Inactive,37.716667,126.3,2001,Dwa - Snow dry winter hot summer,1,Water
+584,KR-Kw1,South Korea,Asia,Active,37.74860664,127.162525,1998,Dwa - Snow dry winter hot summer,154,Mixed Forests
+588,KR-Suw,South Korea,Asia,Active,37.26946667,126.9402167,2002,Cwa - Warm temperate with dry winter and hot summer,55,Cropland/Natural Vegetation Mosaic
+589,KZ-AL1,Kazakhstan,Asia,Intermittent,51.51361111,71.46277778,2006,Dfb - Snow fully humid warm summer,357,Grasslands
+590,KZ-AL2,Kazakhstan,Asia,Intermittent,51.48361111,71.10472222,2006,Dfb - Snow fully humid warm summer,404,Croplands
+591,KZ-AL3,Kazakhstan,Asia,Intermittent,51.58722222,71.00083333,2006,Dfb - Snow fully humid warm summer,398,Grasslands
+592,KZ-AL4,Kazakhstan,Asia,Intermittent,51.68147222,71.14369444,2006,BSk - Arid Steppe cold,386,Grasslands
+594,KZ-CW1,Kazakhstan,Asia,Intermittent,51.5275,71.48277778,2006,BSk - Arid Steppe cold,360,Grasslands
+595,KZ-CW2,Kazakhstan,Asia,Intermittent,51.48083333,71.114,2006,Dfb - Snow fully humid warm summer,397,Grasslands
+596,KZ-CW3,Kazakhstan,Asia,Intermittent,51.58888889,71.00027778,2006,Dfb - Snow fully humid warm summer,398,Grasslands
+597,KZ-CW4,Kazakhstan,Asia,Intermittent,51.68277778,71.14772222,2006,BSk - Arid Steppe cold,387,Grasslands
+598,KZ-VL1,Kazakhstan,Asia,Intermittent,51.51,71.45583333,2006,Dfb - Snow fully humid warm summer,356,Grasslands
+599,KZ-VL2,Kazakhstan,Asia,Intermittent,51.4775,71.10361111,2006,Dfb - Snow fully humid warm summer,391,Grasslands
+600,KZ-VL3,Kazakhstan,Asia,Intermittent,51.62333333,70.96944444,2006,Dfb - Snow fully humid warm summer,378,Grasslands
+601,KZ-VL4,Kazakhstan,Asia,Intermittent,51.67555556,71.15444444,2006,BSk - Arid Steppe cold,387,Grasslands
+602,KZ-VL5,Kazakhstan,Asia,Inactive,51.57583333,71.26805556,1999,Dfb - Snow fully humid warm summer,423,Croplands
+603,KZ-Wht,Kazakhstan,Asia,Intermittent,51.57361111,71.25972222,2006,Dfb - Snow fully humid warm summer,427,Grasslands
+613,MN-Arv,Mongolia,Asia,Inactive,46.23381667,102.8251167,1998,BSk - Arid Steppe cold,1728,Grasslands
+616,MN-Inn,China,Asia,Active,43.5,117.45,2003,Dwb - Snow dry winter warm summer,1720,Deciduous Broadleaf Forest
+637,MN-Mag,China,Asia,Intermittent,43.55472222,116.6780556,2004,Dwb - Snow dry winter warm summer,1247,Grasslands
+644,MX-Cha,Mexico,North America,Active,19.50928056,-105.040175,2005,As - Equatorial savannah with dry summer,58,Deciduous Broadleaf Forest
+646,MX-Lpa,Mexico,North America,Active,24.12925,-110.4380278,2000,BWh - Arid desert hot,21,Open Shrublands
+661,NL-Ca1,Netherlands,Europe,Active,51.971,4.927,2000,Cfb - Warm temperate fully humid with warm summer,1,Cropland/Natural Vegetation Mosaic
+665,NL-Hor,Netherlands,Europe,Active,52.24035,5.071301,2003,Cfb - Warm temperate fully humid with warm summer,1,Mixed Forests
+666,NL-Lel,Netherlands,Europe,Active,52.52423818,5.551615935,2004,Cfb - Warm temperate fully humid with warm summer,-4,Croplands
+667,NL-Loo,Netherlands,Europe,Active,52.166581,5.743556,1996,Cfb - Warm temperate fully humid with warm summer,25,Evergreen Needleleaf Forest
+670,NZ-Pur,New Zealand,Australia/Oceania,Inactive,-35.15,174.0333,1992,Cfb - Warm temperate fully humid with warm summer,34,Evergreen Broadleaf Forest
+671,PA-SPs,Panama,South America,Inactive,9.313779833,-79.63142983,2007,Am - Equatorial monsoon,76,Cropland/Natural Vegetation Mosaic
+672,PA-SPn,Panama,South America,Inactive,9.318139833,-79.6346,2007,Am - Equatorial monsoon,80,Cropland/Natural Vegetation Mosaic
+678,PL-Bre,Poland,Europe,Active,49.66667,18.93333,2002,Dfb - Snow fully humid warm summer,706,Mixed Forests
+679,PL-Pol,Slovakia,Europe,Active,48.63333333,19.53333333,2004,Dfb - Snow fully humid warm summer,800,Mixed Forests
+680,PL-wet,Poland,Europe,Active,52.7621994,16.30940056,2004,Cfb - Warm temperate fully humid with warm summer,55,Mixed Forests
+"684,PT-Esp,Portugal,Europe,Active,38.63940048,-8.601799965,2002,""Csa - Warm temperate with dry, hot summer"",90,Woody Savannas"
+"685,PT-Mi1,Portugal,Europe,Active,38.54063889,-8.000055556,1999,""Csa - Warm temperate with dry, hot summer"",230,Savannas"
+"687,PT-Mi3,Portugal,Europe,Active,38.54063889,-8.000055556,2005,""Csa - Warm temperate with dry, hot summer"",230,Savannas"
+"688,PT-Mi2,Portugal,Europe,Active,38.47650146,-8.024550438,2004,""Csa - Warm temperate with dry, hot summer"",193,Savannas"
+692,RU-Che,Russia,Asia,Active,68.61304,161.34143,2002,Dfc - Snow fully humid cool summer,3,Open Shrublands
+693,RU-Cok,Russia,Asia,Inactive,70.82913889,147.4942778,2003,Dfc - Snow fully humid cool summer,16,Open Shrublands
+694,RU-Cuk,Russia,Asia,Active,65.59483333,171.0525,2001,Dfc - Snow fully humid cool summer,183,Open Shrublands
+709,RU-Fyo,Russia,Asia,Active,56.4615278,32.9220833,1998,Dfb - Snow fully humid warm summer,273,Mixed Forests
+713,RU-Sam,Russia,Asia,Intermittent,72.3738,126.4958,2002,Dfd - Snow fully humid extremely continental,16,Woody Savannas
+714,RU-Tuv,Russia,Asia,Inactive,50.15,94.45,2004,Dfb - Snow fully humid warm summer,948,Grasslands
+715,RU-Ha1,Russia,Asia,Active,54.72517,90.00215,2002,Dfc - Snow fully humid cool summer,449,Grasslands
+716,RU-Ha2,Russia,Asia,Active,54.77301,89.95664,2002,Dfc - Snow fully humid cool summer,407,Woody Savannas
+717,RU-Ha3,Russia,Asia,Active,54.70455,89.07785,2004,Dfc - Snow fully humid cool summer,437,Mixed Forests
+719,RU-Ylr,Russia,Asia,Active,62.255,129.6189,1996,Dfd - Snow fully humid extremely continental,214,Deciduous Needleleaf Forest
+720,RU-Ypn,Russia,Asia,Active,62.2414,129.6506,1998,Dfd - Snow fully humid extremely continental,208,Deciduous Needleleaf Forest
+721,RU-Zot,Russia,Asia,Active,60.80080032,89.35079956,2002,Dfc - Snow fully humid cool summer,124,Woody Savannas
+724,SD-Dem,Sudan,Africa,Inactive,13.2829,30.4783,2002,BWh - Arid desert hot,608,Grasslands
+725,SE-Asa,Sweden,Europe,Inactive,57.17226111,14.8001,2004,Cfb - Warm temperate fully humid with warm summer,205,Evergreen Needleleaf Forest
+726,SE-As2,Sweden,Europe,Active,57.1495,14.738663,2005,Cfb - Warm temperate fully humid with warm summer,260,Evergreen Needleleaf Forest
+727,SE-Deg,Sweden,Europe,Active,64.18197222,19.55669444,2001,Dfc - Snow fully humid cool summer,242,Evergreen Needleleaf Forest
+728,SE-Fla,Sweden,Europe,Active,64.11277777,19.45694444,1996,Dfc - Snow fully humid cool summer,307,Evergreen Needleleaf Forest
+729,SE-Kno,Sweden,Europe,Active,60.99825,16.21727778,2004,Dfc - Snow fully humid cool summer,285,Evergreen Needleleaf Forest
+730,SE-Nor,Sweden,Europe,Active,60.08649722,17.47950278,1996,Dfb - Snow fully humid warm summer,28,Evergreen Needleleaf Forest
+732,SE-Sk2,Sweden,Europe,Active,60.12966667,17.84005556,2004,Dfb - Snow fully humid warm summer,58,Evergreen Needleleaf Forest
+733,SE-Sk1,Sweden,Europe,Active,60.125,17.91805556,2004,Dfb - Snow fully humid warm summer,42,Evergreen Needleleaf Forest
+734,SE-St2,Sweden,Europe,Active,68.35424444,19.04714444,2004,ET - Polar tundra,347,Woody Savannas
+735,SE-St1,Sweden,Europe,Active,68.3541488,19.050333,2004,ET - Polar tundra,347,Closed Shrublands
+736,SK-Pol,Slovakia,Europe,Active,48.63333333,19.46666667,2002,Dfb - Snow fully humid warm summer,1222,Mixed Forests
+745,TH-Mae,Thailand,Asia,Active,14.575,98.85833333,2001,Am - Equatorial monsoon,214,Evergreen Broadleaf Forest
+746,TH-Mix,Thailand,Asia,Active,16.93986111,99.42986111,2002,Aw - Equatorial savannah with dry winter,105,Woody Savannas
+752,TH-Sak,Thailand,Asia,Active,14.49333333,101.9219444,2001,Aw - Equatorial savannah with dry winter,470,Evergreen Broadleaf Forest
+759,TW-Chn,Taiwan,Asia,Active,24.59094444,121.4989722,2005,Cfa - Warm temperate fully humid with hot summer,457,Evergreen Broadleaf Forest
+760,TW-Hui,Taiwan,Asia,Active,24.076,121.126,2006,Cfb - Warm temperate fully humid with warm summer,1292,Evergreen Broadleaf Forest
+761,TW-Nch,Taiwan,Asia,Active,24.12055556,120.6780556,2006,Cfa - Warm temperate fully humid with hot summer,54,Urban and Built-Up
+765,TW-Tar,Taiwan,Asia,Active,24.03122222,120.6883889,2005,Cfa - Warm temperate fully humid with hot summer,83,Croplands
+771,UK-AMo,United Kingdom,Europe,Active,55.79166667,-3.238888889,2002,Cfb - Warm temperate fully humid with warm summer,265,Grasslands
+773,UK-Cas,United Kingdom,Europe,Active,57.23333333,-3.5,2002,Cfc - Warm temperate fully humid with cool summer,461,Mixed Forests
+775,UK-EBu,United Kingdom,Europe,Active,55.866,-3.205777778,2004,Cfb - Warm temperate fully humid with warm summer,208,Cropland/Natural Vegetation Mosaic
+776,UK-ESa,United Kingdom,Europe,Active,55.9069444,-2.85861111,2003,Cfb - Warm temperate fully humid with warm summer,307,Croplands
+777,UK-Gri,United Kingdom,Europe,Active,56.6072222,-3.79805556,1997,Cfb - Warm temperate fully humid with warm summer,343,Evergreen Needleleaf Forest
+778,UK-Ham,United Kingdom,Europe,Active,51.153533,-0.8583,2004,Cfb - Warm temperate fully humid with warm summer,76,Cropland/Natural Vegetation Mosaic
+779,UK-Har,United Kingdom,Europe,Active,55.21272222,-2.037527777,2003,Cfb - Warm temperate fully humid with warm summer,282,Evergreen Needleleaf Forest
+780,UK-Her,United Kingdom,Europe,Active,51.78379822,-0.47608,2004,Cfb - Warm temperate fully humid with warm summer,142,Croplands
+781,UK-MoH,United Kingdom,Europe,Active,54.69633333,-2.396383333,2004,Cfb - Warm temperate fully humid with warm summer,600,Mixed Forests
+783,UK-PL1,United Kingdom,Europe,Active,51.53329849,-1.483330011,2004,Cfb - Warm temperate fully humid with warm summer,159,Croplands
+784,UK-PL2,United Kingdom,Europe,Active,51.43330002,-1.233330011,2004,Cfb - Warm temperate fully humid with warm summer,78,Cropland/Natural Vegetation Mosaic
+785,UK-PL3,United Kingdom,Europe,Active,51.45,-1.266666667,2004,Cfb - Warm temperate fully humid with warm summer,104,Mixed Forests
+786,UK-Pol,United Kingdom,Europe,Active,55.28683333,-3.4015,2002,Cfb - Warm temperate fully humid with warm summer,180,Grasslands
+787,UK-Tad,United Kingdom,Europe,Active,51.20709991,-2.828639984,2000,Cfb - Warm temperate fully humid with warm summer,28,Grasslands
+798,US-Ivo,United States,North America,Inactive,68.48647222,-155.748,2003,ET - Polar tundra,557,Open Shrublands
+805,US-NSP,United States,North America,Active,41.55788056,-93.29618611,2005,Dfa - Snow with fully humid hot summer,269,Croplands
+806,US-Br1,United States,North America,Active,41.69148056,-93.69138611,2001,Dfa - Snow with fully humid hot summer,270,Cropland/Natural Vegetation Mosaic
+807,US-Br2,United States,North America,Active,41.97565278,-93.69251944,2005,Dfa - Snow with fully humid hot summer,313,Croplands
+808,US-Br3,United States,North America,Active,41.97471944,-93.69357222,2001,Dfa - Snow with fully humid hot summer,313,Croplands
+810,US-Atq,United States,North America,Inactive,70.46961111,-157.4089444,1999,ET - Polar tundra,15,Grasslands
+811,US-Aud,United States,North America,Active,31.5907,-110.5092,2002,BSk - Arid Steppe cold,1466,Open Shrublands
+814,US-Wkg,United States,North America,Active,31.736527,-109.94188,2003,BSk - Arid Steppe cold,1524,Grasslands
+815,US-LSM,United States,North America,Active,31.56584,-110.13438,2001,BSk - Arid Steppe cold,1238,Open Shrublands
+816,US-Whs,United States,North America,Active,31.743833,-110.052222,2003,BSk - Arid Steppe cold,1366,Open Shrublands
+818,US-MtB,United States,North America,Active,32.41666667,-110.7255139,2002,BSk - Arid Steppe cold,2446,Woody Savannas
+822,US-Brw,United States,North America,Active,71.322525,-156.6258806,1993,ET - Polar tundra,1,Snow and Ice
+823,US-Bar,United States,North America,Active,44.06463967,-71.28807685,2004,Dfb - Snow fully humid warm summer,270,Mixed Forests
+825,US-Blk,United States,North America,Inactive,44.158,-103.65,1999,Dfb - Snow fully humid warm summer,1743,Evergreen Needleleaf Forest
+"826,US-Blo,United States,North America,Inactive,38.89525,-120.63275,1997,""Csb - Warm temperate with dry, warm summer"",1280,Evergreen Needleleaf Forest"
+830,US-Bo1,United States,North America,Active,40.0062,-88.2904,1996,Dfa - Snow with fully humid hot summer,217,Croplands
+831,US-Bo2,United States,North America,Inactive,40.0061,-88.2918,2004,Dfa - Snow with fully humid hot summer,218,Croplands
+833,US-Bkg,United States,North America,Active,44.34529,-96.83617,2004,Dfa - Snow with fully humid hot summer,495,Croplands
+844,US-CaV,United States,North America,Active,39.0633,-79.4208,2004,Cfb - Warm temperate fully humid with warm summer,975,Cropland/Natural Vegetation Mosaic
+845,US-ChR,United States,North America,Active,35.931093,-84.332424,2006,Cfa - Warm temperate fully humid with hot summer,290,Deciduous Broadleaf Forest
+863,US-Co1,United States,North America,Inactive,40.72514,-104.30138,2003,BSk - Arid Steppe cold,1526,Grasslands
+864,US-Co2,United States,North America,Inactive,40.7345,-104.30128,2003,BSk - Arid Steppe cold,1528,Grasslands
+865,US-Co3,United States,North America,Inactive,40.72965,-104.30134,2003,BSk - Arid Steppe cold,1526,Grasslands
+866,US-Cyp,United States,North America,Inactive,29.77043333,-82.2081,1994,Cfa - Warm temperate fully humid with hot summer,46,Mixed Forests
+867,US-Dk1,United States,North America,Active,35.9712024,-79.09337586,2001,Cfa - Warm temperate fully humid with hot summer,166,Mixed Forests
+2816,CN-Tbs,China,Asia,Inactive,31.37,91.9,1998,ET - Polar tundra,,Grasslands
+868,US-Dk2,United States,North America,Active,35.97358231,-79.10043042,2000,Cfa - Warm temperate fully humid with hot summer,169,Mixed Forests
+869,US-Dk3,United States,North America,Active,35.97816586,-79.09419557,1997,Cfa - Warm temperate fully humid with hot summer,169,Mixed Forests
+871,US-Skr,United States,North America,Active,25.36463056,-81.07794611,2003,Aw - Equatorial savannah with dry winter,1,Permanent Wetlands
+873,US-FPe,United States,North America,Active,48.3077,-105.1019,1999,BSk - Arid Steppe cold,638,Grasslands
+874,US-FR1,United States,North America,Active,29.93,-98.01,2004,Cfa - Warm temperate fully humid with hot summer,243,Grasslands
+875,US-FR2,United States,North America,Active,29.94948932,-97.99622779,2004,Cfa - Warm temperate fully humid with hot summer,260,Cropland/Natural Vegetation Mosaic
+876,US-FR3,United States,North America,Active,29.94,-97.99,2004,Cfa - Warm temperate fully humid with hot summer,243,Woody Savannas
+881,US-GLE,United States,North America,Active,41.3644,-106.2394,1999,Dfb - Snow fully humid warm summer,3150,Evergreen Needleleaf Forest
+882,US-Goo,United States,North America,Inactive,34.2547,-89.8735,2002,Cfa - Warm temperate fully humid with hot summer,90,Cropland/Natural Vegetation Mosaic
+883,US-GMF,United States,North America,Inactive,41.96666667,-73.23333333,1999,Dfb - Snow fully humid warm summer,474,Mixed Forests
+884,US-HVa,United States,North America,Inactive,69.14233,-148.84117,1993,Dfc - Snow fully humid cool summer,303,Open Shrublands
+886,US-Ha1,United States,North America,Active,42.53775556,-72.17147778,1991,Dfb - Snow fully humid warm summer,353,Mixed Forests
+887,US-Ha2,United States,North America,Active,42.53933333,-72.17794444,2000,Dfb - Snow fully humid warm summer,365,Mixed Forests
+890,US-Ho1,United States,North America,Active,45.2041,-68.7402,1995,Dfb - Snow fully humid warm summer,72,Mixed Forests
+891,US-Ho2,United States,North America,Active,45.20912,-68.747,1999,Dfb - Snow fully humid warm summer,82,Mixed Forests
+892,US-Ho3,United States,North America,Active,45.20722,-68.725,2001,Dfb - Snow fully humid warm summer,62,Mixed Forests
+899,US-IB1,United States,North America,Active,41.8593,-88.22273333,2005,Dfa - Snow with fully humid hot summer,220,Croplands
+900,US-IB2,United States,North America,Active,41.84061667,-88.24103333,2004,Dfa - Snow with fully humid hot summer,228,Cropland/Natural Vegetation Mosaic
+"911,US-Jas,United States,North America,Active,37.40213208,-122.2210281,1998,""Csb - Warm temperate with dry, warm summer"",181,Woody Savannas"
+915,US-Kon,United States,North America,Active,39.0823925,-96.56027694,1996,Cfa - Warm temperate fully humid with hot summer,430,Grasslands
+916,US-Man,United States,North America,Active,39.46,-96.757,1997,Cfa - Warm temperate fully humid with hot summer,354,Woody Savannas
+920,US-Ra1,United States,North America,Active,39.139,-96.523,1997,Cfa - Warm temperate fully humid with hot summer,409,Grasslands
+921,US-Ra2,United States,North America,Active,39.14049722,-96.52704722,1997,Cfa - Warm temperate fully humid with hot summer,402,Grasslands
+922,US-KS1,United States,North America,Inactive,28.45830448,-80.67090255,2001,Cfa - Warm temperate fully humid with hot summer,1,Mixed Forests
+923,US-KS2,United States,North America,Inactive,28.60857739,-80.67153396,1999,Cfa - Warm temperate fully humid with hot summer,1,Woody Savannas
+929,US-ARM,United States,North America,Active,36.6058,-97.4888,2000,Cfa - Warm temperate fully humid with hot summer,312,Croplands
+930,US-LWW,United States,North America,Inactive,34.9604,-97.978895,1995,Cfa - Warm temperate fully humid with hot summer,365,Grasslands
+931,US-Los,United States,North America,Active,46.08268,-89.97919,2000,Dfb - Snow fully humid warm summer,485,Mixed Forests
+935,US-LPH,United States,North America,Active,42.54186111,-72.18496389,2002,Dfb - Snow fully humid warm summer,351,Deciduous Broadleaf Forest
+944,US-Cub,United States,North America,Active,39.41251389,-76.5208,2001,Cfa - Warm temperate fully humid with hot summer,137,Urban and Built-Up
+947,US-Age,United States,North America,Inactive,45.0344,-68.68203333,2004,Dfb - Snow fully humid warm summer,44,Mixed Forests
+951,US-Ne1,United States,North America,Active,41.165056,-96.476638,2001,Dfa - Snow with fully humid hot summer,355,Croplands
+952,US-Ne2,United States,North America,Active,41.164871,-96.4701,2001,Dfa - Snow with fully humid hot summer,355,Croplands
+953,US-Ne3,United States,North America,Active,41.179667,-96.439646,2001,Dfa - Snow with fully humid hot summer,356,Croplands
+"954,US-Me1,United States,North America,Inactive,44.5794,-121.5,2004,""Csb - Warm temperate with dry, warm summer"",885,Croplands"
+"955,US-Me2,United States,North America,Active,44.4523,-121.5574,2003,""Csb - Warm temperate with dry, warm summer"",1237,Evergreen Needleleaf Forest"
+"956,US-Me3,United States,North America,Inactive,44.3154,-121.6078,2003,""Csb - Warm temperate with dry, warm summer"",1010,Evergreen Needleleaf Forest"
+"957,US-Me4,United States,North America,Inactive,44.4992,-121.6224,1996,""Csb - Warm temperate with dry, warm summer"",915,Evergreen Needleleaf Forest"
+"958,US-Me5,United States,North America,Inactive,44.43718949,-121.566756,1999,""Csb - Warm temperate with dry, warm summer"",1192,Evergreen Needleleaf Forest"
+967,US-MOz,United States,North America,Active,38.74411,-92.200009,2004,Cfa - Warm temperate fully humid with hot summer,212,Deciduous Broadleaf Forest
+968,US-MMS,United States,North America,Active,39.32315,-86.413139,1998,Cfa - Warm temperate fully humid with hot summer,288,Deciduous Broadleaf Forest
+971,US-Ldg,United States,North America,Active,46.95224789,-110.8852724,2006,BSk - Arid Steppe cold,2258,Evergreen Needleleaf Forest
+972,US-Rip,United States,North America,Active,46.94537472,-110.8872449,2006,BSk - Arid Steppe cold,2199,Evergreen Needleleaf Forest
+980,US-NC1,United States,North America,Active,35.81147,-76.71147,2004,Cfa - Warm temperate fully humid with hot summer,6,Mixed Forests
+981,US-NC2,United States,North America,Active,35.8031,-76.66791,2004,Cfa - Warm temperate fully humid with hot summer,5,Evergreen Needleleaf Forest
+997,US-NR1,United States,North America,Active,40.03287778,-105.5464028,1997,Dfc - Snow fully humid cool summer,3023,Evergreen Needleleaf Forest
+998,US-NR2,United States,North America,Active,40.0325,-105.5469444,2000,Dfc - Snow fully humid cool summer,3030,Evergreen Needleleaf Forest
+999,US-Ced,United States,North America,Active,39.83794167,-74.37910111,2004,Cfa - Warm temperate fully humid with hot summer,58,Evergreen Needleleaf Forest
+1000,US-Dix,United States,North America,Inactive,39.97122889,-74.43455028,2004,Cfa - Warm temperate fully humid with hot summer,45,Urban and Built-Up
+1001,US-Slt,United States,North America,Active,39.91375444,-74.595985,2004,Cfa - Warm temperate fully humid with hot summer,31,Deciduous Broadleaf Forest
+1007,US-NMj,United States,North America,Inactive,46.6465,-88.5194,2001,Dfb - Snow fully humid warm summer,392,Mixed Forests
+1008,US-Syv,United States,North America,Inactive,46.242017,-89.34765,2001,Dfb - Snow fully humid warm summer,539,Mixed Forests
+1009,US-NPn,United States,North America,Inactive,42.31288889,-106.5571111,1997,Dfb - Snow fully humid warm summer,2194,Grasslands
+1019,US-Oho,United States,North America,Active,41.55454,-83.84376,2003,Dfa - Snow with fully humid hot summer,200,Deciduous Broadleaf Forest
+"1035,US-MRf,United States,North America,Active,44.64649416,-123.551483,2006,""Csb - Warm temperate with dry, warm summer"",267,Evergreen Needleleaf Forest"
+1036,US-PFa,United States,North America,Active,45.94587778,-90.27230417,1995,Dfb - Snow fully humid warm summer,473,Mixed Forests
+1039,US-Pon,United States,North America,Inactive,36.76666667,-97.13333333,1996,Cfa - Warm temperate fully humid with hot summer,311,Grasslands
+"1041,US-Upa,United States,North America,Inactive,70.28147222,-148.8848333,1993,""Dsc - Snow dry, cool summer"",14,Open Shrublands"
+1047,US-Ro1,United States,North America,Active,44.71430814,-93.08984321,2003,Dfa - Snow with fully humid hot summer,295,Croplands
+1048,US-Ro2,United States,North America,Active,44.72879032,-93.08885384,2006,Dfa - Snow with fully humid hot summer,291,Croplands
+1049,US-Ro3,United States,North America,Active,44.7217122,-93.08933906,2003,Dfa - Snow with fully humid hot summer,295,Croplands
+1050,US-Ru1,United States,North America,Active,40.25932222,-112.478125,2000,Cfa - Warm temperate fully humid with hot summer,1684,Grasslands
+1051,US-Ru2,United States,North America,Active,40.28284444,-112.4715667,2000,Cfa - Warm temperate fully humid with hot summer,1621,Open Shrublands
+1052,US-Ru3,United States,North America,Active,40.28297222,-112.463,2000,Cfa - Warm temperate fully humid with hot summer,1603,Grasslands
+1055,US-SRM,United States,North America,Active,31.82143,-110.86611,2004,BSk - Arid Steppe cold,1118,Open Shrublands
+1062,US-Smt,United States,North America,Inactive,38.88997778,-76.55988333,1995,Cfa - Warm temperate fully humid with hot summer,15,Deciduous Broadleaf Forest
+"1065,US-Snd,United States,North America,Active,38.0373,-121.7536,2006,""Csb - Warm temperate with dry, warm summer"",-2,Cropland/Natural Vegetation Mosaic"
+1066,US-Shd,United States,North America,Inactive,36.93333333,-96.68333333,1996,Cfa - Warm temperate fully humid with hot summer,355,Grasslands
+"1067,US-SO4,United States,North America,Active,33.38444444,-116.6402611,2004,""Csa - Warm temperate with dry, hot summer"",1408,Closed Shrublands"
+"1068,US-SO2,United States,North America,Active,33.37388889,-116.6228889,1993,""Csa - Warm temperate with dry, hot summer"",1414,Closed Shrublands"
+"1069,US-SO3,United States,North America,Active,33.37719444,-116.6226944,1993,""Csa - Warm temperate with dry, hot summer"",1435,Closed Shrublands"
+1070,US-SP1,United States,North America,Active,29.73806667,-82.21876667,1998,Cfa - Warm temperate fully humid with hot summer,47,Mixed Forests
+1071,US-SP2,United States,North America,Active,29.7648,-82.24481667,1995,Cfa - Warm temperate fully humid with hot summer,46,Mixed Forests
+1072,US-SP3,United States,North America,Active,29.75476667,-82.16328333,1998,Cfa - Warm temperate fully humid with hot summer,36,Evergreen Broadleaf Forest
+1073,US-SP4,United States,North America,Inactive,29.80281667,-82.20315,1998,Cfa - Warm temperate fully humid with hot summer,47,Evergreen Broadleaf Forest
+1080,US-Jss,United States,North America,Inactive,30.175506,-97.8778,2002,Cfa - Warm temperate fully humid with hot summer,245,Savannas
+1084,US-UMB,United States,North America,Active,45.55984,-84.71382,1998,Dfb - Snow fully humid warm summer,228,Deciduous Broadleaf Forest
+1085,US-SDU,United States,North America,Active,39.65942003,-105.01274,2001,Dfb - Snow fully humid warm summer,1619,Urban and Built-Up
+1086,US-KUO,United States,North America,Active,44.9983,-93.1886,2004,Dfb - Snow fully humid warm summer,304,Cropland/Natural Vegetation Mosaic
+1087,US-Bef,United States,North America,Intermittent,39.059595,-78.07237861,2000,Cfa - Warm temperate fully humid with hot summer,183,Cropland/Natural Vegetation Mosaic
+"1093,US-Var,United States,North America,Active,38.40666667,-120.9507333,2000,""Csa - Warm temperate with dry, hot summer"",133,Woody Savannas"
+1094,US-Vca,United States,North America,Active,35.87548,-106.47655,2003,Cfb - Warm temperate fully humid with warm summer,2613,Grasslands
+1096,US-WBW,United States,North America,Inactive,35.95876667,-84.28743333,1994,Cfa - Warm temperate fully humid with hot summer,316,Deciduous Broadleaf Forest
+1097,US-Wlr,United States,North America,Inactive,37.52083333,-96.855,1997,Cfa - Warm temperate fully humid with hot summer,411,Grasslands
+1102,US-WCr,United States,North America,Inactive,45.80592667,-90.07985917,1998,Dfb - Snow fully humid warm summer,512,Deciduous Broadleaf Forest
+"1103,US-Wrc,United States,North America,Active,45.82048889,-121.9519111,1998,""Csb - Warm temperate with dry, warm summer"",372,Evergreen Needleleaf Forest"
+1112,VE-Gan,Venezuela,South America,Inactive,8.900105556,-68.15094444,2005,Aw - Equatorial savannah with dry winter,153,Woody Savannas
+1121,ZM-Mon,Zambia,Africa,Active,-15.43777778,23.25277778,2000,Aw - Equatorial savannah with dry winter,1094,Savannas
+"1127,US-Fuf,United States,North America,Active,35.089,-111.762,2005,""Csb - Warm temperate with dry, warm summer"",2234,Woody Savannas"
+"1128,US-Fmf,United States,North America,Active,35.1416,-111.7273,2005,""Csb - Warm temperate with dry, warm summer"",2216,Woody Savannas"
+"1129,US-Fwf,United States,North America,Active,35.4454,-111.7718,2005,""Csb - Warm temperate with dry, warm summer"",2316,Closed Shrublands"
+2596,US-Wi1,United States,North America,Inactive,46.73047222,-91.23294444,2003,Dfb - Snow fully humid warm summer,331,Deciduous Broadleaf Forest
+2597,US-Wi2,United States,North America,Inactive,46.68688889,-91.15283333,2003,Dfb - Snow fully humid warm summer,393,Mixed Forests
+2598,US-Wi3,United States,North America,Inactive,46.63472222,-91.09866667,2002,Dfb - Snow fully humid warm summer,371,Deciduous Broadleaf Forest
+2599,US-Wi4,United States,North America,Inactive,46.73933333,-91.16625,2002,Dfb - Snow fully humid warm summer,362,Mixed Forests
+2600,US-Wi5,United States,North America,Inactive,46.65308333,-91.08580556,2004,Dfb - Snow fully humid warm summer,352,Mixed Forests
+2601,US-Wi6,United States,North America,Inactive,46.62488889,-91.29822222,2002,Dfb - Snow fully humid warm summer,365,Cropland/Natural Vegetation Mosaic
+2602,US-Wi7,United States,North America,Inactive,46.64911111,-91.06927778,2005,Dfb - Snow fully humid warm summer,341,Cropland/Natural Vegetation Mosaic
+2603,US-Wi8,United States,North America,Inactive,46.72233333,-91.25241667,2002,Dfb - Snow fully humid warm summer,381,Deciduous Broadleaf Forest
+2604,US-Wi9,United States,North America,Inactive,46.61877778,-91.08144444,2004,Dfb - Snow fully humid warm summer,347,Mixed Forests
+2605,US-Wi0,United States,North America,Inactive,46.61877778,-91.08144444,2002,Dfb - Snow fully humid warm summer,347,Mixed Forests
+"2606,VU-Coc,Vanuatu,Australia/Oceania,Inactive,-15.44272222,167.1919444,2001,""Af - Equatorial rainforest, fully humid"",1,Evergreen Broadleaf Forest"
+2607,CG-Tch,Congo - Kinshasa,Africa,Active,-4.289166667,11.65641667,2006,Aw - Equatorial savannah with dry winter,1,Woody Savannas
+2608,CA-WP2,Canada,North America,Inactive,55.5375,-112.3343,2004,Dfc - Snow fully humid cool summer,732,Evergreen Needleleaf Forest
+2609,CN-Xi2,China,Asia,Active,43.55277778,116.6713889,,Dwb - Snow dry winter warm summer,1259,Grasslands
+"2610,ID-Pag,Indonesia,Asia,Active,-2.345,114.0363889,2002,""Af - Equatorial rainforest, fully humid"",52,Evergreen Broadleaf Forest"
+2611,JP-Mas,Japan,Asia,Active,36.053972,140.026917,1999,Cfa - Warm temperate fully humid with hot summer,19,Woody Savannas
+2612,SE-Abi,Sweden,Europe,Active,68.3624,18.7948,2005,ET - Polar tundra,353,Woody Savannas
+2613,US-Bn1,United States,North America,Active,63.8881,-145.7394,2003,Dfc - Snow fully humid cool summer,388,Evergreen Needleleaf Forest
+"2614,US-Bn2,United States,North America,Active,63.9178,-145.3731,2003,""Dsc - Snow dry, cool summer"",388,Mixed Forests"
+2615,US-Bn3,United States,North America,Active,63.9217,-145.7456,2003,Dfc - Snow fully humid cool summer,465,Woody Savannas
+2616,BW-GhG,Botswana,Africa,Inactive,-21.51,21.74,2003,BSh - Arid Steppe hot,1161,Grasslands
+2617,SE-Faj,Sweden,Europe,Active,56.26546944,13.55351389,2005,Cfb - Warm temperate fully humid with warm summer,150,Evergreen Needleleaf Forest
+2618,ES-Amo,Spain,Europe,Active,36.833608,-2.252318,2007,BSk - Arid Steppe cold,53,Closed Shrublands
+2619,CA-WP3,Canada,North America,Inactive,54.47,-113.32,2004,Dfb - Snow fully humid warm summer,581,Mixed Forests
+2620,RU-Zfw,Russia,Asia,Active,60.75,89.3833,1998,Dfc - Snow fully humid cool summer,88,Evergreen Needleleaf Forest
+2621,RU-Zbo,Russia,Asia,Active,60.75,89.3833,1998,Dfc - Snow fully humid cool summer,88,Evergreen Needleleaf Forest
+2623,ES-Agu,Spain,Europe,Active,36.940046,-2.033208,2006,BSk - Arid Steppe cold,195,Closed Shrublands
+2626,IE-CLa,Ireland,Europe,Active,52.95,-7.25,2004,Cfb - Warm temperate fully humid with warm summer,140,Mixed Forests
+2627,CZ-BK2,Czech Republic,Europe,Active,49.49443,18.54285,2004,Dfb - Snow fully humid warm summer,837,Mixed Forests
+2628,CZ-wet,Czech Republic,Europe,Active,49.02465,14.77035,2004,Cfb - Warm temperate fully humid with warm summer,425,Croplands
+2629,FR-Lq2,France,Europe,Active,45.63919444,2.737027778,2002,Cfb - Warm temperate fully humid with warm summer,1081,Croplands
+2630,NL-Haa,Netherlands,Europe,Inactive,52.0036111,4.80555556,2003,Cfb - Warm temperate fully humid with warm summer,1,Croplands
+2631,NL-Lan,Netherlands,Europe,Inactive,51.95360184,4.902900219,2005,Cfb - Warm temperate fully humid with warm summer,1,Croplands
+2632,NL-Mol,Netherlands,Europe,Active,51.65,4.63908333,2005,Cfb - Warm temperate fully humid with warm summer,1,Croplands
+2633,IT-Noe,Italy,Europe,Active,40.60613,8.15146,2004, ,-4315,Woody Savannas
+2634,NL-Vre,Netherlands,Europe,Inactive,51.53166667,5.844111111,2006,Cfb - Warm temperate fully humid with warm summer,28,Cropland/Natural Vegetation Mosaic
+2636,SK-Tat,Slovakia,Europe,Active,49.1207778,20.1635,2005,Dfc - Snow fully humid cool summer,980,Croplands
+2637,NL-Lut,Netherlands,Europe,Inactive,53.39892222,6.356027778,2006,Cfb - Warm temperate fully humid with warm summer,1,Croplands
+2642,US-ARb,United States,North America,Inactive,35.54974,-98.04023,2005,Cfa - Warm temperate fully humid with hot summer,421,Croplands
+2643,US-ARc,United States,North America,Inactive,35.54649,-98.04006,2005,Cfa - Warm temperate fully humid with hot summer,424,Grasslands
+2644,BW-GhM,Botswana,Africa,Inactive,-21.2,21.75,2003,BSh - Arid Steppe hot,1139,Savannas
+2645,ZM-Mkt,Zambia,Africa,Inactive,-15.438,23.253,2000,Aw - Equatorial savannah with dry winter,1093,Savannas
+2646,BW-Mkt,Botswana,Africa,Inactive,-19.923,23.594,2000,BSh - Arid Steppe hot,929,Savannas
+2648,FI-Sii,Finland,Europe,Active,61.83268333,24.19278333,2004,Dfc - Snow fully humid cool summer,173,Evergreen Needleleaf Forest
+2649,DE-Har,Germany,Europe,Active,47.9344,7.601,,Cfb - Warm temperate fully humid with warm summer,201,Mixed Forests
+2657,CG-Hin,Congo - Kinshasa,Africa,Inactive,-4.68111111,12.0036111,2001,Aw - Equatorial savannah with dry winter,29,Cropland/Natural Vegetation Mosaic
+2658,CG-Kis,Congo - Kinshasa,Africa,Inactive,-4.791388889,11.98222222,2004,Aw - Equatorial savannah with dry winter,19,Cropland/Natural Vegetation Mosaic
+2661,GH-Ank,Ghana,Africa,Active,5.26854275,-2.69420592,2008,Am - Equatorial monsoon,76,Evergreen Broadleaf Forest
+2683,JP-Tef,Japan,Asia,Active,45.056339,142.106203,2001,Dfb - Snow fully humid warm summer,82,Mixed Forests
+2685,ML-AgG,Mali,Africa,Active,15.34322,-1.48067,2005,BWh - Arid desert hot,291,Grasslands
+2686,ML-AgS,Mali,Africa,Active,15.49961667,1.390083333,2006,BWh - Arid desert hot,307,Open Shrublands
+2687,ML-Bam,Mali,Africa,Active,17.09838,1.4011655,2005,BWh - Arid desert hot,240,Barren or Sparsely Vegetated
+2689,NE-WaF,Niger,Africa,Active,13.64758138,2.63368891,2005,BSh - Arid Steppe hot,235,Grasslands
+2690,NE-WaM,Niger,Africa,Active,13.644017,2.62984816,2005,BSh - Arid Steppe hot,243,Grasslands
+2694,ZA-Kru,South Africa,Africa,Active,-25.0197,31.4969,2000,BSh - Arid Steppe hot,357,Savannas
+2697,US-SCc,United States,North America,Active,33.609444,-116.450556,2006,BWh - Arid desert hot,1294,Open Shrublands
+2698,US-SCd,United States,North America,Active,33.6528,-116.3725,2006,BWh - Arid desert hot,297,Open Shrublands
+"2699,US-SCg,United States,North America,Active,33.736389,-117.694722,2006,""Csa - Warm temperate with dry, hot summer"",445,Closed Shrublands"
+"2700,US-SCs,United States,North America,Active,33.734167,-117.696111,2006,""Csa - Warm temperate with dry, hot summer"",457,Closed Shrublands"
+"2701,US-SCf,United States,North America,Active,33.808056,-116.771667,2006,""Csa - Warm temperate with dry, hot summer"",1736,Woody Savannas"
+2702,US-SCw,United States,North America,Active,33.604722,-116.452667,2006,BWh - Arid desert hot,1276,Open Shrublands
+2703,US-SJ1,United States,North America,Active,33.66,-117.85,1998,BSk - Arid Steppe cold,5,Closed Shrublands
+2704,US-SJ2,United States,North America,Active,33.66,-117.85,2003,BSk - Arid Steppe cold,5,Closed Shrublands
+2706,US-Elm,United States,North America,Active,25.5519,-80.7826,2008,Aw - Equatorial savannah with dry winter,1,Permanent Wetlands
+2707,US-Esm,United States,North America,Active,25.4379,-80.5946,2007,Aw - Equatorial savannah with dry winter,1,Permanent Wetlands
+2709,US-KCM,United States,North America,Active,44.688611,-93.072778,2007,Dfa - Snow with fully humid hot summer,291,Croplands
+2710,US-Seg,United States,North America,Active,34.36233,-106.70195,2006,BSk - Arid Steppe cold,1589,Grasslands
+2711,US-Ses,United States,North America,Active,34.334944,-106.744167,2006,BSk - Arid Steppe cold,1583,Grasslands
+2712,US-Wjs,United States,North America,Active,34.425489,-105.861545,2007,BSk - Arid Steppe cold,1923,Grasslands
+2713,US-Mpj,United States,North America,Active,34.43845,-106.237694,2007,BSk - Arid Steppe cold,2182,Closed Shrublands
+2714,US-Vcp,United States,North America,Active,35.86236,-106.59743,2006,Cfb - Warm temperate fully humid with warm summer,2533,Woody Savannas
+2715,US-Vcm,United States,North America,Active,35.888447,-106.532114,2006,Cfb - Warm temperate fully humid with warm summer,3004,Evergreen Needleleaf Forest
+2716,US-Ctn,United States,North America,Active,43.94995,-101.84661,2006,BSk - Arid Steppe cold,746,Grasslands
+2719,US-Ylw,United States,North America,Inactive,29.789539,-95.3534278,2008,Cfa - Warm temperate fully humid with hot summer,15,Urban and Built-Up
+2754,US-SRC,United States,North America,Active,31.908312,-110.83948,2008,BSk - Arid Steppe cold,984,Open Shrublands
+2755,US-SFP,United States,North America,Active,43.2408,-96.902,2007,Dfa - Snow with fully humid hot summer,387,Croplands
+2791,AU-Drg,Australia,Australia/Oceania,Active,-37.1334,147.171,2007,Cfb - Warm temperate fully humid with warm summer,1309,Closed Shrublands
+2792,AU-Nim,Australia,Australia/Oceania,Active,-36.2159,148.5525,2007,Cfb - Warm temperate fully humid with warm summer,1247,Grasslands
+2793,BF-Bon,Burkina Faso,Africa,Inactive,10.865556,-3.072778,2004,Aw - Equatorial savannah with dry winter,289,Savannas
+2794,BF-Btd,Burkina Faso,Africa,Active,12.46,-1.25,2008,BSh - Arid Steppe hot,281,Cropland/Natural Vegetation Mosaic
+"2795,UG-Jin,Uganda,Africa,Active,0.4,33.18333333,2003,""Af - Equatorial rainforest, fully humid"",1156,Cropland/Natural Vegetation Mosaic"
+2796,ML-Kem,Mali,Africa,Active,15.2237,-1.5662,2005,BWh - Arid desert hot,265,Cropland/Natural Vegetation Mosaic
+2797,ZA-Map,South Africa,Africa,Active,-23.83254,31.21436,2008,BSh - Arid Steppe hot,364,Savannas
+2798,BJ-Nan,Benin,Africa,Active,9.646983333,1.740883333,2005,Aw - Equatorial savannah with dry winter,397,Savannas
+2799,US-Cop,United States,North America,Inactive,38.09,-109.39,2001,BSk - Arid Steppe cold,1925,Grasslands
+"2800,US-SCm,United States,North America,Active,37.06778,-119.19444,2008,""Csb - Warm temperate with dry, warm summer"",1951,Evergreen Needleleaf Forest"
+2810,CN-Lao,China,Asia,Active,45.278611,127.578389,2002,Dwb - Snow dry winter warm summer,,Mixed Forests
+2811,CN-Xg1,China,Asia,Active,44.134167,116.328611,2003,BSk - Arid Steppe cold,,Grasslands
+2812,CN-Xg2,China,Asia,Active,44.088889,113.574167,2007,BSk - Arid Steppe cold,,Grasslands
+2813,CN-Jnz,China,Asia,Active,41.816667,121.2,2004,Dwa - Snow dry winter hot summer,,Croplands
+2814,CN-Pa1,China,Asia,Active,41.14,121.911667,2004,Dwa - Snow dry winter hot summer,,Cropland/Natural Vegetation Mosaic
+2815,CN-Pa2,China,Asia,Active,41.145,121.915,2004,Dwa - Snow dry winter hot summer,,Cropland/Natural Vegetation Mosaic
+2820,CN-Huz,China,Asia,Active,51.47,123.01,2006,Dwc - Snow dry winter cool summer,,Mixed Forests
+2821,CN-Dax,China,Asia,Active,50.83,121.56,2007,Dwc - Snow dry winter cool summer,,Deciduous Needleleaf Forest
+2822,CN-Mao,China,Asia,Active,45.38,127.53,2007,Dwb - Snow dry winter warm summer,,Deciduous Broadleaf Forest
+2823,CN-Dag,China,Asia,Active,27.585278,114.565556,,Cfa - Warm temperate fully humid with hot summer,,Mixed Forests
+2824,CN-Ail,China,Asia,Active,24.538056,101.028889,2004,Cwb - Warm temperate with dry winter and warm summer,,Evergreen Needleleaf Forest
+2825,CN-Maq,China,Asia,Active,37.88,102.15,2005,BSk - Arid Steppe cold,,Grasslands
+2826,CN-Lan,China,Asia,Active,39.6,116.58,,Dwa - Snow dry winter hot summer,,Croplands
+2827,CN-Lua,China,Asia,Active,37.88,114.68,,BSk - Arid Steppe cold,,Urban and Built-Up
+2828,CN-Dez,China,Asia,Active,37.33,116.48,,Cwa - Warm temperate with dry winter and hot summer,,Croplands
+2830,CN-Luo,China,Asia,Active,34.63,112.46,,Cwa - Warm temperate with dry winter and hot summer,,Urban and Built-Up
+2831,CN-Tao,China,Asia,Active,28.91,111.5,,Cfa - Warm temperate fully humid with hot summer,,Cropland/Natural Vegetation Mosaic
+2832,US-ICt,United States,North America,Active,68.606,-149.304,2007,Dfc - Snow fully humid cool summer,,Open Shrublands
+2833,CN-Da2,China,Asia,Active,27.585556,114.565278,,Cfa - Warm temperate fully humid with hot summer,,Mixed Forests
+2834,CN-Da3,China,Asia,Active,27.582778,114.566389,,Cfa - Warm temperate fully humid with hot summer,,Mixed Forests
+2835,CN-Ha2,China,Asia,Active,37.665278,101.331111,2002,ET - Polar tundra,,Grasslands
+2836,CN-Ha3,China,Asia,Active,37.608611,101.326944,2002,ET - Polar tundra,,Grasslands
+2837,US-ICh,United States,North America,Active,68.607,-149.296,2007,Dfc - Snow fully humid cool summer,,Open Shrublands
+2838,US-ICs,United States,North America,Active,68.606,-149.311,2007,Dfc - Snow fully humid cool summer,,Open Shrublands
+2840,CA-Qc2,Canada,North America,Inactive,49.75984,-74.5711,2007,Dfc - Snow fully humid cool summer,,Mixed Forests
+"2842,US-Me6,United States,North America,Active,44.3232,-121.6043,2010,""Csb - Warm temperate with dry, warm summer"",,Woody Savannas"
+2844,CH-Aws,Switzerland,Europe,Active,46.583306,9.790417,2006,ET - Polar tundra,,Evergreen Needleleaf Forest
+2845,US-UMd,United States,North America,Active,45.5625,-84.6975,2007,Dfb - Snow fully humid warm summer,,Mixed Forests
+2846,US-ORv,United States,North America,Active,40.0201,-83.0183,2011,Dfa - Snow with fully humid hot summer,,Urban and Built-Up
+2847,US-SdH,United States,North America,Active,42.0693,-101.4072,2004,Dfa - Snow with fully humid hot summer,,Grasslands
+2848,US-AR1,United States,North America,Active,36.4267,-99.42,2009,Cfa - Warm temperate fully humid with hot summer,,Grasslands
+2849,US-AR2,United States,North America,Active,36.6358,-99.5975,2009,Cfa - Warm temperate fully humid with hot summer,,Grasslands
+"2850,US-Myb,United States,North America,Active,38.0498,-121.7651,2010,""Csb - Warm temperate with dry, warm summer"",,Woody Savannas"
+"2851,US-Twt,United States,North America,Active,38.1055,-121.6521,2010,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+4089,IT-Cng,Italy,Europe,Inactive,44.71,11.53,2012,Cfa - Warm temperate fully humid with hot summer,,Croplands
+2852,US-Akn,United States,North America,Active,33.3833,-81.5656,2011,Cfa - Warm temperate fully humid with hot summer,,Mixed Forests
+2853,US-An1,United States,North America,Active,68.99,-150.28,2008,Dfc - Snow fully humid cool summer,,Open Shrublands
+2854,US-An2,United States,North America,Active,68.95,-150.21,2008,Dfc - Snow fully humid cool summer,,Open Shrublands
+2855,US-An3,United States,North America,Active,68.93,-150.27,2008,Dfc - Snow fully humid cool summer,,Open Shrublands
+2856,AU-Ade,Australia,Australia/Oceania,Inactive,-13.0769,131.1178,2007,Aw - Equatorial savannah with dry winter,,Savannas
+2857,AU-Dry,Australia,Australia/Oceania,Active,-15.2588,132.3706,2008,Aw - Equatorial savannah with dry winter,,Savannas
+2858,AU-Stp,Australia,Australia/Oceania,Active,-17.1508,133.3503,2008,BSh - Arid Steppe hot,,Grasslands
+2859,AU-Wom,Australia,Australia/Oceania,Active,-37.4222,144.0944,2010,Cfb - Warm temperate fully humid with warm summer,,Evergreen Broadleaf Forest
+2860,JP-SMF,Japan,Asia,Inactive,35.25,137.0667,2002,Cfa - Warm temperate fully humid with hot summer,,Croplands
+2861,JP-MBF,Japan,Asia,Inactive,44.3842,142.3186,2003,Dfb - Snow fully humid warm summer,,Mixed Forests
+2862,JP-MMF,Japan,Asia,Inactive,44.3219,142.2614,2003,Dfb - Snow fully humid warm summer,,Mixed Forests
+2863,CN-Du3,China,Asia,Active,42.0551,116.281,2009,Dwb - Snow dry winter warm summer,,Grasslands
+2864,CN-Du4,China,Asia,Active,42.0415,116.286,2009,Dwb - Snow dry winter warm summer,,Grasslands
+2865,US-KUT,United States,North America,Active,44.995,-93.4863,2005,Dfb - Snow fully humid warm summer,,Urban and Built-Up
+2866,JP-YMS,Japan,Asia,Active,34.7948,135.8462,,Cfa - Warm temperate fully humid with hot summer,,Mixed Forests
+"2867,US-Dia,United States,North America,Active,37.6773,-121.5296,2010,""Csb - Warm temperate with dry, warm summer"",,Grasslands"
+2869,MX-Tes,Mexico,North America,Active,27.84,-109.3,2004,BSh - Arid Steppe hot,,Woody Savannas
+2870,MX-Ray,Mexico,North America,Active,29.74,-110.53,2004,BSh - Arid Steppe hot,,Open Shrublands
+2871,MX-EMg,Mexico,North America,Active,32.0302,-116.6042,2008,BSk - Arid Steppe cold,,Closed Shrublands
+2872,MX-Loc,Mexico,North America,Active,29.96,-110.46,2008,BSh - Arid Steppe hot,,Open Shrublands
+2873,MX-Oju,Mexico,North America,Active,21.799,-101.61,2010,BSk - Arid Steppe cold,,Open Shrublands
+2874,MX-Ato,Mexico,North America,Active,20.613779,-98.594097,2012,Cfb - Warm temperate fully humid with warm summer,,Woody Savannas
+2875,MX-Col,Mexico,North America,Active,28.7,-110.54,2011,BSh - Arid Steppe hot,,Open Shrublands
+2876,MX-Esc,Mexico,North America,Inactive,19.404161,-99.176131,2006,Cwb - Warm temperate with dry winter and warm summer,,Urban and Built-Up
+2877,MX-Kax,Mexico,North America,Active,20.09285,-89.56376,2011,Aw - Equatorial savannah with dry winter,,Deciduous Broadleaf Forest
+2878,DK-NuF,Denmark,Europe,Active,64.13083333,-51.38611111,2008,ET - Polar tundra,,Open Shrublands
+2879,DK-ZaF,Denmark,Europe,Active,74.481433,-20.554517,2007,ET - Polar tundra,,Open Shrublands
+2880,DK-ZaH,Denmark,Europe,Active,74.4732,-20.5503,2000,ET - Polar tundra,,Open Shrublands
+2881,NZ-Kop,New Zealand,Australia/Oceania,Active,-37.387917,175.553889,2011,Cfb - Warm temperate fully humid with warm summer,,Evergreen Broadleaf Forest
+2900,CL-ACP,Chile,South America,Active,-40.172267,-73.445203,2014,Cfb - Warm temperate fully humid with warm summer,,Evergreen Broadleaf Forest
+4000,AT-Fue,Austria,Europe,Inactive,47.367374,11.854709,2005,Dfb - Snow fully humid warm summer,,Cropland/Natural Vegetation Mosaic
+4001,AT-Hnb,Austria,Europe,Inactive,47.803333,13.591389,2011,Cfb - Warm temperate fully humid with warm summer,,Evergreen Needleleaf Forest
+4002,AT-Rtz,Austria,Europe,Inactive,47.39472222,11.80472222,2008,Dfb - Snow fully humid warm summer,,Mixed Forests
+4003,AT-StA,Austria,Europe,Inactive,47.12528,11.28944,2003,Dfc - Snow fully humid cool summer,,Evergreen Needleleaf Forest
+4004,AT-StM,Austria,Europe,Inactive,47.12889,11.30583,2002,Dfc - Snow fully humid cool summer,,Mixed Forests
+4005,AT-StP,Austria,Europe,Inactive,47.13694,11.30361,2006,Dfc - Snow fully humid cool summer,,Evergreen Needleleaf Forest
+4006,BE-Dor,Belgium,Europe,Active,50.311708,4.968306,2010,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4007,BE-Lcr,Belgium,Europe,Active,51.1,3.85,2010,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4008,CA-Da1,Canada,North America,Active,64.8689,-111.5748,2004,Dfc - Snow fully humid cool summer,,Open Shrublands
+4009,CA-Da2,Canada,North America,Active,64.8648,-111.5748,2006,Dfc - Snow fully humid cool summer,,Open Shrublands
+4011,CH-Dsc,Switzerland,Europe,Inactive,46.7896991,9.864438203,,ET - Polar tundra,,Mixed Forests
+4013,DE-Akm,Germany,Europe,Inactive,53.86616667,13.68341667,2009,Cfb - Warm temperate fully humid with warm summer,,Urban and Built-Up
+4014,DE-Hmm,Germany,Europe,Inactive,53.739807,9.848723,2011,Cfb - Warm temperate fully humid with warm summer,,Woody Savannas
+4016,DE-Me2,Germany,Europe,Inactive,51.275366,10.65555,2004,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4017,DE-Seh,Germany,Europe,Inactive,50.8706233,6.44965306,2007,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4018,DE-Sng,Germany,Europe,Inactive,51.75813,9.59333,2012,Cfb - Warm temperate fully humid with warm summer,,Evergreen Needleleaf Forest
+4019,DE-Spw,Germany,Europe,Inactive,51.89225,14.03369,2010,Cfb - Warm temperate fully humid with warm summer,,Mixed Forests
+4020,DE-Zrk,Germany,Europe,Active,53.875943,12.88901,2005,Cfb - Warm temperate fully humid with warm summer,,Cropland/Natural Vegetation Mosaic
+4021,DK-Eng,Denmark,Europe,Inactive,55.69052778,12.19175,2005,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4022,DK-MkA,Denmark,Europe,Inactive,56.38131,10.39461,2012,Cfb - Warm temperate fully humid with warm summer,,Cropland/Natural Vegetation Mosaic
+4023,DK-MkG,Denmark,Europe,Inactive,56.38178,10.40312,2012,Cfb - Warm temperate fully humid with warm summer,,Cropland/Natural Vegetation Mosaic
+4024,DK-MkR,Denmark,Europe,Inactive,56.38179,10.4006,2012,Cfb - Warm temperate fully humid with warm summer,,Cropland/Natural Vegetation Mosaic
+4025,DK-SkA,Denmark,Europe,Inactive,55.93777,8.44656,2012,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4026,DK-SkG,Denmark,Europe,Inactive,55.94116,8.447355,2012,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4027,DK-SVA,Denmark,Europe,Inactive,57.23313,9.84435,2012,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4028,DK-SVG,Denmark,Europe,Inactive,57.22988,9.83291,2012,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4029,DK-SVR,Denmark,Europe,Inactive,57.23312,9.84462,2012,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4030,EE-Aar,Estonia,Asia,Inactive,58.31305,26.74388,2012,Dfb - Snow fully humid warm summer,,Cropland/Natural Vegetation Mosaic
+4031,EE-Hi1,Estonia,Asia,Inactive,59.3505,27.1008,2012,Dfb - Snow fully humid warm summer,,Mixed Forests
+4216,MN-Khr,Mongolia,Asia,Active,47.213972,108.737333,2003,BSk - Arid Steppe cold,,Grasslands
+4032,EE-Hi2,Estonia,Asia,Inactive,59.3519,27.1016,2012,Dfb - Snow fully humid warm summer,,Mixed Forests
+4033,EE-Jvs,Estonia,Asia,Inactive,58.274211,27.309952,2008,Dfb - Snow fully humid warm summer,,Mixed Forests
+4034,EE-Ka1,Estonia,Asia,Inactive,59.1411,27.6531,2012,Dfb - Snow fully humid warm summer,,Evergreen Needleleaf Forest
+4035,EE-Ka2,Estonia,Asia,Inactive,59.1459,27.6636,2012,Dfb - Snow fully humid warm summer,,Mixed Forests
+4036,EE-Ka3,Estonia,Asia,Inactive,59.1417,27.6778,2012,Dfb - Snow fully humid warm summer,,Evergreen Needleleaf Forest
+4037,EE-Ku1,Estonia,Asia,Inactive,58.4736,25.2125,2012,Dfb - Snow fully humid warm summer,,Mixed Forests
+4038,EE-Ku2,Estonia,Asia,Inactive,58.4744,25.2008,2012,Dfb - Snow fully humid warm summer,,Mixed Forests
+4039,EE-Lv1,Estonia,Asia,Inactive,58.5727,24.3819,2012,Dfb - Snow fully humid warm summer,,Mixed Forests
+4040,EE-Lv2,Estonia,Asia,Inactive,58.5719,24.3908,2012,Dfb - Snow fully humid warm summer,,Mixed Forests
+4041,EE-Lv3,Estonia,Asia,Inactive,58.573,24.3858,2012,Dfb - Snow fully humid warm summer,,Mixed Forests
+4042,EE-Mam,Estonia,Asia,Inactive,58.5791,24.4266,2012,Dfb - Snow fully humid warm summer,,Woody Savannas
+4043,EE-Pdv,Estonia,Asia,Inactive,59.0866,26.3744,2012,Dfb - Snow fully humid warm summer,,Croplands
+4044,EE-Ph1,Estonia,Asia,Inactive,59.2658,27.6316,2012,Dfb - Snow fully humid warm summer,,Closed Shrublands
+4045,EE-Ph2,Estonia,Asia,Inactive,59.2659,27.6314,2012,Dfb - Snow fully humid warm summer,,Closed Shrublands
+4046,EE-Rok,Estonia,Asia,Inactive,58.245336,27.299731,2012,Dfb - Snow fully humid warm summer,,Mixed Forests
+4047,EE-San,Estonia,Asia,Inactive,58.32704,26.21819,2012,Dfb - Snow fully humid warm summer,,Cropland/Natural Vegetation Mosaic
+4048,EE-Vg1,Estonia,Asia,Inactive,58.43507,25.23629,2012,Dfb - Snow fully humid warm summer,,Evergreen Needleleaf Forest
+4049,EE-Vg2,Estonia,Asia,Inactive,58.43662,25.23675,2012,Dfb - Snow fully humid warm summer,,Evergreen Needleleaf Forest
+"4050,ES-AP1,Spain,Europe,Active,39.680985,-1.842411111,2010,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+"4051,ES-AP2,Spain,Europe,Active,39.67726984,-1.84830946,2011,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+"4052,ES-CMb,Spain,Europe,Active,40.25830581,-1.968060873,2011,""Csb - Warm temperate with dry, warm summer"",,Woody Savannas"
+"4053,ES-CMu,Spain,Europe,Active,40.25206923,-1.964783374,2011,""Csb - Warm temperate with dry, warm summer"",,Evergreen Needleleaf Forest"
+"4054,ES-CPa,Spain,Europe,Inactive,39.22417,-0.90305,2009,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+4055,ES-Cst,Spain,Europe,Active,42.305014,2.033568,2011,Cfb - Warm temperate fully humid with warm summer,,Cropland/Natural Vegetation Mosaic
+"4056,ES-EBn,Spain,Europe,Active,38.93706599,-2.64402303,2011,""Csa - Warm temperate with dry, hot summer"",,Closed Shrublands"
+4057,ES-LBr,Spain,Europe,Active,42.098889,1.661389,2011,Cfb - Warm temperate fully humid with warm summer,,Woody Savannas
+"4058,ES-LgS,Spain,Europe,Inactive,37.097936,-2.965833,2007,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+"4059,ES-Ln1,Spain,Europe,Inactive,36.972098,-3.473851,2008,""Csa - Warm temperate with dry, hot summer"",,Closed Shrublands"
+"4060,ES-Ln2,Spain,Europe,Inactive,36.969502,-3.475819,2009,""Csa - Warm temperate with dry, hot summer"",,Closed Shrublands"
+"4061,ES-Pdu,Spain,Europe,Inactive,37.016975,-3.609228,2011,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+4062,ES-PRt,Spain,Europe,Active,42.063333,1.513333,2010,Cfb - Warm temperate fully humid with warm summer,,Woody Savannas
+"4063,ES-QdM,Spain,Europe,Inactive,39.42690514,-4.117171204,2012,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+"4064,ES-Yst,Spain,Europe,Active,38.33893358,-2.350605236,2012,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+4065,FI-Jo2,Finland,Europe,Inactive,60.89903,23.5128,1999,Dfc - Snow fully humid cool summer,,Croplands
+4066,FI-Jo3,Finland,Europe,Inactive,60.8988,23.5131,1999,Dfc - Snow fully humid cool summer,,Croplands
+4067,FI-Ken,Finland,Europe,Inactive,67.98723,24.24305,2012,Dfc - Snow fully humid cool summer,337m,Woody Savannas
+4068,FI-Kns,Finland,Europe,Inactive,60.64683333,24.356167,2004,Dfb - Snow fully humid warm summer,,Evergreen Needleleaf Forest
+4069,FI-Let,Finland,Europe,Inactive,60.641833,23.9597,2009,Dfb - Snow fully humid warm summer,,Evergreen Needleleaf Forest
+4070,FI-Lom,Finland,Europe,Inactive,67.9972,24.20918333,2005,Dfc - Snow fully humid cool summer,,Woody Savannas
+4071,FI-Skj,Finland,Europe,Inactive,64.7807,24.6515,2002,Dfc - Snow fully humid cool summer,,Evergreen Needleleaf Forest
+4072,FI-Ves,Finland,Europe,Inactive,61.3716,25.1055,2001,Dfc - Snow fully humid cool summer,,Evergreen Needleleaf Forest
+4073,FR-EM1,France,Europe,Inactive,49.8721083,3.02065,2008,Cfb - Warm temperate fully humid with warm summer,,Croplands
+"4074,FR-FBn,France,Europe,Inactive,43.24083333,5.679166667,2007,""Csa - Warm temperate with dry, hot summer"",,Evergreen Needleleaf Forest"
+4075,FR-Fgs,France,Europe,Inactive,48.38,-1.18,2008,Cfb - Warm temperate fully humid with warm summer,,Deciduous Broadleaf Forest
+4076,FR-Mau,France,Europe,Inactive,43.38527778,1.292222222,2005,Cfb - Warm temperate fully humid with warm summer,,Croplands
+"4077,GR-Vcs,Greece,Europe,Active,40.889737,24.84893,2013,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+4078,HU-Spr,Hungary,Europe,Inactive,47.6558725,16.4544737,2010,Cfb - Warm temperate fully humid with warm summer,,Mixed Forests
+4079,IE-Ca1,Ireland,Europe,Inactive,52.85879167,-6.918136111,2004,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4080,IE-Dgm,Ireland,Europe,Inactive,51.986179,-8.753931,2009,Cfb - Warm temperate fully humid with warm summer,,Grasslands
+4081,IN-CRR,India,Asia,Inactive,20.45188333,85.94026667,2010,Aw - Equatorial savannah with dry winter,,Croplands
+4082,IT-Be1,Italy,Europe,Inactive,46.00361,13.02556,2006,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4083,IT-Be2,Italy,Europe,Inactive,46.00431,13.02776,2006,Cfb - Warm temperate fully humid with warm summer,,Croplands
+"4084,IT-CA1,Italy,Europe,Active,42.38041111,12.02656111,2011,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+"4085,IT-CA2,Italy,Europe,Active,42.37721944,12.02603889,2011,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+"4086,IT-CA3,Italy,Europe,Active,42.38,12.0222,2011,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+4087,IT-Cas,Italy,Europe,Inactive,45.07004722,8.717522222,2006,Cfa - Warm temperate fully humid with hot summer,,Croplands
+4088,IT-CdD,Italy,Europe,Inactive,42.950231,12.381827,2012,Cfa - Warm temperate fully humid with hot summer,,Croplands
+"4090,IT-Cp2,Italy,Europe,Active,41.70426559,12.35729313,2012,""Csa - Warm temperate with dry, hot summer"",,Evergreen Needleleaf Forest"
+"4091,IT-Ctv,Italy,Europe,Inactive,37.64416,12.84638,2006,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+4092,IT-La2,Italy,Europe,Inactive,45.9542,11.2853,2000,Cfb - Warm temperate fully humid with warm summer,,Evergreen Needleleaf Forest
+"4093,IT-MPn,Italy,Europe,Inactive,41.1073,14.7416,2004,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+4094,IT-Mrs,Italy,Europe,Inactive,42.927225,12.3651,2010,Cfa - Warm temperate fully humid with hot summer,,Croplands
+"4095,IT-MsN,Italy,Europe,Inactive,39.71472,16.27806,2011,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+"4096,IT-Ro3,Italy,Europe,Inactive,42.37539,11.91542,2007,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+"4097,IT-Ro4,Italy,Europe,Inactive,42.37333,11.91922,2007,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+"4098,IT-Rut,Italy,Europe,Inactive,40.993753,17.03274,2010,""Csa - Warm temperate with dry, hot summer"",,Urban and Built-Up"
+4099,IT-SPC,Italy,Europe,Active,44.653869,11.62277,2012,Cfa - Warm temperate fully humid with hot summer,,Croplands
+"4100,IT-Ter,Italy,Europe,Inactive,40.70377778,9.398166667,2004,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+"4101,IT-To1,Italy,Europe,Inactive,42.18967363,11.92155414,2004,""Csa - Warm temperate with dry, hot summer"",,Mixed Forests"
+"4102,IT-To2,Italy,Europe,Inactive,42.18967363,11.92155414,2004,""Csa - Warm temperate with dry, hot summer"",,Mixed Forests"
+4103,IT-Tor,Italy,Europe,Inactive,45.84444,7.578055,2008,Dfc - Snow fully humid cool summer,,Evergreen Needleleaf Forest
+4104,IT-TrF,Italy,Europe,Inactive,45.82376,7.56089,2010,Dfc - Snow fully humid cool summer,,Evergreen Needleleaf Forest
+4105,IT-VdA,Italy,Europe,Inactive,46.19678,11.11354,2007,Dfb - Snow fully humid warm summer,,Cropland/Natural Vegetation Mosaic
+4106,IT-Vig,Italy,Europe,Inactive,45.29591,8.87554,2004,Cfa - Warm temperate fully humid with hot summer,,Cropland/Natural Vegetation Mosaic
+4108,NE-WaD,Niger,Africa,Inactive,13.6463167,2.64301667,2005,BSh - Arid Steppe hot,,Grasslands
+4109,NL-Dij,Netherlands,Europe,Inactive,51.99206111,5.645944444,2007,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4110,NL-Re1,Netherlands,Europe,Inactive,51.9,4.5,2004,Cfb - Warm temperate fully humid with warm summer,,Urban and Built-Up
+4111,NL-Re2,Netherlands,Europe,Inactive,51.9,4.5,2004,Cfb - Warm temperate fully humid with warm summer,,Urban and Built-Up
+4112,NL-Waa,Netherlands,Europe,Inactive,52.83159444,4.909122222,2008,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4113,NL-Zee,Netherlands,Europe,Inactive,52.33480278,5.372588889,2008,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4114,NO-And,Norway,Europe,Inactive,69.14278,16.02222,2009,Dfc - Snow fully humid cool summer,,Open Shrublands
+4115,NO-Blv,Norway,Europe,Active,78.92163086,11.83108521,2008,ET - Polar tundra,,Snow and Ice
+4116,PH-RIf,Philippines,Australia/Oceania,Inactive,14.14119,121.26526,2009,Am - Equatorial monsoon,,Cropland/Natural Vegetation Mosaic
+4117,PH-RIn,Philippines,Australia/Oceania,Inactive,14.14503,121.26094,2009,Am - Equatorial monsoon,,Cropland/Natural Vegetation Mosaic
+4118,PL-Brd,Poland,Europe,Active,52.434181,16.299523,2011,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4119,PL-Tcz,Poland,Europe,Active,53.19295,16.09748333,2011,Cfb - Warm temperate fully humid with warm summer,,Evergreen Needleleaf Forest
+"4120,PT-Cor,Portugal,Europe,Active,39.13841389,-8.33268889,2009,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+4121,RU-Ndm,Russia,Asia,Inactive,65.185,72.525,2009,Dfc - Snow fully humid cool summer,,Woody Savannas
+4122,RU-UPo,Russia,Asia,Inactive,61.93412778,50.22690278,2008,Dfc - Snow fully humid cool summer,,Grasslands
+4123,RU-Vrk,Russia,Asia,Active,67.05467987,62.94046783,2007,Dfc - Snow fully humid cool summer,,Woody Savannas
+4124,SK-Ta1,Slovakia,Europe,Inactive,49.15833333,20.26111111,2005,Dfc - Snow fully humid cool summer,,Cropland/Natural Vegetation Mosaic
+4125,SK-Ta2,Slovakia,Europe,Inactive,49.12638889,20.10777778,2005,Dfc - Snow fully humid cool summer,,Mixed Forests
+4126,UA-Pet,Ukraine,Asia,Inactive,46.45614,30.33609,2008,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4127,UK-LBT,United Kingdom,Europe,Active,51.5215,-0.1389,2011,Cfb - Warm temperate fully humid with warm summer,,Urban and Built-Up
+4128,ZA-Wgn,South Africa,Africa,Inactive,-26.56944444,26.93916667,2010,BSk - Arid Steppe cold,,Grasslands
+4129,CA-MA1,Canada,North America,Inactive,50.164472,-97.876222,,Dfb - Snow fully humid warm summer,,Croplands
+4130,CA-MA2,Canada,North America,Inactive,50.170972,-97.876222,,Dfb - Snow fully humid warm summer,,Cropland/Natural Vegetation Mosaic
+4131,CA-MA3,Canada,North America,Inactive,50.177444,-97.868639,,Dfb - Snow fully humid warm summer,,Croplands
+4132,CA-VSu,Canada,North America,Active,49.2261,-123.0784,2008,Cfb - Warm temperate fully humid with warm summer,,Urban and Built-Up
+4133,CA-Wes,Canada,North America,Inactive,49.0863,-123.1768,2007,Cfb - Warm temperate fully humid with warm summer,,Closed Shrublands
+4142,BE-Maa,Belgium,Europe,Inactive,50.980444,5.631306,,Cfb - Warm temperate fully humid with warm summer,,Woody Savannas
+4143,CZ-KrP,Czech Republic,Europe,Active,49.573257,15.078773,2012,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4144,DE-Bou,Germany,Europe,Active,52.655284,7.183765,2011,Cfb - Warm temperate fully humid with warm summer,,Woody Savannas
+4145,DE-Fen,Germany,Europe,Active,47.8329,11.0607,2010,Cfb - Warm temperate fully humid with warm summer,,Cropland/Natural Vegetation Mosaic
+4146,DE-GsB,Germany,Europe,Active,52.030067,11.103386,2012,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4147,DE-Gwg,Germany,Europe,Inactive,47.57083,11.03261,,Cfb - Warm temperate fully humid with warm summer,,Deciduous Broadleaf Forest
+4148,DE-HoH,Germany,Europe,Active,52.085306,11.222233,2014,Cfb - Warm temperate fully humid with warm summer,,Mixed Forests
+4149,DE-Lkb,Germany,Europe,Active,49.09961667,13.30466667,2009,Cfb - Warm temperate fully humid with warm summer,,Evergreen Needleleaf Forest
+4150,DE-Msr,Germany,Europe,Active,47.80927,11.45791,2010,Cfb - Warm temperate fully humid with warm summer,,Mixed Forests
+4151,DE-RuR,Germany,Europe,Active,50.6219142,6.3041256,2011,Cfb - Warm temperate fully humid with warm summer,,Grasslands
+4152,DE-RuS,Germany,Europe,Active,50.8659122,6.4471689,2011,Cfb - Warm temperate fully humid with warm summer,,Urban and Built-Up
+4153,DE-RuW,Germany,Europe,Active,50.50490703,6.33101886,2010,Cfb - Warm temperate fully humid with warm summer,,Evergreen Needleleaf Forest
+4154,DE-SfN,Germany,Europe,Active,47.806389,11.3275,2010,Cfb - Warm temperate fully humid with warm summer,,Evergreen Needleleaf Forest
+4155,DK-RCW,Denmark,Europe,Active,55.680682,12.101398,2012,Cfb - Warm temperate fully humid with warm summer,,Croplands
+"4156,ES-Gdn,Spain,Europe,Inactive,37.910917,-3.228444,,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+4157,IT-Isp,Italy,Europe,Active,45.812643,8.633579,2013,Cfb - Warm temperate fully humid with warm summer,,Woody Savannas
+"4158,IT-PCm,Italy,Europe,Active,40.8741,14.2504,2014,""Csa - Warm temperate with dry, hot summer"",,Urban and Built-Up"
+"4159,IT-SR2,Italy,Europe,Active,43.732026,10.290954,2013,""Csa - Warm temperate with dry, hot summer"",,Mixed Forests"
+4160,NO-Adv,Norway,Europe,Active,78.186,15.923,2011,ET - Polar tundra,,Open Shrublands
+4161,PL-Bdg,Poland,Europe,Active,53,17.96,2008,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4162,PL-Wlw,Poland,Europe,Active,52.84,18.31,2010,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4163,RU-SkP,Russia,Asia,Active,62.255,129.168,2001,Dfd - Snow fully humid extremely continental,,Deciduous Needleleaf Forest
+4164,SE-Htm,Sweden,Europe,Inactive,56.09763,13.41897,2015,Cfb - Warm temperate fully humid with warm summer,,Mixed Forests
+4165,SE-Lnn,Sweden,Europe,Inactive,58.34062958,13.10176754,,Dfb - Snow fully humid warm summer,,Croplands
+4166,SE-Sto,Sweden,Europe,Inactive,68.35600281,19.04520988,,ET - Polar tundra,,Permanent Wetlands
+4167,SE-Svb,Sweden,Europe,Inactive,64.2561,19.77451,2015,Dfc - Snow fully humid cool summer,,Evergreen Needleleaf Forest
+4168,SN-Dhr,Senegal,Africa,Active,15.40278,-15.43222,2010,BWh - Arid desert hot,,Grasslands
+4169,AU-ASM,Australia,Australia/Oceania,Active,-22.283,133.249,2010,BSh - Arid Steppe hot,,Open Shrublands
+4170,AU-Cpr,Australia,Australia/Oceania,Active,-34.00206,140.58912,2010,BSk - Arid Steppe cold,,Closed Shrublands
+4171,AU-Cum,Australia,Australia/Oceania,Active,-33.613297,150.722466,2012,Cfa - Warm temperate fully humid with hot summer,,Woody Savannas
+"4172,AU-Gin,Australia,Australia/Oceania,Active,-31.375,115.65,2011,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+"4173,AU-Rgf,Australia,Australia/Oceania,Active,-32.506102,116.966827,2015,""Csa - Warm temperate with dry, hot summer"",,Croplands"
+4174,AU-Rig,Australia,Australia/Oceania,Active,-36.656,145.576,2011,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4175,AU-TTE,Australia,Australia/Oceania,Active,-22.287,133.64,2012,BWh - Arid desert hot,,Open Shrublands
+4176,AU-Whr,Australia,Australia/Oceania,Active,-36.6732,145.0294,2011,Cfb - Warm temperate fully humid with warm summer,,Woody Savannas
+4177,CL-SDF,Chile,South America,Active,-41.883,-73.676,2013,Cfb - Warm temperate fully humid with warm summer,,Evergreen Broadleaf Forest
+4178,CL-SDP,Chile,South America,Active,-41.879,-73.666,2013,Cfb - Warm temperate fully humid with warm summer,,Evergreen Broadleaf Forest
+4179,FR-EM2,France,Europe,Active,49.87211,3.02065,2015,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4180,CA-TPD,Canada,North America,Active,42.635312,-80.557561,2012,Dfb - Snow fully humid warm summer,,Deciduous Broadleaf Forest
+4181,AQ-KSe,Antarctica,Australia/Oceania,Active,-62.232115,-58.804321,2002,EF - Polar frost,,Water
+4182,FI-Kmp,Finland,Europe,Active,60.20288716,24.96104572,2005,Dfb - Snow fully humid warm summer,,Urban and Built-Up
+4183,AU-Ync,Australia,Australia/Oceania,Active,-34.988282,146.291606,2012,BSk - Arid Steppe cold,,Croplands
+4184,BD-Mym,Bangladesh,Asia,Active,24.739348,90.426292,2006,Am - Equatorial monsoon,,Croplands
+"4185,ID-Kan,Indonesia,Asia,Active,1,101.266667,2011,""Af - Equatorial rainforest, fully humid"",,Cropland/Natural Vegetation Mosaic"
+4186,IN-Bet,India,Asia,Active,21.863011,77.426019,2012,As - Equatorial savannah with dry summer,,Woody Savannas
+4187,IN-Brk,India,Asia,Active,30.110682,78.20343,2012,Cwa - Warm temperate with dry winter and hot summer,,Mixed Forests
+4188,IN-Hdw,India,Asia,Active,29.149319,79.421103,2012,Cwa - Warm temperate with dry winter and hot summer,,Woody Savannas
+4189,IN-IAR,India,Asia,Active,28.643839,77.152712,2013,BSh - Arid Steppe hot,,Urban and Built-Up
+4190,JP-Aou,Japan,Asia,Active,34.786316,134.370861,1993,Cfa - Warm temperate fully humid with hot summer,,Mixed Forests
+4191,JP-APP,Japan,Asia,Active,40.022356,140.939255,2000,Dfa - Snow with fully humid hot summer,,Mixed Forests
+4192,JP-Bre,Japan,Asia,Active,42.4,142.466667,2007,Dfb - Snow fully humid warm summer,,Cropland/Natural Vegetation Mosaic
+4193,JP-Das,Japan,Asia,Active,78.916667,11.933333,2003,ET - Polar tundra,,Snow and Ice
+4194,JP-FHK,Japan,Asia,Active,35.443528,138.764722,2006,Dfb - Snow fully humid warm summer,,Mixed Forests
+4195,JP-Fsk,Japan,Asia,Active,40.654722,140.485278,2006,Cfa - Warm temperate fully humid with hot summer,,Croplands
+4196,JP-Kar,Japan,Asia,Active,36.4,138.583333,2002,Dfb - Snow fully humid warm summer,,Mixed Forests
+4197,JP-KEW,Japan,Asia,Active,34.963611,135.994444,2001,Cfa - Warm temperate fully humid with hot summer,,Mixed Forests
+4198,JP-Kob,Japan,Asia,Active,31.966667,130.933333,2004,Cfa - Warm temperate fully humid with hot summer,,Mixed Forests
+4199,JP-Nae,Japan,Asia,Active,36.891703,138.766823,2009,Dfb - Snow fully humid warm summer,,Mixed Forests
+4200,JP-NFT,Japan,Asia,Active,36.05132,140.099316,1997,Cfa - Warm temperate fully humid with hot summer,,Woody Savannas
+4201,JP-Nks,Japan,Asia,Active,43.54606,144.966545,2004,Dfc - Snow fully humid cool summer,,Woody Savannas
+4202,JP-Nsu,Japan,Asia,Active,36.925743,139.967766,2004,Cfa - Warm temperate fully humid with hot summer,,Croplands
+4203,JP-Ooz,Japan,Asia,Active,34.563469,135.533483,2015,Cfa - Warm temperate fully humid with hot summer,,Urban and Built-Up
+4204,JP-Sak,Japan,Asia,Active,34.573402,135.483013,2008,Cfa - Warm temperate fully humid with hot summer,,Urban and Built-Up
+4205,JP-Sap,Japan,Asia,Active,42.986836,141.385288,1999,Dfb - Snow fully humid warm summer,,Mixed Forests
+4206,JP-Sim,Japan,Asia,Active,36.211361,139.947389,2007,Cfa - Warm temperate fully humid with hot summer,,Woody Savannas
+4207,JP-Srk,Japan,Asia,Active,40.565556,140.127778,2008,Cfa - Warm temperate fully humid with hot summer,,Mixed Forests
+4208,JP-Szn,Japan,Asia,Active,42.407267,142.475696,2004,Dfb - Snow fully humid warm summer,,Cropland/Natural Vegetation Mosaic
+4209,JP-Ta2,Japan,Asia,Active,36.139722,137.370833,2005,Dfb - Snow fully humid warm summer,,Mixed Forests
+4210,JP-TEF,Japan,Asia,Active,45.0558,142.1073,2001,Dfb - Snow fully humid warm summer,,Mixed Forests
+4211,KR-Ceo,South Korea,Asia,Active,37.15979,127.652729,2008,Dwa - Snow dry winter hot summer,,Croplands
+4212,KR-Gmj,South Korea,Asia,Active,35.745328,126.852522,2011,Cfa - Warm temperate fully humid with hot summer,,Urban and Built-Up
+4213,KR-Hae,South Korea,Asia,Active,34.5536,126.5643,2002,Cfa - Warm temperate fully humid with hot summer,,Croplands
+4214,KR-Kw2,South Korea,Asia,Active,37.75,127.15,2002,Dwa - Snow dry winter hot summer,,Mixed Forests
+4215,KR-Seo,South Korea,Asia,Active,37.93885,126.9547,2007,Dwa - Snow dry winter hot summer,,Deciduous Broadleaf Forest
+4217,MN-Knt,Mongolia,Asia,Active,48.351861,108.654333,2004,Dwc - Snow dry winter cool summer,,Croplands
+"4218,MY-Cer,Malaysia,Asia,Active,1.400444,111.398333,2011,""Af - Equatorial rainforest, fully humid"",,Evergreen Broadleaf Forest"
+"4219,MY-Lam,Malaysia,Asia,Active,4.2,114.033333,,""Af - Equatorial rainforest, fully humid"",,Evergreen Broadleaf Forest"
+"4220,MY-Mud,Malaysia,Asia,Active,1.482989,111.153374,2011,""Af - Equatorial rainforest, fully humid"",,Evergreen Broadleaf Forest"
+"4221,MY-PSO,Malaysia,Asia,Active,2.973,102.3062,2002,""Af - Equatorial rainforest, fully humid"",,Evergreen Broadleaf Forest"
+"4222,MY-Sbu,Malaysia,Asia,Active,2.186667,111.84325,2011,""Af - Equatorial rainforest, fully humid"",,Cropland/Natural Vegetation Mosaic"
+4223,RU-Tur,Russia,Asia,Active,64.208888,100.463555,2004,Dfc - Snow fully humid cool summer,,Woody Savannas
+4224,TH-Bue,Thailand,Asia,Active,18.239134,103.320122,2012,Aw - Equatorial savannah with dry winter,,Woody Savannas
+4225,TH-Cgs,Thailand,Asia,Active,13.665556,101.441389,2006,Aw - Equatorial savannah with dry winter,,Cropland/Natural Vegetation Mosaic
+4226,TH-Kog,Thailand,Asia,Active,18.8,98.9,1997,Aw - Equatorial savannah with dry winter,,Evergreen Broadleaf Forest
+4227,TH-Moh,Thailand,Asia,Active,18.422942,99.718037,2000,Aw - Equatorial savannah with dry winter,,Woody Savannas
+4228,TH-Rtc,Thailand,Asia,Active,13.583333,99.5,2008,Aw - Equatorial savannah with dry winter,,Cropland/Natural Vegetation Mosaic
+4229,TW-LHC,Taiwan,Asia,Active,23.930967,120.89415,2005,Cwb - Warm temperate with dry winter and warm summer,,Evergreen Broadleaf Forest
+4230,VN-NCT,Vietnam,Asia,Active,11.457145,107.402916,2011,Aw - Equatorial savannah with dry winter,,Evergreen Broadleaf Forest
+4231,DE-RbW,Germany,Europe,Active,47.72991,10.96898,2011,Cfb - Warm temperate fully humid with warm summer,,Cropland/Natural Vegetation Mosaic
+"4232,ES-LM1,Spain,Europe,Active,39.94269,-5.778683,2014,""Csa - Warm temperate with dry, hot summer"",,Savannas"
+"4233,ES-LM2,Spain,Europe,Active,39.94269,-5.778683,2014,""Csa - Warm temperate with dry, hot summer"",,Woody Savannas"
+4234,FI-Kvr,Finland,Europe,Active,61.84667,24.28028,2009,Dfc - Snow fully humid cool summer,,Evergreen Needleleaf Forest
+4235,FR-MsS,France,Europe,Active,48.53816,5.31187,2012,Cfb - Warm temperate fully humid with warm summer,,Deciduous Broadleaf Forest
+4236,FR-OnV,France,Europe,Active,48.50846,5.213463,2013,Cfb - Warm temperate fully humid with warm summer,,Croplands
+4237,IT-BFt,Italy,Europe,Active,45.202225,10.742714,2012,Cfa - Warm temperate fully humid with hot summer,,Mixed Forests
+4238,RU-Ch2,Russia,Asia,Active,68.61689,161.35089,2013,Dfc - Snow fully humid cool summer,,Open Shrublands
+4239,RU-Tks,Russia,Asia,Active,71.594267,128.887817,2011,Dfd - Snow fully humid extremely continental,,Open Shrublands
+4240,UK-Png,United Kingdom,Europe,Active,52.422332,-4.068402,2012,Cfb - Warm temperate fully humid with warm summer,,Grasslands
+4242,Au-Cow,Australia,Australia/Oceania,Active,-16.23819,145.427151,2009,Am - Equatorial monsoon,,Evergreen Broadleaf Forest
+4243,Au-Rob,Australia,Australia/Oceania,Active,-17.117441,145.630168,2013,Cfa - Warm temperate fully humid with hot summer,,Evergreen Broadleaf Forest
+4244,CA-DL1,Canada,North America,Active,64.8689,-111.5748,2004,Dfc - Snow fully humid cool summer,,Open Shrublands
+4245,CA-DL2,Canada,North America,Active,64.8648,-111.5677,2006,Dfc - Snow fully humid cool summer,,Permanent Wetlands
+4246,CR-SoC,Costa Rica,South America,Active,10.3827,-84.621,2014,Aw - Equatorial savannah with dry winter,,Evergreen Broadleaf Forests
+4247,PA-Bar,Panama,South America,Active,9.154,-79.848,2012,Am - Equatorial monsoon,,Evergreen Broadleaf Forests
+4248,US-Bes,United States,North America,Active,71.2809,-156.5965,2005,ET - Polar tundra,,Permanent Wetlands
+4249,US-CRT,United States,North America,Inactive,41.6285,-83.3471,2011,Dfa - Snow with fully humid hot summer,,Cropland
+4250,US-Cst,United States,North America,Active,33.0442,-91.9204,2012,Cfa - Warm temperate fully humid with hot summer,,Evergreen Needleleaf Forests
+4251,US-Dea,United States,North America,Active,32.8136,-115.4423,2014,BWh - Arid desert hot,,Cropland
+4252,US-Deu,United States,North America,Active,32.8056,-115.4456,2014,BWh - Arid desert hot,,Urban and Built-up
+4253,US-EML,United States,North America,Active,63.8784,-149.2536,2008,Dfc - Snow fully humid cool summer,,Open Shrublands
+4254,US-KFB,United States,North America,Active,39.0745,-96.5951,2006,Cfa - Warm temperate fully humid with hot summer,,Grasslands
+4255,US-KL1,United States,North America,Active,42.4847,-85.4422,2009,Dfb - Snow fully humid warm summer,,Cropland
+4256,US-KL2,United States,North America,Active,42.4767,-85.4467,2009,Dfb - Snow fully humid warm summer,,Grasslands
+4257,US-KL3,United States,North America,Active,42.4736,-85.4474,2009,Dfb - Snow fully humid warm summer,,Grasslands
+4258,US-KLS,United States,North America,Active,38.7745,-97.5684,2012,Cfa - Warm temperate fully humid with hot summer,,Grasslands
+4259,US-KM1,United States,North America,Active,42.4376,-85.3288,2009,Dfb - Snow fully humid warm summer,,Cropland
+4260,US-KM2,United States,North America,Active,42.444,-85.3104,2009,Dfb - Snow fully humid warm summer,,Grasslands
+4261,US-KM3,United States,North America,Active,42.444,-85.3098,2009,Dfb - Snow fully humid warm summer,,Grasslands
+4262,US-KM4,United States,North America,Active,42.4423,-85.3301,2009,Dfb - Snow fully humid warm summer,,Grasslands
+4263,US-LGr,United States,North America,Active,34.1377,-101.4787,2013,BSk - Arid Steppe cold,,Grasslands
+4264,US-NC3,United States,North America,Active,35.799,-76.656,2013,Cfa - Warm temperate fully humid with hot summer,,Evergreen Needleleaf Forests
+4265,US-NC4,United States,North America,Inactive,35.7879,-75.9038,2009,Cfa - Warm temperate fully humid with hot summer,,Permanent Wetlands
+4266,US-NGB,United States,North America,Active,71.28,-156.6092,2012,ET - Polar tundra,,Snow and Ice
+4267,US-OWC,United States,North America,Active,41.3795,-82.5125,2015,Dfa - Snow with fully humid hot summer,,Permanent Wetlands
+4268,US-Prr,United States,North America,Active,65.1237,-147.4876,2011,Dfc - Snow fully humid cool summer,,Evergreen Needleleaf Forests
+4269,US-Ro4,United States,North America,Active,44.4041,-93.4201,2014,Dfa - Snow with fully humid hot summer,,Grasslands
+4270,US-SBC,United States,North America,Active,37.5734,-79.0848,2015,Cfa - Warm temperate fully humid with hot summer,,Evergreen Needleleaf Forests
+4271,US-SRG,United States,North America,Active,31.7894,-110.8277,2008,BSk - Arid Steppe cold,,Grasslands
+4272,US-Sta,United States,North America,Inactive,41.3966,-106.8024,2006,Dfb - Snow fully humid warm summer,,Open Shrublands
+4273,US-StJ,United States,North America,Active,39.0882,-75.4372,2015,Cfa - Warm temperate fully humid with hot summer,,Permanent Wetlands
+"4274,US-SuM,United States,North America,Inactive,20.7981,-156.454,2013,""Af - Equatorial rainforest, fully humid"",,Cropland"
+"4275,US-SuS,United States,North America,Inactive,20.7847,-156.4039,2011,""Af - Equatorial rainforest, fully humid"",,Cropland"
+"4276,US-SuW,United States,North America,Inactive,20.8246,-156.4913,2011,""Af - Equatorial rainforest, fully humid"",,Cropland"
+"4277,US-Tw1,United States,North America,Active,38.1074,-121.6469,2012,""Csa - Warm temperate with dry, hot summer"",,Permanent Wetlands"
+"4278,US-Tw2,United States,North America,Inactive,38.1047,-121.6433,2012,""Csa - Warm temperate with dry, hot summer"",,Cropland"
+"4279,US-Tw3,United States,North America,Active,38.1159,-121.6467,2013,""Csa - Warm temperate with dry, hot summer"",,Cropland"
+"4280,US-Tw4,United States,North America,Active,38.103,-121.6414,2013,""Csa - Warm temperate with dry, hot summer"",,Permanent Wetlands"
+4281,US-ULM,United States,North America,Active,32.457,-91.9743,2013,Cfa - Warm temperate fully humid with hot summer,,Deciduous Broadleaf Forests
+4282,US-UM3,United States,North America,Inactive,45.5686,-84.6707,2013,Dfb - Snow fully humid warm summer,,
+4283,US-Wdn,United States,North America,Inactive,40.7838,-106.2618,2006,Dfc - Snow fully humid cool summer,,Open Shrublands
+4284,US-WPT,United States,North America,Inactive,41.4646,-82.9962,2011,Dfa - Snow with fully humid hot summer,,Permanent Wetlands
+4285,DK-RCT,Denmark,Europe,Inactive,55.694101,12.088284,,Cfb - Warm temperate fully humid with warm summer,,
+"4286,ES-FtD,Spain,Europe,Inactive,36.99818,-6.434566,,""Csa - Warm temperate with dry, hot summer"",,"
+"4287,ES-MtN,Spain,Europe,Inactive,36.991805,-6.482628,2012,""Csa - Warm temperate with dry, hot summer"",,"
+"4288,IT-Gln,Italy,Europe,Inactive,40.94711666,14.11708888,,""Csa - Warm temperate with dry, hot summer"",,"
+4289,IT-OVr,Italy,Europe,Inactive,43.91111111,12.90416666,2014,Cfb - Warm temperate fully humid with warm summer,,
+4290,IT-OXm,Italy,Europe,Inactive,43.77446388,11.25524166,2005,Cfb - Warm temperate fully humid with warm summer,,
+"4291,IT-SMc,Italy,Europe,Inactive,40.84725555,14.25781666,2014,""Csa - Warm temperate with dry, hot summer"",,"
+4292,PL-Kpt,Poland,Europe,Inactive,53.591884,22.892348,,Dfb - Snow fully humid warm summer,,
+4293,RU-KsC,Russia,Asia,Inactive,57.25146,65.96931,2013,Dfb - Snow fully humid warm summer,,
+4294,RU-KsG,Russia,Asia,Inactive,57.2528,65.99321,2013,Dfb - Snow fully humid warm summer,,
+4295,RU-Uts,Russia,Asia,Inactive,57.154907,65.343002,2012,Dfb - Snow fully humid warm summer,,
+4296,CA-LuM,Canada,North America,Inactive,43.9201,-80.4052,2014,Dfb - Cold/Without_Dry_Season/Warm_Summer,,Permanent Wetlands
+4297,US-ADR,United States,North America,Active,36.7653,-116.6933,2011,,,Barren or Sparse Vegetation
+4298,US-Bsg,United States,North America,Active,43.4712,-119.6909,2012,BSk - Arid/Steppe/Cold,,Open Shrublands
+4299,US-GBT,United States,North America,Inactive,41.3658,-106.2397,1991,Dfc - Cold/Without_Dry_Season/Cold_Summer,,Evergreen Needleleaf Forests
+4300,US-Wgr,United States,North America,Active,45.1126,-122.6561,2014,Csb - Temperate/Dry_Summer/Warm_Summer,,Cropland
+4301,US-Wpp,United States,North America,Active,44.1369,-123.1824,2014,Csb - Temperate/Dry_Summer/Warm_Summer,,Deciduous Broadleaf Forests
+4302,US-Wwt,United States,North America,Active,45.1089,-122.6664,2014,Csb - Temperate/Dry_Summer/Warm_Summer,,Cropland

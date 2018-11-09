@@ -129,7 +129,7 @@ The examples shown below are for site-scale simulations, i.e., where one model r
 Define the simulation settings as a list. Components of the simulation settings should specify only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (CSV file created "by hand" or some other more clever method for large ensembles - up to you.). The function `prepare_setup_sofun()` complements the simulation settings list by these additional components as lists with elements for each site, nested within the simulation settings list.
 ```{r}
 settings_sims_sitescale <- list(
-  path_siteinfo   = "./metainfo_fluxnet2015.csv",
+  path_siteinfo   = "my_external_stuff/metainfo_fluxnet2015.csv",
   ensemble        = TRUE,
   setup           = "site",
   name            = "fluxnet2015",
@@ -179,6 +179,12 @@ settings_sims_sitescale <- list(
 - `tempstress`: Switch (`TRUE` of `FALSE`) defining whether temperature stress function is to be applied to GPP.
 - `lout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (ascii text file for time series). To be anbandoned, only NetCDF output should be maintained.
 - `lout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (NetCDF file).
+
+For site-scale simulations conducted at FLUXNET 2015 Tier 1 sites, the meta information is provided along with the package `rsofun`. Let's look at this data as an example and save it in a CSV file, corresponding to the information specified above (under `settings_sims_sitescale$path_siteinfo`).
+```{r}
+print( metainfo_Tier1_sites_kgclimate_fluxnet2015 )
+write_csv( metainfo_Tier1_sites_kgclimate_fluxnet2015, path = settings_sims_sitescale$path_siteinfo )
+```  
 
 ### Input settings
 

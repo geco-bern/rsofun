@@ -5,10 +5,9 @@
 #' @param params_opt A named list of calibrated parameter values with names corresponding to the SOFUN model parameter names.  
 #' @param dir_sofun A character string specifying the path of the SOFUN parent directory.
 #'
-#' @return
+#' @return Returns the values that are written into parameter files.
 #' @export
 #'
-# @examples
 update_params <- function( params_opt, dir_sofun ){
   system( paste0( "cp ", dir_sofun, "params_std/* ", dir_sofun, "params/") )
   
