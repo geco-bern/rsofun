@@ -2,7 +2,7 @@
 #'
 #' Checks if FLUXNET 2015 files are available for this variable and initiates download if not.
 #'
-#' @param path A character string specifying the path of FLUXNET 2015 data
+#' @param path A character string specifying the local path of FLUXNET 2015 data.
 #' @param sitename A character string specifying the site name for which FLUXNET 2015 data is searched (based on the site name appearing as part of the respective file name). Defaults to NA.
 #'
 #' @return Error

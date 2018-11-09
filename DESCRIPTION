@@ -4,7 +4,8 @@ Version: 0.0.0.9000
 Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
 Description: What the package does (one paragraph).
 License: What license is it under?
-Depends: BayesianTools,
+Depends:
+    BayesianTools,
     dplyr,
     GenSA,
     ggplot2,
@@ -23,8 +24,9 @@ Depends: BayesianTools,
     sp,
     stringr,
     tidyr
-Suggests: caret,
+Suggests:
+    caret,
     neuralnet,
     nnet,
     testthat
-RoxygenNote: 6.0.1
+RoxygenNote: 5.0.1

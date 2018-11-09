@@ -1,19 +1,17 @@
-
-#' Setup SOFUN settings
+#' Prepare the SOFUN model setup.
 #'
-#' Prepares the setup for running SOFUN with simulation settings defined by argument 'settings'.
-#' In the Fortran version, these settings are read in run-time from parameter files (text files,
-#' one for each site, and simulation).
+#' Prepares the setup for running SOFUN, including linking parameter, input, and output directories, 
+#' creating simulation and site parameter files, and complementing the settings (passed as argument).
 #'
-#' @param settings a named list with the settings.
-#' @param calibvars TODO
-#' @param write_paramfils if \code{TRUE}, write the parameter files.
+#' @param settings A named list containing the simulation settings (see vignette_rsofun.pdf for more information and examples)
+#' @param write_paramfils if \code{TRUE}, simulation and site parameter files are written.
 #'
-#' @return a list with the settings.
+#' @return The complemented list of the settings, passed as argument \code{settings}.
 #' @export
 #'
-# @examples
-prepare_setup_sofun <- function( settings, calibvars = c(), write_paramfils = TRUE ){
+#' @examples settings <- prepare_setup_sofun( settings, write_paramfils = TRUE )
+#' 
+prepare_setup_sofun <- function( settings, write_paramfils = TRUE ){
 
   ## Make sure the SOFUN model directory exists
   if (!dir.exists(settings$dir_sofun)) system( paste0( "mkdir -p ", settings$dir_sofun ) )

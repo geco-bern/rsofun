@@ -2,7 +2,7 @@
 #'
 #' Checks if GePiSaT files are available for this variable and initiates download if not.
 #'
-#' @param path A character string specifying the path of GePiSaT data
+#' @param path A character string specifying the local path of GePiSaT data
 #' @param sitename A character string specifying the site name for which GePiSaT data is searched (based on the site name appearing as part of the respective file name). Defaults to NA.
 #'
 #' @return Error

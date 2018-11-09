@@ -1,18 +1,20 @@
-#' Prepare the inputs for SOFUN
+#' Processes SOFUN model input.
 #'
-#' Creates all the input files/links necessary to run simulations
+#' Handles the processing of model inputs (including the optional downloading from
+#' a remote server), and links input files to the SOFUN model input directory (\code{lonlat} setup),
+#' or writes text files of time series (site-scale setup). 
+#' 
+#' @param settings_input A list containging the model input settings. See vignette_rsofun.pdf for more information and examples.
+#' @param settings_sims A list containing model simulation settings from \code{\link{prepare_setup_sofun}}.  See vignette_rsofun.pdf for more information and examples.
+#' @param return_data If \code{TRUE}, input data is returned as a named list of data frames (tibbles), containing input data for each site (not available in the \code{lonlat} setup).
+#' @param overwrite_climate if \code{TRUE}, climate input text files in the site-scale setup are overwritten.
+#' @param overwrite_fapar if \code{TRUE}, fAPAR input text files in the site-scale setup are overwritten.
+#' @param verbose if \code{TRUE}, additional messages are printed.
 #'
-#' @param settings_input a settings list from \code{\link{prepare_setup_sofun}}.
-#' @param settings_sims TODO
-#' @param return_data if \code{TRUE}, TODO
-#' @param overwrite_climate if \code{TRUE}, TODO
-#' @param overwrite_fapar if \code{TRUE}, TODO
-#' @param verbose if \code{TRUE}, TODO
-#'
-#' @return TODO
+#' @return if \code{return_data == TRUE}, a named list of data frames (tibbles) containing input data for each site is returned. Otherwise, a depressing character string is returned.
 #' @export
 #'
-#' @examples
+#' @examples inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE, overwrite_climate = FALSE, overwrite_fapar = TRUE, verbose = TRUE )
 #' 
 prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALSE, overwrite_climate=FALSE, overwrite_fapar=FALSE, verbose=FALSE ){
 

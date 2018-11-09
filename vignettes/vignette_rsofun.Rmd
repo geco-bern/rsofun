@@ -142,6 +142,7 @@ settings_sims_sitescale <- list(
   in_ppfd         = TRUE,
   recycle         = 1,
   spinupyears     = 10,
+  calibvars       = c(),
   soilmstress     = TRUE,
   tempstress      = TRUE,
   loutdgpp        = TRUE,
@@ -173,6 +174,7 @@ settings_sims_sitescale <- list(
 - `in_ppfd`: Switch (`TRUE` of `FALSE`) whether PPFD should be read from data (prescribed) or simulated online using SPLASH and prescribed fractional cloud cover data.
 - `recycle`: Periodicity (integer, number of years) of repeating forcing years during spinup (e.g. if the simulation start year is 1982 and `recycle=3`, then forcing years 1979-1981 are repeated during the duration of the model spinup, so that the last year of the spinup is forcing year 1981. For `recycle=1` and simulation start year 1982, forcing year 1981 is used for all years of the model spinup. Here, 'forcing year' refers to the year AD in the climate, CO2, fAPAR, etc. data used as model forcing.
 - `spinupyears`: Integer, number of model spinup years before the transient simulation. Use `spinupyears > 0` if the model contains pool variables that that are simulated by dynamics that depend on their current state (typically soil water storage, or plant and soil carbon pools). Typically `spinupyears = 10` is sufficient to bring soil water pools to equilibrium across the globe (unless you chose a large soil water holding capacity).
+- `calibvars`: A vector of strings specifying which variables are to be calibrated. Use `c()` (used as default) for a standard model setup. See vignette `calib_sofun.pdf` for an example of a model calibration setup.
 - `soilmstress`: Switch (`TRUE` of `FALSE`) defining whether soil moisture stress function is to be applied to GPP.
 - `tempstress`: Switch (`TRUE` of `FALSE`) defining whether temperature stress function is to be applied to GPP.
 - `lout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (ascii text file for time series). To be anbandoned, only NetCDF output should be maintained.
@@ -270,6 +272,7 @@ settings_sims_lonlat <- list(
   nyeartrend      = 35,
   recycle         = 1,
   spinupyears     = 10,
+  calibvars       = c(),
   soilmstress     = FALSE,
   tempstress      = FALSE,
   c3              = TRUE,
@@ -364,13 +367,10 @@ Create a run directory with all the simulation parameter files (defining simulat
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 settings_sims_sitescale <- prepare_setup_sofun( 
   settings = settings_sims_sitescale, 
-  calibvars = c(),
   write_paramfils = TRUE 
   )
 save( settings_sims_sitescale, file = "settings_sims_sitescale.Rdata" )
 ```
-
-The separate argument `calibvars = c()` specifies that this is not a calibration setup (the vector of target varibles for calibration is empty). 
 
 ## Prepare inputs
 Prepare SOFUN input (climate input, CO2, etc.). Complements `settings_input`. This will require inputs from the user through the prompt, entered in the console to specify whether data files should be downloaded from Imperial CX1. In case you chose to download, you must have access to CX1 and be connected to the Imperial VPN. Once asked (see console!), enter your user name on CX1. This also requires that no additional entering of the password is required. In order to set this up, you need to generate an SSH key pair beforehand (see [here](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2). 
