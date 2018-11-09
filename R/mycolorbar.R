@@ -17,7 +17,9 @@ mycolorbar <- function( col,           # a vector of colors from which to interp
   ## defined by 'layout'.
   ## Beni Stocker, 3.6.2013
   ## -------------------------------------------------------------------------
-  library(gplots)
+
+  if (!requireNamespace("gplots", quietly = TRUE))
+    stop("Please, install 'gplots' package")
 
   if (length(lev)>3){
     explicit <- TRUE

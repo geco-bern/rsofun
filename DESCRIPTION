@@ -6,7 +6,9 @@ Description: This package  provides functions for all the routine steps in runni
 License: GNU GENERAL PUBLIC LICENSE
 SystemRequirements: This package uses bash scripts to run NCO (http://nco.sourceforge.net/) and CDO (https://code.mpimet.mpg.de/) commands.
 LazyData: true
-Depends:
+Imports:
+    dplyr,
+    ggplot2,
     lubridate,
     Metrics,
     mgcv,
@@ -18,17 +20,17 @@ Depends:
     stringr,
     tidyr
 Suggests:
-    raster,
-    sp,
-    LSD,
-    maptools,
     BayesianTools,
-    dplyr,
-    GenSA,
-    ggplot2,
-    hydroGOF,
     caret,
+    GenSA,
+    gplots,
+    hydroGOF,
+    LSD,
+    maps,
+    maptools,
     neuralnet,
     nnet,
+    raster,
+    sp,
     testthat
 RoxygenNote: 6.0.1

@@ -1,8 +1,7 @@
 plot_map_siteoverview <- function( df, background, plotfiln=NA ){
 
-          require( dplyr, quietly = TRUE )  
-
-  source("../utilities/mycolorbar.R")
+  if (!requireNamespace("maps", quietly = TRUE))
+      stop("Please, install 'maps' package")
 
   ## half degree resolution
   lon <- seq(-179.75, 179.75, 0.5)

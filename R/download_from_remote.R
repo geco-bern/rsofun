@@ -18,8 +18,6 @@
 ## Manages the path specification for MODIS FPAR data download from CX1
 ##-----------------------------------------------------------
 download_from_remote <- function( dir_remote, dir_local, pattern = NA, uname = NULL, address_remote = NULL, getfiles = NA ){
-  
-  require(rlang)
 
   ans <- readline( prompt = paste0("Are you still happy with downloading to ", dir_local, "? (y/n)") )
   if (ans=="y"){
