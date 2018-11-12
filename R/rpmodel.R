@@ -9,27 +9,28 @@
 # Written by Benjamin Stocker, adopted from Python code written by Tyler Davis
 #
 #------------------------------------------------------------------------
-rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
+rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="full", returnvar = NULL ){
   #-----------------------------------------------------------------------
-  # Input:    - fpar (unitless)    : monthly fraction of absorbed photosynthetically active radiation
+  # Input:    - fapar (unitless)   : monthly fraction of absorbed photosynthetically active radiation
   #           - ppfd (mol/m2)      : monthly photon flux density
   #           - co2 (ppm)          : atmospheric CO2 concentration
   #           - tc (deg C)         : monthly air temperature
-  #           - cpalpha (unitless, within [0,1.26]) : monthly Cramer-Prentice-alpha
   #           - vpd (Pa)           : mean monthly vapor pressure -- CRU data is in hPa
   #           - elv (m)            : elevation above sea-level
   # Output:   list of 
   #  xxxx gpp (mol/m2/month)   : gross primary production
   #-----------------------------------------------------------------------
-  ## P-model parameters
-  kphio <- 0.0579       # quantum efficiency (Long et al., 1993)
+
+  #-----------------------------------------------------------------------
+  # Fixed parameters
+  #-----------------------------------------------------------------------
+  c_molmass <- 12.0107  # molecular mass of carbon (g)
   kPo   <- 101325.0     # standard atmosphere, Pa (Allen, 1973)
   kTo   <- 25.0         # base temperature, deg C (Prentice, unpublished)
-  c_molmass <- 12.0107  # molecular mass of carbon (g)
   # beta <- 244.033
   beta <- 146.0         # unit cost ratio (see Prentice et al.,2014)
+  rd_to_vcmax <- 0.015  # Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     
-  #-----------------------------------------------------------------------
   # Metabolic N ratio (N per unit Vcmax)
   # Reference: Harrison et al., 2009, Plant, Cell and Environment; Eq. 3
   #-----------------------------------------------------------------------
@@ -41,9 +42,6 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
   # Metabolic N ratio (mol N s (mol CO2)-1 )
   n_v <- mol_weight_rubisco * n_conc_rubisco / ( cat_turnover_per_site * cat_sites_per_mol_R )
 
-  # Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
-  rd_to_vcmax <- 0.015
-
   ## parameters for Narea -- under construction
   # sla <- 0.0014       # specific leaf area (m2/gC)
 
@@ -54,9 +52,9 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
   # n_v  <- 1.0/40.96    # gN ??mol-1 s-1. Value 40.96 is 'sv' in Table 2 in Kattge et al., 2009, GCB, C3 herbaceous
   ## -- under construction
 
-  ## absorbed photosynthetically active radiation (mol/m2)
-  iabs <- fpar * ppfd
-
+  #-----------------------------------------------------------------------
+  # Calculate photosynthesis model parameters depending on temperature, pressure, and CO2.
+  #-----------------------------------------------------------------------
   ## atmospheric pressure as a function of elevation (Pa)
   patm <- calc_patm( elv )
 
@@ -64,26 +62,24 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
   ca   <- co2_to_ca( co2, patm )
 
   ## photorespiratory compensation point - Gamma-star (Pa)
-  gs   <- calc_gstar_gepisat( tc )
-
-  ## Empirical soil moisture stress (fraction)
-  soilmstress   <- 1.0
+  gstar   <- calc_gstar_gepisat( tc )
 
   ## Michaelis-Menten coef. (Pa)
   kmm  <- calc_k( tc, patm )
 
   ## viscosity correction factor = viscosity( temp, press )/viscosity( 25 degC, 1013.25 Pa) 
-  ns      <- viscosity_h2o( tc, patm )  # Pa s 
-  ns25    <- viscosity_h2o( kTo, kPo )  # Pa s 
+  ns      <- calc_viscosity_h2o( tc, patm )  # Pa s 
+  ns25    <- calc_viscosity_h2o( kTo, kPo )  # Pa s 
   ns_star <- ns / ns25  # (unitless)
 
-
+  ##-----------------------------------------------------------------------
+  ## Caluclate ci:ca ('chi') and terms 'n' and 'm' (see pmodel_doc.pdf)
+  ##-----------------------------------------------------------------------
   if (method=="approx"){
     ##-----------------------------------------------------------------------
     ## A. APPROXIMATIVE METHOD
     ##-----------------------------------------------------------------------
-
-    lue.out <- lue_approx( tc, vpd, elv, ca, gs )
+    out_lue <- lue_approx( tc, vpd, elv, ca, gstar )
 
   } else {
     ##-----------------------------------------------------------------------
@@ -93,88 +89,121 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
 
       ## B.1 SIMPLIFIED FORMULATION 
       ##-----------------------------------------------------------------------
-      lue.out <- lue_vpd_simpl( kmm, gs, ns, ca, vpd, beta  )
+      out_lue <- lue_vpd_simpl( kmm, gstar, ns, ca, vpd, beta  )
 
     } else if (method=="full"){
 
       ## B.2 FULL FORMULATION
       ##-----------------------------------------------------------------------
-      lue.out <- lue_vpd_full( kmm, gs, ns_star, ca, vpd, beta  )
+      out_lue <- lue_vpd_full( kmm, gstar, ns_star, ca, vpd, beta  )
 
     }
 
   }
 
-  ## LUE-functions return m, n, and chi
-  m   <- lue.out$m
-  n   <- lue.out$n
-  chi <- lue.out$chi
+  ## Include effect of Jmax limitation
+  mprime   <- calc_mprime( out_lue$m )
 
-  ##-----------------------------------------------------------------------
-  ## Calculate function return variables
-  ##-----------------------------------------------------------------------
-
-  ## GPP per unit ground area is the product of the intrinsic quantum 
-  ## efficiency, the absorbed PAR, the function of alpha (drought-reduction),
-  ## and 'm'
-  mprime   <- calc_mprime( m )
-
-  gpp <- iabs * kphio * mprime * c_molmass # in g C m-2 s-1
-
-  ## Light use efficiency (gpp per unit iabs)
+  ## Light use efficiency (gpp per unit absorbed light)
   lue <- kphio * mprime
 
   ## leaf-internal CO2 partial pressure (Pa)
   ci <- chi * ca
 
-  ## stomatal conductance
-  gs <- gpp  / ( ca - ci )
+  ##-----------------------------------------------------------------------
+  ## Corrolary preditions (This is prelimirary!)
+  ##-----------------------------------------------------------------------
+  # ## stomatal conductance
+  # gs <- gpp  / ( ca - ci )
 
-  ## Vcmax per unit ground area is the product of the intrinsic quantum 
-  ## efficiency, the absorbed PAR, and 'n'
-  vcmax <- iabs * kphio * n
-
-  ## Vcmax normalised per unit fAPAR (assuming fAPAR=1)
-  vcmax_unitfapar <- ppfd * kphio * n 
+  ## intrinsic water use efficiency 
+  iwue = ( ca - ci ) / ( 1.6 * patm )
 
   ## Vcmax normalised per unit absorbed PPFD (assuming iabs=1)
-  vcmax_unitiabs <- kphio * n 
+  vcmax_unitiabs <- kphio * out_lue$n 
 
   ## Vcmax25 (vcmax normalized to 25 deg C)
-  factor25_vcmax    <- calc_vcmax25( 1.0, tc )
-  vcmax25           <- factor25_vcmax * vcmax
-  vcmax25_unitfapar <- factor25_vcmax * vcmax_unitfapar
-  vcmax25_unitiabs  <- factor25_vcmax * vcmax_unitiabs
+  ftemp_inst_vcmax  <- calc_ftemp_inst_vcmax( tc )
+  vcmax25_unitiabs  <- vcmax_unitiabs  / ftemp_inst_vcmax
 
-  ## Dark respiration
-  rd <- rd_to_vcmax * vcmax
-
-  ## Dark respiration per unit fAPAR (assuming fAPAR=1)
-  rd_unitfapar <- rd_to_vcmax * vcmax_unitfapar
-
-  ## Dark respiration per unit absorbed PPFD (assuming iabs=1)
-  rd_unitiabs <- rd_to_vcmax * vcmax_unitiabs
+  ## Dark respiration at growth temperature
+  ftemp_inst_rd <- calc_ftemp_inst_rd( tc )
+  rd_unitiabs  <- rd_to_vcmax * (ftemp_inst_rd / ftemp_inst_vcmax) * vcmax_unitiabs 
 
   ## active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
-  actnv <- vcmax25 * n_v
-  actnv_unitfapar <- vcmax25_unitfapar * n_v
   actnv_unitiabs  <- vcmax25_unitiabs  * n_v
 
-  ## Transpiration (E)
-  ## Using 
-  ## - E = 1.6 gs D
-  ## - gs = A / (ca (1-chi))
-  ## (- chi = ci / ca)
-  ## => E = (1.6 A D) / (ca - ci)
-  transp           <- (1.6 * iabs * kphio * m * vpd) / (ca - ci)   # gpp <- iabs * kphio * m
-  transp_unitfapar <- (1.6 * ppfd * kphio * m * vpd) / (ca - ci)
-  transp_unitiabs  <- (1.6 * 1.0  * kphio * m * vpd) / (ca - ci)
+
+  if (!is.na(ppfd)){
+    ##-----------------------------------------------------------------------
+    ## Calculate quantities scaling with light assuming fAPAR = 1
+    ## representing leaf-level at the top of the canopy.
+    ##-----------------------------------------------------------------------
+    ## Vcmax normalised per unit fAPAR (assuming fAPAR=1)
+    vcmax_unitfapar <- ppfd * kphio * n 
+
+    ## Vcmax25 (vcmax normalized to 25 deg C)
+    vcmax25_unitfapar <- factor25_vcmax * vcmax_unitfapar
+
+    ## Dark respiration per unit fAPAR (assuming fAPAR=1)
+    rd_unitfapar <- rd_to_vcmax * vcmax_unitfapar
+
+    ## active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
+    actnv_unitfapar <- vcmax25_unitfapar * n_v
+
+    if (!is.na(fapar)){
+      ##-----------------------------------------------------------------------
+      ## Calculate quantities scaling with absorbed light
+      ##-----------------------------------------------------------------------
+      ## absorbed photosynthetically active radiation (mol/m2)
+      iabs <- fapar * ppfd 
+
+      ## Canopy-level quantities 
+      ## Defined per unit ground level -> scaling with aborbed light (iabs)
+      ##-----------------------------------------------------------------------
+      ## Gross primary productivity
+      gpp <- iabs * kphio * mprime * c_molmass # in g C m-2 s-1
+
+      ## Vcmax per unit ground area is the product of the intrinsic quantum 
+      ## efficiency, the absorbed PAR, and 'n'
+      vcmax <- iabs * kphio * n
+
+      ## (vcmax normalized to 25 deg C)
+      vcmax25 <- factor25_vcmax * vcmax
+
+      ## Dark respiration
+      rd <- rd_to_vcmax * vcmax
+
+      ## active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
+      actnv <- vcmax25 * n_v
+
+    } else {
+
+      gpp <- NA
+      vcmax <- NA
+      vcmax25 <- NA
+      rd <- NA
+      actnv <- NA
+
+    }
+
+  } else {
+
+    iabs <- NA
+    vcmax_unitfapar <- NA
+    vcmax25_unitfapar <- NA
+    rd_unitfapar <- NA
+    actnv_unitfapar <- NA
+
+  }
 
   ## construct list for output
   out <- list( 
-              gpp=gpp,                       # mol CO2 m-2 s-1 (given that ppfd is provided in units of s-1)
-              gs=gs,
               ci=ci,
+              chi=chi,
+              iwue=iwue,
+              lue=lue,
+              gpp=gpp,                       # mol CO2 m-2 s-1 (given that ppfd is provided in units of s-1)
               vcmax=vcmax,                   # mol CO2 m-2 s-1 (given that ppfd is provided in units of s-1)
               vcmax25=vcmax25,               # mol CO2 m-2 s-1 (given that ppfd is provided in units of s-1)
               vcmax_unitfapar=vcmax_unitfapar,
@@ -185,14 +214,13 @@ rpmodel <- function( fpar, ppfd, co2, tc, cpalpha, vpd, elv, method="full" ){
               rd_unitiabs=rd_unitiabs, 
               actnv=actnv,                   # mol N/m2 ground area (canopy-level)
               actnv_unitfapar=actnv_unitfapar, 
-              actnv_unitiabs=actnv_unitiabs, 
-              lue=lue,
-              transp=transp,
-              transp_unitfapar=transp_unitfapar,
-              transp_unitiabs=transp_unitiabs
+              actnv_unitiabs=actnv_unitiabs
               )
 
+  if (!is.null(returnvar)) out <- out[returnvar]
+
   return( out )
+
 }
 
 
@@ -430,17 +458,6 @@ get_fapar <- function( lai ){
 }
 
 
-calc_fa <- function( cpalpha ){
-  #-----------------------------------------------------------------------
-  # Input:  cpalpha (unitless, within [0,1.26]): monthly Cramer-Prentice-alpha
-  # Output: fa (unitless, within [0,1]): function of alpha to reduce GPP 
-  #                                      in strongly water-stressed months
-  #-----------------------------------------------------------------------
-  fa <- ( cpalpha / 1.26 )^(0.25)
-  return(fa)
-}
-
-
 co2_to_ca <- function( co2, patm ){
   #-----------------------------------------------------------------------
   # Input:    - float, annual atm. CO2, ppm (co2)
@@ -613,6 +630,41 @@ calc_gstar_colin <- function( tc ){
   return( gs )
 }
 
+calc_ftemp_inst_vcmax <- function( tc ){
+  #-----------------------------------------------------------------------
+  # arguments
+  # tc: temperature (degrees C)
+  #
+  # function return variable
+  # fv: temperature response factor, relative to 25 deg C.
+  #
+  # Output:   Factor fv to correct for instantaneous temperature response
+  #           of Vcmax for:
+  #
+  #               Vcmax(temp) = fv * Vcmax(25 deg C) 
+  #
+  # Ref:      Wang Han et al. (in prep.)
+  #-----------------------------------------------------------------------
+  # loal parameters
+  Ha    = 71513  # activation energy (J/mol)
+  Hd    = 200000 # deactivation energy (J/mol)
+  Rgas  = 8.3145 # universal gas constant (J/mol/K)
+  a_ent = 668.39 # offset of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K)
+  b_ent = 1.07   # slope of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K^2)
+  tk25  = 298.15 # 25 deg C in Kelvin
+
+  # conversion of temperature to Kelvin
+  tk = tc + 273.15
+
+  # calculate entropy following Kattge & Knorr (2007), negative slope and y-axis intersect is when expressed as a function of temperature in degrees Celsius, not Kelvin !!!
+  dent = a_ent - b_ent * tc
+
+  fv = exp( (Ha * (tk - tk25))/(tk * tk25 * Rgas) ) * (1 + exp( (tk25 * dent - Hd)/(Rgas * tk25) ) )/(1 + exp( (tk * dent - Hd)/(Rgas * tk) ) )
+ 
+  return( fv ) 
+}
+
+
 
 calc_vcmax25 <- function( vcmax, tc ){
   #-----------------------------------------------------------------------
@@ -730,7 +782,7 @@ density_h2o <- function( tc, p ){
 }
 
 
-viscosity_h2o <- function( tc, p ) {
+calc_viscosity_h2o <- function( tc, p ) {
   #-----------------------------------------------------------------------
   # Input:    - float, ambient temperature (tc), degrees C
   #           - float, ambient pressure (p), Pa
@@ -801,7 +853,7 @@ viscosity_h2o <- function( tc, p ) {
 }
 
 
-viscosity_h2o_vogel <- function( tc ) {
+calc_viscosity_h2o_vogel <- function( tc ) {
   #-----------------------------------------------------------------------
   # Input:    - float, ambient temperature (tc), degrees C
   # Return:   float, viscosity of water (mu), Pa s

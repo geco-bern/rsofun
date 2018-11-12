@@ -21,14 +21,14 @@ Imports:
     readr,
     rlang,
     stringr,
-    tidyr
+    tidyr,
+    LSD,
 Suggests:
     BayesianTools,
     caret,
     GenSA,
     gplots,
     hydroGOF,
-    LSD,
     maps,
     maptools,
     neuralnet,
