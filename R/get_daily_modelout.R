@@ -6,8 +6,6 @@ get_daily_modelout <- function( expname, dirnam_mod, vars ){
   # vars <- c("gpp","wcont","aet","pet")
   # ## <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-  source( paste0( myhome, "utilities/conv_noleap_to_ymd.R" ) )
-  
   ## read GPP file to initialise data frame and get years
   filnam_mod <- paste0( expname, ".d.gpp.nc" )
   path       <- paste0( dirnam_mod, filnam_mod )
