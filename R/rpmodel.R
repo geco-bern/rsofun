@@ -1,24 +1,59 @@
-#////////////////////////////////////////////////////////////////////////
-# R implementation of the P-model (Prentice et al., 2014; Han et al., 2017)
-#
-# GePiSaT takes a simple approach to modelling terrestrial gross primary 
-# production (GPP) by making the use of the optimality principle of vegetation 
-# minimizing the summed costs associated with maintaining carbon fixation and 
-# water transport capabilities (Prentice et al., 2014).
-#
-# Written by Benjamin Stocker, adopted from Python code written by Tyler Davis
-#
-#------------------------------------------------------------------------
+#' P-model
+#'
+#' R implementation of the P-model and its corrolary predictions (Prentice et al., 2014; Han et al., 2017)
+#' 
+#' @param tc Temperature, relevant for photosynthesis (deg C)
+#' @param vpd Vapour pressure deficit (Pa)
+#' @param co2 Atmospheric CO2 concentration (ppm)
+#' @param elv Elevation above sea-level (m.a.s.l.)
+#' @param kphio Quantum yield efficiency parameter
+#' @param fapar (Optional) Fraction of absorbed photosynthetically active radiation (unitless, defaults to \code{NA})
+#' @param ppfd (Optional) Photosynthetic photon flux density (mol/m2, defaults to \code{NA})
+#' @param method (Optional) A character string specifying which method is to be used for calculating the ci:ca ratio. Defaults to \code{"full"}. Available also \code{c("approx", "simpl")}.
+#' @param returnvar (Optional) A character string of vector of character strings specifying which variables are to be returned (see return below).
+#'
+#' @return A named list of numeric values with   
+#' \begin{itemize}
+#'         \item \code{ci}: leaf-internal partial pressure, (Pa)
+#'         \item \code{chi}: = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
+#'         \item \code{iwue}: intrinsic water use efficiency (unitless)
+#'         \item \code{lue}: light use efficiency (mol CO2 / mol photon)
+#'         \item \code{gpp}: gross primary productivity (g C m-2, calculated only if fAPAR and PPFD are not 'dummy')
+#'         \item \code{vcmax}: maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
+#'         \item \code{vcmax25}: Vcmax25 (vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
+#'         \item \code{vcmax_unitfapar}: Vcmax per fAPAR (mol CO2 m-2 s-1)
+#'         \item \code{vcmax_unitiabs}: Vcmax per unit absorbed light (xxx units)
+#'         \item \code{rd}: Dark respiration (mol CO2 m-2 s-1)
+#'         \item \code{rd_unitfapar}: Dark respiration per fAPAR (mol CO2 m-2 s-1)
+#'         \item \code{rd_unitiabs}: Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
+#'         \item \code{actnv}: Active metabolic leaf N (canopy-level), mol N/m2-ground
+#'         \item \code{actnv_unitfapar}: Active metabolic leaf N (leaf-level, top of canopy), mol N/m2-leaf
+#'         \item \code{actnv_unitiabs}: Active metabolic leaf N per unit absorbed light, mol N/m2/mol
+#' \end{itemize}
+#' 
+#' @export
+#'
+#' @examples out_rpmodel <- rpmodel( tc=10, vpd=300, co2=300, elv=300, kphio=0.06 )
+#' 
 rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="full", returnvar = NULL ){
   #-----------------------------------------------------------------------
-  # Input:    - fapar (unitless)   : monthly fraction of absorbed photosynthetically active radiation
-  #           - ppfd (mol/m2)      : monthly photon flux density
-  #           - co2 (ppm)          : atmospheric CO2 concentration
-  #           - tc (deg C)         : monthly air temperature
-  #           - vpd (Pa)           : mean monthly vapor pressure -- CRU data is in hPa
-  #           - elv (m)            : elevation above sea-level
-  # Output:   list of 
-  #  xxxx gpp (mol/m2/month)   : gross primary production
+  # Output:   list of P-model predictions:
+  #
+  # ci               : leaf-internal partial pressure, (Pa)
+  # chi              : = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
+  # iwue             : intrinsic water use efficiency (unitless)
+  # lue              : light use efficiency (mol CO2 / mol photon)
+  # gpp              : gross primary productivity (g C m-2, calculated only if fAPAR and PPFD are not 'dummy')
+  # vcmax            : maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
+  # vcmax25          : Vcmax25 (vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
+  # vcmax_unitfapar  : Vcmax per fAPAR (mol CO2 m-2 s-1)
+  # vcmax_unitiabs   : Vcmax per unit absorbed light (xxx units)
+  # rd               : Dark respiration (mol CO2 m-2 s-1)
+  # rd_unitfapar     : Dark respiration per fAPAR (mol CO2 m-2 s-1)
+  # rd_unitiabs      : Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
+  # actnv            : Active metabolic leaf N (canopy-level), mol N/m2-ground
+  # actnv_unitfapar  : Active metabolic leaf N (leaf-level, top of canopy), mol N/m2-leaf
+  # actnv_unitiabs   : Active metabolic leaf N per unit absorbed light, mol N/m2/mol
   #-----------------------------------------------------------------------
 
   #-----------------------------------------------------------------------
@@ -62,7 +97,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   ca   <- co2_to_ca( co2, patm )
 
   ## photorespiratory compensation point - Gamma-star (Pa)
-  gstar   <- calc_gstar_gepisat( tc )
+  gstar   <- calc_gstar( tc )
 
   ## Michaelis-Menten coef. (Pa)
   kmm  <- calc_k( tc, patm )
@@ -204,21 +239,21 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
 
   ## construct list for output
   out <- list( 
-              ci=ci,
-              chi=out_lue$chi,
-              iwue=iwue,
-              lue=lue,
-              gpp=gpp,                       # mol CO2 m-2 s-1 (given that ppfd is provided in units of s-1)
-              vcmax=vcmax,                   # mol CO2 m-2 s-1 (given that ppfd is provided in units of s-1)
-              vcmax25=vcmax25,               # mol CO2 m-2 s-1 (given that ppfd is provided in units of s-1)
-              vcmax_unitfapar=vcmax_unitfapar,
-              vcmax_unitiabs=vcmax_unitiabs,
-              rd=rd,                         # mol CO2 m-2 s-1 
-              rd_unitfapar=rd_unitfapar,     # mol CO2 m-2 s-1 
-              rd_unitiabs=rd_unitiabs, 
-              actnv=actnv,                   # mol N/m2 ground area (canopy-level)
-              actnv_unitfapar=actnv_unitfapar, 
-              actnv_unitiabs=actnv_unitiabs
+              ci              = ci,
+              chi             = out_lue$chi,
+              iwue            = iwue,
+              lue             = lue,
+              gpp             = gpp,        
+              vcmax           = vcmax,    
+              vcmax25         = vcmax25,
+              vcmax_unitfapar = vcmax_unitfapar,
+              vcmax_unitiabs  = vcmax_unitiabs,
+              rd              = rd,          
+              rd_unitfapar    = rd_unitfapar,          
+              rd_unitiabs     = rd_unitiabs, 
+              actnv           = actnv,    
+              actnv_unitfapar = actnv_unitfapar, 
+              actnv_unitiabs  = actnv_unitiabs
               )
 
   if (!is.null(returnvar)) out <- out[returnvar]
@@ -226,99 +261,6 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   return( out )
 
 }
-
-
-calc_dgpp <- function( fapar, dppfd, mlue ) {
-  ##//////////////////////////////////////////////////////////////////
-  ## Calculates daily GPP (mol CO2)
-  ##------------------------------------------------------------------
-  ## GPP is light use efficiency multiplied by absorbed light and C-P-alpha
-  dgpp <- fapar * dppfd * mlue
-
-  return( dgpp )
-}
-
-
-calc_drd <- function( lai, meanmppfd, mrd_unitiabs ){
-  ##//////////////////////////////////////////////////////////////////
-  ## Calculates daily dark respiration (Rd) based on monthly mean 
-  ## PPFD (assumes acclimation on a monthly time scale) (mol CO2).
-  ## meanmppfd is monthly mean PPFD, averaged over daylight seconds (mol m-2 s-1)
-  ##------------------------------------------------------------------
-  fapar <- get_fapar( lai )
-
-  ## Dark respiration takes place during night and day (24 hours)
-  drd <- fapar * meanmppfd * mrd_unitiabs * 60.0 * 60.0 * 24.0
-
-  return( drd )
-}
-
-
-calc_dtransp <- function( lai, dppfd, transp_unitiabs ) {
-  ##//////////////////////////////////////////////////////////////////
-  ## Calculates daily GPP (mol H2O).
-  ##------------------------------------------------------------------
-  fapar <- get_fapar( lai )
-
-  ## GPP is light use efficiency multiplied by absorbed light and C-P-alpha
-  dtransp <- fapar * dppfd * transp_unitiabs
-
-  return( dtransp )
-}
-
-
-calc_vcmax <- function( lai, meanmppfd, vcmax_unitiabs ) {
-  ##//////////////////////////////////////////////////////////////////
-  ## Calculates leaf-level metabolic N content per unit leaf area as a
-  ## function of Vcmax25.
-  ##------------------------------------------------------------------
-  fapar <- get_fapar( lai )
-
-  ## Calculate leafy-scale Rubisco-N as a function of LAI and current LUE
-  vcmax <- fapar * meanmppfd * vcmax_unitiabs / lai
-
-  return( vcmax )
-
-}
-
-
-calc_nr_leaf <- function( lai, mactnv_unitiabs, meanmppfd ) { 
-  ##//////////////////////////////////////////////////////////////////
-  ## Calculates leaf-level metabolic N content per unit leaf area as a
-  ## function of Vcmax25.
-  ##------------------------------------------------------------------
-  fapar <- get_fapar( lai )
-
-  ## Calculate leafy-scale Rubisco-N as a function of LAI and current LUE
-  nr_leaf <- max( fapar * meanmppfd[] * mactnv_unitiabs[] ) / lai
-
-  return( nr_leaf )
-}
-
-
-calc_n_rubisco_area <- function( vcmax25 ){
-  #-----------------------------------------------------------------------
-  # Input:    - vcmax25 : leaf level Vcmax  at 25 deg C, (mol CO2) m-2 s-1
-  # Output:   - n_area  : Rubisco N content per unit leaf area, (g N)(m-2 leaf)
-  # Features: Returns Rubisco N content per unit leaf area for a given 
-  #           Vcmax.
-  # Reference: Harrison et al., 2009, Plant, Cell and Environment; Eq. 3
-  #-----------------------------------------------------------------------
-
-  mol_weight_rubisco <- 5.5e5    # molecular weight of Rubisco, (g R)(mol R)-1
-  n_conc_rubisco     <- 1.14e-2  # N concentration in rubisco, (mol N)(g R)-1
-  mol_weight_n       <- 14.0067  # molecular weight of N, (g N)(mol N)-1
-  cat_turnover_per_site <- 3.5   # catalytic turnover rate per site at 25 deg C, (mol CO2)(mol R sites)-1
-  cat_sites_per_mol_R   <- 8.0   # number of catalytic sites per mol R, (mol R sites)(mol R)-1
-
-  # Metabolic N ratio
-  n_v <- mol_weight_rubisco * n_conc_rubisco * mol_weight_n / ( cat_turnover_per_site * cat_sites_per_mol_R )
-
-  n_rubisco_area <- vcmax25 * n_v
-
-  return(n_rubisco_area)
-}
-
 
 lue_approx <- function( temp, vpd, elv, ca, gs ){
   #-----------------------------------------------------------------------
@@ -448,20 +390,6 @@ calc_mprime <- function( m ){
 }
 
 
-get_fapar <- function( lai ){
-  ##////////////////////////////////////////////////////////////////
-  ## Function returns fractional plant cover an individual
-  ## Eq. 7 in Sitch et al., 2003
-  ##----------------------------------------------------------------
-  kbeer <- 0.5
-
-  fapar <- ( 1.0 - exp( -1.0 * kbeer * lai ) )
-
-  return( fapar )
-
-}
-
-
 co2_to_ca <- function( co2, patm ){
   #-----------------------------------------------------------------------
   # Input:    - float, annual atm. CO2, ppm (co2)
@@ -471,48 +399,6 @@ co2_to_ca <- function( co2, patm ){
   #-----------------------------------------------------------------------
   ca   <- ( 1.e-6 ) * co2 * patm         # Pa, atms. CO2
   return( ca )
-}
-
-
-ca_to_co2 <- function( ca, patm ){
-  #-----------------------------------------------------------------------
-  # Input:    - float, ambient CO2, Pa (ca)
-  #           - float, monthly atm. pressure, Pa (patm)
-  # Output:   - co2 in units of Pa
-  # Features: Converts ca (ambient CO2) from Pa to ppm.
-  #-----------------------------------------------------------------------
-  co2   <- ca * ( 1.e6 ) / patm
-  return( co2 )
-}
-
-
-calc_vpd <- function( temp, vap, tmin=NA, tmax=NA ){
-  #-----------------------------------------------------------------------
-  # Input:    - mean monthly temperature, deg C (temp)
-  #           - mean monthly vapor pressure, hPa (vap) -- CRU data is in hPa
-  #           - (optional) mean monthly min daily air temp, deg C (tmin)
-  #           - (optional) mean monthly max daily air temp, deg C (tmax)
-  # Output:   mean monthly vapor pressure deficit, Pa (vpd)
-  # Features: Returns mean monthly vapor pressure deficit
-  # Ref:      Eq. 5.1, Abtew and Meleese (2013), Ch. 5 Vapor Pressure 
-  #           Calculation Methods, in Evaporation and Evapotranspiration: 
-  #           Measurements and Estimations, Springer, London.
-  #             vpd = 0.611*exp[ (17.27 tc)/(tc + 237.3) ] - ea
-  #             where:
-  #                 temp = average daily air temperature, deg C
-  #                 vap  = actual vapor pressure, kPa
-  #-----------------------------------------------------------------------
-  if ( !is.na(tmin) && !is.na(tmax) ){
-    temp <- 0.5 * (tmin + tmax)
-  }
-
-  ## calculate VPD in units of kPa
-  vpd <- ( 0.611 * exp( (17.27 * temp)/(temp + 237.3) ) - 0.10 * vap )    
-
-  ## convert to Pa
-  vpd <- vpd * 1000
-
-  return( vpd )
 }
 
 
@@ -544,36 +430,7 @@ calc_k <- function(tc, patm) {
   return(k)
 }
 
-
-calc_k_colin <- function( tc ) {
-  #-----------------------------------------------------------------------
-  # Input:    - float, air temperature, deg C (tc)
-  # Output:   float, Pa (mmk)
-  # Features: Returns the temperature & pressure dependent Michaelis-Menten
-  #           coefficient, K (Pa).
-  # Ref:      Colin's documents
-  #-----------------------------------------------------------------------
-
-  ## conversion to temperature in Kelvin
-  tk <- tc + 273.15
-
-  kc25 <- 41.03      # Pa, assuming 25 deg C & 98.716 kPa
-  ko25 <- 28210      # Pa
-  dhac <- 79430      # J/mol
-  dhao <- 36380      # J/mol
-  kR   <- 8.3145     # J/mol/K
-  kco  <- 2.09476e5  # ppm, US Standard Atmosphere
-
-  kc <- kc25 * exp( dhac / kR * (1.0/298.15 - 1.0/tk) )
-  ko <- ko25 * exp( dhao / kR * (1.0/298.15 - 1.0/tk) )
-
-  po <- kco * (1e-6) * patm # O2 partial pressure
-  k  <- kc * (1.0 + po/ko )
-
-  return(k)
-}
-
-calc_gstar_gepisat <- function( tc ) {
+calc_gstar <- function( tc ) {
   #-----------------------------------------------------------------------
   # Input:    float, air temperature, degrees C (tc)
   # Output:   float, gamma-star, Pa (gs)
@@ -594,45 +451,6 @@ calc_gstar_gepisat <- function( tc ) {
   return( gs )
 }
 
-
-calc_gstar_wh <- function( temp ){
-  #-----------------------------------------------------------------------
-  ## Returns the temperature-dependent photorespiratory compensation point, 
-  ## Gamma star (Pascals), based on constants derived from 
-  ## Bernacchi et al. (2001) study.
-  #-----------------------------------------------------------------------
-
-  ## wang han's values
-  gs25 <- 42.75  # corresponds to what Colin gave me
-  k    <- 0.0512
-
-  gs <- gs25 * exp( k * ( temp - 25 ) )
-
-  return( gs )
-
-}
-
-calc_gstar_colin <- function( tc ){
-  #-----------------------------------------------------------------------
-  # Input:    tc: air temperature (degrees C)
-  # Output:   gs: gamma-star (Pa)
-  # Features: Returns the temperature-dependent photorespiratory 
-  #           compensation point, Gamma star (Pascals), based on constants 
-  #           derived from Bernacchi et al. (2001) study.
-  # Ref:      Colin's document
-  #-----------------------------------------------------------------------
-
-  ## conversion to temperature in Kelvin
-  tk <- tc + 273.15
-
-  gs25 <- 4.275    # corresponds to what Colin gave me
-  kR   <- 8.3145   # J/mol/K
-  dha  <- 37830    # J/mol
-
-  gs <- gs25 * exp( ( dha / kR ) * ( 1/298.15 - 1.0/tk ) )
-  
-  return( gs )
-}
 
 calc_ftemp_inst_vcmax <- function( tc ){
   #-----------------------------------------------------------------------
@@ -865,4 +683,109 @@ calc_viscosity_h2o_vogel <- function( tc ) {
 
   return( visc )
 }
+
+
+# calc_dgpp <- function( fapar, dppfd, mlue ) {
+#   ##//////////////////////////////////////////////////////////////////
+#   ## Calculates daily GPP (mol CO2)
+#   ##------------------------------------------------------------------
+#   ## GPP is light use efficiency multiplied by absorbed light and C-P-alpha
+#   dgpp <- fapar * dppfd * mlue
+
+#   return( dgpp )
+# }
+
+
+# calc_drd <- function( lai, meanmppfd, mrd_unitiabs ){
+#   ##//////////////////////////////////////////////////////////////////
+#   ## Calculates daily dark respiration (Rd) based on monthly mean 
+#   ## PPFD (assumes acclimation on a monthly time scale) (mol CO2).
+#   ## meanmppfd is monthly mean PPFD, averaged over daylight seconds (mol m-2 s-1)
+#   ##------------------------------------------------------------------
+#   fapar <- get_fapar( lai )
+
+#   ## Dark respiration takes place during night and day (24 hours)
+#   drd <- fapar * meanmppfd * mrd_unitiabs * 60.0 * 60.0 * 24.0
+
+#   return( drd )
+# }
+
+
+# calc_dtransp <- function( lai, dppfd, transp_unitiabs ) {
+#   ##//////////////////////////////////////////////////////////////////
+#   ## Calculates daily GPP (mol H2O).
+#   ##------------------------------------------------------------------
+#   fapar <- get_fapar( lai )
+
+#   ## GPP is light use efficiency multiplied by absorbed light and C-P-alpha
+#   dtransp <- fapar * dppfd * transp_unitiabs
+
+#   return( dtransp )
+# }
+
+
+# calc_vcmax <- function( lai, meanmppfd, vcmax_unitiabs ) {
+#   ##//////////////////////////////////////////////////////////////////
+#   ## Calculates leaf-level metabolic N content per unit leaf area as a
+#   ## function of Vcmax25.
+#   ##------------------------------------------------------------------
+#   fapar <- get_fapar( lai )
+
+#   ## Calculate leafy-scale Rubisco-N as a function of LAI and current LUE
+#   vcmax <- fapar * meanmppfd * vcmax_unitiabs / lai
+
+#   return( vcmax )
+
+# }
+
+
+# calc_nr_leaf <- function( lai, mactnv_unitiabs, meanmppfd ) { 
+#   ##//////////////////////////////////////////////////////////////////
+#   ## Calculates leaf-level metabolic N content per unit leaf area as a
+#   ## function of Vcmax25.
+#   ##------------------------------------------------------------------
+#   fapar <- get_fapar( lai )
+
+#   ## Calculate leafy-scale Rubisco-N as a function of LAI and current LUE
+#   nr_leaf <- max( fapar * meanmppfd[] * mactnv_unitiabs[] ) / lai
+
+#   return( nr_leaf )
+# }
+
+
+# calc_n_rubisco_area <- function( vcmax25 ){
+#   #-----------------------------------------------------------------------
+#   # Input:    - vcmax25 : leaf level Vcmax  at 25 deg C, (mol CO2) m-2 s-1
+#   # Output:   - n_area  : Rubisco N content per unit leaf area, (g N)(m-2 leaf)
+#   # Features: Returns Rubisco N content per unit leaf area for a given 
+#   #           Vcmax.
+#   # Reference: Harrison et al., 2009, Plant, Cell and Environment; Eq. 3
+#   #-----------------------------------------------------------------------
+
+#   mol_weight_rubisco <- 5.5e5    # molecular weight of Rubisco, (g R)(mol R)-1
+#   n_conc_rubisco     <- 1.14e-2  # N concentration in rubisco, (mol N)(g R)-1
+#   mol_weight_n       <- 14.0067  # molecular weight of N, (g N)(mol N)-1
+#   cat_turnover_per_site <- 3.5   # catalytic turnover rate per site at 25 deg C, (mol CO2)(mol R sites)-1
+#   cat_sites_per_mol_R   <- 8.0   # number of catalytic sites per mol R, (mol R sites)(mol R)-1
+
+#   # Metabolic N ratio
+#   n_v <- mol_weight_rubisco * n_conc_rubisco * mol_weight_n / ( cat_turnover_per_site * cat_sites_per_mol_R )
+
+#   n_rubisco_area <- vcmax25 * n_v
+
+#   return(n_rubisco_area)
+# }
+
+# get_fapar <- function( lai ){
+#   ##////////////////////////////////////////////////////////////////
+#   ## Function returns fractional plant cover an individual
+#   ## Eq. 7 in Sitch et al., 2003
+#   ##----------------------------------------------------------------
+#   kbeer <- 0.5
+
+#   fapar <- ( 1.0 - exp( -1.0 * kbeer * lai ) )
+
+#   return( fapar )
+
+# }
 

@@ -1,3 +1,16 @@
+#' Evaluates the functional relationships.
+#'
+#' Evaluates the functional relationships in the data using General Additive Models (using function \code{gam} from the \code{mgcv} package) and the P-model using its function.
+#' 
+#' @param df A data frame containing daily observational data as output from function \code{get_obs_eval()}.
+#' @param overwrite if \code{TRUE}, the GAM model object is overwritten
+#' @param ndays_agg An integer specifying the level of data aggregation by number of days.
+#'
+#' @return A data frame with aggregated data including GAM predictions and P-model results as columns \code{lue_gam} and \code{lue_mod}, respectively.
+#' @export
+#'
+#' @examples eval_response_gam( df, overwrite = TRUE, ndays_agg = 10 )
+#' 
 eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
 
   # ## xxx debug
@@ -29,15 +42,15 @@ eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
                       ) %>%
                     dplyr::rename( 
                       lue_obs = lue_obs_mean,
-                      temp = temp_mean,
-                      vpd = vpd_mean,
-                      soilm = soilm_mean
+                      temp    = temp_mean,
+                      vpd     = vpd_mean,
+                      soilm   = soilm_mean
                       ) %>%
                     mutate( 
                       lue_obs = ifelse(is.nan(lue_obs), NA, lue_obs ),
-                      temp = ifelse(is.nan(temp), NA, temp ),
-                      vpd = ifelse(is.nan(vpd), NA, vpd ),
-                      soilm = ifelse(is.nan(soilm), NA, soilm )
+                      temp    = ifelse(is.nan(temp), NA, temp ),
+                      vpd     = ifelse(is.nan(vpd), NA, vpd ),
+                      soilm   = ifelse(is.nan(soilm), NA, soilm )
                       ) %>%
                     mutate( date = ymd(as.character(inbin)) ) %>%
                     dplyr::select( -inbin ) %>%
@@ -88,12 +101,12 @@ eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
   # with( filter(df_training, sitename=="FR-LBr"), lines( date, lue_gam, col="green"))
   # with( filter(df_training, sitename=="FR-LBr"), lines( date, lue_mod, col="cyan"))
 
-  ## evaluate performance of GAM and P-model predictions
-  stats_gam <- with( df_training,  analyse_modobs( lue_gam, lue_obs, heat = TRUE ) )
-  stats_mod <- with( df_training,  analyse_modobs( lue_mod, lue_obs, heat = TRUE ) )
+  # ## evaluate performance of GAM and P-model predictions
+  # stats_gam <- with( df_training,  analyse_modobs( lue_gam, lue_obs, heat = TRUE ) )
+  # stats_mod <- with( df_training,  analyse_modobs( lue_mod, lue_obs, heat = TRUE ) )
   
   ##-------------------------------------
-  ## Evaluate GAM
+  ## Evaluate GAM and P-model
   ##-------------------------------------
   ## temperature
   eval_response_byvar( df_training, gam, evalvar = "temp", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 40, nsample = 12, ylim=c(0,0.5) ) 
@@ -103,6 +116,11 @@ eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
 
   ## soilm
   eval_response_byvar( df_training, gam, evalvar = "soilm", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 1.0, nsample = 12, ylim=c(0,0.5) )
+
+  ## Return aggregated data with GAM predictions and P-model results
+  df_agg <- df_agg %>% left_join( dplyr::select( df_training, lue_gam, lue_mod ), by = c("sitename", "date") )
+
+  return(df_agg)
 
 }
 
@@ -154,7 +172,9 @@ eval_response_byvar <- function( df, gam, evalvar, predictors, kphio, varmin, va
                                       )
 
   ## plot response in observational and simulated data
-  if (makepdf) pdf( paste0("fig/gam_response_", evalvar, ".pdf") )
+  if (makepdf) filn <- paste0("fig/gam_response_", evalvar, ".pdf")
+  if (makepdf) inform( paste( "Creating plot", filn ))
+  if (makepdf) pdf( filn )
 
     par(las=0)
 	  plot( eval_sum[[evalvar]], eval_sum$median_gam, type = "l", col="black", xlab = evalvar, ... )
