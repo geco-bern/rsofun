@@ -883,7 +883,6 @@ Functional relationships seen in the data can be extracted using Artificial Neur
 In order to improve comparability, ANNs are trained at (P-) modelled and observed GPP, and functional relationships thus derived for observed and modelled. This improves comparability and is preferred here over evaluating the model directly. As always, observations are in black and modelled in red.
 
 ```{r neuralnet, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
-source("eval_response.R")
 eval_response_gam( out_eval_RED$data$ddf, makepdf=FALSE )
 ```
 
