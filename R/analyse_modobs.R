@@ -43,7 +43,7 @@ analyse_modobs <- function( mod,
   prmse  <- 100 * rmse / mean( obs, na.rm = TRUE )
   linmod <- lm( obs ~ mod )
   rsq    <- summary( linmod )$adj.r.squared
-  nse    <- hydroGOF::NSE( obs, mod, na.rm=TRUE )
+  # nse    <- hydroGOF::NSE( obs, mod, na.rm=TRUE )
   pbias  <- mean( (mod[idxs] - obs[idxs]) / obs[idxs] ) 
   bias   <- mean( mod[idxs] - obs[idxs] )
   slope  <- coef(linmod)[2]
@@ -106,6 +106,6 @@ analyse_modobs <- function( mod,
   }
 
   ## return statistics  
-  out <- list( rmse=rmse, linmod=linmod, rsq=rsq, nse=nse, prmse=prmse, bias=bias, slope=slope, N=numb )
+  out <- list( rmse=rmse, linmod=linmod, rsq=rsq, prmse=prmse, bias=bias, slope=slope, N=numb ) # , nse=nse
   return( out )
 }

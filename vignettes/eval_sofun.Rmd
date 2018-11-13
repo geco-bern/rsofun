@@ -723,26 +723,28 @@ out_eval$metrics %>%
   knitr::kable( caption="Performance metrics of correlations between modelled and observed values at different temporal aggregation levels, absolute values and anomalies.")
 ```
 
-### Annual values
+<!-- ### Annual values -->
 
-Annual values in modelled and simulated GPP can be decomposed into the mean annual GPP per site $\overline{X}_i$ and its anomaly from the multi-annual mean $X'_{i,t}$:
-$$
-X_{i,t} = \overline{X}_i + X'_{i,t}
-$$
+<!-- Annual values in modelled and simulated GPP can be decomposed into the mean annual GPP per site $\overline{X}_i$ and its anomaly from the multi-annual mean $X'_{i,t}$: -->
+<!-- $$ -->
+<!-- X_{i,t} = \overline{X}_i + X'_{i,t} -->
+<!-- $$ -->
 
-#### Combined spatial/annual
+### Combined spatial/annual
 
 This shows the same as in the SI of our submitted manuscript: Figures S14 and S15 [here](http://rpubs.com/stineb/si_soilm_global).
 
-```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
-plot_modobs_spatial_annual( out_eval_RED$data$meandf, out_eval_RED$data$linmod_meandf, out_eval_RED$data$adf_stats, makepdf=FALSE )
+```{r, echo=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
+plot_modobs_spatial_annual( out_eval_RED$data$meandf, out_eval_RED$data$linmod_meandf, out_eval_RED$data$adf_stats, out_eval_RED$metrics$gpp$fluxnet2015$annual_pooled, out_eval_RED$metrics$gpp$fluxnet2015$spatial, makepdf = TRUE, pattern = "RED", xlim = c(0,4000), ylim = c(0,4000) )
+plot_modobs_spatial_annual( out_eval_NULL$data$meandf, out_eval_NULL$data$linmod_meandf, out_eval_NULL$data$adf_stats, out_eval_NULL$metrics$gpp$fluxnet2015$annual_pooled, out_eval_NULL$metrics$gpp$fluxnet2015$spatial, makepdf = TRUE, pattern = "NULL", xlim = c(0,4000), ylim = c(0,4000) )
+plot_modobs_spatial_annual( out_eval_NULLpft$data$meandf, out_eval_NULLpft$data$linmod_meandf, out_eval_NULLpft$data$adf_stats, out_eval_NULLpft$metrics$gpp$fluxnet2015$annual_pooled, out_eval_NULLpft$metrics$gpp$fluxnet2015$spatial, makepdf = TRUE, pattern = "NULLpft", xlim = c(0,4000), ylim = c(0,4000) )
 ```
 
-**OPEN POINT:**
+<!-- **OPEN POINT:** -->
 
-For some sites, this relationship is completely off. I'll have to have a closer look to check if the data is ok.
+<!-- For some sites, this relationship is completely off. I'll have to have a closer look to check if the data is ok. -->
 
-Selecting data only for sites used in the SI of our submitted manuscript (Figures S14 and S15 [see here](http://rpubs.com/stineb/si_soilm_global)), should give exactly the same figure, but it doesn't (see below). I'll have to look into what's going wrong here (thereby hopefully also resolving the open point mentioned above).
+<!-- Selecting data only for sites used in the SI of our submitted manuscript (Figures S14 and S15 [see here](http://rpubs.com/stineb/si_soilm_global)), should give exactly the same figure, but it doesn't (see below). I'll have to look into what's going wrong here (thereby hopefully also resolving the open point mentioned above). -->
 
 ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
 library(readr)
@@ -750,10 +752,10 @@ library(dplyr)
 successcodes <- read_csv( "successcodes.csv" )
 do.sites <- dplyr::filter( successcodes, successcode==1 | successcode==2 )$mysitename
 plot_modobs_spatial_annual(
-  filter( out_eval$data$meandf, sitename %in% do.sites),
-  lm( gpp_obs ~ gpp_mod, data = filter( out_eval$data$meandf, sitename %in% do.sites) ),
-  filter( out_eval$data$adf_stats, sitename %in% do.sites),
-  makepdf=FALSE )
+  filter( out_eval_RED$data$meandf, sitename %in% do.sites),
+  lm( gpp_obs ~ gpp_mod, data = filter( out_eval_RED$data$meandf, sitename %in% do.sites) ),
+  filter( out_eval_RED$data$adf_stats, sitename %in% do.sites),
+  makepdf=TRUE, pattern = "SOILM_GLOBAL", xlim=c(0,3000), ylim=c(0,3000) )
 ```
 
 #### Spatial correlation
@@ -779,7 +781,8 @@ $$
 \overline{X_{\text{DOY}}} = \frac{1}{N_y} \sum_y X_{\text{DOY},y}
 $$
 ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
-modobs_meandoy <- plot_modobs_meandoy( out_eval$data$meandoydf, out_eval$data$meandoydf_stats, makepdf=FALSE )
+modobs_meandoy <- plot_modobs_meandoy( out_eval_RED$data$meandoydf, out_eval_RED$data$meandoydf_stats, makepdf=TRUE, pattern = "RED" )
+modobs_meandoy <- plot_modobs_meandoy( out_eval_NULL$data$meandoydf, out_eval_NULL$data$meandoydf_stats, makepdf=TRUE, pattern = "NULL" )
 ```
 
 #### Seasonal cycle by climate zones
@@ -788,8 +791,24 @@ More insights are provided by looking at the seasonal cycle explicitly. Plots fo
 
 The classification of sites into Koeppen-Geiger climate zones is based on Falge et al. 2016. [ORNL DAAC](https://doi.org/10.3334/ORNLDAAC/1530), and complemented by extracting information from a global map. A table explaining the Koeppen-Geiger codes is given below.
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
-read_csv( "koeppen_legend.csv" ) %>% knitr::kable(caption = "Koeppen-Geiger climate zones.")
+koeppen_legend %>% knitr::kable(caption = "Koeppen-Geiger climate zones.")
 ```
+
+## Mean seasonality by climate zone
+
+Plot only for climate zones where data from at least five different sites are available. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
+nothing <- plot_by_doy_allzones( out_eval_RED$data$meandoydf_byclim_stats, dashed=out_eval_FULL$data$meandoydf_byclim_stats, makepdf=TRUE, pattern="RED" )
+nothing <- plot_by_doy_allzones( out_eval_NULL$data$meandoydf_byclim_stats, makepdf=TRUE, pattern ="NULL" )
+metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
+  mutate( hemisphere = ifelse( lat>0, "north", "south" ) ) %>% 
+  group_by( koeppen_code, hemisphere ) %>% 
+  summarise( nsites = n() ) %>% 
+  left_join( dplyr::rename( koeppen_legend, koeppen_code = Code ), by = "koeppen_code" )%>% 
+  arrange( -nsites )
+```
+
 
 Insights from seasonality analysis by climate zones (results see below, red is the model, black the observations, discussing only climate zones with data from more than three sites):
 
@@ -829,7 +848,7 @@ modobs_ddf <- plot_modobs_xdaily( out_eval$data$xdf, makepdf=FALSE, xlim=c(0,20)
 - The fact that the correlation improves when aggregating daily values to 5-daily values might reflect that applying the P-model as a light use efficiency model at the daily time scale violates its basic assumption related to the acclimation time scale. Non-linearities of the light-response curve imply that the ratio of GPP to absorbed light relationship declines with increasing light levels (right?). Day-to-day variations in GPP are mainly driven by light availability (not systematically investigated). Hence, anomalies of daily GPP from its mean seasonal cycle should be larger in the P-model than in the observations. This is the case as the figures below show.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
-modobs_anomalies_daily <- plot_modobs_anomalies_daily( out_eval$data$idvdf, out_eval$data$idvdf_stats, makepdf=FALSE)
+modobs_anomalies_daily <- plot_modobs_anomalies_daily( out_eval_RED$data$idvdf, out_eval_RED$data$idvdf_stats, pattern = "RED", makepdf=TRUE )
 ```
 Above figure shows the correlation and the distribution of anomalies in daily GPP from the respective mean seasonal cycle in the observations and in simulated values. Note that the blue lines in the first plot are the regression lines of daily anomalies for each site. The fact that their slope is consistently lower than 1, indicates that the day-to-day variability in simulated GPP is higher than in observed GPP. This is also reflected by the histogram in the second plot (note standard deviation values given in the upper left corner).
 
@@ -864,8 +883,8 @@ Functional relationships seen in the data can be extracted using Artificial Neur
 In order to improve comparability, ANNs are trained at (P-) modelled and observed GPP, and functional relationships thus derived for observed and modelled. This improves comparability and is preferred here over evaluating the model directly. As always, observations are in black and modelled in red.
 
 ```{r neuralnet, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
-source("eval_response_gam.R")
-eval_response_gam( out_eval$data$ddf, makepdf=FALSE )
+source("eval_response.R")
+eval_response_gam( out_eval_RED$data$ddf, makepdf=FALSE )
 ```
 
 There are several points here:
@@ -893,13 +912,6 @@ siteinfo %>%
   dplyr::rename( Site=sitename, Lon.=lon, Lat.=lat, Elevation=elv, Veg.=classid, Clim.=koeppen_code, N = ndailygpp ) %>%
   dplyr::select( Site, Lon., Lat., Period, Veg., Clim., N, Reference ) %>%
   knitr::kable( caption = "Sites used for evaluation. Lon. is longitude, negative values indicate west longitude; Lat. is latitude, positive values indicate north latitude; Veg. is vegetation type: deciduous broadleaf forest (DBF); evergreen broadleaf forest (EBF); evergreen needleleaf forest (ENF); grassland (GRA); mixed deciduous and evergreen needleleaf forest (MF); savanna ecosystem (SAV); shrub ecosystem (SHR); wetland (WET)." )
-```
-
-
-## Mean seasonality by climate zone
-
-```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE, warning=FALSE}
-nothing <- plot_by_doy_allzones( out_eval$data$meandoydf_byclim_stats, makepdf=FALSE )
 ```
 
 
