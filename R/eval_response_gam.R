@@ -55,7 +55,7 @@ eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 5, ... ){
   df_training <- df_training %>% dplyr::filter( temp > 0.0 )
   
   ## train the neural network at observed daily GPP
-  filn <- "gam_obs.Rdata"
+  filn <- "tmpdir/gam_obs.Rdata"
   if (!file.exists(filn)||overwrite){
     set.seed(1982)
     gam_obs <- gam( gpp_obs ~ s(temp) + s(vpd) + s(fapar) + s(ppfd) + s(soilm), data = df_training, method = "REML" )
@@ -68,7 +68,7 @@ eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 5, ... ){
   }
 
   ## train the neural network at modelled daily GPP
-  filn <- "gam_mod.Rdata"
+  filn <- "tmpdir/gam_mod.Rdata"
   if (!file.exists(filn)||overwrite){
     set.seed(1982)
     gam_mod <- gam( gpp_mod ~ s(temp) + s(vpd) + s(fapar) + s(ppfd) + s(soilm), data = df_training, method = "REML" )
@@ -81,7 +81,7 @@ eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 5, ... ){
   }
 
   ## train the neural network at modelled daily GPP
-  filn <- "gam_bias.Rdata"
+  filn <- "tmpdir/gam_bias.Rdata"
   if (!file.exists(filn)||overwrite){
     set.seed(1982)
     gam_bias <- gam( bias ~ s(temp) + s(vpd) + s(fapar) + s(ppfd) + s(soilm), data = df_training, method = "REML" )

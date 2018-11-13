@@ -23,23 +23,25 @@ Load the package. This contains all the necessary wrapper functions to set up an
 library(rsofun)  ## Not yet implemented
 ```
 
-For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, `runread_sofun()` , and `update_params()`. Load the respective functions.
-```{r}
-source("prepare_metainfo_fluxnet2015.R")
-source("prepare_setup_sofun.R")
-source("prepare_input_sofun.R")
-source("calib_sofun.R")
-source("runread_sofun.R")
-source("update_params.R")
-source("eval_sofun.R")
-source("pmodel.R")
-source("get_obs_bysite_gpp_fluxnet2015.R")
-source("get_obs_bysite_gpp_gepisat.R")
-```
+<!-- For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, `runread_sofun()` , and `update_params()`. Load the respective functions. -->
+<!-- ```{r} -->
+<!-- source("prepare_metainfo_fluxnet2015.R") -->
+<!-- source("prepare_setup_sofun.R") -->
+<!-- source("prepare_input_sofun.R") -->
+<!-- source("calib_sofun.R") -->
+<!-- source("runread_sofun.R") -->
+<!-- source("update_params.R") -->
+<!-- source("eval_sofun.R") -->
+<!-- source("pmodel.R") -->
+<!-- source("get_obs_bysite_gpp_fluxnet2015.R") -->
+<!-- source("get_obs_bysite_gpp_gepisat.R") -->
+<!-- ``` -->
 
 Some other crap.
 ```{r}
 systr <- "''"    # for Mac
+knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() )
+system("mkdir -p tempdir")
 ```
 
 # Setup {.tabset .tabset-fade}
@@ -82,7 +84,7 @@ Run SOFUN in the simple setup.
 
 ```{r, eval=FALSE, message=FALSE, warning=FALSE}
 ## First update calibratable parameters.
-params_opt <- read_csv( paste0("params_opt_kphio_soilm_global.csv") ) # as an example
+params_opt <- read_csv( "tmpdir/params_opt_kphio_soilm_global.csv" ) # as an example
 nothing <- update_params( params_opt, settings_sims_simple$dir_sofun )
 
 # here <- getwd() # save current working directory
@@ -99,7 +101,7 @@ if (!file.exists( paste0( settings_sims_simple$dir_sofun, "rundemo_pmodel"))){
 
 # ## more directly:
 # source("rpmodel.R")
-# out <- rpmodel( fpar = 0.7, ppfd = 10, co2 = 300, tc = 20, cpalpha = 1.0, vpd = 100, elv = 300 )
+# out <- rpmodel( tc = 20, vpd = 100, co2 = 300, elv = 300, kphio = kphio params_opt$kphio, fapar = 0.7, ppfd = 10, method="full", returnvar = NULL )
 
 ## Run for different temperatures and plot
 ## Fortran
@@ -109,7 +111,7 @@ proc.time() - ptm
 
 ## R
 ptm <- proc.time()
-gpp_temp_test_r <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), ~rpmodel( fpar = 0.7, ppfd = 10, co2 = 300, tc = ., cpalpha = 1.0, vpd = 100, elv = 300 ) ) %>% purrr::map("gpp") %>% unlist()
+gpp_temp_test_r <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), ~rpmodel( tc = ., vpd = 100, co2 = 300, elv = 300, kphio = params_opt$kphio, fapar = 0.7, ppfd = 10, method="full", returnvar = "gpp" ) ) %>% unlist()
 proc.time() - ptm
 
 plot( 1:100, gpp_temp_test_for, ylim = c(0,3), type = "l", xlab = "temperature (deg C)", ylab = "GPP (gC/d/m2)" )

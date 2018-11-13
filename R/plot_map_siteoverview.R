@@ -51,17 +51,17 @@ plot_map_siteoverview <- function( df, background, plotfiln=NA ){
           )
     maps::map( add=TRUE, interior=FALSE, resolution=0, lwd=0.5 )
 
-    axis( 2, at=lat.labels, lab=do.call(expression,a), cex.axis=0.7, lwd=1.5 )
-    axis( 2, at=lat.short, lab=F, lwd=1, tck=-0.01 )
+    axis( 2, at=lat.labels, labels=do.call(expression,a), cex.axis=0.7, lwd=1.5 )
+    axis( 2, at=lat.short, labels=FALSE, lwd=1, tck=-0.01 )
 
-    axis( 4, at=lat.labels, lab=F, lwd=1.5 )
-    axis( 4, at=lat.short, lab=F, lwd=1, tck=-0.01 )
+    axis( 4, at=lat.labels, labels=FALSE, lwd=1.5 )
+    axis( 4, at=lat.short, labels=FALSE, lwd=1, tck=-0.01 )
 
-    axis( 1, at=lon.labels, lab=do.call(expression,b), cex.axis=0.7, lwd=1.5 )
-    axis( 1, at=lon.short, lab=F, lwd=1, tck=-0.01 )
+    axis( 1, at=lon.labels, labels=do.call(expression,b), cex.axis=0.7, lwd=1.5 )
+    axis( 1, at=lon.short, labels=FALSE, lwd=1, tck=-0.01 )
 
-    axis( 3, at=lon.labels, lab=F, lwd=1.5 )
-    axis( 3, at=lon.short, lab=F, lwd=1, tck=-0.01 )
+    axis( 3, at=lon.labels, labels=FALSE, lwd=1.5 )
+    axis( 3, at=lon.short, labels=FALSE, lwd=1, tck=-0.01 )
 
     # growtype <- list( herb=c("GRA", "CRO"), sav=c("SAV", "WSA"), shrub=c("OSH", "CSH"), woody_dec=c("MF", "DBF"), woody_evg=c("ENF", "EBF"), wet=c("WET") )
 

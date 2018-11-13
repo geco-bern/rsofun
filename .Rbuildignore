@@ -1,3 +1,8 @@
 ^LICENSE\.md$
+<<<<<<< HEAD
 ^.*\.Rproj$
 ^\.Rproj\.user$
+=======
+^appveyor\.yml$
+^\.travis\.yml$
+>>>>>>> 9c2a34bf61eacae6bb44526d2aa0a223cf1f8875

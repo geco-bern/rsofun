@@ -58,7 +58,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
     ## Aggregate model output data to annual/monthly/weekly, only for selected sites,
     ## and merge into respective observational data frame 
     ##------------------------------------------------------------
-	  print("Getting model outputs...")
+	  print("Aggregating model outputs...")
 
     ## annual sum
     obs_eval$adf <- ddf_mod %>%
@@ -406,6 +406,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
 			metrics$gpp$fluxnet2015$anomalies_xdaily <- list( rsq=NA, rmse=NA )
 		}
 
+		print("Done with eval_sofun().")
 	}
   
   data = list(  
@@ -423,7 +424,8 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
     meandoydf              = meandoydf, 
     meandoydf_stats        = meandoydf_stats, 
     meandoydf_stats        = meandoydf_stats, 
-    meandoydf_byclim_stats = meandoydf_byclim_stats, 
+  	meandoydf_byclim       = meandoydf_byclim,
+  	meandoydf_byclim_stats = meandoydf_byclim_stats, 
     meanxoydf              = meanxoydf, 
     meanxoydf_stats        = meanxoydf_stats,
     adf                    = obs_eval$adf,
