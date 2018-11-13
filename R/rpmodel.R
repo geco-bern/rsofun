@@ -12,8 +12,8 @@
 #' @param method (Optional) A character string specifying which method is to be used for calculating the ci:ca ratio. Defaults to \code{"full"}. Available also \code{c("approx", "simpl")}.
 #' @param returnvar (Optional) A character string of vector of character strings specifying which variables are to be returned (see return below).
 #'
-#' @return A named list of numeric values with   
-#' \begin{itemize}
+#' @return A named list of numeric values with 
+#' \itemize{
 #'         \item \code{ci}: leaf-internal partial pressure, (Pa)
 #'         \item \code{chi}: = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
 #'         \item \code{iwue}: intrinsic water use efficiency (unitless)
@@ -29,7 +29,7 @@
 #'         \item \code{actnv}: Active metabolic leaf N (canopy-level), mol N/m2-ground
 #'         \item \code{actnv_unitfapar}: Active metabolic leaf N (leaf-level, top of canopy), mol N/m2-leaf
 #'         \item \code{actnv_unitiabs}: Active metabolic leaf N per unit absorbed light, mol N/m2/mol
-#' \end{itemize}
+#' }  
 #' 
 #' @export
 #'
