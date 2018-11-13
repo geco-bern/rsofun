@@ -665,43 +665,31 @@ calc_ftemp_inst_vcmax <- function( tc ){
 }
 
 
-
-calc_vcmax25 <- function( vcmax, tc ){
+calc_ftemp_inst_rd <- function( tc ){
   #-----------------------------------------------------------------------
-  # Input:    - gcmax  : Vcmax at a given temperature tc 
-  #           - tc     : air temperature (degrees C)
-  # Output:   vcmax25  : Vcmax at 25 deg C
-  # Features: Returns the temperature-corrected Vcmax at 25 deg C
-  # Ref:      Analogue function like 'calc_gstar_gepisat'
+  # arguments:
+  # tc                  # temperature (degrees C)
+  # function return variable:
+  # fr                  # temperature response factor, relative to 25 deg C.
+  # Output:   Factor fr to correct for instantaneous temperature response
+  #           of Rd (dark respiration) for:
+  #
+  #               Rd(temp) = fr * Rd(25 deg C) 
+  #
+  # Ref:      Heskel et al. (2016) used by Wang Han et al. (in prep.)
   #-----------------------------------------------------------------------
+  # loal parameters
+  apar <- 0.1012
+  bpar <- 0.0005
+  tk25  <- 298.15 # 25 deg C in Kelvin
 
-  dhav <- 65330    # J/mol
-  kR   <- 8.3145   # J/mol/K
+  # conversion of temperature to Kelvin
+  tk <- tc + 273.15
 
-  vcmax25 <- vcmax * exp( -dhav * ( tc - 25.0 ) / ( 298.15 * kR * ( tc + 273.15 ) ) )
-  return( vcmax25 )
+  fr <- exp( apar * (tc - 25.0) - bpar * (tc^2 - 25.0^2) )
+ 
+  return(fr) 
 }
-
-
-# calc_vcmax25_colin <- function( vcmax, tc ){
-#   #-----------------------------------------------------------------------
-#   # Input:    - gcmax  : Vcmax at a given temperature tc 
-#   #           - tc     : air temperature (degrees C)
-#   # Output:   vcmax25  : Vcmax at 25 deg C
-#   # Features: Returns the temperature-corrected Vcmax at 25 deg C
-#   # Ref:      Colin's document
-#   #-----------------------------------------------------------------------
-
-#   ## conversion to temperature in Kelvin
-#   tk <- tc + 273.15
-
-#   dhav <- 65330    # J/mol
-#   kR   <- 8.3145   # J/mol/K
-
-#   vcmax25 <- vcmax * exp( -dhav/kR * (1/298.15 - 1/tk) )
-#   return( vcmax25 )
-# }
-
 
 calc_patm <- function( elv ){
   #-----------------------------------------------------------------------
