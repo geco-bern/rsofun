@@ -18,15 +18,21 @@ header-includes:
 bibliography: bibliography.bib
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r "knitr config", cache = FALSE, include=FALSE}
+require(knitr)
 library(captioner)
+library(rsofun)
 tab_nums <- captioner( prefix = "Table S", auto_space=FALSE, style = "i" )
 fig_nums <- captioner( prefix = "Figure S", auto_space=FALSE, style = "i" )
 systr <- "''"    # for Mac
-knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() )
-system("mkdir -p tempdir")
+rootdir <- rprojroot::find_rstudio_root_file()
+knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does not work properly
 ```
+ 
+```{r, "load", echo = FALSE}
+load(paste0( rootdir, "/tmpdir/settings_sims_sitescale.Rdata" ) )
+```
+
 
 # Evaluation of GPP against FLUXNET data
 
@@ -34,22 +40,9 @@ system("mkdir -p tempdir")
 
 Load settings and functions defined outside (e.g. as shown in `vignette_rsofun.Rmd`).
 ```{r message=FALSE}
-library(rsofun)
-library(dplyr)
-library(readr)
-load("tmpdir/siteinfo.Rdata")
-load("tmpdir/settings_sims_sitescale.Rdata")
-load("tmpdir/settings_input_sitescale.Rdata")
-load("tmpdir/setup_sofun_sitescale.Rdata")
-# source("../R/prepare_setup_sofun.R")
-# source("../R/prepare_input_sofun.R")
-# source("../R/runread_sofun.R")
-# source("../R/update_params.R")
-# source("../R/eval_sofun.R")
-# source("../R/get_obs_bysite_gpp_fluxnet2015.R")
-# source("../R/get_obs_bysite_gpp_gepisat.R")
-# source("../R/remove_outliers.R")
-# source("../R/plot_eval_sofun.R")
+load( paste0( rootdir, "/tmpdir/settings_sims_sitescale.Rdata" ) )
+load( paste0( rootdir, "/tmpdir/settings_input_sitescale.Rdata" ) )
+load( paste0( rootdir, "/tmpdir/setup_sofun_sitescale.Rdata" ) )
 ```
 
 Define common model evaluation settings as a list.
@@ -883,7 +876,7 @@ Functional relationships seen in the data can be extracted using Artificial Neur
 In order to improve comparability, ANNs are trained at (P-) modelled and observed GPP, and functional relationships thus derived for observed and modelled. This improves comparability and is preferred here over evaluating the model directly. As always, observations are in black and modelled in red.
 
 ```{r neuralnet, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
-eval_response_gam( out_eval_RED$data$ddf, makepdf=FALSE )
+eval_response( out_eval_RED$data$ddf, makepdf=FALSE )
 ```
 
 There are several points here:

@@ -1,4 +1,4 @@
-#' P-model
+#' P-model in R
 #'
 #' R implementation of the P-model and its corrolary predictions (Prentice et al., 2014; Han et al., 2017)
 #' 
@@ -175,7 +175,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
     ## representing leaf-level at the top of the canopy.
     ##-----------------------------------------------------------------------
     ## Vcmax normalised per unit fAPAR (assuming fAPAR=1)
-    vcmax_unitfapar <- ppfd * kphio * n 
+    vcmax_unitfapar <- ppfd * kphio * out_lue$n 
 
     ## Vcmax25 (vcmax normalized to 25 deg C)
     vcmax25_unitfapar <- vcmax_unitfapar / ftemp_inst_vcmax
@@ -201,7 +201,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
 
       ## Vcmax per unit ground area is the product of the intrinsic quantum 
       ## efficiency, the absorbed PAR, and 'n'
-      vcmax <- iabs * kphio * n
+      vcmax <- iabs * kphio * out_lue$n
 
       ## (vcmax normalized to 25 deg C)
       vcmax25 <- vcmax / ftemp_inst_vcmax

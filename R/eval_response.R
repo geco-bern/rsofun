@@ -9,9 +9,9 @@
 #' @return A data frame with aggregated data including GAM predictions and P-model results as columns \code{lue_gam} and \code{lue_mod}, respectively.
 #' @export
 #'
-#' @examples eval_response_gam( df, overwrite = TRUE, ndays_agg = 10 )
+#' @examples eval_response( df, overwrite = TRUE, ndays_agg = 10 )
 #' 
-eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
+eval_response <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
 
   # ## xxx debug
   # df <- out_eval_RED$data$ddf
