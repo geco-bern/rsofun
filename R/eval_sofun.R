@@ -91,58 +91,6 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
       ## merge into observational data frame
       right_join( obs_eval$ddf, by = c("sitename", "date"))
 
-    # ##------------------------------------------------------------
-    # ## Create table for overview
-    # ##------------------------------------------------------------
-    # filn <- "siteinfo_eval.csv"
-    # if (!file.exists(filn)||overwrite){
-    # 	## Get additional meta information for sites: Koeppen-Geiger Class
-    # 	## First, get this info from a separate CSV file
-    #   ## XXX Joan: Put this file on Zenodo and get this file along with R-package-related data download. 
-    #   tmp <-  read_csv("~/data/FLUXNET-2015_Tier1/meta/fluxnet_site_info_mysub.csv") %>%
-    #           dplyr::rename( sitename = fluxnetid ) %>% dplyr::select( sitename, koeppen_climate )
-      
-  	 #  meta <- tmp %>%
-  	 #          mutate( koeppen_climate = str_split( koeppen_climate, " - " ) ) %>%
-  	 #          mutate( koeppen_code = purrr::map( koeppen_climate, 1 ) ) %>%
-  	 #          mutate( koeppen_word = purrr::map( koeppen_climate, 2 ) ) %>%
-  	 #          unnest( koeppen_code )
-
-  	 #  ## add info: number of data points (daily GPP)
-  		# siteinfo_eval <- obs_eval$ddf %>% group_by( sitename ) %>% summarise( ndailygpp = sum(!is.na(gpp_obs)) ) %>% 
-  		# 	right_join( dplyr::rename( siteinfo$light, sitename = mysitename ), by = "sitename" ) %>%
-  		# 	left_join( meta, by = "sitename")
-  		
-  		# legend <- tmp$koeppen_climate %>% as_tibble() %>% 
-  		#   filter( !is.na(value) ) %>%
-  		#   filter( value!="-" ) %>%
-  		#   mutate( koeppen_climate = str_split( value, " - " ) ) %>%
-  		#   mutate( koeppen_code = purrr::map( koeppen_climate, 1 ) ) %>%
-  		#   mutate( koeppen_word = purrr::map( koeppen_climate, 2 ) ) %>%
-  		#   unnest( koeppen_code ) %>% 
-  		#   unnest( koeppen_word ) %>% 
-  		#   dplyr::select( Code = koeppen_code, Climate = koeppen_word ) %>% 
-  		#   distinct( Code, .keep_all = TRUE ) %>%
-  		#   arrange( Code )
-
-  		# write_csv( legend, path = "koeppen_legend.csv" )
-  		
-  		# ## Second, extract the class from a global map, complement missing in above
-  		# kgclass <- raster("~/data/koeppengeiger/koeppen-geiger.tif")
-  		# kglegend <- read_csv("~/data/koeppengeiger/koppen-geiger_legend.csv") %>% setNames( c("kgnumber", "koeppen_code_extr"))
-  		# siteinfo_eval <- siteinfo_eval %>% mutate( kgnumber = extract( kgclass, data.frame( x=.$lon, y=.$lat ) ) ) %>% 
-  		#   left_join( kglegend, by = "kgnumber" ) %>%
-  		#   mutate( koeppen_code = ifelse( is.na(koeppen_code), koeppen_code_extr, koeppen_code ) ) %>%
-  		#   dplyr::select( -koeppen_climate, -koeppen_word )
-  					
-  		# write_csv( siteinfo_eval, path = filn )
-
-    # } else {
-
-    #   siteinfo_eval <- read_csv( filn )
-
-    # }
-
 		## metrics for daily and x-daily values, all sites pooled
     metrics$gpp$fluxnet2015$daily_pooled <- with( obs_eval$ddf, get_stats( gpp_mod, gpp_obs ) )
     metrics$gpp$fluxnet2015$xdaily_pooled <- with( obs_eval$xdf, get_stats( gpp_mod, gpp_obs ) )

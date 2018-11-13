@@ -105,10 +105,10 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   mprime   <- calc_mprime( out_lue$m )
 
   ## Light use efficiency (gpp per unit absorbed light)
-  lue <- kphio * mprime
+  lue <- kphio * mprime * c_molmass
 
   ## leaf-internal CO2 partial pressure (Pa)
-  ci <- chi * ca
+  ci <- out_lue$chi * ca
 
   ##-----------------------------------------------------------------------
   ## Corrolary preditions (This is prelimirary!)
@@ -143,10 +143,10 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
     vcmax_unitfapar <- ppfd * kphio * n 
 
     ## Vcmax25 (vcmax normalized to 25 deg C)
-    vcmax25_unitfapar <- factor25_vcmax * vcmax_unitfapar
+    vcmax25_unitfapar <- vcmax_unitfapar / ftemp_inst_vcmax
 
     ## Dark respiration per unit fAPAR (assuming fAPAR=1)
-    rd_unitfapar <- rd_to_vcmax * vcmax_unitfapar
+    rd_unitfapar <- rd_to_vcmax * (ftemp_inst_rd / ftemp_inst_vcmax) * vcmax_unitfapar
 
     ## active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
     actnv_unitfapar <- vcmax25_unitfapar * n_v
@@ -169,10 +169,10 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
       vcmax <- iabs * kphio * n
 
       ## (vcmax normalized to 25 deg C)
-      vcmax25 <- factor25_vcmax * vcmax
+      vcmax25 <- vcmax / ftemp_inst_vcmax
 
       ## Dark respiration
-      rd <- rd_to_vcmax * vcmax
+      rd <- rd_to_vcmax * (ftemp_inst_rd / ftemp_inst_vcmax) * vcmax
 
       ## active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
       actnv <- vcmax25 * n_v
@@ -189,18 +189,23 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
 
   } else {
 
-    iabs <- NA
     vcmax_unitfapar <- NA
     vcmax25_unitfapar <- NA
     rd_unitfapar <- NA
     actnv_unitfapar <- NA
 
+    gpp <- NA
+    vcmax <- NA
+    vcmax25 <- NA
+    rd <- NA
+    actnv <- NA
+    
   }
 
   ## construct list for output
   out <- list( 
               ci=ci,
-              chi=chi,
+              chi=out_lue$chi,
               iwue=iwue,
               lue=lue,
               gpp=gpp,                       # mol CO2 m-2 s-1 (given that ppfd is provided in units of s-1)
@@ -208,7 +213,6 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
               vcmax25=vcmax25,               # mol CO2 m-2 s-1 (given that ppfd is provided in units of s-1)
               vcmax_unitfapar=vcmax_unitfapar,
               vcmax_unitiabs=vcmax_unitiabs,
-              factor25_vcmax=factor25_vcmax, # unitless
               rd=rd,                         # mol CO2 m-2 s-1 
               rd_unitfapar=rd_unitfapar,     # mol CO2 m-2 s-1 
               rd_unitiabs=rd_unitiabs, 

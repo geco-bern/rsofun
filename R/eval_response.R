@@ -1,7 +1,7 @@
-eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 5, ... ){
+eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
 
-  ## xxx debug
-  df <- out_eval_RED$data$ddf
+  # ## xxx debug
+  # df <- out_eval_RED$data$ddf
   
   ## rename (should go outside this function)
   df <- df %>%  mutate( lue_obs = gpp_obs / (fapar * ppfd_fluxnet2015) ) %>%
@@ -18,35 +18,37 @@ eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 5, ... ){
   breaks <- purrr::map( as.list(listyears), ~seq( from=., by=paste0( ndays_agg, " days"), length.out = ceiling(365 / ndays_agg)) ) %>% Reduce(c,.)
   
   ## take mean across periods
-  df <- df %>% mutate( inbin = cut( date, breaks = breaks, right = FALSE ) ) %>%
-               group_by( sitename, inbin ) %>%
-               summarise( 
-                  lue_obs_mean = mean( lue_obs, na.rm = TRUE ),
-                  temp_mean    = mean( temp,    na.rm = TRUE ), 
-                  vpd_mean     = mean( vpd,     na.rm = TRUE ), 
-                  soilm_mean   = mean( soilm, na.rm   = TRUE ),
-                  n_obs        = sum(!is.na(lue_obs)) 
-                  ) %>%
-               dplyr::rename( 
-                  lue_obs = lue_obs_mean,
-                  temp = temp_mean,
-                  vpd = vpd_mean,
-                  soilm = soilm_mean
-                  ) %>%
-               mutate( 
-                  lue_obs = ifelse(is.nan(lue_obs), NA, lue_obs ),
-                  temp = ifelse(is.nan(temp), NA, temp ),
-                  vpd = ifelse(is.nan(vpd), NA, vpd ),
-                  soilm = ifelse(is.nan(soilm), NA, soilm )
-                  )
-
+  df_agg <- df %>%  mutate( inbin = cut( date, breaks = breaks, right = FALSE ) ) %>%
+                    group_by( sitename, inbin ) %>%
+                    summarise( 
+                      lue_obs_mean = mean( lue_obs, na.rm = TRUE ),
+                      temp_mean    = mean( temp,    na.rm = TRUE ), 
+                      vpd_mean     = mean( vpd,     na.rm = TRUE ), 
+                      soilm_mean   = mean( soilm, na.rm   = TRUE ),
+                      n_obs        = sum(!is.na(lue_obs)) 
+                      ) %>%
+                    dplyr::rename( 
+                      lue_obs = lue_obs_mean,
+                      temp = temp_mean,
+                      vpd = vpd_mean,
+                      soilm = soilm_mean
+                      ) %>%
+                    mutate( 
+                      lue_obs = ifelse(is.nan(lue_obs), NA, lue_obs ),
+                      temp = ifelse(is.nan(temp), NA, temp ),
+                      vpd = ifelse(is.nan(vpd), NA, vpd ),
+                      soilm = ifelse(is.nan(soilm), NA, soilm )
+                      ) %>%
+                    mutate( date = ymd(as.character(inbin)) ) %>%
+                    dplyr::select( -inbin ) %>%
+                    ungroup()
 
   ## filter out data if any of the variables is NA. Different for gpp_mod and gpp_obs
-  df_training <- dplyr::filter( df, !is.na(lue_obs) & !is.na(temp) & !is.na(vpd) & !is.na(soilm) )
+  df_training <- dplyr::filter( df_agg, !is.na(lue_obs) & !is.na(temp) & !is.na(vpd) & !is.na(soilm) )
   
   ## filter days with temperature below zero
   df_training <- df_training %>% dplyr::filter( temp > 0.0 )
-  
+
   ## train the neural network at observed daily GPP
   filn <- "tmpdir/gam.Rdata"
   if (!file.exists(filn)||overwrite){
@@ -65,27 +67,46 @@ eval_response_gam <- function( df, overwrite = FALSE, ndays_agg = 5, ... ){
 
   ## calculate values with P-model
   params_opt <- read_csv( "tmpdir/params_opt_RED.csv" )
-  df_training <- df_training[1:3,] %>%  mutate( lue_gam = predicted[1:3] ) %>%
-                                        mutate( lue_pmodel = rpmodel( tc = temp, vpd = vpd, co2 = 300, elv = 300, kphio = kphio params_opt$kphio, fapar = NA, ppfd = NA, method="full", returnvar = "lue" ) )
-  
-  # ## evaluate performance of gam-predictions
-  # stats_gam      <- with( df_training,  analyse_modobs( lue_gam, gpp_obs, heat = TRUE, plot.fil = "fig/modobs_gam.pdf" ) )
+  df_training <- df_training %>%  mutate( lue_gam = predicted ) %>%
+    group_by( date, sitename ) %>%
+    nest() %>%
+    mutate( out_pmodel = purrr::map( data, ~rpmodel(  tc = .$temp, 
+                                                      vpd = .$vpd, 
+                                                      co2 = 300, 
+                                                      elv = 300, 
+                                                      kphio = params_opt$kphio, 
+                                                      fapar = NA, 
+                                                      ppfd = NA, 
+                                                      method="full"
+                                                      ) ) ) %>%
+    mutate( lue_mod = purrr::map_dbl( out_pmodel, "lue" ) ) %>%
+    unnest( data )
+              
+  ## xxx test
+  # with( filter(df, sitename=="FR-LBr"), plot( date, lue_obs, type="l", ylim=c(0,1)))
+  # with( filter(df_agg, sitename=="FR-LBr"), lines( date, lue_obs, col="red"))
+  # with( filter(df_training, sitename=="FR-LBr"), lines( date, lue_gam, col="green"))
+  # with( filter(df_training, sitename=="FR-LBr"), lines( date, lue_mod, col="cyan"))
 
+  ## evaluate performance of GAM and P-model predictions
+  stats_gam <- with( df_training,  analyse_modobs( lue_gam, lue_obs, heat = TRUE ) )
+  stats_mod <- with( df_training,  analyse_modobs( lue_mod, lue_obs, heat = TRUE ) )
+  
   ##-------------------------------------
   ## Evaluate GAM
   ##-------------------------------------
   ## temperature
-  eval_response_byvar( df_training, gam, evalvar = "temp", predictors = c("temp", "vpd", "soilm"), varmin = 0, varmax = 40, nsample = 12, ylim=c(0,0.5) ) 
+  eval_response_byvar( df_training, gam, evalvar = "temp", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 40, nsample = 12, ylim=c(0,0.5) ) 
 
   ## vpd
-  eval_response_byvar( df_training, gam, evalvar = "vpd", predictors = c("temp", "vpd", "soilm"), varmin = 0, varmax = 3000, nsample = 12, ylim=c(0,0.5) )
+  eval_response_byvar( df_training, gam, evalvar = "vpd", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 3000, nsample = 12, ylim=c(0,0.5) )
 
   ## soilm
-  eval_response_byvar( df_training, gam, evalvar = "soilm", predictors = c("temp", "vpd", "soilm"), varmin = 0, varmax = 1.0, nsample = 12, ylim=c(0,0.5) )
+  eval_response_byvar( df_training, gam, evalvar = "soilm", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 1.0, nsample = 12, ylim=c(0,0.5) )
 
 }
 
-eval_response_byvar <- function( df, gam, evalvar, predictors, varmin, varmax, nsample, makepdf=TRUE, ... ){
+eval_response_byvar <- function( df, gam, evalvar, predictors, kphio, varmin, varmax, nsample, makepdf=TRUE, ... ){
 
   if (evalvar %in% predictors) predictors <- predictors[-which(predictors==evalvar)]
 
@@ -97,25 +118,50 @@ eval_response_byvar <- function( df, gam, evalvar, predictors, varmin, varmax, n
               as_tibble() %>%
               setNames( c( evalvar, predictors ) )
 
-  ## predict with evaluation data
+  ## predict for GAM with evaluation data
   predicted_eval <- predict( gam, evaldata )
   evaldata <- evaldata %>% mutate( lue_gam = predicted_eval )
 
+  ## predict for P-model with evaluation data
+  evaldata <- evaldata %>%  mutate( id = 1:n() ) %>%
+                            group_by( id ) %>%
+                            nest() %>%
+                            mutate( out_pmodel = purrr::map( data, ~rpmodel(  tc = .$temp, 
+                                                                              vpd = .$vpd, 
+                                                                              co2 = 300, 
+                                                                              elv = 300, 
+                                                                              kphio = kphio, 
+                                                                              fapar = NA, 
+                                                                              ppfd = NA, 
+                                                                              method="full"
+                                                                              ) ) ) %>%
+                            mutate( lue_mod = purrr::map_dbl( out_pmodel, "lue" ) ) %>%
+                            unnest( data )
+
   ## summarise by temperature steps
   eval_sum <- evaldata %>% group_by_( evalvar ) %>%
-                           summarise( median = median( lue_gam ),  
-                                      q33 = quantile( lue_gam, 0.33 ),
-                                      q66 = quantile( lue_gam, 0.66 ),
-                                      q25 = quantile( lue_gam, 0.25 ),
-                                      q75 = quantile( lue_gam, 0.75 )
+                           summarise( median_gam = median( lue_gam ),  
+                                      q33_gam = quantile( lue_gam, 0.33 ),
+                                      q66_gam = quantile( lue_gam, 0.66 ),
+                                      q25_gam = quantile( lue_gam, 0.25 ),
+                                      q75_gam = quantile( lue_gam, 0.75 ),
+
+                                      median_mod = median( lue_mod ),  
+                                      q33_mod = quantile( lue_mod, 0.33 ),
+                                      q66_mod = quantile( lue_mod, 0.66 ),
+                                      q25_mod = quantile( lue_mod, 0.25 ),
+                                      q75_mod = quantile( lue_mod, 0.75 )
                                       )
 
   ## plot response in observational and simulated data
   if (makepdf) pdf( paste0("fig/gam_response_", evalvar, ".pdf") )
 
     par(las=0)
-	  plot( eval_sum[[evalvar]], eval_sum$median, type = "l", col="black", xlab = evalvar, ... )
-	  polygon( c(eval_sum[[evalvar]], rev(eval_sum[[evalvar]])), c(eval_sum$q33, rev(eval_sum$q66)), col=rgb(0,0,0,0.2), border = NA )
+	  plot( eval_sum[[evalvar]], eval_sum$median_gam, type = "l", col="black", xlab = evalvar, ... )
+	  polygon( c(eval_sum[[evalvar]], rev(eval_sum[[evalvar]])), c(eval_sum$q33_gam, rev(eval_sum$q66_gam)), col=rgb(0,0,0,0.2), border = NA )
+
+    lines( eval_sum[[evalvar]], eval_sum$median_mod, col="red" )
+    polygon( c(eval_sum[[evalvar]], rev(eval_sum[[evalvar]])), c(eval_sum$q33_mod, rev(eval_sum$q66_mod)), col=rgb(1,0,0,0.2), border = NA )
 
   if (makepdf) dev.off()
 
