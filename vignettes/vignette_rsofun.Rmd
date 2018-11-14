@@ -45,9 +45,9 @@ knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does no
 <!-- source("get_obs_bysite_gpp_gepisat.R") -->
 <!-- ``` -->
 
-<!-- # Setup {.tabset .tabset-fade}
- -->
-## P-model as a function
+<!-- # Setup {.tabset .tabset-fade} -->
+
+## Simplest setup
 
 This is the simplest setup, where the SOFUN is executed as a function for a single time step and location.
 
@@ -119,15 +119,25 @@ plot( seq( 0, 35, length.out = 100 ), gpp_temp_test_r, ylim = c(0,3), type = "l"
 
 ## Site-scale simulations
 
-The examples shown below are for site-scale simulations, i.e., where one model run covers a single point only. Calibration and evaluation steps are currently available only for site-scale simulations.
+The examples shown below are for site-scale simulations, i.e., where one model run covers a single point only. Note that calibration and evaluation steps (described further below) are currently available only for site-scale simulations.
 
 ### Simulation settings
 
-Define the simulation settings as a list. Components of the simulation settings should specify only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (CSV file created "by hand" or some other more clever method for large ensembles - up to you.). The function `prepare_setup_sofun()` complements the simulation settings list by these additional components as lists with elements for each site, nested within the simulation settings list.
+The simulation settings define the model simulations for each site and the the user-defined local environment. Simulation settings are defined as a named list. The user specifies only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (a CSV file created separately). The function `prepare_setup_sofun()` complements the simulation settings by these additional components as lists with elements for each site, nested within the simulation settings list.
 
-In the example given here, we use a site meta information file provided along with the `rsofun` package. It's located at the path `/rsofun/inst/extdata/siteinfo_fluxnet2015_sofun+whc.csv`. For demonstration, 
+In the example given here, we use a site meta information file for FLUXNET 2015 Tier 1 sites, provided along with the `rsofun` package. It's located at the path `/rsofun/inst/extdata/siteinfo_example.csv`. For demonstration, we define a set of site-scale simulations of length one. That is, for only one site, here "FR-Pue". Note that FLUXNET 2015 data and MODIS FPAR data is provided along with the package `rsofun` for this one site for demonstration purposes only  and provides data only for a reduced number of years (2007-2014). The site meta information file looks like this:
+```{r message=FALSE}
+siteinfo <- read_csv( paste0( rootdir, "/inst/extdata/siteinfo_example.csv" ) )
+print( siteinfo )
+```
 
-The SOFUN directory will be cloned using `git` locally and placed in `"~/sofun/trunk/"`. This information, along with more, is specified as a list as shown below.
+To conduct P-model simulations with the Fortran implementation, respective model code needs to be downloaded separately from the Github [sofun](https://github.com/stineb/sofun) repository and placed in a separate directory (`dir_sofun` below). Builds of this Fortran code are available for public download at XXX in order to avoid having to compile from source.
+
+<!-- For site-scale simulations conducted at FLUXNET 2015 Tier 1 sites, the meta information is provided along with the package `rsofun`. Let's look at this data as an example and save it in a CSV file, corresponding to the information specified above (under `settings_sims_sitescale$path_siteinfo`). -->
+<!-- ```{r} -->
+<!-- print( metainfo_Tier1_sites_kgclimate_fluxnet2015 ) -->
+<!-- write_csv( metainfo_Tier1_sites_kgclimate_fluxnet2015, path = settings_sims_sitescale$path_siteinfo ) -->
+<!-- ``` -->
 
 ```{r}
 settings_sims_sitescale <- list(
@@ -181,15 +191,10 @@ settings_sims_sitescale <- list(
 - `lout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (ascii text file for time series). To be anbandoned, only NetCDF output should be maintained.
 - `lout<var>`: Switch (`TRUE` of `FALSE`) whether variable `<var>` is to be written to output (NetCDF file).
 
-For site-scale simulations conducted at FLUXNET 2015 Tier 1 sites, the meta information is provided along with the package `rsofun`. Let's look at this data as an example and save it in a CSV file, corresponding to the information specified above (under `settings_sims_sitescale$path_siteinfo`).
-```{r}
-print( metainfo_Tier1_sites_kgclimate_fluxnet2015 )
-write_csv( metainfo_Tier1_sites_kgclimate_fluxnet2015, path = settings_sims_sitescale$path_siteinfo )
-```
 
 ### Input settings
 
-Define data sources used for SOFUN input. Two modes of specifying inputs are available. Either providing the input data directly (element `data`, not available for `lonlat` simulations), or by specifying a keyword for the source dataset as strings. E.g. `"fluxnet2015"` triggers specific functions that read input data from specific files, here all the site-level meteo data from FLUXNET 2015. Define the input settings as a list.
+Input settings define data sources used for SOFUN input. Two modes of specifying inputs are available. Either providing the input data directly (element `data`, not available for `"lonlat"` simulations), or by specifying a keyword for the source dataset as strings. E.g. `"fluxnet2015"` triggers specific functions that read input data from specifically formatted files, here all the site-level meteo data from FLUXNET 2015. Define the input settings as a list.
 
 ```{r}
 settings_input_sitescale <-  list(
@@ -199,24 +204,11 @@ settings_input_sitescale <-  list(
   vpd                      = "fluxnet2015",
   ppfd                     = "fluxnet2015",
   netrad                   = NA,
-  cloudcover               = "cru",
-  fapar                    = "MODIS_FPAR_MCD15A3H", # valid alternative: "MODIS_EVI_MOD13Q1",
+  fapar                    = "MODIS_FPAR_MCD15A3H",
   splined_fapar            = TRUE,
   path_co2                 = paste0( rootdir, "inst/extdata/cCO2_rcp85_const850-1765.dat" ),
-  path_fluxnet2015         = rootdir,
-  path_watch_wfdei         = "~/data/watch_wfdei/",
-  path_cru                 = "~/data/cru/ts_4.01/",
-  path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
-  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
-  path_remote_watch_wfdei  = "/work/bstocker/labprentice/data/watch_wfdei/",
-  path_remote_co2          = "/work/bstocker/labprentice/data/co2/cCO2_rcp85_const850-1765.dat",
-  path_remote_cru          = "/work/bstocker/labprentice/data/cru/ts_4.01/",
-  path_remote_MODIS_FPAR_MCD15A3H  = "/work/bstocker/labprentice/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/",
-  path_remote_MODIS_EVI_MOD13Q1 = "/work/bstocker/labprentice/data/evi_MODIS_EVI_MOD13Q1_fluxnet2015_gee_subset/",
-  path_remote_fluxnet2015  = "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_remote_watch_wfdei  = "/work/bstocker/labprentice/data/watch_wfdei/",
-  uname_remote             = "bstocker",
-  address_remote           = "login.cx1.hpc.ic.ac.uk"
+  path_fluxnet2015         = paste0( rootdir, "inst/extdata" ),
+  path_MODIS_FPAR_MCD15A3H = paste0( rootdir, "inst/extdata" )
   )
 ```
 
