@@ -96,7 +96,9 @@ prepare_metainfo_fluxnet2015 <- function( origfilpath, dir_DD_fluxnet2015, overw
   ##--------------------------------------------------------------------
   ## Get C3/C4 information from an additional file
   ##--------------------------------------------------------------------
-  filn <- "./inst/extdata/siteinfo_fluxnet_sofun_withC3C4info.csv"
+  filn <- "./inst/extdata/metainfo_tier1sites_fluxnet2015_C3C4.csv"
+  inform( paste("Collecting C3/C4 information from file", filn ) )
+
   # if (!file.exists(filn)){
   #   download_file_cx1(  path_remote = "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/siteinfo_fluxnet_sofun_withC3C4info.csv", 
   #                       path_local  = paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/" )
@@ -105,16 +107,15 @@ prepare_metainfo_fluxnet2015 <- function( origfilpath, dir_DD_fluxnet2015, overw
 
   # siteinfo <- read_delim( filn, delim = ";" ) %>%
   siteinfo <- read_csv( filn ) %>%
-    dplyr::select( mysitename, type ) %>%
-    right_join( siteinfo, by = "mysitename" )
-
-  ## There was an error with mutate
-  siteinfo$c4 <- ifelse( (siteinfo$type=="C4" | siteinfo$type=="C3C4" ), TRUE, FALSE )
+    dplyr::select( mysitename, c4 ) %>%
+    left_join( siteinfo, by = "mysitename" )
 
   ##--------------------------------------------------------------------
   ## Add water holding capacity information
   ##--------------------------------------------------------------------
   filn <- "./inst/extdata/siteinfo_fluxnet2015_sofun+whc.csv"
+  inform( paste("Collecting water holding capacity information from file", filn ) )
+
   # if (!file.exists(filn)){
   #   download_file_cx1(  path_remote = "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/siteinfo_fluxnet2015_sofun+whc.csv", 
   #                       path_local  = paste0( settings_input$path_cx1data, "FLUXNET-2015_Tier1/" )
@@ -123,13 +124,14 @@ prepare_metainfo_fluxnet2015 <- function( origfilpath, dir_DD_fluxnet2015, overw
 
   siteinfo <- read_csv( filn ) %>%
               dplyr::select( mysitename, whc ) %>%
-              right_join( siteinfo, by = "mysitename" )
+              left_join( siteinfo, by = "mysitename" )
 
   ##--------------------------------------------------------------------
   ## Add elevation information by reading from WATCH-WFDEI elevation map
   ##--------------------------------------------------------------------
   if (!is.na(filn_elv_watch)){
 
+    inform("Collecting elevation information from WATCH-WFDEI")
     siteinfo$elv_watch <- purrr::map_dbl( as.list(1:nrow(siteinfo)), ~get_pointdata_elv_watch( siteinfo$lon[.], siteinfo$lat[.], filn_elv_watch ) )
     siteinfo <- siteinfo %>% mutate( elv = ifelse( is.na(elv), elv_watch, elv ) )
 
@@ -194,7 +196,9 @@ add_metainfo_koeppengeiger_fluxnet2015 <- function( siteinfo ){
 
   ## Get additional meta information for sites: Koeppen-Geiger Class
   ## The file "siteinfo_climate_koeppengeiger_flunxet2015.csv" was downloaded from downloaded from https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1530 (placed in my ~/data/FLUXNET-2015_Tier1/meta/)
-  tmp <-  read_csv("./inst/extdata/siteinfo_climate_koeppengeiger_flunxet2015.csv") %>%   # read_csv("~/data/FLUXNET-2015_Tier1/meta/fluxnet_site_info_mysub.csv") %>%
+  filn <- "./inst/extdata/siteinfo_climate_koeppengeiger_flunxet2015.csv"
+  inform(paste0("Collecting koeppen-geiger climate information from file ", filn))
+  tmp <-  read_csv(filn) %>%   # read_csv("~/data/FLUXNET-2015_Tier1/meta/fluxnet_site_info_mysub.csv") %>%
           dplyr::rename( sitename = fluxnetid ) %>% dplyr::select( sitename, koeppen_climate )
   
   meta <- tmp %>%
@@ -540,4 +544,10 @@ metainfo_Tier1_sites_kgclimate_fluxnet2015 <- read_csv( "./inst/extdata/tier1_si
                                               left_join( dplyr::select(metainfo_sites_fluxnet2015, sitename = mysitename, lon, lat, elv, year_start, year_end, years_data, classid, whc, c4), by = "sitename" ) %>%
                                               add_metainfo_koeppengeiger_fluxnet2015()
 save( metainfo_Tier1_sites_kgclimate_fluxnet2015, file = "./data/metainfo_Tier1_sites_kgclimate_fluxnet2015.Rdata" )
+
+## Create example CSV to be included in Package external data.
+out <- dplyr::filter( metainfo_Tier1_sites_kgclimate_fluxnet2015, sitename =="FR-Pue" ) %>%
+  mutate( year_start = 2007, year_end = 2014 ) %>%
+  mutate( years_data = year_end - year_start + 1 )
+write_csv( out, path = "./inst/extdata/siteinfo_example.csv" )
 

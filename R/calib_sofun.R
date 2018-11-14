@@ -1,6 +1,20 @@
+#' Calibrates SOFUN model parameters
+#'
+#' This is the main function that handles the calibration of SOFUN model parameters. 
+#' 
+#' @param setup A list containging the model settings. See vignette_rsofun.pdf for more information and an example.
+#' @param settings_calib A list containing model calibration settings. See vignette_rsofun.pdf for more information and examples.
+#' @param settings_sims A list containing model simulation settings from \code{\link{prepare_setup_sofun}}.  See vignette_rsofun.pdf for more information and examples.
+#' @param settings_input A list containing model input settings. See vignette_rsofun.pdf for more information and examples.
+#' @param ddf_obs (Optional) A data frame containing observational data used for model calibration. Created by function \code{get_obs()}
+#'
+#' @return A complemented named list containing the calibration settings and optimised parameter values.
+#' @export
+#'
+#' @examples settings_calib <- calib_sofun( setup, settings_calib, settings_sims, settings_input )
+#' 
 calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, ddf_obs = NA ){
 
-  
   ##----------------------------------------------------------------
   ## Collect observational data used as calibration target
   ##----------------------------------------------------------------
@@ -48,6 +62,8 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   ## make global
   obs <<- ddf_obs %>% dplyr::select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
 
+  if (!settings_sims$implementation=="fortran") abort("calib_sofun(): Only implemented for Fortran.")
+
   ##----------------------------------------------------------------
   ## Set up for calibration ensemble
   ##----------------------------------------------------------------
@@ -79,10 +95,33 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
 
   ## example run to get output file structure
   param_init <- unlist( lapply( settings_calib$par, function(x) x$init ) ) %>% unname()
-  outfilnam <<- paste0( settings_sims$dir_sofun, "output_calib/calibtargets_tmp_fluxnet2015.txt" )
+  outfilnam <<- paste0( settings_sims$dir_sofun, "/output_calib/calibtargets_tmp_", settings_calib$name, ".txt" )
   system( paste0("rm ", outfilnam))
-  system( paste0("make ", model) )
 
+  ## Get executable
+  if (setup$do_compile){
+
+    ## Compile from source code
+    system( "make clean" )
+    system( paste0("make ", model) )
+
+  } else if (!file.exists(paste0("run", model))){
+
+    ## Copy pre-compiled executable from R package (only for Mac)
+    print("Copying executable, compiled on a Mac with gfortran into SOFUN run directory...")
+    system( paste0( "cp ", path.package("rsofun"), "/extdata/run", model, " ." ) )
+
+    # ## Download executable from CX1
+    # warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
+    # download_from_remote(   path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model ),
+    #                         path_local = settings$dir_sofun 
+    #                         )
+
+    if (!file.exists(paste0("run", model))) abort( paste( "Executable could not be copied: ", paste0("run", model)) )
+
+  }
+
+  ## Example run for getting structure of output file
   if (names(settings_calib$par)=="kphio"){
     ## For calibrating quantum yield efficiency only
     out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
@@ -199,7 +238,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   vec <- unlist( unname( lapply( settings_calib$par, function(x) x$opt  )) )
   # df <- as_tibble(vec) %>% setNames( names(vec) )
   df <- as_tibble(t(vec))
-  filn <- paste0("params_opt_", settings_calib$name,".csv")
+  filn <- paste0(settings_calib$dir_results, "/params_opt_", settings_calib$name,".csv")
   print( paste0( "writing calibrated parameters to ", filn ) )
   write_csv( df, path = filn )
   

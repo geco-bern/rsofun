@@ -1,7 +1,18 @@
-##----------------------------------------------------------------------
-## Function for reading observational GPP data from FLUXNET 2015 dataset
-## and defining calibration target (which flux decomposition method etc.)
-##----------------------------------------------------------------------
+#' Get FLUXNET 2015 observational data for one site.
+#'
+#' Function for reading observational GPP data from FLUXNET 2015 dataset
+#' and defining calibration target (which flux decomposition method etc.)
+#'
+#' @param sitename A character string specifying the site name for which FLUXNET 2015 data is searched (based on the site name appearing as part of the respective file name). Defaults to NA.
+#' @param path_fluxnet2015 A character string specifying the local path of FLUXNET 2015 data.
+#' @param timescale A character specifying the time scale of FLUXNET 2015 data. Any of \code{c("d", "w", "m", "y")} for daily, weekly, monthly, or yearly, respectively.
+#' @param methodd A character string specifying the data based on which GPP flux decompisiton method is to be used. Defaults to \code{"NT"} for nighttime decomposition. Any of \code{c("DT", "NT")}  . 
+#'
+#' @return A data frame (tibble) containint observational data.
+#' @export
+#'
+#' @examples df <- get_obs_bysite_gpp_fluxnet2015( "FR-Pue", "./inst/extdata/", timescale = "d, method = "NT" )
+#' 
 get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescale, method = "NT" ){
 
   ## Get GPP data from FLUXNET 2015 dataset

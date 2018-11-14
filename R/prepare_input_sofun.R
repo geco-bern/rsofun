@@ -157,7 +157,8 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
         "fluxnet2015" %in% settings_input$temperature, 
         "fluxnet2015" %in% settings_input$precipitation, 
         "fluxnet2015" %in% settings_input$vpd, 
-        "fluxnet2015" %in% settings_input$ppfd
+        "fluxnet2015" %in% settings_input$ppfd,
+        "fluxnet2015" %in% settings_input$netrad
         ))){
 
         error <- check_download_fluxnet2015( settings_input$path_fluxnet2015 )
@@ -321,6 +322,14 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
     }
 
     ##----------------------------------------------------------------------
+    ## Fill missing variables
+    ##----------------------------------------------------------------------
+    if (is.na(settings_input$cloudcover)){
+      warn("Filling column ccov_dummy with value 50 (%).")
+      ddf <- ddf %>% mutate( ccov_dummy = 50 )
+    }
+
+    ##----------------------------------------------------------------------
     ## Read CRU data (extracting from NetCDF files for this site)
     ##----------------------------------------------------------------------
     if (any( c( 
@@ -391,13 +400,6 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       out <- out %>% mutate( prec = ifelse( !is.na(prec), prec, prec_watch ) )
     }
 
-    ## cloud cover
-    if ( "ccov_cru_int" %in% names(ddf) ){
-      out <- out %>%  mutate( ccov = ccov_cru_int )
-    } else {
-      out <- out %>%  mutate( ccov = NA )
-    }
-    
     ## VPD
     out <- out %>%  mutate( vpd = vpd_fluxnet2015 )
     if ("vpd_qair_watch_temp_watch" %in% names(ddf) && "vpd_vap_cru_temp_cru_int" %in% names(ddf) ){
@@ -412,16 +414,35 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       out <- out %>% mutate( ppfd = ifelse( !is.na(ppfd), ppfd, ifelse( !is.na(ppfd_watch), ppfd_watch, NA ) ) )
     } 
 
+    if (settings_sims$in_netrad){
+      ## nrad
+      out <- out %>%  mutate( nrad = nrad_fluxnet2015 )
+      if ("nrad_watch" %in% names(ddf) ){
+        out <- out %>% mutate( nrad = ifelse( !is.na(nrad), nrad, ifelse( !is.na(nrad_watch), nrad_watch, NA ) ) )
+      } 
+    } else {
+      ## cloud cover
+      if ( "ccov_cru_int" %in% names(ddf) ){
+        out <- out %>%  mutate( ccov = ccov_cru_int )
+      } else if ("ccov_dummy" %in% names(ddf)){
+        out <- out %>% mutate( ccov = ccov_dummy )
+      }
+    }
+
     out <- out %>% mutate(  temp   = fill_gaps( temp   ),
                             prec   = fill_gaps( prec, is.prec=TRUE ),
                             temp   = fill_gaps( temp   ),
-                            ccov   = fill_gaps( ccov   ),
                             vpd    = fill_gaps( vpd    ),
                             ppfd   = fill_gaps( ppfd   )
-                            # netrad = ifelse( in_netrad, fill_gaps( netrad ), NA )
                            ) %>% 
                     dplyr::filter( !( month(date)==2 & mday(date)==29 ) )
-                   
+    
+    ## Help. I don't know why this doesn't work with ifelse inside mutate
+    if (settings_sims$in_netrad){
+      out <- out %>% mutate( nrad = fill_gaps( nrad ) )
+    } else {
+      out <- out %>% mutate( ccov = fill_gaps( ccov ) )
+    }
 
     for (yr in unique(year(out$date))){
 
@@ -436,14 +457,19 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       filnam <- paste0( dirnam, "dprec_", sitename, "_", yr, ".txt" )
       write_sofunformatted( filnam, sub$prec )
 
-      filnam <- paste0( dirnam, "dfsun_", sitename, "_", yr, ".txt" )
-      write_sofunformatted( filnam, ( 100.0 - sub$ccov ) / 100.0 )
-
       filnam <- paste0( dirnam, "dvpd_", sitename, "_", yr, ".txt" )
       write_sofunformatted( filnam, sub$vpd )
 
       filnam <- paste0( dirnam, "dppfd_", sitename, "_", yr, ".txt" )
       write_sofunformatted( filnam, sub$ppfd )
+
+      if (settings_sims$in_netrad){
+        filnam <- paste0( dirnam, "dnetrad_", sitename, "_", yr, ".txt" )
+        write_sofunformatted( filnam, sub$nrad )
+      } else {
+        filnam <- paste0( dirnam, "dfsun_", sitename, "_", yr, ".txt" )
+        write_sofunformatted( filnam, ( 100.0 - sub$ccov ) / 100.0 )
+      }
 
     }          
   
@@ -666,7 +692,7 @@ get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
     meteo <- meteo %>% mutate( date = ymd( TIMESTAMP ) )
 
   }
-
+  
   ## rename variables and unit conversions
   meteo <- meteo %>%  dplyr::rename( temp = TA_F,
                               vpd  = VPD_F,
@@ -676,10 +702,19 @@ get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
                       mutate( swin = swin * 60 * 60 * 24,   # given in W m-2, required in J m-2 d-1 
                               ppfd = swin * kfFEC * 1.0e-6, # convert from J/m2/d to mol/m2/d
                               vpd  = vpd * 1e2,             # given in hPa, required in Pa
-                              ccov = NA,
-                              nrad = ifelse( is.element( "NETRAD", names(.) ), as.numeric(NETRAD) * 60 * 60 * 24, NA ) # given in W m-2 (avg.), required in J m-2 (daily total)
-                            ) %>% 
-                      dplyr::select( date, temp, prec, nrad, ppfd, vpd, ccov )
+                              ccov = NA
+                            ) 
+  
+  ## I don't know how to do this better with a single condition to be evaluated
+  if (is.element( "NETRAD", names(meteo) )){
+    meteo <- meteo %>%  mutate( nrad = NETRAD * (60 * 60 * 24) ) %>% # given in W m-2 (avg.), required in J m-2 (daily total)
+                        dplyr::select( date, temp, prec, nrad, ppfd, vpd, ccov )
+  } else {
+    meteo <- meteo %>% mutate( nrad = NA )
+  }
+  
+  ## subset data
+  meteo <- meteo %>% dplyr::select( date, temp, prec, nrad, ppfd, vpd, ccov )
 
   return( meteo )
 
@@ -705,6 +740,10 @@ get_watch_daily <- function( lon, lat, elv, date_start, date_end, settings_input
   ## extract PPFD data
   ddf_ppfd <- purrr:map( as.list(bymonths), ~get_pointdata_ppfd_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
               bind_rows()
+
+  ## extract net radiation data XXX NOT IMPLEMENTED
+  warn( "get_watch_daily(): Net radiation data extraction from WATCH-WFDEI is not implemented. Filling with NAs." )
+  ddf_nrad <- ddf_ppfd %>% dplyr::rename( nrad_watch = ppfd_watch ) %>% mutate( nrad_watch = NA )
 
   ## extract air humidity data and calculate VPD based on temperature
   ddf_qair <- purrr:map( as.list(bymonths), ~get_pointdata_qair_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
@@ -741,8 +780,8 @@ get_pointdata_temp_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
   filn <- paste0( path, "/Tair_daily/Tair_daily_WFDEI_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )
   if ( file.exists( filn ) ){
     print( paste( "extracting from", filn ) )
-    system( paste( "./inst/bash/extract_pointdata_byfil.sh ", filn, "Tair", "lon", "lat", sprintf("%.2f",lon), sprintf("%.2f",lat) ) )
-    dtemp <- read.table( "out.txt" )$V1 - 273.15  # conversion from Kelving to Celsius
+    system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", filn, " Tair", " lon", " lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
+    dtemp <- read.table( paste0( path.package("rsofun"), "/tmp/out.txt") )$V1 - 273.15  # conversion from Kelving to Celsius
     if ( ignore_leap && mo==2 && length(dtemp==29) ){ dtemp <- dtemp[1:28] }
   } else {
     print(paste("get_pointdata_temp_wfdei(): file does not exist:", filn ))
@@ -772,8 +811,8 @@ get_pointdata_prec_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
   filn <- paste0( path, "/Rainf_daily/Rainf_daily_WFDEI_CRU_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )
   if ( file.exists( filn ) ){
     print( paste( "extracting from", filn ) )
-    system( paste( "./inst/bash/extract_pointdata_byfil.sh ", filn, "Rainf", "lon", "lat", sprintf("%.2f",lon), sprintf("%.2f",lat) ) )
-    dprec <- read.table( "out.txt" )$V1
+    system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", filn, " Rainf", " lon", " lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
+    dprec <- read.table( paste0( path.package("rsofun"), "/tmp/out.txt") )$V1
     dprec <- dprec*60*60*24 # kg/m2/s -> mm/day
   } else {
     # print( paste( "file", filn, "does not exist." ) )
@@ -785,8 +824,8 @@ get_pointdata_prec_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
   filn <- paste0( path, "/Snowf_daily/Snowf_daily_WFDEI_CRU_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )
   if ( file.exists( filn ) ){
     print( paste( "extracting from", filn ) )
-    system( paste( "./inst/bash/extract_pointdata_byfil.sh ", filn, "Snowf", "lon", "lat", sprintf("%.2f",lon), sprintf("%.2f",lat) ) )
-    dsnow <- read.table( "out.txt" )$V1
+    system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", filn, " Snowf", " lon", " lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
+    dsnow <- read.table( paste0( path.package("rsofun"), "/tmp/out.txt") )$V1
     dsnow <- dsnow*60*60*24 # kg/m2/s -> mm/day
     dprec <- dprec + dsnow
     # print( paste( "snow only: ", sum( dprec*60*60*24 )))
@@ -818,8 +857,8 @@ get_pointdata_qair_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
   filn <- paste0( path, "/Qair_daily/Qair_daily_WFDEI_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )
   if ( file.exists( filn ) ){
     print( paste( "extracting from", filn ) )
-    system( paste( "./inst/bash/extract_pointdata_byfil.sh ", filn, "Qair", "lon", "lat", sprintf("%.2f",lon), sprintf("%.2f",lat) ) )
-    dqair <- read.table( "out.txt" )$V1
+    system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", filn, " Qair", " lon", " lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
+    dqair <- read.table( path.package("rsofun"), "/tmp/out.txt" )$V1
     if ( ignore_leap && mo==2 && length(dqair==29) ){ dqair <- dqair[1:28] }
   } else {
     dqair <- rep( NA, ndaymonth )
@@ -851,8 +890,8 @@ get_pointdata_ppfd_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
   filn <- paste0( path, "/SWdown_daily/SWdown_daily_WFDEI_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )
   if ( file.exists( filn ) ){
     print( paste( "extracting from", filn ) )
-    system( paste( "./inst/bash/extract_pointdata_byfil.sh ", filn, "SWdown", "lon", "lat", sprintf("%.2f",lon), sprintf("%.2f",lat) ) )
-    dswdown <- read.table( "out.txt" )$V1
+    system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", filn, " SWdown", " lon", " lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
+    dswdown <- read.table( paste0( path.package("rsofun"), "/tmp/out.txt") )$V1
     dppfd <- dswdown * kfFEC  # W m-2 -> umol s-1 m-2
     dppfd <- 1.0e-6 * dppfd * 60 * 60 * 24  # umol m-2 s-1 -> mol m-2 d-1
     if ( ignore_leap && mo==2 && length(dppfd==29) ){ dppfd <- dppfd[1:28] }
@@ -881,10 +920,10 @@ get_pointdata_monthly_cru <- function( varnam, lon, lat, settings, yrend ){
 
   if ( length( filn )!=0 ){
 
-    cmd <- paste( "./inst/bash/extract_pointdata_byfil.sh ", paste0( settings$path_cru, filn ), varnam, "lon", "lat", sprintf("%.2f",lon), sprintf("%.2f",lat) )
+    cmd <- paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", paste0( settings$path_cru, filn ), " ", varnam, " lon", " lat", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) )
     print( paste( "executing command:", cmd ) )
     system( cmd )
-    mdata <- read.table( "./out.txt" )$V1
+    mdata <- read.table( paste0( path.package("rsofun"), "/tmp/out.txt") )$V1
     mdf <-  init_dates_dataframe( 1901, yrend, freq="months" ) %>%
             mutate( mdata = mdata )
 

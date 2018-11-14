@@ -94,13 +94,13 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   patm <- calc_patm( elv )
 
   ## ambient CO2 partial pression (Pa)
-  ca   <- co2_to_ca( co2, patm )
+  ca <- co2_to_ca( co2, patm )
 
   ## photorespiratory compensation point - Gamma-star (Pa)
-  gstar   <- calc_gstar( tc )
+  gstar <- calc_gstar( tc )
 
   ## Michaelis-Menten coef. (Pa)
-  kmm  <- calc_k( tc, patm )
+  kmm <- calc_k( tc, patm )
 
   ## viscosity correction factor = viscosity( temp, press )/viscosity( 25 degC, 1013.25 Pa) 
   ns      <- calc_viscosity_h2o( tc, patm )  # Pa s 
@@ -137,7 +137,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   }
 
   ## Include effect of Jmax limitation
-  mprime   <- calc_mprime( out_lue$m )
+  mprime <- calc_mprime( out_lue$m )
 
   ## Light use efficiency (gpp per unit absorbed light)
   lue <- kphio * mprime * c_molmass
@@ -175,16 +175,16 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
     ## representing leaf-level at the top of the canopy.
     ##-----------------------------------------------------------------------
     ## Vcmax normalised per unit fAPAR (assuming fAPAR=1)
-    vcmax_unitfapar <- ppfd * kphio * out_lue$n 
+    vcmax_unitfapar <- ppfd * vcmax_unitiabs
 
     ## Vcmax25 (vcmax normalized to 25 deg C)
-    vcmax25_unitfapar <- vcmax_unitfapar / ftemp_inst_vcmax
+    vcmax25_unitfapar <- ppfd * vcmax25_unitiabs
 
     ## Dark respiration per unit fAPAR (assuming fAPAR=1)
-    rd_unitfapar <- rd_to_vcmax * (ftemp_inst_rd / ftemp_inst_vcmax) * vcmax_unitfapar
+    rd_unitfapar <- ppfd * rd_unitiabs
 
     ## active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
-    actnv_unitfapar <- vcmax25_unitfapar * n_v
+    actnv_unitfapar <- ppfd * actnv_unitiabs
 
     if (!is.na(fapar)){
       ##-----------------------------------------------------------------------
@@ -197,20 +197,20 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
       ## Defined per unit ground level -> scaling with aborbed light (iabs)
       ##-----------------------------------------------------------------------
       ## Gross primary productivity
-      gpp <- iabs * kphio * mprime * c_molmass # in g C m-2 s-1
+      gpp <- iabs * lue  # in g C m-2 s-1
 
       ## Vcmax per unit ground area is the product of the intrinsic quantum 
       ## efficiency, the absorbed PAR, and 'n'
-      vcmax <- iabs * kphio * out_lue$n
+      vcmax <- iabs * vcmax_unitiabs
 
       ## (vcmax normalized to 25 deg C)
-      vcmax25 <- vcmax / ftemp_inst_vcmax
+      vcmax25 <- iabs * vcmax25_unitiabs
 
       ## Dark respiration
-      rd <- rd_to_vcmax * (ftemp_inst_rd / ftemp_inst_vcmax) * vcmax
+      rd <- iabs * rd_unitiabs
 
       ## active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
-      actnv <- vcmax25 * n_v
+      actnv <- iabs * actnv_unitiabs
 
     } else {
 

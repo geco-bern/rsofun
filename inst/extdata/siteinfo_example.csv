@@ -1,1 +1,2 @@
-mysitename,lon,lat,elv,year_start,year_end,years_data,classid,elv_watch,elv_diff,whcFR-Pue,3.5958,43.7414,270,2007,2014,15,EBF,209,-61,239.649292
+sitename,lon,lat,elv,year_start,year_end,years_data,classid,whc,c4,koeppen_code,kgnumber,koeppen_code_extr
+FR-Pue,3.5958,43.7414,270,2007,2014,8,EBF,239.649292,NA,Csa,12,Cwb

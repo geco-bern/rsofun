@@ -48,12 +48,17 @@ run_sofun <- function( settings, setup ){
 
     } else if (!file.exists(paste0("run", setup$model))){
 
-      ## Download executable from CX1
-      warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
-      download_from_remote(   path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model ),
-                              path_local = settings$dir_sofun 
-                              )
+      print("Copying executable, compiled on a Mac with gfortran into SOFUN run directory...")
+      system( paste0( "cp ", path.package("rsofun"), "/extdata/run", setup$model, " ." ) )
+
+      # ## Download executable from CX1
+      # warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
+      # download_from_remote(   path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model ),
+      #                         path_local = settings$dir_sofun 
+      #                         )
+
       if (!file.exists(paste0("run", setup$model))) abort( paste( "Executable could not be downloaded: ", paste0("run", setup$model)) )
+
     }
 
     if (settings$ensemble){
@@ -123,7 +128,11 @@ proc_ncout_sofun_bysite <- function( sitename, path_nc ){
   print(paste0("processing ", sitename, "..."))
   filelist <- system( paste0( "ls ", path_nc, "/", sitename, ".????.*.nc" ), intern = TRUE )
   if (length(filelist)>0){
-    system( paste0( "./proc_output_sofun.sh ", sitename, " ", path_nc, " >ncproc_", sitename, ".out", " 2>ncproc_", sitename, ".err" ) )
+    system( paste0( 
+      path.package("rsofun"), "/bash/proc_output_sofun.sh ", sitename, " ", path_nc, 
+      " >",  path.package("rsofun"), "/tmp/ncproc_", sitename, ".out", 
+      " 2>", path.package("rsofun"), "/tmp/ncproc_", sitename, ".err" 
+      ) )
   } else {
     warn("Assuming that annual files have already been combined to multi-annual.")
   }

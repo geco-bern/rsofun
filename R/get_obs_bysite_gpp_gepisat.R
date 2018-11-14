@@ -1,8 +1,18 @@
-##----------------------------------------------------------------------
-## Function for reading observational GPP data from GePiSaT (Tyler's 
-## alternative flux decomposition) for FLUXNET 2015 stations.
-##----------------------------------------------------------------------
-get_obs_bysite_gpp_gepisat <- function( sitename, path_gepisat, timescale ){
+#' Get FLUXNET 2015 observational data for one site based on the GePiSaT method flux decomposition.
+#'
+#' Function for reading observational GPP data from GePiSaT (Tyler's 
+#' alternative flux decomposition) for FLUXNET 2015 stations.
+#'
+#' @param sitename A character string specifying the site name for which FLUXNET 2015 data is searched (based on the site name appearing as part of the respective file name). Defaults to NA.
+#' @param path_gepisat A character string specifying the local path of FLUXNET 2015 data.
+#' @param timescale A character specifying the time scale of FLUXNET 2015 data. Only available: \code{c("d")} for daily.
+#'
+#' @return A data frame (tibble) containint observational data.
+#' @export
+#'
+#' @examples df <- get_obs_bysite_gpp_gepisat( "FR-Pue", "./inst/extdata/", timescale = "d, method = "NT" )
+#' 
+get_obs_bysite_gpp_gepisat <- function( sitename, path_gepisat, timescale = "d" ){
 
     
   ## Take only file for this site
