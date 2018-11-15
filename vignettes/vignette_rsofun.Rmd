@@ -32,8 +32,10 @@ fig_nums <- captioner( prefix = "Figure S", auto_space=FALSE, style = "i" )
 
 ## other crap
 systr <- "''"    # for Mac
-rootdir <- rprojroot::find_rstudio_root_file()
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does not work properly
+## for developer setup
+if (!file.exists("bash"))    system("ln -s inst/bash bash")
+if (!file.exists("extdata")) system("ln -s inst/extdata extdata")
 ```
 
 <!-- For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, `runread_sofun()` , and `update_params()`. Load the respective functions. -->
@@ -95,7 +97,7 @@ Run SOFUN in the simple setup.
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 ## First update calibratable parameters.
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() )
-params_opt <- readr::read_csv( paste0( rootdir, "/tmpdir/params_opt_kphio_soilm_global.csv" ) ) # as an example
+params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/tmpdir/params_opt_kphio_soilm_global.csv" ) ) # as an example
 nothing <- update_params( params_opt, settings_sims_simple$dir_sofun )
 
 ## Check if executable is available, otherwise copy it from the R package's external data
@@ -131,9 +133,9 @@ The examples shown below are for site-scale simulations, i.e., where one model r
 
 The simulation settings define the model simulations for each site and the the user-defined local environment. Simulation settings are defined as a named list. The user specifies only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (a CSV file created separately). The function `prepare_setup_sofun()` complements the simulation settings by these additional components as lists with elements for each site, nested within the simulation settings list.
 
-In the example given here, we use a site meta information file for FLUXNET 2015 Tier 1 sites, provided along with the `rsofun` package. It's located at the path `/rsofun/inst/extdata/siteinfo_example.csv`. For demonstration, we define a set of site-scale simulations of length one. That is, for only one site, here "FR-Pue". Note that FLUXNET 2015 data and MODIS FPAR data is provided along with the package `rsofun` for this one site for demonstration purposes only  and provides data only for a reduced number of years (2007-2014). The site meta information file looks like this:
+In the example given here, we use a site meta information file for FLUXNET 2015 Tier 1 sites, provided along with the `rsofun` package. It's located at the path `/rsofun/extdata/siteinfo_example.csv`. For demonstration, we define a set of site-scale simulations of length one. That is, for only one site, here "FR-Pue". Note that FLUXNET 2015 data and MODIS FPAR data is provided along with the package `rsofun` for this one site for demonstration purposes only  and provides data only for a reduced number of years (2007-2014). The site meta information file looks like this:
 ```{r message=FALSE}
-siteinfo <- readr::read_csv( paste0( rootdir, "/inst/extdata/siteinfo_example.csv" ) )
+siteinfo <- readr::read_csv( paste0( path.package("rsofun"), "/extdata/siteinfo_example.csv" ) )
 print( siteinfo )
 ```
 
@@ -147,7 +149,7 @@ To conduct P-model simulations with the Fortran implementation, respective model
 
 ```{r}
 settings_sims_sitescale <- list(
-  path_siteinfo   = paste0( rootdir, "/inst/extdata/siteinfo_example.csv"),
+  path_siteinfo   = paste0( path.package("rsofun"), "/extdata/siteinfo_example.csv"),
   ensemble        = TRUE,
   setup           = "site",
   name            = "example",
@@ -213,9 +215,9 @@ settings_input_sitescale <-  list(
   cloudcover               = NA,
   fapar                    = "MODIS_FPAR_MCD15A3H",
   splined_fapar            = TRUE,
-  path_co2                 = paste0( rootdir, "/inst/extdata/cCO2_rcp85_const850-1765.dat" ),
-  path_fluxnet2015         = paste0( rootdir, "/inst/extdata/" ),
-  path_MODIS_FPAR_MCD15A3H = paste0( rootdir, "/inst/extdata/" )
+  path_co2                 = paste0( path.package("rsofun"), "/extdata/cCO2_rcp85_const850-1765.dat" ),
+  path_fluxnet2015         = paste0( path.package("rsofun"), "/extdata/" ),
+  path_MODIS_FPAR_MCD15A3H = paste0( path.package("rsofun"), "/extdata/" )
   )
 ```
 
@@ -402,8 +404,8 @@ settings_calib <- list(
   timescale        = list( gpp = "d" ),
   par              = list( kphio = list( lower=0.01, upper=0.12, init=0.05 ) ),
   datasource       = list( gpp = "fluxnet2015_NT" ),
-  path_fluxnet2015 = paste0( rootdir, "/inst/extdata/" ),
-  path_gepisat     = paste0( rootdir, "/inst/extdata/" ),
+  path_fluxnet2015 = paste0( path.package("rsofun"), "/extdata/" ),
+  path_gepisat     = paste0( path.package("rsofun"), "/extdata/" ),
   maxit            = 50,
   sitenames        = "FR-Pue",  # dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename, # calibrate for non-C4 sites
   filter_temp_min  = 10.0,
@@ -411,7 +413,7 @@ settings_calib <- list(
   filter_soilm_min = NA,     # this is dangerous: removes entire sites where no soil moisture is measured
   filter_drought   = FALSE,
   metric           = "rmse",
-  dir_results      = paste0( rootdir, "/tmpdir" )
+  dir_results      = paste0( path.package("rsofun"), "/tmpdir" )
  )
 ```
 
@@ -459,7 +461,7 @@ settings_eval <- list(
   benchmark = list( gpp = c("fluxnet2015_NT") ),
   sitenames_siteplots = "FR-Pue",
   agg = 5,
-  path_fluxnet2015_d = paste0( rootdir, "/inst/extdata/" ),
+  path_fluxnet2015_d = paste0( path.package("rsofun"), "/extdata/" ),
   path_fluxnet2015_w = "",
   path_fluxnet2015_m = "",
   path_fluxnet2015_y = "",

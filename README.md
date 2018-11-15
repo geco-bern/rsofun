@@ -2,7 +2,7 @@
 
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/stineb/rsofun?branch=master&svg=true)](https://ci.appveyor.com/project/stineb/rsofun)
 
-This repository contains the code for the R-package that provides functions for all the routine steps in running the SOFUN model:
+This repository contains the code for the R-package that provides functions for all the routine steps in running the [SOFUN](https://github.com/stineb/sofun) model:
 
 - Setup of the model environment
 - Preparation of input files
