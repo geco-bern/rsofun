@@ -76,7 +76,7 @@ download_from_remote_path <- function( dir_remote, dir_local, pattern = NA, unam
     if (length(getfiles)==0){
       ## no data available for this site
       error <- 1
-      warn(paste0("No files available for ", dir_remote ) )
+      rlang::warn(paste0("No files available for ", dir_remote ) )
     } else {
       if (subdir==""){
         error <- purrr::map( as.list(getfiles), ~system( paste0( "rsync -avz ", uname, "@", address_remote, ":", dir_remote, .," ", dir_local ) ) )    

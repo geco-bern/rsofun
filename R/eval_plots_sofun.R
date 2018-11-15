@@ -175,7 +175,7 @@ plot_modobs_meandoy <- function( meandoydf, meandoydf_stats, makepdf=FALSE ){
 ## mean seasonal cycle by site (selected sites only)
 plot_by_doy_allsites <- function( meandoydf_stats, makepdf=FALSE ){
 	system( "mkdir -p fig/meandoy_bysite" )
-	# mylist <- read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
+	# mylist <- readr::read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
 	mylist <- c("AU-Tum", "CA-NS3", "CA-NS6", "CA-Obs", "DE-Geb", "DE-Hai", "DE-Kli", "FI-Hyy", "FR-Fon", "FR-LBr", "FR-Pue", "IT-Cpz", "NL-Loo", "US-Ha1", "US-MMS", "US-UMB", "US-WCr")
 	tmp <- purrr::map( filter( meandoydf_stats, sitename %in% mylist )$data, ~plot_by_doy_bysite(., makepdf = makepdf) )
 }
@@ -210,7 +210,7 @@ modobs_meanxoy <- plot_modobs_meanxoy <- function( meanxoydf, makepdf=FALSE ){
 
 plot_by_xoy_allsites <- function( meanxoydf_stats, makepdf=FALSE ){
 	system( "mkdir -p fig/meanxoy_bysite" )
-	mylist <- read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
+	mylist <- readr::read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
 	tmp <- purrr::map( filter( meanxoydf_stats, sitename %in% mylist )$data, ~plot_by_xoy_bysite(., makepdf = TRUE ) )
 }
 

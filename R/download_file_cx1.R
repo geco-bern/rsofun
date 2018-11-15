@@ -9,7 +9,7 @@ download_file_cx1 <- function( path_remote, path_local ){
     if (ans=="y"){
 
 			## No files found at specified location
-			warn( paste0("Downloading from ", path_remote, " to ", path_local ) )
+			rlang::warn( paste0("Downloading from ", path_remote, " to ", path_local ) )
 			system( paste0( "rsync -avz ", uname, "@login.cx1.hpc.ic.ac.uk:", path_remote, " ", path_local ) )
 
 		} else {

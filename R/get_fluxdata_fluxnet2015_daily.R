@@ -29,7 +29,7 @@ get_fluxdata_fluxnet2015_daily <- function( sitename, add_swcvars=FALSE ){
     c_molmass <- 12.0107
 
     ## get data
-    ddf <-  read_csv( path, na="-9999", col_types = cols() ) %>%
+    ddf <-  readr::read_csv( path, na="-9999", col_types = cols() ) %>%
             mutate( date = ymd( TIMESTAMP ) )
 
     ## convert units. given in umolCO2 m-2 s-1. converted to gC m-2 d-1

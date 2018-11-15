@@ -156,7 +156,7 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, list_modobs=N
   ## fAPAR
   print( paste( "getting fapar input data (MODIS FPAR) ..." ) )
   filn <- paste0( myhome, "sofun/input_fluxnet2015_sofun/sitedata/fapar/", sitename, "/dfapar_MODIS_FPAR_MCD15A3H_", sitename, "_gee_subset.csv" )
-  ddf_infpar <- try( read_csv( filn ) )
+  ddf_infpar <- try( readr::read_csv( filn ) )
   if (class(ddf_infpar)=="try-error"){
     missing_infpar <- c( missing_infpar, sitename )    
   } else {

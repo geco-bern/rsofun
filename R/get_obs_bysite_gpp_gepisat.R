@@ -67,7 +67,7 @@ get_obs_gepisat_raw <- function( sitename, path, freq="d" ){
   ## Returns data in units given in the fluxnet 2015 dataset
   ##--------------------------------------------------------------------
   ## get data
-  df <-  read_csv( path, na="-9999", col_types = cols() )
+  df <-  readr::read_csv( path, na="-9999", col_types = cols() )
 
   ## get dates, their format differs slightly between temporal resolution
   if ( freq=="d" ){

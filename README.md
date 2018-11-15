@@ -60,12 +60,17 @@ Several functions require external programs called by `system()` calls from with
 - [NCO](http://nco.sourceforge.net/). Is used by `get_pointdata_()` functions (executing the Bash script `"./extract_pointdata_byfil.sh"` with NCO command `ncks`). Before using `rsofun`, install NCO on a Mac by
 ```sh
 brew tap homebrew/science
-brew install cdo
+brew install nco
 ```
 - [CDO](https://code.mpimet.mpg.de/). Is used by the `proc_ncout_sofun_bysite()` function (executing Bash script `"./proc_output_sofun.sh"` with CDO command `cdo mergetime`). Before using `rsofun`, install CDO on a Mac by
 ```sh
 brew install cdo
 ```
+Apparently, CDO is no longer available as a Homebrew formula (right?). Unse MacPorts instead:
+```sh
+sudo port install cdo
+```
+
 
 ## Examples
 

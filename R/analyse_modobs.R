@@ -61,7 +61,7 @@ analyse_modobs <- function( mod,
     if (is.na(ylim)) ylim <- xlim
 
     if (heat){
-      heatscatter( 
+      LSD::heatscatter( 
                   mod, 
                   obs, 
                   main=main, 

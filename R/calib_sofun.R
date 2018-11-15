@@ -43,7 +43,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     ## For calibration, use only non-drought data from sites where the flux/RS-based drought detection 
     ## worked well (see Stocker et al., 2018 New Phytologist). This is based on the fLUE data available
     ## through Zenodo (https://zenodo.org/record/1158524#.W2fz2dgzbUI).
-    ddf_obs <-  read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+    ddf_obs <-  readr::read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
       dplyr::filter( !is.na(cluster) ) %>%
       dplyr::select( site, date, is_flue_drought ) %>%
       dplyr::rename( sitename = site ) %>%
@@ -112,7 +112,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     system( paste0( "cp ", path.package("rsofun"), "/extdata/run", model, " ." ) )
 
     # ## Download executable from CX1
-    # warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
+    # rlang::warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
     # download_from_remote(   path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model ),
     #                         path_local = settings$dir_sofun 
     #                         )
@@ -415,7 +415,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
   if ("gpp" %in% settings_calib$targetvars){
 
     ## Interpret benchmarking data specification
-    datasource <- str_split( settings_calib$datasource, "_" ) %>% unlist()
+    datasource <- stringr::str_split( settings_calib$datasource, "_" ) %>% unlist()
 
     if ("fluxnet2015" %in% datasource){
 

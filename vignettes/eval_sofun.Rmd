@@ -47,7 +47,7 @@ load( paste0( rootdir, "/tmpdir/setup_sofun_sitescale.Rdata" ) )
 
 Define common model evaluation settings as a list.
 ```{r, eval=FALSE, message=FALSE}
-mylist <- read_csv("my_external_stuff/myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
+mylist <- readr::read_csv("my_external_stuff/myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
 settings_eval <- list(
   sitenames = dplyr::filter(siteinfo$light, c4 %in% c(FALSE, NA) )$mysitename,
   sitenames_siteplots = mylist,
@@ -118,7 +118,7 @@ if (!file.exists("tmpdir/mod_RED.Rdata")){
     )
 
   ## update files containing parameter values read by model
-  params_opt <- read_csv( "tmpdir/params_opt_RED.csv" )
+  params_opt <- readr::read_csv( "tmpdir/params_opt_RED.csv" )
   nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
 
   mod_RED <- runread_sofun( 
@@ -195,7 +195,7 @@ if (!file.exists("tmpdir/mod_FULL.Rdata")){
     )
 
   ## update files containing parameter values read by model
-  params_opt <- read_csv( "tmpdir/params_opt_FULL.csv" )
+  params_opt <- readr::read_csv( "tmpdir/params_opt_FULL.csv" )
   nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
 
   mod_FULL <- runread_sofun( 
@@ -367,7 +367,7 @@ if (!file.exists("tmpdir/mod_RED_FPARitp.Rdata")){
     )
 
   ## update files containing parameter values read by model
-  params_opt <- read_csv( "tmpdir/params_opt_RED_FPARitp.csv" )
+  params_opt <- readr::read_csv( "tmpdir/params_opt_RED_FPARitp.csv" )
   nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
 
   mod_RED_FPARitp <- runread_sofun( 
@@ -439,7 +439,7 @@ if (!file.exists("tmpdir/mod_RED_EVI.Rdata")){
     )
 
   ## update files containing parameter values read by model
-  params_opt <- read_csv( "tmpdir/params_opt_RED_EVI.csv" )
+  params_opt <- readr::read_csv( "tmpdir/params_opt_RED_EVI.csv" )
   nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
 
   settings_sims_sitescale$loutdrd     = FALSE
@@ -513,7 +513,7 @@ if (!file.exists("tmpdir/mod_RED_DT.Rdata")){
     )
 
   ## update files containing parameter values read by model
-  params_opt <- read_csv( "tmpdir/params_opt_RED_DT.csv" )
+  params_opt <- readr::read_csv( "tmpdir/params_opt_RED_DT.csv" )
   nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
 
   settings_sims_sitescale$loutdrd     = FALSE
@@ -587,7 +587,7 @@ if (!file.exists("tmpdir/mod_RED_Ty.Rdata")){
     )
 
   ## update files containing parameter values read by model
-  params_opt <- read_csv( "tmpdir/params_opt_RED_Ty.csv" )
+  params_opt <- readr::read_csv( "tmpdir/params_opt_RED_Ty.csv" )
   nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
 
   settings_sims_sitescale$loutdrd     = FALSE
@@ -742,7 +742,7 @@ plot_modobs_spatial_annual( out_eval_NULLpft$data$meandf, out_eval_NULLpft$data$
 ```{r, fig.width=7.6, fig.height=7, echo=FALSE, message=FALSE}
 library(readr)
 library(dplyr)
-successcodes <- read_csv( "successcodes.csv" )
+successcodes <- readr::read_csv( "successcodes.csv" )
 do.sites <- dplyr::filter( successcodes, successcode==1 | successcode==2 )$mysitename
 plot_modobs_spatial_annual(
   filter( out_eval_RED$data$meandf, sitename %in% do.sites),
@@ -896,7 +896,7 @@ Colin has shown some plots at the ICDC that apparently Trevor produced. They sho
 ```{r siteoverview, echo=FALSE, warning=FALSE, message=FALSE}
 require(readr, quietly = TRUE)
 require(dplyr, quietly = TRUE)
-siteinfo <- read_csv("siteinfo_eval.csv") %>%
+siteinfo <- readr::read_csv("siteinfo_eval.csv") %>%
             mutate( Reference = paste0("[@", sitename ,"]") ) %>%
             mutate( Period = paste0(as.character(year_start), "-", as.character(year_end)) ) %>%
             dplyr::select( -year_start, -year_end )

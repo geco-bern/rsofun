@@ -17,7 +17,7 @@ check_download_fluxnet2015 <- function( path, sitename = NA, path_remote = NA, u
 
   if (length(getfiles)==0){
     ## No files found at specified location
-    warn( paste0("No files found for fluxnet2015 in directory ", path) )
+    rlang::warn( paste0("No files found for fluxnet2015 in directory ", path) )
 
     ## Search at a different location?
     path <- readline( prompt="Would you like to search for files recursively from a certain directory? Enter the path from which search is to be done: ")
@@ -25,7 +25,7 @@ check_download_fluxnet2015 <- function( path, sitename = NA, path_remote = NA, u
 
     if (length(getfiles)==0){
       ## Search from home
-      warn( paste0("Still nothing found at specified location ", path ) )
+      rlang::warn( paste0("Still nothing found at specified location ", path ) )
 
       ## Search recursively from home directory?
       ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
@@ -44,7 +44,7 @@ check_download_fluxnet2015 <- function( path, sitename = NA, path_remote = NA, u
         if (!is.na(sitename)) getfiles <- getfiles[ grepl(sitename, getfiles) ]
 
         ## Still no files found at specified location. Try to download from remote server and place in <path>
-        warn( "Initiating download from remote server..." )
+        rlang::warn( "Initiating download from remote server..." )
         error <- download_from_remote( 
           path_remote,
           path,

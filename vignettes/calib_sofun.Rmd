@@ -60,7 +60,7 @@ Then define the calibration settings as.
 ```{r, eval=FALSE}
 ## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
 ## and exclude sites where C4 vegetation is present.
-calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+calibsites <- readr::read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
               dplyr::filter( !is.na(cluster) ) %>%
               dplyr::select( site ) %>%
               distinct() %>%

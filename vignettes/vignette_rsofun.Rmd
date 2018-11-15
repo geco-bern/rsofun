@@ -2,15 +2,15 @@
 title: "Vignette for package rsofun"
 author: "Benjamin D. Stocker"
 date: "`r Sys.Date()`"
-output:
-  html_document:
-    toc: true
-    toc_float: true
-    toc_depth: 2
 # output:
-#   pdf_document:
+#   html_document:
 #     toc: true
+#     toc_float: true
 #     toc_depth: 2
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
 header-includes:
    - \usepackage{amsmath}
 # bibliography: bibliography.bib
@@ -22,9 +22,9 @@ Load the package. This contains all the necessary wrapper functions to set up an
 ```{r message=FALSE}
 library(rsofun)
 library(captioner)
-
+library(dplyr)
 ## load all rsofun dependencies
-load_dependencies_rsofun()
+# load_dependencies_rsofun()
 
 ## for creating figure numbers
 tab_nums <- captioner( prefix = "Table S", auto_space=FALSE, style = "i" )
@@ -62,7 +62,7 @@ This is the simplest setup, where the SOFUN is executed as a function for a sing
 settings_sims_simple <- list( 
   setup = "simple", 
   implementation  = "fortran", 
-  dir_sofun = "~/sofun/trunk/" 
+  dir_sofun = "~/alphadata01/bstocker/sofun/trunk/" 
   )
 ```
 
@@ -73,7 +73,7 @@ Use the `demo_pmodel` compilation for the simple setup
 ```{r}
 setup_sofun_simple <- list(
   model      = "demo_pmodel",
-  dir        = "~/sofun/trunk",
+  dir        = "~/alphadata01/bstocker/sofun/trunk",
   do_compile = FALSE,
   simsuite   = FALSE
   )
@@ -95,12 +95,13 @@ Run SOFUN in the simple setup.
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 ## First update calibratable parameters.
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() )
-params_opt <- read_csv( paste0( rootdir, "/tmpdir/params_opt_kphio_soilm_global.csv" ) ) # as an example
+params_opt <- readr::read_csv( paste0( rootdir, "/tmpdir/params_opt_kphio_soilm_global.csv" ) ) # as an example
 nothing <- update_params( params_opt, settings_sims_simple$dir_sofun )
 
-## Check if executable is available, otherwise compile
-if (!file.exists( paste0( settings_sims_simple$dir_sofun, "rundemo_pmodel"))){
-  system( "make demo_pmodel" )
+## Check if executable is available, otherwise copy it from the R package's external data
+## This is not done inside the function 'pmodel()'. It would slow it down unnecessarily
+if (!file.exists( paste0( settings_sims_simple$dir_sofun, "/rundemo_pmodel"))){
+  system( paste0( "cp extdata/rundemo_pmodel ", settings_sims_simple$dir_sofun ) )
 }
 
 ## Run for different temperatures and plot
@@ -132,7 +133,7 @@ The simulation settings define the model simulations for each site and the the u
 
 In the example given here, we use a site meta information file for FLUXNET 2015 Tier 1 sites, provided along with the `rsofun` package. It's located at the path `/rsofun/inst/extdata/siteinfo_example.csv`. For demonstration, we define a set of site-scale simulations of length one. That is, for only one site, here "FR-Pue". Note that FLUXNET 2015 data and MODIS FPAR data is provided along with the package `rsofun` for this one site for demonstration purposes only  and provides data only for a reduced number of years (2007-2014). The site meta information file looks like this:
 ```{r message=FALSE}
-siteinfo <- read_csv( paste0( rootdir, "/inst/extdata/siteinfo_example.csv" ) )
+siteinfo <- readr::read_csv( paste0( rootdir, "/inst/extdata/siteinfo_example.csv" ) )
 print( siteinfo )
 ```
 
@@ -150,10 +151,10 @@ settings_sims_sitescale <- list(
   ensemble        = TRUE,
   setup           = "site",
   name            = "example",
-  dir_sofun       = "~/sofun/trunk/",
-  path_output     = "~/sofun/output_example_sofun/",
-  path_output_nc  = "~/sofun/output_nc_example_sofun/",
-  path_input      = "~/sofun/input_example_sofun/",
+  dir_sofun       = "~/alphadata01/bstocker/sofun/trunk/",
+  path_output     = "~/alphadata01/bstocker/sofun/output_example_sofun/",
+  path_output_nc  = "~/alphadata01/bstocker/sofun/output_nc_example_sofun/",
+  path_input      = "~/alphadata01/bstocker/sofun/input_example_sofun/",
   grid            = NA,
   implementation  = "fortran",
   in_ppfd         = TRUE,
@@ -238,7 +239,7 @@ Define model setup as a list.
 ```{r}
 setup_sofun_sitescale <- list(
   model      = "pmodel",
-  dir        = "~/sofun/trunk",
+  dir        = "~/alphadata01/bstocker/sofun/trunk",
   do_compile = FALSE,
   simsuite   = FALSE
   )
@@ -266,10 +267,10 @@ setup_sofun_sitescale <- list(
 <!--   ensemble        = FALSE, -->
 <!--   setup           = "lonlat", -->
 <!--   name            = "global_TEST", -->
-<!--   dir_sofun       = "~/sofun/trunk/", -->
-<!--   path_output     = "~/sofun/output_global_TEST_sofun/", -->
-<!--   path_output_nc  = "~/sofun/output_nc_global_TEST_sofun/", -->
-<!--   path_input      = "~/sofun/input_global_TEST_sofun/", -->
+<!--   dir_sofun       = "~/alphadata01/bstocker/sofun/trunk/", -->
+<!--   path_output     = "~/alphadata01/bstocker/sofun/output_global_TEST_sofun/", -->
+<!--   path_output_nc  = "~/alphadata01/bstocker/sofun/output_nc_global_TEST_sofun/", -->
+<!--   path_input      = "~/alphadata01/bstocker/sofun/input_global_TEST_sofun/", -->
 <!--   grid            = "halfdeg", -->
 <!--   implementation  = "fortran", -->
 <!--   in_ppfd         = TRUE, -->
@@ -334,7 +335,7 @@ setup_sofun_sitescale <- list(
 <!-- ```{r} -->
 <!-- setup_sofun_lonlat <- list(  -->
 <!--   model      = "gpmodel", -->
-<!--   dir        = "~/sofun/trunk", -->
+<!--   dir        = "~/alphadata01/bstocker/sofun/trunk", -->
 <!--   do_compile = TRUE, -->
 <!--   simsuite   = FALSE -->
 <!--   ) -->
@@ -392,7 +393,7 @@ inputdata <- prepare_input_sofun(
 ## Calibrate the model
 
 Define the calibration settings as.
-```{r, eval=FALSE}
+```{r}
 ## Define calibration settings common for all setups
 settings_calib <- list(
   name             = "example",
@@ -440,21 +441,19 @@ settings_calib <- calib_sofun(
 ## Run the model
 
 Run SOFUN with calibrated parameters.
-```{r, eval=FALSE, message=FALSE, warning=FALSE}
-params_opt <- read_csv( paste0( settings_calib$dir_results, "/params_opt_example.csv" ) ) # as an example
+```{r, message=FALSE, warning=FALSE}
+params_opt <- readr::read_csv( paste0( settings_calib$dir_results, "/params_opt_example.csv" ) ) # as an example
 nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
-rm("mod")
 mod <- runread_sofun(
   settings = settings_sims_sitescale,
   setup = setup_sofun_sitescale
   )
-save( mod, file="mod.Rdata" )
 ```
 
 ## Evaluate the model
 
 Define model evaluation settings as a list.
-```{r, eval=FALSE, message=FALSE}
+```{r}
 settings_eval <- list(
   sitenames = "FR-Pue",
   benchmark = list( gpp = c("fluxnet2015_NT") ),
@@ -464,7 +463,7 @@ settings_eval <- list(
   path_fluxnet2015_w = "",
   path_fluxnet2015_m = "",
   path_fluxnet2015_y = "",
-  path_gepisat_d     = paste0( rootdir, "/inst/extdata/" )
+  path_gepisat_d     = ""
   )
 ```
 
@@ -477,6 +476,10 @@ obs_eval <- get_obs_eval( settings_eval = settings_eval, settings_sims = setting
 out_eval <- eval_sofun( mod, settings_eval, settings_sims_sitescale, obs_eval = obs_eval, overwrite = TRUE )
 ```
 
+The object returned by `eval_sofun()` includes a set of standard functions that can be applied to the evaluation data itself. Here is one example for observed versus modelled values.
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+modobs_daily <- out_eval$plotfunctions$plot_modobs_daily()
+```
 
 
 

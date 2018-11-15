@@ -79,7 +79,7 @@ eval_response <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
   predicted <- predict( gam, df_training )
 
   ## calculate values with P-model
-  params_opt <- read_csv( "tmpdir/params_opt_RED.csv" )
+  params_opt <- readr::read_csv( "tmpdir/params_opt_RED.csv" )
   df_training <- df_training %>%  mutate( lue_gam = predicted ) %>%
     group_by( date, sitename ) %>%
     nest() %>%

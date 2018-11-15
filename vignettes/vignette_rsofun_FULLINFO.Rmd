@@ -90,7 +90,7 @@ Run SOFUN in the simple setup.
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 ## First update calibratable parameters.
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() )
-params_opt <- read_csv( paste0( rootdir, "/tmpdir/params_opt_kphio_soilm_global.csv" ) ) # as an example
+params_opt <- readr::read_csv( paste0( rootdir, "/tmpdir/params_opt_kphio_soilm_global.csv" ) ) # as an example
 nothing <- update_params( params_opt, settings_sims_simple$dir_sofun )
 
 ## Check if executable is available, otherwise compile
@@ -127,7 +127,7 @@ The simulation settings define the model simulations for each site and the the u
 
 In the example given here, we use a site meta information file for FLUXNET 2015 Tier 1 sites, provided along with the `rsofun` package. It's located at the path `/rsofun/inst/extdata/siteinfo_example.csv`. For demonstration, we define a set of site-scale simulations of length one. That is, for only one site, here "FR-Pue". Note that FLUXNET 2015 data and MODIS FPAR data is provided along with the package `rsofun` for this one site for demonstration purposes only  and provides data only for a reduced number of years (2007-2014). The site meta information file looks like this:
 ```{r message=FALSE}
-siteinfo <- read_csv( paste0( rootdir, "/inst/extdata/siteinfo_example.csv" ) )
+siteinfo <- readr::read_csv( paste0( rootdir, "/inst/extdata/siteinfo_example.csv" ) )
 print( siteinfo )
 ```
 
@@ -417,7 +417,7 @@ setup_sofun_sitescale <- list(
 
 <!-- Run SOFUN with calibrated parameters. -->
 <!-- ```{r, eval=FALSE, message=FALSE, warning=FALSE} -->
-<!-- params_opt <- read_csv( paste0("params_opt_calib_RED.csv") ) # as an example -->
+<!-- params_opt <- readr::read_csv( paste0("params_opt_calib_RED.csv") ) # as an example -->
 <!-- nothing <- update_params( params_opt, settings_sims$dir_sofun ) -->
 <!-- rm("mod") -->
 <!-- mod <- runread_sofun(  -->

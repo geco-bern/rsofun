@@ -52,7 +52,7 @@ run_sofun <- function( settings, setup ){
       system( paste0( "cp ", path.package("rsofun"), "/extdata/run", setup$model, " ." ) )
 
       # ## Download executable from CX1
-      # warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
+      # rlang::warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
       # download_from_remote(   path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model ),
       #                         path_local = settings$dir_sofun 
       #                         )
@@ -80,9 +80,14 @@ run_sofun <- function( settings, setup ){
 ## Reads output.
 ##-----------------------------------------------------------
 read_sofun <- function( settings, setup ){
+  
+  ## processing output files requires CDO
+  cdopath <- system("which cdo", ignore.stderr=TRUE)
 
   ## First, process NetCDF which are written separately for each simulation year
   print("processing NetCDF outputs...")
+  tmpdir <- paste0( path.package("rsofun"), "/tmp" )
+  if (!dir.exists(tmpdir)) system( paste0( "mkdir ", tmpdir ) )
   tmp <- purrr::map( as.list(settings$sitenames), ~proc_ncout_sofun_bysite( ., settings$path_output_nc ) )
   rm("tmp")
 
@@ -94,7 +99,7 @@ read_sofun <- function( settings, setup ){
     print("reading from annual NetCDF files...")
     ddf_list$annual <- purrr::map( as.list(settings$sitenames), ~read_ncout_sofun_annual( ., settings ) )
     names(ddf_list$annual) <- settings$sitenames
-    warn("read_sofun(): Daily output is not read into R.")
+    rlang::warn("read_sofun(): Daily output is not read into R.")
   
   } else {
     ## daily output
@@ -134,7 +139,7 @@ proc_ncout_sofun_bysite <- function( sitename, path_nc ){
       " 2>", path.package("rsofun"), "/tmp/ncproc_", sitename, ".err" 
       ) )
   } else {
-    warn("Assuming that annual files have already been combined to multi-annual.")
+    rlang::warn("Assuming that annual files have already been combined to multi-annual.")
   }
 }
 
@@ -164,10 +169,10 @@ read_ncout_sofun_daily <- function( expname, settings ){
   
   if (file.exists(path)){
 
-    nc         <- nc_open( path )
-    gpp        <- ncvar_get( nc, varid = vars[1] )
-    time       <- ncvar_get( nc, varid = "time" )
-    nc_close(nc)
+    nc         <- ncdf4::nc_open( path )
+    gpp        <- ncdf4::ncvar_get( nc, varid = vars[1] )
+    time       <- ncdf4::ncvar_get( nc, varid = "time" )
+    ncdf4::nc_close(nc)
 
     ## convert to a ymd datetime object
     time <- conv_noleap_to_ymd( time, since="2001-01-01" )
@@ -181,8 +186,8 @@ read_ncout_sofun_daily <- function( expname, settings ){
       for (ivar in readvars){
         filnam_mod <- paste0( expname, ".d.", ivar, ".nc" )
         path       <- paste0( settings$path_output_nc, filnam_mod )
-        nc         <- nc_open( path )
-        addvar     <- ncvar_get( nc, varid = ivar )
+        nc         <- ncdf4::nc_open( path )
+        addvar     <- ncdf4::ncvar_get( nc, varid = ivar )
         ddf <- tibble( date=time, ivar=addvar ) %>% 
                setNames( c("date", ivar) ) %>% 
                right_join( ddf, by = "date" )
@@ -219,9 +224,9 @@ read_ncout_sofun_annual <- function( expname, settings ){
   if (file.exists(path)){
 
     adf  <- list()
-    nc         <- nc_open( path )
-    adf[["time"]] <- ncvar_get( nc, varid = "time" ) %>% conv_noleap_to_ymd( since="2001-01-01" )
-    nc_close(nc)
+    nc         <- ncdf4::nc_open( path )
+    adf[["time"]] <- ncdf4::ncvar_get( nc, varid = "time" ) %>% conv_noleap_to_ymd( since="2001-01-01" )
+    ncdf4::nc_close(nc)
     
     readvars <- vars
 
@@ -230,9 +235,9 @@ read_ncout_sofun_annual <- function( expname, settings ){
       for (ivar in readvars){
         filnam_mod    <- paste0( expname, ".a.", ivar, ".nc" )
         path          <- paste0( settings$path_output_nc, filnam_mod )
-        nc            <- nc_open( path )
-        adf[[ ivar ]] <- ncvar_get( nc, varid = ivar )
-        nc_close(nc)
+        nc            <- ncdf4::nc_open( path )
+        adf[[ ivar ]] <- ncdf4::ncvar_get( nc, varid = ivar )
+        ncdf4::nc_close(nc)
       }
 
     }

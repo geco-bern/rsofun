@@ -59,7 +59,7 @@ get_obs_fluxnet2015_raw <- function( sitename, path, vars, freq="y" ){
     c_molmass <- 12.0107
 
     ## get data
-    df <-  read_csv( path, na="-9999", col_types = cols() )
+    df <-  readr::read_csv( path, na="-9999", col_types = cols() )
 
     ## get dates, their format differs slightly between temporal resolution
     if ( freq=="y" ){

@@ -27,6 +27,10 @@ init_dates_dataframe <- function( yrstart, yrend, startmoy=1, startdoy=1, freq="
     ## date is always the 15th of each month
     startdate <- ymd( paste0( as.character(yrstart), "-", sprintf( "%02d", startmoy), "-15" ) )
     enddate   <- ymd( paste0( as.character(yrend  ), "-", sprintf( "%02d", endmoy  ), "-15" ) )    
+  } else if (freq=="years"){
+    ## date is always the 15th of each month
+    startdate <- ymd( paste0( as.character(yrstart), "-", sprintf( "%02d", 1), "-01" ) )
+    enddate   <- ymd( paste0( as.character(yrend  ), "-", sprintf( "%02d", 7), "-01" ) )    
   }
 
   ddf <-  tibble( date=seq( from = startdate, to = enddate, by = freq ) ) %>% 

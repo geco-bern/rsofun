@@ -50,10 +50,10 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
       )
   }
 
-  if (length(filn)==0) abort(paste0("No files found for timescale ", timescale, " in sub-directories of ", path_fluxnet2015 ) )
+  if (length(filn)==0) rlang::abort(paste0("No files found for timescale ", timescale, " in sub-directories of ", path_fluxnet2015 ) )
   if (length(filn)>1){
     filn <- filn[which(grepl("3.csv", filn))]
-    # warn(paste0("Multiple files found for timsescale ", timescale, " in sub-directories of ", path_fluxnet2015, ". Taking only ", filn ) )
+    # rlang::warn(paste0("Multiple files found for timsescale ", timescale, " in sub-directories of ", path_fluxnet2015, ". Taking only ", filn ) )
   }
   
   ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
@@ -218,7 +218,7 @@ get_obs_fluxnet2015_raw <- function( sitename, path, freq="d" ){
   ## Returns data in units given in the fluxnet 2015 dataset
   ##--------------------------------------------------------------------
   ## get data
-  df <-  read_csv( path, na="-9999", col_types = cols() )
+  df <-  readr::read_csv( path, na="-9999", col_types = cols() )
 
   ## get dates, their format differs slightly between temporal resolution
   if ( freq=="y" ){

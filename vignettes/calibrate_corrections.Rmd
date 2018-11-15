@@ -102,7 +102,7 @@ settings_calib <- calib_sofun(
   )
 
 ## overwrite
-params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
+params_opt <- readr::read_csv( paste0("params_opt_", settings_calib$name,".csv") )
 nothing <- update_params( params_opt, settings = settings_sims )
 rm("mod")
 mod <- runread_sofun( 
@@ -139,7 +139,7 @@ Calibration is done for the subset of sites where Stocker et al. (2018) identifi
 ```{r, message=FALSE, include=FALSE}
 ## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
 ## and exclude sites where C4 vegetation is present.
-calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+calibsites <- readr::read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
               dplyr::filter( cluster %in% c("cGR", "cDD") ) %>%
               dplyr::select( site ) %>%
               distinct() %>%
@@ -190,7 +190,7 @@ settings_calib <- calib_sofun(
   )
 
 ## update parameters for site-level simulations, run and read sofun
-params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
+params_opt <- readr::read_csv( paste0("params_opt_", settings_calib$name,".csv") )
 nothing <- update_params( params_opt, settings = settings_sims )
 rm("mod")
 mod <- runread_sofun( 
@@ -227,7 +227,7 @@ Calibration is done for all good-quality sites and all parameters at once.
 ```{r, message=FALSE, include=FALSE}
 ## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
 ## and exclude sites where C4 vegetation is present.
-calibsites <- read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+calibsites <- readr::read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
               dplyr::filter( !is.na(cluster) ) %>%
               dplyr::select( site ) %>%
               distinct() %>%
@@ -276,7 +276,7 @@ settings_calib <- calib_sofun(
   )
 
 ## update parameters for site-level simulations, run and read sofun
-params_opt <- read_csv( paste0("params_opt_", settings_calib$name,".csv") )
+params_opt <- readr::read_csv( paste0("params_opt_", settings_calib$name,".csv") )
 nothing <- update_params( params_opt, settings = settings_sims )
 rm("mod")
 mod <- runread_sofun( 

@@ -197,7 +197,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 
       } else if (is.na(settings_input$fapar)){
 
-        warn("No fapar data prepared.")
+        rlang::warn("No fapar data prepared.")
 
       }
 
@@ -270,7 +270,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
 
   if (file.exists(csvfiln)&&!overwrite){
 
-    ddf <- read_csv( csvfiln )
+    ddf <- readr::read_csv( csvfiln )
 
   } else {
 
@@ -325,7 +325,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
     ## Fill missing variables
     ##----------------------------------------------------------------------
     if (is.na(settings_input$cloudcover)){
-      warn("Filling column ccov_dummy with value 50 (%).")
+      rlang::warn("Filling column ccov_dummy with value 50 (%).")
       ddf <- ddf %>% mutate( ccov_dummy = 50 )
     }
 
@@ -497,7 +497,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
 
   if (file.exists(csvfiln)&&!overwrite){
 
-    ddf <- read_csv( csvfiln ) %>% mutate( fapar = as.numeric(fapar) )
+    ddf <- readr::read_csv( csvfiln ) %>% mutate( fapar = as.numeric(fapar) )
 
   } else {
 
@@ -521,7 +521,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
         ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
         ## IMPORTANT: This is gapfilled data. Original data is in <settings_input$path_MODIS_FPAR_MCD15A3H>/raw/
         ## Gap-filling is done with 'getin/gapfill_modis.R'. The gapfilling step is not yet implemented within prepare_input_sofun().
-        tmp <- read_csv( paste0( settings_input$path_MODIS_FPAR_MCD15A3H, filn ) )
+        tmp <- readr::read_csv( paste0( settings_input$path_MODIS_FPAR_MCD15A3H, filn ) )
         if (settings_input$splined_fapar){
           tmp <- tmp %>% dplyr::select( date, fapar = spline )
         } else {
@@ -545,7 +545,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
         ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
         ## IMPORTANT: This is gapfilled data. Original data is in <settings_input$path_MODIS_EVI_MOD13Q1>/raw/
         ## Gap-filling is done with 'getin/gapfill_modis.R'. The gapfilling step is not yet implemented within prepare_input_sofun().
-        tmp <- read_csv( paste0( settings_input$path_MODIS_EVI_MOD13Q1, filn ) )
+        tmp <- readr::read_csv( paste0( settings_input$path_MODIS_EVI_MOD13Q1, filn ) )
         if (settings_input$splined_fapar){
           tmp <- tmp %>% dplyr::select( date, fapar = spline )
         } else {
@@ -670,7 +670,7 @@ get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
   }
 
   ## read data
-  meteo <-  read_csv( path, na="-9999", col_types = cols() )
+  meteo <-  readr::read_csv( path, na="-9999", col_types = cols() )
 
   ## get dates, their format differs slightly between temporal resolution
   if ( freq=="y" ){
@@ -742,7 +742,7 @@ get_watch_daily <- function( lon, lat, elv, date_start, date_end, settings_input
               bind_rows()
 
   ## extract net radiation data XXX NOT IMPLEMENTED
-  warn( "get_watch_daily(): Net radiation data extraction from WATCH-WFDEI is not implemented. Filling with NAs." )
+  rlang::warn( "get_watch_daily(): Net radiation data extraction from WATCH-WFDEI is not implemented. Filling with NAs." )
   ddf_nrad <- ddf_ppfd %>% dplyr::rename( nrad_watch = ppfd_watch ) %>% mutate( nrad_watch = NA )
 
   ## extract air humidity data and calculate VPD based on temperature
@@ -1124,12 +1124,12 @@ find_nearest_cruland_by_lat <- function( lon, lat, filn ){
   if (!requireNamespace("ncdf4", quietly = TRUE))
     stop("Please, install 'ncdf4' package")
 
-  nc <- nc_open( filn, readunlim=FALSE )
-  crufield <- ncvar_get( nc, varid="TMP" )
-  lon_vec <- ncvar_get( nc, varid="LON" )
-  lat_vec <- ncvar_get( nc, varid="LAT" )
+  nc <- ncdf4::nc_open( filn, readunlim=FALSE )
+  crufield <- ncdf4::ncvar_get( nc, varid="TMP" )
+  lon_vec <- ncdf4::ncvar_get( nc, varid="LON" )
+  lat_vec <- ncdf4::ncvar_get( nc, varid="LAT" )
   crufield[crufield==-9999] <- NA
-  nc_close(nc)
+  ncdf4::nc_close(nc)
 
   ilon <- which.min( abs( lon_vec - lon ) )
   ilat <- which.min( abs( lat_vec - lat ) )
@@ -1164,7 +1164,7 @@ check_download_watch_wfdei <- function( varnam, settings_input, settings_sims ){
   if (length(filelist)==0){
 
     ## No files found at specified location
-    warn( paste0("No files found for WATCH-WFDEI in directory ", settings_input$path_watch_wfdei) )
+    rlang::warn( paste0("No files found for WATCH-WFDEI in directory ", settings_input$path_watch_wfdei) )
 
     ## Search at a different location?
     path <- readline( prompt="Would you like to search for files recursively from a different directory? Enter the path from which search is to be done: ")
@@ -1173,7 +1173,7 @@ check_download_watch_wfdei <- function( varnam, settings_input, settings_sims ){
     if (length(filelist)==0){
      
       ## Search from home
-      warn( paste0("Still nothing found at specified location ", path ) )
+      rlang::warn( paste0("Still nothing found at specified location ", path ) )
       ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
       
       if (ans=="y"){
@@ -1183,7 +1183,7 @@ check_download_watch_wfdei <- function( varnam, settings_input, settings_sims ){
       } else {
         
         ## Still no files found at specified location. Try to download from remote server and place in <settings_input$path_watch_wfdei>
-        warn( "Initiating download from remote server..." )
+        rlang::warn( "Initiating download from remote server..." )
         getfiles <- getfilenames_watch_wfdei( settings_input$date_start, settings_input$date_end )
         error <- download_from_remote(
           settings_input$path_remote_watch_wfdei,  
@@ -1255,7 +1255,7 @@ check_download_cru <- function( varnam, settings_input, settings_sims ){
   if (length(getfiles)==0){
 
     ## No files found at specified location
-    warn( paste0("No files found for CRU TS in directory ", settings_input$path_cru) )
+    rlang::warn( paste0("No files found for CRU TS in directory ", settings_input$path_cru) )
 
     ## Search at a different location?
     path <- readline( prompt="Would you like to search for files recursively from a different directory? Enter the path from which search is to be done: ")
@@ -1264,7 +1264,7 @@ check_download_cru <- function( varnam, settings_input, settings_sims ){
     if (length(getfiles)==0){
      
       ## Search from home
-      warn( paste0("Still nothing found at specified location ", path ) )
+      rlang::warn( paste0("Still nothing found at specified location ", path ) )
       ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
       
       if (ans=="y"){
@@ -1274,7 +1274,7 @@ check_download_cru <- function( varnam, settings_input, settings_sims ){
       } else {
         
         ## Still no files found at specified location. Try to download from remote server and place in <settings_input$path_cru>
-        warn( "Initiating download from remote server ..." )
+        rlang::warn( "Initiating download from remote server ..." )
         error <- download_from_remote( 
           settings_input$path_remote_cru, 
           settings_input$path_cru, 
@@ -1316,7 +1316,7 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
   if (length(filelist)==0){
 
     ## No files found at specified location
-    warn( paste0("No files found for MODIS_FPAR_MCD15A3H in directory ", settings_input$path_MODIS_FPAR_MCD15A3H) )
+    rlang::warn( paste0("No files found for MODIS_FPAR_MCD15A3H in directory ", settings_input$path_MODIS_FPAR_MCD15A3H) )
 
     ## Search at a different location?
     path <- readline( prompt="Would you like to search for files recursively from a certain directory? Enter the path from which search is to be done: ")
@@ -1325,13 +1325,13 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
     if (length(filelist)==0){
      
       ## Search from home
-      warn( paste0("Still nothing found at specified location ", path ) )
+      rlang::warn( paste0("Still nothing found at specified location ", path ) )
       ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
       if (ans=="y"){
         filelist <- list.files( "~/", pattern = "dfapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_.*_gee_subset.csv", recursive = TRUE )
       } else {
         ## Still no files found at specified location. Try to download from remote server and place in <settings_input$path_MODIS_FPAR_MCD15A3H>
-        warn( "Initiating download from remote server..." )
+        rlang::warn( "Initiating download from remote server..." )
         error <- download_from_remote( 
           settings_input$path_remote_MODIS_FPAR_MCD15A3H, 
           settings_input$path_MODIS_FPAR_MCD15A3H, 
@@ -1344,7 +1344,7 @@ check_download_MODIS_FPAR_MCD15A3H <- function( settings_input, settings_sims, s
 
       if (length(filelist)==0){
         ## Still no files found at specified location. Try to download from remote server and place in <settings_input$path_MODIS_FPAR_MCD15A3H>
-        warn( "Initiating download from remote server..." )
+        rlang::warn( "Initiating download from remote server..." )
         error <- download_from_remote( 
           settings_input$path_remote_MODIS_FPAR_MCD15A3H, 
           settings_input$path_MODIS_FPAR_MCD15A3H, 
@@ -1395,7 +1395,7 @@ check_download_MODIS_EVI_MOD13Q1 <- function( settings_input, settings_sims, sit
   if (length(filelist)==0){
 
     ## No files found at specified location
-    warn( paste0("No files found for MODIS_EVI_MOD13Q1 in directory ", settings_input$path_MODIS_EVI_MOD13Q1) )
+    rlang::warn( paste0("No files found for MODIS_EVI_MOD13Q1 in directory ", settings_input$path_MODIS_EVI_MOD13Q1) )
 
     ## Search at a different location?
     path <- readline( prompt="Would you like to search for files recursively from a certain directory? Enter the path from which search is to be done: ")
@@ -1404,13 +1404,13 @@ check_download_MODIS_EVI_MOD13Q1 <- function( settings_input, settings_sims, sit
     if (length(filelist)==0){
      
       ## Search from home
-      warn( paste0("Still nothing found at specified location ", path ) )
+      rlang::warn( paste0("Still nothing found at specified location ", path ) )
       ans <- readline( prompt="Would you like to search for files recursively from your home directory (y/n): ")
       if (ans=="y"){
         filelist <- list.files( "~/", pattern = "fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_.*_gee_subset.csv", recursive = TRUE )
       } else {
         ## Still no files found at specified location. Try to download from remote server and place in <settings_input$path_MODIS_EVI_MOD13Q1>
-        warn( "Initiating download from remote server..." )
+        rlang::warn( "Initiating download from remote server..." )
         error <- download_from_remote( 
           settings_input$path_remote_MODIS_EVI_MOD13Q1, 
           settings_input$path_MODIS_EVI_MOD13Q1, 
@@ -1423,7 +1423,7 @@ check_download_MODIS_EVI_MOD13Q1 <- function( settings_input, settings_sims, sit
 
       if (length(filelist)==0){
         ## Still no files found at specified location. Try to download from remote server and place in <settings_input$path_MODIS_EVI_MOD13Q1>
-        warn( "Initiating download from remote server..." )
+        rlang::warn( "Initiating download from remote server..." )
         error <- download_from_remote( 
           settings_input$path_remote_MODIS_EVI_MOD13Q1, 
           settings_input$path_MODIS_EVI_MOD13Q1, 
@@ -1840,7 +1840,7 @@ write_sofunformatted <- function( filnam, data ){
 #     if (length(filelist)==0){
 #       ## no data available for this site
 #       error <- 1
-#       warn(paste0("No MODIS_FPAR_MCD15A3H data available for site ", sitename ) )
+#       rlang::warn(paste0("No MODIS_FPAR_MCD15A3H data available for site ", sitename ) )
 #     } else {
 #       purrr::map( as.list(filelist), ~system( paste0( "rsync -avz ", uname, "@", settings$address_remote, ":", origpath, .," ", path ) ) )    
 #     }
@@ -1883,7 +1883,7 @@ write_sofunformatted <- function( filnam, data ){
 #     if (length(filelist)==0){
 #       ## no data available for this site
 #       error <- 1
-#       warn(paste0("No MODIS_EVI_MOD13Q1 data available for site ", sitename ) )
+#       rlang::warn(paste0("No MODIS_EVI_MOD13Q1 data available for site ", sitename ) )
 #     } else {
 #       purrr::map( as.list(filelist), ~system( paste0( "rsync -avz ", uname, "@", settings$address_remote, ":", settings$path_remote_MODIS_EVI_MOD13Q1, .," ", settings$path_MODIS_EVI_MOD13Q1 ) ) )    
 #     }

@@ -48,7 +48,7 @@ prepare_setup_sofun <- function( settings, write_paramfils = TRUE ){
       system( paste0( "rm -rf ", settings$dir_sofun, "/*" ) )
 
       ## first clone into a temporary directory
-      warn("Cloning SOFUN from github...")
+      rlang::warn("Cloning SOFUN from github...")
       system( paste0( "git clone https://github.com/stineb/sofun.git tmp" ) )
       
       ## then move all its contents to the SOFUN directory and delete the temporary directory
@@ -59,11 +59,11 @@ prepare_setup_sofun <- function( settings, write_paramfils = TRUE ){
       ## checkout the required branch of SOFUN, here 'pnmodel' (hard-coded)
       here <- getwd()
       setwd( settings$dir_sofun )
-      warn("Switching to branch pnmodel...")
+      rlang::warn("Switching to branch pnmodel...")
       system( "git checkout pnmodel")
       setwd( here )
       
-      warn("...done.")
+      rlang::warn("...done.")
       if (!dir.exists(paste0(settings$dir_sofun, "params_std"))) abort("Aborting. SOFUN could not be cloned for an unknown reason.")
     }
 
@@ -138,7 +138,7 @@ prepare_setup_sofun <- function( settings, write_paramfils = TRUE ){
       ## - elevation of site, column must be named 'elv'
       ## - years for which simulation is to be done (corresponding to data availability from site), 
       ##   requires two columns named 'year_start' and 'year_end'.
-      siteinfo <- read_csv( settings$path_siteinfo )
+      siteinfo <- readr::read_csv( settings$path_siteinfo )
 
       ##--------------------------------------
       ## Complement settings with meta info for each site
