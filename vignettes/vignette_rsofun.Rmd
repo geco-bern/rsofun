@@ -38,21 +38,6 @@ if (!file.exists("bash"))    system("ln -s inst/bash bash")
 if (!file.exists("extdata")) system("ln -s inst/extdata extdata")
 ```
 
-<!-- For the time being, we just go with a set of wrapper functions `prepare_setup_sofun()`, `prepare_input_sofun()`, `runread_sofun()` , and `update_params()`. Load the respective functions. -->
-<!-- ```{r} -->
-<!-- source("prepare_metainfo_fluxnet2015.R") -->
-<!-- source("prepare_setup_sofun.R") -->
-<!-- source("prepare_input_sofun.R") -->
-<!-- source("calib_sofun.R") -->
-<!-- source("runread_sofun.R") -->
-<!-- source("update_params.R") -->
-<!-- source("eval_sofun.R") -->
-<!-- source("pmodel.R") -->
-<!-- source("get_obs_bysite_gpp_fluxnet2015.R") -->
-<!-- source("get_obs_bysite_gpp_gepisat.R") -->
-<!-- ``` -->
-
-<!-- # Setup {.tabset .tabset-fade} -->
 
 ## Simplest setup
 
@@ -97,7 +82,7 @@ Run SOFUN in the simple setup.
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 ## First update calibratable parameters.
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() )
-params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/tmpdir/params_opt_kphio_soilm_global.csv" ) ) # as an example
+params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/extdata/params_opt_kphio_soilm_global.csv" ) ) # as an example
 nothing <- update_params( params_opt, settings_sims_simple$dir_sofun )
 
 ## Check if executable is available, otherwise copy it from the R package's external data
@@ -141,11 +126,6 @@ print( siteinfo )
 
 To conduct P-model simulations with the Fortran implementation, respective model code needs to be downloaded separately from the Github [sofun](https://github.com/stineb/sofun) repository and placed in a separate directory (`dir_sofun` below). Builds of this Fortran code are available for public download at XXX in order to avoid having to compile from source.
 
-<!-- For site-scale simulations conducted at FLUXNET 2015 Tier 1 sites, the meta information is provided along with the package `rsofun`. Let's look at this data as an example and save it in a CSV file, corresponding to the information specified above (under `settings_sims_sitescale$path_siteinfo`). -->
-<!-- ```{r} -->
-<!-- print( metainfo_Tier1_sites_kgclimate_fluxnet2015 ) -->
-<!-- write_csv( metainfo_Tier1_sites_kgclimate_fluxnet2015, path = settings_sims_sitescale$path_siteinfo ) -->
-<!-- ``` -->
 
 ```{r}
 settings_sims_sitescale <- list(
@@ -413,7 +393,7 @@ settings_calib <- list(
   filter_soilm_min = NA,     # this is dangerous: removes entire sites where no soil moisture is measured
   filter_drought   = FALSE,
   metric           = "rmse",
-  dir_results      = paste0( path.package("rsofun"), "/tmpdir" )
+  dir_results      = "/Users/benjaminstocker/alphadata01/bstocker/rsofun/calib_results" # use absolute path!
  )
 ```
 
@@ -464,8 +444,9 @@ settings_eval <- list(
   path_fluxnet2015_d = paste0( path.package("rsofun"), "/extdata/" ),
   path_fluxnet2015_w = "",
   path_fluxnet2015_m = "",
-  path_fluxnet2015_y = "",
-  path_gepisat_d     = ""
+  path_fluxnet2015_y = paste0( path.package("rsofun"), "/extdata/" ),
+  path_gepisat_d     = "",
+  dir_figs           = "~/alphadata01/bstocker/rsofun/fig/"
   )
 ```
 
@@ -480,7 +461,20 @@ out_eval <- eval_sofun( mod, settings_eval, settings_sims_sitescale, obs_eval = 
 
 The object returned by `eval_sofun()` includes a set of standard functions that can be applied to the evaluation data itself. Here is one example for observed versus modelled values.
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
-modobs_daily <- out_eval$plotfunctions$plot_modobs_daily()
+modobs_daily   <- out_eval$plot$modobs_daily()
+# modobs_xdf     <- out_eval$plot$modobs_xdaily()
+# modobs_meandoy <- out_eval$plot$modobs_meandoy()
+# out_eval$plot$by_doy_allsites()
+# out_eval$plot$by_xoy_allsites()
+# modobs_anomalies_daily  <- out_eval$plot$modobs_anomalies_daily()
+# modobs_anomalies_xdaily <- out_eval$plot$modobs_anomalies_xdaily()
+# modobs_anomalies_annual <- out_eval$plot$modobs_anomalies_annual()
+# modobs_meanxoy <- out_eval$plot$modobs_meanxoy()
+# out_eval$plot$by_doy_allzones()
+
+# modobs_mdf <- out_eval$plot$modobs_monthly( dir = "./fig", makepdf = TRUE )
+# modobs_spatial <- out_eval$plot$modobs_spatial( dir = "./fig", makepdf = TRUE )
+# out_eval$plot$modobs_spatial_annual( dir = "./fig", makepdf = TRUE )
 ```
 
 

@@ -364,7 +364,6 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
 		print("Done with eval_sofun().")
 	}
 
-
   ##------------------------------------------------------------
   ## PLOTTING FUNCTIONS
   ##------------------------------------------------------------
@@ -372,7 +371,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   # ##------------------------------------------------------------
   # ## Creates all plots for SOFUN evaluation
   # ##------------------------------------------------------------
-  # plot_eval_sofun <- function( out_eval, dir = "./fig/", makepdf = TRUE ){
+  # plot_eval_sofun <- function( out_eval, makepdf = TRUE ){
 
   #   modobs_ddf <- plot_modobs_daily( out_eval$ddf, subtitle = "", dir = "./fig", makepdf = TRUE )
   #   modobs_xdf <- plot_modobs_xdaily( out_eval$xdf, dir = "./fig", makepdf = TRUE )
@@ -393,7 +392,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Mod. vs. obs. of mean per site -> spatial correlation
   ##------------------------------------------------------------
-  plot_modobs_spatial <- function( meandf, dir = "./fig/", makepdf=TRUE ){
+  plot_modobs_spatial <- function( makepdf=TRUE ){   # using meandf
     # source("analyse_modobs.R")
     par(las=1, mar=c(4,4.5,4,1))
     if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
@@ -415,9 +414,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Combined spatial - IAV correlation
   ##------------------------------------------------------------
-  plot_modobs_spatial_annual <- function( dir = "./fig/", pattern = "", makepdf = FALSE, ... ){  #meandf, linmod_meandf, annual_bysite_stats, annual_pooled_stats = NA, spatial_stats = NA, 
+  plot_modobs_spatial_annual <- function( pattern = "", makepdf = FALSE, ... ){  #meandf, linmod_meandf, annual_bysite_stats, annual_pooled_stats = NA, spatial_stats = NA, 
 
-    if (makepdf) pdf( paste0( dir, "/modobs_spatial_annual_", pattern, ".pdf" ) )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_spatial_annual_", pattern, ".pdf" ) )
 
       par(las=1, mar=c(4,4.5,4,1))
 
@@ -452,7 +452,8 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
     # # v_orig <- v
     # # v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
     # # par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
-    # if (makepdf) pdf( paste0( dir, "/hist_slopes_anomalies_annual.pdf" ) )
+    # if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+      # if (makepdf) pdf( paste0( settings_eval$dir_figs, "/hist_slopes_anomalies_annual.pdf" ) )
     #   hist( annual_bysite_stats$slope, xlim=c(-5,5), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 50, xlab="slope" )
     #   abline( v=1.0, col="red" )
     #   axis( 1, cex.axis=1.0, xlab="slope" )
@@ -470,7 +471,8 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
     # # v_orig <- v
     # # v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
     # # par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
-    # if (makepdf) pdf( paste0( dir, "/hist_r2_anomalies_annual.pdf" ) )
+    # if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+      # if (makepdf) pdf( paste0( settings_eval$dir_figs, "/hist_r2_anomalies_annual.pdf" ) )
     #   hist( annual_bysite_stats$rsq, xlim=c(-1,1), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 12, xlab= bquote( italic(R)^2 ) )
     #   abline( v=1.0, col="red" )
     #   axis( 1, cex.axis=1.0, xlab = bquote( italic(R)^2 ) )
@@ -483,9 +485,9 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Mod. vs. obs. of IAV correlation: x_(y,i) - mean_y( x_(y,i) )
   ##------------------------------------------------------------
-  plot_modobs_anomalies_annual <- function( iavdf, iavdf_stats, dir = "./fig/", makepdf = FALSE ){
+  plot_modobs_anomalies_annual <- function( makepdf = FALSE ){   # using iavdf, iavdf_stats
     # source("analyse_modobs.R")
-    if(makepdf) pdf( paste0( dir, "/modobs_anomalies_annual.pdf") )
+    if(makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_anomalies_annual.pdf") )
       par(las=1)
       modobs_anomalies_annual <- with( iavdf, analyse_modobs(gpp_mod, 
         gpp_obs, 
@@ -503,9 +505,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Mod. vs. obs. of IDV (interday variability) correlation: x_(d,i) - mean_d( x_(d,i) )
   ##------------------------------------------------------------
-  plot_modobs_anomalies_daily <- function( idvdf, idvdf_stats, dir = "./fig/", pattern="", makepdf = FALSE ){
+  plot_modobs_anomalies_daily <- function( pattern="", makepdf = FALSE ){   # using idvdf, idvdf_stats
     # source("analyse_modobs.R")
-    if (makepdf) pdf( paste0( dir, "/modobs_anomalies_daily_", pattern, ".pdf" ) )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_anomalies_daily_", pattern, ".pdf" ) )
       modobs_anomalies_daily <- with( idvdf, analyse_modobs(
         gpp_mod,
         gpp_obs,
@@ -519,7 +522,8 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
     
     ## histogram of daily anomalies from mean seasonal cycle based on DOY
     ##------------------------------------------------------------
-    if (makepdf) pdf( paste0( dir, "/hist_anomalies_daily_", pattern, ".pdf" ) )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/hist_anomalies_daily_", pattern, ".pdf" ) )
       par(las=1)
       out <- with( idvdf, hist( gpp_obs, breaks = 50, col = rgb(0,0,0,0.3), freq = FALSE, main = "Daily anomalies", ylim = c(0,0.6), xlab = expression( paste("GPP anomaly (gC m"^-2, "d"^-1, ")" ) ) ) )
       with( idvdf, hist( gpp_mod, breaks = out$breaks, col = rgb(1,0,0,0.3), freq = FALSE, add = TRUE ) )
@@ -536,9 +540,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Mod. vs. obs. of m of IXV correlation: x_(x,i) - mean_x( x_(x,i) )
   ##------------------------------------------------------------
-  plot_modobs_anomalies_xdaily <- function( ixvdf, ixvdf_stats, dir = "./fig/", makepdf = FALSE ){
+  plot_modobs_anomalies_xdaily <- function( makepdf = FALSE ){  # using ixvdf, ixvdf_stats
     # source("analyse_modobs.R")
-    if (makepdf) pdf( paste0( dir, "/modobs_anomalies_xdaily.pdf" ) )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_anomalies_xdaily.pdf" ) )
       modobs_anomalies_xdaily <- with( ixvdf, analyse_modobs(
         gpp_mod, 
         gpp_obs, 
@@ -552,10 +557,17 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
 
     ## histogram of X-daily anomalies from mean seasonal cycle based on XOY
     ##------------------------------------------------------------
-    if (makepdf) pdf( paste0( dir, "/hist_anomalies_xdaily.pdf" ) )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/hist_anomalies_xdaily.pdf" ) )
       par(las=1)
-      with( ixvdf, hist( gpp_obs, breaks = 20, col = rgb(0,0,0,0.3), freq = FALSE, main = "Anomalies in X-day periods", xlab = expression( paste("GPP anomaly (gC m"^-2, "d"^-1, ")" ) ), ylim = c(0,0.45) ) )
-      with( ixvdf, hist( gpp_mod, breaks = 20, col = rgb(1,0,0,0.3), freq = FALSE, add = TRUE ) )
+      ## do not plot, to get density
+      outhist1 <- with( ixvdf, hist( gpp_obs, breaks = 20, plot = FALSE ) )
+      outhist2 <- with( ixvdf, hist( gpp_mod, breaks = outhist1$breaks, freq = FALSE, plot = FALSE ) )
+
+      ## plot with proper y-axis
+      plot(outhist1, freq = FALSE, col = rgb(0,0,0,0.3), main = "Anomalies in X-day periods", xlab = expression( paste("GPP anomaly (gC m"^-2, "d"^-1, ")" ) ), ylim = c(0,max(outhist1$density, outhist2$density)))
+      plot(outhist2, freq = FALSE, add=TRUE, col = rgb(1,0,0,0.3))
+
       mtext( bquote( sigma[obs] == .(format( sd(ixvdf$gpp_obs, na.rm = TRUE), digits = 3)) ), side=3, adj=0, line=0 ) 
       mtext( bquote( sigma[mod] == .(format( sd(ixvdf$gpp_mod, na.rm = TRUE), digits = 3)) ), side=3, adj=0, line=-1 )  
       legend("topright", c("observed", "modelled"), fill = c(rgb(0,0,0,0.3), rgb(1,0,0,0.3)), bty = "n")
@@ -568,9 +580,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ## Mod. vs. obs. of mean seasonal cycle by day of year (DOY)
   ##------------------------------------------------------------
   ## observed vs. modelled
-  plot_modobs_meandoy <- function( meandoydf, meandoydf_stats, dir = "./fig/", pattern = "", makepdf = FALSE ){
+  plot_modobs_meandoy <- function( pattern = "", makepdf = FALSE ){    # using meandoydf
     # source("analyse_modobs.R")
-    if (makepdf) pdf( paste0( dir, "/modobs_meandoy_", pattern, ".pdf") )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_meandoy_", pattern, ".pdf") )
     modobs_meandoy <- with( meandoydf, 
       analyse_modobs( 
         mod_mean, 
@@ -588,7 +601,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Wrapper for mean seasonality by site (daily) for selected sites only sites
   ##------------------------------------------------------------
-  plot_by_doy_allsites <- function( meandoydf_stats, dir = "./fig/", makepdf = FALSE ){
+  plot_by_doy_allsites <- function( makepdf = FALSE ){   # using meandoydf_stats
     system( "mkdir -p fig/meandoy_bysite" )
     # mylist <- readr::read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
     mylist <- c("AU-Tum", "CA-NS3", "CA-NS6", "CA-Obs", "DE-Geb", "DE-Hai", "DE-Kli", "FI-Hyy", "FR-Fon", "FR-LBr", "FR-Pue", "IT-Cpz", "NL-Loo", "US-Ha1", "US-MMS", "US-UMB", "US-WCr")
@@ -599,10 +612,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Wrapper for mean seasonality by site (daily) for all climate zones
   ##------------------------------------------------------------
-  plot_by_doy_allzones <- function( meandoydf_byclim_stats, dashed = NA, dir = "./fig/", makepdf = FALSE, pattern="" ){
+  plot_by_doy_allzones <- function( dashed = NA, makepdf = FALSE, pattern="" ){    # using meandoydf_byclim_stats 
     system( "mkdir -p fig/meandoy_byzone" )
     # tmp <- purrr::map( meandoydf_byclim_stats$data, ~plot_by_doy_byzone(., dashed = dashed, makepdf = makepdf, pattern = pattern ) )
-    tmp <- purrr::map( as.list(seq(nrow(meandoydf_byclim_stats))) , ~plot_by_doy_byzone( meandoydf_byclim_stats$data[[.]], dashed = dashed$data[[.]], makepdf = makepdf, pattern = pattern ) )
+    tmp <- purrr::map( as.list(seq(nrow(meandoydf_byclim_stats))) , ~plot_by_doy_byzone( meandoydf_byclim_stats$data[[.]], makepdf = makepdf, pattern = pattern ) )  # dashed = dashed$data[[.]]
   }
 
 
@@ -610,9 +623,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ## Mean seasonal cycle by x-day-period of year (XOY)
   ##------------------------------------------------------------
   ## observed vs. modelled
-  modobs_meanxoy <- plot_modobs_meanxoy <- function( meanxoydf, dir = "./fig/", makepdf = FALSE ){
+  plot_modobs_meanxoy <- function( makepdf = FALSE ){    # meanxoydf
     # source("analyse_modobs.R")
-    if (makepdf) pdf( paste0( dir, "/modobs_meanxoy.pdf" ) )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_meanxoy.pdf" ) )
     modobs_meanxoy <- with( meanxoydf, 
       analyse_modobs( 
         mod_mean, 
@@ -630,10 +644,9 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Wrapper for mean seasonality by site for all sites (aggregated by X-day periods)
   ##------------------------------------------------------------
-  plot_by_xoy_allsites <- function( meanxoydf_stats, dir = "./fig/", makepdf = FALSE ){
+  plot_by_xoy_allsites <- function( makepdf = FALSE ){     # using meanxoydf_stats
     system( "mkdir -p fig/meanxoy_bysite" )
-    mylist <- readr::read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
-    tmp <- purrr::map( filter( meanxoydf_stats, sitename %in% mylist )$data, ~plot_by_xoy_bysite(., makepdf = TRUE ) )
+    tmp <- purrr::map( meanxoydf_stats$data, ~plot_by_xoy_bysite(., makepdf = makepdf ) )
   }
 
 
@@ -641,9 +654,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ## Mod. vs. obs for daily values (absolute)
   ##------------------------------------------------------------
   ## observed vs. modelled
-  plot_modobs_daily <- function( subtitle = "", dir = "./fig/", makepdf = FALSE, ... ){  # ddf
+  plot_modobs_daily <- function( subtitle = "", makepdf = FALSE, ... ){  # ddf
     # source("analyse_modobs.R")
-    if (makepdf) pdf( paste0( dir, "/modobs_daily.pdf" ) )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_daily.pdf" ) )
     modobs_ddf <- with( ddf, 
       analyse_modobs( 
         gpp_mod, 
@@ -663,9 +677,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ## Mod. vs. obs for monthly values (absolute)
   ##------------------------------------------------------------
   ## observed vs. modelled
-  plot_modobs_monthly <- function( mdf, dir = "./fig/", makepdf = FALSE, ... ){
+  plot_modobs_monthly <- function( makepdf = FALSE, ... ){  # using mdf
     # source("analyse_modobs.R")
-    if (makepdf) pdf( paste0( dir, "/modobs_monthly.pdf" ) )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_monthly.pdf" ) )
     modobs_mdf <- with( mdf, 
       analyse_modobs( 
         gpp_mod, 
@@ -685,9 +700,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ## Mod. vs. obs for nnual values (absolute)
   ##------------------------------------------------------------
   ## observed vs. modelled
-  plot_modobs_annual <- function( adf, dir = "./fig/", makepdf = FALSE, ... ){
+  plot_modobs_annual <- function( makepdf = FALSE, ... ){  # using adf
     # source("analyse_modobs.R")
-    if (makepdf) pdf( paste0( dir, "/modobs_annual.pdf" ) )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_annual.pdf" ) )
     modobs_adf <- with( adf, 
       analyse_modobs( 
         gpp_mod, 
@@ -707,9 +723,10 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ## Mod. vs. obs. for ggregated values (absolute) aggregated to X-day periods
   ##------------------------------------------------------------
   ## observed vs. modelled
-  plot_modobs_xdaily <- function( xdf, dir = "./fig/", makepdf = FALSE, ... ){
+  plot_modobs_xdaily <- function( makepdf = FALSE, ... ){    # using xdf
     # source("analyse_modobs.R")
-    if (makepdf) pdf( paste0( dir, "/modobs_xdaily.pdf" ) )
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_xdaily.pdf" ) )
     modobs_xdf <- with( xdf, 
       analyse_modobs( 
         gpp_mod, 
@@ -728,25 +745,27 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Mean seasonality (daily) for one site
   ##------------------------------------------------------------
-  plot_by_doy_bysite <- function( df, dir = "./fig/", makepdf = FALSE ){
-    if (makepdf) pdf( paste0( dir, "/meandoy_bysite/meandoy_bysite_", df$site[1], ".pdf" ))
+  plot_by_doy_bysite <- function( df, makepdf = FALSE ){
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/meandoy_bysite/meandoy_bysite_", df$site[1], ".pdf" ))
       par(las=1)
       yrange <- range( df$mod_min, df$mod_max, df$obs_min, df$obs_max, na.rm = TRUE )
       plot(  df$doy, df$obs_mean, type="l", ylim = yrange, ylab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ), xlab = "DOY" )
       polygon( c(df$doy, rev(df$doy)), c(df$obs_min, rev(df$obs_max)), border = NA, col = rgb(0,0,0,0.3)  )
       lines( df$doy, df$mod_mean, col="red", lwd=1.75 )
       polygon( c(df$doy, rev(df$doy)), c(df$mod_min, rev(df$mod_max)), border = NA, col = rgb(1,0,0,0.3)  )
-      title( df$site[1] )
+      title( paste0( "Mean seasonality (daily) - ", df$site[1] ) )
     if (makepdf) dev.off()
   }
 
   ##------------------------------------------------------------
   ## Mean seasonality with aggregated data from one climate zone 
   ##------------------------------------------------------------
-  plot_by_doy_byzone <- function( df, dashed, dir = "./fig/", makepdf = FALSE, pattern="" ){
+  plot_by_doy_byzone <- function( df, dashed = NA, makepdf = FALSE, pattern="" ){
     if (df$nsites[1]>4){
       if (makepdf) filn <- paste0( dir, "/meandoy_byzone/meandoy_byzone_", df$climatezone[1], "_", pattern, ".pdf" )
       if (makepdf) print( paste( "Creating plot", filn ) )
+      if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
       if (makepdf) pdf( filn )
         par(las=1)
         yrange <- range( df$mod_min, df$mod_max, df$obs_min, df$obs_max, na.rm = TRUE )
@@ -766,15 +785,16 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Mean seasonality (X-day periods) for one site
   ##------------------------------------------------------------
-  plot_by_xoy_bysite <- function( df, dir = "./fig/", makepdf = FALSE ){
-    if (makepdf) pdf( paste0( dir, "/meanxoy_bysite/meanxoy_bysite_", df$site[1], ".pdf" ))
+  plot_by_xoy_bysite <- function( df, makepdf = FALSE ){
+    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/meanxoy_bysite/meanxoy_bysite_", df$site[1], ".pdf" ))
       par(las=1)
       yrange <- range( df$mod_min, df$mod_max, df$obs_min, df$obs_max, na.rm = TRUE )
       plot(  df$xoy, df$obs_mean, type="l", ylim = yrange, ylab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ), xlab = "DOY" )
       polygon( c(df$xoy, rev(df$xoy)), c(df$obs_min, rev(df$obs_max)), border = NA, col = rgb(0,0,0,0.3)  )
       lines( df$xoy, df$mod_mean, col="red", lwd=1.75 )
       polygon( c(df$xoy, rev(df$xoy)), c(df$mod_min, rev(df$mod_max)), border = NA, col = rgb(1,0,0,0.3)  )
-      title( df$site[1] )
+      title( paste0( "Mean seasonality (X-daily) - ", df$site[1] ) )
     if (makepdf) dev.off()
   }  
   
@@ -806,23 +826,23 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
     xdf                    = xdf
   )
 
-  plotfunctions <- list(
-    plot_modobs_daily            = plot_modobs_daily,
-    plot_modobs_xdaily           = plot_modobs_xdaily,
-    plot_modobs_monthly          = plot_modobs_monthly,
-    plot_modobs_spatial          = plot_modobs_spatial,
-    plot_modobs_spatial_annual   = plot_modobs_spatial_annual,
-    plot_modobs_anomalies_annual = plot_modobs_anomalies_annual,
-    plot_modobs_anomalies_daily  = plot_modobs_anomalies_daily,
-    plot_modobs_anomalies_xdaily = plot_modobs_anomalies_xdaily,
-    plot_modobs_meandoy          = plot_modobs_meandoy,
-    plot_by_doy_allsites         = plot_by_doy_allsites,
-    plot_by_doy_allzones         = plot_by_doy_allzones,
-    plot_modobs_meanxoy          = plot_modobs_meanxoy,
-    plot_by_xoy_allsites         = plot_by_xoy_allsites
+  plot <- list(
+    modobs_daily            = plot_modobs_daily,
+    modobs_xdaily           = plot_modobs_xdaily,
+    modobs_monthly          = plot_modobs_monthly,
+    modobs_spatial          = plot_modobs_spatial,
+    modobs_spatial_annual   = plot_modobs_spatial_annual,
+    modobs_anomalies_annual = plot_modobs_anomalies_annual,
+    modobs_anomalies_daily  = plot_modobs_anomalies_daily,
+    modobs_anomalies_xdaily = plot_modobs_anomalies_xdaily,
+    modobs_meandoy          = plot_modobs_meandoy,
+    by_doy_allsites         = plot_by_doy_allsites,
+    by_doy_allzones         = plot_by_doy_allzones,
+    modobs_meanxoy          = plot_modobs_meanxoy,
+    by_xoy_allsites         = plot_by_xoy_allsites
     )
   
-	return( list( metrics=metrics, data=data, plotfunctions=plotfunctions ) )
+	return( list( metrics=metrics, data=data, plot=plot ) )
 }
 
 add_fitted <- function( data ){

@@ -152,7 +152,10 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
 
   ##----------------------------------------------------------------
   ## Do the calibration
-  ##---------------------------------------------------------------- 
+  ##----------------------------------------------------------------
+  ## check directory where calibration results are stored
+  if (!dir.exists(settings_calib$dir_results)) system( paste0( "mkdir -p ", settings_calib$dir_results) )
+
   if (settings_calib$method=="gensa"){
     ##----------------------------------------------------------------
     ## calibrate the model parameters using GenSA (simulated annealing)
@@ -168,7 +171,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     proc.time() - ptm
     print(out_optim$par)
 
-    filn <- paste0( here, "/out_gensa_", settings_calib$name, ".Rdata")
+    filn <- paste0( settings_calib$dir_results, "/out_gensa_", settings_calib$name, ".Rdata")
     print( paste0( "writing output from GenSA function to ", filn ) )
     save( out_optim, file = filn )
     
@@ -185,7 +188,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     proc.time() - ptm
     print(out_optim$par)
 
-    filn <- paste0( here, "/out_optimr_", settings_calib$name, ".Rdata")
+    filn <- paste0( settings_calib$dir_results, "/out_optimr_", settings_calib$name, ".Rdata")
     print( paste0( "writing output from optimr function to ", filn ) )
     save( out_optim, file = filn )
 
@@ -220,7 +223,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     proc.time() - ptm
     print(out_optim$par)
 
-    filn <- paste0( here, "/out_linscale_", settings_calib$name, ".Rdata")
+    filn <- paste0( settings_calib$dir_results, "/out_linscale_", settings_calib$name, ".Rdata")
     print( paste0( "writing output from linscale function to ", filn ) )
     save( out_optim, file = filn )
 
@@ -238,7 +241,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   vec <- unlist( unname( lapply( settings_calib$par, function(x) x$opt  )) )
   # df <- as_tibble(vec) %>% setNames( names(vec) )
   df <- as_tibble(t(vec))
-  filn <- paste0(settings_calib$dir_results, "/params_opt_", settings_calib$name,".csv")
+  filn <- paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name,".csv")
   print( paste0( "writing calibrated parameters to ", filn ) )
   write_csv( df, path = filn )
   
