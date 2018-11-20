@@ -49,7 +49,7 @@ This is the simplest setup, where the SOFUN is executed as a function for a sing
 settings_sims_simple <- list( 
   setup = "simple", 
   implementation  = "fortran", 
-  dir_sofun = "~/alphadata01/bstocker/sofun/trunk/" 
+  dir_sofun = "~/sofun/trunk/" 
   )
 ```
 
@@ -60,7 +60,7 @@ Use the `demo_pmodel` compilation for the simple setup
 ```{r}
 setup_sofun_simple <- list(
   model      = "demo_pmodel",
-  dir        = "~/alphadata01/bstocker/sofun/trunk",
+  dir        = "~/sofun/trunk",
   do_compile = FALSE,
   simsuite   = FALSE
   )
@@ -133,10 +133,10 @@ settings_sims_sitescale <- list(
   ensemble        = TRUE,
   setup           = "site",
   name            = "example",
-  dir_sofun       = "~/alphadata01/bstocker/sofun/trunk/",
-  path_output     = "~/alphadata01/bstocker/sofun/output_example_sofun/",
-  path_output_nc  = "~/alphadata01/bstocker/sofun/output_nc_example_sofun/",
-  path_input      = "~/alphadata01/bstocker/sofun/input_example_sofun/",
+  dir_sofun       = "~/sofun/trunk/",
+  path_output     = "~/sofun/output_example_sofun/",
+  path_output_nc  = "~/sofun/output_nc_example_sofun/",
+  path_input      = "~/sofun/input_example_sofun/",
   grid            = NA,
   implementation  = "fortran",
   in_ppfd         = TRUE,
@@ -221,7 +221,7 @@ Define model setup as a list.
 ```{r}
 setup_sofun_sitescale <- list(
   model      = "pmodel",
-  dir        = "~/alphadata01/bstocker/sofun/trunk",
+  dir        = "~/sofun/trunk",
   do_compile = FALSE,
   simsuite   = FALSE
   )
@@ -249,10 +249,10 @@ setup_sofun_sitescale <- list(
 <!--   ensemble        = FALSE, -->
 <!--   setup           = "lonlat", -->
 <!--   name            = "global_TEST", -->
-<!--   dir_sofun       = "~/alphadata01/bstocker/sofun/trunk/", -->
-<!--   path_output     = "~/alphadata01/bstocker/sofun/output_global_TEST_sofun/", -->
-<!--   path_output_nc  = "~/alphadata01/bstocker/sofun/output_nc_global_TEST_sofun/", -->
-<!--   path_input      = "~/alphadata01/bstocker/sofun/input_global_TEST_sofun/", -->
+<!--   dir_sofun       = "~/sofun/trunk/", -->
+<!--   path_output     = "~/sofun/output_global_TEST_sofun/", -->
+<!--   path_output_nc  = "~/sofun/output_nc_global_TEST_sofun/", -->
+<!--   path_input      = "~/sofun/input_global_TEST_sofun/", -->
 <!--   grid            = "halfdeg", -->
 <!--   implementation  = "fortran", -->
 <!--   in_ppfd         = TRUE, -->
@@ -317,7 +317,7 @@ setup_sofun_sitescale <- list(
 <!-- ```{r} -->
 <!-- setup_sofun_lonlat <- list(  -->
 <!--   model      = "gpmodel", -->
-<!--   dir        = "~/alphadata01/bstocker/sofun/trunk", -->
+<!--   dir        = "~/sofun/trunk", -->
 <!--   do_compile = TRUE, -->
 <!--   simsuite   = FALSE -->
 <!--   ) -->
@@ -393,7 +393,7 @@ settings_calib <- list(
   filter_soilm_min = NA,     # this is dangerous: removes entire sites where no soil moisture is measured
   filter_drought   = FALSE,
   metric           = "rmse",
-  dir_results      = "/Users/benjaminstocker/alphadata01/bstocker/rsofun/calib_results" # use absolute path!
+  dir_results      = "/Users/benjaminstocker/rsofun/calib_results" # use absolute path!
  )
 ```
 
@@ -443,10 +443,10 @@ settings_eval <- list(
   agg = 5,
   path_fluxnet2015_d = paste0( path.package("rsofun"), "/extdata/" ),
   path_fluxnet2015_w = "",
-  path_fluxnet2015_m = "",
+  path_fluxnet2015_m = paste0( path.package("rsofun"), "/extdata/" ),
   path_fluxnet2015_y = paste0( path.package("rsofun"), "/extdata/" ),
   path_gepisat_d     = "",
-  dir_figs           = "~/alphadata01/bstocker/rsofun/fig/"
+  dir_figs           = "~/rsofun/fig/"
   )
 ```
 
@@ -462,19 +462,19 @@ out_eval <- eval_sofun( mod, settings_eval, settings_sims_sitescale, obs_eval = 
 The object returned by `eval_sofun()` includes a set of standard functions that can be applied to the evaluation data itself. Here is one example for observed versus modelled values.
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 modobs_daily   <- out_eval$plot$modobs_daily()
-# modobs_xdf     <- out_eval$plot$modobs_xdaily()
-# modobs_meandoy <- out_eval$plot$modobs_meandoy()
-# out_eval$plot$by_doy_allsites()
-# out_eval$plot$by_xoy_allsites()
-# modobs_anomalies_daily  <- out_eval$plot$modobs_anomalies_daily()
-# modobs_anomalies_xdaily <- out_eval$plot$modobs_anomalies_xdaily()
-# modobs_anomalies_annual <- out_eval$plot$modobs_anomalies_annual()
-# modobs_meanxoy <- out_eval$plot$modobs_meanxoy()
-# out_eval$plot$by_doy_allzones()
-
-# modobs_mdf <- out_eval$plot$modobs_monthly( dir = "./fig", makepdf = TRUE )
-# modobs_spatial <- out_eval$plot$modobs_spatial( dir = "./fig", makepdf = TRUE )
-# out_eval$plot$modobs_spatial_annual( dir = "./fig", makepdf = TRUE )
+modobs_xdf     <- out_eval$plot$modobs_xdaily()
+modobs_mdf     <- out_eval$plot$modobs_monthly()
+modobs_meandoy <- out_eval$plot$modobs_meandoy()
+modobs_meandoy <- out_eval$plot$modobs_annual()
+out_eval$plot$by_doy_allsites()
+out_eval$plot$by_xoy_allsites()
+modobs_anomalies_daily  <- out_eval$plot$modobs_anomalies_daily()
+modobs_anomalies_xdaily <- out_eval$plot$modobs_anomalies_xdaily()
+modobs_anomalies_annual <- out_eval$plot$modobs_anomalies_annual()
+modobs_meanxoy <- out_eval$plot$modobs_meanxoy()
+out_eval$plot$by_doy_allzones()
+out_eval$plot$modobs_spatial_annual()
+modobs_spatial <- out_eval$plot$modobs_spatial()
 ```
 
 

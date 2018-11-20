@@ -392,21 +392,40 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   ## Mod. vs. obs. of mean per site -> spatial correlation
   ##------------------------------------------------------------
-  plot_modobs_spatial <- function( makepdf=TRUE ){   # using meandf
+  plot_modobs_spatial <- function( makepdf=FALSE ){   # using meandf
+    
     # source("analyse_modobs.R")
     par(las=1, mar=c(4,4.5,4,1))
-    if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
-    if (makepdf) { filn <- paste0( dir, "/modobs_spatial.pdf" ) } else { filn <- N}
-    modobs_spatial <- with( meandf, analyse_modobs( 
-                                          gpp_mod, 
-                                          gpp_obs, 
-                                          heat = FALSE, 
-                                          col = "black", 
-                                          ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), 
-                                          xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ),
-                                          plot.fil = filn,
-                                          plot.title = "Spatial correlation"
-                                          ) )
+    if (!dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs ) )
+    if (makepdf) { filn <- paste0( settings_eval$dir_figs, "/modobs_spatial.pdf" ) } else { filn <- NA }
+    if (nrow(meandf)>2){
+      modobs_spatial <- with( meandf, analyse_modobs( 
+        gpp_mod, 
+        gpp_obs, 
+        heat = FALSE, 
+        col = "black", 
+        ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), 
+        xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ),
+        plot.fil = filn,
+        plot.title = "Spatial correlation"
+      ) )
+    } else {
+      modobs_spatial <- NA
+      if (makepdf) pdf(filn)
+      with( meandf, plot( 
+        gpp_mod, 
+        gpp_obs,  
+        col = "black",
+        pch = 16,
+        ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), 
+        xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ),
+        main = "Spatial correlation",
+        xlim = range(c(gpp_mod, gpp_obs, na.rm=TRUE)),
+        ylim = range(c(gpp_mod, gpp_obs, na.rm=TRUE))
+      ))
+      lines( c(-9999,9999), c(-9999,9999), lty=3 )
+      if (makepdf) dev.off()
+    }
     # abline( linmod_meandf, col="red")
     return(modobs_spatial)
   }
@@ -416,69 +435,75 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   plot_modobs_spatial_annual <- function( pattern = "", makepdf = FALSE, ... ){  #meandf, linmod_meandf, annual_bysite_stats, annual_pooled_stats = NA, spatial_stats = NA, 
 
-    if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
-    if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_spatial_annual_", pattern, ".pdf" ) )
-
+    if (identical(linmod_meandf, NA)){
+      
+      if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+      if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_spatial_annual_", pattern, ".pdf" ) )
+      
       par(las=1, mar=c(4,4.5,4,1))
-
+      
       ## set up plotting and add linear regression line for means by site
       with( meandf, plot( gpp_mod, gpp_obs, pch=16, col=rgb(0,0,0,0.5), type = "n", ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ), ... ) )
       abline( linmod_meandf, col="red")
-
+      
       ## plot black regression lines of annual values within sites
       out <- annual_bysite_stats %>%  mutate( purrr::map( data, ~lines( fitted ~ gpp_mod, data = . ) ) )  # to have it sorted: %>% mutate( data = purrr::map( data, ~arrange( ., gpp_mod ) ) )
-
+      
       title( "Spatial/annual correlation" )
-
+      
       ## Add annotations for statistics of annual values (pooled)
       if (!is.na(annual_pooled_stats)) mtext( bquote( italic(R)^2 == .(format( annual_pooled_stats$rsq, digits = 2) ) ), adj = 1, cex = 0.8, line=2 )
       if (!is.na(annual_pooled_stats)) mtext( paste0( "RMSE = ",  format( annual_pooled_stats$rmse, digits = 3 ) ), adj = 1, cex = 0.8, line=1 )
-
+      
       ## Add annotations for statistics of means by site (~spatial)
       if (!is.na(spatial_stats)) mtext( bquote( italic(R)^2 == .(format( spatial_stats$rsq, digits = 2) ) ), adj = 0, cex = 0.8, line=2, col="red" )
       if (!is.na(spatial_stats)) mtext( paste0( "RMSE = ",  format( spatial_stats$rmse, digits = 3 ) ), adj = 0, cex = 0.8, line=1, col="red" )
       if (!is.na(spatial_stats)) mtext( paste0( "slope = ", format( spatial_stats$meanslope, digits = 3 ) ), adj = 0, cex = 0.8, col="red" )
-
-    if (makepdf) dev.off()
-
-    # ## Histogram of slopes
-    # ##------------------------------------------------------------
-    # ## (Uncomment to plot as inset in spatial-IAV plot) 
-    # # u <- par("usr")
-    # # v <- c(
-    # #   grconvertX(u[1:2], "user", "ndc"),
-    # #   grconvertY(u[3:4], "user", "ndc")
-    # # )
-    # # v_orig <- v
-    # # v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
-    # # par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
-    # if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+      
+      if (makepdf) dev.off()
+      
+      # ## Histogram of slopes
+      # ##------------------------------------------------------------
+      # ## (Uncomment to plot as inset in spatial-IAV plot) 
+      # # u <- par("usr")
+      # # v <- c(
+      # #   grconvertX(u[1:2], "user", "ndc"),
+      # #   grconvertY(u[3:4], "user", "ndc")
+      # # )
+      # # v_orig <- v
+      # # v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
+      # # par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
+      # if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
       # if (makepdf) pdf( paste0( settings_eval$dir_figs, "/hist_slopes_anomalies_annual.pdf" ) )
-    #   hist( annual_bysite_stats$slope, xlim=c(-5,5), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 50, xlab="slope" )
-    #   abline( v=1.0, col="red" )
-    #   axis( 1, cex.axis=1.0, xlab="slope" )
-    #   title( "Slopes of annual regressions" )
-    # if (makepdf) dev.off()
-    # 
-    # ## Histogram of R2
-    # ##------------------------------------------------------------
-    # ## (Uncomment to plot as inset in spatial-IAV plot) 
-    # # u <- par("usr")
-    # # v <- c(
-    # #   grconvertX(u[1:2], "user", "ndc"),
-    # #   grconvertY(u[3:4], "user", "ndc")
-    # # )
-    # # v_orig <- v
-    # # v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
-    # # par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
-    # if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
+      #   hist( annual_bysite_stats$slope, xlim=c(-5,5), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 50, xlab="slope" )
+      #   abline( v=1.0, col="red" )
+      #   axis( 1, cex.axis=1.0, xlab="slope" )
+      #   title( "Slopes of annual regressions" )
+      # if (makepdf) dev.off()
+      # 
+      # ## Histogram of R2
+      # ##------------------------------------------------------------
+      # ## (Uncomment to plot as inset in spatial-IAV plot) 
+      # # u <- par("usr")
+      # # v <- c(
+      # #   grconvertX(u[1:2], "user", "ndc"),
+      # #   grconvertY(u[3:4], "user", "ndc")
+      # # )
+      # # v_orig <- v
+      # # v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
+      # # par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
+      # if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
       # if (makepdf) pdf( paste0( settings_eval$dir_figs, "/hist_r2_anomalies_annual.pdf" ) )
-    #   hist( annual_bysite_stats$rsq, xlim=c(-1,1), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 12, xlab= bquote( italic(R)^2 ) )
-    #   abline( v=1.0, col="red" )
-    #   axis( 1, cex.axis=1.0, xlab = bquote( italic(R)^2 ) )
-    #   title( bquote( bold(Slopes ~ of ~ italic(R)^2) ) )
-    # if (makepdf) dev.off()
+      #   hist( annual_bysite_stats$rsq, xlim=c(-1,1), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 12, xlab= bquote( italic(R)^2 ) )
+      #   abline( v=1.0, col="red" )
+      #   axis( 1, cex.axis=1.0, xlab = bquote( italic(R)^2 ) )
+      #   title( bquote( bold(Slopes ~ of ~ italic(R)^2) ) )
+      # if (makepdf) dev.off()
+    } else {
+      print("plot_modobs_spatial_annual(): Not enough sites to get spatial correlations.")
+    }
     
+
   }
 
 
@@ -830,6 +855,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
     modobs_daily            = plot_modobs_daily,
     modobs_xdaily           = plot_modobs_xdaily,
     modobs_monthly          = plot_modobs_monthly,
+    modobs_annual           = plot_modobs_annual,
     modobs_spatial          = plot_modobs_spatial,
     modobs_spatial_annual   = plot_modobs_spatial_annual,
     modobs_anomalies_annual = plot_modobs_anomalies_annual,
