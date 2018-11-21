@@ -3,15 +3,18 @@
 #' Evaluates the functional relationships in the data using General Additive Models (using function \code{gam} from the \code{mgcv} package) and the P-model using its function.
 #' 
 #' @param df A data frame containing daily observational data as output from function \code{get_obs_eval()}.
+#' @param params_opt A list of optimised P-model parameters or the path to the CSV file where calibrated parameters are stored.
 #' @param overwrite if \code{TRUE}, the GAM model object is overwritten
 #' @param ndays_agg An integer specifying the level of data aggregation by number of days.
+#' @param dir A character string specifying the path of the directory into which figures are saved.
+#' @param pattern A character string added to the figure file name for uniqe identification
 #'
 #' @return A data frame with aggregated data including GAM predictions and P-model results as columns \code{lue_gam} and \code{lue_mod}, respectively.
 #' @export
 #'
 #' @examples eval_response( df, overwrite = TRUE, ndays_agg = 10 )
 #' 
-eval_response <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
+eval_response <- function( df, params_opt, overwrite = FALSE, ndays_agg = 10, dir = "./", pattern = "", ... ){
 
   # ## xxx debug
   # df <- out_eval_RED$data$ddf
@@ -63,15 +66,17 @@ eval_response <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
   df_training <- df_training %>% dplyr::filter( temp > 0.0 )
 
   ## train the neural network at observed daily GPP
-  filn <- "tmpdir/gam.Rdata"
+  filn <- "gam.Rdata"
   if (!file.exists(filn)||overwrite){
     set.seed(1982)
     gam <- mgcv::gam( lue_obs ~ s(temp) + s(vpd) + s(soilm), data = df_training, method = "REML" )
     # gam.check(gam)
     # summary(gam)
     # plot(gam)
+    print( paste0("Writing file ", filn))
     save( gam, file = filn )
   } else {
+    print( paste0("Reading from file ", filn))
     load( filn )
   }
 
@@ -79,7 +84,13 @@ eval_response <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
   predicted <- predict( gam, df_training )
 
   ## calculate values with P-model
-  params_opt <- readr::read_csv( "tmpdir/params_opt_RED.csv" )
+  if ( is.character(params_opt) ){
+    if (file.exists(params_opt)) params_opt <- readr::read_csv( params_opt )
+  }
+  if ( !is.list(params_opt) ){
+    rlang::abort("eval_response(): Could not read calibrated parameters.")
+  }
+  
   df_training <- df_training %>%  mutate( lue_gam = predicted ) %>%
     group_by( date, sitename ) %>%
     nest() %>%
@@ -109,22 +120,22 @@ eval_response <- function( df, overwrite = FALSE, ndays_agg = 10, ... ){
   ## Evaluate GAM and P-model
   ##-------------------------------------
   ## temperature
-  eval_response_byvar( df_training, gam, evalvar = "temp", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 40, nsample = 12, ylim=c(0,0.5) ) 
+  eval_response_byvar( df_training, gam, evalvar = "temp", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 40, nsample = 12, ylim=c(0,0.5), dir = dir ) 
 
   ## vpd
-  eval_response_byvar( df_training, gam, evalvar = "vpd", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 3000, nsample = 12, ylim=c(0,0.5) )
+  eval_response_byvar( df_training, gam, evalvar = "vpd", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 3000, nsample = 12, ylim=c(0,0.5), dir = dir )
 
   ## soilm
-  eval_response_byvar( df_training, gam, evalvar = "soilm", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 1.0, nsample = 12, ylim=c(0,0.5) )
+  eval_response_byvar( df_training, gam, evalvar = "soilm", predictors = c("temp", "vpd", "soilm"), kphio = params_opt$kphio, varmin = 0, varmax = 1.0, nsample = 12, ylim=c(0,0.5), dir = dir )
 
   ## Return aggregated data with GAM predictions and P-model results
-  df_agg <- df_agg %>% left_join( dplyr::select( df_training, lue_gam, lue_mod ), by = c("sitename", "date") )
+  df_agg <- df_agg %>% left_join( dplyr::select( df_training, sitename, date, lue_gam, lue_mod ), by = c("sitename", "date") )
 
   return(df_agg)
 
 }
 
-eval_response_byvar <- function( df, gam, evalvar, predictors, kphio, varmin, varmax, nsample, makepdf=TRUE, ... ){
+eval_response_byvar <- function( df, gam, evalvar, predictors, kphio, varmin, varmax, nsample, makepdf=TRUE, dir="./", ... ){
 
   if (evalvar %in% predictors) predictors <- predictors[-which(predictors==evalvar)]
 
@@ -172,8 +183,9 @@ eval_response_byvar <- function( df, gam, evalvar, predictors, kphio, varmin, va
                                       )
 
   ## plot response in observational and simulated data
-  if (makepdf) filn <- paste0("fig/gam_response_", evalvar, ".pdf")
-  if (makepdf) inform( paste( "Creating plot", filn ))
+  if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
+  if (makepdf) filn <- paste0( dir, "/gam_response_", evalvar, ".pdf" )
+  if (makepdf) print( paste( "Creating plot", filn ))
   if (makepdf) pdf( filn )
 
     par(las=0)

@@ -10,7 +10,7 @@
 #'
 #' @examples error <- check_download_fluxnet2015( "./" )
 #' 
-check_download_fluxnet2015 <- function( path, sitename = NA, path_remote = NA, uname = NA, address_remote = NA ){
+check_download_fluxnet2015 <- function( path, sitename = NA, path_remote = NA, uname_remote = NA, address_remote = NA ){
 
   ## Check if any data is available in the specified directory
   getfiles <- list.files( path, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv" )
@@ -49,7 +49,7 @@ check_download_fluxnet2015 <- function( path, sitename = NA, path_remote = NA, u
           path_remote,
           path,
           getfiles = getfiles,
-          uname = uname, 
+          uname = uname_remote, 
           address_remote = address_remote 
          )
         getfiles <- list.files( path, pattern = "FLX_.*_FLUXNET2015_FULLSET_DD.*.csv" )
