@@ -74,4 +74,4 @@ sudo port install cdo
 
 ## Examples
 
-Examples are given in several vignettes.
+Examples are given in several vignettes, also available [here](http://rpubs.com/stineb/vignette_rsofun3).

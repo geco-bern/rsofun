@@ -197,7 +197,19 @@ settings_input_sitescale <-  list(
   splined_fapar            = TRUE,
   path_co2                 = paste0( path.package("rsofun"), "/extdata/cCO2_rcp85_const850-1765.dat" ),
   path_fluxnet2015         = paste0( path.package("rsofun"), "/extdata/" ),
-  path_MODIS_FPAR_MCD15A3H = paste0( path.package("rsofun"), "/extdata/" )
+  path_MODIS_FPAR_MCD15A3H = paste0( path.package("rsofun"), "/extdata/" ),
+
+  ## below is information for downloading input data from remote server
+  get_from_remote          = TRUE,
+  path_remote_watch_wfdei  = "/work/bstocker/labprentice/data/watch_wfdei/",
+  path_remote_co2          = "/work/bstocker/labprentice/data/co2/cCO2_rcp85_const850-1765.dat",
+  path_remote_cru          = "/work/bstocker/labprentice/data/cru/ts_4.01/",
+  path_remote_MODIS_FPAR_MCD15A3H  = "/work/bstocker/labprentice/data/fapar_MODIS_FPAR_MCD15A3H_fluxnet2015_gee_subset/",
+  path_remote_MODIS_EVI_MOD13Q1 = "/work/bstocker/labprentice/data/evi_MODIS_EVI_MOD13Q1_fluxnet2015_gee_subset/",
+  path_remote_fluxnet2015  = "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_remote_watch_wfdei  = "/work/bstocker/labprentice/data/watch_wfdei/",
+  uname_remote             = "bstocker",
+  address_remote           = "login.cx1.hpc.ic.ac.uk"
   )
 ```
 

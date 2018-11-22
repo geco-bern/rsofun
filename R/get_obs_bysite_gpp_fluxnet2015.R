@@ -11,7 +11,7 @@
 #' @return A data frame (tibble) containint observational data.
 #' @export
 #'
-#' @examples df <- get_obs_bysite_gpp_fluxnet2015( "FR-Pue", "./inst/extdata/", timescale = "d, method = "NT" )
+#' @examples df <- get_obs_bysite_gpp_fluxnet2015( "FR-Pue", "./extdata/", timescale = "d, method = "NT" )
 #' 
 get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescale, method = "NT" ){
 

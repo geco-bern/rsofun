@@ -138,6 +138,7 @@ prepare_setup_sofun <- function( settings, write_paramfils = TRUE ){
       ## - elevation of site, column must be named 'elv'
       ## - years for which simulation is to be done (corresponding to data availability from site), 
       ##   requires two columns named 'year_start' and 'year_end'.
+      if (!file.exists(settings$path_siteinfo)) abort( "prepare_setup_sofun(): File specified by settings$path_siteinfo does not exist." )
       siteinfo <- readr::read_csv( settings$path_siteinfo )
 
       ##--------------------------------------

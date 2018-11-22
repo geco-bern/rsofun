@@ -435,30 +435,33 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   plot_modobs_spatial_annual <- function( pattern = "", makepdf = FALSE, ... ){  #meandf, linmod_meandf, annual_bysite_stats, annual_pooled_stats = NA, spatial_stats = NA, 
 
-    if (identical(linmod_meandf, NA)){
+    if (!identical(linmod_meandf, NA)){
       
       if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
-      if (makepdf) pdf( paste0( settings_eval$dir_figs, "/modobs_spatial_annual_", pattern, ".pdf" ) )
+      if (makepdf) filn <- paste0( settings_eval$dir_figs, "/modobs_spatial_annual_", pattern, ".pdf" )
+      if (makepdf) print( paste( "Plotting to file:", filn ) )
+      if (makepdf) pdf( filn )
       
       par(las=1, mar=c(4,4.5,4,1))
       
       ## set up plotting and add linear regression line for means by site
       with( meandf, plot( gpp_mod, gpp_obs, pch=16, col=rgb(0,0,0,0.5), type = "n", ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ), ... ) )
       abline( linmod_meandf, col="red")
+      lines(c(-9999,9999), c(-9999,9999), lty=3)
       
       ## plot black regression lines of annual values within sites
-      out <- annual_bysite_stats %>%  mutate( purrr::map( data, ~lines( fitted ~ gpp_mod, data = . ) ) )  # to have it sorted: %>% mutate( data = purrr::map( data, ~arrange( ., gpp_mod ) ) )
+      out <- adf_stats %>%  mutate( purrr::map( data, ~lines( fitted ~ gpp_mod, data = . ) ) )  # to have it sorted: %>% mutate( data = purrr::map( data, ~arrange( ., gpp_mod ) ) )
       
       title( "Spatial/annual correlation" )
-      
+
       ## Add annotations for statistics of annual values (pooled)
-      if (!is.na(annual_pooled_stats)) mtext( bquote( italic(R)^2 == .(format( annual_pooled_stats$rsq, digits = 2) ) ), adj = 1, cex = 0.8, line=2 )
-      if (!is.na(annual_pooled_stats)) mtext( paste0( "RMSE = ",  format( annual_pooled_stats$rmse, digits = 3 ) ), adj = 1, cex = 0.8, line=1 )
+      if (!identical(NA, metrics$gpp$fluxnet2015$annual_pooled)) mtext( bquote( italic(R)^2 == .(format( metrics$gpp$fluxnet2015$annual_pooled$rsq,  digits = 2) ) ), adj = 1, cex = 0.8, line=2 )
+      if (!identical(NA, metrics$gpp$fluxnet2015$annual_pooled)) mtext( paste0( "RMSE = ",       format( metrics$gpp$fluxnet2015$annual_pooled$rmse, digits = 3 ) ),  adj = 1, cex = 0.8, line=1 )
       
       ## Add annotations for statistics of means by site (~spatial)
-      if (!is.na(spatial_stats)) mtext( bquote( italic(R)^2 == .(format( spatial_stats$rsq, digits = 2) ) ), adj = 0, cex = 0.8, line=2, col="red" )
-      if (!is.na(spatial_stats)) mtext( paste0( "RMSE = ",  format( spatial_stats$rmse, digits = 3 ) ), adj = 0, cex = 0.8, line=1, col="red" )
-      if (!is.na(spatial_stats)) mtext( paste0( "slope = ", format( spatial_stats$meanslope, digits = 3 ) ), adj = 0, cex = 0.8, col="red" )
+      if (!identical(NA, metrics$gpp$fluxnet2015$spatial)) mtext( bquote( italic(R)^2 == .(format( metrics$gpp$fluxnet2015$spatial$rsq, digits = 2) ) ), adj = 0, cex = 0.8, line=2, col="red" )
+      if (!identical(NA, metrics$gpp$fluxnet2015$spatial)) mtext( paste0( "RMSE = ",  format( metrics$gpp$fluxnet2015$spatial$rmse, digits = 3 ) ), adj = 0, cex = 0.8, line=1, col="red" )
+      # if (!identical(NA, metrics$gpp$fluxnet2015$spatial)) mtext( paste0( "slope = ", format( metrics$gpp$fluxnet2015$spatial$meanslope, digits = 3 ) ), adj = 0, cex = 0.8, col="red" )
       
       if (makepdf) dev.off()
       
@@ -788,10 +791,11 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
   ##------------------------------------------------------------
   plot_by_doy_byzone <- function( df, dashed = NA, makepdf = FALSE, pattern="" ){
     if (df$nsites[1]>4){
-      if (makepdf) filn <- paste0( dir, "/meandoy_byzone/meandoy_byzone_", df$climatezone[1], "_", pattern, ".pdf" )
-      if (makepdf) print( paste( "Creating plot", filn ) )
-      if (makepdf && !dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs))
-      if (makepdf) pdf( filn )
+    	dir_figs <- paste0( settings_eval$dir_figs, "/meandoy_byzone" )
+    	if (makepdf && !dir.exists(dir_figs)) system( paste0( "mkdir -p ", dir_figs))
+    	if (makepdf) filn <- paste0( dir_figs, "/meandoy_byzone_", df$climatezone[1], "_", pattern, ".pdf" )
+    	if (makepdf) print( paste( "Plotting to file:", filn ) )
+    	if (makepdf) pdf( filn )
         par(las=1)
         yrange <- range( df$mod_min, df$mod_max, df$obs_min, df$obs_max, na.rm = TRUE )
         plot(  df$doy, df$obs_mean, type="l", ylim = yrange, ylab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ), xlab = "DOY" )

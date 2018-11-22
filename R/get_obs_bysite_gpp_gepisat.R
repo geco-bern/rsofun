@@ -10,7 +10,7 @@
 #' @return A data frame (tibble) containint observational data.
 #' @export
 #'
-#' @examples df <- get_obs_bysite_gpp_gepisat( "FR-Pue", "./inst/extdata/", timescale = "d, method = "NT" )
+#' @examples df <- get_obs_bysite_gpp_gepisat( "FR-Pue", "./extdata/", timescale = "d, method = "NT" )
 #' 
 get_obs_bysite_gpp_gepisat <- function( sitename, path_gepisat, timescale = "d" ){
 

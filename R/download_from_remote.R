@@ -1,7 +1,7 @@
 #' Download file from a remote server.
 #'
-#' A file is downloaded from a remote server using SSH.
-#'
+#' Downloads all files in a given directly from remote server, or only files that contain 'pattern'
+#' 
 #' @param dir_remote A character string specifying the path of the directory that contains files to be downloaded from the remote server.
 #' @param dir_local A character string specifying the path of the directory that contains files to be downloaded to the local machine.
 #' @param pattern (Optional) A character string of the pattern used to filter files to be downloaded.
@@ -14,33 +14,13 @@
 #'
 #' @examples
 #' 
-##-----------------------------------------------------------
-## Manages the path specification for MODIS FPAR data download from CX1
-##-----------------------------------------------------------
 download_from_remote <- function( dir_remote, dir_local, pattern = NA, uname = NULL, address_remote = NULL, getfiles = NA ){
-
-  ans <- readline( prompt = paste0("Are you still happy with downloading to ", dir_local, "? (y/n)") )
-  if (ans=="y"){
-    error <- download_from_remote_path( dir_remote, dir_local, pattern, uname, address_remote, getfiles )
-  } else {
-    dir_local <- readline( prompt = "Please specify a new path: " )
-    error <- download_from_remote_path( dir_remote, dir_local, pattern, uname, address_remote, getfiles )
-  }
-
-  return(error)
-
-}
-
-##-----------------------------------------------------------
-## Downloads all files in a given directly from remote server, or only files that contain 'pattern'
-##-----------------------------------------------------------
-download_from_remote_path <- function( dir_remote, dir_local, pattern = NA, uname = NULL, address_remote = NULL, getfiles = NA ){
 
   error <- 0
 
   ## get user name from user
   if (!exists("uname") && is.null(uname)) uname <<- readline( prompt = "Enter your user name for logging onto remote server: " )
-  if (is.null(address_remote)) address_remote <<- readline( prompt = "Enter your address of remote server: " )
+  if (is.null(address_remote))   address_remote <<- readline( prompt = "Enter your address of remote server: " )
 
   if (is.na(pattern) && is.na(getfiles)){
     ## Download all files in the specified remote directory
@@ -89,4 +69,21 @@ download_from_remote_path <- function( dir_remote, dir_local, pattern = NA, unam
   }
   return( error )
 }
+
+# ##-----------------------------------------------------------
+# ## Manages the path specification for MODIS FPAR data download from CX1
+# ##-----------------------------------------------------------
+# download_from_remote <- function( dir_remote, dir_local, pattern = NA, uname = NULL, address_remote = NULL, getfiles = NA ){
+
+#   ans <- readline( prompt = paste0("Are you still happy with downloading to ", dir_local, "? (y/n)") )
+#   if (ans=="y"){
+#     error <- download_from_remote_path( dir_remote, dir_local, pattern, uname, address_remote, getfiles )
+#   } else {
+#     dir_local <- readline( prompt = "Please specify a new path: " )
+#     error <- download_from_remote_path( dir_remote, dir_local, pattern, uname, address_remote, getfiles )
+#   }
+
+#   return(error)
+
+# }
 
