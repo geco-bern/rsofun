@@ -107,6 +107,9 @@ read_sofun <- function( settings, setup ){
     ddf_list$daily <- purrr::map( as.list(settings$sitenames), ~read_ncout_sofun_daily( ., settings ) )
     names(ddf_list$daily) <- settings$sitenames
   
+    ## remove sites from list if they are missing (appear as NA in list)
+    ddf_list$daily <- na.omit.list( ddf_list$daily )
+
   }
 
   return(ddf_list)
@@ -250,4 +253,7 @@ read_ncout_sofun_annual <- function( expname, settings ){
 
   return( adf )
 }
+
+## copied from https://gist.github.com/rhochreiter/7029236
+na.omit.list <- function(y) { return(y[!sapply(y, function(x) all(is.na(x)))]) }
 
