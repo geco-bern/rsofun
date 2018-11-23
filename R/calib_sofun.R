@@ -122,7 +122,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   }
 
   ## Example run for getting structure of output file
-  if (names(settings_calib$par)=="kphio"){
+  if (identical(names(settings_calib$par),"kphio")){
     ## For calibrating quantum yield efficiency only
     out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
     cost_rmse <- cost_rmse_kphio
