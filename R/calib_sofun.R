@@ -20,7 +20,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   ##----------------------------------------------------------------
   if (is.na(ddf_obs)){
     print("Collecting observational target data ...")
-    ddf_obs <- get_obs( settings_calib, settings_sims, settings_input )
+    ddf_obs <- get_obs_calib( settings_calib, settings_sims, settings_input )
   }
 
   ##----------------------------------------------------------------
@@ -378,10 +378,23 @@ cost_mae <- function( par ){
   return(cost)
 }
 
+#' Get observational data for calibration
+#'
+#' Gets observational data for model calibration by looping over sites
+#' 
+#' @param settings_calib A list containing model calibration settings. See vignette_rsofun.pdf for more information and examples.
+#' @param settings_sims A list containing model simulation settings from \code{\link{prepare_setup_sofun}}.  See vignette_rsofun.pdf for more information and examples.
+#' @param settings_input A list containing model input settings. See vignette_rsofun.pdf for more information and examples.
+#'
+#' @return A data frame (tibble) containing observational data used for model calibration
+#' @export
+#'
+#' @examples ddf_obs <- get_obs_calib( settings_calib, settings_sims, settings_input )
+#' 
 ##------------------------------------------------------------
 ## Gets data by looping over sites
 ##------------------------------------------------------------
-get_obs <- function( settings_calib, settings_sims, settings_input ){
+get_obs_calib <- function( settings_calib, settings_sims, settings_input ){
 
 
   ##------------------------------------------------------------
