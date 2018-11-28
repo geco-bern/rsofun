@@ -478,7 +478,7 @@ get_obs_calib <- function( settings_calib, settings_sims, settings_input ){
                                                       ) %>% mutate( sitename=x ) )
                 
   ## combine dataframes from multiple sites along rows
-  ddf_obs <- bind_rows( list_bysite )
+  ddf_obs <- dplyr::bind_rows( list_bysite )
   rm("list_bysite")
 
   return( ddf_obs )
@@ -491,6 +491,8 @@ get_obs_calib <- function( settings_calib, settings_sims, settings_input ){
 ## used as target variables for calibration for a given site, covering specified dates.
 ##------------------------------------------------------------
 get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_input ){
+
+  # print(paste("getting obs for ", sitename))
 
   ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
   ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE )
@@ -507,11 +509,11 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
 
       ## This gets gpp_obs as mean of GPP_NT_VUT_REF and GPP_DT_VUT_REF
       ddf <-  get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale, method = datasource[ -which( datasource=="fluxnet2015" ) ] ) %>%
-              right_join( ddf, by = "date" )
+              dplyr::right_join( ddf, by = "date" )
 
     } else {
       
-      ddf <- ddf %>% mutate( gpp_obs = NA )
+      ddf <- ddf %>% dplyr::mutate( gpp_obs = NA )
       
     }
 
@@ -552,6 +554,51 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
 
     }
 
+    if (!is.null(settings_calib$filter_days)){
+
+      ## replace all 'gpp_obs' from FLUXNET 2015 data with NA if GPP from DT decomposition is NA
+      if ("fluxnet2015_DT" %in% settings_calib$filter_days){
+        ddf <- ddf %>% dplyr::mutate( gpp_obs = ifelse( is.na(GPP_DT_VUT_REF), NA, gpp_obs ) )  
+      }
+
+      ## replace all 'gpp_obs' from FLUXNET 2015 data with NA if GPP from NT decomposition is NA
+      if ("fluxnet2015_NT" %in% settings_calib$filter_days){
+        ddf <- ddf %>% dplyr::mutate( gpp_obs = ifelse( is.na(GPP_NT_VUT_REF), NA, gpp_obs ) )  
+      }
+
+      if ("fluxnet2015_Ty" %in% settings_calib$filter_days){
+        ## Filter out data points based on GePiSaT data
+        
+        avl_gepisat <- TRUE
+        if (!("gpp_obs_gepisat" %in% names(ddf))){
+          ## get GePiSaT data
+          ## Make sure data is available for this site
+          error <- check_download_gepisat( settings_calib$path_gepisat, sitename )
+          
+          ddf_gepisat <- get_obs_bysite_gpp_gepisat( sitename, settings_calib$path_gepisat, settings_calib$timescale )
+          
+          ## add to other data frame and take take weighted average for updated 'gpp_obs'
+          if (!is.null(ddf_gepisat)){
+            
+            ddf <- ddf_gepisat %>%
+              ## Some GPP data looks weird when its error in resp. day is zero. Exclude this data.
+              dplyr::mutate( gpp_obs = ifelse( gpp_err_obs == 0.0, NA, gpp_obs ) ) %>% 
+              dplyr::rename( gpp_obs_gepisat = gpp_obs ) %>%
+              dplyr::right_join( ddf, by = "date" )
+              
+          } else {
+            ## No GePiSaT data available for this site. Consider all GPP data missing (NA).
+            ddf <- ddf %>% dplyr::mutate( gpp_obs = NA )
+            avl_gepisat <- FALSE
+          }
+          
+        }
+        
+        ## replace all 'gpp_obs' from FLUXNET 2015 data with NA if GePiSaT-GPP is NA
+        if (avl_gepisat) ddf <- ddf %>% dplyr::mutate( gpp_obs = ifelse( is.na(gpp_obs_gepisat), NA, gpp_obs ) )  
+
+      }
+    }
   }
 
   if ("wcont" %in% settings_calib$targetvars){
@@ -562,7 +609,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
       error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
 
       ddf <- get_obs_bysite_wcont_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
-             right_join( ddf, by = "date" )
+             dplyr::right_join( ddf, by = "date" )
 
     }
 

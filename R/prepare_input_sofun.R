@@ -145,10 +145,10 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     if (!is.na(settings_input$data)){
       ## Data is provided as a list of data frames.  
       ## Climate input files
-      ddf_climate <-  settings_input$data %>% dplyr::select( -fapar ) %>% bind_rows()
+      ddf_climate <- settings_input$data %>% dplyr::select( -fapar ) %>% bind_rows()
 
       ## prepare the fapar input files for each site
-      ddf_fapar <-  settings_input$data %>% dplyr::select( fapar ) %>% bind_rows()
+      ddf_fapar <- settings_input$data %>% dplyr::select( fapar ) %>% bind_rows()
 
 
     } else {

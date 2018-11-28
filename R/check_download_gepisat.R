@@ -12,6 +12,8 @@
 #' 
 check_download_gepisat <- function( path, sitename = NA, path_remote = NA, uname = NA, address_remote = NA ){
 
+  error <- 0
+  
   ## Check if any data is available in the specified directory
   getfiles <- list.files( path, pattern = ".*_daily_GPP.txt" )
 
