@@ -280,11 +280,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   vec <- unlist( unname( lapply( settings_calib$par, function(x) x$opt  )) )
   # df <- as_tibble(t(vec)) %>% setNames( names(vec) )
   df <- as_tibble(t(vec)) %>% setNames( names(settings_calib$par) )
-  if (is.na(sitename)){
-    filn <- paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name, ".csv")
-  } else {
-    filn <- paste0( settings_calib$dir_results, "/params_opt_SINGLESITE_", sitename, ".csv")
-  }
+  filn <- paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name, ".csv")
   print( paste0( "writing calibrated parameters to ", filn ) )
   write_csv( df, path = filn )
 
