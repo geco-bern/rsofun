@@ -143,6 +143,11 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
 			}
 
 			##------------------------------------------------------------
+			## Filter days
+			##------------------------------------------------------------
+			if (!is.null(ettings_eval$filter_days)) ddf <- ddf %>% filter_days( settings_eval$filter_days, settings_eval$path_gepisat )
+
+			##------------------------------------------------------------
 			## Add forcing data to daily data frame (for neural network-based evaluation)
 			##------------------------------------------------------------
 			ddf <- lapply( as.list(settings_eval$sitenames), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%

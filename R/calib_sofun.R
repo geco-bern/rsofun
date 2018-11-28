@@ -499,7 +499,9 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
     datasource <- stringr::str_split( settings_calib$datasource, "_" ) %>% unlist()
 
     if ("fluxnet2015" %in% datasource){
-
+      ##------------------------------------------------------------
+      ## Get FLUXNET 2015 data
+      ##------------------------------------------------------------
       ## Make sure data is available for this site
       error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
 
@@ -514,7 +516,9 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
     }
 
     if ("Ty" %in% datasource){
-
+      ##------------------------------------------------------------
+      ## Get GePiSaT data
+      ##------------------------------------------------------------
       ## Make sure data is available for this site
       error <- check_download_gepisat( settings_calib$path_gepisat, sitename )
 
@@ -550,51 +554,57 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
 
     }
 
-    if (!is.null(settings_calib$filter_days)){
+    ##------------------------------------------------------------
+    ## Filter days
+    ##------------------------------------------------------------
+    if (!is.null(ettings_eval$filter_days)) ddf <- ddf %>% filter_days( settings_eval$filter_days, settings_eval$path_gepisat )
 
-      ## replace all 'gpp_obs' from FLUXNET 2015 data with NA if GPP from DT decomposition is NA
-      if ("fluxnet2015_DT" %in% settings_calib$filter_days){
-        ddf <- ddf %>% dplyr::mutate( gpp_obs = ifelse( is.na(GPP_DT_VUT_REF), NA, gpp_obs ) )  
-      }
+    # if (!is.null(settings_calib$filter_days)){
 
-      ## replace all 'gpp_obs' from FLUXNET 2015 data with NA if GPP from NT decomposition is NA
-      if ("fluxnet2015_NT" %in% settings_calib$filter_days){
-        ddf <- ddf %>% dplyr::mutate( gpp_obs = ifelse( is.na(GPP_NT_VUT_REF), NA, gpp_obs ) )  
-      }
+    #   ## replace all 'gpp_obs' from FLUXNET 2015 data with NA if GPP from DT decomposition is NA
+    #   if ("fluxnet2015_DT" %in% settings_calib$filter_days){
+    #     ddf <- ddf %>% dplyr::mutate( gpp_obs = ifelse( is.na(GPP_DT_VUT_REF), NA, gpp_obs ) )  
+    #   }
 
-      if ("fluxnet2015_Ty" %in% settings_calib$filter_days){
-        ## Filter out data points based on GePiSaT data
+    #   ## replace all 'gpp_obs' from FLUXNET 2015 data with NA if GPP from NT decomposition is NA
+    #   if ("fluxnet2015_NT" %in% settings_calib$filter_days){
+    #     ddf <- ddf %>% dplyr::mutate( gpp_obs = ifelse( is.na(GPP_NT_VUT_REF), NA, gpp_obs ) )  
+    #   }
+
+    #   if ("fluxnet2015_Ty" %in% settings_calib$filter_days){
+    #     ## Filter out data points based on GePiSaT data
         
-        avl_gepisat <- TRUE
-        if (!("gpp_obs_gepisat" %in% names(ddf))){
-          ## get GePiSaT data
-          ## Make sure data is available for this site
-          error <- check_download_gepisat( settings_calib$path_gepisat, sitename )
+    #     avl_gepisat <- TRUE
+    #     if (!("gpp_obs_gepisat" %in% names(ddf))){
+    #       ## get GePiSaT data
+    #       ## Make sure data is available for this site
+    #       error <- check_download_gepisat( settings_calib$path_gepisat, sitename )
           
-          ddf_gepisat <- get_obs_bysite_gpp_gepisat( sitename, settings_calib$path_gepisat, settings_calib$timescale )
+    #       ddf_gepisat <- get_obs_bysite_gpp_gepisat( sitename, settings_calib$path_gepisat, settings_calib$timescale )
           
-          ## add to other data frame and take take weighted average for updated 'gpp_obs'
-          if (!is.null(ddf_gepisat)){
+    #       ## add to other data frame and take take weighted average for updated 'gpp_obs'
+    #       if (!is.null(ddf_gepisat)){
             
-            ddf <- ddf_gepisat %>%
-              ## Some GPP data looks weird when its error in resp. day is zero. Exclude this data.
-              dplyr::mutate( gpp_obs = ifelse( gpp_err_obs == 0.0, NA, gpp_obs ) ) %>% 
-              dplyr::rename( gpp_obs_gepisat = gpp_obs ) %>%
-              dplyr::right_join( ddf, by = "date" )
+    #         ddf <- ddf_gepisat %>%
+    #           ## Some GPP data looks weird when its error in resp. day is zero. Exclude this data.
+    #           dplyr::mutate( gpp_obs = ifelse( gpp_err_obs == 0.0, NA, gpp_obs ) ) %>% 
+    #           dplyr::rename( gpp_obs_gepisat = gpp_obs ) %>%
+    #           dplyr::right_join( ddf, by = "date" )
               
-          } else {
-            ## No GePiSaT data available for this site. Consider all GPP data missing (NA).
-            ddf <- ddf %>% dplyr::mutate( gpp_obs = NA )
-            avl_gepisat <- FALSE
-          }
+    #       } else {
+    #         ## No GePiSaT data available for this site. Consider all GPP data missing (NA).
+    #         ddf <- ddf %>% dplyr::mutate( gpp_obs = NA )
+    #         avl_gepisat <- FALSE
+    #       }
           
-        }
+    #     }
         
-        ## replace all 'gpp_obs' from FLUXNET 2015 data with NA if GePiSaT-GPP is NA
-        if (avl_gepisat) ddf <- ddf %>% dplyr::mutate( gpp_obs = ifelse( is.na(gpp_obs_gepisat), NA, gpp_obs ) )  
+    #     ## replace all 'gpp_obs' from FLUXNET 2015 data with NA if GePiSaT-GPP is NA
+    #     if (avl_gepisat) ddf <- ddf %>% dplyr::mutate( gpp_obs = ifelse( is.na(gpp_obs_gepisat), NA, gpp_obs ) )  
 
-      }
-    }
+    #   }
+    # }
+    
   }
 
   if ("wcont" %in% settings_calib$targetvars){
