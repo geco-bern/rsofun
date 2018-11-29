@@ -9,7 +9,10 @@
 #' @param kphio Quantum yield efficiency parameter
 #' @param fapar (Optional) Fraction of absorbed photosynthetically active radiation (unitless, defaults to \code{NA})
 #' @param ppfd (Optional) Photosynthetic photon flux density (mol/m2, defaults to \code{NA})
-#' @param method (Optional) A character string specifying which method is to be used for calculating the ci:ca ratio. Defaults to \code{"full"}. Available also \code{c("approx", "simpl")}.
+#' @param method (Optional) A character string specifying which method is to be used for calculating the ci:ca ratio. Defaults to \code{"full"}. 
+#' Available also \code{c("approx", "simpl")}.
+#' @param do_ftemp_kphio (Optional) A logical specifying whether temperature-dependence of quantum yield efficiency after Bernacchi et al., 2003 PCE 
+#' is to be accounted for. Defaults to \code{TRUE}.
 #' @param returnvar (Optional) A character string of vector of character strings specifying which variables are to be returned (see return below).
 #'
 #' @return A named list of numeric values with 
@@ -35,7 +38,7 @@
 #'
 #' @examples out_rpmodel <- rpmodel( tc=10, vpd=300, co2=300, elv=300, kphio=0.06 )
 #' 
-rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="full", returnvar = NULL ){
+rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="full", do_ftemp_kphio = TRUE, returnvar = NULL ){
   #-----------------------------------------------------------------------
   # Output:   list of P-model predictions:
   #
@@ -86,6 +89,17 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   # ncw <- 0.0056          # N:C ratio in cell walls, working hypothesis: leaf N is solely determined by Vcmax25
   # n_v  <- 1.0/40.96    # gN ??mol-1 s-1. Value 40.96 is 'sv' in Table 2 in Kattge et al., 2009, GCB, C3 herbaceous
   ## -- under construction
+
+  #-----------------------------------------------------------------------
+  # Temperature dependence of quantum yield efficiency
+  #-----------------------------------------------------------------------
+  ## 'do_ftemp_kphio' is not actually a stress function, but is the temperature-dependency of 
+  ## the quantum yield efficiency after Bernacchi et al., 2003 PCE
+  if (do_ftemp_kphio){
+    ftemp_kphio <- calc_ftemp_kphio( dtemp )
+  } else {
+    ftemp_kphio <- 1.0
+  }
 
   #-----------------------------------------------------------------------
   # Calculate photosynthesis model parameters depending on temperature, pressure, and CO2.
@@ -140,7 +154,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   mprime <- calc_mprime( out_lue$m )
 
   ## Light use efficiency (gpp per unit absorbed light)
-  lue <- kphio * mprime * c_molmass
+  lue <- kphio * mprime * c_molmass * ftemp_kphio
 
   ## leaf-internal CO2 partial pressure (Pa)
   ci <- out_lue$chi * ca
@@ -155,7 +169,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   iwue = ( ca - ci ) / ( 1.6 * patm )
 
   ## Vcmax normalised per unit absorbed PPFD (assuming iabs=1)
-  vcmax_unitiabs <- kphio * out_lue$n 
+  vcmax_unitiabs <- kphio * out_lue$n * ftemp_kphio
 
   ## Vcmax25 (vcmax normalized to 25 deg C)
   ftemp_inst_vcmax  <- calc_ftemp_inst_vcmax( tc )
@@ -682,6 +696,17 @@ calc_viscosity_h2o_vogel <- function( tc ) {
   visc <- 1e-3 * exp(a + b/(tk - c))
 
   return( visc )
+}
+
+calc_ftemp_kphio <- function( dtemp ){
+  #////////////////////////////////////////////////////////////////
+  # Calculates the instantaneous temperature response of the quantum
+  # yield efficiency based on Bernacchi et al., 2003 PCE (Equation
+  # and parameter values taken from Appendix B)
+  #----------------------------------------------------------------
+  ftemp <- 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp^2
+  
+  return(ftemp)  
 }
 
 

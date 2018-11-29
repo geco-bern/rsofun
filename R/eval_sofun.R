@@ -47,6 +47,9 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
 	  ##------------------------------------------------------------
 	  ## Get daily model output
 	  ##------------------------------------------------------------
+	  # missing_mod <- purrr::map_lgl( mod$daily, ~identical(., NA ) ) %>% which() %>% names()
+	  # missing_mod <- purrr::map_lgl( mod$daily, ~identical(., NULL ) ) %>% which() %>% names()
+	  
 	  ddf_mod <- lapply( as.list(settings_eval$sitenames),  function(x) dplyr::select( mod$daily[[x]], date, gpp_mod = gpp ) %>% mutate( sitename = x ) ) %>%
 	    bind_rows()
 
@@ -262,16 +265,20 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
 	                        	(metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% mutate( hemisphere = ifelse( lat>0, "north", "south" ) ) %>% group_by( koeppen_code, hemisphere ) %>% summarise( nsites = n() )), 
 	                        	by = c("koeppen_code", "hemisphere") 
 	                        	)
-
+			
 			meandoydf_byclim_stats <- meandoydf_byclim %>% 
 			                          group_by( koeppen_code, hemisphere ) %>%
-																nest() %>%
+			                          nest() %>%
+			                          mutate( n_obs  = purrr::map( data, ~sum(!is.na(.$obs_mean)) ) ) %>% 
+			                          unnest( n_obs ) %>% 
+			                          filter( n_obs>0, !is.na(koeppen_code) ) %>% 
 															  mutate( linmod = purrr::map( data, ~lm( obs_mean ~ mod_mean, data = . ) ),
 															          stats  = purrr::map( data, ~get_stats( .$mod_mean, .$obs_mean ) ) ) %>%
 															  mutate( data   = purrr::map( data, ~add_fitted_alternativenames(.) ) ) %>%
 															  unnest( stats )
 			
 			metrics$gpp$fluxnet2015$meandoy_byclim <- meandoydf_byclim_stats %>% dplyr::select( -data, -linmod )
+			
 		} else {
 			meandoydf <- NA 
 			meandoydf_stats <- NA 
@@ -891,24 +898,6 @@ interpol_lin <- function(vec){
 	out <- try( approx( seq(length(vec)), vec, xout = seq(length(vec)) )$y )
 	if (class(out)=="try-error") out <- vec * NA
 	return(out)
-}
-
-get_forcing_from_csv <- function( sitename, settings_sims ){
-
-	## get climate data
-  dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
-  csvfiln <- paste0( dir, "/clim_daily_", sitename, ".csv" )
-  ddf <- readr::read_csv( csvfiln )
-
-  ## get fapar data
-  dir <- paste0( settings_sims$path_input, "/sitedata/fapar/", sitename )
-  csvfiln <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
-  ddf <- readr::read_csv( csvfiln ) %>%
-         mutate( fapar = as.numeric(fapar)) %>%
-  			 right_join( ddf, by = "date" )
-
-  return(ddf)
-
 }
 
 extract_koeppen_code <- function( str ){

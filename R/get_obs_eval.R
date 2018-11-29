@@ -141,12 +141,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
 				  ddf <- ddf %>% mutate( gpp_obs_gepisat = NA )
 				}			  							
 			}
-
-			##------------------------------------------------------------
-			## Filter days
-			##------------------------------------------------------------
-			if (!is.null(ettings_eval$filter_days)) ddf <- ddf %>% filter_days( settings_eval$filter_days, settings_eval$path_gepisat )
-
+	    
 			##------------------------------------------------------------
 			## Add forcing data to daily data frame (for neural network-based evaluation)
 			##------------------------------------------------------------
@@ -183,4 +178,23 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
 	}
 
 	return( list( ddf=ddf, xdf=xdf, mdf=mdf, adf=adf, breaks_xdf = breaks ) )
+}
+
+## Read forcing data from CSV file prepared for SOFUN input
+get_forcing_from_csv <- function( sitename, settings_sims ){
+  
+  ## get climate data
+  dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
+  csvfiln <- paste0( dir, "/clim_daily_", sitename, ".csv" )
+  ddf <- readr::read_csv( csvfiln )
+  
+  ## get fapar data
+  dir <- paste0( settings_sims$path_input, "/sitedata/fapar/", sitename )
+  csvfiln <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
+  ddf <- readr::read_csv( csvfiln ) %>%
+    mutate( fapar = as.numeric(fapar)) %>%
+    right_join( ddf, by = "date" )
+  
+  return(ddf)
+  
 }
