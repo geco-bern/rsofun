@@ -102,7 +102,7 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
       right_join( ddf, by = c("sitename", "date"))
 
 		## metrics for daily and x-daily values, all sites pooled
-    metrics$gpp$fluxnet2015$daily_pooled <- with( ddf, get_stats( gpp_mod, gpp_obs ) )
+    metrics$gpp$fluxnet2015$daily_pooled  <- with( ddf, get_stats( gpp_mod, gpp_obs ) )
     metrics$gpp$fluxnet2015$xdaily_pooled <- with( xdf, get_stats( gpp_mod, gpp_obs ) )
 
     ##------------------------------------------------------------

@@ -14,7 +14,7 @@ getrow_statstable <- function( out_eval, stat ){
   addrow <- tibble( spatial         = out_eval$metrics$gpp$fluxnet2015$spatial[[ stat ]],
                     annual          = out_eval$metrics$gpp$fluxnet2015$annual_pooled[[ stat ]],
                     monthly         = out_eval$metrics$gpp$fluxnet2015$monthly_pooled[[ stat ]],
-                    # xdaily          = out_eval$metrics$gpp$fluxnet2015$xdaily_pooled[[ stat ]],
+                    xdaily          = out_eval$metrics$gpp$fluxnet2015$xdaily_pooled[[ stat ]],
                     daily           = out_eval$metrics$gpp$fluxnet2015$daily_pooled[[ stat ]],
                     seasonal        = out_eval$metrics$gpp$fluxnet2015$meandoy[[ stat ]],
                     # seasonal_xdaily = out_eval$metrics$gpp$fluxnet2015$meanxoy[[ stat ]],

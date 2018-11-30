@@ -96,7 +96,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   ## 'do_ftemp_kphio' is not actually a stress function, but is the temperature-dependency of 
   ## the quantum yield efficiency after Bernacchi et al., 2003 PCE
   if (do_ftemp_kphio){
-    ftemp_kphio <- calc_ftemp_kphio( dtemp )
+    ftemp_kphio <- calc_ftemp_kphio( tc )
   } else {
     ftemp_kphio <- 1.0
   }
@@ -698,13 +698,13 @@ calc_viscosity_h2o_vogel <- function( tc ) {
   return( visc )
 }
 
-calc_ftemp_kphio <- function( dtemp ){
+calc_ftemp_kphio <- function( tc ){
   #////////////////////////////////////////////////////////////////
   # Calculates the instantaneous temperature response of the quantum
   # yield efficiency based on Bernacchi et al., 2003 PCE (Equation
   # and parameter values taken from Appendix B)
   #----------------------------------------------------------------
-  ftemp <- 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp^2
+  ftemp <- 0.352 + 0.022 * tc - 3.4e-4 * tc^2
   
   return(ftemp)  
 }
