@@ -156,7 +156,7 @@ legend( "topleft", c("Smith my implementation", "Smith original"), lty = 1, col 
 ```
 
 
-### Vcmax*
+<!-- ### Vcmax*
 
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 vcmax_star_smith     <- pmodel_smith     %>% purrr::map_dbl("vcmax_star")
@@ -166,15 +166,15 @@ plot(  seq( 0, 35, length.out = 100 ), vcmax_star_smith, type = "l", xlab = "Tem
 lines( seq( 0, 35, length.out = 100 ), vcmax_star_smithcode, col="red" )
 legend( "topleft", c("Smith my implementation", "Smith original"), lty = 1, col = c("black", "red"), lwd=c(6,1), bty = "n")
 ```
-
+ -->
 
 
 ### Vcmax
 
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
-vcmax_smithcode <- pmodel_smithcode %>% purrr::map_dbl("vcmax_prime")
+vcmax_smithcode <- pmodel_smithcode %>% purrr::map_dbl("vcmax_star")
 vcmax_wanghan   <- pmodel_wanghan   %>% purrr::map_dbl("vcmax")
-vcmax_smith     <- pmodel_smith     %>% purrr::map_dbl("vcmax")
+vcmax_smith     <- pmodel_smith     %>% purrr::map_dbl("vcmax_star")
 
 plot(  seq( 0, 35, length.out = 100 ), vcmax_smith, type = "l", xlab = "Temperature (deg C)", ylab = "Vcmax", lwd=6 )
 lines( seq( 0, 35, length.out = 100 ), vcmax_wanghan, col="blue", lwd=3 )
