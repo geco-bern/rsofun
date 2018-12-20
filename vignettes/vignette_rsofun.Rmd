@@ -100,7 +100,7 @@ if (!file.exists( paste0( settings_sims_simple$dir_sofun, "/rundemo_pmodel"))){
 ## R
 ptm <- proc.time()
 gpp_temp_test_r <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
-  ~rpmodel( tc = ., vpd = 100, co2 = 300, elv = 300, kphio = params_opt$kphio, fapar = 0.7, ppfd = 10, method="full", returnvar = "gpp" ) 
+  ~rpmodel( tc = ., vpd = 100, co2 = 300, elv = 300, kphio = params_opt$kphio, fapar = 0.7, ppfd = 10, method="wanghan", returnvar = "gpp", do_ftemp_kphio = FALSE ) 
   ) %>% unlist()
 time_R <- proc.time() - ptm
 
