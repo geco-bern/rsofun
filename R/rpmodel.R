@@ -156,14 +156,14 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="wa
     # mj <- (ci - gammastar) / (ci + 2.0 * gammastar)           # Eq. 8
     # print(paste("mj should be equal: ", mj, out_lue$mj ) )
 
-    # mjov <- (ci + kmm) / (ci + 2.0 * gammastar)               # mj/mc, used in several instances below
-    # print(paste("mjov should be equal: ", mjov, out_lue$mjov ) )
+    # mjoc <- (ci + kmm) / (ci + 2.0 * gammastar)               # mj/mc, used in several instances below
+    # print(paste("mjoc should be equal: ", mjoc, out_lue$mjoc ) )
 
     omega <- calc_omega( theta = theta, c_cost = c_cost, m = out_lue$mj )             # Eq. S4
     omega_star <- 1.0 + omega - sqrt( (1.0 + omega)^2 - (4.0 * theta * omega) )       # Eq. 18
     
     # calculate Vcmax-star, which corresponds to Vcmax at a reference temperature 'tcref'
-    vcmax_unitiabs_star  <- kphio * ftemp_kphio * out_lue$mjov * omega_star / (8.0 * theta)               # Eq. 19
+    vcmax_unitiabs_star  <- kphio * ftemp_kphio * out_lue$mjoc * omega_star / (8.0 * theta)               # Eq. 19
     
     ## tcref is the optimum temperature in K, assumed to be the temperature at which Vcmax* is operating. 
     ## tcref is estimated based on its relationship to growth temperature following Kattge & Knorr 2007
@@ -174,7 +174,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="wa
     vcmax_unitiabs <- vcmax_unitiabs_star * ftemp_inst_vcmax   # Eq. 20
     
     ## calculate Jmax
-    jmax_over_vcmax <- (8.0 * theta * omega) / (out_lue$mjov * omega_star)             # Eq. 15 / Eq. 19
+    jmax_over_vcmax <- (8.0 * theta * omega) / (out_lue$mjoc * omega_star)             # Eq. 15 / Eq. 19
     jmax_prime <- jmax_over_vcmax * vcmax_unitiabs 
 
     ## light use efficiency
@@ -194,8 +194,10 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="wa
     ## Light use efficiency (gpp per unit absorbed light)
     lue <- kphio * ftemp_kphio * mprime * c_molmass
 
-    ## Vcmax normalised per unit absorbed PPFD (assuming iabs=1), without Jmax limitation
-    vcmax_unitiabs <- kphio * ftemp_kphio * out_lue$mjov
+    ## Vcmax normalised per unit absorbed PPFD (assuming iabs=1), with Jmax limitation
+    vcmax_unitiabs <- kphio * ftemp_kphio * out_lue$mjoc * mprime / out_lue$mj
+
+    # print(paste("Jmax limit factor", mprime / out_lue$mj))
 
     ## xxx test
     omega       <- NA
@@ -480,9 +482,9 @@ lue_vpd_full <- function( kmm, gammastar, ns_star, ca, vpd, beta ){
   mc <- (chi - gamma) / (chi + kappa)
 
   ## mj:mv
-  mjov <- (chi + kappa) / (chi + 2 * gamma)
+  mjoc <- (chi + kappa) / (chi + 2 * gamma)
 
-  out <- list( chi=chi, mc=mc, mj=mj, mjov=mjov )
+  out <- list( chi=chi, mc=mc, mj=mj, mjoc=mjoc )
   return(out)
 }
 
@@ -499,6 +501,7 @@ calc_mprime <- function( mc ){
 
   # Check for negatives:
   if (mpi > 0){ mpi <- sqrt(mpi) }
+
   return(mpi)    
 }
 

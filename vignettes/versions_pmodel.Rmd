@@ -42,7 +42,7 @@ knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does no
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 ## R, Vcmax based on Wang Han's formulation
 pmodel_wanghan <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
-  ~rpmodel( tc = ., vpd = 1000, co2 = 400, elv = 0, kphio = 0.257, fapar = 1.0, ppfd = 800, method="wanghan", do_ftemp_kphio = FALSE ) 
+  ~rpmodel( tc = ., vpd = 1000, co2 = 400, elv = 0, kphio = 0.05, fapar = 1.0, ppfd = 800, method="wanghan", do_ftemp_kphio = FALSE ) 
   )
 
 pmodel_smith <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
@@ -58,7 +58,7 @@ pmodel_smithcode <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ),
 
 ## Evaluation
 
-Below, I'm comparing different variables calculated in the different implementations. 'rsofun standard' refers to what is implemented in rsofun, based on Wang Han et al., 2017 and originally adopted from the GePiSaT code. 'Smith my implementation' is based on Beni's adoptation of Nick's code within rsofun, 'Smith original' is Nick Smith's code from [github](https://github.com/SmithEcophysLab/optimal_vcmax_R) (run with PAR and VPD not additionally adjusted for elevation-effects).
+Below, I'm comparing different variables calculated in the different implementations, as a function of temperature (to which it's acclimated to). 'rsofun standard' refers to what is implemented in rsofun, based on Wang Han et al., 2017 and originally adopted from the GePiSaT code. 'Smith my implementation' is based on Beni's adoptation of Nick's code within rsofun, 'Smith original' is Nick Smith's code from [github](https://github.com/SmithEcophysLab/optimal_vcmax_R) (run with PAR and VPD not additionally adjusted for elevation-effects). The temperature-dependence of quantum yield efficiency is not accounted for in any of the calculations.
 
 ### Michaelis-Menten K
 
@@ -155,20 +155,6 @@ lines( seq( 0, 35, length.out = 100 ), ftemp_inst_vcmax_smithcode, col="red" )
 legend( "topleft", c("Smith my implementation", "Smith original"), lty = 1, col = c("black", "red"), lwd=c(6,1), bty = "n")
 ```
 
-
-<!-- ### Vcmax*
-
-```{r, eval=TRUE, message=FALSE, warning=FALSE}
-vcmax_star_smith     <- pmodel_smith     %>% purrr::map_dbl("vcmax_star")
-vcmax_star_smithcode <- pmodel_smithcode %>% purrr::map_dbl("vcmax_star")
-
-plot(  seq( 0, 35, length.out = 100 ), vcmax_star_smith, type = "l", xlab = "Temperature (deg C)", ylab = "Vcmax*", lwd=6 )
-lines( seq( 0, 35, length.out = 100 ), vcmax_star_smithcode, col="red" )
-legend( "topleft", c("Smith my implementation", "Smith original"), lty = 1, col = c("black", "red"), lwd=c(6,1), bty = "n")
-```
- -->
-
-
 ### Vcmax
 
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
@@ -176,13 +162,10 @@ vcmax_smithcode <- pmodel_smithcode %>% purrr::map_dbl("vcmax_star")
 vcmax_wanghan   <- pmodel_wanghan   %>% purrr::map_dbl("vcmax")
 vcmax_smith     <- pmodel_smith     %>% purrr::map_dbl("vcmax_star")
 
-plot(  seq( 0, 35, length.out = 100 ), vcmax_smith, type = "l", xlab = "Temperature (deg C)", ylab = "Vcmax", lwd=6 )
+plot(  seq( 0, 35, length.out = 100 ), vcmax_smith, type = "l", xlab = "Temperature (deg C)", ylab = "Vcmax", lwd=6, ylim=c(0,max(vcmax_smith)) )
 lines( seq( 0, 35, length.out = 100 ), vcmax_wanghan, col="blue", lwd=3 )
 lines( seq( 0, 35, length.out = 100 ), vcmax_smithcode, col="red" )
-legend( "topleft", c("Smith my implementation", "rsofun standard", "Smith original"), lty = 1, col = c("black", "blue", "red"), lwd=c(6,3,1), bty = "n")
-
-plot(  seq( 0, 35, length.out = 100 ), vcmax_wanghan, type = "l", xlab = "Temperature (deg C)", ylab = "Vcmax", lwd=6 )
-legend( "topleft", c("rsofun standard (Wang Han)"), lty = 1, col = c("black"), lwd=6, bty = "n")
+legend( "topleft", c("Smith my implementation", "rsofun standard, with Jmax limitation (Wang Han)", "Smith original"), lty = 1, col = c("black", "blue", "red"), lwd=c(6,3,1), bty = "n" )
 ```
 
 
@@ -192,12 +175,9 @@ legend( "topleft", c("rsofun standard (Wang Han)"), lty = 1, col = c("black"), l
 lue_wanghan   <- pmodel_wanghan   %>% purrr::map_dbl("lue")
 lue_smith     <- pmodel_smith     %>% purrr::map_dbl("lue")
 
-plot(  seq( 0, 35, length.out = 100 ), lue_smith, type = "l", xlab = "Temperature (deg C)", ylab = "lue", lwd=6 )
+plot(  seq( 0, 35, length.out = 100 ), lue_smith, type = "l", xlab = "Temperature (deg C)", ylab = "lue", lwd=6, ylim=c(0,max(lue_smith)) )
 lines( seq( 0, 35, length.out = 100 ), lue_wanghan, col="blue", lwd=3 )
-legend( "topright", c("Smith my implementation", "rsofun standard"), lty = 1, col = c("black", "blue", "red"), lwd=c(6,3,1), bty = "n")
-
-plot(  seq( 0, 35, length.out = 100 ), lue_wanghan, type = "l", xlab = "Temperature (deg C)", ylab = "lue", lwd=6 )
-legend( "topright", c("rsofun standard (Wang Han)"), lty = 1, col = c("black"), lwd=6, bty = "n")
+legend( "topright", c("Smith my implementation", "rsofun standard, with Jmax limitation (Wang Han)"), lty = 1, col = c("black", "blue", "red"), lwd=c(6,3,1), bty = "n")
 ```
 
 

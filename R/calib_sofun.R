@@ -178,7 +178,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
                                         max.call=settings_calib$maxit,
                                         trace.mat=TRUE,
                                         threshold.stop=1e-4
-                                         )
+                                        )
                         )
       proc.time() - ptm
       print(out_optim$par)
