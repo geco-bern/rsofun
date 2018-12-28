@@ -189,7 +189,11 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
       
     } else if (settings_calib$method=="optimr"){
       ##----------------------------------------------------------------
-      ## calibrate the model parameters using R optimr()
+      ## Calibrate the model parameters using R optimr(). Optimr is a 
+      ## wrapper that implements different optimization methods.
+      ## Here, we're using unconstrained parameters. The optimization 
+      ## method is the default for unconstrained parameters: 
+      ## Rvmminu, Rcgminu, lbfgsb3, newuoa, nmkb (this is a list).
       ##----------------------------------------------------------------
       ptm <- proc.time()
       out_optim <- optimr(
@@ -206,7 +210,9 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
 
     } else if (settings_calib$method=="BayesianTools"){
       ##----------------------------------------------------------------
-      ## calibrate the model parameters using BayesianTools and 
+      ## Calibrate the model parameters using Bayesian calibration 
+      ## implemented in 'BayesianTools'. I.e., the posterior density is
+      ## maximised (explicitly: the sum of log-likelihoods is minimized) 
       ##----------------------------------------------------------------
       ptm <- proc.time()
       bt_setup    <- createBayesianSetup( cost_rmse( inverse=TRUE ), 
@@ -219,7 +225,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
 
     } else if (settings_calib$method=="linscale"){
       ##----------------------------------------------------------------
-      ## calibrate the quantum yield efficiency parameter ('kphio') 
+      ## Calibrate the quantum yield efficiency parameter ('kphio') 
       ## applied as a linear scalar to simulated GPP.
       ##----------------------------------------------------------------
       ## Combine obs and mod by columns and make global

@@ -2081,6 +2081,7 @@ calc_vpd <- function( eact=NA, qair=NA, tc=NA, tmin=NA, tmax=NA, elv=NA ){
   kMv = 18.02    # molecular weight of water vapor, g/mol (Tsilingiris, 2008)
   kMa = 28.963   # molecular weight of dry air, g/mol (Tsilingiris, 2008)
 
+  ## Warning: this is crude, if not wrong. 
   if ( !is.na(tmin) && !is.na(tmax) ) {
 
     my_tc <- 0.5 * (tmin + tmax)

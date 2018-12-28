@@ -39,6 +39,15 @@ knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does no
 
 ## Run different implementations
 
+Varying temperature from 0 to 35 degrees Celsius. All other factors are held constant with:
+
+- `ppfd = 800`
+- `vpd = 1000`
+- `co2 = 400`
+- `elv = 0`
+
+The quantum yield efficiency is set to `kphio = 0.05` for the `"wanghan"` method, and 0.257 for the `"smith"` method.
+
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 ## R, Vcmax based on Wang Han's formulation
 pmodel_wanghan <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
@@ -48,6 +57,11 @@ pmodel_wanghan <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ),
 pmodel_smith <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
   ~rpmodel( tc = ., vpd = 1000, co2 = 400, elv = 0, kphio = 0.257, fapar = 1.0, ppfd = 800, method="smith", do_ftemp_kphio = FALSE ) 
   )
+
+## Fortran, Vcmax basedon Wang Han's formulation
+## update quantum yield parameter in file
+pmodel_fortran <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
+  ~pmodel( temp = ., vpd = 1000, co2 = 400, ppfd = 800, fapar = 1.0, elv = 0, implementation = "fortran", sofundir = "/alphadata01/bstocker/sofun/trunk" ) )
 
 ## Vcmax based on Nick's code
 source("~/optimal_vcmax_R/calc_optimal_vcmax.R")
@@ -157,6 +171,10 @@ legend( "topleft", c("Smith my implementation", "Smith original"), lty = 1, col 
 
 ### Vcmax
 
+Note: I’m comparing "acclimated $V_{\text{cmax}}$" from Wang et al., 2017 to $V_{\text{cmax}}^{\ast}$ in Nick Smith’s paper (that is Eq. 19 in the document I have), calculated as:
+$$
+V_{\text{cmax}}^{\ast} = \phi_0 \; I \; \frac{m\;\omega^{\ast}}{8 \; m_c \; \theta}
+$$
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 vcmax_smithcode <- pmodel_smithcode %>% purrr::map_dbl("vcmax_star")
 vcmax_wanghan   <- pmodel_wanghan   %>% purrr::map_dbl("vcmax")
