@@ -98,7 +98,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     ## example run to get output file structure
     param_init <- unlist( lapply( settings_calib$par, function(x) x$init ) ) %>% unname()
     outfilnam <<- paste0( settings_sims$dir_sofun, "/output_calib/calibtargets_tmp_", settings_sims$name, ".txt" )
-    system( paste0("rm ", outfilnam))
+    if (file.exists(outfilnam)) system( paste0("rm ", outfilnam))
 
     ## Get executable
     if (setup$do_compile){

@@ -26,10 +26,10 @@ prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
   ##-----------------------------------------------------------
   if ( settings$implementation=="fortran"){
 
-    if (!dir.exists(paste0(settings$dir_sofun, "params_std"))){
+    if (!dir.exists(paste0(settings$dir_sofun, "/params_std"))){
       ## Assuming SOFUN has not been cloned yet. Clone it now.
       ## First clean directory
-      system( paste0( "rm -rf ", settings$dir_sofun, "/*" ) )
+      # system( paste0( "rm -rf ", settings$dir_sofun, "/*" ) )
 
       ## first clone into a temporary directory
       rlang::warn("Cloning SOFUN from github...")
@@ -52,10 +52,10 @@ prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
       cmd <- paste0("make ", setup$model)
       system( cmd )
 
-    } else if (!file.exists(paste0("run", setup$model))){
+    } else if (!file.exists( paste0( settings$dir_sofun, "/run", setup$model))){
 
       print("Copying executable provided by rsofun and compiled on a 64-bit UNIX machine with gfortran into the SOFUN run directory...")
-      system( paste0( "cp ", path.package("rsofun"), "/extdata/run", setup$model, " ." ) )
+      system( paste0( "cp ", path.package("rsofun"), "/extdata/run", setup$model, " ", settings$dir_sofun ) )
 
       if (!file.exists(paste0("run", setup$model))) rlang::abort( paste( "Executable is not available: ", paste0("run", setup$model)) )
 

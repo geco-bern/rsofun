@@ -19,11 +19,13 @@ It also provides a generic function (`pmodel()`) to run alternative implementati
 To install and load the rsofun package run the following command in your R terminal: 
 ```r
 if(!require(devtools)){install.packages(devtools)}
-devtools::install_github( "stineb/rsofun", dependencies = NA )
+devtools::install_github( "stineb/rsofun", dependencies = NA, build_vignettes = FALSE )
 library(rsofun)
 ```
-Build the vignette for a more comprehensive documentation:
+
+The vignettes need to be built in a separate step, after manually modifying the path of where SOFUN is located locally. Modify the path below and build the vignette. This provides a more comprehensive documentation:
 ```r
+options( list( rsofun.dir.sofun="/alphadata01/bstocker/sofun/trunk/" ) )
 devtools::build_vignettes()
 ```
 Display the rsofun overview vignette:

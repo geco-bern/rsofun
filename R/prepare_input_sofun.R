@@ -655,7 +655,7 @@ get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
       ## Annual data
       print( paste( "getting annual FLUXNET 2015 data for site", sitename ) )
       allfiles <- list.files( dir )
-      allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
+      allfiles <- allfiles[ which( grepl( "FULLSET_YY", allfiles ) ) ]
       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
       path <- paste0( dir, filnam_obs ) 
@@ -664,7 +664,7 @@ get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
       ## Monthly data
       print( paste( "getting monthly FLUXNET 2015 data for site", sitename ) )
       allfiles <- list.files( dir )
-      allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
+      allfiles <- allfiles[ which( grepl( "FULLSET_MM", allfiles ) ) ]
       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
       path <- paste0( dir, filnam_obs ) 
@@ -673,7 +673,7 @@ get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
       ## Weekly data
       print( paste( "getting weekly FLUXNET 2015 data for site", sitename ) )
       allfiles <- list.files( dir )
-      allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
+      allfiles <- allfiles[ which( grepl( "FULLSET_WW", allfiles ) ) ]
       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
       path <- paste0( dir, filnam_obs ) 
@@ -682,7 +682,7 @@ get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
       ## Daily data
       print( paste( "getting daily FLUXNET 2015 data for site", sitename ) )
       allfiles <- list.files( dir )
-      allfiles <- allfiles[ which( grepl( "FULLSET", allfiles ) ) ]
+      allfiles <- allfiles[ which( grepl( "FULLSET_DD", allfiles ) ) ]
       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
       path <- paste0( dir, filnam_obs ) 

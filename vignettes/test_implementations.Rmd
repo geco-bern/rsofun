@@ -26,18 +26,14 @@ vignette: >
 Load the `rsofun` package. This contains all the necessary wrapper functions to set up and run SOFUN and read its output. 
 ```{r message=FALSE, echo=FALSE}
 library(rsofun)
-library(captioner)
-library(dplyr)
-## load all rsofun dependencies
-# load_dependencies_rsofun()
 
-## for creating figure numbers
-tab_nums <- captioner( prefix = "Table S", auto_space=FALSE, style = "i" )
-fig_nums <- captioner( prefix = "Figure S", auto_space=FALSE, style = "i" )
+## load all rsofun dependencies
+load_dependencies_rsofun()
 
 ## other crap
 systr <- "''"    # for Mac
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does not work properly
+if (options()$rsofun.dir.sofun=="") options( list( rsofun.dir.sofun="/alphadata01/bstocker/sofun/trunk/" ) )
 ```
 
 ## Run implementations for a temperature range
@@ -71,10 +67,10 @@ pmodel_smith <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ),
 ## update quantum yield parameter in file
 params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/extdata/params_opt_kphio_soilm_global.csv" ) )
 params_opt$kphio <- 0.05 
-update_params( params_opt, "~/sofun/trunk/" )
+nothing <- update_params( params_opt, options()$rsofun.dir.sofun )
 
 pmodel_fortran <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
-  ~pmodel( temp = ., vpd = vpd, co2 = co2, ppfd = ppfd, fapar = fapar, elv = elv, implementation = "fortran", sofundir = "~/sofun/trunk/" ) )
+  ~pmodel( temp = ., vpd = vpd, co2 = co2, ppfd = ppfd, fapar = fapar, elv = elv, implementation = "fortran", sofundir = options()$rsofun.dir.sofun ) )
 ```
 
 ## Evaluation by temperature
