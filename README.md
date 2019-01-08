@@ -71,9 +71,41 @@ sudo port install cdo
 
 ## Usage
 
-rsofun provides 
+rsofun provides functionalities to run the P-model in different setups, and implementations in different languages.
 
 ### Simple usage
+
+The P-model can be run as a simple R function. This uses model code that is directly implemented in R (in file `rpmodel.R`) For example:
+```r
+tc    <- 20     # deg C
+ppfd  <- 800    # mol/m2/d
+vpd   <- 1000   # Pa
+co2   <- 400    # ppm
+elv   <- 0      # m.a.s.l.
+fapar <- 1      # unitless
+
+out_pmodel_R <- rpmodel( tc = tc, vpd = vpd, co2 = co2, elv = elv, kphio = 0.05, fapar = fapar, ppfd = ppfd, method_optci="prentice14", method_jmaxlim = "wang17", do_ftemp_kphio = FALSE )
+```
+This returns a named list of P-model predictions, including the following elements:
+
+- `gammastar`: photorespiratory compensation point, (Pa)
+- `kmm`: Michaelis-Menten coefficient for photosynthesis (Pa)
+- `ci`: leaf-internal partial pressure, (Pa)
+- `chi`: = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
+- `iwue`: intrinsic water use efficiency (unitless)
+- `lue`: light use efficiency (mol CO2 / mol photon)
+- `gpp`: gross primary productivity (g C m-2, calculated only if fAPAR and PPFD are not 'dummy')
+- `vcmax`: maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
+- `vcmax25`: Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
+- `vcmax_unitfapar`: Vcmax per fAPAR (mol CO2 m-2 s-1)
+- `vcmax_unitiabs`: Vcmax per unit absorbed light (xxx units)
+- `rd`: Dark respiration (mol CO2 m-2 s-1)
+- `rd_unitfapar`: Dark respiration per fAPAR (mol CO2 m-2 s-1)
+- `rd_unitiabs`: Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
+- `actnv`: Active metabolic leaf N (canopy-level), mol N/m2-ground
+- `actnv_unitfapar`: Active metabolic leaf N (leaf-level, top of canopy), mol N/m2-leaf
+- `actnv_unitiabs`: Active metabolic leaf N per unit absorbed light, mol N/m2/mol
+
 
 
 ### Site-scale simulations
@@ -81,6 +113,8 @@ rsofun provides
 
 ### Spatial simulations
 
+
+## Tests
 
 
 ## Examples

@@ -29,7 +29,7 @@
 #'         \item \code{lue}: light use efficiency (mol CO2 / mol photon)
 #'         \item \code{gpp}: gross primary productivity (g C m-2, calculated only if fAPAR and PPFD are not 'dummy')
 #'         \item \code{vcmax}: maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
-#'         \item \code{vcmax25}: Vcmax25 (vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
+#'         \item \code{vcmax25}: Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
 #'         \item \code{vcmax_unitfapar}: Vcmax per fAPAR (mol CO2 m-2 s-1)
 #'         \item \code{vcmax_unitiabs}: Vcmax per unit absorbed light (xxx units)
 #'         \item \code{rd}: Dark respiration (mol CO2 m-2 s-1)

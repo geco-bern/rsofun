@@ -2,15 +2,15 @@
 title: "Vignette for package rsofun"
 author: "Benjamin D. Stocker"
 date: "`r Sys.Date()`"
-# output:
-#   html_document:
-#     toc: true
-#     toc_float: true
-#     toc_depth: 2
 output:
-  pdf_document:
+  html_document:
     toc: true
+    toc_float: true
     toc_depth: 2
+# output:
+#   pdf_document:
+#     toc: true
+#     toc_depth: 2
 header-includes:
    - \usepackage{amsmath}
 # bibliography: bibliography.bib

@@ -68,7 +68,7 @@ pmodel_smith <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ),
 ## update quantum yield parameter in file
 params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/extdata/params_opt_kphio_soilm_global.csv" ) )
 params_opt$kphio <- 0.05 
-nothing <- update_params( params_opt, "/alphadata01/bstocker/sofun/trunk/" )
+update_params( params_opt, "/alphadata01/bstocker/sofun/trunk/" )
 
 pmodel_fortran <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
   ~pmodel( temp = ., vpd = vpd, co2 = co2, ppfd = ppfd, fapar = fapar, elv = elv, implementation = "fortran", sofundir = "/alphadata01/bstocker/sofun/trunk/" ) )
