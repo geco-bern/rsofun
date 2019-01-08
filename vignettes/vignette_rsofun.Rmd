@@ -447,8 +447,7 @@ settings_calib <- calib_sofun(
 
 Run SOFUN with calibrated parameters.
 ```{r, message=FALSE, warning=FALSE}
-# params_opt <- readr::read_csv( "params_opt_kphio_soilm_global.csv	" ) ) # as an example
-params_opt <- dplyr::tibble( kphio=0.0579 )
+params_opt <- readr::read_csv( paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name, ".csv" ) ) # as an example
 nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
 mod <- runread_sofun(
   settings = settings_sims_sitescale,
@@ -497,7 +496,7 @@ modobs_anomalies_xdaily <- out_eval$plot$modobs_anomalies_xdaily()
 modobs_anomalies_annual <- out_eval$plot$modobs_anomalies_annual()
 modobs_meanxoy <- out_eval$plot$modobs_meanxoy()
 out_eval$plot$by_doy_allzones()
-out_eval$plot$modobs_spatial_annual()
+#out_eval$plot$modobs_spatial_annual()
 modobs_spatial <- out_eval$plot$modobs_spatial()
 ```
 
