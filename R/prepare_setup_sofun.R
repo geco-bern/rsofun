@@ -19,23 +19,6 @@ prepare_setup_sofun <- function( settings, write_paramfils = TRUE ){
     system( paste0( "mkdir -p ", settings$dir_sofun ) )
   } 
   
-  ## Complement output booleans as FALSE if missing
-  settings$loutplant      = ifelse( is.null(settings$loutplant), FALSE, settings$loutplant)
-  settings$loutgpp        = ifelse( is.null(settings$loutgpp), FALSE, settings$loutgpp)
-  settings$loutwaterbal   = ifelse( is.null(settings$loutwaterbal), FALSE, settings$loutwaterbal)
-  settings$loutforcing    = ifelse( is.null(settings$loutforcing), FALSE, settings$loutforcing )
-
-  settings$loutdgpp       = ifelse( is.null(settings$loutdgpp), FALSE, settings$loutdgpp)
-  settings$loutdrd        = ifelse( is.null(settings$loutdrd), FALSE, settings$loutdrd )
-  settings$loutdtransp    = ifelse( is.null(settings$loutdtransp), FALSE, settings$loutdtransp)
-  settings$loutdalpha     = ifelse( is.null(settings$loutdalpha), FALSE, settings$loutdalpha)
-  settings$loutdaet       = ifelse( is.null(settings$loutdaet), FALSE, settings$loutdaet  )
-  settings$loutdpet       = ifelse( is.null(settings$loutdpet), FALSE, settings$loutdpet  )
-  settings$loutdwcont     = ifelse( is.null(settings$loutdwcont), FALSE, settings$loutdwcont)
-  settings$loutdtemp      = ifelse( is.null(settings$loutdtemp), FALSE, settings$loutdtemp )
-  settings$loutdfapar     = ifelse( is.null(settings$loutdfapar), FALSE, settings$loutdfapar)
-  settings$loutdtemp_soil = ifelse( is.null(settings$loutdtemp_soil), FALSE, settings$loutdtemp_soil)
-
   ##-----------------------------------------------------------
   ## Get SOFUN from github (necessary even if you don't compile
   ## the code because of the parameter files)
@@ -49,31 +32,58 @@ prepare_setup_sofun <- function( settings, write_paramfils = TRUE ){
 
       ## first clone into a temporary directory
       rlang::warn("Cloning SOFUN from github...")
-      system( paste0( "git clone https://github.com/stineb/sofun.git tmp" ) )
+      system( paste0( "git clone -b pnmodel https://github.com/stineb/sofun.git ", dirname(settings$dir_sofun) ) )
       
-      ## then move all its contents to the SOFUN directory and delete the temporary directory
-      system( paste0("mv tmp/*  ", settings$dir_sofun ) )
-      system( paste0("mv tmp/.git ", settings$dir_sofun ) )
-      system( "rm -rf tmp")
-      
-      ## checkout the required branch of SOFUN, here 'pnmodel' (hard-coded)
-      here <- getwd()
-      setwd( settings$dir_sofun )
-      rlang::warn("Switching to branch pnmodel...")
-      system( "git checkout pnmodel")
-      setwd( here )
+      # ## checkout the required branch of SOFUN, here 'pnmodel' (hard-coded)
+      # here <- getwd()
+      # setwd( settings$dir_sofun )
+      # rlang::warn("Switching to branch pnmodel...")
+      # system( "git checkout pnmodel")
+      # setwd( here )
       
       rlang::warn("...done.")
-      if (!dir.exists(paste0(settings$dir_sofun, "params_std"))) abort("Aborting. SOFUN could not be cloned for an unknown reason.")
+      if (!dir.exists(paste0(settings$dir_sofun, "params_std"))) rlang::abort("Aborting. SOFUN could not be cloned for an unknown reason.")
+    }
+
+    ## Get executable
+    if (setup$do_compile){
+
+      cmd <- paste0("make ", setup$model)
+      system( cmd )
+
+    } else if (!file.exists(paste0("run", setup$model))){
+
+      print("Copying executable provided by rsofun and compiled on a 64-bit UNIX machine with gfortran into the SOFUN run directory...")
+      system( paste0( "cp ", path.package("rsofun"), "/extdata/run", setup$model, " ." ) )
+
+      if (!file.exists(paste0("run", setup$model))) rlang::abort( paste( "Executable is not available: ", paste0("run", setup$model)) )
+
     }
 
   } else {
 
-    abort("prepare_setup_sofun(): rsofun is not available for other SOFUN implementations than the Fortran one.")
+    rlang::abort("prepare_setup_sofun(): rsofun is not available for other SOFUN implementations than the Fortran one.")
 
   }
 
   if (settings$setup!="simple"){
+
+    ## Complement output booleans as FALSE if missing
+    settings$loutplant      = ifelse( is.null(settings$loutplant), FALSE, settings$loutplant)
+    settings$loutgpp        = ifelse( is.null(settings$loutgpp), FALSE, settings$loutgpp)
+    settings$loutwaterbal   = ifelse( is.null(settings$loutwaterbal), FALSE, settings$loutwaterbal)
+    settings$loutforcing    = ifelse( is.null(settings$loutforcing), FALSE, settings$loutforcing )
+
+    settings$loutdgpp       = ifelse( is.null(settings$loutdgpp), FALSE, settings$loutdgpp)
+    settings$loutdrd        = ifelse( is.null(settings$loutdrd), FALSE, settings$loutdrd )
+    settings$loutdtransp    = ifelse( is.null(settings$loutdtransp), FALSE, settings$loutdtransp)
+    settings$loutdalpha     = ifelse( is.null(settings$loutdalpha), FALSE, settings$loutdalpha)
+    settings$loutdaet       = ifelse( is.null(settings$loutdaet), FALSE, settings$loutdaet  )
+    settings$loutdpet       = ifelse( is.null(settings$loutdpet), FALSE, settings$loutdpet  )
+    settings$loutdwcont     = ifelse( is.null(settings$loutdwcont), FALSE, settings$loutdwcont)
+    settings$loutdtemp      = ifelse( is.null(settings$loutdtemp), FALSE, settings$loutdtemp )
+    settings$loutdfapar     = ifelse( is.null(settings$loutdfapar), FALSE, settings$loutdfapar)
+    settings$loutdtemp_soil = ifelse( is.null(settings$loutdtemp_soil), FALSE, settings$loutdtemp_soil)
 
     if (settings$setup=="lonlat"){
       ##-----------------------------------------------------------
@@ -138,7 +148,7 @@ prepare_setup_sofun <- function( settings, write_paramfils = TRUE ){
       ## - elevation of site, column must be named 'elv'
       ## - years for which simulation is to be done (corresponding to data availability from site), 
       ##   requires two columns named 'year_start' and 'year_end'.
-      if (!file.exists(settings$path_siteinfo)) abort( "prepare_setup_sofun(): File specified by settings$path_siteinfo does not exist." )
+      if (!file.exists(settings$path_siteinfo)) rlang::abort( "prepare_setup_sofun(): File specified by settings$path_siteinfo does not exist." )
       siteinfo <- readr::read_csv( settings$path_siteinfo )
 
       ##--------------------------------------

@@ -1,6 +1,7 @@
-# rsofun
-
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/stineb/rsofun?branch=master&svg=true)](https://ci.appveyor.com/project/stineb/rsofun)
+<a href="https://www.buymeacoffee.com/H2wlgqCLO" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" height="21px" ></a>
+
+# rsofun
 
 The rsofun R package provides functions for all the routine steps of running the P-model within R.
 
@@ -110,7 +111,47 @@ This returns a named list of P-model predictions, including the following elemen
 
 #### Fortran wrapped into R
 
-The P-model is also implemented in Fortran in the [SOFUN](https://github.com/stineb/sofun) modelling framework. We can use the generic P-model wrapper function `pmodel( ..., implementation = "Fortran" )` to run the P-model implemented in SOFUN and read its output back into R. To set up and run SOFUN, follow the steps below.
+The P-model is also implemented in Fortran in the [SOFUN](https://github.com/stineb/sofun) modelling framework. We can use the generic P-model wrapper function `pmodel( ..., implementation = "Fortran" )` to run the P-model implemented in SOFUN and read its output back into R. To set up and run SOFUN, follow the steps below as an example:
+
+1. Define the simulation settings:
+```r
+settings_sims_simple <- list( 
+  setup = "simple", 
+  implementation  = "fortran", 
+  dir_sofun = "~/sofun/trunk/" 
+  )
+```
+
+2. Define the model setup. Use the `demo_pmodel` compilation for the simple setup where the P-model is run as a function:
+```r
+setup_sofun_simple <- list(
+  model      = "demo_pmodel",
+  dir        = "~/sofun/trunk",
+  do_compile = FALSE,
+  simsuite   = FALSE
+  )
+```
+
+3. Prepare the setup. For the simple setup, this clones the [SOFUN](https://github.com/stineb/sofun) repository, switches to branch `pnmodel`, and puts the executables in place (copying from the rsofun package or compiling if `do_compile = TRUE`). 
+```r
+settings_sims_simple <- prepare_setup_sofun( settings = settings_sims_simple )
+```
+
+4. Create parameter (text) file. In the example below, we're using an example parameter file that is provided along with the `rsofun` package. Creating the parameter file is done again in R by:
+```r
+params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/extdata/params_opt_kphio_soilm_global.csv" ) )
+nothing <- rsofun::update_params( params_opt, dir_sofun )
+```
+
+5. Now, we can wrap SOFUN in R as:
+```r
+out_pmodel <- pmodel( temp = 20, vpd = 100, co2 = 300, ppfd = 800, fapar = 1.0, elv = 200, implementation = "fortran", sofundir = dir_sofun )
+
+```
+This returns a named list, similar as described above for the `rpmodel()` function.
+
+
+**Alternatively**, above steps can also be done directly in the shell without using the `prepare_setup_sofun()` function as follows:
 
 1. Get the [SOFUN](https://github.com/stineb/sofun) repository and switch to branch `pnmodel`. If you don't plan to further develop the publicly available code, you may just directly clone it:
 ```sh
@@ -164,3 +205,7 @@ This returns a named list, similar as described above for the `rpmodel()` functi
 ## Examples
 
 Examples are given in several vignettes, also available [here](http://rpubs.com/stineb/vignette_rsofun3).
+
+## Acknowledgements
+
+The main author (B. Stocker) was funded by Marie Sklodowska-Curie fellowship H2020-MSCA-IF-2015, project FIBER, grant number 701329.
