@@ -274,7 +274,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, c4=FALSE, 
     jvrat       <- NA
     jmax_prime  <- NA
     ftemp_inst_vcmax <- NA
-
+    
 
   } else {
 
@@ -539,25 +539,20 @@ calc_kmm <- function( tc, patm ) {
   #           functions for models of Rubisco-limited photosynthesis, 
   #           Plant, Cell and Environment, 24, 253--259.
   #-----------------------------------------------------------------------
-  dhac   <- 79430      # J/mol
-  dhao   <- 36380      # J/mol
-  kR     <- 8.3145     # J/mol/K
-  kco    <- 2.09476e5  # O2 partial pressure, US Standard Atmosphere
-  kc25_0 <- 41.03
-  ko25_0 <- 28210
+  dhac   <- 79430      # (J/mol) Activation energy, Bernacchi et al. (2001)
+  dhao   <- 36380      # (J/mol) Activation energy, Bernacchi et al. (2001)
+  kco    <- 2.09476e5  # (ppm) O2 partial pressure, Standard Atmosphere
 
-  ## Correct parameters for pressure-dependence
-  ## This is adopted from Nick Smith's implementation.
-  rat  <- patm / calc_patm(0)
-  kc25 <- kc25_0 * rat 
-  ko25 <- ko25_0 * rat 
+  ## k25 parameters are not dependent on atmospheric pressure
+  kc25 <- 39.97   # Pa, value based on Bernacchi et al. (2001), converted to Pa by T. Davis assuming elevation of 227.076 m.a.s.l.
+  ko25 <- 27480   # Pa, value based on Bernacchi et al. (2001), converted to Pa by T. Davis assuming elevation of 227.076 m.a.s.l.
 
   tk <- tc + 273.15
 
   kc <- kc25 * calc_ftemp_arrhenius( tk, dha=dhac )
   ko <- ko25 * calc_ftemp_arrhenius( tk, dha=dhao )
 
-  po  <- kco * (1e-6) * patm # O2 partial pressure
+  po  <- kco * (1e-6) * patm         # O2 partial pressure
   kmm <- kc * (1.0 + po/ko)
 
   return(kmm)
@@ -575,19 +570,13 @@ calc_gammastar <- function( tc, patm ) {
   #           functions for models of Rubisco-limited photosynthesis, 
   #           Plant, Cell and Environment, 24, 253--259.
   #-----------------------------------------------------------------------
-  dha      <- 37830    # J/mol
-  oxygen   <- 2.09476e5 # ppm
-  patm0    <- calc_patm(0.0)
-  oxygen_0 <- oxygen * 1e-6 * patm0
-  oxygen_z <- oxygen * 1e-6 * patm
-  rat      <- patm / patm0
+  dha    <- 37830       # (J/mol) Activation energy, Bernacchi et al. (2001)
+  gs25_0 <- 4.332       # Pa, value based on Bernacchi et al. (2001), converted to Pa by T. Davis assuming elevation of 227.076 m.a.s.l.
 
-  gammastar25 <- 4.332 * rat  # Pa
+  gammastar25 <- gs25_0 * patm / calc_patm(0.0)  
 
   tk <- tc + 273.15
-  gammastar_pa <- gammastar25 * calc_ftemp_arrhenius( tk, dha=dha )
-
-  gammastar <- gammastar_pa * (oxygen_z / oxygen_0) # vary based on oxygen due to Rubisco specificity factor
+  gammastar <- gammastar25 * calc_ftemp_arrhenius( tk, dha=dha )
 
   return( gammastar )
 }

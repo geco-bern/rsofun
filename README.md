@@ -2,7 +2,7 @@
 
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/stineb/rsofun?branch=master&svg=true)](https://ci.appveyor.com/project/stineb/rsofun)
 
-This repository contains the code for the R-package that provides functions for all the routine steps in running the [SOFUN](https://github.com/stineb/sofun) model:
+The rsofun R package provides functions for all the routine steps of running the P-model within R.
 
 - Setup of the model environment
 - Preparation of input files
@@ -11,31 +11,38 @@ This repository contains the code for the R-package that provides functions for 
 - Reading outputs into R
 - Evaluating outputs (benchmarking)
 
-Get this R-package by 
-```sh
-install_github("stineb/rsofun")
+It also provides a generic function (`pmodel()`) to run alternative implementations of the P-model in different languages (Fortran using the [SOFUN](https://github.com/stineb/sofun) modelling framework, Python not implemeted yet), wrapped within R, and an impementation in R itself. 
+
+## Installation
+
+To install and load the rsofun package run the following command in your R terminal: 
+```r
+if(!require(devtools)){install.packages(devtools)}
+devtools::install_github( "stineb/rsofun", dependencies = NA )
+library(rsofun)
 ```
 
-## Dependencies
+### Dependencies
 
-### R environment
+The `rsofun` package requires a large number of other R-packages (dependencies). Required dependencies are essential for `rsofun` functions and are:
 
-Note that the package `rsofun` requires a large number of other R-packages (dependencies). Some are required only for specific tasks (e.g. creating certain plots or applying certain calibration methods). These are loaded optionally (XXX TODO XXX). Others are essential as the source code is generally implemented adopting `tidyverse` syntax. Essential dependencies need to be installed beforehand and are loaded with the `library(rsofun)` call. These are:
+- `dplyr`,`ggplot2`,`lubridate`,`Metrics`,`mgcv`,`ncdf4`,`optimr`,`purrr`,`readr`,`rlang`,`stringr`,`tidyr`, and `LSD`
 
-- `dplyr`
-- `tidyr`
-- `purrr`
-- `readr`
-- `rlang`
-- `stringr`
-- `ggplot2`
-- `lubridate`
-- `Metrics`
-- `mgcv`
-- `ncdf4`
-- `optimr`
+Suggested dependencies are required only for certain optional tasks and are:
 
-Suggested dependencies are:
+- `BayesianTools`, `caret`, `GenSA`, `gplots`, `hydroGOF`, `maps`, `maptools`, `neuralnet`, `nnet`, `raster`, `sp`, and `testthat`
+
+To install locally unavailable packages, run
+```r
+install_dependencies_rsofun()
+```
+
+To load dependencies, run
+```r
+load_dependencies_rsofun()
+```
+
+Suggested dependencies are only used optionally:
 
 - `GenSA`: used by `calib_sofun()`, if `settings_calib$method=="gensa"`, see calib_sofun.R
 - `BayesianTools`: used by `calib_sofun()`, if `settings_calib$method=="BayesianTools"`, see calib_sofun.R
@@ -43,15 +50,6 @@ Suggested dependencies are:
 - `neuralnet`: used by `gapfill_nn()` and `eval_response_neuralnet()`, see eval_response_neuralnet.R and gapfill_nn.R
 - `nnet`: used by `gapfill_nn()` and `eval_response_neuralnet()`, see eval_response_neuralnet.R and gapfill_nn.R
 - `hydroGOF`: used by `analyse_modobs()` to calculate the Nash-Sutcliffe model efficiency, see analyse_modobs.R
-
-Install required dependencies by:
-```r
-list_of_packages <- c( "dplyr", "tidyr", "purrr", "readr", "rlang", "stringr", 
-                       "ggplot2", "lubridate", "Metrics", "mgcv", "ncdf4", "optimr" 
-                       )
-new_packages <- list_of_packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if( length(new_packages)>0 ) install.packages(new_packages)
-```
 
 ### External environment
 
@@ -70,6 +68,10 @@ Apparently, CDO is no longer available as a Homebrew formula (right?). Unse MacP
 ```sh
 sudo port install cdo
 ```
+
+## Usage
+
+
 
 
 ## Examples

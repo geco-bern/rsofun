@@ -15,14 +15,30 @@
 #'    \item \code{stringr}
 #'    \item \code{tidyr}
 #'    \item \code{LSD}
+#' }
+#' If argument `suggested = TRUE`, suggested dependencies are loaded too. These include:
+#' \itemize{
+#'   \item \code{BayesianTools}
+#'   \item \code{caret}
+#'   \item \code{GenSA}
+#'   \item \code{gplots}
+#'   \item \code{hydroGOF}
+#'   \item \code{maps}
+#'   \item \code{maptools}
+#'   \item \code{neuralnet}
+#'   \item \code{nnet}
+#'   \item \code{raster}
+#'   \item \code{sp}
+#'   \item \code{testtha}
 #' }  
+
 #'
 #' @return \code{NULL}
 #' @export
 #'
-#' @examples NULL <- load_dependencies_rsofun()
+#' @examples load_dependencies_rsofun()
 #' 
-load_dependencies_rsofun <- function(){
+load_dependencies_rsofun <- function( suggested = FALSE ){
 
 	require(dplyr)
 	require(ggplot2)
@@ -38,47 +54,20 @@ load_dependencies_rsofun <- function(){
 	require(tidyr)
 	require(LSD)
 
-	return(NULL)
-}
-
-#' Loads suggested rsofun dependencies 
-#'
-#' Loads all suggested dependencies of the rsofun package with a \code{require} call. This includes the following:
-#' \itemize{
-#'   \item \code{BayesianTools}
-#'   \item \code{caret}
-#'   \item \code{GenSA}
-#'   \item \code{gplots}
-#'   \item \code{hydroGOF}
-#'   \item \code{maps}
-#'   \item \code{maptools}
-#'   \item \code{neuralnet}
-#'   \item \code{nnet}
-#'   \item \code{raster}
-#'   \item \code{sp}
-#'   \item \code{testtha}
-#' }  
-#'
-#' @return \code{NULL}
-#' @export
-#'
-#' @examples NULL <- load_dependencies_suggest_rsofun()
-#' 
-load_dependencies_suggest_rsofun <- function(){
-
-	require(BayesianTools)
-	require(caret)
-	require(GenSA)
-	require(gplots)
-	require(hydroGOF)
-	require(maps)
-	require(maptools)
-	require(neuralnet)
-	require(nnet)
-	require(raster)
-	require(sp)
-	require(testtha)
-
-	return(NULL)
+	if (suggested){
+		require(BayesianTools)
+		require(caret)
+		require(GenSA)
+		require(gplots)
+		require(hydroGOF)
+		require(maps)
+		require(maptools)
+		require(neuralnet)
+		require(nnet)
+		require(raster)
+		require(sp)
+		require(testthat)
+	}
 
 }
+

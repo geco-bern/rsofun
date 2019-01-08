@@ -31,9 +31,41 @@ pmodel <- function( temp, vpd, co2, ppfd, fapar, elv, kphio, implementation = "R
 
     out <- system2( "./rundemo_pmodel", 
                     input = c( as.character(temp), as.character(vpd), as.character(co2), as.character(ppfd), as.character(fapar), as.character(elv) ),
-                    stdout = TRUE, stderr = FALSE )
-    out <- as.numeric(out)
+                    stdout = TRUE, stderr = FALSE ) %>%
+            stringr::str_squish() %>%
+            stringr::str_split( pattern=" ") %>%
+            lapply( FUN = as.numeric ) %>% 
+            unlist()
   
+    ## This has to correspond to the order of elements in the derived type 'outtype_pmodel', see gpp_pmodel.mod.f90
+    varnams <- c(
+      "gammastar",           # temperature-dependent photorespiratory compensation point (Pa)
+      "kmm",                 # Michaelis-Menten coefficient (Pa)
+      "ci",                  # leaf-internal partial pressure, (Pa)
+      "chi",                 # = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
+      "iwue",                # intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
+      "lue",                 # light use efficiency (mol CO2 / mol photon)
+      "assim",               # leaf-level assimilation rate (mol CO2 m-2 s-1)
+      "gs",                  # stomatal conductance to CO2, expressed per units absorbed light (mol H2O m-2 m-1 / (mol light m-2))
+      "gpp",                 # gross primary productivity (g CO2 m-2 d-1)
+      "vcmax",               # canopy-level maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
+      "vcmax25",             # canopy-level Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
+      "vcmax_unitfapar",     # Vcmax per unit fAPAR (mol CO2 m-2 s-1)
+      "vcmax_unitiabs",      # Vcmax per unit absorbed light (mol CO2 m-2 s-1 mol-1)
+      "ftemp_inst_vcmax",    # Instantaneous temperature response factor of Vcmax (unitless)
+      "ftemp_inst_rd",       # Instantaneous temperature response factor of Rd (unitless)
+      "rd",                  # Dark respiration (mol CO2 m-2 s-1)
+      "rd_unitfapar",        # Dark respiration per unit fAPAR (mol CO2 m-2 s-1)
+      "rd_unitiabs",         # Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
+      "actnv",               # Canopy-level total metabolic leaf N per unit ground area (g N m-2)
+      "actnv_unitfapar",     # Metabolic leaf N per unit fAPAR (g N m-2)
+      "actnv_unitiabs",      # Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
+      "transp"               # Canopy-level total transpiration rate (g H2O (mol photons)-1)
+      )
+
+    names(out) <- varnams
+    out <- as.list(out)
+
     setwd( here )
     
   } else {
