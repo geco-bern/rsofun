@@ -10,7 +10,7 @@
 #'
 update_params <- function( params_opt, dir_sofun ){
   
-  system( paste0( "cp ", dir_sofun, "params_std/* ", dir_sofun, "params/") )
+  system( paste0( "cp ", dir_sofun, "/params_std/* ", dir_sofun, "params/") )
 
   filn <- paste0( dir_sofun, "params/params_gpp_pmodel.dat") 
   content <- readLines( filn )

@@ -57,7 +57,7 @@ run_sofun <- function( settings, setup ){
       #                         path_local = settings$dir_sofun 
       #                         )
 
-      if (!file.exists(paste0("run", setup$model))) abort( paste( "Executable could not be downloaded: ", paste0("run", setup$model)) )
+      if (!file.exists(paste0("run", setup$model))) abort( paste( "Executable is not available: ", paste0("run", setup$model)) )
 
     }
 

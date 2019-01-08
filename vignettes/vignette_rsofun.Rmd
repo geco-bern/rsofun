@@ -21,14 +21,10 @@ header-includes:
 Load the package. This contains all the necessary wrapper functions to set up and run SOFUN and read its output. 
 ```{r message=FALSE}
 library(rsofun)
-library(captioner)
 library(dplyr)
-## load all rsofun dependencies
-# load_dependencies_rsofun()
 
-## for creating figure numbers
-tab_nums <- captioner( prefix = "Table S", auto_space=FALSE, style = "i" )
-fig_nums <- captioner( prefix = "Figure S", auto_space=FALSE, style = "i" )
+## load all rsofun dependencies
+load_dependencies_rsofun()
 
 ## other crap
 systr <- "''"    # for Mac

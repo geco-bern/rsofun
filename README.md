@@ -75,7 +75,9 @@ rsofun provides functionalities to run the P-model in different setups, and impl
 
 ### Simple usage
 
-The P-model can be run as a simple R function. This uses model code that is directly implemented in R (in file `rpmodel.R`) For example:
+#### R
+
+The P-model can be run as a simple R function. This uses model code that is directly implemented in R (in file `rpmodel.R) For example:
 ```r
 tc    <- 20     # deg C
 ppfd  <- 800    # mol/m2/d
@@ -83,9 +85,10 @@ vpd   <- 1000   # Pa
 co2   <- 400    # ppm
 elv   <- 0      # m.a.s.l.
 fapar <- 1      # unitless
-
 out_pmodel_R <- rpmodel( tc = tc, vpd = vpd, co2 = co2, elv = elv, kphio = 0.05, fapar = fapar, ppfd = ppfd, method_optci="prentice14", method_jmaxlim = "wang17", do_ftemp_kphio = FALSE )
 ```
+
+
 This returns a named list of P-model predictions, including the following elements:
 
 - `gammastar`: photorespiratory compensation point, (Pa)
@@ -106,7 +109,34 @@ This returns a named list of P-model predictions, including the following elemen
 - `actnv_unitfapar`: Active metabolic leaf N (leaf-level, top of canopy), mol N/m2-leaf
 - `actnv_unitiabs`: Active metabolic leaf N per unit absorbed light, mol N/m2/mol
 
+#### Fortran wrapped into R
 
+The P-model is also implemented in Fortran in the [SOFUN](https://github.com/stineb/sofun) modelling framework. We can use the generic P-model wrapper function `pmodel( ..., implementation = "Fortran" )` to run the P-model implemented in SOFUN and read its output back into R. To set up for running SOFUN, Follow the steps below.
+
+1. Get the [SOFUN](https://github.com/stineb/sofun) repository and switch to branch `pnmodel`. If you don't plan to further develop the publicly available code, you may just directly clone it:
+```sh
+cd dir_sofun # this is where you want to save SOFUN locally
+git clone -b pnmodel https://github.com/stineb/sofun.git
+```
+If you plan to develop new code, fork SOFUN in github. This creates a copy of the repository for your own, where you can implement your code edits. Once you're ready to share these (this is generally very welcome!), you can create a pull request in github to merge edits back into the original repository.
+
+2. Get the executables. Executables, compiled on a 64 bit UNIX machine are provided along with the `rsofun` package. These can just be copied into your local SOFUN directory. In R, do:
+```r
+system( paste0( "cp ", path.package("rsofun"), "/extdata/rundemo_pmodel dir_sofun" ) )
+```
+Alternatively or if you require executables on a Windows machine, compile the Fortran code. This is tested using the publicly available gfortran compiler. Make sure you have this compiler installed. See [here](http://www.lapk.org/gfortran/gfortran.php?OS=7) for a guide to install gfortran. For the simple function-like setup of the Fortran P-model wrapped into R, we compile from your shell as follows:
+```sh
+cd dir_sofun
+make demo_pmodel
+```
+
+3. 
+
+
+To run a quick test, the following command (entered in your shell) should return a sequence of numeric values:
+```sh
+echo 20 100 300 800 1.0 200 | ./rundemo_pmodel
+```
 
 ### Site-scale simulations
 
