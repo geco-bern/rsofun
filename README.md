@@ -55,7 +55,7 @@ if( length(new_packages)>0 ) install.packages(new_packages)
 
 ### External environment
 
-Several functions require external programs called by `system()` calls from within R. Required programs need to be installed beforehand, as follows:
+Several functions require external programs called by `system()` calls from within R. Required programs need to be installed beforehand, as follows (**Note: These are not required for the "Simple usage", described below**):
 
 - [NCO](http://nco.sourceforge.net/). Is used by `get_pointdata_()` functions (executing the Bash script `"./extract_pointdata_byfil.sh"` with NCO command `ncks`). Before using `rsofun`, install NCO on a Mac by
 ```sh
@@ -70,6 +70,18 @@ Apparently, CDO is no longer available as a Homebrew formula (right?). Unse MacP
 ```sh
 sudo port install cdo
 ```
+
+## Usage
+
+rsofun provides 
+
+### Simple usage
+
+
+### Site-scale simulations
+
+
+### Spatial simulations
 
 
 ## Examples
