@@ -1,4 +1,4 @@
-#' P-model in R
+#' P-model
 #'
 #' R implementation of the P-model and its corrolary predictions (Prentice et al., 2014; Han et al., 2017)
 #' 
@@ -9,14 +9,20 @@
 #' @param kphio Quantum yield efficiency parameter
 #' @param fapar (Optional) Fraction of absorbed photosynthetically active radiation (unitless, defaults to \code{NA})
 #' @param ppfd (Optional) Photosynthetic photon flux density (mol/m2, defaults to \code{NA})
-#' @param method (Optional) A character string specifying which method is to be used for calculating the ci:ca ratio. Defaults to \code{"full"}. 
-#' Available also \code{c("approx", "simpl")}.
+#' @param c4 (Optional) A logical value specifying whether the C3 or C4 photosynthetic pathway is followed. Defaults to \code{method_optci="c4=FALSE"}. 
+#' If \code{method_optci="c4=TRUE"}, ci is assumed to be very large and \code{lue = kphio * fapar * ppfd}.
+#' @param method_optci (Optional) A character string specifying which method is to be used for calculating optimal ci:ca. Defaults to \code{"prentice14"}. 
+#' @param method_jmaxlim (Optional) A character string specifying which method is to be used for factoring in Jmax limitation. Defaults to \code{"wang17"}, 
+#' based on Wang Han et al. 2017 Nature Plants and (Smith 1937). Available is also \code{"smith19"}, following the method by Smith et al., 2019 Ecology Letters, 
+#' and \code{"none"} for ignoring effects of Jmax limitation.
 #' @param do_ftemp_kphio (Optional) A logical specifying whether temperature-dependence of quantum yield efficiency after Bernacchi et al., 2003 PCE 
 #' is to be accounted for. Defaults to \code{TRUE}.
 #' @param returnvar (Optional) A character string of vector of character strings specifying which variables are to be returned (see return below).
 #'
 #' @return A named list of numeric values with 
 #' \itemize{
+#'         \item \code{gammastar}: photorespiratory compensation point, (Pa)
+#'         \item \code{kmm}: Michaelis-Menten coefficient for photosynthesis (Pa)
 #'         \item \code{ci}: leaf-internal partial pressure, (Pa)
 #'         \item \code{chi}: = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
 #'         \item \code{iwue}: intrinsic water use efficiency (unitless)
@@ -38,7 +44,7 @@
 #'
 #' @examples out_rpmodel <- rpmodel( tc=10, vpd=300, co2=300, elv=300, kphio=0.06 )
 #' 
-rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="full", do_ftemp_kphio = TRUE, returnvar = NULL ){
+rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, c4=FALSE, method_optci="prentice14", method_jmaxlim="wang17", do_ftemp_kphio = TRUE, returnvar = NULL ){
   #-----------------------------------------------------------------------
   # Output:   list of P-model predictions:
   #
@@ -102,7 +108,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   }
 
   #-----------------------------------------------------------------------
-  # Calculate photosynthesis model parameters depending on temperature, pressure, and CO2.
+  # Photosynthesis model parameters depending on temperature, pressure, and CO2.
   #-----------------------------------------------------------------------
   ## atmospheric pressure as a function of elevation (Pa)
   patm <- calc_patm( elv )
@@ -111,10 +117,10 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   ca <- co2_to_ca( co2, patm )
 
   ## photorespiratory compensation point - Gamma-star (Pa)
-  gstar <- calc_gstar( tc )
+  gammastar <- calc_gammastar( tc, patm )
 
   ## Michaelis-Menten coef. (Pa)
-  kmm <- calc_k( tc, patm )
+  kmm <- calc_kmm( tc, patm )   ## XXX Todo: replace 'NA' here with 'patm'
 
   ## viscosity correction factor = viscosity( temp, press )/viscosity( 25 degC, 1013.25 Pa) 
   ns      <- calc_viscosity_h2o( tc, patm )  # Pa s 
@@ -122,45 +128,32 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   ns_star <- ns / ns25  # (unitless)
 
   ##-----------------------------------------------------------------------
-  ## Caluclate ci:ca ('chi') and terms 'n' and 'm' (see pmodel_doc.pdf)
+  ## Optimal ci
+  ## The heart of the P-model: calculate ci:ca ratio (chi) and additional terms
   ##-----------------------------------------------------------------------
-  if (method=="approx"){
+  if (c4){
+
+    # "dummy" ci:ca for C4 plants
+    out_optchi <- calc_chi_c4()
+
+  } else if (method_optci=="prentice14"){
+
+    ## Full formualation (Gamma-star not zero), analytical solution
     ##-----------------------------------------------------------------------
-    ## A. APPROXIMATIVE METHOD
-    ##-----------------------------------------------------------------------
-    out_lue <- lue_approx( tc, vpd, elv, ca, gstar )
+    out_optchi <- calc_optimal_chi( kmm, gammastar, ns_star, ca, vpd, beta  )
 
   } else {
-    ##-----------------------------------------------------------------------
-    ## B. THEORETICAL METHOD
-    ##-----------------------------------------------------------------------
-    if (method=="simpl") {
 
-      ## B.1 SIMPLIFIED FORMULATION 
-      ##-----------------------------------------------------------------------
-      out_lue <- lue_vpd_simpl( kmm, gstar, ns, ca, vpd, beta  )
-
-    } else if (method=="full"){
-
-      ## B.2 FULL FORMULATION
-      ##-----------------------------------------------------------------------
-      out_lue <- lue_vpd_full( kmm, gstar, ns_star, ca, vpd, beta  )
-
-    }
+    rlang::abort("rpmodel(): argument method_optci not idetified.")
 
   }
 
-  ## Include effect of Jmax limitation
-  mprime <- calc_mprime( out_lue$m )
-
-  ## Light use efficiency (gpp per unit absorbed light)
-  lue <- kphio * mprime * c_molmass * ftemp_kphio
 
   ## leaf-internal CO2 partial pressure (Pa)
-  ci <- out_lue$chi * ca
+  ci <- out_optchi$chi * ca  
 
   ##-----------------------------------------------------------------------
-  ## Corrolary preditions (This is prelimirary!)
+  ## Corrolary preditions
   ##-----------------------------------------------------------------------
   # ## stomatal conductance
   # gs <- gpp  / ( ca - ci )
@@ -168,16 +161,139 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
   ## intrinsic water use efficiency 
   iwue = ( ca - ci ) / ( 1.6 * patm )
 
-  ## Vcmax normalised per unit absorbed PPFD (assuming iabs=1)
-  vcmax_unitiabs <- kphio * out_lue$n * ftemp_kphio
+  ##-----------------------------------------------------------------------
+  ## Vcmax and light use efficiency
+  ##-----------------------------------------------------------------------
+  if (c4){
+
+    ## Light use efficiency (gpp per unit absorbed light)
+    lue <- kphio * ftemp_kphio * c_molmass
+
+    ## Vcmax normalised per unit absorbed PPFD (assuming iabs=1), with Jmax limitation
+    vcmax_unitiabs <- kphio * ftemp_kphio
+
+    ## xxx test
+    omega       <- NA
+    m           <- NA
+    mc          <- NA
+    omega_star  <- NA
+    vcmax_unitiabs_star <- NA
+    vcmax_star  <- NA
+    vcmax_prime <- NA
+    jvrat       <- NA
+    jmax_prime  <- NA
+    ftemp_inst_vcmax <- NA
+
+
+  } else if (method_jmaxlim=="wang17"){
+
+    ## Include effect of Jmax limitation
+    mprime <- calc_mprime( out_optchi$mj )
+
+    ## Light use efficiency (gpp per unit absorbed light)
+    lue <- kphio * ftemp_kphio * mprime * c_molmass
+
+    ## Vcmax normalised per unit absorbed PPFD (assuming iabs=1), with Jmax limitation
+    vcmax_unitiabs <- kphio * ftemp_kphio * out_optchi$mjoc * mprime / out_optchi$mj
+
+    # print(paste("Jmax limit factor", mprime / out_optchi$mj))
+
+    ## xxx test
+    omega       <- NA
+    m           <- NA
+    mc          <- NA
+    omega_star  <- NA
+    vcmax_unitiabs_star <- NA
+    vcmax_star  <- NA
+    vcmax_prime <- NA
+    jvrat       <- NA
+    jmax_prime  <- NA
+    ftemp_inst_vcmax <- NA
+
+
+  } else if (method_jmaxlim=="smith19"){
+
+    ## constants
+    theta <- 0.85    # should be calibratable?
+    c_cost <- 0.05336251
+
+    # mc <- (ci - gammastar) / (ci + kmm)                       # Eq. 6
+    # print(paste("mc should be equal: ", mc, out_optchi$mc ) )
+
+    # mj <- (ci - gammastar) / (ci + 2.0 * gammastar)           # Eq. 8
+    # print(paste("mj should be equal: ", mj, out_optchi$mj ) )
+
+    # mjoc <- (ci + kmm) / (ci + 2.0 * gammastar)               # mj/mc, used in several instances below
+    # print(paste("mjoc should be equal: ", mjoc, out_optchi$mjoc ) )
+
+    omega <- calc_omega( theta = theta, c_cost = c_cost, m = out_optchi$mj )             # Eq. S4
+    omega_star <- 1.0 + omega - sqrt( (1.0 + omega)^2 - (4.0 * theta * omega) )       # Eq. 18
+    
+    # calculate Vcmax-star, which corresponds to Vcmax at a reference temperature 'tcref'
+    vcmax_unitiabs_star  <- kphio * ftemp_kphio * out_optchi$mjoc * omega_star / (8.0 * theta)               # Eq. 19
+    
+    ## tcref is the optimum temperature in K, assumed to be the temperature at which Vcmax* is operating. 
+    ## tcref is estimated based on its relationship to growth temperature following Kattge & Knorr 2007
+    tcref <- 0.44 * tc + 24.92
+
+    ## calculated acclimated Vcmax at prevailing growth temperatures
+    ftemp_inst_vcmax <- calc_ftemp_inst_vcmax( tc, tc, tcref = tcref )
+    vcmax_unitiabs <- vcmax_unitiabs_star * ftemp_inst_vcmax   # Eq. 20
+    
+    ## calculate Jmax
+    jmax_over_vcmax <- (8.0 * theta * omega) / (out_optchi$mjoc * omega_star)             # Eq. 15 / Eq. 19
+    jmax_prime <- jmax_over_vcmax * vcmax_unitiabs 
+
+    ## light use efficiency
+    lue <- c_molmass * kphio * ftemp_kphio * out_optchi$mj * omega_star / (8.0 * theta) # * calc_ftemp_inst_vcmax( tc, tc, tcref = tcref )     # treat theta as a calibratable parameter
+
+    ## xxx test
+    m     <- out_optchi$mj
+    mc    <- out_optchi$mc
+    jvrat <- jmax_over_vcmax
+
+
+  } else if (method_jmaxlim=="none"){
+
+    ## Light use efficiency (gpp per unit absorbed light)
+    lue <- kphio * ftemp_kphio * out_optchi$mj * c_molmass
+
+    ## Vcmax normalised per unit absorbed PPFD (assuming iabs=1), with Jmax limitation
+    vcmax_unitiabs <- kphio * ftemp_kphio * out_optchi$mjoc
+
+    # print(paste("Jmax limit factor", mprime / out_optchi$mj))
+
+    ## xxx test
+    omega       <- NA
+    m           <- NA
+    mc          <- NA
+    omega_star  <- NA
+    vcmax_unitiabs_star <- NA
+    vcmax_star  <- NA
+    vcmax_prime <- NA
+    jvrat       <- NA
+    jmax_prime  <- NA
+    ftemp_inst_vcmax <- NA
+    
+
+  } else {
+
+    rlang::abort("rpmodel(): argument method_jmaxlim not idetified.")
+
+  }
+
+
+  ##-----------------------------------------------------------------------
+  ## Corrolary preditions (This is prelimirary!)
+  ##-----------------------------------------------------------------------
 
   ## Vcmax25 (vcmax normalized to 25 deg C)
-  ftemp_inst_vcmax  <- calc_ftemp_inst_vcmax( tc )
-  vcmax25_unitiabs  <- vcmax_unitiabs  / ftemp_inst_vcmax
+  ftemp25_inst_vcmax  <- calc_ftemp_inst_vcmax( tc, tc, tcref = 25.0 )
+  vcmax25_unitiabs  <- vcmax_unitiabs  / ftemp25_inst_vcmax
 
   ## Dark respiration at growth temperature
   ftemp_inst_rd <- calc_ftemp_inst_rd( tc )
-  rd_unitiabs  <- rd_to_vcmax * (ftemp_inst_rd / ftemp_inst_vcmax) * vcmax_unitiabs 
+  rd_unitiabs  <- rd_to_vcmax * (ftemp_inst_rd / ftemp25_inst_vcmax) * vcmax_unitiabs 
 
   ## active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
   actnv_unitiabs  <- vcmax25_unitiabs  * n_v
@@ -199,6 +315,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
 
     ## active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
     actnv_unitfapar <- ppfd * actnv_unitiabs
+
 
     if (!is.na(fapar)){
       ##-----------------------------------------------------------------------
@@ -226,6 +343,9 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
       ## active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
       actnv <- iabs * actnv_unitiabs
 
+      ## xxx test
+      vcmax_star  <- iabs * vcmax_unitiabs_star
+
     } else {
 
       gpp <- NA
@@ -242,7 +362,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
     vcmax25_unitfapar <- NA
     rd_unitfapar <- NA
     actnv_unitfapar <- NA
-
+    
     gpp <- NA
     vcmax <- NA
     vcmax25 <- NA
@@ -253,11 +373,26 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
 
   ## construct list for output
   out <- list( 
+              gammastar       = gammastar,
+              kmm             = kmm,
               ci              = ci,
-              chi             = out_lue$chi,
+              chi             = out_optchi$chi,
               iwue            = iwue,
               lue             = lue,
               gpp             = gpp,        
+
+              ## additional for testing:----------------
+              ftemp_inst_vcmax = ftemp_inst_vcmax,
+              omega           = omega,
+              m               = m,
+              mc              = mc,
+              omega_star      = omega_star,
+              vcmax_star      = vcmax_star,
+              vcmax_unitiabs_star = vcmax_unitiabs_star,
+              jvrat           = jvrat,
+              jmax_prime      = jmax_prime,
+              ##-----------------------------------------
+
               vcmax           = vcmax,    
               vcmax25         = vcmax25,
               vcmax_unitfapar = vcmax_unitfapar,
@@ -276,41 +411,31 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, method="fu
 
 }
 
-lue_approx <- function( temp, vpd, elv, ca, gs ){
-  #-----------------------------------------------------------------------
-  # Input:    - float, 'temp' : deg C, air temperature
-  #           - float, 'vpd'  : Pa, vapour pressure deficit
-  #           - float, 'elv'  : m, elevation above sea level
-  #           - float, 'ca'   : Pa, ambient CO2 partial pressure
-  #           - float, 'gs'   : Pa, photores. comp. point (Gamma-star)
-  # Output:   list: 'm' (unitless), 'chi' (unitless)
-  # Features: Returns list containing light use efficiency (m) and ci/ci ratio (chi)
-  #           based on the approximation of the theoretical relationships
-  #           of chi with temp, vpd, and elevation.
-  #           Is now based on SI units as inputs.
-  #-----------------------------------------------------------------------
+# Adopted from Nick Smith's code:
+# Calculate omega, see Smith et al., 2019 Ecology Letters
+calc_omega <- function( theta, c_cost, m ){
+  
+  cm <- 4 * c_cost / m                        # simplification term for omega calculation
+  v  <- 1/(cm * (1 - theta * cm)) - 4 * theta # simplification term for omega calculation
+  
+  # account for non-linearities at low m values
+  capP <- (((1/1.4) - 0.7)^2 / (1-theta)) + 3.4
+  aquad <- -1
+  bquad <- capP
+  cquad <- -(capP * theta)
+  m_star <- (4 * c_cost) / polyroot(c(aquad, bquad, cquad))
+  
+  omega <- ifelse(  m < Re(m_star[1]), 
+                    -( 1 - (2 * theta) ) - sqrt( (1 - theta) * v), 
+                    -( 1 - (2 * theta))  + sqrt( (1 - theta) * v)
+                    )
+  
+  return(omega)
 
-  ## Wang-Han Equation
-  whe <- exp( 
-    4.644
-    + 0.0545 * ( temp - 25.0 )
-    - 0.5 * log( vpd )    # convert vpd from Pa to kPa 
-    - 8.15e-5 * elv       # convert elv from m to km
-    )
-
-  ## leaf-internal-to-ambient CO2 partial pressure (ci/ca) ratio
-  chi <- whe / ( 1.0 + whe )
-
-  ##  m
-  gamma <- gs / ca
-  m <- (chi - gamma) / (chi + 2 * gamma)
-
-  out <- list( chi=chi, m=m, n=NA )
-  return(out)
 }
 
 
-lue_vpd_simpl <- function( kmm, gs, ns_star, ca, vpd, beta ){
+calc_optimal_chi <- function( kmm, gammastar, ns_star, ca, vpd, beta ){
   #-----------------------------------------------------------------------
   # Input:    - float, 'kmm' : Pa, Michaelis-Menten coeff.
   #           - float, 'ns_star'  : (unitless) viscosity correction factor for water
@@ -324,82 +449,69 @@ lue_vpd_simpl <- function( kmm, gs, ns_star, ca, vpd, beta ){
   #-----------------------------------------------------------------------
 
   ## leaf-internal-to-ambient CO2 partial pressure (ci/ca) ratio
-  xi  <- sqrt( beta * kmm / (1.6 * ns_star))
-  chi <- xi / (xi + sqrt(vpd))
+  xi  <- sqrt( (beta * ( kmm + gammastar ) ) / ( 1.6 * ns_star ) )
+  chi <- gammastar / ca + ( 1.0 - gammastar / ca ) * xi / ( xi + sqrt(vpd) )
 
-  ## light use efficiency (m)
-  ## consistent with this, directly return light-use-efficiency (m)
-  m <- ( xi * (ca - gs) - gs * sqrt( vpd ) ) / ( xi * (ca + 2.0 * gs) + 2.0 * gs * sqrt( vpd ) )
-
-  ## n 
-  gamma <- gs / ca
-  kappa <- kmm / ca
-  n <- (chi + kappa) / (chi + 2 * gamma)
-
-  out <- list( chi=chi, m=m, n=n )
-  return(out)
-}
-
-
-lue_vpd_full <- function( kmm, gs, ns_star, ca, vpd, beta ){
-  #-----------------------------------------------------------------------
-  # Input:    - float, 'kmm' : Pa, Michaelis-Menten coeff.
-  #           - float, 'ns_star'  : (unitless) viscosity correction factor for water
-  #           - float, 'vpd' : Pa, vapor pressure deficit
-  # Output:   float, ratio of ci/ca (chi)
-  # Features: Returns an estimate of leaf internal to ambient CO2
-  #           partial pressure following the "simple formulation".
-  # Depends:  - kc
-  #           - ns
-  #           - vpd
-  #-----------------------------------------------------------------------
-
-  ## leaf-internal-to-ambient CO2 partial pressure (ci/ca) ratio
-  xi  <- sqrt( (beta * ( kmm + gs ) ) / ( 1.6 * ns_star ) )
-  chi <- gs / ca + ( 1.0 - gs / ca ) * xi / ( xi + sqrt(vpd) )
-
-  ## consistent with this, directly return light-use-efficiency (m)
+  ## consistent with this, directly return light-use-efficiency (mc)
   ## see Eq. 13 in 'Simplifying_LUE.pdf'
 
-  ## light use efficiency (m)
-  # m <- (ca - gs)/(ca + 2.0 * gs + 3.0 * gs * sqrt( (1.6 * vpd) / (beta * (K + gs) / ns_star ) ) )
+  ## light use efficiency (mc)
+  # mc <- (ca - gammastar)/(ca + 2.0 * gammastar + 3.0 * gammastar * sqrt( (1.6 * vpd) / (beta * (K + gammastar) / ns_star ) ) )
 
   # Define variable substitutes:
-  vdcg <- ca - gs
-  vacg <- ca + 2.0 * gs
-  vbkg <- beta * (kmm + gs)
+  vdcg <- ca - gammastar
+  vacg <- ca + 2.0 * gammastar
+  vbkg <- beta * (kmm + gammastar)
 
   # Check for negatives:
   if (vbkg > 0){
     vsr <- sqrt( 1.6 * ns_star * vpd / vbkg )
 
-    # Based on the m' formulation (see Regressing_LUE.pdf)
-    m <- vdcg / ( vacg + 3.0 * gs * vsr )
+    # Based on the mc' formulation (see Regressing_LUE.pdf)
+    mj <- vdcg / ( vacg + 3.0 * gammastar * vsr )
   }
 
-  ## n 
-  gamma <- gs / ca
+  ## alternative variables
+  gamma <- gammastar / ca
   kappa <- kmm / ca
-  n <- (chi + kappa) / (chi + 2 * gamma)
 
+  # ## mj
+  # mj_test <- (chi - gamma) / (chi + 2 * gamma)
+  # print(paste("mj should be equal: ", mj, mj_test))
 
-  out <- list( chi=chi, m=m, n=n )
+  ## mc
+  mc <- (chi - gamma) / (chi + kappa)
+
+  ## mj:mv
+  mjoc <- (chi + kappa) / (chi + 2 * gamma)
+
+  out <- list( chi=chi, mc=mc, mj=mj, mjoc=mjoc )
   return(out)
 }
 
 
-calc_mprime <- function( m ){
+calc_chi_c4 <- function(){
+  #//////////////////////////////////////////////////////////////////
+  # (Dummy-) ci:ca for C4 photosynthesis
+  #-----------------------------------------------------------------------  
+  out <- list( chi=9999, mc=1, mj=1, mjoc=1 )
+  return(out)
+}
+
+
+calc_mprime <- function( mc ){
   #-----------------------------------------------------------------------
-  # Input:  m   (unitless): factor determining LUE
+  # Input:  mc   (unitless): factor determining LUE
   # Output: mpi (unitless): modiefied m accounting for the co-limitation
   #                         hypothesis after Prentice et al. (2014)
   #-----------------------------------------------------------------------
   kc <- 0.41          # Jmax cost coefficient
 
-  mpi <- m^2 - kc^(2.0/3.0) * (m^(4.0/3.0))
+  mpi <- mc^2 - kc^(2.0/3.0) * (mc^(4.0/3.0))
 
   # Check for negatives:
   if (mpi > 0){ mpi <- sqrt(mpi) }
+
   return(mpi)    
 }
 
@@ -411,12 +523,12 @@ co2_to_ca <- function( co2, patm ){
   # Output:   - ca in units of Pa
   # Features: Converts ca (ambient CO2) from ppm to Pa.
   #-----------------------------------------------------------------------
-  ca   <- ( 1.e-6 ) * co2 * patm         # Pa, atms. CO2
+  ca   <- ( 1.0e-6 ) * co2 * patm         # Pa, atms. CO2
   return( ca )
 }
 
 
-calc_k <- function(tc, patm) {
+calc_kmm <- function( tc, patm ) {
   #-----------------------------------------------------------------------
   # Input:    - float, air temperature, deg C (temp)
   #           - float, atmospheric pressure, Pa (patm)
@@ -427,27 +539,30 @@ calc_k <- function(tc, patm) {
   #           functions for models of Rubisco-limited photosynthesis, 
   #           Plant, Cell and Environment, 24, 253--259.
   #-----------------------------------------------------------------------
+  dhac   <- 79430      # (J/mol) Activation energy, Bernacchi et al. (2001)
+  dhao   <- 36380      # (J/mol) Activation energy, Bernacchi et al. (2001)
+  kco    <- 2.09476e5  # (ppm) O2 partial pressure, Standard Atmosphere
 
-  kc25 <- 39.97      # Pa, assuming 25 deg C & 98.716 kPa
-  ko25 <- 2.748e4    # Pa, assuming 25 deg C & 98.716 kPa
-  dhac <- 79430      # J/mol
-  dhao <- 36380      # J/mol
-  kR   <- 8.3145     # J/mol/K
-  kco  <- 2.09476e5  # ppm, US Standard Atmosphere
+  ## k25 parameters are not dependent on atmospheric pressure
+  kc25 <- 39.97   # Pa, value based on Bernacchi et al. (2001), converted to Pa by T. Davis assuming elevation of 227.076 m.a.s.l.
+  ko25 <- 27480   # Pa, value based on Bernacchi et al. (2001), converted to Pa by T. Davis assuming elevation of 227.076 m.a.s.l.
 
-  kc <- kc25 * exp( dhac * (tc - 25.0)/(298.15 * kR * (tc + 273.15)) ) 
-  ko <- ko25 * exp( dhao * (tc - 25.0)/(298.15 * kR * (tc + 273.15)) ) 
+  tk <- tc + 273.15
 
-  po <- kco * (1e-6) * patm # O2 partial pressure
-  k  <- kc * (1.0 + po/ko)
+  kc <- kc25 * calc_ftemp_arrhenius( tk, dha=dhac )
+  ko <- ko25 * calc_ftemp_arrhenius( tk, dha=dhao )
 
-  return(k)
+  po  <- kco * (1e-6) * patm         # O2 partial pressure
+  kmm <- kc * (1.0 + po/ko)
+
+  return(kmm)
 }
 
-calc_gstar <- function( tc ) {
+
+calc_gammastar <- function( tc, patm ) {
   #-----------------------------------------------------------------------
   # Input:    float, air temperature, degrees C (tc)
-  # Output:   float, gamma-star, Pa (gs)
+  # Output:   float, gamma-star, Pa (gammastar)
   # Features: Returns the temperature-dependent photorespiratory 
   #           compensation point, Gamma star (Pascals), based on constants 
   #           derived from Bernacchi et al. (2001) study.
@@ -455,21 +570,44 @@ calc_gstar <- function( tc ) {
   #           functions for models of Rubisco-limited photosynthesis, 
   #           Plant, Cell and Environment, 24, 253--259.
   #-----------------------------------------------------------------------
+  dha    <- 37830       # (J/mol) Activation energy, Bernacchi et al. (2001)
+  gs25_0 <- 4.332       # Pa, value based on Bernacchi et al. (2001), converted to Pa by T. Davis assuming elevation of 227.076 m.a.s.l.
 
-  gs25 <- 4.220    # Pa, assuming 25 deg C & 98.716 kPa)
-  dha  <- 37830    # J/mol
-  kR   <- 8.3145   # J/mol/K
+  gammastar25 <- gs25_0 * patm / calc_patm(0.0)  
 
-  gs <- gs25 * exp( dha * ( tc - 25.0 ) / ( 298.15 * kR * ( tc + 273.15 ) ) )
+  tk <- tc + 273.15
+  gammastar <- gammastar25 * calc_ftemp_arrhenius( tk, dha=dha )
 
-  return( gs )
+  return( gammastar )
 }
 
 
-calc_ftemp_inst_vcmax <- function( tc ){
+calc_ftemp_arrhenius <- function( tk, dha, tkref = 298.15 ){
+  #-----------------------------------------------------------------------
+  # Output:   Factor fv to correct for instantaneous temperature response
+  #           of Vcmax for:
+  #
+  #               Vcmax(temp) = fv * Vcmax(25 deg C) 
+  #
+  #-----------------------------------------------------------------------
+
+  ## Note that the following two forms are equivalent:
+  ## ftemp = exp( dha * (tk - 298.15) / (298.15 * kR * tk) )
+  ## ftemp = exp( dha * (tc - 25.0)/(298.15 * kR * (tc + 273.15)) )
+
+  kR   <- 8.3145     # Universal gas constant, J/mol/K
+
+  ftemp <- exp( dha * (tk - tkref) / (tkref * kR * tk) )
+
+  return(ftemp)
+}
+
+
+calc_ftemp_inst_vcmax <- function( tcleaf, tcgrowth, tcref = 25.0 ){
   #-----------------------------------------------------------------------
   # arguments
-  # tc: temperature (degrees C)
+  # tcleaf: temperature (degrees C)
+  # tref: is 'to' in Nick's set it to 25 C (=298.15 K in other cals)
   #
   # function return variable
   # fv: temperature response factor, relative to 25 deg C.
@@ -482,21 +620,23 @@ calc_ftemp_inst_vcmax <- function( tc ){
   # Ref:      Wang Han et al. (in prep.)
   #-----------------------------------------------------------------------
   # loal parameters
-  Ha    = 71513  # activation energy (J/mol)
-  Hd    = 200000 # deactivation energy (J/mol)
-  Rgas  = 8.3145 # universal gas constant (J/mol/K)
-  a_ent = 668.39 # offset of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K)
-  b_ent = 1.07   # slope of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K^2)
-  tk25  = 298.15 # 25 deg C in Kelvin
+  Ha    <- 71513  # activation energy (J/mol)
+  Hd    <- 200000 # deactivation energy (J/mol)
+  Rgas  <- 8.3145 # universal gas constant (J/mol/K)
+  a_ent <- 668.39 # offset of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K)
+  b_ent <- 1.07   # slope of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K^2)
+  
+  tkref <- tcref + 273.15  # to Kelvin
 
-  # conversion of temperature to Kelvin
-  tk = tc + 273.15
+  # conversion of temperature to Kelvin, tcleaf is the instantaneous leaf temperature in degrees C. 
+  tkleaf <- tcleaf + 273.15
 
   # calculate entropy following Kattge & Knorr (2007), negative slope and y-axis intersect is when expressed as a function of temperature in degrees Celsius, not Kelvin !!!
-  dent = a_ent - b_ent * tc
+  dent <- a_ent - b_ent * tcgrowth   # 'tcgrowth' corresponds to 'tmean' in Nicks, 'tc25' is 'to' in Nick's
+  fva <- calc_ftemp_arrhenius( tkleaf, Ha, tkref = tkref )
+  fvb <- (1 + exp( (tkref * dent - Hd)/(Rgas * tkref) ) ) / (1 + exp( (tkleaf * dent - Hd)/(Rgas * tkleaf) ) )
+  fv  <- fva * fvb
 
-  fv = exp( (Ha * (tk - tk25))/(tk * tk25 * Rgas) ) * (1 + exp( (tk25 * dent - Hd)/(Rgas * tk25) ) )/(1 + exp( (tk * dent - Hd)/(Rgas * tk) ) )
- 
   return( fv ) 
 }
 
@@ -527,6 +667,7 @@ calc_ftemp_inst_rd <- function( tc ){
   return(fr) 
 }
 
+
 calc_patm <- function( elv ){
   #-----------------------------------------------------------------------
   # Input:    - elevation, m (elv)
@@ -543,17 +684,16 @@ calc_patm <- function( elv ){
   # Define constants:
   kPo <- 101325   # standard atmosphere, Pa (Allen, 1973)
   kTo <- 298.15   # base temperature, K (Prentice, unpublished)
-  kL <- 0.0065    # temperature lapse rate, K/m (Allen, 1973)
-  kG <- 9.80665   # gravitational acceleration, m/s^2 (Allen, 1973)
-  kR <- 8.3143    # universal gas constant, J/mol/K (Allen, 1973)
+  kL  <- 0.0065    # temperature lapse rate, K/m (Allen, 1973)
+  kG  <- 9.80665   # gravitational acceleration, m/s^2 (Allen, 1973)
+  kR  <- 8.3145    # universal gas constant, J/mol/K (Allen, 1973)
   kMa <- 0.028963 # molecular weight of dry air, kg/mol (Tsilingiris, 2008)
 
   # Convert elevation to pressure, Pa:
-  patm <- kPo*(1.0 - kL*elv/kTo)**(kG*kMa/(kR*kL))
+  patm <- kPo*(1.0 - kL*elv/kTo)^(kG*kMa/(kR*kL))
   
-  return (patm)
+  return(patm)
 }
-
 
 density_h2o <- function( tc, p ){
   #-----------------------------------------------------------------------
@@ -629,11 +769,11 @@ calc_viscosity_h2o <- function( tc, p ) {
   rho <- density_h2o(tc, p)
 
   # Calculate dimensionless parameters:
-  tbar <- (tc + 273.15)/tk_ast
+  tbar  <- (tc + 273.15)/tk_ast
   tbarx <- tbar^(0.5)
   tbar2 <- tbar^2
   tbar3 <- tbar^3
-  rbar <- rho/rho_ast
+  rbar  <- rho/rho_ast
 
   # Calculate mu0 (Eq. 11 & Table 2, Huber et al., 2009):
   mu0 <- 1.67752 + 2.20462/tbar + 0.6366564/tbar2 - 0.241605/tbar3
