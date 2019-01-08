@@ -91,11 +91,11 @@ if (!file.exists( paste0( settings_sims_simple$dir_sofun, "/rundemo_pmodel"))){
   system( paste0( "cp extdata/rundemo_pmodel ", settings_sims_simple$dir_sofun ) )
 }
 
-# ## Run for different temperatures and plot
-# ## Fortran
-# ptm <- proc.time()
-# gpp_temp_test_for <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), ~pmodel( temp = ., vpd = 100, co2 = 300, ppfd = 10, fapar = 0.7, elv = 300, implementation = "fortran", sofundir = settings_sims_simple$dir_sofun) ) %>% unlist()
-# time_for <- proc.time() - ptm
+## Run for different temperatures and plot
+## Fortran
+ptm <- proc.time()
+gpp_temp_test_for <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), ~pmodel( temp = ., vpd = 100, co2 = 300, ppfd = 10, fapar = 0.7, elv = 300, implementation = "fortran", sofundir = settings_sims_simple$dir_sofun) ) %>% unlist()
+time_for <- proc.time() - ptm
 
 ## R
 ptm <- proc.time()
@@ -105,8 +105,8 @@ gpp_temp_test_r <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ),
 time_R <- proc.time() - ptm
 
 plot(  seq( 0, 35, length.out = 100 ), gpp_temp_test_r, ylim = c(0,3), type = "l", xlab = "Temperature (deg C)", ylab = "GPP (gC/d/m2)" )
-# lines( seq( 0, 35, length.out = 100 ), gpp_temp_test_for, col = "red" )
-# legend( "topright", c("Fortran", "R"), lty = 1, col = c("black", "red"), bty = "n")
+lines( seq( 0, 35, length.out = 100 ), gpp_temp_test_for, col = "red" )
+legend( "topright", c("Fortran", "R"), lty = 1, col = c("black", "red"), bty = "n")
 ```
 
 
@@ -436,7 +436,8 @@ settings_calib <- calib_sofun(
 
 Run SOFUN with calibrated parameters.
 ```{r, message=FALSE, warning=FALSE}
-params_opt <- readr::read_csv( paste0( settings_calib$dir_results, "/params_opt_example.csv" ) ) # as an example
+# params_opt <- readr::read_csv( "params_opt_kphio_soilm_global.csv	" ) ) # as an example
+params_opt <- dplyr::tibble( kphio=0.0579 )
 nothing <- update_params( params_opt, settings_sims_sitescale$dir_sofun )
 mod <- runread_sofun(
   settings = settings_sims_sitescale,
