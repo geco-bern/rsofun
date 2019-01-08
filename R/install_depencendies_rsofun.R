@@ -15,12 +15,12 @@
 #'    \item \code{stringr}
 #'    \item \code{tidyr}
 #'    \item \code{LSD}
+#'    \item \code{GenSA}
 #' }
 #' If argument `suggested = TRUE`, suggested dependencies are loaded too. These include:
 #' \itemize{
 #'   \item \code{BayesianTools}
 #'   \item \code{caret}
-#'   \item \code{GenSA}
 #'   \item \code{gplots}
 #'   \item \code{hydroGOF}
 #'   \item \code{maps}
@@ -52,6 +52,7 @@ install_dependencies_rsofun <- function( suggested = FALSE ){
 											"rlang", 
 											"stringr", 
 											"tidyr", 
+											"GenSA", 
 											"LSD"
 											)
 	new_packages <- dependencies[!(dependencies %in% installed.packages()[,"Package"])]
@@ -60,7 +61,6 @@ install_dependencies_rsofun <- function( suggested = FALSE ){
 	if (suggested){
 		dependencies <- c("BayesianTools", 
 											"caret", 
-											"GenSA", 
 											"gplots", 
 											"hydroGOF", 
 											"maps", 

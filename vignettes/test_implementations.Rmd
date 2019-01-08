@@ -2,21 +2,24 @@
 title: "Compare P-model implementations"
 author: "Benjamin D. Stocker"
 date: "`r Sys.Date()`"
-output:
-  html_document:
-    toc: true
-    toc_float: true
-    toc_depth: 3
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{test_implementations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 # output:
-#   pdf_document:
+#   html_document:
 #     toc: true
-#     toc_depth: 2
-header-includes:
-   - \usepackage{amsmath}
-# bibliography: bibliography.bib
+#     toc_float: true
+#     toc_depth: 3
+# # output:
+# #   pdf_document:
+# #     toc: true
+# #     toc_depth: 2
+# header-includes:
+#    - \usepackage{amsmath}
+# # bibliography: bibliography.bib
 ---
-
-This Rmarkdown file is part of the rsofun package (`vignettes/versions_pmodel.Rmd`).
 
 ## Environment
 
@@ -68,10 +71,10 @@ pmodel_smith <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ),
 ## update quantum yield parameter in file
 params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/extdata/params_opt_kphio_soilm_global.csv" ) )
 params_opt$kphio <- 0.05 
-update_params( params_opt, "/alphadata01/bstocker/sofun/trunk/" )
+update_params( params_opt, "~/sofun/trunk/" )
 
 pmodel_fortran <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
-  ~pmodel( temp = ., vpd = vpd, co2 = co2, ppfd = ppfd, fapar = fapar, elv = elv, implementation = "fortran", sofundir = "/alphadata01/bstocker/sofun/trunk/" ) )
+  ~pmodel( temp = ., vpd = vpd, co2 = co2, ppfd = ppfd, fapar = fapar, elv = elv, implementation = "fortran", sofundir = "~/sofun/trunk/" ) )
 ```
 
 ## Evaluation by temperature

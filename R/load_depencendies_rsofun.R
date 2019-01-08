@@ -15,12 +15,12 @@
 #'    \item \code{stringr}
 #'    \item \code{tidyr}
 #'    \item \code{LSD}
+#'    \item \code{GenSA}
 #' }
 #' If argument `suggested = TRUE`, suggested dependencies are loaded too. These include:
 #' \itemize{
 #'   \item \code{BayesianTools}
 #'   \item \code{caret}
-#'   \item \code{GenSA}
 #'   \item \code{gplots}
 #'   \item \code{hydroGOF}
 #'   \item \code{maps}
@@ -53,11 +53,11 @@ load_dependencies_rsofun <- function( suggested = FALSE ){
 	require(stringr)
 	require(tidyr)
 	require(LSD)
+	require(GenSA)
 
 	if (suggested){
 		require(BayesianTools)
 		require(caret)
-		require(GenSA)
 		require(gplots)
 		require(hydroGOF)
 		require(maps)

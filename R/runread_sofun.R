@@ -40,27 +40,6 @@ run_sofun <- function( settings, setup ){
   ## How to run the model from the command line (shell) is different for each implementation (Python and Fortran)
   if (settings$implementation=="fortran"){
 
-    ## Compile source code
-    if (setup$do_compile){
-
-      cmd <- paste0("make ", setup$model)
-      system( cmd )
-
-    } else if (!file.exists(paste0("run", setup$model))){
-
-      print("Copying executable, compiled on a Mac with gfortran into SOFUN run directory...")
-      system( paste0( "cp ", path.package("rsofun"), "/extdata/run", setup$model, " ." ) )
-
-      # ## Download executable from CX1
-      # rlang::warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
-      # download_from_remote(   path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model ),
-      #                         path_local = settings$dir_sofun 
-      #                         )
-
-      if (!file.exists(paste0("run", setup$model))) abort( paste( "Executable is not available: ", paste0("run", setup$model)) )
-
-    }
-
     if (settings$ensemble){
       ## Run all simulations in this ensemble as individual simulations. Runnames are given by the sitenames in the ensemble
       out_std <- purrr::map( as.list(settings$sitenames), ~run_sofun_bysite( ., setup ) )      

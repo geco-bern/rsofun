@@ -4,6 +4,7 @@
 #' creating simulation and site parameter files, and complementing the settings (passed as argument).
 #'
 #' @param settings A named list containing the simulation settings (see vignette_rsofun.pdf for more information and examples)
+#' @param setup A named list containing the model setup specification.
 #' @param write_paramfils if \code{TRUE}, simulation and site parameter files are written.
 #'
 #' @return The complemented list of the settings, passed as argument \code{settings}.
@@ -11,7 +12,7 @@
 #'
 #' @examples settings <- prepare_setup_sofun( settings, write_paramfils = TRUE )
 #' 
-prepare_setup_sofun <- function( settings, write_paramfils = TRUE ){
+prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
 
   ## Make sure the SOFUN model directory exists
   if (!dir.exists(settings$dir_sofun)){

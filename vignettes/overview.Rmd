@@ -1,19 +1,21 @@
 ---
-title: "Vignette for package rsofun"
+title: "Overview for package rsofun"
 author: "Benjamin D. Stocker"
 date: "`r Sys.Date()`"
-output:
-  html_document:
-    toc: true
-    toc_float: true
-    toc_depth: 2
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{overview}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+# output:
+#   html_document:
+#     toc: true
+#     toc_float: true
+#     toc_depth: 2
 # output:
 #   pdf_document:
 #     toc: true
 #     toc_depth: 2
-header-includes:
-   - \usepackage{amsmath}
-# bibliography: bibliography.bib
 ---
 
 # Environment
@@ -68,7 +70,7 @@ setup_sofun_simple <- list(
 This the simple setup, this just checks whether the model code is in place.
 
 ```{r, message=FALSE, warning=FALSE}
-settings_sims_simple <- prepare_setup_sofun( settings = settings_sims_simple )
+settings_sims_simple <- prepare_setup_sofun( settings = settings_sims_simple, setup = setup_sofun_simple )
 ```
 
 ### Run the model
@@ -374,6 +376,7 @@ Create a run directory with all the simulation parameter files (defining simulat
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 settings_sims_sitescale <- prepare_setup_sofun(
   settings = settings_sims_sitescale,
+  setup = setup_sofun_sitescale,
   write_paramfils = TRUE
   )
 ```

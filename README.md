@@ -22,16 +22,24 @@ if(!require(devtools)){install.packages(devtools)}
 devtools::install_github( "stineb/rsofun", dependencies = NA )
 library(rsofun)
 ```
+Build the vignette for a more comprehensive documentation:
+```r
+devtools::build_vignettes()
+```
+Display the rsofun overview vignette:
+```r
+vignette("overview", "rsofun")
+```
 
 ### Dependencies
 
 The `rsofun` package requires a large number of other R-packages (dependencies). Required dependencies are essential for `rsofun` functions and are:
 
-- `dplyr`,`ggplot2`,`lubridate`,`Metrics`,`mgcv`,`ncdf4`,`optimr`,`purrr`,`readr`,`rlang`,`stringr`,`tidyr`, and `LSD`
+- `dplyr`,`ggplot2`,`lubridate`,`Metrics`,`mgcv`,`ncdf4`,`optimr`,`purrr`,`readr`,`rlang`,`stringr`,`tidyr`, `LSD`, and `GenSA`, 
 
 Suggested dependencies are required only for certain optional tasks and are:
 
-- `BayesianTools`, `caret`, `GenSA`, `gplots`, `hydroGOF`, `maps`, `maptools`, `neuralnet`, `nnet`, `raster`, `sp`, and `testthat`
+- `BayesianTools`, `caret`, `gplots`, `hydroGOF`, `maps`, `maptools`, `neuralnet`, `nnet`, `raster`, `sp`, and `testthat`
 
 To install locally unavailable packages, run
 ```r
@@ -195,12 +203,23 @@ This returns a named list, similar as described above for the `rpmodel()` functi
 
 ### Site-scale simulations
 
+See overview vignette:
+```r
+vignette("overview", "rsofun")
+```
 
 ### Spatial simulations
 
+See overview vignette:
+```r
+vignette("overview", "rsofun")
+```
 
 ## Tests
-
+Display the rsofun test vignette:
+```r
+vignette("test_implementations", "rsofun")
+```
 
 ## Examples
 
