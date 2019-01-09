@@ -52,7 +52,7 @@ prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
       cmd <- paste0("make ", setup$model)
       system( cmd )
 
-    } else if (!file.exists( paste0( settings$dir_sofun, "/run", setup$model))){
+    } else {
 
       print("Copying executable provided by rsofun and compiled on a 64-bit UNIX machine with gfortran into the SOFUN run directory...")
       system( paste0( "cp ", path.package("rsofun"), "/extdata/run", setup$model, " ", settings$dir_sofun ) )
