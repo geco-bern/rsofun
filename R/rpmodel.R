@@ -373,13 +373,16 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, c4=FALSE, 
 
   ## construct list for output
   out <- list( 
+              ca              = ca,
               gammastar       = gammastar,
               kmm             = kmm,
+              ns_star         = ns_star,
               ci              = ci,
               chi             = out_optchi$chi,
               iwue            = iwue,
               lue             = lue,
-              gpp             = gpp,        
+              gpp             = gpp,
+              gs              = (gpp / c_molmass) / (ca - ci),    
 
               ## additional for testing:----------------
               ftemp_inst_vcmax = ftemp_inst_vcmax,
@@ -487,6 +490,54 @@ calc_optimal_chi <- function( kmm, gammastar, ns_star, ca, vpd, beta ){
 
   out <- list( chi=chi, mc=mc, mj=mj, mjoc=mjoc )
   return(out)
+}
+
+
+calc_optimal_chi_numerical <- function( kmm, gammastar, ns_star, ca, vpd, beta ){
+  #-----------------------------------------------------------------------
+  # Input:    - float, 'kmm' : Pa, Michaelis-Menten coeff.
+  #           - float, 'ns_star'  : (unitless) viscosity correction factor for water
+  #           - float, 'vpd' : Pa, vapor pressure deficit
+  # Output:   float, ratio of ci/ca (chi)
+  # Features: Returns an estimate of leaf internal to ambient CO2
+  #           partial pressure following the "simple formulation".
+  # Depends:  - kc
+  #           - ns
+  #           - vpd
+  #-----------------------------------------------------------------------
+
+  calc_net_assim <- function( par ){
+
+    vcmax <- par[1]
+    gs    <- par[2]
+
+    ## Get assimilation and ci, given Vcmax and gs
+    ## by solving the equation system
+    ## assim = vcmax * (ci - gammastar)/(ci + kmm)
+    ## assim = gs * (ca - ci)
+    a_quad <- -gs
+    b_quad <- gs * ca - gs * kmm - vcmax
+    c_quad <- gs * ca * kmm + vcmax * gammastar
+    det <- sqrt( b_quad^2 - 4 * a_quad * c_quad )
+    
+    ci <- -b_quad + det / (2 * a_quad)    # bigger root
+    assim <- vcmax * (ci - gammastar) / (ci + kmm)
+
+    cost_transp <- any * 1.6 * gs * vpd
+    cost_vcmax  <- any * (beta / ns_star) * vcmax
+
+    net_assim <- assim - cost_transp - cost_vcmax
+
+    return(net_assim)
+  }
+
+  out_optim <- optimr(
+    par     = c( vcmax, gs ),
+    fn      = calc_net_assim,
+    control = list( maxit = 100, maximize = TRUE )
+    )
+
+
 }
 
 

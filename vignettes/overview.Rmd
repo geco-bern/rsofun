@@ -35,7 +35,7 @@ if (!file.exists("bash"))    system("ln -s inst/bash bash")
 if (!file.exists("extdata")) system("ln -s inst/extdata extdata")
 
 # if (is.null(options()$rsofun.dir.sofun)) rlang::abort( "Option rsofun.dir.sofun not set. Do so by `options( list( rsofun.dir.sofun=string_path_where_sofun_is ))`" )  
-options( list( rsofun.dir.sofun="string_path_where_sofun_is" ) )
+options( list( rsofun.dir.sofun="~/sofun/trunk/" ) )
 ```
 
 ## Simplest setup

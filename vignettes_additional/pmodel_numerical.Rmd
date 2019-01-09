@@ -1,0 +1,132 @@
+---
+title: "Numerical solution of the P model"
+author: "Benjamin D. Stocker"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+# output:
+#   pdf_document:
+#     toc: true
+#     toc_depth: 2
+---
+
+```{r}
+library(rsofun)
+```
+
+Get the analytical solution for one specific set of arguments.
+```{r}
+## Run for different temperatures and plot
+tc <- 20
+ppfd <- 800
+vpd  <- 1000
+co2  <- 400
+elv  <- 0
+fapar <- 1
+
+out_analytical <- rpmodel( tc = tc, vpd = vpd, co2 = co2, elv = elv, kphio = 0.05, fapar = fapar, ppfd = ppfd, method_optci="prentice14", method_jmaxlim = "none", do_ftemp_kphio = FALSE )
+```
+
+Is it internally consistent?
+$$
+c_i = c_a - A / g_s
+$$
+
+```{r}
+print( out_analytical$ci )
+print( out_analytical$ca - (out_analytical$gpp / 12.0107) / out_analytical$gs )
+```
+Yes. 
+
+And what about ...
+$$
+A = V_{\text{cmax}} \frac{c_i-\Gamma^{\ast}}{c_i + K}
+$$
+
+```{r}
+print( out_analytical$gpp / 12.0107 )
+print( out_analytical$vcmax * (out_analytical$ci - out_analytical$gammastar) / (out_analytical$ci + out_analytical$kmm ))
+print( out_analytical$gs * (out_analytical$ca - out_analytical$ci) )
+```
+Yes.
+
+Maximise the following term numerically:
+$$
+A - aE -bV_{\text{cmax}} = max.
+$$
+ 
+Define the function which is to be maximised.
+```{r}
+calc_net_assim <- function( par, args ){
+  
+  vcmax <- par[1]
+  gs    <- par[2]
+  
+  kmm       <- args[1]
+  gammastar <- args[2]
+  ns_star   <- args[3]
+  ca        <- args[4]
+  vpd       <- args[5]
+  beta      <- args[6]
+  
+  ## Get assimilation and ci, given Vcmax and gs
+  ## by solving the equation system
+  ## assim = vcmax * (ci - gammastar)/(ci + kmm)
+  ## assim = gs * (ca - ci)
+  a_quad <- -gs
+  b_quad <- gs * ca - gs * kmm - vcmax
+  c_quad <- gs * ca * kmm + vcmax * gammastar
+
+  root_ci <- polyroot( c(c_quad, b_quad, a_quad) )
+  ci <- Re(root_ci)[which(Re(root_ci)>0)]   # take positive root
+
+  # det <- sqrt( b_quad^2 - 4 * a_quad * c_quad )
+  # ci <- -b_quad - det / (2 * a_quad)    # smaller root
+
+  assim <- vcmax * (ci - gammastar) / (ci + kmm)
+  
+  ## only cost ratio is defined. for this here we need absolute values. Set randomly
+  any <- 0.001
+  
+  cost_transp <- any * 1.6 * gs * vpd
+  cost_vcmax  <- any * (beta / ns_star) * vcmax
+  
+  net_assim <- assim - cost_transp - cost_vcmax
+  
+  return( net_assim )
+}
+```
+
+Use the analytically optimal vcmax and ci as starting values and calculate net assimilation with these
+```{r}
+## starting values for par = [vcmax, gs]. Use the ones returned by rpmodel()
+par <- c( out_analytical$vcmax, out_analytical$gs )
+args <- c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 )
+
+out_numerical <- calc_net_assim( par, args )
+print(out_numerical)
+```
+
+Now, change $V_{\text{cmax}}$ just a little bit to see whether the net assimilation declines.
+```{r}
+par <- c( out_analytical$vcmax * 1.01, out_analytical$gs )
+out_numerical <- calc_net_assim( par, args )
+print(out_numerical)
+```
+Hmmm. It shouldn't increase...
+
+Optimise $V_{\text{cmax}}$ and $g_s$ simultaneously so that net assimilation is maximised. This should return the same values for Vcmax and gs as the starting values (which were taken from the analytical solution).
+```{r}
+out_optim <- optimr::optimr(
+  par     = c( out_analytical$vcmax, out_analytical$gs ),
+  fn      = calc_net_assim,
+  args    = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ),
+  control = list( maxit = 1000, maximize = TRUE )
+  )
+print(out_optim$par)
+print(out_optim$value)
+```
+This is complete bullocks.
