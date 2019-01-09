@@ -33,6 +33,9 @@ knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does no
 ## for developer setup
 if (!file.exists("bash"))    system("ln -s inst/bash bash")
 if (!file.exists("extdata")) system("ln -s inst/extdata extdata")
+
+# if (is.null(options()$rsofun.dir.sofun)) rlang::abort( "Option rsofun.dir.sofun not set. Do so by `options( list( rsofun.dir.sofun=string_path_where_sofun_is ))`" )  
+options( list( rsofun.dir.sofun="string_path_where_sofun_is" ) )
 ```
 
 ## Simplest setup
@@ -43,8 +46,6 @@ This is the simplest setup, where the SOFUN is executed as a function for a sing
 
 ```{r}
 ## Set the option specifying the location of SOFUN manually it it's not set
-if (is.null(options()$rsofun.dir.sofun)) rlang::abort( "Option rsofun.dir.sofun not set. Do so by `options( list( rsofun.dir.sofun=string_path_where_sofun_is ))`" )
-
 settings_sims_simple <- list( 
   setup = "simple", 
   implementation  = "fortran", 
