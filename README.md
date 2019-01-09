@@ -23,12 +23,12 @@ devtools::install_github( "stineb/rsofun", dependencies = NA, build_vignettes = 
 library(rsofun)
 ```
 
-The vignettes need to be built in a separate step, after manually modifying the path of where SOFUN is located locally. Modify the path below and build the vignette. This provides a more comprehensive documentation:
+The vignettes need to be built in a separate step after manually specifying the path of where SOFUN is located locally. This is done by defining the option `rsofun.dor.sofun`. Change the path below to where you have SOFUN installed and build the vignette in R by:
 ```r
 options( list( rsofun.dir.sofun="/alphadata01/bstocker/sofun/trunk/" ) )
 devtools::build_vignettes()
 ```
-Display the rsofun overview vignette:
+Display the rsofun overview vignette for a comprehensive documentation of the package:
 ```r
 vignette("overview", "rsofun")
 ```
@@ -128,7 +128,7 @@ The P-model is also implemented in Fortran in the [SOFUN](https://github.com/sti
 settings_sims_simple <- list( 
   setup = "simple", 
   implementation  = "fortran", 
-  dir_sofun = "~/sofun/trunk/" 
+  dir_sofun = options()$rsofun.dir.sofun 
   )
 ```
 
@@ -136,7 +136,7 @@ settings_sims_simple <- list(
 ```r
 setup_sofun_simple <- list(
   model      = "demo_pmodel",
-  dir        = "~/sofun/trunk",
+  dir        = options()$rsofun.dir.sofun,
   do_compile = FALSE,
   simsuite   = FALSE
   )
@@ -172,7 +172,7 @@ If you plan to develop new code, fork SOFUN in github. This creates a copy of th
 
 2. Get the executables. Executables, compiled on a 64 bit UNIX machine are provided along with the `rsofun` package. These can just be copied into your local SOFUN directory. In R, do:
 ```r
-system( paste0( "cp ", path.package("rsofun"), "/extdata/rundemo_pmodel dir_sofun" ) )
+system( paste0( "cp ", path.package("rsofun"), "/extdata/rundemo_pmodel ", options()$rsofun.dir.sofun ) )
 ```
 Note that `dir_sofun` is the local path where SOFUN was cloned into.
 
@@ -185,7 +185,7 @@ make demo_pmodel
 3. Create parameter (text) file. In the example below, we're using an example parameter file that is provided along with the `rsofun` package. Creating the parameter file is done again in R by:
 ```r
 params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/extdata/params_opt_kphio_soilm_global.csv" ) )
-nothing <- rsofun::update_params( params_opt, dir_sofun )
+nothing <- rsofun::update_params( params_opt, options()$rsofun.dir.sofun )
 ```
 
 4. To run a quick test to see whether the Fortran-only part is running, the following command (entered in your shell) should return a sequence of numeric values:
@@ -197,7 +197,7 @@ echo 20 100 300 800 1.0 200 | ./rundemo_pmodel  # the values are: temp, vpd, co2
 
 5. Now, we can wrap SOFUN in R as:
 ```r
-out_pmodel <- pmodel( temp = 20, vpd = 100, co2 = 300, ppfd = 800, fapar = 1.0, elv = 200, implementation = "fortran", sofundir = dir_sofun )
+out_pmodel <- pmodel( temp = 20, vpd = 100, co2 = 300, ppfd = 800, fapar = 1.0, elv = 200, implementation = "fortran", sofundir = options()$rsofun.dir.sofun )
 
 ```
 This returns a named list, similar as described above for the `rpmodel()` function.
