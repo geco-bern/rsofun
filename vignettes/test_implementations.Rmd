@@ -33,7 +33,7 @@ load_dependencies_rsofun()
 ## other crap
 systr <- "''"    # for Mac
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does not work properly
-if (options()$rsofun.dir.sofun=="") options( list( rsofun.dir.sofun="/alphadata01/bstocker/sofun/trunk/" ) )
+if (options()$rsofun.dir.sofun==NULL) rlang::abort( "Option rsofun.dir.sofun not set. Do so by `options( list( rsofun.dir.sofun=string_path_where_sofun_is ))`" )
 ```
 
 ## Run implementations for a temperature range

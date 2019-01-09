@@ -43,7 +43,7 @@ This is the simplest setup, where the SOFUN is executed as a function for a sing
 
 ```{r}
 ## Set the option specifying the location of SOFUN manually it it's not set
-if (options()$rsofun.dir.sofun=="") options( list( rsofun.dir.sofun="/alphadata01/bstocker/sofun/trunk/" ) )
+if (options()$rsofun.dir.sofun==NULL) rlang::abort( "Option rsofun.dir.sofun not set. Do so by `options( list( rsofun.dir.sofun=string_path_where_sofun_is ))`" )
 
 settings_sims_simple <- list( 
   setup = "simple", 

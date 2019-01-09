@@ -25,7 +25,7 @@ library(rsofun)
 
 The vignettes need to be built in a separate step after manually specifying the path of where SOFUN is located locally. This is done by defining the option `rsofun.dor.sofun`. Change the path below to where you have SOFUN installed and build the vignette in R by:
 ```r
-options( list( rsofun.dir.sofun="/alphadata01/bstocker/sofun/trunk/" ) )
+options( list( rsofun.dir.sofun="string_path_where_sofun_is" ) )
 devtools::build_vignettes()
 ```
 Display the rsofun overview vignette for a comprehensive documentation of the package:
