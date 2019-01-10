@@ -21,8 +21,8 @@ Get the analytical solution for one specific set of arguments.
 ```{r}
 ## Run for different temperatures and plot
 tc <- 20
-ppfd <- 800
-vpd  <- 1000
+ppfd <- 500
+vpd  <- 500
 co2  <- 400
 elv  <- 0
 fapar <- 1
@@ -55,12 +55,21 @@ Yes.
 
 Maximise the following term numerically:
 $$
-A - aE -bV_{\text{cmax}} = max.
+A_n = A - aE -bV_{\text{cmax}} = max.
 $$
+ 
+The analytically calculated $A_n$ from the P-model (`rpmodel()` call above) is:
+```{r}
+a_unitcost <- 0.001
+b_unitcost <- 146 * a_unitcost
+cost_transp <- a_unitcost * 1.6 * out_analytical$ns_star * out_analytical$gs * vpd
+cost_vcmax <- b_unitcost * out_analytical$vcmax
+print( out_analytical$gpp / 12.0107 - cost_transp - cost_vcmax )
+```
  
 Define the function which is to be maximised.
 ```{r}
-calc_net_assim <- function( par, args ){
+calc_net_assim <- function( par, args, a_unitcost ){
   
   vcmax <- par[1]
   gs    <- par[2]
@@ -89,10 +98,8 @@ calc_net_assim <- function( par, args ){
   assim <- vcmax * (ci - gammastar) / (ci + kmm)
   
   ## only cost ratio is defined. for this here we need absolute values. Set randomly
-  any <- 0.001
-  
-  cost_transp <- any * 1.6 * gs * vpd
-  cost_vcmax  <- any * (beta / ns_star) * vcmax
+  cost_transp <- a_unitcost * 1.6 * gs * vpd
+  cost_vcmax  <- a_unitcost * (beta / ns_star) * vcmax
   
   net_assim <- assim - cost_transp - cost_vcmax
   
@@ -106,17 +113,53 @@ Use the analytically optimal vcmax and ci as starting values and calculate net a
 par <- c( out_analytical$vcmax, out_analytical$gs )
 args <- c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 )
 
-out_numerical <- calc_net_assim( par, args )
+out_numerical <- calc_net_assim( par, args, a_unitcost=0.00045 )
 print(out_numerical)
 ```
+Ok, this is correctly calculated.
 
 Now, change $V_{\text{cmax}}$ just a little bit to see whether the net assimilation declines.
 ```{r}
 par <- c( out_analytical$vcmax * 1.01, out_analytical$gs )
-out_numerical <- calc_net_assim( par, args )
+out_numerical <- calc_net_assim( par, args, a_unitcost=0.00045 )
 print(out_numerical)
 ```
 Hmmm. It shouldn't increase...
+
+Plot this for fixed $g_s$.
+```{r}
+library(dplyr)
+## a_unitcost is searched by hand
+sapply( seq(out_analytical$vcmax * 0.10, out_analytical$vcmax * 10, length.out = 100), FUN = function(x) calc_net_assim( c(x, out_analytical$gs), args, a_unitcost = 0.00045 ) ) %>% plot(type="l", xlab="Vcmax", ylab="net A")
+abline(v=out_analytical$vcmax, lty=3)
+```
+
+```{r}
+library(dplyr)
+## a_unitcost is searched by hand
+sapply( seq(out_analytical$gs * 0.10, out_analytical$gs * 10, length.out = 100), FUN = function(x) calc_net_assim( c(out_analytical$vcmax, x), args, a_unitcost = 0.00045 ) ) %>% plot(type="l", xlab="gs", ylab="net A")
+abline(v=out_analytical$vcmax, lty=3)
+```
+
+Plot a surface of $A_n$ as a function of $V_{\text{cmax}}$ and $g_s$.
+```{r}
+len_vcmax <- 50
+len_gs <- 50
+vcmax_vec <- seq(out_analytical$vcmax * 0.01, out_analytical$vcmax * 500, length.out = len_vcmax)
+gs_vec <- seq(out_analytical$gs * 0.10, out_analytical$gs * 500, length.out = len_gs)
+# anet_arr <- outer( vcmax_vec, gs_vec, calc_net_assim_altargs, args = args, a_unitcost = 0.00045 )
+
+grid <- expand.grid(vcmax_vec, gs_vec)
+names(grid) <- c("vcmax", "gs") 
+A_net <- grid %>% 
+  rowwise() %>% 
+  do( net_assim = calc_net_assim( c(.$vcmax, .$gs), args=args, a_unitcost=0.0005 ) ) %>% 
+  tidyr::unnest(net_assim) %>%
+  as.matrix() %>% 
+  array( dim=c(len_vcmax,len_gs) )
+
+persp( vcmax_vec, gs_vec, A_net )
+```
 
 Optimise $V_{\text{cmax}}$ and $g_s$ simultaneously so that net assimilation is maximised. This should return the same values for Vcmax and gs as the starting values (which were taken from the analytical solution).
 ```{r}

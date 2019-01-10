@@ -12,6 +12,7 @@
 #' @param c4 (Optional) A logical value specifying whether the C3 or C4 photosynthetic pathway is followed. Defaults to \code{method_optci="c4=FALSE"}. 
 #' If \code{method_optci="c4=TRUE"}, ci is assumed to be very large and \code{lue = kphio * fapar * ppfd}.
 #' @param method_optci (Optional) A character string specifying which method is to be used for calculating optimal ci:ca. Defaults to \code{"prentice14"}. 
+#' Available also \code{"prentice14_num"} for a numerical solution to the same optimization criterium as used for \code{"prentice14"}.
 #' @param method_jmaxlim (Optional) A character string specifying which method is to be used for factoring in Jmax limitation. Defaults to \code{"wang17"}, 
 #' based on Wang Han et al. 2017 Nature Plants and (Smith 1937). Available is also \code{"smith19"}, following the method by Smith et al., 2019 Ecology Letters, 
 #' and \code{"none"} for ignoring effects of Jmax limitation.
@@ -140,7 +141,13 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, c4=FALSE, 
 
     ## Full formualation (Gamma-star not zero), analytical solution
     ##-----------------------------------------------------------------------
-    out_optchi <- calc_optimal_chi( kmm, gammastar, ns_star, ca, vpd, beta  )
+    out_optchi     <- calc_optimal_chi(     kmm, gammastar, ns_star, ca, vpd, beta )
+
+  } else if (method_optci=="prentice14_num"){
+
+    ## Full formualation (Gamma-star not zero), numerical solution
+    ##-----------------------------------------------------------------------
+    out_optchi_num <- calc_optimal_chi_num( kmm, gammastar, ns_star, ca, vpd, beta ) # numerical solution
 
   } else {
 
@@ -493,7 +500,7 @@ calc_optimal_chi <- function( kmm, gammastar, ns_star, ca, vpd, beta ){
 }
 
 
-calc_optimal_chi_numerical <- function( kmm, gammastar, ns_star, ca, vpd, beta ){
+calc_optimal_chi_num <- function( kmm, gammastar, ns_star, ca, vpd, beta ){
   #-----------------------------------------------------------------------
   # Input:    - float, 'kmm' : Pa, Michaelis-Menten coeff.
   #           - float, 'ns_star'  : (unitless) viscosity correction factor for water
@@ -505,39 +512,39 @@ calc_optimal_chi_numerical <- function( kmm, gammastar, ns_star, ca, vpd, beta )
   #           - ns
   #           - vpd
   #-----------------------------------------------------------------------
-
-  calc_net_assim <- function( par ){
-
-    vcmax <- par[1]
-    gs    <- par[2]
-
-    ## Get assimilation and ci, given Vcmax and gs
-    ## by solving the equation system
-    ## assim = vcmax * (ci - gammastar)/(ci + kmm)
-    ## assim = gs * (ca - ci)
-    a_quad <- -gs
-    b_quad <- gs * ca - gs * kmm - vcmax
-    c_quad <- gs * ca * kmm + vcmax * gammastar
-    det <- sqrt( b_quad^2 - 4 * a_quad * c_quad )
-    
-    ci <- -b_quad + det / (2 * a_quad)    # bigger root
-    assim <- vcmax * (ci - gammastar) / (ci + kmm)
-
-    cost_transp <- any * 1.6 * gs * vpd
-    cost_vcmax  <- any * (beta / ns_star) * vcmax
-
-    net_assim <- assim - cost_transp - cost_vcmax
-
-    return(net_assim)
+  maximise_this <- function( chi, kmm, gammastar, ns_star, ca, vpd, beta ){
+    out <- 1.6 * ns_star * vpd / (ca * (1.0 - chi)) + beta * (chi * ca + kmm)/(chi * ca - gammastar)
+    return(out)
   }
 
-  out_optim <- optimr(
-    par     = c( vcmax, gs ),
-    fn      = calc_net_assim,
-    control = list( maxit = 100, maximize = TRUE )
+  out_optim <- optimr::optimr(
+    par       = 0.7,
+    lower     = 0.01,
+    upper     = 0.99,
+    fn        = maximise_this,
+    kmm       = kmm,
+    gammastar = gammastar,
+    ns_star   = ns_star,
+    ca        = ca,
+    vpd       = vpd,
+    beta      = beta,
+    method    = "L-BFGS-B",
+    control   = list( maxit = 100, maximize = TRUE )
     )
 
+  chi <- out_optim$par
 
+  ## mj
+  mj <- (ca * chi - gammastar) / (ca * chi + 2 * gammastar)
+
+  ## mc
+  mc <- (ca * chi - gammastar) / (ca * chi + kmm)
+
+  ## mj:mv
+  mjoc <- (ca * chi + kmm) / (ca * chi + 2 * gammastar)
+
+  out <- list( chi=chi, mc=mc, mj=mj, mjoc=mjoc )
+  return(out)
 }
 
 
