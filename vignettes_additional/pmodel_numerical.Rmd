@@ -13,15 +13,20 @@ output:
 #     toc_depth: 2
 ---
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(rsofun)
+library(dplyr)
+lseq <- function(from=1, to=100000, length.out=6) {
+  # logarithmic spaced sequence
+  exp(seq(log(from), log(to), length.out = length.out))
+}
 ```
 
 Get the analytical solution for one specific set of arguments.
 ```{r}
 ## Run for different temperatures and plot
 tc <- 20
-ppfd <- 500
+ppfd <- 500 / 0.05
 vpd  <- 500
 co2  <- 400
 elv  <- 0
@@ -53,27 +58,99 @@ print( out_analytical$gs * (out_analytical$ca - out_analytical$ci) )
 ```
 Yes.
 
-Maximise the following term numerically:
+Maximise the following term numerically, subject to $V_{\mathrm{cmax}}$ and $g_s$:
 $$
-A_n = A - aE -bV_{\text{cmax}} = max.
+A_n = A - aE -bV_{\text{cmax}} = max. \;\;\;\;\;\;\;\;\;\;\;\;(1)
 $$
- 
+
+
+Note, that this is (almost) equivalent to the optimality criterium in Prentice et al., 2014:
+$$
+a \; \frac{\partial (E/A)}{\partial \chi} = -b \; \frac{\partial (V_{\mathrm{cmax}}/A)}{\partial \chi}  \;\;\;\;\;\;\;\;\;\;\;\;(2)
+$$
+The twist is, that in above equation, $V_{\mathrm{cmax}}$ cancels and we get "just" an optimal $\chi$.
+
+Instead of analytically taking the derivatives in Eq. 2 and solving for $\chi$, we can apply a numerical optimisation algorithm to maximise the following expression (which is strictly equivalent to Eq. 2):
+$$
+E/A + \beta V_{\mathrm{cmax}}/A = max.
+$$
+with $\beta=b/a$. This can be written out as
+$$
+\frac{1.6\;D}{c_a(1-\chi)} - \beta \frac{\chi c_a + K}{\chi c_a - \Gamma^{\ast}} = max.
+$$
+To find the maximum, let's define the numerical optimization function:
+```{r}
+calc_optimal_chi_num <- function( kmm, gammastar, ns_star, ca, vpd, beta ){
+  #-----------------------------------------------------------------------
+  # Input:    - float, 'kmm' : Pa, Michaelis-Menten coeff.
+  #           - float, 'ns_star'  : (unitless) viscosity correction factor for water
+  #           - float, 'vpd' : Pa, vapor pressure deficit
+  # Output:   float, ratio of ci/ca (chi)
+  # Features: Returns an estimate of leaf internal to ambient CO2
+  #           partial pressure following the "simple formulation".
+  # Depends:  - kc
+  #           - ns
+  #           - vpd
+  #-----------------------------------------------------------------------
+  maximise_this <- function( chi, kmm, gammastar, ns_star, ca, vpd, beta ){
+    out <- 1.6 * ns_star * vpd / (ca * (1.0 - chi)) + beta * (chi * ca + kmm)/(chi * ca - gammastar)
+    return(out)
+  }
+
+  out_optim <- optimr::optimr(
+    par       = 0.7,
+    lower     = 0.01,
+    upper     = 0.99,
+    fn        = maximise_this,
+    kmm       = kmm,
+    gammastar = gammastar,
+    ns_star   = ns_star,
+    ca        = ca,
+    vpd       = vpd,
+    beta      = beta,
+    method    = "L-BFGS-B",
+    control   = list( maxit = 100, maximize = TRUE )
+    )
+
+  return(out_optim$par)
+}
+```
+Now, let's calculate the optimal $\chi$ with the same parameters as used to run the P-model above.
+```{r}
+chi_opt <- calc_optimal_chi_num( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146 )
+print(chi_opt)
+```
+As a check: is this the same as returned by the P-model?
+```{r}
+print(out_analytical$chi)
+```
+Practically, yes.
+
+Let's call this $\chi^{\ast}$. For the P-model, it is then assumed that $A=A_J$ with
+$$
+A_J = \phi_0 \; I_{\mathrm{abs}}\;\frac{c_a \chi^{\ast} - \Gamma^{\ast}}{c_a \chi^{\ast} + 2\Gamma^{\ast}}
+$$
+A check again: is this the same as returned by the P-model?
+```{r}
+print( 0.05 * ppfd * fapar * (out_analytical$ca * chi_opt - out_analytical$gammastar)/(out_analytical$ca * chi_opt + 2 * out_analytical$gammastar))
+print( out_analytical$gpp / 12.0107 )
+```
+Yes, practically.
+
 The analytically calculated $A_n$ from the P-model (`rpmodel()` call above) is:
 ```{r}
 a_unitcost <- 0.001
 b_unitcost <- 146 * a_unitcost
 cost_transp <- a_unitcost * 1.6 * out_analytical$ns_star * out_analytical$gs * vpd
 cost_vcmax <- b_unitcost * out_analytical$vcmax
-print( out_analytical$gpp / 12.0107 - cost_transp - cost_vcmax )
+net_assim_analytical <- out_analytical$gpp / 12.0107 - cost_transp - cost_vcmax
+print( net_assim_analytical )
 ```
- 
-Define the function which is to be maximised.
+
+Define the function which is to be maximised. This corresponds to Eq. 1.
 ```{r}
-calc_net_assim <- function( par, args, a_unitcost ){
-  
-  vcmax <- par[1]
-  gs    <- par[2]
-  
+calc_net_assim <- function( par, args, iabs, kphio, a_unitcost, maximize=FALSE, return_chi=FALSE ){
+
   kmm       <- args[1]
   gammastar <- args[2]
   ns_star   <- args[3]
@@ -81,29 +158,64 @@ calc_net_assim <- function( par, args, a_unitcost ){
   vpd       <- args[5]
   beta      <- args[6]
   
+  vcmax <- par[1]
+  gs    <- par[2]
+  
   ## Get assimilation and ci, given Vcmax and gs
   ## by solving the equation system
   ## assim = vcmax * (ci - gammastar)/(ci + kmm)
   ## assim = gs * (ca - ci)
-  a_quad <- -gs
+  a_quad <- -1.0 * gs
   b_quad <- gs * ca - gs * kmm - vcmax
   c_quad <- gs * ca * kmm + vcmax * gammastar
 
-  root_ci <- polyroot( c(c_quad, b_quad, a_quad) )
-  ci <- Re(root_ci)[which(Re(root_ci)>0)]   # take positive root
+  root_ci <- try( polyroot( c(c_quad, b_quad, a_quad) ) )
 
-  # det <- sqrt( b_quad^2 - 4 * a_quad * c_quad )
-  # ci <- -b_quad - det / (2 * a_quad)    # smaller root
+  if (class(root_ci)=="try-error"){
 
-  assim <- vcmax * (ci - gammastar) / (ci + kmm)
-  
-  ## only cost ratio is defined. for this here we need absolute values. Set randomly
-  cost_transp <- a_unitcost * 1.6 * gs * vpd
-  cost_vcmax  <- a_unitcost * (beta / ns_star) * vcmax
-  
-  net_assim <- assim - cost_transp - cost_vcmax
-  
-  return( net_assim )
+    return( NA )
+
+  } else {
+
+    ci <- Re(root_ci)[which(Re(root_ci)>0)]   # take positive root
+    
+    # det <- sqrt( b_quad^2 - 4 * a_quad * c_quad )
+    # ci <- -b_quad - det / (2 * a_quad)    # smaller root
+
+    ## A_j
+    a_j <- iabs * kphio * (ci - gammastar) / (ci + 2 * gammastar)
+
+    ## A_c
+    a_c <- vcmax * (ci - gammastar) / (ci + kmm)
+
+    ## I don't understand if this is correct... It must be inconsistent with the Vcmax-related ci calculated above. But anyhow, this the logic of the P-model...
+    assim <- a_j
+
+    ## ... when it should actually be the minimum of A_j and A_c:
+    # assim <- min(a_j, a_c)
+        
+    ## All above is correct. That is, A and ci are correctly back-calculated from Vcmax and gs
+    
+    ## only cost ratio is defined. for this here we need absolute values. Set randomly
+    cost_transp <- a_unitcost * 1.6 * ns_star * gs * vpd
+    cost_vcmax  <- a_unitcost * beta * vcmax
+    
+    # ## Eq. 1
+    # net_assim <- assim - cost_transp - cost_vcmax
+    
+    # ## Or something equivalent to the P-model: INDEED, THIS IS IT!!!!
+    # net_assim <- -(cost_transp + cost_vcmax) / a_c
+      
+    ## At least this here would be intuitive:
+    net_assim <- a_c - cost_transp - cost_vcmax
+    
+    if (maximize) net_assim <- -net_assim
+    if (return_chi){
+      return(ci/ca)
+    } else {
+      return(net_assim)
+    }
+  }
 }
 ```
 
@@ -113,63 +225,167 @@ Use the analytically optimal vcmax and ci as starting values and calculate net a
 par <- c( out_analytical$vcmax, out_analytical$gs )
 args <- c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 )
 
-out_numerical <- calc_net_assim( par, args, a_unitcost=0.00045 )
+out_numerical <- calc_net_assim( par, args, iabs=(fapar * ppfd), kphio = 0.05, a_unitcost=0.0003 )
 print(out_numerical)
+print( calc_net_assim( par, args, iabs=(fapar * ppfd), kphio = 0.05, a_unitcost=0.0003, return_chi = TRUE ) )
+print(out_analytical$chi)
 ```
-Ok, this is correctly calculated.
+Ok, this is calculated correctly.
 
-Now, change $V_{\text{cmax}}$ just a little bit to see whether the net assimilation declines.
+<!-- Now, change $V_{\text{cmax}}$ just a little bit to see whether the net assimilation declines. -->
+<!-- ```{r} -->
+<!-- par <- c( out_analytical$vcmax * 1.01, out_analytical$gs ) -->
+<!-- out_numerical <- calc_net_assim( par, args, iabs=(fapar * ppfd), kphio = 0.05, a_unitcost=0.0003 ) -->
+<!-- print(out_numerical) -->
+<!-- ``` -->
+<!-- Hmmm. It shouldn't increase... -->
+
+<!-- Plot this for fixed $g_s$. -->
+<!-- ```{r} -->
+<!-- library(dplyr) -->
+<!-- ## a_unitcost is searched by hand -->
+<!-- sapply( seq(out_analytical$vcmax * 0.10, out_analytical$vcmax * 10, length.out = 100), FUN = function(x) calc_net_assim( c(x, out_analytical$gs), args, iabs=(fapar * ppfd), kphio = 0.05, a_unitcost = 0.00045 ) ) %>% plot(type="l", xlab="Vcmax", ylab="net A") -->
+<!-- abline(v=out_analytical$vcmax, lty=3) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- library(dplyr) -->
+<!-- ## a_unitcost is searched by hand -->
+<!-- sapply( seq(out_analytical$gs * 0.10, out_analytical$gs * 10, length.out = 100), FUN = function(x) calc_net_assim( c(out_analytical$vcmax, x), args, iabs=(fapar * ppfd), kphio = 0.05, a_unitcost = 0.00045 ) ) %>% plot(type="l", xlab="gs", ylab="net A") -->
+<!-- abline(v=out_analytical$vcmax, lty=3) -->
+<!-- ``` -->
+
+Optimise $V_{\text{cmax}}$ and $g_s$ simultaneously so that net assimilation is maximised (Implementing Eq. 1). This should return the same values for Vcmax and gs as the starting values (which were taken from the analytical solution), and the same $\chi$ as the analytical solution of the P-model.
 ```{r}
-par <- c( out_analytical$vcmax * 1.01, out_analytical$gs )
-out_numerical <- calc_net_assim( par, args, a_unitcost=0.00045 )
-print(out_numerical)
+out_optim <- optimr::optimr(
+  par        = c( out_analytical$vcmax, out_analytical$gs ),
+  lower      = c( out_analytical$vcmax*0.0001, out_analytical$gs*0.001 ),
+  upper      = c( out_analytical$vcmax*20,   out_analytical$gs*30 ),
+  fn         = calc_net_assim,
+  args       = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ),
+  iabs       = (fapar * ppfd), 
+  kphio      = 0.05,
+  a_unitcost = 0.0003,
+  method     = "L-BFGS-B",
+  maximize   = TRUE,
+  control    = list( maxit = 1000 )
+  )
+print( paste( "Vcmax, gs from gs/Vcmax optimization:", out_optim$par ) )
+print( paste("A_n from gs/Vcmax optimization:", -out_optim$value) )
+print( paste( "Vcmax,gs from P-model:", c( out_analytical$vcmax, out_analytical$gs )) )
+print( paste( "chi from gs/Vcmax optimization:", calc_net_assim( par = out_optim$par, args = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ), iabs = (fapar * ppfd), kphio = 0.05, a_unitcost=0.0003, return_chi = TRUE ) ))
+print(paste("... this should be identical to ", out_analytical$chi))
 ```
-Hmmm. It shouldn't increase...
+No. This doesn't work.
 
-Plot this for fixed $g_s$.
+The problem of all of this is that the cost factor that scales both the cost of $V_{\text{cmax}}$ and $g_s$ equally is missing from the optimization criterium when $ E/A + \beta\; Vcmax/A = max.$ is used. Let's term this cost scalar $x$ and find it numerically. 
+
+```{r message=FALSE, warning=FALSE}
+setzero <- function( x_cost, chi_target, out_analytical, fapar, ppfd, vpd ){
+
+  out_optim <- optimr::optimr(
+    par        = c( out_analytical$vcmax, out_analytical$gs ),
+    lower      = c( out_analytical$vcmax*0.0001, out_analytical$gs*0.001 ),
+    upper      = c( out_analytical$vcmax*20,   out_analytical$gs*30 ),
+    fn         = calc_net_assim,
+    args       = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ),
+    iabs       = (fapar * ppfd), 
+    kphio      = 0.05,
+    a_unitcost = x_cost,
+    maximize   = TRUE,
+    method     = "L-BFGS-B",
+    control    = list( maxit = 100 )
+    )
+
+  args <- c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 )
+
+  chi_numerical <- calc_net_assim( out_optim$par, args, iabs=(fapar * ppfd), kphio = 0.05, a_unitcost=x_cost, return_chi = TRUE )
+
+  out <- chi_target - chi_numerical
+
+  return(abs(out))
+}
+
+sapply( lseq( from=0.001, to=0.003, length.out = 100), FUN =  function(x) setzero( x, out_analytical$chi, out_analytical, fapar, ppfd, vpd ) ) %>% 
+plot( lseq( from=0.001, to=0.003, length.out = 100), ., type="l" )
+abline(h=0, lty=2)
+
+## Watch out: numerical noise is happening. For this example, chose starting point where visually determined in plot above
+unitcost_root <- optimr::optimr(
+  par            = 0.002,
+  # lower          = 0.001,
+  # upper          = 0.003,
+  fn             = setzero,
+  chi_target     = out_analytical$chi,
+  out_analytical = out_analytical,
+  fapar          = fapar,
+  ppfd           = ppfd,
+  vpd            = vpd,
+  # method         = "L-BFGS-B",
+  control        = list( maxit = 100000 )
+  )
+abline( v = unitcost_root$par, col="red" )
+
+print( paste("My guess for the cost scalar is:", unitcost_root$par ) )
+```
+
+Now, try the same again and see if, with the determined fitted cost scalar, we get the same for the analytical P-model and the $V_{\text{cmax}}$, $g_s$ optimization:
+Optimise $V_{\text{cmax}}$ and $g_s$ simultaneously so that net assimilation is maximised (Implementing Eq. 1). This should **now definitely** return the same $c_i$ as the analytical solution of the P-model.
 ```{r}
+out_optim <- optimr::optimr(
+  par        = c( out_analytical$vcmax, out_analytical$gs ),
+  lower      = c( out_analytical$vcmax*0.0001, out_analytical$gs*0.001 ),
+  upper      = c( out_analytical$vcmax*20,   out_analytical$gs*30 ),
+  fn         = calc_net_assim,
+  args       = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ),
+  iabs       = (fapar * ppfd), 
+  kphio      = 0.05,
+  a_unitcost = unitcost_root$par,
+  method     = "L-BFGS-B",
+  maximize   = TRUE,
+  control    = list( maxit = 1000 )
+  )
+print( paste( "chi from gs/Vcmax optimization:", calc_net_assim( par = out_optim$par, args = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ), iabs = (fapar * ppfd), kphio = 0.05, a_unitcost=unitcost_root$par, return_chi = TRUE ) ))
+print(paste("... this should be identical to ", out_analytical$chi))
+```
+Yes!!!
+
+Plot a surface of $A_n$ as a function of $V_{\text{cmax}}$ and $g_s$, with a red point where the numerical optimization found the maximum, and a green point, where the analytical solution lies.
+```{r, message=FALSE, warning=FALSE}
 library(dplyr)
-## a_unitcost is searched by hand
-sapply( seq(out_analytical$vcmax * 0.10, out_analytical$vcmax * 10, length.out = 100), FUN = function(x) calc_net_assim( c(x, out_analytical$gs), args, a_unitcost = 0.00045 ) ) %>% plot(type="l", xlab="Vcmax", ylab="net A")
-abline(v=out_analytical$vcmax, lty=3)
-```
-
-```{r}
-library(dplyr)
-## a_unitcost is searched by hand
-sapply( seq(out_analytical$gs * 0.10, out_analytical$gs * 10, length.out = 100), FUN = function(x) calc_net_assim( c(out_analytical$vcmax, x), args, a_unitcost = 0.00045 ) ) %>% plot(type="l", xlab="gs", ylab="net A")
-abline(v=out_analytical$vcmax, lty=3)
-```
-
-Plot a surface of $A_n$ as a function of $V_{\text{cmax}}$ and $g_s$.
-```{r}
 len_vcmax <- 50
 len_gs <- 50
-vcmax_vec <- seq(out_analytical$vcmax * 0.01, out_analytical$vcmax * 500, length.out = len_vcmax)
-gs_vec <- seq(out_analytical$gs * 0.10, out_analytical$gs * 500, length.out = len_gs)
-# anet_arr <- outer( vcmax_vec, gs_vec, calc_net_assim_altargs, args = args, a_unitcost = 0.00045 )
+vcmax_vec <- lseq(out_analytical$vcmax*0.0001, out_analytical$vcmax*20, length.out = len_vcmax)
+gs_vec <- lseq(out_analytical$gs*0.001, out_analytical$gs*30, length.out = len_gs)
 
-grid <- expand.grid(vcmax_vec, gs_vec)
-names(grid) <- c("vcmax", "gs") 
-A_net <- grid %>% 
+A_net <- expand.grid(vcmax_vec, gs_vec) %>% 
+  setNames( c("vcmax", "gs") ) %>% 
   rowwise() %>% 
-  do( net_assim = calc_net_assim( c(.$vcmax, .$gs), args=args, a_unitcost=0.0005 ) ) %>% 
+  do( net_assim = calc_net_assim( 
+    c(.$vcmax, .$gs), 
+    args=c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ), 
+    iabs=(fapar * ppfd), 
+    kphio = 0.05, 
+    a_unitcost=unitcost_root$par, 
+    maximize=FALSE 
+    ) ) %>% 
   tidyr::unnest(net_assim) %>%
   as.matrix() %>% 
   array( dim=c(len_vcmax,len_gs) )
 
-persp( vcmax_vec, gs_vec, A_net )
-```
+pmat <- persp( (vcmax_vec), (gs_vec), A_net, 
+               phi = 10, # Azimut, 0 is along gs_vec axis
+               theta = 30,
+               col="lightblue"
+               )
+points( trans3d( (out_optim$par[1]), (out_optim$par[2]), -out_optim$value, pmat ), pch=16, col="red", cex=1.8 )
+points( trans3d( (out_analytical$vcmax), (out_analytical$gs), net_assim_analytical, pmat ), pch=16, col="green", cex=1 )
 
-Optimise $V_{\text{cmax}}$ and $g_s$ simultaneously so that net assimilation is maximised. This should return the same values for Vcmax and gs as the starting values (which were taken from the analytical solution).
-```{r}
-out_optim <- optimr::optimr(
-  par     = c( out_analytical$vcmax, out_analytical$gs ),
-  fn      = calc_net_assim,
-  args    = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ),
-  control = list( maxit = 1000, maximize = TRUE )
-  )
-print(out_optim$par)
-print(out_optim$value)
+# numerical:
+print( c(out_optim$par[1], out_optim$par[2], -out_optim$value) )
+# analytical:
+print( c(out_analytical$vcmax, out_analytical$gs, net_assim_analytical) )
 ```
-This is complete bullocks.
+The reason why the red and green dots are not exactly on top of each other is because the optimisation (red) returns $A_{n}=A_c - transpcost - vcmaxcost$, while the analytical (green point) returns $A_n = min(A_j, A_c) - transpcost - vcmaxcost$.
+
+

@@ -141,7 +141,7 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, c4=FALSE, 
 
     ## Full formualation (Gamma-star not zero), analytical solution
     ##-----------------------------------------------------------------------
-    out_optchi     <- calc_optimal_chi(     kmm, gammastar, ns_star, ca, vpd, beta )
+    out_optchi <- calc_optimal_chi( kmm, gammastar, ns_star, ca, vpd, beta )
 
   } else if (method_optci=="prentice14_num"){
 
