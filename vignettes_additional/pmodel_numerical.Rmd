@@ -397,17 +397,17 @@ library(dplyr)
 sapply( as.list(vcmax_vec), FUN = function(x) calc_net_assim( c(x, out_optim$par[2]), args, iabs=(fapar * ppfd), kphio = 0.05, cost_scalar = unitcost_root$par ) ) %>% plot( vcmax_vec, ., type="l", xlab="Vcmax", ylab="net A", ylim=c(-500,500), xlim=c(0,5000))
 abline(v=out_optim$par[1], lty=3)
 points( (out_optim$par[1]), -out_optim$value, pch=16, col="red", cex=1.8 )
-points( (out_optim$par[1]), net_assim_analytical, pch=16, col="green", cex=1 )
+points( (out_analytical$vcmax), net_assim_analytical, pch=16, col="green", cex=1 )
 ```
 
 And for fixed (optimal) $V_{\text{cmax}}$:
 ```{r}
 library(dplyr)
 ## cost_scalar is searched by hand
-sapply( as.list(gs_vec), FUN = function(x) calc_net_assim( c(out_optim$par[1], x), args, iabs=(fapar * ppfd), kphio = 0.05, cost_scalar = unitcost_root$par ) ) %>% plot( gs_vec, ., type="l", xlab="gs", ylab="net A", ylim=c(-500,500), xlim=c(0,300))
+sapply( as.list(gs_vec), FUN = function(x) calc_net_assim( c(out_optim$par[1], x), args, iabs=(fapar * ppfd), kphio = 0.05, cost_scalar = unitcost_root$par ) ) %>% plot( gs_vec, ., type="l", xlab="gs", ylab="net A", ylim=c(-500,500), xlim=c(0,600))
 abline( v=out_optim$par[2], lty=3 )
 points( (out_optim$par[2]), -out_optim$value, pch=16, col="red", cex=1.8 )
-points( (out_optim$par[2]), net_assim_analytical, pch=16, col="green", cex=1 )
+points( (out_analytical$gs), net_assim_analytical, pch=16, col="green", cex=1 )
 ```
 
 
