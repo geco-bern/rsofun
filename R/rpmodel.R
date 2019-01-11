@@ -7,6 +7,7 @@
 #' @param co2 Atmospheric CO2 concentration (ppm)
 #' @param elv Elevation above sea-level (m.a.s.l.)
 #' @param kphio Quantum yield efficiency parameter
+#' @param beta Unit cost ratio. Defaults to 146.0.
 #' @param fapar (Optional) Fraction of absorbed photosynthetically active radiation (unitless, defaults to \code{NA})
 #' @param ppfd (Optional) Photosynthetic photon flux density (mol/m2, defaults to \code{NA})
 #' @param c4 (Optional) A logical value specifying whether the C3 or C4 photosynthetic pathway is followed. Defaults to \code{method_optci="c4=FALSE"}. 
@@ -45,7 +46,7 @@
 #'
 #' @examples out_rpmodel <- rpmodel( tc=10, vpd=300, co2=300, elv=300, kphio=0.06 )
 #' 
-rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, c4=FALSE, method_optci="prentice14", method_jmaxlim="wang17", do_ftemp_kphio = TRUE, returnvar = NULL ){
+rpmodel <- function( tc, vpd, co2, elv, kphio, beta = 146.0, fapar = NA, ppfd = NA, c4=FALSE, method_optci="prentice14", method_jmaxlim="wang17", do_ftemp_kphio = TRUE, returnvar = NULL ){
   #-----------------------------------------------------------------------
   # Output:   list of P-model predictions:
   #
@@ -73,7 +74,6 @@ rpmodel <- function( tc, vpd, co2, elv, kphio, fapar = NA, ppfd = NA, c4=FALSE, 
   kPo   <- 101325.0     # standard atmosphere, Pa (Allen, 1973)
   kTo   <- 25.0         # base temperature, deg C (Prentice, unpublished)
   # beta <- 244.033
-  beta <- 146.0         # unit cost ratio (see Prentice et al.,2014)
   rd_to_vcmax <- 0.015  # Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     
   # Metabolic N ratio (N per unit Vcmax)

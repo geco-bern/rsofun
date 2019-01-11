@@ -16,10 +16,14 @@ output:
 ```{r, message=FALSE, warning=FALSE}
 library(rsofun)
 library(dplyr)
+# modified seq() function to get a logarithmically spaced sequence
 lseq <- function(from=1, to=100000, length.out=6) {
-  # logarithmic spaced sequence
   exp(seq(log(from), log(to), length.out = length.out))
 }
+
+## Set parameters
+beta <- 146    # unit cost ratio
+kphio <- 0.05  # quantum yield efficiency
 ```
 
 Get the analytical solution for one specific set of arguments.
@@ -32,7 +36,19 @@ co2  <- 400
 elv  <- 0
 fapar <- 1
 
-out_analytical <- rpmodel( tc = tc, vpd = vpd, co2 = co2, elv = elv, kphio = 0.05, fapar = fapar, ppfd = ppfd, method_optci="prentice14", method_jmaxlim = "none", do_ftemp_kphio = FALSE )
+out_analytical <- rsofun::rpmodel( 
+  tc = tc,
+  vpd = vpd,
+  co2 = co2,
+  elv = elv,
+  kphio = kphio,
+  beta = beta,
+  fapar = fapar,
+  ppfd = ppfd,
+  method_optci="prentice14",
+  method_jmaxlim = "none",
+  do_ftemp_kphio = FALSE 
+  )
 ```
 
 Is it internally consistent?
@@ -117,7 +133,7 @@ calc_optimal_chi_num <- function( kmm, gammastar, ns_star, ca, vpd, beta ){
 ```
 Now, let's calculate the optimal $\chi$ with the same parameters as used to run the P-model above.
 ```{r}
-chi_opt <- calc_optimal_chi_num( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146 )
+chi_opt <- calc_optimal_chi_num( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, beta )
 print(chi_opt)
 ```
 As a check: is this the same as returned by the P-model?
@@ -132,7 +148,7 @@ A_J = \phi_0 \; I_{\mathrm{abs}}\;\frac{c_a \chi^{\ast} - \Gamma^{\ast}}{c_a \ch
 $$
 A check again: is this the same as returned by the P-model?
 ```{r}
-print( 0.05 * ppfd * fapar * (out_analytical$ca * chi_opt - out_analytical$gammastar)/(out_analytical$ca * chi_opt + 2 * out_analytical$gammastar))
+print( kphio * ppfd * fapar * (out_analytical$ca * chi_opt - out_analytical$gammastar)/(out_analytical$ca * chi_opt + 2 * out_analytical$gammastar))
 print( out_analytical$gpp / 12.0107 )
 ```
 Yes, practically.
@@ -141,7 +157,7 @@ The analytically calculated $A_n$ from the P-model (`rpmodel()` call above) is:
 ```{r}
 cost_scalar <- 0.001
 cost_transp <- cost_scalar * 1.6 * out_analytical$ns_star * out_analytical$gs * vpd
-cost_vcmax <- 146 * cost_scalar * out_analytical$vcmax
+cost_vcmax <- beta * cost_scalar * out_analytical$vcmax
 net_assim_analytical <- out_analytical$gpp / 12.0107 - cost_transp - cost_vcmax
 print( net_assim_analytical )
 ```
@@ -229,11 +245,11 @@ Use the analytically optimal vcmax and ci as starting values and calculate net a
 ```{r}
 ## starting values for par = [vcmax, gs]. Use the ones returned by rpmodel()
 par <- c( out_analytical$vcmax, out_analytical$gs )
-args <- c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 )
+args <- c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, beta )
 
-out_numerical <- calc_net_assim( par, args, iabs=(fapar * ppfd), kphio = 0.05, cost_scalar=0.0003 )
+out_numerical <- calc_net_assim( par, args, iabs=(fapar * ppfd), kphio = kphio, cost_scalar=0.0003 )
 print(out_numerical)
-print( calc_net_assim( par, args, iabs=(fapar * ppfd), kphio = 0.05, cost_scalar=0.0003, return_chi = TRUE ) )
+print( calc_net_assim( par, args, iabs=(fapar * ppfd), kphio = kphio, cost_scalar=0.0003, return_chi = TRUE ) )
 print(out_analytical$chi)
 ```
 Ok, this is calculated correctly.
@@ -241,7 +257,7 @@ Ok, this is calculated correctly.
 <!-- Now, change $V_{\text{cmax}}$ just a little bit to see whether the net assimilation declines. -->
 <!-- ```{r} -->
 <!-- par <- c( out_analytical$vcmax * 1.01, out_analytical$gs ) -->
-<!-- out_numerical <- calc_net_assim( par, args, iabs=(fapar * ppfd), kphio = 0.05, cost_scalar=0.0003 ) -->
+<!-- out_numerical <- calc_net_assim( par, args, iabs=(fapar * ppfd), kphio = kphio, cost_scalar=0.0003 ) -->
 <!-- print(out_numerical) -->
 <!-- ``` -->
 <!-- Hmmm. It shouldn't increase... -->
@@ -253,9 +269,9 @@ out_optim <- optimr::optimr(
   lower      = c( out_analytical$vcmax*0.0001, out_analytical$gs*0.001 ),
   upper      = c( out_analytical$vcmax*20,   out_analytical$gs*30 ),
   fn         = calc_net_assim,
-  args       = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ),
+  args       = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, beta ),
   iabs       = (fapar * ppfd), 
-  kphio      = 0.05,
+  kphio      = kphio,
   cost_scalar = 0.0003,
   method     = "L-BFGS-B",
   maximize   = TRUE,
@@ -264,7 +280,7 @@ out_optim <- optimr::optimr(
 print( paste( "Vcmax, gs from gs/Vcmax optimization:", out_optim$par ) )
 print( paste("A_n from gs/Vcmax optimization:", -out_optim$value) )
 print( paste( "Vcmax,gs from P-model:", c( out_analytical$vcmax, out_analytical$gs )) )
-print( paste( "chi from gs/Vcmax optimization:", calc_net_assim( par = out_optim$par, args = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ), iabs = (fapar * ppfd), kphio = 0.05, cost_scalar=0.0003, return_chi = TRUE ) ))
+print( paste( "chi from gs/Vcmax optimization:", calc_net_assim( par = out_optim$par, args = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, beta ), iabs = (fapar * ppfd), kphio = kphio, cost_scalar=0.0003, return_chi = TRUE ) ))
 print(paste("... this should be identical to ", out_analytical$chi))
 ```
 No. This doesn't work.
@@ -279,18 +295,18 @@ setzero <- function( x_cost, chi_target, out_analytical, fapar, ppfd, vpd ){
     lower      = c( out_analytical$vcmax*0.0001, out_analytical$gs*0.001 ),
     upper      = c( out_analytical$vcmax*20,   out_analytical$gs*30 ),
     fn         = calc_net_assim,
-    args       = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ),
+    args       = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, beta ),
     iabs       = (fapar * ppfd), 
-    kphio      = 0.05,
+    kphio      = kphio,
     cost_scalar = x_cost,
     maximize   = TRUE,
     method     = "L-BFGS-B",
     control    = list( maxit = 100 )
     )
 
-  args <- c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 )
+  args <- c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, beta )
 
-  chi_numerical <- calc_net_assim( out_optim$par, args, iabs=(fapar * ppfd), kphio = 0.05, cost_scalar=x_cost, return_chi = TRUE )
+  chi_numerical <- calc_net_assim( out_optim$par, args, iabs=(fapar * ppfd), kphio = kphio, cost_scalar=x_cost, return_chi = TRUE )
 
   out <- chi_target - chi_numerical
 
@@ -328,22 +344,21 @@ out_optim <- optimr::optimr(
   lower      = c( out_analytical$vcmax*0.0001, out_analytical$gs*0.001 ),
   upper      = c( out_analytical$vcmax*5,   out_analytical$gs*5 ),
   fn         = calc_net_assim,
-  args       = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ),
+  args       = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, beta ),
   iabs       = (fapar * ppfd), 
-  kphio      = 0.05,
+  kphio      = kphio,
   cost_scalar = unitcost_root$par,
   method     = "L-BFGS-B",
   maximize   = TRUE,
   control    = list( maxit = 1000 )
   )
-print( paste( "chi from gs/Vcmax optimization:", calc_net_assim( par = out_optim$par, args = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ), iabs = (fapar * ppfd), kphio = 0.05, cost_scalar=unitcost_root$par, return_chi = TRUE ) ))
+print( paste( "chi from gs/Vcmax optimization:", calc_net_assim( par = out_optim$par, args = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, beta ), iabs = (fapar * ppfd), kphio = kphio, cost_scalar=unitcost_root$par, return_chi = TRUE ) ))
 print(paste("... this should be identical to ", out_analytical$chi))
 ```
 Yes!!!
 
 Plot a surface of $A_n$ as a function of $V_{\text{cmax}}$ and $g_s$, with a red point where the numerical optimization found the maximum, and a green point, where the analytical solution lies.
 ```{r, message=FALSE, warning=FALSE}
-library(dplyr)
 len_vcmax <- 50
 len_gs <- 50
 vcmax_vec <- lseq(out_analytical$vcmax*0.0001, out_analytical$vcmax*5, length.out = len_vcmax)
@@ -354,9 +369,9 @@ A_net <- expand.grid(vcmax_vec, gs_vec) %>%
   rowwise() %>% 
   do( net_assim = calc_net_assim( 
     c(.$vcmax, .$gs), 
-    args=c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ), 
+    args=c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, beta ), 
     iabs=(fapar * ppfd), 
-    kphio = 0.05, 
+    kphio = kphio, 
     cost_scalar=unitcost_root$par, 
     maximize=FALSE 
     ) ) %>% 
@@ -376,9 +391,9 @@ points( trans3d( (out_analytical$vcmax), (out_analytical$gs), net_assim_analytic
 print( c(out_optim$par[1], out_optim$par[2], -out_optim$value) )
 print( calc_net_assim( 
   par            = c(out_optim$par[1], out_optim$par[2]),
-  args           = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, 146.0 ),
+  args           = c( out_analytical$kmm, out_analytical$gammastar, out_analytical$ns_star, out_analytical$ca, vpd, beta ),
   iabs           = (fapar * ppfd), 
-  kphio          =  0.05, 
+  kphio          =  kphio, 
   cost_scalar    = unitcost_root$par,
   return_a_j_net = TRUE
 ))
@@ -392,9 +407,8 @@ print( c(out_analytical$vcmax, out_analytical$gs, net_assim_analytical) )
 
 And in 2D. For fixed (optimal) $g_s$.
 ```{r}
-library(dplyr)
 ## cost_scalar is searched by hand
-sapply( as.list(vcmax_vec), FUN = function(x) calc_net_assim( c(x, out_optim$par[2]), args, iabs=(fapar * ppfd), kphio = 0.05, cost_scalar = unitcost_root$par ) ) %>% plot( vcmax_vec, ., type="l", xlab="Vcmax", ylab="net A", ylim=c(-500,500), xlim=c(0,5000))
+sapply( as.list(vcmax_vec), FUN = function(x) calc_net_assim( c(x, out_optim$par[2]), args, iabs=(fapar * ppfd), kphio = kphio, cost_scalar = unitcost_root$par ) ) %>% plot( vcmax_vec, ., type="l", xlab="Vcmax", ylab="net A", ylim=c(-500,500), xlim=c(0,5000))
 abline(v=out_optim$par[1], lty=3)
 points( (out_optim$par[1]), -out_optim$value, pch=16, col="red", cex=1.8 )
 points( (out_analytical$vcmax), net_assim_analytical, pch=16, col="green", cex=1 )
@@ -402,9 +416,8 @@ points( (out_analytical$vcmax), net_assim_analytical, pch=16, col="green", cex=1
 
 And for fixed (optimal) $V_{\text{cmax}}$:
 ```{r}
-library(dplyr)
 ## cost_scalar is searched by hand
-sapply( as.list(gs_vec), FUN = function(x) calc_net_assim( c(out_optim$par[1], x), args, iabs=(fapar * ppfd), kphio = 0.05, cost_scalar = unitcost_root$par ) ) %>% plot( gs_vec, ., type="l", xlab="gs", ylab="net A", ylim=c(-500,500), xlim=c(0,600))
+sapply( as.list(gs_vec), FUN = function(x) calc_net_assim( c(out_optim$par[1], x), args, iabs=(fapar * ppfd), kphio = kphio, cost_scalar = unitcost_root$par ) ) %>% plot( gs_vec, ., type="l", xlab="gs", ylab="net A", ylim=c(-500,500), xlim=c(0,600))
 abline( v=out_optim$par[2], lty=3 )
 points( (out_optim$par[2]), -out_optim$value, pch=16, col="red", cex=1.8 )
 points( (out_analytical$gs), net_assim_analytical, pch=16, col="green", cex=1 )
