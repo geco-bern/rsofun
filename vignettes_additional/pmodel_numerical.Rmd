@@ -133,7 +133,7 @@ calc_optimal_chi_num <- function( kmm, gammastar, ns_star, ca, vpd, beta ){
 
   out_optim <- optimr::optimr(
     par       = 0.7,
-    lower     = 0.01,
+    lower     = 0.1,
     upper     = 0.99,
     fn        = maximise_this,
     kmm       = kmm,
@@ -294,6 +294,8 @@ print( paste( "optimal Vcmax:", varlist$vcmax ) )
 print( paste( "Vcmax^P:", kphio * fapar * ppfd * (varlist$ci + varlist$kmm) / (varlist$ci + 2 * varlist$gammastar )) )
 print( paste("Vcmax from P-model:", out_analytical$vcmax ) )
 ```
+
+It's important to note that calculating $V_{\text{cmax}}$ like this implies the assumption of $A_J = A_C$, while solving for simultaneously optimal $V_{\text{cmax}}$ and $g_s$ doesn't use this assumption. Nevertheless, the results are identical, which may not be immediately obvious. 
 
 ### Light limitation?
 
