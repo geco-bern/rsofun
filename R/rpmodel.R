@@ -643,10 +643,9 @@ calc_gammastar <- function( tc, patm ) {
 calc_ftemp_arrhenius <- function( tk, dha, tkref = 298.15 ){
   #-----------------------------------------------------------------------
   # Output:   Factor fv to correct for instantaneous temperature response
-  #           of Vcmax for:
-  #
-  #               Vcmax(temp) = fv * Vcmax(25 deg C) 
-  #
+  #           following the Arrhenius equation:
+  #           x = exp(c - H/(R*T))
+  #           This function returns ftemp = x(T)/x(298.15 K).
   #-----------------------------------------------------------------------
 
   ## Note that the following two forms are equivalent:
@@ -742,10 +741,10 @@ calc_patm <- function( elv ){
   # Define constants:
   kPo <- 101325   # standard atmosphere, Pa (Allen, 1973)
   kTo <- 298.15   # base temperature, K (Prentice, unpublished)
-  kL  <- 0.0065    # temperature lapse rate, K/m (Allen, 1973)
+  kL  <- 0.0065    # adiabiatic temperature lapse rate, K/m (Allen, 1973)
   kG  <- 9.80665   # gravitational acceleration, m/s^2 (Allen, 1973)
   kR  <- 8.3145    # universal gas constant, J/mol/K (Allen, 1973)
-  kMa <- 0.028963 # molecular weight of dry air, kg/mol (Tsilingiris, 2008)
+  kMa <- 0.028963  # molecular weight of dry air, kg/mol (Tsilingiris, 2008)
 
   # Convert elevation to pressure, Pa:
   patm <- kPo*(1.0 - kL*elv/kTo)^(kG*kMa/(kR*kL))
