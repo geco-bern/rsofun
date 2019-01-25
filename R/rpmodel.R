@@ -607,8 +607,8 @@ calc_kmm <- function( tc, patm ) {
 
   tk <- tc + 273.15
 
-  kc <- kc25 * calc_ftemp_arrhenius( tk, dha=dhac )
-  ko <- ko25 * calc_ftemp_arrhenius( tk, dha=dhao )
+  kc <- kc25 * calc_ftemp_arrh( tk, dha=dhac )
+  ko <- ko25 * calc_ftemp_arrh( tk, dha=dhao )
 
   po  <- kco * (1e-6) * patm         # O2 partial pressure
   kmm <- kc * (1.0 + po/ko)
@@ -631,30 +631,25 @@ calc_gammastar <- function( tc, patm ) {
   dha    <- 37830       # (J/mol) Activation energy, Bernacchi et al. (2001)
   gs25_0 <- 4.332       # Pa, value based on Bernacchi et al. (2001), converted to Pa by T. Davis assuming elevation of 227.076 m.a.s.l.
 
-  gammastar25 <- gs25_0 * patm / calc_patm(0.0)  
-
-  tk <- tc + 273.15
-  gammastar <- gammastar25 * calc_ftemp_arrhenius( tk, dha=dha )
+  gammastar <- gs25_0 * patm / calc_patm(0.0) * calc_ftemp_arrh( (tc + 273.15), dha=dha )
 
   return( gammastar )
 }
 
 
-calc_ftemp_arrhenius <- function( tk, dha, tkref = 298.15 ){
+calc_ftemp_arrh <- function( tk, dha, tkref = 298.15 ){
   #-----------------------------------------------------------------------
   # Output:   Factor fv to correct for instantaneous temperature response
   #           of Vcmax for:
   #
   #               Vcmax(temp) = fv * Vcmax(25 deg C) 
   #
+  # Note that the following forms are equivalent:
+  # ftemp = exp( dha * (tk - 298.15) / (298.15 * kR * tk) )
+  # ftemp = exp( dha * (tc - 25.0)/(298.15 * kR * (tc + 273.15)) )
+  # ftemp = exp( (dha/kR) * (1/298.15 - 1/tk) )
   #-----------------------------------------------------------------------
-
-  ## Note that the following two forms are equivalent:
-  ## ftemp = exp( dha * (tk - 298.15) / (298.15 * kR * tk) )
-  ## ftemp = exp( dha * (tc - 25.0)/(298.15 * kR * (tc + 273.15)) )
-
   kR   <- 8.3145     # Universal gas constant, J/mol/K
-
   ftemp <- exp( dha * (tk - tkref) / (tkref * kR * tk) )
 
   return(ftemp)
@@ -691,7 +686,7 @@ calc_ftemp_inst_vcmax <- function( tcleaf, tcgrowth, tcref = 25.0 ){
 
   # calculate entropy following Kattge & Knorr (2007), negative slope and y-axis intersect is when expressed as a function of temperature in degrees Celsius, not Kelvin !!!
   dent <- a_ent - b_ent * tcgrowth   # 'tcgrowth' corresponds to 'tmean' in Nicks, 'tc25' is 'to' in Nick's
-  fva <- calc_ftemp_arrhenius( tkleaf, Ha, tkref = tkref )
+  fva <- calc_ftemp_arrh( tkleaf, Ha, tkref = tkref )
   fvb <- (1 + exp( (tkref * dent - Hd)/(Rgas * tkref) ) ) / (1 + exp( (tkleaf * dent - Hd)/(Rgas * tkleaf) ) )
   fv  <- fva * fvb
 
