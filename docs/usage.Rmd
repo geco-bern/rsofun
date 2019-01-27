@@ -6,8 +6,6 @@ output:
     toc_float: true
 ---
 
-## Usage
-
 rsofun provides functionalities to run the P-model in different setups, and implementations in different languages.
 
 ### Simple usage

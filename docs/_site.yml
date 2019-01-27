@@ -1,6 +1,6 @@
 name: "website_sofun"
 navbar:
-  title: "SOFUN"
+  title: "rsofun"
   left:
     - text: "Home"
       href: index.html
