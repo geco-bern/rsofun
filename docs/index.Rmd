@@ -1,0 +1,122 @@
+---
+title: "The rsofun R package"
+output: 
+  html_document:
+     css: site_libs/font-awesome-4.5.0/css/font-awesome.css
+     self_contained: no
+---
+
+<!-- Uncomment to include FontAwesom -->
+```{r setup, include=FALSE}
+htmltools::tagList(rmarkdown::html_dependency_font_awesome())
+```
+
+<!-- <i class="fa fa-file fa-lg"></i> -->
+
+<!-- To preview the correctly rendered html file, click  -->
+<!-- <a href="http://htmlpreview.github.io/?https://stineb.github.io/index.html" title="preview on htmlpreview.github.io" target="_blank">here</a>.  -->
+
+
+
+<!-- <style type="text/css">
+.title {
+  display: none;
+}
+
+#getting-started img {
+  margin-right: 10px;
+}
+
+</style>
+
+<div class="row" style="padding-top: 30px;">
+<div class="col-sm-6">
+ -->
+
+<!-- [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/stineb/rsofun?branch=master&svg=true)](https://ci.appveyor.com/project/stineb/rsofun) -->
+<!-- <a href="https://www.buymeacoffee.com/H2wlgqCLO" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" height="21px" ></a> -->
+
+## What it does
+
+The rsofun R package provides functions for all the routine steps of running the P-model within R.
+
+- Setup of the model environment
+- Preparation of input files
+- Calibrating model parameters
+- Running the model
+- Reading outputs into R
+- Evaluating outputs (benchmarking)
+
+It also provides a generic function (`pmodel()`) to run alternative implementations of the P-model in different languages (Fortran using the [SOFUN](https://github.com/stineb/sofun) modelling framework, Python not implemeted yet), wrapped within R, and an impementation in R itself. 
+
+## Installation
+
+To install and load the rsofun package run the following command in your R terminal: 
+```{r, eval=FALSE}
+if(!require(devtools)){install.packages(devtools)}
+devtools::install_github( "stineb/rsofun", dependencies = NA, build_vignettes = FALSE )
+library(rsofun)
+```
+
+The vignettes need to be built in a separate step after manually specifying the path of where SOFUN is located locally. This is done by defining the option `rsofun.dor.sofun`. Change the paths in the vignettes `vignettes/overview.Rmd` and `vignettes/test_implementations.Rmd` from `"string_path_where_sofun_is"` to wherever you put it by hand. Then build the vignettes in R:
+```{r, eval=FALSE}
+options( list( rsofun.dir.sofun="string_path_where_sofun_is" ) )
+devtools::build_vignettes()
+```
+Display the rsofun overview vignette for a comprehensive documentation of the package:
+```{r, eval=FALSE}
+vignette("overview", "rsofun")
+```
+
+### Dependencies
+
+The `rsofun` package requires a large number of other R-packages (dependencies). Required dependencies are essential for `rsofun` functions and are:
+
+- `dplyr`, `ggplot2`, `lubridate`, `Metrics`, `mgcv`, `ncdf4`, `optimr`, `purrr`, `readr`, `rlang`, `stringr`, `tidyr`, `LSD`, and `GenSA`, 
+
+Suggested dependencies are required only for certain optional tasks and are:
+
+- `BayesianTools`, `caret`, `gplots`, `hydroGOF`, `maps`, `maptools`, `neuralnet`, `nnet`, `raster`, `sp`, and `testthat`
+
+To install locally unavailable packages, run
+```{r, eval=FALSE}
+install_dependencies_rsofun()
+```
+
+To load dependencies, run
+```{r, eval=FALSE}
+load_dependencies_rsofun()
+```
+
+Suggested dependencies are only used optionally:
+
+- `GenSA`: used by `calib_sofun()`, if `settings_calib$method=="gensa"`, see calib_sofun.R
+- `BayesianTools`: used by `calib_sofun()`, if `settings_calib$method=="BayesianTools"`, see calib_sofun.R
+- `caret`: used by `gapfill_nn()`, see gapfill_nn.R and prepare_input_sofun.R 
+- `neuralnet`: used by `gapfill_nn()` and `eval_response_neuralnet()`, see eval_response_neuralnet.R and gapfill_nn.R
+- `nnet`: used by `gapfill_nn()` and `eval_response_neuralnet()`, see eval_response_neuralnet.R and gapfill_nn.R
+- `hydroGOF`: used by `analyse_modobs()` to calculate the Nash-Sutcliffe model efficiency, see analyse_modobs.R
+
+### External environment
+
+Several functions require external programs called by `system()` calls from within R. Required programs need to be installed beforehand, as follows (**Note: These are not required for the "Simple usage", described below**):
+
+- [NCO](http://nco.sourceforge.net/). Is used by `get_pointdata_()` functions (executing the Bash script `"./extract_pointdata_byfil.sh"` with NCO command `ncks`). Before using `rsofun`, install NCO on a Mac by
+```
+brew tap homebrew/science
+brew install nco
+```
+- [CDO](https://code.mpimet.mpg.de/). Is used by the `proc_ncout_sofun_bysite()` function (executing Bash script `"./proc_output_sofun.sh"` with CDO command `cdo mergetime`). Before using `rsofun`, install CDO on a Mac by
+```
+brew install cdo
+```
+Apparently, CDO is no longer available as a Homebrew formula (right?). Unse MacPorts instead:
+```
+sudo port install cdo
+```
+
+
+## Acknowledgements
+
+The main author (B. Stocker) was funded by Marie Sklodowska-Curie fellowship H2020-MSCA-IF-2015, project FIBER, grant number 701329.
+

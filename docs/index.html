@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>The rsofun R package</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="site_libs/font-awesome-4.5.0/css/font-awesome.css" type="text/css" />
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">SOFUN</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="usage.html">Usage</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stineb/rsofun">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">The rsofun R package</h1>
+
+</div>
+
+
+<!-- Uncomment to include FontAwesom -->
+<!-- <i class="fa fa-file fa-lg"></i> -->
+<!-- To preview the correctly rendered html file, click  -->
+<!-- <a href="http://htmlpreview.github.io/?https://stineb.github.io/index.html" title="preview on htmlpreview.github.io" target="_blank">here</a>.  -->
+<!-- <style type="text/css">
+.title {
+  display: none;
+}
+
+#getting-started img {
+  margin-right: 10px;
+}
+
+</style>
+
+<div class="row" style="padding-top: 30px;">
+<div class="col-sm-6">
+ -->
+<!-- [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/stineb/rsofun?branch=master&svg=true)](https://ci.appveyor.com/project/stineb/rsofun) -->
+<!-- <a href="https://www.buymeacoffee.com/H2wlgqCLO" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" height="21px" ></a> -->
+<div id="what-it-does" class="section level1">
+<h1>What it does</h1>
+<p>The rsofun R package provides functions for all the routine steps of running the P-model within R.</p>
+<ul>
+<li>Setup of the model environment</li>
+<li>Preparation of input files</li>
+<li>Calibrating model parameters</li>
+<li>Running the model</li>
+<li>Reading outputs into R</li>
+<li>Evaluating outputs (benchmarking)</li>
+</ul>
+<p>It also provides a generic function (<code>pmodel()</code>) to run alternative implementations of the P-model in different languages (Fortran using the <a href="https://github.com/stineb/sofun">SOFUN</a> modelling framework, Python not implemeted yet), wrapped within R, and an impementation in R itself.</p>
+<div id="installation" class="section level2">
+<h2>Installation</h2>
+<p>To install and load the rsofun package run the following command in your R terminal:</p>
+<pre class="r"><code>if(!require(devtools)){install.packages(devtools)}
+devtools::install_github( &quot;stineb/rsofun&quot;, dependencies = NA, build_vignettes = FALSE )
+library(rsofun)</code></pre>
+<p>The vignettes need to be built in a separate step after manually specifying the path of where SOFUN is located locally. This is done by defining the option <code>rsofun.dor.sofun</code>. Change the paths in the vignettes <code>vignettes/overview.Rmd</code> and <code>vignettes/test_implementations.Rmd</code> from <code>&quot;string_path_where_sofun_is&quot;</code> to wherever you put it by hand. Then build the vignettes in R:</p>
+<pre class="r"><code>options( list( rsofun.dir.sofun=&quot;string_path_where_sofun_is&quot; ) )
+devtools::build_vignettes()</code></pre>
+<p>Display the rsofun overview vignette for a comprehensive documentation of the package:</p>
+<pre class="r"><code>vignette(&quot;overview&quot;, &quot;rsofun&quot;)</code></pre>
+<div id="dependencies" class="section level3">
+<h3>Dependencies</h3>
+<p>The <code>rsofun</code> package requires a large number of other R-packages (dependencies). Required dependencies are essential for <code>rsofun</code> functions and are:</p>
+<ul>
+<li><code>dplyr</code>, <code>ggplot2</code>, <code>lubridate</code>, <code>Metrics</code>, <code>mgcv</code>, <code>ncdf4</code>, <code>optimr</code>, <code>purrr</code>, <code>readr</code>, <code>rlang</code>, <code>stringr</code>, <code>tidyr</code>, <code>LSD</code>, and <code>GenSA</code>,</li>
+</ul>
+<p>Suggested dependencies are required only for certain optional tasks and are:</p>
+<ul>
+<li><code>BayesianTools</code>, <code>caret</code>, <code>gplots</code>, <code>hydroGOF</code>, <code>maps</code>, <code>maptools</code>, <code>neuralnet</code>, <code>nnet</code>, <code>raster</code>, <code>sp</code>, and <code>testthat</code></li>
+</ul>
+<p>To install locally unavailable packages, run</p>
+<pre class="r"><code>install_dependencies_rsofun()</code></pre>
+<p>To load dependencies, run</p>
+<pre class="r"><code>load_dependencies_rsofun()</code></pre>
+<p>Suggested dependencies are only used optionally:</p>
+<ul>
+<li><code>GenSA</code>: used by <code>calib_sofun()</code>, if <code>settings_calib$method==&quot;gensa&quot;</code>, see calib_sofun.R</li>
+<li><code>BayesianTools</code>: used by <code>calib_sofun()</code>, if <code>settings_calib$method==&quot;BayesianTools&quot;</code>, see calib_sofun.R</li>
+<li><code>caret</code>: used by <code>gapfill_nn()</code>, see gapfill_nn.R and prepare_input_sofun.R</li>
+<li><code>neuralnet</code>: used by <code>gapfill_nn()</code> and <code>eval_response_neuralnet()</code>, see eval_response_neuralnet.R and gapfill_nn.R</li>
+<li><code>nnet</code>: used by <code>gapfill_nn()</code> and <code>eval_response_neuralnet()</code>, see eval_response_neuralnet.R and gapfill_nn.R</li>
+<li><code>hydroGOF</code>: used by <code>analyse_modobs()</code> to calculate the Nash-Sutcliffe model efficiency, see analyse_modobs.R</li>
+</ul>
+</div>
+<div id="external-environment" class="section level3">
+<h3>External environment</h3>
+<p>Several functions require external programs called by <code>system()</code> calls from within R. Required programs need to be installed beforehand, as follows (<strong>Note: These are not required for the “Simple usage”, described below</strong>):</p>
+<ul>
+<li><p><a href="http://nco.sourceforge.net/">NCO</a>. Is used by <code>get_pointdata_()</code> functions (executing the Bash script <code>&quot;./extract_pointdata_byfil.sh&quot;</code> with NCO command <code>ncks</code>). Before using <code>rsofun</code>, install NCO on a Mac by</p>
+<pre><code>brew tap homebrew/science
+brew install nco</code></pre></li>
+<li><p><a href="https://code.mpimet.mpg.de/">CDO</a>. Is used by the <code>proc_ncout_sofun_bysite()</code> function (executing Bash script <code>&quot;./proc_output_sofun.sh&quot;</code> with CDO command <code>cdo mergetime</code>). Before using <code>rsofun</code>, install CDO on a Mac by</p>
+<pre><code>brew install cdo</code></pre>
+<p>Apparently, CDO is no longer available as a Homebrew formula (right?). Unse MacPorts instead:</p>
+<pre><code>sudo port install cdo</code></pre></li>
+</ul>
+</div>
+</div>
+<div id="acknowledgements" class="section level2">
+<h2>Acknowledgements</h2>
+<p>The main author (B. Stocker) was funded by Marie Sklodowska-Curie fellowship H2020-MSCA-IF-2015, project FIBER, grant number 701329.</p>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
