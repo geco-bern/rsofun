@@ -23,13 +23,13 @@
 #'
 #' @return A named list of numeric values with 
 #' \itemize{
-#'         \item \code{gammastar}: photorespiratory compensation point, (Pa)
+#'         \item \code{gammastar}: photorespiratory compensation point, (Pa). It is calculated as:
 #'         \item \code{kmm}: Michaelis-Menten coefficient for photosynthesis (Pa)
 #'         \item \code{ci}: leaf-internal partial pressure, (Pa)
 #'         \item \code{chi}: = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
 #'         \item \code{iwue}: intrinsic water use efficiency (unitless)
 #'         \item \code{lue}: light use efficiency (mol CO2 / mol photon)
-#'         \item \code{gpp}: gross primary productivity (g C m-2, calculated only if fAPAR and PPFD are not 'dummy')
+#'         \item \code{gpp}: gross primary productivity (g C m-2). Calculated only if \code{fapar} and \code{ppfd} are not \code{NA}.
 #'         \item \code{vcmax}: maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
 #'         \item \code{vcmax25}: Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
 #'         \item \code{vcmax_unitfapar}: Vcmax per fAPAR (mol CO2 m-2 s-1)

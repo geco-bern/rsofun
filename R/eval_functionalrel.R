@@ -85,7 +85,6 @@ eval_response_byvar <- function( evalvar, df, gam, all_predictors, nam_target, n
 
 
 ## aggregates to multi-day periods
-#' @param ndays_agg An integer specifying the level of data aggregation by number of days. If \code{ndays_agg=NULL}, no aggregation is done.
 aggregate_mean <- function( ddf, ndays_agg, dovars, year_start, year_end ){
 
   if (ndays_agg==1){
