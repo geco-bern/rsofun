@@ -2,8 +2,10 @@
 title: "The rsofun R package"
 output: 
   html_document:
-     css: site_libs/font-awesome-4.5.0/css/font-awesome.css
-     self_contained: no
+    toc: true
+    toc_float: true
+    css: site_libs/font-awesome-4.5.0/css/font-awesome.css
+    self_contained: no
 ---
 
 <!-- Uncomment to include FontAwesom -->
