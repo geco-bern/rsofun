@@ -46,20 +46,24 @@ prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
       if (!dir.exists(paste0(settings$dir_sofun, "params_std"))) rlang::abort("Aborting. SOFUN could not be cloned for an unknown reason.")
     }
 
+    here <- getwd()
+    setwd(settings$dir_sofun)
+    
     ## Get executable
     if (setup$do_compile){
 
       cmd <- paste0("make ", setup$model)
       system( cmd )
 
-    } else {
+    } else if (!file.exists(paste0("run", setup$model))) {
 
       print("Copying executable provided by rsofun and compiled on a 64-bit UNIX machine with gfortran into the SOFUN run directory...")
-      system( paste0( "cp ", path.package("rsofun"), "/extdata/run", setup$model, " ", settings$dir_sofun ) )
+      system( paste0( "cp ", path.package("rsofun"), "/extdata/run", setup$model, " ." ) )
 
       if (!file.exists(paste0("run", setup$model))) rlang::abort( paste( "Executable is not available: ", paste0("run", setup$model)) )
 
     }
+    setwd(here)
 
   } else {
 
