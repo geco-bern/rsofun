@@ -3,6 +3,8 @@ title: "Compare P-model implementations"
 author: "Benjamin D. Stocker"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
+fig_width: 30 
+fig_height: 20 
 vignette: >
   %\VignetteIndexEntry{test_implementations}
   %\VignetteEngine{knitr::rmarkdown}
@@ -24,17 +26,16 @@ vignette: >
 ## Environment
 
 Load the `rsofun` package. This contains all the necessary wrapper functions to set up and run SOFUN and read its output. 
-```{r message=FALSE, echo=FALSE}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 library(rsofun)
 
 ## load all rsofun dependencies
 load_dependencies_rsofun()
 
 ## other crap
-systr <- "''"    # for Mac
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does not work properly
 # if (is.null(options()$rsofun.dir.sofun)) rlang::abort( "Option rsofun.dir.sofun not set. Do so by `options( list( rsofun.dir.sofun=string_path_where_sofun_is ))`" )
-options( list( rsofun.dir.sofun="string_path_where_sofun_is" ) )
+options( list( rsofun.dir.sofun="~/sofun/trunk/" ))
 ```
 
 ## Run implementations for a temperature range
@@ -48,7 +49,7 @@ Varying temperature from 0 to 35 degrees Celsius. All other factors are held con
 
 The quantum yield efficiency is set to `kphio = 0.05` for the `"wanghan"` method, and 0.257 for the `"smith"` method.
 
-```{r, eval=TRUE, message=FALSE, warning=FALSE}
+```{r, eval=TRUE, message=FALSE, warning=FALSE, fig.width=12}
 ppfd <- 800
 vpd  <- 1000
 co2  <- 400
@@ -67,7 +68,7 @@ pmodel_smith <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ),
 ## Fortran, Vcmax basedon Wang Han's formulation
 ## update quantum yield parameter in file
 params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/extdata/params_opt_kphio_soilm_global.csv" ) )
-params_opt$kphio <- 0.05 
+params_opt$kphio <- 0.05
 nothing <- update_params( params_opt, options()$rsofun.dir.sofun )
 
 pmodel_fortran <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 

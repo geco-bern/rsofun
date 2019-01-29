@@ -29,6 +29,9 @@ pmodel <- function( temp, vpd, co2, ppfd, fapar, elv, kphio, implementation = "R
     here <- getwd() # save current working directory
     setwd( sofundir )    
 
+    ## This invokes a system call, corresponding to something like
+    ## > echo 20 1000 400 800 1.0 0.0 | ./rundemo_pmodel
+    ## This should return 22 values that are read back into R and given names (see 'varnams' below).
     out <- system2( "./rundemo_pmodel", 
                     input = c( as.character(temp), as.character(vpd), as.character(co2), as.character(ppfd), as.character(fapar), as.character(elv) ),
                     stdout = TRUE, stderr = FALSE ) %>%
