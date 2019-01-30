@@ -64,22 +64,22 @@ get_obs_fluxnet2015_raw <- function( sitename, path, vars, freq="y" ){
     ## get dates, their format differs slightly between temporal resolution
     if ( freq=="y" ){
 
-      df <- df %>% mutate( year = TIMESTAMP ) %>% mutate( date = ymd( paste0( as.character(year), "-01-01" ) ) )      
+      df <- df %>% dplyr::mutate( year = TIMESTAMP ) %>% dplyr::mutate( date = ymd( paste0( as.character(year), "-01-01" ) ) )      
 
     } else if ( freq=="w"){
 
-      df <- df %>% mutate( date_start = ymd(TIMESTAMP_START), date_end = ymd(TIMESTAMP_END) ) %>% 
-                   mutate( date = date_start )
+      df <- df %>% dplyr::mutate( date_start = ymd(TIMESTAMP_START), date_end = ymd(TIMESTAMP_END) ) %>% 
+                   dplyr::mutate( date = date_start )
 
     } else if ( freq=="m" ){
 
-      df <- df %>% mutate( year = substr( TIMESTAMP, start = 1, stop = 4 ), month = substr( TIMESTAMP, start = 5, stop = 6 ) ) %>%
-                   mutate( date = ymd( paste0( as.character(year), "-", as.character(month), "-01" ) ) )
+      df <- df %>% dplyr::mutate( year = substr( TIMESTAMP, start = 1, stop = 4 ), month = substr( TIMESTAMP, start = 5, stop = 6 ) ) %>%
+                   dplyr::mutate( date = ymd( paste0( as.character(year), "-", as.character(month), "-01" ) ) )
 
     }
 
     ## convert units. given in umolCO2 m-2 s-1. converted to gC m-2 d-1
-    df <- df %>%  mutate(
+    df <- df %>%  dplyr::mutate(
                           GPP_NT_VUT_REF     = as.numeric(GPP_NT_VUT_REF)    ,
                           GPP_NT_VUT_USTAR50 = as.numeric(GPP_NT_VUT_USTAR50),
                           GPP_DT_VUT_REF     = as.numeric(GPP_DT_VUT_REF)    ,
@@ -87,7 +87,7 @@ get_obs_fluxnet2015_raw <- function( sitename, path, vars, freq="y" ){
                           LE_F_MDS           = as.numeric(LE_F_MDS),             ## W m-2 -> J m-2 d-1
                           gpp_obs            = ( GPP_NT_VUT_REF + GPP_DT_VUT_REF ) / 2  
                           ) %>%
-                  select( date, GPP_NT_VUT_REF, GPP_NT_VUT_USTAR50, GPP_DT_VUT_REF, GPP_DT_VUT_USTAR50, LE_F_MDS, gpp_obs )
+                  dplyr::select( date, GPP_NT_VUT_REF, GPP_NT_VUT_USTAR50, GPP_DT_VUT_REF, GPP_DT_VUT_USTAR50, LE_F_MDS, gpp_obs )
 
   } else {
 

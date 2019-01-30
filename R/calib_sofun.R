@@ -187,6 +187,10 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
       print( paste0( "writing output from GenSA function to ", filn ) )
       save( out_optim, file = filn )
       
+      # ## Test plot with the same SOFUN call
+      # plot_test_kphio( out_optim$par, subtitle = "", label = paste("CALIB test", settings_calib$name), makepdf = FALSE )    
+
+
     } else if (settings_calib$method=="optimr"){
       ##----------------------------------------------------------------
       ## Calibrate the model parameters using R optimr(). Optimr is a 
@@ -207,6 +211,10 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
       filn <- paste0( settings_calib$dir_results, "/out_optimr_", settings_calib$name, ".Rdata")
       print( paste0( "writing output from optimr function to ", filn ) )
       save( out_optim, file = filn )
+
+      # ## Test plot with the same SOFUN call
+      # plot_test_kphio( out_optim$par, subtitle = "", label = paste("CALIB test", settings_calib$name), makepdf = FALSE )
+
 
     } else if (settings_calib$method=="BayesianTools"){
       ##----------------------------------------------------------------
@@ -316,6 +324,42 @@ cost_rmse_kphio <- function( par, inverse = FALSE ){
   if (inverse) cost <- 1.0 / cost
 
   return(cost)
+}
+
+
+##------------------------------------------------------------
+## Test plot with the same SOFUN call to check if it worked
+##------------------------------------------------------------
+plot_test_kphio <- function( par, subtitle = "", label = "", makepdf = FALSE, ... ){
+
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
+
+  ## read output from calibration run
+  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
+  
+  ## Combine obs and mod by columns
+  out <- bind_cols( obs, out )
+
+  ## Plot observed vs. modelled
+  dir_figs <- "./fig/"
+  if (makepdf && !dir.exists(dir_figs)) system( paste0( "mkdir -p ", dir_figs))
+  if (makepdf) filn <- paste0( dir_figs, "/modobs_calibtest_", label, ".pdf" )
+  if (makepdf) print( paste( "Plotting to file:", filn ) )
+  if (makepdf) pdf( filn )
+  modobs_xdf <- with( out, 
+    analyse_modobs( 
+      gpp_mod, 
+      gpp_obs, 
+      heat=TRUE, 
+      ylab = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), 
+      xlab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ),
+      plot.title = label,
+      ...
+      ) )
+  if (makepdf) dev.off()
+
 }
 
 

@@ -47,7 +47,7 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, list_modobs=N
 
       ## For comparison with FLUXNET 2015 data, normalise simulated soil moisture to between 0 and 1
       print( "WARNING: Normalising simulated soil moisture to maximum (=1) for comparability with observational data.")
-      ddf_tmp <- ddf_tmp %>% mutate( wcont = wcont / max( wcont, na.rm = TRUE ) )  
+      ddf_tmp <- ddf_tmp %>% dplyr::mutate( wcont = wcont / max( wcont, na.rm = TRUE ) )  
 
       ## add to list
       ddf[[ iset ]] <- ddf_tmp
@@ -57,8 +57,8 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, list_modobs=N
     ##---------------------------------------------------------
     ## Aggregate to model output from daily to monthly
     ##---------------------------------------------------------
-    mdf[[ iset ]] <- ddf[[ iset ]] %>%  group_by( month(date) ) %>%
-                                        summarise( date = min( date ),   ## 'date' is now the first day of the month
+    mdf[[ iset ]] <- ddf[[ iset ]] %>%  dplyr::group_by( month(date) ) %>%
+                                        dplyr::summarise( date = min( date ),   ## 'date' is now the first day of the month
                                                    pet = sum( pet ),
                                                    aet = sum( aet ),
                                                    wcont = mean( wcont ),
@@ -68,8 +68,8 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, list_modobs=N
     ##---------------------------------------------------------
     ## Aggregate to model output from daily to weekly
     ##---------------------------------------------------------
-    wdf[[ iset ]] <- ddf[[ iset ]] %>%  group_by( week(date) ) %>%
-                                        summarise( date = min( date ),   ## 'date' is now the first day of the week
+    wdf[[ iset ]] <- ddf[[ iset ]] %>%  dplyr::group_by( week(date) ) %>%
+                                        dplyr::summarise( date = min( date ),   ## 'date' is now the first day of the week
                                                    pet = sum( pet ),
                                                    aet = sum( aet ),
                                                    wcont = mean( wcont ),
@@ -79,8 +79,8 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, list_modobs=N
     ##---------------------------------------------------------
     ## Aggregate to model output from daily to annual
     ##---------------------------------------------------------
-    adf[[ iset ]] <- ddf[[ iset ]] %>%  group_by( year(date) ) %>%
-                                        summarise( date = min( date ),    ## 'date' is now the first day of the year
+    adf[[ iset ]] <- ddf[[ iset ]] %>%  dplyr::group_by( year(date) ) %>%
+                                        dplyr::summarise( date = min( date ),    ## 'date' is now the first day of the year
                                                    pet = sum( pet ),
                                                    aet = sum( aet ),
                                                    wcont = mean( wcont ),
@@ -101,12 +101,12 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, list_modobs=N
   if (any(!is.na(ddf_obs))){ 
 
     ## Normalise observational soil moisture to within minimum (=0) and maximum (=1), and
-    ddf_obs$obs_swc <- ddf_obs$obs_swc %>% mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) )
+    ddf_obs$obs_swc <- ddf_obs$obs_swc %>% dplyr::mutate_at( vars(starts_with("SWC_F_MDS")), funs(norm_to_max(.)) )
     
     ## get mean soil observational moisture across different depths (if available)
     ddf_obs$obs_swc <- ddf_obs$obs_swc %>%
-      mutate( soilm_obs_mean = apply( select( ddf_obs$obs_swc, starts_with("SWC_F_MDS") ), 1, FUN=mean, na.rm=TRUE ) ) %>%
-      mutate( soilm_obs_mean = ifelse( is.nan(soilm_obs_mean), NA, soilm_obs_mean ) )
+      dplyr::mutate( soilm_obs_mean = apply( dplyr::select( ddf_obs$obs_swc, starts_with("SWC_F_MDS") ), 1, FUN=mean, na.rm=TRUE ) ) %>%
+      dplyr::mutate( soilm_obs_mean = ifelse( is.nan(soilm_obs_mean), NA, soilm_obs_mean ) )
   
   } else {
 
@@ -160,20 +160,20 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, list_modobs=N
   if (class(ddf_infpar)=="try-error"){
     missing_infpar <- c( missing_infpar, sitename )    
   } else {
-    ddf_infpar <- ddf_infpar %>% rename( fpar = modisvar_interpol ) %>% select( date, fpar ) %>% mutate( date = ymd(date) )
+    ddf_infpar <- ddf_infpar %>% dplyr::rename( fpar = modisvar_interpol ) %>% dplyr::select( date, fpar ) %>% dplyr::mutate( date = ymd(date) )
   }
 
   ## monthly
-  mdf_infpar <- ddf_infpar %>%  group_by( month(date) ) %>%
-                                summarise( fpar = mean( fpar ), date = min(date) ) ## 'date' is now the first day of the month
+  mdf_infpar <- ddf_infpar %>%  dplyr::group_by( month(date) ) %>%
+                                dplyr::summarise( fpar = mean( fpar ), date = min(date) ) ## 'date' is now the first day of the month
 
   ## weekly
-  wdf_infpar <- ddf_infpar %>%  group_by( week(date) ) %>%
-                                summarise( fpar = mean( fpar ), date = min(date) ) ## 'date' is now the first day of the week
+  wdf_infpar <- ddf_infpar %>%  dplyr::group_by( week(date) ) %>%
+                                dplyr::summarise( fpar = mean( fpar ), date = min(date) ) ## 'date' is now the first day of the week
   
   ## annual
-  adf_infpar <- ddf_infpar %>%  group_by( year(date) ) %>%
-                                summarise( fpar = mean( fpar ), date = min(date) ) ## 'date' is now the first day of the year
+  adf_infpar <- ddf_infpar %>%  dplyr::group_by( year(date) ) %>%
+                                dplyr::summarise( fpar = mean( fpar ), date = min(date) ) ## 'date' is now the first day of the year
 
   ##---------------------------------------------------------
   ## Check if any data is available
@@ -190,20 +190,20 @@ get_modobs_fluxnet2015 <- function( sitename, simsuite, outputset, list_modobs=N
 
       ## add daily data to list
       ddf$obs     <- ddf_obs$obs
-      ddf$inp     <- ddf_inclim %>% left_join( ddf_infpar, by = "date" )
+      ddf$inp     <- ddf_inclim %>% dplyr::left_join( ddf_infpar, by = "date" )
       ddf$swc_obs <- ddf_obs$obs_swc
 
       ## add weekly data to list
       wdf$obs     <- wdf_obs
-      wdf$inp     <- wdf_inclim %>% left_join( wdf_infpar, by = "date" )
+      wdf$inp     <- wdf_inclim %>% dplyr::left_join( wdf_infpar, by = "date" )
 
       ## add monthly data to list
       mdf$obs     <- mdf_obs
-      mdf$inp     <- mdf_inclim %>% left_join( mdf_infpar, by = "date" )
+      mdf$inp     <- mdf_inclim %>% dplyr::left_join( mdf_infpar, by = "date" )
 
       ## add annual data to list
       adf$obs     <- adf_obs
-      adf$inp     <- adf_inclim %>% left_join( adf_infpar, by = "date" )
+      adf$inp     <- adf_inclim %>% dplyr::left_join( adf_infpar, by = "date" )
 
     } else {
     

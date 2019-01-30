@@ -66,7 +66,7 @@ add_swcvars_fluxnet2015 <- function( sitename, fluxnet=NA, outdir="./" ){
   # Attach ET-data-driven soil moisture to dataframe
   #---------------------------------------------------------
   if (avl) { 
-    fluxnet[[ sitename ]]$ddf$swc_by_etobs <- cbind( select( data, year, moy, dom, year, year_dec, le_f_mds ), soilm_from_et, soilm_from_et_orthbucket )
+    fluxnet[[ sitename ]]$ddf$swc_by_etobs <- cbind( dplyr::select( data, year, moy, dom, year, year_dec, le_f_mds ), soilm_from_et, soilm_from_et_orthbucket )
     fluxnet[[ sitename ]]$ddf$obs$le_f_mds_mygapfilled <- data$le_f_mds
   } else {
     fluxnet[[ sitename ]]$swc_by_etobs <- NA
