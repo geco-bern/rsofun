@@ -48,7 +48,7 @@ lseq <- function(from=1, to=100000, length.out=6) {
 
 ## Set parameters
 beta <- 146          # unit cost ratio a/b
-gamma <- 100 #  0.053       # unit cost ratio c/b
+gamma <- 0.105       # unit cost ratio c/b
 kphio <- 0.05        # quantum yield efficiency
 c_molmass <- 12.0107 # molar mass, g / mol
 
@@ -58,7 +58,7 @@ ppfd <- 300          # mol/m2/d
 vpd  <- 1000          # Pa
 co2  <- 400          # ppm
 elv  <- 0            # m.a.s.l.
-fapar <- 1           # fraction
+fapar <- 1           # fraction  
 
 out_analytical <- rsofun::rpmodel( 
   tc             = tc,
@@ -779,7 +779,7 @@ calc_optimal_gs_vcmax_jmax <- function( par, args, iabs, kphio, cost_scalar, max
     ## here cost_scalar basically corresponds to a in Eq. 2
     cost_transp <- cost_scalar * 1.6 * ns_star * gs * vpd
     cost_vcmax  <- cost_scalar * beta * vcmax
-    cost_jmax   <- cost_scalar * gamma * jmax
+    cost_jmax   <- gamma * jmax    # Tried here without cost_scalar because we know that dA/dJmax = 0.105 = gamma
 
     ## The trouble is that A_c is used to determine optimality here, but actual assimilation is
     ## later calculated following the light-limited function for A_j.
