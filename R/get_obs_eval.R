@@ -44,10 +44,10 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
       } else {
       	rlang::warn("settings_eval$path_fluxnet2015_y is empty")
 			  adf <-  lapply( as.list(settings_eval$sitenames),
-												  	function(x) init_dates_dataframe( 
-												  		year(settings_sims$date_start[[x]]), 
-												  		year(settings_sims$date_end[[x]]), 
-												  		noleap = TRUE, 
+												  	function(x) init_dates_dataframe(
+												  		year(settings_sims$date_start[[x]]),
+												  		year(settings_sims$date_end[[x]]),
+												  		noleap = TRUE,
 												  		freq = "years" ) %>%
 											## Remove outliers, i.e. when data is outside 1.5 times the inter-quartile range
 											mutate( gpp_obs = NA,
@@ -74,10 +74,10 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
       } else {
       	rlang::warn("settings_eval$path_fluxnet2015_m is empty")
 				mdf <-  lapply( as.list(settings_eval$sitenames),
-												  	function(x) init_dates_dataframe( 
-												  		year(settings_sims$date_start[[x]]), 
-												  		year(settings_sims$date_end[[x]]), 
-												  		noleap = TRUE, 
+												  	function(x) init_dates_dataframe(
+												  		year(settings_sims$date_start[[x]]),
+												  		year(settings_sims$date_end[[x]]),
+												  		noleap = TRUE,
 												  		freq = "months" ) %>%
 											mutate( year = year(date),
 															sitename = x ) ) %>%
@@ -102,10 +102,10 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
       } else {
       	rlang::warn("settings_eval$path_fluxnet2015_d is empty")
 				ddf <-  lapply( as.list(settings_eval$sitenames),
-								  	function(x) init_dates_dataframe( 
-								  		year(settings_sims$date_start[[x]]), 
-								  		year(settings_sims$date_end[[x]]), 
-								  		noleap = TRUE, 
+								  	function(x) init_dates_dataframe(
+								  		year(settings_sims$date_start[[x]]),
+								  		year(settings_sims$date_end[[x]]),
+								  		noleap = TRUE,
 								  		freq = "days" ) %>%
 							mutate( year = year(date),
 											sitename = x ) ) %>%
@@ -118,14 +118,14 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
 			##------------------------------------------------------------
 			if ("Ty" %in% datasource){
 				ddf_gepisat <- lapply( as.list(settings_eval$sitenames),
-												function(x) get_obs_bysite_gpp_gepisat( x, 
-												  settings_eval$path_gepisat_d, 
+												function(x) get_obs_bysite_gpp_gepisat( x,
+												  settings_eval$path_gepisat_d,
 													timescale = "d" ) )
 				names(ddf_gepisat) <- settings_eval$sitenames
 
 				missing_gepisat <- purrr::map_lgl( ddf_gepisat, ~identical(., NULL ) ) %>% which() %>% names()
 				settings_eval$sitenames_gepisat <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_gepisat))]
-        
+
 				## Convert to one long data frame and add sitename to data frames inside the list
 				ddf_gepisat <- ddf_gepisat %>% bind_rows( .id = "sitename" ) %>%
 				               mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) %>%  # remove pre-modis data
@@ -139,9 +139,9 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
 
 				} else {
 				  ddf <- ddf %>% mutate( gpp_obs_gepisat = NA )
-				}			  							
+				}
 			}
-	    
+
 			##------------------------------------------------------------
 			## Add forcing data to daily data frame (for neural network-based evaluation)
 			##------------------------------------------------------------

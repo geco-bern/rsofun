@@ -263,7 +263,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 ##-----------------------------------------------------------
 prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite=FALSE, overwrite_csv=FALSE, verbose=FALSE ){
 
-  if (verbose) print(paste("prepare_input_sofun_climate_bysite() for site", sitename ))
+  if (verbose) print(paste("Getting climate data for site", sitename ))
 
   ## path of CSV file with data for this site
   dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
