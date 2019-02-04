@@ -4,6 +4,7 @@
 #'
 #' @param mod A vector of numeric values representing modelled values. 
 #' @param obs A vector of numeric values representing observed values. 
+#' @param heat If \code{TRUE}, uses the heat color palette from LSD. Defaults to \code{FALSE}.
 #' @param plot.fil A character string specifying the name of the file containing the plot.
 #' @param xlim A vector of length 2 specifying the limits of the x-axis of the plot.
 #' @param ylim A vector of length 2 specifying the limits of the y-axis of the plot.
@@ -33,7 +34,9 @@ analyse_modobs <- function( mod,
                             lab.xpos=0.75,
                             lab.ypos=0.75,
                             main="",
-                            ... ){
+                            log=NA,
+                            ... 
+                            ){
 
 
   ## get statistics
@@ -61,14 +64,24 @@ analyse_modobs <- function( mod,
     if (is.na(ylim)) ylim <- xlim
 
     if (heat){
-      LSD::heatscatter( 
-                  mod, 
-                  obs, 
-                  main=main, 
-                  xlim=xlim, 
-                  ylim=ylim,
-                  ...
-                  )      
+      if (!is.na(log)){
+        LSD::heatscatter( 
+          mod, 
+          obs, 
+          main=main,
+          log=log,
+          ...
+        )      
+      } else {
+        LSD::heatscatter( 
+          mod, 
+          obs, 
+          main=main, 
+          xlim=xlim, 
+          ylim=ylim,
+          ...
+        )      
+      }
     } else {
       plot( mod, obs, main = main, pch = 16, xlim = xlim, ylim = ylim, ... )
     }

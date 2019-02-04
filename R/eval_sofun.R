@@ -110,11 +110,13 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
     ##------------------------------------------------------------
     if (sum(!is.na(adf$gpp_obs))>2){
 	    print("Evaluate annual values...")
-			adf_stats <- adf %>% group_by( sitename ) %>% 
+			adf_stats <- adf %>% 
+			             mutate( validpoint = ifelse( is.na(gpp_obs) | is.na(gpp_mod), FALSE, TRUE ) ) %>% 
+			             group_by( sitename ) %>% 
 									 nest() %>%
-			             mutate( nyears_obs = purrr::map( data, ~sum(!is.na( .$gpp_obs )  ) ) ) %>%
-			             unnest( nyears_obs ) %>%
-			             filter( nyears_obs > 2 ) %>%
+			             mutate( npoints = purrr::map( data, ~sum( .$validpoint ) ) ) %>%
+			             unnest( npoints ) %>%
+			             filter( npoints > 2 ) %>%
 			             mutate( linmod = purrr::map( data, ~lm( gpp_obs ~ gpp_mod, data = . ) ),
 	    		                 stats  = purrr::map( data, ~get_stats( .$gpp_mod, .$gpp_obs ) ) ) %>%
 			             mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
