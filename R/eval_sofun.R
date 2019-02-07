@@ -71,21 +71,23 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
 	  print("Aggregating model outputs...")
 
     ## annual sum
-    adf <- ddf_mod %>%
+    adf <- ddf_mod %>% 
       mutate( year = year(date) ) %>%
       group_by( sitename, year ) %>%
       summarise( gpp_mod = sum(gpp_mod), n = n() ) %>%
       mutate( gpp_mod = ifelse( n<365, NA, gpp_mod ) ) %>%
       ## merge into observational data frame
-      right_join( adf, by = c("sitename", "year"))
+      right_join( adf, by = c("sitename", "year")) %>%
+      dplyr::filter( sitename %in% settings_eval$sitenames )
 
     ## monthly mean
-    mdf <- ddf_mod %>%
+    mdf <- ddf_mod %>% 
       mutate( year = year(date), moy = month(date) ) %>%
       group_by( sitename, year, moy ) %>%
       summarise( gpp_mod = mean(gpp_mod), n = n() ) %>%
       ## merge into observational data frame
-      right_join( mutate( mdf, moy = month(date) ), by = c("sitename", "year", "moy"))
+      right_join( mutate( mdf, moy = month(date) ), by = c("sitename", "year", "moy")) %>%
+      dplyr::filter( sitename %in% settings_eval$sitenames )
 
     ## mean across multi-day period
     xdf <- ddf_mod %>% 
@@ -94,12 +96,14 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
       group_by( sitename, inbin ) %>%
       summarise( gpp_mod_mean = mean( gpp_mod, na.rm = TRUE ), gpp_mod_min = min( gpp_mod, na.rm = TRUE ), gpp_mod_max = max( gpp_mod, na.rm = TRUE ), n_mod = sum(!is.na(gpp_mod)) ) %>%
       dplyr::rename( gpp_mod = gpp_mod_mean ) %>%
-    	right_join( xdf, by = c("sitename", "inbin") )
+    	right_join( xdf, by = c("sitename", "inbin") ) %>%
+      dplyr::filter( sitename %in% settings_eval$sitenames )
     
     ## daily
-    ddf <- ddf_mod %>%
+    ddf <- ddf_mod %>% 
       ## merge into observational data frame
-      right_join( ddf, by = c("sitename", "date"))
+      right_join( ddf, by = c("sitename", "date")) %>%
+      dplyr::filter( sitename %in% settings_eval$sitenames )
 
 		## metrics for daily and x-daily values, all sites pooled
     metrics$gpp$fluxnet2015$daily_pooled  <- with( ddf, get_stats( gpp_mod, gpp_obs ) )
@@ -259,14 +263,11 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
 												  filter( doy != 366 ) %>% ## XXXX this is a dirty fix! better force lubridate to ignore leap years when calculating yday()
 												  group_by( koeppen_code, hemisphere, doy ) %>% 
 												  summarise( obs_mean = median( gpp_obs, na.rm=TRUE ), obs_min = quantile( gpp_obs, 0.33, na.rm=TRUE ), obs_max = quantile( gpp_obs, 0.66, na.rm=TRUE ),
-												             mod_mean = median( gpp_mod, na.rm=TRUE ), mod_min = quantile( gpp_mod, 0.33, na.rm=TRUE ), mod_max = quantile( gpp_mod, 0.66, na.rm=TRUE ) ) %>%
+												             mod_mean = median( gpp_mod, na.rm=TRUE ), mod_min = quantile( gpp_mod, 0.33, na.rm=TRUE ), mod_max = quantile( gpp_mod, 0.66, na.rm=TRUE ),
+												             nsites = length(unique(sitename)) ) %>%
 	                        mutate( obs_min = ifelse( is.infinite(obs_min), NA, obs_min ), obs_max = ifelse( is.infinite(obs_max), NA, obs_max ) ) %>%
 	                        mutate( obs_mean = interpol_lin(obs_mean), obs_min = interpol_lin(obs_min), obs_max = interpol_lin( obs_max ) ) %>%
-	                        mutate( climatezone = paste( koeppen_code, hemisphere ) ) %>%
-	                        left_join( 
-	                        	(metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% mutate( hemisphere = ifelse( lat>0, "north", "south" ) ) %>% group_by( koeppen_code, hemisphere ) %>% summarise( nsites = n() )), 
-	                        	by = c("koeppen_code", "hemisphere") 
-	                        	)
+	                        mutate( climatezone = paste( koeppen_code, hemisphere ) )
 			
 			meandoydf_byclim_stats <- meandoydf_byclim %>% 
 			                          group_by( koeppen_code, hemisphere ) %>%

@@ -13,4 +13,5 @@ output:
   html_document:
      css: site_libs/font-awesome-4.5.0/css/font-awesome.css
      self_contained: no
+     theme: cosmo
 output_dir: "."
