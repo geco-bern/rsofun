@@ -129,27 +129,57 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
 				## Convert to one long data frame and add sitename to data frames inside the list
 				ddf_gepisat <- ddf_gepisat %>% bind_rows( .id = "sitename" ) %>%
 				               mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) %>%  # remove pre-modis data
-				               dplyr::rename( gpp_obs_gepisat = gpp_obs )
+				               dplyr::rename( gpp_obs_gepisat = gpp_obs ) %>% 
+				                
+				               # remove weird data points where error is zero
+				               mutate( gpp_obs_gepisat = ifelse( gpp_err_obs==0.0, NA, gpp_obs_gepisat ) )
+				  
 
-        ## add to other data frames (ddf, adf, mdf) and take take weighted average for updated 'gpp_obs'
+        ## ake weighted average for updated 'gpp_obs', aggregate, and add to other data frames (ddf, adf, mdf)
 				if (!is.null(ddf_gepisat)){
+				  
+				  ## daily
 				  ddf <- ddf_gepisat %>% right_join( ddf, by = c("sitename", "date") )
 				  totlen <- length(datasource[ -which( datasource=="fluxnet2015" ) ])
 				  ddf$gpp_obs <-  apply( dplyr::select( ddf, gpp_obs, gpp_obs_gepisat ), 1, stats::weighted.mean, c((totlen-1)/totlen, 1/totlen), na.rm=TRUE )
 
+				  # ##------------------------------------------------------------
+				  # ## Add forcing data to daily data frame (for evaluation of functional relationships)
+				  # ##------------------------------------------------------------
+				  # ddf <- lapply( as.list(settings_eval$sitenames), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
+				  #   bind_rows() %>%
+				  #   dplyr::select(-year_dec.x, -year_dec.y) %>%
+				  #   right_join( ddf, by = c("sitename", "date") )
+				  
+				  ## monthly
+				  mdf <- mdf %>% mutate( year=year(date), moy=month(date) ) %>% select(-gpp_obs)
+				  mdf <- ddf %>%
+				    mutate( moy=month(date), year=year(date) ) %>% 
+				    group_by( sitename, year, moy ) %>% 
+				    summarise( gpp_obs = sum(gpp_obs) ) %>% 
+				    right_join( mdf, by = c("sitename", "year", "moy") )
+
+				  ## annual
+				  adf <- adf %>% select(-gpp_obs)
+				  adf <- ddf %>%
+				    mutate( year=year(date) ) %>% 
+				    group_by( sitename, year ) %>% 
+				    summarise( gpp_obs = sum(gpp_obs) ) %>% 
+				    right_join( adf, by = c("sitename", "year") )
+				  
 				} else {
 				  ddf <- ddf %>% mutate( gpp_obs_gepisat = NA )
 				}
 			}
 
-			##------------------------------------------------------------
-			## Add forcing data to daily data frame (for neural network-based evaluation)
-			##------------------------------------------------------------
-			ddf <- lapply( as.list(settings_eval$sitenames), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
-			       bind_rows() %>%
-			       dplyr::select(-year_dec.x, -year_dec.y) %>%
-						 right_join( ddf, by = c("sitename", "date") )
-
+	    ##------------------------------------------------------------
+	    ## Add forcing data to daily data frame (for evaluation of functional relationships)
+	    ##------------------------------------------------------------
+	    ddf <- lapply( as.list(settings_eval$sitenames), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
+	      bind_rows() %>%
+	      dplyr::select(-year_dec.x, -year_dec.y) %>%
+	      right_join( ddf, by = c("sitename", "date") )
+	    
 		  ##------------------------------------------------------------
 		  ## Aggregate to multi-day periods
 		  ## periods should start with the 1st of January each year, otherwise can't compute mean seasonal cycle
