@@ -259,11 +259,13 @@ eval_sofun <- function( mod, settings_eval, settings_sims, obs_eval = NA, overwr
 			meandoydf_byclim <- ddf %>% mutate( doy = yday(date) ) %>%
 												  left_join( dplyr::select( metainfo_Tier1_sites_kgclimate_fluxnet2015, sitename, lat, koeppen_code ), by = "sitename" ) %>%   # 'metainfo_Tier1_sites_kgclimate_fluxnet2015' is lazy-loaded with library(rsofun)
 												  mutate( hemisphere = ifelse( lat>0, "north", "south" ) ) %>%
+			                    # mutate( bias = gpp_mod - gpp_obs ) %>% 
 												  dplyr::select( -lat ) %>%
 												  filter( doy != 366 ) %>% ## XXXX this is a dirty fix! better force lubridate to ignore leap years when calculating yday()
 												  group_by( koeppen_code, hemisphere, doy ) %>% 
-												  summarise( obs_mean = median( gpp_obs, na.rm=TRUE ), obs_min = quantile( gpp_obs, 0.33, na.rm=TRUE ), obs_max = quantile( gpp_obs, 0.66, na.rm=TRUE ),
-												             mod_mean = median( gpp_mod, na.rm=TRUE ), mod_min = quantile( gpp_mod, 0.33, na.rm=TRUE ), mod_max = quantile( gpp_mod, 0.66, na.rm=TRUE ),
+												  summarise( obs_mean  = median( gpp_obs, na.rm=TRUE ), obs_min  = quantile( gpp_obs, 0.33, na.rm=TRUE ), obs_max  = quantile( gpp_obs, 0.66, na.rm=TRUE ),
+												             mod_mean  = median( gpp_mod, na.rm=TRUE ), mod_min  = quantile( gpp_mod, 0.33, na.rm=TRUE ), mod_max  = quantile( gpp_mod, 0.66, na.rm=TRUE ),
+												             # bias_mean = median( bias,    na.rm=TRUE ), bias_min = quantile( bias, 0.33,    na.rm=TRUE ), bias_max = quantile( bias,    0.66, na.rm=TRUE ),
 												             nsites = length(unique(sitename)) ) %>%
 	                        mutate( obs_min = ifelse( is.infinite(obs_min), NA, obs_min ), obs_max = ifelse( is.infinite(obs_max), NA, obs_max ) ) %>%
 	                        mutate( obs_mean = interpol_lin(obs_mean), obs_min = interpol_lin(obs_min), obs_max = interpol_lin( obs_max ) ) %>%
