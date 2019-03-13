@@ -64,16 +64,19 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
 
     ## convert to numeric (weirdly isn't always) and subset (select)
     mutate_at( vars(one_of(getvars)), funs(as.numeric)) %>%
-    dplyr::select( date, one_of(getvars), starts_with("SWC_") ) %>%  # get soil water content data for filtering later
+    
+    # get soil water content and soil temperature data in addition to 'getvars', used for analyses
+    dplyr::select( date, one_of(getvars), starts_with("SWC_"), starts_with("TS_F_MDS_") ) %>%
     mutate_at( vars(starts_with("SWC_")), funs(as.numeric) ) %>%
-
+    mutate_at( vars(starts_with("TS_F_MDS_")), funs(as.numeric) ) %>%
+    
     ## XXX THIS IS WRONG! DATA IS ALREADY GIVEN IN gC m-2 d-1
     # ## Convert units
     # ## given in umolCO2 m-2 s-1. converted to gC m-2 d-1
     # mutate_at( vars(starts_with("GPP_")), funs(convert_gpp_fluxnet2015) ) %>%
     ## XXXXXXXXXXXXX
 
-    ## W m-2 -> J m-2 d-1
+    ## convert units of latent energy: W m-2 -> J m-2 d-1
     mutate_at( vars(starts_with("LE_")), funs(convert_le_fluxnet2015))
     
   # ## Convert units to gC m-2 mo-1 and gC m-2 w-1 (per month/week instead of per day)
@@ -116,11 +119,38 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
     } else {
       df <- df %>% mutate( soilm_obs_mean = NA )
     }
-    
+
   } else {
     df <- df %>% mutate( soilm_obs_mean = NA )
   }
 
+  ## Soil temperature related stuff
+  if (timescale=="d"){
+    tmp <- df %>% dplyr::select( starts_with("TS_F_MDS_") )
+    if (ncol(tmp)>0){
+      stvars   <- tmp %>% dplyr::select( -ends_with("QC") ) %>% names()
+      stqcvars <- tmp %>% dplyr::select(  ends_with("QC") ) %>% names()
+      
+      # map( as.list(seq(length(stvars))), ~clean_fluxnet_st( df[[ stvars[.] ]], df[[ stqcvars[.] ]]) )
+      if (length(stvars)>0){
+        for (ivar in 1:length(stvars)){
+          df[[ stvars[ivar] ]] <- clean_fluxnet_st( df[[ stvars[ivar] ]], df[[ stqcvars[ivar] ]], frac_data_thresh=0.5 )
+        }
+      }
+      
+      ## get mean observational soil temperature across different depths (if available)
+      df <- df %>%
+        mutate( soiltemp_obs_mean = apply( dplyr::select( ., one_of(stvars) ), 1, FUN = mean, na.rm = TRUE ) ) %>%
+        mutate( soiltemp_obs_mean = ifelse( is.nan(soiltemp_obs_mean), NA, soiltemp_obs_mean ) )
+      
+    } else {
+      df <- df %>% mutate( soiltemp_obs_mean = NA )
+    }
+    
+  } else {
+    df <- df %>% mutate( soiltemp_obs_mean = NA )
+  }
+    
   ## define which data is to be used as target for calibration 'gpp_obs'
   if (identical(method, "NT")){
     df <- df %>% mutate( gpp_obs = GPP_NT_VUT_REF )
@@ -137,7 +167,7 @@ get_obs_bysite_gpp_fluxnet2015 <- function( sitename, path_fluxnet2015, timescal
   }
 
   df <- df %>%  mutate( transp_obs = LE_F_MDS, temp = TA_F, gpp_obs = ifelse( is.nan(gpp_obs), NA, gpp_obs ) ) %>%
-                dplyr::select( date, gpp_obs, transp_obs, soilm_obs_mean, temp, GPP_NT_VUT_REF, GPP_DT_VUT_REF )
+                dplyr::select( date, gpp_obs, transp_obs, soilm_obs_mean, soiltemp_obs_mean, temp, GPP_NT_VUT_REF, GPP_DT_VUT_REF )
 
   return(df)
 
@@ -305,6 +335,7 @@ clean_fluxnet_et <- function( et, qflag_et, cutoff=0.2 ){
 
 clean_fluxnet_swc <- function( swc, qflag_swc, frac_data_thresh=1.0 ){
   ##--------------------------------------------------------------------
+  ## clean soil water content data based on qc flag
   ## frac_data_thresh: fraction of data based on gap-filled half-hourly
   ##--------------------------------------------------------------------
   ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
@@ -314,7 +345,49 @@ clean_fluxnet_swc <- function( swc, qflag_swc, frac_data_thresh=1.0 ){
   return( swc )
 }
 
+clean_fluxnet_st <- function( st, qflag_st, frac_data_thresh=1.0 ){
+  ##--------------------------------------------------------------------
+  ## clean soil temperature data based on qc flag
+  ## frac_data_thresh: fraction of data based on gap-filled half-hourly
+  ##--------------------------------------------------------------------
+  ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
+  st[ which( qflag_st < frac_data_thresh ) ] <- NA
+  st <- as.numeric( st )
+  
+  return( st )
+}
+
 norm_to_max <- function( vec ){
   vec <- ( vec - min( vec, na.rm=TRUE ) ) / ( max( vec, na.rm=TRUE ) - min( vec, na.rm=TRUE ) )
   return( vec )
 }
+
+## Identify a pattern of weirdly repeated values in a vector
+identify_pattern <- function( vec ){
+  
+  eps <- 1e-4
+  
+  vec <- as.numeric(as.character(vec))
+  
+  ## identify all numbers that appear more than once (already suspicious)
+  counts <- as.data.frame( table( vec ) )
+  counts <- counts[ order(-counts$Freq),  ]
+  counts <- counts[ which(counts$Freq>2), ]
+  
+  ## convert factors to numeric
+  counts$vec  <- as.numeric(levels(counts$vec))[counts$vec]
+  
+  for (idx in 1:nrow(counts)){
+    
+    ## find where this value appears
+    pos <- which( abs(vec-counts$vec[idx])<eps )
+    
+    ## replace all numbers that appear more than twice with NA (assuming they are suspicious/wrong)
+    vec[ pos ] <- NA
+    
+  }
+  
+  return( vec )
+  
+}
+

@@ -9,8 +9,9 @@ gapfill_nn <- function( data, predictors, nam_target, package="neuralnet" ){
   ##--------------------------------------------------------------------
 
   if (package=="neuralnet"){
-    if (!requireNamespace("neuralnet", quietly = TRUE))
-      stop("Please, install 'neuralnet' package")
+
+    if (!requireNamespace("neuralnet", quietly = TRUE)) rlang::abort("Please, install 'neuralnet' package")
+
     ##--------------------------------------------------------------------
     ## Using package neuralnet
     ##--------------------------------------------------------------------
@@ -55,8 +56,8 @@ gapfill_nn <- function( data, predictors, nam_target, package="neuralnet" ){
 
 
   } else if (package=="caret"){
-    if (!requireNamespace("caret", quietly = TRUE) | !requireNamespace("nnet", quietly = TRUE))
-      stop("Please, install 'caret' and 'nnet' packages")
+
+    if (!requireNamespace("caret", quietly = TRUE) | !requireNamespace("nnet", quietly = TRUE)) rlang::abort("Please, install 'caret' and 'nnet' packages")
 
     ##--------------------------------------------------------------------
     ## Using package caret
@@ -64,6 +65,7 @@ gapfill_nn <- function( data, predictors, nam_target, package="neuralnet" ){
 
     ## some predictors may be NA. Approximate by linear interpolation.
     for (ipred in predictors){
+
       ## if first value is NA, fill with second
       if ( is.na(data[[ ipred ]][1]) ) { data[[ ipred ]][1] <- data[[ ipred ]][2] }
 
@@ -76,7 +78,7 @@ gapfill_nn <- function( data, predictors, nam_target, package="neuralnet" ){
     }
     # print(apply(data, 2, FUN = function (x) sum(is.na(x))))
 
-    ## this has caused a problem before due to values being too hight -> weird
+    ## this has caused a problem before due to values being too high -> weird
     data[[ nam_target ]] <- data[[ nam_target ]] * 1e-6
 
     ## identify NAs
@@ -100,7 +102,7 @@ gapfill_nn <- function( data, predictors, nam_target, package="neuralnet" ){
                 trace     = FALSE
                 )
 
-    pred_nn <- as.vector( predict( nn, data ))   
+    pred_nn <- as.vector( predict( nn, data ) )   
     # pred_nn <- pred_nn * 1e6 
     
     # ## plot for verification
