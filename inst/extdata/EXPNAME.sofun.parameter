@@ -54,13 +54,13 @@ daily_out_endyr                         XXXdaily_out_endyrXXX
 outdt                                   1
 
 # boolean defining which PFTs to include (lpft1: pftcode=1)
-lTrE                                    .false.
-lTNE                                    .false.
-lTrD                                    .false.
-lTND                                    .false.
-lGr3                                    .true.
-lGN3                                    .false.
-lGr4                                    .false.
+lTrE                                    XXXlTrEXXX
+lTNE                                    XXXlTNEXXX
+lTrD                                    XXXlTrDXXX
+lTND                                    XXXlTNDXXX
+lGr3                                    XXXlGr3XXX
+lGN3                                    XXXlGN3XXX
+lGr4                                    XXXlGr4XXX
 
 # Module-specific booleans defining whether a set of variables is written to annual output
 loutplant                               XXXloutplantXXX
