@@ -161,6 +161,7 @@ settings_sims_sitescale <- list(
   loutdwcont      = TRUE,
   loutdaet        = TRUE,
   loutdpet        = TRUE,
+  loutdnetrad     = TRUE,
   loutdalpha      = TRUE
   )
 ```

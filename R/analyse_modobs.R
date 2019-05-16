@@ -60,8 +60,8 @@ analyse_modobs <- function( mod,
 
     par( las=1, mar=c(4.5,4.5,4,2) )
 
-    if (is.na(xlim)) xlim <- c( min(range(mod, na.rm=TRUE)[1], range(obs, na.rm=TRUE)[1]), max(range(mod, na.rm=TRUE)[2], range(obs, na.rm=TRUE)[2]) )
-    if (is.na(ylim)) ylim <- xlim
+    if (identical(xlim, NA)) xlim <- c( min(range(mod, na.rm=TRUE)[1], range(obs, na.rm=TRUE)[1]), max(range(mod, na.rm=TRUE)[2], range(obs, na.rm=TRUE)[2]) )
+    if (identical(ylim, NA)) ylim <- xlim
 
     if (heat){
       if (!is.na(log)){

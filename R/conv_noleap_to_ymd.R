@@ -7,73 +7,62 @@
 #' For 365 days calendar we leave out feb 29th if being leap year.
 #' Taken from https://github.com/cran/wux/blob/master/R/ReadNetCdfTimeData.R
 #'
-#' @param time  A vector with timesteps, which once was the time variable of a NetCDF file. These timesteps have to be on DAILY basis!
-#' @param since POSIXt object, time starts with.
-#' @param calendar.days Character or numeric. Calendar type. Can be "365" or "360".
+#' @param time  A vector with timesteps, which once was the time variable of a NetCDF file. 
+#' These timesteps have to be on DAILY basis!
+#' @param origin POSIXt or lubridate \code{ymd} object defining the date of zero-day of the time 
+#' vector (argument \code{time})
+#' @param calendar_days Character or numeric. Calendar type. Can be "365" or "360".
 #'
-#' @return lubridate::ymd vector of dates within NetCDF file, having same length as NetCDF time dimension.
+#' @return lubridate::ymd vector of dates within NetCDF file, having same length as
+#' NetCDF time dimension.
 #' @export
 #' 
-conv_noleap_to_ymd <- function(time, since, calender.days="365") { 
-
-  IsLeapYear <- function(year){
-    ## small helperfunction returning boolean vector leapyear true/false
-    ## http://en.wikipedia.org/wiki/Leap_year
-    return(((year %% 4 == 0) & (year %% 100 != 0)) | (year %% 400 == 0))
-  }
+conv_noleap_to_ymd <- function(time, origin, calendar_days=365 ) { 
 
   ## convert arguments to useful format
-  calender.days <- as.numeric(calender.days)
-  since <- as.POSIXlt(since)
-
-  ## get vector containing the "years since" and "day in that year"
-  n.of.years <- time/calender.days
-  year <- floor(n.of.years)
-
-  ## merge "years since" and "day in that year" to a POSIXct date vector
-  date.posix <- since
-  ## get years since ... (by adding years)
-  date.posix$year <- since$year + year
+  calendar_days <- as.numeric(calendar_days)
+  origin_date <- lubridate::ymd(origin)
+  
+  ## get vector containing the "years origin" and "day in that year"
+  years_since_origin_numeric <- time / calendar_days   # numerical value of years since origin
+  year_since_origin_integer <- floor(years_since_origin_numeric)
+  
+  time_year <- origin_date + lubridate::years(year_since_origin_integer)
+  
   ## boolean vector indicating if year is leapyear
-  is.leapyear <- IsLeapYear(as.integer(format(date.posix, format = "%Y")))
+  is_leapyear <- lubridate::leap_year(time_year)
 
   ## getting days within this year
-  days <- time %% calender.days  ## OLD calculation: (n.of.years - year) * calender.days
+  time_day_of_year <- time %% calendar_days  ## OLD calculation: (years_since_origin_numeric - year) * calendar_days
+  
   ## now comes the crucial part:
   ## we shift the days for 360days calendar and 365days calendar so, that:
   ## case 360days: all 31st (except jan and mar) disappear (for leapyears all
   ##               except jan)
   ## case 365days: for leapyears feb 29th disappears
-  if (calender.days == 360){
-    days[days >= 150 & !is.leapyear] <- days[days >= 150 & !is.leapyear] + 1#may 31th
-    days[days >= 211 & !is.leapyear] <- days[days >= 211 & !is.leapyear] + 1#jul 31th
-    days[days >= 242 & !is.leapyear] <- days[days >= 242 & !is.leapyear] + 1#aug 31th
-    days[days >= 303 & !is.leapyear] <- days[days >= 303 & !is.leapyear] + 1#oct 31th
-    days[days >= 364 & !is.leapyear] <- days[days >= 364 & !is.leapyear] + 1#dec 31th
+  if (calendar_days == 360){
+    time_day_of_year[time_day_of_year >= 150 & !is_leapyear] <- time_day_of_year[time_day_of_year >= 150 & !is_leapyear] + 1#may 31th
+    time_day_of_year[time_day_of_year >= 211 & !is_leapyear] <- time_day_of_year[time_day_of_year >= 211 & !is_leapyear] + 1#jul 31th
+    time_day_of_year[time_day_of_year >= 242 & !is_leapyear] <- time_day_of_year[time_day_of_year >= 242 & !is_leapyear] + 1#aug 31th
+    time_day_of_year[time_day_of_year >= 303 & !is_leapyear] <- time_day_of_year[time_day_of_year >= 303 & !is_leapyear] + 1#oct 31th
+    time_day_of_year[time_day_of_year >= 364 & !is_leapyear] <- time_day_of_year[time_day_of_year >= 364 & !is_leapyear] + 1#dec 31th
 
-    days[days >= 90  & is.leapyear] <- days[days >= 90  & is.leapyear] + 1 #mar 31th
-    days[days >= 151 & is.leapyear] <- days[days >= 151 & is.leapyear] + 1 #may 31th
-    days[days >= 212 & is.leapyear] <- days[days >= 212 & is.leapyear] + 1 #jul 31th
-    days[days >= 243 & is.leapyear] <- days[days >= 243 & is.leapyear] + 1 #aug 31th
-    days[days >= 304 & is.leapyear] <- days[days >= 304 & is.leapyear] + 1 #oct 31th
-    days[days >= 365 & is.leapyear] <- days[days >= 365 & is.leapyear] + 1 #dec 31th
+    time_day_of_year[time_day_of_year >= 90  & is_leapyear] <- time_day_of_year[time_day_of_year >= 90  & is_leapyear] + 1 #mar 31th
+    time_day_of_year[time_day_of_year >= 151 & is_leapyear] <- time_day_of_year[time_day_of_year >= 151 & is_leapyear] + 1 #may 31th
+    time_day_of_year[time_day_of_year >= 212 & is_leapyear] <- time_day_of_year[time_day_of_year >= 212 & is_leapyear] + 1 #jul 31th
+    time_day_of_year[time_day_of_year >= 243 & is_leapyear] <- time_day_of_year[time_day_of_year >= 243 & is_leapyear] + 1 #aug 31th
+    time_day_of_year[time_day_of_year >= 304 & is_leapyear] <- time_day_of_year[time_day_of_year >= 304 & is_leapyear] + 1 #oct 31th
+    time_day_of_year[time_day_of_year >= 365 & is_leapyear] <- time_day_of_year[time_day_of_year >= 365 & is_leapyear] + 1 #dec 31th
   }
-  else if (calender.days == 365){
-    days[days >= 60  & is.leapyear] <- days[days >= 60  & is.leapyear] + 1 #feb 29th
+  else if (calendar_days == 365){
+    time_day_of_year[time_day_of_year >= 60  & is_leapyear] <- time_day_of_year[time_day_of_year >= 60  & is_leapyear] + 1 #feb 29th
   }
   else {
     stop("INVALID CALENDAR TYPE IN conv_noleap_to_ymd")
   }
 
-  ## add days to POSIX object
-  date.posix <- date.posix + days * 24 * 3600
+  ## add to ymd object
+  time_date_out <- time_year + lubridate::days(time_day_of_year)
 
-  ## short output summary
-  n.years.approx <- as.integer(strftime( tail(date.posix, 1), "%Y")) -
-    as.integer(strftime( date.posix[1], "%Y")) + 1
-  ## cat("Range in NetCDF file: ", as.character(date.posix[1]), " to ",
-  ##     as.character(tail(date.posix, 1)),  " (~",
-  ##     n.years.approx, " years)\n", sep="")
-
-  return( ymd(date.posix) )
+  return( time_date_out )
 }

@@ -85,6 +85,7 @@ prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
     settings$loutdalpha     = ifelse( is.null(settings$loutdalpha), FALSE, settings$loutdalpha)
     settings$loutdaet       = ifelse( is.null(settings$loutdaet), FALSE, settings$loutdaet  )
     settings$loutdpet       = ifelse( is.null(settings$loutdpet), FALSE, settings$loutdpet  )
+    settings$loutdnetrad    = ifelse( is.null(settings$loutdnetrad), FALSE, settings$loutdnetrad  )
     settings$loutdwcont     = ifelse( is.null(settings$loutdwcont), FALSE, settings$loutdwcont)
     settings$loutdtemp      = ifelse( is.null(settings$loutdtemp), FALSE, settings$loutdtemp )
     settings$loutdfapar     = ifelse( is.null(settings$loutdfapar), FALSE, settings$loutdfapar)
@@ -394,6 +395,7 @@ write_simulation_parameter_bysite <- function( sitename, settings_sim ){
               loutdalpha           = settings_sim$loutdalpha,
               loutdaet             = settings_sim$loutdaet,
               loutdpet             = settings_sim$loutdpet,
+              loutdnetrad          = settings_sim$loutdnetrad,
               loutdwcont           = settings_sim$loutdwcont,
               loutdtemp            = settings_sim$loutdtemp,
               loutdfapar           = settings_sim$loutdfapar,
@@ -458,7 +460,8 @@ create_simulation_parameter_file <- function(
   loutdtransp          = FALSE,
   loutdwcont           = FALSE,
   loutdaet             = FALSE,
-  loutdpet             = FALSE,
+  loutdpet             = FALSE, 
+  loutdnetrad          = FALSE,
   loutdalpha           = FALSE,
   loutdtemp            = FALSE,
   loutdfapar           = FALSE,
@@ -664,6 +667,11 @@ create_simulation_parameter_file <- function(
     system( paste0( "sed -i ", systr, " 's/XXXloutdpetXXX/.true./g' ", path ) )
   } else {
     system( paste0( "sed -i ", systr, " 's/XXXloutdpetXXX/.false./g' ", path ) )
+  }
+  if (loutdnetrad){
+    system( paste0( "sed -i ", systr, " 's/XXXloutdnetradXXX/.true./g' ", path ) )
+  } else {
+    system( paste0( "sed -i ", systr, " 's/XXXloutdnetradXXX/.false./g' ", path ) )
   }
   if (loutdalpha){
     system( paste0( "sed -i ", systr, " 's/XXXloutdalphaXXX/.true./g' ", path ) )

@@ -23,13 +23,13 @@
 		ncrcat -O $2/$1.*.d.gpp.nc $2/$1.d.gpp.nc
 		rm $2/$1.*.d.gpp.nc
 
-		## RD
-		ncrcat -O $2/$1.*.d.rd.nc $2/$1.d.rd.nc
-		rm $2/$1.*.d.rd.nc
+		## Net radiation
+		ncrcat -O $2/$1.*.d.netrad.nc $2/$1.d.netrad.nc
+		rm $2/$1.*.d.netrad.nc
 
 		## TRANSP
 		ncrcat -O $2/$1.*.d.transp.nc $2/$1.d.transp.nc
-		rm $2/$1.*.d.rd.nc
+		rm $2/$1.*.d.transp.nc
 
 		## AET
 		ncrcat -O $2/$1.*.d.pet.nc $2/$1.d.pet.nc
@@ -103,13 +103,13 @@
 		cdo -O mergetime $2/$1.*.d.wcont.nc $2/$1.d.wcont.nc
 		rm $2/$1.*.d.wcont.nc
 
-		## RD
-		cdo -O mergetime $2/$1.*.d.rd.nc $2/$1.d.rd.nc
-		rm $2/$1.*.d.rd.nc
+		## Net radiation
+		cdo -O mergetime $2/$1.*.d.netrad.nc $2/$1.d.netrad.nc
+		rm $2/$1.*.d.netrad.nc
 
 		## TRANSP
 		cdo -O mergetime $2/$1.*.d.transp.nc $2/$1.d.transp.nc
-		rm $2/$1.*.d.rd.nc
+		rm $2/$1.*.d.transp.nc
 
 		## AET
 		cdo -O mergetime $2/$1.*.d.pet.nc $2/$1.d.pet.nc

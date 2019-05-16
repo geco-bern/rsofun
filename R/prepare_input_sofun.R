@@ -288,20 +288,39 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
     if ("fluxnet2015" %in% settings_input$precipitation) fluxnetvars <- c( fluxnetvars, "prec" )
     if ("fluxnet2015" %in% settings_input$vpd)           fluxnetvars <- c( fluxnetvars, "vpd" )
     if ("fluxnet2015" %in% settings_input$ppfd)          fluxnetvars <- c( fluxnetvars, "ppfd" )
-    if ("fluxnet2015" %in% settings_input$netrad)        fluxnetvars <- c( fluxnetvars, "nrad" )
+    if ("fluxnet2015" %in% settings_input$netrad)        fluxnetvars <- c( fluxnetvars, "netrad" )
+    if ("fluxnet2015" %in% settings_input$patm)          fluxnetvars <- c( fluxnetvars, "patm" )
+
+    getvars <- c()
+    if ("fluxnet2015" %in% settings_input$temperature)   getvars <- c( getvars, "TA_F" )  # c( getvars, "TA_F_DAY" )
+    if ("fluxnet2015" %in% settings_input$precipitation) getvars <- c( getvars, "P_F" )
+    if ("fluxnet2015" %in% settings_input$vpd)           getvars <- c( getvars, "VPD_F" ) # c( getvars, "VPD_F_DAY" )
+    if ("fluxnet2015" %in% settings_input$ppfd)          getvars <- c( getvars, "SW_IN_F" )
+    if ("fluxnet2015" %in% settings_input$netrad)        getvars <- c( getvars, "NETRAD" )
+    if ("fluxnet2015" %in% settings_input$patm)          getvars <- c( getvars, "PA_F" )
 
     if (length(fluxnetvars)>0){
 
       ## Make sure data is available for this site
       error <- check_download_fluxnet2015( settings_input$path_fluxnet2015, sitename )
+
       ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
-      ddf <- get_meteo_fluxnet2015( sitename, dir = settings_input$path_fluxnet2015, freq="d" ) %>%
+      # ddf <- get_meteo_fluxnet2015( sitename, dir = settings_input$path_fluxnet2015, freq="d" ) %>%
+      #   dplyr::select( date, one_of(fluxnetvars) ) %>% 
+      #   setNames( c("date", paste0( fluxnetvars, "_fluxnet2015" ))) %>%
+      #   right_join( ddf, by = "date" )
+      
+      ddf <- get_obs_bysite_fluxnet2015(sitename, 
+                                        path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                        timescale        = "d", 
+                                        getvars          = getvars, 
+                                        getswc           = FALSE ) %>%
         dplyr::select( date, one_of(fluxnetvars) ) %>% 
         setNames( c("date", paste0( fluxnetvars, "_fluxnet2015" ))) %>%
-        right_join( ddf, by = "date" )
+        right_join( ddf, by = "date" )   
 
     }
-
+    
     ##----------------------------------------------------------------------
     ## Read WATCH-WFDEI data (extracting from NetCDF files for this site)
     ##----------------------------------------------------------------------
@@ -309,16 +328,18 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       "watch_wfdei" %in% settings_input$temperature, 
       "watch_wfdei" %in% settings_input$precipitation, 
       "watch_wfdei" %in% settings_input$vpd, 
-      "watch_wfdei" %in% settings_input$ppfd
+      "watch_wfdei" %in% settings_input$ppfd,
+      "watch_wfdei" %in% settings_input$netrad,
+      "watch_wfdei" %in% settings_input$patm
       ))){
 
-      ddf <- get_watch_daily( lon = settings_sims$lon[[sitename]], 
-                              lat = settings_sims$lat[[sitename]], 
-                              elv = settings_sims$elv[[sitename]], 
-                              date_start = settings_sims$date_start[[sitename]], 
-                              date_end= settings_sims$date_end[[sitename]], 
-                              settings_input
-                              ) %>% 
+      ddf <-  get_watch_daily(  lon = settings_sims$lon[[sitename]], 
+                                lat = settings_sims$lat[[sitename]], 
+                                elv = settings_sims$elv[[sitename]], 
+                                date_start = settings_sims$date_start[[sitename]], 
+                                date_end= settings_sims$date_end[[sitename]], 
+                                settings_input
+                                ) %>% 
               right_join( ddf, by="date" )
 
     }
@@ -421,8 +442,8 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       } 
 
       if (settings_sims$in_netrad){
-        ## nrad
-        out <- out %>%  mutate( nrad = nrad_fluxnet2015 )
+        ## netrad
+        out <- out %>%  mutate( nrad = netrad_fluxnet2015 )
         if ("nrad_watch" %in% names(ddf) ){
           out <- out %>% mutate( nrad = ifelse( !is.na(nrad), nrad, ifelse( !is.na(nrad_watch), nrad_watch, NA ) ) )
         } 
@@ -632,117 +653,117 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
 
 }
 
-##--------------------------------------------------------------------
-## Function returns a dataframe containing all the data of flux-derived
-## GPP for the station implicitly given by path (argument).
-## Specific for FLUXNET 2015 data
-## Returns variables in the following units:
-## temp: deg C
-## vpd : Pa
-## prec: mm d-1
-## nrad: J m-2 d-1
-## swin: J m-2 d-1
-## ppfd: mol m-2 d-1 
-##--------------------------------------------------------------------
-get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
-
-  ## from flux to energy conversion, umol/J (Meek et al., 1984), same as used in SPLASH (see Eq.50 in spash_doc.pdf)
-  kfFEC <- 2.04
-
-  if (is.na(path)){
-
-    if ( freq=="y" ){
-      ## Annual data
-      print( paste( "getting annual FLUXNET 2015 data for site", sitename ) )
-      allfiles <- list.files( dir )
-      allfiles <- allfiles[ which( grepl( "FULLSET_YY", allfiles ) ) ]
-      allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
-      filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
-      path <- paste0( dir, filnam_obs ) 
-
-    } else if ( freq=="m" ){
-      ## Monthly data
-      print( paste( "getting monthly FLUXNET 2015 data for site", sitename ) )
-      allfiles <- list.files( dir )
-      allfiles <- allfiles[ which( grepl( "FULLSET_MM", allfiles ) ) ]
-      allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
-      filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
-      path <- paste0( dir, filnam_obs ) 
-
-    } else if ( freq=="w" ){
-      ## Weekly data
-      print( paste( "getting weekly FLUXNET 2015 data for site", sitename ) )
-      allfiles <- list.files( dir )
-      allfiles <- allfiles[ which( grepl( "FULLSET_WW", allfiles ) ) ]
-      allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
-      filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
-      path <- paste0( dir, filnam_obs ) 
-
-    } else if ( freq=="d" ){
-      ## Daily data
-      print( paste( "getting daily FLUXNET 2015 data for site", sitename ) )
-      allfiles <- list.files( dir )
-      allfiles <- allfiles[ which( grepl( "FULLSET_DD", allfiles ) ) ]
-      allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
-      filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
-      path <- paste0( dir, filnam_obs ) 
-
-    }
-
-  } else if (is.na(path)) {
-    abort("get_meteo_fluxnet2015(): Either path or dir must be provided as arguments.")
-  }
-
-  ## read data
-  meteo <-  readr::read_csv( path, na="-9999", col_types = cols() )
-
-  ## get dates, their format differs slightly between temporal resolution
-  if ( freq=="y" ){
-
-    meteo <- meteo %>% mutate( year = TIMESTAMP ) %>% mutate( date = ymd( paste0( as.character(year), "-01-01" ) ) )      
-
-  } else if ( freq=="w"){
-
-    meteo <- meteo %>% mutate( date_start = ymd(TIMESTAMP_START), date_end = ymd(TIMESTAMP_END) ) %>% 
-                       mutate( date = date_start )
-
-  } else if ( freq=="m" ){
-
-    meteo <- meteo %>% mutate( year = substr( TIMESTAMP, start = 1, stop = 4 ), month = substr( TIMESTAMP, start = 5, stop = 6 ) ) %>%
-                       mutate( date = ymd( paste0( as.character(year), "-", as.character(month), "-01" ) ) )
-  
-  } else if ( freq=="d" ){
-
-    meteo <- meteo %>% mutate( date = ymd( TIMESTAMP ) )
-
-  }
-  
-  ## rename variables and unit conversions
-  meteo <- meteo %>%  dplyr::rename( temp = TA_F,
-                              vpd  = VPD_F,
-                              prec = P_F,
-                              swin = SW_IN_F
-                            ) %>%
-                      mutate( swin = swin * 60 * 60 * 24,   # given in W m-2, required in J m-2 d-1 
-                              ppfd = swin * kfFEC * 1.0e-6, # convert from J/m2/d to mol/m2/d
-                              vpd  = vpd * 1e2,             # given in hPa, required in Pa
-                              ccov = NA
-                            ) 
-  
-  ## I don't know how to do this better with a single condition to be evaluated
-  if (is.element( "NETRAD", names(meteo) )){
-    meteo <- meteo %>%  mutate( nrad = NETRAD * (60 * 60 * 24) ) %>% # given in W m-2 (avg.), required in J m-2 (daily total)
-                        dplyr::select( date, temp, prec, nrad, ppfd, vpd, ccov )
-  } else {
-    meteo <- meteo %>% mutate( nrad = NA )
-  }
-  
-  ## subset data
-  meteo <- meteo %>% dplyr::select( date, temp, prec, nrad, ppfd, vpd, ccov )
-
-  return( meteo )
-
-}
+# ##--------------------------------------------------------------------
+# ## Function returns a dataframe containing all the data of flux-derived
+# ## GPP for the station implicitly given by path (argument).
+# ## Specific for FLUXNET 2015 data
+# ## Returns variables in the following units:
+# ## temp: deg C
+# ## vpd : Pa
+# ## prec: mm d-1
+# ## nrad: J m-2 d-1
+# ## swin: J m-2 d-1
+# ## ppfd: mol m-2 d-1 
+# ##--------------------------------------------------------------------
+# get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
+# 
+#   ## from flux to energy conversion, umol/J (Meek et al., 1984), same as used in SPLASH (see Eq.50 in spash_doc.pdf)
+#   kfFEC <- 2.04
+# 
+#   if (is.na(path)){
+# 
+#     if ( freq=="y" ){
+#       ## Annual data
+#       print( paste( "getting annual FLUXNET 2015 data for site", sitename ) )
+#       allfiles <- list.files( dir )
+#       allfiles <- allfiles[ which( grepl( "FULLSET_YY", allfiles ) ) ]
+#       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
+#       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
+#       path <- paste0( dir, filnam_obs ) 
+# 
+#     } else if ( freq=="m" ){
+#       ## Monthly data
+#       print( paste( "getting monthly FLUXNET 2015 data for site", sitename ) )
+#       allfiles <- list.files( dir )
+#       allfiles <- allfiles[ which( grepl( "FULLSET_MM", allfiles ) ) ]
+#       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
+#       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
+#       path <- paste0( dir, filnam_obs ) 
+# 
+#     } else if ( freq=="w" ){
+#       ## Weekly data
+#       print( paste( "getting weekly FLUXNET 2015 data for site", sitename ) )
+#       allfiles <- list.files( dir )
+#       allfiles <- allfiles[ which( grepl( "FULLSET_WW", allfiles ) ) ]
+#       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
+#       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
+#       path <- paste0( dir, filnam_obs ) 
+# 
+#     } else if ( freq=="d" ){
+#       ## Daily data
+#       print( paste( "getting daily FLUXNET 2015 data for site", sitename ) )
+#       allfiles <- list.files( dir )
+#       allfiles <- allfiles[ which( grepl( "FULLSET_DD", allfiles ) ) ]
+#       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
+#       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
+#       path <- paste0( dir, filnam_obs ) 
+# 
+#     }
+# 
+#   } else if (is.na(path)) {
+#     abort("get_meteo_fluxnet2015(): Either path or dir must be provided as arguments.")
+#   }
+# 
+#   ## read data
+#   meteo <-  readr::read_csv( path, na="-9999", col_types = cols() )
+# 
+#   ## get dates, their format differs slightly between temporal resolution
+#   if ( freq=="y" ){
+# 
+#     meteo <- meteo %>% mutate( year = TIMESTAMP ) %>% mutate( date = ymd( paste0( as.character(year), "-01-01" ) ) )      
+# 
+#   } else if ( freq=="w"){
+# 
+#     meteo <- meteo %>% mutate( date_start = ymd(TIMESTAMP_START), date_end = ymd(TIMESTAMP_END) ) %>% 
+#                        mutate( date = date_start )
+# 
+#   } else if ( freq=="m" ){
+# 
+#     meteo <- meteo %>% mutate( year = substr( TIMESTAMP, start = 1, stop = 4 ), month = substr( TIMESTAMP, start = 5, stop = 6 ) ) %>%
+#                        mutate( date = ymd( paste0( as.character(year), "-", as.character(month), "-01" ) ) )
+#   
+#   } else if ( freq=="d" ){
+# 
+#     meteo <- meteo %>% mutate( date = ymd( TIMESTAMP ) )
+# 
+#   }
+#   
+#   ## rename variables and unit conversions
+#   meteo <- meteo %>%  dplyr::rename( temp = TA_F,
+#                               vpd  = VPD_F,
+#                               prec = P_F,
+#                               swin = SW_IN_F
+#                             ) %>%
+#                       mutate( swin = swin * 60 * 60 * 24,   # given in W m-2, required in J m-2 d-1 
+#                               ppfd = swin * kfFEC * 1.0e-6, # convert from J/m2/d to mol/m2/d
+#                               vpd  = vpd * 1e2,             # given in hPa, required in Pa
+#                               ccov = NA
+#                             ) 
+#   
+#   ## I don't know how to do this better with a single condition to be evaluated
+#   if (is.element( "NETRAD", names(meteo) )){
+#     meteo <- meteo %>%  mutate( nrad = NETRAD * (60 * 60 * 24) ) %>% # given in W m-2 (avg.), required in J m-2 (daily total)
+#                         dplyr::select( date, temp, prec, nrad, ppfd, vpd, ccov )
+#   } else {
+#     meteo <- meteo %>% mutate( nrad = NA )
+#   }
+#   
+#   ## subset data
+#   meteo <- meteo %>% dplyr::select( date, temp, prec, nrad, ppfd, vpd, ccov )
+# 
+#   return( meteo )
+# 
+# }
 
 ##--------------------------------------------------------------------
 ## Function returns daily data frame with columns for watch data 
@@ -1212,18 +1233,21 @@ check_download_watch_wfdei <- function( varnam, settings_input, settings_sims ){
       } else {
         
         ## Still no files found at specified location. Try to download from remote server and place in <settings_input$path_watch_wfdei>
-        if (settings_input$get_from_remote){
-          rlang::warn( "Initiating download from remote server..." )
-          getfiles <- getfilenames_watch_wfdei( settings_input$date_start, settings_input$date_end )
-          error <- download_from_remote(
-            settings_input$path_remote_watch_wfdei,  
-            settings_input$path_watch_wfdei, 
-            getfiles = getfiles, 
-            uname = settings_input$uname_remote, 
-            address_remote = settings_input$address_remote 
+        if (!is.null(settings_input$get_from_remote)){
+          if (settings_input$get_from_remote){
+            rlang::warn( "Initiating download from remote server..." )
+            getfiles <- getfilenames_watch_wfdei( settings_input$date_start, settings_input$date_end )
+            error <- download_from_remote(
+              settings_input$path_remote_watch_wfdei,  
+              settings_input$path_watch_wfdei, 
+              getfiles = getfiles, 
+              uname = settings_input$uname_remote, 
+              address_remote = settings_input$address_remote 
             )        
+          }
+          filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( varnam, "_daily_WFDEI_.*.nc"), recursive = TRUE )
         }
-        filelist <- list.files( settings_input$path_watch_wfdei, pattern = paste0( varnam, "_daily_WFDEI_.*.nc"), recursive = TRUE )
+        
       }
 
       if (length(filelist)==0){
@@ -1303,17 +1327,19 @@ check_download_cru <- function( varnam, settings_input, settings_sims ){
       } else {
         
         ## Still no files found at specified location. Try to download from remote server and place in <settings_input$path_cru>
-        if (settings_input$get_from_remote){
-          rlang::warn( "Initiating download from remote server ..." )
-          error <- download_from_remote( 
-            settings_input$path_remote_cru, 
-            settings_input$path_cru, 
-            pattern = varnam, 
-            uname = settings_input$uname_remote, 
-            address_remote = settings_input$address_remote 
+        if (!is.null(settings_input$get_from_remote)){
+          if (settings_input$get_from_remote){
+            rlang::warn( "Initiating download from remote server ..." )
+            error <- download_from_remote( 
+              settings_input$path_remote_cru, 
+              settings_input$path_cru, 
+              pattern = varnam, 
+              uname = settings_input$uname_remote, 
+              address_remote = settings_input$address_remote 
             )
+          }
+          getfiles <- list.files( settings_input$path_cru, pattern = paste0( "cru_ts*.1901.2016.", varnam, ".dat.nc") )
         }
-        getfiles <- list.files( settings_input$path_cru, pattern = paste0( "cru_ts*.1901.2016.", varnam, ".dat.nc") )
       }
 
       if (length(getfiles)==0){
