@@ -9,7 +9,8 @@
 #' @param path_fluxnet2015 A character string specifying the local path of 
 #' FLUXNET 2015 data.
 #' @param path_fluxnet2015_hh A character string specifying the local path of 
-#' half-hourly FLUXNET 2015 data
+#' half-hourly FLUXNET 2015 data, required to get daytime VPD. Defaults to 
+#' \code{NULL} (no daytime VPD is calculated).
 #' @param timescale A character specifying the time scale of FLUXNET 2015 
 #' data. Any of \code{c("d", "w", "m", "y")} for daily, weekly, monthly, 
 #' or yearly, respectively.
@@ -83,6 +84,15 @@
 #' monthly, and annual data and 0 [measured], 1 [good quality gapfill], 2 [
 #' medium], 3 [poor] for half-hourly data. Defaults to \code{threshold_GPP=0} 
 #' meaning no data is excluded.
+#' @param threshold_NETRAD A numeric value (between 0 and 1 for daily, weekly,
+#' monthly, and annual data or 0 [measured], 1 [good quality gapfill], 2 [
+#' medium], 3 [poor] for half-hourly data). The value specifies the 
+#' threshold for excluding data during data cleaning. The threshold is 
+#' with respect to the data quality flag in the FLUXNET 2015 data, indicating
+#' the fraction of measured and good quality gapfilled data for daily, weekly,
+#' monthly, and annual data and 0 [measured], 1 [good quality gapfill], 2 [
+#' medium], 3 [poor] for half-hourly data. Defaults to \code{threshold_GPP=0} 
+#' meaning no data is excluded.
 #'
 #' @return A data frame (tibble) containing cleaned observational data,
 #' named and in units corresponding to rsofun standard.
@@ -90,10 +100,10 @@
 #'
 #' @examples df <- get_obs_bysite_fluxnet2015( "FR-Pue", "./inst/extdata/", timescale = "d, method = "NT" )
 #' 
-get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet2015_hh,
+get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet2015_hh=NULL,
   timescale, getvars, getswc=TRUE,
   threshold_GPP=0.0, threshold_LE=0.0, threshold_H=0.0, threshold_SWC=0.0, 
-  threshold_WS=0.0, threshold_USTAR=0.0, threshold_T=0.0, verbose=TRUE ){
+  threshold_WS=0.0, threshold_USTAR=0.0, threshold_T=0.0, threshold_NETRAD=0.0, verbose=TRUE ){
 
   ## Take only file for this site
   if (timescale=="d"){
@@ -144,26 +154,66 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
     )
 
   ## For some sites, the NETRAD column is missing.
-  if (!("NETRAD" %in% names(df))){
+  if ("NETRAD" %in% getvars && !("NETRAD" %in% names(df))){
     df <- df %>% mutate(NETRAD = NA, NETRAD_QC = 0.0)
   }
   
   ## Get daytime VPD separately
   if ("VPD_F_DAY" %in% getvars && !(timescale == "hh")){
-
-    path_fluxnet2015 <- path_fluxnet2015 %>% 
-      dirname() %>% 
-      dirname() %>% 
-      dirname() %>% 
-      paste0(., "/point-scale_none_0.5h/original/unpacked/")
     
-    filn_hh <- list.files( path_fluxnet2015, 
-      pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_HH.*.csv" ), 
-      recursive = TRUE 
+    if (is.null(path_fluxnet2015_hh)){
+      rlang:warn("Argument path_fluxnet2015_hh is not provided. Daytime VPD could not be calculted.")
+    } else {
+      
+      filn_hh <- list.files( path_fluxnet2015_hh, 
+                             pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_HH.*.csv" ), 
+                             recursive = TRUE 
       )
-    df_vpd_day <- get_vpd_day_fluxnet2015_byfile(filn_hh)
-
-    df <- df %>% dplyr::left_join(df_vpd_day, by="date")
+      df_vpd_day_dd <- get_vpd_day_fluxnet2015_byfile(filn_hh)
+      
+      if (timescale=="d"){
+        df <- df %>% dplyr::left_join(df_vpd_day_dd, by="date")
+      } else if (timescale=="w"){
+        
+        df <- df_vpd_day_dd %>%
+          dplyr::mutate(year = lubridate::year(date),
+                        week = lubridate::week(date)) %>% 
+          dplyr::group_by(sitename, year, week) %>% 
+          dplyr::summarise(VPD_F_DAY        = mean(VPD_F, na.rm=TRUE),
+                           VPD_F_DAY_QC     = mean(VPD_F_QC, na.rm=TRUE),
+                           VPD_F_DAY_MDS    = mean(VPD_F_MDS, na.rm=TRUE),
+                           VPD_F_DAY_MDS_QC = mean(VPD_F_MDS_QC, na.rm=TRUE),
+                           VPD_DAY_ERA      = mean(VPD_ERA, na.rm=TRUE) ) %>% 
+          dplyr::right_join(df, by="date")
+        
+      } else if (timescale=="m"){
+        
+        df <- df_vpd_day_dd %>%
+          dplyr::mutate(year = lubridate::year(date),
+                        moy = lubridate::month(date)) %>% 
+          dplyr::group_by(sitename, year, moy) %>% 
+          dplyr::summarise(VPD_F_DAY        = mean(VPD_F, na.rm=TRUE),
+                           VPD_F_DAY_QC     = mean(VPD_F_QC, na.rm=TRUE),
+                           VPD_F_DAY_MDS    = mean(VPD_F_MDS, na.rm=TRUE),
+                           VPD_F_DAY_MDS_QC = mean(VPD_F_MDS_QC, na.rm=TRUE),
+                           VPD_DAY_ERA      = mean(VPD_ERA, na.rm=TRUE) ) %>% 
+          dplyr::right_join(df, by="date")
+        
+      } else if (timescale=="y"){
+        
+        df <- df_vpd_day_dd %>%
+          dplyr::mutate(year = lubridate::year(date)) %>% 
+          dplyr::group_by(sitename, year) %>% 
+          dplyr::summarise(VPD_F_DAY        = mean(VPD_F, na.rm=TRUE),
+                           VPD_F_DAY_QC     = mean(VPD_F_QC, na.rm=TRUE),
+                           VPD_F_DAY_MDS    = mean(VPD_F_MDS, na.rm=TRUE),
+                           VPD_F_DAY_MDS_QC = mean(VPD_F_MDS_QC, na.rm=TRUE),
+                           VPD_DAY_ERA      = mean(VPD_ERA, na.rm=TRUE) ) %>% 
+          dplyr::right_join(df, by="date")
+        
+      }
+      
+    }
 
   }
 
@@ -202,11 +252,18 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
     df <- df %>% clean_fluxnet_byvar(ivar, threshold_USTAR)
   }
   
+  ## net radiation
+  NETRAD_vars <- getvars[which(grepl("NETRAD", getvars))]
+  NETRAD_vars <- NETRAD_vars[-which(grepl("_QC", NETRAD_vars))]
+  for (ivar in NETRAD_vars){
+    df <- df %>% clean_fluxnet_byvar(ivar, threshold_NETRAD)
+  }  
+  
   df <- df %>%
     ## Unit conversion for sensible and latent heat flux: W m-2 -> J m-2 d-1
-    dplyr::mutate_at( vars(starts_with("LE_")), list(~convert_energy_fluxnet2015)) %>%
-    dplyr::mutate_at( vars(starts_with("H_")),  list(~convert_energy_fluxnet2015))
-
+    dplyr::mutate_at( vars(starts_with("LE_")),    list(~convert_energy_fluxnet2015)) %>%
+    dplyr::mutate_at( vars(starts_with("H_")),     list(~convert_energy_fluxnet2015))
+    
   ## clean GPP data
   if (any(grepl("GPP_", getvars))){
     if (any( !(c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC") %in% getvars) )) rlang::abort("Not all variables read from file that are needed for data cleaning.")
@@ -220,9 +277,12 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
     if (any( !(c("LE_F_MDS", "LE_F_MDS_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
     #df$LE_F_MDS_good <- clean_fluxnet_energy( df$LE_F_MDS, df$LE_F_MDS_QC, threshold_LE=0.0 )
     df$LE_F_MDS <- clean_fluxnet_energy( df$LE_F_MDS, df$LE_F_MDS_QC, threshold=threshold_LE )
-    df$H_F_MDS  <- clean_fluxnet_energy( df$H_F_MDS, df$H_F_MDS_QC,   threshold=threshold_LE )
   }
-
+  if (any(grepl("H_", getvars))){
+    if (any( !(c("H_F_MDS", "H_F_MDS_QC") %in% getvars) )) abort("Not all variables read from file that are needed for data cleaning.")
+    df$H_F_MDS  <- clean_fluxnet_energy( df$H_F_MDS, df$H_F_MDS_QC,   threshold=threshold_H )
+  }
+  
   ## Soil moisture related stuff for daily data
   if (timescale=="d" && getswc){
     tmp <- df %>% dplyr::select( starts_with("SWC") )
@@ -491,7 +551,11 @@ clean_fluxnet_gpp <- function( gpp_nt, gpp_dt, qflag_reichstein, qflag_lasslop, 
   ## remove negative GPP
   gpp_nt[ which(gpp_nt<0) ] <- NA
   gpp_dt[ which(gpp_dt<0) ] <- NA
-
+  
+  ## remove outliers
+  gpp_nt <- remove_outliers( gpp_nt, coef=1.5 )
+  gpp_dt <- remove_outliers( gpp_dt, coef=1.5 )
+  
   return( list( gpp_nt=gpp_nt, gpp_dt=gpp_dt ) )
 }
 
