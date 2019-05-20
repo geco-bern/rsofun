@@ -162,7 +162,7 @@ settings_sims_sitescale <- list(
   loutdaet        = TRUE,
   loutdpet        = TRUE,
   loutdnetrad     = TRUE,
-  loutdalpha      = TRUE
+  loutdwbal      = TRUE
   )
 ```
 
@@ -292,7 +292,7 @@ setup_sofun_sitescale <- list(
 <!--   loutplant       = FALSE, -->
 <!--   loutgpp         = TRUE, -->
 <!--   loutwaterbal    = TRUE, -->
-<!--   loutdalpha      = TRUE, -->
+<!--   loutdwbal      = TRUE, -->
 <!--   loutdgpp        = TRUE, -->
 <!--   loutdwcont      = TRUE -->
 <!--   ) -->

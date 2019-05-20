@@ -157,7 +157,7 @@ read_ncout_sofun_daily <- function( expname, settings ){
   if ( settings$loutdgpp) vars <- c( vars, "gpp" )
   if ( settings$loutdrd) vars <- c( vars, "rd" )
   if ( settings$loutdtransp) vars <- c( vars, "transp" )
-  if ( settings$loutdalpha) vars <- c( vars, "alpha" )
+  if ( settings$loutdwbal) vars <- c( vars, "wbal" )
   if ( settings$loutdaet) vars <- c( vars, "aet" )
   if ( settings$loutdpet) vars <- c( vars, "pet" )
   if ( settings$loutdwcont) vars <- c( vars, "wcont" )

@@ -414,40 +414,30 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
       ##------------------------------------------------------------
       plot_modobs_spatial <- function( makepdf=FALSE ){   # using meandf
         
-        # source("analyse_modobs.R")
-        par(las=1, mar=c(4,4.5,4,1))
         if (!dir.exists(settings_eval$dir_figs)) system( paste0( "mkdir -p ", settings_eval$dir_figs ) )
         if (makepdf) { filn <- paste0( settings_eval$dir_figs, "/modobs_spatial.pdf" ) } else { filn <- NA }
+        
         if (nrow(meandf)>2){
-          modobs_spatial <- with( meandf, analyse_modobs( 
-            mod, 
-            obs, 
-            heat = FALSE, 
-            col = "black", 
-            ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), 
-            xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ),
-            plot.fil = filn,
-            plot.title = "Spatial correlation"
-          ) )
+
+          out <- meandf %>% 
+            analyse_modobs2("mod", "obs", type = "points") + 
+            labs(title = "Spatial correlation")
+
         } else {
           modobs_spatial <- NA
-          if (makepdf) pdf(filn)
-          with( meandf, plot( 
-            mod, 
-            obs,  
-            col = "black",
-            pch = 16,
-            ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), 
-            xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ),
-            main = "Spatial correlation",
-            xlim = range(c(mod, obs, na.rm=TRUE)),
-            ylim = range(c(mod, obs, na.rm=TRUE))
-          ))
-          lines( c(-9999,9999), c(-9999,9999), lty=3 )
-          if (makepdf) dev.off()
+
+          gg <- meandf %>%
+            ggplot2::ggplot(aes(mod, obs)) +
+            geom_point() +
+            geom_abline(intercept=0, slope=1, linetype="dotted") +
+            labs(title = "Spatial correlation")
+
+          out <- list(gg=gg, df_metrics=NA)
         }
-        # abline( linmod_meandf, col="red")
-        return(modobs_spatial)
+
+        if (makepdf) ggsave(filn)
+
+        return(out)
       }
 
       ##------------------------------------------------------------
