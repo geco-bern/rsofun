@@ -39,9 +39,9 @@
 		ncrcat -O $2/$1.*.d.aet.nc $2/$1.d.aet.nc
 		rm $2/$1.*.d.aet.nc
 
-		## ALPHA
-		ncrcat -O $2/$1.*.d.alpha.nc $2/$1.d.alpha.nc
-		rm $2/$1.*.d.alpha.nc
+		## WBAL (water balance)
+		ncrcat -O $2/$1.*.d.wbal.nc $2/$1.d.wbal.nc
+		rm $2/$1.*.d.wbal.nc
 
 		## WCONT
 		ncrcat -O $2/$1.*.d.wcont.nc $2/$1.d.wcont.nc
@@ -119,9 +119,9 @@
 		cdo -O mergetime $2/$1.*.d.aet.nc $2/$1.d.aet.nc
 		rm $2/$1.*.d.aet.nc
 
-		## ALPHA
-		cdo -O mergetime $2/$1.*.d.alpha.nc $2/$1.d.alpha.nc
-		rm $2/$1.*.d.alpha.nc
+		## wbal
+		cdo -O mergetime $2/$1.*.d.wbal.nc $2/$1.d.wbal.nc
+		rm $2/$1.*.d.wbal.nc
 
 		## WCONT
 		cdo -O mergetime $2/$1.*.d.gpp.nc $2/$1.d.gpp.nc
