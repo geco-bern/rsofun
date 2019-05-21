@@ -8,7 +8,7 @@ library(rsofun)
 library(rbeni)
 
 load_dependencies_rsofun()
-systr <- "''"    # for Mac
+# systr <- "''"    # for Mac
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does not work properly
 if (!file.exists("bash"))    system("ln -s inst/bash bash")
 if (!file.exists("extdata")) system("ln -s inst/extdata extdata")
@@ -68,7 +68,7 @@ settings_input_sitescale <-  list(
 
 
 ## Model setup
-Define model setup as a list.
+# Define model setup as a list.
 
 setup_sofun_sitescale <- list(
   model      = "swbm",
