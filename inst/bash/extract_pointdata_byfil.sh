@@ -12,5 +12,5 @@
 ## 7. latitude value of site (point)
 
 # echo "extracting from $1, output is in out.txt"
-ncks -s '%13.9f\n' -C -H -d $4,$6 -d $5,$7 -v $3 $1/$2 >./tmp.txt
-sed '/^$/d' ./tmp.txt >./out.txt
+ncks -s '%13.9f\n' -C -H -d $4,$6 -d $5,$7 -v $3 $1/$2 >./tmp/tmp.txt
+sed '/^$/d' ./tmp/tmp.txt >./tmp/out.txt
