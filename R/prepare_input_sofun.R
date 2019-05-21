@@ -827,7 +827,7 @@ get_pointdata_temp_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
   if ( file.exists( filn ) ){
     print( paste( "extracting from", filn ) )
     system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " Tair", " lon lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
-    dtemp <- read.table( paste0( dirn, "/tmp/out.txt") )$V1 - 273.15  # conversion from Kelving to Celsius
+    dtemp <- read.table( "./tmp/out.txt" )$V1 - 273.15  # conversion from Kelving to Celsius
     if ( ignore_leap && mo==2 && length(dtemp==29) ){ dtemp <- dtemp[1:28] }
   } else {
     print(paste("get_pointdata_temp_wfdei(): file does not exist:", filn ))
@@ -859,7 +859,7 @@ get_pointdata_prec_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
   if ( file.exists( filn ) ){
     print( paste( "extracting from", filn ) )
     system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " Rainf", " lon lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
-    dprec <- read.table( paste0( dirn, "/tmp/out.txt") )$V1
+    dprec <- read.table( "./tmp/out.txt" )$V1
     dprec <- dprec*60*60*24 # kg/m2/s -> mm/day
   } else {
     # print( paste( "file", filn, "does not exist." ) )
@@ -873,7 +873,7 @@ get_pointdata_prec_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
   if ( file.exists( filn ) ){
     print( paste( "extracting from", filn ) )
     system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " Snowf", " lon lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
-    dsnow <- read.table( paste0( dirn, "/tmp/out.txt") )$V1
+    dsnow <- read.table( "./tmp/out.txt" )$V1
     dsnow <- dsnow*60*60*24 # kg/m2/s -> mm/day
     dprec <- dprec + dsnow
     # print( paste( "snow only: ", sum( dprec*60*60*24 )))
@@ -907,7 +907,7 @@ get_pointdata_qair_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
   if ( file.exists( filn ) ){
     print( paste( "extracting from", filn ) )
     system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " Qair", " lon lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
-    dqair <- read.table( dirn, "/tmp/out.txt" )$V1
+    dqair <- read.table( "./tmp/out.txt" )$V1
     if ( ignore_leap && mo==2 && length(dqair==29) ){ dqair <- dqair[1:28] }
   } else {
     dqair <- rep( NA, ndaymonth )
@@ -941,7 +941,7 @@ get_pointdata_ppfd_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path )
   if ( file.exists( filn ) ){
     print( paste( "extracting from", filn ) )
     system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " SWdown", " lon lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
-    dswdown <- read.table( paste0( dirn, "/tmp/out.txt") )$V1
+    dswdown <- read.table( "./tmp/out.txt" )$V1
     dppfd <- dswdown * kfFEC  # W m-2 -> umol s-1 m-2
     dppfd <- 1.0e-6 * dppfd * 60 * 60 * 24  # umol m-2 s-1 -> mol m-2 d-1
     if ( ignore_leap && mo==2 && length(dppfd==29) ){ dppfd <- dppfd[1:28] }
@@ -971,11 +971,11 @@ get_pointdata_monthly_cru <- function( varnam, lon, lat, settings, yrend ){
   if ( length( filn )!=0 ){
     
     dirn <- settings$path_cru
-    if (!dir.exists(paste0(dirn, "/tmp"))) system(paste0("mkdir ", dirn, "/tmp"))
+    if (!dir.exists("./tmp")) system("mkdir ./tmp")
     cmd <- paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " ", varnam, " lon", " lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) )
     print( paste( "executing command:", cmd ) )
     system( cmd )
-    mdata <- read.table( paste0( dirn, "/tmp/out.txt") )$V1
+    mdata <- read.table( "./tmp/out.txt" )$V1
     mdf <-  init_dates_dataframe( 1901, yrend, freq="months" ) %>%
             mutate( mdata = mdata )
 

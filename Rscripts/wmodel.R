@@ -82,7 +82,7 @@ setup_sofun_sitescale <- list(
 ## Prepare simulation setup
 settings_sims_sitescale <- prepare_setup_sofun(
   settings = settings_sims_sitescale,
-    setup = setup_sofun_sitescale,
+  setup = setup_sofun_sitescale,
   write_paramfils = TRUE
   )
 
