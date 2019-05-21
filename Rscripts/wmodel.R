@@ -5,18 +5,19 @@
 
 # Environment
 library(rsofun)
+library(rbeni)
+
 load_dependencies_rsofun()
 systr <- "''"    # for Mac
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does not work properly
 if (!file.exists("bash"))    system("ln -s inst/bash bash")
 if (!file.exists("extdata")) system("ln -s inst/extdata extdata")
-options( list( rsofun.dir.sofun="/alphadata01/bstocker/sofun/trunk/" ) )
+options( list( rsofun.dir.sofun="~/sofun/trunk/" ) )
 
 
 ## Simulation settings
 siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
   write_csv(path = "./siteinfo_pet_fluxnet2015.csv")
-
 
 settings_sims_sitescale <- list(
   path_siteinfo   = "./siteinfo_pet_fluxnet2015.csv",
@@ -57,12 +58,12 @@ settings_input_sitescale <-  list(
   cloudcover               = "cru",
   fapar                    = "MODIS_FPAR_MCD15A3H",
   splined_fapar            = FALSE,
-  path_co2                 = "/alphadata01/bstocker/data/co2/cCO2_rcp85_const850-1765.dat",
-  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_fluxnet2015_hh      = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_0.5h/original/unpacked/",
-  path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
+  path_co2                 = "~/data/co2/cCO2_rcp85_const850-1765.dat",
+  path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_fluxnet2015_hh      = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_0.5h/original/unpacked/",
+  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
   get_from_remote          = FALSE,
-  path_cru                 = "/alphadata01/bstocker/data/cru/ts_4.01/"
+  path_cru                 = "~/data/cru/ts_4.01/"
   )
 
 
@@ -126,10 +127,10 @@ inputdata <- prepare_input_sofun(
 #   benchmark = list( aet = c("fluxnet2015"), netrad = c("fluxnet2015") ),
 #   sitenames_siteplots = "FR-Pue",
 #   agg = 5,
-#   path_fluxnet2015_d = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+#   path_fluxnet2015_d = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
 #   path_fluxnet2015_w = "",
-#   path_fluxnet2015_m = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/",
-#   path_fluxnet2015_y = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/",
+#   path_fluxnet2015_m = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/",
+#   path_fluxnet2015_y = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/",
 #   path_gepisat_d     = "",
 #   dir_figs           = "~/mct/fig/",
 #   remove_premodis    = FALSE
