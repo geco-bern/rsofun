@@ -9,7 +9,7 @@ library(rbeni)
 
 load_dependencies_rsofun()
 # systr <- "''"    # for Mac
-# knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does not work properly
+systr <- "--"  # for LINUX/UNIX
 if (!file.exists("bash"))    system("ln -s inst/bash bash")
 if (!file.exists("extdata")) system("ln -s inst/extdata extdata")
 options( list( rsofun.dir.sofun="~/sofun/trunk/" ) )
