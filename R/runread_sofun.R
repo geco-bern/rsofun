@@ -189,11 +189,14 @@ read_ncout_sofun_daily <- function( expname, settings ){
       for (ivar in readvars){
         filnam_mod <- paste0( expname, ".d.", ivar, ".nc" )
         path       <- paste0( settings$path_output_nc, filnam_mod )
-        nc         <- ncdf4::nc_open( path )
-        addvar     <- ncdf4::ncvar_get( nc, varid = ivar )
-        ddf <- tibble( date=time, ivar=addvar ) %>% 
-               setNames( c("date", ivar) ) %>% 
-               right_join( ddf, by = "date" )
+        if (file.exists(path)){
+          nc         <- ncdf4::nc_open( path )
+          addvar     <- ncdf4::ncvar_get( nc, varid = ivar )
+          ddf <- tibble( date=time, ivar=addvar ) %>% 
+            setNames( c("date", ivar) ) %>% 
+            right_join( ddf, by = "date" )
+          ncdf4::nc_close(nc)
+        }
       }
 
     }

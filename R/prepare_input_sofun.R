@@ -975,7 +975,7 @@ get_pointdata_monthly_cru <- function( varnam, lon, lat, settings, yrend ){
     cmd <- paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " ", varnam, " lon", " lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) )
     print( paste( "executing command:", cmd ) )
     system( cmd )
-    mdata <- read.table( "./tmp/out.txt" )$V1
+    mdata <- read.table( paste0(getwd(), "/tmp/out.txt") )$V1
     mdf <-  init_dates_dataframe( 1901, yrend, freq="months" ) %>%
             mutate( mdata = mdata )
 
