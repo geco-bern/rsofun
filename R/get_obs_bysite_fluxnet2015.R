@@ -169,7 +169,7 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
                              pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_HH.*.csv" ), 
                              recursive = TRUE 
       )
-      df_vpd_day_dd <- get_vpd_day_fluxnet2015_byfile(filn_hh)
+      df_vpd_day_dd <- get_vpd_day_fluxnet2015_byfile(paste0(path_fluxnet2015_hh, filn_hh), write = TRUE)
       
       if (timescale=="d"){
         df <- df %>% dplyr::left_join(df_vpd_day_dd, by="date")

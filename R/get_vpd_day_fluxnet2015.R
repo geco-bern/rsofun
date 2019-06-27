@@ -10,6 +10,8 @@ get_vpd_day_fluxnet2015 <- function(dir){
 get_vpd_day_fluxnet2015_byfile <- function(filename_hh, write=FALSE){
   
   ## read half-hourly data
+  if (!file.exists(filename_hh)) rlang::abort(paste("Half-hourly file does not exist:", filename_hh))
+  
   df <- readr::read_csv(filename_hh) %>% 
     dplyr::mutate( date_start = lubridate::ymd_hm( TIMESTAMP_START ),
                    date_end   = lubridate::ymd_hm( TIMESTAMP_END ) ) %>%
@@ -33,6 +35,7 @@ get_vpd_day_fluxnet2015_byfile <- function(filename_hh, write=FALSE){
     filename_dd <- filename_hh %>% 
       stringr::str_replace("HH", "DD") %>% 
       stringr::str_replace(".csv", "_VPD_DAY.csv")
+    print(paste("Writing file with daytime VPD as:", filename_dd))
     readr::write_csv(df, path=filename_dd)
   }
 
