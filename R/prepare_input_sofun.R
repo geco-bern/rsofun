@@ -204,10 +204,10 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       # }
 
 
-      ##-----------------------------------------------------------
-      ## Make sure CMIP standard CO2 data is available locally    
-      ##-----------------------------------------------------------
-      error <- check_download_co2( settings_input, settings_sims )
+      # ##-----------------------------------------------------------
+      # ## Make sure CMIP standard CO2 data is available locally    
+      # ##-----------------------------------------------------------
+      # error <- check_download_co2( settings_input, settings_sims )
 
       # ##-----------------------------------------------------------
       # ## Prepare climate input
@@ -284,8 +284,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 
         ## Using the Google EE function
         ddf_fapar <- purrr::map(
-          # as.list(seq(nrow(df_lonlat))),
-          as.list(seq(2)),
+          as.list(seq(nrow(df_lonlat))),
           ~prepare_input_sofun_fapar_bysite_GEE( 
             slice(df_lonlat, .), 
             start_date = "2000-01-01",
@@ -307,11 +306,15 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
             python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python", # "/usr/bin/python", 
             gee_path = "/alphadata01/bstocker/gee_subset/gee_subset/"
             )
-          ) %>% 
-          purrr::map(., "ddf")
-
-        names(ddf_fapar) <- settings_sims$sitenames[1:2]
+          )
         
+        ## get missing
+        names(ddf_fapar) <- settings_sims$sitenames
+        missing_fapar <- which(is.na(ddf_fapar)) %>% names()
+
+        ddf_fapar <- ddf_fapar %>% purrr::map(., "ddf")
+        
+        ## rearrange to flat table
         ddf_fapar <- ddf_fapar %>%
           bind_rows(.id = "sitename") %>% 
           dplyr::select(sitename, date, fapar = modisvar_interpol)
@@ -322,8 +325,8 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
         
       }
 
-      ## CO2 file: link into site-specific input directories
-      error_list <- purrr::map( as.list(settings_sims$sitenames), ~check_download_co2( settings_input, settings_sims, . ) )
+      # ## CO2 file: link into site-specific input directories
+      # error_list <- purrr::map( as.list(settings_sims$sitenames), ~check_download_co2( settings_input, settings_sims, . ) )
 
     }
 
@@ -976,10 +979,10 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
   ## This file is the link for _tseries and split scripts and should contain all the raw data, not gap-filled or interpolated!
   ## this file is written by 'interpolate_modis()'
   filnam_modis_raw_csv  <- paste0( dirnam_csv_outputdata, "/raw/", sitename, "_", prod_suffix, "_gee_subset.csv" )
-  filnam_modis_nice_csv <- paste0( dirnam_csv_outputdata, varnam, "_", productnam, "_", prod_suffix, "_", sitename, "_gee_subset.csv" )
+  filnam_modis_nice_csv <- paste0( dirnam_csv_outputdata, "/", sitename, "/", varnam, "_", productnam, "_", prod_suffix, "_", sitename, "_gee_subset.csv" )
 
   ## These files are gap-filled and interpolated
-  if (asfaparinput) filnam_daily_csv <- paste0( dirnam_csv_outputdata, "d", varnam, "_", productnam, "_", prod_suffix, "_", sitename, "_gee_subset.csv" )
+  if (asfaparinput) filnam_daily_csv <- paste0( dirnam_csv_outputdata, "/", sitename, "/d", varnam, "_", productnam, "_", prod_suffix, "_", sitename, "_gee_subset.csv" )
 
   if (!file.exists(filnam_modis_raw_csv)||overwrite_raw){
     ##--------------------------------------------------------------------
@@ -1117,6 +1120,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
 
       print( paste( "WARNING: NO DATA AVAILABLE FOR SITE:", sitename ) )
       df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=1 ) )
+      out <- NA
 
     }
 
@@ -1124,6 +1128,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
 
     print( paste( "WARNING: RAW DATA FILE NOT FOUND FOR SITE:", sitename ) )
     df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=2 ) ) 
+    out <- NA
 
   }
   return(out)
