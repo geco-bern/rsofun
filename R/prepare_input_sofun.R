@@ -209,121 +209,121 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       # ##-----------------------------------------------------------
       # error <- check_download_co2( settings_input, settings_sims )
 
-      # ##-----------------------------------------------------------
-      # ## Prepare climate input
-      # ##-----------------------------------------------------------
-      # if (overwrite_climate || return_data || overwrite_csv_climate){
-
-      #   ## First, get climate data from site-specific
-      #   if (verbose) print("Preparing climate input files...")
-      #   ddf_climate <- purrr::map( 
-      #     as.list(settings_sims$sitenames), 
-      #     ~get_input_sofun_climate_bysite( ., settings_input, settings_sims, verbose = verbose ) 
-      #     )
-      #   names(ddf_climate) <- settings_sims$sitenames
-      #   ddf_climate <- ddf_climate %>%
-      #     bind_rows(.id = "sitename")
-
-      #   ## Second, get climate data from global files
-      #   ddf_climte_globalfields <- get_input_sofun_climate_globalfields( 
-      #     ddf_climate, 
-      #     settings_input, 
-      #     settings_sims, 
-      #     overwrite = overwrite_climate, 
-      #     overwrite_csv = overwrite_csv_climate, 
-      #     verbose = FALSE 
-      #     )
-      #   ddf_climate <- ddf_climate %>%
-      #     left_join(
-      #       ddf_climte_globalfields,
-      #       by = c("sitename", "date")
-      #     )
-        
-      #   ## Then, prepare climate input data files for sofun
-      #   purrr::map( 
-      #     as.list(settings_sims$sitenames), 
-      #     ~prepare_input_sofun_climate_bysite( 
-      #       .,
-      #       dplyr::filter(ddf_climate, sitename == .), 
-      #       settings_input, 
-      #       settings_sims, 
-      #       overwrite=overwrite_climate, 
-      #       overwrite_csv=overwrite_csv_climate, 
-      #       verbose = verbose )
-      #     )
-      # }
-
       ##-----------------------------------------------------------
-      ## Prepare fapar input
+      ## Prepare climate input
       ##-----------------------------------------------------------
-      if (overwrite_fapar || return_data || overwrite_csv_fapar){
+      if (overwrite_climate || return_data || overwrite_csv_climate){
 
-        ## Create data frame for site info for batch-download using MODISTools or GEE
-        df_lonlat <- tibble(
-          sitename   = settings_sims$sitenames,
-          lat        = unlist(settings_sims$lat),
-          lon        = unlist(settings_sims$lon),
-          year_start = purrr::map_dbl( settings_sims$date_start, ~lubridate::year(.) ),
-          year_end   = purrr::map_dbl( settings_sims$date_end,   ~lubridate::year(.) )
+        ## First, get climate data from site-specific
+        if (verbose) print("Preparing climate input files...")
+        if (verbose) print("Reading from site-specific files...")
+        ddf_climate <- purrr::map( 
+          as.list(settings_sims$sitenames), 
+          ~get_input_sofun_climate_bysite( ., settings_input, settings_sims, verbose = verbose ) 
           )
-                  
-        if (!dir.exists(settings_input$path_fapar)) system(paste0("mkdir -p ", settings_input$path_fapar))
-        
-        # ## Using MODISTools
-        # bands <- MODISTools::mt_bands(product = "MCD15A3H") %>% View()
-        # dates <- MODISTools::mt_dates(product = "MCD15A3H", lat = df_lonlat$lat[1], lon = df_lonlat$lon[1]) %>% View()
-        # subsets <- MODISTools::mt_batch_subset(
-        #              df = dplyr::distinct(df_lonlat, lon, lat, .keep_all=TRUE) %>% 
-        #                slice(1:2),
-        #              product = "MCD15A3H",
-        #              band = "Fpar_500m",
-        #              internal = TRUE,
-        #              start = "2000-01-01",
-        #              end = "2018-12-31",
-        #              out_dir = settings_input$path_fapar)
+        names(ddf_climate) <- settings_sims$sitenames
+        ddf_climate <- ddf_climate %>%
+          bind_rows(.id = "sitename")
 
-        ## Using the Google EE function
-        ddf_fapar <- purrr::map(
-          as.list(seq(nrow(df_lonlat))),
-          ~prepare_input_sofun_fapar_bysite_GEE( 
-            slice(df_lonlat, .), 
-            start_date = "2000-01-01",
-            end_date = "2018-12-31", 
-            settings_sims = settings_sims, 
-            settings_input = settings_input,
-            overwrite_raw = TRUE, 
-            overwrite_nice = TRUE,
-            band_var = "Fpar", 
-            band_qc = "FparLai_QC", 
-            prod = "MODIS/006/MCD15A3H", 
-            prod_suffix = "MCD15A3H", 
-            varnam = "fapar", 
-            productnam = "MODIS_FPAR_MCD15A3H_gee", 
-            scale_factor = 0.01, 
-            period = 4, 
-            asfaparinput = TRUE, 
-            do_plot_interpolated = TRUE, 
-            python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python", # "/usr/bin/python", 
-            gee_path = "/alphadata01/bstocker/gee_subset/gee_subset/"
-            )
+        ## Second, get climate data from global files
+        if (verbose) print("Reading from global files...")
+        ddf_climte_globalfields <- get_input_sofun_climate_globalfields( 
+          ddf_climate, 
+          settings_input, 
+          settings_sims, 
+          overwrite = overwrite_climate, 
+          overwrite_csv = overwrite_csv_climate, 
+          verbose = FALSE 
+          )
+        ddf_climate <- ddf_climate %>%
+          left_join(
+            ddf_climte_globalfields,
+            by = c("sitename", "date")
           )
         
-        ## get missing
-        names(ddf_fapar) <- settings_sims$sitenames
-        missing_fapar <- which(is.na(ddf_fapar)) %>% names()
-
-        ddf_fapar <- ddf_fapar %>% purrr::map(., "ddf")
-        
-        ## rearrange to flat table
-        ddf_fapar <- ddf_fapar %>%
-          bind_rows(.id = "sitename") %>% 
-          dplyr::select(sitename, date, fapar = modisvar_interpol)
-
-        # ## getting site-specific files externally downloaded from Google EE
-        # ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite = overwrite_fapar, overwrite_csv = overwrite_csv_fapar, verbose = verbose ) ) %>%
-        #               bind_rows()
-        
+        ## Then, prepare climate input data files for sofun
+        if (verbose) print("Writing climate forcing to files...")
+        purrr::map( 
+          as.list(settings_sims$sitenames), 
+          ~prepare_input_sofun_climate_bysite( 
+            .,
+            dplyr::filter(ddf_climate, sitename == .), 
+            settings_input, 
+            settings_sims, 
+            overwrite=overwrite_climate, 
+            overwrite_csv=overwrite_csv_climate, 
+            verbose = verbose )
+          )
       }
+
+      # ##-----------------------------------------------------------
+      # ## Prepare fapar input
+      # ##-----------------------------------------------------------
+      # if (overwrite_fapar || return_data || overwrite_csv_fapar){
+
+      #   ## Create data frame for site info for batch-download using MODISTools or GEE
+      #   df_lonlat <- tibble(
+      #     sitename   = settings_sims$sitenames,
+      #     lat        = unlist(settings_sims$lat),
+      #     lon        = unlist(settings_sims$lon),
+      #     year_start = purrr::map_dbl( settings_sims$date_start, ~lubridate::year(.) ),
+      #     year_end   = purrr::map_dbl( settings_sims$date_end,   ~lubridate::year(.) )
+      #     )
+                  
+      #   if (!dir.exists(settings_input$path_fapar)) system(paste0("mkdir -p ", settings_input$path_fapar))
+        
+      #   # ## Using MODISTools
+      #   # bands <- MODISTools::mt_bands(product = "MCD15A3H") %>% View()
+      #   # dates <- MODISTools::mt_dates(product = "MCD15A3H", lat = df_lonlat$lat[1], lon = df_lonlat$lon[1]) %>% View()
+      #   # subsets <- MODISTools::mt_batch_subset(
+      #   #              df = dplyr::distinct(df_lonlat, lon, lat, .keep_all=TRUE) %>% 
+      #   #                slice(1:2),
+      #   #              product = "MCD15A3H",
+      #   #              band = "Fpar_500m",
+      #   #              internal = TRUE,
+      #   #              start = "2000-01-01",
+      #   #              end = "2018-12-31",
+      #   #              out_dir = settings_input$path_fapar)
+
+      #   ## Using the Google EE function
+      #   ddf_fapar <- purrr::map(
+      #     as.list(seq(nrow(df_lonlat))),
+      #     ~prepare_input_sofun_fapar_bysite_GEE( 
+      #       slice(df_lonlat, .), 
+      #       start_date = "2000-01-01",
+      #       end_date = "2018-12-31", 
+      #       settings_sims = settings_sims, 
+      #       settings_input = settings_input,
+      #       overwrite_raw = TRUE, 
+      #       overwrite_nice = TRUE,
+      #       band_var = "Fpar", 
+      #       band_qc = "FparLai_QC", 
+      #       prod = "MODIS/006/MCD15A3H", 
+      #       prod_suffix = "MCD15A3H", 
+      #       varnam = "fapar", 
+      #       productnam = "MODIS_FPAR_MCD15A3H_gee", 
+      #       scale_factor = 0.01, 
+      #       period = 4, 
+      #       asfaparinput = TRUE, 
+      #       do_plot_interpolated = TRUE, 
+      #       python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python", # "/usr/bin/python", 
+      #       gee_path = "/alphadata01/bstocker/gee_subset/gee_subset/"
+      #       )
+      #     )
+        
+      #   ## get missing
+      #   names(ddf_fapar) <- settings_sims$sitenames
+      #   missing_fapar <- which(is.na(ddf_fapar)) %>% names()
+
+      #   ddf_fapar <- ddf_fapar %>% purrr::map(., "ddf")
+        
+      #   ## rearrange to flat table
+      #   ddf_fapar <- ddf_fapar %>%
+      #     bind_rows(.id = "sitename") %>% 
+      #     dplyr::select(sitename, date, fapar = modisvar_interpol)
+
+        
+      # }
 
       # ## CO2 file: link into site-specific input directories
       # error_list <- purrr::map( as.list(settings_sims$sitenames), ~check_download_co2( settings_input, settings_sims, . ) )
@@ -382,9 +382,9 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
   if ("fluxnet2015" %in% settings_input$patm)          fluxnetvars <- c( fluxnetvars, "patm" )
 
   getvars <- c()
-  if ("fluxnet2015" %in% settings_input$temperature)   getvars <- c( getvars, "TA_F" )  # c( getvars, "TA_F_DAY" )
+  if ("fluxnet2015" %in% settings_input$temperature)   getvars <- c( getvars, "TA_F_DAY" ) # c( getvars, "TA_F" )  # 
   if ("fluxnet2015" %in% settings_input$precipitation) getvars <- c( getvars, "P_F" )
-  if ("fluxnet2015" %in% settings_input$vpd)           getvars <- c( getvars, "VPD_F" ) # c( getvars, "VPD_F_DAY" )
+  if ("fluxnet2015" %in% settings_input$vpd)           getvars <- c( getvars, "VPD_F_DAY" ) #c( getvars, "VPD_F" ) # 
   if ("fluxnet2015" %in% settings_input$ppfd)          getvars <- c( getvars, "SW_IN_F" )
   if ("fluxnet2015" %in% settings_input$netrad)        getvars <- c( getvars, "NETRAD" )
   if ("fluxnet2015" %in% settings_input$patm)          getvars <- c( getvars, "PA_F" )
@@ -396,6 +396,7 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
     
     ddf <- get_obs_bysite_fluxnet2015(sitename, 
                                       path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                      path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
                                       timescale        = "d", 
                                       getvars          = getvars, 
                                       getswc           = FALSE ) %>%
