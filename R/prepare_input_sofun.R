@@ -142,7 +142,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
     # Ensemble of multiple site-scale simulations that "go toghether"
     # In this case, <settings$name> is the name of the ensemble (e.g., "fluxnet2015")
     #-----------------------------------------------------------
-    if (!is.na(settings_input$data)){
+    if (!identical(NA, settings_input$data)){
       ## Data is provided as a list of data frames.  
       ## Climate input files
       ddf_climate <- settings_input$data %>% dplyr::select( -fapar ) %>% bind_rows()
@@ -163,71 +163,170 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
         "fluxnet2015" %in% settings_input$netrad
         ))){
 
-        error <- check_download_fluxnet2015( settings_input$path_fluxnet2015 )
+        # error <- check_download_fluxnet2015( settings_input$path_fluxnet2015 )
 
       }
 
-      ##-----------------------------------------------------------
-      ## If WATCH-WFDEI data is required, make sure it's available locally
-      ##-----------------------------------------------------------
-      if ("watch_wfdei" %in% settings_input$temperature)   error <- check_download_watch_wfdei( varnam = "Tair", settings_input, settings_sims )
-      if ("watch_wfdei" %in% settings_input$precipitation) error <- check_download_watch_wfdei( varnam = "Snowf_daily", settings_input, settings_sims )
-      if ("watch_wfdei" %in% settings_input$precipitation) error <- check_download_watch_wfdei( varnam = "Rainf_daily", settings_input, settings_sims )
-      if ("watch_wfdei" %in% settings_input$vpd)           error <- check_download_watch_wfdei( varnam = "Qair_daily", settings_input, settings_sims )
-      if ("watch_wfdei" %in% settings_input$ppfd)          error <- check_download_watch_wfdei( varnam = "SWdown_daily", settings_input, settings_sims )
+      # ##-----------------------------------------------------------
+      # ## If WATCH-WFDEI data is required, make sure it's available locally
+      # ##-----------------------------------------------------------
+      # if ("watch_wfdei" %in% settings_input$temperature)   error <- check_download_watch_wfdei( varnam = "Tair_daily", settings_input, settings_sims )
+      # if ("watch_wfdei" %in% settings_input$precipitation) error <- check_download_watch_wfdei( varnam = "Snowf_daily", settings_input, settings_sims )
+      # if ("watch_wfdei" %in% settings_input$precipitation) error <- check_download_watch_wfdei( varnam = "Rainf_daily", settings_input, settings_sims )
+      # if ("watch_wfdei" %in% settings_input$vpd)           error <- check_download_watch_wfdei( varnam = "Qair_daily", settings_input, settings_sims )
+      # if ("watch_wfdei" %in% settings_input$ppfd)          error <- check_download_watch_wfdei( varnam = "SWdown_daily", settings_input, settings_sims )
+
+      # ##-----------------------------------------------------------
+      # ## If CRU TS data is required, make sure it's available locally
+      # ##-----------------------------------------------------------
+      # if ("cru" %in% settings_input$temperature)   error <- check_download_cru( varnam = "tmp", settings_input, settings_sims )
+      # if ("cru" %in% settings_input$precipitation) error <- check_download_cru( varnam = "wet", settings_input, settings_sims )
+      # if ("cru" %in% settings_input$precipitation) error <- check_download_cru( varnam = "pre", settings_input, settings_sims )
+      # if ("cru" %in% settings_input$vpd)           error <- check_download_cru( varnam = "vap", settings_input, settings_sims )
+      # if ("cru" %in% settings_input$vpd)           error <- check_download_cru( varnam = "tmp", settings_input, settings_sims )
+      # if ("cru" %in% settings_input$cloudcover)    error <- check_download_cru( varnam = "cld", settings_input, settings_sims )
+
+      # ##-----------------------------------------------------------
+      # ## If fapar data is required, make sure it's available locally
+      # ##-----------------------------------------------------------
+      # if (settings_input$fapar=="MODIS_FPAR_MCD15A3H"){
+
+      #   error <- check_download_MODIS_FPAR_MCD15A3H( settings_input, settings_sims )
+
+      # } else if (settings_input$fapar=="MODIS_EVI_MOD13Q1"){
+
+      #   error <- check_download_MODIS_EVI_MOD13Q1( settings_input, settings_sims )
+
+      # } else if (is.na(settings_input$fapar)){
+
+      #   rlang::warn("No fapar data prepared.")
+
+      # }
+
+
+      # ##-----------------------------------------------------------
+      # ## Make sure CMIP standard CO2 data is available locally    
+      # ##-----------------------------------------------------------
+      # error <- check_download_co2( settings_input, settings_sims )
 
       ##-----------------------------------------------------------
-      ## If CRU TS data is required, make sure it's available locally
+      ## Prepare climate input
       ##-----------------------------------------------------------
-      if ("cru" %in% settings_input$temperature)   error <- check_download_cru( varnam = "tmp", settings_input, settings_sims )
-      if ("cru" %in% settings_input$precipitation) error <- check_download_cru( varnam = "wet", settings_input, settings_sims )
-      if ("cru" %in% settings_input$precipitation) error <- check_download_cru( varnam = "pre", settings_input, settings_sims )
-      if ("cru" %in% settings_input$vpd)           error <- check_download_cru( varnam = "vap", settings_input, settings_sims )
-      if ("cru" %in% settings_input$vpd)           error <- check_download_cru( varnam = "tmp", settings_input, settings_sims )
-      if ("cru" %in% settings_input$cloudcover)    error <- check_download_cru( varnam = "cld", settings_input, settings_sims )
-
-      ##-----------------------------------------------------------
-      ## If fapar data is required, make sure it's available locally    
-      ##-----------------------------------------------------------
-      if (settings_input$fapar=="MODIS_FPAR_MCD15A3H"){
-
-        error <- check_download_MODIS_FPAR_MCD15A3H( settings_input, settings_sims )
-
-      } else if (settings_input$fapar=="MODIS_EVI_MOD13Q1"){
-
-        error <- check_download_MODIS_EVI_MOD13Q1( settings_input, settings_sims )
-
-      } else if (is.na(settings_input$fapar)){
-
-        rlang::warn("No fapar data prepared.")
-
-      }
-
-
-      ##-----------------------------------------------------------
-      ## Make sure CMIP standard CO2 data is available locally    
-      ##-----------------------------------------------------------
-      error <- check_download_co2( settings_input, settings_sims )
-
-      ##-----------------------------------------------------------
-      ## Loop over all sites and prepare input files by site.
-      ##-----------------------------------------------------------
-      ## Climate input files
       if (overwrite_climate || return_data || overwrite_csv_climate){
-        ddf_climate <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_climate_bysite( ., settings_input, settings_sims, overwrite = overwrite_climate, overwrite_csv = overwrite_csv_climate, verbose = verbose ) ) %>%
-                        bind_rows()
+
+        ## First, get climate data from site-specific
+        if (verbose) print("Preparing climate input files...")
+        if (verbose) print("Reading from site-specific files...")
+        ddf_climate <- purrr::map( 
+          as.list(settings_sims$sitenames), 
+          ~get_input_sofun_climate_bysite( ., settings_input, settings_sims, verbose = verbose ) 
+          )
+        names(ddf_climate) <- settings_sims$sitenames
+        ddf_climate <- ddf_climate %>%
+          bind_rows(.id = "sitename")
+
+        ## Second, get climate data from global files
+        if (verbose) print("Reading from global files...")
+        ddf_climte_globalfields <- get_input_sofun_climate_globalfields( 
+          ddf_climate, 
+          settings_input, 
+          settings_sims, 
+          overwrite = overwrite_climate, 
+          overwrite_csv = overwrite_csv_climate, 
+          verbose = FALSE 
+          )
+        ddf_climate <- ddf_climate %>%
+          left_join(
+            ddf_climte_globalfields,
+            by = c("sitename", "date")
+          )
+        
+        ## Then, prepare climate input data files for sofun
+        if (verbose) print("Writing climate forcing to files...")
+        purrr::map( 
+          as.list(settings_sims$sitenames), 
+          ~prepare_input_sofun_climate_bysite( 
+            .,
+            dplyr::filter(ddf_climate, sitename == .), 
+            settings_input, 
+            settings_sims, 
+            overwrite=overwrite_climate, 
+            overwrite_csv=overwrite_csv_climate, 
+            verbose = verbose )
+          )
       }
 
-      ## prepare the fapar input files for each site
-      if (overwrite_fapar || return_data || overwrite_csv_fapar){
-        ddf_fapar <-  purrr::map( as.list(settings_sims$sitenames), ~prepare_input_sofun_fapar_bysite( ., settings_input, settings_sims, overwrite = overwrite_fapar, overwrite_csv = overwrite_csv_fapar, verbose = verbose ) ) %>%
-                      bind_rows()
-      }
+      # ##-----------------------------------------------------------
+      # ## Prepare fapar input
+      # ##-----------------------------------------------------------
+      # if (overwrite_fapar || return_data || overwrite_csv_fapar){
 
-      ## CO2 file: link into site-specific input directories
-      error_list <- purrr::map( as.list(settings_sims$sitenames), ~check_download_co2( settings_input, settings_sims, . ) )
+      #   ## Create data frame for site info for batch-download using MODISTools or GEE
+      #   df_lonlat <- tibble(
+      #     sitename   = settings_sims$sitenames,
+      #     lat        = unlist(settings_sims$lat),
+      #     lon        = unlist(settings_sims$lon),
+      #     year_start = purrr::map_dbl( settings_sims$date_start, ~lubridate::year(.) ),
+      #     year_end   = purrr::map_dbl( settings_sims$date_end,   ~lubridate::year(.) )
+      #     )
+                  
+      #   if (!dir.exists(settings_input$path_fapar)) system(paste0("mkdir -p ", settings_input$path_fapar))
+        
+      #   # ## Using MODISTools
+      #   # bands <- MODISTools::mt_bands(product = "MCD15A3H") %>% View()
+      #   # dates <- MODISTools::mt_dates(product = "MCD15A3H", lat = df_lonlat$lat[1], lon = df_lonlat$lon[1]) %>% View()
+      #   # subsets <- MODISTools::mt_batch_subset(
+      #   #              df = dplyr::distinct(df_lonlat, lon, lat, .keep_all=TRUE) %>% 
+      #   #                slice(1:2),
+      #   #              product = "MCD15A3H",
+      #   #              band = "Fpar_500m",
+      #   #              internal = TRUE,
+      #   #              start = "2000-01-01",
+      #   #              end = "2018-12-31",
+      #   #              out_dir = settings_input$path_fapar)
 
-      ## fAPAR input files: see below
+      #   ## Using the Google EE function
+      #   ddf_fapar <- purrr::map(
+      #     as.list(seq(nrow(df_lonlat))),
+      #     ~prepare_input_sofun_fapar_bysite_GEE( 
+      #       slice(df_lonlat, .), 
+      #       start_date = "2000-01-01",
+      #       end_date = "2018-12-31", 
+      #       settings_sims = settings_sims, 
+      #       settings_input = settings_input,
+      #       overwrite_raw = TRUE, 
+      #       overwrite_nice = TRUE,
+      #       band_var = "Fpar", 
+      #       band_qc = "FparLai_QC", 
+      #       prod = "MODIS/006/MCD15A3H", 
+      #       prod_suffix = "MCD15A3H", 
+      #       varnam = "fapar", 
+      #       productnam = "MODIS_FPAR_MCD15A3H_gee", 
+      #       scale_factor = 0.01, 
+      #       period = 4, 
+      #       asfaparinput = TRUE, 
+      #       do_plot_interpolated = TRUE, 
+      #       python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python", # "/usr/bin/python", 
+      #       gee_path = "/alphadata01/bstocker/gee_subset/gee_subset/"
+      #       )
+      #     )
+        
+      #   ## get missing
+      #   names(ddf_fapar) <- settings_sims$sitenames
+      #   missing_fapar <- which(is.na(ddf_fapar)) %>% names()
+
+      #   ddf_fapar <- ddf_fapar %>% purrr::map(., "ddf")
+        
+      #   ## rearrange to flat table
+      #   ddf_fapar <- ddf_fapar %>%
+      #     bind_rows(.id = "sitename") %>% 
+      #     dplyr::select(sitename, date, fapar = modisvar_interpol)
+
+        
+      # }
+
+      # ## CO2 file: link into site-specific input directories
+      # error_list <- purrr::map( as.list(settings_sims$sitenames), ~check_download_co2( settings_input, settings_sims, . ) )
 
     }
 
@@ -257,132 +356,304 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 }
 
 ##-----------------------------------------------------------
+## Read climate data from files given by sites
+##-----------------------------------------------------------
+get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, verbose=FALSE ){
+
+  # if (verbose) print(paste("Getting climate data for site", sitename ))
+
+  ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
+  ddf <- init_dates_dataframe( 
+    year(settings_sims$date_start[[sitename]]), 
+    year(settings_sims$date_end[[sitename]]), 
+    noleap = TRUE) %>% 
+    dplyr::select(-year_dec)
+
+  ##----------------------------------------------------------------------
+  ## Read daily FLUXNET 2015 meteo data for each site (reads all variables)
+  ## A file must be found containing the site name in the file name and located in <settings_input$path_fluxnet2015>
+  ##----------------------------------------------------------------------
+  fluxnetvars <- c()
+  if ("fluxnet2015" %in% settings_input$temperature)   fluxnetvars <- c( fluxnetvars, "temp" )
+  if ("fluxnet2015" %in% settings_input$precipitation) fluxnetvars <- c( fluxnetvars, "prec" )
+  if ("fluxnet2015" %in% settings_input$vpd)           fluxnetvars <- c( fluxnetvars, "vpd" )
+  if ("fluxnet2015" %in% settings_input$ppfd)          fluxnetvars <- c( fluxnetvars, "ppfd" )
+  if ("fluxnet2015" %in% settings_input$netrad)        fluxnetvars <- c( fluxnetvars, "netrad" )
+  if ("fluxnet2015" %in% settings_input$patm)          fluxnetvars <- c( fluxnetvars, "patm" )
+
+  getvars <- c()
+  if ("fluxnet2015" %in% settings_input$temperature)   getvars <- c( getvars, "TA_F_DAY" ) # c( getvars, "TA_F" )  # 
+  if ("fluxnet2015" %in% settings_input$precipitation) getvars <- c( getvars, "P_F" )
+  if ("fluxnet2015" %in% settings_input$vpd)           getvars <- c( getvars, "VPD_F_DAY" ) #c( getvars, "VPD_F" ) # 
+  if ("fluxnet2015" %in% settings_input$ppfd)          getvars <- c( getvars, "SW_IN_F" )
+  if ("fluxnet2015" %in% settings_input$netrad)        getvars <- c( getvars, "NETRAD" )
+  if ("fluxnet2015" %in% settings_input$patm)          getvars <- c( getvars, "PA_F" )
+
+  if (length(fluxnetvars)>0){
+
+    ## Make sure data is available for this site
+    error <- check_download_fluxnet2015( settings_input$path_fluxnet2015, sitename )
+    
+    ddf <- get_obs_bysite_fluxnet2015(sitename, 
+                                      path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                      path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
+                                      timescale        = "d", 
+                                      getvars          = getvars, 
+                                      getswc           = FALSE ) %>%
+      dplyr::select( date, one_of(fluxnetvars) ) %>% 
+      setNames( c("date", paste0( fluxnetvars, "_fluxnet2015" ))) %>%
+      right_join( ddf, by = "date" )   
+
+  }
+  
+  return( ddf )
+
+}
+
+
+##-----------------------------------------------------------
+## Read climate data from files as global fields
+##-----------------------------------------------------------
+get_input_sofun_climate_globalfields <- function( ddf, settings_input, settings_sims, overwrite=FALSE, overwrite_csv=FALSE, verbose=FALSE ){
+
+  if (verbose) print("Getting climate data from global fields...")
+
+  ##----------------------------------------------------------------------
+  ## Read WATCH-WFDEI data (extracting from NetCDF files for this site)
+  ##----------------------------------------------------------------------
+  ## temperature
+  if ("watch_wfdei" %in% settings_input$temperature){
+    ddf_temp <- get_input_sofun_climate_globalfields_watch_byvar( "Tair_daily", settings_input, settings_sims ) %>%
+      dplyr::rename(temp_watch = myvar) %>% 
+      dplyr::mutate(temp_watch = temp_watch - 273.15)
+  }
+
+  ## precipitation
+  if ("watch_wfdei" %in% settings_input$precipitation){
+    ddf_prec <- get_input_sofun_climate_globalfields_watch_byvar( "Rainf_daily", settings_input, settings_sims ) %>%
+      dplyr::mutate( rain = myvar ) %>%
+      left_join(
+        get_input_sofun_climate_globalfields_watch_byvar( "Snowf_daily", settings_input, settings_sims ) %>%
+          dplyr::mutate( snow = myvar ),
+        by = c("sitename", "date")
+        ) %>%
+      dplyr::rename(prec_watch = (rain + snow) * 60 * 60 * 24 )  # kg/m2/s -> mm/day
+  }
+  
+  ## humidity
+  if ("watch_wfdei" %in% settings_input$vpd){
+    ddf_qair <- get_input_sofun_climate_globalfields_watch_byvar( "Qair_daily", settings_input, settings_sims ) %>%
+      dplyr::rename(qair_watch = myvar)
+  }
+  
+  ## PPFD
+  if ("watch_wfdei" %in% settings_input$ppfd){
+    kfFEC <- 2.04    
+    ddf_ppfd <- get_input_sofun_climate_globalfields_watch_byvar( "SWdown_daily", settings_input, settings_sims ) %>%
+      dplyr::rename(ppfd_watch = myvar * kfFEC * 1.0e-6 * 60 * 60 * 24 ) # umol m-2 s-1 -> mol m-2 d-1
+  }
+
+  ## merge into data frame that is passed as argument
+  ddf <- ddf %>%
+    dplyr::left_join(ddf_temp, by = c("sitename", "date")) %>%
+    dplyr::left_join(ddf_prec, by = c("sitename", "date")) %>%
+    dplyr::left_join(ddf_qair, by = c("sitename", "date")) %>%
+    dplyr::left_join(ddf_ppfd, by = c("sitename", "date"))
+  
+
+  ##----------------------------------------------------------------------
+  ## Fill missing variables
+  ##----------------------------------------------------------------------
+  if (is.na(settings_input$cloudcover)){
+    rlang::warn("Filling column ccov_dummy with value 50 (%).")
+    ddf <- ddf %>% mutate( ccov_dummy = 50 )
+  }
+
+  ##----------------------------------------------------------------------
+  ## Read CRU monthly data (extracting from NetCDF files for this site)
+  ##----------------------------------------------------------------------
+  cruvars <- c()
+  mdf <- ddf %>%
+    dplyr::select(sitename, date) %>% 
+    dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+    dplyr::select(sitename, year, moy) %>% 
+    dplyr::distinct()
+  
+  ## temperature
+  if ("cru" %in% settings_input$temperature){
+    cruvars <- c(cruvars, "temp")
+    mdf <- get_input_sofun_climate_globalfields_cru_byvar( "tmp", settings_input, settings_sims ) %>%
+      dplyr::select(sitename, date, myvar) %>% 
+      dplyr::rename(temp_cru = myvar) %>% 
+      dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+      dplyr::select(-date) %>% 
+      dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+      
+  }
+  
+  ## precipitation
+  if ("cru" %in% settings_input$precipitation){
+    cruvars <- c(cruvars, "prec")
+    mdf <- get_input_sofun_climate_globalfields_cru_byvar( "pre", settings_input, settings_sims ) %>%
+      dplyr::select(sitename, date, myvar) %>% 
+      dplyr::rename(prec_cru = myvar) %>% 
+      dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+      dplyr::select(-date) %>% 
+      dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+  }
+  
+  ## vpd from vapour pressure
+  if ("cru" %in% settings_input$temperature){
+    cruvars <- c(cruvars, "vap")
+    mdf <- get_input_sofun_climate_globalfields_cru_byvar( "vap", settings_input, settings_sims ) %>%
+      dplyr::select(sitename, date, myvar) %>% 
+      dplyr::rename(vap_cru = myvar) %>% 
+      dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+      dplyr::select(-date) %>% 
+      dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+  }
+
+  ## cloud cover
+  if ("cru" %in% settings_input$cloudcover){
+    cruvars <- c(cruvars, "ccov")
+    mdf <- get_input_sofun_climate_globalfields_cru_byvar( "cld", settings_input, settings_sims ) %>%
+      dplyr::select(sitename, date, myvar) %>% 
+      dplyr::rename(ccov_cru = myvar) %>% 
+      dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+      # dplyr::select(-date) %>% 
+      dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+  }
+  
+  ## wet days
+  if ("cru" %in% settings_input$cloudcover){
+    cruvars <- c(cruvars, "wetd")
+    mdf <- get_input_sofun_climate_globalfields_cru_byvar( "wet", settings_input, settings_sims ) %>%
+      dplyr::select(sitename, date, myvar) %>% 
+      dplyr::rename(wetd_cru = myvar) %>% 
+      dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+      dplyr::select(-date) %>% 
+      dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+  }  
+  
+  ## VPD
+  ## calculated as a function of vapour pressure and temperature, vapour
+  ## pressure is given by CRU data.
+  if ("vap" %in% cruvars){
+    ## calculate VPD (vap is in hPa)
+    mdf <-  mdf %>%
+      mutate( vpd_vap_cru_temp_cru = calc_vpd( eact = 1e2 * vap_cru, tc = temp_cru ) )
+  }
+
+  ## expand monthly to daily data
+  if (length(cruvars)>0){ 
+    ddf <- expand_clim_cru_monthly( mdf, cruvars ) %>%
+      right_join( ddf, by = "date" )
+  }
+
+  return( ddf )
+
+}
+
+
+##--------------------------------------------------------------------
+## Extract temperature time series for a set of sites at once (opening
+## each file only once).
+##--------------------------------------------------------------------
+get_input_sofun_climate_globalfields_watch_byvar <- function( varnam, settings_input, settings_sims ){
+
+  dirn <- paste0( settings_input$path_watch_wfdei, "/", varnam, "/" )
+
+  ## loop over all year and months that are required
+  year_start <- purrr::map(settings_sims$date_start, ~lubridate::year(.)) %>%
+    unlist() %>%
+    min()
+  year_end <- purrr::map(settings_sims$date_end, ~lubridate::year(.)) %>%
+    unlist() %>%
+    max()
+
+  allmonths <- 1:12
+  allyears <- year_start:year_end
+
+  ## construct data frame holding longitude and latitude info
+  df_lonlat <- tibble(
+    sitename = settings_sims$sitenames,
+    lon      = unlist(settings_sims$lon),
+    lat      = unlist(settings_sims$lat)
+    )
+
+  ## extract all the data
+  df <- expand.grid(allmonths, allyears) %>%
+    dplyr::as_tibble() %>%
+    setNames(c("mo", "yr")) %>%
+    dplyr::filter(yr==2000) %>%  # XXX test
+    rowwise() %>%
+    dplyr::mutate(filename = paste0( settings_input$path_watch, "/", varnam, "/", varnam, "_WFDEI_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )) %>%
+    dplyr::mutate(data = purrr::map(filename, ~extract_pointdata_allsites(., df_lonlat ) ))
+
+  ## rearrange to a daily data frame
+  complement_df <- function(df){
+    df <- df %>% 
+      setNames(., c("myvar")) %>%
+      mutate( dom = 1:nrow(.))
+    return(df)
+  }
+  ddf <- df %>% 
+    tidyr::unnest(data) %>% 
+    dplyr::mutate(data = purrr::map(data, ~complement_df(.))) %>%
+    tidyr::unnest(data) %>%
+    dplyr::select(sitename, mo, yr, dom, myvar) %>% 
+    dplyr::mutate(date = lubridate::ymd(paste0(as.character(yr), "-", sprintf( "%02d", mo), "-", sprintf( "%02d", dom))) ) %>% 
+    dplyr::select(-mo, -yr, -dom)
+  
+  return( ddf )
+}
+
+
+##--------------------------------------------------------------------
+## Extract temperature time series for a set of sites at once (opening
+## each file only once).
+##--------------------------------------------------------------------
+get_input_sofun_climate_globalfields_cru_byvar <- function( varnam, settings_input, settings_sims ){
+
+  ## construct data frame holding longitude and latitude info
+  df_lonlat <- tibble(
+    sitename = settings_sims$sitenames,
+    lon      = unlist(settings_sims$lon),
+    lat      = unlist(settings_sims$lat)
+    )
+
+  ## extract the data
+  filename <- list.files( settings_input$path_cru, pattern=paste0( varnam, ".dat.nc" ) )
+  df <- extract_pointdata_allsites( paste0(settings_input$path_cru, filename), df_lonlat, get_time = TRUE ) %>% 
+    dplyr::mutate(data = purrr::map(data, ~setNames(., c("myvar", "date"))))
+
+  ## rearrange to a daily data frame
+  ddf <- df %>% 
+    tidyr::unnest(data)
+  
+  return( ddf )
+}
+
+
+##-----------------------------------------------------------
 ## Returns a dataframe with all climate input data for one site
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
 ##-----------------------------------------------------------
-prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite=FALSE, overwrite_csv=FALSE, verbose=FALSE ){
+prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, settings_sims, overwrite=FALSE, overwrite_csv=FALSE, verbose=FALSE ){
 
-  if (verbose) print(paste("Getting climate data for site", sitename ))
+  if (verbose) print(paste("Writing climate input files...", sitename ))
 
   ## path of CSV file with data for this site
   dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
   csvfiln <- paste0( dir, "/clim_daily_", sitename, ".csv" )
 
-  if (file.exists(csvfiln)&&!overwrite_csv){
+  if (file.exists(csvfiln) && !overwrite_csv){
 
     ddf <- readr::read_csv( csvfiln )
 
   } else {
-
-    ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
-    ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE )
-
-    ##----------------------------------------------------------------------
-    ## Read daily FLUXNET 2015 meteo data for each site (reads all variables)
-    ## A file must be found containing the site name in the file name and located in <settings_input$path_fluxnet2015>
-    ##----------------------------------------------------------------------
-    fluxnetvars <- c()
-    if ("fluxnet2015" %in% settings_input$temperature)   fluxnetvars <- c( fluxnetvars, "temp" )
-    if ("fluxnet2015" %in% settings_input$precipitation) fluxnetvars <- c( fluxnetvars, "prec" )
-    if ("fluxnet2015" %in% settings_input$vpd)           fluxnetvars <- c( fluxnetvars, "vpd" )
-    if ("fluxnet2015" %in% settings_input$ppfd)          fluxnetvars <- c( fluxnetvars, "ppfd" )
-    if ("fluxnet2015" %in% settings_input$netrad)        fluxnetvars <- c( fluxnetvars, "netrad" )
-    if ("fluxnet2015" %in% settings_input$patm)          fluxnetvars <- c( fluxnetvars, "patm" )
-
-    getvars <- c()
-    if ("fluxnet2015" %in% settings_input$temperature)   getvars <- c( getvars, "TA_F" )  # c( getvars, "TA_F_DAY" )
-    if ("fluxnet2015" %in% settings_input$precipitation) getvars <- c( getvars, "P_F" )
-    if ("fluxnet2015" %in% settings_input$vpd)           getvars <- c( getvars, "VPD_F" ) # c( getvars, "VPD_F_DAY" )
-    if ("fluxnet2015" %in% settings_input$ppfd)          getvars <- c( getvars, "SW_IN_F" )
-    if ("fluxnet2015" %in% settings_input$netrad)        getvars <- c( getvars, "NETRAD" )
-    if ("fluxnet2015" %in% settings_input$patm)          getvars <- c( getvars, "PA_F" )
-
-    if (length(fluxnetvars)>0){
-
-      ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_input$path_fluxnet2015, sitename )
-
-      ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
-      # ddf <- get_meteo_fluxnet2015( sitename, dir = settings_input$path_fluxnet2015, freq="d" ) %>%
-      #   dplyr::select( date, one_of(fluxnetvars) ) %>% 
-      #   setNames( c("date", paste0( fluxnetvars, "_fluxnet2015" ))) %>%
-      #   right_join( ddf, by = "date" )
-      
-      ddf <- get_obs_bysite_fluxnet2015(sitename, 
-                                        path_fluxnet2015 = settings_input$path_fluxnet2015, 
-                                        timescale        = "d", 
-                                        getvars          = getvars, 
-                                        getswc           = FALSE ) %>%
-        dplyr::select( date, one_of(fluxnetvars) ) %>% 
-        setNames( c("date", paste0( fluxnetvars, "_fluxnet2015" ))) %>%
-        right_join( ddf, by = "date" )   
-
-    }
-    
-    ##----------------------------------------------------------------------
-    ## Read WATCH-WFDEI data (extracting from NetCDF files for this site)
-    ##----------------------------------------------------------------------
-    if (any( c( 
-      "watch_wfdei" %in% settings_input$temperature, 
-      "watch_wfdei" %in% settings_input$precipitation, 
-      "watch_wfdei" %in% settings_input$vpd, 
-      "watch_wfdei" %in% settings_input$ppfd,
-      "watch_wfdei" %in% settings_input$netrad,
-      "watch_wfdei" %in% settings_input$patm
-      ))){
-
-      ddf <-  get_watch_daily(  lon = settings_sims$lon[[sitename]], 
-                                lat = settings_sims$lat[[sitename]], 
-                                elv = settings_sims$elv[[sitename]], 
-                                date_start = settings_sims$date_start[[sitename]], 
-                                date_end= settings_sims$date_end[[sitename]], 
-                                settings_input
-                                ) %>% 
-              right_join( ddf, by="date" )
-
-    }
-
-    ##----------------------------------------------------------------------
-    ## Fill missing variables
-    ##----------------------------------------------------------------------
-    if (is.na(settings_input$cloudcover)){
-      rlang::warn("Filling column ccov_dummy with value 50 (%).")
-      ddf <- ddf %>% mutate( ccov_dummy = 50 )
-    }
-
-    ##----------------------------------------------------------------------
-    ## Read CRU data (extracting from NetCDF files for this site)
-    ##----------------------------------------------------------------------
-    if (any( c( 
-      "cru" %in% settings_input$temperature, 
-      "cru" %in% settings_input$precipitation, 
-      "cru" %in% settings_input$vpd, 
-      "cru" %in% settings_input$ppfd,
-      "cru" %in% settings_input$cloudcover
-      ))){
-
-      cruvars <- c()
-      if ("cru" %in% settings_input$temperature)   cruvars <- c(cruvars, "temp")
-      if ("cru" %in% settings_input$cloudcover)    cruvars <- c(cruvars, "ccov")
-      if ("cru" %in% settings_input$precipitation) cruvars <- c(cruvars, "prec")
-      if ("cru" %in% settings_input$precipitation) cruvars <- c(cruvars, "wetd")
-      if ("cru" %in% settings_input$vpd)           cruvars <- c(cruvars, "vap")
-      if ("cru" %in% settings_input$vpd)           cruvars <- c(cruvars, "temp")
-
-      ## First get monthly data
-      mdf_cru <- get_clim_cru_monthly(  lon = settings_sims$lon[[sitename]], 
-                                        lat = settings_sims$lat[[sitename]], 
-                                        settings = settings_input, 
-                                        cruvars 
-                                        )
-
-      ## expand monthly to daily data
-      if (length(cruvars)>0) ddf <- expand_clim_cru_monthly( mdf_cru, cruvars ) %>%
-        right_join( ddf, by = "date" )
-
-    }
 
     ##----------------------------------------------------------------------
     ## Write climate data to CSV files: 
@@ -393,8 +664,8 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
 
   }
 
-  ## Add site name to dataframe (is merged by rows with ddf of other sites)
-  ddf <- ddf %>% dplyr::select( -(starts_with("year_dec")) ) %>% mutate( sitename = sitename )
+  # ## Add site name to dataframe (is merged by rows with ddf of other sites)
+  # ddf <- ddf %>% dplyr::select( -(starts_with("year_dec")) ) %>% mutate( sitename = sitename )
 
   ## Check if fortran-formatted text files are written already
   filelist <- list.files( paste0( settings_sims$path_input, "/sitedata/climate/", sitename, "/", as.character( lubridate::year( ddf$date[1] ) ), "/" ) )
@@ -412,7 +683,11 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       out <- ddf
 
       ## temperature
-      out <- out %>%  mutate( temp = temp_fluxnet2015 )
+      if ("temp_fluxnet2015" %in% names(out)){
+        out <- out %>% mutate( temp = temp_fluxnet2015 )        
+      } else {
+        out <- out %>% mutate( temp = NA )
+      }
       if ("temp_watch" %in% names(ddf) && "temp_cru_int" %in% names(ddf) ){
         out <- out %>% mutate( temp = ifelse( !is.na(temp), temp, ifelse( !is.na(temp_watch), temp_watch, temp_cru_int ) ) )
       } else if ("temp_watch" %in% names(ddf)){
@@ -420,7 +695,11 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       }
 
       ## precipitation
-      out <- out %>%  mutate( prec = prec_fluxnet2015 )
+      if ("prec_fluxnet2015" %in% names(out)){
+        out <- out %>% mutate( prec = prec_fluxnet2015 )        
+      } else {
+        out <- out %>% mutate( prec = NA )
+      }      
       if ("prec_watch" %in% names(ddf) && "prec_cru_int" %in% names(ddf) ){
         out <- out %>% mutate( prec = ifelse( !is.na(prec), prec, ifelse( !is.na(prec_watch), prec_watch, prec_cru_gen ) ) )
       } else if ("prec_watch" %in% names(ddf)){
@@ -428,7 +707,11 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       }
 
       ## VPD
-      out <- out %>%  mutate( vpd = vpd_fluxnet2015 )
+      if ("vpd_fluxnet2015" %in% names(out)){
+        out <- out %>% mutate( vpd = vpd_fluxnet2015 )        
+      } else {
+        out <- out %>% mutate( vpd = NA )
+      }
       if ("vpd_qair_watch_temp_watch" %in% names(ddf) && "vpd_vap_cru_temp_cru_int" %in% names(ddf) ){
         out <- out %>% mutate( vpd = ifelse( !is.na(vpd), vpd, ifelse( !is.na(vpd_qair_watch_temp_watch), vpd_qair_watch_temp_watch, vpd_vap_cru_temp_cru_int ) ) )
       } else if ("vpd_qair_watch_temp_watch" %in% names(ddf)){
@@ -436,24 +719,31 @@ prepare_input_sofun_climate_bysite <- function( sitename, settings_input, settin
       }
 
       ## ppfd
-      out <- out %>%  mutate( ppfd = ppfd_fluxnet2015 )
+      if ("ppfd_fluxnet2015" %in% names(out)){
+        out <- out %>% mutate( ppfd = ppfd_fluxnet2015 )        
+      } else {
+        out <- out %>% mutate( ppfd = NA )
+      }
       if ("ppfd_watch" %in% names(ddf) ){
         out <- out %>% mutate( ppfd = ifelse( !is.na(ppfd), ppfd, ifelse( !is.na(ppfd_watch), ppfd_watch, NA ) ) )
       } 
 
+      ## netrad
       if (settings_sims$in_netrad){
-        ## netrad
         out <- out %>%  mutate( nrad = netrad_fluxnet2015 )
         if ("nrad_watch" %in% names(ddf) ){
           out <- out %>% mutate( nrad = ifelse( !is.na(nrad), nrad, ifelse( !is.na(nrad_watch), nrad_watch, NA ) ) )
         } 
+
       } else {
+
         ## cloud cover
         if ( "ccov_cru_int" %in% names(ddf) ){
           out <- out %>%  mutate( ccov = ccov_cru_int )
         } else if ("ccov_dummy" %in% names(ddf)){
           out <- out %>% mutate( ccov = ccov_dummy )
         }
+        
       }
 
       out <- out %>% mutate(  temp   = fill_gaps( temp   ),
@@ -524,7 +814,7 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
   
   csvfiln <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
 
-  if (file.exists(csvfiln)&&!overwrite_csv){
+  if ( file.exists( csvfiln ) && !overwrite_csv ){
 
     ddf <- readr::read_csv( csvfiln ) %>% mutate( fapar = as.numeric(fapar) )
 
@@ -653,406 +943,842 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
 
 }
 
-# ##--------------------------------------------------------------------
-# ## Function returns a dataframe containing all the data of flux-derived
-# ## GPP for the station implicitly given by path (argument).
-# ## Specific for FLUXNET 2015 data
-# ## Returns variables in the following units:
-# ## temp: deg C
-# ## vpd : Pa
-# ## prec: mm d-1
-# ## nrad: J m-2 d-1
-# ## swin: J m-2 d-1
-# ## ppfd: mol m-2 d-1 
-# ##--------------------------------------------------------------------
-# get_meteo_fluxnet2015 <- function( sitename, dir=NA, path=NA, freq="d" ){
-# 
-#   ## from flux to energy conversion, umol/J (Meek et al., 1984), same as used in SPLASH (see Eq.50 in spash_doc.pdf)
-#   kfFEC <- 2.04
-# 
-#   if (is.na(path)){
-# 
-#     if ( freq=="y" ){
-#       ## Annual data
-#       print( paste( "getting annual FLUXNET 2015 data for site", sitename ) )
-#       allfiles <- list.files( dir )
-#       allfiles <- allfiles[ which( grepl( "FULLSET_YY", allfiles ) ) ]
-#       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
-#       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
-#       path <- paste0( dir, filnam_obs ) 
-# 
-#     } else if ( freq=="m" ){
-#       ## Monthly data
-#       print( paste( "getting monthly FLUXNET 2015 data for site", sitename ) )
-#       allfiles <- list.files( dir )
-#       allfiles <- allfiles[ which( grepl( "FULLSET_MM", allfiles ) ) ]
-#       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
-#       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
-#       path <- paste0( dir, filnam_obs ) 
-# 
-#     } else if ( freq=="w" ){
-#       ## Weekly data
-#       print( paste( "getting weekly FLUXNET 2015 data for site", sitename ) )
-#       allfiles <- list.files( dir )
-#       allfiles <- allfiles[ which( grepl( "FULLSET_WW", allfiles ) ) ]
-#       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
-#       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
-#       path <- paste0( dir, filnam_obs ) 
-# 
-#     } else if ( freq=="d" ){
-#       ## Daily data
-#       print( paste( "getting daily FLUXNET 2015 data for site", sitename ) )
-#       allfiles <- list.files( dir )
-#       allfiles <- allfiles[ which( grepl( "FULLSET_DD", allfiles ) ) ]
-#       allfiles <- allfiles[ which( grepl( "3.csv", allfiles ) ) ]
-#       filnam_obs <- allfiles[ which( grepl( sitename, allfiles ) ) ]
-#       path <- paste0( dir, filnam_obs ) 
-# 
-#     }
-# 
-#   } else if (is.na(path)) {
-#     abort("get_meteo_fluxnet2015(): Either path or dir must be provided as arguments.")
-#   }
-# 
-#   ## read data
-#   meteo <-  readr::read_csv( path, na="-9999", col_types = cols() )
-# 
-#   ## get dates, their format differs slightly between temporal resolution
-#   if ( freq=="y" ){
-# 
-#     meteo <- meteo %>% mutate( year = TIMESTAMP ) %>% mutate( date = ymd( paste0( as.character(year), "-01-01" ) ) )      
-# 
-#   } else if ( freq=="w"){
-# 
-#     meteo <- meteo %>% mutate( date_start = ymd(TIMESTAMP_START), date_end = ymd(TIMESTAMP_END) ) %>% 
-#                        mutate( date = date_start )
-# 
-#   } else if ( freq=="m" ){
-# 
-#     meteo <- meteo %>% mutate( year = substr( TIMESTAMP, start = 1, stop = 4 ), month = substr( TIMESTAMP, start = 5, stop = 6 ) ) %>%
-#                        mutate( date = ymd( paste0( as.character(year), "-", as.character(month), "-01" ) ) )
-#   
-#   } else if ( freq=="d" ){
-# 
-#     meteo <- meteo %>% mutate( date = ymd( TIMESTAMP ) )
-# 
-#   }
-#   
-#   ## rename variables and unit conversions
-#   meteo <- meteo %>%  dplyr::rename( temp = TA_F,
-#                               vpd  = VPD_F,
-#                               prec = P_F,
-#                               swin = SW_IN_F
-#                             ) %>%
-#                       mutate( swin = swin * 60 * 60 * 24,   # given in W m-2, required in J m-2 d-1 
-#                               ppfd = swin * kfFEC * 1.0e-6, # convert from J/m2/d to mol/m2/d
-#                               vpd  = vpd * 1e2,             # given in hPa, required in Pa
-#                               ccov = NA
-#                             ) 
-#   
-#   ## I don't know how to do this better with a single condition to be evaluated
-#   if (is.element( "NETRAD", names(meteo) )){
-#     meteo <- meteo %>%  mutate( nrad = NETRAD * (60 * 60 * 24) ) %>% # given in W m-2 (avg.), required in J m-2 (daily total)
-#                         dplyr::select( date, temp, prec, nrad, ppfd, vpd, ccov )
-#   } else {
-#     meteo <- meteo %>% mutate( nrad = NA )
-#   }
-#   
-#   ## subset data
-#   meteo <- meteo %>% dplyr::select( date, temp, prec, nrad, ppfd, vpd, ccov )
-# 
-#   return( meteo )
-# 
-# }
 
-##--------------------------------------------------------------------
-## Function returns daily data frame with columns for watch data 
-## (temp_watch, prec_watch, vpd_qair_watch_temp_watch, [ppfd_watch])
-##--------------------------------------------------------------------
-get_watch_daily <- function( lon, lat, elv, date_start, date_end, settings_input ){
-
-  ## WATCH-WFDEI data is available monthly. Create vector with all required months.
-  bymonths <- seq( date_start, date_end, by = "months" )
-
-  ## extract temperature data
-  ddf_temp <- purrr:map( as.list(bymonths), ~get_pointdata_temp_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
-              bind_rows()
-
-  ## extract precipitation data (sum of snowfall and rainfall)
-  ddf_prec <- purrr:map( as.list(bymonths), ~get_pointdata_prec_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
-              bind_rows()
-
-  ## extract PPFD data
-  ddf_ppfd <- purrr:map( as.list(bymonths), ~get_pointdata_ppfd_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
-              bind_rows()
-
-  ## extract net radiation data XXX NOT IMPLEMENTED
-  rlang::warn( "get_watch_daily(): Net radiation data extraction from WATCH-WFDEI is not implemented. Filling with NAs." )
-  ddf_nrad <- ddf_ppfd %>% dplyr::rename( nrad_watch = ppfd_watch ) %>% mutate( nrad_watch = NA )
-
-  ## extract air humidity data and calculate VPD based on temperature
-  ddf_qair <- purrr:map( as.list(bymonths), ~get_pointdata_qair_wfdei( lon, lat, month(.), year(.), ignore_leap=TRUE, path=settings_input$path_watch_wfdei ) ) %>%
-              bind_rows() %>%
-              ## merge temperature data in here for VPD calculation
-              left_join( ddf_temp, by = "date" ) %>%
-              ## calculate VPD
-              mutate( vpd_qair_watch_temp_watch = calc_vpd( qair=qair_watch, tc=temp_watch, elv=elv ) ) %>%
-              ## drop temperature data again to avoid duplication
-              dplyr::select( -temp_watch )
-
-
-  ## merge all data frames
-  ddf <- ddf_temp %>% left_join( ddf_prec, by = c("date", "year_dec") ) %>%
-                      left_join( ddf_qair, by = c("date", "year_dec") ) %>%
-                      left_join( ddf_ppfd, by = c("date", "year_dec") )
-
-
-  return( ddf )
-
-}
-
-
-##--------------------------------------------------------------------
-## Extract monthly data from files for each year and attach to the 
-## monthly dataframe (at the right location).
-## Original data in K, returns data in K
-##--------------------------------------------------------------------
-get_pointdata_temp_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path ){
+##-----------------------------------------------------------
+## Returns a list of two data frames, one with data at original
+## modis dates (df), and one interpolated to all days (ddf).
+##-----------------------------------------------------------
+prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
+  end_date, settings_sims, settings_input,
+  overwrite_raw, overwrite_nice,
+  band_var, band_qc, prod, prod_suffix, varnam, productnam, scale_factor, 
+  period, asfaparinput, do_plot_interpolated, python_path, gee_path){
   
-  ndaymonth_all <- c(31,28,31,30,31,30,31,31,30,31,30,31)
-  ndaymonth <- ndaymonth_all[mo]
 
-  dirn <- paste0( path, "/Tair_daily/" )
-  filn <- paste0( "Tair_daily_WFDEI_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )
-  if ( file.exists( filn ) ){
-    print( paste( "extracting from", filn ) )
-    system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " Tair", " lon lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
-    dtemp <- read.table( "./tmp/out.txt" )$V1 - 273.15  # conversion from Kelving to Celsius
-    if ( ignore_leap && mo==2 && length(dtemp==29) ){ dtemp <- dtemp[1:28] }
-  } else {
-    print(paste("get_pointdata_temp_wfdei(): file does not exist:", filn ))
-    dtemp <- rep( NA, ndaymonth )
-  }
-  dates <- seq( from = ymd( paste0( as.character(yr), "-", as.character(mo), "-", sprintf( "%02d", 1  ) ) ),
-                to   = ymd( paste0( as.character(yr), "-", as.character(mo), "-", sprintf( "%02d", ndaymonth  ) ) ),
-                by   = "days"
-                )
-  ddf <- tibble( date=dates, temp_watch=dtemp )
-  
-  return( ddf )
+  sitename <- df_siteinfo$sitename[1]
+  df_sub <- slice(df_siteinfo, 1)
 
-}
+  ## output directory
+  dirnam_csv_outputdata <- paste0(settings_sims$path_input, "/sitedata/fapar/", sitename)
+  if (!dir.exists(dirnam_csv_outputdata)) system( paste0( "mkdir -p ", dirnam_csv_outputdata ) )
 
-##--------------------------------------------------------------------
-## Extract monthly data from files for each year and attach to the 
-## monthly dataframe (at the right location). 
-## Original data in kg/m2s, returns data in kg/m2/month.
-##--------------------------------------------------------------------
-get_pointdata_prec_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path ){
+  ## Find file from which (crude) data is read
+  savedir <- paste0( dirnam_csv_outputdata, "/raw/" )
+  if (!dir.exists(savedir)) system( paste( "mkdir -p ", savedir ) )
 
-  ndaymonth_all <- c(31,28,31,30,31,30,31,31,30,31,30,31)
-  ndaymonth <- ndaymonth_all[mo]
-  
-  ## rain
-  dirn <- paste0( path, "/Rainf_daily/" )
-  filn <- paste0( "Rainf_daily_WFDEI_CRU_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )
-  if ( file.exists( filn ) ){
-    print( paste( "extracting from", filn ) )
-    system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " Rainf", " lon lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
-    dprec <- read.table( "./tmp/out.txt" )$V1
-    dprec <- dprec*60*60*24 # kg/m2/s -> mm/day
-  } else {
-    # print( paste( "file", filn, "does not exist." ) )
-    dprec <- rep( NA, ndaymonth )
-  }
-  # print( paste( "rain only: ", mprec))
+  ## Save error code (0: no error, 1: error: file downloaded bu all data is NA, 2: file not downloaded)
+  df_error <- tibble()
 
-  ## snow
-  dirn <- paste0( path, "/Snowf_daily/" )
-  filn <- paste0( "Snowf_daily_WFDEI_CRU_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )
-  if ( file.exists( filn ) ){
-    print( paste( "extracting from", filn ) )
-    system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " Snowf", " lon lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
-    dsnow <- read.table( "./tmp/out.txt" )$V1
-    dsnow <- dsnow*60*60*24 # kg/m2/s -> mm/day
-    dprec <- dprec + dsnow
-    # print( paste( "snow only: ", sum( dprec*60*60*24 )))
+  ##--------------------------------------------------------------------
+  ## Handle file names
+  ##--------------------------------------------------------------------
+  if (asfaparinput){
+    dirnam_csv_asfaparinput <- dirnam_csv_outputdata
+    if (!dir.exists(dirnam_csv_asfaparinput)) system( paste0( "mkdir -p ", dirnam_csv_asfaparinput ) )
   }
 
-  ## ignore leap years
-  if ( ignore_leap && mo==2 && length(dprec==29) ){ dprec <- dprec[1:28] }
+  ## This file is the link for _tseries and split scripts and should contain all the raw data, not gap-filled or interpolated!
+  ## this file is written by 'interpolate_modis()'
+  filnam_modis_raw_csv  <- paste0( dirnam_csv_outputdata, "/raw/", sitename, "_", prod_suffix, "_gee_subset.csv" )
+  filnam_modis_nice_csv <- paste0( dirnam_csv_outputdata, "/", sitename, "/", varnam, "_", productnam, "_", prod_suffix, "_", sitename, "_gee_subset.csv" )
 
-  dates <- seq( from = ymd( paste0( as.character(yr), "-", as.character(mo), "-", sprintf( "%02d", 1  ) ) ),
-                to   = ymd( paste0( as.character(yr), "-", as.character(mo), "-", sprintf( "%02d", ndaymonth  ) ) ),
-                by   = "days"
-                )
-  ddf <- tibble( date=dates, prec_watch=dprec )
+  ## These files are gap-filled and interpolated
+  if (asfaparinput) filnam_daily_csv <- paste0( dirnam_csv_outputdata, "/", sitename, "/d", varnam, "_", productnam, "_", prod_suffix, "_", sitename, "_gee_subset.csv" )
 
-  return( ddf )
+  if (!file.exists(filnam_modis_raw_csv)||overwrite_raw){
+    ##--------------------------------------------------------------------
+    ## Trigger download using the python function
+    ##--------------------------------------------------------------------    
+    write.csv( dplyr::select( df_sub, site = sitename, latitude = lat, longitude = lon), file=filnam_modis_raw_csv, row.names=FALSE )
 
-}
-
-##--------------------------------------------------------------------
-## Extract monthly data from files for each year and attach to the 
-## monthly dataframe (at the right location).
-## Original data in K, returns data in K
-##--------------------------------------------------------------------
-get_pointdata_qair_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path ){
-
-  ndaymonth_all <- c(31,28,31,30,31,30,31,31,30,31,30,31)
-  ndaymonth <- ndaymonth_all[mo]
-
-  dirn <- paste0( path, "/Qair_daily/" )
-  filn <- paste0( "Qair_daily_WFDEI_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )
-  if ( file.exists( filn ) ){
-    print( paste( "extracting from", filn ) )
-    system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " Qair", " lon lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
-    dqair <- read.table( "./tmp/out.txt" )$V1
-    if ( ignore_leap && mo==2 && length(dqair==29) ){ dqair <- dqair[1:28] }
-  } else {
-    dqair <- rep( NA, ndaymonth )
-  }
-
-  dates <- seq( from = ymd( paste0( as.character(yr), "-", as.character(mo), "-", sprintf( "%02d", 1  ) ) ),
-                to   = ymd( paste0( as.character(yr), "-", as.character(mo), "-", sprintf( "%02d", ndaymonth  ) ) ),
-                by   = "days"
-                )
-  ddf <- tibble( date=dates, qair_watch=dqair )
-
-  return( ddf )
-
-}
-
-##--------------------------------------------------------------------
-## Extract monthly data from files for each year and attach to the 
-## monthly dataframe (at the right location).
-## Original data in K, returns data in K
-##--------------------------------------------------------------------
-get_pointdata_ppfd_wfdei <- function( lon, lat, mo, yr, ignore_leap=TRUE, path ){
-  
-  ndaymonth_all <- c(31,28,31,30,31,30,31,31,30,31,30,31)
-  ndaymonth <- ndaymonth_all[mo]
-
-  ## conversion factor from SPLASH: flux to energy conversion, umol/J (Meek et al., 1984)
-  kfFEC <- 2.04    
-
-  dirn <- paste0( path, "/SWdown_daily/" )
-  filn <- paste0( "SWdown_daily_WFDEI_", sprintf( "%4d", yr ), sprintf( "%02d", mo ), ".nc" )
-  if ( file.exists( filn ) ){
-    print( paste( "extracting from", filn ) )
-    system( paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " SWdown", " lon lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) ) )
-    dswdown <- read.table( "./tmp/out.txt" )$V1
-    dppfd <- dswdown * kfFEC  # W m-2 -> umol s-1 m-2
-    dppfd <- 1.0e-6 * dppfd * 60 * 60 * 24  # umol m-2 s-1 -> mol m-2 d-1
-    if ( ignore_leap && mo==2 && length(dppfd==29) ){ dppfd <- dppfd[1:28] }
-  } else {
-    dppfd <- rep( NA, ndaymonth )
-  }
-
-  dates <- seq( from = ymd( paste0( as.character(yr), "-", as.character(mo), "-", sprintf( "%02d", 1  ) ) ),
-                to   = ymd( paste0( as.character(yr), "-", as.character(mo), "-", sprintf( "%02d", ndaymonth  ) ) ),
-                by   = "days"
-                )
-  ddf <- tibble( date=dates, ppfd_watch=dppfd )
-
-  return( ddf )
-
-}
-
-##--------------------------------------------------------------------
-## Extract monthly data from files for each year and attach to the 
-## monthly dataframe (at the right location).
-## Original data in K, returns data in K
-##--------------------------------------------------------------------
-get_pointdata_monthly_cru <- function( varnam, lon, lat, settings, yrend ){
-
-  filn <- list.files( settings$path_cru, pattern=paste0( varnam, ".dat.nc" ) )
-
-  if ( length( filn )!=0 ){
+    start = Sys.time()
+    system(sprintf("%s %s/gee_subset.py -p %s -b %s %s -s %s -e %s -f %s -d %s -sc 30",
+                   python_path,
+                   gee_path,
+                   prod,
+                   band_var,
+                   band_qc,
+                   start_date,
+                   end_date,
+                   filnam_modis_raw_csv,
+                   savedir
+                   ), wait = TRUE)
     
-    dirn <- settings$path_cru
-    if (!dir.exists("./tmp")) system("mkdir ./tmp")
-    cmd <- paste0( path.package("rsofun"), "/bash/extract_pointdata_byfil.sh ", dirn, " ", filn, " ", varnam, " lon", " lat ", sprintf("%.2f",lon), " ", sprintf("%.2f",lat) )
-    print( paste( "executing command:", cmd ) )
-    system( cmd )
-    mdata <- read.table( "./tmp/out.txt" )$V1
-    mdf <-  init_dates_dataframe( 1901, yrend, freq="months" ) %>%
-            mutate( mdata = mdata )
-
-    if (is.na(mdf$mdata[1])) mdf <- "noland"            
+    end = Sys.time()
+    proc_time = as.vector(end - start)
+    print( paste( "... completed in", format( proc_time, digits = 3), "sec" ) )
+    print( paste( "raw data file written:", filnam_modis_raw_csv ) )
 
   } else {
 
-    mdf <- init_dates_dataframe( 1901, yrend, freq="months" ) %>%
-           mutate( mdata = NA )
+    print( paste( "file exists already:", filnam_modis_raw_csv ) )
 
   }
 
-  return( mdf )
+  ##--------------------------------------------------------------------
+  ## Read raw data and create a data frame holding the complete time series
+  ## Note: 'date', 'doy', 'dom', etc. refer to the date, centered within 
+  ## each N-day period. 'date_start' refers to the beginning of each 
+  ## N-day period.
+  ##--------------------------------------------------------------------
+  if (file.exists(filnam_modis_raw_csv)){
+  
+    df <- readr::read_csv( filnam_modis_raw_csv, col_types = cols() ) %>%
+          dplyr::mutate(  date_start = ymd(date) ) %>%
+          dplyr::mutate(  date = date_start + days( as.integer(period/2) ),
+                          doy = yday(date),
+                          year = year(date)
+                        ) %>% 
+          dplyr::mutate( ndayyear = ifelse( leap_year( date ), 366, 365 ) ) %>%
+          dplyr::mutate( year_dec = year(date) + (yday(date)-1) / ndayyear ) %>% 
+          dplyr::select( -longitude, -latitude, -product, -ndayyear )
+                 
+    ## Apply scale factor, specific for each product
+    if (any(!is.na(df[[band_var]]))){
+      df[[band_var]] <- df[[band_var]] * scale_factor
+      cont <- TRUE
+    } else {
+      cont <- FALSE
+    }
+    
+
+    if (cont){
+
+      if (!file.exists(filnam_modis_nice_csv)||overwrite_nice){
+        ##--------------------------------------------------------------------
+        ## Clean (gapfill and interpolate) full time series data to 8-days, daily, and monthly
+        ##--------------------------------------------------------------------
+        print("gapfilling and interpolating to daily ...")
+        out <- gapfill_modis(
+                              df,
+                              sitename, 
+                              year_start = df_sub$year_start,
+                              year_end   = df_sub$year_end,
+                              qc_name = band_qc, 
+                              prod = prod_suffix,
+                              do_interpolate = asfaparinput,
+                              do_plot_interpolated = do_plot_interpolated
+                            )
+
+        ##--------------------------------------------------------------------
+        ## Save data frames as CSV files
+        ##--------------------------------------------------------------------
+        readr::write_csv( out$df,  path=filnam_modis_nice_csv )
+        if (asfaparinput) readr::write_csv( out$ddf, path=filnam_daily_csv )
+
+      } else {
+
+        ##--------------------------------------------------------------------
+        ## Read CSV file directly for this site
+        ##--------------------------------------------------------------------
+        print( "monthly data already available in CSV file ...")
+        out <- list()
+        out$df  <- readr::read_csv( filnam_modis_nice_csv, col_types = cols() )
+        if (asfaparinput) out$ddf <- readr::read_csv( filnam_daily_csv, col_types = cols() )
+
+      }
+
+      ##--------------------------------------------------------------------
+      ## Write to Fortran-formatted output for each variable and year separately
+      ## For days (and years) where no data is available, take the mean by DOY
+      ##--------------------------------------------------------------------
+      if (asfaparinput){
+
+        ## get mean seasonal cycle. This is relevant for years where no MODIS data is available.
+        df_meandoy <- out$ddf %>% group_by( doy ) %>% summarise( meandoy = mean( modisvar_interpol , na.rm=TRUE ) ) 
+
+        print( "writing formatted input files ..." )
+
+        ## in separate formatted file 
+        for (yr in df_sub$year_start:df_sub$year_end){
+
+          ## subset only this year
+          ddf_sub <- dplyr::filter( out$ddf, year(date)==yr ) 
+
+          ## fill gaps with mean seasonal cycle (for pre-MODIS years, entire year is mean seasonal cycle)
+          if (nrow(ddf_sub)==0) ddf_sub <- init_dates_dataframe( yr, yr ) %>% mutate( modisvar_interpol = NA ) %>% dplyr::filter( !( month(date)==2 & mday(date)==29 ) ) %>% mutate( doy=yday(date) )
+          ddf_sub <- ddf_sub %>% left_join( df_meandoy, by="doy" )
+
+          # ## fill gaps with mean by DOY/MOY
+          # ddf_sub$modisvar_interpol[ which( is.na( ddf_sub$modisvar_interpol ) ) ] <- ddf_sub$meandoy[ which( is.na( ddf_sub$modisvar_interpol ) ) ]
+
+          ## define directory name for SOFUN input
+          dirnam_csv_outputdata
+          dirnam <- paste0( dirnam_csv_outputdata, "/", as.character(yr), "/" )
+          system( paste( "mkdir -p", dirnam ) )
+
+          ## daily
+          filnam <- paste0( dirnam, "dfapar_", productnam,"_", prod_suffix, "_", sitename, "_", yr, ".txt" )
+          write_sofunformatted( filnam, ddf_sub$modisvar_interpol )
+          
+        }
+
+      }
+
+      df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=0 ) ) 
+
+    } else {
+
+      print( paste( "WARNING: NO DATA AVAILABLE FOR SITE:", sitename ) )
+      df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=1 ) )
+      out <- NA
+
+    }
+
+  } else {
+
+    print( paste( "WARNING: RAW DATA FILE NOT FOUND FOR SITE:", sitename ) )
+    df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=2 ) ) 
+    out <- NA
+
+  }
+  return(out)
+}
+
+
+gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do_interpolate=FALSE, do_plot_interpolated=FALSE ){
+  ##--------------------------------------
+  ## Returns data frame containing data 
+  ## (and year, moy, doy) for all available
+  ## months. Interpolated to mid-months
+  ## from original 16-daily data.
+  ##--------------------------------------
+
+  # require( signal )  ## for sgolayfilt, masks filter()
+
+  ##--------------------------------------
+  ## CLEAN AND GAP-FILL
+  ##--------------------------------------
+  if (prod=="MOD13Q1"){
+    ##--------------------------------------
+    ## This is for MOD13Q1 EVI data downloaded from Google Earth Engine with gee_subset
+    ## USED AS MODIS EVI GEE for P-model
+    ##--------------------------------------
+    ## QC interpreted according to https://explorer.earthengine.google.com/#detail/MODIS%2F006%2FMOD13Q1:
+    ## 0: Good data, use with confidence
+    ## 1: Marginal data, useful but look at detailed QA for more information
+    ## 2: Pixel covered with snow/ice
+    ## 3: Pixel is cloudy
+    ##--------------------------------------
+    df <- df %>%  mutate( good_quality  = ifelse( SummaryQA %in% c(0, 1, 2), TRUE, FALSE ) ) %>%
+                  rename( modisvar = EVI )
+
+    ## Plot effect of filtering steps
+    if (do_plot_interpolated){
+      plotfiln <- paste0( "fig/evi_MOD13Q1gee_", sitename, ".pdf" )
+      print( paste( "Gapfilling illustrated in:", plotfiln ) )
+      pdf( plotfiln, width=15, height=6 )
+      par(xpd=TRUE)
+      with( df, plot( year_dec, modisvar, pch=16, col='black', main=sitename, ylim=c(0,1), xlab="year", ylab="MOD13Q1gee", las=1 ) )
+      with( dplyr::filter( df, good_quality & modisvar > 0.0), points( year_dec, modisvar, pch=16, col='blue' ) )
+
+      legend( "topleft", 
+        c( "initial", "good_quality" ), 
+        col=c("black", "blue" ), pch=16, bty="n", inset = c(0,-0.2)
+        )
+
+    }
+
+    ## Actually filter
+    df <- df %>% mutate( modisvar = ifelse( good_quality, modisvar, NA )  )  ## replace by NA for values to be filtered out
+    # df <- df %>% dplyr::filter( good_quality )
+
+    ##--------------------------------------
+    ## replace missing values with mean by DOY (mean seasonal cycle)
+    ##--------------------------------------
+    ## get mean seasonal cycle
+    ddf_meandoy <- df %>% group_by( doy ) %>% summarise( meandoy = mean( modisvar , na.rm=TRUE ) )
+
+    ## attach mean seasonal cycle as column 'meandoy' to daily dataframe
+    df <- df %>% left_join( ddf_meandoy, by="doy" ) %>%
+
+      ## fill gaps at head and tail
+      mutate( modisvar = ifelse( is.na(modisvar), meandoy, modisvar ) )
+
+
+    ##--------------------------------------
+    ## This is for data downloaded using RModisTools
+    ##--------------------------------------
+
+    # ##--------------------------------------
+    # ## data cleaning
+    # ##--------------------------------------
+    # ## Replace data points with quality flag = 2 (snow covered) by 0
+    # # df_gapfld$centre[ which(df_gapfld$centre_qc==2) ] <- max( min( df_gapfld$centre ), 0.0 )
+    # df_gapfld$raw <- df_gapfld$centre
+    # df_gapfld$centre[ which(df_gapfld$centre<0) ] <- NA
+
+    # if (!is.null(df_gapfld$centre_qc)){
+    #   ## Drop all data with quality flag 3, 1 or -1
+    #   df_gapfld$centre[ which(df_gapfld$centre_qc==3) ]  <- NA  # Target not visible, covered with cloud
+    #   df_gapfld$centre[ which(df_gapfld$centre_qc==1) ]  <- NA  # Useful, but look at other QA information
+    #   df_gapfld$centre[ which(df_gapfld$centre_qc==-1) ] <- NA  # Not Processed
+    # }
+
+    # ## open plot for illustrating gap-filling
+    # if (do_plot_interpolated) pdf( paste("fig/evi_fill_", sitename, ".pdf", sep="" ), width=10, height=6 )
+    # if (do_plot_interpolated) plot( df_gapfld$year_dec, df_gapfld$raw, pch=16, col='black', main=sitename, ylim=c(0,1), xlab="year", ylab="MODIS EVI 250 m", las=1 )
+    # left <- seq(2000, 2016, 2)
+    # right <- seq(2001, 2017, 2)
+    # if (do_plot_interpolated) rect( left, -99, right, 99, border=NA, col=rgb(0,0,0,0.2) )
+    # if (do_plot_interpolated) points( df_gapfld$year_dec, df_gapfld$centre, pch=16, col='red' )
+
+    # # ## Drop all data identified as outliers = lie outside 5*IQR
+    # # df_gapfld$centre <- remove_outliers( df_gapfld$centre, coef=5 ) ## maybe too dangerous - removes peaks
+
+    # ## add points to plot opened before
+    # if (do_plot_interpolated) points( df_gapfld$year_dec, df_gapfld$centre, pch=16, col='blue' )
+
+    # ##--------------------------------------
+    # ## get LOESS spline model for predicting daily values (below)
+    # ##--------------------------------------
+    # idxs    <- which(!is.na(df_gapfld$centre))
+    # myloess <- try( with( df_gapfld, loess( centre[idxs] ~ year_dec[idxs], span=0.01 ) ))
+    # i <- 0
+    # while (class(myloess)=="try-error" && i<50){
+    #   i <- i + 1
+    #   print(paste("i=",i))
+    #   myloess <- try( with( df_gapfld, loess( centre[idxs] ~ year_dec[idxs], span=(0.01+0.002*(i-1)) ) ))
+    # }
+    # print("ok now...")
+
+    # ##--------------------------------------
+    # ## get spline model for predicting daily values (below)
+    # ##--------------------------------------
+    # spline <- try( with( df_gapfld, smooth.spline( year_dec[idxs], centre[idxs], spar=0.001 ) ) )
+
+    # ## aggregate by DOY
+    # agg <- aggregate( centre ~ doy, data=df_gapfld, FUN=mean, na.rm=TRUE )
+    # if (is.element("centre_meansurr", names(df_gapfld))){
+    #   agg_meansurr <- aggregate( centre_meansurr ~ doy, data=df_gapfld, FUN=mean, na.rm=TRUE )
+    #   agg <- agg %>% left_join( agg_meansurr ) %>% dplyr::rename( centre_meandoy=centre, centre_meansurr_meandoy=centre_meansurr )
+    # } else {
+    #   agg <- agg %>% dplyr::rename( centre_meandoy=centre )      
+    # }
+    # df_gapfld <- df_gapfld %>% left_join( agg )
+
+    # ##--------------------------------------
+    # ## gap-fill with information from surrounding pixels - XXX CHANGED THIS FOR AMERIWUE: NO INFO FROM MEAN OF SURROUNDINGS USED XXX
+    # ##--------------------------------------
+    # idxs <- which( is.na(df_gapfld$centre) )
+    # if (is.element("centre_meansurr", names(df_gapfld))){
+    #   ## get current anomaly of mean across surrounding pixels w.r.t. its mean annual cycle
+    #   df_gapfld$anom_surr    <- df_gapfld$centre_meansurr / df_gapfld$centre_meansurr_meandoy
+    #   # df_gapfld$centre[idxs] <- df_gapfld$centre_meandoy[idxs] * df_gapfld$anom_surr[idxs]
+    # } else {
+    #   # df_gapfld$centre[idxs] <- df_gapfld$centre_meandoy[idxs]
+    # }
+    # if (do_plot_interpolated) with( df_gapfld, points( year_dec[idxs], centre[idxs], pch=16, col='green' ) )
+    # if (do_plot_interpolated) legend("topright", c("modis", "outliers", "after bad values dropped and outliers removed", "added from mean of surrounding" ), col=c("black", "red", "blue", "green" ), pch=16, bty="n" )
+    # # legend("topleft", c("R LOESS smoothing with span=0.01", "R smooth.spline"), col=c("red", "dodgerblue"), lty=1, bty="n" )
+
+
+    # # points( df_gapfld$yr_dec_read[idxs],  df_gapfld$centre[idxs],  pch=16 )
+    # # points( df_gapfld$yr_dec_read[-idxs], df_gapfld$centre[-idxs], pch=16, col='blue' )
+
+    # # ## Gap-fill remaining again by mean-by-DOY
+    # # idxs <- which( is.na(df_gapfld$centre) )
+    # # df_gapfld$centre[idxs] <- df_gapfld$centre_meandoy[idxs]
+    # # # points( df_gapfld$yr_dec_read[idxs], df_gapfld$centre[idxs], pch=16, col='red' )
+
+    # # ## Gap-fill still remaining by linear approximation
+    # # idxs <- which( is.na(df_gapfld$centre) )
+    # # if (length(idxs)>1){
+    # #   df_gapfld$centre <- approx( df_gapfld$year_dec[-idxs], df_gapfld$centre[-idxs], xout=df_gapfld$year_dec )$y
+    # # }
+
+    # # points( df_gapfld$yr_dec_read[idxs], df_gapfld$centre[idxs], pch=16, col='green' )
+    # # lines( df_gapfld$yr_dec_read, df_gapfld$centre )
+    # # dev.off()
+
+  } else if (prod=="MCD15A3H"){
+    ##--------------------------------------
+    ## This is for MCD15A3H FPAR data downloaded from Google Earth Engine with gee_subset
+    ## USED AS MODIS FPAR GEE for P-model
+    ##--------------------------------------
+    ## QC interpreted according to https://explorer.earthengine.google.com/#detail/MODIS%2F006%2FMCD15A3H:
+    ## Bit 0: MODLAND_QC bits
+    ##   0: Good quality (main algorithm with or without saturation)
+    ##   1: Other quality (back-up algorithm or fill values)
+    ## Bit 1: Sensor
+    ##   0: Terra
+    ##   1: Aqua
+    ## Bit 2: Dead detector
+    ##   0: Detectors apparently fine for up to 50% of channels 1, 2
+    ##   1: Dead detectors caused >50% adjacent detector retrieval
+    ## Bits 3-4: Cloud state
+    ##   0: Significant clouds NOT present (clear)
+    ##   1: Significant clouds WERE present
+    ##   2: Mixed cloud present in pixel
+    ##   3: Cloud state not defined, assumed clear
+    ## Bits 5-7: SCF_QC
+    ##   0: Main (RT) method used with no saturation, best result possible
+    ##   1: Main (RT) method used with saturation, good and very usable
+    ##   2: Main (RT) method failed due to bad geometry, empirical algorithm used
+    ##   3: Main (RT) method failed due to problems other than geometry, empirical algorithm used
+    ##   4: Pixel not produced at all, value couldn't be retrieved (possible reasons: bad L1B data, unusable MOD09GA data)
+    ##--------------------------------------
+
+    ## This is interpreted according to https://lpdaac.usgs.gov/sites/default/files/public/product_documentation/mod15_user_guide.pdf, p.9
+    ## see mod15_user_guide.pdf
+
+    df$qc_bitname <- sapply( seq(nrow(df)), function(x) as.integer( intToBits( df$FparLai_QC[x] )[1:8] ) %>% rev() %>% as.character() %>% paste( collapse="" )  )
+
+    ## MODLAND_QC bits
+    ## 0: Good  quality (main algorithm with or without saturation)
+    ## 1: Other quality (backup  algorithm or fill values)
+    df$qc_bit0 <- substr( df$qc_bitname, start=8, stop=8 )
+
+    ## Sensor
+    ## 0: Terra
+    ## 1: Aqua
+    df$qc_bit1 <- substr( df$qc_bitname, start=7, stop=7 )
+
+    ## Dead detector
+    ## 0: Detectors apparently  fine  for up  to  50% of  channels  1,  2
+    ## 1: Dead  detectors caused  >50%  adjacent  detector  retrieval
+    df$qc_bit2 <- substr( df$qc_bitname, start=6, stop=6 )
+
+    ## CloudState
+    ## 00 0  Significant clouds  NOT present (clear)
+    ## 01 1  Significant clouds  WERE  present
+    ## 10 2  Mixed cloud present in  pixel
+    ## 11 3  Cloud state not defined,  assumed clear
+    df$qc_bit3 <- substr( df$qc_bitname, start=4, stop=5 )
+
+    ## SCF_QC (five level confidence score)
+    ## 000 0 Main (RT) method used, best result possible (no saturation)
+    ## 001 1 Main (RT) method used with saturation. Good, very usable
+    ## 010 2 Main (RT) method failed due to bad geometry, empirical algorithm used
+    ## 011 3 Main (RT) method failed due to problems other than geometry, empirical algorithm used
+    ## 100 4 Pixel not produced at all, value couldn???t be retrieved (possible reasons: bad L1B data, unusable MOD09GA data)
+    df$qc_bit4 <- substr( df$qc_bitname, start=1, stop=3 )
+
+    df <- df %>%  mutate(  good_quality  = ifelse( qc_bit0=="0", TRUE, FALSE ),
+                           terra         = ifelse( qc_bit1=="0", TRUE, FALSE ),
+                           dead_detector = ifelse( qc_bit2=="1", TRUE, FALSE ),
+                           CloudState    = ifelse( qc_bit3=="00", 0, ifelse( qc_bit3=="01", 1, ifelse( qc_bit3=="10", 2, 3 ) ) ),
+                           SCF_QC        = ifelse( qc_bit4=="000", 0, ifelse( qc_bit4=="001", 1, ifelse( qc_bit4=="010", 2, ifelse( qc_bit4=="011", 3, 4 ) ) ) )
+                          ) %>%
+                  select( -qc_bitname, -FparLai_QC, -qc_bit0, -qc_bit1, -qc_bit2, -qc_bit3, -qc_bit4 ) %>% 
+                  rename( modisvar = Fpar )
+
+    ## Plot effect of filtering steps
+    if (do_plot_interpolated){
+      plotfiln <- paste0( "fig/fpar_MCD15A3H_v2_fill_", sitename, ".pdf" )
+      print( paste( "Gapfilling illustrated in:", plotfiln ) )
+      pdf( plotfiln, width=15, height=6 )
+      par(xpd=TRUE)
+      with( df, plot( year_dec, modisvar, pch=16, col='black', main=sitename, ylim=c(0,1), xlab="year", ylab="MCD15A3H", las=1 ) )
+      with( dplyr::filter( df, CloudState!=1, modisvar!=1.0  ), points( year_dec, modisvar, pch=16, col='blue' ) ) # good_quality &  & SCF_QC!=4  & SCF_QC %in% c(0,1)
+
+      # with( dplyr::filter( df, good_quality), points( year_dec, modisvar, pch=16, col='blue' ) )
+      # with( dplyr::filter( df, good_quality & CloudState==0), points( year_dec, modisvar, pch=16, col='springgreen3' ) )
+      # with( dplyr::filter( df, good_quality & CloudState==0 & !dead_detector ), points( year_dec, modisvar, pch=16, col='orchid' ) )
+      # with( dplyr::filter( df, good_quality & CloudState==0 & !dead_detector & SCF_QC==0 ), points( year_dec, modisvar, pch=16, col='black' ) )
+      legend( "topleft", 
+        c("initial", "cleaned"
+          # "good_quality, but not CloudState==0 and not(dead_detector) and not(SCF_QC==0)", 
+          # "good_quality and CloudState==0, but not(dead_detector) and not(SCF_QC==0)", 
+          # "good_quality and CloudState==0 and not(dead_detector), but not not(SCF_QC==0)",
+          # "remaining"
+          ), 
+        col=c("black", "blue"
+          # ,"springgreen3", "orchid", "black" 
+          ), pch=16, bty="n", inset = c(0,-0.2)
+        )
+    }
+
+    ## Actually filter
+    # df <- df %>% dplyr::filter( CloudState!=1 )  #  good_quality & CloudState!=1 & SCF_QC!=4  & CloudState==0 & !dead_detector & SCF_QC==0
+    df <- df %>% mutate( modisvar = ifelse( CloudState!=1 , modisvar, NA )  ) %>%  ## replace by NA for values to be filtered out   & SCF_QC %in% c(0,1)
+
+      ## don't believe the hype
+      mutate( modisvar = ifelse( modisvar==1.0, NA, modisvar ) ) %>%  
+
+      ## Drop all data identified as outliers = lie outside 5*IQR
+      mutate( modisvar = remove_outliers( modisvar, coef=3 ) )  # maybe too dangerous - removes peaks
+
+    ##--------------------------------------
+    ## replace missing values with mean by DOY (mean seasonal cycle)
+    ##--------------------------------------
+    ## get mean seasonal cycle
+    ddf_meandoy <- df %>% group_by( doy ) %>% summarise( meandoy = mean( modisvar , na.rm=TRUE ) )
+
+    ## attach mean seasonal cycle as column 'meandoy' to daily dataframe
+    df <- df %>% left_join( ddf_meandoy, by="doy" ) %>%
+
+      ## fill gaps at head and tail
+      mutate( modisvar = ifelse( is.na(modisvar), meandoy, modisvar ) )
+
+    
+  }  else if (prod=="MOD15A2"){
+    ## MOD15A2 contains fpar
+
+    ##--------------------------------------
+    ## data cleaning
+    ##--------------------------------------
+    # ## Drop all data with quality flag != 0
+    # if (!is.null(df_gapfld$centre_qc)){
+    #   df_gapfld$centre[ which(df_gapfld$centre_qc!=0) ] <- NA
+    # }
+
+    ## no quality info available for fpar from trevor
+
+    ## remove values that are above 1
+    df_gapfld$centre <- replace( df_gapfld$centre,  df_gapfld$centre>1.0, NA )
+
+    ## open plot for illustrating gap-filling
+    if (do_plot_interpolated) pdf( paste("fig/fpar_fill_", sitename, ".pdf", sep="" ), width=10, height=6 )
+    if (do_plot_interpolated) plot( modis$year_dec, modis$centre, pch=16, col='black', main=sitename, ylim=c(0,1), xlab="year", ylab="MODIS FPAR 1 km", las=1 )
+    left <- seq(2000, 2016, 2)
+    right <- seq(2001, 2017, 2)
+    if (do_plot_interpolated) rect( left, -99, right, 99, border=NA, col=rgb(0,0,0,0.2) )
+    if (do_plot_interpolated) points( df_gapfld$year_dec, df_gapfld$centre, pch=16, col='red' )
+
+    # ## Drop all data identified as outliers = lie outside 5*IQR
+    # df_gapfld$centre <- remove_outliers( df_gapfld$centre, coef=5 ) ## maybe too dangerous - removes peaks
+
+    ## add points to plot opened before
+    if (do_plot_interpolated) points( df_gapfld$year_dec, df_gapfld$centre, pch=16, col='springgreen3' )
+
+    ##--------------------------------------
+    ## get LOESS spline model for predicting daily values (below)
+    ##--------------------------------------
+    idxs <- which(!is.na(df_gapfld$centre))
+    if (length(idxs)>0){
+      myloess <- try( with( df_gapfld, loess( centre[idxs] ~ year_dec[idxs], span=0.01 ) ))
+      i <- 0
+      while (class(myloess)=="try-error" && i<50){
+        i <- i + 1
+        print(paste("i=",i))
+        myloess <- try( with( df_gapfld, loess( centre[idxs] ~ year_dec[idxs], span=(0.01+0.002*(i-1)) ) ))
+      }
+      print("ok now...")
+    } else {
+      missing <- TRUE
+    }
+
+    ##--------------------------------------
+    ## get spline model for predicting daily values (below)
+    ##--------------------------------------
+    if (!missing){
+      spline <- try( with( df_gapfld, smooth.spline( year_dec[idxs], centre[idxs], spar=0.001 ) ))
+    }
+
+    if (!missing){
+      ## aggregate by DOY
+      agg <- aggregate( centre ~ doy, data=df_gapfld, FUN=mean, na.rm=TRUE )
+      if (is.element("centre_meansurr", names(df_gapfld))){
+        agg_meansurr <- aggregate( centre_meansurr ~ doy, data=df_gapfld, FUN=mean, na.rm=TRUE )
+        agg <- agg %>% left_join( agg_meansurr ) %>% dplyr::rename( centre_meandoy=centre, centre_meansurr_meandoy=centre_meansurr )
+      } else {
+        agg <- agg %>% dplyr::rename( centre_meandoy=centre )
+      }
+      df_gapfld <- df_gapfld %>% left_join( agg )
+
+      ## get consecutive data gaps and fill only by mean seasonality if more than 3 consecutive dates are missing
+      na_instances <- get_consecutive( is.na(df_gapfld$centre), leng_threshold=4, do_merge=FALSE )
+      if (nrow(na_instances)>0){
+        for (iinst in 1:nrow(na_instances)){
+          idxs <- na_instances$idx_start[iinst]:(na_instances$idx_start[iinst]+na_instances$len[iinst]-1)
+          if (is.element("centre_meansurr", names(df_gapfld))){
+            ## get current anomaly of mean across surrounding pixels w.r.t. its mean annual cycle
+            df_gapfld$anom_surr    <- df_gapfld$centre_meansurr / df_gapfld$centre_meansurr_meandoy
+            df_gapfld$centre[idxs] <- df_gapfld$centre_meandoy[idxs] * df_gapfld$anom_surr[idxs]
+          } else {
+            df_gapfld$centre[idxs] <- df_gapfld$centre_meandoy[idxs]
+          }
+        }
+      }
+
+    }
+
+    # ## Gap-fill still remaining by linear approximation
+    # idxs <- which( is.na(df_gapfld$centre) )
+    # if (length(idxs)>1){
+    #   df_gapfld$centre <- approx( df_gapfld$year_dec[-idxs], df_gapfld$centre[-idxs], xout=df_gapfld$year_dec )$y
+    # }
+
+    # points( df_gapfld$year_dec[idxs], df_gapfld$centre[idxs], pch=16 )
+    # points( df_gapfld$year_dec[-idxs], df_gapfld$centre[-idxs], pch=16, col='blue' )
+    # lines(  df_gapfld$year_dec, df_gapfld$centre )
+
+    # ## for pixels with low quality information, use mean of surroundings
+    # if (is.element("centre_meansurr", names(df_gapfld))){
+    #   for (idx in seq(nrow(df_gapfld))){
+    #     if (df_gapfld_qc[idx,usecol]!=0) {
+    #       df_gapfld$centre[idx] <- unname( apply( df_gapfld[idx,1:npixels], 1, FUN=mean, na.rm=TRUE ))
+    #     }
+    #   }
+    # }
+
+    # dev.off()
+
+  } else if (prod=="MOD17A2H"){
+    ## Contains MODIS GPP
+    ## quality bitmap interpreted based on https://lpdaac.usgs.gov/dataset_discovery/modis/modis_products_table/mod17a2
+
+    df$qc_bitname <- sapply( seq(nrow(df)), function(x) as.integer( intToBits( df$Psn_QC[x] )[1:8] ) %>% rev() %>% as.character() %>% paste( collapse="" )  )
+
+    ## MODLAND_QC bits
+    ## 0: Good  quality (main algorithm with  or without saturation)
+    ## 1: Other quality (backup  algorithm or  fill  values)
+    df$qc_bit0 <- substr( df$qc_bitname, start=8, stop=8 )
+    # >>>>>>> 4a98b7722357887423c4ebe4f33497586902ab25
+
+    ## Sensor
+    ## 0: Terra
+    ## 1: Aqua
+    df$qc_bit1 <- substr( df$qc_bitname, start=7, stop=7 )
+
+    ## Dead detector
+    ## 0: Detectors apparently  fine  for up  to  50% of  channels  1,  2
+    ## 1: Dead  detectors caused  >50%  adjacent  detector  retrieval
+    df$qc_bit2 <- substr( df$qc_bitname, start=6, stop=6 )
+
+    ## CloudState
+    ## 00 0  Significant clouds  NOT present (clear)
+    ## 01 1  Significant clouds  WERE  present
+    ## 10 2  Mixed cloud present in  pixel
+    ## 11 3  Cloud state not defined,  assumed clear
+    df$qc_bit3 <- substr( df$qc_bitname, start=4, stop=5 )
+
+    ## SCF_QC (five level confidence score)
+    ## 000 0 Very best possible
+    ## 001 1 Good, very usable, but not the best (saturation in FPAR/LAI has occurred)
+    ## 010 2 Substandard due to geometry problems ??? use with caution
+    ## 011 3 Substandard due to other than geometry problems ??? use with caution
+    ## 100 4  Couldn't retrieve pixel (NOT PRODUCED AT ALL ??? non-terrestrial biome)
+    ## 111 7  Fill Value
+    df$qc_bit4 <- substr( df$qc_bitname, start=1, stop=3 )
+
+    df <- df %>%  mutate(  good_quality  = ifelse( qc_bit0=="0", TRUE, FALSE ),
+                           terra         = ifelse( qc_bit1=="0", TRUE, FALSE ),
+                           dead_detector = ifelse( qc_bit2=="1", TRUE, FALSE ),
+                           CloudState    = ifelse( qc_bit3=="00", 0, ifelse( qc_bit3=="01", 1, ifelse( qc_bit3=="10", 2, 3 ) ) ),
+                           SCF_QC        = ifelse( qc_bit4=="000", 0, ifelse( qc_bit4=="001", 1, ifelse( qc_bit4=="010", 2, ifelse( qc_bit4=="011", 3, ifelse( qc_bit4=="111", 7, NA ) ) ) ) )
+                          ) %>%
+                  select( -qc_bitname, -Psn_QC, -qc_bit0, -qc_bit1, -qc_bit2, -qc_bit3, -qc_bit4 ) %>% 
+                  rename( modisvar = Gpp )
+
+    ## Identify outliers, i.e. whether value is exceedingly high, i.e. if the distance of the value to the median is more than 5 times the distance of the distance of the 75% quantile to the median
+    df <- df %>%  mutate( outlier = ifelse( modisvar - median( modisvar, na.rm=TRUE ) > 5 * ( quantile( modisvar, probs=0.75, na.rm=TRUE  ) - median( modisvar, na.rm=TRUE ) ), TRUE, FALSE ) )
+
+    ## Plot effect of filtering steps
+    plotfiln <- paste0( "fig/gpp_MOD17A2H_fill_", sitename, ".pdf" )
+    print( paste( "Gapfilling illustrated in:", plotfiln ) )
+    pdf( plotfiln, width=15, height=6 )
+    par(xpd=TRUE)
+    with( df, plot( year_dec, modisvar, pch=16, col='red', main=sitename, xlab="year", ylab="MOD17A2H", las=1 ) )
+    with( dplyr::filter( df, !outlier ), points( year_dec, modisvar, pch=16, col='black' ) )
+    # with( dplyr::filter( df, good_quality), points( year_dec, modisvar, pch=16, col='blue' ) )
+    # with( dplyr::filter( df, good_quality & CloudState==0), points( year_dec, modisvar, pch=16, col='springgreen3' ) )
+    # with( dplyr::filter( df, good_quality & CloudState==0 & !dead_detector ), points( year_dec, modisvar, pch=16, col='orchid' ) )
+    # with( dplyr::filter( df, good_quality & CloudState==0 & !dead_detector & SCF_QC==0 ), points( year_dec, modisvar, pch=16, col='black' ) )
+    legend( "topleft", 
+      c("initial", "!outlier"), 
+      col=c( "red", "black" ), pch=16, bty="n", inset = c(0,-0.2)
+      )
+
+    ## Filter, i.e. replacing by NA in order to keep all dates
+    df <- df %>% mutate( modisvar = ifelse( ( !outlier ), modisvar, NA ) )
+    
+  }
+
+  if (do_interpolate){
+    ##--------------------------------------
+    ## Create daily dataframe
+    ##--------------------------------------
+    ddf <- init_dates_dataframe( year_start, year_end ) %>% dplyr::mutate( doy = lubridate::yday(date) )
+    
+    ## merge N-day dataframe into daily one. 
+    ## Warning: here, 'date' must be centered within 4-day period - thus not equal to start date but (start date + 2)
+    ddf <- ddf %>% left_join( dplyr::select( df, date, modisvar ), by="date" )
+
+    ## extrapolate to missing values at head and tail using mean seasonal cycle
+    ##--------------------------------------
+    ## identify NAs at head and tail
+    idxs <- findna_headtail( ddf$modisvar )
+    if (length(idxs)>0) rlang::warn("Using mean seasonal cycle for years where no fapar data is available.")
+
+    ## get mean seasonal cycle
+    ddf_meandoy <- ddf %>% 
+      dplyr::group_by( doy ) %>% 
+      dplyr::summarise( meandoy = mean( modisvar , na.rm=TRUE ) )
+
+    ## attach mean seasonal cycle as column 'meandoy' to daily dataframe
+    ddf <- ddf %>% 
+      dplyr::left_join( ddf_meandoy, by="doy" )
+
+    ## fill gaps at head and tail
+    ddf$modisvar[ idxs ] <- ddf$meandoy[ idxs ]
+
+    ##--------------------------------------
+    ## get LOESS spline model for predicting daily values (used below)
+    ##--------------------------------------
+    idxs    <- which(!is.na(ddf$modisvar))
+    myloess <- try( with( ddf, loess( modisvar[idxs] ~ year_dec[idxs], span=0.01 ) ))
+    i <- 0
+    while (class(myloess)=="try-error" && i<50){
+      i <- i + 1
+      print(paste("i=",i))
+      myloess <- try( with( ddf, loess( modisvar[idxs] ~ year_dec[idxs], span=(0.01+0.002*(i-1)) ) ))
+    }
+
+    ##--------------------------------------
+    ## get SPLINE model for predicting daily values (used below)
+    ##--------------------------------------
+    idxs   <- which(!is.na(ddf$modisvar))
+    spline <- try( with( ddf, smooth.spline( year_dec[idxs], modisvar[idxs], spar=0.01 ) ) )
+
+    ## predict LOESS
+    ##--------------------------------------
+    tmp <- try( with( ddf, predict( myloess, year_dec ) ) )
+    if (class(tmp)!="try-error"){
+      ddf$data_loess <- tmp
+    } else {
+      ddf$data_loess <- rep( NA, nrow(ddf) )
+    }
+
+    ## predict SPLINE
+    ##--------------------------------------
+    tmp <- try( with( ddf, predict( spline, year_dec ) )$y)
+    if (class(tmp)!="try-error"){
+      ddf$spline <- tmp
+    } else {
+      ddf$spline <- rep( NA, nrow(ddf) )
+    }
+
+    ## LINEAR INTERPOLATION
+    ##--------------------------------------
+    ddf$interpl <- approx( ddf$year_dec, ddf$modisvar, xout=ddf$year_dec )$y 
+
+    ## SAVITZKY GOLAY FILTER
+    ##--------------------------------------
+    ddf$sgfiltered <- rep( NA, nrow(ddf) )
+    idxs <- which(!is.na(ddf$interpl))
+    ddf$sgfiltered[idxs] <- signal::sgolayfilt( ddf$interpl[idxs], p=3, n=51 ) 
+      
+    ##--------------------------------------
+    ## DEFINE STANDARD: LINEAR INTERPOLATION
+    ##--------------------------------------
+    ddf$modisvar_interpol <- ddf$interpl
+
+    ## limit to within 0 and 1 (loess spline sometimes "explodes")
+    ddf <- ddf %>% mutate( modisvar_interpol = replace( modisvar_interpol, modisvar_interpol<0, 0  ) ) %>%
+                   mutate( modisvar_interpol = replace( modisvar_interpol, modisvar_interpol>1, 1  ) )
+
+    ## plot daily smoothed line and close plotting device
+    if (do_plot_interpolated) with( ddf, lines( year_dec, modisvar_interpol, col='red', lwd=2 ) ) 
+    if (do_plot_interpolated) with( ddf, lines( year_dec, sgfiltered, col='springgreen3', lwd=1 ) )
+    if (do_plot_interpolated) with( ddf, lines( year_dec, spline, col='cyan', lwd=1 ) )
+    legend( "topright", 
+            c("Savitzky-Golay filter", "Spline", "Linear interpolation (standard)"), 
+            col=c("springgreen3", "cyan", "red" ), lty=1, lwd=c(1,1,2), bty="n", inset = c(0,-0.2)
+          )
+
+  } else {
+
+    ddf = tibble()
+
+  }
+
+  dev.off()
+
+  return( list( df=df, ddf=ddf ) )
 
 }
 
 
 ##--------------------------------------------------------------------
-## Get monthly data from CRU
+## Extracts point data for a set of sites given by df_lonlat using
+## functions from the raster package.
 ##--------------------------------------------------------------------
-get_clim_cru_monthly <- function( lon, lat, settings, cruvars ){
+extract_pointdata_allsites <- function( filename, df_lonlat, get_time = FALSE ){
 
-  ## get last year for which data is available
-  filn <- list.files( settings$path_cru, pattern="cld.dat.nc")
-  start <- regexpr( 20, filn)[1]
-  stop <- start + 3
-  yrend <- substr( filn, start, stop ) %>% as.numeric %>% ifelse( length(.)==0, 2010, . )
+  ## load file using the raster library
+  print(paste("Creating raster brick from file", filename))
+  rasta <- raster::brick(filename)
 
-  ## cloud cover
-  mdf <- get_pointdata_monthly_cru( "cld", lon, lat, settings, yrend=yrend )
-
-  ## Check if data is available at that location, otherwise use nearest gridcell
-  if (!is.data.frame(mdf)){
-    lon_look <- find_nearest_cruland_by_lat( lon, lat, paste0( settings$path_cru, filn ) )
-    mdf <- get_pointdata_monthly_cru( "cld", lon_look, lat, settings, yrend=yrend )
-  } else {
-    lon_look <- lon
-  }
-  mdf <- mdf %>% dplyr::rename( ccov_cru = mdata )    
-
-  ## precipitation
-  if ("prec" %in% cruvars){
-    mdf <- get_pointdata_monthly_cru( "pre", lon_look, lat, settings, yrend=yrend ) %>% dplyr::rename( prec_cru = mdata ) %>% 
-      right_join( mdf, by = c("date", "year_dec") )
+  df_lonlat <- raster::extract(rasta, sp::SpatialPoints(dplyr::select(df_lonlat, lon, lat)), sp = TRUE) %>% 
+    as_tibble() %>% 
+    tidyr::nest(-lon, -lat) %>%
+    right_join(df_lonlat, by = c("lon", "lat")) %>%
+    mutate( data = purrr::map(data, ~dplyr::slice(., 1)) ) %>% 
+    dplyr::mutate(data = purrr::map(data, ~t(.))) %>% 
+    dplyr::mutate(data = purrr::map(data, ~as_tibble(.)))
+  
+  if (get_time){
+    timevals <- raster::getZ(rasta)
+    df_lonlat <- df_lonlat %>% 
+      mutate( data = purrr::map(data, ~bind_cols(., tibble(date = timevals))))
   }
 
-  ## wet days
-  if ("wetd" %in% cruvars){
-    mdf <- get_pointdata_monthly_cru( "wet", lon_look, lat, settings, yrend=yrend ) %>% dplyr::rename( wetd_cru = mdata ) %>% 
-      right_join( mdf, by = c("date", "year_dec") )
-  }
-
-  ## air temperature
-  if ("temp" %in% cruvars){
-    mdf <- get_pointdata_monthly_cru( "tmp", lon_look, lat, settings, yrend=yrend ) %>% dplyr::rename( temp_cru = mdata ) %>% 
-      right_join( mdf, by = c("date", "year_dec") )
-  }
-
-  ## VPD 
-  ## calculated as a function of vapour pressure and temperature, vapour
-  ## pressure is given by CRU data.
-  if ("vap" %in% cruvars){
-    mdf <-  get_pointdata_monthly_cru( "vap", lon_look, lat, settings, yrend=yrend ) %>%  
-                dplyr::rename( vap_cru = mdata ) %>%
-                ## merge temperature data in here for VPD calculation
-                left_join( mdf_temp, by =  c("date", "year_dec") ) %>%
-                ## calculate VPD (vap is in hPa)
-                mutate( vpd_vap_cru_temp_cru = calc_vpd( eact=1e2*vap_cru, tc=temp_cru ) ) %>% 
-                ## avoid duplicate 
-                dplyr::select( -temp_cru ) %>% 
-                right_join( mdf, by = c("date", "year_dec") )
-  }
-
-
-  return( mdf )
-
+  return(df_lonlat)
 }
+
+
+# ##--------------------------------------------------------------------
+# ## Get monthly data from CRU
+# ##--------------------------------------------------------------------
+# get_clim_cru_monthly_bysite <- function( lon, lat, settings, cruvars ){
+
+#   ## get last year for which data is available
+#   filn <- list.files( settings$path_cru, pattern="cld.dat.nc")
+#   start <- regexpr( 20, filn)[1]
+#   stop <- start + 3
+#   yrend <- substr( filn, start, stop ) %>% as.numeric %>% ifelse( length(.)==0, 2010, . )
+
+#   ## cloud cover
+#   mdf <- get_pointdata_monthly_cru( "cld", lon, lat, settings, yrend=yrend )
+
+#   ## Check if data is available at that location, otherwise use nearest gridcell
+#   if (!is.data.frame(mdf)){
+#     lon_look <- find_nearest_cruland_by_lat( lon, lat, paste0( settings$path_cru, filn ) )
+#     mdf <- get_pointdata_monthly_cru( "cld", lon_look, lat, settings, yrend=yrend )
+#   } else {
+#     lon_look <- lon
+#   }
+#   mdf <- mdf %>% dplyr::rename( ccov_cru = mdata )    
+
+#   ## precipitation
+#   if ("prec" %in% cruvars){
+#     mdf <- get_pointdata_monthly_cru( "pre", lon_look, lat, settings, yrend=yrend ) %>% dplyr::rename( prec_cru = mdata ) %>% 
+#       right_join( mdf, by = c("date", "year_dec") )
+#   }
+
+#   ## wet days
+#   if ("wetd" %in% cruvars){
+#     mdf <- get_pointdata_monthly_cru( "wet", lon_look, lat, settings, yrend=yrend ) %>% dplyr::rename( wetd_cru = mdata ) %>% 
+#       right_join( mdf, by = c("date", "year_dec") )
+#   }
+
+#   ## air temperature
+#   if ("temp" %in% cruvars){
+#     mdf <- get_pointdata_monthly_cru( "tmp", lon_look, lat, settings, yrend=yrend ) %>% dplyr::rename( temp_cru = mdata ) %>% 
+#       right_join( mdf, by = c("date", "year_dec") )
+#   }
+
+#   ## VPD 
+#   ## calculated as a function of vapour pressure and temperature, vapour
+#   ## pressure is given by CRU data.
+#   if ("vap" %in% cruvars){
+#     mdf <-  get_pointdata_monthly_cru( "vap", lon_look, lat, settings, yrend=yrend ) %>%  
+#                 dplyr::rename( vap_cru = mdata ) %>%
+#                 ## merge temperature data in here for VPD calculation
+#                 left_join( mdf_temp, by =  c("date", "year_dec") ) %>%
+#                 ## calculate VPD (vap is in hPa)
+#                 mutate( vpd_vap_cru_temp_cru = calc_vpd( eact=1e2*vap_cru, tc=temp_cru ) ) %>% 
+#                 ## avoid duplicate 
+#                 dplyr::select( -temp_cru ) %>% 
+#                 right_join( mdf, by = c("date", "year_dec") )
+#   }
+
+
+#   return( mdf )
+
+# }
 
 
 ##--------------------------------------------------------------------
@@ -1061,9 +1787,8 @@ get_clim_cru_monthly <- function( lon, lat, settings, cruvars ){
 ##--------------------------------------------------------------------
 expand_clim_cru_monthly <- function( mdf, cruvars ){
 
-  ddf_yr_list <- purrr::map( as.list( unique( year( mdf$date ) ) ), ~expand_clim_cru_monthly_byyr( ., mdf, cruvars ) )
-
-  ddf <- bind_rows( ddf_yr_list )
+  ddf <- purrr::map( as.list( unique( year( mdf$date ) ) ), ~expand_clim_cru_monthly_byyr( ., mdf, cruvars ) ) %>% 
+    bind_rows()
 
   return( ddf )
 
@@ -1085,8 +1810,8 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
   yr_nxt <- min(endyr_cru, yr+1)
 
   ## add first and last year to head and tail of 'mdf'
-  first <- mdf[1:12,] %>% dplyr::select( -year_dec ) %>% mutate( date = date - years(1) )
-  last  <- mdf[(nrow(mdf)-11):nrow(mdf),] %>% dplyr::select( -year_dec ) %>% mutate( date = date + years(1) )
+  first <- mdf[1:12,] %>% mutate( date = date - years(1) )
+  last  <- mdf[(nrow(mdf)-11):nrow(mdf),] %>% mutate( date = date + years(1) )
 
   ddf <- init_dates_dataframe( yr, yr )
 
@@ -1142,7 +1867,6 @@ expand_clim_cru_monthly_byyr <- function( yr, mdf, cruvars ){
             ## Reduce CCOV to a maximum 100%
             mutate( ccov_cru_int = ifelse( ccov_cru_int > 100, 100, ccov_cru_int ) ) %>%
             right_join( ddf, by = c("date", "year_dec") )
-
   }
 
   ##--------------------------------------------------------------------
@@ -2152,4 +2876,51 @@ calc_vpd <- function( eact=NA, qair=NA, tc=NA, tmin=NA, tmax=NA, elv=NA ){
   return( vpd )
 
 }
+
+findna_headtail <- function( vec ){
+
+  ## Remove (cut) NAs from the head and tail of a vector.
+  ## Returns the indexes to be dropped from a vector
+
+  ## Get indeces of consecutive NAs at head
+  if (is.na(vec[1])){
+    idx <- 0
+    while ( idx < length(vec) ){
+      idx <- idx + 1
+      test <- head( vec, idx )
+      if (any(!is.na(test))){
+        ## first non-NA found at position idx
+        cuthead <- idx - 1
+        break
+      }
+    }
+    idxs_head <- 1:cuthead
+  } else {
+    idxs_head <- c()
+  }
+
+
+  ## Get indeces of consecutive NAs at tail
+  if (is.na(vec[length(vec)])){
+    idx <- 0
+    while ( idx < length(vec) ){
+      idx <- idx + 1
+      test <- tail( vec, idx )
+      if (any(!is.na(test))){
+        ## first non-NA found at position idx, counting from tail
+        cuttail <- idx - 1
+        break
+      }
+    }
+    idxs_tail <- (length(vec)-cuttail+1):length(vec)
+  } else {
+    idxs_tail <- c()
+  }
+
+  idxs <- c( idxs_head, idxs_tail )
+
+  return(idxs)
+
+}
+
 

@@ -168,7 +168,7 @@ prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
 
       ## End year
       year_end <- sapply( siteinfo[,1], function(x) siteinfo$year_end[ which(siteinfo[,1]==x) ] ) %>% as.list()
-      date_end <- purrr::map( year_end, ~ymd( paste0( ., "-01-01" ) ) )
+      date_end <- purrr::map( year_end, ~ymd( paste0( ., "-12-31" ) ) )
       names(date_end) <- siteinfo[,1][[sitenam_colnam]]
 
       ## Number of years
@@ -188,11 +188,21 @@ prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
       names(elv) <- siteinfo[,1][[sitenam_colnam]]
 
       ## Water holding capacity of the soil at the site
-      whc <- sapply( siteinfo[,1], function(x) siteinfo$whc[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      if ("whc" %in% names(siteinfo)){
+        whc <- sapply( siteinfo[,1], function(x) siteinfo$whc[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      } else {
+        rlang::warn("Column whc not provided in siteinfo. Using WHC = 200 mm for all sites.")
+        whc <- as.list(rep(200, nrow(siteinfo)))
+      }
       names(whc) <- siteinfo[,1][[sitenam_colnam]]
-
+      
       ## Whether there are C4 grasses at the sites
-      c4 <- sapply( siteinfo[,1], function(x) siteinfo$c4[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      if ("c4" %in% names(siteinfo)){
+        c4 <- sapply( siteinfo[,1], function(x) siteinfo$c4[ which(siteinfo[,1]==x) ] ) %>% as.list()
+      } else {
+        rlang::warn("Column c4 not provided in siteinfo. Using c4 = FALSE for all sites.")
+        c4 <- as.list(rep(FALSE, nrow(siteinfo)))
+      }        
       names(c4) <- siteinfo[,1][[sitenam_colnam]]
       
       ## Complement settings list
