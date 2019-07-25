@@ -80,11 +80,11 @@ setup_sofun_sitescale <- list(
 ## Workflow
 
 ## Prepare simulation setup
-settings_sims_sitescale <- prepare_setup_sofun(
-  settings = settings_sims_sitescale,
-  setup = setup_sofun_sitescale,
-  write_paramfils = TRUE
-  )
+#settings_sims_sitescale <- prepare_setup_sofun(
+#  settings = settings_sims_sitescale,
+#  setup = setup_sofun_sitescale,
+#  write_paramfils = TRUE
+#  )
 
 ## Prepare inputs
 inputdata <- prepare_input_sofun(
