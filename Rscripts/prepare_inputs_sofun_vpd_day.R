@@ -13,7 +13,8 @@ sitelist <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015$sitename
 
 # Specify the data read from FLUXNET2015 files as a vector of variable names corresponding to their naming in the FLUXNET2015 datasets. 
 getvars <- c( 
-  "VPD_F_DAY" # Daytime vapour pressure deficit  hPa
+  "VPD_F",     # Mean daily vapour pressure deficit  hPa
+  "VPD_F_DAY"  # Mean daytime vapour pressure deficit  hPa
   )
 
 ddf <- purrr::map( 

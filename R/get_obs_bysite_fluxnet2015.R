@@ -199,10 +199,10 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
           path_hh <- paste0(path_fluxnet2015_hh, filn_hh)
           
           if (length(filn_hh)>1){
-            rlang::warn("Reading only largest half-hourly file available")
             file.info_getsize <- function(filn){
               file.info(filn)$size
             }
+            rlang::warn("Reading only largest half-hourly file available")
             size_vec <- purrr::map_dbl(as.list(path_hh), ~file.info_getsize(.))
             path_hh <- path_hh[which.max(size_vec)]
           }
@@ -212,10 +212,10 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
           
         } else {
           
-          rlang::abort("No half-hourly data available.")
+          # rlang::abort("No half-hourly data available.")
 
-          # if (verbose) print("No half-hourly data available. Taking daytime VPD as average VPD from daily file.")
-          # getvars <- getvars[-which(str_detect(getvars, "VPD_F_DAY"))]
+          if (verbose) rlang::warn("No half-hourly data available. Cannot get vpd_day for this site.")
+          getvars <- getvars[-which(str_detect(getvars, "VPD_F_DAY"))]
           # getvars <- c(getvars, "VPD_F", "VPD_F_QC")
 
         } 
@@ -407,8 +407,8 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
     df <- df %>% dplyr::rename_at( vars(starts_with("H_F_MDS")), list(~stringr::str_replace(., "H_F_MDS", "sensibleh" )) )
   }
   if (any(grepl("VPD_F_DAY", getvars))){
-    if (verbose) rlang::warn("Renaming: vpd = VPD_F_DAY \n")
-    df <- df %>% dplyr::rename_at( vars(starts_with("VPD_F_DAY")), list(~stringr::str_replace(., "VPD_F_DAY", "vpd" )) )
+    if (verbose) rlang::warn("Renaming: vpd_day = VPD_F_DAY \n")
+    df <- df %>% dplyr::rename_at( vars(starts_with("VPD_F_DAY")), list(~stringr::str_replace(., "VPD_F_DAY", "vpd_day" )) )
   }
   if (any(grepl("VPD_F", getvars))){
     if (verbose) rlang::warn("Renaming: vpd = VPD_F \n")
@@ -428,6 +428,10 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   }
 
   ## Convert units
+  if (any(grepl("VPD_F_DAY", getvars))){
+    if (verbose) rlang::warn("Converting: vpd_day = vpd_day * 1e2 (given in hPa, required in Pa) \n")
+    df <- df %>% dplyr::mutate( vpd_day = vpd_day * 1e2 )
+  }
   if (any(grepl("VPD_F", getvars))){
     if (verbose) rlang::warn("Converting: vpd = vpd * 1e2 (given in hPa, required in Pa) \n")
     df <- df %>% dplyr::mutate( vpd = vpd * 1e2 )
