@@ -378,75 +378,75 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   outgetvars <- c()
 
   ## Rename variables
-  if (any(grepl("TA_F_DAY", getvars))){
-    if (verbose) rlang::warn("Renaming: temp = TA_F_DAY \n")
-    df <- df %>% dplyr::rename_at( vars(starts_with("TA_F_DAY")), list(~stringr::str_replace(., "TA_F_DAY", "temp")) )
+  if ("TA_F_DAY" %in% getvars){
+    if (verbose) rlang::warn("Renaming: temp_day = TA_F_DAY \n")
+    df <- df %>% dplyr::rename_at( vars(starts_with("TA_F_DAY")), list(~stringr::str_replace(., "TA_F_DAY", "temp_day")) )
   }  
-  if (any(grepl("TA_F", getvars))){
+  if ("TA_F" %in% getvars){
     if (verbose) rlang::warn("Renaming: temp = TA_F \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("TA_F")), list(~stringr::str_replace(., "TA_F", "temp")) )
   }
-  if (any(grepl("P_F", getvars))){
+  if ("P_F" %in% getvars){
     if (verbose) rlang::warn("Renaming: prec = P_F (given and required in mm) \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("P_F")), list(~stringr::str_replace(., "P_F", "prec")) )
   }
-  if (any(grepl("WS_F", getvars))){
+  if ("WS_F" %in% getvars){
     if (verbose) rlang::warn("Renaming: wspeed = WS_F (given and required in m s-1) \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("WS_F")), list(~stringr::str_replace(., "WS_F", "wspeed")) )
   }
-  if (any(grepl("USTAR", getvars))){
+  if ("USTAR" %in% getvars){
     if (verbose) rlang::warn("Renaming: ustar = USTAR (given and required in m s-1) \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("USTAR")), list(~stringr::str_replace(., "USTAR", "ustar")) )
   }
-  if (any(grepl("LE_F_MDS", getvars))){
+  if ("LE_F_MDS" %in% getvars){
     if (verbose) rlang::warn("Renaming: latenth = LE_F_MDS \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("LE_F_MDS")), list(~stringr::str_replace(., "LE_F_MDS", "latenth")) )
   }
-  if (any(grepl("H_F_MDS", getvars))){
+  if ("H_F_MDS" %in% getvars){
     if (verbose) rlang::warn("Renaming: sensibleh = H_F_MDS \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("H_F_MDS")), list(~stringr::str_replace(., "H_F_MDS", "sensibleh" )) )
   }
-  if (any(grepl("VPD_F_DAY", getvars))){
+  if ("VPD_F_DAY" %in% getvars){
     if (verbose) rlang::warn("Renaming: vpd_day = VPD_F_DAY \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("VPD_F_DAY")), list(~stringr::str_replace(., "VPD_F_DAY", "vpd_day" )) )
   }
-  if (any(grepl("VPD_F", getvars))){
+  if ("VPD_F" %in% getvars){
     if (verbose) rlang::warn("Renaming: vpd = VPD_F \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("VPD_F")), list(~stringr::str_replace(., "VPD_F", "vpd" )) )
   }
-  if (any(grepl("PA_F", getvars))){
+  if ("PA_F" %in% getvars){
     if (verbose) rlang::warn("Renaming: patm = PA_F \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("PA_F")), list(~stringr::str_replace(., "PA_F", "patm" )) )
   }
-  if (any(grepl("SW_IN_F", getvars))){
+  if ("SW_IN_F" %in% getvars){
     if (verbose) rlang::warn("Renaming: swin = SW_IN_F  \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("SW_IN_F")), list(~stringr::str_replace(., "SW_IN_F", "swin" )) )
   }
-  if (any(grepl("NETRAD", getvars))){
+  if ("NETRAD" %in% getvars){
     if (verbose) rlang::warn("Renaming: netrad = NETRAD \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("NETRAD")), list(~stringr::str_replace(., "NETRAD", "netrad" )) )
   }
 
   ## Convert units
-  if (any(grepl("VPD_F_DAY", getvars))){
+  if ("VPD_F_DAY" %in% getvars){
     if (verbose) rlang::warn("Converting: vpd_day = vpd_day * 1e2 (given in hPa, required in Pa) \n")
     df <- df %>% dplyr::mutate( vpd_day = vpd_day * 1e2 )
   }
-  if (any(grepl("VPD_F", getvars))){
+  if ("VPD_F" %in% getvars){
     if (verbose) rlang::warn("Converting: vpd = vpd * 1e2 (given in hPa, required in Pa) \n")
     df <- df %>% dplyr::mutate( vpd = vpd * 1e2 )
   }
-  if (any(grepl("PA_F", getvars))){
+  if ("PA_F" %in% getvars){
     if (verbose) rlang::warn("Converting: patm = patm * 1e3 (given in kPa, required in Pa) \n")
     df <- df %>% dplyr::mutate( patm = patm * 1e3 )
   }
-  if (any(grepl("SW_IN_F", getvars))){
+  if ("SW_IN_F" %in% getvars){
     if (verbose) rlang::warn("Converting: swin = swin * 60 * 60 * 24 (given in W m-2, required in J m-2 d-1) \n")
     df <- df %>% dplyr::mutate( swin = swin * 60 * 60 * 24 )
     if (verbose) rlang::warn("Converting: ppfd = swin * kfFEC * 1.0e-6 (convert from J/m2/d to mol/m2/d; kfFEC = 2.04 is the flux-to-energy conversion, micro-mol/J (Meek et al., 1984)) \n")
     df <- df %>% dplyr::mutate( ppfd = swin * kfFEC * 1.0e-6 )
   }
-  if (any(grepl("NETRAD", getvars))){
+  if ("NETRAD" %in% getvars){
     if (verbose) rlang::warn("Converting: netrad = NETRAD * 60 * 60 * 24 (given in W m-2 (avg.), required in J m-2 (daily total)) \n")
     df <- df %>% dplyr::mutate( netrad = netrad * 60 * 60 * 24 )
   }
