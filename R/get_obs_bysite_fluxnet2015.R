@@ -145,9 +145,21 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
 
   if (length(filn)==0) rlang::abort(paste0("No files found for timescale ", timescale, " in sub-directories of ", path_fluxnet2015 ) )
   if (length(filn)>1){
-    filn <- filn[which(grepl("3.csv", filn))]
-    # rlang::warn(paste0("Multiple files found for timsescale ", timescale, " in sub-directories of ", path_fluxnet2015, ". Taking only ", filn ) )
+    file.info_getsize <- function(filn){
+      file.info(filn)$size
+    }
+    rlang::warn("Reading only largest daily file available")
+    path_dd <- paste0(path_fluxnet2015, filn)
+    size_vec <- purrr::map_dbl(as.list(path_dd), ~file.info_getsize(.))
+    path_dd <- path_dd[which.max(size_vec)]
+    filn <- basename(path_dd)
   }
+  
+  
+  # if (length(filn)>1){
+  #   filn <- filn[which(grepl("3.csv", filn))]
+  #   # rlang::warn(paste0("Multiple files found for timsescale ", timescale, " in sub-directories of ", path_fluxnet2015, ". Taking only ", filn ) )
+  # }
   
   ## This returns a data frame with columns (date, temp, prec, nrad, ppfd, vpd, ccov)
   df <- get_obs_fluxnet2015_raw( sitename, 
@@ -186,6 +198,17 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
       #   stringr::str_replace(".csv", "_VPD_DAY.csv")
       
       if (length(filename_dd_vpd)>0){
+        
+        if (length(filename_dd_vpd)>1){
+          file.info_getsize <- function(filn){
+            file.info(filn)$size
+          }
+          rlang::warn("Reading only largest daily VPD file available")
+          path_dd_vpd <- paste0(path_fluxnet2015_hh, filename_dd_vpd)
+          size_vec <- purrr::map_dbl(as.list(path_dd_vpd), ~file.info_getsize(.))
+          path_dd_vpd <- path_dd_vpd[which.max(size_vec)]
+          filename_dd_vpd <- basename(path_dd_vpd)
+        }
         
         ## read directly
         if (verbose) print(paste("Reading daytime VPD directly from:", paste0(path_fluxnet2015_hh, filename_dd_vpd)))
@@ -466,7 +489,7 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   #     df <- df %>% dplyr::rename( gpp_obs = GPP_DT_VUT_REF )
   #   }
   # }
-
+  print("Successfully finished get_obs_bysite_fluxnet2015()")
   return(df)
 
 }
