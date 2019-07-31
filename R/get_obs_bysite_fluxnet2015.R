@@ -304,8 +304,8 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   ## retain all getvars, plus soil moisture if required
   if (getswc){
     df <- df %>% 
-      dplyr::select( ., date, one_of(getvars), starts_with("SWC_") ) %>%
-      dplyr::mutate_at(., vars(starts_with("SWC_")), list(~as.numeric) )
+      dplyr::select( ., date, one_of(getvars), starts_with("SWC_") )
+      # dplyr::mutate_at(., vars(starts_with("SWC_")), list(~as.numeric) ) # this has caused error
   } else {
     df <- df %>% dplyr::select( ., date, one_of(getvars) ) 
   }

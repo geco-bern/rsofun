@@ -209,53 +209,53 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       # ##-----------------------------------------------------------
       # error <- check_download_co2( settings_input, settings_sims )
 
-      #-----------------------------------------------------------
-      # Prepare climate input
-      #-----------------------------------------------------------
-      if (overwrite_climate || return_data || overwrite_csv_climate){
-
-        ## First, get climate data from site-specific
-        if (verbose) print("Preparing climate input files...")
-        if (verbose) print("Reading from site-specific files...")
-        ddf_climate <- purrr::map(
-          as.list(settings_sims$sitenames),
-          ~get_input_sofun_climate_bysite( ., settings_input, settings_sims, verbose = verbose )
-          )
-        names(ddf_climate) <- settings_sims$sitenames
-        ddf_climate <- ddf_climate %>%
-          bind_rows(.id = "sitename")
-
-        ## Second, get climate data from global files
-        if (verbose) print("Reading from global files...")
-        ddf_climte_globalfields <- get_input_sofun_climate_globalfields(
-          dplyr::select(ddf_climate, sitename, date),
-          settings_input,
-          settings_sims,
-          overwrite = overwrite_climate,
-          overwrite_csv = overwrite_csv_climate,
-          verbose = FALSE
-          )
-        ddf_climate <- ddf_climate %>%
-          left_join(
-            ddf_climte_globalfields,
-            by = c("sitename", "date")
-          )
-
-        ## Then, prepare climate input data files for sofun
-        if (verbose) print("Writing climate forcing to files...")
-        purrr::map(
-          as.list(settings_sims$sitenames),
-          ~prepare_input_sofun_climate_bysite(
-            .,
-            dplyr::filter(ddf_climate, sitename == .),
-            settings_input,
-            settings_sims,
-            overwrite=overwrite_climate,
-            overwrite_csv=overwrite_csv_climate,
-            verbose = verbose )
-          )
-
-      }
+      # #-----------------------------------------------------------
+      # # Prepare climate input
+      # #-----------------------------------------------------------
+      # if (overwrite_climate || return_data || overwrite_csv_climate){
+      # 
+      #   ## First, get climate data from site-specific
+      #   if (verbose) print("Preparing climate input files...")
+      #   if (verbose) print("Reading from site-specific files...")
+      #   ddf_climate <- purrr::map(
+      #     as.list(settings_sims$sitenames),
+      #     ~get_input_sofun_climate_bysite( ., settings_input, settings_sims, verbose = verbose )
+      #     )
+      #   names(ddf_climate) <- settings_sims$sitenames
+      #   ddf_climate <- ddf_climate %>%
+      #     bind_rows(.id = "sitename")
+      # 
+      #   ## Second, get climate data from global files
+      #   if (verbose) print("Reading from global files...")
+      #   ddf_climte_globalfields <- get_input_sofun_climate_globalfields(
+      #     dplyr::select(ddf_climate, sitename, date),
+      #     settings_input,
+      #     settings_sims,
+      #     overwrite = overwrite_climate,
+      #     overwrite_csv = overwrite_csv_climate,
+      #     verbose = FALSE
+      #     )
+      #   ddf_climate <- ddf_climate %>%
+      #     left_join(
+      #       ddf_climte_globalfields,
+      #       by = c("sitename", "date")
+      #     )
+      # 
+      #   ## Then, prepare climate input data files for sofun
+      #   if (verbose) print("Writing climate forcing to files...")
+      #   purrr::map(
+      #     as.list(settings_sims$sitenames),
+      #     ~prepare_input_sofun_climate_bysite(
+      #       .,
+      #       dplyr::filter(ddf_climate, sitename == .),
+      #       settings_input,
+      #       settings_sims,
+      #       overwrite=overwrite_climate,
+      #       overwrite_csv=overwrite_csv_climate,
+      #       verbose = verbose )
+      #     )
+      # 
+      # }
 
       ##-----------------------------------------------------------
       ## Prepare fapar input
@@ -1145,7 +1145,12 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
           ddf_sub <- dplyr::filter( out$ddf, year(date)==yr ) 
 
           ## fill gaps with mean seasonal cycle (for pre-MODIS years, entire year is mean seasonal cycle)
-          if (nrow(ddf_sub)==0) ddf_sub <- init_dates_dataframe( yr, yr ) %>% mutate( modisvar_interpol = NA ) %>% dplyr::filter( !( month(date)==2 & mday(date)==29 ) ) %>% mutate( doy=yday(date) )
+          if (nrow(ddf_sub)==0){
+            ddf_sub <- init_dates_dataframe( yr, yr ) %>% 
+              mutate( modisvar_interpol = NA ) %>% 
+              dplyr::filter( !( month(date)==2 & mday(date)==29 ) ) %>% 
+              mutate( doy=yday(date) )
+          }
           ddf_sub <- ddf_sub %>% left_join( df_meandoy, by="doy" )
 
           # ## fill gaps with mean by DOY/MOY
