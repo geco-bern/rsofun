@@ -173,7 +173,7 @@ read_ncout_sofun_daily <- function( expname, settings ){
   if (file.exists(path)){
 
     nc         <- ncdf4::nc_open( path )
-    gpp        <- ncdf4::ncvar_get( nc, varid = vars[1] )
+    # gpp        <- ncdf4::ncvar_get( nc, varid = vars[1] )
     time       <- ncdf4::ncvar_get( nc, varid = "time" )
     ncdf4::nc_close(nc)
 

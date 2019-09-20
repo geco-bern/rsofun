@@ -127,7 +127,7 @@ The examples shown below are for site-scale simulations, i.e., where one model r
 
 ### Simulation settings
 
-The simulation settings define the model simulations for each site and the the user-defined local environment. Simulation settings are defined as a named list. The user specifies only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `path_siteinfo` (a CSV file created separately). The function `prepare_setup_sofun()` complements the simulation settings by these additional components as lists with elements for each site, nested within the simulation settings list.
+The simulation settings define the model simulations for each site and the the user-defined local environment. Simulation settings are defined as a named list. The user specifies only variables that are identical across simulations within an ensemble. Other variables that differ between simulation within an ensemble (e.g. start and end year of the simulation, vegetation type C3 or C4, longitude and latitude of the site, soil type, etc.) are to be specified in the meta info file `siteinfo` (a CSV file created separately). The function `prepare_setup_sofun()` complements the simulation settings by these additional components as lists with elements for each site, nested within the simulation settings list.
 
 In the example given here, we use a site meta information file for FLUXNET 2015 Tier 1 sites, provided along with the `rsofun` package. It's located at the path `/rsofun/extdata/siteinfo_example.csv`. For demonstration, we define a set of site-scale simulations of length one. That is, for only one site, here "FR-Pue". Note that FLUXNET 2015 data and MODIS FPAR data is provided along with the package `rsofun` for this one site for demonstration purposes only  and provides data only for a reduced number of years (2007-2014). The site meta information file looks like this:
 ```{r message=FALSE}
@@ -140,7 +140,7 @@ To conduct P-model simulations with the Fortran implementation, respective model
 
 ```{r}
 settings_sims_sitescale <- list(
-  path_siteinfo   = paste0( path.package("rsofun"), "/extdata/siteinfo_example.csv"),
+  siteinfo        = paste0( path.package("rsofun"), "/extdata/siteinfo_example.csv"),
   ensemble        = TRUE,
   setup           = "site",
   name            = "example",
@@ -166,14 +166,14 @@ settings_sims_sitescale <- list(
   )
 ```
 
-- `path_siteinfo`: Path (character string) of a CSV file that contains all the information needed for defining simulations. One row for each simulation in an ensemble, typically sites. Specifying this element is required if `ensemble = TRUE`. Columns are as follows:
+- `siteinfo`: Path (character string) of a CSV file that contains all the information needed for defining simulations. One row for each simulation in an ensemble, typically sites. Specifying this element is required if `ensemble = TRUE`. Columns are as follows:
     - site name, must be: column number 1
     - longitude of site, column must be named 'lon'
     - latitude of site, column must be named 'lat'
     - elevation of site, column must be named 'elv'
     - years for which simulation is to be done (corresponding to data availability from site),
       requires two columns named 'year_start' and 'year_end'.
-- `ensemble`: TRUE if an ensemble of site-level simulations are to be run (This may become obsolte, this information is given already if the number of rows in the CSV file `path_siteinfo` is larger than one.)
+- `ensemble`: TRUE if an ensemble of site-level simulations are to be run (This may become obsolte, this information is given already if the number of rows in the CSV file `siteinfo` is larger than one.)
 - `setup`: String. One of `"simple"` (SOFUN used as a function, single time step, single location), `"site"` (site-scale simulation), or `"lonlat"` (spatial simulation on a longitude-latitude grid).
 - `name`: a character string specifying the name of the ensemble (e.g. 'fluxnet2015') or of a single simulation.
 - `dir_sofun`: Path (character string) where the model sits (corresponding to the parent directory of the respective git repository).
@@ -263,13 +263,13 @@ setup_sofun_sitescale <- list(
 
 <!-- ### Simulation settings -->
 
-<!-- In contrast to site-scale simulations, set `setup = "lonlat"`. Typically, we would run single simulations. Hence, set `ensemble = FALSE`. In this setup also the meta info file specified by `path_siteinfo` is obsolete (longitude, latitude and elevation are defined for each gridcell in respective input files). The simulation start year and length (number of years covered) are specified directly in the simulation settings (`firstyeartrend` and `nyeartrend`). For spatial simulations, we have to choice to run the model on different grids. Set `grid = "halfdeg"` to run on a $0.5^{\circ} \times 0.5^{\circ}$ grid. Alternatively, use `grid = "1x1deg"` to run on a $1^{\circ} \times 1^{\circ}$ grid (no other resolutions are implemented yet). All other elements of `settings_sims` are described in the tab for site-scale simulations and are used the same way here. -->
+<!-- In contrast to site-scale simulations, set `setup = "lonlat"`. Typically, we would run single simulations. Hence, set `ensemble = FALSE`. In this setup also the meta info file specified by `siteinfo` is obsolete (longitude, latitude and elevation are defined for each gridcell in respective input files). The simulation start year and length (number of years covered) are specified directly in the simulation settings (`firstyeartrend` and `nyeartrend`). For spatial simulations, we have to choice to run the model on different grids. Set `grid = "halfdeg"` to run on a $0.5^{\circ} \times 0.5^{\circ}$ grid. Alternatively, use `grid = "1x1deg"` to run on a $1^{\circ} \times 1^{\circ}$ grid (no other resolutions are implemented yet). All other elements of `settings_sims` are described in the tab for site-scale simulations and are used the same way here. -->
 
 <!-- Set `c3 = TRUE` and `c4 = FALSE` here to use only one single generic PFT that follows the C3 photosynthesis pathway.  -->
 
 <!-- ```{r} -->
 <!-- settings_sims_lonlat <- list(  -->
-<!--   path_siteinfo   = NA, -->
+<!--   siteinfo   = NA, -->
 <!--   ensemble        = FALSE, -->
 <!--   setup           = "lonlat", -->
 <!--   name            = "global_TEST", -->
@@ -356,7 +356,7 @@ The example shown below is for a set of site-scale simulations.
 
 <!-- This setp is required only for site-scale simulations. -->
 
-<!-- This step is either done by hand so that the file has a certain structure (for column names etc see above: `path_siteinfo`). Below is an example for creating such a meta info file (info for each site in an ensemble) for the FLUXNET 2015 Tier 1 ensemble. -->
+<!-- This step is either done by hand so that the file has a certain structure (for column names etc see above: `siteinfo`). Below is an example for creating such a meta info file (info for each site in an ensemble) for the FLUXNET 2015 Tier 1 ensemble. -->
 
 <!-- ```{r, eval=FALSE, message=FALSE, warning=FALSE} -->
 <!-- siteinfo <- prepare_metainfo_fluxnet2015( -->

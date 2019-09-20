@@ -15,6 +15,12 @@
 #' 
 calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, ddf_obs = NA ){
 
+  ## rename for local use
+  targetvars <- paste0( settings_calib$targetvars, "_obs")
+  rename_obs <- function(name){paste0(name, "_obs")}
+  ddf_obs <- ddf_obs %>% 
+    rename_at(vars(one_of(settings_calib$targetvars)), rename_obs)
+  
   ##----------------------------------------------------------------
   ## Collect observational data used as calibration target
   ##----------------------------------------------------------------
@@ -27,16 +33,30 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   ## Apply filters
   ##----------------------------------------------------------------
   ## "filtering" pre-MODIS data
-  ddf_obs <- ddf_obs %>% dplyr::mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) )
+  ddf_obs <- ddf_obs %>% 
+    rowwise() %>% 
+    dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( date < "2000-02-18", NA, . ) )
   
   ## "filtering" by minimum temperature
-  if (!is.na(settings_calib$filter_temp_min)) ddf_obs <- ddf_obs %>% dplyr::mutate( gpp_obs = ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) )
+  if (!is.na(settings_calib$filter_temp_min)){
+    ddf_obs <- ddf_obs %>% 
+      rowwise() %>% 
+      dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) )
+  }
 
   ## "filtering" by maximum temperature
-  if (!is.na(settings_calib$filter_temp_max)) ddf_obs <- ddf_obs %>% dplyr::mutate( gpp_obs = ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) )
+  if (!is.na(settings_calib$filter_temp_max)){
+    ddf_obs <- ddf_obs %>% 
+      rowwise() %>% 
+      dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) )
+  }
           
   ## "filtering" by low soil moisture
-  if (!is.na(settings_calib$filter_soilm_min)) ddf_obs <- ddf_obs %>% dplyr::mutate( gpp_obs = ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) )
+  if (!is.na(settings_calib$filter_soilm_min)){
+    ddf_obs <- ddf_obs %>% 
+      rowwise() %>% 
+      dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) )
+  }
   
   # ## "filtering" by whether it's a drought based on Stocker et al. (2018) analysis
   # if (settings_calib$filter_drought){
@@ -60,7 +80,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   #                             unlist() %>% unname()
 
   ## make global
-  obs <<- ddf_obs %>% dplyr::select( date, sitename, one_of( paste0( settings_calib$targetvars, "_obs") ) )
+  obs <<- ddf_obs %>% dplyr::select( date, sitename, one_of( targetvars ) )
 
   if (nrow(obs)>0){
 
@@ -573,15 +593,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
       error <- check_download_gepisat( settings_calib$path_gepisat, sitename )
 
       ddf_gepisat <- get_obs_bysite_gpp_gepisat( sitename, settings_calib$path_gepisat, settings_calib$timescale )
-      
-      # ## XXX test
-      # if (any(!is.na(ddf_gepisat$gpp_obs))){
-      #   pdf( paste0("fig/gpp_gepisat/gpp_gepisat_", sitename, ".pdf"))
-      #   with(ddf_gepisat, plot( date, gpp_obs, type="l"))
-      #   title( sitename )
-      #   dev.off()
-      # }
-      
+
       ## add to other data frame and take take weighted average for updated 'gpp_obs'
       if (!is.null(ddf_gepisat)){
         
@@ -606,6 +618,38 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
 
   }
 
+  if ("latenth" %in% settings_calib$targetvars){
+    
+    ## Interpret benchmarking data specification
+    datasource <- stringr::str_split( settings_calib$datasource, "_" ) %>% unlist()
+    
+    if ("fluxnet2015" %in% datasource){
+      ##------------------------------------------------------------
+      ## Get FLUXNET 2015 data
+      ##------------------------------------------------------------
+      ## Make sure data is available for this site
+      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
+      
+      ## This gets gpp_obs as mean of GPP_NT_VUT_REF and GPP_DT_VUT_REF
+      ddf <- get_obs_bysite_fluxnet2015(
+        sitename, 
+        path_fluxnet2015 = settings_input$path_fluxnet2015, 
+        timescale = settings_calib$timescale$latenth,
+        getvars = "LE_F_MDS", 
+        getswc = FALSE,
+        threshold_LE = 0.6, 
+        verbose = TRUE
+        ) %>% 
+        dplyr::right_join( ddf, by = "date" )
+      
+    } else {
+      
+      ddf <- ddf %>% dplyr::mutate( gpp_obs = NA )
+      
+    }
+    
+  }
+  
   if ("wcont" %in% settings_calib$targetvars){
 
     if ("fluxnet2015" %in% settings_calib$datasource$wcont){

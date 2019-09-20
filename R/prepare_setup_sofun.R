@@ -12,7 +12,7 @@
 #'
 #' @examples settings <- prepare_setup_sofun( settings, write_paramfils = TRUE )
 #' 
-prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
+prepare_setup_sofun <- function( settings, setup, settings_calib = NA, write_paramfils = TRUE ){
 
   ## Make sure the SOFUN model directory exists
   if (!dir.exists(settings$dir_sofun)){
@@ -147,19 +147,26 @@ prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
       ## Ensemble: multiple site-scale simulations that "go toghether"
       ## In this case, <settings$name> is the name of the ensemble (e.g., "fluxnet2015")
       ##-----------------------------------------------------------
-      ## Read info that varies between sites from the meta information file <settings$path_siteinfo>:
+      ## Read info that varies between sites from the meta information file <settings$siteinfo>:
       ## - site name, must be: column number 1 
       ## - longitude of site, column must be named 'lon'
       ## - latitude of site, column must be named 'lat'
       ## - elevation of site, column must be named 'elv'
       ## - years for which simulation is to be done (corresponding to data availability from site), 
       ##   requires two columns named 'year_start' and 'year_end'.
-      if (!file.exists(settings$path_siteinfo)) rlang::abort( "prepare_setup_sofun(): File specified by settings$path_siteinfo does not exist." )
-      siteinfo <- readr::read_csv( settings$path_siteinfo )
+      if (is.character(settings$siteinfo)){
+        if (!file.exists(settings$siteinfo)) rlang::abort( "prepare_setup_sofun(): File specified by settings$siteinfo does not exist." )
+        siteinfo <- readr::read_csv( settings$siteinfo )
+      } else {
+        siteinfo <- settings$siteinfo
+      }
 
       ##--------------------------------------
       ## Complement settings with meta info for each site
       ##--------------------------------------
+      siteinfo <- siteinfo %>% 
+        mutate(year_start = as.numeric(year_start), year_end = as.numeric(year_end))
+      
       ## Start year
       year_start <- sapply( siteinfo[,1], function(x) siteinfo$year_start[ which(siteinfo[,1]==x) ] ) %>% as.list()
       date_start <- purrr::map( year_start, ~ymd( paste0( ., "-01-01" ) ) )
@@ -172,7 +179,11 @@ prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
       names(date_end) <- siteinfo[,1][[sitenam_colnam]]
 
       ## Number of years
-      nyears <- sapply( siteinfo[,1], function(x) (siteinfo$year_end[ which(siteinfo[,1]==x) ] - siteinfo$year_start[ which(siteinfo[,1]==x) ] + 1) ) %>% as.list()
+      if (!("nyears" %in% names(siteinfo))){
+        siteinfo <- siteinfo %>% 
+          dplyr::mutate(nyears = year_end - year_start + 1)
+      }
+      nyears <- sapply( siteinfo[,1], function(x) siteinfo$nyears[ which(siteinfo[,1]==x) ] ) %>% as.list()
       names(nyears) <- siteinfo[,1][[sitenam_colnam]]
 
       ## Longitude
@@ -244,19 +255,19 @@ prepare_setup_sofun <- function( settings, setup, write_paramfils = TRUE ){
       tmp <- purrr::map( as.list(settings$sitenames), ~cat( ., "\n", file=zz ) )
       close(zz)
 
-      # ## Write total number of simulation years in this ensemble to file (needed in calibration setup)
-      # if (!identical(settings_calib, NA)){
-      #   filn_totrunyears <- paste0( settings$path_input, "run/totrunyears_calib.txt" )
-      #   zz <- file( filn_totrunyears, "w")
-      #   tmp <- purrr::map( unlist(settings$nyears)[names(unlist(settings$nyears)) %in% settings_calib$sitenames] %>% sum(), ~cat( ., "\n", file=zz ) )
-      #   close(zz)
+      ## Write total number of simulation years in this ensemble to file (needed in calibration setup)
+      if (!identical(settings_calib, NA)){
+        filn_totrunyears <- paste0( settings$path_input, "run/totrunyears_calib.txt" )
+        zz <- file( filn_totrunyears, "w")
+        tmp <- purrr::map( unlist(settings$nyears)[names(unlist(settings$nyears)) %in% settings_calib$sitenames] %>% sum(), ~cat( ., "\n", file=zz ) )
+        close(zz)
 
-      #   ## Write total number of calibration targets to file
-      #   filn_nvars_calib <- paste0( settings$path_input, "run/nvars_calib.txt" )
-      #   zz <- file( filn_nvars_calib, "w")
-      #   tmp <- cat( length( calibvars ), "\n", file=zz )
-      #   close(zz)      
-      # }
+        ## Write total number of calibration targets to file
+        filn_nvars_calib <- paste0( settings$path_input, "run/nvars_calib.txt" )
+        zz <- file( filn_nvars_calib, "w")
+        tmp <- cat( length( settings_calib$calibvars ), "\n", file=zz )
+        close(zz)
+      }
       
       ##--------------------------------------
       ## Link directories

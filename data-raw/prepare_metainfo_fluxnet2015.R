@@ -186,7 +186,7 @@ prepare_metainfo_fluxnet2015 <- function( origfilpath, dir_DD_fluxnet2015, overw
   ##--------------------------------------------------------------------
   ## write to file
   ##--------------------------------------------------------------------
-  # print( paste0("Writing (light) meta info file: ", settings_sims$path_siteinfo ) )
+  # print( paste0("Writing (light) meta info file: ", settings_sims$siteinfo ) )
   # print( "Full and light meta info is returned by this function as list." )
 
   return( siteinfo )

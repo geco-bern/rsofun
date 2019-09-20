@@ -93,6 +93,8 @@
 #' monthly, and annual data and 0 [measured], 1 [good quality gapfill], 2 [
 #' medium], 3 [poor] for half-hourly data. Defaults to \code{threshold_GPP=0} 
 #' meaning no data is excluded.
+#' @param return_qc A logical specifying whether quality control variables
+#' should be returned.
 #'
 #' @return A data frame (tibble) containing cleaned observational data,
 #' named and in units corresponding to rsofun standard.
@@ -103,7 +105,7 @@
 get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet2015_hh=NULL,
   timescale, getvars, getswc=TRUE,
   threshold_GPP=0.0, threshold_LE=0.0, threshold_H=0.0, threshold_SWC=0.0, 
-  threshold_WS=0.0, threshold_USTAR=0.0, threshold_T=0.0, threshold_NETRAD=0.0, verbose=TRUE ){
+  threshold_WS=0.0, threshold_USTAR=0.0, threshold_T=0.0, threshold_NETRAD=0.0, return_qc=FALSE, verbose=TRUE ){
 
   if (verbose) print(paste("...", sitename, "..."))
   
@@ -343,10 +345,14 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
     df <- df %>% clean_fluxnet_byvar(ivar, threshold_NETRAD)
   }  
   
+  energyvars <- df %>% 
+    dplyr::select(starts_with("LE_"), starts_with("H_")) %>% 
+    dplyr::select(-ends_with("_QC")) %>% 
+    names()
+  
   df <- df %>%
     ## Unit conversion for sensible and latent heat flux: W m-2 -> J m-2 d-1
-    dplyr::mutate_at( vars(starts_with("LE_")), list(~convert_energy_fluxnet2015)) %>%
-    dplyr::mutate_at( vars(starts_with("H_")),  list(~convert_energy_fluxnet2015))
+    dplyr::mutate_at( vars(one_of(energyvars)), convert_energy_fluxnet2015)
     
   ## clean GPP data
   if (any(grepl("GPP_", getvars))){
@@ -377,7 +383,7 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
       # map( as.list(seq(length(swcvars))), ~clean_fluxnet_swc( df[[ swcvars[.] ]], df[[ swcqcvars[.] ]]) )
       if (length(swcvars)>0){
         for (ivar in 1:length(swcvars)){
-          df[[ swcvars[ivar] ]] <- clean_fluxnet_swc( df[[ swcvars[ivar] ]], df[[ swcqcvars[ivar] ]], frac_data_thresh=threshold_SWC )
+          df[[ swcvars[ivar] ]] <- clean_fluxnet_swc( df[[ swcvars[ivar] ]], df[[ swcqcvars[ivar] ]], frac_data_thresh = threshold_SWC )
         }
       }
       
@@ -392,6 +398,10 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
       
     }
     
+  }
+  
+  if (!return_qc){
+    df <- df %>% dplyr::select(-ends_with("_QC"))
   }
 
   ## conversion factor from SPLASH: flux to energy conversion, umol/J (Meek et al., 1984)
@@ -620,7 +630,7 @@ get_obs_fluxnet2015_raw <- function( sitename, path, freq="d" ){
 ## Converts units of latent energy (LE) variables from FLUXNET 2015 to SOFUN standard
 convert_energy_fluxnet2015 <- function( le ){
   ## W m-2 -> J m-2 d-1
-  le_converted <- le * 60 * 60 * 24
+  le_converted <- as.numeric(le) * 60 * 60 * 24
   return(le_converted)
 }
 
