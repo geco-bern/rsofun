@@ -296,7 +296,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
             settings_sims        = settings_sims, 
             settings_input       = settings_input,
             overwrite_raw        = FALSE, 
-            overwrite_nice       = TRUE,
+            overwrite_nice       = overwrite_csv_fapar,
             band_var             = settings_input$settings_gee$band_var, 
             band_qc              = settings_input$settings_gee$band_qc, 
             prod                 = settings_input$settings_gee$prod, 
@@ -305,7 +305,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
             productnam           = settings_input$settings_gee$productnam, 
             scale_factor         = settings_input$settings_gee$scale_factor, 
             period               = settings_input$settings_gee$period, 
-            asfaparinput         = settings_input$settings_gee$asfaparinput, 
+            asfaparinput         = TRUE, 
             do_plot_interpolated = settings_input$settings_gee$do_plot_interpolated, 
             python_path          = settings_input$settings_gee$python_path,
             gee_path             = settings_input$settings_gee$gee_path
@@ -322,7 +322,6 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
         ddf_fapar <- ddf_fapar %>%
           bind_rows(.id = "sitename") %>% 
           dplyr::select(sitename, date, fapar = modisvar_interpol)
-
         
       }
 
@@ -1090,107 +1089,110 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
       cont <- FALSE
     }
     
-
-    if (cont){
-
-      if (!file.exists(filnam_modis_nice_csv)||overwrite_nice){
-        ##--------------------------------------------------------------------
-        ## Clean (gapfill and interpolate) full time series data to 8-days, daily, and monthly
-        ##--------------------------------------------------------------------
-        print("gapfilling and interpolating to daily ...")
-        out <- gapfill_modis(
-                              df,
-                              sitename, 
-                              year_start = df_siteinfo$year_start,
-                              year_end   = df_siteinfo$year_end,
-                              qc_name = band_qc, 
-                              prod = prod_suffix,
-                              do_interpolate = asfaparinput,
-                              do_plot_interpolated = do_plot_interpolated
-                            )
-
-        ##--------------------------------------------------------------------
-        ## Save data frames as CSV files
-        ##--------------------------------------------------------------------
-        readr::write_csv( out$df,  path=filnam_modis_nice_csv )
-        if (asfaparinput) readr::write_csv( out$ddf, path=filnam_daily_csv )
-
-      } else {
-
-        ##--------------------------------------------------------------------
-        ## Read CSV file directly for this site
-        ##--------------------------------------------------------------------
-        print( "monthly data already available in CSV file ...")
-        out <- list()
-        out$df  <- readr::read_csv( filnam_modis_nice_csv, col_types = cols() )
-        if (asfaparinput) out$ddf <- readr::read_csv( filnam_daily_csv, col_types = cols() )
-
-      }
-
-      ##--------------------------------------------------------------------
-      ## Write to Fortran-formatted output for each variable and year separately
-      ## For days (and years) where no data is available, take the mean by DOY
-      ##--------------------------------------------------------------------
-      if (asfaparinput){
-
-        ## get mean seasonal cycle. This is relevant for years where no MODIS data is available.
-        df_meandoy <- out$ddf %>% group_by( doy ) %>% summarise( meandoy = mean( modisvar_interpol , na.rm=TRUE ) ) 
-
-        print( "writing formatted input files ..." )
-
-        ## in separate formatted file 
-        for (yr in df_siteinfo$year_start:df_siteinfo$year_end){
-
-          ## subset only this year
-          ddf_sub <- dplyr::filter( out$ddf, year(date)==yr ) 
-
-          ## fill gaps with mean seasonal cycle (for pre-MODIS years, entire year is mean seasonal cycle)
-          if (nrow(ddf_sub)==0){
-            ddf_sub <- init_dates_dataframe( yr, yr ) %>% 
-              mutate( modisvar_interpol = NA ) %>% 
-              dplyr::filter( !( month(date)==2 & mday(date)==29 ) ) %>% 
-              mutate( doy=yday(date) )
-          }
-          ddf_sub <- ddf_sub %>% left_join( df_meandoy, by="doy" )
-
-          # ## fill gaps with mean by DOY/MOY
-          # ddf_sub$modisvar_interpol[ which( is.na( ddf_sub$modisvar_interpol ) ) ] <- ddf_sub$meandoy[ which( is.na( ddf_sub$modisvar_interpol ) ) ]
-
-          ## define directory name for SOFUN input
-          dirnam_csv_outputdata
-          dirnam <- paste0( dirnam_csv_outputdata, "/", as.character(yr), "/" )
-          system( paste( "mkdir -p", dirnam ) )
-
-          ## daily
-          filnam <- paste0( dirnam, "dfapar_", productnam,"_", prod_suffix, "_", sitename, "_", yr, ".txt" )
-          write_sofunformatted( filnam, ddf_sub$modisvar_interpol )
-          
-        }
-
-      }
-
-      df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=0 ) ) 
-
-    } else {
-
-      print( paste( "WARNING: NO DATA AVAILABLE FOR SITE:", sitename ) )
-      df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=1 ) )
-      out <- NA
-
-    }
-
   } else {
-
+      
     print( paste( "WARNING: RAW DATA FILE NOT FOUND FOR SITE:", sitename ) )
     df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=2 ) ) 
     out <- NA
-
-  }
+    cont <- FALSE
+    
+  }    
+  
+    
+  if (cont){
+    
+    if (!file.exists(filnam_modis_nice_csv)||overwrite_nice){
+      ##--------------------------------------------------------------------
+      ## Clean (gapfill and interpolate) full time series data to 8-days, daily, and monthly
+      ##--------------------------------------------------------------------
+      print("gapfilling and interpolating to daily ...")
+      out <- gapfill_modis(
+        df,
+        sitename, 
+        year_start = df_siteinfo$year_start,
+        year_end   = df_siteinfo$year_end,
+        qc_name = band_qc, 
+        prod = prod_suffix,
+        do_interpolate = asfaparinput,
+        do_plot_interpolated = do_plot_interpolated,
+        dir = settings_sims$path_input
+      )
+      
+      ##--------------------------------------------------------------------
+      ## Save data frames as CSV files
+      ##--------------------------------------------------------------------
+      readr::write_csv( out$df,  path=filnam_modis_nice_csv )
+      if (asfaparinput) readr::write_csv( out$ddf, path=filnam_daily_csv )
+      
+    } else {
+      
+      ##--------------------------------------------------------------------
+      ## Read CSV file directly for this site
+      ##--------------------------------------------------------------------
+      print( "monthly data already available in CSV file ...")
+      out <- list()
+      out$df  <- readr::read_csv( filnam_modis_nice_csv, col_types = cols() )
+      if (asfaparinput) out$ddf <- readr::read_csv( filnam_daily_csv, col_types = cols() )
+      
+    }
+    
+    ##--------------------------------------------------------------------
+    ## Write to Fortran-formatted output for each variable and year separately
+    ## For days (and years) where no data is available, take the mean by DOY
+    ##--------------------------------------------------------------------
+    if (asfaparinput){
+      
+      ## get mean seasonal cycle. This is relevant for years where no MODIS data is available.
+      df_meandoy <- out$ddf %>% group_by( doy ) %>% summarise( meandoy = mean( modisvar_interpol , na.rm=TRUE ) ) 
+      
+      print( "writing formatted input files ..." )
+      
+      ## in separate formatted file 
+      for (yr in df_siteinfo$year_start:df_siteinfo$year_end){
+        
+        ## subset only this year
+        ddf_sub <- dplyr::filter( out$ddf, year(date)==yr ) 
+        
+        ## fill gaps with mean seasonal cycle (for pre-MODIS years, entire year is mean seasonal cycle)
+        if (nrow(ddf_sub)==0){
+          ddf_sub <- init_dates_dataframe( yr, yr ) %>% 
+            mutate( modisvar_interpol = NA ) %>% 
+            dplyr::filter( !( month(date)==2 & mday(date)==29 ) ) %>% 
+            mutate( doy=yday(date) )
+        }
+        ddf_sub <- ddf_sub %>% left_join( df_meandoy, by="doy" )
+        
+        # ## fill gaps with mean by DOY/MOY
+        # ddf_sub$modisvar_interpol[ which( is.na( ddf_sub$modisvar_interpol ) ) ] <- ddf_sub$meandoy[ which( is.na( ddf_sub$modisvar_interpol ) ) ]
+        
+        ## define directory name for SOFUN input
+        dirnam_csv_outputdata
+        dirnam <- paste0( dirnam_csv_outputdata, "/", as.character(yr), "/" )
+        system( paste( "mkdir -p", dirnam ) )
+        
+        ## daily
+        filnam <- paste0( dirnam, "dfapar_", sitename, "_", yr, ".txt" )
+        write_sofunformatted( filnam, ddf_sub$modisvar_interpol )
+        
+      }
+      
+    }
+    
+    df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=0 ) ) 
+    
+  } else {
+    
+    print( paste( "WARNING: NO DATA AVAILABLE FOR SITE:", sitename ) )
+    df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=1 ) )
+    out <- NA
+    
+  } 
+  
   return(out)
 }
 
 
-gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do_interpolate=FALSE, do_plot_interpolated=FALSE ){
+gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do_interpolate=FALSE, do_plot_interpolated=FALSE, dir = "./" ){
   ##--------------------------------------
   ## Returns data frame containing data 
   ## (and year, moy, doy) for all available
@@ -1219,7 +1221,9 @@ gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do
 
     ## Plot effect of filtering steps
     if (do_plot_interpolated){
-      plotfiln <- paste0( "fig/evi_MOD13Q1gee_", sitename, ".pdf" )
+      dir <- paste0(dir, "/fig_fapar_gapfilling/")
+      if (!dir.exists(dir)) system(paste0("mkdir ", dir))
+      plotfiln <- paste0( dir, "evi_MOD13Q1gee_", sitename, ".pdf" )
       print( paste( "Gapfilling illustrated in:", plotfiln ) )
       pdf( plotfiln, width=15, height=6 )
       par(xpd=TRUE)
@@ -1419,7 +1423,9 @@ gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do
 
     ## Plot effect of filtering steps
     if (do_plot_interpolated){
-      plotfiln <- paste0( "fig/fpar_MCD15A3H_v2_fill_", sitename, ".pdf" )
+      dir <- paste0(dir, "/fig_fapar_gapfilling/")
+      if (!dir.exists(dir)) system(paste0("mkdir ", dir))
+      plotfiln <- paste0( dir, "fpar_MCD15A3H_v2_fill_", sitename, ".pdf" )
       print( paste( "Gapfilling illustrated in:", plotfiln ) )
       pdf( plotfiln, width=15, height=6 )
       par(xpd=TRUE)
@@ -1620,7 +1626,9 @@ gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do
     df <- df %>%  mutate( outlier = ifelse( modisvar - median( modisvar, na.rm=TRUE ) > 5 * ( quantile( modisvar, probs=0.75, na.rm=TRUE  ) - median( modisvar, na.rm=TRUE ) ), TRUE, FALSE ) )
 
     ## Plot effect of filtering steps
-    plotfiln <- paste0( "fig/gpp_MOD17A2H_fill_", sitename, ".pdf" )
+    dir <- paste0(dir, "/fig_fapar_gapfilling/")
+    if (!dir.exists(dir)) system(paste0("mkdir ", dir))
+    plotfiln <- paste0( dir, "gpp_MOD17A2H_fill_", sitename, ".pdf" )
     print( paste( "Gapfilling illustrated in:", plotfiln ) )
     pdf( plotfiln, width=15, height=6 )
     par(xpd=TRUE)
@@ -1650,23 +1658,8 @@ gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do
     ## Warning: here, 'date' must be centered within 4-day period - thus not equal to start date but (start date + 2)
     ddf <- ddf %>% left_join( dplyr::select( df, date, modisvar ), by="date" )
 
-    ## extrapolate to missing values at head and tail using mean seasonal cycle
-    ##--------------------------------------
-    ## identify NAs at head and tail
-    idxs <- findna_headtail( ddf$modisvar )
-    if (length(idxs)>0) rlang::warn("Using mean seasonal cycle for years where no fapar data is available.")
-
-    ## get mean seasonal cycle
-    ddf_meandoy <- ddf %>% 
-      dplyr::group_by( doy ) %>% 
-      dplyr::summarise( meandoy = mean( modisvar , na.rm=TRUE ) )
-
-    ## attach mean seasonal cycle as column 'meandoy' to daily dataframe
-    ddf <- ddf %>% 
-      dplyr::left_join( ddf_meandoy, by="doy" )
-
-    ## fill gaps at head and tail
-    ddf$modisvar[ idxs ] <- ddf$meandoy[ idxs ]
+    ## extrapolate missing values at head and tail
+    ddf$modisvar <- extrapolate_missing_headtail(dplyr::select(ddf, var = modisvar, doy))
 
     ##--------------------------------------
     ## get LOESS spline model for predicting daily values (used below)
@@ -1731,6 +1724,11 @@ gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do
             c("Savitzky-Golay filter", "Spline", "Linear interpolation (standard)"), 
             col=c("springgreen3", "cyan", "red" ), lty=1, lwd=c(1,1,2), bty="n", inset = c(0,-0.2)
           )
+    
+    ## extrapolate missing values at head and tail again
+    ##--------------------------------------
+    ddf$modisvar_interpol <- extrapolate_missing_headtail(dplyr::select(ddf, var = modisvar_interpol, doy))
+    
 
   } else {
 
@@ -2934,6 +2932,33 @@ calc_vpd <- function( eact=NA, qair=NA, tc=NA, tmin=NA, tmax=NA, elv=NA ){
   return( vpd )
 
 }
+
+
+extrapolate_missing_headtail <- function(ddf){
+  ## extrapolate to missing values at head and tail using mean seasonal cycle
+  ##--------------------------------------
+  ## identify NAs at head and tail
+  idxs <- findna_headtail( ddf$var )
+  if (length(idxs)>0) rlang::warn("Using mean seasonal cycle for years where no fapar data is available.")
+  
+  ## get mean seasonal cycle
+  ddf_meandoy <- ddf %>% 
+    dplyr::group_by( doy ) %>% 
+    dplyr::summarise( meandoy = mean( var , na.rm=TRUE ) )
+  
+  ## attach mean seasonal cycle as column 'meandoy' to daily dataframe
+  ddf <- ddf %>% 
+    dplyr::left_join( ddf_meandoy, by="doy" )
+  
+  ## fill gaps at head and tail
+  ddf$var[ idxs ] <- ddf$meandoy[ idxs ]
+  
+  vec <- ddf %>% 
+    dplyr::pull(var)
+  
+  return(vec)      
+}
+
 
 findna_headtail <- function( vec ){
 

@@ -96,15 +96,23 @@ settings_input <-  list(
   precipitation            = "fluxnet2015",
   vpd                      = "fluxnet2015",
   ppfd                     = "fluxnet2015",
-  netrad                   = NA,
+  netrad                   = "fluxnet2015",  #  c("fluxnet2015", "watch_wfdei"),
+  patm                     = "fluxnet2015",
   cloudcover               = "cru",
-  path_watch_wfdei         = "/alphadata01/bstocker/data/watch_wfdei/",
-  path_cru                 = "/alphadata01/bstocker/data/cru/ts_4.01/",
-  path_MODIS_EVI_MOD13Q1   = "/alphadata01/bstocker/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
-  path_MODIS_FPAR_MCD15A3H = "/alphadata01/bstocker/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
-  path_co2                 = "/alphadata01/bstocker/data/co2/cCO2_rcp85_const850-1765.dat",
-  path_fluxnet2015         = "/alphadata01/bstocker/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  get_from_remote          = FALSE
+  fapar                    = "MODIS_EVI_MOD13Q1", #  "MODIS_FPAR_MCD15A3H", # "",
+  splined_fapar            = TRUE,
+  path_co2                 = "~/data/co2/cCO2_rcp85_const850-1765.dat",
+  path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_fluxnet2015_hh      = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_0.5h/original/unpacked/",
+  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
+  path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
+  get_from_remote          = FALSE,
+  path_cru                 = "~/data/cru/ts_4.01/",
+  settings_gee             = get_settings_gee( 
+    bundle = "fpar", 
+    python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python",
+    gee_path = "/alphadata01/bstocker/gee_subset/gee_subset/"
+    )
   )
 
 setup_sofun <- list(
@@ -131,7 +139,7 @@ calibsites <- readr::read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
 
 settings_calib <- list(
   name             = "calib_et",
-  par              = list( apar_latenth = list( lower=0.1, upper=2.0, init=1.0 ),
+  par              = list( apar_latenth = list( lower=0.1,  upper=2.0,  init=1.0 ),
                            bpar_latenth = list( lower=0.01, upper=20.0, init=0.1 ),
                            mpar_latenth = list( lower=0.01, upper=20.0, init=0.2 ) ),
   method           = "gensa",
@@ -155,7 +163,7 @@ settings_sims <- prepare_setup_sofun(
   settings = settings_sims,
   setup = setup_sofun,
   settings_calib = settings_calib,
-  write_paramfils = TRUE
+  write_paramfils = FALSE
   )
 ```
 
@@ -167,10 +175,10 @@ inputdata <- prepare_input_sofun(
   settings_sims = settings_sims,
   return_data = FALSE,
   overwrite_climate = FALSE,
-  overwrite_fapar = FALSE,
+  overwrite_fapar = TRUE,
   verbose = TRUE,
   overwrite_csv_climate = FALSE,
-  overwrite_csv_fapar = FALSE
+  overwrite_csv_fapar = TRUE
   )
 ```
 

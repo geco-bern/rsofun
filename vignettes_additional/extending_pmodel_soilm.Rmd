@@ -1,0 +1,22 @@
+---
+title: "Extending the P-model"
+output: html_notebook
+---
+
+Currently, the unit cost $a$ is defined in Prentice et al. (2014) as:
+$$
+a = R_s / E = \frac{r_s h^2 \rho_s \eta}{2 \Delta \psi k_{sw} \rho_w}
+$$
+Note that $k_{sw}$ is the sapwood conductivity, as opposed to $k_s$ being the soil conductivity.
+
+With $R_s = \nu_H r_s h \rho_s / 2$, transpiration is 
+$$
+E = \frac{\Delta \psi k_{sw} \rho_w \nu_H}{h \eta} = \frac{\Delta \psi \rho_w \nu_H}{h \eta R_{sw}}
+$$
+
+One point here is that we're only accounting for sapwood conductivity ($k_s$), representative of only the root-to-leaf path, while $\psi$ is defined as the ``water potential difference between soil and leaf'', representative of the whole soil-to-root-to-leaf path. $E$ is governed by the conductivity of the whole path, not only sapwood. 
+
+What's missing is the conductivity along the soil-to-root pathway. $E$ is then
+$$
+
+$$

@@ -146,28 +146,13 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     ## Example run for getting structure of output file
     if (identical(names(settings_calib$par),"kphio")){
       ## For calibrating quantum yield efficiency only
-      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
+      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f", param_init[1], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
       cost_rmse <- cost_rmse_kphio
     
-    } else if ( "kphio" %in% names(settings_calib$par) && "temp_ramp_edge" %in% names(settings_calib$par) && "soilm_par_a" %in% names(settings_calib$par) && "soilm_par_b" %in% names(settings_calib$par) ){  
+    } else if ( "kphio" %in% names(settings_calib$par) && "soilm_par_a" %in% names(settings_calib$par) && "soilm_par_b" %in% names(settings_calib$par) ){  
       ## Full stack calibration
-      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], param_init[2], param_init[3], param_init[4] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f", param_init[1], param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
       cost_rmse <- cost_rmse_fullstack   
-
-    } else if ( "kphio" %in% names(settings_calib$par) && "temp_ramp_edge" %in% names(settings_calib$par) ){  
-      ## For calibration temperature ramp parameters
-      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], param_init[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
-      cost_rmse <- cost_rmse_temp_ramp
-    
-    } else if ("kphio" %in% names(settings_calib$par) && "soilm_par_a" %in% names(settings_calib$par) && "soilm_par_b" %in% names(settings_calib$par) ){
-      ## For calibrating soil moisture stress parameters
-      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", param_init[1], -9999, param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
-      cost_rmse <- cost_rmse_soilmstress
-
-    } else if (identical("soilm_par_a" , names(settings_calib$par))){
-      ## TEST: whether soil moisture stress calibration works
-      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", 0.05, -9999, param_init[1], 0.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
-      cost_rmse <- cost_rmse_soilmstress_TEST
 
     }
 
