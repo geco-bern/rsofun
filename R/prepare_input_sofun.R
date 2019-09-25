@@ -209,53 +209,53 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       # ##-----------------------------------------------------------
       # error <- check_download_co2( settings_input, settings_sims )
 
-      # #-----------------------------------------------------------
-      # # Prepare climate input
-      # #-----------------------------------------------------------
-      # if (overwrite_climate || return_data || overwrite_csv_climate){
-      # 
-      #   ## First, get climate data from site-specific
-      #   if (verbose) print("Preparing climate input files...")
-      #   if (verbose) print("Reading from site-specific files...")
-      #   ddf_climate <- purrr::map(
-      #     as.list(settings_sims$sitenames),
-      #     ~get_input_sofun_climate_bysite( ., settings_input, settings_sims, verbose = verbose )
-      #     )
-      #   names(ddf_climate) <- settings_sims$sitenames
-      #   ddf_climate <- ddf_climate %>%
-      #     bind_rows(.id = "sitename")
-      # 
-      #   ## Second, get climate data from global files
-      #   if (verbose) print("Reading from global files...")
-      #   ddf_climte_globalfields <- get_input_sofun_climate_globalfields(
-      #     dplyr::select(ddf_climate, sitename, date),
-      #     settings_input,
-      #     settings_sims,
-      #     overwrite = overwrite_climate,
-      #     overwrite_csv = overwrite_csv_climate,
-      #     verbose = FALSE
-      #     )
-      #   ddf_climate <- ddf_climate %>%
-      #     left_join(
-      #       ddf_climte_globalfields,
-      #       by = c("sitename", "date")
-      #     )
-      # 
-      #   ## Then, prepare climate input data files for sofun
-      #   if (verbose) print("Writing climate forcing to files...")
-      #   purrr::map(
-      #     as.list(settings_sims$sitenames),
-      #     ~prepare_input_sofun_climate_bysite(
-      #       .,
-      #       dplyr::filter(ddf_climate, sitename == .),
-      #       settings_input,
-      #       settings_sims,
-      #       overwrite=overwrite_climate,
-      #       overwrite_csv=overwrite_csv_climate,
-      #       verbose = verbose )
-      #     )
-      # 
-      # }
+      #-----------------------------------------------------------
+      # Prepare climate input
+      #-----------------------------------------------------------
+      if (overwrite_climate || return_data || overwrite_csv_climate){
+
+        ## First, get climate data from site-specific
+        if (verbose) print("Preparing climate input files...")
+        if (verbose) print("Reading from site-specific files...")
+        ddf_climate <- purrr::map(
+          as.list(settings_sims$sitenames),
+          ~get_input_sofun_climate_bysite( ., settings_input, settings_sims, verbose = verbose )
+          )
+        names(ddf_climate) <- settings_sims$sitenames
+        ddf_climate <- ddf_climate %>%
+          bind_rows(.id = "sitename")
+
+        ## Second, get climate data from global files
+        if (verbose) print("Reading from global files...")
+        ddf_climte_globalfields <- get_input_sofun_climate_globalfields(
+          dplyr::select(ddf_climate, sitename, date),
+          settings_input,
+          settings_sims,
+          overwrite = overwrite_climate,
+          overwrite_csv = overwrite_csv_climate,
+          verbose = FALSE
+          )
+        ddf_climate <- ddf_climate %>%
+          left_join(
+            ddf_climte_globalfields,
+            by = c("sitename", "date")
+          )
+
+        ## Then, prepare climate input data files for sofun
+        if (verbose) print("Writing climate forcing to files...")
+        purrr::map(
+          as.list(settings_sims$sitenames),
+          ~prepare_input_sofun_climate_bysite(
+            .,
+            dplyr::filter(ddf_climate, sitename == .),
+            settings_input,
+            settings_sims,
+            overwrite=overwrite_climate,
+            overwrite_csv=overwrite_csv_climate,
+            verbose = verbose )
+          )
+
+      }
 
       ##-----------------------------------------------------------
       ## Prepare fapar input
@@ -1751,6 +1751,7 @@ extract_pointdata_allsites <- function( filename, df_lonlat, get_time = FALSE ){
 
   ## load file using the raster library
   print(paste("Creating raster brick from file", filename))
+  if (!file.exists(filename)) rlang::abort(paste0("File not found: ", filename))
   rasta <- raster::brick(filename)
 
   df_lonlat <- raster::extract(rasta, sp::SpatialPoints(dplyr::select(df_lonlat, lon, lat)), sp = TRUE) %>% 

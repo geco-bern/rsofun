@@ -189,7 +189,18 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
                              pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_HH.*.csv" ), 
                              recursive = TRUE 
                             )
-      
+      if (length(filn_hh)>0){
+        use_hh <- TRUE
+      } else {
+        ## get hourly file name(s)
+        filn_hh <- list.files( path_fluxnet2015_hh, 
+                               pattern = paste0( "FLX_", sitename, ".*_FLUXNET2015_FULLSET_HR.*.csv" ), 
+                               recursive = TRUE 
+                              )
+        use_hh <- FALSE
+        
+      }
+
       ## get file name(s) of file containing daily daytime VPD derived from half-hourly data
       filename_dd_vpd <- list.files( path_fluxnet2015_hh,
                                      pattern = paste0("FLX_", sitename, ".*_VPD_DAY.csv"),
@@ -237,11 +248,11 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
           
         } else {
           
-          # rlang::abort("No half-hourly data available.")
-
-          if (verbose) rlang::warn("No half-hourly data available. Cannot get vpd_day for this site.")
-          getvars <- getvars[-which(str_detect(getvars, "VPD_F_DAY"))]
-          # getvars <- c(getvars, "VPD_F", "VPD_F_QC")
+          if (length(filn_hh)==0) rlang::abort("No half-hourly files found (required to calculate VPD_DAY).")
+          
+          # if (verbose) rlang::warn("No half-hourly data available. Cannot get vpd_day for this site.")
+          # getvars <- getvars[-which(str_detect(getvars, "VPD_F_DAY"))]
+          # # getvars <- c(getvars, "VPD_F", "VPD_F_QC")
 
         } 
         

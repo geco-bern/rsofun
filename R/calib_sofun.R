@@ -33,10 +33,14 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   ## Apply filters
   ##----------------------------------------------------------------
   ## "filtering" pre-MODIS data
+  idxs <- which(ddf_obs$date < lubridate::ymd("2000-02-18"))
+  make_na_premodis <- function(vec, idxs){
+    vec[idxs] <- NA
+    return(vec)
+  }
   ddf_obs <- ddf_obs %>% 
-    rowwise() %>% 
-    dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( date < "2000-02-18", NA, . ) )
-  
+    dplyr::mutate_at( vars(one_of(targetvars)), ~make_na_premodis(., idxs) )
+    
   ## "filtering" by minimum temperature
   if (!is.na(settings_calib$filter_temp_min)){
     ddf_obs <- ddf_obs %>% 
@@ -80,7 +84,9 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   #                             unlist() %>% unname()
 
   ## make global
-  obs <<- ddf_obs %>% dplyr::select( date, sitename, one_of( targetvars ) )
+  obs <<- ddf_obs %>% 
+    dplyr::select( date, sitename, one_of( targetvars ) ) %>% 
+    dplyr::filter( sitename %in% settings_calib$sitenames )
 
   if (nrow(obs)>0){
 
@@ -117,7 +123,8 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
 
     ## example run to get output file structure
     param_init <- unlist( lapply( settings_calib$par, function(x) x$init ) ) %>% unname()
-    outfilnam <<- paste0( settings_sims$dir_sofun, "/output_calib/calibtargets_tmp_", settings_sims$name, ".txt" )
+    if (!dir.exists(paste0( settings_sims$dir_sofun, "output_calib/"))) system(paste0("mkdir ", settings_sims$dir_sofun, "output_calib/"))
+    outfilnam <<- paste0( settings_sims$dir_sofun, "output_calib/calibtargets_tmp_", settings_sims$name, ".txt" )
     if (file.exists(outfilnam)) system( paste0("rm ", outfilnam))
 
     ## Get executable
@@ -154,6 +161,11 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
       out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f", param_init[1], param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
       cost_rmse <- cost_rmse_fullstack   
 
+    } else if ( "apar_latenth" %in% names(settings_calib$par) && "bpar_latenth" %in% names(settings_calib$par) && "mpar_latenth" %in% names(settings_calib$par) ){  
+      ## Calibration of VPD stress function (P-model runs with soilmstress and tempstress on)
+      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", 0.0870, 0.0000, 0.6850, param_init[1], param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+      cost_rmse <- cost_rmse_vpdstress
+      
     }
 
     # col_positions <<- fwf_empty( outfilnam, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ), comment = "" ) ## this caused a mean bug, 
@@ -461,6 +473,29 @@ cost_rmse_fullstack <- function( par, inverse = FALSE ){
   
   if (inverse) cost <- 1.0 / cost
 
+  return(cost)
+}
+
+##------------------------------------------------------------
+## Generic cost function of model-observation (mis-) match using
+## root mean square error.
+##------------------------------------------------------------
+cost_rmse_vpdstress <- function( par, inverse = FALSE ){
+  
+  ## Full stack calibration
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", 0.0870, 0.0000, 0.6850, par[1], par[2], par[3] ), " | ./run", model ), intern = TRUE )
+  
+  ## read output from calibration run
+  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
+  
+  ## Combine obs and mod by columns
+  out <- bind_cols( obs, out )
+  
+  ## Calculate cost (RMSE)
+  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
+  
+  if (inverse) cost <- 1.0 / cost
+  
   return(cost)
 }
 

@@ -68,6 +68,7 @@ ggplot(aes(x = x)) +
 ```{r message=FALSE}
 path_siteinfo <- "/alphadata01/bstocker/rsofun/siteinfo_pet_fluxnet2015.csv"
 siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
+  dplyr::filter(sitename == "US-Ha1") %>%    # xxx debug
   write_csv(path = path_siteinfo)
 
 settings_sims <- list(
@@ -137,6 +138,12 @@ calibsites <- readr::read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
               dplyr::filter( !(site %in% c4sites) ) %>%  # additionally exclude C4
               dplyr::pull(site)
 
+## xxx debug:
+calibsites <- "US-Ha1"
+
+# ## crude fix: exclude DE-Akm from calibration sites because there's no fapar data available
+# calibsites <- calibsites[-which(calibsites %in% c("DE-Akm", "FI-Sod", "IT-Ro1"))]
+
 settings_calib <- list(
   name             = "calib_et",
   par              = list( apar_latenth = list( lower=0.1,  upper=2.0,  init=1.0 ),
@@ -174,26 +181,33 @@ inputdata <- prepare_input_sofun(
   settings_input = settings_input,
   settings_sims = settings_sims,
   return_data = FALSE,
-  overwrite_climate = FALSE,
-  overwrite_fapar = TRUE,
+  overwrite_climate = TRUE,
+  overwrite_fapar = FALSE,
   verbose = TRUE,
-  overwrite_csv_climate = FALSE,
-  overwrite_csv_fapar = TRUE
+  overwrite_csv_climate = TRUE,
+  overwrite_csv_fapar = FALSE
   )
 ```
 
 
-# Full-stack calibration
+# VPD-stress calibration
 
 Calibration is done for all good-quality sites and all parameters at once.
 
 ```{r, message=FALSE, include=FALSE}
 ## Get observational data (GPP based on NT method) used as target for calibration
-ddf_obs <- get_obs_calib( settings_calib, settings_sims, settings_input )
-save( ddf_obs, file = "~/mct/data/ddf_obs.Rdata" )
+filn <- "~/mct/data/ddf_obs.Rdata"
+if (!exists("ddf_obs") && file.exists(filn)){
+  load(filn)
+} else {
+  if (!exists("ddf_obs")){
+    ddf_obs <- get_obs_calib( settings_calib, settings_sims, settings_input )
+    save( ddf_obs, file =  )
+  }
+}
 
 set.seed(1982)
-settings_calib_ORG <- calib_sofun(
+settings_calib <- calib_sofun(
   setup          = setup_sofun,
   settings_calib = settings_calib,
   settings_sims  = settings_sims,
