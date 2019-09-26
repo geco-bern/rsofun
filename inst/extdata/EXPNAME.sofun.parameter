@@ -85,6 +85,7 @@ loutdtemp_soil                          XXXloutdtemp_soilXXX
 lcalibgpp                               XXXlcalibgppXXX
 lcalibfapar                             XXXlcalibfaparXXX
 lcalibtransp                            XXXlcalibtranspXXX
+lcaliblatenth                           XXXlcaliblatenthXXX
 
 #                                      |
 # write value behind this position:    |->

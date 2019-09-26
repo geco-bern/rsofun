@@ -424,7 +424,8 @@ write_simulation_parameter_bysite <- function( sitename, settings_sim ){
 
               lcalibgpp            = ("gpp" %in% settings_sim$calibvars),
               lcalibfapar          = ("fapar" %in% settings_sim$calibvars),
-              lcalibtransp         = ("transp" %in% settings_sim$calibvars)
+              lcalibtransp         = ("transp" %in% settings_sim$calibvars),
+              lcaliblatenth        = ("latenth" %in% settings_sim$calibvars)
               )
 
   } else if (settings_sim$implementation=="python"){
@@ -489,6 +490,7 @@ create_simulation_parameter_file <- function(
   loutdtemp_soil       = FALSE,
   lcalibgpp            = FALSE,
   lcalibtransp         = FALSE,
+  lcaliblatenth        = FALSE,
   lcalibfapar          = FALSE
   ){
 
@@ -730,7 +732,11 @@ create_simulation_parameter_file <- function(
   } else {
     system( paste0( "sed -i ", systr, " 's/XXXlcalibtranspXXX/.false./g' ", path ) )
   }
-
+  if (lcaliblatenth){
+    system( paste0( "sed -i ", systr, " 's/XXXlcaliblatenthXXX/.true./g' ", path ) )
+  } else {
+    system( paste0( "sed -i ", systr, " 's/XXXlcaliblatenthXXX/.false./g' ", path ) )
+  }
 
   # print( paste0( "finished writing ", path ) )
 

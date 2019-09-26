@@ -169,7 +169,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     }
 
     # col_positions <<- fwf_empty( outfilnam, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ), comment = "" ) ## this caused a mean bug, 
-    col_positions <<- list( begin = 4, end = 15, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ) ) ## this is how bug is fixed
+    col_positions <<- list( begin = 1, end = 15, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ) ) ## this is how bug is fixed
     mod <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
 
     if (nrow(mod)!=nrow(obs)) abort("calib_sofun(): Unequal number of rows in obs. and mod. Re-read observational data.")
@@ -492,7 +492,7 @@ cost_rmse_vpdstress <- function( par, inverse = FALSE ){
   out <- bind_cols( obs, out )
   
   ## Calculate cost (RMSE)
-  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
+  cost <- sqrt( mean( (out$latenth_mod - out$latenth_obs )^2, na.rm = TRUE ) )
   
   if (inverse) cost <- 1.0 / cost
   

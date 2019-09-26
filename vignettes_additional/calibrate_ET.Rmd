@@ -42,6 +42,11 @@ This requires three additional model parameters for SPLASH/SOFUN: $a, b, m$.
 a <- 1
 b <- 0.1
 m <- 0.2
+
+# from calibration at US-Ha1:
+a <- 0.1
+b <- 3.841307
+m <- 1.368163
 calc_vpd_stress <- function(vpd, a, b, m){
   out <- a * (b - m * (log(0.001) + log(vpd)))
   out <- ifelse(out>1, 1, out)
@@ -88,7 +93,7 @@ settings_sims <- list(
   in_netrad       = FALSE,
   recycle         = 1,
   spinupyears     = 10,
-  calibvars       = c("gpp")
+  calibvars       = c("latenth")
   )
 
 settings_input <-  list(
@@ -159,7 +164,9 @@ settings_calib <- list(
   filter_temp_min  = NA,
   filter_temp_max  = NA,
   filter_soilm_min = NA,
-  filter_drought   = FALSE 
+  filter_drought   = FALSE,
+  metric           = "rmse",
+  dir_results      = "~/mct/calib_results/"
  )
 ```
 
@@ -170,7 +177,7 @@ settings_sims <- prepare_setup_sofun(
   settings = settings_sims,
   setup = setup_sofun,
   settings_calib = settings_calib,
-  write_paramfils = FALSE
+  write_paramfils = TRUE
   )
 ```
 
