@@ -1003,11 +1003,12 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
   df_siteinfo <- slice(df_siteinfo, 1)
 
   ## output directory
-  dirnam_csv_outputdata <- paste0(settings_sims$path_input, "/sitedata/fapar/", sitename)
+  dirnam_csv_outputdata <- settings_input[paste0("path_", stringr::str_replace(productnam ,"_gee", ""))] %>% unlist() %>% unname()
+  # dirnam_csv_outputdata <- paste0(settings_sims$path_input, "/sitedata/fapar/", sitename)
   if (!dir.exists(dirnam_csv_outputdata)) system( paste0( "mkdir -p ", dirnam_csv_outputdata ) )
 
   ## Find file from which (crude) data is read
-  savedir <- paste0( dirnam_csv_outputdata, "/raw/" )
+  savedir <- paste0( dirnam_csv_outputdata, "raw/" )
   if (!dir.exists(savedir)) system( paste( "mkdir -p ", savedir ) )
 
   # sitedir <- paste0( dirnam_csv_outputdata, "/", sitename, "/raw/")
@@ -1020,17 +1021,17 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
   ## Handle file names
   ##--------------------------------------------------------------------
   if (asfaparinput){
-    dirnam_csv_asfaparinput <- dirnam_csv_outputdata
-    if (!dir.exists(dirnam_csv_asfaparinput)) system( paste0( "mkdir -p ", dirnam_csv_asfaparinput ) )
+    dirnam_asfaparinput <- paste0(settings_sims$path_input, "sitedata/fapar/", sitename)
+    if (!dir.exists(dirnam_asfaparinput)) system( paste0( "mkdir -p ", dirnam_asfaparinput ) )
   }
 
   ## This file is the link for _tseries and split scripts and should contain all the raw data, not gap-filled or interpolated!
   ## this file is written by 'interpolate_modis()'
   filnam_modis_raw_csv  <- paste0( savedir, sitename, "_", prod_suffix, "_gee_subset.csv" )
-  filnam_modis_nice_csv <- paste0( dirnam_csv_outputdata, "/", varnam, "_", productnam, "_", prod_suffix, "_", sitename, "_gee_subset.csv" )
+  filnam_modis_nice_csv <- paste0( dirnam_csv_outputdata, "/", varnam, "_", productnam, "_", sitename, "_subset.csv" )
   
   ## These files are gap-filled and interpolated
-  if (asfaparinput) filnam_daily_csv <- paste0( dirnam_csv_outputdata, "/d", varnam, "_", productnam, "_", prod_suffix, "_", sitename, "_gee_subset.csv" )
+  if (asfaparinput) filnam_daily_csv <- paste0( dirnam_csv_outputdata, "/d", varnam, "_", productnam, "_", sitename, "_subset.csv" )
 
   if (!file.exists(filnam_modis_raw_csv)||overwrite_raw){
     ##--------------------------------------------------------------------
@@ -1166,8 +1167,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
         # ddf_sub$modisvar_interpol[ which( is.na( ddf_sub$modisvar_interpol ) ) ] <- ddf_sub$meandoy[ which( is.na( ddf_sub$modisvar_interpol ) ) ]
         
         ## define directory name for SOFUN input
-        dirnam_csv_outputdata
-        dirnam <- paste0( dirnam_csv_outputdata, "/", as.character(yr), "/" )
+        dirnam <- paste0( dirnam_asfaparinput, "/", as.character(yr), "/" )
         system( paste( "mkdir -p", dirnam ) )
         
         ## daily

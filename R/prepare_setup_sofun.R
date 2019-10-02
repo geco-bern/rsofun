@@ -251,6 +251,7 @@ prepare_setup_sofun <- function( settings, setup, settings_calib = NA, write_par
       ## Write runnames (typically corresponds to site names) belonging to this ensemble into a text file 
       ## located in the run directory.
       settings$path_runnames <- paste0( settings$path_input, "run/runnames_", settings$name, ".txt" )
+      # if (!dir.exists(settings$path_runnames)) system(paste0("mkdir -p ", settings$path_runnames))
       zz <- file( settings$path_runnames, "w")
       tmp <- purrr::map( as.list(settings$sitenames), ~cat( ., "\n", file=zz ) )
       close(zz)

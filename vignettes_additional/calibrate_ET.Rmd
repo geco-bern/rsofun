@@ -71,7 +71,7 @@ ggplot(aes(x = x)) +
 ### General settings
 
 ```{r message=FALSE}
-path_siteinfo <- "/alphadata01/bstocker/rsofun/siteinfo_pet_fluxnet2015.csv"
+path_siteinfo <- "~/rsofun/siteinfo_pet_fluxnet2015.csv"
 siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
   dplyr::filter(sitename == "US-Ha1") %>%    # xxx debug
   write_csv(path = path_siteinfo)
@@ -81,10 +81,10 @@ settings_sims <- list(
   ensemble        = TRUE,
   setup           = "site",
   name            = "calib_et_fluxnet2015",
-  dir_sofun       = "/alphadata01/bstocker/sofun/trunk/",
-  path_output     = "~/sofun/output_pet_fluxnet2015_sofun/",
-  path_output_nc  = "~/sofun/output_nc_pet_fluxnet2015_sofun/",
-  path_input      = "~/sofun/input_pet_fluxnet2015_sofun/",
+  dir_sofun       = "~/sofun/",
+  path_output     = "~/sofun_outputs/output_pet_fluxnet2015_sofun/",
+  path_output_nc  = "~/sofun_outputs/output_nc_pet_fluxnet2015_sofun/",
+  path_input      = "~/sofun_inputs/input_pet_fluxnet2015_sofun/",
   grid            = NA,
   implementation  = "fortran",
   soilmstress     = TRUE,
@@ -110,14 +110,14 @@ settings_input <-  list(
   path_co2                 = "~/data/co2/cCO2_rcp85_const850-1765.dat",
   path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
   path_fluxnet2015_hh      = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_0.5h/original/unpacked/",
-  path_MODIS_FPAR_MCD15A3H = "~/data/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
-  path_MODIS_EVI_MOD13Q1   = "~/data/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
+  path_MODIS_FPAR_MCD15A3H = "~/data/fluxnet_subsets/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
+  path_MODIS_EVI_MOD13Q1   = "~/data/fluxnet_subsets/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
   get_from_remote          = FALSE,
   path_cru                 = "~/data/cru/ts_4.01/",
   settings_gee             = get_settings_gee( 
     bundle = "fpar", 
     python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python",
-    gee_path = "/alphadata01/bstocker/gee_subset/gee_subset/"
+    gee_path = "~/gee_subset/gee_subset/"
     )
   )
 
@@ -189,10 +189,10 @@ inputdata <- prepare_input_sofun(
   settings_sims = settings_sims,
   return_data = FALSE,
   overwrite_climate = TRUE,
-  overwrite_fapar = FALSE,
+  overwrite_fapar = TRUE,
   verbose = TRUE,
   overwrite_csv_climate = TRUE,
-  overwrite_csv_fapar = FALSE
+  overwrite_csv_fapar = TRUE
   )
 ```
 
@@ -209,7 +209,7 @@ if (!exists("ddf_obs") && file.exists(filn)){
 } else {
   if (!exists("ddf_obs")){
     ddf_obs <- get_obs_calib( settings_calib, settings_sims, settings_input )
-    save( ddf_obs, file =  )
+    save( ddf_obs, file = filn )
   }
 }
 
@@ -223,7 +223,7 @@ settings_calib <- calib_sofun(
   )
 
 ## update parameters for site-level simulations, run and read sofun
-params_opt <- readr::read_csv( paste0("params_opt_", settings_calib$name,".csv") )
+params_opt <- readr::read_csv( paste0(settings_calib$dir_results, "params_opt_", settings_calib$name,".csv") )
 nothing <- update_params( params_opt, settings = settings_sims )
 rm("mod")
 mod <- runread_sofun( 
