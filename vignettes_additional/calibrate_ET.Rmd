@@ -99,7 +99,8 @@ settings_sims <- list(
   in_netrad       = FALSE,
   recycle         = 1,
   spinupyears     = 10,
-  calibvars       = c("latenth")
+  calibvars       = c("latenth"),
+  loutdaet        = TRUE
   )
 
 settings_input <-  list(
@@ -183,7 +184,7 @@ settings_sims <- prepare_setup_sofun(
   settings = settings_sims,
   setup = setup_sofun,
   settings_calib = settings_calib,
-  write_paramfils = FALSE
+  write_paramfils = TRUE
   )
 ```
 
@@ -194,11 +195,11 @@ inputdata <- prepare_input_sofun(
   settings_input = settings_input,
   settings_sims = settings_sims,
   return_data = FALSE,
-  overwrite_climate = TRUE,
-  overwrite_fapar = TRUE,
+  overwrite_climate = FALSE,
+  overwrite_fapar = FALSE,
   verbose = TRUE,
-  overwrite_csv_climate = TRUE,
-  overwrite_csv_fapar = TRUE
+  overwrite_csv_climate = FALSE,
+  overwrite_csv_fapar = FALSE
   )
 ```
 
@@ -230,8 +231,7 @@ settings_calib <- calib_sofun(
 
 ## update parameters for site-level simulations, run and read sofun
 params_opt <- readr::read_csv( paste0(settings_calib$dir_results, "params_opt_", settings_calib$name,".csv") )
-nothing <- update_params( params_opt, settings = settings_sims )
-rm("mod")
+nothing <- update_params( params_opt, settings_sims$dir_sofun )
 
 mod <- runread_sofun( 
   settings = settings_sims, 

@@ -143,7 +143,9 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   }
 
   ## Use also quality flag data for each variable in 'getvars'
-  getvars <- c(getvars, paste0(getvars, "_QC"))
+  obsvars <- getvars[-which(stringr::str_detect(getvars, "UNC"))]
+  uncvars <- getvars[ which(stringr::str_detect(getvars, "UNC"))]
+  getvars <- c(obsvars, paste0(obsvars, "_QC"), uncvars)
 
   if (length(filn)==0) rlang::abort(paste0("No files found for timescale ", timescale, " in sub-directories of ", path_fluxnet2015 ) )
   if (length(filn)>1){
