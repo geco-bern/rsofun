@@ -446,6 +446,10 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
     if (verbose) rlang::warn("Renaming: latenth = LE_F_MDS \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("LE_F_MDS")), list(~stringr::str_replace(., "LE_F_MDS", "latenth")) )
   }
+  if ("LE_RANDUNC" %in% getvars){
+    if (verbose) rlang::warn("Renaming: latenth_unc = LE_RANDUNC \n")
+    df <- df %>% dplyr::rename_at( vars(starts_with("LE_RANDUNC")), list(~stringr::str_replace(., "LE_RANDUNC", "latenth_unc")) )
+  }
   if ("H_F_MDS" %in% getvars){
     if (verbose) rlang::warn("Renaming: sensibleh = H_F_MDS \n")
     df <- df %>% dplyr::rename_at( vars(starts_with("H_F_MDS")), list(~stringr::str_replace(., "H_F_MDS", "sensibleh" )) )

@@ -43,10 +43,16 @@ a <- 1
 b <- 0.1
 m <- 0.2
 
-# from calibration at US-Ha1:
+# from calibration at US-Ha1, using RMSE:
 a <- 0.1
 b <- 3.841307
 m <- 1.368163
+
+# from calibration at US-Ha1, using chi-squared:
+a <- 0.3035047    
+b <- 1.0075488    
+m <- 0.0100000 
+
 calc_vpd_stress <- function(vpd, a, b, m){
   out <- a * (b - m * (log(0.001) + log(vpd)))
   out <- ifelse(out>1, 1, out)
@@ -151,15 +157,15 @@ calibsites <- "US-Ha1"
 
 settings_calib <- list(
   name             = "calib_et",
-  par              = list( apar_latenth = list( lower=0.1,  upper=2.0,  init=1.0 ),
-                           bpar_latenth = list( lower=0.01, upper=20.0, init=0.1 ),
-                           mpar_latenth = list( lower=0.01, upper=20.0, init=0.2 ) ),
+  par              = list( vpdstress_par_a = list( lower=0.1,  upper=2.0,  init=1.0 ),
+                           vpdstress_par_b = list( lower=0.01, upper=20.0, init=0.1 ),
+                           vpdstress_par_m = list( lower=0.01, upper=20.0, init=0.2 ) ),
   method           = "gensa",
   targetvars       = c("latenth"),
   datasource       = list( latenth = "fluxnet2015" ),
   timescale        = list( latenth = "d" ),
   path_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  maxit            = 30,
+  maxit            = 10,
   sitenames        = calibsites,
   filter_temp_min  = NA,
   filter_temp_max  = NA,
@@ -177,13 +183,13 @@ settings_sims <- prepare_setup_sofun(
   settings = settings_sims,
   setup = setup_sofun,
   settings_calib = settings_calib,
-  write_paramfils = TRUE
+  write_paramfils = FALSE
   )
 ```
 
 
 ### Prepare inputs
-```{r, eval=TRUE, message=FALSE, warning=TRUE, results="hide"}
+```{r, eval=FALSE, message=FALSE, warning=TRUE, results="hide"}
 inputdata <- prepare_input_sofun(
   settings_input = settings_input,
   settings_sims = settings_sims,
@@ -209,7 +215,7 @@ if (!exists("ddf_obs") && file.exists(filn)){
 } else {
   if (!exists("ddf_obs")){
     ddf_obs <- get_obs_calib( settings_calib, settings_sims, settings_input )
-    save( ddf_obs, file =  )
+    save( ddf_obs, file = filn )
   }
 }
 
@@ -222,10 +228,9 @@ settings_calib <- calib_sofun(
   ddf_obs        = ddf_obs
   )
 
-## update parameters for site-level simulations, run and read sofun
-params_opt <- readr::read_csv( paste0("params_opt_", settings_calib$name,".csv") )
-nothing <- update_params( params_opt, settings = settings_sims )
-rm("mod")
+
+nothing <- update_params( as.list(settings_calib$par_opt), settings_sims$dir_sofun )
+
 mod <- runread_sofun( 
   settings = settings_sims, 
   setup = setup_sofun 
