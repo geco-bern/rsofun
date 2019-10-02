@@ -84,8 +84,9 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   #                             unlist() %>% unname()
 
   ## make global
+  targetvars_with_unc <- c(targetvars, paste0(settings_calib$targetvars, "_unc"))
   obs <<- ddf_obs %>% 
-    dplyr::select( date, sitename, one_of( targetvars ) ) %>% 
+    dplyr::select( date, sitename, one_of( targetvars_with_unc ) ) %>% 
     dplyr::filter( sitename %in% settings_calib$sitenames )
 
   if (nrow(obs)>0){
@@ -161,10 +162,10 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
       out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f", param_init[1], param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
       cost_rmse <- cost_rmse_fullstack   
 
-    } else if ( "apar_latenth" %in% names(settings_calib$par) && "bpar_latenth" %in% names(settings_calib$par) && "mpar_latenth" %in% names(settings_calib$par) ){  
+    } else if ( "vpdstress_par_a" %in% names(settings_calib$par) && "vpdstress_par_b" %in% names(settings_calib$par) && "vpdstress_par_m" %in% names(settings_calib$par) ){  
       ## Calibration of VPD stress function (P-model runs with soilmstress and tempstress on)
       out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", 0.0870, 0.0000, 0.6850, param_init[1], param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
-      cost_rmse <- cost_rmse_vpdstress
+      cost_rmse <- cost_chisquared_vpdstress
       
     }
 
@@ -286,7 +287,8 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     for (parnam in names(settings_calib$par)){
       settings_calib$par[[ parnam ]]$opt <- out_optim$par[ parnam ]
     }
-
+    settings_calib$par_opt <- out_optim$par
+    
     setwd( here )
 
     # ## delete variables made global again
@@ -500,6 +502,30 @@ cost_rmse_vpdstress <- function( par, inverse = FALSE ){
 }
 
 ##------------------------------------------------------------
+## Generic cost function of model-observation (mis-) match using
+## the chi-squared statistic (Keenan et al., 2012 GCB).
+##------------------------------------------------------------
+cost_chisquared_vpdstress <- function( par, inverse = FALSE ){
+  
+  ## Full stack calibration
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", 0.0870, 0.0000, 0.6850, par[1], par[2], par[3] ), " | ./run", model ), intern = TRUE )
+  
+  ## read output from calibration run
+  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
+  
+  ## Combine obs and mod by columns
+  out <- bind_cols( obs, out )
+  
+  ## Calculate cost (chi-squared)
+  cost <- ((out$latenth_mod - out$latenth_obs )/(2 * out$latenth_unc))^2
+  cost <- sum(cost, na.rm = TRUE)/sum(!is.na(cost))
+  
+  if (inverse) cost <- 1.0 / cost
+  
+  return(cost)
+}
+
+##------------------------------------------------------------
 ## Cost function of linearly scaled output
 ##------------------------------------------------------------
 cost_linscale_rmse <- function( par ){
@@ -655,7 +681,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
         sitename, 
         path_fluxnet2015 = settings_input$path_fluxnet2015, 
         timescale = settings_calib$timescale$latenth,
-        getvars = "LE_F_MDS", 
+        getvars = c("LE_F_MDS", "LE_RANDUNC"), 
         getswc = FALSE,
         threshold_LE = 0.6, 
         verbose = TRUE
