@@ -41,26 +41,26 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   ddf_obs <- ddf_obs %>% 
     dplyr::mutate_at( vars(one_of(targetvars)), ~make_na_premodis(., idxs) )
     
-  ## "filtering" by minimum temperature
-  if (!is.na(settings_calib$filter_temp_min)){
-    ddf_obs <- ddf_obs %>% 
-      rowwise() %>% 
-      dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) )
-  }
-
-  ## "filtering" by maximum temperature
-  if (!is.na(settings_calib$filter_temp_max)){
-    ddf_obs <- ddf_obs %>% 
-      rowwise() %>% 
-      dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) )
-  }
-          
-  ## "filtering" by low soil moisture
-  if (!is.na(settings_calib$filter_soilm_min)){
-    ddf_obs <- ddf_obs %>% 
-      rowwise() %>% 
-      dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) )
-  }
+  # ## "filtering" by minimum temperature
+  # if (!is.na(settings_calib$filter_temp_min)){
+  #   ddf_obs <- ddf_obs %>% 
+  #     rowwise() %>% 
+  #     dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) )
+  # }
+  # 
+  # ## "filtering" by maximum temperature
+  # if (!is.na(settings_calib$filter_temp_max)){
+  #   ddf_obs <- ddf_obs %>% 
+  #     rowwise() %>% 
+  #     dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) )
+  # }
+  #         
+  # ## "filtering" by low soil moisture
+  # if (!is.na(settings_calib$filter_soilm_min)){
+  #   ddf_obs <- ddf_obs %>% 
+  #     rowwise() %>% 
+  #     dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) )
+  # }
   
   # ## "filtering" by whether it's a drought based on Stocker et al. (2018) analysis
   # if (settings_calib$filter_drought){
@@ -193,7 +193,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
                           upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist(),
                           control=list( 
                                         temperature=4000, 
-                                        max.call=settings_calib$maxit,
+                                        max.call=5, # xxx debug settings_calib$maxit,
                                         trace.mat=TRUE,
                                         threshold.stop=1e-4
                                         )
@@ -640,6 +640,10 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
         threshold_GPP = 0.9, 
         verbose = TRUE
         ) %>% 
+        dplyr::mutate( gpp_obs = case_when("NT" %in% datasource & !("DT" %in% datasource) ~ GPP_NT_VUT_REF,
+                                           "DT" %in% datasource & !("NT" %in% datasource) ~ GPP_DT_VUT_REF
+                                           # "DT" %in% datasource &   "NT" %in% datasource  ~ (GPP_NT_VUT_REF+GPP_DT_VUT_REF)/2
+                                           ) ) %>% 
         dplyr::right_join( ddf, by = "date" )
       
       

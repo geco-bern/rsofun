@@ -830,8 +830,8 @@ prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, s
 
         sub <- dplyr::filter( out, year(date)==yr )
         
-        ## crude fix (was weird for AU-ASM)
-        if (nrow(sub)==364) sub <- dplyr::bind_rows(sub, sub[nrow(sub),])
+        # ## crude fix (was weird for AU-ASM)
+        # if (nrow(sub)==364) sub <- dplyr::bind_rows(sub, sub[nrow(sub),])
         
         if (nrow(sub)!=365) rlang::abort(paste0("Number of days (rows) is not equal to 365 for year", yr))
 
