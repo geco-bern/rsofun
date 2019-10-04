@@ -240,9 +240,3 @@ mod <- runread_sofun(
 save( mod, file="mod.Rdata" )
 ```
 
-Head over to `eval_sofun.Rmd` and knit it. Save settings to files in order to read them in by eval_sofun.
-```{r, eval=TRUE, message=FALSE, warning=FALSE}
-save( settings_eval, file = "settings_eval.Rdata" )
-save( settings_sims, file = "settings_sims.Rdata" )
-save( siteinfo, file = "siteinfo.Rdata" )
-```

@@ -219,7 +219,12 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
         if (verbose) print("Reading from site-specific files...")
         ddf_climate <- purrr::map(
           as.list(settings_sims$sitenames),
-          ~get_input_sofun_climate_bysite( ., settings_input, settings_sims, verbose = verbose )
+          ~get_input_sofun_climate_bysite( ., 
+                                           settings_input, 
+                                           settings_sims, 
+                                           overwrite_csv = overwrite_csv_climate,
+                                           verbose = verbose 
+                                           )
           )
         names(ddf_climate) <- settings_sims$sitenames
         ddf_climate <- ddf_climate %>%
@@ -254,7 +259,6 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
             overwrite_csv=overwrite_csv_climate,
             verbose = verbose )
           )
-
       }
 
       ##-----------------------------------------------------------
@@ -265,10 +269,10 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
         ## Create data frame for site info for batch-download using MODISTools or GEE
         df_lonlat <- tibble(
           sitename   = settings_sims$sitenames,
-          lat        = unlist(settings_sims$lat),
-          lon        = unlist(settings_sims$lon),
-          year_start = purrr::map_dbl( settings_sims$date_start, ~lubridate::year(.) ),
-          year_end   = purrr::map_dbl( settings_sims$date_end,   ~lubridate::year(.) )
+          lat        = unlist(settings_sims$lat[settings_sims$sitenames]),
+          lon        = unlist(settings_sims$lon[settings_sims$sitenames]),
+          year_start = purrr::map_dbl( settings_sims$date_start[settings_sims$sitenames], ~lubridate::year(.) ),
+          year_end   = purrr::map_dbl( settings_sims$date_end[settings_sims$sitenames],   ~lubridate::year(.) )
           )
                   
         # if (!dir.exists(settings_input$path_fapar)) system(paste0("mkdir -p ", settings_input$path_fapar))
@@ -358,96 +362,114 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
 ##-----------------------------------------------------------
 ## Read climate data from files given by sites
 ##-----------------------------------------------------------
-get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, verbose=FALSE ){
+get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv, verbose=FALSE ){
 
   # if (verbose) print(paste("Getting climate data for site", sitename ))
-
-  ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
-  ddf <- init_dates_dataframe( 
-    year(settings_sims$date_start[[sitename]]), 
-    year(settings_sims$date_end[[sitename]]), 
-    noleap = TRUE) %>% 
-    dplyr::select(-year_dec)
   
-  ##----------------------------------------------------------------------
-  ## Read daily FLUXNET 2015 meteo data for each site (reads all variables)
-  ## A file must be found containing the site name in the file name and located in <settings_input$path_fluxnet2015>
-  ##----------------------------------------------------------------------
-  fluxnetvars <- c()
-  if ("fluxnet2015" %in% settings_input$temperature)   fluxnetvars <- c( fluxnetvars, "temp_day" )
-  if ("fluxnet2015" %in% settings_input$precipitation) fluxnetvars <- c( fluxnetvars, "prec" )
-  if ("fluxnet2015" %in% settings_input$vpd)           fluxnetvars <- c( fluxnetvars, "vpd_day" )
-  if ("fluxnet2015" %in% settings_input$ppfd)          fluxnetvars <- c( fluxnetvars, "ppfd" )
-  if ("fluxnet2015" %in% settings_input$netrad)        fluxnetvars <- c( fluxnetvars, "netrad" )
-  if ("fluxnet2015" %in% settings_input$patm)          fluxnetvars <- c( fluxnetvars, "patm" )
-
-  getvars <- c()
-  if ("fluxnet2015" %in% settings_input$temperature)   getvars <- c( getvars, "TA_F_DAY" ) # c( getvars, "TA_F" )  # 
-  if ("fluxnet2015" %in% settings_input$precipitation) getvars <- c( getvars, "P_F" )
-  if ("fluxnet2015" %in% settings_input$vpd)           getvars <- c( getvars, "VPD_F_DAY" ) #c( getvars, "VPD_F" ) # 
-  if ("fluxnet2015" %in% settings_input$ppfd)          getvars <- c( getvars, "SW_IN_F" )
-  if ("fluxnet2015" %in% settings_input$netrad)        getvars <- c( getvars, "NETRAD" )
-  if ("fluxnet2015" %in% settings_input$patm)          getvars <- c( getvars, "PA_F" )
-
-  # ## xxx debug
-  # fluxnetvars <- c()
-  # getvars <- c()
+  ## path of CSV file with data for this site
+  dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
+  if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
+  csvfiln <- paste0( dir, "/clim_daily_lev1_", sitename, ".csv" )
   
-  if (length(fluxnetvars)>0){
-
-    ## Make sure data is available for this site
-    error <- check_download_fluxnet2015( settings_input$path_fluxnet2015, sitename )
+  if (file.exists(csvfiln) && !overwrite_csv){
     
-    ddf_tmp <- get_obs_bysite_fluxnet2015(sitename, 
-                                      path_fluxnet2015 = settings_input$path_fluxnet2015, 
-                                      path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
-                                      timescale        = "d", 
-                                      getvars          = getvars, 
-                                      getswc           = FALSE 
-                                      )
+    ddf <- readr::read_csv(csvfiln)
+  
+  } else {
+  
+    ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
+    ddf <- init_dates_dataframe( 
+      year(settings_sims$date_start[[sitename]]), 
+      year(settings_sims$date_end[[sitename]]), 
+      noleap = TRUE) %>% 
+      dplyr::select(-year_dec)
     
-    if (any(!(fluxnetvars %in% names(ddf_tmp)))){
-      rlang::warn(paste("Could not get all flunetvars for site", sitename))
-      rlang::warn("Missing: ")
-      missing <- fluxnetvars[!(fluxnetvars %in% names(ddf))]
-      rlang::warn(missing)
-      if ("vpd_day" %in% missing){
-        rlang::warn("Getting mean daily VPD instead of mean daytime VPD.")
-        ## re-read mean daily VPD instead of daytime VPD
-        fluxnetvars <- c(fluxnetvars[-which(fluxnetvars=="vpd_day")], "vpd")
-        getvars <- "VPD_F"
-        ddf_tmp <- get_obs_bysite_fluxnet2015(sitename, 
-                                          path_fluxnet2015 = settings_input$path_fluxnet2015, 
-                                          path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
-                                          timescale        = "d", 
-                                          getvars          = getvars, 
-                                          getswc           = FALSE 
-                                          ) %>% 
-          right_join(ddf_tmp, by = "date")
-      }
-      if ("temp_day" %in% missing){
-        rlang::warn("Getting mean daily VPD instead of mean daytime VPD.")
-        ## re-read mean daily VPD instead of daytime VPD
-        fluxnetvars <- c(fluxnetvars[-which(fluxnetvars=="temp_day")], "temp")
-        getvars <- "TA_F"
-        ddf_tmp <- get_obs_bysite_fluxnet2015(sitename, 
-                                          path_fluxnet2015 = settings_input$path_fluxnet2015, 
-                                          path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
-                                          timescale        = "d", 
-                                          getvars          = getvars, 
-                                          getswc           = FALSE 
-                                          ) %>% 
-          right_join(ddf_tmp, by = "date")
-      }
+    ##----------------------------------------------------------------------
+    ## Read daily FLUXNET 2015 meteo data for each site (reads all variables)
+    ## A file must be found containing the site name in the file name and located in <settings_input$path_fluxnet2015>
+    ##----------------------------------------------------------------------
+    fluxnetvars <- c()
+    if ("fluxnet2015" %in% settings_input$temperature)   fluxnetvars <- c( fluxnetvars, "temp_day" )
+    if ("fluxnet2015" %in% settings_input$precipitation) fluxnetvars <- c( fluxnetvars, "prec" )
+    if ("fluxnet2015" %in% settings_input$vpd)           fluxnetvars <- c( fluxnetvars, "vpd_day" )
+    if ("fluxnet2015" %in% settings_input$ppfd)          fluxnetvars <- c( fluxnetvars, "ppfd" )
+    if ("fluxnet2015" %in% settings_input$netrad)        fluxnetvars <- c( fluxnetvars, "netrad" )
+    if ("fluxnet2015" %in% settings_input$patm)          fluxnetvars <- c( fluxnetvars, "patm" )
+    
+    getvars <- c()
+    if ("fluxnet2015" %in% settings_input$temperature)   getvars <- c( getvars, "TA_F_DAY" ) # c( getvars, "TA_F" )  # 
+    if ("fluxnet2015" %in% settings_input$precipitation) getvars <- c( getvars, "P_F" )
+    if ("fluxnet2015" %in% settings_input$vpd)           getvars <- c( getvars, "VPD_F_DAY" ) #c( getvars, "VPD_F" ) # 
+    if ("fluxnet2015" %in% settings_input$ppfd)          getvars <- c( getvars, "SW_IN_F" )
+    if ("fluxnet2015" %in% settings_input$netrad)        getvars <- c( getvars, "NETRAD" )
+    if ("fluxnet2015" %in% settings_input$patm)          getvars <- c( getvars, "PA_F" )
+    
+    # ## xxx debug
+    # fluxnetvars <- c()
+    # getvars <- c()
+    
+    if (length(fluxnetvars)>0){
       
-    } else {
-      ddf <- ddf_tmp %>% 
-        dplyr::select( date, one_of(fluxnetvars) ) %>% 
-        setNames( c("date", paste0( fluxnetvars, "_fluxnet2015" ))) %>%
-        right_join( ddf, by = "date" )   
+      ## Make sure data is available for this site
+      error <- check_download_fluxnet2015( settings_input$path_fluxnet2015, sitename )
+      
+      ddf <- get_obs_bysite_fluxnet2015(sitename, 
+                                            path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                            path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
+                                            timescale        = "d", 
+                                            getvars          = getvars, 
+                                            getswc           = FALSE 
+      )
+      
+      if (any(!(fluxnetvars %in% names(ddf)))){
+        rlang::warn(paste("Could not get all flunetvars for site", sitename))
+        rlang::warn("Missing: ")
+        missing <- fluxnetvars[!(fluxnetvars %in% names(ddf))]
+        rlang::warn(missing)
+        if ("vpd_day" %in% missing){
+          rlang::warn("Getting mean daily VPD instead of mean daytime VPD.")
+          ## re-read mean daily VPD instead of daytime VPD
+          fluxnetvars <- c(fluxnetvars[-which(fluxnetvars=="vpd_day")], "vpd")
+          getvars <- "VPD_F"
+          ddf <- get_obs_bysite_fluxnet2015(sitename, 
+                                                path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                                path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
+                                                timescale        = "d", 
+                                                getvars          = getvars, 
+                                                getswc           = FALSE 
+                                                ) %>% 
+            right_join(ddf, by = "date")
+        }
+        if ("temp_day" %in% missing){
+          rlang::warn("Getting mean daily VPD instead of mean daytime VPD.")
+          ## re-read mean daily VPD instead of daytime VPD
+          fluxnetvars <- c(fluxnetvars[-which(fluxnetvars=="temp_day")], "temp")
+          getvars <- "TA_F"
+          ddf <- get_obs_bysite_fluxnet2015(sitename, 
+                                                path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                                path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
+                                                timescale        = "d", 
+                                                getvars          = getvars, 
+                                                getswc           = FALSE 
+                                                ) %>% 
+            right_join(ddf, by = "date")
+        }
+        
+      } else {
+        
+        ddf <- ddf %>% 
+          dplyr::select( date, one_of(fluxnetvars) ) %>% 
+          setNames( c("date", paste0( fluxnetvars, "_fluxnet2015" ))) %>%
+          right_join( ddf, by = "date" )   
+        
+      }
     }
+    
+    ## Write to temporary file
+    readr::write_csv(ddf, path = csvfiln)
+
   }
-  
+
   return( ddf )
 
 }
@@ -807,6 +829,11 @@ prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, s
       for (yr in unique(year(out$date))){
 
         sub <- dplyr::filter( out, year(date)==yr )
+        
+        ## crude fix (was weird for AU-ASM)
+        if (nrow(sub)==364) sub <- dplyr::bind_rows(sub, sub[nrow(sub),])
+        
+        if (nrow(sub)!=365) rlang::abort(paste0("Number of days (rows) is not equal to 365 for year", yr))
 
         dirnam <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename, "/", as.character(yr), "/" )
         if (!dir.exists(dirnam)) system( paste0( "mkdir -p ", dirnam ) )

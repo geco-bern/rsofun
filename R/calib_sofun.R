@@ -154,12 +154,12 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     ## Example run for getting structure of output file
     if (identical(names(settings_calib$par),"kphio")){
       ## For calibrating quantum yield efficiency only
-      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f", param_init[1], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
+      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", param_init[1], 1.0, 0.0, -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
       cost_rmse <- cost_rmse_kphio
     
     } else if ( "kphio" %in% names(settings_calib$par) && "soilm_par_a" %in% names(settings_calib$par) && "soilm_par_b" %in% names(settings_calib$par) ){  
       ## Full stack calibration
-      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f", param_init[1], param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", param_init[1], param_init[2], param_init[3], -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
       cost_rmse <- cost_rmse_fullstack   
 
     } else if ( "vpdstress_par_a" %in% names(settings_calib$par) && "vpdstress_par_b" %in% names(settings_calib$par) && "vpdstress_par_m" %in% names(settings_calib$par) ){  
@@ -329,8 +329,8 @@ cost_rmse_kphio <- function( par, inverse = FALSE ){
 
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
-
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", par[1], 1.0, 0.0, -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
+  
   ## read output from calibration run
   out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
   
@@ -583,12 +583,14 @@ get_obs_calib <- function( settings_calib, settings_sims, settings_input ){
   ## corresponds to each simulation's length (number of days).
   ##------------------------------------------------------------
   ## loop over sites to get data frame with all variables
-  list_bysite <- lapply( settings_calib$sitenames, function(x) get_obs_bysite(x,
-                                                      settings_calib = settings_calib, 
-                                                      settings_sims  = settings_sims,
-                                                      settings_input = settings_input
-                                                      ) %>% mutate( sitename=x ) )
-                
+  list_bysite <- lapply( settings_calib$sitenames, 
+                         function(x) get_obs_bysite(x,
+                                                    settings_calib = settings_calib, 
+                                                    settings_sims  = settings_sims,
+                                                    settings_input = settings_input) %>% 
+                           mutate( sitename=x ) 
+                         )
+  
   ## combine dataframes from multiple sites along rows
   ddf_obs <- dplyr::bind_rows( list_bysite )
   rm("list_bysite")
@@ -619,12 +621,28 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
       ## Get FLUXNET 2015 data
       ##------------------------------------------------------------
       ## Make sure data is available for this site
+      getvars <- c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC")
+      if ("NT" %in% datasource){
+        getvars <- c(getvars, "GPP_NT_VUT_SE")
+      }
+      if ("DT" %in% datasource){
+        getvars <- c(getvars, "GPP_DT_VUT_SE")
+      }
+      
       error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
-
-      ## This gets gpp_obs as mean of GPP_NT_VUT_REF and GPP_DT_VUT_REF
-      ddf <-  get_obs_bysite_gpp_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale, method = datasource[ -which( datasource=="fluxnet2015" ) ] ) %>%
-              dplyr::right_join( ddf, by = "date" )
-
+      
+      ddf <- get_obs_bysite_fluxnet2015(
+        sitename, 
+        path_fluxnet2015 = settings_input$path_fluxnet2015, 
+        timescale = settings_calib$timescale$gpp,
+        getvars = getvars, 
+        getswc = FALSE,
+        threshold_GPP = 0.9, 
+        verbose = TRUE
+        ) %>% 
+        dplyr::right_join( ddf, by = "date" )
+      
+      
     } else {
       
       ddf <- ddf %>% dplyr::mutate( gpp_obs = NA )
@@ -676,7 +694,6 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
       ## Make sure data is available for this site
       error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
       
-      ## This gets gpp_obs as mean of GPP_NT_VUT_REF and GPP_DT_VUT_REF
       ddf <- get_obs_bysite_fluxnet2015(
         sitename, 
         path_fluxnet2015 = settings_input$path_fluxnet2015, 

@@ -143,8 +143,12 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   }
 
   ## Use also quality flag data for each variable in 'getvars'
-  obsvars <- getvars[-which(stringr::str_detect(getvars, "UNC"))]
-  uncvars <- getvars[ which(stringr::str_detect(getvars, "UNC"))]
+  obsvars <- tibble( getvars = getvars ) %>%
+    dplyr::filter(!(stringr::str_detect(., "UNC"))) %>% 
+    dplyr::pull(getvars)
+  uncvars <- tibble( getvars = getvars ) %>%
+    dplyr::filter(stringr::str_detect(., "UNC")) %>% 
+    dplyr::pull(getvars)
   getvars <- c(obsvars, paste0(obsvars, "_QC"), uncvars)
 
   if (length(filn)==0) rlang::abort(paste0("No files found for timescale ", timescale, " in sub-directories of ", path_fluxnet2015 ) )
@@ -370,7 +374,13 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   ## clean GPP data
   if (any(grepl("GPP_", getvars))){
     if (any( !(c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC") %in% getvars) )) rlang::abort("Not all variables read from file that are needed for data cleaning.")
-    out_clean <- clean_fluxnet_gpp( df$GPP_NT_VUT_REF, df$GPP_DT_VUT_REF, df$NEE_VUT_REF_NIGHT_QC, df$NEE_VUT_REF_DAY_QC, threshold=threshold_GPP )
+    out_clean <- clean_fluxnet_gpp( 
+      df$GPP_NT_VUT_REF, 
+      df$GPP_DT_VUT_REF, 
+      df$NEE_VUT_REF_NIGHT_QC, 
+      df$NEE_VUT_REF_DAY_QC, 
+      threshold=threshold_GPP 
+      )
     df$GPP_NT_VUT_REF <- out_clean$gpp_nt
     df$GPP_DT_VUT_REF <- out_clean$gpp_dt
   }
@@ -516,7 +526,7 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   #     df <- df %>% dplyr::rename( gpp_obs = GPP_DT_VUT_REF )
   #   }
   # }
-  print("Successfully finished get_obs_bysite_fluxnet2015()")
+
   return(df)
 
 }
