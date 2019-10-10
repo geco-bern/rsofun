@@ -61,7 +61,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
                        threshold_NETRAD=0.5, 
                        verbose=FALSE
                        ) %>%
-                       mutate( year = year(date),
+                       mutate( year =lubridate::year(date),
                                sitename = x )) %>% 
         bind_rows()
       
@@ -76,7 +76,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
                         freq = "years" 
                       ) %>%
                         ## Remove outliers, i.e. when data is outside 1.5 times the inter-quartile range
-                        mutate( year = year(date),
+                        mutate( year =lubridate::year(date),
                                 sitename = x )) %>%
         bind_rows()
       
@@ -84,7 +84,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
     
     ## remove pre-modis data
     if (settings_eval$remove_premodis){
-      adf <- adf %>% filter( year(date) >= 2000 )
+      adf <- adf %>% filter( lubridate::year(date) >= 2000 )
     }
     
     ##------------------------------------------------------------
@@ -111,7 +111,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
                        threshold_NETRAD=0.5, 
                        verbose=FALSE
                        ) %>%
-                       mutate( year = year(date),
+                       mutate( year =lubridate::year(date),
                                sitename = x )) %>% 
         bind_rows()
       
@@ -126,14 +126,14 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
                         freq = "months" 
                       ) %>%
                         ## Remove outliers, i.e. when data is outside 1.5 times the inter-quartile range
-                        mutate( year = year(date),
+                        mutate( year =lubridate::year(date),
                                 sitename = x )) %>%
         bind_rows()
     }
     
     ## remove pre-modis data
     if (settings_eval$remove_premodis){
-      mdf <- mdf %>% filter( year(date) >= 2000 )
+      mdf <- mdf %>% filter(lubridate::year(date) >= 2000 )
     }    
 
     ##------------------------------------------------------------
@@ -159,7 +159,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
                        threshold_NETRAD=0.5, 
                        verbose=FALSE
                        ) %>%
-                       mutate( year = year(date),
+                       mutate( year =lubridate::year(date),
                                sitename = x )) %>% 
         bind_rows()
       
@@ -174,7 +174,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
                         freq = "days" 
                       ) %>%
                         ## Remove outliers, i.e. when data is outside 1.5 times the inter-quartile range
-                        mutate( year = year(date),
+                        mutate( year =lubridate::year(date),
                                 sitename = x )) %>%
         bind_rows()
       
@@ -182,7 +182,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
     
     ## remove pre-modis data
     if (settings_eval$remove_premodis){
-      ddf <- ddf %>% filter( year(date) >= 2000 )
+      ddf <- ddf %>% filter(lubridate::year(date) >= 2000 )
     }    
 
     ##------------------------------------------------------------

@@ -1029,6 +1029,18 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
   sitename <- df_siteinfo$sitename[1]
   df_siteinfo <- slice(df_siteinfo, 1)
 
+  ## path of CSV file with gap-filled and interpolated data for this site
+  dirnam_asfaparinput <- paste0(settings_sims$path_input, "sitedata/fapar/", sitename)
+  if (!dir.exists(dirnam_asfaparinput)) system( paste0( "mkdir -p ", dirnam_asfaparinput ) )
+  if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
+  filnam_daily_csv <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
+  
+  if (file.exists(filnam_daily_csv) && !overwrite_csv && asfaparinput){
+    
+    ddf <- readr::read_csv(filnam_daily_csv)
+    
+  } else {
+    
   ## output directory
   dirnam_csv_outputdata <- settings_input[paste0("path_", stringr::str_replace(productnam ,"_gee", ""))] %>% unlist() %>% unname()
   # dirnam_csv_outputdata <- paste0(settings_sims$path_input, "/sitedata/fapar/", sitename)
@@ -1047,19 +1059,12 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
   ##--------------------------------------------------------------------
   ## Handle file names
   ##--------------------------------------------------------------------
-  if (asfaparinput){
-    dirnam_asfaparinput <- paste0(settings_sims$path_input, "sitedata/fapar/", sitename)
-    if (!dir.exists(dirnam_asfaparinput)) system( paste0( "mkdir -p ", dirnam_asfaparinput ) )
-  }
 
   ## This file is the link for _tseries and split scripts and should contain all the raw data, not gap-filled or interpolated!
   ## this file is written by 'interpolate_modis()'
   filnam_modis_raw_csv  <- paste0( savedir, sitename, "_", prod_suffix, "_gee_subset.csv" )
   filnam_modis_nice_csv <- paste0( dirnam_csv_outputdata, "/", varnam, "_", productnam, "_", sitename, "_subset.csv" )
   
-  ## These files are gap-filled and interpolated
-  if (asfaparinput) filnam_daily_csv <- paste0( dirnam_csv_outputdata, "/d", varnam, "_", productnam, "_", sitename, "_subset.csv" )
-
   if (!file.exists(filnam_modis_raw_csv)||overwrite_raw){
     ##--------------------------------------------------------------------
     ## Trigger download using the python function
@@ -1126,7 +1131,6 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
     
   }    
   
-    
   if (cont){
     
     if (!file.exists(filnam_modis_nice_csv)||overwrite_nice){

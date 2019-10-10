@@ -41,6 +41,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   ddf_obs <- ddf_obs %>% 
     dplyr::mutate_at( vars(one_of(targetvars)), ~make_na_premodis(., idxs) )
     
+  
   # ## "filtering" by minimum temperature
   # if (!is.na(settings_calib$filter_temp_min)){
   #   ddf_obs <- ddf_obs %>% 
@@ -155,7 +156,8 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     if (identical(names(settings_calib$par),"kphio")){
       ## For calibrating quantum yield efficiency only
       out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", param_init[1], 1.0, 0.0, -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
-      cost_rmse <- cost_chisquared_kphio
+      # cost_rmse <- cost_chisquared_kphio
+      cost_rmse <- cost_rmse_kphio
     
     } else if ( "kphio" %in% names(settings_calib$par) && "soilm_par_a" %in% names(settings_calib$par) && "soilm_par_b" %in% names(settings_calib$par) ){  
       ## Full stack calibration
@@ -347,7 +349,7 @@ cost_rmse_kphio <- function( par, inverse = FALSE ){
 
 ##------------------------------------------------------------
 ## Generic cost function of model-observation (mis-) match using
-## the chi-squared statistic (Keenan et al., 2012 GCB).
+## the chi-squared statistic ( ).
 ##------------------------------------------------------------
 cost_chisquared_kphio <- function( par, inverse = FALSE ){
   
@@ -361,7 +363,7 @@ cost_chisquared_kphio <- function( par, inverse = FALSE ){
   out <- bind_cols( obs, out )
   
   ## Calculate cost (chi-squared)
-  cost <- ((out$gpp_mod - out$gpp_obs )/(2 * out$gpp_unc))^2
+  cost <- ((out$gpp_mod - out$gpp_obs )/(out$gpp_unc))^2
   cost <- sum(cost, na.rm = TRUE)/sum(!is.na(cost))
   
   if (inverse) cost <- 1.0 / cost
@@ -555,6 +557,16 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
                        gpp_unc = case_when("NT" %in% datasource & !("DT" %in% datasource) ~ GPP_NT_VUT_SE,
                                            "DT" %in% datasource & !("NT" %in% datasource) ~ GPP_DT_VUT_SE )) %>% 
         dplyr::right_join( ddf, by = "date" )
+      
+      ## replace observations with NA if uncertainty is very small
+      targetvars_unc <- paste0(settings_calib$targetvars, "_unc")
+      replace_zero_with_na <- function(obs, unc){
+        idxs <- which( unc < 0.0001 )
+        obs[idxs] <- NA
+        return(obs)
+      }
+      ddf <- ddf %>% 
+        dplyr::mutate( gpp_obs = replace_zero_with_na(gpp_obs, gpp_unc) )
       
       
     } else {
