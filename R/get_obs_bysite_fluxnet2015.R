@@ -107,7 +107,7 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   threshold_GPP=0.0, threshold_LE=0.0, threshold_H=0.0, threshold_SWC=0.0, 
   threshold_WS=0.0, threshold_USTAR=0.0, threshold_T=0.0, threshold_NETRAD=0.0, return_qc=FALSE, verbose=TRUE ){
 
-  if (verbose) print(paste("...", sitename, "..."))
+  if (verbose) print(paste("Getting FLUXNET data for", sitename, "..."))
   
   ## Take only file for this site
   if (timescale=="d"){

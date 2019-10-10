@@ -155,7 +155,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     if (identical(names(settings_calib$par),"kphio")){
       ## For calibrating quantum yield efficiency only
       out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", param_init[1], 1.0, 0.0, -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
-      cost_rmse <- cost_rmse_kphio
+      cost_rmse <- cost_chisquared_kphio
     
     } else if ( "kphio" %in% names(settings_calib$par) && "soilm_par_a" %in% names(settings_calib$par) && "soilm_par_b" %in% names(settings_calib$par) ){  
       ## Full stack calibration
@@ -193,12 +193,12 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
                           upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist(),
                           control=list( 
                                         temperature=4000, 
-                                        max.call=5, # xxx debug settings_calib$maxit,
+                                        max.call=settings_calib$maxit,
                                         trace.mat=TRUE,
                                         threshold.stop=1e-4
                                         )
                         )
-      proc.time() - ptm
+      out_optim$time_optim <- proc.time() - ptm
       print(out_optim$par)
 
       filn <- paste0( settings_calib$dir_results, "/out_gensa_", settings_calib$name, ".Rdata")
@@ -345,51 +345,14 @@ cost_rmse_kphio <- function( par, inverse = FALSE ){
   return(cost)
 }
 
-
 ##------------------------------------------------------------
-## Test plot with the same SOFUN call to check if it worked
+## Generic cost function of model-observation (mis-) match using
+## the chi-squared statistic (Keenan et al., 2012 GCB).
 ##------------------------------------------------------------
-plot_test_kphio <- function( par, subtitle = "", label = "", makepdf = FALSE, ... ){
-
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
-
-  ## read output from calibration run
-  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
+cost_chisquared_kphio <- function( par, inverse = FALSE ){
   
-  ## Combine obs and mod by columns
-  out <- bind_cols( obs, out )
-
-  ## Plot observed vs. modelled
-  dir_figs <- "./fig/"
-  if (makepdf && !dir.exists(dir_figs)) system( paste0( "mkdir -p ", dir_figs))
-  if (makepdf) filn <- paste0( dir_figs, "/modobs_calibtest_", label, ".pdf" )
-  if (makepdf) print( paste( "Plotting to file:", filn ) )
-  if (makepdf) pdf( filn )
-  modobs_xdf <- with( out, 
-    analyse_modobs( 
-      gpp_mod, 
-      gpp_obs, 
-      heat=TRUE, 
-      ylab = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), 
-      xlab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ),
-      plot.title = label,
-      ...
-      ) )
-  if (makepdf) dev.off()
-
-}
-
-
-##------------------------------------------------------------
-## Generic cost function of model-observation (mis-)match using
-## root mean square error.
-##------------------------------------------------------------
-cost_rmse_temp_ramp <- function( par, inverse = FALSE ){
-
-  ## For calibration temperature ramp parameters
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], par[2], 1.0, 0.0 ), " | ./run", model ), intern = TRUE )
+  ## Full stack calibration
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", par[1], 1.0, 0.0, -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
   
   ## read output from calibration run
   out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
@@ -397,61 +360,12 @@ cost_rmse_temp_ramp <- function( par, inverse = FALSE ){
   ## Combine obs and mod by columns
   out <- bind_cols( obs, out )
   
-  ## Calculate cost (RMSE)
-  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
+  ## Calculate cost (chi-squared)
+  cost <- ((out$gpp_mod - out$gpp_obs )/(2 * out$gpp_unc))^2
+  cost <- sum(cost, na.rm = TRUE)/sum(!is.na(cost))
   
   if (inverse) cost <- 1.0 / cost
-
-  return(cost)
-}
-
-
-##------------------------------------------------------------
-## Generic cost function of model-observation (mis-)match using
-## root mean square error.
-##------------------------------------------------------------
-cost_rmse_soilmstress <- function( par, inverse = FALSE ){
-
-  ## execute model for this parameter set  
-  ## For calibrating soil moisture stress parameters
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], -9999, par[2], par[3] ), " | ./run", model ), intern = TRUE )
-
-  ## read output from calibration run
-  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
   
-  ## Combine obs and mod by columns
-  out <- bind_cols( obs, out )
-  
-  ## Calculate cost (RMSE)
-  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
-  
-  if (inverse) cost <- 1.0 / cost
-
-  return(cost)
-}
-
-
-##------------------------------------------------------------
-## Generic cost function of model-observation (mis-)match using
-## root mean square error.
-##------------------------------------------------------------
-cost_rmse_soilmstress_TEST <- function( par, inverse = FALSE ){
-
-  ## execute model for this parameter set  
-  ## For calibrating soil moisture stress parameters
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", 0.05, -9999, par[1], 0.0 ), " | ./run", model ), intern = TRUE )
-
-  ## read output from calibration run
-  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
-  
-  ## Combine obs and mod by columns
-  out <- bind_cols( obs, out )
-  
-  ## Calculate cost (RMSE)
-  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
-  
-  if (inverse) cost <- 1.0 / cost
-
   return(cost)
 }
 
@@ -621,13 +535,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
       ## Get FLUXNET 2015 data
       ##------------------------------------------------------------
       ## Make sure data is available for this site
-      getvars <- c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC")
-      if ("NT" %in% datasource){
-        getvars <- c(getvars, "GPP_NT_VUT_SE")
-      }
-      if ("DT" %in% datasource){
-        getvars <- c(getvars, "GPP_DT_VUT_SE")
-      }
+      getvars <- c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC", "GPP_NT_VUT_SE", "GPP_DT_VUT_SE")
       
       error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
       
@@ -643,7 +551,9 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
         dplyr::mutate( gpp_obs = case_when("NT" %in% datasource & !("DT" %in% datasource) ~ GPP_NT_VUT_REF,
                                            "DT" %in% datasource & !("NT" %in% datasource) ~ GPP_DT_VUT_REF
                                            # "DT" %in% datasource &   "NT" %in% datasource  ~ (GPP_NT_VUT_REF+GPP_DT_VUT_REF)/2
-                                           ) ) %>% 
+                                           ),
+                       gpp_unc = case_when("NT" %in% datasource & !("DT" %in% datasource) ~ GPP_NT_VUT_SE,
+                                           "DT" %in% datasource & !("NT" %in% datasource) ~ GPP_DT_VUT_SE )) %>% 
         dplyr::right_join( ddf, by = "date" )
       
       

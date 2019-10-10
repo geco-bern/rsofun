@@ -12,6 +12,8 @@
 #' @param obs_eval (Optional) A named list of data frames containing observational data for each sites. 
 #' The names of list elements corresponds to site names. Defaults to \code{NA} 
 #' @param overwrite (Optional) A logical specifying whether temporary data stored in \code{./tmpdir} should be overwritten. Defaults to \code{TRUE}.
+#' @param doplot (Optional) A logical specifying whether plots should be saved. Defaults to \code{FALSE}.
+#' @param light (Optional) A logical specifying whether reduced data should saved. Defaults to \code{FALSE}.
 #'
 #' @return A list containing data frames of modelled and observed values aggregated to several temporal scales 
 #' (ddf for daily, xdf for X-daily, mdf for monthly, adf for annual), data frames of respective performance metrics,
@@ -20,7 +22,7 @@
 #'
 #' @examples out_eval <- eval_sofun( mod, settings_eval, settings_sims, obs_eval = NA, overwrite = TRUE, doplot = FALSE )
 #' 
-eval_sofun <- function(mod, settings_eval, settings_sims, obs_eval = NA, overwrite = TRUE, doplot = FALSE){
+eval_sofun <- function(mod, settings_eval, settings_sims, obs_eval = NA, overwrite = TRUE, doplot = FALSE, light = FALSE){
 
   ## expand to flat data frame by rows
   mod <- mod$daily %>% bind_rows(.id = "sitename")
