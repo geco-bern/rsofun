@@ -212,11 +212,14 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
       #-----------------------------------------------------------
       # Prepare climate input
       #-----------------------------------------------------------
-      if (overwrite_climate || return_data || overwrite_csv_climate){
-
-        ## First, get climate data from site-specific
-        if (verbose) print("Preparing climate input files...")
-        if (verbose) print("Reading from site-specific files...")
+      ## Second, get climate data from global files
+      dir <- paste0( settings_sims$path_input, "/sitedata/climate/" )
+      filnam_clim <- paste0( dir, "/clim_daily_lev2.Rdata" )
+      if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
+      
+      ## First, get climate data from site-specific
+      if (!file.exists(filnam_clim) || overwrite_csv_climate){
+        
         ddf_climate <- purrr::map(
           as.list(settings_sims$sitenames),
           ~get_input_sofun_climate_bysite( ., 
@@ -224,14 +227,12 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
                                            settings_sims, 
                                            overwrite_csv = overwrite_csv_climate,
                                            verbose = verbose 
-                                           )
           )
+        )
         names(ddf_climate) <- settings_sims$sitenames
         ddf_climate <- ddf_climate %>%
           bind_rows(.id = "sitename")
-
-        ## Second, get climate data from global files
-        if (verbose) print("Reading from global files...")
+        
         ddf_climte_globalfields <- get_input_sofun_climate_globalfields(
           dplyr::select(ddf_climate, sitename, date),
           settings_input,
@@ -239,15 +240,24 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
           overwrite = overwrite_climate,
           overwrite_csv = overwrite_csv_climate,
           verbose = FALSE
-          )
+        )
         ddf_climate <- ddf_climate %>%
           left_join(
             ddf_climte_globalfields,
             by = c("sitename", "date")
           )
+        
+        ## write to file
+        save(ddf_climate, file = filnam_clim)
+        
+      } else {
+        
+        load(filnam_clim)
+        
+      }
 
-        ## Then, prepare climate input data files for sofun
-        if (verbose) print("Writing climate forcing to files...")
+      ## Then, prepare climate input data files for sofun
+      if (overwrite_climate || overwrite_csv_climate){
         purrr::map(
           as.list(settings_sims$sitenames),
           ~prepare_input_sofun_climate_bysite(
@@ -258,7 +268,7 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
             overwrite=overwrite_climate,
             overwrite_csv=overwrite_csv_climate,
             verbose = verbose )
-          )
+        )
       }
 
       ##-----------------------------------------------------------
@@ -299,8 +309,9 @@ prepare_input_sofun <- function( settings_input, settings_sims, return_data=FALS
             end_date             = "2018-12-31", 
             settings_sims        = settings_sims, 
             settings_input       = settings_input,
-            overwrite_raw        = FALSE, 
-            overwrite_nice       = overwrite_csv_fapar,
+            overwrite_raw        = FALSE,
+            overwrite_nice       = FALSE,
+            overwrite_csv        = overwrite_csv_fapar,
             band_var             = settings_input$settings_gee$band_var, 
             band_qc              = settings_input$settings_gee$band_qc, 
             prod                 = settings_input$settings_gee$prod, 
@@ -701,30 +712,22 @@ get_input_sofun_climate_globalfields_cru_byvar <- function( varnam, settings_inp
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
 ##-----------------------------------------------------------
-prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, settings_sims, overwrite=FALSE, overwrite_csv=FALSE, verbose=FALSE ){
+prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, settings_sims, overwrite=FALSE, verbose=FALSE ){
 
   if (verbose) print(paste("Writing climate input files...", sitename ))
 
   ## path of CSV file with data for this site
   dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
-  csvfiln <- paste0( dir, "/clim_daily_", sitename, ".csv" )
+  csvfiln <- paste0( dir, "/clim_daily_lev2_", sitename, ".csv" )
 
-  if (file.exists(csvfiln) && !overwrite_csv){
-
-    ddf <- readr::read_csv( csvfiln )
-
-  } else {
-
-    ##----------------------------------------------------------------------
-    ## Write climate data to CSV files: 
-    ## <settings_sims$path_input>/sitedata/climate/<sitename>/clim_daily_<sitename>.csv 
-    ## (may be read by Python directly???)
-    ##----------------------------------------------------------------------
-    write_csv( ddf, path = csvfiln )
-
-  }
-
+  ##----------------------------------------------------------------------
+  ## Write climate data to CSV files: 
+  ## <settings_sims$path_input>/sitedata/climate/<sitename>/clim_daily_<sitename>.csv 
+  ## (may be read by Python directly???)
+  ##----------------------------------------------------------------------
+  write_csv( ddf, path = csvfiln )
+  
   # ## Add site name to dataframe (is merged by rows with ddf of other sites)
   # ddf <- ddf %>% dplyr::select( -(starts_with("year_dec")) ) %>% mutate( sitename = sitename )
 
@@ -833,7 +836,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, s
         # ## crude fix (was weird for AU-ASM)
         # if (nrow(sub)==364) sub <- dplyr::bind_rows(sub, sub[nrow(sub),])
         
-        if (nrow(sub)!=365) rlang::abort(paste0("Number of days (rows) is not equal to 365 for year", yr))
+        if (nrow(sub)!=365) rlang::abort(paste0("Number of days (rows) is equal to ", nrow(sub), " for year ", yr))
 
         dirnam <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename, "/", as.character(yr), "/" )
         if (!dir.exists(dirnam)) system( paste0( "mkdir -p ", dirnam ) )
@@ -1019,207 +1022,193 @@ prepare_input_sofun_fapar_bysite <- function( sitename, settings_input, settings
 ## modis dates (df), and one interpolated to all days (ddf).
 ##-----------------------------------------------------------
 prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
-  end_date, settings_sims, settings_input,
-  overwrite_raw, overwrite_nice,
-  band_var, band_qc, prod, prod_suffix, varnam, productnam, scale_factor, 
-  period, asfaparinput, do_plot_interpolated, python_path, gee_path){
+                                                  end_date, settings_sims, settings_input,
+                                                  overwrite_raw, overwrite_nice, overwrite_csv,
+                                                  band_var, band_qc, prod, prod_suffix, varnam, productnam, scale_factor, 
+                                                  period, asfaparinput, do_plot_interpolated, python_path, gee_path){
   
-
-  ## get
+  ##---------------------------------------------
+  ## Define names
+  ##---------------------------------------------
   sitename <- df_siteinfo$sitename[1]
   df_siteinfo <- slice(df_siteinfo, 1)
-
-  ## path of CSV file with gap-filled and interpolated data for this site
-  dirnam_asfaparinput <- paste0(settings_sims$path_input, "sitedata/fapar/", sitename)
-  if (!dir.exists(dirnam_asfaparinput)) system( paste0( "mkdir -p ", dirnam_asfaparinput ) )
-  if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
-  filnam_daily_csv <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
   
-  if (file.exists(filnam_daily_csv) && !overwrite_csv && asfaparinput){
-    
-    ddf <- readr::read_csv(filnam_daily_csv)
-    
-  } else {
-    
-  ## output directory
-  dirnam_csv_outputdata <- settings_input[paste0("path_", stringr::str_replace(productnam ,"_gee", ""))] %>% unlist() %>% unname()
-  # dirnam_csv_outputdata <- paste0(settings_sims$path_input, "/sitedata/fapar/", sitename)
-  if (!dir.exists(dirnam_csv_outputdata)) system( paste0( "mkdir -p ", dirnam_csv_outputdata ) )
-
-  ## Find file from which (crude) data is read
-  savedir <- paste0( dirnam_csv_outputdata, "raw/" )
-  if (!dir.exists(savedir)) system( paste( "mkdir -p ", savedir ) )
-
-  # sitedir <- paste0( dirnam_csv_outputdata, "/", sitename, "/raw/")
-  # if (!dir.exists(sitedir)) system(paste0("mkdir -p ", sitedir))
+  dirnam_daily_csv <- paste0(settings_sims$path_input, "sitedata/fapar/", sitename)
+  dirnam_nice_csv <- settings_input[paste0("path_", stringr::str_replace(productnam ,"_gee", ""))] %>% unlist() %>% unname()
+  dirnam_raw_csv <- paste0( dirnam_nice_csv, "/raw/" )
+  
+  if (!dir.exists(dirnam_daily_csv)) system( paste( "mkdir -p ", dirnam_daily_csv ) )
+  if (!dir.exists(dirnam_nice_csv)) system( paste( "mkdir -p ", dirnam_nice_csv ) )
+  if (!dir.exists(dirnam_raw_csv)) system( paste( "mkdir -p ", dirnam_raw_csv ) )
+  
+  filnam_daily_csv <- paste0( dirnam_daily_csv, "/fapar_daily_", sitename, ".csv" )
+  filnam_nice_csv <- paste0( dirnam_nice_csv, "/", varnam, "_", productnam, "_", sitename, "_subset.csv" )
+  filnam_raw_csv <- paste0( dirnam_raw_csv, sitename, "_", prod_suffix, "_gee_subset.csv" )
+  
+  out <- list()
+  cont <- TRUE
   
   ## Save error code (0: no error, 1: error: file downloaded bu all data is NA, 2: file not downloaded)
   df_error <- tibble()
-
-  ##--------------------------------------------------------------------
-  ## Handle file names
-  ##--------------------------------------------------------------------
-
-  ## This file is the link for _tseries and split scripts and should contain all the raw data, not gap-filled or interpolated!
-  ## this file is written by 'interpolate_modis()'
-  filnam_modis_raw_csv  <- paste0( savedir, sitename, "_", prod_suffix, "_gee_subset.csv" )
-  filnam_modis_nice_csv <- paste0( dirnam_csv_outputdata, "/", varnam, "_", productnam, "_", sitename, "_subset.csv" )
   
-  if (!file.exists(filnam_modis_raw_csv)||overwrite_raw){
-    ##--------------------------------------------------------------------
-    ## Trigger download using the python function
-    ##--------------------------------------------------------------------  
-    path_info <- paste0(savedir, "info_lonlat.csv")
-    write.csv( dplyr::select( df_siteinfo, site = sitename, latitude = lat, longitude = lon), file=path_info, row.names=FALSE )
-
-    start = Sys.time()
-    system(sprintf("%s %s/gee_subset.py -p %s -b %s %s -s %s -e %s -f %s -d %s -sc 30",
-                   python_path,
-                   gee_path,
-                   prod,
-                   band_var,
-                   band_qc,
-                   start_date,
-                   end_date,
-                   path_info,
-                   savedir
-                   ), wait = TRUE)
+  if (file.exists(filnam_daily_csv) && !overwrite_csv){
+    ##---------------------------------------------
+    ## Read daily interpolated and gapfilled
+    ##---------------------------------------------
+    out$ddf <- readr::read_csv( filnam_daily_csv, col_types = cols() )
     
-    end = Sys.time()
-    proc_time = as.vector(end - start)
-    print( paste( "... completed in", format( proc_time, digits = 3), "sec" ) )
-    print( paste( "raw data file written:", filnam_modis_raw_csv ) )
-
   } else {
-
-    print( paste( "file exists already:", filnam_modis_raw_csv ) )
-
-  }
-
-  ##--------------------------------------------------------------------
-  ## Read raw data and create a data frame holding the complete time series
-  ## Note: 'date', 'doy', 'dom', etc. refer to the date, centered within 
-  ## each N-day period. 'date_start' refers to the beginning of each 
-  ## N-day period.
-  ##--------------------------------------------------------------------
-  if (file.exists(filnam_modis_raw_csv)){
-  
-    df <- readr::read_csv( filnam_modis_raw_csv, col_types = cols() ) %>%
+    
+    if (file.exists(filnam_nice_csv) && !overwrite_nice){
+      ##---------------------------------------------
+      ## Read nicely formatted 8-daily      
+      ##---------------------------------------------
+      out$df  <- readr::read_csv( filnam_nice_csv, col_types = cols() )
+      out$ddf <- readr::read_csv( filnam_daily_csv, col_types = cols() )
+      
+    } else {
+      
+      if (file.exists(filnam_raw_csv) && ! overwrite_raw){
+        ## Raw downloaded file will be read separately
+        # print( paste( "File exists already:", filnam_modis_raw_csv ) )
+        
+      } else {
+        ##---------------------------------------------
+        ## Download via Google Earth Engine using the python function
+        ##---------------------------------------------
+        path_info <- paste0(filnam_raw_csv, "info_lonlat.csv")
+        write.csv( dplyr::select( df_siteinfo, site = sitename, latitude = lat, longitude = lon), file=path_info, row.names=FALSE )
+        
+        start = Sys.time()
+        system(sprintf("%s %s/gee_subset.py -p %s -b %s %s -s %s -e %s -f %s -d %s -sc 30",
+                       python_path,
+                       gee_path,
+                       prod,
+                       band_var,
+                       band_qc,
+                       start_date,
+                       end_date,
+                       path_info,
+                       filnam_raw_csv
+        ), wait = TRUE)
+        
+        end = Sys.time()
+        proc_time = as.vector(end - start)
+        print( paste( "... completed in", format( proc_time, digits = 3), "sec" ) )
+        
+        ## Raw downloaded data is saved to file
+        print( paste( "raw data file written:", filnam_raw_csv ) )
+        
+      }
+      
+      ##--------------------------------------------------------------------
+      ## Read raw data and create a data frame holding the complete time series
+      ## Note: 'date', 'doy', 'dom', etc. refer to the date, centered within 
+      ## each N-day period. 'date_start' refers to the beginning of each 
+      ## N-day period.
+      ##--------------------------------------------------------------------
+      if (file.exists(filnam_raw_csv)){
+        
+        df <- readr::read_csv( filnam_raw_csv, col_types = cols() ) %>%
           dplyr::mutate(  date_start = ymd(date) ) %>%
           dplyr::mutate(  date = date_start + days( as.integer(period/2) ),
                           doy = yday(date),
                           year = year(date)
-                        ) %>% 
+          ) %>% 
           dplyr::mutate( ndayyear = ifelse( leap_year( date ), 366, 365 ) ) %>%
           dplyr::mutate( year_dec = year(date) + (yday(date)-1) / ndayyear ) %>% 
           dplyr::select( -longitude, -latitude, -product, -ndayyear )
-                 
-    ## Apply scale factor, specific for each product
-    if (any(!is.na(df[[band_var]]))){
-      df[[band_var]] <- df[[band_var]] * scale_factor
-      cont <- TRUE
-    } else {
-      cont <- FALSE
-    }
-    
-  } else {
-      
-    print( paste( "WARNING: RAW DATA FILE NOT FOUND FOR SITE:", sitename ) )
-    df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=2 ) ) 
-    out <- NA
-    cont <- FALSE
-    
-  }    
-  
-  if (cont){
-    
-    if (!file.exists(filnam_modis_nice_csv)||overwrite_nice){
-      ##--------------------------------------------------------------------
-      ## Clean (gapfill and interpolate) full time series data to 8-days, daily, and monthly
-      ##--------------------------------------------------------------------
-      print("gapfilling and interpolating to daily ...")
-      out <- gapfill_modis(
-        df,
-        sitename, 
-        year_start = df_siteinfo$year_start,
-        year_end   = df_siteinfo$year_end,
-        qc_name = band_qc, 
-        prod = prod_suffix,
-        do_interpolate = asfaparinput,
-        do_plot_interpolated = do_plot_interpolated,
-        dir = settings_sims$path_input
-      )
-      
-      ##--------------------------------------------------------------------
-      ## Save data frames as CSV files
-      ##--------------------------------------------------------------------
-      readr::write_csv( out$df,  path=filnam_modis_nice_csv )
-      if (asfaparinput) readr::write_csv( out$ddf, path=filnam_daily_csv )
-      
-    } else {
-      
-      ##--------------------------------------------------------------------
-      ## Read CSV file directly for this site
-      ##--------------------------------------------------------------------
-      print( "monthly data already available in CSV file ...")
-      out <- list()
-      out$df  <- readr::read_csv( filnam_modis_nice_csv, col_types = cols() )
-      if (asfaparinput) out$ddf <- readr::read_csv( filnam_daily_csv, col_types = cols() )
-      
-    }
-    
-    ##--------------------------------------------------------------------
-    ## Write to Fortran-formatted output for each variable and year separately
-    ## For days (and years) where no data is available, take the mean by DOY
-    ##--------------------------------------------------------------------
-    if (asfaparinput){
-      
-      ## get mean seasonal cycle. This is relevant for years where no MODIS data is available.
-      df_meandoy <- out$ddf %>% group_by( doy ) %>% summarise( meandoy = mean( modisvar_interpol , na.rm=TRUE ) ) 
-      
-      print( "writing formatted input files ..." )
-      
-      ## in separate formatted file 
-      for (yr in df_siteinfo$year_start:df_siteinfo$year_end){
         
-        ## subset only this year
-        ddf_sub <- dplyr::filter( out$ddf, year(date)==yr ) 
-        
-        ## fill gaps with mean seasonal cycle (for pre-MODIS years, entire year is mean seasonal cycle)
-        if (nrow(ddf_sub)==0){
-          ddf_sub <- init_dates_dataframe( yr, yr ) %>% 
-            mutate( modisvar_interpol = NA ) %>% 
-            dplyr::filter( !( month(date)==2 & mday(date)==29 ) ) %>% 
-            mutate( doy=yday(date) )
+        ## Apply scale factor, specific for each product
+        if (any(!is.na(df[[band_var]]))){
+          df[[band_var]] <- df[[band_var]] * scale_factor
+        } else {
+          cont <- FALSE
         }
-        ddf_sub <- ddf_sub %>% left_join( df_meandoy, by="doy" )
         
-        # ## fill gaps with mean by DOY/MOY
-        # ddf_sub$modisvar_interpol[ which( is.na( ddf_sub$modisvar_interpol ) ) ] <- ddf_sub$meandoy[ which( is.na( ddf_sub$modisvar_interpol ) ) ]
+      } else {
         
-        ## define directory name for SOFUN input
-        dirnam <- paste0( dirnam_asfaparinput, "/", as.character(yr), "/" )
-        system( paste( "mkdir -p", dirnam ) )
+        print( paste( "WARNING: RAW DATA FILE NOT FOUND FOR SITE:", sitename ) )
+        df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=2 ) ) 
+        out <- NA
+        cont <- FALSE
         
-        ## daily
-        filnam <- paste0( dirnam, "dfapar_", sitename, "_", yr, ".txt" )
-        write_sofunformatted( filnam, ddf_sub$modisvar_interpol )
+      }      
+      
+      if (cont){
+        ##---------------------------------------------
+        ## Clean (gapfill and interpolate) full time series data to 8-days, daily, and monthly
+        ##--------------------------------------------------------------------
+        print("gapfilling and interpolating to daily ...")
+        out <- gapfill_modis(
+          df,
+          sitename, 
+          year_start = df_siteinfo$year_start,
+          year_end   = df_siteinfo$year_end,
+          qc_name = band_qc, 
+          prod = prod_suffix,
+          do_interpolate = asfaparinput,
+          do_plot_interpolated = do_plot_interpolated,
+          dir = settings_sims$path_input
+        )
+        
+        ##---------------------------------------------
+        ## save nicely formatted 8-daily to file
+        ##---------------------------------------------
+        readr::write_csv( out$df,  path=filnam_nice_csv )
+        readr::write_csv( out$ddf, path=filnam_daily_csv )
         
       }
+      
+      print( paste( "WARNING: NO DATA AVAILABLE FOR SITE:", sitename ) )
+      df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=1 ) )
+      out <- NA
+      
+    }
+  }
+  
+  if (cont && asfaparinput){
+    ##---------------------------------------------
+    ## Write SOFUN-formatted input
+    ##---------------------------------------------
+    ## get mean seasonal cycle. This is relevant for years where no MODIS data is available.
+    df_meandoy <- out$ddf %>% 
+      group_by( doy ) %>% 
+      summarise( meandoy = mean( modisvar_interpol , na.rm=TRUE ) ) 
+    
+    ## in separate formatted file 
+    for (yr in df_siteinfo$year_start:df_siteinfo$year_end){
+      
+      ## subset only this year
+      ddf_sub <- dplyr::filter( out$ddf, year(date)==yr ) 
+      
+      ## fill gaps with mean seasonal cycle (for pre-MODIS years, entire year is mean seasonal cycle)
+      if (nrow(ddf_sub)==0){
+        ddf_sub <- init_dates_dataframe( yr, yr ) %>% 
+          mutate( modisvar_interpol = NA ) %>% 
+          dplyr::filter( !( month(date)==2 & mday(date)==29 ) ) %>% 
+          mutate( doy=yday(date) )
+      }
+      ddf_sub <- ddf_sub %>% left_join( df_meandoy, by="doy" )
+      
+      ## fill gaps with mean by DOY/MOY
+      ddf_sub$modisvar_interpol[ which( is.na( ddf_sub$modisvar_interpol ) ) ] <- ddf_sub$meandoy[ which( is.na( ddf_sub$modisvar_interpol ) ) ]
+      
+      ## define directory name for SOFUN input
+      dirnam <- paste0( dirnam_daily_csv, "/", as.character(yr), "/" )
+      system( paste( "mkdir -p", dirnam ) )
+      
+      ## daily
+      filnam <- paste0( dirnam, "dfapar_", sitename, "_", yr, ".txt" )
+      write_sofunformatted( filnam, ddf_sub$modisvar_interpol )
       
     }
     
     df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=0 ) ) 
     
-  } else {
-    
-    print( paste( "WARNING: NO DATA AVAILABLE FOR SITE:", sitename ) )
-    df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=1 ) )
-    out <- NA
-    
-  } 
+  }
   
-  return(out)
+  return(out) 
 }
 
 

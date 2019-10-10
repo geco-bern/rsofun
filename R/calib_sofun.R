@@ -558,16 +558,16 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
                                            "DT" %in% datasource & !("NT" %in% datasource) ~ GPP_DT_VUT_SE )) %>% 
         dplyr::right_join( ddf, by = "date" )
       
-      ## replace observations with NA if uncertainty is very small
-      targetvars_unc <- paste0(settings_calib$targetvars, "_unc")
-      replace_zero_with_na <- function(obs, unc){
-        idxs <- which( unc < 0.0001 )
-        obs[idxs] <- NA
-        return(obs)
-      }
-      ddf <- ddf %>% 
-        dplyr::mutate( gpp_obs = replace_zero_with_na(gpp_obs, gpp_unc) )
-      
+      # ## replace observations with NA if uncertainty is very small -- only necessary when using chi-squared calibration
+      # targetvars_unc <- paste0(settings_calib$targetvars, "_unc")
+      # replace_zero_with_na <- function(obs, unc){
+      #   idxs <- which( unc < 0.0001 )
+      #   obs[idxs] <- NA
+      #   return(obs)
+      # }
+      # ddf <- ddf %>% 
+      #   dplyr::mutate( gpp_obs = replace_zero_with_na(gpp_obs, gpp_unc) )
+      # 
       
     } else {
       

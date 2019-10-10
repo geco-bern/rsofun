@@ -6,13 +6,14 @@
 #' @param settings_eval A list specifying evaluation settings (see vignette eval_sofun.pdf for more information and examples)
 #' @param settings_sims A named list containing the simulation settings (see vignette_rsofun.pdf for more information and examples)
 #' @param overwrite (Optional) A logical specifying whether temporary data stored in \code{./tmpdir} should be overwritten. Defaults to \code{TRUE}.
+#' @param light (Optional) A logical specifying whether reduced data should saved. Defaults to \code{FALSE}.
 #'
 #' @return A list containing data frames of observed values aggregated to several temporal scales (ddf for daily, xdf for X-daily, mdf for monthly, adf for annual).
 #' @export
 #'
 #' @examples obs <- get_obs_eval( settings_eval, settings_sims, overwrite = TRUE )
 #' 
-get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
+get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light = FALSE){
 
   ## Interpret benchmarking data specification
   datasource <- settings_eval$benchmark %>% 
@@ -26,13 +27,20 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
 	if ("gpp" %in% names(settings_eval$benchmark)){
 		## Get observational GPP data
 	  getvars <- c(getvars, "GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC")
+	  settings_eval$benchmarkvar$gpp <- ifelse(settings_eval$benchmark$gpp == "fluxnet2015_NT",
+	                                           "GPP_NT_VUT_REF",
+	                                           ifelse(settings_eval$benchmark$gpp == "fluxnet2015_DT",
+	                                                  "GPP_DT_VUT_REF",
+	                                                  NA))
 	}
   if ("netrad" %in% names(settings_eval$benchmark)){
     getvars <- c(getvars, "NETRAD")
+    settings_eval$benchmarkvar$netrad <- "NETRAD"
   }
   if ("aet" %in% names(settings_eval$benchmark)){
     getvars <- c(getvars, "LE_F_MDS")
     evalvars[which(evalvars=="aet")] <- "latenth"
+    settings_eval$benchmarkvar$latenth <- "LE_F_MDS"
   }
 	  
   if ("fluxnet2015" %in% datasource){
@@ -44,27 +52,34 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
       print("getting annual FLUXNET-2015_Tier1 data...")
       print(settings_eval$path_fluxnet2015_y)
       adf <- lapply( as.list(settings_eval$sitenames),
-                     function(x) get_obs_bysite_fluxnet2015( 
-                       sitename = x, 
-                       path_fluxnet2015 = settings_eval$path_fluxnet2015_y, 
+                     function(x) get_obs_bysite_fluxnet2015(
+                       sitename = x,
+                       path_fluxnet2015 = settings_eval$path_fluxnet2015_y,
                        path_fluxnet2015_hh = NULL,
-                       timescale = "y", 
-                       getvars = getvars, 
-                       getswc=TRUE,                              
-                       threshold_GPP=0.5, 
-                       threshold_LE=0.5, 
-                       threshold_H=0.5, 
-                       threshold_SWC=0.5,                               
-                       threshold_WS=0.5, 
-                       threshold_USTAR=0.5, 
-                       threshold_T=0.5, 
-                       threshold_NETRAD=0.5, 
+                       timescale = "y",
+                       getvars = getvars,
+                       getswc=!light,
+                       threshold_GPP=0.5,
+                       threshold_LE=0.5,
+                       threshold_H=0.5,
+                       threshold_SWC=0.5,
+                       threshold_WS=0.5,
+                       threshold_USTAR=0.5,
+                       threshold_T=0.5,
+                       threshold_NETRAD=0.5,
                        verbose=FALSE
                        ) %>%
                        mutate( year =lubridate::year(date),
-                               sitename = x )) %>% 
+                               sitename = x )) %>%
         bind_rows()
-      
+
+      ## change variable names
+      if ("gpp" %in% names(settings_eval$benchmark)){
+        adf <- adf %>%
+          change_names("gpp", settings_eval$benchmarkvar)
+      }
+
+
     } else {
 
       rlang::warn("settings_eval$path_fluxnet2015_y is empty")
@@ -73,20 +88,20 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
                         year(settings_sims$date_start[[x]]),
                         year(settings_sims$date_end[[x]]),
                         noleap = TRUE,
-                        freq = "years" 
+                        freq = "years"
                       ) %>%
                         ## Remove outliers, i.e. when data is outside 1.5 times the inter-quartile range
                         mutate( year =lubridate::year(date),
                                 sitename = x )) %>%
         bind_rows()
-      
+
     }
-    
+
     ## remove pre-modis data
     if (settings_eval$remove_premodis){
       adf <- adf %>% filter( lubridate::year(date) >= 2000 )
     }
-    
+
     ##------------------------------------------------------------
     ## Read monthly observational data from FLUXNET 2015 files (from monthly files!).
     ##------------------------------------------------------------
@@ -94,27 +109,33 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
     if (settings_eval$path_fluxnet2015_m!=""){
       print("getting monthly FLUXNET-2015_Tier1 data...")
       mdf <- lapply( as.list(settings_eval$sitenames),
-                     function(x) get_obs_bysite_fluxnet2015( 
-                       sitename = x, 
-                       path_fluxnet2015 = settings_eval$path_fluxnet2015_m, 
+                     function(x) get_obs_bysite_fluxnet2015(
+                       sitename = x,
+                       path_fluxnet2015 = settings_eval$path_fluxnet2015_m,
                        path_fluxnet2015_hh = NULL,
-                       timescale = "m", 
-                       getvars = getvars, 
-                       getswc=TRUE,                              
-                       threshold_GPP=0.5, 
-                       threshold_LE=0.5, 
-                       threshold_H=0.5, 
-                       threshold_SWC=0.5,                               
-                       threshold_WS=0.5, 
-                       threshold_USTAR=0.5, 
-                       threshold_T=0.5, 
-                       threshold_NETRAD=0.5, 
+                       timescale = "m",
+                       getvars = getvars,
+                       getswc=!light,
+                       threshold_GPP=0.5,
+                       threshold_LE=0.5,
+                       threshold_H=0.5,
+                       threshold_SWC=0.5,
+                       threshold_WS=0.5,
+                       threshold_USTAR=0.5,
+                       threshold_T=0.5,
+                       threshold_NETRAD=0.5,
                        verbose=FALSE
                        ) %>%
                        mutate( year =lubridate::year(date),
-                               sitename = x )) %>% 
+                               sitename = x )) %>%
         bind_rows()
-      
+
+      ## change variable names
+      if ("gpp" %in% names(settings_eval$benchmark)){
+        mdf <- mdf %>%
+          change_names("gpp", settings_eval$benchmarkvar)
+      }
+
     } else {
 
       rlang::warn("settings_eval$path_fluxnet2015_m is empty")
@@ -123,18 +144,18 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
                         year(settings_sims$date_start[[x]]),
                         year(settings_sims$date_end[[x]]),
                         noleap = TRUE,
-                        freq = "months" 
+                        freq = "months"
                       ) %>%
                         ## Remove outliers, i.e. when data is outside 1.5 times the inter-quartile range
                         mutate( year =lubridate::year(date),
                                 sitename = x )) %>%
         bind_rows()
     }
-    
+
     ## remove pre-modis data
     if (settings_eval$remove_premodis){
       mdf <- mdf %>% filter(lubridate::year(date) >= 2000 )
-    }    
+    }
 
     ##------------------------------------------------------------
     ## Read daily observational data from FLUXNET 2015 files (from daily files!).
@@ -148,7 +169,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
                        path_fluxnet2015_hh = NULL,
                        timescale = "d", 
                        getvars = getvars, 
-                       getswc=TRUE,                              
+                       getswc=!light,                              
                        threshold_GPP=0.5, 
                        threshold_LE=0.5, 
                        threshold_H=0.5, 
@@ -157,11 +178,17 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
                        threshold_USTAR=0.5, 
                        threshold_T=0.5, 
                        threshold_NETRAD=0.5, 
-                       verbose=FALSE
+                       verbose=TRUE
                        ) %>%
                        mutate( year =lubridate::year(date),
                                sitename = x )) %>% 
         bind_rows()
+
+        ## change variable names
+        if ("gpp" %in% names(settings_eval$benchmark)){
+          ddf <- ddf %>% 
+            change_names("gpp", settings_eval$benchmarkvar)
+        }
       
     } else {
       
@@ -247,10 +274,12 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE ){
     ##------------------------------------------------------------
     ## Add forcing data to daily data frame (for evaluation of functional relationships)
     ##------------------------------------------------------------
-    print("adding forcing data...")
-    ddf <- lapply( as.list(settings_eval$sitenames), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
-      bind_rows() %>%
-      right_join( ddf, by = c("sitename", "date") )
+    if (!light){
+      print("adding forcing data...")
+      ddf <- lapply( as.list(settings_eval$sitenames), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
+        bind_rows() %>%
+        right_join( ddf, by = c("sitename", "date") )
+    }
 
     ##------------------------------------------------------------
     ## Aggregate to multi-day periods
@@ -295,7 +324,8 @@ get_forcing_from_csv <- function( sitename, settings_sims ){
   csvfiln <- paste0( dir, "/fapar_daily_", sitename, ".csv" )
   if (file.exists(csvfiln)){
     ddf <- readr::read_csv( csvfiln ) %>%
-      mutate( fapar = as.numeric(fapar)) %>%
+      mutate( fapar = as.numeric(modisvar_interpol)) %>%
+      dplyr::select(date, fapar) %>% 
       right_join( ddf, by = "date" )
   } else {
     ddf <- tibble(date=ymd("2001-01-01"))
@@ -303,4 +333,18 @@ get_forcing_from_csv <- function( sitename, settings_sims ){
   
   return(ddf)
   
+}
+
+change_names <- function(df, varnam, benchmarkvar){
+  
+  df[[varnam]] <- df[[benchmarkvar[[varnam]]]]
+  df <- df %>% 
+    dplyr::select(-matches(benchmarkvar[[varnam]]))
+  
+  if (varnam=="gpp"){
+    df <- df %>% 
+      dplyr::select(-starts_with("GPP_"))
+  }
+  
+  return(df)      
 }
