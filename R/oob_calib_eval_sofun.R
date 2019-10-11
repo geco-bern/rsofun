@@ -12,7 +12,7 @@
 #' @param ddf_obs_calib A data frame containing observational data used for model calibration. Created by function \code{get_obs_calib()}
 #' @param ddf_obs_eval A data frame containing observational data used for model evaluation Created by function \code{get_obs_eval()}
 #'
-#' @return A nested list of objects returned by eval_sofun()
+#' @return A nested list of objects returned by \code{\link{eval_sofun}}.
 #' @export
 #'
 #' @examples xxx
@@ -32,6 +32,23 @@ oob_calib_eval_sofun <- function( setup, settings_calib, settings_eval, settings
                                  ddf_obs_eval = ddf_obs_eval
                                  )
     )
+  names(out_oob) <- settings_sims$sitenames
+  
+  ## add evaluation result of all predicted data pooled
+  extract_ddf_bysite <- function(site, out_oob){
+    ddf <- out_oob[[site]]$gpp$fluxnet2015$data$ddf %>% 
+      dplyr::select(date, gpp = mod)
+    return(ddf)
+  }
+  mod <- list()
+  mod$daily <- purrr::map(
+    as.list(settings_sims$sitenames),
+    ~extract_ddf_bysite(., out_oob)
+    )
+  names(mod$daily) <- settings_sims$sitenames
+  
+  out_oob$AALL <- eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_eval, overwrite = TRUE, light = TRUE )
+  
   return(out_oob)
 }
 
@@ -82,7 +99,8 @@ oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, setting
   ##------------------------------------------------
   ## Update parameters and run at evaluation site
   ##------------------------------------------------
-  params_opt <- readr::read_csv( paste0("calib_results/params_opt_leftout_", evalsite, ".csv") )
+  filn <- paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name, ".csv")
+  params_opt <- readr::read_csv( filn )
   nothing <- update_params( params_opt, settings_sims$dir_sofun )
   
   settings_sims$sitenames <- evalsite
