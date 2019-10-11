@@ -569,6 +569,9 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
       #   dplyr::mutate( gpp_obs = replace_zero_with_na(gpp_obs, gpp_unc) )
       # 
       
+      test <- sum(!is.na(ddf$gpp_obs))
+      if (test<3) rlang::abort(paste0("Too hard filtering for site ", sitename))
+
     } else {
       
       ddf <- ddf %>% dplyr::mutate( gpp_obs = NA )

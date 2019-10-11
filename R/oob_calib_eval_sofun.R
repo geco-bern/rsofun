@@ -1,0 +1,104 @@
+#' Conducts an out-of-bag calibration
+#'
+#' Wraps around calib_sofun() to calibrate out-of-bag (with one left-out site) and returns the evaluation result 
+#' done for the left-out site.
+#' 
+#' @param setup A list containging the model settings. See vignette_rsofun.pdf for more information and an example.
+#' @param settings_calib A list containing model calibration settings. See vignette_rsofun.pdf for more information and examples.
+#' @param settings_eval A list specifying evaluation settings 
+#' (see vignette eval_sofun.pdf for more information and examples)
+#' @param settings_sims A list containing model simulation settings from \code{\link{prepare_setup_sofun}}.  See vignette_rsofun.pdf for more information and examples.
+#' @param settings_input A list containing model input settings. See vignette_rsofun.pdf for more information and examples.
+#' @param ddf_obs_calib A data frame containing observational data used for model calibration. Created by function \code{get_obs_calib()}
+#' @param ddf_obs_eval A data frame containing observational data used for model evaluation Created by function \code{get_obs_eval()}
+#'
+#' @return A nested list of objects returned by eval_sofun()
+#' @export
+#'
+#' @examples xxx
+#' 
+oob_calib_eval_sofun <- function( setup, settings_calib, settings_eval, settings_sims, settings_input, ddf_obs_calib, ddf_obs_eval ){
+  
+  ## Get list of results from out-of-bag calibration 
+  out_oob <- purrr::map(
+    as.list(settings_sims$sitenames),
+    ~oob_calib_eval_sofun_bysite(., 
+                                 setup, 
+                                 settings_calib, 
+                                 settings_eval, 
+                                 settings_sims, 
+                                 settings_input, 
+                                 ddf_obs_calib = ddf_obs_calib, 
+                                 ddf_obs_eval = ddf_obs_eval
+                                 )
+    )
+  return(out_oob)
+}
+
+oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, settings_eval, settings_sims, 
+                                        settings_input, ddf_obs_calib, ddf_obs_eval ){
+  
+  ##------------------------------------------------
+  ## Adjust calibration settings
+  ##------------------------------------------------
+  settings_calib$name = paste0("leftout_", evalsite)
+  settings_calib$sitenames = settings_calib$sitenames[-which(settings_calib$sitenames == evalsite)]
+  
+  ##------------------------------------------------
+  ## Get data for evaluation
+  ##------------------------------------------------
+  breaks_xdf <- ddf_obs_eval$breaks_xdf
+  extract_obs_evalsite <- function(df, evalsite){
+    df <- df %>% 
+      dplyr::filter(sitename == evalsite)
+    return(df)
+  }
+  ddf_obs_evalsite <- purrr::map(
+    ddf_obs_eval[c("ddf", "xdf", "mdf", "adf")],
+    ~extract_obs_evalsite(., evalsite)
+  )
+  ddf_obs_evalsite$breaks_xdf <- breaks_xdf
+  
+  ##------------------------------------------------
+  ## Get data for calibration
+  ##------------------------------------------------
+  ddf_obs_calibsites <- ddf_obs_calib %>% 
+    dplyr::filter(sitename != evalsite)
+  
+  ##------------------------------------------------
+  ## Calibrate on left-out sites
+  ##------------------------------------------------
+  set.seed(1982)
+  settings_calib <- calib_sofun(
+    setup          = setup,
+    settings_calib = settings_calib,
+    settings_sims  = settings_sims,
+    settings_input = settings_input,
+    ddf_obs        = ddf_obs_calibsites
+    )
+  
+  settings_eval$sitenames <- evalsite
+  
+  ##------------------------------------------------
+  ## Update parameters and run at evaluation site
+  ##------------------------------------------------
+  params_opt <- readr::read_csv( paste0("calib_results/params_opt_leftout_", evalsite, ".csv") )
+  nothing <- update_params( params_opt, settings_sims$dir_sofun )
+  
+  settings_sims$sitenames <- evalsite
+  mod <- runread_sofun( 
+    settings = settings_sims, 
+    setup = setup
+    )
+  
+  ##------------------------------------------------
+  ## Get evaluation results
+  ##------------------------------------------------
+  out_eval <- eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_evalsite, overwrite = TRUE, light = TRUE )
+
+  # out <- out_eval$gpp$fluxnet2015$data$xdf %>%
+  #   rbeni::analyse_modobs2(mod = "mod", obs = "obs", type = "heat")
+  # out$gg
+  
+  return(out_eval)
+}
