@@ -112,11 +112,17 @@ oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, setting
   ##------------------------------------------------
   ## Get evaluation results
   ##------------------------------------------------
-  out_eval <- eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_evalsite, overwrite = TRUE, light = TRUE )
-
+  out_eval <- try( eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_evalsite, overwrite = TRUE, light = TRUE ) )
+  if (class(res) == "try-error"){
+    out_eval <- NA
+  }
+  
   # out <- out_eval$gpp$fluxnet2015$data$xdf %>%
   #   rbeni::analyse_modobs2(mod = "mod", obs = "obs", type = "heat")
   # out$gg
+  
+  ## write to file
+  save(out_eval, file = paste0(settings_calib$dir_results, "/out_eval_leftout_", evalsite, ".Rdata"))
   
   return(out_eval)
 }
