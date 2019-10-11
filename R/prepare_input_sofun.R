@@ -712,7 +712,7 @@ get_input_sofun_climate_globalfields_cru_byvar <- function( varnam, settings_inp
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
 ##-----------------------------------------------------------
-prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, settings_sims, overwrite=FALSE, verbose=FALSE ){
+prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, settings_sims, overwrite=FALSE, overwrite_csv=FALSE, verbose=FALSE ){
 
   if (verbose) print(paste("Writing climate input files...", sitename ))
 
