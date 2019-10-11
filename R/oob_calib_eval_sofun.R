@@ -113,7 +113,7 @@ oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, setting
   ## Get evaluation results
   ##------------------------------------------------
   out_eval <- try( eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_evalsite, overwrite = TRUE, light = TRUE ) )
-  if (class(res) == "try-error"){
+  if (class(out_eval) == "try-error"){
     out_eval <- NA
   }
   
