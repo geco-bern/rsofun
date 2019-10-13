@@ -32,7 +32,7 @@ oob_calib_eval_sofun <- function( setup, settings_calib, settings_eval, settings
                                  ddf_obs_eval = ddf_obs_eval
                                  )
     )
-  names(out_oob) <- settings_sims$sitenames
+  names(out_oob) <- settings_calib$sitenames
   
   ## add evaluation result of all predicted data pooled
   extract_ddf_bysite <- function(site, out_oob){
@@ -42,10 +42,10 @@ oob_calib_eval_sofun <- function( setup, settings_calib, settings_eval, settings
   }
   mod <- list()
   mod$daily <- purrr::map(
-    as.list(settings_sims$sitenames),
+    as.list(settings_calib$sitenames),
     ~extract_ddf_bysite(., out_oob)
     )
-  names(mod$daily) <- settings_sims$sitenames
+  names(mod$daily) <- settings_calib$sitenames
   
   out_oob$AALL <- eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_eval, overwrite = TRUE, light = TRUE )
   
