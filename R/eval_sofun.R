@@ -25,7 +25,7 @@
 eval_sofun <- function(mod, settings_eval, settings_sims, obs_eval = NA, overwrite = TRUE, doplot = FALSE, light = FALSE){
 
   ## expand to flat data frame by rows
-  mod <- mod$daily %>% bind_rows(.id = "sitename")
+  mod <- mod$daily %>% dplyr::bind_rows(.id = "sitename")
   
   ## Loop over variables to evaluate (benchmarking variables)
   out <- lapply( as.list(names(settings_eval$benchmark)), 
