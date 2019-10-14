@@ -36,8 +36,12 @@ oob_calib_eval_sofun <- function( setup, settings_calib, settings_eval, settings
   
   ## add evaluation result of all predicted data pooled
   extract_ddf_bysite <- function(site, out_oob){
-    ddf <- out_oob[[site]]$gpp$fluxnet2015$data$ddf %>% 
-      dplyr::select(date, gpp = mod)
+    if (identical(NA, out_oob[[site]])){
+      ddf <- NA
+    } else {
+      ddf <- out_oob[[site]]$gpp$fluxnet2015$data$ddf %>% 
+        dplyr::select(date, gpp = mod)
+    }
     return(ddf)
   }
   mod <- list()
@@ -47,6 +51,10 @@ oob_calib_eval_sofun <- function( setup, settings_calib, settings_eval, settings
     )
   names(mod$daily) <- settings_calib$sitenames
   
+  ## drop NAs from list
+  na.omit.list <- function(y) { return(y[!sapply(y, function(x) all(is.na(x)))]) }
+  mod$daily <- na.omit.list(mod$daily)
+  
   out_oob$AALL <- eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_eval, overwrite = TRUE, light = TRUE )
   
   return(out_oob)
@@ -54,6 +62,8 @@ oob_calib_eval_sofun <- function( setup, settings_calib, settings_eval, settings
 
 oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, settings_eval, settings_sims, 
                                         settings_input, ddf_obs_calib, ddf_obs_eval ){
+  
+  print(paste("oob_calib_eval_sofun_bysite() for site", evalsite))
   
   ##------------------------------------------------
   ## Adjust calibration settings
@@ -111,7 +121,7 @@ oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, setting
   
   ##------------------------------------------------
   ## Get evaluation results
-  ##------------------------------------------------
+  ##------------------------------------------------  
   out_eval <- try( eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_evalsite, overwrite = TRUE, light = TRUE ) )
   if (class(out_eval) == "try-error"){
     out_eval <- NA
