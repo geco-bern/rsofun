@@ -18,7 +18,7 @@
 #' @examples xxx
 #' 
 oob_calib_eval_sofun <- function( setup, settings_calib, settings_eval, settings_sims, settings_input, ddf_obs_calib, ddf_obs_eval ){
-  
+
   ## Get list of results from out-of-bag calibration 
   out_oob <- purrr::map(
     as.list(settings_calib$sitenames),
