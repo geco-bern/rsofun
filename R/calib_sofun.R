@@ -197,7 +197,8 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
                                         temperature=4000, 
                                         max.call=settings_calib$maxit,
                                         trace.mat=TRUE,
-                                        threshold.stop=1e-4
+                                        threshold.stop=1e-4,
+                                        max.time=300
                                         )
                         )
       out_optim$time_optim <- proc.time() - ptm
@@ -378,8 +379,8 @@ cost_chisquared_kphio <- function( par, inverse = FALSE ){
 cost_rmse_fullstack <- function( par, inverse = FALSE ){
 
   ## Full stack calibration
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f", par[1], par[2], par[3], par[4] ), " | ./run", model ), intern = TRUE )
-
+  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", par[1], par[2], par[3], -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  
   ## read output from calibration run
   out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
   
@@ -388,6 +389,7 @@ cost_rmse_fullstack <- function( par, inverse = FALSE ){
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
+  # print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
   
   if (inverse) cost <- 1.0 / cost
 
