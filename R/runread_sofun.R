@@ -24,7 +24,10 @@ runread_sofun <- function( settings, setup ){
   ## read output into one big list
   ddf_list <- read_sofun( settings, setup )
 
-  return(ddf_list)
+  ## expand to flat data frame by rows
+  ddf <- ddf_list$daily %>% dplyr::bind_rows(.id = "sitename")
+  
+  return(ddf)
 }
   
 

@@ -197,7 +197,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
                                         temperature=4000, 
                                         max.call=settings_calib$maxit,
                                         trace.mat=TRUE,
-                                        threshold.stop=1e-4,
+                                        threshold.stop=1e-5,
                                         max.time=300
                                         )
                         )
@@ -389,7 +389,7 @@ cost_rmse_fullstack <- function( par, inverse = FALSE ){
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
-  # print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
+  print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
   
   if (inverse) cost <- 1.0 / cost
 

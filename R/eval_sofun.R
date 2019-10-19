@@ -24,9 +24,6 @@
 #' 
 eval_sofun <- function(mod, settings_eval, settings_sims, obs_eval = NA, overwrite = TRUE, doplot = FALSE, light = FALSE){
 
-  ## expand to flat data frame by rows
-  mod <- mod$daily %>% dplyr::bind_rows(.id = "sitename")
-  
   ## Loop over variables to evaluate (benchmarking variables)
   out <- lapply( as.list(names(settings_eval$benchmark)), 
                  function(x) eval_sofun_byvar(x, dplyr::select(mod, sitename, date, mod = eval(x)), settings_eval, settings_sims, obs_eval = obs_eval, overwrite = TRUE, doplot = FALSE, light = light)
@@ -170,10 +167,13 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
 
       ## metrics for annual values, all sites pooled
       metrics$annual_pooled <- with( adf, get_stats( mod, obs ) )
+      
     } else {
+      
       adf_stats <- NA
       metrics$annual_pooled <- list( rsq=NA, rmse=NA )
-    }
+    
+      }
 
     ##------------------------------------------------------------
     ## Evaluate monthly values by site
