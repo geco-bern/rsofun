@@ -55,6 +55,7 @@ oob_calib_eval_sofun <- function( setup, settings_calib, settings_eval, settings
   na.omit.list <- function(y) { return(y[!sapply(y, function(x) all(is.na(x)))]) }
   mod$daily <- na.omit.list(mod$daily)
   
+  mod$daily <- mod$daily %>% dplyr::bind_rows(.id = "sitename")
   out_oob$AALL <- eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_eval, overwrite = TRUE, light = TRUE )
   
   return(out_oob)

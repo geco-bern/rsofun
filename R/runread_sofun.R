@@ -22,10 +22,10 @@ runread_sofun <- function( settings, setup ){
   rm("out_std")
 
   ## read output into one big list
-  ddf_list <- read_sofun( settings, setup )
+  ddf <- read_sofun( settings, setup )
 
   ## expand to flat data frame by rows
-  ddf <- ddf_list$daily %>% dplyr::bind_rows(.id = "sitename")
+  ddf$daily <- ddf$daily %>% dplyr::bind_rows(.id = "sitename")
   
   return(ddf)
 }

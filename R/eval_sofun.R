@@ -24,9 +24,9 @@
 #' 
 eval_sofun <- function(mod, settings_eval, settings_sims, obs_eval = NA, overwrite = TRUE, doplot = FALSE, light = FALSE){
 
-  ## Loop over variables to evaluate (benchmarking variables)
+  ## Evaluate daily variables
   out <- lapply( as.list(names(settings_eval$benchmark)), 
-                 function(x) eval_sofun_byvar(x, dplyr::select(mod, sitename, date, mod = eval(x)), settings_eval, settings_sims, obs_eval = obs_eval, overwrite = TRUE, doplot = FALSE, light = light)
+                 function(x) eval_sofun_byvar(x, dplyr::select(mod$daily, sitename, date, mod = eval(x)), settings_eval, settings_sims, obs_eval = obs_eval, overwrite = TRUE, doplot = FALSE, light = light)
                  ) %>%
           setNames(names(settings_eval$benchmark))
 
