@@ -65,74 +65,83 @@ oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, setting
   
   print(paste("oob_calib_eval_sofun_bysite() for site", evalsite))
   
-  ##------------------------------------------------
-  ## Adjust calibration settings
-  ##------------------------------------------------
-  settings_calib$name = paste0("leftout_", evalsite)
-  settings_calib$sitenames = settings_calib$sitenames[-which(settings_calib$sitenames == evalsite)]
+  outfil <- paste0(settings_calib$dir_results, "/out_eval_leftout_", evalsite, ".Rdata")
   
-  ##------------------------------------------------
-  ## Get data for evaluation
-  ##------------------------------------------------
-  breaks_xdf <- ddf_obs_eval$breaks_xdf
-  extract_obs_evalsite <- function(df, evalsite){
-    df <- df %>% 
-      dplyr::filter(sitename == evalsite)
-    return(df)
-  }
-  ddf_obs_evalsite <- purrr::map(
-    ddf_obs_eval[c("ddf", "xdf", "mdf", "adf")],
-    ~extract_obs_evalsite(., evalsite)
-  )
-  ddf_obs_evalsite$breaks_xdf <- breaks_xdf
-  
-  ##------------------------------------------------
-  ## Get data for calibration
-  ##------------------------------------------------
-  ddf_obs_calibsites <- ddf_obs_calib %>% 
-    dplyr::filter(sitename != evalsite)
-  
-  ##------------------------------------------------
-  ## Calibrate on left-out sites
-  ##------------------------------------------------
-  set.seed(1982)
-  settings_calib <- calib_sofun(
-    setup          = setup,
-    settings_calib = settings_calib,
-    settings_sims  = settings_sims,
-    settings_input = settings_input,
-    ddf_obs        = ddf_obs_calibsites
+  if (file.exists(outfil)){
+    
+    load(outfil)
+
+  } else {
+    ##------------------------------------------------
+    ## Adjust calibration settings
+    ##------------------------------------------------
+    settings_calib$name = paste0("leftout_", evalsite)
+    settings_calib$sitenames = settings_calib$sitenames[-which(settings_calib$sitenames == evalsite)]
+    
+    ##------------------------------------------------
+    ## Get data for evaluation
+    ##------------------------------------------------
+    breaks_xdf <- ddf_obs_eval$breaks_xdf
+    extract_obs_evalsite <- function(df, evalsite){
+      df <- df %>% 
+        dplyr::filter(sitename == evalsite)
+      return(df)
+    }
+    ddf_obs_evalsite <- purrr::map(
+      ddf_obs_eval[c("ddf", "xdf", "mdf", "adf")],
+      ~extract_obs_evalsite(., evalsite)
     )
-  
-  settings_eval$sitenames <- evalsite
-  
-  ##------------------------------------------------
-  ## Update parameters and run at evaluation site
-  ##------------------------------------------------
-  filn <- paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name, ".csv")
-  params_opt <- readr::read_csv( filn )
-  nothing <- update_params( params_opt, settings_sims$dir_sofun )
-  
-  settings_sims$sitenames <- evalsite
-  mod <- runread_sofun( 
-    settings = settings_sims, 
-    setup = setup
+    ddf_obs_evalsite$breaks_xdf <- breaks_xdf
+    
+    ##------------------------------------------------
+    ## Get data for calibration
+    ##------------------------------------------------
+    ddf_obs_calibsites <- ddf_obs_calib %>% 
+      dplyr::filter(sitename != evalsite)
+    
+    ##------------------------------------------------
+    ## Calibrate on left-out sites
+    ##------------------------------------------------
+    set.seed(1982)
+    settings_calib <- calib_sofun(
+      setup          = setup,
+      settings_calib = settings_calib,
+      settings_sims  = settings_sims,
+      settings_input = settings_input,
+      ddf_obs        = ddf_obs_calibsites
     )
-  
-  ##------------------------------------------------
-  ## Get evaluation results
-  ##------------------------------------------------  
-  out_eval <- try( eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_evalsite, overwrite = TRUE, light = TRUE ) )
-  if (class(out_eval) == "try-error"){
-    out_eval <- NA
+    
+    settings_eval$sitenames <- evalsite
+    
+    ##------------------------------------------------
+    ## Update parameters and run at evaluation site
+    ##------------------------------------------------
+    filn <- paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name, ".csv")
+    params_opt <- readr::read_csv( filn )
+    nothing <- update_params( params_opt, settings_sims$dir_sofun )
+    
+    settings_sims$sitenames <- evalsite
+    mod <- runread_sofun( 
+      settings = settings_sims, 
+      setup = setup
+    )
+    
+    ##------------------------------------------------
+    ## Get evaluation results
+    ##------------------------------------------------  
+    out_eval <- try( eval_sofun( mod, settings_eval, settings_sims, obs_eval = ddf_obs_evalsite, overwrite = TRUE, light = TRUE ) )
+    if (class(out_eval) == "try-error"){
+      out_eval <- NA
+    }
+    
+    # out <- out_eval$gpp$fluxnet2015$data$xdf %>%
+    #   rbeni::analyse_modobs2(mod = "mod", obs = "obs", type = "heat")
+    # out$gg
+    
+    ## write to file
+    save(out_eval, file = outfil)
+    
   }
-  
-  # out <- out_eval$gpp$fluxnet2015$data$xdf %>%
-  #   rbeni::analyse_modobs2(mod = "mod", obs = "obs", type = "heat")
-  # out$gg
-  
-  ## write to file
-  save(out_eval, file = paste0(settings_calib$dir_results, "/out_eval_leftout_", evalsite, ".Rdata"))
   
   return(out_eval)
 }
