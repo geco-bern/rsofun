@@ -68,10 +68,14 @@ oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, setting
   outfil <- paste0(settings_calib$dir_results, "/out_eval_leftout_", evalsite, ".Rdata")
   
   if (file.exists(outfil)){
-    
+
+    print("loading file...")    
     load(outfil)
 
   } else {
+    
+    print("calibrating with left-out site...")
+    
     ##------------------------------------------------
     ## Adjust calibration settings
     ##------------------------------------------------
