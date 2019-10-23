@@ -18,6 +18,7 @@ load_dependencies_rsofun()
 path_siteinfo <- "~/.siteinfo_example_fortran.csv"
 siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
   # dplyr::filter(sitename %in% c("FR-Pue", "FR-LBr", "IT-Noe")) %>%
+  dplyr::slice(1) %>% 
   write_csv(path = path_siteinfo)
 ```
 
@@ -148,7 +149,7 @@ mylist <- readr::read_csv("~/eval_pmodel/myselect_fluxnet2015.csv") %>%
   dplyr::pull( Site )
 
 settings_eval <- list(
-  sitenames = settings_siml$sitename,
+  sitenames = settings_sims$sitename,
   sitenames_siteplots = mylist,
   agg = 8,
   path_fluxnet2015_d = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
@@ -215,8 +216,14 @@ list_soiltexture <- list(
   bottom = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
 )
 
-
-
+source("~/rsofun/R/run_sofun_f_bysite.R")
+mod <- run_sofun_f_bysite( 
+      settings         = dplyr::filter(settings_sims, sitename == settings_sims$sitename[1]), 
+      params_modl      = params_modl, 
+      list_soiltexture = list_soiltexture,
+      forcing          = dplyr::filter(ddf_input, sitename == settings_sims$sitename[1])
+      )
+      
 ## call SOFUN for multiple sites
 ptm <- proc.time()
 mod <- runread_sofun_f( 
