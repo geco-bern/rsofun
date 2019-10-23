@@ -261,7 +261,7 @@ contains
 
 
     ! LOOP THROUGH YEARS
-    print*, '-------------------START OF SIMULATION--------------------'
+    ! print*, '-------------------START OF SIMULATION--------------------'
 
 
     do yr=1,myinterface%params_siml%runyears
@@ -271,9 +271,9 @@ contains
       !----------------------------------------------------------------
       myinterface%steering = getsteering( yr, myinterface%params_siml )
 
-      if (yr == myinterface%params_siml%spinupyears+1 ) then
-        print*, '------------------TRANSIENT SIMULATION--------------------'
-      endif
+      ! if (yr == myinterface%params_siml%spinupyears+1 ) then
+      !   print*, '------------------TRANSIENT SIMULATION--------------------'
+      ! endif
 
 
       !----------------------------------------------------------------
@@ -355,9 +355,9 @@ contains
       ! Call SR biosphere at an annual time step but with vectors 
       ! containing data for each day of this year.
       !----------------------------------------------------------------
-      print*,'--------------------------------------------------------'
-      print*,'Simulation year: ', myinterface%steering%year, ' - Real year: ', myinterface%steering%outyear
-      print*,'--------------------------------------------------------'
+      ! print*,'--------------------------------------------------------'
+      ! print*,'Simulation year: ', myinterface%steering%year, ' - Real year: ', myinterface%steering%outyear
+      ! print*,'--------------------------------------------------------'
       
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains gridcell loop)
@@ -383,7 +383,7 @@ contains
 
     enddo
 
-    print*, '--------------------END OF SIMULATION---------------------'
+    ! print*, '--------------------END OF SIMULATION---------------------'
 
     ! clean up
     deallocate(myinterface%grid)
