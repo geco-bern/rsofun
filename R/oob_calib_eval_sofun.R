@@ -66,7 +66,7 @@ oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, setting
   
   print(paste("oob_calib_eval_sofun_bysite() for site", evalsite))
   
-  outfil <- paste0(settings_calib$dir_results, "/out_eval_leftout_", evalsite, ".Rdata")
+  outfil <- paste0(settings_calib$dir_results, "/out_eval_leftout_", evalsite, "_", settings_calib$name , ".Rdata")
   
   if (file.exists(outfil)){
 
@@ -121,7 +121,7 @@ oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, setting
     ##------------------------------------------------
     ## Update parameters and run at evaluation site
     ##------------------------------------------------
-    filn <- paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name, ".csv")
+    filn <- paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name, "_leftout_", evalsite, ".csv")
     params_opt <- readr::read_csv( filn )
     nothing <- update_params( params_opt, settings_sims$dir_sofun )
     

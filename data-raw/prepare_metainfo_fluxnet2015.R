@@ -229,6 +229,7 @@ add_metainfo_koeppengeiger_fluxnet2015 <- function( siteinfo ){
   save( koeppen_legend, file = add_filname )
   
   ## Second, extract the class from a global map, complement missing in above
+  ## File by Beck et al. (2018) Scientific Data, DOI: 10.1038/sdata.2018.214
   require(raster)
   kgclass <- raster("./inst/extdata/koeppen-geiger.tif")
   kglegend <- read_csv("./inst/extdata/koppen-geiger_legend.csv") %>% setNames( c("kgnumber", "koeppen_code_extr"))
