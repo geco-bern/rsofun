@@ -1,0 +1,237 @@
+---
+title: "Example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(rFortran)
+library(dplyr)
+library(rsofun)
+load_dependencies_rsofun()
+```
+
+## Example
+
+### Simulation settings
+
+```{r}
+path_siteinfo <- "~/.siteinfo_example_fortran.csv"
+siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
+  dplyr::filter(sitename %in% c("FR-Pue", "FR-LBr", "IT-Noe")) %>%
+  write_csv(path = path_siteinfo)
+```
+
+
+```{r}
+params_siml <- list(
+  spinup         = TRUE,
+	spinupyears    = 10,
+	recycle        = 1,
+	# firstyeartrend = 1982,
+	# nyeartrend     = nyeartrend,
+	soilmstress               = TRUE,
+	tempstress                = TRUE,
+	in_ppfd                   = TRUE,
+	in_netrad                 = FALSE,
+	const_clim_year           = -9999,
+	const_lu_year             = -9999,
+	const_co2_year            = -9999,
+	const_ndep_year           = -9999,
+	const_nfert_year          = -9999,
+	daily_out_startyr         = 1982,
+	daily_out_endyr           = 1982,
+	outdt                     = 1,
+	ltre                      = FALSE,
+	ltne                      = FALSE,
+	ltrd                      = FALSE,
+	ltnd                      = FALSE,
+	lgr3                      = TRUE,
+	lgn3                      = FALSE,
+	lgr4                      = FALSE,
+	loutplant                 = FALSE,
+	loutgpp                   = FALSE,
+	loutwaterbal              = FALSE,
+	loutforcing               = FALSE,
+	loutdgpp                  = FALSE,
+	loutdrd                   = FALSE,
+	loutdtransp               = FALSE,
+	loutdwcont                = FALSE,
+	loutdaet                  = FALSE,
+	loutdpet                  = FALSE,
+	loutdnetrad               = FALSE,
+	loutdwbal                 = FALSE,
+	loutdtemp                 = FALSE,
+	loutdfapar                = FALSE,
+	loutdtemp_soil            = FALSE,
+	lcalibgpp                 = FALSE,
+	lcalibfapar               = FALSE,
+	lcalibtransp              = FALSE,
+	lcaliblatenth             = FALSE
+	)
+
+settings_sims <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
+```
+
+<!-- ### Site parameters -->
+<!-- ```{r} -->
+<!-- params_site <- list( -->
+<!-- 	longitude = 10.0, -->
+<!-- 	latitude  = 44.0, -->
+<!-- 	altitude  = 300.0, -->
+<!-- 	soilcode  = 1, -->
+<!-- 	whc       = 200.0 -->
+<!-- 	) -->
+<!-- ``` -->
+
+### Model parameters
+```{r}
+params_modl <- list(
+	kphio           = 0.06,
+	soilm_par_a     = 0.1,
+	soilm_par_b     = 0.7,
+	vpdstress_par_a = 0.2,
+	vpdstress_par_b = 0.2,
+	vpdstress_par_m = 5
+	)
+```
+
+### Calibration settings
+
+```{r}
+## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
+## and exclude sites where C4 vegetation is present.
+flue_sites <- readr::read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+              dplyr::filter( !is.na(cluster) ) %>% 
+              distinct(site) %>% 
+              pull(site)
+
+calibsites <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
+  dplyr::filter(!(sitename %in% c("DE-Akm", "IT-Ro1"))) %>%  # excluded because fapar data could not be downloaded (WEIRD)
+  # dplyr::filter(!(sitename %in% c("AU-Wom"))) %>%  # excluded because no GPP data was found in FLUXNET file
+  dplyr::filter(sitename != "FI-Sod") %>%  # excluded because some temperature data is missing
+  dplyr::filter( c4 %in% c(FALSE, NA) & classid != "CRO" & classid != "WET" ) %>%
+  dplyr::filter( sitename %in% flue_sites ) %>%
+  pull(sitename)
+
+# ## Calibration sites for TerraP, excluding CA-Obs
+# calibsites <- c("AU-Tum", "CA-NS3", "CA-NS6", "DE-Geb", "DE-Hai", "DE-Kli", "FI-Hyy", "FR-Fon", "FR-LBr", "FR-Pue", "IT-Cpz", "NL-Loo", "US-Ha1", "US-MMS", "US-UMB", "US-WCr")
+# calibsites <- c("FR-Pue", "FR-LBr", "IT-Noe")
+
+## Define calibration settings common for all setups
+settings_calib <- list(
+  method              = "gensa",
+  targetvars          = c("gpp"),
+  timescale           = list( gpp = "d" ),
+  path_fluxnet2015    = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_fluxnet2015_hh = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_0.5h/original/unpacked/",
+  path_gepisat        = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
+  maxit               = 4, # (5 for gensa) (30 for optimr)    #
+  sitenames           = calibsites,
+  filter_temp_max     = 35.0,
+  filter_drought      = FALSE,
+  metric              = "rmse",
+  dir_results         = "~/eval_pmodel/calib_results",
+  name                = "BRC",
+  par                 = list( kphio = list( lower=0.01, upper=0.2, init=0.05 ) ),
+  datasource          = list( gpp = "fluxnet2015_NT" ),
+  filter_temp_min     = NA,
+  filter_soilm_min    = NA
+ )
+```
+
+
+### Evaluation settings
+
+```{r}
+mylist <- readr::read_csv("~/eval_pmodel/myselect_fluxnet2015.csv") %>% 
+  dplyr::filter( use==1 ) %>% 
+  dplyr::pull( Site )
+
+settings_eval <- list(
+  sitenames = settings_siml$sitename,
+  sitenames_siteplots = mylist,
+  agg = 8,
+  path_fluxnet2015_d = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_fluxnet2015_w = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/",
+  path_fluxnet2015_m = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/",
+  path_fluxnet2015_y = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/",
+  path_gepisat_d     = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
+  benchmark = list( gpp = c("fluxnet2015_NT") ),
+  remove_premodis = TRUE
+  )
+```
+
+### Get input
+
+First, define input settings.
+```{r}
+settings_input <-  list(
+    data                     = NA,
+    temperature              = "fluxnet2015",
+    precipitation            = "fluxnet2015",
+    vpd                      = "fluxnet2015",
+    ppfd                     = "fluxnet2015",
+    netrad                   = "fluxnet2015",  #  c("fluxnet2015", "watch_wfdei"),
+    patm                     = "fluxnet2015",
+    netrad                   = NA,
+    cloudcover               = "cru",
+    path_input               = "~/sofun_inputs/example/",
+    path_watch_wfdei         = "~/data/watch_wfdei/",
+    path_cru                 = "~/data/cru/ts_4.01/",
+    path_MODIS_FPAR_MCD15A3H = "~/data/fluxnet_subsets/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
+    path_MODIS_EVI_MOD13Q1   = "~/data/fluxnet_subsets/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
+    path_co2                 = "~/data/co2/cCO2_rcp85_const850-1765.csv",
+    path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+    path_fluxnet2015_hh      = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_0.5h/original/unpacked/",
+    get_from_remote          = FALSE,
+    settings_gee             = get_settings_gee( 
+      bundle = "fpar", 
+      python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python",
+      gee_path = "~/gee_subset/gee_subset/"
+      ),
+  fapar = "MODIS_FPAR_MCD15A3H",
+  splined_fapar = TRUE
+  )
+```
+
+
+Then, get the input data.
+```{r message=FALSE, warning=FALSE}
+ddf_input <- prepare_input_sofun(
+  settings_input = settings_input,
+  settings_sims = settings_siml,
+  overwrite_csv_climate = TRUE,
+  overwrite_climate = TRUE,
+  overwrite_csv_fapar = TRUE,
+  overwrite_fapar = TRUE,
+  verbose = TRUE
+  )
+```
+
+
+```{r}
+list_soiltexture <- list(
+  top = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
+  bottom = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
+)
+
+## call SOFUN for multiple sites
+ptm <- proc.time()
+list_ddf <- purrr::map(
+  as.list(settings_sims$sitename),
+  ~run_sofun_f_bysite( 
+  	settings_sims    = dplyr::filter(settings_sims, sitename == .), 
+	  params_modl      = params_modl, 
+	  list_soiltexture = list_soiltexture,
+	  forcing          = dplyr::filter(ddf_input, sitename == .)
+	  )
+  )
+ptm <- proc.time() - ptm
+# print(out)
+print(ptm)
+
+list_ddf[[3]] %>% 
+  ggplot(aes(x=date, y=gpp)) +
+  geom_line()
+
+```
