@@ -391,7 +391,6 @@ contains
     deallocate(myinterface%soilparams)
     deallocate(myinterface%dfapar_field)
 
-
   end subroutine sofun_f
 
 end module sofun_r_mod

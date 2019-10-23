@@ -216,7 +216,7 @@ list_soiltexture <- list(
   bottom = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
 )
 
-source("~/rsofun/R/run_sofun_f_bysite.R")
+#source("~/rsofun/R/run_sofun_f_bysite.R")
 mod <- run_sofun_f_bysite( 
       settings         = dplyr::filter(settings_sims, sitename == settings_sims$sitename[1]), 
       params_modl      = params_modl, 
@@ -235,7 +235,7 @@ mod <- runread_sofun_f(
 ptm <- proc.time() - ptm
 print(ptm)
 
-list_ddf[[3]] %>% 
+mod$daily[[3]] %>% 
   ggplot(aes(x=date, y=gpp)) +
   geom_line()
 

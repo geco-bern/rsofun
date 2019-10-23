@@ -191,10 +191,10 @@ static const R_CallMethodDef CallEntries[] = {
   {NULL,         NULL,                0}
 };
 
-void R_init_rFortran(DllInfo *dll)
+void R_init_rsofun(DllInfo *dll)
 {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 
-    R_RegisterCCallable("rFortran", "sofun_f_C",  (DL_FUNC) &sofun_f_C);
+    R_RegisterCCallable("rsofun", "sofun_f_C",  (DL_FUNC) &sofun_f_C);
 }

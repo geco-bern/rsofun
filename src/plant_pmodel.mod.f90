@@ -243,7 +243,6 @@ contains
     end if
 
     npft_site = pft
-    print*,'npft_site: ', npft_site
     if (npft_site==0) stop 'PLANT:GETPAR_MODL_PLANT: PFT name not valid. See run/<simulationname>.sofun.parameter'
 
   end subroutine getpar_modl_plant

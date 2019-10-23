@@ -8,7 +8,7 @@
 #' @details This is the model
 #'
 #' @export
-#' @useDynLib rFortran
+#' @useDynLib rsofun
 #'
 run_sofun_f_bysite <- function( settings_sims, params_modl, list_soiltexture, forcing ){
 
@@ -126,5 +126,5 @@ run_sofun_f_bysite <- function( settings_sims, params_modl, list_soiltexture, fo
 
 
 .onUnload <- function(libpath) {
-  library.dynam.unload("rFortran", libpath)
+  library.dynam.unload("rsofun", libpath)
 }
