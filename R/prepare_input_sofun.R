@@ -172,8 +172,7 @@ prepare_input_sofun <- function( settings_input,
 
   out <- ddf_climate %>% left_join( ddf_fapar, by=c("date", "sitename")) %>% 
     dplyr::mutate(year = lubridate::year(date)) %>% 
-    dplyr::select(-date) %>% 
-    dplyr::left_join(df_co2, by = "year")
+    dplyr::left_join(dplyr::select(df_co2, -date), by = "year")
 
   return(out)
 
@@ -283,6 +282,14 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
           right_join( ddf, by = "date" )   
         
       }
+    }
+    
+    ## some FLUXNET2015 data has missing 31-Dec at the end of the time series
+    ## take 30-Dec data to fill the gap
+    if (lubridate::mday(ddf$date[nrow(ddf)])==30){
+      ddf <- ddf %>% 
+        dplyr::bind_cols( dplyr::slice(ddf, nrow(ddf)))
+      ddf$date[nrow(ddf)] <- ddf$date[nrow(ddf)] + lubridate::days(1)
     }
     
     ## Write to temporary file
@@ -541,10 +548,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, s
   # ## Add site name to dataframe (is merged by rows with ddf of other sites)
   # ddf <- ddf %>% dplyr::select( -(starts_with("year_dec")) ) %>% mutate( sitename = sitename )
 
-  ## Check if fortran-formatted text files are written already
-  filelist <- list.files( paste0( settings_input$path_input, "/sitedata/climate/", sitename, "/", as.character( lubridate::year( ddf$date[1] ) ), "/" ) )
-  
-  if (length(filelist)==0 || overwrite){
+  if (overwrite){
     ##----------------------------------------------------------------------
     ## Write fortran-formatted ascii files with daily values for each year 
     ## based on the CSV file written above (clim_daily_<sitename>.csv)
@@ -620,20 +624,26 @@ prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, s
       
     }
     
+    keepvars <- c("sitename", "date", "temp", "prec", "temp", "vpd", "ppfd")
     out <- out %>% mutate(  temp   = fill_gaps( temp   ),
                             prec   = fill_gaps( prec, is.prec=TRUE ),
-                            temp   = fill_gaps( temp   ),
                             vpd    = fill_gaps( vpd    ),
                             ppfd   = fill_gaps( ppfd   )
-    ) %>% 
+      ) %>% 
+
+      ## remove leap year dates (sofun doesn't have leap years)
       dplyr::filter( !( lubridate::month(date)==2 & lubridate::mday(date)==29 ) )
     
     ## Help. I don't know why this doesn't work with ifelse inside mutate
     if (settings_sims$params_siml[[1]]$in_netrad){
       out <- out %>% mutate( nrad = fill_gaps( nrad ) )
+      keepvars <- c(keepvars, "nrad")
     } else {
       out <- out %>% mutate( ccov = fill_gaps( ccov ) )
+      keepvars <- c(keepvars, "ccov")
     }
+    out <- out %>% 
+      dplyr::select(keepvars)
     
   } 
 

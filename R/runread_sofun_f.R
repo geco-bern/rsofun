@@ -25,7 +25,7 @@ runread_sofun_f <- function( settings, ddf_input, list_soiltexture, params_modl 
     )
   )
   names(ddf) <- settings$sitename
-  ddf <- ddf %>% dplyr::bind_rows(.id = "sitename")
+  # ddf <- ddf %>% dplyr::bind_rows(.id = "sitename")
   out <- list(daily = ddf)
   return(out)
 }

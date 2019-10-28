@@ -18,7 +18,7 @@ load_dependencies_rsofun()
 path_siteinfo <- "~/.siteinfo_example_fortran.csv"
 siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
   # dplyr::filter(sitename %in% c("FR-Pue", "FR-LBr", "IT-Noe")) %>%
-  dplyr::slice(1) %>% 
+  dplyr::slice(1:5) %>% 
   write_csv(path = path_siteinfo)
 ```
 
@@ -182,8 +182,8 @@ settings_input <-  list(
     path_MODIS_FPAR_MCD15A3H = "~/data/fluxnet_subsets/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
     path_MODIS_EVI_MOD13Q1   = "~/data/fluxnet_subsets/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
     path_co2                 = "~/data/co2/cCO2_rcp85_const850-1765.csv",
-    path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-    path_fluxnet2015_hh      = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_0.5h/original/unpacked/",
+    path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
+    path_fluxnet2015_hh      = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
     get_from_remote          = FALSE,
     settings_gee             = get_settings_gee( 
       bundle = "fpar", 
@@ -218,10 +218,10 @@ list_soiltexture <- list(
 
 #source("~/rsofun/R/run_sofun_f_bysite.R")
 mod <- run_sofun_f_bysite( 
-      settings         = dplyr::filter(settings_sims, sitename == settings_sims$sitename[1]), 
+      settings         = dplyr::filter(settings_sims, sitename == settings_sims$sitename[5]), 
       params_modl      = params_modl, 
       list_soiltexture = list_soiltexture,
-      forcing          = dplyr::filter(ddf_input, sitename == settings_sims$sitename[1])
+      forcing          = dplyr::filter(ddf_input, sitename == settings_sims$sitename[5])
       )
       
 ## call SOFUN for multiple sites
@@ -235,8 +235,7 @@ mod <- runread_sofun_f(
 ptm <- proc.time() - ptm
 print(ptm)
 
-mod$daily[[3]] %>% 
+mod$daily[[1]] %>% 
   ggplot(aes(x=date, y=gpp)) +
   geom_line()
-
 ```
