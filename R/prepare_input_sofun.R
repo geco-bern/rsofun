@@ -1059,7 +1059,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
     
   } else {
     
-    if (file.exists(filnam_nice_csv) && !overwrite_nice){
+    if (file.exists(filnam_nice_csv) && file.exists(filnam_daily_csv) && !overwrite_nice){
       ##---------------------------------------------
       ## Read nicely formatted 8-daily      
       ##---------------------------------------------
@@ -1068,11 +1068,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
       
     } else {
       
-      if (file.exists(filnam_raw_csv) && ! overwrite_raw){
-        ## Raw downloaded file will be read separately
-        # print( paste( "File exists already:", filnam_modis_raw_csv ) )
-        
-      } else {
+      if (!(file.exists(filnam_raw_csv) && ! overwrite_raw)){
         ##---------------------------------------------
         ## Download via Google Earth Engine using the python function
         ##---------------------------------------------
@@ -1159,10 +1155,6 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
         readr::write_csv( out$ddf, path=filnam_daily_csv )
         
       }
-      
-      print( paste( "WARNING: NO DATA AVAILABLE FOR SITE:", sitename ) )
-      df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=1 ) )
-      out <- NA
       
     }
   }

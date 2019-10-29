@@ -390,7 +390,7 @@ cost_rmse_fullstack <- function( par, inverse = FALSE ){
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
-  #print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
+  print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
   
   if (inverse) cost <- 1.0 / cost
 

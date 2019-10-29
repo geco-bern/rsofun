@@ -540,6 +540,16 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   #     df <- df %>% dplyr::rename( gpp_obs = GPP_DT_VUT_REF )
   #   }
   # }
+  
+  
+  # Crude fix for a crude problem: some FLUXNET2015 files end on Dec 30 in the last year available
+  # Duplicate last row
+  lastrow <- df %>% dplyr::slice(nrow(df))
+  if (lubridate::month(lastrow$date)==12 && lubridate::mday(lastrow$date)==30){
+    lastrow$date <- lastrow$date + lubridate::days(1)
+    df <- df %>% 
+      bind_rows(lastrow)
+  }
 
   return(df)
 
