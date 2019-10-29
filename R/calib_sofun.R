@@ -194,10 +194,10 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
                           lower = lapply( settings_calib$par, function(x) x$lower ) %>% unlist(),
                           upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist(),
                           control=list( 
-                                        temperature=4000, 
+                                        #temperature=4000, 
                                         max.call=settings_calib$maxit,
                                         trace.mat=TRUE,
-                                        threshold.stop=1e-5,
+                                        threshold.stop=1e-4,
                                         max.time=300
                                         )
                         )
@@ -342,7 +342,8 @@ cost_rmse_kphio <- function( par, inverse = FALSE ){
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
-  #print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
+  
+  # print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
   
   if (inverse) cost <- 1.0 / cost
 
@@ -390,7 +391,7 @@ cost_rmse_fullstack <- function( par, inverse = FALSE ){
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
-  print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
+  # print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
   
   if (inverse) cost <- 1.0 / cost
 
