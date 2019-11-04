@@ -12,14 +12,15 @@
 #' @param overwrite_csv_fapar if \code{TRUE}, fAPAR input CSV files in the site-scale setup are overwritten.
 #' @param verbose if \code{TRUE}, additional messages are printed.
 #'
-#' @return if \code{return_data == TRUE}, a named list of data frames (tibbles) containing input data for each site is returned. Otherwise, a depressing character string is returned.
+#' @return A named list of data frames (tibbles) containing input data for each site is returned.
 #' @export
 #'
-#' @examples inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, return_data = TRUE, overwrite_climate = FALSE, overwrite_fapar = TRUE, verbose = TRUE )
+#' @examples inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, overwrite_climate = FALSE, overwrite_fapar = TRUE, verbose = TRUE )
 #' 
 prepare_input_sofun <- function( settings_input, 
                                  settings_sims, 
-                                 overwrite_climate=FALSE, overwrite_fapar=FALSE, overwrite_csv_climate=FALSE, overwrite_csv_fapar=FALSE, verbose=FALSE ){
+                                 overwrite_rdata_climate=FALSE,
+                                 overwrite_fapar=FALSE, overwrite_csv_climate=FALSE, overwrite_csv_fapar=FALSE, verbose=FALSE ){
 
   # # If FLUXNET 2015 data is required, make sure it's available locally    
   # #-----------------------------------------------------------
@@ -40,11 +41,11 @@ prepare_input_sofun <- function( settings_input,
   #-----------------------------------------------------------
   ## Second, get climate data from global files
   dir <- paste0( settings_input$path_input, "/sitedata/climate/" )
-  filnam_clim <- paste0( dir, "/clim_daily_lev2.Rdata" )
+  filnam_clim <- paste0( dir, "/clim_daily.Rdata" )
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
   
   ## First, get climate data from site-specific
-  if (!file.exists(filnam_clim) || overwrite_csv_climate){
+  if (!file.exists(filnam_clim) || overwrite_rdata_climate){
     
     ddf_climate <- purrr::map(
       as.list(settings_sims$sitename),
@@ -90,9 +91,9 @@ prepare_input_sofun <- function( settings_input,
       dplyr::filter(ddf_climate, sitename == .),
       settings_input,
       settings_sims,
-      overwrite=overwrite_climate,
       overwrite_csv=overwrite_csv_climate,
-      verbose = verbose )
+      verbose = verbose 
+      )
   )
   names(ddf_climate) <- settings_sims$sitename
   ddf_climate <- ddf_climate %>%
@@ -102,65 +103,62 @@ prepare_input_sofun <- function( settings_input,
   ##-----------------------------------------------------------
   ## Get fapar input
   ##-----------------------------------------------------------
-  if (overwrite_fapar || return_data || overwrite_csv_fapar){
-    
-    ## Create data frame for site info for batch-download using MODISTools or GEE
-    df_lonlat <- settings_sims %>% 
-      dplyr::mutate(year_start = lubridate::year(date_start)) %>% 
-      dplyr::select(sitename, lon, lat, year_start, year_end)
-    
-    # if (!dir.exists(settings_input$path_fapar)) system(paste0("mkdir -p ", settings_input$path_fapar))
-    
-    # ## Using MODISTools
-    # bands <- MODISTools::mt_bands(product = "MCD15A3H") %>% View()
-    # dates <- MODISTools::mt_dates(product = "MCD15A3H", lat = df_lonlat$lat[1], lon = df_lonlat$lon[1]) %>% View()
-    # subsets <- MODISTools::mt_batch_subset(
-    #              df = dplyr::distinct(df_lonlat, lon, lat, .keep_all=TRUE) %>% 
-    #                slice(1:2),
-    #              product = "MCD15A3H",
-    #              band = "Fpar_500m",
-    #              internal = TRUE,
-    #              start = "2000-01-01",
-    #              end = "2018-12-31",
-    #              out_dir = settings_input$path_fapar)
-    
-    ## Using the Google EE function
-    ddf_fapar <- purrr::map(
-      as.list(seq(nrow(df_lonlat))),
-      ~prepare_input_sofun_fapar_bysite_GEE( 
-        slice(df_lonlat, .), 
-        start_date           = "2000-01-01",
-        end_date             = "2018-12-31", 
-        settings_sims        = settings_sims, 
-        settings_input       = settings_input,
-        overwrite_raw        = FALSE,
-        overwrite_nice       = FALSE,
-        overwrite_csv        = overwrite_csv_fapar,
-        band_var             = settings_input$settings_gee$band_var, 
-        band_qc              = settings_input$settings_gee$band_qc, 
-        prod                 = settings_input$settings_gee$prod, 
-        prod_suffix          = settings_input$settings_gee$prod_suffix, 
-        varnam               = settings_input$settings_gee$varnam, 
-        productnam           = settings_input$settings_gee$productnam, 
-        scale_factor         = settings_input$settings_gee$scale_factor, 
-        period               = settings_input$settings_gee$period, 
-        asfaparinput         = TRUE, 
-        do_plot_interpolated = settings_input$settings_gee$do_plot_interpolated, 
-        python_path          = settings_input$settings_gee$python_path,
-        gee_path             = settings_input$settings_gee$gee_path
-      )
+  ## Create data frame for site info for batch-download using MODISTools or GEE
+  df_lonlat <- settings_sims %>% 
+    dplyr::mutate(year_start = lubridate::year(date_start)) %>% 
+    dplyr::select(sitename, lon, lat, year_start, year_end)
+  
+  # if (!dir.exists(settings_input$path_fapar)) system(paste0("mkdir -p ", settings_input$path_fapar))
+  
+  # ## Using MODISTools
+  # bands <- MODISTools::mt_bands(product = "MCD15A3H") %>% View()
+  # dates <- MODISTools::mt_dates(product = "MCD15A3H", lat = df_lonlat$lat[1], lon = df_lonlat$lon[1]) %>% View()
+  # subsets <- MODISTools::mt_batch_subset(
+  #              df = dplyr::distinct(df_lonlat, lon, lat, .keep_all=TRUE) %>% 
+  #                slice(1:2),
+  #              product = "MCD15A3H",
+  #              band = "Fpar_500m",
+  #              internal = TRUE,
+  #              start = "2000-01-01",
+  #              end = "2018-12-31",
+  #              out_dir = settings_input$path_fapar)
+  
+  ## Using the Google EE function
+  ddf_fapar <- purrr::map(
+    as.list(seq(nrow(df_lonlat))),
+    ~prepare_input_sofun_fapar_bysite_GEE( 
+      slice(df_lonlat, .), 
+      start_date           = "2000-01-01",
+      end_date             = "2018-12-31", 
+      settings_sims        = settings_sims, 
+      settings_input       = settings_input,
+      overwrite_raw        = FALSE,
+      overwrite_nice       = overwrite_csv_fapar,
+      overwrite_csv        = overwrite_csv_fapar,
+      band_var             = settings_input$settings_gee$band_var, 
+      band_qc              = settings_input$settings_gee$band_qc, 
+      prod                 = settings_input$settings_gee$prod, 
+      prod_suffix          = settings_input$settings_gee$prod_suffix, 
+      varnam               = settings_input$settings_gee$varnam, 
+      productnam           = settings_input$settings_gee$productnam, 
+      scale_factor         = settings_input$settings_gee$scale_factor, 
+      period               = settings_input$settings_gee$period, 
+      do_plot_interpolated = settings_input$settings_gee$do_plot_interpolated, 
+      python_path          = settings_input$settings_gee$python_path,
+      gee_path             = settings_input$settings_gee$gee_path
     )
-    
-    ## get missing
-    names(ddf_fapar) <- settings_sims$sitename
-    missing_fapar <- which(is.na(ddf_fapar)) %>% names()
-    
-    ## rearrange to flat table
-    ddf_fapar <- ddf_fapar %>%
-      bind_rows(.id = "sitename") %>% 
-      dplyr::select(sitename, date, fapar = modisvar_interpol)
-    
-  }
+  )
+  
+  ## get missing
+  names(ddf_fapar) <- settings_sims$sitename
+  missing_fapar <- which(is.na(ddf_fapar)) %>% names()
+  
+  ## rearrange to flat table
+  ddf_fapar <- ddf_fapar %>%
+    # na.omit.list() %>% 
+    bind_rows(.id = "sitename") %>% 
+    dplyr::select(sitename, date, fapar = modisvar_interpol)
+  
   
   ##-----------------------------------------------------------
   ## Get CO2 input
@@ -529,7 +527,7 @@ get_input_sofun_climate_globalfields_cru_byvar <- function( varnam, settings_inp
 ## and writes this to CSV and Fortran-formatted input files
 ## on the fly.
 ##-----------------------------------------------------------
-prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, settings_sims, overwrite=FALSE, overwrite_csv=FALSE, verbose=FALSE ){
+prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, settings_sims, overwrite_csv=FALSE, verbose=FALSE ){
 
   if (verbose) print(paste("Writing climate input files...", sitename ))
 
@@ -538,97 +536,89 @@ prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, s
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
   csvfiln <- paste0( dir, "/clim_daily_lev2_", sitename, ".csv" )
 
-  ##----------------------------------------------------------------------
-  ## Write climate data to CSV files: 
-  ## <settings_input$path_input>/sitedata/climate/<sitename>/clim_daily_<sitename>.csv 
-  ## (may be read by Python directly???)
-  ##----------------------------------------------------------------------
-  write_csv( ddf, path = csvfiln )
-  
   # ## Add site name to dataframe (is merged by rows with ddf of other sites)
   # ddf <- ddf %>% dplyr::select( -(starts_with("year_dec")) ) %>% mutate( sitename = sitename )
 
-  if (overwrite){
+  if (overwrite_csv || !file.exists(csvfiln)){
     ##----------------------------------------------------------------------
     ## Write fortran-formatted ascii files with daily values for each year 
     ## based on the CSV file written above (clim_daily_<sitename>.csv)
     ## Necessary because reading from CSV is a pain in Fortran.
     ##----------------------------------------------------------------------
-    out <- ddf
-    
     ## temperature
-    if ("temp_day_fluxnet2015" %in% names(out)){
-      out <- out %>% mutate( temp = temp_day_fluxnet2015 )        
-    } else if ("temp_fluxnet2015" %in% names(out)) {
-      out <- out %>% mutate( temp = temp_fluxnet2015 )
+    if ("temp_day_fluxnet2015" %in% names(ddf)){
+      ddf <- ddf %>% mutate( temp = temp_day_fluxnet2015 )        
+    } else if ("temp_fluxnet2015" %in% names(ddf)) {
+      ddf <- ddf %>% mutate( temp = temp_fluxnet2015 )
     } else {
-      out <- out %>% mutate( temp = NA )
+      ddf <- ddf %>% mutate( temp = NA )
     }
     if ("temp_watch" %in% names(ddf) && "temp_cru_int" %in% names(ddf) ){
-      out <- out %>% mutate( temp = ifelse( !is.na(temp), temp, ifelse( !is.na(temp_watch), temp_watch, temp_cru_int ) ) )
+      ddf <- ddf %>% mutate( temp = ifelse( !is.na(temp), temp, ifelse( !is.na(temp_watch), temp_watch, temp_cru_int ) ) )
     } else if ("temp_watch" %in% names(ddf)){
-      out <- out %>% mutate( temp = ifelse( !is.na(temp), temp, temp_watch ) )
+      ddf <- ddf %>% mutate( temp = ifelse( !is.na(temp), temp, temp_watch ) )
     }
     
     ## precipitation
-    if ("prec_fluxnet2015" %in% names(out)){
-      out <- out %>% mutate( prec = prec_fluxnet2015 )        
+    if ("prec_fluxnet2015" %in% names(ddf)){
+      ddf <- ddf %>% mutate( prec = prec_fluxnet2015 )        
     } else {
-      out <- out %>% mutate( prec = NA )
+      ddf <- ddf %>% mutate( prec = NA )
     }      
     if ("prec_watch" %in% names(ddf) && "prec_cru_int" %in% names(ddf) ){
-      out <- out %>% mutate( prec = ifelse( !is.na(prec), prec, ifelse( !is.na(prec_watch), prec_watch, prec_cru_gen ) ) )
+      ddf <- ddf %>% mutate( prec = ifelse( !is.na(prec), prec, ifelse( !is.na(prec_watch), prec_watch, prec_cru_gen ) ) )
     } else if ("prec_watch" %in% names(ddf)){
-      out <- out %>% mutate( prec = ifelse( !is.na(prec), prec, prec_watch ) )
+      ddf <- ddf %>% mutate( prec = ifelse( !is.na(prec), prec, prec_watch ) )
     }
     
     ## VPD
-    if ("vpd_day_fluxnet2015" %in% names(out)){
-      out <- out %>% mutate( vpd = vpd_day_fluxnet2015 )        
-    } else if ("vpd_fluxnet2015" %in% names(out)){
-      out <- out %>% mutate( vpd = vpd_fluxnet2015 )        
+    if ("vpd_day_fluxnet2015" %in% names(ddf)){
+      ddf <- ddf %>% mutate( vpd = vpd_day_fluxnet2015 )        
+    } else if ("vpd_fluxnet2015" %in% names(ddf)){
+      ddf <- ddf %>% mutate( vpd = vpd_fluxnet2015 )        
     } else {
-      out <- out %>% mutate( vpd = NA )
+      ddf <- ddf %>% mutate( vpd = NA )
     }
     if ("vpd_qair_watch_temp_watch" %in% names(ddf) && "vpd_vap_cru_temp_cru_int" %in% names(ddf) ){
-      out <- out %>% mutate( vpd = ifelse( !is.na(vpd), vpd, ifelse( !is.na(vpd_qair_watch_temp_watch), vpd_qair_watch_temp_watch, vpd_vap_cru_temp_cru_int ) ) )
+      ddf <- ddf %>% mutate( vpd = ifelse( !is.na(vpd), vpd, ifelse( !is.na(vpd_qair_watch_temp_watch), vpd_qair_watch_temp_watch, vpd_vap_cru_temp_cru_int ) ) )
     } else if ("vpd_qair_watch_temp_watch" %in% names(ddf)){
-      out <- out %>% mutate( vpd = ifelse( !is.na(vpd), vpd, temp_watch ) )
+      ddf <- ddf %>% mutate( vpd = ifelse( !is.na(vpd), vpd, temp_watch ) )
     }
     
     ## ppfd
-    if ("ppfd_fluxnet2015" %in% names(out)){
-      out <- out %>% mutate( ppfd = ppfd_fluxnet2015 )        
+    if ("ppfd_fluxnet2015" %in% names(ddf)){
+      ddf <- ddf %>% mutate( ppfd = ppfd_fluxnet2015 )        
     } else {
-      out <- out %>% mutate( ppfd = NA )
+      ddf <- ddf %>% mutate( ppfd = NA )
     }
     if ("ppfd_watch" %in% names(ddf) ){
-      out <- out %>% mutate( ppfd = ifelse( !is.na(ppfd), ppfd, ifelse( !is.na(ppfd_watch), ppfd_watch, NA ) ) )
+      ddf <- ddf %>% mutate( ppfd = ifelse( !is.na(ppfd), ppfd, ifelse( !is.na(ppfd_watch), ppfd_watch, NA ) ) )
     } 
     
     ## netrad
     if (settings_sims$params_siml[[1]]$in_netrad){
-      out <- out %>%  mutate( nrad = netrad_fluxnet2015 )
+      ddf <- ddf %>%  mutate( nrad = netrad_fluxnet2015 )
       if ("nrad_watch" %in% names(ddf) ){
-        out <- out %>% mutate( nrad = ifelse( !is.na(nrad), nrad, ifelse( !is.na(nrad_watch), nrad_watch, NA ) ) )
+        ddf <- ddf %>% mutate( nrad = ifelse( !is.na(nrad), nrad, ifelse( !is.na(nrad_watch), nrad_watch, NA ) ) )
       } 
       
     } else {
       
       ## cloud cover
       if ( "ccov_cru_int" %in% names(ddf) ){
-        out <- out %>%  mutate( ccov = ccov_cru_int )
+        ddf <- ddf %>%  mutate( ccov = ccov_cru_int )
       } else if ("ccov_dummy" %in% names(ddf)){
-        out <- out %>% mutate( ccov = ccov_dummy )
+        ddf <- ddf %>% mutate( ccov = ccov_dummy )
       }
       
     }
     
     keepvars <- c("sitename", "date", "temp", "prec", "temp", "vpd", "ppfd")
-    out <- out %>% mutate(  temp   = fill_gaps( temp   ),
+    ddf <- ddf %>% mutate(  temp   = fill_gaps( temp   ),
                             prec   = fill_gaps( prec, is.prec=TRUE ),
                             vpd    = fill_gaps( vpd    ),
-                            ppfd   = fill_gaps( ppfd   )
+                            ppfd   = fill_gaps( ppfd   ),
+                            ccov   = fill_gaps( ccov )
       ) %>% 
 
       ## remove leap year dates (sofun doesn't have leap years)
@@ -636,18 +626,32 @@ prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, s
     
     ## Help. I don't know why this doesn't work with ifelse inside mutate
     if (settings_sims$params_siml[[1]]$in_netrad){
-      out <- out %>% mutate( nrad = fill_gaps( nrad ) )
+      ddf <- ddf %>% mutate( nrad = fill_gaps( nrad ) )
       keepvars <- c(keepvars, "nrad")
     } else {
-      out <- out %>% mutate( ccov = fill_gaps( ccov ) )
+      ddf <- ddf %>% mutate( ccov = fill_gaps( ccov ) )
       keepvars <- c(keepvars, "ccov")
     }
-    out <- out %>% 
+    ddf <- ddf %>% 
       dplyr::select(keepvars)
     
-  } 
+    ##----------------------------------------------------------------------
+    ## Write climate data to CSV files: 
+    ## <settings_input$path_input>/sitedata/climate/<sitename>/clim_daily_<sitename>.csv 
+    ## (may be read by Python directly???)
+    ##----------------------------------------------------------------------
+    readr::write_csv( ddf, path = csvfiln ) 
+    
+  } else {
+    
+    ##----------------------------------------------------------------------
+    ## Read from file
+    ##----------------------------------------------------------------------
+    ddf <- readr::read_csv( csvfiln ) 
 
-  return( out )
+  }
+
+  return( ddf )
 
 }
 
@@ -802,13 +806,14 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
                                                   end_date, settings_sims, settings_input,
                                                   overwrite_raw, overwrite_nice, overwrite_csv,
                                                   band_var, band_qc, prod, prod_suffix, varnam, productnam, scale_factor, 
-                                                  period, asfaparinput, do_plot_interpolated, python_path, gee_path){
+                                                  period, do_plot_interpolated, python_path, gee_path){
   
   ##---------------------------------------------
   ## Define names
   ##---------------------------------------------
   sitename <- df_siteinfo$sitename[1]
   df_siteinfo <- slice(df_siteinfo, 1)
+  print(paste("getting fapar for site", sitename))
   
   dirnam_daily_csv <- paste0(settings_input$path_input, "sitedata/fapar/", sitename)
   dirnam_nice_csv <- settings_input[paste0("path_", stringr::str_replace(productnam ,"_gee", ""))] %>% unlist() %>% unname()
@@ -845,9 +850,10 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
       
     } else {
       
-      if (file.exists(filnam_raw_csv) && ! overwrite_raw){
+      if (file.exists(filnam_raw_csv) && !overwrite_raw){
         ## Raw downloaded file will be read separately
         # print( paste( "File exists already:", filnam_modis_raw_csv ) )
+        print(paste("site", sitename))
         
       } else {
         ##---------------------------------------------
@@ -924,7 +930,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
           year_end   = df_siteinfo$year_end,
           qc_name = band_qc, 
           prod = prod_suffix,
-          do_interpolate = asfaparinput,
+          do_interpolate = TRUE,
           do_plot_interpolated = do_plot_interpolated,
           dir = settings_input$path_input
         )
@@ -935,12 +941,18 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
         readr::write_csv( out$df,  path=filnam_nice_csv )
         readr::write_csv( out$ddf, path=filnam_daily_csv )
         
+      } else {
+        ddf_out <- init_dates_dataframe(
+          lubridate::year(start_date),
+          lubridate::year(end_date)
+          ) %>% 
+          mutate(modisvar_interpol = NA)
       }
       
     }
   }
   
-  if (cont && asfaparinput){
+  if (cont){
     ##---------------------------------------------
     ## Write SOFUN-formatted input
     ##---------------------------------------------
@@ -2718,23 +2730,30 @@ calc_vpd <- function( eact=NA, qair=NA, tc=NA, tmin=NA, tmax=NA, elv=NA ){
 extrapolate_missing_headtail <- function(ddf){
   ## extrapolate to missing values at head and tail using mean seasonal cycle
   ##--------------------------------------
-  ## identify NAs at head and tail
-  idxs <- findna_headtail( ddf$var )
-  if (length(idxs)>0) rlang::warn("Using mean seasonal cycle for years where no fapar data is available.")
+
+  ## new: fill gaps at head
+  idxs <- findna_head( ddf$var )
+  if (length(idxs)>0) rlang::warn("Filling values with last available data point at head")
+  ddf$var[idxs] <- ddf$var[max(idxs)+1]
+
+  ## new: fill gaps at tail
+  idxs <- findna_tail( ddf$var )
+  if (length(idxs)>0) rlang::warn("Filling values with last available data point at tail.")
+  ddf$var[idxs] <- ddf$var[min(idxs)-1]
   
-  ## get mean seasonal cycle
-  ddf_meandoy <- ddf %>% 
-    dplyr::group_by( doy ) %>% 
-    dplyr::summarise( meandoy = mean( var , na.rm=TRUE ) )
-  
-  ## attach mean seasonal cycle as column 'meandoy' to daily dataframe
-  ddf <- ddf %>% 
-    dplyr::left_join( ddf_meandoy, by="doy" )
-  
-  ## fill gaps at head and tail
-  ddf$var[ idxs ] <- ddf$meandoy[ idxs ]
-  
-  vec <- ddf %>% 
+  # ## get mean seasonal cycle
+  # ddf_meandoy <- ddf %>% 
+  #   dplyr::group_by( doy ) %>% 
+  #   dplyr::summarise( meandoy = mean( var , na.rm=TRUE ) )
+  # 
+  # ## attach mean seasonal cycle as column 'meandoy' to daily dataframe
+  # ddf <- ddf %>% 
+  #   dplyr::left_join( ddf_meandoy, by="doy" )
+  # 
+  # ## fill gaps at head and tail
+  # ddf$var[ idxs ] <- ddf$meandoy[ idxs ]
+
+  vec <- ddf %>%
     dplyr::pull(var)
   
   return(vec)      
@@ -2746,6 +2765,17 @@ findna_headtail <- function( vec ){
   ## Remove (cut) NAs from the head and tail of a vector.
   ## Returns the indexes to be dropped from a vector
 
+  idxs <- c(findna_head(vec), findna_tail(vec))
+  
+  return(idxs)
+
+}
+
+findna_head <- function( vec ){
+  
+  ## Remove (cut) NAs from the head and tail of a vector.
+  ## Returns the indexes to be dropped from a vector
+  
   ## Get indeces of consecutive NAs at head
   if (is.na(vec[1])){
     idx <- 0
@@ -2762,8 +2792,16 @@ findna_headtail <- function( vec ){
   } else {
     idxs_head <- c()
   }
+  
+  return(idxs_head)
+  
+}
 
-
+findna_tail <- function( vec ){
+  
+  ## Remove (cut) NAs from the head and tail of a vector.
+  ## Returns the indexes to be dropped from a vector
+  
   ## Get indeces of consecutive NAs at tail
   if (is.na(vec[length(vec)])){
     idx <- 0
@@ -2780,11 +2818,10 @@ findna_headtail <- function( vec ){
   } else {
     idxs_tail <- c()
   }
-
-  idxs <- c( idxs_head, idxs_tail )
-
-  return(idxs)
-
+  
+  return(idxs_tail)
+  
 }
 
+na.omit.list <- function(y) { return(y[!sapply(y, function(x) all(is.na(x)))]) }
 
