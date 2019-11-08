@@ -20,6 +20,15 @@ devtools::install_github( "stineb/rsofun@v0.2" )
 library(rsofun)
 ```
 
+## Environment
+
+**This is important**
+
+In order to successfully compile the package (Fortran source), you need to have gfortran installed and manually adjust the compiler flag specification. To do so, open the Makeconf file (you'll find it by entering in R: `file.path(R.home("etc"), "Makeconf")`). In there, add the gfortran flag `-ffree-line-length-0`. The respective line then looks like this:
+```sh
+FCFLAGS = -Wall -g -O2 $(LTO) -ffree-line-length-0
+```
+
 ### Dependencies
 
 The `rsofun` package requires a large number of other R-packages (dependencies). Required dependencies are essential for `rsofun` functions and are:
@@ -32,8 +41,6 @@ load_dependencies_rsofun()
 ```
 
 ## Example run
-
-### Environment
 
 ```r
 library(dplyr)
