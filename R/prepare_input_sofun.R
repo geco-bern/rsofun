@@ -7,20 +7,22 @@
 #' @param settings_input A list containging the model input settings. See vignette_rsofun.pdf for more information and examples.
 #' @param settings_sims A list containing model simulation settings from \code{\link{prepare_setup_sofun}}.  See vignette_rsofun.pdf for more information and examples.
 #' @param overwrite_climate if \code{TRUE}, yearly climate input text files in the site-scale setup are overwritten.
-#' @param overwrite_fapar if \code{TRUE}, yearly fAPAR input text files in the site-scale setup are overwritten.
-#' @param overwrite_csv_climate if \code{TRUE}, climate input CSV files in the site-scale setup are overwritten.
+#' @param overwrite_csv_climate_lev1 if \code{TRUE}, climate input CSV files created after collecting site-scale meteo data are overwritten.
+#' @param overwrite_csv_climate_lev2 if \code{TRUE}, climate input CSV files created after collecting data from global field for all sites are overwritten.
+#' @param overwrite_csv_climate_lev3 if \code{TRUE}, climate input CSV files created after deriving SOFUN-standard input (naming, units, and interpolation) are overwritten.
 #' @param overwrite_csv_fapar if \code{TRUE}, fAPAR input CSV files in the site-scale setup are overwritten.
 #' @param verbose if \code{TRUE}, additional messages are printed.
 #'
 #' @return A named list of data frames (tibbles) containing input data for each site is returned.
 #' @export
 #'
-#' @examples inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, overwrite_climate = FALSE, overwrite_fapar = TRUE, verbose = TRUE )
+#' @examples inputdata <- prepare_input_sofun( settings_input = settings_input, settings_sims = settings_sims, overwrite_climate = FALSE, verbose = TRUE )
 #' 
 prepare_input_sofun <- function( settings_input, 
                                  settings_sims, 
+                                 overwrite_csv_climate_lev1=FALSE, overwrite_csv_climate_lev2=FALSE, overwrite_csv_climate_lev3=FALSE,
                                  overwrite_rdata_climate=FALSE,
-                                 overwrite_fapar=FALSE, overwrite_csv_climate=FALSE, overwrite_csv_fapar=FALSE, verbose=FALSE ){
+                                 overwrite_csv_fapar=FALSE, verbose=FALSE ){
 
   # # If FLUXNET 2015 data is required, make sure it's available locally    
   # #-----------------------------------------------------------
@@ -52,7 +54,7 @@ prepare_input_sofun <- function( settings_input,
       ~get_input_sofun_climate_bysite( .,
                                        settings_input,
                                        dplyr::filter(settings_sims, sitename == .),
-                                       overwrite_csv = overwrite_csv_climate,
+                                       overwrite_csv = overwrite_csv_climate_lev1,
                                        verbose = verbose
       )
     )
@@ -64,8 +66,7 @@ prepare_input_sofun <- function( settings_input,
       dplyr::select(ddf_climate, sitename, date),
       settings_input,
       settings_sims,
-      overwrite = overwrite_climate,
-      overwrite_csv = overwrite_csv_climate,
+      overwrite_csv = overwrite_csv_climate_lev2,
       verbose = FALSE
     )
     ddf_climate <- ddf_climate %>%
@@ -73,6 +74,22 @@ prepare_input_sofun <- function( settings_input,
         ddf_climte_globalfields,
         by = c("sitename", "date")
       )
+    
+    ## Then, prepare climate input data files for sofun
+    ddf_climate <- purrr::map(
+      as.list(settings_sims$sitename),
+      ~prepare_input_sofun_climate_bysite(
+        .,
+        dplyr::filter(ddf_climate, sitename == .),
+        settings_input,
+        settings_sims,
+        overwrite_csv = overwrite_csv_climate_lev3,
+        verbose = verbose
+      )
+    )
+    names(ddf_climate) <- settings_sims$sitename
+    ddf_climate <- ddf_climate %>%
+      bind_rows()
     
     ## write to file
     save(ddf_climate, file = filnam_clim)
@@ -82,22 +99,6 @@ prepare_input_sofun <- function( settings_input,
     load(filnam_clim)
     
   }
-  
-  ## Then, prepare climate input data files for sofun
-  ddf_climate <- purrr::map(
-    as.list(settings_sims$sitename),
-    ~prepare_input_sofun_climate_bysite(
-      .,
-      dplyr::filter(ddf_climate, sitename == .),
-      settings_input,
-      settings_sims,
-      overwrite_csv=overwrite_csv_climate,
-      verbose = verbose 
-      )
-  )
-  names(ddf_climate) <- settings_sims$sitename
-  ddf_climate <- ddf_climate %>%
-    bind_rows()
   
   
   ##-----------------------------------------------------------
@@ -179,7 +180,7 @@ prepare_input_sofun <- function( settings_input,
 ##-----------------------------------------------------------
 ## Read climate data from files given by sites
 ##-----------------------------------------------------------
-get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv, verbose=FALSE ){
+get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_sims, overwrite_csv=FALSE, verbose=FALSE ){
 
   # if (verbose) print(paste("Getting climate data for site", sitename ))
   
@@ -303,139 +304,153 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
 ##-----------------------------------------------------------
 ## Read climate data from files as global fields
 ##-----------------------------------------------------------
-get_input_sofun_climate_globalfields <- function( ddf, settings_input, settings_sims, overwrite=FALSE, overwrite_csv=FALSE, verbose=FALSE ){
+get_input_sofun_climate_globalfields <- function( ddf, settings_input, settings_sims, overwrite_csv=FALSE, verbose=FALSE ){
 
   if (verbose) print("Getting climate data from global fields...")
 
-  ##----------------------------------------------------------------------
-  ## Read WATCH-WFDEI data (extracting from NetCDF files for this site)
-  ##----------------------------------------------------------------------
-  ## temperature
-  if ("watch_wfdei" %in% settings_input$temperature){
-    ddf <- get_input_sofun_climate_globalfields_watch_byvar( "Tair_daily", settings_input, settings_sims ) %>%
-      dplyr::rename(temp_watch = myvar) %>% 
-      dplyr::mutate(temp_watch = temp_watch - 273.15) %>%
-      dplyr::right_join(ddf, by = c("sitename", "date"))
-  }
-
-  ## precipitation
-  if ("watch_wfdei" %in% settings_input$precipitation){
-    ddf <- get_input_sofun_climate_globalfields_watch_byvar( "Rainf_daily", settings_input, settings_sims ) %>%
-      dplyr::mutate( rain = myvar ) %>%
-      left_join(
-        get_input_sofun_climate_globalfields_watch_byvar( "Snowf_daily", settings_input, settings_sims ) %>%
-          dplyr::mutate( snow = myvar ),
-        by = c("sitename", "date")
+  ## path of CSV file with data for this site
+  dir <- paste0( settings_input$path_input, "/sitedata/climate/" )
+  if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
+  csvfiln <- paste0( dir, "/clim_daily_lev2.csv" )
+  
+  if (overwrite_csv || !file.exists(csvfiln)){  
+    ##----------------------------------------------------------------------
+    ## Read WATCH-WFDEI data (extracting from NetCDF files for this site)
+    ##----------------------------------------------------------------------
+    ## temperature
+    if ("watch_wfdei" %in% settings_input$temperature){
+      ddf <- get_input_sofun_climate_globalfields_watch_byvar( "Tair_daily", settings_input, settings_sims ) %>%
+        dplyr::rename(temp_watch = myvar) %>% 
+        dplyr::mutate(temp_watch = temp_watch - 273.15) %>%
+        dplyr::right_join(ddf, by = c("sitename", "date"))
+    }
+    
+    ## precipitation
+    if ("watch_wfdei" %in% settings_input$precipitation){
+      ddf <- get_input_sofun_climate_globalfields_watch_byvar( "Rainf_daily", settings_input, settings_sims ) %>%
+        dplyr::mutate( rain = myvar ) %>%
+        left_join(
+          get_input_sofun_climate_globalfields_watch_byvar( "Snowf_daily", settings_input, settings_sims ) %>%
+            dplyr::mutate( snow = myvar ),
+          by = c("sitename", "date")
         ) %>%
-      dplyr::rename(prec_watch = (rain + snow) * 60 * 60 * 24 ) %>%  # kg/m2/s -> mm/day
-      dplyr::right_join(ddf_prec, by = c("sitename", "date"))
-  }
-  
-  ## humidity
-  if ("watch_wfdei" %in% settings_input$vpd){
-    ddf <- get_input_sofun_climate_globalfields_watch_byvar( "Qair_daily", settings_input, settings_sims ) %>%
-      dplyr::rename(qair_watch = myvar) %>% 
-      dplyr::right_join(ddf_qair, by = c("sitename", "date"))
-  }
-  
-  ## PPFD
-  if ("watch_wfdei" %in% settings_input$ppfd){
-    kfFEC <- 2.04    
-    ddf <- get_input_sofun_climate_globalfields_watch_byvar( "SWdown_daily", settings_input, settings_sims ) %>%
-      dplyr::rename(ppfd_watch = myvar * kfFEC * 1.0e-6 * 60 * 60 * 24 ) %>%  # umol m-2 s-1 -> mol m-2 d-1
-      dplyr::right_join(ddf_ppfd, by = c("sitename", "date"))
-  }
-
-
-  ##----------------------------------------------------------------------
-  ## Fill missing variables
-  ##----------------------------------------------------------------------
-  if (is.na(settings_input$cloudcover)){
-    rlang::warn("Filling column ccov_dummy with value 50 (%).")
-    ddf <- ddf %>% mutate( ccov_dummy = 50 )
-  }
-
-  ##----------------------------------------------------------------------
-  ## Read CRU monthly data (extracting from NetCDF files for this site)
-  ##----------------------------------------------------------------------
-  cruvars <- c()
-  mdf <- ddf %>%
-    dplyr::select(sitename, date) %>% 
-    dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
-    dplyr::select(sitename, year, moy) %>% 
-    dplyr::distinct()
-  
-  ## temperature
-  if ("cru" %in% settings_input$temperature){
-    cruvars <- c(cruvars, "temp")
-    mdf <- get_input_sofun_climate_globalfields_cru_byvar( "tmp", settings_input, settings_sims ) %>%
-      dplyr::select(sitename, date, myvar) %>% 
-      dplyr::rename(temp_cru = myvar) %>% 
+        dplyr::rename(prec_watch = (rain + snow) * 60 * 60 * 24 ) %>%  # kg/m2/s -> mm/day
+        dplyr::right_join(ddf_prec, by = c("sitename", "date"))
+    }
+    
+    ## humidity
+    if ("watch_wfdei" %in% settings_input$vpd){
+      ddf <- get_input_sofun_climate_globalfields_watch_byvar( "Qair_daily", settings_input, settings_sims ) %>%
+        dplyr::rename(qair_watch = myvar) %>% 
+        dplyr::right_join(ddf_qair, by = c("sitename", "date"))
+    }
+    
+    ## PPFD
+    if ("watch_wfdei" %in% settings_input$ppfd){
+      kfFEC <- 2.04    
+      ddf <- get_input_sofun_climate_globalfields_watch_byvar( "SWdown_daily", settings_input, settings_sims ) %>%
+        dplyr::rename(ppfd_watch = myvar * kfFEC * 1.0e-6 * 60 * 60 * 24 ) %>%  # umol m-2 s-1 -> mol m-2 d-1
+        dplyr::right_join(ddf_ppfd, by = c("sitename", "date"))
+    }
+    
+    
+    ##----------------------------------------------------------------------
+    ## Fill missing variables
+    ##----------------------------------------------------------------------
+    if (is.na(settings_input$cloudcover)){
+      rlang::warn("Filling column ccov_dummy with value 50 (%).")
+      ddf <- ddf %>% mutate( ccov_dummy = 50 )
+    }
+    
+    ##----------------------------------------------------------------------
+    ## Read CRU monthly data (extracting from NetCDF files for this site)
+    ##----------------------------------------------------------------------
+    cruvars <- c()
+    mdf <- ddf %>%
+      dplyr::select(sitename, date) %>% 
       dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
-      dplyr::select(-date) %>% 
-      dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+      dplyr::select(sitename, year, moy) %>% 
+      dplyr::distinct()
+    
+    ## temperature
+    if ("cru" %in% settings_input$temperature){
+      cruvars <- c(cruvars, "temp")
+      mdf <- get_input_sofun_climate_globalfields_cru_byvar( "tmp", settings_input, settings_sims ) %>%
+        dplyr::select(sitename, date, myvar) %>% 
+        dplyr::rename(temp_cru = myvar) %>% 
+        dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+        dplyr::select(-date) %>% 
+        dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
       
-  }
-  
-  ## precipitation
-  if ("cru" %in% settings_input$precipitation){
-    cruvars <- c(cruvars, "prec")
-    mdf <- get_input_sofun_climate_globalfields_cru_byvar( "pre", settings_input, settings_sims ) %>%
-      dplyr::select(sitename, date, myvar) %>% 
-      dplyr::rename(prec_cru = myvar) %>% 
-      dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
-      dplyr::select(-date) %>% 
-      dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
-  }
-  
-  ## vpd from vapour pressure
-  if ("cru" %in% settings_input$temperature){
-    cruvars <- c(cruvars, "vap")
-    mdf <- get_input_sofun_climate_globalfields_cru_byvar( "vap", settings_input, settings_sims ) %>%
-      dplyr::select(sitename, date, myvar) %>% 
-      dplyr::rename(vap_cru = myvar) %>% 
-      dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
-      dplyr::select(-date) %>% 
-      dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
-  }
+    }
+    
+    ## precipitation
+    if ("cru" %in% settings_input$precipitation){
+      cruvars <- c(cruvars, "prec")
+      mdf <- get_input_sofun_climate_globalfields_cru_byvar( "pre", settings_input, settings_sims ) %>%
+        dplyr::select(sitename, date, myvar) %>% 
+        dplyr::rename(prec_cru = myvar) %>% 
+        dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+        dplyr::select(-date) %>% 
+        dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+    }
+    
+    ## vpd from vapour pressure
+    if ("cru" %in% settings_input$temperature){
+      cruvars <- c(cruvars, "vap")
+      mdf <- get_input_sofun_climate_globalfields_cru_byvar( "vap", settings_input, settings_sims ) %>%
+        dplyr::select(sitename, date, myvar) %>% 
+        dplyr::rename(vap_cru = myvar) %>% 
+        dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+        dplyr::select(-date) %>% 
+        dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+    }
+    
+    ## cloud cover
+    if ("cru" %in% settings_input$cloudcover){
+      cruvars <- c(cruvars, "ccov")
+      mdf <- get_input_sofun_climate_globalfields_cru_byvar( "cld", settings_input, settings_sims ) %>%
+        dplyr::select(sitename, date, myvar) %>% 
+        dplyr::rename(ccov_cru = myvar) %>% 
+        dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+        # dplyr::select(-date) %>% 
+        dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+    }
+    
+    ## wet days
+    if ("cru" %in% settings_input$wetdays){
+      cruvars <- c(cruvars, "wetd")
+      mdf <- get_input_sofun_climate_globalfields_cru_byvar( "wet", settings_input, settings_sims ) %>%
+        dplyr::select(sitename, date, myvar) %>% 
+        dplyr::rename(wetd_cru = myvar) %>% 
+        dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
+        dplyr::select(-date) %>% 
+        dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+    }  
+    
+    ## VPD
+    ## calculated as a function of vapour pressure and temperature, vapour
+    ## pressure is given by CRU data.
+    if ("vap" %in% cruvars){
+      ## calculate VPD (vap is in hPa)
+      mdf <-  mdf %>%
+        mutate( vpd_vap_cru_temp_cru = calc_vpd( eact = 1e2 * vap_cru, tc = temp_cru ) )
+    }
+    
+    ## expand monthly to daily data
+    if (length(cruvars)>0){ 
+      ddf <- expand_clim_cru_monthly( mdf, cruvars ) %>%
+        right_join( ddf, by = "date" )
+    }
 
-  ## cloud cover
-  if ("cru" %in% settings_input$cloudcover){
-    cruvars <- c(cruvars, "ccov")
-    mdf <- get_input_sofun_climate_globalfields_cru_byvar( "cld", settings_input, settings_sims ) %>%
-      dplyr::select(sitename, date, myvar) %>% 
-      dplyr::rename(ccov_cru = myvar) %>% 
-      dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
-      # dplyr::select(-date) %>% 
-      dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
+    ## Write to file    
+    readr::write_csv(ddf, path = csvfiln)
+    
+  } else {
+    ## Read from file
+    ddf <- readr::read_csv( csvfiln )
+    
   }
-  
-  ## wet days
-  if ("cru" %in% settings_input$wetdays){
-    cruvars <- c(cruvars, "wetd")
-    mdf <- get_input_sofun_climate_globalfields_cru_byvar( "wet", settings_input, settings_sims ) %>%
-      dplyr::select(sitename, date, myvar) %>% 
-      dplyr::rename(wetd_cru = myvar) %>% 
-      dplyr::mutate(year = lubridate::year(date), moy = lubridate::month(date)) %>% 
-      dplyr::select(-date) %>% 
-      dplyr::right_join(mdf, by = c("sitename", "year", "moy"))
-  }  
-  
-  ## VPD
-  ## calculated as a function of vapour pressure and temperature, vapour
-  ## pressure is given by CRU data.
-  if ("vap" %in% cruvars){
-    ## calculate VPD (vap is in hPa)
-    mdf <-  mdf %>%
-      mutate( vpd_vap_cru_temp_cru = calc_vpd( eact = 1e2 * vap_cru, tc = temp_cru ) )
-  }
-
-  ## expand monthly to daily data
-  if (length(cruvars)>0){ 
-    ddf <- expand_clim_cru_monthly( mdf, cruvars ) %>%
-      right_join( ddf, by = "date" )
-  }
-
   return( ddf )
 
 }
@@ -534,7 +549,7 @@ prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, s
   ## path of CSV file with data for this site
   dir <- paste0( settings_input$path_input, "/sitedata/climate/", sitename )
   if (!dir.exists(dir)) system( paste0( "mkdir -p ", dir ) )
-  csvfiln <- paste0( dir, "/clim_daily_lev2_", sitename, ".csv" )
+  csvfiln <- paste0( dir, "/clim_daily_lev3_", sitename, ".csv" )
 
   # ## Add site name to dataframe (is merged by rows with ddf of other sites)
   # ddf <- ddf %>% dplyr::select( -(starts_with("year_dec")) ) %>% mutate( sitename = sitename )
@@ -813,7 +828,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
   ##---------------------------------------------
   sitename <- df_siteinfo$sitename[1]
   df_siteinfo <- slice(df_siteinfo, 1)
-  print(paste("getting fapar for site", sitename))
+  #print(paste("getting fapar for site", sitename))
   
   dirnam_daily_csv <- paste0(settings_input$path_input, "sitedata/fapar/", sitename)
   dirnam_nice_csv <- settings_input[paste0("path_", stringr::str_replace(productnam ,"_gee", ""))] %>% unlist() %>% unname()

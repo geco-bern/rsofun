@@ -27,8 +27,6 @@ params_siml <- list(
   spinup         = TRUE,
 	spinupyears    = 10,
 	recycle        = 1,
-	# firstyeartrend = 1982,
-	# nyeartrend     = nyeartrend,
 	soilmstress               = TRUE,
 	tempstress                = TRUE,
 	in_ppfd                   = TRUE,
@@ -72,18 +70,8 @@ params_siml <- list(
 settings_sims <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
 ```
 
-<!-- ### Site parameters -->
-<!-- ```{r} -->
-<!-- params_site <- list( -->
-<!-- 	longitude = 10.0, -->
-<!-- 	latitude  = 44.0, -->
-<!-- 	altitude  = 300.0, -->
-<!-- 	soilcode  = 1, -->
-<!-- 	whc       = 200.0 -->
-<!-- 	) -->
-<!-- ``` -->
 
-### Model parameters
+### Define model parameters
 ```{r}
 params_modl <- list(
 	kphio           = 0.06,
@@ -95,6 +83,14 @@ params_modl <- list(
 	)
 ```
 
+### Define soil parameters
+
+```{r}
+list_soiltexture <- list(
+  top = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
+  bottom = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
+)
+```
 
 ### Get input
 
@@ -131,26 +127,22 @@ settings_input <-  list(
 
 
 Then, get the input data.
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, echo=FALSE}
 ddf_input <- prepare_input_sofun(
   settings_input = settings_input,
   settings_sims = settings_sims,
-  overwrite_csv_climate = FALSE,
-  overwrite_climate = TRUE,
+  overwrite_csv_climate_lev1 = FALSE,
+  overwrite_csv_climate_lev2 = FALSE,
+  overwrite_csv_climate_lev3 = TRUE,
+  overwrite_rdata_climate = TRUE,
   overwrite_csv_fapar = FALSE,
-  overwrite_fapar = FALSE,
-  verbose = TRUE
+  verbose = FALSE
   )
 ```
 
 ### Run the model
 
 ```{r}
-list_soiltexture <- list(
-  top = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
-  bottom = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
-)
-
 #source("~/rsofun/R/run_sofun_f_bysite.R")
 mod <- run_sofun_f_bysite( 
       settings         = dplyr::filter(settings_sims, sitename == settings_sims$sitename[1]), 
