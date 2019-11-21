@@ -100,7 +100,7 @@
 #' named and in units corresponding to rsofun standard.
 #' @export
 #'
-#' @examples df <- get_obs_bysite_fluxnet2015( "FR-Pue", "./inst/extdata/", timescale = "d, method = "NT" )
+#' @examples df <- get_obs_bysite_fluxnet2015
 #' 
 get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet2015_hh=NULL,
   timescale, getvars, getswc=TRUE,

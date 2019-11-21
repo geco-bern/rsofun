@@ -7,13 +7,14 @@
 #' @param settings_sims A named list containing the simulation settings (see vignette_rsofun.pdf for more information and examples)
 #' @param overwrite (Optional) A logical specifying whether temporary data stored in \code{./tmpdir} should be overwritten. Defaults to \code{TRUE}.
 #' @param light (Optional) A logical specifying whether reduced data should saved. Defaults to \code{FALSE}.
+#' @param add_forcing (Optional) a logical specifying whether forcing data is to be added to data frames containing observational data.
 #'
 #' @return A list containing data frames of observed values aggregated to several temporal scales (ddf for daily, xdf for X-daily, mdf for monthly, adf for annual).
 #' @export
 #'
 #' @examples obs <- get_obs_eval( settings_eval, settings_sims, overwrite = TRUE )
 #' 
-get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light = FALSE){
+get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light = FALSE, add_forcing = FALSE){
 
   ## Interpret benchmarking data specification
   datasource <- settings_eval$benchmark %>% 
@@ -48,7 +49,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
     ## Read annual observational data from FLUXNET 2015 files (from annual files!).
     ##------------------------------------------------------------
     ## loop over sites to get data frame with all variables
-    if (settings_eval$path_fluxnet2015_y!=""){
+    if (settings_eval$path_fluxnet2015_y!="" && !("Ty" %in% datasource)){
       print("getting annual FLUXNET-2015_Tier1 data...")
       print(settings_eval$path_fluxnet2015_y)
       adf <- lapply( as.list(settings_eval$sitenames),
@@ -59,14 +60,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
                        timescale = "y",
                        getvars = getvars,
                        getswc=!light,
-                       threshold_GPP=0.5,
-                       threshold_LE=0.5,
-                       threshold_H=0.5,
-                       threshold_SWC=0.5,
-                       threshold_WS=0.5,
-                       threshold_USTAR=0.5,
-                       threshold_T=0.5,
-                       threshold_NETRAD=0.5,
+                       threshold_GPP=0,
                        verbose=FALSE
                        ) %>%
                        mutate( year =lubridate::year(date),
@@ -82,7 +76,6 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
 
     } else {
 
-      rlang::warn("settings_eval$path_fluxnet2015_y is empty")
       adf <-  lapply( as.list(settings_eval$sitenames),
                       function(x) init_dates_dataframe(
                         year(settings_sims$date_start[[x]]),
@@ -106,7 +99,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
     ## Read monthly observational data from FLUXNET 2015 files (from monthly files!).
     ##------------------------------------------------------------
     ## loop over sites to get data frame with all variables
-    if (settings_eval$path_fluxnet2015_m!=""){
+    if (settings_eval$path_fluxnet2015_m!="" && !("Ty" %in% datasource)){
       print("getting monthly FLUXNET-2015_Tier1 data...")
       mdf <- lapply( as.list(settings_eval$sitenames),
                      function(x) get_obs_bysite_fluxnet2015(
@@ -117,13 +110,6 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
                        getvars = getvars,
                        getswc=!light,
                        threshold_GPP=0.5,
-                       threshold_LE=0.5,
-                       threshold_H=0.5,
-                       threshold_SWC=0.5,
-                       threshold_WS=0.5,
-                       threshold_USTAR=0.5,
-                       threshold_T=0.5,
-                       threshold_NETRAD=0.5,
                        verbose=FALSE
                        ) %>%
                        mutate( year =lubridate::year(date),
@@ -138,7 +124,6 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
 
     } else {
 
-      rlang::warn("settings_eval$path_fluxnet2015_m is empty")
       mdf <-  lapply( as.list(settings_eval$sitenames),
                       function(x) init_dates_dataframe(
                         year(settings_sims$date_start[[x]]),
@@ -160,7 +145,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
     ##------------------------------------------------------------
     ## Read daily observational data from FLUXNET 2015 files (from daily files!).
     ##------------------------------------------------------------
-    if (settings_eval$path_fluxnet2015_d!=""){
+    if (settings_eval$path_fluxnet2015_d!="" && !("Ty" %in% datasource)){
       print("getting daily FLUXNET-2015_Tier1 data...")
       ddf <- lapply( as.list(settings_eval$sitenames),
                      function(x) get_obs_bysite_fluxnet2015( 
@@ -171,13 +156,6 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
                        getvars = getvars, 
                        getswc=!light,                              
                        threshold_GPP=0.5, 
-                       threshold_LE=0.5, 
-                       threshold_H=0.5, 
-                       threshold_SWC=0.5,                               
-                       threshold_WS=0.5, 
-                       threshold_USTAR=0.5, 
-                       threshold_T=0.5, 
-                       threshold_NETRAD=0.5, 
                        verbose=TRUE
                        ) %>%
                        mutate( year =lubridate::year(date),
@@ -192,7 +170,6 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
       
     } else {
       
-      rlang::warn("settings_eval$path_fluxnet2015_d is empty")
       ddf <-  lapply( as.list(settings_eval$sitenames),
                       function(x) init_dates_dataframe(
                         year(settings_sims$date_start[[x]]),
@@ -226,21 +203,26 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
       settings_eval$sitenames_gepisat <- settings_eval$sitenames[which(!(settings_eval$sitenames %in% missing_gepisat))]
       
       ## Convert to one long data frame and add sitename to data frames inside the list
-      ddf_gepisat <- ddf_gepisat %>% bind_rows( .id = "sitename" ) %>%
-        mutate( obs = ifelse( date < "2000-02-18", NA, obs ) ) %>%  # remove pre-modis data
-        dplyr::rename( obs_gepisat = obs ) %>% 
+      ddf_gepisat <- ddf_gepisat %>% 
+        bind_rows( .id = "sitename" ) %>%
+        mutate( gpp_obs = ifelse( date < "2000-02-18", NA, gpp_obs ) ) %>%  # remove pre-modis data
+        dplyr::rename( gpp = gpp_obs ) %>% 
         
         # remove weird data points where error is zero
-        mutate( obs_gepisat = ifelse( gpp_err_obs==0.0, NA, obs_gepisat ) )
+        mutate( gpp = ifelse( gpp_err_obs==0.0, NA, gpp ) )
       
       
       ## ake weighted average for updated 'obs', aggregate, and add to other data frames (ddf, adf, mdf)
       if (!is.null(ddf_gepisat)){
         
         ## daily
-        ddf <- ddf_gepisat %>% right_join( ddf, by = c("sitename", "date") )
-        totlen <- length(datasource[ -which( datasource=="fluxnet2015" ) ])
-        ddf$obs <-  apply( dplyr::select( ddf, obs, obs_gepisat ), 1, stats::weighted.mean, c((totlen-1)/totlen, 1/totlen), na.rm=TRUE )
+        ddf <- ddf_gepisat %>% 
+          right_join( ddf, by = c("sitename", "date") ) %>% 
+          dplyr::select(-year, -year_dec)
+        
+        ## don't remember why I did this, commenting it out
+        # totlen <- length(datasource[ -which( datasource=="fluxnet2015" ) ])
+        #ddf$gpp <-  apply( dplyr::select( ddf, gpp, gpp_gepisat ), 1, stats::weighted.mean, c((totlen-1)/totlen, 1/totlen), na.rm=TRUE )
         
         # ##------------------------------------------------------------
         # ## Add forcing data to daily data frame (for evaluation of functional relationships)
@@ -251,30 +233,29 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
         #   right_join( ddf, by = c("sitename", "date") )
         
         ## monthly
-        mdf <- mdf %>% mutate( year=year(date), moy=month(date) ) %>% select(-obs)
+        mdf <- mdf %>% mutate( year=year(date), moy=month(date) )
         mdf <- ddf %>%
           mutate( moy=month(date), year=year(date) ) %>% 
           group_by( sitename, year, moy ) %>% 
-          summarise( obs = sum(obs) ) %>% 
+          summarise( gpp = sum(gpp) ) %>% 
           right_join( mdf, by = c("sitename", "year", "moy") )
         
         ## annual
-        adf <- adf %>% select(-obs)
         adf <- ddf %>%
           mutate( year=year(date) ) %>% 
           group_by( sitename, year ) %>% 
-          summarise( obs = sum(obs) ) %>% 
+          summarise( gpp = sum(gpp) ) %>% 
           right_join( adf, by = c("sitename", "year") )
         
       } else {
-        ddf <- ddf %>% mutate( obs_gepisat = NA )
+        ddf <- ddf %>% mutate( gpp_gepisat = NA )
       }
     }
     
     ##------------------------------------------------------------
     ## Add forcing data to daily data frame (for evaluation of functional relationships)
     ##------------------------------------------------------------
-    if (!light){
+    if (add_forcing){
       print("adding forcing data...")
       ddf <- lapply( as.list(settings_eval$sitenames), function(x) get_forcing_from_csv( x, settings_sims ) ) %>%
         bind_rows() %>%
@@ -291,7 +272,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
     # ## aggregate to weeks
     # xdf <- ddf %>% mutate( inbin = week(date) ) %>%
     #                group_by( sitename, year, inbin ) %>%
-    #                summarise( obs = mean( obs, na.rm=TRUE) )
+    #                summarise( gpp = mean( gpp, na.rm=TRUE) )
     
     ## Generate vector of starting dates of X-day periods, making sure the 1st of Jan is always the start of a new period
     listyears <- seq( ymd("1990-01-01"), ymd("2018-01-01"), by = "year" )	   
@@ -307,12 +288,13 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
 	return( list( ddf = ddf, xdf = xdf, mdf = mdf, adf = adf, breaks_xdf = breaks ) )
 }
 
+
 ## Read forcing data from CSV file prepared for SOFUN input
 get_forcing_from_csv <- function( sitename, settings_sims ){
   
   ## get climate data
   dir <- paste0( settings_sims$path_input, "/sitedata/climate/", sitename )
-  csvfiln <- paste0( dir, "/clim_daily_", sitename, ".csv" )
+  csvfiln <- paste0( dir, "/clim_daily_lev2_", sitename, ".csv" )
   if (file.exists(csvfiln)){
     ddf <- readr::read_csv( csvfiln )
   } else {

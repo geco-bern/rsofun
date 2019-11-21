@@ -89,10 +89,10 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
     } else {
       varnam_obs <- varnam
     }
-    adf <- obs_eval$adf %>% select(sitename, date,  obs = eval(varnam_obs))
-    mdf <- obs_eval$mdf %>% select(sitename, date,  obs = eval(varnam_obs))
-    ddf <- obs_eval$ddf %>% select(sitename, date,  obs = eval(varnam_obs))
-    xdf <- obs_eval$xdf %>% select(sitename, inbin, obs = eval(varnam_obs))
+    adf <- obs_eval$adf %>% dplyr::select(sitename, date,  obs = eval(varnam_obs))
+    mdf <- obs_eval$mdf %>% dplyr::select(sitename, date,  obs = eval(varnam_obs))
+    ddf <- obs_eval$ddf %>% dplyr::select(sitename, date,  obs = eval(varnam_obs))
+    xdf <- obs_eval$xdf %>% dplyr::select(sitename, inbin, obs = eval(varnam_obs))
     
     obs_eval$adf <- NULL
     obs_eval$mdf <- NULL
@@ -100,7 +100,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
     obs_eval$ddf <- NULL
     
     ##------------------------------------------------------------
-    ## Aggregate model output data to annual/monthly/weekly, only for selected sites,
+    ## Aggregate model output data to annual/monthly/weekly, only for dplyr::selected sites,
     ## and merge into respective observational data frame 
     ##------------------------------------------------------------
     print("Aggregating model outputs...")
@@ -116,6 +116,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
       dplyr::filter( sitename %in% settings_eval$sitenames )
 
     ## monthly mean
+    mdf <- mdf %>% ungroup()
     mdf <- ddf_mod %>% 
       mutate( year = year(date), moy = month(date) ) %>%
       group_by( sitename, year, moy ) %>%
@@ -314,18 +315,19 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
           mutate( obs_mean = interpol_lin(obs_mean), obs_min = interpol_lin(obs_min), obs_max = interpol_lin( obs_max ) ) %>%
           mutate( climatezone = paste( koeppen_code, hemisphere ) )
         
-        meandoydf_byclim_stats <- meandoydf_byclim %>% 
-          group_by( koeppen_code, hemisphere ) %>%
-          nest() %>%
-          mutate( n_obs  = purrr::map( data, ~sum(!is.na(.$obs_mean)) ) ) %>% 
-          unnest( n_obs ) %>% 
-          filter( n_obs>0, !is.na(koeppen_code) ) %>% 
-          mutate( linmod = purrr::map( data, ~lm( obs_mean ~ mod_mean, data = . ) ),
-                  stats  = purrr::map( data, ~get_stats( .$mod_mean, .$obs_mean ) ) ) %>%
-          mutate( data   = purrr::map( data, ~add_fitted_alternativenames(.) ) ) %>%
-          unnest( stats )
-
-        metrics$meandoy_byclim <- meandoydf_byclim_stats %>% dplyr::select( -data, -linmod )
+        # meandoydf_byclim_stats <- meandoydf_byclim %>% 
+        #   group_by( koeppen_code, hemisphere ) %>%
+        #   nest() %>%
+        #   mutate( n_obs  = purrr::map( data, ~sum(!is.na(.$obs_mean)) ) ) %>% 
+        #   unnest( n_obs ) %>% 
+        #   filter( n_obs>0, !is.na(koeppen_code) ) %>% 
+        #   mutate( linmod = purrr::map( data, ~lm( obs_mean ~ mod_mean, data = . ) ),
+        #           stats  = purrr::map( data, ~get_stats( .$mod_mean, .$obs_mean ) ) ) %>%
+        #   mutate( data   = purrr::map( data, ~add_fitted_alternativenames(.) ) ) %>%
+        #   unnest( stats )
+        # 
+        # metrics$meandoy_byclim <- meandoydf_byclim_stats %>% dplyr::select( -data, -linmod )
+        meandoydf_byclim_stats <- NA
         
       } else {
         
