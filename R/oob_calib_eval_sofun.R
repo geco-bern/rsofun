@@ -67,10 +67,12 @@ oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, setting
   print(paste("oob_calib_eval_sofun_bysite() for site", evalsite))
   
   dirn <- paste0( settings_calib$dir_results, "/oob_", settings_calib$name)
+
   if (!dir.exists(dirn)){
     system(paste0("mkdir -p ", dirn))
   }
   outfil <- paste0(dirn, "/out_eval_leftout_", evalsite, ".Rdata")
+
   
   if (file.exists(outfil)){
 
@@ -86,7 +88,10 @@ oob_calib_eval_sofun_bysite <- function(evalsite, setup, settings_calib, setting
     ##------------------------------------------------
     settings_calib$name = paste0("leftout_", evalsite)
     settings_calib$sitenames = settings_calib$sitenames[-which(settings_calib$sitenames == evalsite)]
-    
+
+    ## overwrite settings to write site-level calibration results to sub-directory
+    settings_calib$dir_results <- dirn
+
     ##------------------------------------------------
     ## Get data for evaluation
     ##------------------------------------------------
