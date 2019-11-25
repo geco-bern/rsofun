@@ -551,6 +551,11 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
       bind_rows(lastrow)
   }
 
+  # Crude fix for a crude problem: some FLUXNET2015 files have NA in first row for VPD
+  if (is.na(df$vpd_day[1]) && !is.na(df$vpd_day[2])){
+    df$vpd_day[1] <- df$vpd_day[2]
+  }
+  
   return(df)
 
 }
