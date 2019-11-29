@@ -551,7 +551,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
         timescale = settings_calib$timescale$gpp,
         getvars = getvars, 
         getswc = FALSE,
-        threshold_GPP = 0.9, 
+        threshold_GPP = settings_calib$threshold_GPP, 
         verbose = TRUE
         ) %>% 
         dplyr::mutate( gpp_obs = case_when("NT" %in% datasource & !("DT" %in% datasource) ~ GPP_NT_VUT_REF,
