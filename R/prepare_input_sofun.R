@@ -425,12 +425,13 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
       error <- check_download_fluxnet2015( settings_input$path_fluxnet2015, sitename )
       
       ddf <- get_obs_bysite_fluxnet2015(sitename, 
-                                            path_fluxnet2015 = settings_input$path_fluxnet2015, 
-                                            path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
-                                            timescale        = "d", 
-                                            getvars          = getvars, 
-                                            getswc           = FALSE 
-      )
+                                        path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                        path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
+                                        timescale        = "d", 
+                                        getvars          = getvars, 
+                                        getswc           = FALSE,
+                                        threshold_GPP    = settings_input$threshold_GPP
+                                        )
       
       if (any(!(fluxnetvars %in% names(ddf)))){
         rlang::warn(paste("Could not get all flunetvars for site", sitename))
@@ -443,12 +444,13 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
           fluxnetvars <- c(fluxnetvars[-which(fluxnetvars=="vpd_day")], "vpd")
           getvars <- "VPD_F"
           ddf <- get_obs_bysite_fluxnet2015(sitename, 
-                                                path_fluxnet2015 = settings_input$path_fluxnet2015, 
-                                                path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
-                                                timescale        = "d", 
-                                                getvars          = getvars, 
-                                                getswc           = FALSE 
-                                                ) %>% 
+                                            path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                            path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
+                                            timescale        = "d", 
+                                            getvars          = getvars, 
+                                            getswc           = FALSE,
+                                            threshold_GPP    = settings_input$threshold_GPP
+                                            ) %>% 
             right_join(ddf, by = "date")
         }
         if ("temp_day" %in% missing){
@@ -457,12 +459,13 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
           fluxnetvars <- c(fluxnetvars[-which(fluxnetvars=="temp_day")], "temp")
           getvars <- "TA_F"
           ddf <- get_obs_bysite_fluxnet2015(sitename, 
-                                                path_fluxnet2015 = settings_input$path_fluxnet2015, 
-                                                path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
-                                                timescale        = "d", 
-                                                getvars          = getvars, 
-                                                getswc           = FALSE 
-                                                ) %>% 
+                                            path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                            path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
+                                            timescale        = "d", 
+                                            getvars          = getvars, 
+                                            getswc           = FALSE,
+                                            threshold_GPP    = settings_input$threshold_GPP
+                                            ) %>% 
             right_join(ddf, by = "date")
         }
         
@@ -475,8 +478,6 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
         
       }
     }
-    
-    
     
     ## Write to temporary file
     readr::write_csv(ddf, path = csvfiln)

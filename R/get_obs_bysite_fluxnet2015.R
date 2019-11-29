@@ -730,27 +730,16 @@ clean_fluxnet_gpp <- function(df, nam_gpp_nt, nam_gpp_dt, nam_nt_qc, nam_dt_qc, 
            GPP_DT_VUT_REF = replace_with_na_res(GPP_DT_VUT_REF, res, q025, q975)
            ) %>% 
 
-    ## remove negative GPP
-    mutate(GPP_NT_VUT_REF = replace_with_na_neg(GPP_NT_VUT_REF),
-           GPP_DT_VUT_REF = replace_with_na_neg(GPP_DT_VUT_REF)
-           ) %>% 
+    # xxx don't do this - distorts error distribution
+    # ## remove negative GPP
+    # mutate(GPP_NT_VUT_REF = replace_with_na_neg(GPP_NT_VUT_REF),
+    #        GPP_DT_VUT_REF = replace_with_na_neg(GPP_DT_VUT_REF)
+    #        ) %>% 
     
     ## remove outliers
     mutate(GPP_NT_VUT_REF = remove_outliers(GPP_NT_VUT_REF, coef = 1.5),
            GPP_DT_VUT_REF = remove_outliers(GPP_DT_VUT_REF, coef = 1.5)
            )
-  
-  # res  <- as.numeric(gpp_nt) - as.numeric(gpp_dt)
-  
-  # gpp_nt[ res > q975 | res < q025  ] <- NA
-  # gpp_dt[ res > q975 | res < q025  ] <- NA
-  
-  # gpp_nt[ which(gpp_nt<0) ] <- NA
-  # gpp_dt[ which(gpp_dt<0) ] <- NA
-  
-  # ## remove outliers
-  # gpp_nt <- remove_outliers( gpp_nt, coef=1.5 )
-  # gpp_dt <- remove_outliers( gpp_dt, coef=1.5 )
   
   return(df)
 }
