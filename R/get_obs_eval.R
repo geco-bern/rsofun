@@ -61,6 +61,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
                        getvars = getvars,
                        getswc=!light,
                        threshold_GPP=0,
+                       remove_neg = TRUE,
                        verbose=FALSE
                        ) %>%
                        mutate( year =lubridate::year(date),
@@ -110,6 +111,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
                        getvars = getvars,
                        getswc=!light,
                        threshold_GPP=0.5,
+                       remove_neg = TRUE,
                        verbose=FALSE
                        ) %>%
                        mutate( year =lubridate::year(date),
@@ -156,6 +158,7 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
                        getvars = getvars, 
                        getswc=!light,                              
                        threshold_GPP=0.5, 
+                       remove_neg = FALSE,
                        verbose=TRUE
                        ) %>%
                        mutate( year =lubridate::year(date),

@@ -28,6 +28,7 @@ vignette: >
 Load the `rsofun` package. This contains all the necessary wrapper functions to set up and run SOFUN and read its output. 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 library(rsofun)
+library(rpmodel)
 
 ## load all rsofun dependencies
 load_dependencies_rsofun()
@@ -35,7 +36,7 @@ load_dependencies_rsofun()
 ## other crap
 knitr::opts_knit$set( root.dir = rprojroot::find_rstudio_root_file() ) # does not work properly
 # if (is.null(options()$rsofun.dir.sofun)) rlang::abort( "Option rsofun.dir.sofun not set. Do so by `options( list( rsofun.dir.sofun=string_path_where_sofun_is ))`" )
-options( list( rsofun.dir.sofun="~/sofun/trunk/" ))
+options( list( rsofun.dir.sofun="~/sofun/" ))
 ```
 
 ## Run implementations for a temperature range
@@ -58,17 +59,17 @@ fapar <- 1
 
 ## R, Vcmax based on Wang Han's formulation
 pmodel_stdrd_R <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
-  ~rpmodel( tc = ., vpd = vpd, co2 = co2, elv = elv, kphio = 0.05, fapar = fapar, ppfd = ppfd, method_optci="prentice14", method_jmaxlim = "wang17", do_ftemp_kphio = FALSE ) 
+  ~rpmodel::rpmodel( tc = ., vpd = vpd, co2 = co2, elv = elv, kphio = 0.05, fapar = fapar, ppfd = ppfd, method_optci="prentice14", method_jmaxlim = "wang17", do_ftemp_kphio = FALSE ) 
   )
 
 pmodel_smith <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
-  ~rpmodel( tc = ., vpd = vpd, co2 = co2, elv = elv, kphio = 0.257, fapar = fapar, ppfd = ppfd, method_optci="prentice14", method_jmaxlim = "smith19", do_ftemp_kphio = FALSE ) 
+  ~rpmodel::rpmodel( tc = ., vpd = vpd, co2 = co2, elv = elv, kphio = 0.257, fapar = fapar, ppfd = ppfd, method_optci="prentice14", method_jmaxlim = "smith19", do_ftemp_kphio = FALSE ) 
   )
 
 ## Fortran, Vcmax basedon Wang Han's formulation
 ## update quantum yield parameter in file
-params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/extdata/params_opt_kphio_soilm_global.csv" ) )
-params_opt$kphio <- 0.05
+#params_opt <- readr::read_csv( paste0( path.package("rsofun"), "/extdata/params_opt_kphio_soilm_global.csv" ) )
+params_opt <- tibble(kphio = 0.05)
 nothing <- update_params( params_opt, options()$rsofun.dir.sofun )
 
 pmodel_fortran <- purrr::map( as.list( seq( 0, 35, length.out = 100 ) ), 
@@ -123,7 +124,7 @@ legend( "topright", c("rsofun standard (R)", "rsofun standard (Fortran)", "Smith
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 vcmax_stdrd_R   <- pmodel_stdrd_R   %>% purrr::map_dbl("vcmax")
 vcmax_fortran   <- pmodel_fortran   %>% purrr::map_dbl("vcmax")
-vcmax_smith     <- pmodel_smith     %>% purrr::map_dbl("vcmax_star")
+# vcmax_smith     <- pmodel_smith     %>% purrr::map_dbl("vcmax_star")
 
 plot(  seq( 0, 35, length.out = 100 ), vcmax_stdrd_R, type = "l", xlab = "Temperature (deg C)", ylab = "Vcmax", lwd=6, ylim=c(0,max(vcmax_stdrd_R)) )
 lines( seq( 0, 35, length.out = 100 ), vcmax_fortran, col="green", lwd=3 )

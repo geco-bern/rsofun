@@ -552,6 +552,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
         getvars = getvars, 
         getswc = FALSE,
         threshold_GPP = settings_calib$threshold_GPP, 
+        remove_neg = FALSE,
         verbose = TRUE
         ) %>% 
         dplyr::mutate( gpp_obs = case_when("NT" %in% datasource & !("DT" %in% datasource) ~ GPP_NT_VUT_REF,
@@ -634,6 +635,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
         getvars = c("LE_F_MDS", "LE_RANDUNC"), 
         getswc = FALSE,
         threshold_LE = 0.6, 
+        remove_neg = FALSE,
         verbose = TRUE
         ) %>% 
         dplyr::right_join( ddf, by = "date" )
