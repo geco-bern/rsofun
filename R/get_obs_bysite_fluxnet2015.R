@@ -95,17 +95,20 @@
 #' meaning no data is excluded.
 #' @param return_qc A logical specifying whether quality control variables
 #' should be returned.
+#' @param remove_neg A logical specifying whether negative GPP values are to
+#' be removed (replaces with NA).
 #'
 #' @return A data frame (tibble) containing cleaned observational data,
 #' named and in units corresponding to rsofun standard.
 #' @export
 #'
-#' @examples df <- get_obs_bysite_fluxnet2015( "FR-Pue", "./inst/extdata/", timescale = "d, method = "NT" )
+#' @examples df <- get_obs_bysite_fluxnet2015
 #' 
 get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet2015_hh=NULL,
   timescale, getvars, getswc=TRUE,
   threshold_GPP=0.0, threshold_LE=0.0, threshold_H=0.0, threshold_SWC=0.0, 
-  threshold_WS=0.0, threshold_USTAR=0.0, threshold_T=0.0, threshold_NETRAD=0.0, return_qc=FALSE, verbose=TRUE ){
+  threshold_WS=0.0, threshold_USTAR=0.0, threshold_T=0.0, threshold_NETRAD=0.0, return_qc=FALSE, 
+  remove_neg = FALSE, verbose=TRUE ){
 
   if (verbose) print(paste("Getting FLUXNET data for", sitename, "..."))
   
@@ -390,7 +393,7 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
     # df$GPP_DT_VUT_REF <- out_clean$gpp_dt
     
     df <- df %>% 
-      clean_fluxnet_gpp(threshold = threshold_GPP)
+      clean_fluxnet_gpp(threshold = threshold_GPP, remove_neg = remove_neg)
   }
   
   ## clean energy data (sensible and latent heat flux) data - often has spuriously equal values
@@ -551,6 +554,13 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
       bind_rows(lastrow)
   }
 
+  # Crude fix for a crude problem: some FLUXNET2015 files have NA in first row for VPD
+  if ("vdp_day" %in% getvars){
+    if (is.na(df$vpd_day[1]) && !is.na(df$vpd_day[2])){
+      df$vpd_day[1] <- df$vpd_day[2]
+    }
+  }
+  
   return(df)
 
 }
@@ -685,7 +695,7 @@ convert_energy_fluxnet2015 <- function( le ){
   return(le_converted)
 }
 
-clean_fluxnet_gpp <- function(df, nam_gpp_nt, nam_gpp_dt, nam_nt_qc, nam_dt_qc, threshold){
+clean_fluxnet_gpp <- function(df, nam_gpp_nt, nam_gpp_dt, nam_nt_qc, nam_dt_qc, threshold, remove_neg = FALSE){
   ##--------------------------------------------------------------------
   ## Cleans daily data using criteria 1-4 as documented in Tramontana et al., 2016
   ## gpp_nt: based on nighttime flux decomposition ("NT")
@@ -721,31 +731,25 @@ clean_fluxnet_gpp <- function(df, nam_gpp_nt, nam_gpp_dt, nam_nt_qc, nam_dt_qc, 
   q975 <- quantile( df$res, probs = 0.975, na.rm=TRUE )
   
   df <- df %>% 
+    
+    ## remove data outside the quartiles of the residuals between the DT and NT estimates
     mutate(GPP_NT_VUT_REF = replace_with_na_res(GPP_NT_VUT_REF, res, q025, q975),
            GPP_DT_VUT_REF = replace_with_na_res(GPP_DT_VUT_REF, res, q025, q975)
            ) %>% 
 
-    ## remove negative GPP
-    mutate(GPP_NT_VUT_REF = replace_with_na_neg(GPP_NT_VUT_REF),
-           GPP_DT_VUT_REF = replace_with_na_neg(GPP_DT_VUT_REF)
-           ) %>% 
-    
     ## remove outliers
     mutate(GPP_NT_VUT_REF = remove_outliers(GPP_NT_VUT_REF, coef = 1.5),
            GPP_DT_VUT_REF = remove_outliers(GPP_DT_VUT_REF, coef = 1.5)
            )
   
-  # res  <- as.numeric(gpp_nt) - as.numeric(gpp_dt)
+  ## remove negative GPP
+  if (remove_neg){
+    df <- df %>% 
+      mutate(GPP_NT_VUT_REF = replace_with_na_neg(GPP_NT_VUT_REF),
+             GPP_DT_VUT_REF = replace_with_na_neg(GPP_DT_VUT_REF)
+      )
+  }
   
-  # gpp_nt[ res > q975 | res < q025  ] <- NA
-  # gpp_dt[ res > q975 | res < q025  ] <- NA
-  
-  # gpp_nt[ which(gpp_nt<0) ] <- NA
-  # gpp_dt[ which(gpp_dt<0) ] <- NA
-  
-  # ## remove outliers
-  # gpp_nt <- remove_outliers( gpp_nt, coef=1.5 )
-  # gpp_dt <- remove_outliers( gpp_dt, coef=1.5 )
   
   return(df)
 }

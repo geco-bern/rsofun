@@ -169,6 +169,25 @@ mod$daily[[1]] %>%
 ```
 
 
+### Compare implementations
+
+First, compare input data with the dataset used in Stocker et al. (2019) GMD. 
+```{r}
+ddf_stocker19gmd <- read_csv("~/data/stocker19gmd_outputs/ddf_fluxnet2015_pmodel_with_forcings_stocker19gmd.csv")
+
+## temperature
+ddf_input %>% 
+  left_join(ddf_stocker19gmd, by = c("sitename", "date")) %>% 
+  ggplot(aes(x = temp, y = temp_day_fluxnet2015)) + 
+  geom_point(size = 0.1)
+
+## VPD
+ddf_input %>% 
+  left_join(ddf_stocker19gmd, by = c("sitename", "date")) %>% 
+  ggplot(aes(x = vpd, y = vpd_day_fluxnet2015)) + 
+  geom_point(size = 0.1)
+```
+
 ### Calibrate
 
 ```{r}
