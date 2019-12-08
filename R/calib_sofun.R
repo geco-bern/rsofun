@@ -194,10 +194,10 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
                           lower = lapply( settings_calib$par, function(x) x$lower ) %>% unlist(),
                           upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist(),
                           control=list( 
-                                        temperature=4000, 
+                                        #temperature=4000, 
                                         max.call=settings_calib$maxit,
                                         trace.mat=TRUE,
-                                        threshold.stop=1e-5,
+                                        threshold.stop=1e-4,
                                         max.time=300
                                         )
                         )
@@ -343,6 +343,8 @@ cost_rmse_kphio <- function( par, inverse = FALSE ){
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
   
+  # print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
+  
   if (inverse) cost <- 1.0 / cost
 
   return(cost)
@@ -389,7 +391,7 @@ cost_rmse_fullstack <- function( par, inverse = FALSE ){
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
-  print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
+  # print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
   
   if (inverse) cost <- 1.0 / cost
 
@@ -549,7 +551,8 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
         timescale = settings_calib$timescale$gpp,
         getvars = getvars, 
         getswc = FALSE,
-        threshold_GPP = 0.9, 
+        threshold_GPP = settings_calib$threshold_GPP, 
+        remove_neg = FALSE,
         verbose = TRUE
         ) %>% 
         dplyr::mutate( gpp_obs = case_when("NT" %in% datasource & !("DT" %in% datasource) ~ GPP_NT_VUT_REF,
@@ -632,6 +635,7 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
         getvars = c("LE_F_MDS", "LE_RANDUNC"), 
         getswc = FALSE,
         threshold_LE = 0.6, 
+        remove_neg = FALSE,
         verbose = TRUE
         ) %>% 
         dplyr::right_join( ddf, by = "date" )

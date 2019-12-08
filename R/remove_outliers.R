@@ -4,7 +4,7 @@
 #' The function uses the command \code{boxplot.stats()} which uses the Tukey's method to identify the outliers ranged above and below the \code{coef*}IQR.
 #' 
 #' @param vec A vector of numeric values
-#' @coef A number specifying the maximum distance from the inter-quartile range of \code{vec} for which values in \code{vec} are not replaced with NA.
+#' @param coef A number specifying the maximum distance from the inter-quartile range of \code{vec} for which values in \code{vec} are not replaced with NA.
 #' 
 #' @return A vector of numeric values of length \code{length(vec)} whith all elements identical as in \code{vec} except that outliers are replaced by NA.
 #' @export

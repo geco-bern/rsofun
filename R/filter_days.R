@@ -2,8 +2,7 @@
 #'
 #' Filters observational data points for \code{gpp_obs} (hard-coded) in one data source, based on data availability from another data source.
 #'
-#' @param ddf A data frame containing columns \code{GPP_DT_VUT_REF} in case \code{"fluxnet2015_DT" %in% filter_days_source}, 
-#' \code{GPP_NT_VUT_REF} in case \code{"fluxnet2015_NT" %in% filter_days_source}, 
+#' @param ddf xxx
 #' @param filter_days_source xxx
 #' @param path_gepisat xxx
 #'

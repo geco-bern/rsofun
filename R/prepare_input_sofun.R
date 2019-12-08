@@ -232,12 +232,13 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
       error <- check_download_fluxnet2015( settings_input$path_fluxnet2015, sitename )
       
       ddf <- get_obs_bysite_fluxnet2015(sitename, 
-                                            path_fluxnet2015 = settings_input$path_fluxnet2015, 
-                                            path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
-                                            timescale        = "d", 
-                                            getvars          = getvars, 
-                                            getswc           = FALSE 
-      )
+                                        path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                        path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
+                                        timescale        = "d", 
+                                        getvars          = getvars, 
+                                        getswc           = FALSE,
+                                        threshold_GPP    = settings_input$threshold_GPP
+                                        )
       
       if (any(!(fluxnetvars %in% names(ddf)))){
         rlang::warn(paste("Could not get all flunetvars for site", sitename))
@@ -250,12 +251,13 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
           fluxnetvars <- c(fluxnetvars[-which(fluxnetvars=="vpd_day")], "vpd")
           getvars <- "VPD_F"
           ddf <- get_obs_bysite_fluxnet2015(sitename, 
-                                                path_fluxnet2015 = settings_input$path_fluxnet2015, 
-                                                path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
-                                                timescale        = "d", 
-                                                getvars          = getvars, 
-                                                getswc           = FALSE 
-                                                ) %>% 
+                                            path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                            path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
+                                            timescale        = "d", 
+                                            getvars          = getvars, 
+                                            getswc           = FALSE,
+                                            threshold_GPP    = settings_input$threshold_GPP
+                                            ) %>% 
             right_join(ddf, by = "date")
         }
         if ("temp_day" %in% missing){
@@ -264,12 +266,13 @@ get_input_sofun_climate_bysite <- function( sitename, settings_input, settings_s
           fluxnetvars <- c(fluxnetvars[-which(fluxnetvars=="temp_day")], "temp")
           getvars <- "TA_F"
           ddf <- get_obs_bysite_fluxnet2015(sitename, 
-                                                path_fluxnet2015 = settings_input$path_fluxnet2015, 
-                                                path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
-                                                timescale        = "d", 
-                                                getvars          = getvars, 
-                                                getswc           = FALSE 
-                                                ) %>% 
+                                            path_fluxnet2015 = settings_input$path_fluxnet2015, 
+                                            path_fluxnet2015_hh = settings_input$path_fluxnet2015_hh,
+                                            timescale        = "d", 
+                                            getvars          = getvars, 
+                                            getswc           = FALSE,
+                                            threshold_GPP    = settings_input$threshold_GPP
+                                            ) %>% 
             right_join(ddf, by = "date")
         }
         
@@ -843,7 +846,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
   filnam_raw_csv <- paste0( dirnam_raw_csv, sitename, "_", prod_suffix, "_gee_subset.csv" )
   
   out <- list()
-  cont <- TRUE
+  do_continue <- TRUE
   
   ## Save error code (0: no error, 1: error: file downloaded bu all data is NA, 2: file not downloaded)
   df_error <- tibble()
@@ -921,7 +924,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
         if (any(!is.na(df[[band_var]]))){
           df[[band_var]] <- df[[band_var]] * scale_factor
         } else {
-          cont <- FALSE
+          do_continue <- FALSE
         }
         
       } else {
@@ -929,11 +932,11 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
         print( paste( "WARNING: RAW DATA FILE NOT FOUND FOR SITE:", sitename ) )
         df_error <- df_error %>% bind_rows( tibble( mysitename=sitename, error=2 ) ) 
         out <- NA
-        cont <- FALSE
+        do_continue <- FALSE
         
       }      
       
-      if (cont){
+      if (do_continue){
         ##---------------------------------------------
         ## Clean (gapfill and interpolate) full time series data to 8-days, daily, and monthly
         ##--------------------------------------------------------------------
@@ -999,7 +1002,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
 }
 
 
-gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do_interpolate=FALSE, do_plot_interpolated=FALSE, dir = "./" ){
+gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, splined_fapar, do_interpolate=FALSE, do_plot_interpolated=FALSE, dir = "./" ){
   ##--------------------------------------
   ## Returns data frame containing data 
   ## (and year, moy, doy) for all available
@@ -1476,7 +1479,7 @@ gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do
     i <- 0
     while (class(myloess)=="try-error" && i<50){
       i <- i + 1
-      print(paste("i=",i))
+      # print(paste("i=",i))
       myloess <- try( with( ddf, loess( modisvar[idxs] ~ year_dec[idxs], span=(0.01+0.002*(i-1)) ) ))
     }
 
@@ -1515,9 +1518,13 @@ gapfill_modis <- function( df, sitename, year_start, year_end, qc_name, prod, do
     ddf$sgfiltered[idxs] <- signal::sgolayfilt( ddf$interpl[idxs], p=3, n=51 ) 
       
     ##--------------------------------------
-    ## DEFINE STANDARD: LINEAR INTERPOLATION
+    ## DEFINE STANDARD: LINEAR INTERPOLATION OR SPLINE
     ##--------------------------------------
-    ddf$modisvar_interpol <- ddf$interpl
+    if (splined_fapar){
+      ddf$modisvar_interpol <- ddf$spline
+    } else {
+      ddf$modisvar_interpol <- ddf$interpl
+    }
 
     ## limit to within 0 and 1 (loess spline sometimes "explodes")
     ddf <- ddf %>% mutate( modisvar_interpol = replace( modisvar_interpol, modisvar_interpol<0, 0  ) ) %>%
