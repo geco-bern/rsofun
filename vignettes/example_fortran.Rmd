@@ -311,3 +311,19 @@ out_eval$gpp$fluxnet2015$metrics$xdaily_pooled
 ```{r}
 out_eval$gpp$fluxnet2015$data$xdf %>% rbeni::analyse_modobs2("mod", "obs", type = "heat")
 ```
+
+```{r}
+out_eval$gpp$fluxnet2015$data$ddf %>% 
+  dplyr::filter(sitename=="BE-Vie" & year(date) < 2005) %>% 
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = obs), col="black") +
+  geom_line(aes(y = mod), col="red") + 
+  labs(title = "BE-Vie")
+
+out_eval$gpp$fluxnet2015$data$ddf %>% 
+  dplyr::filter(sitename=="AU-Dry" & year(date) > 2010) %>% 
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = obs), col="black") +
+  geom_line(aes(y = mod), col="red") + 
+  labs(title = "AU-Dry")
+```
