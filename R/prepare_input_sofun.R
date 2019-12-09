@@ -871,7 +871,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
       if (file.exists(filnam_raw_csv) && !overwrite_raw){
         ## Raw downloaded file will be read separately
         # print( paste( "File exists already:", filnam_modis_raw_csv ) )
-        print(paste("site", sitename))
+        # print(paste("site", sitename))
         
       } else {
         ##---------------------------------------------
@@ -948,6 +948,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
           year_end   = df_siteinfo$year_end,
           qc_name = band_qc, 
           prod = prod_suffix,
+          splined_fapar = settings_input$splined_fapar,
           do_interpolate = TRUE,
           do_plot_interpolated = do_plot_interpolated,
           dir = settings_input$path_input
@@ -970,7 +971,7 @@ prepare_input_sofun_fapar_bysite_GEE <- function( df_siteinfo, start_date,
     }
   }
   
-  if (cont){
+  if (do_continue){
     ##---------------------------------------------
     ## Write SOFUN-formatted input
     ##---------------------------------------------

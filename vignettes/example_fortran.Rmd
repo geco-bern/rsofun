@@ -13,22 +13,27 @@ load_dependencies_rsofun()
 
 ### Simulation settings
 
+Manually select some sites from which we're going to use the data for evaluation and calibration.
+```{r}
+mysites <- c("BE-Vie", "DE-Tha", "DK-Sor", "FI-Hyy", "IT-Col", "NL-Loo", "US-MMS", "US-WCr", "US-UMB", "US-Syv", "DE-Hai", "IT-MBo", "US-GLE", "FR-Fon", "NL-Hor", "US-UMd", "AU-Dry", "DE-Obe", "IT-Tor", "US-Wi4")
+```
+
+Create a site meta info table that contains all the site-specific information that is used to force site-simulations (e.g. starting year, number of simulations years, elevation, etc.). For FLUXNET2015 data, required meta info is provided by the `rsofun` package (data frame `rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015`).
 ```{r}
 path_siteinfo <- "~/.siteinfo_example_fortran.csv"
 siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
-  # dplyr::filter(sitename %in% c("FR-Pue", "FR-LBr", "IT-Noe")) %>%
-  # dplyr::slice(61) %>%
+  dplyr::filter(sitename %in% mysites) %>%
   write_csv(path = path_siteinfo)
 ```
 
-
+Now specify the simulation parameters that are identical for all site-scale simulations.
 ```{r}
 params_siml <- list(
   spinup         = TRUE,
 	spinupyears    = 10,
 	recycle        = 1,
-	soilmstress               = TRUE,
-	tempstress                = TRUE,
+	soilmstress               = FALSE,
+	tempstress                = FALSE,
 	in_ppfd                   = TRUE,
 	in_netrad                 = FALSE,
 	const_clim_year           = -9999,
@@ -66,17 +71,21 @@ params_siml <- list(
 	lcalibtransp              = FALSE,
 	lcaliblatenth             = FALSE
 	)
+```
 
+Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters).
+```{r}
 settings_sims <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
 ```
 
-
 ### Define model parameters
+
+First, let's do it by hand (calibration of parameters is shown later).
 ```{r}
 params_modl <- list(
-	kphio           = 0.06,
-	soilm_par_a     = 0.1,
-	soilm_par_b     = 0.7,
+	kphio           = 0.04997714009213085,
+	soilm_par_a     = 1.0,
+	soilm_par_b     = 0.0,
 	vpdstress_par_a = 0.2,
 	vpdstress_par_b = 0.2,
 	vpdstress_par_m = 5
@@ -85,6 +94,7 @@ params_modl <- list(
 
 ### Define soil parameters
 
+For now, this is implemented as an illustration. Should be made site-specific.
 ```{r}
 list_soiltexture <- list(
   top = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
@@ -125,7 +135,6 @@ settings_input <-  list(
   )
 ```
 
-
 Then, get the input data.
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 ddf_input <- prepare_input_sofun(
@@ -133,8 +142,8 @@ ddf_input <- prepare_input_sofun(
   settings_sims = settings_sims,
   overwrite_csv_climate_lev1 = FALSE,
   overwrite_csv_climate_lev2 = FALSE,
-  overwrite_csv_climate_lev3 = TRUE,
-  overwrite_rdata_climate = TRUE,
+  overwrite_csv_climate_lev3 = FALSE,
+  overwrite_rdata_climate = FALSE,
   overwrite_csv_fapar = FALSE,
   verbose = FALSE
   )
@@ -142,8 +151,8 @@ ddf_input <- prepare_input_sofun(
 
 ### Run the model
 
+Run the model for all the sites specified in the first step.
 ```{r}
-#source("~/rsofun/R/run_sofun_f_bysite.R")
 mod <- run_sofun_f_bysite( 
       settings         = dplyr::filter(settings_sims, sitename == settings_sims$sitename[1]), 
       params_modl      = params_modl, 
@@ -168,74 +177,65 @@ mod$daily[[1]] %>%
   labs(title = names(mod$daily[1]), subtitle = "SOFUN output")
 ```
 
-
-### Compare implementations
-
-First, compare input data with the dataset used in Stocker et al. (2019) GMD. 
-```{r}
-ddf_stocker19gmd <- read_csv("~/data/stocker19gmd_outputs/ddf_fluxnet2015_pmodel_with_forcings_stocker19gmd.csv")
-
-## temperature
-ddf_input %>% 
-  left_join(ddf_stocker19gmd, by = c("sitename", "date")) %>% 
-  ggplot(aes(x = temp, y = temp_day_fluxnet2015)) + 
-  geom_point(size = 0.1)
-
-## VPD
-ddf_input %>% 
-  left_join(ddf_stocker19gmd, by = c("sitename", "date")) %>% 
-  ggplot(aes(x = vpd, y = vpd_day_fluxnet2015)) + 
-  geom_point(size = 0.1)
-```
-
 ### Calibrate
 
+Define calibration settings.
 ```{r}
-## Use only sites for calibration for which ANN method by Stocker et al. (2018) worked fine,
-## and exclude sites where C4 vegetation is present.
-flue_sites <- readr::read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
-              dplyr::filter( !is.na(cluster) ) %>% 
-              distinct(site) %>% 
-              pull(site)
-
-calibsites <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
-  dplyr::filter(!(sitename %in% c("DE-Akm", "IT-Ro1"))) %>%  # excluded because fapar data could not be downloaded (WEIRD)
-  # dplyr::filter(!(sitename %in% c("AU-Wom"))) %>%  # excluded because no GPP data was found in FLUXNET file
-  dplyr::filter(sitename != "FI-Sod") %>%  # excluded because some temperature data is missing
-  dplyr::filter( c4 %in% c(FALSE, NA) & classid != "CRO" & classid != "WET" ) %>%
-  dplyr::filter( sitename %in% flue_sites ) %>%
-  pull(sitename)
-
-# ## Calibration sites for TerraP, excluding CA-Obs
-# calibsites <- c("AU-Tum", "CA-NS3", "CA-NS6", "DE-Geb", "DE-Hai", "DE-Kli", "FI-Hyy", "FR-Fon", "FR-LBr", "FR-Pue", "IT-Cpz", "NL-Loo", "US-Ha1", "US-MMS", "US-UMB", "US-WCr")
-# calibsites <- c("FR-Pue", "FR-LBr", "IT-Noe")
-calibsites <- c("DE-Akm")
-
 ## Define calibration settings common for all setups
 settings_calib <- list(
   method              = "gensa",
   targetvars          = c("gpp"),
   timescale           = list( gpp = "d" ),
-  path_fluxnet2015    = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_fluxnet2015_hh = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_0.5h/original/unpacked/",
+  path_fluxnet2015    = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
+  path_fluxnet2015_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
+  threshold_GPP       = 0.5,
   path_gepisat        = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
-  maxit               = 4, # (5 for gensa) (30 for optimr)    #
-  sitenames           = calibsites,
+  maxit               = 10, # (5 for gensa) (30 for optimr)    #
+  sitenames           = mysites,
   filter_temp_max     = 35.0,
   filter_drought      = FALSE,
   metric              = "rmse",
-  dir_results         = "~/eval_pmodel/calib_results",
-  name                = "BRC",
-  par                 = list( kphio = list( lower=0.01, upper=0.2, init=0.05 ) ),
+  dir_results         = "./",
+  name                = "ORG",
+  par                 = list( kphio = list( lower=0.03, upper=0.07, init=0.0496 ) ),
   datasource          = list( gpp = "fluxnet2015_NT" ),
   filter_temp_min     = NA,
   filter_soilm_min    = NA
  )
 ```
+ 
+Get calibration target data.
+```{r}
+ddf_obs_calib <- get_obs_calib( 
+  settings_calib = settings_calib, 
+  settings_sims, 
+  settings_input
+  )
+```
+
+Calibrate the model.
+
+```{r}
+set.seed(1982)
+settings_calib <- calib_sofun(
+  setup          = setup_sofun,
+  settings_calib = settings_calib,
+  settings_sims  = settings_sims,
+  settings_input = settings_input,
+  ddf_obs        = ddf_obs_calib,
+  ddf_input      = ddf_input
+)
+```
+
+The calibrated parameters are returned by `calib_sofun()` as part of the list:
+```{r}
+print(settings_calib$par_opt)
+```
 
 
 ### Evaluate
 
+Run the model once again with these parameters and evaluate results.
 ```{r}
 mylist <- readr::read_csv("~/eval_pmodel/myselect_fluxnet2015.csv") %>% 
   dplyr::filter( use==1 ) %>% 
@@ -253,4 +253,61 @@ settings_eval <- list(
   benchmark = list( gpp = c("fluxnet2015_NT") ),
   remove_premodis = TRUE
   )
+```
+
+Get evaluation data (benchmarking data).
+```{r}
+filn <- "./obs_eval.Rdata"
+if (file.exists(filn)){
+  load(filn)
+} else {
+  obs_eval  <- get_obs_eval( 
+    settings_eval = settings_eval, 
+    settings_sims = settings_sims, 
+    overwrite     = TRUE, 
+    light         = TRUE,
+    add_forcing   = FALSE
+  )
+  save(obs_eval, file = filn)
+} 
+```
+
+Now run the model with calibrated parameters.
+```{r}
+params_modl <- list(
+  kphio           = settings_calib$par_opt[["kphio"]],
+  soilm_par_a     = 1.0,
+  soilm_par_b     = 0.0,
+  vpdstress_par_a = 0.2,
+  vpdstress_par_b = 0.2,
+  vpdstress_par_m = 5
+  )
+
+mod <- runread_sofun_f( 
+  settings = settings_sims, 
+  ddf_input = ddf_input, 
+  list_soiltexture = list_soiltexture, 
+  params_modl = params_modl 
+  )
+```
+
+And finally do the evaluation.
+```{r}
+out_eval <- eval_sofun( 
+  mod, 
+  settings_eval, 
+  settings_sims, 
+  obs_eval = obs_eval, 
+  overwrite = TRUE, 
+  light = FALSE 
+  )
+```
+
+Print some results.
+```{r}
+out_eval$gpp$fluxnet2015$metrics$xdaily_pooled
+```
+
+```{r}
+out_eval$gpp$fluxnet2015$data$xdf %>% rbeni::analyse_modobs2("mod", "obs", type = "heat")
 ```

@@ -23,7 +23,10 @@
 #' @examples out_eval <- eval_sofun( mod, settings_eval, settings_sims, obs_eval = NA, overwrite = TRUE, doplot = FALSE )
 #' 
 eval_sofun <- function(mod, settings_eval, settings_sims, obs_eval = NA, overwrite = TRUE, doplot = FALSE, light = FALSE){
-
+  
+  mod$daily <- mod$daily %>% 
+    dplyr::bind_rows()
+  
   ## Evaluate daily variables
   out <- lapply( as.list(names(settings_eval$benchmark)), 
                  function(x) eval_sofun_byvar(x, dplyr::select(mod$daily, sitename, date, mod = eval(x)), settings_eval, settings_sims, obs_eval = obs_eval, overwrite = TRUE, doplot = FALSE, light = light)

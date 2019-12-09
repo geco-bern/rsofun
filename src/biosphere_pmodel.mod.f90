@@ -225,7 +225,8 @@ contains
                       moy, &
                       myinterface%climate(jpngr)%dtemp(doy), &
                       myinterface%params_siml%soilmstress, &
-                      myinterface%params_siml%tempstress &
+                      myinterface%params_siml%tempstress, &
+                      myinterface%dfapar_field(doy,jpngr) &
                       )
             if (verbose) print*,'... done'
 

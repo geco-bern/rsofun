@@ -19,48 +19,48 @@ run_sofun_f_bysite <- function( settings_sims, params_modl, list_soiltexture, fo
     dplyr::select(temp, rainf=prec, vpd, ppfd, netrad, fsun, snowf, co2, ndep, fapar)
 
   ## Tests
+  do_continue <- TRUE
   if (makecheck){
     is.nanull <- function(x) ifelse(is.na(x) | is.null(x), TRUE, FALSE)
-    cont <- TRUE
     if (any(is.nanull(forcing$temp))){
       rlang::warn(paste("Error: Missing value in temp for site", settings_sims$sitename, "\n"))
-      cont <- FALSE
+      do_continue <- FALSE
     }
     if (any(is.nanull(forcing$rainf))){
       rlang::warn(paste("Error: Missing value in rainf for site", settings_sims$sitename, "\n"))
-      cont <- FALSE
+      do_continue <- FALSE
     }
     if (any(is.nanull(forcing$vpd))){
       rlang::warn(paste("Error: Missing value in vpd for site", settings_sims$sitename, "\n"))
-      cont <- FALSE
+      do_continue <- FALSE
     }
     if (any(is.nanull(forcing$ppfd))){
       rlang::warn(paste("Error: Missing value in ppfd for site", settings_sims$sitename, "\n"))
-      cont <- FALSE
+      do_continue <- FALSE
     }
     if (any(is.nanull(forcing$netrad))){
       rlang::warn(paste("Error: Missing value in netrad for site", settings_sims$sitename, "\n"))
-      cont <- FALSE
+      do_continue <- FALSE
     }
     if (any(is.nanull(forcing$fsun))){
       rlang::warn(paste("Error: Missing value in fsun for site", settings_sims$sitename, "\n"))
-      cont <- FALSE
+      do_continue <- FALSE
     }
     if (any(is.nanull(forcing$snowf))){
       rlang::warn(paste("Error: Missing value in snowf for site", settings_sims$sitename, "\n"))
-      cont <- FALSE
+      do_continue <- FALSE
     }
     if (any(is.nanull(forcing$co2))){
       rlang::warn(paste("Error: Missing value in co2 for site", settings_sims$sitename, "\n"))
-      cont <- FALSE
+      do_continue <- FALSE
     }
     if (any(is.nanull(forcing$ndep))){
       rlang::warn(paste("Error: Missing value in ndep for site", settings_sims$sitename, "\n"))
-      cont <- FALSE
+      do_continue <- FALSE
     }
     if (any(is.nanull(forcing$fapar))){
       rlang::warn(paste("Error: Missing value in fapar for site", settings_sims$sitename, "\n"))
-      cont <- FALSE
+      do_continue <- FALSE
     }
     
     if (nrow(forcing) != settings_sims$params_siml[[1]]$nyeartrend * 365){
@@ -71,7 +71,7 @@ run_sofun_f_bysite <- function( settings_sims, params_modl, list_soiltexture, fo
     }
   }
 
-  if (cont){
+  if (do_continue){
     forcing <- as.matrix(forcing)
     
     n = as.integer(nrow(forcing))

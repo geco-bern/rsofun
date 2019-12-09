@@ -7,19 +7,16 @@
 #' @param settings_sims A list containing model simulation settings from \code{\link{prepare_setup_sofun}}.  See vignette_rsofun.pdf for more information and examples.
 #' @param settings_input A list containing model input settings. See vignette_rsofun.pdf for more information and examples.
 #' @param ddf_obs (Optional) A data frame containing observational data used for model calibration. Created by function \code{get_obs()}
+#' @param ddf_input asdf
 #'
 #' @return A complemented named list containing the calibration settings and optimised parameter values.
 #' @export
 #'
 #' @examples settings_calib <- calib_sofun( setup, settings_calib, settings_sims, settings_input )
 #' 
-calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, ddf_obs = NA ){
+calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, ddf_obs = NA, ddf_input ){
 
-  ## rename for local use
   targetvars <- paste0( settings_calib$targetvars, "_obs")
-  rename_obs <- function(name){paste0(name, "_obs")}
-  ddf_obs <- ddf_obs %>% 
-    rename_at(vars(one_of(settings_calib$targetvars)), rename_obs)
   
   ##----------------------------------------------------------------
   ## Collect observational data used as calibration target
@@ -41,141 +38,30 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   ddf_obs <- ddf_obs %>% 
     dplyr::mutate_at( vars(one_of(targetvars)), ~make_na_premodis(., idxs) )
     
-  
-  # ## "filtering" by minimum temperature
-  # if (!is.na(settings_calib$filter_temp_min)){
-  #   ddf_obs <- ddf_obs %>% 
-  #     rowwise() %>% 
-  #     dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( temp < settings_calib$filter_temp_min, NA, gpp_obs ) )
-  # }
-  # 
-  # ## "filtering" by maximum temperature
-  # if (!is.na(settings_calib$filter_temp_max)){
-  #   ddf_obs <- ddf_obs %>% 
-  #     rowwise() %>% 
-  #     dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( temp > settings_calib$filter_temp_max, NA, gpp_obs ) )
-  # }
-  #         
-  # ## "filtering" by low soil moisture
-  # if (!is.na(settings_calib$filter_soilm_min)){
-  #   ddf_obs <- ddf_obs %>% 
-  #     rowwise() %>% 
-  #     dplyr::mutate_at( vars(one_of(targetvars)), ~ifelse( soilm_obs_mean < settings_calib$filter_soilm_min, NA, gpp_obs ) )
-  # }
-  
-  # ## "filtering" by whether it's a drought based on Stocker et al. (2018) analysis
-  # if (settings_calib$filter_drought){
-  #   ## For calibration, use only non-drought data from sites where the flux/RS-based drought detection 
-  #   ## worked well (see Stocker et al., 2018 New Phytologist). This is based on the fLUE data available
-  #   ## through Zenodo (https://zenodo.org/record/1158524#.W2fz2dgzbUI).
-  #   ddf_obs <-  readr::read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
-  #     dplyr::filter( !is.na(cluster) ) %>%
-  #     dplyr::select( site, date, is_flue_drought ) %>%
-  #     dplyr::rename( sitename = site ) %>%
-  #     right_join( ddf_obs, by = c( "sitename", "date" ) ) %>%
-  #     dplyr::mutate( gpp_obs = ifelse( is_flue_drought, NA, gpp_obs ) )
-    
-  # }
-
-  # ## Re-evaluate sites to be used for calibration based on whether they have at least one valid data point
-  # ## and overwrite:
-  # settings_calib$sitenames <- ddf_obs %>% group_by( sitename ) %>% summarise( npoints = sum(!is.na(gpp_obs)) ) %>%
-  #                             dplyr::filter( npoints > 0 ) %>%
-  #                             dplyr::select( sitename ) %>%
-  #                             unlist() %>% unname()
 
   ## make global
   targetvars_with_unc <- c(targetvars, paste0(settings_calib$targetvars, "_unc"))
-  obs <<- ddf_obs %>% 
+  ddf_obs <- ddf_obs %>% 
     dplyr::select( date, sitename, one_of( targetvars_with_unc ) ) %>% 
     dplyr::filter( sitename %in% settings_calib$sitenames )
 
-  if (nrow(obs)>0){
-
-    if (!settings_sims$implementation=="fortran") rlang::abort("calib_sofun(): Only implemented for Fortran.")
-
-    ##----------------------------------------------------------------
-    ## Set up for calibration ensemble
-    ##----------------------------------------------------------------
-    ## Write total number of simulation years in this ensemble to file (needed in calibration setup)
-    filn_totrunyears <- paste0( settings_sims$path_input, "run/totrunyears_calib.txt" )
-    zz <- file( filn_totrunyears, "w")
-    tmp <- purrr::map( unlist(settings_sims$nyears)[ names(unlist(settings_sims$nyears)) %in% settings_calib$sitenames ] %>% sum(), ~cat( ., "\n", file=zz ) )
-    close(zz)
-
-    ## Write total number of calibration targets to file
-    filn_nvars_calib <- paste0( settings_sims$path_input, "run/nvars_calib.txt" )
-    zz <- file( filn_nvars_calib, "w")
-    tmp <- cat( length( settings_calib$targetvars ), "\n", file=zz )
-    close(zz)      
-
-    ## Write run names (site names) for calibration to file
-    settings_calib$path_runnames <- paste0( settings_sims$path_input, "run/runnames_calib_", settings_sims$name, ".txt" )
-    zz <- file( settings_calib$path_runnames, "w")
-    tmp <- purrr::map( as.list(settings_calib$sitenames), ~cat( ., "\n", file=zz ) )
-    close(zz)
-
-    ## global variables (used inside cost function)
-    model    <<- paste0(setup$model, "_simsuite")
-    simsuite <<- settings_sims$name
-
-    ## save current working directory
-    here <- getwd()
-    setwd( settings_sims$dir_sofun )
-
-    ## example run to get output file structure
-    param_init <- unlist( lapply( settings_calib$par, function(x) x$init ) ) %>% unname()
-    if (!dir.exists(paste0( settings_sims$dir_sofun, "output_calib/"))) system(paste0("mkdir ", settings_sims$dir_sofun, "output_calib/"))
-    outfilnam <<- paste0( settings_sims$dir_sofun, "output_calib/calibtargets_tmp_", settings_sims$name, ".txt" )
-    if (file.exists(outfilnam)) system( paste0("rm ", outfilnam))
-
-    ## Get executable
-    if (setup$do_compile){
-
-      ## Compile from source code
-      system( "make clean" )
-      system( paste0("make ", model) )
-
-    } else if (!file.exists(paste0("run", model))){
-
-      ## Copy pre-compiled executable from R package (only for Mac)
-      print("Copying executable, compiled on a Mac with gfortran into SOFUN run directory...")
-      system( paste0( "cp ", path.package("rsofun"), "/extdata/run", model, " ." ) )
-
-      # ## Download executable from CX1
-      # rlang::warn( paste0("Executable run", setup$model, " is not available locally. Download it from CX1..."))
-      # download_from_remote(   path_remote = paste0("/work/bstocker/labprentice/data/sofun_executables/run/", setup$model ),
-      #                         path_local = settings$dir_sofun 
-      #                         )
-
-      if (!file.exists(paste0("run", model))) abort( paste( "Executable could not be copied: ", paste0("run", model)) )
-
-    }
+  if (nrow(ddf_obs)>0){
 
     ## Example run for getting structure of output file
     if (identical(names(settings_calib$par),"kphio")){
       ## For calibrating quantum yield efficiency only
-      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", param_init[1], 1.0, 0.0, -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
       # cost_rmse <- cost_chisquared_kphio
       cost_rmse <- cost_rmse_kphio
     
     } else if ( "kphio" %in% names(settings_calib$par) && "soilm_par_a" %in% names(settings_calib$par) && "soilm_par_b" %in% names(settings_calib$par) ){  
       ## Full stack calibration
-      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", param_init[1], param_init[2], param_init[3], -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
       cost_rmse <- cost_rmse_fullstack   
 
     } else if ( "vpdstress_par_a" %in% names(settings_calib$par) && "vpdstress_par_b" %in% names(settings_calib$par) && "vpdstress_par_m" %in% names(settings_calib$par) ){  
       ## Calibration of VPD stress function (P-model runs with soilmstress and tempstress on)
-      out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", 0.0870, 0.0000, 0.6850, param_init[1], param_init[2], param_init[3] ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
       cost_rmse <- cost_chisquared_vpdstress
       
     }
-
-    # col_positions <<- fwf_empty( outfilnam, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ), comment = "" ) ## this caused a mean bug, 
-    col_positions <<- list( begin = 1, end = 15, skip = 0, col_names = paste0( settings_calib$targetvars, "_mod" ) ) ## this is how bug is fixed
-    mod <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
-
-    if (nrow(mod)!=nrow(obs)) abort("calib_sofun(): Unequal number of rows in obs. and mod. Re-read observational data.")
 
     ##----------------------------------------------------------------
     ## Do the calibration
@@ -199,7 +85,9 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
                                         trace.mat=TRUE,
                                         threshold.stop=1e-4,
                                         max.time=300
-                                        )
+                                        ),
+                          ddf_obs = ddf_obs,
+                          ddf_input = ddf_input
                         )
       out_optim$time_optim <- proc.time() - ptm
       print(out_optim$par)
@@ -251,6 +139,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
       bt_settings <- list( iterations = settings_calib$maxit,  message = TRUE )
       out_optim <- runMCMC( bayesianSetup = bt_setup, sampler = "DEzs", settings = bt_settings )
       proc.time() - ptm
+      
 
     } else if (settings_calib$method=="linscale"){
       ##----------------------------------------------------------------
@@ -292,15 +181,6 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
     }
     settings_calib$par_opt <- out_optim$par
     
-    setwd( here )
-
-    # ## delete variables made global again
-    # if (exists("model"))         rm( "model", where=.GlobalEnv )
-    # if (exists("simsuite"))      rm( "simsuite", where=.GlobalEnv )
-    # if (exists("outfilnam"))     rm( "outfilnam", where=.GlobalEnv )
-    # if (exists("col_positions")) rm( "col_positions", where=.GlobalEnv )
-    # if (exists("obs"))           rm( "obs", where=.GlobalEnv )
-
   } else {
 
     print("WARNING: No observational target data left after filtering.")
@@ -314,7 +194,6 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
 
   ## Write calibrated parameters into a CSV file
   vec <- unlist( unname( lapply( settings_calib$par, function(x) x$opt  )) )
-  # df <- as_tibble(t(vec)) %>% setNames( names(vec) )
   df <- as_tibble(t(vec)) %>% setNames( names(settings_calib$par) )
   filn <- paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name, ".csv")
   print( paste0( "writing calibrated parameters to ", filn ) )
@@ -328,20 +207,32 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
 ## Generic cost function of model-observation (mis-)match using
 ## root mean square error.
 ##------------------------------------------------------------
-cost_rmse_kphio <- function( par, inverse = FALSE ){
+cost_rmse_kphio <- function( par, ddf_obs, ddf_input, inverse = FALSE ){
 
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", par[1], 1.0, 0.0, -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## single calibration parameter
-  
-  ## read output from calibration run
-  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
-  
-  ## Combine obs and mod by columns
-  out <- bind_cols( obs, out )
+  params_modl <- list(
+    kphio           = par[1],
+    soilm_par_a     = 1.0,
+    soilm_par_b     = 0.0,
+    vpdstress_par_a = 0.2,
+    vpdstress_par_b = 0.2,
+    vpdstress_par_m = 5
+    )
+
+  df <- runread_sofun_f( 
+    settings         = settings_sims, 
+    ddf_input        = ddf_input, 
+    list_soiltexture = list_soiltexture, 
+    params_modl      = params_modl,
+    makecheck        = FALSE
+    )[["daily"]] %>% 
+    dplyr::bind_rows() %>% 
+    dplyr::rename(gpp_mod = gpp) %>% 
+    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
   ## Calculate cost (RMSE)
-  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
+  cost <- sqrt( mean( (df$gpp_mod - df$gpp_obs )^2, na.rm = TRUE ) )
   
   # print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
   
@@ -506,7 +397,7 @@ get_obs_calib <- function( settings_calib, settings_sims, settings_input ){
   list_bysite <- lapply( settings_calib$sitenames, 
                          function(x) get_obs_bysite(x,
                                                     settings_calib = settings_calib, 
-                                                    settings_sims  = settings_sims,
+                                                    settings_sims  = dplyr::filter(settings_sims, sitename == x),
                                                     settings_input = settings_input) %>% 
                            mutate( sitename=x ) 
                          )
@@ -524,12 +415,12 @@ get_obs_calib <- function( settings_calib, settings_sims, settings_input ){
 ## Function returns a data frame (tibble) containing all the observational data
 ## used as target variables for calibration for a given site, covering specified dates.
 ##------------------------------------------------------------
-get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_input ){
+get_obs_bysite <- function( mysitename, settings_calib, settings_sims, settings_input ){
 
-  # print(paste("getting obs for ", sitename))
+  # print(paste("getting obs for ", mysitename))
 
   ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
-  ddf <- init_dates_dataframe( year(settings_sims$date_start[[sitename]]), year(settings_sims$date_end[[sitename]]), noleap = TRUE )
+  ddf <- init_dates_dataframe( year(settings_sims$date_start), year(settings_sims$date_end), noleap = TRUE )
 
   if ("gpp" %in% settings_calib$targetvars){
 
@@ -543,10 +434,10 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
       ## Make sure data is available for this site
       getvars <- c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC", "GPP_NT_VUT_SE", "GPP_DT_VUT_SE")
       
-      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
+      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, mysitename )
       
       ddf <- get_obs_bysite_fluxnet2015(
-        sitename, 
+        mysitename, 
         path_fluxnet2015 = settings_input$path_fluxnet2015, 
         timescale = settings_calib$timescale$gpp,
         getvars = getvars, 
@@ -561,7 +452,8 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
                                            ),
                        gpp_unc = case_when("NT" %in% datasource & !("DT" %in% datasource) ~ GPP_NT_VUT_SE,
                                            "DT" %in% datasource & !("NT" %in% datasource) ~ GPP_DT_VUT_SE )) %>% 
-        dplyr::right_join( ddf, by = "date" )
+        dplyr::right_join( ddf, by = "date" ) %>% 
+        dplyr::select(date, gpp_obs, gpp_unc)
       
       # ## replace observations with NA if uncertainty is very small -- only necessary when using chi-squared calibration
       # targetvars_unc <- paste0(settings_calib$targetvars, "_unc")
@@ -574,12 +466,12 @@ get_obs_bysite <- function( sitename, settings_calib, settings_sims, settings_in
       #   dplyr::mutate( gpp_obs = replace_zero_with_na(gpp_obs, gpp_unc) )
       # 
       
-      test <- sum(!is.na(ddf$gpp_obs))
+      # test <- sum(!is.na(ddf$gpp_obs))
       # if (test<3) rlang::abort(paste0("Too hard filtering for site ", sitename))
 
     } else {
       
-      ddf <- ddf %>% dplyr::mutate( gpp_obs = NA )
+      ddf <- ddf %>% dplyr::mutate( gpp_obs = NA, gpp_unc = NA )
       
     }
 
