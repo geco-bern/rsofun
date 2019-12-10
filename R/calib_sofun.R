@@ -227,7 +227,7 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
       .,
       run_sofun_f_bysite,
       params_modl = params_modl,
-      makecheck = makecheck
+      makecheck = FALSE
     )) %>% 
     dplyr::select(sitename, out_sofun) %>% 
     dplyr::rename(id = sitename) %>% 

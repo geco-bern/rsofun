@@ -186,14 +186,23 @@ df_output <- df_drivers %>%
 ptm <- proc.time() - ptm
 print(ptm)
 
-ptm <- proc.time()
-df_output <- runread_sofun_f(
+microbenchmark::microbenchmark(
+  runread_sofun_f(
   df_drivers, 
   params_modl = params_modl, 
-  makecheck = TRUE
-  )
-ptm <- proc.time() - ptm
-print(ptm)
+  makecheck = TRUE,
+  parallel = TRUE,
+  ncores = 4
+  ),
+  runread_sofun_f(
+  df_drivers, 
+  params_modl = params_modl, 
+  makecheck = TRUE,
+  parallel = FALSE
+  ),
+  times = 5,
+  units = 's'
+)
 
 df_output$out_sofun[[1]] %>% 
   ggplot(aes(x=date, y=gpp)) +
@@ -305,13 +314,6 @@ params_modl <- list(
   vpdstress_par_m = 5
   )
 
-# mod <- runread_sofun_f( 
-#   settings = settings_sims, 
-#   ddf_input = ddf_input, 
-#   list_soiltexture = list_soiltexture, 
-#   params_modl = params_modl 
-#   )
-
 mod <- runread_sofun_f(
   df_drivers, 
   params_modl = params_modl, 
@@ -322,7 +324,7 @@ mod <- runread_sofun_f(
 ```
 
 And finally do the evaluation.
-```{r}
+```{r warning=FALSE, message=FALSE}
 out_eval <- eval_sofun( 
   mod, 
   settings_eval, 

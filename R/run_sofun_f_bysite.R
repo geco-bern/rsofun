@@ -92,25 +92,7 @@ run_sofun_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_soi
     soiltexture <- df_soiltexture %>% 
       dplyr::select(fsand, fclay, forg, fgravel) %>% 
       as.matrix() %>% 
-      t() 
-    
-    # soiltexture = data.frame(
-    #   top =  c(
-    #   as.numeric(list_soiltexture$top$fsand), 
-    #   as.numeric(list_soiltexture$top$fclay), 
-    #   as.numeric(list_soiltexture$top$forg), 
-    #   as.numeric(list_soiltexture$top$fgravel)),
-    #   bottom =  c(
-    #   as.numeric(list_soiltexture$bottom$fsand), 
-    #   as.numeric(list_soiltexture$bottom$fclay), 
-    #   as.numeric(list_soiltexture$bottom$forg), 
-    #   as.numeric(list_soiltexture$bottom$fgravel))
-    #   ) %>% 
-    #   as.matrix()
-    
-    # ## unnest simulation parameters list
-    # settings_sims <- settings_sims %>% 
-    #   tidyr::unnest(params_siml)
+      t()
 
     ## C wrapper call
     out <- .Call(
