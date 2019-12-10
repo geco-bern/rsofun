@@ -96,9 +96,9 @@ params_modl <- list(
 
 For now, this is implemented as an illustration. Should be made site-specific.
 ```{r}
-list_soiltexture <- list(
-  top = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
-  bottom = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
+df_soiltexture <- bind_rows(
+  top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
+  bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
 )
 ```
 
@@ -153,28 +153,52 @@ ddf_input <- prepare_input_sofun(
 
 Run the model for all the sites specified in the first step.
 ```{r}
-mod <- run_sofun_f_bysite( 
-      settings         = dplyr::filter(settings_sims, sitename == settings_sims$sitename[1]), 
-      params_modl      = params_modl, 
-      list_soiltexture = list_soiltexture,
-      forcing          = dplyr::filter(ddf_input, sitename == settings_sims$sitename[1])
-      )
-      
-## call SOFUN for multiple sites
-ptm <- proc.time()
-mod <- runread_sofun_f( 
+df_drivers <- collect_drivers_sofun( 
   settings = settings_sims, 
-  ddf_input = ddf_input, 
-  list_soiltexture = list_soiltexture, 
-  params_modl = params_modl 
+  forcing = ddf_input, 
+  df_soiltexture = df_soiltexture
+  )
+
+## by spelling out arguments
+mod <- run_sofun_f_bysite( 
+  df_drivers$sitename[1], 
+  df_drivers$params_siml[[1]], 
+  df_drivers$siteinfo[[1]], 
+  df_drivers$forcing[[1]], 
+  df_drivers$df_soiltexture[[1]], 
+  params_modl = params_modl, 
+  makecheck = TRUE 
+  )
+
+## The advantage of using the nested data frame 'df_drivers' is that the 
+## function 'run_sofun_f_bysite' can be applied to each row using 'pmap'
+## Doing it like this, the outputs are stored in a new column 'out_sofun'.
+## This same code is implemented in 'run_sofun_f'
+ptm <- proc.time()
+df_output <- df_drivers %>% 
+  mutate(out_sofun = purrr::pmap(
+    .,
+    run_sofun_f_bysite,
+    params_modl = params_modl,
+    makecheck = TRUE
+    )) %>% 
+    dplyr::select(sitename, out_sofun)
+ptm <- proc.time() - ptm
+print(ptm)
+
+ptm <- proc.time()
+df_output <- runread_sofun_f(
+  df_drivers, 
+  params_modl = params_modl, 
+  makecheck = TRUE
   )
 ptm <- proc.time() - ptm
 print(ptm)
 
-mod$daily[[1]] %>% 
+df_output$out_sofun[[1]] %>% 
   ggplot(aes(x=date, y=gpp)) +
   geom_line() + 
-  labs(title = names(mod$daily[1]), subtitle = "SOFUN output")
+  labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
 ```
 
 ### Calibrate
@@ -190,7 +214,7 @@ settings_calib <- list(
   path_fluxnet2015_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
   threshold_GPP       = 0.5,
   path_gepisat        = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
-  maxit               = 10, # (5 for gensa) (30 for optimr)    #
+  maxit               = 5, # (5 for gensa) (30 for optimr)    #
   sitenames           = mysites,
   filter_temp_max     = 35.0,
   filter_drought      = FALSE,
@@ -205,10 +229,10 @@ settings_calib <- list(
 ```
  
 Get calibration target data.
-```{r}
+```{r warning=FALSE, messge=FALSE}
 ddf_obs_calib <- get_obs_calib( 
   settings_calib = settings_calib, 
-  settings_sims, 
+  dplyr::select(df_drivers, sitename, siteinfo) %>% tidyr::unnest(siteinfo), 
   settings_input
   )
 ```
@@ -217,14 +241,12 @@ Calibrate the model.
 
 ```{r}
 set.seed(1982)
-settings_calib <- calib_sofun(
-  setup          = setup_sofun,
-  settings_calib = settings_calib,
-  settings_sims  = settings_sims,
-  settings_input = settings_input,
-  ddf_obs        = ddf_obs_calib,
-  ddf_input      = ddf_input
-)
+settings_calib <- calib_sofun( 
+  settings_calib, 
+  settings_input, 
+  df_drivers, 
+  ddf_obs = ddf_obs_calib 
+  )
 ```
 
 The calibrated parameters are returned by `calib_sofun()` as part of the list:
@@ -283,12 +305,20 @@ params_modl <- list(
   vpdstress_par_m = 5
   )
 
-mod <- runread_sofun_f( 
-  settings = settings_sims, 
-  ddf_input = ddf_input, 
-  list_soiltexture = list_soiltexture, 
-  params_modl = params_modl 
-  )
+# mod <- runread_sofun_f( 
+#   settings = settings_sims, 
+#   ddf_input = ddf_input, 
+#   list_soiltexture = list_soiltexture, 
+#   params_modl = params_modl 
+#   )
+
+mod <- runread_sofun_f(
+  df_drivers, 
+  params_modl = params_modl, 
+  makecheck = TRUE
+  ) %>% 
+  rename(id = sitename) %>% 
+  unnest(out_sofun)
 ```
 
 And finally do the evaluation.

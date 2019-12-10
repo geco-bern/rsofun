@@ -2,8 +2,8 @@
 #'
 #' Runs the model and reads output in once.
 #'
-#' @param settings A named list containing the simulation settings (see vignette_rsofun.pdf for more information and examples).
-#' @param ddf_input A data frame containing the model forcing for each model time step. 
+#' @param df_drivers
+#' @param params_modl
 #' @param makecheck A logical specifying whether checks are performed to verify forcings.
 #'
 #' @return Returns a named list of data frames (tibbles) containing model outputs (separate data frames for 
@@ -14,20 +14,44 @@
 #'
 #' @examples mod <- runread_sofun( settings = settings, setup = setup_sofun )
 #' 
-runread_sofun_f <- function( settings, ddf_input, list_soiltexture, params_modl, makecheck = TRUE ){
+runread_sofun_f <- function( df_drivers, params_modl, makecheck = TRUE ){
 
-  ddf <- purrr::map(
-    as.list(settings$sitename),
-    ~run_sofun_f_bysite( 
-      settings         = dplyr::filter(settings, sitename == .), 
-      params_modl      = params_modl, 
-      list_soiltexture = list_soiltexture,
-      forcing          = dplyr::filter(ddf_input, sitename == .),
-      makecheck        = makecheck  
-    )
-  )
-  names(ddf) <- settings$sitename
-  # ddf <- ddf %>% dplyr::bind_rows(.id = "sitename")
-  out <- list(daily = ddf)
-  return(out)
+  # if (parallelise){
+  #   
+  # 
+  #   
+  #   ## set up the cluster
+  #   cluster <- multidplyr::new_cluster(settings$ncores)
+  #   
+  #   ## distribute to to cores, making sure all data from a specific site is sent to the same core
+  #   forcing_distr <- forcing %>% 
+  #     dplyr::group_by(sitename) %>% 
+  #     multidplyr::partition(cluster)
+  #   
+  # }
+  
+  df_out <- df_drivers %>% 
+    mutate(out_sofun = purrr::pmap(
+      .,
+      run_sofun_f_bysite,
+      params_modl = params_modl,
+      makecheck = makecheck
+    )) %>% 
+    dplyr::select(sitename, out_sofun)
+  
+  # ddf <- purrr::map(
+  #   as.list(settings$sitename),
+  #   ~run_sofun_f_bysite( 
+  #     settings         = dplyr::filter(settings, sitename == .), 
+  #     params_modl      = params_modl, 
+  #     df_soiltexture = df_soiltexture,
+  #     forcing          = dplyr::filter(forcing, sitename == .),
+  #     makecheck        = makecheck  
+  #   )
+  # )
+  # names(ddf) <- settings$sitename
+  # # ddf <- ddf %>% dplyr::bind_rows(.id = "sitename")
+  # out <- list(daily = ddf)
+  
+  return(df_out)
 }

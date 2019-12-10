@@ -2,19 +2,17 @@
 #'
 #' This is the main function that handles the calibration of SOFUN model parameters. 
 #' 
-#' @param setup A list containging the model settings. See vignette_rsofun.pdf for more information and an example.
 #' @param settings_calib A list containing model calibration settings. See vignette_rsofun.pdf for more information and examples.
-#' @param settings_sims A list containing model simulation settings from \code{\link{prepare_setup_sofun}}.  See vignette_rsofun.pdf for more information and examples.
 #' @param settings_input A list containing model input settings. See vignette_rsofun.pdf for more information and examples.
+#' @param df_drivers asdf
 #' @param ddf_obs (Optional) A data frame containing observational data used for model calibration. Created by function \code{get_obs()}
-#' @param ddf_input asdf
 #'
 #' @return A complemented named list containing the calibration settings and optimised parameter values.
 #' @export
 #'
 #' @examples settings_calib <- calib_sofun( setup, settings_calib, settings_sims, settings_input )
 #' 
-calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, ddf_obs = NA, ddf_input ){
+calib_sofun <- function( settings_calib, settings_input, df_drivers, ddf_obs = NA ){
 
   targetvars <- paste0( settings_calib$targetvars, "_obs")
   
@@ -23,7 +21,11 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
   ##----------------------------------------------------------------
   if (identical(NA,ddf_obs)){
     print("Collecting observational target data ...")
-    ddf_obs <- get_obs_calib( settings_calib, settings_sims, settings_input )
+    ddf_obs <- get_obs_calib( 
+      settings_calib, 
+      dplyr::select(df_drivers, sitename, siteinfo) %>% tidyr::unnest(siteinfo), 
+      settings_input 
+      )
   }
 
   ##----------------------------------------------------------------
@@ -87,7 +89,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
                                         max.time=300
                                         ),
                           ddf_obs = ddf_obs,
-                          ddf_input = ddf_input
+                          df_drivers = df_drivers
                         )
       out_optim$time_optim <- proc.time() - ptm
       print(out_optim$par)
@@ -207,7 +209,7 @@ calib_sofun <- function( setup, settings_calib, settings_sims, settings_input, d
 ## Generic cost function of model-observation (mis-)match using
 ## root mean square error.
 ##------------------------------------------------------------
-cost_rmse_kphio <- function( par, ddf_obs, ddf_input, inverse = FALSE ){
+cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
 
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
@@ -220,21 +222,23 @@ cost_rmse_kphio <- function( par, ddf_obs, ddf_input, inverse = FALSE ){
     vpdstress_par_m = 5
     )
 
-  df <- runread_sofun_f( 
-    settings         = settings_sims, 
-    ddf_input        = ddf_input, 
-    list_soiltexture = list_soiltexture, 
-    params_modl      = params_modl,
-    makecheck        = FALSE
-    )[["daily"]] %>% 
-    dplyr::bind_rows() %>% 
+  df <- df_drivers %>% 
+    mutate(out_sofun = purrr::pmap(
+      .,
+      run_sofun_f_bysite,
+      params_modl = params_modl,
+      makecheck = makecheck
+    )) %>% 
+    dplyr::select(sitename, out_sofun) %>% 
+    dplyr::rename(id = sitename) %>% 
+    tidyr::unnest(out_sofun) %>% 
     dplyr::rename(gpp_mod = gpp) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (df$gpp_mod - df$gpp_obs )^2, na.rm = TRUE ) )
   
-  # print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
+  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
   if (inverse) cost <- 1.0 / cost
 
