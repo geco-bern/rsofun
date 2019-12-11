@@ -2,7 +2,7 @@ module md_interface
 
   use, intrinsic :: iso_fortran_env, dp=>real64
 
-  use md_forcing, only: climate_type, landuse_type, ninput_type  
+  use md_forcing, only: climate_type, landuse_type, ninput_type, vegcover_type  
   use md_params_soil, only: paramtype_soil
   use md_params_siml, only: paramstype_siml, outtype_steering
   use md_params_core, only: nlayers_soil, ndayyear
@@ -32,7 +32,7 @@ module md_interface
     ! type( landuse_type )  , dimension(:),   allocatable :: landuse
     type( climate_type )  , dimension(:),   allocatable :: climate
     ! type( ninput_type)    , dimension(:),   allocatable :: ninput_field
-    real                  , dimension(:,:), allocatable :: dfapar_field
+    type( vegcover_type ) , dimension(:), allocatable   :: vegcover
     type( domaininfo_type )                             :: domaininfo
     type( outtype_steering )                            :: steering
     type( paramstype_siml )                             :: params_siml

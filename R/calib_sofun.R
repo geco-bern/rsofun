@@ -16,6 +16,10 @@ calib_sofun <- function( settings_calib, settings_input, df_drivers, ddf_obs = N
 
   targetvars <- paste0( settings_calib$targetvars, "_obs")
   
+  ## Use only calibsites
+  df_drivers <- df_drivers %>% 
+    dplyr::filter(sitename %in% settings_calib$sitenames)
+  
   ##----------------------------------------------------------------
   ## Collect observational data used as calibration target
   ##----------------------------------------------------------------
@@ -297,21 +301,38 @@ cost_rmse_fullstack <- function( par, inverse = FALSE ){
 ## Generic cost function of model-observation (mis-) match using
 ## root mean square error.
 ##------------------------------------------------------------
-cost_rmse_vpdstress <- function( par, inverse = FALSE ){
+cost_rmse_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   
-  ## Full stack calibration
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", 0.0870, 0.0000, 0.6850, par[1], par[2], par[3] ), " | ./run", model ), intern = TRUE )
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio           = 0.04971,
+    soilm_par_a     = 1.0,
+    soilm_par_b     = 0.0,
+    vpdstress_par_a = par[1],
+    vpdstress_par_b = par[2],
+    vpdstress_par_m = par[3]
+  )
   
-  ## read output from calibration run
-  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
-  
-  ## Combine obs and mod by columns
-  out <- bind_cols( obs, out )
+  df <- df_drivers %>% 
+    mutate(out_sofun = purrr::pmap(
+      .,
+      run_sofun_f_bysite,
+      params_modl = params_modl,
+      makecheck = FALSE
+    )) %>% 
+    dplyr::select(sitename, out_sofun) %>% 
+    dplyr::rename(id = sitename) %>% 
+    tidyr::unnest(out_sofun) %>% 
+    dplyr::rename(gpp_mod = gpp) %>% 
+    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
   ## Calculate cost (RMSE)
-  cost <- sqrt( mean( (out$latenth_mod - out$latenth_obs )^2, na.rm = TRUE ) )
+  cost <- sqrt( mean( (df$latenth_mod - df$latenth_obs )^2, na.rm = TRUE ) )
   
-  if (inverse) cost <- 1.0 / cost
+  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost  
   
   return(cost)
 }
@@ -320,21 +341,38 @@ cost_rmse_vpdstress <- function( par, inverse = FALSE ){
 ## Generic cost function of model-observation (mis-) match using
 ## the chi-squared statistic (Keenan et al., 2012 GCB).
 ##------------------------------------------------------------
-cost_chisquared_vpdstress <- function( par, inverse = FALSE ){
+cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   
-  ## Full stack calibration
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", 0.0870, 0.0000, 0.6850, par[1], par[2], par[3] ), " | ./run", model ), intern = TRUE )
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio           = 0.04971,
+    soilm_par_a     = 1.0,
+    soilm_par_b     = 0.0,
+    vpdstress_par_a = par[1],
+    vpdstress_par_b = par[2],
+    vpdstress_par_m = par[3]
+  )
   
-  ## read output from calibration run
-  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
+  df <- df_drivers %>% 
+    mutate(out_sofun = purrr::pmap(
+      .,
+      run_sofun_f_bysite,
+      params_modl = params_modl,
+      makecheck = FALSE
+    )) %>% 
+    dplyr::select(sitename, out_sofun) %>% 
+    dplyr::rename(id = sitename) %>% 
+    tidyr::unnest(out_sofun) %>% 
+    dplyr::rename(latenth_mod = latenth) %>% 
+    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
-  ## Combine obs and mod by columns
-  out <- bind_cols( obs, out )
-  
-  ## Calculate cost (chi-squared)
-  cost <- ((out$latenth_mod - out$latenth_obs )/(2 * out$latenth_unc))^2
+  ## Calculate cost (RMSE)
+  cost <- ((df$latenth_mod - df$latenth_obs )/(2 * df$latenth_unc))^2
   cost <- sum(cost, na.rm = TRUE)/sum(!is.na(cost))
   
+  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+
   if (inverse) cost <- 1.0 / cost
   
   return(cost)
@@ -421,7 +459,7 @@ get_obs_calib <- function( settings_calib, settings_sims, settings_input ){
 ##------------------------------------------------------------
 get_obs_bysite <- function( mysitename, settings_calib, settings_sims, settings_input ){
 
-  # print(paste("getting obs for ", mysitename))
+  print(paste("getting obs for ", mysitename))
 
   ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
   ddf <- init_dates_dataframe( year(settings_sims$date_start), year(settings_sims$date_end), noleap = TRUE )
@@ -471,7 +509,7 @@ get_obs_bysite <- function( mysitename, settings_calib, settings_sims, settings_
       # 
       
       # test <- sum(!is.na(ddf$gpp_obs))
-      # if (test<3) rlang::abort(paste0("Too hard filtering for site ", sitename))
+      # if (test<3) rlang::abort(paste0("Too hard filtering for site ", mysitename))
 
     } else {
       
@@ -484,9 +522,9 @@ get_obs_bysite <- function( mysitename, settings_calib, settings_sims, settings_
       ## Get GePiSaT data
       ##------------------------------------------------------------
       ## Make sure data is available for this site
-      error <- check_download_gepisat( settings_calib$path_gepisat, sitename )
+      error <- check_download_gepisat( settings_calib$path_gepisat, mysitename )
 
-      ddf_gepisat <- get_obs_bysite_gpp_gepisat( sitename, settings_calib$path_gepisat, settings_calib$timescale )
+      ddf_gepisat <- get_obs_bysite_gpp_gepisat( mysitename, settings_calib$path_gepisat, settings_calib$timescale )
 
       ## add to other data frame and take take weighted average for updated 'gpp_obs'
       if (!is.null(ddf_gepisat)){
@@ -522,23 +560,24 @@ get_obs_bysite <- function( mysitename, settings_calib, settings_sims, settings_
       ## Get FLUXNET 2015 data
       ##------------------------------------------------------------
       ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
+      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, mysitename )
       
       ddf <- get_obs_bysite_fluxnet2015(
-        sitename, 
+        mysitename, 
         path_fluxnet2015 = settings_input$path_fluxnet2015, 
         timescale = settings_calib$timescale$latenth,
-        getvars = c("LE_F_MDS", "LE_RANDUNC"), 
+        getvars = c("LE_F_MDS", "LE_RANDUNC", "LE_F_MDS_QC"), 
         getswc = FALSE,
         threshold_LE = 0.6, 
         remove_neg = FALSE,
         verbose = TRUE
         ) %>% 
-        dplyr::right_join( ddf, by = "date" )
+        dplyr::right_join( ddf, by = "date" ) %>% 
+        dplyr::rename(latenth_obs = latenth)
       
     } else {
       
-      ddf <- ddf %>% dplyr::mutate( gpp_obs = NA )
+      ddf <- ddf %>% dplyr::mutate( latenth_obs = NA, latenth_unc = NA )
       
     }
     
@@ -549,9 +588,9 @@ get_obs_bysite <- function( mysitename, settings_calib, settings_sims, settings_
     if ("fluxnet2015" %in% settings_calib$datasource$wcont){
 
       ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, sitename )
+      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, mysitename )
 
-      ddf <- get_obs_bysite_wcont_fluxnet2015( sitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
+      ddf <- get_obs_bysite_wcont_fluxnet2015( mysitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
              dplyr::right_join( ddf, by = "date" )
 
     }

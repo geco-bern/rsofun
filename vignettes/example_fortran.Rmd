@@ -29,26 +29,27 @@ siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>%
 Now specify the simulation parameters that are identical for all site-scale simulations.
 ```{r}
 params_siml <- list(
-  spinup         = TRUE,
-	spinupyears    = 10,
-	recycle        = 1,
-	soilmstress               = FALSE,
-	tempstress                = FALSE,
-	in_ppfd                   = TRUE,
-	in_netrad                 = FALSE,
-	const_clim_year           = -9999,
-	const_lu_year             = -9999,
-	const_co2_year            = -9999,
-	const_ndep_year           = -9999,
-	const_nfert_year          = -9999,
-	outdt                     = 1,
-	ltre                      = FALSE,
-	ltne                      = FALSE,
-	ltrd                      = FALSE,
-	ltnd                      = FALSE,
-	lgr3                      = TRUE,
-	lgn3                      = FALSE,
-	lgr4                      = FALSE
+  spinup             = TRUE,
+  spinupyears        = 10,
+  recycle            = 1,
+  soilmstress        = FALSE,
+  tempstress         = FALSE,
+  calc_aet_fapar_vpd = FALSE,
+  in_ppfd            = TRUE,
+  in_netrad          = FALSE,
+  const_clim_year    = -9999,
+  const_lu_year      = -9999,
+  const_co2_year     = -9999,
+  const_ndep_year    = -9999,
+  const_nfert_year   = -9999,
+  outdt              = 1,
+  ltre               = FALSE,
+  ltne               = FALSE,
+  ltrd               = FALSE,
+  ltnd               = FALSE,
+  lgr3               = TRUE,
+  lgn3               = FALSE,
+  lgr4               = FALSE
 	)
 ```
 
@@ -105,9 +106,9 @@ settings_input <-  list(
     path_fluxnet2015_hh      = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
     get_from_remote          = FALSE,
     settings_gee             = get_settings_gee( 
-      bundle = "fpar", 
+      bundle      = "fpar", 
       python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python",
-      gee_path = "~/gee_subset/gee_subset/"
+      gee_path    = "~/gee_subset/gee_subset/"
       ),
   fapar = "MODIS_FPAR_MCD15A3H",
   splined_fapar = TRUE
@@ -117,14 +118,14 @@ settings_input <-  list(
 Then, get the input data.
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 ddf_input <- prepare_input_sofun(
-  settings_input = settings_input,
-  settings_sims = settings_sims,
+  settings_input             = settings_input,
+  settings_sims              = settings_sims,
   overwrite_csv_climate_lev1 = FALSE,
   overwrite_csv_climate_lev2 = FALSE,
   overwrite_csv_climate_lev3 = FALSE,
-  overwrite_rdata_climate = FALSE,
-  overwrite_csv_fapar = FALSE,
-  verbose = FALSE
+  overwrite_rdata_climate    = FALSE,
+  overwrite_csv_fapar        = FALSE,
+  verbose                    = FALSE
   )
 ```
 
@@ -133,8 +134,8 @@ ddf_input <- prepare_input_sofun(
 Run the model for all the sites specified in the first step.
 ```{r}
 df_drivers <- collect_drivers_sofun( 
-  settings = settings_sims, 
-  forcing = ddf_input, 
+  settings       = settings_sims, 
+  forcing        = ddf_input, 
   df_soiltexture = df_soiltexture
   )
 
@@ -252,16 +253,16 @@ mylist <- readr::read_csv("~/eval_pmodel/myselect_fluxnet2015.csv") %>%
   dplyr::pull( Site )
 
 settings_eval <- list(
-  sitenames = settings_sims$sitename,
+  sitenames           = settings_sims$sitename,
   sitenames_siteplots = mylist,
-  agg = 8,
-  path_fluxnet2015_d = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_fluxnet2015_w = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/",
-  path_fluxnet2015_m = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/",
-  path_fluxnet2015_y = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/",
-  path_gepisat_d     = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
-  benchmark = list( gpp = c("fluxnet2015_NT") ),
-  remove_premodis = TRUE
+  agg                 = 8,
+  path_fluxnet2015_d  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_fluxnet2015_w  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/",
+  path_fluxnet2015_m  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/",
+  path_fluxnet2015_y  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/",
+  path_gepisat_d      = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
+  benchmark           = list( gpp = c("fluxnet2015_NT") ),
+  remove_premodis     = TRUE
   )
 ```
 

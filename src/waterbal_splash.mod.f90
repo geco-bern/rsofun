@@ -119,13 +119,14 @@ module md_waterbal
 
 contains
 
-  subroutine waterbal( soil, tile_fluxes, plant_fluxes, doy, jpngr, lat, elv, pr, sn, tc, sf, netrad, fapar, vpd )
+  subroutine waterbal( soil, tile_fluxes, plant_fluxes, doy, jpngr, lat, elv, pr, sn, tc, sf, netrad, vpd, fapar )
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates daily and monthly quantities for one year
     !-------------------------------------------------------------------------
     use md_params_core, only: ndayyear, ndaymonth, npft
     use md_tile, only: soil_type, tile_fluxes_type
     use md_plant, only: plant_fluxes_type
+    use md_interface, only: myinterface
 
     ! arguments
     type( soil_type ), dimension(nlu), intent(inout)        :: soil
@@ -140,8 +141,8 @@ contains
     real, intent(in)    :: tc     ! mean monthly temperature (deg C)
     real, intent(in)    :: sf     ! mean monthly sunshine fraction (unitless)
     real, intent(in)    :: netrad ! net radiation (W m-2), may be dummy (in which case this is not used)
-    real, intent(in)    :: fapar  ! fraction of absorbed photosynthetically active radiation (unitless)
     real, intent(in)    :: vpd    ! vapour pressure deficit (Pa)
+    real, intent(in)    :: fapar  ! fraction of absorbed photosynthetically active radiation (unitless)
 
     ! local variables
     real :: wcont_prev                   ! soil moisture (water content) before being updated (mm)
@@ -169,9 +170,11 @@ contains
       ! print*,'calling evap with arguments ', lat, doy, elv, sf, tc, tile_fluxes(lu)%sw
       evap(lu) = get_evap( lat, doy, elv, sf, tc, tile_fluxes(lu)%sw, netrad )
 
-      ! ! Overwrite AET calculated by get_evap(), instead using vdpstress * fapar * pet
-      ! evap(lu)%aet = calc_vdpstress( vpd ) * fapar * evap(lu)%pet
-      ! evap(lu)%aet_e = evap(lu)%aet / (evap(lu)%econ * 1000.0)
+      if (myinterface%params_siml%calc_aet_fapar_vpd) then
+        ! Overwrite AET calculated by get_evap(), instead using vdpstress * fapar * pet
+        evap(lu)%aet = calc_vdpstress( vpd ) * fapar * evap(lu)%pet
+        evap(lu)%aet_e = evap(lu)%aet / (evap(lu)%econ * 1000.0)
+      end if
 
       ! take acual evaporation
       if (npft>1) stop 'waterbal_splash: Think of soething when npft > 1.'

@@ -28,25 +28,6 @@ prepare_setup_sofun <- function( siteinfo, params_siml ){
     siteinfo <- readr::read_csv( siteinfo )
   }
 
-  ## Complement output booleans as FALSE if missing
-  params_siml$loutplant      = ifelse( is.null(params_siml$loutplant), FALSE, params_siml$loutplant)
-  params_siml$loutgpp        = ifelse( is.null(params_siml$loutgpp), FALSE, params_siml$loutgpp)
-  params_siml$loutwaterbal   = ifelse( is.null(params_siml$loutwaterbal), FALSE, params_siml$loutwaterbal)
-  params_siml$loutforcing    = ifelse( is.null(params_siml$loutforcing), FALSE, params_siml$loutforcing )
-  
-  params_siml$loutdgpp       = ifelse( is.null(params_siml$loutdgpp), FALSE, params_siml$loutdgpp)
-  params_siml$loutdrd        = ifelse( is.null(params_siml$loutdrd), FALSE, params_siml$loutdrd )
-  params_siml$loutdtransp    = ifelse( is.null(params_siml$loutdtransp), FALSE, params_siml$loutdtransp)
-  params_siml$loutdwbal      = ifelse( is.null(params_siml$loutdwbal), FALSE, params_siml$loutdwbal)
-  params_siml$loutdaet       = ifelse( is.null(params_siml$loutdaet), FALSE, params_siml$loutdaet  )
-  params_siml$loutdpet       = ifelse( is.null(params_siml$loutdpet), FALSE, params_siml$loutdpet  )
-  params_siml$loutdnetrad    = ifelse( is.null(params_siml$loutdnetrad), FALSE, params_siml$loutdnetrad  )
-  params_siml$loutdwcont     = ifelse( is.null(params_siml$loutdwcont), FALSE, params_siml$loutdwcont)
-  params_siml$loutdtemp      = ifelse( is.null(params_siml$loutdtemp), FALSE, params_siml$loutdtemp )
-  params_siml$loutdfapar     = ifelse( is.null(params_siml$loutdfapar), FALSE, params_siml$loutdfapar)
-  params_siml$loutdtemp_soil = ifelse( is.null(params_siml$loutdtemp_soil), FALSE, params_siml$loutdtemp_soil)
-    
-
   ##--------------------------------------
   ## Complement settings with meta info for each site
   ##--------------------------------------

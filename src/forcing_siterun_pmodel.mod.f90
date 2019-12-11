@@ -17,7 +17,7 @@ module md_forcing
 
   private
   public ninput_type, landuse_type, climate_type, &
-    getclimate, getco2, getfapar, get_fpc_grid
+    getclimate, getco2, getfapar, get_fpc_grid, vegcover_type
 
   type climate_type
     real(kind=sp), dimension(ndayyear) :: dtemp  ! deg C
@@ -28,6 +28,10 @@ module md_forcing
     real(kind=sp), dimension(ndayyear) :: dppfd  ! mol m-2 d-1
     real(kind=sp), dimension(ndayyear) :: dnetrad! W m-2
   end type climate_type
+
+  type vegcover_type
+    real, dimension(ndayyear) :: dfapar ! fraction of absorbed photosynthetically active radiation
+  end type vegcover_type
 
   type landuse_type
     real(kind=sp), dimension(nlu)  :: lu_area
@@ -134,7 +138,7 @@ contains
   end function getco2
 
 
-  function getfapar( nt, forcing,  domaininfo, grid, forcingyear_idx ) result( fapar_field )
+  function getfapar( nt, forcing,  domaininfo, grid, forcingyear_idx ) result( out_vegcover )
     !////////////////////////////////////////////////////////////////
     ! Function reads this year's atmospheric CO2 from input
     !----------------------------------------------------------------
@@ -146,7 +150,7 @@ contains
     integer, intent(in) :: forcingyear_idx
 
     ! function return variable
-    real, dimension(ndayyear,1) :: fapar_field
+    type( vegcover_type ), dimension(1) :: out_vegcover
 
     ! local variables 
     integer :: idx_start, idx_end
@@ -154,7 +158,7 @@ contains
     idx_start = (forcingyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
 
-    fapar_field(:,1) = real(forcing(idx_start:idx_end, 10))
+    out_vegcover(1)%dfapar(:) = real(forcing(idx_start:idx_end, 10))
 
   end function getfapar
 

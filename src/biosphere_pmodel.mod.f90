@@ -175,8 +175,8 @@ contains
                           myinterface%climate(jpngr)%dtemp(doy), & 
                           myinterface%climate(jpngr)%dfsun(doy), &
                           myinterface%climate(jpngr)%dnetrad(doy), &
-                          myinterface%dfapar_field(doy,jpngr), &
-                          myinterface%climate(jpngr)%dvpd(doy) &
+                          myinterface%climate(jpngr)%dvpd(doy),  &
+                          myinterface%vegcover(jpngr)%dfapar(doy) &
                           )
             if (verbose) print*,'... done'
 
@@ -204,7 +204,7 @@ contains
                               plant(:,jpngr), &
                               solar, &
                               out_pmodel(:,:), &
-                              myinterface%dfapar_field(doy,jpngr), &
+                              myinterface%vegcover(jpngr)%dfapar(doy), &
                               myinterface%fpc_grid(:,jpngr) &
                               )
             if (verbose) print*,'... done'
@@ -226,7 +226,7 @@ contains
                       myinterface%climate(jpngr)%dtemp(doy), &
                       myinterface%params_siml%soilmstress, &
                       myinterface%params_siml%tempstress, &
-                      myinterface%dfapar_field(doy,jpngr) &
+                      myinterface%vegcover(jpngr)%dfapar(doy) &
                       )
             if (verbose) print*,'... done'
 

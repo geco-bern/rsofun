@@ -13,6 +13,7 @@ void F77_NAME(sofun_f)(
     int *nyeartrend,
     _Bool *soilmstress,
     _Bool *tempstress,
+    _Bool *calc_aet_fapar_vpd,
     _Bool *in_ppfd,
     _Bool *in_netrad,
     int *const_clim_year,
@@ -48,6 +49,7 @@ extern SEXP sofun_f_C(
     SEXP nyeartrend,
     SEXP soilmstress,
     SEXP tempstress,
+    SEXP calc_aet_fapar_vpd,
     SEXP in_ppfd,
     SEXP in_netrad,
     SEXP const_clim_year,
@@ -88,6 +90,7 @@ extern SEXP sofun_f_C(
         INTEGER(nyeartrend),
         LOGICAL(soilmstress),
         LOGICAL(tempstress),
+        LOGICAL(calc_aet_fapar_vpd),
         LOGICAL(in_ppfd),
         LOGICAL(in_netrad),
         INTEGER(const_clim_year),
@@ -124,7 +127,7 @@ extern SEXP sofun_f_C(
 }
 
 static const R_CallMethodDef CallEntries[] = {
-  {"sofun_f_C",   (DL_FUNC) &sofun_f_C,   30},  // Specify number of arguments to C wrapper as the last number here
+  {"sofun_f_C",   (DL_FUNC) &sofun_f_C,   31},  // Specify number of arguments to C wrapper as the last number here
   {NULL,         NULL,                0}
 };
 

@@ -19,6 +19,7 @@ contains
     nyeartrend,                &       
     soilmstress,               &        
     tempstress,                &       
+    calc_aet_fapar_vpd,        &       
     in_ppfd,                   &    
     in_netrad,                 &      
     const_clim_year,           &            
@@ -68,6 +69,7 @@ contains
     integer(kind=c_int),  intent(in) :: nyeartrend
     logical(kind=c_bool), intent(in) :: soilmstress
     logical(kind=c_bool), intent(in) :: tempstress
+    logical(kind=c_bool), intent(in) :: calc_aet_fapar_vpd
     logical(kind=c_bool), intent(in) :: in_ppfd
     logical(kind=c_bool), intent(in) :: in_netrad
     integer(kind=c_int),  intent(in) :: const_clim_year
@@ -113,24 +115,25 @@ contains
       myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
       myinterface%params_siml%spinupyears = 0
     endif
-
-    myinterface%params_siml%soilmstress      = soilmstress
-    myinterface%params_siml%tempstress       = tempstress
-    myinterface%params_siml%in_ppfd          = in_ppfd
-    myinterface%params_siml%in_netrad        = in_netrad
-    myinterface%params_siml%const_clim_year  = const_clim_year
-    myinterface%params_siml%const_lu_year    = const_lu_year
-    myinterface%params_siml%const_co2_year   = const_co2_year
-    myinterface%params_siml%const_ndep_year  = const_ndep_year
-    myinterface%params_siml%const_nfert_year = const_nfert_year
-    myinterface%params_siml%outdt            = outdt
-    myinterface%params_siml%ltre             = ltre
-    myinterface%params_siml%ltne             = ltne
-    myinterface%params_siml%ltrd             = ltrd
-    myinterface%params_siml%ltnd             = ltnd
-    myinterface%params_siml%lgr3             = lgr3
-    myinterface%params_siml%lgn3             = lgn3
-    myinterface%params_siml%lgr4             = lgr4
+    
+    myinterface%params_siml%soilmstress        = soilmstress
+    myinterface%params_siml%tempstress         = tempstress
+    myinterface%params_siml%calc_aet_fapar_vpd = calc_aet_fapar_vpd
+    myinterface%params_siml%in_ppfd            = in_ppfd
+    myinterface%params_siml%in_netrad          = in_netrad
+    myinterface%params_siml%const_clim_year    = const_clim_year
+    myinterface%params_siml%const_lu_year      = const_lu_year
+    myinterface%params_siml%const_co2_year     = const_co2_year
+    myinterface%params_siml%const_ndep_year    = const_ndep_year
+    myinterface%params_siml%const_nfert_year   = const_nfert_year
+    myinterface%params_siml%outdt              = outdt
+    myinterface%params_siml%ltre               = ltre
+    myinterface%params_siml%ltne               = ltne
+    myinterface%params_siml%ltrd               = ltrd
+    myinterface%params_siml%ltnd               = ltnd
+    myinterface%params_siml%lgr3               = lgr3
+    myinterface%params_siml%lgn3               = lgn3
+    myinterface%params_siml%lgr4               = lgr4
 
     npft_local = 0
     if (myinterface%params_siml%ltre) npft_local = npft_local + 1
@@ -161,7 +164,7 @@ contains
     if (.not. allocated(myinterface%grid))         allocate( myinterface%grid(                       ncells ) )
     if (.not. allocated(myinterface%climate))      allocate( myinterface%climate(                    ncells ) )
     if (.not. allocated(myinterface%soilparams))   allocate( myinterface%soilparams(   nlayers_soil, ncells ) )
-    if (.not. allocated(myinterface%dfapar_field)) allocate( myinterface%dfapar_field( ndayyear,     ncells ) )
+    if (.not. allocated(myinterface%vegcover))     allocate( myinterface%vegcover(                   ncells ) )
     if (.not. allocated(myinterface%fpc_grid))     allocate( myinterface%fpc_grid(     npft,         ncells ) )
     ! allocate( myinterface%ninput_field(               ncells ) )
     ! allocate( myinterface%landuse(                    ncells ) )
@@ -279,13 +282,13 @@ contains
       !----------------------------------------------------------------
       ! Get prescribed fAPAR if required (otherwise set to dummy value)
       !----------------------------------------------------------------
-      myinterface%dfapar_field(:,:) = getfapar( &
-                                                nt, &
-                                                forcing, &
-                                                myinterface%domaininfo, &
-                                                myinterface%grid, &
-                                                myinterface%steering%forcingyear_idx &
-                                                )    
+      myinterface%vegcover(:) = getfapar( &
+                                          nt, &
+                                          forcing, &
+                                          myinterface%domaininfo, &
+                                          myinterface%grid, &
+                                          myinterface%steering%forcingyear_idx &
+                                          )
 
       !----------------------------------------------------------------
       ! Call SR biosphere at an annual time step but with vectors 
@@ -325,7 +328,7 @@ contains
     deallocate(myinterface%grid)
     deallocate(myinterface%climate)
     deallocate(myinterface%soilparams)
-    deallocate(myinterface%dfapar_field)
+    deallocate(myinterface%vegcover)
 
   end subroutine sofun_f
 

@@ -107,6 +107,7 @@ run_sofun_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_soi
       nyeartrend                = as.integer(params_siml$nyeartrend),
       soilmstress               = as.logical(params_siml$soilmstress),
       tempstress                = as.logical(params_siml$tempstress),
+      calc_aet_fapar_vpd        = as.logical(params_siml$calc_aet_fapar_vpd),
       in_ppfd                   = as.logical(params_siml$in_ppfd),
       in_netrad                 = as.logical(params_siml$in_netrad),
       const_clim_year           = as.integer(params_siml$const_clim_year),
