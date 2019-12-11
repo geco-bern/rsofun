@@ -48,26 +48,7 @@ params_siml <- list(
 	ltnd                      = FALSE,
 	lgr3                      = TRUE,
 	lgn3                      = FALSE,
-	lgr4                      = FALSE,
-	loutplant                 = FALSE,
-	loutgpp                   = FALSE,
-	loutwaterbal              = FALSE,
-	loutforcing               = FALSE,
-	loutdgpp                  = FALSE,
-	loutdrd                   = FALSE,
-	loutdtransp               = FALSE,
-	loutdwcont                = FALSE,
-	loutdaet                  = FALSE,
-	loutdpet                  = FALSE,
-	loutdnetrad               = FALSE,
-	loutdwbal                 = FALSE,
-	loutdtemp                 = FALSE,
-	loutdfapar                = FALSE,
-	loutdtemp_soil            = FALSE,
-	lcalibgpp                 = FALSE,
-	lcalibfapar               = FALSE,
-	lcalibtransp              = FALSE,
-	lcaliblatenth             = FALSE
+	lgr4                      = FALSE
 	)
 ```
 
