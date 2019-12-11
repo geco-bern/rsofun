@@ -26,8 +26,8 @@ contains
     const_co2_year,            &           
     const_ndep_year,           &            
     const_nfert_year,          &             
-    daily_out_startyr,         &              
-    daily_out_endyr,           &            
+    ! daily_out_startyr,         &              
+    ! daily_out_endyr,           &            
     outdt,                     &  
     ltre,                      & 
     ltne,                      & 
@@ -36,25 +36,25 @@ contains
     lgr3,                      & 
     lgn3,                      & 
     lgr4,                      & 
-    loutplant,                 &      
-    loutgpp,                   &    
-    loutwaterbal,              &         
-    loutforcing,               &        
-    loutdgpp,                  &     
-    loutdrd,                   &    
-    loutdtransp,               &        
-    loutdwcont,                &       
-    loutdaet,                  &     
-    loutdpet,                  &     
-    loutdnetrad,               &        
-    loutdwbal,                 &      
-    loutdtemp,                 &      
-    loutdfapar,                &       
-    loutdtemp_soil,            &           
-    lcalibgpp,                 &      
-    lcalibfapar,               &        
-    lcalibtransp,              &         
-    lcaliblatenth,             &          
+    ! loutplant,                 &      
+    ! loutgpp,                   &    
+    ! loutwaterbal,              &         
+    ! loutforcing,               &        
+    ! loutdgpp,                  &     
+    ! loutdrd,                   &    
+    ! loutdtransp,               &        
+    ! loutdwcont,                &       
+    ! loutdaet,                  &     
+    ! loutdpet,                  &     
+    ! loutdnetrad,               &        
+    ! loutdwbal,                 &      
+    ! loutdtemp,                 &      
+    ! loutdfapar,                &       
+    ! loutdtemp_soil,            &           
+    ! lcalibgpp,                 &      
+    ! lcalibfapar,               &        
+    ! lcalibtransp,              &         
+    ! lcaliblatenth,             &          
     longitude,                 &      
     latitude,                  &     
     altitude,                  &     
@@ -96,8 +96,8 @@ contains
     integer(kind=c_int),  intent(in) :: const_co2_year
     integer(kind=c_int),  intent(in) :: const_ndep_year
     integer(kind=c_int),  intent(in) :: const_nfert_year
-    integer(kind=c_int),  intent(in) :: daily_out_startyr
-    integer(kind=c_int),  intent(in) :: daily_out_endyr
+    ! integer(kind=c_int),  intent(in) :: daily_out_startyr
+    ! integer(kind=c_int),  intent(in) :: daily_out_endyr
     integer(kind=c_int),  intent(in) :: outdt
     logical(kind=c_bool), intent(in) :: ltre
     logical(kind=c_bool), intent(in) :: ltne
@@ -106,25 +106,25 @@ contains
     logical(kind=c_bool), intent(in) :: lgr3
     logical(kind=c_bool), intent(in) :: lgn3
     logical(kind=c_bool), intent(in) :: lgr4
-    logical(kind=c_bool), intent(in) :: loutplant
-    logical(kind=c_bool), intent(in) :: loutgpp
-    logical(kind=c_bool), intent(in) :: loutwaterbal
-    logical(kind=c_bool), intent(in) :: loutforcing
-    logical(kind=c_bool), intent(in) :: loutdgpp
-    logical(kind=c_bool), intent(in) :: loutdrd
-    logical(kind=c_bool), intent(in) :: loutdtransp
-    logical(kind=c_bool), intent(in) :: loutdwcont
-    logical(kind=c_bool), intent(in) :: loutdaet
-    logical(kind=c_bool), intent(in) :: loutdpet
-    logical(kind=c_bool), intent(in) :: loutdnetrad
-    logical(kind=c_bool), intent(in) :: loutdwbal
-    logical(kind=c_bool), intent(in) :: loutdtemp
-    logical(kind=c_bool), intent(in) :: loutdfapar
-    logical(kind=c_bool), intent(in) :: loutdtemp_soil
-    logical(kind=c_bool), intent(in) :: lcalibgpp
-    logical(kind=c_bool), intent(in) :: lcalibfapar
-    logical(kind=c_bool), intent(in) :: lcalibtransp
-    logical(kind=c_bool), intent(in) :: lcaliblatenth
+    ! logical(kind=c_bool), intent(in) :: loutplant
+    ! logical(kind=c_bool), intent(in) :: loutgpp
+    ! logical(kind=c_bool), intent(in) :: loutwaterbal
+    ! logical(kind=c_bool), intent(in) :: loutforcing
+    ! logical(kind=c_bool), intent(in) :: loutdgpp
+    ! logical(kind=c_bool), intent(in) :: loutdrd
+    ! logical(kind=c_bool), intent(in) :: loutdtransp
+    ! logical(kind=c_bool), intent(in) :: loutdwcont
+    ! logical(kind=c_bool), intent(in) :: loutdaet
+    ! logical(kind=c_bool), intent(in) :: loutdpet
+    ! logical(kind=c_bool), intent(in) :: loutdnetrad
+    ! logical(kind=c_bool), intent(in) :: loutdwbal
+    ! logical(kind=c_bool), intent(in) :: loutdtemp
+    ! logical(kind=c_bool), intent(in) :: loutdfapar
+    ! logical(kind=c_bool), intent(in) :: loutdtemp_soil
+    ! logical(kind=c_bool), intent(in) :: lcalibgpp
+    ! logical(kind=c_bool), intent(in) :: lcalibfapar
+    ! logical(kind=c_bool), intent(in) :: lcalibtransp
+    ! logical(kind=c_bool), intent(in) :: lcaliblatenth
     real(kind=c_double),  intent(in) :: longitude
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
@@ -165,8 +165,8 @@ contains
     myinterface%params_siml%const_co2_year   = const_co2_year
     myinterface%params_siml%const_ndep_year  = const_ndep_year
     myinterface%params_siml%const_nfert_year = const_nfert_year
-    myinterface%params_siml%daily_out_startyr= daily_out_startyr
-    myinterface%params_siml%daily_out_endyr  = daily_out_endyr
+    ! myinterface%params_siml%daily_out_startyr= daily_out_startyr
+    ! myinterface%params_siml%daily_out_endyr  = daily_out_endyr
     myinterface%params_siml%outdt            = outdt
     myinterface%params_siml%ltre             = ltre
     myinterface%params_siml%ltne             = ltne
@@ -185,25 +185,25 @@ contains
     if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
     if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
 
-    myinterface%params_siml%loutplant        = loutplant
-    myinterface%params_siml%loutgpp          = loutgpp
-    myinterface%params_siml%loutwaterbal     = loutwaterbal
-    myinterface%params_siml%loutforcing      = loutforcing
-    myinterface%params_siml%loutdgpp         = loutdgpp
-    myinterface%params_siml%loutdrd          = loutdrd
-    myinterface%params_siml%loutdtransp      = loutdtransp
-    myinterface%params_siml%loutdwcont       = loutdwcont
-    myinterface%params_siml%loutdaet         = loutdaet
-    myinterface%params_siml%loutdpet         = loutdpet
-    myinterface%params_siml%loutdnetrad      = loutdnetrad
-    myinterface%params_siml%loutdwbal        = loutdwbal
-    myinterface%params_siml%loutdtemp        = loutdtemp
-    myinterface%params_siml%loutdfapar       = loutdfapar
-    myinterface%params_siml%loutdtemp_soil   = loutdtemp_soil
-    myinterface%params_siml%lcalibgpp        = lcalibgpp
-    myinterface%params_siml%lcalibfapar      = lcalibfapar
-    myinterface%params_siml%lcalibtransp     = lcalibtransp
-    myinterface%params_siml%lcaliblatenth    = lcaliblatenth
+    ! myinterface%params_siml%loutplant        = loutplant
+    ! myinterface%params_siml%loutgpp          = loutgpp
+    ! myinterface%params_siml%loutwaterbal     = loutwaterbal
+    ! myinterface%params_siml%loutforcing      = loutforcing
+    ! myinterface%params_siml%loutdgpp         = loutdgpp
+    ! myinterface%params_siml%loutdrd          = loutdrd
+    ! myinterface%params_siml%loutdtransp      = loutdtransp
+    ! myinterface%params_siml%loutdwcont       = loutdwcont
+    ! myinterface%params_siml%loutdaet         = loutdaet
+    ! myinterface%params_siml%loutdpet         = loutdpet
+    ! myinterface%params_siml%loutdnetrad      = loutdnetrad
+    ! myinterface%params_siml%loutdwbal        = loutdwbal
+    ! myinterface%params_siml%loutdtemp        = loutdtemp
+    ! myinterface%params_siml%loutdfapar       = loutdfapar
+    ! myinterface%params_siml%loutdtemp_soil   = loutdtemp_soil
+    ! myinterface%params_siml%lcalibgpp        = lcalibgpp
+    ! myinterface%params_siml%lcalibfapar      = lcalibfapar
+    ! myinterface%params_siml%lcalibtransp     = lcalibtransp
+    ! myinterface%params_siml%lcaliblatenth    = lcaliblatenth
 
     ! set parameter to define that this is not a calibration run (otherwise sofun.f90 would not have been compiled, but sofun_simsuite.f90)
     myinterface%params_siml%is_calib = .true.  ! treat paramters passed through R/C-interface the same way as calibratable parameters

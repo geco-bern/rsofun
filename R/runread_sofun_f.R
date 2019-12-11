@@ -22,16 +22,16 @@ runread_sofun_f <- function( df_drivers, params_modl, makecheck = TRUE, parallel
   if (parallel){
 
     cl <- multidplyr::new_cluster(2) %>% 
-      cluster_assign(params_modl = params_modl) %>% 
-      cluster_assign(makecheck = FALSE) %>% 
-      cluster_library(c("dplyr", "purrr", "rlang", "rsofun"))
+      multidplyr::cluster_assign(params_modl = params_modl) %>% 
+      multidplyr::cluster_assign(makecheck = FALSE) %>% 
+      multidplyr::cluster_library(c("dplyr", "purrr", "rlang", "rsofun"))
     
     ## distribute to to cores, making sure all data from a specific site is sent to the same core
-    df_drivers_distr <- df_drivers %>%
-      group_by( id = row_number() ) %>%
+    df_out <- df_drivers %>%
+      dplyr::group_by( id = row_number() ) %>%
       tidyr::nest(input = c(sitename, params_siml, siteinfo, forcing, df_soiltexture)) %>%
       multidplyr::partition(cl) %>% 
-      mutate(out_sofun = purrr::map( input, 
+      dplyr::mutate(out_sofun = purrr::map( input, 
                                      ~run_sofun_f_bysite(
                                        sitename       = .x$sitename[[1]], 
                                        params_siml    = .x$params_siml[[1]], 
@@ -41,15 +41,15 @@ runread_sofun_f <- function( df_drivers, params_modl, makecheck = TRUE, parallel
                                        params_modl    = params_modl, 
                                        makecheck      = makecheck )
       )) %>% 
-      collect() %>%
-      ungroup() %>%
+      dplyr::collect() %>%
+      dplyr::ungroup() %>%
       dplyr::select( out_sofun )  %>% 
       tidyr::unnest( cols = c( out_sofun ))
     
   } else {
   
     df_out <- df_drivers %>% 
-      mutate(out_sofun = purrr::pmap(
+      dplyr::mutate(out_sofun = purrr::pmap(
         .,
         run_sofun_f_bysite,
         params_modl = params_modl,

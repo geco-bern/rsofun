@@ -41,8 +41,6 @@ params_siml <- list(
 	const_co2_year            = -9999,
 	const_ndep_year           = -9999,
 	const_nfert_year          = -9999,
-	daily_out_startyr         = 1982,
-	daily_out_endyr           = 1982,
 	outdt                     = 1,
 	ltre                      = FALSE,
 	ltne                      = FALSE,
@@ -188,18 +186,18 @@ print(ptm)
 
 microbenchmark::microbenchmark(
   runread_sofun_f(
-  df_drivers, 
-  params_modl = params_modl, 
-  makecheck = TRUE,
-  parallel = TRUE,
-  ncores = 4
-  ),
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = TRUE,
+    ncores = 4
+    ),
   runread_sofun_f(
-  df_drivers, 
-  params_modl = params_modl, 
-  makecheck = TRUE,
-  parallel = FALSE
-  ),
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ),
   times = 5,
   units = 's'
 )

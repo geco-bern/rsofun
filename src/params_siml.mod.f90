@@ -19,8 +19,8 @@ module md_params_siml
     integer :: nyeartrend      ! number of transient years
     integer :: firstyeartrend  ! year AD of first transient year
     integer :: recycle         ! length of standard recycling period
-    integer :: daily_out_startyr! first year where daily output is written
-    integer :: daily_out_endyr ! last year where daily output is written
+    ! integer :: daily_out_startyr! first year where daily output is written
+    ! integer :: daily_out_endyr ! last year where daily output is written
     integer :: outdt           ! output periodicity
     integer :: outnt           ! number of output time steps per year
     
@@ -61,30 +61,30 @@ module md_params_siml
 
     integer :: npft        ! number of activated PFTs
 
-    ! Module-specific booleans defining whether a set of variables is written to annual output
-    logical :: loutplant
-    logical :: loutgpp
-    logical :: loutwaterbal
-    logical :: loutforcing
+    ! ! Module-specific booleans defining whether a set of variables is written to annual output
+    ! logical :: loutplant
+    ! logical :: loutgpp
+    ! logical :: loutwaterbal
+    ! logical :: loutforcing
 
-    ! Module-specific booleans whether a single variable is written to daily output
-    logical :: loutdgpp
-    logical :: loutdrd
-    logical :: loutdtransp
-    logical :: loutdwcont
-    logical :: loutdaet
-    logical :: loutdpet
-    logical :: loutdnetrad
-    logical :: loutdwbal
-    logical :: loutdtemp
-    logical :: loutdfapar
-    logical :: loutdtemp_soil
+    ! ! Module-specific booleans whether a single variable is written to daily output
+    ! logical :: loutdgpp
+    ! logical :: loutdrd
+    ! logical :: loutdtransp
+    ! logical :: loutdwcont
+    ! logical :: loutdaet
+    ! logical :: loutdpet
+    ! logical :: loutdnetrad
+    ! logical :: loutdwbal
+    ! logical :: loutdtemp
+    ! logical :: loutdfapar
+    ! logical :: loutdtemp_soil
 
-    ! booleans defining whether variable is used as calibration target
-    logical :: lcalibgpp
-    logical :: lcalibfapar
-    logical :: lcalibtransp
-    logical :: lcaliblatenth
+    ! ! booleans defining whether variable is used as calibration target
+    ! logical :: lcalibgpp
+    ! logical :: lcalibfapar
+    ! logical :: lcalibtransp
+    ! logical :: lcaliblatenth
 
   end type paramstype_siml
 
