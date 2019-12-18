@@ -1,7 +1,6 @@
-#' Conducts an out-of-bag calibration
+#' Conducts an site-by-site calibration
 #'
-#' Wraps around calib_sofun() to calibrate out-of-bag (with one left-out site) and returns the evaluation result 
-#' done for the left-out site.
+#' Wraps around calib_sofun() to calibrate site-by-site (with one single site data for calibration and evaluation) and returns the evaluation result.
 #' 
 #' @param settings_calib A list containing model calibration settings. See vignette_rsofun.pdf for more information and examples.
 #' @param settings_eval A list specifying evaluation settings 
@@ -18,13 +17,14 @@
 #'
 #' @examples xxx
 #' 
-oob_calib_eval_sofun <- function( settings_calib, settings_eval, settings_sims, settings_input, df_drivers, ddf_obs_calib, obs_eval,
+sbs_calib_eval_sofun <- function( settings_calib, settings_eval, settings_sims, settings_input, df_drivers, ddf_obs_calib, obs_eval,
                                          overwrite){
 
   ## Get list of results from out-of-bag calibration 
-  out_oob <- purrr::map(
+  out_sbs <- purrr::map(
     as.list(settings_calib$sitenames),
-    ~oob_calib_eval_sofun_bysite(., 
+    ~sbs_calib_eval_sofun_bysite(., 
+                                 settings_calib, 
                                  settings_eval, 
                                  settings_sims, 
                                  settings_input, 
@@ -33,39 +33,40 @@ oob_calib_eval_sofun <- function( settings_calib, settings_eval, settings_sims, 
                                  obs_eval = obs_eval,
                                  overwrite = overwrite
                                  )
-    )
-  names(out_oob) <- settings_calib$sitenames
+                                )
+  
+  names(out_sbs) <- settings_calib$sitenames
   
   ## add evaluation result of all predicted data pooled
-  extract_ddf_bysite <- function(site, out_oob){
-    if (identical(NA, out_oob[[site]])){
+  extract_ddf_bysite <- function(site, out_sbs){
+    if (identical(NA, out_sbs[[site]])){
       ddf <- NA
     } else {
-      ddf <- out_oob[[site]][[settings_calib$targetvars]]$fluxnet2015$data$ddf %>% 
-        dplyr::select(date, mod) %>%
+      ddf <- out_sbs[[site]][[settings_calib$targetvars]]$fluxnet2015$data$ddf %>% 
+        dplyr::select(sitename, date, mod) %>% 
         dplyr::rename( !!settings_calib$targetvars := mod)
     }
     return(ddf)
   }
   mod <- purrr::map(
     as.list(settings_calib$sitenames),
-    ~extract_ddf_bysite(., out_oob)
+    ~extract_ddf_bysite(., out_sbs)
     ) %>% 
     bind_rows()
 
-  out_oob$AALL <- eval_sofun( mod, settings_eval, settings_sims, obs_eval = obs_eval, overwrite = TRUE, light = TRUE )
+  # out_sbs$AALL <- eval_sofun( mod, settings_eval, settings_sims, obs_eval = obs_eval, overwrite = TRUE, light = TRUE )
   
-  return(out_oob)
+  return(out_sbs)
 }
 
 
 
-oob_calib_eval_sofun_bysite <- function(evalsite, settings_calib, settings_eval, settings_sims, 
+sbs_calib_eval_sofun_bysite <- function(evalsite, settings_calib, settings_eval, settings_sims, 
                                         settings_input, df_drivers, ddf_obs_calib, obs_eval, overwrite ){
   
-  print(paste("oob_calib_eval_sofun_bysite() for site", evalsite))
+  print(paste("sbs_calib_eval_sofun_bysite() for site", evalsite))
   
-  dirn <- paste0( settings_calib$dir_results, "/oob_", settings_calib$name)
+  dirn <- paste0( settings_calib$dir_results, "/sbs_", settings_calib$name)
 
   if (!dir.exists(dirn)){
     system(paste0("mkdir -p ", dirn))
@@ -86,7 +87,7 @@ oob_calib_eval_sofun_bysite <- function(evalsite, settings_calib, settings_eval,
     ## Adjust calibration settings
     ##------------------------------------------------
     settings_calib$name = paste0("leftout_", evalsite)
-    settings_calib$sitenames = settings_calib$sitenames[-which(settings_calib$sitenames == evalsite)]
+    settings_calib$sitenames = evalsite
 
     ## overwrite settings to write site-level calibration results to sub-directory
     settings_calib$dir_results <- dirn
@@ -110,7 +111,7 @@ oob_calib_eval_sofun_bysite <- function(evalsite, settings_calib, settings_eval,
     ## Get data for calibration
     ##------------------------------------------------
     ddf_obs_calibsites <- ddf_obs_calib %>% 
-      dplyr::filter(sitename != evalsite)
+      dplyr::filter(sitename == evalsite)
     
     ##------------------------------------------------
     ## Calibrate on left-out sites
@@ -118,7 +119,7 @@ oob_calib_eval_sofun_bysite <- function(evalsite, settings_calib, settings_eval,
     set.seed(1982)
     settings_calib <- calib_sofun( 
       settings_calib, 
-      dplyr::filter(df_drivers, sitename != evalsite), 
+      dplyr::filter(df_drivers, sitename == evalsite), 
       ddf_obs = ddf_obs_calibsites 
       )
     

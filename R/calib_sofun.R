@@ -3,8 +3,8 @@
 #' This is the main function that handles the calibration of SOFUN model parameters. 
 #' 
 #' @param settings_calib A list containing model calibration settings. See vignette_rsofun.pdf for more information and examples.
-#' @param settings_input A list containing model input settings. See vignette_rsofun.pdf for more information and examples.
 #' @param df_drivers asdf
+#' @param settings_input A list containing model input settings. See vignette_rsofun.pdf for more information and examples.
 #' @param ddf_obs (Optional) A data frame containing observational data used for model calibration. Created by function \code{get_obs()}
 #'
 #' @return A complemented named list containing the calibration settings and optimised parameter values.
@@ -12,7 +12,7 @@
 #'
 #' @examples settings_calib <- calib_sofun( setup, settings_calib, settings_sims, settings_input )
 #' 
-calib_sofun <- function( settings_calib, settings_input, df_drivers, ddf_obs = NA ){
+calib_sofun <- function( settings_calib, df_drivers, settings_input = NA, ddf_obs = NA ){
 
   targetvars <- paste0( settings_calib$targetvars, "_obs")
   
@@ -65,7 +65,8 @@ calib_sofun <- function( settings_calib, settings_input, df_drivers, ddf_obs = N
 
     } else if ( "vpdstress_par_a" %in% names(settings_calib$par) && "vpdstress_par_b" %in% names(settings_calib$par) && "vpdstress_par_m" %in% names(settings_calib$par) ){  
       ## Calibration of VPD stress function (P-model runs with soilmstress and tempstress on)
-      cost_rmse <- cost_chisquared_vpdstress
+      # cost_rmse <- cost_chisquared_vpdstress
+      cost_rmse <- cost_rmse_vpdstress
       
     }
 
@@ -226,13 +227,19 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     vpdstress_par_m = 5
     )
 
-  df <- df_drivers %>% 
-    mutate(out_sofun = purrr::pmap(
-      .,
-      run_sofun_f_bysite,
-      params_modl = params_modl,
-      makecheck = FALSE
-    )) %>% 
+  df <- runread_sofun_f(
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) %>%   
+  # df <- df_drivers %>% 
+  #   mutate(out_sofun = purrr::pmap(
+  #     .,
+  #     run_sofun_f_bysite,
+  #     params_modl = params_modl,
+  #     makecheck = FALSE
+  #   )) %>% 
     dplyr::select(sitename, out_sofun) %>% 
     dplyr::rename(id = sitename) %>% 
     tidyr::unnest(out_sofun) %>% 
@@ -314,23 +321,29 @@ cost_rmse_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     vpdstress_par_m = par[3]
   )
   
-  df <- df_drivers %>% 
-    mutate(out_sofun = purrr::pmap(
-      .,
-      run_sofun_f_bysite,
-      params_modl = params_modl,
-      makecheck = FALSE
-    )) %>% 
+  df <- runread_sofun_f(
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) %>%   
+  # df <- df_drivers %>% 
+  #   mutate(out_sofun = purrr::pmap(
+  #     .,
+  #     run_sofun_f_bysite,
+  #     params_modl = params_modl,
+  #     makecheck = FALSE
+  #   )) %>% 
     dplyr::select(sitename, out_sofun) %>% 
     dplyr::rename(id = sitename) %>% 
     tidyr::unnest(out_sofun) %>% 
-    dplyr::rename(gpp_mod = gpp) %>% 
+    dplyr::rename(latenth_mod = latenth) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (df$latenth_mod - df$latenth_obs )^2, na.rm = TRUE ) )
   
-  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
   if (inverse) cost <- 1.0 / cost  
   
@@ -354,13 +367,19 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
     vpdstress_par_m = par[3]
   )
   
-  df <- df_drivers %>% 
-    mutate(out_sofun = purrr::pmap(
-      .,
-      run_sofun_f_bysite,
-      params_modl = params_modl,
-      makecheck = FALSE
-    )) %>% 
+  # df <- df_drivers %>% 
+  #   mutate(out_sofun = purrr::pmap(
+  #     .,
+  #     run_sofun_f_bysite,
+  #     params_modl = params_modl,
+  #     makecheck = FALSE
+  #   )) %>% 
+  df <- runread_sofun_f(
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) %>%   
     dplyr::select(sitename, out_sofun) %>% 
     dplyr::rename(id = sitename) %>% 
     tidyr::unnest(out_sofun) %>% 

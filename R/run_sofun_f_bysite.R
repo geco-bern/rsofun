@@ -145,7 +145,7 @@ run_sofun_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_soi
       dplyr::select(-year_dec)
 
   } else {
-    out <- tibble(sitename = sitename, date = NA, fapar = NA, gpp = NA, transp = NA, latenth = NA, XXX = NA)
+    out <- tibble(sitename = sitename, date = lubridate::ymd("2000-01-01"), fapar = NA, gpp = NA, transp = NA, latenth = NA, XXX = NA)
   }
     
   return(out)

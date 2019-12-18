@@ -38,8 +38,8 @@ get_obs_eval <- function( settings_eval, settings_sims, overwrite = TRUE, light 
     getvars <- c(getvars, "NETRAD")
     settings_eval$benchmarkvar$netrad <- "NETRAD"
   }
-  if ("aet" %in% names(settings_eval$benchmark)){
-    getvars <- c(getvars, "LE_F_MDS")
+  if ("aet" %in% names(settings_eval$benchmark) || "latenth" %in% names(settings_eval$benchmark)){
+    getvars <- c(getvars, "LE_F_MDS", "LE_F_MDS_QC", "LE_RANDUNC")
     evalvars[which(evalvars=="aet")] <- "latenth"
     settings_eval$benchmarkvar$latenth <- "LE_F_MDS"
   }
