@@ -233,13 +233,6 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     makecheck = TRUE,
     parallel = FALSE
     ) %>%   
-  # df <- df_drivers %>% 
-  #   mutate(out_sofun = purrr::pmap(
-  #     .,
-  #     run_sofun_f_bysite,
-  #     params_modl = params_modl,
-  #     makecheck = FALSE
-  #   )) %>% 
     dplyr::select(sitename, out_sofun) %>% 
     dplyr::rename(id = sitename) %>% 
     tidyr::unnest(out_sofun) %>% 

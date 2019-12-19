@@ -15,6 +15,8 @@
 #'
 run_sofun_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_soiltexture, params_modl, makecheck = TRUE ){
 
+  rlang::inform(paste("run_sofun_f_bysite() for ", sitename))
+  
   ## re-define units and naming of forcing dataframe
   forcing <- forcing %>% 
     dplyr::mutate(netrad = -9999.9, fsun = (100-ccov)/100, snowf = 0.0, ndep = 0.0) %>% 

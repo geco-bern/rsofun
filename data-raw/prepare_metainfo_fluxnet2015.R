@@ -1,5 +1,6 @@
 library(dplyr)
 library(readr)
+load_dependencies_rsofun()
 
 prepare_metainfo_fluxnet2015 <- function( origfilpath, dir_DD_fluxnet2015, overwrite=FALSE, filn_elv_watch=NA ){
   ##--------------------------------------------------------------------
@@ -575,9 +576,11 @@ metainfo_Tier1_sites_kgclimate_fluxnet2015 <- read_csv( "./inst/extdata/list_tie
   ## complement elevation
   mutate(gtopo30_elevation = as.numeric(gtopo30_elevation)) %>% 
   mutate(elv = ifelse(is.na(elv), gtopo30_elevation, elv)) %>% 
-  mutate(elv = ifelse(is.na(elv), elv_watch, elv))
+  mutate(elv = ifelse(is.na(elv), elv_watch, elv)) %>% 
   # mutate(elv = ifelse(is.na(elv), elv_elevatr, elv))
 
+  distinct()
+  
 save( metainfo_Tier1_sites_kgclimate_fluxnet2015, file = "./data/metainfo_Tier1_sites_kgclimate_fluxnet2015.Rdata" )
 
 # ## Create example CSV to be included in Package external data.
