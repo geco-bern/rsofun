@@ -62,68 +62,52 @@ siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>%
 Define the simulation parameters.
 ```r
 params_siml <- list(
-  spinup         = TRUE,
-	spinupyears    = 10,
-	recycle        = 1,
-	soilmstress               = TRUE,
-	tempstress                = TRUE,
-	in_ppfd                   = TRUE,
-	in_netrad                 = FALSE,
-	const_clim_year           = -9999,
-	const_lu_year             = -9999,
-	const_co2_year            = -9999,
-	const_ndep_year           = -9999,
-	const_nfert_year          = -9999,
-	daily_out_startyr         = 1982,
-	daily_out_endyr           = 1982,
-	outdt                     = 1,
-	ltre                      = FALSE,
-	ltne                      = FALSE,
-	ltrd                      = FALSE,
-	ltnd                      = FALSE,
-	lgr3                      = TRUE,
-	lgn3                      = FALSE,
-	lgr4                      = FALSE,
-	loutplant                 = FALSE,
-	loutgpp                   = FALSE,
-	loutwaterbal              = FALSE,
-	loutforcing               = FALSE,
-	loutdgpp                  = FALSE,
-	loutdrd                   = FALSE,
-	loutdtransp               = FALSE,
-	loutdwcont                = FALSE,
-	loutdaet                  = FALSE,
-	loutdpet                  = FALSE,
-	loutdnetrad               = FALSE,
-	loutdwbal                 = FALSE,
-	loutdtemp                 = FALSE,
-	loutdfapar                = FALSE,
-	loutdtemp_soil            = FALSE,
-	lcalibgpp                 = FALSE,
-	lcalibfapar               = FALSE,
-	lcalibtransp              = FALSE,
-	lcaliblatenth             = FALSE
-	)
+  spinup             = TRUE,
+  spinupyears        = 10,
+  recycle            = 1,
+  soilmstress        = FALSE,
+  tempstress         = FALSE,
+  calc_aet_fapar_vpd = FALSE,
+  in_ppfd            = TRUE,
+  in_netrad          = FALSE,
+  const_clim_year    = -9999,
+  const_lu_year      = -9999,
+  const_co2_year     = -9999,
+  const_ndep_year    = -9999,
+  const_nfert_year   = -9999,
+  outdt              = 1,
+  ltre               = FALSE,
+  ltne               = FALSE,
+  ltrd               = FALSE,
+  ltnd               = FALSE,
+  lgr3               = TRUE,
+  lgn3               = FALSE,
+  lgr4               = FALSE
+  )
+```
 
+Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters).
+```r
 settings_sims <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
 ```
 
-
 ### Define model parameters
 
+First, let's do it by hand (calibration of parameters is shown later).
 ```r
 params_modl <- list(
-	kphio           = 0.06,
-	soilm_par_a     = 0.1,
-	soilm_par_b     = 0.7,
-	vpdstress_par_a = 0.2,
-	vpdstress_par_b = 0.2,
-	vpdstress_par_m = 5
-	)
+  kphio           = 0.04997714009213085,
+  soilm_par_a     = 1.0,
+  soilm_par_b     = 0.0,
+  vpdstress_par_a = 0.2,
+  vpdstress_par_b = 0.2,
+  vpdstress_par_m = 5
+  )
 ```
 
 ### Define soil parameters
 
+For now, this is implemented as an illustration. Should be made site-specific.
 ```r
 list_soiltexture <- list(
   top = list(fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
@@ -155,9 +139,9 @@ settings_input <-  list(
     path_fluxnet2015_hh      = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
     get_from_remote          = FALSE,
     settings_gee             = get_settings_gee( 
-      bundle = "fpar", 
+      bundle      = "fpar", 
       python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python",
-      gee_path = "~/gee_subset/gee_subset/"
+      gee_path    = "~/gee_subset/gee_subset/"
       ),
   fapar = "MODIS_FPAR_MCD15A3H",
   splined_fapar = TRUE
@@ -167,45 +151,208 @@ settings_input <-  list(
 Then, get the input data.
 ```r
 ddf_input <- prepare_input_sofun(
-  settings_input = settings_input,
-  settings_sims = settings_sims,
+  settings_input             = settings_input,
+  settings_sims              = settings_sims,
   overwrite_csv_climate_lev1 = FALSE,
-  overwrite_csv_climate_lev2 = FALSE,
+  overwrite_csv_climate_lev2 = TRUE,
   overwrite_csv_climate_lev3 = TRUE,
-  overwrite_rdata_climate = TRUE,
-  overwrite_csv_fapar = FALSE,
-  verbose = FALSE
+  overwrite_rdata_climate    = TRUE,
+  overwrite_csv_fapar        = FALSE,
+  verbose                    = FALSE
   )
 ```
 
 ### Run the model
 
+Run the model for all the sites specified in the first step.
 ```r
-## single site simulation
-mod <- run_sofun_f_bysite( 
-      settings         = dplyr::filter(settings_sims, sitename == settings_sims$sitename[1]), 
-      params_modl      = params_modl, 
-      list_soiltexture = list_soiltexture,
-      forcing          = dplyr::filter(ddf_input, sitename == settings_sims$sitename[1])
-      )
-      
-## call SOFUN for multiple sites
-ptm <- proc.time()
-mod <- runread_sofun_f( 
-  settings = settings_sims, 
-  ddf_input = ddf_input, 
-  list_soiltexture = list_soiltexture, 
-  params_modl = params_modl 
+df_drivers <- collect_drivers_sofun( 
+  settings       = settings_sims, 
+  forcing        = ddf_input, 
+  df_soiltexture = df_soiltexture
   )
+
+## by spelling out arguments
+mod <- run_sofun_f_bysite( 
+  df_drivers$sitename[1], 
+  df_drivers$params_siml[[1]], 
+  df_drivers$siteinfo[[1]], 
+  df_drivers$forcing[[1]], 
+  df_drivers$df_soiltexture[[1]], 
+  params_modl = params_modl, 
+  makecheck = TRUE 
+  )
+
+## The advantage of using the nested data frame 'df_drivers' is that the
+## function 'run_sofun_f_bysite' can be applied to each row using 'pmap'
+## Doing it like this, the outputs are stored in a new column 'out_sofun'.
+## This same code is implemented in 'run_sofun_f'
+ptm <- proc.time()
+df_output <- df_drivers %>%
+  mutate(out_sofun = purrr::pmap(
+    .,
+    run_sofun_f_bysite,
+    params_modl = params_modl,
+    makecheck = TRUE
+    )) %>%
+    dplyr::select(sitename, out_sofun)
 ptm <- proc.time() - ptm
 print(ptm)
 
-mod$daily[[1]] %>% 
+df_output$out_sofun[[1]] %>% 
   ggplot(aes(x=date, y=gpp)) +
   geom_line() + 
-  labs(title = names(mod$daily[1]), subtitle = "SOFUN output")
+  labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
 ```
 
+### Calibrate
+
+Define calibration settings.
+```r
+## Define calibration settings common for all setups
+settings_calib <- list(
+  method              = "gensa",
+  targetvars          = c("gpp"),
+  timescale           = list( gpp = "d" ),
+  path_fluxnet2015    = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
+  path_fluxnet2015_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
+  threshold_GPP       = 0.5,
+  path_gepisat        = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
+  maxit               = 5, # (5 for gensa) (30 for optimr)    #
+  sitenames           = mysites,
+  filter_temp_max     = 35.0,
+  filter_drought      = FALSE,
+  metric              = "rmse",
+  dir_results         = "./",
+  name                = "ORG",
+  par                 = list( kphio = list( lower=0.03, upper=0.07, init=0.0496 ) ),
+  datasource          = list( gpp = "fluxnet2015_NT" ),
+  filter_temp_min     = NA,
+  filter_soilm_min    = NA
+ )
+```
+ 
+Get calibration target data.
+```r
+ddf_obs_calib <- get_obs_calib( 
+  settings_calib = settings_calib, 
+  dplyr::select(df_drivers, sitename, siteinfo) %>% tidyr::unnest(siteinfo), 
+  settings_input
+  )
+```
+
+Calibrate the model.
+
+```r
+set.seed(1982)
+settings_calib <- calib_sofun( 
+  settings_calib, 
+  df_drivers, 
+  ddf_obs = ddf_obs_calib 
+  )
+```
+
+The calibrated parameters are returned by `calib_sofun()` as part of the list:
+```r
+print(settings_calib$par_opt)
+```
+
+
+### Evaluate
+
+Run the model once again with these parameters and evaluate results.
+```r
+mylist <- readr::read_csv("~/eval_pmodel/myselect_fluxnet2015.csv") %>% 
+  dplyr::filter( use==1 ) %>% 
+  dplyr::pull( Site )
+
+settings_eval <- list(
+  sitenames           = settings_sims$sitename,
+  sitenames_siteplots = mylist,
+  agg                 = 8,
+  path_fluxnet2015_d  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
+  path_fluxnet2015_w  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/",
+  path_fluxnet2015_m  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/",
+  path_fluxnet2015_y  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/",
+  path_gepisat_d      = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
+  benchmark           = list( gpp = c("fluxnet2015_NT") ),
+  remove_premodis     = TRUE
+  )
+```
+
+Get evaluation data (benchmarking data).
+```r
+filn <- "./obs_eval.Rdata"
+if (file.exists(filn)){
+  load(filn)
+} else {
+  obs_eval  <- get_obs_eval( 
+    settings_eval = settings_eval, 
+    settings_sims = settings_sims, 
+    overwrite     = TRUE, 
+    light         = TRUE,
+    add_forcing   = FALSE
+  )
+  save(obs_eval, file = filn)
+} 
+```
+
+Now run the model with calibrated parameters.
+```r
+params_modl <- list(
+  kphio           = settings_calib$par_opt[["kphio"]],
+  soilm_par_a     = 1.0,
+  soilm_par_b     = 0.0,
+  vpdstress_par_a = 0.2,
+  vpdstress_par_b = 0.2,
+  vpdstress_par_m = 5
+  )
+
+mod <- runread_sofun_f(
+  df_drivers, 
+  params_modl = params_modl, 
+  makecheck = TRUE
+  ) %>% 
+  rename(id = sitename) %>% 
+  unnest(out_sofun)
+```
+
+And finally do the evaluation.
+```{r warning=FALSE, message=FALSE}
+out_eval <- eval_sofun( 
+  mod, 
+  settings_eval, 
+  settings_sims, 
+  obs_eval = obs_eval, 
+  overwrite = TRUE, 
+  light = FALSE 
+  )
+```
+
+Print some results.
+```r
+out_eval$gpp$fluxnet2015$metrics$xdaily_pooled
+```
+
+```r
+out_eval$gpp$fluxnet2015$data$xdf %>% rbeni::analyse_modobs2("mod", "obs", type = "heat")
+```
+
+```r
+out_eval$gpp$fluxnet2015$data$ddf %>% 
+  dplyr::filter(sitename=="BE-Vie" & year(date) < 2005) %>% 
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = obs), col="black") +
+  geom_line(aes(y = mod), col="red") + 
+  labs(title = "BE-Vie")
+
+out_eval$gpp$fluxnet2015$data$ddf %>% 
+  dplyr::filter(sitename=="AU-Dry" & year(date) > 2010) %>% 
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = obs), col="black") +
+  geom_line(aes(y = mod), col="red") + 
+  labs(title = "AU-Dry")
+```
 
 ## Acknowledgements
 
