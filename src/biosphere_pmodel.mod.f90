@@ -216,7 +216,7 @@ contains
             call gpp( plant(:,jpngr), &
                       plant_fluxes(:), &
                       out_pmodel(:,moy), &
-                      solar%dppfd(doy), &
+                      myinterface%climate(jpngr)%dppfd(doy), &
                       solar%dayl(doy), &
                       solar%meanmppfd(moy), &
                       tile(:,jpngr)%soil%phy%wscal, &

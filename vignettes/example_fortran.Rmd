@@ -232,7 +232,6 @@ Calibrate the model.
 set.seed(1982)
 settings_calib <- calib_sofun( 
   settings_calib, 
-  settings_input, 
   df_drivers, 
   ddf_obs = ddf_obs_calib 
   )
