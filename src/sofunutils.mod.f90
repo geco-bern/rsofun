@@ -8,6 +8,31 @@ module md_sofunutils
 
 contains
 
+  function dampen_variability( var, tau, var_memory ) result( out_memory )
+    !/////////////////////////////////////////////////////////////////////////
+    ! Calculates the updated variable accounting for a memory time scale tau.
+    ! Following Eq. 5 in Makela et al. (2004) Tree Physiology 24, 369–376
+    ! 
+    ! d(var_memory) / dt = (1 / tau) * var - var_memory
+    ! 
+    !-------------------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: var           ! fast-varying variable
+    real, intent(in)    :: tau           ! memory e-folding time scale (d)
+    real, intent(inout) :: var_memory    ! damped (low-pass filtered) variable
+
+    ! function return variable
+    real :: out_memory
+
+    ! local variable
+    real :: dvar
+
+    dvar = (1.0/tau) * (var - var_memory)
+    out_memory = var_memory + dvar 
+
+  end function dampen_variability
+
+
   function running( presval, inow, lenval, lenper, method, prevval ) result( runningval )
     !/////////////////////////////////////////////////////////////////////////
     ! Returns running sum or average. 'prevval' is optional, if not pro-
@@ -16,9 +41,9 @@ contains
     !-------------------------------------------------------------------------
     ! arguments
     ! xxx instead of dimension declaration with 'lenval', use size(presval)
+    integer, intent(in) :: lenval                             ! number of timesteps per year
     real, dimension(lenval), intent(in) :: presval            ! vector containing 'lenvals' values for each timestep in this year
     integer, intent(in) :: inow                               ! index corresponding to "now" (day of year or month of year)  
-    integer, intent(in) :: lenval                             ! number of timesteps per year
     integer, intent(in) :: lenper                             ! number of timesteps over which to average/sum
     character(len=*), intent(in) :: method                    ! either "sum" or "mean" for running sum or running mean
     real, dimension(lenval), intent(in), optional :: prevval  ! vector containing 'lenvals' values for each timestep in previous year
@@ -952,7 +977,7 @@ contains
     ! function return value
     real ::  patm ! atmospheric pressure (Pa)
 
-    patm = kPo * (1.0 - kL * elv / kTo) ** (kG * kMa / (kR * kL))
+    patm = kPo * (1.0 - kL * elv / kTo) ** (kG * kMa * 1.e-3 / (kR * kL))
 
   end function calc_patm
 
@@ -1029,7 +1054,7 @@ contains
     !--------------------------------------------------------------------
     real, dimension(:), intent(in)     :: vec
     integer, intent(in)                :: start, end
-    real                               :: minimum
+    integer                            :: minimum
     integer                            :: location
     integer                            :: i
     integer                            :: out

@@ -5,10 +5,12 @@ module md_biosphere
   use md_plant, only: plant_type, plant_fluxes_type, initdaily_plant, initglobal_plant, getpar_modl_plant
   use md_params_soil, only: paramtype_soil
   use md_waterbal, only: solartype, waterbal, get_solar, getpar_modl_waterbal, init_rlm_waterbal, get_rlm_waterbal, getrlm_daily_waterbal
-  use md_gpp, only: outtype_pmodel, getpar_modl_gpp, getlue, gpp
+  use md_gpp, only: outtype_pmodel, getpar_modl_gpp, gpp
   use md_vegdynamics, only: vegdynamics
   use md_tile, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile
   use md_soiltemp, only: soiltemp
+  use md_sofunutils, only: calc_patm
+
 
   implicit none
 
@@ -47,9 +49,8 @@ contains
 
     ! local variables
     integer :: dm, moy, jpngr, doy
-    real, dimension(nmonth) :: mtemp      ! monthly mean air temperature (deg C)
-    real, dimension(nmonth) :: mvpd       ! monthly mean vapour pressure deficit (Pa)
-    logical, parameter :: verbose = .false.
+    logical, save           :: init_daily = .true.   ! is true only on the first day of the simulation 
+    logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
@@ -115,23 +116,30 @@ contains
                           )
         if (verbose) print*,'... done'
 
-        !----------------------------------------------------------------
-        ! Run P-model
-        ! to get monthly light use efficiency, Rd, and Vcmax per unit of 
-        ! light absorbed light.
-        ! Photosynthetic parameters acclimate at ~monthly time scale
-        !----------------------------------------------------------------
-        if (verbose) print*,'    with argument CO2  = ', myinterface%pco2
-        if (verbose) print*,'    with argument temp.= ', myinterface%climate(jpngr)%dtemp(1:10)
-        if (verbose) print*,'    with argument VPD  = ', myinterface%climate(jpngr)%dvpd(1:10)
-        if (verbose) print*,'    with argument elv. = ', myinterface%grid(jpngr)%elv
-        out_pmodel(:,:) = getlue( &
-                                  myinterface%pco2, & 
-                                  myinterface%climate(jpngr)%dtemp(:), & 
-                                  myinterface%climate(jpngr)%dvpd(:), & 
-                                  myinterface%grid(jpngr)%elv & 
-                                  )
+        ! !----------------------------------------------------------------
+        ! ! Run P-model
+        ! ! to get monthly light use efficiency, Rd, and Vcmax per unit of 
+        ! ! light absorbed light.
+        ! ! Photosynthetic parameters acclimate at ~monthly time scale
+        ! !----------------------------------------------------------------
+        ! if (verbose) print*,'calling getlue() ... '
+        ! if (verbose) print*,'    with argument CO2  = ', myinterface%pco2
+        ! if (verbose) print*,'    with argument temp.= ', myinterface%climate(jpngr)%dtemp(1:10)
+        ! if (verbose) print*,'    with argument VPD  = ', myinterface%climate(jpngr)%dvpd(1:10)
+        ! if (verbose) print*,'    with argument elv. = ', myinterface%grid(jpngr)%elv
+        ! out_pmodel(:,:) = getlue( &
+        !                           myinterface%pco2, & 
+        !                           myinterface%climate(jpngr)%dtemp(:), & 
+        !                           myinterface%climate(jpngr)%dvpd(:), & 
+        !                           myinterface%grid(jpngr)%elv & 
+        !                           )
+
         if (verbose) print*,'... done'
+
+        !----------------------------------------------------------------
+        ! calculate constant atmospheric pressure as a function of elevation
+        !----------------------------------------------------------------
+        myinterface%climate(jpngr)%dpatm(:) = calc_patm(myinterface%grid(jpngr)%elv)
 
         !----------------------------------------------------------------
         ! LOOP THROUGH MONTHS
@@ -157,26 +165,66 @@ contains
             call initdaily_tile( tile_fluxes(:) )
             if (verbose) print*,'... done.'
 
+
+            !----------------------------------------------------------------
+            ! update canopy and tile variables and simulate daily 
+            ! establishment / sprouting
+            !----------------------------------------------------------------
+            if (verbose) print*,'calling vegdynamics() ... '
+            call vegdynamics( tile(:,jpngr), &
+                              plant(:,jpngr), &
+                              solar, &
+                              out_pmodel(:,:), &
+                              myinterface%vegcover(jpngr)%dfapar(doy), &
+                              myinterface%fpc_grid(:,jpngr) &
+                              )
+            if (verbose) print*,'... done'
+
+
+            !----------------------------------------------------------------
+            ! calculate GPP
+            !----------------------------------------------------------------
+            if (verbose) print*,'calling gpp() ... '
+            call gpp( &
+                      myinterface%pco2, & 
+                      myinterface%climate(jpngr)%dtemp(doy), & 
+                      myinterface%climate(jpngr)%dvpd(doy), & 
+                      myinterface%climate(jpngr)%dpatm(doy), &
+                      myinterface%climate(jpngr)%dppfd(doy), &
+                      myinterface%vegcover(jpngr)%dfapar(doy), &
+                      plant(:,jpngr)%fpc_grid, &
+                      solar%dayl(doy), &
+                      solar%meanmppfd(moy), &
+                      tile(:,jpngr)%soil%phy%wscal, &
+                      tile(:,jpngr)%soil%phy%rlmalpha, &
+                      myinterface%params_siml%soilmstress, &
+                      myinterface%params_siml%tempstress, &
+                      plant_fluxes(:)%dgpp, &
+                      plant_fluxes(:)%drd, &
+                      plant_fluxes(:)%dtransp, &
+                      init_daily &
+                      )
+            if (verbose) print*,'... done'
+
             !----------------------------------------------------------------
             ! get soil moisture, and runoff
             !----------------------------------------------------------------
             if (verbose) print*,'calling waterbal() ... '
-            ! print*,'lon,lat,ilon,ilat,jpngr', myinterface%grid(jpngr)%lon, myinterface%grid(jpngr)%lat, myinterface%grid(jpngr)%ilon, myinterface%grid(jpngr)%ilat, jpngr
             call waterbal( &
                           tile(:,jpngr)%soil, &
                           tile_fluxes(:), &
                           plant_fluxes(:), &
                           doy, &
                           jpngr, & 
-                          myinterface%grid(jpngr)%lat, & 
-                          myinterface%grid(jpngr)%elv, & 
-                          myinterface%climate(jpngr)%dprec(doy), & 
-                          myinterface%climate(jpngr)%dsnow(doy), & 
-                          myinterface%climate(jpngr)%dtemp(doy), & 
-                          myinterface%climate(jpngr)%dfsun(doy), &
+                          myinterface%grid(jpngr)%lat,             & 
+                          myinterface%grid(jpngr)%elv,             & 
+                          myinterface%climate(jpngr)%dprec(doy),   & 
+                          myinterface%climate(jpngr)%dsnow(doy),   & 
+                          myinterface%climate(jpngr)%dtemp(doy),   & 
+                          myinterface%climate(jpngr)%dfsun(doy),   &
                           myinterface%climate(jpngr)%dnetrad(doy), &
-                          myinterface%climate(jpngr)%dvpd(doy),  &
-                          myinterface%vegcover(jpngr)%dfapar(doy) &
+                          myinterface%climate(jpngr)%dvpd(doy),    &
+                          myinterface%vegcover(jpngr)%dfapar(doy)  &
                           )
             if (verbose) print*,'... done'
 
@@ -195,40 +243,6 @@ contains
             !               )
             ! if (verbose) print*, '... done'
 
-            !----------------------------------------------------------------
-            ! update canopy and tile variables and simulate daily 
-            ! establishment / sprouting
-            !----------------------------------------------------------------
-            if (verbose) print*,'calling vegdynamics() ... '
-            call vegdynamics( tile(:,jpngr), &
-                              plant(:,jpngr), &
-                              solar, &
-                              out_pmodel(:,:), &
-                              myinterface%vegcover(jpngr)%dfapar(doy), &
-                              myinterface%fpc_grid(:,jpngr) &
-                              )
-            if (verbose) print*,'... done'
-
-            !----------------------------------------------------------------
-            ! calculate GPP
-            !----------------------------------------------------------------
-            if (verbose) print*,'calling gpp() ... '
-            call gpp( plant(:,jpngr), &
-                      plant_fluxes(:), &
-                      out_pmodel(:,moy), &
-                      myinterface%climate(jpngr)%dppfd(doy), &
-                      solar%dayl(doy), &
-                      solar%meanmppfd(moy), &
-                      tile(:,jpngr)%soil%phy%wscal, &
-                      tile(:,jpngr)%soil%phy%rlmalpha, &
-                      doy, &
-                      moy, &
-                      myinterface%climate(jpngr)%dtemp(doy), &
-                      myinterface%params_siml%soilmstress, &
-                      myinterface%params_siml%tempstress, &
-                      myinterface%vegcover(jpngr)%dfapar(doy) &
-                      )
-            if (verbose) print*,'... done'
 
             call getrlm_daily_waterbal( jpngr, doy )
 
@@ -240,6 +254,8 @@ contains
             out_biosphere%gpp(doy)     = plant_fluxes(1)%dgpp
             out_biosphere%transp(doy)  = plant_fluxes(1)%dtransp
             out_biosphere%latenth(doy) = plant_fluxes(1)%dlatenth
+
+            init_daily = .false.
 
           end do dayloop
 

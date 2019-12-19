@@ -613,6 +613,16 @@ prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, s
       ddf <- ddf %>% mutate( ppfd = ifelse( !is.na(ppfd), ppfd, ifelse( !is.na(ppfd_watch), ppfd_watch, NA ) ) )
     } 
     
+    ## patm
+    if ("patm_fluxnet2015" %in% names(ddf)){
+      ddf <- ddf %>% mutate( patm = patm_fluxnet2015 )        
+    } else {
+      ddf <- ddf %>% mutate( patm = NA )
+    }
+    if ("patm_watch" %in% names(ddf) ){
+      ddf <- ddf %>% mutate( patm = ifelse( !is.na(patm), patm, ifelse( !is.na(patm_watch), patm_watch, NA ) ) )
+    }    
+    
     ## netrad
     if (settings_sims$params_siml[[1]]$in_netrad){
       ddf <- ddf %>%  mutate( nrad = netrad_fluxnet2015 )
@@ -631,13 +641,14 @@ prepare_input_sofun_climate_bysite <- function( sitename, ddf, settings_input, s
       
     }
     
-    keepvars <- c("sitename", "date", "temp", "prec", "temp", "vpd", "ppfd")
+    keepvars <- c("sitename", "date", "temp", "prec", "temp", "vpd", "ppfd", "patm")
     ddf <- ddf %>% mutate(  temp   = fill_gaps( temp   ),
                             prec   = fill_gaps( prec, is.prec=TRUE ),
                             vpd    = fill_gaps( vpd    ),
                             ppfd   = fill_gaps( ppfd   ),
-                            ccov   = fill_gaps( ccov )
-      ) %>% 
+                            ccov   = fill_gaps( ccov ),
+                            patm   = fill_gaps( patm ),
+                          ) %>% 
 
       ## remove leap year dates (sofun doesn't have leap years)
       dplyr::filter( !( lubridate::month(date)==2 & lubridate::mday(date)==29 ) )

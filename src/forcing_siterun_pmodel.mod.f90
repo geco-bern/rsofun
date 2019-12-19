@@ -27,6 +27,7 @@ module md_forcing
     real(kind=sp), dimension(ndayyear) :: dvpd   ! Pa
     real(kind=sp), dimension(ndayyear) :: dppfd  ! mol m-2 d-1
     real(kind=sp), dimension(ndayyear) :: dnetrad! W m-2
+    real(kind=sp), dimension(ndayyear) :: dpatm  ! Pa
   end type climate_type
 
   type vegcover_type
@@ -56,7 +57,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,10), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     type( domaininfo_type ), intent(in) :: domaininfo
     type( gridtype ), dimension(1), intent(inout) :: grid
     logical, intent(in) :: init
@@ -69,7 +70,7 @@ contains
     integer, dimension(2) :: shape_forcing
 
     ! function return variable
-    type( climate_type ), dimension(1) :: out_climate
+    type( climate_type ) :: out_climate
 
     idx_start = (climateyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
@@ -81,26 +82,27 @@ contains
     end if
 
     ! warning: column indices in forcing array are hard coded
-    out_climate(1)%dtemp(:)   = real(forcing(idx_start:idx_end, 1))
-    out_climate(1)%dprec(:)   = real(forcing(idx_start:idx_end, 2))
-    out_climate(1)%dvpd(:)    = real(forcing(idx_start:idx_end, 3))
+    out_climate%dtemp(:)   = real(forcing(idx_start:idx_end, 1))
+    out_climate%dprec(:)   = real(forcing(idx_start:idx_end, 2))
+    out_climate%dvpd(:)    = real(forcing(idx_start:idx_end, 3))
+    out_climate%dpatm(:)   = real(forcing(idx_start:idx_end, 11))
 
     if (in_ppfd) then
-      out_climate(1)%dppfd(:) = real(forcing(idx_start:idx_end, 4))
+      out_climate%dppfd(:) = real(forcing(idx_start:idx_end, 4))
     else
-      out_climate(1)%dppfd(:) = dummy
+      out_climate%dppfd(:) = dummy
     end if
     if (in_netrad) then
-      out_climate(1)%dnetrad(:) = real(forcing(idx_start:idx_end, 5))
+      out_climate%dnetrad(:) = real(forcing(idx_start:idx_end, 5))
     else
-      out_climate(1)%dnetrad(:) = dummy
+      out_climate%dnetrad(:) = dummy
     end if
     if ( in_netrad .and. in_ppfd ) then
-      out_climate(1)%dfsun(:) = dummy
+      out_climate%dfsun(:) = dummy
     else
-      out_climate(1)%dfsun(:) = real(forcing(idx_start:idx_end, 6))
+      out_climate%dfsun(:) = real(forcing(idx_start:idx_end, 6))
     end if
-    out_climate(1)%dsnow(:)   = real(forcing(idx_start:idx_end, 7))
+    out_climate%dsnow(:)   = real(forcing(idx_start:idx_end, 7))
 
   end function getclimate
 
@@ -111,7 +113,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,10), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     type( domaininfo_type ), intent(in) :: domaininfo
     integer, intent(in) :: forcingyear
     integer, intent(in) :: const_co2_year
@@ -144,13 +146,13 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,10), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     type( domaininfo_type ), intent(in) :: domaininfo
     type( gridtype ), dimension(1), intent(in) :: grid
     integer, intent(in) :: forcingyear_idx
 
     ! function return variable
-    type( vegcover_type ), dimension(1) :: out_vegcover
+    type( vegcover_type ) :: out_vegcover
 
     ! local variables 
     integer :: idx_start, idx_end
@@ -158,11 +160,11 @@ contains
     idx_start = (forcingyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
 
-    out_vegcover(1)%dfapar(:) = real(forcing(idx_start:idx_end, 10))
+    out_vegcover%dfapar(:) = real(forcing(idx_start:idx_end, 10))
 
     ! "Correct" fAPAR
     ! print*,"WARNING: normalising fAPAR to within 0.12 and 1.0."
-    out_vegcover(1)%dfapar(:) = max((out_vegcover(1)%dfapar(:) - 0.12), 0.0)/(1.0 - 0.12)
+    out_vegcover%dfapar(:) = max((out_vegcover%dfapar(:) - 0.12), 0.0)/(1.0 - 0.12)
     
 
   end function getfapar

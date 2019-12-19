@@ -121,9 +121,9 @@ ddf_input <- prepare_input_sofun(
   settings_input             = settings_input,
   settings_sims              = settings_sims,
   overwrite_csv_climate_lev1 = FALSE,
-  overwrite_csv_climate_lev2 = FALSE,
-  overwrite_csv_climate_lev3 = FALSE,
-  overwrite_rdata_climate    = FALSE,
+  overwrite_csv_climate_lev2 = TRUE,
+  overwrite_csv_climate_lev3 = TRUE,
+  overwrite_rdata_climate    = TRUE,
   overwrite_csv_fapar        = FALSE,
   verbose                    = FALSE
   )
@@ -150,39 +150,39 @@ mod <- run_sofun_f_bysite(
   makecheck = TRUE 
   )
 
-## The advantage of using the nested data frame 'df_drivers' is that the 
+## The advantage of using the nested data frame 'df_drivers' is that the
 ## function 'run_sofun_f_bysite' can be applied to each row using 'pmap'
 ## Doing it like this, the outputs are stored in a new column 'out_sofun'.
 ## This same code is implemented in 'run_sofun_f'
 ptm <- proc.time()
-df_output <- df_drivers %>% 
+df_output <- df_drivers %>%
   mutate(out_sofun = purrr::pmap(
     .,
     run_sofun_f_bysite,
     params_modl = params_modl,
     makecheck = TRUE
-    )) %>% 
+    )) %>%
     dplyr::select(sitename, out_sofun)
 ptm <- proc.time() - ptm
 print(ptm)
 
-microbenchmark::microbenchmark(
-  runread_sofun_f(
-    df_drivers, 
-    params_modl = params_modl, 
-    makecheck = TRUE,
-    parallel = TRUE,
-    ncores = 4
-    ),
-  runread_sofun_f(
-    df_drivers, 
-    params_modl = params_modl, 
-    makecheck = TRUE,
-    parallel = FALSE
-    ),
-  times = 5,
-  units = 's'
-)
+# microbenchmark::microbenchmark(
+#   runread_sofun_f(
+#     df_drivers, 
+#     params_modl = params_modl, 
+#     makecheck = TRUE,
+#     parallel = TRUE,
+#     ncores = 4
+#     ),
+#   runread_sofun_f(
+#     df_drivers, 
+#     params_modl = params_modl, 
+#     makecheck = TRUE,
+#     parallel = FALSE
+#     ),
+#   times = 5,
+#   units = 's'
+# )
 
 df_output$out_sofun[[1]] %>% 
   ggplot(aes(x=date, y=gpp)) +
