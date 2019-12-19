@@ -97,7 +97,7 @@ prepare_metainfo_fluxnet2015 <- function( origfilpath, dir_DD_fluxnet2015, overw
   ## Get C3/C4 information from an additional file
   ##--------------------------------------------------------------------
   filn <- "./inst/extdata/metainfo_tier1sites_fluxnet2015_C3C4.csv"
-  inform( paste("Collecting C3/C4 information from file", filn ) )
+  rlang::inform( paste("Collecting C3/C4 information from file", filn ) )
 
   # if (!file.exists(filn)){
   #   download_file_cx1(  path_remote = "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/siteinfo_fluxnet_sofun_withC3C4info.csv", 
@@ -114,7 +114,7 @@ prepare_metainfo_fluxnet2015 <- function( origfilpath, dir_DD_fluxnet2015, overw
   ## Add water holding capacity information
   ##--------------------------------------------------------------------
   filn <- "./inst/extdata/siteinfo_fluxnet2015_sofun+whc.csv"
-  inform( paste("Collecting water holding capacity information from file", filn ) )
+  rlang::inform( paste("Collecting water holding capacity information from file", filn ) )
 
   # if (!file.exists(filn)){
   #   download_file_cx1(  path_remote = "/work/bstocker/labprentice/data/FLUXNET-2015_Tier1/siteinfo_fluxnet2015_sofun+whc.csv", 
