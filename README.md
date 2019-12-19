@@ -318,7 +318,7 @@ mod <- runread_sofun_f(
 ```
 
 And finally do the evaluation.
-```{r warning=FALSE, message=FALSE}
+```r
 out_eval <- eval_sofun( 
   mod, 
   settings_eval, 
