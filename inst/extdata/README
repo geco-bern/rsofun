@@ -1,3 +1,7 @@
-The file "siteinfo_climate_koeppengeiger_flunxet2015" was downloaded from downloaded from https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1530 (placed in my ~/data/FLUXNET-2015_Tier1/meta/).
+
+
+The file "fluxnet_site_info_all.csv" was downloaded from downloaded from https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1530 (placed in my ~/data/FLUXNET-2015_Tier1/meta/Fluxnet_site_DB_1530).
+
 The soil water holding capacity (WHC) information provided in file siteinfo_fluxnet2015_sofun+whc.csv was created by David Sandoval Calle (Imperial College) based on Soilgrids data (see Stocker et al., 2018 Nature Geoscience).
+
 The information of C3/C4 vegetation provided in file "siteinfo_fluxnet_sofun_withC3C4info.csv" was created by B. Stocker based on information in the FLUXNET 2015 meta info.

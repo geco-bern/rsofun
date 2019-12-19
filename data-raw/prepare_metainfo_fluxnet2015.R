@@ -129,13 +129,34 @@ prepare_metainfo_fluxnet2015 <- function( origfilpath, dir_DD_fluxnet2015, overw
   ##--------------------------------------------------------------------
   ## Add elevation information by reading from WATCH-WFDEI elevation map
   ##--------------------------------------------------------------------
-  if (!is.na(filn_elv_watch)){
+  if (!is.na(filn_elv_watch) && file.exists(filn_elv_watch)){
 
-    inform("Collecting elevation information from WATCH-WFDEI")
-    siteinfo$elv_watch <- purrr::map_dbl( as.list(1:nrow(siteinfo)), ~get_pointdata_elv_watch( siteinfo$lon[.], siteinfo$lat[.], filn_elv_watch ) )
-    siteinfo <- siteinfo %>% mutate( elv = ifelse( is.na(elv), elv_watch, elv ) )
+    # inform("Collecting elevation information from WATCH-WFDEI")
+    # siteinfo$elv_watch <- purrr::map_dbl( as.list(1:nrow(siteinfo)), ~get_pointdata_elv_watch( siteinfo$lon[.], siteinfo$lat[.], filn_elv_watch ) )
+    # siteinfo <- siteinfo %>% mutate( elv = ifelse( is.na(elv), elv_watch, elv ) )
 
+    ## load file using the raster library
+    print(paste("Creating raster brick from file", filn_elv_watch))
+    if (!file.exists(filn_elv_watch)) rlang::abort(paste0("File not found: ", filn_elv_watch))
+    rasta <- raster::brick(filn_elv_watch)
+    
+    siteinfo <- raster::extract(rasta, sp::SpatialPoints(dplyr::select(siteinfo, lon, lat)), sp = TRUE) %>% 
+      as_tibble() %>% 
+      dplyr::rename(elv_watch = layer) %>%
+      right_join(siteinfo, by = c("lon", "lat"))
+    
   }
+  
+  # ##--------------------------------------------------------------------
+  # ## Add elevation information using the elevatr R package
+  # ##--------------------------------------------------------------------
+  # siteinfo <- sp::SpatialPoints(dplyr::select(siteinfo, lon, lat) %>% slice(1:3)) %>% 
+  #   elevatr::get_elev_point(prj = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") %>% 
+  #   as_tibble() %>% 
+  #   dplyr::rename(elv_elevatr = elevation) %>% 
+  #   dplyr::mutate(elv_elevatr = ifelse(elv_elevatr==-1000000, NA, elv_elevatr)) %>%
+  #   right_join(siteinfo, by = c("lon", "lat"))
+
 
   # ##--------------------------------------------------------------------
   # ## Get more stations which are in LaThuile (free-fair-use - FFU) dataset but not in 2015
@@ -192,14 +213,15 @@ prepare_metainfo_fluxnet2015 <- function( origfilpath, dir_DD_fluxnet2015, overw
   return( siteinfo )
 }
 
-add_metainfo_koeppengeiger_fluxnet2015 <- function( siteinfo ){
+add_metainfo_koeppengeiger_gtopo30_elv <- function( siteinfo, filn ){
 
   ## Get additional meta information for sites: Koeppen-Geiger Class
   ## The file "siteinfo_climate_koeppengeiger_flunxet2015.csv" was downloaded from downloaded from https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1530 (placed in my ~/data/FLUXNET-2015_Tier1/meta/)
-  filn <- "./inst/extdata/siteinfo_climate_koeppengeiger_flunxet2015.csv"
-  inform(paste0("Collecting koeppen-geiger climate information from file ", filn))
-  tmp <-  read_csv(filn) %>%   # read_csv("~/data/FLUXNET-2015_Tier1/meta/fluxnet_site_info_mysub.csv") %>%
-          dplyr::rename( sitename = fluxnetid ) %>% dplyr::select( sitename, koeppen_climate )
+  rlang::inform(paste0("Collecting koeppen-geiger climate information from file ", filn))
+  tmp <-  read_csv(filn) %>%
+    dplyr::select(-sitename) %>% 
+    dplyr::rename( sitename = fluxnetid ) %>% 
+    dplyr::select( sitename, koeppen_climate, gtopo30_elevation )
   
   meta <- tmp %>%
           mutate( koeppen_climate = str_split( koeppen_climate, " - " ) ) %>%
@@ -247,13 +269,17 @@ add_metainfo_koeppengeiger_fluxnet2015 <- function( siteinfo ){
 
 long_to_wide_fluxnet2015 <- function( sitename, long ){
 
-  sub <- long %>% filter( SITE_ID==sitename )
+  sub <- long %>% dplyr::filter( SITE_ID==sitename )
     
   ## remove variable groups that have lots of duplicates w.r.t. variable
-  sub <- sub %>% filter( VARIABLE_GROUP!="GRP_TEAM_MEMBER", VARIABLE!="NETWORK", VARIABLE_GROUP!="GRP_DM_FERT_M", VARIABLE_GROUP!="GRP_DM_AGRICULTURE", VARIABLE_GROUP!="GRP_DM_PESTICIDE", VARIABLE_GROUP!="GRP_DM_PLANTING", VARIABLE_GROUP!="GRP_DM_TILL"  )
+  sub <- sub %>% 
+    dplyr::filter( VARIABLE_GROUP!="GRP_TEAM_MEMBER", VARIABLE!="NETWORK", VARIABLE_GROUP!="GRP_DM_FERT_M", VARIABLE_GROUP!="GRP_DM_AGRICULTURE", VARIABLE_GROUP!="GRP_DM_PESTICIDE", VARIABLE_GROUP!="GRP_DM_PLANTING", VARIABLE_GROUP!="GRP_DM_TILL"  )
 
   ## determine duplicates
-  df_nduplicates <- sub %>% group_by( SITE_ID, VARIABLE ) %>% summarize( n = n()) %>% filter( n>1 )
+  df_nduplicates <- sub %>% 
+    group_by( SITE_ID, VARIABLE ) %>% 
+    summarize( n = n()) %>% 
+    filter( n>1 )
 
   ##  treat duplicates
   ## Use only first entry for 'reference paper'
@@ -505,50 +531,58 @@ long_to_wide_fluxnet2015 <- function( sitename, long ){
 
 }
 
-get_pointdata_elv_watch <- function( lon, lat, filn ){
-  ##--------------------------------------------------------------------
-  ## Extract monthly data from files for each year and attach to the 
-  ## monthly dataframe (at the right location).
-  ## Original data in K, returns data in K
-  ##--------------------------------------------------------------------
-  if ( !file.exists( filn ) ) {
-    path_remote <- "WFDEI-elevation.nc" #"/work/bstocker/labprentice/data/watch_wfdei/WFDEI-elevation.nc"
-    path_local <- filn
-    download_file_cx1( path_remote, path_local )
-  }
-
-  if ( file.exists( filn ) ){
-    
-    cmd <- paste( paste0( "./inst/bash/extract_pointdata_byfil.sh " ), filn, "elevation", "lon", "lat", sprintf( "%.2f", lon ), sprintf( "%.2f", lat ) )
-    system( cmd )
-    out <- read.table( "./out.txt" )$V1
-
-  } else {
-
-    abort("Could not find WATCH-WFDEI elevation file nor download it.")
-
-  }
-  return( out )
-}
+# get_pointdata_elv_watch <- function( lon, lat, filn ){
+#   ##--------------------------------------------------------------------
+#   ## Extract monthly data from files for each year and attach to the 
+#   ## monthly dataframe (at the right location).
+#   ## Original data in K, returns data in K
+#   ##--------------------------------------------------------------------
+#   if ( !file.exists( filn ) ) {
+#     path_remote <- "WFDEI-elevation.nc" #"/work/bstocker/labprentice/data/watch_wfdei/WFDEI-elevation.nc"
+#     path_local <- filn
+#     download_file_cx1( path_remote, path_local )
+#   }
+# 
+#   if ( file.exists( filn ) ){
+#     
+#     cmd <- paste( paste0( "./inst/bash/extract_pointdata_byfil.sh " ), filn, "elevation", "lon", "lat", sprintf( "%.2f", lon ), sprintf( "%.2f", lat ) )
+#     system( cmd )
+#     out <- read.table( "./out.txt" )$V1
+# 
+#   } else {
+# 
+#     abort("Could not find WATCH-WFDEI elevation file nor download it.")
+# 
+#   }
+#   return( out )
+# }
 
 ## Get complete meta info for all FLUXNET 2015 sites as Rdata file
 metainfo_sites_fluxnet2015 <- prepare_metainfo_fluxnet2015( 
-                                origfilpath = "./inst/extdata/FLX_AA-Flx_BIF_LATEST.csv", 
-                                dir_DD_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked",
-                                overwrite = FALSE, 
-                                filn_elv_watch = "./inst/extdata/WFDEI-elevation.nc" 
-                                )
+  origfilpath = "./inst/extdata/FLX_AA-Flx_BIF_LATEST.csv", 
+  dir_DD_fluxnet2015 = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked",
+  overwrite = FALSE, 
+  filn_elv_watch = "./inst/extdata/WFDEI-elevation.nc" 
+  )
+
 save( metainfo_sites_fluxnet2015, file = "./data/metainfo_sites_fluxnet2015.Rdata" )
 
 ## For Tier 1 sites, add Koeppen-Geiger climate information
-metainfo_Tier1_sites_kgclimate_fluxnet2015 <- read_csv( "./inst/extdata/tier1_sites_fluxnet2015.csv" ) %>% 
-                                              left_join( dplyr::select(metainfo_sites_fluxnet2015, sitename = mysitename, lon, lat, elv, year_start, year_end, years_data, classid, whc, c4), by = "sitename" ) %>%
-                                              add_metainfo_koeppengeiger_fluxnet2015()
+metainfo_Tier1_sites_kgclimate_fluxnet2015 <- read_csv( "./inst/extdata/list_tier1_sites_fluxnet2015.csv" ) %>% 
+  left_join( dplyr::select(metainfo_sites_fluxnet2015, sitename = mysitename, lon, lat, elv, elv_watch, year_start, year_end, years_data, classid, whc, c4), by = "sitename" ) %>%
+  add_metainfo_koeppengeiger_gtopo30_elv( filn = "./inst/extdata/fluxnet_site_info_all.csv") %>% 
+  
+  ## complement elevation
+  mutate(gtopo30_elevation = as.numeric(gtopo30_elevation)) %>% 
+  mutate(elv = ifelse(is.na(elv), gtopo30_elevation, elv)) %>% 
+  mutate(elv = ifelse(is.na(elv), elv_watch, elv))
+  # mutate(elv = ifelse(is.na(elv), elv_elevatr, elv))
+
 save( metainfo_Tier1_sites_kgclimate_fluxnet2015, file = "./data/metainfo_Tier1_sites_kgclimate_fluxnet2015.Rdata" )
 
-## Create example CSV to be included in Package external data.
-out <- dplyr::filter( metainfo_Tier1_sites_kgclimate_fluxnet2015, sitename =="FR-Pue" ) %>%
-  mutate( year_start = 2007, year_end = 2014 ) %>%
-  mutate( years_data = year_end - year_start + 1 )
-write_csv( out, path = "./inst/extdata/siteinfo_example.csv" )
+# ## Create example CSV to be included in Package external data.
+# out <- dplyr::filter( metainfo_Tier1_sites_kgclimate_fluxnet2015, sitename =="FR-Pue" ) %>%
+#   mutate( year_start = 2007, year_end = 2014 ) %>%
+#   mutate( years_data = year_end - year_start + 1 )
+# write_csv( out, path = "./inst/extdata/siteinfo_example.csv" )
 
