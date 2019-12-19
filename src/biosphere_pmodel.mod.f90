@@ -117,29 +117,9 @@ contains
         if (verbose) print*,'... done'
 
         ! !----------------------------------------------------------------
-        ! ! Run P-model
-        ! ! to get monthly light use efficiency, Rd, and Vcmax per unit of 
-        ! ! light absorbed light.
-        ! ! Photosynthetic parameters acclimate at ~monthly time scale
+        ! ! calculate constant atmospheric pressure as a function of elevation
         ! !----------------------------------------------------------------
-        ! if (verbose) print*,'calling getlue() ... '
-        ! if (verbose) print*,'    with argument CO2  = ', myinterface%pco2
-        ! if (verbose) print*,'    with argument temp.= ', myinterface%climate(jpngr)%dtemp(1:10)
-        ! if (verbose) print*,'    with argument VPD  = ', myinterface%climate(jpngr)%dvpd(1:10)
-        ! if (verbose) print*,'    with argument elv. = ', myinterface%grid(jpngr)%elv
-        ! out_pmodel(:,:) = getlue( &
-        !                           myinterface%pco2, & 
-        !                           myinterface%climate(jpngr)%dtemp(:), & 
-        !                           myinterface%climate(jpngr)%dvpd(:), & 
-        !                           myinterface%grid(jpngr)%elv & 
-        !                           )
-
-        if (verbose) print*,'... done'
-
-        !----------------------------------------------------------------
-        ! calculate constant atmospheric pressure as a function of elevation
-        !----------------------------------------------------------------
-        myinterface%climate(jpngr)%dpatm(:) = calc_patm(myinterface%grid(jpngr)%elv)
+        ! myinterface%climate(jpngr)%dpatm(:) = calc_patm(myinterface%grid(jpngr)%elv)
 
         !----------------------------------------------------------------
         ! LOOP THROUGH MONTHS

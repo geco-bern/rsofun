@@ -16,7 +16,7 @@ Provides a wrapper for the SOFUN model implemented in Fortran. Shared memory (ca
 To install and load the rsofun package run the following command in your R terminal: 
 ```r
 if(!require(devtools)){install.packages(devtools)}
-devtools::install_github( "stineb/rsofun@v0.2" )
+devtools::install_github( "stineb/rsofun@v0.4" )
 library(rsofun)
 ```
 
