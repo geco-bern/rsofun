@@ -284,20 +284,35 @@ cost_chisquared_kphio <- function( par, inverse = FALSE ){
 ## Generic cost function of model-observation (mis-)match using
 ## root mean square error.
 ##------------------------------------------------------------
-cost_rmse_fullstack <- function( par, inverse = FALSE ){
+cost_rmse_fullstack <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
 
-  ## Full stack calibration
-  out <- system( paste0("echo ", simsuite, " ", sprintf( "%f %f %f %f %f %f", par[1], par[2], par[3], -9999.0, -9999.0, -9999.0 ), " | ./run", model ), intern = TRUE )  ## holding kphio fixed at previously optimised value for splined FPAR
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio           = par[1],
+    soilm_par_a     = par[2],
+    soilm_par_b     = par[3],
+    vpdstress_par_a = 0.0,
+    vpdstress_par_b = 0.0,
+    vpdstress_par_m = 0
+  )
   
-  ## read output from calibration run
-  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
-  
-  ## Combine obs and mod by columns
-  out <- bind_cols( obs, out )
+  df <- runread_sofun_f(
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) %>%   
+    dplyr::select(sitename, out_sofun) %>% 
+    dplyr::rename(id = sitename) %>% 
+    tidyr::unnest(out_sofun) %>% 
+    dplyr::rename(gpp_mod = gpp) %>% 
+    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
   ## Calculate cost (RMSE)
-  cost <- sqrt( mean( (out$gpp_mod - out$gpp_obs )^2, na.rm = TRUE ) )
-  # print(paste("cost =", cost, "par =", paste(par, collapse = ", " )))
+  cost <- sqrt( mean( (df$gpp_mod - df$gpp_obs )^2, na.rm = TRUE ) )
+  
+  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
   if (inverse) cost <- 1.0 / cost
 
@@ -327,13 +342,6 @@ cost_rmse_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     makecheck = TRUE,
     parallel = FALSE
     ) %>%   
-  # df <- df_drivers %>% 
-  #   mutate(out_sofun = purrr::pmap(
-  #     .,
-  #     run_sofun_f_bysite,
-  #     params_modl = params_modl,
-  #     makecheck = FALSE
-  #   )) %>% 
     dplyr::select(sitename, out_sofun) %>% 
     dplyr::rename(id = sitename) %>% 
     tidyr::unnest(out_sofun) %>% 
