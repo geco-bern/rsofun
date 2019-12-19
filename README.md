@@ -187,17 +187,12 @@ mod <- run_sofun_f_bysite(
 ## function 'run_sofun_f_bysite' can be applied to each row using 'pmap'
 ## Doing it like this, the outputs are stored in a new column 'out_sofun'.
 ## This same code is implemented in 'run_sofun_f'
-ptm <- proc.time()
-df_output <- df_drivers %>%
-  mutate(out_sofun = purrr::pmap(
-    .,
-    run_sofun_f_bysite,
-    params_modl = params_modl,
-    makecheck = TRUE
-    )) %>%
-    dplyr::select(sitename, out_sofun)
-ptm <- proc.time() - ptm
-print(ptm)
+df_output <- runread_sofun_f(
+     df_drivers, 
+     params_modl = params_modl, 
+     makecheck = TRUE,
+     parallel = FALSE
+     )
 
 df_output$out_sofun[[1]] %>% 
   ggplot(aes(x=date, y=gpp)) +

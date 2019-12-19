@@ -155,15 +155,12 @@ mod <- run_sofun_f_bysite(
 ## Doing it like this, the outputs are stored in a new column 'out_sofun'.
 ## This same code is implemented in 'run_sofun_f'
 ptm <- proc.time()
-df_output <- df_drivers %>%
-  mutate(out_sofun = purrr::pmap(
-    .,
-    run_sofun_f_bysite,
-    params_modl = params_modl,
-    makecheck = TRUE
-    )) %>%
-    dplyr::select(sitename, out_sofun)
-ptm <- proc.time() - ptm
+df_output <- runread_sofun_f(
+     df_drivers, 
+     params_modl = params_modl, 
+     makecheck = TRUE,
+     parallel = FALSE
+     )
 print(ptm)
 
 # microbenchmark::microbenchmark(
