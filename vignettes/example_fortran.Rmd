@@ -139,7 +139,7 @@ df_drivers <- collect_drivers_sofun(
   df_soiltexture = df_soiltexture
   )
 
-## by spelling out arguments
+## run for a single site
 mod <- run_sofun_f_bysite( 
   df_drivers$sitename[1], 
   df_drivers$params_siml[[1]], 
@@ -150,10 +150,7 @@ mod <- run_sofun_f_bysite(
   makecheck = TRUE 
   )
 
-## The advantage of using the nested data frame 'df_drivers' is that the
-## function 'run_sofun_f_bysite' can be applied to each row using 'pmap'
-## Doing it like this, the outputs are stored in a new column 'out_sofun'.
-## This same code is implemented in 'run_sofun_f'
+## Run for the full set of sites
 ptm <- proc.time()
 df_output <- runread_sofun_f(
      df_drivers, 
@@ -225,7 +222,7 @@ ddf_obs_calib <- get_obs_calib(
 
 Calibrate the model.
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 set.seed(1982)
 settings_calib <- calib_sofun( 
   settings_calib, 
@@ -243,7 +240,7 @@ print(settings_calib$par_opt)
 ### Evaluate
 
 Run the model once again with these parameters and evaluate results.
-```{r}
+```{r warning=FALSE, message=FALSE}
 mylist <- readr::read_csv("~/eval_pmodel/myselect_fluxnet2015.csv") %>% 
   dplyr::filter( use==1 ) %>% 
   dplyr::pull( Site )
@@ -263,7 +260,7 @@ settings_eval <- list(
 ```
 
 Get evaluation data (benchmarking data).
-```{r}
+```{r warning=FALSE, message=FALSE}
 filn <- "./obs_eval.Rdata"
 if (file.exists(filn)){
   load(filn)
