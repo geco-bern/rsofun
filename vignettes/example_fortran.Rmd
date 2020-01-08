@@ -212,7 +212,7 @@ settings_calib <- list(
 ```
  
 Get calibration target data.
-```{r warning=FALSE, messge=FALSE}
+```{r warning=FALSE, message=FALSE}
 ddf_obs_calib <- get_obs_calib( 
   settings_calib = settings_calib, 
   dplyr::select(df_drivers, sitename, siteinfo) %>% tidyr::unnest(siteinfo), 

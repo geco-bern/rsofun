@@ -242,7 +242,7 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (df$gpp_mod - df$gpp_obs )^2, na.rm = TRUE ) )
   
-  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
   if (inverse) cost <- 1.0 / cost
 
@@ -305,7 +305,7 @@ cost_rmse_fullstack <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (df$gpp_mod - df$gpp_obs )^2, na.rm = TRUE ) )
   
-  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
   if (inverse) cost <- 1.0 / cost
 
@@ -391,7 +391,7 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
   cost <- ((df$latenth_mod - df$latenth_obs )/(2 * df$latenth_unc))^2
   cost <- sum(cost, na.rm = TRUE)/sum(!is.na(cost))
   
-  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
 
   if (inverse) cost <- 1.0 / cost
   
