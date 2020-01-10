@@ -54,10 +54,10 @@ contains
     use md_params_siml, only: getsteering
     use md_grid, only: get_domaininfo, getgrid, type_params_domain
     use md_params_soil, only: getsoil
-    use md_forcing, only: getclimate, getco2, getfapar, get_fpc_grid
+    use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: nlayers_soil, ndayyear, npft
-    use md_biosphere, only: biosphere_annual
+    use md_biosphere_pmodel, only: biosphere_annual
 
     implicit none
 
@@ -92,7 +92,7 @@ contains
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(6), intent(in) :: par  ! free (calibratable) model parameters
-    real(kind=c_double),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
+    real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
     real(kind=c_double),  dimension(nt,5), intent(out) :: output
 
     ! local variables
@@ -333,40 +333,38 @@ contains
   end subroutine pmodel_f
 
 
-  subroutine lm3ppa_f(          &
-    spinup,                    &   
-    spinupyears,               &        
-    recycle,                   &    
-    firstyeartrend,            &           
-    nyeartrend,                &       
-    soilmstress,               &        
-    tempstress,                &       
-    calc_aet_fapar_vpd,        &       
-    in_ppfd,                   &    
-    in_netrad,                 &      
-    const_clim_year,           &            
-    const_lu_year,             &          
-    const_co2_year,            &           
-    const_ndep_year,           &            
-    const_nfert_year,          &             
-    outdt,                     &  
-    ltre,                      & 
-    ltne,                      & 
-    ltrd,                      & 
-    ltnd,                      & 
-    lgr3,                      & 
-    lgn3,                      & 
-    lgr4,                      & 
-    longitude,                 &      
-    latitude,                  &     
-    altitude,                  &     
-    whc,                       &
-    soiltexture,               &
-    nt,                        &
-    par,                       &
-    forcing,                   &
-    output                     &
-    ) bind(C, name = "lm3ppa_f_")
+  subroutine lm3ppa_f(    &
+    model_run_years,      &             
+    equi_days,            &       
+    outputhourly,         &          
+    outputdaily,          &         
+    do_U_shaped_mortality,&                   
+    update_annaulLAImax,  &                 
+    do_closedN_run,       &            
+    soiltype,             &      
+    FLDCAP,               &    
+    WILTPT,               &    
+    K1,                   &
+    K2,                   &
+    K_nitrogen,           &        
+    etaN,                 &  
+    MLmixRatio,           &        
+    l_fract,              &     
+    retransN,             &      
+    fNSNmax,              &     
+    f_N_add,              &     
+    f_initialBSW,         &          
+    params_species,       &            
+    params_soil,          &         
+    init_cohort,          &         
+    init_fast_soil_C,     &              
+    init_slow_soil_C,     &              
+    init_Nmineral,        &           
+    N_input,              &     
+    n,                    &    
+    forcing,              &     
+    output                &
+    ) bind(C, n&ame = "lm3ppa_f_")
 
     !////////////////////////////////////////////////////////////////
     ! Main subroutine to handle I/O with C and R. 
@@ -376,46 +374,46 @@ contains
     use md_params_siml, only: getsteering
     use md_grid, only: get_domaininfo, getgrid, type_params_domain
     use md_params_soil, only: getsoil
-    use md_forcing, only: getclimate, getco2, getfapar, get_fpc_grid
+    use md_forcing_lm3ppa, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: nlayers_soil, ndayyear, npft
-    use md_biosphere, only: biosphere_annual
+    use md_biosphere_lm3ppa, only: biosphere_annual
 
     implicit none
 
     ! arguments
-    logical(kind=c_bool), intent(in) :: spinup
-    integer(kind=c_int),  intent(in) :: spinupyears
-    integer(kind=c_int),  intent(in) :: recycle
-    integer(kind=c_int),  intent(in) :: firstyeartrend
-    integer(kind=c_int),  intent(in) :: nyeartrend
-    logical(kind=c_bool), intent(in) :: soilmstress
-    logical(kind=c_bool), intent(in) :: tempstress
-    logical(kind=c_bool), intent(in) :: calc_aet_fapar_vpd
-    logical(kind=c_bool), intent(in) :: in_ppfd
-    logical(kind=c_bool), intent(in) :: in_netrad
-    integer(kind=c_int),  intent(in) :: const_clim_year
-    integer(kind=c_int),  intent(in) :: const_lu_year
-    integer(kind=c_int),  intent(in) :: const_co2_year
-    integer(kind=c_int),  intent(in) :: const_ndep_year
-    integer(kind=c_int),  intent(in) :: const_nfert_year
-    integer(kind=c_int),  intent(in) :: outdt
-    logical(kind=c_bool), intent(in) :: ltre
-    logical(kind=c_bool), intent(in) :: ltne
-    logical(kind=c_bool), intent(in) :: ltrd
-    logical(kind=c_bool), intent(in) :: ltnd
-    logical(kind=c_bool), intent(in) :: lgr3
-    logical(kind=c_bool), intent(in) :: lgn3
-    logical(kind=c_bool), intent(in) :: lgr4
-    real(kind=c_double),  intent(in) :: longitude
-    real(kind=c_double),  intent(in) :: latitude
-    real(kind=c_double),  intent(in) :: altitude
-    real(kind=c_double),  intent(in) :: whc
-    real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
-    integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(6), intent(in) :: par  ! free (calibratable) model parameters
-    real(kind=c_double),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
-    real(kind=c_double),  dimension(nt,5), intent(out) :: output
+    integer(kind=c_int), intent(in) :: model_run_years
+    integer(kind=c_int), intent(in) :: equi_days
+    logical(kind=c_bool), intent(in) :: outputhourly
+    logical(kind=c_bool), intent(in) :: outputdaily
+    logical(kind=c_bool), intent(in) :: do_U_shaped_mortality
+    logical(kind=c_bool), intent(in) :: update_annaulLAImax
+    logical(kind=c_bool), intent(in) :: do_closedN_run
+    
+    integer(kind=c_int), intent(in) :: soiltype
+    real(kind=c_double), intent(in) :: FLDCAP
+    real(kind=c_double), intent(in) :: WILTPT
+    real(kind=c_double), intent(in) :: K1
+    real(kind=c_double), intent(in) :: K2
+    real(kind=c_double), intent(in) :: K_nitrogen
+    real(kind=c_double), intent(in) :: etaN
+    real(kind=c_double), intent(in) :: MLmixRatio
+    real(kind=c_double), intent(in) :: l_fract
+    real(kind=c_double), intent(in) :: retransN
+    real(kind=c_double), intent(in) :: fNSNmax
+    real(kind=c_double), intent(in) :: f_N_add
+    real(kind=c_double), intent(in) :: f_initialBSW
+
+    real(kind=c_double), dimension(11,15), intent(in) :: params_species
+    real(kind=c_double), dimension(9,9),   intent(in) :: params_soil
+    real(kind=c_double), dimension(10,5),  intent(in) :: init_cohort
+    real(kind=c_double), intent(in) :: init_fast_soil_C
+    real(kind=c_double), intent(in) :: init_slow_soil_C
+    real(kind=c_double), intent(in) :: init_Nmineral
+    real(kind=c_double), intent(in) :: N_input
+    integer(kind=c_int), intent(in) :: nt
+    real(kind=c_double), dimension(nt,13), intent(in) :: forcing
+    real(kind=c_double), intent(in) :: output
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 

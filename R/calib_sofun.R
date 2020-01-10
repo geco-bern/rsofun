@@ -371,7 +371,7 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
   # df <- df_drivers %>% 
   #   mutate(out_sofun = purrr::pmap(
   #     .,
-  #     run_sofun_f_bysite,
+  #     run_pmodel_f_bysite,
   #     params_modl = params_modl,
   #     makecheck = FALSE
   #   )) %>% 

@@ -8,6 +8,7 @@ module md_params_core
   implicit none
 
   integer, parameter :: ndayyear = 365           ! number of days in a year
+  integer, parameter :: nhoursyear = 8760        ! number of days in a year
   integer, parameter :: nmonth = 12              ! number of months in a year
   real,    parameter :: secs_per_day = 86400.0   ! number of seconds in a day
   integer, parameter :: maxgrid = 1              ! number of spatial gridcells (dummy dimension for later code extension)

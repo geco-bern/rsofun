@@ -1,4 +1,4 @@
-module md_forcing
+module md_forcing_pmodel
   !////////////////////////////////////////////////////////////////
   ! Module contains forcing variables (climate, co2, ...), and
   ! subroutines used to read forcing input files for a specific year
@@ -9,7 +9,7 @@ module md_forcing
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32
+  use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_params_core, only: ndayyear, nlu, dummy
   use md_grid, only: domaininfo_type, gridtype
 
@@ -228,5 +228,5 @@ contains
 
   end function get_fpc_grid
 
-end module md_forcing
+end module md_forcing_pmodel
 
