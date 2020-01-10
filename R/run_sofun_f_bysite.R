@@ -159,7 +159,73 @@ run_sofun_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_soi
         dplyr::select(-year_dec)
 
     } else if (build=="lm3ppa"){
-      ## ...
+      ## xxx todo: adapt to lm3ppa specific
+
+      ## Model parameters as vector
+      par = c(
+        as.numeric(params_modl$kphio),
+        as.numeric(params_modl$soilm_par_a),
+        as.numeric(params_modl$soilm_par_b),
+        as.numeric(params_modl$vpdstress_par_a),
+        as.numeric(params_modl$vpdstress_par_b),
+        as.numeric(params_modl$vpdstress_par_m)
+        )
+
+      ## Soil texture as matrix (layer x texture parameter)
+      soiltexture <- df_soiltexture %>% 
+        dplyr::select(fsand, fclay, forg, fgravel) %>% 
+        as.matrix() %>% 
+        t()
+
+      ## C wrapper call
+      out <- .Call(
+
+        'lm3ppa_f_C',
+        
+        ## Simulation parameters
+        spinup                    = as.logical(params_siml$spinup),
+        spinupyears               = as.integer(params_siml$spinupyears),
+        recycle                   = as.integer(params_siml$recycle),
+        firstyeartrend            = as.integer(params_siml$firstyeartrend),
+        nyeartrend                = as.integer(params_siml$nyeartrend),
+        soilmstress               = as.logical(params_siml$soilmstress),
+        tempstress                = as.logical(params_siml$tempstress),
+        calc_aet_fapar_vpd        = as.logical(params_siml$calc_aet_fapar_vpd),
+        in_ppfd                   = as.logical(params_siml$in_ppfd),
+        in_netrad                 = as.logical(params_siml$in_netrad),
+        const_clim_year           = as.integer(params_siml$const_clim_year),
+        const_lu_year             = as.integer(params_siml$const_lu_year),
+        const_co2_year            = as.integer(params_siml$const_co2_year),
+        const_ndep_year           = as.integer(params_siml$const_ndep_year),
+        const_nfert_year          = as.integer(params_siml$const_nfert_year),
+        outdt                     = as.integer(params_siml$outdt),
+        ltre                      = as.logical(params_siml$ltre),
+        ltne                      = as.logical(params_siml$ltne),
+        ltrd                      = as.logical(params_siml$ltrd),
+        ltnd                      = as.logical(params_siml$ltnd),
+        lgr3                      = as.logical(params_siml$lgr3),
+        lgn3                      = as.logical(params_siml$lgn3),
+        lgr4                      = as.logical(params_siml$lgr4),
+        longitude                 = as.numeric(siteinfo$lon),
+        latitude                  = as.numeric(siteinfo$lat),
+        altitude                  = as.numeric(siteinfo$elv),
+        whc                       = as.numeric(siteinfo$whc),
+        soiltexture               = soiltexture,
+        n                         = n,
+        par                       = par, 
+        forcing                   = forcing
+        )
+      
+      ## Prepare output to be a nice looking tidy data frame (tibble)
+      ddf <- init_dates_dataframe(yrstart = params_siml$firstyeartrend, yrend = siteinfo$year_end, noleap = TRUE)
+
+      out <- out %>%
+        as.matrix() %>% 
+        as_tibble() %>%
+        setNames(c("fapar", "gpp", "transp", "latenth", "XXX")) %>%
+        dplyr::mutate(sitename = sitename) %>% 
+        dplyr::bind_cols(ddf,.) %>% 
+        dplyr::select(-year_dec)
 
     }
 
