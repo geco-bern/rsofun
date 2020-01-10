@@ -5,7 +5,7 @@
 #include <R_ext/Rdynload.h>
 
 // Fortran subroutine registration
-void F77_NAME(sofun_f)(
+void F77_NAME(pmodel_f)(
     _Bool *spinup,
     int *spinupyears,
     int *recycle,
@@ -41,7 +41,7 @@ void F77_NAME(sofun_f)(
     );
 
 // C wrapper function
-extern SEXP sofun_f_C(
+extern SEXP pmodel_f_C(
     SEXP spinup,
     SEXP spinupyears,
     SEXP recycle,
@@ -82,7 +82,7 @@ extern SEXP sofun_f_C(
     SEXP output = PROTECT( allocMatrix(REALSXP, nt, 5) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns
 
     // Fortran subroutine call
-    F77_CALL(sofun_f)(
+    F77_CALL(pmodel_f)(
         LOGICAL(spinup),
         INTEGER(spinupyears),
         INTEGER(recycle),
@@ -127,7 +127,7 @@ extern SEXP sofun_f_C(
 }
 
 static const R_CallMethodDef CallEntries[] = {
-  {"sofun_f_C",   (DL_FUNC) &sofun_f_C,   31},  // Specify number of arguments to C wrapper as the last number here
+  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   31},  // Specify number of arguments to C wrapper as the last number here
   {NULL,         NULL,                0}
 };
 
@@ -136,5 +136,5 @@ void R_init_rsofun(DllInfo *dll)
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 
-    R_RegisterCCallable("rsofun", "sofun_f_C",  (DL_FUNC) &sofun_f_C);
+    R_RegisterCCallable("rsofun", "pmodel_f_C",  (DL_FUNC) &pmodel_f_C);
 }

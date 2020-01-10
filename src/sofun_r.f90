@@ -7,11 +7,11 @@ module sofun_r_mod
   implicit none
 
   private
-  public :: sofun_f
+  public :: pmodel_f
 
 contains
 
-  subroutine sofun_f(          &
+  subroutine pmodel_f(          &
     spinup,                    &   
     spinupyears,               &        
     recycle,                   &    
@@ -44,7 +44,7 @@ contains
     par,                       &
     forcing,                   &
     output                     &
-    ) bind(C, name = "sofun_f_")
+    ) bind(C, name = "pmodel_f_")
 
     !////////////////////////////////////////////////////////////////
     ! Main subroutine to handle I/O with C and R. 
@@ -330,6 +330,6 @@ contains
     deallocate(myinterface%soilparams)
     deallocate(myinterface%vegcover)
 
-  end subroutine sofun_f
+  end subroutine pmodel_f
 
 end module sofun_r_mod
