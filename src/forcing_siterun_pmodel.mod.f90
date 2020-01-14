@@ -194,7 +194,7 @@ contains
     type( paramstype_siml ), intent(in) :: params_siml
 
     ! function return variable
-    real, dimension(npft) :: fpc_grid_field
+    real, dimension(npft,1) :: fpc_grid_field
 
     ! local variables
     integer :: pft
@@ -207,19 +207,19 @@ contains
     if ( params_siml%ltre ) then
       ! xxx dirty: call all non-grass vegetation types 'TrE', see indeces above
       pft = pft + 1
-      fpc_grid_field(pft) = 1.0
+      fpc_grid_field(pft,1) = 1.0
     end if 
 
     if ( params_siml%lgr3 ) then
       ! xxx dirty: call all grass vegetation types 'Gr3'
       pft = pft + 1
-      fpc_grid_field(pft) = 1.0
+      fpc_grid_field(pft,1) = 1.0
     end if
 
     if ( params_siml%lgr4 ) then
       ! xxx dirty: call all grass vegetation types 'Gr3'
       pft = pft + 1
-      fpc_grid_field(pft) = 1.0
+      fpc_grid_field(pft,1) = 1.0
     end if
 
     if (pft==0) stop 'get_fpc_grid: no PFT activated accoring to simulation parameter file.'

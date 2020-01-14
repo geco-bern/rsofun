@@ -30,13 +30,13 @@ module md_forcing_lm3ppa
     real(kind=sp), dimension(nhoursyear)    :: rain          ! kgH2O m-2 s-1
     real(kind=sp), dimension(nhoursyear)    :: windU         ! wind velocity (m s-1)
     real(kind=sp), dimension(nhoursyear)    :: P_air         ! pa
-    ! real(kind=sp), dimension(nhoursyear)    :: CO2           ! ppm
+    real(kind=sp), dimension(nhoursyear)    :: CO2           ! ppm
     real(kind=sp), dimension(nhoursyear)    :: soilwater     ! soil moisture, vol/vol
   end type climate_type
 
 contains
 
-  function getclimate( nt, forcing, climateyear_idx, climateyear ) result ( out_climate )
+  function getclimate( nt, forcing, domaininfo, grid, init, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
   ! function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
@@ -46,8 +46,13 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    integer, intent(in) :: climateyear_idx, climateyear
+    real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    type( domaininfo_type ), intent(in) :: domaininfo
+    type( gridtype ), dimension(1), intent(inout) :: grid
+    logical, intent(in) :: init
+    integer, intent(in) :: climateyear_idx
+    logical, intent(in) :: in_ppfd
+    logical, intent(in) :: in_netrad
 
     ! local variables
     integer :: idx_start, idx_end
@@ -66,10 +71,8 @@ contains
       stop 'forcing array size does not have enough rows.'
     end if
 
-    if (int(forcing(idx_start, 1)) /= climateyear) stop 'getclimate(): climateyear does not correspond to index read from forcing'
-
     ! This is to read from ORNL file
-    out_climate%year      = real(forcing(idx_start:idx_end, 1))           ! Year
+    out_climate%year      = real(forcing(idx_start:idx_end, 1))          ! Year
     out_climate%doy       = real(forcing(idx_start:idx_end, 2))           ! day of the year
     out_climate%hod       = real(forcing(idx_start:idx_end, 3))           ! hour of the day
     out_climate%PAR       = real(forcing(idx_start:idx_end, 4)) * 2.0     ! umol/m2/s           ! umol m-2 s-1
@@ -80,37 +83,10 @@ contains
     out_climate%rain      = real(forcing(idx_start:idx_end, 9))/(timestep * 3600) ! kgH2O m-2 s-1
     out_climate%windU     = real(forcing(idx_start:idx_end, 10))           ! wind velocity (m s-1)
     out_climate%P_air     = real(forcing(idx_start:idx_end, 11))           ! pa
+    out_climate%CO2       = real(forcing(idx_start:idx_end, 12)) * 1.0e-6  ! mol/mol
     out_climate%soilwater = 0.8                                           ! soil moisture, vol/vol
 
   end function getclimate
-
-
-
-  function getco2( nt, forcing, forcingyear_idx, forcingyear ) result( pco2 )
-    !////////////////////////////////////////////////////////////////
-    !  Function reads this year's atmospheric CO2 from input
-    !----------------------------------------------------------------
-    ! arguments
-    integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    integer, intent(in) :: forcingyear_idx, forcingyear
-
-    ! function return variable
-    real :: pco2
-
-    ! local variables 
-    integer :: idx_start, idx_end, year
-    real, parameter :: timestep = 1.0
-
-    idx_start = (climateyear_idx - 1) * nhoursyear + 1
-    idx_end   = idx_start + nhoursyear - 1
-
-    if (int(forcing(idx_start, 1)) /= forcingyear) stop 'getclimate(): forcingyear does not correspond to index read from forcing'
-
-    year = real(forcing(idx_start:idx_end, 1))           ! Year
-    pco2 = real(forcing(idx_start:idx_end, 12)) * 1.0e-6  ! mol/mol
-
-  end function getco2  
 
 end module md_forcing_lm3ppa
 

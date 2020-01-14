@@ -20,11 +20,11 @@ void F77_NAME(pmodel_f)(
     _Bool *calc_aet_fapar_vpd,
     _Bool *in_ppfd,
     _Bool *in_netrad,
-    // int *const_clim_year,
-    // int *const_lu_year,
-    // int *const_co2_year,
-    // int *const_ndep_year,
-    // int *const_nfert_year,
+    int *const_clim_year,
+    int *const_lu_year,
+    int *const_co2_year,
+    int *const_ndep_year,
+    int *const_nfert_year,
     int *outdt,
     _Bool *ltre,
     _Bool *ltne,
@@ -56,11 +56,11 @@ extern SEXP pmodel_f_C(
     SEXP calc_aet_fapar_vpd,
     SEXP in_ppfd,
     SEXP in_netrad,
-    // SEXP const_clim_year,
-    // SEXP const_lu_year,
-    // SEXP const_co2_year,
-    // SEXP const_ndep_year,
-    // SEXP const_nfert_year,
+    SEXP const_clim_year,
+    SEXP const_lu_year,
+    SEXP const_co2_year,
+    SEXP const_ndep_year,
+    SEXP const_nfert_year,
     SEXP outdt,
     SEXP ltre,
     SEXP ltne,
@@ -97,11 +97,11 @@ extern SEXP pmodel_f_C(
         LOGICAL(calc_aet_fapar_vpd),
         LOGICAL(in_ppfd),
         LOGICAL(in_netrad),
-        // INTEGER(const_clim_year),
-        // INTEGER(const_lu_year),
-        // INTEGER(const_co2_year),
-        // INTEGER(const_ndep_year),
-        // INTEGER(const_nfert_year),
+        INTEGER(const_clim_year),
+        INTEGER(const_lu_year),
+        INTEGER(const_co2_year),
+        INTEGER(const_ndep_year),
+        INTEGER(const_nfert_year),
         INTEGER(outdt),
         LOGICAL(ltre),
         LOGICAL(ltne),
@@ -248,14 +248,13 @@ extern SEXP lm3ppa_f_C(
     return output;
 }
 
-/////////////////////////////////////////////////////////////
-// Declarations for all functions
-/////////////////////////////////////////////////////////////
+
 static const R_CallMethodDef CallEntries[] = {
-  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
+  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   31},  // Specify number of arguments to C wrapper as the last number here
   {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   29},  // Specify number of arguments to C wrapper as the last number here
   {NULL,         NULL,                0}
 };
+
 
 void R_init_rsofun(DllInfo *dll)
 {

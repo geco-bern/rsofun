@@ -22,11 +22,11 @@ contains
     calc_aet_fapar_vpd,        &       
     in_ppfd,                   &    
     in_netrad,                 &      
-    ! const_clim_year,           &            
-    ! const_lu_year,             &          
-    ! const_co2_year,            &           
-    ! const_ndep_year,           &            
-    ! const_nfert_year,          &             
+    const_clim_year,           &            
+    const_lu_year,             &          
+    const_co2_year,            &           
+    const_ndep_year,           &            
+    const_nfert_year,          &             
     outdt,                     &  
     ltre,                      & 
     ltne,                      & 
@@ -72,11 +72,11 @@ contains
     logical(kind=c_bool), intent(in) :: calc_aet_fapar_vpd
     logical(kind=c_bool), intent(in) :: in_ppfd
     logical(kind=c_bool), intent(in) :: in_netrad
-    ! integer(kind=c_int),  intent(in) :: const_clim_year
-    ! integer(kind=c_int),  intent(in) :: const_lu_year
-    ! integer(kind=c_int),  intent(in) :: const_co2_year
-    ! integer(kind=c_int),  intent(in) :: const_ndep_year
-    ! integer(kind=c_int),  intent(in) :: const_nfert_year
+    integer(kind=c_int),  intent(in) :: const_clim_year
+    integer(kind=c_int),  intent(in) :: const_lu_year
+    integer(kind=c_int),  intent(in) :: const_co2_year
+    integer(kind=c_int),  intent(in) :: const_ndep_year
+    integer(kind=c_int),  intent(in) :: const_nfert_year
     integer(kind=c_int),  intent(in) :: outdt
     logical(kind=c_bool), intent(in) :: ltre
     logical(kind=c_bool), intent(in) :: ltne
@@ -103,11 +103,11 @@ contains
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
     !----------------------------------------------------------------
-    myinterface%params_siml%do_spinup      = spinup
-    myinterface%params_siml%spinupyears    = spinupyears
-    myinterface%params_siml%recycle        = recycle
-    myinterface%params_siml%firstyeartrend = firstyeartrend
-    myinterface%params_siml%nyeartrend     = nyeartrend
+    myinterface%params_siml%do_spinup        = spinup
+    myinterface%params_siml%spinupyears      = spinupyears
+    myinterface%params_siml%recycle          = recycle
+    myinterface%params_siml%firstyeartrend   = firstyeartrend
+    myinterface%params_siml%nyeartrend       = nyeartrend
 
     if (myinterface%params_siml%do_spinup) then
       myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend + myinterface%params_siml%spinupyears
@@ -121,11 +121,11 @@ contains
     myinterface%params_siml%calc_aet_fapar_vpd = calc_aet_fapar_vpd
     myinterface%params_siml%in_ppfd            = in_ppfd
     myinterface%params_siml%in_netrad          = in_netrad
-    ! myinterface%params_siml%const_clim_year    = const_clim_year
-    ! myinterface%params_siml%const_lu_year      = const_lu_year
-    ! myinterface%params_siml%const_co2_year     = const_co2_year
-    ! myinterface%params_siml%const_ndep_year    = const_ndep_year
-    ! myinterface%params_siml%const_nfert_year   = const_nfert_year
+    myinterface%params_siml%const_clim_year    = const_clim_year
+    myinterface%params_siml%const_lu_year      = const_lu_year
+    myinterface%params_siml%const_co2_year     = const_co2_year
+    myinterface%params_siml%const_ndep_year    = const_ndep_year
+    myinterface%params_siml%const_nfert_year   = const_nfert_year
     myinterface%params_siml%outdt              = outdt
     myinterface%params_siml%ltre               = ltre
     myinterface%params_siml%ltne               = ltne
@@ -135,7 +135,6 @@ contains
     myinterface%params_siml%lgn3               = lgn3
     myinterface%params_siml%lgr4               = lgr4
 
-    ! Count PFTs to be simulated
     npft_local = 0
     if (myinterface%params_siml%ltre) npft_local = npft_local + 1
     if (myinterface%params_siml%ltne) npft_local = npft_local + 1
@@ -145,35 +144,41 @@ contains
     if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
     if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
 
-    ! allocate variable size arrays
-    if (.not. allocated(myinterface%fpc_grid)) allocate( myinterface%fpc_grid( npft_local ) )
-
     ! set parameter to define that this is not a calibration run (otherwise sofun.f90 would not have been compiled, but sofun_simsuite.f90)
     myinterface%params_siml%is_calib = .true.  ! treat paramters passed through R/C-interface the same way as calibratable parameters
 
     !----------------------------------------------------------------
     ! GET GRID INFORMATION
     !----------------------------------------------------------------
-    ! XXX todo: possibly remove domaininfo and grid stuff
     ! below is done by getpar_domain() otherwise
-    params_domain%lon_site = real( longitude )
-    params_domain%lat_site = real( latitude )
-    params_domain%elv_site = real( altitude )
-    params_domain%whc_site = real( whc )
+    params_domain%lon_site      = real( longitude )
+    params_domain%lat_site      = real( latitude )
+    params_domain%elv_site      = real( altitude )
+    params_domain%whc_site      = real( whc )
 
     myinterface%domaininfo = get_domaininfo( params_domain )
 
+    ! allocate variable size arrays
+    ! ncells = myinterface%domaininfo%maxgrid
+    ncells = 1
+    if (.not. allocated(myinterface%grid))         allocate( myinterface%grid(                       ncells ) )
+    if (.not. allocated(myinterface%climate))      allocate( myinterface%climate(                    ncells ) )
+    if (.not. allocated(myinterface%soilparams))   allocate( myinterface%soilparams(   nlayers_soil, ncells ) )
+    if (.not. allocated(myinterface%vegcover))     allocate( myinterface%vegcover(                   ncells ) )
+    if (.not. allocated(myinterface%fpc_grid))     allocate( myinterface%fpc_grid(     npft,         ncells ) )
+    ! allocate( myinterface%ninput_field(               ncells ) )
+    ! allocate( myinterface%landuse(                    ncells ) )
 
     ! vectorise 2D array, keeping only land gridcells
-    myinterface%grid = getgrid( myinterface%domaininfo, params_domain )
+    myinterface%grid(:) = getgrid( myinterface%domaininfo, params_domain )
 
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
-    myinterface%soilparams = getsoil( soiltexture )
+    myinterface%soilparams(:,:) = getsoil( soiltexture )
 
     ! Overwrite whc
-    myinterface%soilparams%whc(:) = whc
+    myinterface%soilparams(:,:)%whc = whc
 
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
@@ -191,7 +196,7 @@ contains
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)
     !----------------------------------------------------------------
-    myinterface%fpc_grid(:) = get_fpc_grid( myinterface%domaininfo, myinterface%params_siml )
+    myinterface%fpc_grid(:,:) = get_fpc_grid( myinterface%domaininfo, myinterface%params_siml )
 
 
     ! LOOP THROUGH YEARS
@@ -209,20 +214,21 @@ contains
       !   print*, '------------------TRANSIENT SIMULATION--------------------'
       ! endif
 
+
       !----------------------------------------------------------------
       ! Get external (environmental) forcing
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
-      myinterface%climate = getclimate(  &
-                                          nt, &
-                                          forcing, &
-                                          myinterface%domaininfo, &
-                                          myinterface%grid, &
-                                          myinterface%steering%init, &
-                                          myinterface%steering%climateyear_idx, &
-                                          myinterface%params_siml%in_ppfd,  &
-                                          myinterface%params_siml%in_netrad &
-                                          )
+      myinterface%climate(:) = getclimate(  &
+                                            nt, &
+                                            forcing, &
+                                            myinterface%domaininfo, &
+                                            myinterface%grid, &
+                                            myinterface%steering%init, &
+                                            myinterface%steering%climateyear_idx, &
+                                            myinterface%params_siml%in_ppfd,  &
+                                            myinterface%params_siml%in_netrad &
+                                            )
 
       ! Get annual, gobally uniform CO2
       myinterface%pco2 = getco2(  &
@@ -234,16 +240,55 @@ contains
                                   myinterface%params_siml%firstyeartrend &
                                   )
 
+      ! ! Atmospheric N deposition (note that actual data is not read in all SOFUN setups)
+      ! ndep_field(:) = getninput( &
+      !   "ndep", &
+      !   trim(runname), &
+      !   myinterface%domaininfo, &
+      !   myinterface%steering%forcingyear, &
+      !   myinterface%params_siml%firstyeartrend, &
+      !   myinterface%params_siml%const_ndep_year, &
+      !   myinterface%params_siml%ndep_noy_forcing_file, &
+      !   myinterface%params_siml%ndep_nhx_forcing_file, &
+      !   myinterface%climate(:)&
+      !   )
+      
+      ! ! N fertiliser input (note that actual data is not read in all SOFUN setups)
+      ! nfert_field(:) = getninput( &
+      !   "nfert", &
+      !   trim(runname), &
+      !   myinterface%domaininfo, &
+      !   myinterface%steering%forcingyear, &
+      !   myinterface%params_siml%firstyeartrend, &
+      !   myinterface%params_siml%const_nfert_year, &
+      !   myinterface%params_siml%nfert_noy_forcing_file, &
+      !   myinterface%params_siml%nfert_nhx_forcing_file, &
+      !   myinterface%climate(:)&
+      !   )
+
+      ! ! myInterface holds only total reactive N input (N deposition + N fertiliser)                             
+      ! myinterface%ninput_field(:) = gettot_ninput( nfert_field(:), ndep_field(:) )
+                                   
+      ! ! Get land use information (note that actual data is not read in all SOFUN setups)
+      ! myinterface%landuse(:) = getlanduse( &
+      !   trim(runname), &
+      !   myinterface%domaininfo, &
+      !   myinterface%steering%forcingyear, &
+      !   myinterface%params_siml%do_grharvest_forcing_file, &
+      !   myinterface%params_siml%const_lu_year, &
+      !   myinterface%params_siml%firstyeartrend &
+      !   )
+
       !----------------------------------------------------------------
       ! Get prescribed fAPAR if required (otherwise set to dummy value)
       !----------------------------------------------------------------
-      myinterface%vegcover = getfapar( &
-                                        nt, &
-                                        forcing, &
-                                        myinterface%domaininfo, &
-                                        myinterface%grid, &
-                                        myinterface%steering%forcingyear_idx &
-                                        )
+      myinterface%vegcover(:) = getfapar( &
+                                          nt, &
+                                          forcing, &
+                                          myinterface%domaininfo, &
+                                          myinterface%grid, &
+                                          myinterface%steering%forcingyear_idx &
+                                          )
 
       !----------------------------------------------------------------
       ! Call SR biosphere at an annual time step but with vectors 
@@ -280,7 +325,10 @@ contains
     ! print*, '--------------------END OF SIMULATION---------------------'
 
     ! clean up
-    deallocate(myinterface%fpc_grid)
+    deallocate(myinterface%grid)
+    deallocate(myinterface%climate)
+    deallocate(myinterface%soilparams)
+    deallocate(myinterface%vegcover)
 
   end subroutine pmodel_f
 
@@ -327,22 +375,21 @@ contains
     use md_grid, only: get_domaininfo, getgrid, type_params_domain
     use md_params_soil, only: getsoil
     use md_forcing_lm3ppa, only: getclimate, getco2, getfapar, get_fpc_grid
-    use md_interface_lm3ppa, only: interfacetype_biosphere, outtype_biosphere, myinterface
-    use md_params_core_lm3ppa, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS
+    use md_interface, only: interfacetype_biosphere, outtype_biosphere, myinterface
+    use md_params_core, only: nlayers_soil, ndayyear, npft
     use md_biosphere_lm3ppa, only: biosphere_annual
 
     implicit none
 
-    ! Simulation parameters
-    integer(kind=c_int),  intent(in) :: model_run_years
-    integer(kind=c_int),  intent(in) :: equi_days
+    ! arguments
+    integer(kind=c_int), intent(in) :: model_run_years
+    integer(kind=c_int), intent(in) :: equi_days
     logical(kind=c_bool), intent(in) :: outputhourly
     logical(kind=c_bool), intent(in) :: outputdaily
     logical(kind=c_bool), intent(in) :: do_U_shaped_mortality
     logical(kind=c_bool), intent(in) :: update_annaulLAImax
     logical(kind=c_bool), intent(in) :: do_closedN_run
-
-    ! Tile parameters
+    
     integer(kind=c_int), intent(in) :: soiltype
     real(kind=c_double), intent(in) :: FLDCAP
     real(kind=c_double), intent(in) :: WILTPT
@@ -357,17 +404,13 @@ contains
     real(kind=c_double), intent(in) :: f_N_add
     real(kind=c_double), intent(in) :: f_initialBSW
 
-    ! naked arrays
-    real(kind=c_double), dimension(MSPECIES,15), intent(in) :: params_species
-    real(kind=c_double), dimension(n_dim_soil_types,8), intent(in) :: params_soil
-    real(kind=c_double), dimension(MAX_INIT_COHORTS,5),  intent(in) :: init_cohort
-
-    ! initial soil pool size
+    real(kind=c_double), dimension(11,15), intent(in) :: params_species
+    real(kind=c_double), dimension(9,9),   intent(in) :: params_soil
+    real(kind=c_double), dimension(10,5),  intent(in) :: init_cohort
     real(kind=c_double), intent(in) :: init_fast_soil_C
     real(kind=c_double), intent(in) :: init_slow_soil_C
     real(kind=c_double), intent(in) :: init_Nmineral
     real(kind=c_double), intent(in) :: N_input
-
     integer(kind=c_int), intent(in) :: nt
     real(kind=c_double), dimension(nt,13), intent(in) :: forcing
     real(kind=c_double), intent(in) :: output
@@ -377,133 +420,85 @@ contains
     type(type_params_domain) :: params_domain
     integer :: npft_local, yr, ncells, idx_start, idx_end
 
-
-    !----------------------------------------------------------------
-    ! POPULATE MYINTERFACE WITH ARGUMENTS FROM R
-    !----------------------------------------------------------------
-    ! Simulation parameters
-    myinterface%params_siml%model_run_years       = model_run_years
-    myinterface%params_siml%equi_days             = equi_days
-    myinterface%params_siml%outputhourly          = outputhourly
-    myinterface%params_siml%outputdaily           = outputdaily
-    myinterface%params_siml%do_U_shaped_mortality = do_U_shaped_mortality
-    myinterface%params_siml%update_annaulLAImax   = update_annaulLAImax
-    myinterface%params_siml%do_closedN_run        = do_closedN_run
-
-    ! Tile parameters
-    myinterface%params_tile%soiltype     = soiltype
-    myinterface%params_tile%FLDCAP       = FLDCAP
-    myinterface%params_tile%WILTPT       = WILTPT
-    myinterface%params_tile%K1           = K1
-    myinterface%params_tile%K2           = K2
-    myinterface%params_tile%K_nitrogen   = K_nitrogen
-    myinterface%params_tile%etaN         = etaN
-    myinterface%params_tile%MLmixRatio   = MLmixRatio
-    myinterface%params_tile%l_fract      = l_fract
-    myinterface%params_tile%retransN     = retransN
-    myinterface%params_tile%fNSNmax      = fNSNmax
-    myinterface%params_tile%f_N_add      = f_N_add
-    myinterface%params_tile%f_initialBSW = f_initialBSW
-
-    ! Species parameters
-    myinterface%params_species%lifeform(:)     = params_species(:,1)
-    myinterface%params_species%phenotype(:)    = params_species(:,2)
-    myinterface%params_species%pt(:)           = params_species(:,3)
-    myinterface%params_species%seedlingsize(:) = params_species(:,4)
-    myinterface%params_species%LMA(:)          = params_species(:,5)
-    myinterface%params_species%phiRL(:)        = params_species(:,6)
-    myinterface%params_species%LNbase(:)       = params_species(:,7)
-    myinterface%params_species%laimax(:)       = params_species(:,8)
-    myinterface%params_species%LAI_light(:)    = params_species(:,9)
-    myinterface%params_species%Nfixrate0(:)    = params_species(:,10)
-    myinterface%params_species%NfixCost0(:)    = params_species(:,11)
-    myinterface%params_species%phiCSA(:)       = params_species(:,12)
-    myinterface%params_species%mortrate_d_c(:) = params_species(:,13)
-    myinterface%params_species%mortrate_d_u(:) = params_species(:,14)
-    myinterface%params_species%maturalage(:)   = params_species(:,15)
-
-    ! Initial cohort sizes
-    myinterface%init_cohort%init_cohort_species(:) = init_cohort(:,1)
-    myinterface%init_cohort%init_cohort_nindivs(:) = init_cohort(:,2)
-    myinterface%init_cohort%init_cohort_bsw(:)     = init_cohort(:,3)
-    myinterface%init_cohort%init_cohort_bHW(:)     = init_cohort(:,4)
-    myinterface%init_cohort%init_cohort_nsc(:)     = init_cohort(:,5)
-
-    ! Initial soil pools
-    myinterface%init_soil%init_fast_soil_C = init_fast_soil_C
-    myinterface%init_soil%init_slow_soil_C = init_slow_soil_C
-    myinterface%init_soil%init_Nmineral    = init_Nmineral
-    myinterface%init_soil%N_input          = N_input
-
-
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
     !----------------------------------------------------------------
-    ! myinterface%params_siml%do_spinup        = spinup
-    ! myinterface%params_siml%spinupyears      = spinupyears
-    ! myinterface%params_siml%recycle          = recycle
-    ! myinterface%params_siml%firstyeartrend   = firstyeartrend
-    ! myinterface%params_siml%nyeartrend       = nyeartrend
+    myinterface%params_siml%do_spinup        = spinup
+    myinterface%params_siml%spinupyears      = spinupyears
+    myinterface%params_siml%recycle          = recycle
+    myinterface%params_siml%firstyeartrend   = firstyeartrend
+    myinterface%params_siml%nyeartrend       = nyeartrend
 
-    ! if (myinterface%params_siml%do_spinup) then
-    !   myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend + myinterface%params_siml%spinupyears
-    ! else
-    !   myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
-    !   myinterface%params_siml%spinupyears = 0
-    ! endif
+    if (myinterface%params_siml%do_spinup) then
+      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend + myinterface%params_siml%spinupyears
+    else
+      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
+      myinterface%params_siml%spinupyears = 0
+    endif
     
-    ! myinterface%params_siml%soilmstress        = soilmstress
-    ! myinterface%params_siml%tempstress         = tempstress
-    ! myinterface%params_siml%calc_aet_fapar_vpd = calc_aet_fapar_vpd
-    ! myinterface%params_siml%in_ppfd            = in_ppfd
-    ! myinterface%params_siml%in_netrad          = in_netrad
-    ! myinterface%params_siml%const_clim_year    = const_clim_year
-    ! myinterface%params_siml%const_lu_year      = const_lu_year
-    ! myinterface%params_siml%const_co2_year     = const_co2_year
-    ! myinterface%params_siml%const_ndep_year    = const_ndep_year
-    ! myinterface%params_siml%const_nfert_year   = const_nfert_year
-    ! myinterface%params_siml%outdt              = outdt
-    ! myinterface%params_siml%ltre               = ltre
-    ! myinterface%params_siml%ltne               = ltne
-    ! myinterface%params_siml%ltrd               = ltrd
-    ! myinterface%params_siml%ltnd               = ltnd
-    ! myinterface%params_siml%lgr3               = lgr3
-    ! myinterface%params_siml%lgn3               = lgn3
-    ! myinterface%params_siml%lgr4               = lgr4
+    myinterface%params_siml%soilmstress        = soilmstress
+    myinterface%params_siml%tempstress         = tempstress
+    myinterface%params_siml%calc_aet_fapar_vpd = calc_aet_fapar_vpd
+    myinterface%params_siml%in_ppfd            = in_ppfd
+    myinterface%params_siml%in_netrad          = in_netrad
+    myinterface%params_siml%const_clim_year    = const_clim_year
+    myinterface%params_siml%const_lu_year      = const_lu_year
+    myinterface%params_siml%const_co2_year     = const_co2_year
+    myinterface%params_siml%const_ndep_year    = const_ndep_year
+    myinterface%params_siml%const_nfert_year   = const_nfert_year
+    myinterface%params_siml%outdt              = outdt
+    myinterface%params_siml%ltre               = ltre
+    myinterface%params_siml%ltne               = ltne
+    myinterface%params_siml%ltrd               = ltrd
+    myinterface%params_siml%ltnd               = ltnd
+    myinterface%params_siml%lgr3               = lgr3
+    myinterface%params_siml%lgn3               = lgn3
+    myinterface%params_siml%lgr4               = lgr4
 
-    ! npft_local = 0
-    ! if (myinterface%params_siml%ltre) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%ltne) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%ltrd) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%ltnd) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%lgr3) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
+    npft_local = 0
+    if (myinterface%params_siml%ltre) npft_local = npft_local + 1
+    if (myinterface%params_siml%ltne) npft_local = npft_local + 1
+    if (myinterface%params_siml%ltrd) npft_local = npft_local + 1
+    if (myinterface%params_siml%ltnd) npft_local = npft_local + 1
+    if (myinterface%params_siml%lgr3) npft_local = npft_local + 1
+    if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
+    if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
 
-    ! ! allocate variable size arrays
-    ! if (.not. allocated(myinterface%fpc_grid)) allocate( myinterface%fpc_grid( npft_local ) )
-
-    ! ! set parameter to define that this is not a calibration run (otherwise sofun.f90 would not have been compiled, but sofun_simsuite.f90)
-    ! myinterface%params_siml%is_calib = .true.  ! treat paramters passed through R/C-interface the same way as calibratable parameters
+    ! set parameter to define that this is not a calibration run (otherwise sofun.f90 would not have been compiled, but sofun_simsuite.f90)
+    myinterface%params_siml%is_calib = .true.  ! treat paramters passed through R/C-interface the same way as calibratable parameters
 
     !----------------------------------------------------------------
     ! GET GRID INFORMATION
     !----------------------------------------------------------------
-    ! ! below is done by getpar_domain() otherwise
-    ! params_domain%lon_site = real( longitude )
-    ! params_domain%lat_site = real( latitude )
-    ! params_domain%elv_site = real( altitude )
-    ! params_domain%whc_site = real( whc )
+    ! below is done by getpar_domain() otherwise
+    params_domain%lon_site      = real( longitude )
+    params_domain%lat_site      = real( latitude )
+    params_domain%elv_site      = real( altitude )
+    params_domain%whc_site      = real( whc )
 
-    ! myinterface%domaininfo = get_domaininfo( params_domain )
+    myinterface%domaininfo = get_domaininfo( params_domain )
 
-    ! ! vectorise 2D array, keeping only land gridcells
-    ! myinterface%grid = getgrid( myinterface%domaininfo, params_domain )
+    ! allocate variable size arrays
+    ! ncells = myinterface%domaininfo%maxgrid
+    ncells = 1
+    if (.not. allocated(myinterface%grid))         allocate( myinterface%grid(                       ncells ) )
+    if (.not. allocated(myinterface%climate))      allocate( myinterface%climate(                    ncells ) )
+    if (.not. allocated(myinterface%soilparams))   allocate( myinterface%soilparams(   nlayers_soil, ncells ) )
+    if (.not. allocated(myinterface%vegcover))     allocate( myinterface%vegcover(                   ncells ) )
+    if (.not. allocated(myinterface%fpc_grid))     allocate( myinterface%fpc_grid(     npft,         ncells ) )
+    ! allocate( myinterface%ninput_field(               ncells ) )
+    ! allocate( myinterface%landuse(                    ncells ) )
+
+    ! vectorise 2D array, keeping only land gridcells
+    myinterface%grid(:) = getgrid( myinterface%domaininfo, params_domain )
 
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
-    myinterface%soilparams = getsoil( params_soil )
+    myinterface%soilparams(:,:) = getsoil( soiltexture )
+
+    ! Overwrite whc
+    myinterface%soilparams(:,:)%whc = whc
 
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
@@ -511,12 +506,17 @@ contains
     ! XXX warning: converting from double to single may cause a problem
     ! when calibrating and parameters are varied in their Nth digit after
     ! the comma!  
-    ! myinterface%params_calib%kphio = real(par(1))
+    myinterface%params_calib%kphio           = real(par(1))
+    myinterface%params_calib%soilm_par_a     = real(par(2))
+    myinterface%params_calib%soilm_par_b     = real(par(3))
+    myinterface%params_calib%vpdstress_par_a = real(par(4))
+    myinterface%params_calib%vpdstress_par_b = real(par(5))
+    myinterface%params_calib%vpdstress_par_m = real(par(6))
 
-    ! !----------------------------------------------------------------
-    ! ! GET VEGETATION COVER (fractional projective cover by PFT)
-    ! !----------------------------------------------------------------
-    ! myinterface%fpc_grid(:) = get_fpc_grid( myinterface%domaininfo, myinterface%params_siml )
+    !----------------------------------------------------------------
+    ! GET VEGETATION COVER (fractional projective cover by PFT)
+    !----------------------------------------------------------------
+    myinterface%fpc_grid(:,:) = get_fpc_grid( myinterface%domaininfo, myinterface%params_siml )
 
 
     ! LOOP THROUGH YEARS
@@ -539,23 +539,76 @@ contains
       ! Get external (environmental) forcing
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
-      myinterface%climate = getclimate( &
-                                        nt, &
-                                        forcing, &
-                                        myinterface%steering%climateyear_idx, &
-                                        myinterface%steering%climateyear &
-                                        )
+      myinterface%climate(:) = getclimate(  &
+                                            nt, &
+                                            forcing, &
+                                            myinterface%domaininfo, &
+                                            myinterface%grid, &
+                                            myinterface%steering%init, &
+                                            myinterface%steering%climateyear_idx, &
+                                            myinterface%params_siml%in_ppfd,  &
+                                            myinterface%params_siml%in_netrad &
+                                            )
 
       ! Get annual, gobally uniform CO2
       myinterface%pco2 = getco2(  &
                                   nt, &
                                   forcing, &
-                                  myinterface%steering%climateyear_idx, &  ! to make it equivalent to BiomeE
-                                  myinterface%steering%climateyear &
-                                  ! myinterface%steering%forcingyear_idx, &
-                                  ! myinterface%steering%forcingyear &
+                                  myinterface%domaininfo, &
+                                  myinterface%steering%forcingyear, &
+                                  myinterface%params_siml%const_co2_year, &
+                                  myinterface%params_siml%firstyeartrend &
                                   )
 
+      ! ! Atmospheric N deposition (note that actual data is not read in all SOFUN setups)
+      ! ndep_field(:) = getninput( &
+      !   "ndep", &
+      !   trim(runname), &
+      !   myinterface%domaininfo, &
+      !   myinterface%steering%forcingyear, &
+      !   myinterface%params_siml%firstyeartrend, &
+      !   myinterface%params_siml%const_ndep_year, &
+      !   myinterface%params_siml%ndep_noy_forcing_file, &
+      !   myinterface%params_siml%ndep_nhx_forcing_file, &
+      !   myinterface%climate(:)&
+      !   )
+      
+      ! ! N fertiliser input (note that actual data is not read in all SOFUN setups)
+      ! nfert_field(:) = getninput( &
+      !   "nfert", &
+      !   trim(runname), &
+      !   myinterface%domaininfo, &
+      !   myinterface%steering%forcingyear, &
+      !   myinterface%params_siml%firstyeartrend, &
+      !   myinterface%params_siml%const_nfert_year, &
+      !   myinterface%params_siml%nfert_noy_forcing_file, &
+      !   myinterface%params_siml%nfert_nhx_forcing_file, &
+      !   myinterface%climate(:)&
+      !   )
+
+      ! ! myInterface holds only total reactive N input (N deposition + N fertiliser)                             
+      ! myinterface%ninput_field(:) = gettot_ninput( nfert_field(:), ndep_field(:) )
+                                   
+      ! ! Get land use information (note that actual data is not read in all SOFUN setups)
+      ! myinterface%landuse(:) = getlanduse( &
+      !   trim(runname), &
+      !   myinterface%domaininfo, &
+      !   myinterface%steering%forcingyear, &
+      !   myinterface%params_siml%do_grharvest_forcing_file, &
+      !   myinterface%params_siml%const_lu_year, &
+      !   myinterface%params_siml%firstyeartrend &
+      !   )
+
+      !----------------------------------------------------------------
+      ! Get prescribed fAPAR if required (otherwise set to dummy value)
+      !----------------------------------------------------------------
+      myinterface%vegcover(:) = getfapar( &
+                                          nt, &
+                                          forcing, &
+                                          myinterface%domaininfo, &
+                                          myinterface%grid, &
+                                          myinterface%steering%forcingyear_idx &
+                                          )
 
       !----------------------------------------------------------------
       ! Call SR biosphere at an annual time step but with vectors 
@@ -592,7 +645,10 @@ contains
     ! print*, '--------------------END OF SIMULATION---------------------'
 
     ! clean up
-    ! deallocate(myinterface%fpc_grid)
+    deallocate(myinterface%grid)
+    deallocate(myinterface%climate)
+    deallocate(myinterface%soilparams)
+    deallocate(myinterface%vegcover)
 
   end subroutine lm3ppa_f
 

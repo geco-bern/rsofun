@@ -23,9 +23,6 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
   forcing <- forcing %>% 
     dplyr::select(1:13)
 
-  params_soil <- params_soil %>%
-    dplyr::select(-type)
-
   ## Tests XXX todo: adapt test to forcing for lm3ppa
   do_continue <- TRUE
 
