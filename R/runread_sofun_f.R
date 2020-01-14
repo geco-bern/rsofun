@@ -17,7 +17,7 @@
 #'
 #' @examples mod <- runread_sofun_f( df_drivers, params_modl, makecheck = TRUE, parallel = FALSE, ncores = 2 )
 #' 
-runread_pmodel_f <- function( df_drivers, params_modl, makecheck = TRUE, parallel = FALSE, ncores = 2 ){
+runread_sofun_f <- function( df_drivers, params_modl, makecheck = TRUE, parallel = FALSE, ncores = 2 ){
 
   if (parallel){
 
@@ -32,7 +32,7 @@ runread_pmodel_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
       tidyr::nest(input = c(sitename, params_siml, siteinfo, forcing, df_soiltexture)) %>%
       multidplyr::partition(cl) %>% 
       dplyr::mutate(out_sofun = purrr::map( input, 
-                                     ~run_pmodel_f_bysite(
+                                     ~run_sofun_f_bysite(
                                        sitename       = .x$sitename[[1]], 
                                        params_siml    = .x$params_siml[[1]], 
                                        siteinfo       = .x$siteinfo[[1]], 
@@ -51,7 +51,7 @@ runread_pmodel_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
     df_out <- df_drivers %>% 
       dplyr::mutate(out_sofun = purrr::pmap(
         .,
-        run_pmodel_f_bysite,
+        run_sofun_f_bysite,
         params_modl = params_modl,
         makecheck = makecheck
       )) %>% 

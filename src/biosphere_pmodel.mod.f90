@@ -1,4 +1,4 @@
-module md_biosphere_pmodel
+module md_biosphere
 
   use md_params_core
   use md_classdefs
@@ -264,4 +264,4 @@ contains
 
   end function biosphere_annual
 
-end module md_biosphere_pmodel
+end module md_biosphere
