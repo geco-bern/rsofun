@@ -1,4 +1,4 @@
-module md_params_siml
+module md_params_siml_lm3ppa
   !////////////////////////////////////////////////////////////////
   ! Module for handling simulation parameters.
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
@@ -14,51 +14,51 @@ module md_params_siml
   !----------------------------------------------------------------
   type paramstype_siml
     
-    integer :: runyears        ! number of years of entire simulation (spinup+transient)
-    integer :: spinupyears     ! number of spinup years
-    integer :: nyeartrend      ! number of transient years
-    integer :: firstyeartrend  ! year AD of first transient year
-    integer :: recycle         ! length of standard recycling period
-    integer :: outdt           ! output periodicity
-    integer :: outnt           ! number of output time steps per year
+    integer :: model_run_years
+    integer :: equi_days
+    logical :: outputhourly
+    logical :: outputdaily
+    logical :: do_U_shaped_mortality
+    logical :: update_annaulLAImax
+    logical :: do_closedN_run
+
+    ! ! xxx todo: include the following as simulation parameters conforming to the following SOFUN parameters: 
+
+    ! xxx todo: the following need to be defined:
+    logical :: do_spinup
+    integer :: spinupyears
+    integer :: firstyeartrend
+    integer :: recycle
+    logical :: is_calib
+
+    ! integer :: runyears        ! number of years of entire simulation (spinup+transient)
+    ! integer :: spinupyears     ! number of spinup years
+    ! integer :: nyeartrend      ! number of transient years
+    ! integer :: firstyeartrend  ! year AD of first transient year
+    ! integer :: recycle         ! length of standard recycling period
+    ! ! integer :: outdt           ! output periodicity
+    ! ! integer :: outnt           ! number of output time steps per year
     
-    logical :: do_spinup            ! whether this simulation does spinup 
-    logical :: is_calib             ! whether this simulation is a calibration simulation (overriding parameters and no output)
+    ! logical :: do_spinup            ! whether this simulation does spinup 
+    ! logical :: is_calib             ! whether this simulation is a calibration simulation (overriding parameters and no output)
 
-    integer :: const_co2_year       ! is true when using constant CO2, given by first transient year in 'co2_forcing_file'
-    integer :: const_ndep_year      ! is true when using constant N deposition, given by first transient year in 'ndep_forcing_file'
-    integer :: const_nfert_year     ! is true when using constant N fertilisation, given by first transient year in 'nfert_forcing_file'
-    integer :: const_clim_year      ! is true when using constant climate, given by year 'firstyeartrend'
-    integer :: const_lu_year        ! is true when using constant land use, given by year 'firstyeartrend'
-
-    logical :: soilmstress          ! when true, an empirical soil moisture stress function is applied to GPP
-    logical :: tempstress           ! when true, an empirical temperature stress function is applied to GPP
-    logical :: calc_aet_fapar_vpd   ! when true, AET is calculated as f(VPD) * fAPAR * PET, where f(VPD) is of the form a * (b + m * ln(VPD))
+    ! logical :: soilmstress          ! when true, an empirical soil moisture stress function is applied to GPP
+    ! logical :: tempstress           ! when true, an empirical temperature stress function is applied to GPP
+    ! logical :: calc_aet_fapar_vpd   ! when true, AET is calculated as f(VPD) * fAPAR * PET, where f(VPD) is of the form a * (b + m * ln(VPD))
     
-    character(len=256) :: runname
-    character(len=256) :: sitename
-    character(len=256) :: co2_forcing_file
-    character(len=256) :: ndep_noy_forcing_file
-    character(len=256) :: ndep_nhx_forcing_file
-    character(len=256) :: nfert_noy_forcing_file
-    character(len=256) :: nfert_nhx_forcing_file 
-    character(len=256) :: do_grharvest_forcing_file
-    character(len=256) :: fapar_forcing_source
+    ! character(len=256) :: runname
+    ! character(len=256) :: sitename
 
-    ! optionally prescribed variables (if false, then simulated internally)
-    logical :: in_netrad    ! net radiation
-    logical :: in_ppfd      ! photosynthetic photon flux density 
+    ! ! ! activated PFTs
+    ! ! logical :: ltre        ! evergreen tree
+    ! ! logical :: ltne        ! evergreen tree, n-fixing
+    ! ! logical :: ltrd        ! deciduous tree
+    ! ! logical :: ltnd        ! deciduous tree, n-fixing
+    ! ! logical :: lgr3        ! grass, c3 photosynthetic pathway
+    ! ! logical :: lgn3        ! grass, c3 photosynthetic pathway, n-fixing
+    ! ! logical :: lgr4        ! grass, c4 photosynthetic pathway
 
-    ! activated PFTs
-    logical :: ltre        ! evergreen tree
-    logical :: ltne        ! evergreen tree, n-fixing
-    logical :: ltrd        ! deciduous tree
-    logical :: ltnd        ! deciduous tree, n-fixing
-    logical :: lgr3        ! grass, c3 photosynthetic pathway
-    logical :: lgn3        ! grass, c3 photosynthetic pathway, n-fixing
-    logical :: lgr4        ! grass, c4 photosynthetic pathway
-
-    integer :: npft        ! number of activated PFTs
+    ! ! integer :: npft        ! number of activated PFTs
 
   end type paramstype_siml
 
@@ -231,6 +231,6 @@ contains
 
   end function get_cycleyear
 
-end module md_params_siml
+end module md_params_siml_lm3ppa
 
 

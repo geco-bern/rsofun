@@ -1,4 +1,4 @@
-module md_interface
+module md_interface_lm3ppa
 
   use, intrinsic :: iso_fortran_env, dp=>real64
 
@@ -57,4 +57,4 @@ module md_interface
 contains
 
 
-end module md_interface
+end module md_interface_lm3ppa

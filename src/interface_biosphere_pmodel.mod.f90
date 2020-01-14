@@ -1,4 +1,4 @@
-module md_interface
+module md_interface_pmodel
 
   use, intrinsic :: iso_fortran_env, dp=>real64
 
@@ -25,19 +25,17 @@ module md_interface
 
 
   type interfacetype_biosphere
-    integer                                             :: year
-    real                                                :: pco2
-    type( gridtype )      , dimension(:),   allocatable :: grid
-    type( paramtype_soil ), dimension(:,:), allocatable :: soilparams
-    ! type( landuse_type )  , dimension(:),   allocatable :: landuse
-    type( climate_type )  , dimension(:),   allocatable :: climate
-    ! type( ninput_type)    , dimension(:),   allocatable :: ninput_field
-    type( vegcover_type ) , dimension(:), allocatable   :: vegcover
-    type( domaininfo_type )                             :: domaininfo
-    type( outtype_steering )                            :: steering
-    type( paramstype_siml )                             :: params_siml
-    real, dimension(:,:), allocatable                   :: fpc_grid
-    type( paramstype_calib )                            :: params_calib    ! calibratable parameters
+    integer                         :: year
+    real                            :: pco2
+    type( gridtype )                :: grid
+    type( paramtype_soil )          :: soilparams
+    type( climate_type )            :: climate
+    type( vegcover_type )           :: vegcover
+    type( domaininfo_type )         :: domaininfo
+    type( outtype_steering )        :: steering
+    type( paramstype_siml )         :: params_siml
+    real, dimension(:), allocatable :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
+    type( paramstype_calib )        :: params_calib    ! calibratable parameters
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface
@@ -54,9 +52,4 @@ module md_interface
     real, dimension(ndayyear) :: latenth
   end type outtype_biosphere
 
-
-
-contains
-
-
-end module md_interface
+end module md_interface_pmodel
