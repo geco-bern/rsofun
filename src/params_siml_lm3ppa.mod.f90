@@ -14,7 +14,14 @@ module md_params_siml_lm3ppa
   !----------------------------------------------------------------
   type paramstype_siml
     
-    integer :: model_run_years
+    ! nice sofun parameters:
+    integer :: spinupyears     ! number of spinup years
+    integer :: nyeartrend      ! number of transient years
+    integer :: firstyeartrend  ! year AD of first transient year
+    integer :: recycle         ! length of standard recycling period
+    logical :: do_spinup            ! whether this simulation does spinup 
+    
+    ! integer :: model_run_years
     integer :: equi_days
     logical :: outputhourly
     logical :: outputdaily
@@ -128,18 +135,11 @@ contains
         out_steering%forcingyear =  year - params_siml%spinupyears + params_siml%firstyeartrend - 1
         out_steering%forcingyear_idx =  year - params_siml%spinupyears
 
-        if (params_siml%const_clim_year/=int(dummy)) then
-          ! constant climate year specified
-          cycleyear = get_cycleyear( year, params_siml%spinupyears, params_siml%recycle )
-          out_steering%climateyear = cycleyear + params_siml%const_clim_year - 1
-          out_steering%climateyear_idx = cycleyear + params_siml%const_clim_year - params_siml%firstyeartrend
-        
-        else
-          ! constant climate year not specified
-          out_steering%climateyear = out_steering%forcingyear
-          out_steering%climateyear_idx = out_steering%forcingyear_idx
-        
-        end if
+
+        ! constant climate year not specified
+        out_steering%climateyear = out_steering%forcingyear
+        out_steering%climateyear_idx = out_steering%forcingyear_idx
+      
 
       endif
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1

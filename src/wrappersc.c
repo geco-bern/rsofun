@@ -141,6 +141,9 @@ void F77_NAME(lm3ppa_f)(
     _Bool *do_U_shaped_mortality
     _Bool *update_annaulLAImax
     _Bool *do_closedN_run
+    double *longitude,
+    double *latitude,
+    double *altitude,
     int *soiltype
     double *FLDCAP
     double *WILTPT
@@ -175,6 +178,9 @@ extern SEXP lm3ppa_f_C(
     SEXP do_U_shaped_mortality,
     SEXP update_annaulLAImax,
     SEXP do_closedN_run,
+    SEXP longitude,
+    SEXP latitude,
+    SEXP altitude,
     SEXP soiltype,
     SEXP FLDCAP,
     SEXP WILTPT,
@@ -214,6 +220,9 @@ extern SEXP lm3ppa_f_C(
         LOGICAL(do_U_shaped_mortality),
         LOGICAL(update_annaulLAImax),
         LOGICAL(do_closedN_run),
+        REAL(longitude),
+        REAL(latitude),
+        REAL(altitude),
         INTEGER(soiltype),
         REAL(FLDCAP),
         REAL(WILTPT),
@@ -253,7 +262,7 @@ extern SEXP lm3ppa_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
-  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   29},  // Specify number of arguments to C wrapper as the last number here
+  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   32},  // Specify number of arguments to C wrapper as the last number here
   {NULL,         NULL,                0}
 };
 

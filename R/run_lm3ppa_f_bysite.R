@@ -104,6 +104,11 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       update_annaulLAImax   = as.logical(params_siml$update_annaulLAImax),
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
 
+      ## site meta info
+      longitude             = as.numeric(siteinfo$lon),
+      latitude              = as.numeric(siteinfo$lat),
+      altitude              = as.numeric(siteinfo$elv),
+
       ## Tile-level parameters
       soiltype     = as.integer(params_tile$soiltype),
       FLDCAP       = as.numeric(params_tile$FLDCAP),

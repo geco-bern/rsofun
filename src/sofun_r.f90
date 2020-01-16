@@ -22,11 +22,6 @@ contains
     calc_aet_fapar_vpd,        &       
     in_ppfd,                   &    
     in_netrad,                 &      
-    ! const_clim_year,           &            
-    ! const_lu_year,             &          
-    ! const_co2_year,            &           
-    ! const_ndep_year,           &            
-    ! const_nfert_year,          &             
     outdt,                     &  
     ltre,                      & 
     ltne,                      & 
@@ -52,7 +47,7 @@ contains
     ! simulation's forcing as time series
     !----------------------------------------------------------------
     use md_params_siml_pmodel, only: getsteering
-    use md_grid, only: get_domaininfo, getgrid, type_params_domain
+    ! use md_grid, only: get_domaininfo, getgrid, type_params_domain
     use md_params_soil_pmodel, only: getsoil
     use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
@@ -72,11 +67,6 @@ contains
     logical(kind=c_bool), intent(in) :: calc_aet_fapar_vpd
     logical(kind=c_bool), intent(in) :: in_ppfd
     logical(kind=c_bool), intent(in) :: in_netrad
-    ! integer(kind=c_int),  intent(in) :: const_clim_year
-    ! integer(kind=c_int),  intent(in) :: const_lu_year
-    ! integer(kind=c_int),  intent(in) :: const_co2_year
-    ! integer(kind=c_int),  intent(in) :: const_ndep_year
-    ! integer(kind=c_int),  intent(in) :: const_nfert_year
     integer(kind=c_int),  intent(in) :: outdt
     logical(kind=c_bool), intent(in) :: ltre
     logical(kind=c_bool), intent(in) :: ltne
@@ -121,11 +111,6 @@ contains
     myinterface%params_siml%calc_aet_fapar_vpd = calc_aet_fapar_vpd
     myinterface%params_siml%in_ppfd            = in_ppfd
     myinterface%params_siml%in_netrad          = in_netrad
-    ! myinterface%params_siml%const_clim_year    = const_clim_year
-    ! myinterface%params_siml%const_lu_year      = const_lu_year
-    ! myinterface%params_siml%const_co2_year     = const_co2_year
-    ! myinterface%params_siml%const_ndep_year    = const_ndep_year
-    ! myinterface%params_siml%const_nfert_year   = const_nfert_year
     myinterface%params_siml%outdt              = outdt
     myinterface%params_siml%ltre               = ltre
     myinterface%params_siml%ltne               = ltne
@@ -154,18 +139,12 @@ contains
     !----------------------------------------------------------------
     ! GET GRID INFORMATION
     !----------------------------------------------------------------
-    ! XXX todo: possibly remove domaininfo and grid stuff
-    ! below is done by getpar_domain() otherwise
-    params_domain%lon_site = real( longitude )
-    params_domain%lat_site = real( latitude )
-    params_domain%elv_site = real( altitude )
-    params_domain%whc_site = real( whc )
-
-    myinterface%domaininfo = get_domaininfo( params_domain )
-
-
-    ! vectorise 2D array, keeping only land gridcells
-    myinterface%grid = getgrid( myinterface%domaininfo, params_domain )
+    myinterface%grid%lon = real( longitude )
+    myinterface%grid%lat = real( latitude )
+    myinterface%grid%elv = real( altitude )
+    myinterface%grid%dogridcell = .true.  ! xxx todo remove all dogridcell statemetns
+    myinterface%grid%landfrac = 1.0
+    myinterface%grid%area     = 1.0
 
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
@@ -286,13 +265,21 @@ contains
 
 
   subroutine lm3ppa_f(    &
-    model_run_years,      &             
+    spinup,                    &   
+    spinupyears,               &        
+    recycle,                   &    
+    firstyeartrend,            &           
+    nyeartrend,                &       
+    ! model_run_years,      &             
     equi_days,            &       
     outputhourly,         &          
     outputdaily,          &         
     do_U_shaped_mortality,&                   
     update_annaulLAImax,  &                 
     do_closedN_run,       &            
+    longitude,            &      
+    latitude,             &     
+    altitude,             &     
     soiltype,             &      
     FLDCAP,               &    
     WILTPT,               &    
@@ -325,7 +312,7 @@ contains
     ! test xxx
     !----------------------------------------------------------------
     use md_params_siml_lm3ppa, only: getsteering
-    use md_grid, only: get_domaininfo, getgrid, type_params_domain
+    ! use md_grid, only: get_domaininfo, getgrid, type_params_domain
     use md_params_soil_lm3ppa, only: getsoil
     use md_forcing_lm3ppa, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_lm3ppa, only: interfacetype_biosphere, outtype_biosphere, myinterface
@@ -335,13 +322,24 @@ contains
     implicit none
 
     ! Simulation parameters
-    integer(kind=c_int),  intent(in) :: model_run_years
+    logical(kind=c_bool), intent(in) :: spinup
+    integer(kind=c_int),  intent(in) :: spinupyears
+    integer(kind=c_int),  intent(in) :: recycle
+    integer(kind=c_int),  intent(in) :: firstyeartrend
+    integer(kind=c_int),  intent(in) :: nyeartrend
+
+    ! integer(kind=c_int),  intent(in) :: model_run_years
     integer(kind=c_int),  intent(in) :: equi_days
     logical(kind=c_bool), intent(in) :: outputhourly
     logical(kind=c_bool), intent(in) :: outputdaily
     logical(kind=c_bool), intent(in) :: do_U_shaped_mortality
     logical(kind=c_bool), intent(in) :: update_annaulLAImax
     logical(kind=c_bool), intent(in) :: do_closedN_run
+
+    ! site information
+    real(kind=c_double),  intent(in) :: longitude
+    real(kind=c_double),  intent(in) :: latitude
+    real(kind=c_double),  intent(in) :: altitude
 
     ! Tile parameters
     integer(kind=c_int), intent(in) :: soiltype
@@ -382,14 +380,27 @@ contains
     !----------------------------------------------------------------
     ! POPULATE MYINTERFACE WITH ARGUMENTS FROM R
     !----------------------------------------------------------------
+    myinterface%params_siml%do_spinup        = spinup
+    myinterface%params_siml%spinupyears      = spinupyears
+    myinterface%params_siml%recycle          = recycle
+    myinterface%params_siml%firstyeartrend   = firstyeartrend
+    myinterface%params_siml%nyeartrend       = nyeartrend
+
+    if (myinterface%params_siml%do_spinup) then
+      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend + myinterface%params_siml%spinupyears
+    else
+      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
+      myinterface%params_siml%spinupyears = 0
+    endif
+
     ! Simulation parameters
-    myinterface%params_siml%model_run_years       = model_run_years
-    myinterface%params_siml%equi_days             = equi_days
+    ! myinterface%params_siml%model_run_years       = myinterface%params_siml%runyears    ! xxx delete model_run_years from arguments
+    myinterface%params_siml%equi_days             = 0   ! to always write output; xxx todo: remove once output is passed back to R
     myinterface%params_siml%outputhourly          = outputhourly
     myinterface%params_siml%outputdaily           = outputdaily
     myinterface%params_siml%do_U_shaped_mortality = do_U_shaped_mortality
-    myinterface%params_siml%update_annaulLAImax   = update_annaulLAImax
-    myinterface%params_siml%do_closedN_run        = do_closedN_run
+    myinterface%params_siml%update_annaulLAImax   = update_annaulLAImax      ! xxx actually not used at all. todo: remove from arguments etc.
+    myinterface%params_siml%do_closedN_run        = do_closedN_run           ! xxx actually not used at all. todo: remove from arguments etc.
 
     ! Tile parameters
     myinterface%params_tile%soiltype     = soiltype
@@ -436,22 +447,6 @@ contains
     myinterface%init_soil%init_Nmineral    = init_Nmineral
     myinterface%init_soil%N_input          = N_input
 
-
-    !----------------------------------------------------------------
-    ! GET SIMULATION PARAMETERS
-    !----------------------------------------------------------------
-    ! myinterface%params_siml%do_spinup        = spinup
-    ! myinterface%params_siml%spinupyears      = spinupyears
-    ! myinterface%params_siml%recycle          = recycle
-    ! myinterface%params_siml%firstyeartrend   = firstyeartrend
-    ! myinterface%params_siml%nyeartrend       = nyeartrend
-
-    ! if (myinterface%params_siml%do_spinup) then
-    !   myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend + myinterface%params_siml%spinupyears
-    ! else
-    !   myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
-    !   myinterface%params_siml%spinupyears = 0
-    ! endif
     
     ! myinterface%params_siml%soilmstress        = soilmstress
     ! myinterface%params_siml%tempstress         = tempstress
@@ -490,16 +485,12 @@ contains
     !----------------------------------------------------------------
     ! GET GRID INFORMATION
     !----------------------------------------------------------------
-    ! ! below is done by getpar_domain() otherwise
-    ! params_domain%lon_site = real( longitude )
-    ! params_domain%lat_site = real( latitude )
-    ! params_domain%elv_site = real( altitude )
-    ! params_domain%whc_site = real( whc )
-
-    ! myinterface%domaininfo = get_domaininfo( params_domain )
-
-    ! ! vectorise 2D array, keeping only land gridcells
-    ! myinterface%grid = getgrid( myinterface%domaininfo, params_domain )
+    myinterface%grid%lon = real( longitude )
+    myinterface%grid%lat = real( latitude )
+    myinterface%grid%elv = real( altitude )
+    myinterface%grid%dogridcell = .true.  ! xxx todo remove all dogridcell statemetns
+    myinterface%grid%landfrac = 1.0
+    myinterface%grid%area     = 1.0
 
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS

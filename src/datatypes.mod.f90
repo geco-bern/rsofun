@@ -581,7 +581,7 @@ real      :: step_seconds = 3600.0
 
 character(len=80) :: filepath_in = '/Users/eweng/Documents/BiomeESS/forcingData/'
 character(len=160) :: climfile = 'US-Ha1forcing.txt'
-integer   :: model_run_years = 100
+integer   :: model_run_years = 100  ! xxx todo: not used
 integer   :: equi_days       = 0 ! 100 * 365
 logical   :: outputhourly = .False.
 logical   :: outputdaily  = .True.
@@ -647,6 +647,9 @@ end subroutine initialize_soilpars
 
 ! ================================================
 subroutine initialize_PFT_data(namelistfile)
+
+  use md_interface_lm3ppa, only: myinterface
+
 ! Initialize PFT parameters
    character(len=50),intent(in) :: namelistfile
   ! ---- local vars
@@ -655,17 +658,18 @@ subroutine initialize_PFT_data(namelistfile)
   integer :: i
   integer :: nml_unit
 
-!  Read parameters from the parameter file (namelist)
-  if(read_from_parameter_file)then
-      nml_unit = 999
-      open(nml_unit, file=namelistfile, form='formatted', action='read', status='old')
-      read (nml_unit, nml=vegn_parameters_nml, iostat=io, end=10)
-10    close (nml_unit)
-   endif
-      write(*,nml=vegn_parameters_nml)
+! !  Read parameters from the parameter file (namelist)
+!   if(read_from_parameter_file)then
+!       nml_unit = 999
+!       open(nml_unit, file=namelistfile, form='formatted', action='read', status='old')
+!       read (nml_unit, nml=vegn_parameters_nml, iostat=io, end=10)
+! 10    close (nml_unit)
+!    endif
+!       write(*,nml=vegn_parameters_nml)
+
   ! initialize vegetation data structure
   spdata%pt         = pt
-  spdata%phenotype  = phenotype
+  spdata%phenotype  = myinterface%params_species%phenotype(:) !phenotype    xxx todo: do the same for all other variables that are available in 
   spdata%Vmax       = Vmax
   spdata%Vannual    = Vannual
   spdata%m_cond     = m_cond
@@ -916,6 +920,9 @@ end subroutine summarize_tile
 !=========================================================================
 ! Hourly fluxes sum to daily
  subroutine hourly_diagnostics(vegn,forcing,iyears,idoy,ihour,iday,fno1)
+
+  use md_interface_lm3ppa, only: myinterface
+
   type(vegn_tile_type), intent(inout) :: vegn
   type(climate_data_type),intent(in):: forcing
   integer, intent(in) :: iyears,idoy,ihour,iday,fno1
@@ -944,7 +951,9 @@ end subroutine summarize_tile
   ! NEP is equal to NNP minus soil respiration
   vegn%nep = vegn%npp - vegn%rh ! kgC m-2 hour-1; time step is hourly
   !! Output horly diagnostics
-  If(outputhourly.and. iday>equi_days) &
+
+  if (myinterface%params_siml%outputhourly .and. iday > myinterface%params_siml%equi_days) &
+  ! If(outputhourly.and. iday>equi_days) &
     write(fno1,'(3(I5,","),25(E11.4,","),25(F8.2,","))')  &
       iyears, idoy, ihour,      &
       forcingData%radiation,    &
@@ -969,6 +978,7 @@ end subroutine hourly_diagnostics
 
 !============================================
 subroutine daily_diagnostics(vegn,forcing,iyears,idoy,iday,fno3,fno4)
+  use md_interface_lm3ppa, only: myinterface
   type(vegn_tile_type), intent(inout) :: vegn
   type(climate_data_type),intent(in):: forcing
   integer, intent(in) :: iyears,idoy,iday,fno3,fno4
@@ -981,7 +991,8 @@ subroutine daily_diagnostics(vegn,forcing,iyears,idoy,iday,fno3,fno4)
       !!! daily !! cohorts output
       do i = 1, vegn%n_cohorts
           cc => vegn%cohorts(i)
-          if(outputdaily.and. iday>equi_days) &
+          ! if(outputdaily.and. iday>equi_days) &
+          if (myinterface%params_siml%outputdaily .and. iday > myinterface%params_siml%equi_days) &
           write(fno3,'(6(I5,","),1(F8.1,","),25(F12.4,","))')  &
                 iyears,idoy,i, cc%ccID,cc%species,cc%layer,   &
                 cc%nindivs*10000, cc%layerfrac, cc%LAI, &
@@ -1003,7 +1014,8 @@ subroutine daily_diagnostics(vegn,forcing,iyears,idoy,iday,fno3,fno4)
           cc%dailyResp = 0.0
       enddo
       !! Tile level, daily
-      if(outputdaily.and. iday>equi_days) then
+      ! if(outputdaily.and. iday>equi_days) then
+        if (myinterface%params_siml%outputdaily .and. iday > myinterface%params_siml%equi_days) &
          call summarize_tile(vegn)
          write(fno4,'(2(I5,","),60(F12.6,","))') iyears, idoy,  &
             vegn%tc_daily, vegn%dailyPrcp, vegn%soilwater,      &

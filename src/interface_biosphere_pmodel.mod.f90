@@ -6,7 +6,7 @@ module md_interface_pmodel
   use md_params_soil, only: paramtype_soil
   use md_params_siml, only: paramstype_siml, outtype_steering
   use md_params_core, only: nlayers_soil, ndayyear
-  use md_grid, only: gridtype, domaininfo_type
+  use md_grid, only: gridtype !, domaininfo_type
 
   implicit none
 
@@ -31,10 +31,10 @@ module md_interface_pmodel
     type( paramtype_soil )          :: soilparams
     type( climate_type )            :: climate
     type( vegcover_type )           :: vegcover
-    type( domaininfo_type )         :: domaininfo
+    ! type( domaininfo_type )         :: domaininfo
     type( outtype_steering )        :: steering
     type( paramstype_siml )         :: params_siml
-    real, dimension(:), allocatable :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
+    real, dimension(:), allocatable :: fpc_grid        ! allocatable because we don't know number of PFTs a priori
     type( paramstype_calib )        :: params_calib    ! calibratable parameters
   end type interfacetype_biosphere
 

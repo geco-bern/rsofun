@@ -935,6 +935,7 @@ subroutine Seasonal_fall(cc,vegn)
 !============================================================================
 !------------------------Mortality------------------------------------
 subroutine vegn_nat_mortality (vegn, deltat)
+  use md_interface_lm3ppa, only: myinterface
 ! TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
   type(vegn_tile_type), intent(inout) :: vegn
   real, intent(in) :: deltat ! seconds since last mortality calculations, s
@@ -969,7 +970,7 @@ subroutine vegn_nat_mortality (vegn, deltat)
                      (1.0 +        exp(B_mort*cc%dbh))
 
          else  ! First layer mortality
-            if(do_U_shaped_mortality)then
+            if(myinterface%params_siml%do_U_shaped_mortality)then
                 deathrate = sp%mortrate_d_c *                 &
                            (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
                            (1. + exp(4.*(cc%dbh-DBHtp))))
@@ -2060,6 +2061,9 @@ end function
 
 !============= Vegetation initializations =====================
 subroutine initialize_vegn_tile(vegn,nCohorts,namelistfile)
+
+  use md_interface_lm3ppa, only: myinterface
+
    type(vegn_tile_type),intent(inout),pointer :: vegn
    integer,intent(in) :: nCohorts
    character(len=50),intent(in) :: namelistfile
@@ -2075,14 +2079,30 @@ subroutine initialize_vegn_tile(vegn,nCohorts,namelistfile)
    integer :: ierr         ! error code, returned by i/o routines
    integer :: nml_unit
 
+    ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
+    K1          = myinterface%params_tile%K1  
+    K2          = myinterface%params_tile%K2
+    K_nitrogen  = myinterface%params_tile%K_nitrogen   
+    etaN        = myinterface%params_tile%etaN         
+    MLmixRatio  = myinterface%params_tile%MLmixRatio   
+    l_fract     = myinterface%params_tile%l_fract      
+    retransN    = myinterface%params_tile%retransN     
+    fNSNmax     = myinterface%params_tile%fNSNmax      
+    f_N_add     = myinterface%params_tile%f_N_add      
+    f_initialBSW= myinterface%params_tile%f_initialBSW 
+
 !  Read parameters from the parameter file (namelist)
    if(read_from_parameter_file)then
-      ! --- Generate cohorts according to "initial_state_nml" ---
-      nml_unit = 999
-      open(nml_unit, file=namelistfile, form='formatted', action='read', status='old')
-      read (nml_unit, nml=initial_state_nml, iostat=io, end=20)
-20    close (nml_unit)
-      write(*,nml=initial_state_nml)
+
+!     ! xxx todo: take info from myinterface instead of from namelist
+!       ! --- Generate cohorts according to "initial_state_nml" ---
+!       nml_unit = 999
+!       open(nml_unit, file=namelistfile, form='formatted', action='read', status='old')
+!       read (nml_unit, nml=initial_state_nml, iostat=io, end=20)
+! 20    close (nml_unit)
+!       write(*,nml=initial_state_nml)
+
+
       ! Initialize plant cohorts
       init_n_cohorts = nCohorts ! Weng,2018-11-21
       allocate(cc(1:init_n_cohorts), STAT = istat)
@@ -2094,12 +2114,12 @@ subroutine initialize_vegn_tile(vegn,nCohorts,namelistfile)
          cx => vegn%cohorts(i)
          cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
          cx%layer   = 1
-         cx%species = init_cohort_species(i)
+         cx%species = myinterface%init_cohort%init_cohort_species(i) ! xxx todo: do others the same init_cohort_species(i)
          cx%ccID =  i
-         cx%nsc     = init_cohort_nsc(i)
-         cx%nindivs = init_cohort_nindivs(i) ! trees/m2
-         cx%bsw     = init_cohort_bsw(i)
-         cx%bHW   = init_cohort_bHW(i)
+         cx%nsc     = myinterface%init_cohort%init_cohort_nsc(i)
+         cx%nindivs = myinterface%init_cohort%init_cohort_nindivs(i) ! trees/m2
+         cx%bsw     = myinterface%init_cohort%init_cohort_bsw(i)
+         cx%bHW   = myinterface%init_cohort%init_cohort_bHW(i)
          btotal     = cx%bsw + cx%bHW  ! kgC /tree
          call initialize_cohort_from_biomass(cx,btotal)
       enddo
@@ -2107,18 +2127,23 @@ subroutine initialize_vegn_tile(vegn,nCohorts,namelistfile)
       ! Sorting these cohorts
       call relayer_cohorts(vegn)
       ! Initial Soil pools and environmental conditions
-      vegn%metabolicL   = init_fast_soil_C ! kgC m-2
-      vegn%structuralL  = init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+      vegn%metabolicL   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
+      vegn%structuralL  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
       vegn%metabolicN   = vegn%metabolicL/CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
       vegn%structuralN  = vegn%structuralL/CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-      vegn%N_input      = N_input  ! kgN m-2 yr-1, N input to soil
-      vegn%mineralN     = init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
+      vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
+      vegn%mineralN     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
       vegn%previousN    = vegn%mineralN
+      
       !Soil water
-      vegn%soiltype = soiltype
-      vegn%FLDCAP = FLDCAP
-      vegn%WILTPT = WILTPT
-      vegn%wcl = FLDCAP
+      ! Parameters
+      vegn%soiltype = myinterface%params_tile%soiltype    ! soiltype
+      vegn%FLDCAP = myinterface%params_tile%FLDCAP  !FLDCAP
+      vegn%WILTPT = myinterface%params_tile%WILTPT  ! WILTPT
+
+      ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
+      vegn%wcl = myinterface%params_tile%FLDCAP  !FLDCAP
+
       ! Update soil water
       vegn%SoilWater = 0.0
       do i=1, max_lev
