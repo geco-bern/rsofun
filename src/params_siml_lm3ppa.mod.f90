@@ -87,7 +87,7 @@ contains
     ! simulation year (setting booleans for opening files, doing   
     ! spinup etc.)
     !----------------------------------------------------------------
-    use md_params_core, only: dummy
+    use md_params_core_lm3ppa, only: dummy
 
     ! arguments
     integer, intent(in) :: year ! simulation year, starts counting from 1, starting at the beginning of spinup

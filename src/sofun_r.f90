@@ -322,6 +322,7 @@ contains
     ! Main subroutine to handle I/O with C and R. 
     ! Receives simulation parameters, site parameters, and the full 
     ! simulation's forcing as time series
+    ! test xxx
     !----------------------------------------------------------------
     use md_params_siml_lm3ppa, only: getsteering
     use md_grid, only: get_domaininfo, getgrid, type_params_domain

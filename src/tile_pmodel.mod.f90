@@ -1,4 +1,4 @@
-module md_tile
+module md_tile_pmodel
   !////////////////////////////////////////////////////////////////
   ! Holds all tile-specific variables and procedurs
   ! --------------------------------------------------------------
@@ -164,4 +164,4 @@ contains
 
   end subroutine initdaily_tile
 
-end module md_tile
+end module md_tile_pmodel

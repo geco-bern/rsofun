@@ -1,4 +1,4 @@
-module md_vegdynamics
+module md_vegdynamics_pmodel
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
 
@@ -56,4 +56,4 @@ contains
   end subroutine vegdynamics
 
 
-end module md_vegdynamics
+end module md_vegdynamics_pmodel

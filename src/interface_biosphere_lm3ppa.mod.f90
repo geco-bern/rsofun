@@ -2,10 +2,10 @@ module md_interface_lm3ppa
 
   use, intrinsic :: iso_fortran_env, dp=>real64
 
-  use md_forcing, only: climate_type, landuse_type, ninput_type, vegcover_type  
-  use md_params_soil, only: paramtype_soil
-  use md_params_siml, only: paramstype_siml, outtype_steering
-  use md_params_core, only: nlayers_soil, ndayyear
+  use md_forcing_lm3ppa, only: climate_type, landuse_type, ninput_type, vegcover_type  
+  use md_params_soil_lm3ppa, only: paramtype_soil
+  use md_params_siml_lm3ppa, only: paramstype_siml, outtype_steering
+  use md_params_core_lm3ppa, only: nlayers_soil, ndayyear
   use md_grid, only: gridtype, domaininfo_type
 
   implicit none

@@ -1,4 +1,4 @@
-module md_gpp
+module md_gpp_pmodel
   !////////////////////////////////////////////////////////////////
   ! P-MODEL MODULE
   ! 
@@ -1537,4 +1537,4 @@ contains
   end subroutine getpar_modl_gpp
 
 
-end module md_gpp
+end module md_gpp_pmodel

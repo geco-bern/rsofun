@@ -10,7 +10,7 @@ module md_forcing_lm3ppa
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  use md_params_core, only: ndayyear, nlu, dummy
+  use md_params_core_lm3ppa, only: ndayyear, nlu, dummy
   use md_grid, only: domaininfo_type, gridtype
 
   implicit none

@@ -16,7 +16,7 @@ module md_biosphere_lm3ppa
   use esdvm
   use soil_mod
 
-  use md_params_core
+  use md_params_core_lm3ppa
 
   implicit none
 
@@ -54,7 +54,7 @@ contains
     ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
     ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
-    use md_interface, only: myinterface, outtype_biosphere
+    use md_interface_lm3ppa, only: myinterface, outtype_biosphere
   
     ! return variable
     type(outtype_biosphere) :: out_biosphere
