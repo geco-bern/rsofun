@@ -51,12 +51,12 @@ contains
     ! Receives simulation parameters, site parameters, and the full 
     ! simulation's forcing as time series
     !----------------------------------------------------------------
-    use md_params_siml, only: getsteering
+    use md_params_siml_pmodel, only: getsteering
     use md_grid, only: get_domaininfo, getgrid, type_params_domain
-    use md_params_soil, only: getsoil
+    use md_params_soil_pmodel, only: getsoil
     use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
-    use md_interface, only: interfacetype_biosphere, outtype_biosphere, myinterface
-    use md_params_core, only: nlayers_soil, ndayyear, npft
+    use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
+    use md_params_core_pmodel, only: nlayers_soil, ndayyear, npft
     use md_biosphere_pmodel, only: biosphere_annual
 
     implicit none
@@ -323,9 +323,9 @@ contains
     ! Receives simulation parameters, site parameters, and the full 
     ! simulation's forcing as time series
     !----------------------------------------------------------------
-    use md_params_siml, only: getsteering
+    use md_params_siml_lm3ppa, only: getsteering
     use md_grid, only: get_domaininfo, getgrid, type_params_domain
-    use md_params_soil, only: getsoil
+    use md_params_soil_lm3ppa, only: getsoil
     use md_forcing_lm3ppa, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_lm3ppa, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core_lm3ppa, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS
