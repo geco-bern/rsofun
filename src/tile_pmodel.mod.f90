@@ -2,8 +2,8 @@ module md_tile_pmodel
   !////////////////////////////////////////////////////////////////
   ! Holds all tile-specific variables and procedurs
   ! --------------------------------------------------------------
-  use md_params_core, only: npft, nlu
-  use md_params_soil, only: paramtype_soil
+  use md_params_core_pmodel, only: npft, nlu
+  use md_params_soil_pmodel, only: paramtype_soil
 
   implicit none
 
@@ -73,7 +73,7 @@ contains
     !  June 2014
     !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
-    use md_interface, only: myinterface
+    use md_interface_pmodel, only: myinterface
 
     ! argument
     type( tile_type ), dimension(nlu,ngridcells), intent(inout) :: tile

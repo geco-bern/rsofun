@@ -3,7 +3,7 @@
 ! and reproduce the forest succession patterns shown in Weng et al.,
 ! 2016 Global Change Biology along the graidient of temperature. 
 
-module soil_mod
+module md_soil_lm3ppa
  use datatypes
  implicit none
  private
@@ -458,7 +458,7 @@ subroutine cohort_uptake_profile(cohort, dz, uptake_frac_max, vegn_uptake_term)
 end subroutine 
 ! ================================================
 
-end module soil_mod
+end module md_soil_lm3ppa
 
 
 

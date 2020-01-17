@@ -668,17 +668,17 @@ subroutine initialize_PFT_data(namelistfile)
 !       write(*,nml=vegn_parameters_nml)
 
   ! initialize vegetation data structure
-  spdata%pt         = pt
-  spdata%phenotype  = myinterface%params_species%phenotype(:) !phenotype    xxx todo: do the same for all other variables that are available in 
-  spdata%Vmax       = Vmax
-  spdata%Vannual    = Vannual
-  spdata%m_cond     = m_cond
-  spdata%alpha_phot = alpha_phot
+  spdata%pt            = myinterface%params_species%pt(:)
+  spdata%phenotype     = myinterface%params_species%phenotype(:) !phenotype  
+  spdata%Vmax          = Vmax
+  spdata%Vannual       = Vannual
+  spdata%m_cond        = m_cond
+  spdata%alpha_phot    = alpha_phot
   spdata%wet_leaf_dreg = wet_leaf_dreg
-  spdata%gamma_L  = gamma_L
-  spdata%gamma_LN = gamma_LN
-  spdata%gamma_SW = gamma_SW
-  spdata%gamma_FR = gamma_FR
+  spdata%gamma_L       = gamma_L
+  spdata%gamma_LN      = gamma_LN
+  spdata%gamma_SW      = gamma_SW
+  spdata%gamma_FR      = gamma_FR
 
   spdata%rho_FR    = rho_FR
   spdata%root_r    = root_r
@@ -692,45 +692,45 @@ subroutine initialize_PFT_data(namelistfile)
   spdata%gdd_crit  = gdd_crit
 
 ! Plant traits
-  spdata%LMA            = LMA      ! leaf mass per unit area, kg C/m2
-  spdata%LNbase         = LNbase   ! Basal leaf nitrogen per unit area, kg N/m2
-  spdata%CNleafsupport  = CNleafsupport
-  spdata%lifeform     = lifeform
-  spdata%alphaHT      = alphaHT
-  spdata%thetaHT      = thetaHT
-  spdata%alphaCA      = alphaCA
-  spdata%thetaCA      = thetaCA
-  spdata%alphaBM      = alphaBM
-  spdata%thetaBM      = thetaBM
+  spdata%LMA           = myinterface%params_species%LMA(:) ! leaf mass per unit area, kg C/m2
+  spdata%LNbase        = myinterface%params_species%LNbase(:)   ! Basal leaf nitrogen per unit area, kg N/m2
+  spdata%CNleafsupport = CNleafsupport
+  spdata%lifeform      = myinterface%params_species%lifeform(:)
+  spdata%alphaHT       = alphaHT
+  spdata%thetaHT       = thetaHT
+  spdata%alphaCA       = alphaCA
+  spdata%thetaCA       = thetaCA
+  spdata%alphaBM       = alphaBM
+  spdata%thetaBM       = thetaBM
 
-  spdata%maturalage   = maturalage
+  spdata%maturalage   = myinterface%params_species%maturalage(:)
   spdata%v_seed       = v_seed
-  spdata%seedlingsize = seedlingsize
+  spdata%seedlingsize = myinterface%params_species%seedlingsize(:)
   spdata%prob_g       = prob_g
   spdata%prob_e       = prob_e
-  spdata%mortrate_d_c = mortrate_d_c
-  spdata%mortrate_d_u = mortrate_d_u
+  spdata%mortrate_d_c = myinterface%params_species%mortrate_d_c(:)
+  spdata%mortrate_d_u = myinterface%params_species%mortrate_d_u(:)
   spdata%rho_wood     = rho_wood
   spdata%taperfactor  = taperfactor
-  spdata%LAImax       = LAImax
-  spdata%underLAImax  = LAImax
-  spdata%LAI_light    = LAI_light
+  spdata%laimax       = myinterface%params_species%laimax(:)
+  spdata%underLAImax  = laimax
+  spdata%LAI_light    = myinterface%params_species%LAI_light(:)
   spdata%tauNSC       = tauNSC
   spdata%fNSNmax      = fNSNmax
-  spdata%phiRL        = phiRL
-  spdata%phiCSA       = phiCSA
+  spdata%phiRL    = myinterface%params_species%phiRL(:)
+  spdata%phiCSA       = myinterface%params_species%phiCSA(:)
   ! root urnover rate
-  spdata%alpha_FR = alpha_FR
+  spdata%alpha_FR     = alpha_FR
 
 
 !! Nitrogen Weng 2012-10-24
 ! spdata%CNleaf0 = CNleaf0
-  spdata%CNsw0   = CNsw0
-  spdata%CNwood0 = CNwood0
-  spdata%CNroot0 = CNroot0
-  spdata%CNseed0 = CNseed0
-  spdata%NfixRate0 = NfixRate0
-  spdata%NfixCost0 = NfixCost0
+  spdata%CNsw0     = CNsw0
+  spdata%CNwood0   = CNwood0
+  spdata%CNroot0   = CNroot0
+  spdata%CNseed0   = CNseed0
+  spdata%Nfixrate0 = myinterface%params_species%Nfixrate0(:)
+  spdata%NfixCost0 = myinterface%params_species%NfixCost0(:)
 
   spdata%internal_gap_frac = internal_gap_frac
   do i = 0, MSPECIES

@@ -10,7 +10,7 @@ module md_forcing_pmodel
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  use md_params_core, only: ndayyear, nlu, dummy
+  use md_params_core_pmodel, only: ndayyear, nlu, dummy
   use md_grid, only: domaininfo_type, gridtype
 
   implicit none
@@ -185,8 +185,8 @@ contains
     ! 9: WET: type12 = "permanent wetlands" ;
     ! 10:CRO: type13 + type15 = "croplands" + "cropland (natural vegetation mosaic)";
     !----------------------------------------------------------------
-    use md_params_siml, only: paramstype_siml
-    use md_params_core, only: npft
+    use md_params_siml_pmodel, only: paramstype_siml
+    use md_params_core_pmodel, only: npft
     use md_grid, only: domaininfo_type
 
     ! arguments

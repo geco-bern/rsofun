@@ -92,7 +92,7 @@ contains
     !/////////////////////////////////////////////////////////////////////////
     ! Returns monthly values as a mean over daily values in each month.
     !-------------------------------------------------------------------------
-    use md_params_core, only: ndaymonth, cumdaymonth, ndayyear, nmonth
+    use md_params_core_pmodel, only: ndaymonth, cumdaymonth, ndayyear, nmonth
 
     ! arguments
     real, intent(in), dimension(ndayyear) :: dval ! vector containing 365 (366 in case lapyear is TRUE) daily values
@@ -131,7 +131,7 @@ contains
     ! Distributes monthly total precipitation to days, given number of 
     ! monthly wet days. Adopted from LPX.
     !--------------------------------------------------------------------
-    use md_params_core, only: nmonth, ndayyear, ndaymonth
+    use md_params_core_pmodel, only: nmonth, ndayyear, ndaymonth
 
     ! arguments
     real, dimension(nmonth), intent(in)     :: mval_prec  ! monthly precipitation totals
@@ -280,7 +280,7 @@ contains
     !/////////////////////////////////////////////////////////////////////////
     ! Returns daily values based on monthly values, using a defined method.
     !-------------------------------------------------------------------------
-    use md_params_core, only: middaymonth, ndayyear, ndaymonth, nmonth
+    use md_params_core_pmodel, only: middaymonth, ndayyear, ndaymonth, nmonth
     
     ! arguments
     real, dimension(nmonth), intent(in) :: mval  ! vector containing 12 monthly values
@@ -472,7 +472,7 @@ contains
     ! Function reads a file that contains 365 lines, each line for
     ! a daily value. 
     !----------------------------------------------------------------
-    use md_params_core, only: ndayyear
+    use md_params_core_pmodel, only: ndayyear
     implicit none
 
     ! arguments
@@ -503,7 +503,7 @@ contains
     ! Function reads a file that contains 12 lines, each line for
     ! a daily value. 
     !----------------------------------------------------------------
-    use md_params_core, only: nmonth
+    use md_params_core_pmodel, only: nmonth
     implicit none
 
     ! arguments
@@ -534,7 +534,7 @@ contains
     !  Function reads one (annual) value corresponding to the given 
     !  year from a time series ascii file. 
     !----------------------------------------------------------------
-    use md_params_core, only: ndayyear
+    use md_params_core_pmodel, only: ndayyear
 
     ! arguments
     character(len=*), intent(in) :: filename
@@ -727,7 +727,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Low-level function for reading real parameter value from text file.
     !----------------------------------------------------------------
-    use md_params_core, only: dummy
+    use md_params_core_pmodel, only: dummy
 
     ! arguments
     character(len=*), intent(in)  :: filename, paraname
@@ -944,7 +944,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Calculates grid cell area in m2 on a spherical Earth
     !----------------------------------------------------------------
-    use md_params_core, only: pi
+    use md_params_core_pmodel, only: pi
 
     ! arguments
     real, intent(in) :: lat      ! latitude (degrees N)
@@ -969,7 +969,7 @@ contains
     ! Ref:      Allen et al. (1998)
     ! This function is copied from SPLASH
     !----------------------------------------------------------------
-    use md_params_core, only: kPo, kL, kTo, kG, kMa, kR
+    use md_params_core_pmodel, only: kPo, kL, kTo, kG, kMa, kR
 
     ! arguments
     real, intent(in) :: elv ! elevation above sea level, m

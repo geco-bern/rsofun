@@ -16,6 +16,22 @@ module md_interface_lm3ppa
   ! type paramstype_calib
   !   real :: kphio
   ! end type paramstype_calib  
+
+  type paramstype_tile
+    integer :: soiltype
+    real :: FLDCAP
+    real :: WILTPT
+    real :: K1
+    real :: K2
+    real :: K_nitrogen
+    real :: etaN
+    real :: MLmixRatio
+    real :: l_fract
+    real :: retransN
+    real :: fNSNmax
+    real :: f_N_add
+    real :: f_initialBSW
+  end type paramstype_tile
   
   type paramstype_species
     real, dimension(MSPECIES) :: lifeform
@@ -35,16 +51,20 @@ module md_interface_lm3ppa
     real, dimension(MSPECIES) :: maturalage
   end type paramstype_species
 
+  type inittype_cohort 
+    real, dimension(MAX_INIT_COHORTS) :: init_cohort_species
+    real, dimension(MAX_INIT_COHORTS) :: init_cohort_nindivs
+    real, dimension(MAX_INIT_COHORTS) :: init_cohort_bsw
+    real, dimension(MAX_INIT_COHORTS) :: init_cohort_bHW
+    real, dimension(MAX_INIT_COHORTS) :: init_cohort_nsc
+  end type inittype_cohort
 
-  type paramstype_tile
-    ! xxx todo: add tile parameters
-  end type paramstype_tile
-
-  type inittype_cohort ! xxx todo 
-
-  type inittype_soil ! xxx tod 
-
-
+  type inittype_soil 
+    real :: init_fast_soil_C
+    real :: init_slow_soil_C
+    real :: init_Nmineral
+    real :: N_input
+  end type inittype_soil
 
   type interfacetype_biosphere
     integer                         :: year

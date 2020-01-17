@@ -7,7 +7,7 @@ module md_plant_pmodel
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
-  use md_params_core
+  use md_params_core_pmodel
 
   implicit none
 
@@ -112,7 +112,7 @@ contains
     ! light conditions (meanmppfd) and the Rubisco-N per unit absorbed
     ! light.
     !----------------------------------------------------------------
-    use md_params_core, only: nmonth
+    use md_params_core_pmodel, only: nmonth
 
     ! arguments
     real, intent(in)                    :: mylai
@@ -150,7 +150,7 @@ contains
     ! Narea_metabolic  = predicted
     ! Narea_structural = rN:C_struct * LMA
     !----------------------------------------------------------------
-    use md_params_core, only: c_content_of_biomass, nmonth, n_molmass, c_molmass
+    use md_params_core_pmodel, only: c_content_of_biomass, nmonth, n_molmass, c_molmass
 
     ! arguments
     type( plant_type ), intent(inout)   :: plant
@@ -188,7 +188,7 @@ contains
     ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------    
     use md_sofunutils, only: getparreal
-    use md_interface
+    use md_interface_pmodel
 
     ! local variables
     integer :: pft
@@ -253,7 +253,7 @@ contains
     ! Read PFT parameters from respective file, given the PFT name
     !----------------------------------------------------------------
     use md_sofunutils, only: getparreal
-    use md_params_core, only: lunat
+    use md_params_core_pmodel, only: lunat
 
     ! arguments
     character(len=*), intent(in) :: pftname
@@ -352,7 +352,7 @@ contains
     !  June 2014
     !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
-    use md_params_core, only: npft
+    use md_params_core_pmodel, only: npft
 
     ! argument
     type( plant_type ), dimension(npft,ngridcells), intent(inout) :: plant

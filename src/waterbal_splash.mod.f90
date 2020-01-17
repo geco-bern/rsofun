@@ -21,7 +21,7 @@ module md_waterbal
   ! contact: b.stocker@imperial.ac.uk
   ! ...
   !----------------------------------------------------------------
-  use md_params_core, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
+  use md_params_core_pmodel, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
     kMv, kMa, kfFEC, secs_per_day, dummy
 
   implicit none
@@ -123,10 +123,10 @@ contains
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates daily and monthly quantities for one year
     !-------------------------------------------------------------------------
-    use md_params_core, only: ndayyear, ndaymonth, npft
-    use md_tile, only: soil_type, tile_fluxes_type
-    use md_plant, only: plant_fluxes_type
-    use md_interface, only: myinterface
+    use md_params_core_pmodel, only: ndayyear, ndaymonth, npft
+    use md_tile_pmodel, only: soil_type, tile_fluxes_type
+    use md_plant_pmodel, only: plant_fluxes_type
+    use md_interface_pmodel, only: myinterface
 
     ! arguments
     type( soil_type ), dimension(nlu), intent(inout)        :: soil
@@ -253,7 +253,7 @@ contains
     ! - daily extraterrestrial solar radiation (dra), J/m^2
     ! - daily PPFD (dppfd), mol/m^2
     !-------------------------------------------------------------------------  
-    use md_params_core, only: ndayyear, pi, dummy
+    use md_params_core_pmodel, only: ndayyear, pi, dummy
     use md_sofunutils, only: daily2monthly
 
     ! arguments
@@ -430,7 +430,7 @@ contains
     ! - daily AET (out_evap%aet), mm
     ! - daily condensation (out_evap%cn), mm
     !-------------------------------------------------------------------------  
-    use md_params_core, only: ndayyear, pi, dummy
+    use md_params_core_pmodel, only: ndayyear, pi, dummy
     use md_sofunutils, only: calc_patm
 
     ! arguments
@@ -917,7 +917,7 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface, only: myinterface
+    use md_interface_pmodel, only: myinterface
 
     ! constant for dRnl (Monteith & Unsworth, 1990)
     kA       = 107.0
@@ -977,7 +977,7 @@ contains
     ! Calculates the cosine of an angle given in degrees. Equal to 
     ! 'dsin' in Python version.
     !----------------------------------------------------------------   
-    use md_params_core, only: pi
+    use md_params_core_pmodel, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, degrees (0-360)
@@ -996,7 +996,7 @@ contains
     ! Calculates the sinus of an angle given in degrees. Equal to 
     ! 'dsin' in Python version.
     !----------------------------------------------------------------   
-    use md_params_core, only: pi
+    use md_params_core_pmodel, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, degrees (0-360)
@@ -1014,7 +1014,7 @@ contains
     !----------------------------------------------------------------   
     ! Returns corresponding degrees if x is given in radians
     !----------------------------------------------------------------   
-    use md_params_core, only: pi
+    use md_params_core_pmodel, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, radians
@@ -1031,7 +1031,7 @@ contains
     !----------------------------------------------------------------   
     ! Returns corresponding radians if x is given in degrees
     !----------------------------------------------------------------   
-    use md_params_core, only: pi
+    use md_params_core_pmodel, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, radians
@@ -1257,7 +1257,7 @@ contains
     ! Initialises waterbalance-specific output variables
     ! The same subroutine is used here for initialising rolling mean variables
     !----------------------------------------------------------------
-    use md_interface, only: myinterface
+    use md_interface_pmodel, only: myinterface
 
     ! arguments
     integer, intent(in) :: ngridcells
@@ -1276,7 +1276,7 @@ contains
     ! Collect daily output variables
     ! so far not implemented for isotopes
     !----------------------------------------------------------------
-    use md_interface, only: myinterface
+    use md_interface_pmodel, only: myinterface
 
     ! argument
     integer, intent(in) :: jpngr
@@ -1296,8 +1296,8 @@ contains
     ! Calculates the rolling mean of relevant variables
     ! This requires the full arrays (all gridcells) to be stored.
     !-------------------------------------------------------------------------
-    use md_params_core, only: nlu
-    use md_tile, only: psoilphystype
+    use md_params_core_pmodel, only: nlu
+    use md_tile_pmodel, only: psoilphystype
 
     ! arguments
     type( psoilphystype ), dimension(:,:), intent(inout) :: phy

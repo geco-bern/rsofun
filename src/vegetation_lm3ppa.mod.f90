@@ -1,6 +1,6 @@
-module esdvm
+module md_vegetation_lm3ppa
  use datatypes
- use soil_mod
+ use md_soil_lm3ppa
  implicit none
  private
 
@@ -2114,7 +2114,7 @@ subroutine initialize_vegn_tile(vegn,nCohorts,namelistfile)
          cx => vegn%cohorts(i)
          cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
          cx%layer   = 1
-         cx%species = myinterface%init_cohort%init_cohort_species(i) ! xxx todo: do others the same init_cohort_species(i)
+         cx%species = myinterface%init_cohort%init_cohort_species(i) 
          cx%ccID =  i
          cx%nsc     = myinterface%init_cohort%init_cohort_nsc(i)
          cx%nindivs = myinterface%init_cohort%init_cohort_nindivs(i) ! trees/m2
@@ -2205,7 +2205,7 @@ end subroutine initialize_vegn_tile
 
 ! ====================================
 
-end module esdvm
+end module md_vegetation_lm3ppa
 
 
 

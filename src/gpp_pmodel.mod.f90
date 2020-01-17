@@ -27,7 +27,7 @@ module md_gpp_pmodel
   ! Tyler Davis.
   !----------------------------------------------------------------
   ! load core parameters
-  use md_params_core, only: nmonth, npft, nlu, c_molmass, h2o_molmass, maxgrid, ndayyear, dummy
+  use md_params_core_pmodel, only: nmonth, npft, nlu, c_molmass, h2o_molmass, maxgrid, ndayyear, dummy
 
   implicit none
 
@@ -132,7 +132,7 @@ contains
     ! Calculates soil moisture and temperature stress functions.
     ! Calls P-model.
     !------------------------------------------------------------------
-    use md_plant, only: params_pft_plant, plant_type, plant_fluxes_type
+    use md_plant_pmodel, only: params_pft_plant, plant_type, plant_fluxes_type
     use md_sofunutils, only: dampen_variability
 
     ! input-only arguments
@@ -1129,7 +1129,7 @@ contains
     !
     ! Ref:      Wang Han et al. (in prep.)
     !-----------------------------------------------------------------------
-    use md_params_core, only: kR           ! Universal gas constant, J/mol/K
+    use md_params_core_pmodel, only: kR           ! Universal gas constant, J/mol/K
 
     ! arguments
     real, intent(in) :: tcleaf
@@ -1208,7 +1208,7 @@ contains
     !
     ! T_ref is 25 deg C (=298.13 K) per default.
     !-----------------------------------------------------------------------
-    use md_params_core, only: kR           ! Universal gas constant, J/mol/K
+    use md_params_core_pmodel, only: kR           ! Universal gas constant, J/mol/K
 
     ! arguments
     real, intent(in) :: tk                 ! temperature (Kelvin)
@@ -1505,8 +1505,8 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Subroutine reads module-specific parameters from input file.
     !----------------------------------------------------------------
-    use md_interface, only: myinterface
-    use md_plant, only: params_pft_plant
+    use md_interface_pmodel, only: myinterface
+    use md_plant_pmodel, only: params_pft_plant
 
     ! local variables
     integer :: pft

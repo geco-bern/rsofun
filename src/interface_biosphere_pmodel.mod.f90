@@ -2,10 +2,10 @@ module md_interface_pmodel
 
   use, intrinsic :: iso_fortran_env, dp=>real64
 
-  use md_forcing, only: climate_type, landuse_type, ninput_type, vegcover_type  
-  use md_params_soil, only: paramtype_soil
-  use md_params_siml, only: paramstype_siml, outtype_steering
-  use md_params_core, only: nlayers_soil, ndayyear
+  use md_forcing_pmodel, only: climate_type, landuse_type, ninput_type, vegcover_type  
+  use md_params_soil_pmodel, only: paramtype_soil
+  use md_params_siml_pmodel, only: paramstype_siml, outtype_steering
+  use md_params_core_pmodel, only: nlayers_soil, ndayyear
   use md_grid, only: gridtype !, domaininfo_type
 
   implicit none
