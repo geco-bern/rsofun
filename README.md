@@ -10,6 +10,9 @@ Provides a wrapper for the SOFUN model implemented in Fortran. Shared memory (ca
 - Running the model and getting outputs directly back into R (tidy data)
 - Evaluating outputs (benchmarking)
 
+So far, rsofun implements the P-model ([Stocker et al., 2019 GMDD](https://www.geosci-model-dev-discuss.net/gmd-2019-200/)) and was used for simulations presented in [Stocker et al., 2019 GMDD](https://www.geosci-model-dev-discuss.net/gmd-2019-200/).
+
+Parallelisation for a large number of site-level simulations is provided using the *multidplyr* R package. Calibration uses the *gensa* R package. 
 
 ## Installation
 
