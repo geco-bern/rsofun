@@ -5,12 +5,12 @@
 
 Provides a wrapper for the SOFUN model implemented in Fortran. Shared memory (calling Fortran functions from within R) increases speed and facilitates use and installation. The package provides the following functionalities:
 
-- Collecting input data for a large number of site-scale simulations
+- Collecting input data for a large number of site-scale simulations (data ingest)
 - Calibrating model parameters
-- Running the model and getting outputs directly back into R (tidy data)
+- Running the model and getting outputs directly back into R ("tidy" data)
 - Evaluating outputs (benchmarking)
 
-So far, rsofun implements the P-model ([Stocker et al., 2019 GMDD](https://www.geosci-model-dev-discuss.net/gmd-2019-200/)) and was used for simulations presented in [Stocker et al., 2019 GMDD](https://www.geosci-model-dev-discuss.net/gmd-2019-200/).
+So far, rsofun implements the P-model ([Stocker et al., 2019 GMDD](https://www.geosci-model-dev-discuss.net/gmd-2019-200/)) and was used for simulations presented in [Stocker et al., 2019 GMDD](https://www.geosci-model-dev-discuss.net/gmd-2019-200/). Dataset-specific steps (data ingest, and benchmarking) are so far only implemented for using GPP or ET data from FLUXNET 2015. However, all steps are implemented in a modular and generic way in order to provide an extendible framework.
 
 Parallelisation for a large number of site-level simulations is provided using the *multidplyr* R package. Calibration uses the *gensa* R package. 
 
