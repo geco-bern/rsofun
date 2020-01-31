@@ -15,12 +15,14 @@ load_dependencies_rsofun()
 
 Manually select some sites from which we're going to use the data for evaluation and calibration.
 ```{r}
-mysites <- c("BE-Vie", "DE-Tha", "DK-Sor", "FI-Hyy", "IT-Col", "NL-Loo", "US-MMS", "US-WCr", "US-UMB", "US-Syv", "DE-Hai", "IT-MBo", "US-GLE", "FR-Fon", "NL-Hor", "US-UMd", "AU-Dry", "DE-Obe", "IT-Tor", "US-Wi4")
+#mysites <- c("BE-Vie", "DE-Tha", "DK-Sor", "FI-Hyy", "IT-Col", "NL-Loo", "US-MMS", "US-WCr", "US-UMB", "US-Syv", "DE-Hai", "IT-MBo", "US-GLE", "FR-Fon", "NL-Hor", "US-UMd", "AU-Dry", "DE-Obe", "IT-Tor", "US-Wi4")
+
+mysites <- c("BE-Vie")
 ```
 
 Create a site meta info table that contains all the site-specific information that is used to force site-simulations (e.g. starting year, number of simulations years, elevation, etc.). For FLUXNET2015 data, required meta info is provided by the `rsofun` package (data frame `rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015`).
 ```{r}
-path_siteinfo <- "~/siteinfo_example_fortran.csv"
+path_siteinfo <- "~/.siteinfo_example_fortran.csv"
 siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
   dplyr::filter(sitename %in% mysites) %>%
   write_csv(path = path_siteinfo)
@@ -29,28 +31,16 @@ siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>%
 Now specify the simulation parameters that are identical for all site-scale simulations.
 ```{r}
 params_siml <- list(
-  spinup             = TRUE,
-  spinupyears        = 10,
-  recycle            = 1,
-  soilmstress        = FALSE,
-  tempstress         = FALSE,
-  calc_aet_fapar_vpd = FALSE,
-  in_ppfd            = TRUE,
-  in_netrad          = FALSE,
-  const_clim_year    = -9999,
-  const_lu_year      = -9999,
-  const_co2_year     = -9999,
-  const_ndep_year    = -9999,
-  const_nfert_year   = -9999,
-  outdt              = 1,
-  ltre               = FALSE,
-  ltne               = FALSE,
-  ltrd               = FALSE,
-  ltnd               = FALSE,
-  lgr3               = TRUE,
-  lgn3               = FALSE,
-  lgr4               = FALSE
-	)
+ filepath_in           = '/Users/bestocke/sofun/input/',
+ climfile              = 'US-WCrforcing.txt',
+ model_run_years       =  1800, # 1200,
+ equi_days             =  0,
+ outputhourly          =  FALSE, # .True. #
+ outputdaily           =  TRUE,  # FALSE # TRUE
+ do_U_shaped_mortality =  FALSE, # TRUE #
+ update_annualLAImax   =  FALSE, # TRUE #
+ do_closedN_run        =  TRUE
+)
 ```
 
 Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters).
@@ -60,17 +50,95 @@ settings_sims <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_s
 
 ### Define model parameters
 
-First, let's do it by hand (calibration of parameters is shown later).
+#### Tile-level parameters
+
 ```{r}
-params_modl <- list(
-	kphio           = 0.04997714009213085,
-	soilm_par_a     = 1.0,
-	soilm_par_b     = 0.0,
-	vpdstress_par_a = 0.2,
-	vpdstress_par_b = 0.2,
-	vpdstress_par_m = 5
-	)
+params_tile <- list(
+  soiltype     = 3,
+  FLDCAP       = 0.4,
+  WILTPT       = 0.05,
+  K1           = 2.0,  # turnover rate of fast SOM per year
+  K2           = 0.1,   # 0.12 # 0.2, # 0.075 # turnover rate of slow SOM per year
+  K_nitrogen   = 0.0, # 1.2 # 2.5 # rate of a year, 2.5
+  etaN         = 0.0, # 0.025 # loss rate with runoff
+  MLmixRatio   = 0.6, # 0.8 # fraction of microbes to litter
+  l_fract      = 0.0,
+  retransN     = 0.0,
+  fNSNmax      = 5.0, # 5.0
+  f_N_add      = 0.02, # 0.005, # 0.02
+  f_initialBSW = 0.005
+  # alpha_FR   =  1.2; gamma_FR = 12.0; dSlowSOM = 2.5 * iSOM + 1.5; rho_N_up0 = 0.1
+  )
+
 ```
+
+#### Species-level parameters
+
+```{r}
+params_species <- tibble(
+  lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),    # 0: grass; 1 Woody
+  phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),    # 0: Deciduous; 1 Evergreen
+  pt            = c(1,       0,        0,        0,        0,      0,        0,        0,      0,        0,        0),    # 0: C3; 1: C4
+  seedlingsize  = c(0.02,    0.05,     0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05),  # initial size of seedlings
+  LMA           = c(0.035,   0.14,     0.14,     0.14,     0.14,   0.14,    0.14,   0.14,     0.14,     0.14,     0.035),# Leaf mass per unit area
+  phiRL         = c(4.0,     1.0,      2.0,      3.0,      4.0,     5.0,     6.0,      7.0,     8.0,    9.0,      3.0),
+  LNbase        = c(0.8E-3,  0.8E-3,   0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3),   # kgN m-2 leaf, Vmax = 0.03125*LNbase
+  laimax        = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  # maximum crown LAI
+  LAI_light     = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  # Light-limited crown LAI
+  Nfixrate0     = c(0.0,     0.0,      0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0),  # 0.03 kgN kgRootC-1 yr-1
+  NfixCost0     = c(12.,     12.,      12.,      12.,      12.,    12.,      12.,      12.,    12.,      12.,      12.),  # 12, 24 gC/gN
+  phiCSA        = c(1.25E-4, 0.25E-4,  0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4),
+  mortrate_d_c  = c(0.02,    0.02,     0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02),    # canopy tree mortality rate, year-1
+  mortrate_d_u  = c(0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08),    # understory tree mortality rate, year-1
+  maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
+  )
+```
+
+#### Soil parameters
+
+By layers.
+```{r}
+# adopted from datatypes.mod.f90 l.538
+params_soil <- tibble(
+  type              = c("Coarse",  "Medium",   "Fine",    "CM",     "CF",     "MF",    "CMF",    "Peat",    "MCM"),
+  GMD               = c(0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3),
+  GSD               = c(5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4),
+  vwc_sat           = c(0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445),
+  chb               = c( 3.5,   6.4,  11.0,   4.8,   6.3,   8.4,   6.3,   6.4,   6.4),
+  psi_sat_ref       = c(-600., -790., -910., -1580., -1680., -1880., -5980., -790., -790.), # Pa
+  k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2),      # mol/(s MPa m)
+  alphaSoil         = rep(1.0, 9),
+  heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6,   1.0)
+  )
+```
+
+#### Initial cohort specification
+
+```{r}
+init_cohort <- tibble(
+ init_cohort_species = c(1,      2,        3,        4,      5,        6,        7,      8,        9,       10),
+ init_cohort_nindivs = c(0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02),
+ init_cohort_bsw     = c(0.2,    0.2,      0.2,      0.2,    0.2,      0.2,      0.2,    0.2,      0.2,     0.2),
+ init_cohort_bHW     = c(0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0),
+ init_cohort_nsc     = c(0.5,    0.5,      0.5,      0.5,    0.5,      0.5,      0.5,    0.5,      0.5,     0.5)
+)
+
+```
+
+#### Initial soil pools
+
+```{r}
+# high N input --> Deciduous
+# low  N input --> Evergreen
+init_soil <- list(
+ init_fast_soil_C    = 0.15,   # kg C m-2    # C/N = 15, 0.75 kg SOM ~ 50 gN
+ init_slow_soil_C    = 16.0,   # kg C m-2    # C/N = 40
+ init_Nmineral       = 2.5E-3, # kg N m-2
+ N_input             = 0.0E-3  # 2.4E-3, # kg N m-2 yr-1, N deposit: 0.8 g N m-2 yr-1
+)
+
+```
+
 
 ### Define soil parameters
 
@@ -84,50 +152,22 @@ df_soiltexture <- bind_rows(
 
 ### Get input
 
-First, define input settings.
+Get the input from the nice weird looking file with half-hourly data.
+
+The file has the following variables (units):
+
+ Year  DOY  Hour  T_air          Q_air          Wind_speed      Precip          Pressure        R_global_in      R_longwave_in   CO2
+                      K          kg/kg          m/s     kg_H2O/m2/s               pa               W/m2            W/m2            ppm     
+
 ```{r}
-settings_input <-  list(
-    data                     = NA,
-    temperature              = "fluxnet2015",
-    precipitation            = "fluxnet2015",
-    vpd                      = "fluxnet2015",
-    ppfd                     = "fluxnet2015",
-    netrad                   = "fluxnet2015",  #  c("fluxnet2015", "watch_wfdei"),
-    patm                     = "fluxnet2015",
-    netrad                   = NA,
-    cloudcover               = "cru",
-    path_input               = "~/sofun_inputs/example/",
-    path_watch_wfdei         = "~/data/watch_wfdei/",
-    path_cru                 = "~/data/cru/ts_4.01/",
-    path_MODIS_FPAR_MCD15A3H = "~/data/fluxnet_subsets/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
-    path_MODIS_EVI_MOD13Q1   = "~/data/fluxnet_subsets/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
-    path_co2                 = "~/data/co2/cCO2_rcp85_const850-1765.csv",
-    path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
-    path_fluxnet2015_hh      = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
-    get_from_remote          = FALSE,
-    settings_gee             = get_settings_gee( 
-      bundle      = "fpar", 
-      python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python",
-      gee_path    = "~/gee_subset/gee_subset/"
-      ),
-  fapar = "MODIS_FPAR_MCD15A3H",
-  splined_fapar = TRUE
-  )
+ddf_input <- read_delim("~/sofun/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
+  mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) )
+
+complete <-rep(seq(ymd("1998-01-01"), ymd("2008-12-31"), by = "days"), each = 24)
+
+ddf_complete <- tibble(date = complete)
 ```
 
-Then, get the input data.
-```{r message=FALSE, warning=FALSE, echo=FALSE}
-ddf_input <- prepare_input_sofun(
-  settings_input             = settings_input,
-  settings_sims              = settings_sims,
-  overwrite_csv_climate_lev1 = FALSE,
-  overwrite_csv_climate_lev2 = TRUE,
-  overwrite_csv_climate_lev3 = TRUE,
-  overwrite_rdata_climate    = TRUE,
-  overwrite_csv_fapar        = FALSE,
-  verbose                    = FALSE
-  )
-```
 
 ### Run the model
 
@@ -147,7 +187,8 @@ mod <- run_sofun_f_bysite(
   df_drivers$forcing[[1]], 
   df_drivers$df_soiltexture[[1]], 
   params_modl = params_modl, 
-  makecheck = TRUE 
+  makecheck = TRUE,
+  method = "lm3ppa"
   )
 
 ## Run for the full set of sites
@@ -156,7 +197,8 @@ df_output <- runread_sofun_f(
      df_drivers, 
      params_modl = params_modl, 
      makecheck = TRUE,
-     parallel = FALSE
+     parallel = FALSE,
+     method = "lm3ppa"
      )
 print(ptm)
 
