@@ -7,10 +7,10 @@ module md_params_core_lm3ppa
   !----------------------------------------------------------------
   implicit none
 
-  integer, parameter :: nhoursyear = 8760        ! number of days in a year
+  integer :: ntstepsyear           ! number of days in a year
+  integer, parameter :: ndayyear = 365           ! number of days in a year
   
-  ! integer, parameter :: ndayyear = 365           ! number of days in a year
-  ! integer, parameter :: nmonth = 12              ! number of months in a year
+  integer, parameter :: nmonth = 12              ! number of months in a year
   ! real,    parameter :: secs_per_day = 86400.0   ! number of seconds in a day
   ! integer, parameter :: maxgrid = 1              ! number of spatial gridcells (dummy dimension for later code extension)
   ! integer, parameter :: nbucket = 2              ! number of buckets for soil water model
@@ -24,6 +24,13 @@ module md_params_core_lm3ppa
   integer, parameter :: n_dim_soil_types = 9     ! number of soil types
   integer, parameter :: MSPECIES = 15            ! number of species
   integer, parameter :: MAX_INIT_COHORTS = 10    ! Number of initial cohorts
+  integer, parameter :: out_max_cohorts = 20     ! Try: Number of maximum cohorts
+
+  integer, parameter :: nvars_hourly_tile = 15
+  integer, parameter :: nvars_daily_tile = 35
+  integer, parameter :: nvars_daily_cohorts = 27
+  integer, parameter :: nvars_annual_cohorts = 22
+  integer, parameter :: nvars_annual_tile = 44
 
   ! needed here
   real, parameter :: dummy = -9999.0             ! arbitrary dummy value
@@ -31,7 +38,7 @@ module md_params_core_lm3ppa
   ! integer, parameter, dimension(npft) :: pft_start = 1
   ! integer, parameter, dimension(npft) :: pft_end   = 1
 
-  ! integer, parameter, dimension(nmonth)   :: ndaymonth = (/31,28,31,30,31,30,31,31,30,31,30,31/) ! number of days per month
+  integer, parameter, dimension(nmonth)   :: ndaymonth = (/31,28,31,30,31,30,31,31,30,31,30,31/) ! number of days per month
   ! integer, parameter, dimension(nmonth+1) :: middaymonth = (/16,44,75,105,136,166,197,228,258,289,319,350,381/) ! day of year of middle-month-day
   ! integer, parameter, dimension(nmonth)   :: cumdaymonth = (/31,59,90,120,151,181,212,243,273,304,334,365/)
 

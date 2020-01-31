@@ -20,7 +20,9 @@ module md_params_siml_lm3ppa
     integer :: firstyeartrend  ! year AD of first transient year
     integer :: recycle         ! length of standard recycling period
     logical :: do_spinup            ! whether this simulation does spinup 
-    
+    integer :: runyears        ! number of years of entire simulation (spinup+transient)
+    logical :: is_calib
+
     ! integer :: model_run_years
     integer :: equi_days
     logical :: outputhourly
@@ -28,44 +30,6 @@ module md_params_siml_lm3ppa
     logical :: do_U_shaped_mortality
     logical :: update_annaulLAImax
     logical :: do_closedN_run
-
-    ! ! xxx todo: include the following as simulation parameters conforming to the following SOFUN parameters: 
-
-    ! xxx todo: the following need to be defined:
-    logical :: do_spinup
-    integer :: spinupyears
-    integer :: firstyeartrend
-    integer :: recycle
-    logical :: is_calib
-
-    ! integer :: runyears        ! number of years of entire simulation (spinup+transient)
-    ! integer :: spinupyears     ! number of spinup years
-    ! integer :: nyeartrend      ! number of transient years
-    ! integer :: firstyeartrend  ! year AD of first transient year
-    ! integer :: recycle         ! length of standard recycling period
-    ! ! integer :: outdt           ! output periodicity
-    ! ! integer :: outnt           ! number of output time steps per year
-    
-    ! logical :: do_spinup            ! whether this simulation does spinup 
-    ! logical :: is_calib             ! whether this simulation is a calibration simulation (overriding parameters and no output)
-
-    ! logical :: soilmstress          ! when true, an empirical soil moisture stress function is applied to GPP
-    ! logical :: tempstress           ! when true, an empirical temperature stress function is applied to GPP
-    ! logical :: calc_aet_fapar_vpd   ! when true, AET is calculated as f(VPD) * fAPAR * PET, where f(VPD) is of the form a * (b + m * ln(VPD))
-    
-    ! character(len=256) :: runname
-    ! character(len=256) :: sitename
-
-    ! ! ! activated PFTs
-    ! ! logical :: ltre        ! evergreen tree
-    ! ! logical :: ltne        ! evergreen tree, n-fixing
-    ! ! logical :: ltrd        ! deciduous tree
-    ! ! logical :: ltnd        ! deciduous tree, n-fixing
-    ! ! logical :: lgr3        ! grass, c3 photosynthetic pathway
-    ! ! logical :: lgn3        ! grass, c3 photosynthetic pathway, n-fixing
-    ! ! logical :: lgr4        ! grass, c4 photosynthetic pathway
-
-    ! ! integer :: npft        ! number of activated PFTs
 
   end type paramstype_siml
 

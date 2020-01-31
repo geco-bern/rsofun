@@ -12,11 +12,11 @@ module md_forcing_lm3ppa
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_params_core_lm3ppa, only: ndayyear, nlu, dummy
   use md_grid, only: domaininfo_type, gridtype
-
   implicit none
 
   private
-  public climate_type, getclimate
+  public getco2, getninput, ninput_type, gettot_ninput, getfapar, getclimate_site, &
+    getlanduse, landuse_type, climate_type
 
   type climate_type
     integer(kind=in), dimension(nhoursyear) :: year          ! Year

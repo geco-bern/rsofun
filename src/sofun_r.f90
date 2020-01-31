@@ -302,7 +302,12 @@ contains
     N_input,              &     
     n,                    &    
     forcing,              &     
-    output                &
+    output_hourly_tile    &
+    output_daily_tile     &
+    output_daily_cohorts  &
+    output_annual_tile    &
+    output_annual_cohorts &
+
     ) bind(C, n&ame = "lm3ppa_f_")
 
     !////////////////////////////////////////////////////////////////
@@ -316,8 +321,10 @@ contains
     use md_params_soil_lm3ppa, only: getsoil
     use md_forcing_lm3ppa, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_lm3ppa, only: interfacetype_biosphere, outtype_biosphere, myinterface
-    use md_params_core_lm3ppa, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS
+    use md_params_core_lm3ppa, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
+    ndayyear, nvars_daily_tile, nvars_hourly_tile, nvars_daily_cohorts, nvars_annual_cohorts, nvars_annual_tile
     use md_biosphere_lm3ppa, only: biosphere_annual
+    use datatypes
 
     implicit none
 
@@ -327,6 +334,7 @@ contains
     integer(kind=c_int),  intent(in) :: recycle
     integer(kind=c_int),  intent(in) :: firstyeartrend
     integer(kind=c_int),  intent(in) :: nyeartrend
+    integer(kind=c_int),  intent(in) :: runyears
 
     ! integer(kind=c_int),  intent(in) :: model_run_years
     integer(kind=c_int),  intent(in) :: equi_days
@@ -356,6 +364,11 @@ contains
     real(kind=c_double), intent(in) :: f_N_add
     real(kind=c_double), intent(in) :: f_initialBSW
 
+    integer(kind=c_int), intent(in) :: idx_hourly_start
+    integer(kind=c_int), intent(in) :: idx_hourly_end
+    integer(kind=c_int), intent(in) :: idx_daily_start
+    integer(kind=c_int), intent(in) :: idx_daily_end
+
     ! naked arrays
     real(kind=c_double), dimension(MSPECIES,15), intent(in) :: params_species
     real(kind=c_double), dimension(n_dim_soil_types,8), intent(in) :: params_soil
@@ -368,8 +381,16 @@ contains
     real(kind=c_double), intent(in) :: N_input
 
     integer(kind=c_int), intent(in) :: nt
+    integer(kind=c_int), intent(in) :: nt_daily
+    integer(kind=c_int), intent(in) :: nt_annual
+
     real(kind=c_double), dimension(nt,13), intent(in) :: forcing
-    real(kind=c_double), intent(in) :: output
+    real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(in) :: output_hourly_tile !xxxxxxx
+    real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(in) :: output_daily_tile
+    real(kind=c_double), dimension(nt_daily,out_max_cohorts,nvars_daily_cohorts), intent(in) :: output_daily_cohorts
+    real(kind=c_double), dimension(nt_annual,nvars_annual_tile), intent(in) :: output_annual_tile
+    real(kind=c_double), dimension(nt_annual,out_max_cohorts,nvars_annual_cohorts), intent(in) :: output_annual_cohorts
+
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 

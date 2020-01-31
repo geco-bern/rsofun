@@ -4,6 +4,7 @@
 ! 2016 Global Change Biology along the graidient of temperature. 
 
 module md_soil_lm3ppa
+ use md_interface_lm3ppa, only: myinterface
  use datatypes
  implicit none
  private
@@ -34,6 +35,7 @@ contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 !========================================================================
 ! Weng 2017-10-18 ! compute available water for photosynthesis
 subroutine water_supply_layer(forcing, vegn)
+  use md_forcing_lm3ppa, only: climate_type
   type(climate_data_type),intent(in):: forcing
   type(vegn_tile_type), intent(inout) :: vegn
 

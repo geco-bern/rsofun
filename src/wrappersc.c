@@ -10,35 +10,35 @@
 // P-model
 /////////////////////////////////////////////////////////////
 void F77_NAME(pmodel_f)(
-    _Bool *spinup,
-    int *spinupyears,
-    int *recycle,
-    int *firstyeartrend,
-    int *nyeartrend,
-    _Bool *soilmstress,
-    _Bool *tempstress,
-    _Bool *calc_aet_fapar_vpd,
-    _Bool *in_ppfd,
-    _Bool *in_netrad,
+    _Bool  *spinup,
+    int    *spinupyears,
+    int    *recycle,
+    int    *firstyeartrend,
+    int    *nyeartrend,
+    _Bool  *soilmstress,
+    _Bool  *tempstress,
+    _Bool  *calc_aet_fapar_vpd,
+    _Bool  *in_ppfd,
+    _Bool  *in_netrad,
     // int *const_clim_year,
     // int *const_lu_year,
     // int *const_co2_year,
     // int *const_ndep_year,
     // int *const_nfert_year,
-    int *outdt,
-    _Bool *ltre,
-    _Bool *ltne,
-    _Bool *ltrd,
-    _Bool *ltnd,
-    _Bool *lgr3,
-    _Bool *lgn3,
-    _Bool *lgr4,
+    int    *outdt,
+    _Bool  *ltre,
+    _Bool  *ltne,
+    _Bool  *ltrd,
+    _Bool  *ltnd,
+    _Bool  *lgr3,
+    _Bool  *lgn3,
+    _Bool  *lgr4,
     double *longitude,
     double *latitude,
     double *altitude,
     double *whc,
     double *soiltexture,
-    int *nt,
+    int    *nt,
     double *par,
     double *forcing,
     double *output
@@ -134,17 +134,17 @@ extern SEXP pmodel_f_C(
 // LM3PPA
 /////////////////////////////////////////////////////////////
 void F77_NAME(lm3ppa_f)(
-    int *model_run_years
-    int *equi_days
-    _Bool *outputhourly
-    _Bool *outputdaily
-    _Bool *do_U_shaped_mortality
-    _Bool *update_annaulLAImax
-    _Bool *do_closedN_run
+    int    *model_run_years
+    int    *equi_days
+    _Bool  *outputhourly
+    _Bool  *outputdaily
+    _Bool  *do_U_shaped_mortality
+    _Bool  *update_annaulLAImax
+    _Bool  *do_closedN_run
     double *longitude,
     double *latitude,
     double *altitude,
-    int *soiltype
+    int    *soiltype
     double *FLDCAP
     double *WILTPT
     double *K1
@@ -164,9 +164,15 @@ void F77_NAME(lm3ppa_f)(
     double *init_slow_soil_C
     double *init_Nmineral
     double *N_input
-    int *nt
+    int    *nt
+    int    *nt_daily
+    int    *nt_annual
     double *forcing
-    double *output
+    double *output_hourly_tile
+    double *output_daily_tile
+    double *output_daily_cohorts
+    double *output_annual_tile
+    double *output_annual_cohorts
     );
 
 // C wrapper function for LM3PPA
@@ -201,15 +207,23 @@ extern SEXP lm3ppa_f_C(
     SEXP init_slow_soil_C,
     SEXP init_Nmineral,
     SEXP N_input,
-    SEXP n,
+    SEXP n, // corresponds to hourly
+    SEXP n_daily, // corresponds to hourly
+    SEXP n_annual, // corresponds to hourly
     SEXP forcing,
     ){
 
     // Number of time steps (same in forcing and output)
     const int nt = INTEGER(n)[0] ;
+    const int nt_daily= INTEGER(n_daily)[0];
+    const int nt_annual= INTEGER(n_annual)[0];
 
     // Specify output
-    SEXP output = PROTECT( allocMatrix(REALSXP, nt, 5) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_hourly_tile    = PROTECT( allocMatrix(REALSXP, nt,        15) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_daily_tile     = PROTECT( allocMatrix(REALSXP, nt_daily,  35) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_daily_cohorts  = PROTECT( allocMatrix(REALSXP, nt_daily,  27) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_annual_tile    = PROTECT( allocMatrix(REALSXP, nt_annual, 44) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_annual_cohorts = PROTECT( allocMatrix(REALSXP, nt_annual, 22) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
 
     // Fortran subroutine call
     F77_CALL(lm3ppa_f)(
@@ -244,15 +258,25 @@ extern SEXP lm3ppa_f_C(
         REAL(init_Nmineral),
         REAL(N_input),
         INTEGER(n),
+        INTEGER(n_daily),
+        INTEGER(n_annual),
         REAL(forcing),
-        REAL(output),
+        REAL(output_hourly_tile), 
+        REAL(output_daily_tile), 
+        REAL(output_daily_cohorts), 
+        REAL(output_annual_tile), 
+        REAL(output_annual_cohorts), 
         );
 
-    // // Output as list
-    // SEXP out_full = PROTECT( allocVector(VECSXP, 1) );
-    // SET_VECTOR_ELT(out_full, 0, output);
+    // Output as list
+    SEXP out_list = PROTECT( allocVector(VECSXP, 5) );  // maybe try  STRSXP instead of VECSXP
+    SET_VECTOR_ELT(out_list, 0, output_hourly_tile);
+    SET_VECTOR_ELT(out_list, 1, output_daily_tile);
+    SET_VECTOR_ELT(out_list, 2, output_daily_cohorts);
+    SET_VECTOR_ELT(out_list, 3, output_annual_tile);
+    SET_VECTOR_ELT(out_list, 4, output_annual_cohorts);
 
-    UNPROTECT(1);
+    UNPROTECT(6);
 
     return output;
 }
@@ -262,7 +286,7 @@ extern SEXP lm3ppa_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
-  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   32},  // Specify number of arguments to C wrapper as the last number here
+  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   39},  // Specify number of arguments to C wrapper as the last number here; xxx adjust this
   {NULL,         NULL,                0}
 };
 

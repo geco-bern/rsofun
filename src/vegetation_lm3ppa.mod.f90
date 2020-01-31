@@ -1,6 +1,9 @@
 module md_vegetation_lm3ppa
+ 
  use datatypes
  use md_soil_lm3ppa
+ use md_interface_lm3ppa, only: myinterface
+
  implicit none
  private
 
@@ -11,18 +14,23 @@ public :: vegn_reproduction, vegn_annualLAImax_update, annual_calls
 public :: vegn_starvation, vegn_nat_mortality, vegn_species_switch
 public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
 public :: vegn_annual_starvation,Zero_diagnostics
+
  contains
+
 !=============== ESS subroutines ========================================
 !========================================================================
  subroutine vegn_CNW_budget_fast(vegn, forcing)
-! hourly carbon, nitrogen, and water dynamics, Weng 2016-11-25
-! include Nitrogen uptake and carbon budget
-! C_growth is calculated here to drive plant growth and reproduciton
+    !////////////////////////////////////////////////////////////////
+    ! hourly carbon, nitrogen, and water dynamics, Weng 2016-11-25
+    ! include Nitrogen uptake and carbon budget
+    ! C_growth is calculated here to drive plant growth and reproduciton
+    !---------------------------------------------------------------
+  use md_forcing_lm3ppa, only: climate_type
+
   type(vegn_tile_type), intent(inout) :: vegn
   type(climate_data_type),intent(in):: forcing
 
-
-  !-------local var
+  ! local variables
   type(cohort_type), pointer :: cc  ! current cohort
   integer :: i
   real :: tair, tsoil ! temperature of soil, degC
@@ -46,8 +54,10 @@ public :: vegn_annual_starvation,Zero_diagnostics
 
   ! Respiration and allocation for growth
   do i = 1, vegn%n_cohorts
+
      cc => vegn%cohorts(i)
      associate ( sp => spdata(cc%species) )
+
      ! increment tha cohort age
      cc%age = cc%age + dt_fast_yr
      ! Maintenance respiration
@@ -60,7 +70,7 @@ public :: vegn_annual_starvation,Zero_diagnostics
      cc%nsc = cc%nsc + cc%npp
      cc%NSN = cc%NSN + cc%fixedN
 
-     END ASSOCIATE
+     end associate
   enddo ! all cohorts
 
   ! update soil carbon
@@ -71,12 +81,15 @@ public :: vegn_annual_starvation,Zero_diagnostics
    
 end subroutine vegn_CNW_budget_fast
 
-! ============= Plant physiology ========================================
-!========================================================================
-! Weng 2017-10-18
-! compute stomatal conductance, photosynthesis and respiration
-! updates cc%An_op and cc%An_cl, from LM3
+  !========================================================================
+  !============= Plant physiology =========================================
+  !========================================================================
+  ! Weng 2017-10-18
+  ! compute stomatal conductance, photosynthesis and respiration
+  ! updates cc%An_op and cc%An_cl, from LM3
+
 subroutine vegn_photosynthesis (forcing, vegn)
+  use md_forcing_lm3ppa, only: climate_type
   type(climate_data_type),intent(in):: forcing
   type(vegn_tile_type), intent(inout) :: vegn
 
@@ -119,20 +132,26 @@ subroutine vegn_photosynthesis (forcing, vegn)
 
   ! Calculate kappa according to sun zenith angle ! kappa = cc%extinct/max(cosz,0.01) !
   kappa = cc%extinct ! 0.75
+
   ! Light fraction
   f_light = 0.0
   f_light(1) = 1.0
+
   do i =2, layer !MIN(int(vegn%CAI+1.0),9)
       f_light(i) = f_light(i-1) * (exp(0.0-kappa*LAIlayer(i-1)) + f_gap)
       !f_light(i) = f_light(i-1) * (exp(0.0-kappa*3.5) + 0.1)
   enddo
+
   ! Photosynthesis
   accuCAI = 0.0
+
   do i = 1, vegn%n_cohorts
 
      cc => vegn%cohorts(i)
      associate ( sp => spdata(cc%species) )
+
      if(cc%status == LEAF_ON .and. cc%lai > 0.1) then
+
         ! Convert forcing data
          layer = Max (1, Min(cc%layer,9))
          !accuCAI = accuCAI + cc%crownarea * cc%nindivs/(1.0-f_gap)
@@ -150,11 +169,13 @@ subroutine vegn_photosynthesis (forcing, vegn)
         !call get_vegn_wet_frac (cohort, fw=fw, fs=fs)
         fw = 0.0
         fs = 0.0
+
         call gs_Leuning(rad_top, rad_net, TairK, cana_q, cc%lai, &
                     p_surf, water_supply, cc%species, sp%pt, &
                     cana_co2, cc%extinct, fs+fw, cc%layer, &
              ! output:
                     psyn, resp,w_scale2,transp )
+
         ! store the calculated photosynthesis, photorespiration, and transpiration for future use
         ! in growth
         cc%An_op  = psyn  ! molC s-1 m-2 of leaves
@@ -165,11 +186,14 @@ subroutine vegn_photosynthesis (forcing, vegn)
         !if(isnan(cc%gpp))cc%gpp=0.0
 
         if(isnan(cc%gpp))stop '"gpp" is a NaN'
+
      else
+
         ! no leaves means no photosynthesis and no stomatal conductance either
         cc%An_op  = 0.0;  cc%An_cl  = 0.0
         cc%gpp    = 0.0;  cc%transp = 0.0
         cc%w_scale  = -9999
+
      endif
 
      end associate
@@ -180,6 +204,7 @@ end subroutine vegn_photosynthesis
 subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
                    p_surf, ws, pft, pt, ca, kappa, leaf_wet, layer, &
                    apot, acl,w_scale2, transp)
+
   real,    intent(in)    :: rad_top ! PAR dn on top of the canopy, w/m2
   real,    intent(in)    :: rad_net ! PAR net on top of the canopy, w/m2
   real,    intent(in)    :: tl   ! leaf temperature, degK
@@ -237,6 +262,7 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
   real :: gsbar;
   real :: w_scale;
   real, parameter :: p_sea = 1.0e5 ! sea level pressure, Pa
+
   ! soil water stress
   real :: Ed,an_w,gs_w;
 
@@ -311,9 +337,12 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
   ! find the LAI level at which gross photosynthesis rates are equal
   ! only if PAR is positive
   if ( light_top > light_crit ) then
+
      if (pt==PT_C4) then ! C4 species
+
         coef0=(1+ds/do1)/spdata(pft)%m_cond;
         ci=(ca+1.6*coef0*capgam)/(1+1.6*coef0);
+
         if (ci>capgam) then
            f2=vm;
            f3=18000.0*vm*ci; ! 18000 or 1800?
@@ -337,14 +366,18 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
            if(anbar>0.0) then
                gsbar=anbar/(ci-capgam)/coef0;
            endif
+
         endif ! ci>capgam
+
      else ! C3 species
+
         coef0=(1+ds/do1)/spdata(pft)%m_cond;
         coef1=kc*(1.0+0.209/ko);
         ci=(ca+1.6*coef0*capgam)/(1+1.6*coef0);
         f2=vm*(ci-capgam)/(ci+coef1);
         f3=vm/2.;
         dum2=min(f2,f3);
+
         if (ci>capgam) then
            ! find LAI level at which rubisco limited rate is equal to light limited rate
            lai_eq=-log(dum2*(ci+2.*capgam)/(ci-capgam)/ &
@@ -354,6 +387,7 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
            ! gross photosynthesis for light-limited part of the canopy
            Ag_l   = spdata(pft)%alpha_phot * (ci-capgam)/(ci+2.*capgam) * par_net &
                 * (exp(-lai_eq*kappa)-exp(-lai*kappa))/(1.0-exp(-lai*kappa))
+
            ! gross photosynthesis for rubisco-limited part of the canopy
            Ag_rb  = dum2*lai_eq
 
@@ -365,9 +399,13 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
            if(anbar>0.0) then
                gsbar=anbar/(ci-capgam)/coef0;
            endif
+
         endif ! ci>capgam
+
      endif
+
   endif ! light is available for photosynthesis
+
   !write(898,'(1(I4,","),10(E10.4,","))') &
   !     layer, light_top, par_net, kappa, lai, lai_eq, ci, capgam, Ag_l, Ag_rb, Ag
   
@@ -410,8 +448,8 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
    gs = gs * Rugas * Tl / p_surf
    !write(899, '(25(E12.4,","))') rad_net,par_net,apot*3600*12,acl*3600*12,Ed
 
-
 end subroutine gs_Leuning
+
 !============================================================================
  ! Weng, 05/24/2018
  subroutine calc_solarzen(td,latdegrees,cosz,solarelev,solarzen)
@@ -426,6 +464,7 @@ end subroutine gs_Leuning
       real,intent(out) :: cosz        ! cosz=cos(zen angle)=sin(elev angle)
       real,intent(out) :: solarelev    ! solar elevation angle (rad)
       real,intent(out) :: solarzen     ! solar zenith angle (rad)
+      
       pi  = 3.1415926
       rad = pi / 180.0 ! Conversion from degrees to radians.
       hour = (td-floor(td))*24.0
@@ -438,22 +477,25 @@ end subroutine gs_Leuning
       ! compute the solar elevation and zenth angles below
       solarelev = asin(cosz)/pi*180.0  !since asin(cos(zen))=pi/2-zen=elev
       solarzen = 90.0 - solarelev ! pi/2.d0 - solarelev
+
  end subroutine calc_solarzen
 
 !============================================================================
 subroutine plant_respiration(cc, tairK)
   type(cohort_type), intent(inout) :: cc
   real, intent(in) :: tairK ! degK
-  !---------local var ---------
+
+  ! local variables
   real :: tf,tfs ! thermal inhibition factors for above- and below-ground biomass
   real :: r_leaf, r_stem, r_root
   real :: Acambium  ! cambium area, m2/tree
   ! real :: LeafN     ! leaf nitrogen, kgN/Tree
   real :: fnsc,NSCtarget ! used to regulation respiration rate
   real :: r_Nfix    ! respiration due to N fixation
-  
   integer :: sp ! shorthand for cohort species
+
   sp = cc%species
+
   ! temperature response function
   tf  = exp(9000.0*(1.0/298.16-1.0/tairK))
 
@@ -482,17 +524,24 @@ subroutine plant_respiration(cc, tairK)
   cc%resp = r_leaf + r_stem + r_root + r_Nfix   !kgC tree-1 step-1
   cc%resl = r_leaf + r_stem !tree-1 step-1
   cc%resr = r_root + r_Nfix ! tree-1 step-1
+
 end subroutine plant_respiration
 
-!========= Plant growth ==========================
-subroutine fetch_CN_for_growth(cc)
-!@sum Fetch C from labile C pool according to the demand of leaves and fine roots,
-!@+   and the push of labile C pool
-!@+   DAILY call.
-!@+   added by Weng, 12-06-2016
+!========================================================================
+!========= Plant growth =================================================
+!========================================================================
+
+  subroutine fetch_CN_for_growth(cc)
+    !////////////////////////////////////////////////////////////////
+    ! Fetch C from labile C pool according to the demand of leaves and fine roots,
+    ! and the push of labile C pool
+    ! DAILY call.
+    ! added by Weng, 12-06-2016
+    !---------------------------------------------------------------
     implicit none
     type(cohort_type), intent(inout) :: cc
-    !------local var -----------
+
+    ! local variables
     logical :: woody
     logical :: dormant,growing
 
@@ -506,6 +555,7 @@ subroutine fetch_CN_for_growth(cc)
     ! make these two variables to PFT-specific parameters
     LFR_rate = 1.0 ! 1.0/5.0 ! filling rate/day
     associate ( sp => spdata(cc%species) )
+
     NSCtarget = 3.0 * (cc%bl_max + cc%br_max)      ! kgC/tree
     ! Fetch C from labile C pool if it is in the growing season
     if (cc%status == LEAF_ON) then ! growing season
@@ -528,15 +578,18 @@ subroutine fetch_CN_for_growth(cc)
         cc%resg     = 0.0
     endif
     end associate
+
  end subroutine fetch_CN_for_growth
 
 ! ============================================================================
  subroutine vegn_growth_EW(vegn)
-! updates cohort biomass pools, LAI, and height using accumulated 
-! C_growth and bHW_gain
+    !////////////////////////////////////////////////////////////////
+    ! updates cohort biomass pools, LAI, and height using accumulated 
+    ! C_growth and bHW_gain
+    !---------------------------------------------------------------
   type(vegn_tile_type), intent(inout) :: vegn
 
-  ! ---- local vars
+  ! local variables
   type(cohort_type), pointer :: cc    ! current cohort
   real :: CSAtot ! total cross section area, m2
   real :: CSAsw  ! Sapwood cross sectional area, m2
@@ -720,7 +773,8 @@ subroutine fetch_CN_for_growth(cc)
   enddo
   cc => null()
 
-end subroutine vegn_growth_EW ! daily
+end subroutine vegn_growth_EW
+
 
 !=================================================
 ! Weng, 2017-10-26
