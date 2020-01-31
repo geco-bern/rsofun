@@ -1582,7 +1582,7 @@ extract_pointdata_allsites <- function( filename, df_lonlat, get_time = FALSE ){
 
   df_lonlat <- raster::extract(rasta, sp::SpatialPoints(dplyr::select(df_lonlat, lon, lat)), sp = TRUE) %>% 
     as_tibble() %>% 
-    tidyr::nest(-lon, -lat) %>%
+    tidyr::nest(data = c(-lon, -lat)) %>%
     right_join(df_lonlat, by = c("lon", "lat")) %>%
     mutate( data = purrr::map(data, ~dplyr::slice(., 1)) ) %>% 
     dplyr::mutate(data = purrr::map(data, ~t(.))) %>% 

@@ -377,19 +377,23 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
   ## clean GPP data
   if (any(grepl("GPP_", getvars))){
     
-    if (timescale=="hh"){
-      reqvars <- c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_QC")
-    } else {
-      reqvars <- c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC")
-    }
-    
-    if (any( !(reqvars %in% getvars) ) ||
-        any( !(reqvars %in% names(df)))){
+    if (any( !(c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC") %in% getvars) ) ||
+        any(!(c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC") %in% names(df)))){
       rlang::abort("Not all variables read from file that are needed for data cleaning.")
     } 
     
+    # out_clean <- clean_fluxnet_gpp( 
+    #   df$GPP_NT_VUT_REF, 
+    #   df$GPP_DT_VUT_REF, 
+    #   df$NEE_VUT_REF_NIGHT_QC, 
+    #   df$NEE_VUT_REF_DAY_QC, 
+    #   threshold=threshold_GPP 
+    # )
+    # df$GPP_NT_VUT_REF <- out_clean$gpp_nt
+    # df$GPP_DT_VUT_REF <- out_clean$gpp_dt
+    
     df <- df %>% 
-      clean_fluxnet_gpp(threshold = threshold_GPP, timescale = timescale, remove_neg = remove_neg, timescale)
+      clean_fluxnet_gpp(threshold = threshold_GPP, remove_neg = remove_neg)
   }
   
   ## clean energy data (sensible and latent heat flux) data - often has spuriously equal values
@@ -512,23 +516,18 @@ get_obs_bysite_fluxnet2015 <- function( sitename, path_fluxnet2015, path_fluxnet
     if (verbose) rlang::warn("Converting: patm = patm * 1e3 (given in kPa, required in Pa) \n")
     df <- df %>% dplyr::mutate( patm = patm * 1e3 )
   }
-  
-  if (timescale=="d"){
-    if ("SW_IN_F" %in% getvars){
-      if (verbose) rlang::warn("Converting: swin = swin * 60 * 60 * 24 (given in W m-2, required in J m-2 d-1) \n")
-      df <- df %>% dplyr::mutate( swin = swin * 60 * 60 * 24 )
-    }
-    if ("NETRAD" %in% getvars){
-      if (verbose) rlang::warn("Converting: netrad = NETRAD * 60 * 60 * 24 (given in W m-2 (avg.), required in J m-2 (daily total)) \n")
-      df <- df %>% dplyr::mutate( netrad = netrad * 60 * 60 * 24 )
-    }    
-  }
-  
   if ("SW_IN_F" %in% getvars){
+    if (verbose) rlang::warn("Converting: swin = swin * 60 * 60 * 24 (given in W m-2, required in J m-2 d-1) \n")
+    df <- df %>% dplyr::mutate( swin = swin * 60 * 60 * 24 )
     if (verbose) rlang::warn("Converting: ppfd = swin * kfFEC * 1.0e-6 (convert from J/m2/d to mol/m2/d; kfFEC = 2.04 is the flux-to-energy conversion, micro-mol/J (Meek et al., 1984)) \n")
     df <- df %>% dplyr::mutate( ppfd = swin * kfFEC * 1.0e-6 )
   }
+  if ("NETRAD" %in% getvars){
+    if (verbose) rlang::warn("Converting: netrad = NETRAD * 60 * 60 * 24 (given in W m-2 (avg.), required in J m-2 (daily total)) \n")
+    df <- df %>% dplyr::mutate( netrad = netrad * 60 * 60 * 24 )
+  }    
   
+
   # ## GPP: mean over DT and NT
   # if ("GPP_NT_VUT_REF" %in% getvars){
   #   if ("GPP_DT_VUT_REF" %in% getvars){
@@ -696,18 +695,14 @@ convert_energy_fluxnet2015 <- function( le ){
   return(le_converted)
 }
 
-clean_fluxnet_gpp <- function(df, timescale, nam_gpp_nt, nam_gpp_dt, nam_nt_qc, nam_dt_qc, threshold, remove_neg = FALSE){
+clean_fluxnet_gpp <- function(df, nam_gpp_nt, nam_gpp_dt, nam_nt_qc, nam_dt_qc, threshold, remove_neg = FALSE){
   ##--------------------------------------------------------------------
   ## Cleans daily data using criteria 1-4 as documented in Tramontana et al., 2016
   ## gpp_nt: based on nighttime flux decomposition ("NT")
   ## gpp_dt: based on daytime flux decomposition ("DT")
   ##--------------------------------------------------------------------
-  replace_with_na_qc <- function(gpp, qc, threshold, timescale){
-    if (timescale=="hh"){
-      gpp[which(qc > threshold)] <- NA
-    } else {
-      gpp[which(qc < threshold)] <- NA
-    }
+  replace_with_na_qc <- function(gpp, qc, threshold){
+    gpp[which(qc < threshold)] <- NA
     return(gpp)
   }
   replace_with_na_neg <- function(gpp){
@@ -719,15 +714,9 @@ clean_fluxnet_gpp <- function(df, timescale, nam_gpp_nt, nam_gpp_dt, nam_nt_qc, 
     return(gpp)
   }
   
-  if (timescale=="hh"){
-    df <- df %>% 
-      mutate(GPP_NT_VUT_REF = replace_with_na_qc(GPP_NT_VUT_REF, NEE_VUT_REF_QC, threshold, timescale),
-             GPP_DT_VUT_REF = replace_with_na_qc(GPP_DT_VUT_REF, NEE_VUT_REF_QC, threshold, timescale))
-  } else {
-    df <- df %>% 
-      mutate(GPP_NT_VUT_REF = replace_with_na_qc(GPP_NT_VUT_REF, NEE_VUT_REF_NIGHT_QC, threshold, timescale),
-             GPP_DT_VUT_REF = replace_with_na_qc(GPP_DT_VUT_REF, NEE_VUT_REF_DAY_QC,   threshold, timescale))
-  }
+  df <- df %>% 
+    mutate(GPP_NT_VUT_REF = replace_with_na_qc(GPP_NT_VUT_REF, NEE_VUT_REF_NIGHT_QC, threshold),
+           GPP_DT_VUT_REF = replace_with_na_qc(GPP_DT_VUT_REF, NEE_VUT_REF_DAY_QC,   threshold))
   
   # ## Remove data points that are based on too much gap-filled data in the underlying half-hourly data
   # gpp_nt[ which(qflag_nt < threshold) ] <- NA  ## based on fraction of data based on gap-filled half-hourly
