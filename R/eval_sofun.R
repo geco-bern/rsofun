@@ -3,8 +3,9 @@
 #' Calculates a set of perfomance metrics for model outputs, compared against observational data.
 #' Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 data, are implemented.
 #'
-#' @param settings A named list of data frames containing containing model outputs. 
-#' The names of list elements corresponds to site names.
+#' @param mod A flat dataframe containing model outputs with columns \code{"sitename"} (character), \code{"date"} 
+#' (date object created by \code{lubridate::ymd()}) and \code{"varnam"} where \code{"varnam"} corresponds to 
+#' \code{names(settings_eval$benchmark)}.
 #' @param settings_eval A list specifying evaluation settings 
 #' (see vignette eval_sofun.pdf for more information and examples)
 #' @param settings_sims A named list containing the simulation settings 

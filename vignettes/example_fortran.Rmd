@@ -210,12 +210,12 @@ settings_calib <- list(
   filter_soilm_min    = NA
  )
 ```
- 
+
 Get calibration target data.
 ```{r warning=FALSE, message=FALSE}
-ddf_obs_calib <- get_obs_calib( 
-  settings_calib = settings_calib, 
-  dplyr::select(df_drivers, sitename, siteinfo) %>% tidyr::unnest(siteinfo), 
+ddf_obs_calib <- get_obs_calib(
+  settings_calib = settings_calib,
+  dplyr::select(df_drivers, sitename, siteinfo) %>% tidyr::unnest(siteinfo),
   settings_input
   )
 ```
@@ -224,10 +224,10 @@ Calibrate the model.
 
 ```{r warning=FALSE, message=FALSE}
 set.seed(1982)
-settings_calib <- calib_sofun( 
-  settings_calib, 
-  df_drivers, 
-  ddf_obs = ddf_obs_calib 
+settings_calib <- calib_sofun(
+  settings_calib,
+  df_drivers,
+  ddf_obs = ddf_obs_calib
   )
 ```
 
