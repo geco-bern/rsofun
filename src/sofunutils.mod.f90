@@ -434,7 +434,8 @@ contains
           d3t = endt**3.0 - startt**3.0
 
           ! Take a sheet of paper and try solve the polynom, well here is the outcome
-          polya = (mval(moy)*dt - deltatemp*d2t/dt/2.0 - starttemp*dt + deltatemp*startt) / (d3t/3.0 - d2t**2.0/dt/2.0 - dt*startt**2.0 + startt*d2t)
+          polya = (mval(moy)*dt - deltatemp*d2t/dt/2.0 - starttemp*dt + deltatemp*startt) & 
+            / (d3t/3.0 - d2t**2.0/dt/2.0 - dt*startt**2.0 + startt*d2t)
           polyb = deltatemp/dt - polya*(startt+endt)
           polyc = starttemp - polya*startt**2.0 - polyb*startt
 
