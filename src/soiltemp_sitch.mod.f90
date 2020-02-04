@@ -124,9 +124,11 @@ contains
 
       ! Interpolate thermal diffusivity function against soil water content
       if (meanw1<0.15) then
-        diffus = ( soil(lu)%params%thdiff_whc15 - soil(lu)%params%thdiff_wp ) / 0.15 * meanw1 + soil(lu)%params%thdiff_wp
+        diffus = ( soil(lu)%params%thdiff_whc15 - soil(lu)%params%thdiff_wp ) / 0.15 &
+                  * meanw1 + soil(lu)%params%thdiff_wp
       else
-        diffus = ( soil(lu)%params%thdiff_fc - soil(lu)%params%thdiff_whc15 ) / 0.85 * ( meanw1 - 0.15 ) + soil(lu)%params%thdiff_whc15
+        diffus = ( soil(lu)%params%thdiff_fc - soil(lu)%params%thdiff_whc15 ) / 0.85 &
+                  * ( meanw1 - 0.15 ) + soil(lu)%params%thdiff_whc15
       endif
           
       ! Convert diffusivity from mm2/s to m2/month
