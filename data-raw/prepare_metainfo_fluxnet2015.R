@@ -249,7 +249,7 @@ add_metainfo_koeppengeiger_gtopo30_elv <- function( siteinfo, filn ){
   ## write the koeppen_legend to a file
   add_filname <- "./data/koeppen_legend.Rdata"
   rlang::inform(paste0("Saving ", add_filname, " ..."))
-  save( koeppen_legend, file = add_filname )
+  save( koeppen_legend, file = add_filname, version = 3 )
   
   ## Second, extract the class from a global map, complement missing in above
   ## File by Beck et al. (2018) Scientific Data, DOI: 10.1038/sdata.2018.214
@@ -566,7 +566,7 @@ metainfo_sites_fluxnet2015 <- prepare_metainfo_fluxnet2015(
   filn_elv_watch = "./inst/extdata/WFDEI-elevation.nc" 
   )
 
-save( metainfo_sites_fluxnet2015, file = "./data/metainfo_sites_fluxnet2015.Rdata" )
+save( metainfo_sites_fluxnet2015, file = "./data/metainfo_sites_fluxnet2015.Rdata", version = 3 )
 
 ## For Tier 1 sites, add Koeppen-Geiger climate information
 metainfo_Tier1_sites_kgclimate_fluxnet2015 <- read_csv( "./inst/extdata/list_tier1_sites_fluxnet2015.csv" ) %>% 
@@ -581,7 +581,7 @@ metainfo_Tier1_sites_kgclimate_fluxnet2015 <- read_csv( "./inst/extdata/list_tie
 
   distinct()
   
-save( metainfo_Tier1_sites_kgclimate_fluxnet2015, file = "./data/metainfo_Tier1_sites_kgclimate_fluxnet2015.Rdata" )
+save( metainfo_Tier1_sites_kgclimate_fluxnet2015, file = "./data/metainfo_Tier1_sites_kgclimate_fluxnet2015.Rdata", version = 3 )
 
 # ## Create example CSV to be included in Package external data.
 # out <- dplyr::filter( metainfo_Tier1_sites_kgclimate_fluxnet2015, sitename =="FR-Pue" ) %>%
