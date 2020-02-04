@@ -115,18 +115,18 @@ contains
         out_steering%forcingyear =  year - params_siml%spinupyears + params_siml%firstyeartrend - 1
         out_steering%forcingyear_idx =  year - params_siml%spinupyears
 
-        if (params_siml%const_clim_year/=int(dummy)) then
-          ! constant climate year specified
-          cycleyear = get_cycleyear( year, params_siml%spinupyears, params_siml%recycle )
-          out_steering%climateyear = cycleyear + params_siml%const_clim_year - 1
-          out_steering%climateyear_idx = cycleyear + params_siml%const_clim_year - params_siml%firstyeartrend
+        ! if (params_siml%const_clim_year/=int(dummy)) then
+        !   ! constant climate year specified
+        !   cycleyear = get_cycleyear( year, params_siml%spinupyears, params_siml%recycle )
+        !   out_steering%climateyear = cycleyear + params_siml%const_clim_year - 1
+        !   out_steering%climateyear_idx = cycleyear + params_siml%const_clim_year - params_siml%firstyeartrend
         
-        else
+        ! else
           ! constant climate year not specified
           out_steering%climateyear = out_steering%forcingyear
           out_steering%climateyear_idx = out_steering%forcingyear_idx
         
-        end if
+        !end if
 
       endif
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1

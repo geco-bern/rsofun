@@ -36,7 +36,7 @@ contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ! Weng 2017-10-18 ! compute available water for photosynthesis
 subroutine water_supply_layer(forcing, vegn)
   use md_forcing_lm3ppa, only: climate_type
-  type(climate_data_type),intent(in):: forcing
+  type(climate_type),intent(in):: forcing
   type(vegn_tile_type), intent(inout) :: vegn
 
 !----- local var --------------
@@ -64,7 +64,7 @@ subroutine water_supply_layer(forcing, vegn)
      do j = 1, vegn%n_cohorts
         cc => vegn%cohorts(j)
         associate ( sp => spdata(cc%species) )
-        cc%WupL(i) = cc%rootareaL(i)*sp%Kw_root*dpsiSR(i) * (step_seconds*mol_h2o) ! kg H2O tree-1 step-1
+        cc%WupL(i) = cc%rootareaL(i)*sp%Kw_root*dpsiSR(i) * (myinterface%step_seconds*mol_h2o) ! kg H2O tree-1 step-1
         totWsup(i) = totWsup(i) + cc%WupL(i) * cc%nindivs ! water uptake per layer by all cohorts
         end associate
      enddo
@@ -89,8 +89,9 @@ subroutine water_supply_layer(forcing, vegn)
 subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
 !     All of inputs, the unit of water is 'mm',
 !     soil moisture (soil water content) is a ratio
+  use md_forcing_lm3ppa, only: climate_type
   type(vegn_tile_type), intent(inout) :: vegn
-  type(climate_data_type),intent(in):: forcing
+  type(climate_type),intent(in):: forcing
 
 !----- local var --------------
   type(cohort_type),pointer :: cc
@@ -149,8 +150,8 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
       rhocp = cpair * forcing%P_air * mol_air / (Rugas*TairK)
       H2OLv =H2oLv0 - 2.365e3*Tair
       RH = forcing%RH  ! Check forcing's unit of humidity
-      Dair  = esat(Tair)*(1.0 - RH)
-      slope = (esat(Tair+0.1)-esat(Tair))/0.1
+      Dair  = calc_esat(Tair)*(1.0 - RH)
+      slope = (calc_esat(Tair+0.1)-calc_esat(Tair))/0.1
       psyc=forcing%P_air*cpair*mol_air/(H2OLv*mol_h2o)
       Cmolar=forcing%P_air/(Rugas*TairK) ! mole density of air (mol/m3)
       rsoil = exp(8.206-4.255*fldcap) ! s m-1, Liu Yanlan et al. 2017, PNAS
@@ -169,13 +170,12 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
 !      Hsoil = Rsoilabs - Esoil - Hgrownd
 
   !Calculate Esoil, kg m-2 step-1
-  vegn%evap = min(Esoil/H2OLv * step_seconds, &
-                  0.2*vegn%wcl(1) * thksl(1) *1000.) ! kg m-2 step-1
+  vegn%evap = min(Esoil/H2OLv * myinterface%step_seconds, 0.2*vegn%wcl(1) * thksl(1) *1000.) ! kg m-2 step-1
   !vegn%wcl(1) = vegn%wcl(1) - vegn%evap/(thksl(1) *1000.)
   WaterBudgetL(1) = WaterBudgetL(1) - vegn%evap
 
 !! soil water refill by precipitation
-  rainwater =  forcing%rain * step_seconds
+  rainwater =  forcing%rain * myinterface%step_seconds
   if(rainwater > 0.0)then
      do i=1, max_lev
         W_deficit(i) = (FLDCAP - vegn%wcl(i)) * thksl(i)*1000.0

@@ -113,7 +113,7 @@ module md_waterbal
   !----------------------------------------------------------------
   ! Module-specific variables for rolling annual mean calculations
   !----------------------------------------------------------------
-  real, allocatable, dimension(:,:)   :: rlmalpha
+  real, dimension(nlu) :: rlmalpha
 
   character(len=7) :: in_ppfd       ! information whether PPFD is prescribed from meteo file for global attribute in NetCDF file
 
@@ -1252,26 +1252,19 @@ contains
   end function psychro
 
 
-  subroutine init_rlm_waterbal( ngridcells )
+  subroutine init_rlm_waterbal()
     !////////////////////////////////////////////////////////////////
     ! Initialises waterbalance-specific output variables
     ! The same subroutine is used here for initialising rolling mean variables
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
-
-    ! arguments
-    integer, intent(in) :: ngridcells
 
     ! Rolling mean variables
-    if (myinterface%steering%init) then
-      if (.not.allocated(rlmalpha)) allocate( rlmalpha(nlu,ngridcells) )
-    end if
-    rlmalpha(:,:) = 0.0
+    rlmalpha(:) = 0.0
 
   end subroutine init_rlm_waterbal
 
 
-  subroutine getrlm_daily_waterbal( jpngr, doy )
+  subroutine getrlm_daily_waterbal( doy )
     !////////////////////////////////////////////////////////////////
     ! Collect daily output variables
     ! so far not implemented for isotopes
@@ -1279,13 +1272,12 @@ contains
     use md_interface_pmodel, only: myinterface
 
     ! argument
-    integer, intent(in) :: jpngr
     integer, intent(in) :: doy    
 
     if (evap(1)%pet > 0.0) then
-      rlmalpha(:,jpngr)  = rlmalpha(:,jpngr) + (evap(:)%aet / evap(1)%pet) / ndayyear
+      rlmalpha(:)  = rlmalpha(:) + (evap(:)%aet / evap(1)%pet) / ndayyear
     else
-      rlmalpha(:,jpngr)  = rlmalpha(:,jpngr) + 1.0 / ndayyear
+      rlmalpha(:)  = rlmalpha(:) + 1.0 / ndayyear
     end if
 
   end subroutine getrlm_daily_waterbal
@@ -1300,7 +1292,7 @@ contains
     use md_tile_pmodel, only: psoilphystype
 
     ! arguments
-    type( psoilphystype ), dimension(:,:), intent(inout) :: phy
+    type( psoilphystype ), dimension(:), intent(inout) :: phy
     logical :: init
 
     ! local variables
@@ -1313,7 +1305,7 @@ contains
     nyrs_uptonow = min( ncalls, nyrs_rlmalpha )
 
     do lu=1,nlu
-      phy(lu,:)%rlmalpha = ( phy(lu,:)%rlmalpha * (nyrs_uptonow - 1) + rlmalpha(lu,:) ) / nyrs_uptonow
+      phy(lu)%rlmalpha = ( phy(lu)%rlmalpha * (nyrs_uptonow - 1) + rlmalpha(lu) ) / nyrs_uptonow
     end do
 
   end subroutine get_rlm_waterbal

@@ -134,138 +134,144 @@ extern SEXP pmodel_f_C(
 // LM3PPA
 /////////////////////////////////////////////////////////////
 void F77_NAME(lm3ppa_f)(
-    int    *model_run_years
-    int    *equi_days
-    _Bool  *outputhourly
-    _Bool  *outputdaily
-    _Bool  *do_U_shaped_mortality
-    _Bool  *update_annaulLAImax
-    _Bool  *do_closedN_run
-    double *longitude,
-    double *latitude,
-    double *altitude,
-    int    *soiltype
-    double *FLDCAP
-    double *WILTPT
-    double *K1
-    double *K2
-    double *K_nitrogen
-    double *etaN
-    double *MLmixRatio
-    double *l_fract
-    double *retransN
-    double *fNSNmax
-    double *f_N_add
-    double *f_initialBSW
-    double *params_species
-    double *params_soil
-    double *init_cohort
-    double *init_fast_soil_C
-    double *init_slow_soil_C
-    double *init_Nmineral
-    double *N_input
-    int    *nt
-    int    *nt_daily
-    int    *nt_annual
-    double *forcing
-    double *output_hourly_tile
-    double *output_daily_tile
-    double *output_daily_cohorts
-    double *output_annual_tile
+    _Bool  *spinup,                  
+    int    *spinupyears,                  
+    int    *recycle,                  
+    int    *firstyeartrend,                  
+    int    *nyeartrend,                  
+    _Bool  *outputhourly,                   
+    _Bool  *outputdaily,                   
+    _Bool  *do_U_shaped_mortality,             
+    _Bool  *update_annualLAImax,                   
+    _Bool  *do_closedN_run,                   
+    double *longitude,                  
+    double *latitude,                  
+    double *altitude,                  
+    int    *soiltype,                   
+    double *FLDCAP,                   
+    double *WILTPT,                   
+    double *K1,                   
+    double *K2,                   
+    double *K_nitrogen,                   
+    double *etaN,                   
+    double *MLmixRatio,                   
+    double *l_fract,                   
+    double *retransN,                   
+    double *f_N_add,                   
+    double *f_initialBSW,                   
+    double *params_species,                   
+    double *params_soil,                   
+    double *init_cohort,                   
+    double *init_fast_soil_C,                   
+    double *init_slow_soil_C,                   
+    double *init_Nmineral,                   
+    double *N_input,                   
+    int    *nt,                     
+    int    *nt_daily,                 
+    int    *nt_annual,                
+    double *forcing,                   
+    double *output_hourly_tile,   
+    double *output_daily_tile,    
+    double *output_daily_cohorts, 
+    double *output_annual_tile,   
     double *output_annual_cohorts
     );
 
 // C wrapper function for LM3PPA
 extern SEXP lm3ppa_f_C(
-    SEXP model_run_years,
-    SEXP equi_days,
-    SEXP outputhourly,
-    SEXP outputdaily,
-    SEXP do_U_shaped_mortality,
-    SEXP update_annaulLAImax,
-    SEXP do_closedN_run,
-    SEXP longitude,
-    SEXP latitude,
-    SEXP altitude,
-    SEXP soiltype,
-    SEXP FLDCAP,
-    SEXP WILTPT,
-    SEXP K1,
-    SEXP K2,
-    SEXP K_nitrogen,
-    SEXP etaN,
-    SEXP MLmixRatio,
-    SEXP l_fract,
-    SEXP retransN,
-    SEXP fNSNmax,
-    SEXP f_N_add,
-    SEXP f_initialBSW,
-    SEXP params_species,
-    SEXP params_soil,
-    SEXP init_cohort,
-    SEXP init_fast_soil_C,
-    SEXP init_slow_soil_C,
-    SEXP init_Nmineral,
-    SEXP N_input,
-    SEXP n, // corresponds to hourly
-    SEXP n_daily, // corresponds to hourly
-    SEXP n_annual, // corresponds to hourly
-    SEXP forcing,
+    SEXP spinup,                  
+    SEXP spinupyears,                  
+    SEXP recycle,                  
+    SEXP firstyeartrend,                  
+    SEXP nyeartrend,                  
+    SEXP outputhourly,                   
+    SEXP outputdaily,                   
+    SEXP do_U_shaped_mortality,             
+    SEXP update_annualLAImax,                   
+    SEXP do_closedN_run,                   
+    SEXP longitude,                  
+    SEXP latitude,                  
+    SEXP altitude,                  
+    SEXP soiltype,                   
+    SEXP FLDCAP,                   
+    SEXP WILTPT,                   
+    SEXP K1,                   
+    SEXP K2,                   
+    SEXP K_nitrogen,                   
+    SEXP etaN,                   
+    SEXP MLmixRatio,                   
+    SEXP l_fract,                   
+    SEXP retransN,                   
+    SEXP f_N_add,                   
+    SEXP f_initialBSW,                   
+    SEXP params_species,                   
+    SEXP params_soil,                   
+    SEXP init_cohort,                   
+    SEXP init_fast_soil_C,                   
+    SEXP init_slow_soil_C,                   
+    SEXP init_Nmineral,                   
+    SEXP N_input,                   
+    SEXP n,                     
+    SEXP n_daily,                 
+    SEXP n_annual,                
+    SEXP forcing                 
     ){
 
     // Number of time steps (same in forcing and output)
     const int nt = INTEGER(n)[0] ;
-    const int nt_daily= INTEGER(n_daily)[0];
-    const int nt_annual= INTEGER(n_annual)[0];
+    const int nt_daily = INTEGER(n_daily)[0];
+    const int nt_annual = INTEGER(n_annual)[0];
 
     // Specify output
     SEXP output_hourly_tile    = PROTECT( allocMatrix(REALSXP, nt,        15) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_daily_tile     = PROTECT( allocMatrix(REALSXP, nt_daily,  35) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_daily_cohorts  = PROTECT( allocMatrix(REALSXP, nt_daily,  27) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_annual_tile    = PROTECT( allocMatrix(REALSXP, nt_annual, 44) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
-    SEXP output_annual_cohorts = PROTECT( allocMatrix(REALSXP, nt_annual, 22) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_annual_cohorts = PROTECT( allocMatrix(REALSXP, nt_annual, 23) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
 
     // Fortran subroutine call
     F77_CALL(lm3ppa_f)(
-        INTEGER(model_run_years),
-        INTEGER(equi_days),
-        LOGICAL(outputhourly),
-        LOGICAL(outputdaily),
-        LOGICAL(do_U_shaped_mortality),
-        LOGICAL(update_annaulLAImax),
-        LOGICAL(do_closedN_run),
-        REAL(longitude),
-        REAL(latitude),
-        REAL(altitude),
-        INTEGER(soiltype),
-        REAL(FLDCAP),
-        REAL(WILTPT),
-        REAL(K1),
-        REAL(K2),
-        REAL(K_nitrogen),
-        REAL(etaN),
-        REAL(MLmixRatio),
-        REAL(l_fract),
-        REAL(retransN),
-        REAL(fNSNmax),
-        REAL(f_N_add),
-        REAL(f_initialBSW),
-        REAL(params_species),
-        REAL(params_soil),
-        REAL(init_cohort),
-        REAL(init_fast_soil_C),
-        REAL(init_slow_soil_C),
-        REAL(init_Nmineral),
-        REAL(N_input),
-        INTEGER(n),
-        INTEGER(n_daily),
-        INTEGER(n_annual),
-        REAL(forcing),
-        REAL(output_hourly_tile), 
-        REAL(output_daily_tile), 
+        LOGICAL(spinup),                  
+        INTEGER(spinupyears),                  
+        INTEGER(recycle),                  
+        INTEGER(firstyeartrend),                  
+        INTEGER(nyeartrend),                  
+        LOGICAL(outputhourly),                   
+        LOGICAL(outputdaily),                   
+        LOGICAL(do_U_shaped_mortality),                
+        LOGICAL(update_annualLAImax),                   
+        LOGICAL(do_closedN_run),                   
+        REAL(longitude),                  
+        REAL(latitude),                  
+        REAL(altitude),                  
+        INTEGER(soiltype),                   
+        REAL(FLDCAP),                   
+        REAL(WILTPT),                   
+        REAL(K1),                   
+        REAL(K2),                   
+        REAL(K_nitrogen),                   
+        REAL(etaN),                   
+        REAL(MLmixRatio),                   
+        REAL(l_fract),                   
+        REAL(retransN),                   
+        REAL(f_N_add),                   
+        REAL(f_initialBSW),                   
+        REAL(params_species),                   
+        REAL(params_soil),                   
+        REAL(init_cohort),                   
+        REAL(init_fast_soil_C),                   
+        REAL(init_slow_soil_C),                   
+        REAL(init_Nmineral),                   
+        REAL(N_input),                   
+        INTEGER(nt),                     
+        INTEGER(nt_daily),                 
+        INTEGER(nt_annual),                
+        REAL(forcing),                   
+        REAL(output_hourly_tile),   
+        REAL(output_daily_tile),    
         REAL(output_daily_cohorts), 
-        REAL(output_annual_tile), 
-        REAL(output_annual_cohorts), 
+        REAL(output_annual_tile),   
+        REAL(output_annual_cohorts)
         );
 
     // Output as list
@@ -278,7 +284,7 @@ extern SEXP lm3ppa_f_C(
 
     UNPROTECT(6);
 
-    return output;
+    return out_list;
 }
 
 /////////////////////////////////////////////////////////////
@@ -286,7 +292,7 @@ extern SEXP lm3ppa_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
-  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   39},  // Specify number of arguments to C wrapper as the last number here; xxx adjust this
+  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   36},  // Specify number of arguments to C wrapper as the last number here; xxx adjust this
   {NULL,         NULL,                0}
 };
 

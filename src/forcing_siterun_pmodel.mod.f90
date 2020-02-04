@@ -11,7 +11,7 @@ module md_forcing_pmodel
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_params_core_pmodel, only: ndayyear, nlu, dummy
-  use md_grid, only: domaininfo_type, gridtype
+  use md_grid, only:  gridtype
 
   implicit none
 
@@ -47,7 +47,7 @@ module md_forcing_pmodel
 
 contains
 
-  function getclimate( nt, forcing, domaininfo, grid, init, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
+  function getclimate( nt, forcing, init, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
   ! function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
@@ -58,8 +58,6 @@ contains
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
     real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    type( domaininfo_type ), intent(in) :: domaininfo
-    type( gridtype ), dimension(1), intent(inout) :: grid
     logical, intent(in) :: init
     integer, intent(in) :: climateyear_idx
     logical, intent(in) :: in_ppfd
@@ -107,16 +105,14 @@ contains
   end function getclimate
 
 
-  function getco2( nt, forcing, domaininfo, forcingyear, const_co2_year, firstyeartrend ) result( pco2 )
+  function getco2( nt, forcing, forcingyear, firstyeartrend ) result( pco2 )
     !////////////////////////////////////////////////////////////////
     !  Function reads this year's atmospheric CO2 from input
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
     real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    type( domaininfo_type ), intent(in) :: domaininfo
     integer, intent(in) :: forcingyear
-    integer, intent(in) :: const_co2_year
     integer, intent(in) :: firstyeartrend
 
     ! function return variable
@@ -126,11 +122,7 @@ contains
     integer :: readyear_idx
     integer :: idx_start, idx_end
 
-    if (const_co2_year/=int(dummy)) then
-      readyear_idx = const_co2_year - firstyeartrend + 1
-    else  
-      readyear_idx = forcingyear - firstyeartrend + 1
-    end if
+    readyear_idx = forcingyear - firstyeartrend + 1
 
     idx_start = (readyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
@@ -140,15 +132,13 @@ contains
   end function getco2
 
 
-  function getfapar( nt, forcing,  domaininfo, grid, forcingyear_idx ) result( out_vegcover )
+  function getfapar( nt, forcing, forcingyear_idx ) result( out_vegcover )
     !////////////////////////////////////////////////////////////////
     ! Function reads this year's atmospheric CO2 from input
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
     real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    type( domaininfo_type ), intent(in) :: domaininfo
-    type( gridtype ), dimension(1), intent(in) :: grid
     integer, intent(in) :: forcingyear_idx
 
     ! function return variable
@@ -170,7 +160,7 @@ contains
   end function getfapar
 
 
-  function get_fpc_grid( domaininfo, params_siml ) result( fpc_grid_field )
+  function get_fpc_grid( params_siml ) result( fpc_grid_field )
     !////////////////////////////////////////////////////////////////
     ! Function returns the fractional land cover by vegetation types 
     ! based on the 10 IGBP types in the input file (MODIS Landcover)
@@ -187,10 +177,8 @@ contains
     !----------------------------------------------------------------
     use md_params_siml_pmodel, only: paramstype_siml
     use md_params_core_pmodel, only: npft
-    use md_grid, only: domaininfo_type
 
     ! arguments
-    type( domaininfo_type ), intent(in) :: domaininfo
     type( paramstype_siml ), intent(in) :: params_siml
 
     ! function return variable
@@ -200,7 +188,7 @@ contains
     integer :: pft
 
     ! get binary information of PFT presence from simulation parameters
-    fpc_grid_field(:,1) = 0.0
+    fpc_grid_field(:) = 0.0
 
     ! Code below must follow the same structure as in 'plant_pmodel.mod.f90'
     pft = 0

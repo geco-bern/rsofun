@@ -1,9 +1,9 @@
-module md_params_soil
+module md_params_soil_pmodel
   !////////////////////////////////////////////////////////////////
   ! Module handling soil parameters
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, mydb=>real64, mysg=>real32
-  use md_params_core, only: nlayers_soil
+  use md_params_core_pmodel, only: nlayers_soil
 
   implicit none
 
@@ -11,18 +11,18 @@ module md_params_soil
   public paramtype_soil, getsoil
 
   type paramtype_soil
-    real(kind=mysg), dimension(nlayers_soil) :: fsand
-    real(kind=mysg), dimension(nlayers_soil) :: fclay
-    real(kind=mysg), dimension(nlayers_soil) :: forg
-    real(kind=mysg), dimension(nlayers_soil) :: fgravel
-    real(kind=mysg), dimension(nlayers_soil) :: fc
-    real(kind=mysg), dimension(nlayers_soil) :: pwp
-    real(kind=mysg), dimension(nlayers_soil) :: whc_dz
-    real(kind=mysg), dimension(nlayers_soil) :: whc
-    real(kind=mysg), dimension(nlayers_soil) :: ksat
-    real(kind=mysg), dimension(nlayers_soil) :: thdiff_wp
-    real(kind=mysg), dimension(nlayers_soil) :: thdiff_whc15
-    real(kind=mysg), dimension(nlayers_soil) :: thdiff_fc
+    real(kind=mysg) :: fsand
+    real(kind=mysg) :: fclay
+    real(kind=mysg) :: forg
+    real(kind=mysg) :: fgravel
+    real(kind=mysg) :: fc
+    real(kind=mysg) :: pwp
+    real(kind=mysg) :: whc_dz
+    real(kind=mysg) :: whc
+    real(kind=mysg) :: ksat
+    real(kind=mysg) :: thdiff_wp
+    real(kind=mysg) :: thdiff_whc15
+    real(kind=mysg) :: thdiff_fc
   end type
 
 contains
@@ -78,13 +78,12 @@ contains
     real(kind=mysg), parameter :: b_ks = 3.0924   ! 3.12048
     real(kind=mysg), parameter :: c_ks = 4.2146   ! 4.358185
 
-    do idx = 1, nlayers_soil
+    ! do idx = 1, nlayers_soil
 
-      ! topsoil
-      fsand   = real(soiltexture(1,idx))
-      fclay   = real(soiltexture(2,idx))
-      forg    = real(soiltexture(3,idx))
-      fgravel = real(soiltexture(4,idx))
+      fsand   = real(soiltexture(1,1))
+      fclay   = real(soiltexture(2,1))
+      forg    = real(soiltexture(3,1))
+      fgravel = real(soiltexture(4,1))
 
       fsand_forg  = fsand * forg
       fclay_forg  = fclay * forg
@@ -177,21 +176,21 @@ contains
       whc_dz = (fc-pwp)*(1-fgravel)
 
       ! add to soil paramters type
-      params_soil%fsand(idx)        = real(fsand)
-      params_soil%fclay(idx)        = real(fclay)
-      params_soil%forg(idx)         = real(forg)
-      params_soil%fgravel(idx)      = real(fgravel)
-      params_soil%fc(idx)           = real(fc)
-      params_soil%pwp(idx)          = real(pwp)
-      params_soil%whc_dz(idx)       = real(whc_dz)
-      params_soil%ksat(idx)         = real(ksat)
-      params_soil%thdiff_wp(idx)    = 0.2    ! value chosen from LPX (most soil codes have 0.2)
-      params_soil%thdiff_whc15(idx) = 0.6 ! value chosen from LPX (most soil codes have 0.2)
-      params_soil%thdiff_fc(idx)    = 0.4
+      params_soil%fsand        = real(fsand)
+      params_soil%fclay        = real(fclay)
+      params_soil%forg         = real(forg)
+      params_soil%fgravel      = real(fgravel)
+      params_soil%fc           = real(fc)
+      params_soil%pwp          = real(pwp)
+      params_soil%whc_dz       = real(whc_dz)
+      params_soil%ksat         = real(ksat)
+      params_soil%thdiff_wp    = 0.2    ! value chosen from LPX (most soil codes have 0.2)
+      params_soil%thdiff_whc15 = 0.6 ! value chosen from LPX (most soil codes have 0.2)
+      params_soil%thdiff_fc    = 0.4
 
-    end do
+    ! end do
 
   end function getsoil
 
-end module md_params_soil
+end module md_params_soil_pmodel
 

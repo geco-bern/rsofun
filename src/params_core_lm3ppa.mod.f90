@@ -9,7 +9,8 @@ module md_params_core_lm3ppa
 
   integer :: ntstepsyear           ! number of days in a year
   integer, parameter :: ndayyear = 365           ! number of days in a year
-  
+  integer, parameter :: nhoursyear = 17520           ! number of days in a year
+
   integer, parameter :: nmonth = 12              ! number of months in a year
   ! real,    parameter :: secs_per_day = 86400.0   ! number of seconds in a day
   ! integer, parameter :: maxgrid = 1              ! number of spatial gridcells (dummy dimension for later code extension)
@@ -29,7 +30,7 @@ module md_params_core_lm3ppa
   integer, parameter :: nvars_hourly_tile = 15
   integer, parameter :: nvars_daily_tile = 35
   integer, parameter :: nvars_daily_cohorts = 27
-  integer, parameter :: nvars_annual_cohorts = 22
+  integer, parameter :: nvars_annual_cohorts = 23
   integer, parameter :: nvars_annual_tile = 44
 
   ! needed here

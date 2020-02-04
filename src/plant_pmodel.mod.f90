@@ -345,7 +345,7 @@ contains
   end function getpftparams
 
 
-  subroutine initglobal_plant( plant, ngridcells )
+  subroutine initglobal_plant( plant )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
@@ -355,21 +355,17 @@ contains
     use md_params_core_pmodel, only: npft
 
     ! argument
-    type( plant_type ), dimension(npft,ngridcells), intent(inout) :: plant
-    integer, intent(in) :: ngridcells
+    type( plant_type ), dimension(npft), intent(inout) :: plant
 
     ! local variables
     integer :: pft
-    integer :: jpngr
 
     !-----------------------------------------------------------------------------
     ! derive which PFTs are present from fpc_grid (which is prescribed)
     !-----------------------------------------------------------------------------
-    do jpngr=1,ngridcells
-      do pft=1,npft
-        call initpft( plant(pft,jpngr) )
-        plant(pft,jpngr)%pftno = pft
-      end do
+    do pft=1,npft
+      call initpft( plant(pft) )
+      plant(pft)%pftno = pft
     end do
 
   end subroutine initglobal_plant

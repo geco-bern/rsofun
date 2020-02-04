@@ -43,7 +43,7 @@ contains
     ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     use md_interface_lm3ppa, only: myinterface, outtype_biosphere
-    use md_params_core, only: ntstepsyear
+    use md_params_core_lm3ppa, only: ntstepsyear
   
     ! return variable
     type(outtype_biosphere) :: out_biosphere
@@ -75,7 +75,7 @@ contains
     integer :: year0,  year1, iyears
     integer :: fno1, fno2, fno3, fno4, fno5 ! output files
     integer :: totyears
-    integer :: i, j, k, idays, idoy
+    integer :: i, j, k, idoy
     integer :: idata
     integer, save :: simu_steps !, datalines
     integer, save :: idays
@@ -151,57 +151,57 @@ contains
       ! Translation to LM3-PPA variables
       !------------------------------------------------------------------------
       ! head
-      write(fno1,'(5(a8,","),25(a12,","))')      &
-          'year','doy','hour','rad',            &
-          'Tair','Prcp', 'GPP', 'Resp',         &
-          'Transp','Evap','Runoff','Soilwater', &
-          'wcl','FLDCAP','WILTPT'
-      write(fno2,'(3(a5,","),25(a9,","))')            &
-          'cID','PFT','layer','density', 'f_layer',  &
-          'dDBH','dbh','height','Acrown',            &
-          'wood','nsc', 'NSN','NPPtr','seed',        &
-          'NPPL','NPPR','NPPW','GPP-yr','NPP-yr',    &
-          'N_uptk','N_fix','maxLAI'
+      ! write(fno1,'(5(a8,","),25(a12,","))')      &
+      !     'year','doy','hour','rad',            &
+      !     'Tair','Prcp', 'GPP', 'Resp',         &
+      !     'Transp','Evap','Runoff','Soilwater', &
+      !     'wcl','FLDCAP','WILTPT'
+      ! write(fno2,'(3(a5,","),25(a9,","))')            &
+      !     'cID','PFT','layer','density', 'f_layer',  &
+      !     'dDBH','dbh','height','Acrown',            &
+      !     'wood','nsc', 'NSN','NPPtr','seed',        &
+      !     'NPPL','NPPR','NPPW','GPP-yr','NPP-yr',    &
+      !     'N_uptk','N_fix','maxLAI'
 
-      write(fno3,'(5(a5,","),25(a8,","))')              &
-          'year','doy','hour','cID','PFT',             &
-          'layer','density', 'f_layer', 'LAI',         &
-          'gpp','resp','transp',                       &
-          'NPPleaf','NPProot','NPPwood',               &
-          'NSC','seedC','leafC','rootC','SW-C','HW-C', &
-          'NSN','seedN','leafN','rootN','SW-N','HW-N'
+      ! write(fno3,'(5(a5,","),25(a8,","))')              &
+      !     'year','doy','hour','cID','PFT',             &
+      !     'layer','density', 'f_layer', 'LAI',         &
+      !     'gpp','resp','transp',                       &
+      !     'NPPleaf','NPProot','NPPwood',               &
+      !     'NSC','seedC','leafC','rootC','SW-C','HW-C', &
+      !     'NSN','seedN','leafN','rootN','SW-N','HW-N'
 
-      write(fno4,'(2(a5,","),55(a10,","))')  'year','doy',    &
-          'Tc','Prcp', 'totWs',  'Trsp', 'Evap','Runoff',    &
-          'ws1','ws2','ws3', 'LAI','GPP', 'Rauto', 'Rh',     &
-          'NSC','seedC','leafC','rootC','SW-C','HW-C',       &
-          'NSN','seedN','leafN','rootN','SW-N','HW-N',       &
-          'McrbC', 'fastSOM',   'slowSOM',                   &
-          'McrbN', 'fastSoilN', 'slowSoilN',                 &
-          'mineralN', 'N_uptk'
+      ! write(fno4,'(2(a5,","),55(a10,","))')  'year','doy',    &
+      !     'Tc','Prcp', 'totWs',  'Trsp', 'Evap','Runoff',    &
+      !     'ws1','ws2','ws3', 'LAI','GPP', 'Rauto', 'Rh',     &
+      !     'NSC','seedC','leafC','rootC','SW-C','HW-C',       &
+      !     'NSN','seedN','leafN','rootN','SW-N','HW-N',       &
+      !     'McrbC', 'fastSOM',   'slowSOM',                   &
+      !     'McrbN', 'fastSoilN', 'slowSoilN',                 &
+      !     'mineralN', 'N_uptk'
 
-      write(fno5,'(1(a5,","),80(a12,","))')  'year',              &
-          'CAI','LAI','GPP', 'Rauto',   'Rh',                    &
-          'rain','SoilWater','Transp','Evap','Runoff',           &
-          'plantC','soilC',    'plantN', 'soilN','totN',         &
-          'NSC', 'SeedC', 'leafC', 'rootC', 'SapwoodC', 'WoodC', &
-          'NSN', 'SeedN', 'leafN', 'rootN', 'SapwoodN', 'WoodN', &
-          'McrbC','fastSOM',   'SlowSOM',                        &
-          'McrbN','fastSoilN', 'slowSoilN',                      &
-          'mineralN', 'N_fxed','N_uptk','N_yrMin','N_P2S','N_loss', &
-          'seedC','seedN','Seedling-C','Seedling-N'
+      ! write(fno5,'(1(a5,","),80(a12,","))')  'year',              &
+      !     'CAI','LAI','GPP', 'Rauto',   'Rh',                    &
+      !     'rain','SoilWater','Transp','Evap','Runoff',           &
+      !     'plantC','soilC',    'plantN', 'soilN','totN',         &
+      !     'NSC', 'SeedC', 'leafC', 'rootC', 'SapwoodC', 'WoodC', &
+      !     'NSN', 'SeedN', 'leafN', 'rootN', 'SapwoodN', 'WoodN', &
+      !     'McrbC','fastSOM',   'SlowSOM',                        &
+      !     'McrbN','fastSoilN', 'slowSoilN',                      &
+      !     'mineralN', 'N_fxed','N_uptk','N_yrMin','N_P2S','N_loss', &
+      !     'seedC','seedN','Seedling-C','Seedling-N'
 
-      !------------------------------------------------------------------------
+      ! !------------------------------------------------------------------------
       ! Initialisations
       !------------------------------------------------------------------------
       allocate(out_biosphere%hourly_tile(ntstepsyear))
 
       ! Parameter initialization: Initialize PFT parameters
-      call initialize_PFT_data(namelistfile)
+      call initialize_PFT_data()
 
       ! Initialize vegetation tile and plant cohorts
       allocate(vegn)
-      call initialize_vegn_tile(vegn,nCohorts,namelistfile)
+      call initialize_vegn_tile(vegn,nCohorts)
       
       ! Sort and relayer cohorts
       call relayer_cohorts(vegn)
@@ -231,10 +231,10 @@ contains
     !----------------------------------------------------------------
     ! LOOP THROUGH GRIDCELLS
     !----------------------------------------------------------------
-    if (verbose) print*,'looping through gridcells ...'
-    gridcellloop: do jpngr=1,size(myinterface%grid)
+    ! if (verbose) print*,'looping through gridcells ...'
+    ! gridcellloop: do jpngr=1,size(myinterface%grid)
 
-      if (myinterface%grid(jpngr)%dogridcell) then
+    !   if (myinterface%grid(jpngr)%dogridcell) then
 
         !----------------------------------------------------------------
         ! LOOP THROUGH MONTHS
@@ -361,7 +361,7 @@ contains
     print*,'real year: ', year0
 
 
-    if(update_annualLAImax) call vegn_annualLAImax_update(vegn)
+    if(myinterface%params_siml%update_annualLAImax) call vegn_annualLAImax_update(vegn)
 
     call annual_diagnostics(vegn, iyears, fno2, fno5, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
 
@@ -413,18 +413,20 @@ contains
 
   end function biosphere_annual
 
-end module md_biosphere
+end module md_biosphere_lm3ppa
 
 
 
   !========================================================================
   ! read in forcing data (Users need to write their own data input procedure)
   subroutine read_FACEforcing(forcingData,datalines,days_data,yr_data,timestep)
-    type(climate_data_type),pointer,intent(inout) :: forcingData(:)
+    use md_forcing_lm3ppa, only: climate_type
+
+    type(climate_type),pointer,intent(inout) :: forcingData(:)
     integer,intent(inout) :: datalines,days_data,yr_data
     real, intent(inout)   :: timestep
     !------------local var -------------------
-    type(climate_data_type), pointer :: climateData(:)
+    type(climate_type), pointer :: climateData(:)
     character(len=80)  commts
     integer, parameter :: niterms=9       ! MDK data for Oak Ridge input
     integer, parameter :: ilines=22*366*24 ! the maxmum records of Oak Ridge FACE, 1999~2007
@@ -436,6 +438,9 @@ end module md_biosphere
     integer :: doy,idays
     integer :: i,j,k
     integer :: m,n
+
+    character(len=80) :: filepath_in = '/Users/lmarques/BiomeE-Allocation/model/input/'
+    character(len=80) :: climfile    = 'ORNL_forcing.txt'
 
     climfile=trim(filepath_in)//trim(climfile)
 
@@ -501,11 +506,13 @@ end module md_biosphere
   !=============================================================
   ! for reading in NACP site synthesis forcing
 subroutine read_NACPforcing(forcingData,datalines,days_data,yr_data,timestep)
-  type(climate_data_type),pointer,intent(inout) :: forcingData(:)
+  use md_forcing_lm3ppa, only: climate_type
+
+  type(climate_type),pointer,intent(inout) :: forcingData(:)
   integer,intent(inout) :: datalines,days_data,yr_data
   real, intent(inout)   :: timestep
   !------------local var -------------------
-  type(climate_data_type), pointer :: climateData(:)
+  type(climate_type), pointer :: climateData(:)
   character(len=80)  commts
   integer, parameter :: niterms=15       ! NACP site forcing
   integer, parameter :: ilines=22*366*48 ! the maxmum records
@@ -520,6 +527,10 @@ subroutine read_NACPforcing(forcingData,datalines,days_data,yr_data,timestep)
 
   ! xxx try
   integer :: idx_climatedata
+
+  ! xxx temporary
+    character(len=80) :: filepath_in = '/Users/lmarques/BiomeE-Allocation/model/input/'
+    character(len=80) :: climfile    = 'US-WCrforcing.txt'
 
   climfile=trim(filepath_in)//trim(climfile)
   write(*,*)'inputfile: ',climfile
@@ -612,5 +623,3 @@ subroutine read_NACPforcing(forcingData,datalines,days_data,yr_data,timestep)
 
 end subroutine read_NACPforcing
 
-
-end module md_biosphere_lm3ppa

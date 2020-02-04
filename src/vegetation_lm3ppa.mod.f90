@@ -28,7 +28,7 @@ public :: vegn_annual_starvation,Zero_diagnostics
   use md_forcing_lm3ppa, only: climate_type
 
   type(vegn_tile_type), intent(inout) :: vegn
-  type(climate_data_type),intent(in):: forcing
+  type(climate_type),intent(in):: forcing
 
   ! local variables
   type(cohort_type), pointer :: cc  ! current cohort
@@ -59,14 +59,14 @@ public :: vegn_annual_starvation,Zero_diagnostics
      associate ( sp => spdata(cc%species) )
 
      ! increment tha cohort age
-     cc%age = cc%age + dt_fast_yr
+     cc%age = cc%age + myinterface%dt_fast_yr
      ! Maintenance respiration
      call plant_respiration(cc,forcing%tair) ! get resp per tree per time step
-     cc%resp = cc%resp + (cc%resg *step_seconds)/seconds_per_day ! put growth respiration to tot resp
+     cc%resp = cc%resp + (cc%resg * myinterface%step_seconds)/seconds_per_day ! put growth respiration to tot resp
      cc%npp  = cc%gpp  - cc%resp ! kgC tree-1 step-1
 
      ! detach photosynthesis model from plant growth
-     !cc%nsc  = cc%nsc + 2.4 * cc%crownarea * dt_fast_yr - cc%resp
+     !cc%nsc  = cc%nsc + 2.4 * cc%crownarea * myinterface%dt_fast_yr - cc%resp
      cc%nsc = cc%nsc + cc%npp
      cc%NSN = cc%NSN + cc%fixedN
 
@@ -90,7 +90,7 @@ end subroutine vegn_CNW_budget_fast
 
 subroutine vegn_photosynthesis (forcing, vegn)
   use md_forcing_lm3ppa, only: climate_type
-  type(climate_data_type),intent(in):: forcing
+  type(climate_type),intent(in):: forcing
   type(vegn_tile_type), intent(inout) :: vegn
 
 !----- local var --------------
@@ -161,10 +161,10 @@ subroutine vegn_photosynthesis (forcing, vegn)
          p_surf  = forcing%P_air  ! Pa
          TairK   = forcing%Tair ! K
          Tair   = forcing%Tair - 273.16 ! degC
-         cana_q  = (esat(Tair)*forcing%RH*mol_h2o)/(p_surf*mol_air)  ! air specific humidity, kg/kg
+         cana_q  = (calc_esat(Tair)*forcing%RH*mol_h2o)/(p_surf*mol_air)  ! air specific humidity, kg/kg
          cana_co2= forcing%CO2 ! co2 concentration in canopy air space, mol CO2/mol dry air
         ! recalculate the water supply to mol H20 per m2 of leaf per second
-         water_supply = cc%W_supply/(cc%leafarea*step_seconds*mol_h2o) ! mol m-2 leafarea s-1
+         water_supply = cc%W_supply/(cc%leafarea*myinterface%step_seconds*mol_h2o) ! mol m-2 leafarea s-1
 
         !call get_vegn_wet_frac (cohort, fw=fw, fs=fs)
         fw = 0.0
@@ -181,8 +181,8 @@ subroutine vegn_photosynthesis (forcing, vegn)
         cc%An_op  = psyn  ! molC s-1 m-2 of leaves
         cc%An_cl  = -resp  ! molC s-1 m-2 of leaves
         cc%w_scale  = w_scale2
-        cc%transp = transp * mol_h2o * cc%leafarea * step_seconds ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
-        cc%gpp  = (psyn-resp) * mol_C * cc%leafarea * step_seconds ! kgC step-1 tree-1
+        cc%transp = transp * mol_h2o * cc%leafarea * myinterface%step_seconds ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
+        cc%gpp  = (psyn-resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
         !if(isnan(cc%gpp))cc%gpp=0.0
 
         if(isnan(cc%gpp))stop '"gpp" is a NaN'
@@ -508,18 +508,18 @@ subroutine plant_respiration(cc, tairK)
 
   ! Facultive Nitrogen fixation
   !if(cc%NSN < cc%NSNmax .and. cc%NSC > 0.5 * NSCtarget)then
-  !   cc%fixedN = spdata(sp)%NfixRate0 * cc%br * tf * dt_fast_yr ! kgN tree-1 step-1
+  !   cc%fixedN = spdata(sp)%NfixRate0 * cc%br * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
   !else
-  !   cc%fixedN = 0.0 ! spdata(sp)%NfixRate0 * cc%br * tf * dt_fast_yr ! kgN tree-1 step-1
+  !   cc%fixedN = 0.0 ! spdata(sp)%NfixRate0 * cc%br * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
   !endif
 
   ! Obligate Nitrogen Fixation
-  cc%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%br * tf * dt_fast_yr ! kgN tree-1 step-1
+  cc%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%br * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
   r_Nfix    = spdata(sp)%NfixCost0 * cc%fixedN ! + 0.25*spdata(sp)%NfixCost0 * cc%N_uptake    ! tree-1 step-1
   ! LeafN    = spdata(sp)%LNA * cc%leafarea
-  r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * dt_fast_yr ! kgC tree-1 step-1
-  r_root   = fnsc*spdata(sp)%gamma_FR  * cc%rootN * tf * dt_fast_yr ! root respiration ~ root N
-  r_leaf   = cc%An_cl * mol_C * cc%leafarea * step_seconds ! fnsc*spdata(sp)%gamma_LN  * cc%leafN * tf * dt_fast_yr  ! tree-1 step-1
+  r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * myinterface%dt_fast_yr ! kgC tree-1 step-1
+  r_root   = fnsc*spdata(sp)%gamma_FR  * cc%rootN * tf * myinterface%dt_fast_yr ! root respiration ~ root N
+  r_leaf   = cc%An_cl * mol_C * cc%leafarea * myinterface%step_seconds ! fnsc*spdata(sp)%gamma_LN  * cc%leafN * tf * myinterface%dt_fast_yr  ! tree-1 step-1
 
   cc%resp = r_leaf + r_stem + r_root + r_Nfix   !kgC tree-1 step-1
   cc%resl = r_leaf + r_stem !tree-1 step-1
@@ -1534,8 +1534,8 @@ subroutine vegn_N_uptake(vegn, tsoil)
      ! rate at given root biomass and period of time
      if(N_roots>0.0)then
         ! Add a temperature response equation herefor rho_N_up0 (Zhu Qing 2016)
-        ! rho_N_up = 1.-exp(-rho_N_up0 * N_roots/(N_roots0+N_roots) * hours_per_year * dt_fast_yr) ! rate at given root density and time period
-        rho_N_up = rho_N_up0 * N_roots/(N_roots0+N_roots) * hours_per_year * dt_fast_yr
+        ! rho_N_up = 1.-exp(-rho_N_up0 * N_roots/(N_roots0+N_roots) * hours_per_year * myinterface%dt_fast_yr) ! rate at given root density and time period
+        rho_N_up = rho_N_up0 * N_roots/(N_roots0+N_roots) * hours_per_year * myinterface%dt_fast_yr
         totNup = rho_N_up * vegn%mineralN * exp(9000.0 * (1./298.16 - 1./tsoil)) ! kgN m-2 time step-1
         avgNup = totNup / N_roots ! kgN time step-1 kg roots-1
         ! Nitrogen uptaken by each cohort, N_uptake
@@ -1580,8 +1580,8 @@ subroutine SOMdecomposition(vegn, tsoil, thetaS)
   real :: CNfast, CNslow
   real :: A  ! decomp rate reduction due to moisture and temperature
   
-!  runoff = vegn%Wrunoff * 365*24*3600 *dt_fast_yr !kgH2O m-2 s-1 ->kg m-2/time step
-  runoff = vegn%runoff  !* dt_fast_yr !kgH2O m-2 yr-1 ->kgH2O m-2/time step, weng 2017-10-15
+!  runoff = vegn%Wrunoff * 365*24*3600 *myinterface%dt_fast_yr !kgH2O m-2 s-1 ->kg m-2/time step
+  runoff = vegn%runoff  !* myinterface%dt_fast_yr !kgH2O m-2 yr-1 ->kgH2O m-2/time step, weng 2017-10-15
 ! CN ratios of soil C pools
 
   CNfast = vegn%metabolicL/vegn%metabolicN
@@ -1589,15 +1589,15 @@ subroutine SOMdecomposition(vegn, tsoil, thetaS)
 
 !! C decomposition
 !  A=A_function(tsoil,thetaS)
-!  micr_C_loss = vegn%microbialC *A*phoMicrobial* dt_fast_yr
-!  fast_L_loss = vegn%metabolicL*A*K1           * dt_fast_yr
-!  slow_L_loss = vegn%structuralL*A*K2          * dt_fast_yr
+!  micr_C_loss = vegn%microbialC *A*phoMicrobial* myinterface%dt_fast_yr
+!  fast_L_loss = vegn%metabolicL*A*K1           * myinterface%dt_fast_yr
+!  slow_L_loss = vegn%structuralL*A*K2          * myinterface%dt_fast_yr
 
 ! C decomposition
   A=A_function(tsoil,thetaS)
-  micr_C_loss = vegn%microbialC * (1.0 - exp(-A*phoMicrobial* dt_fast_yr))
-  fast_L_loss = vegn%metabolicL * (1.0 - exp(-A*K1          * dt_fast_yr))
-  slow_L_loss = vegn%structuralL* (1.0 - exp(-A*K2          * dt_fast_yr))
+  micr_C_loss = vegn%microbialC * (1.0 - exp(-A*phoMicrobial* myinterface%dt_fast_yr))
+  fast_L_loss = vegn%metabolicL * (1.0 - exp(-A*K1          * myinterface%dt_fast_yr))
+  slow_L_loss = vegn%structuralL* (1.0 - exp(-A*K2          * myinterface%dt_fast_yr))
 
 ! Carbon use efficiencies of microbes
   NforM = fNM * vegn%mineralN
@@ -1624,7 +1624,7 @@ end if
 
 ! Find papers about soil DON losses
 ! DON loss, revised by Weng. 2016-03-03  ??
-  fDON        = 0.25 ! 0.25 ! * dt_fast_yr ! 0.05 !* dt_fast_yr
+  fDON        = 0.25 ! 0.25 ! * myinterface%dt_fast_yr ! 0.05 !* myinterface%dt_fast_yr
   runoff      = 0.2 ! 0.2 ! mm day-1
   ! Assume it is proportional to decomposition rates
   ! Find some papers!!
@@ -1651,17 +1651,17 @@ end if
   fast_N_free = MAX(0.0, fast_L_loss*(1./CNfast - CUEfast/CNm))
   slow_N_free = MAX(0.0, slow_L_loss*(1./CNslow - CUEslow/CNm))
 
-  N_loss = MAX(0.,vegn%mineralN) * A * K_nitrogen * dt_fast_yr
-!  N_loss = MAX(0.,vegn%mineralN) * (1. - exp(0.0 - etaN*runoff - A*K_nitrogen*dt_fast_yr))
-  N_loss = vegn%mineralN * MIN(0.25, (A * K_nitrogen * dt_fast_yr + etaN*runoff))
+  N_loss = MAX(0.,vegn%mineralN) * A * K_nitrogen * myinterface%dt_fast_yr
+!  N_loss = MAX(0.,vegn%mineralN) * (1. - exp(0.0 - etaN*runoff - A*K_nitrogen*myinterface%dt_fast_yr))
+  N_loss = vegn%mineralN * MIN(0.25, (A * K_nitrogen * myinterface%dt_fast_yr + etaN*runoff))
   vegn%Nloss_yr = vegn%Nloss_yr + N_loss + DON_loss
 
   vegn%mineralN = vegn%mineralN - N_loss       &
-                  + vegn%N_input * dt_fast_yr  &
+                  + vegn%N_input * myinterface%dt_fast_yr  &
                   + fast_N_free + slow_N_free  &
                   + micr_C_loss/CNm
   vegn%annualN   = vegn%annualN - N_loss       &
-                  + vegn%N_input * dt_fast_yr  &
+                  + vegn%N_input * myinterface%dt_fast_yr  &
                   + fast_N_free + slow_N_free  &
                   + micr_C_loss/CNm
 
@@ -1979,12 +1979,14 @@ end subroutine initialize_cohort_from_biomass
 
 ! ============================================================================
 subroutine annual_calls(vegn)
+  use md_interface_lm3ppa, only: myinterface
+  
    type(vegn_tile_type), intent(inout) :: vegn
 
     ! ---------- annual call -------------
     ! update the LAImax of each PFT according to available N for next year
 
-    if(update_annualLAImax) call vegn_annualLAImax_update(vegn)
+    if(myinterface%params_siml%update_annualLAImax) call vegn_annualLAImax_update(vegn)
 
     ! Reproduction and mortality
     !call vegn_starvation(vegn)  ! called daily
@@ -2114,13 +2116,13 @@ end function
 ! ============================================================================
 
 !============= Vegetation initializations =====================
-subroutine initialize_vegn_tile(vegn,nCohorts,namelistfile)
+subroutine initialize_vegn_tile(vegn,nCohorts)
 
   use md_interface_lm3ppa, only: myinterface
 
    type(vegn_tile_type),intent(inout),pointer :: vegn
    integer,intent(in) :: nCohorts
-   character(len=50),intent(in) :: namelistfile
+
 !--------local vars -------
 
    type(cohort_type),dimension(:), pointer :: cc
@@ -2131,7 +2133,6 @@ subroutine initialize_vegn_tile(vegn,nCohorts,namelistfile)
    integer :: i, istat
    integer :: io           ! i/o status for the namelist
    integer :: ierr         ! error code, returned by i/o routines
-   integer :: nml_unit
 
     ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
     K1          = myinterface%params_tile%K1  
@@ -2141,21 +2142,11 @@ subroutine initialize_vegn_tile(vegn,nCohorts,namelistfile)
     MLmixRatio  = myinterface%params_tile%MLmixRatio   
     l_fract     = myinterface%params_tile%l_fract      
     retransN    = myinterface%params_tile%retransN     
-    fNSNmax     = myinterface%params_tile%fNSNmax      
-    f_N_add     = myinterface%params_tile%f_N_add      
+    f_N_add     = myinterface%params_tile%f_N_add      ! is indeed a tile parameter
     f_initialBSW= myinterface%params_tile%f_initialBSW 
 
 !  Read parameters from the parameter file (namelist)
    if(read_from_parameter_file)then
-
-!     ! xxx todo: take info from myinterface instead of from namelist
-!       ! --- Generate cohorts according to "initial_state_nml" ---
-!       nml_unit = 999
-!       open(nml_unit, file=namelistfile, form='formatted', action='read', status='old')
-!       read (nml_unit, nml=initial_state_nml, iostat=io, end=20)
-! 20    close (nml_unit)
-!       write(*,nml=initial_state_nml)
-
 
       ! Initialize plant cohorts
       init_n_cohorts = nCohorts ! Weng,2018-11-21
@@ -2168,12 +2159,12 @@ subroutine initialize_vegn_tile(vegn,nCohorts,namelistfile)
          cx => vegn%cohorts(i)
          cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
          cx%layer   = 1
-         cx%species = myinterface%init_cohort%init_cohort_species(i) 
+         cx%species = myinterface%init_cohort(i)%init_cohort_species 
          cx%ccID =  i
-         cx%nsc     = myinterface%init_cohort%init_cohort_nsc(i)
-         cx%nindivs = myinterface%init_cohort%init_cohort_nindivs(i) ! trees/m2
-         cx%bsw     = myinterface%init_cohort%init_cohort_bsw(i)
-         cx%bHW   = myinterface%init_cohort%init_cohort_bHW(i)
+         cx%nsc     = myinterface%init_cohort(i)%init_cohort_nsc
+         cx%nindivs = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
+         cx%bsw     = myinterface%init_cohort(i)%init_cohort_bsw
+         cx%bHW   = myinterface%init_cohort(i)%init_cohort_bHW
          btotal     = cx%bsw + cx%bHW  ! kgC /tree
          call initialize_cohort_from_biomass(cx,btotal)
       enddo

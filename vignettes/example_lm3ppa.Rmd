@@ -64,7 +64,6 @@ params_tile <- list(
   MLmixRatio   = 0.6, # 0.8 # fraction of microbes to litter
   l_fract      = 0.0,
   retransN     = 0.0,
-  fNSNmax      = 5.0, # 5.0
   f_N_add      = 0.02, # 0.005, # 0.02
   f_initialBSW = 0.005
   # alpha_FR   =  1.2; gamma_FR = 12.0; dSlowSOM = 2.5 * iSOM + 1.5; rho_N_up0 = 0.1
@@ -90,7 +89,8 @@ params_species <- tibble(
   phiCSA        = c(1.25E-4, 0.25E-4,  0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4),
   mortrate_d_c  = c(0.02,    0.02,     0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02),    # canopy tree mortality rate, year-1
   mortrate_d_u  = c(0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08),    # understory tree mortality rate, year-1
-  maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
+  maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
+  fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
   )
 ```
 

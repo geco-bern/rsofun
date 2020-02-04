@@ -2,8 +2,8 @@ module md_interface_lm3ppa
 
   use, intrinsic :: iso_fortran_env, dp=>real64
 
-  use md_forcing_lm3ppa, only: climate_type, landuse_type, ninput_type, vegcover_type  
-  use md_params_soil_lm3ppa, only: paramtype_soil
+  use md_forcing_lm3ppa, only: climate_type
+  use md_params_soil_lm3ppa, only: paramtype_soil, getsoil
   use md_params_siml_lm3ppa, only: paramstype_siml, outtype_steering
   use md_params_core_lm3ppa, only: MSPECIES, ntstepsyear, ndayyear, MAX_INIT_COHORTS, out_max_cohorts
   use md_grid, only: gridtype !, domaininfo_type
@@ -29,37 +29,35 @@ module md_interface_lm3ppa
     real   :: MLmixRatio
     real   :: l_fract
     real   :: retransN
-    real   :: fNSNmax
     real   :: f_N_add
     real   :: f_initialBSW
   end type paramstype_tile
   
   type paramstype_species
-    real, dimension(0:MSPECIES) :: lifeform
-    real, dimension(0:MSPECIES) :: phenotype
-    real, dimension(0:MSPECIES) :: pt
-    real, dimension(0:MSPECIES) :: seedlingsize
-    real, dimension(0:MSPECIES) :: LMA
-    real, dimension(0:MSPECIES) :: phiRL
-    real, dimension(0:MSPECIES) :: LNbase
-    real, dimension(0:MSPECIES) :: laimax
-    real, dimension(0:MSPECIES) :: LAI_light
-    real, dimension(0:MSPECIES) :: Nfixrate0
-    real, dimension(0:MSPECIES) :: NfixCost0
-    real, dimension(0:MSPECIES) :: phiCSA
-    real, dimension(0:MSPECIES) :: mortrate_d_c
-    real, dimension(0:MSPECIES) :: mortrate_d_u
-    real, dimension(0:MSPECIES) :: maturalage
-    real, dimension(0:MSPECIES) :: fNSNmax
-    real                        :: f_N_add
+    integer :: lifeform
+    integer :: phenotype
+    integer :: pt
+    real :: seedlingsize
+    real :: LMA
+    real :: phiRL
+    real :: LNbase
+    real :: laimax
+    real :: LAI_light
+    real :: Nfixrate0
+    real :: NfixCost0
+    real :: phiCSA
+    real :: mortrate_d_c
+    real :: mortrate_d_u
+    real :: maturalage
+    real :: fNSNmax
   end type paramstype_species
 
   type inittype_cohort 
-    real, dimension(MAX_INIT_COHORTS) :: init_cohort_species
-    real, dimension(MAX_INIT_COHORTS) :: init_cohort_nindivs
-    real, dimension(MAX_INIT_COHORTS) :: init_cohort_bsw
-    real, dimension(MAX_INIT_COHORTS) :: init_cohort_bHW
-    real, dimension(MAX_INIT_COHORTS) :: init_cohort_nsc
+    real :: init_cohort_species
+    real :: init_cohort_nindivs
+    real :: init_cohort_bsw
+    real :: init_cohort_bHW
+    real :: init_cohort_nsc
   end type inittype_cohort
 
   type inittype_soil 
@@ -70,23 +68,23 @@ module md_interface_lm3ppa
   end type inittype_soil
 
   type interfacetype_biosphere
-    integer                                       :: year
-    real, dimension(:), allocatable               :: pco2
-    type(gridtype)                                :: grid
-    type(climate_type), dimension(:), allocatable :: climate
-    type(outtype_steering)                        :: steering
-    type(paramstype_siml)                         :: params_siml
-    real, dimension(:), allocatable               :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
-    ! type(paramstype_calib)                      :: params_calib    ! calibratable parameters
-    type(paramstype_species)                      :: params_species
-    type(paramtype_soil)                          :: params_soil
-    type(paramstype_tile)                         :: params_tile
-    type(inittype_cohort)                         :: init_cohort
-    type(inittype_soil)                           :: init_soil
-    integer                                       :: datalines
-    integer                                       :: steps_per_day
-    real                                          :: dt_fast_yr
-    real                                          :: step_seconds
+    integer                                           :: year
+    real, dimension(:), allocatable                   :: pco2
+    type(gridtype)                                    :: grid
+    type(climate_type), dimension(:), allocatable     :: climate
+    type(outtype_steering)                            :: steering
+    type(paramstype_siml)                             :: params_siml
+    real, dimension(:), allocatable                   :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
+    ! type(paramstype_calib)                          :: params_calib    ! calibratable parameters
+    type(paramstype_species), dimension(0:MSPECIES)   :: params_species
+    type(paramtype_soil)                              :: params_soil
+    type(paramstype_tile)                             :: params_tile
+    type(inittype_cohort), dimension(MAX_INIT_COHORTS):: init_cohort
+    type(inittype_soil)                               :: init_soil
+    integer                                           :: datalines
+    integer                                           :: steps_per_day
+    real                                              :: dt_fast_yr
+    real                                              :: step_seconds
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface
@@ -231,6 +229,7 @@ module md_interface_lm3ppa
   end type outtype_annual_tile  
 
   type outtype_annual_cohorts ! fno2
+    real :: year
     real :: cID
     real :: PFT
     real :: layer

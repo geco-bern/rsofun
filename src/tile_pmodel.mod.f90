@@ -66,7 +66,7 @@ module md_tile_pmodel
 
 contains
 
-  subroutine initglobal_tile( tile, ngridcells )
+  subroutine initglobal_tile( tile )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
@@ -76,34 +76,30 @@ contains
     use md_interface_pmodel, only: myinterface
 
     ! argument
-    type( tile_type ), dimension(nlu,ngridcells), intent(inout) :: tile
-    integer, intent(in) :: ngridcells
+    type( tile_type ), dimension(nlu), intent(inout) :: tile
 
     ! local variables
     integer :: lu
-    integer :: jpngr
 
     !-----------------------------------------------------------------------------
     ! derive which PFTs are present from fpc_grid (which is prescribed)
     !-----------------------------------------------------------------------------
     ! allocate( tile(nlu,ngridcells) )
 
-    do jpngr=1,ngridcells
-      do lu=1,nlu
-        
-        tile(lu,jpngr)%luno = lu
+    do lu=1,nlu
+      
+      tile(lu)%luno = lu
 
-        ! initialise soil variables
-        call initglobal_soil( tile(lu,jpngr)%soil )
+      ! initialise soil variables
+      call initglobal_soil( tile(lu)%soil )
 
-        ! initialise canopy variables
-        call initglobal_canopy( tile(lu,jpngr)%canopy )
+      ! initialise canopy variables
+      call initglobal_canopy( tile(lu)%canopy )
 
-        ! Copy soil parameters
-        ! XXX use soil parameters from topsoil 
-        tile(lu,jpngr)%soil%params = myinterface%soilparams(1, jpngr)
+      ! Copy soil parameters
+      ! XXX use soil parameters from topsoil 
+      tile(lu)%soil%params = myinterface%soilparams
 
-      end do
     end do
 
   end subroutine initglobal_tile
