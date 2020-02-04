@@ -124,7 +124,9 @@ module md_gpp
 
 contains
 
-  subroutine gpp( co2, dtemp, dvpd, dpatm, dppfd, dfapar, fpc_grid, dayl, meanmppfd, wscal, rlmalpha, do_soilmstress, do_tempstress, dgpp, drd, dtransp, init)
+  subroutine gpp( co2, dtemp, dvpd, dpatm, dppfd, dfapar, fpc_grid, dayl, &
+                  meanmppfd, wscal, rlmalpha, do_soilmstress, do_tempstress, &
+                  dgpp, drd, dtransp, init)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
