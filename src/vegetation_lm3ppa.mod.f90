@@ -35,11 +35,6 @@ public :: vegn_annual_starvation,Zero_diagnostics
   integer :: i
   real :: tair, tsoil ! temperature of soil, degC
   real :: thetaS ! soil wetness, unitless
-  real :: NSC_supply,LR_demand,LR_deficit
-  real :: LeafGrowthMin, RootGrowthMin,NSCtarget,v
-  real :: LR_growth,WS_growth
-  real :: R_days,fNSC,fLFR,fStem
-  integer :: layer
 
   ! Climatic variable
   tair   = forcing%Tair -273.16   ! degC
@@ -105,7 +100,7 @@ subroutine vegn_photosynthesis (forcing, vegn)
   real  :: fw, fs ! wet and snow-covered fraction of leaves
   real  :: psyn   ! net photosynthesis, mol C/(m2 of leaves s)
   real  :: resp   ! leaf respiration, mol C/(m2 of leaves s)
-  real  :: tempLAI,w_scale2, transp ! mol H20 per m2 of leaf per second
+  real  :: w_scale2, transp ! mol H20 per m2 of leaf per second
   real  :: kappa  ! light extinction coefficient of corwn layers
   real :: f_light(10)=0.0      ! light fraction of each layer
   real :: LAIlayer(10),accuCAI,f_gap ! additional GPP for lower layer cohorts due to gaps
@@ -451,36 +446,6 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
 end subroutine gs_Leuning
 
 !============================================================================
- ! Weng, 05/24/2018
- subroutine calc_solarzen(td,latdegrees,cosz,solarelev,solarzen)
-      !* Calculate solar zenith angle **in radians**
-      !* From Spitters, C. J. T. (1986), AgForMet 38: 231-242.
-      implicit none
-      real,intent(in) :: td             ! day(to minute fraction)
-      real,intent(in) :: latdegrees     ! latitude in degrees
-      real :: hour,latrad
-      real :: delta    ! declination angle
-      real :: pi, rad
-      real,intent(out) :: cosz        ! cosz=cos(zen angle)=sin(elev angle)
-      real,intent(out) :: solarelev    ! solar elevation angle (rad)
-      real,intent(out) :: solarzen     ! solar zenith angle (rad)
-      
-      pi  = 3.1415926
-      rad = pi / 180.0 ! Conversion from degrees to radians.
-      hour = (td-floor(td))*24.0
-      latrad = latdegrees*rad
-      delta  = asin(-sin(rad*23.450)*cos(2.0*pi*(td+10.0)/365.0))
-      cosz = sin(latrad)*sin(delta) + &
-               cos(latrad)*cos(delta)*cos(rad* 15.0*(hour-12.0))
-      cosz = max (cosz, 0.01)  ! Sun's angular is 0.01
-
-      ! compute the solar elevation and zenth angles below
-      solarelev = asin(cosz)/pi*180.0  !since asin(cos(zen))=pi/2-zen=elev
-      solarzen = 90.0 - solarelev ! pi/2.d0 - solarelev
-
- end subroutine calc_solarzen
-
-!============================================================================
 subroutine plant_respiration(cc, tairK)
   type(cohort_type), intent(inout) :: cc
   real, intent(in) :: tairK ! degK
@@ -490,7 +455,7 @@ subroutine plant_respiration(cc, tairK)
   real :: r_leaf, r_stem, r_root
   real :: Acambium  ! cambium area, m2/tree
   ! real :: LeafN     ! leaf nitrogen, kgN/Tree
-  real :: fnsc,NSCtarget ! used to regulation respiration rate
+  real :: fnsc ! used to regulation respiration rate
   real :: r_Nfix    ! respiration due to N fixation
   integer :: sp ! shorthand for cohort species
 
@@ -542,15 +507,10 @@ end subroutine plant_respiration
     type(cohort_type), intent(inout) :: cc
 
     ! local variables
-    logical :: woody
-    logical :: dormant,growing
-
     real :: NSCtarget
-    real :: C_push, C_pull, growthC
-    real :: N_push, N_pull, growthN
+    real :: C_push, C_pull
+    real :: N_push, N_pull
     real :: LFR_rate ! make these two variables to PFT-specific parameters
-    real :: bl_max, br_max
-    real :: resp_growth
 
     ! make these two variables to PFT-specific parameters
     LFR_rate = 1.0 ! 1.0/5.0 ! filling rate/day
@@ -596,7 +556,7 @@ end subroutine plant_respiration
   real :: CSAwd  ! Heartwood cross sectional area, m2
   real :: DBHwd  ! diameter of heartwood at breast height, m
   real :: BSWmax ! max sapwood biomass, kg C/individual
-  real :: dB_LRS, G_LFR  ! amount of carbon spent on leaf and root growth
+  real :: G_LFR  ! amount of carbon spent on leaf and root growth
   real :: dSeed ! allocation to seeds, Weng, 2016-11-26
   real :: dBL, dBR ! tendencies of leaf and root biomass, kgC/individual
   real :: dBSW ! tendency of sapwood biomass, kgC/individual
@@ -605,13 +565,12 @@ end subroutine plant_respiration
   real :: dCA ! tendency of crown area, m2/individual
   real :: dHeight ! tendency of vegetation height
   real :: dNS    ! Nitrogen from SW to HW
-  real :: sw2nsc = 0.0 ! conversion of sapwood to non-structural carbon
-  real :: b,BL_u,BL_c
+  real :: BL_u,BL_c
   real :: LFR_deficit, LF_deficit, FR_deficit
   real :: N_demand,Nsupplyratio,extraN
   real :: r_N_SD
   logical :: do_editor_scheme = .False.
-  integer :: i,j
+  integer :: i
 
   do_editor_scheme = .False. ! .True.
 
@@ -817,12 +776,9 @@ subroutine vegn_phenology(vegn,doy) ! daily step
 
   ! ---- local vars
   type(cohort_type), pointer :: cc
-  integer :: i,j
-  real    :: grassdensity   ! for grasses only
-  real    :: BL_u,BL_c
-  real    :: ccFR, ccNSC, ccRootN, ccNSN
+  integer :: i
+  real    :: ccNSC, ccNSN
   logical :: cc_firstday = .false.
-  logical :: growingseason
   logical :: TURN_ON_life, TURN_OFF_life
 
   vegn%litter = 0   ! daily litter
@@ -996,10 +952,9 @@ subroutine vegn_nat_mortality (vegn, deltat)
 
   ! ---- local vars
   type(cohort_type), pointer :: cc => null()
-  type(spec_data_type),   pointer :: sp
   real :: deathrate ! mortality rate, 1/year
   real :: deadtrees ! number of trees that died over the time step
-  integer :: i, k
+  integer :: i
 
   real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
   ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
@@ -1054,9 +1009,8 @@ subroutine vegn_starvation (vegn)
   ! ---- local vars --------
   real :: deathrate ! mortality rate, 1/year
   real :: deadtrees ! number of trees that died over the time step
-  integer :: i, k
+  integer :: i
   type(cohort_type), pointer :: cc
-  type(cohort_type), dimension(:),pointer :: ccold, ccnew
 
   do i = 1, vegn%n_cohorts
      cc => vegn%cohorts(i)
@@ -1088,9 +1042,8 @@ subroutine vegn_annual_starvation (vegn)
   ! ---- local vars --------
   real :: deathrate ! mortality rate, 1/year
   real :: deadtrees ! number of trees that died over the time step
-  integer :: i, k
+  integer :: i
   type(cohort_type), pointer :: cc
-  type(cohort_type), dimension(:),pointer :: ccold, ccnew
 
   do i = 1, vegn%n_cohorts
      cc => vegn%cohorts(i)
@@ -1159,10 +1112,9 @@ subroutine vegn_reproduction (vegn)
   type(cohort_type), dimension(:),pointer :: ccold, ccnew   ! pointer to old cohort array
   integer,dimension(16) :: reproPFTs
   real,   dimension(16) :: seedC, seedN ! seed pool of productible PFTs
-  real :: failed_seeds, N_failedseed !, prob_g, prob_e
   integer :: newcohorts, matchflag, nPFTs ! number of new cohorts to be created
   integer :: nCohorts, istat
-  integer :: i, j, k ! cohort indices
+  integer :: i, k ! cohort indices
 
 ! Looping through all reproductable cohorts and Check if reproduction happens
   reproPFTs = -999 ! the code of reproductive PFT
@@ -1311,7 +1263,6 @@ end function
   ! ---- local vars --------
   real :: loss_fine,loss_coarse
   real :: lossN_fine,lossN_coarse
-  integer :: i, k
   type(cohort_type), pointer :: cc
 
      cc => vegn%cohorts(1)
@@ -1511,7 +1462,6 @@ subroutine vegn_N_uptake(vegn, tsoil)
   real    :: totNup    ! kgN m-2
   real    :: avgNup
   real    :: rho_N_up,N_roots   ! actual N uptake rate
-  logical :: NSN_not_full
   integer :: i
 
 !! Nitrogen uptake parameter
@@ -1847,7 +1797,7 @@ subroutine kill_lowdensity_cohorts(vegn)
   type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
   logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
   real, parameter :: mindensity = 0.25E-4
-  integer :: i,j,k
+  integer :: i,k
 
  ! calculate the number of cohorts with indivs>mindensity
   k = 0
@@ -2040,10 +1990,8 @@ subroutine vegn_annualLAImax_update(vegn)
   type(vegn_tile_type), intent(inout) :: vegn
 
   ! ---- local vars
-  type(cohort_type), pointer :: cc
   real   :: LAImin, LAIfixedN, LAImineralN
   real   :: LAI_Nitrogen
-  real   :: fixedN, rootN
   logical:: fixedN_based
   integer :: i
   ! Calculating LAI max based on mineral N or mineralN + fixed N
@@ -2131,8 +2079,7 @@ subroutine initialize_vegn_tile(vegn,nCohorts)
    real    :: r
    real    :: btotal
    integer :: i, istat
-   integer :: io           ! i/o status for the namelist
-   integer :: ierr         ! error code, returned by i/o routines
+
 
     ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
     K1          = myinterface%params_tile%K1  

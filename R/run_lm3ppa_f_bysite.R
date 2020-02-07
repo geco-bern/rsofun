@@ -107,12 +107,12 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       do_U_shaped_mortality = as.logical(params_siml$do_U_shaped_mortality),
       update_annaulLAImax   = as.logical(params_siml$update_annaulLAImax),
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
-
+      
       ## site meta info
       longitude             = as.numeric(siteinfo$lon),
       latitude              = as.numeric(siteinfo$lat),
       altitude              = as.numeric(siteinfo$elv),
-
+      # 
       ## Tile-level parameters
       soiltype     = as.integer(params_tile$soiltype),
       FLDCAP       = as.numeric(params_tile$FLDCAP),
@@ -125,23 +125,23 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       l_fract      = as.numeric(params_tile$l_fract),
       retransN     = as.numeric(params_tile$retransN),
       f_N_add      = as.numeric(params_tile$f_N_add),
-      f_initialBSW = as.numericn_daily(params_tile$f_initialBSW),
-
-      ## Species-specific parameters
+      f_initialBSW = as.numeric(params_tile$f_initialBSW),
+      # 
+      # ## Species-specific parameters
       params_species = as.matrix(params_species),
-
+      
       ## soil parameters
       params_soil = as.matrix(params_soil),
-
+      
       ## initial cohort sizes
       init_cohort = as.matrix(init_cohort),
-
+      # 
       ## initial soil pools
       init_fast_soil_C = as.numeric(init_soil$init_fast_soil_C),
       init_slow_soil_C = as.numeric(init_soil$init_slow_soil_C),
       init_Nmineral    = as.numeric(init_soil$init_Nmineral),
       N_input          = as.numeric(init_soil$N_input),
-
+      # 
       n        = as.integer(nrow(forcing)), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       n_daily  = as.integer(n_daily), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       n_annual = as.integer(runyears), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
@@ -156,29 +156,29 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       as.matrix() %>% 
       as_tibble() %>%
       setNames(c("year", "doy", "hour", "rad", "Tair", "Prcp", "GPP", "Resp", "Transp", "Evap", "Runoff", "Soilwater", "wcl", "FLDCAP", "WILTPT")) %>%
-      dplyr::mutate(sitename = sitename) %>%
-      dplyr::mutate(date = lubridate::ymd_hm(paste0(as.character(year), "-01-01 00:00")) + lubridate::days(doy-1) + hours(hour)) %>%
-      dplyr::select(-year, -doy, -hour)
+      dplyr::mutate(sitename = sitename) #%>%
+      # dplyr::mutate(date = lubridate::ymd_hm(paste0(as.character(year), "-01-01 00:00")) + lubridate::days(doy-1) + hours(hour)) %>%
+      # dplyr::select(-year, -doy, -hour)
       # dplyr::bind_cols(ddf,.) %>% 
       # dplyr::select(-year_dec)
-
-    ## daily_tile
+    
+    # ## daily_tile
     out[[2]] <- out[[2]] %>%
       as.matrix() %>% 
       as_tibble() %>%
       setNames(c("year", "doy", "Tc", "Prcp", "totWs", "Trsp", "Evap", "Runoff", "ws1", "ws2", "ws3", "LAI", "GPP", "Rauto", "Rh", "NSC", "seedC", "leafC", "rootC", "SW_C", "HW_C", "NSN", "seedN", "leafN", "rootN", "SW_N", "HW_N", "McrbC", "fastSOM", "slowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_uptk")) %>%
-      dplyr::mutate(sitename = sitename) %>%
-      dplyr::mutate(date = lubridate::ymd(paste0(as.character(year), "-01-01")) + lubridate::days(doy-1)) %>%
-      dplyr::select(-year, -doy)
+      dplyr::mutate(sitename = sitename) #%>%
+    #   dplyr::mutate(date = lubridate::ymd(paste0(as.character(year), "-01-01")) + lubridate::days(doy-1)) %>%
+    #   dplyr::select(-year, -doy)
       
-    ## daily_cohorts
+    # ## daily_cohorts
     out[[3]] <- out[[3]] %>%
       as.matrix() %>% 
       as_tibble() %>%
       setNames(c("year", "doy", "hour", "cID", "PFT", "layer", "density", "f_layer", "LAI", "gpp", "resp", "transp", "NPPleaf", "NPProot", "NPPwood", "NSC", "seedC", "leafC", "rootC", "SW_C", "HW_C", "NSN", "seedN", "leafN", "rootN", "SW_N", "HW_N")) %>%
-      dplyr::mutate(sitename = sitename) %>%
-      dplyr::mutate(date = lubridate::ymd(paste0(as.character(year), "-01-01")) + lubridate::days(doy-1)) %>%
-      dplyr::select(-year, -doy)
+      dplyr::mutate(sitename = sitename) #%>%
+    #   dplyr::mutate(date = lubridate::ymd(paste0(as.character(year), "-01-01")) + lubridate::days(doy-1)) %>%
+    #   dplyr::select(-year, -doy)
      
     ## annual tile
     out[[4]] <- out[[4]] %>%
@@ -186,8 +186,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       as_tibble() %>%
       setNames(c("year", "CAI", "LAI", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N")) %>%
       dplyr::mutate(sitename = sitename)
-
-    ## annual cohorts
+    
+    # ## annual cohorts
     out[[5]] <- out[[5]] %>%
       as.matrix() %>% 
       as_tibble() %>%
@@ -195,7 +195,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       dplyr::mutate(sitename = sitename)
 
   } else {
-    # out <- tibble(sitename = sitename, date = lubridate::ymd("2000-01-01"), fapar = NA, gpp = NA, transp = NA, latenth = NA, XXX = NA)
+
   }
     
   return(out)

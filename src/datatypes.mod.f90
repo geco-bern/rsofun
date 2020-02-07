@@ -325,26 +325,7 @@ type :: vegn_tile_type
    real :: totSeedC,totSeedN,totNewCC, totNewCN
 end type vegn_tile_type
 
-!---------------------------
 
-! type :: climate_data_type
-!    integer :: year          ! Year
-!    integer :: doy           ! day of the year
-!    real    :: hod           ! hour of the day
-!    real    :: PAR           ! umol m-2 s-1
-!    real    :: radiation     ! W/m2
-!    real    :: Tair          ! air temperature,  K
-!    real    :: Tsoil         ! soil temperature, K
-!    real    :: RH            ! relative humidity
-!    real    :: rain          ! kgH2O m-2 s-1
-!    real    :: windU         ! wind velocity (m s-1)
-!    real    :: P_air         ! pa
-!    real    :: CO2           ! ppm
-!    real    :: soilwater     ! soil moisture, vol/vol
-! end type climate_data_type
-!---------------------------
-
-!----------------------------------------
 type :: soil_pars_type
   real :: GMD ! geometric mean partice diameter, mm
   real :: GSD ! geometric standard deviation of particle size
@@ -610,21 +591,6 @@ real   :: N_input    = 0.0008 ! annual N input to soil N pool, kgN m-2 yr-1
 subroutine initialize_soilpars(namelistfile)
   use md_interface_lm3ppa, only: myinterface
    character(len=50),intent(in) :: namelistfile
-
-  ! ---- local vars
-  integer :: io           ! i/o status for the namelist
-  integer :: ierr         ! error code, returned by i/o routines
-  integer :: i
-  integer :: nml_unit
-
-! !  Read parameters from the parameter file (namelist)
-!   if(read_from_parameter_file)then
-!      nml_unit = 999
-!      open(nml_unit, file=namelistfile, form='formatted', action='read', status='old')
-!      read (nml_unit, nml=soil_data_nml, iostat=io, end=10)
-! 10   close (nml_unit)
-!      write (*, nml=soil_data_nml)
-!   endif
   
   ! initialize soil parameters
     soilpars%GMD               = myinterface%params_soil%GMD(:) ! geometric mean partice diameter, mm
@@ -657,10 +623,7 @@ subroutine initialize_PFT_data() !namelistfile
    ! character(len=50),intent(in) :: namelistfile
 
   ! ---- local vars
-  integer :: io           ! i/o status for the namelist
-  integer :: ierr         ! error code, returned by i/o routines
   integer :: i
-  integer :: nml_unit
 
 ! !  Read parameters from the parameter file (namelist)
 !   if(read_from_parameter_file)then
@@ -745,7 +708,7 @@ subroutine initialize_PFT_data() !namelistfile
  subroutine init_derived_species_data(sp)
    type(spec_data_type), intent(inout) :: sp
    ! ---- local vars ------
-   integer :: i,j
+   integer :: j
    real :: rdepth(0:max_lev)
    real :: residual
 
@@ -926,7 +889,7 @@ end subroutine summarize_tile
 ! Hourly fluxes sum to daily
   subroutine hourly_diagnostics(vegn, forcing, iyears, idoy, ihour, iday, fno1, out_hourly_tile)
 
-  use md_forcing_lm3ppa, only: climate_type, forcingData
+  use md_forcing_lm3ppa, only: climate_type
   use md_interface_lm3ppa, only: outtype_hourly_tile, myinterface
 
   type(vegn_tile_type), intent(inout) :: vegn
@@ -937,7 +900,6 @@ end subroutine summarize_tile
   !-------local var ------
   type(cohort_type), pointer :: cc    ! current cohort
   integer :: i
-  integer :: ntstepsyear
 
   vegn%age = vegn%age + myinterface%dt_fast_yr
   ! Tile summary
@@ -1007,7 +969,7 @@ end subroutine hourly_diagnostics
   subroutine daily_diagnostics(vegn, forcing, iyears, idoy, iday, fno3, fno4, out_daily_cohorts, out_daily_tile)
 
   use md_forcing_lm3ppa, only: climate_type
-  use md_interface_lm3ppa, only: myinterface, outtype_daily_cohorts, outtype_daily_tile
+  use md_interface_lm3ppa, only: outtype_daily_cohorts, outtype_daily_tile
 
 
   type(vegn_tile_type), intent(inout) :: vegn
@@ -1228,17 +1190,6 @@ end subroutine hourly_diagnostics
             cc%annualNup*1000,cc%annualfixedN*1000,             &
             spdata(cc%species)%laimax
 
-        !! Screen output
-        !write(*,'(1(I7,","),2(I4,","),1(F9.1,","),25(F9.2,","))')    &
-        !            cc%ccID,cc%species,cc%layer,                     &
-        !            cc%nindivs*10000, cc%layerfrac,dDBH,             &
-        !            cc%dbh,cc%height,cc%crownarea,                   &
-        !            cc%bsw+cc%bHW,cc%nsc,cc%NSN*1000,                &
-        !            fseed, fleaf, froot, fwood,                      &
-        !            cc%annualGPP/cc%crownarea,                       &
-        !            cc%annualNPP/cc%crownarea,                       &
-        !            cc%annualNup*1000,cc%annualfixedN*1000,          &
-        !            spdata(cc%species)%laimax
     enddo
 
     ! tile pools output
@@ -1329,7 +1280,7 @@ subroutine Recover_N_balance(vegn)
       endif
 
  end subroutine
-!================================================
+
 end module datatypes
 
 

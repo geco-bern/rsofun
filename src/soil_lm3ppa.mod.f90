@@ -23,8 +23,6 @@ real, public :: &
 ! soil layer depth
 real     :: dz(max_lev) = thksl   ! thicknesses of layers
 real     :: zfull(max_lev)
-real     :: zhalf(max_lev+1)
-
 
 contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -44,10 +42,10 @@ subroutine water_supply_layer(forcing, vegn)
   real :: fWup(max_lev)      ! fraction to the actual soil water
   real :: freewater(max_lev)
   real :: totWsup(max_lev) ! potential water uptake, mol s-1 m-2
-  real :: psi_soil, psi_leaf, psi_stem, psi_root ! Pa, water potentials from soil to leaf
+  real :: psi_soil, psi_leaf ! Pa, water potentials from soil to leaf
   real :: thetaS(max_lev) ! soil moisture index (0~1)
   real :: dpsiSR(max_lev) ! pressure difference between soil water and root water, Pa
-  integer :: i,j, layer
+  integer :: i,j
 
 !! Plant hydraulics
    psi_leaf = -2.31 *1.0e6 ! pa, Katul et al. 2003, for clay soil
@@ -98,7 +96,6 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
   real    :: rainwater,W_deficit(max_lev),W_add(max_lev)
   real    :: kappa  ! light extinction coefficient of corwn layers
   real    :: Esoil      ! soil surface evaporation, kg m-2 s-1
-  real    :: Hsoil      ! sensible heat from soil
   real    :: Rsoilabs   ! W/m2
   real    :: Hgrownd    ! Ground heat flux, W/m2
   real    :: TairK,Tair      ! temperature, K and C, respectively
@@ -114,7 +111,7 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
   real    :: rLAI
   real    :: transp,fsupply ! fraction of transpiration from a soil layer
   real    :: WaterBudgetL(max_lev)
-  integer :: i,j,k
+  integer :: i,j
 
 ! Soil water conditions
   !call water_supply_layer(forcing, vegn)
@@ -166,8 +163,6 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
       Esoil=(slope*Rsoilabs + rhocp*Dair/raero)/ &
             (slope + psyc*(1.0+rsoil/raero)) *   &
             max(vegn%wcl(1),0.0)/FLDCAP ! (vegn%wcl(1)-ws0)/(FLDCAP-ws0)
-!     sensible heat flux into air from soil
-!      Hsoil = Rsoilabs - Esoil - Hgrownd
 
   !Calculate Esoil, kg m-2 step-1
   vegn%evap = min(Esoil/H2OLv * myinterface%step_seconds, 0.2*vegn%wcl(1) * thksl(1) *1000.) ! kg m-2 step-1
@@ -220,10 +215,10 @@ subroutine soil_data_beta(soil, vegn, soil_beta, soil_water_supply, &
        uptake_frac_max, & ! normalized root distribution
        vegn_uptake_term, &
        vlc, vsc, & ! volumetric fractions of water and ice in the layer
-       root_length, & ! vertical distribution of volumetric root length, m/m3
+   !    root_length, & ! vertical distribution of volumetric root length, m/m3
        VRL, & ! volumetric root length
        u, du ! uptake and its derivative (the latter is not used)
-  real :: z  !  soil depth
+  !real :: z  !  soil depth
   !real :: psi_wilt ! added by Weng, 2017-10-29
   logical :: uptake_oneway = .TRUE. ! added by Weng
   logical :: uptake_from_sat = .true.

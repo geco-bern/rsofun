@@ -26,26 +26,29 @@ path_siteinfo <- "~/.siteinfo_example_fortran.csv"
 siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>% 
   dplyr::filter(sitename %in% mysites) %>%
   write_csv(path = path_siteinfo)
+
+siteinfo <- data.frame(lon = 99, lat = 99, elv = 99)
 ```
 
 Now specify the simulation parameters that are identical for all site-scale simulations.
 ```{r}
 params_siml <- list(
- filepath_in           = '/Users/bestocke/sofun/input/',
- climfile              = 'US-WCrforcing.txt',
- model_run_years       =  1800, # 1200,
- equi_days             =  0,
- outputhourly          =  FALSE, # .True. #
- outputdaily           =  TRUE,  # FALSE # TRUE
- do_U_shaped_mortality =  FALSE, # TRUE #
- update_annualLAImax   =  FALSE, # TRUE #
- do_closedN_run        =  TRUE
+      spinup                = TRUE,
+      spinupyears           = 1800,
+      recycle               = 11, # 9 or 11
+      firstyeartrend        = 1998,
+      nyeartrend            = 11, #9 or 11
+      outputhourly          = TRUE,
+      outputdaily           = TRUE,
+      do_U_shaped_mortality = FALSE,
+      update_annaulLAImax   = FALSE,
+      do_closedN_run        = TRUE
 )
 ```
 
 Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters).
 ```{r}
-settings_sims <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
+#settings_sims <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
 ```
 
 ### Define model parameters
@@ -91,7 +94,8 @@ params_species <- tibble(
   mortrate_d_u  = c(0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08),    # understory tree mortality rate, year-1
   maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
   fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
-  )
+  ) %>% 
+  bind_rows(., slice(., 1:5))
 ```
 
 #### Soil parameters
@@ -160,8 +164,10 @@ The file has the following variables (units):
                       K          kg/kg          m/s     kg_H2O/m2/s               pa               W/m2            W/m2            ppm     
 
 ```{r}
-ddf_input <- read_delim("~/sofun/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
-  mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) )
+ddf_input <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
+  mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
+  mutate(sitename = "ORNL") %>% 
+  filter(!(mday(date)==29 & month(date)==2))
 
 complete <-rep(seq(ymd("1998-01-01"), ymd("2008-12-31"), by = "days"), each = 24)
 
@@ -173,14 +179,25 @@ ddf_complete <- tibble(date = complete)
 
 Run the model for all the sites specified in the first step.
 ```{r}
+# siteinfo <- list(lon = 99, lat = 99, elv = 99)
+mod <- run_lm3ppa_f_bysite( "BE-Vie", 
+                            params_siml, 
+                            siteinfo, 
+                            ddf_input, # forcing
+                            params_tile, 
+                            params_species, 
+                            params_soil, 
+                            init_cohort, 
+                            init_soil, 
+                            makecheck = TRUE)
+  
 df_drivers <- collect_drivers_sofun( 
   settings       = settings_sims, 
-  forcing        = ddf_input, 
-  df_soiltexture = df_soiltexture
+  forcing        = ddf_input
   )
 
 ## run for a single site
-mod <- run_sofun_f_bysite( 
+mod <- run_lm3ppa_f_bysite( 
   df_drivers$sitename[1], 
   df_drivers$params_siml[[1]], 
   df_drivers$siteinfo[[1]], 
@@ -191,16 +208,16 @@ mod <- run_sofun_f_bysite(
   method = "lm3ppa"
   )
 
-## Run for the full set of sites
-ptm <- proc.time()
-df_output <- runread_sofun_f(
-     df_drivers, 
-     params_modl = params_modl, 
-     makecheck = TRUE,
-     parallel = FALSE,
-     method = "lm3ppa"
-     )
-print(ptm)
+# ## Run for the full set of sites
+# ptm <- proc.time()
+# df_output <- runread_sofun_f(
+#      df_drivers, 
+#      params_modl = params_modl, 
+#      makecheck = TRUE,
+#      parallel = FALSE,
+#      method = "lm3ppa"
+#      )
+# print(ptm)
 
 # microbenchmark::microbenchmark(
 #   runread_sofun_f(
