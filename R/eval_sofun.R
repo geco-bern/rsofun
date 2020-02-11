@@ -90,15 +90,15 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
     } else {
       varnam_obs <- varnam
     }
-    adf <- obs_eval$adf %>% dplyr::select(sitename, date,  obs = eval(varnam_obs))
-    mdf <- obs_eval$mdf %>% dplyr::select(sitename, date,  obs = eval(varnam_obs))
-    ddf <- obs_eval$ddf %>% dplyr::select(sitename, date,  obs = eval(varnam_obs))
-    xdf <- obs_eval$xdf %>% dplyr::select(sitename, inbin, obs = eval(varnam_obs))
+    adf <- obs_eval$adf %>% dplyr::select(sitename, date,  obs = {{varnam_obs}} ) # eval(varnam_obs))
+    mdf <- obs_eval$mdf %>% dplyr::select(sitename, date,  obs = {{varnam_obs}})
+    ddf <- obs_eval$ddf %>% dplyr::select(sitename, date,  obs = {{varnam_obs}})
+    xdf <- obs_eval$xdf %>% dplyr::select(sitename, inbin, obs = {{varnam_obs}})
     
-    obs_eval$adf <- NULL
-    obs_eval$mdf <- NULL
-    obs_eval$xdf <- NULL
-    obs_eval$ddf <- NULL
+    # obs_eval$adf <- NULL
+    # obs_eval$mdf <- NULL
+    # obs_eval$xdf <- NULL
+    # obs_eval$ddf <- NULL
     
     ##------------------------------------------------------------
     ## Aggregate model output data to annual/monthly/weekly, only for dplyr::selected sites,
@@ -108,13 +108,14 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
 
     ## annual sum
     adf <- ddf_mod %>% 
+      tidyr::drop_na() %>% 
       mutate( year = year(date) ) %>%
-      group_by( sitename, year ) %>%
+      group_by( year, sitename ) %>%
       summarise( mod = sum(mod), n = n() ) %>%
       mutate( mod = ifelse( n<365, NA, mod ) ) %>%
       ## merge into observational data frame
-      right_join( mutate(adf, year = year(date)), by = c("sitename", "year")) %>%
-      dplyr::filter( sitename %in% settings_eval$sitenames )
+      right_join( mutate(adf, year = year(date)), by = c("sitename", "year")) 
+      # dplyr::filter( sitename %in% settings_eval$sitenames )
 
     ## monthly mean
     mdf <- mdf %>% ungroup()
@@ -123,24 +124,26 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
       group_by( sitename, year, moy ) %>%
       summarise( mod = mean(mod), n = n() ) %>%
       ## merge into observational data frame
-      right_join( mutate( mdf, year = year(date), moy = month(date) ), by = c("sitename", "year", "moy")) %>%
-      dplyr::filter( sitename %in% settings_eval$sitenames )
+      right_join( mutate( mdf, year = year(date), moy = month(date) ), by = c("sitename", "year", "moy"))
+      # dplyr::filter( sitename %in% settings_eval$sitenames )
 
     ## mean across multi-day period
     xdf <- ddf_mod %>% 
       # mutate( year = year(date), week = week(date) ) %>%
       mutate( year = year(date), inbin = cut( date, breaks = obs_eval$breaks_xdf, right = FALSE ) ) %>%
+      tidyr::drop_na() %>% 
       group_by( sitename, inbin ) %>%
       summarise( mod_mean = mean( mod, na.rm = TRUE ), mod_min = min( mod, na.rm = TRUE ), mod_max = max( mod, na.rm = TRUE ), n_mod = sum(!is.na(mod)) ) %>%
       dplyr::rename( mod = mod_mean ) %>%
-      right_join( xdf, by = c("sitename", "inbin") ) %>%
-      dplyr::filter( sitename %in% settings_eval$sitenames )
+      right_join( xdf, by = c("sitename", "inbin") )
+      # dplyr::filter( sitename %in% settings_eval$sitenames )
     
     ## daily
     ddf <- ddf_mod %>% 
+      tidyr::drop_na() %>% 
       ## merge into observational data frame
-      right_join( ddf, by = c("sitename", "date")) %>%
-      dplyr::filter( sitename %in% settings_eval$sitenames )
+      right_join( ddf, by = c("sitename", "date"))
+      # dplyr::filter( sitename %in% settings_eval$sitenames )
 
     ## metrics for daily and x-daily values, all sites pooled
     metrics$daily_pooled  <- with( ddf, get_stats( mod, obs ) )
