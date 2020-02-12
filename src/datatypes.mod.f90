@@ -1,4 +1,5 @@
 module datatypes
+  use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_interface_lm3ppa, only: myinterface
   use md_params_core_lm3ppa, only: out_max_cohorts
 
@@ -32,10 +33,10 @@ public :: qscomp, calc_esat
  real,    public, parameter :: seconds_per_day = 24. * 3600.
 
  real,    public, parameter :: PI = 3.1415926
- integer, public, parameter :: MSPECIES = 15, Nsoiltypes = 7
+ integer, public, parameter :: MSPECIES = 15
  integer, public, parameter :: n_dim_soil_types = 9
  integer, public, parameter :: max_lev  = 3 ! Soil layers, for soil water dynamics
- integer, public, parameter :: num_l    = 3 ! Soil layers,
+ integer, public, parameter :: num_l    = 3 ! Soil layers
  integer, public, parameter :: LEAF_ON  = 1
  integer, public, parameter :: LEAF_OFF = 0
  integer, public, parameter :: & ! physiology types
@@ -233,6 +234,7 @@ type :: cohort_type
   real    :: uptake_frac(max_lev) ! for LM3 soil water uptake, Weng, 2017-10-28
   real    :: K_r,r_r
   real    :: root_zeta
+
 ! for photosynthesis
   real :: An_op = 0.0 ! mol C/(m2 of leaf per year)
   real :: An_cl = 0.0 ! mol C/(m2 of leaf per year)
@@ -704,6 +706,7 @@ subroutine initialize_PFT_data() !namelistfile
      call init_derived_species_data(spdata(i))
   enddo
   end subroutine initialize_pft_data
+
 !------------------------------------------
  subroutine init_derived_species_data(sp)
    type(spec_data_type), intent(inout) :: sp
@@ -887,15 +890,15 @@ end subroutine summarize_tile
 
 !=========================================================================
 ! Hourly fluxes sum to daily
-  subroutine hourly_diagnostics(vegn, forcing, iyears, idoy, ihour, iday, fno1, out_hourly_tile)
+  subroutine hourly_diagnostics(vegn, forcing, iyears, idoy, ihour, out_hourly_tile)
 
   use md_forcing_lm3ppa, only: climate_type
   use md_interface_lm3ppa, only: outtype_hourly_tile, myinterface
 
   type(vegn_tile_type), intent(inout) :: vegn
   type(climate_type),intent(in):: forcing
-  integer, intent(in) :: iyears,idoy,ihour,iday,fno1
-  type(outtype_hourly_tile) :: out_hourly_tile
+  integer, intent(in) :: iyears, idoy, ihour
+  type(outtype_hourly_tile),intent(out) :: out_hourly_tile !!
 
   !-------local var ------
   type(cohort_type), pointer :: cc    ! current cohort
@@ -905,6 +908,7 @@ end subroutine summarize_tile
   ! Tile summary
   vegn%GPP    = 0.
   vegn%NPP    = 0.; vegn%Resp   = 0.
+
   do i = 1, vegn%n_cohorts
      cc => vegn%cohorts(i)
      ! cohort daily
@@ -923,34 +927,44 @@ end subroutine summarize_tile
   !! Output horly diagnostics
 
   ! xxx test: removing condition
-    if (.not. myinterface%steering%spinup) then
+    ! if (.not. myinterface%steering%spinup) then
 
-        out_hourly_tile%year      =  iyears    
-        out_hourly_tile%doy       =  idoy   
-        out_hourly_tile%hour      =  ihour    
-        out_hourly_tile%rad       =  forcing%radiation    !forcingData 
-        out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
-        out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
-        out_hourly_tile%GPP       =  vegn%GPP  
-        out_hourly_tile%Resp      =  vegn%resp   
-        out_hourly_tile%Transp    =  vegn%transp
-        out_hourly_tile%Evap      =  vegn%evap   
-        out_hourly_tile%Runoff    =  vegn%runoff   
-        out_hourly_tile%Soilwater =  vegn%soilwater
-        out_hourly_tile%wcl       =  vegn%wcl(1)    
-        out_hourly_tile%FLDCAP    =  vegn%FLDCAP
-        out_hourly_tile%WILTPT    =  vegn%WILTPT
+    !     ! xxx debug XXX PROBLEM WITH POPULATING out_hourly_tile
+    !     ! if (ihour==1.0 .and. idoy==1.0) then
+    !     !   print*,iyears    
+    !     !   print*,idoy   
+    !     !   print*,ihour    
+    !     !   print*,forcing%radiation    !forcingData 
+    !     !   print*,forcing%Tair         !forcingData  
+    !     !   print*,forcing%rain         !forcingData 
+    !     !   print*,vegn%GPP  
+    !     !   print*,vegn%resp   
+    !     !   print*,vegn%transp
+    !     !   print*,vegn%evap   
+    !     !   print*,vegn%runoff   
+    !     !   print*,vegn%soilwater
+    !     !   print*,vegn%wcl(1)    
+    !     !   print*,vegn%FLDCAP
+    !     !   print*,vegn%WILTPT
+    !     ! end if
 
-      write(fno1,'(3(I5,","),25(E11.4,","),25(F8.2,","))')  &
-        iyears, idoy, ihour,      &
-        forcing%radiation,    &  !forcingData 
-        forcing%Tair,         &  !forcingData 
-        forcing%rain,         &  !forcingData 
-        vegn%GPP,vegn%resp,vegn%transp,  &
-        vegn%evap,vegn%runoff,vegn%soilwater, &
-        vegn%wcl(1),vegn%FLDCAP,vegn%WILTPT
+    !     out_hourly_tile%year      =  iyears    
+    !     out_hourly_tile%doy       =  idoy   
+    !     out_hourly_tile%hour      =  ihour    
+    !     out_hourly_tile%rad       =  forcing%radiation    !forcingData 
+    !     out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
+    !     out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
+    !     out_hourly_tile%GPP       =  vegn%GPP  
+    !     out_hourly_tile%Resp      =  vegn%resp   
+    !     out_hourly_tile%Transp    =  vegn%transp
+    !     out_hourly_tile%Evap      =  vegn%evap   
+    !     out_hourly_tile%Runoff    =  vegn%runoff   
+    !     out_hourly_tile%Soilwater =  vegn%soilwater
+    !     out_hourly_tile%wcl       =  vegn%wcl(1)    
+    !     out_hourly_tile%FLDCAP    =  vegn%FLDCAP
+    !     out_hourly_tile%WILTPT    =  vegn%WILTPT
 
-    end if
+    ! end if
 
   ! Daily summary:
   vegn%dailyNup  = vegn%dailyNup  + vegn%N_uptake
@@ -961,12 +975,14 @@ end subroutine summarize_tile
   vegn%dailyTrsp = vegn%dailyTrsp + vegn%transp
   vegn%dailyEvap = vegn%dailyEvap + vegn%evap
   vegn%dailyRoff = vegn%dailyRoff + vegn%runoff
-    vegn%dailyPrcp = vegn%dailyPrcp + forcing%rain * myinterface%step_seconds
+  vegn%dailyPrcp = vegn%dailyPrcp + forcing%rain * myinterface%step_seconds
+
+  ! print*,'hourly_diagnostics() : vegn%evap, vegn%dailyEvap ', vegn%evap, vegn%dailyEvap
 
 end subroutine hourly_diagnostics
 
 !============================================
-  subroutine daily_diagnostics(vegn, forcing, iyears, idoy, iday, fno3, fno4, out_daily_cohorts, out_daily_tile)
+  subroutine daily_diagnostics(vegn, forcing, iyears, idoy, out_daily_cohorts, out_daily_tile)
 
   use md_forcing_lm3ppa, only: climate_type
   use md_interface_lm3ppa, only: outtype_daily_cohorts, outtype_daily_tile
@@ -974,9 +990,10 @@ end subroutine hourly_diagnostics
 
   type(vegn_tile_type), intent(inout) :: vegn
   type(climate_type),intent(in):: forcing
-  integer, intent(in) :: iyears,idoy,iday,fno3,fno4
-  type(outtype_daily_cohorts), dimension(out_max_cohorts) :: out_daily_cohorts
-  type(outtype_daily_tile) :: out_daily_tile
+  ! real(kind=dp),  dimension(:,13), intent(in)  :: forcing 
+  integer, intent(in) :: iyears,idoy
+  type(outtype_daily_cohorts), dimension(out_max_cohorts), intent(out) :: out_daily_cohorts
+  type(outtype_daily_tile), intent(out) :: out_daily_tile
 
   !-------local var ------
   type(cohort_type), pointer :: cc    ! current cohort
@@ -991,7 +1008,7 @@ end subroutine hourly_diagnostics
           
           out_daily_cohorts(i)%year    = iyears
           out_daily_cohorts(i)%doy     = idoy
-          out_daily_cohorts(i)%hour    = i
+          out_daily_cohorts(i)%hour    = 1.0 ! doesn-t make sense
           out_daily_cohorts(i)%cID     = cc%ccID
           out_daily_cohorts(i)%PFT     = cc%species
           out_daily_cohorts(i)%layer   = cc%layer
@@ -1016,15 +1033,6 @@ end subroutine hourly_diagnostics
           out_daily_cohorts(i)%rootN   = cc%rootN*1000
           out_daily_cohorts(i)%SW_N    = cc%sapwN*1000
           out_daily_cohorts(i)%HW_N    = cc%woodN*1000
-
-          write(fno3,'(6(I5,","),1(F8.1,","),25(F12.4,","))')  &
-                iyears,idoy,i, cc%ccID,cc%species,cc%layer,   &
-                cc%nindivs*10000, cc%layerfrac, cc%LAI, &
-                cc%dailygpp,cc%dailyresp,cc%dailytrsp, &
-                cc%seedC,cc%NPPleaf,cc%NPProot,cc%NPPwood, &
-                cc%NSC, cc%seedC, cc%bl, cc%br, cc%bsw, cc%bHW, &
-                cc%NSN*1000, cc%seedN*1000, cc%leafN*1000, &
-                cc%rootN*1000,cc%sapwN*1000,cc%woodN*1000
 
           ! annual sum
           cc%annualGPP = cc%annualGPP + cc%dailyGPP
@@ -1078,21 +1086,6 @@ end subroutine hourly_diagnostics
         out_daily_tile%mineralN  = vegn%mineralN*1000
         out_daily_tile%N_uptk    = vegn%dailyNup*1000
 
-         write(fno4,'(2(I5,","),60(F12.6,","))') iyears, idoy,  &
-            vegn%tc_daily, vegn%dailyPrcp, vegn%soilwater,      &
-            vegn%dailyTrsp, vegn%dailyEvap,vegn%dailyRoff,      &
-            vegn%wcl(1)*thksl(1)*1000.,vegn%wcl(2)*thksl(2)*1000., &
-            vegn%wcl(3)*thksl(3)*1000., &
-            vegn%LAI,vegn%dailyGPP, vegn%dailyResp, vegn%dailyRh, &
-            vegn%NSC, vegn%SeedC, vegn%leafC, vegn%rootC,  &
-            vegn%SapwoodC, vegn%woodC,                     &
-            vegn%NSN*1000, vegn%SeedN*1000, vegn%leafN*1000,  &
-            vegn%rootN*1000, vegn%SapwoodN *1000,  vegn%WoodN *1000,  &
-            vegn%MicrobialC, vegn%metabolicL, vegn%structuralL, &
-            vegn%MicrobialN*1000, vegn%metabolicN*1000, vegn%structuralN*1000, &
-            vegn%mineralN*1000,   vegn%dailyNup*1000
-      !endif
-
         !annual tile
         ! Annual summary:
         vegn%annualNup  = vegn%annualNup  + vegn%dailyNup
@@ -1119,14 +1112,14 @@ end subroutine hourly_diagnostics
  end subroutine daily_diagnostics
 
 !======================================================
-  subroutine annual_diagnostics(vegn, iyears, fno2, fno5, out_annual_cohorts, out_annual_tile)
+  subroutine annual_diagnostics(vegn, iyears, out_annual_cohorts, out_annual_tile)
    
   use md_interface_lm3ppa, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
 
    type(vegn_tile_type), intent(inout) :: vegn
-   integer, intent(in) :: fno2, fno5, iyears
-   type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts
-   type(outtype_annual_tile) :: out_annual_tile
+   integer, intent(in) :: iyears
+   type(outtype_annual_cohorts), dimension(out_max_cohorts), intent(out) :: out_annual_cohorts
+   type(outtype_annual_tile), intent(out) :: out_annual_tile
 
 !   --------local var --------
     type(cohort_type), pointer :: cc
@@ -1134,16 +1127,6 @@ end subroutine hourly_diagnostics
     real :: plantC, plantN, soilC, soilN
     integer :: i
     integer, parameter :: out_max_cohorts = 20     ! Try: Number of maximum cohorts
-
-    write(fno2,'(2(I6,","),1(F9.2,","))')iyears, vegn%n_cohorts,vegn%annualN*1000
-    ! write(*,  '(2(I6,","),1(F9.2,","))')iyears !, vegn%n_cohorts,vegn%annualN*1000
-    !! output yearly variables
-    !write(*,'(3(a5,","),25(a9,","))') &
-    !'chtID','PFT','layer','density', 'f_layer',  &
-    !    'dDBH','dbh','height','Acrown', &
-    !    'wood','nsc', 'NSN','fNPPseed',     &
-    !    'fNPPL','fNPPR','fNPPW','GPP-yr','NPP-yr', &
-    !    'N_uptk','N_fix','spLAI'
 
     ! Cohotrs ouput
     do i = 1, vegn%n_cohorts
@@ -1178,17 +1161,6 @@ end subroutine hourly_diagnostics
       out_annual_cohorts(i)%N_uptk  = cc%annualNup*1000
       out_annual_cohorts(i)%N_fix   = cc%annualfixedN*1000
       out_annual_cohorts(i)%maxLAI  = spdata(cc%species)%laimax
-
-        write(fno2,'(1(I7,","),2(I4,","),1(F9.1,","),45(F12.4,","))')        &
-            iyears,       &
-            cc%ccID,cc%species,cc%layer,                        &
-            cc%nindivs*10000, cc%layerfrac,dDBH,                &
-            cc%dbh,cc%height,cc%crownarea,                      &
-            cc%bsw+cc%bHW,cc%nsc,cc%NSN*1000,                   &
-            treeG,fseed, fleaf, froot, fwood,                 &
-            cc%annualGPP,cc%annualNPP,                          &
-            cc%annualNup*1000,cc%annualfixedN*1000,             &
-            spdata(cc%species)%laimax
 
     enddo
 
@@ -1250,23 +1222,6 @@ end subroutine hourly_diagnostics
     out_annual_tile%Seedling_C = vegn%totNewCC*1000
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
 
-
-    write(fno5,'(1(I5,","),27(F9.4,","),6(F9.3,","),18(F10.4,","))') &
-        iyears,       &
-        vegn%CAI,vegn%LAI, &
-        vegn%annualGPP, vegn%annualResp, vegn%annualRh, &
-        vegn%annualPrcp, vegn%SoilWater,vegn%annualTrsp, vegn%annualEvap, vegn%annualRoff, &
-        plantC,soilC,plantN *1000, soilN * 1000, (plantN+soilN)*1000,&
-        vegn%NSC, vegn%SeedC, vegn%leafC, vegn%rootC,  &
-        vegn%SapwoodC, vegn%woodC,                     &
-        vegn%NSN*1000, vegn%SeedN*1000, vegn%leafN*1000, vegn%rootN*1000, &
-        vegn%SapwoodN *1000,  vegn%WoodN *1000,  &
-        vegn%MicrobialC, vegn%metabolicL, vegn%structuralL, &
-        vegn%MicrobialN*1000, vegn%metabolicN*1000, vegn%structuralN*1000, &
-        vegn%mineralN*1000,   vegn%annualfixedN*1000, vegn%annualNup*1000, &
-        vegn%annualN*1000,vegn%N_P2S_yr*1000, vegn%Nloss_yr*1000, &
-        vegn%totseedC*1000,vegn%totseedN*1000,vegn%totNewCC*1000,vegn%totNewCN*1000
-    
     ! I cannot figure out why N losing. Hack!
    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
 
@@ -1282,6 +1237,3 @@ subroutine Recover_N_balance(vegn)
  end subroutine
 
 end module datatypes
-
-
-

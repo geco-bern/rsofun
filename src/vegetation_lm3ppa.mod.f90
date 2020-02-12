@@ -1066,7 +1066,6 @@ subroutine vegn_annual_starvation (vegn)
   enddo
   ! Remove the cohorts with 0 individuals
   ! call kill_lowdensity_cohorts(vegn)
-
 end subroutine vegn_annual_starvation
 
 ! ===============================
@@ -1935,7 +1934,6 @@ subroutine annual_calls(vegn)
 
     ! ---------- annual call -------------
     ! update the LAImax of each PFT according to available N for next year
-
     if(myinterface%params_siml%update_annualLAImax) call vegn_annualLAImax_update(vegn)
 
     ! Reproduction and mortality
@@ -1990,6 +1988,7 @@ subroutine vegn_annualLAImax_update(vegn)
   type(vegn_tile_type), intent(inout) :: vegn
 
   ! ---- local vars
+  type(cohort_type), pointer :: cc
   real   :: LAImin, LAIfixedN, LAImineralN
   real   :: LAI_Nitrogen
   logical:: fixedN_based
@@ -2072,14 +2071,12 @@ subroutine initialize_vegn_tile(vegn,nCohorts)
    integer,intent(in) :: nCohorts
 
 !--------local vars -------
-
    type(cohort_type),dimension(:), pointer :: cc
    type(cohort_type),pointer :: cx
    integer,parameter :: rand_seed = 86456
    real    :: r
    real    :: btotal
    integer :: i, istat
-
 
     ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
     K1          = myinterface%params_tile%K1  
@@ -2117,7 +2114,9 @@ subroutine initialize_vegn_tile(vegn,nCohorts)
       enddo
       MaxCohortID = cx%ccID
       ! Sorting these cohorts
+
       call relayer_cohorts(vegn)
+
       ! Initial Soil pools and environmental conditions
       vegn%metabolicL   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
       vegn%structuralL  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
@@ -2144,7 +2143,10 @@ subroutine initialize_vegn_tile(vegn,nCohorts)
       vegn%thetaS = 1.0
 
       ! tile
+      !print*, 'initialize_vegn_tile() 1: ',  vegn%n_cohorts   ! xxx debug
       call summarize_tile(vegn)
+      !print*, 'initialize_vegn_tile() 2: ',  vegn%n_cohorts   ! xxx debug
+
       vegn%initialN0 = vegn%NSN + vegn%SeedN + vegn%leafN +      &
                        vegn%rootN + vegn%SapwoodN + vegn%woodN + &
                        vegn%MicrobialN + vegn%metabolicN +       &
@@ -2168,7 +2170,9 @@ subroutine initialize_vegn_tile(vegn,nCohorts)
          call initialize_cohort_from_biomass(cx,btotal)
       enddo
       ! Sorting these cohorts
+
       call relayer_cohorts(vegn)
+
       ! ID each cohort
       do i=1,nCohorts
          cx => vegn%cohorts(i)
@@ -2185,7 +2189,10 @@ subroutine initialize_vegn_tile(vegn,nCohorts)
       vegn%previousN   = vegn%mineralN
 
       ! tile
+      !print*, 'initialize_vegn_tile() 3: ',  vegn%n_cohorts   ! xxx debug
       call summarize_tile(vegn)
+      !print*, 'initialize_vegn_tile() 4: ',  vegn%n_cohorts   ! xxx debug
+
       vegn%initialN0 = vegn%NSN + vegn%SeedN + vegn%leafN +      &
                        vegn%rootN + vegn%SapwoodN + vegn%woodN + &
                        vegn%MicrobialN + vegn%metabolicN +       &

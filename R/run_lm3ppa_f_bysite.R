@@ -151,6 +151,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     ## Prepare output to be a nice looking tidy data frame (tibble)
     # ddf <- init_dates_dataframe(yrstart = params_siml$firstyeartrend, yrend = siteinfo$year_end, noleap = TRUE)
 
+    names(out) <- c("output_hourly_tile", "output_daily_tile", "output_daily_cohorts", "output_annual_tile", "output_annual_cohorts")
+
     ## hourly
     out[[1]] <- out[[1]] %>%
       as.matrix() %>% 
@@ -195,7 +197,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       dplyr::mutate(sitename = sitename)
 
   } else {
-
+    out <- NA
   }
     
   return(out)

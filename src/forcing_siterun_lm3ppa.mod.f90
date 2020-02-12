@@ -10,7 +10,7 @@ module md_forcing_lm3ppa
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  use md_params_core_lm3ppa, only: ntstepsyear !, ndayyear, dummy, nhoursyear
+  use md_params_core_lm3ppa, only: ntstepsyear
   implicit none
 
   private
@@ -66,7 +66,7 @@ contains
     integer, intent(in) :: nt ! number of time steps
 
     real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    ! type(climate_type), dimension(nt), intent(in) :: forcing
+    !type(climate_type), dimension(nt), intent(in) :: forcing
 
     integer, intent(in) :: climateyear_idx, climateyear
 
@@ -95,7 +95,7 @@ contains
     ! out_climate%P_air     = real(forcing(idx_start:idx_end, 11))           ! pa
     ! out_climate%soilwater = 0.8                                           ! soil moisture, vol/vol
 
-    ! xxx check if units as they are provided in input file need to be adjusted (to be done in R), for conversions see above.
+    !xxx check if units as they are provided in input file need to be adjusted (to be done in R), for conversions see above.
     out_climate(:)%year      = int(forcing(idx_start:idx_end,1))          ! Year
     out_climate(:)%doy       = int(forcing(idx_start:idx_end,2))           ! day of the year
     out_climate(:)%hod       = real(forcing(idx_start:idx_end,3))           ! hour of the day
@@ -110,6 +110,9 @@ contains
     out_climate(:)%CO2       = real(forcing(idx_start:idx_end,12))           ! ppm
     out_climate(:)%soilwater = real(forcing(idx_start:idx_end,13))     ! soil moisture, vol/vol
 
+    !out_climate(:) = forcing(idx_start:idx_end)
+
+
   end function getclimate
 
 
@@ -120,6 +123,8 @@ contains
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
     real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    ! type(climate_type), dimension(nt), intent(in) :: forcing
+
     integer, intent(in) :: forcingyear_idx, forcingyear
 
     ! function return variable
@@ -132,12 +137,13 @@ contains
     idx_start = (forcingyear_idx - 1) * ntstepsyear + 1
     idx_end   = idx_start + ntstepsyear - 1
 
-    if (int(forcing(idx_start, 1)) /= forcingyear) stop 'getclimate(): forcingyear does not correspond to index read from forcing'
-
+    ! if (int(forcing(idx_start, 1)) /= forcingyear) stop 'getco2(): forcingyear does not correspond to index read from forcing'
+    
     !year = real(forcing(idx_start:idx_end, 1))           ! Year
-    pco2 = real(forcing(idx_start:idx_end, 12)) * 1.0e-6  ! mol/mol
+    pco2 = real(forcing(idx_start:idx_end,12)) * 1.0e-6  ! mol/mol
 
-  end function getco2  
+  end function getco2
+
 
 end module md_forcing_lm3ppa
 

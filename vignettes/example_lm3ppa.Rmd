@@ -43,7 +43,7 @@ params_siml <- list(
       do_U_shaped_mortality = FALSE,
       update_annaulLAImax   = FALSE,
       do_closedN_run        = TRUE
-)
+      )
 ```
 
 Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters).
@@ -164,10 +164,11 @@ The file has the following variables (units):
                       K          kg/kg          m/s     kg_H2O/m2/s               pa               W/m2            W/m2            ppm     
 
 ```{r}
-ddf_input <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
+forcing <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
   mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
   mutate(sitename = "ORNL") %>% 
-  filter(!(mday(date)==29 & month(date)==2))
+  filter(!(mday(date)==29 & month(date)==2)) %>% 
+dplyr::select(-date, -sitename)
 
 complete <-rep(seq(ymd("1998-01-01"), ymd("2008-12-31"), by = "days"), each = 24)
 
@@ -183,14 +184,14 @@ Run the model for all the sites specified in the first step.
 mod <- run_lm3ppa_f_bysite( "BE-Vie", 
                             params_siml, 
                             siteinfo, 
-                            ddf_input, # forcing
+                            forcing, # ddf_input
                             params_tile, 
                             params_species, 
                             params_soil, 
                             init_cohort, 
                             init_soil, 
                             makecheck = TRUE)
-  
+
 df_drivers <- collect_drivers_sofun( 
   settings       = settings_sims, 
   forcing        = ddf_input

@@ -378,7 +378,14 @@ contains
     myinterface%params_siml%outputdaily           = outputdaily
     myinterface%params_siml%do_U_shaped_mortality = do_U_shaped_mortality
     myinterface%params_siml%update_annualLAImax   = update_annualLAImax      
-    myinterface%params_siml%do_closedN_run        = do_closedN_run          
+    myinterface%params_siml%do_closedN_run        = do_closedN_run       
+
+    !----------------------------------------------------------------
+    ! GET GRID INFORMATION
+    !----------------------------------------------------------------
+    myinterface%grid%lon = real( longitude )
+    myinterface%grid%lat = real( latitude )
+    myinterface%grid%elv = real( altitude )   
 
     ! Tile parameters
     myinterface%params_tile%soiltype     = int(soiltype)
@@ -425,34 +432,31 @@ contains
     myinterface%init_soil%init_Nmineral    = real( init_Nmineral )
     myinterface%init_soil%N_input          = real( N_input )
 
-
-    !----------------------------------------------------------------
-    ! GET GRID INFORMATION
-    !----------------------------------------------------------------
-    myinterface%grid%lon = real( longitude )
-    myinterface%grid%lat = real( latitude )
-    myinterface%grid%elv = real( altitude )
-
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
     myinterface%params_soil = getsoil( params_soil )
 
+    !----------------------------------------------------------------
+    ! INTERPRET FORCING
+    !----------------------------------------------------------------
+    timestep = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
     myinterface%steps_per_day = int(24.0/timestep)
     myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
     myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
     ntstepsyear = myinterface%steps_per_day * 365
-    write(*,*) myinterface%steps_per_day, myinterface%dt_fast_yr, myinterface%step_seconds
   
     totyears = myinterface%params_siml%runyears
     totdays  = int(totyears/yr_data+1)*days_data
-    myinterface%datalines = datalines
+    myinterface%params_siml%equi_days = totdays - days_data
+
+    !myinterface%datalines = datalines
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
-
+    
     do yr=1,myinterface%params_siml%runyears
 
       !----------------------------------------------------------------
@@ -465,7 +469,8 @@ contains
       ! Get external (environmental) forcing
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
-      myinterface%climate = getclimate( &
+      !print*,'climateyear_idx, climateyear', myinterface%steering%climateyear_idx, myinterface%steering%climateyear
+      myinterface%climate(:) = getclimate( &
                                         nt, &
                                         forcing, &
                                         myinterface%steering%climateyear_idx, &
@@ -473,27 +478,27 @@ contains
                                         )
 
       ! Get annual, gobally uniform CO2
-      myinterface%pco2 = getco2(  &
+      myinterface%pco2(:) = getco2(  &
                                   nt, &
                                   forcing, &
                                   myinterface%steering%climateyear_idx, &  ! to make it equivalent to BiomeE
                                   myinterface%steering%climateyear &
-                                  ! myinterface%steering%forcingyear_idx, &
-                                  ! myinterface%steering%forcingyear &
+                                  !myinterface%steering%forcingyear_idx, &
+                                  !myinterface%steering%forcingyear &
                                   )
 
-      ! !----------------------------------------------------------------
-      ! ! Call biosphere (wrapper for all modules, contains gridcell loop)
-      ! !----------------------------------------------------------------
-      ! out_biosphere = biosphere_annual()
+      !----------------------------------------------------------------
+      ! Call biosphere (wrapper for all modules, contains gridcell loop)
+      !----------------------------------------------------------------
+      out_biosphere = biosphere_annual()
 
       ! ! ----------------------------------------------------------------
       ! ! Populate big output arrays
       ! ! ----------------------------------------------------------------
 
-      ! ! ----------------------------------------------------------------
-      ! ! Print out_hourly_tile
-      ! ! ----------------------------------------------------------------
+      ! ----------------------------------------------------------------
+      ! Output out_hourly_tile
+      ! ----------------------------------------------------------------
       ! if (.not. myinterface%steering%spinup) then
       !   idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1          ! To exclude the spinup years and include only the transient years
       !   idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
@@ -501,24 +506,24 @@ contains
       ! end if
 
       ! ! ----------------------------------------------------------------
-      ! ! Print out_daily_tile
+      ! ! Output out_daily_tile
       ! ! ----------------------------------------------------------------
       ! idx_daily_start  = (yr - 1) * ndayyear + 1
       ! idx_daily_end    = idx_daily_start + ndayyear - 1
       ! call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
 
       ! ! ----------------------------------------------------------------
-      ! ! Print out_daily_cohorts
+      ! ! Output out_daily_cohorts
       ! ! ----------------------------------------------------------------
       ! call populate_outarray_daily_cohorts( out_biosphere%daily_cohorts(:,:), output_daily_cohorts(idx_daily_start:idx_daily_end,:,:) )
 
       ! ! ----------------------------------------------------------------
-      ! ! Print out_annual_tile
+      ! ! Output out_annual_tile
       ! ! ----------------------------------------------------------------
       ! call populate_outarray_annual_tile( out_biosphere%annual_tile, output_annual_tile(yr,:) )
 
       ! ! ----------------------------------------------------------------
-      ! ! Print output_annual_cohorts
+      ! ! Output output_annual_cohorts
       ! ! ----------------------------------------------------------------
       ! call populate_outarray_annual_cohorts( out_biosphere%annual_cohorts(:), output_annual_cohorts(yr,:,:) )
 
@@ -526,9 +531,10 @@ contains
 
     deallocate(myinterface%climate)
     deallocate(myinterface%pco2)
+ 
 
-  end subroutine lm3ppa_f
-
+  !end subroutine lm3ppa_f
+  contains
 
   subroutine populate_outarray_hourly_tile( hourly_tile, out_hourly_tile ) !, idx_daily_start, idx_daily_end
 
@@ -742,5 +748,7 @@ contains
     out_annual_cohorts(:, 24) = dble(annual_cohorts(:)%maxLAI)
 
   end subroutine populate_outarray_annual_cohorts
+
+  end subroutine lm3ppa_f
 
 end module sofun_r_mod
