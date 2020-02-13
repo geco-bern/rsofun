@@ -1935,6 +1935,8 @@ subroutine annual_calls(vegn)
     ! ---------- annual call -------------
     ! update the LAImax of each PFT according to available N for next year
     if(myinterface%params_siml%update_annualLAImax) call vegn_annualLAImax_update(vegn)
+    !if (update_annualLAImax) 
+    !call vegn_annualLAImax_update(vegn)
 
     ! Reproduction and mortality
     !call vegn_starvation(vegn)  ! called daily

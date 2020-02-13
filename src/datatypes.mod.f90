@@ -568,11 +568,12 @@ real   :: N_input    = 0.0008 ! annual N input to soil N pool, kgN m-2 yr-1
 ! character(len=80) :: filepath_in = '/Users/eweng/Documents/BiomeESS/forcingData/'
 ! character(len=160) :: climfile = 'US-Ha1forcing.txt'
 ! ! integer   :: model_run_years = 100  ! xxx todo: not used
-! logical   :: outputhourly = .False.
-! logical   :: outputdaily  = .True.
-! logical   :: do_U_shaped_mortality = .False.
-! logical   :: update_annualLAImax = .False.
-! logical   :: do_closedN_run = .True. !.False.
+!integer   :: equi_days       = 0 ! 100 * 365
+logical   :: outputhourly = .False.
+logical   :: outputdaily  = .True.
+logical   :: do_U_shaped_mortality = .False.
+logical   :: update_annualLAImax = .False.
+logical   :: do_closedN_run = .True. !.False.
 
 ! namelist /initial_state_nml/ &
 !     init_n_cohorts, init_cohort_species, init_cohort_nindivs, &
@@ -927,44 +928,44 @@ end subroutine summarize_tile
   !! Output horly diagnostics
 
   ! xxx test: removing condition
-    ! if (.not. myinterface%steering%spinup) then
+    if (.not. myinterface%steering%spinup) then
 
-    !     ! xxx debug XXX PROBLEM WITH POPULATING out_hourly_tile
-    !     ! if (ihour==1.0 .and. idoy==1.0) then
-    !     !   print*,iyears    
-    !     !   print*,idoy   
-    !     !   print*,ihour    
-    !     !   print*,forcing%radiation    !forcingData 
-    !     !   print*,forcing%Tair         !forcingData  
-    !     !   print*,forcing%rain         !forcingData 
-    !     !   print*,vegn%GPP  
-    !     !   print*,vegn%resp   
-    !     !   print*,vegn%transp
-    !     !   print*,vegn%evap   
-    !     !   print*,vegn%runoff   
-    !     !   print*,vegn%soilwater
-    !     !   print*,vegn%wcl(1)    
-    !     !   print*,vegn%FLDCAP
-    !     !   print*,vegn%WILTPT
-    !     ! end if
+        ! xxx debug XXX PROBLEM WITH POPULATING out_hourly_tile
+        ! if (ihour==1.0 .and. idoy==1.0) then
+        !   print*,iyears    
+        !   print*,idoy   
+        !   print*,ihour    
+        !   print*,forcing%radiation    !forcingData 
+        !   print*,forcing%Tair         !forcingData  
+        !   print*,forcing%rain         !forcingData 
+        !   print*,vegn%GPP  
+        !   print*,vegn%resp   
+        !   print*,vegn%transp
+        !   print*,vegn%evap   
+        !   print*,vegn%runoff   
+        !   print*,vegn%soilwater
+        !   print*,vegn%wcl(1)    
+        !   print*,vegn%FLDCAP
+        !   print*,vegn%WILTPT
+        ! end if
 
-    !     out_hourly_tile%year      =  iyears    
-    !     out_hourly_tile%doy       =  idoy   
-    !     out_hourly_tile%hour      =  ihour    
-    !     out_hourly_tile%rad       =  forcing%radiation    !forcingData 
-    !     out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
-    !     out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
-    !     out_hourly_tile%GPP       =  vegn%GPP  
-    !     out_hourly_tile%Resp      =  vegn%resp   
-    !     out_hourly_tile%Transp    =  vegn%transp
-    !     out_hourly_tile%Evap      =  vegn%evap   
-    !     out_hourly_tile%Runoff    =  vegn%runoff   
-    !     out_hourly_tile%Soilwater =  vegn%soilwater
-    !     out_hourly_tile%wcl       =  vegn%wcl(1)    
-    !     out_hourly_tile%FLDCAP    =  vegn%FLDCAP
-    !     out_hourly_tile%WILTPT    =  vegn%WILTPT
+        out_hourly_tile%year      =  iyears    
+        out_hourly_tile%doy       =  idoy   
+        out_hourly_tile%hour      =  ihour    
+        out_hourly_tile%rad       =  forcing%radiation    !forcingData 
+        out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
+        out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
+        out_hourly_tile%GPP       =  vegn%GPP  
+        out_hourly_tile%Resp      =  vegn%resp   
+        out_hourly_tile%Transp    =  vegn%transp
+        out_hourly_tile%Evap      =  vegn%evap   
+        out_hourly_tile%Runoff    =  vegn%runoff   
+        out_hourly_tile%Soilwater =  vegn%soilwater
+        out_hourly_tile%wcl       =  vegn%wcl(1)    
+        out_hourly_tile%FLDCAP    =  vegn%FLDCAP
+        out_hourly_tile%WILTPT    =  vegn%WILTPT
 
-    ! end if
+    end if
 
   ! Daily summary:
   vegn%dailyNup  = vegn%dailyNup  + vegn%N_uptake

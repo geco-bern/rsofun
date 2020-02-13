@@ -278,7 +278,7 @@ contains
     !----------------------------------------------------------------
     use md_params_siml_lm3ppa, only: getsteering
     use md_params_soil_lm3ppa, only: getsoil
-    use md_forcing_lm3ppa, only: getclimate, getco2, climate_type, forcingData
+    use md_forcing_lm3ppa, only: getclimate, getco2, climate_type !, forcingData
     use md_interface_lm3ppa, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core_lm3ppa, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
       ndayyear, nvars_daily_tile, nvars_hourly_tile, nvars_daily_cohorts, nvars_annual_cohorts, nvars_annual_tile
@@ -402,22 +402,22 @@ contains
     myinterface%params_tile%f_N_add      = real( f_N_add )
 
     ! Species parameters
-    myinterface%params_species(:)%lifeform     = real( params_species(:,1) )
-    myinterface%params_species(:)%phenotype    = real( params_species(:,2) )
-    myinterface%params_species(:)%pt           = real( params_species(:,3) )
-    myinterface%params_species(:)%seedlingsize = real( params_species(:,4) )
-    myinterface%params_species(:)%LMA          = real( params_species(:,5) )
-    myinterface%params_species(:)%phiRL        = real( params_species(:,6) )
-    myinterface%params_species(:)%LNbase       = real( params_species(:,7) )
-    myinterface%params_species(:)%laimax       = real( params_species(:,8) )
-    myinterface%params_species(:)%LAI_light    = real( params_species(:,9) )
-    myinterface%params_species(:)%Nfixrate0    = real( params_species(:,10) )
-    myinterface%params_species(:)%NfixCost0    = real( params_species(:,11) )
-    myinterface%params_species(:)%phiCSA       = real( params_species(:,12) )
-    myinterface%params_species(:)%mortrate_d_c = real( params_species(:,13) )
-    myinterface%params_species(:)%mortrate_d_u = real( params_species(:,14) )
-    myinterface%params_species(:)%maturalage   = real( params_species(:,15) )
-    myinterface%params_species(:)%fNSNmax      = real( params_species(:,16) )
+    myinterface%params_species(:)%lifeform     = real( params_species(:,1))
+    myinterface%params_species(:)%phenotype    = real( params_species(:,2))
+    myinterface%params_species(:)%pt           = real( params_species(:,3))
+    myinterface%params_species(:)%seedlingsize = real( params_species(:,4))
+    myinterface%params_species(:)%LMA          = real( params_species(:,5))
+    myinterface%params_species(:)%phiRL        = real( params_species(:,6))
+    myinterface%params_species(:)%LNbase       = real( params_species(:,7))
+    myinterface%params_species(:)%laimax       = real( params_species(:,8))
+    myinterface%params_species(:)%LAI_light    = real( params_species(:,9))
+    myinterface%params_species(:)%Nfixrate0    = real( params_species(:,10))
+    myinterface%params_species(:)%NfixCost0    = real( params_species(:,11))
+    myinterface%params_species(:)%phiCSA       = real( params_species(:,12))
+    myinterface%params_species(:)%mortrate_d_c = real( params_species(:,13))
+    myinterface%params_species(:)%mortrate_d_u = real( params_species(:,14))
+    myinterface%params_species(:)%maturalage   = real( params_species(:,15))
+    myinterface%params_species(:)%fNSNmax      = real( params_species(:,16))
 
     ! Initial cohort sizes
     myinterface%init_cohort(:)%init_cohort_species = real(init_cohort(:,1))
@@ -435,7 +435,17 @@ contains
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
-    myinterface%params_soil = getsoil( params_soil )
+    !myinterface%params_soil = getsoil( params_soil )
+
+    myinterface%params_soil%GMD(:)               = real(params_soil(:,1))
+    myinterface%params_soil%GSD(:)               = real(params_soil(:,2))
+    myinterface%params_soil%vwc_sat(:)           = real(params_soil(:,3))
+    myinterface%params_soil%chb(:)               = real(params_soil(:,4))
+    myinterface%params_soil%psi_sat_ref(:)       = real(params_soil(:,5))
+    myinterface%params_soil%k_sat_ref(:)         = real(params_soil(:,6))
+    myinterface%params_soil%alphaSoil(:)         = real(params_soil(:,7))
+    myinterface%params_soil%heat_capacity_dry(:) = real(params_soil(:,8))
+
 
     !----------------------------------------------------------------
     ! INTERPRET FORCING
@@ -445,19 +455,19 @@ contains
     myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
     myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
     ntstepsyear = myinterface%steps_per_day * 365
-  
+
+    !write(*,*) timestep, myinterface%steps_per_day, myinterface%dt_fast_yr, myinterface%step_seconds
+
     totyears = myinterface%params_siml%runyears
     totdays  = int(totyears/yr_data+1)*days_data
-    myinterface%params_siml%equi_days = totdays - days_data
-
-    !myinterface%datalines = datalines
+    !myinterface%params_siml%equi_days = totdays - days_data
+    myinterface%datalines = datalines
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
-    
-    do yr=1,myinterface%params_siml%runyears
+    do yr=1,15 !myinterface%params_siml%runyears
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -486,7 +496,6 @@ contains
                                   !myinterface%steering%forcingyear_idx, &
                                   !myinterface%steering%forcingyear &
                                   )
-
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains gridcell loop)
       !----------------------------------------------------------------
@@ -499,18 +508,18 @@ contains
       ! ----------------------------------------------------------------
       ! Output out_hourly_tile
       ! ----------------------------------------------------------------
-      ! if (.not. myinterface%steering%spinup) then
-      !   idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1          ! To exclude the spinup years and include only the transient years
-      !   idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
-      !   call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
-      ! end if
+      if (.not. myinterface%steering%spinup) then
+        idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1          ! To exclude the spinup years and include only the transient years
+        idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
+        call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
+      end if
 
       ! ! ----------------------------------------------------------------
       ! ! Output out_daily_tile
       ! ! ----------------------------------------------------------------
-      ! idx_daily_start  = (yr - 1) * ndayyear + 1
-      ! idx_daily_end    = idx_daily_start + ndayyear - 1
-      ! call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
+      idx_daily_start  = (yr - 1) * ndayyear + 1
+      idx_daily_end    = idx_daily_start + ndayyear - 1
+      call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
 
       ! ! ----------------------------------------------------------------
       ! ! Output out_daily_cohorts
@@ -520,7 +529,7 @@ contains
       ! ! ----------------------------------------------------------------
       ! ! Output out_annual_tile
       ! ! ----------------------------------------------------------------
-      ! call populate_outarray_annual_tile( out_biosphere%annual_tile, output_annual_tile(yr,:) )
+      call populate_outarray_annual_tile( out_biosphere%annual_tile, output_annual_tile(yr,:) )
 
       ! ! ----------------------------------------------------------------
       ! ! Output output_annual_cohorts

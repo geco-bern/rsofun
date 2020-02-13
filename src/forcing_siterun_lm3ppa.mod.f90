@@ -14,7 +14,7 @@ module md_forcing_lm3ppa
   implicit none
 
   private
-  public climate_type, getclimate, getco2, forcingData
+  public climate_type, getclimate, getco2!, forcingData
 
   ! type climate_type
   !   integer(kind=in), dimension(ntstepsyear) :: year          ! Year
@@ -50,7 +50,7 @@ module md_forcing_lm3ppa
   end type climate_type
 
   ! Input forcing data
-  type(climate_type), pointer, save :: forcingData(:)
+  !type(climate_type), pointer, save :: forcingData(:)
 
 contains
 
@@ -111,7 +111,6 @@ contains
     out_climate(:)%soilwater = real(forcing(idx_start:idx_end,13))     ! soil moisture, vol/vol
 
     !out_climate(:) = forcing(idx_start:idx_end)
-
 
   end function getclimate
 

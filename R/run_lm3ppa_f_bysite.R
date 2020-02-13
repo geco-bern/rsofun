@@ -157,8 +157,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     out[[1]] <- out[[1]] %>%
       as.matrix() %>% 
       as_tibble() %>%
-      setNames(c("year", "doy", "hour", "rad", "Tair", "Prcp", "GPP", "Resp", "Transp", "Evap", "Runoff", "Soilwater", "wcl", "FLDCAP", "WILTPT")) %>%
-      dplyr::mutate(sitename = sitename) #%>%
+      setNames(c("year", "doy", "hour", "rad", "Tair", "Prcp", "GPP", "Resp", "Transp", "Evap", "Runoff", "Soilwater", "wcl", "FLDCAP", "WILTPT")) #%>%
+      #dplyr::mutate(sitename = sitename) #%>%
       # dplyr::mutate(date = lubridate::ymd_hm(paste0(as.character(year), "-01-01 00:00")) + lubridate::days(doy-1) + hours(hour)) %>%
       # dplyr::select(-year, -doy, -hour)
       # dplyr::bind_cols(ddf,.) %>% 
@@ -168,33 +168,33 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     out[[2]] <- out[[2]] %>%
       as.matrix() %>% 
       as_tibble() %>%
-      setNames(c("year", "doy", "Tc", "Prcp", "totWs", "Trsp", "Evap", "Runoff", "ws1", "ws2", "ws3", "LAI", "GPP", "Rauto", "Rh", "NSC", "seedC", "leafC", "rootC", "SW_C", "HW_C", "NSN", "seedN", "leafN", "rootN", "SW_N", "HW_N", "McrbC", "fastSOM", "slowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_uptk")) %>%
-      dplyr::mutate(sitename = sitename) #%>%
-    #   dplyr::mutate(date = lubridate::ymd(paste0(as.character(year), "-01-01")) + lubridate::days(doy-1)) %>%
-    #   dplyr::select(-year, -doy)
+      setNames(c("year", "doy", "Tc", "Prcp", "totWs", "Trsp", "Evap", "Runoff", "ws1", "ws2", "ws3", "LAI", "GPP", "Rauto", "Rh", "NSC", "seedC", "leafC", "rootC", "SW_C", "HW_C", "NSN", "seedN", "leafN", "rootN", "SW_N", "HW_N", "McrbC", "fastSOM", "slowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_uptk")) #%>%
+      #dplyr::mutate(sitename = sitename) #%>%
+      #dplyr::mutate(date = lubridate::ymd(paste0(as.character(year), "-01-01")) + lubridate::days(doy-1)) %>%
+      #dplyr::select(-year, -doy)
       
     # ## daily_cohorts
     out[[3]] <- out[[3]] %>%
       as.matrix() %>% 
       as_tibble() %>%
-      setNames(c("year", "doy", "hour", "cID", "PFT", "layer", "density", "f_layer", "LAI", "gpp", "resp", "transp", "NPPleaf", "NPProot", "NPPwood", "NSC", "seedC", "leafC", "rootC", "SW_C", "HW_C", "NSN", "seedN", "leafN", "rootN", "SW_N", "HW_N")) %>%
-      dplyr::mutate(sitename = sitename) #%>%
-    #   dplyr::mutate(date = lubridate::ymd(paste0(as.character(year), "-01-01")) + lubridate::days(doy-1)) %>%
-    #   dplyr::select(-year, -doy)
+      setNames(c("year", "doy", "hour", "cID", "PFT", "layer", "density", "f_layer", "LAI", "gpp", "resp", "transp", "NPPleaf", "NPProot", "NPPwood", "NSC", "seedC", "leafC", "rootC", "SW_C", "HW_C", "NSN", "seedN", "leafN", "rootN", "SW_N", "HW_N")) #%>%
+      #dplyr::mutate(sitename = sitename) #%>%
+      #dplyr::mutate(date = lubridate::ymd(paste0(as.character(year), "-01-01")) + lubridate::days(doy-1)) %>%
+      #dplyr::select(-year, -doy)
      
     ## annual tile
     out[[4]] <- out[[4]] %>%
       as.matrix() %>% 
       as_tibble() %>%
-      setNames(c("year", "CAI", "LAI", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N")) %>%
-      dplyr::mutate(sitename = sitename)
+      setNames(c("year", "CAI", "LAI", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N")) #%>%
+      #dplyr::mutate(sitename = sitename)
     
     # ## annual cohorts
     out[[5]] <- out[[5]] %>%
       as.matrix() %>% 
       as_tibble() %>%
-      setNames(c("year", "cID", "PFT", "layer", "density", "f_layer", "dDBH", "dbh", "height", "Acrown", "wood", "nsc", "NSN", "NPPtr", "seed", "NPPL", "NPPR", "NPPW", "GPP", "NPP", "N_uptk", "N_fix", "maxLAI")) %>%
-      dplyr::mutate(sitename = sitename)
+      setNames(c("year", "cID", "PFT", "layer", "density", "f_layer", "dDBH", "dbh", "height", "Acrown", "wood", "nsc", "NSN", "NPPtr", "seed", "NPPL", "NPPR", "NPPW", "GPP", "NPP", "N_uptk", "N_fix", "maxLAI")) #%>%
+      #dplyr::mutate(sitename = sitename)
 
   } else {
     out <- NA

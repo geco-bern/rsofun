@@ -24,7 +24,6 @@ module md_params_siml_lm3ppa
     logical :: is_calib
 
     ! integer :: model_run_years
-    integer :: equi_days
     logical :: outputhourly
     logical :: outputdaily
     logical :: do_U_shaped_mortality

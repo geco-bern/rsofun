@@ -15,9 +15,9 @@ load_dependencies_rsofun()
 
 Manually select some sites from which we're going to use the data for evaluation and calibration.
 ```{r}
-#mysites <- c("BE-Vie", "DE-Tha", "DK-Sor", "FI-Hyy", "IT-Col", "NL-Loo", "US-MMS", "US-WCr", "US-UMB", "US-Syv", "DE-Hai", "IT-MBo", "US-GLE", "FR-Fon", "NL-Hor", "US-UMd", "AU-Dry", "DE-Obe", "IT-Tor", "US-Wi4")
+mysites <- c("BE-Vie", "DE-Tha", "DK-Sor", "FI-Hyy", "IT-Col", "NL-Loo", "US-MMS", "US-WCr", "US-UMB", "US-Syv", "DE-Hai", "IT-MBo", "US-GLE", "FR-Fon", "NL-Hor", "US-UMd", "AU-Dry", "DE-Obe", "IT-Tor", "US-Wi4")
 
-mysites <- c("BE-Vie")
+mysites <- c("ORNL")
 ```
 
 Create a site meta info table that contains all the site-specific information that is used to force site-simulations (e.g. starting year, number of simulations years, elevation, etc.). For FLUXNET2015 data, required meta info is provided by the `rsofun` package (data frame `rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015`).
@@ -27,7 +27,7 @@ siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>%
   dplyr::filter(sitename %in% mysites) %>%
   write_csv(path = path_siteinfo)
 
-siteinfo <- data.frame(lon = 99, lat = 99, elv = 99)
+siteinfo <- data.frame(sitename="ORNL", lon = 0.0, lat = 0.0, elv = 0.0)
 ```
 
 Now specify the simulation parameters that are identical for all site-scale simulations.
@@ -35,10 +35,10 @@ Now specify the simulation parameters that are identical for all site-scale simu
 params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800,
-      recycle               = 11, # 9 or 11
+      recycle               = 9, # 9 or 11
       firstyeartrend        = 1998,
-      nyeartrend            = 11, #9 or 11
-      outputhourly          = TRUE,
+      nyeartrend            = 9, #9 or 11
+      outputhourly          = FALSE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
       update_annaulLAImax   = FALSE,
@@ -168,8 +168,10 @@ forcing <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_na
   mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
   mutate(sitename = "ORNL") %>% 
   filter(!(mday(date)==29 & month(date)==2)) %>% 
-dplyr::select(-date, -sitename)
-
+  dplyr::select(-date, -sitename)
+forcing <- subset(forcing, YEAR<=2006)
+#ORNL_forcing.txt
+#US-WCrforcing.txt
 complete <-rep(seq(ymd("1998-01-01"), ymd("2008-12-31"), by = "days"), each = 24)
 
 ddf_complete <- tibble(date = complete)
@@ -181,7 +183,7 @@ ddf_complete <- tibble(date = complete)
 Run the model for all the sites specified in the first step.
 ```{r}
 # siteinfo <- list(lon = 99, lat = 99, elv = 99)
-mod <- run_lm3ppa_f_bysite( "BE-Vie", 
+mod <- run_lm3ppa_f_bysite( "ORNL", 
                             params_siml, 
                             siteinfo, 
                             forcing, # ddf_input

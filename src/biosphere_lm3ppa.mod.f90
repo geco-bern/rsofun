@@ -49,7 +49,10 @@ contains
     integer, save :: simu_steps !, datalines
     integer, save :: iyears
     ! character(len=50) :: namelistfile = '~/sofun/params/parameters_Allocation.nml' !'parameters_WC_biodiversity.nml' ! 'parameters_CN.nml'
-    
+
+    print*,'year0: ', myinterface%climate(1)%year
+    print*,'climateyear: ', myinterface%steering%climateyear_idx, myinterface%steering%climateyear
+
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
@@ -81,6 +84,8 @@ contains
     endif 
 
     simu_steps = 0
+
+    print*,'year0: ', myinterface%climate(1)%year
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -130,85 +135,86 @@ contains
         tsoil         = tsoil/myinterface%steps_per_day
         soil_theta    = vegn%thetaS
 
-!         !-------------------------------------------------
-!         ! Daily calls
-!         !-------------------------------------------------
-        
-!         call daily_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
-!         !print*,'5: ', vegn%n_cohorts
-!         ! Determine start and end of season and maximum leaf (root) mass
-!         !print*,'4: ', vegn%n_cohorts
-!         call vegn_phenology(vegn, j)
+        !-------------------------------------------------
+        ! Daily calls
+        !-------------------------------------------------
 
-!         ! Produce new biomass from 'carbon_gain' (is zero afterwards)
-!         !print*,'4: ', vegn%n_cohorts
-!         call vegn_growth_EW(vegn)
+        call daily_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
+        !print*,'5: ', vegn%n_cohorts
+        ! Determine start and end of season and maximum leaf (root) mass
+        !print*,'4: ', vegn%n_cohorts
+        call vegn_phenology(vegn, j)
 
-!         !----------------------------------------------------------------
-!         ! populate function return variable
-!         !----------------------------------------------------------------
+        ! Produce new biomass from 'carbon_gain' (is zero afterwards)
+        !print*,'4: ', vegn%n_cohorts
+        call vegn_growth_EW(vegn)
+
+        !----------------------------------------------------------------
+        ! populate function return variable
+        !----------------------------------------------------------------
 
       end do dayloop
 
     end do monthloop
 
-!     !----------------------------------------------------------------
-!     ! Annual calls
-!     !----------------------------------------------------------------
-!      idoy = 0
 
-!     print*,'sim. year  ', iyears
-!     print*,'real year: ', year0
+    !----------------------------------------------------------------
+    ! Annual calls
+    !----------------------------------------------------------------
+     idoy = 0
+
+    print*,'sim. year  ', iyears
+    print*,'real year: ', year0
 
 
-!     if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update(vegn)
+    if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update(vegn)
 
-!     call annual_diagnostics(vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
+    call annual_diagnostics(vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
 
-!     !---------------------------------------------
-!     ! Reproduction and mortality
-!     !---------------------------------------------        
-!     ! Kill all individuals in a cohort if NSC falls below critical point
-!     call vegn_annual_starvation(vegn)
-!      print*,'5: ', vegn%n_cohorts
+    !---------------------------------------------
+    ! Reproduction and mortality
+    !---------------------------------------------        
+    ! Kill all individuals in a cohort if NSC falls below critical point
+    call vegn_annual_starvation(vegn)
+     print*,'5: ', vegn%n_cohorts
 
-!     ! Natural mortality (reducing number of individuals 'nindivs')
-!     ! (~Eq. 2 in Weng et al., 2015 BG)
-!     call vegn_nat_mortality(vegn, real( seconds_per_year ))
-!      print*,'6: ', vegn%n_cohorts
+    ! Natural mortality (reducing number of individuals 'nindivs')
+    ! (~Eq. 2 in Weng et al., 2015 BG)
+    call vegn_nat_mortality(vegn, real( seconds_per_year ))
+     print*,'6: ', vegn%n_cohorts
 
-!     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
-!     call vegn_reproduction(vegn)
-!      print*,'7: ', vegn%n_cohorts
+    ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
+    call vegn_reproduction(vegn)
+     print*,'7: ', vegn%n_cohorts
 
-!     !---------------------------------------------
-!     ! Re-organize cohorts
-!     !---------------------------------------------
-!     call kill_lowdensity_cohorts(vegn)
-!     print*,'8: ', vegn%n_cohorts
-!     call relayer_cohorts(vegn)
-!     print*,'9: ', vegn%n_cohorts
-!     call vegn_mergecohorts(vegn)
-!     print*,'10: ', vegn%n_cohorts
+    !---------------------------------------------
+    ! Re-organize cohorts
+    !---------------------------------------------
+    call kill_lowdensity_cohorts(vegn)
+    print*,'8: ', vegn%n_cohorts
+    call relayer_cohorts(vegn)
+    print*,'9: ', vegn%n_cohorts
+    call vegn_mergecohorts(vegn)
+    print*,'10: ', vegn%n_cohorts
 
-!     ! !---------------------------------------------
-!     ! ! Set annual variables zero
-!     ! !---------------------------------------------
-!     call Zero_diagnostics(vegn)
-!     print*,'11: ', vegn%n_cohorts
+    ! !---------------------------------------------
+    ! ! Set annual variables zero
+    ! !---------------------------------------------
+    call Zero_diagnostics(vegn)
+    print*,'11: ', vegn%n_cohorts
 
-!     ! update the years of model run
-!     iyears = iyears + 1
+    ! update the years of model run
+    iyears = iyears + 1
 
-!     if (myinterface%steering%finalize) then
-!       !----------------------------------------------------------------
-!       ! Finazlize run: deallocating memory
-!       !----------------------------------------------------------------
-!       deallocate(vegn%cohorts)
+    if (myinterface%steering%finalize) then
+      !----------------------------------------------------------------
+      ! Finazlize run: deallocating memory
+      !----------------------------------------------------------------
+      deallocate(vegn%cohorts)
 
-!     end if
+    end if
 
-!     if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
+    if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
 
   end function biosphere_annual
 
