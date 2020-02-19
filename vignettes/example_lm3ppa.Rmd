@@ -35,9 +35,9 @@ Now specify the simulation parameters that are identical for all site-scale simu
 params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800,
-      recycle               = 9, # 9 or 11
+      recycle               = 11, # 9 or 11
       firstyeartrend        = 1998,
-      nyeartrend            = 9, #9 or 11
+      nyeartrend            = 11, #9 or 11
       outputhourly          = FALSE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
@@ -169,7 +169,7 @@ forcing <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_na
   mutate(sitename = "ORNL") %>% 
   filter(!(mday(date)==29 & month(date)==2)) %>% 
   dplyr::select(-date, -sitename)
-forcing <- subset(forcing, YEAR<=2006)
+#forcing <- subset(forcing, YEAR<=2006)
 #ORNL_forcing.txt
 #US-WCrforcing.txt
 complete <-rep(seq(ymd("1998-01-01"), ymd("2008-12-31"), by = "days"), each = 24)

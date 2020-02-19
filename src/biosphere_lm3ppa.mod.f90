@@ -51,7 +51,7 @@ contains
     ! character(len=50) :: namelistfile = '~/sofun/params/parameters_Allocation.nml' !'parameters_WC_biodiversity.nml' ! 'parameters_CN.nml'
 
     print*,'year0: ', myinterface%climate(1)%year
-    print*,'climateyear: ', myinterface%steering%climateyear_idx, myinterface%steering%climateyear
+    print*,'climateyear_idx climateyear: ', myinterface%steering%climateyear_idx, myinterface%steering%climateyear
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
@@ -167,7 +167,8 @@ contains
     print*,'real year: ', year0
 
 
-    if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update(vegn)
+    !if ( myinterface%params_siml%update_annualLAImax ) 
+    call vegn_annualLAImax_update(vegn)
 
     call annual_diagnostics(vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
 

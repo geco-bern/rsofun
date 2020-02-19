@@ -7,9 +7,9 @@ module md_params_core_lm3ppa
   !----------------------------------------------------------------
   implicit none
 
-  integer :: ntstepsyear           ! number of days in a year
+  integer :: ntstepsyear           ! 24*365
   integer, parameter :: ndayyear = 365           ! number of days in a year
-  integer, parameter :: nhoursyear = 17520           ! number of days in a year
+  !integer, parameter :: nhoursyear = 17520           ! number of hours in a year (48h)
 
   integer, parameter :: nmonth = 12              ! number of months in a year
   ! real,    parameter :: secs_per_day = 86400.0   ! number of seconds in a day

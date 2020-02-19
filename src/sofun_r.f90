@@ -458,10 +458,10 @@ contains
 
     !write(*,*) timestep, myinterface%steps_per_day, myinterface%dt_fast_yr, myinterface%step_seconds
 
-    totyears = myinterface%params_siml%runyears
-    totdays  = int(totyears/yr_data+1)*days_data
-    !myinterface%params_siml%equi_days = totdays - days_data
-    myinterface%datalines = datalines
+    ! totyears = myinterface%params_siml%runyears
+    ! totdays  = int(totyears/yr_data+1)*days_data
+    ! !myinterface%params_siml%equi_days = totdays - days_data
+    ! myinterface%datalines = datalines
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
@@ -500,12 +500,13 @@ contains
       ! Call biosphere (wrapper for all modules, contains gridcell loop)
       !----------------------------------------------------------------
       out_biosphere = biosphere_annual()
+        
 
       ! ! ----------------------------------------------------------------
       ! ! Populate big output arrays
       ! ! ----------------------------------------------------------------
 
-      ! ----------------------------------------------------------------
+        ! ----------------------------------------------------------------
       ! Output out_hourly_tile
       ! ----------------------------------------------------------------
       if (.not. myinterface%steering%spinup) then
@@ -514,6 +515,9 @@ contains
         call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
       end if
 
+    print*, "idx_hourly_start  idx_hourly_end", yr, myinterface%params_siml%spinupyears, idx_hourly_start,idx_hourly_end, ntstepsyear
+    ! print*,out_biosphere%hourly_tile(3)
+
       ! ! ----------------------------------------------------------------
       ! ! Output out_daily_tile
       ! ! ----------------------------------------------------------------
@@ -521,10 +525,15 @@ contains
       idx_daily_end    = idx_daily_start + ndayyear - 1
       call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
 
+    print*, "idx_daily_start  idx_daily_end", idx_daily_start,idx_daily_end, ndayyear
+
       ! ! ----------------------------------------------------------------
       ! ! Output out_daily_cohorts
       ! ! ----------------------------------------------------------------
-      ! call populate_outarray_daily_cohorts( out_biosphere%daily_cohorts(:,:), output_daily_cohorts(idx_daily_start:idx_daily_end,:,:) )
+    !   call populate_outarray_daily_cohorts( out_biosphere%daily_cohorts(:,:), output_daily_cohorts(idx_daily_start:idx_daily_end,:,:) )
+    ! print*,'b'
+    ! print*,out_biosphere%daily_cohorts(1:3,1:3)
+
 
       ! ! ----------------------------------------------------------------
       ! ! Output out_annual_tile
@@ -535,6 +544,7 @@ contains
       ! ! Output output_annual_cohorts
       ! ! ----------------------------------------------------------------
       ! call populate_outarray_annual_cohorts( out_biosphere%annual_cohorts(:), output_annual_cohorts(yr,:,:) )
+      ! print*,out_biosphere%annual_cohorts(1:3)
 
     enddo
 
@@ -542,8 +552,8 @@ contains
     deallocate(myinterface%pco2)
  
 
-  !end subroutine lm3ppa_f
-  contains
+  end subroutine lm3ppa_f
+  !contains
 
   subroutine populate_outarray_hourly_tile( hourly_tile, out_hourly_tile ) !, idx_daily_start, idx_daily_end
 
@@ -749,15 +759,15 @@ contains
     out_annual_cohorts(:, 15) = dble(annual_cohorts(:)%seed)
     out_annual_cohorts(:, 16) = dble(annual_cohorts(:)%NPPL)
     out_annual_cohorts(:, 17) = dble(annual_cohorts(:)%NPPR)
-    out_annual_cohorts(:, 19) = dble(annual_cohorts(:)%NPPW)
-    out_annual_cohorts(:, 20) = dble(annual_cohorts(:)%GPP)
-    out_annual_cohorts(:, 21) = dble(annual_cohorts(:)%NPP)
-    out_annual_cohorts(:, 22) = dble(annual_cohorts(:)%N_uptk)
-    out_annual_cohorts(:, 23) = dble(annual_cohorts(:)%N_fix)
-    out_annual_cohorts(:, 24) = dble(annual_cohorts(:)%maxLAI)
+    out_annual_cohorts(:, 18) = dble(annual_cohorts(:)%NPPW)
+    out_annual_cohorts(:, 19) = dble(annual_cohorts(:)%GPP)
+    out_annual_cohorts(:, 20) = dble(annual_cohorts(:)%NPP)
+    out_annual_cohorts(:, 21) = dble(annual_cohorts(:)%N_uptk)
+    out_annual_cohorts(:, 22) = dble(annual_cohorts(:)%N_fix)
+    out_annual_cohorts(:, 23) = dble(annual_cohorts(:)%maxLAI)
 
   end subroutine populate_outarray_annual_cohorts
 
-  end subroutine lm3ppa_f
+  !end subroutine lm3ppa_f
 
 end module sofun_r_mod
