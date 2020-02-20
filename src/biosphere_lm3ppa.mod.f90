@@ -10,9 +10,7 @@ module md_biosphere_lm3ppa
   private
   public biosphere_annual
 
-   type(vegn_tile_type),  pointer :: vegn
-   type(soil_tile_type),  pointer :: soil
-   type(cohort_type),     pointer :: cx, cc
+   type(vegn_tile_type),  pointer :: vegn   
 
 contains
 
@@ -86,6 +84,42 @@ contains
     simu_steps = 0
 
     print*,'year0: ', myinterface%climate(1)%year
+
+
+    !----------------------------------------------------------------
+    ! INITIALISATIONS OF OUTPUT 
+    ! important because maximum cohorts may be bigger than active cohorts
+    !----------------------------------------------------------------
+    ! out_biosphere%daily_cohorts(:,:)%year    = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%doy     = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%hour    = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%cID     = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%PFT     = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%layer   = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%density = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%f_layer = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%LAI     = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%gpp     = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%resp    = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%transp  = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%NPPleaf = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%NPProot = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%NPPwood = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%NSC     = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%seedC   = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%leafC   = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%rootC   = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%SW_C    = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%HW_C    = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%NSN     = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%seedN   = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%leafN   = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%rootN   = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%SW_N    = 0.0
+    ! out_biosphere%daily_cohorts(:,:)%HW_N    = 0.0
+
+    ! same for the annual cohorts
+
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS

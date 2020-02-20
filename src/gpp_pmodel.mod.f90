@@ -39,9 +39,6 @@ module md_gpp_pmodel
   ! Module-specific state variables
   !----------------------------------------------------------------
   real, dimension(npft) :: dassim           ! daily leaf-level assimilation rate (per unit leaf area) [gC/m2/d]
-  real, dimension(npft) :: dgs              ! stomatal conductance (per unit leaf area, average daily) [mol H2O m-2 s-1]  
-  real, dimension(npft) :: dvcmax_canop     ! canopy-level Vcmax [gCO2/m2-ground/s]
-  real, dimension(npft) :: dvcmax_leaf      ! leaf-level Vcmax [gCO2/m2-leaf/s]
 
   !-----------------------------------------------------------------------
   ! Known parameters, therefore hard-wired.
@@ -168,8 +165,7 @@ contains
     real, save :: temp_memory
     real, save :: patm_memory
 
-    ! xxx test
-    real :: a_c, a_j, a_returned, fact_jmaxlim
+
 
     !----------------------------------------------------------------
     ! Calculate environmental conditions with memory, time scale 
@@ -334,29 +330,29 @@ contains
   end function calc_dassim
 
 
-  function calc_dgs( dppfd, dgs_unitiabs, daylength, ftemp_kphio, soilmstress ) result( dgs )
-    !//////////////////////////////////////////////////////////////////
-    ! Calculates leaf-level stomatal conductance to H2O, mean over daylight hours
-    ! Not described in Stocker et al., XXX.
-    !------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: dppfd           ! daily total photon flux density, mol m-2
-    real, intent(in) :: dgs_unitiabs    ! stomatal conductance per unit absorbed light (mol H2O m-2 s-1 / mol light)
-    real, intent(in) :: daylength       ! day length (h)
-    real, intent(in) :: ftemp_kphio      ! this day's air temperature, deg C
-    real, intent(in) :: soilmstress     ! soil moisture stress factor
+  ! function calc_dgs( dppfd, dgs_unitiabs, daylength, ftemp_kphio, soilmstress ) result( dgs )
+  !   !//////////////////////////////////////////////////////////////////
+  !   ! Calculates leaf-level stomatal conductance to H2O, mean over daylight hours
+  !   ! Not described in Stocker et al., XXX.
+  !   !------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: dppfd           ! daily total photon flux density, mol m-2
+  !   real, intent(in) :: dgs_unitiabs    ! stomatal conductance per unit absorbed light (mol H2O m-2 s-1 / mol light)
+  !   real, intent(in) :: daylength       ! day length (h)
+  !   real, intent(in) :: ftemp_kphio      ! this day's air temperature, deg C
+  !   real, intent(in) :: soilmstress     ! soil moisture stress factor
 
-    ! function return variable
-    real :: dgs                         ! leaf-level stomatal conductance to H2O, mean over daylight hours ( mol H2O m-2 s-1 )
+  !   ! function return variable
+  !   real :: dgs                         ! leaf-level stomatal conductance to H2O, mean over daylight hours ( mol H2O m-2 s-1 )
 
-    ! Leaf-level assimilation rate, average over daylight hours
-    if (daylength>0.0) then
-      dgs = dppfd * soilmstress * dgs_unitiabs * ftemp_kphio / ( 60.0 * 60.0 * daylength )
-    else
-      dgs = 0.0
-    end if
+  !   ! Leaf-level assimilation rate, average over daylight hours
+  !   if (daylength>0.0) then
+  !     dgs = dppfd * soilmstress * dgs_unitiabs * ftemp_kphio / ( 60.0 * 60.0 * daylength )
+  !   else
+  !     dgs = 0.0
+  !   end if
     
-  end function calc_dgs
+  ! end function calc_dgs
 
 
   function calc_drd( fapar, fpc_grid, meanmppfd, rd_unitiabs, ftemp_kphio, soilmstress ) result( my_drd )
@@ -382,47 +378,47 @@ contains
   end function calc_drd
 
 
-  function calc_dtransp( fapar, acrown, dppfd, transp_unitiabs, ftemp_kphio, soilmstress ) result( my_dtransp )
-    !//////////////////////////////////////////////////////////////////
-    ! Calculates daily transpiration. 
-    ! Exploratory only.
-    ! Not described in Stocker et al., XXX.
-    !------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: fapar
-    real, intent(in) :: acrown
-    real, intent(in) :: dppfd              ! daily total photon flux density, mol m-2
-    real, intent(in) :: transp_unitiabs
-    real, intent(in) :: ftemp_kphio              ! this day's air temperature
-    real, intent(in) :: soilmstress        ! soil moisture stress factor
+  ! function calc_dtransp( fapar, acrown, dppfd, transp_unitiabs, ftemp_kphio, soilmstress ) result( my_dtransp )
+  !   !//////////////////////////////////////////////////////////////////
+  !   ! Calculates daily transpiration. 
+  !   ! Exploratory only.
+  !   ! Not described in Stocker et al., XXX.
+  !   !------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: fapar
+  !   real, intent(in) :: acrown
+  !   real, intent(in) :: dppfd              ! daily total photon flux density, mol m-2
+  !   real, intent(in) :: transp_unitiabs
+  !   real, intent(in) :: ftemp_kphio              ! this day's air temperature
+  !   real, intent(in) :: soilmstress        ! soil moisture stress factor
 
-    ! function return variable
-    real :: my_dtransp
+  !   ! function return variable
+  !   real :: my_dtransp
 
-    ! GPP is light use efficiency multiplied by absorbed light and C-P-alpha
-    my_dtransp = fapar * acrown * dppfd * soilmstress * transp_unitiabs * ftemp_kphio * h2o_molmass
+  !   ! GPP is light use efficiency multiplied by absorbed light and C-P-alpha
+  !   my_dtransp = fapar * acrown * dppfd * soilmstress * transp_unitiabs * ftemp_kphio * h2o_molmass
 
-  end function calc_dtransp
+  ! end function calc_dtransp
 
 
-  function calc_vcmax_canop( fapar, vcmax_unitiabs, meanmppfd ) result( my_vcmax )
-    !//////////////////////////////////////////////////////////////////
-    ! Calculates canopy-level summed carboxylation capacity (Vcmax). To get
-    ! value per unit leaf area, divide by LAI.
-    ! Not described in Stocker et al., XXX.
-    !------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: fapar
-    real, intent(in) :: vcmax_unitiabs
-    real, intent(in) :: meanmppfd
+  ! function calc_vcmax_canop( fapar, vcmax_unitiabs, meanmppfd ) result( my_vcmax )
+  !   !//////////////////////////////////////////////////////////////////
+  !   ! Calculates canopy-level summed carboxylation capacity (Vcmax). To get
+  !   ! value per unit leaf area, divide by LAI.
+  !   ! Not described in Stocker et al., XXX.
+  !   !------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: fapar
+  !   real, intent(in) :: vcmax_unitiabs
+  !   real, intent(in) :: meanmppfd
 
-    ! function return variable
-    real :: my_vcmax    ! canopy-level Vcmax [gCO2/m2-ground/s]
+  !   ! function return variable
+  !   real :: my_vcmax    ! canopy-level Vcmax [gCO2/m2-ground/s]
 
-    ! Calculate leafy-scale Rubisco-N as a function of LAI and current LUE
-    my_vcmax = fapar * meanmppfd * vcmax_unitiabs
+  !   ! Calculate leafy-scale Rubisco-N as a function of LAI and current LUE
+  !   my_vcmax = fapar * meanmppfd * vcmax_unitiabs
 
-  end function calc_vcmax_canop
+  ! end function calc_vcmax_canop
 
 
   function pmodel( kphio, fapar, ppfd, co2, tc, vpd, patm, c4, method_optci, method_jmaxlim ) result( out_pmodel )
@@ -452,7 +448,6 @@ contains
     real :: kmm                 ! Michaelis-Menten coefficient (Pa)
     real :: gammastar           ! photorespiratory compensation point - Gamma-star (Pa)
     real :: ca                  ! ambient CO2 partial pressure, (Pa)
-    real :: gs                  ! stomatal conductance to H2O, expressed per units absorbed light (mol H2O m-2 m-1 / (mol light m-2))
     real :: ci                  ! leaf-internal partial pressure, (Pa)
     real :: chi                 ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
     real :: xi                  ! relative cost parameter, Eq. 9 in Stocker et al., 2019
@@ -478,11 +473,10 @@ contains
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
     real :: actnv_unitfapar     ! Metabolic leaf N per unit fAPAR (g N m-2)
     real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
-    real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
 
     ! local variables for Jmax limitation following Nick Smith's method
-    real :: omega, omega_star, vcmax_unitiabs_star, tcref, jmax_over_vcmax, jmax_prime, jvrat
+    real :: omega, omega_star, vcmax_unitiabs_star, tcref, jmax_over_vcmax, jmax_prime
 
     real, parameter :: theta = 0.85
     real, parameter :: c_cost = 0.05336251
@@ -1028,21 +1022,21 @@ contains
   end function co2_to_ca
 
 
-  function ca_to_co2( ca, patm ) result( co2 )
-    !-----------------------------------------------------------------------
-    ! Output:   - co2 in units of Pa
-    ! Features: Converts ca (ambient CO2) from Pa to ppm.
-    !-----------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: ca        ! ambient CO2 in units of Pa
-    real, intent(in) :: patm      ! monthly atm. pressure, Pa
+  ! function ca_to_co2( ca, patm ) result( co2 )
+  !   !-----------------------------------------------------------------------
+  !   ! Output:   - co2 in units of Pa
+  !   ! Features: Converts ca (ambient CO2) from Pa to ppm.
+  !   !-----------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: ca        ! ambient CO2 in units of Pa
+  !   real, intent(in) :: patm      ! monthly atm. pressure, Pa
 
-    ! function return variable
-    real :: co2
+  !   ! function return variable
+  !   real :: co2
 
-    co2   = ca * ( 1.e6 ) / patm
+  !   co2   = ca * ( 1.e6 ) / patm
     
-  end function ca_to_co2
+  ! end function ca_to_co2
 
 
   function calc_kmm( tc, patm ) result( kmm )
@@ -1063,7 +1057,7 @@ contains
     real, parameter :: kc25 = 39.97      ! Pa, assuming 25 deg C & assuming elevation of 227.076 m.a.s.l.
     real, parameter :: ko25 = 27480      ! Pa, assuming 25 deg C & assuming elevation of 227.076 m.a.s.l.
     real, parameter :: kco  = 2.09476d5  ! ppm, US Standard Atmosphere
-    real :: kc, ko, po, rat, tk
+    real :: kc, ko, po, tk
 
     ! function return variable
     real :: kmm                           ! temperature & pressure dependent Michaelis-Menten coefficient, K (Pa).
@@ -1506,7 +1500,6 @@ contains
     ! Subroutine reads module-specific parameters from input file.
     !----------------------------------------------------------------
     use md_interface_pmodel, only: myinterface
-    use md_plant_pmodel, only: params_pft_plant
 
     ! local variables
     integer :: pft

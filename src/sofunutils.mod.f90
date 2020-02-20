@@ -293,7 +293,7 @@ contains
     real, dimension(ndayyear) :: dval
     
     ! local variables
-    integer :: moy, doy, today, dm, iloop
+    integer :: moy, doy, today, dm
     real :: dd, todaysval
 
     real, dimension(0:(nmonth+1))    :: mval_ext
@@ -491,7 +491,7 @@ contains
     read1year_daily = dval
 
     return
-    600 format (F10.7)
+    !600 format (F10.7)
     888 write(0,*) 'READ1YEAR_DAILY: error opening file '//trim(filename)//'. Abort. '
     stop
 
@@ -522,7 +522,7 @@ contains
     read1year_monthly = mval
 
     return
-    600 format (F10.7)
+    !600 format (F10.7)
     888 write(0,*) 'READ1YEAR_MONTHLY: error opening file ./input/'//trim(filename)//'. Abort. '
     stop
 
@@ -997,7 +997,6 @@ contains
 
     ! local variables
     real, dimension(1:len)             :: tmp
-    integer                            :: i
 
     tmp(:) = vec(:)
 
@@ -1085,7 +1084,7 @@ contains
     real, dimension(2) :: root
 
     ! local variables
-    real :: d, root1, root2
+    real :: d
 
     d = b*b - 4.0*a*c
     if (d >= 0.0) then              ! is it solvable?

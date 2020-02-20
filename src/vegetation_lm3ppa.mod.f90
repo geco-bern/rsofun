@@ -1990,7 +1990,7 @@ subroutine vegn_annualLAImax_update(vegn)
   type(vegn_tile_type), intent(inout) :: vegn
 
   ! ---- local vars
-  type(cohort_type), pointer :: cc
+  
   real   :: LAImin, LAIfixedN, LAImineralN
   real   :: LAI_Nitrogen
   logical:: fixedN_based

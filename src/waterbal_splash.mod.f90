@@ -102,7 +102,6 @@ module md_waterbal
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, KNOWN PARAMETERS
   !----------------------------------------------------------------
-  logical :: outenergy = .true.
 
   !----------------------------------------------------------------
   ! Module-specific rolling mean variables
@@ -145,13 +144,7 @@ contains
     real, intent(in)    :: fapar  ! fraction of absorbed photosynthetically active radiation (unitless)
 
     ! local variables
-    real :: wcont_prev                   ! soil moisture (water content) before being updated (mm)
-    real :: wbal                         ! daily water balance (mm), temporary variable
-
     integer :: lu                        ! land unit (gridcell tile)
-    integer :: moy                       ! month of year
-    integer :: idx                       ! day of year corresponding to yesterday
-    integer :: dm                        ! day of month
 
     type( outtype_snow_rain )   :: out_snow_rain
 
@@ -273,7 +266,6 @@ contains
     real               :: rv                           ! variable substitute for v
     real               :: hs                           ! sunset hour angle
     real               :: tau                          ! transmittivity (unitless)
-    real               :: rw                           ! variable substitute (W/m^2)
     real, dimension(2) :: out_ru_rv      ! function return variable containing 'ru' and 'rv'.
 
     real, dimension(ndayyear) :: daysecs ! daylight seconds for each DOY
@@ -458,7 +450,6 @@ contains
     real :: pw                           ! density of water, kg/m^3
     real :: lv                           ! enthalpy of vaporization, J/kg
     real :: gamma                        ! psychrometric constant, Pa/K
-    real :: econ                         ! Eq. 58, SPLASH 2.0 Documentation
     real :: rx                           ! variable substitute (mm/hr)/(W/m^2)
     real :: hi, cos_hi                   ! intersection hour angle, degrees
     real, dimension(2) :: out_ru_rv      ! function return variable containing 'ru' and 'rv'.
@@ -1060,8 +1051,6 @@ contains
     ! local variables
     real :: anm, ranm, anv, ranv
     real :: dlamm                ! Mean longitude for day of year
-    real :: my_nu
-    real :: my_tls
     real :: xee, xec, xse        ! variable substitutes
     real :: xlam                 ! Mean longitude for vernal equinox
     real :: tmp1, tmp2, tmp3     ! variable substitutes
@@ -1269,7 +1258,6 @@ contains
     ! Collect daily output variables
     ! so far not implemented for isotopes
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
 
     ! argument
     integer, intent(in) :: doy    

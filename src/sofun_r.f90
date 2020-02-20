@@ -86,7 +86,7 @@ contains
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
-    integer :: npft_local, yr, ncells, idx_start, idx_end
+    integer :: npft_local, yr, idx_start, idx_end
 
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
@@ -342,15 +342,9 @@ contains
     real(kind=c_double), dimension(nt_annual,out_max_cohorts,nvars_annual_cohorts), intent(out) :: output_annual_cohorts ! nvars_annual_cohorts + 23
 
     ! local variables
-    !integer(kind=c_int), intent(in) :: datalines
-    integer(kind=c_int)     :: datalines
-    integer(kind=c_int)     :: yr_data
-    integer(kind=c_int)     :: totyears
-    integer(kind=c_int)     :: totdays
-    integer(kind=c_int)     :: days_data
     real(kind=c_double)     :: timestep
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
-    integer(kind=c_int)     :: npft_local, yr, iday, ncells, idx_start, idx_end
+    integer(kind=c_int)     :: yr
     
     integer(kind=c_int) :: idx_hourly_start
     integer(kind=c_int) :: idx_hourly_end
@@ -509,13 +503,14 @@ contains
         ! ----------------------------------------------------------------
       ! Output out_hourly_tile
       ! ----------------------------------------------------------------
-      if (.not. myinterface%steering%spinup) then
+      if (.not. myinterface%steering%spinup) then    !!xxx uncommented for testing
         idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1          ! To exclude the spinup years and include only the transient years
+        ! idx_hourly_start = mod((yr - 1), 11) * ntstepsyear + 1          ! To exclude the spinup years and include only the transient years
         idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
         call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
       end if
 
-    print*, "idx_hourly_start  idx_hourly_end", yr, myinterface%params_siml%spinupyears, idx_hourly_start,idx_hourly_end, ntstepsyear
+    print*, "yr  spinupyears  idx_hourly_start  idx_hourly_end  ntstepsyear", yr, myinterface%params_siml%spinupyears, idx_hourly_start,idx_hourly_end, ntstepsyear
     ! print*,out_biosphere%hourly_tile(3)
 
       ! ! ----------------------------------------------------------------
@@ -524,16 +519,17 @@ contains
       idx_daily_start  = (yr - 1) * ndayyear + 1
       idx_daily_end    = idx_daily_start + ndayyear - 1
       call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
-
-    print*, "idx_daily_start  idx_daily_end", idx_daily_start,idx_daily_end, ndayyear
+    
+    print*, "size annual tile", size(out_biosphere%daily_tile(:)), size(output_daily_tile(idx_daily_start:idx_daily_end, :))
+    print*, "idx_daily_start  idx_daily_end  ndayyear", idx_daily_start,idx_daily_end, ndayyear
 
       ! ! ----------------------------------------------------------------
       ! ! Output out_daily_cohorts
-      ! ! ----------------------------------------------------------------
-    !   call populate_outarray_daily_cohorts( out_biosphere%daily_cohorts(:,:), output_daily_cohorts(idx_daily_start:idx_daily_end,:,:) )
-    ! print*,'b'
-    ! print*,out_biosphere%daily_cohorts(1:3,1:3)
-
+      ! ----------------------------------------------------------------
+    print*, "size daily cohorts", size(out_biosphere%daily_cohorts(:,:)), size(output_daily_cohorts(idx_daily_start:idx_daily_end,:,:))
+      ! call populate_outarray_daily_cohorts( out_biosphere%daily_cohorts(:,:), output_daily_cohorts(idx_daily_start:idx_daily_end,:,:) )
+    print*, 'b', out_biosphere%daily_cohorts(1:3,1:3)
+    print*,'c',output_daily_cohorts(1:2,1:3,1:3)
 
       ! ! ----------------------------------------------------------------
       ! ! Output out_annual_tile
@@ -543,6 +539,8 @@ contains
       ! ! ----------------------------------------------------------------
       ! ! Output output_annual_cohorts
       ! ! ----------------------------------------------------------------
+    print*, "size annual cohorts", size(out_biosphere%annual_cohorts(:)), size(output_annual_cohorts(yr,:,:))
+
       ! call populate_outarray_annual_cohorts( out_biosphere%annual_cohorts(:), output_annual_cohorts(yr,:,:) )
       ! print*,out_biosphere%annual_cohorts(1:3)
 
@@ -641,35 +639,35 @@ contains
 
     ! arguments
     type(outtype_daily_cohorts), dimension(ndayyear, out_max_cohorts), intent(in) :: daily_cohorts
-    real(kind=dp), dimension(ndayyear, out_max_cohorts,nvars_daily_cohorts), intent(inout) :: out_daily_cohorts
+    real(kind=dp), dimension(ndayyear, out_max_cohorts, nvars_daily_cohorts), intent(inout) :: out_daily_cohorts
 
     out_daily_cohorts(:,:, 1)  = dble(daily_cohorts(:,:)%year)
-    out_daily_cohorts(:,:, 2)  = dble(daily_cohorts(:,:)%doy)
-    out_daily_cohorts(:,:, 3)  = dble(daily_cohorts(:,:)%hour)
-    out_daily_cohorts(:,:, 4)  = dble(daily_cohorts(:,:)%cID)
-    out_daily_cohorts(:,:, 5)  = dble(daily_cohorts(:,:)%PFT)
-    out_daily_cohorts(:,:, 6)  = dble(daily_cohorts(:,:)%layer)
-    out_daily_cohorts(:,:, 7)  = dble(daily_cohorts(:,:)%density)
-    out_daily_cohorts(:,:, 8)  = dble(daily_cohorts(:,:)%f_layer)
-    out_daily_cohorts(:,:, 9)  = dble(daily_cohorts(:,:)%LAI)
-    out_daily_cohorts(:,:, 10) = dble(daily_cohorts(:,:)%gpp)
-    out_daily_cohorts(:,:, 11) = dble(daily_cohorts(:,:)%resp)
-    out_daily_cohorts(:,:, 12) = dble(daily_cohorts(:,:)%transp)
-    out_daily_cohorts(:,:, 13) = dble(daily_cohorts(:,:)%NPPleaf)
-    out_daily_cohorts(:,:, 14) = dble(daily_cohorts(:,:)%NPProot)
-    out_daily_cohorts(:,:, 15) = dble(daily_cohorts(:,:)%NPPwood)    
-    out_daily_cohorts(:,:, 16) = dble(daily_cohorts(:,:)%NSC)
-    out_daily_cohorts(:,:, 17) = dble(daily_cohorts(:,:)%seedC)
-    out_daily_cohorts(:,:, 18) = dble(daily_cohorts(:,:)%leafC)
-    out_daily_cohorts(:,:, 19) = dble(daily_cohorts(:,:)%rootC)
-    out_daily_cohorts(:,:, 20) = dble(daily_cohorts(:,:)%SW_C)
-    out_daily_cohorts(:,:, 21) = dble(daily_cohorts(:,:)%HW_C)
-    out_daily_cohorts(:,:, 22) = dble(daily_cohorts(:,:)%NSN)
-    out_daily_cohorts(:,:, 23) = dble(daily_cohorts(:,:)%seedN)
-    out_daily_cohorts(:,:, 24) = dble(daily_cohorts(:,:)%leafN)
-    out_daily_cohorts(:,:, 25) = dble(daily_cohorts(:,:)%rootN)
-    out_daily_cohorts(:,:, 26) = dble(daily_cohorts(:,:)%SW_N)
-    out_daily_cohorts(:,:, 27) = dble(daily_cohorts(:,:)%HW_N)
+    ! out_daily_cohorts(:,:, 2)  = dble(daily_cohorts(:,:)%doy)
+    ! out_daily_cohorts(:,:, 3)  = dble(daily_cohorts(:,:)%hour)
+    ! out_daily_cohorts(:,:, 4)  = dble(daily_cohorts(:,:)%cID)
+    ! out_daily_cohorts(:,:, 5)  = dble(daily_cohorts(:,:)%PFT)
+    ! out_daily_cohorts(:,:, 6)  = dble(daily_cohorts(:,:)%layer)
+    ! out_daily_cohorts(:,:, 7)  = dble(daily_cohorts(:,:)%density)
+    ! out_daily_cohorts(:,:, 8)  = dble(daily_cohorts(:,:)%f_layer)
+    ! out_daily_cohorts(:,:, 9)  = dble(daily_cohorts(:,:)%LAI)
+    ! out_daily_cohorts(:,:, 10) = dble(daily_cohorts(:,:)%gpp)
+    ! out_daily_cohorts(:,:, 11) = dble(daily_cohorts(:,:)%resp)
+    ! out_daily_cohorts(:,:, 12) = dble(daily_cohorts(:,:)%transp)
+    ! out_daily_cohorts(:,:, 13) = dble(daily_cohorts(:,:)%NPPleaf)
+    ! out_daily_cohorts(:,:, 14) = dble(daily_cohorts(:,:)%NPProot)
+    ! out_daily_cohorts(:,:, 15) = dble(daily_cohorts(:,:)%NPPwood)    
+    ! out_daily_cohorts(:,:, 16) = dble(daily_cohorts(:,:)%NSC)
+    ! out_daily_cohorts(:,:, 17) = dble(daily_cohorts(:,:)%seedC)
+    ! out_daily_cohorts(:,:, 18) = dble(daily_cohorts(:,:)%leafC)
+    ! out_daily_cohorts(:,:, 19) = dble(daily_cohorts(:,:)%rootC)
+    ! out_daily_cohorts(:,:, 20) = dble(daily_cohorts(:,:)%SW_C)
+    ! out_daily_cohorts(:,:, 21) = dble(daily_cohorts(:,:)%HW_C)
+    ! out_daily_cohorts(:,:, 22) = dble(daily_cohorts(:,:)%NSN)
+    ! out_daily_cohorts(:,:, 23) = dble(daily_cohorts(:,:)%seedN)
+    ! out_daily_cohorts(:,:, 24) = dble(daily_cohorts(:,:)%leafN)
+    ! out_daily_cohorts(:,:, 25) = dble(daily_cohorts(:,:)%rootN)
+    ! out_daily_cohorts(:,:, 26) = dble(daily_cohorts(:,:)%SW_N)
+    ! out_daily_cohorts(:,:, 27) = dble(daily_cohorts(:,:)%HW_N)
 
   end subroutine populate_outarray_daily_cohorts
 

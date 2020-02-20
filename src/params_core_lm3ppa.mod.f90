@@ -7,9 +7,9 @@ module md_params_core_lm3ppa
   !----------------------------------------------------------------
   implicit none
 
-  integer :: ntstepsyear           ! 24*365
+  integer :: ntstepsyear                         ! 24*365
   integer, parameter :: ndayyear = 365           ! number of days in a year
-  !integer, parameter :: nhoursyear = 17520           ! number of hours in a year (48h)
+  !integer, parameter :: nhoursyear = 17520      ! number of hours in a year (48h)
 
   integer, parameter :: nmonth = 12              ! number of months in a year
   ! real,    parameter :: secs_per_day = 86400.0   ! number of seconds in a day
@@ -25,11 +25,11 @@ module md_params_core_lm3ppa
   integer, parameter :: n_dim_soil_types = 9     ! number of soil types
   integer, parameter :: MSPECIES = 15            ! number of species
   integer, parameter :: MAX_INIT_COHORTS = 10    ! Number of initial cohorts
-  integer, parameter :: out_max_cohorts = 20     ! Try: Number of maximum cohorts
+  integer, parameter :: out_max_cohorts = 50     ! Try: Number of maximum cohorts
 
   integer, parameter :: nvars_hourly_tile = 15
   integer, parameter :: nvars_daily_tile = 35
-  integer, parameter :: nvars_daily_cohorts = 27
+  integer, parameter :: nvars_daily_cohorts = 1 !27
   integer, parameter :: nvars_annual_cohorts = 23
   integer, parameter :: nvars_annual_tile = 44
 

@@ -59,7 +59,6 @@ contains
     ! local variables
     real(kind=mysg) :: fsand, fclay, forg, fgravel, fsand_forg, fclay_forg, &
       fsand_fclay, dp, bd, sat, fc, pwp, L_10_Ksat, ksat, whc_dz
-    integer idx
 
     ! from David's code
     real(kind=mysg), parameter :: depth    =  30.0
