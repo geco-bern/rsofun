@@ -14,10 +14,6 @@ module md_interface_lm3ppa
   public  myinterface, interfacetype_biosphere, outtype_biosphere, outtype_hourly_tile, &
     outtype_annual_cohorts, outtype_daily_cohorts, outtype_daily_tile, outtype_annual_tile
 
-  ! type paramstype_calib
-  !   real :: kphio
-  ! end type paramstype_calib  
-
   type paramstype_tile
     integer:: soiltype
     real   :: FLDCAP
@@ -255,11 +251,11 @@ module md_interface_lm3ppa
   end type outtype_annual_cohorts
 
   type outtype_biosphere
-    type(outtype_hourly_tile), dimension(:), allocatable             :: hourly_tile      !fn01
-    type(outtype_daily_tile), dimension(ndayyear)                    :: daily_tile       !fno4
-    type(outtype_daily_cohorts), dimension(ndayyear, out_max_cohorts):: daily_cohorts    !fno3
-    type(outtype_annual_tile)                                        :: annual_tile      !fno5
-    type(outtype_annual_cohorts), dimension(out_max_cohorts)         :: annual_cohorts   !fno2
+    type(outtype_hourly_tile), dimension(:), allocatable              :: hourly_tile      !fn01
+    type(outtype_daily_tile), dimension(ndayyear)                     :: daily_tile       !fno4
+    type(outtype_daily_cohorts), dimension(ndayyear, out_max_cohorts) :: daily_cohorts    !fno3
+    type(outtype_annual_tile)                                         :: annual_tile      !fno5
+    type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: annual_cohorts   !fno2
   end type outtype_biosphere
 
 contains

@@ -29,7 +29,7 @@ module md_params_core_lm3ppa
 
   integer, parameter :: nvars_hourly_tile = 15
   integer, parameter :: nvars_daily_tile = 35
-  integer, parameter :: nvars_daily_cohorts = 1 !27
+  integer, parameter :: nvars_daily_cohorts = 27 !27
   integer, parameter :: nvars_annual_cohorts = 23
   integer, parameter :: nvars_annual_tile = 44
 
