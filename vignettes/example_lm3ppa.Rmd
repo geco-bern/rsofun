@@ -175,6 +175,9 @@ forcing <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_na
 complete <-rep(seq(ymd("1998-01-01"), ymd("2008-12-31"), by = "days"), each = 24)
 
 ddf_complete <- tibble(date = complete)
+
+# forcing <- read_delim("~/BiomeE-Allocation/model/input/US-WCrforcing_clean.txt", col_names = TRUE, delim = "\t")
+
 ```
 
 
