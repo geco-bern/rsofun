@@ -180,7 +180,6 @@ ddf_complete <- tibble(date = complete)
 
 ```
 
-
 ### Run the model
 
 Run the model for all the sites specified in the first step.
