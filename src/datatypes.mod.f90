@@ -1000,7 +1000,7 @@ end subroutine hourly_diagnostics
   type(cohort_type), pointer :: cc    ! current cohort
   integer :: i
   integer, parameter :: ndayyear = 365  
-  integer, parameter :: out_max_cohorts = 20     ! Try: Number of maximum cohorts
+  integer, parameter :: out_max_cohorts = 50     ! Try: Number of maximum cohorts
 
   ! Output and zero daily variables
       !!! daily !! cohorts output
@@ -1019,9 +1019,9 @@ end subroutine hourly_diagnostics
           out_daily_cohorts(i)%gpp     = cc%dailygpp
           out_daily_cohorts(i)%resp    = cc%dailyresp
           out_daily_cohorts(i)%transp  = cc%dailytrsp
-          out_daily_cohorts(i)%NPPleaf  = cc%NPPleaf
-          out_daily_cohorts(i)%NPProot  = cc%NPProot
-          out_daily_cohorts(i)%NPPwood  = cc%NPPwood
+          out_daily_cohorts(i)%NPPleaf = cc%NPPleaf
+          out_daily_cohorts(i)%NPProot = cc%NPProot
+          out_daily_cohorts(i)%NPPwood = cc%NPPwood
           out_daily_cohorts(i)%NSC     = cc%NSC
           out_daily_cohorts(i)%seedC   = cc%seedC
           out_daily_cohorts(i)%leafC   = cc%bl
@@ -1127,7 +1127,7 @@ end subroutine hourly_diagnostics
     real treeG, fseed, fleaf, froot,fwood,dDBH
     real :: plantC, plantN, soilC, soilN
     integer :: i
-    integer, parameter :: out_max_cohorts = 20     ! Try: Number of maximum cohorts
+    integer, parameter :: out_max_cohorts = 50     ! Try: Number of maximum cohorts
 
     ! Cohotrs ouput
     do i = 1, vegn%n_cohorts
