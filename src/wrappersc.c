@@ -223,11 +223,11 @@ extern SEXP lm3ppa_f_C(
     const int nt_annual = INTEGER(n_annual)[0];
 
     // // Specify output
-    SEXP output_hourly_tile    = PROTECT( allocMatrix(REALSXP, nt,        15) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
-    SEXP output_daily_tile     = PROTECT( allocMatrix(REALSXP, nt_daily,  35) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
-    SEXP output_daily_cohorts  = PROTECT( allocMatrix(REALSXP, nt_daily,  27) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
-    SEXP output_annual_tile    = PROTECT( allocMatrix(REALSXP, nt_annual, 44) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
-    SEXP output_annual_cohorts = PROTECT( allocMatrix(REALSXP, nt_annual, 23) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_hourly_tile    = PROTECT( allocMatrix(REALSXP, nt, 15           ) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_daily_tile     = PROTECT( allocMatrix(REALSXP, nt_daily, 35     ) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_daily_cohorts  = PROTECT( allocMatrix(REALSXP, nt_daily, 50, 27 ) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_annual_tile    = PROTECT( allocMatrix(REALSXP, nt_annual, 44    ) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_annual_cohorts = PROTECT( allocMatrix(REALSXP, nt_annual, 50, 23) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
 
     // xxx debug: Specify output
     // SEXP out_list = PROTECT( allocMatrix(REALSXP, nt, 5) );   // nt and 10 2nd agument to allocMatrix is number of rows, 3rd is number of columns

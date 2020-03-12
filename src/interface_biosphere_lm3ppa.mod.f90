@@ -253,7 +253,7 @@ module md_interface_lm3ppa
   type outtype_biosphere
     type(outtype_hourly_tile), dimension(:), allocatable              :: hourly_tile      !fn01
     type(outtype_daily_tile), dimension(ndayyear)                     :: daily_tile       !fno4
-    type(outtype_daily_cohorts), dimension(ndayyear, out_max_cohorts) :: daily_cohorts    !fno3
+    type(outtype_daily_cohorts), dimension(ndayyear,out_max_cohorts)  :: daily_cohorts    !fno3
     type(outtype_annual_tile)                                         :: annual_tile      !fno5
     type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: annual_cohorts   !fno2
   end type outtype_biosphere
