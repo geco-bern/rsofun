@@ -107,7 +107,7 @@ contains
   end function getclimate
 
 
-  function getco2( nt, forcing, domaininfo, forcingyear, const_co2_year, firstyeartrend ) result( pco2 )
+  function getco2( nt, forcing, domaininfo, forcingyear, firstyeartrend ) result( pco2 )
     !////////////////////////////////////////////////////////////////
     !  Function reads this year's atmospheric CO2 from input
     !----------------------------------------------------------------
@@ -116,7 +116,6 @@ contains
     real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     type( domaininfo_type ), intent(in) :: domaininfo
     integer, intent(in) :: forcingyear
-    integer, intent(in) :: const_co2_year
     integer, intent(in) :: firstyeartrend
 
     ! function return variable
@@ -126,11 +125,7 @@ contains
     integer :: readyear_idx
     integer :: idx_start, idx_end
 
-    if (const_co2_year/=int(dummy)) then
-      readyear_idx = const_co2_year - firstyeartrend + 1
-    else  
-      readyear_idx = forcingyear - firstyeartrend + 1
-    end if
+    readyear_idx = forcingyear - firstyeartrend + 1
 
     idx_start = (readyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1

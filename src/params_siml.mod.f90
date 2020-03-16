@@ -25,12 +25,6 @@ module md_params_siml
     logical :: do_spinup            ! whether this simulation does spinup 
     logical :: is_calib             ! whether this simulation is a calibration simulation (overriding parameters and no output)
 
-    integer :: const_co2_year       ! is true when using constant CO2, given by first transient year in 'co2_forcing_file'
-    integer :: const_ndep_year      ! is true when using constant N deposition, given by first transient year in 'ndep_forcing_file'
-    integer :: const_nfert_year     ! is true when using constant N fertilisation, given by first transient year in 'nfert_forcing_file'
-    integer :: const_clim_year      ! is true when using constant climate, given by year 'firstyeartrend'
-    integer :: const_lu_year        ! is true when using constant land use, given by year 'firstyeartrend'
-
     logical :: soilmstress          ! when true, an empirical soil moisture stress function is applied to GPP
     logical :: tempstress           ! when true, an empirical temperature stress function is applied to GPP
     logical :: calc_aet_fapar_vpd   ! when true, AET is calculated as f(VPD) * fAPAR * PET, where f(VPD) is of the form a * (b + m * ln(VPD))
@@ -128,19 +122,10 @@ contains
         out_steering%forcingyear =  year - params_siml%spinupyears + params_siml%firstyeartrend - 1
         out_steering%forcingyear_idx =  year - params_siml%spinupyears
 
-        if (params_siml%const_clim_year/=int(dummy)) then
-          ! constant climate year specified
-          cycleyear = get_cycleyear( year, params_siml%spinupyears, params_siml%recycle )
-          out_steering%climateyear = cycleyear + params_siml%const_clim_year - 1
-          out_steering%climateyear_idx = cycleyear + params_siml%const_clim_year - params_siml%firstyeartrend
-        
-        else
-          ! constant climate year not specified
-          out_steering%climateyear = out_steering%forcingyear
-          out_steering%climateyear_idx = out_steering%forcingyear_idx
-        
-        end if
-
+        ! constant climate year not specified
+        out_steering%climateyear = out_steering%forcingyear
+        out_steering%climateyear_idx = out_steering%forcingyear_idx
+      
       endif
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1
 

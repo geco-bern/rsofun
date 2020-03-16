@@ -22,11 +22,6 @@ contains
     calc_aet_fapar_vpd,        &       
     in_ppfd,                   &    
     in_netrad,                 &      
-    const_clim_year,           &            
-    const_lu_year,             &          
-    const_co2_year,            &           
-    const_ndep_year,           &            
-    const_nfert_year,          &             
     outdt,                     &  
     ltre,                      & 
     ltne,                      & 
@@ -72,11 +67,6 @@ contains
     logical(kind=c_bool), intent(in) :: calc_aet_fapar_vpd
     logical(kind=c_bool), intent(in) :: in_ppfd
     logical(kind=c_bool), intent(in) :: in_netrad
-    integer(kind=c_int),  intent(in) :: const_clim_year
-    integer(kind=c_int),  intent(in) :: const_lu_year
-    integer(kind=c_int),  intent(in) :: const_co2_year
-    integer(kind=c_int),  intent(in) :: const_ndep_year
-    integer(kind=c_int),  intent(in) :: const_nfert_year
     integer(kind=c_int),  intent(in) :: outdt
     logical(kind=c_bool), intent(in) :: ltre
     logical(kind=c_bool), intent(in) :: ltne
@@ -121,11 +111,6 @@ contains
     myinterface%params_siml%calc_aet_fapar_vpd = calc_aet_fapar_vpd
     myinterface%params_siml%in_ppfd            = in_ppfd
     myinterface%params_siml%in_netrad          = in_netrad
-    myinterface%params_siml%const_clim_year    = const_clim_year
-    myinterface%params_siml%const_lu_year      = const_lu_year
-    myinterface%params_siml%const_co2_year     = const_co2_year
-    myinterface%params_siml%const_ndep_year    = const_ndep_year
-    myinterface%params_siml%const_nfert_year   = const_nfert_year
     myinterface%params_siml%outdt              = outdt
     myinterface%params_siml%ltre               = ltre
     myinterface%params_siml%ltne               = ltne
@@ -236,7 +221,6 @@ contains
                                   forcing, &
                                   myinterface%domaininfo, &
                                   myinterface%steering%forcingyear, &
-                                  myinterface%params_siml%const_co2_year, &
                                   myinterface%params_siml%firstyeartrend &
                                   )
 

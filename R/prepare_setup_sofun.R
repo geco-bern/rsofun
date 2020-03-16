@@ -44,7 +44,8 @@ prepare_setup_sofun <- function( siteinfo, params_siml ){
     dplyr::mutate(tmp = 1) %>% 
     dplyr::right_join(mutate(siteinfo, tmp = 1), by = "tmp") %>% 
     dplyr::select(names(siteinfo), names(params_siml)) %>% 
-    dplyr::rename(nyeartrend = years_data, firstyeartrend = year_start) %>% 
+    dplyr::mutate(nyeartrend = year_end - year_start + 1) %>%
+    dplyr::rename(firstyeartrend = year_start) %>% 
     tidyr::nest(params_siml = c(names(params_siml), "firstyeartrend", "nyeartrend"))
   
   return(siteinfo)
