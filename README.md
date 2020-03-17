@@ -18,10 +18,10 @@ Parallelisation for a large number of site-level simulations is provided using t
 To install and load the rsofun package using the latest release run the following command in your R terminal: 
 ```r
 if(!require(devtools)){install.packages(devtools)}
-devtools::install_github( "stineb/rsofun@v1.0" )
+devtools::install_github( "stineb/rsofun@v1.1" )
 library(rsofun)
 ```
-Check *Releases* for the latest version. In above example, the latest is `v1.0`. Replace the respective string accordingly in the `install_github()` call above.
+Check *Releases* for the latest version. In above example, the latest is `v1.1`. Replace the respective string accordingly in the `install_github()` call above.
 
 ## Environment
 
@@ -36,14 +36,9 @@ FCFLAGS = -Wall -g -O2 $(LTO) -ffree-line-length-0
 
 The `rsofun` package requires a large number of other R-packages (dependencies). Required dependencies are essential for `rsofun` functions and are:
 
-- `dplyr`,`ggplot2`,`lubridate`,`Metrics`,`mgcv`,`ncdf4`,`optimr`,`purrr`,`readr`,`rlang`,`stringr`,`tidyr`, `LSD`, and `GenSA`, 
+- dplyr, purrr, lubridate, tidyr, raster, lubridate, stringi, sp, GenSA, stringr, rlang, readr
 
-To load dependencies, run
-```r
-load_dependencies_rsofun()
-```
-
-## Example run
+## Example
 
 See [here](https://rpubs.com/stineb/rsofun) for an example.
 
