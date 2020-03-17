@@ -31,7 +31,7 @@ In order to successfully compile the package (Fortran source), you need to have 
 FCFLAGS = -Wall -g -O2 $(LTO) -ffree-line-length-0
 ```
 
-### Dependencies
+## Dependencies
 
 The `rsofun` package requires a large number of other R-packages (dependencies). Required dependencies are essential for `rsofun` functions and are:
 
@@ -41,7 +41,7 @@ The `rsofun` package requires a large number of other R-packages (dependencies).
 
 See [here](https://rpubs.com/stineb/rsofun) for an example.
 
-### Usage and contribution
+## Usage and contribution
 
 This package is designed to be extendible to ingesting other data types (sources). The developer (Beni Stocker) would appreciate if you made sure that your developments can be fed back to this repository. To do so, please use git. See [here](http://rogerdudler.github.io/git-guide/) for a brief introduction to git. 
 
