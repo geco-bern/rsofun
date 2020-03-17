@@ -11,11 +11,12 @@ output:
 library(rsofun)
 library(dplyr)
 library(readr)
+library(ingestr)
 ```
 
 ## Example using rsofun for P-model simulations
 
-The following describes the use of `rsofun` for an ensemble of site-scale P-model simulations, including steps for model calibration and evaluation (benchmarking). `rsofun` is designed in a modular and hierarchical fashion. This enables multiple setups within the same modelling framework. The P-model implementation in `rsofun` is described in Stocker et al. (2020) **Geosci. Mod. Dev.**. 
+The following describes the use of `rsofun` for an ensemble of site-scale P-model simulations, including steps for model calibration and evaluation (benchmarking). `rsofun` is designed in a modular and hierarchical fashion. This enables multiple setups within the same modelling framework. The P-model implementation in `rsofun` is described in Stocker et al. (2020) *Geosci. Mod. Dev.*. 
 
 In the P-model setup, the model requires time series of daily meteorological data as input and is calibrated against observational GPP data. This example describes simulations at a subset of FLUXNET 2015 Tier 1 sites, using GPP based on the night-time flux partitioning method as calibration target and benchmark (no worries, an out-of-sample calibration/evaluation function is available, too). 
 
@@ -23,7 +24,8 @@ In the P-model setup, the model requires time series of daily meteorological dat
 
 We manually define a subset of sites that are part of the FLUXNET 2015 Tier 1 set of sites:
 ```{r}
-mysites <- c("BE-Vie", "DE-Tha", "DK-Sor", "FI-Hyy", "IT-Col", "NL-Loo", "US-MMS", "US-WCr", "US-UMB", "US-Syv", "DE-Hai")
+# mysites <- c("BE-Vie", "DE-Tha", "DK-Sor", "FI-Hyy", "IT-Col", "NL-Loo", "US-MMS", "US-WCr", "US-UMB", "US-Syv", "FR-Pue")
+mysites <- "FR-Pue"
 ```
 
 A small number of meta data variables have to be specified for each site specifically to define the simulation years. This information is also used for input, calibration, and evaluation data ingestion. Required meta information is specified for each site (in rows) and a number of variables:
@@ -38,7 +40,13 @@ A small number of meta data variables have to be specified for each site specifi
 This information is provided in file `siteinfo_fluxnet2015.csv`. This file is created as described in (and using code from) [metainfo_fluxnet2015](https://github.com/stineb/metainfo_fluxnet2015). 
 ```{r}
 siteinfo <- readr::read_csv("~/rsofun/siteinfo_fluxnet2015.csv") %>%
-  filter(sitename %in% mysites) %>%
+  filter(sitename %in% mysites)
+
+## take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo
+siteinfo <- siteinfo %>% 
+  mutate(year_start = 2007, year_end = 2014)
+
+siteinfo <- siteinfo %>% 
   mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 ```
@@ -77,7 +85,7 @@ params_siml <- list(
 
 Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters), global simulation parameters are wrapped inside an additional column `params_siml`, added to the site meta info dataframe.
 ```{r}
-settings_sims <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
+siteinfo <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
 ```
 
 ### Define model parameters
@@ -114,11 +122,11 @@ The following ingests meteorological data from the FLUXNET 2015 files for variab
 ```{r message=FALSE, warning=FALSE}
 library(ingestr)
 ddf_fluxnet <- ingest(
-  siteinfo = siteinfo,
+  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
   source    = "fluxnet2015",
-  getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F_DAY", swin =  "SW_IN_F", patm = "PA_F"),
-  dir       = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
-  settings  = list(dir_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/", getswc = FALSE),
+  getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F", swin =  "SW_IN_F", patm = "PA_F"),
+  dir       = paste0(path.package("rsofun"), "/extdata/"),
+  settings  = list(dir_hh = paste0(path.package("rsofun"), "/extdata/"), dir_hr = paste0(path.package("rsofun"), "/extdata/"), getswc = FALSE),
   timescale = "d"
   )
 ```
@@ -126,7 +134,7 @@ ddf_fluxnet <- ingest(
 Some meteo data is not available from FLUXNET. Extract it from CRU global climate files instead.
 ```{r}
 ddf_cru <- ingest(
-  siteinfo = siteinfo,
+  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
   source    = "cru",
   getvars   = list(ccov = "cld"),
   dir       = "~/data/cru/ts_4.01/"
@@ -157,20 +165,32 @@ settings_gee <- get_settings_gee(
   python_path = system("which python", intern = TRUE),
   gee_path = "~/google_earth_engine_subsets/gee_subset/",
   data_path = "~/data/gee_subsets/",
-  splined = TRUE,
-  do_plot_interpolated = FALSE,
+  method_interpol = "linear",
+  keep = FALSE,
   overwrite_raw = FALSE,
-  overwrite_interpol = FALSE
+  overwrite_interpol = TRUE
   )
 ```
 
 This can now be used to download the data to the directory specified by argument `data_path` of function `get_settings_gee()` and to read data into R.
 ```{r}
-ddf_fapar <- ingest(
-  siteinfo = siteinfo,
+df_gee_modis_fpar <- ingest(
+  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
   source = "gee",
   settings = settings_gee,
   verbose = FALSE
+  )
+```
+
+#### CO2
+
+Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
+```{r}
+df_co2 <- ingest(
+  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  source = "co2",
+  verbose = FALSE,
+  settings = list(path = "~/data/co2/cCO2_rcp85_const850-1765.csv")
   )
 ```
 
@@ -179,73 +199,19 @@ ddf_fapar <- ingest(
 Finally, we can collect forcing data, simulation parameters, and site meta info into a single object that will be used to drive rsofun.
 ```{r}
 df_drivers <- collect_drivers_sofun( 
-  settings       = settings_sims, 
+  siteinfo       = siteinfo %>% filter(sitename %in% mysites),
   meteo          = ddf_meteo, 
-  fapar          = ddf_fapar,
+  fapar          = df_gee_modis_fpar,
+  co2            = df_co2,
   df_soiltexture = df_soiltexture
   )
 ```
 
-
-
-
-
-
-First, define input settings.
-```{r}
-settings_input <-  list(
-    data                     = NA,
-    temperature              = "fluxnet2015",
-    precipitation            = "fluxnet2015",
-    vpd                      = "fluxnet2015",
-    ppfd                     = "fluxnet2015",
-    netrad                   = "fluxnet2015",  #  c("fluxnet2015", "watch_wfdei"),
-    patm                     = "fluxnet2015",
-    netrad                   = NA,
-    cloudcover               = "cru",
-    path_input               = "~/sofun_inputs/example/",
-    path_watch_wfdei         = "~/data/watch_wfdei/",
-    path_cru                 = "~/data/cru/ts_4.01/",
-    path_MODIS_FPAR_MCD15A3H = "~/data/fluxnet_subsets/fapar_MODIS_FPAR_MCD15A3H_gee_MCD15A3H_fluxnet2015_gee_subset/",
-    path_MODIS_EVI_MOD13Q1   = "~/data/fluxnet_subsets/fapar_MODIS_EVI_MOD13Q1_gee_MOD13Q1_fluxnet2015_gee_subset/",
-    path_co2                 = "~/data/co2/cCO2_rcp85_const850-1765.csv",
-    path_fluxnet2015         = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
-    path_fluxnet2015_hh      = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
-    get_from_remote          = FALSE,
-    settings_gee             = get_settings_gee( 
-      bundle      = "fpar", 
-      python_path = "/Users/benjaminstocker/Library/Enthought/Canopy_64bit/User/bin/python",
-      gee_path    = "~/gee_subset/gee_subset/"
-      ),
-  fapar = "MODIS_FPAR_MCD15A3H",
-  splined_fapar = TRUE
-  )
-```
-
-Then, get the input data.
-```{r message=FALSE, warning=FALSE, echo=FALSE}
-ddf_input <- prepare_input_sofun(
-  settings_input             = settings_input,
-  settings_sims              = settings_sims,
-  overwrite_csv_climate_lev1 = FALSE,
-  overwrite_csv_climate_lev2 = TRUE,
-  overwrite_csv_climate_lev3 = TRUE,
-  overwrite_rdata_climate    = TRUE,
-  overwrite_csv_fapar        = FALSE,
-  verbose                    = FALSE
-  )
-```
 
 ### Run the model
 
 Run the model for all the sites specified in the first step.
 ```{r}
-df_drivers <- collect_drivers_sofun( 
-  settings       = settings_sims, 
-  forcing        = ddf_input, 
-  df_soiltexture = df_soiltexture
-  )
-
 ## run for a single site
 mod <- run_sofun_f_bysite( 
   df_drivers$sitename[1], 
@@ -285,6 +251,7 @@ print(ptm)
 #   units = 's'
 # )
 
+library(ggplot2)
 df_output$out_sofun[[1]] %>% 
   ggplot(aes(x=date, y=gpp)) +
   geom_line() + 
@@ -295,46 +262,47 @@ df_output$out_sofun[[1]] %>%
 
 Define calibration settings.
 ```{r}
-## Define calibration settings common for all setups
 settings_calib <- list(
   method              = "gensa",
   targetvars          = c("gpp"),
   timescale           = list( gpp = "d" ),
-  path_fluxnet2015    = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
-  path_fluxnet2015_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
-  threshold_GPP       = 0.5,
-  path_gepisat        = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
   maxit               = 5, # (5 for gensa) (30 for optimr)    #
-  sitenames           = mysites,
-  filter_temp_max     = 35.0,
-  filter_drought      = FALSE,
+  sitenames           = "FR-Pue",
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list( kphio = list( lower=0.03, upper=0.07, init=0.0496 ) ),
-  datasource          = list( gpp = "fluxnet2015_NT" ),
-  filter_temp_min     = NA,
-  filter_soilm_min    = NA
+  par                 = list( kphio = list( lower=0.03, upper=0.07, init=0.0496 ) )
  )
 ```
 
-Get calibration target data.
+Use the [ingestr](https://github.com/stineb/ingestr) package once again, now for collecting calibration target data. I.e., GPP based on the nighttime flux decomposition method.
 ```{r warning=FALSE, message=FALSE}
-ddf_obs_calib <- get_obs_calib(
-  settings_calib = settings_calib,
-  dplyr::select(df_drivers, sitename, siteinfo) %>% tidyr::unnest(siteinfo),
-  settings_input
+settings_ingestr_fluxnet <- list(
+  dir_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/", 
+  getswc = FALSE,
+  filter_ntdt = TRUE,
+  threshold_GPP = 0.8,
+  remove_neg = FALSE
+  )
+
+ddf_fluxnet_gpp <- ingestr::ingest(
+  siteinfo = filter(siteinfo, sitename == "FR-Pue"),
+  source    = "fluxnet2015",
+  getvars = list(gpp = "GPP_NT_VUT_REF",
+                 gpp_unc = "GPP_NT_VUT_SE"),
+  dir = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
+  settings = settings_ingestr_fluxnet,
+  timescale = "d"
   )
 ```
 
 Calibrate the model.
-
 ```{r warning=FALSE, message=FALSE}
 set.seed(1982)
 settings_calib <- calib_sofun(
-  settings_calib,
-  df_drivers,
-  ddf_obs = ddf_obs_calib
+  df_drivers = filter(df_drivers, sitename %in% settings_calib$sitenames),  # use only one site
+  ddf_obs = ddf_fluxnet_gpp,
+  settings = settings_calib
   )
 ```
 
@@ -348,65 +316,78 @@ print(settings_calib$par_opt)
 
 Run the model once again with these parameters and evaluate results.
 ```{r warning=FALSE, message=FALSE}
-mylist <- readr::read_csv("~/eval_pmodel/myselect_fluxnet2015.csv") %>% 
-  dplyr::filter( use==1 ) %>% 
-  dplyr::pull( Site )
+params_modl$kphio <- settings_calib$par_opt["kphio"]
 
-settings_eval <- list(
-  sitenames           = settings_sims$sitename,
-  sitenames_siteplots = mylist,
-  agg                 = 8,
-  path_fluxnet2015_d  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_fluxnet2015_w  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/",
-  path_fluxnet2015_m  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/",
-  path_fluxnet2015_y  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/",
-  path_gepisat_d      = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
-  benchmark           = list( gpp = c("fluxnet2015_NT") ),
-  remove_premodis     = TRUE
-  )
+df_output <- runread_sofun_f(
+     df_drivers, 
+     params_modl = params_modl, 
+     makecheck = TRUE,
+     parallel = FALSE
+     )
 ```
+
 
 Get evaluation data (benchmarking data).
-```{r warning=FALSE, message=FALSE}
-filn <- "./obs_eval.Rdata"
-if (file.exists(filn)){
-  load(filn)
-} else {
-  obs_eval  <- get_obs_eval( 
-    settings_eval = settings_eval, 
-    settings_sims = settings_sims, 
-    overwrite     = TRUE, 
-    light         = TRUE,
-    add_forcing   = FALSE
+```{r message=FALSE, warning=FALSE}
+## get data for idfferent time scales separately
+settings_fluxnet <- list(
+  getswc = FALSE,
+  filter_ntdt = TRUE,
+  threshold_GPP = 0.8,
+  remove_neg = FALSE
   )
-  save(obs_eval, file = filn)
-} 
+
+ddf_eval <- ingest(
+  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  source    = "fluxnet2015",
+  getvars   = list(gpp = "GPP_NT_VUT_REF",
+                   gpp_unc = "GPP_NT_VUT_SE"),
+  dir       = paste0(path.package("rsofun"), "/extdata/"),
+  settings  = settings_fluxnet,
+  timescale = "d"
+  )
+
+mdf_eval <- ingest(
+  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  source    = "fluxnet2015",
+  getvars   = list(gpp = "GPP_NT_VUT_REF",
+                   gpp_unc = "GPP_NT_VUT_SE"),
+  dir       = paste0(path.package("rsofun"), "/extdata/"),
+  settings  = settings_fluxnet,
+  timescale = "m"
+  )
+
+adf_eval <- ingest(
+  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  source    = "fluxnet2015",
+  getvars   = list(gpp = "GPP_NT_VUT_REF",
+                   gpp_unc = "GPP_NT_VUT_SE"),
+  dir       = paste0(path.package("rsofun"), "/extdata/"),
+  settings  = settings_fluxnet,
+  timescale = "y"
+  )
 ```
 
-Now run the model with calibrated parameters.
+Use rsofun to create a standardised object used for benchmarking the model output.
 ```{r}
-params_modl <- list(
-  kphio           = settings_calib$par_opt[["kphio"]],
-  soilm_par_a     = 1.0,
-  soilm_par_b     = 0.0,
-  vpdstress_par_a = 0.2,
-  vpdstress_par_b = 0.2,
-  vpdstress_par_m = 5
+settings_eval <- list(
+  benchmark = list( gpp = c("fluxnet2015") ),
+  sitenames = mysites,
+  agg       = 8  # An integer specifying the number of days used to define the width of bins for daily data aggregated to several days
   )
-
-mod <- runread_sofun_f(
-  df_drivers, 
-  params_modl = params_modl, 
-  makecheck = TRUE
-  ) %>% 
-  rename(id = sitename) %>% 
-  unnest(out_sofun)
+obs_eval <- collect_obs_eval( 
+  siteinfo = siteinfo %>% filter(sitename %in% mysites),
+  settings = settings_eval, 
+  adf = adf_eval, 
+  mdf = mdf_eval, 
+  ddf = ddf_eval 
+  )
 ```
 
 And finally do the evaluation.
 ```{r warning=FALSE, message=FALSE}
 out_eval <- eval_sofun( 
-  mod, 
+  df_output, 
   settings_eval, 
   settings_sims, 
   obs_eval = obs_eval, 
@@ -420,22 +401,12 @@ Print some results.
 out_eval$gpp$fluxnet2015$metrics$xdaily_pooled
 ```
 
+Get the [rbeni](https://github.com/stineb/rbeni) R package for nice plotting functions that can be used with the output of `eval_sofun()`.
 ```{r}
-out_eval$gpp$fluxnet2015$data$xdf %>% rbeni::analyse_modobs2("mod", "obs", type = "heat")
-```
-
-```{r}
-out_eval$gpp$fluxnet2015$data$ddf %>% 
-  dplyr::filter(sitename=="BE-Vie" & year(date) < 2005) %>% 
-  ggplot(aes(x = date)) +
-  geom_line(aes(y = obs), col="black") +
-  geom_line(aes(y = mod), col="red") + 
-  labs(title = "BE-Vie")
-
-out_eval$gpp$fluxnet2015$data$ddf %>% 
-  dplyr::filter(sitename=="AU-Dry" & year(date) > 2010) %>% 
-  ggplot(aes(x = date)) +
-  geom_line(aes(y = obs), col="black") +
-  geom_line(aes(y = mod), col="red") + 
-  labs(title = "AU-Dry")
+library(rbeni)
+gg <- out_eval$gpp$fluxnet2015$data$xdf %>% analyse_modobs2("mod", "obs", type = "heat")
+gg$gg +
+  labs(title = "FR-Pue: modelled vs. observed GPP", 
+       x = expression(paste("Modelled GPP (gC m"^{-2}, "d"^{-1}, ")")), 
+       y = expression(paste("Observed GPP (gC m"^{-2}, "d"^{-1}, ")")))
 ```

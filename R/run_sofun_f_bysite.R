@@ -76,6 +76,7 @@ run_sofun_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_soi
       rlang::warn(paste(" Number of years data: ", nrow(forcing)/365))
       rlang::warn(paste(" Number of simulation years: ", params_siml$nyeartrend))
       rlang::warn(" Returning a dummy data frame.")
+      do_continue <- FALSE
     }
   }
 

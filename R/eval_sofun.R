@@ -25,11 +25,22 @@
 #' 
 eval_sofun <- function(mod, settings_eval, settings_sims, obs_eval = NA, overwrite = TRUE, doplot = FALSE, light = FALSE){
   
+  ## make model output a long flat table
+  mod <- mod %>% 
+    dplyr::rename(id = sitename) %>% 
+    tidyr::unnest(out_sofun)
+  
   ## Evaluate daily variables
-  out <- lapply( as.list(names(settings_eval$benchmark)), 
-                 function(x) eval_sofun_byvar(x, dplyr::select(mod, sitename, date, mod = eval(x)), settings_eval, settings_sims, obs_eval = obs_eval, overwrite = TRUE, doplot = FALSE, light = light)
-                 ) %>%
-          setNames(names(settings_eval$benchmark))
+  out <- purrr::map(
+    as.list(names(settings_eval$benchmark)),
+    ~eval_sofun_byvar(., dplyr::select(mod, sitename, date, mod = {{.}}), settings_eval, settings_sims, obs_eval = obs_eval, overwrite = TRUE, doplot = FALSE, light = light)
+    ) %>% 
+    setNames(names(settings_eval$benchmark))
+  
+  # out <- lapply( as.list(names(settings_eval$benchmark)), 
+  #                function(x) eval_sofun_byvar(x, dplyr::select(mod, sitename, date, mod = eval(x)), settings_eval, settings_sims, obs_eval = obs_eval, overwrite = TRUE, doplot = FALSE, light = light)
+  #                ) %>%
+  #         setNames(names(settings_eval$benchmark))
 
   return(out)
 }
@@ -82,7 +93,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
     ##------------------------------------------------------------
     ## Get observations for evaluation
     ##------------------------------------------------------------
-    if (identical(obs_eval, NA)) obs_eval <- get_obs_eval( settings_eval = settings_eval, settings_sims = settings_sims, overwrite = overwrite )
+    if (identical(obs_eval, NA)) rlang::abort("eval_sofun_byvar(): Object provided by argument 'eval_sofun_byvar' could not be identified.")
     
     ## detach
     if (varnam=="aet"){
@@ -90,10 +101,10 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
     } else {
       varnam_obs <- varnam
     }
-    adf <- obs_eval$adf %>% dplyr::select(sitename, date,  obs = {{varnam_obs}} ) # eval(varnam_obs))
-    mdf <- obs_eval$mdf %>% dplyr::select(sitename, date,  obs = {{varnam_obs}})
-    ddf <- obs_eval$ddf %>% dplyr::select(sitename, date,  obs = {{varnam_obs}})
-    xdf <- obs_eval$xdf %>% dplyr::select(sitename, inbin, obs = {{varnam_obs}})
+    adf <- obs_eval$adf %>% tidyr::unnest(data) %>% dplyr::select(sitename, date,  obs = {{varnam_obs}})
+    mdf <- obs_eval$mdf %>% tidyr::unnest(data) %>% dplyr::select(sitename, date,  obs = {{varnam_obs}})
+    ddf <- obs_eval$ddf %>% tidyr::unnest(data) %>% dplyr::select(sitename, date,  obs = {{varnam_obs}}, lat, koeppen_code)
+    xdf <- obs_eval$xdf %>% tidyr::unnest(data) %>% dplyr::select(sitename, inbin, obs = {{varnam_obs}})
     
     # obs_eval$adf <- NULL
     # obs_eval$mdf <- NULL
@@ -130,7 +141,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
     ## mean across multi-day period
     xdf <- ddf_mod %>% 
       # mutate( year = year(date), week = week(date) ) %>%
-      mutate( year = year(date), inbin = cut( date, breaks = obs_eval$breaks_xdf, right = FALSE ) ) %>%
+      mutate( year = year(date), inbin = cut( date, breaks = obs_eval$breaks, right = FALSE ) ) %>%
       tidyr::drop_na() %>% 
       group_by( sitename, inbin ) %>%
       summarise( mod_mean = mean( mod, na.rm = TRUE ), mod_min = min( mod, na.rm = TRUE ), mod_max = max( mod, na.rm = TRUE ), n_mod = sum(!is.na(mod)) ) %>%
@@ -305,7 +316,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings_eval, settings_sims, obs_
       if (!light){
         print("Evaluate mean seasonal cycle by climate zones...")
         meandoydf_byclim <- ddf %>% mutate( doy = yday(date) ) %>%
-          left_join( dplyr::select( metainfo_Tier1_sites_kgclimate_fluxnet2015, sitename, lat, koeppen_code ), by = "sitename" ) %>%   # 'metainfo_Tier1_sites_kgclimate_fluxnet2015' is lazy-loaded with library(rsofun)
+          # left_join( dplyr::select( metainfo_Tier1_sites_kgclimate_fluxnet2015, sitename, lat, koeppen_code ), by = "sitename" ) %>%   # 'metainfo_Tier1_sites_kgclimate_fluxnet2015' is lazy-loaded with library(rsofun)
           mutate( hemisphere = ifelse( lat>0, "north", "south" ) ) %>%
           # mutate( bias = mod - obs ) %>% 
           dplyr::select( -lat ) %>%

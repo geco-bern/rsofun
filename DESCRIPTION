@@ -7,6 +7,6 @@ Description: Implements the SOFUN modelling framework for simulating terrestrial
   calibration and benchmarking.
 License: GPL-3
 LazyData: true
-Depends: dplyr, purrr, lubridate, tidyr, raster, lubridate, stringi, sp, gensa, stringr, rland, readr
+Depends: dplyr, purrr, lubridate, tidyr, raster, lubridate, stringi, sp, GenSA, stringr, rlang, readr
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr

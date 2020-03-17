@@ -2,68 +2,44 @@
 #'
 #' This is the main function that handles the calibration of SOFUN model parameters. 
 #' 
-#' @param settings_calib A list containing model calibration settings. See vignette_rsofun.pdf for more information and examples.
 #' @param df_drivers asdf
-#' @param settings_input A list containing model input settings. See vignette_rsofun.pdf for more information and examples.
-#' @param ddf_obs (Optional) A data frame containing observational data used for model calibration. Created by function \code{get_obs()}
+#' @param ddf_obs A data frame containing observational data used for model calibration. Created by function \code{get_obs_calib2()}
+#' @param settings A list containing model calibration settings. See vignette_rsofun.pdf for more information and examples.
 #'
 #' @return A complemented named list containing the calibration settings and optimised parameter values.
 #' @export
 #'
-#' @examples settings_calib <- calib_sofun( setup, settings_calib, settings_sims, settings_input )
+#' @examples \dontrun{ calib_sofun( df_drivers = filter(df_drivers, sitename %in% settings$sitenames),  ddf_obs = ddf_obs_calib, settings = settings)}
 #' 
-calib_sofun <- function( settings_calib, df_drivers, settings_input = NA, ddf_obs = NA ){
+calib_sofun <- function( df_drivers, ddf_obs, settings ){
 
-  targetvars <- paste0( settings_calib$targetvars, "_obs")
+  targetvars <- paste0( settings$targetvars, "_obs")
   
   ## Use only calibsites
   df_drivers <- df_drivers %>% 
-    dplyr::filter(sitename %in% settings_calib$sitenames)
-  
-  ##----------------------------------------------------------------
-  ## Collect observational data used as calibration target
-  ##----------------------------------------------------------------
-  if (identical(NA,ddf_obs)){
-    print("Collecting observational target data ...")
-    ddf_obs <- get_obs_calib( 
-      settings_calib, 
-      dplyr::select(df_drivers, sitename, siteinfo) %>% tidyr::unnest(siteinfo), 
-      settings_input 
-      )
-  }
-
-  ##----------------------------------------------------------------
-  ## Apply filters
-  ##----------------------------------------------------------------
-  ## "filtering" pre-MODIS data
-  idxs <- which(ddf_obs$date < lubridate::ymd("2000-02-18"))
-  make_na_premodis <- function(vec, idxs){
-    vec[idxs] <- NA
-    return(vec)
-  }
-  ddf_obs <- ddf_obs %>% 
-    dplyr::mutate_at( vars(one_of(targetvars)), ~make_na_premodis(., idxs) )
-    
+    dplyr::filter(sitename %in% settings$sitenames)
 
   ## make global
-  targetvars_with_unc <- c(targetvars, paste0(settings_calib$targetvars, "_unc"))
+  targetvars_with_unc <- c(targetvars, paste0(settings$targetvars, "_unc"))
   ddf_obs <- ddf_obs %>% 
+    tidyr::unnest(data) %>% 
+    rename(gpp_obs = gpp) %>% 
     dplyr::select( date, sitename, one_of( targetvars_with_unc ) ) %>% 
-    dplyr::filter( sitename %in% settings_calib$sitenames )
+    dplyr::filter( sitename %in% settings$sitenames )
 
   if (nrow(ddf_obs)>0){
 
     ## Example run for getting structure of output file
-    if (identical(names(settings_calib$par),"kphio")){
+    if (identical(names(settings$par), "kphio")){
       ## For calibrating quantum yield efficiency only
       # cost_rmse <- cost_chisquared_kphio
       cost_rmse <- cost_rmse_kphio
     
-    } else if ( "kphio" %in% names(settings_calib$par) && "soilm_par_a" %in% names(settings_calib$par) && "soilm_par_b" %in% names(settings_calib$par) ){  
+    } else if ( "kphio" %in% names(settings$par) && "soilm_par_a" %in% names(settings$par) && "soilm_par_b" %in% names(settings$par) ){  
       ## Full stack calibration
       cost_rmse <- cost_rmse_fullstack   
 
-    } else if ( "vpdstress_par_a" %in% names(settings_calib$par) && "vpdstress_par_b" %in% names(settings_calib$par) && "vpdstress_par_m" %in% names(settings_calib$par) ){  
+    } else if ( "vpdstress_par_a" %in% names(settings$par) && "vpdstress_par_b" %in% names(settings$par) && "vpdstress_par_m" %in% names(settings$par) ){  
       ## Calibration of VPD stress function (P-model runs with soilmstress and tempstress on)
       # cost_rmse <- cost_chisquared_vpdstress
       cost_rmse <- cost_rmse_vpdstress
@@ -74,21 +50,21 @@ calib_sofun <- function( settings_calib, df_drivers, settings_input = NA, ddf_ob
     ## Do the calibration
     ##----------------------------------------------------------------
     ## check directory where calibration results are stored
-    if (!dir.exists(settings_calib$dir_results)) system( paste0( "mkdir -p ", settings_calib$dir_results) )
+    if (!dir.exists(settings$dir_results)) system( paste0( "mkdir -p ", settings$dir_results) )
 
-    if (settings_calib$method=="gensa"){
+    if (settings$method=="gensa"){
       ##----------------------------------------------------------------
       ## calibrate the model parameters using GenSA (simulated annealing)
       ##----------------------------------------------------------------
       ptm <- proc.time()
       out_optim <- GenSA(
-                          par   = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
+                          par   = lapply( settings$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
                           fn    = cost_rmse,
-                          lower = lapply( settings_calib$par, function(x) x$lower ) %>% unlist(),
-                          upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist(),
+                          lower = lapply( settings$par, function(x) x$lower ) %>% unlist(),
+                          upper = lapply( settings$par, function(x) x$upper ) %>% unlist(),
                           control=list( 
                                         #temperature=4000, 
-                                        max.call=settings_calib$maxit,
+                                        max.call=settings$maxit,
                                         trace.mat=TRUE,
                                         threshold.stop=1e-4,
                                         max.time=300
@@ -99,15 +75,15 @@ calib_sofun <- function( settings_calib, df_drivers, settings_input = NA, ddf_ob
       out_optim$time_optim <- proc.time() - ptm
       print(out_optim$par)
 
-      filn <- paste0( settings_calib$dir_results, "/out_gensa_", settings_calib$name, ".Rdata")
+      filn <- paste0( settings$dir_results, "/out_gensa_", settings$name, ".Rdata")
       print( paste0( "writing output from GenSA function to ", filn ) )
       save( out_optim, file = filn )
       
       # ## Test plot with the same SOFUN call
-      # plot_test_kphio( out_optim$par, subtitle = "", label = paste("CALIB test", settings_calib$name), makepdf = FALSE )    
+      # plot_test_kphio( out_optim$par, subtitle = "", label = paste("CALIB test", settings$name), makepdf = FALSE )    
 
 
-    } else if (settings_calib$method=="optimr"){
+    } else if (settings$method=="optimr"){
       ##----------------------------------------------------------------
       ## Calibrate the model parameters using R optimr(). Optimr is a 
       ## wrapper that implements different optimization methods.
@@ -117,22 +93,22 @@ calib_sofun <- function( settings_calib, df_drivers, settings_input = NA, ddf_ob
       ##----------------------------------------------------------------
       ptm <- proc.time()
       out_optim <- optimr(
-                          par     = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
+                          par     = lapply( settings$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
                           fn      = cost_rmse,
-                          control = list( maxit = settings_calib$maxit )
+                          control = list( maxit = settings$maxit )
                           )
       proc.time() - ptm
       print(out_optim$par)
 
-      filn <- paste0( settings_calib$dir_results, "/out_optimr_", settings_calib$name, ".Rdata")
+      filn <- paste0( settings$dir_results, "/out_optimr_", settings$name, ".Rdata")
       print( paste0( "writing output from optimr function to ", filn ) )
       save( out_optim, file = filn )
 
       # ## Test plot with the same SOFUN call
-      # plot_test_kphio( out_optim$par, subtitle = "", label = paste("CALIB test", settings_calib$name), makepdf = FALSE )
+      # plot_test_kphio( out_optim$par, subtitle = "", label = paste("CALIB test", settings$name), makepdf = FALSE )
 
 
-    } else if (settings_calib$method=="BayesianTools"){
+    } else if (settings$method=="BayesianTools"){
       ##----------------------------------------------------------------
       ## Calibrate the model parameters using Bayesian calibration 
       ## implemented in 'BayesianTools'. I.e., the posterior density is
@@ -140,15 +116,15 @@ calib_sofun <- function( settings_calib, df_drivers, settings_input = NA, ddf_ob
       ##----------------------------------------------------------------
       ptm <- proc.time()
       bt_setup    <- createBayesianSetup( cost_rmse( inverse=TRUE ), 
-                                          lower = apply( settings_calib$par, function(x) x$lower ) %>% unlist(), 
-                                          upper = lapply( settings_calib$par, function(x) x$upper ) %>% unlist() 
+                                          lower = apply( settings$par, function(x) x$lower ) %>% unlist(), 
+                                          upper = lapply( settings$par, function(x) x$upper ) %>% unlist() 
                                           )
-      bt_settings <- list( iterations = settings_calib$maxit,  message = TRUE )
+      bt_settings <- list( iterations = settings$maxit,  message = TRUE )
       out_optim <- runMCMC( bayesianSetup = bt_setup, sampler = "DEzs", settings = bt_settings )
       proc.time() - ptm
       
 
-    } else if (settings_calib$method=="linscale"){
+    } else if (settings$method=="linscale"){
       ##----------------------------------------------------------------
       ## Calibrate the quantum yield efficiency parameter ('kphio') 
       ## applied as a linear scalar to simulated GPP.
@@ -159,22 +135,22 @@ calib_sofun <- function( settings_calib, df_drivers, settings_input = NA, ddf_ob
 
       ptm <- proc.time()
       out_optim <- optimr(
-                          par     = lapply( settings_calib$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
+                          par     = lapply( settings$par, function(x) x$init ) %>% unlist(),  # initial parameter value, if NULL will be generated automatically
                           fn      = cost_linscale_rmse,
-                          control = list( maxit = settings_calib$maxit )
+                          control = list( maxit = settings$maxit )
                           )
       proc.time() - ptm
       print(out_optim$par)
 
-      filn <- paste0( settings_calib$dir_results, "/out_linscale_", settings_calib$name, ".Rdata")
+      filn <- paste0( settings$dir_results, "/out_linscale_", settings$name, ".Rdata")
       print( paste0( "writing output from linscale function to ", filn ) )
       save( out_optim, file = filn )
 
     }
 
     # ## xxx Test---------------------------
-    # parvals <- seq( from = lapply( settings_calib$par, function(x) x$lower ) %>% unlist(),
-    #                 to   = lapply( settings_calib$par, function(x) x$upper ) %>% unlist(),
+    # parvals <- seq( from = lapply( settings$par, function(x) x$lower ) %>% unlist(),
+    #                 to   = lapply( settings$par, function(x) x$upper ) %>% unlist(),
     #                 length.out = 20 )
     # cost <- purrr::map( as.list( parvals ), ~cost_rmse( par = list(.) ) ) %>% unlist()
     # plot( parvals, cost, pch=16 )
@@ -182,31 +158,31 @@ calib_sofun <- function( settings_calib, df_drivers, settings_input = NA, ddf_ob
     # ## -----------------------------------
     
     ## save optimised parameters
-    names(out_optim$par) <- names(settings_calib$par)
-    for (parnam in names(settings_calib$par)){
-      settings_calib$par[[ parnam ]]$opt <- out_optim$par[ parnam ]
+    names(out_optim$par) <- names(settings$par)
+    for (parnam in names(settings$par)){
+      settings$par[[ parnam ]]$opt <- out_optim$par[ parnam ]
     }
-    settings_calib$par_opt <- out_optim$par
+    settings$par_opt <- out_optim$par
     
   } else {
 
     print("WARNING: No observational target data left after filtering.")
 
-    settings_calib$par$kphio$opt          <- NA
-    settings_calib$par$temp_ramp_edge$opt <- NA
-    settings_calib$par$soilm_par_a$opt    <- NA
-    settings_calib$par$soilm_par_b$opt    <- NA
+    settings$par$kphio$opt          <- NA
+    settings$par$temp_ramp_edge$opt <- NA
+    settings$par$soilm_par_a$opt    <- NA
+    settings$par$soilm_par_b$opt    <- NA
 
   }
 
   ## Write calibrated parameters into a CSV file
-  vec <- unlist( unname( lapply( settings_calib$par, function(x) x$opt  )) )
-  df <- as_tibble(t(vec)) %>% setNames( names(settings_calib$par) )
-  filn <- paste0( settings_calib$dir_results, "/params_opt_", settings_calib$name, ".csv")
+  vec <- unlist( unname( lapply( settings$par, function(x) x$opt  )) )
+  df <- as_tibble(t(vec)) %>% setNames( names(settings$par) )
+  filn <- paste0( settings$dir_results, "/params_opt_", settings$name, ".csv")
   print( paste0( "writing calibrated parameters to ", filn ) )
   write_csv( df, path = filn )
 
-  return( settings_calib )
+  return( settings )
 
 }
 
@@ -226,7 +202,7 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     vpdstress_par_b = 0.2,
     vpdstress_par_m = 5
     )
-
+  
   df <- runread_sofun_f(
     df_drivers, 
     params_modl = params_modl, 
@@ -430,194 +406,4 @@ cost_mae <- function( par ){
   return(cost)
 }
 
-#' Get observational data for calibration
-#'
-#' Gets observational data for model calibration by looping over sites
-#' 
-#' @param settings_calib A list containing model calibration settings. See vignette_rsofun.pdf for more information and examples.
-#' @param settings_sims A list containing model simulation settings from \code{\link{prepare_setup_sofun}}.  See vignette_rsofun.pdf for more information and examples.
-#' @param settings_input A list containing model input settings. See vignette_rsofun.pdf for more information and examples.
-#'
-#' @return A data frame (tibble) containing observational data used for model calibration
-#' @export
-#'
-#' @examples ddf_obs <- get_obs_calib( settings_calib, settings_sims, settings_input )
-#' 
-##------------------------------------------------------------
-## Gets data by looping over sites
-##------------------------------------------------------------
-get_obs_calib <- function( settings_calib, settings_sims, settings_input ){
-
-
-  ##------------------------------------------------------------
-  ## Read raw observational data from files.
-  ## This creates a data frame (tibble) that contains
-  ## a column 'date' and columns for each target variable. The number of rows
-  ## corresponds to each simulation's length (number of days).
-  ##------------------------------------------------------------
-  ## loop over sites to get data frame with all variables
-  list_bysite <- lapply( settings_calib$sitenames, 
-                         function(x) get_obs_bysite(x,
-                                                    settings_calib = settings_calib, 
-                                                    settings_sims  = dplyr::filter(settings_sims, sitename == x),
-                                                    settings_input = settings_input) %>% 
-                           mutate( sitename=x ) 
-                         )
-  
-  ## combine dataframes from multiple sites along rows
-  ddf_obs <- dplyr::bind_rows( list_bysite )
-  rm("list_bysite")
-
-  return( ddf_obs )
-
-}
-
-
-##------------------------------------------------------------
-## Function returns a data frame (tibble) containing all the observational data
-## used as target variables for calibration for a given site, covering specified dates.
-##------------------------------------------------------------
-get_obs_bysite <- function( mysitename, settings_calib, settings_sims, settings_input ){
-
-  print(paste("getting obs for ", mysitename))
-
-  ## Initialise daily dataframe (WITHOUT LEAP YEARS, SOFUN USES FIXED 365-DAYS YEARS!)
-  ddf <- init_dates_dataframe( year(settings_sims$date_start), year(settings_sims$date_end), noleap = TRUE )
-
-  if ("gpp" %in% settings_calib$targetvars){
-
-    ## Interpret benchmarking data specification
-    datasource <- stringr::str_split( settings_calib$datasource, "_" ) %>% unlist()
-
-    if ("fluxnet2015" %in% datasource){
-      ##------------------------------------------------------------
-      ## Get FLUXNET 2015 data
-      ##------------------------------------------------------------
-      ## Make sure data is available for this site
-      getvars <- c("GPP_NT_VUT_REF", "GPP_DT_VUT_REF", "NEE_VUT_REF_NIGHT_QC", "NEE_VUT_REF_DAY_QC", "GPP_NT_VUT_SE", "GPP_DT_VUT_SE")
-      
-      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, mysitename )
-      
-      ddf <- get_obs_bysite_fluxnet2015(
-        mysitename, 
-        path_fluxnet2015 = settings_input$path_fluxnet2015, 
-        timescale = settings_calib$timescale$gpp,
-        getvars = getvars, 
-        getswc = FALSE,
-        threshold_GPP = settings_calib$threshold_GPP, 
-        remove_neg = FALSE,
-        verbose = TRUE
-        ) %>% 
-        dplyr::mutate( gpp_obs = case_when("NT" %in% datasource & !("DT" %in% datasource) ~ GPP_NT_VUT_REF,
-                                           "DT" %in% datasource & !("NT" %in% datasource) ~ GPP_DT_VUT_REF
-                                           # "DT" %in% datasource &   "NT" %in% datasource  ~ (GPP_NT_VUT_REF+GPP_DT_VUT_REF)/2
-                                           ),
-                       gpp_unc = case_when("NT" %in% datasource & !("DT" %in% datasource) ~ GPP_NT_VUT_SE,
-                                           "DT" %in% datasource & !("NT" %in% datasource) ~ GPP_DT_VUT_SE )) %>% 
-        dplyr::right_join( ddf, by = "date" ) %>% 
-        dplyr::select(date, gpp_obs, gpp_unc)
-      
-      # ## replace observations with NA if uncertainty is very small -- only necessary when using chi-squared calibration
-      # targetvars_unc <- paste0(settings_calib$targetvars, "_unc")
-      # replace_zero_with_na <- function(obs, unc){
-      #   idxs <- which( unc < 0.0001 )
-      #   obs[idxs] <- NA
-      #   return(obs)
-      # }
-      # ddf <- ddf %>% 
-      #   dplyr::mutate( gpp_obs = replace_zero_with_na(gpp_obs, gpp_unc) )
-      # 
-      
-      # test <- sum(!is.na(ddf$gpp_obs))
-      # if (test<3) rlang::abort(paste0("Too hard filtering for site ", mysitename))
-
-    } else {
-      
-      ddf <- ddf %>% dplyr::mutate( gpp_obs = NA, gpp_unc = NA )
-      
-    }
-
-    if ("Ty" %in% datasource){
-      ##------------------------------------------------------------
-      ## Get GePiSaT data
-      ##------------------------------------------------------------
-      ## Make sure data is available for this site
-      error <- check_download_gepisat( settings_calib$path_gepisat, mysitename )
-
-      ddf_gepisat <- get_obs_bysite_gpp_gepisat( mysitename, settings_calib$path_gepisat, settings_calib$timescale )
-
-      ## add to other data frame and take take weighted average for updated 'gpp_obs'
-      if (!is.null(ddf_gepisat)){
-        
-        ddf <- ddf_gepisat %>%
-          ## Some GPP data looks weird when its error in resp. day is zero. Exclude this data.
-          mutate( gpp_obs = ifelse( gpp_err_obs == 0.0, NA, gpp_obs ) ) %>% 
-          dplyr::rename( gpp_obs_gepisat = gpp_obs ) %>%
-          right_join( ddf, by = "date" )
-        totlen <- length(datasource[ -which( datasource=="fluxnet2015" ) ])
-        if (totlen>1){
-          ddf$gpp_obs <- sum( c(ddf$gpp_obs * (totlen-1), ddf$gpp_obs_gepisat), na.rm = TRUE ) / totlen
-        } else {
-          ddf <- ddf %>% mutate( gpp_obs = gpp_obs_gepisat )
-        }
-        
-      } else {
-        ## No GePiSaT data available for this site. Consider all GPP data missing (NA).
-        ddf <- ddf %>% mutate( gpp_obs = NA )
-      }
-
-    }
-
-  }
-
-  if ("latenth" %in% settings_calib$targetvars){
-    
-    ## Interpret benchmarking data specification
-    datasource <- stringr::str_split( settings_calib$datasource, "_" ) %>% unlist()
-    
-    if ("fluxnet2015" %in% datasource){
-      ##------------------------------------------------------------
-      ## Get FLUXNET 2015 data
-      ##------------------------------------------------------------
-      ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, mysitename )
-      
-      ddf <- get_obs_bysite_fluxnet2015(
-        mysitename, 
-        path_fluxnet2015 = settings_input$path_fluxnet2015, 
-        timescale = settings_calib$timescale$latenth,
-        getvars = c("LE_F_MDS", "LE_RANDUNC", "LE_F_MDS_QC"), 
-        getswc = FALSE,
-        threshold_LE = 0.6, 
-        remove_neg = FALSE,
-        verbose = TRUE
-        ) %>% 
-        dplyr::right_join( ddf, by = "date" ) %>% 
-        dplyr::rename(latenth_obs = latenth)
-      
-    } else {
-      
-      ddf <- ddf %>% dplyr::mutate( latenth_obs = NA, latenth_unc = NA )
-      
-    }
-    
-  }
-  
-  if ("wcont" %in% settings_calib$targetvars){
-
-    if ("fluxnet2015" %in% settings_calib$datasource$wcont){
-
-      ## Make sure data is available for this site
-      error <- check_download_fluxnet2015( settings_calib$path_fluxnet2015, mysitename )
-
-      ddf <- get_obs_bysite_wcont_fluxnet2015( mysitename, settings_calib$path_fluxnet2015, settings_calib$timescale ) %>%
-             dplyr::right_join( ddf, by = "date" )
-
-    }
-
-  }
-
-  return(ddf)
-
-}
 
