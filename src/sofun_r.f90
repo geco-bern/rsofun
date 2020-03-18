@@ -560,9 +560,9 @@ contains
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
-    do yr=1,1700 !myinterface%params_siml%runyears
+    do yr=1,15 !myinterface%params_siml%runyears
 
-      print*,'yr ', yr
+      ! print*,'yr ', yr
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -605,13 +605,13 @@ contains
       ! Output out_hourly_tile
       !----------------------------------------------------------------
       if (.not. myinterface%steering%spinup) then    !!xxx uncommented for testing
-        idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1          ! To exclude the spinup years and include only the transient years
-        ! idx_hourly_start = mod((yr - 1), 11) * ntstepsyear + 1          ! To exclude the spinup years and include only the transient years
+        idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
+        ! idx_hourly_start = mod((yr - 1), 11) * ntstepsyear + 1      
         idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
         call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
       end if
 
-      print*, "yr  spinupyears  idx_hourly_start  idx_hourly_end  ntstepsyear", yr, myinterface%params_siml%spinupyears, idx_hourly_start,idx_hourly_end, ntstepsyear
+      ! print*, "yr  spinupyears  idx_hourly_start  idx_hourly_end  ntstepsyear", yr, myinterface%params_siml%spinupyears, idx_hourly_start,idx_hourly_end, ntstepsyear
       ! print*,out_biosphere%hourly_tile(3)
 
       !----------------------------------------------------------------
@@ -621,9 +621,16 @@ contains
       idx_daily_end    = idx_daily_start + ndayyear - 1
       call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
     
-      print*, "size daily tile", size(out_biosphere%daily_tile(:)), size(output_daily_tile(idx_daily_start:idx_daily_end, :))
-      print*, "idx_daily_start  idx_daily_end  ndayyear", idx_daily_start,idx_daily_end, ndayyear
-      !print*,'output_daily_tile',output_daily_tile(1:10,2)
+      ! if (.not. myinterface%steering%spinup) then    !!xxx uncommented for testing
+      !   idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1    ! To exclude the spinup years and include only the transient years
+      !   idx_daily_end   = idx_daily_start + ndayyear - 1
+      !   call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
+      ! end if
+
+
+      ! print*, "size daily tile", size(out_biosphere%daily_tile(:)), size(output_daily_tile(idx_daily_start:idx_daily_end, :))
+      ! print*, "idx_daily_start  idx_daily_end  ndayyear", idx_daily_start,idx_daily_end, ndayyear
+      ! print*,'output_daily_tile',output_daily_tile(1:10,2)
     
       ! ----------------------------------------------------------------
       ! Output out_daily_cohorts (without subroutine)
