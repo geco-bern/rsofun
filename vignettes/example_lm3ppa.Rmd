@@ -196,7 +196,7 @@ mod <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-df_drivers <- collect_drivers_sofun( 
+moddf_drivers <- collect_drivers_sofun( 
   settings       = settings_sims, 
   forcing        = ddf_input
   )

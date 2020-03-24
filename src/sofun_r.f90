@@ -560,7 +560,7 @@ contains
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
-    do yr=1,15 !myinterface%params_siml%runyears
+    do yr=1, 1800 !myinterface%params_siml%runyears
 
       ! print*,'yr ', yr
 
@@ -602,7 +602,7 @@ contains
       !----------------------------------------------------------------
 
       !----------------------------------------------------------------
-      ! Output out_hourly_tile
+      ! Output out_hourly_tile (calling subroutine)
       !----------------------------------------------------------------
       if (.not. myinterface%steering%spinup) then    !!xxx uncommented for testing
         idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
@@ -615,7 +615,7 @@ contains
       ! print*,out_biosphere%hourly_tile(3)
 
       !----------------------------------------------------------------
-      ! Output out_daily_tile
+      ! Output out_daily_tile (calling subroutine)
       !----------------------------------------------------------------
       idx_daily_start  = (yr - 1) * ndayyear + 1
       idx_daily_end    = idx_daily_start + ndayyear - 1
@@ -664,7 +664,7 @@ contains
       output_daily_cohorts_HW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%HW_N)
 
       !----------------------------------------------------------------
-      ! Output out_annual_tile
+      ! Output out_annual_tile (calling subroutine)
       !----------------------------------------------------------------
       call populate_outarray_annual_tile( out_biosphere%annual_tile, output_annual_tile(yr,:) )
 

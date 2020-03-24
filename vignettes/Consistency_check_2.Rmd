@@ -3,18 +3,18 @@ title: "Consistency check 2: SOFUN vs. RSOFUN"
 output: html_document
 ---
 
-Compare output files written by SOFUN in branch lm3ppa_BiomeE_test_rsofun with RSOFUN implementation in R. If differences exist, find cause based on print statements.
+Compare output files written by SOFUN in branch lm3ppa_BiomeE_test_rsofun with RSOFUN implementation in R. 
 
 Forcing data: ORNL (11 years)
 
 ## Running SOFUN in terminal and getting outputs as csv files
 
-```{r, include=T, eval=T}
+```{r, include=F, eval=F}
 setwd("/Users/lmarques/sofun")
-#system("git checkout lm3ppa_BiomeE_test_rsofun")
-#system("make clean")
-#system("make lm3ppa")
-#system("./runlm3ppa")
+system("git checkout lm3ppa_BiomeE_test_rsofun")
+system("make clean")
+system("make lm3ppa")
+system("./runlm3ppa")
 
 ```
 
@@ -22,34 +22,34 @@ setwd("/Users/lmarques/sofun")
 
 ```{r, include=T, eval=T}
 setwd("/Users/lmarques/sofun/output")
-#sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
-#sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
-#sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
-#sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
-#sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
+sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
+sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
+sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
+sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 
 ```
 
 ## Running RSOFUN
 
-```{r setup, include=FALSE}
+```{r setup, include=F}
 library(dplyr)
 library(rsofun)
 load_dependencies_rsofun()
 ```
 
-Manually select some sites from which we're going to use the data for evaluation and calibration.
-```{r}
+#### Manually select some sites from which we're going to use the data for evaluation and calibration.
+```{r, include=T, eval=F}
 mysites <- c("ORNL")
 ```
 
-Create a site meta info table that contains all the site-specific information that is used to force site-simulations
-```{r}
+#### Create a site meta info table that contains all the site-specific information that is used to force site-simulations
+```{r, include=T, eval=F}
 siteinfo <- data.frame(sitename="ORNL", lon = 0.0, lat = 0.0, elv = 0.0)
 ```
 
-Specify the simulation parameters that are identical for all site-scale simulations.
-```{r}
+####  Specify the simulation parameters that are identical for all site-scale simulations.
+```{r, include=T, eval=F}
 params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800,
@@ -68,7 +68,7 @@ params_siml <- list(
 
 #### Tile-level parameters
 
-```{r}
+```{r, include=T, eval=F}
 params_tile <- list(
   soiltype     = 3,
   FLDCAP       = 0.4,
@@ -89,7 +89,7 @@ params_tile <- list(
 
 #### Species-level parameters
 
-```{r}
+```{r, include=T, eval=F}
 params_species <- tibble(
   lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),    # 0: grass; 1 Woody
   phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),    # 0: Deciduous; 1 Evergreen
@@ -114,7 +114,7 @@ params_species <- tibble(
 #### Soil parameters
 
 By layers.
-```{r}
+```{r, include=T, eval=F}
 # adopted from datatypes.mod.f90 l.538
 params_soil <- tibble(
   type              = c("Coarse",  "Medium",   "Fine",    "CM",     "CF",     "MF",    "CMF",    "Peat",    "MCM"),
@@ -131,7 +131,7 @@ params_soil <- tibble(
 
 #### Initial cohort specification
 
-```{r}
+```{r, include=T, eval=F}
 init_cohort <- tibble(
  init_cohort_species = c(1,      2,        3,        4,      5,        6,        7,      8,        9,       10),
  init_cohort_nindivs = c(0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02),
@@ -144,7 +144,7 @@ init_cohort <- tibble(
 
 #### Initial soil pools
 
-```{r}
+```{r, include=T, eval=F}
 # high N input --> Deciduous
 # low  N input --> Evergreen
 init_soil <- list(
@@ -158,8 +158,7 @@ init_soil <- list(
 
 #### Define soil parameters
 
-For now, this is implemented as an illustration. Should be made site-specific.
-```{r}
+```{r, include=T, eval=F}
 df_soiltexture <- bind_rows(
   top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
   bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
@@ -168,7 +167,7 @@ df_soiltexture <- bind_rows(
 
 #### Get forcing data
 
-```{r}
+```{r, include=T, eval=F}
 forcing <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
   mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
   mutate(sitename = "ORNL") %>% 
@@ -183,7 +182,7 @@ forcing <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_na
 #### Run the model
 
 Run the model for all the sites specified in the first step.
-```{r}
+```{r, include=T, eval=F}
 mod <- run_lm3ppa_f_bysite( "ORNL", 
                             params_siml, 
                             siteinfo, 
@@ -194,5 +193,16 @@ mod <- run_lm3ppa_f_bysite( "ORNL",
                             init_cohort, 
                             init_soil, 
                             makecheck = TRUE)
+
+```
+
+#### Getting Rsofun outputs
+
+```{r, include=T, eval=T}
+rsofun_out_hourly_tile <- mod$output_hourly_tile
+rsofun_out_daily_tile <- mod$output_daily_tile
+rsofun_out_daily_cohorts <- mod$output_daily_cohorts
+rsofun_out_annual_tile <- mod$output_annual_tile
+rsofun_out_annual_cohorts <- mod$output_annual_cohorts
 
 ```

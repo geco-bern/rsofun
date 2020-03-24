@@ -1,15 +1,15 @@
 ---
-title: "Consistency check 1: BiomeE vs. SOFUN"
+title: "Consistency check 1: BiomeE-Allocation vs. SOFUN"
 output: html_document
 ---
 
-Compare output files written by original BiomeE-Allocation (Enshneg Weng) with SOFUN in branch lm3ppa_BiomeE_test_rsofun. If differences exist, find cause based on print statements.
+Compare output files written by original BiomeE-Allocation (Enshneg Weng) with SOFUN in branch lm3ppa_BiomeE_test_rsofun. 
 
 Forcing data: US-WCr (9 years)
 
 ## Running BiomeE-Allocation in terminal and getting outputs as csv files
 
-```{r, include=T, eval=F}
+```{r, include=F, eval=F}
 setwd("/Users/lmarques/BiomeE-Allocation/model")
 system("gfortran src/main.f90 src/datatypes.f90 src/soil.f90 src/vegetation.f90 -o ess")
 system("./ess")
@@ -30,7 +30,7 @@ biomeE_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 
 ## Running SOFUN in terminal and getting outputs as csv files
 
-```{r, include=T, eval=F}
+```{r, include=F, eval=F}
 setwd("/Users/lmarques/sofun")
 system("make clean")
 system("make lm3ppa")
@@ -44,17 +44,59 @@ system("./runlm3ppa")
 setwd("/Users/lmarques/sofun/output")
 sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
 sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
-sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
-sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
-sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
+#sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+#sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
+#sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 
 ```
 
-Plots of hourlu outputs
+Plots of hourly tile outputs
+
+```{r, include=T, eval=F}
+dim(biomeE_out_hourly_tile)
+dim(sofun_out_hourly_tile)
+biomeE_out_hourly_tile <- subset(biomeE_out_hourly_tile, year <= 1800)
+
+plot_dfs <- lapply(names(biomeE_out_hourly_tile),function(nm)data.frame(col1 = biomeE_out_hourly_tile[,1],col2 = biomeE_out_hourly_tile[,nm], col3 = sofun_out_hourly_tile[,nm]))
+
+library(ggplot2)
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(biomeE_out_hourly_tile)[idx]))
+```
 
 Plots of daily tile outputs
 
+```{r, include=T, eval=T}
+dim(biomeE_out_daily_tile)
+dim(sofun_out_daily_tile)
+biomeE_out_daily_tile <- subset(biomeE_out_daily_tile, year <= 1800)
+
+plot_dfs <- lapply(names(biomeE_out_daily_tile),function(nm)data.frame(col1 = biomeE_out_daily_tile[,1],col2 = biomeE_out_daily_tile[,nm], col3 = sofun_out_daily_tile[,nm]))
+
+library(ggplot2)
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(biomeE_out_daily_tile)[idx]))
+```
+
 Plots of daily cohorts outputs
+
+```{r, include=T, eval=F}
+dim(biomeE_out_daily_cohorts)
+dim(sofun_out_daily_cohorts)
+biomeE_out_daily_cohorts <- subset(biomeE_out_daily_cohorts, year <= 1800)
+
+plot_dfs <- lapply(names(biomeE_out_daily_cohorts),function(nm)data.frame(col1 = biomeE_out_daily_cohorts[,1],col2 = biomeE_out_daily_cohorts[,nm], col3 = sofun_out_daily_cohorts[,nm]))
+
+library(ggplot2)
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(biomeE_out_daily_cohorts)[idx]))
+```
 
 Plots of annual tile outputs
 
@@ -74,18 +116,18 @@ for (idx in seq_along(plot_dfs))
 
 Plots of annual cohorts outputs
 
-```{r, include=T, eval=T}
+```{r, include=T, eval=F}
 dim(biomeE_out_annual_cohorts)
 dim(sofun_out_annual_cohorts)
 biomeE_out_annual_cohorts <- subset(biomeE_out_annual_cohorts, year <= 1800)
 
-plot_dfs <- lapply(names(biomeE_out_annual_tile),function(nm)data.frame(col1 = biomeE_out_annual_tile[,1],col2 = biomeE_out_annual_tile[,nm], col3 = sofun_out_annual_tile[,nm]))
+plot_dfs <- lapply(names(biomeE_out_annual_cohorts),function(nm)data.frame(col1 = biomeE_out_annual_cohorts[,1],col2 = biomeE_out_annual_cohorts[,nm], col3 = sofun_out_annual_cohorts[,nm]))
 
 library(ggplot2)
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
       geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
-      ggtitle(names(biomeE_out_annual_tile)[idx]))
+      ggtitle(names(biomeE_out_annual_cohorts)[idx]))
 ```
 
 
