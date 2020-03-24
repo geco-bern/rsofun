@@ -1,0 +1,97 @@
+---
+title: "Consistency check 1: BiomeE vs. SOFUN"
+output: html_document
+---
+
+Compare output files written by original BiomeE-Allocation (Enshneg Weng) with SOFUN in branch lm3ppa_BiomeE_test_rsofun. If differences exist, find cause based on print statements.
+
+Forcing data: US-WCr (9 years)
+
+## Running BiomeE-Allocation in terminal and getting outputs as csv files
+
+```{r, include=T, eval=F}
+setwd("/Users/lmarques/BiomeE-Allocation/model")
+system("gfortran src/main.f90 src/datatypes.f90 src/soil.f90 src/vegetation.f90 -o ess")
+system("./ess")
+
+```
+
+#### Getting BiomeE outputs
+
+```{r, include=T, eval=T}
+setwd("/Users/lmarques/BiomeE-Allocation/model/output")
+biomeE_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
+biomeE_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
+biomeE_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+biomeE_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
+biomeE_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
+
+```
+
+## Running SOFUN in terminal and getting outputs as csv files
+
+```{r, include=T, eval=F}
+setwd("/Users/lmarques/sofun")
+system("make clean")
+system("make lm3ppa")
+system("./runlm3ppa")
+
+```
+
+#### Getting SOFUN outputs
+
+```{r, include=T, eval=T}
+setwd("/Users/lmarques/sofun/output")
+sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
+sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
+sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
+sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
+
+```
+
+Plots of hourlu outputs
+
+Plots of daily tile outputs
+
+Plots of daily cohorts outputs
+
+Plots of annual tile outputs
+
+```{r, include=T, eval=T}
+dim(biomeE_out_annual_tile)
+dim(sofun_out_annual_tile)
+biomeE_out_annual_tile <- subset(biomeE_out_annual_tile, year <= 1800)
+
+plot_dfs <- lapply(names(biomeE_out_annual_tile),function(nm)data.frame(col1 = biomeE_out_annual_tile[,1],col2 = biomeE_out_annual_tile[,nm], col3 = sofun_out_annual_tile[,nm]))
+
+library(ggplot2)
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(biomeE_out_annual_tile)[idx]))
+```
+
+Plots of annual cohorts outputs
+
+```{r, include=T, eval=T}
+dim(biomeE_out_annual_cohorts)
+dim(sofun_out_annual_cohorts)
+biomeE_out_annual_cohorts <- subset(biomeE_out_annual_cohorts, year <= 1800)
+
+plot_dfs <- lapply(names(biomeE_out_annual_tile),function(nm)data.frame(col1 = biomeE_out_annual_tile[,1],col2 = biomeE_out_annual_tile[,nm], col3 = sofun_out_annual_tile[,nm]))
+
+library(ggplot2)
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(biomeE_out_annual_tile)[idx]))
+```
+
+
+Compared to BiomeE model outputs and found differences that are due to plant-soil feedbacks, i.e., when holding mineralN constant, the outputs are exactly identical.
+
+
+
+
+
