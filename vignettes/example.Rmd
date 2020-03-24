@@ -205,7 +205,10 @@ df_drivers <- collect_drivers_sofun(
   co2            = df_co2,
   df_soiltexture = df_soiltexture
   )
+df_drivers
 ```
+
+If the data ingestion failed, an example for the drivers data frame `df_driver` can be 
 
 
 ### Run the model
