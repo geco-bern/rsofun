@@ -209,9 +209,9 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     makecheck = TRUE,
     parallel = FALSE
     ) %>%   
-    dplyr::select(sitename, out_sofun) %>% 
+    dplyr::select(sitename, data) %>% 
     dplyr::rename(id = sitename) %>% 
-    tidyr::unnest(out_sofun) %>% 
+    tidyr::unnest(data) %>% 
     dplyr::rename(gpp_mod = gpp) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
@@ -272,9 +272,9 @@ cost_rmse_fullstack <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     makecheck = TRUE,
     parallel = FALSE
     ) %>%   
-    dplyr::select(sitename, out_sofun) %>% 
+    dplyr::select(sitename, data) %>% 
     dplyr::rename(id = sitename) %>% 
-    tidyr::unnest(out_sofun) %>% 
+    tidyr::unnest(data) %>% 
     dplyr::rename(gpp_mod = gpp) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
@@ -311,9 +311,9 @@ cost_rmse_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     makecheck = TRUE,
     parallel = FALSE
     ) %>%   
-    dplyr::select(sitename, out_sofun) %>% 
+    dplyr::select(sitename, data) %>% 
     dplyr::rename(id = sitename) %>% 
-    tidyr::unnest(out_sofun) %>% 
+    tidyr::unnest(data) %>% 
     dplyr::rename(latenth_mod = latenth) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
@@ -345,7 +345,7 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
   )
   
   # df <- df_drivers %>% 
-  #   mutate(out_sofun = purrr::pmap(
+  #   mutate(data = purrr::pmap(
   #     .,
   #     run_sofun_f_bysite,
   #     params_modl = params_modl,
@@ -357,9 +357,9 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
     makecheck = TRUE,
     parallel = FALSE
     ) %>%   
-    dplyr::select(sitename, out_sofun) %>% 
+    dplyr::select(sitename, data) %>% 
     dplyr::rename(id = sitename) %>% 
-    tidyr::unnest(out_sofun) %>% 
+    tidyr::unnest(data) %>% 
     dplyr::rename(latenth_mod = latenth) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   

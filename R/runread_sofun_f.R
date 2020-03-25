@@ -12,7 +12,7 @@
 #' Defaults to 2.
 #'
 #' @return A data frame (tibble) with one row for each site and outputs stored in the nested
-#' column \code{out_sofun}
+#' column \code{data}
 #' @export
 #'
 #' @examples mod <- runread_sofun_f( df_drivers, params_modl, makecheck = TRUE, parallel = FALSE, ncores = 2 )
@@ -31,7 +31,7 @@ runread_sofun_f <- function( df_drivers, params_modl, makecheck = TRUE, parallel
       dplyr::group_by( id = row_number() ) %>%
       tidyr::nest(input = c(sitename, params_siml, siteinfo, forcing, df_soiltexture)) %>%
       multidplyr::partition(cl) %>% 
-      dplyr::mutate(out_sofun = purrr::map( input, 
+      dplyr::mutate(data = purrr::map( input, 
                                      ~run_sofun_f_bysite(
                                        sitename       = .x$sitename[[1]], 
                                        params_siml    = .x$params_siml[[1]], 
@@ -43,19 +43,19 @@ runread_sofun_f <- function( df_drivers, params_modl, makecheck = TRUE, parallel
       )) %>% 
       dplyr::collect() %>%
       dplyr::ungroup() %>%
-      dplyr::select( out_sofun )  %>% 
-      tidyr::unnest( cols = c( out_sofun ))
+      dplyr::select( data )  %>% 
+      tidyr::unnest( cols = c( data ))
     
   } else {
   
     df_out <- df_drivers %>% 
-      dplyr::mutate(out_sofun = purrr::pmap(
+      dplyr::mutate(data = purrr::pmap(
         .,
         run_sofun_f_bysite,
         params_modl = params_modl,
         makecheck = makecheck
       )) %>% 
-      dplyr::select(sitename, out_sofun)
+      dplyr::select(sitename, data)
     
   }
   

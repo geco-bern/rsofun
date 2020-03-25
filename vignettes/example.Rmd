@@ -123,7 +123,7 @@ The following ingests meteorological data from the FLUXNET 2015 files for variab
 library(ingestr)
 ddf_fluxnet <- ingest(
   siteinfo  = siteinfo %>% filter(sitename %in% mysites),
-  source    = "fluxnet2015",
+  source    = "fluxnet",
   getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F", swin =  "SW_IN_F", patm = "PA_F"),
   dir       = paste0(path.package("rsofun"), "/extdata/"),
   settings  = list(dir_hh = paste0(path.package("rsofun"), "/extdata/"), dir_hr = paste0(path.package("rsofun"), "/extdata/"), getswc = FALSE),
@@ -386,6 +386,10 @@ obs_eval <- collect_obs_eval(
   ddf = ddf_eval 
   )
 ```
+
+`obs_eval` is now a list of data frames for different temporal resolutions. The data frames have rows for sites and time series for each site nested inside the column `data`. 
+
+`df_output` is the model output, also a data frame with rows for sites and time series for each site nested inside a column named `out_sofun`.
 
 And finally do the evaluation.
 ```{r warning=FALSE, message=FALSE}

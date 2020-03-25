@@ -28,7 +28,7 @@ eval_sofun <- function(mod, settings_eval, settings_sims, obs_eval = NA, overwri
   ## make model output a long flat table
   mod <- mod %>% 
     dplyr::rename(id = sitename) %>% 
-    tidyr::unnest(out_sofun)
+    tidyr::unnest(data)
   
   ## Evaluate daily variables
   out <- purrr::map(
