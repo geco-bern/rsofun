@@ -161,17 +161,19 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       as.matrix() %>% 
       as_tibble() %>%
       setNames(c("year", "doy", "hour", "rad", "Tair", "Prcp", "GPP", "Resp", "Transp", "Evap", "Runoff", "Soilwater", "wcl", "FLDCAP", "WILTPT")) #%>%
+      #filter_at(vars(year), all_vars((.) != 0)) #%>%
       #dplyr::mutate(sitename = sitename) #%>%
       # dplyr::mutate(date = lubridate::ymd_hm(paste0(as.character(year), "-01-01 00:00")) + lubridate::days(doy-1) + hours(hour)) %>%
       # dplyr::select(-year, -doy, -hour)
       # dplyr::bind_cols(ddf,.) %>% 
-      # dplyr::select(-year_dec)
+      # dplyr::select(-year_dec) %>%
     
     ## daily_tile
     out$output_daily_tile <- lm3out[[2]] %>%
       as.matrix() %>% 
       as_tibble() %>%
-      setNames(c("year", "doy", "Tc", "Prcp", "totWs", "Trsp", "Evap", "Runoff", "ws1", "ws2", "ws3", "LAI", "GPP", "Rauto", "Rh", "NSC", "seedC", "leafC", "rootC", "SW_C", "HW_C", "NSN", "seedN", "leafN", "rootN", "SW_N", "HW_N", "McrbC", "fastSOM", "slowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_uptk")) #%>%
+      setNames(c("year", "doy", "Tc", "Prcp", "totWs", "Trsp", "Evap", "Runoff", "ws1", "ws2", "ws3", "LAI", "GPP", "Rauto", "Rh", "NSC", "seedC", "leafC", "rootC", "SW_C", "HW_C", "NSN", "seedN", "leafN", "rootN", "SW_N", "HW_N", "McrbC", "fastSOM", "slowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_uptk")) %>%
+      filter_at(vars(year), all_vars((.) != 0)) #%>%
       #dplyr::mutate(sitename = sitename) #%>%
       #dplyr::mutate(date = lubridate::ymd(paste0(as.character(year), "-01-01")) + lubridate::days(doy-1)) %>%
       #dplyr::select(-year, -doy)
@@ -397,7 +399,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     out$output_annual_tile <- lm3out[[30]] %>%
       as.matrix() %>% 
       as_tibble() %>%
-      setNames(c("year", "CAI", "LAI", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N")) #%>%
+      setNames(c("year", "CAI", "LAI", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N")) %>%
+      filter_at(vars(year), all_vars((.) != 0))
     
     ## annual cohorts
     out$output_annual_cohorts <- lm3out[[31]] %>%

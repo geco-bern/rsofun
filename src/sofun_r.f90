@@ -11,7 +11,7 @@ module sofun_r_mod
 
 contains
 
-  subroutine pmodel_f(          &
+  subroutine pmodel_f(         &
     spinup,                    &   
     spinupyears,               &        
     recycle,                   &    
@@ -561,8 +561,6 @@ contains
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
     do yr=1, 1800 !myinterface%params_siml%runyears
-
-      ! print*,'yr ', yr
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)

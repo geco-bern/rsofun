@@ -7,6 +7,14 @@ Compare output files written by SOFUN in branch lm3ppa_BiomeE_test_rsofun with R
 
 Forcing data: ORNL (11 years)
 
+```{r setup, include=F}
+library(dplyr)
+library(rsofun)
+library(ggplot2)
+load_dependencies_rsofun()
+```
+
+
 ## Running SOFUN in terminal and getting outputs as csv files
 
 ```{r, include=F, eval=F}
@@ -22,34 +30,28 @@ system("./runlm3ppa")
 
 ```{r, include=T, eval=T}
 setwd("/Users/lmarques/sofun/output")
-sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
+#sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
 sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
-sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+#sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
 sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
-sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
+#sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 
 ```
 
 ## Running RSOFUN
 
-```{r setup, include=F}
-library(dplyr)
-library(rsofun)
-load_dependencies_rsofun()
-```
-
 #### Manually select some sites from which we're going to use the data for evaluation and calibration.
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 mysites <- c("ORNL")
 ```
 
 #### Create a site meta info table that contains all the site-specific information that is used to force site-simulations
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 siteinfo <- data.frame(sitename="ORNL", lon = 0.0, lat = 0.0, elv = 0.0)
 ```
 
 ####  Specify the simulation parameters that are identical for all site-scale simulations.
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800,
@@ -68,7 +70,7 @@ params_siml <- list(
 
 #### Tile-level parameters
 
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 params_tile <- list(
   soiltype     = 3,
   FLDCAP       = 0.4,
@@ -89,7 +91,7 @@ params_tile <- list(
 
 #### Species-level parameters
 
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 params_species <- tibble(
   lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),    # 0: grass; 1 Woody
   phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),    # 0: Deciduous; 1 Evergreen
@@ -114,7 +116,7 @@ params_species <- tibble(
 #### Soil parameters
 
 By layers.
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 # adopted from datatypes.mod.f90 l.538
 params_soil <- tibble(
   type              = c("Coarse",  "Medium",   "Fine",    "CM",     "CF",     "MF",    "CMF",    "Peat",    "MCM"),
@@ -131,7 +133,7 @@ params_soil <- tibble(
 
 #### Initial cohort specification
 
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 init_cohort <- tibble(
  init_cohort_species = c(1,      2,        3,        4,      5,        6,        7,      8,        9,       10),
  init_cohort_nindivs = c(0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02),
@@ -144,7 +146,7 @@ init_cohort <- tibble(
 
 #### Initial soil pools
 
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 # high N input --> Deciduous
 # low  N input --> Evergreen
 init_soil <- list(
@@ -158,7 +160,7 @@ init_soil <- list(
 
 #### Define soil parameters
 
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 df_soiltexture <- bind_rows(
   top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
   bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
@@ -167,22 +169,19 @@ df_soiltexture <- bind_rows(
 
 #### Get forcing data
 
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 forcing <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
   mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
   mutate(sitename = "ORNL") %>% 
   filter(!(mday(date)==29 & month(date)==2)) %>% 
   dplyr::select(-date, -sitename)
 
-#complete <- rep(seq(ymd("1998-01-01"), ymd("2008-12-31"), by = "days"), each = 24)
-#ddf_complete <- tibble(date = complete)
-
 ```
 
 #### Run the model
 
 Run the model for all the sites specified in the first step.
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 mod <- run_lm3ppa_f_bysite( "ORNL", 
                             params_siml, 
                             siteinfo, 
@@ -206,3 +205,92 @@ rsofun_out_annual_tile <- mod$output_annual_tile
 rsofun_out_annual_cohorts <- mod$output_annual_cohorts
 
 ```
+
+### Plots of hourly tile outputs
+
+```{r, include=T, eval=F}
+dim(sofun_out_hourly_tile)
+dim(rsofun_out_hourly_tile)
+sofun_out_hourly_tile <- subset(sofun_out_hourly_tile, year <= 1800)
+
+plot_dfs <- lapply(names(sofun_out_hourly_tile),function(nm)data.frame(col1 = sofun_out_hourly_tile[,1],col2 = sofun_out_hourly_tile[,nm], col3 = rsofun_out_hourly_tile[,nm]))
+
+library(ggplot2)
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(sofun_out_hourly_tile)[idx]))
+```
+
+### Plots of daily tile outputs
+
+```{r, include=T, eval=T}
+dim(sofun_out_daily_tile)
+dim(rsofun_out_daily_tile)
+sofun_out_daily_tile <- sofun_out_daily_tile[,-36]
+rsofun_out_daily_tile <- as.data.frame(rsofun_out_daily_tile)
+
+plot_dfs <- lapply(names(sofun_out_daily_tile),function(nm)data.frame(col1 = sofun_out_daily_tile[,1],col2 = sofun_out_daily_tile[,nm], col3 = rsofun_out_daily_tile[,nm]))
+
+ggplot() + 
+  geom_line(data=sofun_out_daily_tile, aes(x=year, y=totWs), color='blue', size = 2) + 
+  geom_line(data=rsofun_out_daily_tile, aes(x=year, y=totWs), color='red')
+
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(sofun_out_daily_tile)[idx]))
+```
+
+### Plots of daily cohorts outputs
+
+```{r, include=T, eval=F}
+dim(sofun_out_daily_cohorts)
+dim(rsofun_out_daily_cohorts)
+sofun_out_daily_cohorts <- subset(sofun_out_daily_cohorts, year <= 1800)
+
+plot_dfs <- lapply(names(sofun_out_daily_cohorts),function(nm)data.frame(col1 = sofun_out_daily_cohorts[,1],col2 = sofun_out_daily_cohorts[,nm], col3 = rsofun_out_daily_cohorts[,nm]))
+
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(sofun_out_daily_cohorts)[idx]))
+```
+
+### Plots of annual tile outputs
+
+```{r, include=T, eval=T}
+dim(sofun_out_annual_tile)
+str(rsofun_out_annual_tile)
+sofun_out_annual_tile <- sofun_out_annual_tile[,-45]
+rsofun_out_annual_tile <- as.data.frame(rsofun_out_annual_tile)
+
+ggplot() + 
+  geom_line(data=sofun_out_annual_tile, aes(x=year, y=NSC), color='blue') + 
+  geom_line(data=rsofun_out_annual_tile, aes(x=year, y=NSC), color='red')
+
+plot_dfs <- lapply(names(sofun_out_annual_tile),function(nm)data.frame(col1 = sofun_out_annual_tile[,1],col2 = sofun_out_annual_tile[,nm], col3 = rsofun_out_annual_tile[,nm]))
+
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(sofun_out_annual_tile)[idx]))
+```
+
+### Plots of annual cohorts outputs
+
+```{r, include=T, eval=F}
+dim(sofun_out_annual_cohorts)
+dim(rsofun_out_annual_cohorts)
+sofun_out_annual_cohorts <- subset(sofun_out_annual_cohorts, year <= 1800)
+
+plot_dfs <- lapply(names(sofun_out_annual_cohorts),function(nm)data.frame(col1 = sofun_out_annual_cohorts[,1],col2 = sofun_out_annual_cohorts[,nm], col3 = rsofun_out_annual_cohorts[,nm]))
+
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(sofun_out_annual_cohorts)[idx]))
+```
+
+
+

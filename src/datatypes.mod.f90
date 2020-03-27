@@ -568,7 +568,7 @@ real   :: N_input    = 0.0008 ! annual N input to soil N pool, kgN m-2 yr-1
 ! character(len=80) :: filepath_in = '/Users/eweng/Documents/BiomeESS/forcingData/'
 ! character(len=160) :: climfile = 'US-Ha1forcing.txt'
 ! ! integer   :: model_run_years = 100  ! xxx todo: not used
-!integer   :: equi_days       = 0 ! 100 * 365
+integer   :: equi_days       = 0 ! 100 * 365
 logical   :: outputhourly = .False.
 logical   :: outputdaily  = .True.
 logical   :: do_U_shaped_mortality = .False.
