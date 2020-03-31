@@ -4,7 +4,6 @@ output: html_document
 ---
 
 Compare output files written by original BiomeE-Allocation (Enshneg Weng) with SOFUN in branch lm3ppa_BiomeE_test_rsofun. 
-Forcing data: ORNL (11 years)
 
 ```{r setup, include=T}
 library(dplyr)
@@ -12,8 +11,7 @@ library(ggplot2)
 
 ```
 
-
-Forcing data: US-WCr (9 years)
+Forcing data: ORNL (11 years)
 
 ## Running BiomeE-Allocation in terminal and getting outputs as csv files
 
@@ -29,8 +27,8 @@ system("./ess")
 ```{r, include=T, eval=T}
 setwd("/Users/lmarques/BiomeE-Allocation/model/output")
 #biomeE_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
-#biomeE_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
-#biomeE_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+biomeE_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
+biomeE_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
 biomeE_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
 biomeE_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 
@@ -51,8 +49,8 @@ system("./runlm3ppa")
 ```{r, include=T, eval=T}
 setwd("/Users/lmarques/sofun/output")
 #sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
-#sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
-#sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
+sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
 sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
 sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 
@@ -75,16 +73,13 @@ for (idx in seq_along(plot_dfs))
 
 ### Plots of daily tile outputs
 
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 dim(biomeE_out_daily_tile)
 dim(sofun_out_daily_tile)
-biomeE_out_daily_tile <- subset(biomeE_out_daily_tile, year <= 1800)
+biomeE_out_daily_tile <- subset(biomeE_out_daily_tile, year <= 1800)[,-36]
+sofun_out_daily_tile <- sofun_out_daily_tile[,-36]
 
 plot_dfs <- lapply(names(biomeE_out_daily_tile),function(nm)data.frame(col1 = biomeE_out_daily_tile[,1],col2 = biomeE_out_daily_tile[,nm], col3 = sofun_out_daily_tile[,nm]))
-
-ggplot() + 
-  geom_line(data=outBiomeE, aes(x=year, y=plantN), color='blue', size = 2) + 
-  geom_line(data=outSOFUN, aes(x=year, y=plantN), color='red')
 
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
@@ -94,10 +89,11 @@ for (idx in seq_along(plot_dfs))
 
 ### Plots of daily cohorts outputs
 
-```{r, include=T, eval=F}
+```{r, include=T, eval=T}
 dim(biomeE_out_daily_cohorts)
 dim(sofun_out_daily_cohorts)
-sofun_out_daily_cohorts <- sofun_out_daily_cohorts[1:12461830,]
+sofun_out_daily_cohorts <- sofun_out_daily_cohorts[1:12461830,][,-28]
+biomeE_out_daily_cohorts <- biomeE_out_daily_cohorts[,-28]
 
 plot_dfs <- lapply(names(biomeE_out_daily_cohorts),function(nm)data.frame(col1 = biomeE_out_daily_cohorts[,1],col2 = biomeE_out_daily_cohorts[,nm], col3 = sofun_out_daily_cohorts[,nm]))
 
@@ -115,24 +111,24 @@ dim(sofun_out_annual_tile)
 biomeE_out_annual_tile <- subset(biomeE_out_annual_tile, year <= 1800)[,-45]
 sofun_out_annual_tile <- sofun_out_annual_tile[,-45]
 
-ggplot() + 
-  geom_line(data=biomeE_out_annual_tile, aes(x=year, y=N_loss), color='blue', size = 2) + 
-  geom_line(data=sofun_out_annual_tile, aes(x=year, y=N_loss), color='red')
-
 plot_dfs <- lapply(names(biomeE_out_annual_tile),function(nm)data.frame(col1 = biomeE_out_annual_tile[,1],col2 = biomeE_out_annual_tile[,nm], col3 = sofun_out_annual_tile[,nm]))
 
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
       geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
       ggtitle(names(biomeE_out_annual_tile)[idx]))
+
 ```
+
+See that N_fxd and N_loss plots are empty because these variables are equal to 0.
 
 ### Plots of annual cohorts outputs
 
-```{r, include=T, eval=T}
+```{r, include=T, eval=F}
 dim(biomeE_out_annual_cohorts)
 dim(sofun_out_annual_cohorts)
-sofun_out_annual_cohorts <- sofun_out_annual_cohorts[1:34142,]
+sofun_out_annual_cohorts <- sofun_out_annual_cohorts[1:34142,][,-24]
+biomeE_out_annual_cohorts <- biomeE_out_annual_cohorts[,-24]
 
 plot_dfs <- lapply(names(biomeE_out_annual_cohorts),function(nm)data.frame(col1 = biomeE_out_annual_cohorts[,1],col2 = biomeE_out_annual_cohorts[,nm], col3 = sofun_out_annual_cohorts[,nm]))
 
@@ -140,10 +136,11 @@ for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
       geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
       ggtitle(names(biomeE_out_annual_cohorts)[idx]))
+
 ```
 
 
-Compared to BiomeE model outputs and found differences that are due to plant-soil feedbacks, i.e., when holding mineralN constant, the outputs are exactly identical.
+Compared to BiomeE model outputs and found differences that are due to plant-soil feedbacks, i.e., when holding mineralN constant, the outputs are exactly identical. Slightly different dynamics are caused by mineralN. See file vegetation.mod.f90 in sofun and BiomE-Allocation (vegn%mineralN = 0.00025).
 
 
 

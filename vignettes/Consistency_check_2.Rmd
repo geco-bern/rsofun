@@ -28,30 +28,30 @@ system("./runlm3ppa")
 
 #### Getting SOFUN outputs
 
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 setwd("/Users/lmarques/sofun/output")
 #sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
-sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
+#sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
 #sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
 sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
-#sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
+sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 
 ```
 
 ## Running RSOFUN
 
 #### Manually select some sites from which we're going to use the data for evaluation and calibration.
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 mysites <- c("ORNL")
 ```
 
 #### Create a site meta info table that contains all the site-specific information that is used to force site-simulations
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 siteinfo <- data.frame(sitename="ORNL", lon = 0.0, lat = 0.0, elv = 0.0)
 ```
 
 ####  Specify the simulation parameters that are identical for all site-scale simulations.
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800,
@@ -70,7 +70,7 @@ params_siml <- list(
 
 #### Tile-level parameters
 
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 params_tile <- list(
   soiltype     = 3,
   FLDCAP       = 0.4,
@@ -91,7 +91,7 @@ params_tile <- list(
 
 #### Species-level parameters
 
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 params_species <- tibble(
   lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),    # 0: grass; 1 Woody
   phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),    # 0: Deciduous; 1 Evergreen
@@ -116,7 +116,7 @@ params_species <- tibble(
 #### Soil parameters
 
 By layers.
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 # adopted from datatypes.mod.f90 l.538
 params_soil <- tibble(
   type              = c("Coarse",  "Medium",   "Fine",    "CM",     "CF",     "MF",    "CMF",    "Peat",    "MCM"),
@@ -133,7 +133,7 @@ params_soil <- tibble(
 
 #### Initial cohort specification
 
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 init_cohort <- tibble(
  init_cohort_species = c(1,      2,        3,        4,      5,        6,        7,      8,        9,       10),
  init_cohort_nindivs = c(0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02),
@@ -146,7 +146,7 @@ init_cohort <- tibble(
 
 #### Initial soil pools
 
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 # high N input --> Deciduous
 # low  N input --> Evergreen
 init_soil <- list(
@@ -160,7 +160,7 @@ init_soil <- list(
 
 #### Define soil parameters
 
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 df_soiltexture <- bind_rows(
   top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
   bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
@@ -169,7 +169,7 @@ df_soiltexture <- bind_rows(
 
 #### Get forcing data
 
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 forcing <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
   mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
   mutate(sitename = "ORNL") %>% 
@@ -181,7 +181,7 @@ forcing <- read_delim("~/BiomeE-Allocation/model/input/ORNL_forcing.txt", col_na
 #### Run the model
 
 Run the model for all the sites specified in the first step.
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 mod <- run_lm3ppa_f_bysite( "ORNL", 
                             params_siml, 
                             siteinfo, 
@@ -197,7 +197,7 @@ mod <- run_lm3ppa_f_bysite( "ORNL",
 
 #### Getting Rsofun outputs
 
-```{r, include=T, eval=T}
+```{r, include=F, eval=T}
 rsofun_out_hourly_tile <- mod$output_hourly_tile
 rsofun_out_daily_tile <- mod$output_daily_tile
 rsofun_out_daily_cohorts <- mod$output_daily_cohorts
@@ -224,7 +224,7 @@ for (idx in seq_along(plot_dfs))
 
 ### Plots of daily tile outputs
 
-```{r, include=T, eval=T}
+```{r, include=T, eval=F}
 dim(sofun_out_daily_tile)
 dim(rsofun_out_daily_tile)
 sofun_out_daily_tile <- sofun_out_daily_tile[,-36]
@@ -260,16 +260,17 @@ for (idx in seq_along(plot_dfs))
 ### Plots of annual tile outputs
 
 ```{r, include=T, eval=T}
-dim(sofun_out_annual_tile)
+str(sofun_out_annual_tile)
 str(rsofun_out_annual_tile)
 sofun_out_annual_tile <- sofun_out_annual_tile[,-45]
 rsofun_out_annual_tile <- as.data.frame(rsofun_out_annual_tile)
 
-ggplot() + 
-  geom_line(data=sofun_out_annual_tile, aes(x=year, y=NSC), color='blue') + 
-  geom_line(data=rsofun_out_annual_tile, aes(x=year, y=NSC), color='red')
-
 plot_dfs <- lapply(names(sofun_out_annual_tile),function(nm)data.frame(col1 = sofun_out_annual_tile[,1],col2 = sofun_out_annual_tile[,nm], col3 = rsofun_out_annual_tile[,nm]))
+
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_line(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      geom_line(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
+      ggtitle(names(sofun_out_annual_tile)[idx]))
 
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
