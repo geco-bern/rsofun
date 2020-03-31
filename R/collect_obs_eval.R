@@ -73,7 +73,7 @@ collect_obs_eval <- function( siteinfo, settings, adf = NULL, mdf = NULL, ddf = 
     right_join(adf, by = "sitename")
   
   ## get breaks
-  breaks <- xdf %>% tidyr::unnest(data) %>% pull(inbin) %>% as.character() %>% lubridate::ymd()
+  breaks <- xdf %>% tidyr::unnest(data) %>% pull(inbin) %>% as.character() %>% lubridate::ymd() %>% unique()
   
 	return( list( ddf = ddf, xdf = xdf, mdf = mdf, adf = adf, breaks = breaks ) )
 

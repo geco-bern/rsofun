@@ -124,7 +124,7 @@ library(ingestr)
 ddf_fluxnet <- ingest(
   siteinfo  = siteinfo %>% filter(sitename %in% mysites),
   source    = "fluxnet",
-  getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F", swin =  "SW_IN_F", patm = "PA_F"),
+  getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F", ppfd =  "SW_IN_F", patm = "PA_F"),
   dir       = paste0(path.package("rsofun"), "/extdata/"),
   settings  = list(dir_hh = paste0(path.package("rsofun"), "/extdata/"), dir_hr = paste0(path.package("rsofun"), "/extdata/"), getswc = FALSE),
   timescale = "d"
@@ -255,7 +255,7 @@ print(ptm)
 # )
 
 library(ggplot2)
-df_output$out_sofun[[1]] %>% 
+df_output$data[[1]] %>% 
   ggplot(aes(x=date, y=gpp)) +
   geom_line() + 
   labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
@@ -290,7 +290,7 @@ settings_ingestr_fluxnet <- list(
 
 ddf_fluxnet_gpp <- ingestr::ingest(
   siteinfo = filter(siteinfo, sitename == "FR-Pue"),
-  source    = "fluxnet2015",
+  source    = "fluxnet",
   getvars = list(gpp = "GPP_NT_VUT_REF",
                  gpp_unc = "GPP_NT_VUT_SE"),
   dir = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
@@ -342,7 +342,7 @@ settings_fluxnet <- list(
 
 ddf_eval <- ingest(
   siteinfo  = siteinfo %>% filter(sitename %in% mysites),
-  source    = "fluxnet2015",
+  source    = "fluxnet",
   getvars   = list(gpp = "GPP_NT_VUT_REF",
                    gpp_unc = "GPP_NT_VUT_SE"),
   dir       = paste0(path.package("rsofun"), "/extdata/"),
@@ -352,7 +352,7 @@ ddf_eval <- ingest(
 
 mdf_eval <- ingest(
   siteinfo  = siteinfo %>% filter(sitename %in% mysites),
-  source    = "fluxnet2015",
+  source    = "fluxnet",
   getvars   = list(gpp = "GPP_NT_VUT_REF",
                    gpp_unc = "GPP_NT_VUT_SE"),
   dir       = paste0(path.package("rsofun"), "/extdata/"),
@@ -362,7 +362,7 @@ mdf_eval <- ingest(
 
 adf_eval <- ingest(
   siteinfo  = siteinfo %>% filter(sitename %in% mysites),
-  source    = "fluxnet2015",
+  source    = "fluxnet",
   getvars   = list(gpp = "GPP_NT_VUT_REF",
                    gpp_unc = "GPP_NT_VUT_SE"),
   dir       = paste0(path.package("rsofun"), "/extdata/"),
@@ -389,7 +389,7 @@ obs_eval <- collect_obs_eval(
 
 `obs_eval` is now a list of data frames for different temporal resolutions. The data frames have rows for sites and time series for each site nested inside the column `data`. 
 
-`df_output` is the model output, also a data frame with rows for sites and time series for each site nested inside a column named `out_sofun`.
+`df_output` is the model output, also a data frame with rows for sites and time series for each site nested inside a column named `data`.
 
 And finally do the evaluation.
 ```{r warning=FALSE, message=FALSE}
