@@ -73,7 +73,7 @@ Forcing data: ORNL (11 years)
 
 ## Running BiomeE-Allocation in terminal and getting outputs as csv files
 
-```{r}
+```{r eval=FALSE}
 here <- getwd()
 setwd(path_orig)
 system("gfortran src/main.f90 src/datatypes.f90 src/soil.f90 src/vegetation.f90 -o ess")
@@ -83,7 +83,7 @@ setwd(here)
 
 #### Getting BiomeE outputs
 
-```{r, message=FALSE, include=T, eval=T}
+```{r, message=FALSE, include=T, eval=TRUE}
 #biomeE_out_hourly_tile <- read_csv("Hourly_tile_test.csv")
 biomeE_out_daily_tile     <- read_csv(paste0(path_orig, "/output/daily_tile_test.csv"))
 biomeE_out_daily_cohorts  <- read_csv(paste0(path_orig, "/output/daily_cohorts_test.csv"))
@@ -93,7 +93,7 @@ biomeE_out_annual_cohorts <- read_csv(paste0(path_orig, "/output/annual_cohorts_
 
 ## Running SOFUN in terminal and getting outputs as csv files
 
-```{r, include=F, eval=F}
+```{r, include=F, eval=FALSE}
 here <- getwd()
 setwd(path_sofun)
 system("make clean")
@@ -116,22 +116,17 @@ sofun_out_annual_cohorts <- read_csv(paste0(path_sofun, "/output/Annual_cohorts_
 
 ```{r, include=T, eval=T}
 varnams_annual_biomeE <- names(biomeE_out_annual_tile)[c(-1, -length(names(biomeE_out_annual_tile)))]
-varnams_annual_sofun <- names(biomeE_out_annual_tile)[c(-1, -length(names(biomeE_out_annual_tile)))]
+varnams_annual_sofun <- names(sofun_out_annual_tile)[c(-1, -length(names(sofun_out_annual_tile)))]
 all.equal(varnams_annual_biomeE, varnams_annual_sofun)
 
-for (varnam in varnams_annual_biomeE[1:10]){
-  print(varnam)
-  
-  gg <- plot_tseries_byvar(varnam, biomeE_out_annual_tile, sofun_out_annual_tile)
-  print(gg)
-
-  gg <- plot_modobs_byvar(varnam, biomeE_out_annual_tile, sofun_out_annual_tile)
-  print(gg)
-}
+## in sofun but not in biomee:
+varnams_annual_sofun[which(!(varnams_annual_sofun %in% varnams_annual_biomeE))]
 
 out_modobs <- purrr::map(as.list(varnams_annual_biomeE),
                          ~plot_modobs_byvar(., biomeE_out_annual_tile, sofun_out_annual_tile))
-
+out_tseries <- purrr::map(as.list(varnams_annual_biomeE),
+                         ~plot_tseries_byvar(., biomeE_out_annual_tile, sofun_out_annual_tile))
+purrr::map(out_tseries, ~print(.))
 ```
 
 See that N_fxd and N_loss plots are empty because these variables are equal to 0.
