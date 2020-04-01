@@ -90,36 +90,57 @@ contains
     ! INITIALISATIONS OF OUTPUT 
     ! important because maximum cohorts may be bigger than active cohorts
     !----------------------------------------------------------------
-    ! out_biosphere%daily_cohorts(:,:)%year    = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%doy     = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%hour    = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%cID     = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%PFT     = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%layer   = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%density = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%f_layer = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%LAI     = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%gpp     = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%resp    = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%transp  = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%NPPleaf = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%NPProot = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%NPPwood = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%NSC     = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%seedC   = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%leafC   = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%rootC   = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%SW_C    = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%HW_C    = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%NSN     = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%seedN   = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%leafN   = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%rootN   = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%SW_N    = 0.0
-    ! out_biosphere%daily_cohorts(:,:)%HW_N    = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%year    = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%doy     = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%hour    = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%cID     = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%PFT     = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%layer   = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%density = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%f_layer = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%LAI     = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%gpp     = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%resp    = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%transp  = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%NPPleaf = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%NPProot = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%NPPwood = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%NSC     = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%seedC   = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%leafC   = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%rootC   = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%SW_C    = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%HW_C    = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%NSN     = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%seedN   = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%leafN   = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%rootN   = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%SW_N    = 0.0
+      ! out_biosphere%daily_cohorts(:,:)%HW_N    = 0.0
 
-    ! same for the annual cohorts
-
+      ! out_biosphere%annual_cohorts(:)%year)    = 0.0
+      ! out_biosphere%annual_cohorts(:)%cID)     = 0.0
+      ! out_biosphere%annual_cohorts(:)%PFT)     = 0.0
+      ! out_biosphere%annual_cohorts(:)%layer)   = 0.0
+      ! out_biosphere%annual_cohorts(:)%density) = 0.0
+      ! out_biosphere%annual_cohorts(:)%f_layer) = 0.0
+      ! out_biosphere%annual_cohorts(:)%dDBH)    = 0.0
+      ! out_biosphere%annual_cohorts(:)%dbh)     = 0.0
+      ! out_biosphere%annual_cohorts(:)%height)  = 0.0
+      ! out_biosphere%annual_cohorts(:)%Acrown)  = 0.0
+      ! out_biosphere%annual_cohorts(:)%wood)    = 0.0
+      ! out_biosphere%annual_cohorts(:)%nsc)     = 0.0
+      ! out_biosphere%annual_cohorts(:)%NSN)     = 0.0
+      ! out_biosphere%annual_cohorts(:)%NPPtr)   = 0.0
+      ! out_biosphere%annual_cohorts(:)%seed)    = 0.0
+      ! out_biosphere%annual_cohorts(:)%NPPL)    = 0.0
+      ! out_biosphere%annual_cohorts(:)%NPPR)    = 0.0
+      ! out_biosphere%annual_cohorts(:)%NPPW)    = 0.0
+      ! out_biosphere%annual_cohorts(:)%GPP)     = 0.0
+      ! out_biosphere%annual_cohorts(:)%NPP)     = 0.0
+      ! out_biosphere%annual_cohorts(:)%N_uptk)  = 0.0
+      ! out_biosphere%annual_cohorts(:)%N_fix)   = 0.0
+      ! out_biosphere%annual_cohorts(:)%maxLAI)  = 0.0
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
     !----------------------------------------------------------------

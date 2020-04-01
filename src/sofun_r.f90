@@ -560,7 +560,7 @@ contains
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
-    do yr=1, 1800 !myinterface%params_siml%runyears
+    do yr=1, 30 !1800 !myinterface%params_siml%runyears
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -669,6 +669,7 @@ contains
       ! ----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)
       ! ----------------------------------------------------------------
+
       output_annual_cohorts_year(yr, :)    = dble(out_biosphere%annual_cohorts(:)%year)
       output_annual_cohorts_cID(yr, :)     = dble(out_biosphere%annual_cohorts(:)%cID)
       output_annual_cohorts_PFT(yr, :)     = dble(out_biosphere%annual_cohorts(:)%PFT)
@@ -692,7 +693,12 @@ contains
       output_annual_cohorts_N_uptk(yr, :)  = dble(out_biosphere%annual_cohorts(:)%N_uptk)
       output_annual_cohorts_N_fix(yr, :)   = dble(out_biosphere%annual_cohorts(:)%N_fix)
       output_annual_cohorts_maxLAI(yr, :)  = dble(out_biosphere%annual_cohorts(:)%maxLAI)
-      
+
+      print*,'output_annual_cohorts_cID',output_annual_cohorts_cID(30,:)
+      print*,'output_annual_cohorts_cID',output_annual_cohorts_cID(yr,:)
+
+      print*, 'out_biosphere%annual_cohorts(:)%year)', out_biosphere%annual_cohorts(:)%year
+
     enddo
 
     deallocate(myinterface%climate)

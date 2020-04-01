@@ -213,12 +213,11 @@ dim(sofun_out_hourly_tile)
 dim(rsofun_out_hourly_tile)
 sofun_out_hourly_tile <- subset(sofun_out_hourly_tile, year <= 1800)
 
-plot_dfs <- lapply(names(sofun_out_hourly_tile),function(nm)data.frame(col1 = sofun_out_hourly_tile[,1],col2 = sofun_out_hourly_tile[,nm], col3 = rsofun_out_hourly_tile[,nm]))
+plot_dfs <- lapply(names(sofun_out_hourly_tile),function(nm)data.frame(col1 = sofun_out_hourly_tile[,nm], col2 = rsofun_out_hourly_tile[,nm]))
 
 library(ggplot2)
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
-      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
       ggtitle(names(sofun_out_hourly_tile)[idx]))
 ```
 
@@ -230,15 +229,10 @@ dim(rsofun_out_daily_tile)
 sofun_out_daily_tile <- sofun_out_daily_tile[,-36]
 rsofun_out_daily_tile <- as.data.frame(rsofun_out_daily_tile)
 
-plot_dfs <- lapply(names(sofun_out_daily_tile),function(nm)data.frame(col1 = sofun_out_daily_tile[,1],col2 = sofun_out_daily_tile[,nm], col3 = rsofun_out_daily_tile[,nm]))
-
-ggplot() + 
-  geom_line(data=sofun_out_daily_tile, aes(x=year, y=totWs), color='blue', size = 2) + 
-  geom_line(data=rsofun_out_daily_tile, aes(x=year, y=totWs), color='red')
+plot_dfs <- lapply(names(sofun_out_daily_tile),function(nm)data.frame(col1 = sofun_out_daily_tile[,nm], col2 = rsofun_out_daily_tile[,nm]))
 
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
-      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
       ggtitle(names(sofun_out_daily_tile)[idx]))
 ```
 
@@ -249,11 +243,10 @@ dim(sofun_out_daily_cohorts)
 dim(rsofun_out_daily_cohorts)
 sofun_out_daily_cohorts <- subset(sofun_out_daily_cohorts, year <= 1800)
 
-plot_dfs <- lapply(names(sofun_out_daily_cohorts),function(nm)data.frame(col1 = sofun_out_daily_cohorts[,1],col2 = sofun_out_daily_cohorts[,nm], col3 = rsofun_out_daily_cohorts[,nm]))
+plot_dfs <- lapply(names(sofun_out_daily_cohorts),function(nm)data.frame(col1 = sofun_out_daily_cohorts[,nm], col2 = rsofun_out_daily_cohorts[,nm]))
 
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
-      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
       ggtitle(names(sofun_out_daily_cohorts)[idx]))
 ```
 
@@ -265,16 +258,10 @@ str(rsofun_out_annual_tile)
 sofun_out_annual_tile <- sofun_out_annual_tile[,-45]
 rsofun_out_annual_tile <- as.data.frame(rsofun_out_annual_tile)
 
-plot_dfs <- lapply(names(sofun_out_annual_tile),function(nm)data.frame(col1 = sofun_out_annual_tile[,1],col2 = sofun_out_annual_tile[,nm], col3 = rsofun_out_annual_tile[,nm]))
-
-for (idx in seq_along(plot_dfs))
-  print(ggplot()+geom_line(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
-      geom_line(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
-      ggtitle(names(sofun_out_annual_tile)[idx]))
+plot_dfs <- lapply(names(sofun_out_annual_tile),function(nm)data.frame(col1 = sofun_out_annual_tile[,nm], col2 = rsofun_out_annual_tile[,nm]))
 
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
-      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
       ggtitle(names(sofun_out_annual_tile)[idx]))
 ```
 
@@ -285,11 +272,10 @@ dim(sofun_out_annual_cohorts)
 dim(rsofun_out_annual_cohorts)
 sofun_out_annual_cohorts <- subset(sofun_out_annual_cohorts, year <= 1800)
 
-plot_dfs <- lapply(names(sofun_out_annual_cohorts),function(nm)data.frame(col1 = sofun_out_annual_cohorts[,1],col2 = sofun_out_annual_cohorts[,nm], col3 = rsofun_out_annual_cohorts[,nm]))
+plot_dfs <- lapply(names(sofun_out_annual_cohorts),function(nm)data.frame(col1 = sofun_out_annual_cohorts[,nm], col2 = rsofun_out_annual_cohorts[,nm]))
 
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
-      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col3),color="red")+
       ggtitle(names(sofun_out_annual_cohorts)[idx]))
 ```
 
