@@ -198,12 +198,11 @@ mod <- run_lm3ppa_f_bysite( "ORNL",
 #### Getting Rsofun outputs
 
 ```{r, include=F, eval=T}
-rsofun_out_hourly_tile <- mod$output_hourly_tile
-rsofun_out_daily_tile <- mod$output_daily_tile
-rsofun_out_daily_cohorts <- mod$output_daily_cohorts
-rsofun_out_annual_tile <- mod$output_annual_tile
-rsofun_out_annual_cohorts <- mod$output_annual_cohorts
-
+rsofun_out_hourly_tile <- out$output_hourly_tile
+rsofun_out_daily_tile <- out$output_daily_tile
+rsofun_out_daily_cohorts <- out$output_daily_cohorts
+rsofun_out_annual_tile <- out$output_annual_tile
+rsofun_out_annual_cohorts <- out$output_annual_cohorts
 ```
 
 ### Plots of hourly tile outputs

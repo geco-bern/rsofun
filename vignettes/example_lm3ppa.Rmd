@@ -185,7 +185,7 @@ ddf_complete <- tibble(date = complete)
 Run the model for all the sites specified in the first step.
 ```{r}
 # siteinfo <- list(lon = 99, lat = 99, elv = 99)
-mod <- run_lm3ppa_f_bysite( "ORNL", 
+out <- run_lm3ppa_f_bysite( "ORNL", 
                             params_siml, 
                             siteinfo, 
                             forcing, # ddf_input

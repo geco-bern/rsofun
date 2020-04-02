@@ -19,7 +19,7 @@ module md_params_siml_lm3ppa
     integer :: nyeartrend      ! number of transient years
     integer :: firstyeartrend  ! year AD of first transient year
     integer :: recycle         ! length of standard recycling period
-    logical :: do_spinup            ! whether this simulation does spinup 
+    logical :: do_spinup       ! whether this simulation does spinup 
     integer :: runyears        ! number of years of entire simulation (spinup+transient)
     logical :: is_calib
 
@@ -92,6 +92,13 @@ contains
         out_steering%climateyear = cycleyear + params_siml%firstyeartrend - 1
         out_steering%climateyear_idx = cycleyear
 
+        ! xxx consistency check
+        out_steering%forcingyear_idx = MOD(year - 1, params_siml%recycle) + 1
+        out_steering%forcingyear = out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
+
+        out_steering%climateyear_idx = MOD(year - 1, params_siml%recycle) + 1
+        out_steering%climateyear = out_steering%climateyear_idx + params_siml%firstyeartrend - 1
+
       else  
         ! during transient simulation
         out_steering%spinup = .false.
@@ -103,6 +110,11 @@ contains
         out_steering%climateyear = out_steering%forcingyear
         out_steering%climateyear_idx = out_steering%forcingyear_idx
       
+           ! xxx consistency check
+         out_steering%forcingyear_idx = MOD(year - 1, params_siml%recycle) + 1
+         out_steering%forcingyear = out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
+         out_steering%climateyear_idx = MOD(year - 1, params_siml%recycle) + 1
+         out_steering%climateyear = out_steering%climateyear_idx + params_siml%firstyeartrend - 1      
 
       endif
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1

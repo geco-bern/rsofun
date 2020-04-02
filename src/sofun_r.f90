@@ -560,7 +560,7 @@ contains
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
-    do yr=1, 30 !1800 !myinterface%params_siml%runyears
+    do yr=1, 1800 !myinterface%params_siml%runyears
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -609,8 +609,11 @@ contains
         call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
       end if
 
+      ! print*, 'idx_hourly', idx_hourly_start, idx_hourly_end
+
       ! print*, "yr  spinupyears  idx_hourly_start  idx_hourly_end  ntstepsyear", yr, myinterface%params_siml%spinupyears, idx_hourly_start,idx_hourly_end, ntstepsyear
       ! print*,out_biosphere%hourly_tile(3)
+      ! print*, "myinterface%params_siml%firstyeartrend", firstyeartrend
 
       !----------------------------------------------------------------
       ! Output out_daily_tile (calling subroutine)
@@ -694,10 +697,10 @@ contains
       output_annual_cohorts_N_fix(yr, :)   = dble(out_biosphere%annual_cohorts(:)%N_fix)
       output_annual_cohorts_maxLAI(yr, :)  = dble(out_biosphere%annual_cohorts(:)%maxLAI)
 
-      print*,'output_annual_cohorts_cID',output_annual_cohorts_cID(30,:)
-      print*,'output_annual_cohorts_cID',output_annual_cohorts_cID(yr,:)
+      ! print*,'output_annual_cohorts_cID',output_annual_cohorts_cID(30,:)
+      ! print*,'output_annual_cohorts_cID',output_annual_cohorts_cID(yr,:)
 
-      print*, 'out_biosphere%annual_cohorts(:)%year)', out_biosphere%annual_cohorts(:)%year
+      ! print*, 'out_biosphere%annual_cohorts(:)%year)', out_biosphere%annual_cohorts(:)%year
 
     enddo
 
