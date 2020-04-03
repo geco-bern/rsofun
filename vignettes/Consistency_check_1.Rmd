@@ -230,11 +230,9 @@ plot_modobs_byvar <- function(var, df_biomeE, df_sofun){
 }
 ```
 
-Forcing data: ORNL (11 years)
-
 ## Running BiomeE-Allocation in terminal and getting outputs as csv files
 
-```{r, include=F, eval=T}
+```{r, include=F, eval=F}
 setwd(path_orig_model_L)
 system("gfortran src/main.f90 src/datatypes.f90 src/soil.f90 src/vegetation.f90 -o ess")
 system("./ess")
@@ -244,9 +242,9 @@ system("./ess")
 
 ```{r, include=F, eval=T}
 setwd(path_orig_output_L)
-biomeE_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
-biomeE_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
-biomeE_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+#biomeE_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
+#biomeE_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
+#biomeE_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
 biomeE_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
 biomeE_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 ```
@@ -254,7 +252,8 @@ biomeE_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 ## Running SOFUN in terminal and getting outputs as csv files
 
 ```{r, include=F, eval=F}
-setwd(path_sofun_L)
+setwd(path_sofun_model_L)
+system("git checkout lm3ppa_BiomeE_test_rsofun")
 system("make clean")
 system("make lm3ppa")
 system("./runlm3ppa")
@@ -264,16 +263,16 @@ system("./runlm3ppa")
 
 ```{r, include=F, eval=T}
 setwd(path_sofun_output_L)
-sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
-sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
-sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+#sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
+#sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
+#sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
 sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
 sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 ```
 
 ### Plots of hourly tile outputs
 
-```{r, include=F, eval=T}
+```{r, include=F, eval=F}
 # Other option for plots using ggplot2()
 dim(biomeE_out_hourly_tile)
 dim(sofun_out_hourly_tile)
@@ -287,7 +286,7 @@ for (idx in seq_along(plot_dfs))
 
 ### Plots of daily tile outputs
 
-```{r, include=F, eval=T}
+```{r, include=F, eval=F}
 # Other option for plots using ggplot2()
 dim(biomeE_out_daily_tile)
 dim(sofun_out_daily_tile)
@@ -320,11 +319,11 @@ for (idx in seq_along(plot_dfs))
 ### Plots of annual tile outputs
 
 ```{r, include=T, eval=T}
-varnams_annual_biomeE <- names(biomeE_out_annual_tile)[c(-1, -length(names(biomeE_out_annual_tile)))]
-varnams_annual_sofun <- names(biomeE_out_annual_tile)[c(-1, -length(names(biomeE_out_annual_tile)))]
-all.equal(varnams_annual_biomeE, varnams_annual_sofun)
+varnams_annual_tile_biomeE <- names(biomeE_out_annual_tile)[c(-1, -length(names(biomeE_out_annual_tile)))]
+varnams_annual_tile_sofun <- names(sofun_out_annual_tile)[c(-1, -length(names(biomeE_out_annual_tile)))]
+all.equal(varnams_annual_tile_biomeE, varnams_annual_tile_sofun)
 
-for (varnam in varnams_annual_biomeE[1:10]){
+for (varnam in varnams_annual_tile_biomeE[1:43]){
   print(varnam)
   
   gg <- plot_tseries_byvar(varnam, biomeE_out_annual_tile, sofun_out_annual_tile)
@@ -334,18 +333,15 @@ for (varnam in varnams_annual_biomeE[1:10]){
   print(gg)
 }
 
-out_modobs <- purrr::map(as.list(varnams_annual_biomeE),
+out_modobs <- purrr::map(as.list(varnams_annual_tile_biomeE),
                          ~plot_modobs_byvar(., biomeE_out_annual_tile, sofun_out_annual_tile))
-
 ```
-
 
 ```{r, include=F, eval=F}
 # Other option for plots using ggplot2()
 dim(biomeE_out_annual_tile)
 dim(sofun_out_annual_tile)
-biomeE_out_annual_tile <- subset(biomeE_out_annual_tile, year <= 1800)[,-45]
-sofun_out_annual_tile <- sofun_out_annual_tile[,-45]
+sofun_out_annual_tile <- sofun_out_annual_tile[1:1804,]
 
 plot_dfs <- lapply(names(biomeE_out_annual_tile),function(nm)data.frame(col1 = biomeE_out_annual_tile[,nm], col2 = sofun_out_annual_tile[,nm]))
 
@@ -358,6 +354,25 @@ for (idx in seq_along(plot_dfs))
 See that N_fxd and N_loss plots are empty because these variables are equal to 0.
 
 ### Plots of annual cohorts outputs
+
+```{r, include=T, eval=T}
+varnams_annual_cohorts_biomeE <- names(biomeE_out_annual_cohorts)[c(-1, -length(names(biomeE_out_annual_cohorts)))]
+varnams_annual_cohorts_sofun <- names(sofun_out_annual_cohorts)[c(-1, -length(names(sofun_out_annual_cohorts)))]
+all.equal(varnams_annual_cohorts_biomeE, varnams_annual_cohorts_sofun)
+
+for (varnam in varnams_annual_cohorts_biomeE[1:10]){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, biomeE_out_annual_cohorts, sofun_out_annual_cohorts)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, biomeE_out_annual_cohorts, sofun_out_annual_cohorts)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_annual_cohorts_biomeE),
+                         ~plot_modobs_byvar(., biomeE_out_annual_cohorts, sofun_out_annual_cohorts))
+```
 
 ```{r, include=F, eval=F}
 # Other option for plots using ggplot2()

@@ -41,7 +41,7 @@ params_siml <- list(
       outputhourly          = FALSE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
-      update_annaulLAImax   = FALSE,
+      update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE
       )
 ```

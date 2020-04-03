@@ -110,7 +110,7 @@ contains
         out_steering%climateyear = out_steering%forcingyear
         out_steering%climateyear_idx = out_steering%forcingyear_idx
       
-           ! xxx consistency check
+        ! xxx consistency check
          out_steering%forcingyear_idx = MOD(year - 1, params_siml%recycle) + 1
          out_steering%forcingyear = out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
          out_steering%climateyear_idx = MOD(year - 1, params_siml%recycle) + 1

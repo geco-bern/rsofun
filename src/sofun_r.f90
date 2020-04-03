@@ -560,7 +560,7 @@ contains
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
-    do yr=1, 1800 !myinterface%params_siml%runyears
+    do yr=1, myinterface%params_siml%runyears
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -592,8 +592,8 @@ contains
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains gridcell loop)
       !----------------------------------------------------------------
-      out_biosphere = biosphere_annual()
-        
+      ! out_biosphere = biosphere_annual()
+      call biosphere_annual(out_biosphere)   !xxx debugging
 
       !----------------------------------------------------------------
       ! Populate big output arrays
@@ -667,7 +667,11 @@ contains
       !----------------------------------------------------------------
       ! Output out_annual_tile (calling subroutine)
       !----------------------------------------------------------------
+      ! print*,'a'
+      ! print*,output_annual_tile(yr,1)
       call populate_outarray_annual_tile( out_biosphere%annual_tile, output_annual_tile(yr,:) )
+
+      ! print*, "CAI, LAI, GPP",output_annual_tile(yr,2),output_annual_tile(yr,3),output_annual_tile(yr,4)
 
       ! ----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)

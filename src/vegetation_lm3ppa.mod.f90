@@ -2145,9 +2145,9 @@ subroutine initialize_vegn_tile(vegn,nCohorts)
       vegn%thetaS = 1.0
 
       ! tile
-      !print*, 'initialize_vegn_tile() 1: ',  vegn%n_cohorts   ! xxx debug
+      ! print*, 'initialize_vegn_tile() 1: ',  vegn%n_cohorts   ! xxx debug
       call summarize_tile(vegn)
-      !print*, 'initialize_vegn_tile() 2: ',  vegn%n_cohorts   ! xxx debug
+      ! print*, 'initialize_vegn_tile() 2: ',  vegn%n_cohorts   ! xxx debug
 
       vegn%initialN0 = vegn%NSN + vegn%SeedN + vegn%leafN +      &
                        vegn%rootN + vegn%SapwoodN + vegn%woodN + &
@@ -2191,9 +2191,9 @@ subroutine initialize_vegn_tile(vegn,nCohorts)
       vegn%previousN   = vegn%mineralN
 
       ! tile
-      !print*, 'initialize_vegn_tile() 3: ',  vegn%n_cohorts   ! xxx debug
+      ! print*, 'initialize_vegn_tile() 3: ',  vegn%n_cohorts   ! xxx debug
       call summarize_tile(vegn)
-      !print*, 'initialize_vegn_tile() 4: ',  vegn%n_cohorts   ! xxx debug
+      ! print*, 'initialize_vegn_tile() 4: ',  vegn%n_cohorts   ! xxx debug
 
       vegn%initialN0 = vegn%NSN + vegn%SeedN + vegn%leafN +      &
                        vegn%rootN + vegn%SapwoodN + vegn%woodN + &

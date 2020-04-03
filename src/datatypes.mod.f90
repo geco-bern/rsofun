@@ -13,8 +13,6 @@ public :: Zero_diagnostics, hourly_diagnostics, daily_diagnostics, &
           annual_diagnostics
 public :: qscomp, calc_esat
 
-! ! ------ public namelists ---------
-! public :: vegn_parameters_nml, soil_data_nml, initial_state_nml
 
 ! ---- public variables ---------
  public :: spdata, soilpars
@@ -327,7 +325,6 @@ type :: vegn_tile_type
    real :: totSeedC,totSeedN,totNewCC, totNewCN
 end type vegn_tile_type
 
-
 type :: soil_pars_type
   real :: GMD ! geometric mean partice diameter, mm
   real :: GSD ! geometric standard deviation of particle size
@@ -568,7 +565,7 @@ real   :: N_input    = 0.0008 ! annual N input to soil N pool, kgN m-2 yr-1
 ! character(len=80) :: filepath_in = '/Users/eweng/Documents/BiomeESS/forcingData/'
 ! character(len=160) :: climfile = 'US-Ha1forcing.txt'
 ! ! integer   :: model_run_years = 100  ! xxx todo: not used
-integer   :: equi_days       = 0 ! 100 * 365
+! integer   :: equi_days       = 0 ! 100 * 365
 logical   :: outputhourly = .False.
 logical   :: outputdaily  = .True.
 logical   :: do_U_shaped_mortality = .False.
@@ -785,61 +782,62 @@ subroutine Zero_diagnostics(vegn)
   integer :: i
   !daily
   vegn%dailyfixedN = 0.
-  vegn%dailyPrcp = 0.0
-  vegn%dailyTrsp = 0.0
-  vegn%dailyEvap = 0.0
-  vegn%dailyRoff = 0.0
-  vegn%dailyNup  = 0.0
-  vegn%dailyGPP = 0.0
-  vegn%dailyNPP = 0.0
-  vegn%dailyResp = 0.0
-  vegn%dailyRh   = 0.0
+  vegn%dailyPrcp   = 0.0
+  vegn%dailyTrsp   = 0.0
+  vegn%dailyEvap   = 0.0
+  vegn%dailyRoff   = 0.0
+  vegn%dailyNup    = 0.0
+  vegn%dailyGPP    = 0.0
+  vegn%dailyNPP    = 0.0
+  vegn%dailyResp   = 0.0
+  vegn%dailyRh     = 0.0
 
   !annual
   vegn%annualfixedN = 0.
-  vegn%annualPrcp = 0.0
-  vegn%annualTrsp = 0.0
-  vegn%annualEvap = 0.0
-  vegn%annualRoff = 0.0
-  vegn%annualGPP = 0.0
-  vegn%annualNPP = 0.0
-  vegn%annualResp = 0.0
-  vegn%annualRh   = 0.0
-  vegn%N_P2S_yr  = 0.
-  vegn%annualN   = 0.
-  vegn%Nloss_yr  = 0.
-  vegn%annualNup  = 0.0
+  vegn%annualPrcp   = 0.0
+  vegn%annualTrsp   = 0.0
+  vegn%annualEvap   = 0.0
+  vegn%annualRoff   = 0.0
+  vegn%annualGPP    = 0.0
+  vegn%annualNPP    = 0.0
+  vegn%annualResp   = 0.0
+  vegn%annualRh     = 0.0
+  vegn%N_P2S_yr     = 0.
+  vegn%annualN      = 0.
+  vegn%Nloss_yr     = 0.
+  vegn%annualNup    = 0.0
 
   do i = 1, vegn%n_cohorts
      cc => vegn%cohorts(i)
-     cc%C_growth = 0.0
-     cc%N_growth = 0.0
-     cc%gpp      = 0.0
-     cc%npp      = 0.0
-     cc%resp     = 0.0
-     cc%resl     = 0.0
-     cc%resr     = 0.0
-     cc%resg     = 0.0
-     cc%transp   = 0.0
+     cc%C_growth     = 0.0
+     cc%N_growth     = 0.0
+     cc%gpp          = 0.0
+     cc%npp          = 0.0
+     cc%resp         = 0.0
+     cc%resl         = 0.0
+     cc%resr         = 0.0
+     cc%resg         = 0.0
+     cc%transp       = 0.0
      !daily
-     cc%dailyTrsp = 0.0
-     cc%dailyGPP = 0.0
-     cc%dailyNPP = 0.0
-     cc%dailyResp= 0.0
-     cc%dailyNup   = 0.0
-     cc%dailyfixedN = 0.0
+     cc%dailyTrsp    = 0.0
+     cc%dailyGPP     = 0.0
+     cc%dailyNPP     = 0.0
+     cc%dailyResp    = 0.0
+     cc%dailyNup     = 0.0
+     cc%dailyfixedN  = 0.0
      ! annual
-     cc%annualTrsp = 0.0
-     cc%annualGPP = 0.0
-     cc%annualNPP = 0.0
-     cc%annualResp= 0.0
-     cc%annualNup   = 0.0
+     cc%annualTrsp   = 0.0
+     cc%annualGPP    = 0.0
+     cc%annualNPP    = 0.0
+     cc%annualResp   = 0.0
+     cc%annualNup    = 0.0
      cc%annualfixedN = 0.0
-     cc%NPPleaf   = 0.0
-     cc%NPProot   = 0.0
-     cc%NPPwood   = 0.0
-     cc%DBH_ys    = cc%DBH
+     cc%NPPleaf      = 0.0
+     cc%NPProot      = 0.0
+     cc%NPPwood      = 0.0
+     cc%DBH_ys       = cc%DBH
   enddo
+  
 end subroutine Zero_diagnostics
 
 ! ========================
@@ -870,21 +868,21 @@ subroutine summarize_tile(vegn)
   do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
         ! Vegn C pools:
-        vegn%NSC     = vegn%NSC   + cc%NSC      * cc%nindivs
-        vegn%SeedC   = vegn%SeedC + cc%seedC    * cc%nindivs
-        vegn%leafC   = vegn%leafC + cc%bl       * cc%nindivs
-        vegn%rootC   = vegn%rootC + cc%br       * cc%nindivs
-        vegn%SapwoodC= vegn%SapwoodC + cc%bsw   * cc%nindivs
-        vegn%woodC   = vegn%woodC    + cc%bHW   * cc%nindivs
-        vegn%CAI     = vegn%CAI + cc%crownarea * cc%nindivs
-        vegn%LAI     = vegn%LAI   + cc%leafarea * cc%nindivs
+        vegn%NSC     = vegn%NSC      + cc%NSC       * cc%nindivs
+        vegn%SeedC   = vegn%SeedC    + cc%seedC     * cc%nindivs
+        vegn%leafC   = vegn%leafC    + cc%bl        * cc%nindivs
+        vegn%rootC   = vegn%rootC    + cc%br        * cc%nindivs
+        vegn%SapwoodC= vegn%SapwoodC + cc%bsw       * cc%nindivs
+        vegn%woodC   = vegn%woodC    + cc%bHW       * cc%nindivs
+        vegn%CAI     = vegn%CAI      + cc%crownarea * cc%nindivs
+        vegn%LAI     = vegn%LAI      + cc%leafarea  * cc%nindivs
         ! Vegn N pools
-        vegn%NSN     = vegn%NSN   + cc%NSN      * cc%nindivs
-        vegn%SeedN   = vegn%SeedN + cc%seedN    * cc%nindivs
-        vegn%leafN   = vegn%leafN + cc%leafN    * cc%nindivs
-        vegn%rootN   = vegn%rootN + cc%rootN    * cc%nindivs
-        vegn%SapwoodN= vegn%SapwoodN + cc%sapwN * cc%nindivs
-        vegn%woodN   = vegn%woodN    + cc%woodN * cc%nindivs
+        vegn%NSN     = vegn%NSN      + cc%NSN       * cc%nindivs
+        vegn%SeedN   = vegn%SeedN    + cc%seedN     * cc%nindivs
+        vegn%leafN   = vegn%leafN    + cc%leafN     * cc%nindivs
+        vegn%rootN   = vegn%rootN    + cc%rootN     * cc%nindivs
+        vegn%SapwoodN= vegn%SapwoodN + cc%sapwN     * cc%nindivs
+        vegn%woodN   = vegn%woodN    + cc%woodN     * cc%nindivs
   enddo
 
 end subroutine summarize_tile
@@ -904,6 +902,7 @@ end subroutine summarize_tile
   !-------local var ------
   type(cohort_type), pointer :: cc    ! current cohort
   integer :: i
+  integer :: ntstepsyear !differ
 
   vegn%age = vegn%age + myinterface%dt_fast_yr
   ! Tile summary
@@ -999,7 +998,7 @@ end subroutine hourly_diagnostics
   !-------local var ------
   type(cohort_type), pointer :: cc    ! current cohort
   integer :: i
-  integer, parameter :: ndayyear = 365  
+  ! integer, parameter :: ndayyear = 365  
   integer, parameter :: out_max_cohorts = 50     ! Try: Number of maximum cohorts
 
   ! Output and zero daily variables
@@ -1009,7 +1008,7 @@ end subroutine hourly_diagnostics
           
           out_daily_cohorts(i)%year    = iyears
           out_daily_cohorts(i)%doy     = idoy
-          out_daily_cohorts(i)%hour    = 1.0 ! doesn-t make sense
+          out_daily_cohorts(i)%hour    = i !1.0 ! doesn-t make sense !xxx debugging
           out_daily_cohorts(i)%cID     = cc%ccID
           out_daily_cohorts(i)%PFT     = cc%species
           out_daily_cohorts(i)%layer   = cc%layer
@@ -1119,9 +1118,11 @@ end subroutine hourly_diagnostics
 
    type(vegn_tile_type), intent(inout) :: vegn
    integer, intent(in) :: iyears
-   type(outtype_annual_cohorts), dimension(out_max_cohorts), intent(out) :: out_annual_cohorts
-   type(outtype_annual_tile), intent(out) :: out_annual_tile
-
+   ! type(outtype_annual_cohorts), dimension(out_max_cohorts), intent(out) :: out_annual_cohorts
+   ! type(outtype_annual_tile), intent(out) :: out_annual_tile
+   type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts
+   type(outtype_annual_tile) :: out_annual_tile
+   
 !   --------local var --------
     type(cohort_type), pointer :: cc
     real treeG, fseed, fleaf, froot,fwood,dDBH
@@ -1223,13 +1224,18 @@ end subroutine hourly_diagnostics
     out_annual_tile%Seedling_C = vegn%totNewCC*1000
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
 
+     ! print*,'annual_diagnostics() : vegn%CAI, vegn%LAI ', vegn%CAI, vegn%LAI
+
+
     ! I cannot figure out why N losing. Hack!
    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
 
  end subroutine annual_diagnostics
 
 subroutine Recover_N_balance(vegn)
+
    type(vegn_tile_type), intent(inout) :: vegn
+
       if(abs(vegn%totN-vegn%initialN0)*1000>0.001)then
          vegn%structuralN = vegn%structuralN - vegn%totN + vegn%initialN0
          vegn%totN =  vegn%initialN0

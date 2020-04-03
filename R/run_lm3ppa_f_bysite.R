@@ -29,7 +29,6 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
   runyears <- ifelse(params_siml$spinup, (params_siml$spinupyears + params_siml$nyeartrend), params_siml$nyeartrend)
   n_daily  <- runyears * 365
 
-  ## Tests XXX todo: adapt test to forcing for lm3ppa
   do_continue <- TRUE
 
   if (makecheck){
@@ -107,7 +106,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       outputhourly          = as.logical(params_siml$outputhourly),
       outputdaily           = as.logical(params_siml$outputdaily),
       do_U_shaped_mortality = as.logical(params_siml$do_U_shaped_mortality),
-      update_annaulLAImax   = as.logical(params_siml$update_annaulLAImax),
+      update_annualLAImax   = as.logical(params_siml$update_annualLAImax),
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
       
       ## site meta info

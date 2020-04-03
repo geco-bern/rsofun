@@ -11,10 +11,13 @@ module md_biosphere_lm3ppa
   public biosphere_annual
 
    type(vegn_tile_type),  pointer :: vegn   
+   type(soil_tile_type),  pointer :: soil
+   type(cohort_type),     pointer :: cx, cc
 
 contains
 
-  function biosphere_annual() result( out_biosphere )
+  ! function biosphere_annual() result( out_biosphere ) ! in the original it was a function
+  subroutine biosphere_annual(out_biosphere)
     !////////////////////////////////////////////////////////////////
     ! function BIOSPHERE_annual calculates net ecosystem exchange (nee)
     ! in response to environmental boundary conditions (atmospheric 
@@ -42,10 +45,12 @@ contains
     integer, parameter :: nCohorts = 1
     real    :: tsoil, soil_theta
     integer :: year0
-    integer :: i, j, idoy
+    integer :: i, j
     integer :: idata
     integer, save :: simu_steps !, datalines
     integer, save :: iyears
+    integer, save :: idays
+    integer, save :: idoy
     ! character(len=50) :: namelistfile = '~/sofun/params/parameters_Allocation.nml' !'parameters_WC_biodiversity.nml' ! 'parameters_CN.nml'
 
     ! print*,'year0: ', myinterface%climate(1)%year
@@ -56,35 +61,38 @@ contains
     !----------------------------------------------------------------
     if (myinterface%steering%init) then
 
-      allocate(out_biosphere%hourly_tile(ntstepsyear))
+      ! allocate(out_biosphere%hourly_tile(ntstepsyear)) !xxxdebug
 
       ! Parameter initialization: Initialize PFT parameters
+      ! print*,'1: vegn%cohorts ', vegn%n_cohorts
       call initialize_PFT_data()
+
+      ! print
 
       ! Initialize vegetation tile and plant cohorts
       allocate(vegn)
 
-      ! print*,'2: ', vegn%n_cohorts
+      ! print*,'2: vegn%cohorts, vegn%CAI, vegn%LAI ', vegn%n_cohorts, vegn%CAI, vegn%LAI 
       call initialize_vegn_tile(vegn,nCohorts)
       
       ! Sort and relayer cohorts
 
-      ! print*,'3: ', vegn%n_cohorts
+      ! print*,'3: vegn%cohorts, vegn%CAI, vegn%LAI ', vegn%n_cohorts, vegn%CAI, vegn%LAI 
       call relayer_cohorts(vegn)
 
-      ! print*,'4: ', vegn%n_cohorts
+      ! print*,'4: vegn%cohorts, vegn%CAI, vegn%LAI ', vegn%n_cohorts, vegn%CAI, vegn%LAI 
       call Zero_diagnostics(vegn)
 
       year0 = myinterface%climate(1)%year  ! forcingData(1)%year
       iyears = 1
       idoy = 0
+      idays  = 0
 
     endif 
 
     simu_steps = 0
 
     ! print*,'year0: ', myinterface%climate(1)%year
-
 
     !----------------------------------------------------------------
     ! INITIALISATIONS OF OUTPUT 
@@ -150,12 +158,13 @@ contains
       !----------------------------------------------------------------
       ! LOOP THROUGH DAYS
       !----------------------------------------------------------------
+      ! print*,'5: vegn%cohorts , vegn%CAI, vegn%LAI', vegn%n_cohorts, vegn%CAI, vegn%LAI
       dayloop: do dm=1,ndaymonth(moy)
         
         doy = doy + 1
 
         if (verbose) print*,'----------------------'
-        if (verbose) print*,'YEAR, Doy ', myinterface%steering%year, doy
+        if (verbose) print*,'YEAR, DOY ', myinterface%steering%year, doy
         if (verbose) print*,'----------------------'
 
         idoy = idoy + 1
@@ -192,15 +201,15 @@ contains
         !-------------------------------------------------
         ! Daily calls
         !-------------------------------------------------
-
+        ! print*,'5: vegn%cohorts , vegn%CAI, vegn%LAI', vegn%n_cohorts, vegn%CAI, vegn%LAI
         call daily_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
-        !print*,'5: ', vegn%n_cohorts
+
         ! Determine start and end of season and maximum leaf (root) mass
-        !print*,'4: ', vegn%n_cohorts
+        ! print*,'6: vegn%cohorts , vegn%CAI, vegn%LAI', vegn%n_cohorts, vegn%CAI, vegn%LAI
         call vegn_phenology(vegn, j)
 
         ! Produce new biomass from 'carbon_gain' (is zero afterwards)
-        !print*,'4: ', vegn%n_cohorts
+        ! print*,'7: vegn%cohorts , vegn%CAI, vegn%LAI', vegn%n_cohorts, vegn%CAI, vegn%LAI
         call vegn_growth_EW(vegn)
 
         !----------------------------------------------------------------
@@ -220,10 +229,10 @@ contains
     print*,'sim. year  ', iyears
     print*,'real year: ', year0
 
+    ! call vegn_annualLAImax_update(vegn) ! Before without conditional
+    if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update(vegn) !xxx debugging
 
-    !if ( myinterface%params_siml%update_annualLAImax ) 
-    call vegn_annualLAImax_update(vegn)
-
+    ! print*,'8: vegn%cohorts , vegn%CAI, vegn%LAI', vegn%n_cohorts, vegn%CAI, vegn%LAI
     call annual_diagnostics(vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
 
     !---------------------------------------------
@@ -271,6 +280,6 @@ contains
 
     if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
 
-  end function biosphere_annual
+  end subroutine biosphere_annual
 
 end module md_biosphere_lm3ppa
