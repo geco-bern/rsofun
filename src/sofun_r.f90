@@ -560,6 +560,8 @@ contains
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
+    ! print*, 'forcing', forcing(1:15,1)
+
     do yr=1, myinterface%params_siml%runyears
 
       !----------------------------------------------------------------

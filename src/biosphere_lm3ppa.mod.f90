@@ -90,6 +90,18 @@ contains
 
     endif 
 
+    ! print*, 'year', myinterface%climate(1)%year
+    ! print*, 'doy',myinterface%climate(1)%doy
+    ! print*, 'hour',myinterface%climate(1)%hod
+    ! print*, 'PAR',myinterface%climate(1)%PAR
+    ! print*, 'radiation',myinterface%climate(1)%radiation
+    ! print*, 'Tair', myinterface%climate(1)%Tair
+    ! print*, 'Tsoil', myinterface%climate(1)%Tsoil
+    ! print*, 'windU', myinterface%climate(1)%windU
+    ! print*, 'P_air', myinterface%climate(1)%P_air
+    ! print*, 'CO2', myinterface%climate(1)%CO2
+    ! print*, 'soilwater', myinterface%climate(1)%soilwater
+
     simu_steps = 0
 
     ! print*,'year0: ', myinterface%climate(1)%year

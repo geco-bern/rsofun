@@ -82,19 +82,20 @@ contains
     idx_end   = idx_start + ntstepsyear - 1
 
     ! This is to read from ORNL file
-    out_climate%year      = int(forcing(idx_start:idx_end, 1))           ! Year
-    out_climate%doy       = int(forcing(idx_start:idx_end, 2))           ! day of the year
-    out_climate%hod       = real(forcing(idx_start:idx_end, 3))           ! hour of the day
-    out_climate%PAR       = real(forcing(idx_start:idx_end, 4)) * 2.0     ! umol/m2/s           ! umol m-2 s-1
-    out_climate%radiation = real(forcing(idx_start:idx_end, 5))           ! W/m2
-    out_climate%Tair      = real(forcing(idx_start:idx_end, 6)) + 273.16  ! air temperature, K
-    out_climate%Tsoil     = real(forcing(idx_start:idx_end, 7)) + 273.16  ! soil temperature, K
-    out_climate%RH        = real(forcing(idx_start:idx_end, 8)) * 0.01    ! relative humidity (0.xx)
+    out_climate%year      = int(forcing(idx_start:idx_end, 1))                    ! Year
+    out_climate%doy       = int(forcing(idx_start:idx_end, 2))                    ! day of the year
+    out_climate%hod       = real(forcing(idx_start:idx_end, 3))                   ! hour of the day
+    out_climate%PAR       = real(forcing(idx_start:idx_end, 4))                   ! umol/m2/s  (*2)         
+    out_climate%radiation = real(forcing(idx_start:idx_end, 5))                   ! W/m2
+    out_climate%Tair      = real(forcing(idx_start:idx_end, 6)) + 273.16          ! air temperature, K
+    out_climate%Tsoil     = real(forcing(idx_start:idx_end, 7)) + 273.16          ! soil temperature, K
+    out_climate%RH        = real(forcing(idx_start:idx_end, 8)) * 0.01            ! relative humidity (0.xx)
     out_climate%rain      = real(forcing(idx_start:idx_end, 9))/(timestep * 3600) ! kgH2O m-2 s-1
-    out_climate%windU     = real(forcing(idx_start:idx_end, 10))           ! wind velocity (m s-1)
-    out_climate%P_air     = real(forcing(idx_start:idx_end, 11))           ! pa
-    out_climate%CO2       = real(forcing(idx_start:idx_end, 12))           ! pa
-    out_climate%soilwater = 0.8                                           ! soil moisture, vol/vol
+    out_climate%windU     = real(forcing(idx_start:idx_end, 10))                  ! wind velocity (m s-1)
+    out_climate%P_air     = real(forcing(idx_start:idx_end, 11))                  ! pa
+    out_climate%CO2       = real(forcing(idx_start:idx_end, 12)) * 1.0e-6         ! mol/mol
+    out_climate%soilwater = 0.8                                                   ! soil moisture, vol/vol
+
 
     ! if (forcing(idx_start,1) /= climateyear) then
     !   print*,'forcing(idx_start)%year ', forcing(idx_start,1)

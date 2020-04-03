@@ -241,7 +241,7 @@ system("./runlm3ppa")
 
 ```{r, include=F, eval=T}
 setwd(path_sofun_output_L)
-#sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
+sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
 #sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
 #sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
 sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
@@ -413,12 +413,33 @@ rsofun_out_annual_cohorts <- out$output_annual_cohorts
 
 ### Plots of hourly tile outputs
 
+```{r, include=T, eval=T}
+varnams_hourly_tile_sofun <- names(sofun_out_hourly_tile)[c(-1, -length(names(sofun_out_hourly_tile)))]
+varnams_hourly_tile_rsofun <- names(rsofun_out_hourly_tile)[c(-1,-length(names(sofun_out_hourly_tile)))]
+all.equal(varnams_hourly_tile_sofun, varnams_hourly_tile_rsofun)
+
+for (varnam in varnams_hourly_tile_sofun[1:15]){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, sofun_out_hourly_tile, rsofun_out_hourly_tile)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, sofun_out_hourly_tile, rsofun_out_hourly_tile)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_hourly_tile_sofun),
+                         ~plot_modobs_byvar(., sofun_out_hourly_tile, rsofun_out_hourly_tile))
+```
+
 ```{r, include=F, eval=F}
 dim(sofun_out_hourly_tile)
 dim(rsofun_out_hourly_tile)
-sofun_out_hourly_tile <- subset(sofun_out_hourly_tile, year <= 1800)
+sofun_out_hourly_tile <- sofun_out_hourly_tile[,-16]
+rsofun_out_hourly_tile <- as.data.frame(rsofun_out_hourly_tile)
 
-plot_dfs <- lapply(names(sofun_out_hourly_tile),function(nm)data.frame(col1 = sofun_out_hourly_tile[,nm], col2 = rsofun_out_hourly_tile[,nm]))
+plot_dfs <- lapply(names(sofun_out_hourly_tile),function(nm)data.frame(col1 = sofun_out_hourly_tile[,nm], 
+                                                                       col2 = rsofun_out_hourly_tile[,nm]))
 
 library(ggplot2)
 for (idx in seq_along(plot_dfs))
@@ -476,11 +497,11 @@ out_modobs <- purrr::map(as.list(varnams_annual_tile_sofun),
                          ~plot_modobs_byvar(., sofun_out_annual_tile, rsofun_out_annual_tile))
 ```
 
-```{r, include=F, eval=F}
+```{r, include=F, eval=T}
 # Other option for plots using ggplot2()
 dim(sofun_out_annual_tile)
 dim(rsofun_out_annual_tile)
-sofun_out_annual_tile <- sofun_out_annual_tile[1:1800,-45]
+sofun_out_annual_tile <- sofun_out_annual_tile[,-45]
 rsofun_out_annual_tile <- as.data.frame(rsofun_out_annual_tile)
 
 plot_dfs <- lapply(names(sofun_out_annual_tile),function(nm)data.frame(col1 = sofun_out_annual_tile[,nm], col2 = rsofun_out_annual_tile[,nm]))
