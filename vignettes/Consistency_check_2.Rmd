@@ -11,6 +11,7 @@ library(rsofun)
 load_dependencies_rsofun()
 library(readr)
 library(tidyr)
+library(ggplot2)
 #if(!require(devtools)){install.packages(devtools)}
 #devtools::install_github("stineb/rbeni")
 #library(rbeni)
@@ -242,8 +243,8 @@ system("./runlm3ppa")
 ```{r, include=F, eval=T}
 setwd(path_sofun_output_L)
 sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
-#sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
-#sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
+sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
 sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
 sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 ```
@@ -413,7 +414,7 @@ rsofun_out_annual_cohorts <- out$output_annual_cohorts
 
 ### Plots of hourly tile outputs
 
-```{r, include=T, eval=T}
+```{r, include=T, eval=F}
 varnams_hourly_tile_sofun <- names(sofun_out_hourly_tile)[c(-1, -length(names(sofun_out_hourly_tile)))]
 varnams_hourly_tile_rsofun <- names(rsofun_out_hourly_tile)[c(-1,-length(names(sofun_out_hourly_tile)))]
 all.equal(varnams_hourly_tile_sofun, varnams_hourly_tile_rsofun)
@@ -432,7 +433,7 @@ out_modobs <- purrr::map(as.list(varnams_hourly_tile_sofun),
                          ~plot_modobs_byvar(., sofun_out_hourly_tile, rsofun_out_hourly_tile))
 ```
 
-```{r, include=F, eval=F}
+```{r, include=T, eval=T}
 dim(sofun_out_hourly_tile)
 dim(rsofun_out_hourly_tile)
 sofun_out_hourly_tile <- sofun_out_hourly_tile[,-16]
@@ -441,7 +442,6 @@ rsofun_out_hourly_tile <- as.data.frame(rsofun_out_hourly_tile)
 plot_dfs <- lapply(names(sofun_out_hourly_tile),function(nm)data.frame(col1 = sofun_out_hourly_tile[,nm], 
                                                                        col2 = rsofun_out_hourly_tile[,nm]))
 
-library(ggplot2)
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
       ggtitle(names(sofun_out_hourly_tile)[idx]))
@@ -449,7 +449,26 @@ for (idx in seq_along(plot_dfs))
 
 ### Plots of daily tile outputs
 
-```{r, include=F, eval=F}
+```{r, include=T, eval=T}
+varnams_daily_tile_sofun <- names(sofun_out_daily_tile)[c(-1, -length(names(sofun_out_daily_tile)))]
+varnams_daily_tile_rsofun <- names(rsofun_out_daily_tile)[c(-1,-length(names(sofun_out_daily_tile)))]
+all.equal(varnams_daily_tile_sofun, varnams_daily_tile_rsofun)
+
+for (varnam in varnams_daily_tile_sofun[1:34]){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, sofun_out_daily_tile, rsofun_out_daily_tile)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, sofun_out_daily_tile, rsofun_out_daily_tile)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_daily_tile_sofun),
+                         ~plot_modobs_byvar(., sofun_out_daily_tile, rsofun_out_daily_tile))
+```
+
+```{r, include=T, eval=T}
 dim(sofun_out_daily_tile)
 dim(rsofun_out_daily_tile)
 sofun_out_daily_tile <- sofun_out_daily_tile[,-36]
@@ -464,10 +483,30 @@ for (idx in seq_along(plot_dfs))
 
 ### Plots of daily cohorts outputs
 
+```{r, include=T, eval=T}
+varnams_daily_cohorts_sofun <- names(sofun_out_daily_cohorts)[c(-1, -length(names(sofun_out_daily_cohorts)))]
+varnams_daily_cohorts_rsofun <- names(rsofun_out_daily_cohorts)[c(-1,-length(names(sofun_out_daily_cohorts)))]
+all.equal(varnams_daily_cohorts_sofun, varnams_daily_cohorts_rsofun)
+
+for (varnam in varnams_daily_cohorts_sofun){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, sofun_out_daily_cohorts, rsofun_out_daily_cohorts)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, sofun_out_daily_cohorts, rsofun_out_daily_cohorts)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_daily_cohorts_sofun),
+                         ~plot_modobs_byvar(., sofun_out_daily_cohorts, rsofun_out_daily_cohorts))
+```
+
 ```{r, include=F, eval=F}
 dim(sofun_out_daily_cohorts)
 dim(rsofun_out_daily_cohorts)
-sofun_out_daily_cohorts <- subset(sofun_out_daily_cohorts, year <= 1800)
+sofun_out_daily_cohorts <- sofun_out_daily_cohorts[,-28]
+rsofun_out_daily_cohorts <- as.data.frame(rsofun_out_daily_cohorts)[,-1]
 
 plot_dfs <- lapply(names(sofun_out_daily_cohorts),function(nm)data.frame(col1 = sofun_out_daily_cohorts[,nm], col2 = rsofun_out_daily_cohorts[,nm]))
 
@@ -497,7 +536,7 @@ out_modobs <- purrr::map(as.list(varnams_annual_tile_sofun),
                          ~plot_modobs_byvar(., sofun_out_annual_tile, rsofun_out_annual_tile))
 ```
 
-```{r, include=F, eval=T}
+```{r, include=T, eval=T}
 # Other option for plots using ggplot2()
 dim(sofun_out_annual_tile)
 dim(rsofun_out_annual_tile)
@@ -515,7 +554,7 @@ for (idx in seq_along(plot_dfs))
 
 ```{r, include=F, eval=F}
 varnams_annual_cohorts_sofun <- names(sofun_out_annual_cohorts)[c(-1, -length(names(sofun_out_annual_cohorts)))]
-varnams_annual_cohorts_rsofun <- names(sofun_out_annual_cohorts)[c(-1, -length(names(sofun_out_annual_cohorts)))]
+varnams_annual_cohorts_rsofun <- names(rsofun_out_annual_cohorts)[c(-1, -length(names(sofun_out_annual_cohorts)))]
 all.equal(varnams_annual_cohorts_sofun, varnams_annual_cohorts_rsofun)
 
 for (varnam in varnams_annual_cohorts_sofun[1:10]){
@@ -533,9 +572,10 @@ out_modobs <- purrr::map(as.list(varnams_annual_cohorts_sofun),
 ```
 
 ```{r, include=F, eval=F}
-dim(sofun_out_annual_cohorts)
-dim(rsofun_out_annual_cohorts)
-sofun_out_annual_cohorts <- subset(sofun_out_annual_cohorts, year <= 1800)
+names(sofun_out_annual_cohorts)
+names(rsofun_out_annual_cohorts)
+sofun_out_annual_cohorts <- sofun_out_annual_cohorts[,-24]
+rsofun_out_annual_cohorts <- as.data.frame(rsofun_out_annual_cohorts[,-1])
 
 plot_dfs <- lapply(names(sofun_out_annual_cohorts),function(nm)data.frame(col1 = sofun_out_annual_cohorts[,nm], col2 = rsofun_out_annual_cohorts[,nm]))
 

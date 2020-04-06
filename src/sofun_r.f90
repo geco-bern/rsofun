@@ -604,7 +604,7 @@ contains
       !----------------------------------------------------------------
       ! Output out_hourly_tile (calling subroutine)
       !----------------------------------------------------------------
-      if (.not. myinterface%steering%spinup) then    !!xxx uncommented for testing
+      if (.not. myinterface%steering%spinup) then  
         idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
         ! idx_hourly_start = mod((yr - 1), 11) * ntstepsyear + 1      
         idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
@@ -703,8 +703,7 @@ contains
       output_annual_cohorts_N_fix(yr, :)   = dble(out_biosphere%annual_cohorts(:)%N_fix)
       output_annual_cohorts_maxLAI(yr, :)  = dble(out_biosphere%annual_cohorts(:)%maxLAI)
 
-      ! print*,'output_annual_cohorts_cID',output_annual_cohorts_cID(30,:)
-      ! print*,'output_annual_cohorts_cID',output_annual_cohorts_cID(yr,:)
+      ! print*,'output_annual_cohorts_year',output_annual_cohorts_year(yr,:)
 
       ! print*, 'out_biosphere%annual_cohorts(:)%year)', out_biosphere%annual_cohorts(:)%year
 

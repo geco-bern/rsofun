@@ -183,7 +183,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       as_tibble() %>%
       setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
       tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "year", names_prefix = "cohort_") %>%
-      mutate(year = ifelse(year==0, NA, year)) %>%
+      mutate(year = ifelse(year >= lag(cummax(year), default=0), year, 0)) %>% mutate(year = ifelse(year==0, NA, year)) %>% # Remove the previous years filled by cohorts
         bind_cols(
         .,
         lm3out[[4]] %>%
@@ -390,8 +390,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as.matrix() %>% 
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "HW_C", names_prefix = "cohort_") %>%
-          mutate(HW_C = ifelse(HW_C==0, NA, HW_C)) %>% dplyr::select(-1)) %>%
+          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "HW_N", names_prefix = "cohort_") %>%
+          mutate(HW_N = ifelse(HW_N==0, NA, HW_N)) %>% dplyr::select(-1)) %>%
       tidyr::drop_na(year)
      
     ## annual tile
@@ -407,7 +407,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       as_tibble() %>%
       setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
       tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "year", names_prefix = "cohort_") %>%
-      mutate(year = ifelse(year==0, NA, year)) %>%
+      mutate(year = ifelse(year >= lag(cummax(year), default=0), year, 0)) %>% mutate(year = ifelse(year==0, NA, year)) %>% # Remove the previous years filled by cohorts
       bind_cols(
        .,
       lm3out[[32]] %>%
@@ -550,16 +550,16 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "GPP", names_prefix = "cohort_") %>%
-        mutate(GPP = ifelse(GPP==0, NA, GPP)) %>% dplyr::select(-1)) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "GPP_year", names_prefix = "cohort_") %>%
+        mutate(GPP_year = ifelse(GPP_year==0, NA, GPP_year)) %>% dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[50]] %>%
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPP", names_prefix = "cohort_") %>%
-        mutate(NPP = ifelse(NPP==0, NA, NPP)) %>% dplyr::select(-1)) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPP_year", names_prefix = "cohort_") %>%
+        mutate(NPP_year = ifelse(NPP_year==0, NA, NPP_year)) %>% dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[51]] %>%
@@ -584,7 +584,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "maxLAI", names_prefix = "cohort_") %>%
         mutate(maxLAI = ifelse(maxLAI==0, NA, maxLAI)) %>% dplyr::select(-1)) %>%
-    tidyr::drop_na(year)
+    tidyr::drop_na(year) 
 
   } else {
     out <- NA

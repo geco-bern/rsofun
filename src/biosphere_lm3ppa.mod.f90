@@ -161,6 +161,7 @@ contains
       ! out_biosphere%annual_cohorts(:)%N_uptk)  = 0.0
       ! out_biosphere%annual_cohorts(:)%N_fix)   = 0.0
       ! out_biosphere%annual_cohorts(:)%maxLAI)  = 0.0
+      
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
     !----------------------------------------------------------------
