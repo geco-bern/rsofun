@@ -40,15 +40,15 @@ A small number of meta data variables have to be specified for each site specifi
 This information is provided in file `siteinfo_fluxnet2015.csv`. This file is created as described in (and using code from) [metainfo_fluxnet2015](https://github.com/stineb/metainfo_fluxnet2015). 
 ```{r}
 siteinfo <- readr::read_csv("~/rsofun/siteinfo_fluxnet2015.csv") %>%
-  filter(sitename %in% mysites)
+  dplyr::filter(sitename %in% mysites)
 
 ## take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo
 siteinfo <- siteinfo %>% 
-  mutate(year_start = 2007, year_end = 2014)
+  dplyr::mutate(year_start = 2007, year_end = 2014)
 
 siteinfo <- siteinfo %>% 
-  mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
-  mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
+  dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
+  dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 ```
 
 ### Simulation settings
@@ -122,11 +122,11 @@ The following ingests meteorological data from the FLUXNET 2015 files for variab
 ```{r message=FALSE, warning=FALSE}
 library(ingestr)
 ddf_fluxnet <- ingest(
-  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
   source    = "fluxnet",
-  getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F", ppfd =  "SW_IN_F", patm = "PA_F"),
-  dir       = paste0(path.package("rsofun"), "/extdata/"),
-  settings  = list(dir_hh = paste0(path.package("rsofun"), "/extdata/"), dir_hr = paste0(path.package("rsofun"), "/extdata/"), getswc = FALSE),
+  getvars   = list(temp = "TA_F", prec = "P_F", vpd  = "VPD_F", ppfd =  "SW_IN_F", patm = "PA_F"),
+  dir       = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
+  settings  = list(dir_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/", getswc = FALSE),
   timescale = "d"
   )
 ```
@@ -134,7 +134,7 @@ ddf_fluxnet <- ingest(
 Some meteo data is not available from FLUXNET. Extract it from CRU global climate files instead.
 ```{r}
 ddf_cru <- ingest(
-  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
   source    = "cru",
   getvars   = list(ccov = "cld"),
   dir       = "~/data/cru/ts_4.01/"
@@ -175,7 +175,7 @@ settings_gee <- get_settings_gee(
 This can now be used to download the data to the directory specified by argument `data_path` of function `get_settings_gee()` and to read data into R.
 ```{r}
 df_gee_modis_fpar <- ingest(
-  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
   source = "gee",
   settings = settings_gee,
   verbose = FALSE
@@ -187,7 +187,7 @@ df_gee_modis_fpar <- ingest(
 Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
 ```{r}
 df_co2 <- ingest(
-  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
   source = "co2",
   verbose = FALSE,
   settings = list(path = "~/data/co2/cCO2_rcp85_const850-1765.csv")
@@ -199,7 +199,7 @@ df_co2 <- ingest(
 Finally, we can collect forcing data, simulation parameters, and site meta info into a single object that will be used to drive rsofun.
 ```{r}
 df_drivers <- collect_drivers_sofun( 
-  siteinfo       = siteinfo %>% filter(sitename %in% mysites),
+  siteinfo       = siteinfo %>% dplyr::filter(sitename %in% mysites),
   meteo          = ddf_meteo, 
   fapar          = df_gee_modis_fpar,
   co2            = df_co2,
