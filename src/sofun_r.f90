@@ -38,7 +38,7 @@ contains
     nt,                        &
     par,                       &
     forcing,                   &
-    output                     &
+    outarr                     &
     ) bind(C, name = "sofun_f_")
 
     !////////////////////////////////////////////////////////////////
@@ -83,12 +83,14 @@ contains
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(6), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
-    real(kind=c_double),  dimension(nt,5), intent(out) :: output
+    real(kind=c_double),  dimension(nt,5), intent(out) :: outarr
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
     type(type_params_domain) :: params_domain
     integer :: npft_local, yr, ncells, idx_start, idx_end
+
+    logical, parameter :: verbose = .false.
 
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
@@ -183,7 +185,6 @@ contains
     !----------------------------------------------------------------
     myinterface%fpc_grid(:,:) = get_fpc_grid( myinterface%domaininfo, myinterface%params_siml )
 
-
     ! LOOP THROUGH YEARS
     ! print*, '-------------------START OF SIMULATION--------------------'
 
@@ -195,9 +196,9 @@ contains
       !----------------------------------------------------------------
       myinterface%steering = getsteering( yr, myinterface%params_siml )
 
-      ! if (yr == myinterface%params_siml%spinupyears+1 ) then
-      !   print*, '------------------TRANSIENT SIMULATION--------------------'
-      ! endif
+      if (yr == myinterface%params_siml%spinupyears+1 ) then
+        ! print*, '------------------TRANSIENT SIMULATION--------------------'
+      endif
 
 
       !----------------------------------------------------------------
@@ -224,45 +225,6 @@ contains
                                   myinterface%params_siml%firstyeartrend &
                                   )
 
-      ! ! Atmospheric N deposition (note that actual data is not read in all SOFUN setups)
-      ! ndep_field(:) = getninput( &
-      !   "ndep", &
-      !   trim(runname), &
-      !   myinterface%domaininfo, &
-      !   myinterface%steering%forcingyear, &
-      !   myinterface%params_siml%firstyeartrend, &
-      !   myinterface%params_siml%const_ndep_year, &
-      !   myinterface%params_siml%ndep_noy_forcing_file, &
-      !   myinterface%params_siml%ndep_nhx_forcing_file, &
-      !   myinterface%climate(:)&
-      !   )
-      
-      ! ! N fertiliser input (note that actual data is not read in all SOFUN setups)
-      ! nfert_field(:) = getninput( &
-      !   "nfert", &
-      !   trim(runname), &
-      !   myinterface%domaininfo, &
-      !   myinterface%steering%forcingyear, &
-      !   myinterface%params_siml%firstyeartrend, &
-      !   myinterface%params_siml%const_nfert_year, &
-      !   myinterface%params_siml%nfert_noy_forcing_file, &
-      !   myinterface%params_siml%nfert_nhx_forcing_file, &
-      !   myinterface%climate(:)&
-      !   )
-
-      ! ! myInterface holds only total reactive N input (N deposition + N fertiliser)                             
-      ! myinterface%ninput_field(:) = gettot_ninput( nfert_field(:), ndep_field(:) )
-                                   
-      ! ! Get land use information (note that actual data is not read in all SOFUN setups)
-      ! myinterface%landuse(:) = getlanduse( &
-      !   trim(runname), &
-      !   myinterface%domaininfo, &
-      !   myinterface%steering%forcingyear, &
-      !   myinterface%params_siml%do_grharvest_forcing_file, &
-      !   myinterface%params_siml%const_lu_year, &
-      !   myinterface%params_siml%firstyeartrend &
-      !   )
-
       !----------------------------------------------------------------
       ! Get prescribed fAPAR if required (otherwise set to dummy value)
       !----------------------------------------------------------------
@@ -274,10 +236,10 @@ contains
                                           myinterface%steering%forcingyear_idx &
                                           )
 
-      !----------------------------------------------------------------
+      ! ----------------------------------------------------------------
       ! Call SR biosphere at an annual time step but with vectors 
       ! containing data for each day of this year.
-      !----------------------------------------------------------------
+      ! ----------------------------------------------------------------
       ! print*,'--------------------------------------------------------'
       ! print*,'Simulation year: ', myinterface%steering%year, ' - Real year: ', myinterface%steering%outyear
       ! print*,'--------------------------------------------------------'
@@ -296,23 +258,23 @@ contains
         idx_start = (myinterface%steering%forcingyear_idx - 1) * ndayyear + 1
         idx_end   = idx_start + ndayyear - 1
 
-        output(idx_start:idx_end,1) = dble(out_biosphere%fapar(:))  
-        output(idx_start:idx_end,2) = dble(out_biosphere%gpp(:))    
-        output(idx_start:idx_end,3) = dble(out_biosphere%transp(:)) 
-        output(idx_start:idx_end,4) = dble(out_biosphere%latenth(:))
-        output(idx_start:idx_end,5) = 0.d0
+        outarr(idx_start:idx_end,1) = dble(out_biosphere%fapar(:))  
+        outarr(idx_start:idx_end,2) = dble(out_biosphere%gpp(:))    
+        outarr(idx_start:idx_end,3) = dble(out_biosphere%transp(:)) 
+        outarr(idx_start:idx_end,4) = dble(out_biosphere%latenth(:))
+        outarr(idx_start:idx_end,5) = 0.d0
 
       end if
 
     enddo
-
-    ! print*, '--------------------END OF SIMULATION---------------------'
 
     ! clean up
     deallocate(myinterface%grid)
     deallocate(myinterface%climate)
     deallocate(myinterface%soilparams)
     deallocate(myinterface%vegcover)
+
+    ! print*, '--------------------END OF SIMULATION---------------------'
 
   end subroutine sofun_f
 

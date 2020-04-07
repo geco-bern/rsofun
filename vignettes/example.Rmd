@@ -289,7 +289,7 @@ settings_ingestr_fluxnet <- list(
   )
 
 ddf_fluxnet_gpp <- ingestr::ingest(
-  siteinfo = filter(siteinfo, sitename == "FR-Pue"),
+  siteinfo = dplyr::filter(siteinfo, sitename == "FR-Pue"),
   source    = "fluxnet",
   getvars = list(gpp = "GPP_NT_VUT_REF",
                  gpp_unc = "GPP_NT_VUT_SE"),
@@ -303,7 +303,7 @@ Calibrate the model.
 ```{r warning=FALSE, message=FALSE}
 set.seed(1982)
 settings_calib <- calib_sofun(
-  df_drivers = filter(df_drivers, sitename %in% settings_calib$sitenames),  # use only one site
+  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib$sitenames),  # use only one site
   ddf_obs = ddf_fluxnet_gpp,
   settings = settings_calib
   )
@@ -341,7 +341,7 @@ settings_fluxnet <- list(
   )
 
 ddf_eval <- ingest(
-  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
   source    = "fluxnet",
   getvars   = list(gpp = "GPP_NT_VUT_REF",
                    gpp_unc = "GPP_NT_VUT_SE"),
@@ -351,7 +351,7 @@ ddf_eval <- ingest(
   )
 
 mdf_eval <- ingest(
-  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
   source    = "fluxnet",
   getvars   = list(gpp = "GPP_NT_VUT_REF",
                    gpp_unc = "GPP_NT_VUT_SE"),
@@ -361,7 +361,7 @@ mdf_eval <- ingest(
   )
 
 adf_eval <- ingest(
-  siteinfo  = siteinfo %>% filter(sitename %in% mysites),
+  siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
   source    = "fluxnet",
   getvars   = list(gpp = "GPP_NT_VUT_REF",
                    gpp_unc = "GPP_NT_VUT_SE"),
@@ -374,12 +374,12 @@ adf_eval <- ingest(
 Use rsofun to create a standardised object used for benchmarking the model output.
 ```{r}
 settings_eval <- list(
-  benchmark = list( gpp = c("fluxnet2015") ),
+  benchmark = list( gpp = c("fluxnet") ),
   sitenames = mysites,
   agg       = 8  # An integer specifying the number of days used to define the width of bins for daily data aggregated to several days
   )
 obs_eval <- collect_obs_eval( 
-  siteinfo = siteinfo %>% filter(sitename %in% mysites),
+  siteinfo = siteinfo %>% dplyr::filter(sitename %in% mysites),
   settings = settings_eval, 
   adf = adf_eval, 
   mdf = mdf_eval, 
@@ -405,13 +405,13 @@ out_eval <- eval_sofun(
 
 Print some results.
 ```{r}
-out_eval$gpp$fluxnet2015$metrics$xdaily_pooled
+out_eval$gpp$fluxnet$metrics$xdaily_pooled
 ```
 
 Get the [rbeni](https://github.com/stineb/rbeni) R package for nice plotting functions that can be used with the output of `eval_sofun()`.
 ```{r}
 library(rbeni)
-gg <- out_eval$gpp$fluxnet2015$data$xdf %>% analyse_modobs2("mod", "obs", type = "heat")
+gg <- out_eval$gpp$fluxnet$data$xdf %>% analyse_modobs2("mod", "obs", type = "heat")
 gg$gg +
   labs(title = "FR-Pue: modelled vs. observed GPP", 
        x = expression(paste("Modelled GPP (gC m"^{-2}, "d"^{-1}, ")")), 

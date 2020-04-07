@@ -170,7 +170,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
           nest() %>%
           mutate( npoints = purrr::map( data, ~sum( .$validpoint ) ) ) %>%
           unnest( npoints ) %>%
-          filter( npoints > 2 ) %>%
+          dplyr::filter( npoints > 2 ) %>%
           mutate( linmod = purrr::map( data, ~lm( obs ~ mod, data = . ) ),
                   stats  = purrr::map( data, ~get_stats( .$mod, .$obs ) ) ) %>%
           mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
@@ -200,7 +200,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
       #              mutate( nmonths_obs = purrr::map( data, ~sum(!is.na( .$obs )  ) ),
       #                      nmonths_mod = purrr::map( data, ~sum(!is.na( .$mod )  ) ) ) %>%
       #              unnest( nmonths_obs, nmonths_mod ) %>%
-      #              filter( nmonths_obs > 2 & nmonths_mod > 0 ) %>%
+      #              dplyr::filter( nmonths_obs > 2 & nmonths_mod > 0 ) %>%
       #              mutate( linmod = purrr::map( data, ~lm( obs ~ mod, data = ., na.action = na.exclude ) ),
       #                      stats  = purrr::map( data, ~get_stats( .$mod, .$obs ) ) ) %>%
       #              mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
@@ -242,9 +242,9 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
       # ddf_old <- nice_agg %>% dplyr::select( sitename = mysitename, date, mod_old = gpp_pmodel )
       # ddf_new <- lapply( as.list(settings$sitenames),  function(x) dplyr::select( mod[[x]] , date, mod = gpp ) %>% mutate( sitename = x ) ) %>%
       #   bind_rows() %>% left_join( ddf_old, by=c("sitename", "date"))
-      # with( filter(ddf_new, sitename=="AR-Vir"), plot(mod_old, mod) )
-      # with( filter(ddf_new, sitename=="AU-ASM"), plot(mod_old, mod) )
-      # with( filter(ddf_new, sitename=="US-Me2"), plot(mod_old, mod) )
+      # with( dplyr::filter(ddf_new, sitename=="AR-Vir"), plot(mod_old, mod) )
+      # with( dplyr::filter(ddf_new, sitename=="AU-ASM"), plot(mod_old, mod) )
+      # with( dplyr::filter(ddf_new, sitename=="US-Me2"), plot(mod_old, mod) )
       # with( ddf_new, plot( mod_old, mod ) )
     } else {
       meandf <- NA
@@ -268,7 +268,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
           nest() %>%
           mutate( nyears_obs = purrr::map( data, ~sum(!is.na( .$obs )  ) ), nyears_mod = purrr::map( data, ~sum(!is.na( .$mod )  ) ) ) %>%
           unnest( nyears_obs, nyears_mod ) %>%
-          filter( nyears_obs > 2 & nyears_mod > 2 ) %>%
+          dplyr::filter( nyears_obs > 2 & nyears_mod > 2 ) %>%
           mutate( linmod = purrr::map( data, ~lm( obs ~ mod, data = . ) ),
                   stats  = purrr::map( data, ~get_stats( .$mod, .$obs ) ) ) %>%
           mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
@@ -293,7 +293,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
     if (sum(!is.na(ddf$obs))>2){
       rlang::inform("Evaluate mean seasonal cycle...")
       meandoydf <- ddf %>%  mutate( doy = yday(date) ) %>%
-                    filter( doy != 366 ) %>% ## XXXX this is a dirty fix! better force lubridate to ignore leap years when calculating yday()
+                    dplyr::filter( doy != 366 ) %>% ## XXXX this is a dirty fix! better force lubridate to ignore leap years when calculating yday()
                     group_by( sitename, doy ) %>% 
                     summarise( obs_mean = mean( obs, na.rm=TRUE ), obs_min = min( obs, na.rm=TRUE ), obs_max = max( obs, na.rm=TRUE ),
                                mod_mean = mean( mod, na.rm=TRUE ), mod_min = min( mod, na.rm=TRUE ), mod_max = max( mod, na.rm=TRUE )
@@ -318,7 +318,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
           mutate( hemisphere = ifelse( lat>0, "north", "south" ) ) %>%
           # mutate( bias = mod - obs ) %>% 
           dplyr::select( -lat ) %>%
-          filter( doy != 366 ) %>% ## XXXX this is a dirty fix! better force lubridate to ignore leap years when calculating yday()
+          dplyr::filter( doy != 366 ) %>% ## XXXX this is a dirty fix! better force lubridate to ignore leap years when calculating yday()
           group_by( koeppen_code, hemisphere, doy ) %>% 
           summarise( obs_mean  = median( obs, na.rm=TRUE ), obs_min  = quantile( obs, 0.33, na.rm=TRUE ), obs_max  = quantile( obs, 0.66, na.rm=TRUE ),
                      mod_mean  = median( mod, na.rm=TRUE ), mod_min  = quantile( mod, 0.33, na.rm=TRUE ), mod_max  = quantile( mod, 0.66, na.rm=TRUE ),
@@ -333,7 +333,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
         #   nest() %>%
         #   mutate( n_obs  = purrr::map( data, ~sum(!is.na(.$obs_mean)) ) ) %>% 
         #   unnest( n_obs ) %>% 
-        #   filter( n_obs>0, !is.na(koeppen_code) ) %>% 
+        #   dplyr::filter( n_obs>0, !is.na(koeppen_code) ) %>% 
         #   mutate( linmod = purrr::map( data, ~lm( obs_mean ~ mod_mean, data = . ) ),
         #           stats  = purrr::map( data, ~get_stats( .$mod_mean, .$obs_mean ) ) ) %>%
         #   mutate( data   = purrr::map( data, ~add_fitted_alternativenames(.) ) ) %>%
@@ -379,7 +379,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
           nest() %>%
           mutate( ndays_obs = purrr::map( data, ~sum(!is.na( .$obs )  ) ), ndays_mod = purrr::map( data, ~sum(!is.na( .$mod )  ) ) ) %>%
           unnest( ndays_obs, ndays_mod ) %>%
-          filter( ndays_obs > 2 & ndays_mod > 2 ) %>%
+          dplyr::filter( ndays_obs > 2 & ndays_mod > 2 ) %>%
           mutate( linmod = purrr::map( data, ~lm( obs ~ mod, data = . ) ),
                   stats  = purrr::map( data, ~get_stats( .$mod, .$obs ) ) ) %>%
           mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
@@ -444,7 +444,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
           nest() %>%
           mutate( nxdays_obs = purrr::map( data, ~sum(!is.na( .$obs )  ) ), nxdays_mod = purrr::map( data, ~sum(!is.na( .$mod )  ) ) ) %>%
           unnest( nxdays_obs, nxdays_mod ) %>%
-          filter( nxdays_obs > 2 & nxdays_mod > 2 ) %>%
+          dplyr::filter( nxdays_obs > 2 & nxdays_mod > 2 ) %>%
           mutate( linmod = purrr::map( data, ~lm( obs ~ mod, data = . ) ),
                   stats  = purrr::map( data, ~get_stats( .$mod, .$obs ) ) ) %>%
           mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
@@ -706,9 +706,9 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
       ##------------------------------------------------------------
       plot_by_doy_allsites <- function( makepdf = FALSE ){   # using meandoydf_stats
         system( "mkdir -p fig/meandoy_bysite" )
-        # mylist <- readr::read_csv("myselect_fluxnet2015.csv") %>% filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
+        # mylist <- readr::read_csv("myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
         mylist <- c("AU-Tum", "CA-NS3", "CA-NS6", "CA-Obs", "DE-Geb", "DE-Hai", "DE-Kli", "FI-Hyy", "FR-Fon", "FR-LBr", "FR-Pue", "IT-Cpz", "NL-Loo", "US-Ha1", "US-MMS", "US-UMB", "US-WCr")
-        tmp <- purrr::map( filter( meandoydf_stats, sitename %in% mylist )$data, ~plot_by_doy_bysite(., makepdf = makepdf) )
+        tmp <- purrr::map( dplyr::filter( meandoydf_stats, sitename %in% mylist )$data, ~plot_by_doy_bysite(., makepdf = makepdf) )
       }
       
       

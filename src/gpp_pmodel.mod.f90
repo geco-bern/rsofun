@@ -533,20 +533,17 @@ contains
 
       else
 
-        select case (method_optci)
+        if (method_optci == "prentice14") then
+          !-----------------------------------------------------------------------
+          ! B.2 FULL FORMULATION
+          !-----------------------------------------------------------------------
+          out_optchi = calc_optimal_chi( kmm, gammastar, ns_star, ca, vpd )
+        
+        else
 
-          case ("prentice14")
+          stop 'PMODEL: select valid method'
 
-            !-----------------------------------------------------------------------
-            ! B.2 FULL FORMULATION
-            !-----------------------------------------------------------------------
-            out_optchi = calc_optimal_chi( kmm, gammastar, ns_star, ca, vpd )
-          
-          case default
-
-            stop 'PMODEL: select valid method'
-
-        end select
+        end if
 
       end if 
 

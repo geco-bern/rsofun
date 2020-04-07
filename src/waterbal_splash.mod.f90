@@ -279,7 +279,6 @@ contains
     real, dimension(ndayyear) :: daysecs ! daylight seconds for each DOY
     real, dimension(nmonth)   :: monsecs ! daylight seconds for each MOY
 
-
     ! initialise members of solartype
     out_solar%dayl(:)      = 0.0
     out_solar%dra(:)       = 0.0
@@ -288,10 +287,6 @@ contains
     out_solar%meanmppfd(:) = 0.0
 
     do doy=1,ndayyear
-
-      ! Test for comparison with Python SPLASH
-      
-
       ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       ! 2. Calculate heliocentric longitudes (nu and lambda), degrees
       ! Store daily return values for later use in subroutine 'evap'.

@@ -140,14 +140,15 @@ run_sofun_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_soi
 
     out <- out %>%
       as.matrix() %>% 
-      as_tibble() %>%
+      as.data.frame() %>% 
       setNames(c("fapar", "gpp", "transp", "latenth", "XXX")) %>%
-      dplyr::mutate(sitename = sitename) %>% 
+      as_tibble(.name_repair = "check_unique") %>%
+      # dplyr::mutate(sitename = sitename) %>% 
       dplyr::bind_cols(ddf,.) %>% 
       dplyr::select(-year_dec)
 
   } else {
-    out <- tibble(sitename = sitename, date = lubridate::ymd("2000-01-01"), fapar = NA, gpp = NA, transp = NA, latenth = NA, XXX = NA)
+    out <- tibble(date = lubridate::ymd("2000-01-01"), fapar = NA, gpp = NA, transp = NA, latenth = NA, XXX = NA)    # sitename = sitename, 
   }
     
   return(out)

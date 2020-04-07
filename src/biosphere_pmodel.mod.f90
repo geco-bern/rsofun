@@ -118,10 +118,10 @@ contains
                           )
         if (verbose) print*,'... done'
 
-        ! !----------------------------------------------------------------
-        ! ! calculate constant atmospheric pressure as a function of elevation
-        ! !----------------------------------------------------------------
-        ! myinterface%climate(jpngr)%dpatm(:) = calc_patm(myinterface%grid(jpngr)%elv)
+        !----------------------------------------------------------------
+        ! calculate constant atmospheric pressure as a function of elevation
+        !----------------------------------------------------------------
+        myinterface%climate(jpngr)%dpatm(:) = calc_patm(myinterface%grid(jpngr)%elv)
 
         !----------------------------------------------------------------
         ! LOOP THROUGH MONTHS
@@ -147,7 +147,6 @@ contains
             call initdaily_tile( tile_fluxes(:) )
             if (verbose) print*,'... done.'
 
-
             !----------------------------------------------------------------
             ! update canopy and tile variables and simulate daily 
             ! establishment / sprouting
@@ -161,7 +160,6 @@ contains
                               myinterface%fpc_grid(:,jpngr) &
                               )
             if (verbose) print*,'... done'
-
 
             !----------------------------------------------------------------
             ! calculate GPP
@@ -246,10 +244,10 @@ contains
       end if
     end do gridcellloop
 
-    !----------------------------------------------------------------
-    ! Get rolling multi-year averages (needs to store entire arrays)
-    !----------------------------------------------------------------
-    call get_rlm_waterbal( tile(:,:)%soil%phy, myinterface%steering%init )
+    ! !----------------------------------------------------------------
+    ! ! Get rolling multi-year averages (needs to store entire arrays)
+    ! !----------------------------------------------------------------
+    ! call get_rlm_waterbal( tile(:,:)%soil%phy, myinterface%steering%init )
 
 
     if (myinterface%steering%finalize) then
