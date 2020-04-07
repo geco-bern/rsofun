@@ -392,6 +392,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "HW_N", names_prefix = "cohort_") %>%
           mutate(HW_N = ifelse(HW_N==0, NA, HW_N)) %>% dplyr::select(-1)) %>%
+      mutate(year = ifelse(year==-9999, NA, year)) %>%   # XXXXXX 
       tidyr::drop_na(year)
      
     ## annual tile
