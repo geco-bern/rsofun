@@ -183,7 +183,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       as_tibble() %>%
       setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
       tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "year", names_prefix = "cohort_") %>%
-      mutate(year = ifelse(year >= lag(cummax(year), default=0), year, 0)) %>% mutate(year = ifelse(year==0, NA, year)) %>% # Remove the previous years filled by cohorts
+      # mutate(year = ifelse(year >= lag(cummax(year), default=0), year, 0)) %>% # Remove the previous years filled by cohorts
+      mutate(year = ifelse(year==-9999.0, NA, year)) %>%  
         bind_cols(
         .,
         lm3out[[4]] %>%
@@ -191,7 +192,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "doy", names_prefix = "cohort_") %>%
-          mutate(doy = ifelse(doy==0, NA, doy)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[5]] %>%
@@ -199,7 +200,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "hour", names_prefix = "cohort_") %>%
-          mutate(hour = ifelse(hour==0, NA, hour)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[6]] %>%
@@ -207,7 +208,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "cID", names_prefix = "cohort_") %>%
-          mutate(cID = ifelse(cID==0, NA, cID)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[7]] %>%
@@ -215,7 +216,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "PFT", names_prefix = "cohort_") %>%
-          mutate(PFT = ifelse(PFT==0, NA, PFT)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[8]] %>%
@@ -223,7 +224,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "layer", names_prefix = "cohort_") %>%
-          mutate(layer = ifelse(layer==0, NA, layer)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[9]] %>%
@@ -231,7 +232,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "density", names_prefix = "cohort_") %>%
-          mutate(density = ifelse(density==0, NA, density)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[10]] %>%
@@ -239,7 +240,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "f_layer", names_prefix = "cohort_") %>%
-          mutate(f_layer = ifelse(f_layer==0, NA, f_layer)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[11]] %>%
@@ -247,7 +248,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "LAI", names_prefix = "cohort_") %>%
-          mutate(LAI = ifelse(LAI==0, NA, LAI)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[12]] %>%
@@ -255,7 +256,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "gpp", names_prefix = "cohort_") %>%
-          mutate(gpp = ifelse(gpp==0, NA, gpp)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[13]] %>%
@@ -263,7 +264,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "resp", names_prefix = "cohort_") %>%
-          mutate(resp = ifelse(resp==0, NA, resp)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[14]] %>%
@@ -271,7 +272,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "transp", names_prefix = "cohort_") %>%
-          mutate(transp = ifelse(transp==0, NA, transp)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[15]] %>%
@@ -279,7 +280,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPleaf", names_prefix = "cohort_") %>%
-          mutate(NPPleaf = ifelse(NPPleaf==0, NA, NPPleaf)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[16]] %>%
@@ -287,7 +288,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPProot", names_prefix = "cohort_") %>%
-          mutate(NPProot = ifelse(NPProot==0, NA, NPProot)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[17]] %>%
@@ -295,7 +296,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPwood", names_prefix = "cohort_") %>%
-          mutate(NPPwood = ifelse(NPPwood==0, NA, NPPwood)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[18]] %>%
@@ -303,7 +304,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NSC", names_prefix = "cohort_") %>%
-          mutate(NSC = ifelse(NSC==0, NA, NSC)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[19]] %>%
@@ -311,7 +312,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "seedC", names_prefix = "cohort_") %>%
-          mutate(seedC = ifelse(seedC==0, NA, seedC)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[20]] %>%
@@ -319,7 +320,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "leafC", names_prefix = "cohort_") %>%
-          mutate(leafC = ifelse(leafC==0, NA, leafC)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[21]] %>%
@@ -327,7 +328,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "rootC", names_prefix = "cohort_") %>%
-          mutate(rootC = ifelse(rootC==0, NA, rootC)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[22]] %>%
@@ -335,7 +336,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "SW_C", names_prefix = "cohort_") %>%
-          mutate(SW_C = ifelse(SW_C==0, NA, SW_C)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[23]] %>%
@@ -343,7 +344,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "HW_C", names_prefix = "cohort_") %>%
-          mutate(HW_C = ifelse(HW_C==0, NA, HW_C)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[24]] %>%
@@ -351,7 +352,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NSN", names_prefix = "cohort_") %>%
-          mutate(NSN = ifelse(NSN==0, NA, NSN)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[25]] %>%
@@ -359,7 +360,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "seedN", names_prefix = "cohort_") %>%
-          mutate(seedN = ifelse(seedN==0, NA, seedN)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[26]] %>%
@@ -367,7 +368,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "leafN", names_prefix = "cohort_") %>%
-          mutate(leafN = ifelse(leafN==0, NA, leafN)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[27]] %>%
@@ -375,7 +376,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "rootN", names_prefix = "cohort_") %>%
-          mutate(rootN = ifelse(rootN==0, NA, rootN)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[28]] %>%
@@ -383,7 +384,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "SW_N", names_prefix = "cohort_") %>%
-          mutate(SW_N = ifelse(SW_N==0, NA, SW_N)) %>% dplyr::select(-1)) %>%
+          dplyr::select(-1)) %>%
       bind_cols(
         .,
         lm3out[[29]] %>%
@@ -391,8 +392,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
           as_tibble() %>%
           setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
           tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "HW_N", names_prefix = "cohort_") %>%
-          mutate(HW_N = ifelse(HW_N==0, NA, HW_N)) %>% dplyr::select(-1)) %>%
-      mutate(year = ifelse(year==-9999, NA, year)) %>%   # XXXXXX 
+          dplyr::select(-1)) %>%
       tidyr::drop_na(year)
      
     ## annual tile
@@ -408,7 +408,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       as_tibble() %>%
       setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
       tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "year", names_prefix = "cohort_") %>%
-      mutate(year = ifelse(year >= lag(cummax(year), default=0), year, 0)) %>% mutate(year = ifelse(year==0, NA, year)) %>% # Remove the previous years filled by cohorts
+      # mutate(year = ifelse(year >= lag(cummax(year), default=0), year, 0)) %>% # Remove the previous years filled by cohorts
+      mutate(year = ifelse(year==-9999.0, NA, year)) %>% 
       bind_cols(
        .,
       lm3out[[32]] %>%
@@ -416,7 +417,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "cID", names_prefix = "cohort_") %>%
-        mutate(cID = ifelse(cID==0, NA, cID)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[33]] %>%
@@ -424,7 +425,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "PFT", names_prefix = "cohort_") %>%
-        mutate(PFT = ifelse(PFT==0, NA, PFT)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[34]] %>%
@@ -432,7 +433,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "layer", names_prefix = "cohort_") %>%
-        mutate(layer = ifelse(layer==0, NA, layer)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[35]] %>%
@@ -440,7 +441,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "density", names_prefix = "cohort_") %>%
-        mutate(density = ifelse(density==0, NA, density)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[36]] %>%
@@ -448,7 +449,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "f_layer", names_prefix = "cohort_") %>%
-        mutate(f_layer = ifelse(f_layer==0, NA, f_layer)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[37]] %>%
@@ -456,7 +457,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "dDBH", names_prefix = "cohort_") %>%
-        mutate(dDBH = ifelse(dDBH==0, NA, dDBH)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[38]] %>%
@@ -464,7 +465,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "dbh", names_prefix = "cohort_") %>%
-        mutate(dbh = ifelse(dbh==0, NA, dbh)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[39]] %>%
@@ -472,7 +473,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "height", names_prefix = "cohort_") %>%
-        mutate(height = ifelse(height==0, NA, height)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[40]] %>%
@@ -480,7 +481,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Acrown", names_prefix = "cohort_") %>%
-        mutate(Acrown = ifelse(Acrown==0, NA, Acrown)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[41]] %>%
@@ -488,7 +489,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "wood", names_prefix = "cohort_") %>%
-        mutate(wood = ifelse(wood==0, NA, wood)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[42]] %>%
@@ -496,7 +497,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "nsc", names_prefix = "cohort_") %>%
-        mutate(nsc = ifelse(nsc==0, NA, nsc)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[43]] %>%
@@ -504,7 +505,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NSN", names_prefix = "cohort_") %>%
-        mutate(NSN = ifelse(NSN==0, NA, NSN)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[44]] %>%
@@ -512,7 +513,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPtr", names_prefix = "cohort_") %>%
-        mutate(NPPtr = ifelse(NPPtr==0, NA, NPPtr)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[45]] %>%
@@ -520,7 +521,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "seed", names_prefix = "cohort_") %>%
-        mutate(seed = ifelse(seed==0, NA, seed)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[46]] %>%
@@ -528,7 +529,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPL", names_prefix = "cohort_") %>%
-        mutate(NPPL = ifelse(NPPL==0, NA, NPPL)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[47]] %>%
@@ -536,7 +537,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPR", names_prefix = "cohort_") %>%
-        mutate(NPPR = ifelse(NPPR==0, NA, NPPR)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[48]] %>%
@@ -544,23 +545,23 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPW", names_prefix = "cohort_") %>%
-        mutate(NPPW = ifelse(NPPW==0, NA, NPPW)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[49]] %>%
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "GPP_year", names_prefix = "cohort_") %>%
-        mutate(GPP_year = ifelse(GPP_year==0, NA, GPP_year)) %>% dplyr::select(-1)) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "GPP_yr", names_prefix = "cohort_") %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[50]] %>%
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPP_year", names_prefix = "cohort_") %>%
-        mutate(NPP_year = ifelse(NPP_year==0, NA, NPP_year)) %>% dplyr::select(-1)) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPP_yr", names_prefix = "cohort_") %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[51]] %>%
@@ -568,7 +569,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_uptk", names_prefix = "cohort_") %>%
-        mutate(N_uptk = ifelse(N_uptk==0, NA, N_uptk)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[52]] %>%
@@ -576,7 +577,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_fix", names_prefix = "cohort_") %>%
-        mutate(N_fix = ifelse(N_fix==0, NA, N_fix)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[53]] %>%
@@ -584,7 +585,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "maxLAI", names_prefix = "cohort_") %>%
-        mutate(maxLAI = ifelse(maxLAI==0, NA, maxLAI)) %>% dplyr::select(-1)) %>%
+        dplyr::select(-1)) %>%
     tidyr::drop_na(year) 
 
   } else {

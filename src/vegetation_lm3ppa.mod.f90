@@ -1124,8 +1124,10 @@ subroutine vegn_reproduction (vegn)
   seedC = 0.0
   seedN = 0.0
   nPFTs = 0
+
   do k=1, vegn%n_cohorts
      cc => vegn%cohorts(k)
+
      if(cohort_can_reproduce(cc))then
         matchflag = 0
         do i=1,nPFTs
@@ -1192,6 +1194,7 @@ subroutine vegn_reproduction (vegn)
         cc%bHW     = 0.0 * sp%seedlingsize
         cc%seedC   = 0.0
         cc%nsc     = sp%seedlingsize - cc%bsw -cc%br !
+        
         call rootarea_and_verticalprofile(cc)
 
 !!      Nitrogen pools
@@ -1206,6 +1209,10 @@ subroutine vegn_reproduction (vegn)
 
         vegn%totNewCC = vegn%totNewCC + cc%nindivs*(cc%bl + cc%br + cc%bsw + cc%bHW + cc%nsc)
         vegn%totNewCN = vegn%totNewCN + cc%nindivs*(cc%leafN + cc%rootN + cc%sapwN + cc%woodN + cc%NSN)
+
+  ! print*, '3 totNewCC', vegn%totNewCC
+  ! print*, '3 cc%nindivs*', cc%nindivs*(cc%bl + cc%br + cc%bsw + cc%bHW + cc%nsc)
+
 
         call init_cohort_allometry(cc)
 !!        !! seeds fail

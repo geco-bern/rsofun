@@ -865,8 +865,10 @@ subroutine summarize_tile(vegn)
 
   vegn%LAI     = 0.0
   vegn%CAI     = 0.0
+
   do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
+
         ! Vegn C pools:
         vegn%NSC     = vegn%NSC      + cc%NSC       * cc%nindivs
         vegn%SeedC   = vegn%SeedC    + cc%seedC     * cc%nindivs
@@ -1150,8 +1152,6 @@ end subroutine hourly_diagnostics
 
    type(vegn_tile_type), intent(inout) :: vegn
    integer, intent(in) :: iyears
-   ! type(outtype_annual_cohorts), dimension(out_max_cohorts), intent(out) :: out_annual_cohorts
-   ! type(outtype_annual_tile), intent(out) :: out_annual_tile
    type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts
    type(outtype_annual_tile) :: out_annual_tile
    
@@ -1238,6 +1238,15 @@ end subroutine hourly_diagnostics
     soilN     = vegn%MicrobialN + vegn%metabolicN + vegn%structuralN + vegn%mineralN
     vegn%totN = plantN + soilN
     
+    ! out_annual_tile%Seedling_C = 0.0
+    ! out_annual_tile%Seedling_N = 0.0
+
+
+    print*, '1 out_annual_tile%Seedling_C', out_annual_tile%Seedling_C
+    print*, '1 out_annual_tile%Seedling_N', out_annual_tile%Seedling_N
+    print*, '1 vegn%totNewCC', vegn%totNewCC
+    print*, '1 vegn%totNewCN', vegn%totNewCN
+
     out_annual_tile%year       = iyears
     out_annual_tile%CAI        = vegn%CAI
     out_annual_tile%LAI        = vegn%LAI
@@ -1284,6 +1293,10 @@ end subroutine hourly_diagnostics
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
 
      ! print*,'annual_diagnostics() : vegn%CAI, vegn%LAI ', vegn%CAI, vegn%LAI
+    print*, '2 out_annual_tile%Seedling_C', out_annual_tile%Seedling_C
+    print*, '2 out_annual_tile%Seedling_N', out_annual_tile%Seedling_N
+    print*, '2 vegn%totNewCC', vegn%totNewCC
+    print*, '2 vegn%totNewCN', vegn%totNewCN
 
 
     ! I cannot figure out why N losing. Hack!

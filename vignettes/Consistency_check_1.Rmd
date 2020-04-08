@@ -232,7 +232,7 @@ plot_modobs_byvar <- function(var, df_biomeE, df_sofun){
 
 ## Running BiomeE-Allocation in terminal and getting outputs as csv files
 
-```{r, include=F, eval=F}
+```{r, include=F, eval=T}
 setwd(path_orig_model_L)
 system("gfortran src/main.f90 src/datatypes.f90 src/soil.f90 src/vegetation.f90 -o ess")
 system("./ess")
@@ -251,7 +251,7 @@ biomeE_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 
 ## Running SOFUN in terminal and getting outputs as csv files
 
-```{r, include=F, eval=F}
+```{r, include=F, eval=T}
 setwd(path_sofun_model_L)
 system("git checkout lm3ppa_BiomeE_test_rsofun")
 system("make clean")
@@ -273,9 +273,30 @@ sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
 ### Plots of hourly tile outputs
 
 ```{r, include=F, eval=F}
+varnams_hourly_tile_biomeE <- names(biomeE_out_hourly_tile)[c(-1, -length(names(biomeE_out_hourly_tile)))]
+varnams_hourly_tile_sofun <- names(sofun_out_hourly_tile)[c(-1,-length(names(biomeE_out_hourly_tile)))]
+all.equal(varnams_hourly_tile_biomeE, varnams_hourly_tile_sofun)
+
+for (varnam in varnams_hourly_tile_biomeE[1:15]){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, biomeE_out_hourly_tile, sofun_out_hourly_tile)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, biomeE_out_hourly_tile, sofun_out_hourly_tile)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_hourly_tile_biomeE),
+                         ~plot_modobs_byvar(., biomeE_out_hourly_tile, sofun_out_hourly_tile))
+```
+
+```{r, include=T, eval=T}
 # Other option for plots using ggplot2()
 dim(biomeE_out_hourly_tile)
 dim(sofun_out_hourly_tile)
+biomeE_out_hourly_tile <- biomeE_out_hourly_tile[,-16]
+sofun_out_hourly_tile <- sofun_out_hourly_tile[,-16]
 
 plot_dfs <- lapply(names(biomeE_out_hourly_tile),function(nm)data.frame(col1 = biomeE_out_hourly_tile[,nm], col2 = sofun_out_hourly_tile[,nm]))
 
@@ -287,10 +308,29 @@ for (idx in seq_along(plot_dfs))
 ### Plots of daily tile outputs
 
 ```{r, include=F, eval=F}
+varnams_daily_tile_biomeE <- names(biomeE_out_daily_tile)[c(-1, -length(names(biomeE_out_daily_tile)))]
+varnams_daily_tile_sofun <- names(sofun_out_daily_tile)[c(-1,-length(names(biomeE_out_daily_tile)))]
+all.equal(varnams_daily_tile_biomeE, varnams_daily_tile_sofun)
+
+for (varnam in varnams_daily_tile_biomeE[1:34]){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, biomeE_out_daily_tile, sofun_out_daily_tile)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, biomeE_out_daily_tile, sofun_out_daily_tile)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_daily_tile_biomeE),
+                         ~plot_modobs_byvar(., biomeE_out_daily_tile, sofun_out_daily_tile))
+```
+
+```{r, include=T, eval=T}
 # Other option for plots using ggplot2()
 dim(biomeE_out_daily_tile)
 dim(sofun_out_daily_tile)
-biomeE_out_daily_tile <- subset(biomeE_out_daily_tile, year <= 1800)[,-36]
+biomeE_out_daily_tile <- biomeE_out_daily_tile[,-36]
 sofun_out_daily_tile <- sofun_out_daily_tile[,-36]
 
 plot_dfs <- lapply(names(biomeE_out_daily_tile),function(nm)data.frame(col1 = biomeE_out_daily_tile[,nm], col2 = sofun_out_daily_tile[,nm]))
@@ -303,17 +343,39 @@ for (idx in seq_along(plot_dfs))
 ### Plots of daily cohorts outputs
 
 ```{r, include=F, eval=F}
+varnams_daily_cohorts_biomeE <- names(biomeE_out_daily_cohorts)[c(-1, -length(names(biomeE_out_daily_cohorts)))]
+varnams_daily_cohorts_sofun <- names(sofun_out_daily_cohorts)[c(-1,-length(names(biomeE_out_daily_cohorts)))]
+all.equal(varnams_daily_cohorts_biomeE, varnams_daily_cohorts_sofun)
+
+for (varnam in varnams_daily_cohorts_biomeE[1:2]){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, biomeE_out_daily_cohorts, sofun_out_daily_cohorts)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, biomeE_out_daily_cohorts, sofun_out_daily_cohorts)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_daily_cohorts_biomeE),
+                         ~plot_modobs_byvar(., biomeE_out_daily_cohorts, sofun_out_daily_cohorts))
+```
+
+```{r, include=T, eval=T}
 # Other option for plots using ggplot2()
 dim(biomeE_out_daily_cohorts)
 dim(sofun_out_daily_cohorts)
-sofun_out_daily_cohorts <- sofun_out_daily_cohorts[1:12461830,][,-28]
 biomeE_out_daily_cohorts <- biomeE_out_daily_cohorts[,-28]
+sofun_out_daily_cohorts <- sofun_out_daily_cohorts[,-28]
 
-plot_dfs <- lapply(names(biomeE_out_daily_cohorts),function(nm)data.frame(col1 = biomeE_out_daily_cohorts[,nm], col2 = sofun_out_daily_cohorts[,nm]))
+biomeE_out_daily_cohorts_short <- biomeE_out_daily_cohorts[1:100000,]
+sofun_out_daily_cohorts_short <- sofun_out_daily_cohorts[1:100000,]
+
+plot_dfs <- lapply(names(biomeE_out_daily_cohorts_short),function(nm)data.frame(col1 = biomeE_out_daily_cohorts_short[,nm], col2 = sofun_out_daily_cohorts_short[,nm]))
 
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
-      ggtitle(names(biomeE_out_daily_cohorts)[idx]))
+      ggtitle(names(biomeE_out_daily_cohorts_short)[idx]))
 ```
 
 ### Plots of annual tile outputs
@@ -337,11 +399,12 @@ out_modobs <- purrr::map(as.list(varnams_annual_tile_biomeE),
                          ~plot_modobs_byvar(., biomeE_out_annual_tile, sofun_out_annual_tile))
 ```
 
-```{r, include=F, eval=F}
+```{r, include=T, eval=T}
 # Other option for plots using ggplot2()
 dim(biomeE_out_annual_tile)
 dim(sofun_out_annual_tile)
-sofun_out_annual_tile <- sofun_out_annual_tile[1:1804,]
+biomeE_out_annual_tile <- biomeE_out_annual_tile[,-45]
+sofun_out_annual_tile <- sofun_out_annual_tile[,-45]
 
 plot_dfs <- lapply(names(biomeE_out_annual_tile),function(nm)data.frame(col1 = biomeE_out_annual_tile[,nm], col2 = sofun_out_annual_tile[,nm]))
 
@@ -355,12 +418,12 @@ See that N_fxd and N_loss plots are empty because these variables are equal to 0
 
 ### Plots of annual cohorts outputs
 
-```{r, include=T, eval=T}
+```{r, include=F, eval=F}
 varnams_annual_cohorts_biomeE <- names(biomeE_out_annual_cohorts)[c(-1, -length(names(biomeE_out_annual_cohorts)))]
 varnams_annual_cohorts_sofun <- names(sofun_out_annual_cohorts)[c(-1, -length(names(sofun_out_annual_cohorts)))]
 all.equal(varnams_annual_cohorts_biomeE, varnams_annual_cohorts_sofun)
 
-for (varnam in varnams_annual_cohorts_biomeE[1:10]){
+for (varnam in varnams_annual_cohorts_biomeE[1:23]){
   print(varnam)
   
   gg <- plot_tseries_byvar(varnam, biomeE_out_annual_cohorts, sofun_out_annual_cohorts)
@@ -374,18 +437,17 @@ out_modobs <- purrr::map(as.list(varnams_annual_cohorts_biomeE),
                          ~plot_modobs_byvar(., biomeE_out_annual_cohorts, sofun_out_annual_cohorts))
 ```
 
-```{r, include=F, eval=F}
+```{r, include=T, eval=T}
 # Other option for plots using ggplot2()
 dim(biomeE_out_annual_cohorts)
 dim(sofun_out_annual_cohorts)
-sofun_out_annual_cohorts <- sofun_out_annual_cohorts[1:30626,][,-24]
+sofun_out_annual_cohorts <- sofun_out_annual_cohorts[,-24]
 biomeE_out_annual_cohorts <- biomeE_out_annual_cohorts[,-24]
 
 plot_dfs <- lapply(names(biomeE_out_annual_cohorts),function(nm)data.frame(col1 = biomeE_out_annual_cohorts[,nm], col2 = sofun_out_annual_cohorts[,nm]))
 
 for (idx in seq_along(plot_dfs))
   print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
-      geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="red")+
       ggtitle(names(biomeE_out_annual_cohorts)[idx]))
 
 ```

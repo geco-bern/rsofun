@@ -34,7 +34,7 @@ Now specify the simulation parameters that are identical for all site-scale simu
 ```{r}
 params_siml <- list(
       spinup                = TRUE,
-      spinupyears           = 1800,
+      spinupyears           = 1793,
       recycle               = 11, # 9 or 11
       firstyeartrend        = 1998,
       nyeartrend            = 11, #9 or 11
@@ -195,6 +195,8 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_cohort, 
                             init_soil, 
                             makecheck = TRUE)
+
+
 
 moddf_drivers <- collect_drivers_sofun( 
   settings       = settings_sims, 

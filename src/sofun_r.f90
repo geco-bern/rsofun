@@ -703,7 +703,7 @@ contains
       output_annual_cohorts_N_fix(yr, :)   = dble(out_biosphere%annual_cohorts(:)%N_fix)
       output_annual_cohorts_maxLAI(yr, :)  = dble(out_biosphere%annual_cohorts(:)%maxLAI)
 
-      print*,'output_annual_cohorts_year',output_annual_cohorts_year(yr,:)
+      ! print*,'output_annual_cohorts_year',output_annual_cohorts_year(yr,:)
 
       ! print*, 'out_biosphere%annual_cohorts(:)%year)', out_biosphere%annual_cohorts(:)%year
 
