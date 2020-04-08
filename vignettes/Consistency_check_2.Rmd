@@ -548,7 +548,7 @@ rsofun_out_annual_tile <- as.data.frame(rsofun_out_annual_tile)
 plot_dfs <- lapply(names(sofun_out_annual_tile),function(nm)data.frame(col1 = sofun_out_annual_tile[,nm], col2 = rsofun_out_annual_tile[,nm]))
 
 for (idx in seq_along(plot_dfs))
-  print(ggplot()+geom_line(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
       ggtitle(names(sofun_out_annual_tile)[idx]))
 ```
 

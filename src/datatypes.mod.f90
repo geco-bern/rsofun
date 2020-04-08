@@ -1241,11 +1241,10 @@ end subroutine hourly_diagnostics
     ! out_annual_tile%Seedling_C = 0.0
     ! out_annual_tile%Seedling_N = 0.0
 
-
-    print*, '1 out_annual_tile%Seedling_C', out_annual_tile%Seedling_C
-    print*, '1 out_annual_tile%Seedling_N', out_annual_tile%Seedling_N
-    print*, '1 vegn%totNewCC', vegn%totNewCC
-    print*, '1 vegn%totNewCN', vegn%totNewCN
+    ! print*, '1 out_annual_tile%Seedling_C', out_annual_tile%Seedling_C
+    ! print*, '1 out_annual_tile%Seedling_N', out_annual_tile%Seedling_N
+    ! print*, '1 vegn%totNewCC', vegn%totNewCC
+    ! print*, '1 vegn%totNewCN', vegn%totNewCN
 
     out_annual_tile%year       = iyears
     out_annual_tile%CAI        = vegn%CAI
@@ -1292,11 +1291,11 @@ end subroutine hourly_diagnostics
     out_annual_tile%Seedling_C = vegn%totNewCC*1000
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
 
-     ! print*,'annual_diagnostics() : vegn%CAI, vegn%LAI ', vegn%CAI, vegn%LAI
-    print*, '2 out_annual_tile%Seedling_C', out_annual_tile%Seedling_C
-    print*, '2 out_annual_tile%Seedling_N', out_annual_tile%Seedling_N
-    print*, '2 vegn%totNewCC', vegn%totNewCC
-    print*, '2 vegn%totNewCN', vegn%totNewCN
+    ! print*,'annual_diagnostics() : vegn%CAI, vegn%LAI ', vegn%CAI, vegn%LAI
+    ! print*, '2 out_annual_tile%Seedling_C', out_annual_tile%Seedling_C
+    ! print*, '2 out_annual_tile%Seedling_N', out_annual_tile%Seedling_N
+    ! print*, '2 vegn%totNewCC', vegn%totNewCC
+    ! print*, '2 vegn%totNewCN', vegn%totNewCN
 
 
     ! I cannot figure out why N losing. Hack!
