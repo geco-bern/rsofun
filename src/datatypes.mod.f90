@@ -931,25 +931,6 @@ end subroutine summarize_tile
   ! xxx test: removing condition
     if (.not. myinterface%steering%spinup) then
 
-        ! xxx debug XXX PROBLEM WITH POPULATING out_hourly_tile
-        ! if (ihour==1.0 .and. idoy==1.0) then
-        !   print*,iyears    
-        !   print*,idoy   
-        !   print*,ihour    
-        !   print*,forcing%radiation    !forcingData 
-        !   print*,forcing%Tair         !forcingData  
-        !   print*,forcing%rain         !forcingData 
-        !   print*,vegn%GPP  
-        !   print*,vegn%resp   
-        !   print*,vegn%transp
-        !   print*,vegn%evap   
-        !   print*,vegn%runoff   
-        !   print*,vegn%soilwater
-        !   print*,vegn%wcl(1)    
-        !   print*,vegn%FLDCAP
-        !   print*,vegn%WILTPT
-        ! end if
-
         out_hourly_tile%year      =  iyears    
         out_hourly_tile%doy       =  idoy   
         out_hourly_tile%hour      =  ihour    
@@ -1005,6 +986,9 @@ end subroutine hourly_diagnostics
 
     ! re-initialise to avoid elements not updated when number 
     ! of cohorts declines from one year to the next
+
+    ! if (.not. myinterface%steering%spinup) then 
+
     out_daily_cohorts(:)%year    = dummy
     out_daily_cohorts(:)%doy     = dummy
     out_daily_cohorts(:)%hour    = dummy
@@ -1033,12 +1017,16 @@ end subroutine hourly_diagnostics
     out_daily_cohorts(:)%SW_N    = dummy
     out_daily_cohorts(:)%HW_N    = dummy
 
+    ! endif
+
     ! Output and zero daily variables
     !!! daily !! cohorts output
     do i = 1, vegn%n_cohorts
 
       cc => vegn%cohorts(i)
       
+      if (.not. myinterface%steering%spinup) then 
+
       out_daily_cohorts(i)%year    = iyears
       out_daily_cohorts(i)%doy     = idoy
       out_daily_cohorts(i)%hour    = i !1.0 ! doesn-t make sense !xxx debugging
@@ -1067,6 +1055,8 @@ end subroutine hourly_diagnostics
       out_daily_cohorts(i)%SW_N    = cc%sapwN*1000
       out_daily_cohorts(i)%HW_N    = cc%woodN*1000
 
+      endif
+
       ! annual sum
       cc%annualGPP = cc%annualGPP + cc%dailyGPP
       cc%annualNPP = cc%annualNPP + cc%dailyNPP
@@ -1081,6 +1071,9 @@ end subroutine hourly_diagnostics
     enddo
 
     !! Tile level, daily
+
+    if (.not. myinterface%steering%spinup) then 
+
     call summarize_tile(vegn)
 
     out_daily_tile%year      = iyears
@@ -1118,6 +1111,8 @@ end subroutine hourly_diagnostics
     out_daily_tile%slowSoilN = vegn%structuralN*1000
     out_daily_tile%mineralN  = vegn%mineralN*1000
     out_daily_tile%N_uptk    = vegn%dailyNup*1000
+
+    endif
 
     !annual tile
     ! Annual summary:

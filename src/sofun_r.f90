@@ -620,16 +620,18 @@ contains
       !----------------------------------------------------------------
       ! Output out_daily_tile (calling subroutine)
       !----------------------------------------------------------------
-      idx_daily_start  = (yr - 1) * ndayyear + 1
-      idx_daily_end    = idx_daily_start + ndayyear - 1
-      call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
-    
-      ! if (.not. myinterface%steering%spinup) then    !!xxx uncommented for testing
-      !   idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1    ! To exclude the spinup years and include only the transient years
-      !   idx_daily_end   = idx_daily_start + ndayyear - 1
-      !   call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
-      ! end if
+      ! Output during spinup and transient years
 
+      ! idx_daily_start  = (yr - 1) * ndayyear + 1
+      ! idx_daily_end    = idx_daily_start + ndayyear - 1
+      ! call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
+    
+      ! Output only for transient years
+
+      if (.not. myinterface%steering%spinup) then  
+        idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1  
+        idx_daily_end   = idx_daily_start + ndayyear - 1
+        call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
 
       ! print*, "size daily tile", size(out_biosphere%daily_tile(:)), size(output_daily_tile(idx_daily_start:idx_daily_end, :))
       ! print*, "idx_daily_start  idx_daily_end  ndayyear", idx_daily_start,idx_daily_end, ndayyear
@@ -638,6 +640,7 @@ contains
       ! ----------------------------------------------------------------
       ! Output out_daily_cohorts (without subroutine)
       ! ----------------------------------------------------------------
+
       output_daily_cohorts_year(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%year)
       output_daily_cohorts_doy(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%doy)
       output_daily_cohorts_hour(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%hour)
@@ -665,6 +668,10 @@ contains
       output_daily_cohorts_rootN(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%rootN)
       output_daily_cohorts_SW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%SW_N)
       output_daily_cohorts_HW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%HW_N)
+
+      end if
+
+      ! print*, 'out_biosphere%daily_cohorts(1,2)%year', out_biosphere%daily_cohorts(1,2)%year
 
       !----------------------------------------------------------------
       ! Output out_annual_tile (calling subroutine)

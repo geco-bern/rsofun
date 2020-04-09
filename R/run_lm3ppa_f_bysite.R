@@ -184,7 +184,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
       tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "year", names_prefix = "cohort_") %>%
       # mutate(year = ifelse(year >= lag(cummax(year), default=0), year, 0)) %>% # Remove the previous years filled by cohorts
-      mutate(year = ifelse(year==-9999.0, NA, year)) %>%  
+      mutate(year = ifelse(year==-9999.0, NA, year)) %>%  mutate(year = ifelse(year==0, NA, year)) %>%
         bind_cols(
         .,
         lm3out[[4]] %>%
