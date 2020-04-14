@@ -2098,6 +2098,13 @@ subroutine initialize_vegn_tile(vegn,nCohorts)
     f_N_add     = myinterface%params_tile%f_N_add      ! is indeed a tile parameter
     f_initialBSW= myinterface%params_tile%f_initialBSW 
 
+    ! additional initialisations
+    ! introduced by Laura Marques
+    vegn%totseedC = 0.0
+    vegn%totseedN = 0.0
+    vegn%totNewCC = 0.0
+    vegn%totNewCN = 0.0
+
 !  Read parameters from the parameter file (namelist)
    if(read_from_parameter_file)then
 
@@ -2113,11 +2120,11 @@ subroutine initialize_vegn_tile(vegn,nCohorts)
          cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
          cx%layer   = 1
          cx%species = myinterface%init_cohort(i)%init_cohort_species 
-         cx%ccID =  i
+         cx%ccID    =  i
          cx%nsc     = myinterface%init_cohort(i)%init_cohort_nsc
          cx%nindivs = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
          cx%bsw     = myinterface%init_cohort(i)%init_cohort_bsw
-         cx%bHW   = myinterface%init_cohort(i)%init_cohort_bHW
+         cx%bHW     = myinterface%init_cohort(i)%init_cohort_bHW
          btotal     = cx%bsw + cx%bHW  ! kgC /tree
          call initialize_cohort_from_biomass(cx,btotal)
       enddo
