@@ -411,7 +411,8 @@ out_eval$gpp$fluxnet$metrics$xdaily_pooled
 Get the [rbeni](https://github.com/stineb/rbeni) R package for nice plotting functions that can be used with the output of `eval_sofun()`.
 ```{r}
 library(rbeni)
-gg <- out_eval$gpp$fluxnet$data$xdf %>% analyse_modobs2("mod", "obs", type = "heat")
+gg <- out_eval$gpp$fluxnet$data$xdf %>% 
+  analyse_modobs2("mod", "obs", type = "heat")
 gg$gg +
   labs(title = "FR-Pue: modelled vs. observed GPP", 
        x = expression(paste("Modelled GPP (gC m"^{-2}, "d"^{-1}, ")")), 

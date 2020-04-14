@@ -210,7 +210,6 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     parallel = FALSE
     ) %>%   
     dplyr::select(sitename, data) %>% 
-    dplyr::rename(id = sitename) %>% 
     tidyr::unnest(data) %>% 
     dplyr::rename(gpp_mod = gpp) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
@@ -273,7 +272,6 @@ cost_rmse_fullstack <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     parallel = FALSE
     ) %>%   
     dplyr::select(sitename, data) %>% 
-    dplyr::rename(id = sitename) %>% 
     tidyr::unnest(data) %>% 
     dplyr::rename(gpp_mod = gpp) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
@@ -312,7 +310,6 @@ cost_rmse_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     parallel = FALSE
     ) %>%   
     dplyr::select(sitename, data) %>% 
-    dplyr::rename(id = sitename) %>% 
     tidyr::unnest(data) %>% 
     dplyr::rename(latenth_mod = latenth) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
@@ -358,7 +355,6 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
     parallel = FALSE
     ) %>%   
     dplyr::select(sitename, data) %>% 
-    dplyr::rename(id = sitename) %>% 
     tidyr::unnest(data) %>% 
     dplyr::rename(latenth_mod = latenth) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
