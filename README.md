@@ -45,7 +45,7 @@ The `rsofun` package requires a large number of other R-packages (dependencies).
 
 ## Example
 
-See [here](https://rpubs.com/stineb/rsofun) for an example.
+See vignette [Example for using rsofun](./articles/example.html) for how to run the model, and [Prepare rsofun forcing data](./articles/prepare_inputs_rsofun.html) for how to use the [ingestr R package ](https://stineb.github.io/ingestr/) for collecting the forcing data to run rsofun. 
 
 ## Usage and contribution
 

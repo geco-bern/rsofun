@@ -1,6 +1,5 @@
 Package: rsofun
-Title: Implements the SOFUN modelling framework for simulating terrestrial processes, including model
-  calibration and benchmarking.
+Title: SOFUN in R
 Version: 0.3.0
 Authors@R: c(person("Benjamin", "Stocker", email = "benjamin.stocker@gmail.com", role = c("aut", "cre")))
 Description: Implements the SOFUN modelling framework for simulating terrestrial processes, including model
@@ -10,3 +9,4 @@ LazyData: true
 Depends: dplyr, purrr, lubridate, tidyr, raster, lubridate, stringi, sp, GenSA, stringr, rlang, readr
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr
+URL: https://github.com/stineb/ingestr
