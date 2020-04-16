@@ -1,8 +1,9 @@
-module md_params_soil
+module md_params_soil_pmodel
   !////////////////////////////////////////////////////////////////
   ! Module handling soil parameters
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, mydb=>real64, mysg=>real32
+  use md_params_core_pmodel, only: nlayers_soil
 
   implicit none
 
@@ -30,13 +31,11 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Function to calculate soil parameters from texture info.
     !----------------------------------------------------------------
-    use md_params_core, only: nlayers_soil
-
     ! arguments
     real(kind=mydb), dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: fractions of sand, clay, organic, gravel; columns: top, bottom)
 
     ! function return variable
-    type(paramtype_soil), dimension(nlayers_soil,1) :: params_soil
+    type(paramtype_soil) :: params_soil
 
     ! ADOPTED FROM David Sandoval (https://github.com/dsval/rsplash/blob/master/R/splash.point.R)
     ! ************************************************************************
@@ -60,7 +59,6 @@ contains
     ! local variables
     real(kind=mysg) :: fsand, fclay, forg, fgravel, fsand_forg, fclay_forg, &
       fsand_fclay, dp, bd, sat, fc, pwp, L_10_Ksat, ksat, whc_dz
-    integer idx
 
     ! from David's code
     real(kind=mysg), parameter :: depth    =  30.0
@@ -79,13 +77,12 @@ contains
     real(kind=mysg), parameter :: b_ks = 3.0924   ! 3.12048
     real(kind=mysg), parameter :: c_ks = 4.2146   ! 4.358185
 
-    do idx = 1, nlayers_soil
+    ! do idx = 1, nlayers_soil
 
-      ! topsoil
-      fsand   = real(soiltexture(1,idx))
-      fclay   = real(soiltexture(2,idx))
-      forg    = real(soiltexture(3,idx))
-      fgravel = real(soiltexture(4,idx))
+      fsand   = real(soiltexture(1,1))
+      fclay   = real(soiltexture(2,1))
+      forg    = real(soiltexture(3,1))
+      fgravel = real(soiltexture(4,1))
 
       fsand_forg  = fsand * forg
       fclay_forg  = fclay * forg
@@ -178,21 +175,21 @@ contains
       whc_dz = (fc-pwp)*(1-fgravel)
 
       ! add to soil paramters type
-      params_soil(idx,:)%fsand        = real(fsand)
-      params_soil(idx,:)%fclay        = real(fclay)
-      params_soil(idx,:)%forg         = real(forg)
-      params_soil(idx,:)%fgravel      = real(fgravel)
-      params_soil(idx,:)%fc           = real(fc)
-      params_soil(idx,:)%pwp          = real(pwp)
-      params_soil(idx,:)%whc_dz       = real(whc_dz)
-      params_soil(idx,:)%ksat         = real(ksat)
-      params_soil(idx,:)%thdiff_wp    = 0.2    ! value chosen from LPX (most soil codes have 0.2)
-      params_soil(idx,:)%thdiff_whc15 = 0.6 ! value chosen from LPX (most soil codes have 0.2)
-      params_soil(idx,:)%thdiff_fc    = 0.4
+      params_soil%fsand        = real(fsand)
+      params_soil%fclay        = real(fclay)
+      params_soil%forg         = real(forg)
+      params_soil%fgravel      = real(fgravel)
+      params_soil%fc           = real(fc)
+      params_soil%pwp          = real(pwp)
+      params_soil%whc_dz       = real(whc_dz)
+      params_soil%ksat         = real(ksat)
+      params_soil%thdiff_wp    = 0.2    ! value chosen from LPX (most soil codes have 0.2)
+      params_soil%thdiff_whc15 = 0.6 ! value chosen from LPX (most soil codes have 0.2)
+      params_soil%thdiff_fc    = 0.4
 
-    end do
+    ! end do
 
   end function getsoil
 
-end module md_params_soil
+end module md_params_soil_pmodel
 

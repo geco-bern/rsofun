@@ -1,4 +1,4 @@
-module md_plant
+module md_plant_pmodel
   !////////////////////////////////////////////////////////////////
   !  Module contains (constrainable) model parameters.
   !  Model parameters adopted here are from LPX C3 grass PFT
@@ -7,7 +7,7 @@ module md_plant
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
-  use md_params_core
+  use md_params_core_pmodel
 
   implicit none
 
@@ -112,7 +112,7 @@ contains
     ! light conditions (meanmppfd) and the Rubisco-N per unit absorbed
     ! light.
     !----------------------------------------------------------------
-    use md_params_core, only: nmonth
+    use md_params_core_pmodel, only: nmonth
 
     ! arguments
     real, intent(in)                    :: mylai
@@ -150,7 +150,7 @@ contains
     ! Narea_metabolic  = predicted
     ! Narea_structural = rN:C_struct * LMA
     !----------------------------------------------------------------
-    use md_params_core, only: c_content_of_biomass, nmonth, n_molmass, c_molmass
+    use md_params_core_pmodel, only: c_content_of_biomass, nmonth, n_molmass, c_molmass
 
     ! arguments
     type( plant_type ), intent(inout)   :: plant
@@ -188,7 +188,7 @@ contains
     ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------    
     use md_sofunutils, only: getparreal
-    use md_interface
+    use md_interface_pmodel
 
     ! local variables
     integer :: pft
@@ -253,7 +253,7 @@ contains
     ! Read PFT parameters from respective file, given the PFT name
     !----------------------------------------------------------------
     use md_sofunutils, only: getparreal
-    use md_params_core, only: lunat
+    use md_params_core_pmodel, only: lunat
 
     ! arguments
     character(len=*), intent(in) :: pftname
@@ -345,31 +345,27 @@ contains
   end function getpftparams
 
 
-  subroutine initglobal_plant( plant, ngridcells )
+  subroutine initglobal_plant( plant )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
     !  June 2014
     !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
-    use md_params_core, only: npft
+    use md_params_core_pmodel, only: npft
 
     ! argument
-    type( plant_type ), dimension(npft,ngridcells), intent(inout) :: plant
-    integer, intent(in) :: ngridcells
+    type( plant_type ), dimension(npft), intent(inout) :: plant
 
     ! local variables
     integer :: pft
-    integer :: jpngr
 
     !-----------------------------------------------------------------------------
     ! derive which PFTs are present from fpc_grid (which is prescribed)
     !-----------------------------------------------------------------------------
-    do jpngr=1,ngridcells
-      do pft=1,npft
-        call initpft( plant(pft,jpngr) )
-        plant(pft,jpngr)%pftno = pft
-      end do
+    do pft=1,npft
+      call initpft( plant(pft) )
+      plant(pft)%pftno = pft
     end do
 
   end subroutine initglobal_plant
@@ -417,4 +413,4 @@ contains
   end subroutine initdaily_plant
 
 
-end module md_plant
+end module md_plant_pmodel

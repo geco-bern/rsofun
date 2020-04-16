@@ -1,4 +1,4 @@
-module md_params_core
+module md_params_core_pmodel
   !////////////////////////////////////////////////////////////////
   ! This module contains parameters that are not modified, but needed
   ! to define variables, dimension lengths, etc.
@@ -8,6 +8,7 @@ module md_params_core
   implicit none
 
   integer, parameter :: ndayyear = 365           ! number of days in a year
+  integer, parameter :: nhoursyear = 8760        ! number of days in a year
   integer, parameter :: nmonth = 12              ! number of months in a year
   real,    parameter :: secs_per_day = 86400.0   ! number of seconds in a day
   integer, parameter :: maxgrid = 1              ! number of spatial gridcells (dummy dimension for later code extension)
@@ -50,4 +51,4 @@ module md_params_core
   real, parameter :: cp = 1004.834               ! specific heat of air for constant pressure (J K-1 kg-1); from bigleaf R package
   real, parameter :: Rd = 287.0586               ! gas constant of dry air (J kg-1 K-1) (Foken 2008 p. 245; from bigleaf R package)
 
-end module md_params_core
+end module md_params_core_pmodel

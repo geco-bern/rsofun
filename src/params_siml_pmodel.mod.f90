@@ -1,4 +1,4 @@
-module md_params_siml
+module md_params_siml_pmodel
   !////////////////////////////////////////////////////////////////
   ! Module for handling simulation parameters.
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
@@ -31,13 +31,6 @@ module md_params_siml
     
     character(len=256) :: runname
     character(len=256) :: sitename
-    character(len=256) :: co2_forcing_file
-    character(len=256) :: ndep_noy_forcing_file
-    character(len=256) :: ndep_nhx_forcing_file
-    character(len=256) :: nfert_noy_forcing_file
-    character(len=256) :: nfert_nhx_forcing_file 
-    character(len=256) :: do_grharvest_forcing_file
-    character(len=256) :: fapar_forcing_source
 
     ! optionally prescribed variables (if false, then simulated internally)
     logical :: in_netrad    ! net radiation
@@ -52,7 +45,7 @@ module md_params_siml
     logical :: lgn3        ! grass, c3 photosynthetic pathway, n-fixing
     logical :: lgr4        ! grass, c4 photosynthetic pathway
 
-    integer :: npft        ! number of activated PFTs
+    ! integer :: npft        ! number of activated PFTs
 
   end type paramstype_siml
 
@@ -81,7 +74,7 @@ contains
     ! simulation year (setting booleans for opening files, doing   
     ! spinup etc.)
     !----------------------------------------------------------------
-    use md_params_core, only: dummy
+    use md_params_core_pmodel, only: dummy
 
     ! arguments
     integer, intent(in) :: year ! simulation year, starts counting from 1, starting at the beginning of spinup
@@ -122,10 +115,19 @@ contains
         out_steering%forcingyear =  year - params_siml%spinupyears + params_siml%firstyeartrend - 1
         out_steering%forcingyear_idx =  year - params_siml%spinupyears
 
-        ! constant climate year not specified
-        out_steering%climateyear = out_steering%forcingyear
-        out_steering%climateyear_idx = out_steering%forcingyear_idx
-      
+        ! if (params_siml%const_clim_year/=int(dummy)) then
+        !   ! constant climate year specified
+        !   cycleyear = get_cycleyear( year, params_siml%spinupyears, params_siml%recycle )
+        !   out_steering%climateyear = cycleyear + params_siml%const_clim_year - 1
+        !   out_steering%climateyear_idx = cycleyear + params_siml%const_clim_year - params_siml%firstyeartrend
+        
+        ! else
+          ! constant climate year not specified
+          out_steering%climateyear = out_steering%forcingyear
+          out_steering%climateyear_idx = out_steering%forcingyear_idx
+        
+        !end if
+
       endif
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1
 
@@ -143,8 +145,7 @@ contains
         out_steering%do_soilequil = .false.
       end if
 
-      if ( year<=params_siml%spinupyears .and. ( year > ( spinupyr_soilequil_1 - params_siml%recycle ) &
-              .and. year <= spinupyr_soilequil_1 &
+      if ( year<=params_siml%spinupyears .and. ( year > ( spinupyr_soilequil_1 - params_siml%recycle ) .and. year <= spinupyr_soilequil_1 &
               .or. year > ( spinupyr_soilequil_2 - params_siml%recycle ) .and. year <= spinupyr_soilequil_2 ) ) then
         out_steering%average_soil = .true.
       else
@@ -217,6 +218,6 @@ contains
 
   end function get_cycleyear
 
-end module md_params_siml
+end module md_params_siml_pmodel
 
 

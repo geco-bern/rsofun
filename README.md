@@ -23,7 +23,7 @@ The P-model is implemented in different repositories for different purposes:
 To install and load the rsofun package using the latest release run the following command in your R terminal: 
 ```r
 if(!require(devtools)){install.packages(devtools)}
-devtools::install_github( "stineb/rsofun@v1.1" )
+devtools::install_github( "stineb/rsofun@v1.2" )
 library(rsofun)
 ```
 Check *Releases* for the latest version. In above example, the latest is `v1.1`. Replace the respective string accordingly in the `install_github()` call above.

@@ -13,9 +13,9 @@
 #' @export
 #' @useDynLib rsofun
 #'
-run_sofun_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_soiltexture, params_modl, makecheck = TRUE ){
+run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_soiltexture, params_modl, makecheck = TRUE ){
 
-  # rlang::inform(paste("run_sofun_f_bysite() for ", sitename))
+  # rlang::inform(paste("run_pmodel_f_bysite() for ", sitename))
   
   ## re-define units and naming of forcing dataframe
   forcing <- forcing %>% 
@@ -104,7 +104,7 @@ run_sofun_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_soi
     ## C wrapper call
     out <- .Call(
 
-      'sofun_f_C',
+      'pmodel_f_C',
       
       ## Simulation parameters
       spinup                    = as.logical(params_siml$spinup),

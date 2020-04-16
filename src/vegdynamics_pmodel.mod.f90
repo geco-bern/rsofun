@@ -1,4 +1,4 @@
-module md_vegdynamics
+module md_vegdynamics_pmodel
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
 
@@ -14,11 +14,11 @@ contains
     ! Updates canopy and tile variables and calls 'estab' to 
     ! simulate establishment of new individuals
     !------------------------------------------------------------------
-    use md_params_core, only: npft, nlu, nmonth, dummy
-    use md_plant, only: get_leaftraits, plant_type, params_pft_plant
-    use md_tile, only: tile_type
+    use md_params_core_pmodel, only: npft, nlu, nmonth, dummy
+    use md_plant_pmodel, only: get_leaftraits, plant_type, params_pft_plant
+    use md_tile_pmodel, only: tile_type
     use md_waterbal, only: solartype
-    use md_gpp, only: outtype_pmodel
+    use md_gpp_pmodel, only: outtype_pmodel
 
     ! arguments
     type( tile_type ), dimension(nlu), intent(inout)           :: tile
@@ -56,4 +56,4 @@ contains
   end subroutine vegdynamics
 
 
-end module md_vegdynamics
+end module md_vegdynamics_pmodel

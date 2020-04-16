@@ -21,7 +21,7 @@ module md_waterbal
   ! contact: b.stocker@imperial.ac.uk
   ! ...
   !----------------------------------------------------------------
-  use md_params_core, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
+  use md_params_core_pmodel, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
     kMv, kMa, kfFEC, secs_per_day, dummy
 
   implicit none
@@ -102,7 +102,6 @@ module md_waterbal
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, KNOWN PARAMETERS
   !----------------------------------------------------------------
-  logical :: outenergy = .true.
 
   !----------------------------------------------------------------
   ! Module-specific rolling mean variables
@@ -113,7 +112,7 @@ module md_waterbal
   !----------------------------------------------------------------
   ! Module-specific variables for rolling annual mean calculations
   !----------------------------------------------------------------
-  real, allocatable, dimension(:,:)   :: rlmalpha
+  real, dimension(nlu) :: rlmalpha
 
   character(len=7) :: in_ppfd       ! information whether PPFD is prescribed from meteo file for global attribute in NetCDF file
 
@@ -123,10 +122,10 @@ contains
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates daily and monthly quantities for one year
     !-------------------------------------------------------------------------
-    use md_params_core, only: ndayyear, ndaymonth, npft
-    use md_tile, only: soil_type, tile_fluxes_type
-    use md_plant, only: plant_fluxes_type
-    use md_interface, only: myinterface
+    use md_params_core_pmodel, only: ndayyear, ndaymonth, npft
+    use md_tile_pmodel, only: soil_type, tile_fluxes_type
+    use md_plant_pmodel, only: plant_fluxes_type
+    use md_interface_pmodel, only: myinterface
 
     ! arguments
     type( soil_type ), dimension(nlu), intent(inout)        :: soil
@@ -145,13 +144,7 @@ contains
     real, intent(in)    :: fapar  ! fraction of absorbed photosynthetically active radiation (unitless)
 
     ! local variables
-    real :: wcont_prev                   ! soil moisture (water content) before being updated (mm)
-    real :: wbal                         ! daily water balance (mm), temporary variable
-
     integer :: lu                        ! land unit (gridcell tile)
-    integer :: moy                       ! month of year
-    integer :: idx                       ! day of year corresponding to yesterday
-    integer :: dm                        ! day of month
 
     type( outtype_snow_rain )   :: out_snow_rain
 
@@ -253,7 +246,7 @@ contains
     ! - daily extraterrestrial solar radiation (dra), J/m^2
     ! - daily PPFD (dppfd), mol/m^2
     !-------------------------------------------------------------------------  
-    use md_params_core, only: ndayyear, pi, dummy
+    use md_params_core_pmodel, only: ndayyear, pi, dummy
     use md_sofunutils, only: daily2monthly
 
     ! arguments
@@ -273,7 +266,6 @@ contains
     real               :: rv                           ! variable substitute for v
     real               :: hs                           ! sunset hour angle
     real               :: tau                          ! transmittivity (unitless)
-    real               :: rw                           ! variable substitute (W/m^2)
     real, dimension(2) :: out_ru_rv      ! function return variable containing 'ru' and 'rv'.
 
     real, dimension(ndayyear) :: daysecs ! daylight seconds for each DOY
@@ -425,7 +417,7 @@ contains
     ! - daily AET (out_evap%aet), mm
     ! - daily condensation (out_evap%cn), mm
     !-------------------------------------------------------------------------  
-    use md_params_core, only: ndayyear, pi, dummy
+    use md_params_core_pmodel, only: ndayyear, pi, dummy
     use md_sofunutils, only: calc_patm
 
     ! arguments
@@ -453,7 +445,6 @@ contains
     real :: pw                           ! density of water, kg/m^3
     real :: lv                           ! enthalpy of vaporization, J/kg
     real :: gamma                        ! psychrometric constant, Pa/K
-    real :: econ                         ! Eq. 58, SPLASH 2.0 Documentation
     real :: rx                           ! variable substitute (mm/hr)/(W/m^2)
     real :: hi, cos_hi                   ! intersection hour angle, degrees
     real, dimension(2) :: out_ru_rv      ! function return variable containing 'ru' and 'rv'.
@@ -912,7 +903,7 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface, only: myinterface
+    use md_interface_pmodel, only: myinterface
 
     ! constant for dRnl (Monteith & Unsworth, 1990)
     kA       = 107.0
@@ -972,7 +963,7 @@ contains
     ! Calculates the cosine of an angle given in degrees. Equal to 
     ! 'dsin' in Python version.
     !----------------------------------------------------------------   
-    use md_params_core, only: pi
+    use md_params_core_pmodel, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, degrees (0-360)
@@ -991,7 +982,7 @@ contains
     ! Calculates the sinus of an angle given in degrees. Equal to 
     ! 'dsin' in Python version.
     !----------------------------------------------------------------   
-    use md_params_core, only: pi
+    use md_params_core_pmodel, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, degrees (0-360)
@@ -1009,7 +1000,7 @@ contains
     !----------------------------------------------------------------   
     ! Returns corresponding degrees if x is given in radians
     !----------------------------------------------------------------   
-    use md_params_core, only: pi
+    use md_params_core_pmodel, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, radians
@@ -1026,7 +1017,7 @@ contains
     !----------------------------------------------------------------   
     ! Returns corresponding radians if x is given in degrees
     !----------------------------------------------------------------   
-    use md_params_core, only: pi
+    use md_params_core_pmodel, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, radians
@@ -1055,8 +1046,6 @@ contains
     ! local variables
     real :: anm, ranm, anv, ranv
     real :: dlamm                ! Mean longitude for day of year
-    real :: my_nu
-    real :: my_tls
     real :: xee, xec, xse        ! variable substitutes
     real :: xlam                 ! Mean longitude for vernal equinox
     real :: tmp1, tmp2, tmp3     ! variable substitutes
@@ -1247,40 +1236,31 @@ contains
   end function psychro
 
 
-  subroutine init_rlm_waterbal( ngridcells )
+  subroutine init_rlm_waterbal()
     !////////////////////////////////////////////////////////////////
     ! Initialises waterbalance-specific output variables
     ! The same subroutine is used here for initialising rolling mean variables
     !----------------------------------------------------------------
-    use md_interface, only: myinterface
-
-    ! arguments
-    integer, intent(in) :: ngridcells
 
     ! Rolling mean variables
-    if (myinterface%steering%init) then
-      if (.not.allocated(rlmalpha)) allocate( rlmalpha(nlu,ngridcells) )
-    end if
-    rlmalpha(:,:) = 0.0
+    rlmalpha(:) = 0.0
 
   end subroutine init_rlm_waterbal
 
 
-  subroutine getrlm_daily_waterbal( jpngr, doy )
+  subroutine getrlm_daily_waterbal( doy )
     !////////////////////////////////////////////////////////////////
     ! Collect daily output variables
     ! so far not implemented for isotopes
     !----------------------------------------------------------------
-    use md_interface, only: myinterface
 
     ! argument
-    integer, intent(in) :: jpngr
     integer, intent(in) :: doy    
 
     if (evap(1)%pet > 0.0) then
-      rlmalpha(:,jpngr)  = rlmalpha(:,jpngr) + (evap(:)%aet / evap(1)%pet) / ndayyear
+      rlmalpha(:)  = rlmalpha(:) + (evap(:)%aet / evap(1)%pet) / ndayyear
     else
-      rlmalpha(:,jpngr)  = rlmalpha(:,jpngr) + 1.0 / ndayyear
+      rlmalpha(:)  = rlmalpha(:) + 1.0 / ndayyear
     end if
 
   end subroutine getrlm_daily_waterbal
@@ -1291,11 +1271,11 @@ contains
     ! Calculates the rolling mean of relevant variables
     ! This requires the full arrays (all gridcells) to be stored.
     !-------------------------------------------------------------------------
-    use md_params_core, only: nlu
-    use md_tile, only: psoilphystype
+    use md_params_core_pmodel, only: nlu
+    use md_tile_pmodel, only: psoilphystype
 
     ! arguments
-    type( psoilphystype ), dimension(:,:), intent(inout) :: phy
+    type( psoilphystype ), dimension(:), intent(inout) :: phy
     logical :: init
 
     ! local variables
@@ -1308,7 +1288,7 @@ contains
     nyrs_uptonow = min( ncalls, nyrs_rlmalpha )
 
     do lu=1,nlu
-      phy(lu,:)%rlmalpha = ( phy(lu,:)%rlmalpha * (nyrs_uptonow - 1) + rlmalpha(lu,:) ) / nyrs_uptonow
+      phy(lu)%rlmalpha = ( phy(lu)%rlmalpha * (nyrs_uptonow - 1) + rlmalpha(lu) ) / nyrs_uptonow
     end do
 
   end subroutine get_rlm_waterbal

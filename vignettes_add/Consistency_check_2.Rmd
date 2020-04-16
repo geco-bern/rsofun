@@ -1,0 +1,590 @@
+---
+title: "Consistency check 2: SOFUN vs. RSOFUN"
+output: html_document
+---
+
+Compare output files written by SOFUN in branch lm3ppa_BiomeE_test_rsofun with RSOFUN implementation in R. 
+
+```{r setup, include=F,  eval=T}
+library(dplyr)
+library(rsofun)
+load_dependencies_rsofun()
+library(readr)
+library(tidyr)
+library(ggplot2)
+#if(!require(devtools)){install.packages(devtools)}
+#devtools::install_github("stineb/rbeni")
+#library(rbeni)
+library(rlang)
+```
+
+Set local path of original BiomeE-Allocation repo and SOFUN.
+```{r, include=F, eval=T}
+path_sofun_model_B <- "/Users/benjaminstocker/sofun"
+path_sofun_output_B <- "/Users/benjaminstocker/sofun/output"
+
+path_sofun_model_L <- "/Users/lmarques/sofun"
+path_sofun_output_L <- "/Users/lmarques/sofun/output"
+```
+
+Describe function from rbeni package
+```{r, include=F, eval=T}
+analyse_modobs2 <- function(
+  df,
+  mod,
+  obs,
+  type       = "points",
+  filnam     = NA,
+  xlim       = NULL,
+  ylim       = NULL,
+  use_factor = NULL,
+  shortsubtitle = FALSE,
+  ...
+  ){
+
+  require(ggplot2)
+  require(dplyr)
+  require(LSD)
+  require(ggthemes)
+  require(RColorBrewer)
+
+  #if (identical(filnam, NA)) filnam <- "analyse_modobs.pdf"
+
+  ## rename to 'mod' and 'obs' and remove rows with NA in mod or obs
+  df <- df %>%
+    as_tibble() %>%
+    ungroup() %>%
+    dplyr::select(mod=mod, obs=obs) %>%
+    tidyr::drop_na(mod, obs)
+
+  ## get linear regression (coefficients)
+  linmod <- lm( obs ~ mod, data=df )
+
+  ## construct metrics table using the 'yardstick' library
+  df_metrics <- df %>%
+    yardstick::metrics(obs, mod) %>%
+    dplyr::bind_rows( tibble( .metric = "n",        .estimator = "standard", .estimate = summarise(df, numb=n()) %>% unlist() ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "slope",    .estimator = "standard", .estimate = coef(linmod)[2]) ) %>%
+    # dplyr::bind_rows( tibble( .metric = "nse",      .estimator = "standard", .estimate = hydroGOF::NSE( obs, mod, na.rm=TRUE ) ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "mean_obs", .estimator = "standard", .estimate = summarise(df, mean=mean(obs, na.rm=TRUE)) %>% unlist() ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "prmse",    .estimator = "standard",
+                       .estimate = filter(., .metric=="rmse") %>% dplyr::select(.estimate) %>% unlist() /
+                         filter(., .metric=="mean_obs") %>% dplyr::select(.estimate) %>% unlist() ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "pmae",    .estimator = "standard",
+                       .estimate = filter(., .metric=="mae") %>% dplyr::select(.estimate) %>% unlist() /
+                         filter(., .metric=="mean_obs") %>% dplyr::select(.estimate) %>% unlist() ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "bias",        .estimator = "standard", .estimate = summarise(df, mean((mod-obs), na.rm=TRUE    )) %>% unlist() ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "pbias",       .estimator = "standard", .estimate = summarise(df, mean((mod-obs)/obs, na.rm=TRUE)) %>% unlist() ) )
+
+  rsq_val <- df_metrics %>% filter(.metric=="rsq") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+  rmse_val <- df_metrics %>% filter(.metric=="rmse") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+  mae_val <- df_metrics %>% filter(.metric=="mae") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+  bias_val <- df_metrics %>% filter(.metric=="bias") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+  slope_val <- df_metrics %>% filter(.metric=="slope") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+  n_val <- df_metrics %>% filter(.metric=="n") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+
+  rsq_lab <- format( rsq_val, digits = 2 )
+  rmse_lab <- format( rmse_val, digits = 3 )
+  mae_lab <- format( mae_val, digits = 3 )
+  bias_lab <- format( bias_val, digits = 3 )
+  slope_lab <- format( slope_val, digits = 3 )
+  n_lab <- format( n_val, digits = 3 )
+
+  results <- tibble( rsq = rsq_val, rmse = rmse_val, mae = mae_val, bias = bias_val, slope = slope_val, n = n_val )
+
+  if (shortsubtitle){
+    subtitle <- bquote( italic(R)^2 == .(rsq_lab) ~~
+                          RMSE == .(rmse_lab) )
+  } else {
+    subtitle <- bquote( italic(R)^2 == .(rsq_lab) ~~
+                          RMSE == .(rmse_lab) ~~
+                          bias == .(bias_lab) ~~
+                          slope == .(slope_lab) ~~
+                          italic(N) == .(n_lab) )
+  }
+
+  if (type=="heat"){
+
+    # if (!identical(filnam, NA)) dev.off()
+    source("~/LSD/R/LSD.heatscatter.R")
+    gg <- heatscatter(
+                  df$mod,
+                  df$obs,
+                  xlim=xlim,
+                  ylim=ylim,
+                  main="",
+                  ggplot=TRUE )
+
+    gg <- gg +
+      geom_smooth(method='lm', color="red", size=0.5, se=FALSE) +
+      geom_abline(intercept=0, slope=1, linetype="dotted") +
+      theme_classic() +
+      labs(
+        subtitle = subtitle
+        )
+
+    if (!identical(filnam, NA)) {
+      ggsave(filnam, width=5, height=5)
+    }
+
+  } else if (type=="hex"){
+
+    ## ggplot hexbin
+    gg <- df %>%
+      ggplot2::ggplot(aes(x=mod, y=obs)) +
+      geom_hex() +
+      scale_fill_gradientn(
+        colours = colorRampPalette( c("gray65", "navy", "red", "yellow"))(5)) +
+      geom_smooth(method='lm', color="red", size=0.5) +
+      geom_abline(intercept=0, slope=1, linetype="dotted") +
+      # coord_fixed() +
+      # xlim(0,NA) +
+      # ylim(0,NA) +
+      theme_classic() +
+      labs(
+        subtitle = subtitle
+        )
+
+    if (!identical(filnam, NA)) {
+      ggsave(filnam, width=5, height=5)
+    }
+
+  } else if (type=="points") {
+
+    ## points
+    gg <- df %>%
+      ggplot(aes(x=mod, y=obs)) +
+      geom_point() +
+      geom_smooth(method='lm', color="red", size=0.5) +
+      geom_abline(intercept=0, slope=1, linetype="dotted") +
+      # coord_fixed() +
+      # xlim(0,NA) +
+      # ylim(0,NA) +
+      theme_classic() +
+      labs(
+        # subtitle = expression( paste( italic(R)^2, "\n",
+        #   "beni")),
+        subtitle = subtitle
+        )
+
+    if (!identical(filnam, NA)) {
+      ggsave(filnam, width=5, height=5)
+    }
+
+  }
+
+  return(list(df_metrics=df_metrics, gg=gg, linmod=linmod, results = results))
+}
+```
+
+Define plotting functions by variable.
+```{r, include=F, eval=T}
+
+plot_tseries_byvar <- function(var, df_sofun, df_rsofun){
+  
+  var_sofun <- paste0(var, "_sofun")
+  var_rsofun  <- paste0(var, "_rsofun")
+  
+  df <- df_sofun %>% 
+    dplyr::select(year, {{var}}) %>% 
+    dplyr::rename(sofun = {{var}}) %>% 
+    left_join(
+      df_rsofun %>% 
+        dplyr::select(year,{{var}}) %>% 
+        dplyr::rename(rsofun = {{var}}),
+      by = "year"
+    ) %>% 
+    pivot_longer(cols = c(sofun, rsofun), names_to = "source", values_to = "var")
+  
+  gg <- df %>% 
+    ggplot(aes(x = year, y = var, color = source)) +
+    geom_line() +
+    labs(x = "Year", y = var)
+  
+  return(gg)
+}
+
+plot_modobs_byvar <- function(var, df_sofun, df_rsofun){
+  
+  var_sofun <- paste0(var, "_sofun")
+  var_rsofun  <- paste0(var, "_rsofun")
+  
+  df <- df_sofun %>% 
+    dplyr::select(year, {{var}}) %>% 
+    dplyr::rename(var_sofun = {{var}}) %>% 
+    left_join(
+      df_rsofun %>% 
+        dplyr::select(year,{{var}}) %>% 
+        dplyr::rename(var_rsofun = {{var}}),
+      by = "year"
+    )
+  modobs <- df %>% 
+    analyse_modobs2("var_sofun", "var_rsofun", relative = TRUE)
+  gg <- modobs$gg +
+    labs(x = var_sofun, y = var_rsofun)
+  
+  return(gg)
+}
+```
+
+## Running SOFUN in terminal and getting outputs as csv files
+
+```{r, include=F, eval=F}
+setwd(path_sofun_model_L)
+system("git checkout lm3ppa_BiomeE_test_rsofun")
+system("make clean")
+system("make lm3ppa")
+system("./runlm3ppa")
+```
+
+#### Getting SOFUN outputs
+
+```{r, include=F, eval=T}
+setwd(path_sofun_output_L)
+sofun_out_hourly_tile <- read.csv("Hourly_tile_test.csv", sep=",")
+sofun_out_daily_tile <- read.csv("Daily_tile_test.csv", sep=",")
+sofun_out_daily_cohorts <- read.csv("Daily_cohorts_test.csv", sep=",")
+sofun_out_annual_tile <- read.csv("Annual_tile_test.csv", sep=",")
+sofun_out_annual_cohorts <- read.csv("Annual_cohorts_test.csv", sep=",")
+```
+
+## Running RSOFUN
+
+#### Manually select some sites from which we're going to use the data for evaluation and calibration.
+```{r, include=F, eval=T}
+mysites <- c("ORNL")
+```
+
+#### Create a site meta info table that contains all the site-specific information that is used to force site-simulations
+```{r, include=F, eval=T}
+siteinfo <- data.frame(sitename="ORNL", lon = 0.0, lat = 0.0, elv = 0.0)
+```
+
+####  Specify the simulation parameters that are identical for all site-scale simulations.
+```{r, include=F, eval=T}
+params_siml <- list(
+      spinup                = TRUE,
+      spinupyears           = 1793,
+      recycle               = 11, # 9 for US-Wc or 11 ORNL
+      firstyeartrend        = 1998,
+      nyeartrend            = 11, # 9 for US-Wc or 11 ORNL
+      outputhourly          = FALSE,
+      outputdaily           = TRUE,
+      do_U_shaped_mortality = FALSE,
+      update_annualLAImax   = FALSE,
+      do_closedN_run        = TRUE
+      )
+```
+
+### Define model parameters
+
+#### Tile-level parameters
+
+```{r, include=F, eval=T}
+params_tile <- list(
+  soiltype     = 3,
+  FLDCAP       = 0.4,
+  WILTPT       = 0.05,
+  K1           = 2.0,  # turnover rate of fast SOM per year
+  K2           = 0.1,   # 0.12 # 0.2, # 0.075 # turnover rate of slow SOM per year
+  K_nitrogen   = 0.0, # 1.2 # 2.5 # rate of a year, 2.5
+  etaN         = 0.0, # 0.025 # loss rate with runoff
+  MLmixRatio   = 0.6, # 0.8 # fraction of microbes to litter
+  l_fract      = 0.0,
+  retransN     = 0.0,
+  f_N_add      = 0.02, # 0.005, # 0.02
+  f_initialBSW = 0.005
+  # alpha_FR   =  1.2; gamma_FR = 12.0; dSlowSOM = 2.5 * iSOM + 1.5; rho_N_up0 = 0.1
+  )
+
+```
+
+#### Species-level parameters
+
+```{r, include=F, eval=T}
+params_species <- tibble(
+  lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),    # 0: grass; 1 Woody
+  phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),    # 0: Deciduous; 1 Evergreen
+  pt            = c(1,       0,        0,        0,        0,      0,        0,        0,      0,        0,        0),    # 0: C3; 1: C4
+  seedlingsize  = c(0.02,    0.05,     0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05),  # initial size of seedlings
+  LMA           = c(0.035,   0.14,     0.14,     0.14,     0.14,   0.14,    0.14,   0.14,     0.14,     0.14,     0.035),# Leaf mass per unit area
+  phiRL         = c(4.0,     1.0,      2.0,      3.0,      4.0,     5.0,     6.0,      7.0,     8.0,    9.0,      3.0),
+  LNbase        = c(0.8E-3,  0.8E-3,   0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3),   # kgN m-2 leaf, Vmax = 0.03125*LNbase
+  laimax        = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  # maximum crown LAI
+  LAI_light     = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  # Light-limited crown LAI
+  Nfixrate0     = c(0.0,     0.0,      0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0),  # 0.03 kgN kgRootC-1 yr-1
+  NfixCost0     = c(12.,     12.,      12.,      12.,      12.,    12.,      12.,      12.,    12.,      12.,      12.),  # 12, 24 gC/gN
+  phiCSA        = c(1.25E-4, 0.25E-4,  0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4),
+  mortrate_d_c  = c(0.02,    0.02,     0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02),    # canopy tree mortality rate, year-1
+  mortrate_d_u  = c(0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08),    # understory tree mortality rate, year-1
+  maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
+  fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
+  ) %>% 
+  bind_rows(., slice(., 1:5))
+```
+
+#### Soil parameters
+
+By layers.
+```{r, include=F, eval=T}
+# adopted from datatypes.mod.f90 l.538
+params_soil <- tibble(
+  type              = c("Coarse",  "Medium",   "Fine",    "CM",     "CF",     "MF",    "CMF",    "Peat",    "MCM"),
+  GMD               = c(0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3),
+  GSD               = c(5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4),
+  vwc_sat           = c(0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445),
+  chb               = c( 3.5,   6.4,  11.0,   4.8,   6.3,   8.4,   6.3,   6.4,   6.4),
+  psi_sat_ref       = c(-600., -790., -910., -1580., -1680., -1880., -5980., -790., -790.), # Pa
+  k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2),      # mol/(s MPa m)
+  alphaSoil         = rep(1.0, 9),
+  heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6,   1.0)
+  )
+```
+
+#### Initial cohort specification
+
+```{r, include=F, eval=T}
+init_cohort <- tibble(
+ init_cohort_species = c(1,      2,        3,        4,      5,        6,        7,      8,        9,       10),
+ init_cohort_nindivs = c(0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02),
+ init_cohort_bsw     = c(0.2,    0.2,      0.2,      0.2,    0.2,      0.2,      0.2,    0.2,      0.2,     0.2),
+ init_cohort_bHW     = c(0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0),
+ init_cohort_nsc     = c(0.5,    0.5,      0.5,      0.5,    0.5,      0.5,      0.5,    0.5,      0.5,     0.5)
+)
+```
+
+#### Initial soil pools
+
+```{r, include=F, eval=T}
+# high N input --> Deciduous
+# low  N input --> Evergreen
+init_soil <- list(
+ init_fast_soil_C    = 0.15,   # kg C m-2    # C/N = 15, 0.75 kg SOM ~ 50 gN
+ init_slow_soil_C    = 16.0,   # kg C m-2    # C/N = 40
+ init_Nmineral       = 2.5E-3, # kg N m-2
+ N_input             = 0.0E-3  # 2.4E-3, # kg N m-2 yr-1, N deposit: 0.8 g N m-2 yr-1
+)
+```
+
+#### Define soil parameters
+
+```{r, include=F, eval=T}
+df_soiltexture <- bind_rows(
+  top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
+  bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
+)
+```
+
+#### Get forcing data
+
+```{r, include=F, eval=T}
+forcing <- read_delim("~/sofun/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
+  mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
+  mutate(sitename = "ORNL") %>% 
+  filter(!(mday(date)==29 & month(date)==2)) %>% 
+  dplyr::select(-date, -sitename)
+```
+
+#### Run the model
+
+Run the model for all the sites specified in the first step.
+```{r, include=F, eval=T}
+out <- run_lm3ppa_f_bysite( "ORNL", 
+                            params_siml, 
+                            siteinfo, 
+                            forcing, # ddf_input
+                            params_tile, 
+                            params_species, 
+                            params_soil, 
+                            init_cohort, 
+                            init_soil, 
+                            makecheck = TRUE)
+```
+
+#### Getting Rsofun outputs
+
+```{r, include=F, eval=T}
+rsofun_out_hourly_tile <- out$output_hourly_tile
+rsofun_out_daily_tile <- out$output_daily_tile
+rsofun_out_daily_cohorts <- out$output_daily_cohorts
+rsofun_out_annual_tile <- out$output_annual_tile
+rsofun_out_annual_cohorts <- out$output_annual_cohorts
+```
+
+### Plots of hourly tile outputs
+
+```{r, include=F, eval=F}
+varnams_hourly_tile_sofun <- names(sofun_out_hourly_tile)[c(-1, -length(names(sofun_out_hourly_tile)))]
+varnams_hourly_tile_rsofun <- names(rsofun_out_hourly_tile)[c(-1,-length(names(sofun_out_hourly_tile)))]
+all.equal(varnams_hourly_tile_sofun, varnams_hourly_tile_rsofun)
+
+for (varnam in varnams_hourly_tile_sofun[1:15]){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, sofun_out_hourly_tile, rsofun_out_hourly_tile)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, sofun_out_hourly_tile, rsofun_out_hourly_tile)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_hourly_tile_sofun),
+                         ~plot_modobs_byvar(., sofun_out_hourly_tile, rsofun_out_hourly_tile))
+```
+
+```{r, include=T, eval=T}
+dim(sofun_out_hourly_tile)
+dim(rsofun_out_hourly_tile)
+sofun_out_hourly_tile <- sofun_out_hourly_tile[,-16]
+rsofun_out_hourly_tile <- as.data.frame(rsofun_out_hourly_tile)
+
+plot_dfs <- lapply(names(sofun_out_hourly_tile),function(nm)data.frame(col1 = sofun_out_hourly_tile[,nm], 
+                                                                       col2 = rsofun_out_hourly_tile[,nm]))
+
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      ggtitle(names(sofun_out_hourly_tile)[idx]))
+```
+
+### Plots of daily tile outputs
+
+```{r, include=F, eval=F}
+varnams_daily_tile_sofun <- names(sofun_out_daily_tile)[c(-1, -length(names(sofun_out_daily_tile)))]
+varnams_daily_tile_rsofun <- names(rsofun_out_daily_tile)[c(-1,-length(names(sofun_out_daily_tile)))]
+all.equal(varnams_daily_tile_sofun, varnams_daily_tile_rsofun)
+
+for (varnam in varnams_daily_tile_sofun[1:34]){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, sofun_out_daily_tile, rsofun_out_daily_tile)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, sofun_out_daily_tile, rsofun_out_daily_tile)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_daily_tile_sofun),
+                         ~plot_modobs_byvar(., sofun_out_daily_tile, rsofun_out_daily_tile))
+```
+
+```{r, include=T, eval=T}
+dim(sofun_out_daily_tile)
+dim(rsofun_out_daily_tile)
+sofun_out_daily_tile <- sofun_out_daily_tile[,-36]
+rsofun_out_daily_tile <- as.data.frame(rsofun_out_daily_tile)
+
+plot_dfs <- lapply(names(sofun_out_daily_tile),function(nm)data.frame(col1 = sofun_out_daily_tile[,nm], col2 = rsofun_out_daily_tile[,nm]))
+
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      ggtitle(names(sofun_out_daily_tile)[idx]))
+```
+
+### Plots of daily cohorts outputs
+
+```{r, include=F, eval=F}
+varnams_daily_cohorts_sofun <- names(sofun_out_daily_cohorts)[c(-1, -length(names(sofun_out_daily_cohorts)))]
+varnams_daily_cohorts_rsofun <- names(rsofun_out_daily_cohorts)[c(-1,-length(names(sofun_out_daily_cohorts)))]
+all.equal(varnams_daily_cohorts_sofun, varnams_daily_cohorts_rsofun)
+
+for (varnam in varnams_daily_cohorts_sofun){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, sofun_out_daily_cohorts, rsofun_out_daily_cohorts)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, sofun_out_daily_cohorts, rsofun_out_daily_cohorts)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_daily_cohorts_sofun),
+                         ~plot_modobs_byvar(., sofun_out_daily_cohorts, rsofun_out_daily_cohorts))
+```
+
+```{r, include=T, eval=T}
+dim(sofun_out_daily_cohorts)
+dim(rsofun_out_daily_cohorts)
+sofun_out_daily_cohorts <- sofun_out_daily_cohorts[,-28]
+rsofun_out_daily_cohorts <- as.data.frame(rsofun_out_daily_cohorts)[,-1]
+
+sofun_out_daily_cohorts_short <- sofun_out_daily_cohorts[1:100000,]
+rsofun_out_daily_cohorts_short <- rsofun_out_daily_cohorts[1:100000,]
+
+plot_dfs <- lapply(names(sofun_out_daily_cohorts_short),function(nm)data.frame(col1 = sofun_out_daily_cohorts_short[,nm], col2 = rsofun_out_daily_cohorts_short[,nm]))
+
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      ggtitle(names(sofun_out_daily_cohorts_short)[idx]))
+```
+
+### Plots of annual tile outputs
+
+```{r, include=F, eval=F}
+varnams_annual_tile_sofun <- names(sofun_out_annual_tile)[c(-1, -length(names(sofun_out_annual_tile)))]
+varnams_annual_tile_rsofun <- names(rsofun_out_annual_tile)[c(-1,-length(names(sofun_out_annual_tile)))]
+all.equal(varnams_annual_tile_sofun, varnams_annual_tile_rsofun)
+
+for (varnam in varnams_annual_tile_sofun[1:43]){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, sofun_out_annual_tile, rsofun_out_annual_tile)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, sofun_out_annual_tile, rsofun_out_annual_tile)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_annual_tile_sofun),
+                         ~plot_modobs_byvar(., sofun_out_annual_tile, rsofun_out_annual_tile))
+```
+
+```{r, include=T, eval=T}
+# Other option for plots using ggplot2()
+dim(sofun_out_annual_tile)
+dim(rsofun_out_annual_tile)
+sofun_out_annual_tile <- sofun_out_annual_tile[,-45]
+rsofun_out_annual_tile <- as.data.frame(rsofun_out_annual_tile)
+
+plot_dfs <- lapply(names(sofun_out_annual_tile),function(nm)data.frame(col1 = sofun_out_annual_tile[,nm], col2 = rsofun_out_annual_tile[,nm]))
+
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      ggtitle(names(sofun_out_annual_tile)[idx]))
+```
+
+### Plots of annual cohorts outputs
+
+```{r, include=F, eval=F}
+varnams_annual_cohorts_sofun <- names(sofun_out_annual_cohorts)[c(-1, -length(names(sofun_out_annual_cohorts)))]
+varnams_annual_cohorts_rsofun <- names(rsofun_out_annual_cohorts)[c(-1, -length(names(sofun_out_annual_cohorts)))]
+all.equal(varnams_annual_cohorts_sofun, varnams_annual_cohorts_rsofun)
+
+for (varnam in varnams_annual_cohorts_sofun){
+  print(varnam)
+  
+  gg <- plot_tseries_byvar(varnam, sofun_out_annual_cohorts, rsofun_out_annual_cohorts)
+  print(gg)
+
+  gg <- plot_modobs_byvar(varnam, sofun_out_annual_cohorts, rsofun_out_annual_cohorts)
+  print(gg)
+}
+
+out_modobs <- purrr::map(as.list(varnams_annual_cohorts_sofun),
+                         ~plot_modobs_byvar(., sofun_out_annual_cohorts, rsofun_out_annual_cohorts))
+```
+
+```{r, include=T, eval=T}
+dim(sofun_out_annual_cohorts)
+dim(rsofun_out_annual_cohorts)
+sofun_out_annual_cohorts <- sofun_out_annual_cohorts[,-24]
+rsofun_out_annual_cohorts <- as.data.frame(rsofun_out_annual_cohorts[,-1])
+
+plot_dfs <- lapply(names(sofun_out_annual_cohorts),function(nm)data.frame(col1 = sofun_out_annual_cohorts[,nm], col2 = rsofun_out_annual_cohorts[,nm]))
+
+for (idx in seq_along(plot_dfs))
+  print(ggplot()+geom_smooth(data = plot_dfs[[idx]], aes(x=col1, y=col2),color="blue") +
+      ggtitle(names(sofun_out_annual_cohorts)[idx]))
+```
+
+
+

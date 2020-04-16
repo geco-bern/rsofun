@@ -203,7 +203,7 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     vpdstress_par_m = 5
     )
   
-  df <- runread_sofun_f(
+  df <- runread_pmodel_f(
     df_drivers, 
     params_modl = params_modl, 
     makecheck = TRUE,
@@ -265,7 +265,7 @@ cost_rmse_fullstack <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     vpdstress_par_m = 0
   )
   
-  df <- runread_sofun_f(
+  df <- runread_pmodel_f(
     df_drivers, 
     params_modl = params_modl, 
     makecheck = TRUE,
@@ -303,7 +303,7 @@ cost_rmse_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     vpdstress_par_m = par[3]
   )
   
-  df <- runread_sofun_f(
+  df <- runread_pmodel_f(
     df_drivers, 
     params_modl = params_modl, 
     makecheck = TRUE,
@@ -348,7 +348,7 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
   #     params_modl = params_modl,
   #     makecheck = FALSE
   #   )) %>% 
-  df <- runread_sofun_f(
+  df <- runread_pmodel_f(
     df_drivers, 
     params_modl = params_modl, 
     makecheck = TRUE,

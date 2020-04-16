@@ -126,7 +126,7 @@ rsofun::df_drivers
 Run the model for all the sites specified in the first step.
 ```{r}
 ## run for a single site
-mod <- run_sofun_f_bysite( 
+mod <- run_pmodel_f_bysite( 
   df_drivers$sitename[1], 
   df_drivers$params_siml[[1]], 
   df_drivers$siteinfo[[1]], 
@@ -138,7 +138,7 @@ mod <- run_sofun_f_bysite(
 
 ## Run for the full set of sites
 ptm <- proc.time()
-df_output <- runread_sofun_f(
+df_output <- runread_pmodel_f(
      df_drivers, 
      params_modl = params_modl, 
      makecheck = TRUE,
@@ -147,14 +147,14 @@ df_output <- runread_sofun_f(
 print(ptm)
 
 # microbenchmark::microbenchmark(
-#   runread_sofun_f(
+#   runread_pmodel_f(
 #     df_drivers, 
 #     params_modl = params_modl, 
 #     makecheck = TRUE,
 #     parallel = TRUE,
 #     ncores = 4
 #     ),
-#   runread_sofun_f(
+#   runread_pmodel_f(
 #     df_drivers, 
 #     params_modl = params_modl, 
 #     makecheck = TRUE,
@@ -231,7 +231,7 @@ Run the model once again with these parameters and evaluate results.
 ```{r warning=FALSE, message=FALSE}
 params_modl$kphio <- settings_calib$par_opt["kphio"]
 
-df_output <- runread_sofun_f(
+df_output <- runread_pmodel_f(
      df_drivers, 
      params_modl = params_modl, 
      makecheck = TRUE,
