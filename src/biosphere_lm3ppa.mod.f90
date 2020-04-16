@@ -189,8 +189,8 @@ contains
     !----------------------------------------------------------------
      idoy = 0
 
-    ! print*,'sim. year  ', iyears
-    ! print*,'real year: ', year0
+    print*,'sim. year  ', iyears
+    print*,'real year: ', year0
 
     ! call vegn_annualLAImax_update(vegn) ! Before without conditional
     if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update(vegn) !xxx debugging
