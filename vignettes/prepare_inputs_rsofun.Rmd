@@ -16,11 +16,10 @@ library(ingestr)
 
 The following describes how to use the [ingestr R package ](https://stineb.github.io/ingestr/) for collecting the forcing data and create the object `df_drivers`, required as an input (forcing) to rsofun. Here, it contains data for just a single site.
 
-### Site selection and meta data
+## Site selection and meta data
 
 We manually define a subset of sites that are part of the FLUXNET 2015 Tier 1 set of sites:
 ```{r}
-# mysites <- c("BE-Vie", "DE-Tha", "DK-Sor", "FI-Hyy", "IT-Col", "NL-Loo", "US-MMS", "US-WCr", "US-UMB", "US-Syv", "FR-Pue")
 mysites <- "FR-Pue"
 ```
 
@@ -38,7 +37,7 @@ This information is provided in file `siteinfo_fluxnet2015.csv`. This file is cr
 siteinfo <- ingestr::siteinfo_fluxnet2015 %>%
   dplyr::filter(sitename %in% mysites)
 
-## take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo
+# take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo
 siteinfo <- siteinfo %>% 
   dplyr::mutate(year_start = 2007, year_end = 2014)
 
@@ -47,7 +46,7 @@ siteinfo <- siteinfo %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 ```
 
-### Simulation settings
+## Simulation settings
 
 Specify additional simulation parameters that are identical for all site-scale simulations.
 ```{r}
@@ -76,7 +75,7 @@ Run `prepare_setup_sofun()` to define the simulation settings that contain all t
 siteinfo <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
 ```
 
-### Define model parameters
+## Define model parameters
 
 First, let's do it by hand (calibration of parameters is shown later).
 ```{r}
@@ -90,7 +89,7 @@ params_modl <- list(
 	)
 ```
 
-### Define soil parameters
+## Define soil parameters
 
 For now, this is implemented as an illustration. Should be made site-specific. Values entered here take no effect.
 ```{r}
@@ -100,16 +99,16 @@ df_soiltexture <- bind_rows(
 )
 ```
 
-### Get input
+## Get input
 
 Input data, used as model forcing, is collected using the [ingestr](https://stineb.github.io/ingestr/) package. A brief description for how to use it for our present application is provided here. Data is collected by data source. 
 
-#### Meteo data
+## Meteo data
 
-The following ingests meteorological data from the FLUXNET 2015 files for variables temperature, precipitation, VPD, shortwave incoming radiation, net radiation, and atmospheric pressure. Arguments that are specific for this data source are provided in the `settings` list. The data object `ddf_fluxnet` is organised as a nested table with rows for sites and time series nested inside the column `data`. See [here](https://tidyr.tidyverse.org/reference/nest.html) for how to handle nested dataframes. 
+The following ingests meteorological data from the FLUXNET 2015 files for variables daytime temperature, precipitation, daytime VPD, shortwave incoming radiation, net radiation, and atmospheric pressure. Arguments that are specific for this data source are provided in the `settings` list. Unfortunately, FLUXNET 2015 doesn't provide daytime VPD. But we can derive it using the ingestr R package as described [here](https://stineb.github.io/ingestr/articles/calc_daytime_vpd.html) and done below. This writes files with daytime VPD into the directory specified by `settings_fluxnet$dir_hh`. The data object `ddf_fluxnet` is organised as a nested table with rows for sites and time series nested inside the column `data`. See [here](https://tidyr.tidyverse.org/reference/nest.html) for how to handle nested dataframes. 
 ```{r message=FALSE, warning=FALSE}
 library(ingestr)
-ddf_fluxnet <- ingest(
+ddf_fluxnet <- ingestr::ingest(
   siteinfo  = siteinfo,
   source    = "fluxnet",
   getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F_DAY", ppfd =  "SW_IN_F", patm = "PA_F"),
@@ -121,8 +120,8 @@ ddf_fluxnet <- ingest(
 
 Some meteo data is not available from FLUXNET. Extract it from CRU global climate files instead.
 ```{r}
-ddf_cru <- ingest(
-  siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
+ddf_cru <- ingestr::ingest(
+  siteinfo  = siteinfo,
   source    = "cru",
   getvars   = list(ccov = "cld"),
   dir       = "~/data/cru/ts_4.01/"
@@ -142,13 +141,13 @@ ddf_meteo <- ddf_fluxnet %>%
   tidyr::nest()
 ```
 
-#### fAPAR data
+## fAPAR data
 
 fAPAR data is prescribed in the P-model setup. The following extracts data MODIS FPAR data from Google Earth Engine (see a complete description for how to set up the GEE API and download library [here](https://stineb.github.io/ingestr/articles/example.html#google-earth-engine)). 
 
 The following example is for downloading MODIS FPAR data (MODIS/006/MCD15A3H, band Fpar). 
 ```{r}
-settings_gee <- get_settings_gee( 
+settings_gee <- ingestr::get_settings_gee( 
   bundle = "modis_fpar", 
   python_path = system("which python", intern = TRUE),
   gee_path = "~/google_earth_engine_subsets/gee_subset/",
@@ -162,32 +161,67 @@ settings_gee <- get_settings_gee(
 
 This can now be used to download the data to the directory specified by argument `data_path` of function `get_settings_gee()` and to read data into R.
 ```{r}
-df_gee_modis_fpar <- ingest(
-  siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
+df_gee_modis_fpar <- ingestr::ingest(
+  siteinfo  = siteinfo,
   source = "gee",
   settings = settings_gee,
   verbose = FALSE
   )
 ```
 
-#### CO2
+## CO2
 
 Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
 ```{r}
 df_co2 <- ingest(
-  siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
-  source = "co2",
-  verbose = FALSE,
-  settings = list(path = "~/data/co2/cCO2_rcp85_const850-1765.csv")
+  siteinfo,
+  source  = "co2_mlo",
+  verbose = FALSE
   )
 ```
 
-#### Collect all drivers
+## Collect all drivers
 
-Finally, we can collect forcing data, simulation parameters, and site meta info into a single object that will be used to drive rsofun.
+Finally, we can collect forcing data, simulation parameters, and site meta info into a single object that will be used to drive rsofun. All of the above steps can be customized. The function `collect_drivers_sofun()` can in general be used to process forcing data into the format required to run SOFUN. The arguments must have the following form:
+
+- `siteinfo`: A data frame (tibble) with columns `sitename`, `lon`, `lat`, `elv` (elevation), `year_start`, `year_end`, `whc` (water holding capacity used for simulating the soil water balance), `c4` (vegetation following C4 photosynthesis). An example for FLUXNET 2015 sites is given by 
+```{r} 
+ingestr::siteinfo_fluxnet2015 %>% dplyr::select(sitename, lon, lat, elv, year_start, year_end, whc)
+```
+- `meteo`: A nested data frame with columns `sitename` and `data`. The latter contains the nested meteorological forcing data frames, with columns `date`, `temp`, `prec`, `vpd`, `ppfd`, `patm`, and `ccov`. Like this:
+```{r}
+## nested data frame:
+ddf_meteo
+
+## inside .$data:
+ddf_meteo$data[[1]] %>% dplyr::select(-ccov_int)
+```
+
+
+- `fapar`: A nested data frame with columns `sitename` and `data`. The latter contains the nested meteorological forcing data frames, with columns `date`, and `fapar`. Like this:
+```{r}
+## nested data frame:
+df_gee_modis_fpar
+
+## inside .$data:
+df_gee_modis_fpar$data[[1]] %>% dplyr::select(date, fapar)
+```
+- `co2`  : A nested data frame with columns `sitename` and `data`. The latter contains the nested meteorological forcing data frames, with columns `date`, and `co2`. Like this:
+```{r}
+## nested data frame:
+df_co2
+
+## inside .$data:
+df_co2$data[[1]] %>% dplyr::select(date, co2)
+```
+- `df_soiltexture`: See above ('Define soil parameters')
+
+See [here](https://tidyr.tidyverse.org/reference/nest.html) for how to handle nested dataframes. 
+
+Finally, all input data can be collected by:
 ```{r}
 df_drivers <- collect_drivers_sofun( 
-  siteinfo       = siteinfo %>% dplyr::filter(sitename %in% mysites),
+  siteinfo       = siteinfo,
   meteo          = ddf_meteo, 
   fapar          = df_gee_modis_fpar,
   co2            = df_co2,

@@ -38,7 +38,7 @@ collect_drivers_sofun <- function( siteinfo, meteo, fapar, co2, df_soiltexture )
   
   ## use only interpolated fapar and combine meteo data and fapar into a single nested column 'forcing'
   df_mega <- df_mega %>% 
-    mutate(fapar = purrr::map(fapar, ~dplyr::select(., date, fapar = modisvar_interpol))) %>% 
+    mutate(fapar = purrr::map(fapar, ~dplyr::select(., date, fapar))) %>% 
     mutate(co2   = purrr::map(co2  , ~dplyr::select(., date, co2))) %>% 
     mutate(forcing = purrr::map2(meteo, fapar, ~left_join( .x, .y, by = "date"))) %>% 
     mutate(forcing = purrr::map2(forcing, co2, ~left_join( .x, .y, by = "date"))) %>% 

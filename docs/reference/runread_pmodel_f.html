@@ -95,7 +95,10 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/example.html">Example for using rsofun</a>
+      <a href="../articles/example_lm3ppa.html">Example</a>
+    </li>
+    <li>
+      <a href="../articles/example_pmodel.html">Example for using rsofun</a>
     </li>
     <li>
       <a href="../articles/prepare_inputs_rsofun.html">Prepare rsofun forcing data</a>
@@ -104,7 +107,12 @@
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/stineb/rsofun/">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -119,7 +127,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Run SOFUN and read output</h1>
-    
+    <small class="dont-index">Source: <a href='https://github.com/stineb/rsofun/blob/master/R/runread_sofun_f.R'><code>R/runread_sofun_f.R</code></a></small>
     <div class="hidden name"><code>runread_pmodel_f.Rd</code></div>
     </div>
 
@@ -141,7 +149,7 @@
     <tr>
       <th>df_drivers</th>
       <td><p>A nested data frame with one row for each site and columns named according to the 
-arguments of function runread_sofun_f_bysite</p></td>
+arguments of function runread_pmodel_f_bysite</p></td>
     </tr>
     <tr>
       <th>params_modl</th>
@@ -166,10 +174,10 @@ Defaults to 2.</p></td>
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A data frame (tibble) with one row for each site and outputs stored in the nested
-column <code>out_sofun</code></p>
+column <code>data</code></p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>mod</span> <span class='kw'>&lt;-</span> <span class='fu'>runread_sofun_f</span>( <span class='no'>df_drivers</span>, <span class='no'>params_modl</span>, <span class='kw'>makecheck</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>parallel</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fl'>2</span> )</div><div class='output co'>#&gt; <span class='error'>Error in .f(sitename = .l[[1L]][[1L]], params_siml = .l[[2L]][[1L]], siteinfo = .l[[3L]][[1L]],     df_soiltexture = .l[[4L]][[1L]], forcing = .l[[5L]][[1L]],     ...): object 'params_modl' not found</span></div><div class='input'>
+    <pre class="examples"><div class='input'><span class='no'>mod</span> <span class='kw'>&lt;-</span> <span class='fu'>runread_pmodel_f</span>( <span class='no'>df_drivers</span>, <span class='no'>params_modl</span>, <span class='kw'>makecheck</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>parallel</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>ncores</span> <span class='kw'>=</span> <span class='fl'>2</span> )</div><div class='output co'>#&gt; <span class='error'>Error in .f(sitename = .l[[1L]][[1L]], params_siml = .l[[2L]][[1L]], siteinfo = .l[[3L]][[1L]],     df_soiltexture = .l[[4L]][[1L]], forcing = .l[[5L]][[1L]],     ...): object 'params_modl' not found</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -186,7 +194,7 @@ column <code>out_sofun</code></p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.0.</p>
 </div>
 
       </footer>

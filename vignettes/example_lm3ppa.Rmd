@@ -155,7 +155,7 @@ The file has the following variables (units):
                       K          kg/kg          m/s     kg_H2O/m2/s               pa               W/m2            W/m2            ppm     
 
 ```{r}
-forcing <- read_delim("/Users/lmarques/sofun/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
+forcing <- read_delim("/Users/benjaminstocker/sofun/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
   mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
   mutate(sitename = "ORNL") %>% 
   dplyr::filter(!(mday(date)==29 & month(date)==2)) %>% 
