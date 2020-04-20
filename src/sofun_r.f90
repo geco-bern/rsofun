@@ -684,7 +684,7 @@ contains
       ! print*,output_annual_tile(yr,1)
       call populate_outarray_annual_tile( out_biosphere%annual_tile, output_annual_tile(yr,:) )
 
-      ! print*, "CAI, LAI, GPP",output_annual_tile(yr,2),output_annual_tile(yr,3),output_annual_tile(yr,4)
+      print*, "CAI output, CAI out_biosphere", output_annual_tile(yr,2), out_biosphere%annual_tile%CAI
 
       ! ----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)
