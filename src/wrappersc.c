@@ -154,6 +154,7 @@ void F77_NAME(lm3ppa_f)(
     int    *nt,                     
     int    *nt_daily,                 
     int    *nt_annual,                
+    int    *nt_annual_cohorts,                
     double *forcing,                  
     double *output_hourly_tile,   
     double *output_daily_tile,    
@@ -247,6 +248,7 @@ extern SEXP lm3ppa_f_C(
     SEXP n,                  
     SEXP n_daily,                 
     SEXP n_annual,                
+    SEXP n_annual_cohorts,                
     SEXP forcing                 
     ){
 
@@ -254,6 +256,7 @@ extern SEXP lm3ppa_f_C(
     const int nt = INTEGER(n)[0];
     const int nt_daily = INTEGER(n_daily)[0];
     const int nt_annual = INTEGER(n_annual)[0];
+    const int nt_annual_cohorts = INTEGER(n_annual_cohorts)[0];
 
     // // Specify output
     SEXP output_hourly_tile            = PROTECT( allocMatrix(REALSXP, nt,       15) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
@@ -286,29 +289,29 @@ extern SEXP lm3ppa_f_C(
     SEXP output_daily_cohorts_SW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_HW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 44) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
-    SEXP output_annual_cohorts_year    = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_cID     = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_PFT     = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_layer   = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_density = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_f_layer = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_dDBH    = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_dbh     = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_height  = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_Acrown  = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_wood    = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_nsc     = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_NSN     = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_NPPtr   = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_seed    = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_NPPL    = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_NPPR    = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_NPPW    = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_GPP     = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_NPP     = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_N_uptk  = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_N_fix   = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
-    SEXP output_annual_cohorts_maxLAI  = PROTECT( allocMatrix(REALSXP, nt_annual, 50) );
+    SEXP output_annual_cohorts_year    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_cID     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_PFT     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_layer   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_density = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_f_layer = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_dDBH    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_dbh     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_height  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_Acrown  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_wood    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_nsc     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_NSN     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_NPPtr   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_seed    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_NPPL    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_NPPR    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_NPPW    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_GPP     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_NPP     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_N_uptk  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_N_fix   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_maxLAI  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     
     // Fortran subroutine call
     F77_CALL(lm3ppa_f)(
@@ -347,6 +350,7 @@ extern SEXP lm3ppa_f_C(
         INTEGER(n),                    
         INTEGER(n_daily),                 
         INTEGER(n_annual),                
+        INTEGER(n_annual_cohorts),                
         REAL(forcing),             
         REAL(output_hourly_tile),  
         REAL(output_daily_tile),    
@@ -470,7 +474,7 @@ extern SEXP lm3ppa_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
-  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   36},  // Number of the SEXP variables (not the output)
+  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   37},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };
 

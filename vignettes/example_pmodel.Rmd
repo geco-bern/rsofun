@@ -1,5 +1,5 @@
 ---
-title: "Example for using rsofun"
+title: "Example using P-model"
 output:
   html_document:
     toc: true
@@ -24,7 +24,6 @@ In the P-model setup, the model requires time series of daily meteorological dat
 
 We manually define a subset of sites that are part of the FLUXNET 2015 Tier 1 set of sites:
 ```{r}
-# mysites <- c("BE-Vie", "DE-Tha", "DK-Sor", "FI-Hyy", "IT-Col", "NL-Loo", "US-MMS", "US-WCr", "US-UMB", "US-Syv", "FR-Pue")
 mysites <- "FR-Pue"
 ```
 
@@ -40,13 +39,12 @@ A small number of meta data variables have to be specified for each site specifi
 This information is provided by the data frame `siteinfo_fluxnet2015` which is available as part of the ingestr package. 
 ```{r}
 siteinfo <- ingestr::siteinfo_fluxnet2015 %>%
-  dplyr::filter(sitename %in% mysites)
+  dplyr::filter(sitename %in% mysites) %>% 
 
-## take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo
-siteinfo <- siteinfo %>% 
-  dplyr::mutate(year_start = 2007, year_end = 2014)
+  ## take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo
+  dplyr::mutate(year_start = 2007, year_end = 2014) %>% 
 
-siteinfo <- siteinfo %>% 
+  ## add info
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 ```
@@ -184,7 +182,7 @@ settings_calib <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list( kphio = list( lower=0.03, upper=0.07, init=0.0496 ) )
+  par                 = list( kphio = list( lower=0.02, upper=0.07, init=0.0496 ) )
  )
 ```
 
@@ -250,32 +248,32 @@ settings_fluxnet <- list(
   remove_neg = FALSE
   )
 
-ddf_eval <- ingest(
+ddf_eval <- ingestr::ingest(
   siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
   source    = "fluxnet",
   getvars   = list(gpp = "GPP_NT_VUT_REF",
                    gpp_unc = "GPP_NT_VUT_SE"),
-  dir       = paste0(path.package("rsofun"), "/extdata/"),
+  dir       = paste0(path.package("ingestr"), "/extdata/"),
   settings  = settings_fluxnet,
   timescale = "d"
   )
 
-mdf_eval <- ingest(
+mdf_eval <- ingestr::ingest(
   siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
   source    = "fluxnet",
   getvars   = list(gpp = "GPP_NT_VUT_REF",
                    gpp_unc = "GPP_NT_VUT_SE"),
-  dir       = paste0(path.package("rsofun"), "/extdata/"),
+  dir       = paste0(path.package("ingestr"), "/extdata/"),
   settings  = settings_fluxnet,
   timescale = "m"
   )
 
-adf_eval <- ingest(
+adf_eval <- ingestr::ingest(
   siteinfo  = siteinfo %>% dplyr::filter(sitename %in% mysites),
   source    = "fluxnet",
   getvars   = list(gpp = "GPP_NT_VUT_REF",
                    gpp_unc = "GPP_NT_VUT_SE"),
-  dir       = paste0(path.package("rsofun"), "/extdata/"),
+  dir       = paste0(path.package("ingestr"), "/extdata/"),
   settings  = settings_fluxnet,
   timescale = "y"
   )

@@ -54,7 +54,10 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/example.html">Example for using rsofun</a>
+      <a href="../articles/example_lm3ppa.html">Example using LM3-PPA</a>
+    </li>
+    <li>
+      <a href="../articles/example_pmodel.html">Example using P-model</a>
     </li>
     <li>
       <a href="../articles/prepare_inputs_rsofun.html">Prepare rsofun forcing data</a>
@@ -93,12 +96,11 @@
     
     
 <p>The following describes how to use the <a href="https://stineb.github.io/ingestr/">ingestr R package</a> for collecting the forcing data and create the object <code>df_drivers</code>, required as an input (forcing) to rsofun. Here, it contains data for just a single site.</p>
-<div id="site-selection-and-meta-data" class="section level3">
-<h3 class="hasAnchor">
-<a href="#site-selection-and-meta-data" class="anchor"></a>Site selection and meta data</h3>
+<div id="site-selection-and-meta-data" class="section level2">
+<h2 class="hasAnchor">
+<a href="#site-selection-and-meta-data" class="anchor"></a>Site selection and meta data</h2>
 <p>We manually define a subset of sites that are part of the FLUXNET 2015 Tier 1 set of sites:</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="co"># mysites &lt;- c("BE-Vie", "DE-Tha", "DK-Sor", "FI-Hyy", "IT-Col", "NL-Loo", "US-MMS", "US-WCr", "US-UMB", "US-Syv", "FR-Pue")</span>
-<span class="no">mysites</span> <span class="kw">&lt;-</span> <span class="st">"FR-Pue"</span></pre></body></html></div>
+<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="no">mysites</span> <span class="kw">&lt;-</span> <span class="st">"FR-Pue"</span></pre></body></html></div>
 <p>A small number of meta data variables have to be specified for each site specifically to define the simulation years. This information is also used for input, calibration, and evaluation data ingestion. Required meta information is specified for each site (in rows) and a number of variables:</p>
 <ul>
 <li>
@@ -118,7 +120,7 @@
 <div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">siteinfo</span> <span class="kw">&lt;-</span> <span class="kw pkg">ingestr</span><span class="kw ns">::</span><span class="no">siteinfo_fluxnet2015</span> <span class="kw">%&gt;%</span>
   <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">sitename</span> <span class="kw">%in%</span> <span class="no">mysites</span>)
 
-<span class="co">## take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo</span>
+<span class="co"># take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo</span>
 <span class="no">siteinfo</span> <span class="kw">&lt;-</span> <span class="no">siteinfo</span> <span class="kw">%&gt;%</span>
   <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">year_start</span> <span class="kw">=</span> <span class="fl">2007</span>, <span class="kw">year_end</span> <span class="kw">=</span> <span class="fl">2014</span>)
 
@@ -126,9 +128,9 @@
   <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">date_start</span> <span class="kw">=</span> <span class="kw pkg">lubridate</span><span class="kw ns">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/ymd.html">ymd</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="no">year_start</span>, <span class="st">"-01-01"</span>))) <span class="kw">%&gt;%</span>
   <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(<span class="kw">date_end</span> <span class="kw">=</span> <span class="kw pkg">lubridate</span><span class="kw ns">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/ymd.html">ymd</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="no">year_end</span>, <span class="st">"-12-31"</span>)))</pre></body></html></div>
 </div>
-<div id="simulation-settings" class="section level3">
-<h3 class="hasAnchor">
-<a href="#simulation-settings" class="anchor"></a>Simulation settings</h3>
+<div id="simulation-settings" class="section level2">
+<h2 class="hasAnchor">
+<a href="#simulation-settings" class="anchor"></a>Simulation settings</h2>
 <p>Specify additional simulation parameters that are identical for all site-scale simulations.</p>
 <div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">params_siml</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(
   <span class="kw">spinup</span>             <span class="kw">=</span> <span class="fl">TRUE</span>,
@@ -151,9 +153,9 @@
 <p>Run <code><a href="../reference/prepare_setup_sofun.html">prepare_setup_sofun()</a></code> to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters), global simulation parameters are wrapped inside an additional column <code>params_siml</code>, added to the site meta info dataframe.</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">siteinfo</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/prepare_setup_sofun.html">prepare_setup_sofun</a></span>(<span class="kw">siteinfo</span> <span class="kw">=</span> <span class="no">siteinfo</span>, <span class="kw">params_siml</span> <span class="kw">=</span> <span class="no">params_siml</span>)</pre></body></html></div>
 </div>
-<div id="define-model-parameters" class="section level3">
-<h3 class="hasAnchor">
-<a href="#define-model-parameters" class="anchor"></a>Define model parameters</h3>
+<div id="define-model-parameters" class="section level2">
+<h2 class="hasAnchor">
+<a href="#define-model-parameters" class="anchor"></a>Define model parameters</h2>
 <p>First, let’s do it by hand (calibration of parameters is shown later).</p>
 <div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">params_modl</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(
     <span class="kw">kphio</span>           <span class="kw">=</span> <span class="fl">0.05</span>,
@@ -164,25 +166,26 @@
     <span class="kw">vpdstress_par_m</span> <span class="kw">=</span> <span class="fl">5</span>
     )</pre></body></html></div>
 </div>
-<div id="define-soil-parameters" class="section level3">
-<h3 class="hasAnchor">
-<a href="#define-soil-parameters" class="anchor"></a>Define soil parameters</h3>
+<div id="define-soil-parameters" class="section level2">
+<h2 class="hasAnchor">
+<a href="#define-soil-parameters" class="anchor"></a>Define soil parameters</h2>
 <p>For now, this is implemented as an illustration. Should be made site-specific. Values entered here take no effect.</p>
 <div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">df_soiltexture</span> <span class="kw">&lt;-</span> <span class="fu">bind_rows</span>(
   <span class="kw">top</span>    <span class="kw">=</span> <span class="fu">tibble</span>(<span class="kw">layer</span> <span class="kw">=</span> <span class="st">"top"</span>,    <span class="kw">fsand</span> <span class="kw">=</span> <span class="fl">0.4</span>, <span class="kw">fclay</span> <span class="kw">=</span> <span class="fl">0.3</span>, <span class="kw">forg</span> <span class="kw">=</span> <span class="fl">0.1</span>, <span class="kw">fgravel</span> <span class="kw">=</span> <span class="fl">0.1</span>),
   <span class="kw">bottom</span> <span class="kw">=</span> <span class="fu">tibble</span>(<span class="kw">layer</span> <span class="kw">=</span> <span class="st">"bottom"</span>, <span class="kw">fsand</span> <span class="kw">=</span> <span class="fl">0.4</span>, <span class="kw">fclay</span> <span class="kw">=</span> <span class="fl">0.3</span>, <span class="kw">forg</span> <span class="kw">=</span> <span class="fl">0.1</span>, <span class="kw">fgravel</span> <span class="kw">=</span> <span class="fl">0.1</span>)
 )</pre></body></html></div>
 </div>
-<div id="get-input" class="section level3">
-<h3 class="hasAnchor">
-<a href="#get-input" class="anchor"></a>Get input</h3>
+<div id="get-input" class="section level2">
+<h2 class="hasAnchor">
+<a href="#get-input" class="anchor"></a>Get input</h2>
 <p>Input data, used as model forcing, is collected using the <a href="https://stineb.github.io/ingestr/">ingestr</a> package. A brief description for how to use it for our present application is provided here. Data is collected by data source.</p>
-<div id="meteo-data" class="section level4">
-<h4 class="hasAnchor">
-<a href="#meteo-data" class="anchor"></a>Meteo data</h4>
-<p>The following ingests meteorological data from the FLUXNET 2015 files for variables temperature, precipitation, VPD, shortwave incoming radiation, net radiation, and atmospheric pressure. Arguments that are specific for this data source are provided in the <code>settings</code> list. The data object <code>ddf_fluxnet</code> is organised as a nested table with rows for sites and time series nested inside the column <code>data</code>. See <a href="https://tidyr.tidyverse.org/reference/nest.html">here</a> for how to handle nested dataframes.</p>
+</div>
+<div id="meteo-data" class="section level2">
+<h2 class="hasAnchor">
+<a href="#meteo-data" class="anchor"></a>Meteo data</h2>
+<p>The following ingests meteorological data from the FLUXNET 2015 files for variables daytime temperature, precipitation, daytime VPD, shortwave incoming radiation, net radiation, and atmospheric pressure. Arguments that are specific for this data source are provided in the <code>settings</code> list. Unfortunately, FLUXNET 2015 doesn’t provide daytime VPD. But we can derive it using the ingestr R package as described <a href="https://stineb.github.io/ingestr/articles/calc_daytime_vpd.html">here</a> and done below. This writes files with daytime VPD into the directory specified by <code>settings_fluxnet$dir_hh</code>. The data object <code>ddf_fluxnet</code> is organised as a nested table with rows for sites and time series nested inside the column <code>data</code>. See <a href="https://tidyr.tidyverse.org/reference/nest.html">here</a> for how to handle nested dataframes.</p>
 <div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ingestr</span>)
-<span class="no">ddf_fluxnet</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span>(
+<span class="no">ddf_fluxnet</span> <span class="kw">&lt;-</span> <span class="kw pkg">ingestr</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span>(
   <span class="kw">siteinfo</span>  <span class="kw">=</span> <span class="no">siteinfo</span>,
   <span class="kw">source</span>    <span class="kw">=</span> <span class="st">"fluxnet"</span>,
   <span class="kw">getvars</span>   <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">temp</span> <span class="kw">=</span> <span class="st">"TA_F_DAY"</span>, <span class="kw">prec</span> <span class="kw">=</span> <span class="st">"P_F"</span>, <span class="kw">vpd</span>  <span class="kw">=</span> <span class="st">"VPD_F_DAY"</span>, <span class="kw">ppfd</span> <span class="kw">=</span>  <span class="st">"SW_IN_F"</span>, <span class="kw">patm</span> <span class="kw">=</span> <span class="st">"PA_F"</span>),
@@ -191,8 +194,8 @@
   <span class="kw">timescale</span> <span class="kw">=</span> <span class="st">"d"</span>
   )</pre></body></html></div>
 <p>Some meteo data is not available from FLUXNET. Extract it from CRU global climate files instead.</p>
-<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">ddf_cru</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span>(
-  <span class="kw">siteinfo</span>  <span class="kw">=</span> <span class="no">siteinfo</span> <span class="kw">%&gt;%</span> <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">sitename</span> <span class="kw">%in%</span> <span class="no">mysites</span>),
+<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">ddf_cru</span> <span class="kw">&lt;-</span> <span class="kw pkg">ingestr</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span>(
+  <span class="kw">siteinfo</span>  <span class="kw">=</span> <span class="no">siteinfo</span>,
   <span class="kw">source</span>    <span class="kw">=</span> <span class="st">"cru"</span>,
   <span class="kw">getvars</span>   <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">ccov</span> <span class="kw">=</span> <span class="st">"cld"</span>),
   <span class="kw">dir</span>       <span class="kw">=</span> <span class="st">"~/data/cru/ts_4.01/"</span>
@@ -214,12 +217,12 @@
   <span class="fu">group_by</span>(<span class="no">sitename</span>) <span class="kw">%&gt;%</span>
   <span class="kw pkg">tidyr</span><span class="kw ns">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html">nest</a></span>()</pre></body></html></div>
 </div>
-<div id="fapar-data" class="section level4">
-<h4 class="hasAnchor">
-<a href="#fapar-data" class="anchor"></a>fAPAR data</h4>
+<div id="fapar-data" class="section level2">
+<h2 class="hasAnchor">
+<a href="#fapar-data" class="anchor"></a>fAPAR data</h2>
 <p>fAPAR data is prescribed in the P-model setup. The following extracts data MODIS FPAR data from Google Earth Engine (see a complete description for how to set up the GEE API and download library <a href="https://stineb.github.io/ingestr/articles/example.html#google-earth-engine">here</a>).</p>
 <p>The following example is for downloading MODIS FPAR data (MODIS/006/MCD15A3H, band Fpar).</p>
-<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="no">settings_gee</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/get_settings_gee.html">get_settings_gee</a></span>(
+<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="no">settings_gee</span> <span class="kw">&lt;-</span> <span class="kw pkg">ingestr</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/get_settings_gee.html">get_settings_gee</a></span>(
   <span class="kw">bundle</span> <span class="kw">=</span> <span class="st">"modis_fpar"</span>,
   <span class="kw">python_path</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.html">system</a></span>(<span class="st">"which python"</span>, <span class="kw">intern</span> <span class="kw">=</span> <span class="fl">TRUE</span>),
   <span class="kw">gee_path</span> <span class="kw">=</span> <span class="st">"~/google_earth_engine_subsets/gee_subset/"</span>,
@@ -229,9 +232,9 @@
   <span class="kw">overwrite_raw</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
   <span class="kw">overwrite_interpol</span> <span class="kw">=</span> <span class="fl">TRUE</span>
   )</pre></body></html></div>
-<p>This can now be used to download the data to the directory specified by argument <code>data_path</code> of function <code><a href="../reference/get_settings_gee.html">get_settings_gee()</a></code> and to read data into R.</p>
-<div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="no">df_gee_modis_fpar</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span>(
-  <span class="kw">siteinfo</span>  <span class="kw">=</span> <span class="no">siteinfo</span> <span class="kw">%&gt;%</span> <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">sitename</span> <span class="kw">%in%</span> <span class="no">mysites</span>),
+<p>This can now be used to download the data to the directory specified by argument <code>data_path</code> of function <code><a href="https://rdrr.io/pkg/ingestr/man/get_settings_gee.html">get_settings_gee()</a></code> and to read data into R.</p>
+<div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="no">df_gee_modis_fpar</span> <span class="kw">&lt;-</span> <span class="kw pkg">ingestr</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span>(
+  <span class="kw">siteinfo</span>  <span class="kw">=</span> <span class="no">siteinfo</span>,
   <span class="kw">source</span> <span class="kw">=</span> <span class="st">"gee"</span>,
   <span class="kw">settings</span> <span class="kw">=</span> <span class="no">settings_gee</span>,
   <span class="kw">verbose</span> <span class="kw">=</span> <span class="fl">FALSE</span>
@@ -250,28 +253,128 @@
 <pre><code>## Warning: Filling values with last available data point at head</code></pre>
 <pre><code>## Warning: Filling values with last available data point at tail.</code></pre>
 </div>
-<div id="co2" class="section level4">
-<h4 class="hasAnchor">
-<a href="#co2" class="anchor"></a>CO2</h4>
+<div id="co2" class="section level2">
+<h2 class="hasAnchor">
+<a href="#co2" class="anchor"></a>CO2</h2>
 <p>Ingesting CO2 data is particularly simple. We can safely assume it’s well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.</p>
-<div class="sourceCode" id="cb18"><html><body><pre class="r"><span class="no">df_co2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span>(
-  <span class="kw">siteinfo</span>  <span class="kw">=</span> <span class="no">siteinfo</span> <span class="kw">%&gt;%</span> <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">sitename</span> <span class="kw">%in%</span> <span class="no">mysites</span>),
-  <span class="kw">source</span> <span class="kw">=</span> <span class="st">"co2"</span>,
-  <span class="kw">verbose</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-  <span class="kw">settings</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">path</span> <span class="kw">=</span> <span class="st">"~/data/co2/cCO2_rcp85_const850-1765.csv"</span>)
+<div class="sourceCode" id="cb18"><html><body><pre class="r"><span class="no">df_co2</span> <span class="kw">&lt;-</span> <span class="kw pkg">ingestr</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span>(
+  <span class="no">siteinfo</span>,
+  <span class="kw">source</span>  <span class="kw">=</span> <span class="st">"co2_mlo"</span>,
+  <span class="kw">verbose</span> <span class="kw">=</span> <span class="fl">FALSE</span>
   )</pre></body></html></div>
-<pre><code>## Parsed with column specification:
-## cols(
-##   year = col_double(),
-##   co2 = col_double()
-## )</code></pre>
 </div>
-<div id="collect-all-drivers" class="section level4">
-<h4 class="hasAnchor">
-<a href="#collect-all-drivers" class="anchor"></a>Collect all drivers</h4>
-<p>Finally, we can collect forcing data, simulation parameters, and site meta info into a single object that will be used to drive rsofun.</p>
-<div class="sourceCode" id="cb20"><html><body><pre class="r"><span class="no">df_drivers</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/collect_drivers_sofun.html">collect_drivers_sofun</a></span>(
-  <span class="kw">siteinfo</span>       <span class="kw">=</span> <span class="no">siteinfo</span> <span class="kw">%&gt;%</span> <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">sitename</span> <span class="kw">%in%</span> <span class="no">mysites</span>),
+<div id="collect-all-drivers" class="section level2">
+<h2 class="hasAnchor">
+<a href="#collect-all-drivers" class="anchor"></a>Collect all drivers</h2>
+<p>Finally, we can collect forcing data, simulation parameters, and site meta info into a single object that will be used to drive rsofun. All of the above steps can be customized. The function <code><a href="../reference/collect_drivers_sofun.html">collect_drivers_sofun()</a></code> can in general be used to process forcing data into the format required to run SOFUN. The arguments must have the following form:</p>
+<ul>
+<li>
+<code>siteinfo</code>: A data frame (tibble) with columns <code>sitename</code>, <code>lon</code>, <code>lat</code>, <code>elv</code> (elevation), <code>year_start</code>, <code>year_end</code>, <code>whc</code> (water holding capacity used for simulating the soil water balance), <code>c4</code> (vegetation following C4 photosynthesis). An example for FLUXNET 2015 sites is given by</li>
+</ul>
+<div class="sourceCode" id="cb19"><html><body><pre class="r"><span class="kw pkg">ingestr</span><span class="kw ns">::</span><span class="no">siteinfo_fluxnet2015</span> <span class="kw">%&gt;%</span> <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">sitename</span>, <span class="no">lon</span>, <span class="no">lat</span>, <span class="no">elv</span>, <span class="no">year_start</span>, <span class="no">year_end</span>, <span class="no">whc</span>)</pre></body></html></div>
+<pre><code>## # A tibble: 166 x 7
+##    sitename   lon   lat   elv year_start year_end   whc
+##    &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;    &lt;dbl&gt;
+##  1 AR-SLu   -66.5 -33.5   499 2009       2011      268.
+##  2 AR-Vir   -56.2 -28.2    97 2009       2012      302.
+##  3 AT-Neu    11.3  47.1   970 2002       2012      270.
+##  4 AU-Ade   131.  -13.1    81 2007       2009      269.
+##  5 AU-ASM   133.  -22.3   606 2010       2013      215.
+##  6 AU-Cpr   141.  -34.0    57 2010       2014      217.
+##  7 AU-Cum   151.  -33.6    28 2012       2014      311.
+##  8 AU-DaP   131.  -14.1   102 2007       2013      295.
+##  9 AU-DaS   131.  -14.2    98 2008       2014      249.
+## 10 AU-Dry   132.  -15.3   172 2008       2014      239.
+## # … with 156 more rows</code></pre>
+<ul>
+<li>
+<code>meteo</code>: A nested data frame with columns <code>sitename</code> and <code>data</code>. The latter contains the nested meteorological forcing data frames, with columns <code>date</code>, <code>temp</code>, <code>prec</code>, <code>vpd</code>, <code>ppfd</code>, <code>patm</code>, and <code>ccov</code>. Like this:</li>
+</ul>
+<div class="sourceCode" id="cb21"><html><body><pre class="r"><span class="co">## nested data frame:</span>
+<span class="no">ddf_meteo</span></pre></body></html></div>
+<pre><code>## # A tibble: 1 x 2
+## # Groups:   sitename [1]
+##   sitename data                
+##   &lt;chr&gt;    &lt;list&gt;              
+## 1 FR-Pue   &lt;tibble [2,920 × 8]&gt;</code></pre>
+<div class="sourceCode" id="cb23"><html><body><pre class="r"><span class="co">## inside .$data:</span>
+<span class="no">ddf_meteo</span>$<span class="no">data</span><span class="kw">[[</span><span class="fl">1</span>]] <span class="kw">%&gt;%</span> <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(-<span class="no">ccov_int</span>)</pre></body></html></div>
+<pre><code>## # A tibble: 2,920 x 7
+##    date        temp  prec   vpd  ppfd   patm  ccov
+##    &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+##  1 2007-01-01 10.2    2.2 183.   9.18  99944  47.5
+##  2 2007-01-02  8.41   0.6 417.  16.6   99992  47.3
+##  3 2007-01-03  9.13   0   566.  16.2  100075  47.2
+##  4 2007-01-04 10.2    0   375.   7.16  99337  47.1
+##  5 2007-01-05 10.7    0   508.  15.8   99419  47.1
+##  6 2007-01-06 13.6    0   656.  16.2   99467  47.1
+##  7 2007-01-07 13.7    0   567.  13.4   99252  47.2
+##  8 2007-01-08 10.9    0   273.   6.19  98871  47.2
+##  9 2007-01-09 16.4    0   682.  16.2   99067  47.3
+## 10 2007-01-10 11.4    0    26.0  2.39  99444  47.5
+## # … with 2,910 more rows</code></pre>
+<ul>
+<li>
+<code>fapar</code>: A nested data frame with columns <code>sitename</code> and <code>data</code>. The latter contains the nested meteorological forcing data frames, with columns <code>date</code>, and <code>fapar</code>. Like this:</li>
+</ul>
+<div class="sourceCode" id="cb25"><html><body><pre class="r"><span class="co">## nested data frame:</span>
+<span class="no">df_gee_modis_fpar</span></pre></body></html></div>
+<pre><code>## # A tibble: 1 x 2
+## # Groups:   sitename [1]
+##   sitename data                 
+##   &lt;chr&gt;    &lt;list&gt;               
+## 1 FR-Pue   &lt;tibble [2,922 × 17]&gt;</code></pre>
+<div class="sourceCode" id="cb27"><html><body><pre class="r"><span class="co">## inside .$data:</span>
+<span class="no">df_gee_modis_fpar</span>$<span class="no">data</span><span class="kw">[[</span><span class="fl">1</span>]] <span class="kw">%&gt;%</span> <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">date</span>, <span class="no">fapar</span>)</pre></body></html></div>
+<pre><code>## # A tibble: 2,922 x 2
+##    date       fapar
+##    &lt;date&gt;     &lt;dbl&gt;
+##  1 2007-01-01 0.76 
+##  2 2007-01-02 0.76 
+##  3 2007-01-03 0.76 
+##  4 2007-01-04 0.775
+##  5 2007-01-05 0.79 
+##  6 2007-01-06 0.805
+##  7 2007-01-07 0.82 
+##  8 2007-01-08 0.808
+##  9 2007-01-09 0.795
+## 10 2007-01-10 0.782
+## # … with 2,912 more rows</code></pre>
+<ul>
+<li>
+<code>co2</code> : A nested data frame with columns <code>sitename</code> and <code>data</code>. The latter contains the nested meteorological forcing data frames, with columns <code>date</code>, and <code>co2</code>. Like this:</li>
+</ul>
+<div class="sourceCode" id="cb29"><html><body><pre class="r"><span class="co">## nested data frame:</span>
+<span class="no">df_co2</span></pre></body></html></div>
+<pre><code>## # A tibble: 1 x 2
+## # Groups:   sitename [1]
+##   sitename data                
+##   &lt;chr&gt;    &lt;list&gt;              
+## 1 FR-Pue   &lt;tibble [2,922 × 2]&gt;</code></pre>
+<div class="sourceCode" id="cb31"><html><body><pre class="r"><span class="co">## inside .$data:</span>
+<span class="no">df_co2</span>$<span class="no">data</span><span class="kw">[[</span><span class="fl">1</span>]] <span class="kw">%&gt;%</span> <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(<span class="no">date</span>, <span class="no">co2</span>)</pre></body></html></div>
+<pre><code>## # A tibble: 2,922 x 2
+##    date         co2
+##    &lt;date&gt;     &lt;dbl&gt;
+##  1 2007-01-01  384.
+##  2 2007-01-02  384.
+##  3 2007-01-03  384.
+##  4 2007-01-04  384.
+##  5 2007-01-05  384.
+##  6 2007-01-06  384.
+##  7 2007-01-07  384.
+##  8 2007-01-08  384.
+##  9 2007-01-09  384.
+## 10 2007-01-10  384.
+## # … with 2,912 more rows</code></pre>
+<ul>
+<li>
+<code>df_soiltexture</code>: See above (‘Define soil parameters’)</li>
+</ul>
+<p>See <a href="https://tidyr.tidyverse.org/reference/nest.html">here</a> for how to handle nested dataframes.</p>
+<p>Finally, all input data can be collected by:</p>
+<div class="sourceCode" id="cb33"><html><body><pre class="r"><span class="no">df_drivers</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/collect_drivers_sofun.html">collect_drivers_sofun</a></span>(
+  <span class="kw">siteinfo</span>       <span class="kw">=</span> <span class="no">siteinfo</span>,
   <span class="kw">meteo</span>          <span class="kw">=</span> <span class="no">ddf_meteo</span>,
   <span class="kw">fapar</span>          <span class="kw">=</span> <span class="no">df_gee_modis_fpar</span>,
   <span class="kw">co2</span>            <span class="kw">=</span> <span class="no">df_co2</span>,
@@ -283,12 +386,13 @@
 ##   &lt;chr&gt;    &lt;list&gt;            &lt;list&gt;           &lt;list&gt;          &lt;list&gt;            
 ## 1 FR-Pue   &lt;tibble [1 × 18]&gt; &lt;tibble [1 × 12… &lt;tibble [2 × 5… &lt;tibble [2,920 × …</code></pre>
 </div>
-</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-      </div>
+        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
+    </nav>
+</div>
 
 </div>
 

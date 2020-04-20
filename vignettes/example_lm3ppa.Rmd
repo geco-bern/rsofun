@@ -1,11 +1,16 @@
 ---
-title: "Example"
-output: html_document
+title: "Example using LM3-PPA"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
 ---
 
 ```{r setup, include=FALSE}
 library(dplyr)
 library(rsofun)
+library(ggplot2)
 ```
 
 ## Example
@@ -155,7 +160,7 @@ The file has the following variables (units):
                       K          kg/kg          m/s     kg_H2O/m2/s               pa               W/m2            W/m2            ppm     
 
 ```{r}
-forcing <- read_delim("/Users/benjaminstocker/sofun/input/ORNL_forcing.txt", col_names = TRUE, delim = "\t") %>% 
+forcing <- read_delim( paste0(path.package("rsofun"), "/extdata/ORNL_forcing.txt"), col_names = TRUE, delim = "\t") %>% 
   mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
   mutate(sitename = "ORNL") %>% 
   dplyr::filter(!(mday(date)==29 & month(date)==2)) %>% 
@@ -196,22 +201,22 @@ rsofun_out_annual_tile <- out$output_annual_tile
 rsofun_out_annual_cohorts <- out$output_annual_cohorts
 
 
-moddf_drivers <- collect_drivers_sofun( 
-  settings       = settings_sims, 
-  forcing        = ddf_input
-  )
-
-## run for a single site
-mod <- run_lm3ppa_f_bysite( 
-  df_drivers$sitename[1], 
-  df_drivers$params_siml[[1]], 
-  df_drivers$siteinfo[[1]], 
-  df_drivers$forcing[[1]], 
-  df_drivers$df_soiltexture[[1]], 
-  params_modl = params_modl, 
-  makecheck = TRUE,
-  method = "lm3ppa"
-  )
+# moddf_drivers <- collect_drivers_sofun( 
+#   settings       = settings_sims, 
+#   forcing        = ddf_input
+#   )
+# 
+# ## run for a single site
+# mod <- run_lm3ppa_f_bysite( 
+#   df_drivers$sitename[1], 
+#   df_drivers$params_siml[[1]], 
+#   df_drivers$siteinfo[[1]], 
+#   df_drivers$forcing[[1]], 
+#   df_drivers$df_soiltexture[[1]], 
+#   params_modl = params_modl, 
+#   makecheck = TRUE,
+#   method = "lm3ppa"
+#   )
 
 # ## Run for the full set of sites
 # ptm <- proc.time()
@@ -242,157 +247,9 @@ mod <- run_lm3ppa_f_bysite(
 #   units = 's'
 # )
 
-df_output$out_sofun[[1]] %>% 
-  ggplot(aes(x=date, y=gpp)) +
+rsofun_out_daily_tile %>% 
+  mutate(date = lubridate::ymd(paste0(year, "-01-01")) + lubridate::days(doy-1)) %>% 
+  ggplot(aes(x=date, y=GPP)) +
   geom_line() + 
-  labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
-```
-
-### Calibrate
-
-Define calibration settings.
-```{r}
-## Define calibration settings common for all setups
-settings_calib <- list(
-  method              = "gensa",
-  targetvars          = c("gpp"),
-  timescale           = list( gpp = "d" ),
-  path_fluxnet2015    = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
-  path_fluxnet2015_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
-  threshold_GPP       = 0.5,
-  path_gepisat        = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
-  maxit               = 5, # (5 for gensa) (30 for optimr)    #
-  sitenames           = mysites,
-  filter_temp_max     = 35.0,
-  filter_drought      = FALSE,
-  metric              = "rmse",
-  dir_results         = "./",
-  name                = "ORG",
-  par                 = list( kphio = list( lower=0.03, upper=0.07, init=0.0496 ) ),
-  datasource          = list( gpp = "fluxnet2015_NT" ),
-  filter_temp_min     = NA,
-  filter_soilm_min    = NA
- )
-```
- 
-Get calibration target data.
-```{r warning=FALSE, message=FALSE}
-ddf_obs_calib <- get_obs_calib( 
-  settings_calib = settings_calib, 
-  dplyr::select(df_drivers, sitename, siteinfo) %>% tidyr::unnest(siteinfo), 
-  settings_input
-  )
-```
-
-Calibrate the model.
-
-```{r warning=FALSE, message=FALSE}
-set.seed(1982)
-settings_calib <- calib_sofun( 
-  settings_calib, 
-  df_drivers, 
-  ddf_obs = ddf_obs_calib 
-  )
-```
-
-The calibrated parameters are returned by `calib_sofun()` as part of the list:
-```{r}
-print(settings_calib$par_opt)
-```
-
-
-### Evaluate
-
-Run the model once again with these parameters and evaluate results.
-```{r warning=FALSE, message=FALSE}
-mylist <- readr::read_csv("~/eval_pmodel/myselect_fluxnet2015.csv") %>% 
-  dplyr::filter( use==1 ) %>% 
-  dplyr::pull( Site )
-
-settings_eval <- list(
-  sitenames           = settings_sims$sitename,
-  sitenames_siteplots = mylist,
-  agg                 = 8,
-  path_fluxnet2015_d  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1d/original/unpacked/",
-  path_fluxnet2015_w  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_7d/original/unpacked/",
-  path_fluxnet2015_m  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1m/original/unpacked/",
-  path_fluxnet2015_y  = "~/data/FLUXNET-2015_Tier1/20160128/point-scale_none_1y/original/unpacked/",
-  path_gepisat_d      = "~/data/gepisat/v3_fluxnet2015/daily_gpp/",
-  benchmark           = list( gpp = c("fluxnet2015_NT") ),
-  remove_premodis     = TRUE
-  )
-```
-
-Get evaluation data (benchmarking data).
-```{r warning=FALSE, message=FALSE}
-filn <- "./obs_eval.Rdata"
-if (file.exists(filn)){
-  load(filn)
-} else {
-  obs_eval  <- get_obs_eval( 
-    settings_eval = settings_eval, 
-    settings_sims = settings_sims, 
-    overwrite     = TRUE, 
-    light         = TRUE,
-    add_forcing   = FALSE
-  )
-  save(obs_eval, file = filn)
-} 
-```
-
-Now run the model with calibrated parameters.
-```{r}
-params_modl <- list(
-  kphio           = settings_calib$par_opt[["kphio"]],
-  soilm_par_a     = 1.0,
-  soilm_par_b     = 0.0,
-  vpdstress_par_a = 0.2,
-  vpdstress_par_b = 0.2,
-  vpdstress_par_m = 5
-  )
-
-mod <- runread_sofun_f(
-  df_drivers, 
-  params_modl = params_modl, 
-  makecheck = TRUE
-  ) %>% 
-  rename(id = sitename) %>% 
-  unnest(out_sofun)
-```
-
-And finally do the evaluation.
-```{r warning=FALSE, message=FALSE}
-out_eval <- eval_sofun( 
-  mod, 
-  settings_eval, 
-  settings_sims, 
-  obs_eval = obs_eval, 
-  overwrite = TRUE, 
-  light = FALSE 
-  )
-```
-
-Print some results.
-```{r}
-out_eval$gpp$fluxnet2015$metrics$xdaily_pooled
-```
-
-```{r}
-out_eval$gpp$fluxnet2015$data$xdf %>% rbeni::analyse_modobs2("mod", "obs", type = "heat")
-```
-
-```{r}
-out_eval$gpp$fluxnet2015$data$ddf %>% 
-  dplyr::filter(sitename=="BE-Vie" & year(date) < 2005) %>% 
-  ggplot(aes(x = date)) +
-  geom_line(aes(y = obs), col="black") +
-  geom_line(aes(y = mod), col="red") + 
-  labs(title = "BE-Vie")
-
-out_eval$gpp$fluxnet2015$data$ddf %>% 
-  dplyr::filter(sitename=="AU-Dry" & year(date) > 2010) %>% 
-  ggplot(aes(x = date)) +
-  geom_line(aes(y = obs), col="black") +
-  geom_line(aes(y = mod), col="red") + 
-  labs(title = "AU-Dry")
+  labs(title = "LM3-PPA at ORNL", subtitle = "SOFUN output")
 ```
