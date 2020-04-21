@@ -385,7 +385,9 @@ contains
 
     ! input and output arrays (naked) to be passed back to C/R
     real(kind=c_double), dimension(nt,13), intent(in) :: forcing
+
     real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
+
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
 
     real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_year
@@ -598,7 +600,7 @@ contains
       ! Call biosphere (wrapper for all modules, contains gridcell loop)
       !----------------------------------------------------------------
       ! out_biosphere = biosphere_annual()
-      call biosphere_annual(out_biosphere)   !xxx debugging
+      call biosphere_annual( out_biosphere )
 
       !----------------------------------------------------------------
       ! Populate big output arrays
@@ -680,11 +682,13 @@ contains
       !----------------------------------------------------------------
       ! Output out_annual_tile (calling subroutine)
       !----------------------------------------------------------------
-      ! print*,'a'
-      ! print*,output_annual_tile(yr,1)
+      ! print*,'shape of output_daily_cohorts_HW_N', shape(output_daily_cohorts_HW_N)
+
       call populate_outarray_annual_tile( out_biosphere%annual_tile, output_annual_tile(yr,:) )
 
-      ! print*, "CAI output, CAI out_biosphere", output_annual_tile(yr,2), out_biosphere%annual_tile%CAI
+      ! out_annual_tile(2)  = dble(annual_tile%CAI)
+
+      ! print*, "CAI output, CAI out_biosphere", out_biosphere%annual_tile%CAI !output_annual_tile(yr,2), 
 
       ! ----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)
