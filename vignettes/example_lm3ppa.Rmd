@@ -193,61 +193,7 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-
-rsofun_out_hourly_tile <- out$output_hourly_tile
-rsofun_out_daily_tile <- out$output_daily_tile
-rsofun_out_daily_cohorts <- out$output_daily_cohorts
-rsofun_out_annual_tile <- out$output_annual_tile
-rsofun_out_annual_cohorts <- out$output_annual_cohorts
-
-
-# moddf_drivers <- collect_drivers_sofun( 
-#   settings       = settings_sims, 
-#   forcing        = ddf_input
-#   )
-# 
-# ## run for a single site
-# mod <- run_lm3ppa_f_bysite( 
-#   df_drivers$sitename[1], 
-#   df_drivers$params_siml[[1]], 
-#   df_drivers$siteinfo[[1]], 
-#   df_drivers$forcing[[1]], 
-#   df_drivers$df_soiltexture[[1]], 
-#   params_modl = params_modl, 
-#   makecheck = TRUE,
-#   method = "lm3ppa"
-#   )
-
-# ## Run for the full set of sites
-# ptm <- proc.time()
-# df_output <- runread_sofun_f(
-#      df_drivers, 
-#      params_modl = params_modl, 
-#      makecheck = TRUE,
-#      parallel = FALSE,
-#      method = "lm3ppa"
-#      )
-# print(ptm)
-
-# microbenchmark::microbenchmark(
-#   runread_sofun_f(
-#     df_drivers, 
-#     params_modl = params_modl, 
-#     makecheck = TRUE,
-#     parallel = TRUE,
-#     ncores = 4
-#     ),
-#   runread_sofun_f(
-#     df_drivers, 
-#     params_modl = params_modl, 
-#     makecheck = TRUE,
-#     parallel = FALSE
-#     ),
-#   times = 5,
-#   units = 's'
-# )
-
-rsofun_out_daily_tile %>% 
+out$output_daily_tile %>% 
   mutate(date = lubridate::ymd(paste0(year, "-01-01")) + lubridate::days(doy-1)) %>% 
   ggplot(aes(x=date, y=GPP)) +
   geom_line() + 

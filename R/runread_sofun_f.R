@@ -1,6 +1,6 @@
-#' Run SOFUN and read output
+#' Run the P-model
 #'
-#' Runs the model and reads output in once.
+#' Runs the P-model and loads output in once.
 #'
 #' @param df_drivers A nested data frame with one row for each site and columns named according to the 
 #' arguments of function \link{runread_pmodel_f_bysite}
@@ -62,9 +62,9 @@ runread_pmodel_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
   return(df_out)
 }
 
-#' Run SOFUN and read output
+#' Run LM3-PPA
 #'
-#' Runs the model and reads output in once.
+#' Runs the LM3-PPA model and loads output in once.
 #'
 #' @param df_drivers A nested data frame with one row for each site and columns named according to the 
 #' arguments of function \link{runread_pmodel_f_bysite}

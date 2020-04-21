@@ -272,60 +272,7 @@
 ## Using compatibility `.name_repair`.
 ## This warning is displayed once every 8 hours.
 ## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
-<div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="no">rsofun_out_hourly_tile</span> <span class="kw">&lt;-</span> <span class="no">out</span>$<span class="no">output_hourly_tile</span>
-<span class="no">rsofun_out_daily_tile</span> <span class="kw">&lt;-</span> <span class="no">out</span>$<span class="no">output_daily_tile</span>
-<span class="no">rsofun_out_daily_cohorts</span> <span class="kw">&lt;-</span> <span class="no">out</span>$<span class="no">output_daily_cohorts</span>
-<span class="no">rsofun_out_annual_tile</span> <span class="kw">&lt;-</span> <span class="no">out</span>$<span class="no">output_annual_tile</span>
-<span class="no">rsofun_out_annual_cohorts</span> <span class="kw">&lt;-</span> <span class="no">out</span>$<span class="no">output_annual_cohorts</span>
-
-
-<span class="co"># moddf_drivers &lt;- collect_drivers_sofun( </span>
-<span class="co">#   settings       = settings_sims, </span>
-<span class="co">#   forcing        = ddf_input</span>
-<span class="co">#   )</span>
-<span class="co"># </span>
-<span class="co"># ## run for a single site</span>
-<span class="co"># mod &lt;- run_lm3ppa_f_bysite( </span>
-<span class="co">#   df_drivers$sitename[1], </span>
-<span class="co">#   df_drivers$params_siml[[1]], </span>
-<span class="co">#   df_drivers$siteinfo[[1]], </span>
-<span class="co">#   df_drivers$forcing[[1]], </span>
-<span class="co">#   df_drivers$df_soiltexture[[1]], </span>
-<span class="co">#   params_modl = params_modl, </span>
-<span class="co">#   makecheck = TRUE,</span>
-<span class="co">#   method = "lm3ppa"</span>
-<span class="co">#   )</span>
-
-<span class="co"># ## Run for the full set of sites</span>
-<span class="co"># ptm &lt;- proc.time()</span>
-<span class="co"># df_output &lt;- runread_sofun_f(</span>
-<span class="co">#      df_drivers, </span>
-<span class="co">#      params_modl = params_modl, </span>
-<span class="co">#      makecheck = TRUE,</span>
-<span class="co">#      parallel = FALSE,</span>
-<span class="co">#      method = "lm3ppa"</span>
-<span class="co">#      )</span>
-<span class="co"># print(ptm)</span>
-
-<span class="co"># microbenchmark::microbenchmark(</span>
-<span class="co">#   runread_sofun_f(</span>
-<span class="co">#     df_drivers, </span>
-<span class="co">#     params_modl = params_modl, </span>
-<span class="co">#     makecheck = TRUE,</span>
-<span class="co">#     parallel = TRUE,</span>
-<span class="co">#     ncores = 4</span>
-<span class="co">#     ),</span>
-<span class="co">#   runread_sofun_f(</span>
-<span class="co">#     df_drivers, </span>
-<span class="co">#     params_modl = params_modl, </span>
-<span class="co">#     makecheck = TRUE,</span>
-<span class="co">#     parallel = FALSE</span>
-<span class="co">#     ),</span>
-<span class="co">#   times = 5,</span>
-<span class="co">#   units = 's'</span>
-<span class="co"># )</span>
-
-<span class="no">rsofun_out_daily_tile</span> <span class="kw">%&gt;%</span>
+<div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="no">out</span>$<span class="no">output_daily_tile</span> <span class="kw">%&gt;%</span>
   <span class="fu">mutate</span>(<span class="kw">date</span> <span class="kw">=</span> <span class="kw pkg">lubridate</span><span class="kw ns">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/ymd.html">ymd</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="no">year</span>, <span class="st">"-01-01"</span>)) + <span class="kw pkg">lubridate</span><span class="kw ns">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/period.html">days</a></span>(<span class="no">doy</span>-<span class="fl">1</span>)) <span class="kw">%&gt;%</span>
   <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="kw">x</span><span class="kw">=</span><span class="no">date</span>, <span class="kw">y</span><span class="kw">=</span><span class="no">GPP</span>)) +
   <span class="fu">geom_line</span>() +
