@@ -172,53 +172,57 @@ contains
       ! Get external (environmental) forcing
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
-      myinterface%climate = getclimate(  &
-                                          nt, &
+      myinterface%climate(:) = getclimate(nt, &
                                           forcing, &
                                           myinterface%steering%init, &
                                           myinterface%steering%climateyear_idx, &
                                           myinterface%params_siml%in_ppfd,  &
-                                          myinterface%params_siml%in_netrad &
+                                          myinterface%params_siml%in_netrad, &
+                                          myinterface%grid%elv &
                                           )
 
       ! Get annual, gobally uniform CO2
-      myinterface%pco2 = getco2(  &
-                                  nt, &
-                                  forcing, &
-                                  myinterface%steering%forcingyear, &
-                                  myinterface%params_siml%firstyeartrend &
-                                  )
+      print*,'nt', nt
+      ! print*,'forcing', forcing
+      print*,'myinterface%steering%forcingyear', myinterface%steering%forcingyear
+      ! print*,'myinterface%params_siml%firstyeartrend', myinterface%params_siml%firstyeartrend ! crashes here
 
-      !----------------------------------------------------------------
-      ! Get prescribed fAPAR if required (otherwise set to dummy value)
-      !----------------------------------------------------------------
-      myinterface%vegcover = getfapar( &
-                                        nt, &
-                                        forcing, &
-                                        myinterface%steering%forcingyear_idx &
-                                        )
+      ! myinterface%pco2 = getco2(  nt, &
+      !                             forcing, &
+      !                             myinterface%steering%forcingyear, &
+      !                             myinterface%params_siml%firstyeartrend &
+      !                             )
 
-      !----------------------------------------------------------------
-      ! Call biosphere (wrapper for all modules, contains gridcell loop)
-      !----------------------------------------------------------------
-      out_biosphere = biosphere_annual() 
-      !----------------------------------------------------------------
+      ! !----------------------------------------------------------------
+      ! ! Get prescribed fAPAR if required (otherwise set to dummy value)
+      ! !----------------------------------------------------------------
+      ! myinterface%vegcover(:) = getfapar( &
+      !                                   nt, &
+      !                                   forcing, &
+      !                                   myinterface%steering%forcingyear_idx &
+      !                                   )
 
-      !----------------------------------------------------------------
-      ! Populate Fortran output array which is passed back to C/R
-      !----------------------------------------------------------------
-      if (yr > myinterface%params_siml%spinupyears ) then
+      ! !----------------------------------------------------------------
+      ! ! Call biosphere (wrapper for all modules, contains gridcell loop)
+      ! !----------------------------------------------------------------
+      ! out_biosphere = biosphere_annual() 
+      ! !----------------------------------------------------------------
 
-        idx_start = (myinterface%steering%forcingyear_idx - 1) * ndayyear + 1
-        idx_end   = idx_start + ndayyear - 1
+      ! !----------------------------------------------------------------
+      ! ! Populate Fortran output array which is passed back to C/R
+      ! !----------------------------------------------------------------
+      ! if (yr > myinterface%params_siml%spinupyears ) then
 
-        output(idx_start:idx_end,1) = dble(out_biosphere%fapar(:))  
-        output(idx_start:idx_end,2) = dble(out_biosphere%gpp(:))    
-        output(idx_start:idx_end,3) = dble(out_biosphere%transp(:)) 
-        output(idx_start:idx_end,4) = dble(out_biosphere%latenth(:))
-        output(idx_start:idx_end,5) = 0.d0
+      !   idx_start = (myinterface%steering%forcingyear_idx - 1) * ndayyear + 1
+      !   idx_end   = idx_start + ndayyear - 1
 
-      end if
+      !   output(idx_start:idx_end,1) = dble(out_biosphere%fapar(:))  
+      !   output(idx_start:idx_end,2) = dble(out_biosphere%gpp(:))    
+      !   output(idx_start:idx_end,3) = dble(out_biosphere%transp(:)) 
+      !   output(idx_start:idx_end,4) = dble(out_biosphere%latenth(:))
+      !   output(idx_start:idx_end,5) = 0.d0
+
+      ! end if
 
     enddo
 
@@ -563,6 +567,7 @@ contains
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
+
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
     ! print*, 'forcing', forcing(1:15,1)
@@ -640,9 +645,7 @@ contains
 
         call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
 
-        ! print*, "size daily tile", size(out_biosphere%daily_tile(:)), size(output_daily_tile(idx_daily_start:idx_daily_end, :))
-        ! print*, "idx_daily_start  idx_daily_end  ndayyear", idx_daily_start,idx_daily_end, ndayyear
-        ! print*,'output_daily_tile',output_daily_tile(1:10,2)
+        print*, "shape daily tile", shape(output_daily_tile)
       
         ! ----------------------------------------------------------------
         ! Output out_daily_cohorts (without subroutine)
@@ -731,6 +734,7 @@ contains
 
     deallocate(myinterface%climate)
     deallocate(myinterface%pco2)
+    deallocate(out_biosphere%hourly_tile)
  
   end subroutine lm3ppa_f
 

@@ -12,6 +12,7 @@ module md_forcing_pmodel
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_params_core_pmodel, only: ndayyear, nlu, dummy
   use md_grid, only:  gridtype
+  use md_sofunutils, only: calc_patm
 
   implicit none
 
@@ -20,18 +21,18 @@ module md_forcing_pmodel
     getclimate, getco2, getfapar, get_fpc_grid, vegcover_type
 
   type climate_type
-    real(kind=sp), dimension(ndayyear) :: dtemp  ! deg C
-    real(kind=sp), dimension(ndayyear) :: dprec  ! mm d-1
-    real(kind=sp), dimension(ndayyear) :: dsnow  ! mm d-1 water equivalents
-    real(kind=sp), dimension(ndayyear) :: dfsun  ! unitless
-    real(kind=sp), dimension(ndayyear) :: dvpd   ! Pa
-    real(kind=sp), dimension(ndayyear) :: dppfd  ! mol m-2 d-1
-    real(kind=sp), dimension(ndayyear) :: dnetrad! W m-2
-    real(kind=sp), dimension(ndayyear) :: dpatm  ! Pa
+    real(kind=sp) :: dtemp  ! deg C
+    real(kind=sp) :: dprec  ! mm d-1
+    real(kind=sp) :: dsnow  ! mm d-1 water equivalents
+    real(kind=sp) :: dfsun  ! unitless
+    real(kind=sp) :: dvpd   ! Pa
+    real(kind=sp) :: dppfd  ! mol m-2 d-1
+    real(kind=sp) :: dnetrad! W m-2
+    real(kind=sp) :: dpatm  ! Pa
   end type climate_type
 
   type vegcover_type
-    real, dimension(ndayyear) :: dfapar ! fraction of absorbed photosynthetically active radiation
+    real :: dfapar ! fraction of absorbed photosynthetically active radiation
   end type vegcover_type
 
   type landuse_type
@@ -47,7 +48,7 @@ module md_forcing_pmodel
 
 contains
 
-  function getclimate( nt, forcing, init, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
+  function getclimate( nt, forcing, init, climateyear_idx, in_ppfd, in_netrad, elv ) result ( out_climate )
   ! function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
@@ -62,13 +63,14 @@ contains
     integer, intent(in) :: climateyear_idx
     logical, intent(in) :: in_ppfd
     logical, intent(in) :: in_netrad
+    real, intent(in) :: elv
 
     ! local variables
     integer :: idx_start, idx_end
     integer, dimension(2) :: shape_forcing
 
     ! function return variable
-    type( climate_type ) :: out_climate
+    type( climate_type ), dimension(ndayyear) :: out_climate
 
     idx_start = (climateyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
@@ -80,27 +82,29 @@ contains
     end if
 
     ! warning: column indices in forcing array are hard coded
-    out_climate%dtemp(:)   = real(forcing(idx_start:idx_end, 1))
-    out_climate%dprec(:)   = real(forcing(idx_start:idx_end, 2))
-    out_climate%dvpd(:)    = real(forcing(idx_start:idx_end, 3))
-    out_climate%dpatm(:)   = real(forcing(idx_start:idx_end, 11))
+    out_climate(:)%dtemp   = real(forcing(idx_start:idx_end, 1))
+    out_climate(:)%dprec   = real(forcing(idx_start:idx_end, 2))
+    out_climate(:)%dvpd    = real(forcing(idx_start:idx_end, 3))
+    out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 11))
 
     if (in_ppfd) then
-      out_climate%dppfd(:) = real(forcing(idx_start:idx_end, 4))
+      out_climate(:)%dppfd = real(forcing(idx_start:idx_end, 4))
     else
-      out_climate%dppfd(:) = dummy
+      out_climate(:)%dppfd = dummy
     end if
     if (in_netrad) then
-      out_climate%dnetrad(:) = real(forcing(idx_start:idx_end, 5))
+      out_climate(:)%dnetrad = real(forcing(idx_start:idx_end, 5))
     else
-      out_climate%dnetrad(:) = dummy
+      out_climate(:)%dnetrad = dummy
     end if
     if ( in_netrad .and. in_ppfd ) then
-      out_climate%dfsun(:) = dummy
+      out_climate(:)%dfsun = dummy
     else
-      out_climate%dfsun(:) = real(forcing(idx_start:idx_end, 6))
+      out_climate(:)%dfsun = real(forcing(idx_start:idx_end, 6))
     end if
-    out_climate%dsnow(:)   = real(forcing(idx_start:idx_end, 7))
+    out_climate(:)%dsnow   = real(forcing(idx_start:idx_end, 7))
+
+    out_climate(:)%dpatm   = calc_patm( elv )    ! todo: use daily varying patm read from forcing
 
   end function getclimate
 
@@ -142,7 +146,7 @@ contains
     integer, intent(in) :: forcingyear_idx
 
     ! function return variable
-    type( vegcover_type ) :: out_vegcover
+    type( vegcover_type ), dimension(ndayyear) :: out_vegcover
 
     ! local variables 
     integer :: idx_start, idx_end
@@ -150,11 +154,11 @@ contains
     idx_start = (forcingyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
 
-    out_vegcover%dfapar(:) = real(forcing(idx_start:idx_end, 10))
+    out_vegcover(:)%dfapar = real(forcing(idx_start:idx_end, 10))
 
     ! "Correct" fAPAR
-    ! print*,"WARNING: normalising fAPAR to within 0.12 and 1.0."
-    out_vegcover%dfapar(:) = max((out_vegcover%dfapar(:) - 0.12), 0.0)/(1.0 - 0.12)
+    print*,"WARNING: normalising fAPAR to within 0.12 and 1.0."
+    out_vegcover(:)%dfapar = max((out_vegcover(:)%dfapar - 0.12), 0.0)/(1.0 - 0.12)
     
 
   end function getfapar

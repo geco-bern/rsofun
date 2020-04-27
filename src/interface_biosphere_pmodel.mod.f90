@@ -25,17 +25,17 @@ module md_interface_pmodel
 
 
   type interfacetype_biosphere
-    integer                         :: year
-    real                            :: pco2
-    type( gridtype )                :: grid
-    type( paramtype_soil )          :: soilparams
-    type( climate_type )            :: climate
-    type( vegcover_type )           :: vegcover
-    ! type( domaininfo_type )         :: domaininfo
-    type( outtype_steering )        :: steering
-    type( paramstype_siml )         :: params_siml
-    real, dimension(npft)           :: fpc_grid        ! allocatable because we don't know number of PFTs a priori
-    type( paramstype_calib )        :: params_calib    ! calibratable parameters
+    integer                                 :: year
+    real                                    :: pco2
+    type(gridtype)                          :: grid
+    type(paramtype_soil)                    :: soilparams
+    type(climate_type), dimension(ndayyear) :: climate
+    type(vegcover_type), dimension(ndayyear):: vegcover
+    ! type(domaininfo_type)                 :: domaininfo
+    type(outtype_steering)                  :: steering
+    type(paramstype_siml)                   :: params_siml
+    real, dimension(npft)                   :: fpc_grid        ! allocatable because we don't know number of PFTs a priori
+    type(paramstype_calib)                  :: params_calib    ! calibratable parameters
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface

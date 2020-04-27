@@ -48,7 +48,8 @@ module md_params_core_pmodel
   real, parameter :: k_karman = 0.41             ! Von Karman constant; from bigleaf R package
   real, parameter :: eps = 9.999e-6              ! numerical imprecision allowed in mass conservation tests
   real, parameter :: dummy = -9999.0             ! arbitrary dummy value
-  real, parameter :: cp = 1004.834               ! specific heat of air for constant pressure (J K-1 kg-1); from bigleaf R package
+  real, parameter :: cp = 1.004834               ! specific heat of air for constant pressure (J K-1 g-1); from bigleaf R package
   real, parameter :: Rd = 287.0586               ! gas constant of dry air (J kg-1 K-1) (Foken 2008 p. 245; from bigleaf R package)
+  real, parameter :: kGsc = 1360.8               ! solar constant (W m-2) (Kopp & Lean, 2011)
 
 end module md_params_core_pmodel
