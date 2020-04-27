@@ -50,20 +50,31 @@ See vignette [Example for using rsofun](./articles/example.html) for how to run 
 
 This package is designed to be extendible to ingesting other data types (sources). The developer (Beni Stocker) would appreciate if you made sure that your developments can be fed back to this repository. To do so, please use git. See [here](http://rogerdudler.github.io/git-guide/) for a brief introduction to git. 
 
+### Application only
+
 I recommend the following steps if you would just like to use this package (no development):
 
-- In RStudio, do install and load the library (see 'Installation' above).
+- Install and load the library as described under 'Installation' above.
 
-I recommend the following steps if you would like to use and further develop the package (even just for your own application - But keep in mind: others may benefit from your efforts too!):
+### For developers
+
+I recommend the following steps if you would like to use and further develop the package (even if this is just some extension for your own application - Keep in mind: Others may benefit from your efforts too!):
 
 1. Make sure you have a Github account.
-2. Log on to Github, and go to [https://github.com/stineb/rsofun](https://github.com/stineb/rsofun) and click on 'Fork' in the upper right corner. This makes a copy of the repository that belongs to you, meaning that you can modify, commit, and push changes back to your forked repository as you please.
+2. Log on to Github, and go to [https://github.com/stineb/rsofun](https://github.com/stineb/rsofun) and click on 'Fork' in the upper right corner. This makes a copy of the repository which then belongs to you, meaning that you can modify, commit, and push changes back to your forked repository as you please.
 3. Clone your fork to your local computer by entering in your terminal (here, it's cloned to a subdirectory `ingestr` placed in your home directory):
 ```sh
 cd home
 git clone https://github.com/<your_github_username>/rsofun.git
 ```
-4. In RStudio, create a new project in your local directory `~/rsofun/`. This opens the repository in RStudio and you have access to the code where all ingestr-functions are implemented (see subdirectory `./R/`).
-5. In RStudio, after having edited code, select the 'Build' tab and click on 'Install and Restart' to build the package again. For quick edits and checks, you may simply source the edited files instead of re-building the whole package. If you like to add new functions, create new a source file in subdirectory `./R/`, write a nice roxygen header (see other source files as an example), then click on 'Build' -> 'More' -> 'Document', and then again on 'Install and Restart'.
-6. If you're happy with your new edits and additions to the package, you may want to have it fet back to the original repository. To do so, please create a new *pull request* in GitHub: Click on 'New pull request' on [the repository page](https://github.com/stineb/rsofun) and follow the inuitive steps. Thanks!
+4. In RStudio, create a new project in your local directory `~/rsofun/`. This opens the repository in RStudio and you have access to the code where all the functions of this package are implemented (see subdirectory `./R/`).
+5. In RStudio, after having edited code, select the 'Build' tab and click on 'Install and Restart' to build the package again. For quick edits and checks, you may simply source the edited files instead of re-building the whole package. If you like to add new functions, create a new source file that contains your function in subdirectory `./R/`, write a nice roxygen header (see other source files as an example), then click on 'Build' -> 'More' -> 'Document', and then again on 'Install and Restart'.
+6. You can upload (commit and push) your edits and additions to your forked repository by
+```sh
+git add -u  # adds all edits to your next commit
+git add <newfile>  # adds new file to the git repository
+git commit -m "a brief description of what you did"
+git push  # pushes the commit to your fork 
+```
+6. If you're happy with your new edits and additions to the package, you may want to have it fed back from your fork to the original repository. To do so, please create a new *pull request* in GitHub: Click on 'New pull request' on [the repository page](https://github.com/stineb/rsofun) and follow the inuitive steps. Thanks!
 
