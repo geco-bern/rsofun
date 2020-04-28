@@ -141,11 +141,11 @@ contains
 
       ! Calculate evaporative supply rate, mm/h
       sw = kCw * tile(lu)%soil%phy%wcont / tile(lu)%soil%params%whc
+      ! print*,'sw ', sw
 
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
       !---------------------------------------------------------
-      ! out_et = calc_et( climate%dtemp, climate%dprec, climate%dpatm, tile(lu)%canopy%lai, tile(lu)%canopy%fapar, out_netrad%rn, climate%dvpd, tile(lu)%canopy%conductance, g_aero )
       call calc_et( tile(lu), tile_fluxes(lu), grid, climate, sw )
 
       !---------------------------------------------------------
@@ -332,7 +332,6 @@ contains
   end subroutine solar
 
 
-  ! subroutine calc_et( lat, doy, elv, sf, tc, sw, netrad ) result( out_evap )
   subroutine calc_et( tile, tile_fluxes, grid, climate, sw )
     !/////////////////////////////////////////////////////////////////////////
     ! This subroutine calculates daily evaporation quantities. Code is 
