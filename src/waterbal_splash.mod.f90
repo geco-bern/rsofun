@@ -73,27 +73,6 @@ module md_waterbal
   end type outtype_snow_rain
 
 
-  ! ! Holds output of function calc_et 
-  ! type outtype_et
-  !   real :: cn             ! daily condensation (mm d-1)
-  !   real :: pet            ! daily potential evapotranspiration (mm d-1)
-  !   real :: pet_e          ! daily potential evapotranspiration (J m-2 d-1)
-  !   real :: aet            ! daily actual evapotranspiration (mm d-1)
-  !   real :: aet_e          ! daily actual evapotranspiration (J m-2 d-1)
-  !   real :: aet_soil       ! daily soil evaporation (mm d-1)
-  !   real :: aet_e_soil     ! daily soil evaporation (J m-2 d-1)
-  !   real :: aet_canop      ! daily canopy evaporation (mm d-1)
-  !   real :: aet_e_canop    ! daily canopy evaporation (J m-2 d-1)
-  ! end type outtype_et
-
-
-  ! type outtype_netrad
-  !   real :: rnl            ! net longwave radiation (W m-2)
-  !   real :: rn             ! daytime total net radiation (J m-2 d-1)
-  !   real :: rnn            ! nighttime total net radiation (J m-2 d-1)
-  ! end type outtype_netrad
-
-
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, KNOWN PARAMETERS
   !----------------------------------------------------------------
@@ -128,8 +107,6 @@ contains
     integer, intent(in) :: doy          ! day of year
 
     ! local variables
-    ! type(outtype_netrad)    :: out_netrad
-    ! type(outtype_et)        :: out_et
     type(outtype_snow_rain) :: out_snow_rain
     real                    :: g_aero
     real                    :: g_canopy
@@ -324,17 +301,7 @@ contains
 
   subroutine calc_et( tile, tile_fluxes, grid, climate, sw )
     !/////////////////////////////////////////////////////////////////////////
-    ! This subroutine calculates daily evaporation quantities. Code is 
-    ! adopted from the evap() function in GePiSaT (Python version). 
-    ! This subroutine ('evap') is called within the daily loop.
-    ! Output:
-    ! - daily net longwave radiation (out_evap%drnl), W/m^2
-    ! - daily daytime net radiation (out_evap%drn), J/m^2
-    ! - daily nighttime net radiation (out_evap%rnn), J/m^2
-    ! - daily EET (out_evap%eet), mm
-    ! - daily PET (out_evap%pet), mm
-    ! - daily AET (out_evap%aet), mm
-    ! - daily condensation (out_evap%dcn), mm
+    !
     !-------------------------------------------------------------------------  
     use md_params_core_pmodel, only: ndayyear, pi, dummy
     use md_sofunutils, only: calc_patm
@@ -511,9 +478,9 @@ contains
 
 
   function calc_dr( nu ) result( dr )
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    !---------------------------------------------------------
     ! Calculates distance factor (dr), unitless
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    !---------------------------------------------------------
     ! arguments
     real, intent(in) :: nu
 
@@ -531,9 +498,9 @@ contains
 
 
   function calc_delta( lambda ) result( delta )
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    !---------------------------------------------------------
     ! Calculates declination angle (delta), degrees
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    !---------------------------------------------------------
     ! arguments
     real, intent(in) :: lambda
 
@@ -562,9 +529,9 @@ contains
 
 
   function calc_hs( ru, rv ) result( hs )
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    !---------------------------------------------------------
     ! Calculates the sunset hour angle (hs), degrees
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    !---------------------------------------------------------
     ! arguments
     real, intent(in) :: ru, rv
 
@@ -587,9 +554,9 @@ contains
 
 
   function calc_tau( sf, elv ) result( tau )
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    !---------------------------------------------------------
     ! Calculates transmittivity (tau), unitless
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    !---------------------------------------------------------
     ! arguments
     real, intent(in) :: sf     ! sunshine fraction
     real, intent(in) :: elv    ! elevation

@@ -182,9 +182,6 @@ contains
       ! initialise soil variables
       call initglobal_soil( tile(lu)%soil )
 
-      ! ! Copy soil parameters
-      ! tile(lu)%soil%params = myinterface%soilparams
-
       ! initialise canopy variables
       call initglobal_canopy( tile(lu)%canopy )
 
@@ -226,10 +223,6 @@ contains
 
     soil%phy%wscal = soil%phy%wcont / soil%params%whc
 
-    ! xxx this makes it crash:
-    print*,'soil%phy%wcont ', soil%phy%wcont
-    print*,'soil%params%whc', soil%params%whc
-    print*,'soil%phy%wscal',  soil%phy%wscal
 
   end subroutine initglobal_soil
 
