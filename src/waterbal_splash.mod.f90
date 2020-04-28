@@ -73,25 +73,25 @@ module md_waterbal
   end type outtype_snow_rain
 
 
-  ! Holds output of function calc_et 
-  type outtype_et
-    real :: cn             ! daily condensation (mm d-1)
-    real :: pet            ! daily potential evapotranspiration (mm d-1)
-    real :: pet_e          ! daily potential evapotranspiration (J m-2 d-1)
-    real :: aet            ! daily actual evapotranspiration (mm d-1)
-    real :: aet_e          ! daily actual evapotranspiration (J m-2 d-1)
-    real :: aet_soil       ! daily soil evaporation (mm d-1)
-    real :: aet_e_soil     ! daily soil evaporation (J m-2 d-1)
-    real :: aet_canop      ! daily canopy evaporation (mm d-1)
-    real :: aet_e_canop    ! daily canopy evaporation (J m-2 d-1)
-  end type outtype_et
+  ! ! Holds output of function calc_et 
+  ! type outtype_et
+  !   real :: cn             ! daily condensation (mm d-1)
+  !   real :: pet            ! daily potential evapotranspiration (mm d-1)
+  !   real :: pet_e          ! daily potential evapotranspiration (J m-2 d-1)
+  !   real :: aet            ! daily actual evapotranspiration (mm d-1)
+  !   real :: aet_e          ! daily actual evapotranspiration (J m-2 d-1)
+  !   real :: aet_soil       ! daily soil evaporation (mm d-1)
+  !   real :: aet_e_soil     ! daily soil evaporation (J m-2 d-1)
+  !   real :: aet_canop      ! daily canopy evaporation (mm d-1)
+  !   real :: aet_e_canop    ! daily canopy evaporation (J m-2 d-1)
+  ! end type outtype_et
 
 
-  type outtype_netrad
-    real :: rnl            ! net longwave radiation (W m-2)
-    real :: rn             ! daytime total net radiation (J m-2 d-1)
-    real :: rnn            ! nighttime total net radiation (J m-2 d-1)
-  end type outtype_netrad
+  ! type outtype_netrad
+  !   real :: rnl            ! net longwave radiation (W m-2)
+  !   real :: rn             ! daytime total net radiation (J m-2 d-1)
+  !   real :: rnn            ! nighttime total net radiation (J m-2 d-1)
+  ! end type outtype_netrad
 
 
   !----------------------------------------------------------------
@@ -128,8 +128,8 @@ contains
     integer, intent(in) :: doy          ! day of year
 
     ! local variables
-    type(outtype_netrad)    :: out_netrad
-    type(outtype_et)        :: out_et
+    ! type(outtype_netrad)    :: out_netrad
+    ! type(outtype_et)        :: out_et
     type(outtype_snow_rain) :: out_snow_rain
     real                    :: g_aero
     real                    :: g_canopy
@@ -141,7 +141,6 @@ contains
 
       ! Calculate evaporative supply rate, mm/h
       sw = kCw * tile(lu)%soil%phy%wcont / tile(lu)%soil%params%whc
-      ! print*,'sw ', sw
 
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
@@ -151,11 +150,11 @@ contains
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
       !---------------------------------------------------------
-      out_snow_rain = get_snow_rain( climate%dprec + out_et%cn, climate%dsnow, climate%dtemp, tile(lu)%soil%phy%snow )
+      out_snow_rain = get_snow_rain( climate%dprec + tile_fluxes(lu)%canopy%dcn, climate%dsnow, climate%dtemp, tile(lu)%soil%phy%snow )
       tile(lu)%soil%phy%snow = out_snow_rain%snow_updated 
 
       ! Update soil moisture
-      tile(lu)%soil%phy%wcont = tile(lu)%soil%phy%wcont + out_snow_rain%liquid_to_soil - out_et%aet
+      tile(lu)%soil%phy%wcont = tile(lu)%soil%phy%wcont + out_snow_rain%liquid_to_soil - tile_fluxes(lu)%canopy%daet
 
       ! Bucket model for runoff generation
       if (tile(lu)%soil%phy%wcont > tile(lu)%soil%params%whc) then
@@ -176,7 +175,7 @@ contains
         ! Bucket is empty
         ! -----------------------------------
         ! set soil moisture to zero
-        out_et%aet = out_et%aet + tile(lu)%soil%phy%wcont
+        tile_fluxes(lu)%canopy%daet = tile_fluxes(lu)%canopy%daet + tile(lu)%soil%phy%wcont
         tile(lu)%soil%phy%wcont        = 0.0
         tile_fluxes(lu)%canopy%dro     = 0.0
         tile_fluxes(lu)%canopy%dfleach = 0.0
@@ -289,7 +288,7 @@ contains
       ! Net radiation positive all day
       hn = 180.0
     else
-      !hn = degrees( dacos((tile_fluxes%canopy%rnl - rw*ru)/(rw*rv)) )
+      !hn = degrees( dacos((tile_fluxes(lu)%canopy%rnl - rw*ru)/(rw*rv)) )
       hn = degrees( acos((tile_fluxes(1)%canopy%rnl - rw*ru)/(rw*rv)) )   ! use acos with single precision compilation
     end if
 
@@ -305,15 +304,6 @@ contains
     ! Eq. 56, SPLASH 2.0 Documentation
     ! adopted bugfix from Python version (iss#13)
     tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
-
-    !---------------------------------------------------------
-    ! Daily condensation, mm d-1
-    !---------------------------------------------------------
-    if (tile_fluxes(1)%canopy%drn < 0.0) then
-      tile_fluxes(:)%canopy%dcn = 1000.0 * tile_fluxes(:)%canopy%econ * abs(tile_fluxes(:)%canopy%drn)
-    else
-      tile_fluxes(:)%canopy%dcn = 0.0
-    end if
 
 
     if (splashtest) then
@@ -344,7 +334,7 @@ contains
     ! - daily EET (out_evap%eet), mm
     ! - daily PET (out_evap%pet), mm
     ! - daily AET (out_evap%aet), mm
-    ! - daily condensation (out_evap%cn), mm
+    ! - daily condensation (out_evap%dcn), mm
     !-------------------------------------------------------------------------  
     use md_params_core_pmodel, only: ndayyear, pi, dummy
     use md_sofunutils, only: calc_patm
@@ -384,6 +374,11 @@ contains
     ! Eq. 51, SPLASH 2.0 Documentation
     ! out_evap%econ = 1.0 / ( lv * rho_water ) ! this is to convert energy into mass (water)
     tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma)) ! MORE PRECISELY - this is to convert energy into mass (water)
+
+    !---------------------------------------------------------
+    ! Daily condensation, mm d-1
+    !---------------------------------------------------------
+    tile_fluxes%canopy%dcn = 1000.0 * tile_fluxes%canopy%econ * abs(tile_fluxes%canopy%drnn)
 
     !---------------------------------------------------------
     ! 17. Estimate daily EET, mm d-1

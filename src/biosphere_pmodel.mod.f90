@@ -171,6 +171,7 @@ contains
         out_biosphere%gpp(doy)     = tile_fluxes(1)%canopy%dgpp
         out_biosphere%transp(doy)  = tile_fluxes(1)%canopy%daet
         out_biosphere%latenth(doy) = tile_fluxes(1)%canopy%daet_e
+        out_biosphere%pet(doy)     = tile_fluxes(1)%canopy%dpet
 
         init_daily = .false.
 

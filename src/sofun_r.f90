@@ -182,10 +182,6 @@ contains
                                           )
 
       ! Get annual, gobally uniform CO2
-      ! print*,'nt', nt
-      ! print*,'shape(forcing)', shape(forcing)
-      ! print*,'myinterface%steering%forcingyear', myinterface%steering%forcingyear
-      ! print*,'myinterface%params_siml%firstyeartrend', myinterface%params_siml%firstyeartrend ! crashes here
       myinterface%pco2 = getco2(  nt, &
                                   forcing, &
                                   myinterface%steering%forcingyear, &
@@ -219,7 +215,7 @@ contains
         output(idx_start:idx_end,2) = dble(out_biosphere%gpp(:))    
         output(idx_start:idx_end,3) = dble(out_biosphere%transp(:)) 
         output(idx_start:idx_end,4) = dble(out_biosphere%latenth(:))
-        output(idx_start:idx_end,5) = 0.d0
+        output(idx_start:idx_end,5) = dble(out_biosphere%pet(:))
 
       end if
 

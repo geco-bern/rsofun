@@ -166,6 +166,7 @@ print(ptm)
 
 save(df_output_newtile, file = "~/rsofun/output/df_output_pmodel_newtile.RData")
 # save(df_output, file = "~/rsofun/output/df_output_pmodel_master_v3.1.1.RData")
+load("~/rsofun/output/df_output_pmodel_master_v3.1.1.RData")
 
 library(ggplot2)
 ggplot() +
@@ -183,7 +184,7 @@ ggplot() +
   labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
 
 ggplot() +
-  geom_line(data = df_output$data[[1]], aes(x=date, y=latenth), color = 'black') + 
+  geom_line(data = df_output$data[[1]], aes(x=date, y=latenth), color = 'black', size = 2) + 
   geom_line(data = df_output_newtile$data[[1]], aes(x=date, y=latenth), color = 'red') + 
   labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
 ```
