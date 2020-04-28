@@ -156,9 +156,9 @@ contains
 
     out_vegcover(:)%dfapar = real(forcing(idx_start:idx_end, 10))
 
-    ! "Correct" fAPAR
-    print*,"WARNING: normalising fAPAR to within 0.12 and 1.0."
-    out_vegcover(:)%dfapar = max((out_vegcover(:)%dfapar - 0.12), 0.0)/(1.0 - 0.12)
+    ! ! "Correct" fAPAR
+    ! print*,"WARNING: normalising fAPAR to within 0.12 and 1.0."
+    ! out_vegcover(:)%dfapar = max((out_vegcover(:)%dfapar - 0.12), 0.0)/(1.0 - 0.12)
     
 
   end function getfapar
