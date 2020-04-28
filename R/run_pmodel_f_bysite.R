@@ -141,14 +141,14 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
     out <- out %>%
       as.matrix() %>% 
       as.data.frame() %>% 
-      setNames(c("fapar", "gpp", "transp", "latenth", "XXX")) %>%
+      setNames(c("fapar", "gpp", "transp", "latenth", "pet")) %>%
       as_tibble(.name_repair = "check_unique") %>%
       # dplyr::mutate(sitename = sitename) %>% 
       dplyr::bind_cols(ddf,.) %>% 
       dplyr::select(-year_dec)
 
   } else {
-    out <- tibble(date = lubridate::ymd("2000-01-01"), fapar = NA, gpp = NA, transp = NA, latenth = NA, XXX = NA)    # sitename = sitename, 
+    out <- tibble(date = lubridate::ymd("2000-01-01"), fapar = NA, gpp = NA, transp = NA, latenth = NA, pet = NA)    # sitename = sitename, 
   }
     
   return(out)

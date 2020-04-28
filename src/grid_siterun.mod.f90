@@ -17,6 +17,8 @@ module md_grid
     real :: lon
     real :: lat
     real :: elv
+    real :: nu               ! true anomaly (orbital parameter), recalculated each year for each gridcell in solar()
+    real :: lambda           ! true longitude (orbital parameter), recalculated each year for each gridcell in solar()
   end type gridtype
 
 end module md_grid

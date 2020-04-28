@@ -3,7 +3,7 @@ module md_interface_pmodel
   use, intrinsic :: iso_fortran_env, dp=>real64
 
   use md_forcing_pmodel, only: climate_type, landuse_type, ninput_type, vegcover_type  
-  use md_params_soil_pmodel, only: paramtype_soil
+  ! use md_params_soil_pmodel, only: paramtype_soil
   use md_params_siml_pmodel, only: paramstype_siml, outtype_steering
   use md_params_core_pmodel, only: nlayers_soil, ndayyear, npft
   use md_grid, only: gridtype !, domaininfo_type
@@ -25,17 +25,18 @@ module md_interface_pmodel
 
 
   type interfacetype_biosphere
-    integer                         :: year
-    real                            :: pco2
-    type( gridtype )                :: grid
-    type( paramtype_soil )          :: soilparams
-    type( climate_type )            :: climate
-    type( vegcover_type )           :: vegcover
-    ! type( domaininfo_type )         :: domaininfo
-    type( outtype_steering )        :: steering
-    type( paramstype_siml )         :: params_siml
-    real, dimension(npft)           :: fpc_grid        ! allocatable because we don't know number of PFTs a priori
-    type( paramstype_calib )        :: params_calib    ! calibratable parameters
+    integer                                 :: year
+    real                                    :: pco2
+    type(gridtype)                          :: grid
+    real, dimension(4,nlayers_soil)         :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
+    real                                    :: whc_prescr
+    type(climate_type), dimension(ndayyear) :: climate
+    type(vegcover_type), dimension(ndayyear):: vegcover
+    ! type(domaininfo_type)                 :: domaininfo
+    type(outtype_steering)                  :: steering
+    type(paramstype_siml)                   :: params_siml
+    real, dimension(npft)                   :: fpc_grid        ! allocatable because we don't know number of PFTs a priori
+    type(paramstype_calib)                  :: params_calib    ! calibratable parameters
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface
@@ -50,6 +51,7 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: fapar
     real, dimension(ndayyear) :: transp
     real, dimension(ndayyear) :: latenth
+    real, dimension(ndayyear) :: pet
   end type outtype_biosphere
 
 end module md_interface_pmodel

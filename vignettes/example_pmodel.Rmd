@@ -133,10 +133,12 @@ mod <- run_pmodel_f_bysite(
   params_modl = params_modl, 
   makecheck = TRUE 
   )
+```
 
-## Run for the full set of sites
+Run for the full set of sites
+```{r}
 ptm <- proc.time()
-df_output <- runread_pmodel_f(
+df_output_newtile <- runread_pmodel_f(
      df_drivers, 
      params_modl = params_modl, 
      makecheck = TRUE,
@@ -162,10 +164,28 @@ print(ptm)
 #   units = 's'
 # )
 
+save(df_output_newtile, file = "~/rsofun/output/df_output_pmodel_newtile.RData")
+# save(df_output, file = "~/rsofun/output/df_output_pmodel_master_v3.1.1.RData")
+load("~/rsofun/output/df_output_pmodel_master_v3.1.1.RData")
+
 library(ggplot2)
-df_output$data[[1]] %>% 
-  ggplot(aes(x=date, y=gpp)) +
-  geom_line() + 
+ggplot() +
+  geom_line(data = df_output$data[[1]], aes(x=date, y=gpp), color = 'black') + 
+  geom_line(data = df_output_newtile$data[[1]], aes(x=date, y=gpp), color = 'red') + 
+  labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
+
+tibble(gpp_newtile =  df_output_newtile$data[[1]]$gpp,
+       gpp_master  =  df_output$data[[1]]$gpp) %>% 
+  rbeni::analyse_modobs2("gpp_newtile", "gpp_master")
+
+ggplot() +
+  geom_line(data = df_output$data[[1]], aes(x=date, y=transp), color = 'black') + 
+  geom_line(data = df_output_newtile$data[[1]], aes(x=date, y=transp), color = 'red') + 
+  labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
+
+ggplot() +
+  geom_line(data = df_output$data[[1]], aes(x=date, y=latenth), color = 'black', size = 2) + 
+  geom_line(data = df_output_newtile$data[[1]], aes(x=date, y=latenth), color = 'red') + 
   labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
 ```
 

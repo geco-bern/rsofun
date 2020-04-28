@@ -47,7 +47,6 @@ contains
     ! simulation's forcing as time series
     !----------------------------------------------------------------
     use md_params_siml_pmodel, only: getsteering
-    use md_params_soil_pmodel, only: getsoil
     use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core_pmodel, only: nlayers_soil, ndayyear, npft
@@ -141,10 +140,11 @@ contains
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
-    myinterface%soilparams = getsoil( soiltexture )
+    ! myinterface%soilparams = getsoil( soiltexture )  xxx copy soilparams to tile%soil%param in subroutine getparams_tile -> getparams_soil
+    myinterface%soiltexture(:,:) = real( soiltexture )
 
     ! Overwrite whc
-    myinterface%soilparams%whc = real( whc )
+    myinterface%whc_prescr = real( whc )
 
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
@@ -172,18 +172,17 @@ contains
       ! Get external (environmental) forcing
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
-      myinterface%climate = getclimate(  &
-                                          nt, &
+      myinterface%climate(:) = getclimate(nt, &
                                           forcing, &
                                           myinterface%steering%init, &
                                           myinterface%steering%climateyear_idx, &
                                           myinterface%params_siml%in_ppfd,  &
-                                          myinterface%params_siml%in_netrad &
+                                          myinterface%params_siml%in_netrad, &
+                                          myinterface%grid%elv &
                                           )
 
       ! Get annual, gobally uniform CO2
-      myinterface%pco2 = getco2(  &
-                                  nt, &
+      myinterface%pco2 = getco2(  nt, &
                                   forcing, &
                                   myinterface%steering%forcingyear, &
                                   myinterface%params_siml%firstyeartrend &
@@ -192,7 +191,7 @@ contains
       !----------------------------------------------------------------
       ! Get prescribed fAPAR if required (otherwise set to dummy value)
       !----------------------------------------------------------------
-      myinterface%vegcover = getfapar( &
+      myinterface%vegcover(:) = getfapar( &
                                         nt, &
                                         forcing, &
                                         myinterface%steering%forcingyear_idx &
@@ -216,7 +215,7 @@ contains
         output(idx_start:idx_end,2) = dble(out_biosphere%gpp(:))    
         output(idx_start:idx_end,3) = dble(out_biosphere%transp(:)) 
         output(idx_start:idx_end,4) = dble(out_biosphere%latenth(:))
-        output(idx_start:idx_end,5) = 0.d0
+        output(idx_start:idx_end,5) = dble(out_biosphere%pet(:))
 
       end if
 
@@ -326,7 +325,7 @@ contains
     ! test xxx
     !----------------------------------------------------------------
     use md_params_siml_lm3ppa, only: getsteering
-    use md_params_soil_lm3ppa, only: getsoil
+    ! use md_params_soil_lm3ppa, only: getsoil
     use md_forcing_lm3ppa, only: getclimate, getco2, climate_type !, forcingData
     use md_interface_lm3ppa, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core_lm3ppa, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
@@ -500,9 +499,9 @@ contains
     myinterface%params_tile%f_N_add      = real( f_N_add )
 
     ! Species parameters
-    myinterface%params_species(:)%lifeform     = real( params_species(:,1))
-    myinterface%params_species(:)%phenotype    = real( params_species(:,2))
-    myinterface%params_species(:)%pt           = real( params_species(:,3))
+    myinterface%params_species(:)%lifeform     = int( params_species(:,1))
+    myinterface%params_species(:)%phenotype    = int( params_species(:,2))
+    myinterface%params_species(:)%pt           = int( params_species(:,3))
     myinterface%params_species(:)%seedlingsize = real( params_species(:,4))
     myinterface%params_species(:)%LMA          = real( params_species(:,5))
     myinterface%params_species(:)%phiRL        = real( params_species(:,6))
@@ -563,6 +562,7 @@ contains
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
+
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
     ! print*, 'forcing', forcing(1:15,1)
@@ -640,9 +640,7 @@ contains
 
         call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
 
-        ! print*, "size daily tile", size(out_biosphere%daily_tile(:)), size(output_daily_tile(idx_daily_start:idx_daily_end, :))
-        ! print*, "idx_daily_start  idx_daily_end  ndayyear", idx_daily_start,idx_daily_end, ndayyear
-        ! print*,'output_daily_tile',output_daily_tile(1:10,2)
+        print*, "shape daily tile", shape(output_daily_tile)
       
         ! ----------------------------------------------------------------
         ! Output out_daily_cohorts (without subroutine)
@@ -731,6 +729,7 @@ contains
 
     deallocate(myinterface%climate)
     deallocate(myinterface%pco2)
+    deallocate(out_biosphere%hourly_tile)
  
   end subroutine lm3ppa_f
 
