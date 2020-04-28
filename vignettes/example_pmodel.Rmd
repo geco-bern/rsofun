@@ -162,7 +162,8 @@ print(ptm)
 #   units = 's'
 # )
 
-save(df_output, file = "~/rsofun/output/df_output_pmodel_master_v3.1.1.RData")
+save(df_output, file = "~/rsofun/output/df_output_pmodel_newtile.RData")
+# save(df_output, file = "~/rsofun/output/df_output_pmodel_master_v3.1.1.RData")
 
 library(ggplot2)
 df_output$data[[1]] %>% 

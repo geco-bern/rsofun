@@ -32,18 +32,16 @@ contains
       ! Add individuals
       !------------------------------------------------------------------
       do pft=1,npft
-        if (params_pft_plant(pft)%lu_category==lu) then
 
-          ! Override interactively simulated fAPAR and foliar projective cover with data
-          ! if (sum(fpc_grid_prescr(:))==0.0) print*,'sum of fpc_grid',sum(fpc_grid_prescr(:))
+        ! Override interactively simulated fAPAR and foliar projective cover with data
+        ! if (sum(fpc_grid_prescr(:))==0.0) print*,'sum of fpc_grid',sum(fpc_grid_prescr(:))
 
-          if (fapar_prescr/=dummy) tile(lu)%canopy%fapar = fapar_prescr
-          tile(lu)%plant(pft)%fpc_grid = fpc_grid_prescr(pft)
+        if (fapar_prescr/=dummy) tile(lu)%canopy%fapar = fapar_prescr
+        tile(lu)%plant(pft)%fpc_grid = fpc_grid_prescr(pft)
 
-          ! ! get annually updated leaf traits (vary because of variations in light and CO2)
-          ! call get_leaftraits( plant(pft), solar%meanmppfd(:), out_pmodel(pft,:)%actnv_unitiabs )
+        ! ! get annually updated leaf traits (vary because of variations in light and CO2)
+        ! call get_leaftraits( plant(pft), solar%meanmppfd(:), out_pmodel(pft,:)%actnv_unitiabs )
 
-        end if
       end do
     end do
 

@@ -155,9 +155,10 @@ contains
     ! real, dimension(npft), intent(inout)  :: dtransp         ! daily total transpiration (XXX)
 
     ! local variables
-    type( outtype_pmodel ) :: out_pmodel                     ! list of P-model output variables
+    type( outtype_pmodel ) :: out_pmodel_c3                     ! list of P-model output variables
     integer    :: pft
     integer    :: lu
+    real       :: iabs
     real       :: soilmstress
     real       :: ftemp_kphio
     real       :: tk
@@ -188,117 +189,160 @@ contains
 
     tk = climate%dtemp + kTkelvin
 
+    if ( tile_fluxes(1)%canopy%dayl > 0.0 .and. climate%dtemp > -5.0 ) then
+      !----------------------------------------------------------------
+      ! P-model call for C3 plants to get a list of variables that are 
+      ! acclimated to slowly varying conditions
+      !----------------------------------------------------------------
+      out_pmodel_c3 = pmodel(  &
+                            kphio          = params_pft_gpp(1)%kphio, &
+                            fapar          = tile(1)%canopy%fapar, &
+                            ppfd           = climate%dppfd, &
+                            co2            = co2_memory, &
+                            tc             = temp_memory, &
+                            vpd            = vpd_memory, &
+                            patm           = patm_memory, &
+                            c4             = .false., &
+                            method_optci   = "prentice14", &
+                            method_jmaxlim = "wang17" &
+                            )
+    end if
+
+    ! simple:
+    lu = 1
+    pft = 1
+    iabs = tile(lu)%canopy%fapar * climate%dppfd * tile(lu)%plant(pft)%fpc_grid
+
     !----------------------------------------------------------------
-    ! CALCULATE PREDICTED GPP FROM P-model
-    ! using instantaneous (daily) LAI, PPFD, Cramer-Prentice-alpha
+    ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
     !----------------------------------------------------------------
-    do pft=1,npft
+    if (do_soilmstress) then
+      soilmstress = calc_soilmstress( tile(1)%soil%phy%wscal, 0.0, params_pft_plant(1)%grass )
+    else
+      soilmstress = 1.0
+    end if    
 
-      ! land use category (gridcell tile)
-      lu = params_pft_plant(pft)%lu_category
+    !----------------------------------------------------------------
+    ! Include instantaneous temperature effect on quantum yield efficiency
+    !----------------------------------------------------------------
+    if (do_tempstress) then
+      ftemp_kphio = calc_ftemp_kphio( climate%dtemp )
+    else
+      ftemp_kphio = 1.0
+    end if
 
-      if ( tile(lu)%plant(pft)%fpc_grid > 0.0 .and. tile_fluxes(lu)%canopy%dayl > 0.0 .and. climate%dtemp > -5.0 ) then
-        !----------------------------------------------------------------
-        ! P-model call to get a list of variables that are acclimated to
-        ! slowly varying conditions
-        !----------------------------------------------------------------
-        out_pmodel = pmodel(  &
-                              kphio          = params_pft_gpp(pft)%kphio, &
-                              fapar          = tile(lu)%canopy%fapar, &
-                              ppfd           = climate%dppfd, &
-                              co2            = co2_memory, &
-                              tc             = temp_memory, &
-                              vpd            = vpd_memory, &
-                              patm           = patm_memory, &
-                              c4             = params_pft_plant(pft)%c4, &
-                              method_optci   = "prentice14", &
-                              method_jmaxlim = "wang17" &
-                              )
+    !----------------------------------------------------------------
+    ! GPP
+    !----------------------------------------------------------------
+    tile_fluxes(lu)%canopy%dgpp = iabs * out_pmodel_c3%lue * ftemp_kphio * soilmstress
 
-        !----------------------------------------------------------------
-        ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
-        !----------------------------------------------------------------
-        if (do_soilmstress) then
-          soilmstress = calc_soilmstress( tile(lu)%soil%phy%wscal, 0.0, params_pft_plant(pft)%grass )
-        else
-          soilmstress = 1.0
-        end if
+    !----------------------------------------------------------------
+    ! Dark respiration
+    !----------------------------------------------------------------
+    tile_fluxes(lu)%canopy%drd = iabs * out_pmodel_c3%rd_unitiabs * ftemp_kphio * soilmstress * c_molmass
 
-        !----------------------------------------------------------------
-        ! Include instantaneous temperature effect on quantum yield efficiency
-        !----------------------------------------------------------------
-        if (do_tempstress) then
-          ftemp_kphio = calc_ftemp_kphio( climate%dtemp )
-        else
-          ftemp_kphio = 1.0
-        end if
 
-        ! GPP
-        tile_fluxes(lu)%canopy%dgpp = calc_dgpp( tile(lu)%canopy%fapar, tile(lu)%plant(pft)%fpc_grid, climate%dppfd, out_pmodel%lue, ftemp_kphio, soilmstress )
+    ! !----------------------------------------------------------------
+    ! ! CALCULATE PREDICTED GPP FROM P-model output
+    ! ! using instantaneous (daily) LAI, PPFD, Cramer-Prentice-alpha
+    ! !----------------------------------------------------------------
+    ! do pft=1,npft
 
-        ! !----------------------------------------------------------------
-        ! ! xxx test
-        ! !----------------------------------------------------------------
-        ! ! light-limited assimilation rate
-        ! fact_jmaxlim = 1.0 / sqrt(1.0 + (4.0 * params_pft_gpp(pft)%kphio * dfapar * dppfd / out_pmodel%jmax)**2)
-        ! a_j = params_pft_gpp(pft)%kphio * dfapar * dppfd * (out_pmodel%ci - out_pmodel%gammastar)/(out_pmodel%ci + 2 * out_pmodel%gammastar) * fact_jmaxlim
+    !   print*,'params_pft_plant(pft)%lu_category ', params_pft_plant(pft)%lu_category
+    !   print*,'tile(lu)%plant(pft)%fpc_grid', tile(lu)%plant(pft)%fpc_grid
+    !   print*,'tile_fluxes(lu)%canopy%dayl', tile_fluxes(lu)%canopy%dayl
+    !   print*,'climate%dtemp', climate%dtemp
 
-        ! ! Rubisco-limited assimilation rate
-        ! a_c = out_pmodel%vcmax * (out_pmodel%ci - out_pmodel%gammastar)/(out_pmodel%ci + out_pmodel%kmm)
+    !   ! land use category (gridcell tile)
+    !   lu = params_pft_plant(pft)%lu_category
+    !     !----------------------------------------------------------------
+    !     ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
+    !     !----------------------------------------------------------------
+    !     print*,'tile(lu)%soil%phy%wscal ', tile(lu)%soil%phy%wscal
+    !     print*,'params_pft_plant(pft)%grass ', params_pft_plant(pft)%grass
+    !     print*,'do_soilmstress ', do_soilmstress
+    !     if (do_soilmstress) then
+    !       ! soilmstress = calc_soilmstress( tile(lu)%soil%phy%wscal, 0.0, params_pft_plant(pft)%grass )
+    !       soilmstress = 1.0
+    !     else
+    !       soilmstress = 1.0
+    !     end if
 
-        ! ! output from pmodel()
-        ! a_returned = out_pmodel%gpp / c_molmass
+    !     !----------------------------------------------------------------
+    !     ! Include instantaneous temperature effect on quantum yield efficiency
+    !     !----------------------------------------------------------------
+    !     if (do_tempstress) then
+    !       ftemp_kphio = calc_ftemp_kphio( climate%dtemp )
+    !     else
+    !       ftemp_kphio = 1.0
+    !     end if
 
-        ! print*,'a_j, a_c, a_returned, dgpp : ', a_j, a_c, a_returned, dgpp / c_molmass
-        ! !----------------------------------------------------------------
+    !     ! GPP
+    !     tile_fluxes(lu)%canopy%dgpp = calc_dgpp( tile(lu)%canopy%fapar, tile(lu)%plant(pft)%fpc_grid, climate%dppfd, out_pmodel%lue, ftemp_kphio, soilmstress )
 
-        ! ! transpiration
-        ! ! dtransp(pft) = calc_dtransp( dfapar, plant(pft)%acrown, dppfd, out_pmodel%transp_unitiabs, ftemp_kphio, soilmstress )
-        ! dtransp(pft) = calc_dtransp( dfapar, plant(pft)%acrown, dppfd, out_pmodel%transp_unitiabs, climate%dtemp )
+    !     !----------------------------------------------------------------
+    !     ! xxx test
+    !     !----------------------------------------------------------------
+    !     ! light-limited assimilation rate
+    !     fact_jmaxlim = 1.0 / sqrt(1.0 + (4.0 * params_pft_gpp(pft)%kphio * dfapar * dppfd / out_pmodel%jmax)**2)
+    !     a_j = params_pft_gpp(pft)%kphio * dfapar * dppfd * (out_pmodel%ci - out_pmodel%gammastar)/(out_pmodel%ci + 2 * out_pmodel%gammastar) * fact_jmaxlim
 
-        !----------------------------------------------------------------
-        ! Dark respiration
-        !----------------------------------------------------------------
-        tile_fluxes(lu)%canopy%drd = calc_drd( vegcover%dfapar, tile(lu)%plant(pft)%fpc_grid, climate%dppfd, out_pmodel%rd_unitiabs, ftemp_kphio, soilmstress )
+    !     ! Rubisco-limited assimilation rate
+    !     a_c = out_pmodel%vcmax * (out_pmodel%ci - out_pmodel%gammastar)/(out_pmodel%ci + out_pmodel%kmm)
 
-        !----------------------------------------------------------------
-        ! Leaf-level assimilation rate
-        !----------------------------------------------------------------
-        tile_fluxes(lu)%canopy%assim = calc_dassim( tile_fluxes(lu)%canopy%dgpp, tile_fluxes(lu)%canopy%dayl )
+    !     ! output from pmodel()
+    !     a_returned = out_pmodel%gpp / c_molmass
 
-        ! !----------------------------------------------------------------
-        ! ! stomatal conductance
-        ! !----------------------------------------------------------------
-        ! print*,'3'
-        ! tile_fluxes(lu)%canopy%dgs = calc_dgs( dassim(pft), climate%dvpd, out_pmodel%ca, out_pmodel%gammastar, out_pmodel%xi )
+    !     print*,'a_j, a_c, a_returned, dgpp : ', a_j, a_c, a_returned, dgpp / c_molmass
+    !     !----------------------------------------------------------------
 
-        ! ! print*,'set-point gs:' dassim * dgs_unitiabs
+    !     ! transpiration
+    !     ! dtransp(pft) = calc_dtransp( dfapar, plant(pft)%acrown, dppfd, out_pmodel%transp_unitiabs, ftemp_kphio, soilmstress )
+    !     dtransp(pft) = calc_dtransp( dfapar, plant(pft)%acrown, dppfd, out_pmodel%transp_unitiabs, climate%dtemp )
 
-        ! !----------------------------------------------------------------
-        ! ! canopy conductance
-        ! !----------------------------------------------------------------
-        ! print*,'4'
-        ! tile(lu)%canopy%dgc = calc_g_canopy( tile_fluxes(lu)%canopy%dgs, tile(lu)%canopy%lai, tk )
+    !     !----------------------------------------------------------------
+    !     ! Dark respiration
+    !     !----------------------------------------------------------------
+    !     tile_fluxes(lu)%canopy%drd = calc_drd( vegcover%dfapar, tile(lu)%plant(pft)%fpc_grid, climate%dppfd, out_pmodel%rd_unitiabs, ftemp_kphio, soilmstress )
 
-        ! tile(lu)%plant%vcmax25 = out_pmodel%vcmax25
+    !     !----------------------------------------------------------------
+    !     ! Leaf-level assimilation rate
+    !     !----------------------------------------------------------------
+    !     tile_fluxes(lu)%canopy%assim = calc_dassim( tile_fluxes(lu)%canopy%dgpp, tile_fluxes(lu)%canopy%dayl )
 
-        ! print*,'dgs per unit day (not second) - should be equal to what gpp/(ca-ci) in pmodel(): ', dgs_unitiabs * gpp / c_molmass
-        ! stop
+    !     ! !----------------------------------------------------------------
+    !     ! ! stomatal conductance
+    !     ! !----------------------------------------------------------------
+    !     ! print*,'3'
+    !     ! tile_fluxes(lu)%canopy%dgs = calc_dgs( dassim(pft), climate%dvpd, out_pmodel%ca, out_pmodel%gammastar, out_pmodel%xi )
 
-        ! ! Canopy-level Vcmax (actually changes only monthly)
-        ! dvcmax_canop(pft) = calc_vcmax_canop( dfapar, out_pmodel%vcmax_unitiabs, meanmppfd )
+    !     ! ! print*,'set-point gs:' dassim * dgs_unitiabs
 
-        ! ! Leaf-level Vcmax
-        ! dvcmax_leaf(pft) = out_pmodel%vcmax_unitiabs * meanmppfd
+    !     ! !----------------------------------------------------------------
+    !     ! ! canopy conductance
+    !     ! !----------------------------------------------------------------
+    !     ! print*,'4'
+    !     ! tile(lu)%canopy%dgc = calc_g_canopy( tile_fluxes(lu)%canopy%dgs, tile(lu)%canopy%lai, tk )
 
-      else  
+    !     ! tile(lu)%plant%vcmax25 = out_pmodel%vcmax25
 
-        tile_fluxes(lu)%canopy%dgpp = 0.0
-        tile_fluxes(lu)%canopy%drd  = 0.0
+    !     ! print*,'dgs per unit day (not second) - should be equal to what gpp/(ca-ci) in pmodel(): ', dgs_unitiabs * gpp / c_molmass
+    !     ! stop
 
-      end if 
+    !     ! ! Canopy-level Vcmax (actually changes only monthly)
+    !     ! dvcmax_canop(pft) = calc_vcmax_canop( dfapar, out_pmodel%vcmax_unitiabs, meanmppfd )
 
-    end do
+    !     ! ! Leaf-level Vcmax
+    !     ! dvcmax_leaf(pft) = out_pmodel%vcmax_unitiabs * meanmppfd
+
+    !   else  
+
+    !     tile_fluxes(lu)%canopy%dgpp = 0.0
+    !     tile_fluxes(lu)%canopy%drd  = 0.0
+
+    !   end if 
+
+    ! end do
 
   end subroutine gpp
 
@@ -1571,14 +1615,10 @@ contains
     params_gpp%soilm_par_b    = myinterface%params_calib%soilm_par_b     ! is provided through standard input
 
     ! PFT-dependent parameter(s)
-    do pft=1,npft
+    params_pft_gpp(:)%kphio = myinterface%params_calib%kphio  ! is provided through standard input
 
-      params_pft_gpp(pft)%kphio = myinterface%params_calib%kphio  ! is provided through standard input
+    print*,'getpar_modl_gpp(); params_pft_gpp(:)%kphio ', params_pft_gpp(:)%kphio
 
-    end do
-
-    return
- 
   end subroutine getpar_modl_gpp
 
 
