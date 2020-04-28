@@ -1617,8 +1617,6 @@ contains
     ! PFT-dependent parameter(s)
     params_pft_gpp(:)%kphio = myinterface%params_calib%kphio  ! is provided through standard input
 
-    print*,'getpar_modl_gpp(); params_pft_gpp(:)%kphio ', params_pft_gpp(:)%kphio
-
   end subroutine getpar_modl_gpp
 
 
