@@ -1,6 +1,6 @@
 module md_biosphere_pmodel
 
-  use md_params_core_pmodel
+  use md_params_core
   use md_classdefs
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp

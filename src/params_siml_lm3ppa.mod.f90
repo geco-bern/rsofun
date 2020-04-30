@@ -30,6 +30,8 @@ module md_params_siml_lm3ppa
     logical :: update_annualLAImax
     logical :: do_closedN_run
 
+    character(len=30) :: method_photosynth
+
   end type paramstype_siml
 
   type outtype_steering
@@ -57,7 +59,7 @@ contains
     ! simulation year (setting booleans for opening files, doing   
     ! spinup etc.)
     !----------------------------------------------------------------
-    use md_params_core_lm3ppa, only: dummy
+    use md_params_core, only: dummy
 
     ! arguments
     integer, intent(in) :: year ! simulation year, starts counting from 1, starting at the beginning of spinup

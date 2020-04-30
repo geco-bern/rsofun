@@ -49,7 +49,7 @@ contains
     use md_params_siml_pmodel, only: getsteering
     use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
-    use md_params_core_pmodel, only: nlayers_soil, ndayyear, npft
+    use md_params_core, only: nlayers_soil, ndayyear, npft
     use md_biosphere_pmodel, only: biosphere_annual
 
     implicit none
@@ -328,7 +328,7 @@ contains
     ! use md_params_soil_lm3ppa, only: getsoil
     use md_forcing_lm3ppa, only: getclimate, getco2, climate_type !, forcingData
     use md_interface_lm3ppa, only: interfacetype_biosphere, outtype_biosphere, myinterface
-    use md_params_core_lm3ppa, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
+    use md_params_core, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
       ndayyear, nvars_daily_tile, nvars_hourly_tile, nvars_daily_cohorts, nvars_annual_cohorts, nvars_annual_tile
     use md_biosphere_lm3ppa, only: biosphere_annual
 
@@ -346,6 +346,9 @@ contains
     logical(kind=c_bool), intent(in) :: do_U_shaped_mortality
     logical(kind=c_bool), intent(in) :: update_annualLAImax
     logical(kind=c_bool), intent(in) :: do_closedN_run
+
+    ! xxx try
+    integer, parameter :: code_method_photosynth = 1
 
     ! site information
     real(kind=c_double),  intent(in) :: longitude
@@ -445,7 +448,7 @@ contains
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
-    real                    :: timestep
+    real                    :: timestep, timestep_d
     integer                 :: yr
     
     integer :: idx
@@ -476,6 +479,12 @@ contains
     myinterface%params_siml%do_U_shaped_mortality = do_U_shaped_mortality
     myinterface%params_siml%update_annualLAImax   = update_annualLAImax      
     myinterface%params_siml%do_closedN_run        = do_closedN_run       
+    
+    if (code_method_photosynth == 1) then
+      myinterface%params_siml%method_photosynth = "gs_leuning"
+    else if (code_method_photosynth == 2) then
+      myinterface%params_siml%method_photosynth = "pmodel"
+    end if
 
     !----------------------------------------------------------------
     ! GET GRID INFORMATION
@@ -547,39 +556,34 @@ contains
     !----------------------------------------------------------------
     ! INTERPRET FORCING
     !----------------------------------------------------------------
-    timestep = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
+    timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
+    timestep_d = real(forcing(2,2)) - real(forcing(1,2))  ! This takes the day of year (a numeric) from the forcing file
+    if (timestep==0.0 .and. timestep_d==1.0) timestep = 24.0
+    !   daily = .true.
+    ! else
+    !   daily = .false.
+    ! end if
     myinterface%steps_per_day = int(24.0/timestep)
     myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
     myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
     ntstepsyear = myinterface%steps_per_day * 365
 
-    !write(*,*) timestep, myinterface%steps_per_day, myinterface%dt_fast_yr, myinterface%step_seconds
-
-    ! totyears = myinterface%params_siml%runyears
-    ! totdays  = int(totyears/yr_data+1)*days_data
-    ! !myinterface%params_siml%equi_days = totdays - days_data
-    ! myinterface%datalines = datalines
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
-
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
-    ! print*, 'forcing', forcing(1:15,1)
 
     do yr=1, myinterface%params_siml%runyears
-
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
       !----------------------------------------------------------------
       myinterface%steering = getsteering( yr, myinterface%params_siml )
 
-
       !----------------------------------------------------------------
       ! Get external (environmental) forcing
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
-      !print*,'climateyear_idx, climateyear', myinterface%steering%climateyear_idx, myinterface%steering%climateyear
       myinterface%climate(:) = getclimate( &
                                         nt, &
                                         forcing, &
@@ -596,6 +600,7 @@ contains
                                   !myinterface%steering%forcingyear_idx, &
                                   !myinterface%steering%forcingyear &
                                   )
+
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains gridcell loop)
       !----------------------------------------------------------------
@@ -611,36 +616,20 @@ contains
       !----------------------------------------------------------------
       if (.not. myinterface%steering%spinup) then  
         idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
-        ! idx_hourly_start = mod((yr - 1), 11) * ntstepsyear + 1      
         idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
         call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
       end if
 
-      ! print*, 'idx_hourly', idx_hourly_start, idx_hourly_end
-
-      ! print*, "yr  spinupyears  idx_hourly_start  idx_hourly_end  ntstepsyear", yr, myinterface%params_siml%spinupyears, idx_hourly_start,idx_hourly_end, ntstepsyear
-      ! print*,out_biosphere%hourly_tile(3)
-      ! print*, "myinterface%params_siml%firstyeartrend", firstyeartrend
-
       !----------------------------------------------------------------
       ! Output out_daily_tile (calling subroutine)
       !----------------------------------------------------------------
-      ! Output during spinup and transient years
-
-      ! idx_daily_start  = (yr - 1) * ndayyear + 1
-      ! idx_daily_end    = idx_daily_start + ndayyear - 1
-      ! call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
-    
       ! Output only for transient years
-
       if (.not. myinterface%steering%spinup) then  
 
         idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1  
         idx_daily_end   = idx_daily_start + ndayyear - 1
 
         call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
-
-        print*, "shape daily tile", shape(output_daily_tile)
       
         ! ----------------------------------------------------------------
         ! Output out_daily_cohorts (without subroutine)
@@ -675,18 +664,10 @@ contains
 
       end if
 
-      ! print*, 'out_biosphere%daily_cohorts(1,2)%year', out_biosphere%daily_cohorts(1,2)%year
-
       !----------------------------------------------------------------
       ! Output out_annual_tile (calling subroutine)
       !----------------------------------------------------------------
-      ! print*,'shape of output_daily_cohorts_HW_N', shape(output_daily_cohorts_HW_N)
-
       call populate_outarray_annual_tile( out_biosphere%annual_tile, output_annual_tile(yr,:) )
-
-      ! out_annual_tile(2)  = dble(annual_tile%CAI)
-
-      ! print*, "CAI output, CAI out_biosphere", out_biosphere%annual_tile%CAI !output_annual_tile(yr,2), 
 
       ! ----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)
@@ -719,10 +700,6 @@ contains
         output_annual_cohorts_N_fix(idx, :)   = dble(out_biosphere%annual_cohorts(:)%N_fix)
         output_annual_cohorts_maxLAI(idx, :)  = dble(out_biosphere%annual_cohorts(:)%maxLAI)
 
-        ! print*,'output_annual_cohorts_year',output_annual_cohorts_year(yr,:)
-
-        ! print*, 'out_biosphere%annual_cohorts(:)%year)', out_biosphere%annual_cohorts(:)%year
-
       end if
 
     enddo
@@ -740,7 +717,7 @@ contains
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
     use md_interface_lm3ppa, only: outtype_hourly_tile
-    use md_params_core_lm3ppa
+    use md_params_core
 
     ! arguments
     type(outtype_hourly_tile), dimension(ntstepsyear), intent(in) :: hourly_tile    ! dimension(ntstepsyear)
@@ -772,7 +749,7 @@ contains
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
     use md_interface_lm3ppa, only: outtype_daily_tile
-    use md_params_core_lm3ppa
+    use md_params_core
 
     ! arguments
     type(outtype_daily_tile), dimension(ndayyear), intent(in) :: daily_tile
@@ -824,7 +801,7 @@ contains
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
     use md_interface_lm3ppa, only: outtype_annual_tile
-    use md_params_core_lm3ppa
+    use md_params_core
 
     ! arguments
     type(outtype_annual_tile), intent(in) :: annual_tile

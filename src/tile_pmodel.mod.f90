@@ -2,7 +2,7 @@ module md_tile_pmodel
   !////////////////////////////////////////////////////////////////
   ! Holds all tile-specific variables and procedurs
   ! --------------------------------------------------------------
-  use md_params_core_pmodel, only: npft, nlu
+  use md_params_core, only: npft, nlu
   use md_plant_pmodel, only: plant_type, plant_fluxes_type, initglobal_plant
 
   implicit none

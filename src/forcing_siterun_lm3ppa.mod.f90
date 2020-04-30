@@ -10,29 +10,12 @@ module md_forcing_lm3ppa
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  use md_params_core_lm3ppa, only: ntstepsyear
+  use md_params_core, only: ntstepsyear, kTkelvin
   implicit none
 
   private
   public climate_type, getclimate, getco2!, forcingData
 
-  ! type climate_type
-  !   integer(kind=in), dimension(ntstepsyear) :: year          ! Year
-  !   integer(kind=in), dimension(ntstepsyear) :: doy           ! day of the year
-  !   real(kind=sp), dimension(ntstepsyear)    :: hod           ! hour of the day
-  !   real(kind=sp), dimension(ntstepsyear)    :: PAR           ! umol m-2 s-1
-  !   real(kind=sp), dimension(ntstepsyear)    :: radiation     ! W/m2
-  !   real(kind=sp), dimension(ntstepsyear)    :: Tair          ! air temperature,  K
-  !   real(kind=sp), dimension(ntstepsyear)    :: Tsoil         ! soil temperature, K
-  !   real(kind=sp), dimension(ntstepsyear)    :: RH            ! relative humidity
-  !   real(kind=sp), dimension(ntstepsyear)    :: rain          ! kgH2O m-2 s-1
-  !   real(kind=sp), dimension(ntstepsyear)    :: windU         ! wind velocity (m s-1)
-  !   real(kind=sp), dimension(ntstepsyear)    :: P_air         ! pa
-  !   ! real(kind=sp), dimension(ntstepsyear)    :: CO2           ! ppm
-  !   real(kind=sp), dimension(ntstepsyear)    :: soilwater     ! soil moisture, vol/vol
-  ! end type climate_type
-
-  ! xxx temporary: for test remove again afterwards
   type :: climate_type
      integer :: year          ! Year
      integer :: doy           ! day of the year
@@ -45,12 +28,10 @@ module md_forcing_lm3ppa
      real    :: rain          ! kgH2O m-2 s-1
      real    :: windU         ! wind velocity (m s-1)
      real    :: P_air         ! pa
-     real    :: CO2           ! ppm
+     real    :: CO2           ! mol CO2/mol dry air
      real    :: soilwater     ! soil moisture, vol/vol
+     real    :: vpd           ! vapour pressure deficit (Pa)
   end type climate_type
-
-  ! Input forcing data
-  !type(climate_type), pointer, save :: forcingData(:)
 
 contains
 
@@ -71,8 +52,7 @@ contains
     integer, intent(in) :: climateyear_idx, climateyear
 
     ! local variables
-    integer :: idx_start, idx_end
-    ! integer, dimension(2) :: shape_forcing
+    integer :: idx_start, idx_end, it
     real, parameter :: timestep = 1.0
 
     ! function return variable
@@ -96,30 +76,9 @@ contains
     out_climate%CO2       = real(forcing(idx_start:idx_end, 12)) * 1.0e-6         ! mol/mol
     out_climate%soilwater = 0.8                                                   ! soil moisture, vol/vol
 
-
-    ! if (forcing(idx_start,1) /= climateyear) then
-    !   print*,'forcing(idx_start)%year ', forcing(idx_start,1)
-    !   print*,'climateyear ', climateyear
-    !   print*,'climateyear_idx ', climateyear_idx
-    !   stop 'getclimate(): climateyear does not correspond to index read from forcing'
-    ! end if
-
-    ! !xxx check if units as they are provided in input file need to be adjusted (to be done in R), for conversions see above.
-    ! out_climate(:)%year      = int(forcing(idx_start:idx_end,1))          ! Year
-    ! out_climate(:)%doy       = int(forcing(idx_start:idx_end,2))           ! day of the year
-    ! out_climate(:)%hod       = real(forcing(idx_start:idx_end,3))           ! hour of the day
-    ! out_climate(:)%PAR       = real(forcing(idx_start:idx_end,4))           ! umol m-2 s-1
-    ! out_climate(:)%radiation = real(forcing(idx_start:idx_end,5))     ! W/m2
-    ! out_climate(:)%Tair      = real(forcing(idx_start:idx_end,6))          ! air temperature,  K
-    ! out_climate(:)%Tsoil     = real(forcing(idx_start:idx_end,7))         ! soil temperature, K
-    ! out_climate(:)%RH        = real(forcing(idx_start:idx_end,8))            ! relative humidity
-    ! out_climate(:)%rain      = real(forcing(idx_start:idx_end,9))          ! kgH2O m-2 s-1
-    ! out_climate(:)%windU     = real(forcing(idx_start:idx_end,10))         ! wind velocity (m s-1)
-    ! out_climate(:)%P_air     = real(forcing(idx_start:idx_end,11))         ! pa
-    ! out_climate(:)%CO2       = real(forcing(idx_start:idx_end,12))           ! ppm
-    ! out_climate(:)%soilwater = real(forcing(idx_start:idx_end,13))     ! soil moisture, vol/vol
-
-    !out_climate(:) = forcing(idx_start:idx_end)
+    do it=1,ntstepsyear
+      out_climate(it)%vpd  = calc_vpd_rh( out_climate(it)%RH, (out_climate(it)%Tair - kTkelvin) )
+    end do
 
   end function getclimate
 
@@ -151,6 +110,27 @@ contains
     pco2 = real(forcing(idx_start:idx_end,12)) * 1.0e-6  ! mol/mol
 
   end function getco2
+
+
+  function calc_vpd_rh( rh, tc ) result( vpd )
+    !////////////////////////////////////////////////////////////////////////
+    ! Calculates vapor pressure deficit
+    !-----------------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: rh      ! relative humidity (fraction <1)
+    real, intent(in)    :: tc      ! daily mean air temperature (deg C), daily varying from WATCH-WFDEI (ACTUALLY NOT USED)
+
+    ! function return variable
+    real :: vpd         ! vapor pressure deficit (Pa)
+
+    ! local variables
+    real :: esat       ! saturation water vapor pressure (Pa) at given air temperature
+
+    esat = 611.0 * exp( (17.27 * tc)/(tc + 237.3) )
+
+    vpd = esat * (1.0 - rh)
+
+  end function calc_vpd_rh
 
 
 end module md_forcing_lm3ppa

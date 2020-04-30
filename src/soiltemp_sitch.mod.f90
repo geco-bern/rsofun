@@ -20,7 +20,7 @@ module md_soiltemp
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
-  use md_params_core_pmodel, only: nlu, maxgrid
+  use md_params_core, only: nlu, maxgrid
 
   implicit none
 
@@ -43,7 +43,7 @@ contains
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil temperature based on.
     !-------------------------------------------------------------------------
-    use md_params_core_pmodel, only: ndayyear, nlu, ndaymonth, pi
+    use md_params_core, only: ndayyear, nlu, ndaymonth, pi
     use md_sofunutils, only: running, daily2monthly
     use md_tile_pmodel, only: soil_type
     use md_interface_pmodel, only: myinterface
