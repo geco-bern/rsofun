@@ -265,7 +265,6 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
   do1=0.09 ; ! kg/kg
   if (pft < 2) do1=0.15;
 
-
   ! Convert Solar influx from W/(m^2s) to mol_of_quanta/(m^2s) PAR,
   ! empirical relationship from McCree is light=rn*0.0000046
   light_top = rad_top*rad_phot;
@@ -274,7 +273,6 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
   ! calculate humidity deficit, kg/kg
   call qscomp(tl, p_surf, hl)
   ds = max(hl - ea,0.0)
-
 
 !  ko=0.25   *exp(1400.0*(1.0/288.2-1.0/tl))*p_sea/p_surf;
 !  kc=0.00015*exp(6000.0*(1.0/288.2-1.0/tl))*p_sea/p_surf;
@@ -286,7 +284,6 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
   kc=0.000404 * exp(59356/Rgas*(1.0/298.2-1.0/tl))*p_sea/p_surf ! Weng, 2013-01-10
   vm=spdata(pft)%Vmax*exp(24920/Rgas*(1.0/298.2-1.0/tl)) ! / ((layer-1)*1.0+1.0) ! Ea = 33920
 
-
   !decrease Vmax due to aging of temperate deciduous leaves 
   !(based on Wilson, Baldocchi and Hanson (2001)."Plant,Cell, and Environment", vol 24, 571-583)
 !! Turned off by Weng, 2013-02-01, since we can't trace new leaves
@@ -296,8 +293,6 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
 
   ! capgam=0.209/(9000.0*exp(-5000.0*(1.0/288.2-1.0/tl))); - Foley formulation, 1986
   capgam=0.5*kc/ko*0.21*0.209; ! Farquhar & Caemmerer 1982
-
-
 
   ! Find respiration for the whole canopy layer
   
@@ -622,31 +617,36 @@ end subroutine plant_respiration
 !!       Nitrogen demand by leaves, roots, and seeds (Their C/N ratios are fixed.)
         N_demand = dBL/sp%CNleaf0 + dBR/sp%CNroot0 + dSeed/sp%CNseed0 + dBSW/sp%CNsw0
 !!       Nitrogen available for all tisues, including wood
-        IF(cc%N_growth < N_demand)THEN
-            ! a new method, Weng, 2019-05-21
-            ! same ratio reduction for leaf, root, and seed if(cc%N_growth < N_demand)
-            Nsupplyratio = MAX(0.0, MIN(1.0, cc%N_growth/N_demand))
-            !r_N_SD = (cc%N_growth-cc%C_growth/sp%CNsw0)/(N_demand-cc%C_growth/sp%CNsw0) ! fixed wood CN
-            r_N_SD = cc%N_growth/N_demand ! = Nsupplyratio
-            if(sp%lifeform > 0 )then ! for trees
-               if(r_N_SD<=1.0 .and. r_N_SD>0.0)then
-                dBSW =  dBSW + (1.0-r_N_SD) * (dBL+dBR+dSeed)
-                dBR  =  r_N_SD * dBR
-                dBL  =  r_N_SD * dBL
-                dSeed=  r_N_SD * dSeed
-               elseif(r_N_SD <= 0.0)then
-                dBSW = cc%N_growth/sp%CNsw0
-                dBR  =  0.0
-                dBL  =  0.0
-                dSeed=  0.0
-               endif
-            else ! for grasses
-               dBR  =  Nsupplyratio * dBR
-               dBL  =  Nsupplyratio * dBL
-               dSeed=  Nsupplyratio * dSeed
-               dBSW =  Nsupplyratio * dBSW
-            endif
-        ENDIF
+
+        !==================================
+        ! Turn off N effects on allocation 
+        !==================================
+        
+        ! IF(cc%N_growth < N_demand)THEN
+        !     ! a new method, Weng, 2019-05-21
+        !     ! same ratio reduction for leaf, root, and seed if(cc%N_growth < N_demand)
+        !     Nsupplyratio = MAX(0.0, MIN(1.0, cc%N_growth/N_demand))
+        !     !r_N_SD = (cc%N_growth-cc%C_growth/sp%CNsw0)/(N_demand-cc%C_growth/sp%CNsw0) ! fixed wood CN
+        !     r_N_SD = cc%N_growth/N_demand ! = Nsupplyratio
+        !     if(sp%lifeform > 0 )then ! for trees
+        !        if(r_N_SD<=1.0 .and. r_N_SD>0.0)then
+        !         dBSW =  dBSW + (1.0-r_N_SD) * (dBL+dBR+dSeed)
+        !         dBR  =  r_N_SD * dBR
+        !         dBL  =  r_N_SD * dBL
+        !         dSeed=  r_N_SD * dSeed
+        !        elseif(r_N_SD <= 0.0)then
+        !         dBSW = cc%N_growth/sp%CNsw0
+        !         dBR  =  0.0
+        !         dBL  =  0.0
+        !         dSeed=  0.0
+        !        endif
+        !     else ! for grasses
+        !        dBR  =  Nsupplyratio * dBR
+        !        dBL  =  Nsupplyratio * dBL
+        !        dSeed=  Nsupplyratio * dSeed
+        !        dBSW =  Nsupplyratio * dBSW
+        !     endif
+        ! ENDIF
 
 !       update carbon pools
         cc%bl     = cc%bl    + dBL
@@ -1876,6 +1876,7 @@ subroutine merge_cohorts(c1,c2)
 
   !  calculate the resulting dry heat capacity
      c2%leafarea = leaf_area_from_biomass(c2%bl, c2%species, c2%layer, c2%firstlayer)
+     call init_cohort_allometry(c2) !Enseng comments
   endif
 end subroutine merge_cohorts
 

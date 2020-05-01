@@ -169,12 +169,11 @@ forcing <- read_delim( paste0(path.package("rsofun"), "/extdata/ORNL_forcing.txt
 #ORNL_forcing.txt
 #US-WCrforcing.txt
 
-complete <- rep(seq(ymd("1998-01-01"), ymd("2008-12-31"), by = "days"), each = 24)
+# Aggregate daily data
+#forcing <- forcing %>% group_by(DOY,YEAR) %>%summarise_all(list(mean)) %>% arrange(YEAR ,.by_group = F) %>% dplyr::select(-HOUR)
 
-ddf_complete <- tibble(date = complete)
-
-# forcing <- read_delim("~/BiomeE-Allocation/model/input/US-WCrforcing_clean.txt", col_names = TRUE, delim = "\t")
-
+#complete <- rep(seq(ymd("1998-01-01"), ymd("2008-12-31"), by = "days"), each = 24)
+#ddf_complete <- tibble(date = complete)
 ```
 
 ### Run the model

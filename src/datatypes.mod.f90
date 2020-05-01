@@ -340,7 +340,6 @@ type :: soil_pars_type
   real::  tfreeze
 end type soil_pars_type
 
-
 type :: soil_prog_type
   real wl
   real ws
@@ -492,32 +491,6 @@ real :: NfixRate0(0:MSPECIES) = 0.0 !Reference N fixation rate (0.03 kgN kgC-1 r
 real :: NfixCost0(0:MSPECIES) = 12.0 ! FUN model, Fisher et al. 2010, GBC
 real :: internal_gap_frac(0:MSPECIES)= 0.1 ! The gaps between trees
 
-! namelist /vegn_parameters_nml/  &
-!   soiltype, FLDCAP, WILTPT, &
-!   pt, phenotype, lifeform, &
-!   Vmax, Vannual,wet_leaf_dreg,   &
-!   gamma_L, gamma_LN, gamma_SW, gamma_FR,  &
-!   rho_FR, root_r, root_zeta,Kw_root, &
-!   !rho_N_up0, N_roots0, &
-!   leaf_size, leafLS, LAImax, LAI_light,   &
-!   LMA, LNbase, CNleafsupport, c_LLS,      &
-!   K1,K2, K_nitrogen, etaN, MLmixRatio,    &
-!   LMAmin, fsc_fine, fsc_wood, &
-!   GR_factor, l_fract, retransN,f_N_add,   &
-!   f_initialBSW,f_LFR_max,  &
-!   gdd_crit,tc_crit, tc_crit_on, &
-!   alphaHT, thetaHT, alphaCA, thetaCA, alphaBM, thetaBM, &
-!   maturalage, v_seed, seedlingsize, prob_g,prob_e,      &
-!   mortrate_d_c, mortrate_d_u, A_mort, B_mort,DBHtp,     &
-!   phiRL, phiCSA, rho_wood, taperfactor, &
-!   tauNSC, fNSNmax, understory_lai_factor, &
-!   CNleaf0,CNsw0,CNwood0,CNroot0,CNseed0, &
-!   NfixRate0, NfixCost0,  &
-!   internal_gap_frac
-
-! -------------------------------------------
-
-
 ! soil parameters
 ! Coarse  Medium   Fine    CM     CF     MF    CMF    Peat    MCM
   real :: GMD(n_dim_soil_types) = & ! geometric mean partice diameter, mm
@@ -536,10 +509,6 @@ real :: internal_gap_frac(0:MSPECIES)= 0.1 ! The gaps between trees
   real :: alphaSoil(n_dim_soil_types) = 1.0       ! *** REPLACE LATER BY alpha(layer)
   real :: heat_capacity_dry(n_dim_soil_types) = &
   (/ 1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6,   1.0   /)
-
-! namelist /soil_data_nml/ &
-!      GMD, GSD, vwc_sat,k_sat_ref, psi_sat_ref, &
-!      chb, alphaSoil,heat_capacity_dry
 
 !----- Initial conditions -------------
 integer, parameter :: MAX_INIT_COHORTS = 10 ! Weng, 2014-10-01
@@ -571,17 +540,6 @@ logical   :: outputdaily  = .True.
 logical   :: do_U_shaped_mortality = .False.
 logical   :: update_annualLAImax = .False.
 logical   :: do_closedN_run = .True. !.False.
-
-! namelist /initial_state_nml/ &
-!     init_n_cohorts, init_cohort_species, init_cohort_nindivs, &
-!     init_cohort_bl, init_cohort_br, init_cohort_bsw, &
-!     init_cohort_bHW, init_cohort_seedC, init_cohort_nsc, &
-!     init_fast_soil_C, init_slow_soil_C,    & 
-!     init_Nmineral, N_input,  &
-!     filepath_in,climfile, & !model_run_years
-!     outputhourly, outputdaily, & ! equi_days, &
-!     do_U_shaped_mortality,update_annualLAImax
-! !---------------------------------
 
  contains
 !=============== subroutines =================================
