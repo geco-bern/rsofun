@@ -978,151 +978,150 @@ end subroutine hourly_diagnostics
     ! re-initialise to avoid elements not updated when number 
     ! of cohorts declines from one year to the next
 
-    ! if (.not. myinterface%steering%spinup) then 
-      ! out_daily_cohorts(:)%year    = dummy
-      ! out_daily_cohorts(:)%doy     = dummy
-      ! out_daily_cohorts(:)%hour    = dummy
-      ! out_daily_cohorts(:)%cID     = dummy
-      ! out_daily_cohorts(:)%PFT     = dummy
-      ! out_daily_cohorts(:)%layer   = dummy
-      ! out_daily_cohorts(:)%density = dummy
-      ! out_daily_cohorts(:)%f_layer = dummy
-      ! out_daily_cohorts(:)%LAI     = dummy
-      ! out_daily_cohorts(:)%gpp     = dummy
-      ! out_daily_cohorts(:)%resp    = dummy
-      ! out_daily_cohorts(:)%transp  = dummy
-      ! out_daily_cohorts(:)%NPPleaf = dummy
-      ! out_daily_cohorts(:)%NPProot = dummy
-      ! out_daily_cohorts(:)%NPPwood = dummy
-      ! out_daily_cohorts(:)%NSC     = dummy
-      ! out_daily_cohorts(:)%seedC   = dummy
-      ! out_daily_cohorts(:)%leafC   = dummy
-      ! out_daily_cohorts(:)%rootC   = dummy
-      ! out_daily_cohorts(:)%SW_C    = dummy
-      ! out_daily_cohorts(:)%HW_C    = dummy
-      ! out_daily_cohorts(:)%NSN     = dummy
-      ! out_daily_cohorts(:)%seedN   = dummy
-      ! out_daily_cohorts(:)%leafN   = dummy
-      ! out_daily_cohorts(:)%rootN   = dummy
-      ! out_daily_cohorts(:)%SW_N    = dummy
-      ! out_daily_cohorts(:)%HW_N    = dummy
-    ! endif
+    if (.not. myinterface%steering%spinup) then 
+      out_daily_cohorts(:)%year    = dummy
+      out_daily_cohorts(:)%doy     = dummy
+      out_daily_cohorts(:)%hour    = dummy
+      out_daily_cohorts(:)%cID     = dummy
+      out_daily_cohorts(:)%PFT     = dummy
+      out_daily_cohorts(:)%layer   = dummy
+      out_daily_cohorts(:)%density = dummy
+      out_daily_cohorts(:)%f_layer = dummy
+      out_daily_cohorts(:)%LAI     = dummy
+      out_daily_cohorts(:)%gpp     = dummy
+      out_daily_cohorts(:)%resp    = dummy
+      out_daily_cohorts(:)%transp  = dummy
+      out_daily_cohorts(:)%NPPleaf = dummy
+      out_daily_cohorts(:)%NPProot = dummy
+      out_daily_cohorts(:)%NPPwood = dummy
+      out_daily_cohorts(:)%NSC     = dummy
+      out_daily_cohorts(:)%seedC   = dummy
+      out_daily_cohorts(:)%leafC   = dummy
+      out_daily_cohorts(:)%rootC   = dummy
+      out_daily_cohorts(:)%SW_C    = dummy
+      out_daily_cohorts(:)%HW_C    = dummy
+      out_daily_cohorts(:)%NSN     = dummy
+      out_daily_cohorts(:)%seedN   = dummy
+      out_daily_cohorts(:)%leafN   = dummy
+      out_daily_cohorts(:)%rootN   = dummy
+      out_daily_cohorts(:)%SW_N    = dummy
+      out_daily_cohorts(:)%HW_N    = dummy
+    endif
 
-    ! Output and zero daily variables
-    !!! daily !! cohorts output
-    ! do i = 1, vegn%n_cohorts
 
-    !   cc => vegn%cohorts(i)
+    ! cohorts output
+    do i = 1, vegn%n_cohorts
+
+      cc => vegn%cohorts(i)
       
-    !   if (.not. myinterface%steering%spinup) then 
-    !     out_daily_cohorts(i)%year    = iyears
-    !     out_daily_cohorts(i)%doy     = idoy
-    !     out_daily_cohorts(i)%hour    = i !1.0 ! doesn-t make sense !xxx debugging
-    !     out_daily_cohorts(i)%cID     = cc%ccID
-    !     out_daily_cohorts(i)%PFT     = cc%species
-    !     out_daily_cohorts(i)%layer   = cc%layer
-    !     out_daily_cohorts(i)%density = cc%nindivs*10000
-    !     out_daily_cohorts(i)%f_layer = cc%layerfrac
-    !     out_daily_cohorts(i)%LAI     = cc%LAI
-    !     out_daily_cohorts(i)%gpp     = cc%dailygpp
-    !     out_daily_cohorts(i)%resp    = cc%dailyresp
-    !     out_daily_cohorts(i)%transp  = cc%dailytrsp
-    !     out_daily_cohorts(i)%NPPleaf = cc%NPPleaf
-    !     out_daily_cohorts(i)%NPProot = cc%NPProot
-    !     out_daily_cohorts(i)%NPPwood = cc%NPPwood
-    !     out_daily_cohorts(i)%NSC     = cc%NSC
-    !     out_daily_cohorts(i)%seedC   = cc%seedC
-    !     out_daily_cohorts(i)%leafC   = cc%bl
-    !     out_daily_cohorts(i)%rootC   = cc%br
-    !     out_daily_cohorts(i)%SW_C    = cc%bsw
-    !     out_daily_cohorts(i)%HW_C    = cc%bHW
-    !     out_daily_cohorts(i)%NSN     = cc%NSN*1000
-    !     out_daily_cohorts(i)%seedN   = cc%seedN*1000
-    !     out_daily_cohorts(i)%leafN   = cc%leafN*1000
-    !     out_daily_cohorts(i)%rootN   = cc%rootN*1000
-    !     out_daily_cohorts(i)%SW_N    = cc%sapwN*1000
-    !     out_daily_cohorts(i)%HW_N    = cc%woodN*1000
-    !   endif
+      if (.not. myinterface%steering%spinup) then 
+        out_daily_cohorts(i)%year    = iyears
+        out_daily_cohorts(i)%doy     = idoy
+        out_daily_cohorts(i)%hour    = i !1.0 ! doesn-t make sense !xxx debugging
+        out_daily_cohorts(i)%cID     = cc%ccID
+        out_daily_cohorts(i)%PFT     = cc%species
+        out_daily_cohorts(i)%layer   = cc%layer
+        out_daily_cohorts(i)%density = cc%nindivs*10000
+        out_daily_cohorts(i)%f_layer = cc%layerfrac
+        out_daily_cohorts(i)%LAI     = cc%LAI
+        out_daily_cohorts(i)%gpp     = cc%dailygpp
+        out_daily_cohorts(i)%resp    = cc%dailyresp
+        out_daily_cohorts(i)%transp  = cc%dailytrsp
+        out_daily_cohorts(i)%NPPleaf = cc%NPPleaf
+        out_daily_cohorts(i)%NPProot = cc%NPProot
+        out_daily_cohorts(i)%NPPwood = cc%NPPwood
+        out_daily_cohorts(i)%NSC     = cc%NSC
+        out_daily_cohorts(i)%seedC   = cc%seedC
+        out_daily_cohorts(i)%leafC   = cc%bl
+        out_daily_cohorts(i)%rootC   = cc%br
+        out_daily_cohorts(i)%SW_C    = cc%bsw
+        out_daily_cohorts(i)%HW_C    = cc%bHW
+        out_daily_cohorts(i)%NSN     = cc%NSN*1000
+        out_daily_cohorts(i)%seedN   = cc%seedN*1000
+        out_daily_cohorts(i)%leafN   = cc%leafN*1000
+        out_daily_cohorts(i)%rootN   = cc%rootN*1000
+        out_daily_cohorts(i)%SW_N    = cc%sapwN*1000
+        out_daily_cohorts(i)%HW_N    = cc%woodN*1000
+      endif
 
-    !   ! annual sum
-    !   cc%annualGPP = cc%annualGPP + cc%dailyGPP
-    !   cc%annualNPP = cc%annualNPP + cc%dailyNPP
-    !   cc%annualResp = cc%annualResp + cc%dailyResp
-    !   cc%annualTrsp = cc%annualTrsp + cc%dailyTrsp
-    !   ! Zero Daily variables
-    !   cc%dailyTrsp = 0.0
-    !   cc%dailyGPP = 0.0
-    !   cc%dailyNPP = 0.0
-    !   cc%dailyResp = 0.0
+      ! annual sum
+      cc%annualGPP = cc%annualGPP + cc%dailyGPP
+      cc%annualNPP = cc%annualNPP + cc%dailyNPP
+      cc%annualResp = cc%annualResp + cc%dailyResp
+      cc%annualTrsp = cc%annualTrsp + cc%dailyTrsp
+      ! Zero Daily variables
+      cc%dailyTrsp = 0.0
+      cc%dailyGPP = 0.0
+      cc%dailyNPP = 0.0
+      cc%dailyResp = 0.0
 
-    ! enddo
+    enddo
 
-    ! !! Tile level, daily
+    ! Tile level, daily
+    call summarize_tile(vegn)
 
-    ! if (.not. myinterface%steering%spinup) then 
+    if (.not. myinterface%steering%spinup) then 
 
-    !   call summarize_tile(vegn)
+      out_daily_tile%year      = iyears
+      out_daily_tile%doy       = idoy
+      out_daily_tile%Tc        = vegn%tc_daily
+      out_daily_tile%Prcp      = vegn%dailyPrcp
+      out_daily_tile%totWs     = vegn%soilwater
+      out_daily_tile%Trsp      = vegn%dailyTrsp
+      out_daily_tile%Evap      = vegn%dailyEvap
+      out_daily_tile%Runoff    = vegn%dailyRoff
+      out_daily_tile%ws1       = vegn%wcl(1)*thksl(1)*1000.
+      out_daily_tile%ws2       = vegn%wcl(2)*thksl(2)*1000.
+      out_daily_tile%ws3       = vegn%wcl(3)*thksl(3)*1000.
+      out_daily_tile%LAI       = vegn%LAI
+      out_daily_tile%GPP       = vegn%dailyGPP
+      out_daily_tile%Rauto     = vegn%dailyResp
+      out_daily_tile%Rh        = vegn%dailyRh
+      out_daily_tile%NSC       = vegn%NSC
+      out_daily_tile%seedC     = vegn%SeedC
+      out_daily_tile%leafC     = vegn%leafC
+      out_daily_tile%rootC     = vegn%rootC
+      out_daily_tile%SW_C      = vegn%SapwoodC
+      out_daily_tile%HW_C      = vegn%woodC
+      out_daily_tile%NSN       = vegn%NSN*1000
+      out_daily_tile%seedN     = vegn%SeedN*1000
+      out_daily_tile%leafN     = vegn%leafN*1000
+      out_daily_tile%rootN     = vegn%rootN*1000
+      out_daily_tile%SW_N      = vegn%SapwoodN *1000
+      out_daily_tile%HW_N      = vegn%WoodN *1000
+      out_daily_tile%McrbC     = vegn%MicrobialC
+      out_daily_tile%fastSOM   = vegn%metabolicL
+      out_daily_tile%slowSOM   = vegn%structuralL
+      out_daily_tile%McrbN     = vegn%MicrobialN*1000
+      out_daily_tile%fastSoilN = vegn%metabolicN*1000
+      out_daily_tile%slowSoilN = vegn%structuralN*1000
+      out_daily_tile%mineralN  = vegn%mineralN*1000
+      out_daily_tile%N_uptk    = vegn%dailyNup*1000
 
-    !   out_daily_tile%year      = iyears
-    !   out_daily_tile%doy       = idoy
-    !   out_daily_tile%Tc        = vegn%tc_daily
-    !   out_daily_tile%Prcp      = vegn%dailyPrcp
-    !   out_daily_tile%totWs     = vegn%soilwater
-    !   out_daily_tile%Trsp      = vegn%dailyTrsp
-    !   out_daily_tile%Evap      = vegn%dailyEvap
-    !   out_daily_tile%Runoff    = vegn%dailyRoff
-    !   out_daily_tile%ws1       = vegn%wcl(1)*thksl(1)*1000.
-    !   out_daily_tile%ws2       = vegn%wcl(2)*thksl(2)*1000.
-    !   out_daily_tile%ws3       = vegn%wcl(3)*thksl(3)*1000.
-    !   out_daily_tile%LAI       = vegn%LAI
-    !   out_daily_tile%GPP       = vegn%dailyGPP
-    !   out_daily_tile%Rauto     = vegn%dailyResp
-    !   out_daily_tile%Rh        = vegn%dailyRh
-    !   out_daily_tile%NSC       = vegn%NSC
-    !   out_daily_tile%seedC     = vegn%SeedC
-    !   out_daily_tile%leafC     = vegn%leafC
-    !   out_daily_tile%rootC     = vegn%rootC
-    !   out_daily_tile%SW_C      = vegn%SapwoodC
-    !   out_daily_tile%HW_C      = vegn%woodC
-    !   out_daily_tile%NSN       = vegn%NSN*1000
-    !   out_daily_tile%seedN     = vegn%SeedN*1000
-    !   out_daily_tile%leafN     = vegn%leafN*1000
-    !   out_daily_tile%rootN     = vegn%rootN*1000
-    !   out_daily_tile%SW_N      = vegn%SapwoodN *1000
-    !   out_daily_tile%HW_N      = vegn%WoodN *1000
-    !   out_daily_tile%McrbC     = vegn%MicrobialC
-    !   out_daily_tile%fastSOM   = vegn%metabolicL
-    !   out_daily_tile%slowSOM   = vegn%structuralL
-    !   out_daily_tile%McrbN     = vegn%MicrobialN*1000
-    !   out_daily_tile%fastSoilN = vegn%metabolicN*1000
-    !   out_daily_tile%slowSoilN = vegn%structuralN*1000
-    !   out_daily_tile%mineralN  = vegn%mineralN*1000
-    !   out_daily_tile%N_uptk    = vegn%dailyNup*1000
+    endif
 
-    ! endif
+    !annual tile
+    ! Annual summary:
+    vegn%annualNup  = vegn%annualNup  + vegn%dailyNup
+    vegn%annualGPP  = vegn%annualGPP  + vegn%dailygpp
+    vegn%annualNPP  = vegn%annualNPP  + vegn%dailynpp
+    vegn%annualResp = vegn%annualResp + vegn%dailyresp
+    vegn%annualRh   = vegn%annualRh   + vegn%dailyrh
+    vegn%annualPrcp = vegn%annualPrcp + vegn%dailyPrcp
+    vegn%annualTrsp = vegn%annualTrsp + vegn%dailytrsp
+    vegn%annualEvap = vegn%annualEvap + vegn%dailyevap
+    vegn%annualRoff = vegn%annualRoff + vegn%dailyRoff
 
-    ! !annual tile
-    ! ! Annual summary:
-    ! vegn%annualNup  = vegn%annualNup  + vegn%dailyNup
-    ! vegn%annualGPP  = vegn%annualGPP  + vegn%dailygpp
-    ! vegn%annualNPP  = vegn%annualNPP  + vegn%dailynpp
-    ! vegn%annualResp = vegn%annualResp + vegn%dailyresp
-    ! vegn%annualRh   = vegn%annualRh   + vegn%dailyrh
-    ! vegn%annualPrcp = vegn%annualPrcp + vegn%dailyPrcp
-    ! vegn%annualTrsp = vegn%annualTrsp + vegn%dailytrsp
-    ! vegn%annualEvap = vegn%annualEvap + vegn%dailyevap
-    ! vegn%annualRoff = vegn%annualRoff + vegn%dailyRoff
-
-    ! ! zero:
-    ! vegn%dailyNup  = 0.0
-    ! vegn%dailyGPP  = 0.0
-    ! vegn%dailyNPP  = 0.0
-    ! vegn%dailyResp = 0.0
-    ! vegn%dailyRh   = 0.0
-    ! vegn%dailyPrcp = 0.0
-    ! vegn%dailyTrsp = 0.0
-    ! vegn%dailyEvap = 0.0
-    ! vegn%dailyRoff = 0.0
+    ! zero:
+    vegn%dailyNup  = 0.0
+    vegn%dailyGPP  = 0.0
+    vegn%dailyNPP  = 0.0
+    vegn%dailyResp = 0.0
+    vegn%dailyRh   = 0.0
+    vegn%dailyPrcp = 0.0
+    vegn%dailyTrsp = 0.0
+    vegn%dailyEvap = 0.0
+    vegn%dailyRoff = 0.0
 
   end subroutine daily_diagnostics
 

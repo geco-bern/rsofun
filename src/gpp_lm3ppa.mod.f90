@@ -279,7 +279,19 @@ contains
             ! cc%resl    = cc%An_cl              * mol_C * myinterface%step_seconds ! kgC tree-1 step-1
             ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * myinterface%step_seconds ! kgC step-1 tree-1
             ! !===============================
-
+            print*,'calling pmodel with:'
+            print*,'     fapar'          , fapar_tree
+            print*,'     ppfd'           , f_light(layer) * forcing%PAR * 1.0e-6
+            print*,'     co2'            , co2_memory
+            print*,'     tc'             , temp_memory
+            print*,'     vpd'            , vpd_memory
+            print*,'     patm'           , patm_memory
+            print*,'     c4'             , .false.
+            print*,'     method_optci'   , "prentice14"
+            print*,'     method_jmaxlim' , "wang17"
+            print*,'     kphio'          , params_pft_gpp%kphio
+            print*,'     beta'           , params_gpp%beta
+            print*,'     rd_to_vcmax'    , params_gpp%rd_to_vcmax
             out_pmodel = pmodel( &
                                 fapar          = fapar_tree, &
                                 ppfd           = f_light(layer) * forcing%PAR * 1.0e-6, &    ! required in mol m-2 s-1
@@ -294,6 +306,7 @@ contains
                                 beta           = params_gpp%beta, &
                                 rd_to_vcmax    = params_gpp%rd_to_vcmax &
                                 )
+            print*,'... done.'
 
             ! irrelevant variables for this setup  
             cc%An_op   = 0.0

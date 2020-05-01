@@ -35,7 +35,7 @@ module md_forcing_lm3ppa
 
 contains
 
-  function getclimate( nt, forcing, climateyear_idx, climateyear ) result ( out_climate )
+  function getclimate( nt, ntstepsyear, ntstepsyear_forcing, forcing, climateyear_idx, climateyear, do_agg_climate ) result ( out_climate )
   ! function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
@@ -45,11 +45,11 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer, intent(in) :: nt ! number of time steps
-
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    !type(climate_type), dimension(nt), intent(in) :: forcing
-
+    integer, intent(in) :: ntstepsyear   ! number of time steps per year of model
+    integer, intent(in) :: ntstepsyear_forcing  ! number of time steps per year of forcing data
+    real,  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: climateyear_idx, climateyear
+    logical, intent(in) :: do_agg_climate
 
     ! local variables
     integer :: idx_start, idx_end, it
@@ -58,8 +58,8 @@ contains
     ! function return variable
     type(climate_type), dimension(ntstepsyear) :: out_climate
 
-    idx_start = (climateyear_idx - 1) * ntstepsyear + 1
-    idx_end   = idx_start + ntstepsyear - 1
+    idx_start = (climateyear_idx - 1) * ntstepsyear_forcing + 1
+    idx_end   = idx_start + ntstepsyear_forcing - 1
 
     ! This is to read from ORNL file
     out_climate%year      = int(forcing(idx_start:idx_end, 1))                    ! Year
@@ -79,6 +79,10 @@ contains
     do it=1,ntstepsyear
       out_climate(it)%vpd  = calc_vpd_rh( out_climate(it)%RH, (out_climate(it)%Tair - kTkelvin) )
     end do
+
+    if (do_agg_climate) then
+      out_climate(:) = aggregate_climate_byday( forcing(idx_start:idx_end) )
+    end if
 
   end function getclimate
 

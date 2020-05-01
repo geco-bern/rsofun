@@ -16,7 +16,6 @@ module md_biosphere_lm3ppa
 
 contains
 
-  ! function biosphere_annual() result( out_biosphere ) ! in the original it was a function
   subroutine biosphere_annual(out_biosphere)
     !////////////////////////////////////////////////////////////////
     ! function BIOSPHERE_annual calculates net ecosystem exchange (nee)
@@ -130,11 +129,11 @@ contains
         ! sum over fast time steps and cohorts
         call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
 
-        ! ! Determine start and end of season and maximum leaf (root) mass
-        ! call vegn_phenology( vegn )
+        ! Determine start and end of season and maximum leaf (root) mass
+        call vegn_phenology( vegn )
 
-        ! ! Produce new biomass from 'carbon_gain' (is zero afterwards)
-        ! call vegn_growth_EW( vegn )
+        ! Produce new biomass from 'carbon_gain' (is zero afterwards)
+        call vegn_growth_EW( vegn )
 
       end do dayloop
 
@@ -145,40 +144,40 @@ contains
     !----------------------------------------------------------------
     idoy = 0
 
-    ! print*,'sim. year  ', iyears
-    ! print*,'real year: ', year0
+    print*,'sim. year  ', iyears
+    print*,'real year: ', year0
 
-    ! if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update( vegn )
+    if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update( vegn )
 
-    ! call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
+    call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
+
+    !---------------------------------------------
+    ! Reproduction and mortality
+    !---------------------------------------------        
+    ! Kill all individuals in a cohort if NSC falls below critical point
+    call vegn_annual_starvation( vegn )
+
+    ! Natural mortality (reducing number of individuals 'nindivs')
+    ! (~Eq. 2 in Weng et al., 2015 BG)
+    call vegn_nat_mortality( vegn, real( seconds_per_year ))
+
+    ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
+    call vegn_reproduction( vegn )
+
+    !---------------------------------------------
+    ! Re-organize cohorts
+    !---------------------------------------------
+    call kill_lowdensity_cohorts( vegn )
+    call relayer_cohorts( vegn )
+    call vegn_mergecohorts( vegn )
 
     ! !---------------------------------------------
-    ! ! Reproduction and mortality
-    ! !---------------------------------------------        
-    ! ! Kill all individuals in a cohort if NSC falls below critical point
-    ! call vegn_annual_starvation( vegn )
-
-    ! ! Natural mortality (reducing number of individuals 'nindivs')
-    ! ! (~Eq. 2 in Weng et al., 2015 BG)
-    ! call vegn_nat_mortality( vegn, real( seconds_per_year ))
-
-    ! ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
-    ! call vegn_reproduction( vegn )
-
+    ! ! Set annual variables zero
     ! !---------------------------------------------
-    ! ! Re-organize cohorts
-    ! !---------------------------------------------
-    ! call kill_lowdensity_cohorts( vegn )
-    ! call relayer_cohorts( vegn )
-    ! call vegn_mergecohorts( vegn )
+    call Zero_diagnostics( vegn )
 
-    ! ! !---------------------------------------------
-    ! ! ! Set annual variables zero
-    ! ! !---------------------------------------------
-    ! call Zero_diagnostics( vegn )
-
-    ! ! update the years of model run
-    ! iyears = iyears + 1
+    ! update the years of model run
+    iyears = iyears + 1
 
     if (myinterface%steering%finalize) then
       !----------------------------------------------------------------

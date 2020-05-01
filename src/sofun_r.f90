@@ -348,7 +348,7 @@ contains
     logical(kind=c_bool), intent(in) :: do_closedN_run
 
     ! xxx try
-    integer, parameter :: code_method_photosynth = 1
+    integer, parameter :: code_method_photosynth = 2
 
     ! site information
     real(kind=c_double),  intent(in) :: longitude
@@ -450,6 +450,8 @@ contains
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
     real                    :: timestep, timestep_d
     integer                 :: yr
+    logical                 :: do_agg_climate = .false.
+    logical                 :: daily
     
     integer :: idx
     integer :: idx_hourly_start
@@ -559,10 +561,11 @@ contains
     timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
     timestep_d = real(forcing(2,2)) - real(forcing(1,2))  ! This takes the day of year (a numeric) from the forcing file
     if (timestep==0.0 .and. timestep_d==1.0) timestep = 24.0
-    !   daily = .true.
-    ! else
-    !   daily = .false.
-    ! end if
+      daily = .true.
+    else
+      daily = .false.
+      if (myinterface%params_siml%method_photosynth == "pmodel") do_agg_climate = .true.
+    end if
     myinterface%steps_per_day = int(24.0/timestep)
     myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
     myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
@@ -585,21 +588,22 @@ contains
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
       myinterface%climate(:) = getclimate( &
-                                        nt, &
-                                        forcing, &
-                                        myinterface%steering%climateyear_idx, &
-                                        myinterface%steering%climateyear &
-                                        )
+                                            nt, &
+                                            forcing, &
+                                            myinterface%steering%climateyear_idx, &
+                                            myinterface%steering%climateyear, &
+                                            do_agg_climate
+                                            )
 
       ! Get annual, gobally uniform CO2
       myinterface%pco2(:) = getco2(  &
-                                  nt, &
-                                  forcing, &
-                                  myinterface%steering%climateyear_idx, &  ! to make it equivalent to BiomeE
-                                  myinterface%steering%climateyear &
-                                  !myinterface%steering%forcingyear_idx, &
-                                  !myinterface%steering%forcingyear &
-                                  )
+                                      nt, &
+                                      forcing, &
+                                      myinterface%steering%climateyear_idx, &  ! to make it equivalent to BiomeE
+                                      myinterface%steering%climateyear &
+                                      !myinterface%steering%forcingyear_idx, &
+                                      !myinterface%steering%forcingyear &
+                                      )
 
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains gridcell loop)
