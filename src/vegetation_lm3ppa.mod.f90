@@ -265,7 +265,6 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
   do1=0.09 ; ! kg/kg
   if (pft < 2) do1=0.15;
 
-
   ! Convert Solar influx from W/(m^2s) to mol_of_quanta/(m^2s) PAR,
   ! empirical relationship from McCree is light=rn*0.0000046
   light_top = rad_top*rad_phot;
@@ -274,7 +273,6 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
   ! calculate humidity deficit, kg/kg
   call qscomp(tl, p_surf, hl)
   ds = max(hl - ea,0.0)
-
 
 !  ko=0.25   *exp(1400.0*(1.0/288.2-1.0/tl))*p_sea/p_surf;
 !  kc=0.00015*exp(6000.0*(1.0/288.2-1.0/tl))*p_sea/p_surf;
@@ -286,7 +284,6 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
   kc=0.000404 * exp(59356/Rgas*(1.0/298.2-1.0/tl))*p_sea/p_surf ! Weng, 2013-01-10
   vm=spdata(pft)%Vmax*exp(24920/Rgas*(1.0/298.2-1.0/tl)) ! / ((layer-1)*1.0+1.0) ! Ea = 33920
 
-
   !decrease Vmax due to aging of temperate deciduous leaves 
   !(based on Wilson, Baldocchi and Hanson (2001)."Plant,Cell, and Environment", vol 24, 571-583)
 !! Turned off by Weng, 2013-02-01, since we can't trace new leaves
@@ -296,8 +293,6 @@ subroutine gs_Leuning(rad_top, rad_net, tl, ea, lai, &
 
   ! capgam=0.209/(9000.0*exp(-5000.0*(1.0/288.2-1.0/tl))); - Foley formulation, 1986
   capgam=0.5*kc/ko*0.21*0.209; ! Farquhar & Caemmerer 1982
-
-
 
   ! Find respiration for the whole canopy layer
   
@@ -1876,6 +1871,7 @@ subroutine merge_cohorts(c1,c2)
 
   !  calculate the resulting dry heat capacity
      c2%leafarea = leaf_area_from_biomass(c2%bl, c2%species, c2%layer, c2%firstlayer)
+     call init_cohort_allometry(c2) !Enseng comments
   endif
 end subroutine merge_cohorts
 
