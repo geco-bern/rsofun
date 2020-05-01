@@ -617,31 +617,36 @@ end subroutine plant_respiration
 !!       Nitrogen demand by leaves, roots, and seeds (Their C/N ratios are fixed.)
         N_demand = dBL/sp%CNleaf0 + dBR/sp%CNroot0 + dSeed/sp%CNseed0 + dBSW/sp%CNsw0
 !!       Nitrogen available for all tisues, including wood
-        IF(cc%N_growth < N_demand)THEN
-            ! a new method, Weng, 2019-05-21
-            ! same ratio reduction for leaf, root, and seed if(cc%N_growth < N_demand)
-            Nsupplyratio = MAX(0.0, MIN(1.0, cc%N_growth/N_demand))
-            !r_N_SD = (cc%N_growth-cc%C_growth/sp%CNsw0)/(N_demand-cc%C_growth/sp%CNsw0) ! fixed wood CN
-            r_N_SD = cc%N_growth/N_demand ! = Nsupplyratio
-            if(sp%lifeform > 0 )then ! for trees
-               if(r_N_SD<=1.0 .and. r_N_SD>0.0)then
-                dBSW =  dBSW + (1.0-r_N_SD) * (dBL+dBR+dSeed)
-                dBR  =  r_N_SD * dBR
-                dBL  =  r_N_SD * dBL
-                dSeed=  r_N_SD * dSeed
-               elseif(r_N_SD <= 0.0)then
-                dBSW = cc%N_growth/sp%CNsw0
-                dBR  =  0.0
-                dBL  =  0.0
-                dSeed=  0.0
-               endif
-            else ! for grasses
-               dBR  =  Nsupplyratio * dBR
-               dBL  =  Nsupplyratio * dBL
-               dSeed=  Nsupplyratio * dSeed
-               dBSW =  Nsupplyratio * dBSW
-            endif
-        ENDIF
+
+        !==================================
+        ! Turn off N effects on allocation 
+        !==================================
+        
+        ! IF(cc%N_growth < N_demand)THEN
+        !     ! a new method, Weng, 2019-05-21
+        !     ! same ratio reduction for leaf, root, and seed if(cc%N_growth < N_demand)
+        !     Nsupplyratio = MAX(0.0, MIN(1.0, cc%N_growth/N_demand))
+        !     !r_N_SD = (cc%N_growth-cc%C_growth/sp%CNsw0)/(N_demand-cc%C_growth/sp%CNsw0) ! fixed wood CN
+        !     r_N_SD = cc%N_growth/N_demand ! = Nsupplyratio
+        !     if(sp%lifeform > 0 )then ! for trees
+        !        if(r_N_SD<=1.0 .and. r_N_SD>0.0)then
+        !         dBSW =  dBSW + (1.0-r_N_SD) * (dBL+dBR+dSeed)
+        !         dBR  =  r_N_SD * dBR
+        !         dBL  =  r_N_SD * dBL
+        !         dSeed=  r_N_SD * dSeed
+        !        elseif(r_N_SD <= 0.0)then
+        !         dBSW = cc%N_growth/sp%CNsw0
+        !         dBR  =  0.0
+        !         dBL  =  0.0
+        !         dSeed=  0.0
+        !        endif
+        !     else ! for grasses
+        !        dBR  =  Nsupplyratio * dBR
+        !        dBL  =  Nsupplyratio * dBL
+        !        dSeed=  Nsupplyratio * dSeed
+        !        dBSW =  Nsupplyratio * dBSW
+        !     endif
+        ! ENDIF
 
 !       update carbon pools
         cc%bl     = cc%bl    + dBL
