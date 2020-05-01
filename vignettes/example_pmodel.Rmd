@@ -12,6 +12,7 @@ library(rsofun)
 library(dplyr)
 library(readr)
 library(ingestr)
+library(ggplot2)
 ```
 
 ## Example using rsofun for P-model simulations
@@ -166,7 +167,6 @@ print(ptm)
 ```
 
 ```{r}
-library(ggplot2)
 ggplot() +
   geom_line(data = df_output$data[[1]], aes(x=date, y=gpp), color = 'black') + 
   labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")

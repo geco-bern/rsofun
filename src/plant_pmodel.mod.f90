@@ -7,7 +7,7 @@ module md_plant_pmodel
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
-  use md_params_core_pmodel, only: ndayyear, npft, nlu, lunat
+  use md_params_core, only: ndayyear, npft, nlu, lunat
   use md_interface_pmodel, only: myinterface
 
   implicit none

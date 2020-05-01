@@ -5,7 +5,7 @@ module md_interface_lm3ppa
   use md_forcing_lm3ppa, only: climate_type
   use md_params_soil_lm3ppa, only: paramtype_soil, getsoil
   use md_params_siml_lm3ppa, only: paramstype_siml, outtype_steering
-  use md_params_core_lm3ppa, only: MSPECIES, ntstepsyear, ndayyear, MAX_INIT_COHORTS, out_max_cohorts
+  use md_params_core, only: MSPECIES, ntstepsyear, ndayyear, MAX_INIT_COHORTS, out_max_cohorts
   use md_grid, only: gridtype !, domaininfo_type
 
   implicit none

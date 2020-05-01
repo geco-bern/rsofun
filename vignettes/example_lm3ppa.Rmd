@@ -39,7 +39,8 @@ params_siml <- list(
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
-      do_closedN_run        = TRUE
+      do_closedN_run        = TRUE,
+      method_photosynth     = "pmodel"
       )
 ```
 
@@ -163,17 +164,23 @@ The file has the following variables (units):
 forcing <- read_delim( paste0(path.package("rsofun"), "/extdata/ORNL_forcing.txt"), col_names = TRUE, delim = "\t") %>% 
   mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
   mutate(sitename = "ORNL") %>% 
-  dplyr::filter(!(mday(date)==29 & month(date)==2)) %>% 
-  dplyr::select(-date, -sitename)
-#forcing <- subset(forcing, YEAR<=2006)
-#ORNL_forcing.txt
-#US-WCrforcing.txt
+  dplyr::filter(!(mday(date)==29 & month(date)==2))
 
-# Aggregate daily data
-#forcing <- forcing %>% group_by(DOY,YEAR) %>%summarise_all(list(mean)) %>% arrange(YEAR ,.by_group = F) %>% dplyr::select(-HOUR)
+## convert rain to units per seconds
+dt_secs <- lubridate::interval(forcing$date[1], forcing$date[2]) %>% 
+  time_length("seconds")
+forcing <- forcing %>% 
+  mutate(RAIN = RAIN / dt_secs)
+```
 
-#complete <- rep(seq(ymd("1998-01-01"), ymd("2008-12-31"), by = "days"), each = 24)
-#ddf_complete <- tibble(date = complete)
+For P-model runs, aggregate to daily forcing.
+```{r}
+if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
+  forcing <- forcing %>% 
+    dplyr::group_by(lubridate::date(date)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>% 
+    dplyr::select(-1)
+}
 ```
 
 ### Run the model
@@ -191,6 +198,8 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_cohort, 
                             init_soil, 
                             makecheck = TRUE)
+
+save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
 
 out$output_daily_tile %>% 
   mutate(date = lubridate::ymd(paste0(year, "-01-01")) + lubridate::days(doy-1)) %>% 

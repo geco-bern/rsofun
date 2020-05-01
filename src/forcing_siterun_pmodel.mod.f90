@@ -10,7 +10,7 @@ module md_forcing_pmodel
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  use md_params_core_pmodel, only: ndayyear, nlu, dummy
+  use md_params_core, only: ndayyear, nlu, dummy
   use md_grid, only:  gridtype
   use md_sofunutils, only: calc_patm
 
@@ -180,7 +180,7 @@ contains
     ! 10:CRO: type13 + type15 = "croplands" + "cropland (natural vegetation mosaic)";
     !----------------------------------------------------------------
     use md_params_siml_pmodel, only: paramstype_siml
-    use md_params_core_pmodel, only: npft
+    use md_params_core, only: npft
 
     ! arguments
     type( paramstype_siml ), intent(in) :: params_siml

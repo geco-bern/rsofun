@@ -21,7 +21,7 @@ module md_waterbal
   ! contact: b.stocker@imperial.ac.uk
   ! ...
   !----------------------------------------------------------------
-  use md_params_core_pmodel, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
+  use md_params_core, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
     kMv, kMa, kfFEC, secs_per_day, pi, dummy, kGsc, ndaymonth, kTkelvin
   use md_tile_pmodel, only: tile_type, tile_fluxes_type
   use md_forcing_pmodel, only: climate_type
@@ -303,7 +303,7 @@ contains
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
-    use md_params_core_pmodel, only: ndayyear, pi, dummy
+    use md_params_core, only: ndayyear, pi, dummy
     use md_sofunutils, only: calc_patm
 
     ! arguments
@@ -641,7 +641,7 @@ contains
     ! Calculates the cosine of an angle given in degrees. Equal to 
     ! 'dsin' in Python version.
     !----------------------------------------------------------------   
-    use md_params_core_pmodel, only: pi
+    use md_params_core, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, degrees (0-360)
@@ -660,7 +660,7 @@ contains
     ! Calculates the sinus of an angle given in degrees. Equal to 
     ! 'dsin' in Python version.
     !----------------------------------------------------------------   
-    use md_params_core_pmodel, only: pi
+    use md_params_core, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, degrees (0-360)
@@ -678,7 +678,7 @@ contains
     !----------------------------------------------------------------   
     ! Returns corresponding degrees if x is given in radians
     !----------------------------------------------------------------   
-    use md_params_core_pmodel, only: pi
+    use md_params_core, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, radians
@@ -695,7 +695,7 @@ contains
     !----------------------------------------------------------------   
     ! Returns corresponding radians if x is given in degrees
     !----------------------------------------------------------------   
-    use md_params_core_pmodel, only: pi
+    use md_params_core, only: pi
 
     ! arguments
     real, intent(in) :: x  ! angle, radians
@@ -952,7 +952,7 @@ contains
   !   ! Calculates the rolling mean of relevant variables
   !   ! This requires the full arrays (all gridcells) to be stored.
   !   !-------------------------------------------------------------------------
-  !   use md_params_core_pmodel, only: nlu
+  !   use md_params_core, only: nlu
   !   use md_tile_pmodel, only: psoilphystype
 
   !   ! arguments

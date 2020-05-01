@@ -3,7 +3,7 @@ module md_params_soil_lm3ppa
   ! Module handling soil parameters
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, mydb=>real64, mysg=>real32
-  use md_params_core_lm3ppa, only: n_dim_soil_types
+  use md_params_core, only: n_dim_soil_types
 
   implicit none
 
