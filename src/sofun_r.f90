@@ -553,19 +553,10 @@ contains
     myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
     ntstepsyear = myinterface%steps_per_day * 365
 
-    !write(*,*) timestep, myinterface%steps_per_day, myinterface%dt_fast_yr, myinterface%step_seconds
-
-    ! totyears = myinterface%params_siml%runyears
-    ! totdays  = int(totyears/yr_data+1)*days_data
-    ! !myinterface%params_siml%equi_days = totdays - days_data
-    ! myinterface%datalines = datalines
-
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
 
     allocate(out_biosphere%hourly_tile(ntstepsyear))
-
-    ! print*, 'forcing', forcing(1:15,1)
 
     do yr=1, myinterface%params_siml%runyears
 
@@ -579,7 +570,6 @@ contains
       ! Get external (environmental) forcing
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
-      !print*,'climateyear_idx, climateyear', myinterface%steering%climateyear_idx, myinterface%steering%climateyear
       myinterface%climate(:) = getclimate( &
                                         nt, &
                                         forcing, &
@@ -611,26 +601,13 @@ contains
       !----------------------------------------------------------------
       if (.not. myinterface%steering%spinup) then  
         idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
-        ! idx_hourly_start = mod((yr - 1), 11) * ntstepsyear + 1      
         idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
         call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
       end if
 
-      ! print*, 'idx_hourly', idx_hourly_start, idx_hourly_end
-
-      ! print*, "yr  spinupyears  idx_hourly_start  idx_hourly_end  ntstepsyear", yr, myinterface%params_siml%spinupyears, idx_hourly_start,idx_hourly_end, ntstepsyear
-      ! print*,out_biosphere%hourly_tile(3)
-      ! print*, "myinterface%params_siml%firstyeartrend", firstyeartrend
-
       !----------------------------------------------------------------
       ! Output out_daily_tile (calling subroutine)
       !----------------------------------------------------------------
-      ! Output during spinup and transient years
-
-      ! idx_daily_start  = (yr - 1) * ndayyear + 1
-      ! idx_daily_end    = idx_daily_start + ndayyear - 1
-      ! call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
-    
       ! Output only for transient years
 
       if (.not. myinterface%steering%spinup) then  
@@ -640,8 +617,6 @@ contains
 
         call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :) )
 
-        print*, "shape daily tile", shape(output_daily_tile)
-      
         ! ----------------------------------------------------------------
         ! Output out_daily_cohorts (without subroutine)
         ! ----------------------------------------------------------------
@@ -675,18 +650,10 @@ contains
 
       end if
 
-      ! print*, 'out_biosphere%daily_cohorts(1,2)%year', out_biosphere%daily_cohorts(1,2)%year
-
       !----------------------------------------------------------------
       ! Output out_annual_tile (calling subroutine)
       !----------------------------------------------------------------
-      ! print*,'shape of output_daily_cohorts_HW_N', shape(output_daily_cohorts_HW_N)
-
       call populate_outarray_annual_tile( out_biosphere%annual_tile, output_annual_tile(yr,:) )
-
-      ! out_annual_tile(2)  = dble(annual_tile%CAI)
-
-      ! print*, "CAI output, CAI out_biosphere", out_biosphere%annual_tile%CAI !output_annual_tile(yr,2), 
 
       ! ----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)
