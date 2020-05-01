@@ -54,37 +54,37 @@ contains
     ! Photosynsthesis
     call gpp( forcing, vegn, init )
     
-    ! Update soil water
-    call SoilWaterDynamicsLayer( forcing, vegn )
+    ! ! Update soil water
+    ! call SoilWaterDynamicsLayer( forcing, vegn )
     
-    ! Respiration and allocation for growth
-    do i = 1, vegn%n_cohorts
+    ! ! Respiration and allocation for growth
+    ! do i = 1, vegn%n_cohorts
 
-      cc => vegn%cohorts(i)
-      associate ( sp => spdata(cc%species) )
+    !   cc => vegn%cohorts(i)
+    !   associate ( sp => spdata(cc%species) )
 
-      ! increment tha cohort age
-      cc%age = cc%age + myinterface%dt_fast_yr
+    !   ! increment tha cohort age
+    !   cc%age = cc%age + myinterface%dt_fast_yr
 
-      ! Maintenance respiration
-      call plant_respiration( cc, forcing%tair ) ! get resp per tree per time step
+    !   ! Maintenance respiration
+    !   call plant_respiration( cc, forcing%tair ) ! get resp per tree per time step
 
-      cc%resp = cc%resp + (cc%resg * myinterface%step_seconds) / seconds_per_day ! put growth respiration to tot resp
-      cc%npp  = cc%gpp  - cc%resp ! kgC tree-1 step-1
+    !   cc%resp = cc%resp + (cc%resg * myinterface%step_seconds) / seconds_per_day ! put growth respiration to tot resp
+    !   cc%npp  = cc%gpp  - cc%resp ! kgC tree-1 step-1
 
-      ! detach photosynthesis model from plant growth
-      cc%nsc = cc%nsc + cc%npp
-      cc%NSN = cc%NSN + cc%fixedN
+    !   ! detach photosynthesis model from plant growth
+    !   cc%nsc = cc%nsc + cc%npp
+    !   cc%NSN = cc%NSN + cc%fixedN
 
       
-      end associate
-    enddo ! all cohorts
+    !   end associate
+    ! enddo ! all cohorts
     
-    ! update soil carbon
-    call SOMdecomposition( vegn, forcing%tsoil, theta )
+    ! ! update soil carbon
+    ! call SOMdecomposition( vegn, forcing%tsoil, theta )
     
-    ! Nitrogen uptake
-    call vegn_N_uptake( vegn, forcing%tsoil )
+    ! ! Nitrogen uptake
+    ! call vegn_N_uptake( vegn, forcing%tsoil )
     
   end subroutine vegn_CNW_budget
 

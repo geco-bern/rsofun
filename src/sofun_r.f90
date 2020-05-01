@@ -223,9 +223,9 @@ contains
 
   end subroutine pmodel_f
 
-!//////////////////////////////////////////////////////////////////////////
+  !//////////////////////////////////////////////////////////////////////////
 
-    subroutine lm3ppa_f(          &
+  subroutine lm3ppa_f(          &
     spinup,                       &   
     spinupyears,                  &        
     recycle,                      &    
@@ -236,6 +236,7 @@ contains
     do_U_shaped_mortality,        &                   
     update_annualLAImax,          &                 
     do_closedN_run,               &            
+    code_method_photosynth,       &            
     longitude,                    &      
     latitude,                     &     
     altitude,                     &     
@@ -346,9 +347,7 @@ contains
     logical(kind=c_bool), intent(in) :: do_U_shaped_mortality
     logical(kind=c_bool), intent(in) :: update_annualLAImax
     logical(kind=c_bool), intent(in) :: do_closedN_run
-
-    ! xxx try
-    integer, parameter :: code_method_photosynth = 2
+    integer(kind=c_int),  intent(in) :: code_method_photosynth
 
     ! site information
     real(kind=c_double),  intent(in) :: longitude
@@ -448,8 +447,8 @@ contains
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
-    real                    :: timestep, timestep_d, timestep_forcing
-    integer                 :: yr
+    real                    :: timestep, timestep_d
+    integer                 :: yr, ntstepsyear_forcing
     logical                 :: do_agg_climate = .false.
     
     integer :: idx
@@ -481,6 +480,7 @@ contains
     myinterface%params_siml%update_annualLAImax   = update_annualLAImax      
     myinterface%params_siml%do_closedN_run        = do_closedN_run       
     
+    ! this needs to be consistent with translation to code in run_lm3ppa_f_bysite.R
     if (code_method_photosynth == 1) then
       myinterface%params_siml%method_photosynth = "gs_leuning"
     else if (code_method_photosynth == 2) then
@@ -559,63 +559,58 @@ contains
     !----------------------------------------------------------------
     timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
     timestep_d = real(forcing(2,2)) - real(forcing(1,2))  ! This takes the day of year (a numeric) from the forcing file
-    timestep_forcing = timestep
     if (timestep==0.0 .and. timestep_d==1.0) then
       ! forcing is daily
       timestep = 24.0
-    else if (timestep < 24.0) then
-      ! forcing is sub-daily. For P-model setup, aggregate to daily
-      if (myinterface%params_siml%method_photosynth == "pmodel") do_agg_climate = .true.
+    ! else if (timestep < 24.0) then
+    !   ! forcing is sub-daily. For P-model setup, aggregate to daily
+    !   if (myinterface%params_siml%method_photosynth == "pmodel") then
+    !     ! aggregate forcing to daily
+    !     do_agg_climate = .true.
+    !     timestep = 24.0
+    !   end if
     end if
+    ! print*,'do_agg_climate', do_agg_climate
+    ! print*,'timestep', timestep
+    ! print*,'timestep_d', timestep_d
     myinterface%steps_per_day = int(24.0/timestep)
     myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
     myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
     ntstepsyear = myinterface%steps_per_day * 365
-    if (do_agg_climate) then 
-      ntstepsyear_forcing = ntstepsyear * timestep_forcing
-    else
-      ntstepsyear_forcing = ntstepsyear
-    end if
+    ! if (do_agg_climate) then 
+    !   ntstepsyear_forcing = ntstepsyear * timestep
+    ! else
+    !   ntstepsyear_forcing = ntstepsyear
+    ! end if
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
 
-    do yr=1, myinterface%params_siml%runyears
+    yearloop: do yr=1, myinterface%params_siml%runyears
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
       !----------------------------------------------------------------
       myinterface%steering = getsteering( yr, myinterface%params_siml )
 
       !----------------------------------------------------------------
-      ! Get external (environmental) forcing
+      ! Get external (environmental) forcing (for lm3ppa, co2 is in myinterface%climate)
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
       myinterface%climate(:) = getclimate( &
                                             nt, &
                                             ntstepsyear, &
-                                            ntstepsyear_forcing, &
+                                            ! ntstepsyear_forcing, &
                                             forcing, &
                                             myinterface%steering%climateyear_idx, &
-                                            myinterface%steering%climateyear, &
-                                            do_agg_climate
+                                            myinterface%steering%climateyear &
+                                            ! do_agg_climate &
                                             )
 
-      ! Get annual, gobally uniform CO2
-      myinterface%pco2(:) = getco2(  &
-                                      nt, &
-                                      forcing, &
-                                      myinterface%steering%climateyear_idx, &  ! to make it equivalent to BiomeE
-                                      myinterface%steering%climateyear &
-                                      !myinterface%steering%forcingyear_idx, &
-                                      !myinterface%steering%forcingyear &
-                                      )
-
       !----------------------------------------------------------------
-      ! Call biosphere (wrapper for all modules, contains gridcell loop)
+      ! Call biosphere (wrapper for all modules, contains time loops)
       !----------------------------------------------------------------
-      ! out_biosphere = biosphere_annual()
       call biosphere_annual( out_biosphere )
 
       !----------------------------------------------------------------
@@ -713,7 +708,7 @@ contains
 
       end if
 
-    enddo
+    end do yearloop
 
     deallocate(myinterface%climate)
     deallocate(myinterface%pco2)

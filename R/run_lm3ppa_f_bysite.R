@@ -29,6 +29,17 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
   runyears <- ifelse(params_siml$spinup, (params_siml$spinupyears + params_siml$nyeartrend), params_siml$nyeartrend)
   n_daily  <- params_siml$nyeartrend * 365
 
+  if (params_siml$method_photosynth == "gs_leuning"){
+    code_method_photosynth = 1
+  } else if (params_siml$method_photosynth == "pmodel"){
+    code_method_photosynth = 2
+    dt_days <- forcing$DOY[2] - forcing$DOY[1]
+    dt_hours <- forcing$HOUR[2] - forcing$HOUR[1]
+    if (dt_days!=1 && dt_hours != 0) rlang::abort("run_lm3ppa_f_bysite: time step must be daily for P-model photosynthesis setup.")
+  } else {
+    rlang::abort(paste("run_lm3ppa_f_bysite: params_siml$method_photosynth not recognised:", params_siml$method_photosynth))
+  }
+  
   do_continue <- TRUE
 
   if (makecheck){
@@ -74,12 +85,12 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       do_continue <- FALSE
     }
     
-    if (nrow(forcing) != params_siml$nyeartrend * 365 * 24){    # xxx todo: must be *48 for lm3ppa
-      rlang::warn("Error: Number of years data in forcing does not correspond to number of simulation years (nyeartrend).")
-      rlang::warn(paste(" Number of years data: ", nrow(forcing)/(365*24)))
-      rlang::warn(paste(" Number of simulation years: ", params_siml$nyeartrend))
-      rlang::warn(" Returning a dummy data frame.")
-    }
+    # if (nrow(forcing) != params_siml$nyeartrend * 365 * 24){    # xxx todo: must be *48 for lm3ppa
+    #   rlang::warn("Error: Number of years data in forcing does not correspond to number of simulation years (nyeartrend). \n")
+    #   rlang::warn(paste(" Number of years data: ", nrow(forcing)/(365*24)))
+    #   rlang::warn(paste(" Number of simulation years: ", params_siml$nyeartrend))
+    #   rlang::warn(" Returning a dummy data frame.")
+    # }
   }
 
   if (do_continue) {
@@ -108,6 +119,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       do_U_shaped_mortality = as.logical(params_siml$do_U_shaped_mortality),
       update_annualLAImax   = as.logical(params_siml$update_annualLAImax),
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
+      code_method_photosynth= as.integer(code_method_photosynth),
       
       ## site meta info
       longitude             = as.numeric(siteinfo$lon),

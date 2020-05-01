@@ -129,6 +129,7 @@ void F77_NAME(lm3ppa_f)(
     _Bool  *do_U_shaped_mortality,             
     _Bool  *update_annualLAImax,                   
     _Bool  *do_closedN_run,                   
+    int    *code_method_photosynth,                   
     double *longitude,                  
     double *latitude,                  
     double *altitude,                  
@@ -222,7 +223,8 @@ extern SEXP lm3ppa_f_C(
     SEXP outputdaily,                   
     SEXP do_U_shaped_mortality,             
     SEXP update_annualLAImax,                   
-    SEXP do_closedN_run,                  
+    SEXP do_closedN_run,  
+    SEXP code_method_photosynth,                
     SEXP longitude,                  
     SEXP latitude,                  
     SEXP altitude,                 
@@ -324,7 +326,8 @@ extern SEXP lm3ppa_f_C(
         LOGICAL(outputdaily),                   
         LOGICAL(do_U_shaped_mortality),                
         LOGICAL(update_annualLAImax),                   
-        LOGICAL(do_closedN_run),                  
+        LOGICAL(do_closedN_run),    
+        INTEGER(code_method_photosynth),              
         REAL(longitude),                  
         REAL(latitude),                  
         REAL(altitude),                  
@@ -474,7 +477,7 @@ extern SEXP lm3ppa_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
-  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   37},  // Number of the SEXP variables (not the output)
+  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   38},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };
 

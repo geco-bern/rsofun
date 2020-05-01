@@ -10,11 +10,11 @@ module md_forcing_lm3ppa
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  use md_params_core, only: ntstepsyear, kTkelvin
+  use md_params_core, only: ntstepsyear, kTkelvin, ndayyear
   implicit none
 
   private
-  public climate_type, getclimate, getco2!, forcingData
+  public climate_type, getclimate, getco2
 
   type :: climate_type
      integer :: year          ! Year
@@ -35,8 +35,8 @@ module md_forcing_lm3ppa
 
 contains
 
-  function getclimate( nt, ntstepsyear, ntstepsyear_forcing, forcing, climateyear_idx, climateyear, do_agg_climate ) result ( out_climate )
-  ! function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
+  ! function getclimate( nt, ntstepsyear, ntstepsyear_forcing, forcing, climateyear_idx, climateyear, do_agg_climate ) result ( out_climate )
+  function getclimate( nt, ntstepsyear, forcing, climateyear_idx, climateyear ) result ( out_climate )
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
     ! to read from NetCDF. This nesting is necessary because this 
@@ -46,10 +46,10 @@ contains
     ! arguments
     integer, intent(in) :: nt ! number of time steps
     integer, intent(in) :: ntstepsyear   ! number of time steps per year of model
-    integer, intent(in) :: ntstepsyear_forcing  ! number of time steps per year of forcing data
-    real,  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    ! integer, intent(in) :: ntstepsyear_forcing  ! number of time steps per year of forcing data
+    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: climateyear_idx, climateyear
-    logical, intent(in) :: do_agg_climate
+    ! logical, intent(in) :: do_agg_climate
 
     ! local variables
     integer :: idx_start, idx_end, it
@@ -58,8 +58,11 @@ contains
     ! function return variable
     type(climate_type), dimension(ntstepsyear) :: out_climate
 
-    idx_start = (climateyear_idx - 1) * ntstepsyear_forcing + 1
-    idx_end   = idx_start + ntstepsyear_forcing - 1
+    ! print*,'ntstepsyear', ntstepsyear
+    ! print*,'ntstepsyear_forcing', ntstepsyear_forcing
+
+    idx_start = (climateyear_idx - 1) * ntstepsyear + 1
+    idx_end   = idx_start + ntstepsyear - 1
 
     ! This is to read from ORNL file
     out_climate%year      = int(forcing(idx_start:idx_end, 1))                    ! Year
@@ -69,8 +72,8 @@ contains
     out_climate%radiation = real(forcing(idx_start:idx_end, 5))                   ! W/m2
     out_climate%Tair      = real(forcing(idx_start:idx_end, 6)) + 273.16          ! air temperature, K
     out_climate%Tsoil     = real(forcing(idx_start:idx_end, 7)) + 273.16          ! soil temperature, K
-    out_climate%RH        = real(forcing(idx_start:idx_end, 8)) * 0.01            ! relative humidity (0.xx)
-    out_climate%rain      = real(forcing(idx_start:idx_end, 9))/(timestep * 3600) ! kgH2O m-2 s-1
+    out_climate%RH        = real(forcing(idx_start:idx_end, 8)) * 0.01            ! relative humidity as a fraction (0.xx)
+    out_climate%rain      = real(forcing(idx_start:idx_end, 9))                   ! kgH2O m-2 s-1
     out_climate%windU     = real(forcing(idx_start:idx_end, 10))                  ! wind velocity (m s-1)
     out_climate%P_air     = real(forcing(idx_start:idx_end, 11))                  ! pa
     out_climate%CO2       = real(forcing(idx_start:idx_end, 12)) * 1.0e-6         ! mol/mol
@@ -80,11 +83,54 @@ contains
       out_climate(it)%vpd  = calc_vpd_rh( out_climate(it)%RH, (out_climate(it)%Tair - kTkelvin) )
     end do
 
-    if (do_agg_climate) then
-      out_climate(:) = aggregate_climate_byday( out_climate(idx_start:idx_end) )
-    end if
+    ! if (do_agg_climate) then
+    !   out_climate(:) = aggregate_climate_byday( out_climate(idx_start:idx_end) )
+    ! end if
 
   end function getclimate
+
+
+  ! function aggregate_climate_byday( forcing ) result( forcing_agg )
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Takes mean over fast time steps provided in input, and 
+  !   ! returns aggregated values.
+  !   !----------------------------------------------------------------
+  !   type(climate_type), dimension(:), intent(in) :: forcing
+
+  !   ! function return variable
+  !   type(climate_type), dimension(ndayyear) :: forcing_agg
+
+  !   ! local
+  !   integer :: nt  ! number of time steps per year (may vary)
+  !   integer :: doy, idx_start, idx_end
+  !   real :: nt_day
+
+  !   nt = size(forcing, 1)
+  !   nt_day = nt / ndayyear
+
+  !   do doy = 1, ndayyear
+
+  !     idx_start = (doy - 1) * nt_day + 1
+  !     idx_end = idx_start + nt_day - 1
+
+  !     forcing_agg(doy)%year      = forcing(idx_start)%year
+  !     forcing_agg(doy)%doy       = forcing(idx_start)%doy
+  !     forcing_agg(doy)%hod       = 12.0
+  !     forcing_agg(doy)%PAR       = sum( forcing(idx_start:idx_end)%PAR ) / nt_day         ! umol m-2 s-1
+  !     forcing_agg(doy)%radiation = sum( forcing(idx_start:idx_end)%radiation ) / nt_day   ! W/m2
+  !     forcing_agg(doy)%Tair      = sum( forcing(idx_start:idx_end)%Tair ) / nt_day        ! air temperature,  K
+  !     forcing_agg(doy)%Tsoil     = sum( forcing(idx_start:idx_end)%Tsoil ) / nt_day       ! soil temperature, K
+  !     forcing_agg(doy)%RH        = sum( forcing(idx_start:idx_end)%RH ) / nt_day          ! relative humidity
+  !     forcing_agg(doy)%rain      = sum( forcing(idx_start:idx_end)%rain ) / nt_day        ! kgH2O m-2 s-1
+  !     forcing_agg(doy)%windU     = sum( forcing(idx_start:idx_end)%windU ) / nt_day       ! wind velocity (m s-1)
+  !     forcing_agg(doy)%P_air     = sum( forcing(idx_start:idx_end)%P_air ) / nt_day       ! pa
+  !     forcing_agg(doy)%CO2       = sum( forcing(idx_start:idx_end)%CO2 ) / nt_day         ! ppm
+  !     forcing_agg(doy)%soilwater = sum( forcing(idx_start:idx_end)%soilwater ) / nt_day   ! soil moisture, vol/vol
+  !     forcing_agg(doy)%vpd       = sum( forcing(idx_start:idx_end)%vpd ) / nt_day   ! soil moisture, vol/vol
+
+  !   end do
+
+  ! end function aggregate_climate_byday
 
 
   function getco2( nt, forcing, forcingyear_idx, forcingyear ) result( pco2 )

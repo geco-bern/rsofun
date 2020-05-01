@@ -82,6 +82,7 @@ contains
     real, save :: patm_memory
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
 
+
     if (trim(myinterface%params_siml%method_photosynth) == "gs_leuning") then
       !===========================================================
       ! Original BiomeE-Allocation
@@ -255,6 +256,8 @@ contains
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
 
+        print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
+
         if (cc%status == LEAF_ON .and. cc%lai > 0.1 .and. temp_memory > -5.0) then
 
           !----------------------------------------------------------------
@@ -267,6 +270,8 @@ contains
           ! P-model call for C3 plants to get a list of variables that are 
           ! acclimated to slowly varying conditions
           !----------------------------------------------------------------
+          print*,'fapar_tree, par', fapar_tree, forcing%PAR
+
           if (fapar_tree > 0.0 .and. forcing%PAR > 0.0) then
 
             ! !===============================
@@ -348,7 +353,7 @@ contains
 
     else
 
-      stop 'gpp(): myinterface%params_siml%method_photosynth not recognized'
+      print*,'WARNING: gpp(): myinterface%params_siml%method_photosynth not recognized'
 
     end if
 
