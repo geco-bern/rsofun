@@ -448,10 +448,9 @@ contains
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
-    real                    :: timestep, timestep_d
+    real                    :: timestep, timestep_d, timestep_forcing
     integer                 :: yr
     logical                 :: do_agg_climate = .false.
-    logical                 :: daily
     
     integer :: idx
     integer :: idx_hourly_start
@@ -560,17 +559,23 @@ contains
     !----------------------------------------------------------------
     timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
     timestep_d = real(forcing(2,2)) - real(forcing(1,2))  ! This takes the day of year (a numeric) from the forcing file
-    if (timestep==0.0 .and. timestep_d==1.0) timestep = 24.0
-      daily = .true.
-    else
-      daily = .false.
+    timestep_forcing = timestep
+    if (timestep==0.0 .and. timestep_d==1.0) then
+      ! forcing is daily
+      timestep = 24.0
+    else if (timestep < 24.0) then
+      ! forcing is sub-daily. For P-model setup, aggregate to daily
       if (myinterface%params_siml%method_photosynth == "pmodel") do_agg_climate = .true.
     end if
     myinterface%steps_per_day = int(24.0/timestep)
     myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
     myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
     ntstepsyear = myinterface%steps_per_day * 365
-
+    if (do_agg_climate) then 
+      ntstepsyear_forcing = ntstepsyear * timestep_forcing
+    else
+      ntstepsyear_forcing = ntstepsyear
+    end if
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
@@ -589,6 +594,8 @@ contains
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
       myinterface%climate(:) = getclimate( &
                                             nt, &
+                                            ntstepsyear, &
+                                            ntstepsyear_forcing, &
                                             forcing, &
                                             myinterface%steering%climateyear_idx, &
                                             myinterface%steering%climateyear, &

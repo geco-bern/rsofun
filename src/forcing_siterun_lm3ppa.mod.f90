@@ -81,7 +81,7 @@ contains
     end do
 
     if (do_agg_climate) then
-      out_climate(:) = aggregate_climate_byday( forcing(idx_start:idx_end) )
+      out_climate(:) = aggregate_climate_byday( out_climate(idx_start:idx_end) )
     end if
 
   end function getclimate
