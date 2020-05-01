@@ -256,7 +256,7 @@ contains
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
 
-        print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
+        ! print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
 
         if (cc%status == LEAF_ON .and. cc%lai > 0.1 .and. temp_memory > -5.0) then
 
@@ -270,33 +270,19 @@ contains
           ! P-model call for C3 plants to get a list of variables that are 
           ! acclimated to slowly varying conditions
           !----------------------------------------------------------------
-          print*,'fapar_tree, par', fapar_tree, forcing%PAR
-
           if (fapar_tree > 0.0 .and. forcing%PAR > 0.0) then
 
-            ! !===============================
-            ! ! XXX constant LUE hack:
-            ! !===============================
+            !===============================
+            ! XXX constant LUE hack:
+            !===============================
             ! cc%An_op   = 1.0e-7 * fapar_tree * f_light(layer) * forcing%PAR / kfFEC  ! molC s-1 m-2 of leaves
             ! cc%An_cl   = 0.5e-9 * fapar_tree * f_light(layer) * forcing%PAR / kfFEC  ! molC s-1 m-2 of leaves
             ! cc%w_scale = 0.0
             ! cc%transp  = 0.0
             ! cc%resl    = cc%An_cl              * mol_C * myinterface%step_seconds ! kgC tree-1 step-1
             ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * myinterface%step_seconds ! kgC step-1 tree-1
-            ! !===============================
-            print*,'calling pmodel with:'
-            print*,'     fapar'          , fapar_tree
-            print*,'     ppfd'           , f_light(layer) * forcing%PAR * 1.0e-6
-            print*,'     co2'            , co2_memory
-            print*,'     tc'             , temp_memory
-            print*,'     vpd'            , vpd_memory
-            print*,'     patm'           , patm_memory
-            print*,'     c4'             , .false.
-            print*,'     method_optci'   , "prentice14"
-            print*,'     method_jmaxlim' , "wang17"
-            print*,'     kphio'          , params_pft_gpp%kphio
-            print*,'     beta'           , params_gpp%beta
-            print*,'     rd_to_vcmax'    , params_gpp%rd_to_vcmax
+            !===============================
+
             out_pmodel = pmodel( &
                                 fapar          = fapar_tree, &
                                 ppfd           = f_light(layer) * forcing%PAR * 1.0e-6, &    ! required in mol m-2 s-1
@@ -311,7 +297,6 @@ contains
                                 beta           = params_gpp%beta, &
                                 rd_to_vcmax    = params_gpp%rd_to_vcmax &
                                 )
-            print*,'... done.'
 
             ! irrelevant variables for this setup  
             cc%An_op   = 0.0

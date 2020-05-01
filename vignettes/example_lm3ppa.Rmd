@@ -31,7 +31,7 @@ Now specify the simulation parameters that are identical for all site-scale simu
 ```{r}
 params_siml <- list(
       spinup                = TRUE,
-      spinupyears           = 11, #1793,
+      spinupyears           = 1793,
       recycle               = 11, # 9 or 11
       firstyeartrend        = 1998,
       nyeartrend            = 11, #9 or 11
@@ -198,6 +198,8 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_cohort, 
                             init_soil, 
                             makecheck = TRUE)
+
+save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
 
 out$output_daily_tile %>% 
   mutate(date = lubridate::ymd(paste0(year, "-01-01")) + lubridate::days(doy-1)) %>% 
