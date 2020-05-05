@@ -1134,7 +1134,7 @@ end subroutine hourly_diagnostics
       fleaf = cc%NPPleaf/treeG
       froot = cc%NPProot/treeG
       fwood = cc%NPPwood/treeG
-      dDBH = (cc%DBH   - cc%DBH_ys)*1000.
+      dDBH  = (cc%DBH - cc%DBH_ys)*1000.
 
       out_annual_cohorts(i)%year    = iyears
       out_annual_cohorts(i)%cID     = cc%ccID
@@ -1163,7 +1163,8 @@ end subroutine hourly_diagnostics
     enddo
 
     ! tile pools output
-    call summarize_tile(vegn)
+    call summarize_tile( vegn )
+
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
       vegn%annualfixedN  = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
@@ -1174,14 +1175,6 @@ end subroutine hourly_diagnostics
     soilC     = vegn%MicrobialC + vegn%metabolicL + vegn%structuralL
     soilN     = vegn%MicrobialN + vegn%metabolicN + vegn%structuralN + vegn%mineralN
     vegn%totN = plantN + soilN
-    
-    ! out_annual_tile%Seedling_C = 0.0
-    ! out_annual_tile%Seedling_N = 0.0
-
-    ! print*, '1 out_annual_tile%Seedling_C', out_annual_tile%Seedling_C
-    ! print*, '1 out_annual_tile%Seedling_N', out_annual_tile%Seedling_N
-    ! print*, '1 vegn%totNewCC', vegn%totNewCC
-    ! print*, '1 vegn%totNewCN', vegn%totNewCN
 
     out_annual_tile%year       = iyears
     out_annual_tile%CAI        = vegn%CAI
@@ -1227,13 +1220,6 @@ end subroutine hourly_diagnostics
     out_annual_tile%totseedN   = vegn%totseedN*1000
     out_annual_tile%Seedling_C = vegn%totNewCC*1000
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
-
-    ! print*,'annual_diagnostics() : vegn%CAI, vegn%LAI ', vegn%CAI, vegn%LAI
-    ! print*, '2 out_annual_tile%Seedling_C', out_annual_tile%Seedling_C
-    ! print*, '2 out_annual_tile%Seedling_N', out_annual_tile%Seedling_N
-    ! print*, '2 vegn%totNewCC', vegn%totNewCC
-    ! print*, '2 vegn%totNewCN', vegn%totNewCN
-
 
     ! I cannot figure out why N losing. Hack!
    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)

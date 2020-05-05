@@ -448,8 +448,7 @@ contains
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
     real                    :: timestep, timestep_d
-    integer                 :: yr, ntstepsyear_forcing
-    logical                 :: do_agg_climate = .false.
+    integer                 :: yr
     
     integer :: idx
     integer :: idx_hourly_start
@@ -586,11 +585,9 @@ contains
       myinterface%climate(:) = getclimate( &
                                             nt, &
                                             ntstepsyear, &
-                                            ! ntstepsyear_forcing, &
                                             forcing, &
                                             myinterface%steering%climateyear_idx, &
                                             myinterface%steering%climateyear &
-                                            ! do_agg_climate &
                                             )
 
       !----------------------------------------------------------------

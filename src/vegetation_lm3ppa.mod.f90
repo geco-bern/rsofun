@@ -380,7 +380,7 @@ contains
         if (cc%layer == 1) cc%topyear = cc%topyear + 1.0 /365.0
         if (cc%layer > 1 .and. cc%firstlayer == 0) then ! changed back, Weng 2014-01-23
           cc%bl_max = BL_u
-          !           Keep understory tree's root low and constant
+          ! Keep understory tree's root low and constant
           cc%br_max = 1.8*cc%bl_max/(sp%LMA*sp%SRA) ! sp%phiRL
           !cc%br_max = sp%phiRL*cc%bl_max/(sp%LMA*sp%SRA) ! sp%phiRL
 
@@ -701,10 +701,10 @@ contains
       endif
 
       !deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
-      deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year) ! individuals / m2
+      deadtrees = cc%nindivs * MIN(1.0, deathrate * deltat / seconds_per_year) ! individuals / m2
 
       ! Carbon and Nitrogen from dead plants to soil pools
-      call plant2soil(vegn,cc,deadtrees)
+      call plant2soil( vegn, cc ,deadtrees )
       
       ! Update plant density
       cc%nindivs = cc%nindivs - deadtrees

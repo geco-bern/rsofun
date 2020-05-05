@@ -187,7 +187,6 @@ if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
 
 Run the model for all the sites specified in the first step.
 ```{r}
-# siteinfo <- list(lon = 99, lat = 99, elv = 99)
 out <- run_lm3ppa_f_bysite( "ORNL", 
                             params_siml, 
                             siteinfo, 
@@ -201,9 +200,8 @@ out <- run_lm3ppa_f_bysite( "ORNL",
 
 save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
 
-out$output_daily_tile %>% 
-  mutate(date = lubridate::ymd(paste0(year, "-01-01")) + lubridate::days(doy-1)) %>% 
-  ggplot(aes(x=date, y=GPP)) +
-  geom_line() + 
-  labs(title = "LM3-PPA at ORNL", subtitle = "SOFUN output")
+out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  labs(title = "LM3-PPA with P-model photosynthesis at ORNL", subtitle = "rsofun output")
 ```
