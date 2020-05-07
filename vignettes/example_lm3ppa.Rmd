@@ -40,7 +40,7 @@ params_siml <- list(
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "pmodel"
+      method_photosynth     = "gs_leuning"
       )
 ```
 

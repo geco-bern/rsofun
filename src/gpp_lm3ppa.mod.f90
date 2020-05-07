@@ -264,7 +264,7 @@ contains
           ! Get light aborbed by cohort, dividing fAPAR up by crown areas
           !----------------------------------------------------------------
           layer = max(1, min(cc%layer,9))
-          fapar_tree = 1.0 - exp(-kappa * cc%leafarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown 
+          fapar_tree = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown 
 
           !----------------------------------------------------------------
           ! P-model call for C3 plants to get a list of variables that are 
@@ -305,8 +305,8 @@ contains
             cc%w_scale = -9999
 
             ! copy to cohort variables
-            cc%resl    = out_pmodel%rd  * myinterface%step_seconds * mol_C     ! kgC step-1 tree-1
-            cc%gpp     = out_pmodel%gpp * myinterface%step_seconds * 1.0e-3    ! kgC step-1 tree-1
+            cc%resl    = out_pmodel%rd  * cc%crownarea * myinterface%step_seconds * mol_C     ! kgC step-1 tree-1
+            cc%gpp     = out_pmodel%gpp * cc%crownarea * myinterface%step_seconds * 1.0e-3    ! kgC step-1 tree-1
 
 
           else
