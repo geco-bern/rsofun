@@ -248,6 +248,9 @@ type :: vegn_tile_type
    type(cohort_type), pointer :: cohorts(:)=>NULL()
    real :: area  ! m2
    real :: age=0 ! tile age
+   real :: nindivs  ! New varaibles at tile level xxx
+   real :: DBH ! New varaibles at tile level xxx
+
    ! leaf area index
    real :: LAI  ! leaf area index
    real :: CAI  ! crown area index
@@ -820,6 +823,10 @@ subroutine summarize_tile(vegn)
   vegn%LAI     = 0.0
   vegn%CAI     = 0.0
 
+  ! New tile outputs xxx
+  vegn%nindivs = 0.0
+  vegn%DBH     = 0.0
+
   do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
 
@@ -839,6 +846,10 @@ subroutine summarize_tile(vegn)
         vegn%rootN   = vegn%rootN    + cc%rootN     * cc%nindivs
         vegn%SapwoodN= vegn%SapwoodN + cc%sapwN     * cc%nindivs
         vegn%woodN   = vegn%woodN    + cc%woodN     * cc%nindivs
+        ! New tile outputs xxx
+        vegn%nindivs = vegn%nindivs  + cc%nindivs
+        vegn%DBH     = vegn%DBH      + cc%dbh
+
   enddo
 
 end subroutine summarize_tile
@@ -1110,6 +1121,7 @@ end subroutine hourly_diagnostics
     out_annual_cohorts(:)%dDBH    = dummy
     out_annual_cohorts(:)%dbh     = dummy
     out_annual_cohorts(:)%height  = dummy
+    out_annual_cohorts(:)%age     = dummy
     out_annual_cohorts(:)%Acrown  = dummy
     out_annual_cohorts(:)%wood    = dummy
     out_annual_cohorts(:)%nsc     = dummy
@@ -1145,6 +1157,7 @@ end subroutine hourly_diagnostics
       out_annual_cohorts(i)%dDBH    = dDBH
       out_annual_cohorts(i)%dbh     = cc%dbh
       out_annual_cohorts(i)%height  = cc%height
+      out_annual_cohorts(i)%age     = cc%age
       out_annual_cohorts(i)%Acrown  = cc%crownarea
       out_annual_cohorts(i)%wood    = cc%bsw+cc%bHW
       out_annual_cohorts(i)%nsc     = cc%nsc
@@ -1167,9 +1180,10 @@ end subroutine hourly_diagnostics
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
-      vegn%annualfixedN  = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
+      vegn%annualfixedN = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
+      
     enddo
-    
+
     plantC    = vegn%NSC + vegn%SeedC + vegn%leafC + vegn%rootC + vegn%SapwoodC + vegn%woodC
     plantN    = vegn%NSN + vegn%SeedN + vegn%leafN + vegn%rootN + vegn%SapwoodN + vegn%woodN
     soilC     = vegn%MicrobialC + vegn%metabolicL + vegn%structuralL
@@ -1179,6 +1193,9 @@ end subroutine hourly_diagnostics
     out_annual_tile%year       = iyears
     out_annual_tile%CAI        = vegn%CAI
     out_annual_tile%LAI        = vegn%LAI
+    out_annual_tile%density    = vegn%nindivs*10000 !xxx New tile out
+    out_annual_tile%DBH        = vegn%DBH !xxx New tile out
+    out_annual_tile%NPP        = vegn%annualNPP !xxx New tile out
     out_annual_tile%GPP        = vegn%annualGPP
     out_annual_tile%Rauto      = vegn%annualResp
     out_annual_tile%Rh         = vegn%annualRh
@@ -1220,6 +1237,7 @@ end subroutine hourly_diagnostics
     out_annual_tile%totseedN   = vegn%totseedN*1000
     out_annual_tile%Seedling_C = vegn%totNewCC*1000
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
+
 
     ! I cannot figure out why N losing. Hack!
    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)

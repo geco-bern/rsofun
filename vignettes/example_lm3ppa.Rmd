@@ -40,7 +40,7 @@ params_siml <- list(
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "gs_leuning"
+      method_photosynth     = "gs_leuning" # or pmodel
       )
 ```
 
@@ -198,7 +198,12 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
+#save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
+rsofun_out_hourly_tile <- out$output_hourly_tile
+rsofun_out_daily_tile <- out$output_daily_tile
+rsofun_out_daily_cohorts <- out$output_daily_cohorts
+rsofun_out_annual_tile <- out$output_annual_tile
+rsofun_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +

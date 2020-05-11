@@ -196,6 +196,7 @@ void F77_NAME(lm3ppa_f)(
     double *output_annual_cohorts_dDBH,
     double *output_annual_cohorts_dbh,
     double *output_annual_cohorts_height,
+    double *output_annual_cohorts_age,
     double *output_annual_cohorts_Acrown,
     double *output_annual_cohorts_wood,
     double *output_annual_cohorts_nsc,
@@ -290,7 +291,7 @@ extern SEXP lm3ppa_f_C(
     SEXP output_daily_cohorts_rootN    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_SW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_HW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 44) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 47) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_annual_cohorts_year    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_cID     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_PFT     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
@@ -300,6 +301,7 @@ extern SEXP lm3ppa_f_C(
     SEXP output_annual_cohorts_dDBH    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_dbh     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_height  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_age     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_Acrown  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_wood    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_nsc     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
@@ -394,6 +396,7 @@ extern SEXP lm3ppa_f_C(
         REAL(output_annual_cohorts_dDBH),
         REAL(output_annual_cohorts_dbh),
         REAL(output_annual_cohorts_height),
+        REAL(output_annual_cohorts_age),
         REAL(output_annual_cohorts_Acrown),
         REAL(output_annual_cohorts_wood),
         REAL(output_annual_cohorts_nsc),
@@ -411,7 +414,7 @@ extern SEXP lm3ppa_f_C(
         );
 
     // // Output as list
-    SEXP out_list = PROTECT( allocVector(VECSXP, 53) );  // maybe try  STRSXP instead of VECSXP
+    SEXP out_list = PROTECT( allocVector(VECSXP, 54) );  // maybe try  STRSXP instead of VECSXP
     
     SET_VECTOR_ELT(out_list, 0, output_hourly_tile);
     SET_VECTOR_ELT(out_list, 1, output_daily_tile);
@@ -452,22 +455,23 @@ extern SEXP lm3ppa_f_C(
     SET_VECTOR_ELT(out_list, 36, output_annual_cohorts_dDBH);
     SET_VECTOR_ELT(out_list, 37, output_annual_cohorts_dbh);
     SET_VECTOR_ELT(out_list, 38, output_annual_cohorts_height);
-    SET_VECTOR_ELT(out_list, 39, output_annual_cohorts_Acrown);
-    SET_VECTOR_ELT(out_list, 40, output_annual_cohorts_wood);
-    SET_VECTOR_ELT(out_list, 41, output_annual_cohorts_nsc);
-    SET_VECTOR_ELT(out_list, 42, output_annual_cohorts_NSN);
-    SET_VECTOR_ELT(out_list, 43, output_annual_cohorts_NPPtr);
-    SET_VECTOR_ELT(out_list, 44, output_annual_cohorts_seed);
-    SET_VECTOR_ELT(out_list, 45, output_annual_cohorts_NPPL);
-    SET_VECTOR_ELT(out_list, 46, output_annual_cohorts_NPPR);
-    SET_VECTOR_ELT(out_list, 47, output_annual_cohorts_NPPW);
-    SET_VECTOR_ELT(out_list, 48, output_annual_cohorts_GPP);
-    SET_VECTOR_ELT(out_list, 49, output_annual_cohorts_NPP);
-    SET_VECTOR_ELT(out_list, 50, output_annual_cohorts_N_uptk);
-    SET_VECTOR_ELT(out_list, 51, output_annual_cohorts_N_fix);
-    SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_maxLAI);
+    SET_VECTOR_ELT(out_list, 39, output_annual_cohorts_age);
+    SET_VECTOR_ELT(out_list, 40, output_annual_cohorts_Acrown);
+    SET_VECTOR_ELT(out_list, 41, output_annual_cohorts_wood);
+    SET_VECTOR_ELT(out_list, 42, output_annual_cohorts_nsc);
+    SET_VECTOR_ELT(out_list, 43, output_annual_cohorts_NSN);
+    SET_VECTOR_ELT(out_list, 44, output_annual_cohorts_NPPtr);
+    SET_VECTOR_ELT(out_list, 45, output_annual_cohorts_seed);
+    SET_VECTOR_ELT(out_list, 46, output_annual_cohorts_NPPL);
+    SET_VECTOR_ELT(out_list, 47, output_annual_cohorts_NPPR);
+    SET_VECTOR_ELT(out_list, 48, output_annual_cohorts_NPPW);
+    SET_VECTOR_ELT(out_list, 49, output_annual_cohorts_GPP);
+    SET_VECTOR_ELT(out_list, 50, output_annual_cohorts_NPP);
+    SET_VECTOR_ELT(out_list, 51, output_annual_cohorts_N_uptk);
+    SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_N_fix);
+    SET_VECTOR_ELT(out_list, 53, output_annual_cohorts_maxLAI);
 
-    UNPROTECT(54);
+    UNPROTECT(55);
 
     return out_list;
 }
