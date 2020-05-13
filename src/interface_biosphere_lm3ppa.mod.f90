@@ -183,6 +183,9 @@ module md_interface_lm3ppa
     real :: LAI
     real :: density
     real :: DBH
+    real :: density12
+    real :: DBH12
+    real :: QMD
     real :: NPP
     real :: GPP
     real :: Rauto

@@ -265,7 +265,7 @@ contains
         N_demand = dBL/sp%CNleaf0 + dBR/sp%CNroot0 + dSeed/sp%CNseed0 + dBSW/sp%CNsw0
 
         !==================================
-        ! Turn off N effects on allocation 
+        ! Turn off N effects on allocation  (for running the simulations)
         !==================================
         
         ! IF(cc%N_growth < N_demand)THEN
