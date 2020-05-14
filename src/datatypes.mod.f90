@@ -854,13 +854,13 @@ subroutine summarize_tile(vegn)
         vegn%SapwoodN= vegn%SapwoodN + cc%sapwN     * cc%nindivs
         vegn%woodN   = vegn%woodN    + cc%woodN     * cc%nindivs
         ! New tile outputs xxx
-        vegn%DBH     = vegn%DBH      + cc%dbh * cc%nindivs
+        vegn%DBH     = vegn%DBH      + cc%dbh       * cc%nindivs
         vegn%nindivs = vegn%nindivs  + cc%nindivs
 
         if (cc%dbh > 0.12) then
-        vegn%DBH12      = vegn%DBH12  + cc%dbh * cc%nindivs 
+        vegn%DBH12      = vegn%DBH12     + cc%dbh      * cc%nindivs 
         vegn%nindivs12  = vegn%nindivs12 + cc%nindivs
-        vegn%DBH12pow2  = vegn%DBH12pow2  + cc%dbh * cc%dbh * cc%nindivs
+        vegn%DBH12pow2  = vegn%DBH12pow2 + cc%dbh      * cc%dbh     * cc%nindivs
         
         endif
 
@@ -868,7 +868,7 @@ subroutine summarize_tile(vegn)
 
     if (vegn%nindivs>0.0) vegn%DBH     = vegn%DBH / vegn%nindivs  
     if (vegn%nindivs12>0.0) vegn%DBH12 = vegn%DBH12 / vegn%nindivs12  ! vegn%nindivs12 could be zero if all dbh<0.12
-    if (vegn%nindivs>0.0) vegn%QMD     = sqrt(vegn%DBH12pow2 / vegn%nindivs)  
+    if (vegn%nindivs12>0.0) vegn%QMD     = sqrt(vegn%DBH12pow2 / vegn%nindivs12)  
 
 end subroutine summarize_tile
 

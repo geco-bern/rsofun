@@ -251,11 +251,11 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea3sa3ma_out_hourly_tile <- out$output_hourly_tile
-ea3sa3ma_out_daily_tile <- out$output_daily_tile
-ea3sa3ma_out_daily_cohorts <- out$output_daily_cohorts
-ea3sa3ma_out_annual_tile <- out$output_annual_tile
-ea3sa3ma_out_annual_cohorts <- out$output_annual_cohorts
+ea3sa1ma_out_hourly_tile <- out$output_hourly_tile
+ea3sa1ma_out_daily_tile <- out$output_daily_tile
+ea3sa1ma_out_daily_cohorts <- out$output_daily_cohorts
+ea3sa1ma_out_annual_tile <- out$output_annual_tile
+ea3sa1ma_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -276,13 +276,13 @@ out$output_daily_tile %>%
 
 # Estimating quadratic mean diameter, growth and mortality
 
-rsofun_out_annual_cohorts <- rsofun_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality)) %>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))   %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) 
+rsofun_out_annual_cohorts <- rsofun_out_annual_cohorts %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality)) %>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) 
 
-ea1s1ma_out_annual_cohorts <- ea1s1ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+ea1sa1ma_out_annual_cohorts <- ea1sa1ma_out_annual_cohorts %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
 
-ea2s1ma_out_annual_cohorts <- ea2s1ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density))%>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality)) %>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity)) %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) 
+ea2sa1ma_out_annual_cohorts <- ea2sa1ma_out_annual_cohorts %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality)) %>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity)) %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) 
 
-ea3s1ma_out_annual_cohorts <- ea3s1ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+ea3sa1ma_out_annual_cohorts <- ea3sa1ma_out_annual_cohorts %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
 
 #eb2s1ma_out_annual_cohorts <- eb2s1ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity)) %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) 
 
@@ -558,92 +558,40 @@ From annual_cohorts_output
 
 # Changes in LUE with WD level 1
 ggplot() + 
-  geom_point(data=simul_data$simuls[[2]][1700:1800,], aes(x=log(DBH), y=log(Density), color='Low')) + 
-  geom_point(data=simul_data$simuls[[5]][1700:1800,], aes(x=log(DBH), y=log(Density), color='Medium')) +
-  geom_point(data=simul_data$simuls[[8]][1700:1800,], aes(x=log(DBH), y=log(Density), color='High')) +
+  geom_point(data=simul_data$simuls[[2]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[5]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[8]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
   scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
   theme_classic() 
 
-
 ggplot() + 
-  geom_point(data=simul_data$simuls[[6]], aes(x=QMD2*1e2, y=density_sum, color='level 1')) + 
-  geom_point(data=simul_data$simuls[[7]], aes(x=QMD2*1e2, y=density_sum, color='level 2')) +
-  geom_point(data=simul_data$simuls[[8]], aes(x=QMD2*1e2, y=density_sum, color='level 3')) +
-  labs(x = "Quadratic Mean Diameter (cm)", y = expression(paste("Density (trees ", ha^-1, ") ")),color = "Legend", title = expression(paste("Light Use Efficiency (mol C ", s^-1, " ", m^-2, ") "))) + 
+  geom_point(data=simul_data$simuls[[2]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
+  geom_point(data=simul_data$simuls[[5]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
+  geom_point(data=simul_data$simuls[[8]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
+  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
   theme_classic() 
-
-ggplot() + 
-  geom_point(data=simul_data$simuls[[6]], aes(x=log(QMD2*1e2), y=log(density_sum), color='1 - Low LUE')) + 
-  geom_point(data=simul_data$simuls[[7]], aes(x=log(QMD2*1e2), y=log(density_sum), color='2 - Medium LUE')) +
-  geom_point(data=simul_data$simuls[[8]], aes(x=log(QMD2*1e2), y=log(density_sum), color='3 - High LUE')) +
-  labs(x = "Ln(QMD)", y = "Ln(N)",color = "Legend") +
-  theme_classic() 
-
 
 ```
 
 ##### GS
 ```{r}
 
-ggplot() + 
-  geom_point(data=simul_data$simuls[[6]], aes(x=QMD2*1e2, y=density_sum, color='level 1')) + 
-  geom_point(data=simul_data$simuls[[11]], aes(x=QMD2*1e2, y=density_sum, color='level 2')) +
-  geom_point(data=simul_data$simuls[[12]], aes(x=QMD2*1e2, y=density_sum, color='level 3')) +
-  labs(x = "Quadratic Mean Diameter (cm)", y = expression(paste("Density (trees ", ha^-1, ") ")),color = "Legend", title = "Growing season") + 
-  theme_classic() 
 
-ggGS2<-ggplot() + 
-  geom_point(data=simul_data$simuls[[6]], aes(x=log(QMD2*1e2), y=log(density_sum), color='level 1')) + 
-  geom_point(data=simul_data$simuls[[11]], aes(x=log(QMD2*1e2), y=log(density_sum), color='level 2')) +
-  geom_point(data=simul_data$simuls[[12]], aes(x=log(QMD2*1e2), y=log(density_sum), color='level 3')) +
-  labs(x = "Ln(QMD)", y = "Ln(N)",color = "Legend", title = "Growing season") + 
-  theme_classic() 
 
 ```
 
 ##### PAR
 ```{r}
 
-ggplot() + 
-  geom_point(data=simul_data$simuls[[6]], aes(x=QMD2*1e2, y=density_sum, color='level 1')) + 
-  geom_point(data=simul_data$simuls[[15]], aes(x=QMD2*1e2, y=density_sum, color='level 2')) +
-  geom_point(data=simul_data$simuls[[16]], aes(x=QMD2*1e2, y=density_sum, color='level 3')) +
-  labs(x = "Quadratic Mean Diameter (cm)", y = expression(paste("Density (trees ", ha^-1, ") ")),color = "Legend", title = "PAR") + 
-  theme_classic() 
 
-ggPAR2<-ggplot() + 
-  geom_point(data=simul_data$simuls[[6]], aes(x=log(QMD2*1e2), y=log(density_sum), color='Level 1')) + 
-  geom_point(data=simul_data$simuls[[15]], aes(x=log(QMD2*1e2), y=log(density_sum), color='Level 2')) +
-  geom_point(data=simul_data$simuls[[16]], aes(x=log(QMD2*1e2), y=log(density_sum), color='Level 3')) +
-  labs(x = "Ln(QMD)", y = "Ln(N)",color = "Legend", title = expression(paste("Radiation (W ", m^-2, ") "))) +
-  theme_classic() 
 
 ```
 
 ##### WD
 ```{r}
 
-ggplot() + 
-  geom_point(data=simul_data$simuls[[6]], aes(x=QMD2*1e2, y=density_sum, color='level 1')) + 
-  geom_point(data=simul_data$simuls[[19]], aes(x=QMD2*1e2, y=density_sum, color='level 2')) +
-  geom_point(data=simul_data$simuls[[20]], aes(x=QMD2*1e2, y=density_sum, color='level 3')) +
-  labs(x = "Quadratic Mean Diameter (cm)", y = expression(paste("Density (trees ", ha^-1, ") ")),color = "Legend", title = "Wood density") + 
-  theme_classic() 
-
-ggWD2<-ggplot() + 
-  geom_point(data=simul_data$simuls[[6]], aes(x=log(QMD2*1e2), y=log(density_sum), color='1 - Low Wood density')) + 
-  geom_point(data=simul_data$simuls[[19]], aes(x=log(QMD2*1e2), y=log(density_sum), color='2 - Medium Wood density')) +
-  geom_point(data=simul_data$simuls[[20]], aes(x=log(QMD2*1e2), y=log(density_sum), color='3 - High Wood density')) +
-  labs(x = "Ln(QMD)", y = "Ln(N)",color = "Legend") + 
-  theme_classic() 
-
-ggplot() + 
-  geom_line(data=simul_data$simuls[[6]], aes(x=year, y=NPP_yr_mean, color='1 - Low LUE')) + 
-  geom_line(data=simul_data$simuls[[19]], aes(x=year, y=NPP_yr_mean, color='2 - Medium LUE')) +
-  geom_line(data=simul_data$simuls[[20]], aes(x=year, y=NPP_yr_mean, color='3 - High LUE')) +
-  labs(x = "Ln(QMD)", y = "Ln(N)",color = "Legend") +
-  theme_classic() 
 
 
 ```
@@ -651,19 +599,6 @@ ggplot() +
 ##### Root:Shoot ratio
 ```{r}
 
-ggplot() + 
-  geom_point(data=simul_data$simuls[[6]], aes(x=QMD2*1e2, y=density_sum, color='level 1')) + 
-  geom_point(data=simul_data$simuls[[23]], aes(x=QMD2*1e2, y=density_sum, color='level 2')) +
-  geom_point(data=simul_data$simuls[[24]], aes(x=QMD2*1e2, y=density_sum, color='level 3')) +
-  labs(x = "Quadratic Mean Diameter (cm)", y = expression(paste("Density (trees ", ha^-1, ") ")),color = "Legend", title = "Root:Shoot ratio") + 
-  theme_classic() 
-
-ggRSR2<-ggplot() + 
-  geom_point(data=simul_data$simuls[[6]], aes(x=log(QMD2*1e2), y=log(density_sum), color='level 1')) + 
-  geom_point(data=simul_data$simuls[[23]], aes(x=log(QMD2*1e2), y=log(density_sum), color='level 2')) +
-  geom_point(data=simul_data$simuls[[24]], aes(x=log(QMD2*1e2), y=log(density_sum), color='level 3')) +
-  labs(x = "Ln(QMD)", y = "Ln(N)",color = "Legend", title = "Root:Shoot ratio") + 
-  theme_classic() 
 
 ```
 
@@ -676,15 +611,6 @@ ggarrange(ggWD2,ggRSR2,ggVCMAX2, ncol = 3, nrow = 1, common.legend = T)
 
 ```
 
-```{r}
-
-library(ggpubr)
-ggarrange(ggLUE1,ggLUE2, ncol = 2, nrow = 1, common.legend = T)
-ggarrange(ggWD2,ggWD2, ncol = 2, nrow = 1, common.legend = T)
-
-ggarrange(ggWD2,ggRSR2,ggVCMAX2, ncol = 3, nrow = 1, common.legend = T)
-
-```
 
 #### Size bin (x, biomass, volume) vs. Growth (y, volume or mass increment per year); data = individual-level
 
@@ -694,48 +620,29 @@ From annual_cohort_output: wood (Biomass) and NPP_yr
 ```{r}
 
 ggLUE3 <- ggplot() + 
-  geom_boxplot(data=ea1s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='Level 1')) + 
-  geom_boxplot(data=ea2s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='Level 2')) +
-  geom_boxplot(data=ea3s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='Level 3')) +
-  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") ")),color = "Legend", title = expression(paste("Light Use Efficiency (mol C ", s^-1, " ", m^-2, ") "))) + 
+  geom_boxplot(data=simul_data$simuls[[12]], aes(x=dbhclass, y=NPP_yr, color='Low')) + 
+  geom_boxplot(data=simul_data$simuls[[15]], aes(x=dbhclass, y=NPP_yr, color='Medium')) +
+  geom_boxplot(data=simul_data$simuls[[18]], aes(x=dbhclass, y=NPP_yr, color='High')) +
+  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
   theme_classic() 
 
-max(ea3s1ma_out_annual_cohorts$dbh)
 
 # Plot relative enhancement: NPP(level 2) / NPP(level 1) [and NPP(level 3) / NPP(level 1)] per size bin
 
-RelEnan2_1 <- mean(ea2s1ma_out_annual_cohorts$NPP_yr) /ea1s1ma_out_annual_cohorts$NPP_yr
-  dim(ea1s1ma_out_annual_cohorts)
-  
-ggLUE3 <- ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohorts, aes(x=year, y=NPP_yr, color='Level 1')) + 
-  geom_point(data=ea2s1ma_out_annual_cohorts, aes(x=year, y=NPP_yr, color='Level 2')) +
-  geom_point(data=ea3s1ma_out_annual_cohorts, aes(x=year, y=NPP_yr, color='Level 3')) +
-  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") ")),color = "Legend", title = expression(paste("Light Use Efficiency (mol C ", s^-1, " ", m^-2, ") "))) + 
-  theme_classic()  
+RelEnan2_1 <- simul_data$simuls[[15]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
+RelEnan3_1 <- simul_data$simuls[[18]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
+
 ```
 
 ##### GS
 ```{r}
 
-ggGS3 <- ggplot() + 
-  geom_boxplot(data=ea1s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 1')) + 
-  geom_boxplot(data=eb2s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 2')) +
-  geom_boxplot(data=eb3s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 3')) +
-  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") ")),color = "Legend", title = "Growing  season") + 
-  theme_classic() 
 
 ```
 
 ##### PAR
 ```{r}
-
-ggPAR3 <- ggplot() + 
-  geom_boxplot(data=ea1s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='Level 1')) + 
-  geom_boxplot(data=ec2s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='Level 2')) +
-  geom_boxplot(data=ec3s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='Level 3')) +
-  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") ")),color = "Legend", title = expression(paste("Radiation (W ", m^-2, ") "))) +
-  theme_classic() 
 
 max(ec3s1ma_out_annual_cohorts$dbh)
 
@@ -744,38 +651,16 @@ max(ec3s1ma_out_annual_cohorts$dbh)
 ##### WD
 ```{r}
 
-ggWD3 <- ggplot() + 
-  geom_boxplot(data=ea1s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 1')) + 
-  geom_boxplot(data=e1sa2ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 2')) +
-  geom_boxplot(data=e1sa3ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 3')) +
-  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") ")),color = "Legend", title = "Wood density") + 
-  theme_classic() 
 
 ```
 
 ##### R:S Ratio
 ```{r}
 
-ggRSR3 <- ggplot() + 
-  geom_boxplot(data=ea1s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 1')) + 
-  geom_boxplot(data=e1sb2ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 2')) +
-  geom_boxplot(data=e1sb3ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 3')) +
-  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") ")),color = "Legend", title = "Root:Shoot ratio") + 
-  theme_classic() 
+
 
 ```
 
-##### Vcmax
-```{r}
-
-ggVCMAX3 <- ggplot() + 
-  geom_boxplot(data=ea1s1ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 1')) + 
-  geom_boxplot(data=e1sc2ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 2')) +
-  geom_boxplot(data=e1sc3ma_out_annual_cohorts, aes(x=dbhclass, y=NPP_yr, color='level 3')) +
-  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") ")),color = "Legend", title = "Vcmax") + 
-  theme_classic() 
-
-```
 
 ##### Size bin plots
 ```{r}
