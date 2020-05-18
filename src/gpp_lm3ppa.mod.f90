@@ -26,7 +26,7 @@ module md_gpp_lm3ppa
 
   ! PFT-DEPENDENT PARAMETERS
   type pftparamstype_gpp
-    real :: kphio = 0.24    ! hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
+    real :: kphio = 0.08    ! hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
   end type pftparamstype_gpp
 
   type(pftparamstype_gpp) :: params_pft_gpp
