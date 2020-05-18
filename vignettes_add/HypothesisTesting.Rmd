@@ -172,7 +172,7 @@ forcing <- forcing %>%
   mutate(RAIN = RAIN / dt_secs)
 
 # Changing values of PAR for running simulations
-#forcing <- forcing %>% mutate(Swdown = Swdown*1.5) # levels = *1, *1.3 and *1.5
+forcing <- forcing %>% mutate(Swdown = Swdown*1.5) # levels = *1, *1.3 and *1.5
 
 ```
 
@@ -251,11 +251,11 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea3sa1ma_out_hourly_tile <- out$output_hourly_tile
-ea3sa1ma_out_daily_tile <- out$output_daily_tile
-ea3sa1ma_out_daily_cohorts <- out$output_daily_cohorts
-ea3sa1ma_out_annual_tile <- out$output_annual_tile
-ea3sa1ma_out_annual_cohorts <- out$output_annual_cohorts
+eb3sb3ma_out_hourly_tile <- out$output_hourly_tile
+eb3sb3ma_out_daily_tile <- out$output_daily_tile
+eb3sb3ma_out_daily_cohorts <- out$output_daily_cohorts
+eb3sb3ma_out_annual_tile <- out$output_annual_tile
+eb3sb3ma_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -270,57 +270,249 @@ out$output_daily_tile %>%
 
 ```
 
+Same models for conditions by default
+```{r}
+
+ea1sb1ma_out_hourly_tile <- ea1sa1ma_out_hourly_tile
+ea1sb1ma_out_daily_tile <- ea1sa1ma_out_daily_tile
+ea1sb1ma_out_daily_cohorts <- ea1sa1ma_out_daily_cohorts
+ea1sb1ma_out_annual_tile <- ea1sa1ma_out_annual_tile
+ea1sb1ma_out_annual_cohorts <- ea1sa1ma_out_annual_cohorts
+
+ea2sb1ma_out_hourly_tile <- ea2sa1ma_out_hourly_tile
+ea2sb1ma_out_daily_tile <- ea2sa1ma_out_daily_tile
+ea2sb1ma_out_daily_cohorts <- ea2sa1ma_out_daily_cohorts
+ea2sb1ma_out_annual_tile <- ea2sa1ma_out_annual_tile
+ea2sb1ma_out_annual_cohorts <- ea2sa1ma_out_annual_cohorts
+
+ea3sb1ma_out_hourly_tile <- ea3sa1ma_out_hourly_tile
+ea3sb1ma_out_daily_tile <- ea3sa1ma_out_daily_tile
+ea3sb1ma_out_daily_cohorts <- ea3sa1ma_out_daily_cohorts
+ea3sb1ma_out_annual_tile <- ea3sa1ma_out_annual_tile
+ea3sb1ma_out_annual_cohorts <- ea3sa1ma_out_annual_cohorts
+
+eb1sa1ma_out_hourly_tile <- ea1sa1ma_out_hourly_tile
+eb1sa1ma_out_daily_tile <- ea1sa1ma_out_daily_tile
+eb1sa1ma_out_daily_cohorts <- ea1sa1ma_out_daily_cohorts
+eb1sa1ma_out_annual_tile <- ea1sa1ma_out_annual_tile
+eb1sa1ma_out_annual_cohorts <- ea1sa1ma_out_annual_cohorts
+
+eb1sb1ma_out_hourly_tile <- ea1sa1ma_out_hourly_tile
+eb1sb1ma_out_daily_tile <- ea1sa1ma_out_daily_tile
+eb1sb1ma_out_daily_cohorts <- ea1sa1ma_out_daily_cohorts
+eb1sb1ma_out_annual_tile <- ea1sa1ma_out_annual_tile
+eb1sb1ma_out_annual_cohorts <- ea1sa1ma_out_annual_cohorts
+
+eb1sa2ma_out_hourly_tile <- ea1sa2ma_out_hourly_tile
+eb1sa2ma_out_daily_tile <- ea1sa2ma_out_daily_tile
+eb1sa2ma_out_daily_cohorts <- ea1sa2ma_out_daily_cohorts
+eb1sa2ma_out_annual_tile <- ea1sa2ma_out_annual_tile
+eb1sa2ma_out_annual_cohorts <- ea1sa2ma_out_annual_cohorts
+
+eb1sa3ma_out_hourly_tile <- ea1sa3ma_out_hourly_tile
+eb1sa3ma_out_daily_tile <- ea1sa3ma_out_daily_tile
+eb1sa3ma_out_daily_cohorts <- ea1sa3ma_out_daily_cohorts
+eb1sa3ma_out_annual_tile <- ea1sa3ma_out_annual_tile
+eb1sa3ma_out_annual_cohorts <- ea1sa3ma_out_annual_cohorts
+
+eb1sb2ma_out_hourly_tile <- ea1sb2ma_out_hourly_tile
+eb1sb2ma_out_daily_tile <- ea1sb2ma_out_daily_tile
+eb1sb2ma_out_daily_cohorts <- ea1sb2ma_out_daily_cohorts
+eb1sb2ma_out_annual_tile <- ea1sb2ma_out_annual_tile
+eb1sb2ma_out_annual_cohorts <- ea1sb2ma_out_annual_cohorts
+
+eb1sb3ma_out_hourly_tile <- ea1sb3ma_out_hourly_tile
+eb1sb3ma_out_daily_tile <- ea1sb3ma_out_daily_tile
+eb1sb3ma_out_daily_cohorts <- ea1sb3ma_out_daily_cohorts
+eb1sb3ma_out_annual_tile <- ea1sb3ma_out_annual_tile
+eb1sb3ma_out_annual_cohorts <- ea1sb3ma_out_annual_cohorts
+
+eb2sb1ma_out_hourly_tile <- eb2sa1ma_out_hourly_tile
+eb2sb1ma_out_daily_tile <- eb2sa1ma_out_daily_tile
+eb2sb1ma_out_daily_cohorts <- eb2sa1ma_out_daily_cohorts
+eb2sb1ma_out_annual_tile <- eb2sa1ma_out_annual_tile
+eb2sb1ma_out_annual_cohorts <- eb2sa1ma_out_annual_cohorts
+
+eb3sb1ma_out_hourly_tile <- eb3sa1ma_out_hourly_tile
+eb3sb1ma_out_daily_tile <- eb3sa1ma_out_daily_tile
+eb3sb1ma_out_daily_cohorts <- eb3sa1ma_out_daily_cohorts
+eb3sb1ma_out_annual_tile <- eb3sa1ma_out_annual_tile
+eb3sb1ma_out_annual_cohorts <- eb3sa1ma_out_annual_cohorts
+
+```
+
+
 ### Aggregating cohorts across years and cohorts
 
 ```{r}
 
-# Estimating quadratic mean diameter, growth and mortality
+rsofun_out_annual_cohorts <- rsofun_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
 
-rsofun_out_annual_cohorts <- rsofun_out_annual_cohorts %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality)) %>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) 
+ea1sa1ma_out_annual_cohorts <- ea1sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea1sa2ma_out_annual_cohorts <- ea1sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea1sa3ma_out_annual_cohorts <- ea1sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea2sa1ma_out_annual_cohorts <- ea2sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea2sa2ma_out_annual_cohorts <- ea2sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea2sa3ma_out_annual_cohorts <- ea2sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea3sa1ma_out_annual_cohorts <- ea3sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea3sa2ma_out_annual_cohorts <- ea3sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea3sa3ma_out_annual_cohorts <- ea3sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
 
-ea1sa1ma_out_annual_cohorts <- ea1sa1ma_out_annual_cohorts %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+ea1sb1ma_out_annual_cohorts <- ea1sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea1sb2ma_out_annual_cohorts <- ea1sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea1sb3ma_out_annual_cohorts <- ea1sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea2sb1ma_out_annual_cohorts <- ea2sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea2sb2ma_out_annual_cohorts <- ea2sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea2sb3ma_out_annual_cohorts <- ea2sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea3sb1ma_out_annual_cohorts <- ea3sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea3sb2ma_out_annual_cohorts <- ea3sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+ea3sb3ma_out_annual_cohorts <- ea3sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
 
-ea2sa1ma_out_annual_cohorts <- ea2sa1ma_out_annual_cohorts %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality)) %>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity)) %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) 
+eb1sa1ma_out_annual_cohorts <- eb1sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb1sa2ma_out_annual_cohorts <- eb1sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb1sa3ma_out_annual_cohorts <- eb1sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb2sa1ma_out_annual_cohorts <- eb2sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb2sa2ma_out_annual_cohorts <- eb2sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb2sa3ma_out_annual_cohorts <- eb2sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb3sa1ma_out_annual_cohorts <- eb3sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb3sa2ma_out_annual_cohorts <- eb3sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb3sa3ma_out_annual_cohorts <- eb3sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
 
-ea3sa1ma_out_annual_cohorts <- ea3sa1ma_out_annual_cohorts %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+eb1sb1ma_out_annual_cohorts <- eb1sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density)%>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb1sb2ma_out_annual_cohorts <- eb1sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb1sb3ma_out_annual_cohorts <- eb1sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb2sb1ma_out_annual_cohorts <- eb2sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb2sb2ma_out_annual_cohorts <- eb2sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb2sb3ma_out_annual_cohorts <- eb2sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb3sb1ma_out_annual_cohorts <- eb3sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb3sb2ma_out_annual_cohorts <- eb3sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
+eb3sb3ma_out_annual_cohorts <- eb3sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
 
-#eb2s1ma_out_annual_cohorts <- eb2s1ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity)) %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) 
+rsofun_out_annual_cohortsMax <- rsofun_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
 
-#eb3s1ma_out_annual_cohorts <- eb3s1ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+ea1sa1ma_out_annual_cohortsMax <- ea1sa1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge) 
+ea1sa2ma_out_annual_cohortsMax <- ea1sa2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea1sa3ma_out_annual_cohortsMax <- ea1sa3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea2sa1ma_out_annual_cohortsMax <- ea2sa1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea2sa2ma_out_annual_cohortsMax <- ea2sa2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea2sa3ma_out_annual_cohortsMax <- ea2sa3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea3sa1ma_out_annual_cohortsMax <- ea3sa1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea3sa2ma_out_annual_cohortsMax <- ea3sa2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea3sa3ma_out_annual_cohortsMax <- ea3sa3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
 
-ec2s1ma_out_annual_cohorts <- ec2s1ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+ea1sb1ma_out_annual_cohortsMax <- ea1sb1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea1sb2ma_out_annual_cohortsMax <- ea1sb2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea1sb3ma_out_annual_cohortsMax <- ea1sb3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea2sb1ma_out_annual_cohortsMax <- ea2sb1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea2sb2ma_out_annual_cohortsMax <- ea2sb2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea2sb3ma_out_annual_cohortsMax <- ea2sb3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea3sb1ma_out_annual_cohortsMax <- ea3sb1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea3sb2ma_out_annual_cohortsMax <- ea3sb2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+ea3sb3ma_out_annual_cohortsMax <- ea3sb3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
 
-ec3s1ma_out_annual_cohorts <- ec3s1ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+eb1sa1ma_out_annual_cohortsMax <- eb1sa1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb1sa2ma_out_annual_cohortsMax <- eb1sa2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb1sa3ma_out_annual_cohortsMax <- eb1sa3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb2sa1ma_out_annual_cohortsMax <- eb2sa1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb2sa2ma_out_annual_cohortsMax <- eb2sa2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb2sa3ma_out_annual_cohortsMax <- eb2sa3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb3sa1ma_out_annual_cohortsMax <- eb3sa1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb3sa2ma_out_annual_cohortsMax <- eb3sa2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb3sa3ma_out_annual_cohortsMax <- eb3sa3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
 
-e1sa2ma_out_annual_cohorts <- e1sa2ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity)) %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) 
+eb1sb1ma_out_annual_cohortsMax <- eb1sb1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb1sb2ma_out_annual_cohortsMax <- eb1sb2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb1sb3ma_out_annual_cohortsMax <- eb1sb3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb2sb1ma_out_annual_cohortsMax <- eb2sb1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb2sb2ma_out_annual_cohortsMax <- eb2sb2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb2sb3ma_out_annual_cohortsMax <- eb2sb3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb3sb1ma_out_annual_cohortsMax <- eb3sb1ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb3sb2ma_out_annual_cohortsMax <- eb3sb2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
+eb3sb3ma_out_annual_cohortsMax <- eb3sb3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
 
-e1sa3ma_out_annual_cohorts <- e1sa3ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+rsofun_out_annual_cohortsMaxAgg <- tibble(rsofun_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,rsofun_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
 
-#e1sb2ma_out_annual_cohorts <- e1sb2ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+ea1sa1ma_out_annual_cohortsMaxAgg <- tibble(ea1sa1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea1sa1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea1sa2ma_out_annual_cohortsMaxAgg <- tibble(ea1sa2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea1sa2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea1sa3ma_out_annual_cohortsMaxAgg <- tibble(ea1sa3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea1sa3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea2sa1ma_out_annual_cohortsMaxAgg <- tibble(ea2sa1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea2sa1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea2sa2ma_out_annual_cohortsMaxAgg <- tibble(ea2sa2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea2sa2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea2sa3ma_out_annual_cohortsMaxAgg <- tibble(ea2sa3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea2sa3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea3sa1ma_out_annual_cohortsMaxAgg <- tibble(ea3sa1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea3sa1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea3sa2ma_out_annual_cohortsMaxAgg <- tibble(ea3sa2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea3sa2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea3sa3ma_out_annual_cohortsMaxAgg <- tibble(ea3sa3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea3sa3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
 
-#e1sb3ma_out_annual_cohorts <- e1sb3ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+ea1sb1ma_out_annual_cohortsMaxAgg <- tibble(ea1sb1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea1sb1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea1sb2ma_out_annual_cohortsMaxAgg <- tibble(ea1sb2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea1sb2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea1sb3ma_out_annual_cohortsMaxAgg <- tibble(ea1sb3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea1sb3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea2sb1ma_out_annual_cohortsMaxAgg <- tibble(ea2sb1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea2sb1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea2sb2ma_out_annual_cohortsMaxAgg <- tibble(ea2sb2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea2sb2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea2sb3ma_out_annual_cohortsMaxAgg <- tibble(ea2sb3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea2sb3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea3sb1ma_out_annual_cohortsMaxAgg <- tibble(ea3sb1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea3sb1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea3sb2ma_out_annual_cohortsMaxAgg <- tibble(ea3sb2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea3sb2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+ea3sb3ma_out_annual_cohortsMaxAgg <- tibble(ea3sb3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea3sb3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
 
-#e1sc2ma_out_annual_cohorts <- e1sc2ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity)) %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
- 
-#e1sc3ma_out_annual_cohorts <- e1sc3ma_out_annual_cohorts %>% mutate(dbh2 = dbh*dbh) %>% mutate(QMD = sqrt(dbh2/density)) %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality))%>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity))  %>%  mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5)))
+eb1sa1ma_out_annual_cohortsMaxAgg <- tibble(eb1sa1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb1sa1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb1sa2ma_out_annual_cohortsMaxAgg <- tibble(eb1sa2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb1sa2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb1sa3ma_out_annual_cohortsMaxAgg <- tibble(eb1sa3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb1sa3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb2sa1ma_out_annual_cohortsMaxAgg <- tibble(eb2sa1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb2sa1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb2sa2ma_out_annual_cohortsMaxAgg <- tibble(eb2sa2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb2sa2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb2sa3ma_out_annual_cohortsMaxAgg <- tibble(eb2sa3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb2sa3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb3sa1ma_out_annual_cohortsMaxAgg <- tibble(eb3sa1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb3sa1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb3sa2ma_out_annual_cohortsMaxAgg <- tibble(eb3sa2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb3sa2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb3sa3ma_out_annual_cohortsMaxAgg <- tibble(eb3sa3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb3sa3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
 
-rsofun_out_annual_cohortsSum <- rsofun_out_annual_cohorts[c(2,6:30)] %>% group_by(year) %>% summarise_all(funs(mean, sum),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) 
+eb1sb1ma_out_annual_cohortsMaxAgg <- tibble(eb1sb1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb1sb1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb1sb2ma_out_annual_cohortsMaxAgg <- tibble(eb1sb2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb1sb2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb1sb3ma_out_annual_cohortsMaxAgg <- tibble(eb1sb3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb1sb3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb2sb1ma_out_annual_cohortsMaxAgg <- tibble(eb2sb1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb2sb1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb2sb2ma_out_annual_cohortsMaxAgg <- tibble(eb2sb2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb2sb2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb2sb3ma_out_annual_cohortsMaxAgg <- tibble(eb2sb3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb2sb3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb3sb1ma_out_annual_cohortsMaxAgg <- tibble(eb3sb1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb3sb1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb3sb2ma_out_annual_cohortsMaxAgg <- tibble(eb3sb2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb3sb2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+eb3sb3ma_out_annual_cohortsMaxAgg <- tibble(eb3sb3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb3sb3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
 
-ea1s1ma_out_annual_cohortsSum <- ea1s1ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum, max),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) %>% mutate(GrowthRate = dbh_mean/age_max)
-ea2s1ma_out_annual_cohortsSum <- ea2s1ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum, max),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) %>% mutate(GrowthRate = dbh_mean/age_max)
-ea3s1ma_out_annual_cohortsSum <- ea3s1ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum, max),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) %>% mutate(GrowthRate = dbh_mean/age_max)
-#eb2s1ma_out_annual_cohortsSum <- eb2s1ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) 
-#eb3s1ma_out_annual_cohortsSum <- eb3s1ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) 
-ec2s1ma_out_annual_cohortsSum <- ec2s1ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum, max),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) %>% mutate(GrowthRate = dbh_mean/age_max)
-ec3s1ma_out_annual_cohortsSum <- ec3s1ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum, max),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) %>% mutate(GrowthRate = dbh_mean/age_max)
-e1sa2ma_out_annual_cohortsSum <- e1sa2ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum, max),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) %>% mutate(GrowthRate = dbh_mean/age_max)
-e1sa3ma_out_annual_cohortsSum <- e1sa3ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum, max),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) %>% mutate(GrowthRate = dbh_mean/age_max)
-#e1sb2ma_out_annual_cohortsSum <- e1sb2ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) 
-#e1sb3ma_out_annual_cohortsSum <- e1sb3ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum))
-#e1sc2ma_out_annual_cohortsSum <- e1sc2ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) 
-#e1sc3ma_out_annual_cohortsSum <- e1sc3ma_out_annual_cohorts[c(2,6:31)] %>% group_by(year) %>% summarise_all(funs(mean, sum),na.rm=T) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum))
+#rsofun_out_annual_cohorts <- rsofun_out_annual_cohorts %>% group_by(cohort) %>% mutate(DeltaWood = ifelse(year>1794, wood-lag(wood), NA)) %>% mutate(Deltadbh = ifelse(year>1794, dbh-lag(dbh), NA)) %>% mutate(Mortality = ifelse(year>1794, lag(density)-density, NA)) %>% mutate(Mortality = ifelse(Mortality<0,0,Mortality)) %>% mutate(Longevity=1/Mortality) %>% mutate(Longevity = ifelse(Longevity=="Inf",NA,Longevity)) %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) 
 
-#(rsofun_out_annual_cohorts %>%arrange(as.numeric(cohort),year)) [,c(1,2,9,31)]
+#rsofun_out_annual_cohortsSum <- rsofun_out_annual_cohorts[c(2,6:29)] %>% group_by(year) %>% summarise_all(funs(mean, sum),na.rm=T) 
+
 ```
 
 ### Nesting data from simulations
@@ -329,13 +521,21 @@ Collect data into a tidy data frame with simulations in rows, "treatment"  and w
 ```{r}
 
 simul_data <- tibble(
-  type = c(rep("annual_tile",10),rep("annual_cohorts",10)),
-  LUE = c(0,1,1,1,2,2,2,3,3,3,0,1,1,1,2,2,2,3,3,3),
-  GS = c(rep(1,20)),
-  PAR = c(rep(1,20)),
-  rho_wood = c(1,1,2,3,1,2,3,1,2,3,1,1,2,3,1,2,3,1,2,3),
-  phiRL = c(rep(1,20)),
-  Mortality = c(rep("A",20)),
+  type = c(rep("annual_tile",10),rep("annual_cohorts",10),rep("annual_cohorts_Max",10),rep("annual_cohorts_MaxAgg",10),
+           rep("annual_tile",9),rep("annual_cohorts",9),rep("annual_cohorts_Max",9),rep("annual_cohorts_MaxAgg",9),
+           rep("annual_tile",9),rep("annual_cohorts",9),rep("annual_cohorts_Max",9),rep("annual_cohorts_MaxAgg",9),
+           rep("annual_tile",9),rep("annual_cohorts",9),rep("annual_cohorts_Max",9),rep("annual_cohorts_MaxAgg",9)),
+  LUE = c(0,1,1,1,2,2,2,3,3,3,0,1,1,1,2,2,2,3,3,3,0,1,1,1,2,2,2,3,3,3,0,1,1,1,2,2,2,3,3,3,
+          1,1,1,2,2,2,3,3,3,1,1,1,2,2,2,3,3,3,1,1,1,2,2,2,3,3,3,1,1,1,2,2,2,3,3,3,rep(1,72)),
+  GS = c(rep(1,148)),
+  PAR = c(rep(1,76),
+          1,1,1,2,2,2,3,3,3,1,1,1,2,2,2,3,3,3,1,1,1,2,2,2,3,3,3,1,1,1,2,2,2,3,3,3,
+          1,1,1,2,2,2,3,3,3,1,1,1,2,2,2,3,3,3,1,1,1,2,2,2,3,3,3,1,1,1,2,2,2,3,3,3),
+  rho_wood = c(1,1,2,3,1,2,3,1,2,3,1,1,2,3,1,2,3,1,2,3,1,1,2,3,1,2,3,1,2,3,1,1,2,3,1,2,3,1,2,3,rep(1,36),
+               1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3, rep(1,36)),
+  phiRL = c(rep(1,40),1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,
+            rep(1,36),1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3),
+  Mortality = c(rep("A",148)),
   simuls = list(
     rsofun_out_annual_tile,
     ea1sa1ma_out_annual_tile,
@@ -356,7 +556,138 @@ simul_data <- tibble(
     ea2sa3ma_out_annual_cohorts,
     ea3sa1ma_out_annual_cohorts,
     ea3sa2ma_out_annual_cohorts,
-    ea3sa3ma_out_annual_cohorts
+    ea3sa3ma_out_annual_cohorts,
+    rsofun_out_annual_cohortsMax,
+    ea1sa1ma_out_annual_cohortsMax,
+    ea1sa2ma_out_annual_cohortsMax,
+    ea1sa3ma_out_annual_cohortsMax,
+    ea2sa1ma_out_annual_cohortsMax,
+    ea2sa2ma_out_annual_cohortsMax,
+    ea2sa3ma_out_annual_cohortsMax,
+    ea3sa1ma_out_annual_cohortsMax,
+    ea3sa2ma_out_annual_cohortsMax,
+    ea3sa3ma_out_annual_cohortsMax,
+    rsofun_out_annual_cohortsMaxAgg,
+    ea1sa1ma_out_annual_cohortsMaxAgg,
+    ea1sa2ma_out_annual_cohortsMaxAgg,
+    ea1sa3ma_out_annual_cohortsMaxAgg,
+    ea2sa1ma_out_annual_cohortsMaxAgg,
+    ea2sa2ma_out_annual_cohortsMaxAgg,
+    ea2sa3ma_out_annual_cohortsMaxAgg,
+    ea3sa1ma_out_annual_cohortsMaxAgg,
+    ea3sa2ma_out_annual_cohortsMaxAgg,
+    ea3sa3ma_out_annual_cohortsMaxAgg,
+
+    ea1sb1ma_out_annual_tile,
+    ea1sb2ma_out_annual_tile,
+    ea1sb3ma_out_annual_tile,
+    ea2sb1ma_out_annual_tile,
+    ea2sb2ma_out_annual_tile,
+    ea2sb3ma_out_annual_tile,
+    ea3sb1ma_out_annual_tile,
+    ea3sb2ma_out_annual_tile,
+    ea3sb3ma_out_annual_tile,
+    ea1sb1ma_out_annual_cohorts,
+    ea1sb2ma_out_annual_cohorts,
+    ea1sb3ma_out_annual_cohorts,
+    ea2sb1ma_out_annual_cohorts,
+    ea2sb2ma_out_annual_cohorts,
+    ea2sb3ma_out_annual_cohorts,
+    ea3sb1ma_out_annual_cohorts,
+    ea3sb2ma_out_annual_cohorts,
+    ea3sb3ma_out_annual_cohorts,
+    ea1sb1ma_out_annual_cohortsMax,
+    ea1sb2ma_out_annual_cohortsMax,
+    ea1sb3ma_out_annual_cohortsMax,
+    ea2sb1ma_out_annual_cohortsMax,
+    ea2sb2ma_out_annual_cohortsMax,
+    ea2sb3ma_out_annual_cohortsMax,
+    ea3sb1ma_out_annual_cohortsMax,
+    ea3sb2ma_out_annual_cohortsMax,
+    ea3sb3ma_out_annual_cohortsMax,
+    ea1sb1ma_out_annual_cohortsMaxAgg,
+    ea1sb2ma_out_annual_cohortsMaxAgg,
+    ea1sb3ma_out_annual_cohortsMaxAgg,
+    ea2sb1ma_out_annual_cohortsMaxAgg,
+    ea2sb2ma_out_annual_cohortsMaxAgg,
+    ea2sb3ma_out_annual_cohortsMaxAgg,
+    ea3sb1ma_out_annual_cohortsMaxAgg,
+    ea3sb2ma_out_annual_cohortsMaxAgg,
+    ea3sb3ma_out_annual_cohortsMaxAgg,
+    
+    eb1sa1ma_out_annual_tile,
+    eb1sa2ma_out_annual_tile,
+    eb1sa3ma_out_annual_tile,
+    eb2sa1ma_out_annual_tile,
+    eb2sa2ma_out_annual_tile,
+    eb2sa3ma_out_annual_tile,
+    eb3sa1ma_out_annual_tile,
+    eb3sa2ma_out_annual_tile,
+    eb3sa3ma_out_annual_tile,
+    eb1sa1ma_out_annual_cohorts,
+    eb1sa2ma_out_annual_cohorts,
+    eb1sa3ma_out_annual_cohorts,
+    eb2sa1ma_out_annual_cohorts,
+    eb2sa2ma_out_annual_cohorts,
+    eb2sa3ma_out_annual_cohorts,
+    eb3sa1ma_out_annual_cohorts,
+    eb3sa2ma_out_annual_cohorts,
+    eb3sa3ma_out_annual_cohorts,
+    eb1sa1ma_out_annual_cohortsMax,
+    eb1sa2ma_out_annual_cohortsMax,
+    eb1sa3ma_out_annual_cohortsMax,
+    eb2sa1ma_out_annual_cohortsMax,
+    eb2sa2ma_out_annual_cohortsMax,
+    eb2sa3ma_out_annual_cohortsMax,
+    eb3sa1ma_out_annual_cohortsMax,
+    eb3sa2ma_out_annual_cohortsMax,
+    eb3sa3ma_out_annual_cohortsMax,
+    eb1sa1ma_out_annual_cohortsMaxAgg,
+    eb1sa2ma_out_annual_cohortsMaxAgg,
+    eb1sa3ma_out_annual_cohortsMaxAgg,
+    eb2sa1ma_out_annual_cohortsMaxAgg,
+    eb2sa2ma_out_annual_cohortsMaxAgg,
+    eb2sa3ma_out_annual_cohortsMaxAgg,
+    eb3sa1ma_out_annual_cohortsMaxAgg,
+    eb3sa2ma_out_annual_cohortsMaxAgg,
+    eb3sa3ma_out_annual_cohortsMaxAgg,
+    
+    eb1sb1ma_out_annual_tile,
+    eb1sb2ma_out_annual_tile,
+    eb1sb3ma_out_annual_tile,
+    eb2sb1ma_out_annual_tile,
+    eb2sb2ma_out_annual_tile,
+    eb2sb3ma_out_annual_tile,
+    eb3sb1ma_out_annual_tile,
+    eb3sb2ma_out_annual_tile,
+    eb3sb3ma_out_annual_tile,
+    eb1sb1ma_out_annual_cohorts,
+    eb1sb2ma_out_annual_cohorts,
+    eb1sb3ma_out_annual_cohorts,
+    eb2sb1ma_out_annual_cohorts,
+    eb2sb2ma_out_annual_cohorts,
+    eb2sb3ma_out_annual_cohorts,
+    eb3sb1ma_out_annual_cohorts,
+    eb3sb2ma_out_annual_cohorts,
+    eb3sb3ma_out_annual_cohorts,
+    eb1sb1ma_out_annual_cohortsMax,
+    eb1sb2ma_out_annual_cohortsMax,
+    eb1sb3ma_out_annual_cohortsMax,
+    eb2sb1ma_out_annual_cohortsMax,
+    eb2sb2ma_out_annual_cohortsMax,
+    eb2sb3ma_out_annual_cohortsMax,
+    eb3sb1ma_out_annual_cohortsMax,
+    eb3sb2ma_out_annual_cohortsMax,
+    eb3sb3ma_out_annual_cohortsMax,
+    eb1sb1ma_out_annual_cohortsMaxAgg,
+    eb1sb2ma_out_annual_cohortsMaxAgg,
+    eb1sb3ma_out_annual_cohortsMaxAgg,
+    eb2sb1ma_out_annual_cohortsMaxAgg,
+    eb2sb2ma_out_annual_cohortsMaxAgg,
+    eb2sb3ma_out_annual_cohortsMaxAgg,
+    eb3sb1ma_out_annual_cohortsMaxAgg,
+    eb3sb2ma_out_annual_cohortsMaxAgg,
+    eb3sb3ma_out_annual_cohortsMaxAgg
   )
 )
 
@@ -376,34 +707,62 @@ hue_pal()(3)
 show_col(hue_pal()(3))
 
 # Changes in LUE with WD level 1
-ggLUE1 <- ggplot() + 
+ggLUE1sa1 <- ggplot() + 
   geom_line(data=simul_data$simuls[[2]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[5]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[8]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_classic() 
 
 # Changes in LUE with WD level 2
-ggplot() + 
+ggLUE1sa2 <- ggplot() + 
   geom_line(data=simul_data$simuls[[3]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[6]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[9]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_color_manual("Levels of LUE at WD 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_classic() 
 
 # Changes in LUE with WD level 3
-ggplot() + 
+ggLUE1sa3 <- ggplot() + 
   geom_line(data=simul_data$simuls[[4]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[7]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[10]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_color_manual("Levels of LUE at WD 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in LUE with root:shoot level 1
+ggLUE1sb1 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[41]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[44]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[47]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in LUE with root:shoot level 2
+ggLUE1sb2 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[42]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[45]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[48]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of LUE at R:S 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in LUE with root:shoot level 3
+ggLUE1sb3 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[43]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[46]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[49]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of LUE at R:S 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_classic() 
 
 
 # Additional plot for this: B* vs. initial slope of (B vs. t) 
+# Changes in LUE with WD level 1
 
 ggplot() + 
   geom_line(data=simul_data$simuls[[2]][1:150,], aes(x=year, y=plantC, color='Low')) + 
@@ -442,7 +801,51 @@ dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
 ggplot(data=dataSlope) +
   geom_point(aes(x=slopes, y=meanBstar,color=level)) +
   geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Additional plot for this: B* vs. initial slope of (B vs. t) 
+# Changes in LUE with R:S level 1
+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[41]][1:150,], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[44]][1:150,], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[47]][1:150,], aes(x=year, y=plantC, color='High')) +
   scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[41]][1300:1804,], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[44]][1300:1804,], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[47]][1300:1804,], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+slope1 <- summary(lm(plantC ~ year, simul_data$simuls[[41]][1:150,]))$coefficients[2,1]
+sd1 <- summary(lm(plantC ~ year, simul_data$simuls[[41]][1:150,]))$coefficients[2,2]
+slope2 <- summary(lm(plantC ~ year, simul_data$simuls[[44]][1:150,]))$coefficients[2,1]
+sd2 <- summary(lm(plantC ~ year, simul_data$simuls[[44]][1:150,]))$coefficients[2,2]
+slope3 <- summary(lm(plantC ~ year, simul_data$simuls[[47]][1:150,]))$coefficients[2,1]
+sd3 <- summary(lm(plantC ~ year, simul_data$simuls[[47]][1:150,]))$coefficients[2,2]
+
+mean1 <- simul_data$simuls[[41]][1300:1804,] %>% summarise(mean1=mean(plantC,na.rm=T), sd1=sd(plantC,na.rm=T))
+mean2 <- simul_data$simuls[[44]][1300:1804,] %>% summarise(mean2=mean(plantC,na.rm=T), sd2=sd(plantC,na.rm=T))
+mean3 <- simul_data$simuls[[47]][1300:1804,] %>% summarise(mean3=mean(plantC,na.rm=T), sd3=sd(plantC,na.rm=T))
+
+slopes <- c(slope1,slope2,slope3)
+sdSlopes <- c(sd1,sd2,sd3)
+meanBstar <- c(mean1$mean1,mean2$mean2, mean3$mean3)
+sdBstar <- c(mean1$sd1,mean2$sd2, mean3$sd3)
+level <- as.factor(c("Low","Medium","High"))
+dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
+
+ggplot(data=dataSlope) +
+  geom_point(aes(x=slopes, y=meanBstar,color=level)) +
+  geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
+  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_classic() 
 ```
@@ -455,6 +858,148 @@ ggplot(data=dataSlope) +
 ##### Radiation
 ```{r}
 
+# Changes in Radiation with WD level 1
+ggRad1sa1 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[77]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[80]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[83]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in Radiation with WD level 2
+ggRad1sa2 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[78]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[81]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[84]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Radiation at WD 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in Radiation with WD level 3
+ggRad1sa3 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[79]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[82]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[85]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Radiation at WD 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in Radiation with root:shoot level 1
+ggRad1sb1 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[113]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[116]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[119]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in Radiation with root:shoot level 2
+ggLRad1sb2 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[114]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[117]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[120]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Radiation at R:S 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in Radiation with root:shoot level 3
+ggLUE1sb3 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[115]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[118]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[121]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Radiation at R:S 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+
+# Additional plot for this: B* vs. initial slope of (B vs. t) 
+# Changes in Radiation with WD level 1
+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[77]][1:150,], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[80]][1:150,], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[83]][1:150,], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[77]][1300:1804,], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[80]][1300:1804,], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[83]][1300:1804,], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+slope1 <- summary(lm(plantC ~ year, simul_data$simuls[[77]][1:150,]))$coefficients[2,1]
+sd1 <- summary(lm(plantC ~ year, simul_data$simuls[[77]][1:150,]))$coefficients[2,2]
+slope2 <- summary(lm(plantC ~ year, simul_data$simuls[[80]][1:150,]))$coefficients[2,1]
+sd2 <- summary(lm(plantC ~ year, simul_data$simuls[[80]][1:150,]))$coefficients[2,2]
+slope3 <- summary(lm(plantC ~ year, simul_data$simuls[[83]][1:150,]))$coefficients[2,1]
+sd3 <- summary(lm(plantC ~ year, simul_data$simuls[[83]][1:150,]))$coefficients[2,2]
+
+mean1 <- simul_data$simuls[[77]][1300:1804,] %>% summarise(mean1=mean(plantC,na.rm=T), sd1=sd(plantC,na.rm=T))
+mean2 <- simul_data$simuls[[80]][1300:1804,] %>% summarise(mean2=mean(plantC,na.rm=T), sd2=sd(plantC,na.rm=T))
+mean3 <- simul_data$simuls[[83]][1300:1804,] %>% summarise(mean3=mean(plantC,na.rm=T), sd3=sd(plantC,na.rm=T))
+
+slopes <- c(slope1,slope2,slope3)
+sdSlopes <- c(sd1,sd2,sd3)
+meanBstar <- c(mean1$mean1,mean2$mean2, mean3$mean3)
+sdBstar <- c(mean1$sd1,mean2$sd2, mean3$sd3)
+level <- as.factor(c("Low","Medium","High"))
+dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
+
+ggplot(data=dataSlope) +
+  geom_point(aes(x=slopes, y=meanBstar,color=level)) +
+  geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Additional plot for this: B* vs. initial slope of (B vs. t) 
+# Changes in Radiation with R:S level 1
+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[113]][1:150,], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[116]][1:150,], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[119]][1:150,], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[113]][1300:1804,], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[116]][1300:1804,], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[119]][1300:1804,], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+slope1 <- summary(lm(plantC ~ year, simul_data$simuls[[113]][1:150,]))$coefficients[2,1]
+sd1 <- summary(lm(plantC ~ year, simul_data$simuls[[113]][1:150,]))$coefficients[2,2]
+slope2 <- summary(lm(plantC ~ year, simul_data$simuls[[116]][1:150,]))$coefficients[2,1]
+sd2 <- summary(lm(plantC ~ year, simul_data$simuls[[116]][1:150,]))$coefficients[2,2]
+slope3 <- summary(lm(plantC ~ year, simul_data$simuls[[119]][1:150,]))$coefficients[2,1]
+sd3 <- summary(lm(plantC ~ year, simul_data$simuls[[119]][1:150,]))$coefficients[2,2]
+
+mean1 <- simul_data$simuls[[113]][1300:1804,] %>% summarise(mean1=mean(plantC,na.rm=T), sd1=sd(plantC,na.rm=T))
+mean2 <- simul_data$simuls[[116]][1300:1804,] %>% summarise(mean2=mean(plantC,na.rm=T), sd2=sd(plantC,na.rm=T))
+mean3 <- simul_data$simuls[[119]][1300:1804,] %>% summarise(mean3=mean(plantC,na.rm=T), sd3=sd(plantC,na.rm=T))
+
+slopes <- c(slope1,slope2,slope3)
+sdSlopes <- c(sd1,sd2,sd3)
+meanBstar <- c(mean1$mean1,mean2$mean2, mean3$mean3)
+sdBstar <- c(mean1$sd1,mean2$sd2, mean3$sd3)
+level <- as.factor(c("Low","Medium","High"))
+dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
+
+ggplot(data=dataSlope) +
+  geom_point(aes(x=slopes, y=meanBstar,color=level)) +
+  geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
+  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
 
 ```
 
@@ -462,29 +1007,56 @@ ggplot(data=dataSlope) +
 ```{r}
 
 # Changes in WD with LUE level 1
-ggWD1 <- ggplot() + 
+ggWD1ea1 <- ggplot() + 
   geom_line(data=simul_data$simuls[[2]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[3]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[4]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Wood density", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  scale_color_manual("Levels of Wood density at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_classic() 
 
 # Changes in WD with LUE level 2
-ggplot() + 
+ggWD1ea2 <- ggplot() + 
   geom_line(data=simul_data$simuls[[5]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[6]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[7]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  scale_color_manual("Levels of Wood density at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_classic() 
 
 # Changes in WD with LUE level 3
-ggplot() + 
+ggWD1ea3 <- ggplot() + 
   geom_line(data=simul_data$simuls[[8]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[9]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[10]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  scale_color_manual("Levels of Wood density at LUE 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in WD with Rad level 1
+ggWD1eb1 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[77]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[78]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[79]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Wood density at Rad 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in WD with Rad level 2
+ggWD1eb2 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[80]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[81]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[82]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Wood density at Rad 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in WD with Rad level 3
+ggWD1eb3 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[83]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[84]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[85]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Wood density at Rad 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_classic() 
 
@@ -528,7 +1100,7 @@ dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
 ggplot(data=dataSlope) +
   geom_point(aes(x=slopes, y=meanBstar,color=level)) +
   geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
-  scale_color_manual("Levels of Wood density", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  scale_color_manual("Levels of Wood density at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_classic() 
 
@@ -537,6 +1109,104 @@ ggplot(data=dataSlope) +
 ##### Root:Shoot ratio
 ```{r}
 
+# Changes in R:S with LUE level 1
+ggRS1ea1 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[41]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[42]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[43]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in R:S with LUE level 2
+ggRS1ea2 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[44]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[45]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[46]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in R:S with LUE level 3
+ggRS1ea3 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[47]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[48]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[49]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in R:S with Rad level 1
+ggRS1eb1 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[113]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[114]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[115]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Root:Shoot ratio at Rad 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in R:S with Rad level 2
+ggRS1eb2 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[116]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[117]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[118]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Root:Shoot ratio at Rad 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in R:S with Rad level 3
+ggRS1eb3 <- ggplot() + 
+  geom_line(data=simul_data$simuls[[119]], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[120]], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[121]], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Root:Shoot ratio at Rad 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+
+# Additional plot for this: B* vs. initial slope of (B vs. t) 
+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[41]][1:150,], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[42]][1:150,], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[43]][1:150,], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[41]][1300:1804,], aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=simul_data$simuls[[42]][1300:1804,], aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=simul_data$simuls[[43]][1300:1804,], aes(x=year, y=plantC, color='High')) +
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+slope1 <- summary(lm(plantC ~ year, simul_data$simuls[[41]][1:150,]))$coefficients[2,1]
+sd1 <- summary(lm(plantC ~ year, simul_data$simuls[[41]][1:150,]))$coefficients[2,2]
+slope2 <- summary(lm(plantC ~ year, simul_data$simuls[[42]][1:150,]))$coefficients[2,1]
+sd2 <- summary(lm(plantC ~ year, simul_data$simuls[[42]][1:150,]))$coefficients[2,2]
+slope3 <- summary(lm(plantC ~ year, simul_data$simuls[[43]][1:150,]))$coefficients[2,1]
+sd3 <- summary(lm(plantC ~ year, simul_data$simuls[[43]][1:150,]))$coefficients[2,2]
+
+mean1 <- simul_data$simuls[[41]][1300:1804,] %>% summarise(mean1=mean(plantC,na.rm=T), sd1=sd(plantC,na.rm=T))
+mean2 <- simul_data$simuls[[42]][1300:1804,] %>% summarise(mean2=mean(plantC,na.rm=T), sd2=sd(plantC,na.rm=T))
+mean3 <- simul_data$simuls[[43]][1300:1804,] %>% summarise(mean3=mean(plantC,na.rm=T), sd3=sd(plantC,na.rm=T))
+
+slopes <- c(slope1,slope2,slope3)
+sdSlopes <- c(sd1,sd2,sd3)
+meanBstar <- c(mean1$mean1,mean2$mean2, mean3$mean3)
+sdBstar <- c(mean1$sd1,mean2$sd2, mean3$sd3)
+level <- as.factor(c("Low","Medium","High"))
+dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
+
+ggplot(data=dataSlope) +
+  geom_point(aes(x=slopes, y=meanBstar,color=level)) +
+  geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
 ```
 
 
@@ -544,14 +1214,13 @@ ggplot(data=dataSlope) +
 ```{r}
 
 library(ggpubr)
-ggarrange(ggLUE1,ggGS1,ggPAR1, ncol = 3, nrow = 1, common.legend = T)
-ggarrange(ggWD1,ggRSR1,ggVCMAX1, ncol = 3, nrow = 1, common.legend = T)
+ggarrange(ggLUE1sa1,ggLUE1sa2,ggLUE1sa3, ncol = 1, nrow = 3, common.legend = T)
 
 ```
 
 #### Self-thinning relathionships
 
-From annual_cohorts_output
+From new annual_tile_output
 
 ##### LUE
 ```{r}
@@ -561,7 +1230,7 @@ ggplot() +
   geom_point(data=simul_data$simuls[[2]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
   geom_point(data=simul_data$simuls[[5]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
   geom_point(data=simul_data$simuls[[8]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
   theme_classic() 
 
@@ -571,6 +1240,59 @@ ggplot() +
   geom_point(data=simul_data$simuls[[8]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
   scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in LUE with WD level 2
+ggplot() + 
+  geom_point(data=simul_data$simuls[[3]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[6]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[9]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of LUE at WD 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in LUE with WD level 3
+ggplot() + 
+  geom_point(data=simul_data$simuls[[4]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[7]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[10]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of LUE at WD 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in LUE with R:S level 1
+ggplot() + 
+  geom_point(data=simul_data$simuls[[41]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[44]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[47]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+ggplot() + 
+  geom_point(data=simul_data$simuls[[41]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
+  geom_point(data=simul_data$simuls[[44]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
+  geom_point(data=simul_data$simuls[[47]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
+  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in LUE with WD level 2
+ggplot() + 
+  geom_point(data=simul_data$simuls[[42]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[45]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[48]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of LUE at R:S 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in LUE with WD level 3
+ggplot() + 
+  geom_point(data=simul_data$simuls[[43]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[46]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[49]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of LUE at R:S 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
   theme_classic() 
 
 ```
@@ -585,20 +1307,207 @@ ggplot() +
 ##### PAR
 ```{r}
 
+# Changes in Radiation with WD level 1
+ggplot() + 
+  geom_point(data=simul_data$simuls[[77]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[80]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[83]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
 
+ggplot() + 
+  geom_point(data=simul_data$simuls[[77]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
+  geom_point(data=simul_data$simuls[[80]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
+  geom_point(data=simul_data$simuls[[83]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in Radiation with WD level 2
+ggplot() + 
+  geom_point(data=simul_data$simuls[[78]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[81]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[84]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of Radiation at WD 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in Radiation with WD level 3
+ggplot() + 
+  geom_point(data=simul_data$simuls[[79]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[82]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[85]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of Radiation at WD 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in Radiation with R:S level 1
+ggplot() + 
+  geom_point(data=simul_data$simuls[[113]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[116]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[119]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+ggplot() + 
+  geom_point(data=simul_data$simuls[[113]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
+  geom_point(data=simul_data$simuls[[116]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
+  geom_point(data=simul_data$simuls[[119]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
+  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in Radiation with WD level 2
+ggplot() + 
+  geom_point(data=simul_data$simuls[[114]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[117]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[120]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of Radiation at R:S 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in Radiation with WD level 3
+ggplot() + 
+  geom_point(data=simul_data$simuls[[115]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[118]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[121]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of Radiation at R:S 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
 
 ```
 
 ##### WD
 ```{r}
 
+# Changes in WD with LUE level 1
+ggplot() + 
+  geom_point(data=simul_data$simuls[[2]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[3]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[4]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of WD at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
 
+ggplot() + 
+  geom_point(data=simul_data$simuls[[2]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
+  geom_point(data=simul_data$simuls[[3]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
+  geom_point(data=simul_data$simuls[[4]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
+  scale_color_manual("Levels of WD", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
+  theme_classic() 
 
+# Changes in WD with LUE level 2
+ggplot() + 
+  geom_point(data=simul_data$simuls[[5]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[6]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[7]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of WD at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in WD with LUE level 3
+ggplot() + 
+  geom_point(data=simul_data$simuls[[8]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[9]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[10]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of WD at LUE 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in WD with Rad level 1
+ggplot() + 
+  geom_point(data=simul_data$simuls[[77]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[78]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[79]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of WD at Rad 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in WD with Rad level 2
+ggplot() + 
+  geom_point(data=simul_data$simuls[[80]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[81]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[82]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of WD at Rad 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in WD with Rad level 3
+ggplot() + 
+  geom_point(data=simul_data$simuls[[83]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[84]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[85]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of WD at Rad 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
 ```
 
 ##### Root:Shoot ratio
 ```{r}
+# Changes in R:S with LUE level 1
+ggplot() + 
+  geom_point(data=simul_data$simuls[[41]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[42]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[43]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of R:S at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
 
+ggplot() + 
+  geom_point(data=simul_data$simuls[[41]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
+  geom_point(data=simul_data$simuls[[42]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
+  geom_point(data=simul_data$simuls[[43]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
+  scale_color_manual("Levels of R:S", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
+  theme_classic() 
+
+# Changes in R:S with LUE level 2
+ggplot() + 
+  geom_point(data=simul_data$simuls[[44]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[45]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[46]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of R:S at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in R:S with LUE level 3
+ggplot() + 
+  geom_point(data=simul_data$simuls[[47]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[48]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[49]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of R:S at LUE 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in R:S with Rad level 1
+ggplot() + 
+  geom_point(data=simul_data$simuls[[113]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[114]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[115]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of R:S at Rad 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in R:S with Rad level 2
+ggplot() + 
+  geom_point(data=simul_data$simuls[[116]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[117]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[118]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of R:S at Rad 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
+
+# Changes in R:S with Rad level 3
+ggplot() + 
+  geom_point(data=simul_data$simuls[[119]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
+  geom_point(data=simul_data$simuls[[120]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
+  geom_point(data=simul_data$simuls[[121]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
+  scale_color_manual("Levels of R:S at Rad 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_classic() 
 
 ```
 
@@ -614,16 +1523,16 @@ ggarrange(ggWD2,ggRSR2,ggVCMAX2, ncol = 3, nrow = 1, common.legend = T)
 
 #### Size bin (x, biomass, volume) vs. Growth (y, volume or mass increment per year); data = individual-level
 
-From annual_cohort_output: wood (Biomass) and NPP_yr
+From annual_cohort_output: dbh class NPP_yr
 
 ##### LUE
 ```{r}
 
-ggLUE3 <- ggplot() + 
+ggplot() + 
   geom_boxplot(data=simul_data$simuls[[12]], aes(x=dbhclass, y=NPP_yr, color='Low')) + 
   geom_boxplot(data=simul_data$simuls[[15]], aes(x=dbhclass, y=NPP_yr, color='Medium')) +
   geom_boxplot(data=simul_data$simuls[[18]], aes(x=dbhclass, y=NPP_yr, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
   theme_classic() 
 
@@ -644,20 +1553,55 @@ RelEnan3_1 <- simul_data$simuls[[18]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
 ##### PAR
 ```{r}
 
-max(ec3s1ma_out_annual_cohorts$dbh)
+ggplot() + 
+  geom_boxplot(data=simul_data$simuls[[86]], aes(x=dbhclass, y=NPP_yr, color='Low')) + 
+  geom_boxplot(data=simul_data$simuls[[89]], aes(x=dbhclass, y=NPP_yr, color='Medium')) +
+  geom_boxplot(data=simul_data$simuls[[92]], aes(x=dbhclass, y=NPP_yr, color='High')) +
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
+  theme_classic() 
 
+
+# Plot relative enhancement: NPP(level 2) / NPP(level 1) [and NPP(level 3) / NPP(level 1)] per size bin
+
+RelEnan2_1 <- simul_data$simuls[[50]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
+RelEnan3_1 <- simul_data$simuls[[53]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
 ```
 
 ##### WD
 ```{r}
 
+ggplot() + 
+  geom_boxplot(data=simul_data$simuls[[12]], aes(x=dbhclass, y=NPP_yr, color='Low')) + 
+  geom_boxplot(data=simul_data$simuls[[13]], aes(x=dbhclass, y=NPP_yr, color='Medium')) +
+  geom_boxplot(data=simul_data$simuls[[14]], aes(x=dbhclass, y=NPP_yr, color='High')) +
+  scale_color_manual("Levels of WD at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
+  theme_classic() 
+
+
+# Plot relative enhancement: NPP(level 2) / NPP(level 1) [and NPP(level 3) / NPP(level 1)] per size bin
+
+RelEnan2_1 <- simul_data$simuls[[15]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
+RelEnan3_1 <- simul_data$simuls[[18]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
 
 ```
 
 ##### R:S Ratio
 ```{r}
 
+ggplot() + 
+  geom_boxplot(data=simul_data$simuls[[50]], aes(x=dbhclass, y=NPP_yr, color='Low')) + 
+  geom_boxplot(data=simul_data$simuls[[51]], aes(x=dbhclass, y=NPP_yr, color='Medium')) +
+  geom_boxplot(data=simul_data$simuls[[52]], aes(x=dbhclass, y=NPP_yr, color='High')) +
+  scale_color_manual("Levels of Rhoot:Shoot ratio at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
+  theme_classic() 
 
+# Plot relative enhancement: NPP(level 2) / NPP(level 1) [and NPP(level 3) / NPP(level 1)] per size bin
+
+RelEnan2_1 <- simul_data$simuls[[50]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
+RelEnan3_1 <- simul_data$simuls[[51]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
 
 ```
 
@@ -671,40 +1615,61 @@ ggarrange(ggWD3,ggRSR3,ggVCMAX3, ncol = 3, nrow = 1, common.legend = T)
 
 ```
 
-#### Light bin (x, quantile of the diameter distribution within the stand) vs. Growth (y, volume or mass increment per year); data = individual-level
+#### Light bin (x, sum of basal area of trees with higher basal area than current one) vs. Growth (y, volume or mass increment per year); data = individual-level
 
 From annual_cohort_output: dbh and NPP_yr
 
 ##### LUE
 ```{r}
 
-ea1s1ma_out_annual_cohorts %>% group_by(year) %>% summarize(dbhQuantile = quantile(dbh, probs=0.25, na.rm=TRUE)) 
-ea1s1ma_out_annual_cohorts %>% group_by(year) %>% summarize(dbhQuantile = quantile(dbh, probs=0.50, na.rm=TRUE)) 
-
-ea1s1ma_out_annual_cohorts %>% group_by(year) %>% summarize(dbhQuantile = quantile(dbh, probs=0.75, na.rm=TRUE)) 
-
-ea1s1ma_out_annual_cohortsSum <- ea1s1ma_out_annual_cohorts[c(2,6:26)] %>% group_by(year) %>% summarise_all(funs(mean, sum)) %>% mutate(QMD2 = sqrt(dbh2_sum/density_sum)) 
-
-quantile(ea1s1ma_out_annual_cohorts$dbh, c(.25, .50, .75)) 
-
-quantile(ea1s1ma_out_annual_cohorts$dbh) 
-
-ggLUE3 <- ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohorts, aes(x=wood, y=NPP_yr, color='level 1')) + 
-  geom_point(data=ea2s1ma_out_annual_cohorts, aes(x=wood, y=NPP_yr, color='level 2')) +
-  geom_point(data=ea3s1ma_out_annual_cohorts, aes(x=wood, y=NPP_yr, color='level 3')) +
-  labs(x = expression(paste("Wood biomass (Kg C ", indiv^-1, ") ")), y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") ")),color = "Legend", title = "LUE") + 
+ggplot() + 
+  geom_boxplot(data=simul_data$simuls[[12]], aes(x=highBAclass, y=NPP_yr, color='Low')) + 
+  geom_boxplot(data=simul_data$simuls[[15]], aes(x=highBAclass, y=NPP_yr, color='Medium')) +
+  geom_boxplot(data=simul_data$simuls[[18]], aes(x=highBAclass, y=NPP_yr, color='High')) +
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = expression(paste("Sum BA of higher trees (", m^2, " " ,ha^-1, ") ")), y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
   theme_classic() 
 
 ```
 
+##### PAR
+```{r}
 
+ggplot() + 
+  geom_boxplot(data=simul_data$simuls[[86]], aes(x=highBAclass, y=NPP_yr, color='Low')) + 
+  geom_boxplot(data=simul_data$simuls[[89]], aes(x=highBAclass, y=NPP_yr, color='Medium')) +
+  geom_boxplot(data=simul_data$simuls[[92]], aes(x=highBAclass, y=NPP_yr, color='High')) +
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = expression(paste("Sum BA of higher trees (", m^2, " " ,ha^-1, ") ")), y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
+  theme_classic() 
 
+```
 
+##### WD
+```{r}
 
+ggplot() + 
+  geom_boxplot(data=simul_data$simuls[[12]], aes(x=highBAclass, y=NPP_yr, color='Low')) + 
+  geom_boxplot(data=simul_data$simuls[[13]], aes(x=highBAclass, y=NPP_yr, color='Medium')) +
+  geom_boxplot(data=simul_data$simuls[[14]], aes(x=highBAclass, y=NPP_yr, color='High')) +
+  scale_color_manual("Levels of WD at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Sum BA of higher trees (", m^2, " " ,ha^-1, ") ")), y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
+  theme_classic() 
 
+```
 
+##### R:S
+```{r}
 
+ggplot() + 
+  geom_boxplot(data=simul_data$simuls[[50]], aes(x=highBAclass, y=NPP_yr, color='Low')) + 
+  geom_boxplot(data=simul_data$simuls[[51]], aes(x=highBAclass, y=NPP_yr, color='Medium')) +
+  geom_boxplot(data=simul_data$simuls[[52]], aes(x=highBAclass, y=NPP_yr, color='High')) +
+  scale_color_manual("Levels of Rhoot:Shoot ratio at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Sum BA of higher trees (", m^2, " " ,ha^-1, ") ")), y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
+  theme_classic() 
+
+```
 #### Longevity vs. growth rates
 
 Hypothesis: The negative relationship between longevity vs. growth rates arises from variations between species, but disappears when looking at variations between sites.
@@ -716,240 +1681,205 @@ Two plots:
 
 
 ##### LUE
-```{r}
-
-ea1s1ma_out_annual_cohortsSumAgg <- tibble(ea1s1ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),ea1s1ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-ea2s1ma_out_annual_cohortsSumAgg <- tibble(ea2s1ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),ea2s1ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-ea3s1ma_out_annual_cohortsSumAgg <- tibble(ea3s1ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),ea3s1ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 1'),width=0)+
-    geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(xmin=mean_NPP_yr_sum-sd_NPP_yr_sum,xmax= mean_NPP_yr_sum+sd_NPP_yr_sum , y=mean_Longevity_sum,color='level 1'),width=0)+
-  geom_point(data=ea2s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 2')) + 
-  geom_errorbar(data=ea2s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 2'),width=0) +
-  geom_errorbar(data=ea2s1ma_out_annual_cohortsSumAgg, aes(xmin=mean_NPP_yr_sum-sd_NPP_yr_sum,xmax= mean_NPP_yr_sum+sd_NPP_yr_sum , y=mean_Longevity_sum,color='level 2'),width=0)+
-geom_point(data=ea3s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 3')) + 
-  geom_errorbar(data=ea3s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 3'),width=0) +
-  geom_errorbar(data=ea3s1ma_out_annual_cohortsSumAgg, aes(xmin=mean_NPP_yr_sum-sd_NPP_yr_sum,xmax= mean_NPP_yr_sum+sd_NPP_yr_sum , y=mean_Longevity_sum,color='level 3'),width=0)+
-  labs(x = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1,  ") ")), y = expression(paste("Longevity (1/mortality, indiv ",yr^-1, ") ")),color = "Legend", title = "LUE") + 
-  theme_classic() 
-
-
-```
 
 Todo:
 
 - longevity is maximum age at tile-level, plot mean across multiple years after spinup
 - plot change in DBH instead of NPP. Take the oldest cohort, and calculate DBH/age
 
-##### LUE with Age max
+##### LUE with Age max and dbh for oldest cohort (age max)
+##### Same species at different sites (differing by LUE, growing season length, PAR)
+
 ```{r}
 
-ea1s1ma_out_annual_cohortsSumAgg <- tibble(ea1s1ma_out_annual_cohortsSum %>% summarise(meanAge=mean(age_max,na.rm=T), sdAge=sd(age_max,na.rm=T)) ,ea1s1ma_out_annual_cohortsSum %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)), ea1s1ma_out_annual_cohortsSum %>%  summarise(meanDBHChange=mean(Deltadbh_mean,na.rm=T), sdDBHChange=sd(Deltadbh_mean,na.rm=T)))
-
-ea2s1ma_out_annual_cohortsSumAgg <- tibble(ea2s1ma_out_annual_cohortsSum %>% summarise(meanAge=mean(age_max,na.rm=T), sdAge=sd(age_max,na.rm=T)) ,ea2s1ma_out_annual_cohortsSum %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)), ea2s1ma_out_annual_cohortsSum %>%  summarise(meanDBHChange=mean(Deltadbh_mean,na.rm=T), sdDBHChange=sd(Deltadbh_mean,na.rm=T)))
-
-ea3s1ma_out_annual_cohortsSumAgg <- tibble(ea3s1ma_out_annual_cohortsSum %>% summarise(meanAge=mean(age_max,na.rm=T), sdAge=sd(age_max,na.rm=T)) ,ea3s1ma_out_annual_cohortsSum %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)), ea3s1ma_out_annual_cohortsSum %>%  summarise(meanDBHChange=mean(Deltadbh_mean,na.rm=T), sdDBHChange=sd(Deltadbh_mean,na.rm=T)))
-
 ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 1'),width=0)+
-    geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 1'),width=0)+
-  geom_point(data=ea2s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 2')) + 
-  geom_errorbar(data=ea2s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 2'),width=0) +
-  geom_errorbar(data=ea2s1ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 2'),width=0)+
-geom_point(data=ea3s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 3')) + 
-  geom_errorbar(data=ea3s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax=meanAge+sdAge,color='Level 3'),width=0) +
-  geom_errorbar(data=ea3s1ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 3'),width=0)+
-  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity",color = "Legend", title = expression(paste("Light Use Efficiency (mol C ", s^-1, " ", m^-2, ") "))) +  
+  geom_point(data=simul_data$simuls[[32]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[32]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[32]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[35]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[35]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[35]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[38]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[38]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[38]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
   theme_classic() 
 
-ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, y=meanAge, color='Level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 1'),width=0)+
-    geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(xmin=meanDBHChange-sdDBHChange,xmax= meanDBHChange+sdDBHChange , y=meanAge,color='Level 1'),width=0)+
-  geom_point(data=ea2s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, y=meanAge, color='Level 2')) + 
-  geom_errorbar(data=ea2s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 2'),width=0) +
-  geom_errorbar(data=ea2s1ma_out_annual_cohortsSumAgg, aes(xmin=meanDBHChange-sdDBHChange,xmax= meanDBHChange+sdDBHChange , y=meanAge,color='Level 2'),width=0)+
-geom_point(data=ea3s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, y=meanAge, color='Level 3')) + 
-  geom_errorbar(data=ea3s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, ymin=meanAge-sdAge,ymax=meanAge+sdAge,color='Level 3'),width=0) +
-  geom_errorbar(data=ea3s1ma_out_annual_cohortsSumAgg, aes(xmin=meanDBHChange-sdDBHChange,xmax= meanDBHChange+sdDBHChange , y=meanAge,color='Level 3'),width=0)+
-  labs(x = "Growth rate (m)", y = "Longevity",color = "Legend", title = expression(paste("Light Use Efficiency (mol C ", s^-1, " ", m^-2, ") "))) + 
-  theme_classic() 
-
-
+ea1sa1ma_out_annual_cohortsMaxAgg
+ea2sa1ma_out_annual_cohortsMaxAgg
+ea3sa1ma_out_annual_cohortsMaxAgg
 
 ```
 
 ##### Radiation with Age max
+##### Same species at different sites (differing by LUE, growing season length, PAR)
+
 ```{r}
 
-ea1s1ma_out_annual_cohortsSumAgg <- tibble(ea1s1ma_out_annual_cohortsSum %>% summarise(meanAge=mean(age_max,na.rm=T), sdAge=sd(age_max,na.rm=T)) ,ea1s1ma_out_annual_cohortsSum %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)), ea1s1ma_out_annual_cohortsSum %>%  summarise(meanDBHChange=mean(Deltadbh_mean,na.rm=T), sdDBHChange=sd(Deltadbh_mean,na.rm=T)))
+ggplot() + 
+  geom_point(data=simul_data$simuls[[104]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[104]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[104]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[107]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[107]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[107]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[110]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[110]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[110]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
+  theme_classic() 
 
-ec2s1ma_out_annual_cohortsSumAgg <- tibble(ec2s1ma_out_annual_cohortsSum %>% summarise(meanAge=mean(age_max,na.rm=T), sdAge=sd(age_max,na.rm=T)) ,ec2s1ma_out_annual_cohortsSum %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)), ec2s1ma_out_annual_cohortsSum %>%  summarise(meanDBHChange=mean(Deltadbh_mean,na.rm=T), sdDBHChange=sd(Deltadbh_mean,na.rm=T)))
+eb1sa1ma_out_annual_cohortsMaxAgg
+eb2sa1ma_out_annual_cohortsMaxAgg
+eb3sa1ma_out_annual_cohortsMaxAgg
+```
 
-ec3s1ma_out_annual_cohortsSumAgg <- tibble(ec3s1ma_out_annual_cohortsSum %>% summarise(meanAge=mean(age_max,na.rm=T), sdAge=sd(age_max,na.rm=T)) ,ec3s1ma_out_annual_cohortsSum %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)), ec3s1ma_out_annual_cohortsSum %>%  summarise(meanDBHChange=mean(Deltadbh_mean,na.rm=T), sdDBHChange=sd(Deltadbh_mean,na.rm=T)))
+##### Wood density with Age max 
+##### Different species at a given site: Each point is one species (differing by wood density, root:shoot ratio). Add info either by using color ~site (given LUE, growing season length, PAR).
+
+```{r}
 
 ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 1'),width=0)+
-    geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 1'),width=0)+
-  geom_point(data=ec2s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 2')) + 
-  geom_errorbar(data=ec2s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 2'),width=0) +
-  geom_errorbar(data=ec2s1ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 2'),width=0)+
-geom_point(data=ec3s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 3')) + 
-  geom_errorbar(data=ec3s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax=meanAge+sdAge,color='Level 3'),width=0) +
-  geom_errorbar(data=ec3s1ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 3'),width=0)+
-  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity",color = "Legend", title = expression(paste("Radiation (W ", m^-2, ") "))) +
+  geom_point(data=simul_data$simuls[[32]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[32]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[32]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[33]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[33]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[33]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[34]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[34]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[34]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of WD at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
   theme_classic() 
 
 ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, y=meanAge, color='Level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 1'),width=0)+
-    geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(xmin=meanDBHChange-sdDBHChange,xmax= meanDBHChange+sdDBHChange , y=meanAge,color='Level 1'),width=0)+
-  geom_point(data=ec2s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, y=meanAge, color='Level 2')) + 
-  geom_errorbar(data=ec2s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 2'),width=0) +
-  geom_errorbar(data=ec2s1ma_out_annual_cohortsSumAgg, aes(xmin=meanDBHChange-sdDBHChange,xmax= meanDBHChange+sdDBHChange , y=meanAge,color='Level 2'),width=0)+
-geom_point(data=ec3s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, y=meanAge, color='Level 3')) + 
-  geom_errorbar(data=ec3s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, ymin=meanAge-sdAge,ymax=meanAge+sdAge,color='Level 3'),width=0) +
-  geom_errorbar(data=ec3s1ma_out_annual_cohortsSumAgg, aes(xmin=meanDBHChange-sdDBHChange,xmax= meanDBHChange+sdDBHChange , y=meanAge,color='Level 3'),width=0)+
-  labs(x = "Growth rate (m)", y = "Longevity",color = "Legend", title = expression(paste("Radiation (W ", m^-2, ") "))) +
+  geom_point(data=simul_data$simuls[[35]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[35]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[35]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[36]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[36]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[36]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[37]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[37]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[37]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of WD at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
   theme_classic() 
 
+ggplot() + 
+  geom_point(data=simul_data$simuls[[38]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[38]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[38]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[39]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[39]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[39]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[40]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[40]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[40]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of WD at LUE 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
+  theme_classic() 
 
+ggplot() + 
+  geom_point(data=simul_data$simuls[[104]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[104]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[104]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[105]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[105]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[105]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[106]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[106]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[106]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of WD at Rad 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
+  theme_classic() 
+
+ggplot() + 
+  geom_point(data=simul_data$simuls[[107]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[107]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[107]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[108]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[108]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[108]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[109]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[109]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[109]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of WD at Rad 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
+  theme_classic() 
+
+ggplot() + 
+  geom_point(data=simul_data$simuls[[110]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[110]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[110]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[111]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[111]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[111]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[112]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[112]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[112]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of WD at Rad 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
+  theme_classic() 
+
+eb1sa1ma_out_annual_cohortsMaxAgg
+eb1sa2ma_out_annual_cohortsMaxAgg
+ea2sa3ma_out_annual_cohortsMaxAgg
 
 ```
 
-##### Wood density with Age max
+##### Rhoot:Shoot ratio with Age max 
+##### Different species at a given site: Each point is one species (differing by wood density, root:shoot ratio). Add info either by using color ~site (given LUE, growing season length, PAR).
+
 ```{r}
 
-ea1s1ma_out_annual_cohortsSumAgg <- tibble(ea1s1ma_out_annual_cohortsSum %>% summarise(meanAge=mean(age_max,na.rm=T), sdAge=sd(age_max,na.rm=T)) ,ea1s1ma_out_annual_cohortsSum %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)), ea1s1ma_out_annual_cohortsSum %>%  summarise(meanDBHChange=mean(Deltadbh_mean,na.rm=T), sdDBHChange=sd(Deltadbh_mean,na.rm=T)))
-
-e1sa2ma_out_annual_cohortsSumAgg <- tibble(e1sa2ma_out_annual_cohortsSum %>% summarise(meanAge=mean(age_max,na.rm=T), sdAge=sd(age_max,na.rm=T)) ,e1sa2ma_out_annual_cohortsSum %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)), e1sa2ma_out_annual_cohortsSum %>%  summarise(meanDBHChange=mean(Deltadbh_mean,na.rm=T), sdDBHChange=sd(Deltadbh_mean,na.rm=T)))
-
-e1sa3ma_out_annual_cohortsSumAgg <- tibble(e1sa3ma_out_annual_cohortsSum %>% summarise(meanAge=mean(age_max,na.rm=T), sdAge=sd(age_max,na.rm=T)) ,e1sa3ma_out_annual_cohortsSum %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)), e1sa3ma_out_annual_cohortsSum %>%  summarise(meanDBHChange=mean(Deltadbh_mean,na.rm=T), sdDBHChange=sd(Deltadbh_mean,na.rm=T)))
-
 ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 1'),width=0)+
-    geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 1'),width=0)+
-  geom_point(data=e1sa2ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 2')) + 
-  geom_errorbar(data=e1sa2ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 2'),width=0) +
-  geom_errorbar(data=e1sa2ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 2'),width=0)+
-geom_point(data=e1sa3ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 3')) + 
-  geom_errorbar(data=e1sa3ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax=meanAge+sdAge,color='Level 3'),width=0) +
-  geom_errorbar(data=e1sa3ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 3'),width=0)+
-  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity",color = "Legend", title = expression(paste("Wood density (Kg C ", m^-3, ") "))) +
+  geom_point(data=simul_data$simuls[[68]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[68]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[68]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[69]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[69]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[69]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[70]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[70]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[70]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of WD at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
   theme_classic() 
 
 ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 1'),width=0)+
-    geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 1'),width=0)+
-  geom_point(data=e1sa2ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 2')) + 
-  geom_errorbar(data=e1sa2ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 2'),width=0) +
-  geom_errorbar(data=e1sa2ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 2'),width=0)+
-geom_point(data=e1sa3ma_out_annual_cohortsSumAgg, aes(x=meanGR, y=meanAge, color='Level 3')) + 
-  geom_errorbar(data=e1sa3ma_out_annual_cohortsSumAgg, aes(x=meanGR, ymin=meanAge-sdAge,ymax=meanAge+sdAge,color='Level 3'),width=0) +
-  geom_errorbar(data=e1sa3ma_out_annual_cohortsSumAgg, aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=meanAge,color='Level 3'),width=0)+
-  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity",color = "Legend", title = expression(paste("Wood density (Kg C ", m^-3, ") "))) +
+  geom_point(data=simul_data$simuls[[71]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[71]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[71]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[72]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[72]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[72]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[73]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[73]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[73]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of WD at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
   theme_classic() 
 
 ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, y=meanAge, color='Level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 1'),width=0)+
-    geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(xmin=meanDBHChange-sdDBHChange,xmax= meanDBHChange+sdDBHChange , y=meanAge,color='Level 1'),width=0)+
-  geom_point(data=e1sa2ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, y=meanAge, color='Level 2')) + 
-  geom_errorbar(data=e1sa2ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, ymin=meanAge-sdAge,ymax= meanAge+sdAge,color='Level 2'),width=0) +
-  geom_errorbar(data=e1sa2ma_out_annual_cohortsSumAgg, aes(xmin=meanDBHChange-sdDBHChange,xmax= meanDBHChange+sdDBHChange , y=meanAge,color='Level 2'),width=0)+
-geom_point(data=e1sa3ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, y=meanAge, color='Level 3')) + 
-  geom_errorbar(data=e1sa3ma_out_annual_cohortsSumAgg, aes(x=meanDBHChange, ymin=meanAge-sdAge,ymax=meanAge+sdAge,color='Level 3'),width=0) +
-  geom_errorbar(data=e1sa3ma_out_annual_cohortsSumAgg, aes(xmin=meanDBHChange-sdDBHChange,xmax= meanDBHChange+sdDBHChange , y=meanAge,color='Level 3'),width=0)+
-  labs(x = "Growth rate (m)", y = "Longevity",color = "Legend", title = expression(paste("Wood density (Kg C ", m^-3, ") "))) +
+  geom_point(data=simul_data$simuls[[74]], aes(x=meanGR, y=maxAge_mean, color='Low')) + 
+  geom_errorbar(data=simul_data$simuls[[74]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Low'),width=0)+
+    geom_errorbar(data=simul_data$simuls[[74]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Low'),width=0)+
+  geom_point(data=simul_data$simuls[[75]], aes(x=meanGR, y=maxAge_mean, color='Medium')) + 
+  geom_errorbar(data=simul_data$simuls[[75]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax= maxAge_mean+sdmaxAge,color='Medium'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[75]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='Medium'),width=0)+
+geom_point(data=simul_data$simuls[[76]], aes(x=meanGR, y=maxAge_mean, color='High')) + 
+  geom_errorbar(data=simul_data$simuls[[76]], aes(x=meanGR, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color='High'),width=0) +
+  geom_errorbar(data=simul_data$simuls[[76]], aes(xmin=meanGR-sdGR,xmax= meanGR+sdGR , y=maxAge_mean,color='High'),width=0)+
+  scale_color_manual("Levels of WD at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
   theme_classic() 
 
-
-
-```
-
-##### Growing season
-```{r}
-
-ea1s1ma_out_annual_cohortsSumAgg <- tibble(ea1s1ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),ea1s1ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-eb2s1ma_out_annual_cohortsSumAgg <- tibble(eb2s1ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),eb2s1ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-eb3s1ma_out_annual_cohortsSumAgg <- tibble(eb3s1ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),eb3s1ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 1'),width=0)+
-  geom_point(data=eb2s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 2')) + 
-  geom_errorbar(data=eb2s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 2'),width=0) +
-geom_point(data=eb3s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 3')) + 
-  geom_errorbar(data=eb3s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 3'),width=0) +
-  labs(x = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1,  ") ")), y = expression(paste("Longevity (1/mortality, indiv ",yr^-1, ") ")),color = "Legend", title = "Growing season") + 
-  theme_classic() 
-
-
-```
-
-##### PAR
-```{r}
-
-ea1s1ma_out_annual_cohortsSumAgg <- tibble(ea1s1ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),ea1s1ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-ec2s1ma_out_annual_cohortsSumAgg <- tibble(ec2s1ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),ec2s1ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-ec3s1ma_out_annual_cohortsSumAgg <- tibble(ec3s1ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),ec3s1ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 1'),width=0)+
-  geom_point(data=ec2s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 2')) + 
-  geom_errorbar(data=ec2s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 2'),width=0) +
-geom_point(data=ec3s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 3')) + 
-  geom_errorbar(data=ec3s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 3'),width=0) +
-  labs(x = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1,  ") ")), y = expression(paste("Longevity (1/mortality, indiv ",yr^-1, ") ")),color = "Legend", title = "PAR") + 
-  theme_classic() 
-
-
-```
-
-##### WD
-```{r}
-
-ea1s1ma_out_annual_cohortsSumAgg <- tibble(ea1s1ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),ea1s1ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-e1sa2ma_out_annual_cohortsSumAgg <- tibble(e1sa2ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),e1sa2ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-e1sa3ma_out_annual_cohortsSumAgg <- tibble(e1sa3ma_out_annual_cohortsSum %>% summarise(mean=mean(Longevity_sum,na.rm=T), sd=sd(Longevity_sum,na.rm=T)) %>% rename(mean_Longevity_sum=mean, sd_Longevity_sum=sd),e1sa3ma_out_annual_cohortsSum %>% summarise(mean=mean(NPP_yr_sum,na.rm=T), sd=sd(NPP_yr_sum,na.rm=T))%>% rename(mean_NPP_yr_sum=mean, sd_NPP_yr_sum=sd))
-
-ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 1'),width=0)+
-  geom_point(data=e1sa2ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 2')) + 
-  geom_errorbar(data=e1sa2ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 2'),width=0) +
-geom_point(data=e1sa3ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 3')) + 
-  geom_errorbar(data=e1sa3ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 3'),width=0) +
-  labs(x = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1,  ") ")), y = expression(paste("Longevity (1/mortality, indiv ",yr^-1, ") ")),color = "Legend", title = "Wood density") + 
-  theme_classic() 
-
-ggplot() + 
-  geom_point(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 1')) + 
-  geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 1'),width=0)+
-    geom_errorbar(data=ea1s1ma_out_annual_cohortsSumAgg, aes(xmin=mean_NPP_yr_sum-sd_NPP_yr_sum,xmax= mean_NPP_yr_sum+sd_NPP_yr_sum , y=mean_Longevity_sum,color='level 1'),width=0)+
-  geom_point(data=e1sa2ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 2')) + 
-  geom_errorbar(data=e1sa2ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 2'),width=0) +
-  geom_errorbar(data=e1sa2ma_out_annual_cohortsSumAgg, aes(xmin=mean_NPP_yr_sum-sd_NPP_yr_sum,xmax= mean_NPP_yr_sum+sd_NPP_yr_sum , y=mean_Longevity_sum,color='level 2'),width=0)+
-geom_point(data=e1sa3ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, y=mean_Longevity_sum, color='level 3')) + 
-  geom_errorbar(data=e1sa3ma_out_annual_cohortsSumAgg, aes(x=mean_NPP_yr_sum, ymin=mean_Longevity_sum-sd_Longevity_sum,ymax=      mean_Longevity_sum+sd_Longevity_sum,color='level 3'),width=0) +
-  geom_errorbar(data=e1sa3ma_out_annual_cohortsSumAgg, aes(xmin=mean_NPP_yr_sum-sd_NPP_yr_sum,xmax= mean_NPP_yr_sum+sd_NPP_yr_sum , y=mean_Longevity_sum,color='level 3'),width=0)+
-  labs(x = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1,  ") ")), y = expression(paste("Longevity (1/mortality, indiv ",yr^-1, ") ")),color = "Legend", title = "Wood density") + 
-  theme_classic() 
-
+ea1sb1ma_out_annual_cohortsMaxAgg
+ea3sb2ma_out_annual_cohortsMaxAgg
+ea3sb3ma_out_annual_cohortsMaxAgg
 
 ```
