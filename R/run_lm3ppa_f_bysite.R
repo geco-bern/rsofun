@@ -434,7 +434,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     out$output_annual_tile <- lm3out[[30]] %>%
       as.matrix() %>% 
       as_tibble() %>%
-      setNames(c("year", "CAI", "LAI", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N")) %>%
+      setNames(c("year", "CAI", "LAI", "Density", "DBH", "Density12", "DBH12", "QMD", "NPP", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N")) %>%
       filter_at(vars(year), all_vars((.) != 0))
     
     ## annual cohorts
@@ -515,7 +515,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Acrown", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "age", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -523,7 +523,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "wood", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Acrown", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -531,7 +531,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "nsc", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "wood", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -539,7 +539,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NSN", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "nsc", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -547,7 +547,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPtr", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NSN", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -555,7 +555,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "seed", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPtr", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -563,7 +563,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPL", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "seed", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -571,7 +571,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPR", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPL", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -579,7 +579,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPW", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPR", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -587,7 +587,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "GPP_yr", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPW", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -595,7 +595,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPP_yr", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "GPP_yr", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -603,7 +603,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_uptk", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPP_yr", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -611,11 +611,19 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_fix", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_uptk", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[53]] %>%
+        as.matrix() %>% 
+        as_tibble() %>%
+        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_fix", names_prefix = "cohort_") %>%
+        dplyr::select(-1)) %>%
+    bind_cols(
+      .,
+      lm3out[[54]] %>%
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%

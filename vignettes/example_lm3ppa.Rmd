@@ -166,6 +166,9 @@ forcing <- read_delim( paste0(path.package("rsofun"), "/extdata/ORNL_forcing.txt
   mutate(sitename = "ORNL") %>% 
   dplyr::filter(!(mday(date)==29 & month(date)==2))
 
+# Changing values of PAR for running simulations
+#forcing <- forcing %>% mutate(Swdown = Swdown*1.5) # levels = *1, *1.3 and *1.5
+
 ## convert rain to units per seconds
 dt_secs <- lubridate::interval(forcing$date[1], forcing$date[2]) %>% 
   time_length("seconds")
@@ -198,10 +201,22 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
+#save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
+rsofun_out_hourly_tile <- out$output_hourly_tile
+rsofun_out_daily_tile <- out$output_daily_tile
+rsofun_out_daily_cohorts <- out$output_daily_cohorts
+rsofun_out_annual_tile <- out$output_annual_tile
+rsofun_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   labs(title = "LM3-PPA with P-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+out$output_daily_tile %>% 
+  mutate(date = lubridate::ymd(paste0(year, "-01-01")) + lubridate::days(doy-1)) %>% 
+  ggplot(aes(x=date, y=GPP)) +
+  geom_line() + 
+  labs(title = "LM3-PPA at ORNL", subtitle = "rsofun output")
+
 ```

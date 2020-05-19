@@ -181,6 +181,12 @@ module md_interface_lm3ppa
     real :: year
     real :: CAI
     real :: LAI
+    real :: density
+    real :: DBH
+    real :: Density12
+    real :: DBH12
+    real :: QMD
+    real :: NPP
     real :: GPP
     real :: Rauto
     real :: Rh
@@ -234,6 +240,7 @@ module md_interface_lm3ppa
     real :: dDBH
     real :: dbh
     real :: height
+    real :: age
     real :: Acrown
     real :: wood
     real :: nsc

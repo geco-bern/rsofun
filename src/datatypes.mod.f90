@@ -248,6 +248,13 @@ type :: vegn_tile_type
    type(cohort_type), pointer :: cohorts(:)=>NULL()
    real :: area  ! m2
    real :: age=0 ! tile age
+   real :: nindivs  ! New varaibles at tile level xxx
+   real :: DBH ! New varaibles at tile level xxx
+   real :: nindivs12
+   real :: DBH12
+   real :: DBH12pow2
+   real :: QMD
+
    ! leaf area index
    real :: LAI  ! leaf area index
    real :: CAI  ! crown area index
@@ -442,7 +449,7 @@ real :: gamma_SW(0:MSPECIES)= 0.08 ! 5.0e-4 ! kgC m-2 Acambium yr-1
 real :: gamma_FR(0:MSPECIES)= 12.0 ! 15 !kgC kgN-1 yr-1 ! 0.6: kgC kgN-1 yr-1
 real :: tc_crit(0:MSPECIES)= 283.16 ! OFF
 real :: tc_crit_on(0:MSPECIES)= 280.16 ! ON
-real :: gdd_crit(0:MSPECIES)= 280.0 !
+real :: gdd_crit(0:MSPECIES)= 280.0 ! Simulations 280, 240, 200
 
 ! Allometry parameters
 real :: alphaHT(0:MSPECIES)      = 36.0
@@ -470,13 +477,13 @@ real :: leafLS(0:MSPECIES) = 1.0
 !(/1., 1., 1., 1., 3., 3., 1., 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 /)
 real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
 real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
-real :: rho_wood(0:MSPECIES)      = 300.0 ! kgC m-3
+real :: rho_wood(0:MSPECIES)      = 300.0 ! kgC m-3 (Simulations: 300, 600, 800)
 real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
 real :: LAImax(0:MSPECIES)        = 3.5 ! maximum LAI for a tree
 real :: LAI_light(0:MSPECIES)     = 4.0 ! maximum LAI limited by light
 real :: tauNSC(0:MSPECIES)        = 3 ! 3 ! NSC residence time,years
 real :: fNSNmax(0:MSPECIES)       = 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
-real :: phiRL(0:MSPECIES)         = 3.5 ! ratio of fine root area to leaf area
+real :: phiRL(0:MSPECIES)         = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
 real :: phiCSA(0:MSPECIES)        = 0.25E-4 ! ratio of sapwood area to leaf area
 ! C/N ratios for plant pools
 real :: CNleaf0(0:MSPECIES)   = 25. ! C/N ratios for leaves
@@ -820,6 +827,13 @@ subroutine summarize_tile(vegn)
   vegn%LAI     = 0.0
   vegn%CAI     = 0.0
 
+  ! New tile outputs xxx
+  vegn%nindivs    = 0.0
+  vegn%DBH        = 0.0
+  vegn%nindivs12  = 0.0
+  vegn%DBH12      = 0.0
+  vegn%DBH12pow2  = 0.0
+
   do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
 
@@ -839,7 +853,22 @@ subroutine summarize_tile(vegn)
         vegn%rootN   = vegn%rootN    + cc%rootN     * cc%nindivs
         vegn%SapwoodN= vegn%SapwoodN + cc%sapwN     * cc%nindivs
         vegn%woodN   = vegn%woodN    + cc%woodN     * cc%nindivs
+        ! New tile outputs xxx
+        vegn%DBH     = vegn%DBH      + cc%dbh       * cc%nindivs
+        vegn%nindivs = vegn%nindivs  + cc%nindivs
+
+        if (cc%dbh > 0.12) then
+        vegn%DBH12      = vegn%DBH12     + cc%dbh      * cc%nindivs 
+        vegn%nindivs12  = vegn%nindivs12 + cc%nindivs
+        vegn%DBH12pow2  = vegn%DBH12pow2 + cc%dbh      * cc%dbh     * cc%nindivs
+        
+        endif
+
   enddo
+
+    if (vegn%nindivs>0.0) vegn%DBH     = vegn%DBH / vegn%nindivs  
+    if (vegn%nindivs12>0.0) vegn%DBH12 = vegn%DBH12 / vegn%nindivs12  ! vegn%nindivs12 could be zero if all dbh<0.12
+    if (vegn%nindivs12>0.0) vegn%QMD     = sqrt(vegn%DBH12pow2 / vegn%nindivs12)  
 
 end subroutine summarize_tile
 
@@ -1110,6 +1139,7 @@ end subroutine hourly_diagnostics
     out_annual_cohorts(:)%dDBH    = dummy
     out_annual_cohorts(:)%dbh     = dummy
     out_annual_cohorts(:)%height  = dummy
+    out_annual_cohorts(:)%age     = dummy
     out_annual_cohorts(:)%Acrown  = dummy
     out_annual_cohorts(:)%wood    = dummy
     out_annual_cohorts(:)%nsc     = dummy
@@ -1145,6 +1175,7 @@ end subroutine hourly_diagnostics
       out_annual_cohorts(i)%dDBH    = dDBH
       out_annual_cohorts(i)%dbh     = cc%dbh
       out_annual_cohorts(i)%height  = cc%height
+      out_annual_cohorts(i)%age     = cc%age
       out_annual_cohorts(i)%Acrown  = cc%crownarea
       out_annual_cohorts(i)%wood    = cc%bsw+cc%bHW
       out_annual_cohorts(i)%nsc     = cc%nsc
@@ -1167,9 +1198,10 @@ end subroutine hourly_diagnostics
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
-      vegn%annualfixedN  = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
+      vegn%annualfixedN = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
+      
     enddo
-    
+
     plantC    = vegn%NSC + vegn%SeedC + vegn%leafC + vegn%rootC + vegn%SapwoodC + vegn%woodC
     plantN    = vegn%NSN + vegn%SeedN + vegn%leafN + vegn%rootN + vegn%SapwoodN + vegn%woodN
     soilC     = vegn%MicrobialC + vegn%metabolicL + vegn%structuralL
@@ -1179,6 +1211,12 @@ end subroutine hourly_diagnostics
     out_annual_tile%year       = iyears
     out_annual_tile%CAI        = vegn%CAI
     out_annual_tile%LAI        = vegn%LAI
+    out_annual_tile%density    = vegn%nindivs*10000 !xxx New tile out
+    out_annual_tile%DBH        = vegn%DBH
+    out_annual_tile%density12  = vegn%nindivs12*10000 !xxx New tile out
+    out_annual_tile%DBH12      = vegn%DBH12
+    out_annual_tile%QMD        = vegn%QMD
+    out_annual_tile%NPP        = vegn%annualNPP !xxx New tile out
     out_annual_tile%GPP        = vegn%annualGPP
     out_annual_tile%Rauto      = vegn%annualResp
     out_annual_tile%Rh         = vegn%annualRh
@@ -1220,6 +1258,7 @@ end subroutine hourly_diagnostics
     out_annual_tile%totseedN   = vegn%totseedN*1000
     out_annual_tile%Seedling_C = vegn%totNewCC*1000
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
+
 
     ! I cannot figure out why N losing. Hack!
    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
