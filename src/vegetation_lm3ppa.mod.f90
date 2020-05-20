@@ -63,7 +63,7 @@ contains
       cc => vegn%cohorts(i)
       associate ( sp => spdata(cc%species) )
 
-      ! increment tha cohort age
+      ! increment the cohort age
       cc%age = cc%age + myinterface%dt_fast_yr
 
       ! Maintenance respiration
@@ -652,7 +652,7 @@ contains
   end subroutine Seasonal_fall
 
 
-  subroutine vegn_nat_mortality( vegn, deltat )
+  subroutine vegn_nat_mortality( vegn, deltat ) ! Include mortality
     !////////////////////////////////////////////////////////////////
     ! Mortality
     ! Code from BiomeE-Allocation

@@ -228,6 +228,7 @@ module md_interface_lm3ppa
     real :: totseedN
     real :: Seedling_C
     real :: Seedling_N
+    real :: MaxAge
   end type outtype_annual_tile  
 
   type outtype_annual_cohorts ! fno2
