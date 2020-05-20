@@ -247,7 +247,7 @@ pmodel_out_annual_tile %>%
 
 pmodel_out_annual_tile %>% 
   ggplot() +
-  geom_line(aes(x = year, y = Rauto)) +
+  geom_line(aes(x = year, y = Volume)) +
   labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
 
 ```

@@ -166,7 +166,7 @@ type :: cohort_type
 ! for populatin structure
   real    :: nindivs   = 1.0 ! density of vegetation, individuals/m2
   real    :: age       = 0.0 ! age of cohort, years
-  real    :: Volume
+  real    :: Volume    = 0.0
   real    :: dbh       = 0.0 ! diameter at breast height, m
   real    :: height    = 0.0 ! vegetation height, m
   real    :: crownarea = 1.0 ! crown area, m2/individual
@@ -256,6 +256,7 @@ type :: vegn_tile_type
    real :: DBH12pow2
    real :: QMD
    real :: MaxAge
+   real :: Volume
 
    ! leaf area index
    real :: LAI  ! leaf area index
@@ -836,6 +837,7 @@ subroutine summarize_tile(vegn)
   vegn%DBH12      = 0.0
   vegn%DBH12pow2  = 0.0
   vegn%MaxAge     = 0.0
+  vegn%Volume     = 0.0
 
   do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
@@ -860,7 +862,8 @@ subroutine summarize_tile(vegn)
         vegn%DBH     = vegn%DBH      + cc%dbh       * cc%nindivs
         vegn%nindivs = vegn%nindivs  + cc%nindivs
 
-        if (cc%age > vegn%MaxAge)  vegn%MaxAge = cc%age
+        if (cc%age > vegn%MaxAge)     vegn%MaxAge = cc%age
+        if (cc%Volume > vegn%Volume)  vegn%Volume = cc%Volume
 
         if (cc%dbh > 0.12) then
         vegn%DBH12      = vegn%DBH12     + cc%dbh      * cc%nindivs 
@@ -1172,6 +1175,7 @@ end subroutine hourly_diagnostics
       froot = cc%NPProot/treeG
       fwood = cc%NPPwood/treeG
       dDBH  = (cc%DBH - cc%DBH_ys)*1000
+      cc%Volume = (cc%bsw+cc%bHW)/spdata(cc%species)%rho_wood
 
       out_annual_cohorts(i)%year    = iyears
       out_annual_cohorts(i)%cID     = cc%ccID
@@ -1197,7 +1201,7 @@ end subroutine hourly_diagnostics
       out_annual_cohorts(i)%N_uptk  = cc%annualNup*1000
       out_annual_cohorts(i)%N_fix   = cc%annualfixedN*1000
       out_annual_cohorts(i)%maxLAI  = spdata(cc%species)%laimax
-      out_annual_cohorts(i)%Volume  = (cc%bsw+cc%bHW)/spdata(cc%species)%rho_wood
+      out_annual_cohorts(i)%Volume  = cc%Volume
 
     enddo
 
@@ -1267,6 +1271,7 @@ end subroutine hourly_diagnostics
     out_annual_tile%Seedling_C = vegn%totNewCC*1000
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
     out_annual_tile%MaxAge     = vegn%MaxAge
+    out_annual_tile%Volume     = vegn%Volume
 
     ! I cannot figure out why N losing. Hack!
    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)

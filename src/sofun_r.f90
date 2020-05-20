@@ -317,7 +317,7 @@ contains
     output_annual_cohorts_NPP,    &
     output_annual_cohorts_N_uptk, &
     output_annual_cohorts_N_fix,  &
-    output_annual_cohorts_maxLAI,  &
+    output_annual_cohorts_maxLAI, &
     output_annual_cohorts_Volume  &
     ) bind(C, name = "lm3ppa_f_")
 
@@ -852,6 +852,7 @@ contains
     out_annual_tile(49) = dble(annual_tile%Seedling_C)
     out_annual_tile(50) = dble(annual_tile%Seedling_N)
     out_annual_tile(51) = dble(annual_tile%MaxAge)
+    out_annual_tile(52) = dble(annual_tile%Volume)
 
   end subroutine populate_outarray_annual_tile
 
