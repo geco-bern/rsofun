@@ -256,6 +256,7 @@ module md_interface_lm3ppa
     real :: N_uptk
     real :: N_fix
     real :: maxLAI
+    real :: Volume
   end type outtype_annual_cohorts
 
   type outtype_biosphere

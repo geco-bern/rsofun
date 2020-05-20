@@ -166,6 +166,7 @@ type :: cohort_type
 ! for populatin structure
   real    :: nindivs   = 1.0 ! density of vegetation, individuals/m2
   real    :: age       = 0.0 ! age of cohort, years
+  real    :: Volume
   real    :: dbh       = 0.0 ! diameter at breast height, m
   real    :: height    = 0.0 ! vegetation height, m
   real    :: crownarea = 1.0 ! crown area, m2/individual
@@ -1119,13 +1120,14 @@ end subroutine hourly_diagnostics
 !======================================================
   subroutine annual_diagnostics(vegn, iyears, out_annual_cohorts, out_annual_tile)
    
-    use md_interface_lm3ppa, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
+   use md_interface_lm3ppa, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
 
    type(vegn_tile_type), intent(inout) :: vegn
    integer, intent(in) :: iyears
    type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts
    type(outtype_annual_tile) :: out_annual_tile
-   
+   ! type(spec_data_type) :: sp
+
 !   --------local var --------
     type(cohort_type), pointer :: cc
     real treeG, fseed, fleaf, froot,fwood,dDBH
@@ -1158,6 +1160,7 @@ end subroutine hourly_diagnostics
     out_annual_cohorts(:)%N_uptk  = dummy
     out_annual_cohorts(:)%N_fix   = dummy
     out_annual_cohorts(:)%maxLAI  = dummy
+    out_annual_cohorts(:)%Volume  = dummy
 
     ! Cohotrs ouput
     do i = 1, vegn%n_cohorts
@@ -1168,7 +1171,7 @@ end subroutine hourly_diagnostics
       fleaf = cc%NPPleaf/treeG
       froot = cc%NPProot/treeG
       fwood = cc%NPPwood/treeG
-      dDBH  = (cc%DBH - cc%DBH_ys)*1000.
+      dDBH  = (cc%DBH - cc%DBH_ys)*1000
 
       out_annual_cohorts(i)%year    = iyears
       out_annual_cohorts(i)%cID     = cc%ccID
@@ -1194,6 +1197,7 @@ end subroutine hourly_diagnostics
       out_annual_cohorts(i)%N_uptk  = cc%annualNup*1000
       out_annual_cohorts(i)%N_fix   = cc%annualfixedN*1000
       out_annual_cohorts(i)%maxLAI  = spdata(cc%species)%laimax
+      out_annual_cohorts(i)%Volume  = (cc%bsw+cc%bHW)/spdata(cc%species)%rho_wood
 
     enddo
 
