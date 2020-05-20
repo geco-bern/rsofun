@@ -320,6 +320,7 @@ contains
             dBSW =  Nsupplyratio * dBSW
           endif
         endif
+
         ! update carbon pools
         cc%bl     = cc%bl    + dBL
         cc%br     = cc%br    + dBR
@@ -623,7 +624,7 @@ contains
       cc%leafarea= leaf_area_from_biomass(cc%bl,cc%species,cc%layer,cc%firstlayer)
       cc%lai     = cc%leafarea/(cc%crownarea *(1.0-sp%internal_gap_frac))
 
-      ! Update plant size (for grasses)
+      ! Update plant size (for grasses)∫
       !call init_cohort_allometry( cc )
 
       !       put C and N into soil pools:  Substraction of C and N from leaf and root pools
@@ -684,11 +685,13 @@ contains
           deathrate = sp%mortrate_d_c
         endif
       else                    ! for trees
+
+        ! deathrate
         if (cc%layer > 1) then ! Understory layer mortality
-          !            deathrate = sp%mortrate_d_u
-          deathrate = sp%mortrate_d_u * &
-          (1.0 + A_mort*exp(B_mort*cc%dbh))/ &
-          (1.0 +        exp(B_mort*cc%dbh))
+            deathrate = sp%mortrate_d_u * &
+            (1.0 + A_mort*exp(B_mort*cc%dbh))/ &
+            (1.0 +        exp(B_mort*cc%dbh))
+          end if
         else  ! First layer mortality
           if (myinterface%params_siml%do_U_shaped_mortality) then
             deathrate = sp%mortrate_d_c *                 &
