@@ -39,7 +39,7 @@ params_siml <- list(
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "gs_leuning" # or pmodel
+      method_photosynth     = "pmodel" # gs_leuning or pmodel
       )
 ```
 
@@ -172,7 +172,7 @@ forcing <- forcing %>%
   mutate(RAIN = RAIN / dt_secs)
 
 # Changing values of PAR for running simulations
-forcing <- forcing %>% mutate(Swdown = Swdown*1.5) # levels = *1, *1.3 and *1.5
+#forcing <- forcing %>% mutate(Swdown = Swdown*1.15) # levels = *1, *1.15 and *1.30
 
 ```
 
@@ -208,19 +208,49 @@ rsofun_out_daily_cohorts <- out$output_daily_cohorts
 rsofun_out_annual_tile <- out$output_annual_tile
 rsofun_out_annual_cohorts <- out$output_annual_cohorts
 
-out$output_annual_tile %>% 
+rsofun_out_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   labs(title = "LM3-PPA with gs leuning photosynthesis at ORNL", subtitle = "rsofun output")
 
-out$output_daily_tile %>% 
-  mutate(date = lubridate::ymd(paste0(year, "-01-01")) + lubridate::days(doy-1)) %>% 
-  ggplot(aes(x=date, y=GPP)) +
-  geom_line() + 
+rsofun_out_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = Rauto)) +
   labs(title = "LM3-PPA with gs leuning photosynthesis at ORNL", subtitle = "rsofun output")
 
 ```
 
+Run the model for with the p-model photosynthesis.
+```{r}
+out <- run_lm3ppa_f_bysite( "ORNL", 
+                            params_siml, 
+                            siteinfo, 
+                            forcing, # ddf_input
+                            params_tile, 
+                            params_species, 
+                            params_soil, 
+                            init_cohort, 
+                            init_soil, 
+                            makecheck = TRUE)
+
+#save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
+pmodel_out_hourly_tile <- out$output_hourly_tile
+pmodel_out_daily_tile <- out$output_daily_tile
+pmodel_out_daily_cohorts <- out$output_daily_cohorts
+pmodel_out_annual_tile <- out$output_annual_tile
+pmodel_out_annual_cohorts <- out$output_annual_cohorts
+
+pmodel_out_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+pmodel_out_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = Volume)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+```
 
 ### Estimating a mean value for LUE
 

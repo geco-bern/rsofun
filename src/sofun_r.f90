@@ -317,7 +317,8 @@ contains
     output_annual_cohorts_NPP,    &
     output_annual_cohorts_N_uptk, &
     output_annual_cohorts_N_fix,  &
-    output_annual_cohorts_maxLAI  &
+    output_annual_cohorts_maxLAI, &
+    output_annual_cohorts_Volume  &
     ) bind(C, name = "lm3ppa_f_")
 
     !////////////////////////////////////////////////////////////////
@@ -420,7 +421,7 @@ contains
     real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_SW_N
     real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_HW_N
 
-    real(kind=c_double), dimension(nt_annual,nvars_annual_tile), intent(out) :: output_annual_tile ! nvars_annual_tile = 47
+    real(kind=c_double), dimension(nt_annual,nvars_annual_tile), intent(out) :: output_annual_tile ! nvars_annual_tile = 51
 
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_year
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_cID
@@ -446,6 +447,7 @@ contains
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_N_uptk
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_N_fix
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_maxLAI
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Volume
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -690,6 +692,7 @@ contains
         output_annual_cohorts_N_uptk(idx, :)  = dble(out_biosphere%annual_cohorts(:)%N_uptk)
         output_annual_cohorts_N_fix(idx, :)   = dble(out_biosphere%annual_cohorts(:)%N_fix)
         output_annual_cohorts_maxLAI(idx, :)  = dble(out_biosphere%annual_cohorts(:)%maxLAI)
+        output_annual_cohorts_Volume(idx, :)  = dble(out_biosphere%annual_cohorts(:)%Volume)
 
       end if
 
@@ -848,6 +851,8 @@ contains
     out_annual_tile(48) = dble(annual_tile%totseedN)
     out_annual_tile(49) = dble(annual_tile%Seedling_C)
     out_annual_tile(50) = dble(annual_tile%Seedling_N)
+    out_annual_tile(51) = dble(annual_tile%MaxAge)
+    out_annual_tile(52) = dble(annual_tile%Volume)
 
   end subroutine populate_outarray_annual_tile
 
