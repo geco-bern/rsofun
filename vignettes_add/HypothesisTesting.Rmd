@@ -83,8 +83,9 @@ params_species <- tibble(
   # 0: C3; 1: C4
   seedlingsize  = c(0.02,    0.05,     0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05),  
   # initial size of seedlings
-  LMA           = c(0.035,   0.14,     0.14,     0.14,     0.14,   0.14,    0.14,   0.14,     0.14,     0.14,     0.035),
-  # Leaf mass per unit area
+  #LMA           = c(0.035,   0.14,     0.14,     0.14,     0.14,   0.14,    0.14,   0.14,     0.14,     0.14,     0.035),
+  LMA            = c(0.035,   0.035,     0.035,     0.035,     0.035,   0.035,    0.035,   0.035,     0.035,     0.035,     0.035),
+  # Leaf mass per unit area: 0.035, 0.085, 0.135
   #phiRL         = c(8.0,     1.0,      2.0,      3.0,      4.0,     5.0,     6.0,      7.0,     8.0,    9.0,      3.0),
   phiRL          = c(4.0,     4.0,      4.0,      4.0,      4.0,     4.0,     4.0,      4.0,     4.0,    4.0,      4.0), 
   # Root:Shoot ratio:  4.0, 6.0, 8.0
@@ -305,11 +306,11 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea1sb2ma_out_hourly_tile <- out$output_hourly_tile
-ea1sb2ma_out_daily_tile <- out$output_daily_tile
-ea1sb2ma_out_daily_cohorts <- out$output_daily_cohorts
-ea1sb2ma_out_annual_tile <- out$output_annual_tile
-ea1sb2ma_out_annual_cohorts <- out$output_annual_cohorts
+ea1sa3ma_out_hourly_tile <- out$output_hourly_tile
+ea1sa3ma_out_daily_tile <- out$output_daily_tile
+ea1sa3ma_out_daily_cohorts <- out$output_daily_cohorts
+ea1sa3ma_out_annual_tile <- out$output_annual_tile
+ea1sa3ma_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -326,23 +327,47 @@ out$output_daily_tile %>%
 
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea1sb2ma_out_hourly_tile, "ea1sb2ma_out_hourly_tile.csv")
-write.csv(ea1sb2ma_out_daily_tile,"ea1sb2ma_out_daily_tile.csv")
-write.csv(ea1sb2ma_out_daily_cohorts,"ea1sb2ma_out_daily_cohorts.csv")
-write.csv(ea1sb2ma_out_annual_tile,"ea1sb2ma_out_annual_tile.csv")
-write.csv(ea1sb2ma_out_annual_cohorts,"ea1sb2ma_out_annual_cohorts.csv")
+write.csv(ea1sa2ma_out_hourly_tile, "ea1sa2ma_out_hourly_tile.csv")
+write.csv(ea1sa2ma_out_daily_tile,"ea1sca2ma_out_daily_tile.csv")
+write.csv(ea1sa2ma_out_daily_cohorts,"ea1sa2ma_out_daily_cohorts.csv")
+write.csv(ea1sa2ma_out_annual_tile,"ea1sa2ma_out_annual_tile.csv")
+write.csv(ea1sa2ma_out_annual_cohorts,"ea1sa2ma_out_annual_cohorts.csv")
 ```
+
 
 ```{r}
 ggplot() + 
-  geom_line(data=ea1sb1ma_out_annual_tile, aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=ea1sb2ma_out_annual_tile, aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=ea1sb3ma_out_annual_tile, aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_line(data=ea1sa1ma_out_annual_tile[c(1:20),], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea1sa3ma_out_annual_tile[c(1:20),], aes(x=year, y=plantC, color='+15%')) +
+  scale_color_manual("Levels of Leaf Mass Area at LUE 1", breaks = c("Control", "+15%"), values = c("#F8766D" ,"#00BA38"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+ggplot() + 
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea1sa2ma_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  scale_color_manual("Levels of Leaf Mass Area at LUE 1", breaks = c("Control", "+15%"), values = c("#F8766D" ,"#00BA38"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_classic() 
+
+mean(ea1sa1ma_out_annual_tile[c(500:1500),]$plantC)
+sd(ea1sa1ma_out_annual_tile[c(500:1500),]$plantC)
+
+mean(ea1sa2ma_out_annual_tile[c(500:1500),]$plantC)
+sd(ea1sa2ma_out_annual_tile[c(500:1500),]$plantC)
+
+```
+
+
+```{r}
+ggplot() + 
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea1sa2ma_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea1sa3ma_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Leaf Mass Area at LUE 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_classic() 
 ```
-
 
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
@@ -588,21 +613,21 @@ rsofun_out_annual_cohorts <- rsofun_out_annual_cohorts %>% mutate(dbhclass = cut
 
 ea1sa1ma_out_annual_cohorts <- ea1sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
-ea1sa2ma_out_annual_cohorts <- ea1sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea1sa2ma_out_annual_cohorts <- ea1sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,2.5,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
-ea1sa3ma_out_annual_cohorts <- ea1sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea1sa3ma_out_annual_cohorts <- ea1sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,2.5,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
-ea2sa1ma_out_annual_cohorts <- ea2sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea2sa1ma_out_annual_cohorts <- ea2sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,4,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
-ea2sa2ma_out_annual_cohorts <- ea2sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea2sa2ma_out_annual_cohorts <- ea2sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,2,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
-ea2sa3ma_out_annual_cohorts <- ea2sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea2sa3ma_out_annual_cohorts <- ea2sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,2,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
-ea3sa1ma_out_annual_cohorts <- ea3sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea3sa1ma_out_annual_cohorts <- ea3sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,4.5,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
-ea3sa2ma_out_annual_cohorts <- ea3sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea3sa2ma_out_annual_cohorts <- ea3sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,2.5,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
-ea3sa3ma_out_annual_cohorts <- ea3sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea3sa3ma_out_annual_cohorts <- ea3sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,2,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,600,100)))
 
 ea1sb1ma_out_annual_cohorts <- ea1sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,3,0.5))) %>% mutate(basalArea = pi*(dbh/2)*density) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
@@ -944,78 +969,78 @@ hue_pal()(3)
 show_col(hue_pal()(3))
 
 # Changes in LUE with WD level 1
-ggLUE1sa1 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[2]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[5]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[8]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[2]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[5]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[8]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in LUE with WD level 2
-ggLUE1sa2 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[3]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[6]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[9]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE at WD 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[3]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[6]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[9]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE at WD 2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in LUE with WD level 3
-ggLUE1sa3 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[4]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[7]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[10]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE at WD 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[4]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[7]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[10]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE at WD 3", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in LUE with root:shoot level 1
-ggLUE1sb1 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[41]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[44]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[47]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[41]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[44]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[47]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in LUE with root:shoot level 2
-ggLUE1sb2 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[42]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[45]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[48]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE at R:S 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[42]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[45]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[48]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE at R:S 2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in LUE with root:shoot level 3
-ggLUE1sb3 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[43]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[46]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[49]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE at R:S 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[43]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[46]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[49]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE at R:S 3", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 
 # Additional plot for this: B* vs. initial slope of (B vs. t) 
 # Changes in LUE with WD level 1
 
 ggplot() + 
-  geom_line(data=simul_data$simuls[[2]][1:150,], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[5]][1:150,], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[8]][1:150,], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_line(data=simul_data$simuls[[2]][1:150,], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[5]][1:150,], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[8]][1:150,], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ggplot() + 
-  geom_line(data=simul_data$simuls[[2]][1300:1804,], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[5]][1300:1804,], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[8]][1300:1804,], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_line(data=simul_data$simuls[[2]][1300:1804,], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[5]][1300:1804,], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[8]][1300:1804,], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 slope1 <- summary(lm(plantC ~ year, simul_data$simuls[[2]][1:150,]))$coefficients[2,1]
 sd1 <- summary(lm(plantC ~ year, simul_data$simuls[[2]][1:150,]))$coefficients[2,2]
@@ -1032,34 +1057,34 @@ slopes <- c(slope1,slope2,slope3)
 sdSlopes <- c(sd1,sd2,sd3)
 meanBstar <- c(mean1$mean1,mean2$mean2, mean3$mean3)
 sdBstar <- c(mean1$sd1,mean2$sd2, mean3$sd3)
-level <- as.factor(c("Low","Medium","High"))
+level <- as.factor(c("Control","+15%","+30%"))
 dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
 
 ggplot(data=dataSlope) +
   geom_point(aes(x=slopes, y=meanBstar,color=level)) +
   geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
-  scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Additional plot for this: B* vs. initial slope of (B vs. t) 
 # Changes in LUE with R:S level 1
 
 ggplot() + 
-  geom_line(data=simul_data$simuls[[41]][1:150,], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[44]][1:150,], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[47]][1:150,], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_line(data=simul_data$simuls[[41]][1:150,], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[44]][1:150,], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[47]][1:150,], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ggplot() + 
-  geom_line(data=simul_data$simuls[[41]][1300:1804,], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[44]][1300:1804,], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[47]][1300:1804,], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_line(data=simul_data$simuls[[41]][1300:1804,], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[44]][1300:1804,], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[47]][1300:1804,], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 slope1 <- summary(lm(plantC ~ year, simul_data$simuls[[41]][1:150,]))$coefficients[2,1]
 sd1 <- summary(lm(plantC ~ year, simul_data$simuls[[41]][1:150,]))$coefficients[2,2]
@@ -1076,98 +1101,92 @@ slopes <- c(slope1,slope2,slope3)
 sdSlopes <- c(sd1,sd2,sd3)
 meanBstar <- c(mean1$mean1,mean2$mean2, mean3$mean3)
 sdBstar <- c(mean1$sd1,mean2$sd2, mean3$sd3)
-level <- as.factor(c("Low","Medium","High"))
+level <- as.factor(c("Control","Medium","High"))
 dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
 
 ggplot(data=dataSlope) +
   geom_point(aes(x=slopes, y=meanBstar,color=level)) +
   geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
-  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
-```
-
-##### GS
-```{r}
-
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ```
 
 ##### Radiation
 ```{r}
 
 # Changes in Radiation with WD level 1
-ggRad1sa1 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[77]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[80]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[83]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[77]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[80]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[83]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in Radiation with WD level 2
-ggRad1sa2 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[78]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[81]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[84]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at WD 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[78]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[81]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[84]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Radiation at WD 2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in Radiation with WD level 3
-ggRad1sa3 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[79]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[82]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[85]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at WD 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[79]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[82]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[85]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Radiation at WD 3", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in Radiation with root:shoot level 1
-ggRad1sb1 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[113]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[116]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[119]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[113]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[116]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[119]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in Radiation with root:shoot level 2
-ggLRad1sb2 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[114]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[117]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[120]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at R:S 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[114]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[117]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[120]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Radiation at R:S 2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in Radiation with root:shoot level 3
-ggRad1sb3 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[115]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[118]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[121]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at R:S 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[115]], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[118]], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[121]], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Radiation at R:S 3", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
-
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Additional plot for this: B* vs. initial slope of (B vs. t) 
 # Changes in Radiation with WD level 1
 
 ggplot() + 
-  geom_line(data=simul_data$simuls[[77]][1:150,], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[80]][1:150,], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[83]][1:150,], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_line(data=simul_data$simuls[[77]][1:150,], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[80]][1:150,], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[83]][1:150,], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ggplot() + 
-  geom_line(data=simul_data$simuls[[77]][1300:1804,], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[80]][1300:1804,], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[83]][1300:1804,], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_line(data=simul_data$simuls[[77]][1300:1804,], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[80]][1300:1804,], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[83]][1300:1804,], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 slope1 <- summary(lm(plantC ~ year, simul_data$simuls[[77]][1:150,]))$coefficients[2,1]
 sd1 <- summary(lm(plantC ~ year, simul_data$simuls[[77]][1:150,]))$coefficients[2,2]
@@ -1184,34 +1203,34 @@ slopes <- c(slope1,slope2,slope3)
 sdSlopes <- c(sd1,sd2,sd3)
 meanBstar <- c(mean1$mean1,mean2$mean2, mean3$mean3)
 sdBstar <- c(mean1$sd1,mean2$sd2, mean3$sd3)
-level <- as.factor(c("Low","Medium","High"))
+level <- as.factor(c("Control","+15%","+30%"))
 dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
 
 ggplot(data=dataSlope) +
   geom_point(aes(x=slopes, y=meanBstar,color=level)) +
   geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
-  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Additional plot for this: B* vs. initial slope of (B vs. t) 
 # Changes in Radiation with R:S level 1
 
 ggplot() + 
-  geom_line(data=simul_data$simuls[[113]][1:150,], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[116]][1:150,], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[119]][1:150,], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_line(data=simul_data$simuls[[113]][1:150,], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[116]][1:150,], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[119]][1:150,], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ggplot() + 
-  geom_line(data=simul_data$simuls[[113]][1300:1804,], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[116]][1300:1804,], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[119]][1300:1804,], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_line(data=simul_data$simuls[[113]][1300:1804,], aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=simul_data$simuls[[116]][1300:1804,], aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=simul_data$simuls[[119]][1300:1804,], aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 slope1 <- summary(lm(plantC ~ year, simul_data$simuls[[113]][1:150,]))$coefficients[2,1]
 sd1 <- summary(lm(plantC ~ year, simul_data$simuls[[113]][1:150,]))$coefficients[2,2]
@@ -1228,15 +1247,15 @@ slopes <- c(slope1,slope2,slope3)
 sdSlopes <- c(sd1,sd2,sd3)
 meanBstar <- c(mean1$mean1,mean2$mean2, mean3$mean3)
 sdBstar <- c(mean1$sd1,mean2$sd2, mean3$sd3)
-level <- as.factor(c("Low","Medium","High"))
+level <- as.factor(c("Control","+15%","+30%"))
 dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
 
 ggplot(data=dataSlope) +
   geom_point(aes(x=slopes, y=meanBstar,color=level)) +
   geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
-  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ```
 
@@ -1244,58 +1263,58 @@ ggplot(data=dataSlope) +
 ```{r}
 
 # Changes in WD with LUE level 1
-ggWD1ea1 <- ggplot() + 
+ggplot() + 
   geom_line(data=simul_data$simuls[[2]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[3]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[4]], aes(x=year, y=plantC, color='High')) +
   scale_color_manual("Levels of Wood density at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in WD with LUE level 2
-ggWD1ea2 <- ggplot() + 
+ggplot() + 
   geom_line(data=simul_data$simuls[[5]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[6]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[7]], aes(x=year, y=plantC, color='High')) +
   scale_color_manual("Levels of Wood density at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in WD with LUE level 3
-ggWD1ea3 <- ggplot() + 
+ggplot() + 
   geom_line(data=simul_data$simuls[[8]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[9]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[10]], aes(x=year, y=plantC, color='High')) +
   scale_color_manual("Levels of Wood density at LUE 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in WD with Rad level 1
-ggWD1eb1 <- ggplot() + 
+ggplot() + 
   geom_line(data=simul_data$simuls[[77]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[78]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[79]], aes(x=year, y=plantC, color='High')) +
   scale_color_manual("Levels of Wood density at Rad 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in WD with Rad level 2
-ggWD1eb2 <- ggplot() + 
+ggplot() + 
   geom_line(data=simul_data$simuls[[80]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[81]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[82]], aes(x=year, y=plantC, color='High')) +
   scale_color_manual("Levels of Wood density at Rad 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in WD with Rad level 3
-ggWD1eb3 <- ggplot() + 
+ggplot() + 
   geom_line(data=simul_data$simuls[[83]], aes(x=year, y=plantC, color='Low')) + 
   geom_line(data=simul_data$simuls[[84]], aes(x=year, y=plantC, color='Medium')) +
   geom_line(data=simul_data$simuls[[85]], aes(x=year, y=plantC, color='High')) +
   scale_color_manual("Levels of Wood density at Rad 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Additional plot for this: B* vs. initial slope of (B vs. t) 
 
@@ -1305,7 +1324,7 @@ ggplot() +
   geom_line(data=simul_data$simuls[[4]][1:150,], aes(x=year, y=plantC, color='High')) +
   scale_color_manual("Levels of Wood density at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ggplot() + 
   geom_line(data=simul_data$simuls[[2]][1300:1804,], aes(x=year, y=plantC, color='Low')) + 
@@ -1313,7 +1332,7 @@ ggplot() +
   geom_line(data=simul_data$simuls[[4]][1300:1804,], aes(x=year, y=plantC, color='High')) +
   scale_color_manual("Levels of Wood density at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 slope1 <- summary(lm(plantC ~ year, simul_data$simuls[[2]][1:150,]))$coefficients[2,1]
 sd1 <- summary(lm(plantC ~ year, simul_data$simuls[[2]][1:150,]))$coefficients[2,2]
@@ -1338,7 +1357,7 @@ ggplot(data=dataSlope) +
   geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
   scale_color_manual("Levels of Wood density at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ```
 
@@ -1346,77 +1365,76 @@ ggplot(data=dataSlope) +
 ```{r}
 
 # Changes in R:S with LUE level 1
-ggRS1ea1 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[41]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[42]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[43]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[41]], aes(x=year, y=plantC, color='phiRL = 4')) + 
+  geom_line(data=simul_data$simuls[[42]], aes(x=year, y=plantC, color='phiRL = 6')) +
+  geom_line(data=simul_data$simuls[[43]], aes(x=year, y=plantC, color='phiRL = 8')) +
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("phiRL = 4", "phiRL = 6", "phiRL = 8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in R:S with LUE level 2
-ggRS1ea2 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[44]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[45]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[46]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Root:Shoot ratio at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[44]], aes(x=year, y=plantC, color='phiRL = 4')) + 
+  geom_line(data=simul_data$simuls[[45]], aes(x=year, y=plantC, color='phiRL = 6')) +
+  geom_line(data=simul_data$simuls[[46]], aes(x=year, y=plantC, color='phiRL = 8')) +
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 2", breaks = c("phiRL = 4", "phiRL = 6", "phiRL = 8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in R:S with LUE level 3
-ggRS1ea3 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[47]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[48]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[49]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Root:Shoot ratio at LUE 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[47]], aes(x=year, y=plantC, color='phiRL = 4')) + 
+  geom_line(data=simul_data$simuls[[48]], aes(x=year, y=plantC, color='phiRL = 6')) +
+  geom_line(data=simul_data$simuls[[49]], aes(x=year, y=plantC, color='phiRL = 8')) +
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 3", breaks = c("phiRL = 4", "phiRL = 6", "phiRL = 8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in R:S with Rad level 1
-ggRS1eb1 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[113]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[114]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[115]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Root:Shoot ratio at Rad 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[113]], aes(x=year, y=plantC, color='phiRL = 4')) + 
+  geom_line(data=simul_data$simuls[[114]], aes(x=year, y=plantC, color='phiRL = 6')) +
+  geom_line(data=simul_data$simuls[[115]], aes(x=year, y=plantC, color='phiRL = 8')) +
+  scale_color_manual("Levels of Root:Shoot ratio at Rad 1", breaks = c("phiRL = 4", "phiRL = 6", "phiRL = 8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in R:S with Rad level 2
-ggRS1eb2 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[116]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[117]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[118]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Root:Shoot ratio at Rad 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[116]], aes(x=year, y=plantC, color='phiRL = 4')) + 
+  geom_line(data=simul_data$simuls[[117]], aes(x=year, y=plantC, color='phiRL = 6')) +
+  geom_line(data=simul_data$simuls[[118]], aes(x=year, y=plantC, color='phiRL = 8')) +
+  scale_color_manual("Levels of Root:Shoot ratio at Rad 2", breaks = c("phiRL = 4", "phiRL = 6", "phiRL = 8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in R:S with Rad level 3
-ggRS1eb3 <- ggplot() + 
-  geom_line(data=simul_data$simuls[[119]], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[120]], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[121]], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Root:Shoot ratio at Rad 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[119]], aes(x=year, y=plantC, color='phiRL = 4')) + 
+  geom_line(data=simul_data$simuls[[120]], aes(x=year, y=plantC, color='phiRL = 6')) +
+  geom_line(data=simul_data$simuls[[121]], aes(x=year, y=plantC, color='phiRL = 8')) +
+  scale_color_manual("Levels of Root:Shoot ratio at Rad 3", breaks = c("phiRL = 4", "phiRL = 6", "phiRL = 8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
-
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Additional plot for this: B* vs. initial slope of (B vs. t) 
 
 ggplot() + 
-  geom_line(data=simul_data$simuls[[41]][1:150,], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[42]][1:150,], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[43]][1:150,], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_line(data=simul_data$simuls[[41]][1:150,], aes(x=year, y=plantC, color='phiRL = 4')) + 
+  geom_line(data=simul_data$simuls[[42]][1:150,], aes(x=year, y=plantC, color='phiRL = 6')) +
+  geom_line(data=simul_data$simuls[[43]][1:150,], aes(x=year, y=plantC, color='phiRL = 8')) +
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("phiRL = 4", "phiRL = 6", "phiRL = 8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ggplot() + 
-  geom_line(data=simul_data$simuls[[41]][1300:1804,], aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=simul_data$simuls[[42]][1300:1804,], aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=simul_data$simuls[[43]][1300:1804,], aes(x=year, y=plantC, color='High')) +
-  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_line(data=simul_data$simuls[[41]][1300:1804,], aes(x=year, y=plantC, color='phiRL = 4')) + 
+  geom_line(data=simul_data$simuls[[42]][1300:1804,], aes(x=year, y=plantC, color='phiRL = 6')) +
+  geom_line(data=simul_data$simuls[[43]][1300:1804,], aes(x=year, y=plantC, color='phiRL = 8')) +
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("phiRL = 4", "phiRL = 6", "phiRL = 8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 slope1 <- summary(lm(plantC ~ year, simul_data$simuls[[41]][1:150,]))$coefficients[2,1]
 sd1 <- summary(lm(plantC ~ year, simul_data$simuls[[41]][1:150,]))$coefficients[2,2]
@@ -1439,20 +1457,40 @@ dataSlope <- data.frame(level,slopes,sdSlopes,meanBstar,sdBstar)
 ggplot(data=dataSlope) +
   geom_point(aes(x=slopes, y=meanBstar,color=level)) +
   geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
-  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  scale_color_manual("Levels of Root:Shoot ratio at LUE 1", breaks = c("phiRL = 4", "phiRL = 6", "phiRL = 8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ```
 
 
 ##### Stand biomass Plots
 ```{r}
-
 library(ggpubr)
 ggarrange(ggLUE1sa1,ggLUE1sa2,ggLUE1sa3, ncol = 1, nrow = 3, common.legend = T)
+```
+
+##### Crown Area Index over time
+```{r}
+# Changes in LUE with WD level 1
+ggplot() + 
+  geom_line(data=simul_data$simuls[[2]][1:120,], aes(x=year, y=CAI, color='Control')) + 
+  geom_line(data=simul_data$simuls[[5]][1:120,], aes(x=year, y=CAI, color='+15%')) +
+  geom_line(data=simul_data$simuls[[8]][1:120,], aes(x=year, y=CAI, color='+30%')) +
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = "CAI") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+ggplot() + 
+  geom_line(data=simul_data$simuls[[2]], aes(x=year, y=CAI, color='Control')) + 
+  geom_line(data=simul_data$simuls[[5]], aes(x=year, y=CAI, color='+15%')) +
+  geom_line(data=simul_data$simuls[[8]], aes(x=year, y=CAI, color='+30%')) +
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = "CAI") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 ```
+
 
 #### Self-thinning relathionships
 
@@ -1463,80 +1501,111 @@ From new annual_tile_output
 
 # Changes in LUE with WD level 1
 ggplot() + 
-  geom_point(data=simul_data$simuls[[2]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[5]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[8]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[2]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[5]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[8]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(3.5,8)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
-
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[2]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[2]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[5]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[5]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[8]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[8]][50:1804,]))[2], color="#619CFF")
+ 
 ggplot() + 
-  geom_point(data=simul_data$simuls[[2]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
-  geom_point(data=simul_data$simuls[[5]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
-  geom_point(data=simul_data$simuls[[8]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
-  scale_color_manual("Levels of LUE", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[2]][50:1804,], aes(x=QMD, y=Density12, color='Control')) + 
+  geom_point(data=simul_data$simuls[[5]][50:1804,], aes(x=QMD, y=Density12, color='+15%')) +
+  geom_point(data=simul_data$simuls[[8]][50:1804,], aes(x=QMD, y=Density12, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
   theme_classic() 
 
 # Changes in LUE with WD level 2
 ggplot() + 
-  geom_point(data=simul_data$simuls[[3]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[6]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[9]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of LUE at WD 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[3]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[6]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[9]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE at WD 2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(3.5,8)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
-
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[3]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[3]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[6]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[6]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[9]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[9]][50:1804,]))[2], color="#619CFF")
+ 
 # Changes in LUE with WD level 3
 ggplot() + 
-  geom_point(data=simul_data$simuls[[4]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[7]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[10]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of LUE at WD 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[4]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[7]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[10]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE at WD 3", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(3.5,8)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[4]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[4]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[7]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[7]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[10]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[10]][50:1804,]))[2], color="#619CFF")
+ 
 
 # Changes in LUE with R:S level 1
 ggplot() + 
-  geom_point(data=simul_data$simuls[[41]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[44]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[47]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[41]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[44]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[47]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(3.5,8)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[41]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[41]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[44]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[44]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[47]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[47]][50:1804,]))[2], color="#619CFF")
+ 
 
+# Changes in LUE with R:S level 2
 ggplot() + 
-  geom_point(data=simul_data$simuls[[41]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
-  geom_point(data=simul_data$simuls[[44]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
-  geom_point(data=simul_data$simuls[[47]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
-  scale_color_manual("Levels of LUE at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
-  theme_classic() 
-
-# Changes in LUE with WD level 2
-ggplot() + 
-  geom_point(data=simul_data$simuls[[42]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[45]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[48]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of LUE at R:S 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[42]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[45]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[48]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE at R:S 2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(3.5,8)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[42]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[42]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[45]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[45]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[48]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[48]][50:1804,]))[2], color="#619CFF")
+ 
 
-# Changes in LUE with WD level 3
+# Changes in LUE with R:S level 3
 ggplot() + 
-  geom_point(data=simul_data$simuls[[43]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[46]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[49]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of LUE at R:S 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[43]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[46]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[49]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE at R:S 3", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(3.5,8)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
-
-```
-
-##### GS
-```{r}
-
-
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[43]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[43]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[46]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[46]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[49]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[49]][50:1804,]))[2], color="#619CFF")
+ 
 
 ```
 
@@ -1545,74 +1614,113 @@ ggplot() +
 
 # Changes in Radiation with WD level 1
 ggplot() + 
-  geom_point(data=simul_data$simuls[[77]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[80]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[83]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[77]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[80]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[83]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(4,8)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[77]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[77]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[80]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[80]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[83]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[83]][50:1804,]))[2], color="#619CFF") 
 
 ggplot() + 
-  geom_point(data=simul_data$simuls[[77]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
-  geom_point(data=simul_data$simuls[[80]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
-  geom_point(data=simul_data$simuls[[83]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
-  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[77]][50:1804,], aes(x=QMD, y=Density12, color='Control')) + 
+  geom_point(data=simul_data$simuls[[80]][50:1804,], aes(x=QMD, y=Density12, color='+15%')) +
+  geom_point(data=simul_data$simuls[[83]][50:1804,], aes(x=QMD, y=Density12, color='+30%')) +
+  scale_color_manual("Levels of Radiation at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in Radiation with WD level 2
 ggplot() + 
-  geom_point(data=simul_data$simuls[[78]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[81]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[84]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of Radiation at WD 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[78]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[81]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[84]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of Radiation at WD 2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(4.5,8)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[78]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[78]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[81]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[81]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[84]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[84]][50:1804,]))[2], color="#619CFF")
+ 
 
 # Changes in Radiation with WD level 3
 ggplot() + 
-  geom_point(data=simul_data$simuls[[79]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[82]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[85]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of Radiation at WD 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[79]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[82]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[85]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of Radiation at WD 3", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  #scale_y_continuous(limits = c(4,6)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[79]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[79]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[82]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[82]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[85]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[85]][50:1804,]))[2], color="#619CFF")
+ 
 
 # Changes in Radiation with R:S level 1
 ggplot() + 
-  geom_point(data=simul_data$simuls[[113]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[116]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[119]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[113]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[116]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[119]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(4,6)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
-
-ggplot() + 
-  geom_point(data=simul_data$simuls[[113]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
-  geom_point(data=simul_data$simuls[[116]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
-  geom_point(data=simul_data$simuls[[119]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
-  scale_color_manual("Levels of Radiation at R:S 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
-  theme_classic() 
-
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[113]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[113]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[116]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[116]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[119]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[119]][50:1804,]))[2], color="#619CFF")
+ 
 # Changes in Radiation with WD level 2
 ggplot() + 
-  geom_point(data=simul_data$simuls[[114]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[117]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[120]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of Radiation at R:S 2", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[114]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[117]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[120]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of Radiation at R:S 2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(4,6.3)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[114]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[114]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[117]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[117]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[120]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[120]][50:1804,]))[2], color="#619CFF") +
+  stat_regline_equation(
+    aes(label =  paste(..eq.label.., ..adj.rr.label.., sep = "~~~~")),label.x.npc = "left", label.y.npc = "top", size = 2) 
+  
 
 # Changes in Radiation with WD level 3
 ggplot() + 
-  geom_point(data=simul_data$simuls[[115]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[118]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[121]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of Radiation at R:S 3", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_point(data=simul_data$simuls[[115]][50:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=simul_data$simuls[[118]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=simul_data$simuls[[121]][50:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of Radiation at R:S 3", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  scale_y_continuous(limits = c(4,6)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
-
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[115]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[115]][50:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[118]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[118]][50:1804,]))[2], color="#00BA38") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[121]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[121]][50:1804,]))[2], color="#619CFF")
+  
 ```
 
 ##### WD
@@ -1620,140 +1728,227 @@ ggplot() +
 
 # Changes in WD with LUE level 1
 ggplot() + 
-  geom_point(data=simul_data$simuls[[2]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[3]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[4]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of WD at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[2]][50:1804,], aes(x=log(QMD), y=log(Density12), color='300 kgC m-3')) + 
+  geom_point(data=simul_data$simuls[[3]][50:1804,], aes(x=log(QMD), y=log(Density12), color='600 kgC m-3')) +
+  geom_point(data=simul_data$simuls[[4]][50:1804,], aes(x=log(QMD), y=log(Density12), color='900 kgC m-3')) +
+  scale_color_manual("Levels of WD at LUE 1", breaks = c("300 kgC m-3", "600 kgC m-3", "900 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[2]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[2]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[3]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[3]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[4]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[4]][50:1804,]))[2], color="#FC4E07") 
 
 ggplot() + 
-  geom_point(data=simul_data$simuls[[2]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
-  geom_point(data=simul_data$simuls[[3]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
-  geom_point(data=simul_data$simuls[[4]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
-  scale_color_manual("Levels of WD", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[2]][50:1804,], aes(x=QMD, y=Density12, color='300 kgC m-3')) + 
+  geom_point(data=simul_data$simuls[[3]][50:1804,], aes(x=QMD, y=Density12, color='600 kgC m-3')) +
+  geom_point(data=simul_data$simuls[[4]][50:1804,], aes(x=QMD, y=Density12, color='900 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "900 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in WD with LUE level 2
 ggplot() + 
-  geom_point(data=simul_data$simuls[[5]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[6]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[7]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of WD at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[5]][50:1804,], aes(x=log(QMD), y=log(Density12), color='300 kgC m-3')) + 
+  geom_point(data=simul_data$simuls[[6]][50:1804,], aes(x=log(QMD), y=log(Density12), color='600 kgC m-3')) +
+  geom_point(data=simul_data$simuls[[7]][50:1804,], aes(x=log(QMD), y=log(Density12), color='900 kgC m-3')) +
+  scale_color_manual("Levels of WD at LUE 2", breaks = c("300 kgC m-3", "600 kgC m-3", "900 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[5]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[5]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[6]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[6]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[7]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[7]][50:1804,]))[2], color="#FC4E07") 
+
 
 # Changes in WD with LUE level 3
 ggplot() + 
-  geom_point(data=simul_data$simuls[[8]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[9]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[10]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of WD at LUE 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[8]][50:1804,], aes(x=log(QMD), y=log(Density12), color='300 kgC m-3')) + 
+  geom_point(data=simul_data$simuls[[9]][50:1804,], aes(x=log(QMD), y=log(Density12), color='600 kgC m-3')) +
+  geom_point(data=simul_data$simuls[[10]][50:1804,], aes(x=log(QMD), y=log(Density12), color='900 kgC m-3')) +
+  scale_color_manual("Levels of WD at LUE 3", breaks = c("300 kgC m-3", "600 kgC m-3", "900 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[8]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[8]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[9]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[9]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[10]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[10]][50:1804,]))[2], color="#FC4E07") 
+
 
 # Changes in WD with Rad level 1
 ggplot() + 
-  geom_point(data=simul_data$simuls[[77]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[78]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[79]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of WD at Rad 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[77]][50:1804,], aes(x=log(QMD), y=log(Density12), color='300 kgC m-3')) + 
+  geom_point(data=simul_data$simuls[[78]][50:1804,], aes(x=log(QMD), y=log(Density12), color='600 kgC m-3')) +
+  geom_point(data=simul_data$simuls[[79]][50:1804,], aes(x=log(QMD), y=log(Density12), color='900 kgC m-3')) +
+  scale_color_manual("Levels of WD at Rad 1", breaks = c("300 kgC m-3", "600 kgC m-3", "900 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[77]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[77]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[78]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[78]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[79]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[79]][50:1804,]))[2], color="#FC4E07") 
+
 
 # Changes in WD with Rad level 2
 ggplot() + 
-  geom_point(data=simul_data$simuls[[80]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[81]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[82]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of WD at Rad 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[80]][50:1804,], aes(x=log(QMD), y=log(Density12), color='300 kgC m-3')) + 
+  geom_point(data=simul_data$simuls[[81]][50:1804,], aes(x=log(QMD), y=log(Density12), color='600 kgC m-3')) +
+  geom_point(data=simul_data$simuls[[82]][50:1804,], aes(x=log(QMD), y=log(Density12), color='900 kgC m-3')) +
+  scale_color_manual("Levels of WD at Rad 2", breaks = c("300 kgC m-3", "600 kgC m-3", "900 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[80]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[80]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[81]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[81]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[82]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[82]][50:1804,]))[2], color="#FC4E07") 
+
 
 # Changes in WD with Rad level 3
 ggplot() + 
-  geom_point(data=simul_data$simuls[[83]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[84]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[85]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of WD at Rad 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[83]][50:1804,], aes(x=log(QMD), y=log(Density12), color='300 kgC m-3')) + 
+  geom_point(data=simul_data$simuls[[84]][50:1804,], aes(x=log(QMD), y=log(Density12), color='600 kgC m-3')) +
+  geom_point(data=simul_data$simuls[[85]][50:1804,], aes(x=log(QMD), y=log(Density12), color='900 kgC m-3')) +
+  scale_color_manual("Levels of WD at Rad 3", breaks = c("300 kgC m-3", "600 kgC m-3", "900 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[83]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[83]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[84]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[84]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[85]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[85]][50:1804,]))[2], color="#FC4E07") 
+ 
 ```
 
 ##### Root:Shoot ratio
 ```{r}
 # Changes in R:S with LUE level 1
 ggplot() + 
-  geom_point(data=simul_data$simuls[[41]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[42]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[43]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of R:S at LUE 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[41]][80:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL = 4')) + 
+  geom_point(data=simul_data$simuls[[42]][80:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =6')) +
+  geom_point(data=simul_data$simuls[[43]][80:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =8')) +
+  scale_color_manual("Levels of R:S at LUE 1", breaks = c("phiRL = 4", "phiRL =6", "phiRL =8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  scale_y_continuous(limits = c(4.5,8)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[41]][80:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[41]][80:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[42]][80:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[42]][80:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[43]][80:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[43]][80:1804,]))[2], color="#FC4E07") 
 
 ggplot() + 
-  geom_point(data=simul_data$simuls[[41]][1000:1804,], aes(x=QMD, y=Density12, color='Low')) + 
-  geom_point(data=simul_data$simuls[[42]][1000:1804,], aes(x=QMD, y=Density12, color='Medium')) +
-  geom_point(data=simul_data$simuls[[43]][1000:1804,], aes(x=QMD, y=Density12, color='High')) +
-  scale_color_manual("Levels of R:S", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[41]][50:1804,], aes(x=QMD, y=Density12, color='phiRL = 4')) + 
+  geom_point(data=simul_data$simuls[[42]][50:1804,], aes(x=QMD, y=Density12, color='phiRL =6')) +
+  geom_point(data=simul_data$simuls[[43]][50:1804,], aes(x=QMD, y=Density12, color='phiRL =8')) +
+  scale_color_manual("Levels of R:S", breaks = c("phiRL = 4", "phiRL =6", "phiRL =8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(x = "Quadratic Mean Diameter (m)", y = expression(paste("Density (trees ", ha^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Changes in R:S with LUE level 2
 ggplot() + 
-  geom_point(data=simul_data$simuls[[44]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[45]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[46]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of R:S at LUE 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[44]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL = 4')) + 
+  geom_point(data=simul_data$simuls[[45]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =6')) +
+  geom_point(data=simul_data$simuls[[46]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =8')) +
+  scale_color_manual("Levels of R:S at LUE 2", breaks = c("phiRL = 4", "phiRL =6", "phiRL =8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[44]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[44]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[45]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[45]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[46]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[46]][50:1804,]))[2], color="#FC4E07") 
 
 # Changes in R:S with LUE level 3
 ggplot() + 
-  geom_point(data=simul_data$simuls[[47]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[48]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[49]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of R:S at LUE 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[47]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL = 4')) + 
+  geom_point(data=simul_data$simuls[[48]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =6')) +
+  geom_point(data=simul_data$simuls[[49]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =8')) +
+  scale_color_manual("Levels of R:S at LUE 3", breaks = c("phiRL = 4", "phiRL =6", "phiRL =8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[47]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[47]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[48]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[48]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[49]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[49]][50:1804,]))[2], color="#FC4E07") 
 
 # Changes in R:S with Rad level 1
 ggplot() + 
-  geom_point(data=simul_data$simuls[[113]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[114]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[115]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of R:S at Rad 1", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[113]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL = 4')) + 
+  geom_point(data=simul_data$simuls[[114]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =6')) +
+  geom_point(data=simul_data$simuls[[115]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =8')) +
+  scale_color_manual("Levels of R:S at Rad 1", breaks = c("phiRL = 4", "phiRL =6", "phiRL =8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[113]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[113]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[114]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[114]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[115]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[115]][50:1804,]))[2], color="#FC4E07") 
 
 # Changes in R:S with Rad level 2
 ggplot() + 
-  geom_point(data=simul_data$simuls[[116]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[117]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[118]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of R:S at Rad 2", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[116]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL = 4')) + 
+  geom_point(data=simul_data$simuls[[117]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =6')) +
+  geom_point(data=simul_data$simuls[[118]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =8')) +
+  scale_color_manual("Levels of R:S at Rad 2", breaks = c("phiRL = 4", "phiRL =6", "phiRL =8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
-
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[116]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[116]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[117]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[117]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[118]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[118]][50:1804,]))[2], color="#FC4E07") 
+ 
 # Changes in R:S with Rad level 3
 ggplot() + 
-  geom_point(data=simul_data$simuls[[119]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Low')) + 
-  geom_point(data=simul_data$simuls[[120]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='Medium')) +
-  geom_point(data=simul_data$simuls[[121]][1000:1804,], aes(x=log(QMD), y=log(Density12), color='High')) +
-  scale_color_manual("Levels of R:S at Rad 3", breaks = c("Low", "Medium", "High"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  geom_point(data=simul_data$simuls[[119]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL = 4')) + 
+  geom_point(data=simul_data$simuls[[120]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =6')) +
+  geom_point(data=simul_data$simuls[[121]][50:1804,], aes(x=log(QMD), y=log(Density12), color='phiRL =8')) +
+  scale_color_manual("Levels of R:S at Rad 3", breaks = c("phiRL = 4", "phiRL =6", "phiRL =8"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  #scale_y_continuous(limits = c(4.75,5.75)) +
   labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[119]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[119]][50:1804,]))[2], color="#00AFBB") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[120]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[120]][50:1804,]))[2], color="#E7B800") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[121]][50:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = simul_data$simuls[[121]][50:1804,]))[2], color="#FC4E07") 
 
 ```
 
 ##### Self-thinning Plots
 ```{r}
-
 library(ggpubr)
 ggarrange(ggLUE2,ggGS2,ggPAR2, ncol = 3, nrow = 1, common.legend = T)
 ggarrange(ggWD2,ggRSR2,ggVCMAX2, ncol = 3, nrow = 1, common.legend = T)
-
 ```
 
 
@@ -1763,6 +1958,9 @@ From annual_cohort_output: dbh class NPP_yr
 
 ##### LUE
 ```{r}
+library(dplyr)
+library(forcats)
+library(ggridges)
 
 ggplot() + 
   geom_boxplot(data=simul_data$simuls[[12]], aes(x=dbhclass, y=NPP_yr, color='Low')) + 
@@ -1770,19 +1968,55 @@ ggplot() +
   geom_boxplot(data=simul_data$simuls[[18]], aes(x=dbhclass, y=NPP_yr, color='High')) +
   scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+ggplot() + 
+  geom_density_ridges(data=simul_data$simuls[[12]], aes(NPP_yr,dbhclass),alpha = .8, color = "white")+
+  geom_density_ridges(data=simul_data$simuls[[15]], aes(NPP_yr,dbhclass),alpha = .8, color = "black")+
+  geom_density_ridges(data=simul_data$simuls[[18]], aes(NPP_yr,dbhclass),alpha = .8, color = "green")
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "DBH class (m)", y = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+
+simul_data$simuls[[12]]$LevelLUE <- rep(1, dim(simul_data$simuls[[12]])[1])
+simul_data$simuls[[15]]$LevelLUE <- rep(2, dim(simul_data$simuls[[15]])[1])
+simul_data$simuls[[18]]$LevelLUE <- rep(3, dim(simul_data$simuls[[18]])[1])
+
+dataBinLUE <- rbind(simul_data$simuls[[12]][,c(28,23,32)], simul_data$simuls[[15]][,c(28,23,32)], simul_data$simuls[[18]][,c(28,23,32)])
+
+ggplot(dataBinLUE) +  geom_density_ridges(aes(NPP_yr,dbhclass,fill = paste(dbhclass, LevelLUE)),alpha = .6, color = "white")+
+  labs(x = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") ")), y = " DBH class (m)") +
+  scale_y_discrete(expand = c(0, 0)) +  scale_x_continuous(expand = c(0, 0)) + coord_cartesian(clip = "off") + theme_bw() +
+  scale_fill_cyclical(
+    breaks = c("Low", "Medium", "High"),
+    #labels = c(`Low` = "Low", `Medium` = "Medium"),
+    values = c("#F8766D", "#F8766D", "#00BA38", "#00BA38", "#619CFF", "#619CFF"),
+    name = "Option", guide = "legend"
+  ) 
+
+
+
+simul_data$simuls[[12]] <- transform(simul_data$simuls[[12]], dbhclass_num = as.numeric(dbhclass))
+ggplot(data=simul_data$simuls[[12]]) + geom_density_ridges(aes(NPP_yr, dbhclass_num, group=dbhclass_num)) # x is numeric and y is factor
+
+ggplot(data=simul_data$simuls[[18]]) + geom_density_ridges(aes(NPP_yr,dbhclass),alpha = .8, color = "white") + # x is numeric and y is factor
+  labs(x = expression(paste("NPP (Kg C ", m^-2, " " ,yr^-1, ") ")), y = " DBH class (m)") +
+  scale_y_discrete(expand = c(0, 0)) +  scale_x_continuous(expand = c(0, 0)) + coord_cartesian(clip = "off") + theme_bw() 
+ 
+ggplot() + 
+  #geom_density_ridges(data=simul_data$simuls[[12]], aes(NPP_yr,dbhclass),alpha = .8, color = "white") +
+  geom_density_ridges(data=simul_data$simuls[[15]], aes(NPP_yr,dbhclass),alpha = .8, color = "black") 
+
+
+
+
 
 
 # Plot relative enhancement: NPP(level 2) / NPP(level 1) [and NPP(level 3) / NPP(level 1)] per size bin
 
 RelEnan2_1 <- simul_data$simuls[[15]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
 RelEnan3_1 <- simul_data$simuls[[18]]$NPP_yr /simul_data$simuls[[12]]$NPP_yr
-
-```
-
-##### GS
-```{r}
-
 
 ```
 
