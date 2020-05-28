@@ -852,7 +852,8 @@ contains
     out_annual_tile(49) = dble(annual_tile%Seedling_C)
     out_annual_tile(50) = dble(annual_tile%Seedling_N)
     out_annual_tile(51) = dble(annual_tile%MaxAge)
-    out_annual_tile(52) = dble(annual_tile%Volume)
+    out_annual_tile(52) = dble(annual_tile%MaxVolume)
+    out_annual_tile(53) = dble(annual_tile%MaxDBH)
 
   end subroutine populate_outarray_annual_tile
 

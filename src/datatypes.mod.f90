@@ -256,7 +256,8 @@ type :: vegn_tile_type
    real :: DBH12pow2
    real :: QMD
    real :: MaxAge
-   real :: Volume
+   real :: MaxVolume
+   real :: MaxDBH
 
    ! leaf area index
    real :: LAI  ! leaf area index
@@ -837,7 +838,8 @@ subroutine summarize_tile(vegn)
   vegn%DBH12      = 0.0
   vegn%DBH12pow2  = 0.0
   vegn%MaxAge     = 0.0
-  vegn%Volume     = 0.0
+  vegn%MaxVolume  = 0.0
+  vegn%MaxDBH     = 0.0
 
   do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
@@ -862,8 +864,9 @@ subroutine summarize_tile(vegn)
         vegn%DBH     = vegn%DBH      + cc%dbh       * cc%nindivs
         vegn%nindivs = vegn%nindivs  + cc%nindivs
 
-        if (cc%age > vegn%MaxAge)     vegn%MaxAge = cc%age
-        if (cc%Volume > vegn%Volume)  vegn%Volume = cc%Volume
+        if (cc%age    > vegn%MaxAge)       vegn%MaxAge    = cc%age
+        if (cc%Volume > vegn%MaxVolume)    vegn%MaxVolume = cc%Volume
+        if (cc%DBH    > vegn%MaxDBH)       vegn%MaxDBH    = cc%DBH
 
         if (cc%dbh > 0.12) then
         vegn%DBH12      = vegn%DBH12     + cc%dbh      * cc%nindivs 
@@ -1271,7 +1274,8 @@ end subroutine hourly_diagnostics
     out_annual_tile%Seedling_C = vegn%totNewCC*1000
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
     out_annual_tile%MaxAge     = vegn%MaxAge
-    out_annual_tile%Volume     = vegn%Volume
+    out_annual_tile%MaxVolume  = vegn%MaxVolume
+    out_annual_tile%MaxDBH     = vegn%MaxDBH
 
     ! I cannot figure out why N losing. Hack!
    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)

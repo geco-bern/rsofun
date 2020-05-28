@@ -229,7 +229,8 @@ module md_interface_lm3ppa
     real :: Seedling_C
     real :: Seedling_N
     real :: MaxAge
-    real :: Volume
+    real :: MaxVolume
+    real :: MaxDBH
   end type outtype_annual_tile  
 
   type outtype_annual_cohorts ! fno2
