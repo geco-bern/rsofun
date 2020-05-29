@@ -166,6 +166,7 @@ type :: cohort_type
 ! for populatin structure
   real    :: nindivs   = 1.0 ! density of vegetation, individuals/m2
   real    :: age       = 0.0 ! age of cohort, years
+  real    :: Volume    = 0.0
   real    :: dbh       = 0.0 ! diameter at breast height, m
   real    :: height    = 0.0 ! vegetation height, m
   real    :: crownarea = 1.0 ! crown area, m2/individual
@@ -255,6 +256,8 @@ type :: vegn_tile_type
    real :: DBH12pow2
    real :: QMD
    real :: MaxAge
+   real :: MaxVolume
+   real :: MaxDBH
 
    ! leaf area index
    real :: LAI  ! leaf area index
@@ -460,7 +463,7 @@ real :: thetaCA(0:MSPECIES)      = 1.5
 real :: alphaBM(0:MSPECIES)      = 5200.0
 real :: thetaBM(0:MSPECIES)      = 2.5
 
-! Reproduction prarameters
+! Reproduction parameters
 real :: maturalage(0:MSPECIES)   = 5.0  ! year
 real :: v_seed(0:MSPECIES)       = 0.1  ! fraction of allocation to wood+seeds
 real :: seedlingsize(0:MSPECIES) = 0.05 ! kgC
@@ -472,7 +475,7 @@ real :: mortrate_d_c(0:MSPECIES) = 0.01 ! yearly
 real :: mortrate_d_u(0:MSPECIES) = 0.075
 
 ! Leaf parameters
-real :: LMA(0:MSPECIES)          = 0.035  !  leaf mass per unit area, kg C/m2
+! real :: LMA(0:MSPECIES)         = 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2
 !(/0.04,    0.04,    0.035,   0.035,   0.140,  0.032, 0.032,  0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036  /)
 real :: leafLS(0:MSPECIES) = 1.0
 !(/1., 1., 1., 1., 3., 3., 1., 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 /)
@@ -484,7 +487,7 @@ real :: LAImax(0:MSPECIES)        = 3.5 ! maximum LAI for a tree
 real :: LAI_light(0:MSPECIES)     = 4.0 ! maximum LAI limited by light
 real :: tauNSC(0:MSPECIES)        = 3 ! 3 ! NSC residence time,years
 real :: fNSNmax(0:MSPECIES)       = 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
-real :: phiRL(0:MSPECIES)         = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
+! real :: phiRL(0:MSPECIES)       = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
 real :: phiCSA(0:MSPECIES)        = 0.25E-4 ! ratio of sapwood area to leaf area
 ! C/N ratios for plant pools
 real :: CNleaf0(0:MSPECIES)   = 25. ! C/N ratios for leaves
@@ -835,6 +838,8 @@ subroutine summarize_tile(vegn)
   vegn%DBH12      = 0.0
   vegn%DBH12pow2  = 0.0
   vegn%MaxAge     = 0.0
+  vegn%MaxVolume  = 0.0
+  vegn%MaxDBH     = 0.0
 
   do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
@@ -859,7 +864,9 @@ subroutine summarize_tile(vegn)
         vegn%DBH     = vegn%DBH      + cc%dbh       * cc%nindivs
         vegn%nindivs = vegn%nindivs  + cc%nindivs
 
-        if (cc%age > vegn%MaxAge)  vegn%MaxAge = cc%age
+        if (cc%age    > vegn%MaxAge)       vegn%MaxAge    = cc%age
+        if (cc%Volume > vegn%MaxVolume)    vegn%MaxVolume = cc%Volume
+        if (cc%DBH    > vegn%MaxDBH)       vegn%MaxDBH    = cc%DBH
 
         if (cc%dbh > 0.12) then
         vegn%DBH12      = vegn%DBH12     + cc%dbh      * cc%nindivs 
@@ -1119,13 +1126,14 @@ end subroutine hourly_diagnostics
 !======================================================
   subroutine annual_diagnostics(vegn, iyears, out_annual_cohorts, out_annual_tile)
    
-    use md_interface_lm3ppa, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
+   use md_interface_lm3ppa, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
 
    type(vegn_tile_type), intent(inout) :: vegn
    integer, intent(in) :: iyears
    type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts
    type(outtype_annual_tile) :: out_annual_tile
-   
+   ! type(spec_data_type) :: sp
+
 !   --------local var --------
     type(cohort_type), pointer :: cc
     real treeG, fseed, fleaf, froot,fwood,dDBH
@@ -1158,6 +1166,7 @@ end subroutine hourly_diagnostics
     out_annual_cohorts(:)%N_uptk  = dummy
     out_annual_cohorts(:)%N_fix   = dummy
     out_annual_cohorts(:)%maxLAI  = dummy
+    out_annual_cohorts(:)%Volume  = dummy
 
     ! Cohotrs ouput
     do i = 1, vegn%n_cohorts
@@ -1168,7 +1177,8 @@ end subroutine hourly_diagnostics
       fleaf = cc%NPPleaf/treeG
       froot = cc%NPProot/treeG
       fwood = cc%NPPwood/treeG
-      dDBH  = (cc%DBH - cc%DBH_ys)*1000.
+      dDBH  = (cc%DBH - cc%DBH_ys)*1000
+      cc%Volume = (cc%bsw+cc%bHW)/spdata(cc%species)%rho_wood
 
       out_annual_cohorts(i)%year    = iyears
       out_annual_cohorts(i)%cID     = cc%ccID
@@ -1194,6 +1204,7 @@ end subroutine hourly_diagnostics
       out_annual_cohorts(i)%N_uptk  = cc%annualNup*1000
       out_annual_cohorts(i)%N_fix   = cc%annualfixedN*1000
       out_annual_cohorts(i)%maxLAI  = spdata(cc%species)%laimax
+      out_annual_cohorts(i)%Volume  = cc%Volume
 
     enddo
 
@@ -1263,6 +1274,8 @@ end subroutine hourly_diagnostics
     out_annual_tile%Seedling_C = vegn%totNewCC*1000
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
     out_annual_tile%MaxAge     = vegn%MaxAge
+    out_annual_tile%MaxVolume  = vegn%MaxVolume
+    out_annual_tile%MaxDBH     = vegn%MaxDBH
 
     ! I cannot figure out why N losing. Hack!
    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)

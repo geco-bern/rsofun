@@ -652,70 +652,60 @@ contains
   end subroutine Seasonal_fall
 
 
-  subroutine vegn_nat_mortality( vegn, deltat ) ! Include mortality
-    !////////////////////////////////////////////////////////////////
-    ! Mortality
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    ! TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
-    type(vegn_tile_type), intent(inout) :: vegn
-    real, intent(in) :: deltat ! seconds since last mortality calculations, s
+  subroutine vegn_nat_mortality (vegn, deltat)
+   use md_interface_lm3ppa, only: myinterface
+!  TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
+   type(vegn_tile_type), intent(inout) :: vegn
+   real, intent(in) :: deltat ! seconds since last mortality calculations, s
 
-    ! local variables
-    type(cohort_type), pointer :: cc => null()
-    type(spec_data_type),   pointer :: sp
-    real :: deathrate ! mortality rate, 1/year
-    real :: deadtrees ! number of trees that died over the time step
-    integer :: i, k
+   ! ---- local vars
+   type(cohort_type), pointer :: cc => null()
+   real :: deathrate ! mortality rate, 1/year
+   real :: deadtrees ! number of trees that died over the time step
+   integer :: i
 
-    real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
-    ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
+   real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
+   ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
 
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
-      associate ( sp => spdata(cc%species))
-
-      ! mortality rate can be a function of growth rate, age, and environmental
-      ! conditions. Here, we only used two constants for canopy layer and under-
-      ! story layer (mortrate_d_c and mortrate_d_u)
-      if (sp%lifeform==0) then  ! for grasses
-        if (cc%layer > 1) then
-          deathrate = sp%mortrate_d_u
-        else
-          deathrate = sp%mortrate_d_c
-        endif
-      else                    ! for trees
-
-        ! deathrate
-        if (cc%layer > 1) then ! Understory layer mortality
+   do i = 1, vegn%n_cohorts
+     cc => vegn%cohorts(i)
+     associate ( sp => spdata(cc%species))
+     ! mortality rate can be a function of growth rate, age, and environmental
+     ! conditions. Here, we only used two constants for canopy layer and under-
+     ! story layer (mortrate_d_c and mortrate_d_u)
+     if(sp%lifeform==0)then  ! for grasses
+         if(cc%layer > 1) then
+             deathrate = sp%mortrate_d_u
+         else
+             deathrate = sp%mortrate_d_c
+         endif
+     else                    ! for trees
+         if(cc%layer > 1) then ! Understory layer mortality
+!            deathrate = sp%mortrate_d_u
             deathrate = sp%mortrate_d_u * &
-            (1.0 + A_mort*exp(B_mort*cc%dbh))/ &
-            (1.0 +        exp(B_mort*cc%dbh))
-          end if
-        else  ! First layer mortality
-          if (myinterface%params_siml%do_U_shaped_mortality) then
-            deathrate = sp%mortrate_d_c *                 &
-            (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
-            (1. + exp(4.*(cc%dbh-DBHtp))))
-          else
-            deathrate = sp%mortrate_d_c
-          endif
-        endif
-      endif
+                     (1.0 + A_mort*exp(B_mort*cc%dbh))/ &
+                     (1.0 +        exp(B_mort*cc%dbh))
 
-      !deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
-      deadtrees = cc%nindivs * MIN(1.0, deathrate * deltat / seconds_per_year) ! individuals / m2
-
-      ! Carbon and Nitrogen from dead plants to soil pools
-      call plant2soil( vegn, cc ,deadtrees )
-      
-      ! Update plant density
-      cc%nindivs = cc%nindivs - deadtrees
-      end associate
-    enddo
-
-    ! Remove the cohorts with 0 individuals
-    !call kill_lowdensity_cohorts( vegn )
+         else  ! First layer mortality
+            if(myinterface%params_siml%do_U_shaped_mortality)then
+                deathrate = sp%mortrate_d_c *                 &
+                           (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
+                           (1. + exp(4.*(cc%dbh-DBHtp))))
+            else
+                deathrate = sp%mortrate_d_c
+            endif
+         endif
+     endif
+     !deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
+     deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year) ! individuals / m2
+     ! Carbon and Nitrogen from dead plants to soil pools
+     call plant2soil(vegn,cc,deadtrees)
+     ! Update plant density
+     cc%nindivs = cc%nindivs - deadtrees
+     end associate
+   enddo
+  ! Remove the cohorts with 0 individuals
+  !call kill_lowdensity_cohorts(vegn)
 
   end subroutine vegn_nat_mortality
 
