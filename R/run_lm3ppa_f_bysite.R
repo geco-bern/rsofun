@@ -29,7 +29,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
   runyears <- ifelse(params_siml$spinup, (params_siml$spinupyears + params_siml$nyeartrend), params_siml$nyeartrend)
   n_daily  <- params_siml$nyeartrend * 365
 
-  if (params_siml$method_photosynth == "gs_leuning"){
+  # Types of photosynthesis model
+    if (params_siml$method_photosynth == "gs_leuning"){
     code_method_photosynth = 1
   } else if (params_siml$method_photosynth == "pmodel"){
     code_method_photosynth = 2
@@ -38,6 +39,17 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     if (dt_days!=1 && dt_hours != 0) rlang::abort("run_lm3ppa_f_bysite: time step must be daily for P-model photosynthesis setup.")
   } else {
     rlang::abort(paste("run_lm3ppa_f_bysite: params_siml$method_photosynth not recognised:", params_siml$method_photosynth))
+  }
+
+# Types of mortality formulations
+    if (params_siml$method_mortality == "cstarvation"){
+    code_method_mortality = 1
+  } else if (params_siml$method_mortality == "growthrate"){
+    code_method_mortality = 2
+  } else if (params_siml$method_mortality == "dbh"){
+    code_method_mortality = 3
+  } else {
+    rlang::abort(paste("run_lm3ppa_f_bysite: params_siml$method_mortality not recognised:", params_siml$method_mortality))
   }
   
   do_continue <- TRUE
@@ -120,6 +132,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       update_annualLAImax   = as.logical(params_siml$update_annualLAImax),
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
       code_method_photosynth= as.integer(code_method_photosynth),
+      code_method_mortality = as.integer(code_method_mortality),
       
       ## site meta info
       longitude             = as.numeric(siteinfo$lon),

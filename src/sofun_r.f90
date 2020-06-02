@@ -236,7 +236,8 @@ contains
     do_U_shaped_mortality,        &                   
     update_annualLAImax,          &                 
     do_closedN_run,               &            
-    code_method_photosynth,       &            
+    code_method_photosynth,       &
+    code_method_mortality,        &             
     longitude,                    &      
     latitude,                     &     
     altitude,                     &     
@@ -350,6 +351,7 @@ contains
     logical(kind=c_bool), intent(in) :: update_annualLAImax
     logical(kind=c_bool), intent(in) :: do_closedN_run
     integer(kind=c_int),  intent(in) :: code_method_photosynth
+    integer(kind=c_int),  intent(in) :: code_method_mortality
 
     ! site information
     real(kind=c_double),  intent(in) :: longitude
@@ -488,6 +490,15 @@ contains
       myinterface%params_siml%method_photosynth = "gs_leuning"
     else if (code_method_photosynth == 2) then
       myinterface%params_siml%method_photosynth = "pmodel"
+    end if
+
+    ! this needs to be consistent with translation to code in run_lm3ppa_f_bysite.R
+    if (code_method_mortality == 1) then
+      myinterface%params_siml%method_mortality = "cstarvation"
+    else if (code_method_mortality == 2) then
+      myinterface%params_siml%method_mortality = "growthrate"
+    else if (code_method_mortality == 3) then
+      myinterface%params_siml%method_mortality = "dbh"
     end if
 
     !----------------------------------------------------------------

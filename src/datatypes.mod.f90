@@ -217,7 +217,7 @@ type :: cohort_type
   real    :: br_max  = 0.0 ! Max. fine root biomass, kg C/individual
   real    :: CSAsw   = 0.0
   real    :: topyear = 0.0 ! the years that a plant in top layer
-  real    :: DBH_ys             ! DBH at the begining of a year (growing season)
+  real    :: DBH_ys        ! DBH at the begining of a year (growing season)
 
 ! ---- water uptake-related variables
   real    :: root_length(max_lev) ! m
@@ -404,11 +404,11 @@ real :: f_N_add = 0.02 ! re-fill of N for sapwood
 ! Ensheng's growth parameters:
 real :: f_LFR_max =0.85 ! max allocation to leaves and fine roots ! wood_fract_min = 0.15 ! for understory mortality rate is calculated as:
 ! deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
-real :: A_mort     = 9.0   ! A coefficient in understory mortality rate correction, 1/year
+real :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
 real :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
-real :: DBHtp      = 2.0 !  m, for canopy tree's mortality rate
+real :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
 ! for leaf life span and LMA (leafLS = c_LLS * LMA
-real :: c_LLS  = 28.57143 ! yr/ (kg C m-2), 1/LMAs, where LMAs = 0.035
+real :: c_LLS  = 28.57143   ! yr/ (kg C m-2), 1/LMAs, where LMAs = 0.035
 
 ! reduction of bl_max and br_max for the understory vegetation, unitless
 real :: understory_lai_factor = 0.25
@@ -428,7 +428,7 @@ real :: alpha_FR(0:MSPECIES) = 1.2 ! Fine root turnover rate yr-1
 real :: rho_FR(0:MSPECIES) = 200 ! woody density, kgC m-3
 real :: root_r(0:MSPECIES) = 2.9E-4
 !(/1.1e-4, 1.1e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 1.1e-4, 1.1e-4, 2.2e-4, 2.2e-4/)
-real    :: root_zeta(0:MSPECIES) = 0.29 !
+real :: root_zeta(0:MSPECIES) = 0.29 !
 real :: Kw_root(0:MSPECIES)= 6.3E-8 * (1000000.0/18.0)*1.e-6 ! mol /(s m2 Mpa) ! 6.3±3.1×10−8 m s−1 MPa−1
 !(/1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5/)
    ! fine root membrane permeability per unit membrane area, kg/(m3 s).
