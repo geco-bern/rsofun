@@ -676,10 +676,13 @@ contains
      ! story layer (mortrate_d_c and mortrate_d_u)
 
     if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
-          deathrate = 1 / (cc%nsc/cc%bl_max)
+          !deathrate = cc%bl_max/cc%nsc ! equivalent to 1 over the ratio of NSC and leaf mass
+           deathrate = exp(-cc%nsc/cc%bl_max)
 
     else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
-          deathrate = 0!1 + exp(dDBH) 
+          deathrate = sp%mortrate_d_c *              &   !Sigmoid function
+                           (1. + 5.*exp(4.*(dDBH))/  &
+                           (1. + exp(4.*(dDBH)))) 
 
     else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      if(sp%lifeform==0)then  ! for grasses
@@ -691,8 +694,8 @@ contains
      else                    ! for trees
          if(cc%layer > 1) then ! Understory layer mortality
             deathrate = sp%mortrate_d_u * &
-                     (1.0 + A_mort*exp(B_mort*cc%dbh))/ &
-                     (1.0 +        exp(B_mort*cc%dbh))
+                     (1. + A_mort*exp(B_mort*cc%dbh))/ &
+                     (1. +        exp(B_mort*cc%dbh))
 
          else  ! First layer mortality
             if(myinterface%params_siml%do_U_shaped_mortality)then

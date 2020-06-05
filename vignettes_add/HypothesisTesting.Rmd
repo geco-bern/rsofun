@@ -40,7 +40,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "growthrate" # cstarvation or growthrate or dbh
+      method_mortality      = "cstarvation" # cstarvation or growthrate or dbh
       )
 ```
 
@@ -277,6 +277,40 @@ pmodel_out_annual_tile %>%
   labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
 
 ```
+
+
+Run the model for with the p-model photosynthesis.
+```{r}
+out <- run_lm3ppa_f_bysite( "ORNL", 
+                            params_siml, 
+                            siteinfo, 
+                            forcing, # ddf_input
+                            params_tile, 
+                            params_species, 
+                            params_soil, 
+                            init_cohort, 
+                            init_soil, 
+                            makecheck = TRUE)
+
+#save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
+pmodel_out_hourly_tile <- out$output_hourly_tile
+pmodel_out_daily_tile <- out$output_daily_tile
+pmodel_out_daily_cohorts <- out$output_daily_cohorts
+pmodel_out_annual_tile <- out$output_annual_tile
+pmodel_out_annual_cohorts <- out$output_annual_cohorts
+
+pmodel_out_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+pmodel_out_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = Rauto)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+```
+
 
 ### Estimating a mean value for LUE
 
