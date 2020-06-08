@@ -40,13 +40,8 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "cstarvation" # cstarvation or growthrate or dbh
+      method_mortality      = "dbh" # cstarvation or growthrate or dbh
       )
-```
-
-Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters).
-```{r}
-#settings_sims <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
 ```
 
 ### Define model parameters
@@ -55,18 +50,19 @@ Run `prepare_setup_sofun()` to define the simulation settings that contain all t
 
 ```{r}
 params_tile <- list(
-  soiltype     = 3,
-  FLDCAP       = 0.4,
-  WILTPT       = 0.05,
+  soiltype     = 3,    # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
+  FLDCAP       = 0.4,  # soil property: field capacity 
+  WILTPT       = 0.05, # soil property: wilting point
   K1           = 2.0,  # turnover rate of fast SOM per year
-  K2           = 0.1,   # 0.12 # 0.2, # 0.075 # turnover rate of slow SOM per year
-  K_nitrogen   = 0.0, # 1.2 # 2.5 # rate of a year, 2.5
-  etaN         = 0.0, # 0.025 # loss rate with runoff
-  MLmixRatio   = 0.6, # 0.8 # fraction of microbes to litter
-  l_fract      = 0.0,
-  retransN     = 0.0,
-  f_N_add      = 0.02, # 0.005, # 0.02
+  K2           = 0.1,  # turnover rate of slow SOM per year
+  K_nitrogen   = 0.0,  # mineral Nitrogen turnover rate
+  etaN         = 0.0,  # loss rate with runoff
+  MLmixRatio   = 0.6,  # the ratio of C and N returned to litters from microbes
+  l_fract      = 0.0,  # fraction of the carbon retained after leaf drop
+  retransN     = 0.0,  # retranslocation coefficient of Nitrogen
+  f_N_add      = 0.02, # re-fill of N for sapwood
   f_initialBSW = 0.005
+  #LAImin       = 0.02
   # alpha_FR   =  1.2; gamma_FR = 12.0; dSlowSOM = 2.5 * iSOM + 1.5; rho_N_up0 = 0.1
   )
 
@@ -76,19 +72,13 @@ params_tile <- list(
 
 ```{r}
 params_species <- tibble(
-  lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),    
-  # 0: grass; 1 Woody
-  phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),    
-  # 0: Deciduous; 1 Evergreen
-  pt            = c(1,       0,        0,        0,        0,      0,        0,        0,      0,        0,        0),    
-  # 0: C3; 1: C4
-  seedlingsize  = c(0.02,    0.05,     0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05),  
-  # initial size of seedlings
-  #LMA           = c(0.035,   0.14,     0.14,     0.14,     0.14,   0.14,    0.14,   0.14,     0.14,     0.14,     0.035),
-  LMA            = c(0.035,   0.035,     0.035,     0.035,     0.035,   0.035,    0.035,   0.035,     0.035,     0.035,     0.035),
+  lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),  # 0: grass; 1 Woody
+  phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),  # 0: Deciduous; 1 Evergreen
+  pt            = c(1,       0,        0,        0,        0,      0,        0,        0,      0,        0,        0),  # 0: C3; 1: C4
+  seedlingsize  = c(0.02,    0.05,     0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05), # initial size of seedlings
+  LMA           = c(0.035,   0.14,     0.14,     0.14,     0.14,   0.14,    0.14,      0.14,   0.14,     0.14,     0.035),
   # Leaf mass per unit area: 0.035, 0.085, 0.135
-  #phiRL         = c(4.0,     1.0,      2.0,      3.0,      4.0,     5.0,     6.0,      7.0,     8.0,    9.0,      3.0),
-  phiRL          = c(4.0,     4.0,      4.0,      4.0,      4.0,     4.0,     4.0,      4.0,     4.0,    4.0,      4.0), 
+  phiRL         = c(4.0,     1.0,      2.0,      3.0,      4.0,     5.0,     6.0,      7.0,   8.0,       9.0,      3.0),
   # Root:Shoot ratio:  4.0, 6.0, 8.0
   LNbase        = c(0.8E-3,  0.8E-3,   0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3),   
   # kgN m-2 leaf, Vmax = 0.03125*LNbase
@@ -311,21 +301,6 @@ pmodel_out_annual_tile %>%
 
 ```
 
-
-### Estimating a mean value for LUE
-
-LUE = Annual sum GPP / Annual sum PAR
-```{r}
-
-Annual_sum_GPP <- rsofun_out_annual_tile  %>% filter (year >= 1794)  %>% summarise_at(c("GPP"), sum, na.rm = TRUE)
-Annual_sum_PAR <- forcing %>% summarise_at(c("PAR"), sum, na.rm = TRUE)
-
-LUE <- Annual_sum_GPP/Annual_sum_PAR
-
-```
-
-See that this LUE is a lower value and produces much higher biomass than previous. We consider 1e-08 as LUE level 1.
-
 ### Run the model
 
 Run the model for all environmental conditions, species and mortality formulations.
@@ -341,11 +316,11 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea1sb3ma_out_hourly_tile <- out$output_hourly_tile
-ea1sb3ma_out_daily_tile <- out$output_daily_tile
-ea1sb3ma_out_daily_cohorts <- out$output_daily_cohorts
-ea1sb3ma_out_annual_tile <- out$output_annual_tile
-ea1sb3ma_out_annual_cohorts <- out$output_annual_cohorts
+ea1sa1mb_out_hourly_tile <- out$output_hourly_tile
+ea1sa1mb_out_daily_tile <- out$output_daily_tile
+ea1sa1mb_out_daily_cohorts <- out$output_daily_cohorts
+ea1sa1mb_out_annual_tile <- out$output_annual_tile
+ea1sa1mb_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -362,11 +337,11 @@ out$output_daily_tile %>%
 
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea1sb3ma_out_hourly_tile, "ea1sb3ma_out_hourly_tile.csv")
-write.csv(ea1sb3ma_out_daily_tile,"ea1scb3ma_out_daily_tile.csv")
-write.csv(ea1sb3ma_out_daily_cohorts,"ea1sb3ma_out_daily_cohorts.csv")
-write.csv(ea1sb3ma_out_annual_tile,"ea1sb3ma_out_annual_tile.csv")
-write.csv(ea1sb3ma_out_annual_cohorts,"ea1sb3ma_out_annual_cohorts.csv")
+write.csv(ea1sa1mb_out_hourly_tile, "ea1sa1mb_out_hourly_tile.csv")
+write.csv(ea1sa1mb_out_daily_tile,"ea1sa1mb_out_daily_tile.csv")
+write.csv(ea1sa1mb_out_daily_cohorts,"ea1sa1mb_out_daily_cohorts.csv")
+write.csv(ea1sa1mb_out_annual_tile,"ea1sa1mb_out_annual_tile.csv")
+write.csv(ea1sa1mb_out_annual_cohorts,"ea1sa1mb_out_annual_cohorts.csv")
 ```
 
 ```{r}
@@ -540,6 +515,12 @@ eb3sb3ma_out_daily_cohorts  <- read.csv("eb3sb3ma_out_daily_cohorts.csv")
 eb3sb3ma_out_annual_tile  <- read.csv("eb3sb3ma_out_annual_tile.csv")
 eb3sb3ma_out_annual_cohorts  <- read.csv("eb3sb3ma_out_annual_cohorts.csv")
 
+ea1sa1mb_out_hourly_tile <- read.csv("ea1sa1mb_out_hourly_tile.csv")
+ea1sa1mb_out_daily_tile  <- read.csv("ea1sa1mb_out_daily_tile.csv")
+ea1sa1mb_out_daily_cohorts  <- read.csv("ea1sa1mb_out_daily_cohorts.csv")
+ea1sa1mb_out_annual_tile  <- read.csv("ea1sa1mb_out_annual_tile.csv")
+ea1sa1mb_out_annual_cohorts  <- read.csv("ea1sa1mb_out_annual_cohorts.csv")
+
 ```
 
 Same models for conditions by default
@@ -620,81 +601,84 @@ eb3sb1ma_out_annual_cohorts <- eb3sa1ma_out_annual_cohorts
 rsofun_out_annual_cohorts <- rsofun_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE))
 
-ea1sa1ma_out_annual_cohorts <- ea1sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea1sa1ma_out_annual_cohorts <- ea1sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(1, dim(ea1sa1ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1ma_out_annual_cohorts)[1]))
-ea1sa2ma_out_annual_cohorts <- ea1sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea1sa2ma_out_annual_cohorts <- ea1sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(1, dim(ea1sa2ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(2, dim(ea1sa2ma_out_annual_cohorts)[1]))
-ea1sa3ma_out_annual_cohorts <- ea1sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea1sa3ma_out_annual_cohorts <- ea1sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(1, dim(ea1sa3ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(3, dim(ea1sa3ma_out_annual_cohorts)[1]))
-ea2sa1ma_out_annual_cohorts <- ea2sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea2sa1ma_out_annual_cohorts <- ea2sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(2, dim(ea2sa1ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_cohorts)[1]))
-ea2sa2ma_out_annual_cohorts <- ea2sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea2sa2ma_out_annual_cohorts <- ea2sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(2, dim(ea2sa2ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(2, dim(ea2sa2ma_out_annual_cohorts)[1]))
-ea2sa3ma_out_annual_cohorts <- ea2sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea2sa3ma_out_annual_cohorts <- ea2sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(2, dim(ea2sa3ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(3, dim(ea2sa3ma_out_annual_cohorts)[1]))
-ea3sa1ma_out_annual_cohorts <- ea3sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea3sa1ma_out_annual_cohorts <- ea3sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(3, dim(ea3sa1ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1ma_out_annual_cohorts)[1]))
-ea3sa2ma_out_annual_cohorts <- ea3sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea3sa2ma_out_annual_cohorts <- ea3sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(3, dim(ea3sa2ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(2, dim(ea3sa2ma_out_annual_cohorts)[1]))
-ea3sa3ma_out_annual_cohorts <- ea3sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea3sa3ma_out_annual_cohorts <- ea3sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(3, dim(ea3sa3ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(3, dim(ea3sa3ma_out_annual_cohorts)[1]))
 
-ea1sb1ma_out_annual_cohorts <- ea1sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea1sb1ma_out_annual_cohorts <- ea1sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(1, dim(ea1sb1ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(1, dim(ea1sb1ma_out_annual_cohorts)[1]))
-ea1sb2ma_out_annual_cohorts <- ea1sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea1sb2ma_out_annual_cohorts <- ea1sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(1, dim(ea1sb2ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(2, dim(ea1sb2ma_out_annual_cohorts)[1]))
-ea1sb3ma_out_annual_cohorts <- ea1sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea1sb3ma_out_annual_cohorts <- ea1sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(1, dim(ea1sb3ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(3, dim(ea1sb3ma_out_annual_cohorts)[1]))
-ea2sb1ma_out_annual_cohorts <- ea2sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea2sb1ma_out_annual_cohorts <- ea2sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>%mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(2, dim(ea2sb1ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(1, dim(ea2sb1ma_out_annual_cohorts)[1]))
-ea2sb2ma_out_annual_cohorts <- ea2sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea2sb2ma_out_annual_cohorts <- ea2sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>%mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(2, dim(ea2sb2ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(2, dim(ea2sb2ma_out_annual_cohorts)[1]))
-ea2sb3ma_out_annual_cohorts <- ea2sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea2sb3ma_out_annual_cohorts <- ea2sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(2, dim(ea2sb3ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(3, dim(ea2sb3ma_out_annual_cohorts)[1]))
-ea3sb1ma_out_annual_cohorts <- ea3sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea3sb1ma_out_annual_cohorts <- ea3sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(3, dim(ea3sb1ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(1, dim(ea3sb1ma_out_annual_cohorts)[1]))
-ea3sb2ma_out_annual_cohorts <- ea3sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea3sb2ma_out_annual_cohorts <- ea3sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(3, dim(ea3sb2ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(2, dim(ea3sb2ma_out_annual_cohorts)[1]))
-ea3sb3ma_out_annual_cohorts <- ea3sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+ea3sb3ma_out_annual_cohorts <- ea3sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(3, dim(ea3sb3ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(3, dim(ea3sb3ma_out_annual_cohorts)[1]))
 
-eb1sa1ma_out_annual_cohorts <- eb1sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb1sa1ma_out_annual_cohorts <- eb1sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(1, dim(eb1sa1ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(1, dim(eb1sa1ma_out_annual_cohorts)[1]))
-eb1sa2ma_out_annual_cohorts <- eb1sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb1sa2ma_out_annual_cohorts <- eb1sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(1, dim(eb1sa2ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(2, dim(eb1sa2ma_out_annual_cohorts)[1]))
-eb1sa3ma_out_annual_cohorts <- eb1sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb1sa3ma_out_annual_cohorts <- eb1sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(1, dim(eb1sa3ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(3, dim(eb1sa3ma_out_annual_cohorts)[1]))
-eb2sa1ma_out_annual_cohorts <- eb2sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb2sa1ma_out_annual_cohorts <- eb2sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(2, dim(eb2sa1ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(1, dim(eb2sa1ma_out_annual_cohorts)[1]))
-eb2sa2ma_out_annual_cohorts <- eb2sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb2sa2ma_out_annual_cohorts <- eb2sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(2, dim(eb2sa2ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(2, dim(eb2sa2ma_out_annual_cohorts)[1]))
-eb2sa3ma_out_annual_cohorts <- eb2sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb2sa3ma_out_annual_cohorts <- eb2sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(2, dim(eb2sa3ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(3, dim(eb2sa3ma_out_annual_cohorts)[1]))
-eb3sa1ma_out_annual_cohorts <- eb3sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb3sa1ma_out_annual_cohorts <- eb3sa1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(3, dim(eb3sa1ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(1, dim(eb3sa1ma_out_annual_cohorts)[1]))
-eb3sa2ma_out_annual_cohorts <- eb3sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb3sa2ma_out_annual_cohorts <- eb3sa2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(3, dim(eb3sa2ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(2, dim(eb3sa2ma_out_annual_cohorts)[1]))
-eb3sa3ma_out_annual_cohorts <- eb3sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb3sa3ma_out_annual_cohorts <- eb3sa3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(3, dim(eb3sa3ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(3, dim(eb3sa3ma_out_annual_cohorts)[1]))
 
-eb1sb1ma_out_annual_cohorts <- eb1sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2))%>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb1sb1ma_out_annual_cohorts <- eb1sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2))%>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(1, dim(eb1sb1ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(1, dim(eb1sb1ma_out_annual_cohorts)[1]))
-eb1sb2ma_out_annual_cohorts <- eb1sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb1sb2ma_out_annual_cohorts <- eb1sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(1, dim(eb1sb2ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(2, dim(eb1sb2ma_out_annual_cohorts)[1]))
-eb1sb3ma_out_annual_cohorts <- eb1sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb1sb3ma_out_annual_cohorts <- eb1sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(1, dim(eb1sb3ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(3, dim(eb1sb3ma_out_annual_cohorts)[1]))
-eb2sb1ma_out_annual_cohorts <- eb2sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb2sb1ma_out_annual_cohorts <- eb2sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(2, dim(eb2sb1ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(1, dim(eb2sb1ma_out_annual_cohorts)[1]))
-eb2sb2ma_out_annual_cohorts <- eb2sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb2sb2ma_out_annual_cohorts <- eb2sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(2, dim(eb2sb2ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(2, dim(eb2sb2ma_out_annual_cohorts)[1]))
-eb2sb3ma_out_annual_cohorts <- eb2sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb2sb3ma_out_annual_cohorts <- eb2sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(2, dim(eb2sb3ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(3, dim(eb2sb3ma_out_annual_cohorts)[1]))
-eb3sb1ma_out_annual_cohorts <- eb3sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb3sb1ma_out_annual_cohorts <- eb3sb1ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(3, dim(eb3sb1ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(1, dim(eb3sb1ma_out_annual_cohorts)[1]))
-eb3sb2ma_out_annual_cohorts <- eb3sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb3sb2ma_out_annual_cohorts <- eb3sb2ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(3, dim(eb3sb2ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(2, dim(eb3sb2ma_out_annual_cohorts)[1]))
-eb3sb3ma_out_annual_cohorts <- eb3sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+eb3sb3ma_out_annual_cohorts <- eb3sb3ma_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>%  mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
   ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelPAR = rep(3, dim(eb3sb3ma_out_annual_cohorts)[1])) %>% mutate(LevelRS = rep(3, dim(eb3sb3ma_out_annual_cohorts)[1]))
+
+ea1sa1mb_out_annual_cohorts <- ea1sa1mb_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = seq(0,10,0.5),include.lowest = TRUE)) %>% mutate(ageclass = cut(age ,breaks = seq(0,500,50),include.lowest = TRUE)) %>% mutate(basalArea = pi*(dbh/2)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = seq(0,40,2),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(1, dim(ea1sa1ma_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1ma_out_annual_cohorts)[1]))
 
 rsofun_out_annual_cohortsMax <- rsofun_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
 
@@ -738,6 +722,8 @@ eb3sb1ma_out_annual_cohortsMax <- eb3sb1ma_out_annual_cohorts %>% group_by(year)
 eb3sb2ma_out_annual_cohortsMax <- eb3sb2ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
 eb3sb3ma_out_annual_cohortsMax <- eb3sb3ma_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge)
 
+ea1sa1mb_out_annual_cohortsMax <- ea1sa1mb_out_annual_cohorts %>% group_by(year) %>% summarize(maxAge = max(age), DBHmaxAge = dbh[which.max(age)]) %>% mutate(GrowthRate = DBHmaxAge/maxAge) 
+
 rsofun_out_annual_cohortsDBHClass <- rsofun_out_annual_cohorts %>% group_by(dbhclass,year) %>% summarize(NPP_yr_aggr = mean(NPP_yr))
 
 ea1sa1ma_out_annual_cohortsDBHClass <- ea1sa1ma_out_annual_cohorts %>% group_by(dbhclass,year) %>% summarize(NPP_yr_aggr = mean(NPP_yr))
@@ -779,6 +765,8 @@ eb2sb3ma_out_annual_cohortsDBHClass <- eb2sb3ma_out_annual_cohorts %>% group_by(
 eb3sb1ma_out_annual_cohortsDBHClass <- eb3sb1ma_out_annual_cohorts %>% group_by(dbhclass,year) %>% summarize(NPP_yr_aggr = mean(NPP_yr))
 eb3sb2ma_out_annual_cohortsDBHClass <- eb3sb2ma_out_annual_cohorts %>% group_by(dbhclass,year) %>% summarize(NPP_yr_aggr = mean(NPP_yr))
 eb3sb3ma_out_annual_cohortsDBHClass <- eb3sb3ma_out_annual_cohorts %>% group_by(dbhclass,year) %>% summarize(NPP_yr_aggr = mean(NPP_yr))
+
+ea1sa1mb_out_annual_cohortsDBHClass <- ea1sa1mb_out_annual_cohorts %>% group_by(dbhclass,year) %>% summarize(NPP_yr_aggr = mean(NPP_yr))
 
 rsofun_out_annual_cohortsHighBAClass <- rsofun_out_annual_cohorts %>% group_by(highBAclass,year) %>% summarize(NPP_yr_aggr = mean(NPP_yr))
 
@@ -822,6 +810,8 @@ eb3sb1ma_out_annual_cohortsHighBAClass <- eb3sb1ma_out_annual_cohorts %>% group_
 eb3sb2ma_out_annual_cohortsHighBAClass <- eb3sb2ma_out_annual_cohorts %>% group_by(highBAclass,year) %>% summarize(NPP_yr_aggr = mean(NPP_yr))
 eb3sb3ma_out_annual_cohortsHighBAClass <- eb3sb3ma_out_annual_cohorts %>% group_by(highBAclass,year) %>% summarize(NPP_yr_aggr = mean(NPP_yr))
 
+ea1sa1mb_out_annual_cohortsHighBAClass <- ea1sa1mb_out_annual_cohorts %>% group_by(highBAclass,year) %>% summarize(NPP_yr_aggr = mean(NPP_yr))
+
 rsofun_out_annual_cohortsMaxAgg <- tibble(rsofun_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,rsofun_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
 
 ea1sa1ma_out_annual_cohortsMaxAgg <- tibble(ea1sa1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea1sa1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
@@ -863,6 +853,8 @@ eb2sb3ma_out_annual_cohortsMaxAgg <- tibble(eb2sb3ma_out_annual_cohortsMax %>% s
 eb3sb1ma_out_annual_cohortsMaxAgg <- tibble(eb3sb1ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb3sb1ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
 eb3sb2ma_out_annual_cohortsMaxAgg <- tibble(eb3sb2ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb3sb2ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
 eb3sb3ma_out_annual_cohortsMaxAgg <- tibble(eb3sb3ma_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,eb3sb3ma_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
+
+ea1sa1mb_out_annual_cohortsMaxAgg <- tibble(ea1sa1mb_out_annual_cohortsMax %>% summarise(maxAge_mean=mean(maxAge,na.rm=T), sdmaxAge=sd(maxAge,na.rm=T)) ,ea1sa1mb_out_annual_cohortsMax %>% summarise(meanGR=mean(GrowthRate,na.rm=T), sdGR=sd(GrowthRate,na.rm=T)))
 
 dataBinLUE_cohortsDBHClassJoin_2_1 <- ea1sa1ma_out_annual_cohortsDBHClass %>% inner_join(ea2sa1ma_out_annual_cohortsDBHClass, 
 by = c("dbhclass", "year"))  %>% mutate(RelEnan2_1 = NPP_yr_aggr.y/NPP_yr_aggr.x)
@@ -1098,6 +1090,90 @@ simul_data <- tibble(
 ```
 
 ### Exploring relationships and plotting
+
+#### Distribution of tree sizes
+
+From annual_cohort_output: dbh class 
+
+##### LUE
+```{r}
+library(dplyr)
+library(forcats)
+library(ggridges)
+
+dataforplot <- rbind(simul_data$simuls[[12]],simul_data$simuls[[15]],simul_data$simuls[[18]])
+
+ggplot(subset(dataforplot,dbhclass!="[0,0.5]")) + geom_bar(aes(fill=as.factor(LevelLUE), x=dbhclass, y=density), position="dodge", stat="identity")+
+    labs(x = "DBH class (m)", y = expression(paste("Density (indiv", " " ,ha^-1, ") "))) +
+    scale_fill_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE at WD 1", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+ggplot(subset(dataforplot,ageclass!="[0,50]")) + geom_bar(aes(fill=as.factor(LevelLUE), x=ageclass, y=density), position="dodge", stat="identity")+
+    labs(x = "DBH class (m)", y = expression(paste("Density (indiv", " " ,ha^-1, ") "))) +
+    scale_fill_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE at WD 1", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+```
+
+##### PAR
+```{r}
+library(dplyr)
+library(forcats)
+library(ggridges)
+
+dataforplot <- rbind(simul_data$simuls[[86]],simul_data$simuls[[89]],simul_data$simuls[[92]])
+
+ggplot(subset(dataforplot,dbhclass!="[0,0.5]")) + geom_bar(aes(fill=as.factor(LevelPAR), x=dbhclass, y=density), position="dodge", stat="identity")+
+    labs(x = "DBH class (m)", y = expression(paste("Density (indiv", " " ,ha^-1, ") "))) +
+    scale_fill_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of PAR at WD 1", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+ggplot(subset(dataforplot,ageclass!="[0,50]")) + geom_bar(aes(fill=as.factor(LevelPAR), x=ageclass, y=density), position="dodge", stat="identity")+
+    labs(x = "DBH class (m)", y = expression(paste("Density (indiv", " " ,ha^-1, ") "))) +
+    scale_fill_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of PAR at WD 1", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+```
+
+##### WD
+```{r}
+library(dplyr)
+library(forcats)
+library(ggridges)
+
+dataforplot <- rbind(simul_data$simuls[[12]],simul_data$simuls[[13]],simul_data$simuls[[14]])
+
+ggplot(subset(dataforplot,dbhclass!="[0,0.5]")) + geom_bar(aes(fill=as.factor(LevelWD), x=dbhclass, y=density), position="dodge", stat="identity")+
+    labs(x = "DBH class (m)", y = expression(paste("Density (indiv", " " ,ha^-1, ") "))) +
+    scale_fill_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of WD at LUE 1", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+ggplot(subset(dataforplot,ageclass!="[0,50]")) + geom_bar(aes(fill=as.factor(LevelWD), x=ageclass, y=density), position="dodge", stat="identity")+
+    labs(x = "DBH class (m)", y = expression(paste("Density (indiv", " " ,ha^-1, ") "))) +
+    scale_fill_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of WD at LUE 1", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+```
+
+##### RS
+```{r}
+library(dplyr)
+library(forcats)
+library(ggridges)
+
+dataforplot <- rbind(simul_data$simuls[[50]],simul_data$simuls[[51]],simul_data$simuls[[52]])
+
+ggplot(subset(dataforplot,dbhclass!="[0,0.5]")) + geom_bar(aes(fill=as.factor(LevelRS), x=dbhclass, y=density), position="dodge", stat="identity")+
+    labs(x = "DBH class (m)", y = expression(paste("Density (indiv", " " ,ha^-1, ") "))) +
+    scale_fill_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of R:S at LUE 1", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+ggplot(subset(dataforplot,ageclass!="[0,50]")) + geom_bar(aes(fill=as.factor(LevelRS), x=ageclass, y=density), position="dodge", stat="identity")+
+    labs(x = "DBH class (m)", y = expression(paste("Density (indiv", " " ,ha^-1, ") "))) +
+    scale_fill_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of R:S at LUE 1", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+```
 
 #### Stand develop: Stand biomass vs. time
 

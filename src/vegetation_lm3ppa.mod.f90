@@ -676,8 +676,11 @@ contains
      ! story layer (mortrate_d_c and mortrate_d_u)
 
     if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
-          !deathrate = cc%bl_max/cc%nsc ! equivalent to 1 over the ratio of NSC and leaf mass
-           deathrate = exp(-cc%nsc/cc%bl_max)
+          ! deathrate = cc%bl_max/cc%nsc ! equivalent to 1 over the ratio of NSC and leaf mass
+          ! deathrate = exp(-cc%nsc/cc%bl_max)
+          deathrate = sp%mortrate_d_c *              &   !Sigmoid function
+                           (1. + 5.*exp(4.*(cc%bl_max/cc%nsc))/  &
+                           (1. + exp(4.*(cc%bl_max/cc%nsc)))) 
 
     else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           deathrate = sp%mortrate_d_c *              &   !Sigmoid function
