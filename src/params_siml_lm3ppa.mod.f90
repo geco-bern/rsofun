@@ -31,6 +31,7 @@ module md_params_siml_lm3ppa
     logical :: do_closedN_run
 
     character(len=30) :: method_photosynth
+    character(len=30) :: method_mortality
 
   end type paramstype_siml
 

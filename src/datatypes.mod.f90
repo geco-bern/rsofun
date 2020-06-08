@@ -217,7 +217,7 @@ type :: cohort_type
   real    :: br_max  = 0.0 ! Max. fine root biomass, kg C/individual
   real    :: CSAsw   = 0.0
   real    :: topyear = 0.0 ! the years that a plant in top layer
-  real    :: DBH_ys             ! DBH at the begining of a year (growing season)
+  real    :: DBH_ys        ! DBH at the begining of a year (growing season)
 
 ! ---- water uptake-related variables
   real    :: root_length(max_lev) ! m
@@ -354,7 +354,6 @@ type :: soil_prog_type
   real T
 end type soil_prog_type
 
-
 type :: soil_tile_type
    integer :: tag ! kind of the soil
    type(soil_pars_type) :: pars
@@ -371,8 +370,6 @@ type :: soil_tile_type
    real, pointer :: psi(:) ! soil water potential
 end type soil_tile_type
 
-! Input forcing data
-!type(climate_data_type),pointer, save :: forcingData(:)
 ! PFT-specific parameters
 type(spec_data_type), save :: spdata(0:MSPECIES) ! define PFTs
 ! Soil
@@ -383,32 +380,32 @@ integer :: MaxCohortID = 0
 
 ! Constants:
 ! Soil water properties
-real   :: soiltype = SandyLoam  ! 1 Sand; 2
-real   :: FLDCAP = 0.4  ! vol/vol
-real   :: WILTPT = 0.05 ! vol/vol
+! real   :: soiltype = SandyLoam  ! 1 Sand; 2
+real   :: FLDCAP != 0.4  ! vol/vol
+real   :: WILTPT != 0.05 ! vol/vol
 ! Carbon pools
-real :: K1 = 2 ! Fast soil C decomposition rate (yr-1)
-real :: K2 = 0.05 ! slow soil C decomposition rate (yr-1)
-real :: K_nitrogen = 8.0     ! mineral Nitrogen turnover rate
-real :: MLmixRatio = 0.8     ! the ratio of C and N returned to litters from microbes
-real :: etaN       = 0.025    ! N loss through runoff (organic and mineral)
+real :: K1 != 2 ! Fast soil C decomposition rate (yr-1)
+real :: K2 != 0.05 ! slow soil C decomposition rate (yr-1)
+real :: K_nitrogen != 8.0     ! mineral Nitrogen turnover rate
+real :: etaN       != 0.025   ! N loss through runoff (organic and mineral)
+real :: MLmixRatio != 0.8     ! the ratio of C and N returned to litters from microbes
+real :: l_fract    != 0.0     ! 0.25  ! 0.5 ! fraction of the carbon retained after leaf drop
+real :: retransN   != 0.0     ! retranslocation coefficient of Nitrogen
+real :: f_N_add != 0.02       ! re-fill of N for sapwood
+real :: f_initialBSW != 0.2   !0.01
 real :: LMAmin     = 0.02    ! minimum LMA, boundary condition
 real :: fsc_fine   = 1.0     ! fraction of fast turnover carbon in fine biomass
 real :: fsc_wood   = 0.0     ! fraction of fast turnover carbon in wood biomass
-real :: GR_factor  = 0.33 ! growth respiration factor
-real :: l_fract    = 0.0 ! 0.25  ! 0.5 ! fraction of the carbon retained after leaf drop
-real :: retransN   = 0.0   ! retranslocation coefficient of Nitrogen
-real :: f_initialBSW = 0.2 !0.01
-real :: f_N_add = 0.02 ! re-fill of N for sapwood
+real :: GR_factor  = 0.33    ! growth respiration factor
 
 ! Ensheng's growth parameters:
 real :: f_LFR_max =0.85 ! max allocation to leaves and fine roots ! wood_fract_min = 0.15 ! for understory mortality rate is calculated as:
 ! deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
-real :: A_mort     = 9.0   ! A coefficient in understory mortality rate correction, 1/year
+real :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
 real :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
-real :: DBHtp      = 2.0 !  m, for canopy tree's mortality rate
+real :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
 ! for leaf life span and LMA (leafLS = c_LLS * LMA
-real :: c_LLS  = 28.57143 ! yr/ (kg C m-2), 1/LMAs, where LMAs = 0.035
+real :: c_LLS  = 28.57143   ! yr/ (kg C m-2), 1/LMAs, where LMAs = 0.035
 
 ! reduction of bl_max and br_max for the understory vegetation, unitless
 real :: understory_lai_factor = 0.25
@@ -416,11 +413,11 @@ real :: understory_lai_factor = 0.25
 
 ! -------- PFT-specific parameters ----------
 ! c4grass  c3grass  temp-decid  tropical  evergreen  BE  BD  BN  NE  ND  G  D  T  A
-integer :: pt(0:MSPECIES) = 0
+! integer :: pt(0:MSPECIES) = 0
 !(/1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0/) ! 0 for C3, 1 for C4
-integer :: phenotype(0:MSPECIES)= 0
+! integer :: phenotype(0:MSPECIES)= 0
 ! (/0,  0,  0,  0,  1,  1,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0 /) ! 0 for Deciduous, 1 for evergreen
-integer :: lifeform(0:MSPECIES) = 1 ! life form of PFTs: 0 for grasses, 1 for trees
+! integer :: lifeform(0:MSPECIES) = 1 ! life form of PFTs: 0 for grasses, 1 for trees
 
 ! root parameters
 real :: alpha_FR(0:MSPECIES) = 1.2 ! Fine root turnover rate yr-1
@@ -428,7 +425,7 @@ real :: alpha_FR(0:MSPECIES) = 1.2 ! Fine root turnover rate yr-1
 real :: rho_FR(0:MSPECIES) = 200 ! woody density, kgC m-3
 real :: root_r(0:MSPECIES) = 2.9E-4
 !(/1.1e-4, 1.1e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 1.1e-4, 1.1e-4, 2.2e-4, 2.2e-4/)
-real    :: root_zeta(0:MSPECIES) = 0.29 !
+real :: root_zeta(0:MSPECIES) = 0.29 !
 real :: Kw_root(0:MSPECIES)= 6.3E-8 * (1000000.0/18.0)*1.e-6 ! mol /(s m2 Mpa) ! 6.3±3.1×10−8 m s−1 MPa−1
 !(/1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5/)
    ! fine root membrane permeability per unit membrane area, kg/(m3 s).
@@ -478,7 +475,6 @@ real :: mortrate_d_u(0:MSPECIES) = 0.075
 ! real :: LMA(0:MSPECIES)         = 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2
 !(/0.04,    0.04,    0.035,   0.035,   0.140,  0.032, 0.032,  0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036  /)
 real :: leafLS(0:MSPECIES) = 1.0
-!(/1., 1., 1., 1., 3., 3., 1., 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 /)
 real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
 real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
 real :: rho_wood(0:MSPECIES)      = 300.0 ! kgC m-3 (Simulations: 300, 600, 800)
@@ -499,54 +495,48 @@ real :: NfixRate0(0:MSPECIES) = 0.0 !Reference N fixation rate (0.03 kgN kgC-1 r
 real :: NfixCost0(0:MSPECIES) = 12.0 ! FUN model, Fisher et al. 2010, GBC
 real :: internal_gap_frac(0:MSPECIES)= 0.1 ! The gaps between trees
 
-! soil parameters
+! soil parameters (passed through R)
 ! Coarse  Medium   Fine    CM     CF     MF    CMF    Peat    MCM
-  real :: GMD(n_dim_soil_types) = & ! geometric mean partice diameter, mm
-  (/ 0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3 /)
-  real :: GSD(n_dim_soil_types) = & ! geometric standard deviation of particle size
-  (/5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4 /)
-  real :: vwc_sat(n_dim_soil_types)= &
-   (/ 0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445   /)
-  !real :: vlc_min(n_dim_soil_types)
-  real :: k_sat_ref(n_dim_soil_types)= & ! mol/(s MPa m) , hydraulic conductivity of saturated soil,
-  (/ 130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2 /)
-  real :: psi_sat_ref(n_dim_soil_types) = & ! Pa
-  (/ -600., -790., -910., -1580., -1680., -1880., -5980., -790., -790./)
-  real :: chb(n_dim_soil_types) = &         ! Soil texture parameter
-  (/   3.5,   6.4,  11.0,   4.8,   6.3,   8.4,   6.3,   6.4,   6.4   /)
-  real :: alphaSoil(n_dim_soil_types) = 1.0       ! *** REPLACE LATER BY alpha(layer)
-  real :: heat_capacity_dry(n_dim_soil_types) = &
-  (/ 1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6,   1.0   /)
+  ! real :: GMD(n_dim_soil_types) = & ! geometric mean partice diameter, mm
+  ! (/ 0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3 /)
+  ! real :: GSD(n_dim_soil_types) = & ! geometric standard deviation of particle size
+  ! (/5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4 /)
+  ! real :: vwc_sat(n_dim_soil_types)= &
+  !  (/ 0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445   /)
+  ! !real :: vlc_min(n_dim_soil_types)
+  ! real :: k_sat_ref(n_dim_soil_types)= & ! mol/(s MPa m) , hydraulic conductivity of saturated soil,
+  ! (/ 130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2 /)
+  ! real :: psi_sat_ref(n_dim_soil_types) = & ! Pa
+  ! (/ -600., -790., -910., -1580., -1680., -1880., -5980., -790., -790./)
+  ! real :: chb(n_dim_soil_types) = &         ! Soil texture parameter
+  ! (/   3.5,   6.4,  11.0,   4.8,   6.3,   8.4,   6.3,   6.4,   6.4   /)
+  ! real :: alphaSoil(n_dim_soil_types) = 1.0       ! *** REPLACE LATER BY alpha(layer)
+  ! real :: heat_capacity_dry(n_dim_soil_types) = &
+  ! (/ 1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6,   1.0   /)
 
 !----- Initial conditions -------------
 integer :: init_n_cohorts                        = MAX_INIT_COHORTS
-integer :: init_cohort_species(MAX_INIT_COHORTS) = 2
-real    :: init_cohort_nindivs(MAX_INIT_COHORTS) = 1.0  ! initial individual density, individual/m2
+! integer :: init_cohort_species(MAX_INIT_COHORTS) = 2
+! real    :: init_cohort_nindivs(MAX_INIT_COHORTS) = 1.0  ! initial individual density, individual/m2
 real    :: init_cohort_bl(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of leaves, kg C/individual
 real    :: init_cohort_br(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of fine roots, kg C/individual
-real    :: init_cohort_bsw(MAX_INIT_COHORTS)     = 0.05 ! initial biomass of sapwood, kg C/individual
-real    :: init_cohort_bHW(MAX_INIT_COHORTS)     = 0.0  ! initial biomass of heartwood, kg C/tree
+! real    :: init_cohort_bsw(MAX_INIT_COHORTS)     = 0.05 ! initial biomass of sapwood, kg C/individual
+! real    :: init_cohort_bHW(MAX_INIT_COHORTS)     = 0.0  ! initial biomass of heartwood, kg C/tree
 real    :: init_cohort_seedC(MAX_INIT_COHORTS)   = 0.0  ! initial biomass of seeds, kg C/individual
-real    :: init_cohort_nsc(MAX_INIT_COHORTS)     = 0.05 ! initial non-structural biomass, kg C/
-!  initial soil Carbon and Nitrogen for a vegn tile, Weng 2012-10-24
-real   :: init_fast_soil_C  = 0.0  ! initial fast soil C, kg C/m2
-real   :: init_slow_soil_C  = 0.0  ! initial slow soil C, kg C/m2
-real   :: init_Nmineral = 0.015  ! Mineral nitrogen pool, (kg N/m2)
-real   :: N_input    = 0.0008 ! annual N input to soil N pool, kgN m-2 yr-1
+! real    :: init_cohort_nsc(MAX_INIT_COHORTS)     = 0.05 ! initial non-structural biomass, kg C/
+!  initial soil Carbon and Nitrogen for a vegn tile, Weng 2012-10-24 (pass them through R)
+! (passed through R)
+! real   :: init_fast_soil_C  = 0.0  ! initial fast soil C, kg C/m2
+! real   :: init_slow_soil_C  = 0.0  ! initial slow soil C, kg C/m2
+! real   :: init_Nmineral = 0.015  ! Mineral nitrogen pool, (kg N/m2)
+real   :: N_input   ! = 0.0008 ! annual N input to soil N pool, kgN m-2 yr-1
 
-! !Model run control
-  ! real      :: myinterface%dt_fast_yr = 1.0 / (365.0 * 24.0) ! daily
-  ! real      :: step_seconds = 3600.0
-
-! character(len=80) :: filepath_in = '/Users/eweng/Documents/BiomeESS/forcingData/'
-! character(len=160) :: climfile = 'US-Ha1forcing.txt'
-! ! integer   :: model_run_years = 100  ! xxx todo: not used
-! integer   :: equi_days       = 0 ! 100 * 365
-logical   :: outputhourly = .False.
-logical   :: outputdaily  = .True.
-logical   :: do_U_shaped_mortality = .False.
-logical   :: update_annualLAImax = .False.
-logical   :: do_closedN_run = .True. !.False.
+! (passed through R)
+! logical   :: outputhourly = .False.
+! logical   :: outputdaily  = .True.
+! logical   :: do_U_shaped_mortality = .False.
+logical   :: update_annualLAImax != .False.
+! logical   :: do_closedN_run = .True. !.False.
 
  contains
 !=============== subroutines =================================
@@ -694,6 +684,7 @@ subroutine initialize_PFT_data() !namelistfile
 
    ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation
    sp%alphaBM    = sp%rho_wood * sp%taperfactor * PI/4. * sp%alphaHT ! 5200
+   print*, sp%rho_wood
 
 !  Vmax as a function of LNbase
    sp%Vmax = 0.02 * sp%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !

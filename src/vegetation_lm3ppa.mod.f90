@@ -663,6 +663,7 @@ contains
    real :: deathrate ! mortality rate, 1/year
    real :: deadtrees ! number of trees that died over the time step
    integer :: i
+   real :: dDBH
 
    real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
    ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
@@ -673,6 +674,20 @@ contains
      ! mortality rate can be a function of growth rate, age, and environmental
      ! conditions. Here, we only used two constants for canopy layer and under-
      ! story layer (mortrate_d_c and mortrate_d_u)
+
+    if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
+          ! deathrate = cc%bl_max/cc%nsc ! equivalent to 1 over the ratio of NSC and leaf mass
+          ! deathrate = exp(-cc%nsc/cc%bl_max)
+          deathrate = sp%mortrate_d_c *              &   !Sigmoid function
+                           (1. + 5.*exp(4.*(cc%bl_max/cc%nsc))/  &
+                           (1. + exp(4.*(cc%bl_max/cc%nsc)))) 
+
+    else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
+          deathrate = sp%mortrate_d_c *              &   !Sigmoid function
+                           (1. + 5.*exp(4.*(dDBH))/  &
+                           (1. + exp(4.*(dDBH)))) 
+
+    else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      if(sp%lifeform==0)then  ! for grasses
          if(cc%layer > 1) then
              deathrate = sp%mortrate_d_u
@@ -681,10 +696,9 @@ contains
          endif
      else                    ! for trees
          if(cc%layer > 1) then ! Understory layer mortality
-!            deathrate = sp%mortrate_d_u
             deathrate = sp%mortrate_d_u * &
-                     (1.0 + A_mort*exp(B_mort*cc%dbh))/ &
-                     (1.0 +        exp(B_mort*cc%dbh))
+                     (1. + A_mort*exp(B_mort*cc%dbh))/ &
+                     (1. +        exp(B_mort*cc%dbh))
 
          else  ! First layer mortality
             if(myinterface%params_siml%do_U_shaped_mortality)then
@@ -696,6 +710,7 @@ contains
             endif
          endif
      endif
+    endif
      !deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
      deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year) ! individuals / m2
      ! Carbon and Nitrogen from dead plants to soil pools
@@ -708,7 +723,6 @@ contains
   !call kill_lowdensity_cohorts(vegn)
 
   end subroutine vegn_nat_mortality
-
 
   subroutine vegn_starvation( vegn )
     !////////////////////////////////////////////////////////////////
@@ -1734,10 +1748,10 @@ contains
     cc%DBH        = (btot / sp%alphaBM) ** ( 1.0/sp%thetaBM )
     cc%height     = sp%alphaHT * cc%dbh ** sp%thetaHT
     cc%crownarea  = sp%alphaCA * cc%dbh ** sp%thetaCA
-    cc%bl_max = sp%LMA   * sp%LAImax        * cc%crownarea/max(1,cc%layer)
-    cc%br_max = sp%phiRL * sp%LAImax/sp%SRA * cc%crownarea/max(1,cc%layer)
-    cc%NSNmax = sp%fNSNmax*(cc%bl_max/(sp%CNleaf0*sp%leafLS)+cc%br_max/sp%CNroot0)
-    cc%nsc    = 2.0 * (cc%bl_max + cc%br_max)
+    cc%bl_max     = sp%LMA   * sp%LAImax        * cc%crownarea/max(1,cc%layer)
+    cc%br_max     = sp%phiRL * sp%LAImax/sp%SRA * cc%crownarea/max(1,cc%layer)
+    cc%NSNmax     = sp%fNSNmax*(cc%bl_max/(sp%CNleaf0*sp%leafLS)+cc%br_max/sp%CNroot0)
+    cc%nsc        = 2.0 * (cc%bl_max + cc%br_max)
     
     call rootarea_and_verticalprofile( cc )
     
