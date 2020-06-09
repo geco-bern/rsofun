@@ -678,7 +678,7 @@ contains
     if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
           ! deathrate = cc%bl_max/cc%nsc ! equivalent to 1 over the ratio of NSC and leaf mass
           ! deathrate = exp(-cc%nsc/cc%bl_max)
-          deathrate = sp%mortrate_d_c *              &   !Sigmoid function
+          deathrate = sp%mortrate_d_c *              &   !Sigmoid function sp%mortrate_d_c=0.01
                            (1. + 5.*exp(4.*(cc%bl_max/cc%nsc))/  &
                            (1. + exp(4.*(cc%bl_max/cc%nsc)))) 
 
@@ -711,7 +711,7 @@ contains
          endif
      endif
     endif
-     !deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
+     ! deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
      deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year) ! individuals / m2
      ! Carbon and Nitrogen from dead plants to soil pools
      call plant2soil(vegn,cc,deadtrees)
