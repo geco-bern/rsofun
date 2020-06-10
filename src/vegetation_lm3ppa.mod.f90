@@ -662,67 +662,62 @@ contains
    real :: deathrate ! mortality rate, 1/year
    real :: deadtrees ! number of trees that died over the time step
    integer :: i
+   integer :: i_crit
    real :: dDBH
-
+   real :: CAI_max = 1.25
+   real, dimension(50) :: cai_partial = 0.0
    real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
    ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
 
-   ! if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
+   if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
 
-   !  ! check if current CAI is greater than maximum CAI
-   !  if (vegn%CAI > CAI_max) then
+    ! check if current CAI is greater than maximum CAI
+    if (vegn%CAI > CAI_max) then
+      
+      ! relayer cohorts: cohorts must be ordered by height after this, whith cohort(1) being the shortest
+      call relayer_cohorts( vegn )
 
-   !    ! relayer cohorts
-   !    ! cohorts must be ordered by height after this, whith cohort(1) being the shortest
-   !    call relayer_cohorts(...)
+      ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
+      ! cai_partial(:) = 0.0 
+      do i = 1, vegn%n_cohorts
+        cc => vegn%cohorts(i)
+        if (i>1) then
+          cai_partial(i) = sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
+        else
+          cai_partial(i) = cc%crownarea * cc%nindivs
+        end if
+      end do
 
-   !    ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
-   !    cai_partial(:) = 0.0 
-   !    do i = 1, vegn%n_cohorts
-   !      cc => vegn%cohorts(i)
-   !      if (i>1) then
-   !        cai_partial(i) = cai_partial(1:(i-1)) + cc%crownarea * cc%nindivs
-   !      else
-   !        cai_partial(i) = cc%crownarea * cc%nindivs
-   !      end if
-   !    end do
+      ! determine the cohort where cai_partial exceeds critical value
+      i_crit = 1
+      do while (cai_partial(i_crit) < CAI_max)
+        i_crit = i_crit + 1
+      end do
+      deathrate = CAI_max / cai_partial(i_crit)
 
-   !    ! determine the cohort where cai_partial exceeds critical value
-   !    i_crit = 1
-   !    do while (cai_partial(i_crit) < CAI_max)
-   !      i_crit = i_crit + 1
-   !    end do
-   !    deathrate = CAI_max / cai_partial(i_crit)
+      cc => vegn%cohorts(i_crit)
 
-   !    cc => vegn%cohorts(i_crit)
+      deadtrees = cc%nindivs * deathrate
+      ! Carbon and Nitrogen from dead plants to soil pools
+      call plant2soil(vegn,cc,deadtrees)
+      ! Update plant density
+      cc%nindivs = cc%nindivs - deadtrees
 
-   !    deadtrees = cc%nindivs * deathrate
-
-   !    ! Carbon and Nitrogen from dead plants to soil pools
-   !    call plant2soil(vegn,cc,deadtrees)
-
-   !    ! Update plant density
-   !    cc%nindivs = cc%nindivs - deadtrees
-
-   !    ! just to be safe...
-   !    if (i_crit < vegn%n_cohorts) then
-   !      do i = (i_crit+1), vegn%n_cohorts
-   !        deathrate = 1.0
-   !        cc => vegn%cohorts(i)
-
-   !        deadtrees = cc%nindivs * deathrate
-
-   !        ! Carbon and Nitrogen from dead plants to soil pools
-   !        call plant2soil(vegn,cc,deadtrees)
-
-   !        ! Update plant density
-   !        cc%nindivs = cc%nindivs - deadtrees
-
-   !      end do
-   !    end if
-
-   ! else
-
+      ! just to be safe...
+      if (i_crit < vegn%n_cohorts) then
+        do i = (i_crit+1), vegn%n_cohorts
+          deathrate = 1.0
+          cc => vegn%cohorts(i)
+          deadtrees = cc%nindivs * deathrate
+          ! Carbon and Nitrogen from dead plants to soil pools
+          call plant2soil(vegn,cc,deadtrees)
+          ! Update plant density
+          cc%nindivs = cc%nindivs - deadtrees
+        end do
+      end if
+    end if
+   
+   else
 
    do i = 1, vegn%n_cohorts
      cc => vegn%cohorts(i)
@@ -733,7 +728,7 @@ contains
 
     if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
           ! equivalent to 1 over the ratio of NSC and leaf mass
-          deathrate = 0.5*cc%bl_max/cc%nsc + 0.01*      &
+          deathrate = 0.02*cc%bl_max/cc%nsc + 0.01*      &
                       (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
                       (1. + exp(4.*(cc%dbh-DBHtp))))
 
@@ -744,10 +739,10 @@ contains
           !                  (1. + exp(4.*(cc%bl_max/cc%nsc)))) 
 
     else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
-
-          deathrate = sp%mortrate_d_c *              &   !Sigmoid function
-                           (1. + 5.*exp(4.*(dDBH))/  &
-                           (1. + exp(4.*(dDBH)))) 
+          deathrate = 2.5*(cc%DBH - cc%DBH_ys)
+          ! deathrate = sp%mortrate_d_c *              &   !Sigmoid function
+          !                  (1. + 5.*exp(4.*(dDBH))/  &
+          !                  (1. + exp(4.*(dDBH)))) 
 
     else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
@@ -774,15 +769,21 @@ contains
          endif
      endif
     endif
+
+  ! endif
+    print*, "cc%DBH - cc%DBH_ys", cc%DBH - cc%DBH_ys
+    print*, "deadtrees", deadtrees
      ! deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
      deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year) ! individuals / m2
      ! Carbon and Nitrogen from dead plants to soil pools
-     print*, deadtrees
+     print*, "deadtrees2", deadtrees
      call plant2soil(vegn,cc,deadtrees)
      ! Update plant density
      cc%nindivs = cc%nindivs - deadtrees
+     print*, "cc%nindivs", cc%nindivs
      end associate
    enddo
+  endif
   ! Remove the cohorts with 0 individuals
   !call kill_lowdensity_cohorts(vegn)
 

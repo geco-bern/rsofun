@@ -499,6 +499,8 @@ contains
       myinterface%params_siml%method_mortality = "growthrate"
     else if (code_method_mortality == 3) then
       myinterface%params_siml%method_mortality = "dbh"
+    else if (code_method_mortality == 4) then
+      myinterface%params_siml%method_mortality = "const_selfthin"
     end if
 
     !----------------------------------------------------------------
