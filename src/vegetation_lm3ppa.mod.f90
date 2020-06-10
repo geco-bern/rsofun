@@ -651,7 +651,6 @@ contains
   
   end subroutine Seasonal_fall
 
-
   subroutine vegn_nat_mortality (vegn, deltat)
    use md_interface_lm3ppa, only: myinterface
 !  TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
@@ -668,61 +667,61 @@ contains
    real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
    ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
 
-   if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
+   ! if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
 
-    ! check if current CAI is greater than maximum CAI
-    if (vegn%CAI > CAI_max) then
+   !  ! check if current CAI is greater than maximum CAI
+   !  if (vegn%CAI > CAI_max) then
 
-      ! relayer cohorts
-      ! cohorts must be ordered by height after this, whith cohort(1) being the shortest
-      call relayer_cohorts(...)
+   !    ! relayer cohorts
+   !    ! cohorts must be ordered by height after this, whith cohort(1) being the shortest
+   !    call relayer_cohorts(...)
 
-      ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
-      cai_partial(:) = 0.0 
-      do i = 1, vegn%n_cohorts
-        cc => vegn%cohorts(i)
-        if (i>1) then
-          cai_partial(i) = cai_partial(1:(i-1)) + cc%crownarea * cc%nindivs
-        else
-          cai_partial(i) = cc%crownarea * cc%nindivs
-        end if
-      end do
+   !    ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
+   !    cai_partial(:) = 0.0 
+   !    do i = 1, vegn%n_cohorts
+   !      cc => vegn%cohorts(i)
+   !      if (i>1) then
+   !        cai_partial(i) = cai_partial(1:(i-1)) + cc%crownarea * cc%nindivs
+   !      else
+   !        cai_partial(i) = cc%crownarea * cc%nindivs
+   !      end if
+   !    end do
 
-      ! determine the cohort where cai_partial exceeds critical value
-      i_crit = 1
-      do while (cai_partial(i_crit) < CAI_max)
-        i_crit = i_crit + 1
-      end do
-      deathrate = CAI_max / cai_partial(i_crit)
+   !    ! determine the cohort where cai_partial exceeds critical value
+   !    i_crit = 1
+   !    do while (cai_partial(i_crit) < CAI_max)
+   !      i_crit = i_crit + 1
+   !    end do
+   !    deathrate = CAI_max / cai_partial(i_crit)
 
-      cc => vegn%cohorts(i_crit)
+   !    cc => vegn%cohorts(i_crit)
 
-      deadtrees = cc%nindivs * deathrate
+   !    deadtrees = cc%nindivs * deathrate
 
-      ! Carbon and Nitrogen from dead plants to soil pools
-      call plant2soil(vegn,cc,deadtrees)
+   !    ! Carbon and Nitrogen from dead plants to soil pools
+   !    call plant2soil(vegn,cc,deadtrees)
 
-      ! Update plant density
-      cc%nindivs = cc%nindivs - deadtrees
+   !    ! Update plant density
+   !    cc%nindivs = cc%nindivs - deadtrees
 
-      ! just to be safe...
-      if (i_crit < vegn%n_cohorts) then
-        do i = (i_crit+1), vegn%n_cohorts
-          deathrate = 1.0
-          cc => vegn%cohorts(i)
+   !    ! just to be safe...
+   !    if (i_crit < vegn%n_cohorts) then
+   !      do i = (i_crit+1), vegn%n_cohorts
+   !        deathrate = 1.0
+   !        cc => vegn%cohorts(i)
 
-          deadtrees = cc%nindivs * deathrate
+   !        deadtrees = cc%nindivs * deathrate
 
-          ! Carbon and Nitrogen from dead plants to soil pools
-          call plant2soil(vegn,cc,deadtrees)
+   !        ! Carbon and Nitrogen from dead plants to soil pools
+   !        call plant2soil(vegn,cc,deadtrees)
 
-          ! Update plant density
-          cc%nindivs = cc%nindivs - deadtrees
+   !        ! Update plant density
+   !        cc%nindivs = cc%nindivs - deadtrees
 
-        end do
-      end if
+   !      end do
+   !    end if
 
-   else
+   ! else
 
 
    do i = 1, vegn%n_cohorts
@@ -733,14 +732,16 @@ contains
      ! story layer (mortrate_d_c and mortrate_d_u)
 
     if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
-          
-          ! deathrate = cc%bl_max/cc%nsc ! equivalent to 1 over the ratio of NSC and leaf mass
+          ! equivalent to 1 over the ratio of NSC and leaf mass
+          deathrate = 0.5*cc%bl_max/cc%nsc + 0.01*      &
+                      (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
+                      (1. + exp(4.*(cc%dbh-DBHtp))))
 
           ! deathrate = exp(-cc%nsc/cc%bl_max)
 
-          deathrate = sp%mortrate_d_c *              &   !Sigmoid function sp%mortrate_d_c=0.01
-                           (1. + 5.*exp(4.*(cc%bl_max/cc%nsc))/  &
-                           (1. + exp(4.*(cc%bl_max/cc%nsc)))) 
+          ! deathrate = sp%mortrate_d_c *              &   !Sigmoid function sp%mortrate_d_c=0.01
+          !                  (1. + 5.*exp(4.*(cc%bl_max/cc%nsc))/  &
+          !                  (1. + exp(4.*(cc%bl_max/cc%nsc)))) 
 
     else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
 
@@ -764,7 +765,7 @@ contains
 
          else  ! First layer mortality
             if(myinterface%params_siml%do_U_shaped_mortality)then
-                deathrate = sp%mortrate_d_c *                 &
+                deathrate = sp%mortrate_d_c *                &
                            (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
                            (1. + exp(4.*(cc%dbh-DBHtp))))
             else
@@ -776,6 +777,7 @@ contains
      ! deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
      deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year) ! individuals / m2
      ! Carbon and Nitrogen from dead plants to soil pools
+     print*, deadtrees
      call plant2soil(vegn,cc,deadtrees)
      ! Update plant density
      cc%nindivs = cc%nindivs - deadtrees
