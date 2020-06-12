@@ -501,6 +501,8 @@ contains
       myinterface%params_siml%method_mortality = "dbh"
     else if (code_method_mortality == 4) then
       myinterface%params_siml%method_mortality = "const_selfthin"
+    else if (code_method_mortality == 5) then
+      myinterface%params_siml%method_mortality = "bal"
     end if
 
     !----------------------------------------------------------------

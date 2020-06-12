@@ -659,12 +659,14 @@ contains
 
    ! ---- local vars
    type(cohort_type), pointer :: cc => null()
+   integer :: idx(vegn%n_cohorts)
    real :: deathrate ! mortality rate, 1/year
    real :: deadtrees ! number of trees that died over the time step
    integer :: i
    integer :: i_crit
    real :: dDBH
    real :: CAI_max = 1.25
+   real :: BAL
    real, dimension(50) :: cai_partial = 0.0
    real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
    ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
@@ -768,9 +770,19 @@ contains
             endif
          endif
      endif
+
+    else if ((trim(myinterface%params_siml%method_mortality) == "bal")) then
+
+    call rank_descending(vegn%cohorts(1:i)%BA,idx)
+
+     if (i>1) then
+          cc%BAL = sum(vegn%cohorts(1:i-1)%BA)
+        else
+          cc%BAL = 0
+     end if  
+     deathrate = 0.5*cc%BAL
     endif
 
-  ! endif
     print*, "cc%DBH - cc%DBH_ys", cc%DBH - cc%DBH_ys
     print*, "deadtrees", deadtrees
      ! deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2

@@ -172,6 +172,9 @@ type :: cohort_type
   real    :: crownarea = 1.0 ! crown area, m2/individual
   real    :: leafarea  = 0.0 ! total area of leaves, m2/individual
   real    :: lai       = 0.0 ! crown leaf area index, m2/m2
+  real    :: BA        = 0.0 ! tree basal area
+  real    :: BAL       = 0.0 ! basal area of larger trees
+
 ! carbon pools
   real    :: bl      = 0.0 ! biomass of leaves, kg C/individual
   real    :: br      = 0.0 ! biomass of fine roots, kg C/individual
@@ -1170,6 +1173,7 @@ end subroutine hourly_diagnostics
       fwood = cc%NPPwood/treeG
       dDBH  = (cc%DBH - cc%DBH_ys)*1000
       cc%Volume = (cc%bsw+cc%bHW)/spdata(cc%species)%rho_wood
+      cc%BA = pi/4*cc%dbh*cc%dbh
 
       out_annual_cohorts(i)%year    = iyears
       out_annual_cohorts(i)%cID     = cc%ccID
@@ -1198,6 +1202,8 @@ end subroutine hourly_diagnostics
       out_annual_cohorts(i)%Volume  = cc%Volume
 
     enddo
+
+    print*, vegn%cohorts(1)%dbh
 
     ! tile pools output
     call summarize_tile( vegn )

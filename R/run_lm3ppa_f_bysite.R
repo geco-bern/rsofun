@@ -50,6 +50,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     code_method_mortality = 3
   } else if (params_siml$method_mortality == "const_selfthin"){
     code_method_mortality = 4
+  } else if (params_siml$method_mortality == "bal"){
+    code_method_mortality = 5
   } else {
     rlang::abort(paste("run_lm3ppa_f_bysite: params_siml$method_mortality not recognised:", params_siml$method_mortality))
   }
