@@ -480,7 +480,7 @@ real :: mortrate_d_u(0:MSPECIES) = 0.075
 real :: leafLS(0:MSPECIES) = 1.0
 real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
 real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
-real :: rho_wood(0:MSPECIES)      = 300.0 ! kgC m-3 (Simulations: 300, 600, 800)
+real :: rho_wood(0:MSPECIES)      = 800.0 ! kgC m-3 (Simulations: 300, 600, 800)
 real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
 real :: LAImax(0:MSPECIES)        = 3.5 ! maximum LAI for a tree
 real :: LAI_light(0:MSPECIES)     = 4.0 ! maximum LAI limited by light
@@ -687,7 +687,7 @@ subroutine initialize_PFT_data() !namelistfile
 
    ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation
    sp%alphaBM    = sp%rho_wood * sp%taperfactor * PI/4. * sp%alphaHT ! 5200
-   print*, sp%rho_wood
+   ! print*, sp%rho_wood
 
 !  Vmax as a function of LNbase
    sp%Vmax = 0.02 * sp%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
@@ -859,8 +859,8 @@ subroutine summarize_tile(vegn)
         vegn%nindivs = vegn%nindivs  + cc%nindivs
 
         if (cc%age    > vegn%MaxAge)       vegn%MaxAge    = cc%age
-        if (cc%Volume > vegn%MaxVolume)    vegn%MaxVolume = cc%Volume
-        if (cc%DBH    > vegn%MaxDBH)       vegn%MaxDBH    = cc%DBH
+        if (cc%Volume > vegn%MaxVolume)    vegn%MaxVolume = cc%Volume ! maxloc(cc%age)
+        if (cc%DBH    > vegn%MaxDBH)       vegn%MaxDBH    = cc%DBH    ! maxloc(cc%age)
 
         if (cc%dbh > 0.12) then
         vegn%DBH12      = vegn%DBH12     + cc%dbh      * cc%nindivs 
@@ -1202,8 +1202,6 @@ end subroutine hourly_diagnostics
       out_annual_cohorts(i)%Volume  = cc%Volume
 
     enddo
-
-    print*, vegn%cohorts(1)%dbh
 
     ! tile pools output
     call summarize_tile( vegn )

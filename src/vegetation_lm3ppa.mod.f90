@@ -773,7 +773,7 @@ contains
 
     else if ((trim(myinterface%params_siml%method_mortality) == "bal")) then
 
-    call rank_descending(vegn%cohorts(1:i)%BA,idx)
+    call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%BA,idx)
 
      if (i>1) then
           cc%BAL = sum(vegn%cohorts(1:i-1)%BA)
@@ -783,16 +783,17 @@ contains
      deathrate = 0.5*cc%BAL
     endif
 
-    print*, "cc%DBH - cc%DBH_ys", cc%DBH - cc%DBH_ys
-    print*, "deadtrees", deadtrees
+    ! print*, "cc%DBH - cc%DBH_ys", cc%DBH - cc%DBH_ys
+    ! print*, "deadtrees", deadtrees
      ! deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
      deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year) ! individuals / m2
+     ! deadtrees = cc%nindivs * deathrate
      ! Carbon and Nitrogen from dead plants to soil pools
-     print*, "deadtrees2", deadtrees
+     ! print*, "deadtrees2", deadtrees
      call plant2soil(vegn,cc,deadtrees)
      ! Update plant density
      cc%nindivs = cc%nindivs - deadtrees
-     print*, "cc%nindivs", cc%nindivs
+     ! print*, "cc%nindivs", cc%nindivs
      end associate
    enddo
   endif
