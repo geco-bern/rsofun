@@ -23,8 +23,8 @@ module md_params_core
   integer, parameter :: nvars_hourly_tile = 15
   integer, parameter :: nvars_daily_tile = 35
   integer, parameter :: nvars_daily_cohorts = 27
-  integer, parameter :: nvars_annual_tile = 53
-  integer, parameter :: nvars_annual_cohorts = 25
+  integer, parameter :: nvars_annual_tile = 56
+  integer, parameter :: nvars_annual_cohorts = 26
 
   ! From SOFUN
   integer, parameter :: maxgrid = 1              ! number of spatial gridcells (dummy dimension for later code extension)

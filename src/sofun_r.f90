@@ -225,7 +225,7 @@ contains
 
   !//////////////////////////////////////////////////////////////////////////
 
-  subroutine lm3ppa_f(          &
+ subroutine lm3ppa_f(             &
     spinup,                       &   
     spinupyears,                  &        
     recycle,                      &    
@@ -319,7 +319,8 @@ contains
     output_annual_cohorts_N_uptk, &
     output_annual_cohorts_N_fix,  &
     output_annual_cohorts_maxLAI, &
-    output_annual_cohorts_Volume  &
+    output_annual_cohorts_Volume, &
+    output_annual_cohorts_annualMort  &
     ) bind(C, name = "lm3ppa_f_")
 
     !////////////////////////////////////////////////////////////////
@@ -450,6 +451,7 @@ contains
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_N_fix
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_maxLAI
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Volume
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_annualMort
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -683,31 +685,32 @@ contains
 
         idx =  yr - myinterface%params_siml%spinupyears
 
-        output_annual_cohorts_year(idx, :)    = dble(out_biosphere%annual_cohorts(:)%year)
-        output_annual_cohorts_cID(idx, :)     = dble(out_biosphere%annual_cohorts(:)%cID)
-        output_annual_cohorts_PFT(idx, :)     = dble(out_biosphere%annual_cohorts(:)%PFT)
-        output_annual_cohorts_layer(idx, :)   = dble(out_biosphere%annual_cohorts(:)%layer)
-        output_annual_cohorts_density(idx, :) = dble(out_biosphere%annual_cohorts(:)%density)
-        output_annual_cohorts_f_layer(idx, :) = dble(out_biosphere%annual_cohorts(:)%f_layer)
-        output_annual_cohorts_dDBH(idx, :)    = dble(out_biosphere%annual_cohorts(:)%dDBH)
-        output_annual_cohorts_dbh(idx, :)     = dble(out_biosphere%annual_cohorts(:)%dbh)
-        output_annual_cohorts_height(idx, :)  = dble(out_biosphere%annual_cohorts(:)%height)
-        output_annual_cohorts_age(idx, :)     = dble(out_biosphere%annual_cohorts(:)%age)
-        output_annual_cohorts_Acrown(idx, :)  = dble(out_biosphere%annual_cohorts(:)%Acrown)
-        output_annual_cohorts_wood(idx, :)    = dble(out_biosphere%annual_cohorts(:)%wood)
-        output_annual_cohorts_nsc(idx, :)     = dble(out_biosphere%annual_cohorts(:)%nsc)
-        output_annual_cohorts_NSN(idx, :)     = dble(out_biosphere%annual_cohorts(:)%NSN)
-        output_annual_cohorts_NPPtr(idx, :)   = dble(out_biosphere%annual_cohorts(:)%NPPtr)
-        output_annual_cohorts_seed(idx, :)    = dble(out_biosphere%annual_cohorts(:)%seed)
-        output_annual_cohorts_NPPL(idx, :)    = dble(out_biosphere%annual_cohorts(:)%NPPL)
-        output_annual_cohorts_NPPR(idx, :)    = dble(out_biosphere%annual_cohorts(:)%NPPR)
-        output_annual_cohorts_NPPW(idx, :)    = dble(out_biosphere%annual_cohorts(:)%NPPW)
-        output_annual_cohorts_GPP(idx, :)     = dble(out_biosphere%annual_cohorts(:)%GPP)
-        output_annual_cohorts_NPP(idx, :)     = dble(out_biosphere%annual_cohorts(:)%NPP)
-        output_annual_cohorts_N_uptk(idx, :)  = dble(out_biosphere%annual_cohorts(:)%N_uptk)
-        output_annual_cohorts_N_fix(idx, :)   = dble(out_biosphere%annual_cohorts(:)%N_fix)
-        output_annual_cohorts_maxLAI(idx, :)  = dble(out_biosphere%annual_cohorts(:)%maxLAI)
-        output_annual_cohorts_Volume(idx, :)  = dble(out_biosphere%annual_cohorts(:)%Volume)
+        output_annual_cohorts_year(idx, :)       = dble(out_biosphere%annual_cohorts(:)%year)
+        output_annual_cohorts_cID(idx, :)        = dble(out_biosphere%annual_cohorts(:)%cID)
+        output_annual_cohorts_PFT(idx, :)        = dble(out_biosphere%annual_cohorts(:)%PFT)
+        output_annual_cohorts_layer(idx, :)      = dble(out_biosphere%annual_cohorts(:)%layer)
+        output_annual_cohorts_density(idx, :)    = dble(out_biosphere%annual_cohorts(:)%density)
+        output_annual_cohorts_f_layer(idx, :)    = dble(out_biosphere%annual_cohorts(:)%f_layer)
+        output_annual_cohorts_dDBH(idx, :)       = dble(out_biosphere%annual_cohorts(:)%dDBH)
+        output_annual_cohorts_dbh(idx, :)        = dble(out_biosphere%annual_cohorts(:)%dbh)
+        output_annual_cohorts_height(idx, :)     = dble(out_biosphere%annual_cohorts(:)%height)
+        output_annual_cohorts_age(idx, :)        = dble(out_biosphere%annual_cohorts(:)%age)
+        output_annual_cohorts_Acrown(idx, :)     = dble(out_biosphere%annual_cohorts(:)%Acrown)
+        output_annual_cohorts_wood(idx, :)       = dble(out_biosphere%annual_cohorts(:)%wood)
+        output_annual_cohorts_nsc(idx, :)        = dble(out_biosphere%annual_cohorts(:)%nsc)
+        output_annual_cohorts_NSN(idx, :)        = dble(out_biosphere%annual_cohorts(:)%NSN)
+        output_annual_cohorts_NPPtr(idx, :)      = dble(out_biosphere%annual_cohorts(:)%NPPtr)
+        output_annual_cohorts_seed(idx, :)       = dble(out_biosphere%annual_cohorts(:)%seed)
+        output_annual_cohorts_NPPL(idx, :)       = dble(out_biosphere%annual_cohorts(:)%NPPL)
+        output_annual_cohorts_NPPR(idx, :)       = dble(out_biosphere%annual_cohorts(:)%NPPR)
+        output_annual_cohorts_NPPW(idx, :)       = dble(out_biosphere%annual_cohorts(:)%NPPW)
+        output_annual_cohorts_GPP(idx, :)        = dble(out_biosphere%annual_cohorts(:)%GPP)
+        output_annual_cohorts_NPP(idx, :)        = dble(out_biosphere%annual_cohorts(:)%NPP)
+        output_annual_cohorts_N_uptk(idx, :)     = dble(out_biosphere%annual_cohorts(:)%N_uptk)
+        output_annual_cohorts_N_fix(idx, :)      = dble(out_biosphere%annual_cohorts(:)%N_fix)
+        output_annual_cohorts_maxLAI(idx, :)     = dble(out_biosphere%annual_cohorts(:)%maxLAI)
+        output_annual_cohorts_Volume(idx, :)     = dble(out_biosphere%annual_cohorts(:)%Volume)
+        output_annual_cohorts_annualMort(idx, :) = dble(out_biosphere%annual_cohorts(:)%annualMort)
 
       end if
 
@@ -869,6 +872,9 @@ contains
     out_annual_tile(51) = dble(annual_tile%MaxAge)
     out_annual_tile(52) = dble(annual_tile%MaxVolume)
     out_annual_tile(53) = dble(annual_tile%MaxDBH)
+    out_annual_tile(54) = dble(annual_tile%NPPL)
+    out_annual_tile(55) = dble(annual_tile%NPPW)
+    out_annual_tile(56) = dble(annual_tile%annualMort)
 
   end subroutine populate_outarray_annual_tile
 

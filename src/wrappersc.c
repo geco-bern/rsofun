@@ -212,7 +212,8 @@ void F77_NAME(lm3ppa_f)(
     double *output_annual_cohorts_N_uptk,
     double *output_annual_cohorts_N_fix,
     double *output_annual_cohorts_maxLAI,
-    double *output_annual_cohorts_Volume
+    double *output_annual_cohorts_Volume,
+    double *output_annual_cohorts_annualMort
     );
 
 // C wrapper function for LM3PPA
@@ -294,7 +295,7 @@ extern SEXP lm3ppa_f_C(
     SEXP output_daily_cohorts_rootN    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_SW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_HW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 53) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 56) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_annual_cohorts_year    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_cID     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_PFT     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
@@ -320,6 +321,7 @@ extern SEXP lm3ppa_f_C(
     SEXP output_annual_cohorts_N_fix   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_maxLAI  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_Volume  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_annualMort  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     
     // Fortran subroutine call
     F77_CALL(lm3ppa_f)(
@@ -416,11 +418,12 @@ extern SEXP lm3ppa_f_C(
         REAL(output_annual_cohorts_N_uptk),
         REAL(output_annual_cohorts_N_fix),
         REAL(output_annual_cohorts_maxLAI),
-        REAL(output_annual_cohorts_Volume)
+        REAL(output_annual_cohorts_Volume),
+        REAL(output_annual_cohorts_annualMort)
         );
 
     // // Output as list
-    SEXP out_list = PROTECT( allocVector(VECSXP, 55) );  // maybe try  STRSXP instead of VECSXP
+    SEXP out_list = PROTECT( allocVector(VECSXP, 56) );  // maybe try  STRSXP instead of VECSXP
     
     SET_VECTOR_ELT(out_list, 0, output_hourly_tile);
     SET_VECTOR_ELT(out_list, 1, output_daily_tile);
@@ -477,8 +480,9 @@ extern SEXP lm3ppa_f_C(
     SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_N_fix);
     SET_VECTOR_ELT(out_list, 53, output_annual_cohorts_maxLAI);
     SET_VECTOR_ELT(out_list, 54, output_annual_cohorts_Volume);
+    SET_VECTOR_ELT(out_list, 55, output_annual_cohorts_annualMort);
 
-    UNPROTECT(56);
+    UNPROTECT(57);
 
     return out_list;
 }

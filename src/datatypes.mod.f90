@@ -196,11 +196,13 @@ type :: cohort_type
   real :: dailyNPP
   real :: dailyResp
   real :: dailyNup
-  real :: dailyfixedN
+  real :: dailyfixedN 
+  real :: dailyMort   ! new variable
   real :: annualTrsp
   real :: annualGPP ! C flux/tree
   real :: annualNPP
   real :: annualResp
+  real :: annualMort  ! new variable
 
 ! ---- Nitrogen model related parameters
   real    :: NSNmax = 0.
@@ -221,6 +223,7 @@ type :: cohort_type
   real    :: CSAsw   = 0.0
   real    :: topyear = 0.0 ! the years that a plant in top layer
   real    :: DBH_ys        ! DBH at the begining of a year (growing season)
+  real    :: Vol_ys
 
 ! ---- water uptake-related variables
   real    :: root_length(max_lev) ! m
@@ -261,6 +264,8 @@ type :: vegn_tile_type
    real :: MaxAge
    real :: MaxVolume
    real :: MaxDBH
+   real :: NPPL
+   real :: NPPW
 
    ! leaf area index
    real :: LAI  ! leaf area index
@@ -320,6 +325,7 @@ type :: vegn_tile_type
    real :: dailyRh
    real :: dailyNup
    real :: dailyfixedN
+   real :: dailyMort
    ! for annual diagnostics
    real :: dailyPrcp=0.0, annualPrcp = 0.0 ! mm m-2 yr-1
    real :: dailyTrsp=0.0,dailyEvap=0.0, dailyRoff=0.0 ! mm m-2 yr-1
@@ -330,6 +336,7 @@ type :: vegn_tile_type
    real :: annualRh   = 0.0
    real :: annualNup       ! accumulated N uptake kgN m-2 yr-1
    real :: annualfixedN = 0.  ! fixe N in a tile
+   real :: annualMort != 0
    ! for annual reporting at tile level
    real :: NSC, SeedC, leafC, rootC, SapwoodC, WoodC
    real :: NSN, SeedN, leafN, rootN, SapwoodN, WoodN
@@ -480,7 +487,7 @@ real :: mortrate_d_u(0:MSPECIES) = 0.075
 real :: leafLS(0:MSPECIES) = 1.0
 real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
 real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
-real :: rho_wood(0:MSPECIES)      = 800.0 ! kgC m-3 (Simulations: 300, 600, 800)
+real :: rho_wood(0:MSPECIES)      = 300.0 ! kgC m-3 (Simulations: 300, 600, 800)
 real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
 real :: LAImax(0:MSPECIES)        = 3.5 ! maximum LAI for a tree
 real :: LAI_light(0:MSPECIES)     = 4.0 ! maximum LAI limited by light
@@ -740,7 +747,7 @@ subroutine Zero_diagnostics(vegn)
   type(cohort_type),pointer :: cc
   integer :: i
   !daily
-  vegn%dailyfixedN = 0.
+  vegn%dailyfixedN = 0.0
   vegn%dailyPrcp   = 0.0
   vegn%dailyTrsp   = 0.0
   vegn%dailyEvap   = 0.0
@@ -750,9 +757,10 @@ subroutine Zero_diagnostics(vegn)
   vegn%dailyNPP    = 0.0
   vegn%dailyResp   = 0.0
   vegn%dailyRh     = 0.0
+  vegn%dailyMort   = 0.0
 
   !annual
-  vegn%annualfixedN = 0.
+  vegn%annualfixedN = 0.0
   vegn%annualPrcp   = 0.0
   vegn%annualTrsp   = 0.0
   vegn%annualEvap   = 0.0
@@ -761,10 +769,11 @@ subroutine Zero_diagnostics(vegn)
   vegn%annualNPP    = 0.0
   vegn%annualResp   = 0.0
   vegn%annualRh     = 0.0
-  vegn%N_P2S_yr     = 0.
-  vegn%annualN      = 0.
-  vegn%Nloss_yr     = 0.
+  vegn%N_P2S_yr     = 0.0
+  vegn%annualN      = 0.0
+  vegn%Nloss_yr     = 0.0
   vegn%annualNup    = 0.0
+  vegn%annualMort   = 0.0
 
   do i = 1, vegn%n_cohorts
      cc => vegn%cohorts(i)
@@ -784,6 +793,7 @@ subroutine Zero_diagnostics(vegn)
      cc%dailyResp    = 0.0
      cc%dailyNup     = 0.0
      cc%dailyfixedN  = 0.0
+     ! cc%dailyMort    = 0.0
      ! annual
      cc%annualTrsp   = 0.0
      cc%annualGPP    = 0.0
@@ -795,6 +805,8 @@ subroutine Zero_diagnostics(vegn)
      cc%NPProot      = 0.0
      cc%NPPwood      = 0.0
      cc%DBH_ys       = cc%DBH
+     cc%Vol_ys       = cc%Volume
+     cc%annualMort   = 0.0 !xxx maybe remove?
   enddo
   
 end subroutine Zero_diagnostics
@@ -806,6 +818,7 @@ subroutine summarize_tile(vegn)
   !-------local var
   type(cohort_type),pointer :: cc
   integer :: i
+  real :: fleaf,fwood
 
   ! State variables
   vegn%NSC     = 0.0
@@ -834,46 +847,51 @@ subroutine summarize_tile(vegn)
   vegn%MaxAge     = 0.0
   vegn%MaxVolume  = 0.0
   vegn%MaxDBH     = 0.0
+  ! vegn%NPPL       = 0.0
+  ! vegn%NPPW       = 0.0
 
   do i = 1, vegn%n_cohorts
-        cc => vegn%cohorts(i)
+    cc => vegn%cohorts(i)
 
-        ! Vegn C pools:
-        vegn%NSC     = vegn%NSC      + cc%NSC       * cc%nindivs
-        vegn%SeedC   = vegn%SeedC    + cc%seedC     * cc%nindivs
-        vegn%leafC   = vegn%leafC    + cc%bl        * cc%nindivs
-        vegn%rootC   = vegn%rootC    + cc%br        * cc%nindivs
-        vegn%SapwoodC= vegn%SapwoodC + cc%bsw       * cc%nindivs
-        vegn%woodC   = vegn%woodC    + cc%bHW       * cc%nindivs
-        vegn%CAI     = vegn%CAI      + cc%crownarea * cc%nindivs
-        vegn%LAI     = vegn%LAI      + cc%leafarea  * cc%nindivs
-        ! Vegn N pools
-        vegn%NSN     = vegn%NSN      + cc%NSN       * cc%nindivs
-        vegn%SeedN   = vegn%SeedN    + cc%seedN     * cc%nindivs
-        vegn%leafN   = vegn%leafN    + cc%leafN     * cc%nindivs
-        vegn%rootN   = vegn%rootN    + cc%rootN     * cc%nindivs
-        vegn%SapwoodN= vegn%SapwoodN + cc%sapwN     * cc%nindivs
-        vegn%woodN   = vegn%woodN    + cc%woodN     * cc%nindivs
-        ! New tile outputs xxx
-        vegn%DBH     = vegn%DBH      + cc%dbh       * cc%nindivs
-        vegn%nindivs = vegn%nindivs  + cc%nindivs
+    ! Vegn C pools:
+    vegn%NSC     = vegn%NSC      + cc%NSC       * cc%nindivs
+    vegn%SeedC   = vegn%SeedC    + cc%seedC     * cc%nindivs
+    vegn%leafC   = vegn%leafC    + cc%bl        * cc%nindivs
+    vegn%rootC   = vegn%rootC    + cc%br        * cc%nindivs
+    vegn%SapwoodC= vegn%SapwoodC + cc%bsw       * cc%nindivs
+    vegn%woodC   = vegn%woodC    + cc%bHW       * cc%nindivs
+    vegn%CAI     = vegn%CAI      + cc%crownarea * cc%nindivs
+    vegn%LAI     = vegn%LAI      + cc%leafarea  * cc%nindivs
+    ! Vegn N pools
+    vegn%NSN     = vegn%NSN      + cc%NSN       * cc%nindivs
+    vegn%SeedN   = vegn%SeedN    + cc%seedN     * cc%nindivs
+    vegn%leafN   = vegn%leafN    + cc%leafN     * cc%nindivs
+    vegn%rootN   = vegn%rootN    + cc%rootN     * cc%nindivs
+    vegn%SapwoodN= vegn%SapwoodN + cc%sapwN     * cc%nindivs
+    vegn%woodN   = vegn%woodN    + cc%woodN     * cc%nindivs
+    ! New tile outputs xxx
+    vegn%DBH     = vegn%DBH      + cc%dbh       * cc%nindivs
+    vegn%nindivs = vegn%nindivs  + cc%nindivs
 
-        if (cc%age    > vegn%MaxAge)       vegn%MaxAge    = cc%age
-        if (cc%Volume > vegn%MaxVolume)    vegn%MaxVolume = cc%Volume ! maxloc(cc%age)
-        if (cc%DBH    > vegn%MaxDBH)       vegn%MaxDBH    = cc%DBH    ! maxloc(cc%age)
+    if (cc%dbh > 0.12) then
+      vegn%DBH12      = vegn%DBH12     + cc%dbh      * cc%nindivs 
+      vegn%nindivs12  = vegn%nindivs12 + cc%nindivs
+      vegn%DBH12pow2  = vegn%DBH12pow2 + cc%dbh      * cc%dbh     * cc%nindivs
+    endif
 
-        if (cc%dbh > 0.12) then
-        vegn%DBH12      = vegn%DBH12     + cc%dbh      * cc%nindivs 
-        vegn%nindivs12  = vegn%nindivs12 + cc%nindivs
-        vegn%DBH12pow2  = vegn%DBH12pow2 + cc%dbh      * cc%dbh     * cc%nindivs
-        
-        endif
+    if (cc%age    > vegn%MaxAge)       vegn%MaxAge    = cc%age
+    if (cc%Volume > vegn%MaxVolume)    vegn%MaxVolume = cc%Volume ! maxloc(cc%age)
+    if (cc%DBH    > vegn%MaxDBH)       vegn%MaxDBH    = cc%DBH    ! maxloc(cc%age)
+
+    ! vegn%NPPL      = vegn%NPPL   + fleaf * cc%nindivs
+    ! vegn%NPPW      = vegn%NPPW   + fwood * cc%nindivs
+    vegn%dailyMort = vegn%dailyMort + cc%dailyMort * cc%nindivs
 
   enddo
 
-    if (vegn%nindivs>0.0) vegn%DBH     = vegn%DBH / vegn%nindivs  
-    if (vegn%nindivs12>0.0) vegn%DBH12 = vegn%DBH12 / vegn%nindivs12  ! vegn%nindivs12 could be zero if all dbh<0.12
-    if (vegn%nindivs12>0.0) vegn%QMD   = sqrt(vegn%DBH12pow2 / vegn%nindivs12)  
+  if (vegn%nindivs>0.0)   vegn%DBH   = vegn%DBH / vegn%nindivs  
+  if (vegn%nindivs12>0.0) vegn%DBH12 = vegn%DBH12 / vegn%nindivs12  ! vegn%nindivs12 could be zero if all dbh<0.12
+  if (vegn%nindivs12>0.0) vegn%QMD   = sqrt(vegn%DBH12pow2 / vegn%nindivs12)  
 
 end subroutine summarize_tile
 
@@ -1037,15 +1055,17 @@ end subroutine hourly_diagnostics
       endif
 
       ! annual sum
-      cc%annualGPP = cc%annualGPP + cc%dailyGPP
-      cc%annualNPP = cc%annualNPP + cc%dailyNPP
+      cc%annualGPP  = cc%annualGPP  + cc%dailyGPP
+      cc%annualNPP  = cc%annualNPP  + cc%dailyNPP
       cc%annualResp = cc%annualResp + cc%dailyResp
       cc%annualTrsp = cc%annualTrsp + cc%dailyTrsp
+      cc%annualMort = cc%annualMort + cc%dailyMort
       ! Zero Daily variables
       cc%dailyTrsp = 0.0
-      cc%dailyGPP = 0.0
-      cc%dailyNPP = 0.0
+      cc%dailyGPP  = 0.0
+      cc%dailyNPP  = 0.0
       cc%dailyResp = 0.0
+      ! cc%dailyMort = 0.0
 
     enddo
 
@@ -1103,6 +1123,7 @@ end subroutine hourly_diagnostics
     vegn%annualTrsp = vegn%annualTrsp + vegn%dailytrsp
     vegn%annualEvap = vegn%annualEvap + vegn%dailyevap
     vegn%annualRoff = vegn%annualRoff + vegn%dailyRoff
+    vegn%annualMort = vegn%annualMort + vegn%dailyMort
 
     ! zero:
     vegn%dailyNup  = 0.0
@@ -1114,6 +1135,7 @@ end subroutine hourly_diagnostics
     vegn%dailyTrsp = 0.0
     vegn%dailyEvap = 0.0
     vegn%dailyRoff = 0.0
+    vegn%dailyMort = 0.0
 
   end subroutine daily_diagnostics
 
@@ -1130,85 +1152,95 @@ end subroutine hourly_diagnostics
 
 !   --------local var --------
     type(cohort_type), pointer :: cc
-    real treeG, fseed, fleaf, froot,fwood,dDBH
+    real treeG, fseed, fleaf, froot,fwood,dDBH, dVol
     real :: plantC, plantN, soilC, soilN
     integer :: i
 
     ! re-initialise to avoid elements not updated when number 
     ! of cohorts declines from one year to the next
-    out_annual_cohorts(:)%year    = dummy
-    out_annual_cohorts(:)%cID     = dummy
-    out_annual_cohorts(:)%PFT     = dummy
-    out_annual_cohorts(:)%layer   = dummy
-    out_annual_cohorts(:)%density = dummy
-    out_annual_cohorts(:)%f_layer = dummy
-    out_annual_cohorts(:)%dDBH    = dummy
-    out_annual_cohorts(:)%dbh     = dummy
-    out_annual_cohorts(:)%height  = dummy
-    out_annual_cohorts(:)%age     = dummy
-    out_annual_cohorts(:)%Acrown  = dummy
-    out_annual_cohorts(:)%wood    = dummy
-    out_annual_cohorts(:)%nsc     = dummy
-    out_annual_cohorts(:)%NSN     = dummy
-    out_annual_cohorts(:)%NPPtr   = dummy
-    out_annual_cohorts(:)%seed    = dummy
-    out_annual_cohorts(:)%NPPL    = dummy
-    out_annual_cohorts(:)%NPPR    = dummy
-    out_annual_cohorts(:)%NPPW    = dummy
-    out_annual_cohorts(:)%GPP     = dummy
-    out_annual_cohorts(:)%NPP     = dummy
-    out_annual_cohorts(:)%N_uptk  = dummy
-    out_annual_cohorts(:)%N_fix   = dummy
-    out_annual_cohorts(:)%maxLAI  = dummy
-    out_annual_cohorts(:)%Volume  = dummy
+    out_annual_cohorts(:)%year       = dummy
+    out_annual_cohorts(:)%cID        = dummy
+    out_annual_cohorts(:)%PFT        = dummy
+    out_annual_cohorts(:)%layer      = dummy
+    out_annual_cohorts(:)%density    = dummy
+    out_annual_cohorts(:)%f_layer    = dummy
+    out_annual_cohorts(:)%dDBH       = dummy
+    out_annual_cohorts(:)%dbh        = dummy
+    out_annual_cohorts(:)%height     = dummy
+    out_annual_cohorts(:)%age        = dummy
+    out_annual_cohorts(:)%Acrown     = dummy
+    out_annual_cohorts(:)%wood       = dummy
+    out_annual_cohorts(:)%nsc        = dummy
+    out_annual_cohorts(:)%NSN        = dummy
+    out_annual_cohorts(:)%NPPtr      = dummy
+    out_annual_cohorts(:)%seed       = dummy
+    out_annual_cohorts(:)%NPPL       = dummy
+    out_annual_cohorts(:)%NPPR       = dummy
+    out_annual_cohorts(:)%NPPW       = dummy
+    out_annual_cohorts(:)%GPP        = dummy
+    out_annual_cohorts(:)%NPP        = dummy
+    out_annual_cohorts(:)%N_uptk     = dummy
+    out_annual_cohorts(:)%N_fix      = dummy
+    out_annual_cohorts(:)%maxLAI     = dummy
+    out_annual_cohorts(:)%Volume     = dummy
+    out_annual_cohorts(:)%annualMort = dummy
+    ! out_annual_cohorts(:)%deadtrees  = dummy
 
-    ! Cohotrs ouput
+    ! Cohorts ouput
     do i = 1, vegn%n_cohorts
 
       cc => vegn%cohorts(i)
-      treeG = cc%seedC + cc%NPPleaf + cc%NPProot + cc%NPPwood
-      fseed = cc%seedC/treeG
-      fleaf = cc%NPPleaf/treeG
-      froot = cc%NPProot/treeG
-      fwood = cc%NPPwood/treeG
-      dDBH  = (cc%DBH - cc%DBH_ys)*1000
+      treeG     = cc%seedC + cc%NPPleaf + cc%NPProot + cc%NPPwood
+      fseed     = cc%seedC/treeG
+      fleaf     = cc%NPPleaf/treeG
+      froot     = cc%NPProot/treeG
+      fwood     = cc%NPPwood/treeG
+      dDBH      = (cc%DBH - cc%DBH_ys)*1000
       cc%Volume = (cc%bsw+cc%bHW)/spdata(cc%species)%rho_wood
-      cc%BA = pi/4*cc%dbh*cc%dbh
+      dVol      = (cc%Volume - cc%Vol_ys)
+      cc%BA     = pi/4*cc%dbh*cc%dbh
 
-      out_annual_cohorts(i)%year    = iyears
-      out_annual_cohorts(i)%cID     = cc%ccID
-      out_annual_cohorts(i)%PFT     = cc%species
-      out_annual_cohorts(i)%layer   = cc%layer
-      out_annual_cohorts(i)%density = cc%nindivs*10000
-      out_annual_cohorts(i)%f_layer = cc%layerfrac
-      out_annual_cohorts(i)%dDBH    = dDBH
-      out_annual_cohorts(i)%dbh     = cc%dbh
-      out_annual_cohorts(i)%height  = cc%height
-      out_annual_cohorts(i)%age     = cc%age
-      out_annual_cohorts(i)%Acrown  = cc%crownarea
-      out_annual_cohorts(i)%wood    = cc%bsw+cc%bHW
-      out_annual_cohorts(i)%nsc     = cc%nsc
-      out_annual_cohorts(i)%NSN     = cc%NSN*1000
-      out_annual_cohorts(i)%NPPtr   = treeG
-      out_annual_cohorts(i)%seed    = fseed
-      out_annual_cohorts(i)%NPPL    = fleaf
-      out_annual_cohorts(i)%NPPR    = froot
-      out_annual_cohorts(i)%NPPW    = fwood
-      out_annual_cohorts(i)%GPP     = cc%annualGPP
-      out_annual_cohorts(i)%NPP     = cc%annualNPP
-      out_annual_cohorts(i)%N_uptk  = cc%annualNup*1000
-      out_annual_cohorts(i)%N_fix   = cc%annualfixedN*1000
-      out_annual_cohorts(i)%maxLAI  = spdata(cc%species)%laimax
-      out_annual_cohorts(i)%Volume  = cc%Volume
-
+      out_annual_cohorts(i)%year       = iyears
+      out_annual_cohorts(i)%cID        = cc%ccID
+      out_annual_cohorts(i)%PFT        = cc%species
+      out_annual_cohorts(i)%layer      = cc%layer
+      out_annual_cohorts(i)%density    = cc%nindivs*10000
+      out_annual_cohorts(i)%f_layer    = cc%layerfrac
+      out_annual_cohorts(i)%dDBH       = dDBH
+      out_annual_cohorts(i)%dbh        = cc%dbh
+      out_annual_cohorts(i)%height     = cc%height
+      out_annual_cohorts(i)%age        = cc%age
+      out_annual_cohorts(i)%Acrown     = cc%crownarea
+      out_annual_cohorts(i)%wood       = cc%bsw+cc%bHW
+      out_annual_cohorts(i)%nsc        = cc%nsc
+      out_annual_cohorts(i)%NSN        = cc%NSN*1000
+      out_annual_cohorts(i)%NPPtr      = treeG
+      out_annual_cohorts(i)%seed       = fseed
+      out_annual_cohorts(i)%NPPL       = fleaf
+      out_annual_cohorts(i)%NPPR       = froot
+      out_annual_cohorts(i)%NPPW       = fwood
+      out_annual_cohorts(i)%GPP        = cc%annualGPP
+      out_annual_cohorts(i)%NPP        = cc%annualNPP
+      out_annual_cohorts(i)%N_uptk     = cc%annualNup*1000
+      out_annual_cohorts(i)%N_fix      = cc%annualfixedN*1000
+      out_annual_cohorts(i)%maxLAI     = spdata(cc%species)%laimax
+      out_annual_cohorts(i)%Volume     = cc%Volume
+      out_annual_cohorts(:)%annualMort = cc%annualMort
+      ! out_annual_cohorts(:)%deadtrees  = deadtrees
+      
     enddo
 
     ! tile pools output
     call summarize_tile( vegn )
 
+    vegn%NPPL       = 0.0
+    vegn%NPPW       = 0.0
+
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
       vegn%annualfixedN = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
+      vegn%NPPL         = vegn%NPPL   + fleaf * cc%nindivs
+      vegn%NPPW         = vegn%NPPW   + fwood * cc%nindivs
       
     enddo
 
@@ -1222,10 +1254,10 @@ end subroutine hourly_diagnostics
     out_annual_tile%CAI        = vegn%CAI
     out_annual_tile%LAI        = vegn%LAI
     out_annual_tile%density    = vegn%nindivs*10000 !xxx New tile out
-    out_annual_tile%DBH        = vegn%DBH
+    out_annual_tile%DBH        = vegn%DBH           !xxx New tile out
     out_annual_tile%density12  = vegn%nindivs12*10000 !xxx New tile out
-    out_annual_tile%DBH12      = vegn%DBH12
-    out_annual_tile%QMD        = vegn%QMD
+    out_annual_tile%DBH12      = vegn%DBH12     !xxx New tile out
+    out_annual_tile%QMD        = vegn%QMD       !xxx New tile out
     out_annual_tile%NPP        = vegn%annualNPP !xxx New tile out
     out_annual_tile%GPP        = vegn%annualGPP
     out_annual_tile%Rauto      = vegn%annualResp
@@ -1268,9 +1300,12 @@ end subroutine hourly_diagnostics
     out_annual_tile%totseedN   = vegn%totseedN*1000
     out_annual_tile%Seedling_C = vegn%totNewCC*1000
     out_annual_tile%Seedling_N = vegn%totNewCN*1000
-    out_annual_tile%MaxAge     = vegn%MaxAge
-    out_annual_tile%MaxVolume  = vegn%MaxVolume
-    out_annual_tile%MaxDBH     = vegn%MaxDBH
+    out_annual_tile%MaxAge     = vegn%MaxAge     !xxx New tile out
+    out_annual_tile%MaxVolume  = vegn%MaxVolume  !xxx New tile out
+    out_annual_tile%MaxDBH     = vegn%MaxDBH     !xxx New tile out
+    out_annual_tile%NPPL       = vegn%NPPL       !xxx New tile out
+    out_annual_tile%NPPW       = vegn%NPPW       !xxx New tile out
+    out_annual_tile%annualMort = vegn%annualMort !xxx New tile out
 
     ! I cannot figure out why N losing. Hack!
    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
