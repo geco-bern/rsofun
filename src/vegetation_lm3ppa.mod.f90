@@ -10,7 +10,7 @@ module md_vegetation_lm3ppa
   ! public subroutines
   public :: initialize_cohort_from_biomass, initialize_vegn_tile
   public :: vegn_CNW_budget, vegn_phenology, vegn_growth_EW,update_layer_LAI              ! , vegn_CNW_budget_daily
-  public :: vegn_reproduction, vegn_annualLAImax_update, annual_calls
+  public :: vegn_reproduction, vegn_annualLAImax_update !, annual_calls
   public :: vegn_starvation, vegn_nat_mortality, vegn_species_switch
   public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
   public :: vegn_annual_starvation,Zero_diagnostics
@@ -677,45 +677,47 @@ contains
       if (vegn%CAI > CAI_max) then
       
         ! relayer cohorts: cohorts must be ordered by height after this, whith cohort(1) being the shortest
-        call relayer_cohorts( vegn )
-        ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
+        ! call relayer_cohorts( vegn )
+        call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
 
         ! xxx check whether cohorts are ranked w.r.t. ??? (height?)
         ! print*, "crownarea", vegn%cohorts%crownarea 
         print*, "height", vegn%cohorts%height 
-        print*, "crownarea", vegn%cohorts%crownarea * vegn%cohorts%nindivs 
+        ! print*, "crownarea", vegn%cohorts%crownarea * vegn%cohorts%nindivs 
 
         ! ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
         allocate(cai_partial(vegn%n_cohorts))
+        cai_partial(:) = 0.0
 
         do i = vegn%n_cohorts, 1 ,-1
           cc => vegn%cohorts(i)
           if (i==vegn%n_cohorts) then ! if (i>1) then
             cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
           else
-            cai_partial(i) = sum(cai_partial(i+1:vegn%n_cohorts)) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
+            cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
           end if
-          ! print*, "cai_partial", cai_partial
+          print*, "i, cai_partial", i, cai_partial
+
         end do
 
-        print*, "cai_partial", cai_partial
+        ! print*, "cai_partial", cai_partial
 
         ! determine the cohort where cai_partial exceeds critical value
-        i_crit = 1
+        i_crit = vegn%n_cohorts
         do while (cai_partial(i_crit) < CAI_max)
-          i_crit = i_crit + 1
+          i_crit = i_crit - 1
         end do
 
         cc => vegn%cohorts(i_crit)
 
-        deathrate = cc%nindivs - cc%nindivs * (cai_partial(i_crit) - CAI_max) / &
-                    (cai_partial(i_crit) - cai_partial(i_crit-1))
+        deathrate = (cai_partial(i_crit) - CAI_max) / &
+                    (cai_partial(i_crit) - cai_partial(i_crit+1))
 
         print*, "deathrate", deathrate
         print*, "i_crit", i_crit
 
         deadtrees = cc%nindivs * deathrate
-        print*, "deadtrees", deadtrees
+        ! print*, "deadtrees", deadtrees
         ! Carbon and Nitrogen from dead plants to soil pools
         call plant2soil(vegn,cc,deadtrees)
         ! Update plant density
@@ -827,6 +829,7 @@ contains
   !call kill_lowdensity_cohorts(vegn)
 
   end subroutine vegn_nat_mortality
+
 
   subroutine vegn_starvation( vegn )
     !////////////////////////////////////////////////////////////////
@@ -1884,26 +1887,26 @@ contains
   end subroutine initialize_cohort_from_biomass
 
 
-  subroutine annual_calls( vegn )
-    !////////////////////////////////////////////////////////////////
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn
-    !---- annual call -------------
-    ! update the LAImax of each PFT according to available N for next year
-    if (update_annualLAImax) call vegn_annualLAImax_update( vegn )
-    ! Reproduction and mortality
-    !call vegn_starvation( vegn )  ! called daily
-    !call vegn_annual_starvation( vegn )
-    call vegn_reproduction( vegn )
-    call vegn_nat_mortality(vegn, real(seconds_per_year))
-    ! Re-organize cohorts
-    call relayer_cohorts( vegn )
-    call kill_lowdensity_cohorts( vegn )
-    call vegn_mergecohorts( vegn )
-    ! set annual variables zero
-    call Zero_diagnostics( vegn )
-  end subroutine annual_calls
+  ! subroutine annual_calls( vegn )
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Code from BiomeE-Allocation
+  !   !---------------------------------------------------------------
+  !   type(vegn_tile_type), intent(inout) :: vegn
+  !   !---- annual call -------------
+  !   ! update the LAImax of each PFT according to available N for next year
+  !   if (update_annualLAImax) call vegn_annualLAImax_update( vegn )
+  !   ! Reproduction and mortality
+  !   !call vegn_starvation( vegn )  ! called daily
+  !   !call vegn_annual_starvation( vegn )
+  !   call vegn_reproduction( vegn )
+  !   call vegn_nat_mortality(vegn, real(seconds_per_year))
+  !   ! Re-organize cohorts
+  !   call relayer_cohorts( vegn )
+  !   call kill_lowdensity_cohorts( vegn )
+  !   call vegn_mergecohorts( vegn )
+  !   ! set annual variables zero
+  !   call Zero_diagnostics( vegn )
+  ! end subroutine annual_calls
 
 
   subroutine init_cohort_allometry( cc )

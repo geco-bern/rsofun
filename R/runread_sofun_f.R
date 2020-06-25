@@ -21,7 +21,7 @@ runread_pmodel_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
 
   if (parallel){
 
-    cl <- multidplyr::new_cluster(2) %>% 
+    cl <- multidplyr::new_cluster(ncores) %>% 
       multidplyr::cluster_assign(params_modl = params_modl) %>% 
       multidplyr::cluster_assign(makecheck = FALSE) %>% 
       multidplyr::cluster_library(c("dplyr", "purrr", "rlang", "rsofun"))
