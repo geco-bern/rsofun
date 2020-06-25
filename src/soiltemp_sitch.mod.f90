@@ -99,8 +99,8 @@ contains
       pm = moy - 1
       ppm = moy - 2
     end if
-    tempthismonth = running( dtemp, doy, ndayyear, ndaymonth(pm), "mean", dtemp_pvy(:,jpngr) )
-    templastmonth = running( dtemp, modulo( doy - ndaymonth(pm), ndayyear ), ndayyear, ndaymonth(ppm), "mean", dtemp_pvy(:,jpngr) )
+    tempthismonth = running( dtemp, doy, ndayyear, ndaymonth(pm), "mean", dtemp_pvy(:,jpngr))
+    templastmonth = running( dtemp, modulo( doy - ndaymonth(pm), ndayyear ), ndayyear, ndaymonth(ppm), "mean", dtemp_pvy(:,jpngr))
 
 
     do lu=1,nlu
@@ -110,9 +110,9 @@ contains
       ! meanw1 stores running mean soil moisture in layer 1 of previous 12 months 
       !-------------------------------------------------------------------------
       if (myinterface%steering%init) then
-        meanw1  = running( wscal_alldays(lu,:), doy, ndayyear, ndayyear, "mean"  )
+        meanw1  = running( wscal_alldays(lu,:), doy, ndayyear, ndayyear, "mean")
       else
-        meanw1  = running( wscal_alldays(lu,:), doy, ndayyear, ndayyear, "mean", wscal_pvy(lu,:,jpngr)  )
+        meanw1  = running( wscal_alldays(lu,:), doy, ndayyear, ndayyear, "mean", wscal_pvy(lu,:,jpngr))
       end if
 
       ! In case of zero soil water, return with soil temp = air temp

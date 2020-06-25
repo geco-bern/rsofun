@@ -127,7 +127,8 @@ contains
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
       !---------------------------------------------------------
-      out_snow_rain = get_snow_rain( climate%dprec + tile_fluxes(lu)%canopy%dcn, climate%dsnow, climate%dtemp, tile(lu)%soil%phy%snow )
+      out_snow_rain = get_snow_rain( climate%dprec + tile_fluxes(lu)%canopy%dcn, climate%dsnow, climate%dtemp, &
+        tile(lu)%soil%phy%snow )
       tile(lu)%soil%phy%snow = out_snow_rain%snow_updated 
 
       ! Update soil moisture
@@ -280,7 +281,8 @@ contains
     !---------------------------------------------------------
     ! Eq. 56, SPLASH 2.0 Documentation
     ! adopted bugfix from Python version (iss#13)
-    tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
+    tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
+      tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
 
 
     if (splashtest) then
@@ -384,7 +386,8 @@ contains
     ! 21. Estimate daily AET (tile_fluxes%canopy%daet), mm d-1
     !---------------------------------------------------------
     ! Eq. 81, SPLASH 2.0 Documentation
-    tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
+    tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
+      radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
     tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)
     
     ! xxx debug

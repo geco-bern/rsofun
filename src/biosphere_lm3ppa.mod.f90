@@ -48,7 +48,6 @@ contains
     integer, save :: iyears
     integer, save :: idays
     integer, save :: idoy
-    ! character(len=50) :: namelistfile = '~/sofun/params/parameters_Allocation.nml' !'parameters_WC_biodiversity.nml' ! 'parameters_CN.nml'
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
