@@ -283,6 +283,8 @@ type :: vegn_tile_type
    real :: MicrobialC  = 0  ! Microbes (kg C/m2)
    real :: metabolicL  = 0  ! fast soil carbon pool, (kg C/m2)
    real :: structuralL = 0  ! slow soil carbon pool, (kg C/m2)
+   real :: n_deadtrees  = 0  ! fast soil carbon pool, (kg C/m2)
+   real :: c_deadtrees = 0  ! slow soil carbon pool, (kg C/m2)
 
 !!  Nitrogen pools, Weng 2014-08-08
    real :: MicrobialN= 0
@@ -336,7 +338,7 @@ type :: vegn_tile_type
    real :: annualRh   = 0.0
    real :: annualNup       ! accumulated N uptake kgN m-2 yr-1
    real :: annualfixedN = 0.  ! fixe N in a tile
-   real :: annualMort != 0
+   real :: annualMort = 0
    ! for annual reporting at tile level
    real :: NSC, SeedC, leafC, rootC, SapwoodC, WoodC
    real :: NSN, SeedN, leafN, rootN, SapwoodN, WoodN

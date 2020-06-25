@@ -749,8 +749,8 @@ contains
           end if
           print*, "cc%BAL", cc%BAL
         end do  
-      ! deathrate = 0.5*cc%BAL
-      deathrate = 0.01*(1 + 5*exp(4*cc%BAL))/(1 + exp(4*cc%BAL))
+      ! deathrate = 0.05*cc%BAL
+      deathrate = 0.01*(exp(0.01*cc%BAL))/(1 + exp(0.01*cc%BAL))
       ! deadtrees = cc%nindivs * deathrate
       deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year)
       ! Carbon and Nitrogen from dead plants to soil pools
@@ -775,7 +775,7 @@ contains
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           ! deathrate = 0.01*(3*exp(4*(cc%DBH - cc%DBH_ys)))/(1+exp(4*(cc%DBH - cc%DBH_ys))) ! in terms of dbh
-          deathrate = 0.01*(3*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
+          deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
           ! deathrate = 0.01*(1 + exp(4*(cc%DBH - cc%DBH_ys))/   &
                            ! (1 + exp(4*(cc%DBH - cc%DBH_ys))))
           ! deathrate = 2.5*(cc%DBH - cc%DBH_ys)
@@ -818,6 +818,8 @@ contains
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
         ! print*, "cc%nindivs", cc%nindivs
+        ! vegn%n_deadtrees = deadtrees
+        ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
         end associate
       enddo
     endif
@@ -945,10 +947,15 @@ contains
 
     ! record daily mortality
     cc%dailyMort = loss_coarse + loss_fine 
+    vegn%n_deadtrees = vegn%n_deadtrees + deadtrees
+    vegn%c_deadtrees = vegn%c_deadtrees + deadtrees * (cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
+    ! vegn%c_deadtrees = vegn%c_deadtrees + loss_coarse + loss_fine
 
-    do i = 1, vegn%n_cohorts
-      ! print*, "cc%dailyMort", cc%dailyMort
-    end do
+    ! vegn%c_deadtrees = vegn%c_deadtrees + loss_coarse + loss_fine
+
+    print*, "cc%dailyMort", cc%dailyMort
+    print*, "vegn%n_deadtrees", vegn%n_deadtrees
+    print*, "vegn%c_deadtrees", vegn%c_deadtrees
 
     end associate
 
