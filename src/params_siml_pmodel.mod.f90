@@ -146,7 +146,7 @@ contains
       end if
 
       if ( year<=params_siml%spinupyears .and. ( year > ( spinupyr_soilequil_1 - params_siml%recycle ) .and. &
-           year <= spinupyr_soilequil_1 & .or. year > ( spinupyr_soilequil_2 - params_siml%recycle ) .and. &
+           year <= spinupyr_soilequil_1 .or. year > ( spinupyr_soilequil_2 - params_siml%recycle ) .and. &
            year <= spinupyr_soilequil_2 ) ) then
         out_steering%average_soil = .true.
       else
