@@ -166,7 +166,7 @@ contains
         !----------------------------------------------------------------
         ! daily diagnostics (e.g., sum over plant within canopy)
         !----------------------------------------------------------------
-        call diag_daily(tile, tile_fluxes)
+        call diag_daily(tile(:), tile_fluxes(:))
 
         !----------------------------------------------------------------
         ! populate function return variable

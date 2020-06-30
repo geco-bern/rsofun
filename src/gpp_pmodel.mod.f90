@@ -147,10 +147,13 @@ contains
         lu = 1
 
         !----------------------------------------------------------------
-        ! xxx try:
-        tile(lu)%plant(pft)%fpc_grid = 0.5
+        ! This is required as long as rsofun-P-model does only single-PFT simulations
+        tile(lu)%plant(pft)%fpc_grid = 1.0
         !----------------------------------------------------------------
 
+        !----------------------------------------------------------------
+        ! distribute PAR to PFTs according to fractional plant coverage
+        !----------------------------------------------------------------
         iabs = tile(lu)%canopy%fapar * climate%dppfd * tile(lu)%plant(pft)%fpc_grid
 
         !----------------------------------------------------------------
