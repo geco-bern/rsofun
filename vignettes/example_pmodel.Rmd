@@ -119,6 +119,10 @@ Now, meteorological forcing data and fAPAR data for each time step have to be co
 rsofun::df_drivers
 ```
 
+```{r}
+df_drivers$params_siml[[1]]$lgr3 <- FALSE
+df_drivers$params_siml[[1]]$lgr4 <- TRUE
+```
 
 ### Run the model
 
@@ -135,6 +139,22 @@ mod <- run_pmodel_f_bysite(
   makecheck = TRUE 
   )
 ```
+
+```{r}
+mod_c3 <- mod
+mod_c4 <- mod
+
+mod_c3 %>% 
+  dplyr::select(date, gpp_c3 = gpp) %>% 
+  left_join(
+    mod_c4 %>% 
+      dplyr::select(date, gpp_c4 = gpp),
+    by = "date"
+  ) %>% 
+  ggplot(aes(gpp_c3, gpp_c4)) +
+  geom_point()
+```
+
 
 Run for the full set of sites
 ```{r}
