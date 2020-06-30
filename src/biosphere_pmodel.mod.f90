@@ -46,8 +46,6 @@ contains
     logical, save           :: init_daily = .true.   ! is true only on the first day of the simulation 
     logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
 
-    print*,'hoi beni'
-
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
