@@ -147,7 +147,7 @@ contains
         lu = 1
 
         !----------------------------------------------------------------
-        ! xxx try:
+        ! This is required as long as rsofun-P-model does only single-PFT simulations
         tile(lu)%plant(pft)%fpc_grid = 1.0
         !----------------------------------------------------------------
 
