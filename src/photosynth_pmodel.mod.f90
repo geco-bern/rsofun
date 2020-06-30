@@ -569,7 +569,7 @@ contains
     type(outtype_chi) :: out_chi
 
     ! return derived type
-    out_chi%chi  = 9999.9
+    out_chi%chi  = 1.0
     out_chi%mj   = 1.0
     out_chi%mc   = 1.0
     out_chi%mjoc = 1.0
