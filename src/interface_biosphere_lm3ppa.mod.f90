@@ -33,19 +33,20 @@ module md_interface_lm3ppa
     integer :: lifeform
     integer :: phenotype
     integer :: pt
-    real :: seedlingsize
-    real :: LMA
-    real :: phiRL
-    real :: LNbase
-    real :: laimax
-    real :: LAI_light
-    real :: Nfixrate0
-    real :: NfixCost0
-    real :: phiCSA
-    real :: mortrate_d_c
-    real :: mortrate_d_u
-    real :: maturalage
-    real :: fNSNmax
+    real    :: seedlingsize
+    real    :: LMA
+    real    :: phiRL
+    real    :: LNbase
+    real    :: laimax
+    real    :: LAI_light
+    real    :: Nfixrate0
+    real    :: NfixCost0
+    real    :: phiCSA
+    real    :: mortrate_d_c
+    real    :: mortrate_d_u
+    real    :: maturalage
+    real    :: fNSNmax
+    real    :: alpha_FR
   end type paramstype_species
 
   type inittype_cohort 
@@ -258,6 +259,7 @@ module md_interface_lm3ppa
     real :: NPPW
     real :: GPP
     real :: NPP
+    real :: Rauto
     real :: N_uptk
     real :: N_fix
     real :: maxLAI

@@ -628,7 +628,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_uptk", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Rauto", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -636,7 +636,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_fix", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_uptk", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -644,7 +644,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "maxLAI", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_fix", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -652,11 +652,19 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Volume", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "maxLAI", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
       lm3out[[56]] %>%
+        as.matrix() %>% 
+        as_tibble() %>%
+        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Volume", names_prefix = "cohort_") %>%
+        dplyr::select(-1)) %>%
+    bind_cols(
+      .,
+      lm3out[[57]] %>%
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%

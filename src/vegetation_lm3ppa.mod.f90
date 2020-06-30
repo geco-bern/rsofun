@@ -11,7 +11,7 @@ module md_vegetation_lm3ppa
   public :: initialize_cohort_from_biomass, initialize_vegn_tile
   public :: vegn_CNW_budget, vegn_phenology, vegn_growth_EW,update_layer_LAI              ! , vegn_CNW_budget_daily
   public :: vegn_reproduction, vegn_annualLAImax_update !, annual_calls
-  public :: vegn_starvation, vegn_nat_mortality, vegn_species_switch
+  public :: vegn_nat_mortality, vegn_species_switch !, vegn_starvation
   public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
   public :: vegn_annual_starvation,Zero_diagnostics
 
@@ -765,15 +765,18 @@ contains
       do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species))
+
         ! mortality rate can be a function of growth rate, age, and environmental
         ! conditions. Here, we only used two constants for canopy layer and under-
         ! story layer (mortrate_d_c and mortrate_d_u)
 
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
           ! equivalent to 1 over the ratio of NSC and leaf mass
-          deathrate = 0.02*cc%bl_max/cc%nsc + 0.01*      &
-                      (1. + 5.*exp(4.*(cc%dbh-DBHtp))/   &
-                      (1. + exp(4.*(cc%dbh-DBHtp))))
+          ! deathrate = 0.02*cc%bl_max/cc%nsc + 0.01*      &
+                      ! (1. + 5.*exp(4.*(cc%dbh-DBHtp))/   &
+                      ! (1. + exp(4.*(cc%dbh-DBHtp))))
+
+          deathrate = exp(-1*(cc%nsc/cc%bl_max)+5)/(1+exp(-1*(cc%nsc/cc%bl_max)+5)) 
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           ! deathrate = 0.01*(3*exp(4*(cc%DBH - cc%DBH_ys)))/(1+exp(4*(cc%DBH - cc%DBH_ys))) ! in terms of dbh
@@ -831,47 +834,45 @@ contains
   end subroutine vegn_nat_mortality
 
 
-  subroutine vegn_starvation( vegn )
-    !////////////////////////////////////////////////////////////////
-    ! Mortality due to C starvation (NSC below threshold)
-    ! Starvation due to low NSC or NSN, daily
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn
+  ! subroutine vegn_starvation( vegn ) ! Daily (not used)
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Mortality due to C starvation (NSC below threshold)
+  !   ! Starvation due to low NSC or NSN, daily
+  !   ! Code from BiomeE-Allocation
+  !   !---------------------------------------------------------------
+  !   type(vegn_tile_type), intent(inout) :: vegn
 
-    ! local variables --------
-    real :: deathrate ! mortality rate, 1/year
-    real :: deadtrees ! number of trees that died over the time step
-    integer :: i, k
-    type(cohort_type), pointer :: cc
-    type(cohort_type), dimension(:), pointer :: ccold, ccnew
+  !   ! local variables --------
+  !   real :: deathrate ! mortality rate, 1/year
+  !   real :: deadtrees ! number of trees that died over the time step
+  !   integer :: i, k
+  !   type(cohort_type), pointer :: cc
+  !   type(cohort_type), dimension(:), pointer :: ccold, ccnew
 
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
-      associate ( sp => spdata(cc%species))
-      !   Mortality due to starvation
-      deathrate = 0.0
-      !   if (cc%bsw<0 .or. cc%nsc < 0.00001*cc%bl_max .OR.(cc%layer >1 .and. sp%lifeform ==0)) then
-      if (cc%nsc < 0.01*cc%bl_max ) then ! .OR. cc%NSN < 0.01*cc%bl_max/sp%CNleaf0
-        deathrate = 1.0
-        deadtrees = cc%nindivs * deathrate !individuals / m2
-        ! Carbon and Nitrogen from plants to soil pools
-        call plant2soil(vegn,cc,deadtrees)
-        !        update cohort individuals
-        cc%nindivs = 0.0 ! cc%nindivs*(1.0 - deathrate)
-      else
-        deathrate = 0.0
-      endif
-      end associate
-    enddo
-
+  !   do i = 1, vegn%n_cohorts
+  !     cc => vegn%cohorts(i)
+  !     associate ( sp => spdata(cc%species))
+  !     !   Mortality due to starvation
+  !     deathrate = 0.0
+  !     !   if (cc%bsw<0 .or. cc%nsc < 0.00001*cc%bl_max .OR.(cc%layer >1 .and. sp%lifeform ==0)) then
+  !     if (cc%nsc < 0.01*cc%bl_max ) then ! .OR. cc%NSN < 0.01*cc%bl_max/sp%CNleaf0
+  !       deathrate = 1.0
+  !       deadtrees = cc%nindivs * deathrate !individuals / m2
+  !       ! Carbon and Nitrogen from plants to soil pools
+  !       call plant2soil(vegn,cc,deadtrees)
+  !       !        update cohort individuals
+  !       cc%nindivs = 0.0 ! cc%nindivs*(1.0 - deathrate)
+  !     else
+  !       deathrate = 0.0
+  !     endif
+  !     end associate
+  !   enddo
     ! Remove the cohorts with 0 individuals
-    !call kill_lowdensity_cohorts( vegn )
-  
-  end subroutine vegn_starvation
+    ! call kill_lowdensity_cohorts( vegn )
+  ! end subroutine vegn_starvation
 
 
-  subroutine vegn_annual_starvation ( vegn )
+  subroutine vegn_annual_starvation ( vegn ) ! Annual
     !////////////////////////////////////////////////////////////////
     ! Mortality due to C starvation (NSC below threshold)
     ! Starvation due to low NSC and annual NPP
@@ -956,9 +957,9 @@ contains
 
     ! vegn%c_deadtrees = vegn%c_deadtrees + loss_coarse + loss_fine
 
-    print*, "cc%dailyMort", cc%dailyMort
-    print*, "vegn%n_deadtrees", vegn%n_deadtrees
-    print*, "vegn%c_deadtrees", vegn%c_deadtrees
+    ! print*, "cc%dailyMort", cc%dailyMort
+    ! print*, "vegn%n_deadtrees", vegn%n_deadtrees
+    ! print*, "vegn%c_deadtrees", vegn%c_deadtrees
 
     end associate
 

@@ -209,6 +209,7 @@ void F77_NAME(lm3ppa_f)(
     double *output_annual_cohorts_NPPW,
     double *output_annual_cohorts_GPP,
     double *output_annual_cohorts_NPP,
+    double *output_annual_cohorts_Rauto,
     double *output_annual_cohorts_N_uptk,
     double *output_annual_cohorts_N_fix,
     double *output_annual_cohorts_maxLAI,
@@ -317,6 +318,7 @@ extern SEXP lm3ppa_f_C(
     SEXP output_annual_cohorts_NPPW    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_GPP     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_NPP     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_Rauto   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_N_uptk  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_N_fix   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_maxLAI  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
@@ -415,6 +417,7 @@ extern SEXP lm3ppa_f_C(
         REAL(output_annual_cohorts_NPPW),
         REAL(output_annual_cohorts_GPP),
         REAL(output_annual_cohorts_NPP),
+        REAL(output_annual_cohorts_Rauto),
         REAL(output_annual_cohorts_N_uptk),
         REAL(output_annual_cohorts_N_fix),
         REAL(output_annual_cohorts_maxLAI),
@@ -423,7 +426,7 @@ extern SEXP lm3ppa_f_C(
         );
 
     // // Output as list
-    SEXP out_list = PROTECT( allocVector(VECSXP, 56) );  // maybe try  STRSXP instead of VECSXP
+    SEXP out_list = PROTECT( allocVector(VECSXP, 57) );  // maybe try  STRSXP instead of VECSXP
     
     SET_VECTOR_ELT(out_list, 0, output_hourly_tile);
     SET_VECTOR_ELT(out_list, 1, output_daily_tile);
@@ -476,13 +479,14 @@ extern SEXP lm3ppa_f_C(
     SET_VECTOR_ELT(out_list, 48, output_annual_cohorts_NPPW);
     SET_VECTOR_ELT(out_list, 49, output_annual_cohorts_GPP);
     SET_VECTOR_ELT(out_list, 50, output_annual_cohorts_NPP);
-    SET_VECTOR_ELT(out_list, 51, output_annual_cohorts_N_uptk);
-    SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_N_fix);
-    SET_VECTOR_ELT(out_list, 53, output_annual_cohorts_maxLAI);
-    SET_VECTOR_ELT(out_list, 54, output_annual_cohorts_Volume);
-    SET_VECTOR_ELT(out_list, 55, output_annual_cohorts_annualMort);
+    SET_VECTOR_ELT(out_list, 51, output_annual_cohorts_Rauto);
+    SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_N_uptk);
+    SET_VECTOR_ELT(out_list, 53, output_annual_cohorts_N_fix);
+    SET_VECTOR_ELT(out_list, 54, output_annual_cohorts_maxLAI);
+    SET_VECTOR_ELT(out_list, 55, output_annual_cohorts_Volume);
+    SET_VECTOR_ELT(out_list, 56, output_annual_cohorts_annualMort);
 
-    UNPROTECT(57);
+    UNPROTECT(58);
 
     return out_list;
 }

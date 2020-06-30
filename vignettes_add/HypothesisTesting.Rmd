@@ -40,7 +40,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -50,6 +50,7 @@ params_siml <- list(
 
 ```{r}
 params_tile <- list(
+  #Soil water properties
   soiltype     = 3,    # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   FLDCAP       = 0.4,  # soil property: field capacity 
   WILTPT       = 0.05, # soil property: wilting point
@@ -61,9 +62,8 @@ params_tile <- list(
   l_fract      = 0.0,  # fraction of the carbon retained after leaf drop
   retransN     = 0.0,  # retranslocation coefficient of Nitrogen
   f_N_add      = 0.02, # re-fill of N for sapwood
-  f_initialBSW = 0.005
-  #LAImin       = 0.02
-  # alpha_FR   =  1.2; gamma_FR = 12.0; dSlowSOM = 2.5 * iSOM + 1.5; rho_N_up0 = 0.1
+  f_initialBSW = 0.005,
+  LMAmin       = 0.02
   )
 
 ```
@@ -96,7 +96,8 @@ params_species <- tibble(
   mortrate_d_u  = c(0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08),    
   # understory tree mortality rate, year-1
   maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
-  fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
+  fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
+  alpha_FR      = c(1.2,     1.2,      1.2,      1.2,      1.2,    1.2,      1.2,      1.2,    1.2,      1.2,      1.2)
   ) %>% 
   bind_rows(., slice(., 1:5))
 ```
