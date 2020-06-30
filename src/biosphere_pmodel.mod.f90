@@ -5,7 +5,7 @@ module md_biosphere_pmodel
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
-  use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, getpar_modl_tile
+  use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, getpar_modl_tile, diag_daily
   use md_plant_pmodel, only: getpar_modl_plant
   ! use md_params_soil_pmodel, only: getpar_soil
   ! use md_soiltemp, only: soiltemp
@@ -162,6 +162,11 @@ contains
         !               doy & 
         !               )
         ! if (verbose) print*, '... done'
+
+        !----------------------------------------------------------------
+        ! daily diagnostics (e.g., sum over plant within canopy)
+        !----------------------------------------------------------------
+        call diag_daily(tile, tile_fluxes)
 
         !----------------------------------------------------------------
         ! populate function return variable

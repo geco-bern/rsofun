@@ -9,7 +9,7 @@ module md_tile_pmodel
 
   private
   public tile_type, tile_fluxes_type, initglobal_tile, psoilphystype, soil_type, &
-    initdaily_tile_fluxes, getpar_modl_tile
+    initdaily_tile_fluxes, getpar_modl_tile, diag_daily
 
   !----------------------------------------------------------------
   ! physical soil state variables with memory from year to year (~pools)
@@ -488,5 +488,29 @@ contains
     params_canopy%kbeer = 0.5 ! hard-coded
 
   end subroutine getpar_modl_canopy
+
+
+  subroutine diag_daily(tile, tile_fluxes)
+    !////////////////////////////////////////////////////////////////
+    ! Daily diagnostics
+    ! - sum over PFTs (plant) within LU (canopy) 
+    !----------------------------------------------------------------
+    ! arguments
+    type(tile_type), dimension(nlu), intent(inout) :: tile 
+    type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
+
+    ! local
+    integer :: lu
+
+    !----------------------------------------------------------------
+    ! Sum over PFTs to get canopy-level quantities
+    !----------------------------------------------------------------
+    do lu=1,nlu
+      tile_fluxes(lu)%canopy%dgpp = sum(tile_fluxes(lu)%plant(:)%dgpp)
+      tile_fluxes(lu)%canopy%drd = sum(tile_fluxes(lu)%plant(:)%drd)
+    end do
+
+  end subroutine diag_daily
+
 
 end module md_tile_pmodel
