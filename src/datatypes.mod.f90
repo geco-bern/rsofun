@@ -19,7 +19,7 @@ public :: qscomp, calc_esat
  ! parameters
  public :: MaxCohortID, &
     K1, K2, K_nitrogen, etaN, MLmixRatio, &
-    fsc_fine, fsc_wood,  &
+    fsc_fine, fsc_wood, LMAmin,  &
     GR_factor,  l_fract, retransN, f_initialBSW, &
     f_N_add, A_mort, B_mort,DBHtp
 
@@ -437,7 +437,7 @@ real :: understory_lai_factor = 0.25
 ! integer :: lifeform(0:MSPECIES) = 1 ! life form of PFTs: 0 for grasses, 1 for trees
 
 ! root parameters
-! real :: alpha_FR(0:MSPECIES) = 1.2 ! Fine root turnover rate yr-1
+real :: alpha_FR(0:MSPECIES) = 1.2 ! Fine root turnover rate yr-1
 !(/0.8, 0.8,0.8, 0.8, 0.8,0.8,0.8,0.8,1.0,1.0,0.6, 1.0, 0.55, 0.9, 0.55, 0.55/)
 real :: rho_FR(0:MSPECIES) = 200 ! woody density, kgC m-3
 real :: root_r(0:MSPECIES) = 2.9E-4
@@ -652,7 +652,7 @@ subroutine initialize_PFT_data() !namelistfile
   spdata%phiRL        = myinterface%params_species(:)%phiRL
   spdata%phiCSA       = myinterface%params_species(:)%phiCSA
   ! root urnover rate
-  spdata%alpha_FR     = myinterface%params_species(:)%alpha_FR
+  spdata%alpha_FR     = alpha_FR
 
 
 !! Nitrogen Weng 2012-10-24

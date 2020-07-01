@@ -41,7 +41,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthin or bal
+      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin or bal
       )
 ```
 
@@ -96,8 +96,8 @@ params_species <- tibble(
   mortrate_d_u  = c(0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08),    
   # understory tree mortality rate, year-1
   maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
-  fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
-  alpha_FR      = c(1.2,     1.2,      1.2,      1.2,      1.2,    1.2,      1.2,      1.2,    1.2,      1.2,      1.2)
+  fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
+  #alpha_FR      = c(1.2,     1.2,      1.2,      1.2,      1.2,    1.2,      1.2,      1.2,    1.2,      1.2,      1.2)
   ) %>% 
   bind_rows(., slice(., 1:5))
 ```

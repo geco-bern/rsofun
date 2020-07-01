@@ -27,6 +27,7 @@ module md_interface_lm3ppa
     real   :: retransN
     real   :: f_N_add
     real   :: f_initialBSW
+    real   :: LMAmin
   end type paramstype_tile
   
   type paramstype_species
@@ -46,7 +47,6 @@ module md_interface_lm3ppa
     real    :: mortrate_d_u
     real    :: maturalage
     real    :: fNSNmax
-    real    :: alpha_FR
   end type paramstype_species
 
   type inittype_cohort 
