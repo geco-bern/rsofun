@@ -31,10 +31,10 @@ Now specify the simulation parameters that are identical for all site-scale simu
 ```{r}
 params_siml <- list(
       spinup                = TRUE,
-      spinupyears           = 1793,
+      spinupyears           = 1800, #1793,
       recycle               = 11, # 9 or 11
       firstyeartrend        = 1998,
-      nyeartrend            = 11, #9 or 11
+      nyeartrend            = 110, #9 or 11
       outputhourly          = FALSE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
@@ -191,6 +191,9 @@ if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
 
 # Changing values of PAR for running simulations
 # forcing <- forcing %>% mutate(PAR = PAR*1.30) # levels = *1, *1.15 and *1.30
+
+# Replicating forcing data to run longer transient years
+forcing <- bind_rows(replicate(10, forcing, simplify = FALSE))
 
 ```
 

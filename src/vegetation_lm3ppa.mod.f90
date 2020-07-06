@@ -748,7 +748,7 @@ contains
             cc%BAL = 0
           else
             cc%BAL = sum(vegn%cohorts(1:i-1)%BA)
-          end if
+          endif
           print*, "cc%BAL", cc%BAL
         end do  
       ! deathrate = 0.05*cc%BAL
@@ -775,8 +775,7 @@ contains
           ! deathrate = 0.02*cc%bl_max/cc%nsc + 0.01*      &
                       ! (1. + 5.*exp(4.*(cc%dbh-DBHtp))/   &
                       ! (1. + exp(4.*(cc%dbh-DBHtp))))
-
-          deathrate = exp(-1*(cc%nsc/cc%bl_max)+5)/(1+exp(-1*(cc%nsc/cc%bl_max)+5)) 
+          deathrate = 0.06*exp(-1*(cc%nsc/cc%bl_max)+5)/(1+exp(-1*(cc%nsc/cc%bl_max)+5)) + 0.03
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           ! deathrate = 0.01*(3*exp(4*(cc%DBH - cc%DBH_ys)))/(1+exp(4*(cc%DBH - cc%DBH_ys))) ! in terms of dbh
@@ -922,7 +921,7 @@ contains
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
-    type(cohort_type),    intent(inout) :: cc
+    type(cohort_type),    intent(inout)    :: cc
     real,                 intent(in)    :: deadtrees ! dead trees/m2
 
     ! local variables --------
@@ -950,7 +949,7 @@ contains
     vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
 
     ! record daily mortality
-    cc%dailyMort = loss_coarse + loss_fine 
+    cc%dailyMort = cc%dailyMort + loss_coarse + loss_fine 
     vegn%n_deadtrees = vegn%n_deadtrees + deadtrees
     vegn%c_deadtrees = vegn%c_deadtrees + deadtrees * (cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
     ! vegn%c_deadtrees = vegn%c_deadtrees + loss_coarse + loss_fine

@@ -171,7 +171,6 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       init_slow_soil_C = as.numeric(init_soil$init_slow_soil_C),
       init_Nmineral    = as.numeric(init_soil$init_Nmineral),
       N_input          = as.numeric(init_soil$N_input),
-
       n                = as.integer(nrow(forcing)), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       n_daily          = as.integer(n_daily), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       n_annual         = as.integer(runyears), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
