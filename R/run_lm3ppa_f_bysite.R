@@ -450,7 +450,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     out$output_annual_tile <- lm3out[[30]] %>%
       as.matrix() %>% 
       as_tibble() %>%
-      setNames(c("year", "CAI", "LAI", "Density", "DBH", "Density12", "DBH12", "QMD", "NPP", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N", "MaxAge", "MaxVolume", "MaxDBH", "NPPL", "NPPW", "annualMort")) %>%
+      setNames(c("year", "CAI", "LAI", "Density", "DBH", "Density12", "DBH12", "QMD", "NPP", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N", "MaxAge", "MaxVolume", "MaxDBH", "NPPL", "NPPW", "n_deadtrees", "c_deadtrees")) %>%
       filter_at(vars(year), all_vars((.) != 0))
     
     ## annual cohorts
@@ -667,7 +667,15 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "annualMort", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "n_deadtrees", names_prefix = "cohort_") %>%
+        dplyr::select(-1)) %>%
+    bind_cols(
+      .,
+      lm3out[[58]] %>%
+        as.matrix() %>% 
+        as_tibble() %>%
+        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "c_deadtrees", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     tidyr::drop_na(year) 
 

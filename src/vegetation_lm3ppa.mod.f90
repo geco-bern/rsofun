@@ -117,7 +117,7 @@ contains
     ! With nitrogen model, leaf respiration is a function of leaf nitrogen
     !NSCtarget = 3.0 * (cc%bl_max + cc%br_max)
     fnsc = 1.0 ! min(max(0.0,cc%nsc/NSCtarget),1.0)
-    Acambium = PI * cc%DBH * cc%height * 1.2
+    Acambium = PI * cc%DBH * cc%height * 1.2 !xxxxx
     ! Facultive Nitrogen fixation
     !if (cc%NSN < cc%NSNmax .and. cc%NSC > 0.5 * NSCtarget) then
     !   cc%fixedN = spdata(sp)%NfixRate0 * cc%br * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
@@ -771,18 +771,12 @@ contains
         ! story layer (mortrate_d_c and mortrate_d_u)
 
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
-          ! equivalent to 1 over the ratio of NSC and leaf mass
-          ! deathrate = 0.02*cc%bl_max/cc%nsc + 0.01*      &
-                      ! (1. + 5.*exp(4.*(cc%dbh-DBHtp))/   &
-                      ! (1. + exp(4.*(cc%dbh-DBHtp))))
-          deathrate = 0.06*exp(-1*(cc%nsc/cc%bl_max)+5)/(1+exp(-1*(cc%nsc/cc%bl_max)+5)) + 0.03
+          deathrate = 0.06*exp(-1*(cc%nsc/cc%bl_max)+5)/(1+exp(-1*(cc%nsc/cc%bl_max)+5))
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
-          ! deathrate = 0.01*(3*exp(4*(cc%DBH - cc%DBH_ys)))/(1+exp(4*(cc%DBH - cc%DBH_ys))) ! in terms of dbh
           deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
-          ! deathrate = 0.01*(1 + exp(4*(cc%DBH - cc%DBH_ys))/   &
+          ! deathrate = 0.01*(1 + exp(4*(cc%DBH - cc%DBH_ys))/ & ! in terms of dbh
                            ! (1 + exp(4*(cc%DBH - cc%DBH_ys))))
-          ! deathrate = 2.5*(cc%DBH - cc%DBH_ys)
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
@@ -810,12 +804,10 @@ contains
           endif
         endif
 
-        ! print*, "cc%height", cc%height
-        ! print*, "deadtrees", deadtrees
+        deathrate = deathrate + 0.01
+        deadtrees = cc%nindivs * deathrate
         ! deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
-        deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year) ! individuals / m2
-        ! print*, "deadtrees", deadtrees
-        ! deadtrees = cc%nindivs * deathrate
+        ! deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year) ! individuals / m2
         ! Carbon and Nitrogen from dead plants to soil pools
         ! print*, "deadtrees2", deadtrees
         call plant2soil(vegn,cc,deadtrees)
@@ -826,10 +818,11 @@ contains
         ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
         end associate
       enddo
+      ! Remove the cohorts with 0 individuals
+      call kill_lowdensity_cohorts(vegn)
     endif
-  ! Remove the cohorts with 0 individuals
-  !call kill_lowdensity_cohorts(vegn)
-
+   ! vegn%n_deadtrees = vegn%n_deadtrees + deadtrees
+   ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW) 
   end subroutine vegn_nat_mortality
 
 
@@ -908,9 +901,8 @@ contains
       endif
       end associate
     enddo
-
     ! Remove the cohorts with 0 individuals
-    ! call kill_lowdensity_cohorts( vegn )
+    call kill_lowdensity_cohorts( vegn )
 
   end subroutine vegn_annual_starvation
 
@@ -921,7 +913,7 @@ contains
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
-    type(cohort_type),    intent(inout)    :: cc
+    type(cohort_type),    intent(inout) :: cc
     real,                 intent(in)    :: deadtrees ! dead trees/m2
 
     ! local variables --------
@@ -948,15 +940,18 @@ contains
     ! annual N from plants to soil
     vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
 
-    ! record daily mortality
-    cc%dailyMort = cc%dailyMort + loss_coarse + loss_fine 
-    vegn%n_deadtrees = vegn%n_deadtrees + deadtrees
-    vegn%c_deadtrees = vegn%c_deadtrees + deadtrees * (cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
-    ! vegn%c_deadtrees = vegn%c_deadtrees + loss_coarse + loss_fine
-
-    ! vegn%c_deadtrees = vegn%c_deadtrees + loss_coarse + loss_fine
-
-    ! print*, "cc%dailyMort", cc%dailyMort
+    ! record mortality
+    ! cohort level
+    cc%n_deadtrees   = deadtrees
+    cc%c_deadtrees   = deadtrees * (cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
+    
+    ! vegn%n_deadtrees   = vegn%n_deadtrees + deadtrees
+    ! vegn%c_deadtrees   = vegn%c_deadtrees + deadtrees * (cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
+    
+    ! ! print*, "vegn%n_deadtrees", vegn%n_deadtrees
+    ! print*, "deadtrees", deadtrees
+    ! print*, "cc%n_deadtrees", cc%n_deadtrees
+    ! print*, "vegn%n_deadtrees", vegn%n_deadtrees
     ! print*, "vegn%n_deadtrees", vegn%n_deadtrees
     ! print*, "vegn%c_deadtrees", vegn%c_deadtrees
 

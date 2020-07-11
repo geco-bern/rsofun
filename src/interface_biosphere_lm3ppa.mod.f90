@@ -234,7 +234,8 @@ module md_interface_lm3ppa
     real :: MaxDBH
     real :: NPPL
     real :: NPPW
-    real :: annualMort
+    real :: n_deadtrees
+    real :: c_deadtrees
   end type outtype_annual_tile  
 
   type outtype_annual_cohorts ! fno2
@@ -264,7 +265,8 @@ module md_interface_lm3ppa
     real :: N_fix
     real :: maxLAI
     real :: Volume
-    real :: annualMort
+    real :: n_deadtrees
+    real :: c_deadtrees
   end type outtype_annual_cohorts
 
   type outtype_biosphere

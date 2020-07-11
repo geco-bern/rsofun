@@ -7,10 +7,7 @@ module md_biosphere_pmodel
   use md_vegdynamics_pmodel, only: vegdynamics
   use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, getpar_modl_tile
   use md_plant_pmodel, only: getpar_modl_plant
-  ! use md_params_soil_pmodel, only: getpar_soil
-  ! use md_soiltemp, only: soiltemp
   use md_sofunutils, only: calc_patm
-
 
   implicit none
 

@@ -321,7 +321,8 @@ contains
     output_annual_cohorts_N_fix,  &
     output_annual_cohorts_maxLAI, &
     output_annual_cohorts_Volume, &
-    output_annual_cohorts_annualMort  &
+    output_annual_cohorts_n_deadtrees,  &
+    output_annual_cohorts_c_deadtrees  &
     ) bind(C, name = "lm3ppa_f_")
 
     !////////////////////////////////////////////////////////////////
@@ -453,7 +454,8 @@ contains
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_N_fix
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_maxLAI
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Volume
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_annualMort
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_n_deadtrees
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_c_deadtrees
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -713,7 +715,8 @@ contains
         output_annual_cohorts_N_fix(idx, :)      = dble(out_biosphere%annual_cohorts(:)%N_fix)
         output_annual_cohorts_maxLAI(idx, :)     = dble(out_biosphere%annual_cohorts(:)%maxLAI)
         output_annual_cohorts_Volume(idx, :)     = dble(out_biosphere%annual_cohorts(:)%Volume)
-        output_annual_cohorts_annualMort(idx, :) = dble(out_biosphere%annual_cohorts(:)%annualMort)
+        output_annual_cohorts_n_deadtrees(idx, :) = dble(out_biosphere%annual_cohorts(:)%n_deadtrees)
+        output_annual_cohorts_c_deadtrees(idx, :) = dble(out_biosphere%annual_cohorts(:)%c_deadtrees)
 
       end if
 
@@ -877,7 +880,8 @@ contains
     out_annual_tile(53) = dble(annual_tile%MaxDBH)
     out_annual_tile(54) = dble(annual_tile%NPPL)
     out_annual_tile(55) = dble(annual_tile%NPPW)
-    out_annual_tile(56) = dble(annual_tile%annualMort)
+    out_annual_tile(56) = dble(annual_tile%n_deadtrees)
+    out_annual_tile(57) = dble(annual_tile%c_deadtrees)
 
   end subroutine populate_outarray_annual_tile
 

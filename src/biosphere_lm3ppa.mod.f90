@@ -1,18 +1,17 @@
 module md_biosphere_lm3ppa
-
+  
   use datatypes
   use md_vegetation_lm3ppa
   use md_soil_lm3ppa
   use md_params_core
-
+  
   implicit none
-
   private
   public biosphere_annual
 
-   type(vegn_tile_type),  pointer :: vegn   
-   type(soil_tile_type),  pointer :: soil
-   type(cohort_type),     pointer :: cx, cc
+  type(vegn_tile_type),  pointer :: vegn   
+  type(soil_tile_type),  pointer :: soil
+  type(cohort_type),     pointer :: cx, cc
 
 contains
 
@@ -113,8 +112,12 @@ contains
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
+         
           call hourly_diagnostics( vegn, myinterface%climate(idata), iyears, idoy, i, out_biosphere%hourly_tile(idata) )
+         
           init = .false.
+         
+          call getout_hourly( vegn, myinterface%climate(idata), iyears, idoy, i, out_biosphere%hourly_tile(idata) )
 
         enddo fastloop ! hourly or half-hourly
 
@@ -133,6 +136,8 @@ contains
 
         ! Produce new biomass from 'carbon_gain' (is zero afterwards)
         call vegn_growth_EW( vegn )
+
+        call getout_daily( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
 
       end do dayloop
 
@@ -160,19 +165,27 @@ contains
     ! (~Eq. 2 in Weng et al., 2015 BG)
     call vegn_nat_mortality( vegn, real( seconds_per_year ))
 
+    ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
+
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
     call vegn_reproduction( vegn )
+    
+    ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
 
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
     call kill_lowdensity_cohorts( vegn )
+
     call relayer_cohorts( vegn )
+    
     call vegn_mergecohorts( vegn )
 
-    ! !---------------------------------------------
-    ! ! Set annual variables zero
-    ! !---------------------------------------------
+    ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
+
+    !---------------------------------------------
+    ! Set annual variables zero
+    !---------------------------------------------
     call Zero_diagnostics( vegn )
 
     ! update the years of model run
