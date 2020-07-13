@@ -40,7 +40,7 @@ params_siml <- list(
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+      method_photosynth     = "pmodel", # gs_leuning or pmodel
       method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
@@ -271,38 +271,24 @@ pmodel_out_annual_cohorts <- out$output_annual_cohorts
 
 pmodel_out_annual_tile %>% 
   ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+  geom_line(aes(x = year, y = GPP), color="red") +
+  labs(title = "LM3-PPA with P-model photosynthesis", subtitle = "rsofun output",
+       x = "Year", y = expression(paste("GPP (Kg C ", m^-2, " ", yr^-1, ") "))) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
 
 pmodel_out_annual_tile %>% 
   ggplot() +
-  geom_line(aes(x = year, y = plantC)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+  geom_line(aes(x = year, y = plantC), color="red") +
+  labs(title = "LM3-PPA with P-model photosynthesis", subtitle = "rsofun output",
+       x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
 
 pmodel_out_annual_tile %>% 
   ggplot() +
-  geom_line(aes(x = year, y = N_P2S)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-pmodel_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = CAI)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-pmodel_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = NPP)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-pmodel_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = NPPL)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-pmodel_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = fastSOM)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+  geom_line(aes(x = year, y = Rauto), color="red") +
+  labs(title = "LM3-PPA with P-model photosynthesis", subtitle = "rsofun output",
+       x = "Year", y = expression(paste("Plant respiration (Kg C ", m^-2, " ", yr^-1, ") "))) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
 
 pmodel_out_annual_tile %>% 
   ggplot() +
