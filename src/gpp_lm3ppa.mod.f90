@@ -1,7 +1,7 @@
 module md_gpp_lm3ppa
   !//////////////////////////////////////////////////////////////////////
   ! GPP MODULE
-  ! Uses LM3-PPA structure to call the gs_Leuning() photosynthesis routine
+  ! Uses LM3-PPA structure to call the gs_leuning() photosynthesis routine
   !------------------------------------------------------------------------
   use datatypes
   use md_soil_lm3ppa, only: water_supply_layer
@@ -142,7 +142,7 @@ contains
           fw = 0.0
           fs = 0.0
 
-          call gs_Leuning(rad_top, rad_net, TairK, cana_q, cc%lai, &
+          call gs_leuning(rad_top, rad_net, TairK, cana_q, cc%lai, &
             p_surf, water_supply, cc%species, sp%pt, &
             cana_co2, cc%extinct, fs+fw, cc%layer, &
             ! output:
@@ -220,7 +220,6 @@ contains
         crownarea_layer(layer) = crownarea_layer(layer) + cc%crownarea
       end do
 
-      
       !----------------------------------------------------------------
       ! Get light fraction received at each crown layer, relative to top-of-canopy -> f_light(layer) 
       !----------------------------------------------------------------
@@ -306,7 +305,6 @@ contains
             cc%resl    = out_pmodel%rd  * cc%crownarea * myinterface%step_seconds * mol_C     ! kgC step-1 tree-1 xxxxxxxxxx
             cc%gpp     = out_pmodel%gpp * cc%crownarea * myinterface%step_seconds * 1.0e-3    ! kgC step-1 tree-1
 
-
           else
 
             cc%An_op   = 0.0
@@ -343,7 +341,7 @@ contains
   end subroutine gpp
 
 
-  subroutine gs_Leuning( rad_top, rad_net, tl, ea, lai, &
+  subroutine gs_leuning( rad_top, rad_net, tl, ea, lai, &
     p_surf, ws, pft, pt, ca, kappa, leaf_wet, layer, &
     apot, acl,w_scale2, transp )
 
@@ -576,7 +574,7 @@ contains
     gs = gs * Rugas * Tl / p_surf
     !write(899, '(25(E12.4,","))') rad_net,par_net,apot*3600*12,acl*3600*12,Ed
 
-  end subroutine gs_Leuning
+  end subroutine gs_leuning
 
 
   subroutine calc_solarzen(td, latdegrees, cosz, solarelev, solarzen)

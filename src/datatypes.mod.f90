@@ -392,7 +392,7 @@ module datatypes
   real :: retransN   != 0.0     ! retranslocation coefficient of Nitrogen
   real :: f_N_add != 0.02       ! re-fill of N for sapwood
   real :: f_initialBSW != 0.2   !0.01
-  real :: LMAmin     != 0.02    ! minimum LMA, boundary condition
+  real :: LMAmin     = 0.02    ! minimum LMA, boundary condition
   real :: fsc_fine   = 1.0     ! fraction of fast turnover carbon in fine biomass
   real :: fsc_wood   = 0.0     ! fraction of fast turnover carbon in wood biomass
   real :: GR_factor  = 0.33    ! growth respiration factor

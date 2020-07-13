@@ -31,16 +31,16 @@ Now specify the simulation parameters that are identical for all site-scale simu
 ```{r}
 params_siml <- list(
       spinup                = TRUE,
-      spinupyears           = 1800, #1793,
+      spinupyears           = 1793, #1793,
       recycle               = 11, # 9 or 11
       firstyeartrend        = 1998,
       nyeartrend            = 11, #9 or 110 (longer transient years)
-      outputhourly          = FALSE,
+      outputhourly          = TRUE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "pmodel", # gs_leuning or pmodel
+      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
       method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
@@ -62,8 +62,8 @@ params_tile <- list(
   l_fract      = 0.0,  # fraction of the carbon retained after leaf drop
   retransN     = 0.0,  # retranslocation coefficient of Nitrogen
   f_N_add      = 0.02, # re-fill of N for sapwood
-  f_initialBSW = 0.005,
-  LMAmin       = 0.02
+  f_initialBSW = 0.005
+  #LMAmin       = 0.02
   )
 
 ```
@@ -144,7 +144,6 @@ init_soil <- list(
  init_Nmineral       = 2.5E-3, # kg N m-2
  N_input             = 0.0E-3  # 2.4E-3, # kg N m-2 yr-1, N deposit: 0.8 g N m-2 yr-1
 )
-
 ```
 
 ### Define soil parameters
