@@ -117,7 +117,7 @@ contains
     ! With nitrogen model, leaf respiration is a function of leaf nitrogen
     !NSCtarget = 3.0 * (cc%bl_max + cc%br_max)
     fnsc = 1.0 ! min(max(0.0,cc%nsc/NSCtarget),1.0)
-    Acambium = PI * cc%DBH * cc%height * 1.2 !xxxxx
+    Acambium = PI * cc%DBH * cc%height * 1.2 ! see Weng et al. 2015: Acambium~D^1.5 -> H~D^0.5 and D*H is proportional to D^1.5
     ! Facultive Nitrogen fixation
     !if (cc%NSN < cc%NSNmax .and. cc%NSC > 0.5 * NSCtarget) then
     !   cc%fixedN = spdata(sp)%NfixRate0 * cc%br * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
@@ -680,10 +680,8 @@ contains
         ! call relayer_cohorts( vegn )
         call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
 
-        ! xxx check whether cohorts are ranked w.r.t. ??? (height?)
-        ! print*, "crownarea", vegn%cohorts%crownarea 
-        print*, "height", vegn%cohorts%height 
-        ! print*, "crownarea", vegn%cohorts%crownarea * vegn%cohorts%nindivs 
+        ! xxx check whether cohorts are ranked w.r.t. (height?)
+        ! print*, "height", vegn%cohorts%height 
 
         ! ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
         allocate(cai_partial(vegn%n_cohorts))
@@ -696,11 +694,9 @@ contains
           else
             cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
           end if
-          print*, "i, cai_partial", i, cai_partial
+          ! print*, "i, cai_partial", i, cai_partial
 
         end do
-
-        ! print*, "cai_partial", cai_partial
 
         ! determine the cohort where cai_partial exceeds critical value
         i_crit = vegn%n_cohorts
@@ -713,8 +709,8 @@ contains
         deathrate = (cai_partial(i_crit) - CAI_max) / &
                     (cai_partial(i_crit) - cai_partial(i_crit+1))
 
-        print*, "deathrate", deathrate
-        print*, "i_crit", i_crit
+        ! print*, "deathrate", deathrate
+        ! print*, "i_crit", i_crit
 
         deadtrees = cc%nindivs * deathrate
         ! print*, "deadtrees", deadtrees
@@ -738,27 +734,27 @@ contains
         deallocate(cai_partial)
       end if
 
-    else if ((trim(myinterface%params_siml%method_mortality) == "bal")) then
+    ! else if ((trim(myinterface%params_siml%method_mortality) == "bal")) then
 
-      call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%BA,idx)
+    !   call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%BA,idx)
 
-        do i = 1, vegn%n_cohorts
-          cc => vegn%cohorts(i)
-          if (i==1) then
-            cc%BAL = 0
-          else
-            cc%BAL = sum(vegn%cohorts(1:i-1)%BA)
-          endif
-          print*, "cc%BAL", cc%BAL
-        end do  
-      ! deathrate = 0.05*cc%BAL
-      deathrate = 0.01*(exp(0.01*cc%BAL))/(1 + exp(0.01*cc%BAL))
-      ! deadtrees = cc%nindivs * deathrate
-      deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year)
-      ! Carbon and Nitrogen from dead plants to soil pools
-      call plant2soil(vegn,cc,deadtrees)
-      ! Update plant density
-      cc%nindivs = cc%nindivs - deadtrees
+    !     do i = 1, vegn%n_cohorts
+    !       cc => vegn%cohorts(i)
+    !       if (i==1) then
+    !         cc%BAL = 0
+    !       else
+    !         cc%BAL = sum(vegn%cohorts(1:i-1)%BA)
+    !       endif
+    !       print*, "cc%BAL", cc%BAL
+    !     end do  
+    !   ! deathrate = 0.05*cc%BAL
+    !   deathrate = 0.01*(exp(0.01*cc%BAL))/(1 + exp(0.01*cc%BAL))
+    !   ! deadtrees = cc%nindivs * deathrate
+    !   deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year)
+    !   ! Carbon and Nitrogen from dead plants to soil pools
+    !   call plant2soil(vegn,cc,deadtrees)
+    !   ! Update plant density
+    !   cc%nindivs = cc%nindivs - deadtrees
  
     else
 
@@ -771,7 +767,7 @@ contains
         ! story layer (mortrate_d_c and mortrate_d_u)
 
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
-          deathrate = 0.06*exp(-1*(cc%nsc/cc%bl_max)+5)/(1+exp(-1*(cc%nsc/cc%bl_max)+5))
+          deathrate = 0.055*exp(-1*(cc%nsc/cc%bl_max)+5)/(1+exp(-1*(cc%nsc/cc%bl_max)+5))
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume

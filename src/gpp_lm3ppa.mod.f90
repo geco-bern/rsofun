@@ -67,7 +67,7 @@ contains
     real   :: psyn   ! net photosynthesis, mol C/(m2 of leaves s)
     real   :: resp   ! leaf respiration, mol C/(m2 of leaves s)
     real   :: tempLAI, w_scale2, transp ! mol H20 per m2 of leaf per second
-    real   :: kappa  ! light extinction coefficient of corwn layers
+    real   :: kappa  ! light extinction coefficient of crown layers
     real   :: f_light(10) = 0.0, f_apar(10) = 0.0      ! incident light fraction, and aborbed light fraction of each layer
     real   :: LAIlayer(10), crownarea_layer(10), accuCAI, f_gap, fapar_tree ! additional GPP for lower layer cohorts due to gaps
     integer:: i, layer
