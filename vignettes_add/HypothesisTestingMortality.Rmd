@@ -41,7 +41,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "cstarvation" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -211,11 +211,11 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea1sa2mb_out_hourly_tile <- out$output_hourly_tile
-ea1sa2mb_out_daily_tile <- out$output_daily_tile
-ea1sa2mb_out_daily_cohorts <- out$output_daily_cohorts
-ea1sa2mb_out_annual_tile <- out$output_annual_tile
-ea1sa2mb_out_annual_cohorts <- out$output_annual_cohorts
+ea1sa3md_out_hourly_tile <- out$output_hourly_tile
+ea1sa3md_out_daily_tile <- out$output_daily_tile
+ea1sa3md_out_daily_cohorts <- out$output_daily_cohorts
+ea1sa3md_out_annual_tile <- out$output_annual_tile
+ea1sa3md_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -242,11 +242,11 @@ out$output_annual_tile %>%
 ### Write model outputs
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea1sa2mb_out_hourly_tile,   "ea1sa2mb_out_hourly_tile.csv")
-write.csv(ea1sa2mb_out_daily_tile,    "ea1sa2mb_out_daily_tile.csv")
-write.csv(ea1sa2mb_out_daily_cohorts, "ea1sa2mb_out_daily_cohorts.csv")
-write.csv(ea1sa2mb_out_annual_tile,   "ea1sa2mb_out_annual_tile.csv")
-write.csv(ea1sa2mb_out_annual_cohorts,"ea1sa2mb_out_annual_cohorts.csv")
+write.csv(ea1sa3md_out_hourly_tile,   "ea1sa3md_out_hourly_tile.csv")
+write.csv(ea1sa3md_out_daily_tile,    "ea1sa3md_out_daily_tile.csv")
+write.csv(ea1sa3md_out_daily_cohorts, "ea1sa3md_out_daily_cohorts.csv")
+write.csv(ea1sa3md_out_annual_tile,   "ea1sa3md_out_annual_tile.csv")
+write.csv(ea1sa3md_out_annual_cohorts,"ea1sa3md_out_annual_cohorts.csv")
 
 ```
 
@@ -778,8 +778,8 @@ ea3sa1md_out_annual_tile <- ea3sa1md_out_annual_tile %>% mutate(Mortality = rep(
 eb1sa1md_out_annual_tile <- eb1sa1md_out_annual_tile %>% mutate(Mortality = rep("Constant Self-thinning", dim(eb1sa1md_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(1, dim(eb1sa1md_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb1sa1md_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb2sa1md_out_annual_tile <- eb2sa1md_out_annual_tile %>% mutate(Mortality = rep("Constant Self-thinning", dim(eb2sa1md_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(2, dim(eb2sa1md_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb2sa1md_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb3sa1md_out_annual_tile <- eb3sa1md_out_annual_tile %>% mutate(Mortality = rep("Constant Self-thinning", dim(eb3sa1md_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(3, dim(eb3sa1md_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb3sa1md_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-# ea1sa2md_out_annual_tile <- ea1sa2md_out_annual_tile %>% mutate(Mortality = rep("Constant Self-thinning", dim(ea1sa2md_out_annual_tile)[1]))  %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-# ea1sa3md_out_annual_tile <- ea1sa3md_out_annual_tile %>% mutate(Mortality = rep("Constant Self-thinning", dim(ea1sa3md_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sa2md_out_annual_tile <- ea1sa2md_out_annual_tile %>% mutate(Mortality = rep("Constant Self-thinning", dim(ea1sa2md_out_annual_tile)[1]))  %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sa3md_out_annual_tile <- ea1sa3md_out_annual_tile %>% mutate(Mortality = rep("Constant Self-thinning", dim(ea1sa3md_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 # ea1sb1md_out_annual_tile <- ea1sb1md_out_annual_tile %>% mutate(Mortality = rep("Constant Self-thinning", dim(ea1sb1md_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelRS = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 # ea1sb2md_out_annual_tile <- ea1sb2md_out_annual_tile %>% mutate(Mortality = rep("Constant Self-thinning", dim(ea1sb2md_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelRS = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 # ea1sb3md_out_annual_tile <- ea1sb3md_out_annual_tile %>% mutate(Mortality = rep("Constant Self-thinning", dim(ea1sb3md_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelRS = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
@@ -1084,7 +1084,7 @@ for (i in 1:14) {
 
 ```
 
-### Exploring relationships and plotting
+## Exploring relationships and plotting
 
 #### Stand develop: Stand biomass vs. time
 
@@ -1139,7 +1139,7 @@ ggplot() +
 
 ```
 
-##### LUE
+##### LUE all
 ```{r, fig.width = 10, fig.height = 4}
 
 ## All mortality form with facet_wrap
@@ -1150,11 +1150,12 @@ data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_
 
 data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate", "Constant Self-thinning"))
 
-ggplot() + 
-  geom_line(data=data1, aes(x=year, y=plantC, color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=4)+
-  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend")+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
+ggplot(data=data1) +
+  geom_line(aes(x=year, y=plantC,color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_manual(labels = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Levels of LUE",x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
 
 ```
 
@@ -1243,6 +1244,37 @@ ggplot() +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   ggtitle("Mortality formulation Growth rate")
 
+# Biomass changes in WD with LUE level 1
+# Mortality Self-thinning
+ggplot() + 
+  geom_line(data=ea1sa1md_out_annual_tile, aes(x=year, y=plantC, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2md_out_annual_tile, aes(x=year, y=plantC, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3md_out_annual_tile, aes(x=year, y=plantC, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Constant Self-thinning")
+
+
+```
+
+##### WD all
+```{r, fig.width = 10, fig.height = 4}
+
+## All mortality form with facet_wrap
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
+               ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
+               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate", "Constant Self-thinning"))
+
+ggplot(data=data1) +
+  geom_line(aes(x=year, y=plantC,color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_manual(labels = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(col = "Levels of WD",x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
 ```
 
 ##### R:S 
@@ -1283,7 +1315,7 @@ ggplot() +
 
 ```
 
-#### Stand develop (Additional plot):  B* vs. initial slope of (B vs. t) 
+#### Additional plot:  B* vs. initial slope of (B vs. t) 
 
 From annual_tile_output: PlanC (Biomass)
 
@@ -1390,10 +1422,54 @@ ggplot(data=dataSlopeC) +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
   ggtitle("Mortality formulation Growth rate")
 
-dataSlope <- rbind(dataSlopeA, dataSlopeB, dataSlopeC)
+# Mortality Constrant self-thinning
+slope1 <- summary(lm(plantC ~ year, ea1sa1md_out_annual_tile[1:150,]))$coefficients[2,1]
+sd1 <- summary(lm(plantC ~ year, ea1sa1md_out_annual_tile[1:150,]))$coefficients[2,2]
+slope2 <- summary(lm(plantC ~ year, ea2sa1md_out_annual_tile[1:150,]))$coefficients[2,1]
+sd2 <- summary(lm(plantC ~ year, ea2sa1md_out_annual_tile[1:150,]))$coefficients[2,2]
+slope3 <- summary(lm(plantC ~ year, ea3sa1md_out_annual_tile[1:150,]))$coefficients[2,1]
+sd3 <- summary(lm(plantC ~ year, ea3sa1md_out_annual_tile[1:150,]))$coefficients[2,2]
+
+mean1 <- ea1sa1md_out_annual_tile[1300:1804,] %>% summarise(mean1=mean(plantC,na.rm=T), sd1=sd(plantC,na.rm=T))
+mean2 <- ea2sa1md_out_annual_tile[1300:1804,] %>% summarise(mean2=mean(plantC,na.rm=T), sd2=sd(plantC,na.rm=T))
+mean3 <- ea3sa1md_out_annual_tile[1300:1804,] %>% summarise(mean3=mean(plantC,na.rm=T), sd3=sd(plantC,na.rm=T))
+
+slopes <- c(slope1,slope2,slope3)
+sdSlopes <- c(sd1,sd2,sd3)
+meanBstar <- c(mean1$mean1,mean2$mean2, mean3$mean3)
+sdBstar <- c(mean1$sd1,mean2$sd2, mean3$sd3)
+level <- as.factor(c("Control","+15%","+30%"))
+mortality <- as.factor(c("Constant self-thinning","Constant self-thinning","Constant self-thinning"))
+dataSlopeD <- data.frame(mortality,level,slopes,sdSlopes,meanBstar,sdBstar)
+
+ggplot(data=dataSlopeD) +
+  geom_point(aes(x=slopes, y=meanBstar,color=level)) +
+  geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
+  ggtitle("Mortality formulation Growth rate")
+
+## facet_wrap
+dataSlope <- rbind(dataSlopeA, dataSlopeB, dataSlopeC,dataSlopeD)
 
 ggplot(data=dataSlope) +
-  geom_point(aes(x=slopes, y=meanBstar,color=level)) + facet_wrap(~ mortality, ncol=3)+
+  geom_point(aes(x=slopes, y=meanBstar,color=level)) + facet_wrap(~ mortality, ncol=4)+
+  geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
+  scale_color_manual(labels = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Levels of LUE",x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+```
+
+##### LUE all 
+```{r, fig.width = 10, fig.height = 4}
+
+## facet_wrap
+dataSlope <- rbind(dataSlopeA, dataSlopeB, dataSlopeC,dataSlopeD)
+
+ggplot(data=dataSlope) +
+  geom_point(aes(x=slopes, y=meanBstar,color=level)) + facet_wrap(~ mortality, ncol=4)+
   geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
   scale_color_manual(labels = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(col = "Levels of LUE",x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
@@ -1585,17 +1661,51 @@ ggplot(data=dataSlope) +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
   ggtitle("Mortality formulation Growth rate")
 
-dataSlope <- rbind(dataSlopeA, dataSlopeB, dataSlopeC)
+
+# Mortality Constant Sefl thinning
+slope1 <- summary(lm(plantC ~ year, ea1sa1md_out_annual_tile[1:150,]))$coefficients[2,1]
+sd1 <- summary(lm(plantC ~ year, ea1sa1md_out_annual_tile[1:150,]))$coefficients[2,2]
+slope2 <- summary(lm(plantC ~ year, ea1sa2md_out_annual_tile[1:150,]))$coefficients[2,1]
+sd2 <- summary(lm(plantC ~ year, ea1sa2md_out_annual_tile[1:150,]))$coefficients[2,2]
+slope3 <- summary(lm(plantC ~ year, ea1sa3md_out_annual_tile[1:150,]))$coefficients[2,1]
+sd3 <- summary(lm(plantC ~ year, ea1sa3md_out_annual_tile[1:150,]))$coefficients[2,2]
+
+mean1 <- ea1sa1md_out_annual_tile[1300:1804,] %>% summarise(mean1=mean(plantC,na.rm=T), sd1=sd(plantC,na.rm=T))
+mean2 <- ea1sa2md_out_annual_tile[1300:1804,] %>% summarise(mean2=mean(plantC,na.rm=T), sd2=sd(plantC,na.rm=T))
+mean3 <- ea1sa2md_out_annual_tile[1300:1804,] %>% summarise(mean3=mean(plantC,na.rm=T), sd3=sd(plantC,na.rm=T))
+
+slopes <- c(slope1,slope2,slope3)
+sdSlopes <- c(sd1,sd2,sd3)
+meanBstar <- c(mean1$mean1,mean2$mean2, mean3$mean3)
+sdBstar <- c(mean1$sd1,mean2$sd2, mean3$sd3)
+level <- as.factor(c("300 kgC m-3","600 kgC m-3","800 kgC m-3"))
+mortality <- as.factor(c("Constant self-thinning","Constant self-thinning","Constant self-thinning"))
+dataSlopeD <- data.frame(mortality,level,slopes,sdSlopes,meanBstar,sdBstar)
 
 ggplot(data=dataSlope) +
-  geom_point(aes(x=slopes, y=meanBstar,color=level)) + facet_wrap(~ mortality, ncol=3)+
+  geom_point(aes(x=slopes, y=meanBstar,color=level)) +
+  geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
+  ggtitle("Mortality formulation Constant self-thinning")
+
+```
+
+##### WD all 
+```{r, fig.width = 10, fig.height = 4}
+
+## facet_wrap
+dataSlope <- rbind(dataSlopeA, dataSlopeB, dataSlopeC,dataSlopeD)
+
+ggplot(data=dataSlope) +
+  geom_point(aes(x=slopes, y=meanBstar,color=level)) + facet_wrap(~ mortality, ncol=4)+
   geom_errorbar(aes(x = slopes, ymin=meanBstar-sdBstar, ymax=meanBstar+sdBstar, color=level),width=0) + 
   scale_color_manual(labels = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(col = "Levels of WD",x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
 
 ```
-
 ##### Root:Shoot ratio
 ```{r}
 
@@ -1694,52 +1804,245 @@ ggplot(data=dataSlope) +
 
 ```
 
-##### Stand biomass Plots
+#### Aboveground NPP vs. (A)NPP
+
+From annual_tile_output: PlanC (Biomass)
+
+##### LUE (mol/s/m2)
 ```{r}
 
-data1 <- rbind(eb1sa1ma_out_annual_tile, eb2sa1ma_out_annual_tile, eb3sa1ma_out_annual_tile,
-               eb1sa1mb_out_annual_tile, eb2sa1mb_out_annual_tile, eb3sa1mb_out_annual_tile,
-               eb1sa1mc_out_annual_tile, eb2sa1mc_out_annual_tile, eb3sa1mc_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
+# Biomass changes in LUE with WD level 1
+# Mortality DBH
 
 ggplot() + 
-  geom_line(data=data1, aes(x=year, y=plantC, color=as.factor(LevelPAR))) + facet_wrap(~ Mortality, ncol=5)+
-  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of PAR", guide = "legend")+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
-
-data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
-               ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
-               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=plantC, y=NPP, color='Control')) + 
+  geom_line(data=ea2sa1ma_out_annual_tile, aes(x=plantC, y=NPP, color='+15%')) +
+  geom_line(data=ea3sa1ma_out_annual_tile, aes(x=plantC, y=NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="Biomass", y="NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH")
 
 ggplot() + 
-  geom_line(data=data1, aes(x=year, y=plantC, color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=3)+
-  scale_color_manual(labels = c("300 kgC m-3","600 kgC m-3", "800 kgC m-3"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(col = "Level of WD", x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
-
-data1 <- rbind(ea1sb1ma_out_annual_tile, ea1sb2ma_out_annual_tile, ea1sb3ma_out_annual_tile,
-               ea1sb1mb_out_annual_tile, ea1sb2mb_out_annual_tile, ea1sb3mb_out_annual_tile,
-               ea1sb1mc_out_annual_tile, ea1sb2mc_out_annual_tile, ea1sb3mc_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
+  geom_line(data=subset(ea1sa1ma_out_annual_tile,year>=50), aes(x=plantC, y=NPP, color='Control')) + 
+  geom_line(data=subset(ea2sa1ma_out_annual_tile,year>=50), aes(x=plantC, y=NPP, color='+15%')) +
+  geom_line(data=subset(ea3sa1ma_out_annual_tile,year>=50), aes(x=plantC, y=NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="Biomass", y="NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH")
 
 ggplot() + 
-  geom_line(data=data1, aes(x=year, y=plantC, color=as.factor(LevelRS))) + facet_wrap(~ Mortality, ncol=5)+
-  scale_color_manual(labels = c("phiRL = 4","phiRL = 6", "phiRL = 8"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(col = "Level of RS", x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='Control')) + 
+  geom_line(data=ea2sa1ma_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+15%')) +
+  geom_line(data=ea3sa1ma_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="(A)Biomass", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH")
+
+# Biomass changes in LUE with WD level 1
+# Mortality Ratio NSC and Leaf Mass
+ggplot() + 
+  geom_line(data=ea1sa1mb_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='Control')) + 
+  geom_line(data=ea2sa1mb_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+15%')) +
+  geom_line(data=ea3sa1mb_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="(A)Biomass", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
+
+# Biomass changes in LUE with WD level 1
+# Mortality Growth rate
+ggplot() + 
+  geom_line(data=ea1sa1mc_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='Control')) + 
+  geom_line(data=ea2sa1mc_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+15%')) +
+  geom_line(data=ea3sa1mc_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="(A)Biomass", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Growth rate")
+
+# Biomass changes in LUE with WD level 1
+# Mortality Constant Self-thinning
+ggplot() + 
+  geom_line(data=ea1sa1md_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='Control')) + 
+  geom_line(data=ea2sa1md_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+15%')) +
+  geom_line(data=ea3sa1md_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="(A)Biomass", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Constant Self-thinning")
 
 ```
 
-#### Aboveground biomass vs. aboveground NPP
+##### LUE all
+```{r, fig.width = 10, fig.height = 4}
 
-From annual_tile_output: A_Biomass, A_NPP
+## All mortality form with facet_wrap
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
+               ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
+               ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
 
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate", "Constant Self-thinning"))
+
+ggplot(data=data1) +
+  geom_line(aes(x=A_Biomass, y=A_NPP,color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_manual(labels = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Levels of LUE",x="(A)Biomass", y="(A)NPP") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+
+```
+
+##### WD 
 ```{r}
+
+# Biomass changes in WD with LUE level 1
+# Mortality DBH
+
+ggplot() + 
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=plantC, y=NPP, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2ma_out_annual_tile, aes(x=plantC, y=NPP, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3ma_out_annual_tile, aes(x=plantC, y=NPP, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x="Biomass", y="NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH")
+
+ggplot() + 
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2ma_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3ma_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x="(A)Biomass", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH")
+
+# Biomass changes in WD with LUE level 1
+# Mortality Ratio NSC and Leaf Mass
+ggplot() + 
+  geom_line(data=ea1sa1mb_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2mb_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3mb_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x="(A)Biomass", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
+
+# Biomass changes in WD with LUE level 1
+# Mortality Growth rate
+ggplot() + 
+  geom_line(data=ea1sa1mc_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2mc_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3mc_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x="(A)Biomass", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Growth rate")
+
+# Biomass changes in WD with LUE level 1
+# Mortality Self-thinning
+ggplot() + 
+  geom_line(data=ea1sa1md_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2md_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3md_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x="(A)Biomass", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Constant Self-thinning")
+
+```
+
+##### WD all
+```{r, fig.width = 10, fig.height = 4}
+
+## All mortality form with facet_wrap
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
+               ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
+               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate", "Constant Self-thinning"))
+
+ggplot(data=data1) +
+  geom_line(aes(x=A_Biomass, y=A_NPP, color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_manual(labels = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(col = "Levels of WD",x="(A)Biomass", y="(A)NPP") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+```
+
+#### (A)NPP vs. mortality
+
+From annual_tile_output: PlanC (Biomass)
+
+##### LUE (mol/s/m2)
+```{r}
+
+# Biomass changes in LUE with WD level 1
+# Mortality DBH
+
+ggplot() + 
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=c_deadtrees, y=NPP, color='Control')) + 
+  geom_line(data=ea2sa1ma_out_annual_tile, aes(x=c_deadtrees, y=NPP, color='+15%')) +
+  geom_line(data=ea3sa1ma_out_annual_tile, aes(x=c_deadtrees, y=NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="Turnover", y="NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH")
+
+ggplot() + 
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='Control')) + 
+  geom_line(data=ea2sa1ma_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+15%')) +
+  geom_line(data=ea3sa1ma_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="Turnover", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH")
+
+# Biomass changes in LUE with WD level 1
+# Mortality Ratio NSC and Leaf Mass
+ggplot() + 
+  geom_line(data=ea1sa1mb_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='Control')) + 
+  geom_line(data=ea2sa1mb_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+15%')) +
+  geom_line(data=ea3sa1mb_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="Turnover", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
+
+# Biomass changes in LUE with WD level 1
+# Mortality Growth rate
+ggplot() + 
+  geom_line(data=ea1sa1mc_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='Control')) + 
+  geom_line(data=ea2sa1mc_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+15%')) +
+  geom_line(data=ea3sa1mc_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="Turnover", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Growth rate")
+
+# Biomass changes in LUE with WD level 1
+# Mortality Constant Self-thinning
+ggplot() + 
+  geom_line(data=ea1sa1md_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='Control')) + 
+  geom_line(data=ea2sa1md_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+15%')) +
+  geom_line(data=ea3sa1md_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x="Turnover", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Constant Self-thinning")
+
+```
+
+##### LUE all
+```{r, fig.width = 10, fig.height = 4}
+
+## All mortality form with facet_wrap
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate", "Constant Self-thinning"))
 
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
                ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
@@ -1747,23 +2050,90 @@ data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_
 
 data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
 
+ggplot(data=data1) +
+  geom_line(aes(x=c_deadtrees, y=A_NPP,color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_manual(labels = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Levels of LUE",x="Turnover", y="(A)NPP") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
+```
+
+##### WD 
+```{r}
+
+# Biomass changes in WD with LUE level 1
+# Mortality DBH
+
 ggplot() + 
-  geom_line(data=subset(data1,year>1500), aes(x=A_Biomass, y=NPP, color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=3)+
-  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend")+
-  labs(x =  expression(paste("(A)biomass (Kg C ", m^-2, " ", yr^-1, ") ")), y = expression(paste("(A)NPP (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
-
-data1 <- rbind(eb1sa1ma_out_annual_tile, eb2sa1ma_out_annual_tile, eb3sa1ma_out_annual_tile,
-               eb1sa1mb_out_annual_tile, eb2sa1mb_out_annual_tile, eb3sa1mb_out_annual_tile,
-               eb1sa1mc_out_annual_tile, eb2sa1mc_out_annual_tile, eb3sa1mc_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=c_deadtrees, y=NPP, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2ma_out_annual_tile, aes(x=c_deadtrees, y=NPP, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3ma_out_annual_tile, aes(x=c_deadtrees, y=NPP, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x="Turnover", y="NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH")
 
 ggplot() + 
-  geom_line(data=subset(data1,year>1500), aes(x=A_Biomass, y=NPP, color=as.factor(LevelPAR))) + facet_wrap(~ Mortality, ncol=3)+
-  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend")+
-  labs(x =  expression(paste("(A)biomass (Kg C ", m^-2, " ", yr^-1, ") ")), y = expression(paste("(A)NPP (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2ma_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3ma_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x="Turnover", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH")
+
+# Biomass changes in WD with LUE level 1
+# Mortality Ratio NSC and Leaf Mass
+ggplot() + 
+  geom_line(data=ea1sa1mb_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2mb_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3mb_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x="Turnover", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
+
+# Biomass changes in WD with LUE level 1
+# Mortality Growth rate
+ggplot() + 
+  geom_line(data=ea1sa1mc_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2mc_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3mc_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x="Turnover", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Growth rate")
+
+# Biomass changes in WD with LUE level 1
+# Mortality Self-thinning
+ggplot() + 
+  geom_line(data=ea1sa1md_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='300 kgC m-3')) + 
+  geom_line(data=ea1sa2md_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='600 kgC m-3')) +
+  geom_line(data=ea1sa3md_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='800 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x="Turnover", y="(A)NPP")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Constant Self-thinning")
+
+
+```
+
+##### WD all
+```{r, fig.width = 10, fig.height = 4}
+
+## All mortality form with facet_wrap
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
+               ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
+               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate", "Constant Self-thinning"))
+
+ggplot(data=data1) +
+  geom_line(aes(x=c_deadtrees, y=A_NPP, color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_manual(labels = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(col = "Levels of WD",x="Turnover", y="(A)NPP") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
 
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
                ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
@@ -1771,84 +2141,99 @@ data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_
 
 data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
 
-ggplot() + 
-  geom_line(data=subset(data1,year>1500), aes(x=A_Biomass, y=NPP, color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=3)+
-  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend")+
-  labs(x =  expression(paste("(A)biomass (Kg C ", m^-2, " ", yr^-1, ") ")), y = expression(paste("(A)NPP (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
-
-data1 <- rbind(ea1sb1ma_out_annual_tile, ea1sb2ma_out_annual_tile, ea1sb3ma_out_annual_tile,
-               ea1sb1mb_out_annual_tile, ea1sb2mb_out_annual_tile, ea1sb3mb_out_annual_tile,
-               ea1sb1mc_out_annual_tile, ea1sb2mc_out_annual_tile, ea1sb3mc_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
-
-ggplot() + 
-  geom_line(data=subset(data1,year>1500), aes(x=A_Biomass, y=NPP, color=as.factor(LevelRS))) + facet_wrap(~ Mortality, ncol=3)+
-  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend")+
-  labs(x =  expression(paste("(A)biomass (Kg C ", m^-2, " ", yr^-1, ") ")), y = expression(paste("(A)NPP (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
+ggplot(data=data1) +
+  geom_line(aes(x=c_deadtrees, y=A_NPP, color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_manual(labels = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(col = "Levels of WD",x="Turnover", y="(A)NPP") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
 
 ```
 
 ##### Crown Area Index over time
 
-```{r}
+```{r, fig.width = 10, fig.height = 4}
 
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
                ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
                ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
-               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile,
-               ea1sa1me_out_annual_tile, ea2sa1me_out_annual_tile, ea3sa1me_out_annual_tile)
+               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
 
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning", "BAL"))
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
 
 ggplot() + 
-  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=3)+
+  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=4)+
   scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend")+
-  labs(x = "Year", y = "CAI") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
-
-data1 <- rbind(eb1sa1ma_out_annual_tile, eb2sa1ma_out_annual_tile, eb3sa1ma_out_annual_tile,
-               eb1sa1mb_out_annual_tile, eb2sa1mb_out_annual_tile, eb3sa1mb_out_annual_tile,
-               eb1sa1mc_out_annual_tile, eb2sa1mc_out_annual_tile, eb3sa1mc_out_annual_tile,
-               eb1sa1md_out_annual_tile, eb2sa1md_out_annual_tile, eb3sa1md_out_annual_tile,
-               eb1sa1me_out_annual_tile, eb2sa1me_out_annual_tile, eb3sa1me_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning", "BAL"))
-
-ggplot() + 
-  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelPAR))) + facet_wrap(~ Mortality, ncol=3)+
-  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of PAR", guide = "legend")+
   labs(x = "Year", y = "CAI") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
 
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
                ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
                ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
-               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile,
-               ea1sa1me_out_annual_tile, ea1sa2me_out_annual_tile, ea1sa3me_out_annual_tile)
+               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
+
+ggplot() + 
+  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_manual(labels = c("300 kgC m-3","600 kgC m-3", "800 kgC m-3"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(col = "Level of WD", x = "Year", y = "CAI") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
+
+
+data1 <- rbind(eb1sa1ma_out_annual_tile, eb2sa1ma_out_annual_tile, eb3sa1ma_out_annual_tile,
+               eb1sa1mb_out_annual_tile, eb2sa1mb_out_annual_tile, eb3sa1mb_out_annual_tile,
+               eb1sa1mc_out_annual_tile, eb2sa1mc_out_annual_tile, eb3sa1mc_out_annual_tile,
+               eb1sa1md_out_annual_tile, eb2sa1md_out_annual_tile, eb3sa1md_out_annual_tile)
 
 data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning", "BAL"))
 
 ggplot() + 
-  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=3)+
-  scale_color_manual(labels = c("300 kgC m-3","600 kgC m-3", "800 kgC m-3"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(col = "Level of WD", x = "Year", y = "CAI") + 
+  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelPAR))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of PAR", guide = "legend")+
+  labs(x = "Year", y = "CAI") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
 
 data1 <- rbind(ea1sb1ma_out_annual_tile, ea1sb2ma_out_annual_tile, ea1sb3ma_out_annual_tile,
                ea1sb1mb_out_annual_tile, ea1sb2mb_out_annual_tile, ea1sb3mb_out_annual_tile,
                ea1sb1mc_out_annual_tile, ea1sb2mc_out_annual_tile, ea1sb3mc_out_annual_tile,
-               ea1sb1md_out_annual_tile, ea1sb2md_out_annual_tile, ea1sb3md_out_annual_tile,
-               ea1sb1me_out_annual_tile, ea1sb2me_out_annual_tile, ea1sb3me_out_annual_tile)
+               ea1sb1md_out_annual_tile, ea1sb2md_out_annual_tile, ea1sb3md_out_annual_tile)
 
 data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
 
 ggplot() + 
-  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelRS))) + facet_wrap(~ Mortality, ncol=3)+
+  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelRS))) + facet_wrap(~ Mortality, ncol=4)+
   scale_color_manual(labels = c("phiRL = 4","phiRL = 6", "phiRL = 8"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(col = "Level of RS", x = "Year", y = "CAI") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
+
+```
+
+```{r, fig.width = 10, fig.height = 4}
+
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
+               ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
+               ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
+
+ggplot() + 
+  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend")+
+  labs(x = "Year", y = "CAI") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
+
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
+               ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
+               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
+
+ggplot() + 
+  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_manual(labels = c("300 kgC m-3","600 kgC m-3", "800 kgC m-3"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(col = "Level of WD", x = "Year", y = "CAI") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
 
 ```
@@ -1859,13 +2244,12 @@ ggplot() +
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
                ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
                ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
-               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile,
-               ea1sa1me_out_annual_tile, ea2sa1me_out_annual_tile, ea3sa1me_out_annual_tile)
+               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
 
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning", "BAL"))
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
 
 ggplot() + 
-  geom_line(data=data1, aes(x=year, y=NPP, color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=5)+
+  geom_line(data=data1, aes(x=year, y=NPP, color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=4)+
   scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend")+
   labs(x = "Year", y = "NPP") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
@@ -1884,7 +2268,8 @@ ggplot() +
 
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
                ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
-               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile)
+               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
 
 data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
 
@@ -1908,20 +2293,42 @@ ggplot() +
 
 ```
 
+##### NPP
+```{r, fig.width = 10, fig.height = 4}
+
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
+               ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
+               ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
+
+ggplot() + 
+  geom_line(data=data1, aes(x=year, y=NPP, color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend")+
+  labs(x = "Year", y = "NPP") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
+
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
+               ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
+               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
+
+ggplot() + 
+  geom_line(data=data1, aes(x=year, y=NPP, color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=4)+
+  scale_color_manual(labels = c("300 kgC m-3","600 kgC m-3", "800 kgC m-3"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(col = "Level of WD", x = "Year", y = "NPP") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
+
+```
+
 #### Self-thinning relathionships
 
 From new annual_tile_output
 
 ```{r}
-
-ggplot() + 
-  geom_point(data=subset(eb1sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
-  geom_point(data=subset(eb2sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
-  geom_point(data=subset(eb3sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
-  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate")
 
 ggplot() + 
   geom_point(data=subset(ea1sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
@@ -1932,24 +2339,14 @@ ggplot() +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   ggtitle("Mortality formulation Growth rate")
 
-ggplot() + 
-  geom_point(data=subset(ea1sa1me_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
-  geom_point(data=subset(ea2sa1me_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
-  geom_point(data=subset(ea3sa1me_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
-  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate")
-
 # Plots together
 
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
                ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
                ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
-               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile,
-               ea1sa1me_out_annual_tile, ea2sa1me_out_annual_tile, ea3sa1me_out_annual_tile)
+               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
 
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning", "BAL"))
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
 
 ggplot() + 
   geom_point(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
@@ -1957,7 +2354,7 @@ ggplot() +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
-  facet_wrap(~ Mortality, ncol=5)
+  facet_wrap(~ Mortality, ncol=4)
   
 data1 <- rbind(eb1sa1ma_out_annual_tile, eb2sa1ma_out_annual_tile, eb3sa1ma_out_annual_tile,
                eb1sa1mb_out_annual_tile, eb2sa1mb_out_annual_tile, eb3sa1mb_out_annual_tile,
@@ -1978,10 +2375,9 @@ ggplot() +
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
                ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
                ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
-               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile,
-               ea1sa1me_out_annual_tile, ea1sa2me_out_annual_tile, ea1sa3me_out_annual_tile)
+               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
 
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning", "BAL"))
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
 
 ggplot() + 
   geom_point(data=subset(data1, year>=300), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelWD))) +
@@ -1989,7 +2385,7 @@ ggplot() +
   scale_color_manual(labels = c("300 kgC m-3","600 kgC m-3", "800 kgC m-3"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
   labs(col = "Level of WD", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
-  facet_wrap(~ Mortality, ncol=3)
+  facet_wrap(~ Mortality, ncol=4)
 
 data1 <- rbind(ea1sb1ma_out_annual_tile, ea1sb2ma_out_annual_tile, ea1sb3ma_out_annual_tile,
                ea1sb1mb_out_annual_tile, ea1sb2mb_out_annual_tile, ea1sb3mb_out_annual_tile,
@@ -2006,6 +2402,42 @@ ggplot() +
   labs(col = "Level of RS", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
   facet_wrap(~ Mortality, ncol=3)
+
+```
+
+```{r, fig.width = 10, fig.height = 4}
+
+# Plots together
+
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
+               ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
+               ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
+
+ggplot() + 
+  geom_point(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
+  geom_smooth(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
+  facet_wrap(~ Mortality, ncol=4)
+
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
+               ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
+               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
+
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
+
+ggplot() + 
+  geom_point(data=subset(data1, year>=300), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelWD))) +
+  geom_smooth(data=subset(data1, year>=300), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelWD)),method = "lm",fullrange = T) +
+  scale_color_manual(labels = c("300 kgC m-3","600 kgC m-3", "800 kgC m-3"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(col = "Level of WD", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
+  facet_wrap(~ Mortality, ncol=4)
 
 ```
 

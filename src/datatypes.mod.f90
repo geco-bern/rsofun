@@ -476,7 +476,7 @@ module datatypes
   real :: leafLS(0:MSPECIES) = 1.0
   ! real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
   real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
-  real :: rho_wood(0:MSPECIES)      = 600.0 ! kgC m-3 (Simulations: 300, 600, 800)
+  real :: rho_wood(0:MSPECIES)      = 300.0 ! kgC m-3 (Simulations: 300, 600, 800)
   real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
   real :: LAImax(0:MSPECIES)        != 3.5 ! maximum LAI for a tree
   ! real :: LAI_light(0:MSPECIES)     = 4.0 ! maximum LAI limited by light

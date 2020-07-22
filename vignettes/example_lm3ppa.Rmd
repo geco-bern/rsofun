@@ -41,9 +41,26 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "dbh" # cstarvation or growthrate or dbh
+      method_mortality      = "dbh" # cstarvation or growthrate or const_selfthin
       )
 ```
+
+#### Photosynthesis method
+The model includes two methods for estimating NPP:
+(a) "gs_leuning" the original method described for the LM3-PPA (Weng et al. 2015).
+(b) "pmodel" the implementation of the P-model (Stocker et al. 2020) within the LM3-PPA.
+The P-model which simulates acclimated photosynthetic parameters and light use efficiency for daily time steps. 
+For the implementation of the P-model in LM3-PPA, GPP is calculated at the cohort-level (not canopy-level), using light absorbed per cohort, and expressed in kg C per day and per tree (or cohort).
+PAR is the amount of light reaching the respective layer (mol m-2 s-1).
+fAPAR is attenuated based on the leaf area index within-crown of all layers above and on a fixed exponential light extinction (with k=0.75).
+LUE is simulated as gpp per unit absorbed light (g C mol−1) and depends on a fix quantum yield efficiency parameter. (kphio Long et al., 1993). 
+
+#### Mortality method
+The model allows for four different mortality functional forms: 
+(a) "dbh" as a function of size: high mortality rate for large trees (following Weng et al. 2015).
+(b) "cstarvation" as a function of tree's C balance: carbon starvation as a decreasing in the cohort’s NSC level.
+(c) "growthrate" as a function of growth rate: high mortality rate for faster growing trees.
+(d) "const_selfthin" as a constant self-thinning relationship.
 
 Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters).
 ```{r}
