@@ -734,6 +734,8 @@ contains
         deallocate(cai_partial)
       end if
 
+      ! xxx recalculate CAI and check if equal to CAI_max
+
     ! else if ((trim(myinterface%params_siml%method_mortality) == "bal")) then
 
     !   call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%BA,idx)
@@ -767,7 +769,7 @@ contains
         ! story layer (mortrate_d_c and mortrate_d_u)
 
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
-          deathrate = 0.055*exp(-1*(cc%nsc/cc%bl_max)+5)/(1+exp(-1*(cc%nsc/cc%bl_max)+5))
+          deathrate = 0.055*exp(-0.5*(cc%nsc/cc%bl_max)+5)/(1+exp(-0.5*(cc%nsc/cc%bl_max)+5))
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
