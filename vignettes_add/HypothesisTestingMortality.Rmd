@@ -41,7 +41,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -211,11 +211,7 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea1sa3md_out_hourly_tile <- out$output_hourly_tile
-ea1sa3md_out_daily_tile <- out$output_daily_tile
-ea1sa3md_out_daily_cohorts <- out$output_daily_cohorts
-ea1sa3md_out_annual_tile <- out$output_annual_tile
-ea1sa3md_out_annual_cohorts <- out$output_annual_cohorts
+ea1sa1mc2_out_annual_tile <- out$output_annual_tile
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -242,11 +238,142 @@ out$output_annual_tile %>%
 ### Write model outputs
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea1sa3md_out_hourly_tile,   "ea1sa3md_out_hourly_tile.csv")
-write.csv(ea1sa3md_out_daily_tile,    "ea1sa3md_out_daily_tile.csv")
-write.csv(ea1sa3md_out_daily_cohorts, "ea1sa3md_out_daily_cohorts.csv")
-write.csv(ea1sa3md_out_annual_tile,   "ea1sa3md_out_annual_tile.csv")
-write.csv(ea1sa3md_out_annual_cohorts,"ea1sa3md_out_annual_cohorts.csv")
+write.csv(ea1sa1mc2_out_annual_tile,"ea1sa1mc2_out_annual_tile.csv")
+
+```
+
+### Read model outputs
+```{r}
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+
+ea1sa1ma1_out_annual_tile <- read.csv("ea1sa1ma1_out_annual_tile.csv")
+ea2sa1ma1_out_annual_tile <- read.csv("ea2sa1ma1_out_annual_tile.csv")
+ea3sa1ma1_out_annual_tile <- read.csv("ea3sa1ma1_out_annual_tile.csv")
+
+ea1sa1ma2_out_annual_tile <- read.csv("ea1sa1ma2_out_annual_tile.csv")
+ea2sa1ma2_out_annual_tile <- read.csv("ea2sa1ma2_out_annual_tile.csv")
+ea3sa1ma2_out_annual_tile <- read.csv("ea3sa1ma2_out_annual_tile.csv")
+
+ea1sa1ma3_out_annual_tile <- read.csv("ea1sa1ma3_out_annual_tile.csv")
+ea2sa1ma3_out_annual_tile <- read.csv("ea2sa1ma3_out_annual_tile.csv")
+ea3sa1ma3_out_annual_tile <- read.csv("ea3sa1ma3_out_annual_tile.csv")
+
+
+```
+##### LUE (mol/s/m2)
+```{r}
+
+# Biomass changes in LUE with WD level 1
+# Mortality DBH
+ggplot() + 
+  geom_line(data=ea1sa1ma1_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1ma1_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1ma1_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH 1")
+
+# Biomass changes in LUE with WD level 1
+# Mortality Ratio NSC and Leaf Mass
+ggplot() + 
+  geom_line(data=ea1sa1ma2_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1ma2_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1ma2_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH 2")
+
+# Biomass changes in LUE with WD level 1
+# Mortality Ratio NSC and Leaf Mass
+ggplot() + 
+  geom_line(data=ea1sa1ma3_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1ma3_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1ma3_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation DBH 3")
+
+
+# Biomass changes in LUE with WD level 1
+# Mortality Growth rate
+ggplot() + 
+  geom_line(data=ea1sa1mc_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mc_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mc_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Growth rate")
+
+# Biomass changes in LUE with WD level 1
+# Mortality Constant Self-thinning
+ggplot() + 
+  geom_line(data=ea1sa1md_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1md_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1md_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Constant Self-thinning")
+
+```
+
+
+### Run the model for different cases
+
+Run the model for all environmental conditions, species and mortality formulations.
+```{r}
+out <- run_lm3ppa_f_bysite( "ORNL", 
+                            params_siml, 
+                            siteinfo, 
+                            forcing, # ddf_input
+                            params_tile, 
+                            params_species, 
+                            params_soil, 
+                            init_cohort, 
+                            init_soil, 
+                            makecheck = TRUE)
+
+ea3sa1ma_out_hourly_tile <- out$output_hourly_tile
+ea3sa1ma_out_daily_tile <- out$output_daily_tile
+ea3sa1ma_out_daily_cohorts <- out$output_daily_cohorts
+ea3sa1ma_out_annual_tile <- out$output_annual_tile
+ea3sa1ma_out_annual_cohorts <- out$output_annual_cohorts
+
+out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = Density)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = CAI)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+```
+
+### Write model outputs
+```{r}
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(ea3sa1ma_out_hourly_tile,   "ea3sa1ma_out_hourly_tile.csv")
+write.csv(ea3sa1ma_out_daily_tile,    "ea3sa1ma_out_daily_tile.csv")
+write.csv(ea3sa1ma_out_daily_cohorts, "ea3sa1ma_out_daily_cohorts.csv")
+write.csv(ea3sa1ma_out_annual_tile,   "ea3sa1ma_out_annual_tile.csv")
+write.csv(ea3sa1ma_out_annual_cohorts,"ea3sa1ma_out_annual_cohorts.csv")
 
 ```
 
@@ -276,6 +403,11 @@ rsofun_out_annual_cohorts <- out$output_annual_cohorts
 rsofun_out_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
+  labs(title = "LM3-PPA with gs leuning photosynthesis at ORNL", subtitle = "rsofun output")
+
+rsofun_out_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
   labs(title = "LM3-PPA with gs leuning photosynthesis at ORNL", subtitle = "rsofun output")
 
 rsofun_out_annual_tile %>% 
@@ -748,9 +880,9 @@ ea1sb1ma_out_annual_tile <- ea1sb1ma_out_annual_tile %>% mutate(Mortality = rep(
 ea1sb2ma_out_annual_tile <- ea1sb2ma_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sb2ma_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelRS = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 ea1sb3ma_out_annual_tile <- ea1sb3ma_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sb3ma_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelRS = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-ea1sa1mb_out_annual_tile <- ea1sa1mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(ea1sa1mb_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-ea2sa1mb_out_annual_tile <- ea2sa1mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(ea2sa1mb_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-ea3sa1mb_out_annual_tile <- ea3sa1mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(ea3sa1mb_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sa1mb_out_annual_tile <- ea1sa1mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(ea1sa1mb_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1mb_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1mb_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea2sa1mb_out_annual_tile <- ea2sa1mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(ea2sa1mb_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1mb_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1mb_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea3sa1mb_out_annual_tile <- ea3sa1mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(ea3sa1mb_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1mb_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1mb_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb1sa1mb_out_annual_tile <- eb1sa1mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(eb1sa1mb_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb2sa1mb_out_annual_tile <- eb2sa1mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(eb2sa1mb_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb3sa1mb_out_annual_tile <- eb3sa1mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(eb3sa1mb_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
@@ -760,9 +892,9 @@ ea1sb1mb_out_annual_tile <- ea1sb1mb_out_annual_tile %>% mutate(Mortality = rep(
 ea1sb2mb_out_annual_tile <- ea1sb2mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(ea1sb2mb_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelRS = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 ea1sb3mb_out_annual_tile <- ea1sb3mb_out_annual_tile %>% mutate(Mortality = rep("NSC/Leaf mass", dim(ea1sb3mb_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelRS = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-ea1sa1mc_out_annual_tile <- ea1sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea1sa1mc_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-ea2sa1mc_out_annual_tile <- ea2sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea2sa1mc_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-ea3sa1mc_out_annual_tile <- ea3sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea3sa1mc_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sa1mc_out_annual_tile <- ea1sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea1sa1mc_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1mc_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1mc_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea2sa1mc_out_annual_tile <- ea2sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea2sa1mc_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1mc_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1mc_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea3sa1mc_out_annual_tile <- ea3sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea3sa1mc_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1mc_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1mc_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb1sa1mc_out_annual_tile <- eb1sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(eb1sa1mc_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb2sa1mc_out_annual_tile <- eb2sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(eb2sa1mc_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb3sa1mc_out_annual_tile <- eb3sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(eb3sa1mc_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)

@@ -665,7 +665,7 @@ contains
     integer :: i
     integer :: i_crit
     real :: dDBH
-    real :: CAI_max = 1.25
+    real :: CAI_max = 1
     real :: BAL, dVol
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
     real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
@@ -681,7 +681,7 @@ contains
         call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
 
         ! xxx check whether cohorts are ranked w.r.t. (height?)
-        ! print*, "height", vegn%cohorts%height 
+        print*, "height", vegn%cohorts%height 
 
         ! ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
         allocate(cai_partial(vegn%n_cohorts))
@@ -694,20 +694,25 @@ contains
           else
             cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
           end if
-          ! print*, "i, cai_partial", i, cai_partial
+          print*, "i, cai_partial", i, cai_partial
 
         end do
 
         ! determine the cohort where cai_partial exceeds critical value
         i_crit = vegn%n_cohorts
-        do while (cai_partial(i_crit) < CAI_max)
-          i_crit = i_crit - 1
+        do while (cai_partial(i_crit) < CAI_max) 
+         i_crit = i_crit - 1
+         print*, "i_crit", i_crit
+         print*, "vegn%n_cohorts", vegn%n_cohorts
         end do
 
         cc => vegn%cohorts(i_crit)
 
-        deathrate = (cai_partial(i_crit) - CAI_max) / &
-                    (cai_partial(i_crit) - cai_partial(i_crit+1))
+        ! deathrate = 0.002*(cai_partial(i_crit) - CAI_max) / &
+                    ! (cai_partial(i_crit) - cai_partial(i_crit+1))
+
+        deathrate = (CAI_max - cai_partial(i_crit)) / &
+                    (cai_partial(i_crit+1) - cai_partial(i_crit))
 
         ! print*, "deathrate", deathrate
         ! print*, "i_crit", i_crit
@@ -720,17 +725,17 @@ contains
         cc%nindivs = cc%nindivs - deadtrees
 
         ! ! ! just to be safe...
-        if (i_crit < vegn%n_cohorts) then
-          do i = (i_crit+1), vegn%n_cohorts
-            deathrate = 1.0
-            cc => vegn%cohorts(i)
-            deadtrees = cc%nindivs * deathrate
-            ! Carbon and Nitrogen from dead plants to soil pools
-            call plant2soil(vegn,cc,deadtrees)
-            ! Update plant density
-            cc%nindivs = cc%nindivs - deadtrees
-          end do
-        end if
+        ! if (i_crit < vegn%n_cohorts) then
+        !   do i = (i_crit+1), vegn%n_cohorts
+        !     deathrate = 1.0
+        !     cc => vegn%cohorts(i)
+        !     deadtrees = cc%nindivs * deathrate
+        !     ! Carbon and Nitrogen from dead plants to soil pools
+        !     call plant2soil(vegn,cc,deadtrees)
+        !     ! Update plant density
+        !     cc%nindivs = cc%nindivs - deadtrees
+        !   end do
+        ! end if
         deallocate(cai_partial)
       end if
 
@@ -764,17 +769,16 @@ contains
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species))
 
-        ! mortality rate can be a function of growth rate, age, and environmental
-        ! conditions. Here, we only used two constants for canopy layer and under-
-        ! story layer (mortrate_d_c and mortrate_d_u)
-
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
-          deathrate = 0.055*exp(-0.5*(cc%nsc/cc%bl_max)+5)/(1+exp(-0.5*(cc%nsc/cc%bl_max)+5))
+          deathrate = 0.03*exp(-0.9*(cc%nsc/cc%bl_max)+5)/(0.01+exp(-0.9*(cc%nsc/cc%bl_max)+5))
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
-          deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
+          ! deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
           ! deathrate = 0.01*(1 + exp(4*(cc%DBH - cc%DBH_ys))/ & ! in terms of dbh
                            ! (1 + exp(4*(cc%DBH - cc%DBH_ys))))
+          deathrate = 1/(1+exp((-0.1)*(dVol-40)))
+          ! deathrate = 0.1/(1+exp((-5)*(cc%DBH-1)))
+
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
@@ -785,16 +789,19 @@ contains
               deathrate = sp%mortrate_d_c
             endif
           else                      ! for trees
-            if(cc%layer > 1) then ! Understory layer mortality
-              deathrate = sp%mortrate_d_u * &
-                     (1. + A_mort*exp(B_mort*cc%dbh))/ &
-                     (1. +        exp(B_mort*cc%dbh))
+            if(cc%layer > 1) then ! Understory layer mortality: deathrate = 0.08*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
+              ! deathrate = sp%mortrate_d_u * &
+              !        (1. + A_mort*exp(B_mort*cc%dbh))/ &
+              !        (1. +        exp(B_mort*cc%dbh))
+              deathrate = 0.4*(cc%dbh-1)**8
 
-            else  ! First layer mortality
+            else  ! First layer mortality                      : deathrate = 0.02*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then
-                deathrate = sp%mortrate_d_c *                &
-                           (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
-                           (1. + exp(4.*(cc%dbh-DBHtp))))
+                ! deathrate = sp%mortrate_d_c *                &
+                !            (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
+                !            (1. + exp(4.*(cc%dbh-DBHtp))))
+                ! deathrate = 0.1/(1+exp((-10)*(cc%dbh-1))) ! Opt.2
+                deathrate = 0.1/exp((-2)*(cc%dbh-2))    ! Opt.3
               else
                 deathrate = sp%mortrate_d_c
               endif
