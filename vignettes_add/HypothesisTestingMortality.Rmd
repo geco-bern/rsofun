@@ -41,7 +41,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "cstarvation" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -211,7 +211,7 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea2sa1mb2_out_annual_tile <- out$output_annual_tile
+ea1sa1ma_out_annual_tile <- out$output_annual_tile
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -238,8 +238,7 @@ out$output_annual_tile %>%
 ### Write model outputs
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea2sa1mb2_out_annual_tile,"ea2sa1mb2_out_annual_tile.csv")
-
+write.csv(ea1sa1ma_out_annual_tile,"ea3sa1ma_out_annual_tile.csv")
 ```
 
 ### Read model outputs

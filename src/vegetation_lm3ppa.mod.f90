@@ -770,15 +770,17 @@ contains
         associate ( sp => spdata(cc%species))
 
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
-          deathrate = 0.03*exp(-0.9*(cc%nsc/cc%bl_max)+5)/(0.01+exp(-0.9*(cc%nsc/cc%bl_max)+5))
+          ! deathrate = 0.03*exp(-0.9*(cc%nsc/cc%bl_max)+5)/(0.01+exp(-0.9*(cc%nsc/cc%bl_max)+5))
+          ! if (cc%bl_max>0) then
+          deathrate = 1*(exp(-1.5*(cc%nsc/cc%bl_max)+5)/(1+exp(-1.2*(cc%nsc/cc%bl_max)+5)))
+          ! endif
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           ! deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
           ! deathrate = 0.01*(1 + exp(4*(cc%DBH - cc%DBH_ys))/ & ! in terms of dbh
                            ! (1 + exp(4*(cc%DBH - cc%DBH_ys))))
-          deathrate = 0.6/(1+exp((-0.1)*(dVol-30)))
-          ! deathrate = 0.1/(1+exp((-5)*(cc%DBH-1)))
-
+          ! deathrate = 0.6/(1+exp((-0.1)*(dVol-30)))
+          deathrate = 0.01*cc%Volume
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
@@ -790,10 +792,10 @@ contains
             endif
           else                      ! for trees
             if(cc%layer > 1) then ! Understory layer mortality: deathrate = 0.08*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
-              ! deathrate = sp%mortrate_d_u * &
-              !        (1. + A_mort*exp(B_mort*cc%dbh))/ &
-              !        (1. +        exp(B_mort*cc%dbh))
-              deathrate = 0.4*(cc%dbh-1)**8
+              deathrate = sp%mortrate_d_u * &
+                     (1. + A_mort*exp(B_mort*cc%dbh))/ &
+                     (1. +        exp(B_mort*cc%dbh)) + &
+                     1/exp((-1)*(cc%dbh-2))
 
             else  ! First layer mortality                      : deathrate = 0.02*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then
@@ -801,7 +803,7 @@ contains
                 !            (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
                 !            (1. + exp(4.*(cc%dbh-DBHtp))))
                 ! deathrate = 0.1/(1+exp((-10)*(cc%dbh-1))) ! Opt.2
-                deathrate = 0.1/exp((-2)*(cc%dbh-2))    ! Opt.3
+                deathrate = 1/exp((-1)*(cc%dbh-2))    ! Opt.3
               else
                 deathrate = sp%mortrate_d_c
               endif
