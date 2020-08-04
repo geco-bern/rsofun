@@ -1,0 +1,284 @@
+---
+title: "ConstantSelfThinning"
+output:
+  html_document: 
+    fig_width: 10
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(rsofun)
+library(ggplot2)
+```
+
+## Example
+
+### Simulation settings
+
+
+Manually select some sites from which we're going to use the data for evaluation and calibration.
+```{r}
+mysites <- c("ORNL")
+```
+
+Create a site meta info table that contains all the site-specific information that is used to force site-simulations (e.g. starting year, number of simulations years, elevation, etc.). For FLUXNET2015 data, required meta info is provided by the `rsofun` package (data frame `rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015`).
+```{r}
+siteinfo <- data.frame(sitename="ORNL", lon = 0.0, lat = 0.0, elv = 0.0)
+```
+
+Now specify the simulation parameters that are identical for all site-scale simulations.
+```{r}
+params_siml <- list(
+      spinup                = TRUE,
+      spinupyears           = 1800, #1793,
+      recycle               = 11, # 9 or 11
+      firstyeartrend        = 1998,
+      nyeartrend            = 11, #9 or 110 (longer transient years)
+      outputhourly          = TRUE,
+      outputdaily           = TRUE,
+      do_U_shaped_mortality = FALSE,
+      update_annualLAImax   = FALSE,
+      do_closedN_run        = TRUE,
+      method_photosynth     = "pmodel", # gs_leuning or pmodel
+      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
+      )
+```
+
+### Define model parameters
+
+#### Tile-level parameters
+
+```{r}
+params_tile <- list(
+  soiltype     = 3,    # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
+  FLDCAP       = 0.4,  # soil property: field capacity 
+  WILTPT       = 0.05, # soil property: wilting point
+  K1           = 2.0,  # turnover rate of fast SOM per year
+  K2           = 0.1,  # turnover rate of slow SOM per year
+  K_nitrogen   = 0.0,  # mineral Nitrogen turnover rate
+  etaN         = 0.0,  # loss rate with runoff
+  MLmixRatio   = 0.6,  # the ratio of C and N returned to litters from microbes
+  l_fract      = 0.0,  # fraction of the carbon retained after leaf drop
+  retransN     = 0.0,  # retranslocation coefficient of Nitrogen
+  f_N_add      = 0.02, # re-fill of N for sapwood
+  f_initialBSW = 0.005
+  #LMAmin       = 0.02
+  )
+
+```
+
+#### Species-level parameters
+
+```{r}
+params_species <- tibble(
+  lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),  # 0: grass; 1 Woody
+  phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),  # 0: Deciduous; 1 Evergreen
+  pt            = c(1,       0,        0,        0,        0,      0,        0,        0,      0,        0,        0),  # 0: C3; 1: C4
+  seedlingsize  = c(0.02,    0.05,     0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05), # initial size of seedlings
+  LMA           = c(0.035,   0.14,     0.14,     0.14,     0.14,   0.14,    0.14,      0.14,   0.14,     0.14,     0.035),
+  # Leaf mass per unit area: 0.035, 0.085, 0.135
+  phiRL         = c(4.0,     4.0,      2.0,      3.0,      4.0,     5.0,     6.0,      7.0,   8.0,       9.0,      3.0),
+  # Root:Shoot ratio:  4.0, 6.0, 8.0
+  LNbase        = c(0.8E-3,  0.8E-3,   0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3),   
+  # kgN m-2 leaf, Vmax = 0.03125*LNbase
+  laimax        = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  
+  # maximum crown LAI
+  LAI_light     = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  
+  # Light-limited crown LAI
+  Nfixrate0     = c(0.0,     0.0,      0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0),  
+  # 0.03 kgN kgRootC-1 yr-1
+  NfixCost0     = c(12.,     12.,      12.,      12.,      12.,    12.,      12.,      12.,    12.,      12.,      12.),  
+  # 12, 24 gC/gN
+  phiCSA        = c(1.25E-4, 0.25E-4,  0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4),
+  mortrate_d_c  = c(0.02,    0.02,     0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02),    
+  # canopy tree mortality rate, year-1
+  mortrate_d_u  = c(0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08),    
+  # understory tree mortality rate, year-1
+  maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
+  fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
+  #alpha_FR      = c(1.2,     1.2,      1.2,      1.2,      1.2,    1.2,      1.2,      1.2,    1.2,      1.2,      1.2)
+  ) %>% 
+  bind_rows(., slice(., 1:5))
+```
+
+#### Soil parameters
+
+By layers.
+```{r}
+# adopted from datatypes.mod.f90 l.538
+params_soil <- tibble(
+  type              = c("Coarse",  "Medium",   "Fine",    "CM",     "CF",     "MF",    "CMF",    "Peat",    "MCM"),
+  GMD               = c(0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3),
+  GSD               = c(5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4),
+  vwc_sat           = c(0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445),
+  chb               = c( 3.5,   6.4,  11.0,   4.8,   6.3,   8.4,   6.3,   6.4,   6.4),
+  psi_sat_ref       = c(-600., -790., -910., -1580., -1680., -1880., -5980., -790., -790.), # Pa
+  k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2),      # mol/(s MPa m)
+  alphaSoil         = rep(1.0, 9),
+  heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6,   1.0)
+  )
+```
+
+#### Initial cohort specification
+
+```{r}
+init_cohort <- tibble(
+ init_cohort_species = c(1,      2,        3,        4,      5,        6,        7,      8,        9,       10),
+ init_cohort_nindivs = c(0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02),
+ init_cohort_bsw     = c(0.2,    0.2,      0.2,      0.2,    0.2,      0.2,      0.2,    0.2,      0.2,     0.2),
+ init_cohort_bHW     = c(0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0),
+ init_cohort_nsc     = c(0.5,    0.5,      0.5,      0.5,    0.5,      0.5,      0.5,    0.5,      0.5,     0.5)
+)
+
+```
+
+#### Initial soil pools
+
+```{r}
+# high N input --> Deciduous
+# low  N input --> Evergreen
+init_soil <- list(
+ init_fast_soil_C    = 0.15,   # kg C m-2    # C/N = 15, 0.75 kg SOM ~ 50 gN
+ init_slow_soil_C    = 16.0,   # kg C m-2    # C/N = 40
+ init_Nmineral       = 2.5E-3, # kg N m-2
+ N_input             = 0.0E-3  # 2.4E-3, # kg N m-2 yr-1, N deposit: 0.8 g N m-2 yr-1
+)
+```
+
+### Define soil parameters
+
+For now, this is implemented as an illustration. Should be made site-specific.
+```{r}
+df_soiltexture <- bind_rows(
+  top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
+  bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
+)
+```
+
+### Get input
+
+Get the input from the nice weird looking file with half-hourly data.
+
+The file has the following variables (units):
+
+ Year  DOY  Hour  T_air          Q_air          Wind_speed      Precip          Pressure        R_global_in      R_longwave_in   CO2
+                      K          kg/kg          m/s     kg_H2O/m2/s               pa               W/m2            W/m2            ppm     
+
+```{r}
+forcing <- read_delim( paste0(path.package("rsofun"), "/extdata/ORNL_forcing.txt"), col_names = TRUE, delim = "\t") %>% 
+  mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
+  mutate(sitename = "ORNL") %>% 
+  dplyr::filter(!(mday(date)==29 & month(date)==2))
+
+## convert rain to units per seconds
+dt_secs <- lubridate::interval(forcing$date[1], forcing$date[2]) %>% 
+  time_length("seconds")
+forcing <- forcing %>% 
+  mutate(RAIN = RAIN / dt_secs)
+```
+
+For P-model runs, aggregate to daily forcing.
+```{r}
+if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
+  forcing <- forcing %>% 
+    dplyr::group_by(lubridate::date(date)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>% 
+    dplyr::select(-1)
+}
+
+# Changing values of PAR for running simulations
+#forcing <- forcing %>% mutate(PAR = PAR*1.30) # levels = *1, *1.15 and *1.30
+
+# Replicating forcing data to run longer transient years
+#forcing <- bind_rows(replicate(10, forcing, simplify = FALSE))
+
+```
+
+### Run the model for different cases
+
+Run the model for all environmental conditions, species and mortality formulations.
+```{r}
+out <- run_lm3ppa_f_bysite( "ORNL", 
+                            params_siml, 
+                            siteinfo, 
+                            forcing, # ddf_input
+                            params_tile, 
+                            params_species, 
+                            params_soil, 
+                            init_cohort, 
+                            init_soil, 
+                            makecheck = TRUE)
+
+ea2sa1mb2_out_annual_tile <- out$output_annual_tile
+
+out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = Density)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = CAI)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+```
+
+### Write model outputs
+```{r}
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(ea1sa1md_out_annual_tile,"ea1sa1md_out_annual_tile.csv")
+write.csv(ea2sa1md_out_annual_tile,"ea2sa1md_out_annual_tile.csv")
+write.csv(ea3sa1md_out_annual_tile,"ea3sa1md_out_annual_tile.csv")
+```
+
+### Read model outputs
+```{r}
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea1sa1md_out_annual_tile <- read.csv("ea1sa1md_out_annual_tile.csv")
+ea2sa1md_out_annual_tile <- read.csv("ea2sa1md_out_annual_tile.csv")
+ea3sa1md_out_annual_tile <- read.csv("ea3sa1md_out_annual_tile.csv")
+```
+
+##### Stand development
+```{r}
+# Changes in LUE with WD level 1
+# Mortality Constant Self-thinning
+ggplot() + 
+  geom_line(data=ea1sa1md_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1md_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1md_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Constant Self-thinning")
+```
+
+#### Self-thinning relathionships
+
+From new annual_tile_output
+
+```{r}
+# Changes in LUE with WD level 1
+# Mortality Constant Self-thinning
+ggplot() + 
+  geom_point(data=subset(ea1sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Constant Self-thinning")
+```
+

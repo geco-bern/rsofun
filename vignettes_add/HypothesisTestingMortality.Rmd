@@ -41,7 +41,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "cstarvation" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -211,7 +211,7 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea1sa1mc2_out_annual_tile <- out$output_annual_tile
+ea2sa1mb2_out_annual_tile <- out$output_annual_tile
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -238,7 +238,7 @@ out$output_annual_tile %>%
 ### Write model outputs
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea1sa1mc2_out_annual_tile,"ea1sa1mc2_out_annual_tile.csv")
+write.csv(ea2sa1mb2_out_annual_tile,"ea2sa1mb2_out_annual_tile.csv")
 
 ```
 
@@ -259,8 +259,20 @@ ea1sa1ma3_out_annual_tile <- read.csv("ea1sa1ma3_out_annual_tile.csv")
 ea2sa1ma3_out_annual_tile <- read.csv("ea2sa1ma3_out_annual_tile.csv")
 ea3sa1ma3_out_annual_tile <- read.csv("ea3sa1ma3_out_annual_tile.csv")
 
+ea1sa1mc2_out_annual_tile <- read.csv("ea1sa1mc2_out_annual_tile.csv")
+ea2sa1mc2_out_annual_tile <- read.csv("ea2sa1mc2_out_annual_tile.csv")
+ea3sa1mc2_out_annual_tile <- read.csv("ea3sa1mc2_out_annual_tile.csv")
+
+ea1sa1mb_out_annual_tile <- read.csv("ea1sa1mb_out_annual_tile.csv")
+ea2sa1mb_out_annual_tile <- read.csv("ea2sa1mb_out_annual_tile.csv")
+ea3sa1mb_out_annual_tile <- read.csv("ea3sa1mb_out_annual_tile.csv")
+
+ea1sa1md_out_annual_tile <- read.csv("ea1sa1md_out_annual_tile.csv")
+ea2sa1md_out_annual_tile <- read.csv("ea2sa1md_out_annual_tile.csv")
+ea3sa1md_out_annual_tile <- read.csv("ea3sa1md_out_annual_tile.csv")
 
 ```
+
 ##### LUE (mol/s/m2)
 ```{r}
 
@@ -297,13 +309,23 @@ ggplot() +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   ggtitle("Mortality formulation DBH 3")
 
+# Biomass changes in LUE with WD level 1
+# Mortality Ratio NSC and Leaf Mass
+ggplot() + 
+  geom_line(data=ea1sa1mb_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mb_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mb_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
 
 # Biomass changes in LUE with WD level 1
 # Mortality Growth rate
 ggplot() + 
-  geom_line(data=ea1sa1mc_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1mc_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1mc_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  geom_line(data=ea1sa1mc2_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mc2_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mc2_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +

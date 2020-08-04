@@ -708,7 +708,7 @@ contains
 
         cc => vegn%cohorts(i_crit)
 
-        ! deathrate = 0.002*(cai_partial(i_crit) - CAI_max) / &
+        ! deathrate = (cai_partial(i_crit) - CAI_max) / &
                     ! (cai_partial(i_crit) - cai_partial(i_crit+1))
 
         deathrate = (CAI_max - cai_partial(i_crit)) / &
@@ -776,7 +776,7 @@ contains
           ! deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
           ! deathrate = 0.01*(1 + exp(4*(cc%DBH - cc%DBH_ys))/ & ! in terms of dbh
                            ! (1 + exp(4*(cc%DBH - cc%DBH_ys))))
-          deathrate = 1/(1+exp((-0.1)*(dVol-40)))
+          deathrate = 0.6/(1+exp((-0.1)*(dVol-30)))
           ! deathrate = 0.1/(1+exp((-5)*(cc%DBH-1)))
 
 
