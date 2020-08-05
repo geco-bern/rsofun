@@ -651,9 +651,14 @@ contains
   
   end subroutine Seasonal_fall
 
+
   subroutine vegn_nat_mortality (vegn, deltat)
+    !////////////////////////////////////////////////////////////////
+    ! Determines mortality and updates tile
+    !---------------------------------------------------------------
     use md_interface_lm3ppa, only: myinterface
-!   TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
+    
+    !   TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
     type(vegn_tile_type), intent(inout) :: vegn
     real, intent(in) :: deltat ! seconds since last mortality calculations, s
 
@@ -665,8 +670,9 @@ contains
     integer :: i
     integer :: i_crit
     real :: dDBH
-    real :: CAI_max = 1
+    real :: CAI_max = 1.0
     real :: BAL, dVol
+    real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
     real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
@@ -683,10 +689,9 @@ contains
         ! xxx check whether cohorts are ranked w.r.t. (height?)
         print*, "height", vegn%cohorts%height 
 
-        ! ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
+        ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
         allocate(cai_partial(vegn%n_cohorts))
         cai_partial(:) = 0.0
-
         do i = vegn%n_cohorts, 1 ,-1
           cc => vegn%cohorts(i)
           if (i==vegn%n_cohorts) then ! if (i>1) then
@@ -694,74 +699,81 @@ contains
           else
             cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
           end if
-          print*, "i, cai_partial", i, cai_partial
-
         end do
+        print*, "cai_partial", cai_partial(:)
 
         ! determine the cohort where cai_partial exceeds critical value
         i_crit = vegn%n_cohorts
         do while (cai_partial(i_crit) < CAI_max) 
          i_crit = i_crit - 1
-         print*, "i_crit", i_crit
-         print*, "vegn%n_cohorts", vegn%n_cohorts
         end do
 
+        print*, "i_crit", i_crit
+        print*, "CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1) ", CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1)        
+
+        ! Manipulate only critical cohort
         cc => vegn%cohorts(i_crit)
 
-        ! deathrate = (cai_partial(i_crit) - CAI_max) / &
-                    ! (cai_partial(i_crit) - cai_partial(i_crit+1))
+        ! kill individuals in critical cohort so that its cumulative CAI equals CAI_max
+        if ((cai_partial(i_crit) - cai_partial(i_crit + 1)) > 0.0) then
 
-        deathrate = (CAI_max - cai_partial(i_crit)) / &
-                    (cai_partial(i_crit+1) - cai_partial(i_crit))
+          frac_new = (CAI_max - cai_partial(i_crit + 1)) / &
+            (cai_partial(i_crit) - cai_partial(i_crit + 1))
 
-        ! print*, "deathrate", deathrate
-        ! print*, "i_crit", i_crit
+          nindivs_new = vegn%cohorts(i_crit)%nindivs * frac_new
+          deadtrees = cc%nindivs - nindivs_new
+          print*,'frac_new, cc%nindivs, nindivs_new ', frac_new, cc%nindivs, nindivs_new
+          print*,'updated cai_partial of i_crit:', (cc%nindivs - deadtrees) * cc%crownarea + cai_partial(i_crit + 1) 
 
-        deadtrees = cc%nindivs * deathrate
-        ! print*, "deadtrees", deadtrees
+        else
+
+          deadtrees = 0.0
+
+        end if
+
         ! Carbon and Nitrogen from dead plants to soil pools
-        call plant2soil(vegn,cc,deadtrees)
+        call plant2soil(vegn, cc, deadtrees)
+
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
 
-        ! ! ! just to be safe...
-        ! if (i_crit < vegn%n_cohorts) then
-        !   do i = (i_crit+1), vegn%n_cohorts
-        !     deathrate = 1.0
-        !     cc => vegn%cohorts(i)
-        !     deadtrees = cc%nindivs * deathrate
-        !     ! Carbon and Nitrogen from dead plants to soil pools
-        !     call plant2soil(vegn,cc,deadtrees)
-        !     ! Update plant density
-        !     cc%nindivs = cc%nindivs - deadtrees
-        !   end do
-        ! end if
+        ! Make all cohorts larger than i_crit are fully killed
+        if (i_crit > 1) then
+          do i = 1, (i_crit-1)
+            cc => vegn%cohorts(i)
+            deadtrees = cc%nindivs
+
+            ! Carbon and Nitrogen from dead plants to soil pools
+            call plant2soil(vegn, cc, deadtrees)
+
+            ! Update plant density
+            cc%nindivs = cc%nindivs - deadtrees
+          end do
+        end if
         deallocate(cai_partial)
+
+        ! xxx try just for printing cai_partial -------------------
+        ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
+        allocate(cai_partial(vegn%n_cohorts))
+        cai_partial(:) = 0.0
+        do i = vegn%n_cohorts, 1 ,-1
+          cc => vegn%cohorts(i)
+          if (i==vegn%n_cohorts) then ! if (i>1) then
+            cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
+          else
+            cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
+          end if
+        end do
+        print*, "cai_partial", cai_partial(:)
+        deallocate(cai_partial)
+        !---------------------------
+
+        ! update tile-level quantities (e.g., CAI)
+        call summarize_tile( vegn )
+
+        print*,'CAI updated', vegn%CAI
+
       end if
-
-      ! xxx recalculate CAI and check if equal to CAI_max
-
-    ! else if ((trim(myinterface%params_siml%method_mortality) == "bal")) then
-
-    !   call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%BA,idx)
-
-    !     do i = 1, vegn%n_cohorts
-    !       cc => vegn%cohorts(i)
-    !       if (i==1) then
-    !         cc%BAL = 0
-    !       else
-    !         cc%BAL = sum(vegn%cohorts(1:i-1)%BA)
-    !       endif
-    !       print*, "cc%BAL", cc%BAL
-    !     end do  
-    !   ! deathrate = 0.05*cc%BAL
-    !   deathrate = 0.01*(exp(0.01*cc%BAL))/(1 + exp(0.01*cc%BAL))
-    !   ! deadtrees = cc%nindivs * deathrate
-    !   deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year)
-    !   ! Carbon and Nitrogen from dead plants to soil pools
-    !   call plant2soil(vegn,cc,deadtrees)
-    !   ! Update plant density
-    !   cc%nindivs = cc%nindivs - deadtrees
  
     else
 
@@ -781,6 +793,8 @@ contains
                            ! (1 + exp(4*(cc%DBH - cc%DBH_ys))))
           ! deathrate = 0.6/(1+exp((-0.1)*(dVol-30)))
           deathrate = 0.01*cc%Volume
+
+          stop 'should take volume *change* for growth rate-dependent mortality'
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
@@ -825,11 +839,14 @@ contains
         ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
         end associate
       enddo
-      ! Remove the cohorts with 0 individuals
-      call kill_lowdensity_cohorts(vegn)
+
     endif
-   ! vegn%n_deadtrees = vegn%n_deadtrees + deadtrees
-   ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW) 
+
+    ! Remove the cohorts with very few individuals
+    print*,'a'
+    call kill_lowdensity_cohorts( vegn )    
+    print*,'b'
+
   end subroutine vegn_nat_mortality
 
 
@@ -1118,6 +1135,7 @@ contains
     endif ! set up new born cohorts
 
   end subroutine vegn_reproduction
+
 
   function cohort_can_reproduce( cc ); logical cohort_can_reproduce
     !////////////////////////////////////////////////////////////////
@@ -1703,6 +1721,7 @@ contains
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
+
     ! local variables
     type(cohort_type), pointer :: cc(:) ! array to hold new cohorts
     logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
@@ -1723,17 +1742,18 @@ contains
         endif
       enddo
     enddo
+
     ! at this point, k is the number of new cohorts
     vegn%n_cohorts = k
     deallocate(vegn%cohorts)
     vegn%cohorts=>cc
+
   end subroutine vegn_mergecohorts
 
 
   subroutine kill_lowdensity_cohorts( vegn )
     !////////////////////////////////////////////////////////////////
-    ! kill low density cohorts, a new function seperated from vegn_mergecohorts
-    ! Weng, 2014-07-22
+    ! Remove cohorts that have (almost) fully died and update tile
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
@@ -1742,12 +1762,14 @@ contains
     logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
     real, parameter :: mindensity = 0.25E-4
     integer :: i,j,k
+
     ! calculate the number of cohorts with indivs>mindensity
     k = 0
     do i = 1, vegn%n_cohorts
       if (vegn%cohorts(i)%nindivs > mindensity) k=k+1
     enddo
     if (k==0) write(*,*)'kill_lowdensity_cohorts: ','All cohorts have died'
+    
     ! exclude cohorts that have low individuals
     if (k < vegn%n_cohorts) then
       allocate(cc(k))

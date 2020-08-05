@@ -129,7 +129,8 @@ contains
         soil_theta    = vegn%thetaS
 
         ! sum over fast time steps and cohorts
-        call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
+        call daily_diagnostics( vegn )
+        ! print*,'1. vegn%annualGPP ', vegn%annualGPP
 
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
@@ -137,6 +138,7 @@ contains
         ! Produce new biomass from 'carbon_gain' (is zero afterwards)
         call vegn_growth_EW( vegn )
 
+        ! get daily outputs
         call getout_daily( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
 
       end do dayloop
@@ -152,37 +154,38 @@ contains
     print*,'real year: ', year0
 
     if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update( vegn )
-
-    call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
+    
+    !---------------------------------------------
+    ! Get annual diagnostics and outputs in once. 
+    ! Needs to be called here 
+    ! because mortality and reproduction re-organize
+    ! cohorts again and we want annual output and daily
+    ! output to be consistent with cohort identities.
+    !---------------------------------------------
+    call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
     !---------------------------------------------        
     ! Kill all individuals in a cohort if NSC falls below critical point
     call vegn_annual_starvation( vegn )
-
+    
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
-    call vegn_nat_mortality( vegn, real( seconds_per_year ))
-
-    ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
-
+    call vegn_nat_mortality( vegn, real( seconds_per_year ) )
+    
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
     call vegn_reproduction( vegn )
     
-    ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
-
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
     call kill_lowdensity_cohorts( vegn )
-
+    
     call relayer_cohorts( vegn )
     
     call vegn_mergecohorts( vegn )
-
-    ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
-
+    
     !---------------------------------------------
     ! Set annual variables zero
     !---------------------------------------------

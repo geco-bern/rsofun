@@ -42,7 +42,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin or dbh
       )
 ```
 
