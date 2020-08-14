@@ -710,7 +710,6 @@ contains
         do while (cai_partial(i_crit) < CAI_max) 
          i_crit = i_crit - 1
         end do
-        if (i_crit < 0)  i_crit = 0 !xxxxnew
 
         print*, "i_crit", i_crit
         print*, "CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1) ", CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1) 
@@ -719,8 +718,6 @@ contains
         cc => vegn%cohorts(i_crit)
 
         ! ! kill individuals in critical cohort so that its cumulative CAI equals CAI_max
-        if (i_crit > 0) then !xxxxnew
-
         if ((cai_partial(i_crit) - cai_partial(i_crit + 1)) > 0) then
 
           frac_new = (CAI_max - cai_partial(i_crit + 1)) / &
@@ -730,13 +727,12 @@ contains
           deadtrees = cc%nindivs - nindivs_new
           print*,'frac_new, cc%nindivs, nindivs_new ', frac_new, cc%nindivs, nindivs_new
           print*,'updated cai_partial of i_crit:', (cc%nindivs - deadtrees) * cc%crownarea + cai_partial(i_crit + 1) 
-
+        
         else
-
+        
           deadtrees = 0.0
-
+        
         end if
-        end if !xxxxnew
 
         print*,'cc%nindivs, nindivs_new ', cc%nindivs, nindivs_new
 
