@@ -211,7 +211,8 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea2sa1mb2_out_annual_tile <- out$output_annual_tile
+ea1sa1md_out_annual_tile <- out$output_annual_tile
+ea1sa1md_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +
