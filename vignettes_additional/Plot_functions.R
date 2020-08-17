@@ -20,7 +20,9 @@ ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.02*(1+5*exp(4*
 # Other options
 ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.1/(1+exp((-10)*(.x-1))))+
   labs(x='DBH (m)', y='Deathrate')
-ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 1/exp((-1)*(.x-2)))+
+ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1/exp((-1)*(.x-2)))+
+  labs(x='DBH (m)', y='Deathrate')
+ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.01*exp(0.6*.x))+
   labs(x='DBH (m)', y='Deathrate')
 
 ######## Carbon starvation function ######## 

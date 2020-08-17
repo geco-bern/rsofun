@@ -799,7 +799,7 @@ contains
           ! deathrate = 0.6/(1+exp((-0.1)*(dVol-30)))
           deathrate = 0.01*cc%Volume
 
-          stop 'should take volume *change* for growth rate-dependent mortality'
+          ! stop 'should take volume *change* for growth rate-dependent mortality'
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
@@ -810,19 +810,19 @@ contains
               deathrate = sp%mortrate_d_c
             endif
           else                      ! for trees
-            if(cc%layer > 1) then ! Understory layer mortality: deathrate = 0.08*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
-              deathrate = sp%mortrate_d_u * &
-                     (1. + A_mort*exp(B_mort*cc%dbh))/ &
-                     (1. +        exp(B_mort*cc%dbh)) + &
-                     1/exp((-1)*(cc%dbh-2))
+            if(cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.08*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
+              ! deathrate = sp%mortrate_d_u * &
+                     ! (1. + A_mort*exp(B_mort*cc%dbh))/ &
+                     ! (1. +        exp(B_mort*cc%dbh)) + &
+                     ! 1/exp((-1)*(cc%dbh-2))
+              deathrate = 0.08*(9*exp(-40*cc%dbh))/(1+exp(-40*cc%dbh))+ 0.01*exp(0.6*cc%dbh)
 
-            else  ! First layer mortality                      : deathrate = 0.02*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
+            else  ! First layer mortality Weng 2015: deathrate = 0.02*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then
                 ! deathrate = sp%mortrate_d_c *                &
                 !            (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
                 !            (1. + exp(4.*(cc%dbh-DBHtp))))
-                ! deathrate = 0.1/(1+exp((-10)*(cc%dbh-1))) ! Opt.2
-                deathrate = 1/exp((-1)*(cc%dbh-2))    ! Opt.3
+                deathrate = 0.01*exp(0.6*cc%dbh)
               else
                 deathrate = sp%mortrate_d_c
               endif
@@ -853,45 +853,6 @@ contains
     print*,'b'
 
   end subroutine vegn_nat_mortality
-
-
-  ! subroutine vegn_starvation( vegn ) ! Daily (not used)
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Mortality due to C starvation (NSC below threshold)
-  !   ! Starvation due to low NSC or NSN, daily
-  !   ! Code from BiomeE-Allocation
-  !   !---------------------------------------------------------------
-  !   type(vegn_tile_type), intent(inout) :: vegn
-
-  !   ! local variables --------
-  !   real :: deathrate ! mortality rate, 1/year
-  !   real :: deadtrees ! number of trees that died over the time step
-  !   integer :: i, k
-  !   type(cohort_type), pointer :: cc
-  !   type(cohort_type), dimension(:), pointer :: ccold, ccnew
-
-  !   do i = 1, vegn%n_cohorts
-  !     cc => vegn%cohorts(i)
-  !     associate ( sp => spdata(cc%species))
-  !     !   Mortality due to starvation
-  !     deathrate = 0.0
-  !     !   if (cc%bsw<0 .or. cc%nsc < 0.00001*cc%bl_max .OR.(cc%layer >1 .and. sp%lifeform ==0)) then
-  !     if (cc%nsc < 0.01*cc%bl_max ) then ! .OR. cc%NSN < 0.01*cc%bl_max/sp%CNleaf0
-  !       deathrate = 1.0
-  !       deadtrees = cc%nindivs * deathrate !individuals / m2
-  !       ! Carbon and Nitrogen from plants to soil pools
-  !       call plant2soil(vegn,cc,deadtrees)
-  !       !        update cohort individuals
-  !       cc%nindivs = 0.0 ! cc%nindivs*(1.0 - deathrate)
-  !     else
-  !       deathrate = 0.0
-  !     endif
-  !     end associate
-  !   enddo
-    ! Remove the cohorts with 0 individuals
-    ! call kill_lowdensity_cohorts( vegn )
-  ! end subroutine vegn_starvation
-
 
   subroutine vegn_annual_starvation ( vegn ) ! Annual
     !////////////////////////////////////////////////////////////////
