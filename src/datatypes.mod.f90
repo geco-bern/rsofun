@@ -1133,7 +1133,7 @@ contains
   end subroutine getout_daily
 
 
-  subroutine annual_diagnostics(vegn, iyears, out_annual_cohorts, out_annual_tile)
+  subroutine annual_diagnostics(vegn, iyears)
     !////////////////////////////////////////////////////////////////////////
     ! Updates tile-level variables and populates annual output in once
     !------------------------------------------------------------------------
@@ -1141,8 +1141,6 @@ contains
 
     type(vegn_tile_type), intent(inout) :: vegn
     integer, intent(in) :: iyears
-    type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts
-    type(outtype_annual_tile) :: out_annual_tile
     ! type(spec_data_type) :: sp
 
     !-------local var
@@ -1150,6 +1148,71 @@ contains
     real treeG, fseed, fleaf, froot,fwood,dDBH, dVol, deathrate
     real :: plantC, plantN, soilC, soilN
     integer :: i
+
+
+    ! Cohorts ouput
+    do i = 1, vegn%n_cohorts
+      cc => vegn%cohorts(i)
+      treeG     = cc%seedC + cc%NPPleaf + cc%NPProot + cc%NPPwood
+      fseed     = cc%seedC/treeG
+      fleaf     = cc%NPPleaf/treeG
+      froot     = cc%NPProot/treeG
+      fwood     = cc%NPPwood/treeG
+      dDBH      = (cc%DBH - cc%DBH_ys)*1000
+      cc%Volume = (cc%bsw+cc%bHW)/spdata(cc%species)%rho_wood
+      dVol      = (cc%Volume - cc%Vol_ys)
+      cc%BA     = pi/4*cc%dbh*cc%dbh
+    enddo
+
+    ! tile pools output
+    call summarize_tile( vegn )
+
+    vegn%NPPL       = 0.0
+    vegn%NPPW       = 0.0
+    vegn%n_deadtrees = 0
+    vegn%c_deadtrees = 0
+
+    do i = 1, vegn%n_cohorts
+      cc => vegn%cohorts(i)
+      vegn%annualfixedN = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
+      vegn%NPPL         = vegn%NPPL   + fleaf * cc%nindivs
+      vegn%NPPW         = vegn%NPPW   + fwood * cc%nindivs 
+      vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees 
+      vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees 
+    enddo
+
+    plantC    = vegn%NSC + vegn%SeedC + vegn%leafC + vegn%rootC + vegn%SapwoodC + vegn%woodC
+    plantN    = vegn%NSN + vegn%SeedN + vegn%leafN + vegn%rootN + vegn%SapwoodN + vegn%woodN
+    soilC     = vegn%MicrobialC + vegn%metabolicL + vegn%structuralL
+    soilN     = vegn%MicrobialN + vegn%metabolicN + vegn%structuralN + vegn%mineralN
+    vegn%totN = plantN + soilN
+
+    ! I cannot figure out why N losing. Hack!
+    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
+
+  end subroutine annual_diagnostics
+
+  subroutine getout_annual(vegn, iyears, out_annual_cohorts, out_annual_tile)
+    !////////////////////////////////////////////////////////////////////////
+    ! Updates tile-level variables and populates annual output in once
+    !------------------------------------------------------------------------
+    use md_interface_lm3ppa, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
+
+    type(vegn_tile_type), intent(in) :: vegn
+    integer, intent(in) :: iyears
+    type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts
+    type(outtype_annual_tile) :: out_annual_tile
+    ! type(spec_data_type) :: sp
+
+    !-------local var
+    type(vegn_tile_type) :: vegn_local
+    type(cohort_type), pointer :: cc
+    real treeG, fseed, fleaf, froot,fwood,dDBH, dVol, deathrate
+    real :: plantC, plantN, soilC, soilN
+    integer :: i
+
+    ! create new temporary instance
+    vegn_local = vegn
 
     ! re-initialise to avoid elements not updated when number 
     ! of cohorts declines from one year to the next
@@ -1182,8 +1245,8 @@ contains
     out_annual_cohorts(:)%c_deadtrees = dummy
 
     ! Cohorts ouput
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
+    do i = 1, vegn_local%n_cohorts
+      cc => vegn_local%cohorts(i)
       treeG     = cc%seedC + cc%NPPleaf + cc%NPProot + cc%NPPwood
       fseed     = cc%seedC/treeG
       fleaf     = cc%NPPleaf/treeG
@@ -1225,94 +1288,87 @@ contains
     enddo
 
     ! tile pools output
-    call summarize_tile( vegn )
+    call summarize_tile( vegn_local )
 
-    vegn%NPPL       = 0.0
-    vegn%NPPW       = 0.0
-    vegn%n_deadtrees = 0
-    vegn%c_deadtrees = 0
+    vegn_local%NPPL       = 0.0
+    vegn_local%NPPW       = 0.0
+    vegn_local%n_deadtrees = 0
+    vegn_local%c_deadtrees = 0
 
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
-      vegn%annualfixedN = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
-      vegn%NPPL         = vegn%NPPL   + fleaf * cc%nindivs
-      vegn%NPPW         = vegn%NPPW   + fwood * cc%nindivs 
-      vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees 
-      vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees 
+    do i = 1, vegn_local%n_cohorts
+      cc => vegn_local%cohorts(i)
+      vegn_local%annualfixedN = vegn_local%annualfixedN  + cc%annualfixedN * cc%nindivs
+      vegn_local%NPPL         = vegn_local%NPPL   + fleaf * cc%nindivs
+      vegn_local%NPPW         = vegn_local%NPPW   + fwood * cc%nindivs 
+      vegn_local%n_deadtrees  = vegn_local%n_deadtrees   + cc%n_deadtrees 
+      vegn_local%c_deadtrees  = vegn_local%c_deadtrees   + cc%c_deadtrees 
     enddo
 
-    plantC    = vegn%NSC + vegn%SeedC + vegn%leafC + vegn%rootC + vegn%SapwoodC + vegn%woodC
-    plantN    = vegn%NSN + vegn%SeedN + vegn%leafN + vegn%rootN + vegn%SapwoodN + vegn%woodN
-    soilC     = vegn%MicrobialC + vegn%metabolicL + vegn%structuralL
-    soilN     = vegn%MicrobialN + vegn%metabolicN + vegn%structuralN + vegn%mineralN
-    vegn%totN = plantN + soilN
+    plantC    = vegn_local%NSC + vegn_local%SeedC + vegn_local%leafC + vegn_local%rootC + vegn_local%SapwoodC + vegn_local%woodC
+    plantN    = vegn_local%NSN + vegn_local%SeedN + vegn_local%leafN + vegn_local%rootN + vegn_local%SapwoodN + vegn_local%woodN
+    soilC     = vegn_local%MicrobialC + vegn_local%metabolicL + vegn_local%structuralL
+    soilN     = vegn_local%MicrobialN + vegn_local%metabolicN + vegn_local%structuralN + vegn_local%mineralN
+    vegn_local%totN = plantN + soilN
 
     out_annual_tile%year       = iyears
-    out_annual_tile%CAI        = vegn%CAI
-    out_annual_tile%LAI        = vegn%LAI
-    out_annual_tile%density    = vegn%nindivs*10000 !xxx New tile out
-    out_annual_tile%DBH        = vegn%DBH           !xxx New tile out
-    out_annual_tile%density12  = vegn%nindivs12*10000 !xxx New tile out
-    out_annual_tile%DBH12      = vegn%DBH12     !xxx New tile out
-    out_annual_tile%QMD        = vegn%QMD       !xxx New tile out
-    out_annual_tile%NPP        = vegn%annualNPP !xxx New tile out
-    out_annual_tile%GPP        = vegn%annualGPP
-    out_annual_tile%Rauto      = vegn%annualResp
-    out_annual_tile%Rh         = vegn%annualRh
-    out_annual_tile%rain       = vegn%annualPrcp
-    out_annual_tile%SoilWater  = vegn%SoilWater
-    out_annual_tile%Transp     = vegn%annualTrsp
-    out_annual_tile%Evap       = vegn%annualEvap
-    out_annual_tile%Runoff     = vegn%annualRoff
+    out_annual_tile%CAI        = vegn_local%CAI
+    out_annual_tile%LAI        = vegn_local%LAI
+    out_annual_tile%density    = vegn_local%nindivs*10000 !xxx New tile out
+    out_annual_tile%DBH        = vegn_local%DBH           !xxx New tile out
+    out_annual_tile%density12  = vegn_local%nindivs12*10000 !xxx New tile out
+    out_annual_tile%DBH12      = vegn_local%DBH12     !xxx New tile out
+    out_annual_tile%QMD        = vegn_local%QMD       !xxx New tile out
+    out_annual_tile%NPP        = vegn_local%annualNPP !xxx New tile out
+    out_annual_tile%GPP        = vegn_local%annualGPP
+    out_annual_tile%Rauto      = vegn_local%annualResp
+    out_annual_tile%Rh         = vegn_local%annualRh
+    out_annual_tile%rain       = vegn_local%annualPrcp
+    out_annual_tile%SoilWater  = vegn_local%SoilWater
+    out_annual_tile%Transp     = vegn_local%annualTrsp
+    out_annual_tile%Evap       = vegn_local%annualEvap
+    out_annual_tile%Runoff     = vegn_local%annualRoff
     out_annual_tile%plantC     = plantC
     out_annual_tile%soilC      = soilC
     out_annual_tile%plantN     = plantN *1000
     out_annual_tile%soilN      = soilN * 1000
     out_annual_tile%totN       = (plantN+soilN)*1000
-    out_annual_tile%NSC        = vegn%NSC
-    out_annual_tile%SeedC      = vegn%SeedC
-    out_annual_tile%leafC      = vegn%leafC
-    out_annual_tile%rootC      = vegn%rootC
-    out_annual_tile%SapwoodC   = vegn%SapwoodC
-    out_annual_tile%WoodC      = vegn%woodC
-    out_annual_tile%NSN        = vegn%NSN*1000
-    out_annual_tile%SeedN      = vegn%SeedN*1000
-    out_annual_tile%leafN      = vegn%leafN*1000
-    out_annual_tile%rootN      = vegn%rootN*1000
-    out_annual_tile%SapwoodN   = vegn%SapwoodN *1000
-    out_annual_tile%WoodN      = vegn%WoodN *1000
-    out_annual_tile%McrbC      = vegn%MicrobialC
-    out_annual_tile%fastSOM    = vegn%metabolicL
-    out_annual_tile%SlowSOM    = vegn%structuralL
-    out_annual_tile%McrbN      = vegn%MicrobialN*1000
-    out_annual_tile%fastSoilN  = vegn%metabolicN*1000
-    out_annual_tile%slowSoilN  = vegn%structuralN*1000
-    out_annual_tile%mineralN   = vegn%mineralN*1000
-    out_annual_tile%N_fxed     = vegn%annualfixedN*1000
-    out_annual_tile%N_uptk     = vegn%annualNup*1000
-    out_annual_tile%N_yrMin    = vegn%annualN*1000
-    out_annual_tile%N_P2S      = vegn%N_P2S_yr*1000
-    out_annual_tile%N_loss     = vegn%Nloss_yr*1000
-    out_annual_tile%totseedC   = vegn%totseedC*1000
-    out_annual_tile%totseedN   = vegn%totseedN*1000
-    out_annual_tile%Seedling_C = vegn%totNewCC*1000
-    out_annual_tile%Seedling_N = vegn%totNewCN*1000
-    out_annual_tile%MaxAge     = vegn%MaxAge     !xxx New tile out
-    out_annual_tile%MaxVolume  = vegn%MaxVolume  !xxx New tile out
-    out_annual_tile%MaxDBH     = vegn%MaxDBH     !xxx New tile out
-    out_annual_tile%NPPL       = vegn%NPPL       !xxx New tile out
-    out_annual_tile%NPPW       = vegn%NPPW       !xxx New tile out
-    out_annual_tile%n_deadtrees = vegn%n_deadtrees !xxx New tile out
-    out_annual_tile%c_deadtrees = vegn%c_deadtrees !xxx New tile out
+    out_annual_tile%NSC        = vegn_local%NSC
+    out_annual_tile%SeedC      = vegn_local%SeedC
+    out_annual_tile%leafC      = vegn_local%leafC
+    out_annual_tile%rootC      = vegn_local%rootC
+    out_annual_tile%SapwoodC   = vegn_local%SapwoodC
+    out_annual_tile%WoodC      = vegn_local%woodC
+    out_annual_tile%NSN        = vegn_local%NSN*1000
+    out_annual_tile%SeedN      = vegn_local%SeedN*1000
+    out_annual_tile%leafN      = vegn_local%leafN*1000
+    out_annual_tile%rootN      = vegn_local%rootN*1000
+    out_annual_tile%SapwoodN   = vegn_local%SapwoodN *1000
+    out_annual_tile%WoodN      = vegn_local%WoodN *1000
+    out_annual_tile%McrbC      = vegn_local%MicrobialC
+    out_annual_tile%fastSOM    = vegn_local%metabolicL
+    out_annual_tile%SlowSOM    = vegn_local%structuralL
+    out_annual_tile%McrbN      = vegn_local%MicrobialN*1000
+    out_annual_tile%fastSoilN  = vegn_local%metabolicN*1000
+    out_annual_tile%slowSoilN  = vegn_local%structuralN*1000
+    out_annual_tile%mineralN   = vegn_local%mineralN*1000
+    out_annual_tile%N_fxed     = vegn_local%annualfixedN*1000
+    out_annual_tile%N_uptk     = vegn_local%annualNup*1000
+    out_annual_tile%N_yrMin    = vegn_local%annualN*1000
+    out_annual_tile%N_P2S      = vegn_local%N_P2S_yr*1000
+    out_annual_tile%N_loss     = vegn_local%Nloss_yr*1000
+    out_annual_tile%totseedC   = vegn_local%totseedC*1000
+    out_annual_tile%totseedN   = vegn_local%totseedN*1000
+    out_annual_tile%Seedling_C = vegn_local%totNewCC*1000
+    out_annual_tile%Seedling_N = vegn_local%totNewCN*1000
+    out_annual_tile%MaxAge     = vegn_local%MaxAge     !xxx New tile out
+    out_annual_tile%MaxVolume  = vegn_local%MaxVolume  !xxx New tile out
+    out_annual_tile%MaxDBH     = vegn_local%MaxDBH     !xxx New tile out
+    out_annual_tile%NPPL       = vegn_local%NPPL       !xxx New tile out
+    out_annual_tile%NPPW       = vegn_local%NPPW       !xxx New tile out
+    out_annual_tile%n_deadtrees = vegn_local%n_deadtrees !xxx New tile out
+    out_annual_tile%c_deadtrees = vegn_local%c_deadtrees !xxx New tile out
 
-    ! print*, "vegn%n_deadtrees 2", vegn%n_deadtrees
-    ! print*, "vegn%n_deadtrees 3", out_annual_tile%n_deadtrees
-
-    ! I cannot figure out why N losing. Hack!
-    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
-
-  end subroutine annual_diagnostics
-
+  end subroutine getout_annual
 
   subroutine Recover_N_balance(vegn)
     type(vegn_tile_type), intent(inout) :: vegn

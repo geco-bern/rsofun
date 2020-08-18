@@ -211,8 +211,8 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea1sa1md_out_annual_tile <- out$output_annual_tile
-ea1sa1md_out_annual_cohorts <- out$output_annual_cohorts
+ea3sa1mb_out_annual_tile <- out$output_annual_tile
+ea3sa1mb_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -239,7 +239,9 @@ out$output_annual_tile %>%
 ### Write model outputs
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea1sa1md_out_annual_tile,"ea3sa1ma_out_annual_tile.csv")
+write.csv(ea2sa1mb_out_annual_tile,"ea2sa1mb_out_annual_tile.csv")
+write.csv(ea2sa1mb_out_annual_cohorts,"ea2sa1mb_out_annual_cohorts.csv")
+
 ```
 
 ### Read model outputs
@@ -247,9 +249,21 @@ write.csv(ea1sa1md_out_annual_tile,"ea3sa1ma_out_annual_tile.csv")
 
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
 
-ea1sa1ma1_out_annual_tile <- read.csv("ea1sa1ma1_out_annual_tile.csv")
-ea2sa1ma1_out_annual_tile <- read.csv("ea2sa1ma1_out_annual_tile.csv")
-ea3sa1ma1_out_annual_tile <- read.csv("ea3sa1ma1_out_annual_tile.csv")
+ea1sa1ma_out_annual_tile <- read.csv("ea1sa1ma_out_annual_tile.csv")
+ea2sa1ma_out_annual_tile <- read.csv("ea2sa1ma_out_annual_tile.csv")
+ea3sa1ma_out_annual_tile <- read.csv("ea3sa1ma_out_annual_tile.csv")
+
+ea1sa1mb_out_annual_tile <- read.csv("ea1sa1mb_out_annual_tile.csv")
+ea2sa1mb_out_annual_tile <- read.csv("ea2sa1mb_out_annual_tile.csv")
+ea3sa1mb_out_annual_tile <- read.csv("ea3sa1mb_out_annual_tile.csv")
+
+ea1sa1mc_out_annual_tile <- read.csv("ea1sa1mc_out_annual_tile.csv")
+ea2sa1mc_out_annual_tile <- read.csv("ea2sa1mc_out_annual_tile.csv")
+ea3sa1mc_out_annual_tile <- read.csv("ea3sa1mc_out_annual_tile.csv")
+
+ea1sa1md_out_annual_tile <- read.csv("ea1sa1md_out_annual_tile.csv")
+ea2sa1md_out_annual_tile <- read.csv("ea2sa1md_out_annual_tile.csv")
+ea3sa1md_out_annual_tile <- read.csv("ea3sa1md_out_annual_tile.csv")
 
 ea1sa1ma2_out_annual_tile <- read.csv("ea1sa1ma2_out_annual_tile.csv")
 ea2sa1ma2_out_annual_tile <- read.csv("ea2sa1ma2_out_annual_tile.csv")
@@ -279,9 +293,9 @@ ea3sa1md_out_annual_tile <- read.csv("ea3sa1md_out_annual_tile.csv")
 # Biomass changes in LUE with WD level 1
 # Mortality DBH
 ggplot() + 
-  geom_line(data=ea1sa1ma1_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1ma1_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1ma1_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1ma_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1ma_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +

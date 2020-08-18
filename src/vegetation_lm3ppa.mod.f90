@@ -670,7 +670,7 @@ contains
     integer :: i
     integer :: i_crit
     real :: dDBH
-    real :: CAI_max = 1.5
+    real :: CAI_max = 1.6
     real :: BAL, dVol
     real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
@@ -680,8 +680,12 @@ contains
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
         ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
 
+      ! needs updating because vegn_annual_starvation removes cohorts
+      call summarize_tile( vegn )
+
       ! check if current CAI is greater than maximum CAI
       if (vegn%CAI > CAI_max) then
+
         print*, "CAI_max, CAI", CAI_max, vegn%CAI 
 
         ! relayer cohorts: cohorts must be ordered by height after this, whith cohort(1) being the longest
@@ -788,9 +792,9 @@ contains
 
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
           ! deathrate = 0.03*exp(-0.9*(cc%nsc/cc%bl_max)+5)/(0.01+exp(-0.9*(cc%nsc/cc%bl_max)+5))
-          ! if (cc%bl_max>0) then
-          deathrate = 1*(exp(-1.5*(cc%nsc/cc%bl_max)+5)/(1+exp(-1.2*(cc%nsc/cc%bl_max)+5)))
-          ! endif
+          ! deathrate = 1*(exp(-2.5*(cc%nsc/cc%bl_max)+7)/(5+exp(-2.5*(cc%nsc/cc%bl_max)+7)))
+          deathrate = 0.5*(exp(-1.5*(cc%nsc/cc%bl_max)+7)/(1+exp(-1*(cc%nsc/cc%bl_max)+7)))
+          ! deathrate = 1*(exp(-1.5*(cc%nsc/cc%bl_max)+8)/(1+exp(-1*(cc%nsc/cc%bl_max)+8)))
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           ! deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
@@ -854,7 +858,7 @@ contains
 
   end subroutine vegn_nat_mortality
 
-  subroutine vegn_annual_starvation ( vegn ) ! Annual
+  subroutine vegn_annual_starvation( vegn ) ! Annual
     !////////////////////////////////////////////////////////////////
     ! Mortality due to C starvation (NSC below threshold)
     ! Starvation due to low NSC and annual NPP

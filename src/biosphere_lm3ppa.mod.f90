@@ -162,23 +162,17 @@ contains
     ! cohorts again and we want annual output and daily
     ! output to be consistent with cohort identities.
     !---------------------------------------------
-    call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
-
-    print*, "vegn%n_cohorts_sofun", vegn%n_cohorts 
+    call annual_diagnostics( vegn, iyears) !out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
     !---------------------------------------------        
     ! Kill all individuals in a cohort if NSC falls below critical point
-    ! call vegn_annual_starvation( vegn )
+    call vegn_annual_starvation( vegn )
     
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
     call vegn_nat_mortality( vegn, real( seconds_per_year ) )
-
-    call vegn_annual_starvation( vegn )
-
-    print*, "vegn%n_cohorts_sofun2", vegn%n_cohorts 
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
     call vegn_reproduction( vegn )
@@ -191,6 +185,8 @@ contains
     call relayer_cohorts( vegn )
     
     call vegn_mergecohorts( vegn )
+
+    call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
     
     !---------------------------------------------
     ! Set annual variables zero
