@@ -670,7 +670,7 @@ contains
     integer :: i
     integer :: i_crit
     real :: dDBH
-    real :: CAI_max = 1.6
+    real :: CAI_max = 1.8 ! This value can be adjusted!
     real :: BAL, dVol
     real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
