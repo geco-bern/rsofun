@@ -54,14 +54,18 @@ ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-2.5*.x+7
 
 
 ######## Growth rate function ######## 
-# Linear fc NOW IN FORTRAN!
-ggplot(data.frame(x = c(0, 180)), aes(x)) + stat_function(fun = ~ 0.01*.x)+
+#  NOW IN FORTRAN!
+ggplot(data.frame(x = c(0, 80)), aes(x)) + stat_function(fun = ~ 1/(1+exp((-.1)*(.x-35))))+
+  labs(x='Vol', y='Deathrate')
+# Linear fc
+ggplot(data.frame(x = c(0, 180)), aes(x)) + stat_function(fun = ~ 0.5*.x)+
   labs(x='Vol', y='Deathrate')
 # Previous forms
 ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 0.01*(4*exp(4*(.x)))/(1+exp(4*(.x))))+
   labs(x='Vol', y='Deathrate')
 ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.1/(1+exp((-5)*(.x-1))))+
   labs(x='DBH (m)', y='Deathrate')
-ggplot(data.frame(x = c(0, 80)), aes(x)) + stat_function(fun = ~ 0.6/(1+exp((-.1)*(.x-30))))+
-  labs(x='Vol', y='Deathrate')
+ggplot(data.frame(x = c(0, 80)), aes(x)) + stat_function(fun = ~ 1/(1+exp((-.1)*(.x-40))))+
+  labs(x='dVol', y='Deathrate')
+
 

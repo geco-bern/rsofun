@@ -41,7 +41,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -211,11 +211,11 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea3sa1md_out_hourly_tile <- out$output_hourly_tile
-ea3sa1md_out_daily_tile <- out$output_daily_tile
-ea3sa1md_out_daily_cohorts <- out$output_daily_cohorts
-ea3sa1md_out_annual_tile <- out$output_annual_tile
-ea3sa1md_out_annual_cohorts <- out$output_annual_cohorts
+ea1sa1mc_out_hourly_tile <- out$output_hourly_tile
+ea1sa1mc_out_daily_tile <- out$output_daily_tile
+ea1sa1mc_out_daily_cohorts <- out$output_daily_cohorts
+ea1sa1mc_out_annual_tile <- out$output_annual_tile
+ea1sa1mc_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -242,13 +242,26 @@ out$output_annual_tile %>%
 ### Write model outputs
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea3sa1md_out_hourly_tile,   "ea3sa1md_out_hourly_tile.csv")
-write.csv(ea3sa1md_out_daily_tile,    "ea3sa1md_out_daily_tile.csv")
-write.csv(ea3sa1md_out_daily_cohorts, "ea3sa1md_out_daily_cohorts.csv")
-write.csv(ea3sa1md_out_annual_tile,   "ea3sa1md_out_annual_tile.csv")
-write.csv(ea3sa1md_out_annual_cohorts,"ea3sa1md_out_annual_cohorts.csv")
+write.csv(ea1sa1mc_out_hourly_tile,   "ea1sa1mc_out_hourly_tile.csv")
+write.csv(ea1sa1mc_out_daily_tile,    "ea1sa1mc_out_daily_tile.csv")
+write.csv(ea1sa1mc_out_daily_cohorts, "ea1sa1mc_out_daily_cohorts.csv")
+write.csv(ea1sa1mc_out_annual_tile,   "ea1sa1mc_out_annual_tile.csv")
+write.csv(ea1sa1mc_out_annual_cohorts,"ea1sa1mc_out_annual_cohorts.csv")
 
 ```
+
+```{r}
+# Self-thinning one site
+ggplot() + 
+  geom_point(data=subset(ea1sa1mc_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mc_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mc_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Growth rate")
+```
+
 
 ### Read model outputs
 
@@ -2146,6 +2159,15 @@ ggplot() +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   ggtitle("Mortality formulation Growth rate")
 
+# Only one site with geom_smooth
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile)
+ggplot() + 
+  geom_point(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
+  geom_smooth(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+
 # Plots together
 
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
@@ -2743,7 +2765,7 @@ Todo:
 ##### LUE with Age max and dbh for oldest cohort (age max)
 ##### Same species at different sites (differing by LUE, growing season length, PAR)
 
-```{r, fig.width = 8, fig.height = 4}
+```{r, fig.width = 10, fig.height = 4}
 # Volume/Age
 ea1sa1ma_out_annual_tileMaxAgg <- ea1sa1ma_out_annual_tile[500:1500,] %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), sdmaxAge=sd(MaxAge,na.rm=T),
                                   MaxVolume_MaxAge_mean=mean(MaxVolume_MaxAge,na.rm=T), sdMaxVolume_MaxAge=sd(MaxVolume_MaxAge,na.rm=T),
@@ -2771,9 +2793,10 @@ geom_point(data=ea3sa1ma_out_annual_tileMaxAgg, aes(x=MaxVolume_MaxAge_mean, y=m
 # Facet wrap
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
                ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
-               ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile)
+               ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
 
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
 
 data1MAxAgg <- data1 %>% filter(year>=1300) %>% group_by(Mortality,LevelLUE) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), sdmaxAge=sd(MaxAge,na.rm=T),
                                   MaxVolume_MaxAge_mean=mean(MaxVolume_MaxAge,na.rm=T), sdMaxVolume_MaxAge=sd(MaxVolume_MaxAge,na.rm=T),
@@ -2786,7 +2809,7 @@ ggplot() +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
   labs(col="Levels of LUE",x = expression(paste("Growth rate (Volume ",age^-1,  ") ")), y = "Longevity") +  
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
-  facet_wrap(~ Mortality, ncol=3)
+  facet_wrap(~ Mortality, ncol=4)
 
 ggplot() + 
   geom_point(data=data1MAxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color=as.factor(LevelLUE))) +
@@ -2795,7 +2818,7 @@ ggplot() +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
   labs(col="Levels of LUE",x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
-  facet_wrap(~ Mortality, ncol=3)
+  facet_wrap(~ Mortality, ncol=4)
 ```
 
 ##### Radiation with Age max

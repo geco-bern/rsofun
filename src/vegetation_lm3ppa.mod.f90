@@ -801,7 +801,8 @@ contains
           ! deathrate = 0.01*(1 + exp(4*(cc%DBH - cc%DBH_ys))/ & ! in terms of dbh
                            ! (1 + exp(4*(cc%DBH - cc%DBH_ys))))
           ! deathrate = 0.6/(1+exp((-0.1)*(dVol-30)))
-          deathrate = 0.01*cc%Volume
+          deathrate = 1/(1+exp((-0.1)*(dVol-35)))
+          ! deathrate = 500*dVol
 
           ! stop 'should take volume *change* for growth rate-dependent mortality'
 
