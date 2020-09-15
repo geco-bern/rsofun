@@ -680,7 +680,7 @@ contains
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
         ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
 
-      ! needs updating because vegn_annual_starvation removes cohorts
+      ! needs updating because vegn_annual_starvation removes cohorts !!!! Changed when crushing if CAI_max>1
       call summarize_tile( vegn )
 
       ! check if current CAI is greater than maximum CAI
@@ -801,8 +801,10 @@ contains
           ! deathrate = 0.01*(1 + exp(4*(cc%DBH - cc%DBH_ys))/ & ! in terms of dbh
                            ! (1 + exp(4*(cc%DBH - cc%DBH_ys))))
           ! deathrate = 0.6/(1+exp((-0.1)*(dVol-30)))
-          deathrate = 1/(1+exp((-0.1)*(dVol-35)))
-          ! deathrate = 500*dVol
+          ! deathrate = 1/(1+exp((-0.1)*(dVol-35)))
+          ! deathrate = 0.2*(cc%Volume - cc%Vol_ys)
+          deathrate = 1*(cc%Volume - cc%Vol_ys)
+          ! deathrate = 2*(cc%DBH - cc%DBH_ys)
 
           ! stop 'should take volume *change* for growth rate-dependent mortality'
 

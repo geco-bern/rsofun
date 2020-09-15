@@ -211,8 +211,9 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea1sa1md_out_annual_tile <- out$output_annual_tile
-ea1sa1md_out_annual_cohorts <- out$output_annual_cohorts
+#ea1sa1md_out_annual_tile <- out$output_annual_tile # for kphio = 0.05
+ea2sa1md_out_annual_tile <- out$output_annual_tile # for kphio = 0.0575
+#ea3sa1md_out_annual_tile <- out$output_annual_tile # for kphio = 0.065
 
 out$output_annual_tile %>% 
   ggplot() +
@@ -239,9 +240,9 @@ out$output_annual_tile %>%
 ### Write model outputs
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea1sa1md_out_annual_tile,"ea1sa1md_out_annual_tile.csv")
-write.csv(ea2sa1md_out_annual_tile,"ea2sa1md_out_annual_tile.csv")
-write.csv(ea3sa1md_out_annual_tile,"ea3sa1md_out_annual_tile.csv")
+write.csv(ea1sa1md_out_annual_tile,"ea1sa1md_out_annual_tile.csv") # for kphio = 0.05
+#write.csv(ea2sa1md_out_annual_tile,"ea2sa1md_out_annual_tile.csv") # for kphio = 0.0575
+#write.csv(ea3sa1md_out_annual_tile,"ea3sa1md_out_annual_tile.csv") # for kphio = 0.065
 ```
 
 ### Read model outputs

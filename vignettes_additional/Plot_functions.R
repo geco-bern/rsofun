@@ -30,7 +30,6 @@ ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 1*(exp(-5*.x+8)
   labs(x='NSC/leaf mass', y='Deathrate')
 ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 1*(exp(-2*.x+7)/(1+exp(-2*.x+7))))+
   labs(x='NSC/leaf mass', y='Deathrate')
-
 # Previous forms
 ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.03*(exp(-0.9*.x+5)/(0.01+exp(-0.9*.x+5))))+
   labs(x='NSC/leaf mass', y='Deathrate')
@@ -52,11 +51,14 @@ ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 1*(exp(-1.4*.x+
 ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-2.5*.x+7)/(10+exp(-2.5*.x+7))))+
   labs(x='NSC/leaf mass', y='Deathrate')
 
-
 ######## Growth rate function ######## 
 #  NOW IN FORTRAN!
-ggplot(data.frame(x = c(0, 80)), aes(x)) + stat_function(fun = ~ 1/(1+exp((-.1)*(.x-35))))+
-  labs(x='Vol', y='Deathrate')
+ggplot(data.frame(x = c(0, 1)), aes(x)) + stat_function(fun = ~ 1*.x)+
+  labs(x='dVol', y='Deathrate')
+ggplot(data.frame(x = c(0, .5)), aes(x)) + stat_function(fun = ~ 2*.x)+
+  labs(x='dVol', y='Deathrate')
+ggplot(data.frame(x = c(0, 12)), aes(x)) + stat_function(fun = ~ 0.08*.x)+
+  labs(x='dDBH', y='Deathrate')
 # Linear fc
 ggplot(data.frame(x = c(0, 180)), aes(x)) + stat_function(fun = ~ 0.5*.x)+
   labs(x='Vol', y='Deathrate')
