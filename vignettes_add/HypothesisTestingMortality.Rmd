@@ -41,7 +41,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -211,13 +211,24 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea1sa1mc_out_hourly_tile <- out$output_hourly_tile
-ea1sa1mc_out_daily_tile <- out$output_daily_tile
-ea1sa1mc_out_daily_cohorts <- out$output_daily_cohorts
-ea1sa1mc_out_annual_tile <- out$output_annual_tile
-ea1sa1mc_out_annual_cohorts <- out$output_annual_cohorts
+sofun_out_hourly_tile <- out$output_hourly_tile
+sofun_out_daily_tile <- out$output_daily_tile
+sofun_out_daily_cohorts <- out$output_daily_cohorts
+sofun_out_annual_tile <- out$output_annual_tile
+sofun_out_annual_cohorts <- out$output_annual_cohorts
+
+#ea1sa1mc_out_hourly_tile <- out$output_hourly_tile
+#ea1sa1mc_out_daily_tile <- out$output_daily_tile
+#ea1sa1mc_out_daily_cohorts <- out$output_daily_cohorts
+#ea1sa1mc_out_annual_tile <- out$output_annual_tile
+#ea1sa1mc_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+
+out$output_daily_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
@@ -946,7 +957,7 @@ ggplot() +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
+  ggtitle("Mortality as a function of size") + scale_y_continuous(limits = c(0,42))
 
 # Biomass changes in LUE with WD level 1
 # Mortality Ratio NSC and Leaf Mass
@@ -968,7 +979,7 @@ ggplot() +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate (in terms of dVol)")
+  ggtitle("Mortality as a function of growth rate") + scale_y_continuous(limits = c(0,42))
 
 # Biomass changes in LUE with WD level 1
 # Mortality Growth rate
@@ -2186,9 +2197,9 @@ From new annual_tile_output
 ```{r}
 
 ggplot() + 
-  geom_point(data=subset(ea1sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
-  geom_point(data=subset(ea2sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
-  geom_point(data=subset(ea3sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  geom_point(data=subset(ea1sa1ma_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1ma_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1ma_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
@@ -2201,7 +2212,18 @@ ggplot() +
   geom_smooth(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
+  ggtitle("Mortality as a function of size") + scale_x_continuous(limits = c(-1.5,-0.1))
+
+# Only one site with geom_smooth
+data1 <- rbind(ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile)
+ggplot() + 
+  geom_point(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
+  geom_smooth(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
+  ggtitle("Mortality as a function of growth rate") + scale_x_continuous(limits = c(-2.2,-0.6))
 
 # Plots together
 

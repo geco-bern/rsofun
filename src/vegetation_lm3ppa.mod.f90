@@ -692,7 +692,7 @@ contains
         ! call relayer_cohorts( vegn )
         ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
 
-        ! xxx check whether cohorts are ranked w.r.t. (height?)
+        ! xxx check whether cohorts are ranked w.r.t. height
         print*, "height", vegn%cohorts%height 
         print*, "vegn%n_cohorts", vegn%n_cohorts 
 
@@ -727,9 +727,9 @@ contains
           frac_new = (CAI_max - cai_partial(i_crit + 1)) / &
             (cai_partial(i_crit) - cai_partial(i_crit + 1))
 
-          nindivs_new = vegn%cohorts(i_crit)%nindivs * frac_new
+          nindivs_new = cc%nindivs * frac_new !vegn%cohorts(i_crit)%nindivs * frac_new
           deadtrees = cc%nindivs - nindivs_new
-          print*,'frac_new, cc%nindivs, nindivs_new ', frac_new, cc%nindivs, nindivs_new
+          print*,'frac_new, cc%nindivs, nindivs_new deadtrees', frac_new, cc%nindivs, nindivs_new, deadtrees
           print*,'updated cai_partial of i_crit:', (cc%nindivs - deadtrees) * cc%crownarea + cai_partial(i_crit + 1) 
         
         else
@@ -761,7 +761,7 @@ contains
         end if
         deallocate(cai_partial)
 
-        ! xxx try just for printing cai_partial -------------------
+        ! xxx try just for printing cai_partial 
         ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
         allocate(cai_partial(vegn%n_cohorts))
         cai_partial(:) = 0
@@ -804,7 +804,7 @@ contains
           ! deathrate = 1/(1+exp((-0.1)*(dVol-35)))
           ! deathrate = 0.2*(cc%Volume - cc%Vol_ys)
           deathrate = 1*(cc%Volume - cc%Vol_ys)
-          ! deathrate = 2*(cc%DBH - cc%DBH_ys)
+          ! deathrate = 0.2*(cc%DBH - cc%DBH_ys)
 
           ! stop 'should take volume *change* for growth rate-dependent mortality'
 

@@ -113,11 +113,11 @@ contains
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
          
-          call hourly_diagnostics( vegn, myinterface%climate(idata), iyears, idoy, i, out_biosphere%hourly_tile(idata) )
+          call hourly_diagnostics( vegn, myinterface%climate(idata), iyears, idoy, i , out_biosphere%hourly_tile(idata))
          
           init = .false.
          
-          call getout_hourly( vegn, myinterface%climate(idata), iyears, idoy, i, out_biosphere%hourly_tile(idata) )
+          ! call getout_hourly( vegn, myinterface%climate(idata), iyears, idoy, i, out_biosphere%hourly_tile(idata) )
 
         enddo fastloop ! hourly or half-hourly
 
@@ -129,7 +129,7 @@ contains
         soil_theta    = vegn%thetaS
 
         ! sum over fast time steps and cohorts
-        call daily_diagnostics( vegn )
+        call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy)  )
         ! print*,'1. vegn%annualGPP ', vegn%annualGPP
 
         ! Determine start and end of season and maximum leaf (root) mass
@@ -139,7 +139,7 @@ contains
         call vegn_growth_EW( vegn )
 
         ! get daily outputs
-        call getout_daily( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
+        ! call getout_daily( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
 
       end do dayloop
 
@@ -162,7 +162,7 @@ contains
     ! cohorts again and we want annual output and daily
     ! output to be consistent with cohort identities.
     !---------------------------------------------
-    call annual_diagnostics( vegn, iyears) !out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
+    call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
@@ -186,8 +186,7 @@ contains
     
     call vegn_mergecohorts( vegn )
 
-    call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
-    
+    ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
 
     !---------------------------------------------
     ! Set annual variables zero

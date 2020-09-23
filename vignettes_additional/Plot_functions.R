@@ -17,7 +17,7 @@ ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.02*(1+5*exp(4*
   labs(x='DBH (m)', y='Deathrate')
 # Modified from Ensheng to avoid asymptotes! NOW IN FORTRAN!
 ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.01*exp(0.6*.x))+
-  labs(x='DBH (m)', y='Deathrate')
+  labs(x='DBH (m)', y='Deathrate') + theme_bw()
 # Other options
 ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.1/(1+exp((-10)*(.x-1))))+
   labs(x='DBH (m)', y='Deathrate')
@@ -25,7 +25,7 @@ ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.1/(1+exp((-10)
 ######## Carbon starvation function ######## 
 
 ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 1*(exp(-1.5*.x+7)/(1+exp(-1*.x+7))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
+  labs(x='NSC', y='Deathrate') +theme_bw()
 ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 1*(exp(-5*.x+8)/(3+exp(-5*.x+8))))+
   labs(x='NSC/leaf mass', y='Deathrate')
 ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 1*(exp(-2*.x+7)/(1+exp(-2*.x+7))))+
@@ -54,7 +54,10 @@ ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-2.5*.x+7
 ######## Growth rate function ######## 
 #  NOW IN FORTRAN!
 ggplot(data.frame(x = c(0, 1)), aes(x)) + stat_function(fun = ~ 1*.x)+
-  labs(x='dVol', y='Deathrate')
+  labs(x='Growth', y='Deathrate') + theme_bw()
+ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 0.2*.x)+
+  labs(x='Growth', y='Deathrate') + theme_bw()
+
 ggplot(data.frame(x = c(0, .5)), aes(x)) + stat_function(fun = ~ 2*.x)+
   labs(x='dVol', y='Deathrate')
 ggplot(data.frame(x = c(0, 12)), aes(x)) + stat_function(fun = ~ 0.08*.x)+
