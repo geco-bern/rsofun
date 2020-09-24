@@ -379,8 +379,8 @@ module datatypes
 
   ! Constants:
   ! Soil water properties
-  ! real   :: soiltype !Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
-  real   :: FLDCAP != 0.4  ! vol/vol
+  real   :: soiltype !Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
+  real   :: FLDCAP = 0.4  ! vol/vol !!! Both variables FLDCAP and WILTPT need to be specified here or gs_leuning crushes!!!
   real   :: WILTPT != 0.05 ! vol/vol
   ! Carbon pools
   real :: K1 != 2 ! Fast soil C decomposition rate (yr-1)
@@ -529,6 +529,11 @@ module datatypes
   ! real   :: init_slow_soil_C  = 0.0  ! initial slow soil C, kg C/m2
   ! real   :: init_Nmineral = 0.015  ! Mineral nitrogen pool, (kg N/m2)
   real   :: N_input   ! = 0.0008 ! annual N input to soil N pool, kgN m-2 yr-1
+
+! character(len=80) :: filepath_in = '/Users/eweng/Documents/BiomeESS/forcingData/'
+! character(len=160) :: climfile = 'US-Ha1forcing.txt'
+! ! integer   :: model_run_years = 100  ! xxx todo: not used
+! integer   :: equi_days       = 0 ! 100 * 365
 
 contains
 
