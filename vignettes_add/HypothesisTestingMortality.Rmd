@@ -32,15 +32,15 @@ Now specify the simulation parameters that are identical for all site-scale simu
 params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800, #1793,
-      recycle               = 11, # 9 or 11
+      recycle               = 1, # 9 or 11
       firstyeartrend        = 1998,
-      nyeartrend            = 11, #9 or 110 (longer transient years)
+      nyeartrend            = 1, #9 or 11 (longer transient years)
       outputhourly          = TRUE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+      method_photosynth     = "pmodel", # gs_leuning or pmodel
       method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
@@ -72,32 +72,31 @@ params_tile <- list(
 
 ```{r}
 params_species <- tibble(
-  lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),  # 0: grass; 1 Woody
-  phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),  # 0: Deciduous; 1 Evergreen
-  pt            = c(1,       0,        0,        0,        0,      0,        0,        0,      0,        0,        0),  # 0: C3; 1: C4
-  seedlingsize  = c(0.02,    0.05,     0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05), # initial size of seedlings
-  LMA           = c(0.035,   0.14,     0.14,     0.14,     0.14,   0.14,    0.14,      0.14,   0.14,     0.14,     0.035),
+  lifeform      = c(0,1,1,1,1,1,1,1,1,1,1),  # 0: grass; 1 Woody
+  phenotype     = c(0,1,1,1,1,1,1,1,1,1,0),  # 0: Deciduous; 1 Evergreen
+  pt            = c(1,0,0,0,0,0,0,0,0,0,0),  # 0: C3; 1: C4
+  seedlingsize  = c(0.02,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05), # initial size of seedlings
+  LMA           = c(0.035,0.14,0.14,0.14,0.14,0.14,0.14,0.14,0.14,0.14,0.035),
   # Leaf mass per unit area: 0.035, 0.085, 0.135
-  phiRL         = c(4.0,     4.0,      2.0,      3.0,      4.0,     5.0,     6.0,      7.0,   8.0,       9.0,      3.0),
+  phiRL         = c(4,4,2,3,4,5,6,7,8,9,3),
   # Root:Shoot ratio:  4.0, 6.0, 8.0
-  LNbase        = c(0.8E-3,  0.8E-3,   0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3),   
+  LNbase        = c(0.8E-3,0.8E-3,0.8E-3,0.8E-3,0.8E-3,0.8E-3,0.8E-3,   0.8E-3,0.8E-3,0.8E-3,0.8E-3),   
   # kgN m-2 leaf, Vmax = 0.03125*LNbase
-  laimax        = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  
+  laimax        = c(3.0,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.8),  
   # maximum crown LAI
-  LAI_light     = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  
+  LAI_light     = c(3.0,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.8),  
   # Light-limited crown LAI
-  Nfixrate0     = c(0.0,     0.0,      0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0),  
+  Nfixrate0     = rep(0,11),  
   # 0.03 kgN kgRootC-1 yr-1
-  NfixCost0     = c(12.,     12.,      12.,      12.,      12.,    12.,      12.,      12.,    12.,      12.,      12.),  
+  NfixCost0     = rep(12,11),  
   # 12, 24 gC/gN
-  phiCSA        = c(1.25E-4, 0.25E-4,  0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4),
-  mortrate_d_c  = c(0.02,    0.02,     0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02),    
+  phiCSA        = c(1.25E-4,0.25E-4,0.25E-4,0.25E-4,0.25E-4,0.25E-4,  0.25E-4,0.25E-4,0.25E-4,0.25E-4,0.25E-4),
+  mortrate_d_c  = rep(0.02,11),    
   # canopy tree mortality rate, year-1
-  mortrate_d_u  = c(0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08),    
-  # understory tree mortality rate, year-1
-  maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
-  fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
-  #alpha_FR      = c(1.2,     1.2,      1.2,      1.2,      1.2,    1.2,      1.2,      1.2,    1.2,      1.2,      1.2)
+  mortrate_d_u  = c(0.2,0.08,0.08,0.08,0.08,0.08,0.08,0.08,0.08,0.08,0.08),   # understory tree mortality rate, year-1
+  maturalage    = c(0.5,5,5,5,5,5,5,5,5,5,5),
+  fNSNmax       = rep(5,11)
+  #alpha_FR      = rep(1.2,11)
   ) %>% 
   bind_rows(., slice(., 1:5))
 ```
@@ -108,15 +107,15 @@ By layers.
 ```{r}
 # adopted from datatypes.mod.f90 l.538
 params_soil <- tibble(
-  type              = c("Coarse",  "Medium",   "Fine",    "CM",     "CF",     "MF",    "CMF",    "Peat",    "MCM"),
+  type              = c("Coarse","Medium","Fine","CM","CF","MF","CMF","Peat","MCM"),
   GMD               = c(0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3),
   GSD               = c(5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4),
   vwc_sat           = c(0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445),
-  chb               = c( 3.5,   6.4,  11.0,   4.8,   6.3,   8.4,   6.3,   6.4,   6.4),
-  psi_sat_ref       = c(-600., -790., -910., -1580., -1680., -1880., -5980., -790., -790.), # Pa
-  k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2),      # mol/(s MPa m)
-  alphaSoil         = rep(1.0, 9),
-  heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6,   1.0)
+  chb               = c(3.5,6.4,11.0,4.8,6.3,8.4,6.3,6.4,6.4),
+  psi_sat_ref       = c(-600, -790, -910, -1580, -1680, -1880, -5980, -790, -790), # Pa
+  k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2), # mol/(s MPa m)
+  alphaSoil         = rep(1, 9),
+  heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6, 1.0)
   )
 ```
 
@@ -124,13 +123,12 @@ params_soil <- tibble(
 
 ```{r}
 init_cohort <- tibble(
- init_cohort_species = c(1,      2,        3,        4,      5,        6,        7,      8,        9,       10),
- init_cohort_nindivs = c(0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02),
- init_cohort_bsw     = c(0.2,    0.2,      0.2,      0.2,    0.2,      0.2,      0.2,    0.2,      0.2,     0.2),
- init_cohort_bHW     = c(0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0),
- init_cohort_nsc     = c(0.5,    0.5,      0.5,      0.5,    0.5,      0.5,      0.5,    0.5,      0.5,     0.5)
+ init_cohort_species = seq(1, 10, 1),
+ init_cohort_nindivs = rep(0.02,10),
+ init_cohort_bsw     = rep(0.2,10),
+ init_cohort_bHW     = rep(0.10),
+ init_cohort_nsc     = rep(0.5,10)
 )
-
 ```
 
 #### Initial soil pools
@@ -151,7 +149,7 @@ init_soil <- list(
 For now, this is implemented as an illustration. Should be made site-specific.
 ```{r}
 df_soiltexture <- bind_rows(
-  top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
+  top    = tibble(layer = "top", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
   bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
 )
 ```
@@ -177,15 +175,26 @@ dt_secs <- lubridate::interval(forcing$date[1], forcing$date[2]) %>%
 forcing <- forcing %>% 
   mutate(RAIN = RAIN / dt_secs)
 
+if (params_siml$method_photosynth == "gs_leuning"){
+  forcing <- forcing %>% 
+    dplyr::group_by(lubridate::month(date),lubridate::day(date),lubridate::hour(date)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+  forcing <- forcing[,-c(1:3)]
+}
+
 ```
 
 For P-model runs, aggregate to daily forcing.
 ```{r}
 if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
+#  forcing <- forcing %>% 
+#    dplyr::group_by(lubridate::date(date)) %>% 
+#    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>% 
+#    dplyr::select(-1)
   forcing <- forcing %>% 
-    dplyr::group_by(lubridate::date(date)) %>% 
-    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>% 
-    dplyr::select(-1)
+    dplyr::group_by(lubridate::month(date),lubridate::day(date)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+  forcing <- forcing[,-c(1:3)]
 }
 
 # Changing values of PAR for running simulations
@@ -211,17 +220,17 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-sofun_out_hourly_tile <- out$output_hourly_tile
-sofun_out_daily_tile <- out$output_daily_tile
-sofun_out_daily_cohorts <- out$output_daily_cohorts
-sofun_out_annual_tile <- out$output_annual_tile
-sofun_out_annual_cohorts <- out$output_annual_cohorts
+sofun2_out_hourly_tile <- out$output_hourly_tile
+sofun2_out_daily_tile <- out$output_daily_tile
+sofun2_out_daily_cohorts <- out$output_daily_cohorts
+sofun2_out_annual_tile <- out$output_annual_tile
+sofun2_out_annual_cohorts <- out$output_annual_cohorts
 
-#ea1sa1mc_out_hourly_tile <- out$output_hourly_tile
-#ea1sa1mc_out_daily_tile <- out$output_daily_tile
-#ea1sa1mc_out_daily_cohorts <- out$output_daily_cohorts
-#ea1sa1mc_out_annual_tile <- out$output_annual_tile
-#ea1sa1mc_out_annual_cohorts <- out$output_annual_cohorts
+#ea1sa1mapm_out_hourly_tile <- out$output_hourly_tile
+#ea1sa1mapm_out_daily_tile <- out$output_daily_tile
+#ea1sa1mapm_out_daily_cohorts <- out$output_daily_cohorts
+#ea1sa1mapm_out_annual_tile <- out$output_annual_tile
+#ea1sa1mapm_out_annual_cohorts <- out$output_annual_cohorts
 
 out$output_annual_tile %>% 
   ggplot() +

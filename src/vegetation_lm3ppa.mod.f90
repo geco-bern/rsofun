@@ -793,8 +793,12 @@ contains
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
           ! deathrate = 0.03*exp(-0.9*(cc%nsc/cc%bl_max)+5)/(0.01+exp(-0.9*(cc%nsc/cc%bl_max)+5))
           ! deathrate = 1*(exp(-2.5*(cc%nsc/cc%bl_max)+7)/(5+exp(-2.5*(cc%nsc/cc%bl_max)+7)))
-          deathrate = 0.5*(exp(-1.5*(cc%nsc/cc%bl_max)+7)/(1+exp(-1*(cc%nsc/cc%bl_max)+7)))
+          ! deathrate = 0.5*(exp(-1.5*(cc%nsc/cc%bl_max)+7)/(1+exp(-1*(cc%nsc/cc%bl_max)+7)))
           ! deathrate = 1*(exp(-1.5*(cc%nsc/cc%bl_max)+8)/(1+exp(-1*(cc%nsc/cc%bl_max)+8)))
+          if (cc%bl_max > 0) then
+          deathrate = 1*(exp(-10*(cc%nsc/cc%bl_max)+7)/(1+exp(-1*(cc%nsc/cc%bl_max)+7))) 
+          ! deathrate = 1*(exp(-6*(cc%nsc/cc%bl_max)+7)/(3+exp(-6*(cc%nsc/cc%bl_max)+7))) ! Changing coef: works with 2          
+          endif
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           ! deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
@@ -805,8 +809,6 @@ contains
           ! deathrate = 0.2*(cc%Volume - cc%Vol_ys)
           deathrate = 1*(cc%Volume - cc%Vol_ys)
           ! deathrate = 0.2*(cc%DBH - cc%DBH_ys)
-
-          ! stop 'should take volume *change* for growth rate-dependent mortality'
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      

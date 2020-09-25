@@ -1428,6 +1428,11 @@ contains
       out_annual_cohorts(i)%Volume     = cc%Volume
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
+
+! print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
+! print*, cc%nsc, "cc%nsc"
+! print*, cc%bl_max, "cc%bl_max"
+
     enddo
 
     ! tile pools output
