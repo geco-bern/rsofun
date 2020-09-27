@@ -796,8 +796,8 @@ contains
           ! deathrate = 0.5*(exp(-1.5*(cc%nsc/cc%bl_max)+7)/(1+exp(-1*(cc%nsc/cc%bl_max)+7)))
           ! deathrate = 1*(exp(-1.5*(cc%nsc/cc%bl_max)+8)/(1+exp(-1*(cc%nsc/cc%bl_max)+8)))
           if (cc%bl_max > 0) then
-          deathrate = 1*(exp(-10*(cc%nsc/cc%bl_max)+7)/(1+exp(-1*(cc%nsc/cc%bl_max)+7))) 
-          ! deathrate = 1*(exp(-6*(cc%nsc/cc%bl_max)+7)/(3+exp(-6*(cc%nsc/cc%bl_max)+7))) ! Changing coef: works with 2          
+          ! deathrate = 1*(exp(-20*(cc%nsc/cc%bl_max)+7)/(1+exp(-20*(cc%nsc/cc%bl_max)+7))) ! Not really working for level 1 LUE
+          deathrate = 1*(exp(-2.3*(cc%nsc/cc%bl_max)+7)/(1+exp(-1*(cc%nsc/cc%bl_max)+7))) ! Changing coef: works with 2.5          
           endif
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then

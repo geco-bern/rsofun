@@ -23,43 +23,12 @@ ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.1/(1+exp((-10)
   labs(x='DBH (m)', y='Deathrate')
 
 ######## Carbon starvation function ######## 
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-10*.x+10)/(0.1+exp(-7.5*.x+10))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-1.9*.x+7)/(1+exp(-1*.x+7))))+
+ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-2.3*.x+7)/(1+exp(-1*.x+7))))+
   labs(x='NSC', y='Deathrate') +theme_bw()
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-10*.x+7)/(1+exp(-10*.x+7))))+
+
+ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-20*.x+7)/(1+exp(-20*.x+7))))+
   labs(x='NSC/leaf mass', y='Deathrate')+theme_bw()
 
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-1.5*.x+7)/(1+exp(-1*.x+7))))+
-  labs(x='NSC', y='Deathrate') +theme_bw()
-ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 0.03*(exp(-0.9*.x+5)/(0.01+exp(-0.9*.x+5))))+
-  labs(x='NSC', y='Deathrate') +theme_bw()
-ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 1*(exp(-1.5*.x+7)/(1+exp(-1*.x+7))))+
-  labs(x='NSC', y='Deathrate') +theme_bw()
-ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 1*(exp(-2*.x+7)/(1+exp(-2*.x+7))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-2*.x+7)/(1+exp(-2*.x+7))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-# Previous forms
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.03*(exp(-0.9*.x+5)/(0.01+exp(-0.9*.x+5))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-# New one
-ggplot(data.frame(x = c(0, 8)), aes(x)) + stat_function(fun = ~ 1*(exp(-2*.x+8)/(1+exp(-2*.x+8))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-1.5*.x+5)/(1+exp(-1.5*.x+5))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-5.5*.x+5)/(1+exp(-5.5*.x+5))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-1.5*.x+5)/(1+exp(-1.1*.x+5))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-1.3*.x+5)/(1+exp(-1.3*.x+5))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-1.3*.x+5)/(1+exp(-1*.x+5))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 1*(exp(-1.4*.x+10)/(1+exp(-1*.x+10))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 1*(exp(-2.5*.x+7)/(10+exp(-2.5*.x+7))))+
-  labs(x='NSC/leaf mass', y='Deathrate')
 
 ######## Growth rate function ######## 
 #  NOW IN FORTRAN!
