@@ -26,7 +26,7 @@ module md_gpp_lm3ppa
 
   ! PFT-DEPENDENT PARAMETERS
   type pftparamstype_gpp
-    real :: kphio = 0.065! Quantum yield efficiency parameter (Simulations: 0.05, 0.0575, 0.065) 0.24 hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
+    real :: kphio = 0.05! Quantum yield efficiency parameter (Simulations: 0.05, 0.0575, 0.065) 0.24 hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
   end type pftparamstype_gpp
   type(pftparamstype_gpp) :: params_pft_gpp
 
@@ -162,7 +162,7 @@ contains
           !===============================
           ! XXX hack: For running simulations
           !===============================
-          cc%An_op   = 0.975e-8 * rad_top  ! molC s-1 m-2 of leaves (Simulations: 0.75e-8, 0.8625e-8, 0.975e-8)
+          cc%An_op   = 0.75e-8 * rad_top  ! molC s-1 m-2 of leaves (Simulations: 0.75e-8, 0.8625e-8, 0.975e-8)
           cc%An_cl   = 1e-9 * rad_top  ! molC s-1 m-2 of leaves
           cc%w_scale = 0.0
           cc%transp  = 0.0

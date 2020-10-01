@@ -670,7 +670,7 @@ contains
     integer :: i
     integer :: i_crit
     real :: dDBH
-    real :: CAI_max = 1 ! This value can be adjusted!
+    real :: CAI_max = 1.1 ! This value can be adjusted!
     real :: BAL, dVol
     real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
@@ -777,10 +777,6 @@ contains
         end do
         print*, "cai_partial", cai_partial(:)
         deallocate(cai_partial)
-        !---------------------------
-
-        print*,'C pools', cc%bl+cc%br+cc%bsw+cc%bHW+cc%seedC+cc%nsc
-        print*, "soil and litter C pool", vegn%litter + vegn%MicrobialC + vegn%metabolicL + vegn%structuralL 
 
         ! update tile-level quantities (e.g., CAI)
         call summarize_tile( vegn )

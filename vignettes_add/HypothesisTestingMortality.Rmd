@@ -702,6 +702,25 @@ ggplot() +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   ggtitle("Function of DBH p-model") + scale_y_continuous(limits = c(0,3.5))
 
+# Mortality as a function of C starvation
+ggplot() + 
+  geom_line(data=ea1sa1mbgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mbgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mbgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of C starvation gs-Leuning") + scale_y_continuous(limits = c(0,25))
+
+ggplot() + 
+  geom_line(data=ea1sa1mbpm_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mbpm_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mbpm_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of C starvation p-model") + scale_y_continuous(limits = c(0,25))
+
 # Mortality as a function of Growth rate
 ggplot() + 
   geom_line(data=ea1sa1mcgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
@@ -720,6 +739,25 @@ ggplot() +
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   ggtitle("Function of Growth rate p-model") + scale_y_continuous(limits = c(0,25))
+
+# Mortality as a function of Constant Self-thinning
+ggplot() + 
+  geom_line(data=ea1sa1mdgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mdgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mdgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Constant Self-thinning gs-Leuning") 
+
+ggplot() + 
+  geom_line(data=ea1sa1mdpm_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mdpm_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mdpm_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Constant Self-thinning p-model") 
 
 ```
 
@@ -789,22 +827,22 @@ ggplot() +
 
 # Mortality as a function of Self-thinning
 ggplot() + 
-  geom_point(data=subset(ea1sa1mdgl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
-  geom_point(data=subset(ea2sa1mdgl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
-  geom_point(data=subset(ea3sa1mdgl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  geom_point(data=subset(ea1sa1mdgl_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mdgl_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mdgl_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of Growth rate gs-Leuning") 
+  ggtitle("Function of Constant Self-thinning gs-Leuning") 
 
 ggplot() + 
-  geom_point(data=subset(ea1sa1mdpm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
-  geom_point(data=subset(ea2sa1mdpm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
-  geom_point(data=subset(ea3sa1mdpm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  geom_point(data=subset(ea1sa1mdpm_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mdpm_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mdpm_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of Growth rate p-model") 
+  ggtitle("Function of Constant Self-thinning p-model") 
 
 ```
 
