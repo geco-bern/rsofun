@@ -219,11 +219,14 @@ contains
 
     ! Turnover of leaves and fine roots
     call vegn_tissue_turnover( vegn )
-    !Allocate C_gain to tissues
+
+    ! Allocate C_gain to tissues
     do i = 1, vegn%n_cohorts   
       cc => vegn%cohorts(i)
-      !    call biomass_allocation( cc )
+
+      ! call biomass_allocation( cc )
       associate (sp => spdata(cc%species)) ! F2003
+
       if (cc%status == LEAF_ON) then
         
         ! Get carbon from NSC pool. This sets cc%C_growth
@@ -241,10 +244,12 @@ contains
         dBL  = min(G_LFR, max(0.0, &
                 (G_LFR*cc%bl_max + cc%bl_max*cc%br - cc%br_max*cc%bl)/(cc%bl_max + cc%br_max) &
                 ))
+
         ! flexible allocation scheme
-        !dBL = min(LF_deficit, 0.6*G_LFR)
+        ! dBL = min(LF_deficit, 0.6*G_LFR)
         if ((G_LFR-dBL) > FR_deficit) dBL = G_LFR - FR_deficit
         dBR  = G_LFR - dBL
+
         ! calculate carbon spent on growth of sapwood growth
         if (cc%layer == 1 .AND. cc%age > sp%maturalage) then
           dSeed = sp%v_seed * (cc%C_growth - G_LFR)
@@ -253,6 +258,7 @@ contains
           dSeed= 0.0
           dBSW = cc%C_growth - G_LFR
         endif
+
         ! For grasses, temporary
         if (sp%lifeform ==0 ) then
           dSeed = dSeed + 0.15*G_LFR
@@ -260,6 +266,7 @@ contains
           dBR   = 0.85 * dBR
           dBL   = 0.85 * dBL
         endif
+
         ! Nitrogen adjustment on allocations between wood and leaves+roots
         ! Nitrogen demand by leaves, roots, and seeds (Their C/N ratios are fixed.)
         N_demand = dBL/sp%CNleaf0 + dBR/sp%CNroot0 + dSeed/sp%CNseed0 + dBSW/sp%CNsw0
@@ -296,10 +303,13 @@ contains
 
         ! Nitrogen available for all tisues, including wood
         if (cc%N_growth < N_demand) then
+
           ! a new method, Weng, 2019-05-21
           ! same ratio reduction for leaf, root, and seed if (cc%N_growth < N_demand)
           Nsupplyratio = MAX(0.0, MIN(1.0, cc%N_growth/N_demand))
+
           !r_N_SD = (cc%N_growth-cc%C_growth/sp%CNsw0)/(N_demand-cc%C_growth/sp%CNsw0) ! fixed wood CN
+
           r_N_SD = cc%N_growth/N_demand ! = Nsupplyratio
           if (sp%lifeform > 0 ) then ! for trees
             if (r_N_SD<=1.0 .and. r_N_SD>0.0) then
@@ -328,6 +338,7 @@ contains
         cc%seedC  = cc%seedC + dSeed
         cc%NSC    = cc%NSC  - dBR - dBL -dSeed - dBSW
         cc%resg = 0.5 * (dBR+dBL+dSeed+dBSW) !  daily
+
         ! update nitrogen pools, Nitrogen allocation
         cc%leafN = cc%leafN + dBL   /sp%CNleaf0
         cc%rootN = cc%rootN + dBR   /sp%CNroot0
@@ -339,15 +350,18 @@ contains
         cc%sapwN = cc%sapwN - extraN
         cc%NSN   = cc%NSN   + extraN - f_N_add*cc%NSN - cc%N_growth !! update NSN
         cc%N_growth = 0.0
-        !       accumulated C allocated to leaf, root, and wood
+
+        ! accumulated C allocated to leaf, root, and wood
         cc%NPPleaf = cc%NPPleaf + dBL
         cc%NPProot = cc%NPProot + dBR
         cc%NPPwood = cc%NPPwood + dBSW
+
         ! update breast height diameter given increase of bsw
         dDBH   = dBSW / (sp%thetaBM * sp%alphaBM * cc%DBH**(sp%thetaBM-1.0))
         dHeight= sp%thetaHT * sp%alphaHT * cc%DBH**(sp%thetaHT-1) * dDBH
         dCA    = sp%thetaCA * sp%alphaCA * cc%DBH**(sp%thetaCA-1) * dDBH
-        !       update plant architecture
+
+        ! update plant architecture
         cc%DBH       = cc%DBH       + dDBH
         cc%height    = cc%height    + dHeight
         cc%crownarea = cc%crownarea + dCA
@@ -356,8 +370,11 @@ contains
         vegn%LAI     = vegn%LAI + cc%leafarea  * cc%nindivs
 
         ! print*,'i, cc%leafarea, cc%lai, cc%nindivs, vegn%LAI ', i, cc%leafarea, cc%lai, cc%nindivs, vegn%LAI
+        ! print*,'cc%C_growth, cc%N_growth, N_demand, dBSW, dDBH, dCA ', cc%C_growth, cc%N_growth, N_demand, dBSW, dDBH, dCA
+        ! print*,'i, cc%bl, cc%br, cc%bsw, cc%crownarea, cc%DBH, cc%height', i, cc%bl, cc%br, cc%bsw, cc%crownarea, cc%DBH, cc%height
 
         call rootarea_and_verticalprofile( cc )
+
         ! convert sapwood to heartwood for woody plants ! Nitrogen from sapwood to heart wood
         if (sp%lifeform>0) then
           CSAsw  = cc%bl_max/sp%LMA * sp%phiCSA * cc%height ! with Plant hydraulics, Weng, 2016-11-30
@@ -367,20 +384,25 @@ contains
           BSWmax = sp%alphaBM * (cc%DBH**sp%thetaBM - DBHwd**sp%thetaBM)
           dBHW   = max(cc%bsw - BSWmax, 0.0)
           dNS    = dBHW/cc%bsw *cc%sapwN
+
           ! update C and N of sapwood and wood
           cc%bHW   = cc%bHW   + dBHW
           cc%bsw   = cc%bsw   - dBHW
           cc%sapwN = cc%sapwN - dNS
           cc%woodN = cc%woodN + dNS
         endif
+
         ! update bl_max and br_max daily
         BL_c = sp%LMA * sp%LAImax * cc%crownarea * &
                 (1.0-sp%internal_gap_frac) /max(1,cc%layer)
         BL_u = sp%LMA*cc%crownarea*(1.0-sp%internal_gap_frac)* &
                 sp%underLAImax
+
         if (cc%layer == 1) cc%topyear = cc%topyear + 1.0 /365.0
+
         if (cc%layer > 1 .and. cc%firstlayer == 0) then ! changed back, Weng 2014-01-23
           cc%bl_max = BL_u
+
           ! Keep understory tree's root low and constant
           cc%br_max = 1.8*cc%bl_max/(sp%LMA*sp%SRA) ! sp%phiRL
           !cc%br_max = sp%phiRL*cc%bl_max/(sp%LMA*sp%SRA) ! sp%phiRL
@@ -670,7 +692,7 @@ contains
     integer :: i
     integer :: i_crit
     real :: dDBH
-    real :: CAI_max = 1.7 ! This value can be adjusted! ! Tried before 1.1
+    real :: CAI_max = 2.0 ! This value can be adjusted! ! Tried before 1.1
     real :: BAL, dVol
     real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
@@ -678,15 +700,38 @@ contains
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
 
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
-        ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
+      
+      ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
 
       ! needs updating because vegn_annual_starvation removes cohorts !!!! Changed when crushing if CAI_max>1
       call summarize_tile( vegn )
 
       ! check if current CAI is greater than maximum CAI
-      if (vegn%CAI > CAI_max) then
+      print*, "A: CAI_max, CAI", CAI_max, vegn%CAI
 
-        print*, "CAI_max, CAI", CAI_max, vegn%CAI 
+      !----------------------------------------------------------
+      ! xxx debug: calculate cumulative CAI
+      !----------------------------------------------------------
+      call relayer_cohorts( vegn )
+      call summarize_tile( vegn )
+      print*, "B: CAI_max, CAI", CAI_max, vegn%CAI
+
+      ! allocate(cai_partial(vegn%n_cohorts))
+      ! cai_partial(:) = 0.0
+
+      ! do i = vegn%n_cohorts, 1 ,-1
+      !   cc => vegn%cohorts(i)
+      !   if (i==vegn%n_cohorts) then ! if (i>1) then
+      !     cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
+      !   else
+      !     cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
+      !   end if
+      ! end do
+      ! print*, "cai_partial", cai_partial(:)
+      ! deallocate(cai_partial)
+      !----------------------------------------------------------
+
+      if (vegn%CAI > CAI_max) then
 
         ! relayer cohorts: cohorts must be ordered by height after this, whith cohort(1) being the longest
         call relayer_cohorts( vegn )
@@ -695,22 +740,24 @@ contains
         ! xxx check whether cohorts are ranked w.r.t. height
         print*, "height", vegn%cohorts%height 
         print*, "vegn%n_cohorts", vegn%n_cohorts 
-        print*, "soil and litter C pool", vegn%litter + vegn%MicrobialC + vegn%metabolicL + vegn%structuralL 
 
-        ! ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
+        !----------------------------------------------------------
+        ! Determine cohort at which cumulative CA is equal CAI* ('i_crit')
+        ! and reduce number of individuals in that cohort
+        !----------------------------------------------------------
+        ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
         allocate(cai_partial(vegn%n_cohorts))
         cai_partial(:) = 0.0
+
         do i = vegn%n_cohorts, 1 ,-1
           cc => vegn%cohorts(i)
           if (i==vegn%n_cohorts) then ! if (i>1) then
             cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
           else
-            ! cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
-            cai_partial(i) = sum(cai_partial(i+1:vegn%n_cohorts)) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
+            cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
           end if
         end do
         print*, "cai_partial", cai_partial(:)
-        print*,'C pools', cc%bl+cc%br+cc%bsw+cc%bHW+cc%seedC+cc%nsc
 
         ! determine the cohort where cai_partial exceeds critical value
         i_crit = vegn%n_cohorts
@@ -724,7 +771,7 @@ contains
         ! Manipulate only critical cohort
         cc => vegn%cohorts(i_crit)
 
-        ! ! kill individuals in critical cohort so that its cumulative CAI equals CAI_max
+        ! kill individuals in critical cohort so that its cumulative CAI equals CAI_max
         if ((cai_partial(i_crit) - cai_partial(i_crit + 1)) > 0) then
 
           frac_new = (CAI_max - cai_partial(i_crit + 1)) / &
@@ -732,6 +779,7 @@ contains
 
           nindivs_new = cc%nindivs * frac_new !vegn%cohorts(i_crit)%nindivs * frac_new
           deadtrees = cc%nindivs - nindivs_new
+
           print*,'frac_new, cc%nindivs, nindivs_new deadtrees', frac_new, cc%nindivs, nindivs_new, deadtrees
           print*,'updated cai_partial of i_crit:', (cc%nindivs - deadtrees) * cc%crownarea + cai_partial(i_crit + 1) 
         
@@ -741,50 +789,81 @@ contains
         
         end if
 
-        print*,'cc%nindivs, nindivs_new ', cc%nindivs, nindivs_new
-
+        ! Kill fraction of individuals in critical cohort i_crit
         ! Carbon and Nitrogen from dead plants to soil pools
         call plant2soil(vegn, cc, deadtrees)
 
-        ! ! Update plant density
+        ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
         print*,'cc%nindivs ', cc%nindivs
 
-        ! ! Make all cohorts larger than i_crit are fully killed
+        !----------------------------------------------------------
+        ! Kill all cohorts above 'i_crit'
+        !----------------------------------------------------------
+        ! Make sure all cohorts larger than i_crit are fully killed
         if (i_crit > 1) then
           do i = 1, (i_crit-1)
             cc => vegn%cohorts(i)
             deadtrees = cc%nindivs
-              print*,'deadtrees, cc%nindivs ', deadtrees, cc%nindivs
+            print*,'i, deadtrees, cc%nindivs: ', i, deadtrees, cc%nindivs
+
             ! Carbon and Nitrogen from dead plants to soil pools
             call plant2soil(vegn, cc, deadtrees)
+
             ! Update plant density
             cc%nindivs = cc%nindivs - deadtrees
+
           end do
         end if
         deallocate(cai_partial)
 
-        ! xxx try just for printing cai_partial 
+        ! update stand variables after killing entire cohorts
+        call kill_lowdensity_cohorts( vegn )
+
+        ! update tile-level quantities (e.g., CAI)
+        call summarize_tile( vegn )
+
+        !----------------------------------------------------------
+        ! Check cai_partial again
+        !----------------------------------------------------------
         ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
         allocate(cai_partial(vegn%n_cohorts))
-        cai_partial(:) = 0
+        cai_partial(:) = 0.0
+
         do i = vegn%n_cohorts, 1 ,-1
           cc => vegn%cohorts(i)
           if (i==vegn%n_cohorts) then ! if (i>1) then
             cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
           else
             cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
+            ! cai_partial(i) = sum(cai_partial(i+1:vegn%n_cohorts)) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
           end if
         end do
-        print*, "cai_partial", cai_partial(:)
-        deallocate(cai_partial)
 
-        ! update tile-level quantities (e.g., CAI)
-        call summarize_tile( vegn )
+        print*, "UPDATED cai_partial", cai_partial(:)
 
-        print*,'CAI updated', vegn%CAI
-        print*,'C pools', cc%bl+cc%br+cc%bsw+cc%bHW+cc%seedC+cc%nsc
-        print*, "soil and litter C pool", vegn%litter + vegn%MicrobialC + vegn%metabolicL + vegn%structuralL 
+
+        ! ! xxx try just for printing cai_partial 
+        ! ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
+        ! allocate(cai_partial(vegn%n_cohorts))
+        ! cai_partial(:) = 0
+        ! do i = vegn%n_cohorts, 1 ,-1
+        !   cc => vegn%cohorts(i)
+        !   if (i==vegn%n_cohorts) then ! if (i>1) then
+        !     cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
+        !   else
+        !     cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
+        !   end if
+        ! end do
+        ! print*, "cai_partial", cai_partial(:)
+        ! deallocate(cai_partial)
+
+        ! ! update tile-level quantities (e.g., CAI)
+        ! call summarize_tile( vegn )
+
+        ! print*,'CAI updated', vegn%CAI
+        ! print*,'C pools', cc%bl+cc%br+cc%bsw+cc%bHW+cc%seedC+cc%nsc
+        ! print*, "soil and litter C pool", vegn%litter + vegn%MicrobialC + vegn%metabolicL + vegn%structuralL 
 
       end if
  
@@ -858,12 +937,11 @@ contains
         end associate
       enddo
 
+      ! Remove the cohorts with very few individuals
+      call kill_lowdensity_cohorts( vegn )    
+
     endif
 
-    ! Remove the cohorts with very few individuals
-    print*,'a'
-    call kill_lowdensity_cohorts( vegn )    
-    print*,'b'
 
   end subroutine vegn_nat_mortality
 
@@ -892,13 +970,18 @@ contains
       !if (cc%bsw<0 .or. cc%nsc < 0.00001*cc%bl_max .OR.(cc%layer >1 .and. sp%lifeform ==0)) then
       !if (cc%nsc < 0.01*cc%bl_max .OR. cc%annualNPP < 0.0) then ! .OR. cc%NSN < 0.01*cc%bl_max/sp%CNleaf0
       if (cc%nsc < 0.01*cc%bl_max) then
+
         deathrate = 1.0
         deadtrees = cc%nindivs * deathrate !individuals / m2
 
         ! Carbon and Nitrogen from plants to soil pools
-        call plant2soil(vegn,cc,deadtrees)
-        !        update cohort individuals
+        call plant2soil(vegn, cc, deadtrees)
+
+        ! update cohort individuals
         cc%nindivs = 0.0 ! cc%nindivs*(1.0 - deathrate)
+
+        print*,'i, deadtrees'
+
       else
         deathrate = 0.0
       endif
@@ -1203,6 +1286,7 @@ contains
     ! ---- local constants
     real, parameter :: tolerance = 1e-4
     real, parameter :: layer_vegn_cover = 1.0   
+
     ! local variables
     integer :: idx(vegn%n_cohorts) ! indices of cohorts in decreasing height order
     integer :: i ! new cohort index
@@ -1210,7 +1294,7 @@ contains
     integer :: L ! layer index (top-down)
     integer :: N0,N1 ! initial and final number of cohorts 
     real    :: frac ! fraction of the layer covered so far by the canopies
-    type(cohort_type), pointer :: cc(:),new(:)
+    type(cohort_type), pointer :: cc(:), new(:)
     real    :: nindivs
 
     !  rand_sorting = .TRUE. ! .False.
@@ -1224,7 +1308,7 @@ contains
     ! old cohorts, plus the number of layers -- since the number of full layers is 
     ! equal to the maximum number of times an input cohort can be split by a layer 
     ! boundary.
-    N1 = vegn%n_cohorts + int(sum(cc(1:N0)%nindivs*cc(1:N0)%crownarea))
+    N1 = vegn%n_cohorts + int( sum( cc(1:N0)%nindivs * cc(1:N0)%crownarea ) )
     allocate(new(N1))
 
     ! copy cohort information to the new cohorts, splitting the old cohorts that 
@@ -1255,7 +1339,7 @@ contains
         L = L+1 ; frac = 0.0              ! start new layer
       endif
 
-      !     write(*,*)i, new(i)%layer
+      ! write(*,*)i, new(i)%layer
       i = i+1
     
     enddo
@@ -1334,9 +1418,9 @@ contains
       cc%sapwN = cc%sapwN - dNStem
       cc%rootN = cc%rootN - dNR
 
-      !    update leaf area and LAI
+      ! update leaf area and LAI
       cc%leafarea= leaf_area_from_biomass(cc%bl,cc%species,cc%layer,cc%firstlayer)
-      cc%lai     = cc%leafarea/(cc%crownarea *(1.0-sp%internal_gap_frac))
+      cc%lai     = cc%leafarea / (cc%crownarea *(1.0-sp%internal_gap_frac))
 
       !    update NPP for leaves, fine roots, and wood
       cc%NPPleaf = cc%NPPleaf - l_fract * dBL

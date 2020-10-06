@@ -7,6 +7,6 @@ Description: Implements the SOFUN modelling framework for simulating terrestrial
 License: GPL-3
 LazyData: true
 Depends: dplyr, purrr, lubridate, tidyr, raster, lubridate, stringi, sp, GenSA, stringr, rlang, readr
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 URL: https://github.com/stineb/rsofun

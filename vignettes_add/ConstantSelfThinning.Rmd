@@ -218,26 +218,36 @@ ea2sa1md_out_annual_tile <- out$output_annual_tile # for kphio = 0.0575
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+  labs(title = "LM3-PPA with P-model photosynthesis at ORNL", subtitle = "rsofun output")
 
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+  labs(title = "LM3-PPA with P-model photosynthesis at ORNL", subtitle = "rsofun output")
 
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = Density)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+  labs(title = "LM3-PPA with P-model photosynthesis at ORNL", subtitle = "rsofun output")
 
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = CAI)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+  labs(title = "LM3-PPA with P-model photosynthesis at ORNL", subtitle = "rsofun output")
 
+out$output_annual_cohorts %>% 
+  filter(cID == 8) %>% 
+  ggplot(aes(x = dbh, y = Acrown * density)) +
+  geom_point()
+
+out$output_annual_cohorts %>% 
+  filter(cID == 8) %>% 
+  ggplot(aes(x = year, y = density)) +
+  geom_point()
 ```
 
 ### Write model outputs
+
 ```{r}
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
 write.csv(ea1sa1md_out_annual_tile,"ea1sa1md_out_annual_tile.csv") # for kphio = 0.05

@@ -830,6 +830,7 @@ contains
       vegn%woodC   = vegn%woodC    + cc%bHW       * cc%nindivs
       vegn%CAI     = vegn%CAI      + cc%crownarea * cc%nindivs
       vegn%LAI     = vegn%LAI      + cc%leafarea  * cc%nindivs
+      
       ! Vegn N pools
       vegn%NSN     = vegn%NSN      + cc%NSN       * cc%nindivs
       vegn%SeedN   = vegn%SeedN    + cc%seedN     * cc%nindivs
