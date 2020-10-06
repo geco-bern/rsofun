@@ -703,18 +703,18 @@ contains
       
       ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
 
+      print*,'   1: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+
       ! needs updating because vegn_annual_starvation removes cohorts !!!! Changed when crushing if CAI_max>1
       call summarize_tile( vegn )
 
-      ! check if current CAI is greater than maximum CAI
-      print*, "A: CAI_max, CAI", CAI_max, vegn%CAI
+      print*,'   2: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
 
       !----------------------------------------------------------
       ! xxx debug: calculate cumulative CAI
       !----------------------------------------------------------
-      call relayer_cohorts( vegn )
-      call summarize_tile( vegn )
-      print*, "B: CAI_max, CAI", CAI_max, vegn%CAI
+      ! call relayer_cohorts( vegn )  ! XXX This may reduce the number of individuals in cohorts
+      print*,'   3: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
 
       ! allocate(cai_partial(vegn%n_cohorts))
       ! cai_partial(:) = 0.0
@@ -730,11 +730,14 @@ contains
       ! print*, "cai_partial", cai_partial(:)
       ! deallocate(cai_partial)
       !----------------------------------------------------------
+      ! check if current CAI is greater than maximum CAI
+      print*, "A: CAI_max, CAI", CAI_max, vegn%CAI
 
       if (vegn%CAI > CAI_max) then
 
-        ! relayer cohorts: cohorts must be ordered by height after this, whith cohort(1) being the longest
-        call relayer_cohorts( vegn )
+        ! ! relayer cohorts: cohorts must be ordered by height after this, whith cohort(1) being the longest
+        ! call relayer_cohorts( vegn )
+      
         ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
 
         ! xxx check whether cohorts are ranked w.r.t. height
@@ -841,7 +844,6 @@ contains
         end do
 
         print*, "UPDATED cai_partial", cai_partial(:)
-
 
         ! ! xxx try just for printing cai_partial 
         ! ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
