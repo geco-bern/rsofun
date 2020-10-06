@@ -26,7 +26,7 @@ module md_gpp_lm3ppa
 
   ! PFT-DEPENDENT PARAMETERS
   type pftparamstype_gpp
-    real :: kphio = 0.05! Quantum yield efficiency parameter (Simulations: 0.05, 0.0575, 0.065) 0.24 hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
+    real :: kphio = 0.065! Quantum yield efficiency parameter (Simulations: 0.05, 0.0575, 0.065) 0.24 hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
   end type pftparamstype_gpp
   type(pftparamstype_gpp) :: params_pft_gpp
 
@@ -152,22 +152,22 @@ contains
           ! if (rad_top > 0.0) print*,'psyn/rad_top, resp/rad_top', psyn/rad_top, resp/rad_top
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
-          cc%An_op   = psyn  ! molC s-1 m-2 of leaves
-          cc%An_cl   = -resp  ! molC s-1 m-2 of leaves
-          cc%w_scale = w_scale2
-          cc%transp  = transp * mol_h2o * cc%leafarea * myinterface%step_seconds ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
-          cc%resl    = -resp         * mol_C * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
-          cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
+          ! cc%An_op   = psyn  ! molC s-1 m-2 of leaves
+          ! cc%An_cl   = -resp  ! molC s-1 m-2 of leaves
+          ! cc%w_scale = w_scale2
+          ! cc%transp  = transp * mol_h2o * cc%leafarea * myinterface%step_seconds ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
+          ! cc%resl    = -resp         * mol_C * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
+          ! cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
           !===============================
           ! XXX hack: For running simulations
           !===============================
-          ! cc%An_op   = 0.75e-8 * rad_top  ! molC s-1 m-2 of leaves (Simulations: 0.75e-8, 0.8625e-8, 0.975e-8)
-          ! cc%An_cl   = 1e-9 * rad_top  ! molC s-1 m-2 of leaves
-          ! cc%w_scale = 0.0
-          ! cc%transp  = 0.0
-          ! cc%resl    = cc%An_cl              * mol_C * cc%leafarea * myinterface%step_seconds ! fnsc*spdata(sp)%gamma_LN  * cc%leafN * tf * myinterface%dt_fast_yr  ! tree-1 step-1
-          ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
+          cc%An_op   = 0.75e-8 * rad_top  ! molC s-1 m-2 of leaves (Simulations: 0.75e-8, 0.8625e-8, 0.975e-8)
+          cc%An_cl   = 1e-9 * rad_top  ! molC s-1 m-2 of leaves
+          cc%w_scale = 0.0
+          cc%transp  = 0.0
+          cc%resl    = cc%An_cl              * mol_C * cc%leafarea * myinterface%step_seconds ! fnsc*spdata(sp)%gamma_LN  * cc%leafN * tf * myinterface%dt_fast_yr  ! tree-1 step-1
+          cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
           if (isnan(cc%gpp)) stop '"gpp" is a NaN'
 

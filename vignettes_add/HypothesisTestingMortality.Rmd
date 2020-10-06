@@ -32,16 +32,16 @@ Now specify the simulation parameters that are identical for all site-scale simu
 params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800, #1793,
-      recycle               = 11, # 9 or 11
+      recycle               = 1, # 9 or 11
       firstyeartrend        = 1998,
-      nyeartrend            = 11, #9 or 110 (longer transient years)
+      nyeartrend            = 1, #9 or 11 (longer transient years)
       outputhourly          = TRUE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -72,32 +72,31 @@ params_tile <- list(
 
 ```{r}
 params_species <- tibble(
-  lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),  # 0: grass; 1 Woody
-  phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),  # 0: Deciduous; 1 Evergreen
-  pt            = c(1,       0,        0,        0,        0,      0,        0,        0,      0,        0,        0),  # 0: C3; 1: C4
-  seedlingsize  = c(0.02,    0.05,     0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05), # initial size of seedlings
-  LMA           = c(0.035,   0.14,     0.14,     0.14,     0.14,   0.14,    0.14,      0.14,   0.14,     0.14,     0.035),
+  lifeform      = c(0,1,1,1,1,1,1,1,1,1,1),  # 0: grass; 1 Woody
+  phenotype     = c(0,1,1,1,1,1,1,1,1,1,0),  # 0: Deciduous; 1 Evergreen
+  pt            = c(1,0,0,0,0,0,0,0,0,0,0),  # 0: C3; 1: C4
+  seedlingsize  = c(0.02,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05), # initial size of seedlings
+  LMA           = c(0.035,0.14,0.14,0.14,0.14,0.14,0.14,0.14,0.14,0.14,0.035),
   # Leaf mass per unit area: 0.035, 0.085, 0.135
-  phiRL         = c(4.0,     4.0,      2.0,      3.0,      4.0,     5.0,     6.0,      7.0,   8.0,       9.0,      3.0),
+  phiRL         = c(4,4,2,3,4,5,6,7,8,9,3),
   # Root:Shoot ratio:  4.0, 6.0, 8.0
-  LNbase        = c(0.8E-3,  0.8E-3,   0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3),   
+  LNbase        = c(0.8E-3,0.8E-3,0.8E-3,0.8E-3,0.8E-3,0.8E-3,0.8E-3,   0.8E-3,0.8E-3,0.8E-3,0.8E-3),   
   # kgN m-2 leaf, Vmax = 0.03125*LNbase
-  laimax        = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  
+  laimax        = c(3.0,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.8),  
   # maximum crown LAI
-  LAI_light     = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  
+  LAI_light     = c(3.0,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.5,3.8),  
   # Light-limited crown LAI
-  Nfixrate0     = c(0.0,     0.0,      0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0),  
+  Nfixrate0     = rep(0,11),  
   # 0.03 kgN kgRootC-1 yr-1
-  NfixCost0     = c(12.,     12.,      12.,      12.,      12.,    12.,      12.,      12.,    12.,      12.,      12.),  
+  NfixCost0     = rep(12,11),  
   # 12, 24 gC/gN
-  phiCSA        = c(1.25E-4, 0.25E-4,  0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4),
-  mortrate_d_c  = c(0.02,    0.02,     0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02),    
+  phiCSA        = c(1.25E-4,0.25E-4,0.25E-4,0.25E-4,0.25E-4,0.25E-4,  0.25E-4,0.25E-4,0.25E-4,0.25E-4,0.25E-4),
+  mortrate_d_c  = rep(0.02,11),    
   # canopy tree mortality rate, year-1
-  mortrate_d_u  = c(0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08),    
-  # understory tree mortality rate, year-1
-  maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
-  fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
-  #alpha_FR      = c(1.2,     1.2,      1.2,      1.2,      1.2,    1.2,      1.2,      1.2,    1.2,      1.2,      1.2)
+  mortrate_d_u  = c(0.2,0.08,0.08,0.08,0.08,0.08,0.08,0.08,0.08,0.08,0.08),   # understory tree mortality rate, year-1
+  maturalage    = c(0.5,5,5,5,5,5,5,5,5,5,5),
+  fNSNmax       = rep(5,11)
+  #alpha_FR      = rep(1.2,11)
   ) %>% 
   bind_rows(., slice(., 1:5))
 ```
@@ -108,15 +107,15 @@ By layers.
 ```{r}
 # adopted from datatypes.mod.f90 l.538
 params_soil <- tibble(
-  type              = c("Coarse",  "Medium",   "Fine",    "CM",     "CF",     "MF",    "CMF",    "Peat",    "MCM"),
+  type              = c("Coarse","Medium","Fine","CM","CF","MF","CMF","Peat","MCM"),
   GMD               = c(0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3),
   GSD               = c(5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4),
   vwc_sat           = c(0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445),
-  chb               = c( 3.5,   6.4,  11.0,   4.8,   6.3,   8.4,   6.3,   6.4,   6.4),
-  psi_sat_ref       = c(-600., -790., -910., -1580., -1680., -1880., -5980., -790., -790.), # Pa
-  k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2),      # mol/(s MPa m)
-  alphaSoil         = rep(1.0, 9),
-  heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6,   1.0)
+  chb               = c(3.5,6.4,11.0,4.8,6.3,8.4,6.3,6.4,6.4),
+  psi_sat_ref       = c(-600, -790, -910, -1580, -1680, -1880, -5980, -790, -790), # Pa
+  k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2), # mol/(s MPa m)
+  alphaSoil         = rep(1, 9),
+  heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6, 1.0)
   )
 ```
 
@@ -124,13 +123,12 @@ params_soil <- tibble(
 
 ```{r}
 init_cohort <- tibble(
- init_cohort_species = c(1,      2,        3,        4,      5,        6,        7,      8,        9,       10),
- init_cohort_nindivs = c(0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02),
- init_cohort_bsw     = c(0.2,    0.2,      0.2,      0.2,    0.2,      0.2,      0.2,    0.2,      0.2,     0.2),
- init_cohort_bHW     = c(0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0),
- init_cohort_nsc     = c(0.5,    0.5,      0.5,      0.5,    0.5,      0.5,      0.5,    0.5,      0.5,     0.5)
+ init_cohort_species = seq(1, 10, 1),
+ init_cohort_nindivs = rep(0.02,10),
+ init_cohort_bsw     = rep(0.2,10),
+ init_cohort_bHW     = rep(0.10),
+ init_cohort_nsc     = rep(0.5,10)
 )
-
 ```
 
 #### Initial soil pools
@@ -151,7 +149,7 @@ init_soil <- list(
 For now, this is implemented as an illustration. Should be made site-specific.
 ```{r}
 df_soiltexture <- bind_rows(
-  top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
+  top    = tibble(layer = "top", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
   bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
 )
 ```
@@ -177,15 +175,26 @@ dt_secs <- lubridate::interval(forcing$date[1], forcing$date[2]) %>%
 forcing <- forcing %>% 
   mutate(RAIN = RAIN / dt_secs)
 
+if (params_siml$method_photosynth == "gs_leuning"){
+  forcing <- forcing %>% 
+    dplyr::group_by(lubridate::month(date),lubridate::day(date),lubridate::hour(date)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+  forcing <- forcing[,-c(1:3)]
+}
+
 ```
 
 For P-model runs, aggregate to daily forcing.
 ```{r}
 if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
+#  forcing <- forcing %>% 
+#    dplyr::group_by(lubridate::date(date)) %>% 
+#    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>% 
+#    dplyr::select(-1)
   forcing <- forcing %>% 
-    dplyr::group_by(lubridate::date(date)) %>% 
-    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>% 
-    dplyr::select(-1)
+    dplyr::group_by(lubridate::month(date),lubridate::day(date)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+  forcing <- forcing[,-c(1:2)]
 }
 
 # Changing values of PAR for running simulations
@@ -211,623 +220,660 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-ea1sa1ma_out_annual_tile <- out$output_annual_tile
-
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+  labs(title = "LM3-PPA with gs-leuning photosynthesis at ORNL", subtitle = "rsofun output")
 
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-out$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = Density)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-out$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = CAI)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
+  labs(title = "LM3-PPA with gs-leuning photosynthesis at ORNL", subtitle = "rsofun output")
 
 ```
 
 ### Write model outputs
 ```{r}
+# gs-leuning Mortality a) DBH
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea1sa1ma_out_annual_tile,"ea3sa1ma_out_annual_tile.csv")
+write.csv(out$output_hourly_tile,   "ea1sa1magl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea1sa1magl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea1sa1magl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea1sa1magl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea1sa1magl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea2sa1magl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea2sa1magl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea2sa1magl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea2sa1magl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea2sa1magl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea3sa1magl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea3sa1magl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea3sa1magl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea3sa1magl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea3sa1magl_out_annual_cohorts.csv")
+
+# p-model Mortality a) DBH
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea1sa1mapm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea1sa1mapm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea1sa1mapm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea1sa1mapm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea1sa1mapm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea2sa1mapm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea2sa1mapm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea2sa1mapm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea2sa1mapm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea2sa1mapm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea3sa1mapm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea3sa1mapm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea3sa1mapm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea3sa1mapm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea3sa1mapm_out_annual_cohorts.csv")
+
+# gs-leuning Mortality b) C starvation
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea1sa1mbgl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea1sa1mbgl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea1sa1mbgl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea1sa1mbgl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea1sa1mbgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea2sa1mbgl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea2sa1mbgl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea2sa1mbgl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea2sa1mbgl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea2sa1mbgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea3sa1mbgl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea3sa1mbgl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea3sa1mbgl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea3sa1mbgl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea3sa1mbgl_out_annual_cohorts.csv")
+
+# p-model Mortality b) C starvation
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea1sa1mbpm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea1sa1mbpm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea1sa1mbpm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea1sa1mbpm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea1sa1mbpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea2sa1mbpm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea2sa1mbpm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea2sa1mbpm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea2sa1mbpm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea2sa1mbpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea3sa1mbpm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea3sa1mbpm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea3sa1mbpm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea3sa1mbpm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea3sa1mbpm_out_annual_cohorts.csv")
+
+# gs-leuning Mortality c) Growth rate
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea1sa1mcgl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea1sa1mcgl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea1sa1mcgl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea1sa1mcgl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea1sa1mcgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea2sa1mcgl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea2sa1mcgl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea2sa1mcgl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea2sa1mcgl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea2sa1mcgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea3sa1mcgl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea3sa1mcgl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea3sa1mcgl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea3sa1mcgl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea3sa1mcgl_out_annual_cohorts.csv")
+
+# p-model Mortality c) Growth rate
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea1sa1mcpm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea1sa1mcpm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea1sa1mcpm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea1sa1mcpm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea1sa1mcpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea2sa1mcpm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea2sa1mcpm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea2sa1mcpm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea2sa1mcpm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea2sa1mcpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea3sa1mcpm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea3sa1mcpm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea3sa1mcpm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea3sa1mcpm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea3sa1mcpm_out_annual_cohorts.csv")
+
+# gs-leuning Mortality d) Constant Self-thinning
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea1sa1mdgl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea1sa1mdgl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea1sa1mdgl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea1sa1mdgl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea1sa1mdgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea2sa1mdgl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea2sa1mdgl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea2sa1mdgl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea2sa1mdgl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea2sa1mdgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea3sa1mdgl_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea3sa1mdgl_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea3sa1mdgl_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea3sa1mdgl_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea3sa1mdgl_out_annual_cohorts.csv")
+
+# p-model Mortality d) Constant Self-thinning
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea1sa1mdpm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea1sa1mdpm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea1sa1mdpm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea1sa1mdpm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea1sa1mdpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea2sa1mdpm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea2sa1mdpm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea2sa1mdpm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea2sa1mdpm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea2sa1mdpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+write.csv(out$output_hourly_tile,   "ea3sa1mdpm_out_hourly_tile.csv")
+write.csv(out$output_daily_tile,    "ea3sa1mdpm_out_daily_tile.csv")
+write.csv(out$output_daily_cohorts, "ea3sa1mdpm_out_daily_cohorts.csv")
+write.csv(out$output_annual_tile,   "ea3sa1mdpm_out_annual_tile.csv")
+write.csv(out$output_annual_cohorts,"ea3sa1mdpm_out_annual_cohorts.csv")
+
 ```
 
 ### Read model outputs
+
 ```{r}
+# gs-leuning Mortality a) DBH
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea1sa1magl_out_hourly_tile <- read.csv("ea1sa1magl_out_hourly_tile.csv")
+ea1sa1magl_out_daily_tile  <- read.csv("ea1sa1magl_out_daily_tile.csv")
+ea1sa1magl_out_daily_cohorts  <- read.csv("ea1sa1magl_out_daily_cohorts.csv")
+ea1sa1magl_out_annual_tile  <- read.csv("ea1sa1magl_out_annual_tile.csv")
+ea1sa1magl_out_annual_cohorts  <- read.csv("ea1sa1magl_out_annual_cohorts.csv")
 
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea2sa1magl_out_hourly_tile <- read.csv("ea2sa1magl_out_hourly_tile.csv")
+ea2sa1magl_out_daily_tile  <- read.csv("ea2sa1magl_out_daily_tile.csv")
+ea2sa1magl_out_daily_cohorts  <- read.csv("ea2sa1magl_out_daily_cohorts.csv")
+ea2sa1magl_out_annual_tile  <- read.csv("ea2sa1magl_out_annual_tile.csv")
+ea2sa1magl_out_annual_cohorts  <- read.csv("ea2sa1magl_out_annual_cohorts.csv")
 
-ea1sa1ma1_out_annual_tile <- read.csv("ea1sa1ma1_out_annual_tile.csv")
-ea2sa1ma1_out_annual_tile <- read.csv("ea2sa1ma1_out_annual_tile.csv")
-ea3sa1ma1_out_annual_tile <- read.csv("ea3sa1ma1_out_annual_tile.csv")
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea3sa1magl_out_hourly_tile <- read.csv("ea3sa1magl_out_hourly_tile.csv")
+ea3sa1magl_out_daily_tile  <- read.csv("ea3sa1magl_out_daily_tile.csv")
+ea3sa1magl_out_daily_cohorts  <- read.csv("ea3sa1magl_out_daily_cohorts.csv")
+ea3sa1magl_out_annual_tile  <- read.csv("ea3sa1magl_out_annual_tile.csv")
+ea3sa1magl_out_annual_cohorts  <- read.csv("ea3sa1magl_out_annual_cohorts.csv")
 
-ea1sa1ma2_out_annual_tile <- read.csv("ea1sa1ma2_out_annual_tile.csv")
-ea2sa1ma2_out_annual_tile <- read.csv("ea2sa1ma2_out_annual_tile.csv")
-ea3sa1ma2_out_annual_tile <- read.csv("ea3sa1ma2_out_annual_tile.csv")
+# p-model Mortality a) DBH
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea1sa1mapm_out_hourly_tile <- read.csv("ea1sa1mapm_out_hourly_tile.csv")
+ea1sa1mapm_out_daily_tile  <- read.csv("ea1sa1mapm_out_daily_tile.csv")
+ea1sa1mapm_out_daily_cohorts  <- read.csv("ea1sa1mapm_out_daily_cohorts.csv")
+ea1sa1mapm_out_annual_tile  <- read.csv("ea1sa1mapm_out_annual_tile.csv")
+ea1sa1mapm_out_annual_cohorts  <- read.csv("ea1sa1mapm_out_annual_cohorts.csv")
 
-ea1sa1ma3_out_annual_tile <- read.csv("ea1sa1ma3_out_annual_tile.csv")
-ea2sa1ma3_out_annual_tile <- read.csv("ea2sa1ma3_out_annual_tile.csv")
-ea3sa1ma3_out_annual_tile <- read.csv("ea3sa1ma3_out_annual_tile.csv")
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea2sa1mapm_out_hourly_tile <- read.csv("ea2sa1mapm_out_hourly_tile.csv")
+ea2sa1mapm_out_daily_tile  <- read.csv("ea2sa1mapm_out_daily_tile.csv")
+ea2sa1mapm_out_daily_cohorts  <- read.csv("ea2sa1mapm_out_daily_cohorts.csv")
+ea2sa1mapm_out_annual_tile  <- read.csv("ea2sa1mapm_out_annual_tile.csv")
+ea2sa1mapm_out_annual_cohorts  <- read.csv("ea2sa1mapm_out_annual_cohorts.csv")
 
-ea1sa1mc2_out_annual_tile <- read.csv("ea1sa1mc2_out_annual_tile.csv")
-ea2sa1mc2_out_annual_tile <- read.csv("ea2sa1mc2_out_annual_tile.csv")
-ea3sa1mc2_out_annual_tile <- read.csv("ea3sa1mc2_out_annual_tile.csv")
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea3sa1mapm_out_hourly_tile <- read.csv("ea3sa1mapm_out_hourly_tile.csv")
+ea3sa1mapm_out_daily_tile  <- read.csv("ea3sa1mapm_out_daily_tile.csv")
+ea3sa1mapm_out_daily_cohorts  <- read.csv("ea3sa1mapm_out_daily_cohorts.csv")
+ea3sa1mapm_out_annual_tile  <- read.csv("ea3sa1mapm_out_annual_tile.csv")
+ea3sa1mapm_out_annual_cohorts  <- read.csv("ea3sa1mapm_out_annual_cohorts.csv")
 
-ea1sa1mb_out_annual_tile <- read.csv("ea1sa1mb_out_annual_tile.csv")
-ea2sa1mb_out_annual_tile <- read.csv("ea2sa1mb_out_annual_tile.csv")
-ea3sa1mb_out_annual_tile <- read.csv("ea3sa1mb_out_annual_tile.csv")
+# gs-leuning Mortality b) C starvation
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea1sa1mbgl_out_hourly_tile <- read.csv("ea1sa1mbgl_out_hourly_tile.csv")
+ea1sa1mbgl_out_daily_tile  <- read.csv("ea1sa1mbgl_out_daily_tile.csv")
+ea1sa1mbgl_out_daily_cohorts  <- read.csv("ea1sa1mbgl_out_daily_cohorts.csv")
+ea1sa1mbgl_out_annual_tile  <- read.csv("ea1sa1mbgl_out_annual_tile.csv")
+ea1sa1mbgl_out_annual_cohorts  <- read.csv("ea1sa1mbgl_out_annual_cohorts.csv")
 
-ea1sa1md_out_annual_tile <- read.csv("ea1sa1md_out_annual_tile.csv")
-ea2sa1md_out_annual_tile <- read.csv("ea2sa1md_out_annual_tile.csv")
-ea3sa1md_out_annual_tile <- read.csv("ea3sa1md_out_annual_tile.csv")
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea2sa1mbgl_out_hourly_tile <- read.csv("ea2sa1mbgl_out_hourly_tile.csv")
+ea2sa1mbgl_out_daily_tile  <- read.csv("ea2sa1mbgl_out_daily_tile.csv")
+ea2sa1mbgl_out_daily_cohorts  <- read.csv("ea2sa1mbgl_out_daily_cohorts.csv")
+ea2sa1mbgl_out_annual_tile  <- read.csv("ea2sa1mbgl_out_annual_tile.csv")
+ea2sa1mbgl_out_annual_cohorts  <- read.csv("ea2sa1mbgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea3sa1mbgl_out_hourly_tile <- read.csv("ea3sa1mbgl_out_hourly_tile.csv")
+ea3sa1mbgl_out_daily_tile  <- read.csv("ea3sa1mbgl_out_daily_tile.csv")
+ea3sa1mbgl_out_daily_cohorts  <- read.csv("ea3sa1mbgl_out_daily_cohorts.csv")
+ea3sa1mbgl_out_annual_tile  <- read.csv("ea3sa1mbgl_out_annual_tile.csv")
+ea3sa1mbgl_out_annual_cohorts  <- read.csv("ea3sa1mbgl_out_annual_cohorts.csv")
+
+# p-model Mortality b) C starvation
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea1sa1mbpm_out_hourly_tile <- read.csv("ea1sa1mbpm_out_hourly_tile.csv")
+ea1sa1mbpm_out_daily_tile  <- read.csv("ea1sa1mbpm_out_daily_tile.csv")
+ea1sa1mbpm_out_daily_cohorts  <- read.csv("ea1sa1mbpm_out_daily_cohorts.csv")
+ea1sa1mbpm_out_annual_tile  <- read.csv("ea1sa1mbpm_out_annual_tile.csv")
+ea1sa1mbpm_out_annual_cohorts  <- read.csv("ea1sa1mbpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea2sa1mbpm_out_hourly_tile <- read.csv("ea2sa1mbpm_out_hourly_tile.csv")
+ea2sa1mbpm_out_daily_tile  <- read.csv("ea2sa1mbpm_out_daily_tile.csv")
+ea2sa1mbpm_out_daily_cohorts  <- read.csv("ea2sa1mbpm_out_daily_cohorts.csv")
+ea2sa1mbpm_out_annual_tile  <- read.csv("ea2sa1mbpm_out_annual_tile.csv")
+ea2sa1mbpm_out_annual_cohorts  <- read.csv("ea2sa1mbpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea3sa1mbpm_out_hourly_tile <- read.csv("ea3sa1mbpm_out_hourly_tile.csv")
+ea3sa1mbpm_out_daily_tile  <- read.csv("ea3sa1mbpm_out_daily_tile.csv")
+ea3sa1mbpm_out_daily_cohorts  <- read.csv("ea3sa1mbpm_out_daily_cohorts.csv")
+ea3sa1mbpm_out_annual_tile  <- read.csv("ea3sa1mbpm_out_annual_tile.csv")
+ea3sa1mbpm_out_annual_cohorts  <- read.csv("ea3sa1mbpm_out_annual_cohorts.csv")
+
+# gs-leuning Mortality c) Growth rate
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea1sa1mcgl_out_hourly_tile <- read.csv("ea1sa1mcgl_out_hourly_tile.csv")
+ea1sa1mcgl_out_daily_tile  <- read.csv("ea1sa1mcgl_out_daily_tile.csv")
+ea1sa1mcgl_out_daily_cohorts  <- read.csv("ea1sa1mcgl_out_daily_cohorts.csv")
+ea1sa1mcgl_out_annual_tile  <- read.csv("ea1sa1mcgl_out_annual_tile.csv")
+ea1sa1mcgl_out_annual_cohorts  <- read.csv("ea1sa1mcgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea2sa1mcgl_out_hourly_tile <- read.csv("ea2sa1mcgl_out_hourly_tile.csv")
+ea2sa1mcgl_out_daily_tile  <- read.csv("ea2sa1mcgl_out_daily_tile.csv")
+ea2sa1mcgl_out_daily_cohorts  <- read.csv("ea2sa1mcgl_out_daily_cohorts.csv")
+ea2sa1mcgl_out_annual_tile  <- read.csv("ea2sa1mcgl_out_annual_tile.csv")
+ea2sa1mcgl_out_annual_cohorts  <- read.csv("ea2sa1mcgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea3sa1mcgl_out_hourly_tile <- read.csv("ea3sa1mcgl_out_hourly_tile.csv")
+ea3sa1mcgl_out_daily_tile  <- read.csv("ea3sa1mcgl_out_daily_tile.csv")
+ea3sa1mcgl_out_daily_cohorts  <- read.csv("ea3sa1mcgl_out_daily_cohorts.csv")
+ea3sa1mcgl_out_annual_tile  <- read.csv("ea3sa1mcgl_out_annual_tile.csv")
+ea3sa1mcgl_out_annual_cohorts  <- read.csv("ea3sa1mcgl_out_annual_cohorts.csv")
+
+# p-model Mortality c) Growth rate
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea1sa1mcpm_out_hourly_tile <- read.csv("ea1sa1mcpm_out_hourly_tile.csv")
+ea1sa1mcpm_out_daily_tile  <- read.csv("ea1sa1mcpm_out_daily_tile.csv")
+ea1sa1mcpm_out_daily_cohorts  <- read.csv("ea1sa1mcpm_out_daily_cohorts.csv")
+ea1sa1mcpm_out_annual_tile  <- read.csv("ea1sa1mcpm_out_annual_tile.csv")
+ea1sa1mcpm_out_annual_cohorts  <- read.csv("ea1sa1mcpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea2sa1mcpm_out_hourly_tile <- read.csv("ea2sa1mcpm_out_hourly_tile.csv")
+ea2sa1mcpm_out_daily_tile  <- read.csv("ea2sa1mcpm_out_daily_tile.csv")
+ea2sa1mcpm_out_daily_cohorts  <- read.csv("ea2sa1mcpm_out_daily_cohorts.csv")
+ea2sa1mcpm_out_annual_tile  <- read.csv("ea2sa1mcpm_out_annual_tile.csv")
+ea2sa1mcpm_out_annual_cohorts  <- read.csv("ea2sa1mcpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea3sa1mcpm_out_hourly_tile <- read.csv("ea3sa1mcpm_out_hourly_tile.csv")
+ea3sa1mcpm_out_daily_tile  <- read.csv("ea3sa1mcpm_out_daily_tile.csv")
+ea3sa1mcpm_out_daily_cohorts  <- read.csv("ea3sa1mcpm_out_daily_cohorts.csv")
+ea3sa1mcpm_out_annual_tile  <- read.csv("ea3sa1mcpm_out_annual_tile.csv")
+ea3sa1mcpm_out_annual_cohorts  <- read.csv("ea3sa1mcpm_out_annual_cohorts.csv")
+
+# gs-leuning Mortality d) Self-thinning
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea1sa1mdgl_out_hourly_tile <- read.csv("ea1sa1mdgl_out_hourly_tile.csv")
+ea1sa1mdgl_out_daily_tile  <- read.csv("ea1sa1mdgl_out_daily_tile.csv")
+ea1sa1mdgl_out_daily_cohorts  <- read.csv("ea1sa1mdgl_out_daily_cohorts.csv")
+ea1sa1mdgl_out_annual_tile  <- read.csv("ea1sa1mdgl_out_annual_tile.csv")
+ea1sa1mdgl_out_annual_cohorts  <- read.csv("ea1sa1mdgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea2sa1mdgl_out_hourly_tile <- read.csv("ea2sa1mdgl_out_hourly_tile.csv")
+ea2sa1mdgl_out_daily_tile  <- read.csv("ea2sa1mdgl_out_daily_tile.csv")
+ea2sa1mdgl_out_daily_cohorts  <- read.csv("ea2sa1mdgl_out_daily_cohorts.csv")
+ea2sa1mdgl_out_annual_tile  <- read.csv("ea2sa1mdgl_out_annual_tile.csv")
+ea2sa1mdgl_out_annual_cohorts  <- read.csv("ea2sa1mdgl_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea3sa1mdgl_out_hourly_tile <- read.csv("ea3sa1mdgl_out_hourly_tile.csv")
+ea3sa1mdgl_out_daily_tile  <- read.csv("ea3sa1mdgl_out_daily_tile.csv")
+ea3sa1mdgl_out_daily_cohorts  <- read.csv("ea3sa1mdgl_out_daily_cohorts.csv")
+ea3sa1mdgl_out_annual_tile  <- read.csv("ea3sa1mdgl_out_annual_tile.csv")
+ea3sa1mdgl_out_annual_cohorts  <- read.csv("ea3sa1mdgl_out_annual_cohorts.csv")
+
+# p-model Mortality d) Self-thinning
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea1sa1mdpm_out_hourly_tile <- read.csv("ea1sa1mdpm_out_hourly_tile.csv")
+ea1sa1mdpm_out_daily_tile  <- read.csv("ea1sa1mdpm_out_daily_tile.csv")
+ea1sa1mdpm_out_daily_cohorts  <- read.csv("ea1sa1mdpm_out_daily_cohorts.csv")
+ea1sa1mdpm_out_annual_tile  <- read.csv("ea1sa1mdpm_out_annual_tile.csv")
+ea1sa1mdpm_out_annual_cohorts  <- read.csv("ea1sa1mdpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea2sa1mdpm_out_hourly_tile <- read.csv("ea2sa1mdpm_out_hourly_tile.csv")
+ea2sa1mdpm_out_daily_tile  <- read.csv("ea2sa1mdpm_out_daily_tile.csv")
+ea2sa1mdpm_out_daily_cohorts  <- read.csv("ea2sa1mdpm_out_daily_cohorts.csv")
+ea2sa1mdpm_out_annual_tile  <- read.csv("ea2sa1mdpm_out_annual_tile.csv")
+ea2sa1mdpm_out_annual_cohorts  <- read.csv("ea2sa1mdpm_out_annual_cohorts.csv")
+
+setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+ea3sa1mdpm_out_hourly_tile <- read.csv("ea3sa1mdpm_out_hourly_tile.csv")
+ea3sa1mdpm_out_daily_tile  <- read.csv("ea3sa1mdpm_out_daily_tile.csv")
+ea3sa1mdpm_out_daily_cohorts  <- read.csv("ea3sa1mdpm_out_daily_cohorts.csv")
+ea3sa1mdpm_out_annual_tile  <- read.csv("ea3sa1mdpm_out_annual_tile.csv")
+ea3sa1mdpm_out_annual_cohorts  <- read.csv("ea3sa1mdpm_out_annual_cohorts.csv")
 
 ```
 
-##### LUE (mol/s/m2)
-```{r}
+## Exploring relationships and plotting
 
-# Biomass changes in LUE with WD level 1
-# Mortality DBH
+#### Stand develop: Stand biomass vs. time
+
+From annual_tile_output: PlanC (Biomass)
+Level of LUE (mol/s/m2)
+```{r}
+# Mortality as a function of DBH
 ggplot() + 
-  geom_line(data=ea1sa1ma1_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1ma1_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1ma1_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  geom_line(data=ea1sa1magl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1magl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1magl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH 1")
+  ggtitle("Function of DBH gs-Leuning") + scale_y_continuous(limits = c(0,45))
 
-# Biomass changes in LUE with WD level 1
-# Mortality Ratio NSC and Leaf Mass
 ggplot() + 
-  geom_line(data=ea1sa1ma2_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1ma2_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1ma2_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  geom_line(data=ea1sa1mapm_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mapm_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mapm_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH 2")
+  ggtitle("Function of DBH p-model") + scale_y_continuous(limits = c(0,45))
 
-# Biomass changes in LUE with WD level 1
-# Mortality Ratio NSC and Leaf Mass
+# Mortality as a function of C starvation
 ggplot() + 
-  geom_line(data=ea1sa1ma3_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1ma3_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1ma3_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  geom_line(data=ea1sa1mbgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mbgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mbgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH 3")
+  ggtitle("Function of C starvation gs-Leuning") 
 
-# Biomass changes in LUE with WD level 1
-# Mortality Ratio NSC and Leaf Mass
 ggplot() + 
-  geom_line(data=ea1sa1mb_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1mb_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1mb_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  geom_line(data=ea1sa1mbpm_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mbpm_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mbpm_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
+  ggtitle("Function of C starvation p-model") 
 
-# Biomass changes in LUE with WD level 1
-# Mortality Growth rate
+# Mortality as a function of Growth rate
 ggplot() + 
-  geom_line(data=ea1sa1mc2_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1mc2_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1mc2_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  geom_line(data=ea1sa1mcgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mcgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mcgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate")
+  ggtitle("Function of Growth rate gs-Leuning") + scale_y_continuous(limits = c(0,25))
 
-# Biomass changes in LUE with WD level 1
-# Mortality Constant Self-thinning
 ggplot() + 
-  geom_line(data=ea1sa1md_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1md_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1md_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  geom_line(data=ea1sa1mcpm_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mcpm_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mcpm_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Constant Self-thinning")
+  ggtitle("Function of Growth rate p-model") + scale_y_continuous(limits = c(0,25))
 
-```
-
-
-### Run the model for different cases
-
-Run the model for all environmental conditions, species and mortality formulations.
-```{r}
-out <- run_lm3ppa_f_bysite( "ORNL", 
-                            params_siml, 
-                            siteinfo, 
-                            forcing, # ddf_input
-                            params_tile, 
-                            params_species, 
-                            params_soil, 
-                            init_cohort, 
-                            init_soil, 
-                            makecheck = TRUE)
-
-ea3sa1ma_out_hourly_tile <- out$output_hourly_tile
-ea3sa1ma_out_daily_tile <- out$output_daily_tile
-ea3sa1ma_out_daily_cohorts <- out$output_daily_cohorts
-ea3sa1ma_out_annual_tile <- out$output_annual_tile
-ea3sa1ma_out_annual_cohorts <- out$output_annual_cohorts
-
-out$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-out$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = plantC)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-out$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = Density)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-out$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = CAI)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-```
-
-### Write model outputs
-```{r}
-setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(ea3sa1ma_out_hourly_tile,   "ea3sa1ma_out_hourly_tile.csv")
-write.csv(ea3sa1ma_out_daily_tile,    "ea3sa1ma_out_daily_tile.csv")
-write.csv(ea3sa1ma_out_daily_cohorts, "ea3sa1ma_out_daily_cohorts.csv")
-write.csv(ea3sa1ma_out_annual_tile,   "ea3sa1ma_out_annual_tile.csv")
-write.csv(ea3sa1ma_out_annual_cohorts,"ea3sa1ma_out_annual_cohorts.csv")
-
-```
-
-
-### Run the model
-
-Run the model for all the sites specified in the first step.
-```{r}
-out <- run_lm3ppa_f_bysite( "ORNL", 
-                            params_siml, 
-                            siteinfo, 
-                            forcing, # ddf_input
-                            params_tile, 
-                            params_species, 
-                            params_soil, 
-                            init_cohort, 
-                            init_soil, 
-                            makecheck = TRUE)
-
-#save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
-rsofun_out_hourly_tile <- out$output_hourly_tile
-rsofun_out_daily_tile <- out$output_daily_tile
-rsofun_out_daily_cohorts <- out$output_daily_cohorts
-rsofun_out_annual_tile <- out$output_annual_tile
-rsofun_out_annual_cohorts <- out$output_annual_cohorts
-
-rsofun_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  labs(title = "LM3-PPA with gs leuning photosynthesis at ORNL", subtitle = "rsofun output")
-
-rsofun_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = plantC)) +
-  labs(title = "LM3-PPA with gs leuning photosynthesis at ORNL", subtitle = "rsofun output")
-
-rsofun_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = Rauto)) +
-  labs(title = "LM3-PPA with gs leuning photosynthesis at ORNL", subtitle = "rsofun output")
-
-rsofun_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = c_deadtrees)) +
-  labs(title = "LM3-PPA with gs leuning photosynthesis at ORNL", subtitle = "rsofun output")
-
-rsofun_out_annual_cohorts %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = c_deadtrees)) +
-  labs(title = "LM3-PPA with gs leuning photosynthesis at ORNL", subtitle = "rsofun output")
-
-```
-
-```{r}
-setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(rsofun_out_hourly_tile, "rsofun_out_hourly_tile.csv")
-write.csv(rsofun_out_daily_tile,"rsofun_out_daily_tile.csv")
-write.csv(rsofun_out_daily_cohorts,"rsofun_out_daily_cohorts.csv")
-write.csv(rsofun_out_annual_tile,"rsofun_out_annual_tile.csv")
-write.csv(rsofun_out_annual_cohorts,"rsofun_out_annual_cohorts.csv")
-```
-
-Run the model for with the p-model photosynthesis.
-```{r}
-out <- run_lm3ppa_f_bysite( "ORNL", 
-                            params_siml, 
-                            siteinfo, 
-                            forcing, # ddf_input
-                            params_tile, 
-                            params_species, 
-                            params_soil, 
-                            init_cohort, 
-                            init_soil, 
-                            makecheck = TRUE)
-
-#save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
-pmodel_out_hourly_tile <- out$output_hourly_tile
-pmodel_out_daily_tile <- out$output_daily_tile
-pmodel_out_daily_cohorts <- out$output_daily_cohorts
-pmodel_out_annual_tile <- out$output_annual_tile
-pmodel_out_annual_cohorts <- out$output_annual_cohorts
-
-pmodel_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = GPP), color="red") +
-  labs(title = "LM3-PPA with P-model photosynthesis method", subtitle = "rsofun output",
-       x = "Year", y = expression(paste("GPP (Kg C ", m^-2, " ", yr^-1, ") "))) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
-
-pmodel_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = plantC), color="red") +
-  labs(title = "LM3-PPA with P-model photosynthesis method", subtitle = "rsofun output",
-       x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
-
-pmodel_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = Rauto), color="red") +
-  labs(title = "LM3-PPA with P-model photosynthesis", subtitle = "rsofun output",
-       x = "Year", y = expression(paste("Plant respiration (Kg C ", m^-2, " ", yr^-1, ") "))) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
-
-pmodel_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = n_deadtrees)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-pmodel_out_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = c_deadtrees)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-pmodel_out_annual_cohorts %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = n_deadtrees)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-pmodel_out_annual_cohorts %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = c_deadtrees)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-pmodel_out_daily_cohorts %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = leafC)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-```
-
-### Run the model for different cases
-
-Run the model for all environmental conditions, species and mortality formulations.
-```{r}
-out <- run_lm3ppa_f_bysite( "ORNL", 
-                            params_siml, 
-                            siteinfo, 
-                            forcing, # ddf_input
-                            params_tile, 
-                            params_species, 
-                            params_soil, 
-                            init_cohort, 
-                            init_soil, 
-                            makecheck = TRUE)
-
-eb3sa1mc_out_hourly_tile <- out$output_hourly_tile
-eb3sa1mc_out_daily_tile <- out$output_daily_tile
-eb3sa1mc_out_daily_cohorts <- out$output_daily_cohorts
-eb3sa1mc_out_annual_tile <- out$output_annual_tile
-eb3sa1mc_out_annual_cohorts <- out$output_annual_cohorts
-
-out$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-out$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = plantC)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-out$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = Density)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-out$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = CAI)) +
-  labs(title = "LM3-PPA with p-model photosynthesis at ORNL", subtitle = "rsofun output")
-
-```
-
-### Write model outputs
-```{r}
-setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-write.csv(eb3sa1mc_out_hourly_tile,   "eb3sa1mc_out_hourly_tile.csv")
-write.csv(eb3sa1mc_out_daily_tile,    "eb3sa1mc_out_daily_tile.csv")
-write.csv(eb3sa1mc_out_daily_cohorts, "eb3sa1mc_out_daily_cohorts.csv")
-write.csv(eb3sa1mc_out_annual_tile,   "eb3sa1mc_out_annual_tile.csv")
-write.csv(eb3sa1mc_out_annual_cohorts,"eb3sa1mc_out_annual_cohorts.csv")
-```
-
-```{r}
+# Mortality as a function of Self-thinning
 ggplot() + 
-  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea1sa2ma_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea1sa3ma_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
-  scale_color_manual("Levels of Leaf Mass Area at LUE 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  geom_line(data=ea1sa1mdgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mdgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mdgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_classic() 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Growth rate gs-Leuning") 
+
+ggplot() + 
+  geom_line(data=ea1sa1mdpm_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mdpm_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mdpm_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Growth rate p-model") 
+
 ```
 
-### Read model outputs
+#### GPP vs. time
+
+From annual_tile_output: GPP 
+LUE (mol/s/m2)
 ```{r}
-setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-rsofun_out_hourly_tile <- read.csv("rsofun_out_hourly_tile.csv")
-rsofun_out_daily_tile  <- read.csv("rsofun_out_daily_tile.csv")
-rsofun_out_daily_cohorts  <- read.csv("rsofun_out_daily_cohorts.csv")
-rsofun_out_annual_tile  <- read.csv("rsofun_out_annual_tile.csv")
-rsofun_out_annual_cohorts  <- read.csv("rsofun_out_annual_cohorts.csv")
+# Mortality as a function of DBH
+ggplot() + 
+  geom_line(data=ea1sa1magl_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
+  geom_line(data=ea2sa1magl_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
+  geom_line(data=ea3sa1magl_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of DBH gs-Leuning") + scale_y_continuous(limits = c(0,3.5))
+
+ggplot() + 
+  geom_line(data=ea1sa1mapm_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
+  geom_line(data=ea2sa1mapm_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
+  geom_line(data=ea3sa1mapm_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of DBH p-model") + scale_y_continuous(limits = c(0,3.5))
+
+# Mortality as a function of C starvation
+ggplot() + 
+  geom_line(data=ea1sa1mbgl_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
+  geom_line(data=ea2sa1mbgl_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
+  geom_line(data=ea3sa1mbgl_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of C starvation gs-Leuning") 
+
+ggplot() + 
+  geom_line(data=ea1sa1mbpm_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
+  geom_line(data=ea2sa1mbpm_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
+  geom_line(data=ea3sa1mbpm_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of C starvation p-model") 
+
+# Mortality as a function of Growth rate
+ggplot() + 
+  geom_line(data=ea1sa1mcgl_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
+  geom_line(data=ea2sa1mcgl_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
+  geom_line(data=ea3sa1mcgl_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Growth rate gs-Leuning") 
+
+ggplot() + 
+  geom_line(data=ea1sa1mcpm_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
+  geom_line(data=ea2sa1mcpm_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
+  geom_line(data=ea3sa1mcpm_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Growth rate p-model") 
+
+# Mortality as a function of Constant Self-thinning
+ggplot() + 
+  geom_line(data=ea1sa1mdgl_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
+  geom_line(data=ea2sa1mdgl_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
+  geom_line(data=ea3sa1mdgl_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Constant Self-thinning gs-Leuning") 
+
+ggplot() + 
+  geom_line(data=ea1sa1mdpm_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
+  geom_line(data=ea2sa1mdpm_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
+  geom_line(data=ea3sa1mdpm_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Constant Self-thinning p-model") 
+
 ```
 
+#### Self-thinning relationship
+
+From annual_tile_output: QMD and Density12
+LUE (mol/s/m2)
 ```{r}
-setwd("/Users/lmarques/rsofun/Simulations_pmodel")
 
-# Mortality DBH
-ea1sa1ma_out_hourly_tile <- read.csv("ea1sa1ma_out_hourly_tile.csv")
-ea1sa1ma_out_daily_tile  <- read.csv("ea1sa1ma_out_daily_tile.csv")
-ea1sa1ma_out_daily_cohorts  <- read.csv("ea1sa1ma_out_daily_cohorts.csv")
-ea1sa1ma_out_annual_tile  <- read.csv("ea1sa1ma_out_annual_tile.csv")
-ea1sa1ma_out_annual_cohorts  <- read.csv("ea1sa1ma_out_annual_cohorts.csv")
+# Mortality as a function of DBH
 
-ea2sa1ma_out_hourly_tile <- read.csv("ea2sa1ma_out_hourly_tile.csv")
-ea2sa1ma_out_daily_tile  <- read.csv("ea2sa1ma_out_daily_tile.csv")
-ea2sa1ma_out_daily_cohorts  <- read.csv("ea2sa1ma_out_daily_cohorts.csv")
-ea2sa1ma_out_annual_tile  <- read.csv("ea2sa1ma_out_annual_tile.csv")
-ea2sa1ma_out_annual_cohorts  <- read.csv("ea2sa1ma_out_annual_cohorts.csv")
+ggplot() + 
+  geom_point(data=subset(ea1sa1magl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1magl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1magl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of DBH gs-Leuning") 
 
-ea3sa1ma_out_hourly_tile <- read.csv("ea3sa1ma_out_hourly_tile.csv")
-ea3sa1ma_out_daily_tile  <- read.csv("ea3sa1ma_out_daily_tile.csv")
-ea3sa1ma_out_daily_cohorts  <- read.csv("ea3sa1ma_out_daily_cohorts.csv")
-ea3sa1ma_out_annual_tile  <- read.csv("ea3sa1ma_out_annual_tile.csv")
-ea3sa1ma_out_annual_cohorts  <- read.csv("ea3sa1ma_out_annual_cohorts.csv")
+ggplot() + 
+  geom_point(data=subset(ea1sa1mapm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mapm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mapm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of DBH p-model") 
 
-ea1sa2ma_out_hourly_tile <- read.csv("ea1sa2ma_out_hourly_tile.csv")
-ea1sa2ma_out_daily_tile  <- read.csv("ea1sa2ma_out_daily_tile.csv")
-ea1sa2ma_out_daily_cohorts  <- read.csv("ea1sa2ma_out_daily_cohorts.csv")
-ea1sa2ma_out_annual_tile  <- read.csv("ea1sa2ma_out_annual_tile.csv")
-ea1sa2ma_out_annual_cohorts  <- read.csv("ea1sa2ma_out_annual_cohorts.csv")
+# Mortality as a function of C starvation
+ggplot() + 
+  geom_point(data=subset(ea1sa1mbgl_out_annual_tile,year>=500), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mbgl_out_annual_tile,year>=500), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mbgl_out_annual_tile,year>=500), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of C starvation gs-Leuning") 
 
-ea1sa3ma_out_hourly_tile <- read.csv("ea1sa3ma_out_hourly_tile.csv")
-ea1sa3ma_out_daily_tile  <- read.csv("ea1sa3ma_out_daily_tile.csv")
-ea1sa3ma_out_daily_cohorts  <- read.csv("ea1sa3ma_out_daily_cohorts.csv")
-ea1sa3ma_out_annual_tile  <- read.csv("ea1sa3ma_out_annual_tile.csv")
-ea1sa3ma_out_annual_cohorts  <- read.csv("ea1sa3ma_out_annual_cohorts.csv")
+ggplot() + 
+  geom_point(data=subset(ea1sa1mbpm_out_annual_tile,year>=200), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mbpm_out_annual_tile,year>=200), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mbpm_out_annual_tile,year>=200), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of C starvation p-model") 
 
-eb2sa1ma_out_hourly_tile <- read.csv("eb2sa1ma_out_hourly_tile.csv")
-eb2sa1ma_out_daily_tile  <- read.csv("eb2sa1ma_out_daily_tile.csv")
-eb2sa1ma_out_daily_cohorts  <- read.csv("eb2sa1ma_out_daily_cohorts.csv")
-eb2sa1ma_out_annual_tile  <- read.csv("eb2sa1ma_out_annual_tile.csv")
-eb2sa1ma_out_annual_cohorts  <- read.csv("eb2sa1ma_out_annual_cohorts.csv")
+# Mortality as a function of Growth rate
+ggplot() + 
+  geom_point(data=subset(ea1sa1mcgl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mcgl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mcgl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Growth rate gs-Leuning") 
 
-eb3sa1ma_out_hourly_tile <- read.csv("eb3sa1ma_out_hourly_tile.csv")
-eb3sa1ma_out_daily_tile  <- read.csv("eb3sa1ma_out_daily_tile.csv")
-eb3sa1ma_out_daily_cohorts  <- read.csv("eb3sa1ma_out_daily_cohorts.csv")
-eb3sa1ma_out_annual_tile  <- read.csv("eb3sa1ma_out_annual_tile.csv")
-eb3sa1ma_out_annual_cohorts  <- read.csv("eb3sa1ma_out_annual_cohorts.csv")
+ggplot() + 
+  geom_point(data=subset(ea1sa1mcpm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mcpm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mcpm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Growth rate p-model") 
 
-ea1sb2ma_out_hourly_tile <- read.csv("ea1sb2ma_out_hourly_tile.csv")
-ea1sb2ma_out_daily_tile  <- read.csv("ea1sb2ma_out_daily_tile.csv")
-ea1sb2ma_out_daily_cohorts  <- read.csv("ea1sb2ma_out_daily_cohorts.csv")
-ea1sb2ma_out_annual_tile  <- read.csv("ea1sb2ma_out_annual_tile.csv")
-ea1sb2ma_out_annual_cohorts  <- read.csv("ea1sb2ma_out_annual_cohorts.csv")
+# Mortality as a function of Self-thinning
+ggplot() + 
+  geom_point(data=subset(ea1sa1mdgl_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mdgl_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mdgl_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Constant Self-thinning gs-Leuning") 
 
-ea1sb3ma_out_hourly_tile <- read.csv("ea1sb3ma_out_hourly_tile.csv")
-ea1sb3ma_out_daily_tile  <- read.csv("ea1sb3ma_out_daily_tile.csv")
-ea1sb3ma_out_daily_cohorts  <- read.csv("ea1sb3ma_out_daily_cohorts.csv")
-ea1sb3ma_out_annual_tile  <- read.csv("ea1sb3ma_out_annual_tile.csv")
-ea1sb3ma_out_annual_cohorts  <- read.csv("ea1sb3ma_out_annual_cohorts.csv")
+ggplot() + 
+  geom_point(data=subset(ea1sa1mdpm_out_annual_tile,year>=21), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mdpm_out_annual_tile,year>=20), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mdpm_out_annual_tile,year>=20), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Constant Self-thinning p-model") 
 
-# Mortality Ratio NSC Leaf Mass
-setwd("/Users/lmarques/rsofun/Simulations_pmodel")
+```
 
-ea1sa1mb_out_hourly_tile <- read.csv("ea1sa1mb_out_hourly_tile.csv")
-ea1sa1mb_out_daily_tile  <- read.csv("ea1sa1mb_out_daily_tile.csv")
-ea1sa1mb_out_daily_cohorts  <- read.csv("ea1sa1mb_out_daily_cohorts.csv")
-ea1sa1mb_out_annual_tile  <- read.csv("ea1sa1mb_out_annual_tile.csv")
-ea1sa1mb_out_annual_cohorts  <- read.csv("ea1sa1mb_out_annual_cohorts.csv")
+## gganimate
 
-ea2sa1mb_out_hourly_tile <- read.csv("ea2sa1mb_out_hourly_tile.csv")
-ea2sa1mb_out_daily_tile  <- read.csv("ea2sa1mb_out_daily_tile.csv")
-ea2sa1mb_out_daily_cohorts  <- read.csv("ea2sa1mb_out_daily_cohorts.csv")
-ea2sa1mb_out_annual_tile  <- read.csv("ea2sa1mb_out_annual_tile.csv")
-ea2sa1mb_out_annual_cohorts  <- read.csv("ea2sa1mb_out_annual_cohorts.csv")
+```{r}
+library(gganimate)
 
-ea3sa1mb_out_hourly_tile <- read.csv("ea3sa1mb_out_hourly_tile.csv")
-ea3sa1mb_out_daily_tile  <- read.csv("ea3sa1mb_out_daily_tile.csv")
-ea3sa1mb_out_daily_cohorts  <- read.csv("ea3sa1mb_out_daily_cohorts.csv")
-ea3sa1mb_out_annual_tile  <- read.csv("ea3sa1mb_out_annual_tile.csv")
-ea3sa1mb_out_annual_cohorts  <- read.csv("ea3sa1mb_out_annual_cohorts.csv")
+# Mortality as a function of DBH
+data1 <- rbind(ea1sa1magl_out_annual_tile, ea2sa1magl_out_annual_tile, ea3sa1magl_out_annual_tile)
 
-ea1sa2mb_out_hourly_tile <- read.csv("ea1sa2mb_out_hourly_tile.csv")
-ea1sa2mb_out_daily_tile  <- read.csv("ea1sa2mb_out_daily_tile.csv")
-ea1sa2mb_out_daily_cohorts  <- read.csv("ea1sa2mb_out_daily_cohorts.csv")
-ea1sa2mb_out_annual_tile  <- read.csv("ea1sa2mb_out_annual_tile.csv")
-ea1sa2mb_out_annual_cohorts  <- read.csv("ea1sa2mb_out_annual_cohorts.csv")
+p <- ggplot() + 
+  geom_point(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
+  ggtitle("Mortality as a function of size") + scale_x_continuous(limits = c(-1.5,-0.1))
 
-ea1sa3mb_out_hourly_tile <- read.csv("ea1sa3mb_out_hourly_tile.csv")
-ea1sa3mb_out_daily_tile  <- read.csv("ea1sa3mb_out_daily_tile.csv")
-ea1sa3mb_out_daily_cohorts  <- read.csv("ea1sa3mb_out_daily_cohorts.csv")
-ea1sa3mb_out_annual_tile  <- read.csv("ea1sa3mb_out_annual_tile.csv")
-ea1sa3mb_out_annual_cohorts  <- read.csv("ea1sa3mb_out_annual_cohorts.csv")
+p + transition_time(Density12) + shadow_mark(alpha = 0.3, size = 0.5)
 
-eb2sa1mb_out_hourly_tile <- read.csv("eb2sa1mb_out_hourly_tile.csv")
-eb2sa1mb_out_daily_tile  <- read.csv("eb2sa1mb_out_daily_tile.csv")
-eb2sa1mb_out_daily_cohorts  <- read.csv("eb2sa1mb_out_daily_cohorts.csv")
-eb2sa1mb_out_annual_tile  <- read.csv("eb2sa1mb_out_annual_tile.csv")
-eb2sa1mb_out_annual_cohorts  <- read.csv("eb2sa1mb_out_annual_cohorts.csv")
+p + transition_states(LevelLUE,transition_length = 2,state_length = 2) +
+  enter_fly(y_loc = 0)
 
-eb3sa1mb_out_hourly_tile <- read.csv("eb3sa1mb_out_hourly_tile.csv")
-eb3sa1mb_out_daily_tile  <- read.csv("eb3sa1mb_out_daily_tile.csv")
-eb3sa1mb_out_daily_cohorts  <- read.csv("eb3sa1mb_out_daily_cohorts.csv")
-eb3sa1mb_out_annual_tile  <- read.csv("eb3sa1mb_out_annual_tile.csv")
-eb3sa1mb_out_annual_cohorts  <- read.csv("eb3sa1mb_out_annual_cohorts.csv")
+q <- ggplot() + 
+  geom_line(data=subset(data1), aes(x=year, y=plantC, color=as.factor(LevelLUE))) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE",x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
+  ggtitle("Mortality as a function of size") 
 
-ea1sb2mb_out_hourly_tile <- read.csv("ea1sb2mb_out_hourly_tile.csv")
-ea1sb2mb_out_daily_tile  <- read.csv("ea1sb2mb_out_daily_tile.csv")
-ea1sb2mb_out_daily_cohorts  <- read.csv("ea1sb2mb_out_daily_cohorts.csv")
-ea1sb2mb_out_annual_tile  <- read.csv("ea1sb2mb_out_annual_tile.csv")
-ea1sb2mb_out_annual_cohorts  <- read.csv("ea1sb2mb_out_annual_cohorts.csv")
-
-ea1sb3mb_out_hourly_tile <- read.csv("ea1sb3mb_out_hourly_tile.csv")
-ea1sb3mb_out_daily_tile  <- read.csv("ea1sb3mb_out_daily_tile.csv")
-ea1sb3mb_out_daily_cohorts  <- read.csv("ea1sb3mb_out_daily_cohorts.csv")
-ea1sb3mb_out_annual_tile  <- read.csv("ea1sb3mb_out_annual_tile.csv")
-ea1sb3mb_out_annual_cohorts  <- read.csv("ea1sb3mb_out_annual_cohorts.csv")
-
-# Mortality Growth rate
-setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-
-ea1sa1mc_out_hourly_tile <- read.csv("ea1sa1mc_out_hourly_tile.csv")
-ea1sa1mc_out_daily_tile  <- read.csv("ea1sa1mc_out_daily_tile.csv")
-ea1sa1mc_out_daily_cohorts  <- read.csv("ea1sa1mc_out_daily_cohorts.csv")
-ea1sa1mc_out_annual_tile  <- read.csv("ea1sa1mc_out_annual_tile.csv")
-ea1sa1mc_out_annual_cohorts  <- read.csv("ea1sa1mc_out_annual_cohorts.csv")
-
-ea2sa1mc_out_hourly_tile <- read.csv("ea2sa1mc_out_hourly_tile.csv")
-ea2sa1mc_out_daily_tile  <- read.csv("ea2sa1mc_out_daily_tile.csv")
-ea2sa1mc_out_daily_cohorts  <- read.csv("ea2sa1mc_out_daily_cohorts.csv")
-ea2sa1mc_out_annual_tile  <- read.csv("ea2sa1mc_out_annual_tile.csv")
-ea2sa1mc_out_annual_cohorts  <- read.csv("ea2sa1mc_out_annual_cohorts.csv")
-
-ea3sa1mc_out_hourly_tile <- read.csv("ea3sa1mc_out_hourly_tile.csv")
-ea3sa1mc_out_daily_tile  <- read.csv("ea3sa1mc_out_daily_tile.csv")
-ea3sa1mc_out_daily_cohorts  <- read.csv("ea3sa1mc_out_daily_cohorts.csv")
-ea3sa1mc_out_annual_tile  <- read.csv("ea3sa1mc_out_annual_tile.csv")
-ea3sa1mc_out_annual_cohorts  <- read.csv("ea3sa1mc_out_annual_cohorts.csv")
-
-ea1sa2mc_out_hourly_tile <- read.csv("ea1sa2mc_out_hourly_tile.csv")
-ea1sa2mc_out_daily_tile  <- read.csv("ea1sa2mc_out_daily_tile.csv")
-ea1sa2mc_out_daily_cohorts  <- read.csv("ea1sa2mc_out_daily_cohorts.csv")
-ea1sa2mc_out_annual_tile  <- read.csv("ea1sa2mc_out_annual_tile.csv")
-ea1sa2mc_out_annual_cohorts  <- read.csv("ea1sa2mc_out_annual_cohorts.csv")
-
-ea1sa3mc_out_hourly_tile <- read.csv("ea1sa3mc_out_hourly_tile.csv")
-ea1sa3mc_out_daily_tile  <- read.csv("ea1sa3mc_out_daily_tile.csv")
-ea1sa3mc_out_daily_cohorts  <- read.csv("ea1sa3mc_out_daily_cohorts.csv")
-ea1sa3mc_out_annual_tile  <- read.csv("ea1sa3mc_out_annual_tile.csv")
-ea1sa3mc_out_annual_cohorts  <- read.csv("ea1sa3mc_out_annual_cohorts.csv")
-
-eb2sa1mc_out_hourly_tile <- read.csv("eb2sa1mc_out_hourly_tile.csv")
-eb2sa1mc_out_daily_tile  <- read.csv("eb2sa1mc_out_daily_tile.csv")
-eb2sa1mc_out_daily_cohorts  <- read.csv("eb2sa1mc_out_daily_cohorts.csv")
-eb2sa1mc_out_annual_tile  <- read.csv("eb2sa1mc_out_annual_tile.csv")
-eb2sa1mc_out_annual_cohorts  <- read.csv("eb2sa1mc_out_annual_cohorts.csv")
-
-eb3sa1mc_out_hourly_tile <- read.csv("eb3sa1mc_out_hourly_tile.csv")
-eb3sa1mc_out_daily_tile  <- read.csv("eb3sa1mc_out_daily_tile.csv")
-eb3sa1mc_out_daily_cohorts  <- read.csv("eb3sa1mc_out_daily_cohorts.csv")
-eb3sa1mc_out_annual_tile  <- read.csv("eb3sa1mc_out_annual_tile.csv")
-eb3sa1mc_out_annual_cohorts  <- read.csv("eb3sa1mc_out_annual_cohorts.csv")
-
-ea1sb2mc_out_hourly_tile <- read.csv("ea1sb2mc_out_hourly_tile.csv")
-ea1sb2mc_out_daily_tile  <- read.csv("ea1sb2mc_out_daily_tile.csv")
-ea1sb2mc_out_daily_cohorts  <- read.csv("ea1sb2mc_out_daily_cohorts.csv")
-ea1sb2mc_out_annual_tile  <- read.csv("ea1sb2mc_out_annual_tile.csv")
-ea1sb2mc_out_annual_cohorts  <- read.csv("ea1sb2mc_out_annual_cohorts.csv")
-
-ea1sb3mc_out_hourly_tile <- read.csv("ea1sb3mc_out_hourly_tile.csv")
-ea1sb3mc_out_daily_tile  <- read.csv("ea1sb3mc_out_daily_tile.csv")
-ea1sb3mc_out_daily_cohorts  <- read.csv("ea1sb3mc_out_daily_cohorts.csv")
-ea1sb3mc_out_annual_tile  <- read.csv("ea1sb3mc_out_annual_tile.csv")
-ea1sb3mc_out_annual_cohorts  <- read.csv("ea1sb3mc_out_annual_cohorts.csv")
-
-setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-
-# Mortality Constant Self-thinning
-ea1sa1md_out_hourly_tile <- read.csv("ea1sa1md_out_hourly_tile.csv")
-ea1sa1md_out_daily_tile  <- read.csv("ea1sa1md_out_daily_tile.csv")
-ea1sa1md_out_daily_cohorts  <- read.csv("ea1sa1md_out_daily_cohorts.csv")
-ea1sa1md_out_annual_tile  <- read.csv("ea1sa1md_out_annual_tile.csv")
-ea1sa1md_out_annual_cohorts  <- read.csv("ea1sa1md_out_annual_cohorts.csv")
-
-ea2sa1md_out_hourly_tile <- read.csv("ea2sa1md_out_hourly_tile.csv")
-ea2sa1md_out_daily_tile  <- read.csv("ea2sa1md_out_daily_tile.csv")
-ea2sa1md_out_daily_cohorts  <- read.csv("ea2sa1md_out_daily_cohorts.csv")
-ea2sa1md_out_annual_tile  <- read.csv("ea2sa1md_out_annual_tile.csv")
-ea2sa1md_out_annual_cohorts  <- read.csv("ea2sa1md_out_annual_cohorts.csv")
-
-ea3sa1md_out_hourly_tile <- read.csv("ea3sa1md_out_hourly_tile.csv")
-ea3sa1md_out_daily_tile  <- read.csv("ea3sa1md_out_daily_tile.csv")
-ea3sa1md_out_daily_cohorts  <- read.csv("ea3sa1md_out_daily_cohorts.csv")
-ea3sa1md_out_annual_tile  <- read.csv("ea3sa1md_out_annual_tile.csv")
-ea3sa1md_out_annual_cohorts  <- read.csv("ea3sa1md_out_annual_cohorts.csv")
-
-ea1sa2md_out_hourly_tile <- read.csv("ea1sa2md_out_hourly_tile.csv")
-ea1sa2md_out_daily_tile  <- read.csv("ea1sa2md_out_daily_tile.csv")
-ea1sa2md_out_daily_cohorts  <- read.csv("ea1sa2md_out_daily_cohorts.csv")
-ea1sa2md_out_annual_tile  <- read.csv("ea1sa2md_out_annual_tile.csv")
-ea1sa2md_out_annual_cohorts  <- read.csv("ea1sa2md_out_annual_cohorts.csv")
-
-ea1sa3md_out_hourly_tile <- read.csv("ea1sa3md_out_hourly_tile.csv")
-ea1sa3md_out_daily_tile  <- read.csv("ea1sa3md_out_daily_tile.csv")
-ea1sa3md_out_daily_cohorts  <- read.csv("ea1sa3md_out_daily_cohorts.csv")
-ea1sa3md_out_annual_tile  <- read.csv("ea1sa3md_out_annual_tile.csv")
-ea1sa3md_out_annual_cohorts  <- read.csv("ea1sa3md_out_annual_cohorts.csv")
-
-setwd("/Users/lmarques/rsofun/Simulations_pmodel")
-
-eb2sa1md_out_hourly_tile <- read.csv("eb2sa1md_out_hourly_tile.csv")
-eb2sa1md_out_daily_tile  <- read.csv("eb2sa1md_out_daily_tile.csv")
-eb2sa1md_out_daily_cohorts  <- read.csv("eb2sa1md_out_daily_cohorts.csv")
-eb2sa1md_out_annual_tile  <- read.csv("eb2sa1md_out_annual_tile.csv")
-eb2sa1md_out_annual_cohorts  <- read.csv("eb2sa1md_out_annual_cohorts.csv")
-
-eb3sa1md_out_hourly_tile <- read.csv("eb3sa1md_out_hourly_tile.csv")
-eb3sa1md_out_daily_tile  <- read.csv("eb3sa1md_out_daily_tile.csv")
-eb3sa1md_out_daily_cohorts  <- read.csv("eb3sa1md_out_daily_cohorts.csv")
-eb3sa1md_out_annual_tile  <- read.csv("eb3sa1md_out_annual_tile.csv")
-eb3sa1md_out_annual_cohorts  <- read.csv("eb3sa1md_out_annual_cohorts.csv")
-
-ea1sb2md_out_hourly_tile <- read.csv("ea1sb2md_out_hourly_tile.csv")
-ea1sb2md_out_daily_tile  <- read.csv("ea1sb2md_out_daily_tile.csv")
-ea1sb2md_out_daily_cohorts  <- read.csv("ea1sb2md_out_daily_cohorts.csv")
-ea1sb2md_out_annual_tile  <- read.csv("ea1sb2md_out_annual_tile.csv")
-ea1sb2md_out_annual_cohorts  <- read.csv("ea1sb2md_out_annual_cohorts.csv")
-
-ea1sb3md_out_hourly_tile <- read.csv("ea1sb3md_out_hourly_tile.csv")
-ea1sb3md_out_daily_tile  <- read.csv("ea1sb3md_out_daily_tile.csv")
-ea1sb3md_out_daily_cohorts  <- read.csv("ea1sb3md_out_daily_cohorts.csv")
-ea1sb3md_out_annual_tile  <- read.csv("ea1sb3md_out_annual_tile.csv")
-ea1sb3md_out_annual_cohorts  <- read.csv("ea1sb3md_out_annual_cohorts.csv")
+q + transition_reveal(year)
 
 ```
 
@@ -889,9 +935,9 @@ ea1sb1md_out_annual_cohorts <- ea1sa1md_out_annual_cohorts
 
 ### Aggregating cohorts across years and cohorts
 ```{r}
-ea1sa1ma_out_annual_tile <- ea1sa1ma_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sa1ma_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-ea2sa1ma_out_annual_tile <- ea2sa1ma_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-ea3sa1ma_out_annual_tile <- ea3sa1ma_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea3sa1ma_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sa1magl_out_annual_tile <- ea1sa1magl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sa1magl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1magl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1magl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea2sa1magl_out_annual_tile <- ea2sa1magl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea2sa1magl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1magl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1magl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea3sa1magl_out_annual_tile <- ea3sa1magl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea3sa1magl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1magl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1magl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb1sa1ma_out_annual_tile <- eb1sa1ma_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(eb1sa1ma_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb2sa1ma_out_annual_tile <- eb2sa1ma_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(eb2sa1ma_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb3sa1ma_out_annual_tile <- eb3sa1ma_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(eb3sa1ma_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
@@ -916,6 +962,11 @@ ea1sb3mb_out_annual_tile <- ea1sb3mb_out_annual_tile %>% mutate(Mortality = rep(
 ea1sa1mc_out_annual_tile <- ea1sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea1sa1mc_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1mc_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1mc_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 ea2sa1mc_out_annual_tile <- ea2sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea2sa1mc_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1mc_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1mc_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 ea3sa1mc_out_annual_tile <- ea3sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea3sa1mc_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1mc_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1mc_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+
+ea1sa1mcD_out_annual_tile <- ea1sa1mcD_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea1sa1mcD_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1mcD_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1mcD_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea2sa1mcD_out_annual_tile <- ea2sa1mcD_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea2sa1mcD_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1mcD_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1mcD_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea3sa1mcD_out_annual_tile <- ea3sa1mcD_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(ea3sa1mcD_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1mcD_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1mcD_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+
 eb1sa1mc_out_annual_tile <- eb1sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(eb1sa1mc_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb2sa1mc_out_annual_tile <- eb2sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(eb2sa1mc_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(2, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 eb3sa1mc_out_annual_tile <- eb3sa1mc_out_annual_tile %>% mutate(Mortality = rep("Growth rate", dim(eb3sa1mc_out_annual_tile)[1])) %>% mutate(LevelPAR = rep(3, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1ma_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
@@ -1237,6 +1288,24 @@ for (i in 1:14) {
 
 ```
 
+## Calibration
+### PROFOUND data
+```{r}
+library(ProfoundData)
+
+dbfile <- downloadDatabase(location = tempdir())
+setDB(dbfile)
+getDB()
+
+downloadDatabase(location = NULL) # Download the dataset as a zip that needs to be unzip manually
+
+sites <- getData(dataset = "SITES")
+data <- getData(dataset ="SOIL", site = "soro", collapse = FALSE)
+PR_Stand_data <- getData(dataset ="STAND", site ="solling_spruce", species = "Picea abies")
+PR_Tree_data <- getData(dataset ="TREE", site ="solling_spruce", species = "Picea abies")
+
+```
+
 ## Exploring relationships and plotting
 
 #### Stand develop: Stand biomass vs. time
@@ -1255,7 +1324,7 @@ ggplot() +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
+  ggtitle("Mortality as a function of size") + scale_y_continuous(limits = c(0,42))
 
 # Biomass changes in LUE with WD level 1
 # Mortality Ratio NSC and Leaf Mass
@@ -1277,7 +1346,18 @@ ggplot() +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate")
+  ggtitle("Mortality as a function of growth rate") + scale_y_continuous(limits = c(0,42))
+
+# Biomass changes in LUE with WD level 1
+# Mortality Growth rate
+ggplot() + 
+  geom_line(data=ea1sa1mcD_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1mcD_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1mcD_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality formulation Growth rate (in terms of dDBH)")
 
 # Biomass changes in LUE with WD level 1
 # Mortality Constant Self-thinning
@@ -1473,7 +1553,7 @@ ggplot() +
 From annual_tile_output: PlanC (Biomass)
 
 ##### LUE (mol/s/m2)
-```{r}
+```{r, fig.width = 10, fig.height = 4}
 
 # Mortality DBH
 ggplot() + 
@@ -2484,13 +2564,33 @@ From new annual_tile_output
 ```{r}
 
 ggplot() + 
-  geom_point(data=subset(ea1sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
-  geom_point(data=subset(ea2sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
-  geom_point(data=subset(ea3sa1md_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  geom_point(data=subset(ea1sa1ma_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1ma_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1ma_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   ggtitle("Mortality formulation Growth rate")
+
+# Only one site with geom_smooth
+data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile)
+ggplot() + 
+  geom_point(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
+  geom_smooth(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
+  ggtitle("Mortality as a function of size") + scale_x_continuous(limits = c(-1.5,-0.1))
+
+# Only one site with geom_smooth
+data1 <- rbind(ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile)
+ggplot() + 
+  geom_point(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
+  geom_smooth(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
+  ggtitle("Mortality as a function of growth rate") + scale_x_continuous(limits = c(-2.2,-0.6))
 
 # Plots together
 
@@ -3089,7 +3189,7 @@ Todo:
 ##### LUE with Age max and dbh for oldest cohort (age max)
 ##### Same species at different sites (differing by LUE, growing season length, PAR)
 
-```{r, fig.width = 8, fig.height = 4}
+```{r, fig.width = 10, fig.height = 4}
 # Volume/Age
 ea1sa1ma_out_annual_tileMaxAgg <- ea1sa1ma_out_annual_tile[500:1500,] %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), sdmaxAge=sd(MaxAge,na.rm=T),
                                   MaxVolume_MaxAge_mean=mean(MaxVolume_MaxAge,na.rm=T), sdMaxVolume_MaxAge=sd(MaxVolume_MaxAge,na.rm=T),
@@ -3117,9 +3217,10 @@ geom_point(data=ea3sa1ma_out_annual_tileMaxAgg, aes(x=MaxVolume_MaxAge_mean, y=m
 # Facet wrap
 data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
                ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
-               ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile)
+               ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
+               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
 
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate"))
+data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
 
 data1MAxAgg <- data1 %>% filter(year>=1300) %>% group_by(Mortality,LevelLUE) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), sdmaxAge=sd(MaxAge,na.rm=T),
                                   MaxVolume_MaxAge_mean=mean(MaxVolume_MaxAge,na.rm=T), sdMaxVolume_MaxAge=sd(MaxVolume_MaxAge,na.rm=T),
@@ -3132,7 +3233,7 @@ ggplot() +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
   labs(col="Levels of LUE",x = expression(paste("Growth rate (Volume ",age^-1,  ") ")), y = "Longevity") +  
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
-  facet_wrap(~ Mortality, ncol=3)
+  facet_wrap(~ Mortality, ncol=4)
 
 ggplot() + 
   geom_point(data=data1MAxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color=as.factor(LevelLUE))) +
@@ -3141,7 +3242,7 @@ ggplot() +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
   labs(col="Levels of LUE",x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
-  facet_wrap(~ Mortality, ncol=3)
+  facet_wrap(~ Mortality, ncol=4)
 ```
 
 ##### Radiation with Age max
