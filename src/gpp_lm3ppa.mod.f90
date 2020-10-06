@@ -279,7 +279,6 @@ contains
             ! cc%resl    = cc%An_cl              * mol_C * myinterface%step_seconds ! kgC tree-1 step-1
             ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * myinterface%step_seconds ! kgC step-1 tree-1
             !===============================
-
             out_pmodel = pmodel( &
                                 fapar          = fapar_tree, &
                                 ppfd           = f_light(layer) * forcing%PAR * 1.0e-6, &    ! required in mol m-2 s-1
