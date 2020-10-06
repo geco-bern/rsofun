@@ -670,7 +670,7 @@ contains
     integer :: i
     integer :: i_crit
     real :: dDBH
-    real :: CAI_max = 1.1 ! This value can be adjusted!
+    real :: CAI_max = 1.7 ! This value can be adjusted! ! Tried before 1.1
     real :: BAL, dVol
     real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
@@ -689,7 +689,7 @@ contains
         print*, "CAI_max, CAI", CAI_max, vegn%CAI 
 
         ! relayer cohorts: cohorts must be ordered by height after this, whith cohort(1) being the longest
-        ! call relayer_cohorts( vegn )
+        call relayer_cohorts( vegn )
         ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
 
         ! xxx check whether cohorts are ranked w.r.t. height
@@ -705,7 +705,8 @@ contains
           if (i==vegn%n_cohorts) then ! if (i>1) then
             cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
           else
-            cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
+            ! cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
+            cai_partial(i) = sum(cai_partial(i+1:vegn%n_cohorts)) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
           end if
         end do
         print*, "cai_partial", cai_partial(:)
