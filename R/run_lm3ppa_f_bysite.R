@@ -150,12 +150,16 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       K1           = as.numeric(params_tile$K1),
       K2           = as.numeric(params_tile$K2),
       K_nitrogen   = as.numeric(params_tile$K_nitrogen),
-      etaN         = as.numeric(params_tile$etaN),
       MLmixRatio   = as.numeric(params_tile$MLmixRatio),
+      etaN         = as.numeric(params_tile$etaN),
+      LMAmin       = as.numeric(params_tile$LMAmin),
+      fsc_fine     = as.numeric(params_tile$fsc_fine),
+      fsc_wood     = as.numeric(params_tile$fsc_wood),
+      GR_factor    = as.numeric(params_tile$GR_factor),
       l_fract      = as.numeric(params_tile$l_fract),
       retransN     = as.numeric(params_tile$retransN),
-      f_N_add      = as.numeric(params_tile$f_N_add),
       f_initialBSW = as.numeric(params_tile$f_initialBSW),
+      f_N_add      = as.numeric(params_tile$f_N_add),
 
       ## Species-specific parameters
       params_species = as.matrix(params_species),

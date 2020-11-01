@@ -21,13 +21,16 @@ module md_interface_lm3ppa
     real   :: K1
     real   :: K2
     real   :: K_nitrogen
-    real   :: etaN
     real   :: MLmixRatio
+    real   :: etaN
+    real   :: LMAmin
+    real   :: fsc_fine
+    real   :: fsc_wood
+    real   :: GR_factor
     real   :: l_fract
     real   :: retransN
-    real   :: f_N_add
     real   :: f_initialBSW
-    real   :: LMAmin
+    real   :: f_N_add
   end type paramstype_tile
   
   type paramstype_species

@@ -2134,14 +2134,17 @@ contains
     ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
     K1          = myinterface%params_tile%K1  
     K2          = myinterface%params_tile%K2
-    K_nitrogen  = myinterface%params_tile%K_nitrogen   
-    etaN        = myinterface%params_tile%etaN         
-    MLmixRatio  = myinterface%params_tile%MLmixRatio   
+    K_nitrogen  = myinterface%params_tile%K_nitrogen  
+    MLmixRatio  = myinterface%params_tile%MLmixRatio    
+    etaN        = myinterface%params_tile%etaN  
+    LMAmin      = myinterface%params_tile%LMAmin   
+    fsc_fine    = myinterface%params_tile%fsc_fine                
+    fsc_wood    = myinterface%params_tile%fsc_wood                
+    GR_factor   = myinterface%params_tile%GR_factor                
     l_fract     = myinterface%params_tile%l_fract      
     retransN    = myinterface%params_tile%retransN     
-    ! fNSNmax     = myinterface%params_tile%fNSNmax      
-    ! f_N_add     = myinterface%params_tile%f_N_add      
     f_initialBSW= myinterface%params_tile%f_initialBSW 
+    f_N_add     = myinterface%params_tile%f_N_add  !xxx
 
     !  Read parameters from the parameter file (namelist)
     if (read_from_parameter_file) then
@@ -2178,11 +2181,11 @@ contains
       vegn%previousN    = vegn%mineralN
       !Soil water
       ! Parameters
-      vegn%soiltype = myinterface%params_tile%soiltype    ! soiltype
-      vegn%FLDCAP = myinterface%params_tile%FLDCAP  !FLDCAP
-      vegn%WILTPT = myinterface%params_tile%WILTPT  ! WILTPT
+      vegn%soiltype = myinterface%params_tile%soiltype    
+      vegn%FLDCAP = myinterface%params_tile%FLDCAP  
+      vegn%WILTPT = myinterface%params_tile%WILTPT  
       ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
-      vegn%wcl = myinterface%params_tile%FLDCAP  !FLDCAP
+      vegn%wcl = myinterface%params_tile%FLDCAP  
       ! Update soil water
       vegn%SoilWater = 0.0
       do i=1, max_lev

@@ -32,7 +32,7 @@ Now specify the simulation parameters that are identical for all site-scale simu
 params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800, #1793,
-      recycle               = 1, # 9 or 11
+      recycle               = 1, # 9 or 11 changed to 1 when aggregating forcing into 1 year
       firstyeartrend        = 1998,
       nyeartrend            = 1, #9 or 11 (longer transient years)
       outputhourly          = TRUE,
@@ -41,7 +41,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -51,19 +51,22 @@ params_siml <- list(
 
 ```{r}
 params_tile <- list(
-  soiltype     = 3,    # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
-  FLDCAP       = 0.4,  # soil property: field capacity 
-  WILTPT       = 0.05, # soil property: wilting point
-  K1           = 2.0,  # turnover rate of fast SOM per year
-  K2           = 0.1,  # turnover rate of slow SOM per year
-  K_nitrogen   = 0.0,  # mineral Nitrogen turnover rate
-  etaN         = 0.0,  # loss rate with runoff
-  MLmixRatio   = 0.6,  # the ratio of C and N returned to litters from microbes
-  l_fract      = 0.0,  # fraction of the carbon retained after leaf drop
-  retransN     = 0.0,  # retranslocation coefficient of Nitrogen
-  f_N_add      = 0.02, # re-fill of N for sapwood
-  f_initialBSW = 0.005
-  #LMAmin       = 0.02
+  soiltype     = 3,     # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
+  FLDCAP       = 0.4,   # soil property: field capacity 
+  WILTPT       = 0.05,  # soil property: wilting point
+  K1           = 2.0,   # turnover rate of fast SOM per year
+  K2           = 0.05,  # turnover rate of slow SOM per year
+  K_nitrogen   = 8.0,   # mineral Nitrogen turnover rate
+  MLmixRatio   = 0.8,   # the ratio of C and N returned to litters from microbes
+  etaN         = 0.025, # loss rate with runoff
+  LMAmin       = 0.02,  # minimum LMA, boundary condition
+  fsc_fine     = 1.0,   # fraction of fast turnover carbon in fine biomass
+  fsc_wood     = 0.0,   # fraction of fast turnover carbon in wood biomass
+  GR_factor    = 0.33,  # growth respiration factor
+  l_fract      = 0.0,   # fraction of the carbon retained after leaf drop
+  retransN     = 0.0,   # retranslocation coefficient of Nitrogen
+  f_initialBSW = 0.2,
+  f_N_add      = 0.02   # re-fill of N for sapwood
   )
 
 ```
@@ -156,13 +159,6 @@ df_soiltexture <- bind_rows(
 
 ### Get input
 
-Get the input from the nice weird looking file with half-hourly data.
-
-The file has the following variables (units):
-
- Year  DOY  Hour  T_air          Q_air          Wind_speed      Precip          Pressure        R_global_in      R_longwave_in   CO2
-                      K          kg/kg          m/s     kg_H2O/m2/s               pa               W/m2            W/m2            ppm     
-
 ```{r}
 forcing <- read_delim( paste0(path.package("rsofun"), "/extdata/ORNL_forcing.txt"), col_names = TRUE, delim = "\t") %>% 
   mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
@@ -223,12 +219,16 @@ out <- run_lm3ppa_f_bysite( "ORNL",
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
-  labs(title = "LM3-PPA with gs-leuning photosynthesis at ORNL", subtitle = "rsofun output")
+  theme_classic()+labs(x = "Year", y = "GPP")
 
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
-  labs(title = "LM3-PPA with gs-leuning photosynthesis at ORNL", subtitle = "rsofun output")
+  theme_classic()+labs(x = "Year", y = "plantC")
+
+out$output_annual_tile %>% 
+  ggplot() + geom_line(aes(x = year, y = CAI)) +
+  theme_classic()+labs(x = "Year", y = "CAI")
 
 ```
 
@@ -855,11 +855,11 @@ library(gganimate)
 data1 <- rbind(ea1sa1magl_out_annual_tile, ea2sa1magl_out_annual_tile, ea3sa1magl_out_annual_tile)
 
 p <- ggplot() + 
-  geom_point(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
+  geom_point(data=data1, aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
-  ggtitle("Mortality as a function of size") + scale_x_continuous(limits = c(-1.5,-0.1))
+  ggtitle("Mortality as a function of size") + scale_x_continuous(limits = c(-2.5,-0.1))
 
 p + transition_time(Density12) + shadow_mark(alpha = 0.3, size = 0.5)
 

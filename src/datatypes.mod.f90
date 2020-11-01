@@ -377,28 +377,28 @@ module datatypes
   type(soil_pars_type), save :: soilpars(n_dim_soil_types) ! soil parameters
   integer :: MaxCohortID = 0
 
-  ! Constants:
+  ! Constants: params_tile in R:
   ! Soil water properties
-  real   :: soiltype !Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
-  real   :: FLDCAP = 0.4  ! vol/vol !!! Both variables FLDCAP and WILTPT need to be specified here or gs_leuning crushes!!!
-  real   :: WILTPT != 0.05 ! vol/vol
+  real   :: soiltype              !Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
+  real   :: FLDCAP      = 0.4     ! vol/vol !!! Both variables FLDCAP need to be specified here or gs_leuning crushes!!!
+  real   :: WILTPT     != 0.05    ! vol/vol
   ! Carbon pools
-  real :: K1 != 2 ! Fast soil C decomposition rate (yr-1)
-  real :: K2 != 0.05 ! slow soil C decomposition rate (yr-1)
-  real :: K_nitrogen != 8.0     ! mineral Nitrogen turnover rate
-  real :: etaN       != 0.025   ! N loss through runoff (organic and mineral)
-  real :: MLmixRatio != 0.8     ! the ratio of C and N returned to litters from microbes
-  real :: l_fract    != 0.0     ! 0.25  ! 0.5 ! fraction of the carbon retained after leaf drop
-  real :: retransN   != 0.0     ! retranslocation coefficient of Nitrogen
-  real :: f_N_add != 0.02       ! re-fill of N for sapwood
-  real :: f_initialBSW != 0.2   !0.01
-  real :: LMAmin     = 0.02    ! minimum LMA, boundary condition
-  real :: fsc_fine   = 1.0     ! fraction of fast turnover carbon in fine biomass
-  real :: fsc_wood   = 0.0     ! fraction of fast turnover carbon in wood biomass
-  real :: GR_factor  = 0.33    ! growth respiration factor
-
+  real :: K1           != 2       ! Fast soil C decomposition rate (yr-1)
+  real :: K2           != 0.05    ! slow soil C decomposition rate (yr-1)
+  real :: K_nitrogen   != 8.0     ! mineral Nitrogen turnover rate
+  real :: MLmixRatio   != 0.8     ! the ratio of C and N returned to litters from microbes
+  real :: etaN         != 0.025   ! N loss through runoff (organic and mineral)
+  real :: LMAmin       != 0.02    ! minimum LMA, boundary condition
+  real :: fsc_fine     != 1.0     ! fraction of fast turnover carbon in fine biomass
+  real :: fsc_wood     != 0.0     ! fraction of fast turnover carbon in wood biomass
+  real :: GR_factor    != 0.33    ! growth respiration factor
+  real :: l_fract      != 0.0     ! 0.25  ! 0.5 ! fraction of the carbon retained after leaf drop
+  real :: retransN     != 0.0     ! retranslocation coefficient of Nitrogen
+  real :: f_initialBSW != 0.2     !0.01
+  real :: f_N_add      != 0.02    ! re-fill of N for sapwood
+ 
   ! Ensheng's growth parameters:
-  real :: f_LFR_max =0.85 ! max allocation to leaves and fine roots ! wood_fract_min = 0.15 ! for understory mortality rate is calculated as:
+  real :: f_LFR_max  = 0.85 ! max allocation to leaves and fine roots ! wood_fract_min = 0.15 ! for understory mortality rate is calculated as:
   ! deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
   real :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
   real :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m

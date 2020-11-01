@@ -247,12 +247,16 @@ contains
     K1,                           &
     K2,                           &
     K_nitrogen,                   &        
-    etaN,                         &  
-    MLmixRatio,                   &        
-    l_fract,                      &     
-    retransN,                     &      
-    f_N_add,                      &     
-    f_initialBSW,                 &          
+    MLmixRatio,                   &  
+    etaN,                         &        
+    LMAmin,                       &     
+    fsc_fine,                     &      
+    fsc_wood,                     &     
+    GR_factor,                    & 
+    l_fract,                      & 
+    retransN,                     & 
+    f_initialBSW,                 & 
+    f_N_add,                      & 
     params_species,               &            
     params_soil,                  &         
     init_cohort,                  &         
@@ -368,12 +372,16 @@ contains
     real(kind=c_double), intent(in) :: K1
     real(kind=c_double), intent(in) :: K2
     real(kind=c_double), intent(in) :: K_nitrogen
-    real(kind=c_double), intent(in) :: etaN
     real(kind=c_double), intent(in) :: MLmixRatio
+    real(kind=c_double), intent(in) :: etaN
+    real(kind=c_double), intent(in) :: LMAmin
+    real(kind=c_double), intent(in) :: fsc_fine
+    real(kind=c_double), intent(in) :: fsc_wood
+    real(kind=c_double), intent(in) :: GR_factor
     real(kind=c_double), intent(in) :: l_fract
     real(kind=c_double), intent(in) :: retransN
-    real(kind=c_double), intent(in) :: f_N_add
     real(kind=c_double), intent(in) :: f_initialBSW
+    real(kind=c_double), intent(in) :: f_N_add
 
     ! naked arrays
     real(kind=c_double), dimension(0:MSPECIES,16), intent(in) :: params_species
@@ -525,8 +533,12 @@ contains
     myinterface%params_tile%K1           = real( K1 )
     myinterface%params_tile%K2           = real( K2 )
     myinterface%params_tile%K_nitrogen   = real( K_nitrogen )
-    myinterface%params_tile%etaN         = real( etaN )
     myinterface%params_tile%MLmixRatio   = real( MLmixRatio )
+    myinterface%params_tile%etaN         = real( etaN )
+    myinterface%params_tile%LMAmin       = real( LMAmin )
+    myinterface%params_tile%fsc_fine     = real( fsc_fine )
+    myinterface%params_tile%fsc_wood     = real( fsc_wood )
+    myinterface%params_tile%GR_factor    = real( GR_factor )
     myinterface%params_tile%l_fract      = real( l_fract )
     myinterface%params_tile%retransN     = real( retransN )
     myinterface%params_tile%f_initialBSW = real( f_initialBSW )
