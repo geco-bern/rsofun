@@ -40,8 +40,8 @@ params_siml <- list(
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
+      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -126,9 +126,8 @@ init_cohort <- tibble(
 
 #### Initial soil pools
 
+high N input --> Deciduous, low  N input --> Evergreen
 ```{r}
-# high N input --> Deciduous
-# low  N input --> Evergreen
 init_soil <- list(
  init_fast_soil_C    = 0.0,    # initial fast soil C, kg C/m2
  init_slow_soil_C    = 0.0,    # initial slow soil C, kg C/m2

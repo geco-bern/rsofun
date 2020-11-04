@@ -26,7 +26,7 @@ module md_gpp_lm3ppa
 
   ! PFT-DEPENDENT PARAMETERS
   type pftparamstype_gpp
-    real :: kphio = 0.05   ! Quantum yield efficiency parameter (Simulations: 0.05, 0.0575, 0.065) 0.24 hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
+    real :: kphio = 0.0575   ! Quantum yield efficiency parameter (Simulations: 0.05, 0.0575, 0.065) 0.24 hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
   end type pftparamstype_gpp
   type(pftparamstype_gpp) :: params_pft_gpp
 
@@ -152,7 +152,7 @@ contains
           ! if (rad_top > 0.0) print*,'psyn/rad_top, resp/rad_top', psyn/rad_top, resp/rad_top
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
-          ! cc%An_op   = psyn  ! molC s-1 m-2 of leaves
+          ! cc%An_op   = psyn  ! molC s-1 m-2 of leaves ! net photosynthesis, mol C/(m2 of leaves s)
           ! cc%An_cl   = -resp  ! molC s-1 m-2 of leaves
           ! cc%w_scale = w_scale2
           ! cc%transp  = transp * mol_h2o * cc%leafarea * myinterface%step_seconds ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16

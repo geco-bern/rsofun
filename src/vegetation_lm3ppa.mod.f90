@@ -128,7 +128,7 @@ contains
     cc%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%br * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
     r_Nfix    = spdata(sp)%NfixCost0 * cc%fixedN ! + 0.25*spdata(sp)%NfixCost0 * cc%N_uptake    ! tree-1 step-1
     
-    ! LeafN    = spdata(sp)%LNA * cc%leafarea
+    ! LeafN    = spdata(sp)%LNA * cc%leafarea  ! gamma_SW is sapwood respiration rate (kgC m-2 Acambium yr-1)
     r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * myinterface%dt_fast_yr ! kgC tree-1 step-1
     r_root   = fnsc*spdata(sp)%gamma_FR  * cc%rootN * tf * myinterface%dt_fast_yr ! root respiration ~ root N    
     cc%resp = cc%resl + r_stem + r_root + r_Nfix   !kgC tree-1 step-1
@@ -692,7 +692,7 @@ contains
     integer :: i
     integer :: i_crit
     real :: dDBH
-    real :: CAI_max = 2.0 ! This value can be adjusted! ! Tried before 1.1
+    real :: CAI_max = 2 ! This value can be adjusted! ! Tried before 1.1
     real :: BAL, dVol
     real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
@@ -701,53 +701,23 @@ contains
 
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
       
-      ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
-
-      print*,'   1: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+      ! Cohorts must be ordered by height after this, whith cohort(1) being the longest
+      ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx) This is already done
 
       ! needs updating because vegn_annual_starvation removes cohorts !!!! Changed when crushing if CAI_max>1
       call summarize_tile( vegn )
 
-      print*,'   2: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
-
-      !----------------------------------------------------------
-      ! xxx debug: calculate cumulative CAI
-      !----------------------------------------------------------
-      ! call relayer_cohorts( vegn )  ! XXX This may reduce the number of individuals in cohorts
-      print*,'   3: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
-
-      ! allocate(cai_partial(vegn%n_cohorts))
-      ! cai_partial(:) = 0.0
-
-      ! do i = vegn%n_cohorts, 1 ,-1
-      !   cc => vegn%cohorts(i)
-      !   if (i==vegn%n_cohorts) then ! if (i>1) then
-      !     cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
-      !   else
-      !     cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
-      !   end if
-      ! end do
-      ! print*, "cai_partial", cai_partial(:)
-      ! deallocate(cai_partial)
-      !----------------------------------------------------------
       ! check if current CAI is greater than maximum CAI
-      print*, "A: CAI_max, CAI", CAI_max, vegn%CAI
+      print*, "CAI_max, CAI", CAI_max, vegn%CAI
+      ! xxx check whether cohorts are ranked w.r.t. height
+      print*, "height", vegn%cohorts%height 
+      print*, "vegn%n_cohorts", vegn%n_cohorts 
 
+      !----------------------------------------------------------
+      ! Calculate cumulative or "partial" CAI
+      !----------------------------------------------------------
       if (vegn%CAI > CAI_max) then
 
-        ! ! relayer cohorts: cohorts must be ordered by height after this, whith cohort(1) being the longest
-        ! call relayer_cohorts( vegn )
-      
-        ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx)
-
-        ! xxx check whether cohorts are ranked w.r.t. height
-        print*, "height", vegn%cohorts%height 
-        print*, "vegn%n_cohorts", vegn%n_cohorts 
-
-        !----------------------------------------------------------
-        ! Determine cohort at which cumulative CA is equal CAI* ('i_crit')
-        ! and reduce number of individuals in that cohort
-        !----------------------------------------------------------
         ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
         allocate(cai_partial(vegn%n_cohorts))
         cai_partial(:) = 0.0
@@ -762,6 +732,10 @@ contains
         end do
         print*, "cai_partial", cai_partial(:)
 
+        !----------------------------------------------------------
+        ! Determine cohort at which cumulative CA is equal CAI* ('i_crit')
+        ! and reduce number of individuals in that cohort
+        !----------------------------------------------------------
         ! determine the cohort where cai_partial exceeds critical value
         i_crit = vegn%n_cohorts
         do while (cai_partial(i_crit) < CAI_max) 
@@ -769,7 +743,8 @@ contains
         end do
 
         print*, "i_crit", i_crit
-        print*, "CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1) ", CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1) 
+        print*, "CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1), cai_partial(i_crit - 1) ", &
+                 CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1), cai_partial(i_crit - 1) 
 
         ! Manipulate only critical cohort
         cc => vegn%cohorts(i_crit)
@@ -784,7 +759,7 @@ contains
           deadtrees = cc%nindivs - nindivs_new
 
           print*,'frac_new, cc%nindivs, nindivs_new deadtrees', frac_new, cc%nindivs, nindivs_new, deadtrees
-          print*,'updated cai_partial of i_crit:', (cc%nindivs - deadtrees) * cc%crownarea + cai_partial(i_crit + 1) 
+          print*,'updated cai_partial of i_crit:', cai_partial(i_crit + 1) + (cc%nindivs - deadtrees) * cc%crownarea  
         
         else
         
@@ -797,7 +772,7 @@ contains
         call plant2soil(vegn, cc, deadtrees)
 
         ! Update plant density
-        cc%nindivs = cc%nindivs - deadtrees
+        cc%nindivs = cc%nindivs - deadtrees ! = to nindivs_new
         print*,'cc%nindivs ', cc%nindivs
 
         !----------------------------------------------------------
@@ -815,7 +790,7 @@ contains
 
             ! Update plant density
             cc%nindivs = cc%nindivs - deadtrees
-
+            print*,'cc%nindivs ', cc%nindivs
           end do
         end if
         deallocate(cai_partial)
@@ -825,6 +800,7 @@ contains
 
         ! update tile-level quantities (e.g., CAI)
         call summarize_tile( vegn )
+        print*, "CAI_max, CAI", CAI_max, vegn%CAI
 
         !----------------------------------------------------------
         ! Check cai_partial again
@@ -839,33 +815,10 @@ contains
             cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
           else
             cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
-            ! cai_partial(i) = sum(cai_partial(i+1:vegn%n_cohorts)) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
           end if
         end do
 
         print*, "UPDATED cai_partial", cai_partial(:)
-
-        ! ! xxx try just for printing cai_partial 
-        ! ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
-        ! allocate(cai_partial(vegn%n_cohorts))
-        ! cai_partial(:) = 0
-        ! do i = vegn%n_cohorts, 1 ,-1
-        !   cc => vegn%cohorts(i)
-        !   if (i==vegn%n_cohorts) then ! if (i>1) then
-        !     cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
-        !   else
-        !     cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
-        !   end if
-        ! end do
-        ! print*, "cai_partial", cai_partial(:)
-        ! deallocate(cai_partial)
-
-        ! ! update tile-level quantities (e.g., CAI)
-        ! call summarize_tile( vegn )
-
-        ! print*,'CAI updated', vegn%CAI
-        ! print*,'C pools', cc%bl+cc%br+cc%bsw+cc%bHW+cc%seedC+cc%nsc
-        ! print*, "soil and litter C pool", vegn%litter + vegn%MicrobialC + vegn%metabolicL + vegn%structuralL 
 
       end if
  
@@ -876,22 +829,11 @@ contains
         associate ( sp => spdata(cc%species))
 
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
-          ! deathrate = 0.03*exp(-0.9*(cc%nsc/cc%bl_max)+5)/(0.01+exp(-0.9*(cc%nsc/cc%bl_max)+5))
-          ! deathrate = 1*(exp(-2.5*(cc%nsc/cc%bl_max)+7)/(5+exp(-2.5*(cc%nsc/cc%bl_max)+7)))
-          ! deathrate = 0.5*(exp(-1.5*(cc%nsc/cc%bl_max)+7)/(1+exp(-1*(cc%nsc/cc%bl_max)+7)))
-          ! deathrate = 1*(exp(-1.5*(cc%nsc/cc%bl_max)+8)/(1+exp(-1*(cc%nsc/cc%bl_max)+8)))
           if (cc%bl_max > 0) then
-          ! deathrate = 1*(exp(-20*(cc%nsc/cc%bl_max)+7)/(1+exp(-20*(cc%nsc/cc%bl_max)+7))) ! Not really working for level 1 LUE
           deathrate = 1*(exp(-2.3*(cc%nsc/cc%bl_max)+7)/(1+exp(-1*(cc%nsc/cc%bl_max)+7))) ! Changing coef: works with 2.5          
           endif
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
-          ! deathrate = 0.01*(4*exp(4*(dVol)))/(1+exp(4*(dVol)))   ! in terms of volume
-          ! deathrate = 0.01*(1 + exp(4*(cc%DBH - cc%DBH_ys))/ & ! in terms of dbh
-                           ! (1 + exp(4*(cc%DBH - cc%DBH_ys))))
-          ! deathrate = 0.6/(1+exp((-0.1)*(dVol-30)))
-          ! deathrate = 1/(1+exp((-0.1)*(dVol-35)))
-          ! deathrate = 0.2*(cc%Volume - cc%Vol_ys)
           deathrate = 1*(cc%Volume - cc%Vol_ys)
           ! deathrate = 0.2*(cc%DBH - cc%DBH_ys)
 
@@ -944,7 +886,6 @@ contains
 
     endif
 
-
   end subroutine vegn_nat_mortality
 
   subroutine vegn_annual_starvation( vegn ) ! Annual
@@ -982,7 +923,7 @@ contains
         ! update cohort individuals
         cc%nindivs = 0.0 ! cc%nindivs*(1.0 - deathrate)
 
-        print*,'i, deadtrees'
+        print*,'i, deadtrees', i, deadtrees
 
       else
         deathrate = 0.0
