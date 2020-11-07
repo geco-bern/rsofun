@@ -686,11 +686,11 @@ contains
 
     ! ---- local vars
     type(cohort_type), pointer :: cc => null()
+    type(cohort_type), pointer :: cp,cs(:) ! array to hold new cohorts
     integer :: idx(vegn%n_cohorts)
     real :: deathrate ! mortality rate, 1/year
     real :: deadtrees ! number of trees that died over the time step
-    integer :: i
-    integer :: i_crit
+    integer :: i,i_crit
     real :: dDBH
     real :: CAI_max = 2 ! This value can be adjusted! ! Tried before 1.1
     real :: BAL, dVol
@@ -698,14 +698,16 @@ contains
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
     real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
+    logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
+    real :: dn, cCAI
 
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
-      
+
       ! Cohorts must be ordered by height after this, whith cohort(1) being the longest
       ! call rank_descending(vegn%cohorts(1:vegn%n_cohorts)%height,idx) This is already done
 
       ! needs updating because vegn_annual_starvation removes cohorts !!!! Changed when crushing if CAI_max>1
-      call summarize_tile( vegn )
+      ! call summarize_tile( vegn )
 
       ! check if current CAI is greater than maximum CAI
       print*, "CAI_max, CAI", CAI_max, vegn%CAI
@@ -716,111 +718,175 @@ contains
       !----------------------------------------------------------
       ! Calculate cumulative or "partial" CAI
       !----------------------------------------------------------
-      if (vegn%CAI > CAI_max) then
+      ! if (vegn%CAI > CAI_max) then
 
         ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
         allocate(cai_partial(vegn%n_cohorts))
+        i_crit = 0
         cai_partial(:) = 0.0
 
         do i = vegn%n_cohorts, 1 ,-1
-          cc => vegn%cohorts(i)
+          ! cc => vegn%cohorts(i)
+          cp => vegn%cohorts(i)
+          ! cCAI = cp%crownarea * cp%nindivs
           if (i==vegn%n_cohorts) then ! if (i>1) then
-            cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
+            cai_partial(i) = cp%crownarea * cp%nindivs
           else
-            cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
+            cai_partial(i) = cai_partial(i+1) + cp%crownarea * cp%nindivs
           end if
+          if (cai_partial(i) < CAI_max) i_crit=i_crit+1
         end do
         print*, "cai_partial", cai_partial(:)
+        i_crit = i_crit + 1 ! keep the one that just above CAI_max
+        print*,"cai_partial", cai_partial
+        print*,'i_crit, vegn%n_cohorts',i_crit, vegn%n_cohorts
 
         !----------------------------------------------------------
         ! Determine cohort at which cumulative CA is equal CAI* ('i_crit')
         ! and reduce number of individuals in that cohort
         !----------------------------------------------------------
         ! determine the cohort where cai_partial exceeds critical value
-        i_crit = vegn%n_cohorts
-        do while (cai_partial(i_crit) < CAI_max) 
-         i_crit = i_crit - 1
-        end do
+        ! i_crit = vegn%n_cohorts
+        ! do while (cai_partial(i_crit) < CAI_max) 
+        !  i_crit = i_crit - 1
+        ! end do
 
-        print*, "i_crit", i_crit
-        print*, "CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1), cai_partial(i_crit - 1) ", &
-                 CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1), cai_partial(i_crit - 1) 
 
-        ! Manipulate only critical cohort
-        cc => vegn%cohorts(i_crit)
+        ! exclude the cohorts that cai_partial > CAI_max
+        if (i_crit==vegn%n_cohorts .and. cai_partial(1) > CAI_max)then
+          cp =>vegn%cohorts(1)
+          dn = (cai_partial(1) - CAI_max)/cp%crownarea
+          cp%nindivs = cp%nindivs - dn
+          call plant2soil(vegn,cp,dn)
 
-        ! kill individuals in critical cohort so that its cumulative CAI equals CAI_max
-        if ((cai_partial(i_crit) - cai_partial(i_crit + 1)) > 0) then
+        else if (i_crit < vegn%n_cohorts) then
+          allocate(cs(i_crit))
+          vegn%n_cohorts = i_crit
+          i_crit = 0
+          do i = 1,vegn%n_cohorts-1
+            cp =>vegn%cohorts(i)
+            if (cai_partial(i+1) < CAI_max) then ! if the next cohort is less than CAI_max
+              i_crit = i_crit + 1
+              cs(i_crit) = cp
+              ! reduce the density of the tallest chort to make CAI=CAI_max
+              if(cai_partial(i) > CAI_max)then
+                dn = (cai_partial(i) - CAI_max)/cp%crownarea
+                cs(i_crit)%nindivs = cp%nindivs - dn
+                call plant2soil(vegn,cp,dn)
+              endif
+            else
+           ! Kill the cohorts with cai_partial > cai_max
+              call plant2soil(vegn,cp,cp%nindivs)
+            endif
+          enddo
+          i_crit = i_crit +1
+          cs(i_crit) = vegn%cohorts(vegn%n_cohorts)
+          deallocate (vegn%cohorts)
+          vegn%cohorts=>cs
+        endif
 
-          frac_new = (CAI_max - cai_partial(i_crit + 1)) / &
-            (cai_partial(i_crit) - cai_partial(i_crit + 1))
+        !final check, can be removed if the model runs well
+        cai_partial = 0.0
+        do i = vegn%n_cohorts, 1, -1
+          cp => vegn%cohorts(i)
+          cCAI = cp%crownarea * cp%nindivs
+            if (i==vegn%n_cohorts) then
+              cai_partial(i) = cCAI
+            else
+              cai_partial(i) = cai_partial(i+1) + cCAI
+            end if
+        enddo
+       print*,"cai_partial2", cai_partial
+       print*,'i_crit2, vegn%n_cohorts',i_crit, vegn%n_cohorts
+      ! end of final check
+  
+      deallocate(cai_partial)
 
-          nindivs_new = cc%nindivs * frac_new !vegn%cohorts(i_crit)%nindivs * frac_new
-          deadtrees = cc%nindivs - nindivs_new
 
-          print*,'frac_new, cc%nindivs, nindivs_new deadtrees', frac_new, cc%nindivs, nindivs_new, deadtrees
-          print*,'updated cai_partial of i_crit:', cai_partial(i_crit + 1) + (cc%nindivs - deadtrees) * cc%crownarea  
+
+
+
+
+
+        ! print*, "i_crit", i_crit
+        ! print*, "CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1), cai_partial(i_crit - 1) ", &
+        !          CAI_max, cai_partial(i_crit), cai_partial(i_crit + 1), cai_partial(i_crit - 1) 
+
+      !   ! Manipulate only critical cohort
+      !   cc => vegn%cohorts(i_crit)
+
+      !   ! kill individuals in critical cohort so that its cumulative CAI equals CAI_max
+      !   if ((cai_partial(i_crit) - cai_partial(i_crit + 1)) > 0) then
+
+      !     frac_new = (CAI_max - cai_partial(i_crit + 1)) / &
+      !       (cai_partial(i_crit) - cai_partial(i_crit + 1))
+
+      !     nindivs_new = cc%nindivs * frac_new !vegn%cohorts(i_crit)%nindivs * frac_new
+      !     deadtrees = cc%nindivs - nindivs_new
+
+      !     print*,'frac_new, cc%nindivs, nindivs_new deadtrees', frac_new, cc%nindivs, nindivs_new, deadtrees
+      !     print*,'updated cai_partial of i_crit:', cai_partial(i_crit + 1) + (cc%nindivs - deadtrees) * cc%crownarea  
         
-        else
+      !   else
         
-          deadtrees = 0.0
+      !     deadtrees = 0.0
         
-        end if
+      !   end if
 
-        ! Kill fraction of individuals in critical cohort i_crit
-        ! Carbon and Nitrogen from dead plants to soil pools
-        call plant2soil(vegn, cc, deadtrees)
+      !   ! Kill fraction of individuals in critical cohort i_crit
+      !   ! Carbon and Nitrogen from dead plants to soil pools
+      !   call plant2soil(vegn, cc, deadtrees)
 
-        ! Update plant density
-        cc%nindivs = cc%nindivs - deadtrees ! = to nindivs_new
-        print*,'cc%nindivs ', cc%nindivs
+      !   ! Update plant density
+      !   cc%nindivs = cc%nindivs - deadtrees ! = to nindivs_new
+      !   print*,'cc%nindivs ', cc%nindivs
 
-        !----------------------------------------------------------
-        ! Kill all cohorts above 'i_crit'
-        !----------------------------------------------------------
-        ! Make sure all cohorts larger than i_crit are fully killed
-        if (i_crit > 1) then
-          do i = 1, (i_crit-1)
-            cc => vegn%cohorts(i)
-            deadtrees = cc%nindivs
-            print*,'i, deadtrees, cc%nindivs: ', i, deadtrees, cc%nindivs
+      !   !----------------------------------------------------------
+      !   ! Kill all cohorts above 'i_crit'
+      !   !----------------------------------------------------------
+      !   ! Make sure all cohorts larger than i_crit are fully killed
+      !   if (i_crit > 1) then
+      !     do i = 1, (i_crit-1)
+      !       cc => vegn%cohorts(i)
+      !       deadtrees = cc%nindivs
+      !       print*,'i, deadtrees, cc%nindivs: ', i, deadtrees, cc%nindivs
 
-            ! Carbon and Nitrogen from dead plants to soil pools
-            call plant2soil(vegn, cc, deadtrees)
+      !       ! Carbon and Nitrogen from dead plants to soil pools
+      !       call plant2soil(vegn, cc, deadtrees)
 
-            ! Update plant density
-            cc%nindivs = cc%nindivs - deadtrees
-            print*,'cc%nindivs ', cc%nindivs
-          end do
-        end if
-        deallocate(cai_partial)
+      !       ! Update plant density
+      !       cc%nindivs = cc%nindivs - deadtrees
+      !       print*,'cc%nindivs ', cc%nindivs
+      !     end do
+      !   end if
+      !   deallocate(cai_partial)
 
-        ! update stand variables after killing entire cohorts
-        call kill_lowdensity_cohorts( vegn )
+      !   ! update stand variables after killing entire cohorts
+      !   call kill_lowdensity_cohorts( vegn )
 
-        ! update tile-level quantities (e.g., CAI)
-        call summarize_tile( vegn )
-        print*, "CAI_max, CAI", CAI_max, vegn%CAI
+      !   ! update tile-level quantities (e.g., CAI)
+      !   call summarize_tile( vegn )
+      !   print*, "CAI_max, CAI", CAI_max, vegn%CAI
 
-        !----------------------------------------------------------
-        ! Check cai_partial again
-        !----------------------------------------------------------
-        ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
-        allocate(cai_partial(vegn%n_cohorts))
-        cai_partial(:) = 0.0
+      !   !----------------------------------------------------------
+      !   ! Check cai_partial again
+      !   !----------------------------------------------------------
+      !   ! Get "partial" CAI of all cohorts shorter/equal than the current cohort
+      !   allocate(cai_partial(vegn%n_cohorts))
+      !   cai_partial(:) = 0.0
 
-        do i = vegn%n_cohorts, 1 ,-1
-          cc => vegn%cohorts(i)
-          if (i==vegn%n_cohorts) then ! if (i>1) then
-            cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
-          else
-            cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
-          end if
-        end do
+      !   do i = vegn%n_cohorts, 1 ,-1
+      !     cc => vegn%cohorts(i)
+      !     if (i==vegn%n_cohorts) then ! if (i>1) then
+      !       cai_partial(i) = cc%crownarea * cc%nindivs !sum(cai_partial(1:(i-1))) + cc%crownarea * cc%nindivs
+      !     else
+      !       cai_partial(i) = cai_partial(i+1) + cc%crownarea * cc%nindivs !cc%crownarea * cc%nindivs
+      !     end if
+      !   end do
 
-        print*, "UPDATED cai_partial", cai_partial(:)
+      !   print*, "UPDATED cai_partial", cai_partial(:)
 
-      end if
+      ! end if
  
     else
 
