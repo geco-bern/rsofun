@@ -1,0 +1,84 @@
+---
+title: "Benchmark GPP using the FLUXNET2015 ensemble"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+library(rsofun)
+library(dplyr)
+library(readr)
+library(ingestr)
+library(ggplot2)
+library(knitr)
+```
+
+## Description
+
+This is to run the same evaluation of GPP simulated by the P-model as done for [Stocker et al. (2020)](https://gmd.copernicus.org/articles/13/1545/2020/), using data from the FLUXNET2015 Tier 1 ensemble. Model forcing and observational GPP data are prepared as detailed in the vignette `prepare_inputs_FLUXNET2015_ensemble.Rmd`. Respective files are available on Euler XXXpathXXX.
+
+This assumes that the model is already calibrated (calibratable parameters are prescribed).
+
+Note: For simulations used in Stocker et al. (2020), forcing data was written to files and read by Fortran. With the updated rsofun model, this is passed through R, using an object formatted like `rsofun::df_drivers`.
+
+## Load data
+
+Load drivers data frame. 
+```{r}
+load("~/data/stocker20gmd_outputs/df_drivers_fluxnet2015.Rdata")
+```
+
+## Model parameters
+
+Use calibrated parameters for FULL setup as given in Stocker et al. (2020).
+```{r}
+params_modl <- list(
+	kphio           = 0.08718,
+	soilm_par_a     = 0,
+	soilm_par_b     = 0.73300,
+	vpdstress_par_a = 9999,
+	vpdstress_par_b = 9999,
+	vpdstress_par_m = 9999
+	)
+```
+
+
+## Run model
+
+```{r}
+## run for a single site
+mod <- run_pmodel_f_bysite( 
+  df_drivers$sitename[1], 
+  df_drivers$params_siml[[1]], 
+  df_drivers$siteinfo[[1]], 
+  df_drivers$forcing[[1]], 
+  df_drivers$df_soiltexture[[1]], 
+  params_modl = params_modl, 
+  makecheck = TRUE 
+  )
+```
+
+
+
+```{r}
+df_output <- runread_pmodel_f(
+     df_drivers %>% slice(1), 
+     params_modl = params_modl, 
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+```
+
+## Evaluation
+
+
+## Appendix
+
+### Site list
+
+```{r}
+siteinfo %>% kable()
+```

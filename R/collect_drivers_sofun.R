@@ -3,9 +3,10 @@
 #' Collect all drivers for site-level simulations into a nested data frame with one row for each site
 #'
 #' @param siteinfo A data frame containing site meta info (rows for sites). Required columns are: \code{"sitename", "date_start", "date_end", "lon", "lat", "elv"}.
-#' @param meteo A data nested data frame with rows for each site and meteo forcing data time series nested inside a column named \code{"data"}
-#' @param fapar A data nested data frame with rows for each site and fAPAR forcing data time series nested inside a column named \code{"data"}
-#' @param co2 A data nested data frame with rows for each site and CO2 forcing data time series nested inside a column named \code{"data"}
+#' @param params_siml A nested data frame with rows for each site containing simulation parameters by site.
+#' @param meteo A nested data frame with rows for each site and meteo forcing data time series nested inside a column named \code{"data"}
+#' @param fapar A nested data frame with rows for each site and fAPAR forcing data time series nested inside a column named \code{"data"}
+#' @param co2 A nested data frame with rows for each site and CO2 forcing data time series nested inside a column named \code{"data"}
 #' @param df_soiltexture
 #'
 #' @return
@@ -13,7 +14,10 @@
 #'
 #' @examples mod <- collect_drivers_sofun( settings = settings, forcing, df_soiltexture )
 #' 
-collect_drivers_sofun <- function( siteinfo, meteo, fapar, co2, df_soiltexture ){
+collect_drivers_sofun <- function( siteinfo, params_siml, meteo, fapar, co2, df_soiltexture ){
+  
+  ## complement the setup settings
+  siteinfo <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
   
   ## create mega-df containing all forcing data and parameters that vary by site (not model parameters!)
   names_metainfo <- names(siteinfo)[-which(names(siteinfo) %in% c("sitename", "params_siml"))]
