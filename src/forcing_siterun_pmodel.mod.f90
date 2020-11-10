@@ -26,6 +26,8 @@ module md_forcing_pmodel
     real(kind=sp) :: dsnow  ! mm d-1 water equivalents
     real(kind=sp) :: dfsun  ! unitless
     real(kind=sp) :: dvpd   ! Pa
+    ! real(kind=sp) :: dtmin    ! deg C
+    ! real(kind=sp) :: dtmax    ! deg C
     real(kind=sp) :: dppfd  ! mol m-2 d-1
     real(kind=sp) :: dnetrad! W m-2
     real(kind=sp) :: dpatm  ! Pa

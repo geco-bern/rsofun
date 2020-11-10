@@ -16,7 +16,8 @@ contains
     spinupyears,               &        
     recycle,                   &    
     firstyeartrend,            &           
-    nyeartrend,                &       
+    nyeartrend,                &  
+    secs_per_tstep,            &     
     soilmstress,               &        
     tempstress,                &       
     calc_aet_fapar_vpd,        &       
@@ -60,6 +61,7 @@ contains
     integer(kind=c_int),  intent(in) :: recycle
     integer(kind=c_int),  intent(in) :: firstyeartrend
     integer(kind=c_int),  intent(in) :: nyeartrend
+    integer(kind=c_int),  intent(in) :: secs_per_tstep
     logical(kind=c_bool), intent(in) :: soilmstress
     logical(kind=c_bool), intent(in) :: tempstress
     logical(kind=c_bool), intent(in) :: calc_aet_fapar_vpd
@@ -116,6 +118,7 @@ contains
     myinterface%params_siml%lgr3               = lgr3
     myinterface%params_siml%lgn3               = lgn3
     myinterface%params_siml%lgr4               = lgr4
+    myinterface%params_siml%secs_per_tstep     = secs_per_tstep
 
     ! Count PFTs to be simulated
     npft_local = 0

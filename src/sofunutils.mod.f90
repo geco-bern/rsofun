@@ -1087,4 +1087,76 @@ contains
   end function findroot_quadratic
 
 
+  function dgcos( x ) result( dgcos_out )
+    !----------------------------------------------------------------   
+    ! Calculates the cosine of an angle given in degrees. Equal to 
+    ! 'dsin' in Python version.
+    !----------------------------------------------------------------   
+    use md_params_core, only: pi
+
+    ! arguments
+    real, intent(in) :: x  ! angle, degrees (0-360)
+
+    ! function return value
+    real :: dgcos_out ! cosine value of x when x is in degrees
+
+    !dgcos = dcos(x*pi/180.0)
+    dgcos_out = cos(x*pi/180.0)  ! xxx use cos with single-precision compilation
+
+  end function dgcos
+
+
+  function dgsin( x ) result( dgsin_out )
+    !----------------------------------------------------------------   
+    ! Calculates the sinus of an angle given in degrees. Equal to 
+    ! 'dsin' in Python version.
+    !----------------------------------------------------------------   
+    use md_params_core, only: pi
+
+    ! arguments
+    real, intent(in) :: x  ! angle, degrees (0-360)
+
+    ! function return value
+    real :: dgsin_out ! sinus value of x when x is in degrees
+
+    !dgsin_out = dsin(x*pi/180.0)
+    dgsin_out = sin(x*pi/180.0)   ! xxx use cos with single-precision compilation
+
+  end function dgsin
+
+
+  function degrees( x ) result( degrees_out )
+    !----------------------------------------------------------------   
+    ! Returns corresponding degrees if x is given in radians
+    !----------------------------------------------------------------   
+    use md_params_core, only: pi
+
+    ! arguments
+    real, intent(in) :: x  ! angle, radians
+
+    ! function return value
+    real :: degrees_out
+
+    degrees_out = x*180.0/pi
+
+  end function degrees
+
+
+  function radians( x ) result( radians_out )
+    !----------------------------------------------------------------   
+    ! Returns corresponding radians if x is given in degrees
+    !----------------------------------------------------------------   
+    use md_params_core, only: pi
+
+    ! arguments
+    real, intent(in) :: x  ! angle, radians
+
+    ! function return value
+    real :: radians_out
+
+    radians_out = x*pi/180.0
+
+  end function radians
+  
+
 end module md_sofunutils

@@ -46,7 +46,7 @@ contains
     ! Subroutines from BiomeE-Allocation
     !------------------------------------------------------------------------
     use md_forcing_lm3ppa, only: climate_type
-    use md_photosynth, only: pmodel, outtype_pmodel
+    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel
     use md_params_core, only: kTkelvin, kfFEC
     use md_sofunutils, only: dampen_variability
 
@@ -73,7 +73,7 @@ contains
     integer:: i, layer
 
     ! local variables used for P-model part
-    real :: tk
+    real :: tk, ftemp_kphio
     real, save :: co2_memory
     real, save :: vpd_memory
     real, save :: temp_memory
@@ -207,6 +207,11 @@ contains
       tk = forcing%Tair + kTkelvin
 
       !----------------------------------------------------------------
+      ! Instantaneous temperature effect on quantum yield efficiency
+      !----------------------------------------------------------------
+      ftemp_kphio = calc_ftemp_kphio( (forcing%Tair - kTkelvin), .false. )  ! no C4
+
+      !----------------------------------------------------------------
       ! Sum leaf area over cohorts in each crown layer -> LAIlayer(layer)
       !----------------------------------------------------------------
       f_gap = 0.1 ! 0.1
@@ -220,7 +225,6 @@ contains
         crownarea_layer(layer) = crownarea_layer(layer) + cc%crownarea
       end do
 
-      
       !----------------------------------------------------------------
       ! Get light fraction received at each crown layer, relative to top-of-canopy -> f_light(layer) 
       !----------------------------------------------------------------
@@ -281,20 +285,31 @@ contains
             ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * myinterface%step_seconds ! kgC step-1 tree-1
             !===============================
 
-            out_pmodel = pmodel( &
-                                fapar          = fapar_tree, &
-                                ppfd           = f_light(layer) * forcing%PAR * 1.0e-6, &    ! required in mol m-2 s-1
-                                co2            = co2_memory, &
-                                tc             = temp_memory, &
-                                vpd            = vpd_memory, &
-                                patm           = patm_memory, &
-                                c4             = .false., &
-                                method_optci   = "prentice14", &
-                                method_jmaxlim = "wang17", &
-                                kphio          = params_pft_gpp%kphio, &
-                                beta           = params_gpp%beta, &
-                                rd_to_vcmax    = params_gpp%rd_to_vcmax &
-                                )
+            !----------------------------------------------------------------
+            ! P-model call to get a list of variables that are 
+            ! acclimated to slowly varying conditions
+            !----------------------------------------------------------------
+            if (temp_memory > -5.0 ) then                      ! minimum temp threshold to avoid fpe
+
+              out_pmodel = pmodel(  &
+                                    kphio          = params_pft_gpp%kphio * ftemp_kphio, &
+                                    beta           = params_gpp%beta, &
+                                    ppfd           = f_light(layer) * forcing%PAR * 1.0e-6, &
+                                    co2            = co2_memory, &
+                                    tc             = temp_memory, &
+                                    vpd            = vpd_memory, &
+                                    patm           = patm_memory, &
+                                    c4             = .false., &
+                                    method_optci   = "prentice14", &
+                                    method_jmaxlim = "wang17" &
+                                    )
+
+            else
+
+              ! PFT is not present 
+              out_pmodel = zero_pmodel()
+
+            end if
 
             ! irrelevant variables for this setup  
             cc%An_op   = 0.0
@@ -302,9 +317,9 @@ contains
             cc%transp  = 0.0
             cc%w_scale = -9999
 
-            ! copy to cohort variables
-            cc%resl    = out_pmodel%rd  * cc%crownarea * myinterface%step_seconds * mol_C     ! kgC step-1 tree-1 xxxxxxxxxx
-            cc%gpp     = out_pmodel%gpp * cc%crownarea * myinterface%step_seconds * 1.0e-3    ! kgC step-1 tree-1
+            ! assume light-use efficiency model (linear scaling of gpp with absorbed light) and copy to cohort variables
+            cc%resl    = out_pmodel%vcmax25 * calc_ftemp_inst_rd( forcing%Tair - kTkelvin ) * fapar_tree * cc%crownarea * myinterface%step_seconds * mol_C     ! kgC step-1 tree-1 xxxxxxxxxx
+            cc%gpp     = out_pmodel%lue * f_light(layer) * forcing%PAR * 1.0e-6   * fapar_tree * cc%crownarea * myinterface%step_seconds * 1.0e-3    ! kgC step-1 tree-1
 
 
           else
@@ -653,21 +668,58 @@ contains
   end function calc_soilmstress
 
 
-  function calc_ftemp_kphio( dtemp ) result( ftemp )
+  function calc_ftemp_kphio( dtemp, c4 ) result( ftemp )
     !////////////////////////////////////////////////////////////////
     ! Calculates the instantaneous temperature response of the quantum
     ! yield efficiency based on Bernacchi et al., 2003 PCE (Equation
     ! and parameter values taken from Appendix B)
     !----------------------------------------------------------------
     ! arguments
-    real, intent(in) :: dtemp
+    real, intent(in) :: dtemp    ! (leaf) temperature in degrees celsius
+    logical, intent(in) :: c4
 
     ! function return variable
     real :: ftemp
 
-    ftemp = 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2
-
+    if (c4) then
+      ftemp = -0.008 + 0.00375 * dtemp - 0.58e-4 * dtemp**2   ! Based on calibrated values by Shirley
+    else
+      ftemp = 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2  ! Based on Bernacchi et al., 2003
+    end if
+    
   end function calc_ftemp_kphio
+
+
+  function calc_ftemp_inst_rd( tc ) result( fr )
+    !-----------------------------------------------------------------------
+    ! Output:   Factor fr to correct for instantaneous temperature response
+    !           of Rd (dark respiration) for:
+    !
+    !               Rd(temp) = fr * Rd(25 deg C) 
+    !
+    ! Ref:      Heskel et al. (2016) used by Wang Han et al. (in prep.)
+    !-----------------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: tc      ! temperature (degrees C)
+
+    ! function return variable
+    real :: fr                  ! temperature response factor, relative to 25 deg C.
+
+    ! loal parameters
+    real, parameter :: apar = 0.1012
+    real, parameter :: bpar = 0.0005
+    real, parameter :: tk25 = 298.15 ! 25 deg C in Kelvin
+
+    ! local variables
+    real :: tk                  ! temperature (Kelvin)
+
+    ! conversion of temperature to Kelvin
+    tk = tc + 273.15
+
+    fr = exp( apar * (tc - 25.0) - bpar * (tc**2 - 25.0**2) )
+    
+  end function calc_ftemp_inst_rd  
+
 
   ! adopted from BiomeE-Allocation, should use the one implemented in SOFUN instead (has slightly different parameters)
   FUNCTION esat(T) ! pressure, Pa

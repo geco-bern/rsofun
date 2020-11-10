@@ -5,7 +5,8 @@ module md_biosphere_pmodel
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
-  use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, getpar_modl_tile, diag_daily
+  use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
+    getpar_modl_tile, diag_daily, diag_annual, init_annual
   use md_plant_pmodel, only: getpar_modl_plant
   ! use md_params_soil_pmodel, only: getpar_soil
   ! use md_soiltemp, only: soiltemp
@@ -42,7 +43,7 @@ contains
     type(outtype_biosphere) :: out_biosphere
 
     ! local variables
-    integer :: dm, moy, jpngr, doy
+    integer :: dm, moy, doy
     logical, save           :: init_daily = .true.   ! is true only on the first day of the simulation 
     logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
 
@@ -70,6 +71,11 @@ contains
       if (verbose) print*, '... done'
 
     endif 
+
+    !----------------------------------------------------------------
+    ! Set annual sums to zero
+    !----------------------------------------------------------------
+    call init_annual( tile_fluxes(:) )
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -130,10 +136,12 @@ contains
                   myinterface%pco2, &
                   myinterface%climate(doy), &
                   myinterface%vegcover(doy), &
+                  myinterface%grid, &
                   myinterface%params_siml%soilmstress, &
                   myinterface%params_siml%tempstress, &
                   init_daily &
                   )
+
         if (verbose) print*,'... done'
 
         !----------------------------------------------------------------
@@ -183,6 +191,12 @@ contains
       end do dayloop
 
     end do monthloop
+
+    !----------------------------------------------------------------
+    ! annual diagnostics
+    !----------------------------------------------------------------
+    call diag_annual( tile(:), tile_fluxes(:) )
+    
 
     if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
 

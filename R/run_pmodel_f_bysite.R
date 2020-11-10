@@ -21,6 +21,10 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
   ndayyear <- 365
   firstyeartrend_forcing <- forcing %>% slice(1) %>% pull(date) %>% lubridate::year()
   nyeartrend_forcing <- nrow(forcing)/ndayyear
+
+  ## determine number of seconds per time step
+  times <- forcing %>% pull(date) %>% head(2)
+  secs_per_tstep <- difftime(times[1], times[2], units = "secs") %>% as.integer() %>% abs()
   
   ## re-define units and naming of forcing dataframe
   forcing <- forcing %>% 
@@ -99,6 +103,7 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
   }
 
   if (do_continue){
+
     forcing <- as.matrix(forcing)
     
     n <- as.integer(nrow(forcing))
@@ -130,6 +135,7 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       recycle                   = as.integer(params_siml$recycle),
       firstyeartrend            = as.integer(params_siml$firstyeartrend),
       nyeartrend                = as.integer(params_siml$nyeartrend),
+      secs_per_tstep            = as.integer(secs_per_tstep),
       soilmstress               = as.logical(params_siml$soilmstress),
       tempstress                = as.logical(params_siml$tempstress),
       calc_aet_fapar_vpd        = as.logical(params_siml$calc_aet_fapar_vpd),

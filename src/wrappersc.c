@@ -15,6 +15,7 @@ void F77_NAME(pmodel_f)(
     int    *recycle,
     int    *firstyeartrend,
     int    *nyeartrend,
+    int    *secs_per_tstep,
     _Bool  *soilmstress,
     _Bool  *tempstress,
     _Bool  *calc_aet_fapar_vpd,
@@ -46,6 +47,7 @@ extern SEXP pmodel_f_C(
     SEXP recycle,
     SEXP firstyeartrend,
     SEXP nyeartrend,
+    SEXP secs_per_tstep,
     SEXP soilmstress,
     SEXP tempstress,
     SEXP calc_aet_fapar_vpd,
@@ -82,6 +84,7 @@ extern SEXP pmodel_f_C(
         INTEGER(recycle),
         INTEGER(firstyeartrend),
         INTEGER(nyeartrend),
+        INTEGER(secs_per_tstep),
         LOGICAL(soilmstress),
         LOGICAL(tempstress),
         LOGICAL(calc_aet_fapar_vpd),
@@ -487,7 +490,7 @@ extern SEXP lm3ppa_f_C(
 // Declarations for all functions
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
-  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
+  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   27},  // Specify number of arguments to C wrapper as the last number here
   {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   39},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };

@@ -73,11 +73,18 @@ module md_plant_pmodel
   !----------------------------------------------------------------
   type plant_fluxes_type
 
+    ! daily updated variables
     real :: dgpp     ! daily gross primary production [gC/m2/d]           
     real :: drd      ! daily dark respiration [gC/m2/d]
     real :: assim    ! daily assimilation (mol CO2 m-2 s-1)
     real :: dtransp  ! daily transpiration [mm]
     real :: dlatenth ! daily latent heat flux [J m-2 d-1]
+    real :: vcmax25  ! daily varying Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
+
+    ! annual variables
+    real :: agpp             ! annual total gross primary production [gC/m2/yr]           
+    real :: avcmax25_mean    ! annual Vcmax, normalised to 25 deg C, GPP-weighted mean
+    real :: avcmax25_max     ! annual Vcmax, normalised to 25 deg C, annual maximum
 
   end type plant_fluxes_type
 
