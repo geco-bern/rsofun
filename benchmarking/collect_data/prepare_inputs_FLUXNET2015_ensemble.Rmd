@@ -22,6 +22,9 @@ Data is collected and available in file `~/data/stocker20gmd_outputs/ddf_fluxnet
 rsofun::df_drivers
 ```
 
+The final drivers data frame is saved as `"~/data/rsofun_benchmarking/df_drivers_fluxnet2015.Rdata"`.
+
+
 ### FLUXNET meteo data and MODIS FPAR
 
 Reformat, but don't nest yet.
@@ -135,7 +138,7 @@ df_drivers_fluxnet2015
 
 Save the full nested object.
 ```{r}
-save(df_drivers_fluxnet2015, file = "~/data/stocker20gmd_outputs/df_drivers_fluxnet2015.Rdata")
+save(df_drivers_fluxnet2015, file = "~/data/rsofun_benchmarking/df_drivers_fluxnet2015.Rdata")
 ```
 
 
