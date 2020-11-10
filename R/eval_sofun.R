@@ -3,9 +3,10 @@
 #' Calculates a set of perfomance metrics for model outputs, compared against observational data.
 #' Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 data, are implemented.
 #'
-#' @param mod A flat dataframe containing model outputs with columns \code{"sitename"} (character), \code{"date"} 
-#' (date object created by \code{lubridate::ymd()}) and \code{"varnam"} where \code{"varnam"} corresponds to 
-#' \code{names(settings$benchmark)}.
+#' @param mod Object returned by \link{runread_pmodel_f}. This is a nested dataframe with sites along rows 
+#' and a nested column \code{"data"} containing model outputs with columns \code{"date"} (date object 
+#' created by \code{lubridate::ymd()}) and \code{"varnam"}.
+#' where \code{"varnam"} corresponds to \code{names(settings$benchmark)}.
 #' @param settings A list specifying evaluation settings 
 #' (see vignette eval_sofun.pdf for more information and examples)
 #' @param obs_eval (Optional) A named list of data frames containing observational data for each sites. 

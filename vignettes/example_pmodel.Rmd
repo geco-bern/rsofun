@@ -225,6 +225,12 @@ The calibrated parameters are returned by `calib_sofun()` as part of the list:
 print(settings_calib$par_opt)
 ```
 
+Update model parameters.
+```{r}
+params_modl <- update_params(params_modl, settings_calib)
+```
+
+Run the model again with updated parameters.
 
 ### Evaluate
 

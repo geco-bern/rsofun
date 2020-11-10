@@ -17,6 +17,11 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
 
   # rlang::inform(paste("run_pmodel_f_bysite() for ", sitename))
   
+  ## record first year and number of years in forcing data frame (may need to overwrite later)
+  ndayyear <- 365
+  firstyeartrend_forcing <- forcing %>% slice(1) %>% pull(date) %>% lubridate::year()
+  nyeartrend_forcing <- nrow(forcing)/ndayyear
+  
   ## re-define units and naming of forcing dataframe
   forcing <- forcing %>% 
     dplyr::mutate(netrad = -9999.9, fsun = (100-ccov)/100, snowf = 0.0, ndep = 0.0) %>% 
@@ -71,12 +76,25 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       do_continue <- FALSE
     }
     
-    if (nrow(forcing) != params_siml$nyeartrend * 365){
-      rlang::warn("Error: Number of years data in forcing does not correspond to number of simulation years (nyeartrend).")
-      rlang::warn(paste(" Number of years data: ", nrow(forcing)/365))
-      rlang::warn(paste(" Number of simulation years: ", params_siml$nyeartrend))
-      rlang::warn(" Returning a dummy data frame.")
-      do_continue <- FALSE
+    if (nrow(forcing) != params_siml$nyeartrend * ndayyear){
+      ## Dates in 'forcing' do not correspond to simulation parameters
+      rlang::warn("Error: Number of years data in forcing does not correspond to number of simulation years (nyeartrend).\n")
+      rlang::warn(paste(" Number of years data: ", nrow(forcing)/ndayyear), "\n")
+      rlang::warn(paste(" Number of simulation years: ", params_siml$nyeartrend, "\n"))
+      rlang::warn(paste(" Site name: ", sitename, "\n"))
+      
+      if (nrow(forcing) %% ndayyear == 0){
+        ## Overwrite params_siml$nyeartrend and params_siml$firstyeartrend based on 'forcing'
+        params_siml$nyeartrend <- nyeartrend_forcing
+        params_siml$firstyeartrend <- firstyeartrend_forcing
+        rlang::warn(paste(" Overwriting params_siml$nyeartrend: ", params_siml$nyeartrend, "\n"))
+        rlang::warn(paste(" Overwriting params_siml$firstyeartrend: ", params_siml$firstyeartrend, "\n"))
+      } else {
+        ## something weird more fundamentally -> don't run the model
+        rlang::warn(" Returning a dummy data frame.")
+        do_continue <- FALSE
+      }
+      
     }
   }
 
