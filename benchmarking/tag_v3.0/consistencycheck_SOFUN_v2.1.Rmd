@@ -1,0 +1,110 @@
+---
+title: "Consistency check with SOFUN v3.2 and rsofun v2.1"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+library(rsofun)
+library(dplyr)
+library(readr)
+library(ingestr)
+library(ggplot2)
+library(knitr)
+```
+
+
+## Load data
+
+Load drivers data frame (created by `prepare_inputs_FLUXNET2015_ensemble.Rmd`).
+```{r}
+load("~/data/rsofun_benchmarking/df_drivers_fluxnet2015.Rdata")
+```
+
+Change fluxes to units per second and use only one year and one site.
+```{r}
+secs_per_tstep <- 60 * 60 * 24
+df_drivers_fluxnet2015 <- df_drivers_fluxnet2015 %>% 
+  dplyr::select(sitename, forcing) %>% 
+  unnest(forcing) %>% 
+  mutate(prec = prec / secs_per_tstep, ppfd = ppfd / secs_per_tstep) %>% 
+  group_by(sitename) %>% 
+  nest() %>% 
+  right_join(
+    df_drivers_fluxnet2015 %>% 
+      dplyr::select(-forcing),
+    by = "sitename"
+  ) %>% 
+  dplyr::select(sitename, forcing = data, params_siml, siteinfo, df_soiltexture) %>% 
+  ungroup() %>% 
+  dplyr::filter(sitename=="FR-Pue")
+
+df_drivers_fluxnet2015$params_siml[[1]]$firstyeartrend <- 2000
+df_drivers_fluxnet2015$params_siml[[1]]$nyeartrend <- 1
+```
+
+
+## Parametrise model
+
+Update model parameters with parameters from v2.0.
+```{r}
+load("../tag_v2.0/settings_calib.Rdata")
+params_modl <- list(
+	kphio           = 0.05,
+	soilm_par_a     = 1.0,
+	soilm_par_b     = 0.0,
+	vpdstress_par_a = 9999,
+	vpdstress_par_b = 9999,
+	vpdstress_par_m = 9999
+	)
+params_modl <- update_params(params_modl, settings_calib)
+```
+
+
+## Run model
+
+```{r warning=FALSE, message=FALSE}
+df_output <- runread_pmodel_f(
+     df_drivers_fluxnet2015,
+     params_modl = params_modl, 
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+```
+
+Check. Comparison to SOFUN output from a similar site-scale simulation.
+```{r}
+# df_output$data[[1]] %>% ggplot(aes(date, pet)) + geom_line()
+
+library(rbeni)
+nc_gpp <- read_nc_onefile("~/sofun/output_nc/FR-Pue.d.gpp.nc")
+nc_aet <- read_nc_onefile("~/sofun/output_nc/FR-Pue.d.aet.nc")
+nc_pet <- read_nc_onefile("~/sofun/output_nc/FR-Pue.d.pet.nc")
+nc_wcont <- read_nc_onefile("~/sofun/output_nc/FR-Pue.d.wcont.nc")
+
+df_sofun <- tibble(date = df_output$data[[1]]$date,
+                   gpp = nc_gpp$vars$gpp, 
+                   aet = nc_aet$vars$aet, 
+                   pet = nc_pet$vars$pet, 
+                   wcont = nc_wcont$vars$wcont
+                   )
+ggplot() + 
+  geom_line(data = df_output$data[[1]], aes(date, transp)) +
+  geom_line(data = df_output$data[[1]], aes(date, pet), color = "royalblue") +
+  # geom_line(data = df_sofun, aes(date, aet), color = "red") +
+  xlim(ymd("2000-01-01"), ymd("2001-01-01"))
+
+ggplot() + 
+  # geom_line(data = df_output$data[[1]], aes(date, pet)) +
+  geom_line(data = df_sofun, aes(date, aet)) +
+  geom_line(data = df_sofun, aes(date, pet), color = "royalblue") +
+  xlim(ymd("2000-01-01"), ymd("2001-01-01"))
+
+ggplot() + 
+  geom_line(data = df_output$data[[1]], aes(date, gpp)) +
+  geom_line(data = df_sofun, aes(date, gpp), color = "red") +
+  xlim(ymd("2000-01-01"), ymd("2001-01-01"))
+```
