@@ -654,7 +654,7 @@ ggplot() +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of Growth rate gs-Leuning") 
+  ggtitle("Function of Constant Self-thinning gs-Leuning") 
 
 ggplot() + 
   geom_line(data=ea1sa1mdpm_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
@@ -663,7 +663,7 @@ ggplot() +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of Growth rate p-model") 
+  ggtitle("Function of Constant Self-thinning p-model") 
 
 ```
 
@@ -822,7 +822,7 @@ ggplot() +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of Constant Self-thinning gs-Leuning") 
+  ggtitle("Function of Constant Self-thinning gs-Leuning") + scale_x_continuous(limits = c(-2,1))
 
 ggplot() + 
   geom_point(data=subset(ea1sa1mdpm_out_annual_tile,year>=21), aes(x=log(QMD), y=log(Density12), color='Control')) + 
