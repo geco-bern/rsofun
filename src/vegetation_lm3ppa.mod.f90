@@ -105,7 +105,7 @@ contains
     real :: Acambium  ! cambium area, m2/tree
 
     ! real :: LeafN     ! leaf nitrogen, kgN/Tree
-    real :: fnsc,NSCtarget ! used to regulation respiration rate
+    real :: fnsc,NSCtarget,exp_acambium ! used to regulation respiration rate
     real :: r_Nfix    ! respiration due to N fixation
     integer :: sp ! shorthand for cohort species
     sp = cc%species
@@ -117,7 +117,9 @@ contains
     ! With nitrogen model, leaf respiration is a function of leaf nitrogen
     !NSCtarget = 3.0 * (cc%bl_max + cc%br_max)
     fnsc = 1.0 ! min(max(0.0,cc%nsc/NSCtarget),1.0)
-    Acambium = PI * cc%DBH * cc%height * 1.2 ! see Weng et al. 2015: Acambium~D^1.5 -> H~D^0.5 and D*H is proportional to D^1.5
+    ! Acambium = PI * cc%DBH * cc%height * 1.2 ! see Weng et al. 2015: Acambium~D^1.5 -> H~D^0.5 and D*H is proportional to D^1.5
+    exp_acambium = 1.5 !(1.0 - 1.5) Use this exponent to make Acambium~D^2. Ensheng suggested range 1.5 to 2.
+    Acambium = PI * cc%DBH ** exp_acambium * cc%height * 1.2
     ! Facultive Nitrogen fixation
     !if (cc%NSN < cc%NSNmax .and. cc%NSC > 0.5 * NSCtarget) then
     !   cc%fixedN = spdata(sp)%NfixRate0 * cc%br * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
@@ -692,7 +694,7 @@ contains
     real :: deadtrees ! number of trees that died over the time step
     integer :: i,i_crit
     real :: dDBH
-    real :: CAI_max = 1.2 ! This value can be adjusted! ! Tried before 1.1
+    real :: CAI_max = 2 ! This value can be adjusted! ! Tried before 1.1
     real :: BAL, dVol
     real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
