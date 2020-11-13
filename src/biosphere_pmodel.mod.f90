@@ -179,12 +179,18 @@ contains
         !----------------------------------------------------------------
         ! populate function return variable
         !----------------------------------------------------------------
-        !if (npft>1) stop 'think about npft > 1'
+        !if (nlu>1) stop 'think about nlu > 1'
         out_biosphere%fapar(doy)   = tile(1)%canopy%fapar
         out_biosphere%gpp(doy)     = tile_fluxes(1)%canopy%dgpp
         out_biosphere%transp(doy)  = tile_fluxes(1)%canopy%daet
         out_biosphere%latenth(doy) = tile_fluxes(1)%canopy%daet_e
         out_biosphere%pet(doy)     = tile_fluxes(1)%canopy%dpet
+
+        out_biosphere%vcmax(doy)   = tile_fluxes(1)%canopy%vcmax
+        out_biosphere%jmax(doy)    = tile_fluxes(1)%canopy%jmax
+        out_biosphere%vcmax25(doy) = tile_fluxes(1)%canopy%vcmax25
+        out_biosphere%jmax25(doy)  = tile_fluxes(1)%canopy%jmax25
+        out_biosphere%gs_accl(doy) = tile_fluxes(1)%canopy%gs_accl
 
         init_daily = .false.
 

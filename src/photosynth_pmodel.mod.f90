@@ -10,7 +10,7 @@ module md_photosynth
   implicit none
 
   private
-  public pmodel, zero_pmodel, outtype_pmodel
+  public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -313,7 +313,7 @@ contains
     !-----------------------------------------------------------------------
     ! Vcmax25 (vcmax normalized to 25 deg C)
     ftemp_inst_vcmax  = calc_ftemp_inst_vcmax( tc, tc, tcref = 25.0 )
-    vcmax25  = 1000000 * vcmax  / ftemp_inst_vcmax ! convert unit from mol/m2/s to umol/m2/s
+    vcmax25  = vcmax / ftemp_inst_vcmax
 
     ! ! Dark respiration at growth temperature
     ! ftemp_inst_rd = calc_ftemp_inst_rd( tc )

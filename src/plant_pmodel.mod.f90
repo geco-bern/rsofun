@@ -54,8 +54,8 @@ module md_plant_pmodel
     real :: acrown              ! crown area
 
     ! leaf traits
-    real :: vcmax25             ! canopy-level Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
-    real :: jmax25              ! total leaf N per unit leaf area (gN m-2)
+    ! real :: vcmax25             ! canopy-level Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
+    ! real :: jmax25              ! total leaf N per unit leaf area (gN m-2)
     real :: narea               ! total leaf N per unit leaf area (gN m-2)
     real :: narea_metabolic     ! metabolic leaf N per unit leaf area (gN m-2)
     real :: narea_structural    ! structural leaf N per unit leaf area (gN m-2)
@@ -74,17 +74,22 @@ module md_plant_pmodel
   type plant_fluxes_type
 
     ! daily updated variables
-    real :: dgpp     ! daily gross primary production [gC/m2/d]           
-    real :: drd      ! daily dark respiration [gC/m2/d]
-    real :: assim    ! daily assimilation (mol CO2 m-2 s-1)
-    real :: dtransp  ! daily transpiration [mm]
-    real :: dlatenth ! daily latent heat flux [J m-2 d-1]
-    real :: vcmax25  ! daily varying Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
+    real :: dgpp              ! daily gross primary production [gC/m2/d]           
+    real :: drd               ! daily dark respiration [gC/m2/d]
+    real :: assim             ! daily assimilation (mol CO2 m-2 s-1)
+    real :: dtransp           ! daily transpiration [mm]
+    real :: dlatenth          ! daily latent heat flux [J m-2 d-1]
+    
+    real :: vcmax25           ! acclimated Vcmax, normalised to 25 deg C (mol CO2 m-2 s-1)
+    real :: jmax25            ! acclimated Jmax, normalised to 25 deg C (mol CO2 m-2 s-1)
+    real :: vcmax             ! daily varying Vcmax (mol CO2 m-2 s-1)
+    real :: jmax              ! daily varying Jmax (mol CO2 m-2 s-1)
+    real :: gs_accl           ! acclimated stomatal conductance (xxx)
 
-    ! annual variables
-    real :: agpp             ! annual total gross primary production [gC/m2/yr]           
-    real :: avcmax25_mean    ! annual Vcmax, normalised to 25 deg C, GPP-weighted mean
-    real :: avcmax25_max     ! annual Vcmax, normalised to 25 deg C, annual maximum
+    ! ! annual variables
+    ! real :: agpp             ! annual total gross primary production [gC/m2/yr]           
+    ! real :: avcmax25_mean    ! annual Vcmax, normalised to 25 deg C, GPP-weighted mean
+    ! real :: avcmax25_max     ! annual Vcmax, normalised to 25 deg C, annual maximum
 
   end type plant_fluxes_type
 
@@ -336,8 +341,8 @@ contains
     plant%acrown    = 0.0
 
     ! canpopy state variables
-    plant%vcmax25          = 0.0
-    plant%jmax25           = 0.0
+    ! plant%vcmax25          = 0.0
+    ! plant%jmax25           = 0.0
     plant%narea            = 0.0
     plant%narea_metabolic  = 0.0
     plant%narea_structural = 0.0
