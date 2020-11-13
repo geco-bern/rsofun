@@ -1,5 +1,5 @@
 ---
-title: "Example using P-model"
+title: "P-model simulation at NEECF site"
 output:
   html_document:
     toc: true
@@ -15,20 +15,14 @@ library(ingestr)
 library(ggplot2)
 ```
 
-## Example using rsofun for P-model simulations
 
-The following describes the use of `rsofun` for an ensemble of site-scale P-model simulations, including steps for model calibration and evaluation (benchmarking). `rsofun` is designed in a modular and hierarchical fashion. This enables multiple setups within the same modelling framework. The P-model implementation in `rsofun` is described in Stocker et al. (2020) *Geosci. Mod. Dev.*. 
+## Site selection and meta data
 
-In the P-model setup, the model requires time series of daily meteorological data as input and is calibrated against observational GPP data. This example describes simulations at a subset of FLUXNET 2015 Tier 1 sites, using GPP based on the night-time flux partitioning method as calibration target and benchmark (no worries, an out-of-sample calibration/evaluation function is available, too). 
-
-### Site selection and meta data
-
-We manually define a subset of sites that are part of the FLUXNET 2015 Tier 1 set of sites:
 ```{r}
 mysites <- "efg"
 ```
 
-A small number of meta data variables have to be specified for each site specifically to define the simulation years. This information is also used for input, calibration, and evaluation data ingestion. Required meta information is specified for each site (in rows) and a number of variables:
+ Required meta information is specified for each site (in rows) and a number of variables:
 
 - `lat` for latitude (decimal degrees)
 - `lon` for longitude (decimal degrees) - this is only used for data ingestion but not for the P-model simulation with `rsofun`.
@@ -50,7 +44,7 @@ siteinfo <- tibble(
   )
 ```
 
-### Simulation settings
+## Simulation settings
 
 Specify additional simulation parameters that are identical for all site-scale simulations.
 ```{r}
@@ -80,7 +74,7 @@ siteinfo <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
 ```
 
 
-### Define model parameters
+## Define model parameters
 
 First, let's do it by hand (calibration of parameters is shown later).
 ```{r}
@@ -94,7 +88,7 @@ params_modl <- list(
 	)
 ```
 
-### Define soil parameters
+## Define soil parameters
 
 For now, this is implemented as an illustration. Should be made site-specific. Values entered here take no effect.
 ```{r}
@@ -104,7 +98,7 @@ df_soiltexture <- bind_rows(
 )
 ```
 
-### Get input
+## Get input
 
 Forcing data was collected as described in `ingestr/vignettes_add/get_sitedata_nonetwork.Rmd`.
 ```{r}
@@ -126,7 +120,7 @@ df_co2 <- ingest_bysite(
 
 
 
-### Run the model
+## Run the model
 
 Run the model for all the sites specified in the first step.
 ```{r}
