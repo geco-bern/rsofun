@@ -41,7 +41,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "cstarvation" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -219,6 +219,10 @@ out$output_annual_tile %>%
   ggplot() + geom_line(aes(x = year, y = CAI)) +
   theme_classic()+labs(x = "Year", y = "CAI")
 
+out$output_annual_tile %>% summarise(GPPtotal=sum(GPP))
+forcing %>% summarise(PARtotal=sum(PAR))
+out$output_annual_tile %>% summarise(GPPtotal=mean(GPP))
+forcing %>% summarise(PARtotal=mean(PAR))
 ```
 
 ### Write model outputs

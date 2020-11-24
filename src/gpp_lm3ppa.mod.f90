@@ -148,7 +148,7 @@ contains
             ! output:
             psyn, resp, w_scale2, transp )
 
-          ! ! psyn/rad_top is on the order of 1e-8; psyn/rad_top is on the order of -1e-9
+          ! ! psyn/rad_top is on the order of -1e-8; psyn/rad_top is on the order of -1e-9
           ! if (rad_top > 0.0) print*,'psyn/rad_top, resp/rad_top', psyn/rad_top, resp/rad_top
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
@@ -159,10 +159,11 @@ contains
           ! cc%resl    = -resp         * mol_C * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
           ! cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
+
           !===============================
           ! XXX hack: For running simulations
           !===============================
-          cc%An_op   = 0.975e-8 * rad_top  ! molC s-1 m-2 of leaves (Simulations: 0.75e-8, 0.8625e-8, 0.975e-8)
+          cc%An_op   = 9e-9 * rad_top  ! molC s-1 m-2 of leaves (Simulations: 0.75e-8, 0.8625e-8, 0.975e-8) 10.35e-9, 11.7e-9
           cc%An_cl   = 1e-9 * rad_top  ! molC s-1 m-2 of leaves
           cc%w_scale = 0.0
           cc%transp  = 0.0
