@@ -41,7 +41,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -218,6 +218,10 @@ out$output_annual_tile %>%
 out$output_annual_tile %>% 
   ggplot() + geom_line(aes(x = year, y = CAI)) +
   theme_classic()+labs(x = "Year", y = "CAI")
+
+out$output_annual_tile %>% 
+  ggplot() + geom_point(aes(x = log(DBH12), y = log(Density12))) +
+  theme_classic()+labs(x = "log(QMD)", y = "log(Density12)") + scale_x_continuous(limits = c(-3,-1.5))
 
 out$output_annual_tile %>% summarise(GPPtotal=sum(GPP))
 forcing %>% summarise(PARtotal=sum(PAR))
@@ -826,12 +830,12 @@ ggplot() +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of Constant Self-thinning gs-Leuning") + scale_x_continuous(limits = c(-2,1))
+  ggtitle("Function of Constant Self-thinning gs-Leuning") + scale_x_continuous(limits = c(-3,0))
 
 ggplot() + 
-  geom_point(data=subset(ea1sa1mdpm_out_annual_tile,year>=21), aes(x=log(QMD), y=log(Density12), color='Control')) + 
-  geom_point(data=subset(ea2sa1mdpm_out_annual_tile,year>=20), aes(x=log(QMD), y=log(Density12), color='+15%')) +
-  geom_point(data=subset(ea3sa1mdpm_out_annual_tile,year>=20), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  geom_point(data=subset(ea1sa1mdpm_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mdpm_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mdpm_out_annual_tile,year>=1), aes(x=log(QMD), y=log(Density12), color='+30%')) +
   scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +

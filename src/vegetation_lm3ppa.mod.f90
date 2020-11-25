@@ -112,6 +112,7 @@ contains
     
     ! temperature response function
     tf  = exp(9000.0*(1.0/298.16-1.0/tairK))
+    
     !  tfs = thermal_inhibition(tsoil)  ! original
     tfs = tf ! Rm_T_response_function(tsoil) ! Weng 2014-01-14
     ! With nitrogen model, leaf respiration is a function of leaf nitrogen
@@ -740,7 +741,7 @@ contains
           ! Update plant density
           cc%nindivs = cc%nindivs - dn
           k = k + 1
-          !write(*,*)'dn=',dn,'k=',k
+          write(*,*)'dn=',dn,'k=',k
         else
          exit
         endif
