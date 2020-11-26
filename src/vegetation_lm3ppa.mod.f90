@@ -368,7 +368,7 @@ contains
         cc%DBH       = cc%DBH       + dDBH
         cc%height    = cc%height    + dHeight
         cc%crownarea = cc%crownarea + dCA
-        cc%leafarea  = leaf_area_from_biomass(cc%bl,cc%species,cc%layer,cc%firstlayer)
+        cc%leafarea  = leaf_area_from_biomass(cc%bl, cc%species, cc%layer, cc%firstlayer)
         cc%lai       = cc%leafarea/cc%crownarea !(cc%crownarea *(1.0-sp%internal_gap_frac))
         vegn%LAI     = vegn%LAI + cc%leafarea  * cc%nindivs
 
@@ -1501,11 +1501,11 @@ contains
 
       dAleaf = leaf_area_from_biomass(dBL, cc%species, cc%layer, cc%firstlayer)
 
-      !    Retranslocation to NSC and NSN
+      ! Retranslocation to NSC and NSN
       cc%nsc = cc%nsc + l_fract  * (dBL + dBR + dBStem)
       cc%NSN = cc%NSN + retransN * (dNL + dNR + dNStem)
 
-      !    update plant pools
+      ! update plant pools
       cc%bl    = cc%bl    - dBL
       cc%bsw   = cc%bsw   - dBStem
       cc%br    = cc%br    - dBR
@@ -1515,7 +1515,7 @@ contains
       cc%rootN = cc%rootN - dNR
 
       ! update leaf area and LAI
-      cc%leafarea= leaf_area_from_biomass(cc%bl,cc%species,cc%layer,cc%firstlayer)
+      cc%leafarea= leaf_area_from_biomass(cc%bl, cc%species, cc%layer, cc%firstlayer)
       cc%lai     = cc%leafarea / (cc%crownarea *(1.0-sp%internal_gap_frac))
 
       !    update NPP for leaves, fine roots, and wood

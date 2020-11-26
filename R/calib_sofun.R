@@ -44,6 +44,11 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
       # cost_rmse <- cost_chisquared_vpdstress
       cost_rmse <- cost_rmse_vpdstress
       
+    }  else if ( "lauraparam1" %in% names(settings$par) && "lauraparam2" %in% names(settings$par) && "lauraparam3" %in% names(settings$par) ){  
+      ## Calibration of VPD stress function (P-model runs with soilmstress and tempstress on)
+      # cost_rmse <- cost_chisquared_vpdstress
+      cost_rmse <- cost_rmse_lm3ppacalib
+      
     }
 
     ##----------------------------------------------------------------
@@ -316,6 +321,58 @@ cost_rmse_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (df$latenth_mod - df$latenth_obs )^2, na.rm = TRUE ) )
+  
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost  
+  
+  return(cost)
+}
+
+
+##------------------------------------------------------------
+## Generic cost function of model-observation (mis-) match using
+## root mean square error.
+##------------------------------------------------------------
+cost_rmse_lm3ppacalib <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
+  
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    lauraparam1 = par[1],
+    lauraparam2 = par[2],
+    vpdstress_par_m = par[3]
+  )
+  
+  # ... or call multi-site function with df_drivers (use function collect_drivers_sofun)
+  df <- run_lm3ppa_f(
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) %>%   
+
+  ## either call by site like this
+  df <- run_lm3ppa_f_bysite( "ORNL", 
+                              params_siml, 
+                              siteinfo, 
+                              forcing, # ddf_input
+                              params_tile, 
+                              params_species, 
+                              params_soil, 
+                              init_cohort, 
+                              init_soil, 
+                              makecheck = TRUE)
+
+## collapse time series outout to 1 value for comparison to observations
+
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data) %>% 
+    dplyr::rename(latenth_mod = latenth) %>% 
+    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
+  
+  ## Calculate cost (RMSE) across the N targets
+  cost <- sqrt( mean( (df$target1_mod - df$target1_obs )^2, na.rm = TRUE ) )
   
   # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
