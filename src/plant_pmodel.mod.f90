@@ -56,6 +56,7 @@ module md_plant_pmodel
     ! leaf traits
     ! real :: vcmax25             ! canopy-level Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
     ! real :: jmax25              ! total leaf N per unit leaf area (gN m-2)
+    
     real :: narea               ! total leaf N per unit leaf area (gN m-2)
     real :: narea_metabolic     ! metabolic leaf N per unit leaf area (gN m-2)
     real :: narea_structural    ! structural leaf N per unit leaf area (gN m-2)
