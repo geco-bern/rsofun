@@ -381,7 +381,7 @@ integer :: MaxCohortID = 0
 ! Constants:
 ! Soil water properties
 ! real   :: soiltype = SandyLoam  ! 1 Sand; 2
-real   :: FLDCAP != 0.4  ! vol/vol
+real   :: FLDCAP = 0.4  ! vol/vol
 real   :: WILTPT != 0.05 ! vol/vol
 ! Carbon pools
 real :: K1 != 2 ! Fast soil C decomposition rate (yr-1)
