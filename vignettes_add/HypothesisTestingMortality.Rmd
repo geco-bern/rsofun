@@ -843,6 +843,30 @@ ggplot() +
 
 ```
 
+```{r}
+# Mortality as a function of Self-thinning
+ggplot() + 
+  geom_line(data=ea1sa1mdgl_out_annual_tile, aes(x=year, y=Density12, color='Control')) + 
+  geom_line(data=ea2sa1mdgl_out_annual_tile, aes(x=year, y=Density12, color='+15%')) +
+  geom_line(data=ea3sa1mdgl_out_annual_tile, aes(x=year, y=Density12, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = "Density12") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Constant Self-thinning gs-Leuning") 
+
+ggplot() + 
+  geom_line(data=ea1sa1mdgl_out_annual_tile, aes(x=year, y=Density, color='Control')) + 
+  geom_line(data=ea2sa1mdgl_out_annual_tile, aes(x=year, y=Density, color='+15%')) +
+  geom_line(data=ea3sa1mdgl_out_annual_tile, aes(x=year, y=Density, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(x = "Year", y = "Density") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Constant Self-thinning gs-Leuning") 
+
+```
+
+
+
 ## gganimate
 
 ```{r}
