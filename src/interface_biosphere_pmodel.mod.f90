@@ -52,6 +52,11 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: transp
     real, dimension(ndayyear) :: latenth
     real, dimension(ndayyear) :: pet
+    real, dimension(ndayyear) :: vcmax
+    real, dimension(ndayyear) :: jmax
+    real, dimension(ndayyear) :: vcmax25
+    real, dimension(ndayyear) :: jmax25
+    real, dimension(ndayyear) :: gs_accl
   end type outtype_biosphere
 
 end module md_interface_pmodel

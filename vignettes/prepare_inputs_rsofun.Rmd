@@ -9,83 +9,66 @@ output:
 
 ```{r setup, include=FALSE}
 library(rsofun)
+library(ingestr)
 library(dplyr)
 library(readr)
-library(ingestr)
+library(tidyr)
 ```
 
-The following describes how to use the [ingestr R package ](https://stineb.github.io/ingestr/) for collecting the forcing data and create the object `df_drivers`, required as an input (forcing) to rsofun. Here, it contains data for just a single site.
+The following describes how to use the [ingestr R package ](https://stineb.github.io/ingestr/) for collecting rsofun forcing data. This is to create the object `df_drivers`, required as an input (forcing) to rsofun. This vignette is specific for collecting forcing data where no site-specific measurements are available, but all data is extracted from global maps. Head over to the vignette `prepare_fluxnetinputs_rsofun.Rmd` for an example for collecting forcing data for a FLUXNET site, using site-specific meteorological data.
 
 ## Site selection and meta data
 
-We manually define a subset of sites that are part of the FLUXNET 2015 Tier 1 set of sites:
-```{r}
-mysites <- "FR-Pue"
-```
+A small number of meta data variables have to be specified for each site specifically to define the simulation years and site location. This information is also used for input, calibration, and evaluation data ingestion. Required meta information is specified as a data frame with sites by rows and the following variables (by columns):
 
-A small number of meta data variables have to be specified for each site specifically to define the simulation years. This information is also used for input, calibration, and evaluation data ingestion. Required meta information is specified for each site (in rows) and a number of variables:
-
+- `sitename`: any unique identifying of the site(s)
 - `lat` for latitude (decimal degrees)
 - `lon` for longitude (decimal degrees) - this is only used for data ingestion but not for the P-model simulation with `rsofun`.
-- `elv` for elevation (m a.s.l.)
-- `year_start` and `year_end` specifying years covered by the simulation
-- `whc` for the soil water holding capacity
-- `koeppen_code` to group sites for evaluation by Koeppen-Geiger climate zones.
+- `elv` for elevation (m a.s.l.). If this is not known, *ingestr* may be used to extract information from a digital elevation model.
+- `year_start` and `year_end` specifying years covered by the simulation. Data extraction and model simulations always cover all 365 days of each year.
+- `whc` for the total rooting zone soil water holding capacity. This is not a temporary "fudge" solution. Set it to 170 mm if no better information is available.
+- `koeppen_code` to group sites for evaluation by Koeppen-Geiger climate zones (may be ignored, only required for `eval_sofun()`).
 
-This information is provided in file `siteinfo_fluxnet2015.csv`. This file is created as described in (and using code from) [metainfo_fluxnet2015](https://github.com/stineb/metainfo_fluxnet2015). 
+The following is an example (`elv` is not specified) for a single-site run:
 ```{r}
-siteinfo <- ingestr::siteinfo_fluxnet2015 %>%
-  dplyr::filter(sitename %in% mysites)
-
-# take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo
-siteinfo <- siteinfo %>% 
-  dplyr::mutate(year_start = 2007, year_end = 2014)
-
-siteinfo <- siteinfo %>% 
-  dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
-  dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
+siteinfo <- data.frame(
+  sitename = "anywhere",
+  lon = 100,
+  lat = 50,
+  year_start = 2003,
+  year_end = 2005
+)
 ```
 
 ## Simulation settings
 
-Specify additional simulation parameters that are identical for all site-scale simulations.
+Specify additional simulation parameters that are identical for all site-scale simulations in multi-site runs, 
 ```{r}
 params_siml <- list(
-  spinup             = TRUE,
-  spinupyears        = 10,
-  recycle            = 1,
-  soilmstress        = FALSE,
-  tempstress         = FALSE,
-  calc_aet_fapar_vpd = FALSE,
-  in_ppfd            = TRUE,
-  in_netrad          = FALSE,
-  outdt              = 1,
-  ltre               = FALSE,
-  ltne               = FALSE,
-  ltrd               = FALSE,
-  ltnd               = FALSE,
-  lgr3               = TRUE,
-  lgn3               = FALSE,
-  lgr4               = FALSE
+  spinup             = TRUE,      # to bring soil moisture to steady state
+  spinupyears        = 10,        # number of spinup years. 10 is enough for soil moisture.
+  recycle            = 1,         # number of years recycled during spinup 
+  soilmstress        = FALSE,     # boolean for whether soil moisture stress function is included
+  tempstress         = FALSE,     # boolean for whether temperature stress function is included
+  calc_aet_fapar_vpd = FALSE,     # set to FALSE - should be dropped again
+  in_ppfd            = TRUE,      # if available from forcing files, set to TRUE
+  in_netrad          = FALSE     # if available from forcing files, set to TRUE
 	)
 ```
 
-Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters), global simulation parameters are wrapped inside an additional column `params_siml`, added to the site meta info dataframe.
-```{r}
-siteinfo <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
-```
+<!-- Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters), global simulation parameters are wrapped inside an additional column `params_siml`, added to the site meta info dataframe. -->
+<!-- ```{r} -->
+<!-- siteinfo <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml) -->
+<!-- ``` -->
 
 ## Define model parameters
 
-First, let's do it by hand (calibration of parameters is shown later).
+Specify model parameters based on prior model calibration. See `benchmarking/tag_v*/benchmark_gpp_FLUXNET2015_ensemble.html` for latest calibrations.
 ```{r}
 params_modl <- list(
-	kphio           = 0.05,
-	soilm_par_a     = 1.0,
-	soilm_par_b     = 0.0,
-	vpdstress_par_a = 0.2,
-	vpdstress_par_b = 0.2,
-	vpdstress_par_m = 5
+	kphio           = 0.09423773,
+	soilm_par_a     = 0.33349283,
+	soilm_par_b     = 1.45602286
 	)
 ```
 
@@ -105,18 +88,34 @@ Input data, used as model forcing, is collected using the [ingestr](https://stin
 
 ## Meteo data
 
-The following ingests meteorological data from the FLUXNET 2015 files for variables daytime temperature, precipitation, daytime VPD, shortwave incoming radiation, net radiation, and atmospheric pressure. Arguments that are specific for this data source are provided in the `settings` list. Unfortunately, FLUXNET 2015 doesn't provide daytime VPD. But we can derive it using the ingestr R package as described [here](https://stineb.github.io/ingestr/articles/calc_daytime_vpd.html) and done below. This writes files with daytime VPD into the directory specified by `settings_fluxnet$dir_hh`. The data object `ddf_fluxnet` is organised as a nested table with rows for sites and time series nested inside the column `data`. See [here](https://tidyr.tidyverse.org/reference/nest.html) for how to handle nested dataframes. 
-```{r message=FALSE, warning=FALSE}
-library(ingestr)
-ddf_fluxnet <- ingestr::ingest(
-  siteinfo  = siteinfo,
-  source    = "fluxnet",
-  getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F_DAY", ppfd =  "SW_IN_F", patm = "PA_F"),
-  dir       = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
-  settings  = list(dir_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/", getswc = FALSE),
-  timescale = "d"
+This extracts from original WATCH-WFDEI files, provided as NetCDF (global, 0.5 degree resolution), provided as monthly files containing all days in each month. The data directory specified here (dir = `"~/data/watch_wfdei/"`) contains sub-directories with names containing the variable names (corresponding to the ones specified by the argument `getvars = list(temp = "Tair"))`. 
+
+Ingest can be used for a single site as follows:
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+df_watch <- ingest_bysite(
+  sitename  = "anywhere",  # can be any name
+  source    = "watch_wfdei",
+  getvars   = list(temp = "Tair"),  # additional variables required for rsofun: prec = "Rainf", vpd = "Qair", ppfd = "SWin"
+  dir       = "~/data/watch_wfdei/",
+  timescale = "d",
+  year_start = 2001,
+  year_end  = 2003,
+  lon       = siteinfo$lon[1],
+  lat       = siteinfo$lat[1],
+  verbose   = FALSE
   )
 ```
+
+For multi-site simulations with rsofun, it's preferable to use ingest for multiple sites at once, using the site meta information specified in `siteinfo`. Here, data object `df_watch` is organised as a nested table with rows for sites and time series nested inside the column `data`. See [here](https://tidyr.tidyverse.org/reference/nest.html) for how to handle nested dataframes. 
+```{r message=FALSE, warning=FALSE}
+df_watch <- ingest(
+  siteinfo  = siteinfo,
+  source    = "watch_wfdei",
+  getvars   = list(temp = "Tair", prec = "Rainf", vpd = "Qair", ppfd = "SWin"),  # additional variables: 
+  dir       = "~/data/watch_wfdei/"  # adjust this with your local path
+  )
+```
+
 
 Some meteo data is not available from FLUXNET. Extract it from CRU global climate files instead.
 ```{r}
@@ -130,7 +129,7 @@ ddf_cru <- ingestr::ingest(
 
 Combine the two meteo data frames into one, containing `ccov` (cloud cover) from CRU and all other variables from FLUXNET.
 ```{r}
-ddf_meteo <- ddf_fluxnet %>% 
+ddf_meteo <- df_watch %>% 
   tidyr::unnest(data) %>% 
   left_join(
     ddf_cru %>% 
@@ -143,31 +142,50 @@ ddf_meteo <- ddf_fluxnet %>%
 
 ## fAPAR data
 
-fAPAR data is prescribed in the P-model setup. The following extracts data MODIS FPAR data from Google Earth Engine (see a complete description for how to set up the GEE API and download library [here](https://stineb.github.io/ingestr/articles/example.html#google-earth-engine)). 
+fAPAR data is prescribed in the P-model setup. The following extracts data MODIS FPAR data from the MODIS LP DAAC  (see a complete description [here](https://stineb.github.io/ingestr/articles/example.html#modis-lp-daac-1)). 
 
-The following example is for downloading MODIS FPAR data (MODIS/006/MCD15A3H, band Fpar). 
+The following example is for downloading MODIS collection 6, MCD15A3H, band `Fpar_500m` data.
 ```{r}
-settings_gee <- ingestr::get_settings_gee( 
-  bundle = "modis_fpar", 
-  python_path = system("which python", intern = TRUE),
-  gee_path = "~/google_earth_engine_subsets/gee_subset/",
-  data_path = "~/data/gee_subsets/",
-  method_interpol = "linear",
-  keep = FALSE,
-  overwrite_raw = FALSE,
-  overwrite_interpol = TRUE
+settings_modis <- get_settings_modis(
+  bundle            = "modis_fpar",
+  data_path         = "~/data/modis_subsets/",
+  method_interpol   = "loess",
+  keep              = TRUE,
+  overwrite_raw     = FALSE,
+  overwrite_interpol= TRUE
   )
 ```
 
-This can now be used to download the data to the directory specified by argument `data_path` of function `get_settings_gee()` and to read data into R.
+This is not yet implemented for multiple sites (using `ingest()`). Use the single-site ingest (`ingest_bysite()`) instead.
 ```{r}
-df_gee_modis_fpar <- ingestr::ingest(
-  siteinfo  = siteinfo,
-  source = "gee",
-  settings = settings_gee,
-  verbose = FALSE
+df_modis_fpar <- ingest_bysite(
+  sitename  = "anywhere",  # can be any name
+  source    = "modis",
+  year_start = 2003,
+  year_end  = 2005,
+  lon       = siteinfo$lon[1],
+  lat       = siteinfo$lat[1],
+  settings  = settings_modis,
+  verbose   = FALSE
   )
 ```
+
+Plot this for a quick check using the function `plot_fapar_ingestr_bysite()` from the ingestr package. **WARNING: FOR MODIS_FPAR, NO FILTERING IMPLEMENTED YET.**
+```{r}
+library(ggplot2)
+plot_fapar_ingestr_bysite(
+  df_modis_fpar,
+  settings_modis)
+```
+
+To make this output consistent for use below, let's nest it and rename the desired column to `fapar` (this is a bit weird, sorry)
+```{r}
+df_modis_fpar <- df_modis_fpar %>% 
+  rename(fapar = modisvar_filled) %>%
+  group_by(sitename) %>% 
+  nest()
+```
+
 
 ## CO2
 
@@ -184,9 +202,9 @@ df_co2 <- ingestr::ingest(
 
 Finally, we can collect forcing data, simulation parameters, and site meta info into a single object that will be used to drive rsofun. All of the above steps can be customized. The function `collect_drivers_sofun()` can in general be used to process forcing data into the format required to run SOFUN. The arguments must have the following form:
 
-- `siteinfo`: A data frame (tibble) with columns `sitename`, `lon`, `lat`, `elv` (elevation), `year_start`, `year_end`, `whc` (water holding capacity used for simulating the soil water balance), `c4` (vegetation following C4 photosynthesis). An example for FLUXNET 2015 sites is given by 
+- `siteinfo`: A data frame (tibble) with columns `sitename`, `lon`, `lat`, `elv` (elevation), `year_start`, `year_end`, `whc` (water holding capacity used for simulating the soil water balance). We have created this above.
 ```{r} 
-ingestr::siteinfo_fluxnet2015 %>% dplyr::select(sitename, lon, lat, elv, year_start, year_end, whc)
+siteinfo
 ```
 - `meteo`: A nested data frame with columns `sitename` and `data`. The latter contains the nested meteorological forcing data frames, with columns `date`, `temp`, `prec`, `vpd`, `ppfd`, `patm`, and `ccov`. Like this:
 ```{r}
@@ -201,10 +219,10 @@ ddf_meteo$data[[1]] %>% dplyr::select(-ccov_int)
 - `fapar`: A nested data frame with columns `sitename` and `data`. The latter contains the nested meteorological forcing data frames, with columns `date`, and `fapar`. Like this:
 ```{r}
 ## nested data frame:
-df_gee_modis_fpar
+df_modis_fpar
 
 ## inside .$data:
-df_gee_modis_fpar$data[[1]] %>% dplyr::select(date, fapar)
+df_modis_fpar$data[[1]] %>% dplyr::select(date, fapar)
 ```
 - `co2`  : A nested data frame with columns `sitename` and `data`. The latter contains the nested meteorological forcing data frames, with columns `date`, and `co2`. Like this:
 ```{r}
@@ -222,8 +240,9 @@ Finally, all input data can be collected by:
 ```{r}
 df_drivers <- collect_drivers_sofun( 
   siteinfo       = siteinfo,
+  params_siml    = params_siml,
   meteo          = ddf_meteo, 
-  fapar          = df_gee_modis_fpar,
+  fapar          = df_modis_fpar,
   co2            = df_co2,
   df_soiltexture = df_soiltexture
   )
