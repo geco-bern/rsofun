@@ -33,6 +33,7 @@ A small number of meta data variables have to be specified for each site specifi
 - `koeppen_code` to group sites for evaluation by Koeppen-Geiger climate zones.
 
 This information is provided in file `siteinfo_fluxnet2015.csv`. This file is created as described in (and using code from) [metainfo_fluxnet2015](https://github.com/stineb/metainfo_fluxnet2015). 
+
 ```{r}
 siteinfo <- ingestr::siteinfo_fluxnet2015 %>%
   dplyr::filter(sitename %in% mysites)

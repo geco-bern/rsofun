@@ -9,6 +9,7 @@ output:
 
 ```{r setup, include=FALSE}
 library(dplyr)
+library(tibble)
 library(rsofun)
 library(ggplot2)
 ```
