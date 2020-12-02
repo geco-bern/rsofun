@@ -119,7 +119,7 @@ contains
     !NSCtarget = 3.0 * (cc%bl_max + cc%br_max)
     fnsc = 1.0 ! min(max(0.0,cc%nsc/NSCtarget),1.0)
     ! Acambium = PI * cc%DBH * cc%height * 1.2 ! see Weng et al. 2015: Acambium~D^1.5 -> H~D^0.5 and D*H is proportional to D^1.5
-    exp_acambium = 1.5 !(1.0 - 1.5) Use this exponent to make Acambium~D^2. Ensheng suggested range 1.5 to 2.
+    exp_acambium = 1.5 !(1.5 - 2) Use this exponent to make Acambium~D^2. Ensheng suggested range 1.5 to 2.
     Acambium = PI * cc%DBH ** exp_acambium * cc%height * 1.2
     ! Facultive Nitrogen fixation
     !if (cc%NSN < cc%NSNmax .and. cc%NSC > 0.5 * NSCtarget) then
@@ -1004,7 +1004,7 @@ contains
                      ! (1. + A_mort*exp(B_mort*cc%dbh))/ &
                      ! (1. +        exp(B_mort*cc%dbh)) + &
                      ! 1/exp((-1)*(cc%dbh-2))
-              deathrate = 0.08*(9*exp(-40*cc%dbh))/(1+exp(-40*cc%dbh))+ 0.01*exp(0.6*cc%dbh)
+              deathrate = 0.08*(9*exp(-40*cc%dbh))/(1+exp(-40*cc%dbh)) + 0.01*exp(0.6*cc%dbh)
 
             else  ! First layer mortality Weng 2015: deathrate = 0.02*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then

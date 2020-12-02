@@ -44,10 +44,17 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
       # cost_rmse <- cost_chisquared_vpdstress
       cost_rmse <- cost_rmse_vpdstress
       
-    }  else if ( "lauraparam1" %in% names(settings$par) && "lauraparam2" %in% names(settings$par) && "lauraparam3" %in% names(settings$par) ){  
-      ## Calibration of VPD stress function (P-model runs with soilmstress and tempstress on)
-      # cost_rmse <- cost_chisquared_vpdstress
-      cost_rmse <- cost_rmse_lm3ppacalib
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "CAI_max" %in% names(settings$par) ){  
+      cost_rmse <- cost_rmse_lm3ppa_constantselfthinning
+
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "dbh" %in% names(settings$par) ){  
+      cost_rmse <- cost_rmse_lm3ppa_dbh
+
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "nsc" %in% names(settings$par) && "bl_max" %in% names(settings$par)){  
+      cost_rmse <- cost_rmse_lm3ppa_cstarvation
+
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "Volume" %in% names(settings$par) ){  
+      cost_rmse <- cost_rmse_lm3ppa_growthrate
       
     }
 
@@ -329,58 +336,6 @@ cost_rmse_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   return(cost)
 }
 
-
-##------------------------------------------------------------
-## Generic cost function of model-observation (mis-) match using
-## root mean square error.
-##------------------------------------------------------------
-cost_rmse_lm3ppacalib <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
-  
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  params_modl <- list(
-    lauraparam1 = par[1],
-    lauraparam2 = par[2],
-    vpdstress_par_m = par[3]
-  )
-  
-  # ... or call multi-site function with df_drivers (use function collect_drivers_sofun)
-  df <- run_lm3ppa_f(
-    df_drivers, 
-    params_modl = params_modl, 
-    makecheck = TRUE,
-    parallel = FALSE
-    ) %>%   
-
-  ## either call by site like this
-  df <- run_lm3ppa_f_bysite( "ORNL", 
-                              params_siml, 
-                              siteinfo, 
-                              forcing, # ddf_input
-                              params_tile, 
-                              params_species, 
-                              params_soil, 
-                              init_cohort, 
-                              init_soil, 
-                              makecheck = TRUE)
-
-## collapse time series outout to 1 value for comparison to observations
-
-    dplyr::select(sitename, data) %>% 
-    tidyr::unnest(data) %>% 
-    dplyr::rename(latenth_mod = latenth) %>% 
-    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
-  
-  ## Calculate cost (RMSE) across the N targets
-  cost <- sqrt( mean( (df$target1_mod - df$target1_obs )^2, na.rm = TRUE ) )
-  
-  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
-  
-  if (inverse) cost <- 1.0 / cost  
-  
-  return(cost)
-}
-
 ##------------------------------------------------------------
 ## Generic cost function of model-observation (mis-) match using
 ## the chi-squared statistic (Keenan et al., 2012 GCB).
@@ -423,6 +378,56 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
   # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
 
   if (inverse) cost <- 1.0 / cost
+  
+  return(cost)
+}
+
+##------------------------------------------------------------
+## Constant Self-thinnning mortality formulation
+##------------------------------------------------------------
+cost_rmse_lm3ppa_constantselfthinning <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
+
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio    = par[1],
+    rho_wood = par[2],
+    tf       = par[3],
+    CAI_max  = par[4]
+  )
+  
+  # ... or call multi-site function with df_drivers (use function collect_drivers_sofun)
+  # df <- run_lm3ppa_f(
+  #   df_drivers, 
+  #   params_modl = params_modl, 
+  #   makecheck = TRUE,
+  #   parallel = FALSE
+  #   ) %>%   
+
+  ## either call by site like this
+  df <- run_lm3ppa_f_bysite( "CH-Lae", 
+                              params_siml, 
+                              siteinfo, 
+                              forcing, 
+                              params_tile, 
+                              params_species, 
+                              params_soil, 
+                              init_cohort, 
+                              init_soil, 
+                              makecheck = TRUE)
+
+## collapse time series outout to 1 value for comparison to observations
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data) %>% 
+    dplyr::rename(latenth_mod = latenth) %>% 
+    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
+  
+  ## Calculate cost (RMSE) across the N targets
+  cost <- sqrt( mean( (df$targets_mod - df$targets_obs )^2, na.rm = TRUE ) )
+  
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost  
   
   return(cost)
 }
