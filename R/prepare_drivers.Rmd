@@ -156,8 +156,22 @@ df_soiltexture <- bind_rows(
 ## Meteo data
 
 ```{r message=FALSE, warning=FALSE}
-
+library(tidyverse)
 FLX_HH_LAE <- read.csv("/Users/lmarques/eulerdata/FLUXNET-2015_Tier1/20191024/HH/FLX_CH-Lae_FLUXNET2015_FULLSET_HH_2004-2014_1-3.csv")
+names(FLX_HH_LAE)
+
+FluxForcing <- FLX_HH_LAE %>% dplyr::select(TIMESTAMP_START,PPFD_IN,SW_IN_F,TA_F,TS_F_MDS_1,RH,P_F,WS_F,PA_F,SWC_F_MDS_1)
+FluxForcing <- FluxForcing %>% dplyr::mutate_all(funs(ifelse(.==-9999, NA, .))) %>% mutate(YEAR=str_sub(TIMESTAMP_START, 1, 4)) %>% mutate(DOY=str_sub(TIMESTAMP_START, 7, 8)) %>% mutate(HOUR=str_sub(TIMESTAMP_START, 9, 10)) %>% relocate(YEAR, DOY, HOUR) %>% mutate(YEAR=as.integer(YEAR),DOY=as.numeric(DOY),HOUR=as.numeric(HOUR))
+FluxForcing <- FluxForcing %>% dplyr::rename(PAR=PPFD_IN,Swdown=SW_IN_F,TEMP=TA_F,SoilT=TS_F_MDS_1,RH=RH,RAIN=P_F,WIND=WS_F,PRESSURE=PA_F,SWC=SWC_F_MDS_1) %>% dplyr::select(-TIMESTAMP_START) %>% 
+  mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
+  mutate(sitename = "CH-Lae") %>% 
+  dplyr::filter(!(mday(date)==29 & month(date)==2))
+str(FluxForcing)
+
+FluxForcing <- FluxForcing %>% 
+    dplyr::group_by(lubridate::year(date),lubridate::month(date),lubridate::day(date),lubridate::hour(date)) %>% 
+    summarise_at(vars(1:14), list(~mean(., na.rm = TRUE))) 
+FluxForcing <- FluxForcing[,-c(1:4)]
 
 ```
 

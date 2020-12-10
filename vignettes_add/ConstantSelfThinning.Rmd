@@ -9,6 +9,7 @@ output:
 
 ```{r setup, include=FALSE}
 library(dplyr)
+library(tibble)
 library(rsofun)
 library(ggplot2)
 ```
@@ -16,7 +17,7 @@ library(ggplot2)
 ## Example
 
 ### Simulation settings
-
+### Simulation settings
 
 Manually select some sites from which we're going to use the data for evaluation and calibration.
 ```{r}
@@ -33,16 +34,16 @@ Now specify the simulation parameters that are identical for all site-scale simu
 params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800, #1793,
-      recycle               = 11, # 9 or 11
+      recycle               = 1, # 9 or 11 changed to 1 when aggregating forcing into 1 year
       firstyeartrend        = 1998,
-      nyeartrend            = 11, #9 or 110 (longer transient years)
+      nyeartrend            = 1, #9 or 11 (longer transient years)
       outputhourly          = TRUE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin or dbh
+      method_photosynth     = "pmodel", # gs_leuning or pmodel
+      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -69,6 +70,7 @@ params_tile <- list(
   f_initialBSW = 0.2,
   f_N_add      = 0.02   # re-fill of N for sapwood
   )
+
 ```
 
 #### Species-level parameters
@@ -126,9 +128,8 @@ init_cohort <- tibble(
 
 #### Initial soil pools
 
+high N input --> Deciduous, low  N input --> Evergreen
 ```{r}
-# high N input --> Deciduous
-# low  N input --> Evergreen
 init_soil <- list(
  init_fast_soil_C    = 0.0,    # initial fast soil C, kg C/m2
  init_slow_soil_C    = 0.0,    # initial slow soil C, kg C/m2
@@ -167,6 +168,7 @@ if (params_siml$method_photosynth == "gs_leuning"){
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
   forcing <- forcing[,-c(1:3)]
 }
+
 ```
 
 For P-model runs, aggregate to daily forcing.
@@ -218,6 +220,11 @@ out$output_annual_tile %>%
 out$output_annual_tile %>% 
   ggplot() + geom_line(aes(x = year, y = CAI)) +
   theme_classic()+labs(x = "Year", y = "CAI")
+
+out$output_annual_tile %>% 
+  ggplot() + geom_point(aes(x = log(QMD), y = log(Density12))) +
+  theme_classic()+labs(x = "log(QMD)", y = "log(Density12)") + scale_x_continuous(limits = c(-3,-0.5))
+
 ```
 
 ### Write model outputs
@@ -257,7 +264,7 @@ From new annual_tile_output
 # Changes in LUE with WD level 1
 # Mortality Constant Self-thinning
 ggplot() + 
-  geom_point(data=subset(out$output_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(out$output_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
   labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +

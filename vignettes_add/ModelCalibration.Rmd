@@ -279,38 +279,20 @@ Leaf Mass per Area (LMA) is the inverse of SLA.
 LAI or fAPAr from MODIS
 
 ```{r}
-devtools::install_github("stineb/ingestr")
-library(ingestr)
-
-settings_gee <- get_settings_gee(
-  bundle            = "modis_fpar",
-  python_path       = system("which python", intern = TRUE),
-  gee_path          = "~/google_earth_engine_subsets/gee_subset/",
-  data_path         = "~/rsofun/vignettes_add/",
-  method_interpol   = "linear",
-  keep              = TRUE,
-  overwrite_raw     = FALSE,
-  overwrite_interpol= TRUE
-  )
-
-df_gee_modis_fpar <- ingest_bysite(
-  sitename  = "CH-Lae",
-  source    = "gee",
-  year_start= 2007,
-  year_end  = 2014,
-  lon       = 3.5958,
-  lat       = 43.7414,
-  settings  = settings_gee,
-  verbose   = FALSE
-  )
-
-plot_fapar_ingestr_bysite(df_gee_modis_fpar, settings_gee)
-
-```
-
-```{r}
 fapar_LAE <- read.csv("fapar_MODIS_FPAR_MCD15A3H_gee_CH-Lae_subset.csv")
 mean_annual_fapar <- mean(fapar_LAE$modisvar, na.rm=T)
+```
+
+## Number of trees higher than 12 cm 
+
+```{r}
+LAE_alltrees <- read.csv("LAE_alltrees.csv")
+unique(LAE_alltrees$ARTN.TEXT)
+
+LAE_Fagus <- LAE_alltrees %>% filter(ARTN.TEXT == "Fagus sylvatica")
+LAE_Fagus <- LAE_Fagus %>% mutate(DBH_m = BHD/100) %>% mutate(StemVolume = 0.0025428 + 0.39446*DBH_m*DBH_m*HOEHE + 2.56612*DBH_m*DBH_m - 3.67034*DBH_m*DBH_m*DBH_m + 0.03567*DBH_m*DBH_m*DBH_m*HOEHE) %>% mutate(StemBiomass = StemVolume * 560)
+mean_biomass <- mean(LAE_Fagus$StemBiomass)
+
 ```
 
 Define calibration settings.
