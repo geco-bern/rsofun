@@ -19,7 +19,7 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
   
   ## record first year and number of years in forcing data frame (may need to overwrite later)
   ndayyear <- 365
-  firstyeartrend_forcing <- forcing %>% slice(1) %>% pull(date) %>% lubridate::year()
+  firstyeartrend_forcing <- forcing %>% ungroup() %>% slice(1) %>% pull(date) %>% lubridate::year()
   nyeartrend_forcing <- nrow(forcing)/ndayyear
 
   ## determine number of seconds per time step
@@ -165,7 +165,7 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
     out <- out %>%
       as.matrix() %>% 
       as.data.frame() %>% 
-      setNames(c("fapar", "gpp", "transp", "latenth", "pet")) %>%
+      setNames(c("fapar", "gpp", "transp", "latenth", "pet", "vcmax", "jmax", "vcmax25", "jmax25", "gs_accl")) %>%
       as_tibble(.name_repair = "check_unique") %>%
       # dplyr::mutate(sitename = sitename) %>% 
       dplyr::bind_cols(ddf,.) %>% 
