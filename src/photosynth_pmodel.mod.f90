@@ -10,7 +10,7 @@ module md_photosynth
   implicit none
 
   private
-  public pmodel, zero_pmodel, outtype_pmodel
+  public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES

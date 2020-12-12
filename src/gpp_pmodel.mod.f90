@@ -77,7 +77,7 @@ contains
     !------------------------------------------------------------------
     ! use md_plant, only: params_pft_plant, plant_type, plant_fluxes_type
     use md_sofunutils, only: dampen_variability
-    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel
+    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
@@ -147,7 +147,10 @@ contains
       !----------------------------------------------------------------
       ! Instantaneous temperature effect on quantum yield efficiency
       !----------------------------------------------------------------
-      ftemp_kphio = calc_ftemp_kphio( climate%dtemp, params_pft_plant(pft)%c4 )
+      ! ftemp_kphio = calc_ftemp_kphio( climate%dtemp, params_pft_plant(pft)%c4 )
+
+      ! take the slowly varying temperature for governing quantum yield variations
+      ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 )
 
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
@@ -197,14 +200,8 @@ contains
       end if
 
       ! simple:
+      if (nlu > 1) stop 'gpp: think about nlu > 1'
       lu = 1
-
-      !print*,'tile(lu)%plant(pft)%fpc_grid ', tile(lu)%plant(pft)%fpc_grid
-
-      ! !----------------------------------------------------------------
-      ! ! xxx try:
-      ! tile(lu)%plant(pft)%fpc_grid = 0.5
-      ! !----------------------------------------------------------------
 
       !----------------------------------------------------------------
       ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
@@ -221,9 +218,6 @@ contains
       ! but not too dangerous...
       !----------------------------------------------------------------
       tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
-      ! if (out_pmodel%lue > 0.0) then
-      !   print*,'tile(lu)%plant(pft)%fpc_grid, tile(lu)%canopy%fapar, climate%dppfd, out_pmodel%lue, soilmstress, myinterface%params_siml%secs_per_tstep', tile(lu)%plant(pft)%fpc_grid, tile(lu)%canopy%fapar, climate%dppfd, out_pmodel%lue, soilmstress, myinterface%params_siml%secs_per_tstep
-      ! end if
 
       !----------------------------------------------------------------
       ! Dark respiration
@@ -231,12 +225,20 @@ contains
       tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar * out_pmodel%vcmax25 * calc_ftemp_inst_rd( climate%dtemp ) * c_molmass
 
       !----------------------------------------------------------------
-      ! Vcmax25
+      ! Vcmax and Jmax
       !----------------------------------------------------------------
-      tile(lu)%plant(pft)%vcmax25 = out_pmodel%vcmax25
+      ! acclimated quantities
       tile_fluxes(lu)%plant(pft)%vcmax25 = out_pmodel%vcmax25
-      !print*,'tile_fluxes(lu)%plant(pft)%vcmax25      ', tile_fluxes(lu)%plant(pft)%vcmax25
-      
+      tile_fluxes(lu)%plant(pft)%jmax25  = out_pmodel%jmax25
+
+      ! quantities with instantaneous temperature response
+      tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%vcmax25
+      tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax(  climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%jmax25
+
+      !----------------------------------------------------------------
+      ! Stomatal conductance
+      !----------------------------------------------------------------
+      tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint
 
     end do pftloop
 
@@ -611,7 +613,7 @@ contains
     params_gpp%rd_to_vcmax  = 0.01400000
 
     ! Apply identical temperature ramp parameter for all PFTs
-    params_gpp%tau_acclim     = 10.0
+    params_gpp%tau_acclim     = 30.0
     params_gpp%soilm_par_a    = myinterface%params_calib%soilm_par_a     ! is provided through standard input
     params_gpp%soilm_par_b    = myinterface%params_calib%soilm_par_b     ! is provided through standard input
 
