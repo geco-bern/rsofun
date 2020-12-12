@@ -53,7 +53,7 @@ params_siml <- list(
   calc_aet_fapar_vpd = FALSE,     # set to FALSE - should be dropped again
   in_ppfd            = TRUE,      # if available from forcing files, set to TRUE
   in_netrad          = FALSE     # if available from forcing files, set to TRUE
-	)
+  )
 ```
 
 <!-- Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters), global simulation parameters are wrapped inside an additional column `params_siml`, added to the site meta info dataframe. -->
@@ -66,10 +66,10 @@ params_siml <- list(
 Specify model parameters based on prior model calibration. See `benchmarking/tag_v*/benchmark_gpp_FLUXNET2015_ensemble.html` for latest calibrations.
 ```{r}
 params_modl <- list(
-	kphio           = 0.09423773,
-	soilm_par_a     = 0.33349283,
-	soilm_par_b     = 1.45602286
-	)
+  kphio           = 0.09423773,
+  soilm_par_a     = 0.33349283,
+  soilm_par_b     = 1.45602286
+  )
 ```
 
 ## Define soil parameters
