@@ -868,7 +868,7 @@ contains
     ! Reference:
     ! Kattge, J. and Knorr, W.: Temperature acclimation in a biochemical model of 
     ! photosynthesis: a reanalysis of data from 36 species, Plant, Cell and Environment, 
-    ! 30,1176–1190, 2007.
+    ! 30,1176â1190, 2007.
     !-----------------------------------------------------------------------
     use md_params_core, only: kR           ! Universal gas constant, J/mol/K
 

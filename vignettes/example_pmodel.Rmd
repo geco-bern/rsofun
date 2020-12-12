@@ -66,8 +66,8 @@ params_siml <- list(
   spinup             = TRUE,
   spinupyears        = 10,
   recycle            = 1,
-  soilmstress        = FALSE,
-  tempstress         = FALSE,
+  soilmstress        = TRUE,
+  tempstress         = TRUE,
   calc_aet_fapar_vpd = FALSE,
   in_ppfd            = TRUE,
   in_netrad          = FALSE,
@@ -117,6 +117,12 @@ Now, meteorological forcing data and fAPAR data for each time step have to be co
 
 ```{r}
 rsofun::df_drivers
+```
+
+The units of fluxes have changed, but the object `df_drivers` has not been adjusted accordingly. Do it "by hand".
+```{r}
+df_drivers$forcing[[1]]$prec <- rsofun::df_drivers$forcing[[1]]$prec / (60*60*24)
+df_drivers$forcing[[1]]$ppfd <- rsofun::df_drivers$forcing[[1]]$ppfd / (60*60*24)
 ```
 
 ### Run the model
