@@ -116,7 +116,8 @@ df_soiltexture <- bind_rows(
 Now, meteorological forcing data and fAPAR data for each time step have to be collected. These steps are described in the vignette `vignettes/prepare_inputs_rsofun.Rmd` for FLUXNET 2015 simulations. All forcing data, combined with model and simulations parameters are collected into one big nested data frame `df_drivers`, which stores all required information by rows for each site. An example of how this looks like is provided as part of the rsofun package.
 
 ```{r}
-rsofun::df_drivers
+df_drivers <- rsofun::df_drivers
+df_drivers
 ```
 
 The units of fluxes have changed, but the object `df_drivers` has not been adjusted accordingly. Do it "by hand".
