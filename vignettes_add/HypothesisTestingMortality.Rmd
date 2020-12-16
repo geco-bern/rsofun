@@ -80,7 +80,7 @@ params_species <- tibble(
   phenotype     = rep(0,16),                 # 0 for Deciduous; 1 for Evergreen
   pt            = rep(0,16),                 # 0 for C3; 1 for C4
   seedlingsize  = rep(0.05,16),              # initial size of seedlings
-  LMA           = rep(0.035,16),             # Leaf mass per unit area: 0.035, 0.085, 0.135
+  LMA           = rep(0.05,16),             # Leaf mass per unit area: 0.035, 0.085, 0.135
   phiRL         = rep(3.5,16),               # Root:Shoot ratio:  4.0, 6.0, 8.0
   LNbase        = rep(0.8E-3,16),            # kgN m-2 leaf, Vmax = 0.03125*LNbase
   laimax        = rep(3.5,16),               # maximum crown LAI

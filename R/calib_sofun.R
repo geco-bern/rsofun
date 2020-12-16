@@ -47,13 +47,13 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
     }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "CAI_max" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa_constantselfthinning
 
-    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "dbh" %in% names(settings$par) ){  
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "par_dbh" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa_dbh
 
-    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "nsc" %in% names(settings$par) && "bl_max" %in% names(settings$par)){  
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "par_nsc" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa_cstarvation
 
-    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "Volume" %in% names(settings$par) ){  
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "par_gr" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa_growthrate
       
     }

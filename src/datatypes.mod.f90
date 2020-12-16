@@ -421,7 +421,7 @@ module datatypes
   ! root parameters
   real :: alpha_FR(0:MSPECIES) = 1.2 ! Fine root turnover rate yr-1
   !(/0.8, 0.8,0.8, 0.8, 0.8,0.8,0.8,0.8,1.0,1.0,0.6, 1.0, 0.55, 0.9, 0.55, 0.55/)
-  real :: rho_FR(0:MSPECIES) = 200 ! woody density, kgC m-3
+  real :: rho_FR(0:MSPECIES) = 200 ! material density of fine roots (kgC m-3)
   real :: root_r(0:MSPECIES) = 2.9E-4
   !(/1.1e-4, 1.1e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 1.1e-4, 1.1e-4, 2.2e-4, 2.2e-4/)
   real :: root_zeta(0:MSPECIES) = 0.29 !
@@ -441,9 +441,9 @@ module datatypes
         ! photosynthesis of completely wet leaf will be 30% less than that of dry one,
         ! provided everything else is the same
   !(/1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2/)
-  real :: m_cond(0:MSPECIES)= 7.0 !
-  real :: alpha_phot(0:MSPECIES)=  0.06 !
-  real :: gamma_L(0:MSPECIES)= 0.02 !
+  real :: m_cond(0:MSPECIES)= 7.0 
+  real :: alpha_phot(0:MSPECIES)=  0.06 
+  real :: gamma_L(0:MSPECIES)= 0.02 
   real :: gamma_LN(0:MSPECIES)= 70.5 ! 25.0  ! kgC kgN-1 yr-1
   real :: gamma_SW(0:MSPECIES)= 0.08 ! 5.0e-4 ! kgC m-2 Acambium yr-1
   real :: gamma_FR(0:MSPECIES)= 12.0 ! 15 !kgC kgN-1 yr-1 ! 0.6: kgC kgN-1 yr-1
@@ -453,11 +453,11 @@ module datatypes
 
   ! Allometry parameters
   real :: alphaHT(0:MSPECIES)      = 36.0
-  real :: thetaHT(0:MSPECIES)      = 0.5 !
+  real :: thetaHT(0:MSPECIES)      = 0.5 
   real :: alphaCA(0:MSPECIES)      = 150.0
   real :: thetaCA(0:MSPECIES)      = 1.5
   real :: alphaBM(0:MSPECIES)      = 5200.0
-  real :: thetaBM(0:MSPECIES)      = 2.5
+  real :: thetaBM(0:MSPECIES)      = 2.36 !2.5
 
   ! Reproduction parameters
   ! real :: maturalage(0:MSPECIES) = 5.0  ! year
@@ -471,12 +471,12 @@ module datatypes
   !real :: mortrate_d_u(0:MSPECIES) = 0.075
 
   ! Leaf parameters
-  ! real :: LMA(0:MSPECIES)         = 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2
+  ! real :: LMA(0:MSPECIES)         = 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2 LMA = 1/SLA 0.05 for Fagus
   !(/0.04,    0.04,    0.035,   0.035,   0.140,  0.032, 0.032,  0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036  /)
   real :: leafLS(0:MSPECIES) = 1.0
   ! real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
   real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
-  real :: rho_wood(0:MSPECIES)      = 300.0 ! kgC m-3 (Simulations: 300, 600, 800)
+  real :: rho_wood(0:MSPECIES)      = 590.0 ! kgC m-3 (Simulations: 300, 600, 800)
   real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
   real :: LAImax(0:MSPECIES)        != 3.5 ! maximum LAI for a tree
   ! real :: LAI_light(0:MSPECIES)     = 4.0 ! maximum LAI limited by light

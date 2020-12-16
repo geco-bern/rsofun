@@ -3,6 +3,8 @@ title: "prepare_drivers"
 output: html_document
 ---
 
+Prepare drivers and inputs for calibrating LM3-PPA. Vignette prepare_inputs_rsofun.Rmd used as reference.
+
 ```{r setup, include=FALSE}
 library(rsofun)
 library(dplyr)
@@ -17,7 +19,8 @@ mysites <- "CH-Lae"
 ```
 
 ```{r}
-siteinfo <- data.frame(sitename="CH-Lae", lon = 8.365, lat = 47.47808, elv = 700, year_start = 2000, year_end = 2019, classid = NA, c4 = FALSE, whc = NA, koeppen_code = NA, igbp_land_use = "Mixed Forests", plant_functional_type = "Broadleaf trees")
+# Take only year 2004 to 2014, corresponding to subset of data for site CH-Lae
+siteinfo <- data.frame(sitename="CH-Lae", lon = 8.365, lat = 47.47808, elv = 700, year_start = 2004, year_end = 2014, classid = NA, c4 = FALSE, whc = NA, koeppen_code = NA, igbp_land_use = "Mixed Forests", plant_functional_type = "Broadleaf trees")
 
 siteinfo <- as_tibble(siteinfo)
 siteinfo <- siteinfo %>% 
@@ -71,7 +74,6 @@ params_tile <- list(
   f_initialBSW = 0.2,
   f_N_add      = 0.02   # re-fill of N for sapwood
   )
-
 ```
 
 #### Species-level parameters
@@ -157,20 +159,50 @@ df_soiltexture <- bind_rows(
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
-FLX_HH_LAE <- read.csv("/Users/lmarques/eulerdata/FLUXNET-2015_Tier1/20191024/HH/FLX_CH-Lae_FLUXNET2015_FULLSET_HH_2004-2014_1-3.csv")
+FLX_HH_LAE <- read.csv("~/data/FLUXNET-2015_Tier1/20191024/HH/FLX_CH-Lae_FLUXNET2015_FULLSET_HH_2004-2014_1-3.csv")
 names(FLX_HH_LAE)
 
 FluxForcing <- FLX_HH_LAE %>% dplyr::select(TIMESTAMP_START,PPFD_IN,SW_IN_F,TA_F,TS_F_MDS_1,RH,P_F,WS_F,PA_F,SWC_F_MDS_1)
 FluxForcing <- FluxForcing %>% dplyr::mutate_all(funs(ifelse(.==-9999, NA, .))) %>% mutate(YEAR=str_sub(TIMESTAMP_START, 1, 4)) %>% mutate(MONTH=str_sub(TIMESTAMP_START, 5, 6)) %>% mutate(DOY=str_sub(TIMESTAMP_START, 7, 8)) %>% mutate(HOUR=str_sub(TIMESTAMP_START, 9, 10)) %>% relocate(YEAR, MONTH, DOY, HOUR) %>% mutate(YEAR=as.integer(YEAR),MONTH=as.numeric(MONTH),DOY=as.numeric(DOY),HOUR=as.numeric(HOUR))
 FluxForcing <- FluxForcing %>% dplyr::rename(PAR=PPFD_IN,Swdown=SW_IN_F,TEMP=TA_F,SoilT=TS_F_MDS_1,RH=RH,RAIN=P_F,WIND=WS_F,PRESSURE=PA_F,SWC=SWC_F_MDS_1) %>% dplyr::select(-TIMESTAMP_START) %>% 
-  mutate(date = make_datetime(YEAR, MONTH, DOY, HOUR))  %>%
-  dplyr::filter(!(mday(date)==29 & month(date)==2)) %>% mutate(DOY=lubridate::yday(date)) %>% dplyr::select(-MONTH) #%>% drop_na()
+  mutate(datehour = make_datetime(YEAR, MONTH, DOY, HOUR))  %>% mutate(date = make_datetime(YEAR, MONTH, DOY)) %>%
+  dplyr::filter(!(mday(datehour)==29 & month(datehour)==2)) %>% mutate(DOY=lubridate::yday(datehour)) %>% dplyr::select(-MONTH) #%>% drop_na()
 # Hourly data
 FluxForcing <- FluxForcing %>% 
-    dplyr::group_by(lubridate::year(date),lubridate::month(date),lubridate::day(date),lubridate::hour(date)) %>% 
-    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))  %>% mutate(sitename = "CH-Lae") 
+    dplyr::group_by(lubridate::year(datehour),lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
+    summarise_at(vars(1:14), list(~mean(., na.rm = TRUE)))  %>% mutate(sitename = "CH-Lae") 
 FluxForcing <- FluxForcing[,-c(1:4)]
 
+```
+
+## CO2
+
+Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
+```{r}
+df_co2 <- ingestr::ingest(
+  siteinfo,
+  source  = "co2_mlo",
+  verbose = FALSE
+  )
+df_co2$data[[1]] # $co2 # To select CO2 
+```
+Combine the two FLUXNET and CO2 to create the complete forcing data.
+
+```{r}
+FluxForcing <- FluxForcing %>% 
+  #tidyr::unnest(data) %>% 
+  left_join(
+    df_co2 %>% 
+      tidyr::unnest(data),
+    by = c("sitename", "date")
+  ) %>% rename(CO2=co2) %>% relocate(CO2, .after = PRESSURE) 
+  #group_by(sitename) %>% 
+  #tidyr::nest()
+
+FluxForcing <- FluxForcing %>% relocate(co2, .after = PRESSURE) 
+```
+
+```{r}
 if (params_siml$method_photosynth == "gs_leuning"){
   FluxForcing <- FluxForcing %>% 
     dplyr::group_by(lubridate::month(date),lubridate::day(date),lubridate::hour(date)) %>% 
@@ -186,49 +218,9 @@ if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
 }
 
 forcing <- FluxForcing
-
-```
-
-Some meteo data is not available from FLUXNET. Extract it from CRU global climate files instead.
-```{r}
-ddf_cru <- ingestr::ingest(
-  siteinfo  = siteinfo,
-  source    = "cru",
-  getvars   = list(ccov = "cld"),
-  dir       = "~/data/cru/ts_4.01/"
-  )
-```
-
-Combine the two meteo data frames into one, containing `ccov` (cloud cover) from CRU and all other variables from FLUXNET.
-```{r}
-ddf_meteo <- ddf_fluxnet %>% 
-  tidyr::unnest(data) %>% 
-  left_join(
-    ddf_cru %>% 
-      tidyr::unnest(data),
-    by = c("sitename", "date")
-  ) %>% 
-  group_by(sitename) %>% 
-  tidyr::nest()
-```
-
-## fAPAR data
-
-```{r}
-fapar_LAE <- read.csv("fapar_MODIS_FPAR_MCD15A3H_gee_CH-Lae_subset.csv")
 ```
 
 
-## CO2
-
-Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
-```{r}
-df_co2 <- ingestr::ingest(
-  siteinfo,
-  source  = "co2_mlo",
-  verbose = FALSE
-  )
-```
 
 ## Collect all drivers
 
