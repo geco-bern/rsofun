@@ -172,7 +172,8 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       dplyr::select(-year_dec)
 
   } else {
-    out <- tibble(date = lubridate::ymd("2000-01-01"), fapar = NA, gpp = NA, transp = NA, latenth = NA, pet = NA)    # sitename = sitename, 
+    out <- tibble(date = lubridate::ymd("2000-01-01"), fapar = NA, gpp = NA, transp = NA, latenth = NA, 
+                  pet = NA, vcmax = NA, jmax = NA, vcmax25 = NA, jmax25 = NA, gs_accl = NA)    # sitename = sitename, 
   }
     
   return(out)
