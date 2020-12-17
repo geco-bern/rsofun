@@ -219,7 +219,7 @@ contains
     if (pft==0) stop 'get_fpc_grid: no PFT activated accoring to simulation parameter file.'
 
     if (pft/=npft) stop 'GET_FPC_GRID: Adjust npft manually in params_core.mod.f90'
-
+    
   end function get_fpc_grid
 
 end module md_forcing_pmodel

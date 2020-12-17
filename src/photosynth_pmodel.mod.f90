@@ -148,10 +148,9 @@ contains
     ! photorespiratory compensation point - Gamma-star (Pa)
     gammastar = calc_gammastar( tc, patm )
 
-    ! ! XXX PMODEL_TEST: ok
+    ! XXX PMODEL_TEST: ok
     ! print*,'tc        ', tc
     ! print*,'patm      ', patm
-    ! print*,'elv       ', elv
     ! print*,'vpd       : ', vpd
     ! print*,'gammastar ', gammastar
 
@@ -235,7 +234,7 @@ contains
 
       ! Light use efficiency (gpp per unit absorbed light)
       lue = kphio * mprime * c_molmass  ! in g CO2 m-2 s-1 / (mol light m-2 s-1)
-
+      
       ! Vcmax after accounting for Jmax limitation
       vcmax = kphio * ppfd * out_optchi%mjoc * mprime / out_optchi%mj
 

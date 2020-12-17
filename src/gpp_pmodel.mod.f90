@@ -144,6 +144,9 @@ contains
 
 
     pftloop: do pft=1,npft
+      
+      lu = 1
+    
       !----------------------------------------------------------------
       ! Instantaneous temperature effect on quantum yield efficiency
       !----------------------------------------------------------------
@@ -218,6 +221,14 @@ contains
       ! but not too dangerous...
       !----------------------------------------------------------------
       tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
+      
+      !! print*,'gpp',tile_fluxes(lu)%plant(pft)%dgpp
+      !! print*,'fpcgrid',tile(lu)%plant(pft)%fpc_grid
+      !! print*,'fapar',tile(lu)%canopy%fapar
+      !! print*,'ppfd', climate%dppfd
+      !! print*,'secspertstep', myinterface%params_siml%secs_per_tstep
+      !! print*,'lue', out_pmodel%lue
+      !! print*,'soilmstress', soilmstress
 
       !----------------------------------------------------------------
       ! Dark respiration

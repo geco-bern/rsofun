@@ -163,7 +163,7 @@ contains
     ! GET VEGETATION COVER (fractional projective cover by PFT)
     !----------------------------------------------------------------
     myinterface%fpc_grid(:) = get_fpc_grid( myinterface%params_siml )
-
+    
     do yr=1,myinterface%params_siml%runyears
 
       !----------------------------------------------------------------

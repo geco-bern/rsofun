@@ -76,9 +76,9 @@ params_siml <- list(
   ltne               = FALSE,
   ltrd               = FALSE,
   ltnd               = FALSE,
-  lgr3               = FALSE,
+  lgr3               = TRUE,
   lgn3               = FALSE,
-  lgr4               = TRUE
+  lgr4               = FALSE
 	)
 ```
 
