@@ -30,12 +30,12 @@ A small number of meta data variables have to be specified for each site specifi
 The following is an example (`elv` is not specified) for small ensemble of site simulations (*N* = 3):
 ```{r}
 siteinfo <- tibble(
-  sitename = c("s1", "s2", "s3"),
+  sitename = c("site_rsofun_demo_1", "site_rsofun_demo_2", "site_rsofun_demo_3"),
   lon = c(100.05, 100.45, 90),
   lat = c(50, 50, 50),
   elv = c(1000, 250, 2500),
   year_start = c(2003, 2001, 2005),
-  year_end = c(2007, 2008, 2009),
+  year_end = c(2005, 2006, 2007),
   whc = 200
 )
 siteinfo
@@ -87,7 +87,7 @@ ddf_meteo <- df_watch %>%
 
 ### fAPAR data
 
-fAPAR data is prescribed in the P-model setup. MODIS data can be ingested either using the [MODISTools](https://docs.ropensci.org/MODISTools/) R package from MODIS LP DAAC (see a complete description [here](https://stineb.github.io/ingestr/articles/example.html#modis-lp-daac-1)), or from MODIS data hosted on Google Earth Engine using the [gee_subset](https://github.com/bluegreen-labs/gee_subset) R package. The former provides full functionality and subsetting larger areas, including multiple pixels. The latter works much faster but allows only data ingest for single pixels. Chose the appropriate for your application. Both are available through the [ingestr](https://stineb.github.io/ingestr/) R package.
+fAPAR data is prescribed in the P-model setup. MODIS data can be ingested either using the [MODISTools](https://docs.ropensci.org/MODISTools/) R package from MODIS LP DAAC (see a complete description [here](https://stineb.github.io/ingestr/articles/example.html#modis-lp-daac-1)), or from MODIS data hosted on Google Earth Engine using the [gee_subset](https://github.com/bluegreen-labs/gee_subset) R package. The former provides full functionality and extracting data for larger areas, including multiple pixels. The latter works much faster but allows only data ingest for single pixels. Choose the appropriate option for your application. Both are available through the [ingestr](https://stineb.github.io/ingestr/) R package.
 
 #### MODISTools
 
