@@ -10,12 +10,10 @@ output:
 ```{r setup, include=FALSE}
 library(rsofun)
 library(ingestr)
-library(dplyr)
-library(readr)
-library(tidyr)
+library(tidyverse)
 ```
 
-The following describes how to use the [ingestr R package ](https://stineb.github.io/ingestr/) for collecting rsofun forcing data. This is to create the object `df_drivers`, required as an input (forcing) to rsofun. This vignette is specific for collecting forcing data where no site-specific measurements are available, but all data is extracted from global maps. Head over to the vignette `prepare_fluxnetinputs_rsofun.Rmd` for an example for collecting forcing data for a FLUXNET site, using site-specific meteorological data.
+The following describes how to use the [ingestr R package ](https://stineb.github.io/ingestr/) for collecting rsofun forcing data. This is to create the object `df_drivers`, required as an input (forcing) to rsofun. This vignette is specific for collecting forcing data where no site-specific measurements are available, but all data is extracted from global maps. Head over to the vignette `prepare_fluxnetinputs_rsofun.Rmd` for an example for collecting forcing data for a FLUXNET site, using site-specific meteorological data. Note that this code requires the [tidyverse](https://www.tidyverse.org/) R package.
 
 ## Site selection and meta data
 
@@ -29,15 +27,138 @@ A small number of meta data variables have to be specified for each site specifi
 - `whc` for the total rooting zone soil water holding capacity. This is not a temporary "fudge" solution. Set it to 170 mm if no better information is available.
 - `koeppen_code` to group sites for evaluation by Koeppen-Geiger climate zones (may be ignored, only required for `eval_sofun()`).
 
-The following is an example (`elv` is not specified) for a single-site run:
+The following is an example (`elv` is not specified) for small ensemble of site simulations (*N* = 3):
 ```{r}
-siteinfo <- data.frame(
-  sitename = "anywhere",
-  lon = 100,
-  lat = 50,
-  year_start = 2003,
-  year_end = 2005
+siteinfo <- tibble(
+  sitename = c("s1", "s2", "s3"),
+  lon = c(100.05, 100.45, 90),
+  lat = c(50, 50, 50),
+  elv = c(1000, 250, 2500),
+  year_start = c(2003, 2001, 2005),
+  year_end = c(2007, 2008, 2009),
+  whc = 200
 )
+siteinfo
+```
+
+Note that sites "s1" and "s2" are located close to each other - within 0.5 degrees in longitude and on the same latitude. Climate forcing used in this example (see below) is from the WATCH-WFDEI reanalysis data, provided at 0.5 degrees. This implies that sites "s1" and "s2" are forced with the same climate (but different fAPAR data). To speed up climate data ingest, we can determine the 0.5 degrees gridcells containing at least one site and ingest respective data. These steps are explained in Section *Forcing by gridcell*. Below, we continue explaining simulations with forcing by site. This facilitates the coding greatly (while dealing with larger amount of climate forcing data, which slows it down) ...
+
+## Get model forcing time series
+
+Input data, used as model forcing, is collected using the [ingestr](https://stineb.github.io/ingestr/) package. A brief description for how to use it for our present application is provided here. Data is collected by data source. 
+
+### Climate forcing
+
+This extracts from original WATCH-WFDEI files, provided as NetCDF (global, 0.5 degree resolution), provided as monthly files containing all days in each month. The data directory specified here (dir = `"~/data/watch_wfdei/"`) contains sub-directories with names corresponding to WATCH-WFDEI variable names (e.g. `"Tair"`). The variables for which data is to be ingested, is given by the argument `getvars`. See the [ingestr](https://stineb.github.io/ingestr/) website for a list of standard variable names. For P-model simulations with rsofun, we typically use the variables indicated below. An additional variable (cloud cover fraction) is read from CRU TS data, for which a data ingest option is also available in the  ingestr package.
+
+For multiple sites, data is ingested as follows.
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+ddf_watch <- ingest(
+  siteinfo = siteinfo,
+  source    = "watch_wfdei",
+  getvars   = c("temp", "prec", "ppfd", "vpd"),
+  dir       = "~/data/watch_wfdei/"  # adjust this with your local path
+)
+save(ddf_watch, file = "~/rsofun/data/ddf_watch.RData")
+
+ddf_cru <- ingest(
+  siteinfo = siteinfo,
+  source    = "cru",
+  getvars   = "ccov",
+  dir       = "~/data/cru/ts_4.01/"  # adjust this with your local path
+)
+save(ddf_cru, file = "~/rsofun/data/ddf_cru.RData")
+```
+
+The data objects `ddf_watch` and `ddf_cru` are organised as a nested table with rows for sites and time series nested inside the column `data`. See [here](https://tidyr.tidyverse.org/reference/nest.html) for how to handle nested data frames. 
+
+Now, Combine the two meteo data frames into one, containing `ccov` (cloud cover) from CRU and all other variables from WATCH-WFDEI
+```{r}
+ddf_meteo <- df_watch %>% 
+  tidyr::unnest(data) %>% 
+  left_join(
+    ddf_cru %>% 
+      tidyr::unnest(data),
+    by = c("sitename", "date")
+  ) %>% 
+  group_by(sitename) %>% 
+  tidyr::nest()
+```
+
+### fAPAR data
+
+fAPAR data is prescribed in the P-model setup. MODIS data can be ingested either using the [MODISTools](https://docs.ropensci.org/MODISTools/) R package from MODIS LP DAAC (see a complete description [here](https://stineb.github.io/ingestr/articles/example.html#modis-lp-daac-1)), or from MODIS data hosted on Google Earth Engine using the [gee_subset](https://github.com/bluegreen-labs/gee_subset) R package. The former provides full functionality and subsetting larger areas, including multiple pixels. The latter works much faster but allows only data ingest for single pixels. Chose the appropriate for your application. Both are available through the [ingestr](https://stineb.github.io/ingestr/) R package.
+
+#### MODISTools
+
+The following example is for downloading MODIS collection 6, MCD15A3H, band `Fpar_500m` data.
+```{r}
+settings_modis <- get_settings_modis(
+  bundle            = "modis_fpar",
+  data_path         = "~/data/modis_subsets/",
+  method_interpol   = "loess",
+  keep              = TRUE,
+  overwrite_raw     = FALSE,
+  overwrite_interpol= TRUE
+  )
+
+df_modis_fpar <- ingest(
+  siteinfo, 
+  source = "modis",
+  settings = settings_modis, 
+  parallel = FALSE,
+  ncores = 2
+  )
+```
+
+Plot this for a quick check using the function `plot_fapar_ingestr_bysite()` from the ingestr package. **WARNING: FOR MODIS_FPAR, NO FILTERING IMPLEMENTED YET.**
+```{r}
+library(ggplot2)
+plot_fapar_ingestr_bysite(
+  df_modis_fpar,
+  settings_modis)
+```
+
+To make this output consistent for use below, let's nest it and rename the desired column to `fapar` (this is a bit weird, sorry)
+```{r}
+df_modis_fpar <- df_modis_fpar %>% 
+  rename(fapar = modisvar_filled) %>%
+  group_by(sitename) %>% 
+  nest()
+```
+
+#### gee_subsets
+
+This requires authentication with Google Earth Engine. See [here](https://stineb.github.io/ingestr/articles/example.html#google-earth-engine) for a guide of required steps. Once, this is done, do the following.
+```{r}
+settings_gee <- get_settings_gee(
+  bundle            = "modis_fpar",
+  python_path       = system("which python", intern = TRUE),
+  gee_path          = "~/google_earth_engine_subsets/gee_subset/",    # adjust this with your local path
+  data_path         = "~/data/gee_subsets/",    # adjust this with your local path
+  method_interpol   = "linear",
+  keep              = TRUE,
+  overwrite_raw     = FALSE,
+  overwrite_interpol= TRUE
+  )
+
+df_gee_modis_fpar <- ingest(
+  siteinfo= siteinfo,
+  source  = "gee",
+  settings= settings_gee,
+  verbose = FALSE
+  )
+```
+
+## CO2
+
+Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
+```{r}
+df_co2 <- ingestr::ingest(
+  siteinfo,
+  source  = "co2_mlo",
+  verbose = FALSE
+  )
 ```
 
 ## Simulation settings
@@ -80,122 +201,6 @@ df_soiltexture <- bind_rows(
   top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
   bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
 )
-```
-
-## Get input
-
-Input data, used as model forcing, is collected using the [ingestr](https://stineb.github.io/ingestr/) package. A brief description for how to use it for our present application is provided here. Data is collected by data source. 
-
-## Meteo data
-
-This extracts from original WATCH-WFDEI files, provided as NetCDF (global, 0.5 degree resolution), provided as monthly files containing all days in each month. The data directory specified here (dir = `"~/data/watch_wfdei/"`) contains sub-directories with names containing the variable names (corresponding to the ones specified by the argument `getvars = list(temp = "Tair"))`. 
-
-Ingest can be used for a single site as follows:
-```{r message=FALSE, warning=FALSE, eval=FALSE}
-df_watch <- ingest_bysite(
-  sitename  = "anywhere",  # can be any name
-  source    = "watch_wfdei",
-  getvars   = list(temp = "Tair"),  # additional variables required for rsofun: prec = "Rainf", vpd = "Qair", ppfd = "SWin"
-  dir       = "~/data/watch_wfdei/",
-  timescale = "d",
-  year_start = 2001,
-  year_end  = 2003,
-  lon       = siteinfo$lon[1],
-  lat       = siteinfo$lat[1],
-  verbose   = FALSE
-  )
-```
-
-For multi-site simulations with rsofun, it's preferable to use ingest for multiple sites at once, using the site meta information specified in `siteinfo`. Here, data object `df_watch` is organised as a nested table with rows for sites and time series nested inside the column `data`. See [here](https://tidyr.tidyverse.org/reference/nest.html) for how to handle nested dataframes. 
-```{r message=FALSE, warning=FALSE}
-df_watch <- ingest(
-  siteinfo  = siteinfo,
-  source    = "watch_wfdei",
-  getvars   = list(temp = "Tair", prec = "Rainf", vpd = "Qair", ppfd = "SWin"),  # additional variables: 
-  dir       = "~/data/watch_wfdei/"  # adjust this with your local path
-  )
-```
-
-
-Some meteo data is not available from FLUXNET. Extract it from CRU global climate files instead.
-```{r}
-ddf_cru <- ingestr::ingest(
-  siteinfo  = siteinfo,
-  source    = "cru",
-  getvars   = list(ccov = "cld"),
-  dir       = "~/data/cru/ts_4.01/"
-  )
-```
-
-Combine the two meteo data frames into one, containing `ccov` (cloud cover) from CRU and all other variables from FLUXNET.
-```{r}
-ddf_meteo <- df_watch %>% 
-  tidyr::unnest(data) %>% 
-  left_join(
-    ddf_cru %>% 
-      tidyr::unnest(data),
-    by = c("sitename", "date")
-  ) %>% 
-  group_by(sitename) %>% 
-  tidyr::nest()
-```
-
-## fAPAR data
-
-fAPAR data is prescribed in the P-model setup. The following extracts data MODIS FPAR data from the MODIS LP DAAC  (see a complete description [here](https://stineb.github.io/ingestr/articles/example.html#modis-lp-daac-1)). 
-
-The following example is for downloading MODIS collection 6, MCD15A3H, band `Fpar_500m` data.
-```{r}
-settings_modis <- get_settings_modis(
-  bundle            = "modis_fpar",
-  data_path         = "~/data/modis_subsets/",
-  method_interpol   = "loess",
-  keep              = TRUE,
-  overwrite_raw     = FALSE,
-  overwrite_interpol= TRUE
-  )
-```
-
-This is not yet implemented for multiple sites (using `ingest()`). Use the single-site ingest (`ingest_bysite()`) instead.
-```{r}
-df_modis_fpar <- ingest_bysite(
-  sitename  = "anywhere",  # can be any name
-  source    = "modis",
-  year_start = 2003,
-  year_end  = 2005,
-  lon       = siteinfo$lon[1],
-  lat       = siteinfo$lat[1],
-  settings  = settings_modis,
-  verbose   = FALSE
-  )
-```
-
-Plot this for a quick check using the function `plot_fapar_ingestr_bysite()` from the ingestr package. **WARNING: FOR MODIS_FPAR, NO FILTERING IMPLEMENTED YET.**
-```{r}
-library(ggplot2)
-plot_fapar_ingestr_bysite(
-  df_modis_fpar,
-  settings_modis)
-```
-
-To make this output consistent for use below, let's nest it and rename the desired column to `fapar` (this is a bit weird, sorry)
-```{r}
-df_modis_fpar <- df_modis_fpar %>% 
-  rename(fapar = modisvar_filled) %>%
-  group_by(sitename) %>% 
-  nest()
-```
-
-
-## CO2
-
-Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
-```{r}
-df_co2 <- ingestr::ingest(
-  siteinfo,
-  source  = "co2_mlo",
-  verbose = FALSE
-  )
 ```
 
 ## Collect all drivers
