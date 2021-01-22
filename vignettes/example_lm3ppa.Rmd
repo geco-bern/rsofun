@@ -9,8 +9,13 @@ output:
 
 ```{r setup, include=FALSE}
 library(dplyr)
+library(tibble)
 library(rsofun)
 library(ggplot2)
+
+if(!require(devtools)){install.packages(devtools)}
+devtools::install_github("stineb/ingestr")
+library(ingestr)
 ```
 
 ## Example
@@ -19,29 +24,36 @@ library(ggplot2)
 
 Manually select some sites from which we're going to use the data for evaluation and calibration.
 ```{r}
-mysites <- c("ORNL")
+mysites <- "CH-Lae"
 ```
 
 Create a site meta info table that contains all the site-specific information that is used to force site-simulations (e.g. starting year, number of simulations years, elevation, etc.). For FLUXNET2015 data, required meta info is provided by the `rsofun` package (data frame `rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015`).
 ```{r}
-siteinfo <- data.frame(sitename="ORNL", lon = 0.0, lat = 0.0, elv = 0.0)
+# Take only year 2004 to 2014, corresponding to subset of data for site CH-Lae
+siteinfo <- data.frame(sitename="CH-Lae", lon = 8.365, lat = 47.47808, elv = 700, year_start = 2004, year_end = 2014, classid = NA, c4 = FALSE, whc = NA, koeppen_code = NA, igbp_land_use = "Mixed Forests", plant_functional_type = "Broadleaf trees")
+
+siteinfo <- as_tibble(siteinfo)
+siteinfo <- siteinfo %>% 
+  dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
+  dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
+
 ```
 
 Now specify the simulation parameters that are identical for all site-scale simulations.
 ```{r}
 params_siml <- list(
       spinup                = TRUE,
-      spinupyears           = 1793,
-      recycle               = 11, # 9 or 11
+      spinupyears           = 1800, #1793,
+      recycle               = 1, # 9 or 11 changed to 1 when aggregating forcing into 1 year
       firstyeartrend        = 1998,
-      nyeartrend            = 11, #9 or 11
-      outputhourly          = FALSE,
+      nyeartrend            = 1, #9 or 11 (longer transient years)
+      outputhourly          = TRUE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "dbh" # cstarvation or growthrate or const_selfthin
+      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -62,56 +74,52 @@ The model allows for four different mortality functional forms:
 (c) "growthrate" as a function of growth rate: high mortality rate for faster growing trees.
 (d) "const_selfthin" as a constant self-thinning relationship.
 
-Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters).
-```{r}
-#settings_sims <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
-```
-
 ### Define model parameters
 
 #### Tile-level parameters
 
 ```{r}
 params_tile <- list(
-  soiltype     = 3,
-  FLDCAP       = 0.4,
-  WILTPT       = 0.05,
-  K1           = 2.0,  # turnover rate of fast SOM per year
-  K2           = 0.1,   # 0.12 # 0.2, # 0.075 # turnover rate of slow SOM per year
-  K_nitrogen   = 0.0, # 1.2 # 2.5 # rate of a year, 2.5
-  etaN         = 0.0, # 0.025 # loss rate with runoff
-  MLmixRatio   = 0.6, # 0.8 # fraction of microbes to litter
-  l_fract      = 0.0,
-  retransN     = 0.0,
-  f_N_add      = 0.02, # 0.005, # 0.02
-  f_initialBSW = 0.005
-  # alpha_FR   =  1.2; gamma_FR = 12.0; dSlowSOM = 2.5 * iSOM + 1.5; rho_N_up0 = 0.1
+  soiltype     = 3,     # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
+  FLDCAP       = 0.4,   # soil property: field capacity 
+  WILTPT       = 0.05,  # soil property: wilting point
+  K1           = 2.0,   # turnover rate of fast SOM per year
+  K2           = 0.05,  # turnover rate of slow SOM per year
+  K_nitrogen   = 8.0,   # mineral Nitrogen turnover rate
+  MLmixRatio   = 0.8,   # the ratio of C and N returned to litters from microbes
+  etaN         = 0.025, # loss rate with runoff
+  LMAmin       = 0.02,  # minimum LMA, boundary condition
+  fsc_fine     = 1.0,   # fraction of fast turnover carbon in fine biomass
+  fsc_wood     = 0.0,   # fraction of fast turnover carbon in wood biomass
+  GR_factor    = 0.33,  # growth respiration factor
+  l_fract      = 0.0,   # fraction of the carbon retained after leaf drop
+  retransN     = 0.0,   # retranslocation coefficient of Nitrogen
+  f_initialBSW = 0.2,
+  f_N_add      = 0.02   # re-fill of N for sapwood
   )
-
 ```
 
 #### Species-level parameters
 
 ```{r}
 params_species <- tibble(
-  lifeform      = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1),    # 0: grass; 1 Woody
-  phenotype     = c(0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0),    # 0: Deciduous; 1 Evergreen
-  pt            = c(1,       0,        0,        0,        0,      0,        0,        0,      0,        0,        0),    # 0: C3; 1: C4
-  seedlingsize  = c(0.02,    0.05,     0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05),  # initial size of seedlings
-  LMA           = c(0.035,   0.14,     0.14,     0.14,     0.14,   0.14,    0.14,   0.14,     0.14,     0.14,     0.035),# Leaf mass per unit area
-  phiRL         = c(4.0,     1.0,      2.0,      3.0,      4.0,     5.0,     6.0,      7.0,     8.0,    9.0,      3.0),
-  LNbase        = c(0.8E-3,  0.8E-3,   0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3),   # kgN m-2 leaf, Vmax = 0.03125*LNbase
-  laimax        = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  # maximum crown LAI
-  LAI_light     = c(3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8),  # Light-limited crown LAI
-  Nfixrate0     = c(0.0,     0.0,      0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0),  # 0.03 kgN kgRootC-1 yr-1
-  NfixCost0     = c(12.,     12.,      12.,      12.,      12.,    12.,      12.,      12.,    12.,      12.,      12.),  # 12, 24 gC/gN
-  phiCSA        = c(1.25E-4, 0.25E-4,  0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4),
-  mortrate_d_c  = c(0.02,    0.02,     0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02),    # canopy tree mortality rate, year-1
-  mortrate_d_u  = c(0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08),    # understory tree mortality rate, year-1
-  maturalage    = c(0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5),
-  fNSNmax       = c(5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5)
-  ) %>% 
-  bind_rows(., slice(., 1:5))
+  lifeform      = rep(1,16),                 # 0 for grasses; 1 for trees
+  phenotype     = rep(0,16),                 # 0 for Deciduous; 1 for Evergreen
+  pt            = rep(0,16),                 # 0 for C3; 1 for C4
+  seedlingsize  = rep(0.05,16),              # initial size of seedlings
+  LMA           = rep(0.05,16),              # Leaf mass per unit area. For sps: Beech (0.05); Spruce (0.17) Fir (0.11)
+  phiRL         = rep(3.5,16),               # Root:Shoot ratio:  4.0, 6.0, 8.0
+  LNbase        = rep(0.8E-3,16),            # kgN m-2 leaf, Vmax = 0.03125*LNbase
+  laimax        = rep(3.5,16),               # maximum crown LAI
+  LAI_light     = rep(4.0,16),               # Light-limited crown LAI
+  Nfixrate0     = rep(0,16),                 # 0.03 kgN kgRootC-1 yr-1
+  NfixCost0     = rep(12,16),                # 12, 24 gC/gN
+  phiCSA        = rep(0.25E-4,16),           # ratio of sapwood area to leaf area
+  mortrate_d_c  = rep(0.01,16),              # canopy tree mortality rate, year-1
+  mortrate_d_u  = rep(0.075,16),             # understory tree mortality rate, year-1
+  maturalage    = rep(5,16),                 # the age that can reproduce
+  fNSNmax       = rep(5,16)                  # multiplier for NSNmax as sum of potential bl and br
+  ) 
 ```
 
 #### Soil parameters
@@ -120,15 +128,15 @@ By layers.
 ```{r}
 # adopted from datatypes.mod.f90 l.538
 params_soil <- tibble(
-  type              = c("Coarse",  "Medium",   "Fine",    "CM",     "CF",     "MF",    "CMF",    "Peat",    "MCM"),
+  type              = c("Coarse","Medium","Fine","CM","CF","MF","CMF","Peat","MCM"),
   GMD               = c(0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3),
   GSD               = c(5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4),
   vwc_sat           = c(0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445),
-  chb               = c( 3.5,   6.4,  11.0,   4.8,   6.3,   8.4,   6.3,   6.4,   6.4),
-  psi_sat_ref       = c(-600., -790., -910., -1580., -1680., -1880., -5980., -790., -790.), # Pa
-  k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2),      # mol/(s MPa m)
-  alphaSoil         = rep(1.0, 9),
-  heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6,   1.0)
+  chb               = c(3.5,6.4,11.0,4.8,6.3,8.4,6.3,6.4,6.4),
+  psi_sat_ref       = c(-600, -790, -910, -1580, -1680, -1880, -5980, -790, -790), # Pa
+  k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2), # mol/(s MPa m)
+  alphaSoil         = rep(1, 9),
+  heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6, 1.0)
   )
 ```
 
@@ -136,13 +144,12 @@ params_soil <- tibble(
 
 ```{r}
 init_cohort <- tibble(
- init_cohort_species = c(1,      2,        3,        4,      5,        6,        7,      8,        9,       10),
- init_cohort_nindivs = c(0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02),
- init_cohort_bsw     = c(0.2,    0.2,      0.2,      0.2,    0.2,      0.2,      0.2,    0.2,      0.2,     0.2),
- init_cohort_bHW     = c(0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0),
- init_cohort_nsc     = c(0.5,    0.5,      0.5,      0.5,    0.5,      0.5,      0.5,    0.5,      0.5,     0.5)
+ init_cohort_species = rep(2, 10),
+ init_cohort_nindivs = rep(1,10),    # initial individual density, individual/m2
+ init_cohort_bsw     = rep(0.05,10), # initial biomass of sapwood, kg C/individual
+ init_cohort_bHW     = rep(0.0, 10), # initial biomass of heartwood, kg C/tree
+ init_cohort_nsc     = rep(0.05,10)  # initial non-structural biomass
 )
-
 ```
 
 #### Initial soil pools
@@ -151,10 +158,10 @@ init_cohort <- tibble(
 # high N input --> Deciduous
 # low  N input --> Evergreen
 init_soil <- list(
- init_fast_soil_C    = 0.15,   # kg C m-2    # C/N = 15, 0.75 kg SOM ~ 50 gN
- init_slow_soil_C    = 16.0,   # kg C m-2    # C/N = 40
- init_Nmineral       = 2.5E-3, # kg N m-2
- N_input             = 0.0E-3  # 2.4E-3, # kg N m-2 yr-1, N deposit: 0.8 g N m-2 yr-1
+ init_fast_soil_C    = 0.0,    # initial fast soil C, kg C/m2
+ init_slow_soil_C    = 0.0,    # initial slow soil C, kg C/m2
+ init_Nmineral       = 0.015,  # Mineral nitrogen pool, (kg N/m2)
+ N_input             = 0.0008  # annual N input to soil N pool, kgN m-2 yr-1
 )
 
 ```
@@ -171,37 +178,46 @@ df_soiltexture <- bind_rows(
 
 ### Get input
 
-Get the input from the nice weird looking file with half-hourly data.
-
 The file has the following variables (units):
 
- Year  DOY  Hour  T_air          Q_air          Wind_speed      Precip          Pressure        R_global_in      R_longwave_in   CO2
-                      K          kg/kg          m/s     kg_H2O/m2/s               pa               W/m2            W/m2            ppm     
-
 ```{r}
-forcing <- read_delim( paste0(path.package("rsofun"), "/extdata/ORNL_forcing.txt"), col_names = TRUE, delim = "\t") %>% 
+fforcing <- read_delim( paste0(path.package("rsofun"), "/extdata/ORNL_forcing.txt"), col_names = TRUE, delim = "\t") %>% 
   mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
   mutate(sitename = "ORNL") %>% 
   dplyr::filter(!(mday(date)==29 & month(date)==2))
-
-# Changing values of PAR for running simulations
-#forcing <- forcing %>% mutate(Swdown = Swdown*1.5) # levels = *1, *1.3 and *1.5
 
 ## convert rain to units per seconds
 dt_secs <- lubridate::interval(forcing$date[1], forcing$date[2]) %>% 
   time_length("seconds")
 forcing <- forcing %>% 
   mutate(RAIN = RAIN / dt_secs)
+
+if (params_siml$method_photosynth == "gs_leuning"){
+  forcing <- forcing %>% 
+    dplyr::group_by(lubridate::month(date),lubridate::day(date),lubridate::hour(date)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+  forcing <- forcing[,-c(1:3)]
+}
 ```
 
 For P-model runs, aggregate to daily forcing.
 ```{r}
 if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
+#  forcing <- forcing %>% 
+#    dplyr::group_by(lubridate::date(date)) %>% 
+#    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>% 
+#    dplyr::select(-1)
   forcing <- forcing %>% 
-    dplyr::group_by(lubridate::date(date)) %>% 
-    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>% 
-    dplyr::select(-1)
+    dplyr::group_by(lubridate::month(date),lubridate::day(date)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+  forcing <- forcing[,-c(1:2)]
 }
+
+# Changing values of PAR for running simulations
+#forcing <- forcing %>% mutate(PAR = PAR*1.30) # levels = *1, *1.15 and *1.30
+
+# Replicating forcing data to run longer transient years
+#forcing <- bind_rows(replicate(10, forcing, simplify = FALSE))
 ```
 
 ### Run the model
@@ -219,22 +235,204 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
-#save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")
-rsofun_out_hourly_tile <- out$output_hourly_tile
-rsofun_out_daily_tile <- out$output_daily_tile
-rsofun_out_daily_cohorts <- out$output_daily_cohorts
-rsofun_out_annual_tile <- out$output_annual_tile
-rsofun_out_annual_cohorts <- out$output_annual_cohorts
-
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
-  labs(title = "LM3-PPA with P-model photosynthesis at ORNL", subtitle = "rsofun output")
+  theme_classic()+labs(x = "Year", y = "GPP")
 
-out$output_daily_tile %>% 
-  mutate(date = lubridate::ymd(paste0(year, "-01-01")) + lubridate::days(doy-1)) %>% 
-  ggplot(aes(x=date, y=GPP)) +
-  geom_line() + 
-  labs(title = "LM3-PPA at ORNL", subtitle = "rsofun output")
+out$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
 
 ```
+
+### Model calibration
+
+#### Define calibration settings
+Targets: GPP, LAI, Stand Biomass (Stem, Foliage, root), # trees
+Calibration parameters: Quantum Yield Efficiency (kphio), Root:Shoot ratio (phiRL), Plant respiration (tf), mortality parameter specific of each formulation.
+
+```{r}
+# Constant Self-thinning 
+settings_calib_CST <- list(
+  method              = "gensa", # gensa, optimr, BayesianTools, linscale
+  targetvars          = c("GPP","AGB","LAI","NTrees"),
+  timescale           = list(GPP = "d"),
+  maxit               = 5, # (5 for gensa) (30 for optimr)
+  sitenames           = "CH-Lae",
+  metric              = "rmse",
+  dir_results         = "./",
+  name                = "ORG",
+  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
+                             phiRL = list(lower=1, upper=8, init=2),
+                             tf = list(lower=0.01, upper=1.5, init=0.1),
+                             CAI_max = list(lower=0, upper=4, init=0.5))
+ )
+
+# Mortality as DBH
+settings_calib_CST <- list(
+  method              = "gensa", # gensa, optimr, BayesianTools, linscale
+  targetvars          = c("GPP","AGB","LAI","NTrees"),
+  timescale           = list(GPP = "d"),
+  maxit               = 5, # (5 for gensa) (30 for optimr)
+  sitenames           = "CH-Lae",
+  metric              = "rmse",
+  dir_results         = "./",
+  name                = "ORG",
+  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
+                             phiRL = list(lower=1, upper=8, init=2),
+                             tf = list(lower=0.01, upper=1.5, init=0.1),
+                             param_dbh = list(lower=0.01, upper=1, init=0.1))
+ )
+
+# Mortality as carbon starvation
+settings_calib_CST <- list(
+  method              = "gensa", # gensa, optimr, BayesianTools, linscale
+  targetvars          = c("GPP","AGB","LAI","NTrees"),
+  timescale           = list(GPP = "d"),
+  maxit               = 5, # (5 for gensa) (30 for optimr)
+  sitenames           = "CH-Lae",
+  metric              = "rmse",
+  dir_results         = "./",
+  name                = "ORG",
+  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
+                             phiRL = list(lower=1, upper=8, init=2),
+                             tf = list(lower=0.01, upper=1.5, init=0.1),
+                             param_nsc = list(lower=-3, upper=-1, init=-2.9))
+ )
+
+# Mortality as growth rate
+settings_calib_CST <- list(
+  method              = "gensa", # gensa, optimr, BayesianTools, linscale
+  targetvars          = c("GPP","AGB","LAI","NTrees"),
+  timescale           = list(GPP = "d"),
+  maxit               = 5, # (5 for gensa) (30 for optimr)
+  sitenames           = "CH-Lae",
+  metric              = "rmse",
+  dir_results         = "./",
+  name                = "ORG",
+  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
+                             phiRL = list(lower=1, upper=8, init=2),
+                             tf = list(lower=0.01, upper=1.5, init=0.1),
+                             param_gr = list(lower=0.01, upper=2, init=0.1))
+ )
+```
+
+#### Get ddf_obs
+
+TARGET 1. GPP data from FluxNet (see Euler)
+FLX_CH-Lae_FLUXNET2015_FULLSET_YY_2004-2014_1-3.csv
+Variable: GPP_NT_VUT_REF
+
+```{r}
+Fluxnet <- read.csv("~/data/FLUXNET-2015_Tier1/20191024/YY/FLX_CH-Lae_FLUXNET2015_FULLSET_YY_2004-2014_1-3.csv")
+GPP <- Fluxnet[,c("TIMESTAMP","GPP_NT_VUT_REF")]
+mean_annual_gpp <- mean(GPP$GPP_NT_VUT_REF)
+```
+
+TARGET 2. LAI or fAPAr from MODIS
+LAI is the one-sided green leaf area per unit ground area in broadleaf canopies and as half the total needle surface area per unit ground area in coniferous canopies. 
+FPAR is the fraction of photosynthetically active radiation (400-700 nm) absorbed by green vegetation. 
+Both variables are used for calculating surface photosynthesis, evapotranspiration, and net primary production.
+
+Data from Euler or downloaded here using ingestr
+
+```{r}
+# LAI
+lai_LAE <- read.csv("~/data/modis_subsets/MODIS_LAI_MCD15A3H_daily_CH-Lae.csv")
+mean_annual_lai <- mean(lai_LAE$modisvar, na.rm=T)
+max_annual_lai <- max(lai_LAE$modisvar, na.rm=T)
+
+settings_modis <- get_settings_modis(
+  bundle            = "modis_lai",
+  data_path         = "~/data/modis_subsets/",
+  method_interpol   = "loess",
+  keep              = TRUE,
+  overwrite_raw     = FALSE,
+  overwrite_interpol= TRUE
+  )
+
+df_modis_lai <- ingest_bysite(
+  sitename  = "CH-Lae",
+  source    = "modis",
+  year_start= 2018,
+  year_end  = 2019,
+  lon       = 8.36439,
+  lat       = 47.47833,
+  settings  = settings_modis,
+  verbose   = FALSE
+  )
+
+fpar_LAE <- read.csv("~/data/modis_subsets/MODIS_FPAR_MCD15A3H_daily_CH-Lae.csv")
+mean_annual_fpar <- mean(fpar_LAE$modisvar, na.rm=T)
+max_annual_fpar <- max(fpar_LAE$modisvar, na.rm=T)
+
+settings_modis <- get_settings_modis(
+  bundle            = "modis_fpar",
+  data_path         = "~/data/modis_subsets/",
+  method_interpol   = "loess",
+  keep              = TRUE,
+  overwrite_raw     = FALSE,
+  overwrite_interpol= TRUE
+  )
+
+df_modis_fpar <- ingest_bysite(
+  sitename  = "CH-Lae",
+  source    = "modis",
+  year_start= 2018,
+  year_end  = 2019,
+  lon       = 8.36439,
+  lat       = 47.47833,
+  settings  = settings_modis,
+  verbose   = FALSE
+  )
+
+```
+
+TARGET 3. Total Stand Biomass 
+
+```{r}
+LAE_alltrees <- read.csv("~/data/LWF/Laegeren/LAE_AllTrees.csv") # Data from Christof
+LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
+
+unique(LAE_alltrees$ARTN.TEXT)
+
+LAE_Fagus <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Fagus sylvatica")
+LAE_Fagus <- LAE_Fagus %>% mutate(DBH_m = BHD/100) %>% mutate(StemVolume = 0.0025428 + 0.39446*DBH_m*DBH_m*HOEHE + 2.56612*DBH_m*DBH_m - 3.67034*DBH_m*DBH_m*DBH_m + 0.03567*DBH_m*DBH_m*DBH_m*HOEHE) %>% mutate(StemBiomass = StemVolume * 560)
+mean_biomassFagus <- mean(LAE_Fagus$StemBiomass)
+
+LAE_Picea <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Picea abies")
+
+LAE_Abies <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Abies alba")
+
+```
+
+TARGET 4. Number of trees higher than 12 cm 
+
+```{r}
+LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
+LAE_nTrees <- LAE_data %>% group_by(INVYEAR,SPECIES) %>% summarise(nTrees=n()) %>% arrange(SPECIES)
+nTreesFagus <- 461
+nTreesPicea <- 114
+nTreesPicea <- 137
+```
+
+#### Calibrate the model
+```{r}
+set.seed(1982)
+settings_calib <- calib_sofun(
+  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib$sitenames),  # use only one site
+  ddf_obs = c(mean_annual_gpp,max_annual_lai,nTreesFagus),
+  settings = settings_calib
+  )
+df_drivers[[5]]
+```
+
+The calibrated parameters are returned by calib_sofun() as part of the list:
+```{r}
+print(settings_calib$par_opt)
+```
+
+
+

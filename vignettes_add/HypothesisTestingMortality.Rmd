@@ -42,7 +42,7 @@ params_siml <- list(
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "cstarvation" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -80,7 +80,7 @@ params_species <- tibble(
   phenotype     = rep(0,16),                 # 0 for Deciduous; 1 for Evergreen
   pt            = rep(0,16),                 # 0 for C3; 1 for C4
   seedlingsize  = rep(0.05,16),              # initial size of seedlings
-  LMA           = rep(0.05,16),             # Leaf mass per unit area: 0.035, 0.085, 0.135
+  LMA           = rep(0.05,16),              # Leaf mass per unit area. For sps: Beech (0.05); Spruce (0.17) Fir (0.11)
   phiRL         = rep(3.5,16),               # Root:Shoot ratio:  4.0, 6.0, 8.0
   LNbase        = rep(0.8E-3,16),            # kgN m-2 leaf, Vmax = 0.03125*LNbase
   laimax        = rep(3.5,16),               # maximum crown LAI
@@ -874,8 +874,48 @@ ggplot() +
 library(gganimate)
 
 # Mortality as a function of DBH
+
+# Without spinup years (year>=100)
+p <- ggplot() + 
+  geom_point(data=subset(ea1sa1magl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1magl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1magl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of Light Use Efficiency", x = "Log Quadratic Mean Diameter", y = "Log Tree density") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Self-thinning relationships") 
+
+p + transition_time(QMD) + shadow_mark(alpha = 0.3, size = 0.5) + enter_fly(y_loc = 0)
+
+# For biomass
+q <- ggplot() + 
+  geom_line(data=ea1sa1magl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1magl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1magl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of Light Use Efficiency", x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Forest biomass")
+
+q + transition_reveal(year)  
+
+# With spinup years
+p <- ggplot() + 
+  geom_point(data=ea1sa1magl_out_annual_tile, aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=ea2sa1magl_out_annual_tile, aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=ea3sa1magl_out_annual_tile, aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of Light Use Efficiency", x = "Log Quadratic Mean Diameter", y = "Log Tree density") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Mortality as a function of size") + scale_x_continuous(limits = c(-2.5,0))
+
+p + transition_time(QMD) + shadow_mark(alpha = 0.3, size = 0.5) + enter_fly(y_loc = 0)
+
+# Same but joining data
+ea1sa1magl_out_annual_tile <- ea1sa1magl_out_annual_tile %>% mutate(LevelLUE = rep(1, dim(ea1sa1magl_out_annual_tile)[1])) 
+ea2sa1magl_out_annual_tile <- ea2sa1magl_out_annual_tile %>% mutate(LevelLUE = rep(2, dim(ea2sa1magl_out_annual_tile)[1])) 
+ea3sa1magl_out_annual_tile <- ea3sa1magl_out_annual_tile %>% mutate(LevelLUE = rep(3, dim(ea3sa1magl_out_annual_tile)[1])) 
 data1 <- rbind(ea1sa1magl_out_annual_tile, ea2sa1magl_out_annual_tile, ea3sa1magl_out_annual_tile)
-data1 <- rbind(ea1sa1mapm_out_annual_tile, ea2sa1mapm_out_annual_tile, ea3sa1mapm_out_annual_tile)
 
 p <- ggplot() + 
   geom_point(data=subset(data1,year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
@@ -884,7 +924,6 @@ p <- ggplot() +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
   ggtitle("Mortality as a function of size") 
 
-# With spinup years
 p <- ggplot() + 
   geom_point(data=data1, aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
@@ -893,10 +932,10 @@ p <- ggplot() +
   ggtitle("Mortality as a function of size") + scale_x_continuous(limits = c(-3.5,0))
 
 p + transition_time(Density12) + shadow_mark(alpha = 0.3, size = 0.5)
-p + transition_time(QMD) + shadow_mark(alpha = 0.3, size = 0.5) 
 p + transition_states(LevelLUE,transition_length = 2,state_length = 2) +
   enter_fly(y_loc = 0)
 
+# For biomass
 q <- ggplot() + 
   geom_line(data=subset(data1), aes(x=year, y=plantC, color=as.factor(LevelLUE))) +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
@@ -904,7 +943,7 @@ q <- ggplot() +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
   ggtitle("Mortality as a function of size") 
 
-q + transition_reveal(year)
+q + transition_reveal(year) + transition_states(LevelLUE,transition_length = 2,state_length = 2)
 
 ```
 

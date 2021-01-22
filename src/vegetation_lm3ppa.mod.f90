@@ -137,6 +137,8 @@ contains
     cc%resp = cc%resl + r_stem + r_root + r_Nfix   !kgC tree-1 step-1
     cc%resr = r_root + r_Nfix ! tree-1 step-1
 
+    ! print*, 'tf',  tf  ! xxx debug
+
   end subroutine plant_respiration
 
   !========================================================================
@@ -792,7 +794,7 @@ contains
             else
               deathrate = sp%mortrate_d_c
             endif
-          else                      ! for trees
+          else                    ! for trees
             if(cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.08*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
               ! deathrate = sp%mortrate_d_u * &
                      ! (1. + A_mort*exp(B_mort*cc%dbh))/ &

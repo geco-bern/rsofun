@@ -7,6 +7,7 @@ output: html_document
 library(dplyr)
 library(rsofun)
 library(ggplot2)
+library(ingestr)
 ```
 
 ### Simulation settings
@@ -276,11 +277,68 @@ mean_biomass <- mean(LAE_Fagus$StemBiomass)
 Specific leaf area (SLA) is the ratio of leaf area to leaf dry mass.
 Leaf Mass per Area (LMA) is the inverse of SLA.
 
+Allometry parameters
+```{r}
+load("/Users/lmarques/data/biomass/d_param.rda")
+parame <- d_param %>% dplyr::filter(parameter=="b1",equation_n==3,component_n=="Aboveground")
+```
+
+PEP725 values
+Laegeren is not in the PEP725 data.
+```{r}
+pep725sitesFagus <- read.csv("/Users/lmarques/data/pep725/PEP725_CH_108_010/PEP725_CH_stations.csv", sep=";")
+pep725sitesFagus <- pep725sitesFagus %>% dplyr::filter(NAME=="Höfen")
+pep725valuesFagus <- read.csv("/Users/lmarques/data/pep725/PEP725_CH_108_010/PEP725_CH_Fagus(Fagus_sylvatica).csv", sep=";")
+pep725valuesFagus <- pep725valuesFagus %>% dplyr::filter(PEP_ID==6758)
+ONFagus <- pep725valuesFagus %>% dplyr::filter(BBCH==13)
+OFFFagus <- pep725valuesFagus %>% dplyr::filter(BBCH==94)
+
+pep725sitesPicea <- read.csv("/Users/lmarques/data/pep725/PEP725_CH_110_000/PEP725_CH_stations.csv", sep=";")
+pep725sitesPicea <- pep725sitesPicea %>% dplyr::filter(NAME=="Höfen")
+pep725valuesPicea <- read.csv("/Users/lmarques/data/pep725/PEP725_CH_110_000/PEP725_CH_Picea_abies_(P.excelsa).csv", sep=";")
+#pep725valuesPicea <- pep725valuesPicea %>% dplyr::filter(PEP_ID==6758)
+#ONFagus <- pep725valuesPicea %>% dplyr::filter(BBCH==13)
+#OFFFagus <- pep725valuesPicea %>% dplyr::filter(BBCH==94)
+
+siteinfo <- data.frame(sitename="CH-Lae", lon = 8.365, lat = 47.47808, elv = 700, year_start = 2004, year_end = 2014, classid = NA, c4 = FALSE, whc = NA, koeppen_code = NA, igbp_land_use = "Mixed Forests", plant_functional_type = "Broadleaf trees")
+
+```
+
 LAI or fAPAr from MODIS
 
 ```{r}
 fapar_LAE <- read.csv("fapar_MODIS_FPAR_MCD15A3H_gee_CH-Lae_subset.csv")
 mean_annual_fapar <- mean(fapar_LAE$modisvar, na.rm=T)
+```
+
+```{r}
+if(!require(devtools)){install.packages(devtools)}
+devtools::install_github("stineb/ingestr")
+library(ingestr)
+
+list_pkgs <- c("dplyr", "purrr", "lubridate", "tidyr", "raster", "lubridate", "stringi", "stringr", "sp", "ncdf4", "signal", "climate", "rgdal")
+new_pkgs <- list_pkgs[!(list_pkgs %in% installed.packages()[,"Package"])]
+if(length(new_pkgs)) install.packages(new_pkgs)
+
+settings_modis <- get_settings_modis(
+  bundle            = "modis_ndvi",
+  data_path         = "~/data/modis_subsets/",
+  method_interpol   = "loess",
+  keep              = TRUE,
+  overwrite_raw     = TRUE,
+  overwrite_interpol= TRUE
+  )
+
+df_modis_fpar <- ingest_bysite(
+  sitename  = "CH-Lae",
+  source    = "modis",
+  year_start= 2000,
+  year_end  = 2019,
+  lon       = 8.365,
+  lat       = 47.47808,
+  settings  = settings_modis,
+  verbose   = FALSE
+  )
 ```
 
 ## Number of trees higher than 12 cm 
@@ -295,21 +353,21 @@ mean_biomass <- mean(LAE_Fagus$StemBiomass)
 
 ```
 
-Define calibration settings.
+Define calibration settings
 Targets: GPP, LAI, Stand Biomass (Stem, Foliage, root), Stand density or # trees
-Calibration parameters: Quantum Yield Efficiency, Specific Leaf Area, Root:Shoot allocation, Resp rates (sapwood and fine roots)
+Calibration parameters: Quantum Yield Efficiency (kphio), Root:Shoot ratio (phiRL), Plant respiration (tf), 
 
 ```{r}
 settings_calib <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("GPP","AGB","LAI","NPP"),
-  timescale           = list( GPP = "d" ),
+  timescale           = list(GPP = "d"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list( kphio = list( lower=0.02, upper=0.07, init=0.0496 ) )
+  par                 = list(kphio = list(lower=0.02, upper=0.07, init=0.0496))
  )
 ```
 

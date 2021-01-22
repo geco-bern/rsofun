@@ -396,30 +396,29 @@ cost_rmse_lm3ppa_constantselfthinning <- function( par, ddf_obs, df_drivers, inv
     CAI_max  = par[4]
   )
   
-  # ... or call multi-site function with df_drivers (use function collect_drivers_sofun)
-  # df <- run_lm3ppa_f(
-  #   df_drivers, 
-  #   params_modl = params_modl, 
-  #   makecheck = TRUE,
-  #   parallel = FALSE
-  #   ) %>%   
+  df <- run_lm3ppa_f(
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) %>%   
 
   ## either call by site like this
-  df <- run_lm3ppa_f_bysite( "CH-Lae", 
-                              params_siml, 
-                              siteinfo, 
-                              forcing, 
-                              params_tile, 
-                              params_species, 
-                              params_soil, 
-                              init_cohort, 
-                              init_soil, 
-                              makecheck = TRUE)
+  # df <- run_lm3ppa_f_bysite( "CH-Lae", 
+  #                             params_siml, 
+  #                             siteinfo, 
+  #                             forcing, 
+  #                             params_tile, 
+  #                             params_species, 
+  #                             params_soil, 
+  #                             init_cohort, 
+  #                             init_soil, 
+  #                             makecheck = TRUE) %>%
 
 ## collapse time series outout to 1 value for comparison to observations
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>% 
-    dplyr::rename(latenth_mod = latenth) %>% 
+    dplyr::rename(targets_mod = targets) %>% 
     dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
   ## Calculate cost (RMSE) across the N targets
