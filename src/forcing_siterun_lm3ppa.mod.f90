@@ -68,10 +68,10 @@ contains
     out_climate%year      = int(forcing(idx_start:idx_end, 1))                    ! Year
     out_climate%doy       = int(forcing(idx_start:idx_end, 2))                    ! day of the year
     out_climate%hod       = real(forcing(idx_start:idx_end, 3))                   ! hour of the day
-    out_climate%PAR       = real(forcing(idx_start:idx_end, 4))                   ! umol/m2/s  (*2)         
+    out_climate%PAR       = real(forcing(idx_start:idx_end, 4))                   ! umol/m2/s  (1W/m2 = 2.02 umol/m2/s )         
     out_climate%radiation = real(forcing(idx_start:idx_end, 5))                   ! W/m2
-    out_climate%Tair      = real(forcing(idx_start:idx_end, 6)) + 273.16          ! air temperature, K
-    out_climate%Tsoil     = real(forcing(idx_start:idx_end, 7)) + 273.16          ! soil temperature, K
+    out_climate%Tair      = real(forcing(idx_start:idx_end, 6)) + 273.15          ! air temperature, K
+    out_climate%Tsoil     = real(forcing(idx_start:idx_end, 7)) + 273.15          ! soil temperature, K
     out_climate%RH        = real(forcing(idx_start:idx_end, 8)) * 0.01            ! relative humidity as a fraction (0.xx)
     out_climate%rain      = real(forcing(idx_start:idx_end, 9))                   ! kgH2O m-2 s-1
     out_climate%windU     = real(forcing(idx_start:idx_end, 10))                  ! wind velocity (m s-1)

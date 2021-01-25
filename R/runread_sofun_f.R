@@ -93,7 +93,7 @@ runread_lm3ppa_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
     ## distribute to to cores, making sure all data from a specific site is sent to the same core
     df_out <- df_drivers %>%
       dplyr::group_by( id = row_number() ) %>%
-      tidyr::nest(input = c(sitename, params_siml, siteinfo, forcing, df_soiltexture)) %>%
+      tidyr::nest(input = c(sitename, params_siml, siteinfo, forcing, params_tile, params_species, params_soil, init_cohort, init_soil)) %>%
       multidplyr::partition(cl) %>% 
       dplyr::mutate(data = purrr::map( input, 
                                        ~run_lm3ppa_f_bysite(
@@ -101,9 +101,14 @@ runread_lm3ppa_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
                                          params_siml    = .x$params_siml[[1]], 
                                          siteinfo       = .x$siteinfo[[1]], 
                                          forcing        = .x$forcing[[1]], 
-                                         df_soiltexture = .x$df_soiltexture[[1]], 
-                                         params_modl    = params_modl, 
+                                         params_tile    = .x$params_tile[[1]], 
+                                         params_species = .x$params_species[[1]], 
+                                         params_soil    = .x$params_soil[[1]], 
+                                         init_cohort    = .x$init_cohort[[1]], 
+                                         init_soil      = .x$init_soil[[1]], 
+                                         # params_modl    = params_modl, 
                                          makecheck      = makecheck )
+
       )) %>% 
       dplyr::collect() %>%
       dplyr::ungroup() %>%

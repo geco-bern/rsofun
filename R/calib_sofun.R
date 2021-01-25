@@ -396,12 +396,17 @@ cost_rmse_lm3ppa_constantselfthinning <- function( par, ddf_obs, df_drivers, inv
     CAI_max  = par[4]
   )
   
-  df <- run_lm3ppa_f(
+  df <- runread_lm3ppa_f(
     df_drivers, 
     params_modl = params_modl, 
     makecheck = TRUE,
     parallel = FALSE
-    ) %>%   
+    ) #%>%   
+
+  # Aggregate variables from the model df
+
+
+
 
   ## either call by site like this
   # df <- run_lm3ppa_f_bysite( "CH-Lae", 
@@ -416,13 +421,15 @@ cost_rmse_lm3ppa_constantselfthinning <- function( par, ddf_obs, df_drivers, inv
   #                             makecheck = TRUE) %>%
 
 ## collapse time series outout to 1 value for comparison to observations
-    dplyr::select(sitename, data) %>% 
-    tidyr::unnest(data) %>% 
-    dplyr::rename(targets_mod = targets) %>% 
-    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
+    # dplyr::select(sitename, data) %>% 
+    # tidyr::unnest(data) %>% 
+    # dplyr::rename(targets_mod = targets) %>% 
+    # dplyr::left_join(ddf_obs, by = c("sitename", "date"))
   
   ## Calculate cost (RMSE) across the N targets
   cost <- sqrt( mean( (df$targets_mod - df$targets_obs )^2, na.rm = TRUE ) )
+
+  # sqrt of the mean between variables. targets_mod= c(GPP,BIOMASS, NTREES)
   
   # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   

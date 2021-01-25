@@ -14,8 +14,11 @@ library(rsofun)
 library(ggplot2)
 
 if(!require(devtools)){install.packages(devtools)}
-devtools::install_github("stineb/ingestr")
+#devtools::install_github("stineb/ingestr")
 library(ingestr)
+
+#devtools::install_github("tidyverse/multidplyr")
+library(multidplyr)
 ```
 
 ## Example
@@ -24,7 +27,7 @@ library(ingestr)
 
 Manually select some sites from which we're going to use the data for evaluation and calibration.
 ```{r}
-mysites <- "CH-Lae"
+sitename <- "CH-Lae"
 ```
 
 Create a site meta info table that contains all the site-specific information that is used to force site-simulations (e.g. starting year, number of simulations years, elevation, etc.). For FLUXNET2015 data, required meta info is provided by the `rsofun` package (data frame `rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015`).
@@ -36,7 +39,6 @@ siteinfo <- as_tibble(siteinfo)
 siteinfo <- siteinfo %>% 
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
-
 ```
 
 Now specify the simulation parameters that are identical for all site-scale simulations.
@@ -45,7 +47,7 @@ params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800, #1793,
       recycle               = 1, # 9 or 11 changed to 1 when aggregating forcing into 1 year
-      firstyeartrend        = 1998,
+      firstyeartrend        = 2009, #1998
       nyeartrend            = 1, #9 or 11 (longer transient years)
       outputhourly          = TRUE,
       outputdaily           = TRUE,
@@ -163,7 +165,6 @@ init_soil <- list(
  init_Nmineral       = 0.015,  # Mineral nitrogen pool, (kg N/m2)
  N_input             = 0.0008  # annual N input to soil N pool, kgN m-2 yr-1
 )
-
 ```
 
 ### Define soil parameters
@@ -181,38 +182,25 @@ df_soiltexture <- bind_rows(
 The file has the following variables (units):
 
 ```{r}
-fforcing <- read_delim( paste0(path.package("rsofun"), "/extdata/ORNL_forcing.txt"), col_names = TRUE, delim = "\t") %>% 
-  mutate(date = lubridate::ymd_hm( paste0( as.character(YEAR), "-01-01 00:00" ) ) + days(DOY-1) + hours(HOUR) ) %>% 
-  mutate(sitename = "ORNL") %>% 
-  dplyr::filter(!(mday(date)==29 & month(date)==2))
-
-## convert rain to units per seconds
-dt_secs <- lubridate::interval(forcing$date[1], forcing$date[2]) %>% 
-  time_length("seconds")
-forcing <- forcing %>% 
-  mutate(RAIN = RAIN / dt_secs)
+load("~/data/forcingLAE.RData") #forcingLAE See script prepare_drivers.Rmd
 
 if (params_siml$method_photosynth == "gs_leuning"){
-  forcing <- forcing %>% 
+  forcingLAE <- forcingLAE %>% 
     dplyr::group_by(lubridate::month(date),lubridate::day(date),lubridate::hour(date)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-  forcing <- forcing[,-c(1:3)]
+  forcingLAE <- forcingLAE[,-c(1:3)]
+}
+
+if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
+  forcingLAE <- forcingLAE %>% 
+    dplyr::group_by(lubridate::month(date),lubridate::day(date)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+  forcingLAE <- forcingLAE[,-c(1:2)]
 }
 ```
 
 For P-model runs, aggregate to daily forcing.
 ```{r}
-if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
-#  forcing <- forcing %>% 
-#    dplyr::group_by(lubridate::date(date)) %>% 
-#    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>% 
-#    dplyr::select(-1)
-  forcing <- forcing %>% 
-    dplyr::group_by(lubridate::month(date),lubridate::day(date)) %>% 
-    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-  forcing <- forcing[,-c(1:2)]
-}
-
 # Changing values of PAR for running simulations
 #forcing <- forcing %>% mutate(PAR = PAR*1.30) # levels = *1, *1.15 and *1.30
 
@@ -224,10 +212,10 @@ if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
 
 Run the model for all the sites specified in the first step.
 ```{r}
-out <- run_lm3ppa_f_bysite( "ORNL", 
+out <- run_lm3ppa_f_bysite( sitename, 
                             params_siml, 
                             siteinfo, 
-                            forcing, # ddf_input
+                            forcingLAE, # ddf_input
                             params_tile, 
                             params_species, 
                             params_soil, 
@@ -235,6 +223,30 @@ out <- run_lm3ppa_f_bysite( "ORNL",
                             init_soil, 
                             makecheck = TRUE)
 
+
+  
+
+
+params_modl <- list(
+    kphio    = par[1],
+    rho_wood = par[2],
+    tf       = par[3],
+    CAI_max  = par[4]
+  )
+  
+  df <- runread_lm3ppa_f(
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) #%>% 
+
+  df_drivers_lm3ppa %>%
+      dplyr::group_by( id = row_number() ) %>%
+      tidyr::nest(input = c(sitename, params_siml, siteinfo, forcing, params_tile,params_species,params_soil,init_cohort,init_soil)) %>%
+      multidplyr::partition(cl) 
+  
+  
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
@@ -257,8 +269,8 @@ Calibration parameters: Quantum Yield Efficiency (kphio), Root:Shoot ratio (phiR
 # Constant Self-thinning 
 settings_calib_CST <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
-  targetvars          = c("GPP","AGB","LAI","NTrees"),
-  timescale           = list(GPP = "d"),
+  targetvars          = c("GPP","LAI","NTrees"),
+  timescale           = list(GPP = "y", LAI = "y", NTrees = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -271,10 +283,10 @@ settings_calib_CST <- list(
  )
 
 # Mortality as DBH
-settings_calib_CST <- list(
+settings_calib_DBH <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("GPP","AGB","LAI","NTrees"),
-  timescale           = list(GPP = "d"),
+  timescale           = list(GPP = "y", LAI = "y", NTrees = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -287,10 +299,10 @@ settings_calib_CST <- list(
  )
 
 # Mortality as carbon starvation
-settings_calib_CST <- list(
+settings_calib_NSC <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("GPP","AGB","LAI","NTrees"),
-  timescale           = list(GPP = "d"),
+  timescale           = list(GPP = "y", LAI = "y", NTrees = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -303,10 +315,10 @@ settings_calib_CST <- list(
  )
 
 # Mortality as growth rate
-settings_calib_CST <- list(
+settings_calib_GR <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("GPP","AGB","LAI","NTrees"),
-  timescale           = list(GPP = "d"),
+  timescale           = list(GPP = "y", LAI = "y", NTrees = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -420,13 +432,30 @@ nTreesPicea <- 137
 
 #### Calibrate the model
 ```{r}
+
+df_drivers_lm3ppa <- tibble(sitename,
+                    siteinfo = list(tibble(siteinfo)),
+                    params_siml = list(tibble(params_siml)),
+                    params_tile = list(tibble(params_tile)),
+                    params_species=list(tibble(params_species)),
+                    params_soil=list(tibble(params_soil)),
+                    init_cohort=list(tibble(init_cohort)),
+                    init_soil=list(tibble(init_soil)),
+                    forcing=list(tibble(forcing)))
+
+
+rsofun::df_drivers
+df_drivers[[3]]
+
 set.seed(1982)
 settings_calib <- calib_sofun(
-  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib$sitenames),  # use only one site
-  ddf_obs = c(mean_annual_gpp,max_annual_lai,nTreesFagus),
-  settings = settings_calib
+  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_CST$sitenames),  
+  ddf_obs = c(mean_annual_gpp, max_annual_lai, nTreesFagus),
+  settings = settings_calib_CST
   )
-df_drivers[[5]]
+
+  ddf_obs = list(GPP = mean_annual_gpp, LAI = max_annual_lai, NTrees= nTreesFagus),
+
 ```
 
 The calibrated parameters are returned by calib_sofun() as part of the list:
