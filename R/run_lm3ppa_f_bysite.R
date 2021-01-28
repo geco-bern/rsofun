@@ -96,8 +96,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       rlang::warn(paste("Error: Missing value in aCO2_AW for site", sitename, "\n"))
       do_continue <- FALSE
     }
-    if (any(is.nanull(forcing$amb_co2))){
-      rlang::warn(paste("Error: Missing value in amb_co2 for site", sitename, "\n"))
+    if (any(is.nanull(forcing$SWC))){
+      rlang::warn(paste("Error: Missing value in SWC for site", sitename, "\n"))
       do_continue <- FALSE
     }
     

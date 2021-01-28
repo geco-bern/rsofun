@@ -43,7 +43,7 @@ siteinfo <- siteinfo %>%
 
 Now specify the simulation parameters that are identical for all site-scale simulations.
 ```{r}
-params_siml <- list(
+params_siml <- tibble( #list
       spinup                = TRUE,
       spinupyears           = 1800, #1793,
       recycle               = 1, # 9 or 11 changed to 1 when aggregating forcing into 1 year
@@ -81,7 +81,7 @@ The model allows for four different mortality functional forms:
 #### Tile-level parameters
 
 ```{r}
-params_tile <- list(
+params_tile <- tibble( #list
   soiltype     = 3,     # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   FLDCAP       = 0.4,   # soil property: field capacity 
   WILTPT       = 0.05,  # soil property: wilting point
@@ -159,7 +159,7 @@ init_cohort <- tibble(
 ```{r}
 # high N input --> Deciduous
 # low  N input --> Evergreen
-init_soil <- list(
+init_soil <- tibble( #list
  init_fast_soil_C    = 0.0,    # initial fast soil C, kg C/m2
  init_slow_soil_C    = 0.0,    # initial slow soil C, kg C/m2
  init_Nmineral       = 0.015,  # Mineral nitrogen pool, (kg N/m2)
@@ -177,9 +177,8 @@ df_soiltexture <- bind_rows(
 )
 ```
 
-### Define soil parameters
+### Define model parameters to be calibrated later
 
-For now, this is implemented as an illustration. Should be made site-specific.
 ```{r}
 params_modl <- list(
     kphio     = 0.05,
@@ -203,14 +202,14 @@ if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
     dplyr::group_by(lubridate::month(date),lubridate::day(date),lubridate::hour(date)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-  forcingLAE <- forcingLAE[,-c(1:3)]
+  forcing <- forcingLAE[,-c(1:3)]
 }
 
 if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
   forcingLAE <- forcingLAE %>% 
     dplyr::group_by(lubridate::month(date),lubridate::day(date)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-  forcingLAE <- forcingLAE[,-c(1:2)]
+  forcing <- forcingLAE[,-c(1:2)]
 }
 ```
 
@@ -223,6 +222,20 @@ For P-model runs, aggregate to daily forcing.
 #forcing <- bind_rows(replicate(10, forcing, simplify = FALSE))
 ```
 
+Collect all drivers
+```{r}
+df_drivers <- tibble(sitename,
+                    siteinfo = list(tibble(siteinfo)),
+                    params_siml = list(tibble(params_siml)),
+                    params_tile = list(tibble(params_tile)),
+                    params_species=list(tibble(params_species)),
+                    params_soil=list(tibble(params_soil)),
+                    init_cohort=list(tibble(init_cohort)),
+                    init_soil=list(tibble(init_soil)),
+                    forcing=list(tibble(forcing)))
+
+```
+
 ### Run the model
 
 Run the model for all the sites specified in the first step.
@@ -230,12 +243,24 @@ Run the model for all the sites specified in the first step.
 out <- run_lm3ppa_f_bysite( sitename, 
                             params_siml, 
                             siteinfo, 
-                            forcingLAE, # ddf_input
+                            forcing, # ddf_input
                             params_tile, 
                             params_species, 
                             params_soil, 
                             init_cohort, 
                             init_soil,
+                            params_modl,
+                            makecheck = TRUE)
+
+out <- run_lm3ppa_f_bysite( df_drivers$sitename[1], 
+                            df_drivers$params_siml[[1]],
+                            df_drivers$siteinfo[[1]], 
+                            df_drivers$forcing[[1]], # ddf_input
+                            df_drivers$params_tile[[1]], 
+                            df_drivers$params_species[[1]], 
+                            df_drivers$params_soil[[1]], 
+                            df_drivers$init_cohort[[1]], 
+                            df_drivers$init_soil[[1]],
                             params_modl,
                             makecheck = TRUE)
 
@@ -249,8 +274,18 @@ out$output_annual_tile %>%
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 
-out$output_annual_tile %>% summarise(GPP = mean(GPP), LAI= max(LAI), NTrees=mean(Density12), Biomass=mean(plantC)) %>%  pivot_longer(everything(), names_to = "targets", values_to = "values")
+```
 
+Run for the full set of sites
+
+```{r}
+df_output <- runread_lm3ppa_f(
+     df_drivers,
+     params_modl = params_modl,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+df_output$data[[1]]$output_annual_tile
 
 ```
 
@@ -264,7 +299,7 @@ Calibration parameters: Quantum Yield Efficiency (kphio), Root:Shoot ratio (phiR
 # Constant Self-thinning 
 settings_calib_CST <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
-  targetvars          = c("targets_obs"),
+  targetvars          = c("targets"),
   timescale           = list(targets_obs = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
@@ -272,7 +307,7 @@ settings_calib_CST <- list(
   dir_results         = "./",
   name                = "ORG",
   par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
-                             phiRL = list(lower=1, upper=8, init=2),
+                             #phiRL = list(lower=1, upper=8, init=2),
                              tf = list(lower=0.01, upper=1.5, init=0.1),
                              CAI_max = list(lower=0, upper=4, init=0.5))
  )
@@ -445,7 +480,7 @@ ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityF
 Contrast obseved vs. simulated targets
 
 ```{r}
- out$output_annual_tile %>% 
+  df_output$data[[1]]$output_annual_tile %>%
   summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
   pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
   left_join(ddf_obs)
@@ -455,28 +490,31 @@ Contrast obseved vs. simulated targets
 #### Calibrate the model
 ```{r}
 
-df_drivers_lm3ppa <- tibble(sitename,
-                    siteinfo = list(tibble(siteinfo)),
-                    params_siml = list(tibble(params_siml)),
-                    params_tile = list(tibble(params_tile)),
-                    params_species=list(tibble(params_species)),
-                    params_soil=list(tibble(params_soil)),
-                    init_cohort=list(tibble(init_cohort)),
-                    init_soil=list(tibble(init_soil)),
-                    forcing=list(tibble(forcing)))
-
 set.seed(1982)
 settings_calib <- calib_sofun(
-  df_drivers_lm3ppa = dplyr::filter(df_drivers_lm3ppa, sitename %in% settings_calib_CST$sitenames),  
+  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_CST$sitenames),  
   ddf_obs = ddf_obs,
   settings = settings_calib_CST
   )
 
+print(settings_calib$par_opt)
+
+df_drivers <- df_drivers %>% 
+    dplyr::filter(sitename %in% settings_calib_CST$sitenames)
+
+
+ dddd <- df_output$data[[1]]$output_annual_tile %>% 
+  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  dplyr::left_join(ddf_obs)
+
+dddd$targets_mod
+
+targetvars <- paste0( settings_calib_CST$targetvars, "_obs")
 
 
 
-rsofun::df_drivers
-df_drivers[[3]]
+
 
 ```
 

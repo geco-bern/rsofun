@@ -44,7 +44,7 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
       # cost_rmse <- cost_chisquared_vpdstress
       cost_rmse <- cost_rmse_vpdstress
       
-    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "CAI_max" %in% names(settings$par) ){  
+    }  else if ( "kphio" %in% names(settings$par) && "tf" %in% names(settings$par) && "CAI_max" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa_constantselfthinning
 
     }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "par_dbh" %in% names(settings$par) ){  
@@ -390,10 +390,14 @@ cost_rmse_lm3ppa_constantselfthinning <- function( par, ddf_obs, df_drivers, inv
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
   params_modl <- list(
-    kphio    = par[1],
-    rho_wood = par[2],
-    tf       = par[3],
-    CAI_max  = par[4]
+    kphio      = par[1],
+    # phiRL    = par[2],
+    tf         = par[2],
+    CAI_max    = par[3],
+    param_dbh  = 0.6,
+    param_nsc  = -2,
+    param_gr   = 1
+
   )
   
   df <- runread_lm3ppa_f(
@@ -401,23 +405,11 @@ cost_rmse_lm3ppa_constantselfthinning <- function( par, ddf_obs, df_drivers, inv
     params_modl = params_modl, 
     makecheck = TRUE,
     parallel = FALSE
-    ) #%>%   
-
-  # Either call by site like this
-  # df <- run_lm3ppa_f_bysite( "CH-Lae", 
-  #                             params_siml, 
-  #                             siteinfo, 
-  #                             forcing, 
-  #                             params_tile, 
-  #                             params_species, 
-  #                             params_soil, 
-  #                             init_cohort, 
-  #                             init_soil, 
-  #                             makecheck = TRUE)
+    ) 
 
   # Aggregate variables from the model df
-  df$output_annual_tile %>% 
-  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), NTrees=mean(Density12), Biomass=mean(plantC)) %>%  
+  df <- df$data[[1]]$output_annual_tile %>% 
+  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
   dplyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
   dplyr::left_join(ddf_obs)
 

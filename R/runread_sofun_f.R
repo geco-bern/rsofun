@@ -106,7 +106,7 @@ runread_lm3ppa_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
                                          params_soil    = .x$params_soil[[1]], 
                                          init_cohort    = .x$init_cohort[[1]], 
                                          init_soil      = .x$init_soil[[1]], 
-                                         # params_modl    = params_modl, 
+                                         params_modl    = params_modl, 
                                          makecheck      = makecheck )
 
       )) %>% 
