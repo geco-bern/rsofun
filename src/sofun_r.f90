@@ -384,7 +384,7 @@ contains
     real(kind=c_double), intent(in) :: f_N_add
 
     ! naked arrays
-    real(kind=c_double), dimension(0:MSPECIES,16), intent(in) :: params_species
+    real(kind=c_double), dimension(0:MSPECIES,15), intent(in) :: params_species
     real(kind=c_double), dimension(n_dim_soil_types,8), intent(in) :: params_soil
     real(kind=c_double), dimension(MAX_INIT_COHORTS,5),  intent(in) :: init_cohort
 
@@ -550,17 +550,17 @@ contains
     myinterface%params_species(:)%pt           = int( params_species(:,3))
     myinterface%params_species(:)%seedlingsize = real( params_species(:,4))
     myinterface%params_species(:)%LMA          = real( params_species(:,5))
-    myinterface%params_species(:)%phiRL        = real( params_species(:,6))
-    myinterface%params_species(:)%LNbase       = real( params_species(:,7))
-    myinterface%params_species(:)%laimax       = real( params_species(:,8))
-    myinterface%params_species(:)%LAI_light    = real( params_species(:,9))
-    myinterface%params_species(:)%Nfixrate0    = real( params_species(:,10))
-    myinterface%params_species(:)%NfixCost0    = real( params_species(:,11))
-    myinterface%params_species(:)%phiCSA       = real( params_species(:,12))
-    myinterface%params_species(:)%mortrate_d_c = real( params_species(:,13))
-    myinterface%params_species(:)%mortrate_d_u = real( params_species(:,14))
-    myinterface%params_species(:)%maturalage   = real( params_species(:,15))
-    myinterface%params_species(:)%fNSNmax      = real( params_species(:,16))
+    ! myinterface%params_species(:)%phiRL        = real( params_species(:,6))
+    myinterface%params_species(:)%LNbase       = real( params_species(:,6))
+    myinterface%params_species(:)%laimax       = real( params_species(:,7))
+    myinterface%params_species(:)%LAI_light    = real( params_species(:,8))
+    myinterface%params_species(:)%Nfixrate0    = real( params_species(:,9))
+    myinterface%params_species(:)%NfixCost0    = real( params_species(:,10))
+    myinterface%params_species(:)%phiCSA       = real( params_species(:,11))
+    myinterface%params_species(:)%mortrate_d_c = real( params_species(:,12))
+    myinterface%params_species(:)%mortrate_d_u = real( params_species(:,13))
+    myinterface%params_species(:)%maturalage   = real( params_species(:,14))
+    myinterface%params_species(:)%fNSNmax      = real( params_species(:,15))
 
     ! Initial cohort sizes
     myinterface%init_cohort(:)%init_cohort_species = real(init_cohort(:,1))

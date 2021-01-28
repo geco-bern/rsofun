@@ -47,7 +47,7 @@ params_siml <- list(
       spinup                = TRUE,
       spinupyears           = 1800, #1793,
       recycle               = 1, # 9 or 11 changed to 1 when aggregating forcing into 1 year
-      firstyeartrend        = 2009, #1998
+      firstyeartrend        = 1998, #1998
       nyeartrend            = 1, #9 or 11 (longer transient years)
       outputhourly          = TRUE,
       outputdaily           = TRUE,
@@ -110,7 +110,7 @@ params_species <- tibble(
   pt            = rep(0,16),                 # 0 for C3; 1 for C4
   seedlingsize  = rep(0.05,16),              # initial size of seedlings
   LMA           = rep(0.05,16),              # Leaf mass per unit area. For sps: Beech (0.05); Spruce (0.17) Fir (0.11)
-  phiRL         = rep(3.5,16),               # Root:Shoot ratio:  4.0, 6.0, 8.0
+  #phiRL         = rep(3.5,16),               # Root:Shoot ratio:  4.0, 6.0, 8.0
   LNbase        = rep(0.8E-3,16),            # kgN m-2 leaf, Vmax = 0.03125*LNbase
   laimax        = rep(3.5,16),               # maximum crown LAI
   LAI_light     = rep(4.0,16),               # Light-limited crown LAI
@@ -177,6 +177,21 @@ df_soiltexture <- bind_rows(
 )
 ```
 
+### Define soil parameters
+
+For now, this is implemented as an illustration. Should be made site-specific.
+```{r}
+params_modl <- list(
+    kphio     = 0.05,
+    #phiRL     = 3.5,
+    tf        = 0.5,
+    CAI_max   = 2,
+    param_dbh = 0.6,
+    param_nsc = -2,
+    param_gr  = 1
+    )
+```
+
 ### Get input
 
 The file has the following variables (units):
@@ -220,33 +235,10 @@ out <- run_lm3ppa_f_bysite( sitename,
                             params_species, 
                             params_soil, 
                             init_cohort, 
-                            init_soil, 
+                            init_soil,
+                            params_modl,
                             makecheck = TRUE)
 
-
-  
-
-
-params_modl <- list(
-    kphio    = par[1],
-    rho_wood = par[2],
-    tf       = par[3],
-    CAI_max  = par[4]
-  )
-  
-  df <- runread_lm3ppa_f(
-    df_drivers, 
-    params_modl = params_modl, 
-    makecheck = TRUE,
-    parallel = FALSE
-    ) #%>% 
-
-  df_drivers_lm3ppa %>%
-      dplyr::group_by( id = row_number() ) %>%
-      tidyr::nest(input = c(sitename, params_siml, siteinfo, forcing, params_tile,params_species,params_soil,init_cohort,init_soil)) %>%
-      multidplyr::partition(cl) 
-  
-  
 out$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
@@ -256,6 +248,9 @@ out$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
+
+out$output_annual_tile %>% summarise(GPP = mean(GPP), LAI= max(LAI), NTrees=mean(Density12), Biomass=mean(plantC)) %>%  pivot_longer(everything(), names_to = "targets", values_to = "values")
+
 
 ```
 
@@ -269,8 +264,8 @@ Calibration parameters: Quantum Yield Efficiency (kphio), Root:Shoot ratio (phiR
 # Constant Self-thinning 
 settings_calib_CST <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
-  targetvars          = c("GPP","LAI","NTrees"),
-  timescale           = list(GPP = "y", LAI = "y", NTrees = "y"),
+  targetvars          = c("targets_obs"),
+  timescale           = list(targets_obs = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -285,8 +280,8 @@ settings_calib_CST <- list(
 # Mortality as DBH
 settings_calib_DBH <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
-  targetvars          = c("GPP","AGB","LAI","NTrees"),
-  timescale           = list(GPP = "y", LAI = "y", NTrees = "y"),
+  targetvars          = c("GPP","AGB","LAI","Density"),
+  timescale           = list(GPP = "y", LAI = "y", Density = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -301,8 +296,8 @@ settings_calib_DBH <- list(
 # Mortality as carbon starvation
 settings_calib_NSC <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
-  targetvars          = c("GPP","AGB","LAI","NTrees"),
-  timescale           = list(GPP = "y", LAI = "y", NTrees = "y"),
+  targetvars          = c("GPP","AGB","LAI","Density"),
+  timescale           = list(GPP = "y", LAI = "y", Density = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -317,8 +312,8 @@ settings_calib_NSC <- list(
 # Mortality as growth rate
 settings_calib_GR <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
-  targetvars          = c("GPP","AGB","LAI","NTrees"),
-  timescale           = list(GPP = "y", LAI = "y", NTrees = "y"),
+  targetvars          = c("GPP","AGB","LAI","Density"),
+  timescale           = list(GPP = "y", LAI = "y", Density = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -339,8 +334,10 @@ Variable: GPP_NT_VUT_REF
 
 ```{r}
 Fluxnet <- read.csv("~/data/FLUXNET-2015_Tier1/20191024/YY/FLX_CH-Lae_FLUXNET2015_FULLSET_YY_2004-2014_1-3.csv")
-GPP <- Fluxnet[,c("TIMESTAMP","GPP_NT_VUT_REF")]
-mean_annual_gpp <- mean(GPP$GPP_NT_VUT_REF)
+GPP <- Fluxnet[,c("TIMESTAMP","GPP_NT_VUT_REF")] # g C/m2/yr
+# Convert in Kg C/m2/yr as in the LM3-PPA model
+GPP <- GPP %>% mutate(GPP_KgC = GPP_NT_VUT_REF/1000)
+mean_annual_gpp <- mean(GPP$GPP_KgC) #Kg C/m2/yr
 ```
 
 TARGET 2. LAI or fAPAr from MODIS
@@ -352,10 +349,13 @@ Data from Euler or downloaded here using ingestr
 
 ```{r}
 # LAI
+# Reading files ...
 lai_LAE <- read.csv("~/data/modis_subsets/MODIS_LAI_MCD15A3H_daily_CH-Lae.csv")
 mean_annual_lai <- mean(lai_LAE$modisvar, na.rm=T)
 max_annual_lai <- max(lai_LAE$modisvar, na.rm=T)
 
+# LAI
+# ... or downloading with ingestr package
 settings_modis <- get_settings_modis(
   bundle            = "modis_lai",
   data_path         = "~/data/modis_subsets/",
@@ -376,10 +376,14 @@ df_modis_lai <- ingest_bysite(
   verbose   = FALSE
   )
 
+# fPAR
+# Reading files ...
 fpar_LAE <- read.csv("~/data/modis_subsets/MODIS_FPAR_MCD15A3H_daily_CH-Lae.csv")
 mean_annual_fpar <- mean(fpar_LAE$modisvar, na.rm=T)
 max_annual_fpar <- max(fpar_LAE$modisvar, na.rm=T)
 
+# fPAR
+# ... or downloading with ingestr package
 settings_modis <- get_settings_modis(
   bundle            = "modis_fpar",
   data_path         = "~/data/modis_subsets/",
@@ -399,19 +403,19 @@ df_modis_fpar <- ingest_bysite(
   settings  = settings_modis,
   verbose   = FALSE
   )
-
 ```
 
 TARGET 3. Total Stand Biomass 
+Use equations from the Swiss NFI book pag 212 see eq for Fagus sylvatica
+Use values of wood density from Forrester et al 2017. 
 
 ```{r}
 LAE_alltrees <- read.csv("~/data/LWF/Laegeren/LAE_AllTrees.csv") # Data from Christof
-LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
+#LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
 
-unique(LAE_alltrees$ARTN.TEXT)
-
+wood_density_Fagus = 590 # Kg/m3
 LAE_Fagus <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Fagus sylvatica")
-LAE_Fagus <- LAE_Fagus %>% mutate(DBH_m = BHD/100) %>% mutate(StemVolume = 0.0025428 + 0.39446*DBH_m*DBH_m*HOEHE + 2.56612*DBH_m*DBH_m - 3.67034*DBH_m*DBH_m*DBH_m + 0.03567*DBH_m*DBH_m*DBH_m*HOEHE) %>% mutate(StemBiomass = StemVolume * 560)
+LAE_Fagus <- LAE_Fagus %>% mutate(DBH_m = BHD/100) %>% mutate(StemVolume = 0.0025428 + 0.39446*DBH_m*DBH_m*HOEHE + 2.56612*DBH_m*DBH_m - 3.67034*DBH_m*DBH_m*DBH_m + 0.03567*DBH_m*DBH_m*DBH_m*HOEHE) %>% mutate(StemBiomass = StemVolume * wood_density_Fagus)
 mean_biomassFagus <- mean(LAE_Fagus$StemBiomass)
 
 LAE_Picea <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Picea abies")
@@ -425,9 +429,27 @@ TARGET 4. Number of trees higher than 12 cm
 ```{r}
 LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
 LAE_nTrees <- LAE_data %>% group_by(INVYEAR,SPECIES) %>% summarise(nTrees=n()) %>% arrange(SPECIES)
-nTreesFagus <- 461
-nTreesPicea <- 114
-nTreesPicea <- 137
+LAE_ha <- 1.34
+densityFagus <- LAE_nTrees[[12,3]]/LAE_ha
+densityPicea <- LAE_nTrees[[16,3]]/LAE_ha
+densityFir   <- LAE_nTrees[[2,3]]/LAE_ha
+```
+
+Prepare the observed target variables: ddf_obs
+
+```{r}
+ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityFagus, Biomass=mean_biomassFagus) %>%
+  pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
+```
+
+Contrast obseved vs. simulated targets
+
+```{r}
+ out$output_annual_tile %>% 
+  summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  left_join(ddf_obs)
+  
 ```
 
 #### Calibrate the model
@@ -443,18 +465,18 @@ df_drivers_lm3ppa <- tibble(sitename,
                     init_soil=list(tibble(init_soil)),
                     forcing=list(tibble(forcing)))
 
-
-rsofun::df_drivers
-df_drivers[[3]]
-
 set.seed(1982)
 settings_calib <- calib_sofun(
-  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_CST$sitenames),  
-  ddf_obs = c(mean_annual_gpp, max_annual_lai, nTreesFagus),
+  df_drivers_lm3ppa = dplyr::filter(df_drivers_lm3ppa, sitename %in% settings_calib_CST$sitenames),  
+  ddf_obs = ddf_obs,
   settings = settings_calib_CST
   )
 
-  ddf_obs = list(GPP = mean_annual_gpp, LAI = max_annual_lai, NTrees= nTreesFagus),
+
+
+
+rsofun::df_drivers
+df_drivers[[3]]
 
 ```
 

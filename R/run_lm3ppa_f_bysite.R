@@ -16,7 +16,7 @@
 #' @export
 #' @useDynLib rsofun
 #'
-run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, params_tile, params_species, params_soil, init_cohort, init_soil, makecheck = TRUE ){
+run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, params_tile, params_species, params_soil, init_cohort, init_soil, params_modl, makecheck = TRUE ){
 
 
   ## re-define units and naming of forcing dataframe
@@ -111,15 +111,18 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
 
   if (do_continue) {
 
-    # ## Soil texture as matrix (layer x texture parameter)
-    # soiltexture <- df_soiltexture %>% 
-    #   dplyr::select(fsand, fclay, forg, fgravel) %>% 
-    #   as.matrix() %>% 
-    #   t()
+    ## Model parameters as vector
+    par = c(
+      as.numeric(params_modl$kphio),
+      #as.numeric(params_modl$phiRL),
+      as.numeric(params_modl$tf),
+      as.numeric(params_modl$CAI_max),
+      as.numeric(params_modl$param_dbh),
+      as.numeric(params_modl$param_nsc),
+      as.numeric(params_modl$param_gr)
+      )
 
     ## C wrapper call
-     # out <- .Call(
-
     lm3out <- .Call(
 
       'lm3ppa_f_C',

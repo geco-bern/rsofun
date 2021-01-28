@@ -39,7 +39,6 @@ module md_interface_lm3ppa
     integer :: pt
     real    :: seedlingsize
     real    :: LMA
-    real    :: phiRL
     real    :: LNbase
     real    :: laimax
     real    :: LAI_light
