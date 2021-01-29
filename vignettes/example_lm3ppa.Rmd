@@ -182,13 +182,15 @@ df_soiltexture <- bind_rows(
 ```{r}
 params_modl <- list(
     kphio     = 0.05,
-    #phiRL     = 3.5,
+    phiRL     = 3.5,
     tf        = 0.5,
+    #fnsc      = 1,
     CAI_max   = 2,
     param_dbh = 0.6,
     param_nsc = -2,
     param_gr  = 1
     )
+
 ```
 
 ### Get input
@@ -307,16 +309,17 @@ settings_calib_CST <- list(
   dir_results         = "./",
   name                = "ORG",
   par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
-                             #phiRL = list(lower=1, upper=8, init=2),
+                             phiRL = list(lower=1, upper=8, init=2),
                              tf = list(lower=0.01, upper=1.5, init=0.1),
+                             #fnsc = list(lower=0.01, upper=1, init=0.1),
                              CAI_max = list(lower=0, upper=4, init=0.5))
  )
 
 # Mortality as DBH
 settings_calib_DBH <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
-  targetvars          = c("GPP","AGB","LAI","Density"),
-  timescale           = list(GPP = "y", LAI = "y", Density = "y"),
+  targetvars          = c("targets_obs"),
+  timescale           = list(targets_obs = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -325,14 +328,15 @@ settings_calib_DBH <- list(
   par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
                              phiRL = list(lower=1, upper=8, init=2),
                              tf = list(lower=0.01, upper=1.5, init=0.1),
+                             #fnsc = list(lower=0.01, upper=1, init=0.1),
                              param_dbh = list(lower=0.01, upper=1, init=0.1))
  )
 
 # Mortality as carbon starvation
 settings_calib_NSC <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
-  targetvars          = c("GPP","AGB","LAI","Density"),
-  timescale           = list(GPP = "y", LAI = "y", Density = "y"),
+  targetvars          = c("targets_obs"),
+  timescale           = list(targets_obs = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -341,14 +345,15 @@ settings_calib_NSC <- list(
   par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
                              phiRL = list(lower=1, upper=8, init=2),
                              tf = list(lower=0.01, upper=1.5, init=0.1),
+                             #fnsc = list(lower=0.01, upper=1, init=0.1),
                              param_nsc = list(lower=-3, upper=-1, init=-2.9))
  )
 
 # Mortality as growth rate
 settings_calib_GR <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
-  targetvars          = c("GPP","AGB","LAI","Density"),
-  timescale           = list(GPP = "y", LAI = "y", Density = "y"),
+  targetvars          = c("targets_obs"),
+  timescale           = list(targets_obs = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
@@ -357,6 +362,7 @@ settings_calib_GR <- list(
   par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
                              phiRL = list(lower=1, upper=8, init=2),
                              tf = list(lower=0.01, upper=1.5, init=0.1),
+                             #fnsc = list(lower=0.01, upper=1, init=0.1),
                              param_gr = list(lower=0.01, upper=2, init=0.1))
  )
 ```
@@ -477,6 +483,7 @@ ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityF
   #pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
   gather("variables", "targets_obs",GPP,LAI,Density,Biomass)
 
+nrow(ddf_obs)
 ```
 
 Contrast obseved vs. simulated targets
@@ -484,7 +491,8 @@ Contrast obseved vs. simulated targets
 ```{r}
   df_output$data[[1]]$output_annual_tile %>%
   summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
-  pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  #pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
   left_join(ddf_obs)
   
 ```
@@ -492,30 +500,46 @@ Contrast obseved vs. simulated targets
 #### Calibrate the model
 ```{r}
 
+## Constant Self-thinning
 set.seed(1982)
-settings_calib <- calib_sofun(
+settings_calib_CST <- calib_sofun(
   df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_CST$sitenames),  
   ddf_obs = ddf_obs,
   settings = settings_calib_CST
   )
 
-print(settings_calib$par_opt)
+print(settings_calib_CST$par_opt)
 
+## Mortality as tree size
+set.seed(1752)
+settings_calib_DBH <- calib_sofun(
+  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_DBH$sitenames),  
+  ddf_obs = ddf_obs,
+  settings = settings_calib_DBH
+  )
 
+print(settings_calib_DBH$par_opt)
 
- dddd <- df_output$data[[1]]$output_annual_tile %>% 
-  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
-  tidyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
-  dplyr::left_join(ddf_obs)
+## Mortality as carbon starvation
+set.seed(1982)
+settings_calib_NSC <- calib_sofun(
+  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_NSC$sitenames),  
+  ddf_obs = ddf_obs,
+  settings = settings_calib_NSC
+  )
 
- df_output$data[[1]]$output_annual_tile %>% 
-  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
-  gather("variables", "targets_mod",GPP,LAI,Density,Biomass)%>%
-  dplyr::left_join(ddf_obs)
- 
+print(settings_calib_NSC$par_opt)
 
-install.packages("tidyr")
-library(tidyr)
+## Mortality as carbon starvation
+set.seed(1682)
+settings_calib_GR <- calib_sofun(
+  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_GR$sitenames),  
+  ddf_obs = ddf_obs,
+  settings = settings_calib_GR
+  )
+
+print(settings_calib_GR$par_opt)
+
 ```
 
 The calibrated parameters are returned by calib_sofun() as part of the list:

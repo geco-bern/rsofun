@@ -44,16 +44,16 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
       # cost_rmse <- cost_chisquared_vpdstress
       cost_rmse <- cost_rmse_vpdstress
       
-    }  else if ( "kphio" %in% names(settings$par) && "tf" %in% names(settings$par) && "CAI_max" %in% names(settings$par) ){  
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "CAI_max" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa_constantselfthinning
 
-    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "par_dbh" %in% names(settings$par) ){  
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "param_dbh" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa_dbh
 
-    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "par_nsc" %in% names(settings$par) ){  
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "param_nsc" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa_cstarvation
 
-    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "par_gr" %in% names(settings$par) ){  
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf" %in% names(settings$par) && "param_gr" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa_growthrate
       
     }
@@ -391,13 +391,136 @@ cost_rmse_lm3ppa_constantselfthinning <- function( par, ddf_obs, df_drivers, inv
   ## For calibrating quantum yield efficiency only
   params_modl <- list(
     kphio      = par[1],
-    # phiRL    = par[2],
-    tf         = par[2],
-    CAI_max    = par[3],
+    phiRL      = par[2],
+    tf         = par[3],
+    CAI_max    = par[4],
     param_dbh  = 0.6,
     param_nsc  = -2,
     param_gr   = 1
+  )
+  
+  df <- runread_lm3ppa_f(
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) 
 
+  # Aggregate variables from the model df
+  df <- df$data[[1]]$output_annual_tile %>% 
+  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  # tidyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  dplyr::left_join(ddf_obs)
+
+  ## Calculate cost (RMSE) across the N targets
+  cost <- sqrt( mean( (df$targets_mod - df$targets_obs )^2, na.rm = TRUE ) )
+  
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost  
+  
+  return(cost)
+}
+
+##------------------------------------------------------------
+## Tree size mortality formulation
+##------------------------------------------------------------
+cost_rmse_lm3ppa_dbh <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
+
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio      = par[1],
+    phiRL      = par[2],
+    tf         = par[3],
+    CAI_max    = 2,
+    param_dbh  = par[4],
+    param_nsc  = -2,
+    param_gr   = 1
+  )
+  
+  df <- runread_lm3ppa_f(
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) 
+
+  # Aggregate variables from the model df
+  df <- df$data[[1]]$output_annual_tile %>% 
+  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  # tidyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  dplyr::left_join(ddf_obs)
+
+  ## Calculate cost (RMSE) across the N targets
+  cost <- sqrt( mean( (df$targets_mod - df$targets_obs )^2, na.rm = TRUE ) )
+  
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost  
+  
+  return(cost)
+}
+
+##------------------------------------------------------------
+## Carbon starvation mortality formulation
+##------------------------------------------------------------
+cost_rmse_lm3ppa_cstarvation <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
+
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio      = par[1],
+    phiRL      = par[2],
+    tf         = par[3],
+    # fnsc       = par[3],
+    CAI_max    = 2,
+    param_dbh  = 0.6,
+    param_nsc  = par[4],
+    param_gr   = 1
+  )
+  
+  df <- runread_lm3ppa_f(
+    df_drivers, 
+    params_modl = params_modl, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) 
+
+  # Aggregate variables from the model df
+  df <- df$data[[1]]$output_annual_tile %>% 
+  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  # tidyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  dplyr::left_join(ddf_obs)
+
+  ## Calculate cost (RMSE) across the N targets
+  cost <- sqrt( mean( (df$targets_mod - df$targets_obs )^2, na.rm = TRUE ) )
+  
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost  
+  
+  return(cost)
+}
+
+##------------------------------------------------------------
+## Carbon starvation mortality formulation
+##------------------------------------------------------------
+cost_rmse_lm3ppa_growthrate <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
+
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio      = par[1],
+    phiRL      = par[2],
+    tf         = par[3],
+    CAI_max    = 2,
+    param_dbh  = 0.6,
+    param_nsc  = -2,
+    param_gr   = par[4]
   )
   
   df <- runread_lm3ppa_f(

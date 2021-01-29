@@ -114,8 +114,9 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     ## Model parameters as vector
     par = c(
       as.numeric(params_modl$kphio),
-      #as.numeric(params_modl$phiRL),
+      as.numeric(params_modl$phiRL),
       as.numeric(params_modl$tf),
+      # as.numeric(params_modl$fnsc),
       as.numeric(params_modl$CAI_max),
       as.numeric(params_modl$param_dbh),
       as.numeric(params_modl$param_nsc),
