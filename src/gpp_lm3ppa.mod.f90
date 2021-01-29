@@ -291,7 +291,7 @@ contains
                                 c4             = .false., &
                                 method_optci   = "prentice14", &
                                 method_jmaxlim = "wang17", &
-                                kphio          = myinterface%params_calib_species(sp)%kphio, & ! params_pft_gpp%kphio, &
+                                kphio          = myinterface%params_calib_species(1)%kphio, & ! params_pft_gpp%kphio, &
                                 beta           = params_gpp%beta, &
                                 rd_to_vcmax    = params_gpp%rd_to_vcmax &
                                 )

@@ -84,9 +84,9 @@ The model allows for four different mortality functional forms:
 params_tile <- tibble( #list
 
   # add calibratable params
-  kphio = xxx,
-  phiRL = xxx,
-
+  tf_base      = 1,
+  par_mort     = 0.6,   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
+  # ---
   soiltype     = 3,     # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   FLDCAP       = 0.4,   # soil property: field capacity 
   WILTPT       = 0.05,  # soil property: wilting point
@@ -103,6 +103,7 @@ params_tile <- tibble( #list
   retransN     = 0.0,   # retranslocation coefficient of Nitrogen
   f_initialBSW = 0.2,
   f_N_add      = 0.02   # re-fill of N for sapwood
+  
   )
 ```
 
@@ -112,15 +113,14 @@ params_tile <- tibble( #list
 params_species <- tibble(
 
   # add calibratable params
-  kphio = rep(xxx, 16),
-  phiRL = rep(xxx, 16),
-
+  kphio         = rep(0.05, 16),
+  phiRL         = rep(3.5, 16),
+  # ---
   lifeform      = rep(1,16),                 # 0 for grasses; 1 for trees
   phenotype     = rep(0,16),                 # 0 for Deciduous; 1 for Evergreen
   pt            = rep(0,16),                 # 0 for C3; 1 for C4
   seedlingsize  = rep(0.05,16),              # initial size of seedlings
   LMA           = rep(0.05,16),              # Leaf mass per unit area. For sps: Beech (0.05); Spruce (0.17) Fir (0.11)
-  #phiRL         = rep(3.5,16),               # Root:Shoot ratio:  4.0, 6.0, 8.0
   LNbase        = rep(0.8E-3,16),            # kgN m-2 leaf, Vmax = 0.03125*LNbase
   laimax        = rep(3.5,16),               # maximum crown LAI
   LAI_light     = rep(4.0,16),               # Light-limited crown LAI
@@ -188,23 +188,12 @@ df_soiltexture <- bind_rows(
 )
 ```
 
-<!-- ### Define model parameters to be calibrated later
-
-```{r}
-params_modl <- list(
-    kphio    = rep(0.05, 16),
-    phiRL    = rep(3.5, 16,
-    tf_base  = 0.5,
-    par_mort = 1
-    )
-``` -->
-
 ### Get input
 
 The file has the following variables (units):
 
 ```{r}
-load("~/data/forcingLAE.RData") #forcingLAE See script prepare_drivers.Rmd
+load("~/data/forcingLAE.RData")#forcingLAE See script prepare_drivers.Rmd
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -369,6 +358,7 @@ settings_calib_GR <- list(
                              #fnsc = list(lower=0.01, upper=1, init=0.1),
                              param_gr = list(lower=0.01, upper=2, init=0.1))
  )
+
 ```
 
 #### Get ddf_obs

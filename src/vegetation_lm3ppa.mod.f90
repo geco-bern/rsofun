@@ -709,9 +709,9 @@ contains
     logical :: merged(vegn%n_cohorts) ! mask to skip cohorts that were already merged
     real :: cCAI
     real :: dn ! number of trees that died due to CAI_partial>CAI_max
-    real :: param_dbh = 0.6
-    real :: param_nsc = -2
-    real :: param_gr = 1
+    real :: param_dbh 
+    real :: param_nsc 
+    real :: param_gr
     real :: CAI_max
 
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then

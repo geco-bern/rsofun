@@ -77,25 +77,25 @@ module md_interface_lm3ppa
   end type paramstype_calib_tile
 
   type interfacetype_biosphere
-    integer                                           :: year
-    real, dimension(:), allocatable                   :: pco2
-    type(gridtype)                                    :: grid
-    type(climate_type), dimension(:), allocatable     :: climate
-    type(outtype_steering)                            :: steering
-    type(paramstype_siml)                             :: params_siml
-    real, dimension(:), allocatable                   :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
-    ! type(paramstype_calib)                          :: params_calib    ! calibratable parameters
-    type(paramstype_species), dimension(0:MSPECIES)   :: params_species
-    type(paramtype_soil)                              :: params_soil
-    type(paramstype_tile)                             :: params_tile
-    type(inittype_cohort), dimension(MAX_INIT_COHORTS):: init_cohort
-    type(inittype_soil)                               :: init_soil
-    integer                                           :: datalines
-    integer                                           :: steps_per_day
-    real                                              :: dt_fast_yr
-    real                                              :: step_seconds
+    integer                                               :: year
+    real, dimension(:), allocatable                       :: pco2
+    type(gridtype)                                        :: grid
+    type(climate_type), dimension(:), allocatable         :: climate
+    type(outtype_steering)                                :: steering
+    type(paramstype_siml)                                 :: params_siml
+    real, dimension(:), allocatable                       :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
+    ! type(paramstype_calib)                              :: params_calib    ! calibratable parameters
+    type(paramstype_species), dimension(0:MSPECIES)       :: params_species
+    type(paramtype_soil)                                  :: params_soil
+    type(paramstype_tile)                                 :: params_tile
+    type(inittype_cohort), dimension(MAX_INIT_COHORTS)    :: init_cohort
+    type(inittype_soil)                                   :: init_soil
+    integer                                               :: datalines
+    integer                                               :: steps_per_day
+    real                                                  :: dt_fast_yr
+    real                                                  :: step_seconds
     type(paramstype_calib_species), dimension(0:MSPECIES) :: params_calib_species
-    type(paramstype_calib_tile)                       :: params_calib_tile
+    type(paramstype_calib_tile)                           :: params_calib_tile
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface

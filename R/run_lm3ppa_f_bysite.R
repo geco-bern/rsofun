@@ -112,10 +112,10 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
   if (do_continue) {
 
     ## take this from params_tile
-    params_calib_tile = c(as.numeric(params_modl$tf_base), as.numeric(params_modl$par_mort))
+    params_calib_tile = c(as.numeric(params_tile$tf_base), as.numeric(params_tile$par_mort))
 
     ## take this from params_species
-    params_calib_species = data.frame(kphio = params_modl$kphio, phiRL = params_modl$phiRL)
+    params_calib_species = data.frame(kphio = params_species$kphio, phiRL = params_species$phiRL)
 
     ## C wrapper call
     lm3out <- .Call(
