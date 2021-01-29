@@ -81,6 +81,7 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
   }
 
   if (do_continue){
+    
     forcing <- as.matrix(forcing)
     
     n <- as.integer(nrow(forcing))

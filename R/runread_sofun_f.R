@@ -81,12 +81,12 @@ runread_pmodel_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
 #'
 #' @examples mod <- runread_pmodel_f( df_drivers, params_modl, makecheck = TRUE, parallel = FALSE, ncores = 2 )
 #' 
-runread_lm3ppa_f <- function( df_drivers, params_modl, makecheck = TRUE, parallel = FALSE, ncores = 2 ){
+runread_lm3ppa_f <- function( df_drivers, makecheck = TRUE, parallel = FALSE, ncores = 2 ){
   
   if (parallel){
     
     cl <- multidplyr::new_cluster(2) %>% 
-      multidplyr::cluster_assign(params_modl = params_modl) %>% 
+      # multidplyr::cluster_assign(params_modl = params_modl) %>% 
       multidplyr::cluster_assign(makecheck = FALSE) %>% 
       multidplyr::cluster_library(c("dplyr", "purrr", "rlang", "rsofun"))
     
@@ -106,7 +106,6 @@ runread_lm3ppa_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
                                          params_soil    = .x$params_soil[[1]], 
                                          init_cohort    = .x$init_cohort[[1]], 
                                          init_soil      = .x$init_soil[[1]], 
-                                         params_modl    = params_modl, 
                                          makecheck      = makecheck )
 
       )) %>% 
@@ -121,7 +120,6 @@ runread_lm3ppa_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
       dplyr::mutate(data = purrr::pmap(
         .,
         run_lm3ppa_f_bysite,
-        params_modl = params_modl,
         makecheck = makecheck
       )) %>% 
       dplyr::select(sitename, data)

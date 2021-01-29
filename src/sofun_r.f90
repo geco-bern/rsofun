@@ -225,7 +225,7 @@ contains
 
   !//////////////////////////////////////////////////////////////////////////
 
- subroutine lm3ppa_f(             &
+  subroutine lm3ppa_f(            &
     spinup,                       &   
     spinupyears,                  &        
     recycle,                      &    
@@ -259,6 +259,8 @@ contains
     f_N_add,                      & 
     params_species,               &            
     params_soil,                  &         
+    params_calib_tile,            &         
+    params_calib_species,         &         
     init_cohort,                  &         
     init_fast_soil_C,             &              
     init_slow_soil_C,             &              
@@ -386,6 +388,8 @@ contains
     ! naked arrays
     real(kind=c_double), dimension(0:MSPECIES,15), intent(in) :: params_species
     real(kind=c_double), dimension(n_dim_soil_types,8), intent(in) :: params_soil
+    real(kind=c_double), dimension(2), intent(in) :: params_calib_tile
+    real(kind=c_double), dimension(0:MSPECIES,2), intent(in) :: params_calib_species
     real(kind=c_double), dimension(MAX_INIT_COHORTS,5),  intent(in) :: init_cohort
 
     ! initial soil pool size
@@ -588,6 +592,15 @@ contains
     myinterface%params_soil%k_sat_ref(:)         = real(params_soil(:,6))
     myinterface%params_soil%alphaSoil(:)         = real(params_soil(:,7))
     myinterface%params_soil%heat_capacity_dry(:) = real(params_soil(:,8))
+
+    !----------------------------------------------------------------
+    ! GET CALIBRATABLE PARAMETERS
+    !----------------------------------------------------------------
+    myinterface%params_calib_tile%tf_base      = real(params_calib_tile(1))
+    myinterface%params_calib_tile%par_mort     = real(params_calib_tile(2))
+
+    myinterface%params_calib_species(:)%kphio  = real(params_calib_species(:,1)) ! make sure they are in the correct order  xxx
+    myinterface%params_calib_species(:)%phiRL  = real(params_calib_species(:,2)) 
 
 
     !----------------------------------------------------------------

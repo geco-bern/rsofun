@@ -16,7 +16,7 @@
 #' @export
 #' @useDynLib rsofun
 #'
-run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, params_tile, params_species, params_soil, init_cohort, init_soil, params_modl, makecheck = TRUE ){
+run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, params_tile, params_species, params_soil, init_cohort, init_soil, makecheck = TRUE ){
 
 
   ## re-define units and naming of forcing dataframe
@@ -111,17 +111,11 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
 
   if (do_continue) {
 
-    ## Model parameters as vector
-    par = c(
-      as.numeric(params_modl$kphio),
-      as.numeric(params_modl$phiRL),
-      as.numeric(params_modl$tf),
-      # as.numeric(params_modl$fnsc),
-      as.numeric(params_modl$CAI_max),
-      as.numeric(params_modl$param_dbh),
-      as.numeric(params_modl$param_nsc),
-      as.numeric(params_modl$param_gr)
-      )
+    ## take this from params_tile
+    params_calib_tile = c(as.numeric(params_modl$tf_base), as.numeric(params_modl$par_mort))
+
+    ## take this from params_species
+    params_calib_species = data.frame(kphio = params_modl$kphio, phiRL = params_modl$phiRL)
 
     ## C wrapper call
     lm3out <- .Call(
@@ -170,6 +164,12 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       
       ## soil parameters
       params_soil = as.matrix(params_soil),
+
+      ## calibratable parameters at tile-level
+      params_calib_tile = params_calib_tile,      # xxx hopefully this works without converting to as.matrix()
+
+      ## calibratable parameters at species-level
+      params_calib_species = as.matrix(params_calib_species),
       
       ## initial cohort sizes
       init_cohort = as.matrix(init_cohort),

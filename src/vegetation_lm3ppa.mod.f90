@@ -100,7 +100,7 @@ contains
     type(cohort_type), intent(inout) :: cc
     real, intent(in) :: tairK ! degK
     ! local variables
-    real :: tf,tfs ! thermal inhibition factors for above- and below-ground biomass
+    real :: tf, tfs ! thermal inhibition factors for above- and below-ground biomass
     real :: r_leaf, r_stem, r_root
     real :: Acambium  ! cambium area, m2/tree
 
@@ -111,22 +111,25 @@ contains
     sp = cc%species
     
     ! temperature response function
-    tf  = exp(9000.0*(1.0/298.16-1.0/tairK))
+    tf  = tf_base * exp(9000.0 * (1.0/298.16 - 1.0/tairK))
     
     !  tfs = thermal_inhibition(tsoil)  ! original
     tfs = tf ! Rm_T_response_function(tsoil) ! Weng 2014-01-14
+
     ! With nitrogen model, leaf respiration is a function of leaf nitrogen
     !NSCtarget = 3.0 * (cc%bl_max + cc%br_max)
     fnsc = 1.0 ! min(max(0.0,cc%nsc/NSCtarget),1.0)
     ! Acambium = PI * cc%DBH * cc%height * 1.2 ! see Weng et al. 2015: Acambium~D^1.5 -> H~D^0.5 and D*H is proportional to D^1.5
     exp_acambium = 1.5 !(1.5 - 2) Use this exponent to make Acambium~D^2. Ensheng suggested range 1.5 to 2.
     Acambium = PI * cc%DBH ** exp_acambium * cc%height * 1.2
+
     ! Facultive Nitrogen fixation
     !if (cc%NSN < cc%NSNmax .and. cc%NSC > 0.5 * NSCtarget) then
     !   cc%fixedN = spdata(sp)%NfixRate0 * cc%br * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
     !else
     !   cc%fixedN = 0.0 ! spdata(sp)%NfixRate0 * cc%br * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
     !endif
+
     ! Obligate Nitrogen Fixation
     cc%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%br * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
     r_Nfix    = spdata(sp)%NfixCost0 * cc%fixedN ! + 0.25*spdata(sp)%NfixCost0 * cc%N_uptake    ! tree-1 step-1
@@ -709,9 +712,12 @@ contains
     real :: param_dbh = 0.6
     real :: param_nsc = -2
     real :: param_gr = 1
-    real :: CAI_max = 2 ! This value can be adjusted. Tried before 1.1
+    real :: CAI_max
 
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
+
+      ! set calibratable mortality parameter
+      CAI_max = myinterface%params_calib_tile%par_mort
 
       ! check if current CAI is greater than maximum CAI
       print*, "CAI_max, CAI", CAI_max, vegn%CAI
@@ -722,6 +728,7 @@ contains
       ! Calculate cumulative CAI from shortest trees
       totCC = vegn%n_cohorts
       allocate(cai_partial(totCC))
+
       ! calculate cai_partial and the number of cohorts with cai_partial < CAI_max (keep them)
       cai_partial = 0.0
       do i = totCC, 1, -1
@@ -765,11 +772,12 @@ contains
           cai_partial(i) = cai_partial(i+1) + cCAI
         end if
       enddo
-    write(*,*)"cai_partial2", cai_partial
-    write(*,*)'k,totCC-2',k, totCC
-    ! end of final check
 
-    deallocate(cai_partial)
+      write(*,*)"cai_partial2", cai_partial
+      write(*,*)'k,totCC-2',k, totCC
+      ! end of final check
+
+      deallocate(cai_partial)
  
     else
 
@@ -778,24 +786,37 @@ contains
         associate ( sp => spdata(cc%species))
 
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
+          
+          ! set calibratable parameter
+          param_nsc = myinterface%params_calib_tile%par_mort
+
           if (cc%bl_max > 0) then
           deathrate = exp(param_nsc*(cc%nsc/cc%bl_max))/(0.01+exp(param_nsc*(cc%nsc/cc%bl_max))) ! Changing coef: works with 2.5          
           endif
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
-          deathrate = param_gr*(cc%Volume - cc%Vol_ys)
+          
+          ! set calibratable parameter
+          param_gr = myinterface%params_calib_tile%par_mort
+
+          deathrate = param_gr * (cc%Volume - cc%Vol_ys)
+
           ! deathrate = 0.2*(cc%DBH - cc%DBH_ys)
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
-          if(sp%lifeform==0)then  ! for grasses
+         ! set calibratable parameter
+         param_dbh = myinterface%params_calib_tile%par_mort
+
+          if (sp%lifeform==0)then  ! for grasses
             if(cc%layer > 1) then
               deathrate = sp%mortrate_d_u
             else
               deathrate = sp%mortrate_d_c
             endif
           else                    ! for trees
-            if(cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.08*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
+
+            if (cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.08*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
               ! deathrate = sp%mortrate_d_u * &
                      ! (1. + A_mort*exp(B_mort*cc%dbh))/ &
                      ! (1. +        exp(B_mort*cc%dbh)) + &
@@ -2020,7 +2041,11 @@ contains
     integer :: io           ! i/o status for the namelist
     integer :: ierr         ! error code, returned by i/o routines
     integer :: nml_unit
-    
+
+    ! Set calibratable parameters
+    tf_base  = myinterface%params_calib_tile%tf_base
+    par_mort = myinterface%params_calib_tile%par_mort
+
     ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
     K1          = myinterface%params_tile%K1  
     K2          = myinterface%params_tile%K2
@@ -2038,6 +2063,7 @@ contains
 
     !  Read parameters from the parameter file (namelist)
     if (read_from_parameter_file) then
+
       ! Initialize plant cohorts
       init_n_cohorts = nCohorts ! Weng,2018-11-21
       allocate(cc(1:init_n_cohorts), STAT = istat)
@@ -2061,6 +2087,7 @@ contains
 
       ! Sorting these cohorts
       call relayer_cohorts( vegn )
+
       ! Initial Soil pools and environmental conditions
       vegn%metabolicL   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
       vegn%structuralL  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
@@ -2069,11 +2096,12 @@ contains
       vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
       vegn%mineralN     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
       vegn%previousN    = vegn%mineralN
-      !Soil water
-      ! Parameters
+
+      ! Soil water parameters
       vegn%soiltype = myinterface%params_tile%soiltype    
       vegn%FLDCAP = myinterface%params_tile%FLDCAP  
       vegn%WILTPT = myinterface%params_tile%WILTPT  
+
       ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
       vegn%wcl = myinterface%params_tile%FLDCAP  
       ! Update soil water
@@ -2083,9 +2111,7 @@ contains
       enddo
       vegn%thetaS = 1.0
       ! tile
-      ! print*, 'initialize_vegn_tile() 1: ',  vegn%n_cohorts   ! xxx debug
       call summarize_tile( vegn )
-      ! print*, 'initialize_vegn_tile() 2: ',  vegn%n_cohorts   ! xxx debug
       vegn%initialN0 = vegn%NSN + vegn%SeedN + vegn%leafN +      &
       vegn%rootN + vegn%SapwoodN + vegn%woodN + &
       vegn%MicrobialN + vegn%metabolicN +       &
@@ -2109,14 +2135,17 @@ contains
         btotal     = rand()*100.0  ! kgC /tree
         call initialize_cohort_from_biomass(cx,btotal)
       enddo
+
       ! Sorting these cohorts
       call relayer_cohorts( vegn )
+
       ! ID each cohort
       do i=1,nCohorts
         cx => vegn%cohorts(i)
         cx%ccID = MaxCohortID + i
       enddo
       MaxCohortID = cx%ccID
+
       ! Initial Soil pools and environmental conditions
       vegn%metabolicL  = 0.2 ! kgC m-2
       vegn%structuralL = 7.0 ! slow soil carbon pool, (kg C/m2)
@@ -2125,10 +2154,9 @@ contains
       vegn%N_input     = N_input  ! kgN m-2 yr-1, N input to soil
       vegn%mineralN    = 0.005  ! Mineral nitrogen pool, (kg N/m2)
       vegn%previousN   = vegn%mineralN
+
       ! tile
-      ! print*, 'initialize_vegn_tile() 3: ',  vegn%n_cohorts   ! xxx debug
       call summarize_tile( vegn )
-      ! print*, 'initialize_vegn_tile() 4: ',  vegn%n_cohorts   ! xxx debug
       vegn%initialN0 = vegn%NSN + vegn%SeedN + vegn%leafN +      &
       vegn%rootN + vegn%SapwoodN + vegn%woodN + &
       vegn%MicrobialN + vegn%metabolicN +       &

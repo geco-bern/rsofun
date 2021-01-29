@@ -66,6 +66,16 @@ module md_interface_lm3ppa
     real :: N_input
   end type inittype_soil
 
+  type paramstype_calib_species
+    real :: kphio
+    real :: phiRL
+  end type paramstype_calib_species
+
+  type paramstype_calib_tile
+    real :: tf_base
+    real :: par_mort
+  end type paramstype_calib_tile
+
   type interfacetype_biosphere
     integer                                           :: year
     real, dimension(:), allocatable                   :: pco2
@@ -84,6 +94,8 @@ module md_interface_lm3ppa
     integer                                           :: steps_per_day
     real                                              :: dt_fast_yr
     real                                              :: step_seconds
+    type(paramstype_calib_species), dimension(0:MSPECIES) :: params_calib_species
+    type(paramstype_calib_tile)                       :: params_calib_tile
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface

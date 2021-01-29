@@ -387,31 +387,27 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
 ##------------------------------------------------------------
 cost_rmse_lm3ppa_constantselfthinning <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
 
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  params_modl <- list(
-    kphio      = par[1],
-    phiRL      = par[2],
-    tf         = par[3],
-    CAI_max    = par[4],
-    param_dbh  = 0.6,
-    param_nsc  = -2,
-    param_gr   = 1
-  )
+  ## modify df_drivers xxx check order in par
+  df_drivers$params_tile$tf_base  <- par[1]
+  df_drivers$params_tile$par_mort <- par[2]
+
+  df_drivers$params_species$kphio[] <- par[3]
+  df_drivers$params_species$phiRL[] <- par[4]
   
   df <- runread_lm3ppa_f(
     df_drivers, 
-    params_modl = params_modl, 
     makecheck = TRUE,
     parallel = FALSE
     ) 
 
   # Aggregate variables from the model df
   df <- df$data[[1]]$output_annual_tile %>% 
-  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
-  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
-  # tidyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
-  dplyr::left_join(ddf_obs)
+
+    # xxx make this base R
+    dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+    gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+    # tidyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+    dplyr::left_join(ddf_obs)
 
   ## Calculate cost (RMSE) across the N targets
   cost <- sqrt( mean( (df$targets_mod - df$targets_obs )^2, na.rm = TRUE ) )

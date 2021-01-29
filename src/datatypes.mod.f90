@@ -262,16 +262,20 @@ module datatypes
     real :: MaxDBH
     real :: NPPL
     real :: NPPW
+
     ! leaf area index
     real :: LAI  ! leaf area index
     real :: CAI  ! crown area index
     real :: LAIlayer(0:10) = 0.0 ! LAI of each crown layer, max. 9
+
     ! uptake-related variables
     real :: root_distance(max_lev) ! characteristic half-distance between fine roots, m
+
     ! averaged quantities for PPA phenology
     real :: tc_daily = 0.0
     real :: gdd      = 0.0 ! growing degree-days
     real :: tc_pheno = 0.0 ! smoothed canopy air temperature for phenology
+
     ! litter and soil carbon pools
     real :: litter = 0.0 ! litter flux
     real :: MicrobialC  = 0  ! Microbes (kg C/m2)
@@ -279,6 +283,7 @@ module datatypes
     real :: structuralL = 0  ! slow soil carbon pool, (kg C/m2)
     real :: n_deadtrees = 0  
     real :: c_deadtrees = 0
+
     ! Nitrogen pools, Weng 2014-08-08
     real :: MicrobialN= 0
     real :: metabolicN = 0  ! fast soil nitrogen pool, (kg N/m2)
@@ -292,6 +297,7 @@ module datatypes
     real :: N_P2S_yr= 0.0  ! annual N from plants to soil
     real :: previousN      ! an weighted annual available N
     real :: initialN0
+
     ! Soil water
     integer :: soiltype       ! lookup table for soil hydrologic parameters
     real :: FLDCAP  ! soil property: field capacity
@@ -302,16 +308,19 @@ module datatypes
     real :: thetaS     ! moisture index (ws - wiltpt)/(fldcap - wiltpt)
     real :: wcl(max_lev)   ! volumetric soil water content for each layer
     real :: soilWater      ! kg m-2 in root zone
+
     ! Water uptake-related variables
     real :: RAI ! root area index
     real :: RAIL(max_lev) = 0.0 ! Root length per layer, m of root/m
     real :: W_uptake  ! water uptake rate per unit time per m2
+
     ! Carbon fluxes
     real :: gpp =0 ! gross primary production, kgC m-2 yr-1
     real :: npp =0 ! net primary productivity
     real :: resp = 0 ! auto-respiration of plants
     real :: nep =0 ! net ecosystem productivity
     real :: rh  =0 ! soil carbon lost to the atmosphere
+
     ! Daily diagnostics
     real :: dailyGPP
     real :: dailyNPP
@@ -370,7 +379,7 @@ module datatypes
     ! added to avoid recalculation of soil hydraulics in case of Darcy uptake
     real          :: uptake_T ! update temperature from previous time step
     real, pointer :: psi(:) ! soil water potential
-  end type soil_tile_type
+  end type soil_tile_type  
 
   ! PFT-specific parameters
   type(spec_data_type), save :: spdata(0:MSPECIES) ! define PFTs
@@ -382,7 +391,10 @@ module datatypes
   real   :: soiltype              !Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   real   :: FLDCAP      = 0.4     ! vol/vol !!! Both variables FLDCAP need to be specified here or gs_leuning crushes!!!
   real   :: WILTPT     != 0.05    ! vol/vol
+
   ! Carbon pools
+  real :: tf_base                 ! scalar for respiration
+  real :: par_mort                ! generic calibratable parameter for mortality module
   real :: K1           != 2       ! Fast soil C decomposition rate (yr-1)
   real :: K2           != 0.05    ! slow soil C decomposition rate (yr-1)
   real :: K_nitrogen   != 8.0     ! mineral Nitrogen turnover rate
@@ -399,10 +411,12 @@ module datatypes
  
   ! Ensheng's growth parameters:
   real :: f_LFR_max  = 0.85 ! max allocation to leaves and fine roots ! wood_fract_min = 0.15 ! for understory mortality rate is calculated as:
+  
   ! deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
   real :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
   real :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
   real :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
+  
   ! for leaf life span and LMA (leafLS = c_LLS * LMA
   real :: c_LLS  = 28.57143   ! yr/ (kg C m-2), 1/LMAs, where LMAs = 0.035
 
@@ -567,7 +581,9 @@ contains
 
 
   subroutine initialize_PFT_data() !namelistfile
+
     use md_interface_lm3ppa, only: myinterface
+
     ! ---- local vars ------
     integer :: i
 
@@ -592,6 +608,7 @@ contains
     spdata%leaf_size     = leaf_size
     spdata%tc_crit       = tc_crit
     spdata%gdd_crit      = gdd_crit
+
     ! Plant traits
     spdata%LMA           = myinterface%params_species(:)%LMA ! leaf mass per unit area, kg C/m2
     spdata%LNbase        = myinterface%params_species(:)%LNbase   ! Basal leaf nitrogen per unit area, kg N/m2
@@ -617,9 +634,10 @@ contains
     spdata%LAI_light     = myinterface%params_species(:)%LAI_light
     spdata%tauNSC        = tauNSC
     spdata%fNSNmax       = myinterface%params_species(:)%fNSNmax
-    spdata%phiRL         = phiRL
+    spdata%phiRL         = myinterface%params_calib_species(:)%phiRL     ! xxx phiRL
     spdata%phiCSA        = myinterface%params_species(:)%phiCSA
-    ! root urnover rate
+
+    ! root turnover rate
     spdata%alpha_FR      = alpha_FR
 
     ! Nitrogen Weng 2012-10-24
@@ -639,7 +657,9 @@ contains
 
 
   subroutine init_derived_species_data(sp)
+    
     type(spec_data_type), intent(inout) :: sp
+
     ! ---- local vars ------
     integer :: j
     real :: rdepth(0:max_lev)

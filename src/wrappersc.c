@@ -152,6 +152,8 @@ void F77_NAME(lm3ppa_f)(
     double *f_N_add,
     double *params_species,                   
     double *params_soil,                   
+    double *params_calib_tile,                   
+    double *params_calib_species,                   
     double *init_cohort,                   
     double *init_fast_soil_C,                   
     double *init_slow_soil_C,                   
@@ -257,6 +259,8 @@ extern SEXP lm3ppa_f_C(
     SEXP f_N_add, 
     SEXP params_species,                   
     SEXP params_soil,                   
+    SEXP params_calib_tile,                   
+    SEXP params_calib_species,                   
     SEXP init_cohort,                   
     SEXP init_fast_soil_C,                   
     SEXP init_slow_soil_C,                   
@@ -370,6 +374,8 @@ extern SEXP lm3ppa_f_C(
         REAL(f_N_add),  
         REAL(params_species),                   
         REAL(params_soil),                   
+        REAL(params_calib_tile),                   
+        REAL(params_calib_species),                   
         REAL(init_cohort),                  
         REAL(init_fast_soil_C),                   
         REAL(init_slow_soil_C),                   
@@ -512,7 +518,7 @@ extern SEXP lm3ppa_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
-  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   43},  // Number of the SEXP variables (not the output)
+  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   45},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };
 

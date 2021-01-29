@@ -24,11 +24,12 @@ module md_gpp_lm3ppa
 
   type(paramstype_gpp) :: params_gpp
 
-  ! PFT-DEPENDENT PARAMETERS
-  type pftparamstype_gpp
-    real :: kphio = 0.05   ! Quantum yield efficiency parameter (Simulations: 0.05, 0.0575, 0.065) 0.0525, 0.055 hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
-  end type pftparamstype_gpp
-  type(pftparamstype_gpp) :: params_pft_gpp
+  ! xxx this is now a calibratable parameter
+  ! ! PFT-DEPENDENT PARAMETERS
+  ! type pftparamstype_gpp
+  !   real :: kphio = 0.05   ! Quantum yield efficiency parameter (Simulations: 0.05, 0.0575, 0.065) 0.0525, 0.055 hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
+  ! end type pftparamstype_gpp
+  ! type(pftparamstype_gpp) :: params_pft_gpp
 
 contains
 
@@ -290,7 +291,7 @@ contains
                                 c4             = .false., &
                                 method_optci   = "prentice14", &
                                 method_jmaxlim = "wang17", &
-                                kphio          = params_pft_gpp%kphio, &
+                                kphio          = myinterface%params_calib_species(sp)%kphio, & ! params_pft_gpp%kphio, &
                                 beta           = params_gpp%beta, &
                                 rd_to_vcmax    = params_gpp%rd_to_vcmax &
                                 )
