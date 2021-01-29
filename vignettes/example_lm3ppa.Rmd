@@ -299,7 +299,7 @@ Calibration parameters: Quantum Yield Efficiency (kphio), Root:Shoot ratio (phiR
 # Constant Self-thinning 
 settings_calib_CST <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
-  targetvars          = c("targets"),
+  targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
   maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
@@ -474,7 +474,9 @@ Prepare the observed target variables: ddf_obs
 
 ```{r}
 ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityFagus, Biomass=mean_biomassFagus) %>%
-  pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
+  #pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
+  gather("variables", "targets_obs",GPP,LAI,Density,Biomass)
+
 ```
 
 Contrast obseved vs. simulated targets
@@ -499,23 +501,21 @@ settings_calib <- calib_sofun(
 
 print(settings_calib$par_opt)
 
-df_drivers <- df_drivers %>% 
-    dplyr::filter(sitename %in% settings_calib_CST$sitenames)
 
 
  dddd <- df_output$data[[1]]$output_annual_tile %>% 
   dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
-  pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  tidyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
   dplyr::left_join(ddf_obs)
 
-dddd$targets_mod
+ df_output$data[[1]]$output_annual_tile %>% 
+  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass)%>%
+  dplyr::left_join(ddf_obs)
+ 
 
-targetvars <- paste0( settings_calib_CST$targetvars, "_obs")
-
-
-
-
-
+install.packages("tidyr")
+library(tidyr)
 ```
 
 The calibrated parameters are returned by calib_sofun() as part of the list:

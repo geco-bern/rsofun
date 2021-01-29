@@ -13,19 +13,19 @@
 #' 
 calib_sofun <- function( df_drivers, ddf_obs, settings ){
 
-  targetvars <- paste0( settings$targetvars, "_obs")
+  # targetvars <- paste0( settings$targetvars, "_obs")
   
   ## Use only calibsites
   df_drivers <- df_drivers %>% 
     dplyr::filter(sitename %in% settings$sitenames)
 
-  ## make global
-  targetvars_with_unc <- c(targetvars, paste0(settings$targetvars, "_unc"))
-  ddf_obs <- ddf_obs %>% 
-    tidyr::unnest(data) %>% 
-    rename(gpp_obs = gpp) %>% 
-    dplyr::select( date, sitename, one_of( targetvars_with_unc ) ) %>% 
-    dplyr::filter( sitename %in% settings$sitenames )
+  ## make global #commented out for calibrating lm3ppa
+  # targetvars_with_unc <- c(targetvars, paste0(settings$targetvars, "_unc")) 
+  # ddf_obs <- ddf_obs %>% 
+    # tidyr::unnest(data) %>% 
+    # rename(gpp_obs = gpp) %>%  
+    # dplyr::select( date, sitename, one_of( targetvars_with_unc ) ) %>% 
+    # dplyr::filter( sitename %in% settings$sitenames )
 
   if (nrow(ddf_obs)>0){
 
@@ -410,7 +410,8 @@ cost_rmse_lm3ppa_constantselfthinning <- function( par, ddf_obs, df_drivers, inv
   # Aggregate variables from the model df
   df <- df$data[[1]]$output_annual_tile %>% 
   dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
-  dplyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  # tidyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
   dplyr::left_join(ddf_obs)
 
   ## Calculate cost (RMSE) across the N targets
