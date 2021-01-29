@@ -112,10 +112,10 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
   if (do_continue) {
 
     ## take this from params_tile
-    params_calib_tile = c(as.numeric(params_tile$tf_base), as.numeric(params_tile$par_mort))
+    # params_calib_tile = c(as.numeric(params_tile$tf_base), as.numeric(params_tile$par_mort))
 
     ## take this from params_species
-    params_calib_species = data.frame(kphio = params_species$kphio, phiRL = params_species$phiRL)
+    # params_calib_species = data.frame(kphio = params_species$kphio, phiRL = params_species$phiRL)
 
     ## C wrapper call
     lm3out <- .Call(
@@ -158,18 +158,14 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       retransN     = as.numeric(params_tile$retransN),
       f_initialBSW = as.numeric(params_tile$f_initialBSW),
       f_N_add      = as.numeric(params_tile$f_N_add),
+      tf_base      = as.numeric(params_tile$tf_base),
+      par_mort     = as.numeric(params_tile$par_mort),
 
       ## Species-specific parameters
       params_species = as.matrix(params_species),
       
       ## soil parameters
       params_soil = as.matrix(params_soil),
-
-      ## calibratable parameters at tile-level
-      params_calib_tile = params_calib_tile,      # xxx hopefully this works without converting to as.matrix()
-
-      ## calibratable parameters at species-level
-      params_calib_species = as.matrix(params_calib_species),
       
       ## initial cohort sizes
       init_cohort = as.matrix(init_cohort),

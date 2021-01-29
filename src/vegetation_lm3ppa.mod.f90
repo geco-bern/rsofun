@@ -100,7 +100,7 @@ contains
     type(cohort_type), intent(inout) :: cc
     real, intent(in) :: tairK ! degK
     ! local variables
-    real :: tf, tfs ! thermal inhibition factors for above- and below-ground biomass
+    real :: tf, tfs, tf_base ! thermal inhibition factors for above- and below-ground biomass
     real :: r_leaf, r_stem, r_root
     real :: Acambium  ! cambium area, m2/tree
 
@@ -717,7 +717,7 @@ contains
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
 
       ! set calibratable mortality parameter
-      CAI_max = myinterface%params_calib_tile%par_mort
+      CAI_max = myinterface%params_tile%par_mort
 
       ! check if current CAI is greater than maximum CAI
       print*, "CAI_max, CAI", CAI_max, vegn%CAI
@@ -788,7 +788,7 @@ contains
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
           
           ! set calibratable parameter
-          param_nsc = myinterface%params_calib_tile%par_mort
+          param_nsc = myinterface%params_tile%par_mort
 
           if (cc%bl_max > 0) then
           deathrate = exp(param_nsc*(cc%nsc/cc%bl_max))/(0.01+exp(param_nsc*(cc%nsc/cc%bl_max))) ! Changing coef: works with 2.5          
@@ -797,7 +797,7 @@ contains
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           
           ! set calibratable parameter
-          param_gr = myinterface%params_calib_tile%par_mort
+          param_gr = myinterface%params_tile%par_mort
 
           deathrate = param_gr * (cc%Volume - cc%Vol_ys)
 
@@ -806,7 +806,7 @@ contains
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
          ! set calibratable parameter
-         param_dbh = myinterface%params_calib_tile%par_mort
+         param_dbh = myinterface%params_tile%par_mort
 
           if (sp%lifeform==0)then  ! for grasses
             if(cc%layer > 1) then
@@ -2043,8 +2043,8 @@ contains
     integer :: nml_unit
 
     ! Set calibratable parameters
-    tf_base  = myinterface%params_calib_tile%tf_base
-    par_mort = myinterface%params_calib_tile%par_mort
+    ! tf_base  = myinterface%params_calib_tile%tf_base
+    ! par_mort = myinterface%params_calib_tile%par_mort
 
     ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
     K1          = myinterface%params_tile%K1  
@@ -2059,7 +2059,9 @@ contains
     l_fract     = myinterface%params_tile%l_fract      
     retransN    = myinterface%params_tile%retransN     
     f_initialBSW= myinterface%params_tile%f_initialBSW 
-    f_N_add     = myinterface%params_tile%f_N_add  !xxx
+    f_N_add     = myinterface%params_tile%f_N_add  
+    tf_base     = myinterface%params_tile%tf_base  !calibratable
+    par_mort    = myinterface%params_tile%par_mort  !calibratable
 
     !  Read parameters from the parameter file (namelist)
     if (read_from_parameter_file) then

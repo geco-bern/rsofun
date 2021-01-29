@@ -18,7 +18,7 @@ module datatypes
   public :: spdata, soilpars
   ! parameters
   public :: MaxCohortID, K1, K2, K_nitrogen, etaN, MLmixRatio, &
-            fsc_fine, fsc_wood, LMAmin, GR_factor,  l_fract, &
+            fsc_fine, fsc_wood, LMAmin, GR_factor, tf_base, par_mort, l_fract, &
             retransN, f_initialBSW,f_N_add, A_mort, B_mort,DBHtp
 
   !=============== constants ===============
@@ -117,7 +117,8 @@ module datatypes
     real    :: alphaHT, thetaHT ! height = alphaHT * DBH ** thetaHT
     real    :: alphaCA, thetaCA ! crown area = alphaCA * DBH ** thetaCA
     real    :: alphaBM, thetaBM ! biomass = alphaBM * DBH ** thetaBM
-    real    :: phiRL            ! ratio of fine root to leaf area
+    real    :: kphio            ! quantum yield efficiency calibratable
+    real    :: phiRL            ! ratio of fine root to leaf area calibratable
     real    :: phiCSA           ! ratio of sapwood CSA to target leaf area
     real    :: tauNSC           ! residence time of C in NSC (to define storage capacity)
     real    :: fNSNmax          ! multilier for NSNmax
@@ -393,7 +394,7 @@ module datatypes
   real   :: WILTPT     != 0.05    ! vol/vol
 
   ! Carbon pools
-  real :: tf_base                 ! scalar for respiration
+  real :: tf_base                 ! calibratable scalar for respiration
   real :: par_mort                ! generic calibratable parameter for mortality module
   real :: K1           != 2       ! Fast soil C decomposition rate (yr-1)
   real :: K2           != 0.05    ! slow soil C decomposition rate (yr-1)
@@ -634,7 +635,8 @@ contains
     spdata%LAI_light     = myinterface%params_species(:)%LAI_light
     spdata%tauNSC        = tauNSC
     spdata%fNSNmax       = myinterface%params_species(:)%fNSNmax
-    spdata%phiRL         = myinterface%params_calib_species(:)%phiRL     ! xxx phiRL
+    spdata%kphio         = myinterface%params_species(:)%kphio     
+    spdata%phiRL         = myinterface%params_species(:)%phiRL     
     spdata%phiCSA        = myinterface%params_species(:)%phiCSA
 
     ! root turnover rate

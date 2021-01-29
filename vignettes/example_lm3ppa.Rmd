@@ -14,7 +14,7 @@ library(rsofun)
 library(ggplot2)
 
 if(!require(devtools)){install.packages(devtools)}
-#devtools::install_github("stineb/ingestr")
+#devtools::install_github("stineb/rbeni")
 library(ingestr)
 
 #devtools::install_github("tidyverse/multidplyr")
@@ -83,10 +83,6 @@ The model allows for four different mortality functional forms:
 ```{r}
 params_tile <- tibble( #list
 
-  # add calibratable params
-  tf_base      = 1,
-  par_mort     = 0.6,   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
-  # ---
   soiltype     = 3,     # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   FLDCAP       = 0.4,   # soil property: field capacity 
   WILTPT       = 0.05,  # soil property: wilting point
@@ -102,7 +98,11 @@ params_tile <- tibble( #list
   l_fract      = 0.0,   # fraction of the carbon retained after leaf drop
   retransN     = 0.0,   # retranslocation coefficient of Nitrogen
   f_initialBSW = 0.2,
-  f_N_add      = 0.02   # re-fill of N for sapwood
+  f_N_add      = 0.02,   # re-fill of N for sapwood
+  
+  # add calibratable params
+  tf_base      = 1,
+  par_mort     = 0.6   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
   
   )
 ```
@@ -111,11 +111,7 @@ params_tile <- tibble( #list
 
 ```{r}
 params_species <- tibble(
-
-  # add calibratable params
-  kphio         = rep(0.05, 16),
-  phiRL         = rep(3.5, 16),
-  # ---
+  
   lifeform      = rep(1,16),                 # 0 for grasses; 1 for trees
   phenotype     = rep(0,16),                 # 0 for Deciduous; 1 for Evergreen
   pt            = rep(0,16),                 # 0 for C3; 1 for C4
@@ -130,7 +126,12 @@ params_species <- tibble(
   mortrate_d_c  = rep(0.01,16),              # canopy tree mortality rate, year-1
   mortrate_d_u  = rep(0.075,16),             # understory tree mortality rate, year-1
   maturalage    = rep(5,16),                 # the age that can reproduce
-  fNSNmax       = rep(5,16)                  # multiplier for NSNmax as sum of potential bl and br
+  fNSNmax       = rep(5,16),                 # multiplier for NSNmax as sum of potential bl and br
+  
+  # add calibratable params
+  kphio         = rep(0.05, 16),
+  phiRL         = rep(3.5, 16)
+  
   ) 
 ```
 
@@ -276,11 +277,13 @@ Run for the full set of sites
 ```{r}
 df_output <- runread_lm3ppa_f(
      df_drivers,
-     params_modl = params_modl,
      makecheck = TRUE,
      parallel = FALSE
      )
-df_output$data[[1]]$output_annual_tile
+df_output$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  theme_classic()+labs(x = "Year", y = "GPP")
 
 ```
 
@@ -303,9 +306,8 @@ settings_calib_CST <- list(
   name                = "ORG",
   par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
                              phiRL = list(lower=1, upper=8, init=2),
-                             tf = list(lower=0.01, upper=1.5, init=0.1),
-                             #fnsc = list(lower=0.01, upper=1, init=0.1),
-                             CAI_max = list(lower=0, upper=4, init=0.5))
+                             tf_base = list(lower=0.5, upper=2, init=1),
+                             par_mort = list(lower=0, upper=4, init=0.5))
  )
 
 # Mortality as DBH
@@ -320,9 +322,8 @@ settings_calib_DBH <- list(
   name                = "ORG",
   par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
                              phiRL = list(lower=1, upper=8, init=2),
-                             tf = list(lower=0.01, upper=1.5, init=0.1),
-                             #fnsc = list(lower=0.01, upper=1, init=0.1),
-                             param_dbh = list(lower=0.01, upper=1, init=0.1))
+                             tf_base = list(lower=0.5, upper=2, init=1),
+                             par_mort = list(lower=0.01, upper=1, init=0.1))
  )
 
 # Mortality as carbon starvation
@@ -337,9 +338,8 @@ settings_calib_NSC <- list(
   name                = "ORG",
   par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
                              phiRL = list(lower=1, upper=8, init=2),
-                             tf = list(lower=0.01, upper=1.5, init=0.1),
-                             #fnsc = list(lower=0.01, upper=1, init=0.1),
-                             param_nsc = list(lower=-3, upper=-1, init=-2.9))
+                             tf_base = list(lower=0.5, upper=2, init=1),
+                             par_mort = list(lower=-3, upper=-1, init=-2.9))
  )
 
 # Mortality as growth rate
@@ -354,9 +354,8 @@ settings_calib_GR <- list(
   name                = "ORG",
   par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
                              phiRL = list(lower=1, upper=8, init=2),
-                             tf = list(lower=0.01, upper=1.5, init=0.1),
-                             #fnsc = list(lower=0.01, upper=1, init=0.1),
-                             param_gr = list(lower=0.01, upper=2, init=0.1))
+                             tf_base = list(lower=0.5, upper=2, init=1),
+                             par_mort = list(lower=0.01, upper=2, init=0.1))
  )
 
 ```
@@ -477,6 +476,9 @@ ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityF
   #pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
   gather("variables", "targets_obs",GPP,LAI,Density,Biomass)
 
+
+data.frame(row.names= c("GPP","LAI","Density","Biomass"),targets_obs = c(mean_annual_gpp,max_annual_lai,densityFagus,mean_biomassFagus))
+
 nrow(ddf_obs)
 ```
 
@@ -503,6 +505,13 @@ settings_calib_CST <- calib_sofun(
   )
 
 print(settings_calib_CST$par_opt)
+
+df_output$data[[1]]$output_annual_tile %>% 
+  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  # tidyr::pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  dplyr::left_join(ddf_obs)
+
 
 ## Mortality as tree size
 set.seed(1752)

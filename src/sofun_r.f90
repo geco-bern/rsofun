@@ -240,7 +240,7 @@ contains
     code_method_mortality,        &             
     longitude,                    &      
     latitude,                     &     
-    altitude,                     &     
+    altitude,                     &             
     soiltype,                     &      
     FLDCAP,                       &    
     WILTPT,                       &    
@@ -257,10 +257,10 @@ contains
     retransN,                     & 
     f_initialBSW,                 & 
     f_N_add,                      & 
+    tf_base,                      &     
+    par_mort,                     & 
     params_species,               &            
     params_soil,                  &         
-    params_calib_tile,            &         
-    params_calib_species,         &         
     init_cohort,                  &         
     init_fast_soil_C,             &              
     init_slow_soil_C,             &              
@@ -384,12 +384,12 @@ contains
     real(kind=c_double), intent(in) :: retransN
     real(kind=c_double), intent(in) :: f_initialBSW
     real(kind=c_double), intent(in) :: f_N_add
+    real(kind=c_double), intent(in) :: tf_base
+    real(kind=c_double), intent(in) :: par_mort
 
     ! naked arrays
-    real(kind=c_double), dimension(0:MSPECIES,15), intent(in) :: params_species
+    real(kind=c_double), dimension(0:MSPECIES,17), intent(in) :: params_species
     real(kind=c_double), dimension(n_dim_soil_types,8), intent(in) :: params_soil
-    real(kind=c_double), dimension(2), intent(in) :: params_calib_tile
-    real(kind=c_double), dimension(0:MSPECIES,2), intent(in) :: params_calib_species
     real(kind=c_double), dimension(MAX_INIT_COHORTS,5),  intent(in) :: init_cohort
 
     ! initial soil pool size
@@ -547,6 +547,8 @@ contains
     myinterface%params_tile%retransN     = real( retransN )
     myinterface%params_tile%f_initialBSW = real( f_initialBSW )
     myinterface%params_tile%f_N_add      = real( f_N_add )
+    myinterface%params_tile%tf_base      = real( tf_base )
+    myinterface%params_tile%par_mort     = real( par_mort )
 
     ! Species parameters
     myinterface%params_species(:)%lifeform     = int( params_species(:,1))
@@ -554,7 +556,6 @@ contains
     myinterface%params_species(:)%pt           = int( params_species(:,3))
     myinterface%params_species(:)%seedlingsize = real( params_species(:,4))
     myinterface%params_species(:)%LMA          = real( params_species(:,5))
-    ! myinterface%params_species(:)%phiRL        = real( params_species(:,6))
     myinterface%params_species(:)%LNbase       = real( params_species(:,6))
     myinterface%params_species(:)%laimax       = real( params_species(:,7))
     myinterface%params_species(:)%LAI_light    = real( params_species(:,8))
@@ -565,6 +566,8 @@ contains
     myinterface%params_species(:)%mortrate_d_u = real( params_species(:,13))
     myinterface%params_species(:)%maturalage   = real( params_species(:,14))
     myinterface%params_species(:)%fNSNmax      = real( params_species(:,15))
+    myinterface%params_species(:)%kphio        = real( params_species(:,16)) ! calibratable
+    myinterface%params_species(:)%phiRL        = real( params_species(:,17)) ! calibratable
 
     ! Initial cohort sizes
     myinterface%init_cohort(:)%init_cohort_species = real(init_cohort(:,1))
@@ -592,16 +595,6 @@ contains
     myinterface%params_soil%k_sat_ref(:)         = real(params_soil(:,6))
     myinterface%params_soil%alphaSoil(:)         = real(params_soil(:,7))
     myinterface%params_soil%heat_capacity_dry(:) = real(params_soil(:,8))
-
-    !----------------------------------------------------------------
-    ! GET CALIBRATABLE PARAMETERS
-    !----------------------------------------------------------------
-    myinterface%params_calib_tile%tf_base      = real(params_calib_tile(1))
-    myinterface%params_calib_tile%par_mort     = real(params_calib_tile(2))
-
-    myinterface%params_calib_species(:)%kphio  = real(params_calib_species(:,1)) ! make sure they are in the correct order  xxx
-    myinterface%params_calib_species(:)%phiRL  = real(params_calib_species(:,2)) 
-
 
     !----------------------------------------------------------------
     ! INTERPRET FORCING

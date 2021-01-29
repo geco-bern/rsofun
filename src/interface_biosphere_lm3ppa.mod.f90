@@ -31,6 +31,8 @@ module md_interface_lm3ppa
     real   :: retransN
     real   :: f_initialBSW
     real   :: f_N_add
+    real   :: tf_base  ! calibratable
+    real   :: par_mort ! calibratable
   end type paramstype_tile
   
   type paramstype_species
@@ -49,6 +51,8 @@ module md_interface_lm3ppa
     real    :: mortrate_d_u
     real    :: maturalage
     real    :: fNSNmax
+    real    :: kphio ! calibratable
+    real    :: phiRL ! calibratable
   end type paramstype_species
 
   type inittype_cohort 
@@ -66,15 +70,15 @@ module md_interface_lm3ppa
     real :: N_input
   end type inittype_soil
 
-  type paramstype_calib_species
-    real :: kphio
-    real :: phiRL
-  end type paramstype_calib_species
+  ! type paramstype_calib_species
+  !   real :: kphio
+  !   real :: phiRL
+  ! end type paramstype_calib_species
 
-  type paramstype_calib_tile
-    real :: tf_base
-    real :: par_mort
-  end type paramstype_calib_tile
+  ! type paramstype_calib_tile
+  !   real :: tf_base
+  !   real :: par_mort
+  ! end type paramstype_calib_tile
 
   type interfacetype_biosphere
     integer                                               :: year
@@ -84,7 +88,6 @@ module md_interface_lm3ppa
     type(outtype_steering)                                :: steering
     type(paramstype_siml)                                 :: params_siml
     real, dimension(:), allocatable                       :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
-    ! type(paramstype_calib)                              :: params_calib    ! calibratable parameters
     type(paramstype_species), dimension(0:MSPECIES)       :: params_species
     type(paramtype_soil)                                  :: params_soil
     type(paramstype_tile)                                 :: params_tile
@@ -94,8 +97,8 @@ module md_interface_lm3ppa
     integer                                               :: steps_per_day
     real                                                  :: dt_fast_yr
     real                                                  :: step_seconds
-    type(paramstype_calib_species), dimension(0:MSPECIES) :: params_calib_species
-    type(paramstype_calib_tile)                           :: params_calib_tile
+    ! type(paramstype_calib_species), dimension(0:MSPECIES) :: params_calib_species
+    ! type(paramstype_calib_tile)                           :: params_calib_tile
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface
