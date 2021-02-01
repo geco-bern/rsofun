@@ -399,7 +399,8 @@ cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
   dplyr::left_join(ddf_obs)
 
-  # data.frame(row.names= c("GPP","LAI","Density","Biomass"),targets_obs = c(mean_annual_gpp,max_annual_lai,densityFagus,mean_biomassFagus))
+  # dff <- data.frame(variables= c("GPP","LAI","Density","Biomass"),targets_obs = c(df$GPP,df$LAI,df$Density,df$Biomass)) %>% 
+  # dplyr::left_join(ddf_obs)
 
   ## Calculate cost (RMSE) across the N targets
   cost <- sqrt( mean( ((df$targets_mod - df$targets_obs)/mean(df$targets_obs))^2, na.rm = TRUE ) )
