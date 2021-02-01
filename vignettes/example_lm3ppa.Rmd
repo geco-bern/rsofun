@@ -207,7 +207,7 @@ if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
 ### Run the model
 
 Run the model for all the sites specified in the first step.
-```{r}
+```{r eval=FALSE}
 out <- run_lm3ppa_f_bysite( "ORNL", 
                             params_siml, 
                             siteinfo, 

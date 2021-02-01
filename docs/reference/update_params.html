@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Get observational data for model evaluation — collect_obs_eval • rsofun</title>
+<title>Update model parameters — update_params • rsofun</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,8 @@
 
 
 
-<meta property="og:title" content="Get observational data for model evaluation — collect_obs_eval" />
-<meta property="og:description" content="Gets observational data for model evaluation, given the benchmarking variable, and data source used 
-for the evaluation. This information is specified in the evaluation settings (argument settings)." />
+<meta property="og:title" content="Update model parameters — update_params" />
+<meta property="og:description" content="Updates rsofun model parameters with the output of calib_rsofun." />
 
 
 
@@ -130,68 +129,35 @@ for the evaluation. This information is specified in the evaluation settings (ar
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Get observational data for model evaluation</h1>
-    <small class="dont-index">Source: <a href='https://github.com/stineb/rsofun/blob/master/R/collect_obs_eval.R'><code>R/collect_obs_eval.R</code></a></small>
-    <div class="hidden name"><code>collect_obs_eval.Rd</code></div>
+    <h1>Update model parameters</h1>
+    <small class="dont-index">Source: <a href='https://github.com/stineb/rsofun/blob/master/R/update_params.R'><code>R/update_params.R</code></a></small>
+    <div class="hidden name"><code>update_params.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Gets observational data for model evaluation, given the benchmarking variable, and data source used 
-for the evaluation. This information is specified in the evaluation settings (argument <code>settings</code>).</p>
+    <p>Updates rsofun model parameters with the output of calib_rsofun.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>collect_obs_eval</span><span class='op'>(</span>
-  <span class='va'>siteinfo</span>,
-  <span class='va'>settings</span>,
-  adf <span class='op'>=</span> <span class='cn'>NULL</span>,
-  mdf <span class='op'>=</span> <span class='cn'>NULL</span>,
-  ddf <span class='op'>=</span> <span class='cn'>NULL</span>,
-  hrdf <span class='op'>=</span> <span class='cn'>NULL</span>,
-  hhdf <span class='op'>=</span> <span class='cn'>NULL</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>update_params</span><span class='op'>(</span><span class='va'>params_modl</span>, <span class='va'>settings_calib</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>siteinfo</th>
-      <td><p>A data frame containing site meta info (rows for sites). Required columns are: <code>"sitename", "date_start", "date_end", "lon", "lat", "elv"</code>.</p></td>
+      <th>params_modl</th>
+      <td><p>A named list specifying rsofun model parameters</p></td>
     </tr>
     <tr>
-      <th>settings</th>
-      <td><p>A list specifying evaluation settings (see vignette eval_sofun.pdf for more information and examples)</p></td>
-    </tr>
-    <tr>
-      <th>adf</th>
-      <td><p>A nested data frame with rows for sites and time series (annual) for each site nested inside the column <code>data</code>.</p></td>
-    </tr>
-    <tr>
-      <th>mdf</th>
-      <td><p>A nested data frame with rows for sites and time series (monthly) for each site nested inside the column <code>data</code>.</p></td>
-    </tr>
-    <tr>
-      <th>ddf</th>
-      <td><p>A nested data frame with rows for sites and time series (daily) for each site nested inside the column <code>data</code>.</p></td>
-    </tr>
-    <tr>
-      <th>hrdf</th>
-      <td><p>A nested data frame with rows for sites and time series (hourly) for each site nested inside the column <code>data</code>.</p></td>
-    </tr>
-    <tr>
-      <th>hhdf</th>
-      <td><p>A nested data frame with rows for sites and time series (half-hourly) for each site nested inside the column <code>data</code>.</p></td>
+      <th>settings_calib</th>
+      <td><p>An object returned by calib_rsofun.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A list containing nested data frames of observed values aggregated to several temporal scales (ddf for daily, xdf for X-daily 
-(determined by argument <code>agg</code>), mdf for monthly, adf for annual).</p>
+    <p>A named list specifying rsofun model parameters, containing elements of <code>params_modl</code> with updated 
+values based on <code>settings_calib</code></p>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='va'>obs</span> <span class='op'>&lt;-</span> <span class='fu'>collect_obs_eval</span><span class='op'>(</span> settings <span class='op'>=</span> <span class='cn'>NULL</span>, adf <span class='op'>=</span> <span class='cn'>NULL</span>, mdf <span class='op'>=</span> <span class='cn'>NULL</span>, ddf <span class='op'>=</span> <span class='cn'>NULL</span>, hrdf <span class='op'>=</span> <span class='cn'>NULL</span>, hhdf <span class='op'>=</span> <span class='cn'>NULL</span>, agg <span class='op'>=</span> <span class='fl'>8</span> <span class='op'>)</span>
-
-</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

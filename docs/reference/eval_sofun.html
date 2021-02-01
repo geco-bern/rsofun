@@ -73,7 +73,7 @@ Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 da
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rsofun</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.3</span>
       </span>
     </div>
 
@@ -81,7 +81,7 @@ Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 da
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -95,6 +95,9 @@ Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 da
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/benchmark_gpp_FLUXNET2015_ensemble_EXAMPLE.html">Benchmarking rsofun</a>
+    </li>
     <li>
       <a href="../articles/example_lm3ppa.html">Example using LM3-PPA</a>
     </li>
@@ -110,7 +113,7 @@ Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 da
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/stineb/rsofun/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -137,23 +140,24 @@ Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 da
 Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 data, are implemented.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>eval_sofun</span>(
-  <span class='no'>mod</span>,
-  <span class='no'>settings</span>,
-  <span class='kw'>obs_eval</span> <span class='kw'>=</span> <span class='fl'>NA</span>,
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>doplot</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>light</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
-)</pre>
+    <pre class="usage"><span class='fu'>eval_sofun</span><span class='op'>(</span>
+  <span class='va'>mod</span>,
+  <span class='va'>settings</span>,
+  obs_eval <span class='op'>=</span> <span class='cn'>NA</span>,
+  overwrite <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  doplot <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  light <span class='op'>=</span> <span class='cn'>FALSE</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>mod</th>
-      <td><p>A flat dataframe containing model outputs with columns <code>"sitename"</code> (character), <code>"date"</code> 
-(date object created by <code><a href='http://lubridate.tidyverse.org/reference/ymd.html'>lubridate::ymd()</a></code>) and <code>"varnam"</code> where <code>"varnam"</code> corresponds to 
-<code><a href='https://rdrr.io/r/base/names.html'>names(settings$benchmark)</a></code>.</p></td>
+      <td><p>Object returned by <a href='runread_pmodel_f.html'>runread_pmodel_f</a>. This is a nested dataframe with sites along rows 
+and a nested column <code>"data"</code> containing model outputs with columns <code>"date"</code> (date object 
+created by <code><a href='http://lubridate.tidyverse.org/reference/ymd.html'>lubridate::ymd()</a></code>) and <code>"varnam"</code>.
+where <code>"varnam"</code> corresponds to <code><a href='https://rdrr.io/r/base/names.html'>names(settings$benchmark)</a></code>.</p></td>
     </tr>
     <tr>
       <th>settings</th>
@@ -186,7 +190,8 @@ The names of list elements corresponds to site names. Defaults to <code>NA</code
 and functions for plotting respective data.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>out_eval</span> <span class='kw'>&lt;-</span> <span class='fu'>eval_sofun</span>( <span class='no'>mod</span>, <span class='no'>settings</span>, <span class='kw'>obs_eval</span> <span class='kw'>=</span> <span class='fl'>NA</span>, <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>doplot</span> <span class='kw'>=</span> <span class='fl'>FALSE</span> )</div><div class='output co'>#&gt; <span class='error'>Error in eval(lhs, parent, parent): object 'mod' not found</span></div><div class='input'>
+    <pre class="examples"><div class='input'><span class='va'>out_eval</span> <span class='op'>&lt;-</span> <span class='fu'>eval_sofun</span><span class='op'>(</span> <span class='va'>mod</span>, <span class='va'>settings</span>, obs_eval <span class='op'>=</span> <span class='cn'>NA</span>, overwrite <span class='op'>=</span> <span class='cn'>TRUE</span>, doplot <span class='op'>=</span> <span class='cn'>FALSE</span> <span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in tidyr::unnest(., data): object 'mod' not found</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -203,7 +208,7 @@ and functions for plotting respective data.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
