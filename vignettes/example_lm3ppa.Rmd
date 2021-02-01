@@ -236,5 +236,4 @@ out$output_daily_tile %>%
   ggplot(aes(x=date, y=GPP)) +
   geom_line() + 
   labs(title = "LM3-PPA at ORNL", subtitle = "rsofun output")
-
 ```

@@ -58,7 +58,8 @@ collect_drivers_sofun <- function( siteinfo, params_siml, meteo, fapar, co2, df_
       mutate_at(vars, myapprox)
   }
   df_mega <- df_mega %>% 
-    mutate(forcing = purrr::map(forcing, ~fill_na_forcing(.)))
+    mutate(forcing = purrr::map(forcing, ~fill_na_forcing(.))) %>% 
+    dplyr::select(sitename, forcing, params_siml, siteinfo, df_soiltexture)
 
   return(df_mega)
 }

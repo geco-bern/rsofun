@@ -79,7 +79,82 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       rlang::warn(paste("Error: Missing value in patm for site", sitename, "\n"))
       do_continue <- FALSE
     }
-    
+    if (is.nanull(params_siml))
+
+
+    if (is.nanull(params_siml$spinup)){
+      rlang::warn(paste("Error: Missing element in params_siml: spinup"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$spinupyears)){
+      rlang::warn(paste("Error: Missing element in params_siml: spinupyears"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$recycle)){
+      rlang::warn(paste("Error: Missing element in params_siml: recycle"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$firstyeartrend)){
+      rlang::warn(paste("Error: Missing element in params_siml: firstyeartrend"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$nyeartrend)){
+      rlang::warn(paste("Error: Missing element in params_siml: nyeartrend"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$soilmstress)){
+      rlang::warn(paste("Error: Missing element in params_siml: soilmstress"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$tempstress)){
+      rlang::warn(paste("Error: Missing element in params_siml: tempstress"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$calc_aet_fapar_vpd)){
+      rlang::warn(paste("Error: Missing element in params_siml: calc_aet_fapar_vpd"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$in_ppfd)){
+      rlang::warn(paste("Error: Missing element in params_siml: in_ppfd"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$in_netrad)){
+      rlang::warn(paste("Error: Missing element in params_siml: in_netrad"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$outdt)){
+      rlang::warn(paste("Error: Missing element in params_siml: outdt"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$ltre)){
+      rlang::warn(paste("Error: Missing element in params_siml: ltre"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$ltne)){
+      rlang::warn(paste("Error: Missing element in params_siml: ltne"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$ltrd)){
+      rlang::warn(paste("Error: Missing element in params_siml: ltrd"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$ltnd)){
+      rlang::warn(paste("Error: Missing element in params_siml: ltnd"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$lgr3)){
+      rlang::warn(paste("Error: Missing element in params_siml: lgr3"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$lgn3)){
+      rlang::warn(paste("Error: Missing element in params_siml: lgn3"))
+      do_continue <- FALSE
+    }
+    if (is.nanull(params_siml$lgr4)){
+      rlang::warn(paste("Error: Missing element in params_siml: lgr4"))
+      do_continue <- FALSE
+    }
+
     if (nrow(forcing) != params_siml$nyeartrend * ndayyear){
       ## Dates in 'forcing' do not correspond to simulation parameters
       rlang::warn("Error: Number of years data in forcing does not correspond to number of simulation years (nyeartrend).\n")
@@ -168,8 +243,7 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       setNames(c("fapar", "gpp", "transp", "latenth", "pet", "vcmax", "jmax", "vcmax25", "jmax25", "gs_accl")) %>%
       as_tibble(.name_repair = "check_unique") %>%
       # dplyr::mutate(sitename = sitename) %>% 
-      dplyr::bind_cols(ddf,.) %>% 
-      dplyr::select(-year_dec)
+      dplyr::bind_cols(ddf,.)
 
   } else {
     out <- tibble(date = lubridate::ymd("2000-01-01"), fapar = NA, gpp = NA, transp = NA, latenth = NA, 
