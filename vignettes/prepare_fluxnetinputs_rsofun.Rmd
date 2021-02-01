@@ -111,7 +111,7 @@ library(ingestr)
 ddf_fluxnet <- ingestr::ingest(
   siteinfo  = siteinfo,
   source    = "fluxnet",
-  getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F_DAY", ppfd =  "SW_IN_F", patm = "PA_F"),
+  getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F_DAY", ppfd = "SW_IN_F", patm = "PA_F"),
   dir       = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
   settings  = list(dir_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/", getswc = FALSE),
   timescale = "d"
