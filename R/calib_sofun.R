@@ -215,7 +215,9 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>% 
     dplyr::rename(gpp_mod = gpp) %>% 
-    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
+    dplyr::left_join(ddf_obs %>% 
+                       unnest(data), 
+                     by = c("sitename", "date"))
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (df$gpp_mod - df$gpp_obs )^2, na.rm = TRUE ) )

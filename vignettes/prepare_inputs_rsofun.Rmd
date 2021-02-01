@@ -41,8 +41,6 @@ siteinfo <- ingestr::siteinfo_fluxnet2015 %>%
 # take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo
 siteinfo <- siteinfo %>% 
   dplyr::mutate(year_start = 2007, year_end = 2014)
-
-siteinfo <- siteinfo %>% 
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 ```
