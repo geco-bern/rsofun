@@ -513,6 +513,8 @@ Use values of wood density from Forrester et al 2017.
 ```{r}
 LAE_alltrees <- read.csv("~/data/LWF/Laegeren/LAE_AllTrees.csv") # Data from Christof
 LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
+# Calculate DBH from UMFANG is the circumference (mm) C=2*pi*r. See there are many NA in the variable recorded BHD (dbh).
+LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
 
 wood_density_Fagus = 590 # Kg/m3
 LAE_Fagus <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Fagus sylvatica")
@@ -548,7 +550,7 @@ ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityF
 nrow(ddf_obs)
 ```
 
-Contrast obseved vs. simulated targets
+Contrast observed vs. simulated targets
 
 ```{r}
   df_output$data[[1]]$output_annual_tile %>%
@@ -612,7 +614,7 @@ save(settings_calib_GR, file = "~/data/settings_calib_GR.RData")
 
 ```{r}
 
-## Constant Self-thinning
+########## Constant Self-thinning ########## 
 df_drivers$params_species[[1]]$kphio  <- rep(settings_calib_CST$par_opt["kphio"],16)
 df_drivers$params_species[[1]]$phiRL  <- rep(settings_calib_CST$par_opt["phiRL"],16)
 df_drivers$params_tile[[1]]$tf_base  <- settings_calib_CST$par_opt["tf_base"]
@@ -639,7 +641,7 @@ df_calib_CST$data[[1]]$output_annual_tile %>%
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 
-## Mortality as tree size
+########## Mortality as tree size ########## 
 df_drivers$params_species[[1]]$kphio  <- rep(settings_calib_DBH$par_opt["kphio"],16)
 df_drivers$params_species[[1]]$phiRL  <- rep(settings_calib_DBH$par_opt["phiRL"],16)
 df_drivers$params_tile[[1]]$tf_base  <- settings_calib_DBH$par_opt["tf_base"]
@@ -666,10 +668,59 @@ df_calib_DBH$data[[1]]$output_annual_tile %>%
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 
-## Mortality as carbon starvation
+########## Mortality as carbon starvation ########## 
+df_drivers$params_species[[1]]$kphio  <- rep(settings_calib_NSC$par_opt["kphio"],16)
+df_drivers$params_species[[1]]$phiRL  <- rep(settings_calib_NSC$par_opt["phiRL"],16)
+df_drivers$params_tile[[1]]$tf_base  <- settings_calib_NSC$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort <- settings_calib_NSC$par_opt["par_mort"]
 
+df_calib_NSC <- runread_lm3ppa_f(
+     df_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
 
-## Mortality as carbon starvation
+df_calib_NSC$data[[1]]$output_annual_tile %>%
+  summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  left_join(ddf_obs)
+
+df_calib_NSC$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  theme_classic()+labs(x = "Year", y = "GPP")
+
+df_calib_NSC$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
+
+########## Mortality as growth rate ########## 
+df_drivers$params_species[[1]]$kphio  <- rep(settings_calib_GR$par_opt["kphio"],16)
+df_drivers$params_species[[1]]$phiRL  <- rep(settings_calib_GR$par_opt["phiRL"],16)
+df_drivers$params_tile[[1]]$tf_base  <- settings_calib_GR$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort <- settings_calib_GR$par_opt["par_mort"]
+
+df_calib_GR <- runread_lm3ppa_f(
+     df_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+df_calib_GR$data[[1]]$output_annual_tile %>%
+  summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  left_join(ddf_obs)
+
+df_calib_GR$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  theme_classic()+labs(x = "Year", y = "GPP")
+
+df_calib_GR$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
 
 ```
 
