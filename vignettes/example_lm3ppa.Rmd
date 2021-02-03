@@ -286,6 +286,10 @@ df_output$data[[1]]$output_annual_tile %>%
   geom_line(aes(x = year, y = GPP)) +
   theme_classic()+labs(x = "Year", y = "GPP")
 
+df_output$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
 ```
 
 ### Model calibration
@@ -512,9 +516,6 @@ Use values of wood density from Forrester et al 2017.
 
 ```{r}
 LAE_alltrees <- read.csv("~/data/LWF/Laegeren/LAE_AllTrees.csv") # Data from Christof
-LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
-# Calculate DBH from UMFANG is the circumference (mm) C=2*pi*r. See there are many NA in the variable recorded BHD (dbh).
-LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
 
 wood_density_Fagus = 590 # Kg/m3
 LAE_Fagus <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Fagus sylvatica")
@@ -527,11 +528,40 @@ LAE_Abies <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Abies alba")
 
 ```
 
+ln(Biomass) = ln(b0) + b1 ln(DBH)
+Biomass = b0*DBH^b1
+
+```{r}
+LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
+# Calculate DBH from UMFANG is the circumference (mm) C=2*pi*r. See there are many NA in the variable recorded BHD (dbh).
+LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
+
+load("/Users/lmarques/data/biomass/d_param.rda")
+# For Fagus sylvatica
+# Aboveground
+parameAG <- d_param %>% dplyr::filter(parameter=="b1",equation_n==3,component_n=="Aboveground")
+Logb0_AG = -1.6594
+b1_AG = 2.3589
+# Belowground
+parameBG <- d_param %>% dplyr::filter(equation_n==3,component_n=="Root mass")
+Logb0_BG = -3.3713000
+b1_BG = 2.3424
+LAE_m2 <- 13400
+
+LAE_data_Fagus <- LAE_data %>% dplyr::filter(SPECIES == "Fagus sylvatica")
+LAE_data_Fagus <- LAE_data_Fagus %>% dplyr::filter(INVYEAR == 2017)
+LAE_data_Fagus <- LAE_data_Fagus %>% mutate(AGB_Kg=exp(Logb0_AG)*DBH_cm^b1_AG) %>% mutate(BGB_Kg=exp(Logb0_BG)*DBH_cm^b1_BG) %>% mutate(TotalBiomass_Kg=AGB_Kg+BGB_Kg) %>% mutate(TotalBiomass_Kgperm2=TotalBiomass_Kg/LAE_m2) 
+mean_biomassFagus <- mean(LAE_data_Fagus$TotalBiomass_Kg,na.rm=T)
+sum_biomassFagus <- sum(LAE_data_Fagus$TotalBiomass_Kgperm2,na.rm=T)
+```
+
 TARGET 4. Number of trees higher than 12 cm 
 
 ```{r}
 LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
-LAE_nTrees <- LAE_data %>% group_by(INVYEAR,SPECIES) %>% summarise(nTrees=n()) %>% arrange(SPECIES)
+LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
+LAE_nTrees <- LAE_data %>% dplyr::filter(DBH_cm >= 12)
+LAE_nTrees <- LAE_nTrees %>% group_by(INVYEAR,SPECIES) %>% summarise(nTrees=n()) %>% arrange(SPECIES)
 LAE_ha <- 1.34
 densityFagus <- LAE_nTrees[[12,3]]/LAE_ha
 densityPicea <- LAE_nTrees[[16,3]]/LAE_ha
@@ -541,13 +571,12 @@ densityFir   <- LAE_nTrees[[2,3]]/LAE_ha
 Prepare the observed target variables: ddf_obs
 
 ```{r}
-ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityFagus, Biomass=mean_biomassFagus) %>%
-  #pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
-  gather("variables", "targets_obs",GPP,LAI,Density,Biomass)
-
-#ddf_obs <- data.frame(variables= c("GPP","LAI","Density","Biomass"),targets_obs = c(mean_annual_gpp,max_annual_lai,densityFagus,mean_biomassFagus))
+ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityFagus, Biomass=sum_biomassFagus) %>%
+  pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
+  #gather("variables", "targets_obs",GPP,LAI,Density,Biomass)
 
 nrow(ddf_obs)
+
 ```
 
 Contrast observed vs. simulated targets
@@ -565,7 +594,7 @@ Contrast observed vs. simulated targets
 ```{r}
 
 ## Constant Self-thinning
-set.seed(1982)
+set.seed(1082)
 settings_calib_CST <- calib_sofun(
   df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_CST$sitenames),  
   ddf_obs = ddf_obs,

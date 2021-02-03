@@ -1097,7 +1097,7 @@ contains
         out_daily_cohorts(i)%cID     = cc%ccID
         out_daily_cohorts(i)%PFT     = cc%species
         out_daily_cohorts(i)%layer   = cc%layer
-        out_daily_cohorts(i)%density = cc%nindivs*10000
+        out_daily_cohorts(i)%density = cc%nindivs*10000 
         out_daily_cohorts(i)%f_layer = cc%layerfrac
         out_daily_cohorts(i)%LAI     = cc%LAI
         out_daily_cohorts(i)%gpp     = cc%dailygpp
@@ -1484,7 +1484,7 @@ contains
     out_annual_tile%year       = iyears
     out_annual_tile%CAI        = vegn%CAI
     out_annual_tile%LAI        = vegn%LAI
-    out_annual_tile%density    = vegn%nindivs*10000 !xxx New tile out
+    out_annual_tile%density    = vegn%nindivs*10000 ! indivs/ha !xxx New tile out
     out_annual_tile%DBH        = vegn%DBH           !xxx New tile out
     out_annual_tile%density12  = vegn%nindivs12*10000 !xxx New tile out
     out_annual_tile%DBH12      = vegn%DBH12     !xxx New tile out
@@ -1498,7 +1498,7 @@ contains
     out_annual_tile%Transp     = vegn%annualTrsp
     out_annual_tile%Evap       = vegn%annualEvap
     out_annual_tile%Runoff     = vegn%annualRoff
-    out_annual_tile%plantC     = plantC
+    out_annual_tile%plantC     = plantC ! kg C/m2/yr
     out_annual_tile%soilC      = soilC
     out_annual_tile%plantN     = plantN *1000
     out_annual_tile%soilN      = soilN * 1000
