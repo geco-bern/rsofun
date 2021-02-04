@@ -375,9 +375,9 @@ settings_calib_CST <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.05),
+  par                 = list(kphio = list(lower=0.06, upper=0.1, init==0.085),
                              phiRL = list(lower=1, upper=8, init=3.5),
-                             tf_base = list(lower=0.5, upper=2, init=1),
+                             tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=0.1, upper=4, init=1))
  )
 
@@ -388,14 +388,14 @@ settings_calib_DBH <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 5, # (5 for gensa) (30 for optimr)
+  maxit               = 10, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.05),
+  par                 = list(kphio = list(lower=0.0, upper=0.1, init==0.085),
                              phiRL = list(lower=1, upper=8, init=3.5),
-                             tf_base = list(lower=0.5, upper=2, init=1),
+                             tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=0.01, upper=1, init=0.6))
  )
 
@@ -409,9 +409,9 @@ settings_calib_NSC <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.05),
+  par                 = list(kphio = list(lower=0.06, upper=0.1, init==0.085),
                              phiRL = list(lower=1, upper=8, init=3.5),
-                             tf_base = list(lower=0.5, upper=2, init=1),
+                             tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=-3, upper=-1, init=-2))
  )
 
@@ -425,9 +425,9 @@ settings_calib_GR <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.05),
+  par                 = list(kphio = list(lower=0.06, upper=0.1, init==0.085),
                              phiRL = list(lower=1, upper=8, init=3.5),
-                             tf_base = list(lower=0.5, upper=2, init=1),
+                             tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=0.01, upper=2, init=1))
  )
 
@@ -594,12 +594,12 @@ Contrast observed vs. simulated targets
 ```
 
 #### Calibrate the model
-```{r}
 
+```{r}
 ## Constant Self-thinning
 set.seed(1082)
 settings_calib_CST <- calib_sofun(
-  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_CST$sitenames),  
+  df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
   settings = settings_calib_CST
   )
@@ -610,7 +610,7 @@ save(settings_calib_CST, file = "~/data/settings_calib_CST.RData")
 ## Mortality as tree size
 set.seed(1052)
 settings_calib_DBH <- calib_sofun(
-  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_DBH$sitenames),  
+  df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
   settings = settings_calib_DBH
   )
@@ -621,7 +621,7 @@ save(settings_calib_DBH, file = "~/data/settings_calib_DBH.RData")
 ## Mortality as carbon starvation
 set.seed(1982)
 settings_calib_NSC <- calib_sofun(
-  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_NSC$sitenames),  
+  df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
   settings = settings_calib_NSC
   )
@@ -632,7 +632,7 @@ save(settings_calib_NSC, file = "~/data/settings_calib_NSC.RData")
 ## Mortality as growth rate
 set.seed(1682)
 settings_calib_GR <- calib_sofun(
-  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_GR$sitenames),  
+  df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
   settings = settings_calib_GR
   )
@@ -702,8 +702,8 @@ calib_GR <- cost_rmse_lm3ppa(
 ```{r}
 
 ########## Constant Self-thinning ########## 
-df_drivers$params_species[[1]]$kphio  <- rep(settings_calib_CST$par_opt["kphio"],16)
-df_drivers$params_species[[1]]$phiRL  <- rep(settings_calib_CST$par_opt["phiRL"],16)
+df_drivers$params_species[[1]]$kphio[]  <- settings_calib_CST$par_opt["kphio"]
+df_drivers$params_species[[1]]$phiRL[]  <- settings_calib_CST$par_opt["phiRL"]
 df_drivers$params_tile[[1]]$tf_base  <- settings_calib_CST$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <- settings_calib_CST$par_opt["par_mort"]
 
