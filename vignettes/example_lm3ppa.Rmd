@@ -194,7 +194,7 @@ df_soiltexture <- bind_rows(
 The file has the following variables (units):
 
 ```{r}
-load("~/data/forcingLAE.RData")#forcingLAE See script prepare_drivers.Rmd
+load("~/data/rsofun_benchmarking/forcingLAE.RData")#forcingLAE See script prepare_drivers.Rmd
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -237,7 +237,7 @@ df_drivers <- tibble(sitename,
 ### Run the model
 
 Run the model for all the sites specified in the first step.
-```{r}
+```{r eval=FALSE}
 out <- run_lm3ppa_f_bysite( sitename, 
                             params_siml, 
                             siteinfo, 
@@ -340,9 +340,9 @@ thetaBM_Picea  <- 2.30
 - Data provided by Vova, Anne Thimonie (obs) and Katrin Meusburger (estim)
 
 ```{r}
-pheno_observations <- read.csv("~/data/LWF/Laegeren/pheno_data/observations/pheno_Laegeren_2021-01-27.csv", sep=";")
+pheno_observations <- read_csv("~/data/LWF/Laegeren/pheno_data/observations/pheno_Laegeren_2021-01-27.csv", sep=";")
 
-pheno_estimations <- read.csv("~/data/LWF/Laegeren/pheno_data/estimations/pheno_estim_LAE.csv")
+pheno_estimations <- read_csv("~/data/LWF/Laegeren/pheno_data/estimations/pheno_estim_LAE.csv")
 
 pheno_estimations_Fagus <- pheno_estimations %>% dplyr::filter(species=="Fagus sylvatica") %>% mutate(daysEnd=366-leafoff)
 
@@ -438,7 +438,7 @@ FLX_CH-Lae_FLUXNET2015_FULLSET_YY_2004-2014_1-3.csv
 Variable: GPP_NT_VUT_REF
 
 ```{r}
-Fluxnet <- read.csv("~/data/FLUXNET-2015_Tier1/20191024/YY/FLX_CH-Lae_FLUXNET2015_FULLSET_YY_2004-2014_1-3.csv")
+Fluxnet <- read_csv("~/data/FLUXNET-2015_Tier1/20191024/YY/FLX_CH-Lae_FLUXNET2015_FULLSET_YY_2004-2014_1-3.csv")
 GPP <- Fluxnet[,c("TIMESTAMP","GPP_NT_VUT_REF")] # g C/m2/yr
 # Convert in Kg C/m2/yr as in the LM3-PPA model
 GPP <- GPP %>% mutate(GPP_KgC = GPP_NT_VUT_REF/1000)
@@ -484,7 +484,7 @@ df_modis_lai <- ingest_bysite(
 
 # fPAR
 # Reading files ...
-fpar_LAE <- read.csv("~/data/modis_subsets/MODIS_FPAR_MCD15A3H_daily_CH-Lae.csv")
+fpar_LAE <- read_csv("~/data/modis_subsets/MODIS_FPAR_MCD15A3H_daily_CH-Lae.csv")
 mean_annual_fpar <- mean(fpar_LAE$modisvar, na.rm=T)
 max_annual_fpar <- max(fpar_LAE$modisvar, na.rm=T)
 
@@ -516,7 +516,7 @@ Use equations from the Swiss NFI book pag 212 see eq for Fagus sylvatica
 Use values of wood density from Forrester et al 2017. 
 
 ```{r}
-LAE_alltrees <- read.csv("~/data/LWF/Laegeren/LAE_AllTrees.csv") # Data from Christof
+LAE_alltrees <- read_csv("~/data/LWF/Laegeren/LAE_AllTrees.csv") # Data from Christof
 
 wood_density_Fagus = 590 # Kg/m3
 LAE_Fagus <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Fagus sylvatica")
@@ -533,7 +533,7 @@ ln(Biomass) = ln(b0) + b1 ln(DBH)
 Biomass = b0*DBH^b1
 
 ```{r}
-LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
+LAE_data <- read_csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
 # Calculate DBH from UMFANG is the circumference (mm) C=2*pi*r. See there are many NA in the variable recorded BHD (dbh).
 LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
 
@@ -559,7 +559,7 @@ sum_biomassFagus <- sum(LAE_data_Fagus$TotalBiomass_Kgperm2,na.rm=T)
 TARGET 4. Number of trees higher than 12 cm 
 
 ```{r}
-LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
+LAE_data <- read_csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
 LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
 LAE_nTrees <- LAE_data %>% dplyr::filter(DBH_cm >= 12)
 LAE_nTrees <- LAE_nTrees %>% group_by(INVYEAR,SPECIES) %>% summarise(nTrees=n()) %>% arrange(SPECIES)
@@ -638,53 +638,7 @@ settings_calib_GR <- calib_sofun(
 print(settings_calib_GR$par_opt)
 save(settings_calib_GR, file = "~/data/settings_calib_GR.RData")
 
-
-cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
-
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  # params_modl <- list(
-  #   kphio      = par[1],
-  #   phiRL      = par[2],
-  #   tf_base    = par[3],
-  #   par_mort   = par[4]
-  # )
-  
-  # Add changed model parameters to df_drivers, overwriting where necessary.
-  df_drivers$params_species[[1]]$kphio  <- rep(par[1],16)
-  df_drivers$params_species[[1]]$phiRL  <- rep(par[2],16)
-  df_drivers$params_tile[[1]]$tf_base  <- par[3]
-  df_drivers$params_tile[[1]]$par_mort <- par[4]
-
-  df <- runread_lm3ppa_f(
-    df_drivers, 
-    makecheck = TRUE,
-    parallel = FALSE
-  ) 
-  
-  # Aggregate variables from the model df taking the last 500 yrs
-  df_mod <- df$data[[1]]$output_annual_tile %>% 
-    tail(500) %>% 
-    dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC))
-  
-  dff <- data.frame(
-    variables = c("GPP","LAI","Density","Biomass"),
-    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Density, df_mod$Biomass)
-    ) %>% 
-    dplyr::left_join(ddf_obs, by = "variables") %>% 
-    mutate(error = targets_mod - targets_obs) %>% 
-    mutate(error_rel = error / targets_obs)
-  
-  ## Calculate cost (RMSE) across the N targets
-  cost <- sqrt(mean(dff$error_rel^2, na.rm = TRUE))
-  
-  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
-  
-  if (inverse) cost <- 1.0 / cost  
-  
-  return(cost)
-}
-
+source("~/rsofun/R/cost_rmse_test.R")
     
 calib_GR <- cost_rmse_lm3ppa(
   par = c(0.05, 2, 1, 0.5),
