@@ -378,7 +378,7 @@ settings_calib_CST <- list(
   par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
                              phiRL = list(lower=1, upper=8, init=2),
                              tf_base = list(lower=0.5, upper=2, init=1),
-                             par_mort = list(lower=0.1, upper=4, init=0.5))
+                             par_mort = list(lower=0.1, upper=4, init=0.8))
  )
 
 # Mortality as DBH
@@ -636,6 +636,54 @@ settings_calib_GR <- calib_sofun(
 
 print(settings_calib_GR$par_opt)
 save(settings_calib_GR, file = "~/data/settings_calib_GR.RData")
+
+
+cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
+
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio      = par[1],
+    phiRL      = par[2],
+    tf_base    = par[3],
+    par_mort   = par[4]
+  )
+  
+  df <- runread_lm3ppa_f(
+    df_drivers, 
+    makecheck = TRUE,
+    parallel = FALSE
+    ) 
+
+  # Aggregate variables from the model df
+  df <- df$data[[1]]$output_annual_tile %>% 
+  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) #%>%  
+  #gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  #dplyr::left_join(ddf_obs)
+
+  dff <- data.frame(variables= c("GPP","LAI","Density","Biomass"),targets_mod = c(df$GPP,df$LAI,df$Density,df$Biomass)) %>% 
+  dplyr::left_join(ddf_obs)
+
+  ## Calculate cost (RMSE) across the N targets
+  cost <- sqrt( mean( ((dff$targets_mod - dff$targets_obs)/mean(dff$targets_obs))^2, na.rm = TRUE ) )
+  
+  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost  
+  
+  return(cost)
+}
+
+
+calib_GR <- cost_rmse_lm3ppa(
+  par = list(kphio = list(lower=0.01, upper=1, init=0.5),
+             phiRL = list(lower=1, upper=8, init=2),
+             tf_base = list(lower=0.5, upper=2, init=1),
+             par_mort = list(lower=0.1, upper=4, init=0.5)),
+  ddf_obs = ddf_obs,
+  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_GR$sitenames),  
+  inverse = FALSE 
+  )
 
 ```
 
