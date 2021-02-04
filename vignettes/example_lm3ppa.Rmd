@@ -194,7 +194,7 @@ df_soiltexture <- bind_rows(
 The file has the following variables (units):
 
 ```{r}
-load("~/data/forcingLAE.RData")#forcingLAE See script prepare_drivers.Rmd
+load("~/data/rsofun_benchmarking/calib_lm3ppa/forcingLAE.RData")#forcingLAE See script prepare_drivers.Rmd
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -325,7 +325,7 @@ rho_wood_Picea  <- 370 #kg C/m3
 - From Forrester et al. 2017.  Equivalent to beta1. See data/biomass/d_param.rda
 
 ```{r}
-load("/Users/lmarques/data/biomass/d_param.rda")
+load("~/data/biomass/d_param.rda")
 parame <- d_param %>% dplyr::filter(parameter=="b1",equation_n==3,component_n=="Aboveground")
 
 thetaBM_Abies  <- 2.45 
@@ -340,9 +340,9 @@ thetaBM_Picea  <- 2.30
 - Data provided by Vova, Anne Thimonie (obs) and Katrin Meusburger (estim)
 
 ```{r}
-pheno_observations <- read.csv("/Users/lmarques/data/LWF/Laegeren/pheno_data/observations/pheno_Laegeren_2021-01-27.csv", sep=";")
+pheno_observations <- read.csv("~/data/LWF/Laegeren/pheno_data/observations/pheno_Laegeren_2021-01-27.csv", sep=";")
 
-pheno_estimations <- read.csv("/Users/lmarques/data/LWF/Laegeren/pheno_data/estimations/pheno_estim_LAE.csv")
+pheno_estimations <- read.csv("~/data/LWF/Laegeren/pheno_data/estimations/pheno_estim_LAE.csv")
 
 pheno_estimations_Fagus <- pheno_estimations %>% dplyr::filter(species=="Fagus sylvatica") %>% mutate(daysEnd=366-leafoff)
 
@@ -455,9 +455,10 @@ Data from Euler or downloaded here using ingestr
 ```{r}
 # LAI
 # Reading files ...
-lai_LAE <- read.csv("~/data/modis_subsets/MODIS_LAI_MCD15A3H_daily_CH-Lae.csv")
-mean_annual_lai <- mean(lai_LAE$modisvar, na.rm=T)
-max_annual_lai <- max(lai_LAE$modisvar, na.rm=T)
+# XXX use max/q95 and mean LAI across june july august
+lai_LAE <- read_csv("~/data/modis_subsets/MODIS_LAI_MCD15A3H_daily_CH-Lae.csv")
+mean_annual_lai <- mean(lai_LAE$linear, na.rm=T)
+max_annual_lai <- quantile(lai_LAE$linear, probs = 0.95, na.rm=T)
 
 # LAI
 # ... or downloading with ingestr package
@@ -536,14 +537,14 @@ LAE_data <- read.csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data fr
 # Calculate DBH from UMFANG is the circumference (mm) C=2*pi*r. See there are many NA in the variable recorded BHD (dbh).
 LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
 
-load("/Users/lmarques/data/biomass/d_param.rda")
+# load("~/data/biomass/d_param.rda")
 # For Fagus sylvatica
 # Aboveground
-parameAG <- d_param %>% dplyr::filter(parameter=="b1",equation_n==3,component_n=="Aboveground")
+# parameAG <- d_param %>% dplyr::filter(parameter=="b1",equation_n==3,component_n=="Aboveground")
 Logb0_AG = -1.6594
 b1_AG = 2.3589
 # Belowground
-parameBG <- d_param %>% dplyr::filter(equation_n==3,component_n=="Root mass")
+# parameBG <- d_param %>% dplyr::filter(equation_n==3,component_n=="Root mass")
 Logb0_BG = -3.3713000
 b1_BG = 2.3424
 LAE_m2 <- 13400
@@ -592,6 +593,8 @@ Contrast observed vs. simulated targets
 
 #### Calibrate the model
 ```{r}
+## first test cost function xxxx
+cost_rmse_lm3ppa( par, ddf_obs, df_drivers, inverse = FALSE )
 
 ## Constant Self-thinning
 set.seed(1082)
@@ -638,53 +641,21 @@ print(settings_calib_GR$par_opt)
 save(settings_calib_GR, file = "~/data/settings_calib_GR.RData")
 
 
-cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
 
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  params_modl <- list(
-    kphio      = par[1],
-    phiRL      = par[2],
-    tf_base    = par[3],
-    par_mort   = par[4]
-  )
-  
-  df <- runread_lm3ppa_f(
-    df_drivers, 
-    makecheck = TRUE,
-    parallel = FALSE
-    ) 
-
-  # Aggregate variables from the model df
-  df <- df$data[[1]]$output_annual_tile %>% 
-  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) #%>%  
-  #gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
-  #dplyr::left_join(ddf_obs)
-
-  dff <- data.frame(variables= c("GPP","LAI","Density","Biomass"),targets_mod = c(df$GPP,df$LAI,df$Density,df$Biomass)) %>% 
-  dplyr::left_join(ddf_obs)
-
-  ## Calculate cost (RMSE) across the N targets
-  cost <- sqrt( mean( ((dff$targets_mod - dff$targets_obs)/mean(dff$targets_obs))^2, na.rm = TRUE ) )
-  
-  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
-  
-  if (inverse) cost <- 1.0 / cost  
-  
-  return(cost)
-}
-
-
+    
 calib_GR <- cost_rmse_lm3ppa(
-  par = list(kphio = list(lower=0.01, upper=1, init=0.5),
-             phiRL = list(lower=1, upper=8, init=2),
-             tf_base = list(lower=0.5, upper=2, init=1),
-             par_mort = list(lower=0.1, upper=4, init=0.5)),
+  par = c(0.05, 2, 1, 0.5),
   ddf_obs = ddf_obs,
   df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_GR$sitenames),  
   inverse = FALSE 
   )
 
+calib_GR <- cost_rmse_lm3ppa(
+  par = c(0.10, 2, 1, 0.5),
+  ddf_obs = ddf_obs,
+  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_GR$sitenames),  
+  inverse = FALSE 
+  )
 ```
 
 #### Evaluate the model

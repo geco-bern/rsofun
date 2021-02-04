@@ -395,12 +395,16 @@ cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
 
   # Aggregate variables from the model df
   df <- df$data[[1]]$output_annual_tile %>% 
-  dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) #%>%  
-  #gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
-  #dplyr::left_join(ddf_obs)
+    # XXX filter years to use only years after steady state is reached (e.g. last 100 years)
+    dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) #%>%  
+    # gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+    # dplyr::left_join(ddf_obs)
 
-  dff <- data.frame(variables= c("GPP","LAI","Density","Biomass"),targets_mod = c(df$GPP,df$LAI,df$Density,df$Biomass)) %>% 
-  dplyr::left_join(ddf_obs)
+  dff <- data.frame(
+    variables = c("GPP","LAI","Density","Biomass"),
+    targets_mod = c(df$GPP, df$LAI, df$Density, df$Biomass)
+    ) %>% 
+    dplyr::left_join(ddf_obs)
 
   ## Calculate cost (RMSE) across the N targets
   cost <- sqrt( mean( ((dff$targets_mod - dff$targets_obs)/mean(dff$targets_obs))^2, na.rm = TRUE ) )
