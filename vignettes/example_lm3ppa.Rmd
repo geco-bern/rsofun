@@ -375,7 +375,7 @@ settings_calib_CST <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.06, upper=0.1, init==0.085),
+  par                 = list(kphio = list(lower=0.06, upper=0.1, init=0.085),
                              phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=0.1, upper=4, init=1))
@@ -393,7 +393,7 @@ settings_calib_DBH <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.0, upper=0.1, init==0.085),
+  par                 = list(kphio = list(lower=0.0, upper=0.1, init=0.085),
                              phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=0.01, upper=1, init=0.6))
@@ -409,7 +409,7 @@ settings_calib_NSC <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.06, upper=0.1, init==0.085),
+  par                 = list(kphio = list(lower=0.06, upper=0.1, init=0.085),
                              phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=-3, upper=-1, init=-2))
@@ -425,7 +425,7 @@ settings_calib_GR <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.06, upper=0.1, init==0.085),
+  par                 = list(kphio = list(lower=0.06, upper=0.1, init=0.085),
                              phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=0.01, upper=2, init=1))
@@ -518,17 +518,25 @@ Use equations from the Swiss NFI book pag 212 see eq for Fagus sylvatica
 Use values of wood density from Forrester et al 2017. 
 
 ```{r}
-LAE_alltrees <- read_csv("~/data/LWF/Laegeren/LAE_AllTrees.csv") # Data from Christof
+LAE_alltrees <- read.csv("~/data/LWF/Laegeren/LAE_AllTrees.csv") # Data from Christof
 
 wood_density_Fagus = 590 # Kg/m3
-LAE_Fagus <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Fagus sylvatica")
-LAE_Fagus <- LAE_Fagus %>% mutate(DBH_m = BHD/100) %>% mutate(StemVolume = 0.0025428 + 0.39446*DBH_m*DBH_m*HOEHE + 2.56612*DBH_m*DBH_m - 3.67034*DBH_m*DBH_m*DBH_m + 0.03567*DBH_m*DBH_m*DBH_m*HOEHE) %>% mutate(StemBiomass = StemVolume * wood_density_Fagus)
+
+LAE_Fagus <- LAE_alltrees %>% 
+  dplyr::filter(ARTN.TEXT == "Fagus sylvatica")
+
+LAE_Fagus <- LAE_Fagus %>% 
+  mutate(DBH_m = BHD/100) %>% 
+  mutate(StemVolume = 0.0025428 + 0.39446*DBH_m*DBH_m*HOEHE + 2.56612*DBH_m*DBH_m - 3.67034*DBH_m*DBH_m*DBH_m + 0.03567*DBH_m*DBH_m*DBH_m*HOEHE) %>% 
+  mutate(StemBiomass = StemVolume * wood_density_Fagus)
+
 mean_biomassFagus <- mean(LAE_Fagus$StemBiomass)
 
-LAE_Picea <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Picea abies")
+LAE_Picea <- LAE_alltrees %>% 
+  dplyr::filter(ARTN.TEXT == "Picea abies")
 
-LAE_Abies <- LAE_alltrees %>% dplyr::filter(ARTN.TEXT == "Abies alba")
-
+LAE_Abies <- LAE_alltrees %>% 
+  dplyr::filter(ARTN.TEXT == "Abies alba")
 ```
 
 ln(Biomass) = ln(b0) + b1 ln(DBH)
@@ -537,7 +545,8 @@ Biomass = b0*DBH^b1
 ```{r}
 LAE_data <- read_csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
 # Calculate DBH from UMFANG is the circumference (mm) C=2*pi*r. See there are many NA in the variable recorded BHD (dbh).
-LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
+LAE_data <- LAE_data %>% 
+  mutate(DBH_cm = UMFANG/pi)
 
 # load("~/data/biomass/d_param.rda")
 # For Fagus sylvatica
@@ -551,9 +560,18 @@ Logb0_BG = -3.3713000
 b1_BG = 2.3424
 LAE_m2 <- 13400
 
-LAE_data_Fagus <- LAE_data %>% dplyr::filter(SPECIES == "Fagus sylvatica")
-LAE_data_Fagus <- LAE_data_Fagus %>% dplyr::filter(INVYEAR == 2017)
-LAE_data_Fagus <- LAE_data_Fagus %>% mutate(AGB_Kg=exp(Logb0_AG)*DBH_cm^b1_AG) %>% mutate(BGB_Kg=exp(Logb0_BG)*DBH_cm^b1_BG) %>% mutate(TotalBiomass_Kg=AGB_Kg+BGB_Kg) %>% mutate(TotalBiomass_Kgperm2=TotalBiomass_Kg/LAE_m2) 
+LAE_data_Fagus <- LAE_data %>% 
+  dplyr::filter(SPECIES == "Fagus sylvatica")
+
+LAE_data_Fagus <- LAE_data_Fagus %>% 
+  dplyr::filter(INVYEAR == 2017)
+
+LAE_data_Fagus <- LAE_data_Fagus %>% 
+  mutate(AGB_Kg=exp(Logb0_AG)*DBH_cm^b1_AG) %>% 
+  mutate(BGB_Kg=exp(Logb0_BG)*DBH_cm^b1_BG) %>% 
+  mutate(TotalBiomass_Kg=AGB_Kg+BGB_Kg) %>% 
+  mutate(TotalBiomass_Kgperm2=TotalBiomass_Kg/LAE_m2) 
+
 mean_biomassFagus <- mean(LAE_data_Fagus$TotalBiomass_Kg,na.rm=T)
 sum_biomassFagus <- sum(LAE_data_Fagus$TotalBiomass_Kgperm2,na.rm=T)
 ```
@@ -562,9 +580,14 @@ TARGET 4. Number of trees higher than 12 cm
 
 ```{r}
 LAE_data <- read_csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
-LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
-LAE_nTrees <- LAE_data %>% dplyr::filter(DBH_cm >= 12)
-LAE_nTrees <- LAE_nTrees %>% group_by(INVYEAR,SPECIES) %>% summarise(nTrees=n()) %>% arrange(SPECIES)
+LAE_data <- LAE_data %>% 
+  mutate(DBH_cm = UMFANG/pi)
+LAE_nTrees <- LAE_data %>% 
+  dplyr::filter(DBH_cm >= 12)
+LAE_nTrees <- LAE_nTrees %>% 
+  group_by(INVYEAR,SPECIES) %>% 
+  summarise(nTrees=n()) %>% 
+  arrange(SPECIES)
 LAE_ha <- 1.34
 densityFagus <- LAE_nTrees[[12,3]]/LAE_ha
 densityPicea <- LAE_nTrees[[16,3]]/LAE_ha
@@ -642,7 +665,6 @@ save(settings_calib_GR, file = "~/data/settings_calib_GR.RData")
 
 source("~/rsofun/R/cost_rmse_test.R")
 
-    
 calib_GR <- cost_rmse_lm3ppa(
   par = c(0.05, 2, 1, 0.5),
   ddf_obs = ddf_obs,
