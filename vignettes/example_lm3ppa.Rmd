@@ -102,7 +102,7 @@ params_tile <- tibble( #list
   
   # add calibratable params
   tf_base      = 1,
-  par_mort     = 0.6   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
+  par_mort     = 1   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
   
   )
 ```
@@ -375,11 +375,13 @@ settings_calib_CST <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=rep(0.01,16), upper=rep(0.07,16), init=rep(0.02,16)),
-                             phiRL = list(lower=rep(1,16), upper=rep(8,16), init=rep(2,16)),
+  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.05),
+                             phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.5, upper=2, init=1),
-                             par_mort = list(lower=0.1, upper=4, init=0.8))
+                             par_mort = list(lower=0.1, upper=4, init=1))
  )
+
+lapply( settings_calib_DBH$par, function(x) x$init ) %>% unlist()
 
 # Mortality as DBH
 settings_calib_DBH <- list(
@@ -391,10 +393,10 @@ settings_calib_DBH <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
-                             phiRL = list(lower=1, upper=8, init=2),
+  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.05),
+                             phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.5, upper=2, init=1),
-                             par_mort = list(lower=0.01, upper=1, init=0.1))
+                             par_mort = list(lower=0.01, upper=1, init=0.6))
  )
 
 # Mortality as carbon starvation
@@ -407,10 +409,10 @@ settings_calib_NSC <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
-                             phiRL = list(lower=1, upper=8, init=2),
+  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.05),
+                             phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.5, upper=2, init=1),
-                             par_mort = list(lower=-3, upper=-1, init=-2.9))
+                             par_mort = list(lower=-3, upper=-1, init=-2))
  )
 
 # Mortality as growth rate
@@ -423,10 +425,10 @@ settings_calib_GR <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.02),
-                             phiRL = list(lower=1, upper=8, init=2),
+  par                 = list(kphio = list(lower=0.01, upper=0.07, init=0.05),
+                             phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.5, upper=2, init=1),
-                             par_mort = list(lower=0.01, upper=2, init=0.1))
+                             par_mort = list(lower=0.01, upper=2, init=1))
  )
 
 ```
@@ -606,7 +608,7 @@ print(settings_calib_CST$par_opt)
 save(settings_calib_CST, file = "~/data/settings_calib_CST.RData")
 
 ## Mortality as tree size
-set.seed(1652)
+set.seed(1052)
 settings_calib_DBH <- calib_sofun(
   df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_DBH$sitenames),  
   ddf_obs = ddf_obs,
@@ -627,7 +629,7 @@ settings_calib_NSC <- calib_sofun(
 print(settings_calib_NSC$par_opt)
 save(settings_calib_NSC, file = "~/data/settings_calib_NSC.RData")
 
-## Mortality as carbon starvation
+## Mortality as growth rate
 set.seed(1682)
 settings_calib_GR <- calib_sofun(
   df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_GR$sitenames),  
@@ -639,6 +641,7 @@ print(settings_calib_GR$par_opt)
 save(settings_calib_GR, file = "~/data/settings_calib_GR.RData")
 
 source("~/rsofun/R/cost_rmse_test.R")
+
     
 calib_GR <- cost_rmse_lm3ppa(
   par = c(0.05, 2, 1, 0.5),
@@ -648,11 +651,50 @@ calib_GR <- cost_rmse_lm3ppa(
   )
 
 calib_GR <- cost_rmse_lm3ppa(
-  par = c(0.10, 2, 1, 0.5),
+  par = c(0.01, 2, 1, 0.5),
   ddf_obs = ddf_obs,
   df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_GR$sitenames),  
   inverse = FALSE 
   )
+
+
+  # Add changed model parameters to df_drivers, overwriting where necessary.
+  df_drivers$params_species[[1]]$kphio  <- rep(0.01,16)
+  df_drivers$params_species[[1]]$phiRL  <- rep(2,16)
+  df_drivers$params_tile[[1]]$tf_base  <- 1
+  df_drivers$params_tile[[1]]$par_mort <- 0.5
+
+  df <- runread_lm3ppa_f(
+    df_drivers, 
+    makecheck = TRUE,
+    parallel = FALSE
+  ) 
+  
+  # Aggregate variables from the model df taking the last 500 yrs
+  df_mod <- df$data[[1]]$output_annual_tile %>% 
+    tail(500) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC))
+  
+  dff <- data.frame(
+    variables = c("GPP","LAI","Density","Biomass"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Density, df_mod$Biomass)
+    ) %>% 
+    dplyr::left_join(ddf_obs, by = "variables") %>% 
+    mutate(error = targets_mod - targets_obs) %>% 
+    mutate(error_rel = error / mean(targets_obs))
+  
+  ## Calculate cost (RMSE) across the N targets
+  cost <- sqrt(mean(dff$error_rel^2, na.rm = TRUE))
+  
+  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost  
+  
+  return(cost)
+
+
+
+
 ```
 
 #### Evaluate the model
