@@ -231,87 +231,18 @@ save(forcingLAE, file = "~/data/forcingLAE.RData")
 ```{r}
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
-    dplyr::group_by(lubridate::month(date),lubridate::day(date),lubridate::hour(date)) %>% 
+    dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
   forcingLAE <- forcingLAE[,-c(1:3)]
 }
 
 if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
   forcingLAE <- forcingLAE %>% 
-    dplyr::group_by(lubridate::month(date),lubridate::day(date)) %>% 
+    dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
   forcingLAE <- forcingLAE[,-c(1:2)]
 }
 str(forcingLAE)
 
-```
-
-
-## Collect all drivers
-
-```{r}
-df_drivers_LAE <- c(sitename,params_siml,siteinfo,df_soiltexture,forcing)
-
-```
-
-
-
-Finally, we can collect forcing data, simulation parameters, and site meta info into a single object that will be used to drive rsofun. All of the above steps can be customized. The function `collect_drivers_sofun()` can in general be used to process forcing data into the format required to run SOFUN. The arguments must have the following form:
-
-- `siteinfo`: A data frame (tibble) with columns `sitename`, `lon`, `lat`, `elv` (elevation), `year_start`, `year_end`, `whc` (water holding capacity used for simulating the soil water balance), `c4` (vegetation following C4 photosynthesis). An example for FLUXNET 2015 sites is given by 
-```{r} 
-ingestr::siteinfo_fluxnet2015 %>% dplyr::select(sitename, lon, lat, elv, year_start, year_end, whc)
-```
-- `meteo`: A nested data frame with columns `sitename` and `data`. The latter contains the nested meteorological forcing data frames, with columns `date`, `temp`, `prec`, `vpd`, `ppfd`, `patm`, and `ccov`. Like this:
-```{r}
-## nested data frame:
-ddf_meteo
-
-## inside .$data:
-ddf_meteo$data[[1]] %>% dplyr::select(-ccov_int)
-```
-
-
-- `fapar`: A nested data frame with columns `sitename` and `data`. The latter contains the nested meteorological forcing data frames, with columns `date`, and `fapar`. Like this:
-```{r}
-## nested data frame:
-df_gee_modis_fpar
-
-## inside .$data:
-df_gee_modis_fpar$data[[1]] %>% dplyr::select(date, fapar)
-```
-- `co2`  : A nested data frame with columns `sitename` and `data`. The latter contains the nested meteorological forcing data frames, with columns `date`, and `co2`. Like this:
-```{r}
-## nested data frame:
-df_co2
-
-## inside .$data:
-df_co2$data[[1]] %>% dplyr::select(date, co2)
-```
-- `df_soiltexture`: See above ('Define soil parameters')
-
-See [here](https://tidyr.tidyverse.org/reference/nest.html) for how to handle nested dataframes. 
-
-Finally, all input data can be collected by:
-```{r}
-
-siteinfo <- data.frame(sitename="CH-Lae", lon = 8.365, lat = 47.47808, elv = 700, year_start = 2004, year_end = 2014, classid = NA, c4 = FALSE, whc = NA, koeppen_code = NA, igbp_land_use = "Mixed Forests", plant_functional_type = "Broadleaf trees")
-
-ddf_meteo
-rsofun::df_drivers
-
-df_drivers2 <- collect_drivers_sofun( 
-  siteinfo       = siteinfo,
-  meteo          = ddf_meteo, 
-  fapar          = df_gee_modis_fpar,
-  co2            = df_co2,
-  params_tile    = params_tile,
-  params_species = params_species,
-  params_soil    = params_soil,
-  init_cohort    = init_cohort,
-  init_soil      = init_soil,
-  df_soiltexture = df_soiltexture
-  )
-df_drivers
 ```
 
