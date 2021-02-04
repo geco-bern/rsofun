@@ -47,7 +47,10 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
     }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa
 
-    }  
+    } else if ( "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) ){  
+      cost_rmse <- cost_rmse_lm3ppa
+
+    }   
 
     ##----------------------------------------------------------------
     ## Do the calibration
@@ -377,15 +380,6 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
 ## LM3-PPA calibration
 ##------------------------------------------------------------
 cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
-
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  # params_modl <- list(
-  #   kphio      = par[1],
-  #   phiRL      = par[2],
-  #   tf_base    = par[3],
-  #   par_mort   = par[4]
-  # )
   
   # Add changed model parameters to df_drivers, overwriting where necessary.
   df_drivers$params_species[[1]]$kphio  <- rep(par[1],16)
