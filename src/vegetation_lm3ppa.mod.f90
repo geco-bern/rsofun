@@ -893,7 +893,7 @@ contains
         ! update cohort individuals
         cc%nindivs = 0.0 ! cc%nindivs*(1.0 - deathrate)
 
-        print*,'i, deadtrees', i, deadtrees
+        ! print*,'i, deadtrees', i, deadtrees
 
       else
         deathrate = 0.0

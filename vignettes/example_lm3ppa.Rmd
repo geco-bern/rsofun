@@ -102,7 +102,7 @@ params_tile <- tibble( #list
   
   # add calibratable params
   tf_base      = 1,
-  par_mort     = 1   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
+  par_mort     = 0.6   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
   
   )
 ```
@@ -194,7 +194,7 @@ df_soiltexture <- bind_rows(
 The file has the following variables (units):
 
 ```{r}
-load("~/data/rsofun_benchmarking/forcingLAE.RData")#forcingLAE See script prepare_drivers.Rmd
+load("~/data/forcingLAE.RData")#forcingLAE See script prepare_drivers.Rmd
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -281,6 +281,12 @@ df_output <- runread_lm3ppa_f(
      parallel = FALSE
      )
 
+compa_all <- df_output$data[[1]]$output_annual_tile %>%
+  summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  #pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  left_join(ddf_obs)
+
 df_output$data[[1]]$output_annual_tile %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
@@ -290,6 +296,15 @@ df_output$data[[1]]$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
+
+# For manual calibration
+compa_inits
+compa_kphio
+compa_phiRL
+compa_tf_base
+compa_par_mort
+compa_all
+
 ```
 
 ### Model calibration
@@ -375,7 +390,7 @@ settings_calib_CST <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.06, upper=0.1, init=0.085),
+  par                 = list(kphio = list(lower=0.04, upper=0.1, init=0.05),
                              phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=0.1, upper=4, init=1))
@@ -393,7 +408,7 @@ settings_calib_DBH <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.0, upper=0.1, init=0.085),
+  par                 = list(kphio = list(lower=0.04, upper=0.1, init=0.05),
                              phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=0.01, upper=1, init=0.6))
@@ -409,7 +424,7 @@ settings_calib_NSC <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.06, upper=0.1, init=0.085),
+  par                 = list(kphio = list(lower=0.04, upper=0.1, init=0.05),
                              phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=-3, upper=-1, init=-2))
@@ -425,7 +440,7 @@ settings_calib_GR <- list(
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
-  par                 = list(kphio = list(lower=0.06, upper=0.1, init=0.085),
+  par                 = list(kphio = list(lower=0.04, upper=0.1, init=0.05),
                              phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.2, upper=5, init=1),
                              par_mort = list(lower=0.01, upper=2, init=1))
@@ -515,7 +530,6 @@ df_modis_fpar <- ingest_bysite(
 
 TARGET 3. Total Stand Biomass 
 Use equations from the Swiss NFI book pag 212 see eq for Fagus sylvatica
-Use values of wood density from Forrester et al 2017. 
 
 ```{r}
 LAE_alltrees <- read.csv("~/data/LWF/Laegeren/LAE_AllTrees.csv") # Data from Christof
@@ -539,41 +553,56 @@ LAE_Abies <- LAE_alltrees %>%
   dplyr::filter(ARTN.TEXT == "Abies alba")
 ```
 
+Use values of wood density from Forrester et al 2017. 
+
 ln(Biomass) = ln(b0) + b1 ln(DBH)
 Biomass = b0*DBH^b1
 
 ```{r}
 LAE_data <- read_csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
 # Calculate DBH from UMFANG is the circumference (mm) C=2*pi*r. See there are many NA in the variable recorded BHD (dbh).
-LAE_data <- LAE_data %>% 
-  mutate(DBH_cm = UMFANG/pi)
+LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
+sort(unique(LAE_data$SPECIES))
 
-# load("~/data/biomass/d_param.rda")
-# For Fagus sylvatica
+load("~/data/biomass/d_param.rda")
+
 # Aboveground
-# parameAG <- d_param %>% dplyr::filter(parameter=="b1",equation_n==3,component_n=="Aboveground")
-Logb0_AG = -1.6594
-b1_AG = 2.3589
+
+parameLogb0_AG <- d_param %>% 
+  dplyr::filter(parameter=="lnb0",equation_n==3,component_n=="Aboveground") %>% 
+  dplyr::filter(species=="Abies alba"|species=="Betula pendula"|species=="Fagus sylvatica"|species=="Fraxinus excelsior"|species=="Picea abies"|species=="Pinus sylvestris"|species=="Quercus petraea"|species=="Quercus robur") 
+Logb0_AG = mean(parameLogb0_AG$value) # -2.330889
+
+parameb1_AG <- d_param %>% 
+  dplyr::filter(parameter=="b1",equation_n==3,component_n=="Aboveground") %>% 
+  dplyr::filter(species=="Abies alba"|species=="Betula pendula"|species=="Fagus sylvatica"|species=="Fraxinus excelsior"|species=="Picea abies"|species=="Pinus sylvestris"|species=="Quercus petraea"|species=="Quercus robur") 
+b1_AG = mean(parameb1_AG$value) # 2.530778
+
 # Belowground
-# parameBG <- d_param %>% dplyr::filter(equation_n==3,component_n=="Root mass")
-Logb0_BG = -3.3713000
-b1_BG = 2.3424
+
+parameLogb0_BG <- d_param %>% 
+  dplyr::filter(parameter=="lnb0",equation_n==3,component_n=="Root mass") %>% 
+  dplyr::filter(species=="Abies alba"|species=="Betula pendula"|species=="Fagus sylvatica"|species=="Fraxinus excelsior"|species=="Picea abies"|species=="Pinus sylvestris"|species=="Quercus petraea"|species=="Quercus robur") 
+Logb0_BG = mean(parameLogb0_BG$value) # -3.133663
+
+parameb1_BG <- d_param %>% 
+  dplyr::filter(parameter=="b1",equation_n==3,component_n=="Root mass") %>% 
+  dplyr::filter(species=="Abies alba"|species=="Betula pendula"|species=="Fagus sylvatica"|species=="Fraxinus excelsior"|species=="Picea abies"|species=="Pinus sylvestris"|species=="Quercus petraea"|species=="Quercus robur") 
+b1_BG = mean(parameb1_BG$value) # 2.254188
+
+# Area of Laegeren plot in m2
 LAE_m2 <- 13400
 
-LAE_data_Fagus <- LAE_data %>% 
-  dplyr::filter(SPECIES == "Fagus sylvatica")
+# Consider all species and the last inventory year
+LAE_data_sel <- LAE_data %>% dplyr::filter(INVYEAR == 2014)
 
-LAE_data_Fagus <- LAE_data_Fagus %>% 
-  dplyr::filter(INVYEAR == 2017)
-
-LAE_data_Fagus <- LAE_data_Fagus %>% 
+LAE_data_sel <- LAE_data_sel %>% 
   mutate(AGB_Kg=exp(Logb0_AG)*DBH_cm^b1_AG) %>% 
   mutate(BGB_Kg=exp(Logb0_BG)*DBH_cm^b1_BG) %>% 
   mutate(TotalBiomass_Kg=AGB_Kg+BGB_Kg) %>% 
   mutate(TotalBiomass_Kgperm2=TotalBiomass_Kg/LAE_m2) 
 
-mean_biomassFagus <- mean(LAE_data_Fagus$TotalBiomass_Kg,na.rm=T)
-sum_biomassFagus <- sum(LAE_data_Fagus$TotalBiomass_Kgperm2,na.rm=T)
+BiomassLAE <- sum(LAE_data_sel$TotalBiomass_Kgperm2,na.rm=T)
 ```
 
 TARGET 4. Number of trees higher than 12 cm 
@@ -584,7 +613,14 @@ LAE_data <- LAE_data %>%
   mutate(DBH_cm = UMFANG/pi)
 LAE_nTrees <- LAE_data %>% 
   dplyr::filter(DBH_cm >= 12)
-LAE_nTrees <- LAE_nTrees %>% 
+
+# For all tree species
+LAE_allsps <- LAE_nTrees %>% 
+  group_by(INVYEAR) %>% 
+  summarise(nTrees=n())
+densityLAE <- LAE_allsps[[1,2]]/LAE_ha
+
+LAE_bysps <- LAE_nTrees %>% 
   group_by(INVYEAR,SPECIES) %>% 
   summarise(nTrees=n()) %>% 
   arrange(SPECIES)
@@ -592,12 +628,13 @@ LAE_ha <- 1.34
 densityFagus <- LAE_nTrees[[12,3]]/LAE_ha
 densityPicea <- LAE_nTrees[[16,3]]/LAE_ha
 densityFir   <- LAE_nTrees[[2,3]]/LAE_ha
+
 ```
 
 Prepare the observed target variables: ddf_obs
 
 ```{r}
-ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityFagus, Biomass=sum_biomassFagus) %>%
+ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityLAE, Biomass=Biomass_LAE) %>%
   pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
   #gather("variables", "targets_obs",GPP,LAI,Density,Biomass)
 
@@ -631,7 +668,7 @@ print(settings_calib_CST$par_opt)
 save(settings_calib_CST, file = "~/data/settings_calib_CST.RData")
 
 ## Mortality as tree size
-set.seed(1052)
+set.seed(3152)
 settings_calib_DBH <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
@@ -642,7 +679,7 @@ print(settings_calib_DBH$par_opt)
 save(settings_calib_DBH, file = "~/data/settings_calib_DBH.RData")
 
 ## Mortality as carbon starvation
-set.seed(1982)
+set.seed(352)
 settings_calib_NSC <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
@@ -751,8 +788,8 @@ df_calib_CST$data[[1]]$output_annual_tile %>%
   theme_classic()+labs(x = "Year", y = "plantC")
 
 ########## Mortality as tree size ########## 
-df_drivers$params_species[[1]]$kphio  <- rep(settings_calib_DBH$par_opt["kphio"],16)
-df_drivers$params_species[[1]]$phiRL  <- rep(settings_calib_DBH$par_opt["phiRL"],16)
+df_drivers$params_species[[1]]$kphio  <- settings_calib_DBH$par_opt["kphio"]
+df_drivers$params_species[[1]]$phiRL  <- settings_calib_DBH$par_opt["phiRL"]
 df_drivers$params_tile[[1]]$tf_base  <- settings_calib_DBH$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <- settings_calib_DBH$par_opt["par_mort"]
 
@@ -761,6 +798,8 @@ df_calib_DBH <- runread_lm3ppa_f(
      makecheck = TRUE,
      parallel = FALSE
      )
+
+compa_inits
 
 df_calib_DBH$data[[1]]$output_annual_tile %>%
   summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
@@ -778,8 +817,8 @@ df_calib_DBH$data[[1]]$output_annual_tile %>%
   theme_classic()+labs(x = "Year", y = "plantC")
 
 ########## Mortality as carbon starvation ########## 
-df_drivers$params_species[[1]]$kphio  <- rep(settings_calib_NSC$par_opt["kphio"],16)
-df_drivers$params_species[[1]]$phiRL  <- rep(settings_calib_NSC$par_opt["phiRL"],16)
+df_drivers$params_species[[1]]$kphio  <- settings_calib_NSC$par_opt["kphio"]
+df_drivers$params_species[[1]]$phiRL  <- settings_calib_NSC$par_opt["phiRL"]
 df_drivers$params_tile[[1]]$tf_base  <- settings_calib_NSC$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <- settings_calib_NSC$par_opt["par_mort"]
 
@@ -816,6 +855,11 @@ df_calib_GR <- runread_lm3ppa_f(
      parallel = FALSE
      )
 
+df_output$data[[1]]$output_annual_tile %>%
+  summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  left_join(ddf_obs)
+
 df_calib_GR$data[[1]]$output_annual_tile %>%
   summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
   gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
@@ -832,5 +876,4 @@ df_calib_GR$data[[1]]$output_annual_tile %>%
   theme_classic()+labs(x = "Year", y = "plantC")
 
 ```
-
 

@@ -47,9 +47,6 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
     }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa
 
-    } else if ( "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) ){  
-      cost_rmse <- cost_rmse_lm3ppa
-
     }   
 
     ##----------------------------------------------------------------
