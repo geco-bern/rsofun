@@ -44,7 +44,8 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
       # cost_rmse <- cost_chisquared_vpdstress
       cost_rmse <- cost_rmse_vpdstress
       
-    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) ){  
+    }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "LAI_light" %in% names(settings$par) &&
+     "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa
 
     }   
@@ -381,10 +382,11 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
 cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   
   # Add changed model parameters to df_drivers, overwriting where necessary.
-  df_drivers$params_species[[1]]$kphio[]  <- par[1]  # the same for all values
-  df_drivers$params_species[[1]]$phiRL[]  <- par[2]  # the same for all values
-  df_drivers$params_tile[[1]]$tf_base  <- par[3]
-  df_drivers$params_tile[[1]]$par_mort <- par[4]
+  df_drivers$params_species[[1]]$kphio[]      <- par[1]  # the same for all values
+  df_drivers$params_species[[1]]$phiRL[]      <- par[2]  # the same for all values
+  df_drivers$params_species[[1]]$LAI_light[]  <- par[3]  # the same for all values
+  df_drivers$params_tile[[1]]$tf_base         <- par[4]
+  df_drivers$params_tile[[1]]$par_mort        <- par[5]
 
   df <- runread_lm3ppa_f(
     df_drivers, 

@@ -43,7 +43,6 @@ module md_interface_lm3ppa
     real    :: LMA
     real    :: LNbase
     real    :: laimax
-    real    :: LAI_light
     real    :: Nfixrate0
     real    :: NfixCost0
     real    :: phiCSA
@@ -51,8 +50,9 @@ module md_interface_lm3ppa
     real    :: mortrate_d_u
     real    :: maturalage
     real    :: fNSNmax
-    real    :: kphio ! calibratable
-    real    :: phiRL ! calibratable
+    real    :: kphio     ! calibratable
+    real    :: phiRL     ! calibratable
+    real    :: LAI_light ! calibratable
   end type paramstype_species
 
   type inittype_cohort 

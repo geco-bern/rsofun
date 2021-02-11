@@ -558,16 +558,16 @@ contains
     myinterface%params_species(:)%LMA          = real( params_species(:,5))
     myinterface%params_species(:)%LNbase       = real( params_species(:,6))
     myinterface%params_species(:)%laimax       = real( params_species(:,7))
-    myinterface%params_species(:)%LAI_light    = real( params_species(:,8))
-    myinterface%params_species(:)%Nfixrate0    = real( params_species(:,9))
-    myinterface%params_species(:)%NfixCost0    = real( params_species(:,10))
-    myinterface%params_species(:)%phiCSA       = real( params_species(:,11))
-    myinterface%params_species(:)%mortrate_d_c = real( params_species(:,12))
-    myinterface%params_species(:)%mortrate_d_u = real( params_species(:,13))
-    myinterface%params_species(:)%maturalage   = real( params_species(:,14))
-    myinterface%params_species(:)%fNSNmax      = real( params_species(:,15))
-    myinterface%params_species(:)%kphio        = real( params_species(:,16)) ! calibratable
-    myinterface%params_species(:)%phiRL        = real( params_species(:,17)) ! calibratable
+    myinterface%params_species(:)%Nfixrate0    = real( params_species(:,8))
+    myinterface%params_species(:)%NfixCost0    = real( params_species(:,9))
+    myinterface%params_species(:)%phiCSA       = real( params_species(:,10))
+    myinterface%params_species(:)%mortrate_d_c = real( params_species(:,11))
+    myinterface%params_species(:)%mortrate_d_u = real( params_species(:,12))
+    myinterface%params_species(:)%maturalage   = real( params_species(:,13))
+    myinterface%params_species(:)%fNSNmax      = real( params_species(:,14))
+    myinterface%params_species(:)%kphio        = real( params_species(:,15)) ! calibratable
+    myinterface%params_species(:)%phiRL        = real( params_species(:,16)) ! calibratable
+    myinterface%params_species(:)%LAI_light    = real( params_species(:,17)) ! calibratable
 
     ! Initial cohort sizes
     myinterface%init_cohort(:)%init_cohort_species = real(init_cohort(:,1))

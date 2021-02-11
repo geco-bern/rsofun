@@ -498,7 +498,7 @@ module datatypes
   ! real :: LAI_light(0:MSPECIES)     = 4.0 ! maximum LAI limited by light
   real :: tauNSC(0:MSPECIES)        = 3 ! 3 ! NSC residence time,years
   ! real :: fNSNmax(0:MSPECIES)       = 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
-  real :: phiRL(0:MSPECIES)       = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
+  ! real :: phiRL(0:MSPECIES)       = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
   ! real :: phiCSA(0:MSPECIES)        = 0.25E-4 ! ratio of sapwood area to leaf area
   ! C/N ratios for plant pools
   real :: CNleaf0(0:MSPECIES)   = 25. ! C/N ratios for leaves
@@ -633,12 +633,12 @@ contains
     spdata%taperfactor   = taperfactor
     spdata%laimax        = myinterface%params_species(:)%laimax
     spdata%underLAImax   = laimax
-    spdata%LAI_light     = myinterface%params_species(:)%LAI_light
     spdata%tauNSC        = tauNSC
     spdata%fNSNmax       = myinterface%params_species(:)%fNSNmax
     spdata%kphio         = myinterface%params_species(:)%kphio     
     spdata%phiRL         = myinterface%params_species(:)%phiRL     
     spdata%phiCSA        = myinterface%params_species(:)%phiCSA
+    spdata%LAI_light     = myinterface%params_species(:)%LAI_light
 
     ! root turnover rate
     spdata%alpha_FR      = alpha_FR
