@@ -1958,6 +1958,7 @@ contains
     ! Calculating LAI max based on mineral N or mineralN + fixed N
     fixedN_based =  .False. ! .True. !
     LAImin       = 0.5
+
     !fixedN = 0.0
     !do i = 1,vegn%n_cohorts
     !      cc => vegn%cohorts(i)
@@ -1966,6 +1967,7 @@ contains
     ! Mineral+fixed N-based LAImax
     ! LAI_fixedN = sp%Nfixrate0 * sp%LMA * sp%CNleaf0 * sp%leafLS / sp%LMA
     ! cc%br_max = sp%phiRL*cc%bl_max/(sp%LMA*sp%SRA)
+
     vegn%previousN = 0.8 * vegn%previousN + 0.2 * vegn%annualN
     do i=0,MSPECIES
       associate (sp => spdata(i) )
@@ -1974,10 +1976,15 @@ contains
 
         !LAImineralN = vegn%previousN/(sp%LMA/(sp%CNleaf0*sp%leafLS)+sp%phiRL*sp%alpha_FR/sp%SRA /sp%CNroot0)
         LAI_nitrogen = LAIfixedN + LAImineralN
-        spdata(i)%LAImax = MAX(LAImin, MIN(LAI_nitrogen,sp%LAI_light))
-        spdata(i)%underLAImax = MIN(sp%LAImax,1.2)
+        ! spdata(i)%LAImax = MAX(LAImin, MIN(LAI_nitrogen, sp%LAI_light))
+
+        ! turn off N limitation
+        spdata(i)%LAImax = MAX(LAImin, sp%LAI_light)
+
+        spdata(i)%underLAImax = MIN(sp%LAImax, 1.2)
       end associate
     enddo
+
     !  ! update the PFTs in the first layer based on fixed N
     !  if (fixedN_based) then ! based on "cc%annualfixedN + vegn%previousN"
     !!    Reset sp%LAImax
