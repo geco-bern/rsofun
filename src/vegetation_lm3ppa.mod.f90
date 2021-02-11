@@ -720,10 +720,10 @@ contains
       CAI_max = myinterface%params_tile%par_mort
 
       ! check if current CAI is greater than maximum CAI
-      print*, "CAI_max, CAI", CAI_max, vegn%CAI
-      ! xxx check whether cohorts are ranked w.r.t. height
-      print*, "height", vegn%cohorts%height 
-      print*, "vegn%n_cohorts", vegn%n_cohorts 
+      ! print*, "CAI_max, CAI", CAI_max, vegn%CAI
+      ! ! xxx check whether cohorts are ranked w.r.t. height
+      ! print*, "height", vegn%cohorts%height 
+      ! print*, "vegn%n_cohorts", vegn%n_cohorts 
 
       ! Calculate cumulative CAI from shortest trees
       totCC = vegn%n_cohorts
@@ -740,8 +740,8 @@ contains
           cai_partial(i) = cai_partial(i+1) + cCAI
         end if
       enddo
-      write(*,*)"cai_partial", cai_partial
-      write(*,*)'k,totCC',k, totCC
+      ! write(*,*)"cai_partial", cai_partial
+      ! write(*,*)'k,totCC',k, totCC
       ! Kill the trees that lead to total CAI > CAI_max
       k = 0 ! for checking how many cohorts trimmed
       do i =1, totCC-1 ! at least keep the last cohort (totCC)
@@ -753,7 +753,7 @@ contains
           ! Update plant density
           cc%nindivs = cc%nindivs - dn
           k = k + 1
-          write(*,*)'dn=',dn,'k=',k
+          ! write(*,*)'dn=',dn,'k=',k
         else
          exit
         endif
@@ -773,8 +773,8 @@ contains
         end if
       enddo
 
-      write(*,*)"cai_partial2", cai_partial
-      write(*,*)'k,totCC-2',k, totCC
+      ! write(*,*)"cai_partial2", cai_partial
+      ! write(*,*)'k,totCC-2',k, totCC
       ! end of final check
 
       deallocate(cai_partial)
@@ -791,7 +791,8 @@ contains
           param_nsc = myinterface%params_tile%par_mort
 
           if (cc%bl_max > 0) then
-          deathrate = exp(param_nsc*(cc%nsc/cc%bl_max))/(0.01+exp(param_nsc*(cc%nsc/cc%bl_max))) ! Changing coef: works with 2.5          
+          deathrate = exp(param_nsc*(cc%nsc/cc%bl_max))/(0.001+exp(param_nsc*(cc%nsc/cc%bl_max))) ! Changing coef: works with 2.5    
+
           endif
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
@@ -800,8 +801,9 @@ contains
           param_gr = myinterface%params_tile%par_mort
 
           deathrate = param_gr * (cc%Volume - cc%Vol_ys)
+          ! deathrate = param_gr * (cc%bsw + cc%bHW - cc%ABG_ys)
 
-          ! deathrate = 0.2*(cc%DBH - cc%DBH_ys)
+          ! print*, cc%bsw + cc%bHW - cc%ABG_ys
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      

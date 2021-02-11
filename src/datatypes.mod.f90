@@ -221,6 +221,7 @@ module datatypes
     real    :: topyear = 0.0 ! the years that a plant in top layer
     real    :: DBH_ys        ! DBH at the begining of a year (growing season)
     real    :: Vol_ys
+    real    :: ABG_ys
 
     ! ---- water uptake-related variables
     real    :: root_length(max_lev) ! m
@@ -793,6 +794,7 @@ contains
       cc%NPPwood      = 0.0
       cc%DBH_ys       = cc%DBH
       cc%Vol_ys       = cc%Volume
+      cc%ABG_ys       = cc%bsw+cc%bHW
       ! cc%n_deadtrees       = 0.0
       ! cc%c_deadtrees       = 0.0
     enddo

@@ -54,8 +54,8 @@ params_siml <- tibble( #list
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
+      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -102,7 +102,7 @@ params_tile <- tibble( #list
   
   # add calibratable params
   tf_base      = 1,
-  par_mort     = 0.6   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
+  par_mort     = 1.9   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
   
   )
 ```
@@ -281,11 +281,7 @@ df_output <- runread_lm3ppa_f(
      parallel = FALSE
      )
 
-compa_all <- df_output$data[[1]]$output_annual_tile %>%
-  summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
-  #pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
-  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
-  left_join(ddf_obs)
+compa_inits <- df_output$data[[1]]$output_annual_tile %>% tail(500) %>% summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>% pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>% left_join(ddf_obs)
 
 df_output$data[[1]]$output_annual_tile %>% 
   ggplot() +
@@ -297,13 +293,20 @@ df_output$data[[1]]$output_annual_tile %>%
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 
+df_output$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = log(QMD), y = log(Density12))) + 
+  theme_classic()+labs(x = "Ln(QMD)", y = "Ln(N)")
+
 # For manual calibration
 compa_inits
-compa_kphio
-compa_phiRL
-compa_tf_base
-compa_par_mort
-compa_all
+#compa_kphio
+#compa_phiRL
+#compa_tf_base
+#compa_par_mort
+#compa_all
+
+datacheck <- df_output$data[[1]]$output_annual_tile
 
 ```
 
@@ -393,17 +396,15 @@ settings_calib_CST <- list(
   par                 = list(kphio = list(lower=0.04, upper=0.1, init=0.05),
                              phiRL = list(lower=1, upper=8, init=3.5),
                              tf_base = list(lower=0.2, upper=5, init=1),
-                             par_mort = list(lower=0.1, upper=4, init=1))
+                             par_mort = list(lower=0.1, upper=1.9, init=1))
  )
-
-lapply( settings_calib_DBH$par, function(x) x$init ) %>% unlist()
 
 # Mortality as DBH
 settings_calib_DBH <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 10, # (5 for gensa) (30 for optimr)
+  maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -474,8 +475,10 @@ Data from Euler or downloaded here using ingestr
 # Reading files ...
 # XXX use max/q95 and mean LAI across june july august
 lai_LAE <- read_csv("~/data/modis_subsets/MODIS_LAI_MCD15A3H_daily_CH-Lae.csv")
-mean_annual_lai <- mean(lai_LAE$linear, na.rm=T)
-max_annual_lai <- quantile(lai_LAE$linear, probs = 0.95, na.rm=T)
+lai_LAE <- lai_LAE %>% mutate(month=str_sub(date, 6, 7))
+lai_LAE_summer <- lai_LAE %>% dplyr::filter(month=="06"|month=="07"|month=="08")
+mean_annual_lai <- mean(lai_LAE_summer$linear, na.rm=T)
+max_annual_lai <- quantile(lai_LAE_summer$linear, probs = 0.95, na.rm=T)
 
 # LAI
 # ... or downloading with ingestr package
@@ -618,13 +621,13 @@ LAE_nTrees <- LAE_data %>%
 LAE_allsps <- LAE_nTrees %>% 
   group_by(INVYEAR) %>% 
   summarise(nTrees=n())
+LAE_ha <- 1.34
 densityLAE <- LAE_allsps[[1,2]]/LAE_ha
 
 LAE_bysps <- LAE_nTrees %>% 
   group_by(INVYEAR,SPECIES) %>% 
   summarise(nTrees=n()) %>% 
   arrange(SPECIES)
-LAE_ha <- 1.34
 densityFagus <- LAE_nTrees[[12,3]]/LAE_ha
 densityPicea <- LAE_nTrees[[16,3]]/LAE_ha
 densityFir   <- LAE_nTrees[[2,3]]/LAE_ha
@@ -634,7 +637,7 @@ densityFir   <- LAE_nTrees[[2,3]]/LAE_ha
 Prepare the observed target variables: ddf_obs
 
 ```{r}
-ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityLAE, Biomass=Biomass_LAE) %>%
+ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityLAE, Biomass=BiomassLAE) %>%
   pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
   #gather("variables", "targets_obs",GPP,LAI,Density,Biomass)
 
@@ -645,12 +648,13 @@ nrow(ddf_obs)
 Contrast observed vs. simulated targets
 
 ```{r}
-  df_output$data[[1]]$output_annual_tile %>%
+
+df_output$data[[1]]$output_annual_tile %>%
+  tail(500) %>%
   summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
-  #pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%
   gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
   left_join(ddf_obs)
-  
+
 ```
 
 #### Calibrate the model
@@ -668,7 +672,7 @@ print(settings_calib_CST$par_opt)
 save(settings_calib_CST, file = "~/data/settings_calib_CST.RData")
 
 ## Mortality as tree size
-set.seed(3152)
+set.seed(2152)
 settings_calib_DBH <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
@@ -700,60 +704,6 @@ settings_calib_GR <- calib_sofun(
 print(settings_calib_GR$par_opt)
 save(settings_calib_GR, file = "~/data/settings_calib_GR.RData")
 
-source("~/rsofun/R/cost_rmse_test.R")
-
-calib_GR <- cost_rmse_lm3ppa(
-  par = c(0.05, 2, 1, 0.5),
-  ddf_obs = ddf_obs,
-  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_GR$sitenames),  
-  inverse = FALSE 
-  )
-
-calib_GR <- cost_rmse_lm3ppa(
-  par = c(0.01, 2, 1, 0.5),
-  ddf_obs = ddf_obs,
-  df_drivers = dplyr::filter(df_drivers, sitename %in% settings_calib_GR$sitenames),  
-  inverse = FALSE 
-  )
-
-
-  # Add changed model parameters to df_drivers, overwriting where necessary.
-  df_drivers$params_species[[1]]$kphio  <- rep(0.01,16)
-  df_drivers$params_species[[1]]$phiRL  <- rep(2,16)
-  df_drivers$params_tile[[1]]$tf_base  <- 1
-  df_drivers$params_tile[[1]]$par_mort <- 0.5
-
-  df <- runread_lm3ppa_f(
-    df_drivers, 
-    makecheck = TRUE,
-    parallel = FALSE
-  ) 
-  
-  # Aggregate variables from the model df taking the last 500 yrs
-  df_mod <- df$data[[1]]$output_annual_tile %>% 
-    tail(500) %>% 
-    dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC))
-  
-  dff <- data.frame(
-    variables = c("GPP","LAI","Density","Biomass"),
-    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Density, df_mod$Biomass)
-    ) %>% 
-    dplyr::left_join(ddf_obs, by = "variables") %>% 
-    mutate(error = targets_mod - targets_obs) %>% 
-    mutate(error_rel = error / mean(targets_obs))
-  
-  ## Calculate cost (RMSE) across the N targets
-  cost <- sqrt(mean(dff$error_rel^2, na.rm = TRUE))
-  
-  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
-  
-  if (inverse) cost <- 1.0 / cost  
-  
-  return(cost)
-
-
-
-
 ```
 
 #### Evaluate the model
@@ -761,7 +711,7 @@ calib_GR <- cost_rmse_lm3ppa(
 ```{r}
 
 ########## Constant Self-thinning ########## 
-df_drivers$params_species[[1]]$kphio[]  <- settings_calib_CST$par_opt["kphio"]
+df_drivers$params_species[[1]]$kphio[]  <- settings_calib_CST$par_opt["kphio"]*1.15 # Increment 15 and 30%
 df_drivers$params_species[[1]]$phiRL[]  <- settings_calib_CST$par_opt["phiRL"]
 df_drivers$params_tile[[1]]$tf_base  <- settings_calib_CST$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <- settings_calib_CST$par_opt["par_mort"]
@@ -772,7 +722,10 @@ df_calib_CST <- runread_lm3ppa_f(
      parallel = FALSE
      )
 
+compa_inits
+
 df_calib_CST$data[[1]]$output_annual_tile %>%
+  tail(500) %>%
   summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
   gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
   left_join(ddf_obs)
@@ -788,7 +741,7 @@ df_calib_CST$data[[1]]$output_annual_tile %>%
   theme_classic()+labs(x = "Year", y = "plantC")
 
 ########## Mortality as tree size ########## 
-df_drivers$params_species[[1]]$kphio  <- settings_calib_DBH$par_opt["kphio"]
+df_drivers$params_species[[1]]$kphio  <- settings_calib_DBH$par_opt["kphio"]*1.30 # Increment 15 and 30%
 df_drivers$params_species[[1]]$phiRL  <- settings_calib_DBH$par_opt["phiRL"]
 df_drivers$params_tile[[1]]$tf_base  <- settings_calib_DBH$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <- settings_calib_DBH$par_opt["par_mort"]
@@ -817,7 +770,7 @@ df_calib_DBH$data[[1]]$output_annual_tile %>%
   theme_classic()+labs(x = "Year", y = "plantC")
 
 ########## Mortality as carbon starvation ########## 
-df_drivers$params_species[[1]]$kphio  <- settings_calib_NSC$par_opt["kphio"]
+df_drivers$params_species[[1]]$kphio  <- settings_calib_NSC$par_opt["kphio"]*1.30 # Increment 15 and 30%
 df_drivers$params_species[[1]]$phiRL  <- settings_calib_NSC$par_opt["phiRL"]
 df_drivers$params_tile[[1]]$tf_base  <- settings_calib_NSC$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <- settings_calib_NSC$par_opt["par_mort"]
@@ -827,6 +780,8 @@ df_calib_NSC <- runread_lm3ppa_f(
      makecheck = TRUE,
      parallel = FALSE
      )
+
+compa_inits
 
 df_calib_NSC$data[[1]]$output_annual_tile %>%
   summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
@@ -844,8 +799,8 @@ df_calib_NSC$data[[1]]$output_annual_tile %>%
   theme_classic()+labs(x = "Year", y = "plantC")
 
 ########## Mortality as growth rate ########## 
-df_drivers$params_species[[1]]$kphio  <- rep(settings_calib_GR$par_opt["kphio"],16)
-df_drivers$params_species[[1]]$phiRL  <- rep(settings_calib_GR$par_opt["phiRL"],16)
+df_drivers$params_species[[1]]$kphio  <- settings_calib_GR$par_opt["kphio"]*1.30 # Increment 15 and 30%
+df_drivers$params_species[[1]]$phiRL  <- settings_calib_GR$par_opt["phiRL"]
 df_drivers$params_tile[[1]]$tf_base  <- settings_calib_GR$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <- settings_calib_GR$par_opt["par_mort"]
 
@@ -855,12 +810,10 @@ df_calib_GR <- runread_lm3ppa_f(
      parallel = FALSE
      )
 
-df_output$data[[1]]$output_annual_tile %>%
-  summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
-  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
-  left_join(ddf_obs)
+#compa_inits
 
 df_calib_GR$data[[1]]$output_annual_tile %>%
+  tail(500) %>%
   summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
   gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
   left_join(ddf_obs)

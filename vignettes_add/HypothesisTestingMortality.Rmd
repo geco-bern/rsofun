@@ -41,8 +41,8 @@ params_siml <- list(
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
+      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+      method_mortality      = "const_selfthin" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -67,7 +67,10 @@ params_tile <- list(
   l_fract      = 0.0,   # fraction of the carbon retained after leaf drop
   retransN     = 0.0,   # retranslocation coefficient of Nitrogen
   f_initialBSW = 0.2,
-  f_N_add      = 0.02   # re-fill of N for sapwood
+  f_N_add      = 0.02,   # re-fill of N for sapwood
+  # add calibratable params
+  tf_base      = 1,
+  par_mort     = 1.5   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
   )
 
 ```
@@ -81,7 +84,6 @@ params_species <- tibble(
   pt            = rep(0,16),                 # 0 for C3; 1 for C4
   seedlingsize  = rep(0.05,16),              # initial size of seedlings
   LMA           = rep(0.05,16),              # Leaf mass per unit area. For sps: Beech (0.05); Spruce (0.17) Fir (0.11)
-  phiRL         = rep(3.5,16),               # Root:Shoot ratio:  4.0, 6.0, 8.0
   LNbase        = rep(0.8E-3,16),            # kgN m-2 leaf, Vmax = 0.03125*LNbase
   laimax        = rep(3.5,16),               # maximum crown LAI
   LAI_light     = rep(4.0,16),               # Light-limited crown LAI
@@ -91,7 +93,10 @@ params_species <- tibble(
   mortrate_d_c  = rep(0.01,16),              # canopy tree mortality rate, year-1
   mortrate_d_u  = rep(0.075,16),             # understory tree mortality rate, year-1
   maturalage    = rep(5,16),                 # the age that can reproduce
-  fNSNmax       = rep(5,16)                  # multiplier for NSNmax as sum of potential bl and br
+  fNSNmax       = rep(5,16),                 # multiplier for NSNmax as sum of potential bl and br
+  kphio         = rep(0.05, 16),
+  phiRL         = rep(3.5,16)                # Root:Shoot ratio:  4.0, 6.0, 8.0
+
   ) 
 ```
 
@@ -1386,7 +1391,7 @@ PR_Tree_data <- getData(dataset ="TREE", site ="solling_spruce", species = "Pice
 
 #### Stand develop: Stand biomass vs. time
 
-From annual_tile_output: PlanC (Biomass)
+From annual_tile_output: PlantC (Biomass)
 
 ##### LUE (mol/s/m2)
 ```{r}
