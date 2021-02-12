@@ -35,8 +35,7 @@ module md_forcing_lm3ppa
 
 contains
 
-  ! function getclimate( nt, ntstepsyear, ntstepsyear_forcing, forcing, climateyear_idx, climateyear, do_agg_climate ) result ( out_climate )
-  function getclimate( nt, ntstepsyear, forcing, climateyear_idx, climateyear ) result ( out_climate )
+  function getclimate( nt, ntstepsyear, forcing, climateyear_idx ) result ( out_climate )
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
     ! to read from NetCDF. This nesting is necessary because this 
@@ -48,7 +47,7 @@ contains
     integer, intent(in) :: ntstepsyear   ! number of time steps per year of model
     ! integer, intent(in) :: ntstepsyear_forcing  ! number of time steps per year of forcing data
     real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    integer, intent(in) :: climateyear_idx, climateyear
+    integer, intent(in) :: climateyear_idx
     ! logical, intent(in) :: do_agg_climate
 
     ! local variables
@@ -133,7 +132,7 @@ contains
   ! end function aggregate_climate_byday
 
 
-  function getco2( nt, forcing, forcingyear_idx, forcingyear ) result( pco2 )
+  function getco2( nt, forcing, forcingyear_idx ) result( pco2 )
     !////////////////////////////////////////////////////////////////
     !  Function reads this year's atmospheric CO2 from input
     !----------------------------------------------------------------
@@ -142,7 +141,7 @@ contains
     real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     ! type(climate_type), dimension(nt), intent(in) :: forcing
 
-    integer, intent(in) :: forcingyear_idx, forcingyear
+    integer, intent(in) :: forcingyear_idx
 
     ! function return variable
     real, dimension(ntstepsyear) :: pco2

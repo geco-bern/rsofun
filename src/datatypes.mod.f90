@@ -488,9 +488,9 @@ contains
 
 ! ================Parameter initialization ===================
 ! =========================================================================
-  subroutine initialize_soilpars(namelistfile)
+  subroutine initialize_soilpars()
     use md_interface_lm3ppa, only: myinterface
-    character(len=50),intent(in) :: namelistfile
+    ! character(len=50),intent(in) :: namelistfile
   
     ! initialize soil parameters
     soilpars%GMD               = myinterface%params_soil%GMD(:) ! geometric mean partice diameter, mm
@@ -743,7 +743,6 @@ contains
     ! local variables
     type(cohort_type),pointer :: cc
     integer :: i
-    real :: fleaf,fwood
 
     ! State variables
     vegn%NSC        = 0.0
@@ -840,7 +839,6 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc    ! current cohort
     integer :: i
-    integer :: ntstepsyear !differ
 
     vegn%age = vegn%age + myinterface%dt_fast_yr
 
@@ -1070,7 +1068,7 @@ contains
 
     !-------local var
     type(cohort_type), pointer :: cc
-    real treeG, fseed, fleaf, froot,fwood,dDBH, dVol, deathrate
+    real treeG, fseed, fleaf, froot,fwood,dDBH, dVol
     real :: plantC, plantN, soilC, soilN
     integer :: i
 

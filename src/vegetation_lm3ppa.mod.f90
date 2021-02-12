@@ -161,12 +161,12 @@ contains
     
     ! local variables
     logical :: woody
-    logical :: dormant,growing
+    ! logical :: dormant,growing
     real :: NSCtarget
     real :: C_push, C_pull, growthC
     real :: N_push, N_pull, growthN
     real :: LFR_rate ! make these two variables to PFT-specific parameters
-    real :: bl_max, br_max
+    ! real :: bl_max, br_max
     real :: resp_growth
     ! make these two variables to PFT-specific parameters
     LFR_rate = 1.0 ! 1.0/5.0 ! filling rate/day
@@ -207,7 +207,7 @@ contains
     real :: CSAwd  ! Heartwood cross sectional area, m2
     real :: DBHwd  ! diameter of heartwood at breast height, m
     real :: BSWmax ! max sapwood biomass, kg C/individual
-    real :: dB_LRS, G_LFR  ! amount of carbon spent on leaf and root growth
+    real :: G_LFR  ! amount of carbon spent on leaf and root growth
     real :: dSeed ! allocation to seeds, Weng, 2016-11-26
     real :: dBL, dBR ! tendencies of leaf and root biomass, kgC/individual
     real :: dBSW ! tendency of sapwood biomass, kgC/individual
@@ -216,13 +216,13 @@ contains
     real :: dCA ! tendency of crown area, m2/individual
     real :: dHeight ! tendency of vegetation height
     real :: dNS    ! Nitrogen from SW to HW
-    real :: sw2nsc = 0.0 ! conversion of sapwood to non-structural carbon
-    real :: b,BL_u,BL_c
+    ! real :: sw2nsc = 0.0 ! conversion of sapwood to non-structural carbon
+    real :: BL_u,BL_c
     real :: LFR_deficit, LF_deficit, FR_deficit
     real :: N_demand,Nsupplyratio,extraN
     real :: r_N_SD
     logical :: do_editor_scheme = .False.
-    integer :: i,j
+    integer :: i
     do_editor_scheme = .False. ! .True.
 
     ! Turnover of leaves and fine roots
@@ -495,10 +495,10 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    integer :: i,j
-    real    :: grassdensity   ! for grasses only
-    real    :: BL_u,BL_c
-    real    :: ccFR, ccNSC, ccRootN, ccNSN
+    integer :: i
+    ! real    :: grassdensity   ! for grasses only
+    ! real    :: BL_u,BL_c
+    real    :: ccNSC, ccNSN
     logical :: cc_firstday = .false.
     logical :: growingseason
     logical :: TURN_ON_life, TURN_OFF_life
@@ -694,19 +694,17 @@ contains
 
     ! ---- local vars
     type(cohort_type), pointer :: cc => null()
-    type(spec_data_type),   pointer :: sp
+    ! type(spec_data_type),   pointer :: sp
 
-    integer :: idx(vegn%n_cohorts)
+    ! integer :: idx(vegn%n_cohorts)
     real :: deathrate ! mortality rate, 1/year
     real :: deadtrees ! number of trees that died over the time step
-    integer :: totCC,i,j,k
-    real :: dDBH
-    real :: BAL, dVol
-    real :: nindivs_new, frac_new
+    integer :: totCC,i,k
+    ! real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
     real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
-    logical :: merged(vegn%n_cohorts) ! mask to skip cohorts that were already merged
+    ! logical :: merged(vegn%n_cohorts) ! mask to skip cohorts that were already merged
     real :: cCAI
     real :: dn ! number of trees that died due to CAI_partial>CAI_max
     real :: param_dbh 
@@ -871,9 +869,9 @@ contains
     ! local variables --------
     real :: deathrate ! mortality rate, 1/year
     real :: deadtrees ! number of trees that died over the time step
-    integer :: i, k
+    integer :: i
     type(cohort_type), pointer :: cc
-    type(cohort_type), dimension(:), pointer :: ccold, ccnew
+    ! type(cohort_type), dimension(:), pointer :: ccold, ccnew
 
     do i = 1, vegn%n_cohorts
       
@@ -920,7 +918,7 @@ contains
     ! local variables --------
     real :: loss_fine,loss_coarse
     real :: lossN_fine,lossN_coarse
-    integer :: i
+    ! integer :: i
 
     associate (sp => spdata(cc%species))
 
@@ -975,10 +973,10 @@ contains
     type(cohort_type), dimension(:), pointer :: ccold, ccnew   ! pointer to old cohort array
     integer, dimension(16) :: reproPFTs
     real,    dimension(16) :: seedC, seedN ! seed pool of productible PFTs
-    real :: failed_seeds, N_failedseed !, prob_g, prob_e
+    ! real :: failed_seeds, N_failedseed !, prob_g, prob_e
     integer :: newcohorts, matchflag, nPFTs ! number of new cohorts to be created
     integer :: nCohorts, istat
-    integer :: i, j, k ! cohort indices
+    integer :: i, k ! cohort indices
 
     ! Looping through all reproductable cohorts and Check if reproduction happens
     reproPFTs = -999 ! the code of reproductive PFT
@@ -1150,7 +1148,7 @@ contains
     ! local variables --------
     real :: loss_fine,loss_coarse
     real :: lossN_fine,lossN_coarse
-    integer :: i, k
+    ! integer :: i, k
     type(cohort_type), pointer :: cc
 
     cc => vegn%cohorts(1)
@@ -1386,7 +1384,7 @@ contains
     real    :: totNup    ! kgN m-2
     real    :: avgNup
     real    :: rho_N_up, N_roots   ! actual N uptake rate
-    logical :: NSN_not_full
+    ! logical :: NSN_not_full
     integer :: i
 
     ! xxx try
@@ -1737,9 +1735,9 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
     ! local variables
     type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
-    logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
+    ! logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
     real, parameter :: mindensity = 0.25E-4
-    integer :: i,j,k
+    integer :: i,k
 
     ! calculate the number of cohorts with indivs>mindensity
     k = 0
@@ -1949,10 +1947,10 @@ contains
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
     ! local variables
-    type(cohort_type), pointer :: cc
+    ! type(cohort_type), pointer :: cc
     real   :: LAImin, LAIfixedN, LAImineralN
     real   :: LAI_Nitrogen
-    real   :: fixedN, rootN
+    ! real   :: fixedN, rootN
     logical:: fixedN_based
     integer :: i
     ! Calculating LAI max based on mineral N or mineralN + fixed N
@@ -2047,13 +2045,9 @@ contains
     real    :: r
     real    :: btotal
     integer :: i, istat
-    integer :: io           ! i/o status for the namelist
-    integer :: ierr         ! error code, returned by i/o routines
-    integer :: nml_unit
-
-    ! Set calibratable parameters
-    ! tf_base  = myinterface%params_calib_tile%tf_base
-    ! par_mort = myinterface%params_calib_tile%par_mort
+    ! integer :: io           ! i/o status for the namelist
+    ! integer :: ierr         ! error code, returned by i/o routines
+    ! integer :: nml_unit
 
     ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
     soiltype    = myinterface%params_tile%soiltype 

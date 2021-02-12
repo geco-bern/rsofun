@@ -67,7 +67,7 @@ contains
     real   :: fw, fs ! wet and snow-covered fraction of leaves
     real   :: psyn   ! net photosynthesis, mol C/(m2 of leaves s)
     real   :: resp   ! leaf respiration, mol C/(m2 of leaves s)
-    real   :: tempLAI, w_scale2, transp ! mol H20 per m2 of leaf per second
+    real   :: w_scale2, transp ! mol H20 per m2 of leaf per second
     real   :: kappa  ! light extinction coefficient of crown layers
     real   :: f_light(10) = 0.0, f_apar(10) = 0.0      ! incident light fraction, and aborbed light fraction of each layer
     real   :: LAIlayer(10), crownarea_layer(10), accuCAI, f_gap, fapar_tree ! additional GPP for lower layer cohorts due to gaps
@@ -429,8 +429,6 @@ contains
     ! capgam=0.209/(9000.0*exp(-5000.0*(1.0/288.2-1.0/tl))); - Foley formulation, 1986
     capgam=0.5*kc/ko*0.21*0.209; ! Farquhar & Caemmerer 1982
 
-
-
     ! Find respiration for the whole canopy layer
 
     !  Resp=spdata(pft)%gamma_resp*vm*lai /((layer-1)*1.0+1.0)  ! Weng, 2013-01-17 add '/ ((layer-1)*1.0+1.0)'
@@ -578,78 +576,78 @@ contains
   end subroutine gs_leuning
 
 
-  subroutine calc_solarzen(td, latdegrees, cosz, solarelev, solarzen)
-    ! Calculate solar zenith angle **in radians**
-    ! From Spitters, C. J. T. (1986), AgForMet 38: 231-242.
-    implicit none
-    real, intent(in) :: td             ! day(to minute fraction)
-    real, intent(in) :: latdegrees     ! latitude in degrees
-    real :: hour,latrad
-    real :: delta    ! declination angle
-    real :: pi, rad
-    real, intent(out) :: cosz        ! cosz=cos(zen angle)=sin(elev angle)
-    real, intent(out) :: solarelev    ! solar elevation angle (rad)
-    real, intent(out) :: solarzen     ! solar zenith angle (rad)
+  ! subroutine calc_solarzen(td, latdegrees, cosz, solarelev, solarzen)
+  !   ! Calculate solar zenith angle **in radians**
+  !   ! From Spitters, C. J. T. (1986), AgForMet 38: 231-242.
+  !   implicit none
+  !   real, intent(in) :: td             ! day(to minute fraction)
+  !   real, intent(in) :: latdegrees     ! latitude in degrees
+  !   real :: hour,latrad
+  !   real :: delta    ! declination angle
+  !   real :: pi, rad
+  !   real, intent(out) :: cosz        ! cosz=cos(zen angle)=sin(elev angle)
+  !   real, intent(out) :: solarelev    ! solar elevation angle (rad)
+  !   real, intent(out) :: solarzen     ! solar zenith angle (rad)
 
-    pi  = 3.1415926
-    rad = pi / 180.0 ! Conversion from degrees to radians.
-    hour = (td-floor(td))*24.0
-    latrad = latdegrees*rad
-    delta  = asin(-sin(rad*23.450)*cos(2.0*pi*(td+10.0)/365.0))
-    cosz = sin(latrad)*sin(delta) + &
-    cos(latrad)*cos(delta)*cos(rad* 15.0*(hour-12.0))
-    cosz = max (cosz, 0.01)  ! Sun's angular is 0.01
-    ! compute the solar elevation and zenth angles below
-    solarelev = asin(cosz)/pi*180.0  !since asin(cos(zen))=pi/2-zen=elev
-    solarzen = 90.0 - solarelev ! pi/2.d0 - solarelev
+  !   pi  = 3.1415926
+  !   rad = pi / 180.0 ! Conversion from degrees to radians.
+  !   hour = (td-floor(td))*24.0
+  !   latrad = latdegrees*rad
+  !   delta  = asin(-sin(rad*23.450)*cos(2.0*pi*(td+10.0)/365.0))
+  !   cosz = sin(latrad)*sin(delta) + &
+  !   cos(latrad)*cos(delta)*cos(rad* 15.0*(hour-12.0))
+  !   cosz = max (cosz, 0.01)  ! Sun's angular is 0.01
+  !   ! compute the solar elevation and zenth angles below
+  !   solarelev = asin(cosz)/pi*180.0  !since asin(cos(zen))=pi/2-zen=elev
+  !   solarzen = 90.0 - solarelev ! pi/2.d0 - solarelev
 
-  end subroutine calc_solarzen
+  ! end subroutine calc_solarzen
 
 
-  function calc_soilmstress( soilm, meanalpha, isgrass ) result( outstress )
-    !//////////////////////////////////////////////////////////////////
-    ! Calculates empirically-derived stress (fractional reduction in light 
-    ! use efficiency) as a function of soil moisture
-    ! Input:  soilm (unitless, within [0,1]): daily varying soil moisture
-    ! Output: outstress (unitless, within [0,1]): function of alpha to reduce GPP 
-    !         in strongly water-stressed months
-    !-----------------------------------------------------------------------
-    ! argument
-    real, intent(in) :: soilm                 ! soil water content (fraction)
-    real, intent(in) :: meanalpha             ! mean annual AET/PET, average over multiple years (fraction)
-    logical, intent(in), optional :: isgrass  ! vegetation cover information to distinguish sensitivity to low soil moisture
+  ! function calc_soilmstress( soilm, meanalpha ) result( outstress )
+  !   !//////////////////////////////////////////////////////////////////
+  !   ! Calculates empirically-derived stress (fractional reduction in light 
+  !   ! use efficiency) as a function of soil moisture
+  !   ! Input:  soilm (unitless, within [0,1]): daily varying soil moisture
+  !   ! Output: outstress (unitless, within [0,1]): function of alpha to reduce GPP 
+  !   !         in strongly water-stressed months
+  !   !-----------------------------------------------------------------------
+  !   ! argument
+  !   real, intent(in) :: soilm                 ! soil water content (fraction)
+  !   real, intent(in) :: meanalpha             ! mean annual AET/PET, average over multiple years (fraction)
+  !   ! logical, intent(in), optional :: isgrass  ! vegetation cover information to distinguish sensitivity to low soil moisture
 
-    real, parameter :: x0 = 0.0
-    real, parameter :: x1 = 0.6
+  !   real, parameter :: x0 = 0.0
+  !   real, parameter :: x1 = 0.6
 
-    real :: y0, beta
+  !   real :: y0, beta
 
-    ! function return variable
-    real :: outstress
+  !   ! function return variable
+  !   real :: outstress
 
-    if (soilm > x1) then
-      outstress = 1.0
-    else
-      ! print*,'soilm_par_a, soilm_par_b, meanalpha', params_gpp%soilm_par_a, params_gpp%soilm_par_b, meanalpha
+  !   if (soilm > x1) then
+  !     outstress = 1.0
+  !   else
+  !     ! print*,'soilm_par_a, soilm_par_b, meanalpha', params_gpp%soilm_par_a, params_gpp%soilm_par_b, meanalpha
 
-      y0 = (params_gpp%soilm_par_a + params_gpp%soilm_par_b * meanalpha)
+  !     y0 = (params_gpp%soilm_par_a + params_gpp%soilm_par_b * meanalpha)
 
-      ! if (present(isgrass)) then
-      !   if (isgrass) then
-      !     y0 = apar_grass + bpar_grass * meanalpha
-      !   else
-      !     y0 = apar + bpar * meanalpha
-      !   end if
-      ! else
-      !   y0 = apar + bpar * meanalpha
-      ! end if
+  !     ! if (present(isgrass)) then
+  !     !   if (isgrass) then
+  !     !     y0 = apar_grass + bpar_grass * meanalpha
+  !     !   else
+  !     !     y0 = apar + bpar * meanalpha
+  !     !   end if
+  !     ! else
+  !     !   y0 = apar + bpar * meanalpha
+  !     ! end if
 
-      beta = (1.0 - y0) / (x0 - x1)**2
-      outstress = 1.0 - beta * ( soilm - x1 )**2
-      outstress = max( 0.0, min( 1.0, outstress ) )
-    end if
+  !     beta = (1.0 - y0) / (x0 - x1)**2
+  !     outstress = 1.0 - beta * ( soilm - x1 )**2
+  !     outstress = max( 0.0, min( 1.0, outstress ) )
+  !   end if
 
-  end function calc_soilmstress
+  ! end function calc_soilmstress
 
 
   function calc_ftemp_kphio( dtemp ) result( ftemp )

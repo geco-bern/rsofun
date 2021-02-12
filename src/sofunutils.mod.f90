@@ -518,7 +518,7 @@ contains
   end function read1year_monthly
 
 
-  function getvalreal( filename, realyear, day, dm, mo ) result( valreal )
+  function getvalreal( filename, realyear, day ) result( valreal )
     !////////////////////////////////////////////////////////////////
     !  Function reads one (annual) value corresponding to the given 
     !  year from a time series ascii file. 
@@ -529,8 +529,8 @@ contains
     character(len=*), intent(in) :: filename
     integer, intent(in) :: realyear
     integer, intent(in), optional :: day ! day in year (1:365)
-    integer, intent(in), optional :: dm  ! day in month (1:31)
-    integer, intent(in), optional :: mo  ! month in year (1:12)
+    ! integer, intent(in), optional :: dm  ! day in month (1:31)
+    ! integer, intent(in), optional :: mo  ! month in year (1:12)
 
     ! function return value
     real :: valreal

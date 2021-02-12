@@ -650,8 +650,8 @@ contains
                                             nt, &
                                             ntstepsyear, &
                                             forcing, &
-                                            myinterface%steering%climateyear_idx, &
-                                            myinterface%steering%climateyear &
+                                            myinterface%steering%climateyear_idx &
+                                            ! myinterface%steering%climateyear &
                                             )
 
       !----------------------------------------------------------------

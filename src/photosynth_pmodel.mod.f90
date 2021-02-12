@@ -43,7 +43,7 @@ module md_photosynth
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
     real :: actnv_unitfapar     ! Metabolic leaf N per unit fAPAR (g N m-2)
     real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
-    real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
+    ! real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
   end type outtype_pmodel
 
   type outtype_chi
@@ -127,17 +127,17 @@ contains
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
     real :: actnv_unitfapar     ! Metabolic leaf N per unit fAPAR (g N m-2)
     real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
-    real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
+    ! real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
 
     ! local variables for Jmax limitation following Nick Smith's method
-    real :: omega, omega_star, vcmax_unitiabs_star, tcref, jmax_over_vcmax, jmax_prime, jvrat
+    real :: omega, omega_star, vcmax_unitiabs_star, tcref, jmax_over_vcmax, jmax_prime
 
     real, parameter :: theta = 0.85
     real, parameter :: c_cost = 0.05336251
 
     ! xxx test
-    real :: gs_test
+    ! real :: gs_test
 
     type(outtype_chi) :: out_optchi
 
@@ -689,21 +689,21 @@ contains
   end function co2_to_ca
 
 
-  function ca_to_co2( ca, patm ) result( co2 )
-    !-----------------------------------------------------------------------
-    ! Output:   - co2 in units of Pa
-    ! Features: Converts ca (ambient CO2) from Pa to ppm.
-    !-----------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: ca        ! ambient CO2 in units of Pa
-    real, intent(in) :: patm      ! monthly atm. pressure, Pa
+  ! function ca_to_co2( ca, patm ) result( co2 )
+  !   !-----------------------------------------------------------------------
+  !   ! Output:   - co2 in units of Pa
+  !   ! Features: Converts ca (ambient CO2) from Pa to ppm.
+  !   !-----------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: ca        ! ambient CO2 in units of Pa
+  !   real, intent(in) :: patm      ! monthly atm. pressure, Pa
 
-    ! function return variable
-    real :: co2
+  !   ! function return variable
+  !   real :: co2
 
-    co2   = ca * ( 1.e6 ) / patm
+  !   co2   = ca * ( 1.e6 ) / patm
     
-  end function ca_to_co2
+  ! end function ca_to_co2
 
 
   function calc_kmm( tc, patm ) result( kmm )
@@ -724,7 +724,7 @@ contains
     real, parameter :: kc25 = 39.97      ! Pa, assuming 25 deg C & assuming elevation of 227.076 m.a.s.l.
     real, parameter :: ko25 = 27480      ! Pa, assuming 25 deg C & assuming elevation of 227.076 m.a.s.l.
     real, parameter :: kco  = 2.09476d5  ! ppm, US Standard Atmosphere
-    real :: kc, ko, po, rat, tk
+    real :: kc, ko, po, tk
 
     ! function return variable
     real :: kmm                           ! temperature & pressure dependent Michaelis-Menten coefficient, K (Pa).
