@@ -2056,6 +2056,9 @@ contains
     ! par_mort = myinterface%params_calib_tile%par_mort
 
     ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
+    soiltype    = myinterface%params_tile%soiltype 
+    FLDCAP      = myinterface%params_tile%FLDCAP 
+    WILTPT      = myinterface%params_tile%WILTPT 
     K1          = myinterface%params_tile%K1  
     K2          = myinterface%params_tile%K2
     K_nitrogen  = myinterface%params_tile%K_nitrogen  
@@ -2162,7 +2165,7 @@ contains
       vegn%structuralL = 7.0 ! slow soil carbon pool, (kg C/m2)
       vegn%metabolicN  = vegn%metabolicL/CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
       vegn%structuralN = vegn%structuralL/CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-      vegn%N_input     = N_input  ! kgN m-2 yr-1, N input to soil
+      vegn%N_input     = 0.0008  ! kgN m-2 yr-1, N input to soil
       vegn%mineralN    = 0.005  ! Mineral nitrogen pool, (kg N/m2)
       vegn%previousN   = vegn%mineralN
 
