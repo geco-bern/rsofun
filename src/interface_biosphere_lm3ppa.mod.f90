@@ -39,6 +39,24 @@ module md_interface_lm3ppa
     integer :: lifeform
     integer :: phenotype
     integer :: pt
+    real    :: alpha_FR
+    real    :: rho_FR
+    real    :: root_r
+    real    :: root_zeta
+    real    :: Kw_root
+    real    :: leaf_size
+    real    :: Vmax
+    real    :: Vannual
+    real    :: wet_leaf_dreg
+    real    :: m_cond
+    real    :: alpha_phot
+    real    :: gamma_L
+    real    :: gamma_LN
+    real    :: gamma_SW
+    real    :: gamma_FR
+    real    :: tc_crit
+    real    :: tc_crit_on
+    real    :: gdd_crit
     real    :: seedlingsize
     real    :: LNbase
     real    :: laimax

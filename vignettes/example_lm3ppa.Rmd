@@ -45,17 +45,17 @@ Now specify the simulation parameters that are identical for all site-scale simu
 ```{r}
 params_siml <- tibble( #list
       spinup                = TRUE,
-      spinupyears           = 1800, #1793,
-      recycle               = 1, # 9 or 11 changed to 1 when aggregating forcing into 1 year
-      firstyeartrend        = 1998, #1998
-      nyeartrend            = 1, #9 or 11 (longer transient years)
+      spinupyears           = 1800, # 1793,
+      recycle               = 1,    # 9 or 11 changed to 1 when aggregating forcing into 1 year
+      firstyeartrend        = 1998, # 1998
+      nyeartrend            = 1,    # 9 or 11 (longer transient years)
       outputhourly          = TRUE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
       method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "dbh"         # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -115,6 +115,33 @@ params_species <- tibble(
   lifeform      = rep(1,16),                      # 0 for grasses; 1 for trees
   phenotype     = c(0,1,1,rep(1,13)),             # 0 for Deciduous; 1 for Evergreen
   pt            = rep(0,16),                      # 0 for C3; 1 for C4
+  # Root parameters
+  alpha_FR      = rep(1.2,16),                    # Fine root turnover rate yr-1
+  rho_FR        = rep(200,16),                    # material density of fine roots (kgC m-3)
+  root_r        = rep(2.9E-4,16), 
+  root_zeta     = rep(0.29,16), 
+  Kw_root       = rep(3.5e-09,16),               # mol /(s m2 Mpa)
+  leaf_size     = rep(0.04,16), 
+  
+  # Photosynthesis parameters
+  Vmax          = rep(35.0E-6,16),               # mol m-2 s-1
+  Vannual       = rep(1.2,16),                   # kgC m-2 yr-1
+  wet_leaf_dreg = rep(0.3,16),                   # wet leaf photosynthesis down-regulation: wet leaf is 30% less than dry leaf
+  m_cond        = rep(7.0,16), 
+  alpha_phot    = rep(0.06,16), 
+  gamma_L       = rep(0.02,16), 
+  gamma_LN      = rep(70.5 ,16),  # kgC kgN-1 yr-1
+  gamma_SW      = rep(0.08,16),   # kgC m-2 Acambium yr-1
+  gamma_FR      = rep(12.0,16),   # kgC kgN-1 yr-1
+  tc_crit       = rep(283.16,16),   # OFF
+  tc_crit_on    = rep(280.16,16),   # ON
+  gdd_crit      = rep(280.0,16),   # Simulations 280, 240, 200
+  # Allometry parameters
+  #alphaHT      = rep(36.0,16),   
+  #thetaHT      = rep(0.5,16),   
+  #alphaCA      = rep(150.0,16),   
+  #thetaCA      = rep(1.5,16),   
+  
   seedlingsize  = rep(0.05,16),                   # initial size of seedlings
   LNbase        = rep(0.8E-3,16),                 # kgN m-2 leaf, Vmax = 0.03125*LNbase
   laimax        = rep(3.5,16),                    # maximum crown LAI
@@ -127,8 +154,9 @@ params_species <- tibble(
   fNSNmax       = rep(5,16),                      # multiplier for NSNmax as sum of potential bl and br
   LMA           = c(0.05,0.17,0.11,rep(0.1,13)),  # Leaf mass per unit area. For sps: Beech (0.05); Spruce (0.17) Fir (0.11)
   rho_wood      = c(590,370,350,rep(300,13)),
-  alphaBM       = c(0.19,0.15,0.09,rep(0.15,13)),
-  thetaBM       = c(2.36,2.30,2.54,rep(2.30,13)),
+  alphaBM       = c(0.19,0.15,0.09,rep(0.15,13)), #In Ensheng BiomeE: 5200.0
+  thetaBM       = c(2.36,2.30,2.54,rep(2.30,13)), #In Ensheng BiomeE: 2.5
+  
   
   # add calibratable params
   kphio         = rep(0.05, 16),
