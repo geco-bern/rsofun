@@ -40,7 +40,6 @@ module md_interface_lm3ppa
     integer :: phenotype
     integer :: pt
     real    :: seedlingsize
-    real    :: LMA
     real    :: LNbase
     real    :: laimax
     real    :: Nfixrate0
@@ -50,6 +49,10 @@ module md_interface_lm3ppa
     real    :: mortrate_d_u
     real    :: maturalage
     real    :: fNSNmax
+    real    :: LMA       ! prescribed by sps
+    real    :: rho_wood  ! prescribed by sps
+    real    :: alphaBM   ! prescribed by sps
+    real    :: thetaBM   ! prescribed by sps
     real    :: kphio     ! calibratable
     real    :: phiRL     ! calibratable
     real    :: LAI_light ! calibratable
@@ -69,16 +72,6 @@ module md_interface_lm3ppa
     real :: init_Nmineral
     real :: N_input
   end type inittype_soil
-
-  ! type paramstype_calib_species
-  !   real :: kphio
-  !   real :: phiRL
-  ! end type paramstype_calib_species
-
-  ! type paramstype_calib_tile
-  !   real :: tf_base
-  !   real :: par_mort
-  ! end type paramstype_calib_tile
 
   type interfacetype_biosphere
     integer                                               :: year

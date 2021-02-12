@@ -102,7 +102,7 @@ params_tile <- tibble( #list
   
   # add calibratable params
   tf_base      = 1,
-  par_mort     = 1.9   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
+  par_mort     = 0.6   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
   
   )
 ```
@@ -112,20 +112,23 @@ params_tile <- tibble( #list
 ```{r}
 params_species <- tibble(
   
-  lifeform      = rep(1,16),                 # 0 for grasses; 1 for trees
-  phenotype     = rep(0,16),                 # 0 for Deciduous; 1 for Evergreen
-  pt            = rep(0,16),                 # 0 for C3; 1 for C4
-  seedlingsize  = rep(0.05,16),              # initial size of seedlings
-  LMA           = rep(0.05,16),              # Leaf mass per unit area. For sps: Beech (0.05); Spruce (0.17) Fir (0.11)
-  LNbase        = rep(0.8E-3,16),            # kgN m-2 leaf, Vmax = 0.03125*LNbase
-  laimax        = rep(3.5,16),               # maximum crown LAI
-  Nfixrate0     = rep(0,16),                 # 0.03 kgN kgRootC-1 yr-1
-  NfixCost0     = rep(12,16),                # 12, 24 gC/gN
-  phiCSA        = rep(0.25E-4,16),           # ratio of sapwood area to leaf area
-  mortrate_d_c  = rep(0.01,16),              # canopy tree mortality rate, year-1
-  mortrate_d_u  = rep(0.075,16),             # understory tree mortality rate, year-1
-  maturalage    = rep(5,16),                 # the age that can reproduce
-  fNSNmax       = rep(5,16),                 # multiplier for NSNmax as sum of potential bl and br
+  lifeform      = rep(1,16),                      # 0 for grasses; 1 for trees
+  phenotype     = c(0,1,1,rep(1,13)),             # 0 for Deciduous; 1 for Evergreen
+  pt            = rep(0,16),                      # 0 for C3; 1 for C4
+  seedlingsize  = rep(0.05,16),                   # initial size of seedlings
+  LNbase        = rep(0.8E-3,16),                 # kgN m-2 leaf, Vmax = 0.03125*LNbase
+  laimax        = rep(3.5,16),                    # maximum crown LAI
+  Nfixrate0     = rep(0,16),                      # 0.03 kgN kgRootC-1 yr-1
+  NfixCost0     = rep(12,16),                     # 12, 24 gC/gN
+  phiCSA        = rep(0.25E-4,16),                # ratio of sapwood area to leaf area
+  mortrate_d_c  = rep(0.01,16),                   # canopy tree mortality rate, year-1
+  mortrate_d_u  = rep(0.075,16),                  # understory tree mortality rate, year-1
+  maturalage    = rep(5,16),                      # the age that can reproduce
+  fNSNmax       = rep(5,16),                      # multiplier for NSNmax as sum of potential bl and br
+  LMA           = c(0.05,0.17,0.11,rep(0.1,13)),  # Leaf mass per unit area. For sps: Beech (0.05); Spruce (0.17) Fir (0.11)
+  rho_wood      = c(590,370,350,rep(300,13)),
+  alphaBM       = c(0.19,0.15,0.09,rep(0.15,13)),
+  thetaBM       = c(2.36,2.30,2.54,rep(2.30,13)),
   
   # add calibratable params
   kphio         = rep(0.05, 16),
@@ -295,8 +298,9 @@ df_output$data[[1]]$output_annual_tile %>%
 
 df_output$data[[1]]$output_annual_tile %>% 
   ggplot() +
-  geom_line(aes(x = log(QMD), y = log(Density12))) + 
-  theme_classic()+labs(x = "Ln(QMD)", y = "Ln(N)")
+  geom_point(aes(x = log(QMD), y = log(Density12))) + 
+  theme_classic()+labs(x = "Ln(QMD)", y = "Ln(N)") +
+  scale_x_continuous(limits = c(-2.5,0))
 
 # For manual calibration
 compa_inits
@@ -411,8 +415,8 @@ settings_calib_DBH <- list(
   name                = "ORG",
   par                 = list(kphio = list(lower=0.04, upper=0.1, init=0.05),
                              phiRL = list(lower=1, upper=8, init=3.5),
-                             LAI_light = list(lower=1, upper=8, init=3),
-                             tf_base = list(lower=0.2, upper=6, init=2),
+                             LAI_light = list(lower=1, upper=8, init=4),
+                             tf_base = list(lower=0.2, upper=6, init=1),
                              par_mort = list(lower=0.01, upper=1, init=0.6))
  )
 
@@ -421,14 +425,15 @@ settings_calib_NSC <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 9, # (5 for gensa) (30 for optimr)
+  maxit               = 12, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
   par                 = list(kphio = list(lower=0.04, upper=0.1, init=0.05),
                              phiRL = list(lower=1, upper=8, init=3.5),
-                             tf_base = list(lower=0.2, upper=5, init=1),
+                             LAI_light = list(lower=1, upper=8, init=4),
+                             tf_base = list(lower=0.2, upper=6, init=1),
                              par_mort = list(lower=-3, upper=-1, init=-2))
  )
 
@@ -569,6 +574,7 @@ LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
 sort(unique(LAE_data$SPECIES))
 
 load("~/data/biomass/d_param.rda")
+d_param %>% dplyr::filter(equation_n==3,component_n=="Aboveground") 
 
 # Aboveground
 
@@ -635,10 +641,27 @@ densityFir   <- LAE_nTrees[[2,3]]/LAE_ha
 
 ```
 
+TARGET 5. DBH higher than 12 cm 
+
+```{r}
+LAE_data <- read_csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
+LAE_data <- LAE_data %>% 
+  mutate(DBH_cm = UMFANG/pi)
+LAE_nTrees <- LAE_data %>% 
+  dplyr::filter(DBH_cm >= 12)
+
+# For all tree species
+LAE_DBH <- LAE_nTrees %>% 
+  group_by(INVYEAR) %>% 
+  summarise(meanDBH=mean(DBH_cm))
+DBHLAE <- LAE_DBH[[1,2]]/100 # DBH in m
+
+```
+
 Prepare the observed target variables: ddf_obs
 
 ```{r}
-ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityLAE, Biomass=BiomassLAE) %>%
+ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityLAE, Biomass=BiomassLAE, DBH=DBHLAE) %>%
   pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
   #gather("variables", "targets_obs",GPP,LAI,Density,Biomass)
 
@@ -652,8 +675,8 @@ Contrast observed vs. simulated targets
 
 df_output$data[[1]]$output_annual_tile %>%
   tail(500) %>%
-  summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
-  gather("variables", "targets_mod",GPP,LAI,Density,Biomass) %>%
+  summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC), DBH=mean(DBH12)) %>%  
+  gather("variables", "targets_mod",GPP,LAI,Density,Biomass,DBH) %>%
   left_join(ddf_obs)
 
 ```
@@ -673,7 +696,7 @@ print(settings_calib_CST$par_opt)
 save(settings_calib_CST, file = "~/data/settings_calib_CST.RData")
 
 ## Mortality as tree size
-set.seed(1152)
+set.seed(3152)
 settings_calib_DBH <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
@@ -684,7 +707,7 @@ print(settings_calib_DBH$par_opt)
 save(settings_calib_DBH, file = "~/data/settings_calib_DBH.RData")
 
 ## Mortality as carbon starvation
-set.seed(352)
+set.seed(1352)
 settings_calib_NSC <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,

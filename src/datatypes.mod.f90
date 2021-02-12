@@ -472,8 +472,8 @@ module datatypes
   real :: thetaHT(0:MSPECIES)      = 0.5 
   real :: alphaCA(0:MSPECIES)      = 150.0
   real :: thetaCA(0:MSPECIES)      = 1.5
-  real :: alphaBM(0:MSPECIES)      = 5200.0
-  real :: thetaBM(0:MSPECIES)      = 2.36 ! Beech (2.36); Spruce (2.30); Fir (2.45)
+  ! real :: alphaBM(0:MSPECIES)      = !In Ensheng BiomeE: 5200.0
+  ! real :: thetaBM(0:MSPECIES)      = 2.36 ! Beech (2.36); Spruce (2.30); Fir (2.45) In Ensheng BiomeE: 2.5
 
   ! Reproduction parameters
   ! real :: maturalage(0:MSPECIES) = 5.0  ! year
@@ -488,14 +488,13 @@ module datatypes
 
   ! Leaf parameters
   ! real :: LMA(0:MSPECIES)         = 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2 LMA = 1/SLA 0.05 for Fagus
-  !(/0.04,    0.04,    0.035,   0.035,   0.140,  0.032, 0.032,  0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036  /)
   real :: leafLS(0:MSPECIES) = 1.0
   ! real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
   real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
-  real :: rho_wood(0:MSPECIES)      = 590.0 ! kgC m-3 (Simulations: 300, 600, 800) Beech (590); Spruce (370); Fir (350)
+  ! real :: rho_wood(0:MSPECIES)      = 590.0 ! kgC m-3 (Simulations: 300, 600, 800) Beech (590); Spruce (370); Fir (350)
   real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
   real :: LAImax(0:MSPECIES)        != 3.5 ! maximum LAI for a tree
-  ! real :: LAI_light(0:MSPECIES)     = 4.0 ! maximum LAI limited by light
+  ! real :: LAI_light(0:MSPECIES)     != 4.0 ! maximum LAI limited by light
   real :: tauNSC(0:MSPECIES)        = 3 ! 3 ! NSC residence time,years
   ! real :: fNSNmax(0:MSPECIES)       = 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
   ! real :: phiRL(0:MSPECIES)       = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
@@ -620,8 +619,8 @@ contains
     spdata%thetaHT       = thetaHT
     spdata%alphaCA       = alphaCA
     spdata%thetaCA       = thetaCA
-    spdata%alphaBM       = alphaBM
-    spdata%thetaBM       = thetaBM
+    spdata%alphaBM       = myinterface%params_species(:)%alphaBM
+    spdata%thetaBM       = myinterface%params_species(:)%thetaBM
     spdata%maturalage    = myinterface%params_species(:)%maturalage
     spdata%v_seed        = v_seed
     spdata%seedlingsize  = myinterface%params_species(:)%seedlingsize
@@ -629,7 +628,7 @@ contains
     spdata%prob_e        = prob_e
     spdata%mortrate_d_c  = myinterface%params_species(:)%mortrate_d_c
     spdata%mortrate_d_u  = myinterface%params_species(:)%mortrate_d_u
-    spdata%rho_wood      = rho_wood
+    spdata%rho_wood      = myinterface%params_species(:)%rho_wood
     spdata%taperfactor   = taperfactor
     spdata%laimax        = myinterface%params_species(:)%laimax
     spdata%underLAImax   = laimax

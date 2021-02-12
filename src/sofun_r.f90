@@ -555,19 +555,22 @@ contains
     myinterface%params_species(:)%phenotype    = int( params_species(:,2))
     myinterface%params_species(:)%pt           = int( params_species(:,3))
     myinterface%params_species(:)%seedlingsize = real( params_species(:,4))
-    myinterface%params_species(:)%LMA          = real( params_species(:,5))
-    myinterface%params_species(:)%LNbase       = real( params_species(:,6))
-    myinterface%params_species(:)%laimax       = real( params_species(:,7))
-    myinterface%params_species(:)%Nfixrate0    = real( params_species(:,8))
-    myinterface%params_species(:)%NfixCost0    = real( params_species(:,9))
-    myinterface%params_species(:)%phiCSA       = real( params_species(:,10))
-    myinterface%params_species(:)%mortrate_d_c = real( params_species(:,11))
-    myinterface%params_species(:)%mortrate_d_u = real( params_species(:,12))
-    myinterface%params_species(:)%maturalage   = real( params_species(:,13))
-    myinterface%params_species(:)%fNSNmax      = real( params_species(:,14))
-    myinterface%params_species(:)%kphio        = real( params_species(:,15)) ! calibratable
-    myinterface%params_species(:)%phiRL        = real( params_species(:,16)) ! calibratable
-    myinterface%params_species(:)%LAI_light    = real( params_species(:,17)) ! calibratable
+    myinterface%params_species(:)%LNbase       = real( params_species(:,5))
+    myinterface%params_species(:)%laimax       = real( params_species(:,6))
+    myinterface%params_species(:)%Nfixrate0    = real( params_species(:,7))
+    myinterface%params_species(:)%NfixCost0    = real( params_species(:,8))
+    myinterface%params_species(:)%phiCSA       = real( params_species(:,9))
+    myinterface%params_species(:)%mortrate_d_c = real( params_species(:,10))
+    myinterface%params_species(:)%mortrate_d_u = real( params_species(:,11))
+    myinterface%params_species(:)%maturalage   = real( params_species(:,12))
+    myinterface%params_species(:)%fNSNmax      = real( params_species(:,13))
+    myinterface%params_species(:)%LMA          = real( params_species(:,14)) ! prescribed
+    myinterface%params_species(:)%rho_wood     = real( params_species(:,15)) ! prescribed
+    myinterface%params_species(:)%alphaBM      = real( params_species(:,16)) ! prescribed
+    myinterface%params_species(:)%thetaBM      = real( params_species(:,17)) ! prescribed
+    myinterface%params_species(:)%kphio        = real( params_species(:,18)) ! calibratable
+    myinterface%params_species(:)%phiRL        = real( params_species(:,19)) ! calibratable
+    myinterface%params_species(:)%LAI_light    = real( params_species(:,20)) ! calibratable
 
     ! Initial cohort sizes
     myinterface%init_cohort(:)%init_cohort_species = real(init_cohort(:,1))
