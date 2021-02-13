@@ -62,11 +62,11 @@ module md_gpp_pmodel
   !----------------------------------------------------------------
   ! Module-specific state variables
   !----------------------------------------------------------------
-  real, dimension(npft) :: dassim           ! daily leaf-level assimilation rate (per unit leaf area) [gC/m2/d]
+  ! real, dimension(npft) :: dassim           ! daily leaf-level assimilation rate (per unit leaf area) [gC/m2/d]
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, do_soilmstress, do_tempstress, init)
+  subroutine gpp( tile, tile_fluxes, co2, climate, do_soilmstress, do_tempstress, init)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -82,7 +82,7 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     real, intent(in)    :: co2                               ! atmospheric CO2 (ppm)
     type(climate_type)  :: climate
-    type(vegcover_type) :: vegcover
+    ! type(vegcover_type) :: vegcover
     logical, intent(in) :: do_soilmstress                    ! whether empirical soil miosture stress function is applied to GPP
     logical, intent(in) :: do_tempstress                     ! whether empirical temperature stress function is applied to GPP
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
@@ -152,7 +152,7 @@ contains
     ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
     !----------------------------------------------------------------
     if (do_soilmstress) then
-      soilmstress = calc_soilmstress( tile(1)%soil%phy%wscal, 0.0, params_pft_plant(1)%grass )
+      soilmstress = calc_soilmstress( tile(1)%soil%phy%wscal, 0.0 )
     else
       soilmstress = 1.0
     end if    
@@ -304,52 +304,52 @@ contains
   end function calc_dgpp
 
 
-  function calc_dassim( dgpp, daylength ) result( my_dassim )
-    !//////////////////////////////////////////////////////////////////
-    ! Calculates assimilation rate, mean over daylight hours.
-    ! Use *_unitfapar to get something representative of top-of-canopy.
-    !------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: dgpp            ! daily total GPP (g CO2 m-2 d-1)
-    real, intent(in) :: daylength       ! day length (h)
+  ! function calc_dassim( dgpp, daylength ) result( my_dassim )
+  !   !//////////////////////////////////////////////////////////////////
+  !   ! Calculates assimilation rate, mean over daylight hours.
+  !   ! Use *_unitfapar to get something representative of top-of-canopy.
+  !   !------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: dgpp            ! daily total GPP (g CO2 m-2 d-1)
+  !   real, intent(in) :: daylength       ! day length (h)
 
-    ! function return variable
-    real :: my_dassim                   ! canopy mean assimilation rate, mean over daylight hours (mol CO2 m-2 s-1)
+  !   ! function return variable
+  !   real :: my_dassim                   ! canopy mean assimilation rate, mean over daylight hours (mol CO2 m-2 s-1)
 
-    ! Assimilation rate, average over daylight hours
-    if (daylength>0.0) then
-      my_dassim = dgpp / ( 60.0 * 60.0 * daylength * c_molmass )
-    else
-      my_dassim = 0.0
-    end if
+  !   ! Assimilation rate, average over daylight hours
+  !   if (daylength>0.0) then
+  !     my_dassim = dgpp / ( 60.0 * 60.0 * daylength * c_molmass )
+  !   else
+  !     my_dassim = 0.0
+  !   end if
 
-  end function calc_dassim
+  ! end function calc_dassim
 
 
-  function calc_dgs( dassim, vpd, ca, gammastar, xi ) result( dgs )
-    !//////////////////////////////////////////////////////////////////
-    ! Calculates leaf-level stomatal conductance to CO2.
-    ! This uses instantaneous VPD and is therefore not calculated inside
-    ! the P-model function. The slope parameter 'xi' is representative
-    ! for the acclimated response.
-    !------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: dassim          ! daily mean assimilation rate (mol CO2 m-2 s-1)
-    real, intent(in) :: vpd             ! vapour pressure deficit (Pa)
-    real, intent(in) :: ca              ! ambient CO2 partial pressure (Pa)
-    real, intent(in) :: gammastar       ! CO2 compensation point (Pa)
-    real, intent(in) :: xi              ! slope parameter of stomatal response derived from P-model optimality, corresponding to sqrt(beta*(K+gammastar)/(1.6*etastar)) (Pa)
-    ! real, intent(in) :: dgs_unitiabs    ! stomatal conductance per unit absorbed light (mol CO2 Pa-1 m-2 s-1 / mol light)
+  ! function calc_dgs( dassim, vpd, ca, gammastar, xi ) result( dgs )
+  !   !//////////////////////////////////////////////////////////////////
+  !   ! Calculates leaf-level stomatal conductance to CO2.
+  !   ! This uses instantaneous VPD and is therefore not calculated inside
+  !   ! the P-model function. The slope parameter 'xi' is representative
+  !   ! for the acclimated response.
+  !   !------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: dassim          ! daily mean assimilation rate (mol CO2 m-2 s-1)
+  !   real, intent(in) :: vpd             ! vapour pressure deficit (Pa)
+  !   real, intent(in) :: ca              ! ambient CO2 partial pressure (Pa)
+  !   real, intent(in) :: gammastar       ! CO2 compensation point (Pa)
+  !   real, intent(in) :: xi              ! slope parameter of stomatal response derived from P-model optimality, corresponding to sqrt(beta*(K+gammastar)/(1.6*etastar)) (Pa)
+  !   ! real, intent(in) :: dgs_unitiabs    ! stomatal conductance per unit absorbed light (mol CO2 Pa-1 m-2 s-1 / mol light)
 
-    ! function return variable
-    real :: dgs                         ! leaf-level stomatal conductance to H2O, mean over daylight hours ( mol CO2 Pa-1 m-2 s-1 )
+  !   ! function return variable
+  !   real :: dgs                         ! leaf-level stomatal conductance to H2O, mean over daylight hours ( mol CO2 Pa-1 m-2 s-1 )
 
-    ! Leaf-level assimilation rate, average over daylight hours
-    ! dgs = dassim * dgs_unitiabs
-    dgs = (1.0 + xi / sqrt(vpd)) * dassim / (ca - gammastar)
-    ! print*,'instantaneous gs: ', dgs 
+  !   ! Leaf-level assimilation rate, average over daylight hours
+  !   ! dgs = dassim * dgs_unitiabs
+  !   dgs = (1.0 + xi / sqrt(vpd)) * dassim / (ca - gammastar)
+  !   ! print*,'instantaneous gs: ', dgs 
     
-  end function calc_dgs
+  ! end function calc_dgs
 
 
   function calc_drd( fapar, fpc_grid, dppfd, rd_unitiabs, ftemp_kphio, soilmstress ) result( my_drd )
@@ -375,72 +375,72 @@ contains
   end function calc_drd
 
 
-  function calc_dtransp( fapar, acrown, dppfd, transp_unitiabs, ftemp_kphio, soilmstress ) result( my_dtransp )
-    !//////////////////////////////////////////////////////////////////
-    ! Calculates daily transpiration. 
-    ! Exploratory only.
-    ! Not described in Stocker et al., XXX.
-    !------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: fapar
-    real, intent(in) :: acrown
-    real, intent(in) :: dppfd              ! daily total photon flux density, mol m-2
-    real, intent(in) :: transp_unitiabs
-    real, intent(in) :: ftemp_kphio              ! this day's air temperature
-    real, intent(in) :: soilmstress        ! soil moisture stress factor
+  ! function calc_dtransp( fapar, acrown, dppfd, transp_unitiabs, ftemp_kphio, soilmstress ) result( my_dtransp )
+  !   !//////////////////////////////////////////////////////////////////
+  !   ! Calculates daily transpiration. 
+  !   ! Exploratory only.
+  !   ! Not described in Stocker et al., XXX.
+  !   !------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: fapar
+  !   real, intent(in) :: acrown
+  !   real, intent(in) :: dppfd              ! daily total photon flux density, mol m-2
+  !   real, intent(in) :: transp_unitiabs
+  !   real, intent(in) :: ftemp_kphio              ! this day's air temperature
+  !   real, intent(in) :: soilmstress        ! soil moisture stress factor
 
-    ! function return variable
-    real :: my_dtransp
+  !   ! function return variable
+  !   real :: my_dtransp
 
-    ! GPP is light use efficiency multiplied by absorbed light and C-P-alpha
-    my_dtransp = fapar * acrown * dppfd * soilmstress * transp_unitiabs * ftemp_kphio * h2o_molmass
+  !   ! GPP is light use efficiency multiplied by absorbed light and C-P-alpha
+  !   my_dtransp = fapar * acrown * dppfd * soilmstress * transp_unitiabs * ftemp_kphio * h2o_molmass
 
-  end function calc_dtransp
-
-
-  function calc_vcmax_canop( fapar, vcmax_unitiabs, meanmppfd ) result( my_vcmax )
-    !//////////////////////////////////////////////////////////////////
-    ! Calculates canopy-level summed carboxylation capacity (Vcmax). To get
-    ! value per unit leaf area, divide by LAI.
-    ! Not described in Stocker et al., XXX.
-    !------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: fapar
-    real, intent(in) :: vcmax_unitiabs
-    real, intent(in) :: meanmppfd
-
-    ! function return variable
-    real :: my_vcmax    ! canopy-level Vcmax [gCO2/m2-ground/s]
-
-    ! Calculate leafy-scale Rubisco-N as a function of LAI and current LUE
-    my_vcmax = fapar * meanmppfd * vcmax_unitiabs
-
-  end function calc_vcmax_canop
+  ! end function calc_dtransp
 
 
-  function calc_g_canopy( g_stomata, lai, tk ) result( g_canopy )
-    !/////////////////////////////////////////////////////////////////////////
-    ! Calculates canopy conductance, proportional to the leaf area index.
-    ! Since g_stomata is taken here from the photosynthesis module, we don't 
-    ! use Eq. 8 in Zhang et al. (2017).
-    !-------------------------------------------------------------------------
-    use md_params_core, only: kR
+  ! function calc_vcmax_canop( fapar, vcmax_unitiabs, meanmppfd ) result( my_vcmax )
+  !   !//////////////////////////////////////////////////////////////////
+  !   ! Calculates canopy-level summed carboxylation capacity (Vcmax). To get
+  !   ! value per unit leaf area, divide by LAI.
+  !   ! Not described in Stocker et al., XXX.
+  !   !------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: fapar
+  !   real, intent(in) :: vcmax_unitiabs
+  !   real, intent(in) :: meanmppfd
 
-    ! arguments
-    real, intent(in) :: g_stomata      ! stomatal conductance (mol CO2 Pa-1 m-2 s-1)
-    real, intent(in) :: lai            ! leaf area index, single-sided (unitless)
-    real, intent(in) :: tk             ! (leaf) temperature (K)
+  !   ! function return variable
+  !   real :: my_vcmax    ! canopy-level Vcmax [gCO2/m2-ground/s]
 
-    ! function return variable
-    real :: g_canopy    ! canopy conductance (m s-1)
+  !   ! Calculate leafy-scale Rubisco-N as a function of LAI and current LUE
+  !   my_vcmax = fapar * meanmppfd * vcmax_unitiabs
 
-    ! canopy conductance scales with LAI. Including unit conversion to m s-1.
-    g_canopy = 1.6 * g_stomata * kR * tk * lai
-
-  end function calc_g_canopy
+  ! end function calc_vcmax_canop
 
 
-  function calc_soilmstress( soilm, meanalpha, isgrass ) result( outstress )
+  ! function calc_g_canopy( g_stomata, lai, tk ) result( g_canopy )
+  !   !/////////////////////////////////////////////////////////////////////////
+  !   ! Calculates canopy conductance, proportional to the leaf area index.
+  !   ! Since g_stomata is taken here from the photosynthesis module, we don't 
+  !   ! use Eq. 8 in Zhang et al. (2017).
+  !   !-------------------------------------------------------------------------
+  !   use md_params_core, only: kR
+
+  !   ! arguments
+  !   real, intent(in) :: g_stomata      ! stomatal conductance (mol CO2 Pa-1 m-2 s-1)
+  !   real, intent(in) :: lai            ! leaf area index, single-sided (unitless)
+  !   real, intent(in) :: tk             ! (leaf) temperature (K)
+
+  !   ! function return variable
+  !   real :: g_canopy    ! canopy conductance (m s-1)
+
+  !   ! canopy conductance scales with LAI. Including unit conversion to m s-1.
+  !   g_canopy = 1.6 * g_stomata * kR * tk * lai
+
+  ! end function calc_g_canopy
+
+
+  function calc_soilmstress( soilm, meanalpha ) result( outstress )
     !//////////////////////////////////////////////////////////////////
     ! Calculates empirically-derived stress (fractional reduction in light 
     ! use efficiency) as a function of soil moisture
@@ -451,7 +451,7 @@ contains
     ! argument
     real, intent(in) :: soilm                 ! soil water content (fraction)
     real, intent(in) :: meanalpha             ! mean annual AET/PET, average over multiple years (fraction)
-    logical, intent(in), optional :: isgrass  ! vegetation cover information to distinguish sensitivity to low soil moisture
+    ! logical, intent(in), optional :: isgrass  ! vegetation cover information to distinguish sensitivity to low soil moisture
 
     real, parameter :: x0 = 0.0
     real, parameter :: x1 = 0.6
@@ -507,9 +507,6 @@ contains
     ! Subroutine reads module-specific parameters from input file.
     !----------------------------------------------------------------
     use md_sofunutils, only: getparreal
-
-    ! local variables
-    integer :: pft
 
     !----------------------------------------------------------------
     ! PFT-independent parameters

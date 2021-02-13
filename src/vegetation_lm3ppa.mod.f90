@@ -32,19 +32,13 @@ contains
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type), intent(in) :: forcing
-    logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
+    logical, intent(in) :: init       ! is true on the very first simulation day (first subroutine call of each gridcell)
 
     ! local variables
-    type(cohort_type), pointer :: cc  ! current cohort
+    type(cohort_type), pointer :: cc  
     integer:: i
-    real   :: tair, tsoil ! temperature of soil, degC
-    real   :: theta ! soil wetness, unitless
-
-    real   :: NSC_supply,LR_demand,LR_deficit
-    real   :: LeafGrowthMin, RootGrowthMin,NSCtarget,v
-    real   :: LR_growth,WS_growth
-    real   :: R_days,fNSC,fLFR,fStem
-    integer:: layer
+    real   :: tair, tsoil  ! temperature of soil, degC
+    real   :: theta        ! soil wetness, unitless
 
     ! Climatic variable
     tair   = forcing%Tair - 273.16   ! conversion to degC
@@ -99,16 +93,14 @@ contains
     !----------------------------------------------------------------------
     type(cohort_type), intent(inout) :: cc
     real, intent(in) :: tairK ! degK
-    ! local variables
-    real :: tf, tfs, tf_base ! thermal inhibition factors for above- and below-ground biomass
-    real :: r_leaf, r_stem, r_root
+    real :: tf, tfs ! thermal inhibition factors for above- and below-ground biomass
+    real :: r_stem, r_root
     real :: Acambium  ! cambium area, m2/tree
-
-    ! real :: LeafN     ! leaf nitrogen, kgN/Tree
-    real :: fnsc,NSCtarget,exp_acambium ! used to regulation respiration rate
+    real :: fnsc,exp_acambium ! used to regulation respiration rate !NSCtarget
     real :: r_Nfix    ! respiration due to N fixation
     integer :: sp ! shorthand for cohort species
     sp = cc%species
+    tf_base = myinterface%params_tile%tf_base
     
     ! temperature response function
     tf  = tf_base * exp(9000.0 * (1.0/298.16 - 1.0/tairK))
@@ -160,14 +152,10 @@ contains
     type(cohort_type), intent(inout) :: cc
     
     ! local variables
-    logical :: woody
-    ! logical :: dormant,growing
     real :: NSCtarget
-    real :: C_push, C_pull, growthC
-    real :: N_push, N_pull, growthN
+    real :: C_push, C_pull
+    real :: N_push, N_pull
     real :: LFR_rate ! make these two variables to PFT-specific parameters
-    ! real :: bl_max, br_max
-    real :: resp_growth
     ! make these two variables to PFT-specific parameters
     LFR_rate = 1.0 ! 1.0/5.0 ! filling rate/day
     associate ( sp => spdata(cc%species) )
@@ -373,7 +361,7 @@ contains
         cc%DBH       = cc%DBH       + dDBH
         cc%height    = cc%height    + dHeight
         cc%crownarea = cc%crownarea + dCA
-        cc%leafarea  = leaf_area_from_biomass(cc%bl, cc%species, cc%layer, cc%firstlayer)
+        cc%leafarea  = leaf_area_from_biomass(cc%bl, cc%species)
         cc%lai       = cc%leafarea/cc%crownarea !(cc%crownarea *(1.0-sp%internal_gap_frac))
         vegn%LAI     = vegn%LAI + cc%leafarea  * cc%nindivs
 
@@ -500,8 +488,7 @@ contains
     ! real    :: BL_u,BL_c
     real    :: ccNSC, ccNSN
     logical :: cc_firstday = .false.
-    logical :: growingseason
-    logical :: TURN_ON_life, TURN_OFF_life
+    logical :: TURN_ON_life = .false., TURN_OFF_life
 
     vegn%litter = 0   ! daily litter
 
@@ -633,7 +620,7 @@ contains
         dNR = 0.0
       endif
 
-      dAleaf = leaf_area_from_biomass(dBL,cc%species,cc%layer,cc%firstlayer)
+      dAleaf = leaf_area_from_biomass(dBL,cc%species)
 
       !       Retranslocation to NSC and NSN
       cc%nsc = cc%nsc + l_fract  * (dBL + dBR + dBStem)
@@ -651,7 +638,7 @@ contains
       cc%NPPleaf = cc%NPPleaf - l_fract * dBL
       cc%NPProot = cc%NPProot - l_fract * dBR
       cc%NPPwood = cc%NPPwood - l_fract * dBStem
-      cc%leafarea= leaf_area_from_biomass(cc%bl,cc%species,cc%layer,cc%firstlayer)
+      cc%leafarea= leaf_area_from_biomass(cc%bl,cc%species)
       cc%lai     = cc%leafarea/(cc%crownarea *(1.0-sp%internal_gap_frac))
 
       ! Update plant size (for grasses)∫
@@ -682,7 +669,7 @@ contains
   end subroutine Seasonal_fall
 
 
-  subroutine vegn_nat_mortality (vegn, deltat)
+  subroutine vegn_nat_mortality (vegn)
     !////////////////////////////////////////////////////////////////
     ! Determines mortality and updates tile
     !---------------------------------------------------------------
@@ -690,14 +677,14 @@ contains
     
     !   TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
     type(vegn_tile_type), intent(inout) :: vegn
-    real, intent(in) :: deltat ! seconds since last mortality calculations, s
+    ! real, intent(in) :: deltat ! seconds since last mortality calculations, s
 
     ! ---- local vars
     type(cohort_type), pointer :: cc => null()
     ! type(spec_data_type),   pointer :: sp
 
     ! integer :: idx(vegn%n_cohorts)
-    real :: deathrate ! mortality rate, 1/year
+    real :: deathrate = 0 ! mortality rate, 1/year
     real :: deadtrees ! number of trees that died over the time step
     integer :: totCC,i,k
     ! real :: nindivs_new, frac_new
@@ -1316,7 +1303,7 @@ contains
       dBR    = cc%br    * sp%alpha_FR /days_per_year
       dNR    = cc%rootN * sp%alpha_FR /days_per_year
 
-      dAleaf = leaf_area_from_biomass(dBL, cc%species, cc%layer, cc%firstlayer)
+      dAleaf = leaf_area_from_biomass(dBL, cc%species)
 
       ! Retranslocation to NSC and NSN
       cc%nsc = cc%nsc + l_fract  * (dBL + dBR + dBStem)
@@ -1332,7 +1319,7 @@ contains
       cc%rootN = cc%rootN - dNR
 
       ! update leaf area and LAI
-      cc%leafarea= leaf_area_from_biomass(cc%bl, cc%species, cc%layer, cc%firstlayer)
+      cc%leafarea= leaf_area_from_biomass(cc%bl, cc%species)
       cc%lai     = cc%leafarea / (cc%crownarea *(1.0-sp%internal_gap_frac))
 
       !    update NPP for leaves, fine roots, and wood
@@ -1815,7 +1802,7 @@ contains
       c2%NSN   = x1*c1%NSN   + x2*c2%NSN
       
       !  calculate the resulting dry heat capacity
-      c2%leafarea = leaf_area_from_biomass(c2%bl, c2%species, c2%layer, c2%firstlayer)
+      c2%leafarea = leaf_area_from_biomass(c2%bl, c2%species)
       call init_cohort_allometry(c2) !Enseng comments
     endif
 
@@ -2010,14 +1997,14 @@ contains
   end subroutine vegn_annualLAImax_update
 
 
-  function leaf_area_from_biomass(bl,species,layer,firstlayer) result (area)
+  function leaf_area_from_biomass(bl,species) result (area)
     !////////////////////////////////////////////////////////////////
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     real :: area ! returned value
     real,    intent(in) :: bl      ! biomass of leaves, kg C/individual
     integer, intent(in) :: species ! species
-    integer, intent(in) :: layer, firstlayer
+    ! integer, intent(in) :: layer, firstlayer
     ! modified by Weng (2014-01-09), 07-18-2017
     area = bl/spdata(species)%LMA
     !if (layer > 1.AND. firstlayer == 0) then
@@ -2082,7 +2069,7 @@ contains
         cx         => vegn%cohorts(i)
         cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
         cx%layer   = 1
-        cx%species = myinterface%init_cohort(i)%init_cohort_species 
+        cx%species = INT(myinterface%init_cohort(i)%init_cohort_species)
         cx%ccID    =  i
         cx%nsc     = myinterface%init_cohort(i)%init_cohort_nsc
         cx%nindivs = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2

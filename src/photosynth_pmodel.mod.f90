@@ -98,13 +98,13 @@ contains
     real :: iabs                ! absorbed photosynthetically active radiation (mol/m2)
     real :: kmm                 ! Michaelis-Menten coefficient (Pa)
     real :: gammastar           ! photorespiratory compensation point - Gamma-star (Pa)
-    real :: ca                  ! ambient CO2 partial pressure, (Pa)
-    real :: gs                  ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
-    real :: gs_unitfapar        ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
-    real :: gs_unitiabs         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
+    real :: ca = 0              ! ambient CO2 partial pressure, (Pa)
+    real :: gs = 0              ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
+    real :: gs_unitfapar = 0    ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
+    real :: gs_unitiabs = 0     ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
     real :: ci                  ! leaf-internal partial pressure, (Pa)
     real :: chi                 ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
-    real :: xi                  ! relative cost parameter, Eq. 9 in Stocker et al., 2019
+    real :: xi = 0              ! relative cost parameter, Eq. 9 in Stocker et al., 2019
     real :: ns                  ! viscosity of H2O at ambient temperatures (Pa s)
     real :: ns25                ! viscosity of H2O at 25 deg C (Pa s)
     real :: ns_star             ! viscosity correction factor (unitless)
@@ -489,7 +489,6 @@ contains
     out_pmodel%gs_unitfapar     = gs_unitfapar
     out_pmodel%gs               = gs
 
-
   end function pmodel
 
 
@@ -516,7 +515,7 @@ contains
     real :: xi                    ! relative cost parameter
     real :: gamma                 ! variable substitute
     real :: kappa                 ! variable substitute
-    real :: mc, mj, mjoc          ! ci-limitation factor Rubisco- and light-limited assimilation and their ratio, resp.
+    real :: mc, mj=0, mjoc          ! ci-limitation factor Rubisco- and light-limited assimilation and their ratio, resp.
 
     ! variable substitutes
     real :: vdcg, vacg, vbkg, vsr

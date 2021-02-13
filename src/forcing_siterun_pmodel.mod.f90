@@ -48,7 +48,7 @@ module md_forcing_pmodel
 
 contains
 
-  function getclimate( nt, forcing, init, climateyear_idx, in_ppfd, in_netrad, elv ) result ( out_climate )
+  function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad, elv ) result ( out_climate )
   ! function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
@@ -59,7 +59,7 @@ contains
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
     real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    logical, intent(in) :: init
+    ! logical, intent(in) :: init
     integer, intent(in) :: climateyear_idx
     logical, intent(in) :: in_ppfd
     logical, intent(in) :: in_netrad

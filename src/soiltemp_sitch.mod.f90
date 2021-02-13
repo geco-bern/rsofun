@@ -35,11 +35,11 @@ module md_soiltemp
   !----------------------------------------------------------------
   ! Module-specific daily output variables
   !----------------------------------------------------------------
-  real, allocatable, dimension(:,:,:) :: outdtemp_soil
+  ! real, allocatable, dimension(:,:,:) :: outdtemp_soil
 
 contains
 
-  subroutine soiltemp( soil, dtemp, ngridcells, init, jpngr, moy, doy ) 
+  subroutine soiltemp( soil, dtemp, ngridcells, jpngr, moy, doy ) 
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil temperature based on.
     !-------------------------------------------------------------------------
@@ -55,7 +55,7 @@ contains
     integer, intent(in)                              :: doy        ! current day of year
     real, dimension(ndayyear), intent(in)            :: dtemp        ! daily temperature (deg C)
     integer, intent(in)                              :: ngridcells
-    logical, intent(in)                              :: init
+    ! logical, intent(in)                              :: init
 
     ! local variables
     real, dimension(:,:), allocatable, save   :: dtemp_pvy    ! daily temperature of previous year (deg C)

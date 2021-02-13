@@ -76,7 +76,7 @@ module md_waterbal
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, KNOWN PARAMETERS
   !----------------------------------------------------------------
-  logical :: outenergy = .true.
+  ! logical :: outenergy = .true.
 
   ! !----------------------------------------------------------------
   ! ! Module-specific rolling mean variables
@@ -89,13 +89,13 @@ module md_waterbal
   ! !----------------------------------------------------------------
   ! real, dimension(nlu) :: rlmalpha
 
-  character(len=7) :: in_ppfd       ! information whether PPFD is prescribed from meteo file for global attribute in NetCDF file
+  ! character(len=7) :: in_ppfd       ! information whether PPFD is prescribed from meteo file for global attribute in NetCDF file
 
   logical, parameter :: splashtest = .false.
 
 contains
 
-  subroutine waterbal( tile, tile_fluxes, grid, climate, doy ) !, lai, fapar, h_canopy, g_stomata )
+  subroutine waterbal( tile, tile_fluxes, grid, climate ) !, lai, fapar, h_canopy, g_stomata )
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil water balance
     !-------------------------------------------------------------------------
@@ -104,12 +104,10 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(gridtype), intent(in)                            :: grid
     type(climate_type), intent(in)                        :: climate
-    integer, intent(in) :: doy          ! day of year
+    ! integer, intent(in) :: doy          ! day of year
 
     ! local variables
     type(outtype_snow_rain) :: out_snow_rain
-    real                    :: g_aero
-    real                    :: g_canopy
     integer                 :: lu              ! land unit (gridcell tile)
     real                    :: sw              ! evaporative supply rate (mm/h)
 
@@ -122,7 +120,7 @@ contains
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
       !---------------------------------------------------------
-      call calc_et( tile(lu), tile_fluxes(lu), grid, climate, sw )
+      call calc_et( tile_fluxes(lu), grid, climate, sw )
 
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
@@ -301,7 +299,7 @@ contains
   end subroutine solar
 
 
-  subroutine calc_et( tile, tile_fluxes, grid, climate, sw )
+  subroutine calc_et( tile_fluxes, grid, climate, sw )
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
@@ -309,7 +307,7 @@ contains
     use md_sofunutils, only: calc_patm
 
     ! arguments
-    type(tile_type), intent(inout)        :: tile
+    ! type(tile_type), intent(inout)        :: tile
     type(tile_fluxes_type), intent(inout) :: tile_fluxes
     type(gridtype), intent(in)            :: grid
     type(climate_type), intent(in)        :: climate
@@ -318,7 +316,6 @@ contains
     ! local variables
     real :: gamma                           ! psychrometric constant (Pa K-1) ! xxx Zhang et al. use it in units of (kPa K-1), probably they use sat_slope in kPa/K, too.
     real :: sat_slope                       ! slope of saturation vapour pressure vs. temperature curve, Pa K-1
-    real :: rho_air                         ! density of air (g m-3)
     real :: lv                              ! enthalpy of vaporization, J/kg
     real :: rho_water                       ! density of water (g m-3)
 
@@ -454,30 +451,30 @@ contains
   end function get_snow_rain
 
 
-  function calc_vdpstress( vpd ) result( out_vpdstress )
-    !/////////////////////////////////////////////////////////////////////////
-    ! Calculates a VPD stress function based on Oren et al. 2001 Eq. 4
-    ! Reference: 
-    ! Oren et al.: Sensitivity of mean canopy stomatal conductance
-    ! to vapor pressure deficit in a flooded Taxodium distichum L. forest:
-    ! hydraulic and non-hydraulic effectsOecologia (2001) 126:21–29, 
-    ! DOI 10.1007/s004420000497
-    !-------------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: vpd    ! Vapour pressure deficit (Pa)
+  ! function calc_vdpstress( vpd ) result( out_vpdstress )
+  !   !/////////////////////////////////////////////////////////////////////////
+  !   ! Calculates a VPD stress function based on Oren et al. 2001 Eq. 4
+  !   ! Reference: 
+  !   ! Oren et al.: Sensitivity of mean canopy stomatal conductance
+  !   ! to vapor pressure deficit in a flooded Taxodium distichum L. forest:
+  !   ! hydraulic and non-hydraulic effectsOecologia (2001) 126:21–29, 
+  !   ! DOI 10.1007/s004420000497
+  !   !-------------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: vpd    ! Vapour pressure deficit (Pa)
 
-    ! function return variable
-    real :: out_vpdstress
+  !   ! function return variable
+  !   real :: out_vpdstress
 
-    if (vpd<1) then
-      out_vpdstress = 1.0
-    else
-      out_vpdstress = vpdstress_par_a * (vpdstress_par_b - vpdstress_par_m * (log(0.001) + log(vpd)))
-      if (out_vpdstress > 1.0) out_vpdstress = 1.0
-      if (out_vpdstress < 0.0) out_vpdstress = 0.0
-    end if
+  !   if (vpd<1) then
+  !     out_vpdstress = 1.0
+  !   else
+  !     out_vpdstress = vpdstress_par_a * (vpdstress_par_b - vpdstress_par_m * (log(0.001) + log(vpd)))
+  !     if (out_vpdstress > 1.0) out_vpdstress = 1.0
+  !     if (out_vpdstress < 0.0) out_vpdstress = 0.0
+  !   end if
 
-  end function calc_vdpstress
+  ! end function calc_vdpstress
 
 
   function calc_dr( nu ) result( dr )
@@ -728,8 +725,6 @@ contains
     ! local variables
     real :: anm, ranm, anv, ranv
     real :: dlamm                ! Mean longitude for day of year
-    real :: my_nu
-    real :: my_tls
     real :: xee, xec, xse        ! variable substitutes
     real :: xlam                 ! Mean longitude for vernal equinox
     real :: tmp1, tmp2, tmp3     ! variable substitutes

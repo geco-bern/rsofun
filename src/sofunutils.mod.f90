@@ -1042,7 +1042,7 @@ contains
     !--------------------------------------------------------------------
     real, dimension(:), intent(in)     :: vec
     integer, intent(in)                :: start, end
-    integer                            :: minimum
+    real                               :: minimum
     integer                            :: location
     integer                            :: i
     integer                            :: out

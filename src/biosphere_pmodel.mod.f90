@@ -39,7 +39,7 @@ contains
     type(outtype_biosphere) :: out_biosphere
 
     ! local variables
-    integer :: dm, moy, jpngr, doy
+    integer :: dm, moy, doy !jpngr
     logical, save           :: init_daily = .true.   ! is true only on the first day of the simulation 
     logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
 
@@ -126,7 +126,6 @@ contains
                   tile_fluxes(:), &
                   myinterface%pco2, &
                   myinterface%climate(doy), &
-                  myinterface%vegcover(doy), &
                   myinterface%params_siml%soilmstress, &
                   myinterface%params_siml%tempstress, &
                   init_daily &
@@ -140,8 +139,7 @@ contains
         call waterbal(  tile(:), &
                         tile_fluxes(:), &
                         myinterface%grid, &
-                        myinterface%climate(doy), &
-                        doy &
+                        myinterface%climate(doy) &
                         )
         if (verbose) print*,'... done'
 

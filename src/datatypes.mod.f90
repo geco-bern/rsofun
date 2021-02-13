@@ -1068,7 +1068,7 @@ contains
 
     !-------local var
     type(cohort_type), pointer :: cc
-    real treeG, fseed, fleaf, froot,fwood,dDBH, dVol
+    real :: treeG, fseed, fleaf=0, froot,fwood=0,dDBH, dVol
     real :: plantC, plantN, soilC, soilN
     integer :: i
 

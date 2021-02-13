@@ -174,7 +174,6 @@ contains
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
       myinterface%climate(:) = getclimate(nt, &
                                           forcing, &
-                                          myinterface%steering%init, &
                                           myinterface%steering%climateyear_idx, &
                                           myinterface%params_siml%in_ppfd,  &
                                           myinterface%params_siml%in_netrad, &

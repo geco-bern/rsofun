@@ -78,7 +78,7 @@ contains
   end subroutine orgcp
 
 
-  subroutine orgcpRec( amount, to, outc, outn, d13C)
+  subroutine orgcpRec( amount, to, outc, outn)
     !////////////////////////////////////////////////////////////////
     !  Generic SR to "copy" organic mass to pool (e.g. for output).
     !  Does NOT substract amount moved ('amount') from source.
@@ -88,7 +88,7 @@ contains
     type(orgpool), intent(inout) :: to
     real, intent(inout) :: outc
     real, intent(inout) :: outn
-    real, optional, intent(in) :: d13C
+    ! real, optional, intent(in) :: d13C
 
     outc = outc + amount%c%c12
     outn = outn + amount%n%n14
@@ -272,7 +272,7 @@ contains
   end subroutine ccp
 
 
-  subroutine ccpRec( amount, to, outc, d13C)
+  subroutine ccpRec( amount, to, outc)
     !////////////////////////////////////////////////////////////////
     !  Generic SR to "copy" carbon to pool (e.g. for output).
     !  Does NOT substract amount moved ('amount') from source
@@ -280,7 +280,7 @@ contains
     type(carbon), intent(in) :: amount
     type(carbon), intent(inout) :: to
     real, intent(inout) :: outc
-    real, optional, intent(in) :: d13C
+    ! real, optional, intent(in) :: d13C
 
     to%c12 = amount%c12 + to%c12
     outc = outc + amount%c12

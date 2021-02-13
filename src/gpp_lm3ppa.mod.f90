@@ -68,10 +68,10 @@ contains
     real   :: psyn   ! net photosynthesis, mol C/(m2 of leaves s)
     real   :: resp   ! leaf respiration, mol C/(m2 of leaves s)
     real   :: w_scale2, transp ! mol H20 per m2 of leaf per second
-    real   :: kappa  ! light extinction coefficient of crown layers
+    real   :: kappa ! light extinction coefficient of crown layers
     real   :: f_light(10) = 0.0, f_apar(10) = 0.0      ! incident light fraction, and aborbed light fraction of each layer
     real   :: LAIlayer(10), crownarea_layer(10), accuCAI, f_gap, fapar_tree ! additional GPP for lower layer cohorts due to gaps
-    integer:: i, layer
+    integer:: i, layer=0
 
     ! local variables used for P-model part
     real :: tk
@@ -87,7 +87,7 @@ contains
       ! Original BiomeE-Allocation
       !-----------------------------------------------------------
       ! Water supply for photosynthesis, Layers
-      call water_supply_layer(forcing, vegn)
+      call water_supply_layer(vegn)
 
       ! Sum leaf area over cohorts in each crown layer -> LAIlayer(layer)
       f_gap = 0.1 ! 0.1
@@ -145,8 +145,7 @@ contains
 
           call gs_leuning(rad_top, rad_net, TairK, cana_q, cc%lai, &
             p_surf, water_supply, cc%species, sp%pt, &
-            cana_co2, cc%extinct, fs+fw, cc%layer, &
-            ! output:
+            cana_co2, cc%extinct, fs+fw, &
             psyn, resp, w_scale2, transp )
 
           ! ! psyn/rad_top is on the order of -1e-8; psyn/rad_top is on the order of -1e-9
@@ -343,7 +342,7 @@ contains
 
 
   subroutine gs_leuning( rad_top, rad_net, tl, ea, lai, &
-    p_surf, ws, pft, pt, ca, kappa, leaf_wet, layer, &
+    p_surf, ws, pft, pt, ca, kappa, leaf_wet, &
     apot, acl,w_scale2, transp )
 
     real,    intent(in)    :: rad_top ! PAR dn on top of the canopy, w/m2
@@ -357,9 +356,9 @@ contains
     integer, intent(in)    :: pft  ! species
     integer, intent(in)    :: pt   ! physiology type (C3 or C4)
     real,    intent(in)    :: ca   ! concentartion of CO2 in the canopy air space, mol CO2/mol dry air
-    real,    intent(in)    :: kappa! canopy extinction coefficient (move inside f(pft))
+    real,    intent(in)    :: kappa ! canopy extinction coefficient (move inside f(pft))
     real,    intent(in)    :: leaf_wet ! fraction of leaf that's wet or snow-covered
-    integer, intent(in)    :: layer  ! the layer of this canopy
+    ! integer, intent(in)    :: layer  ! the layer of this canopy
     ! note that the output is per area of leaf; to get the quantities per area of
     ! land, multiply them by LAI
     !real,    intent(out)   :: gs   ! stomatal conductance, m/s
@@ -650,21 +649,21 @@ contains
   ! end function calc_soilmstress
 
 
-  function calc_ftemp_kphio( dtemp ) result( ftemp )
-    !////////////////////////////////////////////////////////////////
-    ! Calculates the instantaneous temperature response of the quantum
-    ! yield efficiency based on Bernacchi et al., 2003 PCE (Equation
-    ! and parameter values taken from Appendix B)
-    !----------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: dtemp
+  ! function calc_ftemp_kphio( dtemp ) result( ftemp )
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Calculates the instantaneous temperature response of the quantum
+  !   ! yield efficiency based on Bernacchi et al., 2003 PCE (Equation
+  !   ! and parameter values taken from Appendix B)
+  !   !----------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: dtemp
 
-    ! function return variable
-    real :: ftemp
+  !   ! function return variable
+  !   real :: ftemp
 
-    ftemp = 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2
+  !   ftemp = 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2
 
-  end function calc_ftemp_kphio
+  ! end function calc_ftemp_kphio
 
   ! adopted from BiomeE-Allocation, should use the one implemented in SOFUN instead (has slightly different parameters)
   FUNCTION esat(T) ! pressure, Pa

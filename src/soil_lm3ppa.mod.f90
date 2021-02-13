@@ -32,9 +32,8 @@ contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 !========================================================================
 ! Weng 2017-10-18 ! compute available water for photosynthesis
-subroutine water_supply_layer(forcing, vegn)
+subroutine water_supply_layer( vegn)
   use md_forcing_lm3ppa, only: climate_type
-  type(climate_type),intent(in):: forcing
   type(vegn_tile_type), intent(inout) :: vegn
 
 !----- local var --------------

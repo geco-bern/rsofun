@@ -10,8 +10,8 @@ module md_biosphere_lm3ppa
   public biosphere_annual
 
   type(vegn_tile_type),  pointer :: vegn   
-  type(soil_tile_type),  pointer :: soil
-  type(cohort_type),     pointer :: cx, cc
+  ! type(soil_tile_type),  pointer :: soil
+  ! type(cohort_type),     pointer :: cx, cc
 
 contains
 
@@ -41,7 +41,7 @@ contains
     integer, parameter :: nCohorts = 1
     real    :: tsoil, soil_theta
     integer :: year0
-    integer :: i, j
+    integer :: i
     integer :: idata
     integer, save :: simu_steps !, datalines
     integer, save :: iyears
@@ -175,7 +175,7 @@ contains
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
     ! print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
-    call vegn_nat_mortality( vegn, real( seconds_per_year ) )
+    call vegn_nat_mortality( vegn )
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
     ! print*,'D: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
