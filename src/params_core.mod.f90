@@ -35,7 +35,7 @@ module md_params_core
   integer, parameter :: lucrop = 2               ! ID of crop land unit
 
   integer, parameter, dimension(npft) :: pft_start = 1
-  integer, parameter, dimension(npft) :: pft_end   = 1
+  integer, parameter, dimension(npft) :: pft_end   = 3
 
   integer, parameter, dimension(nmonth)   :: ndaymonth = (/31,28,31,30,31,30,31,31,30,31,30,31/) ! number of days per month
   integer, parameter, dimension(nmonth+1) :: middaymonth = (/16,44,75,105,136,166,197,228,258,289,319,350,381/) ! day of year of middle-month-day

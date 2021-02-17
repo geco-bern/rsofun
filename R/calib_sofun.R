@@ -397,11 +397,11 @@ cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   # Aggregate variables from the model df taking the last 500 yrs
   df_mod <- df$data[[1]]$output_annual_tile %>% 
     tail(500) %>% 
-    dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC), DBH=mean(DBH12))
+    dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC))
   
   dff <- data.frame(
-    variables = c("GPP","LAI","Density","Biomass","DBH"),
-    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Density, df_mod$Biomass, df_mod$DBH)
+    variables = c("GPP","LAI","Density","Biomass"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Density, df_mod$Biomass)
     ) %>% 
     dplyr::left_join(ddf_obs, by = "variables") %>% 
     mutate(error = targets_mod - targets_obs) %>% 
