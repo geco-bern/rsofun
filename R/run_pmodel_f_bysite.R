@@ -235,7 +235,7 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       )
     
     ## Prepare output to be a nice looking tidy data frame (tibble)
-    ddf <- init_dates_dataframe(yrstart = params_siml$firstyeartrend, yrend = siteinfo$year_end, noleap = TRUE)
+    ddf <- init_dates_dataframe(yrstart = params_siml$firstyeartrend, yrend = params_siml$firstyeartrend + params_siml$nyeartrend - 1, noleap = TRUE)
 
     out <- out %>%
       as.matrix() %>% 
