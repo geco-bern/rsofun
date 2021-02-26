@@ -54,8 +54,8 @@ params_siml <- tibble( #list
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthin
+      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+      method_mortality      = "cstarvation" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -101,8 +101,8 @@ params_tile <- tibble( #list
   f_N_add      = 0.02,   # re-fill of N for sapwood
   
   # add calibratable params
-  tf_base      = 0.5,
-  par_mort     = 1   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
+  tf_base      = 1,
+  par_mort     = -1   # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
   
   )
 ```
@@ -153,9 +153,9 @@ params_species <- tibble(
   maturalage    = rep(5,16),                      # the age that can reproduce
   fNSNmax       = rep(5,16),                      # multiplier for NSNmax as sum of potential bl and br
   LMA           = c(0.05,0.17,0.11,rep(0.1,13)),  # Leaf mass per unit area. For sps: Beech (0.05); Spruce (0.17) Fir (0.11)
-  rho_wood      = c(590,370,350,rep(300,13)),
-  alphaBM       = c(0.19,0.15,0.09,rep(0.15,13)), #In Ensheng BiomeE: 5200.0
-  thetaBM       = c(2.36,2.30,2.54,rep(2.30,13)), #In Ensheng BiomeE: 2.5
+  rho_wood      = rep(590,16), #c(590,370,350,rep(300,13)),
+  alphaBM       = rep(5200,16), #c(0.19,0.15,0.09,rep(0.15,13)), #In Ensheng BiomeE: 5200.0
+  thetaBM       = rep(2.5,16), #c(2.36,2.30,2.54,rep(2.30,13)), #In Ensheng BiomeE: 2.5
   
   # add calibratable params
   kphio         = rep(0.05,16),
