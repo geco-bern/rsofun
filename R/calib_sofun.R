@@ -397,7 +397,7 @@ cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   # Aggregate variables from the model df taking the last 500 yrs
   df_mod <- df$data[[1]]$output_annual_tile %>% 
     tail(500) %>% 
-    dplyr::summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC))
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Density=mean(Density12), Biomass=mean(plantC))
   
   dff <- data.frame(
     variables = c("GPP","LAI","Density","Biomass"),
