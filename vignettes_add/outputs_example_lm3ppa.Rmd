@@ -375,6 +375,13 @@ ea3sa1mdpm_out_annual_cohorts  <- read.csv("ea3sa1mdpm_out_annual_cohorts.csv")
 
 ```
 
+### Creating dataframes
+```{r}
+ea1sa1mapm_out_annual_tile <- ea1sa1mapm_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sa1mapm_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1mapm_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1mapm_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea2sa1mapm_out_annual_tile <- ea2sa1mapm_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea2sa1mapm_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1mapm_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1mapm_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea3sa1mapm_out_annual_tile <- ea3sa1mapm_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea3sa1mapm_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1mapm_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1mapm_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+```
+
 ## Exploring relationships and plotting
 
 #### Stand develop: Stand biomass vs. time
@@ -569,6 +576,16 @@ ggplot() +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   ggtitle("Function of DBH p-model") 
 
+# With geom_smooth
+data1 <- rbind(ea1sa1mapm_out_annual_tile, ea2sa1mapm_out_annual_tile, ea3sa1mapm_out_annual_tile)
+ggplot() + 
+  geom_point(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
+  geom_smooth(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Stand size", y = "Tree density") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
+  ggtitle("Mortality as a function of size") + scale_x_continuous(limits = c(-1.5,-0.1))
+
 # Mortality as a function of C starvation
 ggplot() + 
   geom_point(data=subset(ea1sa1mbgl_out_annual_tile,year>=500), aes(x=log(QMD), y=log(Density12), color='Control')) + 
@@ -627,6 +644,30 @@ ggplot() +
   ggtitle("Function of Constant Self-thinning p-model") 
 
 ```
+
+```{r,include=T, eval=T,fig.height=6,fig.width=8}
+
+ggplot() + 
+  geom_point(data=subset(ea1sa1mapm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea2sa1mapm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea3sa1mapm_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of DBH p-model") 
+
+# With geom_smooth
+data1 <- rbind(ea1sa1mapm_out_annual_tile, ea2sa1mapm_out_annual_tile, ea3sa1mapm_out_annual_tile)
+ggplot() + 
+  geom_point(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
+  geom_smooth(data=subset(data1, year>=100), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
+  labs(col = "Level of LUE", x = "Stand size", y = "Tree density") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
+  ggtitle("Mortality as a function of size") + scale_x_continuous(limits = c(-1.5,-0.1))
+
+```
+
 
 ```{r}
 # Mortality as a function of Self-thinning

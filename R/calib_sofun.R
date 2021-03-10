@@ -48,7 +48,11 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
      "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa
 
-    }   
+    }  else if ( "phiRL" %in% names(settings$par) && "LAI_light" %in% names(settings$par) &&
+     "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) ){  
+      cost_rmse <- cost_rmse_lm3ppa_gsleuning
+
+    } 
 
     ##----------------------------------------------------------------
     ## Do the calibration
@@ -377,7 +381,7 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
 }
 
 ##------------------------------------------------------------
-## LM3-PPA calibration
+## LM3-PPA calibration p-model
 ##------------------------------------------------------------
 cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   
@@ -417,6 +421,45 @@ cost_rmse_lm3ppa <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   return(cost)
 }
 
+##------------------------------------------------------------
+## LM3-PPA calibration gs-Leuning
+##------------------------------------------------------------
+cost_rmse_lm3ppa_gsleuning <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
+  
+  # Add changed model parameters to df_drivers, overwriting where necessary.
+  df_drivers$params_species[[1]]$phiRL[]      <- par[1]  # the same for all values
+  df_drivers$params_species[[1]]$LAI_light[]  <- par[2]  # the same for all values
+  df_drivers$params_tile[[1]]$tf_base         <- par[3]
+  df_drivers$params_tile[[1]]$par_mort        <- par[4]
+
+  df <- runread_lm3ppa_f(
+    df_drivers, 
+    makecheck = TRUE,
+    parallel = FALSE
+  ) 
+  
+  # Aggregate variables from the model df taking the last 500 yrs
+  df_mod <- df$data[[1]]$output_annual_tile %>% 
+    tail(500) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Density=mean(Density12), Biomass=mean(plantC))
+  
+  dff <- data.frame(
+    variables = c("GPP","LAI","Density","Biomass"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Density, df_mod$Biomass)
+    ) %>% 
+    dplyr::left_join(ddf_obs, by = "variables") %>% 
+    mutate(error = targets_mod - targets_obs) %>% 
+    mutate(error_rel = error / targets_obs)
+  
+  ## Calculate cost (RMSE) across the N targets
+  cost <- sqrt(mean(dff$error_rel^2, na.rm = TRUE))
+  
+  print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost  
+  
+  return(cost)
+}
 
 ##------------------------------------------------------------
 ## Cost function of linearly scaled output
