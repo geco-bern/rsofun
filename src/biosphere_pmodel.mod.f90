@@ -179,7 +179,7 @@ contains
         !----------------------------------------------------------------
         ! populate function return variable
         !----------------------------------------------------------------
-        !if (nlu>1) stop 'think about nlu > 1'
+        if (nlu>1) stop 'think about nlu > 1'
         out_biosphere%fapar(doy)   = tile(1)%canopy%fapar
         out_biosphere%gpp(doy)     = tile_fluxes(1)%canopy%dgpp
         out_biosphere%transp(doy)  = tile_fluxes(1)%canopy%daet

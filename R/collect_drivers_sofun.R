@@ -52,11 +52,37 @@ collect_drivers_sofun <- function( siteinfo, params_siml, meteo, fapar, co2, df_
   myapprox <- function(vec){
     approx(vec, xout = 1:length(vec))$y
   }
+  
   fill_na_forcing <- function(df){
     vars <- names(df)[-which(names(df)=="date")]
-    df %>% 
+    df <- df %>% 
       mutate_at(vars, myapprox)
+    
+    ## fill remaining gaps with mean seasonal cycle
+    add_doy <- function(string){paste0(string, "_doy")}
+    df_meandoy <- df %>% 
+      mutate(doy = lubridate::yday(date)) %>% 
+      group_by(doy) %>% 
+      summarise(across(where(is.double), ~mean(.x, na.rm = TRUE))) %>% 
+      rename_with(.fn = add_doy, .cols = one_of("ppfd", "rain", "snow", "prec", "temp", "patm", "vpd", "ccov", "fapar", "co2")) %>% 
+      dplyr::select(doy, one_of("ppfd_doy", "rain_doy", "snow_doy", "prec_doy", "temp_doy", "patm_doy", "vpd_doy", "ccov_doy", "fapar_doy", "co2_doy"))
+    df <- df %>% 
+      mutate(doy = lubridate::yday(date)) %>% 
+      left_join(df_meandoy, by = "doy") %>% 
+      mutate(ppfd = ifelse(is.na(ppfd), ppfd_doy, ppfd),
+             rain = ifelse(is.na(rain), rain_doy, rain),
+             snow = ifelse(is.na(snow), snow_doy, snow),
+             prec = ifelse(is.na(prec), prec_doy, prec),
+             temp = ifelse(is.na(temp), temp_doy, temp),
+             patm = ifelse(is.na(patm), patm_doy, patm),
+             vpd = ifelse(is.na(vpd), vpd_doy, vpd),
+             ccov = ifelse(is.na(ccov), ccov_doy, ccov),
+             fapar = ifelse(is.na(fapar), fapar_doy, fapar),
+             co2 = ifelse(is.na(co2), co2_doy, co2)) %>% 
+      dplyr::select(-ends_with("_doy"))
+    return(df)
   }
+  
   df_mega <- df_mega %>% 
     mutate(forcing = purrr::map(forcing, ~fill_na_forcing(.))) %>% 
     dplyr::select(sitename, forcing, params_siml, siteinfo, df_soiltexture)

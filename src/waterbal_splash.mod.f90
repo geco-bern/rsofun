@@ -390,6 +390,8 @@ contains
     ! Eq. 81, SPLASH 2.0 Documentation
     tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
     tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)
+
+    ! print*,'in waterbal: sw, hi, rx, rw, rv, hn, hi, ru ', sw, hi, rx, rw, rv, hn, hi, ru
     
     ! xxx debug
     if (splashtest) then
