@@ -282,7 +282,7 @@ contains
             !===============================
             out_pmodel = pmodel( &
                                 fapar          = fapar_tree, &
-                                ppfd           = f_light(layer) * forcing%PAR * 1.0e-6, &    ! required in mol m-2 s-1
+                                ppfd           = f_light(layer) * forcing%PAR * 1.0e-6, &    ! required in mol m-2 s-1, unit ground area
                                 co2            = co2_memory, &
                                 tc             = temp_memory, &
                                 vpd            = vpd_memory, &
@@ -302,8 +302,8 @@ contains
             cc%w_scale = -9999
 
             ! copy to cohort variables
-            cc%resl    = out_pmodel%rd  * cc%crownarea * myinterface%step_seconds * mol_C     ! kgC step-1 tree-1 xxxxxxxxxx
-            cc%gpp     = out_pmodel%gpp * cc%crownarea * myinterface%step_seconds * 1.0e-3    ! kgC step-1 tree-1
+            cc%resl    = out_pmodel%rd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
+            cc%gpp     = out_pmodel%gpp * cc%crownarea * myinterface%step_seconds * 1.0e-3   ! kgC step-1 tree-1
 
           else
 

@@ -64,7 +64,10 @@ contains
       call plant_respiration( cc, forcing%tair ) ! get resp per tree per time step
 
       cc%resp = cc%resp + (cc%resg * myinterface%step_seconds) / seconds_per_day ! put growth respiration to tot resp
-      cc%npp  = cc%gpp  - cc%resp ! kgC tree-1 step-1
+      cc%resp = cc%resp * myinterface%params_tile%tf_base          ! scaling for calibration
+      cc%npp  = cc%gpp  - cc%resp       ! kgC tree-1 step-1
+
+      print*,'CUE daily ', cc%npp / cc%gpp
 
       ! detach photosynthesis model from plant growth
       cc%nsc = cc%nsc + cc%npp
@@ -100,10 +103,11 @@ contains
     real :: r_Nfix    ! respiration due to N fixation
     integer :: sp ! shorthand for cohort species
     sp = cc%species
-    tf_base = myinterface%params_tile%tf_base
+    ! tf_base = myinterface%params_tile%tf_base
     
     ! temperature response function
-    tf  = tf_base * exp(9000.0 * (1.0/298.16 - 1.0/tairK))
+    ! tf  = tf_base * exp(9000.0 * (1.0/298.16 - 1.0/tairK))
+    tf  = exp(9000.0 * (1.0/298.16 - 1.0/tairK))
     
     !  tfs = thermal_inhibition(tsoil)  ! original
     tfs = tf ! Rm_T_response_function(tsoil) ! Weng 2014-01-14
@@ -205,7 +209,7 @@ contains
     real :: dHeight ! tendency of vegetation height
     real :: dNS    ! Nitrogen from SW to HW
     ! real :: sw2nsc = 0.0 ! conversion of sapwood to non-structural carbon
-    real :: BL_u,BL_c
+    real :: BL_u, BL_c
     real :: LFR_deficit, LF_deficit, FR_deficit
     real :: N_demand,Nsupplyratio,extraN
     real :: r_N_SD
@@ -792,8 +796,8 @@ contains
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
-         ! set calibratable parameter
-         param_dbh = myinterface%params_tile%par_mort
+          ! set calibratable parameter
+          param_dbh = myinterface%params_tile%par_mort
 
           if (sp%lifeform==0)then  ! for grasses
             if(cc%layer > 1) then

@@ -134,7 +134,7 @@ module datatypes
     real    :: mortrate_d_c                       ! yearly mortality rate in canopy
     real    :: mortrate_d_u                       ! yearly mortality rate in understory
     !===== Population level variables
-    real    :: LAImax,underLAImax                 ! max. LAI
+    real    :: LAImax, underLAImax                ! max. LAI
     real    :: LAI_light                          ! light controlled maximum LAI
     integer :: n_cc                               ! for calculating LAImax via cc%LAImax derived from cc%NSN
     real    :: layerfrac                          ! species layer fraction
