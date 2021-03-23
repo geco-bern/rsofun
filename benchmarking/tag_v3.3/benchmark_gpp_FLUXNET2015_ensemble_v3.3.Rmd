@@ -156,6 +156,7 @@ df_output <- runread_pmodel_f(
      makecheck = TRUE,
      parallel = FALSE
      )
+save(df_output, file = "~/data/rsofun_benchmarking/df_output_v3.3.Rdata")
 ```
 
 ## Run evaluation
@@ -172,7 +173,6 @@ Load standard benchmarking file with observational data for evaluation.
 ```{r}
 load("~/data/rsofun_benchmarking/obs_eval_fluxnet2015.Rdata")
 ```
-
 
 Define evaluation settings.
 ```{r}
@@ -193,6 +193,7 @@ out_eval <- eval_sofun(
   overwrite = TRUE, 
   light = FALSE 
   )
+save(df_output, file = "~/data/rsofun_benchmarking/out_eval_v3.3.Rdata")
 ```
 
 ## Evaluation results
