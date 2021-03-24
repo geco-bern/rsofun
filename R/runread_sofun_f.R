@@ -122,9 +122,11 @@ runread_lm3ppa_f <- function( df_drivers, makecheck = TRUE, parallel = FALSE, nc
         run_lm3ppa_f_bysite,
         makecheck = makecheck
       )) %>% 
-      dplyr::select(sitename, data)
+      dplyr::select(sitename, data) 
     
   }
   
+  # df_out <- df_out %>% as_tibble(.name_repair = 'unique')
+
   return(df_out)
 }

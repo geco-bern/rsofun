@@ -2,22 +2,89 @@
 ######## DBH function ######## 
 # Understory 
 # Weng et al 2015
-ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.08*(1+9*exp(-60*.x))/(1+exp(-60*.x)))+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 0.075*(1+9*exp(-60*.x))/(1+exp(-60*.x)))+
+  labs(x='DBH (m)', y='Deathrate')
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 1/exp((-1)*.x-2)) +
   labs(x='DBH (m)', y='Deathrate')
 # Modified from Ensheng to reach 0! NOW IN FORTRAN!
-ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.08*(9*exp(-40*.x))/(1+exp(-40*.x)))+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 0.08*(9*exp(-40*.x))/(1+exp(-40*.x)))+
+  labs(x='DBH (m)', y='Deathrate') + theme_bw()
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 2.25*exp(-40*.x)/(1+exp(-40*.x)))+
   labs(x='DBH (m)', y='Deathrate') + theme_bw()
 # Sum this one to control infinite growing! NOW IN FORTRAN!
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.01*exp(0.6*.x))+
+ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.05*exp(0.6*.x))+
   labs(x='DBH (m)', y='Deathrate') + theme_bw()
 
 # Canopy
 # Weng et al 2015
-ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.02*(1+5*exp(4*.x-2))/(1+exp(4*.x-2)))+
+ggplot(data.frame(x = c(0, 1)), aes(x)) + stat_function(fun = ~ 0.01*(1+5*exp(4*(.x-2)))/(1+exp(4*(.x-2)))) +
   labs(x='DBH (m)', y='Deathrate')
 # Modified from Ensheng to avoid asymptotes! NOW IN FORTRAN!
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.01*exp(0.6*.x))+
-  labs(x='DBH (m)', y='Deathrate') + theme_bw()
+ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.05*exp(0.6*.x)) +
+  labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 0.05*exp(4*.x)) +
+  labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ exp(0.3*.x)-1) +
+  labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ exp(0.1*.x)-1) +
+  labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))
+
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*(1*exp(2*(.x-3)))/(1+exp(2*(.x-3)))) +
+  labs(x='DBH (m)', y='Deathrate')
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*exp(4*(.x-2))/(1+exp(4*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate') + scale_y_continuous(limits = c(0,1))
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*exp(2*(.x-2))/(1+exp(2*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate') + scale_y_continuous(limits = c(0,1))
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*exp(5*(.x-2))/(1+exp(5*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate') + scale_y_continuous(limits = c(0,1))
+
+##### NOW!!!
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*(exp(3*(.x-2)))/(1+exp(3*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate')+ scale_y_continuous(limits = c(0,1))
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*(exp(4*(.x-2)))/(1+exp(4*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate')+ scale_y_continuous(limits = c(0,1))
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*(exp(4*(.x-2)))/(1+exp(4*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate')+ scale_y_continuous(limits = c(0,1))
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 15*(exp(4*(.x-2)))/(1+exp(4*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate')+ scale_y_continuous(limits = c(0,1))
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 20*(exp(4*(.x-2)))/(1+exp(4*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate')+ scale_y_continuous(limits = c(0,1))
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*(exp(5*(.x-2)))/(1+exp(5*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate')+ scale_y_continuous(limits = c(0,1))
+
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ exp(0.2*.x)-1) +
+  labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ exp(0.4*.x)-1) +
+  labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ exp(0.6*.x)-1) +
+  labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ (1.5**.x)-1) +
+  labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*exp(1+8*(.x-2))/(1+exp(8*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate') + scale_y_continuous(limits = c(0,1))
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*exp(1+2*(.x-2))/(1+exp(2*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate') + scale_y_continuous(limits = c(0,1))
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*exp(1+9*(.x-2))/(1+exp(9*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate') + scale_y_continuous(limits = c(0,1))
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 1*(1*exp(4*(.x-2)))/(1+exp(6*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate') 
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 10*exp(5*(.x-2))/(1+exp(5*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate')+ scale_y_continuous(limits = c(0,1))
+
+
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 1*(1*exp(7*(.x-2)))/(1+exp(7*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate')
 
 ######## Carbon starvation function ######## 
 #  NOW IN FORTRAN!

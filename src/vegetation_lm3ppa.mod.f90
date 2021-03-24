@@ -67,7 +67,7 @@ contains
       cc%resp = cc%resp * myinterface%params_tile%tf_base          ! scaling for calibration
       cc%npp  = cc%gpp  - cc%resp       ! kgC tree-1 step-1
 
-      print*,'CUE daily ', cc%npp / cc%gpp
+      ! print*,'CUE daily ', cc%npp / cc%gpp
 
       ! detach photosynthesis model from plant growth
       cc%nsc = cc%nsc + cc%npp
@@ -397,6 +397,8 @@ contains
                 (1.0-sp%internal_gap_frac) /max(1,cc%layer)
         BL_u = sp%LMA*cc%crownarea*(1.0-sp%internal_gap_frac)* &
                 sp%underLAImax
+
+        ! print*,'sp%LAImax', sp%LAImax
 
         if (cc%layer == 1) cc%topyear = cc%topyear + 1.0 /365.0
 
@@ -807,21 +809,25 @@ contains
             endif
           else                    ! for trees
 
-            if (cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.08*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
+            if (cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.075*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh)) + 1/exp((-1)*(cc%dbh-2))
               ! deathrate = sp%mortrate_d_u * &
                      ! (1. + A_mort*exp(B_mort*cc%dbh))/ &
                      ! (1. +        exp(B_mort*cc%dbh)) + &
                      ! 1/exp((-1)*(cc%dbh-2))
-              deathrate = 0.72*exp(-40*cc%dbh)/(1+exp(-40*cc%dbh)) + 0.05*exp(param_dbh*cc%dbh)
+              ! deathrate = 0.075*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
+              deathrate = 2.25*exp(-40*cc%dbh)/(1+exp(-40*cc%dbh)) + 0.05*exp(param_dbh*cc%dbh)
 
-            else  ! First layer mortality Weng 2015: deathrate = 0.02*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
+            else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then
                 ! deathrate = sp%mortrate_d_c *                &
                 !            (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
                 !            (1. + exp(4.*(cc%dbh-DBHtp))))
-                deathrate = 0.05*exp(param_dbh*cc%dbh)
+                ! deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
+                ! deathrate = exp(param_dbh*cc%dbh)-1 ! param_dbh = 0.2-0.8
+                deathrate = 0.05*exp(param_dbh*cc%dbh) ! param_dbh = 1-3
+                ! deathrate = 10*(exp(param_dbh*(cc%dbh-2)))/(1+exp(param_dbh*(cc%dbh-2))) ! param_dbh = 3-5
               else
-                deathrate = sp%mortrate_d_c
+                deathrate = sp%mortrate_d_c !0.01
               endif
             endif
           endif
@@ -1971,6 +1977,9 @@ contains
         spdata(i)%LAImax = MAX(LAImin, sp%LAI_light)
 
         spdata(i)%underLAImax = MIN(sp%LAImax, 1.2)
+
+        ! print*,'sp%LAI_light', sp%LAI_light
+
       end associate
     enddo
 

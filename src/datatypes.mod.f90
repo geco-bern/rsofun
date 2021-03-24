@@ -564,8 +564,8 @@ contains
     spdata%mortrate_d_u  = myinterface%params_species(:)%mortrate_d_u
     spdata%rho_wood      = myinterface%params_species(:)%rho_wood
     spdata%taperfactor   = taperfactor
-    spdata%laimax        = myinterface%params_species(:)%laimax
-    spdata%underLAImax   = laimax
+    spdata%LAImax        = myinterface%params_species(:)%LAImax
+    spdata%underLAImax   = LAImax
     spdata%tauNSC        = tauNSC
     spdata%fNSNmax       = myinterface%params_species(:)%fNSNmax
     spdata%kphio         = myinterface%params_species(:)%kphio     
@@ -1141,14 +1141,15 @@ contains
       out_annual_cohorts(i)%Rauto      = cc%annualResp
       out_annual_cohorts(i)%N_uptk     = cc%annualNup*1000
       out_annual_cohorts(i)%N_fix      = cc%annualfixedN*1000
-      out_annual_cohorts(i)%maxLAI     = spdata(cc%species)%laimax
+      out_annual_cohorts(i)%maxLAI     = spdata(cc%species)%LAImax
       out_annual_cohorts(i)%Volume     = cc%Volume
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
 
 ! print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
-! print*, cc%nsc, "cc%nsc"
+! print*, cc%dbh, "cc%dbh"
 ! print*, cc%bl_max, "cc%bl_max"
+
 
     enddo
 
