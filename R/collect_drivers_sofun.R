@@ -19,6 +19,16 @@ collect_drivers_sofun <- function( siteinfo, params_siml, meteo, fapar, co2, df_
   ## complement the setup settings
   siteinfo <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
   
+  ## check if all required variables are available
+  if (!("snow" %in% names(meteo$data[[1]]))){
+    rlang::warn("Variable 'snow' missing in meteo data frame. Assuming zero for all dates. \n")
+    meteo <- meteo %>% mutate(data = purrr::map(data, ~mutate(., snow = 0)))
+  }
+  if (!("rain" %in% names(meteo$data[[1]]))){
+    rlang::warn("Variable 'rain' missing in meteo data frame. Assuming equal to 'prec' for all dates. \n")
+    meteo <- meteo %>% mutate(data = purrr::map(data, ~mutate(., rain = prec)))
+  }
+  
   ## create mega-df containing all forcing data and parameters that vary by site (not model parameters!)
   names_metainfo <- names(siteinfo)[-which(names(siteinfo) %in% c("sitename", "params_siml"))]
   df_mega <- siteinfo %>% 
@@ -48,12 +58,35 @@ collect_drivers_sofun <- function( siteinfo, params_siml, meteo, fapar, co2, df_
     mutate(forcing = purrr::map2(forcing, co2, ~left_join( .x, .y, by = "date"))) %>% 
     dplyr::select(-meteo, -fapar, -co2)
   
+  ## drop sites for which forcing data is missing for all dates
+  count_notna <- function(df){
+    df %>% 
+      ungroup() %>% 
+      summarise(across(c("ppfd", "rain", "snow", "prec", "temp", "patm", "vpd", "ccov", "fapar", "co2"), ~sum(!is.na(.)))) %>% 
+      pivot_longer(cols = 1:10, names_to = "var", values_to = "n_not_missing")
+  }
+  
+  df_missing <- df_mega %>% 
+    mutate(df_count = purrr::map(forcing, ~count_notna(.))) %>% 
+    dplyr::select(sitename, df_count) %>% 
+    unnest(df_count) %>% 
+    dplyr::filter(n_not_missing < 365)
+  
+  if (nrow(df_missing)>0){
+    rlang::warn("Missing values found in forcing data frame:")
+    print(df_missing)
+    rlang::warn("Respective sites are dropped from all drivers data frame.")
+    df_mega <- df_mega %>% 
+      dplyr::filter(!(sitename %in% pull(df_missing, sitename)))
+  }
+    
   ## interpolate to fill gaps in forcing time series
   myapprox <- function(vec){
     approx(vec, xout = 1:length(vec))$y
   }
   
   fill_na_forcing <- function(df){
+    
     vars <- names(df)[-which(names(df)=="date")]
     df <- df %>% 
       mutate_at(vars, myapprox)
@@ -80,6 +113,7 @@ collect_drivers_sofun <- function( siteinfo, params_siml, meteo, fapar, co2, df_
              fapar = ifelse(is.na(fapar), fapar_doy, fapar),
              co2 = ifelse(is.na(co2), co2_doy, co2)) %>% 
       dplyr::select(-ends_with("_doy"))
+    
     return(df)
   }
   

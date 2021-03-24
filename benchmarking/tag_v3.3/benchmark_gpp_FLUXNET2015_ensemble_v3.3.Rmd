@@ -212,6 +212,21 @@ out_eval$gpp$fluxnet$metrics %>%
 out_eval$gpp$fluxnet$plot$gg_modobs_xdaily
 out_eval$gpp$fluxnet$plot$gg_modobs_spatial_annual
 ```
+## Run model for all sites.
+
+`"~/data/rsofun_benchmarking/df_drivers_fluxnet2015_allsites.Rdata"` is prepared by `benchmarking/collect_data/prepare_inputs_FLUXNET2015_allsites.Rmd`.
+
+```{r warning=FALSE, message=FALSE}
+load("~/data/rsofun_benchmarking/df_drivers_fluxnet2015_allsites.Rdata")
+df_output_allsites <- runread_pmodel_f(
+     df_drivers_fluxnet2015,
+     params_modl = params_modl, 
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+save(df_output_allsites, file = "~/data/rsofun_benchmarking/df_output_allsites_v3.3.Rdata")
+```
+
 
 
 ## Appendix

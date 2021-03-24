@@ -13,8 +13,6 @@ library(rsofun)
 library(ingestr)
 ```
 
-The following describes how to use the [ingestr R package ](https://stineb.github.io/ingestr/) for collecting the forcing and evaluation data for all FLUXNET 2015 Tier 1 sites used in Stocker et al. (2020). Files are available on Euler XXXpathXXX.
-
 ## Forcing data
 
 Data is collected and available in file `~/data/stocker20gmd_outputs/ddf_fluxnet2015_pmodel_with_forcings_stocker19gmd.csv` (available on Euler). This here is to re-format it such that it corresponds to:
