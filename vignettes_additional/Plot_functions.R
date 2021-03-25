@@ -23,7 +23,7 @@ ggplot(data.frame(x = c(0, 1)), aes(x)) + stat_function(fun = ~ 0.01*(1+5*exp(4*
 ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.05*exp(0.6*.x)) +
   labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))
 
-ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 0.05*exp(4*.x)) +
+ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 0.05*exp(2*.x)) +
   labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))
 
 ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ exp(0.3*.x)-1) +

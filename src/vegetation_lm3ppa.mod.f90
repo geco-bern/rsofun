@@ -815,7 +815,8 @@ contains
                      ! (1. +        exp(B_mort*cc%dbh)) + &
                      ! 1/exp((-1)*(cc%dbh-2))
               ! deathrate = 0.075*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
-              deathrate = 2.25*exp(-40*cc%dbh)/(1+exp(-40*cc%dbh)) + 0.05*exp(param_dbh*cc%dbh)
+              deathrate = 0.72*exp(-40*cc%dbh)/(1+exp(-40*cc%dbh)) + 0.05*exp(param_dbh*cc%dbh)
+              ! deathrate = 2.25*exp(-40*cc%dbh)/(1+exp(-40*cc%dbh)) + 0.05*exp(param_dbh*cc%dbh)
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then
