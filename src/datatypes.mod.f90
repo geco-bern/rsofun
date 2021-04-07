@@ -21,7 +21,7 @@ module datatypes
   !=============== Public parameters =======================================================
   public :: MaxCohortID, K1, K2, K_nitrogen, etaN, MLmixRatio, &
             fsc_fine, fsc_wood, LMAmin, GR_factor, tf_base, par_mort, l_fract, &
-            retransN, f_initialBSW,f_N_add !, A_mort, B_mort,DBHtp
+            retransN, f_initialBSW,f_N_add, A_mort, B_mort,DBHtp
 
   !=============== Constants =============================================================
   logical, public, parameter :: read_from_parameter_file = .TRUE.
@@ -389,9 +389,9 @@ module datatypes
   real   :: tf_base                                 ! calibratable scalar for respiration
   real   :: par_mort                                ! generic calibratable parameter for mortality module
   !===== deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
-  ! real  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
-  ! real  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
-  ! real  :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
+  real  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
+  real  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
+  real  :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
   
   !=============== Params_species in R ======================================================
 
@@ -440,8 +440,8 @@ module datatypes
   real :: prob_e(0:MSPECIES)       = 1.0
 
   !===== Mortality
-  !real :: mortrate_d_c(0:MSPECIES) = 0.01 ! yearly
-  !real :: mortrate_d_u(0:MSPECIES) = 0.075
+  ! real :: mortrate_d_c(0:MSPECIES) = 0.01 ! yearly
+  ! real :: mortrate_d_u(0:MSPECIES) = 0.075
 
   !===== Leaf parameters
   ! real :: LMA(0:MSPECIES)         = 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2 LMA = 1/SLA 0.05 for Fagus

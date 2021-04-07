@@ -4,6 +4,7 @@
 # Weng et al 2015
 ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 0.075*(1+9*exp(-60*.x))/(1+exp(-60*.x)))+
   labs(x='DBH (m)', y='Deathrate')
+
 ggplot(data.frame(x = c(0, 1.5)), aes(x)) + stat_function(fun = ~ 1/exp((-1)*.x-2)) +
   labs(x='DBH (m)', y='Deathrate')
 # Modified from Ensheng to reach 0! NOW IN FORTRAN!
@@ -19,6 +20,7 @@ ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.05*exp(0.6*.x)
 # Weng et al 2015
 ggplot(data.frame(x = c(0, 1)), aes(x)) + stat_function(fun = ~ 0.01*(1+5*exp(4*(.x-2)))/(1+exp(4*(.x-2)))) +
   labs(x='DBH (m)', y='Deathrate')
+
 # Modified from Ensheng to avoid asymptotes! NOW IN FORTRAN!
 ggplot(data.frame(x = c(0, 2)), aes(x)) + stat_function(fun = ~ 0.05*exp(0.6*.x)) +
   labs(x='DBH (m)', y='Deathrate') + theme_bw() + scale_y_continuous(limits = c(0,1))

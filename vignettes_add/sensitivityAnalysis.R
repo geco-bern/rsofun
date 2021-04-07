@@ -333,7 +333,7 @@ save(par_mort_eval_zoom, file = "~/data/rsofun/par_mort_eval_zoom_pmodel_dbh.RDa
 
 load("~/data/rsofun/df_drivers_gs_dbh.RData")
 
-phiRL_values <- seq(0.1, 12, 0.1)
+phiRL_values <- seq(0.1, 1, 0.2)
 
 phiRL_eval_interval <- data.frame()
 #phiRL_eval_interval_all <- data.frame()
@@ -397,7 +397,7 @@ save(phiRL_eval_zoom, file = "~/data/rsofun/phiRL_eval_zoom_gs_dbh.RData")
 
 load("~/data/rsofun/df_drivers_gs_dbh.RData")
 
-LAI_light_values <- seq(0.1, 12, 0.1)
+LAI_light_values <- seq(2, 6, 1)
 
 LAI_light_eval_interval <- data.frame()
 #LAI_light_eval_interval_all <- data.frame()
@@ -461,7 +461,7 @@ save(LAI_light_eval_zoom, file = "~/data/rsofun/LAI_light_eval_zoom_gs_dbh.RData
 
 load("~/data/rsofun/df_drivers_gs_dbh.RData")
 
-tf_base_values <- seq(0.1, 12, 0.1)
+tf_base_values <- seq(1, 3, 1)
 
 tf_base_eval_interval <- data.frame()
 #tf_base_eval_interval_all <- data.frame()
@@ -525,7 +525,7 @@ save(tf_base_eval_zoom, file = "~/data/rsofun/tf_base_eval_zoom_gs_dbh.RData")
 
 load("~/data/rsofun/df_drivers_gs_dbh.RData")
 
-par_mort_values <- seq(0.01, 1, 0.01)
+par_mort_values <- seq(0.5, 2, 0.5)
 
 par_mort_eval_interval <- data.frame()
 #par_mort_eval_interval_all <- data.frame()
