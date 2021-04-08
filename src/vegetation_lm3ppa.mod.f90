@@ -782,7 +782,8 @@ contains
           param_nsc = myinterface%params_tile%par_mort
 
           if (cc%bl_max > 0) then
-          deathrate = exp(param_nsc*(cc%nsc/cc%bl_max))/(0.001+exp(param_nsc*(cc%nsc/cc%bl_max))) ! Changing coef: works with 2.5    
+          ! deathrate = exp(param_nsc*(cc%nsc/cc%bl_max))/(0.001+exp(param_nsc*(cc%nsc/cc%bl_max))) 
+          deathrate = param_nsc * 0.01 * (exp(-2*(cc%nsc/cc%bl_max))/(0.01+exp(-2*(cc%nsc/cc%bl_max)))) ! -2 instead of -.5
 
           endif
 
@@ -791,10 +792,16 @@ contains
           ! set calibratable parameter
           param_gr = myinterface%params_tile%par_mort
 
-          deathrate = param_gr * (cc%Volume - cc%Vol_ys)
+          ! deathrate = param_gr * (cc%dbh - cc%DBH_ys) + 0.01
+          ! deathrate = param_gr * 0.01*(2*exp(10*(cc%dbh - cc%DBH_ys)))/(1+exp(1*(cc%dbh - cc%DBH_ys)))
+          ! deathrate = param_gr * 0.01
+          deathrate = param_gr * sp%mortrate_d_c *                &
+                           (1. + 5.*exp(4.*(cc%dbh-cc%DBH_ys-2))/ &
+                           (1. + exp(4.*(cc%dbh-cc%DBH_ys-2))))
+          ! deathrate = param_gr * (cc%Volume - cc%Vol_ys)
           ! deathrate = param_gr * (cc%bsw + cc%bHW - cc%ABG_ys)
 
-          ! print*, cc%bsw + cc%bHW - cc%ABG_ys
+          ! print*, deathrate
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      

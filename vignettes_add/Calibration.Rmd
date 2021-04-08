@@ -48,8 +48,8 @@ params_siml <- tibble( #list
       do_U_shaped_mortality = TRUE,
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
+      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+      method_mortality      = "cstarvation" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 
@@ -96,7 +96,7 @@ params_tile <- tibble( #list
   
   # add calibratable params
   tf_base      = 1,
-  par_mort     = 1    # param_dbh=0.6 param_csv=-2 param_gr=1 CAI_MAX=2
+  par_mort     = 0.5    # param_dbh=1 param_csv=-2 param_gr=10 CAI_MAX=2
   
   )
 ```

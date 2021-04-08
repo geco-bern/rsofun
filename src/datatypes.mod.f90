@@ -725,7 +725,7 @@ contains
       cc%NPPleaf      = 0.0
       cc%NPProot      = 0.0
       cc%NPPwood      = 0.0
-      cc%DBH_ys       = cc%DBH
+      cc%DBH_ys       = cc%dbh
       cc%Vol_ys       = cc%Volume
       cc%ABG_ys       = cc%bsw+cc%bHW
       ! cc%n_deadtrees       = 0.0
@@ -807,7 +807,7 @@ contains
 
       if (cc%age    > vegn%MaxAge)       vegn%MaxAge    = cc%age
       if (cc%Volume > vegn%MaxVolume)    vegn%MaxVolume = cc%Volume ! maxloc(cc%age)
-      if (cc%DBH    > vegn%MaxDBH)       vegn%MaxDBH    = cc%DBH    ! maxloc(cc%age)
+      if (cc%dbh    > vegn%MaxDBH)       vegn%MaxDBH    = cc%dbh    ! maxloc(cc%age)
 
       ! vegn%NPPL      = vegn%NPPL   + fleaf * cc%nindivs
       ! vegn%NPPW      = vegn%NPPW   + fwood * cc%nindivs
@@ -1110,12 +1110,13 @@ contains
       fleaf     = cc%NPPleaf/treeG
       froot     = cc%NPProot/treeG
       fwood     = cc%NPPwood/treeG
-      dDBH      = (cc%DBH - cc%DBH_ys)*1000
+      dDBH      = (cc%dbh - cc%DBH_ys) !*1000
       cc%Volume = (cc%bsw+cc%bHW)/spdata(cc%species)%rho_wood
       dVol      = (cc%Volume - cc%Vol_ys)
       cc%BA     = pi/4*cc%dbh*cc%dbh
       ! print*, dDBH, "dDBH"
-      ! print*, dVol, "dVol"
+      ! print*, cc%dbh, "cc%dbh"
+      ! print*, cc%DBH_ys, "cc%DBH_ys"
 
       out_annual_cohorts(i)%year       = iyears
       out_annual_cohorts(i)%cID        = cc%ccID
@@ -1146,10 +1147,8 @@ contains
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
 
-! print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
-! print*, cc%dbh, "cc%dbh"
+print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
 ! print*, cc%bl_max, "cc%bl_max"
-
 
     enddo
 
