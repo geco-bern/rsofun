@@ -794,14 +794,11 @@ contains
 
           ! deathrate = param_gr * (cc%dbh - cc%DBH_ys) + 0.01
           ! deathrate = param_gr * 0.01*(2*exp(10*(cc%dbh - cc%DBH_ys)))/(1+exp(1*(cc%dbh - cc%DBH_ys)))
-          ! deathrate = param_gr * 0.01
           deathrate = param_gr * sp%mortrate_d_c *                &
                            (1. + 5.*exp(4.*(cc%dbh-cc%DBH_ys-2))/ &
                            (1. + exp(4.*(cc%dbh-cc%DBH_ys-2))))
           ! deathrate = param_gr * (cc%Volume - cc%Vol_ys)
           ! deathrate = param_gr * (cc%bsw + cc%bHW - cc%ABG_ys)
-
-          ! print*, deathrate
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      

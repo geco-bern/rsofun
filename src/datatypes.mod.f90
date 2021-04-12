@@ -469,7 +469,7 @@ module datatypes
   !=============== Params_soil in R ============================================================
   ! Soil parameters passed through R : paramX(n_dim_soil_types)
 
-  !=============== Initial ohort specifications in R ============================================
+  !=============== Initial cohort specifications in R ============================================
   ! Initial values passed through R 
   integer :: init_n_cohorts                        = MAX_INIT_COHORTS
   ! integer :: init_cohort_species(MAX_INIT_COHORTS) = 2
@@ -1147,7 +1147,7 @@ contains
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
 
-print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
+! print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
 ! print*, cc%bl_max, "cc%bl_max"
 
     enddo

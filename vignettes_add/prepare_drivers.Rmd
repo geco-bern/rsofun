@@ -187,6 +187,7 @@ FluxForcing <- FluxForcing[,-c(1:4)]
 ## CO2
 
 Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
+
 ```{r}
 
 # General for several sites
@@ -208,6 +209,7 @@ df_co2 <- ingestr::ingest_bysite(
   )
 
 ```
+
 Combine the two FLUXNET and CO2 to create the complete forcing data.
 
 ```{r}

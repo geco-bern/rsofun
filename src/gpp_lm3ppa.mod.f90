@@ -149,10 +149,10 @@ contains
             psyn, resp, w_scale2, transp )
 
           !===============================
-          ! XXX experiment: increasing net photosynthesis 
+          ! XXX Experiment: increasing net photosynthesis 15% and 30%
           !===============================
-          ! psyn = psyn * 1.3
-          ! resp = resp * 1.3
+          ! psyn = psyn * 1.30
+          ! resp = resp * 1.30
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
           cc%An_op   = psyn  ! molC s-1 m-2 of leaves ! net photosynthesis, mol C/(m2 of leaves s)
