@@ -366,6 +366,7 @@ TARGET 4. Number of trees higher than 12 cm
 ```{r,include=FALSE, eval=TRUE}
 LAE_data <- read_csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
 LAE_data <- LAE_data %>%mutate(DBH_cm = UMFANG/pi)
+LAE_data %>% group_by(INVYEAR) %>% summarise(nTrees=n())
 LAE_nTrees <- LAE_data %>% dplyr::filter(DBH_cm >= 12)
 
 # For all tree species

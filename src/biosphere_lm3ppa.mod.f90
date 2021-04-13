@@ -51,7 +51,7 @@ contains
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
-    if (myinterface%steering%init) then
+    if (myinterface%steering%init) then ! is true for the first year
 
       ! Parameter initialization: Initialize PFT parameters
       call initialize_PFT_data()

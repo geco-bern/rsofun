@@ -783,7 +783,7 @@ contains
 
           if (cc%bl_max > 0) then
           ! deathrate = exp(param_nsc*(cc%nsc/cc%bl_max))/(0.001+exp(param_nsc*(cc%nsc/cc%bl_max))) 
-          deathrate = param_nsc * 0.01 * (exp(-2*(cc%nsc/cc%bl_max))/(0.01+exp(-2*(cc%nsc/cc%bl_max)))) ! -2 instead of -.5
+          deathrate = param_nsc * 0.01 * (exp(-2*(cc%nsc/cc%bl_max))/(0.01+exp(-2*(cc%nsc/cc%bl_max))))
 
           endif
 
@@ -794,6 +794,7 @@ contains
 
           ! deathrate = param_gr * (cc%dbh - cc%DBH_ys) + 0.01
           ! deathrate = param_gr * 0.01*(2*exp(10*(cc%dbh - cc%DBH_ys)))/(1+exp(1*(cc%dbh - cc%DBH_ys)))
+          ! dDBH = cc%dbh-cc%DBH_ys
           deathrate = param_gr * sp%mortrate_d_c *                &
                            (1. + 5.*exp(4.*(cc%dbh-cc%DBH_ys-2))/ &
                            (1. + exp(4.*(cc%dbh-cc%DBH_ys-2))))
@@ -817,20 +818,13 @@ contains
               deathrate = sp%mortrate_d_u * &
                      (1. + A_mort*exp(B_mort*cc%dbh))/ &
                      (1. +        exp(B_mort*cc%dbh)) 
-                     ! + 1/exp((-1)*(cc%dbh-2))
-              ! deathrate = 0.075*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
-              ! deathrate = 0.72*exp(-40*cc%dbh)/(1+exp(-40*cc%dbh)) + 0.05*exp(param_dbh*cc%dbh)
-              ! deathrate = 2.25*exp(-40*cc%dbh)/(1+exp(-40*cc%dbh)) + 0.05*exp(param_dbh*cc%dbh)
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then
                 deathrate = param_dbh * sp%mortrate_d_c *    &
                            (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
                            (1. + exp(4.*(cc%dbh-DBHtp))))
-                ! deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
-                ! deathrate = exp(param_dbh*cc%dbh)-1 ! param_dbh = 0.2-0.8
-                ! deathrate = 0.05*exp(param_dbh*cc%dbh) ! param_dbh = 1-3
-                ! deathrate = 10*(exp(param_dbh*(cc%dbh-2)))/(1+exp(param_dbh*(cc%dbh-2))) ! param_dbh = 3-5
+
               else
                 deathrate = sp%mortrate_d_c !0.01
               endif
