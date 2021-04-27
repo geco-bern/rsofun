@@ -1179,10 +1179,10 @@ contains
     out_annual_tile%CAI        = vegn%CAI
     out_annual_tile%LAI        = vegn%LAI
     out_annual_tile%density    = vegn%nindivs*10000   !indivs/ha New tile out
-    out_annual_tile%DBH        = vegn%DBH             !xxx New tile out
+    out_annual_tile%DBH        = vegn%DBH             !xxx New tile out in m.
     out_annual_tile%density12  = vegn%nindivs12*10000 !xxx New tile out
     out_annual_tile%DBH12      = vegn%DBH12           !xxx New tile out
-    out_annual_tile%QMD        = vegn%QMD             !xxx New tile out
+    out_annual_tile%QMD        = vegn%QMD*100         !xxx New tile out *100 to convert in cm
     out_annual_tile%NPP        = vegn%annualNPP       !xxx New tile out
     out_annual_tile%GPP        = vegn%annualGPP
     out_annual_tile%Rauto      = vegn%annualResp

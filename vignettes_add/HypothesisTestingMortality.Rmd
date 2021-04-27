@@ -556,7 +556,7 @@ setwd("/Users/lmarques/rsofun/Simulations_pmodel")
 ea1sa1mdgl_out_hourly_tile <- read.csv("ea1sa1mdgl_out_hourly_tile.csv")
 ea1sa1mdgl_out_daily_tile  <- read.csv("ea1sa1mdgl_out_daily_tile.csv")
 ea1sa1mdgl_out_daily_cohorts  <- read.csv("ea1sa1mdgl_out_daily_cohorts.csv")
-ea1sa1mdgl_out_annual_tile  <- read.csv("ea1sa1mdgl_out_annual_tile.csv")
+ea1sa1mdgl_out_annual_tile  <- read.csv("/Users/lmarques/rsofun/Simulations_pmodel/ea1sa1mdgl_out_annual_tile.csv")
 ea1sa1mdgl_out_annual_cohorts  <- read.csv("ea1sa1mdgl_out_annual_cohorts.csv")
 
 setwd("/Users/lmarques/rsofun/Simulations_pmodel")

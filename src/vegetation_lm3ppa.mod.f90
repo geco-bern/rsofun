@@ -712,7 +712,7 @@ contains
 
       ! check if current CAI is greater than maximum CAI
       ! print*, "CAI_max, CAI", CAI_max, vegn%CAI
-      ! ! xxx check whether cohorts are ranked w.r.t. height
+      ! ! ! xxx check whether cohorts are ranked w.r.t. height
       ! print*, "height", vegn%cohorts%height 
       ! print*, "vegn%n_cohorts", vegn%n_cohorts 
 
@@ -767,6 +767,7 @@ contains
       ! write(*,*)"cai_partial2", cai_partial
       ! write(*,*)'k,totCC-2',k, totCC
       ! end of final check
+      ! print*, "cCAI", cCAI
 
       deallocate(cai_partial)
  
@@ -795,11 +796,15 @@ contains
           ! deathrate = param_gr * (cc%dbh - cc%DBH_ys) + 0.01
           ! deathrate = param_gr * 0.01*(2*exp(10*(cc%dbh - cc%DBH_ys)))/(1+exp(1*(cc%dbh - cc%DBH_ys)))
           ! dDBH = cc%dbh-cc%DBH_ys
-          deathrate = param_gr * sp%mortrate_d_c *                &
-                           (1. + 5.*exp(4.*(cc%dbh-cc%DBH_ys-2))/ &
-                           (1. + exp(4.*(cc%dbh-cc%DBH_ys-2))))
-          ! deathrate = param_gr * (cc%Volume - cc%Vol_ys)
+          ! deathrate = param_gr * sp%mortrate_d_c *    &
+          !                  (1. + 5.*exp(4.*(cc%dbh-cc%DBH_ys-2))/ &
+          !                  (1. + exp(4.*(cc%dbh-cc%DBH_ys-2))))
+          deathrate = param_gr * sp%mortrate_d_c *    &
+                           (1. + 5.*exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))/ &
+                           (1. + exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))))
           ! deathrate = param_gr * (cc%bsw + cc%bHW - cc%ABG_ys)
+          ! print*, "cc%dbh-cc%DBH_ys", cc%dbh-cc%DBH_ys
+          ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      

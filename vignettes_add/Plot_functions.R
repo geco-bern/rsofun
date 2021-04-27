@@ -23,10 +23,15 @@ ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.01*(exp(-2*.x)
 ######## Growth rate function ######## 
 #  NOW IN FORTRAN!
 # See that maximum value of cc%dbh-cc%DBH_ys is 0.002
+# See that maximum value of cc%dbh-cc%DBH_ys is 0.002
+
 ggplot(data.frame(x = c(0, 0.002)), aes(x)) + stat_function(fun = ~ 0.01*(1+5*exp(4*(.x-2)))/(1+exp(4*(.x-2)))) +
   labs(x='Growth', y='Deathrate')
 
-ggplot(data.frame(x = c(0, 0.002)), aes(x)) + stat_function(fun = ~ 1*.x+0.01)+
+ggplot(data.frame(x = c(0, 10)), aes(x)) + stat_function(fun = ~ 0.01*(1+1.5*exp(12*(.x)))/(1+exp(12*(.x)))) +
+  labs(x='Growth', y='Deathrate')
+
+ggplot(data.frame(x = c(0, 0.002)), aes(x)) + stat_function(fun = ~ 5*.x+0.01)+
   labs(x='Growth', y='Deathrate') + theme_bw()
 
 ggplot(data.frame(x = c(0, 0.002)), aes(x)) + stat_function(fun = ~ 0.01*(2*exp(10*(.x)))/(1+exp(1*(.x)))) +
