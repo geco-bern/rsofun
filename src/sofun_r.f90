@@ -327,7 +327,8 @@ contains
     output_annual_cohorts_maxLAI, &
     output_annual_cohorts_Volume, &
     output_annual_cohorts_n_deadtrees,  &
-    output_annual_cohorts_c_deadtrees  &
+    output_annual_cohorts_c_deadtrees,  &
+    output_annual_cohorts_deathrate  &
     ) bind(C, name = "lm3ppa_f_")
 
     !////////////////////////////////////////////////////////////////
@@ -467,6 +468,7 @@ contains
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Volume
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_n_deadtrees
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_c_deadtrees
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_deathrate
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -755,6 +757,7 @@ contains
         output_annual_cohorts_Volume(idx, :)     = dble(out_biosphere%annual_cohorts(:)%Volume)
         output_annual_cohorts_n_deadtrees(idx, :) = dble(out_biosphere%annual_cohorts(:)%n_deadtrees)
         output_annual_cohorts_c_deadtrees(idx, :) = dble(out_biosphere%annual_cohorts(:)%c_deadtrees)
+        output_annual_cohorts_deathrate(idx, :) = dble(out_biosphere%annual_cohorts(:)%deathrate)
 
       end if
 
@@ -920,6 +923,7 @@ contains
     out_annual_tile(55) = dble(annual_tile%NPPW)
     out_annual_tile(56) = dble(annual_tile%n_deadtrees)
     out_annual_tile(57) = dble(annual_tile%c_deadtrees)
+    out_annual_tile(58) = dble(annual_tile%c_turnover_time)
 
   end subroutine populate_outarray_annual_tile
 

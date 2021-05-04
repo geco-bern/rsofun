@@ -264,6 +264,7 @@ module md_interface_lm3ppa
     real :: NPPW
     real :: n_deadtrees
     real :: c_deadtrees
+    real :: c_turnover_time
   end type outtype_annual_tile  
 
   type outtype_annual_cohorts ! fno2
@@ -295,6 +296,7 @@ module md_interface_lm3ppa
     real :: Volume
     real :: n_deadtrees
     real :: c_deadtrees
+    real :: deathrate
   end type outtype_annual_cohorts
 
   type outtype_biosphere

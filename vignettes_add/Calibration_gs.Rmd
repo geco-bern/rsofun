@@ -594,6 +594,8 @@ df_drivers$params_species[[1]]$LAI_light  <- settings_calib_DBH_gs$par_opt["LAI_
 df_drivers$params_tile[[1]]$tf_base  <-      settings_calib_DBH_gs$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <-      settings_calib_DBH_gs$par_opt["par_mort"]
 
+df_drivers$forcing[[1]]$aCO2_AW <- df_drivers$forcing[[1]]$aCO2_AW * 1.15
+
 df_calib_DBH_gs <- runread_lm3ppa_f(
      df_drivers,
      makecheck = TRUE,

@@ -221,7 +221,8 @@ void F77_NAME(lm3ppa_f)(
     double *output_annual_cohorts_maxLAI,
     double *output_annual_cohorts_Volume,
     double *output_annual_cohorts_n_deadtrees,
-    double *output_annual_cohorts_c_deadtrees
+    double *output_annual_cohorts_c_deadtrees,
+    double *output_annual_cohorts_deathrate
     );
 
 // C wrapper function for LM3PPA
@@ -338,6 +339,7 @@ extern SEXP lm3ppa_f_C(
     SEXP output_annual_cohorts_Volume  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_n_deadtrees  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_c_deadtrees  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_deathrate  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     
     // Fortran subroutine call
     F77_CALL(lm3ppa_f)(
@@ -445,7 +447,8 @@ extern SEXP lm3ppa_f_C(
         REAL(output_annual_cohorts_maxLAI),
         REAL(output_annual_cohorts_Volume),
         REAL(output_annual_cohorts_n_deadtrees),
-        REAL(output_annual_cohorts_c_deadtrees)
+        REAL(output_annual_cohorts_c_deadtrees),
+        REAL(output_annual_cohorts_deathrate)
         );
 
     // // Output as list
@@ -509,8 +512,9 @@ extern SEXP lm3ppa_f_C(
     SET_VECTOR_ELT(out_list, 55, output_annual_cohorts_Volume);
     SET_VECTOR_ELT(out_list, 56, output_annual_cohorts_n_deadtrees);
     SET_VECTOR_ELT(out_list, 57, output_annual_cohorts_c_deadtrees);
+    SET_VECTOR_ELT(out_list, 58, output_annual_cohorts_deathrate);
 
-    UNPROTECT(59);
+    UNPROTECT(60);
 
     return out_list;
 }
@@ -520,7 +524,7 @@ extern SEXP lm3ppa_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
-  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   45},  // Number of the SEXP variables (not the output)
+  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   46},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };
 

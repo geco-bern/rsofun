@@ -707,6 +707,13 @@ contains
 
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
 
+      ! Remove a big amount of very small trees first
+      if(cc%layer > 1) deathrate = 0.2 !sp%mortrate_d_u
+      deadtrees = cc%nindivs * deathrate
+      call plant2soil(vegn,cc,deadtrees)
+      ! Update plant density
+      cc%nindivs = cc%nindivs - deadtrees
+
       ! set calibratable mortality parameter
       CAI_max = myinterface%params_tile%par_mort
 
@@ -796,12 +803,11 @@ contains
           ! deathrate = param_gr * (cc%dbh - cc%DBH_ys) + 0.01
           ! deathrate = param_gr * 0.01*(2*exp(10*(cc%dbh - cc%DBH_ys)))/(1+exp(1*(cc%dbh - cc%DBH_ys)))
           ! dDBH = cc%dbh-cc%DBH_ys
-          ! deathrate = param_gr * sp%mortrate_d_c *    &
-          !                  (1. + 5.*exp(4.*(cc%dbh-cc%DBH_ys-2))/ &
-          !                  (1. + exp(4.*(cc%dbh-cc%DBH_ys-2))))
-          deathrate = param_gr * sp%mortrate_d_c *    &
-                           (1. + 5.*exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))/ &
-                           (1. + exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))))
+          ! deathrate = param_gr * 0.01 *    &
+          !                  (1. + 5.*exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))/ &
+          !                  (1. + exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))))
+
+          deathrate = param_gr * 0.01 * (2*exp(60*(cc%bsw+cc%bHW-cc%ABG_ys))/(1+exp(60*(cc%bsw+cc%bHW-cc%ABG_ys))))
           ! deathrate = param_gr * (cc%bsw + cc%bHW - cc%ABG_ys)
           ! print*, "cc%dbh-cc%DBH_ys", cc%dbh-cc%DBH_ys
           ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys
@@ -839,11 +845,13 @@ contains
 
         deathrate = deathrate + 0.01
         deadtrees = cc%nindivs * deathrate
-        ! deadtrees = cc%nindivs*(1.0-exp(0.0-deathrate*deltat/seconds_per_year)) ! individuals / m2
-        ! deadtrees = cc%nindivs * MIN(1.0,deathrate*deltat/seconds_per_year) ! individuals / m2
+
+        ! record mortality rates at cohort level
+        cc%deathratevalue   = deathrate
+
         ! Carbon and Nitrogen from dead plants to soil pools
-        ! print*, "deadtrees2", deadtrees
         call plant2soil(vegn,cc,deadtrees)
+
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
         ! print*, "cc%nindivs", cc%nindivs

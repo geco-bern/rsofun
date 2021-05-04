@@ -191,6 +191,7 @@ module datatypes
     real    :: annualResp 
     real    :: n_deadtrees        = 0.0
     real    :: c_deadtrees        = 0.0
+    real    :: deathratevalue
     !===== Nitrogen model related parameters
     real    :: NSNmax             = 0.0
     real    :: NSN                = 0.0           ! non-structural N pool
@@ -1101,6 +1102,7 @@ contains
     out_annual_cohorts(:)%Volume     = dummy
     out_annual_cohorts(:)%n_deadtrees = dummy
     out_annual_cohorts(:)%c_deadtrees = dummy
+    out_annual_cohorts(:)%deathrate = dummy
 
     ! Cohorts ouput
     do i = 1, vegn%n_cohorts
@@ -1146,9 +1148,10 @@ contains
       out_annual_cohorts(i)%Volume     = cc%Volume
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
+      out_annual_cohorts(i)%deathrate  = cc%deathratevalue
 
 ! print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
-! print*, cc%bl_max, "cc%bl_max"
+! print*, cc%layer, "cc%layer"
 
     enddo
 
@@ -1232,6 +1235,7 @@ contains
     out_annual_tile%NPPW       = vegn%NPPW       !xxx New tile out
     out_annual_tile%n_deadtrees = vegn%n_deadtrees !xxx New tile out
     out_annual_tile%c_deadtrees = vegn%c_deadtrees !xxx New tile out
+    out_annual_tile%c_turnover_time = vegn%woodC/vegn%NPPW !xxx New tile out
 
     ! I cannot figure out why N losing. Hack!
     if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
