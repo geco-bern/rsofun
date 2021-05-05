@@ -229,6 +229,14 @@ eb1sa1DBHgl_out_annual_tile <- eb1sa1DBHgl_out_annual_tile %>% mutate(Mortality 
 eb2sa1DBHgl_out_annual_tile <- eb2sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(eb2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(eb2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb2sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
 eb3sa1DBHgl_out_annual_tile <- eb3sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(eb3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(eb3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb3sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+
+# CO2
+ec1sa1DBHgl_out_annual_tile <- ec1sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ec1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ec1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ec1sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+
+ec2sa1DBHgl_out_annual_tile <- ec2sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ec2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ec2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ec2sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+
+ec3sa1DBHgl_out_annual_tile <- ec3sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ec3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ec3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ec3sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+
 ```
 
 ## NSC Mortality gs-leuning
@@ -1013,7 +1021,7 @@ ggplot() +
 ### Stand develop: Stand biomass vs. time
 
 From annual_tile_output: PlanC (Biomass)
-Level of LUE (mol/s/m2)
+Level of CO2
 
 ```{r}
 # Mortality as a function of DBH
@@ -1079,7 +1087,6 @@ ggsave("plotBio.tiff", width = 10, height = 3, device='tiff', dpi=300)
 
 ```
 
-
 ### Arrange figures
 ```{r, fig.width = 10, fig.height = 4}
 
@@ -1102,8 +1109,66 @@ ggsave("plotBio.tiff", width = 9.5, height = 3, device='tiff', dpi=300)
 
 ```
 
+### Carbon Turnover time vs. time
 
+From annual_tile_output: c_turnover_time 
+Level of CO2
 
+```{r}
+# Mortality as a function of DBH
+# Biomass changes in LUE with WD level 1
+BioCO2 <- ggplot() + 
+  geom_line(data=ec1sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
+  geom_line(data=ec2sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
+  geom_line(data=ec3sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
+  scale_color_manual("Levels of CO2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "Tree mortality as a function of size")
+
+# Mortality as a function of C starvation
+# Biomass changes in LUE with WD level 1
+BioNSC <- ggplot() + 
+  geom_line(data=ea1sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
+  geom_line(data=ea2sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
+  geom_line(data=ea3sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "Tree mortality as a function of C starvation")
+
+# Mortality as a function of Growth rate
+# Biomass changes in LUE with WD level 1
+BioGR <- ggplot() + 
+  geom_line(data=ea1sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
+  geom_line(data=ea2sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
+  geom_line(data=ea3sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " , ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "Tree mortality as a function of growth rate") 
+
+# Mortality as a function of Self-thinning
+# Biomass changes in LUE with WD level 1
+ggplot() + 
+  geom_line(data=ea1sa1CSTgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
+  geom_line(data=ea2sa1CSTgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
+  geom_line(data=ea3sa1CSTgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of Constant Self-thinning gs-Leuning") 
+
+```
 
 
 

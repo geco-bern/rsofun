@@ -1126,8 +1126,8 @@ contains
       out_annual_cohorts(i)%layer      = cc%layer
       out_annual_cohorts(i)%density    = cc%nindivs*10000
       out_annual_cohorts(i)%f_layer    = cc%layerfrac
-      out_annual_cohorts(i)%dDBH       = dDBH ! in m
-      out_annual_cohorts(i)%dbh        = cc%dbh
+      out_annual_cohorts(i)%dDBH       = dDBH*100     ! *100 to convert m in cm
+      out_annual_cohorts(i)%dbh        = cc%dbh*100   ! *100 to convert m in cm
       out_annual_cohorts(i)%height     = cc%height
       out_annual_cohorts(i)%age        = cc%age
       out_annual_cohorts(i)%Acrown     = cc%crownarea
@@ -1181,10 +1181,10 @@ contains
     out_annual_tile%year       = iyears
     out_annual_tile%CAI        = vegn%CAI
     out_annual_tile%LAI        = vegn%LAI
-    out_annual_tile%density    = vegn%nindivs*10000   !indivs/ha New tile out
-    out_annual_tile%DBH        = vegn%DBH             !xxx New tile out in m.
+    out_annual_tile%density    = vegn%nindivs*10000   !New tile out *10000 to convert in indivs/ha
+    out_annual_tile%DBH        = vegn%DBH*100         !xxx New tile out *100 to convert in cm
     out_annual_tile%density12  = vegn%nindivs12*10000 !xxx New tile out
-    out_annual_tile%DBH12      = vegn%DBH12           !xxx New tile out
+    out_annual_tile%DBH12      = vegn%DBH12*100       !xxx New tile out *100 to convert in cm
     out_annual_tile%QMD        = vegn%QMD*100         !xxx New tile out *100 to convert in cm
     out_annual_tile%NPP        = vegn%annualNPP       !xxx New tile out
     out_annual_tile%GPP        = vegn%annualGPP
