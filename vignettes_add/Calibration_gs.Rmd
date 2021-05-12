@@ -49,7 +49,7 @@ params_siml <- tibble( #list
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
       method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
+      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthing
       )
 ```
 
@@ -659,6 +659,8 @@ df_drivers$params_species[[1]]$LAI_light  <- settings_calib_NSC_gs$par_opt["LAI_
 df_drivers$params_tile[[1]]$tf_base  <-      settings_calib_NSC_gs$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <-      settings_calib_NSC_gs$par_opt["par_mort"]
 
+df_drivers$forcing[[1]]$aCO2_AW <- df_drivers$forcing[[1]]$aCO2_AW * 1.30
+
 df_calib_NSC_gs <- runread_lm3ppa_f(
      df_drivers,
      makecheck = TRUE,
@@ -890,6 +892,19 @@ write.csv(df_calib_NSC_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3p
 write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_daily_cohorts.csv")
 write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_annual_tile.csv")
 write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_annual_cohorts.csv")
+
+# CO2
+write.csv(df_calib_NSC_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_hourly_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_daily_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_daily_cohorts.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_annual_cohorts.csv")
+
+write.csv(df_calib_NSC_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_hourly_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_daily_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_daily_cohorts.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_annual_cohorts.csv")
 
 ```
 

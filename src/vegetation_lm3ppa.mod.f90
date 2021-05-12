@@ -9,7 +9,7 @@ module md_vegetation_lm3ppa
 
   ! public subroutines
   public :: initialize_cohort_from_biomass, initialize_vegn_tile
-  public :: vegn_CNW_budget, vegn_phenology, vegn_growth_EW,update_layer_LAI              ! , vegn_CNW_budget_daily
+  public :: vegn_CNW_budget, vegn_phenology, vegn_growth_EW,update_layer_LAI ! , vegn_CNW_budget_daily
   public :: vegn_reproduction, vegn_annualLAImax_update !, annual_calls
   public :: vegn_nat_mortality, vegn_species_switch !, vegn_starvation
   public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
@@ -803,11 +803,11 @@ contains
           ! deathrate = param_gr * (cc%dbh - cc%DBH_ys) + 0.01
           ! deathrate = param_gr * 0.01*(2*exp(10*(cc%dbh - cc%DBH_ys)))/(1+exp(1*(cc%dbh - cc%DBH_ys)))
           ! dDBH = cc%dbh-cc%DBH_ys
-          ! deathrate = param_gr * 0.01 *    &
-          !                  (1. + 5.*exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))/ &
-          !                  (1. + exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))))
+          deathrate = param_gr * 0.01 *    &
+                           (1. + 5.*exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))/ &
+                           (1. + exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))))
 
-          deathrate = param_gr * 0.01 * (2*exp(60*(cc%bsw+cc%bHW-cc%ABG_ys))/(1+exp(60*(cc%bsw+cc%bHW-cc%ABG_ys))))
+          ! deathrate = param_gr * 0.01 * (2*exp(60*(cc%bsw+cc%bHW-cc%ABG_ys))/(1+exp(60*(cc%bsw+cc%bHW-cc%ABG_ys))))
           ! deathrate = param_gr * (cc%bsw + cc%bHW - cc%ABG_ys)
           ! print*, "cc%dbh-cc%DBH_ys", cc%dbh-cc%DBH_ys
           ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys

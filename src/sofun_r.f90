@@ -725,9 +725,10 @@ contains
       !----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)
       !----------------------------------------------------------------
-      if (.not. myinterface%steering%spinup) then  
+      if (.not. myinterface%steering%spinup) then  ! To get outputs only after spinupyears
 
         idx =  yr - myinterface%params_siml%spinupyears
+        ! idx =  yr
 
         output_annual_cohorts_year(idx, :)       = dble(out_biosphere%annual_cohorts(:)%year)
         output_annual_cohorts_cID(idx, :)        = dble(out_biosphere%annual_cohorts(:)%cID)
@@ -757,7 +758,7 @@ contains
         output_annual_cohorts_Volume(idx, :)     = dble(out_biosphere%annual_cohorts(:)%Volume)
         output_annual_cohorts_n_deadtrees(idx, :) = dble(out_biosphere%annual_cohorts(:)%n_deadtrees)
         output_annual_cohorts_c_deadtrees(idx, :) = dble(out_biosphere%annual_cohorts(:)%c_deadtrees)
-        output_annual_cohorts_deathrate(idx, :) = dble(out_biosphere%annual_cohorts(:)%deathrate)
+        output_annual_cohorts_deathrate(idx, :)  = dble(out_biosphere%annual_cohorts(:)%deathrate)
 
       end if
 
