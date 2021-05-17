@@ -224,7 +224,7 @@ df_soiltexture <- bind_rows(
 The file has the following variables (units):
 
 ```{r}
-load("~/data/forcingLAE.RData")#forcingLAE See script prepare_drivers.Rmd
+load("~/rsofun/data/forcingLAE.RData")#forcingLAE See script prepare_drivers.Rmd
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
