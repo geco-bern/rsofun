@@ -136,6 +136,8 @@ The units of fluxes have changed, but the object `df_drivers` has not been adjus
 
 ```{r}
 df_drivers$forcing[[1]]$prec <- rsofun::df_drivers$forcing[[1]]$prec / (60*60*24)
+df_drivers$forcing[[1]]$rainf <- df_drivers$forcing[[1]]$prec
+df_drivers$forcing[[1]]$snowf <- 0.0
 df_drivers$forcing[[1]]$ppfd <- rsofun::df_drivers$forcing[[1]]$ppfd / (60*60*24)
 ```
 
