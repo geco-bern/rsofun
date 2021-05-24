@@ -41,6 +41,9 @@ df_drivers_fluxnet2015 <- df_drivers_fluxnet2015 %>%
   ## model requires flux per seconds now
   mutate(prec = prec / (60*60*24), ppfd = ppfd / (60*60*24)) %>% 
   
+  ## assuming all precipitation in liquid form
+  mutate(rainf = prec, snowf = 0) %>% 
+  
   group_by(sitename) %>% 
   nest() %>%
   rename(forcing = data) %>% 
