@@ -12,6 +12,7 @@ library(dplyr)
 library(tibble)
 library(rsofun)
 library(ggplot2)
+library(ggpubr) # ggarrange
 ```
 
 # Read model outputs
@@ -20,7 +21,7 @@ library(ggplot2)
 
 ```{r}
 
-# LUE
+# LUE - Different environmental conditions
 ea1sa1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_hourly_tile.csv")
 ea1sa1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_daily_tile.csv")
 ea1sa1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_daily_cohorts.csv")
@@ -39,43 +40,24 @@ ea3sa1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_
 ea3sa1DBHgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_out_annual_tile.csv")
 ea3sa1DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_out_annual_cohorts.csv")
 
-# PAR
-eb1sa1DBHgl_out_hourly_tile    <- ea1sa1DBHgl_out_hourly_tile
-eb1sa1DBHgl_out_daily_tile     <- ea1sa1DBHgl_out_daily_tile
-eb1sa1DBHgl_out_daily_cohorts  <- ea1sa1DBHgl_out_daily_cohorts
-eb1sa1DBHgl_out_annual_tile    <- ea1sa1DBHgl_out_annual_tile
-eb1sa1DBHgl_out_annual_cohorts <- ea1sa1DBHgl_out_annual_cohorts
+# rho_wood - Different species
+ea1sb1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_hourly_tile.csv")
+ea1sb1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_daily_tile.csv")
+ea1sb1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_daily_cohorts.csv")
+ea1sb1DBHgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_annual_tile.csv")
+ea1sb1DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_annual_cohorts.csv")
 
-eb2sa1DBHgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1DBHgl_out_hourly_tile.csv")
-eb2sa1DBHgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1DBHgl_out_daily_tile.csv")
-eb2sa1DBHgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1DBHgl_out_daily_cohorts.csv")
-eb2sa1DBHgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1DBHgl_out_annual_tile.csv")
-eb2sa1DBHgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1DBHgl_out_annual_cohorts.csv")
+ea1sb2DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_hourly_tile.csv")
+ea1sb2DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_daily_tile.csv")
+ea1sb2DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_daily_cohorts.csv")
+ea1sb2DBHgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_annual_tile.csv")
+ea1sb2DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_annual_cohorts.csv")
 
-eb3sa1DBHgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1DBHgl_out_hourly_tile.csv")
-eb3sa1DBHgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1DBHgl_out_daily_tile.csv")
-eb3sa1DBHgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1DBHgl_out_daily_cohorts.csv")
-eb3sa1DBHgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1DBHgl_out_annual_tile.csv")
-eb3sa1DBHgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1DBHgl_out_annual_cohorts.csv")
-
-# CO2
-ec1sa1DBHgl_out_hourly_tile    <- ea1sa1DBHgl_out_hourly_tile
-ec1sa1DBHgl_out_daily_tile     <- ea1sa1DBHgl_out_daily_tile
-ec1sa1DBHgl_out_daily_cohorts  <- ea1sa1DBHgl_out_daily_cohorts
-ec1sa1DBHgl_out_annual_tile    <- ea1sa1DBHgl_out_annual_tile
-ec1sa1DBHgl_out_annual_cohorts <- ea1sa1DBHgl_out_annual_cohorts
-
-ec2sa1DBHgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ec2sa1DBHgl_out_hourly_tile.csv")
-ec2sa1DBHgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/ec2sa1DBHgl_out_daily_tile.csv")
-ec2sa1DBHgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/ec2sa1DBHgl_out_daily_cohorts.csv")
-ec2sa1DBHgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ec2sa1DBHgl_out_annual_tile.csv")
-ec2sa1DBHgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ec2sa1DBHgl_out_annual_cohorts.csv")
-
-ec3sa1DBHgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1DBHgl_out_hourly_tile.csv")
-ec3sa1DBHgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1DBHgl_out_daily_tile.csv")
-ec3sa1DBHgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1DBHgl_out_daily_cohorts.csv")
-ec3sa1DBHgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1DBHgl_out_annual_tile.csv")
-ec3sa1DBHgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1DBHgl_out_annual_cohorts.csv")
+ea1sb3DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_hourly_tile.csv")
+ea1sb3DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_daily_tile.csv")
+ea1sb3DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_daily_cohorts.csv")
+ea1sb3DBHgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_annual_tile.csv")
+ea1sb3DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_annual_cohorts.csv")
 
 ```
 
@@ -83,7 +65,7 @@ ec3sa1DBHgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1DBHgl
 
 ```{r}
 
-# LUE
+# LUE - Different environmental conditions
 ea1sa1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_hourly_tile.csv")
 ea1sa1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_daily_tile.csv")
 ea1sa1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_daily_cohorts.csv")
@@ -102,43 +84,24 @@ ea3sa1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_
 ea3sa1NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_annual_tile.csv")
 ea3sa1NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_annual_cohorts.csv")
 
-# PAR
-eb1sa1NSCgl_out_hourly_tile    <- ea1sa1NSCgl_out_hourly_tile
-eb1sa1NSCgl_out_daily_tile     <- ea1sa1NSCgl_out_daily_tile
-eb1sa1NSCgl_out_daily_cohorts  <- ea1sa1NSCgl_out_daily_cohorts
-eb1sa1NSCgl_out_annual_tile    <- ea1sa1NSCgl_out_annual_tile
-eb1sa1NSCgl_out_annual_cohorts <- ea1sa1NSCgl_out_annual_cohorts
+# rho_wood - Different species
+ea1sb1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_hourly_tile.csv")
+ea1sb1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_daily_tile.csv")
+ea1sb1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_daily_cohorts.csv")
+ea1sb1NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_annual_tile.csv")
+ea1sb1NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_annual_cohorts.csv")
 
-eb2sa1NSCgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1NSCgl_out_hourly_tile.csv")
-eb2sa1NSCgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1NSCgl_out_daily_tile.csv")
-eb2sa1NSCgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1NSCgl_out_daily_cohorts.csv")
-eb2sa1NSCgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1NSCgl_out_annual_tile.csv")
-eb2sa1NSCgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1NSCgl_out_annual_cohorts.csv")
+ea1sb2NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_hourly_tile.csv")
+ea1sb2NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_daily_tile.csv")
+ea1sb2NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_daily_cohorts.csv")
+ea1sb2NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_annual_tile.csv")
+ea1sb2NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_annual_cohorts.csv")
 
-eb3sa1NSCgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_hourly_tile.csv")
-eb3sa1NSCgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_daily_tile.csv")
-eb3sa1NSCgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_daily_cohorts.csv")
-eb3sa1NSCgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_annual_tile.csv")
-eb3sa1NSCgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_annual_cohorts.csv")
-
-# CO2
-ec1sa1NSCgl_out_hourly_tile    <- ea1sa1NSCgl_out_hourly_tile
-ec1sa1NSCgl_out_daily_tile     <- ea1sa1NSCgl_out_daily_tile
-ec1sa1NSCgl_out_daily_cohorts  <- ea1sa1NSCgl_out_daily_cohorts
-ec1sa1NSCgl_out_annual_tile    <- ea1sa1NSCgl_out_annual_tile
-ec1sa1NSCgl_out_annual_cohorts <- ea1sa1NSCgl_out_annual_cohorts
-
-ec2sa1NSCgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_hourly_tile.csv")
-ec2sa1NSCgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_daily_tile.csv")
-ec2sa1NSCgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_daily_cohorts.csv")
-ec2sa1NSCgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_annual_tile.csv")
-ec2sa1NSCgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_annual_cohorts.csv")
-
-ec3sa1NSCgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_hourly_tile.csv")
-ec3sa1NSCgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_daily_tile.csv")
-ec3sa1NSCgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_daily_cohorts.csv")
-ec3sa1NSCgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_annual_tile.csv")
-ec3sa1NSCgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_annual_cohorts.csv")
+ea1sb3NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_hourly_tile.csv")
+ea1sb3NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_daily_tile.csv")
+ea1sb3NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_daily_cohorts.csv")
+ea1sb3NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_annual_tile.csv")
+ea1sb3NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_annual_cohorts.csv")
 
 ```
 
@@ -146,7 +109,7 @@ ec3sa1NSCgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ec3sa1NSCgl
 
 ```{r}
 
-# LUE
+# LUE - Different environmental conditions
 ea1sa1GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_hourly_tile.csv")
 ea1sa1GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_daily_tile.csv")
 ea1sa1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_daily_cohorts.csv")
@@ -165,24 +128,24 @@ ea3sa1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_ou
 ea3sa1GRgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_annual_tile.csv")
 ea3sa1GRgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_annual_cohorts.csv")
 
-# PAR
-eb1sa1GRgl_out_hourly_tile    <- ea1sa1GRgl_out_hourly_tile
-eb1sa1GRgl_out_daily_tile     <- ea1sa1GRgl_out_daily_tile
-eb1sa1GRgl_out_daily_cohorts  <- ea1sa1GRgl_out_daily_cohorts
-eb1sa1GRgl_out_annual_tile    <- ea1sa1GRgl_out_annual_tile
-eb1sa1GRgl_out_annual_cohorts <- ea1sa1GRgl_out_annual_cohorts
+# rho_wood - Different species
+ea1sb1GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_hourly_tile.csv")
+ea1sb1GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_daily_tile.csv")
+ea1sb1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_daily_cohorts.csv")
+ea1sb1GRgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_annual_tile.csv")
+ea1sb1GRgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_annual_cohorts.csv")
 
-eb2sa1GRgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1GRgl_out_hourly_tile.csv")
-eb2sa1GRgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1GRgl_out_daily_tile.csv")
-eb2sa1GRgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1GRgl_out_daily_cohorts.csv")
-eb2sa1GRgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1GRgl_out_annual_tile.csv")
-eb2sa1GRgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1GRgl_out_annual_cohorts.csv")
+ea1sb2GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_hourly_tile.csv")
+ea1sb2GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_daily_tile.csv")
+ea1sb2GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_daily_cohorts.csv")
+ea1sb2GRgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_annual_tile.csv")
+ea1sb2GRgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_annual_cohorts.csv")
 
-eb3sa1GRgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1GRgl_out_hourly_tile.csv")
-eb3sa1GRgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1GRgl_out_daily_tile.csv")
-eb3sa1GRgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1GRgl_out_daily_cohorts.csv")
-eb3sa1GRgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1GRgl_out_annual_tile.csv")
-eb3sa1GRgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1GRgl_out_annual_cohorts.csv")
+ea1sb3GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_hourly_tile.csv")
+ea1sb3GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_daily_tile.csv")
+ea1sb3GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_daily_cohorts.csv")
+ea1sb3GRgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_annual_tile.csv")
+ea1sb3GRgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_annual_cohorts.csv")
 
 ```
 
@@ -190,7 +153,7 @@ eb3sa1GRgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1GRgl_o
 
 ```{r}
 
-# LUE
+# LUE - Different environmental conditions
 ea1sa1CSTgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_hourly_tile.csv")
 ea1sa1CSTgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_daily_tile.csv")
 ea1sa1CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_daily_cohorts.csv")
@@ -209,24 +172,24 @@ ea3sa1CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_
 ea3sa1CSTgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_annual_tile.csv")
 ea3sa1CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_annual_cohorts.csv")
 
-# PAR
-eb1sa1CSTgl_out_hourly_tile    <- ea1sa1CSTgl_out_hourly_tile
-eb1sa1CSTgl_out_daily_tile     <- ea1sa1CSTgl_out_daily_tile
-eb1sa1CSTgl_out_daily_cohorts  <- ea1sa1CSTgl_out_daily_cohorts
-eb1sa1CSTgl_out_annual_tile    <- ea1sa1CSTgl_out_annual_tile
-eb1sa1CSTgl_out_annual_cohorts <- ea1sa1CSTgl_out_annual_cohorts
+# rho_wood - Different species
+ea1sb1CSTgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1CSTgl_out_hourly_tile.csv")
+ea1sb1CSTgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1CSTgl_out_daily_tile.csv")
+ea1sb1CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1CSTgl_out_daily_cohorts.csv")
+ea1sb1CSTgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1CSTgl_out_annual_tile.csv")
+ea1sb1CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1CSTgl_out_annual_cohorts.csv")
 
-eb2sa1CSTgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1CSTgl_out_hourly_tile.csv")
-eb2sa1CSTgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1CSTgl_out_daily_tile.csv")
-eb2sa1CSTgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1CSTgl_out_daily_cohorts.csv")
-eb2sa1CSTgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1CSTgl_out_annual_tile.csv")
-eb2sa1CSTgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/eb2sa1CSTgl_out_annual_cohorts.csv")
+ea1sb2CSTgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2CSTgl_out_hourly_tile.csv")
+ea1sb2CSTgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2CSTgl_out_daily_tile.csv")
+ea1sb2CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2CSTgl_out_daily_cohorts.csv")
+ea1sb2CSTgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2CSTgl_out_annual_tile.csv")
+ea1sb2CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2CSTgl_out_annual_cohorts.csv")
 
-eb3sa1CSTgl_out_hourly_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1CSTgl_out_hourly_tile.csv")
-eb3sa1CSTgl_out_daily_tile      <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1CSTgl_out_daily_tile.csv")
-eb3sa1CSTgl_out_daily_cohorts   <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1CSTgl_out_daily_cohorts.csv")
-eb3sa1CSTgl_out_annual_tile     <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1CSTgl_out_annual_tile.csv")
-eb3sa1CSTgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1CSTgl_out_annual_cohorts.csv")
+ea1sb3CSTgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_out_hourly_tile.csv")
+ea1sb3CSTgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_out_daily_tile.csv")
+ea1sb3CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_out_daily_cohorts.csv")
+ea1sb3CSTgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_out_annual_tile.csv")
+ea1sb3CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_out_annual_cohorts.csv")
 
 ```
 
@@ -238,23 +201,19 @@ eb3sa1CSTgl_out_annual_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/eb3sa1CSTgl
 # LUE
 ea1sa1DBHgl_out_annual_tile <- ea1sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
+ea1sa1DBHgl_out_annual_cohorts <- ea1sa1DBHgl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = 10)) %>% mutate(ageclass = cut(age ,breaks = 10)) %>% mutate(basalArea = pi*(dbh^2/4)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
+  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = c(seq(0,10,2),30),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(1, dim(ea1sa1DBHgl_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1DBHgl_out_annual_cohorts)[1])) %>% mutate(Mortality = rep("DBH", dim(ea1sa1DBHgl_out_annual_cohorts)[1])) #%>% mutate(dbhclass = recode(dbhclass, "(2,5]" = ">2")) %>% mutate(ageclass = recode(ageclass, "(150,500]" = ">150")) %>% mutate(highBAclass = recode(highBAclass, "(10,30]" = ">10"))
+
 ea2sa1DBHgl_out_annual_tile <- ea2sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
 ea3sa1DBHgl_out_annual_tile <- ea3sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-# PAR
-eb1sa1DBHgl_out_annual_tile <- eb1sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(eb1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(eb1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb1sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+# rho_wood
+ea1sb1DBHgl_out_annual_tile <- ea1sb1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sb1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sb1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-eb2sa1DBHgl_out_annual_tile <- eb2sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(eb2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(eb2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb2sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sb2DBHgl_out_annual_tile <- ea1sb2DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sb2DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb2DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(2, dim(ea1sb2DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-eb3sa1DBHgl_out_annual_tile <- eb3sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(eb3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(eb3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb3sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-# CO2
-ec1sa1DBHgl_out_annual_tile <- ec1sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ec1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelCO2 = rep(1, dim(ec1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ec1sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-ec2sa1DBHgl_out_annual_tile <- ec2sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ec2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelCO2 = rep(2, dim(ec2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ec2sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-ec3sa1DBHgl_out_annual_tile <- ec3sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ec3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelCO2 = rep(3, dim(ec3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ec3sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sb3DBHgl_out_annual_tile <- ea1sb3DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sb3DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb3DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(3, dim(ea1sb3DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
 ```
 
@@ -268,12 +227,13 @@ ea2sa1NSCgl_out_annual_tile <- ea2sa1NSCgl_out_annual_tile %>% mutate(Mortality 
 
 ea3sa1NSCgl_out_annual_tile <- ea3sa1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea3sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-# PAR
-eb1sa1NSCgl_out_annual_tile <- eb1sa1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(eb1sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(eb1sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb1sa1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+# rho_wood
+ea1sb1NSCgl_out_annual_tile <- ea1sb1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea1sb1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sb1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-eb2sa1NSCgl_out_annual_tile <- eb2sa1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(eb2sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(eb2sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb2sa1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sb2NSCgl_out_annual_tile <- ea1sb2NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea1sb2NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb2NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(2, dim(ea1sb2NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-eb3sa1NSCgl_out_annual_tile <- eb3sa1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(eb3sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(eb3sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb3sa1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sb3NSCgl_out_annual_tile <- ea1sb3NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea1sb3NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb3NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(3, dim(ea1sb3NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+
 ```
 
 ## GR Mortality gs-leuning
@@ -286,12 +246,13 @@ ea2sa1GRgl_out_annual_tile <- ea2sa1GRgl_out_annual_tile %>% mutate(Mortality = 
 
 ea3sa1GRgl_out_annual_tile <- ea3sa1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea3sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-# PAR
-eb1sa1GRgl_out_annual_tile <- eb1sa1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(eb1sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(eb1sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb1sa1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+# rho_wood
+ea1sb1GRgl_out_annual_tile <- ea1sb1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea1sb1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sb1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-eb2sa1GRgl_out_annual_tile <- eb2sa1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(eb2sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(eb2sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb2sa1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sb2GRgl_out_annual_tile <- ea1sb2GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea1sb2GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb2GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(2, dim(ea1sb2GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-eb3sa1GRgl_out_annual_tile <- eb3sa1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(eb3sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(eb3sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb3sa1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+ea1sb3GRgl_out_annual_tile <- ea1sb3GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea1sb3GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb3GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(3, dim(ea1sb3GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+
 ```
 
 ## CST Mortality gs-leuning
@@ -304,27 +265,21 @@ ea2sa1CSTgl_out_annual_tile <- ea2sa1CSTgl_out_annual_tile %>% mutate(Mortality 
 
 ea3sa1CSTgl_out_annual_tile <- ea3sa1CSTgl_out_annual_tile %>% mutate(Mortality = rep("CST", dim(ea3sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1CSTgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-# PAR
-eb1sa1CSTgl_out_annual_tile <- eb1sa1CSTgl_out_annual_tile %>% mutate(Mortality = rep("CST", dim(eb1sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(eb1sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb1sa1CSTgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-eb2sa1CSTgl_out_annual_tile <- eb2sa1CSTgl_out_annual_tile %>% mutate(Mortality = rep("CST", dim(eb2sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(eb2sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb2sa1CSTgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-eb3sa1CSTgl_out_annual_tile <- eb3sa1CSTgl_out_annual_tile %>% mutate(Mortality = rep("CST", dim(eb3sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(eb3sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(eb3sa1CSTgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 ```
 
 # Exploring relationships and plotting
 
 ## LUE levels
 
-### Stand develop: Stand biomass vs. time
+### 1. Stand develop: Stand biomass vs. time
 
 From annual_tile_output: PlanC (Biomass)
 Level of LUE (mol/s/m2)
 
-```{r}
+```{r, fig.width = 5, fig.height = 5}
+
 # Mortality as a function of DBH
-# Biomass changes in LUE with WD level 1
-BioDBH <- ggplot() + 
+Bio_DBH_LUE <- ggplot() + 
   geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
   geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
   geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
@@ -334,11 +289,11 @@ BioDBH <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a function of size")
+  scale_y_continuous(limits = c(0,45),breaks = seq(0,45,10)) +
+  labs(title= "Tree mortality as fc. of size")
 
 # Mortality as a function of C starvation
-# Biomass changes in LUE with WD level 1
-BioNSC <- ggplot() + 
+Bio_NSC_LUE <- ggplot() + 
   geom_line(data=ea1sa1NSCgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
   geom_line(data=ea2sa1NSCgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
   geom_line(data=ea3sa1NSCgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
@@ -348,11 +303,11 @@ BioNSC <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a function of C starvation")
+  scale_y_continuous(limits = c(0,42),breaks = seq(0,40,10)) +
+  labs(title= "Tree mortality as fc. of C starvation")
 
 # Mortality as a function of Growth rate
-# Biomass changes in LUE with WD level 1
-BioGR <- ggplot() + 
+Bio_GR_LUE <- ggplot() + 
   geom_line(data=ea1sa1GRgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
   geom_line(data=ea2sa1GRgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
   geom_line(data=ea3sa1GRgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
@@ -362,11 +317,11 @@ BioGR <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a function of growth rate") 
+  scale_y_continuous(limits = c(0,42),breaks = seq(0,40,10)) +
+  labs(title= "Tree mortality as fc. of growth rate") 
 
 # Mortality as a function of Self-thinning
-# Biomass changes in LUE with WD level 1
-ggplot() + 
+Bio_CST_LUE <- ggplot() + 
   geom_line(data=ea1sa1CSTgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
   geom_line(data=ea2sa1CSTgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
   geom_line(data=ea3sa1CSTgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
@@ -376,252 +331,238 @@ ggplot() +
   ggtitle("Function of Constant Self-thinning gs-Leuning") 
 
 ```
+
 #### Arrange plots
 
 ```{r, include=F, eval=T,fig.height=4,fig.width=10}
-library(ggpubr) # ggarrange
-ggarrange(BioDBH,BioNSC,BioGR, ncol = 3, nrow = 1, common.legend = T,legend="right")
-ggsave("plotBio.tiff", width = 10, height = 3, device='tiff', dpi=300)
+ggarrange(Bio_DBH_LUE,Bio_NSC_LUE,Bio_GR_LUE, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+ggsave("plot_bio_lue.tiff", width = 9, height = 3, device='tiff', dpi=300)
 
 ```
 
+### 2. Relative change Aboveground NPP vs. Aboveground Biomass
 
-### Arrange figures
-```{r, fig.width = 10, fig.height = 4}
+Level of LUE
 
-## All mortality form with facet_wrap
-data1 <- rbind(ea1sa1DBHgl_out_annual_tile, ea2sa1DBHgl_out_annual_tile, ea3sa1DBHgl_out_annual_tile,
-               ea1sa1NSCgl_out_annual_tile, ea2sa1NSCgl_out_annual_tile, ea3sa1NSCgl_out_annual_tile,
-               ea1sa1GRgl_out_annual_tile,  ea2sa1GRgl_out_annual_tile,  ea3sa1GRgl_out_annual_tile)
+```{r, fig.width = 5, fig.height = 5}
 
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC", "GR"),
-                  labels = c("Tree mortality as function of size", "Tree mortality as function of C starvation", "Tree mortality as function of growth rate"))
-
-ggplot(data=data1) +
-  geom_line(aes(x=year, y=plantC,color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=3)+
-  scale_color_manual(labels = c("Low", "Medium", "High"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(col = "Growth rate",x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "right",legend.text = element_text(size=10),legend.title = element_text(size=10))
-
-ggsave("plotBio.tiff", width = 9.5, height = 3, device='tiff', dpi=300)
-
-
-```
-
-### GPP vs. time
-
-From annual_tile_output: GPP 
-LUE (mol/s/m2)
-
-```{r}
 # Mortality as a function of DBH
-# Biomass changes in LUE with WD level 1
-ggplot() + 
-  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
-  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
-  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = "Year", y = expression(paste("GPP (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(NPP30=mean(A_NPP))
+NPP15 <- ea2sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(NPP15=mean(A_NPP))
+NPP0  <- ea1sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(NPP0=mean(A_NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+B30 <- ea3sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(B30=mean(A_Biomass))
+B15 <- ea2sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(B15=mean(A_Biomass))
+B0  <- ea1sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(B0=mean(A_Biomass))
+dB0_15 <- (B15$B15 - B0$B0)/B0$B0
+dB15_30 <- (B30$B30 - B15$B15)/B15$B15
+dB0_30 <- (B30$B30 - B0$B0)/B0$B0
+
+DBHgl_RelChange_0_15 <- data.frame(dNPP0_15,dB0_15)
+DBHgl_RelChange_15_30 <- data.frame(dNPP15_30,dB15_30)
+DBHgl_RelChange_0_30 <- data.frame(dNPP0_30,dB0_30)
+
+dB_dNPP_DBH_LUE <- ggplot() + 
+  geom_point(data=DBHgl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='0-15%')) + 
+  geom_point(data=DBHgl_RelChange_0_30, aes(x=dNPP0_30, y=dB0_30, color='0-30%')) + 
+  scale_color_manual("Levels of LUE", breaks = c("0-15%", "0-30%"), values = c("#619CFF" ,"#00BA38"))+
+  labs(x="dNPP/NPP", y="dB/B")+
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of DBH gs-Leuning") + scale_y_continuous(limits = c(0,3.5))
+  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  ggtitle("Mortality formulation DBH") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+
+# Mortality as a function of NSC
+
+```
+
+#### Arrange plots
+
+```{r, include=F, eval=T,fig.height=4,fig.width=10}
+ggarrange(dB_dNPP_DBH_LUE,dB_dNPP_NSC_LUE,dB_dNPP_GR_LUE, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+ggsave("plot_dB_dNPP_lue.tiff", width = 9, height = 3, device='tiff', dpi=300)
+
+```
+
+### 3. Carbon Turnover time vs. time
+
+From annual_tile_output: c_turnover_time 
+Level of LUE
+
+```{r, fig.width = 5, fig.height = 5}
+# Mortality as a function of DBH
+Tau_DBH_LUE <- ggplot() + 
+  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
+  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
+  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
+  scale_color_manual("Levels of CO2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "Tree mortality as a function of size")
 
 # Mortality as a function of C starvation
-# Biomass changes in LUE with WD level 1
-ggplot() + 
-  geom_line(data=ea1sa1NSCgl_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
-  geom_line(data=ea2sa1NSCgl_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
-  geom_line(data=ea3sa1NSCgl_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = "Year", y = expression(paste("GPP (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of C starvation gs-Leuning") 
+Tau_NSC_LUE <- ggplot() + 
+  geom_line(data=ea1sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
+  geom_line(data=ea2sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
+  geom_line(data=ea3sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "Tree mortality as a function of C starvation")
 
 # Mortality as a function of Growth rate
-# Biomass changes in LUE with WD level 1
-ggplot() + 
-  geom_line(data=ea1sa1GRgl_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
-  geom_line(data=ea2sa1GRgl_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
-  geom_line(data=ea3sa1GRgl_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = "Year", y = expression(paste("GPP (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of Growth rate gs-Leuning") 
+Tau_GR_LUE <- ggplot() + 
+  geom_line(data=ea1sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
+  geom_line(data=ea2sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
+  geom_line(data=ea3sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " , ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "Tree mortality as a function of growth rate") 
 
-# Mortality as a function of Constant Self-thinning
-# Biomass changes in LUE with WD level 1
-ggplot() + 
-  geom_line(data=ea1sa1CSTgl_out_annual_tile, aes(x=year, y=GPP, color='Control')) + 
-  geom_line(data=ea2sa1CSTgl_out_annual_tile, aes(x=year, y=GPP, color='+15%')) +
-  geom_line(data=ea3sa1CSTgl_out_annual_tile, aes(x=year, y=GPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = "Year", y = expression(paste("GPP (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+# Mortality as a function of Self-thinning
+Tau_CST_LUE <- ggplot() + 
+  geom_line(data=ea1sa1CSTgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
+  geom_line(data=ea2sa1CSTgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
+  geom_line(data=ea3sa1CSTgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   ggtitle("Function of Constant Self-thinning gs-Leuning") 
 
 ```
 
-### Crown Area Index vs. time
+#### Arrange plots
 
-```{r}
-ggplot() + 
-  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=CAI, color='Control')) + 
-  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=CAI, color='+15%')) +
-  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=CAI, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="Year", y="CAI")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
+```{r, include=F, eval=T,fig.height=4,fig.width=10}
+ggarrange(Tau_DBH_LUE,Tau_NSC_LUE,Tau_GR_LUE, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+ggsave("plot_tau_lue.tiff", width = 9, height = 3, device='tiff', dpi=300)
 
 ```
 
-### Self-thinning relationship
+### 4. Self-thinning relationship
 
 From annual_tile_output: QMD and Density12
-LUE (mol/s/m2)
+Levels of LUE (mol/s/m2)
 
-```{r, include=T, eval=T,fig.height=6,fig.width=8}
-
-# Mortality as a function of DBH
-# Biomass changes in LUE with WD level 1
-
-## Figure opt 1
-ggplot() + 
-  geom_point(data=subset(ea1sa1DBHgl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='Control')) + 
-  geom_point(data=subset(ea2sa1DBHgl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+15%')) +
-  geom_point(data=subset(ea3sa1DBHgl_out_annual_tile,year>=100), aes(x=log(QMD), y=log(Density12), color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of DBH") + 
-  scale_x_continuous(limits = c(3.5,4.25)) + 
-  scale_y_continuous(limits = c(4.8,6))
-
-## Figure opt 2 With geom_smooth
-data1 <- rbind(ea1sa1DBHgl_out_annual_tile, ea2sa1DBHgl_out_annual_tile, ea3sa1DBHgl_out_annual_tile)
-figure1 <- ggplot() + 
-  geom_point(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
-  geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Levels of Light Use Efficiency", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     legend.text = element_text(size=10),legend.title = element_text(size=10)) + 
-  #ggtitle("Mortality as a function of DBH") + 
-  scale_x_continuous(limits = c(3.5,4),breaks = seq(3.5,4,0.1)) + 
-  scale_y_continuous(limits = c(4.9,6.2),breaks = seq(5,6,0.2))
-ggsave("figure1.1.tiff", width = 5, height = 4, device='tiff', dpi=300)
-
-## Figure opt 3 With geom_abline
-ggplot() + 
-  geom_point(data=ea1sa1DBHgl_out_annual_tile[100:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
-  geom_point(data=ea2sa1DBHgl_out_annual_tile[100:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
-  geom_point(data=ea3sa1DBHgl_out_annual_tile[100:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
-  scale_color_manual("Levels of LUE at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D"  ,"#619CFF","#00BA38"))+
-  scale_x_continuous(limits = c(3.5,4.25)) + 
-  scale_y_continuous(limits = c(4.8,6),breaks = seq(5,6,0.25)) +
-  labs(x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
-  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = ea1sa1DBHgl_out_annual_tile[100:1804,]))[1], 
-              slope = coef(lm(log(Density12) ~ log(QMD), data = ea1sa1DBHgl_out_annual_tile[100:1804,]))[2], color="#F8766D") +
-  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = ea2sa1DBHgl_out_annual_tile[100:1804,]))[1], 
-              slope = coef(lm(log(Density12) ~ log(QMD), data = ea2sa1DBHgl_out_annual_tile[100:1804,]))[2], color="#619CFF") +
-  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = ea3sa1DBHgl_out_annual_tile[100:1804,]))[1], 
-              slope = coef(lm(log(Density12) ~ log(QMD), data = ea3sa1DBHgl_out_annual_tile[100:1804,]))[2], color="#00BA38")
-
-```
-
-From annual_tile_output: QMD and Density12
-LUE (mol/s/m2)
-
-```{r, include=T, eval=T,fig.height=6,fig.width=8}
+```{r, fig.width = 5, fig.height = 5}
 
 # Mortality as a function of DBH
-
 data1 <- rbind(ea1sa1DBHgl_out_annual_tile, ea2sa1DBHgl_out_annual_tile, ea3sa1DBHgl_out_annual_tile)
-ggplot() + 
+stl_DBH_LUE <- ggplot() + 
   geom_point(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),alpha=1) + 
   geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
   scale_color_manual(labels = c("Low","Medium", "High"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
   labs(col = "Growth rate", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
-  ggtitle("") + 
-  scale_x_continuous(limits = c(3.5,4),breaks = seq(3.5,4,0.1)) + 
-  scale_y_continuous(limits = c(4.75,6.25),breaks = seq(4.75,6.25,0.25))
-
-ggsave("figure1.2.tiff", width = 5, height = 5, device='tiff', dpi=300)
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  ggtitle("Tree mortality as fc. of size") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
 
 # Mortality as a function of NSC
-
-data1 <- rbind(ea1sa1NSCgl_out_annual_tile, ea2sa1NSCgl_out_annual_tile, ea3sa1NSCgl_out_annual_tile)
-ggplot() + 
+data1 <- rbind(ea1sa1NSCgl_out_annual_tile[,-59], ea2sa1NSCgl_out_annual_tile, ea3sa1NSCgl_out_annual_tile)
+stl_NSC_LUE <-  ggplot() + 
   geom_point(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
   geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
   labs(col = "Level of LUE", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
-  ggtitle("Mortality as a function of NSC") + 
-  scale_x_continuous(limits = c(2.6,3.6)) + 
-  scale_y_continuous(limits = c(3.8,8.2))
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) +   ggtitle("Tree mortality as fc. of C starvation") + 
+  scale_x_continuous(limits = c(2.5,3.6),breaks = seq(2.5,3.5,0.2)) + 
+  scale_y_continuous(limits = c(3.1,8.8),breaks = seq(4,8,1))
 
 # Mortality as a function of GR
-
 data1 <- rbind(ea1sa1GRgl_out_annual_tile, ea2sa1GRgl_out_annual_tile, ea3sa1GRgl_out_annual_tile)
-ggplot() + 
+stl_GR_LUE <- ggplot() + 
   geom_point(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
   geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
   scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
   labs(col = "Level of LUE", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
-  ggtitle("Mortality as a function of GR") 
-
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) +   ggtitle("Tree mortality as fc. of growth rate") +
+  scale_x_continuous(limits = c(2.5,3.2),breaks = seq(2.5,3.2,0.1)) + 
+  scale_y_continuous(limits = c(3.1,8.8),breaks = seq(4,8,1))
 
 # Mortality as a function of CST
+stl_CST_LUE <- 
+  
+```
 
-## Figure opt 1
-ggplot() + 
-  geom_point(data=subset(ea1sa1CSTgl_out_annual_tile,year>=500), aes(x=log(DBH), y=log(Density), color='Control')) + 
-  geom_point(data=subset(ea2sa1CSTgl_out_annual_tile,year>=500), aes(x=log(DBH), y=log(Density), color='+15%')) +
-  geom_point(data=subset(ea3sa1CSTgl_out_annual_tile,year>=500), aes(x=log(DBH), y=log(Density), color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of DBH") + 
-  scale_x_continuous(limits = c(3.5,4.25)) + 
-  scale_y_continuous(limits = c(4.8,6))
+#### Arrange plots
 
-
-data1 <- rbind(ea1sa1CSTgl_out_annual_tile, ea2sa1CSTgl_out_annual_tile, ea3sa1CSTgl_out_annual_tile)
-ggplot() + 
-  geom_point(data=subset(data1, year>=38), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
-  geom_smooth(data=subset(data1, year>=25), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Level of LUE", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
-  ggtitle("Mortality as a function of GR") 
+```{r, include=F, eval=T,fig.height=4,fig.width=10}
+ggarrange(stl_DBH_LUE,stl_NSC_LUE,stl_GR_LUE, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+ggsave("plot_stl_lue.tiff", width = 9, height = 3, device='tiff', dpi=300)
 
 ```
 
-### Arrange figures
-```{r, fig.width = 10, fig.height = 4}
+### 5. Longevity vs. growth rates
 
-## All mortality form with facet_wrap
-data1 <- rbind(ea1sa1DBHgl_out_annual_tile, ea2sa1DBHgl_out_annual_tile, ea3sa1DBHgl_out_annual_tile,
-               ea1sa1NSCgl_out_annual_tile, ea2sa1NSCgl_out_annual_tile, ea3sa1NSCgl_out_annual_tile,
-               ea1sa1GRgl_out_annual_tile,  ea2sa1GRgl_out_annual_tile,  ea3sa1GRgl_out_annual_tile)
+Hypothesis: The negative relationship between longevity vs. growth rates arises from variations between (across) species, but disappears when looking at variations between sites (within sps).
 
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC", "GR"),
-                  labels = c("Tree mortality as function of size", "Tree mortality as function of C starvation", "Tree mortality as function of growth rate"))
+Two plots:
 
-ggplot(data=subset(data1, year>=500)) +
-  geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
-  geom_point(aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),size=.8) + 
-  facet_wrap(~ Mortality, ncol=3, scales = "free")+
-  scale_color_manual(labels = c("Low", "Medium", "High"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(col = "Growth rate", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "right",legend.text = element_text(size=10),legend.title = element_text(size=10))
+- Different species at a given site: x = growth rate, y = longevity (or 1/mortality). Each point is one species (differing by wood density, root:shoot ratio). Add info either by using color ~site (given LUE, growing season length, PAR); or by combining data from multiple sites and normalizing growth rates and longevity by site-level mean.
+- Same species at different sites (differing by LUE, growing season length, PAR): x = growth rate, y = longevity. Each point is one site (show mean and standard deviations with x and y errorbars)
 
-ggsave("plotST.tiff", width = 9.5, height = 3, device='tiff', dpi=300)
+- longevity is maximum age at tile-level, plot mean across multiple years after spinup
+- plot change in DBH instead of NPP. Take the oldest cohort, and calculate DBH/age
+
+
+```{r, fig.width = 5, fig.height = 5}
+
+# Mortality as a function of DBH
+ea1sa1DBHgl_out_annual_tileMaxAgg <- ea1sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1801) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
+          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T))
+
+ea2sa1DBHgl_out_annual_tileMaxAgg <- ea2sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1801) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),DBH_mean=mean(DBH,na.rm=T), DBH_sd=sd(DBH,na.rm=T),MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T))
+
+ea3sa1DBHgl_out_annual_tileMaxAgg <- ea3sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1801) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),DBH_mean=mean(DBH,na.rm=T), DBH_sd=sd(DBH,na.rm=T),MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T))
+
+long_DBH_LUE <-ggplot() + 
+  geom_point(data=ea1sa1DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color='Control')) + 
+  geom_point(data=ea2sa1DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color='+15%')) +
+  geom_point(data=ea3sa1DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color='+30%')) +
+  scale_color_manual("Levels of CO2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = expression(paste("Growth rate (mm ",yr^-1,  ") ")), y = "Longevity") +  
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "Tree mortality as a function of size")
 
 ```
+
+#### Arrange plots
+
+```{r, include=F, eval=T,fig.height=4,fig.width=10}
+ggarrange(long_DBH_LUE,long_NSC_LUE,long_GR_LUE, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+ggsave("plot_long_lue.tiff", width = 9, height = 3, device='tiff', dpi=300)
+
+```
+
+
+
 
 ### B* vs. initial slope of (B vs. t) 
 
@@ -769,139 +710,6 @@ ggplot(data=dataSlope) +
 
 ```
 
-### Aboveground NPP vs. Biomass
-
-From annual_tile_output: PlanC (Biomass)
-
-```{r}
-
-# Biomass changes in LUE with WD level 1
-# Mortality DBH
-
-ggplot() + 
-  geom_line(data=ea1sa1magl_out_annual_tile, aes(x=plantC, y=NPP, color='Control')) + 
-  geom_line(data=ea2sa1magl_out_annual_tile, aes(x=plantC, y=NPP, color='+15%')) +
-  geom_line(data=ea3sa1magl_out_annual_tile, aes(x=plantC, y=NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="Biomass", y="NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
-
-## A_Biomass and A_NPP need to be calculated in the model!
-ggplot() + 
-  geom_line(data=ea1sa1magl_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='Control')) + 
-  geom_line(data=ea2sa1magl_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+15%')) +
-  geom_line(data=ea3sa1magl_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="(A)Biomass", y="(A)NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
-
-# Biomass changes in LUE with WD level 1
-# Mortality Ratio NSC and Leaf Mass
-ggplot() + 
-  geom_line(data=ea1sa1mb_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='Control')) + 
-  geom_line(data=ea2sa1mb_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+15%')) +
-  geom_line(data=ea3sa1mb_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="(A)Biomass", y="(A)NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
-
-# Biomass changes in LUE with WD level 1
-# Mortality Growth rate
-ggplot() + 
-  geom_line(data=ea1sa1mc_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='Control')) + 
-  geom_line(data=ea2sa1mc_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+15%')) +
-  geom_line(data=ea3sa1mc_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="(A)Biomass", y="(A)NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate")
-
-# Biomass changes in LUE with WD level 1
-# Mortality Constant Self-thinning
-ggplot() + 
-  geom_line(data=ea1sa1md_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='Control')) + 
-  geom_line(data=ea2sa1md_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+15%')) +
-  geom_line(data=ea3sa1md_out_annual_tile, aes(x=A_Biomass, y=A_NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="(A)Biomass", y="(A)NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Constant Self-thinning")
-
-```
-
-### NPP vs. mortality
-
-From annual_tile_output: PlanC (Biomass)
-
-```{r}
-
-# Biomass changes in LUE with WD level 1
-# Mortality DBH
-
-ggplot() + 
-  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=c_deadtrees, y=NPP, color='Control')) + 
-  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=c_deadtrees, y=NPP, color='+15%')) +
-  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=c_deadtrees, y=NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="Turnover", y="NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
-
-ggplot() + 
-  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=n_deadtrees, y=NPP, color='Control')) + 
-  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=n_deadtrees, y=NPP, color='+15%')) +
-  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=n_deadtrees, y=NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="Turnover", y="NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
-
-ggplot() + 
-  geom_line(data=ea1sa1magl_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='Control')) + 
-  geom_line(data=ea2sa1magl_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+15%')) +
-  geom_line(data=ea3sa1magl_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="Turnover", y="(A)NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
-
-# Biomass changes in LUE with WD level 1
-# Mortality Ratio NSC and Leaf Mass
-ggplot() + 
-  geom_line(data=ea1sa1mb_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='Control')) + 
-  geom_line(data=ea2sa1mb_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+15%')) +
-  geom_line(data=ea3sa1mb_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="Turnover", y="(A)NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
-
-# Biomass changes in LUE with WD level 1
-# Mortality Growth rate
-ggplot() + 
-  geom_line(data=ea1sa1mc_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='Control')) + 
-  geom_line(data=ea2sa1mc_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+15%')) +
-  geom_line(data=ea3sa1mc_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="Turnover", y="(A)NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate")
-
-# Biomass changes in LUE with WD level 1
-# Mortality Constant Self-thinning
-ggplot() + 
-  geom_line(data=ea1sa1md_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='Control')) + 
-  geom_line(data=ea2sa1md_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+15%')) +
-  geom_line(data=ea3sa1md_out_annual_tile, aes(x=c_deadtrees, y=A_NPP, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x="Turnover", y="(A)NPP")+
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Constant Self-thinning")
-
-```
 
 ### B* at maturity
 
@@ -957,7 +765,166 @@ ggplot() +
 
 ```
 
-### Longevity vs. growth rates
+## RHO_WOOD levels
+
+### 1. Stand develop: Stand biomass vs. time
+
+From annual_tile_output: PlanC (Biomass)
+Level of rho_wood 
+
+```{r, fig.width = 5, fig.height = 5}
+# Mortality as a function of DBH
+Bio_DBH_WD <- ggplot() + 
+  geom_line(data=ea1sb1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='300 kgC m-3')) +
+  geom_line(data=ea1sb2DBHgl_out_annual_tile, aes(x=year, y=plantC, color='450 kgC m-3')) +
+  geom_line(data=ea1sb3DBHgl_out_annual_tile, aes(x=year, y=plantC, color='600 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "450 kgC m-3", "600 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  scale_y_continuous(limits = c(0,35),breaks = seq(0,35,10)) +
+  labs(title= "Tree mortality as fc. of size")
+
+# Mortality as a function of C starvation
+
+# Mortality as a function of Growth rate
+
+# Mortality as a function of Self-thinning
+
+```
+
+#### Arrange plots
+
+```{r, include=F, eval=T,fig.height=4,fig.width=10}
+ggarrange(Bio_DBH_WD,Bio_NSC_WD,Bio_GR_WD, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+ggsave("plot_dbh_wd.tiff", width = 9, height = 3, device='tiff', dpi=300)
+
+```
+
+### 2. Relative change Aboveground NPP vs. Aboveground Biomass
+Level of rho_wood
+
+```{r, fig.width = 5, fig.height = 5}
+# Calculate the relative change as (Final value - initial value)/initial value
+
+NPP30 <- ea1sb3DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(NPP30=mean(A_NPP))
+NPP15 <- ea1sb2DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(NPP15=mean(A_NPP))
+NPP0  <- ea1sb1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(NPP0=mean(A_NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+B30 <- ea1sb3DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(B30=mean(A_Biomass))
+B15 <- ea1sb2DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(B15=mean(A_Biomass))
+B0  <- ea1sb1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1800) %>% summarise(B0=mean(A_Biomass))
+dB0_15 <- (B15$B15 - B0$B0)/B0$B0
+dB15_30 <- (B30$B30 - B15$B15)/B15$B15
+dB0_30 <- (B30$B30 - B0$B0)/B0$B0
+
+DBHgl_RelChange_0_15 <- data.frame(dNPP0_15,dB0_15)
+DBHgl_RelChange_15_30 <- data.frame(dNPP15_30,dB15_30)
+DBHgl_RelChange_0_30 <- data.frame(dNPP0_30,dB0_30)
+
+dB_dNPP_DBH_WD <- ggplot() + 
+  geom_point(data=DBHgl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='300-450 kgC m-3')) + 
+  geom_point(data=DBHgl_RelChange_0_30, aes(x=dNPP0_30, y=dB0_30, color='300-600 kgC m-3')) + 
+  scale_color_manual("Levels of WD", breaks = c("300-450 kgC m-3", "300-600 kgC m-3"), values = c("#E7B800", "#FC4E07"))+
+  labs(x="dNPP/NPP", y="dB/B")+
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  scale_x_continuous(limits = c(0,0.1)) + scale_y_continuous(limits = c(0,0.1)) +
+  ggtitle("Mortality formulation DBH") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+
+```
+
+#### Arrange plots
+
+```{r, include=F, eval=T,fig.height=4,fig.width=10}
+ggarrange(dB_dNPP_DBH_WD,dB_dNPP_NSC_WD,dB_dNPP_GR_WD, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+ggsave("plot_dB_dNPP_wd.tiff", width = 9, height = 3, device='tiff', dpi=300)
+
+```
+
+### 3. Carbon Turnover time vs. time
+
+From annual_tile_output: c_turnover_time 
+Level of rho_wood
+
+```{r, fig.width = 5, fig.height = 5}
+# Mortality as a function of DBH
+Tau_DBH_LUE <- ggplot() + 
+  geom_line(data=ea1sb1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='300 kgC m-3')) +
+  geom_line(data=ea1sb2DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='450 kgC m-3')) +
+  geom_line(data=ea1sb3DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='600 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "450 kgC m-3", "600 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "Tree mortality as a function of size")
+
+# Mortality as a function of C starvation
+Tau_NSC_LUE <- 
+  
+# Mortality as a function of Growth rate
+Tau_GR_LUE <- 
+  
+# Mortality as a function of Self-thinning
+Tau_CST_LUE <- 
+  
+```
+
+#### Arrange plots
+
+```{r, include=F, eval=T,fig.height=4,fig.width=10}
+ggarrange(Tau_DBH_LUE,Tau_NSC_LUE,Tau_GR_LUE, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+ggsave("plot_tau_wd.tiff", width = 9, height = 3, device='tiff', dpi=300)
+
+```
+
+### 4. Self-thinning relationship
+
+From annual_tile_output: QMD and Density12
+Level of rho_wood
+
+```{r, fig.width = 5, fig.height = 5}
+
+# Mortality as a function of DBH
+data1 <- rbind(ea1sb1DBHgl_out_annual_tile, ea1sb2DBHgl_out_annual_tile, ea1sb3DBHgl_out_annual_tile)
+stl_DBH_WD <- ggplot() + 
+  geom_point(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelWD)),alpha=1) + 
+  geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelWD)),method = "lm",fullrange = T) +
+  scale_color_manual(labels = c("300 kgC m-3", "450 kgC m-3", "600 kgC m-3"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(col = "Species", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  ggtitle("Tree mortality as fc. of size") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
+# Mortality as a function of NSC
+stl_NSC_WD <- 
+  
+# Mortality as a function of GR
+stl_GR_WD <- 
+  
+# Mortality as a function of CST
+
+```
+
+#### Arrange plots
+
+```{r, include=F, eval=T,fig.height=4,fig.width=10}
+ggarrange(stl_DBH_WD,stl_NSC_WD,stl_GR_WD, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+ggsave("plot_stl_wd.tiff", width = 9, height = 3, device='tiff', dpi=300)
+
+```
+
+### 5. Longevity vs. growth rates
 
 Hypothesis: The negative relationship between longevity vs. growth rates arises from variations between (across) species, but disappears when looking at variations between sites (within sps).
 
@@ -966,228 +933,42 @@ Two plots:
 - Different species at a given site: x = growth rate, y = longevity (or 1/mortality). Each point is one species (differing by wood density, root:shoot ratio). Add info either by using color ~site (given LUE, growing season length, PAR); or by combining data from multiple sites and normalizing growth rates and longevity by site-level mean.
 - Same species at different sites (differing by LUE, growing season length, PAR): x = growth rate, y = longevity. Each point is one site (show mean and standard deviations with x and y errorbars)
 
-Todo:
-
 - longevity is maximum age at tile-level, plot mean across multiple years after spinup
 - plot change in DBH instead of NPP. Take the oldest cohort, and calculate DBH/age
 
 
-```{r, fig.width = 10, fig.height = 4}
-ea1sa1DBHgl_out_annual_tileMaxAgg <- ea1sa1DBHgl_out_annual_tile[1500:1801,] %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),DBH_mean=mean(DBH,na.rm=T), DBH_sd=sd(DBH,na.rm=T),MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T))
+```{r, fig.width = 5, fig.height = 5}
 
-ea2sa1DBHgl_out_annual_tileMaxAgg <- ea2sa1DBHgl_out_annual_tile[1500:1801,] %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),DBH_mean=mean(DBH,na.rm=T), DBH_sd=sd(DBH,na.rm=T),MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T))
-
-ea3sa1DBHgl_out_annual_tileMaxAgg <- ea3sa1DBHgl_out_annual_tile[1500:1801,] %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),DBH_mean=mean(DBH,na.rm=T), DBH_sd=sd(DBH,na.rm=T),MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T))
-
-
-ggplot() + 
-  geom_point(data=ea1sa1DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color='Control')) + 
-  geom_errorbar(data=ea1sa1DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, ymin=maxAge_mean-maxAge_sd,
-                                                           ymax=maxAge_mean+maxAge_sd,color='Control'),width=0) +
-  geom_errorbar(data=ea1sa1DBHgl_out_annual_tileMaxAgg, aes(xmin=MaxDBH_MaxAge_mean-MaxDBH_MaxAge_sd,
-                                                           xmax=MaxDBH_MaxAge_mean+MaxDBH_MaxAge_sd,
-                                                           y= maxAge_mean,color='Control'),width=0)+
-  geom_point(data=ea2sa1DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color='+15%')) + 
-  geom_errorbar(data=ea2sa1DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, ymin=maxAge_mean-maxAge_sd,
-                                                           ymax=  maxAge_mean+maxAge_sd,color='+15%'),width=0) +
-  geom_errorbar(data=ea2sa1DBHgl_out_annual_tileMaxAgg, aes(xmin=MaxDBH_MaxAge_mean-MaxDBH_MaxAge_sd,
-                                                           xmax=MaxDBH_MaxAge_mean+MaxDBH_MaxAge_sd,
-                                                           y= maxAge_mean,color='+15%'),width=0)+
-  geom_point(data=ea3sa1DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color='+30%')) + 
-  geom_errorbar(data=ea3sa1DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, ymin=maxAge_mean-maxAge_sd,
-                                                           ymax=  maxAge_mean+maxAge_sd,color='+30%'),width=0) +
-  geom_errorbar(data=ea3sa1DBHgl_out_annual_tileMaxAgg, aes(xmin=MaxDBH_MaxAge_mean-MaxDBH_MaxAge_sd,
-                                                           xmax=MaxDBH_MaxAge_mean+MaxDBH_MaxAge_sd,
-                                                           y= maxAge_mean,color='+30%'),width=0)+
-  scale_color_manual("Levels of LUE at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
-
-
-# Facet wrap
-data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
-               ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
-               ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
-               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
-
-data1MAxAgg <- data1 %>% filter(year>=1300) %>% group_by(Mortality,LevelLUE) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), sdmaxAge=sd(MaxAge,na.rm=T),
-                                  MaxVolume_MaxAge_mean=mean(MaxVolume_MaxAge,na.rm=T), sdMaxVolume_MaxAge=sd(MaxVolume_MaxAge,na.rm=T),
-                                  MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), sdMaxDBH_MaxAge=sd(MaxDBH_MaxAge,na.rm=T))
- 
-ggplot() + 
-  geom_point(data=data1MAxAgg, aes(x=MaxVolume_MaxAge_mean, y=maxAge_mean, color=as.factor(LevelLUE))) +
-  geom_errorbar(data=data1MAxAgg, aes(x=MaxVolume_MaxAge_mean, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color=as.factor(LevelLUE)),width=0) +
-  geom_errorbar(data=data1MAxAgg, aes(xmin=MaxVolume_MaxAge_mean-sdMaxVolume_MaxAge,xmax= MaxVolume_MaxAge_mean+sdMaxVolume_MaxAge , y=maxAge_mean,color=as.factor(LevelLUE)),width=0) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
-  labs(col="Levels of LUE",x = expression(paste("Growth rate (Volume ",age^-1,  ") ")), y = "Longevity") +  
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
-  facet_wrap(~ Mortality, ncol=4)
-
-ggplot() + 
-  geom_point(data=data1MAxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color=as.factor(LevelLUE))) +
-  geom_errorbar(data=data1MAxAgg, aes(x=MaxDBH_MaxAge_mean, ymin=maxAge_mean-sdmaxAge,ymax=maxAge_mean+sdmaxAge,color=as.factor(LevelLUE)),width=0) +
-  geom_errorbar(data=data1MAxAgg, aes(xmin=MaxDBH_MaxAge_mean-sdMaxDBH_MaxAge,xmax= MaxDBH_MaxAge_mean+sdMaxDBH_MaxAge , y=maxAge_mean,color=as.factor(LevelLUE)),width=0) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D", "#00BA38", "#619CFF"))+
-  labs(col="Levels of LUE",x = expression(paste("Growth rate (DBH ",age^-1,  ") ")), y = "Longevity") +  
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
-  facet_wrap(~ Mortality, ncol=4)
-```
-
-## CO2 levels
-
-### Stand develop: Stand biomass vs. time
-
-From annual_tile_output: PlanC (Biomass)
-Level of CO2
-
-```{r}
 # Mortality as a function of DBH
-# Biomass changes in LUE with WD level 1
-BioCO2 <- ggplot() + 
-  geom_line(data=ec1sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ec2sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ec3sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
-  scale_color_manual("Levels of CO2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+ea1sb1DBHgl_out_annual_tileMaxAgg <- ea1sb1DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1801) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
+          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T))
+
+ea1sb2DBHgl_out_annual_tileMaxAgg <- ea1sb2DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1801) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),DBH_mean=mean(DBH,na.rm=T), DBH_sd=sd(DBH,na.rm=T),MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T))
+
+ea1sb3DBHgl_out_annual_tileMaxAgg <- ea1sb3DBHgl_out_annual_tile %>% dplyr::filter(year>=1500&year<=1801) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),DBH_mean=mean(DBH,na.rm=T), DBH_sd=sd(DBH,na.rm=T),MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T))
+
+long_DBH_WD <- ggplot() + 
+  geom_point(data=ea1sb1DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color='300 kgC m-3')) + 
+  geom_point(data=ea1sb2DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color='450 kgC m-3')) +
+  geom_point(data=ea1sb3DBHgl_out_annual_tileMaxAgg, aes(x=MaxDBH_MaxAge_mean, y=maxAge_mean, color='600 kgC m-3')) +
+  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "450 kgC m-3", "600 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+  labs(x = expression(paste("Growth rate (mm ",yr^-1,  ") ")), y = "Longevity") +  
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
   labs(title= "Tree mortality as a function of size")
 
-# Mortality as a function of C starvation
-# Biomass changes in LUE with WD level 1
-BioNSC <- ggplot() + 
-  geom_line(data=ec1sa1NSCgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ec2sa1NSCgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ec3sa1NSCgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
-  scale_color_manual("Levels of CO2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a function of C starvation")
-
-# Mortality as a function of Growth rate
-# Biomass changes in LUE with WD level 1
-BioGR <- ggplot() + 
-  geom_line(data=ea1sa1GRgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1GRgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1GRgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a function of growth rate") 
-
-# Mortality as a function of Self-thinning
-# Biomass changes in LUE with WD level 1
-ggplot() + 
-  geom_line(data=ea1sa1CSTgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1CSTgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1CSTgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of Constant Self-thinning gs-Leuning") 
-
 ```
+
 #### Arrange plots
 
 ```{r, include=F, eval=T,fig.height=4,fig.width=10}
-library(ggpubr) # ggarrange
-ggarrange(BioDBH,BioNSC,BioGR, ncol = 3, nrow = 1, common.legend = T,legend="right")
-ggsave("plotBio.tiff", width = 10, height = 3, device='tiff', dpi=300)
+ggarrange(long_DBH_WD,long_NSC_WD,long_GR_WD, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+ggsave("plot_long_wd.tiff", width = 9, height = 3, device='tiff', dpi=300)
 
 ```
 
-### Arrange figures
-```{r, fig.width = 10, fig.height = 4}
-
-## All mortality form with facet_wrap
-data1 <- rbind(ea1sa1DBHgl_out_annual_tile, ea2sa1DBHgl_out_annual_tile, ea3sa1DBHgl_out_annual_tile,
-               ea1sa1NSCgl_out_annual_tile, ea2sa1NSCgl_out_annual_tile, ea3sa1NSCgl_out_annual_tile,
-               ea1sa1GRgl_out_annual_tile,  ea2sa1GRgl_out_annual_tile,  ea3sa1GRgl_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC", "GR"),
-                  labels = c("Tree mortality as function of size", "Tree mortality as function of C starvation", "Tree mortality as function of growth rate"))
-
-ggplot(data=data1) +
-  geom_line(aes(x=year, y=plantC,color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=3)+
-  scale_color_manual(labels = c("Low", "Medium", "High"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(col = "Growth rate",x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "right",legend.text = element_text(size=10),legend.title = element_text(size=10))
-
-ggsave("plotBio.tiff", width = 9.5, height = 3, device='tiff', dpi=300)
-
-
-```
-
-### Carbon Turnover time vs. time
-
-From annual_tile_output: c_turnover_time 
-Level of CO2
-
-```{r}
-# Mortality as a function of DBH
-# Biomass changes in LUE with WD level 1
-TauCO2 <- ggplot() + 
-  geom_line(data=ec1sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
-  geom_line(data=ec2sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
-  geom_line(data=ec3sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
-  scale_color_manual("Levels of CO2", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a function of size")
-
-# Mortality as a function of C starvation
-# Biomass changes in LUE with WD level 1
-TauNSC <- ggplot() + 
-  geom_line(data=ec1sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
-  geom_line(data=ec2sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
-  geom_line(data=ec3sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a function of C starvation")
-
-# Mortality as a function of Growth rate
-# Biomass changes in LUE with WD level 1
-BioGR <- ggplot() + 
-  geom_line(data=ea1sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
-  geom_line(data=ea2sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
-  geom_line(data=ea3sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " , ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a function of growth rate") 
-
-# Mortality as a function of Self-thinning
-# Biomass changes in LUE with WD level 1
-ggplot() + 
-  geom_line(data=ea1sa1CSTgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
-  geom_line(data=ea2sa1CSTgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
-  geom_line(data=ea3sa1CSTgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of Constant Self-thinning gs-Leuning") 
-
-```
 
 ### Deathrate
 
@@ -1240,301 +1021,7 @@ mortNSC <- ggplot() +
 
 ```
 
-### Self-thinning relationship
 
-From annual_tile_output: QMD and Density12
-LUE (mol/s/m2)
-
-```{r, include=T, eval=T,fig.height=6,fig.width=8}
-
-# Mortality as a function of DBH
-
-data1 <- rbind(ec1sa1DBHgl_out_annual_tile, ec2sa1DBHgl_out_annual_tile, ec3sa1DBHgl_out_annual_tile)
-ggplot() + 
-  geom_point(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelCO2)),alpha=1) + 
-  geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelCO2)),method = "lm",fullrange = T) +
-  scale_color_manual(labels = c("Low","Medium", "High"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Growth rate", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
-  ggtitle("") + 
-  scale_x_continuous(limits = c(3.5,4),breaks = seq(3.5,4,0.1)) + 
-  scale_y_continuous(limits = c(4.75,6.25),breaks = seq(4.75,6.25,0.25))
-
-ggsave("figure1.2.tiff", width = 5, height = 5, device='tiff', dpi=300)
-
-# Mortality as a function of NSC
-
-data1 <- rbind(ea1sa1NSCgl_out_annual_tile, ea2sa1NSCgl_out_annual_tile, ea3sa1NSCgl_out_annual_tile)
-ggplot() + 
-  geom_point(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
-  geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Level of LUE", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
-  ggtitle("Mortality as a function of NSC") + 
-  scale_x_continuous(limits = c(2.6,3.6)) + 
-  scale_y_continuous(limits = c(3.8,8.2))
-
-# Mortality as a function of GR
-
-data1 <- rbind(ea1sa1GRgl_out_annual_tile, ea2sa1GRgl_out_annual_tile, ea3sa1GRgl_out_annual_tile)
-ggplot() + 
-  geom_point(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
-  geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Level of LUE", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
-  ggtitle("Mortality as a function of GR") 
-
-
-# Mortality as a function of CST
-
-## Figure opt 1
-ggplot() + 
-  geom_point(data=subset(ea1sa1CSTgl_out_annual_tile,year>=500), aes(x=log(DBH), y=log(Density), color='Control')) + 
-  geom_point(data=subset(ea2sa1CSTgl_out_annual_tile,year>=500), aes(x=log(DBH), y=log(Density), color='+15%')) +
-  geom_point(data=subset(ea3sa1CSTgl_out_annual_tile,year>=500), aes(x=log(DBH), y=log(Density), color='+30%')) +
-  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Function of DBH") + 
-  scale_x_continuous(limits = c(3.5,4.25)) + 
-  scale_y_continuous(limits = c(4.8,6))
-
-
-data1 <- rbind(ea1sa1CSTgl_out_annual_tile, ea2sa1CSTgl_out_annual_tile, ea3sa1CSTgl_out_annual_tile)
-ggplot() + 
-  geom_point(data=subset(data1, year>=38), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
-  geom_smooth(data=subset(data1, year>=25), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Level of LUE", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") + 
-  ggtitle("Mortality as a function of GR") 
-
-```
-
-
-
-
-
-## PAR levels
-
-### Stand develop: Stand biomass vs. time
-
-```{r}
-
-# Mortality DBH
-# Biomass changes in PAR with WD level 1
-ggplot() + 
-  geom_line(data=eb1sa1magl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=eb2sa1magl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=eb3sa1magl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
-  scale_color_manual("Levels of PAR", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
-
-# Mortality Ratio NSC and Leaf Mass
-# Biomass changes in PAR with WD level 1
-ggplot() + 
-  geom_line(data=eb1sa1mb_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=eb2sa1mb_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=eb3sa1mb_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
-  scale_color_manual("Levels of PAR", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
-
-# Mortality Growth rate
-# Biomass changes in PAR with WD level 1
-ggplot() + 
-  geom_line(data=eb1sa1mc_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=eb2sa1mc_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=eb3sa1mc_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
-  scale_color_manual("Levels of PAR", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate")
-
-# Mortality Constant Self-thinning
-# Biomass changes in PAR with WD level 1
-ggplot() + 
-  geom_line(data=eb1sa1md_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=eb2sa1md_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=eb3sa1md_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
-  scale_color_manual("Levels of PAR", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate")
-
-```
-
-### Arrange figures
-
-```{r, fig.width = 10, fig.height = 4}
-
-## All mortality form with facet_wrap
-data1 <- rbind(eb1sa1magl_out_annual_tile, eb2sa1magl_out_annual_tile, eb3sa1magl_out_annual_tile,
-               eb1sa1mbgl_out_annual_tile, eb2sa1mbgl_out_annual_tile, eb3sa1mbgl_out_annual_tile,
-               eb1sa1mcgl_out_annual_tile, eb2sa1mcgl_out_annual_tile, eb3sa1mcgl_out_annual_tile,
-               eb1sa1mdgl_out_annual_tile, eb2sa1mdgl_out_annual_tile, eb3sa1mdgl_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "C starvation", "Growth rate", "Constant Self-thinning"))
-
-ggplot(data=data1) +
-  geom_line(aes(x=year, y=plantC,color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=4)+
-  scale_color_manual(labels = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#00BA38", "#619CFF"))+
-  labs(col = "Levels of PAR",x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
-
-```
-
-## Wood density levels
-
-### Stand develop: Stand biomass vs. time
-
-```{r}
-
-# Mortality DBH
-# Biomass changes in WD with LUE level 1
-ggplot() + 
-  geom_line(data=ea1sa1ma_out_annual_tile, aes(x=year, y=plantC, color='300 kgC m-3')) + 
-  geom_line(data=ea1sa2ma_out_annual_tile, aes(x=year, y=plantC, color='600 kgC m-3')) +
-  geom_line(data=ea1sa3ma_out_annual_tile, aes(x=year, y=plantC, color='800 kgC m-3')) +
-  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
-
-# Mortality Ratio NSC and Leaf Mass
-# Biomass changes in WD with LUE level 1
-ggplot() + 
-  geom_line(data=ea1sa1mb_out_annual_tile, aes(x=year, y=plantC, color='300 kgC m-3')) + 
-  geom_line(data=ea1sa2mb_out_annual_tile, aes(x=year, y=plantC, color='600 kgC m-3')) +
-  geom_line(data=ea1sa3mb_out_annual_tile, aes(x=year, y=plantC, color='800 kgC m-3')) +
-  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
-
-# Mortality Growth rate
-# Biomass changes in WD with LUE level 1
-ggplot() + 
-  geom_line(data=ea1sa1mc_out_annual_tile, aes(x=year, y=plantC, color='300 kgC m-3')) + 
-  geom_line(data=ea1sa2mc_out_annual_tile, aes(x=year, y=plantC, color='600 kgC m-3')) +
-  geom_line(data=ea1sa3mc_out_annual_tile, aes(x=year, y=plantC, color='800 kgC m-3')) +
-  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate")
-
-# Mortality Self-thinning
-# Biomass changes in WD with LUE level 1
-ggplot() + 
-  geom_line(data=ea1sa1md_out_annual_tile, aes(x=year, y=plantC, color='300 kgC m-3')) + 
-  geom_line(data=ea1sa2md_out_annual_tile, aes(x=year, y=plantC, color='600 kgC m-3')) +
-  geom_line(data=ea1sa3md_out_annual_tile, aes(x=year, y=plantC, color='800 kgC m-3')) +
-  scale_color_manual("Levels of WD", breaks = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Constant Self-thinning")
-
-```
-
-### Arrange figures
-
-```{r, fig.width = 10, fig.height = 4}
-
-## All mortality form with facet_wrap
-data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
-               ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
-               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
-               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate", "Constant Self-thinning"))
-
-ggplot(data=data1) +
-  geom_line(aes(x=year, y=plantC,color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=4)+
-  scale_color_manual(labels = c("300 kgC m-3", "600 kgC m-3", "800 kgC m-3"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(col = "Levels of WD",x = "Slope of B ~ t", y = expression(paste("Mean biomass at maturity (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")
-
-```
-
-## Root:Shoot ratio levels
-
-### Stand develop: Stand biomass vs. time
-
-```{r}
-
-# Biomass changes in RS with LUE level 1
-# Mortality DBH
-ggplot() + 
-  geom_line(data=ea1sb1ma_out_annual_tile, aes(x=year, y=plantC, color='phiRL = 4')) + 
-  geom_line(data=ea1sb2ma_out_annual_tile, aes(x=year, y=plantC, color='phiRL = 5')) +
-  geom_line(data=ea1sb3ma_out_annual_tile, aes(x=year, y=plantC, color='phiRL = 6')) +
-  scale_color_manual("Levels of R:S", breaks = c("phiRL = 4", "phiRL = 5", "phiRL = 6"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation DBH")
-
-# Biomass changes in RS with LUE level 1
-# Mortality Ratio NSC and Leaf Mass
-ggplot() + 
-  geom_line(data=ea1sb1mb_out_annual_tile, aes(x=year, y=plantC, color='phiRL = 4')) + 
-  geom_line(data=ea1sb2mb_out_annual_tile, aes(x=year, y=plantC, color='phiRL = 5')) +
-  geom_line(data=ea1sb3mb_out_annual_tile, aes(x=year, y=plantC, color='phiRL = 6')) +
-  scale_color_manual("Levels of R:S", breaks = c("phiRL = 4", "phiRL = 5", "phiRL = 6"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Ratio NSC - Leaf mass")
-
-# Biomass changes in RS with LUE level 1
-# Mortality Growth rate
-ggplot() + 
-  geom_line(data=ea1sb1mc_out_annual_tile, aes(x=year, y=plantC, color='phiRL = 4')) +  
-  geom_line(data=ea1sb2mc_out_annual_tile, aes(x=year, y=plantC, color='phiRL = 5')) +
-  geom_line(data=ea1sb3mc_out_annual_tile, aes(x=year, y=plantC, color='phiRL = 6')) +
-  scale_color_manual("Levels of R:S", breaks = c("phiRL = 4", "phiRL = 5", "phiRL = 6"), values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
-  ggtitle("Mortality formulation Growth rate")
-
-```
-
-
-
-
-
-```{r, fig.width = 10, fig.height = 4}
-
-data1 <- rbind(ea1sa1ma_out_annual_tile, ea2sa1ma_out_annual_tile, ea3sa1ma_out_annual_tile,
-               ea1sa1mb_out_annual_tile, ea2sa1mb_out_annual_tile, ea3sa1mb_out_annual_tile,
-               ea1sa1mc_out_annual_tile, ea2sa1mc_out_annual_tile, ea3sa1mc_out_annual_tile,
-               ea1sa1md_out_annual_tile, ea2sa1md_out_annual_tile, ea3sa1md_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
-
-ggplot() + 
-  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelLUE))) + facet_wrap(~ Mortality, ncol=4)+
-  scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend")+
-  labs(x = "Year", y = "CAI") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
-
-data1 <- rbind(ea1sa1ma_out_annual_tile, ea1sa2ma_out_annual_tile, ea1sa3ma_out_annual_tile,
-               ea1sa1mb_out_annual_tile, ea1sa2mb_out_annual_tile, ea1sa3mb_out_annual_tile,
-               ea1sa1mc_out_annual_tile, ea1sa2mc_out_annual_tile, ea1sa3mc_out_annual_tile,
-               ea1sa1md_out_annual_tile, ea1sa2md_out_annual_tile, ea1sa3md_out_annual_tile)
-
-data1$Mortality <- factor(data1$Mortality, levels = c("DBH", "NSC/Leaf mass", "Growth rate","Constant Self-thinning"))
-
-ggplot() + 
-  geom_line(data=data1, aes(x=year, y=CAI, color=as.factor(LevelWD))) + facet_wrap(~ Mortality, ncol=4)+
-  scale_color_manual(labels = c("300 kgC m-3","600 kgC m-3", "800 kgC m-3"),values = c("#00AFBB", "#E7B800", "#FC4E07"))+
-  labs(col = "Level of WD", x = "Year", y = "CAI") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") 
-
-```
 
 
 
@@ -2062,3 +1549,57 @@ ggplot() +
 
 ```
 
+## Self-thinning relationship
+
+From annual_tile_output: QMD and Density12
+LUE (mol/s/m2)
+
+```{r, include=T, eval=T,fig.height=6,fig.width=8}
+
+# Mortality as a function of DBH
+# Biomass changes in LUE with WD level 1
+
+## Figure opt 1
+ggplot() + 
+  geom_point(data=subset(ea1sb1DBHgl_out_annual_tile,year>=500), aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=subset(ea1sb2DBHgl_out_annual_tile,year>=500), aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=subset(ea1sb3DBHgl_out_annual_tile,year>=500), aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF","#00BA38"))+
+  labs(col = "Level of LUE", x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  ggtitle("Function of DBH") + 
+  scale_x_continuous(limits = c(3.5,4.25)) + 
+  scale_y_continuous(limits = c(4.8,6))
+
+## Figure opt 2 With geom_smooth
+data1 <- rbind(ea1sa1DBHgl_out_annual_tile, ea2sa1DBHgl_out_annual_tile, ea3sa1DBHgl_out_annual_tile)
+figure1 <- ggplot() + 
+  geom_point(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
+  geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
+  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
+  labs(col = "Levels of Light Use Efficiency", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+                     legend.text = element_text(size=10),legend.title = element_text(size=10)) + 
+  #ggtitle("Mortality as a function of DBH") + 
+  scale_x_continuous(limits = c(3.5,4),breaks = seq(3.5,4,0.1)) + 
+  scale_y_continuous(limits = c(4.9,6.2),breaks = seq(5,6,0.2))
+ggsave("figure1.1.tiff", width = 5, height = 4, device='tiff', dpi=300)
+
+## Figure opt 3 With geom_abline
+ggplot() + 
+  geom_point(data=ea1sa1DBHgl_out_annual_tile[100:1804,], aes(x=log(QMD), y=log(Density12), color='Control')) + 
+  geom_point(data=ea2sa1DBHgl_out_annual_tile[100:1804,], aes(x=log(QMD), y=log(Density12), color='+15%')) +
+  geom_point(data=ea3sa1DBHgl_out_annual_tile[100:1804,], aes(x=log(QMD), y=log(Density12), color='+30%')) +
+  scale_color_manual("Levels of LUE at WD 1", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D"  ,"#619CFF","#00BA38"))+
+  scale_x_continuous(limits = c(3.5,4.25)) + 
+  scale_y_continuous(limits = c(4.8,6),breaks = seq(5,6,0.25)) +
+  labs(x = "Ln(QMD)", y = "Ln(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom")+
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = ea1sa1DBHgl_out_annual_tile[100:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = ea1sa1DBHgl_out_annual_tile[100:1804,]))[2], color="#F8766D") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = ea2sa1DBHgl_out_annual_tile[100:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = ea2sa1DBHgl_out_annual_tile[100:1804,]))[2], color="#619CFF") +
+  geom_abline(intercept = coef(lm(log(Density12) ~ log(QMD), data = ea3sa1DBHgl_out_annual_tile[100:1804,]))[1], 
+              slope = coef(lm(log(Density12) ~ log(QMD), data = ea3sa1DBHgl_out_annual_tile[100:1804,]))[2], color="#00BA38")
+
+```

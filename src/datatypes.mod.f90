@@ -744,6 +744,7 @@ contains
     ! local variables
     type(cohort_type),pointer :: cc
     integer :: i
+    real :: MaxDBH2
 
     ! State variables
     vegn%NSC        = 0.0
@@ -1151,7 +1152,7 @@ contains
       out_annual_cohorts(i)%deathrate  = cc%deathratevalue
 
 ! print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
-! print*, cc%layer, "cc%layer"
+ ! print*, out_annual_cohorts(1)%age, "out_annual_cohorts(i)%age"
 
     enddo
 
