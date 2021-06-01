@@ -39,10 +39,10 @@ Now specify the simulation parameters that are identical for all site-scale simu
 ```{r,include=FALSE, eval=TRUE}
 params_siml <- tibble( #list
       spinup                = TRUE,
-      spinupyears           = 1800, # 1793,
-      recycle               = 1,    # 9 or 11 changed to 1 when aggregating forcing into 1 year
-      firstyeartrend        = 1998, # 1998
-      nyeartrend            = 1,    # 9 or 11 (longer transient years)
+      spinupyears           = 700, 
+      recycle               = 500,    # 9 or 11 changed to 1 when aggregating forcing into 1 year
+      firstyeartrend        = 2009, 
+      nyeartrend            = 500,    # 9 or 11 (longer transient years)
       outputhourly          = TRUE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = TRUE,
@@ -175,6 +175,7 @@ params_soil <- tibble(
   alphaSoil         = rep(1, 9),
   heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6, 1.0)
   )
+
 ```
 
 #### Initial cohort specification
@@ -225,6 +226,7 @@ if (params_siml$method_photosynth == "gs_leuning"){
     dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
   forcing <- forcingLAE[,-c(1:3)]
+  forcing <- bind_rows(replicate(500, forcing, simplify = FALSE)) # Duplicate for the # of transient years
 }
 
 if (params_siml$method_photosynth == "pmodel"){ #&& dt_secs != (60*60*24)){
@@ -267,9 +269,9 @@ df_drivers <- tibble(sitename,
 ```
 
 ```{r,include=FALSE, eval=TRUE}
-save(df_drivers, file = "~/rsofun/input_data/df_drivers_DBH_gs.RData")
+#save(df_drivers, file = "~/rsofun/input_data/df_drivers_DBH_gs.RData")
 #save(df_drivers, file = "~/rsofun/input_data/df_drivers_NSC_gs.RData")
-#save(df_drivers, file = "~/rsofun/input_data/df_drivers_GR_gs.RData")
+save(df_drivers, file = "~/rsofun/input_data/df_drivers_GR_gs.RData")
 #save(df_drivers, file = "~/rsofun/input_data/df_drivers_CST_gs.RData")
 
 ```
@@ -477,7 +479,7 @@ settings_calib_NSC_gs <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 5, # (5 for gensa) (30 for optimr)
+  maxit               = 8, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -498,7 +500,7 @@ settings_calib_GR_gs <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 5, # (5 for gensa) (30 for optimr)
+  maxit               = 15, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -554,15 +556,17 @@ save(settings_calib_DBH_gs, file = "~/rsofun/input_data/settings_calib_DBH_gs.RD
 
 ```{r,include=FALSE, eval=FALSE}
 
-set.seed(1152)
+set.seed(1050)
+start <- Sys.time()
 settings_calib_NSC_gs <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
   settings = settings_calib_NSC_gs
   )
+print(Sys.time() - start)
 
 print(settings_calib_NSC_gs$par_opt)
-save(settings_calib_NSC_gs, file = "~/rsofun/input_data/settings_calib_NSC_gs.RData")
+save(settings_calib_NSC_gs, file = "~/rsofun/input_data/settings_calib_NSC_gs2nd.RData")
 
 ```
 
@@ -570,7 +574,7 @@ save(settings_calib_NSC_gs, file = "~/rsofun/input_data/settings_calib_NSC_gs.RD
 
 ```{r,include=FALSE, eval=FALSE}
 
-set.seed(1152)
+set.seed(1050)
 settings_calib_GR_gs <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
@@ -670,14 +674,16 @@ df_calib_DBH_gs$data[[1]]$output_annual_tile %>%
 
 ```{r}
 load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
-load("~/rsofun/input_data/settings_calib_NSC_gs.RData")
+load("~/rsofun/input_data/settings_calib_NSC_gs2nd.RData")
 
 df_drivers$params_species[[1]]$phiRL  <-     settings_calib_NSC_gs$par_opt["phiRL"]
 df_drivers$params_species[[1]]$LAI_light  <- settings_calib_NSC_gs$par_opt["LAI_light"]
 df_drivers$params_tile[[1]]$tf_base  <-      settings_calib_NSC_gs$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <-      settings_calib_NSC_gs$par_opt["par_mort"]
 
-df_drivers$forcing[[1]]$aCO2_AW <- df_drivers$forcing[[1]]$aCO2_AW * 1.30
+#df_drivers$forcing[[1]]$aCO2_AW <- df_drivers$forcing[[1]]$aCO2_AW * 1.30
+
+df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
 
 df_calib_NSC_gs <- runread_lm3ppa_f(
      df_drivers,
@@ -728,6 +734,8 @@ df_drivers$params_species[[1]]$phiRL  <-     settings_calib_GR_gs$par_opt["phiRL
 df_drivers$params_species[[1]]$LAI_light  <- settings_calib_GR_gs$par_opt["LAI_light"]
 df_drivers$params_tile[[1]]$tf_base  <-      settings_calib_GR_gs$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort <-      settings_calib_GR_gs$par_opt["par_mort"]
+
+df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
 
 df_calib_GR_gs <- runread_lm3ppa_f(
      df_drivers,
@@ -891,31 +899,24 @@ write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3p
 write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_annual_tile.csv")
 write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_annual_cohorts.csv")
 
-# PAR
-write.csv(df_calib_NSC_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/eb2sa1NSCgl_out_hourly_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/eb2sa1NSCgl_out_daily_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/eb2sa1NSCgl_out_daily_cohorts.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/eb2sa1NSCgl_out_annual_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/eb2sa1NSCgl_out_annual_cohorts.csv")
+# rho_wood
+write.csv(df_calib_NSC_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_hourly_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_daily_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_daily_cohorts.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_annual_cohorts.csv")
 
-write.csv(df_calib_NSC_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_hourly_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_daily_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_daily_cohorts.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_annual_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/eb3sa1NSCgl_out_annual_cohorts.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_hourly_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_daily_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_daily_cohorts.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_annual_cohorts.csv")
 
-# CO2
-write.csv(df_calib_NSC_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_hourly_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_daily_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_daily_cohorts.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_annual_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ec2sa1NSCgl_out_annual_cohorts.csv")
-
-write.csv(df_calib_NSC_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_hourly_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_daily_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_daily_cohorts.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_annual_tile.csv")
-write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ec3sa1NSCgl_out_annual_cohorts.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_hourly_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_daily_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_daily_cohorts.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_annual_cohorts.csv")
 
 ```
 
@@ -941,18 +942,24 @@ write.csv(df_calib_GR_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3pp
 write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_annual_tile.csv")
 write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_annual_cohorts.csv")
 
-# PAR
-write.csv(df_calib_GR_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/eb2sa1GRgl_out_hourly_tile.csv")
-write.csv(df_calib_GR_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/eb2sa1GRgl_out_daily_tile.csv")
-write.csv(df_calib_GR_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/eb2sa1GRgl_out_daily_cohorts.csv")
-write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/eb2sa1GRgl_out_annual_tile.csv")
-write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/eb2sa1GRgl_out_annual_cohorts.csv")
+# rho_wood
+write.csv(df_calib_GR_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_hourly_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_daily_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_daily_cohorts.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_annual_cohorts.csv")
 
-write.csv(df_calib_GR_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/eb3sa1GRgl_out_hourly_tile.csv")
-write.csv(df_calib_GR_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/eb3sa1GRgl_out_daily_tile.csv")
-write.csv(df_calib_GR_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/eb3sa1GRgl_out_daily_cohorts.csv")
-write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/eb3sa1GRgl_out_annual_tile.csv")
-write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/eb3sa1GRgl_out_annual_cohorts.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_hourly_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_daily_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_daily_cohorts.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_annual_cohorts.csv")
+
+write.csv(df_calib_GR_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_hourly_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_daily_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_daily_cohorts.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_annual_cohorts.csv")
 
 ```
 

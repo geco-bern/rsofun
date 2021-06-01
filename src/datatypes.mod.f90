@@ -744,7 +744,6 @@ contains
     ! local variables
     type(cohort_type),pointer :: cc
     integer :: i
-    real :: MaxDBH2
 
     ! State variables
     vegn%NSC        = 0.0

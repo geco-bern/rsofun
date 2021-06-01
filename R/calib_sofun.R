@@ -72,9 +72,11 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
                           upper = lapply( settings$par, function(x) x$upper ) %>% unlist(),
                           control=list( 
                                         #temperature=4000, 
-                                        max.call=settings$maxit, # default 1e7
+                                        maxit=settings$maxit, # max.call default 1e7
+                                        max.call=settings$maxit,
                                         trace.mat=TRUE,
                                         threshold.stop=1e-4, #1e-2,
+                                        max.time=86400,
                                         # nb.stop.improvement=5,
                                         max.time=500 #300
                                         ),
