@@ -49,7 +49,7 @@ params_siml <- tibble( #list
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
       method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
+      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthing
       )
 ```
 
@@ -423,6 +423,9 @@ Prepare the observed target variables: ddf_obs
 ```{r,include=FALSE, eval=TRUE}
 ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityLAE, Biomass=BiomassLAE) %>%
   pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
+
+save(ddf_obs, file = "~/rsofun/input_data/ddf_obs.RData")
+
 ```
 
 Contrast observed vs. simulated targets
