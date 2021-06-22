@@ -40,16 +40,16 @@ Now specify the simulation parameters that are identical for all site-scale simu
 params_siml <- tibble( #list
       spinup                = TRUE,
       spinupyears           = 700, 
-      recycle               = 500,    # 9 or 11 changed to 1 when aggregating forcing into 1 year
+      recycle               = 800,    # 9 or 11 changed to 1 when aggregating forcing into 1 year
       firstyeartrend        = 2009, 
-      nyeartrend            = 500,    # 9 or 11 (longer transient years)
+      nyeartrend            = 800,    # 9 or 11 (longer transient years)
       outputhourly          = TRUE,
       outputdaily           = TRUE,
       do_U_shaped_mortality = TRUE,
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
       method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthing
+      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
       )
 ```
 
@@ -226,7 +226,7 @@ if (params_siml$method_photosynth == "gs_leuning"){
     dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
   forcing <- forcingLAE[,-c(1:3)]
-  forcing <- bind_rows(replicate(500, forcing, simplify = FALSE)) # Duplicate for the # of transient years
+  forcing <- bind_rows(replicate(800, forcing, simplify = FALSE)) # Duplicate for the # of transient years
 }
 
 if (params_siml$method_photosynth == "pmodel"){ #&& dt_secs != (60*60*24)){
@@ -461,7 +461,7 @@ settings_calib_DBH_gs <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 5, # (5 for gensa) (30 for optimr)
+  maxit               = 15, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -542,7 +542,7 @@ settings_calib_CST_gs <- list(
 #### DBH mortality
 
 ```{r,include=FALSE, eval=FALSE}
-
+load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
 set.seed(1152)
 settings_calib_DBH_gs <- calib_sofun(
   df_drivers = df_drivers,  

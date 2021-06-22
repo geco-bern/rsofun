@@ -280,17 +280,20 @@ Level of LUE (mol/s/m2)
 
 # Mortality as a function of DBH
 Bio_DBH_LUE <- ggplot() + 
-  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
-  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='Low')) + 
+  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='Medium')) +
+  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='High')) +
+  #scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  scale_color_manual("Growth rate", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  scale_y_continuous(limits = c(0,45),breaks = seq(0,45,10)) +
-  labs(title= "Tree mortality as fc. of size")
+        axis.text = element_text(size = 12),axis.title = element_text(size = 12),
+        legend.text = element_text(size = 12),legend.title = element_text(size = 12),
+        plot.title = element_text(size = 12)) + 
+  scale_y_continuous(limits = c(0,45),breaks = seq(0,45,10)) #+ labs(title= "Tree mortality as fc. of size")
+
+ggsave("plotBio_DBH_LUE.tiff", width = 4.5, height = 4, device='tiff', dpi=300)
+
 
 # Mortality as a function of C starvation
 Bio_NSC_LUE <- ggplot() + 
@@ -497,7 +500,7 @@ ggsave("plot_tau_lue.tiff", width = 9, height = 3, device='tiff', dpi=300)
 From annual_tile_output: QMD and Density12
 Levels of LUE (mol/s/m2)
 
-```{r, fig.width = 5, fig.height = 5}
+```{r, fig.width = 7, fig.height = 5}
 
 # Mortality as a function of DBH
 data1 <- rbind(ea1sa1DBHgl_out_annual_tile, ea2sa1DBHgl_out_annual_tile, ea3sa1DBHgl_out_annual_tile)
@@ -505,14 +508,16 @@ stl_DBH_LUE <- ggplot() +
   geom_point(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),alpha=1) + 
   geom_smooth(data=subset(data1, year>=500), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
   scale_color_manual(labels = c("Low","Medium", "High"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Level of LUE", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
+  labs(col = "Growth rate", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  ggtitle("Tree mortality as fc. of size") #+ 
+        axis.text = element_text(size = 12),axis.title = element_text(size = 12),
+        legend.text = element_text(size = 12),legend.title = element_text(size = 12),
+        plot.title = element_text(size = 12)) #+ ggtitle("Tree mortality as fc. of size") #+ 
   #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
   #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
+ggsave("plotstl_DBH_LUE.tiff", width = 4.5, height = 4, device='tiff', dpi=300)
+
 
 # Mortality as a function of NSC
 data1 <- rbind(ea1sa1NSCgl_out_annual_tile, ea2sa1NSCgl_out_annual_tile, ea3sa1NSCgl_out_annual_tile)

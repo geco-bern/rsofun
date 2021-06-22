@@ -1,5 +1,7 @@
 library(dplyr)
 library(tibble)
+if(!require(devtools)){install.packages(devtools)}
+devtools::install_github("stineb/rsofun")
 library(rsofun)
 library(ggplot2)
 library(ingestr)
