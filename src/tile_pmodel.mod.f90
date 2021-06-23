@@ -125,6 +125,8 @@ module md_tile_pmodel
     real :: vcmax             ! daily varying Vcmax (mol CO2 m-2 s-1)
     real :: jmax              ! daily varying Jmax (mol CO2 m-2 s-1)
     real :: gs_accl           ! acclimated stomatal conductance (xxx)
+    real :: chi               ! ci:ca ratio (unitless)
+    real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
 
     ! radiation
     real :: ppfd_splash
@@ -551,6 +553,8 @@ contains
       tile_fluxes(lu)%canopy%vcmax   = sum(tile_fluxes(lu)%plant(:)%vcmax   * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%jmax    = sum(tile_fluxes(lu)%plant(:)%jmax    * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%gs_accl = sum(tile_fluxes(lu)%plant(:)%gs_accl * tile(lu)%plant(:)%fpc_grid)
+      tile_fluxes(lu)%canopy%chi     = sum(tile_fluxes(lu)%plant(:)%chi     * tile(lu)%plant(:)%fpc_grid)
+      tile_fluxes(lu)%canopy%iwue    = sum(tile_fluxes(lu)%plant(:)%iwue    * tile(lu)%plant(:)%fpc_grid)
     end do
 
     ! !----------------------------------------------------------------

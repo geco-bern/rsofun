@@ -29,6 +29,10 @@ collect_drivers_sofun <- function( siteinfo, params_siml, meteo, fapar, co2, df_
     meteo <- meteo %>% mutate(data = purrr::map(data, ~mutate(., rain = prec)))
   }
   
+  vars_req <- c("ppfd", "rain", "snow", "prec", "temp", "patm", "vpd", "ccov")
+  vars_missing <- vars_req[!(vars_req %in% names(meteo %>% unnest(data)))]
+  if (length(vars_missing)) rlang::abort(paste("Aborting. Variables missing in meteo data frame:", paste(vars_missing, collapse = ", ")))
+  
   ## create mega-df containing all forcing data and parameters that vary by site (not model parameters!)
   names_metainfo <- names(siteinfo)[-which(names(siteinfo) %in% c("sitename", "params_siml"))]
   df_mega <- siteinfo %>% 

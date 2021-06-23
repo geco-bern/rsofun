@@ -86,6 +86,8 @@ module md_plant_pmodel
     real :: vcmax             ! daily varying Vcmax (mol CO2 m-2 s-1)
     real :: jmax              ! daily varying Jmax (mol CO2 m-2 s-1)
     real :: gs_accl           ! acclimated stomatal conductance (xxx)
+    real :: chi               ! ci:ca ratio (unitless)
+    real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
 
     ! ! annual variables
     ! real :: agpp             ! annual total gross primary production [gC/m2/yr]           
