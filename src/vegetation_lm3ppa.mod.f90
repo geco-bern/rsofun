@@ -789,10 +789,17 @@ contains
           ! set calibratable parameter
           param_nsc = myinterface%params_tile%par_mort
 
-          if (cc%bl_max > 0) then
-          ! deathrate = exp(param_nsc*(cc%nsc/cc%bl_max))/(0.001+exp(param_nsc*(cc%nsc/cc%bl_max))) 
-          deathrate = param_nsc * 0.01 * (exp(-2*(cc%nsc/cc%bl_max))/(0.01+exp(-2*(cc%nsc/cc%bl_max))))
+          ! Understory mortality
+          if (cc%layer > 1) then !
+            deathrate = sp%mortrate_d_u * &
+                     (1. + A_mort*exp(B_mort*cc%dbh))/ &
+                     (1. +        exp(B_mort*cc%dbh)) 
 
+          else  
+          ! Understory mortality
+            if (cc%bl_max > 0) then
+            deathrate = param_nsc * 0.01 * (exp(-2*(cc%nsc/cc%bl_max))/(0.01+exp(-2*(cc%nsc/cc%bl_max))))
+            endif
           endif
 
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
@@ -800,12 +807,18 @@ contains
           ! set calibratable parameter
           param_gr = myinterface%params_tile%par_mort
 
-          ! deathrate = param_gr * (cc%dbh - cc%DBH_ys) + 0.01
-          ! deathrate = param_gr * 0.01*(2*exp(10*(cc%dbh - cc%DBH_ys)))/(1+exp(1*(cc%dbh - cc%DBH_ys)))
-          ! dDBH = cc%dbh-cc%DBH_ys
+          ! Understory mortality
+          if (cc%layer > 1) then !
+            deathrate = sp%mortrate_d_u * &
+                     (1. + A_mort*exp(B_mort*cc%dbh))/ &
+                     (1. +        exp(B_mort*cc%dbh)) 
+
+          else  
+          ! Understory mortality
           deathrate = param_gr * 0.01 *    &
                            (1. + 5.*exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))/ &
                            (1. + exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))))
+          endif
 
           ! deathrate = param_gr * 0.01 * (2*exp(60*(cc%bsw+cc%bHW-cc%ABG_ys))/(1+exp(60*(cc%bsw+cc%bHW-cc%ABG_ys))))
           ! deathrate = param_gr * (cc%bsw + cc%bHW - cc%ABG_ys)

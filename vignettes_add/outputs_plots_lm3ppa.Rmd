@@ -280,17 +280,17 @@ Level of LUE (mol/s/m2)
 
 # Mortality as a function of DBH
 Bio_DBH_LUE <- ggplot() + 
-  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='Low')) + 
-  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='Medium')) +
-  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='High')) +
-  #scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  scale_color_manual("Growth rate", breaks = c("Low", "Medium", "High"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 12),axis.title = element_text(size = 12),
         legend.text = element_text(size = 12),legend.title = element_text(size = 12),
         plot.title = element_text(size = 12)) + 
-  scale_y_continuous(limits = c(0,45),breaks = seq(0,45,10)) #+ labs(title= "Tree mortality as fc. of size")
+  scale_y_continuous(limits = c(0,45),breaks = seq(0,45,10)) + 
+  labs(title= "a) Size-dependent mortality")
 
 ggsave("plotBio_DBH_LUE.tiff", width = 4.5, height = 4, device='tiff', dpi=300)
 
@@ -307,7 +307,7 @@ Bio_NSC_LUE <- ggplot() +
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
   scale_y_continuous(limits = c(0,75),breaks = seq(0,75,10)) +
-  labs(title= "Tree mortality as fc. of C starvation")
+  labs(title= "b) C starvation mortality")
 
 # Mortality as a function of Growth rate
 Bio_GR_LUE <- ggplot() + 
@@ -321,7 +321,7 @@ Bio_GR_LUE <- ggplot() +
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
   scale_y_continuous(limits = c(0,42),breaks = seq(0,40,10)) +
-  labs(title= "Tree mortality as fc. of growth rate") 
+  labs(title= "c) Growth rate mortality") 
 
 # Mortality as a function of Self-thinning
 
