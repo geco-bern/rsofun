@@ -329,8 +329,7 @@ df_output$data[[1]]$output_annual_tile %>%
   theme_classic()+labs(x = "DBH", y = "Density")
 
 df_output$data[[1]]$output_annual_tile  %>%
-  #tail(500) %>% 
-  dplyr::filter(year>25) %>% 
+  tail(500) %>% 
   ggplot() +
   geom_point(aes(x = log(QMD), y = log(Density12))) +
   theme_classic()+labs(x = "QMD", y = "Density12")
@@ -340,6 +339,20 @@ df_output$data[[1]]$output_annual_tile %>%
   ggplot() +
   geom_point(aes(x = log(QMD), y = log(Density12), color=plantC)) +
   theme_classic()+labs(x = "log(QMD)", y = "log(Density12)")
+
+df_output$data[[1]]$output_annual_tile %>%
+  tail(500) %>%
+  summarise(GPP = mean(GPP), LAI= max(LAI), Density=mean(Density12), Biomass=mean(plantC)) %>%  
+  pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") 
+
+model_size_dist <- df_output$data[[1]]$output_annual_cohorts %>%
+  dplyr::filter(year>=1000) %>% # this is equivalent to tail(500), so the last 500 yrs of the simulation
+  dplyr::filter(dbh>=12) %>%
+  #mutate(size_bins = cut(dbh, breaks = 5)) %>% 
+  mutate(size_bins = cut(dbh, breaks = c(12,32,52,72,92,112))) %>%
+  group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+
+ggplot(model_size_dist, aes(size_bins, nTrees)) + geom_col()
 
 ```
 
@@ -407,7 +420,7 @@ TARGET 4. Number of trees higher than 12 cm
 
 ```{r,include=FALSE, eval=TRUE}
 LAE_data <- read_csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
-LAE_data <- LAE_data %>%mutate(DBH_cm = UMFANG/pi)
+LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
 LAE_data %>% group_by(INVYEAR) %>% summarise(nTrees=n())
 LAE_nTrees <- LAE_data %>% dplyr::filter(DBH_cm >= 12)
 
@@ -416,6 +429,15 @@ LAE_allsps <- LAE_nTrees %>% group_by(INVYEAR) %>% summarise(nTrees=n())
 # Area of Laegeren plot in ha
 LAE_ha <- 1.34
 densityLAE <- mean(LAE_allsps$nTrees)/LAE_ha
+
+# Size distribution
+#LAE_nTrees <- LAE_nTrees %>% mutate(size_bins = cut(DBH_cm, breaks = 5)) 
+LAE_nTrees <- LAE_nTrees %>% mutate(size_bins = cut(DBH_cm, breaks = c(12,32,52,72,92,112)))
+max(LAE_nTrees$DBH_cm)
+
+LAE_size_dist <- LAE_nTrees %>% group_by(size_bins,INVYEAR) %>% summarise(nTrees=n()) %>% ungroup() %>% group_by(size_bins) %>% summarise(nTrees=mean(nTrees)/LAE_ha)
+ggplot(LAE_size_dist, aes(size_bins, nTrees)) + geom_col()
+
 ```
 
 Prepare the observed target variables: ddf_obs
@@ -423,6 +445,17 @@ Prepare the observed target variables: ddf_obs
 ```{r,include=FALSE, eval=TRUE}
 ddf_obs <- tibble(GPP = mean_annual_gpp, LAI = max_annual_lai, Density= densityLAE, Biomass=BiomassLAE) %>%
   pivot_longer(everything(), names_to = "variables", values_to = "targets_obs")
+
+# Mean absolute difference for the size distribution
+ddf_obs <- data.frame(
+    variables = c("GPP","LAI","Density","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_obs = c(mean_annual_gpp, max_annual_lai, densityLAE, BiomassLAE,LAE_size_dist$nTrees[1],LAE_size_dist$nTrees[2],LAE_size_dist$nTrees[3],LAE_size_dist$nTrees[4],LAE_size_dist$nTrees[5])
+    ) 
+
+ddf_obs2 <- data.frame(
+    variables = c("dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_obs = c(LAE_size_dist$nTrees[1],LAE_size_dist$nTrees[2],LAE_size_dist$nTrees[3],LAE_size_dist$nTrees[4],LAE_size_dist$nTrees[5])
+    ) 
 
 save(ddf_obs, file = "~/rsofun/input_data/ddf_obs.RData")
 
@@ -447,7 +480,47 @@ df_output$data[[1]]$output_annual_tile %>%
   geom_point(aes(x = targets_mod, y = targets_obs, col=variables)) +
   theme_classic()+labs(x = "Predicted", y = "Observed")+
   geom_abline(col="grey") + ggtitle("DBH mortality model gs-Leuning")
+
 ```
+
+
+```{r}
+df_mod <- df_output$data[[1]]$output_annual_tile %>% 
+    tail(500) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Density=mean(Density12), Biomass=mean(plantC))
+
+df_mod_sizedist <- df_output$data[[1]]$output_annual_cohorts %>%
+  dplyr::filter(year>=1000) %>% # this is equivalent to tail(500), so the last 500 yrs of the simulation
+  dplyr::filter(dbh>=12) %>%
+  #mutate(size_bins = cut(dbh, breaks = 5)) %>% 
+  mutate(size_bins = cut(dbh, breaks = c(12,32,52,72,92,112))) %>%
+  group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+ggplot(df_mod_sizedist, aes(size_bins, nTrees)) + geom_col()
+
+  dff <- data.frame(
+    variables = c("GPP","LAI","Density","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Density, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
+    ) %>% 
+    dplyr::left_join(ddf_obs, by = "variables") %>% 
+    mutate(error = targets_mod - targets_obs) %>% 
+    mutate(error_rel = error / targets_obs)
+  
+dff2 <- data.frame(
+    variables = c("dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
+    ) %>% 
+    dplyr::left_join(ddf_obs, by = "variables") %>% 
+    mutate(error = targets_mod - targets_obs) %>% 
+    mutate(error_rel = error / targets_obs) %>% 
+    mutate(mean_abs_diff = mean(abs(error_rel))) 
+  
+  ## Calculate cost (RMSE) across the N targets
+  cost <- sqrt(mean(dff$error_rel^2, na.rm = TRUE))
+```
+
+
+
+
 
 ### Define calibration settings
 Targets: GPP, LAI, Stand Biomass (Stem, Foliage, root), # trees
@@ -461,7 +534,7 @@ settings_calib_DBH_gs <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 15, # (5 for gensa) (30 for optimr)
+  maxit               = 5, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -482,7 +555,7 @@ settings_calib_NSC_gs <- list(
   method              = "gensa", # gensa, optimr, BayesianTools, linscale
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 8, # (5 for gensa) (30 for optimr)
+  maxit               = 100, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -544,10 +617,11 @@ settings_calib_CST_gs <- list(
 ```{r,include=FALSE, eval=FALSE}
 load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
 set.seed(1152)
+settings <- settings_calib_DBH_gs
 settings_calib_DBH_gs <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
-  settings = settings_calib_DBH_gs
+  settings = settings
   )
 
 print(settings_calib_DBH_gs$par_opt)
