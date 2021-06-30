@@ -441,21 +441,22 @@ cost_rmse_lm3ppa_gsleuning <- function( par, ddf_obs, df_drivers, inverse = FALS
   
   # Aggregate variables from the model df taking the last 500 yrs
   df_mod <- df$data[[1]]$output_annual_tile %>% 
-    tail(500) %>% 
-    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Density=mean(Density12), Biomass=mean(plantC))
+    tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
 
   df_mod_sizedist <- df$data[[1]]$output_annual_cohorts %>%
-    dplyr::filter(year>=1000) %>% # equivalent to tail(500), so the last 500 yrs of the simulation
-    dplyr::filter(dbh>=12) %>% mutate(size_bins = cut(dbh, breaks = c(12,32,52,72,92,112))) %>%
+    dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
+    dplyr::filter(dbh>=12) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
     group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
 
   dff <- data.frame(
-    variables = c("GPP","LAI","Density","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
-    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Density, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
+    variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
     ) %>% 
     dplyr::left_join(ddf_obs, by = "variables") %>% 
     mutate(error = targets_mod - targets_obs) %>% 
-    mutate(error_rel = error / targets_obs)
+    mutate(error_rel = error / targets_obs) %>% 
+    mutate(error_rel_weight = ifelse(variables=="GPP"|variables=="LAI"|variables=="Biomass",5*error_rel,error_rel)) 
   
   # dff <- data.frame(
   #   variables = c("GPP","LAI","Density","Biomass"),
@@ -466,7 +467,7 @@ cost_rmse_lm3ppa_gsleuning <- function( par, ddf_obs, df_drivers, inverse = FALS
   #   mutate(error_rel = error / targets_obs)
   
   ## Calculate cost (RMSE) across the N targets
-  cost <- sqrt(mean(dff$error_rel^2, na.rm = TRUE))
+  cost <- sqrt(mean(dff$error_rel_weight^2, na.rm = TRUE))
   
   print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   

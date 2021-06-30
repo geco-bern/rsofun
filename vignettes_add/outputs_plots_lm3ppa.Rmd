@@ -22,40 +22,40 @@ library(ggpubr) # ggarrange
 ```{r}
 
 # LUE - Different environmental conditions
-ea1sa1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_hourly_tile.csv")
-ea1sa1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_daily_tile.csv")
-ea1sa1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_daily_cohorts.csv")
+#ea1sa1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_hourly_tile.csv")
+#ea1sa1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_daily_tile.csv")
+#ea1sa1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_daily_cohorts.csv")
 ea1sa1DBHgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_annual_tile.csv")
 ea1sa1DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1DBHgl_out_annual_cohorts.csv")
 
-ea2sa1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1DBHgl_out_hourly_tile.csv")
-ea2sa1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1DBHgl_out_daily_tile.csv")
-ea2sa1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1DBHgl_out_daily_cohorts.csv")
+#ea2sa1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1DBHgl_out_hourly_tile.csv")
+#ea2sa1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1DBHgl_out_daily_tile.csv")
+#ea2sa1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1DBHgl_out_daily_cohorts.csv")
 ea2sa1DBHgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1DBHgl_out_annual_tile.csv")
 ea2sa1DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1DBHgl_out_annual_cohorts.csv")
 
-ea3sa1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_out_hourly_tile.csv")
-ea3sa1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_out_daily_tile.csv")
-ea3sa1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_out_daily_cohorts.csv")
+#ea3sa1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_out_hourly_tile.csv")
+#ea3sa1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_out_daily_tile.csv")
+#ea3sa1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_out_daily_cohorts.csv")
 ea3sa1DBHgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_out_annual_tile.csv")
 ea3sa1DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHgl_out_annual_cohorts.csv")
 
 # rho_wood - Different species
-ea1sb1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_hourly_tile.csv")
-ea1sb1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_daily_tile.csv")
-ea1sb1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_daily_cohorts.csv")
+#ea1sb1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_hourly_tile.csv")
+#ea1sb1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_daily_tile.csv")
+#ea1sb1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_daily_cohorts.csv")
 ea1sb1DBHgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_annual_tile.csv")
 ea1sb1DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_annual_cohorts.csv")
 
-ea1sb2DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_hourly_tile.csv")
-ea1sb2DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_daily_tile.csv")
-ea1sb2DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_daily_cohorts.csv")
+#ea1sb2DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_hourly_tile.csv")
+#ea1sb2DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_daily_tile.csv")
+#ea1sb2DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_daily_cohorts.csv")
 ea1sb2DBHgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_annual_tile.csv")
 ea1sb2DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2DBHgl_out_annual_cohorts.csv")
 
-ea1sb3DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_hourly_tile.csv")
-ea1sb3DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_daily_tile.csv")
-ea1sb3DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_daily_cohorts.csv")
+#ea1sb3DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_hourly_tile.csv")
+#ea1sb3DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_daily_tile.csv")
+#ea1sb3DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_daily_cohorts.csv")
 ea1sb3DBHgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_annual_tile.csv")
 ea1sb3DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_annual_cohorts.csv")
 
@@ -66,40 +66,40 @@ ea1sb3DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_
 ```{r}
 
 # LUE - Different environmental conditions
-ea1sa1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_hourly_tile.csv")
-ea1sa1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_daily_tile.csv")
-ea1sa1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_daily_cohorts.csv")
+#ea1sa1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_hourly_tile.csv")
+#ea1sa1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_daily_tile.csv")
+#ea1sa1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_daily_cohorts.csv")
 ea1sa1NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_annual_tile.csv")
 ea1sa1NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_annual_cohorts.csv")
 
-ea2sa1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_hourly_tile.csv")
-ea2sa1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_daily_tile.csv")
-ea2sa1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_daily_cohorts.csv")
+#ea2sa1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_hourly_tile.csv")
+#ea2sa1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_daily_tile.csv")
+#ea2sa1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_daily_cohorts.csv")
 ea2sa1NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_annual_tile.csv")
 ea2sa1NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_annual_cohorts.csv")
 
-ea3sa1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_hourly_tile.csv")
-ea3sa1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_daily_tile.csv")
-ea3sa1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_daily_cohorts.csv")
+#ea3sa1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_hourly_tile.csv")
+#ea3sa1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_daily_tile.csv")
+#ea3sa1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_daily_cohorts.csv")
 ea3sa1NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_annual_tile.csv")
 ea3sa1NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_annual_cohorts.csv")
 
 # rho_wood - Different species
-ea1sb1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_hourly_tile.csv")
-ea1sb1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_daily_tile.csv")
-ea1sb1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_daily_cohorts.csv")
+#ea1sb1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_hourly_tile.csv")
+#ea1sb1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_daily_tile.csv")
+#ea1sb1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_daily_cohorts.csv")
 ea1sb1NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_annual_tile.csv")
 ea1sb1NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_annual_cohorts.csv")
 
-ea1sb2NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_hourly_tile.csv")
-ea1sb2NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_daily_tile.csv")
-ea1sb2NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_daily_cohorts.csv")
+#ea1sb2NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_hourly_tile.csv")
+#ea1sb2NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_daily_tile.csv")
+#ea1sb2NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_daily_cohorts.csv")
 ea1sb2NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_annual_tile.csv")
 ea1sb2NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2NSCgl_out_annual_cohorts.csv")
 
-ea1sb3NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_hourly_tile.csv")
-ea1sb3NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_daily_tile.csv")
-ea1sb3NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_daily_cohorts.csv")
+#ea1sb3NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_hourly_tile.csv")
+#ea1sb3NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_daily_tile.csv")
+#ea1sb3NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_daily_cohorts.csv")
 ea1sb3NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_annual_tile.csv")
 ea1sb3NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_annual_cohorts.csv")
 
@@ -286,10 +286,10 @@ Bio_DBH_LUE <- ggplot() +
   scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 12),axis.title = element_text(size = 12),
-        legend.text = element_text(size = 12),legend.title = element_text(size = 12),
-        plot.title = element_text(size = 12)) + 
-  scale_y_continuous(limits = c(0,45),breaks = seq(0,45,10)) + 
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  scale_y_continuous(limits = c(0,56),breaks = seq(0,55,10)) + 
   labs(title= "a) Size-dependent mortality")
 
 ggsave("plotBio_DBH_LUE.tiff", width = 4.5, height = 4, device='tiff', dpi=300)
@@ -456,7 +456,7 @@ Tau_DBH_LUE <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a fc. of size")
+  labs(title= "a) Size-dependent mortality")
 
 # Mortality as a function of C starvation
 Tau_NSC_LUE <- ggplot() + 
@@ -866,8 +866,8 @@ Bio_DBH_WD <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  #scale_y_continuous(limits = c(0,35),breaks = seq(0,35,10)) +
-  labs(title= "Tree mortality as fc. of size")
+  scale_y_continuous(limits = c(0,56),breaks = seq(0,55,10)) + 
+  labs(title= "a) Size-dependent mortality")
 
 # Mortality as a function of C starvation
 Bio_NSC_WD <- ggplot() + 
@@ -1025,7 +1025,7 @@ Level of rho_wood
 
 ```{r, fig.width = 5, fig.height = 5}
 # Mortality as a function of DBH
-Tau_DBH_LUE <- ggplot() + 
+Tau_DBH_WD <- ggplot() + 
   geom_line(data=ea1sb1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='300 kgC m-3')) +
   geom_line(data=ea1sb2DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='450 kgC m-3')) +
   geom_line(data=ea1sb3DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='600 kgC m-3')) +
@@ -1035,7 +1035,7 @@ Tau_DBH_LUE <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a fc. of size")
+  labs(title= "a) Size-dependent mortality")
 
 # Mortality as a function of C starvation
 Tau_NSC_LUE <- ggplot() + 
@@ -1220,6 +1220,21 @@ long_GR_WD <- ggplot() +
 ```{r, include=F, eval=T,fig.height=3.5,fig.width=10}
 ggarrange(long_DBH_WD,long_NSC_WD,long_GR_WD, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
 ggsave("plot_long_wd.tiff", width = 9, height = 3, device='tiff', dpi=300)
+```
+
+
+## ARRANGE ALL
+
+### 1. Stand develop: Stand biomass vs. time
+```{r, include=F, eval=T,fig.height=5,fig.width=10}
+ggarrange(Bio_DBH_LUE,Bio_DBH_WD, ncol = 2, nrow = 1, common.legend = F,legend="bottom")
+ggsave("Bio_DBH.tiff", width = 10, height = 5, device='tiff', dpi=300)
+```
+
+### 3. Carbon Turnover time vs. time
+```{r, include=F, eval=T,fig.height=5,fig.width=10}
+ggarrange(Tau_DBH_LUE,Tau_DBH_WD, ncol = 2, nrow = 1, common.legend = F,legend="bottom")
+ggsave("Tau_DBH.tiff", width = 10, height = 5, device='tiff', dpi=300)
 ```
 
 
