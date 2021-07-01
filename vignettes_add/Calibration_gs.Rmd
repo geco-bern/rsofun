@@ -49,7 +49,7 @@ params_siml <- tibble( #list
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
       method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
+      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthing
       )
 ```
 
@@ -269,9 +269,9 @@ df_drivers <- tibble(sitename,
 ```
 
 ```{r,include=FALSE, eval=TRUE}
-save(df_drivers, file = "~/rsofun/input_data/df_drivers_DBH_gs.RData")
+#save(df_drivers, file = "~/rsofun/input_data/df_drivers_DBH_gs.RData")
 #save(df_drivers, file = "~/rsofun/input_data/df_drivers_NSC_gs.RData")
-#save(df_drivers, file = "~/rsofun/input_data/df_drivers_GR_gs.RData")
+save(df_drivers, file = "~/rsofun/input_data/df_drivers_GR_gs.RData")
 #save(df_drivers, file = "~/rsofun/input_data/df_drivers_CST_gs.RData")
 
 ```
