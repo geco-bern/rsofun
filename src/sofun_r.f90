@@ -257,7 +257,8 @@ contains
     f_initialBSW,                 & 
     f_N_add,                      & 
     tf_base,                      &     
-    par_mort,                     & 
+    par_mort,                     &
+    par_mort_under,               &  
     params_species,               &            
     params_soil,                  &         
     init_cohort,                  &         
@@ -386,6 +387,7 @@ contains
     real(kind=c_double), intent(in) :: f_N_add
     real(kind=c_double), intent(in) :: tf_base
     real(kind=c_double), intent(in) :: par_mort
+    real(kind=c_double), intent(in) :: par_mort_under
 
     ! naked arrays
     real(kind=c_double), dimension(0:MSPECIES,38), intent(in)       :: params_species
@@ -550,6 +552,7 @@ contains
     myinterface%params_tile%f_N_add      = real( f_N_add )
     myinterface%params_tile%tf_base      = real( tf_base )
     myinterface%params_tile%par_mort     = real( par_mort )
+    myinterface%params_tile%par_mort_under  = real( par_mort_under )
 
     ! Species parameters
     myinterface%params_species(:)%lifeform      = int(  params_species(:,1))

@@ -700,6 +700,9 @@ contains
     ! logical :: merged(vegn%n_cohorts) ! mask to skip cohorts that were already merged
     real :: cCAI
     real :: dn ! number of trees that died due to CAI_partial>CAI_max
+    real :: param_dbh_under 
+    real :: param_nsc_under 
+    real :: param_gr_under
     real :: param_dbh 
     real :: param_nsc 
     real :: param_gr
@@ -787,16 +790,17 @@ contains
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
           
           ! set calibratable parameter
-          param_nsc = myinterface%params_tile%par_mort
+          param_nsc_under = myinterface%params_tile%par_mort_under
+          param_nsc       = myinterface%params_tile%par_mort
 
           ! Understory mortality
           if (cc%layer > 1) then !
-            deathrate = sp%mortrate_d_u * &
+            deathrate = param_nsc_under * sp%mortrate_d_u * &
                      (1. + A_mort*exp(B_mort*cc%dbh))/ &
                      (1. +        exp(B_mort*cc%dbh)) 
 
           else  
-          ! Understory mortality
+          ! Canopy mortality
             if (cc%bl_max > 0) then
             deathrate = param_nsc * 0.01 * (exp(-2*(cc%nsc/cc%bl_max))/(0.01+exp(-2*(cc%nsc/cc%bl_max))))
             endif
@@ -805,16 +809,17 @@ contains
         else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           
           ! set calibratable parameter
-          param_gr = myinterface%params_tile%par_mort
+          param_gr_under = myinterface%params_tile%par_mort_under
+          param_gr       = myinterface%params_tile%par_mort
 
           ! Understory mortality
           if (cc%layer > 1) then !
-            deathrate = sp%mortrate_d_u * &
+            deathrate = param_gr_under * sp%mortrate_d_u * &
                      (1. + A_mort*exp(B_mort*cc%dbh))/ &
                      (1. +        exp(B_mort*cc%dbh)) 
 
           else  
-          ! Understory mortality
+          ! Canopy mortality
           deathrate = param_gr * 0.01 *    &
                            (1. + 5.*exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))/ &
                            (1. + exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))))
@@ -828,7 +833,8 @@ contains
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
           ! set calibratable parameter
-          param_dbh = myinterface%params_tile%par_mort
+          param_dbh_under = myinterface%params_tile%par_mort_under
+          param_dbh       = myinterface%params_tile%par_mort
 
           if (sp%lifeform==0)then  ! for grasses
             if(cc%layer > 1) then
@@ -839,7 +845,7 @@ contains
           else                    ! for trees
 
             if (cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.075*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
-              deathrate = sp%mortrate_d_u * &
+              deathrate = param_dbh_under * sp%mortrate_d_u * &
                      (1. + A_mort*exp(B_mort*cc%dbh))/ &
                      (1. +        exp(B_mort*cc%dbh)) 
 
@@ -2093,6 +2099,7 @@ contains
     f_N_add     = myinterface%params_tile%f_N_add  
     tf_base     = myinterface%params_tile%tf_base  !calibratable
     par_mort    = myinterface%params_tile%par_mort  !calibratable
+    par_mort_under  = myinterface%params_tile%par_mort_under  !calibratable
 
     !  Read parameters from the parameter file (namelist)
     if (read_from_parameter_file) then

@@ -154,6 +154,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       f_N_add      = as.numeric(params_tile$f_N_add),
       tf_base      = as.numeric(params_tile$tf_base),
       par_mort     = as.numeric(params_tile$par_mort),
+      par_mort_under = as.numeric(params_tile$par_mort_under),
 
       ## Species-specific parameters
       params_species = as.matrix(params_species),

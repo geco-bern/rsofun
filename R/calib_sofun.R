@@ -432,6 +432,7 @@ cost_rmse_lm3ppa_gsleuning <- function( par, ddf_obs, df_drivers, inverse = FALS
   df_drivers$params_species[[1]]$LAI_light[]  <- par[2]  # the same for all values
   df_drivers$params_tile[[1]]$tf_base         <- par[3]
   df_drivers$params_tile[[1]]$par_mort        <- par[4]
+  df_drivers$params_tile[[1]]$par_mort_under  <- par[5]
 
   df <- runread_lm3ppa_f(
     df_drivers, 
@@ -457,14 +458,6 @@ cost_rmse_lm3ppa_gsleuning <- function( par, ddf_obs, df_drivers, inverse = FALS
     mutate(error = targets_mod - targets_obs) %>% 
     mutate(error_rel = error / targets_obs) %>% 
     mutate(error_rel_weight = ifelse(variables=="GPP"|variables=="LAI"|variables=="Biomass",5*error_rel,error_rel)) 
-  
-  # dff <- data.frame(
-  #   variables = c("GPP","LAI","Density","Biomass"),
-  #   targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Density, df_mod$Biomass)
-  #   ) %>% 
-  #   dplyr::left_join(ddf_obs, by = "variables") %>% 
-  #   mutate(error = targets_mod - targets_obs) %>% 
-  #   mutate(error_rel = error / targets_obs)
   
   ## Calculate cost (RMSE) across the N targets
   cost <- sqrt(mean(dff$error_rel_weight^2, na.rm = TRUE))

@@ -33,6 +33,7 @@ module md_interface_lm3ppa
     real   :: f_N_add
     real   :: tf_base  ! calibratable
     real   :: par_mort ! calibratable
+    real   :: par_mort_under ! calibratable
   end type paramstype_tile
   
   type paramstype_species

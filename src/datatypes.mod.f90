@@ -20,7 +20,7 @@ module datatypes
 
   !=============== Public parameters =======================================================
   public :: MaxCohortID, K1, K2, K_nitrogen, etaN, MLmixRatio, &
-            fsc_fine, fsc_wood, LMAmin, GR_factor, tf_base, par_mort, l_fract, &
+            fsc_fine, fsc_wood, LMAmin, GR_factor, tf_base, par_mort, par_mort_under, l_fract, &
             retransN, f_initialBSW,f_N_add, A_mort, B_mort,DBHtp
 
   !=============== Constants =============================================================
@@ -389,6 +389,7 @@ module datatypes
   !===== Calibratable parameters
   real   :: tf_base                                 ! calibratable scalar for respiration
   real   :: par_mort                                ! generic calibratable parameter for mortality module
+  real   :: par_mort_under                          ! generic calibratable parameter for mortality understory module
   !===== deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
   real  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
   real  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
