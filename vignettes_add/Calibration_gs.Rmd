@@ -293,7 +293,7 @@ start <- Sys.time()
 out <- run_lm3ppa_f_bysite( df_drivers$sitename[1], 
                             df_drivers$params_siml[[1]],
                             df_drivers$siteinfo[[1]], 
-                            df_drivers$forcing[[1]], # ddf_input
+                            df_drivers$forcing[[1]], 
                             df_drivers$params_tile[[1]], 
                             df_drivers$params_species[[1]], 
                             df_drivers$params_soil[[1]], 

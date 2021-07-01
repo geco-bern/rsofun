@@ -9,7 +9,7 @@ library(multidplyr)
 
 print("aaa1")
 
-#install()
+install()
 
 print("aaa2")
 
