@@ -445,6 +445,9 @@ cost_rmse_lm3ppa_gsleuning <- function( par, ddf_obs, df_drivers, inverse = FALS
     tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
     dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
 
+  # Add size dsitribution from observations
+  size_bins <- c(12.1,17.8,28.0,40.8,54.0,105.4)
+
   df_mod_sizedist <- df$data[[1]]$output_annual_cohorts %>%
     dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
     dplyr::filter(dbh>=12) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%

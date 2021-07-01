@@ -10,7 +10,7 @@ library(rsofun)
 library(ggplot2)
 #if(!require(devtools)){install.packages(devtools)}
 #devtools::install_github("stineb/rbeni")
-library(ingestr)
+#library(ingestr)
 #devtools::install_github("tidyverse/multidplyr")
 library(multidplyr)
 ```

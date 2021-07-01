@@ -1,26 +1,31 @@
 library(dplyr)
 library(tibble)
-if(!require(devtools)){install.packages(devtools)}
-devtools::install_github("stineb/rsofun")
+#if(!require(devtools)){install.packages(devtools)}
+#devtools::install_github("stineb/rsofun")
 library(rsofun)
-install()
+library(devtools)
 library(ggplot2)
-library(ingestr)
 library(multidplyr)
 
-load("/cluster/home/lmarques/rsofun/input_data/df_drivers_DBH_gs.RData")
+print("aaa1")
 
-start <- Sys.time()
+#install()
+
+print("aaa2")
+
+load("input_data/df_drivers_DBH_gs.RData")
+
 df_output <- runread_lm3ppa_f(
   df_drivers,
   makecheck = TRUE,
   parallel = FALSE
 )
-print(Sys.time() - start)
 
-write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile, "/cluster/home/lmarques/rsofun/output_euler/ea1sa1DBHgl_out_annual_tileEULER.csv")
+write.csv(df_output$data[[1]]$output_annual_tile, "output_euler/ea1sa1DBHgl_out_annual_tileEULER.csv")
 
-load("/cluster/home/lmarques/rsofun/input_data/ddf_obs.RData")
+print("aaa3")
+
+load("input_data/ddf_obs.RData")
 
 settings_calib_DBH_gs <- list(
   method              = "gensa",
@@ -45,4 +50,4 @@ settings_calib_DBH_gs <- calib_sofun(
   settings = settings_calib_DBH_gs
 )
 
-save(settings_calib_DBH_gs, file = "/cluster/home/lmarques/rsofun/input_data/settings_calib_DBH_gsEULER.RData")
+save(settings_calib_DBH_gs, file = "input_data/settings_calib_DBH_gsEULER.RData")
