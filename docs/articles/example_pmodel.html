@@ -85,7 +85,7 @@
 
       
 
-      </header><script src="example_pmodel_files/header-attrs-2.6/header-attrs.js"></script><div class="row">
+      </header><script src="example_pmodel_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Example using P-model</h1>
@@ -202,12 +202,14 @@
 <code class="sourceCode R"><span class="va">df_drivers</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va">df_drivers</span>
 <span class="va">df_drivers</span></code></pre></div>
 <pre><code>## # A tibble: 1 x 5
-##   sitename params_siml       siteinfo         df_soiltexture  forcing           
-##   &lt;chr&gt;    &lt;list&gt;            &lt;list&gt;           &lt;list&gt;          &lt;list&gt;            
-## 1 FR-Pue   &lt;tibble [1 × 18]&gt; &lt;tibble [1 × 12… &lt;tibble [2 × 5… &lt;tibble [2,920 × …</code></pre>
+##   sitename params_siml       siteinfo         df_soiltexture    forcing         
+##   &lt;chr&gt;    &lt;list&gt;            &lt;list&gt;           &lt;list&gt;            &lt;list&gt;          
+## 1 FR-Pue   &lt;tibble[,18] [1 … &lt;tibble[,12] [1… &lt;tibble[,5] [2 ×… &lt;tibble[,10] [2…</code></pre>
 <p>The units of fluxes have changed, but the object <code>df_drivers</code> has not been adjusted accordingly. Do it “by hand”.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">df_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">prec</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va">df_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">prec</span> <span class="op">/</span> <span class="op">(</span><span class="fl">60</span><span class="op">*</span><span class="fl">60</span><span class="op">*</span><span class="fl">24</span><span class="op">)</span>
+<span class="va">df_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">rain</span> <span class="op">&lt;-</span> <span class="va">df_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">prec</span>
+<span class="va">df_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">snow</span> <span class="op">&lt;-</span> <span class="fl">0.0</span>
 <span class="va">df_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">ppfd</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va">df_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">ppfd</span> <span class="op">/</span> <span class="op">(</span><span class="fl">60</span><span class="op">*</span><span class="fl">60</span><span class="op">*</span><span class="fl">24</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="run-the-model" class="section level3">
@@ -236,13 +238,12 @@
      makecheck <span class="op">=</span> <span class="cn">TRUE</span>,
      parallel <span class="op">=</span> <span class="cn">FALSE</span>
      <span class="op">)</span></code></pre></div>
-<pre><code>## Warning: Problem with `mutate()` input `data`.
-## ℹ the condition has length &gt; 1 and only the first element will be used
-## ℹ Input `data` is `purrr::pmap(...)`.</code></pre>
+<pre><code>## Warning in if (is.nanull(params_siml)) if (is.nanull(params_siml$spinup)) {: the
+## condition has length &gt; 1 and only the first element will be used</code></pre>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">ptm</span><span class="op">)</span></code></pre></div>
 <pre><code>##    user  system elapsed 
-##   3.205   0.267   4.320</code></pre>
+##   3.196   0.242   3.650</code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># microbenchmark::microbenchmark(</span>
 <span class="co">#   runread_pmodel_f(</span>
@@ -414,20 +415,18 @@
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/stineb/rbeni">rbeni</a></span><span class="op">)</span></code></pre></div>
 <pre><code>## 
 ## Attaching package: 'rbeni'</code></pre>
+<pre><code>## The following objects are masked from 'package:LSD':
+## 
+##     colorpalette, complementarycolor, convertcolor, convertgrey,
+##     daltonize, disco, distinctcolors, heatpairs, heatscatter,
+##     heatscatterpoints</code></pre>
 <pre><code>## The following object is masked from 'package:ingestr':
 ## 
 ##     remove_outliers</code></pre>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">gg</span> <span class="op">&lt;-</span> <span class="va">out_eval</span><span class="op">$</span><span class="va">gpp</span><span class="op">$</span><span class="va">fluxnet</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">xdf</span> <span class="op">%&gt;%</span> 
-  <span class="fu">analyse_modobs2</span><span class="op">(</span><span class="st">"mod"</span>, <span class="st">"obs"</span>, type <span class="op">=</span> <span class="st">"heat"</span><span class="op">)</span></code></pre></div>
-<pre><code>## Loading required package: LSD</code></pre>
-<pre><code>## Warning in library(package, lib.loc = lib.loc, character.only = TRUE,
-## logical.return = TRUE, : there is no package called 'LSD'</code></pre>
-<pre><code>## Loading required package: ggthemes</code></pre>
-<pre><code>## Warning in library(package, lib.loc = lib.loc, character.only = TRUE,
-## logical.return = TRUE, : there is no package called 'ggthemes'</code></pre>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">gg</span><span class="op">$</span><span class="va">gg</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/rbeni/man/analyse_modobs2.html">analyse_modobs2</a></span><span class="op">(</span><span class="st">"mod"</span>, <span class="st">"obs"</span>, type <span class="op">=</span> <span class="st">"heat"</span><span class="op">)</span>
+<span class="va">gg</span><span class="op">$</span><span class="va">gg</span> <span class="op">+</span>
   <span class="fu">labs</span><span class="op">(</span>title <span class="op">=</span> <span class="st">"FR-Pue: modelled vs. observed GPP"</span>, 
        x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html">expression</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"Modelled GPP (gC m"</span><span class="op">^</span><span class="op">{</span><span class="op">-</span><span class="fl">2</span><span class="op">}</span>, <span class="st">"d"</span><span class="op">^</span><span class="op">{</span><span class="op">-</span><span class="fl">1</span><span class="op">}</span>, <span class="st">")"</span><span class="op">)</span><span class="op">)</span>, 
        y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html">expression</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"Observed GPP (gC m"</span><span class="op">^</span><span class="op">{</span><span class="op">-</span><span class="fl">2</span><span class="op">}</span>, <span class="st">"d"</span><span class="op">^</span><span class="op">{</span><span class="op">-</span><span class="fl">1</span><span class="op">}</span>, <span class="st">")"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></code></pre></div>

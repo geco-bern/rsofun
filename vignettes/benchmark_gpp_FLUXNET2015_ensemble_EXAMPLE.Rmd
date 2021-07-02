@@ -117,6 +117,10 @@ if (!file.exists(filn)){
 
 Calibrate the model.
 ```{r warning=FALSE, message=FALSE}
+## renaming necessary because of naming mess in different versions
+df_drivers_fluxnet2015 <- df_drivers_fluxnet2015 %>% 
+  mutate(forcing = purrr::map(forcing, ~rename(., rain = rainf, snow = snowf)))
+
 set.seed(1982)
 settings_calib <- calib_sofun(
   df_drivers = dplyr::filter(df_drivers_fluxnet2015, sitename %in% calibsites),  # use only one site

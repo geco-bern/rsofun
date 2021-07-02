@@ -29,7 +29,7 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
   ## re-define units and naming of forcing dataframe
   forcing <- forcing %>% 
     dplyr::mutate(netrad = -9999.9, fsun = (100-ccov)/100, ndep = 0.0) %>% 
-    dplyr::select(temp, rainf, vpd, ppfd, netrad, fsun, snowf, co2, ndep, fapar, patm)
+    dplyr::select(temp, rain, vpd, ppfd, netrad, fsun, snow, co2, ndep, fapar, patm)
 
   ## Tests
   do_continue <- TRUE
@@ -39,8 +39,8 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       rlang::warn(paste("Error: Missing value in temp for site", sitename, "\n"))
       do_continue <- FALSE
     }
-    if (any(is.nanull(forcing$rainf))){
-      rlang::warn(paste("Error: Missing value in rainf for site", sitename, "\n"))
+    if (any(is.nanull(forcing$rain))){
+      rlang::warn(paste("Error: Missing value in rain for site", sitename, "\n"))
       do_continue <- FALSE
     }
     if (any(is.nanull(forcing$vpd))){
@@ -59,8 +59,8 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       rlang::warn(paste("Error: Missing value in fsun for site", sitename, "\n"))
       do_continue <- FALSE
     }
-    if (any(is.nanull(forcing$snowf))){
-      rlang::warn(paste("Error: Missing value in snowf for site", sitename, "\n"))
+    if (any(is.nanull(forcing$snow))){
+      rlang::warn(paste("Error: Missing value in snow for site", sitename, "\n"))
       do_continue <- FALSE
     }
     if (any(is.nanull(forcing$co2))){
