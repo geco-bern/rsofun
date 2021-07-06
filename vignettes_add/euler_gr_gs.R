@@ -1,19 +1,15 @@
 library(dplyr)
 library(tibble)
-#if(!require(devtools)){install.packages(devtools)}
-#devtools::install_github("stineb/rsofun")
+if(!require(devtools)){install.packages(devtools)}
+devtools::install_github("stineb/rsofun")
 library(rsofun)
 library(devtools)
 library(ggplot2)
 library(multidplyr)
 
-print("aaa1")
-
 install()
 
-print("aaa2")
-
-load("input_data/df_drivers_DBH_gs.RData")
+load("input_data/df_drivers_GR_gs.RData")
 
 df_output <- runread_lm3ppa_f(
   df_drivers,
@@ -21,17 +17,16 @@ df_output <- runread_lm3ppa_f(
   parallel = FALSE
 )
 
-write.csv(df_output$data[[1]]$output_annual_tile, "output_euler/ea1sa1DBHgl_out_annual_tileEULER.csv")
-
-print("aaa3")
+write.csv(df_output$data[[1]]$output_annual_tile, "output_euler/ea1sa1GRgl_out_annual_tile_euler.csv")
+write.csv(df_output$data[[1]]$output_annual_cohorts, "output_euler/ea1sa1GRgl_out_annual_cohorts_euler.csv")
 
 load("input_data/ddf_obs.RData")
 
-settings_calib_DBH_gs <- list(
+settings_calib_GR_gs <- list(
   method              = "gensa",
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 2, 
+  maxit               = 2000, 
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -44,10 +39,10 @@ settings_calib_DBH_gs <- list(
 )
 
 set.seed(1152)
-settings_calib_DBH_gs <- calib_sofun(
+settings_calib_GR_gs <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
-  settings = settings_calib_DBH_gs
+  settings = settings_calib_GR_gs
 )
 
-save(settings_calib_DBH_gs, file = "input_data/settings_calib_DBH_gsEULER.RData")
+save(settings_calib_GR_gs, file = "input_data/settings_calib_GR_gs_euler.RData")

@@ -48,8 +48,8 @@ params_siml <- tibble( #list
       do_U_shaped_mortality = TRUE,
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "growthrate" # dbh or cstarvation or growthrate or const_selfthing
+      method_photosynth     = "pmodel", # gs_leuning or pmodel
+      method_mortality      = "const_selfthing" # dbh or cstarvation or growthrate or const_selfthing
       )
 ```
 
@@ -234,6 +234,7 @@ if (params_siml$method_photosynth == "pmodel"){ #&& dt_secs != (60*60*24)){
     dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
   forcing <- forcingLAE[,-c(1:2)]
+  forcing <- bind_rows(replicate(800, forcing, simplify = FALSE)) # Duplicate for the # of transient years
 }
 ```
 
@@ -249,8 +250,6 @@ if (params_siml$method_photosynth == "pmodel"){
 forcing <- forcing %>% mutate(PAR = PAR*1) # levels = *1, *1.15 and *1.30
 }
 
-# Replicating forcing data to run longer transient years
-#forcing <- bind_rows(replicate(10, forcing, simplify = FALSE))
 ```
 
 Collect all drivers
@@ -271,8 +270,13 @@ df_drivers <- tibble(sitename,
 ```{r,include=FALSE, eval=TRUE}
 #save(df_drivers, file = "~/rsofun/input_data/df_drivers_DBH_gs.RData")
 #save(df_drivers, file = "~/rsofun/input_data/df_drivers_NSC_gs.RData")
-save(df_drivers, file = "~/rsofun/input_data/df_drivers_GR_gs.RData")
+#save(df_drivers, file = "~/rsofun/input_data/df_drivers_GR_gs.RData")
 #save(df_drivers, file = "~/rsofun/input_data/df_drivers_CST_gs.RData")
+
+#save(df_drivers, file = "~/rsofun/input_data/df_drivers_DBH_pm.RData")
+#save(df_drivers, file = "~/rsofun/input_data/df_drivers_NSC_pm.RData")
+#save(df_drivers, file = "~/rsofun/input_data/df_drivers_GR_pm.RData")
+save(df_drivers, file = "~/rsofun/input_data/df_drivers_CST_pm.RData")
 
 ```
 
@@ -280,6 +284,8 @@ save(df_drivers, file = "~/rsofun/input_data/df_drivers_GR_gs.RData")
 
 Run for the full set of sites
 ```{r,echo=FALSE,eval=TRUE}
+
+load("~/rsofun/input_data/df_drivers_DBH_pm.RData")
 
 start <- Sys.time()
 df_output <- runread_lm3ppa_f(
@@ -480,6 +486,7 @@ ddf_obs <- data.frame(
     ) 
 
 save(ddf_obs, file = "~/rsofun/input_data/ddf_obs.RData")
+load("~/rsofun/input_data/ddf_obs.RData")
 
 ```
 

@@ -45,11 +45,11 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
       cost_rmse <- cost_rmse_vpdstress
       
     }  else if ( "kphio" %in% names(settings$par) && "phiRL" %in% names(settings$par) && "LAI_light" %in% names(settings$par) &&
-     "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) ){  
+     "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) && "par_mort_under" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa
 
     }  else if ( "phiRL" %in% names(settings$par) && "LAI_light" %in% names(settings$par) &&
-     "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) ){  
+     "tf_base" %in% names(settings$par) && "par_mort" %in% names(settings$par) && "par_mort_under" %in% names(settings$par) ){  
       cost_rmse <- cost_rmse_lm3ppa_gsleuning
 
     } 
@@ -73,7 +73,7 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
                           control=list( 
                                         #temperature=4000, 
                                         #maxit=settings$maxit,
-                                        # threshold.stop=1e-4,
+                                        #threshold.stop=1e-4,
                                         #nb.stop.improvement=5,
                                         max.call= settings$maxit, # max.call default 1e7
                                         #max.time=60*30, #86400,
@@ -392,6 +392,7 @@ cost_rmse_lm3ppa_pmodel <- function( par, ddf_obs, df_drivers, inverse = FALSE )
   df_drivers$params_species[[1]]$LAI_light[]  <- par[3]  # the same for all values
   df_drivers$params_tile[[1]]$tf_base         <- par[4]
   df_drivers$params_tile[[1]]$par_mort        <- par[5]
+  df_drivers$params_tile[[1]]$par_mort_under  <- par[6]
 
   df <- runread_lm3ppa_f(
     df_drivers, 
@@ -401,19 +402,28 @@ cost_rmse_lm3ppa_pmodel <- function( par, ddf_obs, df_drivers, inverse = FALSE )
   
   # Aggregate variables from the model df taking the last 500 yrs
   df_mod <- df$data[[1]]$output_annual_tile %>% 
-    tail(500) %>% 
-    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Density=mean(Density12), Biomass=mean(plantC))
-  
+    tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
+
+  # Add size dsitribution from observations
+  sizedist <- c(12.1,17.8,28.0,40.8,54.0,105.4)
+
+  df_mod_sizedist <- df$data[[1]]$output_annual_cohorts %>%
+    dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
+    dplyr::filter(dbh>=12) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
+    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+
   dff <- data.frame(
-    variables = c("GPP","LAI","Density","Biomass"),
-    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Density, df_mod$Biomass)
+    variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
     ) %>% 
     dplyr::left_join(ddf_obs, by = "variables") %>% 
     mutate(error = targets_mod - targets_obs) %>% 
-    mutate(error_rel = error / targets_obs)
+    mutate(error_rel = error / targets_obs) %>% 
+    mutate(error_rel_weight = ifelse(variables=="GPP"|variables=="LAI"|variables=="Biomass",5*error_rel,error_rel)) 
   
   ## Calculate cost (RMSE) across the N targets
-  cost <- sqrt(mean(dff$error_rel^2, na.rm = TRUE))
+  cost <- sqrt(mean(dff$error_rel_weight^2, na.rm = TRUE))
   
   print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
