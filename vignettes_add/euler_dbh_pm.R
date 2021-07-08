@@ -1,12 +1,13 @@
 library(dplyr)
 library(tibble)
-if(!require(devtools)){install.packages(devtools)}
-devtools::install_github("stineb/rsofun")
-library(rsofun)
+#if(!require(devtools)){install.packages(devtools)}
+#devtools::install_github("stineb/rsofun")
 library(devtools)
+library(rsofun)
 library(ggplot2)
 library(multidplyr)
 
+#build()
 install()
 
 load("input_data/df_drivers_DBH_pm.RData")

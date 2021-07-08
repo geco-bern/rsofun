@@ -285,7 +285,7 @@ save(df_drivers, file = "~/rsofun/input_data/df_drivers_CST_pm.RData")
 Run for the full set of sites
 ```{r,echo=FALSE,eval=TRUE}
 
-load("~/rsofun/input_data/df_drivers_DBH_pm.RData")
+load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
 
 start <- Sys.time()
 df_output <- runread_lm3ppa_f(
