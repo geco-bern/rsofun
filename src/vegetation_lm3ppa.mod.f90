@@ -39,6 +39,7 @@ contains
     integer:: i
     real   :: tair, tsoil  ! temperature of soil, degC
     real   :: theta        ! soil wetness, unitless
+    integer :: iyears
 
     ! Climatic variable
     tair   = forcing%Tair - 273.16   ! conversion to degC
@@ -46,7 +47,7 @@ contains
     theta  = (vegn%wcl(2)-WILTPT)/(FLDCAP-WILTPT)
 
     ! Photosynsthesis
-    call gpp( forcing, vegn, init )
+    call gpp( forcing, vegn, init, iyears )
     
     ! Update soil water
     call SoilWaterDynamicsLayer( forcing, vegn )

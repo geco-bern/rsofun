@@ -463,9 +463,11 @@ densityLAE <- mean(LAE_allsps$nTrees)/LAE_ha
 #LAE_nTrees <- LAE_nTrees %>% mutate(size_bins = cut(DBH_cm, breaks = 5)) 
 #LAE_nTrees <- LAE_nTrees %>% mutate(size_bins = cut(DBH_cm, breaks = c(12,32,52,72,92,112)))
 #LAE_nTrees <- LAE_nTrees %>% mutate(size_bins = cut(DBH_cm, breaks = quantile(DBH_cm, probs = seq(0, 1, 0.2),na.rm=F)))
+LAE_nTrees <- LAE_nTrees %>% mutate(size_bins = cut(DBH_cm, breaks = quantile(DBH_cm, probs = seq(0, 1, 0.2),right = F)))
+
 library(Hmisc)
 LAE_nTrees$size_bins <- cut2(LAE_nTrees$DBH_cm, g = 5)
-v1 <-sort(unique(LAE_nTrees$size_bins))
+v1 <- sort(unique(LAE_nTrees$size_bins))
 sizedist <- as.numeric(c(substr(v1, 2, 5),substr(v1[5], 7, 11)))
 
 LAE_size_dist <- LAE_nTrees %>% group_by(size_bins,INVYEAR) %>% summarise(nTrees=n()) %>% ungroup() %>% group_by(size_bins) %>% summarise(nTrees=mean(nTrees)/LAE_ha)
@@ -524,7 +526,7 @@ settings_calib_DBH_gs <- list(
   method              = "gensa",
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 3, # (5 for gensa) (30 for optimr)
+  maxit               = 1000, # (5 for gensa) (30 for optimr)
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -677,13 +679,15 @@ save(settings_calib_CST_gs, file = "~/rsofun/input_data/settings_calib_CST_gs.RD
 
 ```{r}
 load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
-load("~/rsofun/input_data/settings_calib_DBH_gs.RData")
+#load("~/rsofun/input_data/settings_calib_DBH_gs.RData")
+calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
+settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
 
-df_drivers$params_species[[1]]$phiRL      <-  settings_calib_DBH_gs$par_opt["phiRL"]
-df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_DBH_gs$par_opt["LAI_light"]
-df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_DBH_gs$par_opt["tf_base"]
-df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_DBH_gs$par_opt["par_mort"]
-df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_DBH_gs$par_opt["par_mort_under"]
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_DBH_gs$par_opt$phiRL          #["phiRL"]
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_DBH_gs$par_opt$LAI_light      #["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_DBH_gs$par_opt$tf_base        #["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_DBH_gs$par_opt$par_mort       #["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_DBH_gs$par_opt$par_mort_under #["par_mort_under"]
 
 #df_drivers$forcing[[1]]$aCO2_AW <- df_drivers$forcing[[1]]$aCO2_AW * 1.30
 
@@ -697,30 +701,9 @@ df_calib_DBH_gs <- runread_lm3ppa_f(
 
 df_calib_DBH_gs$data[[1]]$output_annual_tile %>% 
   ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  theme_classic()+labs(x = "Year", y = "GPP")
-
-df_calib_DBH_gs$data[[1]]$output_annual_tile %>% 
-  ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 
-df_calib_DBH_gs$data[[1]]$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = c_turnover_time)) +
-  theme_classic()+labs(x = "Year", y = "c_turnover_time")
-
-df_calib_DBH_gs$data[[1]]$output_annual_tile %>%
-  tail(1000) %>%
-  ggplot() +
-  geom_point(aes(x = log(QMD), y = log(Density12), color=plantC)) +
-  theme_classic()+labs(x = "log(QMD)", y = "log(Density12)")
-
-df_calib_DBH_gs$data[[1]]$output_annual_cohorts %>%
-  dplyr::filter(dbh>0.1) %>%
-  ggplot() +
-  geom_line(aes(x = dbh, y = deathrate)) +
-  theme_classic()+labs(x = "dbh", y = "deathrate")
 
 df_calib_DBH_gs$data[[1]]$output_annual_tile %>%
   tail(500) %>%
@@ -738,18 +721,45 @@ df_calib_DBH_gs$data[[1]]$output_annual_tile %>%
   theme_classic()+labs(x = "Predicted", y = "Observed")+
   geom_abline(col="grey") + ggtitle("DBH mortality model gs-Leuning")
 
+
+df_calib_DBH_gs$data[[1]]$output_annual_tile %>% 
+    tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC)) %>%  
+    pivot_longer(everything(), names_to = "variables", values_to = "targets_mod") %>%  
+    left_join(ddf_obs)
+
+df_calib_DBH_gs$data[[1]]$output_annual_cohorts %>%
+    dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
+    dplyr::filter(dbh>=12) %>% mutate(size_bins = cut(dbh, breaks = c(12.1,17.8,28.0,40.8,54.0,105.4))) %>%
+    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+
+  dff <- data.frame(
+    variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
+    ) %>% 
+    dplyr::left_join(ddf_obs, by = "variables") %>% 
+    mutate(error = targets_mod - targets_obs) %>% 
+    mutate(error_rel = error / targets_obs) %>% 
+    mutate(error_rel_weight = ifelse(variables=="GPP"|variables=="LAI"|variables=="Biomass",5*error_rel,error_rel)) 
+  
+
+
+
 ```
 
 #### NSC mortality
 
 ```{r}
 load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
-load("~/rsofun/input_data/settings_calib_NSC_gs2nd.RData")
+#load("~/rsofun/input_data/settings_calib_NSC_gs2nd.RData")
+calib_param_nsc_gs <- read.csv("~/rsofun/params_calib_nsc_gs.csv")
+settings_calib_NSC_gs$par_opt <- calib_param_nsc_gs[1,]
 
-df_drivers$params_species[[1]]$phiRL  <-     settings_calib_NSC_gs$par_opt["phiRL"]
-df_drivers$params_species[[1]]$LAI_light  <- settings_calib_NSC_gs$par_opt["LAI_light"]
-df_drivers$params_tile[[1]]$tf_base  <-      settings_calib_NSC_gs$par_opt["tf_base"]
-df_drivers$params_tile[[1]]$par_mort <-      settings_calib_NSC_gs$par_opt["par_mort"]
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_NSC_gs$par_opt$phiRL          #["phiRL"]
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_NSC_gs$par_opt$LAI_light      #["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_NSC_gs$par_opt$tf_base        #["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_NSC_gs$par_opt$par_mort       #["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_NSC_gs$par_opt$par_mort_under #["par_mort_under"]
 
 #df_drivers$forcing[[1]]$aCO2_AW <- df_drivers$forcing[[1]]$aCO2_AW * 1.30
 
@@ -763,18 +773,8 @@ df_calib_NSC_gs <- runread_lm3ppa_f(
 
 df_calib_NSC_gs$data[[1]]$output_annual_tile %>% 
   ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  theme_classic()+labs(x = "Year", y = "GPP")
-
-df_calib_NSC_gs$data[[1]]$output_annual_tile %>% 
-  ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
-
-df_calib_NSC_gs$data[[1]]$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = log(QMD), y = log(Density12), color=plantC)) +
-  theme_classic()+labs(x = "log(QMD)", y = "log(Density12)")
 
 df_calib_NSC_gs$data[[1]]$output_annual_tile %>%
   tail(500) %>%

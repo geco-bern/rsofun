@@ -33,7 +33,7 @@ module md_gpp_lm3ppa
 
 contains
 
-  subroutine gpp( forcing, vegn, init )
+  subroutine gpp( forcing, vegn, init, iyears )
     !//////////////////////////////////////////////////////////////////////
     ! GPP
     ! Calculates light availability and photosynthesis for each cohort 
@@ -54,6 +54,7 @@ contains
     type(climate_type), intent(in):: forcing
     type(vegn_tile_type), intent(inout) :: vegn
     logical, intent(in) :: init   ! is true on the very first simulation day (first subroutine call of each gridcell)
+    integer, intent(in) :: iyears
 
     ! local variables used for BiomeE-Allocation part
     type(cohort_type), pointer :: cc
@@ -151,8 +152,10 @@ contains
           !===============================
           ! XXX Experiment: increasing net photosynthesis 15% and 30%
           !===============================
-          ! psyn = psyn * 1.30
-          ! resp = resp * 1.30
+          ! if (iyears>myinterface%params_siml%spinupyears) then
+          if (iyears>1000) then
+          psyn = psyn * 1.30
+          resp = resp * 1.30
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
           cc%An_op   = psyn  ! molC s-1 m-2 of leaves ! net photosynthesis, mol C/(m2 of leaves s)
@@ -163,7 +166,7 @@ contains
           cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
 
-          if (isnan(cc%gpp)) stop '"gpp" is a NaN'
+        if (isnan(cc%gpp)) stop '"gpp" is a NaN'
 
         else
 
@@ -174,6 +177,7 @@ contains
           cc%transp  = 0.0
           cc%w_scale = -9999
 
+        endif
         endif
 
         end associate

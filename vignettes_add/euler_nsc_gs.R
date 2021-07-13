@@ -27,7 +27,7 @@ settings_calib_NSC_gs <- list(
   method              = "gensa",
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 2000, 
+  maxit               = 1000, 
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -40,10 +40,11 @@ settings_calib_NSC_gs <- list(
 )
 
 set.seed(1152)
-settings_calib_NSC_gs <- calib_sofun(
+settings_calib_NSC_gs_euler <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
   settings = settings_calib_NSC_gs
 )
 
-save(settings_calib_NSC_gs, file = "input_data/settings_calib_NSC_gs_euler.RData")
+save(settings_calib_NSC_gs_euler, file = "input_data/settings_calib_NSC_gs_euler.RData")
+
