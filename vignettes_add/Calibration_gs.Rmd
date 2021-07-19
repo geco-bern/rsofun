@@ -48,8 +48,8 @@ params_siml <- tibble( #list
       do_U_shaped_mortality = TRUE,
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "pmodel", # gs_leuning or pmodel
-      method_mortality      = "const_selfthing" # dbh or cstarvation or growthrate or const_selfthing
+      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
       )
 ```
 
@@ -380,9 +380,6 @@ df_mod <- df_output$data[[1]]$output_annual_tile %>%
     mutate(error_rel = error / targets_obs) %>% 
     mutate(error_rel_weight = ifelse(variables=="GPP"|variables=="LAI"|variables=="Biomass",5*error_rel,error_rel)) 
   
-
-
-
 ```
 
 ### Get ddf_obs

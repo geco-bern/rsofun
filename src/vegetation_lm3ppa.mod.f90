@@ -47,7 +47,7 @@ contains
     theta  = (vegn%wcl(2)-WILTPT)/(FLDCAP-WILTPT)
 
     ! Photosynsthesis
-    call gpp( forcing, vegn, init, iyears )
+    call gpp( forcing, vegn, init )
     
     ! Update soil water
     call SoilWaterDynamicsLayer( forcing, vegn )
