@@ -1151,7 +1151,8 @@ contains
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
       out_annual_cohorts(i)%deathrate  = cc%deathratevalue
 
-! print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
+ ! print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
+ ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys
  ! print*, out_annual_cohorts(1)%age, "out_annual_cohorts(i)%age"
 
     enddo

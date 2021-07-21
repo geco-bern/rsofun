@@ -276,24 +276,24 @@ ea3sa1CSTgl_out_annual_tile <- ea3sa1CSTgl_out_annual_tile %>% mutate(Mortality 
 From annual_tile_output: plantC (Biomass)
 Level of LUE (mol/s/m2)
 
-```{r, fig.width = 5, fig.height = 5}
+```{r, fig.width = 3, fig.height = 3}
 
 # Mortality as a function of DBH
 Bio_DBH_LUE <- ggplot() + 
-  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
-  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
-  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=plantC, color='+30%'),alpha=.7) +
   scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  scale_y_continuous(limits = c(0,56),breaks = seq(0,55,10)) + 
-  labs(title= "a) Size-dependent mortality")
+  scale_y_continuous(limits = c(0,63),breaks = seq(0,63,10)) + 
+  #labs(title= "a) Size-dependent mortality")  +
+  labs(title= "b)")
 
 ggsave("plotBio_DBH_LUE.tiff", width = 4.5, height = 4, device='tiff', dpi=300)
-
 
 # Mortality as a function of C starvation
 Bio_NSC_LUE <- ggplot() + 
@@ -332,6 +332,64 @@ Bio_GR_LUE <- ggplot() +
 ```{r, include=F, eval=T,fig.height=3.5,fig.width=10}
 ggarrange(Bio_DBH_LUE,Bio_NSC_LUE,Bio_GR_LUE, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
 ggsave("plot_bio_lue.tiff", width = 9, height = 3, device='tiff', dpi=300)
+```
+
+### 2. Growth and mortality 
+
+From annual_tile_output: NPP (Growth) and 
+Level of LUE (mol/s/m2)
+
+```{r, fig.width = 3, fig.height = 3}
+
+# Mortality as a function of DBH
+Bio_DBH_LUE <- ggplot() + 
+  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=NPP, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=NPP, color='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=NPP, color='+30%'),alpha=.7) +
+  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=c_deadtrees, color='+30%'),alpha=.7) +
+
+  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38")) +
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  scale_y_continuous(limits = c(0,63),breaks = seq(0,63,10)) + 
+  #labs(title= "a) Size-dependent mortality")  +
+  labs(title= "b)")
+
+ggsave("plotBio_DBH_LUE.tiff", width = 4.5, height = 4, device='tiff', dpi=300)
+
+# Mortality as a function of C starvation
+Bio_NSC_LUE <- ggplot() + 
+  geom_line(data=ea1sa1NSCgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1NSCgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1NSCgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  scale_y_continuous(limits = c(0,75),breaks = seq(0,75,10)) +
+  labs(title= "b) C starvation mortality")
+
+# Mortality as a function of Growth rate
+Bio_GR_LUE <- ggplot() + 
+  geom_line(data=ea1sa1GRgl_out_annual_tile, aes(x=year, y=plantC, color='Control')) + 
+  geom_line(data=ea2sa1GRgl_out_annual_tile, aes(x=year, y=plantC, color='+15%')) +
+  geom_line(data=ea3sa1GRgl_out_annual_tile, aes(x=year, y=plantC, color='+30%')) +
+  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
+  labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  scale_y_continuous(limits = c(0,42),breaks = seq(0,40,10)) +
+  labs(title= "c) Growth rate mortality") 
+
+# Mortality as a function of Self-thinning
+
 ```
 
 ### 2. Relative change Aboveground NPP vs. Aboveground Biomass

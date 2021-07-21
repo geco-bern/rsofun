@@ -406,12 +406,13 @@ cost_rmse_lm3ppa_pmodel <- function( par, ddf_obs, df_drivers, inverse = FALSE )
     dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
 
   # Add size dsitribution from observations
-  sizedist <- c(12.1,17.8,28.0,40.8,54.0,105.4)
+  sizedist <- c(12.1,17.8,27.9,40.6,53.7,115.0)
 
   df_mod_sizedist <- df$data[[1]]$output_annual_cohorts %>%
     dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
     dplyr::filter(dbh>=12) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
-    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% 
+    group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
 
   dff <- data.frame(
     variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
@@ -456,12 +457,13 @@ cost_rmse_lm3ppa_gsleuning <- function( par, ddf_obs, df_drivers, inverse = FALS
     dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
 
   # Add size dsitribution from observations
-  sizedist <- c(12.1,17.8,28.0,40.8,54.0,105.4)
+  sizedist <- c(12.1,17.8,27.9,40.6,53.7,115.0)
 
   df_mod_sizedist <- df$data[[1]]$output_annual_cohorts %>%
     dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
     dplyr::filter(dbh>=12) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
-    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% 
+    group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
 
   dff <- data.frame(
     variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),

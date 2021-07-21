@@ -150,9 +150,9 @@ contains
     !----------------------------------------------------------------
     idoy = 0
 
-    print*,'sim. year  ', iyears
+    ! print*,'sim. year  ', iyears
     ! print*,'real year: ', year0
-    print*,'sim. year 2 ', myinterface%steering%year
+    ! print*,'sim. year 2 ', myinterface%steering%year
 
     if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update( vegn )
     

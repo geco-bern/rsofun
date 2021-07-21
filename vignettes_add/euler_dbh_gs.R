@@ -2,10 +2,11 @@ library(dplyr)
 library(tibble)
 #if(!require(devtools)){install.packages(devtools)}
 #devtools::install_github("stineb/rsofun")
-#library(devtools)
+library(devtools)
 library(rsofun)
 library(ggplot2)
 library(multidplyr)
+library(purrr)
 
 #build()
 install()
@@ -27,7 +28,7 @@ settings_calib_DBH_gs <- list(
   method              = "gensa",
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 1000, 
+  maxit               = 500, 
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",

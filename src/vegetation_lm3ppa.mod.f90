@@ -804,6 +804,7 @@ contains
           ! Canopy mortality
             if (cc%bl_max > 0) then
             deathrate = param_nsc * 0.01 * (exp(-2*(cc%nsc/cc%bl_max))/(0.01+exp(-2*(cc%nsc/cc%bl_max))))
+
             endif
           endif
 
@@ -821,13 +822,11 @@ contains
 
           else  
           ! Canopy mortality
-          deathrate = param_gr * 0.01 *    &
-                           (1. + 5.*exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))/ &
-                           (1. + exp(4.*(cc%bsw+cc%bHW-cc%ABG_ys-2))))
+          deathrate = param_gr * 0.002 *    &
+                           (1. + 5.*exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6))/ &
+                           (1. + exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6))))
           endif
 
-          ! deathrate = param_gr * 0.01 * (2*exp(60*(cc%bsw+cc%bHW-cc%ABG_ys))/(1+exp(60*(cc%bsw+cc%bHW-cc%ABG_ys))))
-          ! deathrate = param_gr * (cc%bsw + cc%bHW - cc%ABG_ys)
           ! print*, "cc%dbh-cc%DBH_ys", cc%dbh-cc%DBH_ys
           ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys
 
@@ -907,10 +906,9 @@ contains
       cc => vegn%cohorts(i)
       associate ( sp => spdata(cc%species)  )
 
-      !   Mortality due to starvation
+      ! Mortality due to starvation
       deathrate = 0.0
-      !if (cc%bsw<0 .or. cc%nsc < 0.00001*cc%bl_max .OR.(cc%layer >1 .and. sp%lifeform ==0)) then
-      !if (cc%nsc < 0.01*cc%bl_max .OR. cc%annualNPP < 0.0) then ! .OR. cc%NSN < 0.01*cc%bl_max/sp%CNleaf0
+     
       if (cc%nsc < 0.01*cc%bl_max) then
 
         deathrate = 1.0
