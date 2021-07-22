@@ -2,10 +2,13 @@
 ######## DBH function ######## 
 # Understory 
 # Weng et al 2015
+
+ggplot(data.frame(x = c(0, 0.5)), aes(x)) + stat_function(fun = ~ 0.075*(1+9*exp(-60*.x))/(1+exp(-60*.x))) +
+  labs(x='DBH', y='Mortality rate') +theme_bw()
+
 ggplot(data.frame(x = c(0, 0.5)), aes(x)) + 
-  #stat_function(fun = ~ 0.075*(1+9*exp(-60*.x))/(1+exp(-60*.x)),col="blue") +
-  stat_function(fun = ~ 0.81* 0.075*(1+9*exp(-60*.x))/(1+exp(-60*.x)), col="blue") +
-  stat_function(fun = ~ 0.1* 0.075*(1+9*exp(-60*.x))/(1+exp(-60*.x))) +
+  stat_function(fun = ~ 0.1*0.075*(1+9*exp(-60*.x))/(1+exp(-60*.x))) +
+  stat_function(fun = ~ 1* 0.075*(1+9*exp(-60*.x))/(1+exp(-60*.x)), col="blue") +
   stat_function(fun = ~ 2* 0.075*(1+9*exp(-60*.x))/(1+exp(-60*.x))) +
   labs(x='DBH (m)', y='Deathrate') +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
@@ -18,8 +21,25 @@ ggplot(data.frame(x = c(0, 0.5)), aes(x)) +
 # Weng et al 2015
 # See that maximum value of DBH expected is 1 m or 100 cm
 
-ggplot(data.frame(x = c(0, 1.2)), aes(x)) + stat_function(fun = ~ 0.01*(1+5*exp(4*(.x-2)))/(1+exp(4*(.x-2)))) +
+# Option 1 NOW in FORTRAN
+ggplot(data.frame(x = c(0, 1)), aes(x)) + stat_function(fun = ~ 0.1*(1*exp(2*(.x-1)))/(1+exp(2*(.x-1)))) +
   labs(x='DBH', y='Mortality rate') +theme_bw()
+
+ggplot(data.frame(x = c(0, 1)), aes(x)) + 
+  stat_function(fun = ~ 1*0.1*(1*exp(2*(.x-1)))/(1+exp(2*(.x-1))),col="blue") +
+  stat_function(fun = ~ 0.1*0.1*(1*exp(2*(.x-1)))/(1+exp(2*(.x-1)))) +
+  stat_function(fun = ~ 2*0.1*(1*exp(2*(.x-1)))/(1+exp(2*(.x-1)))) +
+  labs(x='DBH (m)', y='Deathrate') 
+
+# Option 2
+ggplot(data.frame(x = c(0, 1)), aes(x)) + stat_function(fun = ~ 1*(1*exp(2*(.x-2)))/(1+exp(2*(.x-2)))) +
+  labs(x='DBH', y='Mortality rate') +theme_bw()
+
+ggplot(data.frame(x = c(0, 1)), aes(x)) + 
+  stat_function(fun = ~ 1.8*(1*exp(1*2*(.x-2)))/(1+exp(1*2*(.x-2))),col="blue") +
+  stat_function(fun = ~ 1.8*(1*exp(0.1*2*(.x-2)))/(1+exp(0.1*2*(.x-2)))) +
+  stat_function(fun = ~ 1.8*(1*exp(2*2*(.x-2)))/(1+exp(2*2*(.x-2)))) +
+  labs(x='DBH (m)', y='Deathrate') 
 
 fig1a_dbh <- ggplot(data.frame(x = c(0, 1)), aes(x)) + 
   #stat_function(fun = ~ 0.01*(1+5*exp(4*(.x-2)))/(1+exp(4*(.x-2)))) +
@@ -47,8 +67,14 @@ ggplot(data.frame(x = c(0, 1)), aes(x)) +
 # NOW IN FORTRAN!
 # See that maximum value of cc%nsc/cc%bl_max expected is 5
 
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.01*(exp(-2*.x)/(0.01+exp(-2*.x))))+
+ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.05*(exp(-3*.x)/(0.01+exp(-3*.x))))+
   labs(x='NSC', y='Mortality rate') +theme_bw()
+
+ggplot(data.frame(x = c(0, 5)), aes(x)) + 
+  stat_function(fun = ~ 1*0.05*(exp(-2*.x)/(0.01+exp(-2*.x))),col="blue")+
+  stat_function(fun = ~ 0.1*0.05*(exp(-2*.x)/(0.01+exp(-2*.x))))+
+  stat_function(fun = ~ 2*0.05*(exp(-2*.x)/(0.01+exp(-2*.x))))+
+  labs(x='DBH (m)', y='Deathrate') 
 
 fig1a_nsc <- ggplot(data.frame(x = c(0, 5)), aes(x)) + 
   #stat_function(fun = ~ 0.01*(exp(-2*.x)/(0.01+exp(-2*.x)))) +
@@ -66,8 +92,15 @@ fig1a_nsc <- ggplot(data.frame(x = c(0, 5)), aes(x)) +
 #  NOW IN FORTRAN!
 # See that maximum value of cc%bsw+cc%bHW-cc%ABG_ys is 12
 
-ggplot(data.frame(x = c(0, 12)), aes(x)) + stat_function(fun = ~ 0.002*(1+5*exp(1*(.x-6)))/(1+exp(1*(.x-6)))) +
+ggplot(data.frame(x = c(0, 12)), aes(x)) + stat_function(fun = ~ 0.05*(1*exp(1*(.x-6)))/(1+exp(1*(.x-6)))) +
   labs(x='GR', y='Mortality rate') +theme_bw()
 
+ggplot(data.frame(x = c(0, 12)), aes(x)) + 
+  stat_function(fun = ~ 1*0.05*(5*exp(1*(.x-6)))/(1+exp(1*(.x-6))),col="blue") +
+  stat_function(fun = ~ 0.1*0.05*(5*exp(1*(.x-6)))/(1+exp(1*(.x-6)))) +
+  stat_function(fun = ~ 2*0.05*(5*exp(1*(.x-6)))/(1+exp(1*(.x-6)))) +
+  labs(x='DBH (m)', y='Deathrate') 
 
+#ggplot(data.frame(x = c(0, 12)), aes(x)) + stat_function(fun = ~ 0.002*(1+5*exp(1*(.x-6)))/(1+exp(1*(.x-6)))) +
+#  labs(x='GR', y='Mortality rate') +theme_bw()
 

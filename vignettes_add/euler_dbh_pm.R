@@ -1,11 +1,12 @@
 library(dplyr)
 library(tibble)
-#if(!require(devtools)){install.packages(devtools)}
-#devtools::install_github("stineb/rsofun")
+if(!require(devtools)){install.packages(devtools)}
+devtools::install_github("stineb/rsofun")
 library(devtools)
 library(rsofun)
 library(ggplot2)
 library(multidplyr)
+library(purrr)
 
 #build()
 install()

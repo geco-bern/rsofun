@@ -803,8 +803,7 @@ contains
           else  
           ! Canopy mortality
             if (cc%bl_max > 0) then
-            deathrate = param_nsc * 0.01 * (exp(-2*(cc%nsc/cc%bl_max))/(0.01+exp(-2*(cc%nsc/cc%bl_max))))
-
+            deathrate = param_nsc * 0.05 * (exp(-3*(cc%nsc/cc%bl_max))/(0.01+exp(-3*(cc%nsc/cc%bl_max))))
             endif
           endif
 
@@ -822,11 +821,10 @@ contains
 
           else  
           ! Canopy mortality
-          deathrate = param_gr * 0.002 *    &
-                           (1. + 5.*exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6))/ &
+          deathrate = param_gr * 0.05 *    &
+                           (1.*exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6))/ &
                            (1. + exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6))))
           endif
-
           ! print*, "cc%dbh-cc%DBH_ys", cc%dbh-cc%DBH_ys
           ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys
 
@@ -843,7 +841,6 @@ contains
               deathrate = sp%mortrate_d_c
             endif
           else                    ! for trees
-
             if (cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.075*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
               deathrate = param_dbh_under * sp%mortrate_d_u * &
                      (1. + A_mort*exp(B_mort*cc%dbh))/ &
@@ -851,10 +848,9 @@ contains
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then
-                deathrate = param_dbh * sp%mortrate_d_c *    &
-                           (1. + 5.*exp(4.*(cc%dbh-DBHtp))/  &
-                           (1. + exp(4.*(cc%dbh-DBHtp))))
-
+                deathrate = param_dbh * 0.1 *    &
+                           (1.*exp(2.*(cc%dbh-1))/  &
+                           (1. + exp(2.*(cc%dbh-1))))
               else
                 deathrate = sp%mortrate_d_c !0.01
               endif

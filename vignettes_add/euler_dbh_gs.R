@@ -6,7 +6,6 @@ library(devtools)
 library(rsofun)
 library(ggplot2)
 library(multidplyr)
-library(purrr)
 
 #build()
 install()
@@ -28,7 +27,7 @@ settings_calib_DBH_gs <- list(
   method              = "gensa",
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 500, 
+  maxit               = 1000, 
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
