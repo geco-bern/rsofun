@@ -49,6 +49,8 @@ module md_gpp_pmodel
     real :: soilm_par_b
     real :: rd_to_vcmax  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
+    real :: tau_acclim_tempstress
+    real :: par_shape_tempstress
   end type paramstype_gpp
 
   type(paramstype_gpp) :: params_gpp
@@ -90,11 +92,6 @@ contains
     logical, intent(in) :: do_tempstress                     ! whether empirical temperature stress function is applied to GPP
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
 
-    ! ! input-output arguments
-    ! real, dimension(npft), intent(inout)  :: dgpp            ! daily total gross primary productivity (gC m-2 d-1)
-    ! real, dimension(npft), intent(inout)  :: drd             ! daily total dark respiraiton (gC m-2 d-1)
-    ! real, dimension(npft), intent(inout)  :: dtransp         ! daily total transpiration (XXX)
-
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
     type(climate_type)   :: climate_acclimation     ! list of climate variables to which P-model calculates acclimated traits
@@ -110,6 +107,8 @@ contains
     real, save :: temp_memory
     real, save :: patm_memory
     real, save :: ppfd_memory
+
+    real, save :: tmin_memory     ! for low temperature stress
 
     ! xxx test
     real :: a_c, a_j, a_returned, fact_jmaxlim
@@ -132,6 +131,7 @@ contains
       vpd_memory  = climate_acclimation%dvpd
       patm_memory = climate_acclimation%dpatm
       ppfd_memory = climate_acclimation%dppfd
+      tmin_memory = climate_acclimation%dtmin
     end if 
 
     co2_memory  = dampen_variability( co2,                       params_gpp%tau_acclim, co2_memory  )
@@ -139,6 +139,11 @@ contains
     vpd_memory  = dampen_variability( climate_acclimation%dvpd,  params_gpp%tau_acclim, vpd_memory  )
     patm_memory = dampen_variability( climate_acclimation%dpatm, params_gpp%tau_acclim, patm_memory )
     ppfd_memory = dampen_variability( climate_acclimation%dppfd, params_gpp%tau_acclim, ppfd_memory )
+
+    ! separate time scale for minimum temperature stress
+    tmin_memory = dampen_variability( climate_acclimation%dtmin, params_gpp%tau_acclim_tempstress, tmin_memory )
+
+    print*,'climate_acclimation%dtmin, tmin_memory', climate_acclimation%dtmin, tmin_memory
 
     tk = climate_acclimation%dtemp + kTkelvin
 
@@ -148,12 +153,10 @@ contains
       lu = 1
     
       !----------------------------------------------------------------
-      ! Instantaneous temperature effect on quantum yield efficiency
+      ! Low-temperature effect on quantum yield efficiency 
       !----------------------------------------------------------------
-      ! ftemp_kphio = calc_ftemp_kphio( climate%dtemp, params_pft_plant(pft)%c4 )
-
       ! take the slowly varying temperature for governing quantum yield variations
-      ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 )
+      ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 ) * calc_ftemp_kphio_tmin( tmin_memory, params_gpp%par_shape_tempstress )
 
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
@@ -166,8 +169,6 @@ contains
         !----------------------------------------------------------------
         ! With fAPAR = 1.0 (full light) for simulating Vcmax25
         !----------------------------------------------------------------
-        ! print*,'kphio, ppfd_memory, co2_memory, temp_memory, vpd_memory, patm_memory ', params_pft_gpp(pft)%kphio * ftemp_kphio, ppfd_memory, co2_memory, temp_memory, vpd_memory, patm_memory 
-
         out_pmodel = pmodel(  &
                               kphio          = params_pft_gpp(pft)%kphio * ftemp_kphio, &
                               beta           = params_gpp%beta, &
@@ -180,20 +181,6 @@ contains
                               method_optci   = "prentice14", &
                               method_jmaxlim = "wang17" &
                               )
-
-        ! ! xxx test
-        ! out_pmodel = pmodel(  &
-        !                       kphio          = 5.16605116e-02, &
-        !                       beta           = params_gpp%beta, &
-        !                       ppfd           = 1.77466325E-04, &
-        !                       co2            = 369.548828, &
-        !                       tc             = 7.46864176, &
-        !                       vpd            = 433.062012, &
-        !                       patm           = 98229.4453, &
-        !                       c4             = params_pft_plant(pft)%c4, &
-        !                       method_optci   = "prentice14", &
-        !                       method_jmaxlim = "wang17" &
-        !                       )
 
       else
 
@@ -489,6 +476,30 @@ contains
   end function calc_ftemp_kphio
 
 
+  function calc_ftemp_kphio_tmin( tc, shape_par ) result( ftemp )
+    !////////////////////////////////////////////////////////////////
+    ! Calculates the low temperature stress function assuming no stress
+    ! at 10 deg C and above and declining below based on a calibratable
+    ! parameter.
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: tc           ! (leaf) temperature in degrees celsius
+    real, intent(in) :: shape_par    ! shape parameter for the sensitivity of the decline, some positive value
+
+    ! function return variable
+    real :: ftemp
+
+    if (tc > 10.0) then
+      ftemp = 1.0
+    else
+      ftemp = 1.0 - (-shape_par * (tc - 10.0))**2
+      if (ftemp < 0.0) ftemp = 0.0
+    end if
+    print*,'tc, ftemp ', tc, ftemp 
+    
+  end function calc_ftemp_kphio_tmin
+
+
   function calc_ftemp_inst_rd( tc ) result( fr )
     !-----------------------------------------------------------------------
     ! Output:   Factor fr to correct for instantaneous temperature response
@@ -634,6 +645,10 @@ contains
     params_gpp%tau_acclim     = 30.0
     params_gpp%soilm_par_a    = myinterface%params_calib%soilm_par_a     ! is provided through standard input
     params_gpp%soilm_par_b    = myinterface%params_calib%soilm_par_b     ! is provided through standard input
+
+    ! temperature stress time scale is calibratable
+    params_gpp%tau_acclim_tempstress = myinterface%params_calib%tau_acclim_tempstress
+    params_gpp%par_shape_tempstress  = myinterface%params_calib%par_shape_tempstress
 
     ! PFT-dependent parameter(s)
     params_pft_gpp(:)%kphio = myinterface%params_calib%kphio  ! is provided through standard input

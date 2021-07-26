@@ -29,7 +29,7 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
   ## re-define units and naming of forcing dataframe
   forcing <- forcing %>% 
     dplyr::mutate(netrad = -9999.9, fsun = (100-ccov)/100, ndep = 0.0) %>% 
-    dplyr::select(temp, rain, vpd, ppfd, netrad, fsun, snow, co2, ndep, fapar, patm)
+    dplyr::select(temp, rain, vpd, ppfd, netrad, fsun, snow, co2, ndep, fapar, patm, tmin, tmax)
 
   ## Tests
   do_continue <- TRUE
@@ -190,7 +190,9 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       as.numeric(params_modl$soilm_par_b),
       as.numeric(params_modl$vpdstress_par_a),
       as.numeric(params_modl$vpdstress_par_b),
-      as.numeric(params_modl$vpdstress_par_m)
+      as.numeric(params_modl$vpdstress_par_m),
+      as.numeric(params_modl$tau_acclim_tempstress),
+      as.numeric(params_modl$par_shape_tempstress)
       )
 
     ## Soil texture as matrix (layer x texture parameter)
