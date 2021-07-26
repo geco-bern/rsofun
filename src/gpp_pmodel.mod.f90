@@ -112,6 +112,7 @@ contains
 
     ! xxx test
     real :: a_c, a_j, a_returned, fact_jmaxlim
+    integer, save :: count
 
     !----------------------------------------------------------------
     ! Convert daily mean environmental conditions to conditions to
@@ -126,13 +127,19 @@ contains
     ! relevant for Rubisco turnover
     !----------------------------------------------------------------
     if (init) then
+      count = 0
       co2_memory  = co2
       temp_memory = climate_acclimation%dtemp
       vpd_memory  = climate_acclimation%dvpd
       patm_memory = climate_acclimation%dpatm
       ppfd_memory = climate_acclimation%dppfd
       tmin_memory = climate_acclimation%dtmin
+      ! print*,'climate_acclimation%dtmin, tmin_memory', climate_acclimation%dtmin, tmin_memory
     end if 
+
+    ! if (count < 5) print*,'A count, tau_acclim_tempstress, dtmin, tmin_memory', count, params_gpp%tau_acclim_tempstress, climate_acclimation%dtmin, tmin_memory
+
+    count = count + 1
 
     co2_memory  = dampen_variability( co2,                       params_gpp%tau_acclim, co2_memory  )
     temp_memory = dampen_variability( climate_acclimation%dtemp, params_gpp%tau_acclim, temp_memory )
@@ -143,7 +150,7 @@ contains
     ! separate time scale for minimum temperature stress
     tmin_memory = dampen_variability( climate_acclimation%dtmin, params_gpp%tau_acclim_tempstress, tmin_memory )
 
-    print*,'climate_acclimation%dtmin, tmin_memory', climate_acclimation%dtmin, tmin_memory
+    ! if (count < 5) print*,'B count, tau_acclim_tempstress, dtmin, tmin_memory', count, params_gpp%tau_acclim_tempstress, climate_acclimation%dtmin, tmin_memory
 
     tk = climate_acclimation%dtemp + kTkelvin
 
@@ -480,7 +487,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Calculates the low temperature stress function assuming no stress
     ! at 10 deg C and above and declining below based on a calibratable
-    ! parameter.
+    ! parameter and a quadratic function.
     !----------------------------------------------------------------
     ! arguments
     real, intent(in) :: tc           ! (leaf) temperature in degrees celsius
@@ -492,10 +499,9 @@ contains
     if (tc > 10.0) then
       ftemp = 1.0
     else
-      ftemp = 1.0 - (-shape_par * (tc - 10.0))**2
+      ftemp = 1.0 - (shape_par * (tc - 10.0))**2
       if (ftemp < 0.0) ftemp = 0.0
     end if
-    print*,'tc, ftemp ', tc, ftemp 
     
   end function calc_ftemp_kphio_tmin
 

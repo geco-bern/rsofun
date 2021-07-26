@@ -75,7 +75,7 @@ params_siml <- list(
   spinup             = TRUE,
   spinupyears        = 10,
   recycle            = 1,
-  soilmstress        = TRUE,
+  soilmstress        = FALSE,
   tempstress         = TRUE,
   calc_aet_fapar_vpd = FALSE,
   in_ppfd            = TRUE,
@@ -143,6 +143,9 @@ df_drivers$forcing[[1]]$snow <- 0.0
 df_drivers$forcing[[1]]$ppfd <- rsofun::df_drivers$forcing[[1]]$ppfd / (60*60*24)
 df_drivers$forcing[[1]]$tmin <- rsofun::df_drivers$forcing[[1]]$temp - 5.0 # test
 df_drivers$forcing[[1]]$tmax <- rsofun::df_drivers$forcing[[1]]$temp + 5.0 # test
+
+df_drivers$params_siml[[1]]$tempstress <- TRUE
+df_drivers$params_siml[[1]]$soilmstress <- FALSE
 ```
 
 ### Run the model
@@ -219,7 +222,7 @@ settings_calib <- list(
   method              = "gensa",
   targetvars          = c("gpp"),
   timescale           = list( gpp = "d" ),
-  maxit               = 5, # (5 for gensa) (30 for optimr)    #
+  maxit               = 5000, # (5 for gensa) (30 for optimr)    #
   sitenames           = "FR-Pue",
   metric              = "rmse",
   dir_results         = "./",
