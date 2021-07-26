@@ -696,7 +696,7 @@ contains
     vegn%annualN      = 0.0
     vegn%Nloss_yr     = 0.0
     vegn%annualNup    = 0.0
-    ! vegn%n_deadtrees  = 0.0
+    ! vegn%n_deadtrees  = 0.0 !xxx
     ! vegn%c_deadtrees  = 0.0
 
     do i = 1, vegn%n_cohorts

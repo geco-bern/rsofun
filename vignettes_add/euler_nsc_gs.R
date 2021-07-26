@@ -1,7 +1,7 @@
 library(dplyr)
 library(tibble)
-#if(!require(devtools)){install.packages(devtools)}
-#devtools::install_github("stineb/rsofun")
+if(!require(devtools)){install.packages(devtools)}
+devtools::install_github("stineb/rsofun")
 library(devtools)
 library(rsofun)
 library(ggplot2)
@@ -27,7 +27,7 @@ settings_calib_NSC_gs <- list(
   method              = "gensa",
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 1000, 
+  maxit               = 500, 
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -46,5 +46,5 @@ settings_calib_NSC_gs_euler <- calib_sofun(
   settings = settings_calib_NSC_gs
 )
 
-save(settings_calib_NSC_gs_euler, file = "input_data/settings_calib_NSC_gs_euler.RData")
+save(settings_calib_NSC_gs, file = "input_data/settings_calib_NSC_gs_euler.RData")
 

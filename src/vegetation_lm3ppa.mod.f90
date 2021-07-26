@@ -954,10 +954,8 @@ contains
     vegn%metabolicL  = vegn%metabolicL + fsc_fine *loss_fine + fsc_wood *loss_coarse
     vegn%structuralL = vegn%structuralL + (1.0-fsc_fine)*loss_fine + (1.0-fsc_wood)*loss_coarse
 
-    vegn%metabolicN = vegn%metabolicN + &
-    fsc_fine *lossN_fine +    fsc_wood *lossN_coarse
-    vegn%structuralN = vegn%structuralN + &
-    (1.-fsc_fine)*lossN_fine +(1.-fsc_wood)*lossN_coarse
+    vegn%metabolicN = vegn%metabolicN + fsc_fine *lossN_fine + fsc_wood *lossN_coarse
+    vegn%structuralN = vegn%structuralN + (1.-fsc_fine)*lossN_fine +(1.-fsc_wood)*lossN_coarse
 
     ! annual N from plants to soil
     vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
@@ -965,7 +963,7 @@ contains
     ! record mortality
     ! cohort level
     cc%n_deadtrees   = deadtrees
-    cc%c_deadtrees   = deadtrees * (cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
+    cc%c_deadtrees   = deadtrees * (cc%nsc + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW) + loss_coarse + loss_fine !xxxx
     
     ! vegn%n_deadtrees   = vegn%n_deadtrees + deadtrees
     ! vegn%c_deadtrees   = vegn%c_deadtrees + deadtrees * (cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
