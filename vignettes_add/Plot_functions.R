@@ -26,6 +26,12 @@ ggplot(data.frame(x = c(0, 1)), aes(x)) + stat_function(fun = ~ 0.1*(1*exp(2*(.x
   labs(x='DBH', y='Mortality rate') +theme_bw()
 
 ggplot(data.frame(x = c(0, 1)), aes(x)) + 
+  stat_function(fun = ~ .x ^ 1.5) +
+  stat_function(fun = ~ .x ^ 2.5) +
+  stat_function(fun = ~ .x ^ 5) +
+  labs(x='DBH', y='Mortality rate') +theme_bw()
+
+ggplot(data.frame(x = c(0, 1)), aes(x)) + 
   stat_function(fun = ~ 1*0.1*(1*exp(2*(.x-1)))/(1+exp(2*(.x-1))),col="#F8766D") +
   stat_function(fun = ~ 0.1*0.1*(1*exp(2*(.x-1)))/(1+exp(2*(.x-1)))) +
   stat_function(fun = ~ 2*0.1*(1*exp(2*(.x-1)))/(1+exp(2*(.x-1)))) +
@@ -66,7 +72,11 @@ ggplot(data.frame(x = c(0, 1)), aes(x)) +
 # NOW IN FORTRAN!
 # See that maximum value of cc%nsc/cc%bl_max expected is 5
 
-ggplot(data.frame(x = c(0, 5)), aes(x)) + stat_function(fun = ~ 0.05*(exp(-3*.x)/(0.01+exp(-3*.x))))+
+ggplot(data.frame(x = c(0, 5)), aes(x)) + 
+  stat_function(fun = ~ 0.05*(exp(-3*.x)/(0.01+exp(-3*.x)))) +
+  stat_function(fun = ~ 0.05*(exp(-3*.x)/(0.02+exp(-3*.x)))) +
+  stat_function(fun = ~ 0.05*(exp(-3*.x)/(0.03+exp(-3*.x))), col = "red") +
+  stat_function(fun = ~ 0.05*(exp(-3*.x)/(0.1+exp(-3*.x))), col = "red") +
   labs(x='NSC', y='Mortality rate') +theme_bw()
 
 ggplot(data.frame(x = c(0, 5)), aes(x)) + 

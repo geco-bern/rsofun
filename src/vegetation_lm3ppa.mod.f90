@@ -803,7 +803,7 @@ contains
           else  
           ! Canopy mortality
             if (cc%bl_max > 0) then
-            deathrate = param_nsc * 0.05 * (exp(-3*(cc%nsc/cc%bl_max))/(0.01+exp(-3*(cc%nsc/cc%bl_max))))
+            deathrate = param_nsc * 0.05 * (exp(-3.0*(cc%nsc/cc%bl_max))/(0.01+exp(-3.0*(cc%nsc/cc%bl_max))))
             endif
           endif
 
@@ -822,8 +822,8 @@ contains
           else  
           ! Canopy mortality
           deathrate = param_gr * 0.05 *    &
-                           (1.*exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6))/ &
-                           (1. + exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6))))
+                           (1.*exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))/ &
+                           (1. + exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))))
           endif
           ! print*, "cc%dbh-cc%DBH_ys", cc%dbh-cc%DBH_ys
           ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys
@@ -848,14 +848,16 @@ contains
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then
-                deathrate = param_dbh * 0.1 *    &
-                           (1.*exp(2.*(cc%dbh-1))/  &
-                           (1. + exp(2.*(cc%dbh-1))))
+                ! deathrate = param_dbh * 0.1 *    &
+                !            (1.*exp(2.*(cc%dbh-1))/  &
+                !            (1. + exp(2.*(cc%dbh-1))))
+                deathrate = min(1.0, param_dbh * cc%dbh ** 1.5) ! 2.5, 5
               else
                 deathrate = sp%mortrate_d_c !0.01
               endif
             endif
           endif
+         
         endif
 
         deathrate = deathrate + 0.01
@@ -963,7 +965,9 @@ contains
     ! record mortality
     ! cohort level
     cc%n_deadtrees   = deadtrees
-    cc%c_deadtrees   = deadtrees * (cc%nsc + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW) + loss_coarse + loss_fine !xxxx
+    cc%c_deadtrees   = loss_coarse + loss_fine ! xxxxx
+    cc%c_turnover    = cc%c_turnover + loss_coarse + loss_fine
+    ! cc%c_deadtrees   = deadtrees * (cc%nsc + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW) + loss_coarse + loss_fine !xxxx
     
     ! vegn%n_deadtrees   = vegn%n_deadtrees + deadtrees
     ! vegn%c_deadtrees   = vegn%c_deadtrees + deadtrees * (cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
@@ -1380,6 +1384,9 @@ contains
 
       !    annual N from plants to soil
       vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
+
+      ! record continuous biomass turnover (not linked to mortality)
+      cc%c_turnover = cc%c_turnover + loss_coarse + loss_fine
 
       end associate
     enddo

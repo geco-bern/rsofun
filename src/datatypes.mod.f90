@@ -730,8 +730,9 @@ contains
       cc%DBH_ys       = cc%dbh
       cc%Vol_ys       = cc%Volume
       cc%ABG_ys       = cc%bsw+cc%bHW
-      ! cc%n_deadtrees       = 0.0
-      ! cc%c_deadtrees       = 0.0
+      cc%n_deadtrees  = 0.0
+      cc%c_deadtrees  = 0.0
+      cc%c_turnover   = 0.0
     enddo
   
   end subroutine Zero_diagnostics

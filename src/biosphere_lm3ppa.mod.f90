@@ -135,7 +135,7 @@ contains
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
 
-        ! Produce new biomass from 'carbon_gain' (is zero afterwards)
+        ! Produce new biomass from 'carbon_gain' (is zero afterwards) and continous biomass turnover
         call vegn_growth_EW( vegn )
 
         ! get daily outputs
