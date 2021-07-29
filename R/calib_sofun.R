@@ -44,9 +44,14 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
       # cost_rmse <- cost_chisquared_vpdstress
       cost_rmse <- cost_rmse_vpdstress
       
-    } else if ( "kphio" %in% names(settings$par) && "tau_acclim_tempstress" %in% names(settings$par) && "par_shape_tempstress" %in% names(settings$par) ){  
+    } else if ( "kphio" %in% names(settings$par) && "tau_acclim_tempstress" %in% names(settings$par) && "par_shape_tempstress" %in% names(settings$par)){  
       ## Calibration for temperature stress function
       cost_rmse <- cost_rmse_tempstress
+      
+    } else if ( "kphio" %in% names(settings$par) && "tau_acclim_tempstress" %in% names(settings$par) && "par_shape_tempstress" %in% names(settings$par)
+                 && "soilm_par_a" %in% names(settings$par) && "soilm_par_b" %in% names(settings$par) ){  
+      ## Calibration for temperature stress function
+      cost_rmse <- cost_rmse_tempstress_full
       
     }
 
@@ -199,12 +204,14 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
   params_modl <- list(
-    kphio           = par[1],
-    soilm_par_a     = 1.0,
-    soilm_par_b     = 0.0,
-    vpdstress_par_a = 0.2,
-    vpdstress_par_b = 0.2,
-    vpdstress_par_m = 5
+    kphio                 = par[1],
+    soilm_par_a           = 1.0,
+    soilm_par_b           = 0.0,
+    tau_acclim_tempstress = 10,
+    par_shape_tempstress  = 0.0,
+    vpdstress_par_a       = 0.2,
+    vpdstress_par_b       = 0.2,
+    vpdstress_par_m       = 5
     )
   
   df <- runread_pmodel_f(
@@ -261,12 +268,14 @@ cost_rmse_fullstack <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
   params_modl <- list(
-    kphio           = par[1],
-    soilm_par_a     = par[2],
-    soilm_par_b     = par[3],
-    vpdstress_par_a = 0.0,
-    vpdstress_par_b = 0.0,
-    vpdstress_par_m = 0
+    kphio                 = par[1],
+    soilm_par_a           = par[2],
+    soilm_par_b           = par[3],
+    tau_acclim_tempstress = 10,
+    par_shape_tempstress  = 0.0,
+    vpdstress_par_a       = 0.0,
+    vpdstress_par_b       = 0.0,
+    vpdstress_par_m       = 0
   )
   
   df <- runread_pmodel_f(
@@ -294,16 +303,16 @@ cost_rmse_fullstack <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
 ## Generic cost function of model-observation (mis-)match using
 ## root mean square error.
 ##------------------------------------------------------------
-cost_rmse_tempstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
+cost_rmse_tempstress_full <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
   params_modl <- list(
     kphio                 = par[1],
-    tau_acclim_tempstress = par[2],
-    par_shape_tempstress  = par[3],
-    soilm_par_a     = 1.0,
-    soilm_par_b     = 0.0,
+    soilm_par_a           = par[2],
+    soilm_par_b           = par[3],
+    tau_acclim_tempstress = par[4],
+    par_shape_tempstress  = par[5],
     vpdstress_par_a = 0.0,
     vpdstress_par_b = 0.0,
     vpdstress_par_m = 0
@@ -327,6 +336,45 @@ cost_rmse_tempstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   
   return(cost)
 }
+
+##------------------------------------------------------------
+## Generic cost function of model-observation (mis-)match using
+## root mean square error.
+##------------------------------------------------------------
+cost_rmse_tempstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
+  
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio                 = par[1],
+    soilm_par_a           = 1.0,
+    soilm_par_b           = 0.0,
+    tau_acclim_tempstress = par[2],
+    par_shape_tempstress  = par[3],
+    vpdstress_par_a = 0.0,
+    vpdstress_par_b = 0.0,
+    vpdstress_par_m = 0
+  )
+  
+  df <- runread_pmodel_f( df_drivers, 
+                          params_modl = params_modl, 
+                          makecheck = TRUE,
+                          parallel = FALSE) %>%   
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data) %>% 
+    dplyr::rename(gpp_mod = gpp) %>% 
+    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
+  
+  ## Calculate cost (RMSE)
+  cost <- sqrt( mean( (df$gpp_mod - df$gpp_obs )^2, na.rm = TRUE ) )
+  
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost
+  
+  return(cost)
+}
+
 ##------------------------------------------------------------
 ## Generic cost function of model-observation (mis-) match using
 ## root mean square error.
@@ -336,12 +384,14 @@ cost_rmse_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
   params_modl <- list(
-    kphio           = 0.04971,
-    soilm_par_a     = 1.0,
-    soilm_par_b     = 0.0,
-    vpdstress_par_a = par[1],
-    vpdstress_par_b = par[2],
-    vpdstress_par_m = par[3]
+    kphio                 = 0.04971,
+    soilm_par_a           = 1.0,
+    soilm_par_b           = 0.0,
+    tau_acclim_tempstress = 10,
+    par_shape_tempstress  = 0.0,
+    vpdstress_par_a       = par[1],
+    vpdstress_par_b       = par[2],
+    vpdstress_par_m       = par[3]
   )
   
   df <- runread_pmodel_f(
@@ -374,12 +424,14 @@ cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
   params_modl <- list(
-    kphio           = 0.04971,
-    soilm_par_a     = 1.0,
-    soilm_par_b     = 0.0,
-    vpdstress_par_a = par[1],
-    vpdstress_par_b = par[2],
-    vpdstress_par_m = par[3]
+    kphio                 = 0.04971,
+    soilm_par_a           = 1.0,
+    soilm_par_b           = 0.0,
+    tau_acclim_tempstress = 10,
+    par_shape_tempstress  = 0.0,
+    vpdstress_par_a       = par[1],
+    vpdstress_par_b       = par[2],
+    vpdstress_par_m       = par[3]
   )
   
   # df <- df_drivers %>% 

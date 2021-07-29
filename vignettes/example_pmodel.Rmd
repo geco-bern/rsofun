@@ -110,7 +110,7 @@ params_modl <- list(
 	vpdstress_par_b = 0.2,
 	vpdstress_par_m = 5,
 	tau_acclim_tempstress = 15,
-	par_shape_tempstress = 0.1
+	par_shape_tempstress = 0.0  # effectively no additional minimum temperature stress
 	)
 ```
 
@@ -141,11 +141,8 @@ df_drivers$forcing[[1]]$prec <- rsofun::df_drivers$forcing[[1]]$prec / (60*60*24
 df_drivers$forcing[[1]]$rain <- df_drivers$forcing[[1]]$prec
 df_drivers$forcing[[1]]$snow <- 0.0
 df_drivers$forcing[[1]]$ppfd <- rsofun::df_drivers$forcing[[1]]$ppfd / (60*60*24)
-df_drivers$forcing[[1]]$tmin <- rsofun::df_drivers$forcing[[1]]$temp - 5.0 # test
-df_drivers$forcing[[1]]$tmax <- rsofun::df_drivers$forcing[[1]]$temp + 5.0 # test
-
-df_drivers$params_siml[[1]]$tempstress <- TRUE
-df_drivers$params_siml[[1]]$soilmstress <- FALSE
+df_drivers$forcing[[1]]$tmin <- rsofun::df_drivers$forcing[[1]]$temp - 5.0 # for demo
+df_drivers$forcing[[1]]$tmax <- rsofun::df_drivers$forcing[[1]]$temp + 5.0 # for demo
 ```
 
 ### Run the model
@@ -169,22 +166,13 @@ Run for the full set of sites
 
 ```{r}
 ptm <- proc.time()
-params_modl$par_shape_tempstress <- 0.1
-df_output_stress <- runread_pmodel_f(
+df_output <- runread_pmodel_f(
      df_drivers, 
      params_modl = params_modl, 
      makecheck = TRUE,
      parallel = FALSE
      )
 print(ptm)
-
-params_modl$par_shape_tempstress <- 0.0
-df_output_nostress <- runread_pmodel_f(
-     df_drivers, 
-     params_modl = params_modl, 
-     makecheck = TRUE,
-     parallel = FALSE
-     )
 
 # microbenchmark::microbenchmark(
 #   runread_pmodel_f(
@@ -207,8 +195,7 @@ df_output_nostress <- runread_pmodel_f(
 
 ```{r}
 ggplot() +
-  geom_line(data = df_output_stress$data[[1]][1:1000,], aes(x=date, y=gpp), color = 'red') + 
-  geom_line(data = df_output_nostress$data[[1]][1:1000,], aes(x=date, y=gpp), color = 'black') + 
+  geom_line(data = df_output_nostress$data[[1]], aes(x=date, y=gpp), color = 'black') + 
   labs(title = df_output_stress$sitename[[1]], subtitle = "SOFUN output") +
   xlim(ymd("01-01-2008"), ymd("01-01-2010"))
 ```

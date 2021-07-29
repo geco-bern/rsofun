@@ -375,16 +375,22 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
                 dplyr::select( -obs_mean, -mod_mean, -obs_min, -obs_max, -mod_min, -mod_max )
       
       if (!light){
+        use_sites <- idvdf %>% 
+          group_by(sitename) %>% 
+          summarise(ndays_obs = sum(!is.na(obs)), ndays_mod = sum(!is.na(mod)), var_mod = var(mod, na.rm = TRUE)) %>% 
+          dplyr::filter(ndays_obs > 0 & ndays_mod > 0 & var_mod > 0) %>% 
+          pull(sitename)
+        
         idvdf_stats <- idvdf %>% 
+          dplyr::filter(sitename %in% use_sites) %>% 
           group_by( sitename ) %>%
           nest() %>%
-          mutate( ndays_obs = purrr::map( data, ~sum(!is.na( .$obs )  ) ), ndays_mod = purrr::map( data, ~sum(!is.na( .$mod )  ) ) ) %>%
-          unnest( ndays_obs, ndays_mod ) %>%
-          dplyr::filter( ndays_obs > 2 & ndays_mod > 2 ) %>%
           mutate( linmod = purrr::map( data, ~lm( obs ~ mod, data = . ) ),
                   stats  = purrr::map( data, ~get_stats( .$mod, .$obs ) ) ) %>%
           mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
-          unnest( stats )                   
+          unnest( stats )    
+        
+        idvdf_stats <- NA
       } else {
         idvdf_stats <- NA
       }
@@ -440,12 +446,16 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
                 dplyr::select( -obs_mean, -mod_mean, -obs_min, -obs_max) #-mod_min, -mod_max
       
       if (!light){
+        use_sites <- idvdf %>% 
+          group_by(sitename) %>% 
+          summarise(ndays_obs = sum(!is.na(obs)), ndays_mod = sum(!is.na(mod)), var_mod = var(mod, na.rm = TRUE)) %>% 
+          dplyr::filter(ndays_obs > 0 & ndays_mod > 0 & var_mod > 0) %>% 
+          pull(sitename)
+        
         ixvdf_stats <- ixvdf %>% 
+          dplyr::filter(sitename %in% use_sites) %>% 
           group_by( sitename ) %>%
           nest() %>%
-          mutate( nxdays_obs = purrr::map( data, ~sum(!is.na( .$obs )  ) ), nxdays_mod = purrr::map( data, ~sum(!is.na( .$mod )  ) ) ) %>%
-          unnest( nxdays_obs, nxdays_mod ) %>%
-          dplyr::filter( nxdays_obs > 2 & nxdays_mod > 2 ) %>%
           mutate( linmod = purrr::map( data, ~lm( obs ~ mod, data = . ) ),
                   stats  = purrr::map( data, ~get_stats( .$mod, .$obs ) ) ) %>%
           mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
