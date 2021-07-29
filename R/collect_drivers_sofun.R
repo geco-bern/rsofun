@@ -101,8 +101,8 @@ collect_drivers_sofun <- function( siteinfo, params_siml, meteo, fapar, co2, df_
       mutate(doy = lubridate::yday(date)) %>% 
       group_by(doy) %>% 
       summarise(across(where(is.double), ~mean(.x, na.rm = TRUE))) %>% 
-      rename_with(.fn = add_doy, .cols = one_of("ppfd", "rain", "snow", "prec", "temp", "patm", "vpd", "ccov", "fapar", "co2")) %>% 
-      dplyr::select(doy, one_of("ppfd_doy", "rain_doy", "snow_doy", "prec_doy", "temp_doy", "patm_doy", "vpd_doy", "ccov_doy", "fapar_doy", "co2_doy"))
+      rename_with(.fn = add_doy, .cols = one_of("ppfd", "rain", "snow", "prec", "temp", "patm", "vpd", "ccov", "fapar", "co2", "tmin", "tmax")) %>% 
+      dplyr::select(doy, one_of("ppfd_doy", "rain_doy", "snow_doy", "prec_doy", "temp_doy", "patm_doy", "vpd_doy", "ccov_doy", "fapar_doy", "co2_doy", "tmin_doy", "tmax_doy"))
     df <- df %>% 
       mutate(doy = lubridate::yday(date)) %>% 
       left_join(df_meandoy, by = "doy") %>% 
@@ -115,7 +115,9 @@ collect_drivers_sofun <- function( siteinfo, params_siml, meteo, fapar, co2, df_
              vpd = ifelse(is.na(vpd), vpd_doy, vpd),
              ccov = ifelse(is.na(ccov), ccov_doy, ccov),
              fapar = ifelse(is.na(fapar), fapar_doy, fapar),
-             co2 = ifelse(is.na(co2), co2_doy, co2)) %>% 
+             co2 = ifelse(is.na(co2), co2_doy, co2),
+             tmin = ifelse(is.na(tmin), tmin_doy, tmin),
+             tmax = ifelse(is.na(tmax), tmax_doy, tmax)) %>% 
       dplyr::select(-ends_with("_doy"))
     
     return(df)

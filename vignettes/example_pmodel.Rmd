@@ -75,7 +75,7 @@ params_siml <- list(
   spinup             = TRUE,
   spinupyears        = 10,
   recycle            = 1,
-  soilmstress        = TRUE,
+  soilmstress        = FALSE,
   tempstress         = TRUE,
   calc_aet_fapar_vpd = FALSE,
   in_ppfd            = TRUE,
@@ -108,7 +108,9 @@ params_modl <- list(
 	soilm_par_b     = 0.0,
 	vpdstress_par_a = 0.2,
 	vpdstress_par_b = 0.2,
-	vpdstress_par_m = 5
+	vpdstress_par_m = 5,
+	tau_acclim_tempstress = 15,
+	par_shape_tempstress = 0.1
 	)
 ```
 
@@ -139,6 +141,11 @@ df_drivers$forcing[[1]]$prec <- rsofun::df_drivers$forcing[[1]]$prec / (60*60*24
 df_drivers$forcing[[1]]$rain <- df_drivers$forcing[[1]]$prec
 df_drivers$forcing[[1]]$snow <- 0.0
 df_drivers$forcing[[1]]$ppfd <- rsofun::df_drivers$forcing[[1]]$ppfd / (60*60*24)
+df_drivers$forcing[[1]]$tmin <- rsofun::df_drivers$forcing[[1]]$temp - 5.0 # test
+df_drivers$forcing[[1]]$tmax <- rsofun::df_drivers$forcing[[1]]$temp + 5.0 # test
+
+df_drivers$params_siml[[1]]$tempstress <- TRUE
+df_drivers$params_siml[[1]]$soilmstress <- FALSE
 ```
 
 ### Run the model
@@ -162,13 +169,22 @@ Run for the full set of sites
 
 ```{r}
 ptm <- proc.time()
-df_output <- runread_pmodel_f(
+params_modl$par_shape_tempstress <- 0.1
+df_output_stress <- runread_pmodel_f(
      df_drivers, 
      params_modl = params_modl, 
      makecheck = TRUE,
      parallel = FALSE
      )
 print(ptm)
+
+params_modl$par_shape_tempstress <- 0.0
+df_output_nostress <- runread_pmodel_f(
+     df_drivers, 
+     params_modl = params_modl, 
+     makecheck = TRUE,
+     parallel = FALSE
+     )
 
 # microbenchmark::microbenchmark(
 #   runread_pmodel_f(
@@ -191,8 +207,10 @@ print(ptm)
 
 ```{r}
 ggplot() +
-  geom_line(data = df_output$data[[1]], aes(x=date, y=gpp), color = 'black') + 
-  labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
+  geom_line(data = df_output_stress$data[[1]][1:1000,], aes(x=date, y=gpp), color = 'red') + 
+  geom_line(data = df_output_nostress$data[[1]][1:1000,], aes(x=date, y=gpp), color = 'black') + 
+  labs(title = df_output_stress$sitename[[1]], subtitle = "SOFUN output") +
+  xlim(ymd("01-01-2008"), ymd("01-01-2010"))
 ```
 
 ### Calibrate
@@ -204,12 +222,14 @@ settings_calib <- list(
   method              = "gensa",
   targetvars          = c("gpp"),
   timescale           = list( gpp = "d" ),
-  maxit               = 5, # (5 for gensa) (30 for optimr)    #
+  maxit               = 5000, # (5 for gensa) (30 for optimr)    #
   sitenames           = "FR-Pue",
   metric              = "rmse",
   dir_results         = "./",
-  name                = "ORG",
-  par                 = list( kphio = list( lower=0.02, upper=0.07, init=0.0496 ) )
+  name                = "BRC",
+  par                 = list( kphio                 = list( lower=0.02, upper=0.07, init=0.0496 ),
+                              tau_acclim_tempstress = list( lower=5, upper=60, init=15 ),
+                              par_shape_tempstress  = list( lower=0.0, upper=0.2, init=0.1 ))
  )
 ```
 
