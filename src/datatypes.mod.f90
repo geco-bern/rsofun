@@ -191,6 +191,7 @@ module datatypes
     real    :: annualResp 
     real    :: n_deadtrees        = 0.0
     real    :: c_deadtrees        = 0.0
+    real    :: m_turnover         = 0.0
     real    :: deathratevalue
     !===== Nitrogen model related parameters
     real    :: NSNmax             = 0.0
@@ -266,6 +267,7 @@ module datatypes
     real    :: structuralL        = 0.0           ! slow soil carbon pool, (kg C/m2)
     real    :: n_deadtrees        = 0.0
     real    :: c_deadtrees        = 0.0
+    real    :: m_turnover         = 0.0
     !=====  Nitrogen pools, Weng 2014-08-08
     real    :: MicrobialN         = 0.0
     real    :: metabolicN         = 0.0           ! fast soil nitrogen pool, (kg N/m2)
@@ -730,9 +732,9 @@ contains
       cc%DBH_ys       = cc%dbh
       cc%Vol_ys       = cc%Volume
       cc%ABG_ys       = cc%bsw+cc%bHW
-      cc%n_deadtrees  = 0.0
-      cc%c_deadtrees  = 0.0
-      cc%c_turnover   = 0.0
+      ! cc%n_deadtrees  = 0.0
+      ! cc%c_deadtrees  = 0.0
+      cc%m_turnover   = 0.0
     enddo
   
   end subroutine Zero_diagnostics
@@ -1163,16 +1165,18 @@ contains
 
     vegn%NPPL       = 0.0
     vegn%NPPW       = 0.0
-    vegn%n_deadtrees = 0
+    vegn%n_deadtrees = 0 !yyy
     vegn%c_deadtrees = 0
+    vegn%m_turnover = 0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
       vegn%annualfixedN = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
-      vegn%NPPL         = vegn%NPPL   + fleaf * cc%nindivs
-      vegn%NPPW         = vegn%NPPW   + fwood * cc%nindivs 
-      vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees 
-      vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees 
+      vegn%NPPL         = vegn%NPPL          + fleaf * cc%nindivs
+      vegn%NPPW         = vegn%NPPW          + fwood * cc%nindivs 
+      vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees !yyy
+      vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees
+      vegn%m_turnover  = vegn%m_turnover     + cc%m_turnover  
     enddo
 
     plantC    = vegn%NSC + vegn%SeedC + vegn%leafC + vegn%rootC + vegn%SapwoodC + vegn%woodC
@@ -1238,6 +1242,7 @@ contains
     out_annual_tile%NPPW       = vegn%NPPW       !xxx New tile out
     out_annual_tile%n_deadtrees = vegn%n_deadtrees !xxx New tile out
     out_annual_tile%c_deadtrees = vegn%c_deadtrees !xxx New tile out
+    out_annual_tile%m_turnover = vegn%m_turnover !xxx New tile out
     out_annual_tile%c_turnover_time = vegn%woodC/vegn%NPPW !xxx New tile out
 
     ! I cannot figure out why N losing. Hack!

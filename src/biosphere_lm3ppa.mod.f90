@@ -150,7 +150,7 @@ contains
     !----------------------------------------------------------------
     idoy = 0
 
-    ! print*,'sim. year  ', iyears
+    print*,'sim. year  ', iyears
     ! print*,'real year: ', year0
     ! print*,'sim. year 2 ', myinterface%steering%year
 

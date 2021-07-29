@@ -312,7 +312,7 @@ extern SEXP lm3ppa_f_C(
     SEXP output_daily_cohorts_rootN    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_SW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_HW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 58) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 59) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_annual_cohorts_year    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_cID     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_PFT     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );

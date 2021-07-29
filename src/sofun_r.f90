@@ -927,7 +927,8 @@ contains
     out_annual_tile(55) = dble(annual_tile%NPPW)
     out_annual_tile(56) = dble(annual_tile%n_deadtrees)
     out_annual_tile(57) = dble(annual_tile%c_deadtrees)
-    out_annual_tile(58) = dble(annual_tile%c_turnover_time)
+    out_annual_tile(58) = dble(annual_tile%m_turnover)
+    out_annual_tile(59) = dble(annual_tile%c_turnover_time)
 
   end subroutine populate_outarray_annual_tile
 

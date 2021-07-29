@@ -848,10 +848,10 @@ contains
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then
-                ! deathrate = param_dbh * 0.1 *    &
-                !            (1.*exp(2.*(cc%dbh-1))/  &
-                !            (1. + exp(2.*(cc%dbh-1))))
-                deathrate = min(1.0, param_dbh * cc%dbh ** 1.5) ! 2.5, 5
+                deathrate = param_dbh * 0.1 *    &
+                           (1.*exp(2.*(cc%dbh-1))/  &
+                           (1. + exp(2.*(cc%dbh-1))))
+                ! deathrate = min(1.0, param_dbh * cc%dbh ** 1.5) ! 2.5, 5
               else
                 deathrate = sp%mortrate_d_c !0.01
               endif
@@ -965,9 +965,9 @@ contains
     ! record mortality
     ! cohort level
     cc%n_deadtrees   = deadtrees
-    cc%c_deadtrees   = loss_coarse + loss_fine ! xxxxx
-    cc%c_turnover    = cc%c_turnover + loss_coarse + loss_fine
-    ! cc%c_deadtrees   = deadtrees * (cc%nsc + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW) + loss_coarse + loss_fine !xxxx
+    cc%c_deadtrees   = loss_coarse + loss_fine 
+    cc%m_turnover    = cc%m_turnover + loss_coarse + loss_fine
+    ! cc%c_deadtrees   = deadtrees * (cc%nsc + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW) 
     
     ! vegn%n_deadtrees   = vegn%n_deadtrees + deadtrees
     ! vegn%c_deadtrees   = vegn%c_deadtrees + deadtrees * (cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
@@ -1386,7 +1386,7 @@ contains
       vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
 
       ! record continuous biomass turnover (not linked to mortality)
-      cc%c_turnover = cc%c_turnover + loss_coarse + loss_fine
+      cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine
 
       end associate
     enddo

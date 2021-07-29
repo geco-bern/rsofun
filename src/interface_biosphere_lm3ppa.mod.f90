@@ -263,8 +263,9 @@ module md_interface_lm3ppa
     real :: MaxDBH
     real :: NPPL
     real :: NPPW
-    real :: n_deadtrees
+    real :: n_deadtrees !yyy
     real :: c_deadtrees
+    real :: m_turnover
     real :: c_turnover_time
   end type outtype_annual_tile  
 

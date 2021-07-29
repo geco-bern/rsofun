@@ -335,7 +335,7 @@ df_output$data[[1]]$output_annual_tile %>%
 df_output$data[[1]]$output_annual_tile %>%
 ggplot() + 
   geom_line(aes(x = year, y = NPP)) + 
-  geom_line(aes(x = year, y = c_deadtrees)) 
+  geom_line(aes(x = year, y = m_turnover)) 
 
 ```
 
