@@ -1,24 +1,15 @@
----
-title: "prepare_drivers"
-output: html_document
----
 
-Prepare drivers and inputs for calibrating LM3-PPA. Vignette prepare_inputs_rsofun.Rmd used as reference.
+# Prepare drivers and inputs for calibrating LM3-PPA. Vignette prepare_inputs_rsofun.Rmd used as reference.
 
-```{r setup, include=FALSE}
 library(rsofun)
 library(dplyr)
 library(readr)
 library(ingestr)
-```
 
 ## Site selection and meta data
 
-```{r}
 sitename <- "CH-Lae"
-```
 
-```{r}
 # Take only year 2004 to 2014, corresponding to subset of data for site CH-Lae
 siteinfo <- data.frame(sitename="CH-Lae", lon = 8.365, lat = 47.47808, elv = 700, year_start = 2004, year_end = 2014, classid = NA, c4 = FALSE, whc = NA, koeppen_code = NA, igbp_land_use = "Mixed Forests", plant_functional_type = "Broadleaf trees")
 
@@ -26,36 +17,31 @@ siteinfo <- as_tibble(siteinfo)
 siteinfo <- siteinfo %>% 
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
-```
+
 
 ## Simulation settings
 
-```{r}
 params_siml <- list(
-      spinup                = TRUE,
-      spinupyears           = 1800, #1793,
-      recycle               = 1, # 9 or 11 changed to 1 when aggregating forcing into 1 year
-      firstyeartrend        = 1998,
-      nyeartrend            = 1, #9 or 11 (longer transient years)
-      outputhourly          = TRUE,
-      outputdaily           = TRUE,
-      do_U_shaped_mortality = FALSE,
-      update_annualLAImax   = FALSE,
-      do_closedN_run        = TRUE,
-      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
-      )
-```
+  spinup                = TRUE,
+  spinupyears           = 1800, #1793,
+  recycle               = 1, # 9 or 11 changed to 1 when aggregating forcing into 1 year
+  firstyeartrend        = 1998,
+  nyeartrend            = 1, #9 or 11 (longer transient years)
+  outputhourly          = TRUE,
+  outputdaily           = TRUE,
+  do_U_shaped_mortality = FALSE,
+  update_annualLAImax   = FALSE,
+  do_closedN_run        = TRUE,
+  method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+  method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
+)
 
-```{r}
 siteinfo <- tibble(siteinfo, params_siml = list(tibble(params_siml)))
-```
 
 ## Define model parameters
 
 #### Tile-level parameters
 
-```{r}
 params_tile <- list(
   soiltype     = 3,     # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   FLDCAP       = 0.4,   # soil property: field capacity 
@@ -73,12 +59,10 @@ params_tile <- list(
   retransN     = 0.0,   # retranslocation coefficient of Nitrogen
   f_initialBSW = 0.2,
   f_N_add      = 0.02   # re-fill of N for sapwood
-  )
-```
+)
 
 #### Species-level parameters
 
-```{r}
 params_species <- tibble(
   lifeform      = rep(1,16),                 # 0 for grasses; 1 for trees
   phenotype     = rep(0,16),                 # 0 for Deciduous; 1 for Evergreen
@@ -96,15 +80,12 @@ params_species <- tibble(
   mortrate_d_u  = rep(0.075,16),             # understory tree mortality rate, year-1
   maturalage    = rep(5,16),                 # the age that can reproduce
   fNSNmax       = rep(5,16)                  # multiplier for NSNmax as sum of potential bl and br
-  ) 
-```
+) 
 
 ## Define soil parameters
 
 #### Soil parameters
 
-By layers.
-```{r}
 # adopted from datatypes.mod.f90 l.538
 params_soil <- tibble(
   type              = c("Coarse","Medium","Fine","CM","CF","MF","CMF","Peat","MCM"),
@@ -116,48 +97,42 @@ params_soil <- tibble(
   k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2), # mol/(s MPa m)
   alphaSoil         = rep(1, 9),
   heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6, 1.0)
-  )
-```
+)
 
 #### Initial cohort specification
 
-```{r}
 init_cohort <- tibble(
- init_cohort_species = rep(2, 10),
- init_cohort_nindivs = rep(1,10),    # initial individual density, individual/m2
- init_cohort_bsw     = rep(0.05,10), # initial biomass of sapwood, kg C/individual
- init_cohort_bHW     = rep(0.0, 10), # initial biomass of heartwood, kg C/tree
- init_cohort_nsc     = rep(0.05,10)  # initial non-structural biomass
+  init_cohort_species = rep(2, 10),
+  init_cohort_nindivs = rep(1,10),    # initial individual density, individual/m2
+  init_cohort_bsw     = rep(0.05,10), # initial biomass of sapwood, kg C/individual
+  init_cohort_bHW     = rep(0.0, 10), # initial biomass of heartwood, kg C/tree
+  init_cohort_nsc     = rep(0.05,10)  # initial non-structural biomass
 )
-```
 
 #### Initial soil pools
 
-high N input --> Deciduous, low  N input --> Evergreen
-```{r}
+# high N input --> Deciduous, low  N input --> Evergreen
+
 init_soil <- list(
- init_fast_soil_C    = 0.0,    # initial fast soil C, kg C/m2
- init_slow_soil_C    = 0.0,    # initial slow soil C, kg C/m2
- init_Nmineral       = 0.015,  # Mineral nitrogen pool, (kg N/m2)
- N_input             = 0.0008  # annual N input to soil N pool, kgN m-2 yr-1
+  init_fast_soil_C    = 0.0,    # initial fast soil C, kg C/m2
+  init_slow_soil_C    = 0.0,    # initial slow soil C, kg C/m2
+  init_Nmineral       = 0.015,  # Mineral nitrogen pool, (kg N/m2)
+  N_input             = 0.0008  # annual N input to soil N pool, kgN m-2 yr-1
 )
-```
 
 ### Define soil parameters
 
-For now, this is implemented as an illustration. Should be made site-specific.
-```{r}
+# For now, this is implemented as an illustration. Should be made site-specific.
+
 df_soiltexture <- bind_rows(
   top    = tibble(layer = "top", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
   bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
 )
-```
 
 ## Get input (Forcing data)
 
 ## Meteo data
 
-```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 FLX_HH_LAE <- read.csv("~/data/FLUXNET-2015_Tier1/20191024/HH/FLX_CH-Lae_FLUXNET2015_FULLSET_HH_2004-2014_1-3.csv")
 names(FLX_HH_LAE)
@@ -172,8 +147,8 @@ FluxForcing <- FluxForcing %>% dplyr::rename(PAR=PPFD_IN,Swdown=SW_IN_F,TEMP=TA_
 
 # Hourly data
 FluxForcing <- FluxForcing %>% 
-    dplyr::group_by(lubridate::year(datehour),lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
-    summarise_at(vars(1:14), list(~mean(., na.rm = TRUE)))  %>% mutate(sitename = "CH-Lae") 
+  dplyr::group_by(lubridate::year(datehour),lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
+  summarise_at(vars(1:14), list(~mean(., na.rm = TRUE)))  %>% mutate(sitename = "CH-Lae") 
 
 ## convert rain to units per seconds
 dt_secs <- lubridate::interval(FluxForcing$datehour[1], FluxForcing$datehour[2]) %>% 
@@ -182,13 +157,9 @@ FluxForcing <- FluxForcing %>% mutate(RAIN = RAIN / dt_secs)
 
 FluxForcing <- FluxForcing[,-c(1:4)]
 
-```
-
 ## CO2
 
-Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
-
-```{r}
+# Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
 
 # General for several sites
 df_co2 <- ingestr::ingest(
@@ -208,11 +179,8 @@ df_co2 <- ingestr::ingest_bysite(
   verbose = FALSE
   )
 
-```
+# Combine the two FLUXNET and CO2 to create the complete forcing data.
 
-Combine the two FLUXNET and CO2 to create the complete forcing data.
-
-```{r}
 FluxForcing <- FluxForcing %>% 
   #tidyr::unnest(data) %>% 
   left_join(
@@ -228,9 +196,6 @@ FluxForcing <- FluxForcing %>% relocate(aCO2_AW, .after = PRESSURE)
 forcingLAE <- FluxForcing
 save(forcingLAE, file = "~/data/forcingLAE.RData")
 
-```
-
-```{r}
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
     dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
@@ -246,5 +211,4 @@ if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
 }
 str(forcingLAE)
 
-```
 
