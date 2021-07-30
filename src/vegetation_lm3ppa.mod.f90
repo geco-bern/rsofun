@@ -648,7 +648,7 @@ contains
       cc%leafarea= leaf_area_from_biomass(cc%bl,cc%species)
       cc%lai     = cc%leafarea/(cc%crownarea *(1.0-sp%internal_gap_frac))
 
-      ! Update plant size (for grasses)∫
+      ! Update plant size (for grasses)
       !call init_cohort_allometry( cc )
 
       !       put C and N into soil pools:  Substraction of C and N from leaf and root pools

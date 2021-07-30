@@ -25,7 +25,7 @@ contains
 
     ! local variables
     integer :: pft, lu
-
+    
     do lu=1,nlu
       !------------------------------------------------------------------
       ! Add individuals
@@ -36,6 +36,7 @@ contains
         ! if (sum(fpc_grid_prescr(:))==0.0) print*,'sum of fpc_grid',sum(fpc_grid_prescr(:))
 
         if (fapar_prescr/=dummy) tile(lu)%canopy%fapar = fapar_prescr
+        
         tile(lu)%plant(pft)%fpc_grid = fpc_grid_prescr(pft)
 
         ! ! get annually updated leaf traits (vary because of variations in light and CO2)
@@ -43,7 +44,7 @@ contains
 
       end do
     end do
-
+  
   end subroutine vegdynamics
 
 

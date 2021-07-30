@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rsofun</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.3</span>
       </span>
     </div>
 
@@ -39,7 +39,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -54,6 +54,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/benchmark_gpp_FLUXNET2015_ensemble_EXAMPLE.html">Benchmarking rsofun</a>
+    </li>
+    <li>
       <a href="../articles/example_lm3ppa.html">Example using LM3-PPA</a>
     </li>
     <li>
@@ -68,7 +71,7 @@
 <ul class="nav navbar-nav navbar-right">
 <li>
   <a href="https://github.com/stineb/rsofun/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -82,7 +85,7 @@
 
       
 
-      </header><div class="row">
+      </header><script src="example_lm3ppa_files/header-attrs-2.8/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Example using LM3-PPA</h1>
@@ -102,25 +105,40 @@
 <h3 class="hasAnchor">
 <a href="#simulation-settings" class="anchor"></a>Simulation settings</h3>
 <p>Manually select some sites from which we’re going to use the data for evaluation and calibration.</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="no">mysites</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"ORNL"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">mysites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"ORNL"</span><span class="op">)</span></code></pre></div>
 <p>Create a site meta info table that contains all the site-specific information that is used to force site-simulations (e.g. starting year, number of simulations years, elevation, etc.). For FLUXNET2015 data, required meta info is provided by the <code>rsofun</code> package (data frame <code>rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015</code>).</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">siteinfo</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">sitename</span><span class="kw">=</span><span class="st">"ORNL"</span>, <span class="kw">lon</span> <span class="kw">=</span> <span class="fl">0.0</span>, <span class="kw">lat</span> <span class="kw">=</span> <span class="fl">0.0</span>, <span class="kw">elv</span> <span class="kw">=</span> <span class="fl">0.0</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">siteinfo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>sitename<span class="op">=</span><span class="st">"ORNL"</span>, lon <span class="op">=</span> <span class="fl">0.0</span>, lat <span class="op">=</span> <span class="fl">0.0</span>, elv <span class="op">=</span> <span class="fl">0.0</span><span class="op">)</span></code></pre></div>
 <p>Now specify the simulation parameters that are identical for all site-scale simulations.</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">params_siml</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(
-      <span class="kw">spinup</span>                <span class="kw">=</span> <span class="fl">TRUE</span>,
-      <span class="kw">spinupyears</span>           <span class="kw">=</span> <span class="fl">1793</span>,
-      <span class="kw">recycle</span>               <span class="kw">=</span> <span class="fl">11</span>, <span class="co"># 9 or 11</span>
-      <span class="kw">firstyeartrend</span>        <span class="kw">=</span> <span class="fl">1998</span>,
-      <span class="kw">nyeartrend</span>            <span class="kw">=</span> <span class="fl">11</span>, <span class="co">#9 or 11</span>
-      <span class="kw">outputhourly</span>          <span class="kw">=</span> <span class="fl">FALSE</span>,
-      <span class="kw">outputdaily</span>           <span class="kw">=</span> <span class="fl">TRUE</span>,
-      <span class="kw">do_U_shaped_mortality</span> <span class="kw">=</span> <span class="fl">FALSE</span>,
-      <span class="kw">update_annualLAImax</span>   <span class="kw">=</span> <span class="fl">FALSE</span>,
-      <span class="kw">do_closedN_run</span>        <span class="kw">=</span> <span class="fl">TRUE</span>,
-      <span class="kw">method_photosynth</span>     <span class="kw">=</span> <span class="st">"pmodel"</span>
-      )</pre></body></html></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">params_siml</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+      spinup                <span class="op">=</span> <span class="cn">TRUE</span>,
+      spinupyears           <span class="op">=</span> <span class="fl">1793</span>,
+      recycle               <span class="op">=</span> <span class="fl">11</span>, <span class="co"># 9 or 11</span>
+      firstyeartrend        <span class="op">=</span> <span class="fl">1998</span>,
+      nyeartrend            <span class="op">=</span> <span class="fl">11</span>, <span class="co">#9 or 11</span>
+      outputhourly          <span class="op">=</span> <span class="cn">FALSE</span>,
+      outputdaily           <span class="op">=</span> <span class="cn">TRUE</span>,
+      do_U_shaped_mortality <span class="op">=</span> <span class="cn">FALSE</span>,
+      update_annualLAImax   <span class="op">=</span> <span class="cn">FALSE</span>,
+      do_closedN_run        <span class="op">=</span> <span class="cn">TRUE</span>,
+      method_photosynth     <span class="op">=</span> <span class="st">"pmodel"</span>, <span class="co"># gs_leuning or pmodel</span>
+      method_mortality      <span class="op">=</span> <span class="st">"dbh"</span> <span class="co"># dbh or cstarvation or growthrate or const_selfthin</span>
+      <span class="op">)</span></code></pre></div>
+<div id="photosynthesis-method" class="section level4">
+<h4 class="hasAnchor">
+<a href="#photosynthesis-method" class="anchor"></a>Photosynthesis method</h4>
+<p>The model includes two methods for estimating NPP: (a) “gs_leuning” the original method described for the LM3-PPA (Weng et al. 2015). (b) “pmodel” the implementation of the P-model (Stocker et al. 2020) within the LM3-PPA. The P-model which simulates acclimated photosynthetic parameters and light use efficiency for daily time steps. For the implementation of the P-model in LM3-PPA, GPP is calculated at the cohort-level (not canopy-level), using light absorbed per cohort, and expressed in kg C per day and per tree (or cohort). PAR is the amount of light reaching the respective layer (mol m-2 s-1). fAPAR is attenuated based on the leaf area index within-crown of all layers above and on a fixed exponential light extinction (with k=0.75). LUE is simulated as gpp per unit absorbed light (g C mol−1) and depends on a fix quantum yield efficiency parameter. (kphio Long et al., 1993).</p>
+</div>
+<div id="mortality-method" class="section level4">
+<h4 class="hasAnchor">
+<a href="#mortality-method" class="anchor"></a>Mortality method</h4>
+<p>The model allows for four different mortality functional forms: (a) “dbh” as a function of size: high mortality rate for large trees (following Weng et al. 2015). (b) “cstarvation” as a function of tree’s C balance: carbon starvation as a decreasing in the cohort’s NSC level. (c) “growthrate” as a function of growth rate: high mortality rate for faster growing trees. (d) “const_selfthin” as a constant self-thinning relationship.</p>
 <p>Run <code><a href="../reference/prepare_setup_sofun.html">prepare_setup_sofun()</a></code> to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters).</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r">#settings_sims &lt;- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)</pre></body></html></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">#settings_sims &lt;- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)</span></code></pre></div>
+</div>
 </div>
 <div id="define-model-parameters" class="section level3">
 <h3 class="hasAnchor">
@@ -128,94 +146,100 @@
 <div id="tile-level-parameters" class="section level4">
 <h4 class="hasAnchor">
 <a href="#tile-level-parameters" class="anchor"></a>Tile-level parameters</h4>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">params_tile</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(
-  <span class="kw">soiltype</span>     <span class="kw">=</span> <span class="fl">3</span>,
-  <span class="kw">FLDCAP</span>       <span class="kw">=</span> <span class="fl">0.4</span>,
-  <span class="kw">WILTPT</span>       <span class="kw">=</span> <span class="fl">0.05</span>,
-  <span class="kw">K1</span>           <span class="kw">=</span> <span class="fl">2.0</span>,  <span class="co"># turnover rate of fast SOM per year</span>
-  <span class="kw">K2</span>           <span class="kw">=</span> <span class="fl">0.1</span>,   <span class="co"># 0.12 # 0.2, # 0.075 # turnover rate of slow SOM per year</span>
-  <span class="kw">K_nitrogen</span>   <span class="kw">=</span> <span class="fl">0.0</span>, <span class="co"># 1.2 # 2.5 # rate of a year, 2.5</span>
-  <span class="kw">etaN</span>         <span class="kw">=</span> <span class="fl">0.0</span>, <span class="co"># 0.025 # loss rate with runoff</span>
-  <span class="kw">MLmixRatio</span>   <span class="kw">=</span> <span class="fl">0.6</span>, <span class="co"># 0.8 # fraction of microbes to litter</span>
-  <span class="kw">l_fract</span>      <span class="kw">=</span> <span class="fl">0.0</span>,
-  <span class="kw">retransN</span>     <span class="kw">=</span> <span class="fl">0.0</span>,
-  <span class="kw">f_N_add</span>      <span class="kw">=</span> <span class="fl">0.02</span>, <span class="co"># 0.005, # 0.02</span>
-  <span class="kw">f_initialBSW</span> <span class="kw">=</span> <span class="fl">0.005</span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">params_tile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+  soiltype     <span class="op">=</span> <span class="fl">3</span>,
+  FLDCAP       <span class="op">=</span> <span class="fl">0.4</span>,
+  WILTPT       <span class="op">=</span> <span class="fl">0.05</span>,
+  K1           <span class="op">=</span> <span class="fl">2.0</span>,  <span class="co"># turnover rate of fast SOM per year</span>
+  K2           <span class="op">=</span> <span class="fl">0.1</span>,   <span class="co"># 0.12 # 0.2, # 0.075 # turnover rate of slow SOM per year</span>
+  K_nitrogen   <span class="op">=</span> <span class="fl">0.0</span>, <span class="co"># 1.2 # 2.5 # rate of a year, 2.5</span>
+  etaN         <span class="op">=</span> <span class="fl">0.0</span>, <span class="co"># 0.025 # loss rate with runoff</span>
+  MLmixRatio   <span class="op">=</span> <span class="fl">0.6</span>, <span class="co"># 0.8 # fraction of microbes to litter</span>
+  l_fract      <span class="op">=</span> <span class="fl">0.0</span>,
+  retransN     <span class="op">=</span> <span class="fl">0.0</span>,
+  f_N_add      <span class="op">=</span> <span class="fl">0.02</span>, <span class="co"># 0.005, # 0.02</span>
+  f_initialBSW <span class="op">=</span> <span class="fl">0.005</span>
   <span class="co"># alpha_FR   =  1.2; gamma_FR = 12.0; dSlowSOM = 2.5 * iSOM + 1.5; rho_N_up0 = 0.1</span>
-  )</pre></body></html></div>
+  <span class="op">)</span></code></pre></div>
 </div>
 <div id="species-level-parameters" class="section level4">
 <h4 class="hasAnchor">
 <a href="#species-level-parameters" class="anchor"></a>Species-level parameters</h4>
-<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">params_species</span> <span class="kw">&lt;-</span> <span class="fu">tibble</span>(
-  <span class="kw">lifeform</span>      <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>,       <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,      <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,      <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>),    <span class="co"># 0: grass; 1 Woody</span>
-  <span class="kw">phenotype</span>     <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>,       <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,      <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,      <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">0</span>),    <span class="co"># 0: Deciduous; 1 Evergreen</span>
-  <span class="kw">pt</span>            <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>,       <span class="fl">0</span>,        <span class="fl">0</span>,        <span class="fl">0</span>,        <span class="fl">0</span>,      <span class="fl">0</span>,        <span class="fl">0</span>,        <span class="fl">0</span>,      <span class="fl">0</span>,        <span class="fl">0</span>,        <span class="fl">0</span>),    <span class="co"># 0: C3; 1: C4</span>
-  <span class="kw">seedlingsize</span>  <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.02</span>,    <span class="fl">0.05</span>,     <span class="fl">0.05</span>,     <span class="fl">0.05</span>,     <span class="fl">0.05</span>,   <span class="fl">0.05</span>,     <span class="fl">0.05</span>,     <span class="fl">0.05</span>,   <span class="fl">0.05</span>,     <span class="fl">0.05</span>,     <span class="fl">0.05</span>),  <span class="co"># initial size of seedlings</span>
-  <span class="kw">LMA</span>           <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.035</span>,   <span class="fl">0.14</span>,     <span class="fl">0.14</span>,     <span class="fl">0.14</span>,     <span class="fl">0.14</span>,   <span class="fl">0.14</span>,    <span class="fl">0.14</span>,   <span class="fl">0.14</span>,     <span class="fl">0.14</span>,     <span class="fl">0.14</span>,     <span class="fl">0.035</span>),<span class="co"># Leaf mass per unit area</span>
-  <span class="kw">phiRL</span>         <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">4.0</span>,     <span class="fl">1.0</span>,      <span class="fl">2.0</span>,      <span class="fl">3.0</span>,      <span class="fl">4.0</span>,     <span class="fl">5.0</span>,     <span class="fl">6.0</span>,      <span class="fl">7.0</span>,     <span class="fl">8.0</span>,    <span class="fl">9.0</span>,      <span class="fl">3.0</span>),
-  <span class="kw">LNbase</span>        <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.8E-3</span>,  <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>, <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>, <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>),   <span class="co"># kgN m-2 leaf, Vmax = 0.03125*LNbase</span>
-  <span class="kw">laimax</span>        <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">3.0</span>,     <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,    <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,    <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.8</span>),  <span class="co"># maximum crown LAI</span>
-  <span class="kw">LAI_light</span>     <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">3.0</span>,     <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,    <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,    <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.8</span>),  <span class="co"># Light-limited crown LAI</span>
-  <span class="kw">Nfixrate0</span>     <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.0</span>,     <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>,    <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>,    <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>),  <span class="co"># 0.03 kgN kgRootC-1 yr-1</span>
-  <span class="kw">NfixCost0</span>     <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">12.</span>,     <span class="fl">12.</span>,      <span class="fl">12.</span>,      <span class="fl">12.</span>,      <span class="fl">12.</span>,    <span class="fl">12.</span>,      <span class="fl">12.</span>,      <span class="fl">12.</span>,    <span class="fl">12.</span>,      <span class="fl">12.</span>,      <span class="fl">12.</span>),  <span class="co"># 12, 24 gC/gN</span>
-  <span class="kw">phiCSA</span>        <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1.25E-4</span>, <span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,<span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,<span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>),
-  <span class="kw">mortrate_d_c</span>  <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.02</span>,    <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>,   <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>,   <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>),    <span class="co"># canopy tree mortality rate, year-1</span>
-  <span class="kw">mortrate_d_u</span>  <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.2</span>,     <span class="fl">0.08</span>,     <span class="fl">0.08</span>,     <span class="fl">0.08</span>,     <span class="fl">0.08</span>,   <span class="fl">0.08</span>,     <span class="fl">0.08</span>,     <span class="fl">0.08</span>,   <span class="fl">0.08</span>,     <span class="fl">0.08</span>,     <span class="fl">0.08</span>),    <span class="co"># understory tree mortality rate, year-1</span>
-  <span class="kw">maturalage</span>    <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.5</span>,     <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,      <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,      <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>),
-  <span class="kw">fNSNmax</span>       <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">5</span>,       <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,      <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,      <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>)
-  ) <span class="kw">%&gt;%</span>
-  <span class="fu">bind_rows</span>(<span class="no">.</span>, <span class="fu">slice</span>(<span class="no">.</span>, <span class="fl">1</span>:<span class="fl">5</span>))</pre></body></html></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">params_species</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="op">(</span>
+  lifeform      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,       <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,      <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,      <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span><span class="op">)</span>,    <span class="co"># 0: grass; 1 Woody</span>
+  phenotype     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,       <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,      <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">1</span>,      <span class="fl">1</span>,        <span class="fl">1</span>,        <span class="fl">0</span><span class="op">)</span>,    <span class="co"># 0: Deciduous; 1 Evergreen</span>
+  pt            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>,       <span class="fl">0</span>,        <span class="fl">0</span>,        <span class="fl">0</span>,        <span class="fl">0</span>,      <span class="fl">0</span>,        <span class="fl">0</span>,        <span class="fl">0</span>,      <span class="fl">0</span>,        <span class="fl">0</span>,        <span class="fl">0</span><span class="op">)</span>,    <span class="co"># 0: C3; 1: C4</span>
+  seedlingsize  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.02</span>,    <span class="fl">0.05</span>,     <span class="fl">0.05</span>,     <span class="fl">0.05</span>,     <span class="fl">0.05</span>,   <span class="fl">0.05</span>,     <span class="fl">0.05</span>,     <span class="fl">0.05</span>,   <span class="fl">0.05</span>,     <span class="fl">0.05</span>,     <span class="fl">0.05</span><span class="op">)</span>,  <span class="co"># initial size of seedlings</span>
+  LMA           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.035</span>,   <span class="fl">0.14</span>,     <span class="fl">0.14</span>,     <span class="fl">0.14</span>,     <span class="fl">0.14</span>,   <span class="fl">0.14</span>,    <span class="fl">0.14</span>,   <span class="fl">0.14</span>,     <span class="fl">0.14</span>,     <span class="fl">0.14</span>,     <span class="fl">0.035</span><span class="op">)</span>,<span class="co"># Leaf mass per unit area</span>
+  phiRL         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">4.0</span>,     <span class="fl">1.0</span>,      <span class="fl">2.0</span>,      <span class="fl">3.0</span>,      <span class="fl">4.0</span>,     <span class="fl">5.0</span>,     <span class="fl">6.0</span>,      <span class="fl">7.0</span>,     <span class="fl">8.0</span>,    <span class="fl">9.0</span>,      <span class="fl">3.0</span><span class="op">)</span>,
+  LNbase        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.8E-3</span>,  <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>, <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>, <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span>,   <span class="fl">0.8E-3</span><span class="op">)</span>,   <span class="co"># kgN m-2 leaf, Vmax = 0.03125*LNbase</span>
+  laimax        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">3.0</span>,     <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,    <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,    <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.8</span><span class="op">)</span>,  <span class="co"># maximum crown LAI</span>
+  LAI_light     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">3.0</span>,     <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,    <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.5</span>,    <span class="fl">3.5</span>,      <span class="fl">3.5</span>,      <span class="fl">3.8</span><span class="op">)</span>,  <span class="co"># Light-limited crown LAI</span>
+  Nfixrate0     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.0</span>,     <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>,    <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>,    <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span><span class="op">)</span>,  <span class="co"># 0.03 kgN kgRootC-1 yr-1</span>
+  NfixCost0     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">12.</span>,     <span class="fl">12.</span>,      <span class="fl">12.</span>,      <span class="fl">12.</span>,      <span class="fl">12.</span>,    <span class="fl">12.</span>,      <span class="fl">12.</span>,      <span class="fl">12.</span>,    <span class="fl">12.</span>,      <span class="fl">12.</span>,      <span class="fl">12.</span><span class="op">)</span>,  <span class="co"># 12, 24 gC/gN</span>
+  phiCSA        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1.25E-4</span>, <span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,<span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,<span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span>,  <span class="fl">0.25E-4</span><span class="op">)</span>,
+  mortrate_d_c  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.02</span>,    <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>,   <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>,   <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span><span class="op">)</span>,    <span class="co"># canopy tree mortality rate, year-1</span>
+  mortrate_d_u  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.2</span>,     <span class="fl">0.08</span>,     <span class="fl">0.08</span>,     <span class="fl">0.08</span>,     <span class="fl">0.08</span>,   <span class="fl">0.08</span>,     <span class="fl">0.08</span>,     <span class="fl">0.08</span>,   <span class="fl">0.08</span>,     <span class="fl">0.08</span>,     <span class="fl">0.08</span><span class="op">)</span>,    <span class="co"># understory tree mortality rate, year-1</span>
+  maturalage    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.5</span>,     <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,      <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,      <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span><span class="op">)</span>,
+  fNSNmax       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">5</span>,       <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,      <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span>,      <span class="fl">5</span>,        <span class="fl">5</span>,        <span class="fl">5</span><span class="op">)</span>
+  <span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu">bind_rows</span><span class="op">(</span><span class="va">.</span>, <span class="fu">slice</span><span class="op">(</span><span class="va">.</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="soil-parameters" class="section level4">
 <h4 class="hasAnchor">
 <a href="#soil-parameters" class="anchor"></a>Soil parameters</h4>
 <p>By layers.</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="co"># adopted from datatypes.mod.f90 l.538</span>
-<span class="no">params_soil</span> <span class="kw">&lt;-</span> <span class="fu">tibble</span>(
-  <span class="kw">type</span>              <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"Coarse"</span>,  <span class="st">"Medium"</span>,   <span class="st">"Fine"</span>,    <span class="st">"CM"</span>,     <span class="st">"CF"</span>,     <span class="st">"MF"</span>,    <span class="st">"CMF"</span>,    <span class="st">"Peat"</span>,    <span class="st">"MCM"</span>),
-  <span class="kw">GMD</span>               <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.7</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">0.07</span>, <span class="fl">0.007</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span>),
-  <span class="kw">GSD</span>               <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">5.0</span>, <span class="fl">5.3</span>, <span class="fl">7.4</span>, <span class="fl">6.1</span>, <span class="fl">6.1</span>, <span class="fl">14.0</span>, <span class="fl">15.0</span>, <span class="fl">7.4</span>, <span class="fl">7.4</span>),
-  <span class="kw">vwc_sat</span>           <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.380</span>, <span class="fl">0.445</span>, <span class="fl">0.448</span>, <span class="fl">0.412</span>, <span class="fl">0.414</span>, <span class="fl">0.446</span>, <span class="fl">0.424</span>, <span class="fl">0.445</span>, <span class="fl">0.445</span>),
-  <span class="kw">chb</span>               <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>( <span class="fl">3.5</span>,   <span class="fl">6.4</span>,  <span class="fl">11.0</span>,   <span class="fl">4.8</span>,   <span class="fl">6.3</span>,   <span class="fl">8.4</span>,   <span class="fl">6.3</span>,   <span class="fl">6.4</span>,   <span class="fl">6.4</span>),
-  <span class="kw">psi_sat_ref</span>       <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(-<span class="fl">600.</span>, -<span class="fl">790.</span>, -<span class="fl">910.</span>, -<span class="fl">1580.</span>, -<span class="fl">1680.</span>, -<span class="fl">1880.</span>, -<span class="fl">5980.</span>, -<span class="fl">790.</span>, -<span class="fl">790.</span>), <span class="co"># Pa</span>
-  <span class="kw">k_sat_ref</span>         <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">130.8</span>, <span class="fl">75.1</span>, <span class="fl">53.2</span>, <span class="fl">12.1</span>, <span class="fl">11.1</span>, <span class="fl">12.7</span>, <span class="fl">1.69</span>, <span class="fl">53.2</span>, <span class="fl">53.2</span>),      <span class="co"># mol/(s MPa m)</span>
-  <span class="kw">alphaSoil</span>         <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span>(<span class="fl">1.0</span>, <span class="fl">9</span>),
-  <span class="kw">heat_capacity_dry</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1.2e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.4e6</span>,   <span class="fl">1.0</span>)
-  )</pre></body></html></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># adopted from datatypes.mod.f90 l.538</span>
+<span class="va">params_soil</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="op">(</span>
+  type              <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Coarse"</span>,  <span class="st">"Medium"</span>,   <span class="st">"Fine"</span>,    <span class="st">"CM"</span>,     <span class="st">"CF"</span>,     <span class="st">"MF"</span>,    <span class="st">"CMF"</span>,    <span class="st">"Peat"</span>,    <span class="st">"MCM"</span><span class="op">)</span>,
+  GMD               <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">0.07</span>, <span class="fl">0.007</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span><span class="op">)</span>,
+  GSD               <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">5.0</span>, <span class="fl">5.3</span>, <span class="fl">7.4</span>, <span class="fl">6.1</span>, <span class="fl">6.1</span>, <span class="fl">14.0</span>, <span class="fl">15.0</span>, <span class="fl">7.4</span>, <span class="fl">7.4</span><span class="op">)</span>,
+  vwc_sat           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.380</span>, <span class="fl">0.445</span>, <span class="fl">0.448</span>, <span class="fl">0.412</span>, <span class="fl">0.414</span>, <span class="fl">0.446</span>, <span class="fl">0.424</span>, <span class="fl">0.445</span>, <span class="fl">0.445</span><span class="op">)</span>,
+  chb               <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span> <span class="fl">3.5</span>,   <span class="fl">6.4</span>,  <span class="fl">11.0</span>,   <span class="fl">4.8</span>,   <span class="fl">6.3</span>,   <span class="fl">8.4</span>,   <span class="fl">6.3</span>,   <span class="fl">6.4</span>,   <span class="fl">6.4</span><span class="op">)</span>,
+  psi_sat_ref       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">600.</span>, <span class="op">-</span><span class="fl">790.</span>, <span class="op">-</span><span class="fl">910.</span>, <span class="op">-</span><span class="fl">1580.</span>, <span class="op">-</span><span class="fl">1680.</span>, <span class="op">-</span><span class="fl">1880.</span>, <span class="op">-</span><span class="fl">5980.</span>, <span class="op">-</span><span class="fl">790.</span>, <span class="op">-</span><span class="fl">790.</span><span class="op">)</span>, <span class="co"># Pa</span>
+  k_sat_ref         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">130.8</span>, <span class="fl">75.1</span>, <span class="fl">53.2</span>, <span class="fl">12.1</span>, <span class="fl">11.1</span>, <span class="fl">12.7</span>, <span class="fl">1.69</span>, <span class="fl">53.2</span>, <span class="fl">53.2</span><span class="op">)</span>,      <span class="co"># mol/(s MPa m)</span>
+  alphaSoil         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="fl">9</span><span class="op">)</span>,
+  heat_capacity_dry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1.2e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.1e6</span>, <span class="fl">1.4e6</span>,   <span class="fl">1.0</span><span class="op">)</span>
+  <span class="op">)</span></code></pre></div>
 </div>
 <div id="initial-cohort-specification" class="section level4">
 <h4 class="hasAnchor">
 <a href="#initial-cohort-specification" class="anchor"></a>Initial cohort specification</h4>
-<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">init_cohort</span> <span class="kw">&lt;-</span> <span class="fu">tibble</span>(
- <span class="kw">init_cohort_species</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>,      <span class="fl">2</span>,        <span class="fl">3</span>,        <span class="fl">4</span>,      <span class="fl">5</span>,        <span class="fl">6</span>,        <span class="fl">7</span>,      <span class="fl">8</span>,        <span class="fl">9</span>,       <span class="fl">10</span>),
- <span class="kw">init_cohort_nindivs</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.02</span>,   <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>,   <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>,   <span class="fl">0.02</span>,     <span class="fl">0.02</span>,    <span class="fl">0.02</span>),
- <span class="kw">init_cohort_bsw</span>     <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.2</span>,    <span class="fl">0.2</span>,      <span class="fl">0.2</span>,      <span class="fl">0.2</span>,    <span class="fl">0.2</span>,      <span class="fl">0.2</span>,      <span class="fl">0.2</span>,    <span class="fl">0.2</span>,      <span class="fl">0.2</span>,     <span class="fl">0.2</span>),
- <span class="kw">init_cohort_bHW</span>     <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.0</span>,    <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>,    <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>,    <span class="fl">0.0</span>,      <span class="fl">0.0</span>,     <span class="fl">0.0</span>),
- <span class="kw">init_cohort_nsc</span>     <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.5</span>,    <span class="fl">0.5</span>,      <span class="fl">0.5</span>,      <span class="fl">0.5</span>,    <span class="fl">0.5</span>,      <span class="fl">0.5</span>,      <span class="fl">0.5</span>,    <span class="fl">0.5</span>,      <span class="fl">0.5</span>,     <span class="fl">0.5</span>)
-)</pre></body></html></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">init_cohort</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="op">(</span>
+ init_cohort_species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>,      <span class="fl">2</span>,        <span class="fl">3</span>,        <span class="fl">4</span>,      <span class="fl">5</span>,        <span class="fl">6</span>,        <span class="fl">7</span>,      <span class="fl">8</span>,        <span class="fl">9</span>,       <span class="fl">10</span><span class="op">)</span>,
+ init_cohort_nindivs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.02</span>,   <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>,   <span class="fl">0.02</span>,     <span class="fl">0.02</span>,     <span class="fl">0.02</span>,   <span class="fl">0.02</span>,     <span class="fl">0.02</span>,    <span class="fl">0.02</span><span class="op">)</span>,
+ init_cohort_bsw     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.2</span>,    <span class="fl">0.2</span>,      <span class="fl">0.2</span>,      <span class="fl">0.2</span>,    <span class="fl">0.2</span>,      <span class="fl">0.2</span>,      <span class="fl">0.2</span>,    <span class="fl">0.2</span>,      <span class="fl">0.2</span>,     <span class="fl">0.2</span><span class="op">)</span>,
+ init_cohort_bHW     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.0</span>,    <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>,    <span class="fl">0.0</span>,      <span class="fl">0.0</span>,      <span class="fl">0.0</span>,    <span class="fl">0.0</span>,      <span class="fl">0.0</span>,     <span class="fl">0.0</span><span class="op">)</span>,
+ init_cohort_nsc     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.5</span>,    <span class="fl">0.5</span>,      <span class="fl">0.5</span>,      <span class="fl">0.5</span>,    <span class="fl">0.5</span>,      <span class="fl">0.5</span>,      <span class="fl">0.5</span>,    <span class="fl">0.5</span>,      <span class="fl">0.5</span>,     <span class="fl">0.5</span><span class="op">)</span>
+<span class="op">)</span></code></pre></div>
 </div>
 <div id="initial-soil-pools" class="section level4">
 <h4 class="hasAnchor">
 <a href="#initial-soil-pools" class="anchor"></a>Initial soil pools</h4>
-<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="co"># high N input --&gt; Deciduous</span>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># high N input --&gt; Deciduous</span>
 <span class="co"># low  N input --&gt; Evergreen</span>
-<span class="no">init_soil</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(
- <span class="kw">init_fast_soil_C</span>    <span class="kw">=</span> <span class="fl">0.15</span>,   <span class="co"># kg C m-2    # C/N = 15, 0.75 kg SOM ~ 50 gN</span>
- <span class="kw">init_slow_soil_C</span>    <span class="kw">=</span> <span class="fl">16.0</span>,   <span class="co"># kg C m-2    # C/N = 40</span>
- <span class="kw">init_Nmineral</span>       <span class="kw">=</span> <span class="fl">2.5E-3</span>, <span class="co"># kg N m-2</span>
- <span class="kw">N_input</span>             <span class="kw">=</span> <span class="fl">0.0E-3</span>  <span class="co"># 2.4E-3, # kg N m-2 yr-1, N deposit: 0.8 g N m-2 yr-1</span>
-)</pre></body></html></div>
+<span class="va">init_soil</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+ init_fast_soil_C    <span class="op">=</span> <span class="fl">0.15</span>,   <span class="co"># kg C m-2    # C/N = 15, 0.75 kg SOM ~ 50 gN</span>
+ init_slow_soil_C    <span class="op">=</span> <span class="fl">16.0</span>,   <span class="co"># kg C m-2    # C/N = 40</span>
+ init_Nmineral       <span class="op">=</span> <span class="fl">2.5E-3</span>, <span class="co"># kg N m-2</span>
+ N_input             <span class="op">=</span> <span class="fl">0.0E-3</span>  <span class="co"># 2.4E-3, # kg N m-2 yr-1, N deposit: 0.8 g N m-2 yr-1</span>
+<span class="op">)</span></code></pre></div>
 </div>
 </div>
 <div id="define-soil-parameters" class="section level3">
 <h3 class="hasAnchor">
 <a href="#define-soil-parameters" class="anchor"></a>Define soil parameters</h3>
 <p>For now, this is implemented as an illustration. Should be made site-specific.</p>
-<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="no">df_soiltexture</span> <span class="kw">&lt;-</span> <span class="fu">bind_rows</span>(
-  <span class="kw">top</span>    <span class="kw">=</span> <span class="fu">tibble</span>(<span class="kw">layer</span> <span class="kw">=</span> <span class="st">"top"</span>,    <span class="kw">fsand</span> <span class="kw">=</span> <span class="fl">0.4</span>, <span class="kw">fclay</span> <span class="kw">=</span> <span class="fl">0.3</span>, <span class="kw">forg</span> <span class="kw">=</span> <span class="fl">0.1</span>, <span class="kw">fgravel</span> <span class="kw">=</span> <span class="fl">0.1</span>),
-  <span class="kw">bottom</span> <span class="kw">=</span> <span class="fu">tibble</span>(<span class="kw">layer</span> <span class="kw">=</span> <span class="st">"bottom"</span>, <span class="kw">fsand</span> <span class="kw">=</span> <span class="fl">0.4</span>, <span class="kw">fclay</span> <span class="kw">=</span> <span class="fl">0.3</span>, <span class="kw">forg</span> <span class="kw">=</span> <span class="fl">0.1</span>, <span class="kw">fgravel</span> <span class="kw">=</span> <span class="fl">0.1</span>)
-)</pre></body></html></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">df_soiltexture</span> <span class="op">&lt;-</span> <span class="fu">bind_rows</span><span class="op">(</span>
+  top    <span class="op">=</span> <span class="fu">tibble</span><span class="op">(</span>layer <span class="op">=</span> <span class="st">"top"</span>,    fsand <span class="op">=</span> <span class="fl">0.4</span>, fclay <span class="op">=</span> <span class="fl">0.3</span>, forg <span class="op">=</span> <span class="fl">0.1</span>, fgravel <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>,
+  bottom <span class="op">=</span> <span class="fu">tibble</span><span class="op">(</span>layer <span class="op">=</span> <span class="st">"bottom"</span>, fsand <span class="op">=</span> <span class="fl">0.4</span>, fclay <span class="op">=</span> <span class="fl">0.3</span>, forg <span class="op">=</span> <span class="fl">0.1</span>, fgravel <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>
+<span class="op">)</span></code></pre></div>
 </div>
 <div id="get-input" class="section level3">
 <h3 class="hasAnchor">
@@ -223,11 +247,13 @@
 <p>Get the input from the nice weird looking file with half-hourly data.</p>
 <p>The file has the following variables (units):</p>
 <p>Year DOY Hour T_air Q_air Wind_speed Precip Pressure R_global_in R_longwave_in CO2 K kg/kg m/s kg_H2O/m2/s pa W/m2 W/m2 ppm</p>
-<div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="no">forcing</span> <span class="kw">&lt;-</span> <span class="fu">read_delim</span>( <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/find.package.html">path.package</a></span>(<span class="st">"rsofun"</span>), <span class="st">"/extdata/ORNL_forcing.txt"</span>), <span class="kw">col_names</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">delim</span> <span class="kw">=</span> <span class="st">"\t"</span>) <span class="kw">%&gt;%</span>
-  <span class="fu">mutate</span>(<span class="kw">date</span> <span class="kw">=</span> <span class="kw pkg">lubridate</span><span class="kw ns">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/ymd_hms.html">ymd_hm</a></span>( <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>( <span class="fu"><a href="https://rdrr.io/r/base/character.html">as.character</a></span>(<span class="no">YEAR</span>), <span class="st">"-01-01 00:00"</span> ) ) + <span class="fu">days</span>(<span class="no">DOY</span>-<span class="fl">1</span>) + <span class="fu">hours</span>(<span class="no">HOUR</span>) ) <span class="kw">%&gt;%</span>
-  <span class="fu">mutate</span>(<span class="kw">sitename</span> <span class="kw">=</span> <span class="st">"ORNL"</span>) <span class="kw">%&gt;%</span>
-  <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(!(<span class="fu">mday</span>(<span class="no">date</span>)<span class="kw">==</span><span class="fl">29</span> <span class="kw">&amp;</span> <span class="fu">month</span>(<span class="no">date</span>)<span class="kw">==</span><span class="fl">2</span>))</pre></body></html></div>
-<pre><code>## Parsed with column specification:
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">forcing</span> <span class="op">&lt;-</span> <span class="fu">read_delim</span><span class="op">(</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html">path.package</a></span><span class="op">(</span><span class="st">"rsofun"</span><span class="op">)</span>, <span class="st">"/extdata/ORNL_forcing.txt"</span><span class="op">)</span>, col_names <span class="op">=</span> <span class="cn">TRUE</span>, delim <span class="op">=</span> <span class="st">"\t"</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu">mutate</span><span class="op">(</span>date <span class="op">=</span> <span class="fu">lubridate</span><span class="fu">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/ymd_hms.html">ymd_hm</a></span><span class="op">(</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html">as.character</a></span><span class="op">(</span><span class="va">YEAR</span><span class="op">)</span>, <span class="st">"-01-01 00:00"</span> <span class="op">)</span> <span class="op">)</span> <span class="op">+</span> <span class="fu">days</span><span class="op">(</span><span class="va">DOY</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="fu">hours</span><span class="op">(</span><span class="va">HOUR</span><span class="op">)</span> <span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu">mutate</span><span class="op">(</span>sitename <span class="op">=</span> <span class="st">"ORNL"</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="op">!</span><span class="op">(</span><span class="fu">mday</span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">==</span><span class="fl">29</span> <span class="op">&amp;</span> <span class="fu">month</span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">==</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
 ## cols(
 ##   YEAR = col_double(),
 ##   DOY = col_double(),
@@ -243,58 +269,57 @@
 ##   aCO2_AW = col_double(),
 ##   amb_co2 = col_double()
 ## )</code></pre>
-<div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="co"># Changing values of PAR for running simulations</span>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Changing values of PAR for running simulations</span>
 <span class="co">#forcing &lt;- forcing %&gt;% mutate(Swdown = Swdown*1.5) # levels = *1, *1.3 and *1.5</span>
 
 <span class="co">## convert rain to units per seconds</span>
-<span class="no">dt_secs</span> <span class="kw">&lt;-</span> <span class="kw pkg">lubridate</span><span class="kw ns">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/interval.html">interval</a></span>(<span class="no">forcing</span>$<span class="no">date</span>[<span class="fl">1</span>], <span class="no">forcing</span>$<span class="no">date</span>[<span class="fl">2</span>]) <span class="kw">%&gt;%</span>
-  <span class="fu">time_length</span>(<span class="st">"seconds"</span>)
-<span class="no">forcing</span> <span class="kw">&lt;-</span> <span class="no">forcing</span> <span class="kw">%&gt;%</span>
-  <span class="fu">mutate</span>(<span class="kw">RAIN</span> <span class="kw">=</span> <span class="no">RAIN</span> / <span class="no">dt_secs</span>)</pre></body></html></div>
+<span class="va">dt_secs</span> <span class="op">&lt;-</span> <span class="fu">lubridate</span><span class="fu">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/interval.html">interval</a></span><span class="op">(</span><span class="va">forcing</span><span class="op">$</span><span class="va">date</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">forcing</span><span class="op">$</span><span class="va">date</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu">time_length</span><span class="op">(</span><span class="st">"seconds"</span><span class="op">)</span>
+<span class="va">forcing</span> <span class="op">&lt;-</span> <span class="va">forcing</span> <span class="op">%&gt;%</span> 
+  <span class="fu">mutate</span><span class="op">(</span>RAIN <span class="op">=</span> <span class="va">RAIN</span> <span class="op">/</span> <span class="va">dt_secs</span><span class="op">)</span></code></pre></div>
 <p>For P-model runs, aggregate to daily forcing.</p>
-<div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="kw">if</span> (<span class="no">params_siml</span>$<span class="no">method_photosynth</span> <span class="kw">==</span> <span class="st">"pmodel"</span> <span class="kw">&amp;&amp;</span> <span class="no">dt_secs</span> <span class="kw">!=</span> (<span class="fl">60</span>*<span class="fl">60</span>*<span class="fl">24</span>)){
-  <span class="no">forcing</span> <span class="kw">&lt;-</span> <span class="no">forcing</span> <span class="kw">%&gt;%</span>
-    <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="kw pkg">lubridate</span><span class="kw ns">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/date.html">date</a></span>(<span class="no">date</span>)) <span class="kw">%&gt;%</span>
-    <span class="fu">summarise_at</span>(<span class="fu">vars</span>(<span class="fl">1</span>:<span class="fl">13</span>), <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(~<span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">.</span>, <span class="kw">na.rm</span> <span class="kw">=</span> <span class="fl">TRUE</span>))) <span class="kw">%&gt;%</span>
-    <span class="kw pkg">dplyr</span><span class="kw ns">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span>(-<span class="fl">1</span>)
-}</pre></body></html></div>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw">if</span> <span class="op">(</span><span class="va">params_siml</span><span class="op">$</span><span class="va">method_photosynth</span> <span class="op">==</span> <span class="st">"pmodel"</span> <span class="op">&amp;&amp;</span> <span class="va">dt_secs</span> <span class="op">!=</span> <span class="op">(</span><span class="fl">60</span><span class="op">*</span><span class="fl">60</span><span class="op">*</span><span class="fl">24</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
+  <span class="va">forcing</span> <span class="op">&lt;-</span> <span class="va">forcing</span> <span class="op">%&gt;%</span> 
+    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="fu">lubridate</span><span class="fu">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/date.html">date</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+    <span class="fu">summarise_at</span><span class="op">(</span><span class="fu">vars</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">13</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">.</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span>
+<span class="op">}</span></code></pre></div>
 </div>
 <div id="run-the-model" class="section level3">
 <h3 class="hasAnchor">
 <a href="#run-the-model" class="anchor"></a>Run the model</h3>
 <p>Run the model for all the sites specified in the first step.</p>
-<div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="no">out</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/run_lm3ppa_f_bysite.html">run_lm3ppa_f_bysite</a></span>( <span class="st">"ORNL"</span>,
-                            <span class="no">params_siml</span>,
-                            <span class="no">siteinfo</span>,
-                            <span class="no">forcing</span>, <span class="co"># ddf_input</span>
-                            <span class="no">params_tile</span>,
-                            <span class="no">params_species</span>,
-                            <span class="no">params_soil</span>,
-                            <span class="no">init_cohort</span>,
-                            <span class="no">init_soil</span>,
-                            <span class="kw">makecheck</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></body></html></div>
-<pre><code>## Warning: The `x` argument of `as_tibble.matrix()` must have column names if `.name_repair` is omitted as of tibble 2.0.0.
-## Using compatibility `.name_repair`.
-## This warning is displayed once every 8 hours.
-## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
-<div class="sourceCode" id="cb17"><html><body><pre class="r"><span class="co">#save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")</span>
-<span class="no">rsofun_out_hourly_tile</span> <span class="kw">&lt;-</span> <span class="no">out</span>$<span class="no">output_hourly_tile</span>
-<span class="no">rsofun_out_daily_tile</span> <span class="kw">&lt;-</span> <span class="no">out</span>$<span class="no">output_daily_tile</span>
-<span class="no">rsofun_out_daily_cohorts</span> <span class="kw">&lt;-</span> <span class="no">out</span>$<span class="no">output_daily_cohorts</span>
-<span class="no">rsofun_out_annual_tile</span> <span class="kw">&lt;-</span> <span class="no">out</span>$<span class="no">output_annual_tile</span>
-<span class="no">rsofun_out_annual_cohorts</span> <span class="kw">&lt;-</span> <span class="no">out</span>$<span class="no">output_annual_cohorts</span>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_lm3ppa_f_bysite.html">run_lm3ppa_f_bysite</a></span><span class="op">(</span> <span class="st">"ORNL"</span>, 
+                            <span class="va">params_siml</span>, 
+                            <span class="va">siteinfo</span>, 
+                            <span class="va">forcing</span>, <span class="co"># ddf_input</span>
+                            <span class="va">params_tile</span>, 
+                            <span class="va">params_species</span>, 
+                            <span class="va">params_soil</span>, 
+                            <span class="va">init_cohort</span>, 
+                            <span class="va">init_soil</span>, 
+                            makecheck <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 
-<span class="no">out</span>$<span class="no">output_annual_tile</span> <span class="kw">%&gt;%</span>
-  <span class="fu">ggplot</span>() +
-  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">year</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">GPP</span>)) +
-  <span class="fu">labs</span>(<span class="kw">title</span> <span class="kw">=</span> <span class="st">"LM3-PPA with P-model photosynthesis at ORNL"</span>, <span class="kw">subtitle</span> <span class="kw">=</span> <span class="st">"rsofun output"</span>)</pre></body></html></div>
-<p><img src="example_lm3ppa_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
-<div class="sourceCode" id="cb18"><html><body><pre class="r"><span class="no">out</span>$<span class="no">output_daily_tile</span> <span class="kw">%&gt;%</span>
-  <span class="fu">mutate</span>(<span class="kw">date</span> <span class="kw">=</span> <span class="kw pkg">lubridate</span><span class="kw ns">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/ymd.html">ymd</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="no">year</span>, <span class="st">"-01-01"</span>)) + <span class="kw pkg">lubridate</span><span class="kw ns">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/period.html">days</a></span>(<span class="no">doy</span>-<span class="fl">1</span>)) <span class="kw">%&gt;%</span>
-  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="kw">x</span><span class="kw">=</span><span class="no">date</span>, <span class="kw">y</span><span class="kw">=</span><span class="no">GPP</span>)) +
-  <span class="fu">geom_line</span>() +
-  <span class="fu">labs</span>(<span class="kw">title</span> <span class="kw">=</span> <span class="st">"LM3-PPA at ORNL"</span>, <span class="kw">subtitle</span> <span class="kw">=</span> <span class="st">"rsofun output"</span>)</pre></body></html></div>
-<p><img src="example_lm3ppa_files/figure-html/unnamed-chunk-13-2.png" width="700"></p>
+<span class="co">#save(out, file = "~/rsofun/output/out_lm3ppa_pmodel.RData")</span>
+<span class="va">rsofun_out_hourly_tile</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">output_hourly_tile</span>
+<span class="va">rsofun_out_daily_tile</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">output_daily_tile</span>
+<span class="va">rsofun_out_daily_cohorts</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">output_daily_cohorts</span>
+<span class="va">rsofun_out_annual_tile</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">output_annual_tile</span>
+<span class="va">rsofun_out_annual_cohorts</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">output_annual_cohorts</span>
+
+<span class="va">out</span><span class="op">$</span><span class="va">output_annual_tile</span> <span class="op">%&gt;%</span> 
+  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">GPP</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">labs</span><span class="op">(</span>title <span class="op">=</span> <span class="st">"LM3-PPA with P-model photosynthesis at ORNL"</span>, subtitle <span class="op">=</span> <span class="st">"rsofun output"</span><span class="op">)</span>
+
+<span class="va">out</span><span class="op">$</span><span class="va">output_daily_tile</span> <span class="op">%&gt;%</span> 
+  <span class="fu">mutate</span><span class="op">(</span>date <span class="op">=</span> <span class="fu">lubridate</span><span class="fu">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/ymd.html">ymd</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">year</span>, <span class="st">"-01-01"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu">lubridate</span><span class="fu">::</span><span class="fu"><a href="http://lubridate.tidyverse.org/reference/period.html">days</a></span><span class="op">(</span><span class="va">doy</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>, y<span class="op">=</span><span class="va">GPP</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
+  <span class="fu">labs</span><span class="op">(</span>title <span class="op">=</span> <span class="st">"LM3-PPA at ORNL"</span>, subtitle <span class="op">=</span> <span class="st">"rsofun output"</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
   </div>
@@ -314,7 +339,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

@@ -130,10 +130,7 @@ oob_calib_eval_sofun_bysite <- function(evalsite, settings_calib, settings_eval,
     params_modl <- list(
       kphio           = 0.04997714009213085,
       soilm_par_a     = 1.0,
-      soilm_par_b     = 0.0,
-      vpdstress_par_a = settings_calib$par_opt[["vpdstress_par_a"]],
-      vpdstress_par_b = settings_calib$par_opt[["vpdstress_par_b"]],
-      vpdstress_par_m = settings_calib$par_opt[["vpdstress_par_m"]]
+      soilm_par_b     = 0.0
       )
     
     # settings_sims$sitenames <- evalsite

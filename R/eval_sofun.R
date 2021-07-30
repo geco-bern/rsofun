@@ -3,9 +3,10 @@
 #' Calculates a set of perfomance metrics for model outputs, compared against observational data.
 #' Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 data, are implemented.
 #'
-#' @param mod A flat dataframe containing model outputs with columns \code{"sitename"} (character), \code{"date"} 
-#' (date object created by \code{lubridate::ymd()}) and \code{"varnam"} where \code{"varnam"} corresponds to 
-#' \code{names(settings$benchmark)}.
+#' @param mod Object returned by \link{runread_pmodel_f}. This is a nested dataframe with sites along rows 
+#' and a nested column \code{"data"} containing model outputs with columns \code{"date"} (date object 
+#' created by \code{lubridate::ymd()}) and \code{"varnam"}.
+#' where \code{"varnam"} corresponds to \code{names(settings$benchmark)}.
 #' @param settings A list specifying evaluation settings 
 #' (see vignette eval_sofun.pdf for more information and examples)
 #' @param obs_eval (Optional) A named list of data frames containing observational data for each sites. 
@@ -374,16 +375,22 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
                 dplyr::select( -obs_mean, -mod_mean, -obs_min, -obs_max, -mod_min, -mod_max )
       
       if (!light){
+        use_sites <- idvdf %>% 
+          group_by(sitename) %>% 
+          summarise(ndays_obs = sum(!is.na(obs)), ndays_mod = sum(!is.na(mod)), var_mod = var(mod, na.rm = TRUE)) %>% 
+          dplyr::filter(ndays_obs > 0 & ndays_mod > 0 & var_mod > 0) %>% 
+          pull(sitename)
+        
         idvdf_stats <- idvdf %>% 
+          dplyr::filter(sitename %in% use_sites) %>% 
           group_by( sitename ) %>%
           nest() %>%
-          mutate( ndays_obs = purrr::map( data, ~sum(!is.na( .$obs )  ) ), ndays_mod = purrr::map( data, ~sum(!is.na( .$mod )  ) ) ) %>%
-          unnest( ndays_obs, ndays_mod ) %>%
-          dplyr::filter( ndays_obs > 2 & ndays_mod > 2 ) %>%
           mutate( linmod = purrr::map( data, ~lm( obs ~ mod, data = . ) ),
                   stats  = purrr::map( data, ~get_stats( .$mod, .$obs ) ) ) %>%
           mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
-          unnest( stats )                   
+          unnest( stats )    
+        
+        idvdf_stats <- NA
       } else {
         idvdf_stats <- NA
       }
@@ -439,12 +446,16 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
                 dplyr::select( -obs_mean, -mod_mean, -obs_min, -obs_max) #-mod_min, -mod_max
       
       if (!light){
+        use_sites <- idvdf %>% 
+          group_by(sitename) %>% 
+          summarise(ndays_obs = sum(!is.na(obs)), ndays_mod = sum(!is.na(mod)), var_mod = var(mod, na.rm = TRUE)) %>% 
+          dplyr::filter(ndays_obs > 0 & ndays_mod > 0 & var_mod > 0) %>% 
+          pull(sitename)
+        
         ixvdf_stats <- ixvdf %>% 
+          dplyr::filter(sitename %in% use_sites) %>% 
           group_by( sitename ) %>%
           nest() %>%
-          mutate( nxdays_obs = purrr::map( data, ~sum(!is.na( .$obs )  ) ), nxdays_mod = purrr::map( data, ~sum(!is.na( .$mod )  ) ) ) %>%
-          unnest( nxdays_obs, nxdays_mod ) %>%
-          dplyr::filter( nxdays_obs > 2 & nxdays_mod > 2 ) %>%
           mutate( linmod = purrr::map( data, ~lm( obs ~ mod, data = . ) ),
                   stats  = purrr::map( data, ~get_stats( .$mod, .$obs ) ) ) %>%
           mutate( data   = purrr::map( data, ~add_fitted(.) ) ) %>%
@@ -467,9 +478,6 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
       
     }
 
-    rlang::inform("Done with eval_sofun().")
-
-
     ##------------------------------------------------------------
     ## FLUXNET2015-Plots
     ##------------------------------------------------------------
@@ -485,7 +493,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
         if (nrow(meandf)>2){
           
           out <- meandf %>% 
-            analyse_modobs2("mod", "obs", type = "points") + 
+            rbeni::analyse_modobs2("mod", "obs", type = "points") + 
             labs(title = "Spatial correlation")
           
         } else {
@@ -508,81 +516,52 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
       ##------------------------------------------------------------
       ## Combined spatial - IAV correlation
       ##------------------------------------------------------------
-      plot_modobs_spatial_annual <- function( pattern = "", makepdf = FALSE, ... ){  #meandf, linmod_meandf, annual_bysite_stats, annual_pooled_stats = NA, spatial_stats = NA, 
-        
-        if (!identical(linmod_meandf, NA)){
-          
-          if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
-          if (makepdf) filn <- paste0( settings$dir_figs, "/modobs_spatial_annual_", pattern, ".pdf" )
-          if (makepdf) rlang::inform( paste( "Plotting to file:", filn ) )
-          if (makepdf) pdf( filn )
-          
-          par(las=1, mar=c(4,4.5,4,1))
-          
-          ## set up plotting and add linear regression line for means by site
-          with( meandf, plot( mod, obs, pch=16, col=rgb(0,0,0,0.5), type = "n", ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ), ... ) )
-          abline( linmod_meandf, col="red")
-          lines(c(-9999,9999), c(-9999,9999), lty=3)
-          
-          ## plot black regression lines of annual values within sites
-          out <- adf_stats %>%  mutate( purrr::map( data, ~lines( fitted ~ mod, data = . ) ) )  # to have it sorted: %>% mutate( data = purrr::map( data, ~arrange( ., mod ) ) )
-          
-          title( "Spatial/annual correlation" )
-          
-          ## Add annotations for statistics of annual values (pooled)
-          if (!identical(NA, metrics$annual_pooled)) mtext( bquote( italic(R)^2 == .(format( metrics$annual_pooled$rsq,  digits = 2) ) ), adj = 1, cex = 0.8, line=2 )
-          if (!identical(NA, metrics$annual_pooled)) mtext( paste0( "RMSE = ",       format( metrics$annual_pooled$rmse, digits = 3 ) ),  adj = 1, cex = 0.8, line=1 )
-          
-          ## Add annotations for statistics of means by site (~spatial)
-          if (!identical(NA, metrics$spatial)) mtext( bquote( italic(R)^2 == .(format( metrics$spatial$rsq, digits = 2) ) ), adj = 0, cex = 0.8, line=2, col="red" )
-          if (!identical(NA, metrics$spatial)) mtext( paste0( "RMSE = ",  format( metrics$spatial$rmse, digits = 3 ) ), adj = 0, cex = 0.8, line=1, col="red" )
-          # if (!identical(NA, metrics$spatial)) mtext( paste0( "slope = ", format( metrics$spatial$meanslope, digits = 3 ) ), adj = 0, cex = 0.8, col="red" )
-          
-          if (makepdf) dev.off()
-          
-          # ## Histogram of slopes
-          # ##------------------------------------------------------------
-          # ## (Uncomment to plot as inset in spatial-IAV plot) 
-          # # u <- par("usr")
-          # # v <- c(
-          # #   grconvertX(u[1:2], "user", "ndc"),
-          # #   grconvertY(u[3:4], "user", "ndc")
-          # # )
-          # # v_orig <- v
-          # # v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
-          # # par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
-          # if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
-          # if (makepdf) pdf( paste0( settings$dir_figs, "/hist_slopes_anomalies_annual.pdf" ) )
-          #   hist( annual_bysite_stats$slope, xlim=c(-5,5), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 50, xlab="slope" )
-          #   abline( v=1.0, col="red" )
-          #   axis( 1, cex.axis=1.0, xlab="slope" )
-          #   title( "Slopes of annual regressions" )
-          # if (makepdf) dev.off()
-          # 
-          # ## Histogram of R2
-          # ##------------------------------------------------------------
-          # ## (Uncomment to plot as inset in spatial-IAV plot) 
-          # # u <- par("usr")
-          # # v <- c(
-          # #   grconvertX(u[1:2], "user", "ndc"),
-          # #   grconvertY(u[3:4], "user", "ndc")
-          # # )
-          # # v_orig <- v
-          # # v <- c( v[1]+0.03, v[1]+0.2*v[2], v[3]+0.50*v[4], v[3]+0.72*v[4] )
-          # # par( fig=v, new=TRUE, mar=c(0,0,0,0), mgp=c(3,0.5,0) )
-          # if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
-          # if (makepdf) pdf( paste0( settings$dir_figs, "/hist_r2_anomalies_annual.pdf" ) )
-          #   hist( annual_bysite_stats$rsq, xlim=c(-1,1), cex.axis=0.7, axes=FALSE, col="grey70", main="", breaks = 12, xlab= bquote( italic(R)^2 ) )
-          #   abline( v=1.0, col="red" )
-          #   axis( 1, cex.axis=1.0, xlab = bquote( italic(R)^2 ) )
-          #   title( bquote( bold(Slopes ~ of ~ italic(R)^2) ) )
-          # if (makepdf) dev.off()
-          
-        } else {
-          rlang::inform("plot_modobs_spatial_annual(): Not enough sites to get spatial correlations.")
+      plot_modobs_spatial_annual <- function(){
+
+        get_start_end <- function(df){
+          df_start <- df %>% 
+            arrange(mod) %>% 
+            drop_na(mod, fitted) %>% 
+            slice(1)
+          df_end <- df %>% 
+            arrange(desc(mod)) %>% 
+            drop_na(mod, fitted) %>% 
+            slice(1)
+          out <- tibble(
+            xmin = df_start$mod, 
+            xmax = df_end$mod,
+            ymin = df_start$fitted,
+            ymax = df_end$fitted )
+          return(out)
         }
+        df <- adf_stats %>% 
+          mutate(start_end = purrr::map(data, ~get_start_end(.))) %>% 
+          tidyr::unnest(start_end)
         
+        rsq_lab_annual <-  format(metrics$annual_pooled$rsq, digits = 2)
+        rmse_lab_annual <- format(metrics$annual_pooled$rmse, digits = 3)
         
+        rsq_lab_spatial <-  format(metrics$spatial$rsq, digits = 2)
+        rmse_lab_spatial <- format(metrics$spatial$rmse, digits = 3)
+        
+        gg <- df %>% 
+          ggplot() +
+          geom_segment(aes(x=xmin, y=ymin, xend=xmax, yend=ymax)) +
+          geom_line(data = fortify(linmod_meandf), aes(x = mod, y = .fitted), color="red") +
+          geom_abline(intercept=0, slope=1, linetype="dotted") +
+          # ggrepel::geom_text_repel(data = df, aes(x = xmax, y = ymax, label = mylabel)) +
+          theme_classic() +
+          xlim(0,NA) +
+          ylim(0,NA) +
+          labs(
+            subtitle = bquote( bold("Annual:") ~ italic(R)^2 == .(rsq_lab_annual) ~~
+                                 RMSE == .(rmse_lab_annual) ~ "\n" ~
+                                 bold("Spatial:") ~ italic(R)^2 == .(rsq_lab_spatial) ~~
+                                 RMSE == .(rmse_lab_spatial) ),
+            y = expression( paste("Observed GPP (gC m"^-2, "yr"^-1, ")" ) ), 
+            x = expression( paste("Simulated GPP (gC m"^-2, "yr"^-1, ")" ) ))
+        
+        return(gg)
       }
       
       ##------------------------------------------------------------
@@ -592,7 +571,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
         # source("analyse_modobs.R")
         if(makepdf) pdf( paste0( settings$dir_figs, "/modobs_anomalies_annual.pdf") )
         par(las=1)
-        modobs_anomalies_annual <- with( iavdf, analyse_modobs(mod, 
+        modobs_anomalies_annual <- with( iavdf, rbeni::analyse_modobs2(mod, 
                                                                obs, 
                                                                heat = FALSE,
                                                                ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), 
@@ -612,7 +591,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
         # source("analyse_modobs.R")
         if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
         if (makepdf) pdf( paste0( settings$dir_figs, "/modobs_anomalies_daily_", pattern, ".pdf" ) )
-        modobs_anomalies_daily <- with( idvdf, analyse_modobs(
+        modobs_anomalies_daily <- with( idvdf, rbeni::analyse_modobs2(
           mod,
           obs,
           col=rgb(0,0,0,0.05),
@@ -647,7 +626,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
         # source("analyse_modobs.R")
         if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
         if (makepdf) pdf( paste0( settings$dir_figs, "/modobs_anomalies_xdaily.pdf" ) )
-        modobs_anomalies_xdaily <- with( ixvdf, analyse_modobs(
+        modobs_anomalies_xdaily <- with( ixvdf, rbeni::analyse_modobs2(
           mod, 
           obs, 
           col=rgb(0,0,0,0.05), 
@@ -688,7 +667,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
         if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
         if (makepdf) pdf( paste0( settings$dir_figs, "/modobs_meandoy_", pattern, ".pdf") )
         modobs_meandoy <- with( meandoydf, 
-                                analyse_modobs( 
+                                rbeni::analyse_modobs2( 
                                   mod_mean, 
                                   obs_mean, 
                                   heat=TRUE, 
@@ -706,7 +685,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
       ##------------------------------------------------------------
       plot_by_doy_allsites <- function( makepdf = FALSE ){   # using meandoydf_stats
         system( "mkdir -p fig/meandoy_bysite" )
-        # mylist <- readr::read_csv("myselect_fluxnet2015.csv") %>% dplyr::filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
+        # mylist <- readr::read_csv("myselect_fluxnet.csv") %>% dplyr::filter( use==1 ) %>% dplyr::select( -use ) %>% unlist()
         mylist <- c("AU-Tum", "CA-NS3", "CA-NS6", "CA-Obs", "DE-Geb", "DE-Hai", "DE-Kli", "FI-Hyy", "FR-Fon", "FR-LBr", "FR-Pue", "IT-Cpz", "NL-Loo", "US-Ha1", "US-MMS", "US-UMB", "US-WCr")
         tmp <- purrr::map( dplyr::filter( meandoydf_stats, sitename %in% mylist )$data, ~plot_by_doy_bysite(., makepdf = makepdf) )
       }
@@ -731,7 +710,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
         if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
         if (makepdf) pdf( paste0( settings$dir_figs, "/modobs_meanxoy.pdf" ) )
         modobs_meanxoy <- with( meanxoydf, 
-                                analyse_modobs( 
+                                rbeni::analyse_modobs2( 
                                   mod_mean, 
                                   obs_mean, 
                                   heat=TRUE, 
@@ -757,43 +736,34 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
       ## Mod. vs. obs for daily values (absolute)
       ##------------------------------------------------------------
       ## observed vs. modelled
-      plot_modobs_daily <- function( subtitle = "", makepdf = FALSE, ... ){  # ddf
+      plot_modobs_daily <- function(){
         
         modobs_ddf <- ddf %>% 
-          rbeni::analyse_modobs2(mod = "mod", obs = "obs", type = "heat")
+          rbeni::analyse_modobs2(mod = "mod", obs = "obs", type = "density")
         
-        modobs_ddf$gg +
+        gg <- modobs_ddf$gg +
           labs(x = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), 
                y = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ),
-               title = "Daily GPP", subtitle = subtitle)
+               title = "Daily GPP")
         
-        if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
-        if (makepdf) filn <- paste0( settings$dir_figs, "/modobs_daily.pdf" )
-        if (makepdf) ggsave(filn)
-        
-        return( modobs_ddf )
+        return( gg )
       }
       
       ##------------------------------------------------------------
       ## Mod. vs. obs for monthly values (absolute)
       ##------------------------------------------------------------
       ## observed vs. modelled
-      plot_modobs_monthly <- function( makepdf = FALSE, ... ){  # using mdf
-        # source("analyse_modobs.R")
-        if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
-        if (makepdf) pdf( paste0( settings$dir_figs, "/modobs_monthly.pdf" ) )
-        modobs_mdf <- with( mdf, 
-                            analyse_modobs( 
-                              mod, 
-                              obs, 
-                              heat = TRUE, 
-                              ylab = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), 
-                              xlab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ),
-                              plot.title = "Correlation of monthly GPP",
-                              ...
-                            ) )
-        if (makepdf) dev.off()
-        return( modobs_mdf )
+      plot_modobs_monthly <- function(){
+        
+        modobs_mdf <- mdf %>% 
+          rbeni::analyse_modobs2(mod = "mod", obs = "obs", type = "heat")
+        
+        gg <- modobs_mdf$gg +
+          labs(x = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), 
+               y = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ),
+               title = "Monthly GPP")
+        
+        return( gg )
       }
       
       
@@ -801,22 +771,16 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
       ## Mod. vs. obs for nnual values (absolute)
       ##------------------------------------------------------------
       ## observed vs. modelled
-      plot_modobs_annual <- function( makepdf = FALSE, ... ){  # using adf
-        # source("analyse_modobs.R")
-        if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
-        if (makepdf) pdf( paste0( settings$dir_figs, "/modobs_annual.pdf" ) )
-        modobs_adf <- with( adf, 
-                            analyse_modobs( 
-                              mod, 
-                              obs, 
-                              heat = FALSE, 
-                              ylab = expression( paste("observed GPP (gC m"^-2, "yr"^-1, ")" ) ), 
-                              xlab = expression( paste("simulated GPP (gC m"^-2, "yr"^-1, ")" ) ),
-                              plot.title = "Correlation of annual GPP",
-                              ...
-                            ) )
-        if (makepdf) dev.off()
-        return( modobs_adf )
+      plot_modobs_annual <- function(){
+        modobs_adf <- adf %>% 
+          rbeni::analyse_modobs2(mod = "mod", obs = "obs", type = "points")
+        
+        gg <- modobs_adf$gg +
+          labs(x = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), 
+               y = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ),
+               title = "Annual GPP")
+        
+        return( gg )
       }
       
       
@@ -824,22 +788,15 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
       ## Mod. vs. obs. for ggregated values (absolute) aggregated to X-day periods
       ##------------------------------------------------------------
       ## observed vs. modelled
-      plot_modobs_xdaily <- function( makepdf = FALSE, ... ){    # using xdf
-        # source("analyse_modobs.R")
-        if (makepdf && !dir.exists(settings$dir_figs)) system( paste0( "mkdir -p ", settings$dir_figs))
-        if (makepdf) pdf( paste0( settings$dir_figs, "/modobs_xdaily.pdf" ) )
-        modobs_xdf <- with( xdf, 
-                            analyse_modobs( 
-                              mod, 
-                              obs, 
-                              heat=TRUE, 
-                              ylab = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), 
-                              xlab = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ),
-                              plot.title = "Correlation of mean GPP in X-day periods",
-                              ...
-                            ) )
-        if (makepdf) dev.off()
-        return(modobs_xdf)
+      plot_modobs_xdaily <- function(){
+        modobs_ddf <- xdf %>% 
+          rbeni::analyse_modobs2(mod = "mod", obs = "obs", type = "heat")
+        
+        gg <- modobs_ddf$gg +
+          labs(x = expression( paste("observed GPP (gC m"^-2, "d"^-1, ")" ) ), 
+               y = expression( paste("simulated GPP (gC m"^-2, "d"^-1, ")" ) ),
+               title = "X-daily GPP")
+        return(gg)
       }
       
       
@@ -902,6 +859,8 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
 
     }
 
+    rlang::inform("Done with eval_sofun().")
+    
     ##------------------------------------------------------------
     ## Construct output lists for FLUXNET2015
     ##------------------------------------------------------------
@@ -932,14 +891,17 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
       xdf                    = xdf
       )
 
+    out$fluxnet$metrics <- metrics
+    
     if (!light){
+      
       out$fluxnet$plot <- list(
-        modobs_daily            = plot_modobs_daily,
-        modobs_xdaily           = plot_modobs_xdaily,
-        modobs_monthly          = plot_modobs_monthly,
-        modobs_annual           = plot_modobs_annual,
-        modobs_spatial          = plot_modobs_spatial,
-        modobs_spatial_annual   = plot_modobs_spatial_annual,
+        gg_modobs_daily            = plot_modobs_daily(),
+        gg_modobs_xdaily           = plot_modobs_xdaily(),
+        gg_modobs_monthly          = plot_modobs_monthly(),
+        gg_modobs_annual           = plot_modobs_annual(),
+        modobs_spatial             = plot_modobs_spatial,
+        gg_modobs_spatial_annual   = plot_modobs_spatial_annual(),
         modobs_anomalies_annual = plot_modobs_anomalies_annual,
         modobs_anomalies_daily  = plot_modobs_anomalies_daily,
         modobs_anomalies_xdaily = plot_modobs_anomalies_xdaily,
@@ -950,9 +912,7 @@ eval_sofun_byvar <- function(varnam, ddf_mod, settings, obs_eval = NA, overwrite
         by_xoy_allsites         = plot_by_xoy_allsites
       )
     }
-
-    out$fluxnet$metrics <- metrics
-
+    
   } # end FLUXNET2015
 
   return(out)
@@ -981,3 +941,183 @@ extract_koeppen_code <- function( str ){
   out <- stringr::str_split( str, " - ")[[1]][1]
   return( out )
 }
+
+## copied from rbeni package
+analyse_modobs2 <- function(
+  df,
+  mod,
+  obs,
+  type       = "points",
+  filnam     = NA,
+  relative   = FALSE,
+  xlim       = NULL,
+  ylim       = NULL,
+  use_factor = NULL,
+  shortsubtitle = FALSE,
+  plot_subtitle = TRUE,
+  plot_linmod = TRUE,
+  ...
+  ){
+
+  require(ggplot2)
+  require(dplyr)
+  require(LSD)
+  require(ggthemes)
+  require(RColorBrewer)
+
+  #if (identical(filnam, NA)) filnam <- "analyse_modobs.pdf"
+
+  ## rename to 'mod' and 'obs' and remove rows with NA in mod or obs
+  df <- df %>%
+    as_tibble() %>%
+    ungroup() %>%
+    dplyr::select(mod=mod, obs=obs) %>%
+    tidyr::drop_na(mod, obs)
+
+  ## get linear regression (coefficients)
+  linmod <- lm( obs ~ mod, data=df )
+
+  ## construct metrics table using the 'yardstick' library
+  df_metrics <- df %>%
+    yardstick::metrics(obs, mod) %>%
+    dplyr::bind_rows( tibble( .metric = "n",        .estimator = "standard", .estimate = summarise(df, numb=n()) %>% unlist() ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "slope",    .estimator = "standard", .estimate = coef(linmod)[2]) ) %>%
+    # dplyr::bind_rows( tibble( .metric = "nse",      .estimator = "standard", .estimate = hydroGOF::NSE( obs, mod, na.rm=TRUE ) ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "mean_obs", .estimator = "standard", .estimate = summarise(df, mean=mean(obs, na.rm=TRUE)) %>% unlist() ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "prmse",    .estimator = "standard",
+                       .estimate = dplyr::filter(., .metric=="rmse") %>% dplyr::select(.estimate) %>% unlist() /
+                         dplyr::filter(., .metric=="mean_obs") %>% dplyr::select(.estimate) %>% unlist() ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "pmae",    .estimator = "standard",
+                       .estimate = dplyr::filter(., .metric=="mae") %>% dplyr::select(.estimate) %>% unlist() /
+                         dplyr::filter(., .metric=="mean_obs") %>% dplyr::select(.estimate) %>% unlist() ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "bias",        .estimator = "standard", .estimate = dplyr::summarise(df, mean((mod-obs), na.rm=TRUE    )) %>% unlist() ) ) %>%
+    dplyr::bind_rows( tibble( .metric = "pbias",       .estimator = "standard", .estimate = dplyr::summarise(df, mean((mod-obs)/obs, na.rm=TRUE)) %>% unlist() ) )
+
+  rsq_val <- df_metrics %>% dplyr::filter(.metric=="rsq") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+  rmse_val <- df_metrics %>% dplyr::filter(.metric=="rmse") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+  mae_val <- df_metrics %>% dplyr::filter(.metric=="mae") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+  bias_val <- df_metrics %>% dplyr::filter(.metric=="bias") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+  slope_val <- df_metrics %>% dplyr::filter(.metric=="slope") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+  n_val <- df_metrics %>% dplyr::filter(.metric=="n") %>% dplyr::select(.estimate) %>% unlist() %>% unname()
+
+  if (relative){
+    rmse_val <- rmse_val / mean(df$obs, na.rm = TRUE)
+    bias_val <- bias_val / mean(df$obs, na.rm = TRUE)
+  }
+
+  rsq_lab <- format( rsq_val, digits = 2 )
+  rmse_lab <- format( rmse_val, digits = 3 )
+  mae_lab <- format( mae_val, digits = 3 )
+  bias_lab <- format( bias_val, digits = 3 )
+  slope_lab <- format( slope_val, digits = 3 )
+  n_lab <- format( n_val, digits = 3 )
+
+  results <- tibble( rsq = rsq_val, rmse = rmse_val, mae = mae_val, bias = bias_val, slope = slope_val, n = n_val )
+
+  if (shortsubtitle){
+    subtitle <- bquote( italic(R)^2 == .(rsq_lab) ~~
+                          RMSE == .(rmse_lab) )
+  } else {
+    subtitle <- bquote( italic(R)^2 == .(rsq_lab) ~~
+                          RMSE == .(rmse_lab) ~~
+                          bias == .(bias_lab) ~~
+                          slope == .(slope_lab) ~~
+                          italic(N) == .(n_lab) )
+  }
+
+  if (type=="heat"){
+
+    # if (!identical(filnam, NA)) dev.off()
+    # source("~/LSD/R/LSD.heatscatter.R")
+
+    gg <- heatscatter(
+                  df$mod,
+                  df$obs,
+                  xlim=xlim,
+                  ylim=ylim,
+                  main="",
+                  ggplot=TRUE )
+
+    gg <- gg +
+      geom_abline(intercept=0, slope=1, linetype="dotted") +
+      theme_classic() +
+      labs(x = mod, y = obs)
+
+    if (plot_linmod) gg <- gg + geom_smooth(method='lm', color="red", size=0.5, se=FALSE)
+    if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
+
+    if (!identical(filnam, NA)) {
+      ggsave(filnam, width=5, height=5)
+    }
+
+  } else if (type=="hex"){
+
+    ## ggplot hexbin
+    gg <- df %>%
+      ggplot2::ggplot(aes(x=mod, y=obs)) +
+      geom_hex() +
+      scale_fill_gradientn(
+        colours = colorRampPalette( c("gray65", "navy", "red", "yellow"))(5)) +
+      geom_abline(intercept=0, slope=1, linetype="dotted") +
+      # coord_fixed() +
+      # xlim(0,NA) +
+      # ylim(0,NA) +
+      theme_classic() +
+      labs(x = mod, y = obs)
+
+    if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
+    if (plot_linmod) gg <- gg + geom_smooth(method='lm', color="red", size=0.5, se=FALSE)
+
+    if (!identical(filnam, NA)) {
+      ggsave(filnam, width=5, height=5)
+    }
+
+  } else if (type=="points") {
+
+    ## points
+    gg <- df %>%
+      ggplot(aes(x=mod, y=obs)) +
+      geom_point() +
+      geom_abline(intercept=0, slope=1, linetype="dotted") +
+      # coord_fixed() +
+      # xlim(0,NA) +
+      # ylim(0,NA) +
+      theme_classic() +
+      labs(x = mod, y = obs)
+
+    if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
+    if (plot_linmod) gg <- gg + geom_smooth(method='lm', color="red", size=0.5, se=FALSE)
+
+    if (!identical(filnam, NA)) {
+      ggsave(filnam, width=5, height=5)
+    }
+
+  } else if (type=="density") {
+
+    ## points
+    gg <- df %>%
+      ggplot(aes(x=mod, y=obs)) +
+
+      stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon") +
+      scale_fill_gradientn(colours = colorRampPalette( c("gray65", "navy", "red", "yellow"))(5),
+                           guide = "legend") +
+
+      geom_abline(intercept=0, slope=1, linetype="dotted") +
+      # coord_fixed() +
+      # xlim(0,NA) +
+      # ylim(0,NA) +
+      theme_classic() +
+      labs(x = mod, y = obs)
+
+    if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
+    if (plot_linmod) gg <- gg + geom_smooth(method='lm', color="red", size=0.5, se=FALSE)
+
+    if (!identical(filnam, NA)) {
+      ggsave(filnam, width=5, height=5)
+    }
+
+  }
+
+  return(list(df_metrics=df_metrics, gg=gg, linmod=linmod, results = results))
+}
+

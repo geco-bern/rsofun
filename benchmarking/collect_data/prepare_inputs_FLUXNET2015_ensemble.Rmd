@@ -1,0 +1,151 @@
+---
+title: "Prepare FLUXNET 2015 ensemble forcing and evaluation data"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rsofun)
+library(ingestr)
+```
+
+## Forcing data
+
+Data is collected and available in file `~/data/stocker20gmd_outputs/ddf_fluxnet2015_pmodel_with_forcings_stocker19gmd.csv` (available on Euler). This here is to re-format it such that it corresponds to:
+```{r}
+rsofun::df_drivers
+```
+
+The final drivers data frame is saved as `"~/data/rsofun_benchmarking/df_drivers_fluxnet2015.Rdata"`.
+
+
+### FLUXNET meteo data and MODIS FPAR
+
+Reformat, but don't nest yet.
+```{r}
+ddf <- read_csv("~/data/stocker20gmd_outputs/ddf_fluxnet2015_pmodel_with_forcings_stocker19gmd.csv")
+ddf_forcing <- ddf %>%
+  dplyr::select(
+    sitename, date, 
+    temp = temp_day_fluxnet2015, 
+    prec = prec_fluxnet2015, 
+    vpd = vpd_day_fluxnet2015, 
+    ppfd = ppfd_fluxnet2015, 
+    patm = patm_fluxnet2015,
+    fapar = fapar_spl
+    )
+
+usesites <- ddf_forcing %>% pull(sitename) %>% unique()
+
+# ddf_obs <- ddf %>% 
+#   dplyr::select(sitename, date, gpp_obs)
+```
+
+
+### Cloud cover from CRU
+
+Some meteo data is not available from FLUXNET. Extract it from CRU global climate files instead.
+```{r}
+ddf_cru <- ingestr::ingest(
+  siteinfo  = siteinfo_fluxnet2015 %>% 
+    dplyr::filter(sitename %in% usesites),
+  source    = "cru",
+  getvars   = list(ccov = "cld"),
+  dir       = "~/data/cru/ts_4.01/"
+  )
+```
+
+```{r}
+ddf_forcing <- ddf_forcing %>% 
+  left_join(ddf_cru %>% unnest(data) %>% dplyr::select(sitename, date, ccov),
+            by = c("sitename", "date"))
+```
+
+### CO2
+
+Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
+```{r}
+df_co2 <- ingestr::ingest(
+  siteinfo_fluxnet2015 %>% 
+    dplyr::filter(sitename %in% usesites),
+  source  = "co2_mlo",
+  verbose = FALSE
+  )
+
+ddf_forcing <- ddf_forcing %>% 
+  left_join(df_co2 %>% unnest(data),
+            by = c("sitename", "date"))
+```
+
+### Save and nest
+
+Save the flat file.
+```{r}
+write_csv(ddf_forcing, path = "~/data/stocker20gmd_outputs/ddf_forcings_stocker19gmd.csv")
+```
+
+## Collect all drivers
+
+- `df_soiltexture`: dummy for all the same. Using WHC as a site parameter instead.
+```{r}
+df_soiltexture <- bind_rows(
+  top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
+  bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
+)
+```
+
+Define simulation parameters common for all simulations:
+```{r}
+params_siml <- list(
+  spinup             = TRUE,
+  spinupyears        = 10,
+  recycle            = 1,
+  soilmstress        = TRUE,
+  tempstress         = TRUE,
+  calc_aet_fapar_vpd = FALSE,
+  in_ppfd            = TRUE,
+  in_netrad          = FALSE,
+  outdt              = 1,
+  ltre               = FALSE,
+  ltne               = FALSE,
+  ltrd               = FALSE,
+  ltnd               = FALSE,
+  lgr3               = TRUE,
+  lgn3               = FALSE,
+  lgr4               = FALSE
+	)
+```
+
+Finally, all input data can be collected by:
+```{r}
+df_drivers_fluxnet2015 <- collect_drivers_sofun( 
+  siteinfo       = siteinfo_fluxnet2015 %>% 
+    dplyr::filter(sitename %in% usesites),
+  params_siml    = params_siml,
+  meteo          = ddf_forcing %>% dplyr::select(-fapar, -co2) %>% group_by(sitename) %>% nest(), 
+  fapar          = ddf_forcing %>% dplyr::select(sitename, date, fapar) %>% group_by(sitename) %>% nest(),
+  co2            = ddf_forcing %>% dplyr::select(sitename, date, co2) %>% group_by(sitename) %>% nest(),
+  df_soiltexture = df_soiltexture
+  )
+df_drivers_fluxnet2015
+```
+
+Save the full nested object.
+```{r}
+save(df_drivers_fluxnet2015, file = "~/data/rsofun_benchmarking/df_drivers_fluxnet2015.Rdata")
+```
+
+
+## Appendix
+
+### Site list
+
+```{r}
+siteinfo_fluxnet2015 %>% 
+    dplyr::filter(sitename %in% usesites)%>% 
+  kable()
+```

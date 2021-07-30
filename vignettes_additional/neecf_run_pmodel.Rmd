@@ -1,0 +1,156 @@
+---
+title: "P-model simulation at NEECF site"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+library(rsofun)
+library(dplyr)
+library(readr)
+library(ingestr)
+library(ggplot2)
+```
+
+
+## Site selection and meta data
+
+```{r}
+mysites <- "efg"
+```
+
+ Required meta information is specified for each site (in rows) and a number of variables:
+
+- `lat` for latitude (decimal degrees)
+- `lon` for longitude (decimal degrees) - this is only used for data ingestion but not for the P-model simulation with `rsofun`.
+- `elv` for elevation (m a.s.l.)
+- `year_start` and `year_end` specifying years covered by the simulation
+- `whc` for the soil water holding capacity
+- `koeppen_code` to group sites for evaluation by Koeppen-Geiger climate zones.
+
+Let's create this info.
+```{r}
+siteinfo <- tibble(
+  sitename = "efg",
+  lon = 117.369258403,
+  lat = 30.026229678,
+  elv = 330,
+  year_start = 2015,
+  year_end = 2015,
+  whc = 250
+  )
+```
+
+## Simulation settings
+
+Specify additional simulation parameters that are identical for all site-scale simulations.
+```{r}
+params_siml <- list(
+  spinup             = TRUE,
+  spinupyears        = 10,
+  recycle            = 1,
+  soilmstress        = TRUE,
+  tempstress         = TRUE,
+  calc_aet_fapar_vpd = FALSE,
+  in_ppfd            = TRUE,
+  in_netrad          = FALSE,
+  outdt              = 1,
+  ltre               = FALSE,
+  ltne               = FALSE,
+  ltrd               = FALSE,
+  ltnd               = FALSE,
+  lgr3               = TRUE,
+  lgn3               = FALSE,
+  lgr4               = FALSE
+	)
+```
+
+Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters), global simulation parameters are wrapped inside an additional column `params_siml`, added to the site meta info dataframe.
+```{r}
+siteinfo <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
+```
+
+
+## Define model parameters
+
+First, let's do it by hand (calibration of parameters is shown later).
+```{r}
+params_modl <- list(
+	kphio           = 0.09423773,
+	soilm_par_a     = 0.33349283,
+	soilm_par_b     = 1.45602286,
+	vpdstress_par_a = 999,
+	vpdstress_par_b = 999,
+	vpdstress_par_m = 999
+	)
+```
+
+## Define soil parameters
+
+For now, this is implemented as an illustration. Should be made site-specific. Values entered here take no effect.
+```{r}
+df_soiltexture <- bind_rows(
+  top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
+  bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
+)
+```
+
+## Get input
+
+Forcing data was collected as described in `ingestr/vignettes_add/get_sitedata_nonetwork.Rmd`.
+```{r}
+secs_per_tstep <- 60 * 60 * 24
+forcing <- read_csv("~/data/neecf/climate_data/climate_data_collected.csv") %>% 
+  mutate(prec = prec / secs_per_tstep, ppfd = ppfd / secs_per_tstep)
+```
+
+CO2 is separate.
+```{r}
+df_co2 <- ingest_bysite(
+  sitename  = "efg",
+  source  = "co2_mlo",
+  year_start= 2015,
+  year_end  = 2015,
+  verbose = FALSE
+  )
+```
+
+
+
+## Run the model
+
+Run the model for all the sites specified in the first step.
+```{r}
+## run for a single site
+mod <- run_pmodel_f_bysite( 
+  "efg", 
+  siteinfo$params_siml[[1]], 
+  siteinfo, 
+  forcing, 
+  df_soiltexture, 
+  params_modl = params_modl, 
+  makecheck = TRUE 
+  )
+```
+
+Check.
+```{r}
+forcing %>% 
+  ggplot(aes(date, fapar)) + 
+  geom_line()
+
+forcing %>% 
+  ggplot(aes(date, ppfd)) + 
+  geom_line()
+
+mod %>% 
+  ggplot(aes(date, gpp)) + 
+  geom_line()
+
+mod %>% 
+  ggplot(aes(date, vcmax25)) + 
+  geom_line()
+```

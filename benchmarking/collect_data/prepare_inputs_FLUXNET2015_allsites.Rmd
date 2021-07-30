@@ -1,0 +1,160 @@
+---
+title: "Prepare FLUXNET 2015 ensemble forcing and evaluation data"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rsofun)
+library(ingestr)
+```
+
+## Forcing data
+
+Collect data as described also [here](https://stineb.github.io/rsofun/articles/prepare_inputs_rsofun.html#network-site-ensemble-1).
+
+### FLUXNET meteo data
+
+```{r}
+ddf_fluxnet <- ingestr::ingest(
+  siteinfo  = ingestr::siteinfo_fluxnet2015,
+  source    = "fluxnet",
+  getvars   = list(temp = "TA_F_DAY", prec = "P_F", vpd  = "VPD_F_DAY", ppfd = "SW_IN_F", patm = "PA_F"),
+  dir       = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
+  settings  = list(dir_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/", getswc = FALSE),
+  timescale = "d"
+  )
+```
+
+### Cloud cover from CRU
+
+Some meteo data is not available from FLUXNET. Extract it from CRU global climate files instead.
+```{r}
+ddf_cru <- ingestr::ingest(
+  siteinfo  = siteinfo_fluxnet2015,
+  source    = "cru",
+  getvars   = "ccov",
+  dir       = "~/data/cru/ts_4.01/"
+  )
+```
+
+```{r}
+ddf_meteo <- ddf_fluxnet %>% 
+  tidyr::unnest(data) %>% 
+  left_join(
+    ddf_cru %>% 
+      tidyr::unnest(data),
+    by = c("sitename", "date")
+  ) %>% 
+  group_by(sitename) %>% 
+  tidyr::nest() %>% 
+  dplyr::filter(!(sitename %in% c("DE-Akm", "US-ORv", "DE-RuS")))
+```
+
+
+### MODIS fAPAR
+
+```{r}
+settings_modis <- get_settings_modis(
+  bundle            = "modis_fpar",
+  data_path         = "~/data/modis_subsets/",
+  method_interpol   = "loess",
+  keep              = TRUE,
+  overwrite_raw     = FALSE,
+  overwrite_interpol= TRUE,
+  n_focal           = 0
+  )
+
+df_modis_fpar <- ingest(
+  siteinfo_fluxnet2015 %>% dplyr::filter(!(sitename %in% c("DE-Akm", "US-ORv", "DE-RuS"))), 
+  source = "modis",
+  settings = settings_modis, 
+  parallel = FALSE,
+  ncores = 1  # allows parallelised download
+  )
+
+df_modis_fpar <- df_modis_fpar %>% 
+  mutate(data = purrr::map(data, ~rename(., fapar = modisvar_filled)))
+```
+
+### CO2
+
+Ingesting CO2 data is particularly simple. We can safely assume it's well mixed in the atmosphere (independent of site location), and we can use a annual mean value for all days in respective years.  
+```{r}
+df_co2 <- ingestr::ingest(
+  siteinfo_fluxnet2015 %>% dplyr::filter(!(sitename %in% c("DE-Akm", "US-ORv", "DE-RuS"))),
+  source  = "co2_mlo",
+  verbose = FALSE
+  )
+```
+
+### Save and nest
+
+Save the flat file.
+```{r}
+write_csv(ddf_forcing, path = "~/data/stocker20gmd_outputs/ddf_forcings_fluxnet2015_allsites.csv")
+```
+
+## Collect all drivers
+
+- `df_soiltexture`: dummy for all the same. Using WHC as a site parameter instead.
+```{r}
+df_soiltexture <- bind_rows(
+  top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
+  bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
+)
+```
+
+Define simulation parameters common for all simulations:
+```{r}
+params_siml <- list(
+  spinup             = TRUE,
+  spinupyears        = 10,
+  recycle            = 1,
+  soilmstress        = TRUE,
+  tempstress         = TRUE,
+  calc_aet_fapar_vpd = FALSE,
+  in_ppfd            = TRUE,
+  in_netrad          = FALSE,
+  outdt              = 1,
+  ltre               = FALSE,
+  ltne               = FALSE,
+  ltrd               = FALSE,
+  ltnd               = FALSE,
+  lgr3               = TRUE,
+  lgn3               = FALSE,
+  lgr4               = FALSE
+	)
+```
+
+Finally, all input data can be collected by:
+```{r}
+df_drivers_fluxnet2015_allsites <- collect_drivers_sofun( 
+  siteinfo       = siteinfo_fluxnet2015 %>% dplyr::filter(!(sitename %in% c("DE-Akm", "US-ORv", "DE-RuS"))),
+  params_siml    = params_siml,
+  meteo          = ddf_meteo, 
+  fapar          = df_modis_fpar,
+  co2            = df_co2,
+  df_soiltexture = df_soiltexture
+  )
+```
+
+Save the full nested object.
+```{r}
+save(df_drivers_fluxnet2015_allsites, file = "~/data/rsofun_benchmarking/df_drivers_fluxnet2015_allsites.Rdata")
+```
+
+
+## Appendix
+
+### Site list
+
+```{r}
+siteinfo_fluxnet2015 %>% 
+    dplyr::filter(sitename %in% usesites)%>% 
+  kable()
+```

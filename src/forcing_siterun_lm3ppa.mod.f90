@@ -17,20 +17,20 @@ module md_forcing_lm3ppa
   public climate_type, getclimate, getco2
 
   type :: climate_type
-     integer :: year          ! Year
-     integer :: doy           ! day of the year
-     real    :: hod           ! hour of the day
-     real    :: PAR           ! umol m-2 s-1
-     real    :: radiation     ! W/m2
-     real    :: Tair          ! air temperature,  K
-     real    :: Tsoil         ! soil temperature, K
-     real    :: RH            ! relative humidity
-     real    :: rain          ! kgH2O m-2 s-1
-     real    :: windU         ! wind velocity (m s-1)
-     real    :: P_air         ! pa
-     real    :: CO2           ! mol CO2/mol dry air
-     real    :: soilwater     ! soil moisture, vol/vol
-     real    :: vpd           ! vapour pressure deficit (Pa)
+    integer :: year          ! Year
+    integer :: doy           ! day of the year
+    real    :: hod           ! hour of the day
+    real    :: PAR           ! umol m-2 s-1
+    real    :: radiation     ! W/m2
+    real    :: Tair          ! air temperature,  K
+    real    :: Tsoil         ! soil temperature, K
+    real    :: RH            ! relative humidity
+    real    :: rain          ! kgH2O m-2 s-1
+    real    :: windU         ! wind velocity (m s-1)
+    real    :: P_air         ! pa
+    real    :: CO2           ! mol CO2/mol dry air
+    real    :: soilwater     ! soil moisture, vol/vol
+    real    :: vpd           ! vapour pressure deficit (Pa)
   end type climate_type
 
 contains

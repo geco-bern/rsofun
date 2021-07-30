@@ -15,11 +15,11 @@ void F77_NAME(pmodel_f)(
     int    *recycle,
     int    *firstyeartrend,
     int    *nyeartrend,
-    int    *soilmstress,
-    int    *tempstress,
-    int    *calc_aet_fapar_vpd,
-    int    *in_ppfd,
-    int    *in_netrad,
+    int    *secs_per_tstep,
+    _Bool  *soilmstress,
+    _Bool  *tempstress,
+    _Bool  *in_ppfd,
+    _Bool  *in_netrad,
     int    *outdt,
     int    *ltre,
     int    *ltne,
@@ -46,9 +46,9 @@ extern SEXP pmodel_f_C(
     SEXP recycle,
     SEXP firstyeartrend,
     SEXP nyeartrend,
+    SEXP secs_per_tstep,
     SEXP soilmstress,
     SEXP tempstress,
-    SEXP calc_aet_fapar_vpd,
     SEXP in_ppfd,
     SEXP in_netrad,
     SEXP outdt,
@@ -73,7 +73,7 @@ extern SEXP pmodel_f_C(
     const int nt = INTEGER(n)[0] ;
 
     // Specify output
-    SEXP output = PROTECT( allocMatrix(REALSXP, nt, 5) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns
+    SEXP output = PROTECT( allocMatrix(REALSXP, nt, 13) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns
 
     // Fortran subroutine call
     F77_CALL(pmodel_f)(
@@ -82,9 +82,9 @@ extern SEXP pmodel_f_C(
         INTEGER(recycle),
         INTEGER(firstyeartrend),
         INTEGER(nyeartrend),
+        INTEGER(secs_per_tstep),
         LOGICAL(soilmstress),
         LOGICAL(tempstress),
-        LOGICAL(calc_aet_fapar_vpd),
         LOGICAL(in_ppfd),
         LOGICAL(in_netrad),
         INTEGER(outdt),

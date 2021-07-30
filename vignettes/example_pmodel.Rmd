@@ -17,27 +17,29 @@ library(ggplot2)
 
 ## Example using rsofun for P-model simulations
 
-The following describes the use of `rsofun` for an ensemble of site-scale P-model simulations, including steps for model calibration and evaluation (benchmarking). `rsofun` is designed in a modular and hierarchical fashion. This enables multiple setups within the same modelling framework. The P-model implementation in `rsofun` is described in Stocker et al. (2020) *Geosci. Mod. Dev.*. 
+The following describes the use of `rsofun` for an ensemble of site-scale P-model simulations, including steps for model calibration and evaluation (benchmarking). `rsofun` is designed in a modular and hierarchical fashion. This enables multiple setups within the same modelling framework. The P-model implementation in `rsofun` is described in Stocker et al. (2020) *Geosci. Mod. Dev.*.
 
-In the P-model setup, the model requires time series of daily meteorological data as input and is calibrated against observational GPP data. This example describes simulations at a subset of FLUXNET 2015 Tier 1 sites, using GPP based on the night-time flux partitioning method as calibration target and benchmark (no worries, an out-of-sample calibration/evaluation function is available, too). 
+In the P-model setup, the model requires time series of daily meteorological data as input and is calibrated against observational GPP data. This example describes simulations at a subset of FLUXNET 2015 Tier 1 sites, using GPP based on the night-time flux partitioning method as calibration target and benchmark (no worries, an out-of-sample calibration/evaluation function is available, too).
 
 ### Site selection and meta data
 
 We manually define a subset of sites that are part of the FLUXNET 2015 Tier 1 set of sites:
+
 ```{r}
 mysites <- "FR-Pue"
 ```
 
 A small number of meta data variables have to be specified for each site specifically to define the simulation years. This information is also used for input, calibration, and evaluation data ingestion. Required meta information is specified for each site (in rows) and a number of variables:
 
-- `lat` for latitude (decimal degrees)
-- `lon` for longitude (decimal degrees) - this is only used for data ingestion but not for the P-model simulation with `rsofun`.
-- `elv` for elevation (m a.s.l.)
-- `year_start` and `year_end` specifying years covered by the simulation
-- `whc` for the soil water holding capacity
-- `koeppen_code` to group sites for evaluation by Koeppen-Geiger climate zones.
+-   `lat` for latitude (decimal degrees)
+-   `lon` for longitude (decimal degrees) - this is only used for data ingestion but not for the P-model simulation with `rsofun`.
+-   `elv` for elevation (m a.s.l.)
+-   `year_start` and `year_end` specifying years covered by the simulation
+-   `whc` for the soil water holding capacity
+-   `koeppen_code` to group sites for evaluation by Koeppen-Geiger climate zones.
 
-This information is provided by the data frame `siteinfo_fluxnet2015` which is available as part of the ingestr package. 
+This information is provided by the data frame `siteinfo_fluxnet2015` which is available as part of the ingestr package.
+
 ```{r}
 siteinfo <- ingestr::siteinfo_fluxnet2015 %>%
   dplyr::filter(sitename %in% mysites) %>% 
@@ -53,22 +55,28 @@ siteinfo <- ingestr::siteinfo_fluxnet2015 %>%
 ### Simulation settings
 
 <!-- Create a site meta info table that contains all the site-specific information that is used to force site-simulations (e.g. starting year, number of simulations years, elevation, etc.). For FLUXNET2015 data, required meta info is provided by the `rsofun` package (data frame `rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015`). -->
+
 <!-- ```{r} -->
+
 <!-- path_siteinfo <- "~/siteinfo_example_fortran.csv" -->
+
 <!-- siteinfo <- rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015 %>%  -->
+
 <!--   dplyr::filter(sitename %in% mysites) %>% -->
+
 <!--   write_csv(path = path_siteinfo) -->
+
 <!-- ``` -->
 
 Specify additional simulation parameters that are identical for all site-scale simulations.
+
 ```{r}
 params_siml <- list(
   spinup             = TRUE,
   spinupyears        = 10,
   recycle            = 1,
   soilmstress        = FALSE,
-  tempstress         = FALSE,
-  calc_aet_fapar_vpd = FALSE,
+  tempstress         = TRUE,
   in_ppfd            = TRUE,
   in_netrad          = FALSE,
   outdt              = 1,
@@ -83,6 +91,7 @@ params_siml <- list(
 ```
 
 Run `prepare_setup_sofun()` to define the simulation settings that contain all the information specified by the two steps above (meta info, and simulation parameters), global simulation parameters are wrapped inside an additional column `params_siml`, added to the site meta info dataframe.
+
 ```{r}
 siteinfo <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
 ```
@@ -90,20 +99,21 @@ siteinfo <- prepare_setup_sofun(siteinfo = siteinfo, params_siml = params_siml)
 ### Define model parameters
 
 First, let's do it by hand (calibration of parameters is shown later).
+
 ```{r}
 params_modl <- list(
 	kphio           = 0.05,
 	soilm_par_a     = 1.0,
 	soilm_par_b     = 0.0,
-	vpdstress_par_a = 0.2,
-	vpdstress_par_b = 0.2,
-	vpdstress_par_m = 5
+	tau_acclim_tempstress = 15,
+	par_shape_tempstress = 0.0  # effectively no additional minimum temperature stress
 	)
 ```
 
 ### Define soil parameters
 
 For now, this is implemented as an illustration. Should be made site-specific. Values entered here take no effect.
+
 ```{r}
 df_soiltexture <- bind_rows(
   top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
@@ -116,13 +126,25 @@ df_soiltexture <- bind_rows(
 Now, meteorological forcing data and fAPAR data for each time step have to be collected. These steps are described in the vignette `vignettes/prepare_inputs_rsofun.Rmd` for FLUXNET 2015 simulations. All forcing data, combined with model and simulations parameters are collected into one big nested data frame `df_drivers`, which stores all required information by rows for each site. An example of how this looks like is provided as part of the rsofun package.
 
 ```{r}
-rsofun::df_drivers
+df_drivers <- rsofun::df_drivers
+df_drivers
 ```
 
+The units of fluxes have changed, but the object `df_drivers` has not been adjusted accordingly. Do it "by hand".
+
+```{r}
+df_drivers$forcing[[1]]$prec <- rsofun::df_drivers$forcing[[1]]$prec / (60*60*24)
+df_drivers$forcing[[1]]$rain <- df_drivers$forcing[[1]]$prec
+df_drivers$forcing[[1]]$snow <- 0.0
+df_drivers$forcing[[1]]$ppfd <- rsofun::df_drivers$forcing[[1]]$ppfd / (60*60*24)
+df_drivers$forcing[[1]]$tmin <- rsofun::df_drivers$forcing[[1]]$temp - 5.0 # for demo
+df_drivers$forcing[[1]]$tmax <- rsofun::df_drivers$forcing[[1]]$temp + 5.0 # for demo
+```
 
 ### Run the model
 
 Run the model for all the sites specified in the first step.
+
 ```{r}
 ## run for a single site
 mod <- run_pmodel_f_bysite( 
@@ -137,6 +159,7 @@ mod <- run_pmodel_f_bysite(
 ```
 
 Run for the full set of sites
+
 ```{r}
 ptm <- proc.time()
 df_output <- runread_pmodel_f(
@@ -168,28 +191,33 @@ print(ptm)
 
 ```{r}
 ggplot() +
-  geom_line(data = df_output$data[[1]], aes(x=date, y=gpp), color = 'black') + 
-  labs(title = df_output$sitename[[1]], subtitle = "SOFUN output")
+  geom_line(data = df_output_nostress$data[[1]], aes(x=date, y=gpp), color = 'black') + 
+  labs(title = df_output_stress$sitename[[1]], subtitle = "SOFUN output") +
+  xlim(ymd("01-01-2008"), ymd("01-01-2010"))
 ```
 
 ### Calibrate
 
 Define calibration settings.
+
 ```{r}
 settings_calib <- list(
   method              = "gensa",
   targetvars          = c("gpp"),
   timescale           = list( gpp = "d" ),
-  maxit               = 5, # (5 for gensa) (30 for optimr)    #
+  maxit               = 5000, # (5 for gensa) (30 for optimr)    #
   sitenames           = "FR-Pue",
   metric              = "rmse",
   dir_results         = "./",
-  name                = "ORG",
-  par                 = list( kphio = list( lower=0.02, upper=0.07, init=0.0496 ) )
+  name                = "BRC",
+  par                 = list( kphio                 = list( lower=0.02, upper=0.07, init=0.0496 ),
+                              tau_acclim_tempstress = list( lower=5, upper=60, init=15 ),
+                              par_shape_tempstress  = list( lower=0.0, upper=0.2, init=0.1 ))
  )
 ```
 
 Use the [ingestr](https://github.com/stineb/ingestr) package once again, now for collecting calibration target data. I.e., GPP based on the nighttime flux decomposition method.
+
 ```{r warning=FALSE, message=FALSE}
 settings_ingestr_fluxnet <- list(
   dir_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/", 
@@ -211,6 +239,7 @@ ddf_fluxnet_gpp <- ingestr::ingest(
 ```
 
 Calibrate the model.
+
 ```{r warning=FALSE, message=FALSE}
 set.seed(1982)
 settings_calib <- calib_sofun(
@@ -221,14 +250,23 @@ settings_calib <- calib_sofun(
 ```
 
 The calibrated parameters are returned by `calib_sofun()` as part of the list:
+
 ```{r}
 print(settings_calib$par_opt)
 ```
 
+Update model parameters.
+
+```{r}
+params_modl <- update_params(params_modl, settings_calib)
+```
+
+Run the model again with updated parameters.
 
 ### Evaluate
 
 Run the model once again with these parameters and evaluate results.
+
 ```{r warning=FALSE, message=FALSE}
 params_modl$kphio <- settings_calib$par_opt["kphio"]
 
@@ -240,8 +278,8 @@ df_output <- runread_pmodel_f(
      )
 ```
 
-
 Get evaluation data (benchmarking data).
+
 ```{r message=FALSE, warning=FALSE}
 ## get data for idfferent time scales separately
 settings_fluxnet <- list(
@@ -283,6 +321,7 @@ adf_eval <- ingestr::ingest(
 ```
 
 Use rsofun to create a standardised object used for benchmarking the model output.
+
 ```{r}
 settings_eval <- list(
   benchmark = list( gpp = c("fluxnet") ),
@@ -298,11 +337,12 @@ obs_eval <- collect_obs_eval(
   )
 ```
 
-`obs_eval` is now a list of data frames for different temporal resolutions. The data frames have rows for sites and time series for each site nested inside the column `data`. 
+`obs_eval` is now a list of data frames for different temporal resolutions. The data frames have rows for sites and time series for each site nested inside the column `data`.
 
 `df_output` is the model output, also a data frame with rows for sites and time series for each site nested inside a column named `data`.
 
 And finally do the evaluation.
+
 ```{r warning=FALSE, message=FALSE}
 out_eval <- eval_sofun( 
   df_output, 
@@ -315,11 +355,13 @@ out_eval <- eval_sofun(
 ```
 
 Print some results.
+
 ```{r}
 out_eval$gpp$fluxnet$metrics$xdaily_pooled
 ```
 
 Get the [rbeni](https://github.com/stineb/rbeni) R package for nice plotting functions that can be used with the output of `eval_sofun()`.
+
 ```{r}
 library(rbeni)
 gg <- out_eval$gpp$fluxnet$data$xdf %>% 

@@ -1,0 +1,243 @@
+---
+title: "Benchmark rsofun tag v3.3"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+library(rsofun)
+library(dplyr)
+library(readr)
+library(ingestr)
+library(ggplot2)
+library(knitr)
+```
+
+## Description
+
+This is to run the same evaluation of GPP simulated by the P-model as done for [Stocker et al. (2020)](https://gmd.copernicus.org/articles/13/1545/2020/), using data from the FLUXNET2015 Tier 1 ensemble. Model forcing and observational GPP data are prepared as detailed in the vignette `prepare_inputs_rsofun.Rmd`. Respective files are available on Euler (`~/data/rsofun_benchmarking/df_drivers_fluxnet2015.Rdata`)
+
+This assumes that the model is already calibrated (calibratable parameters are prescribed).
+
+Note: For simulations used in Stocker et al. (2020), forcing data was written to files and read by Fortran. With the updated rsofun model, this is passed through R, using an object formatted like `rsofun::df_drivers`.
+
+## Load data
+
+Load drivers data frame (created by `prepare_inputs_FLUXNET2015_ensemble.Rmd`).
+```{r}
+load("~/data/rsofun_benchmarking/df_drivers_fluxnet2015.Rdata")
+```
+
+There seem to be some leap year dates which create problems for rsofun. Drop Feb. 29 dates.
+```{r}
+df_drivers_fluxnet2015 <- df_drivers_fluxnet2015 %>% 
+  dplyr::select(sitename, forcing) %>% 
+  unnest(forcing) %>% 
+  dplyr::filter(!(month(date)==2 & mday(date)==29)) %>% 
+  
+  ## model requires flux per seconds now
+  mutate(prec = prec / (60*60*24), ppfd = ppfd / (60*60*24)) %>% 
+  
+  ## assuming all precipitation in liquid form
+  mutate(rainf = prec, snowf = 0) %>% 
+  
+  group_by(sitename) %>% 
+  nest() %>%
+  rename(forcing = data) %>% 
+  right_join(
+    df_drivers_fluxnet2015 %>% 
+      dplyr::select(-forcing),
+    by = "sitename"
+  ) %>% 
+  ungroup()
+
+# save(df_drivers_fluxnet2015, file = "~/data/rsofun_benchmarking/df_drivers_fluxnet2015.Rdata")
+```
+
+## Calibrate model
+
+Define calibration sites.
+```{r}
+flue_sites <- readr::read_csv( "~/data/flue/flue_stocker18nphyt.csv" ) %>%
+              dplyr::filter( !is.na(cluster) ) %>% 
+              distinct(site) %>% 
+              pull(site)
+
+calibsites <- siteinfo_fluxnet2015 %>% 
+  dplyr::filter(!(sitename %in% c("DE-Akm", "IT-Ro1"))) %>%  # excluded because fapar data could not be downloaded (WEIRD)
+  # dplyr::filter(!(sitename %in% c("AU-Wom"))) %>%  # excluded because no GPP data was found in FLUXNET file
+  dplyr::filter(sitename != "FI-Sod") %>%  # excluded because some temperature data is missing
+  dplyr::filter( c4 %in% c(FALSE, NA) & classid != "CRO" & classid != "WET" ) %>%
+  dplyr::filter( sitename %in% flue_sites ) %>%
+  pull(sitename)
+```
+
+Define calibration settings.
+```{r}
+settings_calib <- list(
+  method              = "gensa",
+  targetvars          = c("gpp"),
+  timescale           = list( gpp = "d" ),
+  maxit               = 5,
+  sitenames           = calibsites,
+  metric              = "rmse",
+  dir_results         = "./",
+  name                = "FULL",
+  par                 = list( kphio       = list( lower=0.03, upper=0.1, init= 0.05 ),
+                              soilm_par_a = list( lower=0.0,  upper=1.0, init=0.0 ),
+                              soilm_par_b = list( lower=0.0,  upper=1.5, init=0.6 ) )
+ )
+```
+
+Use the [ingestr](https://github.com/stineb/ingestr) package once again, now for collecting calibration target data. I.e., GPP based on the nighttime flux decomposition method.
+```{r warning=FALSE, message=FALSE}
+settings_ingestr_fluxnet <- list(
+  dir_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/", 
+  getswc = FALSE,
+  filter_ntdt = TRUE,
+  threshold_GPP = 0.8,
+  remove_neg = FALSE
+  )
+
+filn <- "~/data/rsofun_benchmarking/ddf_fluxnet_gpp.Rdata"
+if (!file.exists(filn)){
+  ddf_fluxnet_gpp <- ingestr::ingest(
+    siteinfo = siteinfo_fluxnet2015 %>% 
+      dplyr::filter(sitename %in% calibsites),
+    source    = "fluxnet",
+    getvars = list(gpp = "GPP_NT_VUT_REF",
+                   gpp_unc = "GPP_NT_VUT_SE"),
+    dir = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
+    settings = settings_ingestr_fluxnet,
+    timescale = "d"
+    )
+  save(ddf_fluxnet_gpp, file = filn)
+} else {
+  load(filn)
+}
+```
+
+Calibrate the model.
+```{r warning=FALSE, message=FALSE}
+set.seed(1982)
+settings_calib <- calib_sofun(
+  df_drivers = dplyr::filter(df_drivers_fluxnet2015, sitename %in% calibsites),  # use only one site
+  ddf_obs = ddf_fluxnet_gpp,
+  settings = settings_calib
+  )
+```
+
+The calibrated parameters are returned by `calib_sofun()` as part of the list:
+```{r}
+print(settings_calib$par_opt)
+save(settings_calib, file = "./settings_calib.Rdata")
+```
+
+Update model parameters.
+```{r}
+params_modl <- list(
+	kphio           = 0.05,
+	soilm_par_a     = 1.0,
+	soilm_par_b     = 0.0,
+	vpdstress_par_a = 9999,
+	vpdstress_par_b = 9999,
+	vpdstress_par_m = 9999
+	)
+params_modl <- update_params(params_modl, settings_calib)
+```
+
+
+## Run model
+
+```{r warning=FALSE, message=FALSE}
+df_output <- runread_pmodel_f(
+     df_drivers_fluxnet2015,
+     params_modl = params_modl, 
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+save(df_output, file = "~/data/rsofun_benchmarking/df_output_v3.3.Rdata")
+```
+
+## Run evaluation
+
+Do evaluation only for sites where simulation was run.
+```{r}
+evalsites <- df_output %>% 
+  mutate(ntsteps = purrr::map_dbl(data, ~nrow(.))) %>% 
+  dplyr::filter(ntsteps > 0) %>% 
+  pull(sitename)
+```
+
+Load standard benchmarking file with observational data for evaluation.
+```{r}
+load("~/data/rsofun_benchmarking/obs_eval_fluxnet2015.Rdata")
+```
+
+Define evaluation settings.
+```{r}
+settings_eval <- list(
+  benchmark = list( gpp = c("fluxnet") ),
+  sitenames = evalsites,
+  agg       = 8  # An integer specifying the number of days used to define the width of bins for daily data aggregated to several days
+  )
+```
+
+And finally run the evaluation.
+```{r warning=FALSE, message=FALSE, error=FALSE}
+out_eval <- eval_sofun( 
+  df_output, 
+  settings_eval, 
+  settings_sims, 
+  obs_eval = obs_eval, 
+  overwrite = TRUE, 
+  light = FALSE 
+  )
+save(df_output, file = "~/data/rsofun_benchmarking/out_eval_v3.3.Rdata")
+```
+
+## Evaluation results
+
+### Metrics table
+
+```{r}
+out_eval$gpp$fluxnet$metrics %>% 
+  bind_rows(.id = "Level") %>% 
+  kable
+```
+
+### Visualisations
+
+```{r message=FALSE, warning=FALSE}
+out_eval$gpp$fluxnet$plot$gg_modobs_xdaily
+out_eval$gpp$fluxnet$plot$gg_modobs_spatial_annual
+```
+## Run model for all sites.
+
+`"~/data/rsofun_benchmarking/df_drivers_fluxnet2015_allsites.Rdata"` is prepared by `benchmarking/collect_data/prepare_inputs_FLUXNET2015_allsites.Rmd`.
+
+```{r warning=FALSE, message=FALSE}
+load("~/data/rsofun_benchmarking/df_drivers_fluxnet2015_allsites.Rdata")
+df_output_allsites <- runread_pmodel_f(
+     df_drivers_fluxnet2015,
+     params_modl = params_modl, 
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+save(df_output_allsites, file = "~/data/rsofun_benchmarking/df_output_allsites_v3.3.Rdata")
+```
+
+
+
+## Appendix
+
+### Site list
+
+```{r}
+siteinfo_fluxnet2015 %>% 
+  dplyr::filter(sitename %in% evalsites) %>% 
+  kable()
+```

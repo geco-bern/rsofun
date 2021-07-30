@@ -27,6 +27,7 @@ module md_waterbal
   use md_forcing_pmodel, only: climate_type
   use md_grid, only: gridtype
   use md_interface_pmodel, only: myinterface
+  use md_sofunutils, only: daily2monthly, radians, dgsin, dgcos, degrees
 
   implicit none
 
@@ -50,9 +51,6 @@ module md_waterbal
   ! real :: kGsc              ! solar constant, W/m^2 (Kopp & Lean, 2011)
   real :: kw                ! entrainment factor (Lhomme, 1997; Priestley & Taylor, 1972)
   real :: komega            ! longitude of perihelion for 2000 CE, degrees (Berger, 1978)
-  real :: vpdstress_par_a   ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
-  real :: vpdstress_par_b   ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
-  real :: vpdstress_par_m   ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -125,8 +123,12 @@ contains
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
       !---------------------------------------------------------
-      out_snow_rain = get_snow_rain( climate%dprec + tile_fluxes(lu)%canopy%dcn, climate%dsnow, climate%dtemp, &
-        tile(lu)%soil%phy%snow )
+      out_snow_rain = get_snow_rain( &
+        climate%dprec * myinterface%params_siml%secs_per_tstep + tile_fluxes(lu)%canopy%dcn, &
+        climate%dsnow * myinterface%params_siml%secs_per_tstep, &
+        climate%dtemp, &
+        tile(lu)%soil%phy%snow &
+        )
       tile(lu)%soil%phy%snow = out_snow_rain%snow_updated 
 
       ! Update soil moisture
@@ -180,8 +182,6 @@ contains
     ! - daily extraterrestrial solar radiation (dra), J/m^2
     ! - daily PPFD (dppfd), mol/m^2
     !-------------------------------------------------------------------------  
-    use md_sofunutils, only: daily2monthly
-
     ! arguments
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(gridtype), intent(inout)                         :: grid
@@ -209,12 +209,12 @@ contains
     !---------------------------------------------------------
     ! 4. Calculate declination angle (delta), degrees
     !---------------------------------------------------------
-    delta = calc_delta( grid%lambda )
+    grid%decl_angle = calc_decl_angle( grid%lambda )
 
     !---------------------------------------------------------
     ! 5. Calculate variable substitutes (ru and rv), unitless
     !---------------------------------------------------------
-    call calc_ru_rv( delta, grid%lat )
+    call calc_ru_rv( grid%decl_angle, grid%lat )
 
     !---------------------------------------------------------
     ! 6. Calculate the sunset hour angle (hs), degrees
@@ -222,9 +222,9 @@ contains
     hs = calc_hs( ru, rv )
 
     !---------------------------------------------------------
-    ! 6.a Calculate day length from sunset hour angle, h
+    ! 6.a Calculate day length from sunset hour angle, seconds
     !---------------------------------------------------------
-    tile_fluxes(:)%canopy%dayl = 24.0 * hs / 180.0  ! hs is in degrees (pi = 180 deg)
+    grid%dayl = 24.0 * 60 * 60 * hs / 180.0  ! hs is in degrees (pi = 180 deg)
 
     !---------------------------------------------------------
     ! 7. Calculate daily extraterrestrial solar radiation (dra), J/m^2/d
@@ -264,7 +264,7 @@ contains
       ! Net radiation positive all day
       hn = 180.0
     else
-      !hn = degrees( dacos((tile_fluxes(lu)%canopy%rnl - rw*ru)/(rw*rv)) )
+      !hn = degrees( dacos((tile_fluxes%canopy%rnl - rw*ru)/(rw*rv)) )
       hn = degrees( acos((tile_fluxes(1)%canopy%rnl - rw*ru)/(rw*rv)) )   ! use acos with single precision compilation
     end if
 
@@ -290,7 +290,7 @@ contains
       print*,'true anomaly, nu: ', grid%nu
       print*,'true longitude, lambda: ', grid%lambda
       print*,'distance factor, dr: ', dr
-      print*,'declination, delta: ', delta
+      print*,'declination, grid%decl_angle: ', grid%decl_angle
       print*,'variable substitute, ru: ', ru
       print*,'variable substitute, rv: ', rv
       print*,'daily PPFD: ', tile_fluxes(:)%canopy%ppfd_splash
@@ -386,6 +386,8 @@ contains
     tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
       radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
     tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)
+
+    ! print*,'in waterbal: sw, hi, rx, rw, rv, hn, hi, ru ', sw, hi, rx, rw, rv, hn, hi, ru
     
     ! xxx debug
     if (splashtest) then
@@ -451,32 +453,6 @@ contains
   end function get_snow_rain
 
 
-  ! function calc_vdpstress( vpd ) result( out_vpdstress )
-  !   !/////////////////////////////////////////////////////////////////////////
-  !   ! Calculates a VPD stress function based on Oren et al. 2001 Eq. 4
-  !   ! Reference: 
-  !   ! Oren et al.: Sensitivity of mean canopy stomatal conductance
-  !   ! to vapor pressure deficit in a flooded Taxodium distichum L. forest:
-  !   ! hydraulic and non-hydraulic effectsOecologia (2001) 126:21–29, 
-  !   ! DOI 10.1007/s004420000497
-  !   !-------------------------------------------------------------------------
-  !   ! arguments
-  !   real, intent(in) :: vpd    ! Vapour pressure deficit (Pa)
-
-  !   ! function return variable
-  !   real :: out_vpdstress
-
-  !   if (vpd<1) then
-  !     out_vpdstress = 1.0
-  !   else
-  !     out_vpdstress = vpdstress_par_a * (vpdstress_par_b - vpdstress_par_m * (log(0.001) + log(vpd)))
-  !     if (out_vpdstress > 1.0) out_vpdstress = 1.0
-  !     if (out_vpdstress < 0.0) out_vpdstress = 0.0
-  !   end if
-
-  ! end function calc_vdpstress
-
-
   function calc_dr( nu ) result( dr )
     !---------------------------------------------------------
     ! Calculates distance factor (dr), unitless
@@ -497,7 +473,7 @@ contains
   end function calc_dr
 
 
-  function calc_delta( lambda ) result( delta )
+  function calc_decl_angle( lambda ) result( delta )
     !---------------------------------------------------------
     ! Calculates declination angle (delta), degrees
     !---------------------------------------------------------
@@ -511,7 +487,7 @@ contains
     delta = asin( dgsin( lambda ) * dgsin( keps ) )   ! xxx use asin with single-precision compilation
     delta = degrees( delta )
 
-  end function calc_delta
+  end function calc_decl_angle
 
 
   subroutine calc_ru_rv( delta, lat )
@@ -622,90 +598,9 @@ contains
     ! maximum snow melting rate (mm d-1) (Orth et al., 2013)
     maxmeltrate = 3.0
 
-    ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
-    vpdstress_par_a = myinterface%params_calib%vpdstress_par_a
-
-    ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
-    vpdstress_par_b = myinterface%params_calib%vpdstress_par_b
-
-    ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
-    vpdstress_par_m = myinterface%params_calib%vpdstress_par_m
-
-
   end subroutine getpar_modl_waterbal
 
   ! xxx put these functions into a 'contain' within calling SR?
-
-  function dgcos( x ) result( dgcos_out )
-    !----------------------------------------------------------------   
-    ! Calculates the cosine of an angle given in degrees. Equal to 
-    ! 'dsin' in Python version.
-    !----------------------------------------------------------------   
-    use md_params_core, only: pi
-
-    ! arguments
-    real, intent(in) :: x  ! angle, degrees (0-360)
-
-    ! function return value
-    real :: dgcos_out ! cosine value of x when x is in degrees
-
-    !dgcos = dcos(x*pi/180.0)
-    dgcos_out = cos(x*pi/180.0)  ! xxx use cos with single-precision compilation
-
-  end function dgcos
-
-
-  function dgsin( x ) result( dgsin_out )
-    !----------------------------------------------------------------   
-    ! Calculates the sinus of an angle given in degrees. Equal to 
-    ! 'dsin' in Python version.
-    !----------------------------------------------------------------   
-    use md_params_core, only: pi
-
-    ! arguments
-    real, intent(in) :: x  ! angle, degrees (0-360)
-
-    ! function return value
-    real :: dgsin_out ! sinus value of x when x is in degrees
-
-    !dgsin_out = dsin(x*pi/180.0)
-    dgsin_out = sin(x*pi/180.0)   ! xxx use cos with single-precision compilation
-
-  end function dgsin
-
-
-  function degrees( x ) result( degrees_out )
-    !----------------------------------------------------------------   
-    ! Returns corresponding degrees if x is given in radians
-    !----------------------------------------------------------------   
-    use md_params_core, only: pi
-
-    ! arguments
-    real, intent(in) :: x  ! angle, radians
-
-    ! function return value
-    real :: degrees_out
-
-    degrees_out = x*180.0/pi
-
-  end function degrees
-
-
-  function radians( x ) result( radians_out )
-    !----------------------------------------------------------------   
-    ! Returns corresponding radians if x is given in degrees
-    !----------------------------------------------------------------   
-    use md_params_core, only: pi
-
-    ! arguments
-    real, intent(in) :: x  ! angle, radians
-
-    ! function return value
-    real :: radians_out
-
-    radians_out = x*pi/180.0
-
-  end function radians
 
 
   subroutine get_berger_tls( day, grid )

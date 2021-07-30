@@ -51,444 +51,492 @@ module datatypes
                     FrittedClay = 5, &
                     Loam        = 6, &
                     Clay        = 7
-  integer, public, parameter :: PHEN_DECIDIOUS           = 0                     ! phenology type
-  integer, public, parameter :: PHEN_EVERGREEN           = 1                     ! phenology type
-  !===== Soil SOM reference C/N ratios
-  real, public, parameter :: CN0metabolicL               = 15.0 
-  real, public, parameter :: CN0structuralL              = 40.0 
-  !===== Physical constants
-  real, public, parameter :: TFREEZE                     = 273.16
-  real, public, parameter :: Rugas                       = 8.314472              ! universal gas constant, J K-1 mol-1
-  real, public, parameter :: mol_C                       = 12.0e-3               ! molar mass of carbon, kg
-  real, public, parameter :: mol_air                     = 28.96440e-3           ! molar mass of air, kg
-  real, public, parameter :: mol_CO2                     = 44.00995e-3           ! molar mass of CO2,kg
-  real, public, parameter :: mol_h2o                     = 18.0e-3               ! molar mass of water, kg
-  real, public, parameter :: cpair                       = 1010.
-  real, public, parameter :: H2OLv0                      = 2.501e6               !latent heat H2O (J/kg)
-  real, public, parameter :: p_sea                       = 101325.               !1.e5 atmospheric pressure  (Pa)
-  real, public, parameter :: DENS_H2O                    = 1000.                 ! kg m-3
 
-  !=============== PFT data type =============================================================
-  type spec_data_type
-    integer :: lifeform                           ! 0 for grasses, 1 for trees
-    integer :: phenotype                          ! phenology type: 0 for deciduous, 1 for evergreen
-    integer :: pt                                 ! photosynthetic physiology of species
-    !===== Leaf traits
-    real    :: LMA                                ! leaf mass per unit area, kg C/m2
-    real    :: leafLS                             ! leaf life span
-    real    :: alpha_L                            ! leaf turn over rate
-    real    :: LNA                                ! leaf Nitrogen per unit area, kg N/m2
-    real    :: LNbase                             ! basal leaf Nitrogen per unit area, kg N/m2, (Rubisco)
-    real    :: CNleafsupport                      ! leaf structural tissues, 175
-    real    :: leaf_size                          ! characteristic leaf size
-    real    :: alpha_phot                         ! photosynthesis efficiency
-    real    :: m_cond                             ! factor of stomatal conductance
-    real    :: Vmax                               ! max rubisco rate, mol m-2 s-1
-    real    :: Vannual                            ! annual productivity per unit area at full fun (kgC m-2 yr-1)
-    real    :: gamma_L                            ! leaf respiration coeficient (per yr)
-    real    :: gamma_LN                           ! leaf respiration coeficient per unit N
-    real    :: wet_leaf_dreg                      ! wet leaf photosynthesis down-regulation
-    !===== Root traits
-    real    :: rho_FR                             ! material density of fine roots (kgC m-3)
-    real    :: root_r                             ! radius of the fine roots, m
-    real    :: root_zeta                          ! e-folding parameter of root vertical distribution (m)
-    real    :: root_frac(max_lev)                 ! root fraction
-    real    :: SRA                                ! speific fine root area, m2/kg C
-    real    :: SRL                                ! specific root lenght
-    real    :: gamma_FR                           ! Fine root respiration rate, kgC kgC-1 yr-1
-    real    :: alpha_FR                           ! Turnover rate of Fine roots, fraction yr-1
-    real    :: Kw_root                            ! fine root water donductivity mol m m-2 s−1 MPa−1 ! 
-    real    :: root_perm
-    ! real    :: rho_N_up0                        ! maximum N uptake rate
-    ! real    :: N_roots0                         ! root biomass at half of max. N-uptake rate
-    real    :: NfixRate0                          ! Reference N fixation rate (kgN kgC-1 root)
-    real    :: NfixCost0                          ! Carbon cost of N fixation (kgC kgN-1)
-    !===== Wood traits
-    real    :: rho_wood                           ! woody density, kg C m-3 wood
-    real    :: gamma_SW                           ! sapwood respiration rate, kgC m-2 Acambium yr-1
-    real    :: taperfactor
-    !===== Allometry
-    real    :: alphaHT, thetaHT                   ! height = alphaHT * DBH ** thetaHT
-    real    :: alphaCA, thetaCA                   ! crown area = alphaCA * DBH ** thetaCA
-    real    :: alphaBM, thetaBM                   ! biomass = alphaBM * DBH ** thetaBM
-    real    :: kphio                              ! quantum yield efficiency calibratable
-    real    :: phiRL                              ! ratio of fine root to leaf area calibratable
-    real    :: phiCSA                             ! ratio of sapwood CSA to target leaf area
-    real    :: tauNSC                             ! residence time of C in NSC (to define storage capacity)
-    real    :: fNSNmax                            ! multilier for NSNmax
-    !===== Default C/N ratios
-    real    :: CNleaf0
-    real    :: CNroot0
-    real    :: CNsw0
-    real    :: CNwood0
-    real    :: CNseed0
-    !===== Phenology
-    real    :: tc_crit                            ! K, for turning OFF a growth season
-    real    :: tc_crit_on                         ! K, for turning ON a growth season
-    real    :: gdd_crit                           ! K, critical value of GDD5 for turning ON growth season
-    !===== Vital rates
-    real    :: maturalage                         ! the age that can reproduce
-    real    :: v_seed                             ! fracton of G_SF to G_F
-    real    :: seedlingsize                       ! size of the seedlings, kgC/indiv
-    real    :: prob_g,prob_e                      ! germination and establishment probabilities
-    real    :: mortrate_d_c                       ! yearly mortality rate in canopy
-    real    :: mortrate_d_u                       ! yearly mortality rate in understory
-    !===== Population level variables
-    real    :: LAImax, underLAImax                ! max. LAI
-    real    :: LAI_light                          ! light controlled maximum LAI
-    integer :: n_cc                               ! for calculating LAImax via cc%LAImax derived from cc%NSN
-    real    :: layerfrac                          ! species layer fraction
-    real    :: internal_gap_frac                  ! fraction of internal gaps in the canopy
-    ! "internal" gaps are the gaps that are created within the canopy by the branch fall processes.
-  end type
+ integer, public, parameter :: & ! phenology type
+ PHEN_DECIDIOUS = 0, &
+ PHEN_EVERGREEN = 1
 
-  !=============== Cohort level data type =============================================================
+ ! Soil SOM reference C/N ratios
+ real, public, parameter :: CN0metabolicL  = 15.0 ! 25.0 ! 15.0
+ real, public, parameter :: CN0structuralL = 40.0 ! 55.0 ! 35.0
 
-  type :: cohort_type
-    !===== Biological prognostic variables
-    integer :: ccID               = 0.0          ! cohort ID
-    integer :: species            = 0.0          ! vegetation species
-    real    :: gdd                = 0.0          ! for phenology
-    integer :: status             = 0.0          ! growth status of plant: 1 for ON, 0 for OFF
-    integer :: layer              = 1.0          ! the layer of this cohort (numbered from top, top layer=1)
-    integer :: firstlayer         = 0.0          ! 0 = never been in the first layer; 1 = at least one year in first layer
-    real    :: layerfrac          = 0.0          ! fraction of layer area occupied by this cohort
-    !===== Populatin structure
-    real    :: nindivs            = 1.0          ! density of vegetation, individuals/m2
-    real    :: age                = 0.0          ! age of cohort, years
-    real    :: Volume             = 0.0
-    real    :: dbh                = 0.0          ! diameter at breast height, m
-    real    :: height             = 0.0          ! vegetation height, m
-    real    :: crownarea          = 1.0          ! crown area, m2/individual
-    real    :: leafarea           = 0.0          ! total area of leaves, m2/individual
-    real    :: lai                = 0.0          ! crown leaf area index, m2/m2
-    real    :: BA                 = 0.0          ! tree basal area
-    real    :: BAL                = 0.0          ! basal area of larger trees
-    !===== Carbon pools
-    real    :: bl                 = 0.0          ! biomass of leaves, kg C/individual
-    real    :: br                 = 0.0          ! biomass of fine roots, kg C/individual
-    real    :: bsw                = 0.0          ! biomass of sapwood, kg C/individual
-    real    :: bHW                = 0.0          ! biomass of heartwood, kg C/individual
-    real    :: seedC              = 0.0          ! biomass put aside for future progeny, kg C/individual
-    real    :: nsc                = 0.0          ! non-structural carbon, kg C/individual
-    !===== Carbon fluxes
-    real    :: gpp                = 0.0          ! gross primary productivity kg C/timestep
-    real    :: npp                = 0.0          ! net primary productivity kg C/timestep
-    real    :: resp               = 0.0          ! plant respiration
-    real    :: resl               = 0.0          ! leaf respiration
-    real    :: resr               = 0.0          ! root respiration
-    real    :: resg               = 0.0          ! growth respiration
-    real    :: NPPleaf,NPProot,NPPwood           ! to record C allocated to leaf, root, and wood
-    real    :: dailyTrsp
-    real    :: dailyGPP                          ! kgC/tree day-1
-    real    :: dailyNPP
-    real    :: dailyResp
-    real    :: dailyNup
-    real    :: dailyfixedN 
-    real    :: annualTrsp
-    real    :: annualGPP                         ! C flux/tree
-    real    :: annualNPP
-    real    :: annualResp 
-    real    :: n_deadtrees        = 0.0
-    real    :: c_deadtrees        = 0.0
-    real    :: m_turnover         = 0.0
-    real    :: deathratevalue
-    !===== Nitrogen model related parameters
-    real    :: NSNmax             = 0.0
-    real    :: NSN                = 0.0           ! non-structural N pool
-    real    :: leafN              = 0.0
-    real    :: sapwN              = 0.0
-    real    :: woodN              = 0.0           ! N of heart wood
-    real    :: rootN              = 0.0           ! N of fine roots
-    real    :: seedN              = 0.0           
-    real    :: N_uptake           = 0.0
-    real    :: annualNup          = 0.0
-    real    :: fixedN                             ! fixed N at each stem per tree
-    real    :: annualfixedN       = 0.0           ! annual N fixation per unit crown area
-    real    :: bl_max             = 0.0           ! Max. leaf biomass, kg C/individual
-    real    :: br_max             = 0.0           ! Max. fine root biomass, kg C/individual
-    real    :: CSAsw              = 0.0
-    real    :: topyear            = 0.0           ! the years that a plant in top layer
-    real    :: DBH_ys                             ! DBH at the begining of a year (growing season)
-    real    :: Vol_ys
-    real    :: ABG_ys
-    !===== Water uptake-related variables
-    real    :: root_length(max_lev)               ! m
-    real    :: rootarea                           ! total fine root area per tree
-    real    :: rootdepth                          ! maximum depth of fine roots
-    real    :: rootareaL(max_lev) = 0.0           ! Root length per layer, m of root/m
-    real    :: WupL(max_lev)      = 0.0           ! normalized vertical distribution of uptake
-    real    :: W_supply                           ! potential water uptake rate per unit time per tree
-    real    :: transp                             ! transpiration rate per tree per hour
-    real    :: uptake_frac(max_lev)               ! for LM3 soil water uptake, Weng, 2017-10-28
-    real    :: K_r,r_r
-    real    :: root_zeta
-    !===== Photosynthesis
-    real    :: An_op              = 0.0           ! mol C/(m2 of leaf per year)
-    real    :: An_cl              = 0.0           ! mol C/(m2 of leaf per year)
-    real    :: w_scale            = -9999
-    real    :: C_growth           = 0.0           ! carbon gain since last growth, kg C/individual
-    real    :: N_growth           = 0.0           ! Nitrogen used for plant tissue growth
-    real    :: extinct            = 0.75          ! light extinction coefficient in the canopy for photosynthesis
-  end type cohort_type
+! Physical constants
+real, public, parameter :: TFREEZE = 273.16
+real, public, parameter :: Rugas = 8.314472 ! universal gas constant, J K-1 mol-1
+real, public, parameter :: mol_C = 12.0e-3 ! molar mass of carbon, kg
+real, public, parameter :: mol_air = 28.96440e-3 ! molar mass of air, kg
+real, public, parameter :: mol_CO2 = 44.00995e-3 ! molar mass of CO2,kg
+real, public, parameter :: mol_h2o = 18.0e-3 ! molar mass of water, kg
+real, public, parameter :: cpair = 1010.
+real, public, parameter :: H2OLv0=2.501e6        !latent heat H2O (J/kg)
+real, public, parameter :: p_sea = 101325. !1.e5           ! atmospheric pressure  (Pa)
+real, public, parameter :: DENS_H2O = 1000. ! kg m-3
 
-  !=============== Tile level data type ============================================================
-  type :: vegn_tile_type
-    integer  :: n_cohorts         = 0.0
-    integer  :: n_years           = 0.0
-    integer  :: n_canopycc        = 0.0
-    type(cohort_type), pointer :: cohorts(:)=>NULL()
-    real    :: area                               ! m2
-    real    :: age                = 0.0           ! tile age
-    real    :: nindivs                            ! New varaibles at tile level 
-    real    :: DBH                                ! New varaibles at tile level 
-    real    :: nindivs12
-    real    :: DBH12
-    real    :: DBH12pow2
-    real    :: QMD
-    real    :: MaxAge
-    real    :: MaxVolume
-    real    :: MaxDBH
-    real    :: NPPL
-    real    :: NPPW
-    !===== Leaf area index
-    real    :: LAI                                ! leaf area index
-    real    :: CAI                                ! crown area index
-    real    :: LAIlayer(0:10)     = 0.0           ! LAI of each crown layer, max. 9
-    real    :: root_distance(max_lev)             ! characteristic half-distance between fine roots, m
-    !=====  Averaged quantities for PPA phenology
-    real    :: tc_daily           = 0.0
-    real    :: gdd                = 0.0           ! growing degree-days
-    real    :: tc_pheno           = 0.0           ! smoothed canopy air temperature for phenology
-    !=====  Litter and soil carbon pools
-    real    :: litter             = 0.0           ! litter flux
-    real    :: MicrobialC         = 0.0           ! Microbes (kg C/m2)
-    real    :: metabolicL         = 0.0           ! fast soil carbon pool, (kg C/m2)
-    real    :: structuralL        = 0.0           ! slow soil carbon pool, (kg C/m2)
-    real    :: n_deadtrees        = 0.0
-    real    :: c_deadtrees        = 0.0
-    real    :: m_turnover         = 0.0
-    !=====  Nitrogen pools, Weng 2014-08-08
-    real    :: MicrobialN         = 0.0
-    real    :: metabolicN         = 0.0           ! fast soil nitrogen pool, (kg N/m2)
-    real    :: structuralN        = 0.0           ! slow soil nitrogen pool, (kg N/m2)
-    real    :: mineralN           = 0.0           ! Mineral nitrogen pool, (kg N/m2)
-    real    :: totN               = 0.0
-    real    :: N_input                            ! annual N input (kgN m-2 yr-1)
-    real    :: N_uptake           = 0.0           ! kg N m-2 hour-1
-    real    :: annualN            = 0.0           ! annual available N in a year
-    real    :: Nloss_yr           = 0.0           ! annual N loss
-    real    :: N_P2S_yr           = 0.0           ! annual N from plants to soil
-    real    :: previousN                          ! an weighted annual available N
-    real    :: initialN0
-    !=====  Soil water
-    integer :: soiltype                           ! lookup table for soil hydrologic parameters
-    real    :: FLDCAP                             ! soil property: field capacity
-    real    :: WILTPT                             ! soil property: wilting point 
-    real    :: evap                               ! kg m-2 per unit fast time step (mm/hour)
-    real    :: transp                             ! kg m-2 hour-1
-    real    :: runoff                             ! Water runoff of the veg tile, unit?
-    real    :: thetaS                             ! moisture index (ws - wiltpt)/(fldcap - wiltpt)
-    real    :: wcl(max_lev)                       ! volumetric soil water content for each layer                    
-    real    :: soilWater                          ! kg m-2 in root zone
-    !=====  Water uptake-related variables
-    real    :: RAI                                ! root area index
-    real    :: RAIL(max_lev)      = 0.0           ! Root length per layer, m of root/m
-    real    :: W_uptake                           ! water uptake rate per unit time per m2
-    !=====  Carbon fluxes
-    real    :: gpp                = 0.0           ! gross primary production, kgC m-2 yr-1
-    real    :: npp                = 0.0           ! net primary productivity
-    real    :: resp               = 0.0           ! auto-respiration of plants
-    real    :: nep                = 0.0           ! net ecosystem productivity
-    real    :: rh                 = 0.0           ! soil carbon lost to the atmosphere
-    !=====  Daily diagnostics
-    real    :: dailyGPP
-    real    :: dailyNPP
-    real    :: dailyResp
-    real    :: dailyRh
-    real    :: dailyNup
-    real    :: dailyfixedN
-    !=====  Annual diagnostics
-    real    :: dailyPrcp     = 0.0,  annualPrcp  = 0.0                            ! mm m-2 yr-1
-    real    :: dailyTrsp     = 0.0,  dailyEvap   = 0.0,   dailyRoff  = 0.0        ! mm m-2 yr-1
-    real    :: annualTrsp    = 0.0,  annualEvap  = 0.0,   annualRoff  = 0.0       ! mm m-2 yr-1
-    real    :: annualGPP     = 0.0                                                ! kgC m-2 ground yr-1
-    real    :: annualNPP     = 0.0
-    real    :: annualResp    = 0.0
-    real    :: annualRh      = 0.0
-    real    :: annualNup                                                          ! accumulated N uptake kgN m-2 yr-1
-    real    :: annualfixedN  = 0.0                                                ! fixed N in a tile
-    !===== Annual reporting at tile level
-    real    :: NSC, SeedC, leafC, rootC, SapwoodC, WoodC
-    real    :: NSN, SeedN, leafN, rootN, SapwoodN, WoodN
-    real    :: totSeedC,totSeedN,totNewCC, totNewCN
-  end type vegn_tile_type
+!===============data types ==============================
+!-----------PFT data type----------------
+type spec_data_type
+  integer :: lifeform     ! 0 for grasses, 1 for trees
+  integer :: phenotype    ! phenology type: 0 for deciduous, 1 for evergreen
+  integer :: pt           ! photosynthetic physiology of species
+  ! leaf traits
+  real    :: LMA          ! leaf mass per unit area, kg C/m2
+  real    :: leafLS       ! leaf life span
+  real    :: alpha_L      ! leaf turn over rate
+  real    :: LNA          ! leaf Nitrogen per unit area, kg N/m2
+  real    :: LNbase       ! basal leaf Nitrogen per unit area, kg N/m2, (Rubisco)
+  real    :: CNleafsupport! leaf structural tissues, 175
+  real    :: leaf_size    ! characteristic leaf size
+  real    :: alpha_phot   ! photosynthesis efficiency
+  real    :: m_cond       ! factor of stomatal conductance
+  real    :: Vmax         ! max rubisco rate, mol m-2 s-1
+  real    :: Vannual      ! annual productivity per unit area at full fun (kgC m-2 yr-1)
+  real    :: gamma_L      ! leaf respiration coeficient (per yr)
+  real    :: gamma_LN     ! leaf respiration coeficient per unit N
+  real    :: wet_leaf_dreg ! wet leaf photosynthesis down-regulation
+  ! root traits
+  real    :: rho_FR       ! material density of fine roots (kgC m-3)
+  real    :: root_r       ! radius of the fine roots, m
+  real    :: root_zeta    ! e-folding parameter of root vertical distribution (m)
+  real    :: root_frac(max_lev)    ! root fraction
+  real    :: SRA          ! speific fine root area, m2/kg C
+  real    :: SRL          ! specific root lenght
+  real    :: gamma_FR     ! Fine root respiration rate, kgC kgC-1 yr-1
+  real    :: alpha_FR     ! Turnover rate of Fine roots, fraction yr-1
+  real    :: Kw_root      ! fine root water donductivity mol m m-2 s−1 MPa−1 ! 
+  real    :: root_perm
+!  real    :: rho_N_up0   ! maximum N uptake rate
+!  real    :: N_roots0    ! root biomass at half of max. N-uptake rate
+  real    :: NfixRate0    ! Reference N fixation rate (kgN kgC-1 root)
+  real    :: NfixCost0    ! Carbon cost of N fixation (kgC kgN-1)
+  ! wood traits
+  real    :: rho_wood     ! woody density, kg C m-3 wood
+  real    :: gamma_SW     ! sapwood respiration rate, kgC m-2 Acambium yr-1
+  real    :: taperfactor
 
-  !=============== Soil data type ============================================================
-  type :: soil_pars_type
-    real    :: GMD                                ! geometric mean partice diameter, mm
-    real    :: GSD                                ! geometric standard deviation of particle size
-    real    :: vwc_wilt
-    real    :: vwc_fc
-    real    :: vwc_sat
-    real    :: vlc_min
-    real    :: k_sat_ref                          ! hydraulic conductivity of saturated soil, kg/(m2 s)
-    real    :: psi_sat_ref                        ! saturation soil water potential, m
-    real    :: chb                                ! Soil texture parameter
-    real    :: alpha                              ! vertical changes of soil property, 1: no change
-    real    :: heat_capacity_dry
-    real    :: tfreeze
-  end type soil_pars_type
+  ! Allometry
+  real    :: alphaHT, thetaHT ! height = alphaHT * DBH ** thetaHT
+  real    :: alphaCA, thetaCA ! crown area = alphaCA * DBH ** thetaCA
+  real    :: alphaBM, thetaBM ! biomass = alphaBM * DBH ** thetaBM
+  real    :: phiRL            ! ratio of fine root to leaf area
+  real    :: phiCSA           ! ratio of sapwood CSA to target leaf area
+  real    :: tauNSC           ! residence time of C in NSC (to define storage capacity)
+  real    :: fNSNmax          ! multilier for NSNmax
 
-  type :: soil_prog_type
-    real    :: wl
-    real    :: ws
-    real    :: T
-  end type soil_prog_type
+  ! Default C/N ratios
+  real    :: CNleaf0
+  real    :: CNroot0
+  real    :: CNsw0
+  real    :: CNwood0
+  real    :: CNseed0
+  ! phenology
+  real    :: tc_crit         ! K, for turning OFF a growth season
+  real    :: tc_crit_on      ! K, for turning ON a growth season
+  real    :: gdd_crit        ! K, critical value of GDD5 for turning ON growth season
+  !  vital rates
+  real    :: maturalage       ! the age that can reproduce
+  real    :: v_seed           ! fracton of G_SF to G_F
+  real    :: seedlingsize     ! size of the seedlings, kgC/indiv
+  real    :: prob_g,prob_e    ! germination and establishment probabilities
+  real    :: mortrate_d_c     ! yearly mortality rate in canopy
+  real    :: mortrate_d_u     ! yearly mortality rate in understory
+  ! Population level variables
+  real    :: LAImax,underLAImax ! max. LAI
+  real    :: LAI_light        ! light controlled maximum LAI
+  integer :: n_cc             ! for calculating LAImax via cc%LAImax derived from cc%NSN
+  real    :: layerfrac        ! species layer fraction
+  real    :: internal_gap_frac ! fraction of internal gaps in the canopy
+  ! "internal" gaps are the gaps that are created within the canopy by the
+  ! branch fall processes.
+end type
 
-  type :: soil_tile_type
-    integer                       :: tag          ! kind of the soil
-    type(soil_pars_type)          :: pars
-    type(soil_prog_type), pointer :: prog(:)
-    real,                 pointer :: w_fc(:)
-    real,                 pointer :: w_wilt(:)
-    real                          :: Eg_part_ref
-    real                          :: z0_scalar
-    real, pointer                 :: heat_capacity_dry(:)
-    real, pointer                 :: e(:),f(:)
-    real                          :: uptake_T     ! update temperature from previous time step
-    real, pointer                 :: psi(:)       ! soil water potential
-  end type soil_tile_type  
+!----------cohort-----------------
+type :: cohort_type
+  ! ---- biological prognostic variables
+  integer :: ccID    = 0   ! cohort ID
+  integer :: species = 0   ! vegetation species
+  real    :: gdd     = 0.0   ! for phenology
+  integer :: status  = 0   ! growth status of plant: 1 for ON, 0 for OFF
+  integer :: layer   = 1   ! the layer of this cohort (numbered from top, top layer=1)
+  integer :: firstlayer = 0 ! 0 = never been in the first layer; 1 = at least one year in first layer
+  real    :: layerfrac  = 0.0 ! fraction of layer area occupied by this cohort
 
-  !=============== PFT-specific parameters ======================================================
-  type(spec_data_type), save :: spdata(0:MSPECIES)         ! define PFTs
-  type(soil_pars_type), save :: soilpars(n_dim_soil_types) ! soil parameters
-  integer :: MaxCohortID = 0
+! for populatin structure
+  real    :: nindivs   = 1.0 ! density of vegetation, individuals/m2
+  real    :: age       = 0.0 ! age of cohort, years
+  real    :: Volume    = 0.0
+  real    :: dbh       = 0.0 ! diameter at breast height, m
+  real    :: height    = 0.0 ! vegetation height, m
+  real    :: crownarea = 1.0 ! crown area, m2/individual
+  real    :: leafarea  = 0.0 ! total area of leaves, m2/individual
+  real    :: lai       = 0.0 ! crown leaf area index, m2/m2
+! carbon pools
+  real    :: bl      = 0.0 ! biomass of leaves, kg C/individual
+  real    :: br      = 0.0 ! biomass of fine roots, kg C/individual
+  real    :: bsw     = 0.0 ! biomass of sapwood, kg C/individual
+  real    :: bHW     = 0.0 ! biomass of heartwood, kg C/individual
+  real    :: seedC   = 0.0 ! biomass put aside for future progeny, kg C/individual
+  real    :: nsc     = 0.0 ! non-structural carbon, kg C/individual
 
-  !=============== Params_tile in R =============================================================
-  !===== Soil water properties
-  real   :: soiltype                                !Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
-  real   :: FLDCAP                                  ! vol/vol 
-  real   :: WILTPT                                  ! vol/vol
-  !===== Carbon pools
-  real   :: K1                                      ! Fast soil C decomposition rate (yr-1)
-  real   :: K2                                      ! slow soil C decomposition rate (yr-1)
-  real   :: K_nitrogen                              ! mineral Nitrogen turnover rate
-  real   :: MLmixRatio                              ! the ratio of C and N returned to litters from microbes
-  real   :: etaN                                    ! N loss through runoff (organic and mineral)
-  real   :: LMAmin                                  ! minimum LMA, boundary condition
-  real   :: fsc_fine                                ! fraction of fast turnover carbon in fine biomass
-  real   :: fsc_wood                                ! fraction of fast turnover carbon in wood biomass
-  real   :: GR_factor                               ! growth respiration factor
-  real   :: l_fract                                 ! fraction of the carbon retained after leaf drop
-  real   :: retransN                                ! retranslocation coefficient of Nitrogen
-  real   :: f_initialBSW      
-  real   :: f_N_add                                 ! re-fill of N for sapwood
-  !===== Ensheng's growth parameters
-  real   :: f_LFR_max  = 0.85                       ! max allocation to leaves and fine roots 
-  !===== Leaf life span 
-  real   :: c_LLS  = 28.57143                       ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
-  !===== Calibratable parameters
-  real   :: tf_base                                 ! calibratable scalar for respiration
-  real   :: par_mort                                ! generic calibratable parameter for mortality module
-  real   :: par_mort_under                          ! generic calibratable parameter for mortality understory module
-  !===== deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
-  real  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
-  real  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
-  real  :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
-  
-  !=============== Params_species in R ======================================================
+! ----- carbon fluxes
+  real :: gpp  = 0.0 ! gross primary productivity kg C/timestep
+  real :: npp  = 0.0 ! net primary productivity kg C/timestep
+  real :: resp = 0.0 ! plant respiration
+  real :: resl = 0.0 ! leaf respiration
+  real :: resr = 0.0 ! root respiration
+  real :: resg = 0.0 ! growth respiration
+  real :: NPPleaf,NPProot,NPPwood ! to record C allocated to leaf, root, and wood
+  real :: dailyTrsp
+  real :: dailyGPP   ! kgC/tree day-1
+  real :: dailyNPP
+  real :: dailyResp
+  real :: dailyNup
+  real :: dailyfixedN
+  real :: annualTrsp
+  real :: annualGPP ! C flux/tree
+  real :: annualNPP
+  real :: annualResp
 
-  ! integer :: lifeform(0:MSPECIES) = 1 ! life form of PFTs: 0 for grasses, 1 for trees
-  ! integer :: phenotype(0:MSPECIES)= 0 ! 0 for Deciduous, 1 for evergreen
-  ! integer :: pt(0:MSPECIES) = 0 ! 0 for C3, 1 for C4
+! ---- Nitrogen model related parameters
+  real    :: NSNmax = 0.
+  real    :: NSN = 0.    ! non-structural N pool
+  real    :: leafN = 0.
+  real    :: sapwN= 0.
+  real    :: woodN = 0. ! N of heart wood
+  real    :: rootN = 0. ! N of fine roots
+  real    :: seedN = 0. !
+  real    :: N_uptake = 0.
+  real    :: annualNup  = 0.0
+  real    :: fixedN ! fixed N at each stem per tree
+  real    :: annualfixedN = 0.0 ! annual N fixation per unit crown area
 
-  !===== Root parameters
-  ! real :: alpha_FR(0:MSPECIES)         = 1.2 ! Fine root turnover rate yr-1
-  ! real :: rho_FR(0:MSPECIES)           = 200 ! material density of fine roots (kgC m-3)
-  ! real :: root_r(0:MSPECIES)           = 2.9E-4
-  ! real :: root_zeta(0:MSPECIES)        = 0.29 
-  ! real :: Kw_root(0:MSPECIES)          = 6.3E-8 * (1000000.0/18.0)*1.e-6 ! 3.5e-09 mol /(s m2 Mpa) 
-  ! !real :: rho_N_up0(0:MSPECIES)       = 0.5 ! fraction of mineral N per hour
-  ! !real :: N_roots0(0:MSPECIES)        = 0.3 ! kgC m-2
-  ! real :: leaf_size(0:MSPECIES)        = 0.04 
+  ! TODO: see if we can make bl_max, br_max local variables
+  real    :: bl_max  = 0.0 ! Max. leaf biomass, kg C/individual
+  real    :: br_max  = 0.0 ! Max. fine root biomass, kg C/individual
+  real    :: CSAsw   = 0.0
+  real    :: topyear = 0.0 ! the years that a plant in top layer
+  real    :: DBH_ys        ! DBH at the begining of a year (growing season)
 
-  !===== Photosynthesis parameters
-  ! real :: Vmax(0:MSPECIES)= 35.0E-6 ! mol m-2 s-1
-  ! real :: Vannual(0:MSPECIES) = 1.2 ! kgC m-2 yr-1
-  ! real :: wet_leaf_dreg(0:MSPECIES) = 0.3 ! wet leaf photosynthesis down-regulation: 0.3 means
-  !       ! photosynthesis of completely wet leaf will be 30% less than that of dry one
-  ! real :: m_cond(0:MSPECIES)= 7.0 
-  ! real :: alpha_phot(0:MSPECIES)=  0.06 
-  ! real :: gamma_L(0:MSPECIES)= 0.02 
-  ! real :: gamma_LN(0:MSPECIES)= 70.5 ! 25.0  ! kgC kgN-1 yr-1
-  ! real :: gamma_SW(0:MSPECIES)= 0.08 ! 5.0e-4 ! kgC m-2 Acambium yr-1
-  ! real :: gamma_FR(0:MSPECIES)= 12.0 ! 15 !kgC kgN-1 yr-1 ! 0.6: kgC kgN-1 yr-1
-  ! real :: tc_crit(0:MSPECIES)= 283.16 ! OFF
-  ! real :: tc_crit_on(0:MSPECIES)= 280.16 ! ON
-  ! real :: gdd_crit(0:MSPECIES)= 280.0 ! Simulations 280, 240, 200
+! ---- water uptake-related variables
+  real    :: root_length(max_lev) ! m
+  real    :: rootarea ! total fine root area per tree
+  real    :: rootdepth  ! maximum depth of fine roots
+  real    :: rootareaL(max_lev) = 0.0 ! Root length per layer, m of root/m
+  real    :: WupL(max_lev) = 0.0 ! normalized vertical distribution of uptake
+  real    :: W_supply  ! potential water uptake rate per unit time per tree
+  real    :: transp   ! transpiration rate per tree per hour
+  real    :: uptake_frac(max_lev) ! for LM3 soil water uptake, Weng, 2017-10-28
+  real    :: K_r,r_r
+  real    :: root_zeta
 
-  !===== Allometry parameters
-  real :: alphaHT(0:MSPECIES)      = 36.0
-  real :: thetaHT(0:MSPECIES)      = 0.5 
-  real :: alphaCA(0:MSPECIES)      = 150.0
-  real :: thetaCA(0:MSPECIES)      = 1.5
-  ! real :: alphaBM(0:MSPECIES)      = !In Ensheng BiomeE: 5200.0
-  ! real :: thetaBM(0:MSPECIES)      = 2.36 ! Beech (2.36); Spruce (2.30); Fir (2.45) In Ensheng BiomeE: 2.5
+! for photosynthesis
+  real :: An_op = 0.0 ! mol C/(m2 of leaf per year)
+  real :: An_cl = 0.0 ! mol C/(m2 of leaf per year)
+  real :: w_scale =-9999
+  real :: C_growth = 0.0 ! carbon gain since last growth, kg C/individual
+  real :: N_growth = 0.0 ! Nitrogen used for plant tissue growth
+  real :: extinct = 0.75     ! light extinction coefficient in the canopy for photosynthesis
 
-  !===== Reproduction parameters
-  ! real :: maturalage(0:MSPECIES) = 5.0  ! year
-  real :: v_seed(0:MSPECIES)       = 0.1  ! fraction of allocation to wood+seeds
-  ! real :: seedlingsize(0:MSPECIES) = 0.05 ! kgC
-  real :: prob_g(0:MSPECIES)       = 1.0
-  real :: prob_e(0:MSPECIES)       = 1.0
+end type cohort_type
 
-  !===== Mortality
-  ! real :: mortrate_d_c(0:MSPECIES) = 0.01 ! yearly
-  ! real :: mortrate_d_u(0:MSPECIES) = 0.075
+!---------------------------
+type :: vegn_tile_type
+   integer :: n_cohorts = 0
+   integer :: n_years   = 0
+   integer :: n_canopycc = 0
+   type(cohort_type), pointer :: cohorts(:)=>NULL()
+   real :: area  ! m2
+   real :: age=0 ! tile age
+   real :: nindivs  ! New varaibles at tile level xxx
+   real :: DBH ! New varaibles at tile level xxx
+   real :: nindivs12
+   real :: DBH12
+   real :: DBH12pow2
+   real :: QMD
+   real :: MaxAge
+   real :: MaxVolume
+   real :: MaxDBH
 
-  !===== Leaf parameters
-  ! real :: LMA(0:MSPECIES)         = 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2 LMA = 1/SLA 0.05 for Fagus
-  real :: leafLS(0:MSPECIES) = 1.0
-  ! real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
-  real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
-  ! real :: rho_wood(0:MSPECIES)      = 590.0 ! kgC m-3 (Simulations: 300, 600, 800) Beech (590); Spruce (370); Fir (350)
-  real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
-  real :: LAImax(0:MSPECIES)        != 3.5 ! maximum LAI for a tree
-  ! real :: LAI_light(0:MSPECIES)     != 4.0 ! maximum LAI limited by light
-  real :: tauNSC(0:MSPECIES)        = 3 ! 3 ! NSC residence time,years
-  ! real :: fNSNmax(0:MSPECIES)       = 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
-  ! real :: phiRL(0:MSPECIES)       = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
-  ! real :: phiCSA(0:MSPECIES)        = 0.25E-4 ! ratio of sapwood area to leaf area
-  ! C/N ratios for plant pools
-  real :: CNleaf0(0:MSPECIES)   = 25. ! C/N ratios for leaves
-  real :: CNsw0(0:MSPECIES)     = 350.0 ! C/N ratios for woody biomass
-  real :: CNwood0(0:MSPECIES)   = 350.0 ! C/N ratios for woody biomass
-  real :: CNroot0(0:MSPECIES)   = 40.0 ! C/N ratios for leaves ! Gordon & Jackson 2000
-  real :: CNseed0(0:MSPECIES)   = 20.0 ! C/N ratios for seeds
-  ! real :: NfixRate0(0:MSPECIES) = 0.0 !Reference N fixation rate (0.03 kgN kgC-1 root yr-1)
-  ! real :: NfixCost0(0:MSPECIES) = 12.0 ! FUN model, Fisher et al. 2010, GBC
-  real :: internal_gap_frac(0:MSPECIES)= 0.1 ! The gaps between trees
+   ! leaf area index
+   real :: LAI  ! leaf area index
+   real :: CAI  ! crown area index
+   real :: LAIlayer(0:10) = 0.0 ! LAI of each crown layer, max. 9
+   ! uptake-related variables
+   real :: root_distance(max_lev) ! characteristic half-distance between fine roots, m
+   ! averaged quantities for PPA phenology
+   real :: tc_daily = 0.0
+   real :: gdd      = 0.0 ! growing degree-days
+   real :: tc_pheno = 0.0 ! smoothed canopy air temperature for phenology
 
-  !=============== Params_soil in R ============================================================
-  ! Soil parameters passed through R : paramX(n_dim_soil_types)
+   ! litter and soil carbon pools
+   real :: litter = 0.0 ! litter flux
+   real :: MicrobialC  = 0  ! Microbes (kg C/m2)
+   real :: metabolicL  = 0  ! fast soil carbon pool, (kg C/m2)
+   real :: structuralL = 0  ! slow soil carbon pool, (kg C/m2)
 
-  !=============== Initial cohort specifications in R ============================================
-  ! Initial values passed through R 
-  integer :: init_n_cohorts                        = MAX_INIT_COHORTS
-  ! integer :: init_cohort_species(MAX_INIT_COHORTS) = 2
-  ! real    :: init_cohort_nindivs(MAX_INIT_COHORTS) = 1.0  ! initial individual density, individual/m2
-  real    :: init_cohort_bl(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of leaves, kg C/individual
-  real    :: init_cohort_br(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of fine roots, kg C/individual
-  ! real    :: init_cohort_bsw(MAX_INIT_COHORTS)     = 0.05 ! initial biomass of sapwood, kg C/individual
-  ! real    :: init_cohort_bHW(MAX_INIT_COHORTS)     = 0.0  ! initial biomass of heartwood, kg C/tree
-  real    :: init_cohort_seedC(MAX_INIT_COHORTS)   = 0.0  ! initial biomass of seeds, kg C/individual
-  ! real    :: init_cohort_nsc(MAX_INIT_COHORTS)     = 0.05 ! initial non-structural biomass, kg C/
+!!  Nitrogen pools, Weng 2014-08-08
+   real :: MicrobialN= 0
+   real :: metabolicN = 0  ! fast soil nitrogen pool, (kg N/m2)
+   real :: structuralN = 0  ! slow soil nitrogen pool, (kg N/m2)
+   real :: mineralN = 0.  ! Mineral nitrogen pool, (kg N/m2)
+   real :: totN = 0.
+   real :: N_input        ! annual N input (kgN m-2 yr-1)
+   real :: N_uptake  = 0.  ! kg N m-2 hour-1
+   real :: annualN = 0.0  ! annual available N in a year
+   real :: Nloss_yr= 0.0  ! annual N loss
+   real :: N_P2S_yr= 0.0  ! annual N from plants to soil
+   real :: previousN      ! an weighted annual available N
+   real :: initialN0
 
-  !=============== Initial soil pools in R ======================================================
-  !  initial soil Carbon and Nitrogen for a vegn tile, Weng 2012-10-24 passed through R
+! Soil water
+   integer :: soiltype       ! lookup table for soil hydrologic parameters
+   real :: FLDCAP,WILTPT  ! soil property: field capacity and wilting point (0.xx)
+   real :: evap           ! kg m-2 per unit fast time step (mm/hour)
+   real :: transp         ! kg m-2 hour-1
+   real :: runoff        ! Water runoff of the veg tile, unit?
+   real :: thetaS     ! moisture index (ws - wiltpt)/(fldcap - wiltpt)
+   real :: wcl(max_lev)   ! volumetric soil water content for each layer
+   real :: soilWater      ! kg m-2 in root zone
+! ---- water uptake-related variables
+  real    :: RAI ! root area index
+  real    :: RAIL(max_lev) = 0.0 ! Root length per layer, m of root/m
+  real    :: W_uptake  ! water uptake rate per unit time per m2
 
-contains
+!  Carbon fluxes
+   real :: gpp =0 ! gross primary production, kgC m-2 yr-1
+   real :: npp =0 ! net primary productivity
+   real :: resp = 0 ! auto-respiration of plants
+   real :: nep =0 ! net ecosystem productivity
+   real :: rh  =0 ! soil carbon lost to the atmosphere
+   ! daily diagnostics
+   real :: dailyGPP
+   real :: dailyNPP
+   real :: dailyResp
+   real :: dailyRh
+   real :: dailyNup
+   real :: dailyfixedN
+   ! for annual diagnostics
+   real :: dailyPrcp=0.0, annualPrcp = 0.0 ! mm m-2 yr-1
+   real :: dailyTrsp=0.0,dailyEvap=0.0, dailyRoff=0.0 ! mm m-2 yr-1
+   real :: annualTrsp=0.0,annualEvap=0.0, annualRoff=0.0 ! mm m-2 yr-1
+   real :: annualGPP = 0.0 ! kgC m-2 ground yr-1
+   real :: annualNPP = 0.0
+   real :: annualResp = 0.0
+   real :: annualRh   = 0.0
+   real :: annualNup       ! accumulated N uptake kgN m-2 yr-1
+   real :: annualfixedN = 0.  ! fixe N in a tile
+   ! for annual reporting at tile level
+   real :: NSC, SeedC, leafC, rootC, SapwoodC, WoodC
+   real :: NSN, SeedN, leafN, rootN, SapwoodN, WoodN
+   real :: totSeedC,totSeedN,totNewCC, totNewCN
+end type vegn_tile_type
+
+type :: soil_pars_type
+  real :: GMD ! geometric mean partice diameter, mm
+  real :: GSD ! geometric standard deviation of particle size
+  real :: vwc_wilt
+  real :: vwc_fc
+  real :: vwc_sat
+  real :: vlc_min
+  real :: k_sat_ref ! hydraulic conductivity of saturated soil, kg/(m2 s)
+  real :: psi_sat_ref ! saturation soil water potential, m
+  real :: chb         ! Soil texture parameter
+  real :: alpha       ! vertical changes of soil property, 1: no change
+  real :: heat_capacity_dry
+  real::  tfreeze
+end type soil_pars_type
+
+type :: soil_prog_type
+  real wl
+  real ws
+  real T
+end type soil_prog_type
+
+type :: soil_tile_type
+   integer :: tag ! kind of the soil
+   type(soil_pars_type) :: pars
+   type(soil_prog_type), pointer :: prog(:)
+   real,                 pointer :: w_fc(:)
+   real,                 pointer :: w_wilt(:)
+   real :: Eg_part_ref
+   real :: z0_scalar
+   ! data that were local to soil.f90
+   real, pointer :: heat_capacity_dry(:)
+   real, pointer :: e(:),f(:)
+   ! added to avoid recalculation of soil hydraulics in case of Darcy uptake
+   real          :: uptake_T ! update temperature from previous time step
+   real, pointer :: psi(:) ! soil water potential
+end type soil_tile_type
+
+! PFT-specific parameters
+type(spec_data_type), save :: spdata(0:MSPECIES) ! define PFTs
+! Soil
+type(soil_pars_type), save :: soilpars(n_dim_soil_types) ! soil parameters
+
+!---------------------------------------
+integer :: MaxCohortID = 0
+
+! Constants:
+! Soil water properties
+! real   :: soiltype = SandyLoam  ! 1 Sand; 2
+real   :: FLDCAP = 0.4  ! vol/vol
+real   :: WILTPT != 0.05 ! vol/vol
+! Carbon pools
+real :: K1 != 2 ! Fast soil C decomposition rate (yr-1)
+real :: K2 != 0.05 ! slow soil C decomposition rate (yr-1)
+real :: K_nitrogen != 8.0     ! mineral Nitrogen turnover rate
+real :: etaN       != 0.025   ! N loss through runoff (organic and mineral)
+real :: MLmixRatio != 0.8     ! the ratio of C and N returned to litters from microbes
+real :: l_fract    != 0.0     ! 0.25  ! 0.5 ! fraction of the carbon retained after leaf drop
+real :: retransN   != 0.0     ! retranslocation coefficient of Nitrogen
+real :: f_N_add != 0.02       ! re-fill of N for sapwood
+real :: f_initialBSW != 0.2   !0.01
+real :: LMAmin     = 0.02    ! minimum LMA, boundary condition
+real :: fsc_fine   = 1.0     ! fraction of fast turnover carbon in fine biomass
+real :: fsc_wood   = 0.0     ! fraction of fast turnover carbon in wood biomass
+real :: GR_factor  = 0.33    ! growth respiration factor
+
+! Ensheng's growth parameters:
+real :: f_LFR_max =0.85 ! max allocation to leaves and fine roots ! wood_fract_min = 0.15 ! for understory mortality rate is calculated as:
+! deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
+real :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
+real :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
+real :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
+! for leaf life span and LMA (leafLS = c_LLS * LMA
+real :: c_LLS  = 28.57143   ! yr/ (kg C m-2), 1/LMAs, where LMAs = 0.035
+
+! reduction of bl_max and br_max for the understory vegetation, unitless
+real :: understory_lai_factor = 0.25
+!real :: rdepth(0: max_lev) = 0.0
+
+! -------- PFT-specific parameters ----------
+! c4grass  c3grass  temp-decid  tropical  evergreen  BE  BD  BN  NE  ND  G  D  T  A
+! integer :: pt(0:MSPECIES) = 0
+!(/1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0/) ! 0 for C3, 1 for C4
+! integer :: phenotype(0:MSPECIES)= 0
+! (/0,  0,  0,  0,  1,  1,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0 /) ! 0 for Deciduous, 1 for evergreen
+! integer :: lifeform(0:MSPECIES) = 1 ! life form of PFTs: 0 for grasses, 1 for trees
+
+! root parameters
+real :: alpha_FR(0:MSPECIES) = 1.2 ! Fine root turnover rate yr-1
+!(/0.8, 0.8,0.8, 0.8, 0.8,0.8,0.8,0.8,1.0,1.0,0.6, 1.0, 0.55, 0.9, 0.55, 0.55/)
+real :: rho_FR(0:MSPECIES) = 200 ! woody density, kgC m-3
+real :: root_r(0:MSPECIES) = 2.9E-4
+!(/1.1e-4, 1.1e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 2.9e-4, 1.1e-4, 1.1e-4, 2.2e-4, 2.2e-4/)
+real :: root_zeta(0:MSPECIES) = 0.29 !
+real :: Kw_root(0:MSPECIES)= 6.3E-8 * (1000000.0/18.0)*1.e-6 ! mol /(s m2 Mpa) ! 6.3±3.1×10−8 m s−1 MPa−1
+!(/1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5/)
+   ! fine root membrane permeability per unit membrane area, kg/(m3 s).
+   ! Root membrane permeability is "high" for the value from Siqueira et al., 2008,
+! Water Resource Research Vol. 44, W01432, converted to mass units
+!real :: rho_N_up0(0:MSPECIES) = 0.5 ! fraction of mineral N per hour
+!real :: N_roots0(0:MSPECIES) = 0.3 ! kgC m-2
+
+real :: leaf_size(0:MSPECIES)= 0.04 !
+! photosynthesis parameters
+real :: Vmax(0:MSPECIES)= 35.0E-6 ! mol m-2 s-1
+real :: Vannual(0:MSPECIES) = 1.2 ! kgC m-2 yr-1
+real :: wet_leaf_dreg(0:MSPECIES) = 0.3 ! wet leaf photosynthesis down-regulation: 0.3 means
+        ! photosynthesis of completely wet leaf will be 30% less than that of dry one,
+        ! provided everything else is the same
+!(/1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2/)
+real :: m_cond(0:MSPECIES)= 7.0 !
+real :: alpha_phot(0:MSPECIES)=  0.06 !
+real :: gamma_L(0:MSPECIES)= 0.02 !
+real :: gamma_LN(0:MSPECIES)= 70.5 ! 25.0  ! kgC kgN-1 yr-1
+real :: gamma_SW(0:MSPECIES)= 0.08 ! 5.0e-4 ! kgC m-2 Acambium yr-1
+real :: gamma_FR(0:MSPECIES)= 12.0 ! 15 !kgC kgN-1 yr-1 ! 0.6: kgC kgN-1 yr-1
+real :: tc_crit(0:MSPECIES)= 283.16 ! OFF
+real :: tc_crit_on(0:MSPECIES)= 280.16 ! ON
+real :: gdd_crit(0:MSPECIES)= 280.0 ! Simulations 280, 240, 200
+
+! Allometry parameters
+real :: alphaHT(0:MSPECIES)      = 36.0
+real :: thetaHT(0:MSPECIES)      = 0.5 !
+real :: alphaCA(0:MSPECIES)      = 150.0
+real :: thetaCA(0:MSPECIES)      = 1.5
+real :: alphaBM(0:MSPECIES)      = 5200.0
+real :: thetaBM(0:MSPECIES)      = 2.5
+
+! Reproduction parameters
+real :: maturalage(0:MSPECIES)   = 5.0  ! year
+real :: v_seed(0:MSPECIES)       = 0.1  ! fraction of allocation to wood+seeds
+real :: seedlingsize(0:MSPECIES) = 0.05 ! kgC
+real :: prob_g(0:MSPECIES)       = 1.0
+real :: prob_e(0:MSPECIES)       = 1.0
+
+! Mortality
+real :: mortrate_d_c(0:MSPECIES) = 0.01 ! yearly
+real :: mortrate_d_u(0:MSPECIES) = 0.075
+
+! Leaf parameters
+! real :: LMA(0:MSPECIES)         = 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2
+!(/0.04,    0.04,    0.035,   0.035,   0.140,  0.032, 0.032,  0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036,   0.036  /)
+real :: leafLS(0:MSPECIES) = 1.0
+real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
+real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
+real :: rho_wood(0:MSPECIES)      = 300.0 ! kgC m-3 (Simulations: 300, 600, 800)
+real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
+real :: LAImax(0:MSPECIES)        = 3.5 ! maximum LAI for a tree
+real :: LAI_light(0:MSPECIES)     = 4.0 ! maximum LAI limited by light
+real :: tauNSC(0:MSPECIES)        = 3 ! 3 ! NSC residence time,years
+real :: fNSNmax(0:MSPECIES)       = 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
+! real :: phiRL(0:MSPECIES)       = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
+real :: phiCSA(0:MSPECIES)        = 0.25E-4 ! ratio of sapwood area to leaf area
+! C/N ratios for plant pools
+real :: CNleaf0(0:MSPECIES)   = 25. ! C/N ratios for leaves
+real :: CNsw0(0:MSPECIES)     = 350.0 ! C/N ratios for woody biomass
+real :: CNwood0(0:MSPECIES)   = 350.0 ! C/N ratios for woody biomass
+real :: CNroot0(0:MSPECIES)   = 40.0 ! C/N ratios for leaves ! Gordon & Jackson 2000
+real :: CNseed0(0:MSPECIES)   = 20.0 ! C/N ratios for seeds
+real :: NfixRate0(0:MSPECIES) = 0.0 !Reference N fixation rate (0.03 kgN kgC-1 root yr-1)
+real :: NfixCost0(0:MSPECIES) = 12.0 ! FUN model, Fisher et al. 2010, GBC
+real :: internal_gap_frac(0:MSPECIES)= 0.1 ! The gaps between trees
+
+! soil parameters (passed through R)
+! Coarse  Medium   Fine    CM     CF     MF    CMF    Peat    MCM
+  ! real :: GMD(n_dim_soil_types) = & ! geometric mean partice diameter, mm
+  ! (/ 0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3 /)
+  ! real :: GSD(n_dim_soil_types) = & ! geometric standard deviation of particle size
+  ! (/5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4 /)
+  ! real :: vwc_sat(n_dim_soil_types)= &
+  !  (/ 0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445   /)
+  ! !real :: vlc_min(n_dim_soil_types)
+  ! real :: k_sat_ref(n_dim_soil_types)= & ! mol/(s MPa m) , hydraulic conductivity of saturated soil,
+  ! (/ 130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2 /)
+  ! real :: psi_sat_ref(n_dim_soil_types) = & ! Pa
+  ! (/ -600., -790., -910., -1580., -1680., -1880., -5980., -790., -790./)
+  ! real :: chb(n_dim_soil_types) = &         ! Soil texture parameter
+  ! (/   3.5,   6.4,  11.0,   4.8,   6.3,   8.4,   6.3,   6.4,   6.4   /)
+  ! real :: alphaSoil(n_dim_soil_types) = 1.0       ! *** REPLACE LATER BY alpha(layer)
+  ! real :: heat_capacity_dry(n_dim_soil_types) = &
+  ! (/ 1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6,   1.0   /)
+
+!----- Initial conditions -------------
+integer :: init_n_cohorts                        = MAX_INIT_COHORTS
+! integer :: init_cohort_species(MAX_INIT_COHORTS) = 2
+! real    :: init_cohort_nindivs(MAX_INIT_COHORTS) = 1.0  ! initial individual density, individual/m2
+real    :: init_cohort_bl(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of leaves, kg C/individual
+real    :: init_cohort_br(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of fine roots, kg C/individual
+! real    :: init_cohort_bsw(MAX_INIT_COHORTS)     = 0.05 ! initial biomass of sapwood, kg C/individual
+! real    :: init_cohort_bHW(MAX_INIT_COHORTS)     = 0.0  ! initial biomass of heartwood, kg C/tree
+real    :: init_cohort_seedC(MAX_INIT_COHORTS)   = 0.0  ! initial biomass of seeds, kg C/individual
+! real    :: init_cohort_nsc(MAX_INIT_COHORTS)     = 0.05 ! initial non-structural biomass, kg C/
+!  initial soil Carbon and Nitrogen for a vegn tile, Weng 2012-10-24 (pass them through R)
+! (passed through R)
+! real   :: init_fast_soil_C  = 0.0  ! initial fast soil C, kg C/m2
+! real   :: init_slow_soil_C  = 0.0  ! initial slow soil C, kg C/m2
+! real   :: init_Nmineral = 0.015  ! Mineral nitrogen pool, (kg N/m2)
+real   :: N_input   ! = 0.0008 ! annual N input to soil N pool, kgN m-2 yr-1
+
+! (passed through R)
+! logical   :: outputhourly = .False.
+! logical   :: outputdaily  = .True.
+! logical   :: do_U_shaped_mortality = .False.
+logical   :: update_annualLAImax != .False.
+! logical   :: do_closedN_run = .True. !.False.
+
+ contains
+!=============== subroutines =================================
 
 ! ================Parameter initialization ===================
 ! =========================================================================

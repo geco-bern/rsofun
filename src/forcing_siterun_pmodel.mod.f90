@@ -21,7 +21,9 @@ module md_forcing_pmodel
     getclimate, getco2, getfapar, get_fpc_grid, vegcover_type
 
   type climate_type
-    real(kind=sp) :: dtemp  ! deg C
+    real(kind=sp) :: dtemp  ! daily mean air temperature, deg C
+    real(kind=sp) :: dtmin  ! daily minimum air temperature, deg C
+    real(kind=sp) :: dtmax  ! daily maximum air temperature, deg C
     real(kind=sp) :: dprec  ! mm d-1
     real(kind=sp) :: dsnow  ! mm d-1 water equivalents
     real(kind=sp) :: dfsun  ! unitless
@@ -58,8 +60,8 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    ! logical, intent(in) :: init
+    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    logical, intent(in) :: init
     integer, intent(in) :: climateyear_idx
     logical, intent(in) :: in_ppfd
     logical, intent(in) :: in_netrad
@@ -106,6 +108,10 @@ contains
 
     out_climate(:)%dpatm   = calc_patm( elv )    ! todo: use daily varying patm read from forcing
 
+    out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 12))
+    out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 13))
+
+
   end function getclimate
 
 
@@ -115,7 +121,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: forcingyear
     integer, intent(in) :: firstyeartrend
 
@@ -217,7 +223,7 @@ contains
     if (pft==0) stop 'get_fpc_grid: no PFT activated accoring to simulation parameter file.'
 
     if (pft/=npft) stop 'GET_FPC_GRID: Adjust npft manually in params_core.mod.f90'
-
+    
   end function get_fpc_grid
 
 end module md_forcing_pmodel

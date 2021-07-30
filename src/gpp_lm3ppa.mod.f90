@@ -47,7 +47,7 @@ contains
     ! Subroutines from BiomeE-Allocation
     !------------------------------------------------------------------------
     use md_forcing_lm3ppa, only: climate_type
-    use md_photosynth, only: pmodel, outtype_pmodel
+    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel
     use md_params_core, only: kTkelvin, kfFEC
     use md_sofunutils, only: dampen_variability
 
@@ -74,7 +74,7 @@ contains
     integer:: i, layer=0
 
     ! local variables used for P-model part
-    real :: tk
+    real :: tk, ftemp_kphio
     real, save :: co2_memory
     real, save :: vpd_memory
     real, save :: temp_memory
@@ -201,6 +201,11 @@ contains
       tk = forcing%Tair + kTkelvin
 
       !----------------------------------------------------------------
+      ! Instantaneous temperature effect on quantum yield efficiency
+      !----------------------------------------------------------------
+      ftemp_kphio = calc_ftemp_kphio( (forcing%Tair - kTkelvin), .false. )  ! no C4
+
+      !----------------------------------------------------------------
       ! Sum leaf area over cohorts in each crown layer -> LAIlayer(layer)
       !----------------------------------------------------------------
       f_gap = 0.1 ! 0.1
@@ -287,7 +292,7 @@ contains
                                 beta           = params_gpp%beta, &
                                 rd_to_vcmax    = params_gpp%rd_to_vcmax &
                                 )
-
+                                
             ! irrelevant variables for this setup  
             cc%An_op   = 0.0
             cc%An_cl   = 0.0
@@ -657,6 +662,38 @@ contains
   !   ftemp = 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2
 
   ! end function calc_ftemp_kphio
+
+
+  function calc_ftemp_inst_rd( tc ) result( fr )
+    !-----------------------------------------------------------------------
+    ! Output:   Factor fr to correct for instantaneous temperature response
+    !           of Rd (dark respiration) for:
+    !
+    !               Rd(temp) = fr * Rd(25 deg C) 
+    !
+    ! Ref:      Heskel et al. (2016) used by Wang Han et al. (in prep.)
+    !-----------------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: tc      ! temperature (degrees C)
+
+    ! function return variable
+    real :: fr                  ! temperature response factor, relative to 25 deg C.
+
+    ! loal parameters
+    real, parameter :: apar = 0.1012
+    real, parameter :: bpar = 0.0005
+    real, parameter :: tk25 = 298.15 ! 25 deg C in Kelvin
+
+    ! local variables
+    real :: tk                  ! temperature (Kelvin)
+
+    ! conversion of temperature to Kelvin
+    tk = tc + 273.15
+
+    fr = exp( apar * (tc - 25.0) - bpar * (tc**2 - 25.0**2) )
+    
+  end function calc_ftemp_inst_rd  
+
 
   ! adopted from BiomeE-Allocation, should use the one implemented in SOFUN instead (has slightly different parameters)
   FUNCTION esat(T) ! pressure, Pa

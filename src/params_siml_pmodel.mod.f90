@@ -21,13 +21,13 @@ module md_params_siml_pmodel
     integer :: recycle         ! length of standard recycling period
     integer :: outdt           ! output periodicity
     integer :: outnt           ! number of output time steps per year
+    integer :: secs_per_tstep  ! number of seconds per time step (now daily => 60 * 60 * 24)
     
     logical :: do_spinup            ! whether this simulation does spinup 
     logical :: is_calib             ! whether this simulation is a calibration simulation (overriding parameters and no output)
 
     logical :: soilmstress          ! when true, an empirical soil moisture stress function is applied to GPP
     logical :: tempstress           ! when true, an empirical temperature stress function is applied to GPP
-    logical :: calc_aet_fapar_vpd   ! when true, AET is calculated as f(VPD) * fAPAR * PET, where f(VPD) is of the form a * (b + m * ln(VPD))
     
     character(len=256) :: runname
     character(len=256) :: sitename
