@@ -76,7 +76,7 @@ params_siml <- list(
   spinupyears        = 10,
   recycle            = 1,
   soilmstress        = FALSE,
-  tempstress         = TRUE,
+  tempstress         = FALSE,
   in_ppfd            = TRUE,
   in_netrad          = FALSE,
   outdt              = 1,
@@ -191,8 +191,8 @@ print(ptm)
 
 ```{r}
 ggplot() +
-  geom_line(data = df_output_nostress$data[[1]], aes(x=date, y=gpp), color = 'black') + 
-  labs(title = df_output_stress$sitename[[1]], subtitle = "SOFUN output") +
+  geom_line(data = df_output$data[[1]], aes(x=date, y=gpp), color = 'black') + 
+  labs(title = df_output$sitename[[1]], subtitle = "SOFUN output") +
   xlim(ymd("01-01-2008"), ymd("01-01-2010"))
 ```
 
@@ -205,14 +205,12 @@ settings_calib <- list(
   method              = "gensa",
   targetvars          = c("gpp"),
   timescale           = list( gpp = "d" ),
-  maxit               = 5000, # (5 for gensa) (30 for optimr)    #
+  maxit               = 5, # (5 for gensa) (30 for optimr)    #
   sitenames           = "FR-Pue",
   metric              = "rmse",
   dir_results         = "./",
-  name                = "BRC",
-  par                 = list( kphio                 = list( lower=0.02, upper=0.07, init=0.0496 ),
-                              tau_acclim_tempstress = list( lower=5, upper=60, init=15 ),
-                              par_shape_tempstress  = list( lower=0.0, upper=0.2, init=0.1 ))
+  name                = "ORG",
+  par                 = list( kphio = list( lower=0.02, upper=0.07, init=0.0496 ))
  )
 ```
 
