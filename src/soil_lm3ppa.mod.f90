@@ -32,9 +32,8 @@ contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 !========================================================================
 ! Weng 2017-10-18 ! compute available water for photosynthesis
-subroutine water_supply_layer(forcing, vegn)
+subroutine water_supply_layer( vegn)
   use md_forcing_lm3ppa, only: climate_type
-  type(climate_type),intent(in):: forcing
   type(vegn_tile_type), intent(inout) :: vegn
 
 !----- local var --------------
@@ -244,7 +243,7 @@ subroutine soil_data_beta(soil, vegn, soil_beta, soil_water_supply, &
    !    root_length, & ! vertical distribution of volumetric root length, m/m3
        VRL, & ! volumetric root length
        u, du ! uptake and its derivative (the latter is not used)
-  real :: z  !  soil depth
+  ! real :: z  !  soil depth
   !real :: psi_wilt ! added by Weng, 2017-10-29
   logical :: uptake_oneway = .TRUE. ! added by Weng
   logical :: uptake_from_sat = .true.

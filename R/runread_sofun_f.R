@@ -21,7 +21,7 @@ runread_pmodel_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
 
   if (parallel){
 
-    cl <- multidplyr::new_cluster(2) %>% 
+    cl <- multidplyr::new_cluster(ncores) %>% 
       multidplyr::cluster_assign(params_modl = params_modl) %>% 
       multidplyr::cluster_assign(makecheck = FALSE) %>% 
       multidplyr::cluster_library(c("dplyr", "purrr", "rlang", "rsofun"))
@@ -81,19 +81,19 @@ runread_pmodel_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
 #'
 #' @examples mod <- runread_pmodel_f( df_drivers, params_modl, makecheck = TRUE, parallel = FALSE, ncores = 2 )
 #' 
-runread_lm3ppa_f <- function( df_drivers, params_modl, makecheck = TRUE, parallel = FALSE, ncores = 2 ){
+runread_lm3ppa_f <- function( df_drivers, makecheck = TRUE, parallel = FALSE, ncores = 2 ){
   
   if (parallel){
     
     cl <- multidplyr::new_cluster(2) %>% 
-      multidplyr::cluster_assign(params_modl = params_modl) %>% 
+      # multidplyr::cluster_assign(params_modl = params_modl) %>% 
       multidplyr::cluster_assign(makecheck = FALSE) %>% 
       multidplyr::cluster_library(c("dplyr", "purrr", "rlang", "rsofun"))
     
     ## distribute to to cores, making sure all data from a specific site is sent to the same core
     df_out <- df_drivers %>%
       dplyr::group_by( id = row_number() ) %>%
-      tidyr::nest(input = c(sitename, params_siml, siteinfo, forcing, df_soiltexture)) %>%
+      tidyr::nest(input = c(sitename, params_siml, siteinfo, forcing, params_tile, params_species, params_soil, init_cohort, init_soil)) %>%
       multidplyr::partition(cl) %>% 
       dplyr::mutate(data = purrr::map( input, 
                                        ~run_lm3ppa_f_bysite(
@@ -101,9 +101,13 @@ runread_lm3ppa_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
                                          params_siml    = .x$params_siml[[1]], 
                                          siteinfo       = .x$siteinfo[[1]], 
                                          forcing        = .x$forcing[[1]], 
-                                         df_soiltexture = .x$df_soiltexture[[1]], 
-                                         params_modl    = params_modl, 
+                                         params_tile    = .x$params_tile[[1]], 
+                                         params_species = .x$params_species[[1]], 
+                                         params_soil    = .x$params_soil[[1]], 
+                                         init_cohort    = .x$init_cohort[[1]], 
+                                         init_soil      = .x$init_soil[[1]], 
                                          makecheck      = makecheck )
+
       )) %>% 
       dplyr::collect() %>%
       dplyr::ungroup() %>%
@@ -116,12 +120,13 @@ runread_lm3ppa_f <- function( df_drivers, params_modl, makecheck = TRUE, paralle
       dplyr::mutate(data = purrr::pmap(
         .,
         run_lm3ppa_f_bysite,
-        params_modl = params_modl,
         makecheck = makecheck
       )) %>% 
-      dplyr::select(sitename, data)
+      dplyr::select(sitename, data) 
     
   }
   
+  # df_out <- df_out %>% as_tibble(.name_repair = 'unique')
+
   return(df_out)
 }

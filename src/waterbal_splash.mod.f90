@@ -74,7 +74,7 @@ module md_waterbal
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, KNOWN PARAMETERS
   !----------------------------------------------------------------
-  logical :: outenergy = .true.
+  ! logical :: outenergy = .true.
 
   ! !----------------------------------------------------------------
   ! ! Module-specific rolling mean variables
@@ -87,13 +87,13 @@ module md_waterbal
   ! !----------------------------------------------------------------
   ! real, dimension(nlu) :: rlmalpha
 
-  character(len=7) :: in_ppfd       ! information whether PPFD is prescribed from meteo file for global attribute in NetCDF file
+  ! character(len=7) :: in_ppfd       ! information whether PPFD is prescribed from meteo file for global attribute in NetCDF file
 
   logical, parameter :: splashtest = .false.
 
 contains
 
-  subroutine waterbal( tile, tile_fluxes, grid, climate, doy ) !, lai, fapar, h_canopy, g_stomata )
+  subroutine waterbal( tile, tile_fluxes, grid, climate ) !, lai, fapar, h_canopy, g_stomata )
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil water balance
     !-------------------------------------------------------------------------
@@ -102,12 +102,10 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(gridtype), intent(in)                            :: grid
     type(climate_type), intent(in)                        :: climate
-    integer, intent(in) :: doy          ! day of year
+    ! integer, intent(in) :: doy          ! day of year
 
     ! local variables
     type(outtype_snow_rain) :: out_snow_rain
-    real                    :: g_aero
-    real                    :: g_canopy
     integer                 :: lu              ! land unit (gridcell tile)
     real                    :: sw              ! evaporative supply rate (mm/h)
 
@@ -120,7 +118,7 @@ contains
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
       !---------------------------------------------------------
-      call calc_et( tile(lu), tile_fluxes(lu), grid, climate, sw )
+      call calc_et( tile_fluxes(lu), grid, climate, sw )
 
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
@@ -281,7 +279,8 @@ contains
     !---------------------------------------------------------
     ! Eq. 56, SPLASH 2.0 Documentation
     ! adopted bugfix from Python version (iss#13)
-    tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
+    tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
+      tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
 
 
     if (splashtest) then
@@ -300,7 +299,7 @@ contains
   end subroutine solar
 
 
-  subroutine calc_et( tile, tile_fluxes, grid, climate, sw )
+  subroutine calc_et( tile_fluxes, grid, climate, sw )
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
@@ -308,7 +307,7 @@ contains
     use md_sofunutils, only: calc_patm
 
     ! arguments
-    type(tile_type), intent(inout)        :: tile
+    ! type(tile_type), intent(inout)        :: tile
     type(tile_fluxes_type), intent(inout) :: tile_fluxes
     type(gridtype), intent(in)            :: grid
     type(climate_type), intent(in)        :: climate
@@ -317,7 +316,6 @@ contains
     ! local variables
     real :: gamma                           ! psychrometric constant (Pa K-1) ! xxx Zhang et al. use it in units of (kPa K-1), probably they use sat_slope in kPa/K, too.
     real :: sat_slope                       ! slope of saturation vapour pressure vs. temperature curve, Pa K-1
-    real :: rho_air                         ! density of air (g m-3)
     real :: lv                              ! enthalpy of vaporization, J/kg
     real :: rho_water                       ! density of water (g m-3)
 
@@ -385,7 +383,8 @@ contains
     ! 21. Estimate daily AET (tile_fluxes%canopy%daet), mm d-1
     !---------------------------------------------------------
     ! Eq. 81, SPLASH 2.0 Documentation
-    tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
+    tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
+      radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
     tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)
 
     ! print*,'in waterbal: sw, hi, rx, rw, rv, hn, hi, ru ', sw, hi, rx, rw, rv, hn, hi, ru
@@ -621,8 +620,6 @@ contains
     ! local variables
     real :: anm, ranm, anv, ranv
     real :: dlamm                ! Mean longitude for day of year
-    real :: my_nu
-    real :: my_tls
     real :: xee, xec, xse        ! variable substitutes
     real :: xlam                 ! Mean longitude for vernal equinox
     real :: tmp1, tmp2, tmp3     ! variable substitutes

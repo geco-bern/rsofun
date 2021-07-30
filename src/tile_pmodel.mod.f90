@@ -179,7 +179,7 @@ contains
     !  June 2014
     !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
+    ! use md_interface_pmodel, only: myinterface
 
     ! argument
     type( tile_type ), dimension(nlu), intent(inout) :: tile

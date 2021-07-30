@@ -169,6 +169,11 @@ df_modis_fpar <- ingest(
 
 To make this output consistent for use below, let's nest it and rename the desired column to `fapar`.
 
+<<<<<<< HEAD
+=======
+This information is provided in file `siteinfo_fluxnet2015.csv`. This file is created as described in (and using code from) [metainfo_fluxnet2015](https://github.com/stineb/metainfo_fluxnet2015). 
+
+>>>>>>> mort_form
 ```{r}
 df_modis_fpar <- df_modis_fpar %>% 
   mutate(data = purrr::map(data, ~rename(., fapar = modisvar_filled)))
@@ -176,6 +181,7 @@ df_modis_fpar <- df_modis_fpar %>%
 
 #### gee_subsets
 
+<<<<<<< HEAD
 This requires authentication with Google Earth Engine. See [here](https://stineb.github.io/ingestr/articles/example.html#google-earth-engine) for a guide of required steps. Once this is done, do the following.
 
 ```{r warning=FALSE, message=FALSE, eval=FALSE}
@@ -208,6 +214,13 @@ df_co2 <- ingestr::ingest(
   source  = "co2_mlo",
   verbose = FALSE
   )
+=======
+# take only year 2007 to 2014, corresponding to subset of data for site FR-Pue provided in this package as demo
+siteinfo <- siteinfo %>% 
+  dplyr::mutate(year_start = 2007, year_end = 2014)
+  dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
+  dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
+>>>>>>> mort_form
 ```
 
 ## Simulation settings

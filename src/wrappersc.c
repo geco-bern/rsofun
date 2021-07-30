@@ -10,7 +10,7 @@
 // P-model
 /////////////////////////////////////////////////////////////
 void F77_NAME(pmodel_f)(
-    _Bool  *spinup,
+    int    *spinup,          // LOGICAL can be defined as _Bool but it gives a warming  
     int    *spinupyears,
     int    *recycle,
     int    *firstyeartrend,
@@ -21,13 +21,13 @@ void F77_NAME(pmodel_f)(
     _Bool  *in_ppfd,
     _Bool  *in_netrad,
     int    *outdt,
-    _Bool  *ltre,
-    _Bool  *ltne,
-    _Bool  *ltrd,
-    _Bool  *ltnd,
-    _Bool  *lgr3,
-    _Bool  *lgn3,
-    _Bool  *lgr4,
+    int    *ltre,
+    int    *ltne,
+    int    *ltrd,
+    int    *ltnd,
+    int    *lgr3,
+    int    *lgn3,
+    int    *lgr4,
     double *longitude,
     double *latitude,
     double *altitude,
@@ -119,16 +119,16 @@ extern SEXP pmodel_f_C(
 // LM3PPA
 /////////////////////////////////////////////////////////////
 void F77_NAME(lm3ppa_f)(
-    _Bool  *spinup,             
+    int    *spinup,          // LOGICAL can be defined as _Bool but it gives a warming             
     int    *spinupyears,               
     int    *recycle,              
     int    *firstyeartrend,                  
     int    *nyeartrend, 
-    _Bool  *outputhourly,                   
-    _Bool  *outputdaily,                   
-    _Bool  *do_U_shaped_mortality,             
-    _Bool  *update_annualLAImax,                   
-    _Bool  *do_closedN_run,                   
+    int    *outputhourly,                   
+    int    *outputdaily,                   
+    int    *do_U_shaped_mortality,             
+    int    *update_annualLAImax,                   
+    int    *do_closedN_run,                   
     int    *code_method_photosynth,
     int    *code_method_mortality,                   
     double *longitude,                  
@@ -140,14 +140,21 @@ void F77_NAME(lm3ppa_f)(
     double *K1,                   
     double *K2,                   
     double *K_nitrogen,                   
-    double *etaN,                   
     double *MLmixRatio,                   
-    double *l_fract,                   
-    double *retransN,                   
-    double *f_N_add,                   
-    double *f_initialBSW,                  
+    double *etaN,
+    double *LMAmin,                                      
+    double *fsc_fine,                   
+    double *fsc_wood,                   
+    double *GR_factor,                   
+    double *l_fract,
+    double *retransN,
+    double *f_initialBSW,
+    double *f_N_add,
+    double *tf_base,
+    double *par_mort,
+    double *par_mort_under,
     double *params_species,                   
-    double *params_soil,                   
+    double *params_soil,                                    
     double *init_cohort,                   
     double *init_fast_soil_C,                   
     double *init_slow_soil_C,                   
@@ -209,10 +216,14 @@ void F77_NAME(lm3ppa_f)(
     double *output_annual_cohorts_NPPW,
     double *output_annual_cohorts_GPP,
     double *output_annual_cohorts_NPP,
+    double *output_annual_cohorts_Rauto,
     double *output_annual_cohorts_N_uptk,
     double *output_annual_cohorts_N_fix,
     double *output_annual_cohorts_maxLAI,
-    double *output_annual_cohorts_Volume
+    double *output_annual_cohorts_Volume,
+    double *output_annual_cohorts_n_deadtrees,
+    double *output_annual_cohorts_c_deadtrees,
+    double *output_annual_cohorts_deathrate
     );
 
 // C wrapper function for LM3PPA
@@ -238,14 +249,21 @@ extern SEXP lm3ppa_f_C(
     SEXP K1,                   
     SEXP K2,                   
     SEXP K_nitrogen,                   
-    SEXP etaN,                   
     SEXP MLmixRatio,                   
-    SEXP l_fract,                   
-    SEXP retransN,                   
-    SEXP f_N_add,                   
-    SEXP f_initialBSW,                   
+    SEXP etaN,                   
+    SEXP LMAmin,                   
+    SEXP fsc_fine,                   
+    SEXP fsc_wood,                   
+    SEXP GR_factor, 
+    SEXP l_fract, 
+    SEXP retransN, 
+    SEXP f_initialBSW, 
+    SEXP f_N_add, 
+    SEXP tf_base, 
+    SEXP par_mort,
+    SEXP par_mort_under,  
     SEXP params_species,                   
-    SEXP params_soil,                   
+    SEXP params_soil,                                  
     SEXP init_cohort,                   
     SEXP init_fast_soil_C,                   
     SEXP init_slow_soil_C,                   
@@ -294,7 +312,7 @@ extern SEXP lm3ppa_f_C(
     SEXP output_daily_cohorts_rootN    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_SW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_HW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 53) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 59) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_annual_cohorts_year    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_cID     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_PFT     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
@@ -316,10 +334,14 @@ extern SEXP lm3ppa_f_C(
     SEXP output_annual_cohorts_NPPW    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_GPP     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_NPP     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_Rauto   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_N_uptk  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_N_fix   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_maxLAI  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_Volume  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_n_deadtrees  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_c_deadtrees  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_deathrate  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     
     // Fortran subroutine call
     F77_CALL(lm3ppa_f)(
@@ -344,14 +366,21 @@ extern SEXP lm3ppa_f_C(
         REAL(K1),                   
         REAL(K2),                   
         REAL(K_nitrogen),                   
-        REAL(etaN),                   
         REAL(MLmixRatio),                   
-        REAL(l_fract),                   
-        REAL(retransN),                   
-        REAL(f_N_add),                   
-        REAL(f_initialBSW),                   
+        REAL(etaN),                   
+        REAL(LMAmin),                   
+        REAL(fsc_fine),                   
+        REAL(fsc_wood),                   
+        REAL(GR_factor),  
+        REAL(l_fract),  
+        REAL(retransN),  
+        REAL(f_initialBSW),  
+        REAL(f_N_add),  
+        REAL(tf_base),  
+        REAL(par_mort),  
+        REAL(par_mort_under),  
         REAL(params_species),                   
-        REAL(params_soil),                   
+        REAL(params_soil),                                     
         REAL(init_cohort),                  
         REAL(init_fast_soil_C),                   
         REAL(init_slow_soil_C),                   
@@ -413,14 +442,18 @@ extern SEXP lm3ppa_f_C(
         REAL(output_annual_cohorts_NPPW),
         REAL(output_annual_cohorts_GPP),
         REAL(output_annual_cohorts_NPP),
+        REAL(output_annual_cohorts_Rauto),
         REAL(output_annual_cohorts_N_uptk),
         REAL(output_annual_cohorts_N_fix),
         REAL(output_annual_cohorts_maxLAI),
-        REAL(output_annual_cohorts_Volume)
+        REAL(output_annual_cohorts_Volume),
+        REAL(output_annual_cohorts_n_deadtrees),
+        REAL(output_annual_cohorts_c_deadtrees),
+        REAL(output_annual_cohorts_deathrate)
         );
 
     // // Output as list
-    SEXP out_list = PROTECT( allocVector(VECSXP, 55) );  // maybe try  STRSXP instead of VECSXP
+    SEXP out_list = PROTECT( allocVector(VECSXP, 59) );  // maybe try  STRSXP instead of VECSXP
     
     SET_VECTOR_ELT(out_list, 0, output_hourly_tile);
     SET_VECTOR_ELT(out_list, 1, output_daily_tile);
@@ -473,12 +506,16 @@ extern SEXP lm3ppa_f_C(
     SET_VECTOR_ELT(out_list, 48, output_annual_cohorts_NPPW);
     SET_VECTOR_ELT(out_list, 49, output_annual_cohorts_GPP);
     SET_VECTOR_ELT(out_list, 50, output_annual_cohorts_NPP);
-    SET_VECTOR_ELT(out_list, 51, output_annual_cohorts_N_uptk);
-    SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_N_fix);
-    SET_VECTOR_ELT(out_list, 53, output_annual_cohorts_maxLAI);
-    SET_VECTOR_ELT(out_list, 54, output_annual_cohorts_Volume);
+    SET_VECTOR_ELT(out_list, 51, output_annual_cohorts_Rauto);
+    SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_N_uptk);
+    SET_VECTOR_ELT(out_list, 53, output_annual_cohorts_N_fix);
+    SET_VECTOR_ELT(out_list, 54, output_annual_cohorts_maxLAI);
+    SET_VECTOR_ELT(out_list, 55, output_annual_cohorts_Volume);
+    SET_VECTOR_ELT(out_list, 56, output_annual_cohorts_n_deadtrees);
+    SET_VECTOR_ELT(out_list, 57, output_annual_cohorts_c_deadtrees);
+    SET_VECTOR_ELT(out_list, 58, output_annual_cohorts_deathrate);
 
-    UNPROTECT(56);
+    UNPROTECT(60);
 
     return out_list;
 }
@@ -488,7 +525,7 @@ extern SEXP lm3ppa_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
-  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   39},  // Number of the SEXP variables (not the output)
+  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   46},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };
 

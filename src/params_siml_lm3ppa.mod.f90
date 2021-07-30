@@ -97,28 +97,22 @@ contains
 
         ! xxx consistency check
         out_steering%forcingyear_idx = MOD(year - 1, params_siml%recycle) + 1
-        out_steering%forcingyear = out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
+        out_steering%forcingyear     = out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
 
         out_steering%climateyear_idx = MOD(year - 1, params_siml%recycle) + 1
-        out_steering%climateyear = out_steering%climateyear_idx + params_siml%firstyeartrend - 1
+        out_steering%climateyear     = out_steering%climateyear_idx + params_siml%firstyeartrend - 1
 
       else  
         ! during transient simulation
-        out_steering%spinup = .false.
-        out_steering%forcingyear =  year - params_siml%spinupyears + params_siml%firstyeartrend - 1
-        out_steering%forcingyear_idx =  year - params_siml%spinupyears
-
+        ! TODO xxx Change to MOD in order to run longer transient years
+        out_steering%spinup          = .false.
+        out_steering%forcingyear_idx =  year - params_siml%spinupyears 
+        out_steering%forcingyear     =  out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
 
         ! constant climate year not specified
-        out_steering%climateyear = out_steering%forcingyear
+        out_steering%climateyear     = out_steering%forcingyear
         out_steering%climateyear_idx = out_steering%forcingyear_idx
       
-        ! xxx consistency check
-         out_steering%forcingyear_idx = MOD(year - 1, params_siml%recycle) + 1
-         out_steering%forcingyear = out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
-         out_steering%climateyear_idx = MOD(year - 1, params_siml%recycle) + 1
-         out_steering%climateyear = out_steering%climateyear_idx + params_siml%firstyeartrend - 1      
-
       endif
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1
 
@@ -136,8 +130,9 @@ contains
         out_steering%do_soilequil = .false.
       end if
 
-      if ( year<=params_siml%spinupyears .and. ( year > ( spinupyr_soilequil_1 - params_siml%recycle ) .and. year <= spinupyr_soilequil_1 &
-              .or. year > ( spinupyr_soilequil_2 - params_siml%recycle ) .and. year <= spinupyr_soilequil_2 ) ) then
+      if ( year<=params_siml%spinupyears .and. ( year > ( spinupyr_soilequil_1 - params_siml%recycle ) .and. &
+           year <= spinupyr_soilequil_1 .or. year > ( spinupyr_soilequil_2 - params_siml%recycle ) .and. &
+           year <= spinupyr_soilequil_2 ) ) then
         out_steering%average_soil = .true.
       else
         out_steering%average_soil = .false.
@@ -174,10 +169,6 @@ contains
     else
       out_steering%finalize = .false.
     end if
-
-    ! print*, 'out_steering%climateyear'
-    ! print*, out_steering%climateyear
-    ! if (year>30) stop
 
   end function getsteering
 

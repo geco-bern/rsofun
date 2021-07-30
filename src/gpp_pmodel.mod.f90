@@ -34,11 +34,13 @@ module md_gpp_pmodel
   use md_plant_pmodel, only: params_pft_plant
   use md_sofunutils, only: radians
   use md_grid, only: gridtype
+  use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
+    calc_ftemp_inst_rd, calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
 
   implicit none
 
   private
-  public params_pft_gpp, getpar_modl_gpp, gpp
+  public params_pft_gpp, gpp, getpar_modl_gpp
     
   !-----------------------------------------------------------------------
   ! Uncertain (unknown) parameters. Runtime read-in
@@ -53,13 +55,12 @@ module md_gpp_pmodel
     real :: par_shape_tempstress
   end type paramstype_gpp
 
-  type(paramstype_gpp) :: params_gpp
-
   ! PFT-DEPENDENT PARAMETERS
   type pftparamstype_gpp
     real :: kphio        ! quantum efficiency (Long et al., 1993)  
   end type pftparamstype_gpp
 
+  type(paramstype_gpp) :: params_gpp
   type(pftparamstype_gpp), dimension(npft) :: params_pft_gpp
 
   !----------------------------------------------------------------
@@ -79,7 +80,6 @@ contains
     !------------------------------------------------------------------
     ! use md_plant, only: params_pft_plant, plant_type, plant_fluxes_type
     use md_sofunutils, only: dampen_variability
-    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
@@ -204,7 +204,7 @@ contains
       ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
       !----------------------------------------------------------------
       if (do_soilmstress) then
-        soilmstress = calc_soilmstress( tile(1)%soil%phy%wscal, 0.0, params_pft_plant(1)%grass )
+        soilmstress = calc_soilmstress( tile(1)%soil%phy%wscal, 0.0, params_pft_plant(1)%grass, params_gpp%soilm_par_a, params_gpp%soilm_par_b )
       else
         soilmstress = 1.0
       end if    
@@ -411,132 +411,6 @@ contains
   ! end function calc_g_canopy
 
 
-  function calc_soilmstress( soilm, meanalpha, isgrass ) result( outstress )
-    !//////////////////////////////////////////////////////////////////
-    ! Calculates empirically-derived stress (fractional reduction in light 
-    ! use efficiency) as a function of soil moisture
-    ! Input:  soilm (unitless, within [0,1]): daily varying soil moisture
-    ! Output: outstress (unitless, within [0,1]): function of alpha to reduce GPP 
-    !         in strongly water-stressed months
-    !-----------------------------------------------------------------------
-    ! argument
-    real, intent(in) :: soilm                 ! soil water content (fraction)
-    real, intent(in) :: meanalpha             ! mean annual AET/PET, average over multiple years (fraction)
-    logical, intent(in), optional :: isgrass  ! vegetation cover information to distinguish sensitivity to low soil moisture
-
-    real, parameter :: x0 = 0.0
-    real, parameter :: x1 = 0.6
-
-    real :: y0, beta
-
-    ! function return variable
-    real :: outstress
-
-    if (soilm > x1) then
-      outstress = 1.0
-    else
-
-      y0 = (params_gpp%soilm_par_a + params_gpp%soilm_par_b * meanalpha)
-
-      ! if (present(isgrass)) then
-      !   if (isgrass) then
-      !     y0 = apar_grass + bpar_grass * meanalpha
-      !   else
-      !     y0 = apar + bpar * meanalpha
-      !   end if
-      ! else
-      !   y0 = apar + bpar * meanalpha
-      ! end if
-
-      beta = (1.0 - y0) / (x0 - x1)**2
-      outstress = 1.0 - beta * ( soilm - x1 )**2
-      outstress = max( 0.0, min( 1.0, outstress ) )
-    end if
-
-  end function calc_soilmstress
-
-
-  function calc_ftemp_kphio( dtemp, c4 ) result( ftemp )
-    !////////////////////////////////////////////////////////////////
-    ! Calculates the instantaneous temperature response of the quantum
-    ! yield efficiency based on Bernacchi et al., 2003 PCE (Equation
-    ! and parameter values taken from Appendix B)
-    !----------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: dtemp    ! (leaf) temperature in degrees celsius
-    logical, intent(in) :: c4
-
-    ! function return variable
-    real :: ftemp
-
-    if (c4) then
-      ftemp = (-0.008 + 0.00375 * dtemp - 0.58e-4 * dtemp**2) * 8.0 ! Based on calibrated values by Shirley
-      if (ftemp < 0.0) then
-        ftemp = 0.0
-      else
-        ftemp = ftemp
-      end if    
-    else
-      ftemp = 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2  ! Based on Bernacchi et al., 2003
-    end if
-    
-  end function calc_ftemp_kphio
-
-
-  function calc_ftemp_kphio_tmin( tc, shape_par ) result( ftemp )
-    !////////////////////////////////////////////////////////////////
-    ! Calculates the low temperature stress function assuming no stress
-    ! at 10 deg C and above and declining below based on a calibratable
-    ! parameter and a quadratic function.
-    !----------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: tc           ! (leaf) temperature in degrees celsius
-    real, intent(in) :: shape_par    ! shape parameter for the sensitivity of the decline, some positive value
-
-    ! function return variable
-    real :: ftemp
-
-    if (tc > 10.0) then
-      ftemp = 1.0
-    else
-      ftemp = 1.0 - (shape_par * (tc - 10.0))**2
-      if (ftemp < 0.0) ftemp = 0.0
-    end if
-    
-  end function calc_ftemp_kphio_tmin
-
-
-  function calc_ftemp_inst_rd( tc ) result( fr )
-    !-----------------------------------------------------------------------
-    ! Output:   Factor fr to correct for instantaneous temperature response
-    !           of Rd (dark respiration) for:
-    !
-    !               Rd(temp) = fr * Rd(25 deg C) 
-    !
-    ! Ref:      Heskel et al. (2016) used by Wang Han et al. (in prep.)
-    !-----------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: tc      ! temperature (degrees C)
-
-    ! function return variable
-    real :: fr                  ! temperature response factor, relative to 25 deg C.
-
-    ! loal parameters
-    real, parameter :: apar = 0.1012
-    real, parameter :: bpar = 0.0005
-    real, parameter :: tk25 = 298.15 ! 25 deg C in Kelvin
-
-    ! local variables
-    real :: tk                  ! temperature (Kelvin)
-
-    ! conversion of temperature to Kelvin
-    tk = tc + 273.15
-
-    fr = exp( apar * (tc - 25.0) - bpar * (tc**2 - 25.0**2) )
-    
-  end function calc_ftemp_inst_rd  
-
-
   ! function calc_climate_acclimation( climate, grid, method ) result( climate_acclimation )
   !   !//////////////////////////////////////////////////////////////////
   !   ! Convert daily mean environmental conditions to conditions to
@@ -627,7 +501,6 @@ contains
   !   end select
 
   ! end function calc_climate_acclimation  
-
 
   subroutine getpar_modl_gpp()
     !////////////////////////////////////////////////////////////////

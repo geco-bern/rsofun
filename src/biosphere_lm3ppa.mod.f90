@@ -1,18 +1,17 @@
 module md_biosphere_lm3ppa
-
+  
   use datatypes
   use md_vegetation_lm3ppa
   use md_soil_lm3ppa
   use md_params_core
-
+  
   implicit none
-
   private
   public biosphere_annual
 
-   type(vegn_tile_type),  pointer :: vegn   
-   type(soil_tile_type),  pointer :: soil
-   type(cohort_type),     pointer :: cx, cc
+  type(vegn_tile_type),  pointer :: vegn   
+  ! type(soil_tile_type),  pointer :: soil
+  ! type(cohort_type),     pointer :: cx, cc
 
 contains
 
@@ -42,18 +41,17 @@ contains
     integer, parameter :: nCohorts = 1
     real    :: tsoil, soil_theta
     integer :: year0
-    integer :: i, j
+    integer :: i
     integer :: idata
     integer, save :: simu_steps !, datalines
     integer, save :: iyears
     integer, save :: idays
     integer, save :: idoy
-    ! character(len=50) :: namelistfile = '~/sofun/params/parameters_Allocation.nml' !'parameters_WC_biodiversity.nml' ! 'parameters_CN.nml'
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
-    if (myinterface%steering%init) then
+    if (myinterface%steering%init) then ! is true for the first year
 
       ! Parameter initialization: Initialize PFT parameters
       call initialize_PFT_data()
@@ -114,8 +112,12 @@ contains
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
-          call hourly_diagnostics( vegn, myinterface%climate(idata), iyears, idoy, i, out_biosphere%hourly_tile(idata) )
+         
+          call hourly_diagnostics( vegn, myinterface%climate(idata), iyears, idoy, i , out_biosphere%hourly_tile(idata))
+         
           init = .false.
+         
+          ! call getout_hourly( vegn, myinterface%climate(idata), iyears, idoy, i, out_biosphere%hourly_tile(idata) )
 
         enddo fastloop ! hourly or half-hourly
 
@@ -127,13 +129,17 @@ contains
         soil_theta    = vegn%thetaS
 
         ! sum over fast time steps and cohorts
-        call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
+        call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy)  )
+        ! print*,'1. vegn%annualGPP ', vegn%annualGPP
 
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
 
-        ! Produce new biomass from 'carbon_gain' (is zero afterwards)
+        ! Produce new biomass from 'carbon_gain' (is zero afterwards) and continous biomass turnover
         call vegn_growth_EW( vegn )
+
+        ! get daily outputs
+        ! call getout_daily( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
 
       end do dayloop
 
@@ -144,37 +150,58 @@ contains
     !----------------------------------------------------------------
     idoy = 0
 
-    print*,'sim. year  ', iyears
-    print*,'real year: ', year0
+    ! print*,'sim. year  ', iyears
+    ! print*,'real year: ', year0
+    ! print*,'sim. year 2 ', myinterface%steering%year
 
     if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update( vegn )
-
-    call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
+    
+    !---------------------------------------------
+    ! Get annual diagnostics and outputs in once. 
+    ! Needs to be called here 
+    ! because mortality and reproduction re-organize
+    ! cohorts again and we want annual output and daily
+    ! output to be consistent with cohort identities.
+    !---------------------------------------------
+    ! print*,'A: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
     !---------------------------------------------        
     ! Kill all individuals in a cohort if NSC falls below critical point
+    ! print*,'B: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs 
     call vegn_annual_starvation( vegn )
-
+    
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
-    call vegn_nat_mortality( vegn, real( seconds_per_year ))
-
+    ! print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    call vegn_nat_mortality( vegn )
+    
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
+    ! print*,'D: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_reproduction( vegn )
-
+    
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
+    ! print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call kill_lowdensity_cohorts( vegn )
+    
+    ! print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call relayer_cohorts( vegn )
+    
+    ! print*,'G: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_mergecohorts( vegn )
 
-    ! !---------------------------------------------
-    ! ! Set annual variables zero
-    ! !---------------------------------------------
+    ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
+
+    !---------------------------------------------
+    ! Set annual variables zero
+    !---------------------------------------------
+    ! print*,'H: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call Zero_diagnostics( vegn )
+    ! print*,'I: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
 
     ! update the years of model run
     iyears = iyears + 1

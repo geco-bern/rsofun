@@ -10,7 +10,7 @@ module md_forcing_lm3ppa
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  use md_params_core, only: ntstepsyear, kTkelvin, ndayyear
+  use md_params_core, only: ntstepsyear, ndayyear, kTkelvin
   implicit none
 
   private
@@ -35,8 +35,7 @@ module md_forcing_lm3ppa
 
 contains
 
-  ! function getclimate( nt, ntstepsyear, ntstepsyear_forcing, forcing, climateyear_idx, climateyear, do_agg_climate ) result ( out_climate )
-  function getclimate( nt, ntstepsyear, forcing, climateyear_idx, climateyear ) result ( out_climate )
+  function getclimate( nt, ntstepsyear, forcing, climateyear_idx ) result ( out_climate )
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
     ! to read from NetCDF. This nesting is necessary because this 
@@ -48,7 +47,7 @@ contains
     integer, intent(in) :: ntstepsyear   ! number of time steps per year of model
     ! integer, intent(in) :: ntstepsyear_forcing  ! number of time steps per year of forcing data
     real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
-    integer, intent(in) :: climateyear_idx, climateyear
+    integer, intent(in) :: climateyear_idx
     ! logical, intent(in) :: do_agg_climate
 
     ! local variables
@@ -68,10 +67,10 @@ contains
     out_climate%year      = int(forcing(idx_start:idx_end, 1))                    ! Year
     out_climate%doy       = int(forcing(idx_start:idx_end, 2))                    ! day of the year
     out_climate%hod       = real(forcing(idx_start:idx_end, 3))                   ! hour of the day
-    out_climate%PAR       = real(forcing(idx_start:idx_end, 4))                   ! umol/m2/s  (*2)         
+    out_climate%PAR       = real(forcing(idx_start:idx_end, 4))                   ! umol/m2/s  (1W/m2 = 2.02 umol/m2/s )         
     out_climate%radiation = real(forcing(idx_start:idx_end, 5))                   ! W/m2
-    out_climate%Tair      = real(forcing(idx_start:idx_end, 6)) + 273.16          ! air temperature, K
-    out_climate%Tsoil     = real(forcing(idx_start:idx_end, 7)) + 273.16          ! soil temperature, K
+    out_climate%Tair      = real(forcing(idx_start:idx_end, 6)) + 273.15          ! air temperature, K
+    out_climate%Tsoil     = real(forcing(idx_start:idx_end, 7)) + 273.15          ! soil temperature, K
     out_climate%RH        = real(forcing(idx_start:idx_end, 8)) * 0.01            ! relative humidity as a fraction (0.xx)
     out_climate%rain      = real(forcing(idx_start:idx_end, 9))                   ! kgH2O m-2 s-1
     out_climate%windU     = real(forcing(idx_start:idx_end, 10))                  ! wind velocity (m s-1)
@@ -133,7 +132,7 @@ contains
   ! end function aggregate_climate_byday
 
 
-  function getco2( nt, forcing, forcingyear_idx, forcingyear ) result( pco2 )
+  function getco2( nt, forcing, forcingyear_idx ) result( pco2 )
     !////////////////////////////////////////////////////////////////
     !  Function reads this year's atmospheric CO2 from input
     !----------------------------------------------------------------
@@ -142,7 +141,7 @@ contains
     real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     ! type(climate_type), dimension(nt), intent(in) :: forcing
 
-    integer, intent(in) :: forcingyear_idx, forcingyear
+    integer, intent(in) :: forcingyear_idx
 
     ! function return variable
     real, dimension(ntstepsyear) :: pco2

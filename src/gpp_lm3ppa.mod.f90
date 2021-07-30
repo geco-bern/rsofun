@@ -1,34 +1,37 @@
 module md_gpp_lm3ppa
   !//////////////////////////////////////////////////////////////////////
   ! GPP MODULE
-  ! Uses LM3-PPA structure to call the gs_Leuning() photosynthesis routine
+  ! Uses LM3-PPA structure to call the gs_leuning() photosynthesis routine
   !------------------------------------------------------------------------
   use datatypes
   use md_soil_lm3ppa, only: water_supply_layer
+  use md_interface_lm3ppa, only: myinterface
 
   implicit none
 
   private
-  public gpp
+  public gpp, getpar_modl_gpp
 
   !-----------------------------------------------------------------------
-  ! P-model parameters
+  ! P-model parameters created here for pmodel option. takes no effect in gs_leuning option
   !-----------------------------------------------------------------------
   type paramstype_gpp
-    real :: beta = 146.0         ! Unit cost of carboxylation (dimensionless)
-    real :: soilm_par_a = 0.0
-    real :: soilm_par_b = 0.0
-    real :: rd_to_vcmax = 0.014  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
-    real :: tau_acclim = 10.0    ! acclimation time scale of photosynthesis (d)
+    real :: beta         ! Unit cost of carboxylation (dimensionless)
+    real :: soilm_par_a
+    real :: soilm_par_b
+    real :: rd_to_vcmax  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
+    real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
+    real :: tau_acclim_tempstress
+    real :: par_shape_tempstress
   end type paramstype_gpp
 
-  type(paramstype_gpp) :: params_gpp
+  ! ! PFT-DEPENDENT PARAMETERS
+  ! type pftparamstype_gpp
+  !   real :: kphio        ! quantum efficiency (Long et al., 1993)  
+  ! end type pftparamstype_gpp
 
-  ! PFT-DEPENDENT PARAMETERS
-  type pftparamstype_gpp
-    real :: kphio = 0.05 ! Quantum yield efficiency parameter (Simulations: 0.05, 0.0575, 0.065) 0.24 hard-coded here, is a calibratable parameter in P-model, unrealistically high here to match ballpark of original model
-  end type pftparamstype_gpp
-  type(pftparamstype_gpp) :: params_pft_gpp
+  type(paramstype_gpp) :: params_gpp
+  ! type(pftparamstype_gpp), dimension(npft) :: params_pft_gpp
 
 contains
 
@@ -46,7 +49,7 @@ contains
     ! Subroutines from BiomeE-Allocation
     !------------------------------------------------------------------------
     use md_forcing_lm3ppa, only: climate_type
-    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel
+    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_rd, calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
     use md_params_core, only: kTkelvin, kfFEC
     use md_sofunutils, only: dampen_variability
 
@@ -66,11 +69,12 @@ contains
     real   :: fw, fs ! wet and snow-covered fraction of leaves
     real   :: psyn   ! net photosynthesis, mol C/(m2 of leaves s)
     real   :: resp   ! leaf respiration, mol C/(m2 of leaves s)
-    real   :: tempLAI, w_scale2, transp ! mol H20 per m2 of leaf per second
-    real   :: kappa  ! light extinction coefficient of corwn layers
+    real   :: w_scale2, transp ! mol H20 per m2 of leaf per second
+    real   :: kappa ! light extinction coefficient of crown layers
     real   :: f_light(10) = 0.0, f_apar(10) = 0.0      ! incident light fraction, and aborbed light fraction of each layer
     real   :: LAIlayer(10), crownarea_layer(10), accuCAI, f_gap, fapar_tree ! additional GPP for lower layer cohorts due to gaps
-    integer:: i, layer
+    real   :: myppfd, myrd, mygpp      ! just for temporary use
+    integer:: i, layer=0
 
     ! local variables used for P-model part
     real :: tk, ftemp_kphio
@@ -80,13 +84,12 @@ contains
     real, save :: patm_memory
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
 
-
     if (trim(myinterface%params_siml%method_photosynth) == "gs_leuning") then   !XXXXX
       !===========================================================
       ! Original BiomeE-Allocation
       !-----------------------------------------------------------
       ! Water supply for photosynthesis, Layers
-      call water_supply_layer(forcing, vegn)
+      call water_supply_layer(vegn)
 
       ! Sum leaf area over cohorts in each crown layer -> LAIlayer(layer)
       f_gap = 0.1 ! 0.1
@@ -142,46 +145,39 @@ contains
           fw = 0.0
           fs = 0.0
 
-          call gs_Leuning(rad_top, rad_net, TairK, cana_q, cc%lai, &
+          call gs_leuning(rad_top, rad_net, TairK, cana_q, cc%lai, &
             p_surf, water_supply, cc%species, sp%pt, &
-            cana_co2, cc%extinct, fs+fw, cc%layer, &
-            ! output:
+            cana_co2, cc%extinct, fs+fw, &
             psyn, resp, w_scale2, transp )
 
-          ! ! psyn/rad_top is on the order of 1e-8; psyn/rad_top is on the order of -1e-9
-          ! if (rad_top > 0.0) print*,'psyn/rad_top, resp/rad_top', psyn/rad_top, resp/rad_top
+          !===============================
+          ! XXX Experiment: increasing net photosynthesis 15% and 30%
+          !===============================
+          ! if (myinterface%steering%year>myinterface%params_siml%spinupyears) then
+          !   psyn = psyn * 1.30
+          !   resp = resp * 1.30
+          ! endif
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
-          cc%An_op   = psyn  ! molC s-1 m-2 of leaves
+          cc%An_op   = psyn  ! molC s-1 m-2 of leaves ! net photosynthesis, mol C/(m2 of leaves s)
           cc%An_cl   = -resp  ! molC s-1 m-2 of leaves
           cc%w_scale = w_scale2
           cc%transp  = transp * mol_h2o * cc%leafarea * myinterface%step_seconds ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
           cc%resl    = -resp         * mol_C * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
           cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
-          !===============================
-          ! XXX hack: For running simulations
-          !===============================
-          ! cc%An_op   = 0.75e-8 * rad_top  ! molC s-1 m-2 of leaves (Simulations: 0.75e-8, 0.8625e-8, 0.975e-8)
-          ! cc%An_cl   = 1e-9 * rad_top  ! molC s-1 m-2 of leaves
-          ! cc%w_scale = 0.0
-          ! cc%transp  = 0.0
-          ! cc%resl    = cc%An_cl              * mol_C * cc%leafarea * myinterface%step_seconds ! fnsc*spdata(sp)%gamma_LN  * cc%leafN * tf * myinterface%dt_fast_yr  ! tree-1 step-1
-          ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
-
           if (isnan(cc%gpp)) stop '"gpp" is a NaN'
 
-        else
+          else
 
           ! no leaves means no photosynthesis and no stomatal conductance either
-          cc%An_op   = 0.0
-          cc%An_cl   = 0.0
-          cc%gpp     = 0.0
-          cc%transp  = 0.0
-          cc%w_scale = -9999
+            cc%An_op   = 0.0
+            cc%An_cl   = 0.0
+            cc%gpp     = 0.0
+            cc%transp  = 0.0
+            cc%w_scale = -9999
 
-        endif
-
+          endif
         end associate
       enddo
 
@@ -284,32 +280,19 @@ contains
             ! cc%resl    = cc%An_cl              * mol_C * myinterface%step_seconds ! kgC tree-1 step-1
             ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * myinterface%step_seconds ! kgC step-1 tree-1
             !===============================
-
-            !----------------------------------------------------------------
-            ! P-model call to get a list of variables that are 
-            ! acclimated to slowly varying conditions
-            !----------------------------------------------------------------
-            if (temp_memory > -5.0 ) then                      ! minimum temp threshold to avoid fpe
-
-              out_pmodel = pmodel(  &
-                                    kphio          = params_pft_gpp%kphio * ftemp_kphio, &
-                                    beta           = params_gpp%beta, &
-                                    ppfd           = f_light(layer) * forcing%PAR * 1.0e-6, &
-                                    co2            = co2_memory, &
-                                    tc             = temp_memory, &
-                                    vpd            = vpd_memory, &
-                                    patm           = patm_memory, &
-                                    c4             = .false., &
-                                    method_optci   = "prentice14", &
-                                    method_jmaxlim = "wang17" &
-                                    )
-
-            else
-
-              ! PFT is not present 
-              out_pmodel = zero_pmodel()
-
-            end if
+            myppfd = f_light(layer) * forcing%PAR * 1.0e-6
+            out_pmodel = pmodel(  &
+                                  kphio          = sp%kphio, &
+                                  beta           = params_gpp%beta, &
+                                  ppfd           = myppfd, &    ! required in mol m-2 s-1, unit ground area
+                                  co2            = co2_memory, &
+                                  tc             = temp_memory, &
+                                  vpd            = vpd_memory, &
+                                  patm           = patm_memory, &
+                                  c4             = .false., &
+                                  method_optci   = "prentice14", &
+                                  method_jmaxlim = "wang17" &
+                                  )
 
             ! irrelevant variables for this setup  
             cc%An_op   = 0.0
@@ -317,10 +300,12 @@ contains
             cc%transp  = 0.0
             cc%w_scale = -9999
 
-            ! assume light-use efficiency model (linear scaling of gpp with absorbed light) and copy to cohort variables
-            cc%resl    = out_pmodel%vcmax25 * calc_ftemp_inst_rd( forcing%Tair - kTkelvin ) * fapar_tree * cc%crownarea * myinterface%step_seconds * mol_C     ! kgC step-1 tree-1 xxxxxxxxxx
-            cc%gpp     = out_pmodel%lue * f_light(layer) * forcing%PAR * 1.0e-6   * fapar_tree * cc%crownarea * myinterface%step_seconds * 1.0e-3    ! kgC step-1 tree-1
+            ! copy to cohort variables
+            myrd  = out_pmodel%vcmax25 * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )               ! mol s-1 m-2
+            mygpp = out_pmodel%lue * myppfd * myinterface%step_seconds                               ! g s-1 m-2
 
+            cc%resl = myrd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
+            cc%gpp  = mygpp * cc%crownarea * myinterface%step_seconds * 1.0e-3   ! kgC step-1 tree-1
 
           else
 
@@ -358,8 +343,8 @@ contains
   end subroutine gpp
 
 
-  subroutine gs_Leuning( rad_top, rad_net, tl, ea, lai, &
-    p_surf, ws, pft, pt, ca, kappa, leaf_wet, layer, &
+  subroutine gs_leuning( rad_top, rad_net, tl, ea, lai, &
+    p_surf, ws, pft, pt, ca, kappa, leaf_wet, &
     apot, acl,w_scale2, transp )
 
     real,    intent(in)    :: rad_top ! PAR dn on top of the canopy, w/m2
@@ -373,9 +358,9 @@ contains
     integer, intent(in)    :: pft  ! species
     integer, intent(in)    :: pt   ! physiology type (C3 or C4)
     real,    intent(in)    :: ca   ! concentartion of CO2 in the canopy air space, mol CO2/mol dry air
-    real,    intent(in)    :: kappa! canopy extinction coefficient (move inside f(pft))
+    real,    intent(in)    :: kappa ! canopy extinction coefficient (move inside f(pft))
     real,    intent(in)    :: leaf_wet ! fraction of leaf that's wet or snow-covered
-    integer, intent(in)    :: layer  ! the layer of this canopy
+    ! integer, intent(in)    :: layer  ! the layer of this canopy
     ! note that the output is per area of leaf; to get the quantities per area of
     ! land, multiply them by LAI
     !real,    intent(out)   :: gs   ! stomatal conductance, m/s
@@ -444,8 +429,6 @@ contains
 
     ! capgam=0.209/(9000.0*exp(-5000.0*(1.0/288.2-1.0/tl))); - Foley formulation, 1986
     capgam=0.5*kc/ko*0.21*0.209; ! Farquhar & Caemmerer 1982
-
-
 
     ! Find respiration for the whole canopy layer
 
@@ -591,134 +574,68 @@ contains
     gs = gs * Rugas * Tl / p_surf
     !write(899, '(25(E12.4,","))') rad_net,par_net,apot*3600*12,acl*3600*12,Ed
 
-  end subroutine gs_Leuning
+  end subroutine gs_leuning
 
 
-  subroutine calc_solarzen(td, latdegrees, cosz, solarelev, solarzen)
-    ! Calculate solar zenith angle **in radians**
-    ! From Spitters, C. J. T. (1986), AgForMet 38: 231-242.
-    implicit none
-    real, intent(in) :: td             ! day(to minute fraction)
-    real, intent(in) :: latdegrees     ! latitude in degrees
-    real :: hour,latrad
-    real :: delta    ! declination angle
-    real :: pi, rad
-    real, intent(out) :: cosz        ! cosz=cos(zen angle)=sin(elev angle)
-    real, intent(out) :: solarelev    ! solar elevation angle (rad)
-    real, intent(out) :: solarzen     ! solar zenith angle (rad)
+  ! subroutine calc_solarzen(td, latdegrees, cosz, solarelev, solarzen)
+  !   ! Calculate solar zenith angle **in radians**
+  !   ! From Spitters, C. J. T. (1986), AgForMet 38: 231-242.
+  !   implicit none
+  !   real, intent(in) :: td             ! day(to minute fraction)
+  !   real, intent(in) :: latdegrees     ! latitude in degrees
+  !   real :: hour,latrad
+  !   real :: delta    ! declination angle
+  !   real :: pi, rad
+  !   real, intent(out) :: cosz        ! cosz=cos(zen angle)=sin(elev angle)
+  !   real, intent(out) :: solarelev    ! solar elevation angle (rad)
+  !   real, intent(out) :: solarzen     ! solar zenith angle (rad)
 
-    pi  = 3.1415926
-    rad = pi / 180.0 ! Conversion from degrees to radians.
-    hour = (td-floor(td))*24.0
-    latrad = latdegrees*rad
-    delta  = asin(-sin(rad*23.450)*cos(2.0*pi*(td+10.0)/365.0))
-    cosz = sin(latrad)*sin(delta) + &
-    cos(latrad)*cos(delta)*cos(rad* 15.0*(hour-12.0))
-    cosz = max (cosz, 0.01)  ! Sun's angular is 0.01
-    ! compute the solar elevation and zenth angles below
-    solarelev = asin(cosz)/pi*180.0  !since asin(cos(zen))=pi/2-zen=elev
-    solarzen = 90.0 - solarelev ! pi/2.d0 - solarelev
+  !   pi  = 3.1415926
+  !   rad = pi / 180.0 ! Conversion from degrees to radians.
+  !   hour = (td-floor(td))*24.0
+  !   latrad = latdegrees*rad
+  !   delta  = asin(-sin(rad*23.450)*cos(2.0*pi*(td+10.0)/365.0))
+  !   cosz = sin(latrad)*sin(delta) + &
+  !   cos(latrad)*cos(delta)*cos(rad* 15.0*(hour-12.0))
+  !   cosz = max (cosz, 0.01)  ! Sun's angular is 0.01
+  !   ! compute the solar elevation and zenth angles below
+  !   solarelev = asin(cosz)/pi*180.0  !since asin(cos(zen))=pi/2-zen=elev
+  !   solarzen = 90.0 - solarelev ! pi/2.d0 - solarelev
 
-  end subroutine calc_solarzen
-
-
-  function calc_soilmstress( soilm, meanalpha, isgrass ) result( outstress )
-    !//////////////////////////////////////////////////////////////////
-    ! Calculates empirically-derived stress (fractional reduction in light 
-    ! use efficiency) as a function of soil moisture
-    ! Input:  soilm (unitless, within [0,1]): daily varying soil moisture
-    ! Output: outstress (unitless, within [0,1]): function of alpha to reduce GPP 
-    !         in strongly water-stressed months
-    !-----------------------------------------------------------------------
-    ! argument
-    real, intent(in) :: soilm                 ! soil water content (fraction)
-    real, intent(in) :: meanalpha             ! mean annual AET/PET, average over multiple years (fraction)
-    logical, intent(in), optional :: isgrass  ! vegetation cover information to distinguish sensitivity to low soil moisture
-
-    real, parameter :: x0 = 0.0
-    real, parameter :: x1 = 0.6
-
-    real :: y0, beta
-
-    ! function return variable
-    real :: outstress
-
-    if (soilm > x1) then
-      outstress = 1.0
-    else
-      ! print*,'soilm_par_a, soilm_par_b, meanalpha', params_gpp%soilm_par_a, params_gpp%soilm_par_b, meanalpha
-
-      y0 = (params_gpp%soilm_par_a + params_gpp%soilm_par_b * meanalpha)
-
-      ! if (present(isgrass)) then
-      !   if (isgrass) then
-      !     y0 = apar_grass + bpar_grass * meanalpha
-      !   else
-      !     y0 = apar + bpar * meanalpha
-      !   end if
-      ! else
-      !   y0 = apar + bpar * meanalpha
-      ! end if
-
-      beta = (1.0 - y0) / (x0 - x1)**2
-      outstress = 1.0 - beta * ( soilm - x1 )**2
-      outstress = max( 0.0, min( 1.0, outstress ) )
-    end if
-
-  end function calc_soilmstress
+  ! end subroutine calc_solarzen
 
 
-  function calc_ftemp_kphio( dtemp, c4 ) result( ftemp )
+  subroutine getpar_modl_gpp()
     !////////////////////////////////////////////////////////////////
-    ! Calculates the instantaneous temperature response of the quantum
-    ! yield efficiency based on Bernacchi et al., 2003 PCE (Equation
-    ! and parameter values taken from Appendix B)
+    ! Subroutine reads module-specific parameters from input file.
     !----------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: dtemp    ! (leaf) temperature in degrees celsius
-    logical, intent(in) :: c4
-
-    ! function return variable
-    real :: ftemp
-
-    if (c4) then
-      ftemp = -0.008 + 0.00375 * dtemp - 0.58e-4 * dtemp**2   ! Based on calibrated values by Shirley
-    else
-      ftemp = 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2  ! Based on Bernacchi et al., 2003
-    end if
-    
-  end function calc_ftemp_kphio
-
-
-  function calc_ftemp_inst_rd( tc ) result( fr )
-    !-----------------------------------------------------------------------
-    ! Output:   Factor fr to correct for instantaneous temperature response
-    !           of Rd (dark respiration) for:
-    !
-    !               Rd(temp) = fr * Rd(25 deg C) 
-    !
-    ! Ref:      Heskel et al. (2016) used by Wang Han et al. (in prep.)
-    !-----------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: tc      ! temperature (degrees C)
-
-    ! function return variable
-    real :: fr                  ! temperature response factor, relative to 25 deg C.
-
-    ! loal parameters
-    real, parameter :: apar = 0.1012
-    real, parameter :: bpar = 0.0005
-    real, parameter :: tk25 = 298.15 ! 25 deg C in Kelvin
+    use md_sofunutils, only: getparreal
 
     ! local variables
-    real :: tk                  ! temperature (Kelvin)
+    integer :: pft
 
-    ! conversion of temperature to Kelvin
-    tk = tc + 273.15
+    !----------------------------------------------------------------
+    ! PFT-independent parameters
+    !----------------------------------------------------------------
+    ! unit cost of carboxylation
+    params_gpp%beta  = 146.000000
 
-    fr = exp( apar * (tc - 25.0) - bpar * (tc**2 - 25.0**2) )
-    
-  end function calc_ftemp_inst_rd  
+    ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
+    params_gpp%rd_to_vcmax  = 0.01400000
+
+    ! Apply identical temperature ramp parameter for all PFTs
+    params_gpp%tau_acclim     = 30.0
+    params_gpp%soilm_par_a    = 1.0
+    params_gpp%soilm_par_b    = 0.0
+
+    ! temperature stress time scale is calibratable
+    params_gpp%tau_acclim_tempstress = 20.0
+    params_gpp%par_shape_tempstress  = 0.0
+
+    ! ! PFT-dependent parameter(s)
+    ! params_pft_gpp%kphio = myinterface%params_species(1)%kphio  ! is provided through standard input
+
+  end subroutine getpar_modl_gpp
 
 
   ! adopted from BiomeE-Allocation, should use the one implemented in SOFUN instead (has slightly different parameters)
@@ -728,5 +645,6 @@ contains
     REAL, INTENT(IN) :: T ! degC
     esat=610.78*exp(17.27*T/(T+237.3))
   END FUNCTION esat
+
 
 end module md_gpp_lm3ppa

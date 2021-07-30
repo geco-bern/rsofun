@@ -48,6 +48,10 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     code_method_mortality = 2
   } else if (params_siml$method_mortality == "dbh"){
     code_method_mortality = 3
+  } else if (params_siml$method_mortality == "const_selfthin"){
+    code_method_mortality = 4
+  } else if (params_siml$method_mortality == "bal"){
+    code_method_mortality = 5
   } else {
     rlang::abort(paste("run_lm3ppa_f_bysite: params_siml$method_mortality not recognised:", params_siml$method_mortality))
   }
@@ -92,8 +96,8 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       rlang::warn(paste("Error: Missing value in aCO2_AW for site", sitename, "\n"))
       do_continue <- FALSE
     }
-    if (any(is.nanull(forcing$amb_co2))){
-      rlang::warn(paste("Error: Missing value in amb_co2 for site", sitename, "\n"))
+    if (any(is.nanull(forcing$SWC))){
+      rlang::warn(paste("Error: Missing value in SWC for site", sitename, "\n"))
       do_continue <- FALSE
     }
     
@@ -107,15 +111,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
 
   if (do_continue) {
 
-    # ## Soil texture as matrix (layer x texture parameter)
-    # soiltexture <- df_soiltexture %>% 
-    #   dplyr::select(fsand, fclay, forg, fgravel) %>% 
-    #   as.matrix() %>% 
-    #   t()
-
     ## C wrapper call
-     # out <- .Call(
-
     lm3out <- .Call(
 
       'lm3ppa_f_C',
@@ -146,12 +142,19 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       K1           = as.numeric(params_tile$K1),
       K2           = as.numeric(params_tile$K2),
       K_nitrogen   = as.numeric(params_tile$K_nitrogen),
-      etaN         = as.numeric(params_tile$etaN),
       MLmixRatio   = as.numeric(params_tile$MLmixRatio),
+      etaN         = as.numeric(params_tile$etaN),
+      LMAmin       = as.numeric(params_tile$LMAmin),
+      fsc_fine     = as.numeric(params_tile$fsc_fine),
+      fsc_wood     = as.numeric(params_tile$fsc_wood),
+      GR_factor    = as.numeric(params_tile$GR_factor),
       l_fract      = as.numeric(params_tile$l_fract),
       retransN     = as.numeric(params_tile$retransN),
-      f_N_add      = as.numeric(params_tile$f_N_add),
       f_initialBSW = as.numeric(params_tile$f_initialBSW),
+      f_N_add      = as.numeric(params_tile$f_N_add),
+      tf_base      = as.numeric(params_tile$tf_base),
+      par_mort     = as.numeric(params_tile$par_mort),
+      par_mort_under = as.numeric(params_tile$par_mort_under),
 
       ## Species-specific parameters
       params_species = as.matrix(params_species),
@@ -167,7 +170,6 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       init_slow_soil_C = as.numeric(init_soil$init_slow_soil_C),
       init_Nmineral    = as.numeric(init_soil$init_Nmineral),
       N_input          = as.numeric(init_soil$N_input),
-
       n                = as.integer(nrow(forcing)), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       n_daily          = as.integer(n_daily), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       n_annual         = as.integer(runyears), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
@@ -447,7 +449,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     out$output_annual_tile <- lm3out[[30]] %>%
       as.matrix() %>% 
       as_tibble() %>%
-      setNames(c("year", "CAI", "LAI", "Density", "DBH", "Density12", "DBH12", "QMD", "NPP", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N", "MaxAge", "MaxVolume", "MaxDBH")) %>%
+      setNames(c("year", "CAI", "LAI", "Density", "DBH", "Density12", "DBH12", "QMD", "NPP", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N", "MaxAge", "MaxVolume", "MaxDBH", "NPPL", "NPPW", "n_deadtrees", "c_deadtrees", "m_turnover", "c_turnover_time")) %>%
       filter_at(vars(year), all_vars((.) != 0))
     
     ## annual cohorts
@@ -624,7 +626,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_uptk", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Rauto", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -632,7 +634,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_fix", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_uptk", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -640,7 +642,7 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "maxLAI", names_prefix = "cohort_") %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_fix", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     bind_cols(
       .,
@@ -648,7 +650,39 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
         as.matrix() %>% 
         as_tibble() %>%
         setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "maxLAI", names_prefix = "cohort_") %>%
+        dplyr::select(-1)) %>%
+    bind_cols(
+      .,
+      lm3out[[56]] %>%
+        as.matrix() %>% 
+        as_tibble() %>%
+        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
         tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Volume", names_prefix = "cohort_") %>%
+        dplyr::select(-1)) %>%
+    bind_cols(
+      .,
+      lm3out[[57]] %>%
+        as.matrix() %>% 
+        as_tibble() %>%
+        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "n_deadtrees", names_prefix = "cohort_") %>%
+        dplyr::select(-1)) %>%
+    bind_cols(
+        .,
+      lm3out[[58]] %>%
+        as.matrix() %>% 
+        as_tibble() %>%
+        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "c_deadtrees", names_prefix = "cohort_") %>%
+        dplyr::select(-1)) %>%
+    bind_cols(
+      .,
+      lm3out[[59]] %>%
+        as.matrix() %>% 
+        as_tibble() %>%
+        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
+        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "deathrate", names_prefix = "cohort_") %>%
         dplyr::select(-1)) %>%
     tidyr::drop_na(year) 
 

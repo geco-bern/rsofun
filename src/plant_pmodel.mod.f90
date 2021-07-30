@@ -243,9 +243,7 @@ contains
     character(len=*), intent(in) :: pftname
 
     ! local variables
-    real :: lu_category_prov    ! land use category associated with PFT (provisional)
-    real :: code_growthform
-    real :: code_nfixer
+    real :: lu_category_prov = 0   ! land use category associated with PFT (provisional)
 
     ! function return variable
     type( params_pft_plant_type ) :: out_getpftparams
@@ -358,18 +356,18 @@ contains
   end subroutine initpft
 
 
-  subroutine initdaily_plant( plant_fluxes )
-    !////////////////////////////////////////////////////////////////
-    ! Initialises all daily variables with zero.
-    !----------------------------------------------------------------
-    ! arguments
-    type( plant_fluxes_type ), dimension(npft), intent(inout) :: plant_fluxes
+  ! subroutine initdaily_plant( plant_fluxes )
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Initialises all daily variables with zero.
+  !   !----------------------------------------------------------------
+  !   ! arguments
+  !   type( plant_fluxes_type ), dimension(npft), intent(inout) :: plant_fluxes
 
-    plant_fluxes(:)%dgpp    = 0.0
-    plant_fluxes(:)%drd     = 0.0
-    plant_fluxes(:)%dtransp = 0.0
+  !   plant_fluxes(:)%dgpp    = 0.0
+  !   plant_fluxes(:)%drd     = 0.0
+  !   plant_fluxes(:)%dtransp = 0.0
 
-  end subroutine initdaily_plant
+  ! end subroutine initdaily_plant
 
 
 end module md_plant_pmodel

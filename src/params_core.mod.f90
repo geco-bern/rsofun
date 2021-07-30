@@ -18,24 +18,24 @@ module md_params_core
   integer, parameter :: n_dim_soil_types = 9     ! number of soil types
   integer, parameter :: MSPECIES = 15            ! number of species
   integer, parameter :: MAX_INIT_COHORTS = 10    ! Number of initial cohorts
-  integer, parameter :: out_max_cohorts = 50     ! Try: Number of maximum cohorts
+  integer, parameter :: out_max_cohorts = 50     ! Number of maximum cohorts
 
   integer, parameter :: nvars_hourly_tile = 15
   integer, parameter :: nvars_daily_tile = 35
   integer, parameter :: nvars_daily_cohorts = 27
-  integer, parameter :: nvars_annual_tile = 53
-  integer, parameter :: nvars_annual_cohorts = 25
+  integer, parameter :: nvars_annual_tile = 59
+  integer, parameter :: nvars_annual_cohorts = 29
 
   ! From SOFUN
   integer, parameter :: maxgrid = 1              ! number of spatial gridcells (dummy dimension for later code extension)
   integer, parameter :: nbucket = 2              ! number of buckets for soil water model
-  integer, parameter :: npft = 1                 ! number of PFTs
+  integer, parameter :: npft = 1                 ! number of PFTs !3
   integer, parameter :: nlu = 1                  ! number of land units (tiles)
   integer, parameter :: lunat = 1                ! ID of natural land unit
   integer, parameter :: lucrop = 2               ! ID of crop land unit
 
   integer, parameter, dimension(npft) :: pft_start = 1
-  integer, parameter, dimension(npft) :: pft_end   = 1
+  integer, parameter, dimension(npft) :: pft_end   = 1 !3
 
   integer, parameter, dimension(nmonth)   :: ndaymonth = (/31,28,31,30,31,30,31,31,30,31,30,31/) ! number of days per month
   integer, parameter, dimension(nmonth+1) :: middaymonth = (/16,44,75,105,136,166,197,228,258,289,319,350,381/) ! day of year of middle-month-day

@@ -10,7 +10,8 @@ module md_photosynth
   implicit none
 
   private
-  public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax
+  public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
+    calc_ftemp_inst_rd, calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -41,8 +42,8 @@ module md_photosynth
     ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (mol CO2 m-2 s-1)
     ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
-    ! real :: actnv_unitfapar     ! Metabolic leaf N per unit fAPAR (g N m-2)
-    ! real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
+    real :: actnv_unitfapar     ! Metabolic leaf N per unit fAPAR (g N m-2)
+    real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
     ! real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
   end type outtype_pmodel
 
@@ -103,7 +104,7 @@ contains
     ! real :: gs_unitiabs         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
     real :: ci                  ! leaf-internal partial pressure, (Pa)
     real :: chi                 ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
-    real :: xi                  ! relative cost parameter, Eq. 9 in Stocker et al., 2019
+    real :: xi = 0              ! relative cost parameter, Eq. 9 in Stocker et al., 2019
     real :: ns                  ! viscosity of H2O at ambient temperatures (Pa s)
     real :: ns25                ! viscosity of H2O at 25 deg C (Pa s)
     real :: ns_star             ! viscosity correction factor (unitless)
@@ -132,7 +133,7 @@ contains
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
 
     ! local variables for Jmax limitation following Nick Smith's method
-    real :: omega, omega_star, vcmax_unitiabs_star, tcref, jmax_over_vcmax, jmax_prime, jvrat
+    real :: omega, omega_star, vcmax_unitiabs_star, tcref, jmax_over_vcmax, jmax_prime
 
     real, parameter :: theta = 0.85
     real, parameter :: c_cost = 0.05336251
@@ -543,7 +544,7 @@ contains
     real :: xi                    ! relative cost parameter
     real :: gamma                 ! variable substitute
     real :: kappa                 ! variable substitute
-    real :: mc, mj, mjoc          ! ci-limitation factor Rubisco- and light-limited assimilation and their ratio, resp.
+    real :: mc, mj=0, mjoc          ! ci-limitation factor Rubisco- and light-limited assimilation and their ratio, resp.
 
     ! variable substitutes
     real :: vdcg, vacg, vbkg, vsr
@@ -716,21 +717,21 @@ contains
   end function co2_to_ca
 
 
-  function ca_to_co2( ca, patm ) result( co2 )
-    !-----------------------------------------------------------------------
-    ! Output:   - co2 in units of Pa
-    ! Features: Converts ca (ambient CO2) from Pa to ppm.
-    !-----------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: ca        ! ambient CO2 in units of Pa
-    real, intent(in) :: patm      ! monthly atm. pressure, Pa
+  ! function ca_to_co2( ca, patm ) result( co2 )
+  !   !-----------------------------------------------------------------------
+  !   ! Output:   - co2 in units of Pa
+  !   ! Features: Converts ca (ambient CO2) from Pa to ppm.
+  !   !-----------------------------------------------------------------------
+  !   ! arguments
+  !   real, intent(in) :: ca        ! ambient CO2 in units of Pa
+  !   real, intent(in) :: patm      ! monthly atm. pressure, Pa
 
-    ! function return variable
-    real :: co2
+  !   ! function return variable
+  !   real :: co2
 
-    co2   = ca * ( 1.e6 ) / patm
+  !   co2   = ca * ( 1.e6 ) / patm
     
-  end function ca_to_co2
+  ! end function ca_to_co2
 
 
   function calc_kmm( tc, patm ) result( kmm )
@@ -751,7 +752,7 @@ contains
     real, parameter :: kc25 = 39.97      ! Pa, assuming 25 deg C & assuming elevation of 227.076 m.a.s.l.
     real, parameter :: ko25 = 27480      ! Pa, assuming 25 deg C & assuming elevation of 227.076 m.a.s.l.
     real, parameter :: kco  = 2.09476d5  ! ppm, US Standard Atmosphere
-    real :: kc, ko, po, rat, tk
+    real :: kc, ko, po, tk
 
     ! function return variable
     real :: kmm                           ! temperature & pressure dependent Michaelis-Menten coefficient, K (Pa).
@@ -799,6 +800,134 @@ contains
     gammastar = gammastar25 * calc_ftemp_arrhenius( tk, dha )
 
   end function calc_gammastar
+
+
+  function calc_soilmstress( soilm, meanalpha, isgrass, soilm_par_a, soilm_par_b ) result( outstress )
+    !//////////////////////////////////////////////////////////////////
+    ! Calculates empirically-derived stress (fractional reduction in light 
+    ! use efficiency) as a function of soil moisture
+    ! Input:  soilm (unitless, within [0,1]): daily varying soil moisture
+    ! Output: outstress (unitless, within [0,1]): function of alpha to reduce GPP 
+    !         in strongly water-stressed months
+    !-----------------------------------------------------------------------
+    ! argument
+    real, intent(in) :: soilm                 ! soil water content (fraction)
+    real, intent(in) :: meanalpha             ! mean annual AET/PET, average over multiple years (fraction)
+    real, intent(in) :: soilm_par_a           ! function parameter
+    real, intent(in) :: soilm_par_b           ! 
+    logical, intent(in), optional :: isgrass  ! vegetation cover information to distinguish sensitivity to low soil moisture
+
+    real, parameter :: x0 = 0.0
+    real, parameter :: x1 = 0.6
+
+    real :: y0, beta
+
+    ! function return variable
+    real :: outstress
+
+    if (soilm > x1) then
+      outstress = 1.0
+    else
+
+      y0 = (soilm_par_a + soilm_par_b * meanalpha)
+
+      ! if (present(isgrass)) then
+      !   if (isgrass) then
+      !     y0 = apar_grass + bpar_grass * meanalpha
+      !   else
+      !     y0 = apar + bpar * meanalpha
+      !   end if
+      ! else
+      !   y0 = apar + bpar * meanalpha
+      ! end if
+
+      beta = (1.0 - y0) / (x0 - x1)**2
+      outstress = 1.0 - beta * ( soilm - x1 )**2
+      outstress = max( 0.0, min( 1.0, outstress ) )
+    end if
+
+  end function calc_soilmstress
+
+
+  function calc_ftemp_kphio( dtemp, c4 ) result( ftemp )
+    !////////////////////////////////////////////////////////////////
+    ! Calculates the instantaneous temperature response of the quantum
+    ! yield efficiency based on Bernacchi et al., 2003 PCE (Equation
+    ! and parameter values taken from Appendix B)
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: dtemp    ! (leaf) temperature in degrees celsius
+    logical, intent(in) :: c4
+
+    ! function return variable
+    real :: ftemp
+
+    if (c4) then
+      ftemp = (-0.008 + 0.00375 * dtemp - 0.58e-4 * dtemp**2) * 8.0 ! Based on calibrated values by Shirley
+      if (ftemp < 0.0) then
+        ftemp = 0.0
+      else
+        ftemp = ftemp
+      end if    
+    else
+      ftemp = 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2  ! Based on Bernacchi et al., 2003
+    end if
+    
+  end function calc_ftemp_kphio
+
+
+  function calc_ftemp_kphio_tmin( tc, shape_par ) result( ftemp )
+    !////////////////////////////////////////////////////////////////
+    ! Calculates the low temperature stress function assuming no stress
+    ! at 10 deg C and above and declining below based on a calibratable
+    ! parameter and a quadratic function.
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: tc           ! (leaf) temperature in degrees celsius
+    real, intent(in) :: shape_par    ! shape parameter for the sensitivity of the decline, some positive value
+
+    ! function return variable
+    real :: ftemp
+
+    if (tc > 10.0) then
+      ftemp = 1.0
+    else
+      ftemp = 1.0 - (shape_par * (tc - 10.0))**2
+      if (ftemp < 0.0) ftemp = 0.0
+    end if
+    
+  end function calc_ftemp_kphio_tmin
+
+
+  function calc_ftemp_inst_rd( tc ) result( fr )
+    !-----------------------------------------------------------------------
+    ! Output:   Factor fr to correct for instantaneous temperature response
+    !           of Rd (dark respiration) for:
+    !
+    !               Rd(temp) = fr * Rd(25 deg C) 
+    !
+    ! Ref:      Heskel et al. (2016) used by Wang Han et al. (in prep.)
+    !-----------------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: tc      ! temperature (degrees C)
+
+    ! function return variable
+    real :: fr                  ! temperature response factor, relative to 25 deg C.
+
+    ! loal parameters
+    real, parameter :: apar = 0.1012
+    real, parameter :: bpar = 0.0005
+    real, parameter :: tk25 = 298.15 ! 25 deg C in Kelvin
+
+    ! local variables
+    real :: tk                  ! temperature (Kelvin)
+
+    ! conversion of temperature to Kelvin
+    tk = tc + 273.15
+
+    fr = exp( apar * (tc - 25.0) - bpar * (tc**2 - 25.0**2) )
+    
+  end function calc_ftemp_inst_rd
 
 
   function calc_ftemp_inst_vcmax( tcleaf, tcgrowth, tcref ) result( fv )

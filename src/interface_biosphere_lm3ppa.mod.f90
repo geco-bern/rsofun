@@ -21,31 +21,60 @@ module md_interface_lm3ppa
     real   :: K1
     real   :: K2
     real   :: K_nitrogen
-    real   :: etaN
     real   :: MLmixRatio
+    real   :: etaN
+    real   :: LMAmin
+    real   :: fsc_fine
+    real   :: fsc_wood
+    real   :: GR_factor
     real   :: l_fract
     real   :: retransN
-    real   :: f_N_add
     real   :: f_initialBSW
+    real   :: f_N_add
+    real   :: tf_base  ! calibratable
+    real   :: par_mort ! calibratable
+    real   :: par_mort_under ! calibratable
   end type paramstype_tile
   
   type paramstype_species
     integer :: lifeform
     integer :: phenotype
     integer :: pt
-    real :: seedlingsize
-    real :: LMA
-    real :: phiRL
-    real :: LNbase
-    real :: laimax
-    real :: LAI_light
-    real :: Nfixrate0
-    real :: NfixCost0
-    real :: phiCSA
-    real :: mortrate_d_c
-    real :: mortrate_d_u
-    real :: maturalage
-    real :: fNSNmax
+    real    :: alpha_FR
+    real    :: rho_FR
+    real    :: root_r
+    real    :: root_zeta
+    real    :: Kw_root
+    real    :: leaf_size
+    real    :: Vmax
+    real    :: Vannual
+    real    :: wet_leaf_dreg
+    real    :: m_cond
+    real    :: alpha_phot
+    real    :: gamma_L
+    real    :: gamma_LN
+    real    :: gamma_SW
+    real    :: gamma_FR
+    real    :: tc_crit
+    real    :: tc_crit_on
+    real    :: gdd_crit
+    real    :: seedlingsize
+    real    :: LNbase
+    real    :: laimax
+    real    :: Nfixrate0
+    real    :: NfixCost0
+    real    :: phiCSA
+    real    :: mortrate_d_c
+    real    :: mortrate_d_u
+    real    :: maturalage
+    real    :: fNSNmax
+    real    :: LMA       ! prescribed by sps
+    real    :: rho_wood  ! prescribed by sps
+    real    :: alphaBM   ! prescribed by sps
+    real    :: thetaBM   ! prescribed by sps
+    real    :: kphio     ! calibratable
+    real    :: phiRL     ! calibratable
+    real    :: LAI_light ! calibratable
   end type paramstype_species
 
   type inittype_cohort 
@@ -64,23 +93,24 @@ module md_interface_lm3ppa
   end type inittype_soil
 
   type interfacetype_biosphere
-    integer                                           :: year
-    real, dimension(:), allocatable                   :: pco2
-    type(gridtype)                                    :: grid
-    type(climate_type), dimension(:), allocatable     :: climate
-    type(outtype_steering)                            :: steering
-    type(paramstype_siml)                             :: params_siml
-    real, dimension(:), allocatable                   :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
-    ! type(paramstype_calib)                          :: params_calib    ! calibratable parameters
-    type(paramstype_species), dimension(0:MSPECIES)   :: params_species
-    type(paramtype_soil)                              :: params_soil
-    type(paramstype_tile)                             :: params_tile
-    type(inittype_cohort), dimension(MAX_INIT_COHORTS):: init_cohort
-    type(inittype_soil)                               :: init_soil
-    integer                                           :: datalines
-    integer                                           :: steps_per_day
-    real                                              :: dt_fast_yr
-    real                                              :: step_seconds
+    integer                                               :: year
+    real, dimension(:), allocatable                       :: pco2
+    type(gridtype)                                        :: grid
+    type(climate_type), dimension(:), allocatable         :: climate
+    type(outtype_steering)                                :: steering
+    type(paramstype_siml)                                 :: params_siml
+    real, dimension(:), allocatable                       :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
+    type(paramstype_species), dimension(0:MSPECIES)       :: params_species
+    type(paramtype_soil)                                  :: params_soil
+    type(paramstype_tile)                                 :: params_tile
+    type(inittype_cohort), dimension(MAX_INIT_COHORTS)    :: init_cohort
+    type(inittype_soil)                                   :: init_soil
+    integer                                               :: datalines
+    integer                                               :: steps_per_day
+    real                                                  :: dt_fast_yr
+    real                                                  :: step_seconds
+    ! type(paramstype_calib_species), dimension(0:MSPECIES) :: params_calib_species
+    ! type(paramstype_calib_tile)                           :: params_calib_tile
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface
@@ -231,6 +261,12 @@ module md_interface_lm3ppa
     real :: MaxAge
     real :: MaxVolume
     real :: MaxDBH
+    real :: NPPL
+    real :: NPPW
+    real :: n_deadtrees !yyy
+    real :: c_deadtrees
+    real :: m_turnover
+    real :: c_turnover_time
   end type outtype_annual_tile  
 
   type outtype_annual_cohorts ! fno2
@@ -255,10 +291,14 @@ module md_interface_lm3ppa
     real :: NPPW
     real :: GPP
     real :: NPP
+    real :: Rauto
     real :: N_uptk
     real :: N_fix
     real :: maxLAI
     real :: Volume
+    real :: n_deadtrees
+    real :: c_deadtrees
+    real :: deathrate
   end type outtype_annual_cohorts
 
   type outtype_biosphere
