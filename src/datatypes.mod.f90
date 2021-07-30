@@ -1201,7 +1201,7 @@ contains
     out_annual_tile%SoilWater  = vegn%SoilWater
     out_annual_tile%Transp     = vegn%annualTrsp
     out_annual_tile%Evap       = vegn%annualEvap
-    out_annual_tile%Runoff     = vegn%annualRoff
+    out_annual_tile%Runoff     = vegn%annualRoff ! test
     out_annual_tile%plantC     = plantC ! kg C/m2/yr
     out_annual_tile%soilC      = soilC
     out_annual_tile%plantN     = plantN *1000
