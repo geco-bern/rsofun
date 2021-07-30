@@ -803,7 +803,7 @@ contains
           else  
           ! Canopy mortality
             if (cc%bl_max > 0) then
-            deathrate = param_nsc * 0.05 * (exp(-3.0*(cc%nsc/cc%bl_max))/(0.01+exp(-3.0*(cc%nsc/cc%bl_max))))
+            deathrate = param_nsc * 0.05 * (exp(-3.5*(cc%nsc/cc%bl_max))/(0.01+exp(-3.5*(cc%nsc/cc%bl_max)))) ! -3.5,-2.5,-2
             endif
           endif
 
@@ -818,12 +818,12 @@ contains
             deathrate = param_gr_under * sp%mortrate_d_u * &
                      (1. + A_mort*exp(B_mort*cc%dbh))/ &
                      (1. +        exp(B_mort*cc%dbh)) 
-
           else  
           ! Canopy mortality
-          deathrate = param_gr * 0.05 *    &
-                           (1.*exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))/ &
-                           (1. + exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))))
+          ! deathrate = param_gr * 0.05 *    &
+          !                  (1.*exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))/ &
+          !                  (1. + exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))))
+          deathrate = min(1.0, param_dbh * 0.015 * cc%dbh ** 1.5) ! 1.5, 1.6, 1.7
           endif
           ! print*, "cc%dbh-cc%DBH_ys", cc%dbh-cc%DBH_ys
           ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys

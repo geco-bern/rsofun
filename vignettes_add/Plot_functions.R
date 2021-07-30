@@ -72,18 +72,13 @@ ggplot(data.frame(x = c(0, 1)), aes(x)) +
 # NOW IN FORTRAN!
 # See that maximum value of cc%nsc/cc%bl_max expected is 5
 
-ggplot(data.frame(x = c(0, 5)), aes(x)) + 
-  stat_function(fun = ~ 0.05*(exp(-3*.x)/(0.01+exp(-3*.x)))) +
-  stat_function(fun = ~ 0.05*(exp(-3*.x)/(0.02+exp(-3*.x)))) +
-  stat_function(fun = ~ 0.05*(exp(-3*.x)/(0.03+exp(-3*.x))), col = "red") +
-  stat_function(fun = ~ 0.05*(exp(-3*.x)/(0.1+exp(-3*.x))), col = "red") +
-  labs(x='NSC', y='Mortality rate') +theme_bw()
+deathrate = param_nsc * 0.05 * (exp(-3.0*(cc%nsc/cc%bl_max))/(0.01+exp(-3.0*(cc%nsc/cc%bl_max))))
 
 ggplot(data.frame(x = c(0, 5)), aes(x)) + 
-  stat_function(fun = ~ 1*0.05*(exp(-3*.x)/(0.01+exp(-3*.x))),col="#F8766D")+
-  stat_function(fun = ~ 0.1*0.05*(exp(-3*.x)/(0.01+exp(-3*.x))))+
-  stat_function(fun = ~ 2*0.05*(exp(-3*.x)/(0.01+exp(-3*.x))))+
-  labs(x='DBH (m)', y='Deathrate') 
+  stat_function(fun = ~ 0.05*(exp(-3.5*.x)/(0.01+exp(-3.5*.x)))) +
+  stat_function(fun = ~ 0.05*(exp(-2.5*.x)/(0.01+exp(-2.5*.x)))) +
+  stat_function(fun = ~ 0.05*(exp(-2*.x)/(0.01+exp(-2*.x))), col = "red") +
+  labs(x='NSC', y='Mortality rate') +theme_bw()
 
 fig1a_nsc <- ggplot(data.frame(x = c(0, 5)), aes(x)) + 
   stat_function(fun = ~ 1.4958614*0.05*(exp(-3*.x)/(0.01+exp(-3*.x))),col="#F8766D")+
@@ -104,10 +99,16 @@ ggplot(data.frame(x = c(0, 12)), aes(x)) + stat_function(fun = ~ 0.05*(1*exp(1*(
   labs(x='GR', y='Mortality rate (m)') +theme_bw()
 
 ggplot(data.frame(x = c(0, 12)), aes(x)) + 
-  stat_function(fun = ~ 1*0.05*(1*exp(1*(.x-6)))/(1+exp(1*(.x-6))),col="#F8766D") +
-  stat_function(fun = ~ 0.1*0.05*(1*exp(1*(.x-6)))/(1+exp(1*(.x-6)))) +
-  stat_function(fun = ~ 2*0.05*(1*exp(1*(.x-6)))/(1+exp(1*(.x-6)))) +
-  labs(x='DBH (m)', y='Deathrate') 
+  stat_function(fun = ~ 0.015*.x ^ 1.5) +
+  stat_function(fun = ~ 0.015*.x ^ 1.6,col="#F8766D") +
+  stat_function(fun = ~ 0.015*.x ^ 1.7) +
+  labs(x='DBH', y='Mortality rate') +theme_bw()
+
+ggplot(data.frame(x = c(0, 12)), aes(x)) + 
+  stat_function(fun = ~ 0.05*(1*exp(1*(.x-8)))/(1+exp(1*(.x-8))),col="#F8766D") +
+  stat_function(fun = ~ 0.05*(1*exp(2*(.x-8)))/(1+exp(2*(.x-8)))) +
+  stat_function(fun = ~ 0.05*(1*exp(3*(.x-8)))/(1+exp(3*(.x-8)))) +
+  labs(x='Biomass growth', y='Deathrate') 
 
 fig1a_gr <- ggplot(data.frame(x = c(0, 12)), aes(x)) + 
   stat_function(fun = ~ 0.1510497*0.05*(1*exp(1*(.x-6)))/(1+exp(1*(.x-6))),col="#F8766D") +
