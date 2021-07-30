@@ -77,7 +77,6 @@ params_siml <- list(
   recycle            = 1,
   soilmstress        = FALSE,
   tempstress         = TRUE,
-  calc_aet_fapar_vpd = FALSE,
   in_ppfd            = TRUE,
   in_netrad          = FALSE,
   outdt              = 1,
@@ -106,9 +105,6 @@ params_modl <- list(
 	kphio           = 0.05,
 	soilm_par_a     = 1.0,
 	soilm_par_b     = 0.0,
-	vpdstress_par_a = 0.2,
-	vpdstress_par_b = 0.2,
-	vpdstress_par_m = 5,
 	tau_acclim_tempstress = 15,
 	par_shape_tempstress = 0.0  # effectively no additional minimum temperature stress
 	)

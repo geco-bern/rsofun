@@ -28,7 +28,6 @@ module md_params_siml_pmodel
 
     logical :: soilmstress          ! when true, an empirical soil moisture stress function is applied to GPP
     logical :: tempstress           ! when true, an empirical temperature stress function is applied to GPP
-    logical :: calc_aet_fapar_vpd   ! when true, AET is calculated as f(VPD) * fAPAR * PET, where f(VPD) is of the form a * (b + m * ln(VPD))
     
     character(len=256) :: runname
     character(len=256) :: sitename

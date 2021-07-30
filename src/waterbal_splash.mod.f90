@@ -51,9 +51,6 @@ module md_waterbal
   ! real :: kGsc              ! solar constant, W/m^2 (Kopp & Lean, 2011)
   real :: kw                ! entrainment factor (Lhomme, 1997; Priestley & Taylor, 1972)
   real :: komega            ! longitude of perihelion for 2000 CE, degrees (Berger, 1978)
-  real :: vpdstress_par_a   ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
-  real :: vpdstress_par_b   ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
-  real :: vpdstress_par_m   ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -457,32 +454,6 @@ contains
   end function get_snow_rain
 
 
-  function calc_vdpstress( vpd ) result( out_vpdstress )
-    !/////////////////////////////////////////////////////////////////////////
-    ! Calculates a VPD stress function based on Oren et al. 2001 Eq. 4
-    ! Reference: 
-    ! Oren et al.: Sensitivity of mean canopy stomatal conductance
-    ! to vapor pressure deficit in a flooded Taxodium distichum L. forest:
-    ! hydraulic and non-hydraulic effectsOecologia (2001) 126:21–29, 
-    ! DOI 10.1007/s004420000497
-    !-------------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: vpd    ! Vapour pressure deficit (Pa)
-
-    ! function return variable
-    real :: out_vpdstress
-
-    if (vpd<1) then
-      out_vpdstress = 1.0
-    else
-      out_vpdstress = vpdstress_par_a * (vpdstress_par_b - vpdstress_par_m * (log(0.001) + log(vpd)))
-      if (out_vpdstress > 1.0) out_vpdstress = 1.0
-      if (out_vpdstress < 0.0) out_vpdstress = 0.0
-    end if
-
-  end function calc_vdpstress
-
-
   function calc_dr( nu ) result( dr )
     !---------------------------------------------------------
     ! Calculates distance factor (dr), unitless
@@ -627,16 +598,6 @@ contains
 
     ! maximum snow melting rate (mm d-1) (Orth et al., 2013)
     maxmeltrate = 3.0
-
-    ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
-    vpdstress_par_a = myinterface%params_calib%vpdstress_par_a
-
-    ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
-    vpdstress_par_b = myinterface%params_calib%vpdstress_par_b
-
-    ! Parameter for Oren et al.-VPD stress function (see calc_vpdstress())
-    vpdstress_par_m = myinterface%params_calib%vpdstress_par_m
-
 
   end subroutine getpar_modl_waterbal
 

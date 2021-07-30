@@ -20,7 +20,6 @@ contains
     secs_per_tstep,            &     
     soilmstress,               &        
     tempstress,                &       
-    calc_aet_fapar_vpd,        &       
     in_ppfd,                   &    
     in_netrad,                 &      
     outdt,                     &  
@@ -64,7 +63,6 @@ contains
     integer(kind=c_int),  intent(in) :: secs_per_tstep
     logical(kind=c_bool), intent(in) :: soilmstress
     logical(kind=c_bool), intent(in) :: tempstress
-    logical(kind=c_bool), intent(in) :: calc_aet_fapar_vpd
     logical(kind=c_bool), intent(in) :: in_ppfd
     logical(kind=c_bool), intent(in) :: in_netrad
     integer(kind=c_int),  intent(in) :: outdt
@@ -81,7 +79,7 @@ contains
     real(kind=c_double),  intent(in) :: whc
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(8), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(5), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
     real(kind=c_double),  dimension(nt,13), intent(out) :: output
 
@@ -107,7 +105,6 @@ contains
     
     myinterface%params_siml%soilmstress        = soilmstress
     myinterface%params_siml%tempstress         = tempstress
-    myinterface%params_siml%calc_aet_fapar_vpd = calc_aet_fapar_vpd
     myinterface%params_siml%in_ppfd            = in_ppfd
     myinterface%params_siml%in_netrad          = in_netrad
     myinterface%params_siml%outdt              = outdt
@@ -155,11 +152,8 @@ contains
     myinterface%params_calib%kphio                 = real(par(1))
     myinterface%params_calib%soilm_par_a           = real(par(2))
     myinterface%params_calib%soilm_par_b           = real(par(3))
-    myinterface%params_calib%vpdstress_par_a       = real(par(4))
-    myinterface%params_calib%vpdstress_par_b       = real(par(5))
-    myinterface%params_calib%vpdstress_par_m       = real(par(6))
-    myinterface%params_calib%tau_acclim_tempstress = real(par(7))
-    myinterface%params_calib%par_shape_tempstress  = real(par(8))
+    myinterface%params_calib%tau_acclim_tempstress = real(par(4))
+    myinterface%params_calib%par_shape_tempstress  = real(par(5))
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)

@@ -39,11 +39,6 @@ calib_sofun <- function( df_drivers, ddf_obs, settings ){
       ## Full stack calibration
       cost_rmse <- cost_rmse_fullstack   
 
-    } else if ( "vpdstress_par_a" %in% names(settings$par) && "vpdstress_par_b" %in% names(settings$par) && "vpdstress_par_m" %in% names(settings$par) ){  
-      ## Calibration of VPD stress function (P-model runs with soilmstress and tempstress on)
-      # cost_rmse <- cost_chisquared_vpdstress
-      cost_rmse <- cost_rmse_vpdstress
-      
     } else if ( "kphio" %in% names(settings$par) && "tau_acclim_tempstress" %in% names(settings$par) && "par_shape_tempstress" %in% names(settings$par)){  
       ## Calibration for temperature stress function
       cost_rmse <- cost_rmse_tempstress
@@ -208,10 +203,7 @@ cost_rmse_kphio <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     soilm_par_a           = 1.0,
     soilm_par_b           = 0.0,
     tau_acclim_tempstress = 10,
-    par_shape_tempstress  = 0.0,
-    vpdstress_par_a       = 0.2,
-    vpdstress_par_b       = 0.2,
-    vpdstress_par_m       = 5
+    par_shape_tempstress  = 0.0
     )
   
   df <- runread_pmodel_f(
@@ -272,11 +264,8 @@ cost_rmse_fullstack <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     soilm_par_a           = par[2],
     soilm_par_b           = par[3],
     tau_acclim_tempstress = 10,
-    par_shape_tempstress  = 0.0,
-    vpdstress_par_a       = 0.0,
-    vpdstress_par_b       = 0.0,
-    vpdstress_par_m       = 0
-  )
+    par_shape_tempstress  = 0.0
+    )
   
   df <- runread_pmodel_f(
     df_drivers, 
@@ -312,11 +301,8 @@ cost_rmse_tempstress_full <- function( par, ddf_obs, df_drivers, inverse = FALSE
     soilm_par_a           = par[2],
     soilm_par_b           = par[3],
     tau_acclim_tempstress = par[4],
-    par_shape_tempstress  = par[5],
-    vpdstress_par_a = 0.0,
-    vpdstress_par_b = 0.0,
-    vpdstress_par_m = 0
-  )
+    par_shape_tempstress  = par[5]
+    )
   
   df <- runread_pmodel_f( df_drivers, 
                           params_modl = params_modl, 
@@ -350,11 +336,8 @@ cost_rmse_tempstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
     soilm_par_a           = 1.0,
     soilm_par_b           = 0.0,
     tau_acclim_tempstress = par[2],
-    par_shape_tempstress  = par[3],
-    vpdstress_par_a = 0.0,
-    vpdstress_par_b = 0.0,
-    vpdstress_par_m = 0
-  )
+    par_shape_tempstress  = par[3]
+    )
   
   df <- runread_pmodel_f( df_drivers, 
                           params_modl = params_modl, 
@@ -370,94 +353,6 @@ cost_rmse_tempstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
   
   # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
-  if (inverse) cost <- 1.0 / cost
-  
-  return(cost)
-}
-
-##------------------------------------------------------------
-## Generic cost function of model-observation (mis-) match using
-## root mean square error.
-##------------------------------------------------------------
-cost_rmse_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
-  
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  params_modl <- list(
-    kphio                 = 0.04971,
-    soilm_par_a           = 1.0,
-    soilm_par_b           = 0.0,
-    tau_acclim_tempstress = 10,
-    par_shape_tempstress  = 0.0,
-    vpdstress_par_a       = par[1],
-    vpdstress_par_b       = par[2],
-    vpdstress_par_m       = par[3]
-  )
-  
-  df <- runread_pmodel_f(
-    df_drivers, 
-    params_modl = params_modl, 
-    makecheck = TRUE,
-    parallel = FALSE
-    ) %>%   
-    dplyr::select(sitename, data) %>% 
-    tidyr::unnest(data) %>% 
-    dplyr::rename(latenth_mod = latenth) %>% 
-    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
-  
-  ## Calculate cost (RMSE)
-  cost <- sqrt( mean( (df$latenth_mod - df$latenth_obs )^2, na.rm = TRUE ) )
-  
-  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
-  
-  if (inverse) cost <- 1.0 / cost  
-  
-  return(cost)
-}
-
-##------------------------------------------------------------
-## Generic cost function of model-observation (mis-) match using
-## the chi-squared statistic (Keenan et al., 2012 GCB).
-##------------------------------------------------------------
-cost_chisquared_vpdstress <- function( par, ddf_obs, df_drivers, inverse = FALSE ){
-  
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  params_modl <- list(
-    kphio                 = 0.04971,
-    soilm_par_a           = 1.0,
-    soilm_par_b           = 0.0,
-    tau_acclim_tempstress = 10,
-    par_shape_tempstress  = 0.0,
-    vpdstress_par_a       = par[1],
-    vpdstress_par_b       = par[2],
-    vpdstress_par_m       = par[3]
-  )
-  
-  # df <- df_drivers %>% 
-  #   mutate(data = purrr::pmap(
-  #     .,
-  #     run_sofun_f_bysite,
-  #     params_modl = params_modl,
-  #     makecheck = FALSE
-  #   )) %>% 
-  df <- runread_pmodel_f(
-    df_drivers, 
-    params_modl = params_modl, 
-    makecheck = TRUE,
-    parallel = FALSE
-    ) %>%   
-    dplyr::select(sitename, data) %>% 
-    tidyr::unnest(data) %>% 
-    dplyr::rename(latenth_mod = latenth) %>% 
-    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
-  
-  ## Calculate cost (RMSE)
-  cost <- ((df$latenth_mod - df$latenth_obs )/(2 * df$latenth_unc))^2
-  cost <- sum(cost, na.rm = TRUE)/sum(!is.na(cost))
-  
-  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
-
   if (inverse) cost <- 1.0 / cost
   
   return(cost)

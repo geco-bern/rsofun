@@ -110,10 +110,6 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       rlang::warn(paste("Error: Missing element in params_siml: tempstress"))
       do_continue <- FALSE
     }
-    if (is.nanull(params_siml$calc_aet_fapar_vpd)){
-      rlang::warn(paste("Error: Missing element in params_siml: calc_aet_fapar_vpd"))
-      do_continue <- FALSE
-    }
     if (is.nanull(params_siml$in_ppfd)){
       rlang::warn(paste("Error: Missing element in params_siml: in_ppfd"))
       do_continue <- FALSE
@@ -188,9 +184,6 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       as.numeric(params_modl$kphio),
       as.numeric(params_modl$soilm_par_a),
       as.numeric(params_modl$soilm_par_b),
-      as.numeric(params_modl$vpdstress_par_a),
-      as.numeric(params_modl$vpdstress_par_b),
-      as.numeric(params_modl$vpdstress_par_m),
       as.numeric(params_modl$tau_acclim_tempstress),
       as.numeric(params_modl$par_shape_tempstress)
       )
@@ -215,7 +208,6 @@ run_pmodel_f_bysite <- function( sitename, params_siml, siteinfo, forcing, df_so
       secs_per_tstep            = as.integer(secs_per_tstep),
       soilmstress               = as.logical(params_siml$soilmstress),
       tempstress                = as.logical(params_siml$tempstress),
-      calc_aet_fapar_vpd        = as.logical(params_siml$calc_aet_fapar_vpd),
       in_ppfd                   = as.logical(params_siml$in_ppfd),
       in_netrad                 = as.logical(params_siml$in_netrad),
       outdt                     = as.integer(params_siml$outdt),
