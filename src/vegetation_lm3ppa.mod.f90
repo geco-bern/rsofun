@@ -848,10 +848,10 @@ contains
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
               if(myinterface%params_siml%do_U_shaped_mortality)then
-                deathrate = param_dbh * 0.1 *    &
-                           (1.*exp(2.*(cc%dbh-1))/  &
-                           (1. + exp(2.*(cc%dbh-1))))
-                ! deathrate = min(1.0, param_dbh * cc%dbh ** 1.5) ! 2.5, 5
+                ! deathrate = param_dbh * 0.1 *    &
+                !            (1.*exp(2.*(cc%dbh-1))/  &
+                !            (1. + exp(2.*(cc%dbh-1))))
+                deathrate = min(1.0, param_dbh * cc%dbh ** 1.5) ! 1.5, 2.5, 5
               else
                 deathrate = sp%mortrate_d_c !0.01
               endif
