@@ -1,4 +1,23 @@
-calc_net_assim <- function( par, args, iabs, kphio, a_unitcost ){
+#' Calculate net assimilation
+#' 
+#' Net assimilation calculation
+#'
+#' @param par parameters (vcmax, gs)
+#' @param args arguments (kmm, gammastart, ns_star, ca, vpd, beta)
+#' @param iabs iabs
+#' @param kphio kphio
+#' @param a_unitcost cost unit
+#'
+#' @return Net assimilation
+#' @export
+
+calc_net_assim <- function(
+  par,
+  args,
+  iabs,
+  kphio,
+  a_unitcost 
+  ){
   
   vcmax <- par[1]
   gs    <- par[2]
@@ -37,12 +56,15 @@ calc_net_assim <- function( par, args, iabs, kphio, a_unitcost ){
     ## A_c
     a_c <- vcmax * (ci - gammastar) / (ci + kmm)
 
-    ## I don't understand if this is correct... It must be inconsistent with the Vcmax-related ci calculated above.
+    ## I don't understand if this is correct... 
+    # It must be inconsistent with the Vcmax-related ci calculated above.
     assim <- min(a_j, a_c)
     
-    ## All above is correct. That is, A and ci are correctly back-calculated from Vcmax and gs
+    # All above is correct. That is, A and ci are correctly
+    # back-calculated from Vcmax and gs
     
-    ## only cost ratio is defined. for this here we need absolute values. Set randomly
+    ## only cost ratio is defined. for this here we need absolute values.
+    # Set randomly
     cost_transp <- a_unitcost * 1.6 * ns_star * gs * vpd
     cost_vcmax  <- a_unitcost * beta * vcmax
     
@@ -52,6 +74,5 @@ calc_net_assim <- function( par, args, iabs, kphio, a_unitcost ){
     return( net_assim )
 
   }
-
 }
 
