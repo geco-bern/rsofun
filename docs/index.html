@@ -98,62 +98,15 @@
 <span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">"stineb/rsofun"</span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/stineb/rsofun">rsofun</a></span><span class="op">)</span></code></pre></div>
 </div>
-<div id="environment" class="section level2">
-<h2 class="hasAnchor">
-<a href="#environment" class="anchor"></a>Environment</h2>
-<p><strong>This is important</strong></p>
-<p>In order to successfully compile the package (Fortran source), you need to have gfortran installed and manually adjust the compiler flag specification. To do so, open the Makeconf file (you’ll find it by entering in R: <code><a href="https://rdrr.io/r/base/file.path.html">file.path(R.home("etc"), "Makeconf")</a></code>). In there, add the gfortran flag <code>-ffree-line-length-0</code>. The respective line then looks like this:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">FCFLAGS</span> = <span class="at">-Wall</span> <span class="at">-g</span> <span class="at">-O2</span> <span class="va">$(</span><span class="ex">LTO</span><span class="va">)</span> <span class="at">-ffree-line-length-0</span></span></code></pre></div>
-</div>
-<div id="dependencies" class="section level2">
-<h2 class="hasAnchor">
-<a href="#dependencies" class="anchor"></a>Dependencies</h2>
-<p>The <code>rsofun</code> package requires a large number of other R-packages (dependencies). Required dependencies are essential for <code>rsofun</code> functions and are:</p>
-<ul>
-<li>dplyr, purrr, lubridate, tidyr, raster, lubridate, stringi, sp, GenSA, stringr, rlang, readr</li>
-</ul>
-</div>
 <div id="example" class="section level2">
 <h2 class="hasAnchor">
 <a href="#example" class="anchor"></a>Example</h2>
-<p>See vignette <a href="./articles/example.html">Example for using rsofun</a> for how to run the model, and <a href="./articles/prepare_inputs_rsofun.html">Prepare rsofun forcing data</a> for how to use the <a href="https://stineb.github.io/ingestr/">ingestr R package</a> for collecting the forcing data to run rsofun.</p>
+<p>See vignette <a href="./articles/example.html">Example for using rsofun</a> for how to run the model, and the <a href="https://stineb.github.io/ingestr/">ingestr R package</a> for collecting the forcing data to run rsofun.</p>
 </div>
 <div id="usage-and-contribution" class="section level2">
 <h2 class="hasAnchor">
 <a href="#usage-and-contribution" class="anchor"></a>Usage and contribution</h2>
 <p>This package is designed to be extendible to ingesting other data types (sources). The developer (Beni Stocker) would appreciate if you made sure that your developments can be fed back to this repository. To do so, please use git. See <a href="http://rogerdudler.github.io/git-guide/">here</a> for a brief introduction to git.</p>
-<div id="application-only" class="section level3">
-<h3 class="hasAnchor">
-<a href="#application-only" class="anchor"></a>Application only</h3>
-<p>I recommend the following steps if you would just like to use this package (no development):</p>
-<ul>
-<li>Install and load the library as described under ‘Installation’ above.</li>
-</ul>
-</div>
-<div id="for-developers" class="section level3">
-<h3 class="hasAnchor">
-<a href="#for-developers" class="anchor"></a>For developers</h3>
-<p>I recommend the following steps if you would like to use and further develop the package (even if this is just some extension for your own application - Keep in mind: Others may benefit from your efforts too!):</p>
-<ol>
-<li>Make sure you have a Github account.</li>
-<li>Log on to Github, and go to <a href="https://github.com/stineb/rsofun">https://github.com/stineb/rsofun</a> and click on ‘Fork’ in the upper right corner. This makes a copy of the repository which then belongs to you, meaning that you can modify, commit, and push changes back to your forked repository as you please.</li>
-<li>Clone your fork to your local computer by entering in your terminal (here, it’s cloned to a subdirectory <code>ingestr</code> placed in your home directory):</li>
-</ol>
-<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> home</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/<span class="op">&lt;</span>your_github_username<span class="op">&gt;</span>/rsofun.git</span></code></pre></div>
-<ol>
-<li>In RStudio, create a new project in your local directory <code>~/rsofun/</code>. This opens the repository in RStudio and you have access to the code where all the functions of this package are implemented (see subdirectory <code>./R/</code>).</li>
-<li>In RStudio, after having edited code, select the ‘Build’ tab and click on ‘Install and Restart’ to build the package again. For quick edits and checks, you may simply source the edited files instead of re-building the whole package. If you like to add new functions, create a new source file that contains your function in subdirectory <code>./R/</code>, write a nice roxygen header (see other source files as an example), then click on ‘Build’ -&gt; ‘More’ -&gt; ‘Document’, and then again on ‘Install and Restart’.</li>
-<li>You can upload (commit and push) your edits and additions to your forked repository by</li>
-</ol>
-<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-u</span>  <span class="co"># adds all edits to your next commit</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="op">&lt;</span>newfile<span class="op">&gt;</span>  # adds new file to the git repository</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"a brief description of what you did"</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push  <span class="co"># pushes the commit to your fork </span></span></code></pre></div>
-<ol>
-<li>If you’re happy with your new edits and additions to the package, you may want to have it fed back from your fork to the original repository. To do so, please create a new <em>pull request</em> in GitHub: Click on ‘New pull request’ on <a href="https://github.com/stineb/rsofun">the repository page</a> and follow the inuitive steps. Thanks!</li>
-</ol>
-</div>
 </div>
 </div>
 
@@ -193,7 +146,8 @@
   <div class="dev-status">
 <h2>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://ci.appveyor.com/project/stineb/rsofun"><img src="https://ci.appveyor.com/api/projects/status/github/stineb/rsofun?branch=master&amp;svg=true" alt="AppVeyor build status"></a></li>
+<li><a href="https://github.com/bluegreen-labs/rsofun/actions"><img src="https://github.com/bluegreen-labs/rsofun/workflows/R-CMD-check/badge.svg" alt="R build status"></a></li>
+<li><a href="https://codecov.io/gh/bluegreen-labs/rsofun"><img src="https://codecov.io/gh/bluegreen-labs/rsofun/branch/master/graph/badge.svg?token=5RJtJmDVV7" alt="codecov"></a></li>
 </ul>
 </div>
 </div>
