@@ -32,8 +32,7 @@ run_lm3ppa_f_bysite <- function(
   ){
   
   ## re-define units and naming of forcing dataframe
-  forcing <- forcing %>% 
-    dplyr::select(1:13)
+  forcing <- forcing[,1:13]
 
   params_soil <- params_soil %>%
     dplyr::select(-type)
