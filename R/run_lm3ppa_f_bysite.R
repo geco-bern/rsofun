@@ -96,19 +96,22 @@ run_lm3ppa_f_bysite <- function(
       "SWC"
     )
     
-    data_integrity <- lapply(check_vars, function(check_var){
-      if (any(is.nanull(forcing[check_var]))){
-        warning(
-          sprintf("Error: Missing value in %s for %s",
-                  check_var, sitename))
-        return(FALSE)
-      } else {
-        return(TRUE)
-      }
-    })
+    data_integrity <- lapply(
+      check_vars,
+      function(check_var){
+        if (any(is.nanull(forcing[check_var]))){
+          warning(
+            sprintf("Error: Missing value in %s for %s",
+                    check_var, sitename))
+          return(FALSE)
+        } else {
+          return(TRUE)
+        }
+      })
    
     # only return true if all checked variables are TRUE 
-    continue <- all(data_integrity)
+    # suppress warning on coercion of list to single logical
+    continue <- suppressWarnings(all(as.vector(data_integrity)))
   }
 
   if (continue) {

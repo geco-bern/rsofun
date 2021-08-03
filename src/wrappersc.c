@@ -119,7 +119,7 @@ extern SEXP pmodel_f_C(
 // LM3PPA
 /////////////////////////////////////////////////////////////
 void F77_NAME(lm3ppa_f)(
-    int    *spinup,          // LOGICAL can be defined as _Bool but it gives a warming             
+    int    *spinup, // LOGICAL can be defined as _Bool but it gives a warming
     int    *spinupyears,               
     int    *recycle,              
     int    *firstyeartrend,                  
