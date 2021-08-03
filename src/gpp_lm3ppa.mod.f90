@@ -49,7 +49,8 @@ contains
     ! Subroutines from BiomeE-Allocation
     !------------------------------------------------------------------------
     use md_forcing_lm3ppa, only: climate_type
-    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_rd, calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
+    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_rd
+    use md_photosynth, only: calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
     use md_params_core, only: kTkelvin, kfFEC
     use md_sofunutils, only: dampen_variability
 
