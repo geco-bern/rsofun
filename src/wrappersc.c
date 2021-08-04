@@ -73,7 +73,8 @@ extern SEXP pmodel_f_C(
     const int nt = INTEGER(n)[0] ;
 
     // Specify output
-    SEXP output = PROTECT( allocMatrix(REALSXP, nt, 13) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns
+    // 2nd agument to allocMatrix is number of rows, 3rd is number of columns
+    SEXP output = PROTECT( allocMatrix(REALSXP, nt, 13) );
 
     // Fortran subroutine call
     F77_CALL(pmodel_f)(
