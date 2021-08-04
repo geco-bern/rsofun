@@ -5,12 +5,14 @@ test_that("p-model run check", {
   
   # load parameters (valid ones)
   params_modl <- list(
-    kphio           = 0.05,
-    soilm_par_a     = 1.0,
-    soilm_par_b     = 0.0,
-    vpdstress_par_a = 0.2,
-    vpdstress_par_b = 0.2,
-    vpdstress_par_m = 5
+      kphio           = 0.05,
+      soilm_par_a     = 1.0,
+      soilm_par_b     = 0.0,
+      vpdstress_par_a = 9999,
+      vpdstress_par_b = 9999,
+      vpdstress_par_m = 9999,
+      tau_acclim_tempstress = 10,
+      par_shape_tempstress  = 0.0
   )
   
   # read in demo data
