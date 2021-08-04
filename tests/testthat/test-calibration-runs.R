@@ -21,11 +21,13 @@ test_that("test calibration routine p-model", {
         iterations = 50
       )
     ),
-    par                 = list(kphio = list(lower=0.04, upper=0.09, init=0.05),
-                               phiRL = list(lower=0.5, upper=5, init=3.5),
-                               LAI_light = list(lower=2, upper=5, init=3.5),
-                               tf_base = list(lower=0.5, upper=1.5, init=1),
-                               par_mort = list(lower=0.1, upper=2, init=1))
+    par = list(
+      kphio = list(lower=0.04, upper=0.1, init = 0.05),
+      a = list(lower=0, upper=5, init = 3.5),
+      b = list(lower=1, upper=5, init=3.5),
+      tau = list(lower=0, upper=15, init=1),
+      shape = list(lower=0, upper=0.1, init=0)
+      )
   )
   
   pars <- calib_sofun(
