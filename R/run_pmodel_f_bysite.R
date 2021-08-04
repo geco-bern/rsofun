@@ -28,16 +28,21 @@ run_pmodel_f_bysite <- function(
   params_modl,
   makecheck = TRUE
   ){
-
-  # rlang::inform(paste("run_pmodel_f_bysite() for ", sitename))
   
-  ## re-define units and naming of forcing dataframe
+  # base state, always execute the call
+  continue <- TRUE
+  
+  # re-define units and naming of forcing dataframe
   forcing <- forcing %>% 
     dplyr::mutate(
       netrad = -9999.9,
       fsun = (100-ccov)/100,
       snowf = 0.0,
-      ndep = 0.0) %>% 
+      ndep = 0.0,
+      tmin = temp,
+      tmax = temp,
+      rain = prec
+      ) %>% 
     dplyr::select(
       temp,
       rain,
@@ -54,15 +59,10 @@ run_pmodel_f_bysite <- function(
       tmax
       )
   
-  # base state, always execute the call
-  continue <- TRUE
-  
   # validate input
   if (makecheck){
     
-    # create a loop to loop over a list of variables
-    # to check validity
-    
+    # list variable to check for
     check_vars <- c(
       "temp",
       "rain",
@@ -79,6 +79,9 @@ run_pmodel_f_bysite <- function(
       "tmax"
     )
     
+    # create a loop to loop over a list of variables
+    # to check validity
+    
     data_integrity <- lapply(check_vars, function(check_var){
       if (any(is.nanull(forcing[check_var]))){
         rlang::warn(sprintf("Error: Missing value in %s for %s", check_var, sitename))
@@ -88,18 +91,68 @@ run_pmodel_f_bysite <- function(
       }
     })
     
-    if (nrow(forcing) != params_siml$nyeartrend * 365){
-      rlang::warn("Error: Number of years data in forcing does not correspond 
-                  to number of simulation years (nyeartrend).")
-      rlang::warn(paste(" Number of years data: ", nrow(forcing)/365))
-      rlang::warn(paste(" Number of simulation years: ",
-                        params_siml$nyeartrend))
-      rlang::warn(" Returning a dummy data frame.")
+    if (any(data_integrity)){
+      continue <- FALSE
     }
     
-    if (nrow(forcing) != params_siml$nyeartrend * 365 && !all(data_integrity)){
-        continue <- FALSE
+    # parameters to check
+    check_param <- c(
+      "spinup",
+      "spinupyears",
+      "recycle",
+      "firstyeartrend",
+      "nyeartrend",
+      "soilmstress",
+      "tempstress",
+      "in_ppfd",
+      "in_netrad",
+      "outdt",
+      "ltre",
+      "ltne",
+      "ltnd",
+      "lgr3",
+      "lgn3",
+      "lgr4"
+    )
+    
+    parameter_integrity <- lapply(check_param, function(check_var){
+      if (any(is.nanull(forcing[check_var]))){
+        rlang::warn(sprintf("Error: Missing value in %s for %s",
+                            check_var, sitename))
+        return(FALSE)
+      } else {
+        return(TRUE)
       }
+    })
+    
+    if (any(parameter_integrity)){
+      continue <- FALSE
+    }
+    
+    # Dates in 'forcing' do not correspond to simulation parameters
+    if (nrow(forcing) != params_siml$nyeartrend * ndayyear){
+      rlang::warn(
+        "Error: Number of years data in forcing does not correspond
+         to number of simulation years (nyeartrend).\n")
+      rlang::warn(paste(" Number of years data: ",
+                        nrow(forcing)/ndayyear), "\n")
+      rlang::warn(paste(" Number of simulation years: ",
+                        params_siml$nyeartrend, "\n"))
+      rlang::warn(paste(" Site name: ", sitename, "\n"))
+      
+      # Overwrite params_siml$nyeartrend and params_siml$firstyeartrend based on 'forcing'
+      if (nrow(forcing) %% ndayyear == 0){
+        params_siml$nyeartrend <- nyeartrend_forcing
+        params_siml$firstyeartrend <- firstyeartrend_forcing
+        rlang::warn(paste(" Overwriting params_siml$nyeartrend: ", params_siml$nyeartrend, "\n"))
+        rlang::warn(paste(" Overwriting params_siml$firstyeartrend: ", params_siml$firstyeartrend, "\n"))
+      } else {
+        # something weird more fundamentally -> don't run the model
+        rlang::warn(" Returning a dummy data frame.")
+        continue <- FALSE
+      } 
+    }
+    
   }
   
   if (continue){
@@ -162,19 +215,17 @@ run_pmodel_f_bysite <- function(
     # Prepare output to be a nice looking tidy data frame (tibble)
     ddf <- init_dates_dataframe(
       yrstart = params_siml$firstyeartrend,
-      yrend = siteinfo$year_end,
+      yrend = params_siml$firstyeartrend + params_siml$nyeartrend - 1,
       noleap = TRUE)
 
     out <- out %>%
-      as.matrix() %>%
-      as.data.frame() %>%
-            setNames(c("fapar", "gpp", "transp", "latenth", "pet",
-             "vcmax", "jmax", "vcmax25", "jmax25", "gs_accl",
-             "wscal", "chi", "iwue")) %>%
-      #setNames(c("fapar", "gpp", "transp", "latenth", "pet")) %>%
+      as.matrix() %>% 
+      as.data.frame() %>% 
+      setNames(
+        c("fapar", "gpp", "transp", "latenth", "pet", "vcmax",
+          "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue")) %>%
       as_tibble(.name_repair = "check_unique") %>%
-      dplyr::bind_cols(ddf,.) %>% 
-      dplyr::select(-year_dec)
+      dplyr::bind_cols(ddf,.)
 
   } else {
     out <- tibble(date = lubridate::ymd("2000-01-01"),
