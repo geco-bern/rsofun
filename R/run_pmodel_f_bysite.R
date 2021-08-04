@@ -106,7 +106,7 @@ run_pmodel_f_bysite <- function(
     # number of rows in matrix (pre-allocation of memory)
     n <- as.integer(nrow(forcing))
 
-    ## Model parameters as vector
+    # Model parameters as vector
     par = c(
       as.numeric(params_modl$kphio),
       as.numeric(params_modl$soilm_par_a),
@@ -115,7 +115,7 @@ run_pmodel_f_bysite <- function(
       as.numeric(params_modl$par_shape_tempstress)
       )
 
-    ## Soil texture as matrix (layer x texture parameter)
+    # Soil texture as matrix (layer x texture parameter)
     soiltexture <- df_soiltexture %>% 
       dplyr::select(fsand, fclay, forg, fgravel) %>% 
       as.matrix() %>% 
