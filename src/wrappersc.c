@@ -16,10 +16,10 @@ void F77_NAME(pmodel_f)(
     int    *firstyeartrend,
     int    *nyeartrend,
     int    *secs_per_tstep,
-    _Bool  *soilmstress,
-    _Bool  *tempstress,
-    _Bool  *in_ppfd,
-    _Bool  *in_netrad,
+    int  *soilmstress,
+    int  *tempstress,
+    int  *in_ppfd,
+    int  *in_netrad,
     int    *outdt,
     int    *ltre,
     int    *ltne,
@@ -119,7 +119,7 @@ extern SEXP pmodel_f_C(
 // LM3PPA
 /////////////////////////////////////////////////////////////
 void F77_NAME(lm3ppa_f)(
-    int    *spinup,          // LOGICAL can be defined as _Bool but it gives a warming             
+    int    *spinup, // LOGICAL can be defined as _Bool but it gives a warming
     int    *spinupyears,               
     int    *recycle,              
     int    *firstyeartrend,                  
