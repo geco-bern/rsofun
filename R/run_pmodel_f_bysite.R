@@ -112,7 +112,7 @@ run_pmodel_f_bysite <- function(
       }
     })
     
-    if (all(data_integrity)){
+    if (suppressWarnings(!all(data_integrity))){
       continue <- FALSE
     }
     
@@ -146,7 +146,7 @@ run_pmodel_f_bysite <- function(
       }
     })
     
-    if (all(parameter_integrity)){
+    if (suppressWarnings(!all(parameter_integrity))){
       continue <- FALSE
     }
     
