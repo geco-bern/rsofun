@@ -54,7 +54,7 @@ params_siml <- tibble( #list
       do_U_shaped_mortality = TRUE,
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+      method_photosynth     = "pmodel", # gs_leuning or pmodel
       method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
       )
 ```
@@ -232,9 +232,7 @@ if (params_siml$method_photosynth == "gs_leuning"){
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
   forcing <- forcingLAE[,-c(1:3)]
   forcing <- bind_rows(replicate(800, forcing, simplify = FALSE)) # Duplicate for the # of transient years
-}
-
-if (params_siml$method_photosynth == "pmodel"){ #&& dt_secs != (60*60*24)){
+} else if (params_siml$method_photosynth == "pmodel"){
   forcingLAE <- forcingLAE %>% 
     dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))

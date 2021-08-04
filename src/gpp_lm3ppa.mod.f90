@@ -281,6 +281,15 @@ contains
             ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * myinterface%step_seconds ! kgC step-1 tree-1
             !===============================
             myppfd = f_light(layer) * forcing%PAR * 1.0e-6
+
+            ! print*,'patm_memory', patm_memory
+            ! print*,'vpd_memory', vpd_memory
+            ! print*,'temp_memory', temp_memory
+            ! print*,'co2_memory', co2_memory
+            ! print*,'myppfd', myppfd
+            ! print*,'params_gpp%beta', params_gpp%beta
+            ! print*,'sp%kphio', sp%kphio
+
             out_pmodel = pmodel(  &
                                   kphio          = sp%kphio, &
                                   beta           = params_gpp%beta, &
@@ -300,10 +309,10 @@ contains
             cc%transp  = 0.0
             cc%w_scale = -9999
 
-            ! copy to cohort variables
-            myrd  = out_pmodel%vcmax25 * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )               ! mol s-1 m-2
-            mygpp = out_pmodel%lue * myppfd * myinterface%step_seconds                               ! g s-1 m-2
+            myrd  = fapar_tree * out_pmodel%vcmax25 * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )               ! mol s-1 m-2
+            mygpp = fapar_tree * out_pmodel%lue * myppfd * myinterface%step_seconds                               ! g s-1 m-2
 
+            ! copy to cohort variables
             cc%resl = myrd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
             cc%gpp  = mygpp * cc%crownarea * myinterface%step_seconds * 1.0e-3   ! kgC step-1 tree-1
 
