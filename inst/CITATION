@@ -1,19 +1,13 @@
-citHeader("To cite rsofun in publications use:")
+citHeader("To cite rsofun in publications, please use:")
 
-citEntry(entry = "Article",
-  title        = "XXX",
-  author       = personList(as.person("Benjamin D. Stocker"),
-                   as.person("Joan Maspons")),
-  journal      = "XXX",
-  year         = "XXX",
-  volume       = "XXX",
-  number       = "XXX",
-  pages        = "XXX",
-  url          = "XXX",
-
-  textVersion  =
-  paste("SOMETHING LIKE: Garrett Grolemund, Hadley Wickham (2011).",
-        "Dates and Times Made Easy with lubridate.",
-        "Journal of Statistical Software, 40(3), 1-25.",
-        "URL http://www.jstatsoft.org/v40/i03/.")
+citEntry(
+  entry = "manual",
+  author = "Benjamin Stocker",
+  title = "rsofun: a modelling framework that implements the P-model for
+    leaf-level acclimation of photosynthesis",
+  year = "2021",
+  textVersion = "Stocker (2021) rsofun: a modelling framework that implements
+  the P-model for leaf-level acclimation of photosynthesis. 
+  https://github.io/stiben/rsofun",
+  url = "https://github.io/stiben/rsofun"
 )

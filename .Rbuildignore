@@ -1,6 +1,29 @@
-^appveyor\.yml$
-^\.travis\.yml$
-^.*\.Rproj$
-^\.Rproj\.user$
-^LICENSE\.md$
+# docs and unit tests
+^\.github$
+^_pkgdown\.yml$
+^pkgdown$
+^docs$
+^analysis$
 ^data-raw$
+^vignettes$
+^benchmarking$
+^Rscripts$
+^Rold$
+
+# R-markdown files in the root folder.
+^.*.ods$
+^LICENSE.*$
+^CONDUCT\.md$
+^NEWS\.md$
+^README\.md$
+^contact\.md$
+^cran-comments\.md$
+^review-notes\.md$
+
+# R Stuff
+^.*\.Rproj$
+^.*\.Renviron$
+^\.Rproj\.user$
+^\.httr-oauth$
+^.*-logo\..*$
+^codemeta\.json$

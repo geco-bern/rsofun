@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rsofun</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0</span>
       </span>
     </div>
 
@@ -85,27 +85,6 @@
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
-</li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/benchmark_gpp_FLUXNET2015_ensemble_EXAMPLE.html">Benchmarking rsofun</a>
-    </li>
-    <li>
-      <a href="../articles/example_lm3ppa.html">Example using LM3-PPA</a>
-    </li>
-    <li>
-      <a href="../articles/example_pmodel.html">Example using P-model</a>
-    </li>
-    <li>
-      <a href="../articles/prepare_inputs_rsofun.html">Prepare rsofun forcing data</a>
-    </li>
-  </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -154,6 +133,12 @@
       <tr>
         
         <td>
+          <p><code><a href="calc_net_assim.html">calc_net_assim()</a></code> </p>
+        </td>
+        <td><p>Calculate net assimilation</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="calib_sofun.html">calib_sofun()</a></code> </p>
         </td>
         <td><p>Calibrates SOFUN model parameters</p></td>
@@ -166,39 +151,105 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="collect_obs_eval.html">collect_obs_eval()</a></code> </p>
+          <p><code><a href="cost_chisquared_kphio.html">cost_chisquared_kphio()</a></code> </p>
         </td>
-        <td><p>Get observational data for model evaluation</p></td>
+        <td><p>Chi-squared cost function</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="eval_sofun.html">eval_sofun()</a></code> </p>
+          <p><code><a href="cost_chisquared_vpdstress.html">cost_chisquared_vpdstress()</a></code> </p>
         </td>
-        <td><p>Evaluates SOFUN model outputs.</p></td>
+        <td><p>Chi-squared cost function</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="filter_days.html">filter_days()</a></code> </p>
+          <p><code><a href="cost_linscale_rmse.html">cost_linscale_rmse()</a></code> </p>
         </td>
-        <td><p>Filter daily observations</p></td>
+        <td><p>Linearly scaled output</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="get_stats.html">get_stats()</a></code> </p>
+          <p><code><a href="cost_mae.html">cost_mae()</a></code> </p>
         </td>
-        <td><p>Get statistics</p></td>
+        <td><p>Mean absolute error (MAE)</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cost_rmse_fullstack.html">cost_rmse_fullstack()</a></code> </p>
+        </td>
+        <td><p>Root mean squared error</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cost_rmse_kphio.html">cost_rmse_kphio()</a></code> </p>
+        </td>
+        <td><p>Root mean squared error</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cost_rmse_lm3ppa_gsleuning.html">cost_rmse_lm3ppa_gsleuning()</a></code> </p>
+        </td>
+        <td><p>LM3PPA gs leuning cost function</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cost_rmse_vpdstress.html">cost_rmse_vpdstress()</a></code> </p>
+        </td>
+        <td><p>Root mean squared error</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="init_dates_dataframe.html">init_dates_dataframe()</a></code> </p>
         </td>
-        <td><p>Initialises a data frame with dates</p></td>
+        <td><p>Initialises a tibble with dates</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="oob_calib_eval_sofun.html">oob_calib_eval_sofun()</a></code> </p>
+          <p><code><a href="likelihood_lm3ppa.html">likelihood_lm3ppa()</a></code> </p>
         </td>
-        <td><p>Conducts an out-of-bag calibration</p></td>
+        <td><p>Log likelihood cost function for model optimization</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="lm3ppa_gs_leuning_drivers.html">lm3ppa_gs_leuning_drivers</a></code> </p>
+        </td>
+        <td><p>SOFUN lm3ppa driver data</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="lm3ppa_p_model_drivers.html">lm3ppa_p_model_drivers</a></code> </p>
+        </td>
+        <td><p>SOFUN lm3ppa driver data</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="lm3ppa_validation.html">lm3ppa_validation</a></code> </p>
+        </td>
+        <td><p>SOFUN LM3PPA GPP validation data</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="lm3ppa_validation_2.html">lm3ppa_validation_2</a></code> </p>
+        </td>
+        <td><p>SOFUN LM3PPA GPP validation data</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="p_model_drivers.html">p_model_drivers</a></code> </p>
+        </td>
+        <td><p>SOFUN p-model driver data</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="p_model_validation.html">p_model_validation</a></code> </p>
+        </td>
+        <td><p>SOFUN p-model GPP validation data</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="plot.rsofun_fit.html">plot(<i>&lt;rsofun_fit&gt;</i>)</a></code> </p>
+        </td>
+        <td><p>Plotting method for fit model output</p></td>
       </tr><tr>
         
         <td>
@@ -210,13 +261,13 @@
         <td>
           <p><code><a href="run_lm3ppa_f_bysite.html">run_lm3ppa_f_bysite()</a></code> </p>
         </td>
-        <td><p>R wrapper for SOFUN</p></td>
+        <td><p>R wrapper for SOFUN LM3PPA</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="run_pmodel_f_bysite.html">run_pmodel_f_bysite()</a></code> </p>
         </td>
-        <td><p>R wrapper for SOFUN</p></td>
+        <td><p>R wrapper for SOFUN P-model</p></td>
       </tr><tr>
         
         <td>
@@ -232,9 +283,9 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="sbs_calib_eval_sofun.html">sbs_calib_eval_sofun()</a></code> </p>
+          <p><code><a href="summary.rsofun_fit.html">summary(<i>&lt;rsofun_fit&gt;</i>)</a></code> </p>
         </td>
-        <td><p>Conducts an site-by-site calibration</p></td>
+        <td><p>Print summary values for fit model output</p></td>
       </tr><tr>
         
         <td>
@@ -256,7 +307,7 @@
 
       <footer>
       <div class="copyright">
-  <p>Developed by Benjamin Stocker.</p>
+  <p>Developed by Stocker Benjamin.</p>
 </div>
 
 <div class="pkgdown">

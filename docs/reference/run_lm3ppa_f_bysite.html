@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>R wrapper for SOFUN — run_lm3ppa_f_bysite • rsofun</title>
+<title>R wrapper for SOFUN LM3PPA — run_lm3ppa_f_bysite • rsofun</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="R wrapper for SOFUN — run_lm3ppa_f_bysite" />
-<meta property="og:description" content="R wrapper for SOFUN" />
+<meta property="og:title" content="R wrapper for SOFUN LM3PPA — run_lm3ppa_f_bysite" />
+<meta property="og:description" content="Call to the LM3PPA Fortran model" />
 
 
 
@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rsofun</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0</span>
       </span>
     </div>
 
@@ -86,27 +86,6 @@
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
-</li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/benchmark_gpp_FLUXNET2015_ensemble_EXAMPLE.html">Benchmarking rsofun</a>
-    </li>
-    <li>
-      <a href="../articles/example_lm3ppa.html">Example using LM3-PPA</a>
-    </li>
-    <li>
-      <a href="../articles/example_pmodel.html">Example using P-model</a>
-    </li>
-    <li>
-      <a href="../articles/prepare_inputs_rsofun.html">Prepare rsofun forcing data</a>
-    </li>
-  </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -129,13 +108,13 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>R wrapper for SOFUN</h1>
+    <h1>R wrapper for SOFUN LM3PPA</h1>
     <small class="dont-index">Source: <a href='https://github.com/stineb/rsofun/blob/master/R/run_lm3ppa_f_bysite.R'><code>R/run_lm3ppa_f_bysite.R</code></a></small>
     <div class="hidden name"><code>run_lm3ppa_f_bysite.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>R wrapper for SOFUN</p>
+    <p>Call to the LM3PPA Fortran model</p>
     </div>
 
     <pre class="usage"><span class='fu'>run_lm3ppa_f_bysite</span><span class='op'>(</span>
@@ -168,7 +147,7 @@
     </tr>
     <tr>
       <th>forcing</th>
-      <td><p>forcing (input) dataframe (returned object by prepare_input_sofun)</p></td>
+      <td><p>forcing (input) dataframe (returned object by `prepare_input_sofun()`)</p></td>
     </tr>
     <tr>
       <th>params_tile</th>
@@ -198,7 +177,7 @@
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>This is the model</p>
+    <p>Model output is provided as a tidy dataframe</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -211,7 +190,7 @@
 
       <footer>
       <div class="copyright">
-  <p>Developed by Benjamin Stocker.</p>
+  <p>Developed by Stocker Benjamin.</p>
 </div>
 
 <div class="pkgdown">

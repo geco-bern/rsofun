@@ -1,4 +1,5 @@
-[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/stineb/rsofun?branch=master&svg=true)](https://ci.appveyor.com/project/stineb/rsofun)
+[![R build status](https://github.com/bluegreen-labs/rsofun/workflows/R-CMD-check/badge.svg)](https://github.com/bluegreen-labs/rsofun/actions)
+[![codecov](https://codecov.io/gh/bluegreen-labs/rsofun/branch/master/graph/badge.svg?token=5RJtJmDVV7)](https://codecov.io/gh/bluegreen-labs/rsofun)
 
 # rsofun
 
@@ -26,55 +27,10 @@ if(!require(devtools)){install.packages(devtools)}
 devtools::install_github("stineb/rsofun")
 library(rsofun)
 ```
-
-## Environment
-
-**This is important**
-
-In order to successfully compile the package (Fortran source), you need to have gfortran installed and manually adjust the compiler flag specification. To do so, open the Makeconf file (you'll find it by entering in R: `file.path(R.home("etc"), "Makeconf")`). In there, add the gfortran flag `-ffree-line-length-0`. The respective line then looks like this:
-```sh
-FCFLAGS = -Wall -g -O2 $(LTO) -ffree-line-length-0
-```
-
-## Dependencies
-
-The `rsofun` package requires a large number of other R-packages (dependencies). Required dependencies are essential for `rsofun` functions and are:
-
-- dplyr, purrr, lubridate, tidyr, raster, lubridate, stringi, sp, GenSA, stringr, rlang, readr
-
 ## Example
 
-See vignette [Example for using rsofun](./articles/example.html) for how to run the model, and [Prepare rsofun forcing data](./articles/prepare_inputs_rsofun.html) for how to use the [ingestr R package ](https://stineb.github.io/ingestr/) for collecting the forcing data to run rsofun. 
+See vignette [Example for using rsofun](./articles/example.html) for how to run the model, and the [ingestr R package ](https://stineb.github.io/ingestr/) for collecting the forcing data to run rsofun.
 
 ## Usage and contribution
 
 This package is designed to be extendible to ingesting other data types (sources). The developer (Beni Stocker) would appreciate if you made sure that your developments can be fed back to this repository. To do so, please use git. See [here](http://rogerdudler.github.io/git-guide/) for a brief introduction to git. 
-
-### Application only
-
-I recommend the following steps if you would just like to use this package (no development):
-
-- Install and load the library as described under 'Installation' above.
-
-### For developers
-
-I recommend the following steps if you would like to use and further develop the package (even if this is just some extension for your own application - Keep in mind: Others may benefit from your efforts too!):
-
-1. Make sure you have a Github account.
-2. Log on to Github, and go to [https://github.com/stineb/rsofun](https://github.com/stineb/rsofun) and click on 'Fork' in the upper right corner. This makes a copy of the repository which then belongs to you, meaning that you can modify, commit, and push changes back to your forked repository as you please.
-3. Clone your fork to your local computer by entering in your terminal (here, it's cloned to a subdirectory `ingestr` placed in your home directory):
-```sh
-cd home
-git clone https://github.com/<your_github_username>/rsofun.git
-```
-4. In RStudio, create a new project in your local directory `~/rsofun/`. This opens the repository in RStudio and you have access to the code where all the functions of this package are implemented (see subdirectory `./R/`).
-5. In RStudio, after having edited code, select the 'Build' tab and click on 'Install and Restart' to build the package again. For quick edits and checks, you may simply source the edited files instead of re-building the whole package. If you like to add new functions, create a new source file that contains your function in subdirectory `./R/`, write a nice roxygen header (see other source files as an example), then click on 'Build' -> 'More' -> 'Document', and then again on 'Install and Restart'.
-6. You can upload (commit and push) your edits and additions to your forked repository by
-```sh
-git add -u  # adds all edits to your next commit
-git add <newfile>  # adds new file to the git repository
-git commit -m "a brief description of what you did"
-git push  # pushes the commit to your fork 
-```
-6. If you're happy with your new edits and additions to the package, you may want to have it fed back from your fork to the original repository. To do so, please create a new *pull request* in GitHub: Click on 'New pull request' on [the repository page](https://github.com/stineb/rsofun) and follow the inuitive steps. Thanks!
-

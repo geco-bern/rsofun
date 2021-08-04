@@ -163,7 +163,8 @@ contains
       ! Low-temperature effect on quantum yield efficiency 
       !----------------------------------------------------------------
       ! take the slowly varying temperature for governing quantum yield variations
-      ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 ) * calc_ftemp_kphio_tmin( tmin_memory, params_gpp%par_shape_tempstress )
+      ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 ) & 
+        * calc_ftemp_kphio_tmin( tmin_memory, params_gpp%par_shape_tempstress )
 
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
@@ -204,7 +205,8 @@ contains
       ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
       !----------------------------------------------------------------
       if (do_soilmstress) then
-        soilmstress = calc_soilmstress( tile(1)%soil%phy%wscal, 0.0, params_pft_plant(1)%grass, params_gpp%soilm_par_a, params_gpp%soilm_par_b )
+        soilmstress = calc_soilmstress( tile(1)%soil%phy%wscal, 0.0, params_pft_plant(1)%grass, &
+        params_gpp%soilm_par_a, params_gpp%soilm_par_b )
       else
         soilmstress = 1.0
       end if    
@@ -214,7 +216,8 @@ contains
       ! This still does a linear scaling of daily GPP - knowingly wrong
       ! but not too dangerous...
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
+      tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
+        * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
       
       !! print*,'gpp',tile_fluxes(lu)%plant(pft)%dgpp
       !! print*,'fpcgrid',tile(lu)%plant(pft)%fpc_grid
@@ -227,7 +230,8 @@ contains
       !----------------------------------------------------------------
       ! Dark respiration
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar * out_pmodel%vcmax25 * calc_ftemp_inst_rd( climate%dtemp ) * c_molmass
+      tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
+        * out_pmodel%vcmax25 * calc_ftemp_inst_rd( climate%dtemp ) * c_molmass
 
       !----------------------------------------------------------------
       ! Vcmax and Jmax
