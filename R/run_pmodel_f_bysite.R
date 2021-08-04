@@ -32,6 +32,27 @@ run_pmodel_f_bysite <- function(
   # base state, always execute the call
   continue <- TRUE
   
+  # record first year and number of years in forcing data 
+  # frame (may need to overwrite later)
+  ndayyear <- 365
+  
+  firstyeartrend_forcing <- forcing %>%
+    ungroup() %>%
+    slice(1) %>%
+    pull(date) %>%
+    lubridate::year()
+  
+  nyeartrend_forcing <- nrow(forcing)/ndayyear
+  
+  # determine number of seconds per time step
+  times <- forcing %>%
+    pull(date) %>%
+    head(2)
+  secs_per_tstep <- difftime(times[1], times[2], units = "secs") %>%
+    as.integer() %>%
+    abs()
+  
+  
   # re-define units and naming of forcing dataframe
   forcing <- forcing %>% 
     dplyr::mutate(
@@ -39,9 +60,9 @@ run_pmodel_f_bysite <- function(
       fsun = (100-ccov)/100,
       snowf = 0.0,
       ndep = 0.0,
-      tmin = temp,
-      tmax = temp,
-      rain = prec
+      tmin = temp, # fake for now
+      tmax = temp, # fake for now
+      rain = prec  # rename variable
       ) %>% 
     dplyr::select(
       temp,
@@ -91,7 +112,7 @@ run_pmodel_f_bysite <- function(
       }
     })
     
-    if (any(data_integrity)){
+    if (all(data_integrity)){
       continue <- FALSE
     }
     
@@ -116,7 +137,7 @@ run_pmodel_f_bysite <- function(
     )
     
     parameter_integrity <- lapply(check_param, function(check_var){
-      if (any(is.nanull(forcing[check_var]))){
+      if (any(is.nanull(params_siml[check_var]))){
         rlang::warn(sprintf("Error: Missing value in %s for %s",
                             check_var, sitename))
         return(FALSE)
@@ -125,7 +146,7 @@ run_pmodel_f_bysite <- function(
       }
     })
     
-    if (any(parameter_integrity)){
+    if (all(parameter_integrity)){
       continue <- FALSE
     }
     
@@ -140,17 +161,20 @@ run_pmodel_f_bysite <- function(
                         params_siml$nyeartrend, "\n"))
       rlang::warn(paste(" Site name: ", sitename, "\n"))
       
-      # Overwrite params_siml$nyeartrend and params_siml$firstyeartrend based on 'forcing'
+      # Overwrite params_siml$nyeartrend and 
+      # params_siml$firstyeartrend based on 'forcing'
       if (nrow(forcing) %% ndayyear == 0){
         params_siml$nyeartrend <- nyeartrend_forcing
         params_siml$firstyeartrend <- firstyeartrend_forcing
-        rlang::warn(paste(" Overwriting params_siml$nyeartrend: ", params_siml$nyeartrend, "\n"))
-        rlang::warn(paste(" Overwriting params_siml$firstyeartrend: ", params_siml$firstyeartrend, "\n"))
+        rlang::warn(paste(" Overwriting params_siml$nyeartrend: ",
+                          params_siml$nyeartrend, "\n"))
+        rlang::warn(paste(" Overwriting params_siml$firstyeartrend: ",
+                          params_siml$firstyeartrend, "\n"))
       } else {
         # something weird more fundamentally -> don't run the model
         rlang::warn(" Returning a dummy data frame.")
         continue <- FALSE
-      } 
+      }
     }
     
   }
