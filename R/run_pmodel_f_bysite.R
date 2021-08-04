@@ -49,7 +49,9 @@ run_pmodel_f_bysite <- function(
       co2,
       ndep,
       fapar,
-      patm
+      patm,
+      tmin,
+      tmax
       )
   
   # base state, always execute the call
@@ -72,7 +74,9 @@ run_pmodel_f_bysite <- function(
       "co2",
       "ndep",
       "fapar",
-      "patm"
+      "patm",
+      "tmin",
+      "tmax"
     )
     
     data_integrity <- lapply(check_vars, function(check_var){
