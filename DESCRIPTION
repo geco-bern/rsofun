@@ -1,12 +1,47 @@
 Package: rsofun
 Title: SOFUN in R
-Version: 3.3
-Authors@R: c(person("Benjamin", "Stocker", email = "benjamin.stocker@gmail.com", role = c("aut", "cre")))
-Description: Implements the SOFUN modelling framework for simulating terrestrial processes, including model
-  calibration and benchmarking.
-License: GPL-3
-LazyData: true
-Depends: dplyr, purrr, lubridate, tidyr, raster, lubridate, stringi, sp, GenSA, stringr, rlang, readr
-RoxygenNote: 7.1.1
-VignetteBuilder: knitr
+Version: 4.0
+Authors@R: c(
+            person(
+              family = "Benjamin",
+              given = "Stocker",
+              email = "benjamin.stocker@gmail.com",
+              comment = c(ORCID = "0000-0002-5070-8109"),
+              role = c("aut", "cre")),
+            person(
+               family = "Hufkens",
+               given = "Koen",
+               email = "koen.hufkens@gmail.com",
+               role = c("ctb"),
+               comment = c(ORCID = "0000-0002-5070-8109"))
+           )
+Description: Implements the SOFUN modelling framework for simulating terrestrial
+              processes, including model calibration and benchmarking.
 URL: https://github.com/stineb/rsofun
+BugReports: https://github.com/stineb/rsofun/issues
+License: GPL-3
+Depends:
+    R (>= 3.6)
+Imports:
+    dplyr,
+    purrr,
+    tidyr,
+    magrittr,
+    lubridate,
+    GenSA,
+    rlang,
+    graphics,
+    grDevices,
+    BayesianTools,
+    multidplyr,
+    stats,
+    utils
+LazyData: true
+ByteCompile: true
+RoxygenNote: 7.1.1
+Suggests:
+    rmarkdown,
+    covr,
+    testthat,
+    knitr
+VignetteBuilder: knitr

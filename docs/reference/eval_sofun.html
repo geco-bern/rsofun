@@ -73,7 +73,7 @@ Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 da
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rsofun</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0</span>
       </span>
     </div>
 
@@ -87,27 +87,6 @@ Currently only evaluations of GPP model outputs, compared agains FLUXNET 2015 da
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
-</li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/benchmark_gpp_FLUXNET2015_ensemble_EXAMPLE.html">Benchmarking rsofun</a>
-    </li>
-    <li>
-      <a href="../articles/example_lm3ppa.html">Example using LM3-PPA</a>
-    </li>
-    <li>
-      <a href="../articles/example_pmodel.html">Example using P-model</a>
-    </li>
-    <li>
-      <a href="../articles/prepare_inputs_rsofun.html">Prepare rsofun forcing data</a>
-    </li>
-  </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -191,7 +170,7 @@ and functions for plotting respective data.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='va'>out_eval</span> <span class='op'>&lt;-</span> <span class='fu'>eval_sofun</span><span class='op'>(</span> <span class='va'>mod</span>, <span class='va'>settings</span>, obs_eval <span class='op'>=</span> <span class='cn'>NA</span>, overwrite <span class='op'>=</span> <span class='cn'>TRUE</span>, doplot <span class='op'>=</span> <span class='cn'>FALSE</span> <span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in tidyr::unnest(., data): object 'mod' not found</span></div><div class='input'>
+</div><div class='output co'>#&gt; <span class='error'>Error in eval_sofun(mod, settings, obs_eval = NA, overwrite = TRUE, doplot = FALSE): could not find function "eval_sofun"</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -204,7 +183,7 @@ and functions for plotting respective data.</p>
 
       <footer>
       <div class="copyright">
-  <p>Developed by Benjamin Stocker.</p>
+  <p>Developed by Stocker Benjamin.</p>
 </div>
 
 <div class="pkgdown">

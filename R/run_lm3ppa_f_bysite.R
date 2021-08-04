@@ -1,9 +1,11 @@
-#' R wrapper for SOFUN
+#' R wrapper for SOFUN LM3PPA
+#' 
+#' Call to the LM3PPA Fortran model
 #'
 #' @param sitename Site name
 #' @param params_siml Simulation parameters
 #' @param siteinfo Site meta info
-#' @param forcing forcing (input) dataframe (returned object by \link{prepare_input_sofun})
+#' @param forcing forcing (input) dataframe (returned object by `prepare_input_sofun()`)
 #' @param params_tile Tile-level model parameters
 #' @param params_species Species-specific model parameters
 #' @param params_soil Soil parameters (per soil layer)
@@ -11,17 +13,26 @@
 #' @param init_soil Initial soil pool sizes
 #' @param makecheck A logical specifying whether checks are performed to verify forcings.
 #'
-#' @details This is the model
+#' @details Model output is provided as a tidy dataframe
 #'
 #' @export
 #' @useDynLib rsofun
-#'
-run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, params_tile, params_species, params_soil, init_cohort, init_soil, makecheck = TRUE ){
 
-
+run_lm3ppa_f_bysite <- function(
+  sitename,
+  params_siml,
+  siteinfo,
+  forcing,
+  params_tile,
+  params_species,
+  params_soil,
+  init_cohort,
+  init_soil,
+  makecheck = TRUE
+  ){
+  
   ## re-define units and naming of forcing dataframe
-  forcing <- forcing %>% 
-    dplyr::select(1:13)
+  forcing <- forcing[,1:13]
 
   params_soil <- params_soil %>%
     dplyr::select(-type)
@@ -36,9 +47,15 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
     code_method_photosynth = 2
     dt_days <- forcing$DOY[2] - forcing$DOY[1]
     dt_hours <- forcing$HOUR[2] - forcing$HOUR[1]
-    if (dt_days!=1 && dt_hours != 0) rlang::abort("run_lm3ppa_f_bysite: time step must be daily for P-model photosynthesis setup.")
+    if (dt_days!=1 && dt_hours != 0){
+      rlang::abort(
+        "run_lm3ppa_f_bysite: time step must be daily for P-model photosynthesis setup."
+        )
+      } 
   } else {
-    rlang::abort(paste("run_lm3ppa_f_bysite: params_siml$method_photosynth not recognised:", params_siml$method_photosynth))
+    rlang::abort(
+      paste("run_lm3ppa_f_bysite: params_siml$method_photosynth not recognised:",
+            params_siml$method_photosynth))
   }
 
 # Types of mortality formulations
@@ -55,61 +72,48 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
   } else {
     rlang::abort(paste("run_lm3ppa_f_bysite: params_siml$method_mortality not recognised:", params_siml$method_mortality))
   }
-  
-  do_continue <- TRUE
 
+  # base state, always execute the call
+  continue <- TRUE
+  
+  # validate input
   if (makecheck){
-    is.nanull <- function(x) ifelse(is.na(x) | is.null(x), TRUE, FALSE)
-    if (any(is.nanull(forcing$PAR))){
-      rlang::warn(paste("Error: Missing value in PAR for site", sitename, "\n"))
-      do_continue <- FALSE
-    }
-    if (any(is.nanull(forcing$Swdown))){
-      rlang::warn(paste("Error: Missing value in Swdown for site", sitename, "\n"))
-      do_continue <- FALSE
-    }
-    if (any(is.nanull(forcing$TEMP))){
-      rlang::warn(paste("Error: Missing value in TEMP for site", sitename, "\n"))
-      do_continue <- FALSE
-    }
-    if (any(is.nanull(forcing$SoilT))){
-      rlang::warn(paste("Error: Missing value in SoilT for site", sitename, "\n"))
-      do_continue <- FALSE
-    }
-    if (any(is.nanull(forcing$RH))){
-      rlang::warn(paste("Error: Missing value in RH for site", sitename, "\n"))
-      do_continue <- FALSE
-    }
-    if (any(is.nanull(forcing$RAIN))){
-      rlang::warn(paste("Error: Missing value in RAIN for site", sitename, "\n"))
-      do_continue <- FALSE
-    }
-    if (any(is.nanull(forcing$WIND))){
-      rlang::warn(paste("Error: Missing value in WIND for site", sitename, "\n"))
-      do_continue <- FALSE
-    }
-    if (any(is.nanull(forcing$PRESSURE))){
-      rlang::warn(paste("Error: Missing value in PRESSURE for site", sitename, "\n"))
-      do_continue <- FALSE
-    }
-    if (any(is.nanull(forcing$aCO2_AW))){
-      rlang::warn(paste("Error: Missing value in aCO2_AW for site", sitename, "\n"))
-      do_continue <- FALSE
-    }
-    if (any(is.nanull(forcing$SWC))){
-      rlang::warn(paste("Error: Missing value in SWC for site", sitename, "\n"))
-      do_continue <- FALSE
-    }
     
-    # if (nrow(forcing) != params_siml$nyeartrend * 365 * 24){    # xxx todo: must be *48 for lm3ppa
-    #   rlang::warn("Error: Number of years data in forcing does not correspond to number of simulation years (nyeartrend). \n")
-    #   rlang::warn(paste(" Number of years data: ", nrow(forcing)/(365*24)))
-    #   rlang::warn(paste(" Number of simulation years: ", params_siml$nyeartrend))
-    #   rlang::warn(" Returning a dummy data frame.")
-    # }
+    # create a loop to loop over a list of variables
+    # to check validity
+    
+    check_vars <- c(
+      "PAR",
+      "Swdown",
+      "TEMP",
+      "SoilT",
+      "RH",
+      "RAIN",
+      "WIND",
+      "PRESSURE",
+      "aCO2_AW",
+      "SWC"
+    )
+    
+    data_integrity <- lapply(
+      check_vars,
+      function(check_var){
+        if (any(is.nanull(forcing[check_var]))){
+          warning(
+            sprintf("Error: Missing value in %s for %s",
+                    check_var, sitename))
+          return(FALSE)
+        } else {
+          return(TRUE)
+        }
+      })
+   
+    # only return true if all checked variables are TRUE 
+    # suppress warning on coercion of list to single logical
+    continue <- suppressWarnings(all(as.vector(data_integrity)))
   }
 
-  if (do_continue) {
+  if (continue) {
 
     ## C wrapper call
     lm3out <- .Call(
@@ -177,515 +181,139 @@ run_lm3ppa_f_bysite <- function( sitename, params_siml, siteinfo, forcing, param
       forcing          = as.matrix(forcing)
       )
     
-    ## Prepare output to be a nice looking tidy data frame (tibble)
-    # ddf <- init_dates_dataframe(yrstart = params_siml$firstyeartrend, yrend = siteinfo$year_end, noleap = TRUE)
-
-    out <- list(output_hourly_tile = NULL, output_daily_tile = NULL, output_daily_cohorts = NULL, output_annual_tile = NULL, output_annual_cohorts = NULL)
-    # names(out) <- c("output_hourly_tile", "output_daily_tile", "output_daily_cohorts_year", "output_annual_tile", "output_annual_cohorts")
-
-    ## hourly
-    out$output_hourly_tile <- lm3out[[1]] %>%
-      as.matrix() %>% 
-      as_tibble() %>%
-      setNames(c("year", "doy", "hour", "rad", "Tair", "Prcp", "GPP", "Resp", "Transp", "Evap", "Runoff", "Soilwater", "wcl", "FLDCAP", "WILTPT")) #%>%
-      #filter_at(vars(year), all_vars((.) != 0)) #%>%
-      #dplyr::mutate(sitename = sitename) #%>%
-      # dplyr::mutate(date = lubridate::ymd_hm(paste0(as.character(year), "-01-01 00:00")) + lubridate::days(doy-1) + hours(hour)) %>%
-      # dplyr::select(-year, -doy, -hour)
-      # dplyr::bind_cols(ddf,.) %>% 
-      # dplyr::select(-year_dec) %>%
+    #---- Single level output, one matrix ----
+    # hourly
+    output_hourly_tile <- as.data.frame(lm3out[[1]], stringAsFactor = FALSE)
+    colnames(output_hourly_tile) <- c("year", "doy", "hour",
+          "rad", "Tair", "Prcp",
+          "GPP", "Resp", "Transp",
+          "Evap", "Runoff", "Soilwater",
+          "wcl", "FLDCAP", "WILTPT")
     
-    ## daily_tile
-    out$output_daily_tile <- lm3out[[2]] %>%
-      as.matrix() %>% 
-      as_tibble() %>%
-      setNames(c("year", "doy", "Tc", "Prcp", "totWs", "Trsp", "Evap", "Runoff", "ws1", "ws2", "ws3", "LAI", "GPP", "Rauto", "Rh", "NSC", "seedC", "leafC", "rootC", "SW_C", "HW_C", "NSN", "seedN", "leafN", "rootN", "SW_N", "HW_N", "McrbC", "fastSOM", "slowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_uptk")) %>%
-      filter_at(vars(year), all_vars((.) != 0)) #%>%
-      #dplyr::mutate(sitename = sitename) #%>%
-      #dplyr::mutate(date = lubridate::ymd(paste0(as.character(year), "-01-01")) + lubridate::days(doy-1)) %>%
-      #dplyr::select(-year, -doy)
-      
-    ## daily_cohorts
-    out$output_daily_cohorts <- lm3out[[3]] %>%
-      as.matrix() %>% 
-      as_tibble() %>%
-      setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-      tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "year", names_prefix = "cohort_") %>%
-      # mutate(year = ifelse(year >= lag(cummax(year), default=0), year, 0)) %>% # Remove the previous years filled by cohorts
-      mutate(year = ifelse(year==-9999.0, NA, year)) %>%  
-      mutate(year = ifelse(year==0, NA, year)) %>%
-        bind_cols(
-        .,
-        lm3out[[4]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "doy", names_prefix = "cohort_") %>%
-          dplyr::select(-1)) %>%
-      bind_cols(
-        .,
-        lm3out[[5]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "hour", names_prefix = "cohort_") %>%
-          dplyr::select(-1)) %>%
-      bind_cols(
-        .,
-        lm3out[[6]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "cID", names_prefix = "cohort_") %>%
-          dplyr::select(-1)) %>%
-      bind_cols(
-        .,
-        lm3out[[7]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "PFT", names_prefix = "cohort_") %>%
-          dplyr::select(-1)) %>%
-      bind_cols(
-        .,
-        lm3out[[8]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "layer", names_prefix = "cohort_") %>%
-          dplyr::select(-1)) %>%
-      bind_cols(
-        .,
-        lm3out[[9]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "density", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[10]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "f_layer", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[11]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "LAI", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[12]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "gpp", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[13]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "resp", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[14]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "transp", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[15]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPleaf", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[16]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPProot", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[17]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPwood", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[18]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NSC", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[19]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "seedC", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[20]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "leafC", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[21]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "rootC", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[22]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "SW_C", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[23]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "HW_C", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[24]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NSN", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[25]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "seedN", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[26]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "leafN", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[27]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "rootN", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[28]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "SW_N", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      bind_cols(
-        .,
-        lm3out[[29]] %>%
-          as.matrix() %>% 
-          as_tibble() %>%
-          setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-          tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "HW_N", names_prefix = "cohort_") %>%
-          dplyr::select(-1)
-        ) %>%
-      tidyr::drop_na(year)
-     
-    ## annual tile
-    out$output_annual_tile <- lm3out[[30]] %>%
-      as.matrix() %>% 
-      as_tibble() %>%
-      setNames(c("year", "CAI", "LAI", "Density", "DBH", "Density12", "DBH12", "QMD", "NPP", "GPP", "Rauto", "Rh", "rain", "SoilWater", "Transp", "Evap", "Runoff", "plantC", "soilC", "plantN", "soilN", "totN", "NSC", "SeedC", "leafC", "rootC", "SapwoodC", "WoodC", "NSN", "SeedN", "leafN", "rootN", "SapwoodN", "WoodN", "McrbC", "fastSOM", "SlowSOM", "McrbN", "fastSoilN", "slowSoilN", "mineralN", "N_fxed", "N_uptk", "N_yrMin", "N_P2S", "N_loss", "totseedC", "totseedN", "Seedling_C", "Seedling_N", "MaxAge", "MaxVolume", "MaxDBH", "NPPL", "NPPW", "n_deadtrees", "c_deadtrees", "m_turnover", "c_turnover_time")) %>%
-      filter_at(vars(year), all_vars((.) != 0))
+    # daily_tile
+    output_daily_tile <- as.data.frame(lm3out[[2]], stringAsFactor = FALSE)
     
-    ## annual cohorts
-    out$output_annual_cohorts <- lm3out[[31]] %>%
-      as.matrix() %>% 
-      as_tibble() %>%
-      setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-      tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "year", names_prefix = "cohort_") %>%
-      # mutate(year = ifelse(year >= lag(cummax(year), default=0), year, 0)) %>% # Remove the previous years filled by cohorts
-      mutate(year = ifelse(year==-9999.0, NA, year)) %>% 
-      bind_cols(
-       .,
-      lm3out[[32]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "cID", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[33]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "PFT", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[34]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "layer", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[35]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "density", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[36]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "f_layer", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[37]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "dDBH", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[38]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "dbh", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[39]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "height", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[40]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "age", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[41]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Acrown", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[42]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "wood", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[43]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "nsc", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[44]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NSN", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[45]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPtr", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[46]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "seed", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[47]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPL", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[48]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPR", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[49]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPPW", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[50]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "GPP_yr", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[51]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "NPP_yr", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[52]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Rauto", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[53]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_uptk", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[54]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "N_fix", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[55]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "maxLAI", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[56]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "Volume", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[57]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "n_deadtrees", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-        .,
-      lm3out[[58]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "c_deadtrees", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    bind_cols(
-      .,
-      lm3out[[59]] %>%
-        as.matrix() %>% 
-        as_tibble() %>%
-        setNames(paste0("cohort_", as.character(1:ncol(.)))) %>%
-        tidyr::pivot_longer(1:ncol(.), names_to = "cohort", values_to = "deathrate", names_prefix = "cohort_") %>%
-        dplyr::select(-1)) %>%
-    tidyr::drop_na(year) 
-
+    colnames(output_daily_tile) <- c("year", "doy", "Tc",
+          "Prcp", "totWs", "Trsp",
+          "Evap", "Runoff", "ws1",
+          "ws2", "ws3", "LAI",
+          "GPP", "Rauto", "Rh",
+          "NSC", "seedC", "leafC",
+          "rootC", "SW_C", "HW_C",
+          "NSN", "seedN", "leafN",
+          "rootN", "SW_N", "HW_N",
+          "McrbC", "fastSOM", "slowSOM",
+          "McrbN", "fastSoilN", "slowSoilN",
+          "mineralN", "N_uptk")
+    
+    # annual tile
+    output_annual_tile <- as.data.frame(lm3out[[30]], stringAsFactor = FALSE)
+    colnames(output_annual_tile) <- c("year", "CAI", "LAI",
+          "Density", "DBH", "Density12",
+          "DBH12", "QMD", "NPP",
+          "GPP", "Rauto", "Rh",
+          "rain", "SoilWater","Transp",
+          "Evap", "Runoff", "plantC",
+          "soilC", "plantN", "soilN",
+          "totN", "NSC", "SeedC", "leafC",
+          "rootC", "SapwoodC", "WoodC",
+          "NSN", "SeedN", "leafN",
+          "rootN", "SapwoodN", "WoodN",
+          "McrbC", "fastSOM", "SlowSOM",
+          "McrbN", "fastSoilN", "slowSoilN",
+          "mineralN", "N_fxed", "N_uptk",
+          "N_yrMin", "N_P2S", "N_loss",
+          "totseedC", "totseedN", "Seedling_C",
+          "Seedling_N", "MaxAge", "MaxVolume",
+          "MaxDBH", "NPPL", "NPPW",
+          "n_deadtrees", "c_deadtrees", "c_turnover_time")
+    
+    #---- Multi-level output, multiple matrices to be combined ----
+    
+    # Convert to non dplyr routine, just a lapply looping over
+    # matrices converting to vector, this is a fixed format
+    # with preset conditions so no additional tidyverse logic
+    # is required for the conversion
+    #
+    # Cohort indices can be formatted using a matrix of the same
+    # dimension as the data, enumerated by column and unraveled
+    # as vector()
+    
+    #---- daily cohorts ----
+    daily_values <- c(
+      "year","doy","hour",
+      "cID", "PFT", "layer",
+      "density","f_layer", "LAI",
+      "gpp","resp","transp",
+      "NPPleaf","NPProot", "NPPwood", "NSC",
+      "seedC", "leafC", "rootC",
+      "SW_C", "HW_C", "NSN",
+      "seedN", "leafN", "rootN",
+      "SW_N", "HW_N"
+    )
+    output_daily_cohorts <- lapply(1:length(daily_values), function(x){
+      loc <- 2 + x
+      v <- data.frame(
+        as.vector(lm3out[[loc]]),
+        stringsAsFactors = FALSE)
+      names(v) <- daily_values[x]
+      return(v)
+    })
+    
+    output_daily_cohorts <- do.call("cbind", output_daily_cohorts)
+    
+    cohort <- sort(rep(1:ncol(lm3out[[3]]),nrow(lm3out[[3]])))
+    output_daily_cohorts <- cbind(cohort, output_daily_cohorts)
+    
+    # drop rows (cohorts) with no values
+    output_daily_cohorts$year[output_daily_cohorts$year == -9999 |
+                              output_daily_cohorts$year == 0] <- NA
+    output_daily_cohorts <- 
+      output_daily_cohorts[!is.na(output_daily_cohorts$year),]
+    
+    #--- annual cohorts ----
+    annual_values <- c(
+      "year","cID",
+      "PFT","layer","density",
+      "f_layer","dDBH","dbh",
+      "height","age","Acrown",
+      "wood","nsc","NSN","NPPtr",
+      "seed","NPPL","NPPR","NPPW",
+      "GPP_yr","NPP_yr","Rauto",
+      "N_uptk","N_fix","maxLAI",
+      "Volume","n_deadtrees",
+      "c_deadtrees","deathrate"
+    )
+    
+    output_annual_cohorts <- lapply(1:length(annual_values), function(x){
+      loc <- 30 + x
+      v <- data.frame(
+        as.vector(lm3out[[loc]]),
+        stringsAsFactors = FALSE)
+      names(v) <- annual_values[x]
+      return(v)
+    })
+    
+    # bind columns
+    output_annual_cohorts <- do.call("cbind", output_annual_cohorts)
+    cohort <- as.character(1:nrow(output_annual_cohorts))
+    output_annual_cohorts <- cbind(cohort,
+                                   output_annual_cohorts)
+    
+    # drop rows (cohorts) with no values
+    output_annual_cohorts$year[output_annual_cohorts$year == -9999 | 
+                           output_annual_cohorts$year == 0] <- NA
+    output_annual_cohorts <- 
+      output_annual_cohorts[!is.na(output_annual_cohorts$year),]
+    
+    # format the output in a structured list
+    out <- list(
+      output_hourly_tile = output_hourly_tile,
+      output_daily_tile = output_daily_tile,
+      output_daily_cohorts = output_daily_cohorts,
+      output_annual_tile = output_annual_tile,
+      output_annual_cohorts = output_annual_cohorts)
+    
   } else {
     out <- NA
   }
