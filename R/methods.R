@@ -6,7 +6,7 @@
 #' @param ... additional parameters to pass
 #' @return a scatterplot with fit statistics, plotting observed vs
 #'  fitted GPP data
-#' @keywords phenology, model, accuracy
+#'
 #' @export
 #' @import graphics
 
@@ -40,7 +40,7 @@ plot.rsofun_fit <- function(x, ...){
 #'  or generally calls which return the rsofun_fit class
 #' @param ... additional parameters to pass
 #' @return a table with fit statistics, a data frame with summary statistics
-#' @keywords phenology, model, accuracy
+
 #' @export
 
 summary.rsofun_fit <- function(object, ...){

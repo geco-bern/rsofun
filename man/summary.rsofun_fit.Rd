@@ -18,6 +18,3 @@ a table with fit statistics, a data frame with summary statistics
 \description{
 Print summary values for fit model output
 }
-\keyword{accuracy}
-\keyword{model,}
-\keyword{phenology,}

@@ -19,6 +19,3 @@ a scatterplot with fit statistics, plotting observed vs
 \description{
 Plotting method for fit model output
 }
-\keyword{accuracy}
-\keyword{model,}
-\keyword{phenology,}
