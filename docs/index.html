@@ -124,7 +124,7 @@
 <a href="#environment" class="anchor"></a>Environment</h2>
 <p><strong>This is important</strong></p>
 <p>In order to successfully compile the package (Fortran source), you need to have gfortran installed and manually adjust the compiler flag specification. To do so, open the Makeconf file (you’ll find it by entering in R: <code><a href="https://rdrr.io/r/base/file.path.html">file.path(R.home("etc"), "Makeconf")</a></code>). In there, add the gfortran flag <code>-ffree-line-length-0</code>. The respective line then looks like this:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">FCFLAGS</span> = <span class="at">-Wall</span> <span class="at">-g</span> <span class="at">-O2</span> <span class="va">$(</span><span class="ex">LTO</span><span class="va">)</span> <span class="at">-ffree-line-length-0</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">FCFLAGS</span> = -Wall -g -O2 <span class="va">$(</span><span class="ex">LTO</span><span class="va">)</span> -ffree-line-length-0</span></code></pre></div>
 </div>
 <div id="dependencies" class="section level2">
 <h2 class="hasAnchor">
@@ -167,10 +167,10 @@
 <li>In RStudio, after having edited code, select the ‘Build’ tab and click on ‘Install and Restart’ to build the package again. For quick edits and checks, you may simply source the edited files instead of re-building the whole package. If you like to add new functions, create a new source file that contains your function in subdirectory <code>./R/</code>, write a nice roxygen header (see other source files as an example), then click on ‘Build’ -&gt; ‘More’ -&gt; ‘Document’, and then again on ‘Install and Restart’.</li>
 <li>You can upload (commit and push) your edits and additions to your forked repository by</li>
 </ol>
-<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-u</span>  <span class="co"># adds all edits to your next commit</span></span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add -u  # adds all edits to your next commit</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="op">&lt;</span>newfile<span class="op">&gt;</span>  # adds new file to the git repository</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"a brief description of what you did"</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push  <span class="co"># pushes the commit to your fork </span></span></code></pre></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit -m <span class="st">"a brief description of what you did"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push  # pushes the commit to your fork </span></code></pre></div>
 <ol>
 <li>If you’re happy with your new edits and additions to the package, you may want to have it fed back from your fork to the original repository. To do so, please create a new <em>pull request</em> in GitHub: Click on ‘New pull request’ on <a href="https://github.com/stineb/rsofun">the repository page</a> and follow the inuitive steps. Thanks!</li>
 </ol>

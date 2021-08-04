@@ -138,13 +138,7 @@
     <p>Runs the LM3-PPA model and loads output in once.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>runread_lm3ppa_f</span><span class='op'>(</span>
-  <span class='va'>df_drivers</span>,
-  <span class='va'>params_modl</span>,
-  makecheck <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  parallel <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  ncores <span class='op'>=</span> <span class='fl'>2</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>runread_lm3ppa_f</span><span class='op'>(</span><span class='va'>df_drivers</span>, makecheck <span class='op'>=</span> <span class='cn'>TRUE</span>, parallel <span class='op'>=</span> <span class='cn'>FALSE</span>, ncores <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -153,10 +147,6 @@
       <th>df_drivers</th>
       <td><p>A nested data frame with one row for each site and columns named according to the 
 arguments of function runread_pmodel_f_bysite</p></td>
-    </tr>
-    <tr>
-      <th>params_modl</th>
-      <td><p>A named list of model parameters</p></td>
     </tr>
     <tr>
       <th>makecheck</th>
@@ -172,6 +162,10 @@ data from a certain number of sites to each core). Defaults to <code>FALSE</code
       <td><p>An integer specifying the number of cores used for parallel computing. 
 Defaults to 2.</p></td>
     </tr>
+    <tr>
+      <th>params_modl</th>
+      <td><p>A named list of model parameters</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -181,10 +175,10 @@ column <code>data</code></p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='va'>mod</span> <span class='op'>&lt;-</span> <span class='fu'><a href='runread_pmodel_f.html'>runread_pmodel_f</a></span><span class='op'>(</span> <span class='va'>df_drivers</span>, <span class='va'>params_modl</span>, makecheck <span class='op'>=</span> <span class='cn'>TRUE</span>, parallel <span class='op'>=</span> <span class='cn'>FALSE</span>, ncores <span class='op'>=</span> <span class='fl'>2</span> <span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error: Problem with `mutate()` column `data`.</span>
-#&gt; <span class='error'><span style='color: #0000BB;'>ℹ</span><span> `data = purrr::pmap(...)`.</span>
-#&gt; <span class='error'></span><span style='color: #BB0000;'>x</span><span> Can't subset columns that don't exist.</span>
-#&gt; <span class='error'></span><span style='color: #BB0000;'>x</span><span> Column `rain` doesn't exist.</span></div><div class='input'>
+</div><div class='output co'>#&gt; <span class='error'>Error: Problem with `mutate()` input `data`.</span>
+#&gt; <span class='error'><span style='color: #BB0000;'>x</span><span> Can't subset columns that don't exist.</span>
+#&gt; <span class='error'></span><span style='color: #BB0000;'>x</span><span> Column `rain` doesn't exist.</span>
+#&gt; <span class='error'></span><span style='color: #0000BB;'>ℹ</span><span> Input `data` is `purrr::pmap(...)`.</span></div><div class='input'>
 </div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
