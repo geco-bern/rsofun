@@ -32,11 +32,11 @@ runread_pmodel_f <- function(
   par,
   makecheck = TRUE,
   parallel = FALSE,
-  ncores = 2 ){
-
+  ncores = 1){
+  
   if (parallel){
 
-    cl <- multidplyr::new_cluster(2) %>%
+    cl <- multidplyr::new_cluster(n = ncores) %>%
       multidplyr::cluster_assign(par = par) %>%
       multidplyr::cluster_assign(makecheck = FALSE) %>%
       multidplyr::cluster_library(c("dplyr", "purrr", "rlang", "rsofun"))
