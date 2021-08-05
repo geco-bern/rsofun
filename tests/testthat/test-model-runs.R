@@ -14,7 +14,6 @@ test_that("p-model run check", {
   
   # read in demo data
   df_drivers <- p_model_drivers
-  df_drivers$params_siml[[1]]$secs_per_tstep <- (60*60*24)
   
   # run the SOFUN Fortran P-model
   mod <- run_pmodel_f_bysite( 
