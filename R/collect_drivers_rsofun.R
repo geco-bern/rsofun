@@ -40,6 +40,7 @@ collect_drivers_sofun <- function(
     meteo <- meteo %>% mutate(data = purrr::map(data,
                                                 ~mutate(., snow = 0)))
   }
+  
   if (!("rain" %in% names(meteo$data[[1]]))){
     rlang::warn("Variable 'rain' missing in meteo data frame.
                 Assuming equal to 'prec' for all dates. \n")
@@ -48,7 +49,19 @@ collect_drivers_sofun <- function(
                               ~mutate(., rain = prec)))
   }
   
-  vars_req <- c("ppfd", "rain", "snow", "prec", "temp", "patm", "vpd", "ccov")
+  if (!("tmin" %in% names(meteo$data[[1]]))){
+    rlang::warn("Variable 'tmin' missing in meteo data frame.
+                Assuming equal to 'temp' for all dates.
+                (same goes for tmax as assumed paired)\n")
+    meteo <- meteo %>%
+      mutate(data = purrr::map(data,
+                               ~mutate(., tmin = temp)),
+             data = purrr::map(data,
+                               ~mutate(., tmax = temp)))
+  }
+  
+  vars_req <- c("ppfd", "rain", "snow", "prec",
+                "temp", "patm", "vpd", "ccov", "tmin", "tmax")
   vars_missing <- vars_req[!(vars_req %in% names(meteo %>% unnest(data)))]
   if (length(vars_missing)){
    rlang::abort(paste("Aborting. Variables missing in meteo data frame:",
