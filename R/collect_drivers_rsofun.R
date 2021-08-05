@@ -27,47 +27,38 @@ collect_drivers_sofun <- function(
   co2,
   df_soiltexture
   ){
-  
-  # complement the setup settings
+    
+  ## complement the setup settings
   siteinfo <- prepare_setup_sofun(
-    siteinfo = siteinfo,
-    params_siml = params_siml
-    )
+        siteinfo = siteinfo,
+        params_siml = params_siml)
   
   ## check if all required variables are available
   if (!("snow" %in% names(meteo$data[[1]]))){
     rlang::warn("Variable 'snow' missing in meteo data frame. 
                 Assuming zero for all dates. \n")
-    meteo <- meteo %>%
-      mutate(
-        data = purrr::map(data, ~mutate(., snow = 0))
-        )
+    meteo <- meteo %>% mutate(data = purrr::map(data,
+                                                ~mutate(., snow = 0)))
   }
   if (!("rain" %in% names(meteo$data[[1]]))){
     rlang::warn("Variable 'rain' missing in meteo data frame.
                 Assuming equal to 'prec' for all dates. \n")
     meteo <- meteo %>%
-      mutate(
-        data = purrr::map(data, ~mutate(., rain = prec))
-        )
+     mutate(data = purrr::map(data,
+                              ~mutate(., rain = prec)))
   }
   
-  # list required variables
   vars_req <- c("ppfd", "rain", "snow", "prec", "temp", "patm", "vpd", "ccov")
-  
-  # check for missing variables
   vars_missing <- vars_req[!(vars_req %in% names(meteo %>% unnest(data)))]
-  
   if (length(vars_missing)){
-    rlang::abort(paste("Aborting. Variables missing in meteo data frame:",
-                       paste(vars_missing, collapse = ", ")))
-    }
+   rlang::abort(paste("Aborting. Variables missing in meteo data frame:",
+                      paste(vars_missing, collapse = ", ")))
+   }
   
-  # create mega-df containing all forcing data and parameters that vary
-  # by site (not model parameters!)
+  # create mega-df containing all forcing data and parameters that
+  # vary by site (not model parameters!)
   names_metainfo <- names(siteinfo)[-which(names(siteinfo) %in%
                                              c("sitename", "params_siml"))]
-  
   df_mega <- siteinfo %>% 
     tidyr::nest(siteinfo = names_metainfo) %>% 
     left_join(
@@ -85,29 +76,25 @@ collect_drivers_sofun <- function(
         rename(co2 = data),
       by = "sitename"
     ) %>% 
-    mutate(
-      df_soiltexture = purrr::map(as.list(seq(nrow(.))),
-                                  ~return(df_soiltexture))
-      )
+    mutate(df_soiltexture = purrr::map(as.list(seq(nrow(.))),
+                                       ~return(df_soiltexture)))
   
-  # use only interpolated fapar and combine meteo data and fapar into
-  # a single nested column 'forcing'
+  # use only interpolated fapar and combine meteo data and fapar
+  # into a single nested column 'forcing'
   df_mega <- df_mega %>% 
     mutate(fapar = purrr::map(fapar, ~dplyr::select(., date, fapar))) %>% 
     mutate(co2   = purrr::map(co2  , ~dplyr::select(., date, co2))) %>% 
-    mutate(forcing = purrr::map2(meteo, fapar,
-                                 ~left_join( .x, .y, by = "date"))) %>% 
-    mutate(forcing = purrr::map2(forcing, co2,
-                                 ~left_join( .x, .y, by = "date"))) %>% 
+    mutate(forcing = purrr::map2(meteo, fapar, ~left_join( .x, .y, by = "date"))) %>% 
+    mutate(forcing = purrr::map2(forcing, co2, ~left_join( .x, .y, by = "date"))) %>% 
     dplyr::select(-meteo, -fapar, -co2)
   
-  # drop sites for which forcing data is missing for all dates
+  ## drop sites for which forcing data is missing for all dates
   count_notna <- function(df){
     df %>% 
       ungroup() %>% 
-      summarise(across(c("ppfd", "rain", "snow", "prec", "temp",
-                         "patm", "vpd", "ccov", "fapar", "co2"),
-                       ~sum(!is.na(.)))) %>% 
+      summarise(across(
+      c("ppfd", "rain", "snow", "prec", "temp",
+        "patm", "vpd", "ccov", "fapar", "co2"), ~sum(!is.na(.)))) %>% 
       pivot_longer(cols = 1:10, names_to = "var", values_to = "n_not_missing")
   }
   
@@ -124,7 +111,7 @@ collect_drivers_sofun <- function(
     df_mega <- df_mega %>% 
       dplyr::filter(!(sitename %in% pull(df_missing, sitename)))
   }
-  
+    
   ## interpolate to fill gaps in forcing time series
   myapprox <- function(vec){
     approx(vec, xout = 1:length(vec))$y
@@ -136,18 +123,20 @@ collect_drivers_sofun <- function(
     df <- df %>% 
       mutate_at(vars, myapprox)
     
-    # fill remaining gaps with mean seasonal cycle
+    ## fill remaining gaps with mean seasonal cycle
     add_doy <- function(string){paste0(string, "_doy")}
+    
     df_meandoy <- df %>% 
       mutate(doy = lubridate::yday(date)) %>% 
       group_by(doy) %>% 
       summarise(across(where(is.double), ~mean(.x, na.rm = TRUE))) %>% 
-      rename_with(.fn = add_doy,
-                  .cols = one_of("ppfd", "rain", "snow", "prec", "temp",
-                                 "patm", "vpd", "ccov", "fapar", "co2")) %>% 
-      dplyr::select(doy, one_of("ppfd_doy", "rain_doy", "snow_doy",
-                                "prec_doy", "temp_doy", "patm_doy",
-                                "vpd_doy", "ccov_doy", "fapar_doy", "co2_doy"))
+      rename_with(.fn = add_doy, .cols = one_of(
+        "ppfd", "rain", "snow", "prec", "temp", "patm",
+        "vpd", "ccov", "fapar", "co2", "tmin", "tmax")) %>% 
+      dplyr::select(doy, 
+      one_of("ppfd_doy", "rain_doy", "snow_doy", "prec_doy", "temp_doy",
+             "patm_doy", "vpd_doy", "ccov_doy", "fapar_doy", "co2_doy",
+             "tmin_doy", "tmax_doy"))
     
     df <- df %>% 
       mutate(doy = lubridate::yday(date)) %>% 
@@ -161,7 +150,9 @@ collect_drivers_sofun <- function(
              vpd = ifelse(is.na(vpd), vpd_doy, vpd),
              ccov = ifelse(is.na(ccov), ccov_doy, ccov),
              fapar = ifelse(is.na(fapar), fapar_doy, fapar),
-             co2 = ifelse(is.na(co2), co2_doy, co2)) %>% 
+             co2 = ifelse(is.na(co2), co2_doy, co2),
+             tmin = ifelse(is.na(tmin), tmin_doy, tmin),
+             tmax = ifelse(is.na(tmax), tmax_doy, tmax)) %>% 
       dplyr::select(-ends_with("_doy"))
     
     return(df)
@@ -170,6 +161,6 @@ collect_drivers_sofun <- function(
   df_mega <- df_mega %>% 
     mutate(forcing = purrr::map(forcing, ~fill_na_forcing(.))) %>% 
     dplyr::select(sitename, forcing, params_siml, siteinfo, df_soiltexture)
-  
+
   return(df_mega)
 }
