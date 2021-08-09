@@ -67,7 +67,8 @@ test_that("test calibration routine p-model", {
   # test for correctly returned values
   expect_type(pars, "list")
 })
-# 
+
+
 # test_that("test calibration routine lm3ppa", {
 #   skip_on_cran()
 #   
@@ -93,10 +94,11 @@ test_that("test calibration routine p-model", {
 #         iterations = 50
 #       )
 #     ),
-#     par                 = list(phiRL = list(lower=0.5, upper=5, init=3.5),
-#                                LAI_light = list(lower=2, upper=5, init=3.5),
-#                                tf_base = list(lower=0.5, upper=1.5, init=1),
-#                                par_mort = list(lower=0.1, upper=2, init=1))
+#     par = list(
+#          phiRL = list(lower=0.5, upper=5, init=3.5),
+#         LAI_light = list(lower=2, upper=5, init=3.5),
+#         tf_base = list(lower=0.5, upper=1.5, init=1),
+#         par_mort = list(lower=0.1, upper=2, init=1))
 #   )
 #   
 #   pars <- calib_sofun(
