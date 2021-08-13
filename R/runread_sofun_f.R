@@ -63,13 +63,28 @@ runread_pmodel_f <- function(
          df_soiltexture = .x$df_soiltexture[[1]], 
          par    = par, 
          makecheck      = makecheck )
-      )) 
+      ))
     
-     df_out <- df_out %>% 
+     # collect the cluster data
+     data <- df_out %>%
       dplyr::collect() %>%
       dplyr::ungroup() %>%
-      dplyr::select( data )  %>% 
-      tidyr::unnest( cols = c( data ))
+      dplyr::select( data )
+     
+     # meta-data
+     meta_data <- df_out %>%
+       dplyr::collect() %>%
+       dplyr::ungroup() %>%
+       dplyr::select( input ) %>%
+       tidyr::unnest( cols = c( input )) %>%
+       dplyr::select(sitename, siteinfo)
+     
+     # combine both data and meta-data
+     # this implicitly assumes that the order
+     # between the two functions above does
+     # not alter! There is no way of checking
+     # in the current setup
+     df_out <- bind_cols(meta_data, data)
     
   } else {
     
@@ -80,7 +95,7 @@ runread_pmodel_f <- function(
                            par = par,
                            makecheck = makecheck
         )) %>% 
-      dplyr::select(sitename, data)
+      dplyr::select(sitename, siteinfo, data)
   }
   
   return(df_out)
