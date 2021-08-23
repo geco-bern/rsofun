@@ -52,17 +52,12 @@ run_pmodel_f_bysite <- function(
     as.integer() %>%
     abs()
   
-  
   # re-define units and naming of forcing dataframe
   forcing <- forcing %>% 
     dplyr::mutate(
       netrad = -9999.9,
       fsun = (100-ccov)/100,
-      snowf = 0.0,
-      ndep = 0.0,
-      tmin = temp, # fake for now
-      tmax = temp, # fake for now
-      rain = prec  # rename variable
+      ndep = 0.0
       ) %>% 
     dplyr::select(
       temp,
@@ -71,7 +66,7 @@ run_pmodel_f_bysite <- function(
       ppfd,
       netrad,
       fsun,
-      snowf,
+      snow,
       co2,
       ndep,
       fapar,
@@ -91,7 +86,7 @@ run_pmodel_f_bysite <- function(
       "ppfd",
       "netrad",
       "fsun",
-      "snowf",
+      "snow",
       "co2",
       "ndep",
       "fapar",
