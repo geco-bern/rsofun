@@ -11,16 +11,6 @@ library(multidplyr)
 install()
 
 load("input_data/df_drivers_DBH_gs.RData")
-
-df_output <- runread_lm3ppa_f(
-  df_drivers,
-  makecheck = TRUE,
-  parallel = FALSE
-)
-
-#write.csv(df_output$data[[1]]$output_annual_tile, "output_euler/ea1sa1DBHgl_out_annual_tile_euler.csv")
-#write.csv(df_output$data[[1]]$output_annual_cohorts, "output_euler/ea1sa1DBHgl_out_annual_cohorts_euler.csv")
-
 load("input_data/ddf_obs.RData")
 
 settings_calib_DBH_gs <- list(

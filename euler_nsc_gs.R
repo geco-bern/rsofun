@@ -11,30 +11,20 @@ library(multidplyr)
 install()
 
 load("input_data/df_drivers_NSC_gs.RData")
-
-df_output <- runread_lm3ppa_f(
-  df_drivers,
-  makecheck = TRUE,
-  parallel = FALSE
-)
-
-#write.csv(df_output$data[[1]]$output_annual_tile, "output_euler/ea1sa1NSCgl_out_annual_tile_euler.csv")
-#write.csv(df_output$data[[1]]$output_annual_cohorts, "output_euler/ea1sa1NSCgl_out_annual_cohorts_euler.csv")
-
 load("input_data/ddf_obs.RData")
 
 settings_calib_NSC_gs <- list(
   method              = "gensa",
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 2000, 
+  maxit               = 1000, 
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
   name                = "ORG",
   par                 = list(phiRL = list(lower=0.5, upper=5, init=3.5),
                              LAI_light = list(lower=2, upper=5, init=3.5),
-                             tf_base = list(lower=0.5, upper=1.5, init=1),
+                             tf_base = list(lower=0.7, upper=1.1, init=1),
                              par_mort = list(lower=0.1, upper=2, init=1),
                              par_mort_under = list(lower=0.1, upper=2, init=1))
 )
