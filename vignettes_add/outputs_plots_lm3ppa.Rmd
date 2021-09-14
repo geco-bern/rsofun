@@ -13,40 +13,12 @@ library(tibble)
 library(rsofun)
 library(ggplot2)
 library(ggpubr) # ggarrange
-```
+library(patchwork)
+library(ggthemes)
+library(scales)
 
-# Mortality formulations
+show_col(colorblind_pal()(8))
 
-```{r}
-fig1a_dbh <- ggplot(data.frame(x = c(0, 1)), aes(x)) + 
-  stat_function(fun = ~ 0.1*.x ^ 1.5, col="#0072B2") +
-  stat_function(fun = ~ 0.1*.x ^ 2.5, col="#009E73") +
-  stat_function(fun = ~ 0.1*.x ^ 5, col="#D55E00") +
-  labs(x='DBH', y='Mortality rate', title= "a)") +
-theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                   axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                   legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                   plot.title = element_text(size = 11))
-
-fig1a_nsc <- ggplot(data.frame(x = c(0, 5)), aes(x)) + 
-  stat_function(fun = ~ 0.1*(exp(-3.0*.x)/(0.01+exp(-3.0*.x))), col="#0072B2") +
-  stat_function(fun = ~ 0.1*(exp(-2.5*.x)/(0.01+exp(-2.5*.x))), col="#009E73") +
-  stat_function(fun = ~ 0.1*(exp(-2.0*.x)/(0.01+exp(-2.0*.x))), col="#D55E00") +
-  labs(x='NSC', y='Mortality rate',title= "a)") +theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-
-fig1a_gr <- ggplot(data.frame(x = c(0, 15)), aes(x)) + 
-  stat_function(fun = ~ 0.1*(exp(0.8*.x)/(100+exp(0.8*.x))), col="#0072B2") +
-  stat_function(fun = ~ 0.1*(exp(0.7*.x)/(100+exp(0.7*.x))), col="#009E73") +
-  stat_function(fun = ~ 0.1*(exp(0.6*.x)/(100+exp(0.6*.x))), col="#D55E00") +
-  labs(x='GR', y='Mortality rate',title= "a)") +theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) 
 ```
 
 # Read model outputs
@@ -327,7 +299,47 @@ ea3sa1CSTgl_out_annual_tile <- ea3sa1CSTgl_out_annual_tile %>% mutate(Mortality 
 ## LUE levels
 
 ### a) Mortality formulations
-Check Plot_functions.R
+
+#### DBH
+```{r}
+fig1a_dbh <- ggplot(data.frame(x = c(0, 1)), aes(x)) + 
+  stat_function(fun = ~ 0.1*.x ^ 1.5, col="#009E73") +  
+  stat_function(fun = ~ 0.1*.x ^ 2.5, col="#0072B2") + 
+  stat_function(fun = ~ 0.1*.x ^ 5, col="#D55E00") + 
+  labs(x='DBH', y='Mortality rate', title= "a)") +
+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+                   axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                   legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+                   plot.title = element_text(size = 11))
+```
+
+#### NSC
+```{r}
+fig1a_nsc <- ggplot(data.frame(x = c(0, 5)), aes(x)) + 
+  stat_function(fun = ~ 0.1*(exp(-3.0*.x)/(0.01+exp(-3.0*.x))), col="#009E73") +
+  stat_function(fun = ~ 0.1*(exp(-2.5*.x)/(0.01+exp(-2.5*.x))), col="#0072B2") +
+  stat_function(fun = ~ 0.1*(exp(-2.0*.x)/(0.01+exp(-2.0*.x))), col="#D55E00") +
+  labs(x='NSC', y='Mortality rate',title= "a)") +theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+                     plot.title = element_text(size = 11)) 
+```
+
+#### GR
+```{r}
+fig1a_gr <- ggplot(data.frame(x = c(0, 15)), aes(x)) + 
+  stat_function(fun = ~ 0.1*(exp(0.6*.x)/(100+exp(0.6*.x))), col="#009E73") +
+  stat_function(fun = ~ 0.1*(exp(0.7*.x)/(100+exp(0.7*.x))), col="#0072B2") +
+  stat_function(fun = ~ 0.1*(exp(0.8*.x)/(100+exp(0.8*.x))), col="#D55E00") +
+  labs(x='GR', y='Mortality rate',title= "a)") +theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) 
+
+fig1a_dbh / fig1a_nsc / fig1a_gr
+```
 
 ### b) Stand develop: Stand biomass vs. time
 
@@ -344,7 +356,7 @@ fig1b_dbh <- ggplot() +
   geom_line(data=ea3sa1DBHp2gl_out_annual_tile, aes(x=year, y=plantC, color='x2', linetype='+30%'),alpha=.7) +
   geom_line(data=ea3sa1DBHp3gl_out_annual_tile, aes(x=year, y=plantC, color='x3', linetype='+30%'),alpha=.7) +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
-                     values = c("#00BA38", "#619CFF", "#F8766D")) +
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                      values = c("dotted","longdash","solid")) +
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
@@ -352,9 +364,7 @@ fig1b_dbh <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  scale_y_continuous(limits = c(0,55),breaks = seq(0,55,10)) + 
   labs(title= "b)")
-
 ```
 
 #### NSC 
@@ -370,7 +380,7 @@ fig1b_nsc <- ggplot() +
   geom_line(data=ea3sa1NSCp2gl_out_annual_tile, aes(x=year, y=plantC, color='x2', linetype='+30%'),alpha=.7) +
   geom_line(data=ea3sa1NSCp3gl_out_annual_tile, aes(x=year, y=plantC, color='x3', linetype='+30%'),alpha=.7) +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
-                     values = c("#00BA38", "#619CFF", "#F8766D")) +
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                      values = c("dotted","longdash","solid")) +
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
@@ -378,9 +388,8 @@ fig1b_nsc <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  scale_y_continuous(limits = c(0,55),breaks = seq(0,55,10)) + 
+  #scale_y_continuous(limits = c(0,55),breaks = seq(0,55,10)) + 
   labs(title= "b)")
-
 ```
 
 #### GR 
@@ -396,7 +405,7 @@ fig1b_gr <- ggplot() +
   geom_line(data=ea3sa1GRp2gl_out_annual_tile, aes(x=year, y=plantC, color='x2', linetype='+30%'),alpha=.7) +
   geom_line(data=ea3sa1GRp3gl_out_annual_tile, aes(x=year, y=plantC, color='x3', linetype='+30%'),alpha=.7) +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
-                     values = c("#00BA38", "#619CFF", "#F8766D")) +
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                      values = c("dotted","longdash","solid")) +
   labs(x = "Year", y = expression(paste("Biomass (Kg C ", m^-2, " ", yr^-1, ") "))) + 
@@ -406,75 +415,159 @@ fig1b_gr <- ggplot() +
         plot.title = element_text(size = 11)) + 
   scale_y_continuous(limits = c(0,55),breaks = seq(0,55,10)) + 
   labs(title= "b)")
-
 ```
 
-### c) Growth and mortality 
-
-From annual_tile_output: NPP (Growth) and 
-Level of LUE (mol/s/m2)
-
-```{r, fig.width = 3, fig.height = 3}
-
-# Mortality as a function of DBH
-fig1c_dbh <- ggplot() + 
-  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=NPP, color='Control'),alpha=.7) + 
-  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=NPP, color='+15%'),alpha=.7) +
-  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=NPP, color='+30%'),alpha=.7) +
-  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=c_deadtrees, color='Control'),alpha=.7) + 
-  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=c_deadtrees, color='+15%'),alpha=.7) +
-  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=c_deadtrees, color='+30%'),alpha=.7) +
-  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38")) +
-  labs(x = "Year", y = "NPP and mortality") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  #scale_y_continuous(limits = c(0,63),breaks = seq(0,63,10)) + 
-  labs(title= "c)")
-
-# Mortality as a function of C starvation
-fig1c_nsc <- ggplot() + 
-  geom_line(data=ea1sa1NSCgl_out_annual_tile, aes(x=year, y=NPP, color='Control'),alpha=.7) + 
-  geom_line(data=ea2sa1NSCgl_out_annual_tile, aes(x=year, y=NPP, color='+15%'),alpha=.7) +
-  geom_line(data=ea3sa1NSCgl_out_annual_tile, aes(x=year, y=NPP, color='+30%'),alpha=.7) +
-  geom_line(data=ea1sa1NSCgl_out_annual_tile, aes(x=year, y=c_deadtrees, color='Control'),alpha=.7) + 
-  geom_line(data=ea2sa1NSCgl_out_annual_tile, aes(x=year, y=c_deadtrees, color='+15%'),alpha=.7) +
-  geom_line(data=ea3sa1NSCgl_out_annual_tile, aes(x=year, y=c_deadtrees, color='+30%'),alpha=.7) +
-  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38")) +
-  labs(x = "Year", y = "NPP and mortality") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  #scale_y_continuous(limits = c(0,63),breaks = seq(0,63,10)) + 
-  labs(title= "c)")
-
-# Mortality as a function of Growth rate
-fig1c_gr <- ggplot() + 
-  geom_line(data=ea1sa1GRgl_out_annual_tile, aes(x=year, y=NPP, color='Control'),alpha=.7) + 
-  geom_line(data=ea2sa1GRgl_out_annual_tile, aes(x=year, y=NPP, color='+15%'),alpha=.7) +
-  geom_line(data=ea3sa1GRgl_out_annual_tile, aes(x=year, y=NPP, color='+30%'),alpha=.7) +
-  geom_line(data=ea1sa1GRgl_out_annual_tile, aes(x=year, y=c_deadtrees, color='Control'),alpha=.7) + 
-  geom_line(data=ea2sa1GRgl_out_annual_tile, aes(x=year, y=c_deadtrees, color='+15%'),alpha=.7) +
-  geom_line(data=ea3sa1GRgl_out_annual_tile, aes(x=year, y=c_deadtrees, color='+30%'),alpha=.7) +
-  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38")) +
-  labs(x = "Year", y = "NPP and mortality") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  #scale_y_continuous(limits = c(0,63),breaks = seq(0,63,10)) + 
-  labs(title= "c)")
-
-# Mortality as a function of Self-thinning
-
-```
-
-### d) Relative change biomass (plantC) vs. NPP
+### c) Growth (NPP)
 
 #### DBH
+```{r, fig.width = 6, fig.height = 6}
+fig1c_dbh <- ggplot() + 
+  geom_line(data=ea1sa1DBHp1gl_out_annual_tile, aes(x=year, y=NPP, color='x1', linetype='Control'),alpha=.7) + 
+  geom_line(data=ea1sa1DBHp2gl_out_annual_tile, aes(x=year, y=NPP, color='x2', linetype='Control'),alpha=.7) +
+  geom_line(data=ea1sa1DBHp3gl_out_annual_tile, aes(x=year, y=NPP, color='x3', linetype='Control'),alpha=.7) +
+  geom_line(data=ea2sa1DBHp1gl_out_annual_tile, aes(x=year, y=NPP, color='x1', linetype='+15%'),alpha=.7) + 
+  geom_line(data=ea2sa1DBHp2gl_out_annual_tile, aes(x=year, y=NPP, color='x2', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea2sa1DBHp3gl_out_annual_tile, aes(x=year, y=NPP, color='x3', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1DBHp1gl_out_annual_tile, aes(x=year, y=NPP, color='x1', linetype='+30%'),alpha=.7) + 
+  geom_line(data=ea3sa1DBHp2gl_out_annual_tile, aes(x=year, y=NPP, color='x2', linetype='+30%'),alpha=.7) +
+  geom_line(data=ea3sa1DBHp3gl_out_annual_tile, aes(x=year, y=NPP, color='x3', linetype='+30%'),alpha=.7) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(x = "Year", y = "Growth (NPP)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "c)")
+```
 
+#### NSC
+```{r, fig.width = 6, fig.height = 6}
+fig1c_nsc <- ggplot() + 
+  geom_line(data=ea1sa1NSCp1gl_out_annual_tile, aes(x=year, y=NPP, color='x1', linetype='Control'),alpha=.7) + 
+  geom_line(data=ea1sa1NSCp2gl_out_annual_tile, aes(x=year, y=NPP, color='x2', linetype='Control'),alpha=.7) +
+  geom_line(data=ea1sa1NSCp3gl_out_annual_tile, aes(x=year, y=NPP, color='x3', linetype='Control'),alpha=.7) +
+  geom_line(data=ea2sa1NSCp1gl_out_annual_tile, aes(x=year, y=NPP, color='x1', linetype='+15%'),alpha=.7) + 
+  geom_line(data=ea2sa1NSCp2gl_out_annual_tile, aes(x=year, y=NPP, color='x2', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea2sa1NSCp3gl_out_annual_tile, aes(x=year, y=NPP, color='x3', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1NSCp1gl_out_annual_tile, aes(x=year, y=NPP, color='x1', linetype='+30%'),alpha=.7) + 
+  geom_line(data=ea3sa1NSCp2gl_out_annual_tile, aes(x=year, y=NPP, color='x2', linetype='+30%'),alpha=.7) +
+  geom_line(data=ea3sa1NSCp3gl_out_annual_tile, aes(x=year, y=NPP, color='x3', linetype='+30%'),alpha=.7) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(x = "Year", y = "Growth (NPP)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "c)")
+```
+
+#### GR
+```{r, fig.width = 6, fig.height = 6}
+fig1c_gr <- ggplot() + 
+  geom_line(data=ea1sa1GRp1gl_out_annual_tile, aes(x=year, y=NPP, color='x1', linetype='Control'),alpha=.7) + 
+  geom_line(data=ea1sa1GRp2gl_out_annual_tile, aes(x=year, y=NPP, color='x2', linetype='Control'),alpha=.7) +
+  geom_line(data=ea1sa1GRp3gl_out_annual_tile, aes(x=year, y=NPP, color='x3', linetype='Control'),alpha=.7) +
+  geom_line(data=ea2sa1GRp1gl_out_annual_tile, aes(x=year, y=NPP, color='x1', linetype='+15%'),alpha=.7) + 
+  geom_line(data=ea2sa1GRp2gl_out_annual_tile, aes(x=year, y=NPP, color='x2', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea2sa1GRp3gl_out_annual_tile, aes(x=year, y=NPP, color='x3', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1GRp1gl_out_annual_tile, aes(x=year, y=NPP, color='x1', linetype='+30%'),alpha=.7) + 
+  geom_line(data=ea3sa1GRp2gl_out_annual_tile, aes(x=year, y=NPP, color='x2', linetype='+30%'),alpha=.7) +
+  geom_line(data=ea3sa1GRp3gl_out_annual_tile, aes(x=year, y=NPP, color='x3', linetype='+30%'),alpha=.7) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(x = "Year", y = "Growth (NPP)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "c)")
+```
+
+### d) Mortality (biomass turnover)
+
+#### DBH
+```{r, fig.width = 6, fig.height = 6}
+fig1d_dbh <- ggplot() + 
+  geom_line(data=ea1sa1DBHp1gl_out_annual_tile, aes(x=year, y=m_turnover, color='x1', linetype='Control'),alpha=.7) + 
+  geom_line(data=ea1sa1DBHp2gl_out_annual_tile, aes(x=year, y=m_turnover, color='x2', linetype='Control'),alpha=.7) +
+  geom_line(data=ea1sa1DBHp3gl_out_annual_tile, aes(x=year, y=m_turnover, color='x3', linetype='Control'),alpha=.7) +
+  geom_line(data=ea2sa1DBHp1gl_out_annual_tile, aes(x=year, y=m_turnover, color='x1', linetype='+15%'),alpha=.7) + 
+  geom_line(data=ea2sa1DBHp2gl_out_annual_tile, aes(x=year, y=m_turnover, color='x2', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea2sa1DBHp3gl_out_annual_tile, aes(x=year, y=m_turnover, color='x3', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1DBHp1gl_out_annual_tile, aes(x=year, y=m_turnover, color='x1', linetype='+30%'),alpha=.7) + 
+  geom_line(data=ea3sa1DBHp2gl_out_annual_tile, aes(x=year, y=m_turnover, color='x2', linetype='+30%'),alpha=.7) +
+  geom_line(data=ea3sa1DBHp3gl_out_annual_tile, aes(x=year, y=m_turnover, color='x3', linetype='+30%'),alpha=.7) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(x = "Year", y = "Mortality (Biomass turnover)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "d)")
+```
+
+#### NSC
+```{r, fig.width = 6, fig.height = 6}
+fig1d_nsc <- ggplot() + 
+  geom_line(data=ea1sa1NSCp1gl_out_annual_tile, aes(x=year, y=m_turnover, color='x1', linetype='Control'),alpha=.7) + 
+  geom_line(data=ea1sa1NSCp2gl_out_annual_tile, aes(x=year, y=m_turnover, color='x2', linetype='Control'),alpha=.7) +
+  geom_line(data=ea1sa1NSCp3gl_out_annual_tile, aes(x=year, y=m_turnover, color='x3', linetype='Control'),alpha=.7) +
+  geom_line(data=ea2sa1NSCp1gl_out_annual_tile, aes(x=year, y=m_turnover, color='x1', linetype='+15%'),alpha=.7) + 
+  geom_line(data=ea2sa1NSCp2gl_out_annual_tile, aes(x=year, y=m_turnover, color='x2', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea2sa1NSCp3gl_out_annual_tile, aes(x=year, y=m_turnover, color='x3', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1NSCp1gl_out_annual_tile, aes(x=year, y=m_turnover, color='x1', linetype='+30%'),alpha=.7) + 
+  geom_line(data=ea3sa1NSCp2gl_out_annual_tile, aes(x=year, y=m_turnover, color='x2', linetype='+30%'),alpha=.7) +
+  geom_line(data=ea3sa1NSCp3gl_out_annual_tile, aes(x=year, y=m_turnover, color='x3', linetype='+30%'),alpha=.7) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(x = "Year", y = "Mortality (Biomass turnover)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "d)")
+```
+
+#### GR
+```{r, fig.width = 6, fig.height = 6}
+fig1d_gr <- ggplot() + 
+  geom_line(data=ea1sa1GRp1gl_out_annual_tile, aes(x=year, y=m_turnover, color='x1', linetype='Control'),alpha=.7) + 
+  geom_line(data=ea1sa1GRp2gl_out_annual_tile, aes(x=year, y=m_turnover, color='x2', linetype='Control'),alpha=.7) +
+  geom_line(data=ea1sa1GRp3gl_out_annual_tile, aes(x=year, y=m_turnover, color='x3', linetype='Control'),alpha=.7) +
+  geom_line(data=ea2sa1GRp1gl_out_annual_tile, aes(x=year, y=m_turnover, color='x1', linetype='+15%'),alpha=.7) + 
+  geom_line(data=ea2sa1GRp2gl_out_annual_tile, aes(x=year, y=m_turnover, color='x2', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea2sa1GRp3gl_out_annual_tile, aes(x=year, y=m_turnover, color='x3', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1GRp1gl_out_annual_tile, aes(x=year, y=m_turnover, color='x1', linetype='+30%'),alpha=.7) + 
+  geom_line(data=ea3sa1GRp2gl_out_annual_tile, aes(x=year, y=m_turnover, color='x2', linetype='+30%'),alpha=.7) +
+  geom_line(data=ea3sa1GRp3gl_out_annual_tile, aes(x=year, y=m_turnover, color='x3', linetype='+30%'),alpha=.7) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(x = "Year", y = "Mortality (Biomass turnover)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "d)")
+```
+
+### e) Relative change biomass (plantC) vs. NPP
+
+#### DBH
 ```{r, fig.width = 5, fig.height = 5}
 
 # DBH p1
@@ -537,7 +630,7 @@ DBHp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dB0_15)
 DBHp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dB15_30)
 DBHp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dB0_30)
 
-fig1d_dbh <- ggplot() + 
+fig1e_dbh <- ggplot() + 
   geom_point(data=DBHp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='x1', shape='0-15%'),size=3) + 
   geom_point(data=DBHp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dB0_30, color='x1', shape='0-30%'),size=3) + 
   geom_point(data=DBHp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='x2', shape='0-15%'),size=3) + 
@@ -545,15 +638,15 @@ fig1d_dbh <- ggplot() +
   geom_point(data=DBHp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='x3', shape='0-15%'),size=3) + 
   geom_point(data=DBHp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dB0_30, color='x3', shape='0-30%'),size=3) + 
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
-                     values = c("#00BA38", "#619CFF", "#F8766D")) +
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,1)) +  labs(x="dNPP/NPP", y="dB/B") +
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
   scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
-  ggtitle("d)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+  ggtitle("e)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 
 ```
 
@@ -621,7 +714,7 @@ NSCp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dB0_15)
 NSCp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dB15_30)
 NSCp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dB0_30)
 
-fig1d_nsc <- ggplot() + 
+fig1e_nsc <- ggplot() + 
   geom_point(data=NSCp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='x1', shape='0-15%'),size=3) + 
   geom_point(data=NSCp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dB0_30, color='x1', shape='0-30%'),size=3) + 
   geom_point(data=NSCp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='x2', shape='0-15%'),size=3) + 
@@ -629,21 +722,20 @@ fig1d_nsc <- ggplot() +
   geom_point(data=NSCp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='x3', shape='0-15%'),size=3) + 
   geom_point(data=NSCp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dB0_30, color='x3', shape='0-30%'),size=3) + 
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
-                     values = c("#00BA38", "#619CFF", "#F8766D")) +
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,1)) +  labs(x="dNPP/NPP", y="dB/B") +
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
   scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
-  ggtitle("d)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+  ggtitle("e)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 ```
 
 #### GR
 
 ```{r, fig.width = 5, fig.height = 5}
-
 # GR p1
 # Calculate the relative change as (Final value - initial value)/initial value
 NPP30 <- ea3sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
@@ -704,7 +796,7 @@ GRp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dB0_15)
 GRp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dB15_30)
 GRp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dB0_30)
 
-fig1d_gr <- ggplot() + 
+fig1e_gr <- ggplot() + 
   geom_point(data=GRp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='x1', shape='0-15%'),size=3) + 
   geom_point(data=GRp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dB0_30, color='x1', shape='0-30%'),size=3) + 
   geom_point(data=GRp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='x2', shape='0-15%'),size=3) + 
@@ -712,279 +804,582 @@ fig1d_gr <- ggplot() +
   geom_point(data=GRp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dB0_15, color='x3', shape='0-15%'),size=3) + 
   geom_point(data=GRp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dB0_30, color='x3', shape='0-30%'),size=3) + 
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
-                     values = c("#00BA38", "#619CFF", "#F8766D")) +
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,1)) +  labs(x="dNPP/NPP", y="dB/B") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
-  ggtitle("d)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
-```
-
-### e) Relative change mortality vs. NPP
-
-Level of LUE
-
-```{r, fig.width = 5, fig.height = 5}
-
-# Mortality as a function of DBH
-
-# Calculate the relative change as (Final value - initial value)/initial value
-NPP30 <- ea3sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
-NPP15 <- ea2sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
-NPP0  <- ea1sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
-dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
-dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
-dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
-
-M30 <- ea3sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(c_deadtrees)) #plantC or A_Biomass
-M15 <- ea2sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(c_deadtrees))
-M0  <- ea1sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(c_deadtrees))
-dM0_15 <- (M15$M15 - M0$M0)/M0$M0
-dM15_30 <- (M30$M30 - M15$M15)/M15$M15
-dM0_30 <- (M30$M30 - M0$M0)/M0$M0
-
-DBHgl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
-DBHgl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
-DBHgl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
-
-fig1e_dbh <- ggplot() + 
-  geom_point(data=DBHgl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='0-15%')) + 
-  geom_point(data=DBHgl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='0-30%')) + 
-  scale_color_manual("Level of LUE", breaks = c("0-15%", "0-30%"), values = c("#619CFF" ,"#00BA38"))+
-  labs(x="dNPP/NPP", y="dM/M") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  scale_x_continuous(limits = c(0,0.7)) + scale_y_continuous(limits = c(0,0.7)) +
-  ggtitle("e)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
-
-# Mortality as a function of NSC
-
-# Calculate the relative change as (Final value - initial value)/initial value
-NPP30 <- ea3sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))
-NPP15 <- ea2sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))
-NPP0  <- ea1sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
-dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
-dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
-dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
-
-M30 <- ea3sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(c_deadtrees)) #plantC or A_Biomass
-M15 <- ea2sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(c_deadtrees))
-M0  <- ea1sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(c_deadtrees))
-dM0_15 <- (M15$M15 - M0$M0)/M0$M0
-dM15_30 <- (M30$M30 - M15$M15)/M15$M15
-dM0_30 <- (M30$M30 - M0$M0)/M0$M0
-
-NSCgl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
-NSCgl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
-NSCgl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
-
-fig1e_nsc <- ggplot() + 
-  geom_point(data=NSCgl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='0-15%')) + 
-  geom_point(data=NSCgl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='0-30%')) + 
-  scale_color_manual("Level of LUE", breaks = c("0-15%", "0-30%"), values = c("#619CFF" ,"#00BA38"))+
-  labs(x="dNPP/NPP", y="dM/M") +
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
   scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
   ggtitle("e)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+```
 
-# Mortality as a function of NSC
+### f) Relative change mortality vs. NPP
 
+#### DBH
+```{r, fig.width = 5, fig.height = 5}
+# DBH 1
 # Calculate the relative change as (Final value - initial value)/initial value
-NPP30 <- ea3sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))
-NPP15 <- ea2sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))
-NPP0  <- ea1sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+NPP30 <- ea3sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
 dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-M30 <- ea3sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(c_deadtrees)) #plantC or A_Biomass
-M15 <- ea2sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(c_deadtrees))
-M0  <- ea1sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(c_deadtrees))
+M30 <- ea3sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(m_turnover)) #plantC or A_Biomass
+M15 <- ea2sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(m_turnover))
+M0  <- ea1sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(m_turnover))
 dM0_15 <- (M15$M15 - M0$M0)/M0$M0
 dM15_30 <- (M30$M30 - M15$M15)/M15$M15
 dM0_30 <- (M30$M30 - M0$M0)/M0$M0
 
-GRgl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
-GRgl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
-GRgl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
+DBHp1gl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
+DBHp1gl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
+DBHp1gl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
 
-fig1e_gr <- ggplot() + 
-  geom_point(data=GRgl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='0-15%')) + 
-  geom_point(data=GRgl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='0-30%')) + 
-  scale_color_manual("Level of LUE", breaks = c("0-15%", "0-30%"), values = c("#619CFF" ,"#00BA38"))+
-  labs(x="dNPP/NPP", y="dM/M") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  scale_x_continuous(limits = c(0,0.8)) + scale_y_continuous(limits = c(0,0.8)) +
-  ggtitle("e)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
-
-```
-
-### f) Relative change k vs. NPP
-
-Level of LUE
-
-```{r, fig.width = 5, fig.height = 5}
-
-# Mortality as a function of DBH
-
+# DBH p2
 # Calculate the relative change as (Final value - initial value)/initial value
-NPP30 <- ea3sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
-NPP15 <- ea2sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
-NPP0  <- ea1sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+NPP30 <- ea3sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
 dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-k30 <- ea3sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
-k15 <- ea2sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
-k0  <- ea1sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
-dk0_15 <- (k15$k15 - k0$k0)/k0$k0
-dk15_30 <- (k30$k30 - k15$k15)/k15$k15
-dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+M30 <- ea3sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(m_turnover)) #plantC or A_Biomass
+M15 <- ea2sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(m_turnover))
+M0  <- ea1sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(m_turnover))
+dM0_15 <- (M15$M15 - M0$M0)/M0$M0
+dM15_30 <- (M30$M30 - M15$M15)/M15$M15
+dM0_30 <- (M30$M30 - M0$M0)/M0$M0
 
-DBHgl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
-DBHgl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
-DBHgl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+DBHp2gl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
+DBHp2gl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
+DBHp2gl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
+
+# DBH p3
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+M30 <- ea3sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(m_turnover)) #plantC or A_Biomass
+M15 <- ea2sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(m_turnover))
+M0  <- ea1sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(m_turnover))
+dM0_15 <- (M15$M15 - M0$M0)/M0$M0
+dM15_30 <- (M30$M30 - M15$M15)/M15$M15
+dM0_30 <- (M30$M30 - M0$M0)/M0$M0
+
+DBHp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
+DBHp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
+DBHp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
 
 fig1f_dbh <- ggplot() + 
-  geom_point(data=DBHgl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='0-15%')) + 
-  geom_point(data=DBHgl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='0-30%')) + 
-  scale_color_manual("Level of LUE", breaks = c("0-15%", "0-30%"), values = c("#619CFF" ,"#00BA38"))+
-  labs(x="dNPP/NPP", y="dk/k") +
+  geom_point(data=DBHp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=DBHp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=DBHp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x3', shape='0-30%'),size=3) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dM/M") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
   scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
   ggtitle("f)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+```
 
-# Mortality as a function of NSC
-
+#### NSC
+```{r, fig.width = 5, fig.height = 5}
+# NSC 1
 # Calculate the relative change as (Final value - initial value)/initial value
-NPP30 <- ea3sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))
-NPP15 <- ea2sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))
-NPP0  <- ea1sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+NPP30 <- ea3sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
 dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-k30 <- ea3sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
-k15 <- ea2sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
-k0  <- ea1sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
-dk0_15 <- (k15$k15 - k0$k0)/k0$k0
-dk15_30 <- (k30$k30 - k15$k15)/k15$k15
-dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+M30 <- ea3sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(m_turnover)) #plantC or A_Biomass
+M15 <- ea2sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(m_turnover))
+M0  <- ea1sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(m_turnover))
+dM0_15 <- (M15$M15 - M0$M0)/M0$M0
+dM15_30 <- (M30$M30 - M15$M15)/M15$M15
+dM0_30 <- (M30$M30 - M0$M0)/M0$M0
 
-NSCgl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
-NSCgl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
-NSCgl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+NSCp1gl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
+NSCp1gl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
+NSCp1gl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
+
+# NSC p2
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+M30 <- ea3sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(m_turnover)) #plantC or A_Biomass
+M15 <- ea2sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(m_turnover))
+M0  <- ea1sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(m_turnover))
+dM0_15 <- (M15$M15 - M0$M0)/M0$M0
+dM15_30 <- (M30$M30 - M15$M15)/M15$M15
+dM0_30 <- (M30$M30 - M0$M0)/M0$M0
+
+NSCp2gl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
+NSCp2gl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
+NSCp2gl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
+
+# NSC p3
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+M30 <- ea3sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(m_turnover)) #plantC or A_Biomass
+M15 <- ea2sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(m_turnover))
+M0  <- ea1sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(m_turnover))
+dM0_15 <- (M15$M15 - M0$M0)/M0$M0
+dM15_30 <- (M30$M30 - M15$M15)/M15$M15
+dM0_30 <- (M30$M30 - M0$M0)/M0$M0
+
+NSCp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
+NSCp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
+NSCp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
 
 fig1f_nsc <- ggplot() + 
-  geom_point(data=NSCgl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='0-15%')) + 
-  geom_point(data=NSCgl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='0-30%')) + 
-  scale_color_manual("Level of LUE", breaks = c("0-15%", "0-30%"), values = c("#619CFF" ,"#00BA38"))+
-  labs(x="dNPP/NPP", y="dk/k") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  #scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
-  ggtitle("f)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
-
-# Mortality as a function of NSC
-
-# Calculate the relative change as (Final value - initial value)/initial value
-NPP30 <- ea3sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))
-NPP15 <- ea2sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))
-NPP0  <- ea1sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
-dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
-dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
-dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
-
-k30 <- ea3sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
-k15 <- ea2sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
-k0  <- ea1sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
-dk0_15 <- (k15$k15 - k0$k0)/k0$k0
-dk15_30 <- (k30$k30 - k15$k15)/k15$k15
-dk0_30 <- (k30$k30 - k0$k0)/k0$k0
-
-GRgl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
-GRgl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
-GRgl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
-
-fig1f_gr <- ggplot() + 
-  geom_point(data=GRgl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='0-15%')) + 
-  geom_point(data=GRgl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='0-30%')) + 
-  scale_color_manual("Level of LUE", breaks = c("0-15%", "0-30%"), values = c("#619CFF" ,"#00BA38"))+
-  labs(x="dNPP/NPP", y="dk/k") +
+  geom_point(data=NSCp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=NSCp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=NSCp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x3', shape='0-30%'),size=3) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dM/M") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
   scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
   ggtitle("f)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
-
 ```
 
-### f*) Carbon Turnover time vs. time
-
-From annual_tile_output: c_turnover_time 
-Level of LUE
-
+#### GR
 ```{r, fig.width = 5, fig.height = 5}
-# Mortality as a function of DBH
-Tau_DBH_LUE <- ggplot() + 
-  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
-  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
-  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
-  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
+# GR 1
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+M30 <- ea3sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(m_turnover)) #plantC or A_Biomass
+M15 <- ea2sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(m_turnover))
+M0  <- ea1sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(m_turnover))
+dM0_15 <- (M15$M15 - M0$M0)/M0$M0
+dM15_30 <- (M30$M30 - M15$M15)/M15$M15
+dM0_30 <- (M30$M30 - M0$M0)/M0$M0
+
+GRp1gl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
+GRp1gl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
+GRp1gl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
+
+# GR p2
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+M30 <- ea3sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(m_turnover)) #plantC or A_Biomass
+M15 <- ea2sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(m_turnover))
+M0  <- ea1sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(m_turnover))
+dM0_15 <- (M15$M15 - M0$M0)/M0$M0
+dM15_30 <- (M30$M30 - M15$M15)/M15$M15
+dM0_30 <- (M30$M30 - M0$M0)/M0$M0
+
+GRp2gl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
+GRp2gl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
+GRp2gl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
+
+# GR p3
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+M30 <- ea3sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M30=mean(m_turnover)) #plantC or A_Biomass
+M15 <- ea2sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M15=mean(m_turnover))
+M0  <- ea1sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(M0=mean(m_turnover))
+dM0_15 <- (M15$M15 - M0$M0)/M0$M0
+dM15_30 <- (M30$M30 - M15$M15)/M15$M15
+dM0_30 <- (M30$M30 - M0$M0)/M0$M0
+
+GRp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dM0_15)
+GRp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dM15_30)
+GRp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dM0_30)
+
+fig1f_gr <- ggplot() + 
+  geom_point(data=GRp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=GRp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=GRp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=GRp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=GRp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=GRp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x3', shape='0-30%'),size=3) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dM/M") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  labs(title= "Size-dependent mortality")
-
-# Mortality as a function of C starvation
-Tau_NSC_LUE <- ggplot() + 
-  geom_line(data=ea1sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
-  geom_line(data=ea2sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
-  geom_line(data=ea3sa1NSCgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
-  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a fc. of C starvation")
-
-# Mortality as a function of Growth rate
-Tau_GR_LUE <- ggplot() + 
-  geom_line(data=ea1sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control')) + 
-  geom_line(data=ea2sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15%')) +
-  geom_line(data=ea3sa1GRgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30%')) +
-  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  labs(title= "Tree mortality as a fc. of growth rate") 
-
+  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  ggtitle("f)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 ```
 
-### g) Longevity vs. growth rates
+### g) Relative change k vs. NPP
+
+#### DBH
+```{r, fig.width = 5, fig.height = 5}
+# DBH 1
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+k30 <- ea3sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
+k15 <- ea2sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
+k0  <- ea1sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
+dk0_15 <- (k15$k15 - k0$k0)/k0$k0
+dk15_30 <- (k30$k30 - k15$k15)/k15$k15
+dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+
+DBHp1gl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
+DBHp1gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
+DBHp1gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+
+# DBH 2
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+k30 <- ea3sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
+k15 <- ea2sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
+k0  <- ea1sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
+dk0_15 <- (k15$k15 - k0$k0)/k0$k0
+dk15_30 <- (k30$k30 - k15$k15)/k15$k15
+dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+
+DBHp2gl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
+DBHp2gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
+DBHp2gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+
+# DBH 3
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+k30 <- ea3sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
+k15 <- ea2sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
+k0  <- ea1sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
+dk0_15 <- (k15$k15 - k0$k0)/k0$k0
+dk15_30 <- (k30$k30 - k15$k15)/k15$k15
+dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+
+DBHp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
+DBHp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
+DBHp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+
+fig1g_dbh <- ggplot() + 
+  geom_point(data=DBHp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=DBHp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=DBHp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x3', shape='0-30%'),size=3) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dk/k") +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  ggtitle("g)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+```
+
+#### NSC
+```{r, fig.width = 5, fig.height = 5}
+# NSC 1
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+k30 <- ea3sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
+k15 <- ea2sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
+k0  <- ea1sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
+dk0_15 <- (k15$k15 - k0$k0)/k0$k0
+dk15_30 <- (k30$k30 - k15$k15)/k15$k15
+dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+
+NSCp1gl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
+NSCp1gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
+NSCp1gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+
+# NSC 2
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+k30 <- ea3sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
+k15 <- ea2sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
+k0  <- ea1sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
+dk0_15 <- (k15$k15 - k0$k0)/k0$k0
+dk15_30 <- (k30$k30 - k15$k15)/k15$k15
+dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+
+NSCp2gl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
+NSCp2gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
+NSCp2gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+
+# NSC 3
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+k30 <- ea3sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
+k15 <- ea2sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
+k0  <- ea1sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
+dk0_15 <- (k15$k15 - k0$k0)/k0$k0
+dk15_30 <- (k30$k30 - k15$k15)/k15$k15
+dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+
+NSCp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
+NSCp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
+NSCp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+
+fig1g_nsc <- ggplot() + 
+  geom_point(data=NSCp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=NSCp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=NSCp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x3', shape='0-30%'),size=3) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dk/k") +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  ggtitle("g)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+```
+
+#### GR
+```{r, fig.width = 5, fig.height = 5}
+# GR 1
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+k30 <- ea3sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
+k15 <- ea2sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
+k0  <- ea1sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
+dk0_15 <- (k15$k15 - k0$k0)/k0$k0
+dk15_30 <- (k30$k30 - k15$k15)/k15$k15
+dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+
+GRp1gl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
+GRp1gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
+GRp1gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+
+# GR 2
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+k30 <- ea3sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
+k15 <- ea2sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
+k0  <- ea1sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
+dk0_15 <- (k15$k15 - k0$k0)/k0$k0
+dk15_30 <- (k30$k30 - k15$k15)/k15$k15
+dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+
+GRp2gl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
+GRp2gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
+GRp2gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+
+# NSC 3
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+k30 <- ea3sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k30=mean(1/c_turnover_time)) 
+k15 <- ea2sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k15=mean(1/c_turnover_time))
+k0  <- ea1sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(k0=mean(1/c_turnover_time))
+dk0_15 <- (k15$k15 - k0$k0)/k0$k0
+dk15_30 <- (k30$k30 - k15$k15)/k15$k15
+dk0_30 <- (k30$k30 - k0$k0)/k0$k0
+
+GRp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dk0_15)
+GRp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
+GRp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
+
+fig1g_gr <- ggplot() + 
+  geom_point(data=GRp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=GRp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=GRp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=GRp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=GRp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=GRp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x3', shape='0-30%'),size=3) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dk/k") +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  ggtitle("g)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+```
+
+### g*) Carbon Turnover time vs. time
+
+#### DBH 
+```{r, fig.width = 5, fig.height = 5}
+fig1gg_dbh <- ggplot() + 
+  geom_line(data=ea1sa1DBHp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x1', linetype='Control'),alpha=.7) + 
+  geom_line(data=ea1sa1DBHp2gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x2', linetype='Control'),alpha=.7) +
+  geom_line(data=ea1sa1DBHp3gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x3', linetype='Control'),alpha=.7) +
+  geom_line(data=ea2sa1DBHp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x1', linetype='+15%'),alpha=.7) + 
+  geom_line(data=ea2sa1DBHp2gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x2', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea2sa1DBHp3gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x3', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1DBHp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x1', linetype='+30%'),alpha=.7) + 
+  geom_line(data=ea3sa1DBHp2gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x2', linetype='+30%'),alpha=.7) +
+  geom_line(data=ea3sa1DBHp3gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x3', linetype='+30%'),alpha=.7) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "g)")
+```
+
+#### NSC 
+```{r, fig.width = 5, fig.height = 5}
+fig1gg_nsc <- ggplot() + 
+  geom_line(data=ea1sa1NSCp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x1', linetype='Control'),alpha=.7) + 
+  geom_line(data=ea1sa1NSCp2gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x2', linetype='Control'),alpha=.7) +
+  geom_line(data=ea1sa1NSCp3gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x3', linetype='Control'),alpha=.7) +
+  geom_line(data=ea2sa1NSCp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x1', linetype='+15%'),alpha=.7) + 
+  geom_line(data=ea2sa1NSCp2gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x2', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea2sa1NSCp3gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x3', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1NSCp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x1', linetype='+30%'),alpha=.7) + 
+  geom_line(data=ea3sa1NSCp2gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x2', linetype='+30%'),alpha=.7) +
+  geom_line(data=ea3sa1NSCp3gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x3', linetype='+30%'),alpha=.7) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "g)")
+```
+
+#### GR 
+```{r, fig.width = 5, fig.height = 5}
+fig1gg_gr <- ggplot() + 
+  geom_line(data=ea1sa1GRp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x1', linetype='Control'),alpha=.7) + 
+  geom_line(data=ea1sa1GRp2gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x2', linetype='Control'),alpha=.7) +
+  geom_line(data=ea1sa1GRp3gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x3', linetype='Control'),alpha=.7) +
+  geom_line(data=ea2sa1GRp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x1', linetype='+15%'),alpha=.7) + 
+  geom_line(data=ea2sa1GRp2gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x2', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea2sa1GRp3gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x3', linetype='+15%'),alpha=.7) +
+  geom_line(data=ea3sa1GRp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x1', linetype='+30%'),alpha=.7) + 
+  geom_line(data=ea3sa1GRp2gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x2', linetype='+30%'),alpha=.7) +
+  geom_line(data=ea3sa1GRp3gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='x3', linetype='+30%'),alpha=.7) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "g)")
+```
+
+### h) Relative longevity vs. growth rates
 
 Hypothesis: The negative relationship between longevity vs. growth rates arises from variations between (across) species, but disappears when looking at variations between sites (within sps).
 
@@ -996,238 +1391,414 @@ Two plots:
 - longevity is maximum age at tile-level, plot mean across multiple years after spinup
 - plot change in DBH instead of NPP. Take the oldest cohort, and calculate DBH/age
 
-
+#### DBH
 ```{r, fig.width = 5, fig.height = 5}
 
-# Mortality as a function of DBH
-ea1sa1DBHgl_out_annual_tileMaxAgg <- ea1sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
-          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T),
-          NPP_mean=mean(NPP,na.rm=T), NPP_sd=sd(NPP,na.rm=T))
-
-ea2sa1DBHgl_out_annual_tileMaxAgg <- ea2sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
-          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T),
-          NPP_mean=mean(NPP,na.rm=T), NPP_sd=sd(NPP,na.rm=T))
-
-ea3sa1DBHgl_out_annual_tileMaxAgg <- ea3sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
-          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T),
-          NPP_mean=mean(NPP,na.rm=T), NPP_sd=sd(NPP,na.rm=T))
-
-fig1g1_dbh <- ggplot() + 
-  geom_point(data=ea1sa1DBHgl_out_annual_tileMaxAgg, aes(x=NPP_mean, y=maxAge_mean, color='Control')) + 
-  geom_point(data=ea2sa1DBHgl_out_annual_tileMaxAgg, aes(x=NPP_mean, y=maxAge_mean, color='+15%')) +
-  geom_point(data=ea3sa1DBHgl_out_annual_tileMaxAgg, aes(x=NPP_mean, y=maxAge_mean, color='+30%')) +
-  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = expression(paste("NPP (Kg C ",yr^-1,  ") ")), y = "Longevity (years)") +  
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  labs(title= "g1)")
-
+# DBH p1
 # Calculate the relative change as (Final value - initial value)/initial value
-NPP30 <- ea3sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
-NPP15 <- ea2sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
-NPP0  <- ea1sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+NPP30 <- ea3sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
 dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1DBHgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
+L15 <- ea2sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
+L0  <- ea1sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
 
-DBHgl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
-DBHgl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
-DBHgl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
+DBHp1gl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
+DBHp1gl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
+DBHp1gl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
 
-fig1g2_dbh <- ggplot() + 
-  geom_point(data=DBHgl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='0-15%')) + 
-  geom_point(data=DBHgl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='0-30%')) + 
-  scale_color_manual("Level of LUE", breaks = c("0-15%", "0-30%"), values = c("#619CFF" ,"#00BA38"))+
-  labs(x="dNPP/NPP", y="dL/L") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  ggtitle("g2)") #+ geom_abline(slope=-1, intercept = 0.0, linetype="dashed")
-
-# Mortality as a function of NSC
-ea1sa1NSCgl_out_annual_tileMaxAgg <- ea1sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
-          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T),
-          NPP_mean=mean(NPP,na.rm=T), NPP_sd=sd(NPP,na.rm=T))
-
-ea2sa1NSCgl_out_annual_tileMaxAgg <- ea2sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
-          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T),
-          NPP_mean=mean(NPP,na.rm=T), NPP_sd=sd(NPP,na.rm=T))
-
-ea3sa1NSCgl_out_annual_tileMaxAgg <- ea3sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
-          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T),
-          NPP_mean=mean(NPP,na.rm=T), NPP_sd=sd(NPP,na.rm=T))
-
-fig1g1_nsc <- ggplot() + 
-  geom_point(data=ea1sa1NSCgl_out_annual_tileMaxAgg, aes(x=NPP_mean, y=maxAge_mean, color='Control')) + 
-  geom_point(data=ea2sa1NSCgl_out_annual_tileMaxAgg, aes(x=NPP_mean, y=maxAge_mean, color='+15%')) +
-  geom_point(data=ea3sa1NSCgl_out_annual_tileMaxAgg, aes(x=NPP_mean, y=maxAge_mean, color='+30%')) +
-  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = expression(paste("NPP (Kg C ",yr^-1,  ") ")), y = "Longevity (years)") +  
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  labs(title= "g1)")
-
+# DBH p2
 # Calculate the relative change as (Final value - initial value)/initial value
-NPP30 <- ea3sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
-NPP15 <- ea2sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
-NPP0  <- ea1sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+NPP30 <- ea3sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
 dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1NSCgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
+L15 <- ea2sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
+L0  <- ea1sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
 
-NSCgl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
-NSCgl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
-NSCgl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
+DBHp2gl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
+DBHp2gl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
+DBHp2gl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
 
-fig1g2_nsc <- ggplot() + 
-  geom_point(data=NSCgl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='0-15%')) + 
-  geom_point(data=NSCgl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='0-30%')) + 
-  scale_color_manual("Level of LUE", breaks = c("0-15%", "0-30%"), values = c("#619CFF" ,"#00BA38"))+
-  labs(x="dNPP/NPP", y="dL/L") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  ggtitle("g2)") 
-
-# Mortality as a function of GR
-ea1sa1GRgl_out_annual_tileMaxAgg <- ea1sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
-          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T),
-          NPP_mean=mean(NPP,na.rm=T), NPP_sd=sd(NPP,na.rm=T))
-
-ea2sa1GRgl_out_annual_tileMaxAgg <- ea2sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
-          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T),
-          NPP_mean=mean(NPP,na.rm=T), NPP_sd=sd(NPP,na.rm=T))
-
-ea3sa1GRgl_out_annual_tileMaxAgg <- ea3sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(maxAge_mean=mean(MaxAge,na.rm=T), maxAge_sd=sd(MaxAge,na.rm=T),
-          MaxDBH_MaxAge_mean=mean(MaxDBH_MaxAge,na.rm=T), MaxDBH_MaxAge_sd=sd(MaxDBH_MaxAge,na.rm=T),
-          NPP_mean=mean(NPP,na.rm=T), NPP_sd=sd(NPP,na.rm=T))
-
-fig1g1_gr <- ggplot() + 
-  geom_point(data=ea1sa1GRgl_out_annual_tileMaxAgg, aes(x=NPP_mean, y=maxAge_mean, color='Control')) + 
-  geom_point(data=ea2sa1GRgl_out_annual_tileMaxAgg, aes(x=NPP_mean, y=maxAge_mean, color='+15%')) +
-  geom_point(data=ea3sa1GRgl_out_annual_tileMaxAgg, aes(x=NPP_mean, y=maxAge_mean, color='+30%')) +
-  scale_color_manual("Level of LUE", breaks = c("Control", "+15%", "+30%"), values = c("#F8766D" ,"#619CFF", "#00BA38"))+
-  labs(x = expression(paste("NPP (Kg C ",yr^-1,  ") ")), y = "Longevity (years)") +  
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) + 
-  labs(title= "g1)")
-
-# Calculate the relative change as (Final value - initial value)/initial value
-NPP30 <- ea3sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
-NPP15 <- ea2sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
-NPP0  <- ea1sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+# DBH p3
+NPP30 <- ea3sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
 dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge)) 
-L15 <- ea2sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1GRgl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
+L15 <- ea2sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
+L0  <- ea1sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
 
-NSCgl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
-NSCgl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
-NSCgl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
+DBHp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
+DBHp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
+DBHp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
 
-fig1g2_gr <- ggplot() + 
-  geom_point(data=GRgl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='0-15%')) + 
-  geom_point(data=GRgl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='0-30%')) + 
-  scale_color_manual("Level of LUE", breaks = c("0-15%", "0-30%"), values = c("#619CFF" ,"#00BA38"))+
-  labs(x="dNPP/NPP", y="dL/L") +
+fig1h_dbh <- ggplot() + 
+  geom_point(data=DBHp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=DBHp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=DBHp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='x3', shape='0-30%'),size=3) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  ggtitle("g2)") 
+  #scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  ggtitle("h)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 
 ```
 
-### h) Self-thinning relationship
+#### NSC
+```{r, fig.width = 5, fig.height = 5}
+
+# NSC p1
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+L30 <- ea3sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
+L15 <- ea2sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
+L0  <- ea1sa1NSCp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+dL0_15 <- (L15$L15 - L0$L0)/L0$L0
+dL15_30 <- (L30$L30 - L15$L15)/L15$L15
+dL0_30 <- (L30$L30 - L0$L0)/L0$L0
+
+NSCp1gl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
+NSCp1gl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
+NSCp1gl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
+
+# NSC p2
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1DNSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+L30 <- ea3sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
+L15 <- ea2sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
+L0  <- ea1sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+dL0_15 <- (L15$L15 - L0$L0)/L0$L0
+dL15_30 <- (L30$L30 - L15$L15)/L15$L15
+dL0_30 <- (L30$L30 - L0$L0)/L0$L0
+
+NSC2gl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
+NSCp2gl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
+NSCp2gl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
+
+# NSC p3
+NPP30 <- ea3sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+L30 <- ea3sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
+L15 <- ea2sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
+L0  <- ea1sa1NSCp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+dL0_15 <- (L15$L15 - L0$L0)/L0$L0
+dL15_30 <- (L30$L30 - L15$L15)/L15$L15
+dL0_30 <- (L30$L30 - L0$L0)/L0$L0
+
+NSCp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
+NSCp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
+NSCp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
+
+fig1h_nsc <- ggplot() + 
+  geom_point(data=NSCp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=NSCp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=NSCp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='x3', shape='0-30%'),size=3) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  #scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  ggtitle("h)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+
+```
+
+#### GR
+```{r, fig.width = 5, fig.height = 5}
+# GR p1
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+L30 <- ea3sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
+L15 <- ea2sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
+L0  <- ea1sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+dL0_15 <- (L15$L15 - L0$L0)/L0$L0
+dL15_30 <- (L30$L30 - L15$L15)/L15$L15
+dL0_30 <- (L30$L30 - L0$L0)/L0$L0
+
+GRp1gl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
+GRp1gl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
+GRp1gl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
+
+# GR p2
+# Calculate the relative change as (Final value - initial value)/initial value
+NPP30 <- ea3sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+L30 <- ea3sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
+L15 <- ea2sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
+L0  <- ea1sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+dL0_15 <- (L15$L15 - L0$L0)/L0$L0
+dL15_30 <- (L30$L30 - L15$L15)/L15$L15
+dL0_30 <- (L30$L30 - L0$L0)/L0$L0
+
+GRp2gl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
+GRp2gl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
+GRp2gl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
+
+# DBH p3
+NPP30 <- ea3sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
+NPP15 <- ea2sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP0  <- ea1sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
+dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
+dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
+dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
+
+L30 <- ea3sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
+L15 <- ea2sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
+L0  <- ea1sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+dL0_15 <- (L15$L15 - L0$L0)/L0$L0
+dL15_30 <- (L30$L30 - L15$L15)/L15$L15
+dL0_30 <- (L30$L30 - L0$L0)/L0$L0
+
+GRp3gl_RelChange_0_15 <- data.frame(dNPP0_15,dL0_15)
+GRp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dL15_30)
+GRp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
+
+fig1h_gr <- ggplot() + 
+  geom_point(data=GRp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=GRp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=GRp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=GRp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=GRp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dL0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=GRp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dL0_30, color='x3', shape='0-30%'),size=3) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  #scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  ggtitle("h)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
+```
+
+### i) Self-thinning relationship
 
 From annual_tile_output: QMD and Density12
-Levels of LUE (mol/s/m2)
 
+#### DBH 
 ```{r, fig.width = 7, fig.height = 5}
-
-# Mortality as a function of DBH
-data1 <- rbind(ea1sa1DBHgl_out_annual_tile, ea2sa1DBHgl_out_annual_tile, ea3sa1DBHgl_out_annual_tile)
-fig1h_dbh <- ggplot() + 
-  geom_point(data=subset(data1, year>=750), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),alpha=1) + 
-  geom_smooth(data=subset(data1, year>=750), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
+datax1 <- rbind(ea1sa1DBHp1gl_out_annual_tile, ea2sa1DBHp1gl_out_annual_tile, ea3sa1DBHp1gl_out_annual_tile)
+datax2 <- rbind(ea1sa1DBHp2gl_out_annual_tile, ea2sa1DBHp2gl_out_annual_tile, ea3sa1DBHp2gl_out_annual_tile)
+datax3 <- rbind(ea1sa1DBHp3gl_out_annual_tile, ea2sa1DBHp3gl_out_annual_tile, ea3sa1DBHp3gl_out_annual_tile)
+ggplot() + 
+  geom_point(data=subset(datax1, year>=750), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),alpha=1) + 
+  geom_smooth(data=subset(datax1, year>=750), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
   scale_color_manual(labels = c("Low","Medium", "High"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
   labs(col = "Growth rate", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  ggtitle("h)") #+ 
+  ggtitle("h)") 
+
+fig1i_dbh <- ggplot() + 
+  geom_point(data= subset(ea1sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='Control'),alpha=.7) + 
+  geom_smooth(data= subset(ea1sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='Control'),
+              method = "lm",fullrange = T) + 
+  geom_point(data=subset(ea1sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='Control'),alpha=.7) +
+  geom_smooth(data= subset(ea1sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='Control'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea1sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='Control'),alpha=.7) +
+  geom_smooth(data= subset(ea1sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='Control'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea2sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='+15%'),alpha=.7) + 
+  geom_smooth(data= subset(ea2sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='+15%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea2sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='+15%'),alpha=.7) +
+  geom_smooth(data= subset(ea2sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='+15%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea2sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='+15%'),alpha=.7) +
+  geom_smooth(data= subset(ea2sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='+15%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea3sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='+30%'),alpha=.7) + 
+  geom_smooth(data= subset(ea3sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='+30%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea3sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='+30%'),alpha=.7) +
+  geom_smooth(data= subset(ea3sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='+30%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea3sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='+30%'),alpha=.7) +
+  geom_smooth(data= subset(ea3sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='+30%'),
+              method = "lm",fullrange = T) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c(1,8,16)) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(col = "Growth rate", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  ggtitle("i)") #+ 
   #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
   #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+```
 
-# Mortality as a function of NSC
-data1 <- rbind(ea1sa1NSCgl_out_annual_tile, ea2sa1NSCgl_out_annual_tile, ea3sa1NSCgl_out_annual_tile)
-fig1h_nsc <-  ggplot() + 
-  geom_point(data=subset(data1, year>=750), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
-  geom_smooth(data=subset(data1, year>=750), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Level of LUE", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
+#### NSC 
+```{r, fig.width = 7, fig.height = 5}
+fig1i_nsc <- ggplot() + 
+  geom_point(data= subset(ea1sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='Control'),alpha=.7) + 
+  geom_smooth(data= subset(ea1sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='Control'),
+              method = "lm",fullrange = T) + 
+  geom_point(data=subset(ea1sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='Control'),alpha=.7) +
+  geom_smooth(data= subset(ea1sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='Control'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea1sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='Control'),alpha=.7) +
+  geom_smooth(data= subset(ea1sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='Control'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea2sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='+15%'),alpha=.7) + 
+  geom_smooth(data= subset(ea2sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='+15%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea2sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='+15%'),alpha=.7) +
+  geom_smooth(data= subset(ea2sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='+15%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea2sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='+15%'),alpha=.7) +
+  geom_smooth(data= subset(ea2sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='+15%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea3sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='+30%'),alpha=.7) + 
+  geom_smooth(data= subset(ea3sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='+30%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea3sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='+30%'),alpha=.7) +
+  geom_smooth(data= subset(ea3sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='+30%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea3sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='+30%'),alpha=.7) +
+  geom_smooth(data= subset(ea3sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='+30%'),
+              method = "lm",fullrange = T) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c(1,8,16)) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(col = "Growth rate", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) +    
-  ggtitle("h)") #+ 
- # scale_x_continuous(limits = c(2.5,3.6),breaks = seq(2.5,3.5,0.2)) + 
- # scale_y_continuous(limits = c(3.1,8.8),breaks = seq(4,8,1))
+        plot.title = element_text(size = 11)) + 
+  ggtitle("i)") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+```
 
-# Mortality as a function of GR
-data1 <- rbind(ea1sa1GRgl_out_annual_tile, ea2sa1GRgl_out_annual_tile, ea3sa1GRgl_out_annual_tile)
-fig1h_gr <- ggplot() + 
-  geom_point(data=subset(data1, year>=750), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE))) +
-  geom_smooth(data=subset(data1, year>=750), aes(x=log(QMD), y=log(Density12), color=as.factor(LevelLUE)),method = "lm",fullrange = T) +
-  scale_color_manual(labels = c("Control","+15%", "+30%"),values = c("#F8766D" ,"#619CFF","#00BA38"))+
-  labs(col = "Level of LUE", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
+#### GR 
+```{r, fig.width = 7, fig.height = 5}
+
+fig1i_gr <- ggplot() + 
+  geom_point(data= subset(ea1sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='Control'),alpha=.7) + 
+  geom_smooth(data= subset(ea1sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='Control'),
+              method = "lm",fullrange = T) + 
+  geom_point(data=subset(ea1sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='Control'),alpha=.7) +
+  geom_smooth(data= subset(ea1sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='Control'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea1sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='Control'),alpha=.7) +
+  geom_smooth(data= subset(ea1sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='Control'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea2sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='+15%'),alpha=.7) + 
+  geom_smooth(data= subset(ea2sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='+15%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea2sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='+15%'),alpha=.7) +
+  geom_smooth(data= subset(ea2sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='+15%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea2sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='+15%'),alpha=.7) +
+  geom_smooth(data= subset(ea2sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='+15%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea3sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='+30%'),alpha=.7) + 
+  geom_smooth(data= subset(ea3sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='+30%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea3sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='+30%'),alpha=.7) +
+  geom_smooth(data= subset(ea3sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='+30%'),
+              method = "lm",fullrange = T) +
+  geom_point(data=subset(ea3sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='+30%'),alpha=.7) +
+  geom_smooth(data= subset(ea3sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='+30%'),
+              method = "lm",fullrange = T) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_shape_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c(1,8,16)) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","longdash","solid")) +
+  labs(col = "Growth rate", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) +    
-  ggtitle("h)") #+
-  #scale_x_continuous(limits = c(2.5,3.2),breaks = seq(2.5,3.2,0.1)) + 
-  #scale_y_continuous(limits = c(3.1,8.8),breaks = seq(4,8,1))
-  
+        plot.title = element_text(size = 11)) + 
+  ggtitle("i)") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
 ```
 
 ### Arrange plots
 
 #### DBH
 ```{r, include=F, eval=T,fig.height=5,fig.width=22}
-ggarrange(fig1a_dbh,fig1b_dbh,fig1c_dbh,fig1d_dbh,fig1e_dbh,fig1f_dbh,fig1g_dbh,fig1h_dbh, ncol = 8, nrow = 1, common.legend = T,legend="bottom")
+ggarrange(fig1a_dbh,fig1b_dbh,fig1c_dbh,fig1d_dbh,fig1e_dbh,fig1f_dbh,fig1g_dbh,fig1h_dbh, ncol = 4, nrow = 2, common.legend = T,legend="bottom")
 
-ggarrange(fig1a_dbh,fig1b_dbh,fig1c_dbh,fig1d_dbh,fig1e_dbh, ncol = 5, nrow = 1, common.legend = T,legend="bottom")
-ggarrange(fig1f_dbh,fig1g1_dbh,fig1g2_dbh,fig1h_dbh, ncol = 4, nrow = 1, common.legend = T,legend="bottom")
+fig1a_dbh + fig1b_dbh + fig1c_dbh + fig1d_dbh + fig1e_dbh
 
 ggsave("plots_dbh.tiff", width = 17, height = 2, device='tiff', dpi=300)
 ```

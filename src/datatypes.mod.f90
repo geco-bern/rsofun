@@ -1163,11 +1163,11 @@ contains
     ! tile pools output
     call summarize_tile( vegn )
 
-    vegn%NPPL       = 0.0
-    vegn%NPPW       = 0.0
+    vegn%NPPL        = 0.0
+    vegn%NPPW        = 0.0
     vegn%n_deadtrees = 0 !yyy
     vegn%c_deadtrees = 0
-    vegn%m_turnover = 0
+    vegn%m_turnover  = 0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
@@ -1176,7 +1176,7 @@ contains
       vegn%NPPW         = vegn%NPPW          + fwood * cc%nindivs 
       vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees !yyy
       vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees
-      vegn%m_turnover  = vegn%m_turnover     + cc%m_turnover  
+      vegn%m_turnover   = vegn%m_turnover    + cc%m_turnover  
     enddo
 
     plantC    = vegn%NSC + vegn%SeedC + vegn%leafC + vegn%rootC + vegn%SapwoodC + vegn%woodC
@@ -1242,7 +1242,7 @@ contains
     out_annual_tile%NPPW       = vegn%NPPW       !xxx New tile out
     out_annual_tile%n_deadtrees = vegn%n_deadtrees !xxx New tile out
     out_annual_tile%c_deadtrees = vegn%c_deadtrees !xxx New tile out
-    out_annual_tile%m_turnover = vegn%m_turnover !xxx New tile out
+    out_annual_tile%m_turnover  = vegn%m_turnover !xxx New tile out
     out_annual_tile%c_turnover_time = vegn%woodC/vegn%NPPW !xxx New tile out
 
     ! I cannot figure out why N losing. Hack!
