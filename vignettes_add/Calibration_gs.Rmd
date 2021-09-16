@@ -49,7 +49,7 @@ params_siml <- tibble( #list
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
       method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
+      method_mortality      = "cstarvation" # dbh or cstarvation or growthrate or const_selfthing
       )
 ```
 
@@ -219,7 +219,7 @@ df_soiltexture <- bind_rows(
 The file has the following variables (units):
 
 ```{r,include=FALSE, eval=TRUE}
-load("~/rsofun/input_data/forcingLAE.RData") #forcingLAE See script prepare_drivers.Rmd
+load("~/rsofun_local/input_data/forcingLAE.RData") #forcingLAE See script prepare_drivers.Rmd
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -285,8 +285,8 @@ save(df_drivers, file = "~/rsofun/input_data/df_drivers_CST_pm.RData")
 Run for the full set of sites
 ```{r,echo=FALSE,eval=TRUE}
 
-load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
-simul <- df_drivers$params_siml
+load("~/rsofun_local/input_data/df_drivers_DBH_gs.RData")
+simul <- df_drivers$params_siml[[1]]
 
 start <- Sys.time()
 df_output <- runread_lm3ppa_f(
@@ -309,16 +309,11 @@ out <- run_lm3ppa_f_bysite( df_drivers$sitename[1],
                             makecheck = TRUE)
 print(Sys.time() - start)
 
-write.csv(df_output$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/preGRgs_output_annual_tile.csv")
-write.csv(df_output$data[[1]]$output_annual_cohorts,   "~/rsofun/outputs_lm3ppa/preGRgs_output_annual_cohorts.csv")
+write.csv(df_output$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/preDBHp1gs_output_annual_tile.csv")
+write.csv(df_output$data[[1]]$output_annual_cohorts,   "~/rsofun/outputs_lm3ppa/preDBHp1gs_output_annual_cohorts.csv")
 
 annual_tile_vegan <- df_output$data[[1]]$output_annual_tile
 annual_tile_cohorts <- df_output$data[[1]]$output_annual_cohorts
-
-annual_tile_vegan %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = CUE)) +
-  theme_classic()+labs(x = "Year", y = "CUE")
 
 df_output$data[[1]]$output_annual_tile %>% 
   ggplot() +
@@ -335,8 +330,12 @@ df_output$data[[1]]$output_annual_tile %>%
 df_output$data[[1]]$output_annual_tile %>%
 ggplot() + 
   geom_line(aes(x = year, y = NPP)) + 
-  geom_line(aes(x = year, y = c_deadtrees)) +
-  geom_line(aes(x = year, y = c_turnover)) 
+  geom_line(aes(x = year, y = m_turnover)) 
+
+df_output$data[[1]]$output_annual_tile %>%
+ggplot() + 
+  geom_line(aes(x = year, y = NPP)) + 
+  geom_line(aes(x = year, y = c_deadtrees)) 
 
 ```
 
@@ -449,7 +448,7 @@ ddf_obs <- data.frame(
     ) 
 
 save(ddf_obs, file = "~/rsofun/input_data/ddf_obs.RData")
-load("~/rsofun/input_data/ddf_obs.RData")
+load("~/rsofun_local/input_data/ddf_obs.RData")
 
 ```
 
@@ -457,14 +456,14 @@ load("~/rsofun/input_data/ddf_obs.RData")
 
 ```{r,include=TRUE, eval=TRUE,fig.width = 5, fig.height = 5}
 
-preDBHgl_out_annual_tile <- read.csv("~/rsofun/outputs_lm3ppa/preDBHgs_output_annual_tile.csv")
-preDBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/preDBHgs_output_annual_cohorts.csv")
+preDBHp1gl_out_annual_tile <- read.csv("~/rsofun/outputs_lm3ppa/preDBHp1gs_output_annual_tile.csv")
+preDBHp1gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/preDBHp1gs_output_annual_cohorts.csv")
 
-df_mod <- preDBHgl_out_annual_tile %>% 
+df_mod <- preDBHp1gl_out_annual_tile %>% 
     tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
     dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
 
-df_mod_sizedist <- preDBHgl_out_annual_cohorts %>%
+df_mod_sizedist <- preDBHp1gl_out_annual_cohorts %>%
     dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
     dplyr::filter(dbh>12.1) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
     group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% 
@@ -478,7 +477,7 @@ dff <- data.frame(
 precalibDBH <- dff %>% 
   ggplot() +
   geom_point(aes(x = targets_mod, y = targets_obs, col=variables)) +
-  theme_classic()+labs(x = "Predicted", y = "Observed")+
+  theme_classic()+labs(x = "Predicted", y = "Observed") +
   geom_abline(col="grey") + ggtitle("Before calibration - DBH gs-Leuning") +
   facet_wrap(~variables,nrow = 4) + theme(legend.position = "none")
 
@@ -586,11 +585,13 @@ settings_calib_NSC_gs <- list(
   dir_results         = "./",
   name                = "ORG",
   par                 = list(phiRL = list(lower=0.5, upper=5, init=3.5),
-                             LAI_light = list(lower=2, upper=5, init=3.5),
-                             tf_base = list(lower=0.5, upper=1.5, init=1),
+                             LAI_light = list(lower=0.5, upper=5, init=3.5),
+                             tf_base = list(lower=0.6, upper=1.5, init=1),
                              par_mort = list(lower=0.1, upper=2, init=1),
                              par_mort_under = list(lower=0.1, upper=2, init=1))
  )
+
+save(settings_calib_NSC_gs, file = "~/rsofun/input_data/settings_calib_NSC_gs.RData")
 
 ```
 
@@ -660,8 +661,8 @@ save(settings_calib_DBH_gs, file = "~/rsofun/input_data/settings_calib_DBH_gs.RD
 #### NSC mortality
 
 ```{r,include=FALSE, eval=FALSE}
-load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
-set.seed(1050)
+load("~/rsofun_local/input_data/df_drivers_NSC_gs.RData")
+set.seed(1152)
 settings_calib_NSC_gs <- calib_sofun(
   df_drivers = df_drivers,  
   ddf_obs = ddf_obs,
@@ -709,17 +710,19 @@ save(settings_calib_CST_gs, file = "~/rsofun/input_data/settings_calib_CST_gs.RD
 
 #### DBH mortality
 
+##### DBH param 1
+
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
-#load("~/rsofun/input_data/settings_calib_DBH_gs.RData")
-calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
-settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
+load("~/rsofun/input_data/settings_calib_DBH_gs_1b_euler.RData")
+#calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
+#settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
 
-df_drivers$params_species[[1]]$phiRL      <-  settings_calib_DBH_gs$par_opt$phiRL          #["phiRL"]
-df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_DBH_gs$par_opt$LAI_light      #["LAI_light"]
-df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_DBH_gs$par_opt$tf_base        #["tf_base"]
-df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_DBH_gs$par_opt$par_mort       #["par_mort"]
-df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_DBH_gs$par_opt$par_mort_under #["par_mort_under"]
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_DBH_gs$par_opt["phiRL"] #$phiRL  
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_DBH_gs$par_opt["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_DBH_gs$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_DBH_gs$par_opt["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_DBH_gs$par_opt["par_mort_under"]
 
 #df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
 
@@ -755,22 +758,121 @@ postcalibDBH <- dff %>%
   theme_classic()+labs(x = "Predicted", y = "Observed")+
   geom_abline(col="grey") + ggtitle("After calibration - DBH gs-Leuning") +
   facet_wrap(~variables,nrow = 4) + theme(legend.position = "none")
+```
 
+##### DBH param 2
+
+```{r,fig.width = 5, fig.height = 5}
+load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
+load("~/rsofun/input_data/settings_calib_DBH_gs_2_euler.RData")
+#calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
+#settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
+
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_DBH_gs$par_opt["phiRL"] #$phiRL  
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_DBH_gs$par_opt["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_DBH_gs$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_DBH_gs$par_opt["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_DBH_gs$par_opt["par_mort_under"]
+
+#df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
+
+df_calib_DBH_gs <- runread_lm3ppa_f(
+     df_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+df_calib_DBH_gs$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
+
+df_mod <- df_calib_DBH_gs$data[[1]]$output_annual_tile %>% 
+    tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
+
+df_mod_sizedist <- df_calib_DBH_gs$data[[1]]$output_annual_cohorts %>%
+    dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
+    dplyr::filter(dbh>12.1) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
+    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% 
+    group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+
+dff <- data.frame(
+    variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
+    ) %>% dplyr::left_join(ddf_obs, by = "variables")
+  
+postcalibDBH <- dff %>% 
+  ggplot() +
+  geom_point(aes(x = targets_mod, y = targets_obs, col=variables)) +
+  theme_classic()+labs(x = "Predicted", y = "Observed")+
+  geom_abline(col="grey") + ggtitle("After calibration - DBH gs-Leuning") +
+  facet_wrap(~variables,nrow = 4) + theme(legend.position = "none")
+```
+
+##### DBH param 3
+
+```{r,fig.width = 5, fig.height = 5}
+load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
+load("~/rsofun/input_data/settings_calib_DBH_gs_3_euler.RData")
+#calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
+#settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
+
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_DBH_gs$par_opt["phiRL"] #$phiRL  
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_DBH_gs$par_opt["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_DBH_gs$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_DBH_gs$par_opt["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_DBH_gs$par_opt["par_mort_under"]
+
+#df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
+
+df_calib_DBH_gs <- runread_lm3ppa_f(
+     df_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+df_calib_DBH_gs$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
+
+df_mod <- df_calib_DBH_gs$data[[1]]$output_annual_tile %>% 
+    tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
+
+df_mod_sizedist <- df_calib_DBH_gs$data[[1]]$output_annual_cohorts %>%
+    dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
+    dplyr::filter(dbh>12.1) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
+    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% 
+    group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+
+dff <- data.frame(
+    variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
+    ) %>% dplyr::left_join(ddf_obs, by = "variables")
+  
+postcalibDBH <- dff %>% 
+  ggplot() +
+  geom_point(aes(x = targets_mod, y = targets_obs, col=variables)) +
+  theme_classic()+labs(x = "Predicted", y = "Observed")+
+  geom_abline(col="grey") + ggtitle("After calibration - DBH gs-Leuning") +
+  facet_wrap(~variables,nrow = 4) + theme(legend.position = "none")
 ```
 
 ```{r,fig.width = 8, fig.height = 5}
 # Join plots
 library(ggpubr)
 ggarrange(precalibDBH,postcalibDBH,ncol = 2, nrow = 1,align = "v")
-
 ```
 
 #### NSC mortality
 
+##### NSC param 1
+
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
-load("~/rsofun/input_data/settings_calib_NSC_gs_euler.RData")
-settings_calib_NSC_gs_euler$par_opt
+load("~/rsofun/input_data/settings_calib_NSC_gs_1_euler.RData")
 #calib_param_nsc_gs <- read.csv("~/rsofun/params_calib_nsc_gs.csv")
 #settings_calib_NSC_gs$par_opt <- calib_param_nsc_gs[1,]
 
@@ -814,7 +916,6 @@ postcalibNSC <- dff %>%
   theme_classic()+labs(x = "Predicted", y = "Observed")+
   geom_abline(col="grey") + ggtitle("After calibration - NSC gs-Leuning") +
   facet_wrap(~variables,nrow = 4) + theme(legend.position = "none")
-
 ```
 
 ```{r,fig.width = 8, fig.height = 5}
@@ -824,12 +925,126 @@ ggarrange(precalibNSC,postcalibNSC,ncol = 2, nrow = 1,align = "v")
 
 ```
 
+##### NSC param 2
+
+```{r,fig.width = 5, fig.height = 5}
+load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
+load("~/rsofun/input_data/settings_calib_NSC_gs_2_euler.RData")
+#calib_param_nsc_gs <- read.csv("~/rsofun/params_calib_nsc_gs.csv")
+#settings_calib_NSC_gs$par_opt <- calib_param_nsc_gs[1,]
+
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_NSC_gs_euler$par_opt["phiRL"]
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_NSC_gs_euler$par_opt["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_NSC_gs_euler$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_NSC_gs_euler$par_opt["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_NSC_gs_euler$par_opt["par_mort_under"]
+
+#df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
+
+df_calib_NSC_gs <- runread_lm3ppa_f(
+     df_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+df_calib_NSC_gs$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
+
+df_mod <- df_calib_NSC_gs$data[[1]]$output_annual_tile %>% 
+    tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
+
+df_mod_sizedist <- df_calib_NSC_gs$data[[1]]$output_annual_cohorts %>%
+    dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
+    dplyr::filter(dbh>12.1) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
+    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% 
+    group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+
+dff <- data.frame(
+    variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
+    ) %>% dplyr::left_join(ddf_obs, by = "variables")
+  
+postcalibNSC <- dff %>% 
+  ggplot() +
+  geom_point(aes(x = targets_mod, y = targets_obs, col=variables)) +
+  theme_classic()+labs(x = "Predicted", y = "Observed")+
+  geom_abline(col="grey") + ggtitle("After calibration - NSC gs-Leuning") +
+  facet_wrap(~variables,nrow = 4) + theme(legend.position = "none")
+```
+
+```{r,fig.width = 8, fig.height = 5}
+# Join plots
+library(ggpubr)
+ggarrange(precalibNSC,postcalibNSC,ncol = 2, nrow = 1,align = "v")
+
+```
+
+##### NSC param 3
+
+```{r,fig.width = 5, fig.height = 5}
+load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
+load("~/rsofun/input_data/settings_calib_NSC_gs_3_euler.RData")
+#calib_param_nsc_gs <- read.csv("~/rsofun/params_calib_nsc_gs.csv")
+#settings_calib_NSC_gs$par_opt <- calib_param_nsc_gs[1,]
+
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_NSC_gs_euler$par_opt["phiRL"]
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_NSC_gs_euler$par_opt["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_NSC_gs_euler$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_NSC_gs_euler$par_opt["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_NSC_gs_euler$par_opt["par_mort_under"]
+
+#df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
+
+df_calib_NSC_gs <- runread_lm3ppa_f(
+     df_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+df_calib_NSC_gs$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
+
+df_mod <- df_calib_NSC_gs$data[[1]]$output_annual_tile %>% 
+    tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
+
+df_mod_sizedist <- df_calib_NSC_gs$data[[1]]$output_annual_cohorts %>%
+    dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
+    dplyr::filter(dbh>12.1) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
+    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% 
+    group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+
+dff <- data.frame(
+    variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
+    ) %>% dplyr::left_join(ddf_obs, by = "variables")
+  
+postcalibNSC <- dff %>% 
+  ggplot() +
+  geom_point(aes(x = targets_mod, y = targets_obs, col=variables)) +
+  theme_classic()+labs(x = "Predicted", y = "Observed")+
+  geom_abline(col="grey") + ggtitle("After calibration - NSC gs-Leuning") +
+  facet_wrap(~variables,nrow = 4) + theme(legend.position = "none")
+```
+
+```{r,fig.width = 8, fig.height = 5}
+# Join plots
+library(ggpubr)
+ggarrange(precalibNSC,postcalibNSC,ncol = 2, nrow = 1,align = "v")
+```
+
 #### GR mortality
+
+##### GR param 1
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_GR_gs.RData")
-load("~/rsofun/input_data/settings_calib_GR_gs_euler.RData")
-settings_calib_GR_gs$par_opt
+load("~/rsofun/input_data/settings_calib_GR_gs_1_euler.RData")
 #calib_param_gr_gs <- read.csv("~/rsofun/params_calib_gr_gs.csv")
 #settings_calib_GR_gs$par_opt <- calib_param_gr_gs[1,]
 
@@ -873,14 +1088,112 @@ postcalibGR <- dff %>%
   theme_classic()+labs(x = "Predicted", y = "Observed")+
   geom_abline(col="grey") + ggtitle("After calibration - GR gs-Leuning") +
   facet_wrap(~variables,nrow = 4) + theme(legend.position = "none")
+```
 
+##### GR param 2
+
+```{r,fig.width = 5, fig.height = 5}
+load("~/rsofun/input_data/df_drivers_GR_gs.RData")
+load("~/rsofun/input_data/settings_calib_GR_gs_2_euler.RData")
+#calib_param_gr_gs <- read.csv("~/rsofun/params_calib_gr_gs.csv")
+#settings_calib_GR_gs$par_opt <- calib_param_gr_gs[1,]
+
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_GR_gs$par_opt["phiRL"]
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_GR_gs$par_opt["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_GR_gs$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_GR_gs$par_opt["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_GR_gs$par_opt["par_mort_under"]
+
+#df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
+
+df_calib_GR_gs <- runread_lm3ppa_f(
+     df_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+df_calib_GR_gs$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
+
+df_mod <- df_calib_GR_gs$data[[1]]$output_annual_tile %>% 
+    tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
+
+df_mod_sizedist <- df_calib_GR_gs$data[[1]]$output_annual_cohorts %>%
+    dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
+    dplyr::filter(dbh>12.1) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
+    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% 
+    group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+
+dff <- data.frame(
+    variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
+    ) %>% dplyr::left_join(ddf_obs, by = "variables")
+  
+postcalibGR <- dff %>% 
+  ggplot() +
+  geom_point(aes(x = targets_mod, y = targets_obs, col=variables)) +
+  theme_classic()+labs(x = "Predicted", y = "Observed")+
+  geom_abline(col="grey") + ggtitle("After calibration - GR gs-Leuning") +
+  facet_wrap(~variables,nrow = 4) + theme(legend.position = "none")
+```
+
+##### GR param 3
+
+```{r,fig.width = 5, fig.height = 5}
+load("~/rsofun/input_data/df_drivers_GR_gs.RData")
+load("~/rsofun/input_data/settings_calib_GR_gs_3_euler.RData")
+#calib_param_gr_gs <- read.csv("~/rsofun/params_calib_gr_gs.csv")
+#settings_calib_GR_gs$par_opt <- calib_param_gr_gs[1,]
+
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_GR_gs$par_opt["phiRL"]
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_GR_gs$par_opt["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_GR_gs$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_GR_gs$par_opt["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_GR_gs$par_opt["par_mort_under"]
+
+#df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
+
+df_calib_GR_gs <- runread_lm3ppa_f(
+     df_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+df_calib_GR_gs$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
+
+df_mod <- df_calib_GR_gs$data[[1]]$output_annual_tile %>% 
+    tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
+    dplyr::summarise(GPP = mean(GPP), LAI= quantile(LAI, probs = 0.95, na.rm=T), Biomass=mean(plantC))
+
+df_mod_sizedist <- df_calib_GR_gs$data[[1]]$output_annual_cohorts %>%
+    dplyr::filter(year>df_drivers$params_siml[[1]]$spinupyears) %>% 
+    dplyr::filter(dbh>12.1) %>% mutate(size_bins = cut(dbh, breaks = sizedist)) %>%
+    group_by(size_bins,year) %>% summarise(nTrees=sum(density)) %>% ungroup() %>% 
+    group_by(size_bins) %>% summarise(nTrees=mean(nTrees))
+
+dff <- data.frame(
+    variables = c("GPP","LAI","Biomass","dbh_c1","dbh_c2","dbh_c3","dbh_c4","dbh_c5"),
+    targets_mod = c(df_mod$GPP, df_mod$LAI, df_mod$Biomass,df_mod_sizedist$nTrees[1],df_mod_sizedist$nTrees[2],df_mod_sizedist$nTrees[3],df_mod_sizedist$nTrees[4],df_mod_sizedist$nTrees[5])
+    ) %>% dplyr::left_join(ddf_obs, by = "variables")
+  
+postcalibGR <- dff %>% 
+  ggplot() +
+  geom_point(aes(x = targets_mod, y = targets_obs, col=variables)) +
+  theme_classic()+labs(x = "Predicted", y = "Observed")+
+  geom_abline(col="grey") + ggtitle("After calibration - GR gs-Leuning") +
+  facet_wrap(~variables,nrow = 4) + theme(legend.position = "none")
 ```
 
 ```{r,fig.width = 10, fig.height = 7}
 # Join plots
 library(ggpubr)
 ggarrange(precalibGR,postcalibGR,ncol = 2, nrow = 1,align = "v")
-
 ```
 
 #### CST mortality
@@ -962,7 +1275,51 @@ write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3p
 
 write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_annual_tile.csv")
 write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_out_annual_cohorts.csv")
+```
 
+##### DBH p1
+```{r}
+# LUE
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1DBHp1gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sa1DBHp1gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1DBHp1gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea2sa1DBHp1gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1DBHp1gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1DBHp1gl_out_annual_cohorts.csv")
+
+# rho_wood
+```
+
+##### DBH p2
+```{r}
+# LUE
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1DBHp2gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sa1DBHp2gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1DBHp2gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea2sa1DBHp2gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1DBHp2gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1DBHp2gl_out_annual_cohorts.csv")
+
+# rho_wood
+```
+
+##### DBH p3
+```{r}
+# LUE
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1DBHp3gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sa1DBHp3gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1DBHp3gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea2sa1DBHp3gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1DBHp3gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1DBHp3gl_out_annual_cohorts.csv")
+
+# rho_wood
 ```
 
 #### NSC mortality
@@ -987,7 +1344,6 @@ write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3p
 
 write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_annual_tile.csv")
 write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_annual_cohorts.csv")
-
 ```
 
 #### GR mortality
@@ -1012,42 +1368,6 @@ write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3pp
 
 write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_annual_tile.csv")
 write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_annual_cohorts.csv")
-
 ```
 
 #### CST mortality
-
-```{r}
-# LUE
-write.csv(df_calib_CST_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_hourly_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_daily_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_daily_cohorts.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_annual_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_annual_cohorts.csv")
-
-write.csv(df_calib_CST_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1CSTgl_out_hourly_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ea2sa1CSTgl_out_daily_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ea2sa1CSTgl_out_daily_cohorts.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1CSTgl_out_annual_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea2sa1CSTgl_out_annual_cohorts.csv")
-
-write.csv(df_calib_CST_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_hourly_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_daily_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_daily_cohorts.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_annual_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_annual_cohorts.csv")
-
-# PAR
-write.csv(df_calib_CST_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/eb2sa1CSTgl_out_hourly_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/eb2sa1CSTgl_out_daily_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/eb2sa1CSTgl_out_daily_cohorts.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/eb2sa1CSTgl_out_annual_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/eb2sa1CSTgl_out_annual_cohorts.csv")
-
-write.csv(df_calib_CST_gs$data[[1]]$output_hourly_tile,   "~/rsofun/outputs_lm3ppa/eb3sa1CSTgl_out_hourly_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_daily_tile,    "~/rsofun/outputs_lm3ppa/eb3sa1CSTgl_out_daily_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_daily_cohorts, "~/rsofun/outputs_lm3ppa/eb3sa1CSTgl_out_daily_cohorts.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/eb3sa1CSTgl_out_annual_tile.csv")
-write.csv(df_calib_CST_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/eb3sa1CSTgl_out_annual_cohorts.csv")
-
-```
