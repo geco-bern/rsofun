@@ -66,6 +66,16 @@ ea3sa1DBHp2gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHp
 ea3sa1DBHp2gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHp2gl_out_annual_cohorts.csv")
 ea3sa1DBHp3gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHp3gl_out_annual_tile.csv")
 ea3sa1DBHp3gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1DBHp3gl_out_annual_cohorts.csv")
+
+ggplot() + 
+  geom_line(data=ea1sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15'),alpha=.7) +
+  geom_line(data=ea3sa1DBHgl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30'),alpha=.7)
+
+ggplot() + 
+  geom_line(data=ea1sa1DBHp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1DBHp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15'),alpha=.7) +
+  geom_line(data=ea3sa1DBHp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30'),alpha=.7)
 ```
 
 ### rho_wood - Different species
@@ -91,6 +101,8 @@ ea1sb3DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_
 
 ## NSC Mortality gs-leuning 
 
+### LUE - Different environmental conditions
+
 ```{r}
 # LUE - Different environmental conditions
 #ea1sa1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_hourly_tile.csv")
@@ -99,11 +111,25 @@ ea1sb3DBHgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3DBHgl_
 ea1sa1NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_annual_tile.csv")
 ea1sa1NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCgl_out_annual_cohorts.csv")
 
+ea1sa1NSCp1gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCp1gl_out_annual_tile.csv")
+ea1sa1NSCp1gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCp1gl_out_annual_cohorts.csv")
+ea1sa1NSCp2gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCp2gl_out_annual_tile.csv")
+ea1sa1NSCp2gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCp2gl_out_annual_cohorts.csv")
+ea1sa1NSCp3gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCp3gl_out_annual_tile.csv")
+ea1sa1NSCp3gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1NSCp3gl_out_annual_cohorts.csv")
+
 #ea2sa1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_hourly_tile.csv")
 #ea2sa1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_daily_tile.csv")
 #ea2sa1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_daily_cohorts.csv")
 ea2sa1NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_annual_tile.csv")
 ea2sa1NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_out_annual_cohorts.csv")
+
+ea2sa1NSCp1gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCp1gl_out_annual_tile.csv")
+ea2sa1NSCp1gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCp1gl_out_annual_cohorts.csv")
+ea2sa1NSCp2gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCp2gl_out_annual_tile.csv")
+ea2sa1NSCp2gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCp2gl_out_annual_cohorts.csv")
+ea2sa1NSCp3gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCp3gl_out_annual_tile.csv")
+ea2sa1NSCp3gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCp3gl_out_annual_cohorts.csv")
 
 #ea3sa1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_hourly_tile.csv")
 #ea3sa1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_daily_tile.csv")
@@ -111,7 +137,18 @@ ea2sa1NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1NSCgl_
 ea3sa1NSCgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_annual_tile.csv")
 ea3sa1NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCgl_out_annual_cohorts.csv")
 
-# rho_wood - Different species
+ea3sa1NSCp1gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp1gl_out_annual_tile.csv")
+ea3sa1NSCp1gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp1gl_out_annual_cohorts.csv")
+ea3sa1NSCp2gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp2gl_out_annual_tile.csv")
+ea3sa1NSCp2gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp2gl_out_annual_cohorts.csv")
+ea3sa1NSCp3gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp3gl_out_annual_tile.csv")
+ea3sa1NSCp3gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp3gl_out_annual_cohorts.csv")
+
+```
+
+### rho_wood - Different species
+
+```{r}
 #ea1sb1NSCgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_hourly_tile.csv")
 #ea1sb1NSCgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_daily_tile.csv")
 #ea1sb1NSCgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1NSCgl_out_daily_cohorts.csv")
@@ -134,28 +171,53 @@ ea1sb3NSCgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_
 
 ## GR Mortality gs-leuning 
 
-```{r}
+### LUE - Different environmental conditions
 
-# LUE - Different environmental conditions
-ea1sa1GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_hourly_tile.csv")
-ea1sa1GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_daily_tile.csv")
-ea1sa1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_daily_cohorts.csv")
+```{r}
+#ea1sa1GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_hourly_tile.csv")
+#ea1sa1GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_daily_tile.csv")
+#ea1sa1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_daily_cohorts.csv")
 ea1sa1GRgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_annual_tile.csv")
 ea1sa1GRgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRgl_out_annual_cohorts.csv")
 
-ea2sa1GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRgl_out_hourly_tile.csv")
-ea2sa1GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRgl_out_daily_tile.csv")
-ea2sa1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRgl_out_daily_cohorts.csv")
+ea1sa1GRp1gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRp1gl_out_annual_tile.csv")
+ea1sa1GRp1gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRp1gl_out_annual_cohorts.csv")
+ea1sa1GRp2gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRp2gl_out_annual_tile.csv")
+ea1sa1GRp2gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRp2gl_out_annual_cohorts.csv")
+ea1sa1GRp3gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRp3gl_out_annual_tile.csv")
+ea1sa1GRp3gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1GRp3gl_out_annual_cohorts.csv")
+
+#ea2sa1GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRgl_out_hourly_tile.csv")
+#ea2sa1GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRgl_out_daily_tile.csv")
+#ea2sa1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRgl_out_daily_cohorts.csv")
 ea2sa1GRgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRgl_out_annual_tile.csv")
 ea2sa1GRgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRgl_out_annual_cohorts.csv")
 
-ea3sa1GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_hourly_tile.csv")
-ea3sa1GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_daily_tile.csv")
-ea3sa1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_daily_cohorts.csv")
+ea2sa1GRp1gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRp1gl_out_annual_tile.csv")
+ea2sa1GRp1gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRp1gl_out_annual_cohorts.csv")
+ea2sa1GRp2gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRp2gl_out_annual_tile.csv")
+ea2sa1GRp2gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRp2gl_out_annual_cohorts.csv")
+ea2sa1GRp3gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRp3gl_out_annual_tile.csv")
+ea2sa1GRp3gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1GRp3gl_out_annual_cohorts.csv")
+
+#ea3sa1GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_hourly_tile.csv")
+#ea3sa1GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_daily_tile.csv")
+#ea3sa1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_daily_cohorts.csv")
 ea3sa1GRgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_annual_tile.csv")
 ea3sa1GRgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRgl_out_annual_cohorts.csv")
 
-# rho_wood - Different species
+ea3sa1GRp1gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRp1gl_out_annual_tile.csv")
+ea3sa1GRp1gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRp1gl_out_annual_cohorts.csv")
+ea3sa1GRp2gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRp2gl_out_annual_tile.csv")
+ea3sa1GRp2gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRp2gl_out_annual_cohorts.csv")
+ea3sa1GRp3gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRp3gl_out_annual_tile.csv")
+ea3sa1GRp3gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRp3gl_out_annual_cohorts.csv")
+
+```
+
+### rho_wood - Different species
+
+```{r}
 ea1sb1GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_hourly_tile.csv")
 ea1sb1GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_daily_tile.csv")
 ea1sb1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_daily_cohorts.csv")
@@ -337,8 +399,6 @@ fig1a_gr <- ggplot(data.frame(x = c(0, 15)), aes(x)) +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) 
-
-fig1a_dbh / fig1a_nsc / fig1a_gr
 ```
 
 ### b) Stand develop: Stand biomass vs. time
@@ -413,7 +473,7 @@ fig1b_gr <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  scale_y_continuous(limits = c(0,55),breaks = seq(0,55,10)) + 
+  #scale_y_continuous(limits = c(0,55),breaks = seq(0,55,10)) + 
   labs(title= "b)")
 ```
 
@@ -729,7 +789,7 @@ fig1e_nsc <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  scale_x_continuous(limits = c(0,1.75)) + scale_y_continuous(limits = c(0,1.75)) +
   ggtitle("e)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 ```
 
@@ -1125,12 +1185,12 @@ DBHp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
 DBHp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
 
 fig1g_dbh <- ggplot() + 
-  geom_point(data=DBHp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x1', shape='0-15%'),size=3) + 
-  geom_point(data=DBHp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x1', shape='0-30%'),size=3) + 
-  geom_point(data=DBHp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x2', shape='0-15%'),size=3) + 
-  geom_point(data=DBHp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x2', shape='0-30%'),size=3) + 
-  geom_point(data=DBHp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x3', shape='0-15%'),size=3) + 
-  geom_point(data=DBHp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x3', shape='0-30%'),size=3) + 
+  geom_point(data=DBHp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=DBHp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=DBHp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=DBHp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='x3', shape='0-30%'),size=3) + 
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
@@ -1139,7 +1199,7 @@ fig1g_dbh <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+ #scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
   ggtitle("g)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 ```
 
@@ -1206,12 +1266,12 @@ NSCp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
 NSCp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
 
 fig1g_nsc <- ggplot() + 
-  geom_point(data=NSCp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x1', shape='0-15%'),size=3) + 
-  geom_point(data=NSCp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x1', shape='0-30%'),size=3) + 
-  geom_point(data=NSCp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x2', shape='0-15%'),size=3) + 
-  geom_point(data=NSCp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x2', shape='0-30%'),size=3) + 
-  geom_point(data=NSCp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x3', shape='0-15%'),size=3) + 
-  geom_point(data=NSCp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x3', shape='0-30%'),size=3) + 
+  geom_point(data=NSCp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=NSCp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=NSCp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=NSCp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='x3', shape='0-30%'),size=3) + 
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
@@ -1220,7 +1280,7 @@ fig1g_nsc <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  #scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
   ggtitle("g)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 ```
 
@@ -1287,12 +1347,12 @@ GRp3gl_RelChange_15_30 <- data.frame(dNPP15_30,dk15_30)
 GRp3gl_RelChange_0_30 <- data.frame(dNPP0_30,dk0_30)
 
 fig1g_gr <- ggplot() + 
-  geom_point(data=GRp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x1', shape='0-15%'),size=3) + 
-  geom_point(data=GRp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x1', shape='0-30%'),size=3) + 
-  geom_point(data=GRp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x2', shape='0-15%'),size=3) + 
-  geom_point(data=GRp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x2', shape='0-30%'),size=3) + 
-  geom_point(data=GRp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dM0_15, color='x3', shape='0-15%'),size=3) + 
-  geom_point(data=GRp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dM0_30, color='x3', shape='0-30%'),size=3) + 
+  geom_point(data=GRp1gl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='x1', shape='0-15%'),size=3) + 
+  geom_point(data=GRp1gl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='x1', shape='0-30%'),size=3) + 
+  geom_point(data=GRp2gl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='x2', shape='0-15%'),size=3) + 
+  geom_point(data=GRp2gl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='x2', shape='0-30%'),size=3) + 
+  geom_point(data=GRp3gl_RelChange_0_15, aes(x=dNPP0_15, y=dk0_15, color='x3', shape='0-15%'),size=3) + 
+  geom_point(data=GRp3gl_RelChange_0_30, aes(x=dNPP0_30, y=dk0_30, color='x3', shape='0-30%'),size=3) + 
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
@@ -1301,7 +1361,7 @@ fig1g_gr <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  #scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
   ggtitle("g)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 ```
 
@@ -1463,7 +1523,7 @@ fig1h_dbh <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dL/L") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
@@ -1499,7 +1559,7 @@ NSCp1gl_RelChange_0_30 <- data.frame(dNPP0_30,dL0_30)
 # NSC p2
 # Calculate the relative change as (Final value - initial value)/initial value
 NPP30 <- ea3sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP30=mean(NPP))  #NPP or A_NPP
-NPP15 <- ea2sa1DNSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
+NPP15 <- ea2sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP15=mean(NPP))  
 NPP0  <- ea1sa1NSCp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(NPP0=mean(NPP))
 dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
@@ -1545,12 +1605,12 @@ fig1h_nsc <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dL/L") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  #scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
   ggtitle("h)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 
 ```
@@ -1626,7 +1686,7 @@ fig1h_gr <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
+                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dL/L") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
@@ -1656,37 +1716,37 @@ ggplot() +
   ggtitle("h)") 
 
 fig1i_dbh <- ggplot() + 
-  geom_point(data= subset(ea1sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='Control'),alpha=.7) + 
-  geom_smooth(data= subset(ea1sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='Control'),
+  geom_point(data= subset(ea1sa1DBHp1gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x1', shape='Control'),alpha=.7) + 
+  geom_smooth(data= subset(ea1sa1DBHp1gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x1', linetype='Control'),
               method = "lm",fullrange = T) + 
-  geom_point(data=subset(ea1sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='Control'),alpha=.7) +
-  geom_smooth(data= subset(ea1sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='Control'),
+  geom_point(data=subset(ea1sa1DBHp2gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x2', shape='Control'),alpha=.7) +
+  geom_smooth(data= subset(ea1sa1DBHp2gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x2', linetype='Control'),
               method = "lm",fullrange = T) +
-  geom_point(data=subset(ea1sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='Control'),alpha=.7) +
-  geom_smooth(data= subset(ea1sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='Control'),
+  geom_point(data=subset(ea1sa1DBHp3gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x3', shape='Control'),alpha=.7) +
+  geom_smooth(data= subset(ea1sa1DBHp3gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x3', linetype='Control'),
               method = "lm",fullrange = T) +
-  geom_point(data=subset(ea2sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='+15%'),alpha=.7) + 
-  geom_smooth(data= subset(ea2sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='+15%'),
+  geom_point(data=subset(ea2sa1DBHp1gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x1', shape='+15%'),alpha=.7) + 
+  geom_smooth(data= subset(ea2sa1DBHp1gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x1', linetype='+15%'),
               method = "lm",fullrange = T) +
-  geom_point(data=subset(ea2sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='+15%'),alpha=.7) +
-  geom_smooth(data= subset(ea2sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='+15%'),
+  geom_point(data=subset(ea2sa1DBHp2gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x2', shape='+15%'),alpha=.7) +
+  geom_smooth(data= subset(ea2sa1DBHp2gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x2', linetype='+15%'),
               method = "lm",fullrange = T) +
-  geom_point(data=subset(ea2sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='+15%'),alpha=.7) +
-  geom_smooth(data= subset(ea2sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='+15%'),
+  geom_point(data=subset(ea2sa1DBHp3gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x3', shape='+15%'),alpha=.7) +
+  geom_smooth(data= subset(ea2sa1DBHp3gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x3', linetype='+15%'),
               method = "lm",fullrange = T) +
-  geom_point(data=subset(ea3sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', shape='+30%'),alpha=.7) + 
-  geom_smooth(data= subset(ea3sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x1', linetype='+30%'),
+  geom_point(data=subset(ea3sa1DBHp1gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x1', shape='+30%'),alpha=.7) + 
+  geom_smooth(data= subset(ea3sa1DBHp1gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x1', linetype='+30%'),
               method = "lm",fullrange = T) +
-  geom_point(data=subset(ea3sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', shape='+30%'),alpha=.7) +
-  geom_smooth(data= subset(ea3sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x2', linetype='+30%'),
+  geom_point(data=subset(ea3sa1DBHp2gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x2', shape='+30%'),alpha=.7) +
+  geom_smooth(data= subset(ea3sa1DBHp2gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x2', linetype='+30%'),
               method = "lm",fullrange = T) +
-  geom_point(data=subset(ea3sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', shape='+30%'),alpha=.7) +
-  geom_smooth(data= subset(ea3sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='x3', linetype='+30%'),
+  geom_point(data=subset(ea3sa1DBHp3gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x3', shape='+30%'),alpha=.7) +
+  geom_smooth(data= subset(ea3sa1DBHp3gl_out_annual_tile, year>=1000), aes(x=log(QMD), y=log(Density12), color='x3', linetype='+30%'),
               method = "lm",fullrange = T) +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
-                     values = c(1,8,16)) +
+                     values = c(15,16,17)) +
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                      values = c("dotted","longdash","solid")) +
   labs(col = "Growth rate", x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)") + 
@@ -1798,33 +1858,33 @@ fig1i_gr <- ggplot() +
 ```{r, include=F, eval=T,fig.height=5,fig.width=22}
 ggarrange(fig1a_dbh,fig1b_dbh,fig1c_dbh,fig1d_dbh,fig1e_dbh,fig1f_dbh,fig1g_dbh,fig1h_dbh, ncol = 4, nrow = 2, common.legend = T,legend="bottom")
 
-fig1a_dbh + fig1b_dbh + fig1c_dbh + fig1d_dbh + fig1e_dbh
+#fig1a_dbh + fig1b_dbh + fig1c_dbh + fig1d_dbh + fig1e_dbh
 
-ggsave("plots_dbh.tiff", width = 17, height = 2, device='tiff', dpi=300)
+ggsave("plots_dbh.png", width = 12, height = 6, device='tiff', dpi=300)
 ```
 
 #### NSC
 ```{r, include=F, eval=T,fig.height=3,fig.width=16}
-ggarrange(fig1a_nsc,fig1b_nsc,fig1c_nsc,fig1d_nsc,fig1e_nsc,fig1f_nsc,fig1g_nsc,fig1h_nsc, ncol = 8, nrow = 1, common.legend = T,legend="bottom")
+ggarrange(fig1a_nsc,fig1b_nsc,fig1c_nsc,fig1d_nsc,fig1e_nsc,fig1f_nsc,fig1g_nsc,fig1h_nsc, ncol = 4, nrow = 2, common.legend = T,legend="bottom")
 
-ggarrange(fig1a_nsc,fig1b_nsc,fig1c_nsc,fig1d_nsc,fig1e_nsc, ncol = 5, nrow = 1, common.legend = T,legend="bottom")
-ggarrange(fig1f_nsc,fig1g1_nsc,fig1g2_nsc,fig1h_nsc, ncol = 4, nrow = 1, common.legend = T,legend="bottom")
-
-ggsave("plots_nsc.tiff", width = 17, height = 2, device='tiff', dpi=300)
+ggsave("plots_nsc.png", width = 12, height = 6, device='tiff', dpi=300)
 ```
 
 #### GR
 ```{r, include=F, eval=T,fig.height=3,fig.width=16}
-ggarrange(fig1a_gr,fig1b_gr,fig1c_gr,fig1d_gr,fig1e_gr,fig1f_gr,fig1g_gr,fig1h_gr, ncol = 8, nrow = 1, common.legend = T,legend="bottom")
+ggarrange(fig1a_gr,fig1b_gr,fig1c_gr,fig1d_gr,fig1e_gr,fig1f_gr,fig1g_gr,fig1h_gr, ncol = 4, nrow = 2, common.legend = T,legend="bottom")
 
-ggarrange(fig1a_gr,fig1b_gr,fig1c_gr,fig1d_gr,fig1e_gr, ncol = 5, nrow = 1, common.legend = T,legend="bottom")
-ggarrange(fig1f_gr,fig1g1_gr,fig1g2_gr,fig1h_gr, ncol = 4, nrow = 1, common.legend = T,legend="bottom")
-
-ggsave("plots_gr.tiff", width = 17, height = 2, device='tiff', dpi=300)
+ggsave("plots_gr.png", width = 12, height = 6, device='tiff', dpi=300)
 ```
 
 #### All
 ```{r, include=F, eval=T,fig.height=4,fig.width=12}
+ggarrange(fig1i_dbh,fig1i_nsc,fig1i_gr, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
+
+fig1i_dbh + fig1i_nsc + fig1i_gr
+
+ggsave("plots_ST.png", width = 10, height = 4, device='tiff', dpi=300)
+
 
 ggarrange(fig1a_dbh,fig1a_nsc,fig1a_gr, ncol = 3, nrow = 1, common.legend = T,legend="bottom")
 ggarrange(fig1b_dbh,fig1b_nsc,fig1b_gr, ncol = 3, nrow = 1, common.legend = T,legend="bottom")

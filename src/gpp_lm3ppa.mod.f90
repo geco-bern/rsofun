@@ -153,10 +153,10 @@ contains
           !===============================
           ! XXX Experiment: increasing net photosynthesis 15% and 30%
           !===============================
-          if (myinterface%steering%year>myinterface%params_siml%spinupyears) then
-            psyn = psyn * 1.30
-            resp = resp * 1.30
-          endif
+          ! if (myinterface%steering%year>myinterface%params_siml%spinupyears) then
+          !   psyn = psyn * 1.30
+          !   resp = resp * 1.30
+          ! endif
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
           cc%An_op   = psyn  ! molC s-1 m-2 of leaves ! net photosynthesis, mol C/(m2 of leaves s)

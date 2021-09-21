@@ -764,7 +764,8 @@ postcalibDBH <- dff %>%
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
-load("~/rsofun/input_data/settings_calib_DBH_gs_2_euler.RData")
+load("~/rsofun/input_data/settings_calib_DBH_gs_1b_euler.RData")
+#load("~/rsofun/input_data/settings_calib_DBH_gs_2_euler.RData")
 #calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
 #settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
 
@@ -814,7 +815,8 @@ postcalibDBH <- dff %>%
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
-load("~/rsofun/input_data/settings_calib_DBH_gs_3_euler.RData")
+load("~/rsofun/input_data/settings_calib_DBH_gs_1b_euler.RData")
+#load("~/rsofun/input_data/settings_calib_DBH_gs_3_euler.RData")
 #calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
 #settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
 
@@ -876,11 +878,11 @@ load("~/rsofun/input_data/settings_calib_NSC_gs_1_euler.RData")
 #calib_param_nsc_gs <- read.csv("~/rsofun/params_calib_nsc_gs.csv")
 #settings_calib_NSC_gs$par_opt <- calib_param_nsc_gs[1,]
 
-df_drivers$params_species[[1]]$phiRL      <-  settings_calib_NSC_gs_euler$par_opt["phiRL"]
-df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_NSC_gs_euler$par_opt["LAI_light"]
-df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_NSC_gs_euler$par_opt["tf_base"]
-df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_NSC_gs_euler$par_opt["par_mort"]
-df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_NSC_gs_euler$par_opt["par_mort_under"]
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_NSC_gs$par_opt["phiRL"] #$phiRL 
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_NSC_gs$par_opt["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_NSC_gs$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_NSC_gs$par_opt["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_NSC_gs$par_opt["par_mort_under"]
 
 #df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
 
@@ -929,15 +931,15 @@ ggarrange(precalibNSC,postcalibNSC,ncol = 2, nrow = 1,align = "v")
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
-load("~/rsofun/input_data/settings_calib_NSC_gs_2_euler.RData")
+load("~/rsofun/input_data/settings_calib_NSC_gs_1_euler.RData")
 #calib_param_nsc_gs <- read.csv("~/rsofun/params_calib_nsc_gs.csv")
 #settings_calib_NSC_gs$par_opt <- calib_param_nsc_gs[1,]
 
-df_drivers$params_species[[1]]$phiRL      <-  settings_calib_NSC_gs_euler$par_opt["phiRL"]
-df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_NSC_gs_euler$par_opt["LAI_light"]
-df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_NSC_gs_euler$par_opt["tf_base"]
-df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_NSC_gs_euler$par_opt["par_mort"]
-df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_NSC_gs_euler$par_opt["par_mort_under"]
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_NSC_gs$par_opt["phiRL"]
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_NSC_gs$par_opt["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_NSC_gs$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_NSC_gs$par_opt["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_NSC_gs$par_opt["par_mort_under"]
 
 #df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
 
@@ -986,15 +988,15 @@ ggarrange(precalibNSC,postcalibNSC,ncol = 2, nrow = 1,align = "v")
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
-load("~/rsofun/input_data/settings_calib_NSC_gs_3_euler.RData")
+load("~/rsofun/input_data/settings_calib_NSC_gs_1_euler.RData")
 #calib_param_nsc_gs <- read.csv("~/rsofun/params_calib_nsc_gs.csv")
 #settings_calib_NSC_gs$par_opt <- calib_param_nsc_gs[1,]
 
-df_drivers$params_species[[1]]$phiRL      <-  settings_calib_NSC_gs_euler$par_opt["phiRL"]
-df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_NSC_gs_euler$par_opt["LAI_light"]
-df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_NSC_gs_euler$par_opt["tf_base"]
-df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_NSC_gs_euler$par_opt["par_mort"]
-df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_NSC_gs_euler$par_opt["par_mort_under"]
+df_drivers$params_species[[1]]$phiRL      <-  settings_calib_NSC_gs$par_opt["phiRL"]
+df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_NSC_gs$par_opt["LAI_light"]
+df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_NSC_gs$par_opt["tf_base"]
+df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_NSC_gs$par_opt["par_mort"]
+df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_NSC_gs$par_opt["par_mort_under"]
 
 #df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
 
@@ -1094,7 +1096,7 @@ postcalibGR <- dff %>%
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_GR_gs.RData")
-load("~/rsofun/input_data/settings_calib_GR_gs_2_euler.RData")
+load("~/rsofun/input_data/settings_calib_GR_gs_1_euler.RData")
 #calib_param_gr_gs <- read.csv("~/rsofun/params_calib_gr_gs.csv")
 #settings_calib_GR_gs$par_opt <- calib_param_gr_gs[1,]
 
@@ -1144,7 +1146,7 @@ postcalibGR <- dff %>%
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_GR_gs.RData")
-load("~/rsofun/input_data/settings_calib_GR_gs_3_euler.RData")
+load("~/rsofun/input_data/settings_calib_GR_gs_1_euler.RData")
 #calib_param_gr_gs <- read.csv("~/rsofun/params_calib_gr_gs.csv")
 #settings_calib_GR_gs$par_opt <- calib_param_gr_gs[1,]
 
@@ -1346,6 +1348,51 @@ write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3p
 write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb3NSCgl_out_annual_cohorts.csv")
 ```
 
+##### NSC p1
+
+```{r}
+# LUE
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1NSCp1gl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sa1NSCp1gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1NSCp1gl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea2sa1NSCp1gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1NSCp1gl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1NSCp1gl_out_annual_cohorts.csv")
+
+```
+
+##### NSC p2
+
+```{r}
+# LUE
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1NSCp2gl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sa1NSCp2gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1NSCp2gl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea2sa1NSCp2gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1NSCp2gl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1NSCp2gl_out_annual_cohorts.csv")
+
+```
+
+##### NSC p3
+
+```{r}
+# LUE
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1NSCp3gl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sa1NSCp3gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1NSCp3gl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea2sa1NSCp3gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1NSCp3gl_out_annual_tile.csv")
+write.csv(df_calib_NSC_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1NSCp3gl_out_annual_cohorts.csv")
+
+```
+
 #### GR mortality
 
 ```{r}
@@ -1368,6 +1415,48 @@ write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3pp
 
 write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_annual_tile.csv")
 write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_annual_cohorts.csv")
+```
+
+##### GR p1
+
+```{r}
+# LUE
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1GRp1gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sa1GRp1gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1GRp1gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea2sa1GRp1gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1GRp1gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1GRp1gl_out_annual_cohorts.csv")
+```
+
+##### GR p2
+
+```{r}
+# LUE
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1GRp2gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sa1GRp2gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1GRp2gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea2sa1GRp2gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1GRp2gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1GRp2gl_out_annual_cohorts.csv")
+```
+
+##### GR p3
+
+```{r}
+# LUE
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea1sa1GRp3gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea1sa1GRp3gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea2sa1GRp3gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea2sa1GRp3gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/outputs_lm3ppa/ea3sa1GRp3gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/outputs_lm3ppa/ea3sa1GRp3gl_out_annual_cohorts.csv")
 ```
 
 #### CST mortality

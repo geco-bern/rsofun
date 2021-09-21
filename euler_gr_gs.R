@@ -36,4 +36,4 @@ settings_calib_GR_gs <- calib_sofun(
   settings = settings_calib_GR_gs
 )
 
-save(settings_calib_GR_gs, file = "input_data/settings_calib_GR_gs_1_euler.RData")
+save(settings_calib_GR_gs, file = "input_data/settings_calib_GR_gs_2_euler.RData")
