@@ -17,7 +17,7 @@ settings_calib_NSC_gs <- list(
   method              = "gensa",
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 500, 
+  maxit               = 300, 
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",

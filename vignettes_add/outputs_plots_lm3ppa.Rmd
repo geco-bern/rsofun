@@ -700,7 +700,7 @@ fig1e_dbh <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
+                     values = c(16,17)) +  labs(x="dNPP/NPP", y="dB/B") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
@@ -784,7 +784,7 @@ fig1e_nsc <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
+                     values = c(16,17)) +  labs(x="dNPP/NPP", y="dB/B") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
@@ -866,7 +866,7 @@ fig1e_gr <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dB/B") +
+                     values = c(16,17)) +  labs(x="dNPP/NPP", y="dB/B") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
@@ -949,7 +949,7 @@ fig1f_dbh <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dM/M") +
+                     values = c(16,17)) +  labs(x="dNPP/NPP", y="dM/M") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
@@ -1030,7 +1030,7 @@ fig1f_nsc <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dM/M") +
+                     values = c(16,17)) +  labs(x="dNPP/NPP", y="dM/M") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
@@ -1111,7 +1111,7 @@ fig1f_gr <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(1,16)) +  labs(x="dNPP/NPP", y="dM/M") +
+                     values = c(16,17)) +  labs(x="dNPP/NPP", y="dM/M") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),

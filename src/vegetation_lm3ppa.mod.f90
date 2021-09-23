@@ -1765,32 +1765,38 @@ contains
     type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
     ! logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
     real, parameter :: mindensity = 0.25E-4
-    integer :: i,k
+    integer :: i,k,j
 
     ! calculate the number of cohorts with indivs>mindensity
     k = 0
     do i = 1, vegn%n_cohorts
       if (vegn%cohorts(i)%nindivs > mindensity) k=k+1
     enddo
-    if (k==0) write(*,*)'kill_lowdensity_cohorts: ','All cohorts have died'
+    ! if (k==0) write(*,*)'kill_lowdensity_cohorts: ','All cohorts have died'
+
+    if (k==0)then
+      write(*,*)'in kill_lowdensity_cohorts: All cohorts will be killed! Stopped!'
+      stop
+    endif
     
     ! exclude cohorts that have low individuals
-    if (k < vegn%n_cohorts) then
+    ! if (k < vegn%n_cohorts) then
+    if (k < vegn%n_cohorts .and. k>0) then
       allocate(cc(k))
-      k=0
+      j = 0 !k=0
       do i = 1,vegn%n_cohorts
         cx =>vegn%cohorts(i)
         associate(sp=>spdata(cx%species))
         if (cx%nindivs > mindensity) then
-          k=k+1
-          cc(k) = cx
+          j=j+1 !k=k+1
+          cc(j) = cx !cc(k) = cx
         else
           ! Carbon and Nitrogen from plants to soil pools
           call plant2soil(vegn,cx,cx%nindivs)
         endif
         end associate
       enddo
-      vegn%n_cohorts = k
+      vegn%n_cohorts = j
       deallocate (vegn%cohorts)
       vegn%cohorts=>cc
     endif
