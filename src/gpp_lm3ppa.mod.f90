@@ -619,8 +619,6 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Subroutine reads module-specific parameters from input file.
     !----------------------------------------------------------------
-    use md_sofunutils, only: getparreal
-
     ! local variables
     integer :: pft
 

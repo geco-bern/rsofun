@@ -27,7 +27,7 @@ module md_waterbal
   use md_forcing_pmodel, only: climate_type
   use md_grid, only: gridtype
   use md_interface_pmodel, only: myinterface
-  use md_sofunutils, only: daily2monthly, radians, dgsin, dgcos, degrees
+  use md_sofunutils, only: radians, dgsin, dgcos, degrees
 
   implicit none
 

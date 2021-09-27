@@ -34,7 +34,6 @@ contains
     ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     use md_interface_pmodel, only: myinterface, outtype_biosphere
-    use md_sofunutils, only: daily2monthly
   
     ! return variable
     type(outtype_biosphere) :: out_biosphere

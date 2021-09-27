@@ -3,21 +3,11 @@
 
 # rsofun
 
-Provides a modelling framework that implements the P-model for leaf-level acclimation of photosynthesis for site-scale simulations, with SPLASH used for simulating the soil water balance (see also [Stocker et al., 2019 GMDD](https://www.geosci-model-dev-discuss.net/gmd-2019-200/)). The package provides the following functionalities:
+A modelling framework for site-scale simulations of ecosystem processes, implemented as an R package (low-level routines in Fortran 90). Implements the following models:
 
-- Calibrating model parameters
-- Running the model and getting outputs directly back into R ("tidy" data)
-- Evaluating outputs (benchmarking)
-
-Model forcing and calibration data is collected using the [ingestr](https://stineb.github.io/ingestr/) package. See [here](https://rpubs.com/stineb/rsofun) for an example.
-
-Parallelisation for a large number of site-level simulations is provided using the *multidplyr* R package. Calibration uses the *GenSA* R package.  
-
-The P-model is implemented in different repositories for different purposes:
-
-- **rsofun** (this package): Is for site-scale simulations (large ensemble of sites can be run in parallelised mode), forced by time series of meteorological data. Acclimation of photosynthesis is assumed at a user-defined time scale. I.e., the P-model optimality criterion (Wang et al., 2017; Prentice et al., 2014) is solved daily with "damped" daily variations in the forcing data (similar to a running mean). All model code is implemented in Fortran.
-- [**rpmodel**](https://stineb.github.io/rpmodel/): Implements the same equation as rsofun (all native R), but solves the optimality criterion for each time step independently (instantaneous acclimation). This can be used for hypothesis generation, exploration, and illustrations. Transient simulations of acclimation and GPP should be done using rsofun.
-- [**SOFUN**](https://stineb.github.io/sofun/): This is for P-model simulations on a (global) spatial grid and is purely in Fortran. Forcing data is read from NetCDF files and outputs are written to NetCDF files.
+- P-model for leaf-level acclimation of photosynthesis from [Stocker et al. (2019)](https://www.geosci-model-dev-discuss.net/gmd-2019-200/).
+- SPLASH for bioclimatic variables, including the surface radiation budget and the soil water balance from [Davis et al. (2017)](https://doi.org/10.5194/gmd-10-689-2017).
+- LM3-PPA for comprehensive simulations of ecosystem carbon and water cycling, tree growth, and tree cohort-explicit forest dynamics following the Perfect Plasticity Approximation, from [Weng et al., (2015)](https://doi.org/10.5194/bg-12-2655-2015).
 
 ## Installation
 

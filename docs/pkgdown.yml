@@ -1,15 +1,6 @@
 pandoc: 2.11.2
 pkgdown: 1.6.1
 pkgdown_sha: ~
-<<<<<<< HEAD
-articles:
-  benchmark_gpp_FLUXNET2015_ensemble_EXAMPLE: benchmark_gpp_FLUXNET2015_ensemble_EXAMPLE.html
-  example_lm3ppa: example_lm3ppa.html
-  example_pmodel: example_pmodel.html
-  prepare_inputs_rsofun: prepare_inputs_rsofun.html
-last_built: 2021-07-30T16:24Z
-=======
 articles: {}
-last_built: 2021-08-04T05:51Z
->>>>>>> 463af7b984d4541e03a5994c8b0069d37aadf674
+last_built: 2021-09-27T11:51Z
 
