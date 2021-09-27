@@ -19,8 +19,16 @@ library(rsofun)
 ```
 ## Example
 
-See vignette [Example for using rsofun](./articles/example.html) for how to run the model, and the [ingestr R package ](https://stineb.github.io/ingestr/) for collecting the forcing data to run rsofun.
+See vignette [Example for using rsofun](./articles/example.html) for how to run the model, and the [ingestr R package](https://stineb.github.io/ingestr/) for collecting the forcing data to run rsofun.
 
 ## Usage and contribution
 
-This package is designed to be extendible to ingesting other data types (sources). The developer (Beni Stocker) would appreciate if you made sure that your developments can be fed back to this repository. To do so, please use git. See [here](http://rogerdudler.github.io/git-guide/) for a brief introduction to git. 
+The developer (Beni Stocker) would appreciate if your developments can be fed back to this repository. Please make pull requests. Thanks.
+
+## References
+
+Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval, D., Davis, T., and Prentice, I. C.: P-model v1.0: an optimality-based light use efficiency model for simulating ecosystem gross primary production, Geosci. Model Dev., 13, 1545–1581, https://doi.org/10.5194/gmd-13-1545-2020, 2020.
+
+Davis, T. W., Prentice, I. C., Stocker, B. D., Thomas, R. T., Whitley, R. J., Wang, H., Evans, B. J., Gallego-Sala, A. V., Sykes, M. T., and Cramer, W.: Simple process-led algorithms for simulating habitats (SPLASH v.1.0): robust indices of radiation, evapotranspiration and plant-available moisture, Geoscientific Model Development, 10, 689–708, doi:10.5194/gmd-10-689-2017, URL http: //www.geosci-model-dev.net/10/689/2017/, 2017.
+
+Weng, E. S., Malyshev, S., Lichstein, J. W., Farrior, C. E., Dybzinski, R., Zhang, T., Shevliakova, E., and Pacala, S. W.: Scaling from individual trees to forests in an Earth system modeling framework using a mathematically tractable model of height-structured competition, Biogeosciences, 12, 2655–2694, https://doi.org/10.5194/bg-12-2655-2015, 2015.

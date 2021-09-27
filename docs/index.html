@@ -47,6 +47,9 @@
 <li>
   <a href="reference/index.html">Reference</a>
 </li>
+<li>
+  <a href="news/index.html">Changelog</a>
+</li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
@@ -72,22 +75,11 @@
 <div id="rsofun" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#rsofun" class="anchor"></a>rsofun</h1></div>
-<p>Provides a modelling framework that implements the P-model for leaf-level acclimation of photosynthesis for site-scale simulations, with SPLASH used for simulating the soil water balance (see also <a href="https://www.geosci-model-dev-discuss.net/gmd-2019-200/">Stocker et al., 2019 GMDD</a>). The package provides the following functionalities:</p>
+<p>A modelling framework for site-scale simulations of ecosystem processes, implemented as an R package (low-level routines in Fortran 90). Implements the following models:</p>
 <ul>
-<li>Calibrating model parameters</li>
-<li>Running the model and getting outputs directly back into R (“tidy” data)</li>
-<li>Evaluating outputs (benchmarking)</li>
-</ul>
-<p>Model forcing and calibration data is collected using the <a href="https://stineb.github.io/ingestr/">ingestr</a> package. See <a href="https://rpubs.com/stineb/rsofun">here</a> for an example.</p>
-<p>Parallelisation for a large number of site-level simulations is provided using the <em>multidplyr</em> R package. Calibration uses the <em>GenSA</em> R package.</p>
-<p>The P-model is implemented in different repositories for different purposes:</p>
-<ul>
-<li>
-<strong>rsofun</strong> (this package): Is for site-scale simulations (large ensemble of sites can be run in parallelised mode), forced by time series of meteorological data. Acclimation of photosynthesis is assumed at a user-defined time scale. I.e., the P-model optimality criterion (Wang et al., 2017; Prentice et al., 2014) is solved daily with “damped” daily variations in the forcing data (similar to a running mean). All model code is implemented in Fortran.</li>
-<li>
-<a href="https://stineb.github.io/rpmodel/"><strong>rpmodel</strong></a>: Implements the same equation as rsofun (all native R), but solves the optimality criterion for each time step independently (instantaneous acclimation). This can be used for hypothesis generation, exploration, and illustrations. Transient simulations of acclimation and GPP should be done using rsofun.</li>
-<li>
-<a href="https://stineb.github.io/sofun/"><strong>SOFUN</strong></a>: This is for P-model simulations on a (global) spatial grid and is purely in Fortran. Forcing data is read from NetCDF files and outputs are written to NetCDF files.</li>
+<li>P-model for leaf-level acclimation of photosynthesis from <a href="https://www.geosci-model-dev-discuss.net/gmd-2019-200/">Stocker et al. (2019)</a>.</li>
+<li>SPLASH for bioclimatic variables, including the surface radiation budget and the soil water balance from <a href="https://doi.org/10.5194/gmd-10-689-2017">Davis et al. (2017)</a>.</li>
+<li>LM3-PPA for comprehensive simulations of ecosystem carbon and water cycling, tree growth, and tree cohort-explicit forest dynamics following the Perfect Plasticity Approximation, from <a href="https://doi.org/10.5194/bg-12-2655-2015">Weng et al., (2015)</a>.</li>
 </ul>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
@@ -106,7 +98,14 @@
 <div id="usage-and-contribution" class="section level2">
 <h2 class="hasAnchor">
 <a href="#usage-and-contribution" class="anchor"></a>Usage and contribution</h2>
-<p>This package is designed to be extendible to ingesting other data types (sources). The developer (Beni Stocker) would appreciate if you made sure that your developments can be fed back to this repository. To do so, please use git. See <a href="http://rogerdudler.github.io/git-guide/">here</a> for a brief introduction to git.</p>
+<p>The developer (Beni Stocker) would appreciate if your developments can be fed back to this repository. Please make pull requests. Thanks.</p>
+</div>
+<div id="references" class="section level2">
+<h2 class="hasAnchor">
+<a href="#references" class="anchor"></a>References</h2>
+<p>Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval, D., Davis, T., and Prentice, I. C.: P-model v1.0: an optimality-based light use efficiency model for simulating ecosystem gross primary production, Geosci. Model Dev., 13, 1545–1581, <a href="https://doi.org/10.5194/gmd-13-1545-2020" class="uri">https://doi.org/10.5194/gmd-13-1545-2020</a>, 2020.</p>
+<p>Davis, T. W., Prentice, I. C., Stocker, B. D., Thomas, R. T., Whitley, R. J., Wang, H., Evans, B. J., Gallego-Sala, A. V., Sykes, M. T., and Cramer, W.: Simple process-led algorithms for simulating habitats (SPLASH v.1.0): robust indices of radiation, evapotranspiration and plant-available moisture, Geoscientific Model Development, 10, 689–708, <a href="doi:10.5194/gmd-10-689-2017" class="uri">doi:10.5194/gmd-10-689-2017</a>, URL http: //www.geosci-model-dev.net/10/689/2017/, 2017.</p>
+<p>Weng, E. S., Malyshev, S., Lichstein, J. W., Farrior, C. E., Dybzinski, R., Zhang, T., Shevliakova, E., and Pacala, S. W.: Scaling from individual trees to forests in an Earth system modeling framework using a mathematically tractable model of height-structured competition, Biogeosciences, 12, 2655–2694, <a href="https://doi.org/10.5194/bg-12-2655-2015" class="uri">https://doi.org/10.5194/bg-12-2655-2015</a>, 2015.</p>
 </div>
 </div>
 
