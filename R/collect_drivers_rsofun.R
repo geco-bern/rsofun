@@ -107,8 +107,10 @@ collect_drivers_sofun <- function(
       ungroup() %>% 
       summarise(across(
       c("ppfd", "rain", "snow", "prec", "temp",
-        "patm", "vpd", "ccov", "fapar", "co2"), ~sum(!is.na(.)))) %>% 
-      pivot_longer(cols = 1:10, names_to = "var", values_to = "n_not_missing")
+        "patm", "vpd", "ccov", "fapar", "co2",
+        "tmin","tmax"), ~sum(!is.na(.)))) %>% 
+      pivot_longer(cols = 1:12, names_to = "var",
+                   values_to = "n_not_missing")
   }
   
   df_missing <- df_mega %>% 
