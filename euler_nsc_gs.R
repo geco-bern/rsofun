@@ -17,7 +17,7 @@ settings_calib_NSC_gs <- list(
   method              = "gensa",
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 300, 
+  maxit               = 2000, 
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -36,5 +36,5 @@ settings_calib_NSC_gs <- calib_sofun(
   settings = settings_calib_NSC_gs
 )
 
-save(settings_calib_NSC_gs, file = "input_data/settings_calib_NSC_gs_2_euler.RData")
+save(settings_calib_NSC_gs, file = "input_data/settings_calib_NSC_gs_3_euler.RData")
 
