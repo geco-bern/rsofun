@@ -714,7 +714,7 @@ save(settings_calib_CST_gs, file = "~/rsofun/input_data/settings_calib_CST_gs.RD
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
-load("~/rsofun/input_data/settings_calib_DBH_gs_1b_euler.RData")
+load("~/rsofun/input_data/settings_calib_DBH_gs_1_euler.RData")
 #calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
 #settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
 
@@ -764,7 +764,7 @@ postcalibDBH <- dff %>%
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
-load("~/rsofun/input_data/settings_calib_DBH_gs_1b_euler.RData")
+load("~/rsofun/input_data/settings_calib_DBH_gs_2_euler.RData")
 #load("~/rsofun/input_data/settings_calib_DBH_gs_2_euler.RData")
 #calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
 #settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
@@ -815,7 +815,7 @@ postcalibDBH <- dff %>%
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
-load("~/rsofun/input_data/settings_calib_DBH_gs_1b_euler.RData")
+load("~/rsofun/input_data/settings_calib_DBH_gs_3_euler.RData")
 #load("~/rsofun/input_data/settings_calib_DBH_gs_3_euler.RData")
 #calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
 #settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
@@ -931,7 +931,7 @@ ggarrange(precalibNSC,postcalibNSC,ncol = 2, nrow = 1,align = "v")
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
-load("~/rsofun/input_data/settings_calib_NSC_gs_1_euler.RData")
+load("~/rsofun/input_data/settings_calib_NSC_gs_2_euler.RData")
 #calib_param_nsc_gs <- read.csv("~/rsofun/params_calib_nsc_gs.csv")
 #settings_calib_NSC_gs$par_opt <- calib_param_nsc_gs[1,]
 
@@ -988,7 +988,7 @@ ggarrange(precalibNSC,postcalibNSC,ncol = 2, nrow = 1,align = "v")
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
-load("~/rsofun/input_data/settings_calib_NSC_gs_1_euler.RData")
+load("~/rsofun/input_data/settings_calib_NSC_gs_3_euler.RData")
 #calib_param_nsc_gs <- read.csv("~/rsofun/params_calib_nsc_gs.csv")
 #settings_calib_NSC_gs$par_opt <- calib_param_nsc_gs[1,]
 
@@ -1096,7 +1096,7 @@ postcalibGR <- dff %>%
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_GR_gs.RData")
-load("~/rsofun/input_data/settings_calib_GR_gs_1_euler.RData")
+load("~/rsofun/input_data/settings_calib_GR_gs_2_euler.RData")
 #calib_param_gr_gs <- read.csv("~/rsofun/params_calib_gr_gs.csv")
 #settings_calib_GR_gs$par_opt <- calib_param_gr_gs[1,]
 
@@ -1146,7 +1146,7 @@ postcalibGR <- dff %>%
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_GR_gs.RData")
-load("~/rsofun/input_data/settings_calib_GR_gs_1_euler.RData")
+load("~/rsofun/input_data/settings_calib_GR_gs_3_euler.RData")
 #calib_param_gr_gs <- read.csv("~/rsofun/params_calib_gr_gs.csv")
 #settings_calib_GR_gs$par_opt <- calib_param_gr_gs[1,]
 

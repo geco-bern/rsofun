@@ -17,7 +17,7 @@ settings_calib_NSC_gs <- list(
   method              = "gensa",
   targetvars          = c("targets_obs"),
   timescale           = list(targets_obs = "y"),
-  maxit               = 2000, 
+  maxit               = 2000,
   sitenames           = "CH-Lae",
   metric              = "rmse",
   dir_results         = "./",
@@ -25,8 +25,8 @@ settings_calib_NSC_gs <- list(
   par                 = list(phiRL = list(lower=0.5, upper=5, init=3.5),
                              LAI_light = list(lower=2, upper=5, init=3.5),
                              tf_base = list(lower=0.7, upper=1.1, init=1),
-                             par_mort = list(lower=0.1, upper=2, init=1),
-                             par_mort_under = list(lower=0.1, upper=2, init=1))
+                             par_mort = list(lower=0.1, upper=0.7, init=0.5),
+                             par_mort_under = list(lower=0.1, upper=0.7, init=0.5))
 )
 
 set.seed(1152)

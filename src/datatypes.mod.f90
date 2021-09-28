@@ -1243,7 +1243,7 @@ contains
     out_annual_tile%n_deadtrees = vegn%n_deadtrees !xxx New tile out
     out_annual_tile%c_deadtrees = vegn%c_deadtrees !xxx New tile out
     out_annual_tile%m_turnover  = vegn%m_turnover !xxx New tile out
-    out_annual_tile%c_turnover_time = vegn%woodC/vegn%NPPW !xxx New tile out
+    out_annual_tile%c_turnover_time = plantC/vegn%annualNPP !vegn%woodC/vegn%NPPW !xxx New tile out
 
     ! I cannot figure out why N losing. Hack!
     if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
