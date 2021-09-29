@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 )
 
 library(rsofun)
+library(dplyr)
 library(ggplot2)
 
 pars <- list(par = c(
@@ -152,22 +153,16 @@ pars <- calib_sofun(
   )
 ```
 
-The new parameters differ from the old ones.
-
-```{r}
-print(pars)
-```
-
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 
 ```{r}
 # reformatting the parameter list
 params_modl <- list(
-    kphio           = 0.04607080,
-    soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444,
-    tau_acclim_tempstress = 7.35259044,
-    par_shape_tempstress  = 0.09863961
+    kphio           = pars$par[1],
+    soilm_par_a     = pars$par[2],
+    soilm_par_b     = pars$par[3],
+    tau_acclim_tempstress = pars$par[4],
+    par_shape_tempstress  = pars$par[5]
   )
 
 # run the model for these parameters
@@ -175,17 +170,15 @@ output_new <- rsofun::runread_pmodel_f(
   p_model_drivers,
   par = params_modl
   )
-```
 
-```{r}
 # we only have one site so we'll unnest
 # the main model output
 model_data_new <- output_new %>%
   filter(sitename == "FR-Pue") %>%
   tidyr::unnest(data)
 
-ggplot() +
-  geom_line(
+  ggplot() +
+    geom_line(
     data = model_data,
     aes(
       date,
@@ -213,6 +206,7 @@ ggplot() +
     x = "Date",
     y = "GPP"
   )
+
 ```
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/web/packages/GenSA/index.html) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
