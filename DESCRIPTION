@@ -43,5 +43,6 @@ Suggests:
     rmarkdown,
     covr,
     testthat,
-    knitr
+    knitr,
+    ggplot2
 VignetteBuilder: knitr
