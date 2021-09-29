@@ -177,16 +177,13 @@ output_new <- rsofun::runread_pmodel_f(
   )
 ```
 
-
-```{r}
+```{r error=FALSE}
 # we only have one site so we'll unnest
 # the main model output
 model_data_new <- output_new %>%
   filter(sitename == "FR-Pue") %>%
   tidyr::unnest(data)
-```
 
-```{r}
 ggplot() +
   geom_line(
     data = model_data,
