@@ -124,7 +124,7 @@
 <code class="sourceCode R">
 <span class="co"># optimized parameters from previous</span>
 <span class="co"># work</span>
-<span class="va">params_modl</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+<span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
     kphio           <span class="op">=</span> <span class="fl">0.09423773</span>,
     soilm_par_a     <span class="op">=</span> <span class="fl">0.33349283</span>,
     soilm_par_b     <span class="op">=</span> <span class="fl">1.45602286</span>,
@@ -228,7 +228,7 @@
 <span class="co">#&gt;            7.35259044            0.09863961</span>
 
 <span class="co"># reformatting the parameter list</span>
-<span class="va">params_modl</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+<span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
     kphio           <span class="op">=</span> <span class="va">pars</span><span class="op">$</span><span class="va">par</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,
     soilm_par_a     <span class="op">=</span> <span class="va">pars</span><span class="op">$</span><span class="va">par</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>,
     soilm_par_b     <span class="op">=</span> <span class="va">pars</span><span class="op">$</span><span class="va">par</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span>,
