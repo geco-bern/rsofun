@@ -3,8 +3,8 @@
 #' This is the main function that handles the 
 #' calibration of SOFUN model parameters. 
 #' 
-#' @param df_drivers asdf
-#' @param ddf_obs A data frame containing observational data used for model
+#' @param drivers asdf
+#' @param obs A data frame containing observational data used for model
 #'  calibration. Created by function \code{get_obs_calib2()}
 #' @param settings A list containing model calibration settings. 
 #'  See vignette_rsofun.pdf for more information and examples.
@@ -18,30 +18,33 @@
 #' @examples 
 #' \dontrun{ 
 #' calib_sofun(
-#'   df_drivers = filter(df_drivers,
+#'   drivers = filter(drivers,
 #'           sitename %in% settings$sitenames),
-#'   ddf_obs = ddf_obs_calib,
+#'   obs = obs_calib,
 #'   settings = settings)
 #' }
  
 calib_sofun <- function(
-  df_drivers,
-  ddf_obs,
+  drivers,
+  obs,
   settings
   ){
 
   # check input variables
-  if(missing(ddf_obs) | missing(df_drivers) | missing(settings)){
+  if(missing(obs) | missing(drivers) | missing(settings)){
     stop("missing input data, please check all parameters")
   }
   
-  if (nrow(ddf_obs) == 0){
+  if (nrow(obs) == 0){
     warning("no validation data available, returning NA parameters")
     
-    settings$par$kphio$opt          <- NA
-    settings$par$temp_ramp_edge$opt <- NA
-    settings$par$soilm_par_a$opt    <- NA
-    settings$par$soilm_par_b$opt    <- NA
+    settings$par$kphio          <- NA
+    settings$par$soilm_par_a <- NA
+    settings$par$soilm_par_b    <- NA
+    settings$par$tau_acclim_tempstress    <- NA
+    settings$par$par_shape_tempstress    <- NA
+    
+    return(settings$par)
   }
     
   #--- GenSA ----
@@ -61,8 +64,8 @@ calib_sofun <- function(
       lower = lower,
       upper = upper,
       control = settings$control,
-      ddf_obs = ddf_obs,
-      df_drivers = df_drivers
+      ddf_obs = obs,
+      df_drivers = drivers
     )
   } 
   
@@ -83,8 +86,8 @@ calib_sofun <- function(
         do.call("cost",
                 list(
                   par = random_par,
-                  ddf_obs = ddf_obs,
-                  df_drivers = df_drivers,
+                  ddf_obs = obs,
+                  df_drivers = drivers,
                   inverse = TRUE
                 ))},
       lower = lower,
