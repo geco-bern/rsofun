@@ -16,7 +16,6 @@ knitr::opts_chunk$set(
 )
 
 library(rsofun)
-library(dplyr)
 library(ggplot2)
 
 pars <- list(par = c(
@@ -185,7 +184,9 @@ output_new <- rsofun::runread_pmodel_f(
 model_data_new <- output_new %>%
   filter(sitename == "FR-Pue") %>%
   tidyr::unnest(data)
+```
 
+```{r}
 ggplot() +
   geom_line(
     data = model_data,
@@ -215,7 +216,6 @@ ggplot() +
     x = "Date",
     y = "GPP"
   )
-
 ````
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/web/packages/GenSA/index.html) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
