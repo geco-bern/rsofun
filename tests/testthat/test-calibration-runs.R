@@ -3,8 +3,8 @@ context("test calibration framework and its parameters")
 test_that("test calibration routine p-model", {
   skip_on_cran()
   
-  df_drivers <- p_model_drivers
-  ddf_obs <- p_model_validation
+  drivers <- p_model_drivers
+  obs <- p_model_validation
   
   settings <- list(
     method              = "bayesiantools",
@@ -31,8 +31,8 @@ test_that("test calibration routine p-model", {
   )
   
   pars <- calib_sofun(
-    df_drivers = df_drivers,  
-    ddf_obs = ddf_obs,
+    drivers = drivers,  
+    obs = obs,
     settings = settings
   )
   
@@ -59,8 +59,8 @@ test_that("test calibration routine p-model", {
   )
   
   pars <- calib_sofun(
-    df_drivers = df_drivers,  
-    ddf_obs = ddf_obs,
+    drivers = df_drivers,  
+    obs = ddf_obs,
     settings = settings
   )
   
