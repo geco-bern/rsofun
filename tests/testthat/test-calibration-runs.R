@@ -59,8 +59,8 @@ test_that("test calibration routine p-model", {
   )
   
   pars <- calib_sofun(
-    drivers = df_drivers,  
-    obs = ddf_obs,
+    drivers = drivers,  
+    obs = obs,
     settings = settings
   )
   
