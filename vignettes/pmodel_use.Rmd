@@ -155,7 +155,7 @@ pars <- calib_sofun(
 
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 
-```{r}
+```{r warning=FALSE}
 # print the parameters
 print(pars)
 
