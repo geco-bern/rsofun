@@ -151,6 +151,8 @@ pars <- calib_sofun(
     ddf_obs = p_model_validation,
     settings = settings
   )
+
+print(pars)
 ```
 
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
@@ -158,11 +160,11 @@ When successful the optimized parameters can be used to run subsequent modelling
 ```{r eval=FALSE, warning=FALSE}
 # reformatting the parameter list
 params_modl <- list(
-    kphio           = pars$par[1],
-    soilm_par_a     = pars$par[2],
-    soilm_par_b     = pars$par[3],
-    tau_acclim_tempstress = pars$par[4],
-    par_shape_tempstress  = pars$par[5]
+    kphio           = 0.04607080,
+    soilm_par_a     = 2.75687824,
+    soilm_par_b     = 1.68140444,
+    tau_acclim_tempstress = 7.35259044,
+    par_shape_tempstress  = 0.09863961
   )
 
 # run the model for these parameters
