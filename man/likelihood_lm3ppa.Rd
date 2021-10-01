@@ -4,12 +4,12 @@
 \alias{likelihood_lm3ppa}
 \title{Log likelihood cost function for model optimization}
 \usage{
-likelihood_lm3ppa(par, ddf_obs, df_driver, ...)
+likelihood_lm3ppa(par, obs, df_driver, ...)
 }
 \arguments{
 \item{par}{a vector of parameter values, this is functions specific}
 
-\item{ddf_obs}{observed data}
+\item{obs}{observed data}
 
 \item{df_driver}{driver data}
 

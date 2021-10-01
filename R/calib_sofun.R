@@ -64,8 +64,8 @@ calib_sofun <- function(
       lower = lower,
       upper = upper,
       control = settings$control,
-      ddf_obs = obs,
-      df_drivers = drivers
+      obs = obs,
+      drivers = drivers
     )
   } 
   
@@ -86,8 +86,8 @@ calib_sofun <- function(
         do.call("cost",
                 list(
                   par = random_par,
-                  ddf_obs = obs,
-                  df_drivers = drivers,
+                  obs = obs,
+                  drivers = drivers,
                   inverse = TRUE
                 ))},
       lower = lower,

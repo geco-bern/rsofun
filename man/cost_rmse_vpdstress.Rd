@@ -4,14 +4,14 @@
 \alias{cost_rmse_vpdstress}
 \title{Root mean squared error}
 \usage{
-cost_rmse_vpdstress(par, ddf_obs, df_drivers, inverse = FALSE)
+cost_rmse_vpdstress(par, obs, drivers, inverse = FALSE)
 }
 \arguments{
 \item{par}{parameters}
 
-\item{ddf_obs}{observed values}
+\item{obs}{observed values}
 
-\item{df_drivers}{drivers}
+\item{drivers}{drivers}
 
 \item{inverse}{invert the function}
 }
