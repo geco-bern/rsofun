@@ -79,13 +79,13 @@
 
       
 
-      </header><script src="pmodel_use_files/header-attrs-2.8/header-attrs.js"></script><div class="row">
+      </header><script src="pmodel_use_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>p-model usage</h1>
                         <h4 class="author">Koen Hufkens</h4>
             
-            <h4 class="date">2021-09-29</h4>
+            <h4 class="date">2021-10-01</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/stineb/rsofun/blob/master/vignettes/pmodel_use.Rmd"><code>vignettes/pmodel_use.Rmd</code></a></small>
       <div class="hidden name"><code>pmodel_use.Rmd</code></div>
@@ -104,16 +104,16 @@
 
 <span class="va">p_model_drivers</span>
 <span class="co">#&gt; # A tibble: 1 x 5</span>
-<span class="co">#&gt;   sitename forcing             params_siml       siteinfo        df_soiltexture </span>
-<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;              &lt;list&gt;            &lt;list&gt;          &lt;list&gt;         </span>
-<span class="co">#&gt; 1 FR-Pue   &lt;tibble [2,920 × 1… &lt;tibble [1 × 18]&gt; &lt;tibble [1 × 1… &lt;tibble [2 × 5…</span>
+<span class="co">#&gt;   sitename forcing           params_siml       siteinfo        df_soiltexture   </span>
+<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;            &lt;list&gt;            &lt;list&gt;          &lt;list&gt;           </span>
+<span class="co">#&gt; 1 FR-Pue   &lt;tibble[,15] [2,… &lt;tibble[,18] [1 … &lt;tibble[,12] [… &lt;tibble[,5] [2 ×…</span>
 
 <span class="va">p_model_validation</span>
 <span class="co">#&gt; # A tibble: 1 x 2</span>
 <span class="co">#&gt; # Groups:   sitename [1]</span>
-<span class="co">#&gt;   sitename data                </span>
-<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;              </span>
-<span class="co">#&gt; 1 FR-Pue   &lt;tibble [2,920 × 3]&gt;</span></code></pre></div>
+<span class="co">#&gt;   sitename data                    </span>
+<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;                  </span>
+<span class="co">#&gt; 1 FR-Pue   &lt;tibble[,3] [2,920 × 3]&gt;</span></code></pre></div>
 <p>These are real data from the French FR-Pue fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize <code>pmodel</code> parameters.</p>
 </div>
 <div id="running-the-model" class="section level2">
