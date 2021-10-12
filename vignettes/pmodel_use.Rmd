@@ -19,7 +19,7 @@ library(rsofun)
 library(dplyr)
 library(ggplot2)
 
-pars = list(par = c(
+pars <- list(par = c(
     kphio           = 0.04607080,
     soilm_par_a     = 2.75687824,
     soilm_par_b     = 1.68140444,
@@ -52,7 +52,7 @@ With all data prepared we can run the model using `runread_pmodel_f()`. This fun
 
 # optimized parameters from previous
 # work
-params_modl = list(
+params_modl <- list(
     kphio           = 0.09423773,
     soilm_par_a     = 0.33349283,
     soilm_par_b     = 1.45602286,
@@ -156,11 +156,8 @@ pars <- calib_sofun(
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 
 ```{r}
-# print the parameters
-print(pars)
-
 # reformatting the parameter list
-params_modl = list(
+params_modl <- list(
     kphio           = pars$par[1],
     soilm_par_a     = pars$par[2],
     soilm_par_b     = pars$par[3],
@@ -180,8 +177,8 @@ model_data_new <- output_new %>%
   filter(sitename == "FR-Pue") %>%
   tidyr::unnest(data)
 
-ggplot() +
-  geom_line(
+  ggplot() +
+    geom_line(
     data = model_data,
     aes(
       date,
@@ -210,7 +207,6 @@ ggplot() +
     y = "GPP"
   )
 
-
-````
+```
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/web/packages/GenSA/index.html) and [BayesianTools](https://github.com/florianhartig/BayesianTools).

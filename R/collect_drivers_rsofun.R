@@ -1,9 +1,9 @@
 #' Collect all drivers
 #'
-#' Collect all drivers for site-level simulations into a nested data frame with 
-#' one row for each site
+#' Collect all drivers for site-level simulations 
+#' into a nested data frame with one row for each site
 #'
-#' @param siteinfo A data frame containing site meta info (rows for sites). 
+#' @param site_info A data frame containing site meta info (rows for sites). 
 #'  Required columns are: \code{"sitename", "date_start", 
 #'  "date_end", "lon", "lat", "elv"}.
 #' @param params_siml A nested data frame with rows for each site containing 
@@ -14,23 +14,23 @@
 #'  forcing data time series nested inside a column named \code{"data"}
 #' @param co2 A nested data frame with rows for each site and CO2 
 #'  forcing data time series nested inside a column named \code{"data"}
-#' @param df_soiltexture Soil texture data descriptor
+#' @param params_soil Soil texture data descriptor
 #'
 #' @return a rsofun input data frame
 #' @export
 
 collect_drivers_sofun <- function( 
-  siteinfo,
+  site_info,
   params_siml,
   meteo,
   fapar,
   co2,
-  df_soiltexture
+  params_soil
   ){
     
   ## complement the setup settings
-  siteinfo <- prepare_setup_sofun(
-        siteinfo = siteinfo,
+  site_info <- prepare_setup_sofun(
+        site_info = site_info,
         params_siml = params_siml)
   
   ## check if all required variables are available
@@ -70,10 +70,10 @@ collect_drivers_sofun <- function(
   
   # create mega-df containing all forcing data and parameters that
   # vary by site (not model parameters!)
-  names_metainfo <- names(siteinfo)[-which(names(siteinfo) %in%
+  names_metainfo <- names(site_info)[-which(names(site_info) %in%
                                              c("sitename", "params_siml"))]
-  df_mega <- siteinfo %>% 
-    tidyr::nest(siteinfo = names_metainfo) %>% 
+  df_mega <- site_info %>% 
+    tidyr::nest(site_info = names_metainfo) %>% 
     left_join(
       meteo %>% 
         rename(meteo = data),
@@ -89,8 +89,8 @@ collect_drivers_sofun <- function(
         rename(co2 = data),
       by = "sitename"
     ) %>% 
-    mutate(df_soiltexture = purrr::map(as.list(seq(nrow(.))),
-                                       ~return(df_soiltexture)))
+    mutate(params_soil = purrr::map(as.list(seq(nrow(.))),
+                                       ~return(params_soil)))
   
   # use only interpolated fapar and combine meteo data and fapar
   # into a single nested column 'forcing'
@@ -175,7 +175,7 @@ collect_drivers_sofun <- function(
   
   df_mega <- df_mega %>% 
     mutate(forcing = purrr::map(forcing, ~fill_na_forcing(.))) %>% 
-    dplyr::select(sitename, forcing, params_siml, siteinfo, df_soiltexture)
+    dplyr::select(sitename, forcing, params_siml, site_info, params_soil)
 
   return(df_mega)
 }

@@ -4,12 +4,12 @@
 \alias{calib_sofun}
 \title{Calibrates SOFUN model parameters}
 \usage{
-calib_sofun(df_drivers, ddf_obs, settings)
+calib_sofun(drivers, obs, settings)
 }
 \arguments{
-\item{df_drivers}{asdf}
+\item{drivers}{asdf}
 
-\item{ddf_obs}{A data frame containing observational data used for model
+\item{obs}{A data frame containing observational data used for model
 calibration. Created by function \code{get_obs_calib2()}}
 
 \item{settings}{A list containing model calibration settings. 
@@ -26,9 +26,9 @@ calibration of SOFUN model parameters.
 \examples{
 \dontrun{ 
 calib_sofun(
-  df_drivers = filter(df_drivers,
+  drivers = filter(drivers,
           sitename \%in\% settings$sitenames),
-  ddf_obs = ddf_obs_calib,
+  obs = obs_calib,
   settings = settings)
 }
 }

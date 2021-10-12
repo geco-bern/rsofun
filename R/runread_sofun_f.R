@@ -49,18 +49,18 @@ runread_pmodel_f <- function(
         input = c(
           sitename,
           params_siml,
-          siteinfo,
+          site_info,
           forcing,
-          df_soiltexture)
+          params_soil)
         ) %>%
       multidplyr::partition(cl) %>% 
       dplyr::mutate(data = purrr::map(input, 
        ~run_pmodel_f_bysite(
          sitename       = .x$sitename[[1]], 
          params_siml    = .x$params_siml[[1]], 
-         siteinfo       = .x$siteinfo[[1]], 
+         site_info       = .x$site_info[[1]], 
          forcing        = .x$forcing[[1]], 
-         df_soiltexture = .x$df_soiltexture[[1]], 
+         params_soil = .x$params_soil[[1]], 
          par    = par, 
          makecheck      = makecheck )
       ))
@@ -77,7 +77,7 @@ runread_pmodel_f <- function(
        dplyr::ungroup() %>%
        dplyr::select( input ) %>%
        tidyr::unnest( cols = c( input )) %>%
-       dplyr::select(sitename, siteinfo)
+       dplyr::select(sitename, site_info)
      
      # combine both data and meta-data
      # this implicitly assumes that the order
@@ -95,7 +95,7 @@ runread_pmodel_f <- function(
                            par = par,
                            makecheck = makecheck
         )) %>% 
-      dplyr::select(sitename, siteinfo, data)
+      dplyr::select(sitename, site_info, data)
   }
   
   return(df_out)
@@ -143,7 +143,7 @@ runread_lm3ppa_f <- function(
       dplyr::group_by( id = row_number() ) %>%
       tidyr::nest(input = c(sitename,
                             params_siml,
-                            siteinfo,
+                            site_info,
                             forcing,
                             params_tile,
                             params_species,
@@ -155,7 +155,7 @@ runread_lm3ppa_f <- function(
          ~run_lm3ppa_f_bysite(
            sitename       = .x$sitename[[1]], 
            params_siml    = .x$params_siml[[1]], 
-           siteinfo       = .x$siteinfo[[1]], 
+           site_info       = .x$site_info[[1]], 
            forcing        = .x$forcing[[1]], 
            params_tile    = .x$params_tile[[1]], 
            params_species = .x$params_species[[1]], 

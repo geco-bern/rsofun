@@ -4,14 +4,14 @@
 \alias{cost_rmse_lm3ppa_gsleuning}
 \title{LM3PPA gs leuning cost function}
 \usage{
-cost_rmse_lm3ppa_gsleuning(par, ddf_obs, df_drivers, inverse = FALSE)
+cost_rmse_lm3ppa_gsleuning(par, obs, drivers, inverse = FALSE)
 }
 \arguments{
 \item{par}{parameters}
 
-\item{ddf_obs}{observed values}
+\item{obs}{observed values}
 
-\item{df_drivers}{drivers}
+\item{drivers}{drivers}
 
 \item{inverse}{invert the cost function metric}
 }

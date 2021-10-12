@@ -483,6 +483,7 @@ contains
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
     real                    :: timestep, timestep_d
     integer                 :: yr
+    integer :: stat
     
     integer :: idx
     integer :: idx_hourly_start
@@ -668,7 +669,16 @@ contains
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains time loops)
       !----------------------------------------------------------------
-      call biosphere_annual( out_biosphere )
+      call biosphere_annual( out_biosphere, stat)
+      
+      if(stat /= 0) then
+        exit
+      endif
+      
+      ! if this call exits unclean, do an exit (skipping out of the loop)
+      ! and progressing further, with an empty matrix consequence
+      ! what will be returned, and should it be populated before or
+      ! after the fact <- check
 
       !----------------------------------------------------------------
       ! Populate big output arrays

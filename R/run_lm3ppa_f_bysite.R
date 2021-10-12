@@ -4,7 +4,7 @@
 #'
 #' @param sitename Site name
 #' @param params_siml Simulation parameters
-#' @param siteinfo Site meta info
+#' @param site_info Site meta info
 #' @param forcing forcing (input) dataframe (returned object by `prepare_input_sofun()`)
 #' @param params_tile Tile-level model parameters
 #' @param params_species Species-specific model parameters
@@ -21,7 +21,7 @@
 run_lm3ppa_f_bysite <- function(
   sitename,
   params_siml,
-  siteinfo,
+  site_info,
   forcing,
   params_tile,
   params_species,
@@ -135,9 +135,9 @@ run_lm3ppa_f_bysite <- function(
       code_method_mortality = as.integer(code_method_mortality),
       
       ## site meta info
-      longitude             = as.numeric(siteinfo$lon),
-      latitude              = as.numeric(siteinfo$lat),
-      altitude              = as.numeric(siteinfo$elv),
+      longitude             = as.numeric(site_info$lon),
+      latitude              = as.numeric(site_info$lat),
+      altitude              = as.numeric(site_info$elv),
 
       ## Tile-level parameters
       soiltype     = as.integer(params_tile$soiltype),

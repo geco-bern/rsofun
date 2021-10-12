@@ -693,7 +693,7 @@ contains
     ! integer :: idx(vegn%n_cohorts)
     real :: deathrate = 0 ! mortality rate, 1/year
     real :: deadtrees ! number of trees that died over the time step
-    integer :: totCC,i,k
+    integer :: totCC,i,k, stat
     ! real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
     real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
@@ -760,8 +760,9 @@ contains
          exit
         endif
       enddo
+      
       ! Remove the cohorts with 0 individuals, (never used b/c k<2)
-      if(k >= 2) call kill_lowdensity_cohorts(vegn)
+      if(k >= 2) call kill_lowdensity_cohorts(vegn, stat)
 
       !final check, can be removed if the model runs well
       cai_partial = 0.0
@@ -878,7 +879,7 @@ contains
       enddo
 
       ! Remove the cohorts with very few individuals
-      call kill_lowdensity_cohorts( vegn )    
+      call kill_lowdensity_cohorts( vegn, stat )    
 
     endif
 
@@ -895,7 +896,7 @@ contains
     ! local variables --------
     real :: deathrate ! mortality rate, 1/year
     real :: deadtrees ! number of trees that died over the time step
-    integer :: i
+    integer :: i, stat
     type(cohort_type), pointer :: cc
     ! type(cohort_type), dimension(:), pointer :: ccold, ccnew
 
@@ -926,7 +927,7 @@ contains
       end associate
     enddo
     ! Remove the cohorts with 0 individuals
-    call kill_lowdensity_cohorts( vegn )
+    call kill_lowdensity_cohorts( vegn, stat )
 
   end subroutine vegn_annual_starvation
 
@@ -1755,42 +1756,49 @@ contains
   end subroutine vegn_mergecohorts
 
 
-  subroutine kill_lowdensity_cohorts( vegn )
+  subroutine kill_lowdensity_cohorts( vegn, stat)
     !////////////////////////////////////////////////////////////////
     ! Remove cohorts that have (almost) fully died and update tile
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
+    
     type(vegn_tile_type), intent(inout) :: vegn
+    integer, intent(out) :: stat
+    
     ! local variables
     type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
     ! logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
     real, parameter :: mindensity = 0.25E-4
-    integer :: i,k
+    integer :: i,k,j
 
     ! calculate the number of cohorts with indivs>mindensity
     k = 0
     do i = 1, vegn%n_cohorts
       if (vegn%cohorts(i)%nindivs > mindensity) k=k+1
     enddo
-    if (k==0) write(*,*)'kill_lowdensity_cohorts: ','All cohorts have died'
+    if (k==0) then
+      ! set index
+      stat = 1  
+      return
+    endif
     
     ! exclude cohorts that have low individuals
-    if (k < vegn%n_cohorts) then
+    if (k < vegn%n_cohorts .and. k > 0) then
       allocate(cc(k))
-      k=0
+      j=0
       do i = 1,vegn%n_cohorts
         cx =>vegn%cohorts(i)
         associate(sp=>spdata(cx%species))
         if (cx%nindivs > mindensity) then
           k=k+1
-          cc(k) = cx
+          cc(j) = cx
         else
           ! Carbon and Nitrogen from plants to soil pools
           call plant2soil(vegn,cx,cx%nindivs)
         endif
         end associate
       enddo
-      vegn%n_cohorts = k
+      vegn%n_cohorts = j
       deallocate (vegn%cohorts)
       vegn%cohorts=>cc
     endif

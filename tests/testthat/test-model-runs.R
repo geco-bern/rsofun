@@ -21,7 +21,7 @@ test_that("p-model run check", {
     df_drivers$params_siml[[1]],
     df_drivers$siteinfo[[1]],
     df_drivers$forcing[[1]], 
-    df_drivers$df_soiltexture[[1]],
+    df_drivers$params_soil[[1]],
     params_modl = params_modl,
     makecheck = FALSE
   )
@@ -53,26 +53,26 @@ test_that("p-model run check", {
   expect_type(df_output_p, "list")
 })
 
-# test_that("lm3ppa p-model run check", {
-#   skip_on_cran()
-#   
-#   df_drivers <- lm3ppa_p_model_drivers
-#   
-#   df_output <- run_lm3ppa_f_bysite(
-#     df_drivers$sitename[1],
-#     df_drivers$params_siml[[1]],
-#     df_drivers$siteinfo[[1]],
-#     df_drivers$forcing[[1]],
-#     df_drivers$params_tile[[1]],
-#     df_drivers$params_species[[1]],
-#     df_drivers$params_soil[[1]],
-#     df_drivers$init_cohort[[1]],
-#     df_drivers$init_soil[[1]],
-#     makecheck = TRUE)
-#   
-#   # test for correctly returned values
-#   expect_type(df_output, "list")
-# })
+test_that("lm3ppa p-model run check", {
+  skip_on_cran()
+
+  df_drivers <- lm3ppa_p_model_drivers
+
+  df_output <- run_lm3ppa_f_bysite(
+    df_drivers$sitename[1],
+    df_drivers$params_siml[[1]],
+    df_drivers$siteinfo[[1]],
+    df_drivers$forcing[[1]],
+    df_drivers$params_tile[[1]],
+    df_drivers$params_species[[1]],
+    df_drivers$params_soil[[1]],
+    df_drivers$init_cohort[[1]],
+    df_drivers$init_soil[[1]],
+    makecheck = TRUE)
+
+  # test for correctly returned values
+  expect_type(df_output, "list")
+})
 
 test_that("lm3ppa leuning run check", {
   skip_on_cran()

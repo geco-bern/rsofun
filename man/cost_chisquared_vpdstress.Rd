@@ -4,14 +4,14 @@
 \alias{cost_chisquared_vpdstress}
 \title{Chi-squared cost function}
 \usage{
-cost_chisquared_vpdstress(par, ddf_obs, df_drivers, inverse = FALSE)
+cost_chisquared_vpdstress(par, obs, drivers, inverse = FALSE)
 }
 \arguments{
 \item{par}{parameters}
 
-\item{ddf_obs}{observed values}
+\item{obs}{observed values}
 
-\item{df_drivers}{drivers}
+\item{drivers}{drivers}
 
 \item{inverse}{invert the function}
 }

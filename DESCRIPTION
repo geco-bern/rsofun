@@ -1,6 +1,6 @@
 Package: rsofun
 Title: SOFUN in R
-Version: 4.0
+Version: 4.1
 Authors@R: c(
             person(
               family = "Benjamin",
@@ -43,5 +43,6 @@ Suggests:
     rmarkdown,
     covr,
     testthat,
-    knitr
+    knitr,
+    ggplot2
 VignetteBuilder: knitr

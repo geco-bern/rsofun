@@ -9,8 +9,8 @@ A tibble of driver data:
 \describe{
   \item{sitename}{site name}
   \item{params_siml}{model parameters}
-  \item{siteinfo}{site information}
-  \item{df_soiltexture}{soil texture data}
+  \item{site_info}{site information}
+  \item{soil_texture}{soil texture data}
   \item{forcing}{forcing data}
 }
 }

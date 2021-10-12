@@ -8,8 +8,8 @@
 #' the kphio parameter.
 #' 
 #' @param par parameters
-#' @param ddf_obs observations
-#' @param df_drivers driver data
+#' @param obs observations
+#' @param drivers driver data
 #' @param inverse invert the function (1-value)
 #' 
 #' @importFrom magrittr '%>%'
@@ -19,8 +19,8 @@
 
 cost_rmse_kphio <- function(
   par,
-  ddf_obs,
-  df_drivers,
+  obs,
+  drivers,
   inverse = FALSE
   ){
   
@@ -36,7 +36,7 @@ cost_rmse_kphio <- function(
   
   # run the model
   df <- runread_pmodel_f(
-    df_drivers, 
+    drivers, 
     par = params_modl,
     makecheck = TRUE,
     parallel = FALSE
@@ -50,12 +50,12 @@ cost_rmse_kphio <- function(
       'gpp_obs' = 'gpp'
     )
   
-  ddf_obs <- ddf_obs %>%
+  obs <- obs %>%
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data)
   
   # left join with observations
-  df <- dplyr::left_join(df, ddf_obs, by = c("sitename", "date"))
+  df <- dplyr::left_join(df, obs, by = c("sitename", "date"))
   
   # Calculate cost (RMSE)
   cost <- sqrt( mean( (df$gpp - df$gpp_obs )^2, na.rm = TRUE ) )
@@ -111,8 +111,8 @@ cost_chisquared_kphio <- function( par, inverse = FALSE ){
 #' the full parameter stack.
 #'
 #' @param par parameters
-#' @param ddf_obs observed values
-#' @param df_drivers drivers
+#' @param obs observed values
+#' @param drivers drivers
 #' @param inverse invert the function
 #'
 #' @importFrom magrittr '%>%'
@@ -123,8 +123,8 @@ cost_chisquared_kphio <- function( par, inverse = FALSE ){
 
 cost_rmse_fullstack <- function(
   par,
-  ddf_obs,
-  df_drivers,
+  obs,
+  drivers,
   inverse = FALSE 
   ){
   
@@ -140,7 +140,7 @@ cost_rmse_fullstack <- function(
   )
   
   df <- runread_pmodel_f(
-    df_drivers, 
+    drivers, 
     par = params_modl, 
     makecheck = TRUE,
     parallel = FALSE
@@ -148,7 +148,7 @@ cost_rmse_fullstack <- function(
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>% 
     dplyr::rename("gpp_mod" = "gpp") %>% 
-    dplyr::left_join(ddf_obs,
+    dplyr::left_join(obs,
                      by = c("sitename", "date"))
   
   ## Calculate cost (RMSE)
@@ -167,8 +167,8 @@ cost_rmse_fullstack <- function(
 #' VPD stress.
 #'
 #' @param par parameters
-#' @param ddf_obs observed values
-#' @param df_drivers drivers
+#' @param obs observed values
+#' @param drivers drivers
 #' @param inverse invert the function
 #'
 #' @importFrom magrittr '%>%'
@@ -178,8 +178,8 @@ cost_rmse_fullstack <- function(
 
 cost_rmse_vpdstress <- function(
   par,
-  ddf_obs,
-  df_drivers,
+  obs,
+  drivers,
   inverse = FALSE
   ){
   
@@ -195,7 +195,7 @@ cost_rmse_vpdstress <- function(
   )
   
   df <- runread_pmodel_f(
-    df_drivers, 
+    drivers, 
     par = params_modl, 
     makecheck = TRUE,
     parallel = FALSE
@@ -203,7 +203,7 @@ cost_rmse_vpdstress <- function(
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>% 
     dplyr::rename("latenth_mod" = "latenth") %>% 
-    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
+    dplyr::left_join(obs, by = c("sitename", "date"))
   
   ## Calculate cost (RMSE)
   cost <- sqrt( mean( (df$latenth_mod - df$latenth_obs )^2, na.rm = TRUE ) )
@@ -221,8 +221,8 @@ cost_rmse_vpdstress <- function(
 #' after (Keenan et al., 2012 GCB)
 #'
 #' @param par parameters
-#' @param ddf_obs observed values
-#' @param df_drivers drivers
+#' @param obs observed values
+#' @param drivers drivers
 #' @param inverse invert the function
 #' 
 #' @importFrom magrittr '%>%'
@@ -232,8 +232,8 @@ cost_rmse_vpdstress <- function(
 
 cost_chisquared_vpdstress <- function(
   par,
-  ddf_obs,
-  df_drivers,
+  obs,
+  drivers,
   inverse = FALSE
 ) {
   
@@ -249,7 +249,7 @@ cost_chisquared_vpdstress <- function(
   )
   
   df <- runread_pmodel_f(
-    df_drivers, 
+    drivers, 
     par = params_modl, 
     makecheck = TRUE,
     parallel = FALSE
@@ -257,7 +257,7 @@ cost_chisquared_vpdstress <- function(
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>% 
     dplyr::rename("latenth_mod" = "latenth") %>% 
-    dplyr::left_join(ddf_obs, by = c("sitename", "date"))
+    dplyr::left_join(obs, by = c("sitename", "date"))
   
   ## Calculate cost (RMSE)
   cost <- ((df$latenth_mod - df$latenth_obs )/(2 * df$latenth_unc))^2
@@ -324,8 +324,8 @@ cost_mae <- function(
 #' LM3PPA gs leuning cost function
 #'
 #' @param par parameters
-#' @param ddf_obs observed values
-#' @param df_drivers drivers
+#' @param obs observed values
+#' @param drivers drivers
 #' @param inverse invert the cost function metric
 #'
 #' @return value of a cost function, to minimize
@@ -333,21 +333,21 @@ cost_mae <- function(
 
 cost_rmse_lm3ppa_gsleuning <- function(
   par,
-  ddf_obs,
-  df_drivers,
+  obs,
+  drivers,
   inverse = FALSE 
   ){
   
-  # Add changed model parameters to df_drivers, overwriting where necessary.
-  df_drivers$params_species[[1]]$phiRL[]      <- par[1]  # the same for all values
-  df_drivers$params_species[[1]]$LAI_light[]  <- par[2]  # the same for all values
-  df_drivers$params_tile[[1]]$tf_base         <- par[3]
-  df_drivers$params_tile[[1]]$par_mort        <- par[4]
+  # Add changed model parameters to drivers, overwriting where necessary.
+  drivers$params_species[[1]]$phiRL[]      <- par[1]  # the same for all values
+  drivers$params_species[[1]]$LAI_light[]  <- par[2]  # the same for all values
+  drivers$params_tile[[1]]$tf_base         <- par[3]
+  drivers$params_tile[[1]]$par_mort        <- par[4]
 
-  ddf_obs <- ddf_obs$data[[1]]
+  obs <- obs$data[[1]]
   
   df <- runread_lm3ppa_f(
-    df_drivers,
+    drivers,
     makecheck = TRUE,
     parallel = FALSE
   )
@@ -367,7 +367,7 @@ cost_rmse_lm3ppa_gsleuning <- function(
                     df_mod$Density,
                     df_mod$Biomass)
   ) %>%
-    dplyr::left_join(ddf_obs, by = "variables") %>%
+    dplyr::left_join(obs, by = "variables") %>%
     mutate(error = targets_mod - targets_obs) %>%
     mutate(error_rel = error / targets_obs)
   
@@ -386,7 +386,7 @@ cost_rmse_lm3ppa_gsleuning <- function(
 #' `cost = function(...){abs(likelihood(...))}`
 #'
 #' @param par a vector of parameter values, this is functions specific
-#' @param ddf_obs observed data 
+#' @param obs observed data 
 #' @param df_driver driver data
 #' @param ... extra arguments to pass to the function
 #' 
@@ -396,21 +396,21 @@ cost_rmse_lm3ppa_gsleuning <- function(
 
 likelihood_lm3ppa <- function(
   par,
-  ddf_obs,
+  obs,
   df_driver,
   ...
 ) {
   
-  # Add changed model parameters to df_drivers, overwriting where necessary.
-  df_drivers$params_species[[1]]$phiRL[]      <- par[1]
-  df_drivers$params_species[[1]]$LAI_light[]  <- par[2]
-  df_drivers$params_tile[[1]]$tf_base         <- par[3]
-  df_drivers$params_tile[[1]]$par_mort        <- par[4]
+  # Add changed model parameters to drivers, overwriting where necessary.
+  drivers$params_species[[1]]$phiRL[]      <- par[1]
+  drivers$params_species[[1]]$LAI_light[]  <- par[2]
+  drivers$params_tile[[1]]$tf_base         <- par[3]
+  drivers$params_tile[[1]]$par_mort        <- par[4]
   
-  ddf_obs <- ddf_obs$data[[1]]
+  obs <- obs$data[[1]]
   
   df <- runread_lm3ppa_f(
-    df_drivers,
+    drivers,
     makecheck = TRUE,
     parallel = FALSE
   )
@@ -430,7 +430,7 @@ likelihood_lm3ppa <- function(
                     df_mod$Density,
                     df_mod$Biomass)
   ) %>%
-    dplyr::left_join(ddf_obs, by = "variables") %>%
+    dplyr::left_join(obs, by = "variables") %>%
     mutate(error = targets_mod - targets_obs) %>%
     mutate(error_rel = error / targets_obs)
   
