@@ -4,10 +4,10 @@
 #'
 #' @param sitename Site name
 #' @param params_siml Simulation parameters
-#' @param siteinfo Site meta info
+#' @param site_info Site meta info
 #' @param forcing forcing (input) dataframe 
 #'  (returned object by `prepare_input_sofun()`)
-#' @param df_soiltexture A list of soil texture parameters
+#' @param params_soil A list of soil texture parameters
 #' @param params_modl Model parameters 
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings.
@@ -22,9 +22,9 @@
 run_pmodel_f_bysite <- function(
   sitename,
   params_siml,
-  siteinfo,
+  site_info,
   forcing,
-  df_soiltexture,
+  params_soil,
   params_modl,
   makecheck = TRUE
   ){
@@ -192,7 +192,7 @@ run_pmodel_f_bysite <- function(
       )
 
     # Soil texture as matrix (layer x texture parameter)
-    soiltexture <- df_soiltexture %>% 
+    soiltexture <- params_soil %>% 
       dplyr::select(fsand, fclay, forg, fgravel) %>% 
       as.matrix() %>% 
       t()
@@ -221,10 +221,10 @@ run_pmodel_f_bysite <- function(
       lgr3                      = as.logical(params_siml$lgr3),
       lgn3                      = as.logical(params_siml$lgn3),
       lgr4                      = as.logical(params_siml$lgr4),
-      longitude                 = as.numeric(siteinfo$lon),
-      latitude                  = as.numeric(siteinfo$lat),
-      altitude                  = as.numeric(siteinfo$elv),
-      whc                       = as.numeric(siteinfo$whc),
+      longitude                 = as.numeric(site_info$lon),
+      latitude                  = as.numeric(site_info$lat),
+      altitude                  = as.numeric(site_info$elv),
+      whc                       = as.numeric(site_info$whc),
       soiltexture               = soiltexture,
       n                         = n,
       par                       = par, 

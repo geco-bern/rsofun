@@ -7,7 +7,7 @@
 run_lm3ppa_f_bysite(
   sitename,
   params_siml,
-  siteinfo,
+  site_info,
   forcing,
   params_tile,
   params_species,
@@ -22,7 +22,7 @@ run_lm3ppa_f_bysite(
 
 \item{params_siml}{Simulation parameters}
 
-\item{siteinfo}{Site meta info}
+\item{site_info}{Site meta info}
 
 \item{forcing}{forcing (input) dataframe (returned object by `prepare_input_sofun()`)}
 

@@ -21,7 +21,7 @@ test_that("p-model run check", {
     df_drivers$params_siml[[1]],
     df_drivers$siteinfo[[1]],
     df_drivers$forcing[[1]], 
-    df_drivers$df_soiltexture[[1]],
+    df_drivers$params_soil[[1]],
     params_modl = params_modl,
     makecheck = FALSE
   )

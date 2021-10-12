@@ -7,9 +7,9 @@
 run_pmodel_f_bysite(
   sitename,
   params_siml,
-  siteinfo,
+  site_info,
   forcing,
-  df_soiltexture,
+  params_soil,
   params_modl,
   makecheck = TRUE
 )
@@ -19,12 +19,12 @@ run_pmodel_f_bysite(
 
 \item{params_siml}{Simulation parameters}
 
-\item{siteinfo}{Site meta info}
+\item{site_info}{Site meta info}
 
 \item{forcing}{forcing (input) dataframe 
 (returned object by `prepare_input_sofun()`)}
 
-\item{df_soiltexture}{A list of soil texture parameters}
+\item{params_soil}{A list of soil texture parameters}
 
 \item{params_modl}{Model parameters}
 

@@ -4,10 +4,10 @@
 \alias{collect_drivers_sofun}
 \title{Collect all drivers}
 \usage{
-collect_drivers_sofun(siteinfo, params_siml, meteo, fapar, co2, df_soiltexture)
+collect_drivers_sofun(site_info, params_siml, meteo, fapar, co2, params_soil)
 }
 \arguments{
-\item{siteinfo}{A data frame containing site meta info (rows for sites). 
+\item{site_info}{A data frame containing site meta info (rows for sites). 
 Required columns are: \code{"sitename", "date_start", 
 "date_end", "lon", "lat", "elv"}.}
 
@@ -23,12 +23,12 @@ forcing data time series nested inside a column named \code{"data"}}
 \item{co2}{A nested data frame with rows for each site and CO2 
 forcing data time series nested inside a column named \code{"data"}}
 
-\item{df_soiltexture}{Soil texture data descriptor}
+\item{params_soil}{Soil texture data descriptor}
 }
 \value{
 a rsofun input data frame
 }
 \description{
-Collect all drivers for site-level simulations into a nested data frame with 
-one row for each site
+Collect all drivers for site-level simulations 
+into a nested data frame with one row for each site
 }

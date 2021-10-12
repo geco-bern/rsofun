@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rsofun</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.1</span>
       </span>
     </div>
 
@@ -135,9 +135,9 @@
     <pre class="usage"><span class='fu'>run_pmodel_f_bysite</span><span class='op'>(</span>
   <span class='va'>sitename</span>,
   <span class='va'>params_siml</span>,
-  <span class='va'>siteinfo</span>,
+  <span class='va'>site_info</span>,
   <span class='va'>forcing</span>,
-  <span class='va'>df_soiltexture</span>,
+  <span class='va'>params_soil</span>,
   <span class='va'>params_modl</span>,
   makecheck <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
@@ -154,7 +154,7 @@
       <td><p>Simulation parameters</p></td>
     </tr>
     <tr>
-      <th>siteinfo</th>
+      <th>site_info</th>
       <td><p>Site meta info</p></td>
     </tr>
     <tr>
@@ -163,7 +163,7 @@
 (returned object by `prepare_input_sofun()`)</p></td>
     </tr>
     <tr>
-      <th>df_soiltexture</th>
+      <th>params_soil</th>
       <td><p>A list of soil texture parameters</p></td>
     </tr>
     <tr>

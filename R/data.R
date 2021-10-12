@@ -7,8 +7,8 @@
 #' \describe{
 #'   \item{sitename}{site name}
 #'   \item{params_siml}{model parameters}
-#'   \item{siteinfo}{site information}
-#'   \item{df_soiltexture}{soil texture data}
+#'   \item{site_info}{site information}
+#'   \item{soil_texture}{soil texture data}
 #'   \item{forcing}{forcing data}
 #' }
 "p_model_drivers"
@@ -35,8 +35,8 @@
 #' \describe{
 #'   \item{sitename}{site name}
 #'   \item{params_siml}{model parameters}
-#'   \item{siteinfo}{site information}
-#'   \item{df_soiltexture}{soil texture data}
+#'   \item{site_info}{site information}
+#'   \item{soil_texture}{soil texture data}
 #'   \item{forcing}{forcing data}
 #' }
 "lm3ppa_p_model_drivers"
@@ -51,8 +51,8 @@
 #' \describe{
 #'   \item{sitename}{site name}
 #'   \item{params_siml}{model parameters}
-#'   \item{siteinfo}{site information}
-#'   \item{df_soiltexture}{soil texture data}
+#'   \item{site_info}{site information}
+#'   \item{soil_texture}{soil texture data}
 #'   \item{forcing}{forcing data}
 #' }
 "lm3ppa_gs_leuning_drivers"

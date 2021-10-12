@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rsofun</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.1</span>
       </span>
     </div>
 
@@ -132,13 +132,13 @@
     <p>Complements the settings based on the site metainfo CSV file or data frame.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>prepare_setup_sofun</span><span class='op'>(</span><span class='va'>siteinfo</span>, <span class='va'>params_siml</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>prepare_setup_sofun</span><span class='op'>(</span><span class='va'>site_info</span>, <span class='va'>params_siml</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>siteinfo</th>
+      <th>site_info</th>
       <td><p>A character string specifying the path to the site meta 
 info file, or a dataframe containing the site meta info.</p></td>
     </tr>
@@ -158,7 +158,7 @@ of complemented simulation parameters.</p>
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
  <span class='va'>setup</span> <span class='op'>&lt;-</span> <span class='fu'>prepare_setup_sofun</span><span class='op'>(</span>
-   siteinfo <span class='op'>=</span> <span class='va'>siteinfo</span>,
+   site_info <span class='op'>=</span> <span class='va'>site_info</span>,
    params_siml <span class='op'>=</span> <span class='va'>params_siml</span>
   <span class='op'>)</span>
 <span class='op'>}</span>

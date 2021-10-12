@@ -4,10 +4,10 @@
 \alias{prepare_setup_sofun}
 \title{Complements the setup settings}
 \usage{
-prepare_setup_sofun(siteinfo, params_siml)
+prepare_setup_sofun(site_info, params_siml)
 }
 \arguments{
-\item{siteinfo}{A character string specifying the path to the site meta 
+\item{site_info}{A character string specifying the path to the site meta 
 info file, or a dataframe containing the site meta info.}
 
 \item{params_siml}{A named list containing the simulation parameters
@@ -24,7 +24,7 @@ Complements the settings based on the site metainfo CSV file or data frame.
 \examples{
 \dontrun{
  setup <- prepare_setup_sofun(
-   siteinfo = siteinfo,
+   site_info = site_info,
    params_siml = params_siml
   )
 }
