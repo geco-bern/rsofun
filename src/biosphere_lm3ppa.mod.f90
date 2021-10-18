@@ -15,7 +15,7 @@ module md_biosphere_lm3ppa
 
 contains
 
-  subroutine biosphere_annual(out_biosphere, stat)
+  subroutine biosphere_annual(out_biosphere)
     !////////////////////////////////////////////////////////////////
     ! function BIOSPHERE_annual calculates net ecosystem exchange (nee)
     ! in response to environmental boundary conditions (atmospheric 
@@ -27,7 +27,6 @@ contains
     use md_interface_lm3ppa, only: myinterface, outtype_biosphere  
     ! return variable
     type(outtype_biosphere) :: out_biosphere
-    integer, intent(out) :: stat
 
     ! ! local variables
     integer :: dm, moy, doy
@@ -187,16 +186,7 @@ contains
     ! Re-organize cohorts
     !---------------------------------------------
     ! print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
-    
-    ! Raise exception on cohort deaths (final)
-    ! requires to set a integer index value which is checked for
-    ! exit the call using a return statement <- 
-    ! so this once more can be passed on to the main routine
-    ! after a check
-    call kill_lowdensity_cohorts( vegn, stat)
-    if(stat /= 0) then
-      return
-    endif
+    call kill_lowdensity_cohorts( vegn )
     
     ! print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call relayer_cohorts( vegn )
