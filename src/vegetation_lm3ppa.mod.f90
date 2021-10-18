@@ -32,7 +32,8 @@ contains
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type), intent(in) :: forcing
-    logical, intent(in) :: init       ! is true on the very first simulation day (first subroutine call of each gridcell)
+    ! is true on the very first simulation day (first subroutine call of each gridcell)
+    logical, intent(in) :: init
 
     ! local variables
     type(cohort_type), pointer :: cc  

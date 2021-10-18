@@ -183,6 +183,7 @@ contains
       enddo
 
     else if (trim(myinterface%params_siml%method_photosynth) == "pmodel") then
+    
       !===========================================================
       ! P-model
       !-----------------------------------------------------------
@@ -197,7 +198,7 @@ contains
       end if 
 
       co2_memory  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, co2_memory )
-      temp_memory = dampen_variability( (forcing%Tair - kTkelvin),  params_gpp%tau_acclim, temp_memory )
+      temp_memory = dampen_variability( (forcing%Tair - kTkelvin),  params_gpp%tau_acclim, temp_memory)
       vpd_memory  = dampen_variability( forcing%vpd,                params_gpp%tau_acclim, vpd_memory )
       patm_memory = dampen_variability( forcing%P_air,              params_gpp%tau_acclim, patm_memory )
 
@@ -255,15 +256,15 @@ contains
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
 
-        ! print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
+        print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
 
         if (cc%status == LEAF_ON .and. cc%lai > 0.1 .and. temp_memory > -5.0) then
-
+          print *, "--- photosynthesis" 
           !----------------------------------------------------------------
-          ! Get light aborbed by cohort, dividing fAPAR up by crown areas
+          ! Get light absorbed by cohort, dividing fAPAR up by crown areas
           !----------------------------------------------------------------
           layer = max(1, min(cc%layer,9))
-          fapar_tree = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown 
+          fapar_tree = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown
 
           !----------------------------------------------------------------
           ! P-model call for C3 plants to get a list of variables that are 
