@@ -79,7 +79,7 @@ contains
     ! Test if forcing dimensions are correct
     shape_forcing = shape(forcing)
     if (idx_end>shape_forcing(1)) then
-      stop 'forcing array size does not have enough rows.'
+      ! stop 'forcing array size does not have enough rows.'
     end if
 
     ! warning: column indices in forcing array are hard coded
@@ -219,9 +219,8 @@ contains
       fpc_grid_field(pft) = 1.0
     end if
 
-    if (pft==0) stop 'get_fpc_grid: no PFT activated accoring to simulation parameter file.'
-
-    if (pft/=npft) stop 'GET_FPC_GRID: Adjust npft manually in params_core.mod.f90'
+    ! if (pft==0) stop 'get_fpc_grid: no PFT activated accoring to simulation parameter file.'
+    ! if (pft/=npft) stop 'GET_FPC_GRID: Adjust npft manually in params_core.mod.f90'
     
   end function get_fpc_grid
 

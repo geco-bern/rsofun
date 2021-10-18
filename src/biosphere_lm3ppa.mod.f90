@@ -89,9 +89,9 @@ contains
         doy = doy + 1
         idoy = idoy + 1
 
-        if (verbose) print*,'----------------------'
-        if (verbose) print*,'YEAR, DOY ', myinterface%steering%year, doy
-        if (verbose) print*,'----------------------'
+        ! if (verbose) print*,'----------------------'
+        ! if (verbose) print*,'YEAR, DOY ', myinterface%steering%year, doy
+        ! if (verbose) print*,'----------------------'
 
         !----------------------------------------------------------------
         ! FAST TIME STEP
@@ -214,7 +214,7 @@ contains
 
     end if
 
-    if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
+    ! if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
 
   end subroutine biosphere_annual
 

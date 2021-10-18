@@ -167,7 +167,7 @@ contains
           cc%resl    = -resp         * mol_C * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
           cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
-          if (isnan(cc%gpp)) stop '"gpp" is a NaN'
+          ! if (isnan(cc%gpp)) stop '"gpp" is a NaN'
 
           else
 
@@ -242,7 +242,7 @@ contains
       ! fraction of light absorbed by layer
       do i=1,layer
         f_apar(i) = f_light(i) - f_light(i+1)
-        if (f_apar(i) < 0.0 ) stop 'negative fapar'
+        ! if (f_apar(i) < 0.0 ) stop 'negative fapar'
       end do
 
       !----------------------------------------------------------------
@@ -346,7 +346,7 @@ contains
 
     else
 
-      print*,'WARNING: gpp(): myinterface%params_siml%method_photosynth not recognized'
+      !print*,'WARNING: gpp(): myinterface%params_siml%method_photosynth not recognized'
 
     end if
 

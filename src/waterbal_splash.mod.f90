@@ -283,18 +283,18 @@ contains
       tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
 
 
-    if (splashtest) then
-      print*,'transmittivity, tau: ', tau
-      print*,'daily TOA radiation: ', (1.0e-6)*tile_fluxes(:)%canopy%dra
-      print*,'sunset angle, hs: ', hs
-      print*,'true anomaly, nu: ', grid%nu
-      print*,'true longitude, lambda: ', grid%lambda
-      print*,'distance factor, dr: ', dr
-      print*,'declination, grid%decl_angle: ', grid%decl_angle
-      print*,'variable substitute, ru: ', ru
-      print*,'variable substitute, rv: ', rv
-      print*,'daily PPFD: ', tile_fluxes(:)%canopy%ppfd_splash
-    end if
+    ! if (splashtest) then
+    !   print*,'transmittivity, tau: ', tau
+    !   print*,'daily TOA radiation: ', (1.0e-6)*tile_fluxes(:)%canopy%dra
+    !   print*,'sunset angle, hs: ', hs
+    !   print*,'true anomaly, nu: ', grid%nu
+    !   print*,'true longitude, lambda: ', grid%lambda
+    !   print*,'distance factor, dr: ', dr
+    !   print*,'declination, grid%decl_angle: ', grid%decl_angle
+    !   print*,'variable substitute, ru: ', ru
+    !   print*,'variable substitute, rv: ', rv
+    !   print*,'daily PPFD: ', tile_fluxes(:)%canopy%ppfd_splash
+    ! end if
   
   end subroutine solar
 
@@ -390,19 +390,19 @@ contains
     ! print*,'in waterbal: sw, hi, rx, rw, rv, hn, hi, ru ', sw, hi, rx, rw, rv, hn, hi, ru
     
     ! xxx debug
-    if (splashtest) then
-      print*,'slope of saturation, s', sat_slope
-      print*,'enthalpy of vaporization: ', lv
-      print*,'water density at 1 atm calculated: ', rho_water
-      print*,'calculating psychrometric const. with patm: ', calc_patm(grid%elv)
-      print*,'psychrometric constant: ', gamma
-      print*,'daily condensation: ', tile_fluxes%canopy%dcn
-      print*,'daily EET: ', tile_fluxes%canopy%deet
-      print*,'daily PET: ', tile_fluxes%canopy%dpet
-      print*,'variable substitute, rx: ', rx
-      print*,'intersection hour angle, hi: ', hi
-      print*,'daily AET set to: ', tile_fluxes%canopy%daet
-    end if
+    ! if (splashtest) then
+    !   print*,'slope of saturation, s', sat_slope
+    !   print*,'enthalpy of vaporization: ', lv
+    !   print*,'water density at 1 atm calculated: ', rho_water
+    !   print*,'calculating psychrometric const. with patm: ', calc_patm(grid%elv)
+    !   print*,'psychrometric constant: ', gamma
+    !   print*,'daily condensation: ', tile_fluxes%canopy%dcn
+    !   print*,'daily EET: ', tile_fluxes%canopy%deet
+    !   print*,'daily PET: ', tile_fluxes%canopy%dpet
+    !   print*,'variable substitute, rx: ', rx
+    !   print*,'intersection hour angle, hi: ', hi
+    !   print*,'daily AET set to: ', tile_fluxes%canopy%daet
+    ! end if
 
     !---------------------------------------------------------
     ! 22. Calculate Cramer-Prentice-Alpha, (unitless)
