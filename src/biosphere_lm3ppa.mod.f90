@@ -25,6 +25,7 @@ contains
     ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     use md_interface_lm3ppa, only: myinterface, outtype_biosphere  
+    use md_gpp_lm3ppa, only: getpar_modl_gpp
     ! return variable
     type(outtype_biosphere) :: out_biosphere
 
@@ -66,6 +67,9 @@ contains
       ! initialise outputs 
       call Zero_diagnostics( vegn )
 
+      ! module-specific parameter specification
+      call getpar_modl_gpp()
+
       year0 = myinterface%climate(1)%year  ! forcingData(1)%year
       iyears = 1
       idoy = 0
@@ -89,9 +93,9 @@ contains
         doy = doy + 1
         idoy = idoy + 1
 
-         !print*,'----------------------'
-         !print*,'YEAR, DOY ', myinterface%steering%year, doy
-         !print*,'----------------------'
+         print*,'----------------------'
+         print*,'YEAR, DOY ', myinterface%steering%year, doy
+         print*,'----------------------'
 
         !----------------------------------------------------------------
         ! FAST TIME STEP
@@ -131,7 +135,7 @@ contains
         ! sum over fast time steps and cohorts
         call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy)  )
         ! print*,'1. vegn%annualGPP ', vegn%annualGPP
-
+ 
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
 

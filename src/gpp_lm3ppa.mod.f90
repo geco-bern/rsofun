@@ -167,7 +167,7 @@ contains
           cc%resl    = -resp         * mol_C * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
           cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
-          ! if (isnan(cc%gpp)) stop '"gpp" is a NaN'
+          !if (isnan(cc%gpp)) stop '"gpp" is a NaN'
 
           else
 
@@ -196,7 +196,7 @@ contains
         vpd_memory  = forcing%vpd
         patm_memory = forcing%P_air
       end if 
-
+      
       co2_memory  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, co2_memory )
       temp_memory = dampen_variability( (forcing%Tair - kTkelvin),  params_gpp%tau_acclim, temp_memory)
       vpd_memory  = dampen_variability( forcing%vpd,                params_gpp%tau_acclim, vpd_memory )
@@ -259,7 +259,7 @@ contains
         print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
 
         if (cc%status == LEAF_ON .and. cc%lai > 0.1 .and. temp_memory > -5.0) then
-          print *, "--- photosynthesis" 
+
           !----------------------------------------------------------------
           ! Get light absorbed by cohort, dividing fAPAR up by crown areas
           !----------------------------------------------------------------
