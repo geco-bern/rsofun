@@ -698,8 +698,8 @@ contains
     vegn%annualN      = 0.0
     vegn%Nloss_yr     = 0.0
     vegn%annualNup    = 0.0
-    ! vegn%n_deadtrees  = 0.0 !xxx
-    ! vegn%c_deadtrees  = 0.0
+    vegn%n_deadtrees  = 0.0 !xxxxxx
+    vegn%c_deadtrees  = 0.0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
@@ -732,7 +732,7 @@ contains
       cc%DBH_ys       = cc%dbh
       cc%Vol_ys       = cc%Volume
       cc%ABG_ys       = cc%bsw+cc%bHW
-      ! cc%n_deadtrees  = 0.0
+      ! cc%n_deadtrees  = 0.0   !xxxxxxxx
       ! cc%c_deadtrees  = 0.0
       cc%m_turnover   = 0.0
     enddo
@@ -774,10 +774,6 @@ contains
     vegn%MaxAge     = 0.0
     vegn%MaxVolume  = 0.0
     vegn%MaxDBH     = 0.0
-    ! vegn%NPPL       = 0.0
-    ! vegn%NPPW       = 0.0
-    ! vegn%n_deadtrees     = 0.0
-    ! vegn%c_deadtrees     = 0.0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
@@ -813,12 +809,6 @@ contains
       if (cc%age    > vegn%MaxAge)       vegn%MaxAge    = cc%age
       if (cc%Volume > vegn%MaxVolume)    vegn%MaxVolume = cc%Volume ! maxloc(cc%age)
       if (cc%dbh    > vegn%MaxDBH)       vegn%MaxDBH    = cc%dbh    ! maxloc(cc%age)
-
-      ! vegn%NPPL      = vegn%NPPL   + fleaf * cc%nindivs
-      ! vegn%NPPW      = vegn%NPPW   + fwood * cc%nindivs
-
-      ! vegn%n_deadtrees = vegn%n_deadtrees + cc%n_deadtrees
-      ! vegn%c_deadtrees = vegn%c_deadtrees + cc%c_deadtrees
 
     enddo
 
@@ -1073,7 +1063,7 @@ contains
 
     !-------local var
     type(cohort_type), pointer :: cc
-    real :: treeG, fseed, fleaf=0, froot,fwood=0,dDBH, dVol
+    real :: treeG, fseed, fleaf=0, froot,fwood=0,dDBH, dVol, deadtrees
     real :: plantC, plantN, soilC, soilN
     integer :: i
 
@@ -1120,6 +1110,8 @@ contains
       cc%Volume = (cc%bsw+cc%bHW)/spdata(cc%species)%rho_wood
       dVol      = (cc%Volume - cc%Vol_ys)
       cc%BA     = pi/4*cc%dbh*cc%dbh
+      ! cc%n_deadtrees   = deadtrees
+      ! cc%c_deadtrees   = deadtrees * (cc%nsc + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW) 
       ! print*, dDBH, "dDBH"
       ! print*, cc%dbh, "cc%dbh"
       ! print*, cc%DBH_ys, "cc%DBH_ys"

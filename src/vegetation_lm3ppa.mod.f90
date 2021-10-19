@@ -803,7 +803,7 @@ contains
           else  
           ! Canopy mortality
             if (cc%bl_max > 0) then
-            deathrate = param_nsc * 0.1 * (exp(-2.5*(cc%nsc/cc%bl_max))/(0.01+exp(-2.5*(cc%nsc/cc%bl_max)))) ! -3.0,-2.5,-2.0
+            deathrate = param_nsc * 0.1 * (exp(-3.5*(cc%nsc/cc%bl_max))/(0.01+exp(-3.5*(cc%nsc/cc%bl_max)))) ! -3.5,-2.5,-1.9
             endif
           endif
 
@@ -823,7 +823,7 @@ contains
           ! deathrate = param_gr * 0.05 *    &
           !                  (1.*exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))/ &
           !                  (1. + exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))))
-          deathrate = param_gr * 0.1 * (exp(0.7*(cc%bsw+cc%bHW-cc%ABG_ys))/(100+exp(0.7*(cc%bsw+cc%bHW-cc%ABG_ys)))) ! 0.6,0.7,0.8
+          deathrate = param_gr * 0.1 * (exp(0.9*(cc%bsw+cc%bHW-cc%ABG_ys))/(100+exp(0.9*(cc%bsw+cc%bHW-cc%ABG_ys)))) ! 0.55,0.7,0.9
           endif
           ! print*, "cc%dbh-cc%DBH_ys", cc%dbh-cc%DBH_ys
           ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys
@@ -851,7 +851,7 @@ contains
                 ! deathrate = param_dbh * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh-1))/  &
                 !            (1. + exp(2.*(cc%dbh-1))))
-                deathrate = min(1.0, param_dbh * 0.1 * cc%dbh ** 2.5) ! 1.5, 2.5, 5.0
+                deathrate = min(1.0, param_dbh * 0.1 * cc%dbh ** 5.0) ! 1.5, 2.5, 5.0
               else
                 deathrate = sp%mortrate_d_c !0.01
               endif
@@ -871,14 +871,20 @@ contains
 
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
+
+        ! cc%n_deadtrees   = deadtrees
+        ! cc%c_deadtrees   = deadtrees * (cc%nsc + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW) 
+
         ! print*, "cc%nindivs", cc%nindivs
-        ! vegn%n_deadtrees = deadtrees
-        ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
+       
         end associate
       enddo
 
       ! Remove the cohorts with very few individuals
       call kill_lowdensity_cohorts( vegn )    
+
+      vegn%n_deadtrees = vegn%n_deadtrees + cc%n_deadtrees
+      vegn%c_deadtrees = vegn%c_deadtrees + cc%c_deadtrees
 
     endif
 
@@ -969,8 +975,8 @@ contains
     cc%m_turnover    = cc%m_turnover + loss_coarse + loss_fine
     ! cc%c_deadtrees   = deadtrees * (cc%nsc + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW) 
     
-    ! vegn%n_deadtrees   = vegn%n_deadtrees + deadtrees
-    ! vegn%c_deadtrees   = vegn%c_deadtrees + deadtrees * (cc%NSC + cc%seedC + cc%bl + cc%br + cc%bsw + cc%bHW)
+    ! vegn%n_deadtrees   = vegn%n_deadtrees + cc%n_deadtrees
+    ! vegn%c_deadtrees   = vegn%c_deadtrees + cc%c_deadtrees
     
     ! ! print*, "vegn%n_deadtrees", vegn%n_deadtrees
     ! print*, "deadtrees", deadtrees

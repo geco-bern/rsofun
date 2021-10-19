@@ -19,6 +19,18 @@ library(scales)
 
 show_col(colorblind_pal()(8))
 
+library(lme4) #lmer model
+library(lmerTest) #p-values
+library(effects) #plot effectslibrary(MuMIn) #r.squaredGLMM
+library(merTools) #predictInterval
+library(lattice) #xyplot
+library(PerformanceAnalytics)
+library(MuMIn)
+library(ggeffects) # plot effects
+library(ggpubr) # ggarrange
+library(ggridges) # stat_density_ridges
+library(PerformanceAnalytics)
+library(sjPlot)
 ```
 
 # Read model outputs
@@ -76,10 +88,15 @@ ggplot() +
   geom_line(data=ea1sa1DBHp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='Control'),alpha=.7) + 
   geom_line(data=ea2sa1DBHp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+15'),alpha=.7) +
   geom_line(data=ea3sa1DBHp1gl_out_annual_tile, aes(x=year, y=c_turnover_time, color='+30'),alpha=.7)
+
+ggplot() + 
+  geom_line(data=ea1sa1DBHp3gl_out_annual_tile, aes(x=year, y=plantC, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1DBHp3gl_out_annual_tile, aes(x=year, y=plantC, color='+15'),alpha=.7) +
+  geom_line(data=ea3sa1DBHp3gl_out_annual_tile, aes(x=year, y=plantC, color='+30'),alpha=.7)
 ```
 
 ### rho_wood - Different species
-```{r}
+```{r, eval=TRUE}
 #ea1sb1DBHgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_hourly_tile.csv")
 #ea1sb1DBHgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_daily_tile.csv")
 #ea1sb1DBHgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1DBHgl_out_daily_cohorts.csv")
@@ -143,6 +160,11 @@ ea3sa1NSCp2gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp
 ea3sa1NSCp2gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp2gl_out_annual_cohorts.csv")
 ea3sa1NSCp3gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp3gl_out_annual_tile.csv")
 ea3sa1NSCp3gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp3gl_out_annual_cohorts.csv")
+
+ggplot() + 
+  geom_line(data=ea1sa1NSCp2gl_out_annual_tile, aes(x=year, y=plantC, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1NSCp2gl_out_annual_tile, aes(x=year, y=plantC, color='+15'),alpha=.7) +
+  geom_line(data=ea3sa1NSCp2gl_out_annual_tile, aes(x=year, y=plantC, color='+30'),alpha=.7)
 
 ```
 
@@ -213,74 +235,21 @@ ea3sa1GRp2gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRp2g
 ea3sa1GRp3gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRp3gl_out_annual_tile.csv")
 ea3sa1GRp3gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1GRp3gl_out_annual_cohorts.csv")
 
+ggplot() + 
+  geom_line(data=subset(ea1sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='Control'),alpha=.7) + 
+  geom_line(data=subset(ea2sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='+15'),alpha=.7) +
+  geom_line(data=subset(ea3sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), color='+30'),alpha=.7)
+
+ggplot() + 
+  geom_line(data=ea1sa1GRp3gl_out_annual_tile, aes(x=year, y=plantC, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1GRp3gl_out_annual_tile, aes(x=year, y=plantC, color='+15'),alpha=.7) +
+  geom_line(data=ea3sa1GRp3gl_out_annual_tile, aes(x=year, y=plantC, color='+30'),alpha=.7)
+
 ```
 
 ### rho_wood - Different species
 
-```{r}
-ea1sb1GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_hourly_tile.csv")
-ea1sb1GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_daily_tile.csv")
-ea1sb1GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_daily_cohorts.csv")
-ea1sb1GRgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_annual_tile.csv")
-ea1sb1GRgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1GRgl_out_annual_cohorts.csv")
-
-ea1sb2GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_hourly_tile.csv")
-ea1sb2GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_daily_tile.csv")
-ea1sb2GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_daily_cohorts.csv")
-ea1sb2GRgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_annual_tile.csv")
-ea1sb2GRgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2GRgl_out_annual_cohorts.csv")
-
-ea1sb3GRgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_hourly_tile.csv")
-ea1sb3GRgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_daily_tile.csv")
-ea1sb3GRgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_daily_cohorts.csv")
-ea1sb3GRgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_annual_tile.csv")
-ea1sb3GRgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3GRgl_out_annual_cohorts.csv")
-
-```
-
 ## CST Mortality gs-leuning 
-
-```{r}
-
-# LUE - Different environmental conditions
-ea1sa1CSTgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_hourly_tile.csv")
-ea1sa1CSTgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_daily_tile.csv")
-ea1sa1CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_daily_cohorts.csv")
-ea1sa1CSTgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_annual_tile.csv")
-ea1sa1CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sa1CSTgl_out_annual_cohorts.csv")
-
-ea2sa1CSTgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1CSTgl_out_hourly_tile.csv")
-ea2sa1CSTgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1CSTgl_out_daily_tile.csv")
-ea2sa1CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1CSTgl_out_daily_cohorts.csv")
-ea2sa1CSTgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1CSTgl_out_annual_tile.csv")
-ea2sa1CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea2sa1CSTgl_out_annual_cohorts.csv")
-
-ea3sa1CSTgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_hourly_tile.csv")
-ea3sa1CSTgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_daily_tile.csv")
-ea3sa1CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_daily_cohorts.csv")
-ea3sa1CSTgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_annual_tile.csv")
-ea3sa1CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1CSTgl_out_annual_cohorts.csv")
-
-# rho_wood - Different species
-ea1sb1CSTgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1CSTgl_out_hourly_tile.csv")
-ea1sb1CSTgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1CSTgl_out_daily_tile.csv")
-ea1sb1CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1CSTgl_out_daily_cohorts.csv")
-ea1sb1CSTgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1CSTgl_out_annual_tile.csv")
-ea1sb1CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb1CSTgl_out_annual_cohorts.csv")
-
-ea1sb2CSTgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2CSTgl_out_hourly_tile.csv")
-ea1sb2CSTgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2CSTgl_out_daily_tile.csv")
-ea1sb2CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2CSTgl_out_daily_cohorts.csv")
-ea1sb2CSTgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2CSTgl_out_annual_tile.csv")
-ea1sb2CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb2CSTgl_out_annual_cohorts.csv")
-
-ea1sb3CSTgl_out_hourly_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_out_hourly_tile.csv")
-ea1sb3CSTgl_out_daily_tile     <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_out_daily_tile.csv")
-ea1sb3CSTgl_out_daily_cohorts  <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_out_daily_cohorts.csv")
-ea1sb3CSTgl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_out_annual_tile.csv")
-ea1sb3CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_out_annual_cohorts.csv")
-
-```
 
 # Creating dataframes for annual tile outputs
 
@@ -288,21 +257,13 @@ ea1sb3CSTgl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea1sb3CSTgl_
 
 ```{r}
 # LUE
-ea1sa1DBHgl_out_annual_tile <- ea1sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW) %>% mutate(mortality_M=c_deadtrees + fastSOM)
+#ea1sa1DBHgl_out_annual_tile <- ea1sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW) %>% mutate(mortality_M=c_deadtrees + fastSOM)
 
-ea1sa1DBHgl_out_annual_cohorts <- ea1sa1DBHgl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = 10)) %>% mutate(ageclass = cut(age ,breaks = 10)) %>% mutate(basalArea = pi*(dbh^2/4)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>%
-  ungroup %>% mutate(highBAclass = cut(highBA ,breaks = c(seq(0,10,2),30),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(1, dim(ea1sa1DBHgl_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1DBHgl_out_annual_cohorts)[1])) %>% mutate(Mortality = rep("DBH", dim(ea1sa1DBHgl_out_annual_cohorts)[1])) #%>% mutate(dbhclass = recode(dbhclass, "(2,5]" = ">2")) %>% mutate(ageclass = recode(ageclass, "(150,500]" = ">150")) %>% mutate(highBAclass = recode(highBAclass, "(10,30]" = ">10"))
+#ea1sa1DBHgl_out_annual_cohorts <- ea1sa1DBHgl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh ,breaks = 10)) %>% mutate(ageclass = cut(age ,breaks = 10)) %>% mutate(basalArea = pi*(dbh^2/4)) %>% group_by(year) %>% mutate(highBA= map_dbl(basalArea,~sum(basalArea[basalArea>=.x]))-basalArea) %>% ungroup %>% mutate(highBAclass = cut(highBA ,breaks = c(seq(0,10,2),30),include.lowest = TRUE)) %>% mutate(LevelLUE = rep(1, dim(ea1sa1DBHgl_out_annual_cohorts)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1DBHgl_out_annual_cohorts)[1])) %>% mutate(Mortality = rep("DBH", dim(ea1sa1DBHgl_out_annual_cohorts)[1])) #%>% mutate(dbhclass = recode(dbhclass, "(2,5]" = ">2")) %>% mutate(ageclass = recode(ageclass, "(150,500]" = ">150")) %>% mutate(highBAclass = recode(highBAclass, "(10,30]" = ">10"))
 
-ea2sa1DBHgl_out_annual_tile <- ea2sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW) %>% mutate(mortality_M=c_deadtrees + fastSOM)
+#ea2sa1DBHgl_out_annual_tile <- ea2sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW) %>% mutate(mortality_M=c_deadtrees + fastSOM)
 
-ea3sa1DBHgl_out_annual_tile <- ea3sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW) %>% mutate(mortality_M=c_deadtrees + fastSOM)
-
-# rho_wood
-ea1sb1DBHgl_out_annual_tile <- ea1sb1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sb1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sb1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-ea1sb2DBHgl_out_annual_tile <- ea1sb2DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sb2DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb2DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(2, dim(ea1sb2DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-ea1sb3DBHgl_out_annual_tile <- ea1sb3DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea1sb3DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb3DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(3, dim(ea1sb3DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+#ea3sa1DBHgl_out_annual_tile <- ea3sa1DBHgl_out_annual_tile %>% mutate(Mortality = rep("DBH", dim(ea3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1DBHgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1DBHgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW) %>% mutate(mortality_M=c_deadtrees + fastSOM)
 
 ```
 
@@ -310,49 +271,22 @@ ea1sb3DBHgl_out_annual_tile <- ea1sb3DBHgl_out_annual_tile %>% mutate(Mortality 
 
 ```{r}
 # LUE
-ea1sa1NSCgl_out_annual_tile <- ea1sa1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea1sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+#ea1sa1NSCgl_out_annual_tile <- ea1sa1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea1sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-ea2sa1NSCgl_out_annual_tile <- ea2sa1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea2sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+#ea2sa1NSCgl_out_annual_tile <- ea2sa1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea2sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-ea3sa1NSCgl_out_annual_tile <- ea3sa1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea3sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-# rho_wood
-ea1sb1NSCgl_out_annual_tile <- ea1sb1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea1sb1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sb1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-ea1sb2NSCgl_out_annual_tile <- ea1sb2NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea1sb2NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb2NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(2, dim(ea1sb2NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-ea1sb3NSCgl_out_annual_tile <- ea1sb3NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea1sb3NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb3NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(3, dim(ea1sb3NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
+#ea3sa1NSCgl_out_annual_tile <- ea3sa1NSCgl_out_annual_tile %>% mutate(Mortality = rep("NSC", dim(ea3sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1NSCgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1NSCgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 ```
 
 ## GR Mortality gs-leuning
 
 ```{r}
 # LUE
-ea1sa1GRgl_out_annual_tile <- ea1sa1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea1sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+#ea1sa1GRgl_out_annual_tile <- ea1sa1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea1sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-ea2sa1GRgl_out_annual_tile <- ea2sa1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea2sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+#ea2sa1GRgl_out_annual_tile <- ea2sa1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea2sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
-ea3sa1GRgl_out_annual_tile <- ea3sa1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea3sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-# rho_wood
-ea1sb1GRgl_out_annual_tile <- ea1sb1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea1sb1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sb1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-ea1sb2GRgl_out_annual_tile <- ea1sb2GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea1sb2GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb2GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(2, dim(ea1sb2GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-ea1sb3GRgl_out_annual_tile <- ea1sb3GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea1sb3GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sb3GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(3, dim(ea1sb3GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-```
-
-## CST Mortality gs-leuning
-
-```{r}
-# LUE
-ea1sa1CSTgl_out_annual_tile <- ea1sa1CSTgl_out_annual_tile %>% mutate(Mortality = rep("CST", dim(ea1sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(1, dim(ea1sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea1sa1CSTgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-ea2sa1CSTgl_out_annual_tile <- ea2sa1CSTgl_out_annual_tile %>% mutate(Mortality = rep("CST", dim(ea2sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(2, dim(ea2sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea2sa1CSTgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
-
-ea3sa1CSTgl_out_annual_tile <- ea3sa1CSTgl_out_annual_tile %>% mutate(Mortality = rep("CST", dim(ea3sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1CSTgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1CSTgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
+#ea3sa1GRgl_out_annual_tile <- ea3sa1GRgl_out_annual_tile %>% mutate(Mortality = rep("GR", dim(ea3sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelLUE = rep(3, dim(ea3sa1GRgl_out_annual_tile)[1])) %>% mutate(LevelWD = rep(1, dim(ea3sa1GRgl_out_annual_tile)[1])) %>% mutate(MaxVolume_MaxAge = MaxVolume/MaxAge) %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) %>% mutate(A_Biomass=WoodC + leafC) %>% mutate(A_NPP=NPPL + NPPW)
 
 ```
 
@@ -375,9 +309,9 @@ theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = elemen
                    plot.title = element_text(size = 11))
 
 fig1a_dbh_calib <- ggplot(data.frame(x = c(0, 1)), aes(x)) + 
-  stat_function(fun = ~ 0.1000000 * 0.1*.x ^ 1.5, col="#009E73") +  
+  stat_function(fun = ~ 0.3075335 * 0.1*.x ^ 1.5, col="#009E73") +  
   stat_function(fun = ~ 0.3075335 * 0.1*.x ^ 2.5, col="#0072B2") + 
-  stat_function(fun = ~ 0.1*.x ^ 5, col="#D55E00") + 
+  stat_function(fun = ~ 0.3075335 * 0.1*.x ^ 5, col="#D55E00") + 
   labs(x='DBH', y='m', title= "a)") +
 theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
                    axis.text = element_text(size = 10),axis.title = element_text(size = 11),
@@ -388,9 +322,9 @@ theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = elemen
 #### NSC
 ```{r}
 fig1a_nsc <- ggplot(data.frame(x = c(0, 5)), aes(x)) + 
-  stat_function(fun = ~ 0.1*(exp(-3.0*.x)/(0.01+exp(-3.0*.x))), col="#009E73") +
+  stat_function(fun = ~ 0.1*(exp(-1.9*.x)/(0.01+exp(-1.9*.x))), col="#009E73") +
   stat_function(fun = ~ 0.1*(exp(-2.5*.x)/(0.01+exp(-2.5*.x))), col="#0072B2") +
-  stat_function(fun = ~ 0.1*(exp(-2.0*.x)/(0.01+exp(-2.0*.x))), col="#D55E00") +
+  stat_function(fun = ~ 0.1*(exp(-3.5*.x)/(0.01+exp(-3.5*.x))), col="#D55E00") +
   labs(x='NSC', y='m',title= "i)") +theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
                      axis.text = element_text(size = 10),axis.title = element_text(size = 11),
@@ -398,9 +332,9 @@ fig1a_nsc <- ggplot(data.frame(x = c(0, 5)), aes(x)) +
                      plot.title = element_text(size = 11)) 
 
 fig1a_nsc_calib <- ggplot(data.frame(x = c(0, 5)), aes(x)) + 
-  stat_function(fun = ~ 1.494771 * 0.1*(exp(-3.0*.x)/(0.01+exp(-3.0*.x))), col="#009E73") +
+  stat_function(fun = ~ 1.494701 * 0.1*(exp(-3.0*.x)/(0.01+exp(-3.0*.x))), col="#009E73") +
   stat_function(fun = ~ 1.494701 * 0.1*(exp(-2.5*.x)/(0.01+exp(-2.5*.x))), col="#0072B2") +
-  stat_function(fun = ~ 0.1*(exp(-2.0*.x)/(0.01+exp(-2.0*.x))), col="#D55E00") +
+  stat_function(fun = ~ 1.494701 * 0.1*(exp(-2.0*.x)/(0.01+exp(-2.0*.x))), col="#D55E00") +
   labs(x='NSC', y='m',title= "i)") +theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
                      axis.text = element_text(size = 10),axis.title = element_text(size = 11),
@@ -410,10 +344,10 @@ fig1a_nsc_calib <- ggplot(data.frame(x = c(0, 5)), aes(x)) +
 
 #### GR
 ```{r}
-fig1a_gr <- ggplot(data.frame(x = c(0, 15)), aes(x)) + 
-  stat_function(fun = ~ 0.1*(exp(0.6*.x)/(100+exp(0.6*.x))), col="#009E73") +
+fig1a_gr <- ggplot(data.frame(x = c(0, 17)), aes(x)) + 
+  stat_function(fun = ~ 0.1*(exp(0.55*.x)/(100+exp(0.55*.x))), col="#009E73") +
   stat_function(fun = ~ 0.1*(exp(0.7*.x)/(100+exp(0.7*.x))), col="#0072B2") +
-  stat_function(fun = ~ 0.1*(exp(0.8*.x)/(100+exp(0.8*.x))), col="#D55E00") +
+  stat_function(fun = ~ 0.1*(exp(0.9*.x)/(100+exp(0.9*.x))), col="#D55E00") +
   labs(x='GR', y='m',title= "q)") +theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
@@ -429,6 +363,7 @@ fig1a_gr_calib <- ggplot(data.frame(x = c(0, 15)), aes(x)) +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11))
+
 ```
 
 ### b) Stand develop: Stand biomass vs. time
@@ -829,7 +764,7 @@ fig1e_nsc <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  scale_x_continuous(limits = c(0,1.75)) + scale_y_continuous(limits = c(0,1.75)) +
+  scale_x_continuous(limits = c(0,3)) + scale_y_continuous(limits = c(0,3)) +
   ggtitle("m)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 ```
 
@@ -911,7 +846,7 @@ fig1e_gr <- ggplot() +
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) + 
-  scale_x_continuous(limits = c(0,0.5)) + scale_y_continuous(limits = c(0,0.5)) +
+  scale_x_continuous(limits = c(0.0,0.5)) + scale_y_continuous(limits = c(0.0,0.5)) +
   ggtitle("u)") + geom_abline(slope=1, intercept = 0.0, linetype="dashed")
 ```
 
@@ -1930,6 +1865,210 @@ leg3 <- get_legend(fig2_leg)
 leg3 <- as_ggplot(leg3)
 ```
 
+```{r}
+
+ea1sa1DBHp1gl_out_annual_tile <- ea1sa1DBHp1gl_out_annual_tile %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = "Control")
+ea2sa1DBHp1gl_out_annual_tile <- ea2sa1DBHp1gl_out_annual_tile %>%
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = "+15%")
+ea3sa1DBHp1gl_out_annual_tile <- ea3sa1DBHp1gl_out_annual_tile %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = "+30%")
+
+data_DBH_p1 <- rbind(ea1sa1DBHp1gl_out_annual_tile, ea2sa1DBHp1gl_out_annual_tile, ea3sa1DBHp1gl_out_annual_tile) 
+
+data_DBH_p1 <- data_DBH_p1 %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 20)) 
+
+sort(unique(data_DBH_p1$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_DBH_p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_DBH_p1 <- data_DBH_p1 %>% left_join(quantileX)
+data_DBH_p1Den <- data_DBH_p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_p1Rest <- data_DBH_p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ggplot() + 
+  geom_point(data = data_DBH_p1, aes(x = log(QMD), y = log(Density12)), color="blue") +
+  geom_point(data = data_DBH_p1Den, aes(x = log(QMD), y = log(Density12)), color="red") 
+
+data_DBH_p1Den <- data_DBH_p1Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_DBH_p1Rest <- data_DBH_p1Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+### 75th percentile
+Fit_QMDInter = lmer(logDensity12 ~ scale(logQMD) * LUE + (1|X), data = data_DBH_p1Den, na.action = "na.exclude")
+Fit_QMDNoInter = lmer(logDensity12 ~ scale(logQMD) + LUE + (1|X), data = data_DBH_p1Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+r.squaredGLMM(Fit_QMDInter)
+plot(allEffects(Fit_QMDInter))
+plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                         terms = c("logQMD","LUE"),title = "",
+                         axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
+                         colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  geom_point(data = data_DBH_p1Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) 
+
+# Analysis of residuals
+ResG <- residuals(Fit_QMDInter)
+FittedG <- fitted(Fit_QMDInter)
+par(mfrow=c(2,2))
+plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
+abline(h=0) ## Homocedasticity
+plot(data_DBH_p1Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
+abline(0, 1) 
+hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
+boxplot(ResG,ylab = "Residuals")
+
+```
+
+```{r}
+
+ea1sa1DBHp2gl_out_annual_tile <- ea1sa1DBHp2gl_out_annual_tile %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "Control")
+ea2sa1DBHp2gl_out_annual_tile <- ea2sa1DBHp2gl_out_annual_tile %>%
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "+15%")
+ea3sa1DBHp2gl_out_annual_tile <- ea3sa1DBHp2gl_out_annual_tile %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "+30%")
+
+data_DBH_p2 <- rbind(ea1sa1DBHp2gl_out_annual_tile, ea2sa1DBHp2gl_out_annual_tile, ea3sa1DBHp2gl_out_annual_tile) 
+
+data_DBH_p2 <- data_DBH_p2 %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 20)) 
+
+sort(unique(data_DBH_p2$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_DBH_p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_DBH_p2 <- data_DBH_p2 %>% left_join(quantileX)
+data_DBH_p2Den <- data_DBH_p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_p2Rest <- data_DBH_p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ggplot() + 
+  geom_point(data = data_DBH_p2, aes(x = log(QMD), y = log(Density12)), color="blue") +
+  geom_point(data = data_DBH_p2Den, aes(x = log(QMD), y = log(Density12)), color="red") 
+
+data_DBH_p2Den <- data_DBH_p2Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_DBH_p2Rest <- data_DBH_p2Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+### 75th percentile
+Fit_QMDInter = lmer(logDensity12 ~ scale(logQMD) * LUE + (1|X), data = data_DBH_p2Den, na.action = "na.exclude")
+Fit_QMDNoInter = lmer(logDensity12 ~ scale(logQMD) + LUE + (1|X), data = data_DBH_p2Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+r.squaredGLMM(Fit_QMDNoInter)
+plot(allEffects(Fit_QMDNoInter))
+plot_model(Fit_QMDNoInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                         terms = c("logQMD","LUE"),title = "",
+                         axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
+                         colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  geom_point(data = data_DBH_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) 
+
+# Analysis of residuals
+ResG <- residuals(Fit_QMDNoInter)
+FittedG <- fitted(Fit_QMDNoInter)
+par(mfrow=c(2,2))
+plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
+abline(h=0) ## Homocedasticity
+plot(data_DBH_p2Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
+abline(0, 1) 
+hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
+boxplot(ResG,ylab = "Residuals")
+
+```
+
+```{r}
+
+ea1sa1DBHp3gl_out_annual_tile <- ea1sa1DBHp3gl_out_annual_tile %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "Control")
+ea2sa1DBHp3gl_out_annual_tile <- ea2sa1DBHp3gl_out_annual_tile %>%
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "+15%")
+ea3sa1DBHp3gl_out_annual_tile <- ea3sa1DBHp3gl_out_annual_tile %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "+30%")
+
+data_DBH_p3 <- rbind(ea1sa1DBHp3gl_out_annual_tile, ea2sa1DBHp3gl_out_annual_tile, ea3sa1DBHp3gl_out_annual_tile) 
+
+data_DBH_p3 <- data_DBH_p3 %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 20)) 
+
+sort(unique(data_DBH_p3$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_DBH_p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_DBH_p3 <- data_DBH_p3 %>% left_join(quantileX)
+data_DBH_p3Den <- data_DBH_p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_p3Rest <- data_DBH_p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ggplot() + 
+  geom_point(data = data_DBH_p3, aes(x = log(QMD), y = log(Density12)), color="blue") +
+  geom_point(data = data_DBH_p3Den, aes(x = log(QMD), y = log(Density12)), color="red") 
+
+data_DBH_p3Den <- data_DBH_p3Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_DBH_p3Rest <- data_DBH_p3Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+### 75th percentile
+Fit_QMDInter = lmer(logDensity12 ~ scale(logQMD) * LUE + (1|X), data = data_DBH_p3Den, na.action = "na.exclude")
+Fit_QMDNoInter = lmer(logDensity12 ~ scale(logQMD) + LUE + (1|X), data = data_DBH_p3Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+r.squaredGLMM(Fit_QMDNoInter)
+plot(allEffects(Fit_QMDNoInter))
+plot_model(Fit_QMDNoInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                         terms = c("logQMD","LUE"),title = "",
+                         axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
+                         colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  geom_point(data = data_DBH_p3Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) 
+
+# Analysis of residuals
+ResG <- residuals(Fit_QMDNoInter)
+FittedG <- fitted(Fit_QMDNoInter)
+par(mfrow=c(2,2))
+plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
+abline(h=0) ## Homocedasticity
+plot(data_DBH_p3Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
+abline(0, 1) 
+hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
+boxplot(ResG,ylab = "Residuals")
+
+```
+
 #### NSC 
 ```{r, fig.width = 7, fig.height = 5}
 fig2d_nsc <- ggplot() + 
@@ -2066,32 +2205,17 @@ fig2i_gr <- ggplot() +
         plot.title = element_text(size = 11)) + ggtitle("i)") #+ 
   #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
   #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
+ggplot() + 
+  geom_point(data= subset(ea1sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),size=1,col="grey") + 
+  geom_point(data=subset(ea2sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),size=1,col="black") + 
+  geom_smooth(data= subset(ea1sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),col="#D55E00",linetype='dashed',
+              method = "lm",fullrange = T) + 
+  geom_smooth(data= subset(ea2sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),col="#D55E00",linetype='solid',
+              method = "lm",fullrange = T) 
 ```
 
 ### Arrange plots
-
-#### DBH
-```{r, include=F, eval=T,fig.height=6,fig.width=12}
-ggarrange(fig1a_dbh,fig1b_dbh,fig1c_dbh,fig1d_dbh,fig1e_dbh,fig1f_dbh,fig1g_dbh,fig1h_dbh, ncol = 4, nrow = 2, common.legend = T,legend="bottom")
-
-#fig1a_dbh + fig1b_dbh + fig1c_dbh + fig1d_dbh + fig1e_dbh
-
-ggsave("plots_dbh.png", width = 12, height = 6, device='tiff', dpi=300)
-```
-
-#### NSC
-```{r, include=F, eval=T,fig.height=6,fig.width=12}
-ggarrange(fig1a_nsc,fig1b_nsc,fig1c_nsc,fig1d_nsc,fig1e_nsc,fig1f_nsc,fig1g_nsc,fig1h_nsc, ncol = 4, nrow = 2, common.legend = T,legend="bottom")
-
-ggsave("plots_nsc.png", width = 12, height = 6, device='tiff', dpi=300)
-```
-
-#### GR
-```{r, include=F, eval=T,fig.height=6,fig.width=12}
-ggarrange(fig1a_gr,fig1b_gr,fig1c_gr,fig1d_gr,fig1e_gr,fig1f_gr,fig1g_gr,fig1h_gr, ncol = 4, nrow = 2, common.legend = T,legend="none")
-
-ggsave("plots_gr.png", width = 12, height = 6, device='tiff', dpi=300)
-```
 
 #### Figure 1
 ```{r, include=F, eval=T,fig.height=18,fig.width=12}
@@ -2099,15 +2223,10 @@ fig1 <- ggarrange(fig1a_dbh,fig1b_dbh,fig1c_dbh,fig1d_dbh,fig1e_dbh,fig1f_dbh,fi
           fig1a_nsc,fig1b_nsc,fig1c_nsc,fig1d_nsc,fig1e_nsc,fig1f_nsc,fig1g_nsc,fig1h_nsc,
           fig1a_gr,fig1b_gr,fig1c_gr,fig1d_gr,fig1e_gr,fig1f_gr,fig1g_gr,fig1h_gr,
           ncol = 4, nrow = 6, common.legend = T,legend="none")
-fig1 <- ggarrange(fig1a_dbh_calib,fig1b_dbh,fig1c_dbh,fig1d_dbh,fig1e_dbh,fig1f_dbh,fig1g_dbh,fig1h_dbh,
-          fig1a_nsc_calib,fig1b_nsc,fig1c_nsc,fig1d_nsc,fig1e_nsc,fig1f_nsc,fig1g_nsc,fig1h_nsc,
-          fig1a_gr_calib,fig1b_gr,fig1c_gr,fig1d_gr,fig1e_gr,fig1f_gr,fig1g_gr,fig1h_gr,
-          ncol = 4, nrow = 6, common.legend = T,legend="none")
 legs <- ggarrange(leg1,leg2, ncol = 2, nrow = 1,align = "h")
 
 ggarrange(fig1,legs, ncol = 1, nrow = 2,align = "v",heights = c(1,0.05))
-
-ggsave("figure1.png", width = 12, height = 17, device='tiff', dpi=300)
+ggsave("~/rsofun/vignettes_add/figure1.png", width = 12, height = 17, dpi=300)
 ```
 
 #### Figure 2
@@ -2118,8 +2237,294 @@ fig2 <- ggarrange(fig2a_dbh,fig2b_dbh,fig2c_dbh,
           ncol = 3, nrow = 3, common.legend = T,legend="none")
 
 ggarrange(fig2,leg3, ncol = 1, nrow = 2,align = "v",heights = c(1,0.05))
+ggsave("~/rsofun/vignettes_add/figure2.png", width = 10, height = 10, dpi=300)
+```
 
-ggsave("figure2.png", width = 10, height = 10, device='tiff', dpi=300)
+
+### Distribution of tree sizes
+
+From annual_cohort_output: dbh class 
+
+```{r, fig.width = 6, fig.height = 9}
+
+# DBH param 1
+ea1sa1DBHp1gl_out_annual_cohorts <- ea1sa1DBHp1gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = 1)
+ea2sa1DBHp1gl_out_annual_cohorts <- ea2sa1DBHp1gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>%  
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = 2)
+ea3sa1DBHp1gl_out_annual_cohorts <- ea3sa1DBHp1gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>%  
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = 3)
+
+# DBH param 2
+ea1sa1DBHp2gl_out_annual_cohorts <- ea1sa1DBHp2gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = 1)
+ea2sa1DBHp2gl_out_annual_cohorts <- ea2sa1DBHp2gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>%  
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = 2)
+ea3sa1DBHp2gl_out_annual_cohorts <- ea3sa1DBHp2gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = 3)
+
+# DBH param 3
+ea1sa1DBHp3gl_out_annual_cohorts <- ea1sa1DBHp3gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = 1)
+ea2sa1DBHp3gl_out_annual_cohorts <- ea2sa1DBHp3gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = 2)
+ea3sa1DBHp3gl_out_annual_cohorts <- ea3sa1DBHp3gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = 3)
+
+# NSC param 1
+ea1sa1NSCp1gl_out_annual_cohorts <- ea1sa1NSCp1gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = 1)
+ea2sa1NSCp1gl_out_annual_cohorts <- ea2sa1NSCp1gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = 2)
+ea3sa1NSCp1gl_out_annual_cohorts <- ea3sa1NSCp1gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = 3)
+
+# NSC param 2
+ea1sa1NSCp2gl_out_annual_cohorts <- ea1sa1NSCp2gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = 1)
+ea2sa1NSCp2gl_out_annual_cohorts <- ea2sa1NSCp2gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = 2)
+ea3sa1NSCp2gl_out_annual_cohorts <- ea3sa1NSCp2gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = 3)
+
+# NSC param 3
+ea1sa1NSCp3gl_out_annual_cohorts <- ea1sa1NSCp3gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = 1)
+ea2sa1NSCp3gl_out_annual_cohorts <- ea2sa1NSCp3gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = 2)
+ea3sa1NSCp3gl_out_annual_cohorts <- ea3sa1NSCp3gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = 3)
+
+# GR param 1
+ea1sa1GRp1gl_out_annual_cohorts <- ea1sa1GRp1gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = 1)
+ea2sa1GRp1gl_out_annual_cohorts <- ea2sa1GRp1gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = 2)
+ea3sa1GRp1gl_out_annual_cohorts <- ea3sa1GRp1gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = 3)
+
+# GR param 2
+ea1sa1GRp2gl_out_annual_cohorts <- ea1sa1GRp2gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = 1)
+ea2sa1GRp2gl_out_annual_cohorts <- ea2sa1GRp2gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = 2)
+ea3sa1GRp2gl_out_annual_cohorts <- ea3sa1GRp2gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = 3)
+
+# GR param 3
+ea1sa1GRp3gl_out_annual_cohorts <- ea1sa1GRp3gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = 1)
+ea2sa1GRp3gl_out_annual_cohorts <- ea2sa1GRp3gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = 2)
+ea3sa1GRp3gl_out_annual_cohorts <- ea3sa1GRp3gl_out_annual_cohorts %>% mutate(dbhclass = cut(dbh, breaks = c(0,12,40,60,80,100,120,140,160,200,400,600))) %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = 3)
+
+alldata <- rbind(ea1sa1DBHp1gl_out_annual_cohorts,ea2sa1DBHp1gl_out_annual_cohorts,ea3sa1DBHp1gl_out_annual_cohorts,
+                 ea1sa1DBHp2gl_out_annual_cohorts,ea2sa1DBHp2gl_out_annual_cohorts,ea3sa1DBHp2gl_out_annual_cohorts,
+                 ea1sa1DBHp3gl_out_annual_cohorts,ea2sa1DBHp3gl_out_annual_cohorts,ea3sa1DBHp3gl_out_annual_cohorts,
+                 ea1sa1NSCp1gl_out_annual_cohorts,ea2sa1NSCp1gl_out_annual_cohorts,ea3sa1NSCp1gl_out_annual_cohorts,
+                 ea1sa1NSCp2gl_out_annual_cohorts,ea2sa1NSCp2gl_out_annual_cohorts,ea3sa1NSCp2gl_out_annual_cohorts,
+                 ea1sa1NSCp3gl_out_annual_cohorts,ea2sa1NSCp3gl_out_annual_cohorts,ea3sa1NSCp3gl_out_annual_cohorts,
+                 ea1sa1GRp1gl_out_annual_cohorts,ea2sa1GRp1gl_out_annual_cohorts,ea3sa1GRp1gl_out_annual_cohorts,
+                 ea1sa1GRp2gl_out_annual_cohorts,ea2sa1GRp2gl_out_annual_cohorts,ea3sa1GRp2gl_out_annual_cohorts,
+                 ea1sa1GRp3gl_out_annual_cohorts,ea2sa1GRp3gl_out_annual_cohorts,ea3sa1GRp3gl_out_annual_cohorts)
+
+fig3 <- alldata %>%
+  filter(dbhclass != "(0,12]") %>% 
+  ggplot() + geom_bar(aes(fill=as.factor(LUE), x=dbhclass, y=density), position="dodge", stat="identity") +
+    labs(x = "DBH class (m)", y = expression(paste("Stand density (indiv", " " ,ha^-1, ") "))) +
+    scale_fill_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  facet_grid(Mortality ~ Parameter) 
+
+ggsave("~/rsofun/vignettes_add/figure3.png", width = 18, height = 11, dpi=300)
+
+```
+
+### CUE vs dbh or height
+```{r}
+ggplot() + 
+  geom_line(data=ea1sa1DBHp3gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
+  geom_line(data=ea1sa1DBHp2gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
+  geom_line(data=ea1sa1DBHp1gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "DBH - LUE control")
+
+ggplot() + 
+  geom_line(data=ea2sa1DBHp3gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
+  geom_line(data=ea2sa1DBHp2gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
+  geom_line(data=ea2sa1DBHp1gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "DBH - LUE +15%")
+
+ggplot() + 
+  geom_line(data=ea3sa1DBHp3gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
+  geom_line(data=ea3sa1DBHp2gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
+  geom_line(data=ea3sa1DBHp1gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "DBH - LUE +30%")
+
+#NSC 
+ggplot() + 
+  geom_line(data=ea1sa1NSCp3gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
+  geom_line(data=ea1sa1NSCp2gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
+  geom_line(data=ea1sa1NSCp1gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "NSC - LUE control")
+
+ggplot() + 
+  geom_line(data=ea2sa1NSCp3gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
+  geom_line(data=ea2sa1NSCp2gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
+  geom_line(data=ea2sa1NSCp1gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "NSC - LUE +15%")
+
+ggplot() + 
+  geom_line(data=ea3sa1NSCp3gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
+  geom_line(data=ea3sa1NSCp2gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
+  geom_line(data=ea3sa1NSCp1gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "NSC - LUE +30%")
+
+#GR 
+ggplot() + 
+  geom_line(data=ea1sa1GRp3gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
+  geom_line(data=ea1sa1GRp2gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
+  geom_line(data=ea1sa1GRp1gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "GR - LUE control")
+
+ggplot() + 
+  geom_line(data=ea2sa1GRp3gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
+  geom_line(data=ea2sa1GRp2gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
+  geom_line(data=ea2sa1GRp1gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "GR - LUE +15%")
+
+ggplot() + 
+  geom_line(data=ea3sa1GRp3gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
+  geom_line(data=ea3sa1GRp2gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
+  geom_line(data=ea3sa1GRp1gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "GR - LUE +30%")
+
+fig4 <- alldata %>%
+  ggplot() + geom_line(aes(color=as.factor(LUE), x=dbh, y=NPP_yr/GPP_yr), alpha=.5) +
+    labs(x = "DBH (m)", y = "CUE") +
+    scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  facet_grid(Mortality ~ Parameter) 
+
+ggsave("~/rsofun/vignettes_add/figure4.png", width = 11, height = 8, dpi=300)
+
 ```
 
 ## RHO_WOOD levels
