@@ -81,7 +81,7 @@ contains
         runningval = sum(valbuf((lenval-lenper+1):lenval))/inow
       end if
     else
-      stop 'RUNNING: declare valid method.'
+      ! stop 'RUNNING: declare valid method.'
     end if
 
   end function running
@@ -1081,7 +1081,7 @@ contains
       root(1) = (-b + d)/(2.0*c)    ! first root
       root(2) = (-b - d)/(2.0*c)    ! second root
     else                            ! complex roots
-      stop 'findroot_quadratic(): There is no real root.'
+      ! stop 'findroot_quadratic(): There is no real root.'
     end if
 
   end function findroot_quadratic

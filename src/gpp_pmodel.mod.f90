@@ -198,7 +198,7 @@ contains
       end if
 
       ! simple:
-      if (nlu > 1) stop 'gpp: think about nlu > 1'
+      ! if (nlu > 1) stop 'gpp: think about nlu > 1'
       lu = 1
 
       !----------------------------------------------------------------
