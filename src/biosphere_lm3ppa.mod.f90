@@ -26,6 +26,7 @@ contains
     !----------------------------------------------------------------
     use md_interface_lm3ppa, only: myinterface, outtype_biosphere  
     use md_gpp_lm3ppa, only: getpar_modl_gpp
+
     ! return variable
     type(outtype_biosphere) :: out_biosphere
 
@@ -70,9 +71,10 @@ contains
       ! module-specific parameter specification
       call getpar_modl_gpp()
 
-      year0 = myinterface%climate(1)%year  ! forcingData(1)%year
+      year0  = myinterface%climate(1)%year  ! forcingData(1)%year
+
       iyears = 1
-      idoy = 0
+      idoy   = 0
       idays  = 0
 
     endif 
