@@ -147,8 +147,8 @@ contains
     patm_memory = dampen_variability( climate_acclimation%dpatm, params_gpp%tau_acclim, patm_memory )
     ppfd_memory = dampen_variability( climate_acclimation%dppfd, params_gpp%tau_acclim, ppfd_memory )
 
-    ! separate time scale for minimum temperature stress
-    tmin_memory = dampen_variability( climate_acclimation%dtmin, params_gpp%tau_acclim_tempstress, tmin_memory )
+    ! ! separate time scale for minimum temperature stress
+    ! tmin_memory = dampen_variability( climate_acclimation%dtmin, params_gpp%tau_acclim_tempstress, tmin_memory )
 
     ! if (count < 5) print*,'B count, tau_acclim_tempstress, dtmin, tmin_memory', count, params_gpp%tau_acclim_tempstress, climate_acclimation%dtmin, tmin_memory
 
@@ -164,7 +164,7 @@ contains
       !----------------------------------------------------------------
       ! take the slowly varying temperature for governing quantum yield variations
       ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 ) & 
-        * calc_ftemp_kphio_tmin( tmin_memory, params_gpp%par_shape_tempstress )
+        * calc_ftemp_kphio_tmin( climate_acclimation%dtmin, params_gpp%par_shape_tempstress )
 
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
