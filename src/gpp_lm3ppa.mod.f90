@@ -167,7 +167,7 @@ contains
           cc%resl    = -resp         * mol_C * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
           cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
-          if (isnan(cc%gpp)) stop '"gpp" is a NaN'
+          !if (isnan(cc%gpp)) stop '"gpp" is a NaN'
 
           else
 
@@ -183,6 +183,7 @@ contains
       enddo
 
     else if (trim(myinterface%params_siml%method_photosynth) == "pmodel") then
+    
       !===========================================================
       ! P-model
       !-----------------------------------------------------------
@@ -195,9 +196,9 @@ contains
         vpd_memory  = forcing%vpd
         patm_memory = forcing%P_air
       end if 
-
+      
       co2_memory  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, co2_memory )
-      temp_memory = dampen_variability( (forcing%Tair - kTkelvin),  params_gpp%tau_acclim, temp_memory )
+      temp_memory = dampen_variability( (forcing%Tair - kTkelvin),  params_gpp%tau_acclim, temp_memory)
       vpd_memory  = dampen_variability( forcing%vpd,                params_gpp%tau_acclim, vpd_memory )
       patm_memory = dampen_variability( forcing%P_air,              params_gpp%tau_acclim, patm_memory )
 
@@ -242,7 +243,7 @@ contains
       ! fraction of light absorbed by layer
       do i=1,layer
         f_apar(i) = f_light(i) - f_light(i+1)
-        if (f_apar(i) < 0.0 ) stop 'negative fapar'
+        ! if (f_apar(i) < 0.0 ) stop 'negative fapar'
       end do
 
       !----------------------------------------------------------------
@@ -255,15 +256,15 @@ contains
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
 
-        ! print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
+        print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
 
         if (cc%status == LEAF_ON .and. cc%lai > 0.1 .and. temp_memory > -5.0) then
 
           !----------------------------------------------------------------
-          ! Get light aborbed by cohort, dividing fAPAR up by crown areas
+          ! Get light absorbed by cohort, dividing fAPAR up by crown areas
           !----------------------------------------------------------------
           layer = max(1, min(cc%layer,9))
-          fapar_tree = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown 
+          fapar_tree = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown
 
           !----------------------------------------------------------------
           ! P-model call for C3 plants to get a list of variables that are 
@@ -346,7 +347,7 @@ contains
 
     else
 
-      print*,'WARNING: gpp(): myinterface%params_siml%method_photosynth not recognized'
+      !print*,'WARNING: gpp(): myinterface%params_siml%method_photosynth not recognized'
 
     end if
 

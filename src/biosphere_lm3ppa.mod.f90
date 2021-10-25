@@ -15,7 +15,7 @@ module md_biosphere_lm3ppa
 
 contains
 
-  subroutine biosphere_annual(out_biosphere, stat)
+  subroutine biosphere_annual(out_biosphere)
     !////////////////////////////////////////////////////////////////
     ! function BIOSPHERE_annual calculates net ecosystem exchange (nee)
     ! in response to environmental boundary conditions (atmospheric 
@@ -29,7 +29,6 @@ contains
 
     ! return variable
     type(outtype_biosphere) :: out_biosphere
-    integer, intent(out) :: stat
 
     ! ! local variables
     integer :: dm, moy, doy
@@ -73,6 +72,7 @@ contains
       call getpar_modl_gpp()
 
       year0  = myinterface%climate(1)%year  ! forcingData(1)%year
+
       iyears = 1
       idoy   = 0
       idays  = 0
@@ -95,9 +95,9 @@ contains
         doy = doy + 1
         idoy = idoy + 1
 
-        if (verbose) print*,'----------------------'
-        if (verbose) print*,'YEAR, DOY ', myinterface%steering%year, doy
-        if (verbose) print*,'----------------------'
+         print*,'----------------------'
+         print*,'YEAR, DOY ', myinterface%steering%year, doy
+         print*,'----------------------'
 
         !----------------------------------------------------------------
         ! FAST TIME STEP
@@ -137,7 +137,7 @@ contains
         ! sum over fast time steps and cohorts
         call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy)  )
         ! print*,'1. vegn%annualGPP ', vegn%annualGPP
-
+ 
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
 
@@ -192,16 +192,7 @@ contains
     ! Re-organize cohorts
     !---------------------------------------------
     ! print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
-    
-    ! Raise exception on cohort deaths (final)
-    ! requires to set a integer index value which is checked for
-    ! exit the call using a return statement <- 
-    ! so this once more can be passed on to the main routine
-    ! after a check
-    call kill_lowdensity_cohorts( vegn, stat)
-    if(stat /= 0) then
-      return
-    endif
+    call kill_lowdensity_cohorts( vegn )
     
     ! print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call relayer_cohorts( vegn )
@@ -229,7 +220,7 @@ contains
 
     end if
 
-    if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
+    ! print*,'Done with biosphere for this year. Guete Rutsch!'
 
   end subroutine biosphere_annual
 

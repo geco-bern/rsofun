@@ -190,7 +190,7 @@ contains
         
         case default
 
-          stop 'PMODEL: select valid method'
+          ! stop 'PMODEL: select valid method'
 
       end select
 
@@ -289,7 +289,7 @@ contains
 
     else
 
-      stop 'PMODEL: select valid method'
+      ! stop 'PMODEL: select valid method'
 
     end if
 
@@ -627,7 +627,7 @@ contains
     if (mprime > 0) then
       mprime = sqrt(mprime)
     else
-      print*,'negative mprime (', mprime, '). Setting to zero.'
+      ! print*,'negative mprime (', mprime, '). Setting to zero.'
       mprime = 0.0
     end if 
     
