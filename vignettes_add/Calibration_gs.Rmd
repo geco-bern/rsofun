@@ -714,8 +714,7 @@ save(settings_calib_CST_gs, file = "~/rsofun/input_data/settings_calib_CST_gs.RD
 ### Evaluate the model
 
 #### DBH mortality
-
-##### DBH param 1,2,3 - Calibration for param 2
+DBH param 1,2,3 - Calibration for param 2
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
@@ -741,6 +740,12 @@ df_calib_DBH_gs$data[[1]]$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
+
+df_calib_DBH_gs$data[[1]]$output_annual_tile %>% 
+  filter(year>=1400) %>% 
+  ggplot() +
+  geom_point(aes(x = log(QMD), y = log(Density12))) +
+  theme_classic()+labs(x = "QMD", y = "Density12")
 
 df_mod <- df_calib_DBH_gs$data[[1]]$output_annual_tile %>% 
     tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
@@ -772,8 +777,7 @@ ggarrange(precalibDBH,postcalibDBH,ncol = 2, nrow = 1,align = "v")
 ```
 
 #### NSC mortality
-
-##### NSC param 1,2,3 - Calibration for param 2
+NSC param 1,2,3 - Calibration for param 2
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_NSC_gs.RData")
@@ -799,6 +803,26 @@ df_calib_NSC_gs$data[[1]]$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
+
+df_calib_NSC_gs$data[[1]]$output_annual_tile %>%
+  tail(700) %>% 
+  ggplot() +
+  geom_line(aes(x = DBH12, y = Density12)) +
+  theme_classic()+labs(x = "DBH12", y = "Density12")
+
+df_calib_NSC_gs$data[[1]]$output_annual_cohorts %>%
+  filter(dbh > 12) %>% 
+  ggplot() +
+  geom_line(aes(x = dbh, y = density)) +
+  theme_classic()+labs(x = "dbh", y = "density")
+
+df_calib_NSC_gs$data[[1]]$output_annual_cohorts %>%
+  filter(dbh > 12) %>% 
+  ggplot() +
+  geom_line(aes(x = dbh, y = NPP_yr/GPP_yr)) +
+  theme_classic()+labs(x = "dbh", y = "CUE")
+
+zzz <- df_calib_NSC_gs$data[[1]]$output_annual_cohorts
 
 df_mod <- df_calib_NSC_gs$data[[1]]$output_annual_tile %>% 
     tail(df_drivers$params_siml[[1]]$nyeartrend) %>% 
@@ -831,8 +855,7 @@ ggarrange(precalibNSC,postcalibNSC,ncol = 2, nrow = 1,align = "v")
 ```
 
 #### GR mortality
-
-##### GR param 1,2,3 - Calibration for param 2
+GR param 1,2,3 - Calibration for param 2
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_GR_gs.RData")

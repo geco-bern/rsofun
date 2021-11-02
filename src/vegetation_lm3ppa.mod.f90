@@ -117,7 +117,7 @@ contains
     !NSCtarget = 3.0 * (cc%bl_max + cc%br_max)
     fnsc = 1.0 ! min(max(0.0,cc%nsc/NSCtarget),1.0)
     ! Acambium = PI * cc%DBH * cc%height * 1.2 ! see Weng et al. 2015: Acambium~D^1.5 -> H~D^0.5 and D*H is proportional to D^1.5
-    exp_acambium = 1.5 !(1.5 - 2) Use this exponent to make Acambium~D^2. Ensheng suggested range 1.5 to 2.
+    exp_acambium = 2.0 !(1.5 - 2) Use this exponent to make Acambium~D^2. Ensheng suggested range 1.5 to 2.
     Acambium = PI * cc%DBH ** exp_acambium * cc%height * 1.2
 
     ! Facultive Nitrogen fixation
@@ -803,7 +803,8 @@ contains
           else  
           ! Canopy mortality
             if (cc%bl_max > 0) then
-            deathrate = param_nsc * 0.1 * (exp(-3.5*(cc%nsc/cc%bl_max))/(0.01+exp(-3.5*(cc%nsc/cc%bl_max)))) ! -3.5,-2.5,-1.9
+            ! deathrate = param_nsc * 0.1 * (exp(-1.9*(cc%nsc/cc%bl_max))/(0.01+exp(-1.9*(cc%nsc/cc%bl_max)))) ! -1.9,-2.5,-3.5 cc%nsc/cc%resp
+            deathrate = param_nsc * 0.1/(1+(exp(3*((cc%nsc/cc%bl_max)-2.5)))) ! 2, 3, 5
             endif
           endif
 
@@ -823,7 +824,8 @@ contains
           ! deathrate = param_gr * 0.05 *    &
           !                  (1.*exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))/ &
           !                  (1. + exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))))
-          deathrate = param_gr * 0.1 * (exp(0.9*(cc%bsw+cc%bHW-cc%ABG_ys))/(100+exp(0.9*(cc%bsw+cc%bHW-cc%ABG_ys)))) ! 0.55,0.7,0.9
+          ! deathrate = param_gr * 0.1 * (exp(0.9*(cc%bsw+cc%bHW-cc%ABG_ys))/(100+exp(0.9*(cc%bsw+cc%bHW-cc%ABG_ys)))) ! 0.55,0.7,0.9
+          deathrate = param_gr * 0.1/(1+(exp(-0.5*((cc%bsw+cc%bHW-cc%ABG_ys)-10)))) ! -0.5, -0.8, -1.4
           endif
           ! print*, "cc%dbh-cc%DBH_ys", cc%dbh-cc%DBH_ys
           ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys

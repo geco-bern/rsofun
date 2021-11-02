@@ -162,9 +162,9 @@ ea3sa1NSCp3gl_out_annual_tile    <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp
 ea3sa1NSCp3gl_out_annual_cohorts <- read.csv("~/rsofun/outputs_lm3ppa/ea3sa1NSCp3gl_out_annual_cohorts.csv")
 
 ggplot() + 
-  geom_line(data=ea1sa1NSCp2gl_out_annual_tile, aes(x=year, y=plantC, color='Control'),alpha=.7) + 
-  geom_line(data=ea2sa1NSCp2gl_out_annual_tile, aes(x=year, y=plantC, color='+15'),alpha=.7) +
-  geom_line(data=ea3sa1NSCp2gl_out_annual_tile, aes(x=year, y=plantC, color='+30'),alpha=.7)
+  geom_line(data=ea1sa1NSCp3gl_out_annual_tile, aes(x=year, y=plantC, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1NSCp3gl_out_annual_tile, aes(x=year, y=plantC, color='+15'),alpha=.7) +
+  geom_line(data=ea3sa1NSCp3gl_out_annual_tile, aes(x=year, y=plantC, color='+30'),alpha=.7)
 
 ```
 
@@ -245,6 +245,11 @@ ggplot() +
   geom_line(data=ea2sa1GRp3gl_out_annual_tile, aes(x=year, y=plantC, color='+15'),alpha=.7) +
   geom_line(data=ea3sa1GRp3gl_out_annual_tile, aes(x=year, y=plantC, color='+30'),alpha=.7)
 
+ggplot() + 
+  geom_line(data=ea1sa1GRp1gl_out_annual_tile, aes(x=year, y=plantC, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1GRp1gl_out_annual_tile, aes(x=year, y=plantC, color='+15'),alpha=.7) +
+  geom_line(data=ea3sa1GRp1gl_out_annual_tile, aes(x=year, y=plantC, color='+30'),alpha=.7)
+
 ```
 
 ### rho_wood - Different species
@@ -298,10 +303,10 @@ ggplot() +
 
 #### DBH
 ```{r}
-fig1a_dbh <- ggplot(data.frame(x = c(0, 1)), aes(x)) + 
+fig1a_dbh <- ggplot(data.frame(x = c(0, 1.05)), aes(x)) + 
   stat_function(fun = ~ 0.1*.x ^ 1.5, col="#009E73") +  
   stat_function(fun = ~ 0.1*.x ^ 2.5, col="#0072B2") + 
-  stat_function(fun = ~ 0.1*.x ^ 5, col="#D55E00") + 
+  stat_function(fun = ~ 0.1*.x ^ 4.0, col="#D55E00") + 
   labs(x='DBH', y='m', title= "a)") +
 theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
                    axis.text = element_text(size = 10),axis.title = element_text(size = 11),
@@ -331,6 +336,16 @@ fig1a_nsc <- ggplot(data.frame(x = c(0, 5)), aes(x)) +
                      legend.text = element_text(size = 10),legend.title = element_text(size = 11),
                      plot.title = element_text(size = 11)) 
 
+fig1a_nsc <- ggplot(data.frame(x = c(0, 5)), aes(x)) + 
+  stat_function(fun = ~ 0.1/(1+(exp(2*(.x-2.5)))), col="#009E73") +
+  stat_function(fun = ~ 0.1/(1+(exp(3*(.x-2.5)))), col="#0072B2") +
+  stat_function(fun = ~ 0.1/(1+(exp(5*(.x-2.5)))), col="#D55E00") +
+  labs(x='GR', y='m',title= "q)") +theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11))
+
 fig1a_nsc_calib <- ggplot(data.frame(x = c(0, 5)), aes(x)) + 
   stat_function(fun = ~ 1.494701 * 0.1*(exp(-3.0*.x)/(0.01+exp(-3.0*.x))), col="#009E73") +
   stat_function(fun = ~ 1.494701 * 0.1*(exp(-2.5*.x)/(0.01+exp(-2.5*.x))), col="#0072B2") +
@@ -348,6 +363,16 @@ fig1a_gr <- ggplot(data.frame(x = c(0, 17)), aes(x)) +
   stat_function(fun = ~ 0.1*(exp(0.55*.x)/(100+exp(0.55*.x))), col="#009E73") +
   stat_function(fun = ~ 0.1*(exp(0.7*.x)/(100+exp(0.7*.x))), col="#0072B2") +
   stat_function(fun = ~ 0.1*(exp(0.9*.x)/(100+exp(0.9*.x))), col="#D55E00") +
+  labs(x='GR', y='m',title= "q)") +theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11))
+
+fig1a_gr <- ggplot(data.frame(x = c(0, 20)), aes(x)) + 
+  stat_function(fun = ~ 0.1/(1+(exp(-0.5*(.x-10)))), col="#009E73") +
+  stat_function(fun = ~ 0.1/(1+(exp(-0.8*(.x-10)))), col="#0072B2") +
+  stat_function(fun = ~ 0.1/(1+(exp(-1.4*(.x-10)))), col="#D55E00") +
   labs(x='GR', y='m',title= "q)") +theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
@@ -1358,7 +1383,7 @@ fig1g_gr <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,17)) +  labs(x="dNPP/NPP", y="dk/k") +
+                     values = c(16,17)) +  labs(x="dG/G", y="dk/k") +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
@@ -1864,61 +1889,91 @@ fig2_leg <- ggplot() +
 leg3 <- get_legend(fig2_leg)
 leg3 <- as_ggplot(leg3)
 ```
-
+##### DBH p1 
 ```{r}
 
 ea1sa1DBHp1gl_out_annual_tile <- ea1sa1DBHp1gl_out_annual_tile %>% 
   mutate(Mortality = "DBH") %>% 
   mutate(Parameter = "p1") %>% 
   mutate(LUE = "Control")
+
+data_DBH_ea1p1 <- ea1sa1DBHp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_DBH_ea1p1$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_DBH_ea1p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea1p1 <- data_DBH_ea1p1 %>% left_join(quantileX)
+data_DBH_ea1p1Den <- data_DBH_ea1p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea1p1Rest <- data_DBH_ea1p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
 ea2sa1DBHp1gl_out_annual_tile <- ea2sa1DBHp1gl_out_annual_tile %>%
   mutate(Mortality = "DBH") %>% 
   mutate(Parameter = "p1") %>% 
   mutate(LUE = "+15%")
+
+data_DBH_ea2p1 <- ea2sa1DBHp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_DBH_ea2p1$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_DBH_ea2p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea2p1 <- data_DBH_ea2p1 %>% left_join(quantileX)
+data_DBH_ea2p1Den <- data_DBH_ea2p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea2p1Rest <- data_DBH_ea2p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
 ea3sa1DBHp1gl_out_annual_tile <- ea3sa1DBHp1gl_out_annual_tile %>% 
   mutate(Mortality = "DBH") %>% 
   mutate(Parameter = "p1") %>% 
   mutate(LUE = "+30%")
 
-data_DBH_p1 <- rbind(ea1sa1DBHp1gl_out_annual_tile, ea2sa1DBHp1gl_out_annual_tile, ea3sa1DBHp1gl_out_annual_tile) 
-
-data_DBH_p1 <- data_DBH_p1 %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 20)) 
-
-sort(unique(data_DBH_p1$QMD_bins))
+data_DBH_ea3p1 <- ea3sa1DBHp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_DBH_ea3p3$QMD_bins))
 
 # Select from each QMD bins the number of plots with higher density
 # Includes a sensitivity analysis using quantiles from 0.5 to 0.9
 valueQuantile = 0.75
-quantileX <- data_DBH_p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+quantileX <- data_DBH_ea3p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
 max(quantileX$`quantile(Density12, c(valueQuantile))`)
-data_DBH_p1 <- data_DBH_p1 %>% left_join(quantileX)
-data_DBH_p1Den <- data_DBH_p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
-data_DBH_p1Rest <- data_DBH_p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea3p1 <- data_DBH_ea3p1 %>% left_join(quantileX)
+data_DBH_ea3p1Den <- data_DBH_ea3p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea3p1Rest <- data_DBH_ea3p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+data_DBH_p1 <- rbind(data_DBH_ea1p1, data_DBH_ea2p1, data_DBH_ea3p1) 
+data_DBH_p1Den <- rbind(data_DBH_ea1p1Den, data_DBH_ea2p1Den, data_DBH_ea3p1Den) 
+data_DBH_p1Rest <- rbind(data_DBH_ea1p1Rest, data_DBH_ea2p1Rest, data_DBH_ea3p1Rest) 
+
+data_DBH_p1Den <- data_DBH_p1Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_DBH_p1Rest <- data_DBH_p1Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+sort(unique(data_DBH_p1$QMD_bins))
 
 ggplot() + 
   geom_point(data = data_DBH_p1, aes(x = log(QMD), y = log(Density12)), color="blue") +
   geom_point(data = data_DBH_p1Den, aes(x = log(QMD), y = log(Density12)), color="red") 
 
-data_DBH_p1Den <- data_DBH_p1Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
-data_DBH_p1Rest <- data_DBH_p1Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
-
 ### 75th percentile
-Fit_QMDInter = lmer(logDensity12 ~ scale(logQMD) * LUE + (1|X), data = data_DBH_p1Den, na.action = "na.exclude")
-Fit_QMDNoInter = lmer(logDensity12 ~ scale(logQMD) + LUE + (1|X), data = data_DBH_p1Den, na.action = "na.exclude")
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * LUE, data = data_DBH_p1Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + LUE, data = data_DBH_p1Den, na.action = "na.exclude")
 AICc(Fit_QMDInter,Fit_QMDNoInter)
 summary(Fit_QMDInter)
 summary(Fit_QMDNoInter)
-r.squaredGLMM(Fit_QMDInter)
 plot(allEffects(Fit_QMDInter))
-plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+fig2a_dbh <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
                          terms = c("logQMD","LUE"),title = "",
                          axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
                          colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  geom_point(data = data_DBH_p1Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  #geom_point(data = data_DBH_p1Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) 
+
+fig2a_dbh
 
 # Analysis of residuals
 ResG <- residuals(Fit_QMDInter)
@@ -1931,62 +1986,115 @@ abline(0, 1)
 hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
 boxplot(ResG,ylab = "Residuals")
 
+ggplot() + 
+  geom_point(data= subset(ea1sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea2sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea3sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_smooth(data= subset(ea1sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='Control'),col="#009E73",
+              method = "lm",fullrange = T) + 
+  geom_smooth(data= subset(ea2sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+15%'),col="#009E73",
+              method = "lm",fullrange = T) +
+  geom_smooth(data= subset(ea3sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+30%'),col="#009E73",
+              method = "lm",fullrange = T) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","dashed","solid")) +
+  labs(x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)",
+       color  = "Level of LUE", linetype = "Level of LUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        legend.key.size = unit(1, 'cm'),
+        plot.title = element_text(size = 11)) + ggtitle("a)") + guides(color = "none") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
 ```
 
+##### DBH p2
 ```{r}
 
 ea1sa1DBHp2gl_out_annual_tile <- ea1sa1DBHp2gl_out_annual_tile %>% 
   mutate(Mortality = "DBH") %>% 
-  mutate(Parameter = "p3") %>% 
+  mutate(Parameter = "p2") %>% 
   mutate(LUE = "Control")
-ea2sa1DBHp2gl_out_annual_tile <- ea2sa1DBHp2gl_out_annual_tile %>%
-  mutate(Mortality = "DBH") %>% 
-  mutate(Parameter = "p3") %>% 
-  mutate(LUE = "+15%")
-ea3sa1DBHp2gl_out_annual_tile <- ea3sa1DBHp2gl_out_annual_tile %>% 
-  mutate(Mortality = "DBH") %>% 
-  mutate(Parameter = "p3") %>% 
-  mutate(LUE = "+30%")
 
-data_DBH_p2 <- rbind(ea1sa1DBHp2gl_out_annual_tile, ea2sa1DBHp2gl_out_annual_tile, ea3sa1DBHp2gl_out_annual_tile) 
-
-data_DBH_p2 <- data_DBH_p2 %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 20)) 
-
-sort(unique(data_DBH_p2$QMD_bins))
+data_DBH_ea1p2 <- ea1sa1DBHp2gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_DBH_ea1p2$QMD_bins))
 
 # Select from each QMD bins the number of plots with higher density
 # Includes a sensitivity analysis using quantiles from 0.5 to 0.9
 valueQuantile = 0.75
-quantileX <- data_DBH_p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+quantileX <- data_DBH_ea1p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
 max(quantileX$`quantile(Density12, c(valueQuantile))`)
-data_DBH_p2 <- data_DBH_p2 %>% left_join(quantileX)
-data_DBH_p2Den <- data_DBH_p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
-data_DBH_p2Rest <- data_DBH_p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea1p2 <- data_DBH_ea1p2 %>% left_join(quantileX)
+data_DBH_ea1p2Den <- data_DBH_ea1p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea1p2Rest <- data_DBH_ea1p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea2sa1DBHp2gl_out_annual_tile <- ea2sa1DBHp2gl_out_annual_tile %>%
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = "+15%")
+
+data_DBH_ea2p2 <- ea2sa1DBHp2gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_DBH_ea2p2$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_DBH_ea2p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea2p2 <- data_DBH_ea2p2 %>% left_join(quantileX)
+data_DBH_ea2p2Den <- data_DBH_ea2p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea2p2Rest <- data_DBH_ea2p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea3sa1DBHp2gl_out_annual_tile <- ea3sa1DBHp2gl_out_annual_tile %>% 
+  mutate(Mortality = "DBH") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = "+30%")
+
+data_DBH_ea3p2 <- ea3sa1DBHp2gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_DBH_ea3p3$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_DBH_ea3p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea3p2 <- data_DBH_ea3p2 %>% left_join(quantileX)
+data_DBH_ea3p2Den <- data_DBH_ea3p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea3p2Rest <- data_DBH_ea3p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+data_DBH_p2 <- rbind(data_DBH_ea1p2, data_DBH_ea2p2, data_DBH_ea3p2) 
+data_DBH_p2Den <- rbind(data_DBH_ea1p2Den, data_DBH_ea2p2Den, data_DBH_ea3p2Den) 
+data_DBH_p2Rest <- rbind(data_DBH_ea1p2Rest, data_DBH_ea2p2Rest, data_DBH_ea3p2Rest) 
+
+data_DBH_p2Den <- data_DBH_p2Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_DBH_p2Rest <- data_DBH_p2Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+sort(unique(data_DBH_p2$QMD_bins))
 
 ggplot() + 
   geom_point(data = data_DBH_p2, aes(x = log(QMD), y = log(Density12)), color="blue") +
   geom_point(data = data_DBH_p2Den, aes(x = log(QMD), y = log(Density12)), color="red") 
 
-data_DBH_p2Den <- data_DBH_p2Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
-data_DBH_p2Rest <- data_DBH_p2Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
-
 ### 75th percentile
-Fit_QMDInter = lmer(logDensity12 ~ scale(logQMD) * LUE + (1|X), data = data_DBH_p2Den, na.action = "na.exclude")
-Fit_QMDNoInter = lmer(logDensity12 ~ scale(logQMD) + LUE + (1|X), data = data_DBH_p2Den, na.action = "na.exclude")
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * LUE, data = data_DBH_p2Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + LUE, data = data_DBH_p2Den, na.action = "na.exclude")
 AICc(Fit_QMDInter,Fit_QMDNoInter)
 summary(Fit_QMDInter)
 summary(Fit_QMDNoInter)
-r.squaredGLMM(Fit_QMDNoInter)
 plot(allEffects(Fit_QMDNoInter))
-plot_model(Fit_QMDNoInter, type = "pred",show.data=TRUE, dot.size=1.5,
+fig2b_dbh <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
                          terms = c("logQMD","LUE"),title = "",
                          axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
                          colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  geom_point(data = data_DBH_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  #geom_point(data = data_DBH_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) 
+
+fig2b_dbh
 
 # Analysis of residuals
 ResG <- residuals(Fit_QMDNoInter)
@@ -1999,62 +2107,115 @@ abline(0, 1)
 hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
 boxplot(ResG,ylab = "Residuals")
 
+ggplot() + 
+  geom_point(data= subset(ea1sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea2sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea3sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_smooth(data= subset(ea1sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='Control'),col="#0072B2",
+              method = "lm",fullrange = T) + 
+  geom_smooth(data= subset(ea2sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+15%'),col="#0072B2",
+              method = "lm",fullrange = T) +
+  geom_smooth(data= subset(ea3sa1DBHp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+30%'),col="#0072B2",
+              method = "lm",fullrange = T) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","dashed","solid")) +
+  labs(x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)",
+       color  = "Level of LUE", linetype = "Level of LUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        legend.key.size = unit(1, 'cm'),
+        plot.title = element_text(size = 11)) + ggtitle("b)") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
 ```
 
+##### DBH p3
 ```{r}
 
 ea1sa1DBHp3gl_out_annual_tile <- ea1sa1DBHp3gl_out_annual_tile %>% 
   mutate(Mortality = "DBH") %>% 
   mutate(Parameter = "p3") %>% 
   mutate(LUE = "Control")
+
+data_DBH_ea1p3 <- ea1sa1DBHp3gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_DBH_ea1p3$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_DBH_ea1p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea1p3 <- data_DBH_ea1p3 %>% left_join(quantileX)
+data_DBH_ea1p3Den <- data_DBH_ea1p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea1p3Rest <- data_DBH_ea1p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
 ea2sa1DBHp3gl_out_annual_tile <- ea2sa1DBHp3gl_out_annual_tile %>%
   mutate(Mortality = "DBH") %>% 
   mutate(Parameter = "p3") %>% 
   mutate(LUE = "+15%")
+
+data_DBH_ea2p3 <- ea2sa1DBHp3gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_DBH_ea2p3$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_DBH_ea2p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea2p3 <- data_DBH_ea2p3 %>% left_join(quantileX)
+data_DBH_ea2p3Den <- data_DBH_ea2p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea2p3Rest <- data_DBH_ea2p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
 ea3sa1DBHp3gl_out_annual_tile <- ea3sa1DBHp3gl_out_annual_tile %>% 
   mutate(Mortality = "DBH") %>% 
   mutate(Parameter = "p3") %>% 
   mutate(LUE = "+30%")
 
-data_DBH_p3 <- rbind(ea1sa1DBHp3gl_out_annual_tile, ea2sa1DBHp3gl_out_annual_tile, ea3sa1DBHp3gl_out_annual_tile) 
-
-data_DBH_p3 <- data_DBH_p3 %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 20)) 
-
-sort(unique(data_DBH_p3$QMD_bins))
+data_DBH_ea3p3 <- ea3sa1DBHp3gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_DBH_ea3p3$QMD_bins))
 
 # Select from each QMD bins the number of plots with higher density
 # Includes a sensitivity analysis using quantiles from 0.5 to 0.9
 valueQuantile = 0.75
-quantileX <- data_DBH_p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+quantileX <- data_DBH_ea3p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
 max(quantileX$`quantile(Density12, c(valueQuantile))`)
-data_DBH_p3 <- data_DBH_p3 %>% left_join(quantileX)
-data_DBH_p3Den <- data_DBH_p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
-data_DBH_p3Rest <- data_DBH_p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea3p3 <- data_DBH_ea3p3 %>% left_join(quantileX)
+data_DBH_ea3p3Den <- data_DBH_ea3p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_DBH_ea3p3Rest <- data_DBH_ea3p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+data_DBH_p3 <- rbind(data_DBH_ea1p3, data_DBH_ea2p3, data_DBH_ea3p3) 
+data_DBH_p3Den <- rbind(data_DBH_ea1p3Den, data_DBH_ea2p3Den, data_DBH_ea3p3Den) 
+data_DBH_p3Rest <- rbind(data_DBH_ea1p3Rest, data_DBH_ea2p3Rest, data_DBH_ea3p3Rest) 
+
+data_DBH_p3Den <- data_DBH_p3Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_DBH_p3Rest <- data_DBH_p3Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+sort(unique(data_DBH_p3$QMD_bins))
 
 ggplot() + 
   geom_point(data = data_DBH_p3, aes(x = log(QMD), y = log(Density12)), color="blue") +
   geom_point(data = data_DBH_p3Den, aes(x = log(QMD), y = log(Density12)), color="red") 
 
-data_DBH_p3Den <- data_DBH_p3Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
-data_DBH_p3Rest <- data_DBH_p3Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
-
 ### 75th percentile
-Fit_QMDInter = lmer(logDensity12 ~ scale(logQMD) * LUE + (1|X), data = data_DBH_p3Den, na.action = "na.exclude")
-Fit_QMDNoInter = lmer(logDensity12 ~ scale(logQMD) + LUE + (1|X), data = data_DBH_p3Den, na.action = "na.exclude")
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * LUE, data = data_DBH_p3Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + LUE, data = data_DBH_p3Den, na.action = "na.exclude")
 AICc(Fit_QMDInter,Fit_QMDNoInter)
 summary(Fit_QMDInter)
 summary(Fit_QMDNoInter)
 r.squaredGLMM(Fit_QMDNoInter)
 plot(allEffects(Fit_QMDNoInter))
-plot_model(Fit_QMDNoInter, type = "pred",show.data=TRUE, dot.size=1.5,
+fig2c_dbh <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
                          terms = c("logQMD","LUE"),title = "",
                          axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
                          colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  geom_point(data = data_DBH_p3Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  #geom_point(data = data_DBH_p3Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
         plot.title = element_text(size = 11)) 
+
+fig2c_dbh
 
 # Analysis of residuals
 ResG <- residuals(Fit_QMDNoInter)
@@ -2066,6 +2227,28 @@ plot(data_DBH_p3Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectar
 abline(0, 1) 
 hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
 boxplot(ResG,ylab = "Residuals")
+
+ggplot() + 
+  geom_point(data= subset(ea1sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea2sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea3sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_smooth(data= subset(ea1sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='Control'),col="#D55E00",
+              method = "lm",fullrange = T) + 
+  geom_smooth(data= subset(ea2sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+15%'),col="#D55E00",
+              method = "lm",fullrange = T) +
+  geom_smooth(data= subset(ea3sa1DBHp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+30%'),col="#D55E00",
+              method = "lm",fullrange = T) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","dashed","solid")) +
+  labs(x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)",
+       color  = "Level of LUE", linetype = "Level of LUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        legend.key.size = unit(1, 'cm'),
+        plot.title = element_text(size = 11)) + ggtitle("c)") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
 
 ```
 
@@ -2136,6 +2319,372 @@ fig2f_nsc <- ggplot() +
         plot.title = element_text(size = 11)) + ggtitle("f)") #+ 
   #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
   #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
+fig2d_nsc
+fig2e_nsc
+fig2f_nsc
+```
+
+##### NSC p1 
+```{r}
+
+ea1sa1NSCp1gl_out_annual_tile <- ea1sa1NSCp1gl_out_annual_tile %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = "Control")
+
+data_NSC_ea1p1 <- ea1sa1NSCp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_NSC_ea1p1$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_NSC_ea1p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea1p1 <- data_NSC_ea1p1 %>% left_join(quantileX)
+data_NSC_ea1p1Den <- data_NSC_ea1p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea1p1Rest <- data_NSC_ea1p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea2sa1NSCp1gl_out_annual_tile <- ea2sa1NSCp1gl_out_annual_tile %>%
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = "+15%")
+
+data_NSC_ea2p1 <- ea2sa1NSCp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_NSC_ea2p1$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_NSC_ea2p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea2p1 <- data_NSC_ea2p1 %>% left_join(quantileX)
+data_NSC_ea2p1Den <- data_NSC_ea2p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea2p1Rest <- data_NSC_ea2p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea3sa1NSCp1gl_out_annual_tile <- ea3sa1NSCp1gl_out_annual_tile %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = "+30%")
+
+data_NSC_ea3p1 <- ea3sa1NSCp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_NSC_ea3p1$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_NSC_ea3p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea3p1 <- data_NSC_ea3p1 %>% left_join(quantileX)
+data_NSC_ea3p1Den <- data_NSC_ea3p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea3p1Rest <- data_NSC_ea3p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+data_NSC_p1 <- rbind(data_NSC_ea1p1, data_NSC_ea2p1, data_NSC_ea3p1) 
+data_NSC_p1Den <- rbind(data_NSC_ea1p1Den, data_NSC_ea2p1Den, data_NSC_ea3p1Den) 
+data_NSC_p1Rest <- rbind(data_NSC_ea1p1Rest, data_NSC_ea2p1Rest, data_NSC_ea3p1Rest) 
+
+data_NSC_p1Den <- data_NSC_p1Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_NSC_p1Rest <- data_NSC_p1Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+sort(unique(data_NSC_p1$QMD_bins))
+
+ggplot() + 
+  geom_point(data = data_NSC_p1, aes(x = log(QMD), y = log(Density12)), color="blue") +
+  geom_point(data = data_NSC_p1Den, aes(x = log(QMD), y = log(Density12)), color="red") 
+
+### 75th percentile
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * LUE, data = data_NSC_p1Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + LUE, data = data_NSC_p1Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+plot(allEffects(Fit_QMDInter))
+fig2d_nsc <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                         terms = c("logQMD","LUE"),title = "",
+                         axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
+                         colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  #geom_point(data = data_NSC_p1Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) 
+
+fig2d_nsc 
+
+# Analysis of residuals
+ResG <- residuals(Fit_QMDInter)
+FittedG <- fitted(Fit_QMDInter)
+par(mfrow=c(2,2))
+plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
+abline(h=0) ## Homocedasticity
+plot(data_NSC_p1Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
+abline(0, 1) 
+hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
+boxplot(ResG,ylab = "Residuals")
+
+ggplot() + 
+  geom_point(data=subset(ea1sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea2sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea3sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_smooth(data= subset(ea1sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='Control'),col="#009E73",
+              method = "lm",fullrange = T) + 
+  geom_smooth(data= subset(ea2sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+15%'),col="#009E73",
+              method = "lm",fullrange = T) +
+  geom_smooth(data= subset(ea3sa1NSCp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+30%'),col="#009E73",
+              method = "lm",fullrange = T) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","dashed","solid")) +
+  labs(x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)",
+       color  = "Level of LUE", linetype = "Level of LUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        legend.key.size = unit(1, 'cm'),
+        plot.title = element_text(size = 11)) + ggtitle("d)") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
+```
+
+##### NSC p2 
+```{r}
+
+ea1sa1NSCp2gl_out_annual_tile <- ea1sa1NSCp2gl_out_annual_tile %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = "Control")
+
+data_NSC_ea1p2 <- ea1sa1NSCp2gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_NSC_ea1p2$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_NSC_ea1p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea1p2 <- data_NSC_ea1p2 %>% left_join(quantileX)
+data_NSC_ea1p2Den <- data_NSC_ea1p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea1p2Rest <- data_NSC_ea1p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea2sa1NSCp2gl_out_annual_tile <- ea2sa1NSCp2gl_out_annual_tile %>%
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = "+15%")
+
+data_NSC_ea2p2 <- ea2sa1NSCp2gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_NSC_ea2p2$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_NSC_ea2p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea2p2 <- data_NSC_ea2p2 %>% left_join(quantileX)
+data_NSC_ea2p2Den <- data_NSC_ea2p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea2p2Rest <- data_NSC_ea2p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea3sa1NSCp2gl_out_annual_tile <- ea3sa1NSCp2gl_out_annual_tile %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = "+30%")
+
+data_NSC_ea3p2 <- ea3sa1NSCp2gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_NSC_ea3p2$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_NSC_ea3p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea3p2 <- data_NSC_ea3p2 %>% left_join(quantileX)
+data_NSC_ea3p2Den <- data_NSC_ea3p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea3p2Rest <- data_NSC_ea3p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+data_NSC_p2 <- rbind(data_NSC_ea1p2, data_NSC_ea2p2, data_NSC_ea3p2) 
+data_NSC_p2Den <- rbind(data_NSC_ea1p2Den, data_NSC_ea2p2Den, data_NSC_ea3p2Den) 
+data_NSC_p2Rest <- rbind(data_NSC_ea1p2Rest, data_NSC_ea2p2Rest, data_NSC_ea3p2Rest) 
+
+data_NSC_p2Den <- data_NSC_p2Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_NSC_p2Rest <- data_NSC_p2Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+sort(unique(data_NSC_p2$QMD_bins))
+
+ggplot() + 
+  geom_point(data = data_NSC_p2, aes(x = log(QMD), y = log(Density12)), color="blue") +
+  geom_point(data = data_NSC_p2Den, aes(x = log(QMD), y = log(Density12)), color="red") 
+
+### 75th percentile
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * LUE, data = data_NSC_p2Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + LUE, data = data_NSC_p2Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+plot(allEffects(Fit_QMDInter))
+fig2e_nsc <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                         terms = c("logQMD","LUE"),title = "",
+                         axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
+                         colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  #geom_point(data = data_NSC_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) 
+
+fig2e_nsc 
+
+# Analysis of residuals
+ResG <- residuals(Fit_QMDInter)
+FittedG <- fitted(Fit_QMDInter)
+par(mfrow=c(2,2))
+plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
+abline(h=0) ## Homocedasticity
+plot(data_NSC_p2Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
+abline(0, 1) 
+hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
+boxplot(ResG,ylab = "Residuals")
+
+ggplot() + 
+  geom_point(data=subset(ea1sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea2sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea3sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_smooth(data= subset(ea1sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='Control'),col="#009E73",
+              method = "lm",fullrange = T) + 
+  geom_smooth(data= subset(ea2sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+15%'),col="#009E73",
+              method = "lm",fullrange = T) +
+  geom_smooth(data= subset(ea3sa1NSCp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+30%'),col="#009E73",
+              method = "lm",fullrange = T) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","dashed","solid")) +
+  labs(x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)",
+       color  = "Level of LUE", linetype = "Level of LUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        legend.key.size = unit(1, 'cm'),
+        plot.title = element_text(size = 11)) + ggtitle("d)") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
+```
+##### NSC p3 
+```{r}
+
+ea1sa1NSCp3gl_out_annual_tile <- ea1sa1NSCp3gl_out_annual_tile %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "Control")
+
+data_NSC_ea1p3 <- ea1sa1NSCp3gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_NSC_ea1p3$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_NSC_ea1p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea1p3 <- data_NSC_ea1p3 %>% left_join(quantileX)
+data_NSC_ea1p3Den <- data_NSC_ea1p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea1p3Rest <- data_NSC_ea1p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea2sa1NSCp3gl_out_annual_tile <- ea2sa1NSCp3gl_out_annual_tile %>%
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "+15%")
+
+data_NSC_ea2p3 <- ea2sa1NSCp3gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_NSC_ea2p3$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_NSC_ea2p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea2p3 <- data_NSC_ea2p3 %>% left_join(quantileX)
+data_NSC_ea2p3Den <- data_NSC_ea2p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea2p3Rest <- data_NSC_ea2p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea3sa1NSCp3gl_out_annual_tile <- ea3sa1NSCp3gl_out_annual_tile %>% 
+  mutate(Mortality = "NSC") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "+30%")
+
+data_NSC_ea3p3 <- ea3sa1NSCp3gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_NSC_ea3p3$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_NSC_ea3p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea3p3 <- data_NSC_ea3p3 %>% left_join(quantileX)
+data_NSC_ea3p3Den <- data_NSC_ea3p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_NSC_ea3p3Rest <- data_NSC_ea3p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+data_NSC_p3 <- rbind(data_NSC_ea1p3, data_NSC_ea2p3, data_NSC_ea3p3) 
+data_NSC_p3Den <- rbind(data_NSC_ea1p3Den, data_NSC_ea2p3Den, data_NSC_ea3p3Den) 
+data_NSC_p3Rest <- rbind(data_NSC_ea1p3Rest, data_NSC_ea2p3Rest, data_NSC_ea3p3Rest) 
+
+data_NSC_p3Den <- data_NSC_p3Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_NSC_p3Rest <- data_NSC_p3Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+sort(unique(data_NSC_p3$QMD_bins))
+
+ggplot() + 
+  geom_point(data = data_NSC_p3, aes(x = log(QMD), y = log(Density12)), color="blue") +
+  geom_point(data = data_NSC_p3Den, aes(x = log(QMD), y = log(Density12)), color="red") 
+
+### 75th percentile
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * LUE, data = data_NSC_p3Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + LUE, data = data_NSC_p3Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+plot(allEffects(Fit_QMDInter))
+fig2f_nsc <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                         terms = c("logQMD","LUE"),title = "",
+                         axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
+                         colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  #geom_point(data = data_NSC_p3Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) 
+
+fig2f_nsc
+
+# Analysis of residuals
+ResG <- residuals(Fit_QMDInter)
+FittedG <- fitted(Fit_QMDInter)
+par(mfrow=c(2,2))
+plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
+abline(h=0) ## Homocedasticity
+plot(data_NSC_p3Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
+abline(0, 1) 
+hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
+boxplot(ResG,ylab = "Residuals")
+
+ggplot() + 
+  geom_point(data= subset(ea1sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea2sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea3sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_smooth(data= subset(ea1sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='Control'),col="#D55E00",
+              method = "lm",fullrange = T) + 
+  geom_smooth(data= subset(ea2sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+15%'),col="#D55E00",
+              method = "lm",fullrange = T) +
+  geom_smooth(data= subset(ea3sa1NSCp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+30%'),col="#D55E00",
+              method = "lm",fullrange = T) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","dashed","solid")) +
+  labs(x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)",
+       color  = "Level of LUE", linetype = "Level of LUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        legend.key.size = unit(1, 'cm'),
+        plot.title = element_text(size = 11)) + ggtitle("f)") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
 ```
 
 #### GR 
@@ -2215,6 +2764,373 @@ ggplot() +
               method = "lm",fullrange = T) 
 ```
 
+##### GR p1 
+```{r}
+
+ea1sa1GRp1gl_out_annual_tile <- ea1sa1GRp1gl_out_annual_tile %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = "Control")
+
+data_GR_ea1p1 <- ea1sa1GRp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_GR_ea1p1$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_GR_ea1p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_GR_ea1p1 <- data_GR_ea1p1 %>% left_join(quantileX)
+data_GR_ea1p1Den <- data_GR_ea1p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_GR_ea1p1Rest <- data_GR_ea1p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea2sa1GRp1gl_out_annual_tile <- ea2sa1GRp1gl_out_annual_tile %>%
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = "+15%")
+
+data_GR_ea2p1 <- ea2sa1GRp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_GR_ea2p1$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_GR_ea2p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_GR_ea2p1 <- data_GR_ea2p1 %>% left_join(quantileX)
+data_GR_ea2p1Den <- data_GR_ea2p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_GR_ea2p1Rest <- data_GR_ea2p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea3sa1GRp1gl_out_annual_tile <- ea3sa1GRp1gl_out_annual_tile %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p1") %>% 
+  mutate(LUE = "+30%")
+
+data_GR_ea3p1 <- ea3sa1GRp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_GR_ea3p1$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_GR_ea3p1 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_GR_ea3p1 <- data_GR_ea3p1 %>% left_join(quantileX)
+data_GR_ea3p1Den <- data_GR_ea3p1 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_GR_ea3p1Rest <- data_GR_ea3p1 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+data_GR_p1 <- rbind(data_GR_ea1p1, data_GR_ea2p1, data_GR_ea3p1) 
+data_GR_p1Den <- rbind(data_GR_ea1p1Den, data_GR_ea2p1Den, data_GR_ea3p1Den) 
+data_GR_p1Rest <- rbind(data_GR_ea1p1Rest, data_GR_ea2p1Rest, data_GR_ea3p1Rest) 
+
+data_GR_p1Den <- data_GR_p1Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_GR_p1Rest <- data_GR_p1Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+sort(unique(data_GR_p1$QMD_bins))
+
+ggplot() + 
+  geom_point(data = data_GR_p1, aes(x = log(QMD), y = log(Density12)), color="blue") +
+  geom_point(data = data_GR_p1Den, aes(x = log(QMD), y = log(Density12)), color="red") 
+
+### 75th percentile
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * LUE, data = data_GR_p1Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + LUE, data = data_GR_p1Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+plot(allEffects(Fit_QMDInter))
+fig2g_gr <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                         terms = c("logQMD","LUE"),title = "",
+                         axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
+                         colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  #geom_point(data = data_GR_p1Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
+fig2g_gr 
+
+# Analysis of residuals
+ResG <- residuals(Fit_QMDInter)
+FittedG <- fitted(Fit_QMDInter)
+par(mfrow=c(2,2))
+plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
+abline(h=0) ## Homocedasticity
+plot(data_GR_p1Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
+abline(0, 1) 
+hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
+boxplot(ResG,ylab = "Residuals")
+
+ggplot() + 
+  geom_point(data= subset(ea1sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea2sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea3sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_smooth(data= subset(ea1sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='Control'),col="#009E73",
+              method = "lm",fullrange = T) + 
+  geom_smooth(data= subset(ea2sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+15%'),col="#009E73",
+              method = "lm",fullrange = T) +
+  geom_smooth(data= subset(ea3sa1GRp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+30%'),col="#009E73",
+              method = "lm",fullrange = T) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","dashed","solid")) +
+  labs(x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)",
+       color  = "Level of LUE", linetype = "Level of LUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        legend.key.size = unit(1, 'cm'),
+        plot.title = element_text(size = 11)) + ggtitle("g)") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+```
+
+##### GR p2 
+```{r}
+
+ea1sa1GRp2gl_out_annual_tile <- ea1sa1GRp2gl_out_annual_tile %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = "Control")
+
+data_GR_ea1p2 <- ea1sa1GRp2gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_GR_ea1p2$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_GR_ea1p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_GR_ea1p2 <- data_GR_ea1p2 %>% left_join(quantileX)
+data_GR_ea1p2Den <- data_GR_ea1p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_GR_ea1p2Rest <- data_GR_ea1p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea2sa1GRp2gl_out_annual_tile <- ea2sa1GRp2gl_out_annual_tile %>%
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = "+15%")
+
+data_GR_ea2p2 <- ea2sa1GRp2gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_GR_ea2p2$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_GR_ea2p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_GR_ea2p2 <- data_GR_ea2p2 %>% left_join(quantileX)
+data_GR_ea2p2Den <- data_GR_ea2p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_GR_ea2p2Rest <- data_GR_ea2p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea3sa1GRp2gl_out_annual_tile <- ea3sa1GRp2gl_out_annual_tile %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p2") %>% 
+  mutate(LUE = "+30%")
+
+data_GR_ea3p2 <- ea3sa1GRp2gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_GR_ea3p2$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_GR_ea3p2 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_GR_ea3p2 <- data_GR_ea3p2 %>% left_join(quantileX)
+data_GR_ea3p2Den <- data_GR_ea3p2 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_GR_ea3p2Rest <- data_GR_ea3p2 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+data_GR_p2 <- rbind(data_GR_ea1p2, data_GR_ea2p2, data_GR_ea3p2) 
+data_GR_p2Den <- rbind(data_GR_ea1p2Den, data_GR_ea2p2Den, data_GR_ea3p2Den) 
+data_GR_p2Rest <- rbind(data_GR_ea1p2Rest, data_GR_ea2p2Rest, data_GR_ea3p2Rest) 
+
+data_GR_p2Den <- data_GR_p2Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_GR_p2Rest <- data_GR_p2Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+sort(unique(data_GR_p2$QMD_bins))
+
+ggplot() + 
+  geom_point(data = data_GR_p2, aes(x = log(QMD), y = log(Density12)), color="blue") +
+  geom_point(data = data_GR_p2Den, aes(x = log(QMD), y = log(Density12)), color="red") 
+
+### 75th percentile
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * LUE, data = data_GR_p2Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + LUE, data = data_GR_p2Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+plot(allEffects(Fit_QMDInter))
+fig2h_gr <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                         terms = c("logQMD","LUE"),title = "",
+                         axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
+                         colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  #geom_point(data = data_GR_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
+fig2h_gr
+
+# Analysis of residuals
+ResG <- residuals(Fit_QMDInter)
+FittedG <- fitted(Fit_QMDInter)
+par(mfrow=c(2,2))
+plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
+abline(h=0) ## Homocedasticity
+plot(data_GR_p2Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
+abline(0, 1) 
+hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
+boxplot(ResG,ylab = "Residuals")
+
+ggplot() + 
+  geom_point(data= subset(ea1sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea2sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea3sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_smooth(data= subset(ea1sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='Control'),col="#0072B2",
+              method = "lm",fullrange = T) + 
+  geom_smooth(data= subset(ea2sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+15%'),col="#0072B2",
+              method = "lm",fullrange = T) +
+  geom_smooth(data= subset(ea3sa1GRp2gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+30%'),col="#0072B2",
+              method = "lm",fullrange = T) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","dashed","solid")) +
+  labs(x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)",
+       color  = "Level of LUE", linetype = "Level of LUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        legend.key.size = unit(1, 'cm'),
+        plot.title = element_text(size = 11)) + ggtitle("h)") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
+```
+
+##### GR p3 
+```{r}
+
+ea1sa1GRp3gl_out_annual_tile <- ea1sa1GRp3gl_out_annual_tile %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "Control")
+
+data_GR_ea1p3 <- ea1sa1GRp3gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_GR_ea1p3$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_GR_ea1p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_GR_ea1p3 <- data_GR_ea1p3 %>% left_join(quantileX)
+data_GR_ea1p3Den <- data_GR_ea1p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_GR_ea1p3Rest <- data_GR_ea1p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea2sa1GRp3gl_out_annual_tile <- ea2sa1GRp3gl_out_annual_tile %>%
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "+15%")
+
+data_GR_ea2p3 <- ea2sa1GRp3gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_GR_ea2p3$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_GR_ea2p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_GR_ea2p3 <- data_GR_ea2p3 %>% left_join(quantileX)
+data_GR_ea2p3Den <- data_GR_ea2p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_GR_ea2p3Rest <- data_GR_ea2p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+ea3sa1GRp3gl_out_annual_tile <- ea3sa1GRp3gl_out_annual_tile %>% 
+  mutate(Mortality = "GR") %>% 
+  mutate(Parameter = "p3") %>% 
+  mutate(LUE = "+30%")
+
+data_GR_ea3p3 <- ea3sa1GRp3gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
+sort(unique(data_GR_ea3p3$QMD_bins))
+
+# Select from each QMD bins the number of plots with higher density
+# Includes a sensitivity analysis using quantiles from 0.5 to 0.9
+valueQuantile = 0.75
+quantileX <- data_GR_ea3p3 %>% group_by(QMD_bins) %>% summarise(quantile(Density12, c(valueQuantile))) 
+max(quantileX$`quantile(Density12, c(valueQuantile))`)
+data_GR_ea3p3 <- data_GR_ea3p3 %>% left_join(quantileX)
+data_GR_ea3p3Den <- data_GR_ea3p3 %>% filter(Density12>=`quantile(Density12, c(valueQuantile))`)
+data_GR_ea3p3Rest <- data_GR_ea3p3 %>% filter(Density12<`quantile(Density12, c(valueQuantile))`)
+
+data_GR_p3 <- rbind(data_GR_ea1p3, data_GR_ea2p3, data_GR_ea3p3) 
+data_GR_p3Den <- rbind(data_GR_ea1p3Den, data_GR_ea2p3Den, data_GR_ea3p3Den) 
+data_GR_p3Rest <- rbind(data_GR_ea1p3Rest, data_GR_ea2p3Rest, data_GR_ea3p3Rest) 
+
+data_GR_p3Den <- data_GR_p3Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+data_GR_p3Rest <- data_GR_p3Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
+
+sort(unique(data_GR_p3$QMD_bins))
+
+ggplot() + 
+  geom_point(data = data_GR_p3, aes(x = log(QMD), y = log(Density12)), color="blue") +
+  geom_point(data = data_GR_p3Den, aes(x = log(QMD), y = log(Density12)), color="red") 
+
+### 75th percentile
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * LUE, data = data_GR_p3Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + LUE, data = data_GR_p3Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+plot(allEffects(Fit_QMDInter))
+fig2i_gr <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                         terms = c("logQMD","LUE"),title = "",
+                         axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
+                         colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  #geom_point(data = data_GR_p3Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+
+fig2i_gr
+
+# Analysis of residuals
+ResG <- residuals(Fit_QMDInter)
+FittedG <- fitted(Fit_QMDInter)
+par(mfrow=c(2,2))
+plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
+abline(h=0) ## Homocedasticity
+plot(data_GR_p3Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
+abline(0, 1) 
+hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
+boxplot(ResG,ylab = "Residuals")
+
+ggplot() + 
+  geom_point(data= subset(ea1sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea2sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_point(data=subset(ea3sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
+  geom_smooth(data= subset(ea1sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='Control'),col="#D55E00",
+              method = "lm",fullrange = T) + 
+  geom_smooth(data= subset(ea2sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+15%'),col="#D55E00",
+              method = "lm",fullrange = T) +
+  geom_smooth(data= subset(ea3sa1GRp3gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+30%'),col="#D55E00",
+              method = "lm",fullrange = T) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                     values = c("dotted","dashed","solid")) +
+  labs(x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)",
+       color  = "Level of LUE", linetype = "Level of LUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        legend.key.size = unit(1, 'cm'),
+        plot.title = element_text(size = 11)) + ggtitle("i)") #+ 
+  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+```
+
 ### Arrange plots
 
 #### Figure 1
@@ -2226,7 +3142,7 @@ fig1 <- ggarrange(fig1a_dbh,fig1b_dbh,fig1c_dbh,fig1d_dbh,fig1e_dbh,fig1f_dbh,fi
 legs <- ggarrange(leg1,leg2, ncol = 2, nrow = 1,align = "h")
 
 ggarrange(fig1,legs, ncol = 1, nrow = 2,align = "v",heights = c(1,0.05))
-ggsave("~/rsofun/vignettes_add/figure1.png", width = 12, height = 17, dpi=300)
+ggsave("~/rsofun/vignettes_add/figure1b.png", width = 12, height = 17, dpi=300)
 ```
 
 #### Figure 2
@@ -2234,12 +3150,11 @@ ggsave("~/rsofun/vignettes_add/figure1.png", width = 12, height = 17, dpi=300)
 fig2 <- ggarrange(fig2a_dbh,fig2b_dbh,fig2c_dbh,
           fig2d_nsc,fig2e_nsc,fig2f_nsc,
           fig2g_gr,fig2h_gr,fig2i_gr,
-          ncol = 3, nrow = 3, common.legend = T,legend="none")
+          ncol = 3, nrow = 3, common.legend = T,legend="bottom")
 
 ggarrange(fig2,leg3, ncol = 1, nrow = 2,align = "v",heights = c(1,0.05))
-ggsave("~/rsofun/vignettes_add/figure2.png", width = 10, height = 10, dpi=300)
+ggsave("~/rsofun/vignettes_add/figure2b.png", width = 10, height = 10, dpi=300)
 ```
-
 
 ### Distribution of tree sizes
 
@@ -2391,7 +3306,36 @@ fig3 <- alldata %>%
     theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   facet_grid(Mortality ~ Parameter) 
 
-ggsave("~/rsofun/vignettes_add/figure3.png", width = 18, height = 11, dpi=300)
+fig3 <- alldata %>%
+  filter(dbh >= 12) %>% 
+  ggplot() + geom_line(aes(x=log(dbh), y=log(density), color='x3'),alpha=.5) 
+    labs(x = "DBH class (m)", y = expression(paste("Stand density (indiv", " " ,ha^-1, ") "))) +
+    scale_fill_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  facet_grid(Mortality ~ Parameter) 
+
+ggplot() + 
+  geom_line(data=subset(ea1sa1DBHp3gl_out_annual_cohorts,dbh>=12), aes(x=dbh, y=density, color='x3'),alpha=.5) +
+  geom_line(data=subset(ea1sa1DBHp2gl_out_annual_cohorts,dbh>=12), aes(x=dbh, y=density, color='x2'),alpha=.5) +
+  geom_line(data=subset(ea1sa1DBHp1gl_out_annual_cohorts,dbh>=12), aes(x=dbh, y=density, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "DBH - LUE control")
+
+fig3 <- alldata %>%
+  filter(dbh >= 12) %>%
+  ggplot() + geom_line(aes(color=as.factor(LUE), x=dbh, y=density), alpha=.4) +
+    labs(x = "DBH (m)", y = "Density") +
+    scale_color_discrete(labels = c(`1` = "Control", `2` = "+15%", `3` = "+30%"),name = "Levels of LUE", guide = "legend") + 
+    theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
+  facet_grid(Mortality ~ Parameter) 
+
+ggsave("~/rsofun/vignettes_add/figure3b.png", width = 11, height = 8, dpi=300)
 
 ```
 
@@ -2401,6 +3345,19 @@ ggplot() +
   geom_line(data=ea1sa1DBHp3gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
   geom_line(data=ea1sa1DBHp2gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
   geom_line(data=ea1sa1DBHp1gl_out_annual_cohorts, aes(x=dbh, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  labs(x = "dbh", y = "CUE") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.title = element_text(size = 11)) + 
+  labs(title= "DBH - LUE control")
+
+ggplot() + 
+  geom_line(data=ea1sa1DBHp3gl_out_annual_cohorts, aes(x=year, y=NPP_yr/GPP_yr, color='x3'),alpha=.5) +
+  geom_line(data=ea1sa1DBHp2gl_out_annual_cohorts, aes(x=year, y=NPP_yr/GPP_yr, color='x2'),alpha=.5) +
+  geom_line(data=ea1sa1DBHp1gl_out_annual_cohorts, aes(x=year, y=NPP_yr/GPP_yr, color='x1'),alpha=.5) + 
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   labs(x = "dbh", y = "CUE") + 
@@ -2523,7 +3480,7 @@ fig4 <- alldata %>%
     theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom") +
   facet_grid(Mortality ~ Parameter) 
 
-ggsave("~/rsofun/vignettes_add/figure4.png", width = 11, height = 8, dpi=300)
+ggsave("~/rsofun/vignettes_add/figure4b.png", width = 11, height = 8, dpi=300)
 
 ```
 
