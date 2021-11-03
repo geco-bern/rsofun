@@ -13,7 +13,7 @@ vignette: >
 
 ALL BELOW IS COPIED FROM sofunCalVal/data/00_prepare_fluxnet_driver_data.R
 
-```{r setup, include = FALSE}
+```{r setup, include = TRUE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
