@@ -88,7 +88,7 @@
       <h1 data-toc-skip>Prepare rsofun forcing</h1>
                         <h4 class="author">Beni Stocker</h4>
             
-            <h4 class="date">2021-11-03</h4>
+            <h4 class="date">2021-11-05</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/computationales/rsofun/blob/master/vignettes/prepare_forcing.Rmd"><code>vignettes/prepare_forcing.Rmd</code></a></small>
       <div class="hidden name"><code>prepare_forcing.Rmd</code></div>
@@ -97,54 +97,32 @@
 
     
     
-<div id="prepare-forcing-data" class="section level2">
-<h2 class="hasAnchor">
-<a href="#prepare-forcing-data" class="anchor"></a>Prepare forcing data</h2>
-<p>ALL BELOW IS COPIED FROM sofunCalVal/data/00_prepare_fluxnet_driver_data.R</p>
+<p>Forcing data of <code>rsofun</code> adheres to a fixed format as described [here]. Any data in this format will be valid <code>rsofun</code> input data. However to facilitate the formatting of these datasets you may use the internal lab tool <code>ingestr</code>. This toolset allows for the easy and consistent formatting of data.</p>
+<p>However, this toolset is very dynamic in nature and therefore will not see a formal CRAN release. Within this context we will also give very limited support. Despite these caveats you might find this tool useful. The below routine shows you how to format data using <code>ingestr</code>, assuming all <a href="https://github.com/computationales/ingestr">source data</a> has been downloaded beforehand.</p>
+<div id="preparing-driver-data" class="section level1">
+<h1 class="hasAnchor">
+<a href="#preparing-driver-data" class="anchor"></a>Preparing driver data</h1>
+<p>To format data we need to load the required libraries first.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/opts_chunk.html">opts_chunk</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span>
-  collapse <span class="op">=</span> <span class="cn">TRUE</span>,
-  comment <span class="op">=</span> <span class="st">"#&gt;"</span>
-<span class="op">)</span>
-
-<span class="co"># Routine to format the benchmark driver dataset</span>
-<span class="co"># based upon FLUXNET data. This routine assumes</span>
-<span class="co"># that the code is run on th Euler compute</span>
-<span class="co"># infrastructure</span>
-<span class="co">#</span>
-<span class="co"># The data generated is meant to drive the p-model</span>
-<span class="co"># and provide a good working / test dataset.</span>
-<span class="co"># The routine used is largely based on previous work</span>
-<span class="co"># REFERENCE PAPER BENI.</span>
-
-<span class="co"># Libraries, check for Euler access ----</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></code></pre></div>
-<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
-<pre><code>## ✓ ggplot2 3.3.5     ✓ purrr   0.3.4
-## ✓ tibble  3.1.5     ✓ dplyr   1.0.7
-## ✓ tidyr   1.1.4     ✓ stringr 1.4.0
-## ✓ readr   2.0.2     ✓ forcats 0.5.1</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/computationales/rsofun">rsofun</a></span><span class="op">)</span>
+<code class="sourceCode R"><span class="co"># Libraries</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/computationales/rsofun">rsofun</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/computationales/ingestr">ingestr</a></span><span class="op">)</span></code></pre></div>
-<pre><code>## 
-## Attaching package: 'ingestr'</code></pre>
-<pre><code>## The following object is masked from 'package:rsofun':
-## 
-##     init_dates_dataframe</code></pre>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># if(!grepl('eu-', Sys.info()['nodename'])){</span>
-<span class="co">#   stop("You are not on Euler, source data unavailable - abort abort abort!")</span>
-<span class="co"># }</span>
+<p>To limit the computational times we’ll use a subset of three fluxnet site locations. We can also use arbitrary locations if desired.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">fluxnet_sites</span> <span class="op">&lt;-</span> <span class="fu">ingestr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/ingestr/man/siteinfo_fluxnet2015.html">siteinfo_fluxnet2015</a></span> <span class="op">%&gt;%</span>
+  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op">==</span> <span class="st">"FR-Pue"</span><span class="op">)</span>
 
-<span class="co"># . set sites to ingest ----</span>
-<span class="va">fluxnet_sites</span> <span class="op">&lt;-</span> <span class="fu">ingestr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/ingestr/man/siteinfo_fluxnet2015.html">siteinfo_fluxnet2015</a></span> <span class="op">%&gt;%</span>
-  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html">slice</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span> <span class="co"># just an example</span>
-
-<span class="co"># . grab fluxnet data ----</span>
+<span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">fluxnet_sites</span><span class="op">)</span>
+<span class="co">#&gt; # A tibble: 1 × 12</span>
+<span class="co">#&gt;   sitename   lon   lat   elv year_start year_end classid c4      whc</span>
+<span class="co">#&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;   &lt;lgl&gt; &lt;dbl&gt;</span>
+<span class="co">#&gt; 1 FR-Pue    3.60  43.7   270 2000       2014     EBF     FALSE  240.</span>
+<span class="co">#&gt; # … with 3 more variables: koeppen_code &lt;chr&gt;, igbp_land_use &lt;chr&gt;,</span>
+<span class="co">#&gt; #   plant_functional_type &lt;chr&gt;</span></code></pre></div>
+<p>Using a data frame of site info we can subset and format fluxnet data into the desired shape (assuming a local copy of the FLUXNET2015 dataset for the desired sites). We refer to the <a href="https://fluxnet.org/data/fluxnet2015-dataset/">FLUXNET2015 data website</a> for data downloads.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># grab fluxnet data ----</span>
 <span class="va">df_fluxnet</span> <span class="op">&lt;-</span>
   <span class="fu"><a href="https://rdrr.io/r/base/warning.html">suppressWarnings</a></span><span class="op">(</span>
     <span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressMessages</a></span><span class="op">(</span>
@@ -163,24 +141,16 @@
         timescale <span class="op">=</span> <span class="st">"d"</span>
       <span class="op">)</span>
     <span class="op">)</span>
-  <span class="op">)</span>
-
-<span class="co"># . get CRU data to complement fluxnet data ----</span>
-<span class="va">df_cru</span> <span class="op">&lt;-</span> <span class="fu">ingestr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span><span class="op">(</span>
+  <span class="op">)</span></code></pre></div>
+<p>Not all required data is available within the fluxnet dataset. As such we amend these data with additional data sources. In this case we use CRU data to complement the fluxnet data, and merged into a single ‘meteo’ data frame.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">df_cru</span> <span class="op">&lt;-</span> <span class="fu">ingestr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span><span class="op">(</span>
   siteinfo  <span class="op">=</span> <span class="va">fluxnet_sites</span>,
   source    <span class="op">=</span> <span class="st">"cru"</span>,
   getvars   <span class="op">=</span> <span class="st">"ccov"</span>,
   dir       <span class="op">=</span> <span class="st">"~/data/cru/ts_4.01/"</span>
-  <span class="op">)</span></code></pre></div>
-<pre><code>## Loading required namespace: ncdf4</code></pre>
-<pre><code>## Warning in .varName(nc, varname, warn = warn): varname used is: cld
-## If that is not correct, you can set it to one of: cld, stn</code></pre>
-<pre><code>## Warning: The `x` argument of `as_tibble.matrix()` must have unique column names if `.name_repair` is omitted as of tibble 2.0.0.
-## Using compatibility `.name_repair`.
-## This warning is displayed once every 8 hours.
-## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.</code></pre>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># . merge data into one "meteo" data frame ----</span>
+  <span class="op">)</span>
+
 <span class="va">df_meteo</span> <span class="op">&lt;-</span> <span class="va">df_fluxnet</span> <span class="op">%&gt;%</span>
   <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html">unnest</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">left_join</a></span><span class="op">(</span>
@@ -189,10 +159,10 @@
     by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"sitename"</span>, <span class="st">"date"</span><span class="op">)</span>
   <span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">sitename</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html">nest</a></span><span class="op">(</span><span class="op">)</span>
-
-<span class="co"># . grab MODIS FPAR data ----</span>
-<span class="va">settings_modis</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/get_settings_modis.html">get_settings_modis</a></span><span class="op">(</span>
+  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html">nest</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<p>Additional fAPAR data is gathered from remote sensing products. We first specify download settings, and initiate a download for our site locations.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">settings_modis</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/get_settings_modis.html">get_settings_modis</a></span><span class="op">(</span>
   bundle            <span class="op">=</span> <span class="st">"modis_fpar"</span>,
   data_path         <span class="op">=</span> <span class="st">"~/data/modis_subsets/"</span>,
   method_interpol   <span class="op">=</span> <span class="st">"loess"</span>,
@@ -209,45 +179,23 @@
   settings <span class="op">=</span> <span class="va">settings_modis</span>,
   parallel <span class="op">=</span> <span class="cn">FALSE</span>,
   ncores <span class="op">=</span> <span class="fl">1</span>
-  <span class="op">)</span></code></pre></div>
-<pre><code>## Number of available pixels:  289</code></pre>
-<pre><code>## Averaging across number of pixels:  1</code></pre>
-<pre><code>## loess...</code></pre>
-<pre><code>## spline...</code></pre>
-<pre><code>## linear ...</code></pre>
-<pre><code>## sgfilter ...</code></pre>
-<pre><code>## Warning: The `path` argument of `write_csv()` is deprecated as of readr 1.4.0.
-## Please use the `file` argument instead.
-## This warning is displayed once every 8 hours.
-## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.</code></pre>
-<pre><code>## Number of available pixels:  289</code></pre>
-<pre><code>## Averaging across number of pixels:  1</code></pre>
-<pre><code>## loess...</code></pre>
-<pre><code>## spline...</code></pre>
-<pre><code>## linear ...</code></pre>
-<pre><code>## sgfilter ...</code></pre>
-<pre><code>## Number of available pixels:  289</code></pre>
-<pre><code>## Averaging across number of pixels:  1</code></pre>
-<pre><code>## loess...</code></pre>
-<pre><code>## spline...</code></pre>
-<pre><code>## linear ...</code></pre>
-<pre><code>## sgfilter ...</code></pre>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## renaming the variable</span>
+  <span class="op">)</span>
+
+<span class="co">## renaming the variable</span>
 <span class="va">df_modis_fpar</span> <span class="op">&lt;-</span> <span class="va">df_modis_fpar</span> <span class="op">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>
     data <span class="op">=</span> <span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html">map</a></span><span class="op">(</span><span class="va">data</span>, <span class="op">~</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span><span class="op">(</span><span class="va">.</span>, fapar <span class="op">=</span> <span class="va">modisvar_filled</span><span class="op">)</span><span class="op">)</span>
-    <span class="op">)</span>
-
-<span class="co"># . grab CO2 data ----</span>
+    <span class="op">)</span></code></pre></div>
+<p>We also download matching CO2 data for the dates covering the fluxnet sites. This covers all data downloads!</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># . grab CO2 data ----</span>
 <span class="va">df_co2</span> <span class="op">&lt;-</span> <span class="fu">ingestr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span><span class="op">(</span>
   <span class="va">fluxnet_sites</span>,
   source  <span class="op">=</span> <span class="st">"co2_mlo"</span>,
   verbose <span class="op">=</span> <span class="cn">FALSE</span>
   <span class="op">)</span></code></pre></div>
-<pre><code>## [1] "ftp://aftp.cmdl.noaa.gov/products/trends/co2/co2_mm_mlo.txt"</code></pre>
-<pre><code>## /var/folders/f_/vvrf3z593z7_hnkqmjt6rwtw0000gq/T//RtmpJ2wr1P/filec41477fd642e</code></pre>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<p>A final set of required ancillary data covers the soil texture properties.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># . set soil parameters ----</span>
 <span class="va">df_soiltexture</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind.html">bind_rows</a></span><span class="op">(</span>
   top    <span class="op">=</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html">tibble</a></span><span class="op">(</span>
@@ -264,12 +212,11 @@
     forg <span class="op">=</span> <span class="fl">0.1</span>,
     fgravel <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>
 <span class="op">)</span></code></pre></div>
-</div>
-<div id="run-model" class="section level2">
+<div id="simulation-parameters" class="section level2">
 <h2 class="hasAnchor">
-<a href="#run-model" class="anchor"></a>Run model</h2>
-<p>set simulation parameters</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<a href="#simulation-parameters" class="anchor"></a>Simulation parameters</h2>
+<p>With all data downloads done we have to set some simulation parameters which will be merged with all driver data. This data includes the number of spin-up years, and how soil and temperature stress are dealt with.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">params_siml</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
   spinup             <span class="op">=</span> <span class="cn">TRUE</span>,
   spinupyears        <span class="op">=</span> <span class="fl">10</span>,
@@ -288,8 +235,12 @@
   lgn3               <span class="op">=</span> <span class="cn">FALSE</span>,
   lgr4               <span class="op">=</span> <span class="cn">FALSE</span>
     <span class="op">)</span></code></pre></div>
-<p>combine all data into the rsofun driver data format and save locally</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+</div>
+<div id="merging-data-streams" class="section level2">
+<h2 class="hasAnchor">
+<a href="#merging-data-streams" class="anchor"></a>Merging data streams</h2>
+<p>With all pieces in place we can use the <code>rsofun</code> collect_drivers_sofun() function to merge all datasets into one nested dataframe, which serves as input to the <code>rsofun</code> p-model. This concludes the formatting of the driver data</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">p_model_fluxnet_drivers</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/collect_drivers_sofun.html">collect_drivers_sofun</a></span><span class="op">(</span>
   site_info      <span class="op">=</span> <span class="va">fluxnet_sites</span>,
   params_siml    <span class="op">=</span> <span class="va">params_siml</span>,
@@ -297,62 +248,15 @@
   fapar          <span class="op">=</span> <span class="va">df_modis_fpar</span>,
   co2            <span class="op">=</span> <span class="va">df_co2</span>,
   params_soil    <span class="op">=</span> <span class="va">df_soiltexture</span>
-  <span class="op">)</span>
-<span class="co">#&gt; Warning: Variable 'snow' missing in meteo data frame. </span>
-<span class="co">#&gt;                 Assuming zero for all dates.</span>
-<span class="co">#&gt; Warning: Variable 'rain' missing in meteo data frame.</span>
-<span class="co">#&gt;                 Assuming equal to 'prec' for all dates.</span>
-<span class="co">#&gt; Warning: Variable 'tmin' missing in meteo data frame.</span>
-<span class="co">#&gt;                 Assuming equal to 'temp' for all dates.</span>
-<span class="co">#&gt;                 (same goes for tmax as assumed paired)</span>
-
-<span class="co"># . save data as a datafile, recognized by the package ----</span>
-<span class="fu"><a href="https://rdrr.io/r/base/save.html">save</a></span><span class="op">(</span><span class="va">p_model_fluxnet_drivers</span>,
-     file <span class="op">=</span> <span class="st">"~/trash/p_model_fluxnet_drivers.rda"</span>,
-     compress <span class="op">=</span> <span class="st">"xz"</span><span class="op">)</span></code></pre></div>
+  <span class="op">)</span></code></pre></div>
 </div>
-<div id="prepare-validation-data" class="section level2">
-<h2 class="hasAnchor">
-<a href="#prepare-validation-data" class="anchor"></a>Prepare validation data</h2>
-<p>Ingest GPP data from FLUXNET2015.</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># Use the same sites as above</span>
-<span class="va">calib_sites</span> <span class="op">&lt;-</span> <span class="va">fluxnet_sites</span> <span class="op">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html">pull</a></span><span class="op">(</span><span class="va">sitename</span><span class="op">)</span>
-<span class="va">calib_sites</span> <span class="op">&lt;-</span> <span class="va">fluxnet_sites</span> <span class="op">%&gt;%</span>
-  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op">%in%</span> <span class="va">calib_sites</span><span class="op">)</span>
-
-<span class="co"># settings for data preparation</span>
-<span class="va">settings_ingestr_fluxnet</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-  dir_hh <span class="op">=</span> <span class="st">"~/data/FLUXNET-2015_Tier1/20191024/HH/"</span>,
-  getswc <span class="op">=</span> <span class="cn">FALSE</span>,
-  filter_ntdt <span class="op">=</span> <span class="cn">TRUE</span>,
-  threshold_GPP <span class="op">=</span> <span class="fl">0.8</span>,
-  remove_neg <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span>
-
-<span class="co"># . format fluxnet GPP data ----</span>
-
-<span class="va">p_model_fluxnet_calval</span> <span class="op">&lt;-</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/warning.html">suppressWarnings</a></span><span class="op">(</span>
-    <span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressMessages</a></span><span class="op">(</span>
-      <span class="fu">ingestr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ingestr/man/ingest.html">ingest</a></span><span class="op">(</span>
-        siteinfo <span class="op">=</span> <span class="va">calib_sites</span>,
-        source    <span class="op">=</span> <span class="st">"fluxnet"</span>,
-        getvars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>gpp <span class="op">=</span> <span class="st">"GPP_NT_VUT_REF"</span>,
-                       gpp_unc <span class="op">=</span> <span class="st">"GPP_NT_VUT_SE"</span><span class="op">)</span>,
-        dir <span class="op">=</span> <span class="st">"~/data/FLUXNET-2015_Tier1/20191024/DD/"</span>,
-        settings <span class="op">=</span> <span class="va">settings_ingestr_fluxnet</span>,
-        timescale <span class="op">=</span> <span class="st">"d"</span>
-      <span class="op">)</span>
-    <span class="op">)</span>
-  <span class="op">)</span>
-
-<span class="fu"><a href="https://rdrr.io/r/base/save.html">save</a></span><span class="op">(</span><span class="va">p_model_fluxnet_calval</span>,
-     file <span class="op">=</span> <span class="st">"~/trash/p_model_fluxnet_calval.rda"</span>,
-     compress <span class="op">=</span> <span class="st">"xz"</span><span class="op">)</span>
-
-<span class="co"># run the model for these parameters</span>
+</div>
+<div id="running-a-simulation" class="section level1">
+<h1 class="hasAnchor">
+<a href="#running-a-simulation" class="anchor"></a>Running a simulation</h1>
+<p>With the above formatted data we can now run the model, provided some additional model parameters. For a model calibration routine see <a href="https://computationales.github.io/rsofun/articles/pmodel_use.html">this vignette</a>.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># run the model for these parameters</span>
 <span class="co"># optimized parameters from previous work (Stocker et al., 2020 GMD)</span>
 <span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
     kphio           <span class="op">=</span> <span class="fl">0.09423773</span>,
@@ -362,167 +266,15 @@
     par_shape_tempstress  <span class="op">=</span> <span class="fl">0.0</span>
   <span class="op">)</span>
 
-<span class="va">output_new</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span>
+<span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span>
   <span class="va">p_model_fluxnet_drivers</span>,
   par <span class="op">=</span> <span class="va">params_modl</span>
   <span class="op">)</span>
-<span class="co">#&gt; Warning: Error: Missing value in fapar for AR-Vir</span>
 
-<span class="va">output_new</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">%&gt;%</span> 
+<span class="va">output</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">%&gt;%</span> 
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">gpp</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<p><img src="prepare_forcing_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
-<!-- The `rsofun` package and framework includes two main models. The `pmodel` and `lm3-ppa` (which in part relies on pmodel compents). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs. -->
-<!-- ## Demo data -->
-<!-- The package includes two demo datasets to run and validate pmodel output. These files can be directly loaded into your workspace by typing: -->
-<!-- ```{r} -->
-<!-- library(rsofun) -->
-<!-- p_model_drivers -->
-<!-- p_model_validation -->
-<!-- ``` -->
-<!-- These are real data from the French FR-Pue fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters. -->
-<!-- ## Running the model -->
-<!-- With all data prepared we can run the model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. -->
-<!-- ```{r} -->
-<!-- # optimized parameters from previous -->
-<!-- # work -->
-<!-- params_modl <- list( -->
-<!--     kphio           = 0.09423773, -->
-<!--     soilm_par_a     = 0.33349283, -->
-<!--     soilm_par_b     = 1.45602286, -->
-<!--     tau_acclim_tempstress = 10, -->
-<!--     par_shape_tempstress  = 0.0 -->
-<!--   ) -->
-<!-- # run the model for these parameters -->
-<!-- output <- rsofun::runread_pmodel_f( -->
-<!--   p_model_drivers, -->
-<!--   par = params_modl -->
-<!--   ) -->
-<!-- ``` -->
-<!-- ### plotting output -->
-<!-- We can now visualize both the model output and the measured values together. -->
-<!-- ```{r} -->
-<!-- library(dplyr) -->
-<!-- library(tidyr) -->
-<!-- library(ggplot2) -->
-<!-- # we only have one site so we'll unnest -->
-<!-- # the main model output -->
-<!-- model_data <- output %>% -->
-<!--   filter(sitename == "FR-Pue") %>% -->
-<!--   tidyr::unnest(data) -->
-<!-- validation_data <- p_model_validation %>% -->
-<!--   tidyr::unnest(data) -->
-<!-- ggplot() + -->
-<!--     geom_line( -->
-<!--     data = model_data, -->
-<!--     aes( -->
-<!--       date, -->
-<!--       gpp -->
-<!--     ), -->
-<!--     colour = "red" -->
-<!--   ) + -->
-<!--   geom_line( -->
-<!--     data = validation_data, -->
-<!--     aes( -->
-<!--       date, -->
-<!--       gpp -->
-<!--     ) -->
-<!--   ) + -->
-<!--   labs( -->
-<!--     x = "Date", -->
-<!--     y = "GPP" -->
-<!--   ) -->
-<!-- ``` -->
-<!-- ## Calibrating model parameters -->
-<!-- To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges. -->
-<!-- ```{r} -->
-<!--   settings <- list( -->
-<!--     method              = "bayesiantools", -->
-<!--     targetvars          = c("gpp"), -->
-<!--     timescale           = list(targets_obs = "y"), -->
-<!--     sitenames           = "FR-Pue", -->
-<!--     metric              = cost_rmse_kphio, -->
-<!--     dir_results         = "./", -->
-<!--     name                = "ORG", -->
-<!--     control = list( -->
-<!--       sampler = "DEzs", -->
-<!--       settings = list( -->
-<!--         burnin = 1000, -->
-<!--         iterations = 5000 -->
-<!--       ) -->
-<!--     ), -->
-<!--     par = list( -->
-<!--       kphio = list(lower=0.04, upper=0.1, init = 0.05), -->
-<!--       a = list(lower=0, upper=5, init = 3.5), -->
-<!--       b = list(lower=1, upper=5, init=3.5), -->
-<!--       tau = list(lower=0, upper=15, init=1), -->
-<!--       shape = list(lower=0, upper=0.1, init=0) -->
-<!--       ) -->
-<!--   ) -->
-<!-- ``` -->
-<!-- By default `rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `BayesianTools` approach using the DEza sampler. For this example the burnin and iterations are kept artificially low. In a real scenario you will have to increase these values orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided all starting with `cost_*` but the model structure is transparent and custom cost functions can be easily written. -->
-<!-- In addition starting values and ranges are provided for the free parameters in the model. Free parameters include, kphio, a, b, tau and shape. Be mindful that with newer version of rsofun additional parameters might be introduced, so re-check vignettes and model descriptions when updating existing code. -->
-<!-- With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified. -->
-<!-- ```{r eval = FALSE} -->
-<!-- # calibrate the model and -->
-<!-- # optimize free parameters -->
-<!-- pars <- calib_sofun( -->
-<!--     df_drivers = p_model_drivers,   -->
-<!--     ddf_obs = p_model_validation, -->
-<!--     settings = settings -->
-<!--   ) -->
-<!-- ``` -->
-<!-- When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set. -->
-<!-- ```{r} -->
-<!-- # reformatting the parameter list -->
-<!-- params_modl <- list( -->
-<!--     kphio           = pars$par[1], -->
-<!--     soilm_par_a     = pars$par[2], -->
-<!--     soilm_par_b     = pars$par[3], -->
-<!--     tau_acclim_tempstress = pars$par[4], -->
-<!--     par_shape_tempstress  = pars$par[5] -->
-<!--   ) -->
-<!-- # run the model for these parameters -->
-<!-- output_new <- rsofun::runread_pmodel_f( -->
-<!--   p_model_drivers, -->
-<!--   par = params_modl -->
-<!--   ) -->
-<!-- # we only have one site so we'll unnest -->
-<!-- # the main model output -->
-<!-- model_data_new <- output_new %>% -->
-<!--   filter(sitename == "FR-Pue") %>% -->
-<!--   tidyr::unnest(data) -->
-<!--   ggplot() + -->
-<!--     geom_line( -->
-<!--     data = model_data, -->
-<!--     aes( -->
-<!--       date, -->
-<!--       gpp -->
-<!--     ), -->
-<!--     colour = "blue", -->
-<!--     alpha = 0.3 -->
-<!--   ) + -->
-<!--   geom_line( -->
-<!--     data = validation_data, -->
-<!--     aes( -->
-<!--       date, -->
-<!--       gpp -->
-<!--     ) -->
-<!--   ) + -->
-<!--     geom_line( -->
-<!--     data = model_data_new, -->
-<!--     aes( -->
-<!--       date, -->
-<!--       gpp -->
-<!--     ), -->
-<!--     colour = "red" -->
-<!--   ) + -->
-<!--   labs( -->
-<!--     x = "Date", -->
-<!--     y = "GPP" -->
-<!--   ) -->
-<!-- ``` -->
-<!-- For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/web/packages/GenSA/index.html) and [BayesianTools](https://github.com/florianhartig/BayesianTools). -->
+<p><img src="prepare_forcing_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
 </div>
   </div>
 
