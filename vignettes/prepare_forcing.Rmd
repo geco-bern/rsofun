@@ -16,7 +16,8 @@ knitr::opts_chunk$set(
 )
 
 # Libraries, check for Euler access ----
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
 library(rsofun)
 library(ingestr)
 
