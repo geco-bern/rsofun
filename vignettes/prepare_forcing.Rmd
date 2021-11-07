@@ -49,11 +49,9 @@ library(ingestr)
 To limit the computational times we'll use a subset of three
 fluxnet site locations. We can also use arbitrary locations if desired.
 
-```{r}
+```{r eval = FALSE}
 fluxnet_sites <- ingestr::siteinfo_fluxnet2015 %>%
   dplyr::filter(sitename == "FR-Pue")
-
-print(fluxnet_sites)
 ```
 Using a data frame of site info we can subset and format fluxnet data into the
 desired shape (assuming a local copy of the FLUXNET2015 dataset for the 
