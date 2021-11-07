@@ -29,6 +29,7 @@ Imports:
     magrittr,
     lubridate,
     GenSA,
+    nloptr,
     rlang,
     graphics,
     grDevices,
