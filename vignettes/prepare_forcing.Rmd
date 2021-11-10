@@ -4,7 +4,7 @@ author: "Beni Stocker"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Prepare forcing}
+  %\VignetteIndexEntry{Prepare rsofun forcing}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

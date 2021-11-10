@@ -95,9 +95,9 @@ contains
         doy = doy + 1
         idoy = idoy + 1
 
-         print*,'----------------------'
-         print*,'YEAR, DOY ', myinterface%steering%year, doy
-         print*,'----------------------'
+         ! print*,'----------------------'
+         ! print*,'YEAR, DOY ', myinterface%steering%year, doy
+         ! print*,'----------------------'
 
         !----------------------------------------------------------------
         ! FAST TIME STEP
