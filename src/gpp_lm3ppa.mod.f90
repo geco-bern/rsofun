@@ -166,6 +166,7 @@ contains
           cc%transp  = transp * mol_h2o * cc%leafarea * myinterface%step_seconds ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
           cc%resl    = -resp         * mol_C * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
           cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
+          ! print *, cc%gpp
 
           !if (isnan(cc%gpp)) stop '"gpp" is a NaN'
 
@@ -256,7 +257,7 @@ contains
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
 
-        print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
+        !print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
 
         if (cc%status == LEAF_ON .and. cc%lai > 0.1 .and. temp_memory > -5.0) then
 
@@ -282,6 +283,9 @@ contains
             ! cc%resl    = cc%An_cl              * mol_C * myinterface%step_seconds ! kgC tree-1 step-1
             ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * myinterface%step_seconds ! kgC step-1 tree-1
             !===============================
+
+            ! conversion from ameriflux umol m-2 s-1 to mol m-2 s-1
+            ! required for pmodel
             myppfd = f_light(layer) * forcing%PAR * 1.0e-6
 
             ! print*,'patm_memory', patm_memory
@@ -317,6 +321,8 @@ contains
             ! copy to cohort variables
             cc%resl = myrd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
             cc%gpp  = mygpp * cc%crownarea * myinterface%step_seconds * 1.0e-3   ! kgC step-1 tree-1
+
+            ! print *, cc%gpp
 
           else
 

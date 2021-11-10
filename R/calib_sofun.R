@@ -38,11 +38,11 @@ calib_sofun <- function(
   if (nrow(obs) == 0){
     warning("no validation data available, returning NA parameters")
     
-    settings$par$kphio          <- NA
+    settings$par$kphio <- NA
     settings$par$soilm_par_a <- NA
-    settings$par$soilm_par_b    <- NA
-    settings$par$tau_acclim_tempstress    <- NA
-    settings$par$par_shape_tempstress    <- NA
+    settings$par$soilm_par_b <- NA
+    settings$par$tau_acclim_tempstress <- NA
+    settings$par$par_shape_tempstress <- NA
     
     return(settings$par)
   }
