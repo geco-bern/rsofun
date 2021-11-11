@@ -4,45 +4,63 @@ author: "Beni Stocker"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Prepare forcing}
+  %\VignetteIndexEntry{Prepare rsofun forcing}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-## Prepare forcing data
-
-ALL BELOW IS COPIED FROM sofunCalVal/data/00_prepare_fluxnet_driver_data.R
-
-```{r setup, include = TRUE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 
-# Routine to format the benchmark driver dataset
-# based upon FLUXNET data. This routine assumes
-# that the code is run on th Euler compute
-# infrastructure
-#
-# The data generated is meant to drive the p-model
-# and provide a good working / test dataset.
-# The routine used is largely based on previous work
-# REFERENCE PAPER BENI.
-
 # Libraries, check for Euler access ----
+library(dplyr)
+library(ggplot2)
+library(rsofun)
+
+p_model_fluxnet_drivers <- rsofun::p_model_drivers
+```
+
+Forcing data of `rsofun` adheres to a fixed format as described [here]. Any data
+in this format will be valid `rsofun` input data. However to facilitate the
+formatting of these datasets you may use the internal lab tool `ingestr`. This
+toolset allows for the easy and consistent formatting of data.
+
+However, this toolset is very dynamic in nature and therefore will not see a
+formal CRAN release. Within this context we will also give very limited support.
+Despite these caveats you might find this tool useful. The below routine shows
+you how to format data using `ingestr`, assuming all 
+[source data](https://github.com/computationales/ingestr) has been 
+downloaded beforehand.
+
+# Preparing driver data
+
+To format data we need to load the required libraries first.
+
+```{r eval = FALSE}
+# Libraries
 library(tidyverse)
 library(rsofun)
 library(ingestr)
+```
 
-# if(!grepl('eu-', Sys.info()['nodename'])){
-#   stop("You are not on Euler, source data unavailable - abort abort abort!")
-# }
+To limit the computational times we'll use a subset of three
+fluxnet site locations. We can also use arbitrary locations if desired.
 
-# . set sites to ingest ----
+```{r eval = FALSE}
 fluxnet_sites <- ingestr::siteinfo_fluxnet2015 %>%
-  dplyr::slice(1:3) # just an example
+  dplyr::filter(sitename == "FR-Pue")
+```
+Using a data frame of site info we can subset and format fluxnet data into the
+desired shape (assuming a local copy of the FLUXNET2015 dataset for the 
+desired sites). We refer to the 
+[FLUXNET2015 data website](https://fluxnet.org/data/fluxnet2015-dataset/)
+for data downloads.
 
-# . grab fluxnet data ----
+```{r eval = FALSE}
+# grab fluxnet data ----
 df_fluxnet <-
   suppressWarnings(
     suppressMessages(
@@ -62,8 +80,13 @@ df_fluxnet <-
       )
     )
   )
+```
 
-# . get CRU data to complement fluxnet data ----
+Not all required data is available within the fluxnet dataset. As such we amend
+these data with additional data sources. In this case we use CRU data to 
+complement the fluxnet data, and merged into a single 'meteo' data frame.
+
+```{r eval = FALSE}
 df_cru <- ingestr::ingest(
   siteinfo  = fluxnet_sites,
   source    = "cru",
@@ -71,7 +94,6 @@ df_cru <- ingestr::ingest(
   dir       = "~/data/cru/ts_4.01/"
   )
 
-# . merge data into one "meteo" data frame ----
 df_meteo <- df_fluxnet %>%
   tidyr::unnest(data) %>%
   left_join(
@@ -81,8 +103,12 @@ df_meteo <- df_fluxnet %>%
   ) %>%
   group_by(sitename) %>%
   tidyr::nest()
+```
 
-# . grab MODIS FPAR data ----
+Additional fAPAR data is gathered from remote sensing products. We first specify
+download settings, and initiate a download for our site locations.
+
+```{r eval = FALSE}
 settings_modis <- get_settings_modis(
   bundle            = "modis_fpar",
   data_path         = "~/data/modis_subsets/",
@@ -107,14 +133,23 @@ df_modis_fpar <- df_modis_fpar %>%
   mutate(
     data = purrr::map(data, ~rename(., fapar = modisvar_filled))
     )
+```
 
+We also download matching CO2 data for the dates covering the fluxnet sites.
+This covers all data downloads!
+
+```{r eval = FALSE}
 # . grab CO2 data ----
 df_co2 <- ingestr::ingest(
   fluxnet_sites,
   source  = "co2_mlo",
   verbose = FALSE
   )
+```
 
+A final set of required ancillary data covers the soil texture properties.
+
+```{r eval = FALSE}
 # . set soil parameters ----
 df_soiltexture <- bind_rows(
   top    = tibble(
@@ -133,11 +168,13 @@ df_soiltexture <- bind_rows(
 )
 ```
 
-## Run model
+## Simulation parameters
 
-set simulation parameters
+With all data downloads done we have to set some simulation parameters which
+will be merged with all driver data. This data includes the number of spin-up
+years, and how soil and temperature stress are dealt with.
 
-```{r}
+```{r eval = FALSE}
 params_siml <- list(
   spinup             = TRUE,
   spinupyears        = 10,
@@ -158,8 +195,13 @@ params_siml <- list(
 	)
 ```
 
-combine all data into the rsofun driver data format and save locally
-```{r}
+## Merging data streams
+
+With all pieces in place we can use the `rsofun` collect_drivers_sofun()
+function to merge all datasets into one nested dataframe, which serves as
+input to the `rsofun` p-model. This concludes the formatting of the driver data
+
+```{r eval = FALSE}
 p_model_fluxnet_drivers <- rsofun::collect_drivers_sofun(
   site_info      = fluxnet_sites,
   params_siml    = params_siml,
@@ -168,54 +210,15 @@ p_model_fluxnet_drivers <- rsofun::collect_drivers_sofun(
   co2            = df_co2,
   params_soil    = df_soiltexture
   )
-
-# . save data as a datafile, recognized by the package ----
-save(p_model_fluxnet_drivers,
-     file = "~/trash/p_model_fluxnet_drivers.rda",
-     compress = "xz")
 ```
 
+# Running a simulation
 
-## Prepare validation data
+With the above formatted data we can now run the model, provided some additional
+model parameters. For a model calibration routine see 
+[this vignette](https://computationales.github.io/rsofun/articles/pmodel_use.html).
 
-Ingest GPP data from FLUXNET2015.
 ```{r}
-# Use the same sites as above
-calib_sites <- fluxnet_sites %>%
-  pull(sitename)
-calib_sites <- fluxnet_sites %>%
-  dplyr::filter(sitename %in% calib_sites)
-
-# settings for data preparation
-settings_ingestr_fluxnet <- list(
-  dir_hh = "~/data/FLUXNET-2015_Tier1/20191024/HH/",
-  getswc = FALSE,
-  filter_ntdt = TRUE,
-  threshold_GPP = 0.8,
-  remove_neg = FALSE
-)
-
-# . format fluxnet GPP data ----
-
-p_model_fluxnet_calval <-
-  suppressWarnings(
-    suppressMessages(
-      ingestr::ingest(
-        siteinfo = calib_sites,
-        source    = "fluxnet",
-        getvars = list(gpp = "GPP_NT_VUT_REF",
-                       gpp_unc = "GPP_NT_VUT_SE"),
-        dir = "~/data/FLUXNET-2015_Tier1/20191024/DD/",
-        settings = settings_ingestr_fluxnet,
-        timescale = "d"
-      )
-    )
-  )
-
-save(p_model_fluxnet_calval,
-     file = "~/trash/p_model_fluxnet_calval.rda",
-     compress = "xz")
-
 # run the model for these parameters
 # optimized parameters from previous work (Stocker et al., 2020 GMD)
 params_modl <- list(
@@ -226,195 +229,12 @@ params_modl <- list(
     par_shape_tempstress  = 0.0
   )
 
-output_new <- rsofun::runread_pmodel_f(
+output <- rsofun::runread_pmodel_f(
   p_model_fluxnet_drivers,
   par = params_modl
   )
 
-output_new$data[[1]] %>% 
+output$data[[1]] %>% 
   ggplot(aes(date, gpp)) +
   geom_line()
 ```
-
-<!-- The `rsofun` package and framework includes two main models. The `pmodel` and `lm3-ppa` (which in part relies on pmodel compents). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs. -->
-
-<!-- ## Demo data -->
-
-<!-- The package includes two demo datasets to run and validate pmodel output. These files can be directly loaded into your workspace by typing: -->
-
-<!-- ```{r} -->
-<!-- library(rsofun) -->
-
-<!-- p_model_drivers -->
-
-<!-- p_model_validation -->
-<!-- ``` -->
-
-<!-- These are real data from the French FR-Pue fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters. -->
-
-<!-- ## Running the model -->
-
-<!-- With all data prepared we can run the model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. -->
-
-<!-- ```{r} -->
-
-<!-- # optimized parameters from previous -->
-<!-- # work -->
-<!-- params_modl <- list( -->
-<!--     kphio           = 0.09423773, -->
-<!--     soilm_par_a     = 0.33349283, -->
-<!--     soilm_par_b     = 1.45602286, -->
-<!--     tau_acclim_tempstress = 10, -->
-<!--     par_shape_tempstress  = 0.0 -->
-<!--   ) -->
-
-<!-- # run the model for these parameters -->
-<!-- output <- rsofun::runread_pmodel_f( -->
-<!--   p_model_drivers, -->
-<!--   par = params_modl -->
-<!--   ) -->
-<!-- ``` -->
-
-<!-- ### plotting output -->
-
-<!-- We can now visualize both the model output and the measured values together. -->
-
-<!-- ```{r} -->
-<!-- library(dplyr) -->
-<!-- library(tidyr) -->
-<!-- library(ggplot2) -->
-
-<!-- # we only have one site so we'll unnest -->
-<!-- # the main model output -->
-<!-- model_data <- output %>% -->
-<!--   filter(sitename == "FR-Pue") %>% -->
-<!--   tidyr::unnest(data) -->
-
-<!-- validation_data <- p_model_validation %>% -->
-<!--   tidyr::unnest(data) -->
-
-<!-- ggplot() + -->
-<!--     geom_line( -->
-<!--     data = model_data, -->
-<!--     aes( -->
-<!--       date, -->
-<!--       gpp -->
-<!--     ), -->
-<!--     colour = "red" -->
-<!--   ) + -->
-<!--   geom_line( -->
-<!--     data = validation_data, -->
-<!--     aes( -->
-<!--       date, -->
-<!--       gpp -->
-<!--     ) -->
-<!--   ) + -->
-<!--   labs( -->
-<!--     x = "Date", -->
-<!--     y = "GPP" -->
-<!--   ) -->
-<!-- ``` -->
-
-<!-- ## Calibrating model parameters -->
-
-<!-- To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges. -->
-
-<!-- ```{r} -->
-<!--   settings <- list( -->
-<!--     method              = "bayesiantools", -->
-<!--     targetvars          = c("gpp"), -->
-<!--     timescale           = list(targets_obs = "y"), -->
-<!--     sitenames           = "FR-Pue", -->
-<!--     metric              = cost_rmse_kphio, -->
-<!--     dir_results         = "./", -->
-<!--     name                = "ORG", -->
-<!--     control = list( -->
-<!--       sampler = "DEzs", -->
-<!--       settings = list( -->
-<!--         burnin = 1000, -->
-<!--         iterations = 5000 -->
-<!--       ) -->
-<!--     ), -->
-<!--     par = list( -->
-<!--       kphio = list(lower=0.04, upper=0.1, init = 0.05), -->
-<!--       a = list(lower=0, upper=5, init = 3.5), -->
-<!--       b = list(lower=1, upper=5, init=3.5), -->
-<!--       tau = list(lower=0, upper=15, init=1), -->
-<!--       shape = list(lower=0, upper=0.1, init=0) -->
-<!--       ) -->
-<!--   ) -->
-<!-- ``` -->
-
-<!-- By default `rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `BayesianTools` approach using the DEza sampler. For this example the burnin and iterations are kept artificially low. In a real scenario you will have to increase these values orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided all starting with `cost_*` but the model structure is transparent and custom cost functions can be easily written. -->
-
-<!-- In addition starting values and ranges are provided for the free parameters in the model. Free parameters include, kphio, a, b, tau and shape. Be mindful that with newer version of rsofun additional parameters might be introduced, so re-check vignettes and model descriptions when updating existing code. -->
-
-<!-- With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified. -->
-
-<!-- ```{r eval = FALSE} -->
-<!-- # calibrate the model and -->
-<!-- # optimize free parameters -->
-<!-- pars <- calib_sofun( -->
-<!--     df_drivers = p_model_drivers,   -->
-<!--     ddf_obs = p_model_validation, -->
-<!--     settings = settings -->
-<!--   ) -->
-<!-- ``` -->
-
-<!-- When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set. -->
-
-<!-- ```{r} -->
-<!-- # reformatting the parameter list -->
-<!-- params_modl <- list( -->
-<!--     kphio           = pars$par[1], -->
-<!--     soilm_par_a     = pars$par[2], -->
-<!--     soilm_par_b     = pars$par[3], -->
-<!--     tau_acclim_tempstress = pars$par[4], -->
-<!--     par_shape_tempstress  = pars$par[5] -->
-<!--   ) -->
-
-<!-- # run the model for these parameters -->
-<!-- output_new <- rsofun::runread_pmodel_f( -->
-<!--   p_model_drivers, -->
-<!--   par = params_modl -->
-<!--   ) -->
-
-<!-- # we only have one site so we'll unnest -->
-<!-- # the main model output -->
-<!-- model_data_new <- output_new %>% -->
-<!--   filter(sitename == "FR-Pue") %>% -->
-<!--   tidyr::unnest(data) -->
-
-<!--   ggplot() + -->
-<!--     geom_line( -->
-<!--     data = model_data, -->
-<!--     aes( -->
-<!--       date, -->
-<!--       gpp -->
-<!--     ), -->
-<!--     colour = "blue", -->
-<!--     alpha = 0.3 -->
-<!--   ) + -->
-<!--   geom_line( -->
-<!--     data = validation_data, -->
-<!--     aes( -->
-<!--       date, -->
-<!--       gpp -->
-<!--     ) -->
-<!--   ) + -->
-<!--     geom_line( -->
-<!--     data = model_data_new, -->
-<!--     aes( -->
-<!--       date, -->
-<!--       gpp -->
-<!--     ), -->
-<!--     colour = "red" -->
-<!--   ) + -->
-<!--   labs( -->
-<!--     x = "Date", -->
-<!--     y = "GPP" -->
-<!--   ) -->
-
-<!-- ``` -->
-
-<!-- For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/web/packages/GenSA/index.html) and [BayesianTools](https://github.com/florianhartig/BayesianTools). -->

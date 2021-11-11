@@ -339,11 +339,10 @@ cost_rmse_lm3ppa_gsleuning <- function(
   ){
   
   # Add changed model parameters to drivers, overwriting where necessary.
-  drivers$params_species[[1]]$phiRL[]      <- par[1]  # the same for all values
-  drivers$params_species[[1]]$LAI_light[]  <- par[2]  # the same for all values
+  drivers$params_species[[1]]$phiRL[]      <- par[1]
+  drivers$params_species[[1]]$LAI_light[]  <- par[2]
   drivers$params_tile[[1]]$tf_base         <- par[3]
   drivers$params_tile[[1]]$par_mort        <- par[4]
-
   obs <- obs$data[[1]]
   
   df <- runread_lm3ppa_f(
@@ -355,11 +354,16 @@ cost_rmse_lm3ppa_gsleuning <- function(
   # Aggregate variables from the model df taking the last 500 yrs
   df_mod <- df$data[[1]]$output_annual_tile %>%
     tail(500) %>%
-    dplyr::summarise(GPP = mean(GPP),
-                     LAI= quantile(LAI, probs = 0.95, na.rm=T),
-                     Density=mean(Density12),
-                     Biomass=mean(plantC))
-
+    select(
+      GPP, LAI, Density12, plantC
+    ) %>%
+    dplyr::summarise(
+       GPP = mean(GPP, na.rm = TRUE),
+       LAI = quantile(LAI, probs = 0.95, na.rm=TRUE),
+       Density = mean(Density12, na.rm=TRUE),
+       Biomass = mean(plantC, na.rm=TRUE)
+       )
+  
   dff <- data.frame(
     variables = c("GPP","LAI","Density","Biomass"),
     targets_mod = c(df_mod$GPP,

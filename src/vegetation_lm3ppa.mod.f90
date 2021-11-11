@@ -1773,7 +1773,13 @@ contains
     do i = 1, vegn%n_cohorts
       if (vegn%cohorts(i)%nindivs > mindensity) k=k+1
     enddo
-    if (k==0) stop
+
+    !print *, k
+
+    if (k==0) then
+      !print *, "cohort too small, killing"
+      stop
+    endif
     
     ! exclude cohorts that have low individuals
     if (k < vegn%n_cohorts) then
