@@ -77,7 +77,7 @@ contains
       idoy   = 0
       idays  = 0
 
-    endif 
+    endif
 
     simu_steps = 0
 
@@ -126,7 +126,7 @@ contains
           ! call getout_hourly( vegn, myinterface%climate(idata), iyears, idoy, i, out_biosphere%hourly_tile(idata) )
 
         enddo fastloop ! hourly or half-hourly
-
+        
         !-------------------------------------------------
         ! Daily calls after fast loop
         !-------------------------------------------------
@@ -137,13 +137,13 @@ contains
         ! sum over fast time steps and cohorts
         call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy)  )
         ! print*,'1. vegn%annualGPP ', vegn%annualGPP
- 
+        
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
-
+        
         ! Produce new biomass from 'carbon_gain' (is zero afterwards) and continous biomass turnover
         call vegn_growth_EW( vegn )
-
+        
         ! get daily outputs
         ! call getout_daily( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
 
@@ -169,35 +169,35 @@ contains
     ! cohorts again and we want annual output and daily
     ! output to be consistent with cohort identities.
     !---------------------------------------------
-    ! print*,'A: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    print*,'A: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
     !---------------------------------------------        
     ! Kill all individuals in a cohort if NSC falls below critical point
-    ! print*,'B: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs 
+    print*,'B: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs 
     call vegn_annual_starvation( vegn )
     
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
-    ! print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_nat_mortality( vegn )
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
-    ! print*,'D: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    print*,'D: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_reproduction( vegn )
     
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
-    ! print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call kill_lowdensity_cohorts( vegn )
     
-    ! print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call relayer_cohorts( vegn )
     
-    ! print*,'G: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    print*,'G: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_mergecohorts( vegn )
 
     ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
@@ -205,9 +205,9 @@ contains
     !---------------------------------------------
     ! Set annual variables zero
     !---------------------------------------------
-    ! print*,'H: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    print*,'H: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call Zero_diagnostics( vegn )
-    ! print*,'I: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    print*,'I: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
 
     ! update the years of model run
     iyears = iyears + 1
@@ -220,7 +220,7 @@ contains
 
     end if
 
-    ! print*,'Done with biosphere for this year. Guete Rutsch!'
+    print*,'Done with biosphere for this year. Guete Rutsch!'
 
   end subroutine biosphere_annual
 

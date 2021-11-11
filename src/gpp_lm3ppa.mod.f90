@@ -60,6 +60,7 @@ contains
 
     ! local variables used for BiomeE-Allocation part
     type(cohort_type), pointer :: cc
+    integer, parameter :: nlayers_max = 10
     real   :: rad_top  ! downward radiation at the top of the canopy, W/m2
     real   :: rad_net  ! net radiation absorbed by the canopy, W/m2
     real   :: Tair, TairK     ! air temperature, degC and degK
@@ -72,10 +73,14 @@ contains
     real   :: resp   ! leaf respiration, mol C/(m2 of leaves s)
     real   :: w_scale2, transp ! mol H20 per m2 of leaf per second
     real   :: kappa ! light extinction coefficient of crown layers
-    real   :: f_light(10) = 0.0, f_apar(10) = 0.0      ! incident light fraction, and aborbed light fraction of each layer
-    real   :: LAIlayer(10), crownarea_layer(10), accuCAI, f_gap, fapar_tree ! additional GPP for lower layer cohorts due to gaps
-    real   :: myppfd, myrd, mygpp      ! just for temporary use
-    integer:: i, layer=0
+    real   :: f_light(nlayers_max+1)        ! incident light fraction at top of a given layer
+    real   :: f_apar(nlayers_max)           ! absorbed light fraction at top of a given layer
+    real   :: LAIlayer(nlayers_max)         ! leaf area index per layer, corrected for gaps (representative for the tree-covered fraction)
+    real   :: cum_lai_layer(nlayers_max+1)  ! cumulative leaf area index of layers above a given layer
+    real   :: crownarea_layer(nlayers_max), accuCAI, f_gap, fapar_tree ! additional GPP for lower layer cohorts due to gaps
+    real   :: par_layer(nlayers_max), myrd, mygpp      ! just for temporary use
+    real   :: apar_layer(nlayers_max)
+    integer:: i, layer=0, layer_old
 
     ! local variables used for P-model part
     real :: tk, ftemp_kphio
@@ -210,61 +215,90 @@ contains
       !----------------------------------------------------------------
       ftemp_kphio = calc_ftemp_kphio( (forcing%Tair - kTkelvin), .false. )  ! no C4
 
+      ! !----------------------------------------------------------------
+      ! ! Average LAI over tree-covered fraction (excluding f_gap) by layer
+      ! !----------------------------------------------------------------
+      ! f_gap = 0.1 ! 0.1
+      ! accuCAI = 0.0
+      ! LAIlayer(:) = 0.0
+      ! crownarea_layer(:) = 0.0
+      ! do i = 1, vegn%n_cohorts
+      !   cc => vegn%cohorts(i)
+      !   layer = max(1, min(cc%layer, 9))
+      !   LAIlayer(layer) = LAIlayer(layer) + cc%leafarea * cc%nindivs / (1.0 - f_gap)
+      !   crownarea_layer(layer) = crownarea_layer(layer) + cc%crownarea * cc%nindivs
+      ! end do
+
+      ! !----------------------------------------------------------------
+      ! ! Fraction of light received at top of each layer
+      ! !----------------------------------------------------------------      
+      ! ! Use constant light extinction coefficient
+      ! kappa = cc%extinct
+      ! f_light(:) = 0.0
+      ! f_light(1) = 1.0
+      ! do layer = 2, (nlayers_max + 1)
+      !   f_light(layer) = f_light(layer - 1) * (f_gap + (1.0 - f_gap) * exp(- kappa * LAIlayer(layer - 1)))
+      ! end do
+
       !----------------------------------------------------------------
-      ! Sum leaf area over cohorts in each crown layer -> LAIlayer(layer)
+      ! Average LAI per unit ground area (excluding f_gap) by layer
       !----------------------------------------------------------------
-      f_gap = 0.1 ! 0.1
       accuCAI = 0.0
       LAIlayer(:) = 0.0
       crownarea_layer(:) = 0.0
       do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
-        layer = max(1, min(cc%layer,9))
-        LAIlayer(layer) = LAIlayer(layer) + cc%leafarea * cc%nindivs / (1.0 - f_gap)
-        crownarea_layer(layer) = crownarea_layer(layer) + cc%crownarea
+        layer = max(1, min(cc%layer, 9))
+        LAIlayer(layer) = LAIlayer(layer) + cc%leafarea * cc%nindivs
+        crownarea_layer(layer) = crownarea_layer(layer) + cc%crownarea * cc%nindivs
       end do
 
       !----------------------------------------------------------------
-      ! Get light fraction received at each crown layer, relative to top-of-canopy -> f_light(layer) 
-      !----------------------------------------------------------------
-      ! Calculate kappa according to sun zenith angle 
-      ! kappa = cc%extinct/max(cosz,0.01)
-
+      ! Fraction of light received at top of each layer
+      !----------------------------------------------------------------      
       ! Use constant light extinction coefficient
       kappa = cc%extinct
       f_light(:) = 0.0
       f_light(1) = 1.0
-      do i=2,layer+1
-        f_light(i) = f_light(i-1) * exp(0.0 - kappa * LAIlayer(i-1))
+      do layer = 2, (nlayers_max + 1)
+        f_light(layer) = f_light(layer - 1) * exp(- kappa * LAIlayer(layer - 1))
       end do
 
-      ! lighten up the canopy (gaps)
-      f_light(:) = f_light(:) * (1.0 - f_gap) + f_gap
 
-      ! fraction of light absorbed by layer
-      do i=1,layer
-        f_apar(i) = f_light(i) - f_light(i+1)
-        ! if (f_apar(i) < 0.0 ) stop 'negative fapar'
-      end do
+      print*,'LAIlayer(:)      ', LAIlayer(:)
+      print*,'f_light(:)       ', f_light(:)      
+      print*,'------------------------------'
 
       !----------------------------------------------------------------
       ! Photosynthesis for each cohort
       !----------------------------------------------------------------
       accuCAI = 0.0
 
-      do i = 1, vegn%n_cohorts
+      ! test
+      apar_layer(:) = 0.0
+
+      par_layer(1) = forcing%PAR * 1.0e-6
+      layer_old = 1
+
+      cohortsloop: do i = 1, vegn%n_cohorts
 
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
 
+        ! check if we're one layer deeper. if so, update light level based on absorbed light by layer above
+        layer = max(1, min(cc%layer, 9))
+        if (layer .ne. layer_old) then
+          par_layer(layer) = par_layer(layer) - apar_layer(layer - 1)
+        end if
+        layer_old = layer
+
         !print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
 
-        if (cc%status == LEAF_ON .and. cc%lai > 0.1 .and. temp_memory > -5.0) then
+        if (cc%status == LEAF_ON .and. temp_memory > -5.0) then
 
           !----------------------------------------------------------------
-          ! Get light absorbed by cohort, dividing fAPAR up by crown areas
+          ! Get light absorbed by cohort
           !----------------------------------------------------------------
-          layer = max(1, min(cc%layer,9))
           fapar_tree = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown
 
           !----------------------------------------------------------------
@@ -284,22 +318,17 @@ contains
             ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * myinterface%step_seconds ! kgC step-1 tree-1
             !===============================
 
-            ! conversion from ameriflux umol m-2 s-1 to mol m-2 s-1
-            ! required for pmodel
-            myppfd = f_light(layer) * forcing%PAR * 1.0e-6
+            ! Light level at this layer
+            ! conversion from umol m-2 s-1 to mol m-2 s-1
+            ! par_layer = f_light(layer) * forcing%PAR * 1.0e-6
 
-            ! print*,'patm_memory', patm_memory
-            ! print*,'vpd_memory', vpd_memory
-            ! print*,'temp_memory', temp_memory
-            ! print*,'co2_memory', co2_memory
-            ! print*,'myppfd', myppfd
-            ! print*,'params_gpp%beta', params_gpp%beta
-            ! print*,'sp%kphio', sp%kphio
+            ! test: total absorbed light per layer, integrating over crownarea
+            apar_layer(layer) = apar_layer(layer) + par_layer(layer) * fapar_tree * cc%crownarea * cc%nindivs
 
             out_pmodel = pmodel(  &
                                   kphio          = sp%kphio, &
                                   beta           = params_gpp%beta, &
-                                  ppfd           = myppfd, &    ! required in mol m-2 s-1, unit ground area
+                                  ppfd           = par_layer(layer), &    ! required in mol m-2 s-1, unit ground area
                                   co2            = co2_memory, &
                                   tc             = temp_memory, &
                                   vpd            = vpd_memory, &
@@ -315,14 +344,15 @@ contains
             cc%transp  = 0.0
             cc%w_scale = -9999
 
-            myrd  = fapar_tree * out_pmodel%vcmax25 * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )               ! mol s-1 m-2
-            mygpp = fapar_tree * out_pmodel%lue * myppfd * myinterface%step_seconds                               ! g s-1 m-2
+            ! quantities per unit ground area
+            mygpp = fapar_tree * out_pmodel%lue * par_layer(layer)                                                                     ! g s-1 m-2
+            myrd  = fapar_tree * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )    ! mol s-1 m-2
 
-            ! copy to cohort variables
+            ! converting to quantities per tree and cumulated over seconds in time step
             cc%resl = myrd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
             cc%gpp  = mygpp * cc%crownarea * myinterface%step_seconds * 1.0e-3   ! kgC step-1 tree-1
 
-            ! print *, cc%gpp
+            ! print*,'resl, gpp, ftemp ', cc%resl, cc%gpp, calc_ftemp_inst_rd( forcing%Tair - kTkelvin )
 
           else
 
@@ -349,7 +379,12 @@ contains
 
         end associate
 
-      end do
+      end do cohortsloop
+
+      print*,'crownarea_layer ', crownarea_layer(:)
+      print*,'apar      ', apar_layer(:)
+      ! print*,'diff light', forcing%PAR * 1.0e-6 * (f_light(1:nlayers_max) - f_light(2:nlayers_max+1))
+      print*,'diff light', par_layer(1:(nlayers_max-1)) - par_layer(2:(nlayers_max))
 
     else
 

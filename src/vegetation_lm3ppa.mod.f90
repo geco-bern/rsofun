@@ -879,7 +879,9 @@ contains
       enddo
 
       ! Remove the cohorts with very few individuals
+      print*,'1'
       call kill_lowdensity_cohorts( vegn )    
+      print*,'3'
 
     endif
 

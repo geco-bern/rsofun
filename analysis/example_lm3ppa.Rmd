@@ -60,20 +60,20 @@ siteinfo <- siteinfo %>%
 
 Now specify the simulation parameters that are identical for all site-scale simulations.
 ```{r,include=TRUE, eval=TRUE}
-params_siml <- tibble( #list
-      spinup                = TRUE,
-      spinupyears           = 700, 
-      recycle               = 800,    # 9 or 11 changed to 1 when aggregating forcing into 1 year
-      firstyeartrend        = 2009, 
-      nyeartrend            = 800,    # 9 or 11 (longer transient years)
-      outputhourly          = TRUE,
-      outputdaily           = TRUE,
-      do_U_shaped_mortality = TRUE,
-      update_annualLAImax   = TRUE,
-      do_closedN_run        = TRUE,
-      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
-      )
+params_siml <- tibble(
+  spinup                = TRUE,
+  spinupyears           = 700, 
+  recycle               = 800,    # 9 or 11 changed to 1 when aggregating forcing into 1 year
+  firstyeartrend        = 2009, 
+  nyeartrend            = 800,    # 9 or 11 (longer transient years)
+  outputhourly          = TRUE,
+  outputdaily           = TRUE,
+  do_U_shaped_mortality = TRUE,
+  update_annualLAImax   = TRUE,
+  do_closedN_run        = TRUE,
+  method_photosynth     = "pmodel", # gs_leuning or pmodel
+  method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
+  )
 ```
 
 #### Photosynthesis method
@@ -98,8 +98,7 @@ The model allows for four different mortality functional forms:
 #### Tile-level parameters
 
 ```{r,include=FALSE, eval=TRUE}
-params_tile <- tibble( #list
-
+params_tile <- tibble(
   soiltype     = 3,     # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   FLDCAP       = 0.4,   # soil property: field capacity 
   WILTPT       = 0.05,  # soil property: wilting point
@@ -244,7 +243,8 @@ The file has the following variables (units):
 ```{r,include=FALSE, eval=TRUE}
 #load(paste0(path.package("rsofun"), "/extdata/forcingLAE.RData"))
 
-load("/home/khufkens/Dropbox/Research_Projects/code_repository/CES/sofunCalVal/backup/data/forcingLAE.RData")
+# load("/home/khufkens/Dropbox/Research_Projects/code_repository/CES/sofunCalVal/backup/data/forcingLAE.RData")
+load("~/data/forcingLAE.RData")
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -252,9 +252,8 @@ if (params_siml$method_photosynth == "gs_leuning"){
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
   forcing <- forcingLAE[,-c(1:3)]
   forcing <- bind_rows(replicate(800, forcing, simplify = FALSE)) # Duplicate for the # of transient years
-}
-
-if (params_siml$method_photosynth == "pmodel"){ #&& dt_secs != (60*60*24)){
+  
+} else if (params_siml$method_photosynth == "pmodel"){ #&& dt_secs != (60*60*24)){
   forcingLAE <- forcingLAE %>% 
     dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
@@ -267,21 +266,18 @@ Changing values of radiation for running simulations
 
 ```{r,include=FALSE, eval=TRUE}
 if (params_siml$method_photosynth == "gs_leuning"){
-forcing <- forcing %>% mutate(Swdown = Swdown*1) # levels = *1, *1.15 and *1.30
-#forcing <- forcing %>% mutate(aCO2_AW = aCO2_AW*1.30) # levels = *1, *1.15 and *1.30
+  forcing <- forcing %>% mutate(Swdown = Swdown*1) # levels = *1, *1.15 and *1.30
+  #forcing <- forcing %>% mutate(aCO2_AW = aCO2_AW*1.30) # levels = *1, *1.15 and *1.30
+} else if (params_siml$method_photosynth == "pmodel"){ 
+  forcing <- forcing %>% mutate(PAR = PAR*1) # levels = *1, *1.15 and *1.30
 }
-
-if (params_siml$method_photosynth == "pmodel"){ 
-forcing <- forcing %>% mutate(PAR = PAR*1) # levels = *1, *1.15 and *1.30
-}
-
 ```
 
 Collect all drivers
 ```{r,include=TRUE, eval=TRUE}
 print(packageVersion("rsofun"))
 
-if(packageVersion("rsofun") == "4.0"){
+## for versions above 4.0
 df_drivers <- tibble(sitename,
                     siteinfo = list(tibble(siteinfo)),
                     params_siml = list(tibble(params_siml)),
@@ -292,21 +288,30 @@ df_drivers <- tibble(sitename,
                     init_soil=list(tibble(init_soil)),
                     forcing=list(tibble(forcing)),
                     .name_repair = "unique")  
-} else {
-  df_drivers <- tibble(sitename,
-                    site_info = list(tibble(siteinfo)),
-                    params_siml = list(tibble(params_siml)),
-                    params_tile = list(tibble(params_tile)),
-                    params_species=list(tibble(params_species)),
-                    params_soil=list(tibble(params_soil)),
-                    init_cohort=list(tibble(init_cohort)),
-                    init_soil=list(tibble(init_soil)),
-                    forcing=list(tibble(forcing)),
-                    .name_repair = "unique")
-}
-
-
-
+  
+# if(as.numeric(unlist(packageVersion("rsofun"))) > 4.0){
+#   df_drivers <- tibble(sitename,
+#                       siteinfo = list(tibble(siteinfo)),
+#                       params_siml = list(tibble(params_siml)),
+#                       params_tile = list(tibble(params_tile)),
+#                       params_species=list(tibble(params_species)),
+#                       params_soil=list(tibble(params_soil)),
+#                       init_cohort=list(tibble(init_cohort)),
+#                       init_soil=list(tibble(init_soil)),
+#                       forcing=list(tibble(forcing)),
+#                       .name_repair = "unique")  
+# } else {
+#   df_drivers <- tibble(sitename,
+#                     site_info = list(tibble(siteinfo)),
+#                     params_siml = list(tibble(params_siml)),
+#                     params_tile = list(tibble(params_tile)),
+#                     params_species=list(tibble(params_species)),
+#                     params_soil=list(tibble(params_soil)),
+#                     init_cohort=list(tibble(init_cohort)),
+#                     init_soil=list(tibble(init_soil)),
+#                     forcing=list(tibble(forcing)),
+#                     .name_repair = "unique")
+# }
 ```
 
 ### Run the model
