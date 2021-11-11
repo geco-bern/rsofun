@@ -1,5 +1,5 @@
 ---
-title: "Prepare rsofun forcing"
+title: "Prepare forcing"
 author: "Beni Stocker"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
