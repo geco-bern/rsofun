@@ -7,7 +7,7 @@ library(rsofun)
 library(ggplot2)
 library(multidplyr)
 
-#build()
+build()
 install()
 
 load("input_data/df_drivers_GR_gs.RData")
