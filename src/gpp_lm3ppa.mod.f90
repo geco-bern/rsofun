@@ -78,9 +78,9 @@ contains
     real   :: LAIlayer(nlayers_max)         ! leaf area index per layer, corrected for gaps (representative for the tree-covered fraction)
     real   :: cum_lai_layer(nlayers_max+1)  ! cumulative leaf area index of layers above a given layer
     real   :: crownarea_layer(nlayers_max), accuCAI, f_gap, fapar_tree ! additional GPP for lower layer cohorts due to gaps
-    real   :: par_layer, myrd, mygpp      ! just for temporary use
+    real   :: par_layer(nlayers_max), myrd, mygpp      ! just for temporary use
     real   :: apar_layer(nlayers_max)
-    integer:: i, layer=0
+    integer:: i, layer=0, layer_old
 
     ! local variables used for P-model part
     real :: tk, ftemp_kphio
@@ -277,10 +277,20 @@ contains
       ! test
       apar_layer(:) = 0.0
 
+      par_layer(1) = forcing%PAR * 1.0e-6
+      layer_old = 1
+
       cohortsloop: do i = 1, vegn%n_cohorts
 
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
+
+        ! check if we're one layer deeper. if so, update light level based on absorbed light by layer above
+        layer = max(1, min(cc%layer, 9))
+        if (layer .ne. layer_old) then
+          par_layer(layer) = par_layer(layer) - apar_layer(layer - 1)
+        end if
+        layer_old = layer
 
         !print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
 
@@ -310,16 +320,15 @@ contains
 
             ! Light level at this layer
             ! conversion from umol m-2 s-1 to mol m-2 s-1
-            layer = max(1, min(cc%layer, 9))
-            par_layer = f_light(layer) * forcing%PAR * 1.0e-6
+            ! par_layer = f_light(layer) * forcing%PAR * 1.0e-6
 
             ! test: total absorbed light per layer, integrating over crownarea
-            apar_layer(layer) = apar_layer(layer) + par_layer * fapar_tree * cc%crownarea * cc%nindivs
+            apar_layer(layer) = apar_layer(layer) + par_layer(layer) * fapar_tree * cc%crownarea * cc%nindivs
 
             out_pmodel = pmodel(  &
                                   kphio          = sp%kphio, &
                                   beta           = params_gpp%beta, &
-                                  ppfd           = par_layer, &    ! required in mol m-2 s-1, unit ground area
+                                  ppfd           = par_layer(layer), &    ! required in mol m-2 s-1, unit ground area
                                   co2            = co2_memory, &
                                   tc             = temp_memory, &
                                   vpd            = vpd_memory, &
@@ -336,7 +345,7 @@ contains
             cc%w_scale = -9999
 
             ! quantities per unit ground area
-            mygpp = fapar_tree * out_pmodel%lue * par_layer                                                                     ! g s-1 m-2
+            mygpp = fapar_tree * out_pmodel%lue * par_layer(layer)                                                                     ! g s-1 m-2
             myrd  = fapar_tree * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )    ! mol s-1 m-2
 
             ! converting to quantities per tree and cumulated over seconds in time step
@@ -374,7 +383,8 @@ contains
 
       print*,'crownarea_layer ', crownarea_layer(:)
       print*,'apar      ', apar_layer(:)
-      print*,'diff light', forcing%PAR * 1.0e-6 * (f_light(1:nlayers_max) - f_light(2:nlayers_max+1))
+      ! print*,'diff light', forcing%PAR * 1.0e-6 * (f_light(1:nlayers_max) - f_light(2:nlayers_max+1))
+      print*,'diff light', par_layer(1:(nlayers_max-1)) - par_layer(2:(nlayers_max))
 
     else
 
