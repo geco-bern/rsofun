@@ -1,7 +1,9 @@
 ---
-title: "prepare_drivers"
+title: "Prepare drivers"
 output: html_document
 ---
+
+# For LM3-PPA run for a network site simulation 
 
 Prepare drivers and inputs for calibrating LM3-PPA. Vignette prepare_inputs_rsofun.Rmd used as reference.
 
@@ -42,7 +44,7 @@ params_siml <- list(
       do_U_shaped_mortality = FALSE,
       update_annualLAImax   = FALSE,
       do_closedN_run        = TRUE,
-      method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+      method_photosynth     = "pmodel", # gs_leuning or pmodel
       method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
@@ -159,29 +161,53 @@ df_soiltexture <- bind_rows(
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
-FLX_HH_LAE <- read.csv("~/data/FLUXNET-2015_Tier1/20191024/HH/FLX_CH-Lae_FLUXNET2015_FULLSET_HH_2004-2014_1-3.csv")
-names(FLX_HH_LAE)
-
-FluxForcing <- FLX_HH_LAE %>% dplyr::select(TIMESTAMP_START,PPFD_IN,SW_IN_F,TA_F,TS_F_MDS_1,RH,P_F,WS_F,PA_F,SWC_F_MDS_1)
-FluxForcing <- FluxForcing %>% dplyr::mutate_all(funs(ifelse(.==-9999, NA, .))) %>% mutate(YEAR=str_sub(TIMESTAMP_START, 1, 4)) %>% mutate(MONTH=str_sub(TIMESTAMP_START, 5, 6)) %>% mutate(DOY=str_sub(TIMESTAMP_START, 7, 8)) %>% mutate(HOUR=str_sub(TIMESTAMP_START, 9, 10)) %>% relocate(YEAR, MONTH, DOY, HOUR) %>% mutate(YEAR=as.integer(YEAR),MONTH=as.numeric(MONTH),DOY=as.numeric(DOY),HOUR=as.numeric(HOUR))
+FLX_HH_LAE <- read_csv("~/data/FLUXNET-2015_Tier1/20191024/HH/FLX_CH-Lae_FLUXNET2015_FULLSET_HH_2004-2014_1-3.csv") %>%
+  dplyr::select(TIMESTAMP_START,PPFD_IN,SW_IN_F,TA_F,TS_F_MDS_1,RH,P_F,WS_F,PA_F,SWC_F_MDS_1) %>% 
+  dplyr::mutate_all(funs(ifelse(.==-9999, NA, .))) %>% 
+  mutate(YEAR=str_sub(TIMESTAMP_START, 1, 4)) %>% 
+  mutate(MONTH=str_sub(TIMESTAMP_START, 5, 6)) %>% 
+  mutate(DOY=str_sub(TIMESTAMP_START, 7, 8)) %>% 
+  mutate(HOUR=str_sub(TIMESTAMP_START, 9, 10)) %>% 
+  relocate(YEAR, MONTH, DOY, HOUR) %>%
+  mutate(YEAR=as.integer(YEAR),MONTH=as.numeric(MONTH),DOY=as.numeric(DOY),HOUR=as.numeric(HOUR))
 
 # Half-hurly data
-FluxForcing <- FluxForcing %>% dplyr::rename(PAR=PPFD_IN,Swdown=SW_IN_F,TEMP=TA_F,SoilT=TS_F_MDS_1,RH=RH,RAIN=P_F,WIND=WS_F,PRESSURE=PA_F,SWC=SWC_F_MDS_1) %>% dplyr::select(-TIMESTAMP_START) %>% 
-  mutate(datehour = make_datetime(YEAR, MONTH, DOY, HOUR))  %>% mutate(date = make_datetime(YEAR, MONTH, DOY)) %>%  mutate(PRESSURE = PRESSURE*1000) %>%  mutate(PAR = PAR*2.02) %>%
-  dplyr::filter(!(mday(datehour)==29 & month(datehour)==2)) %>% mutate(DOY=lubridate::yday(datehour)) %>% dplyr::select(-MONTH) #%>% drop_na()
+FluxForcing <- FluxForcing %>% 
+  dplyr::rename(PAR=PPFD_IN,
+                Swdown=SW_IN_F,
+                TEMP=TA_F,
+                SoilT=TS_F_MDS_1,
+                RH=RH,
+                RAIN=P_F,
+                WIND=WS_F,
+                PRESSURE=PA_F,
+                SWC=SWC_F_MDS_1
+                ) %>% 
+  dplyr::select(-TIMESTAMP_START) %>% 
+  mutate(datehour = make_datetime(YEAR, MONTH, DOY, HOUR))  %>% 
+  mutate(date = make_datetime(YEAR, MONTH, DOY)) %>%  
+  mutate(PRESSURE = PRESSURE*1000) %>%  
+  mutate(PAR = PAR*2.02) %>%
+  dplyr::filter(!(mday(datehour)==29 & month(datehour)==2)) %>% 
+  mutate(DOY=lubridate::yday(datehour)) %>% 
+  dplyr::select(-MONTH) #%>% drop_na()
 
 # Hourly data
-FluxForcing <- FluxForcing %>% 
-    dplyr::group_by(lubridate::year(datehour),lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
-    summarise_at(vars(1:14), list(~mean(., na.rm = TRUE)))  %>% mutate(sitename = "CH-Lae") 
+FluxForcing <- FluxForcing %>%
+  dplyr::group_by(lubridate::year(datehour),
+                  lubridate::month(datehour),
+                  lubridate::day(datehour),
+                  lubridate::hour(datehour)) %>% 
+  summarise_at(vars(1:14), list(~mean(., na.rm = TRUE)))  %>% 
+  mutate(sitename = "CH-Lae") 
 
 ## convert rain to units per seconds
 dt_secs <- lubridate::interval(FluxForcing$datehour[1], FluxForcing$datehour[2]) %>% 
   time_length("seconds")
-FluxForcing <- FluxForcing %>% mutate(RAIN = RAIN / dt_secs)
+FluxForcing <- FluxForcing %>% 
+  mutate(RAIN = RAIN / dt_secs)
 
 FluxForcing <- FluxForcing[,-c(1:4)]
-
 ```
 
 ## CO2
@@ -216,8 +242,7 @@ Combine the two FLUXNET and CO2 to create the complete forcing data.
 FluxForcing <- FluxForcing %>% 
   #tidyr::unnest(data) %>% 
   left_join(
-    df_co2 %>% 
-      tidyr::unnest(data),
+    df_co2,
     by = c("sitename", "date")
   ) %>% rename(aCO2_AW=co2) %>% relocate(aCO2_AW, .after = PRESSURE) 
   #group_by(sitename) %>% 
@@ -226,10 +251,11 @@ FluxForcing <- FluxForcing %>%
 FluxForcing <- FluxForcing %>% relocate(aCO2_AW, .after = PRESSURE) 
 
 forcingLAE <- FluxForcing
-save(forcingLAE, file = "~/data/forcingLAE.RData")
+save(forcingLAE, file = "~/rsofun/data/forcingLAE.RData")
 
 ```
 
+Make it a mean seasonal cycle.
 ```{r}
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -240,11 +266,10 @@ if (params_siml$method_photosynth == "gs_leuning"){
 
 if (params_siml$method_photosynth == "pmodel" && dt_secs != (60*60*24)){
   forcingLAE <- forcingLAE %>% 
-    dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour)) %>% 
+    dplyr::group_by(lubridate::month(datehour), lubridate::day(datehour)) %>% 
     summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
   forcingLAE <- forcingLAE[,-c(1:2)]
 }
-str(forcingLAE)
-
+save(forcingLAE, file = "~/rsofun/data/forcingLAE_meandoy.RData")
 ```
 
