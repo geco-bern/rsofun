@@ -215,41 +215,17 @@ contains
       !----------------------------------------------------------------
       ftemp_kphio = calc_ftemp_kphio( (forcing%Tair - kTkelvin), .false. )  ! no C4
 
-      ! !----------------------------------------------------------------
-      ! ! Average LAI over tree-covered fraction (excluding f_gap) by layer
-      ! !----------------------------------------------------------------
-      ! f_gap = 0.1 ! 0.1
-      ! accuCAI = 0.0
-      ! LAIlayer(:) = 0.0
-      ! crownarea_layer(:) = 0.0
-      ! do i = 1, vegn%n_cohorts
-      !   cc => vegn%cohorts(i)
-      !   layer = max(1, min(cc%layer, 9))
-      !   LAIlayer(layer) = LAIlayer(layer) + cc%leafarea * cc%nindivs / (1.0 - f_gap)
-      !   crownarea_layer(layer) = crownarea_layer(layer) + cc%crownarea * cc%nindivs
-      ! end do
-
-      ! !----------------------------------------------------------------
-      ! ! Fraction of light received at top of each layer
-      ! !----------------------------------------------------------------      
-      ! ! Use constant light extinction coefficient
-      ! kappa = cc%extinct
-      ! f_light(:) = 0.0
-      ! f_light(1) = 1.0
-      ! do layer = 2, (nlayers_max + 1)
-      !   f_light(layer) = f_light(layer - 1) * (f_gap + (1.0 - f_gap) * exp(- kappa * LAIlayer(layer - 1)))
-      ! end do
-
       !----------------------------------------------------------------
-      ! Average LAI per unit ground area (excluding f_gap) by layer
+      ! Average LAI over tree-covered fraction (excluding f_gap) by layer
       !----------------------------------------------------------------
+      f_gap = 0.1 ! 0.1
       accuCAI = 0.0
       LAIlayer(:) = 0.0
       crownarea_layer(:) = 0.0
       do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
         layer = max(1, min(cc%layer, 9))
-        LAIlayer(layer) = LAIlayer(layer) + cc%leafarea * cc%nindivs
+        LAIlayer(layer) = LAIlayer(layer) + cc%leafarea * cc%nindivs / (1.0 - f_gap)
         crownarea_layer(layer) = crownarea_layer(layer) + cc%crownarea * cc%nindivs
       end do
 
@@ -261,36 +237,24 @@ contains
       f_light(:) = 0.0
       f_light(1) = 1.0
       do layer = 2, (nlayers_max + 1)
-        f_light(layer) = f_light(layer - 1) * exp(- kappa * LAIlayer(layer - 1))
+        f_light(layer) = f_light(layer - 1) * (f_gap + (1.0 - f_gap) * exp(- kappa * LAIlayer(layer - 1)))
       end do
 
-
       print*,'LAIlayer(:)      ', LAIlayer(:)
-      print*,'f_light(:)       ', f_light(:)      
-      print*,'------------------------------'
+      print*,'f_light(:)       ', f_light(:)
 
       !----------------------------------------------------------------
       ! Photosynthesis for each cohort
       !----------------------------------------------------------------
       accuCAI = 0.0
 
-      ! test
-      apar_layer(:) = 0.0
-
-      par_layer(1) = forcing%PAR * 1.0e-6
-      layer_old = 1
-
       cohortsloop: do i = 1, vegn%n_cohorts
 
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
 
-        ! check if we're one layer deeper. if so, update light level based on absorbed light by layer above
-        layer = max(1, min(cc%layer, 9))
-        if (layer .ne. layer_old) then
-          par_layer(layer) = par_layer(layer) - apar_layer(layer - 1)
-        end if
-        layer_old = layer
+        layer = cc%layer
+        print *, layer
 
         !print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
 
@@ -307,23 +271,13 @@ contains
           !----------------------------------------------------------------
           if (fapar_tree > 0.0 .and. forcing%PAR > 0.0) then
 
-            !===============================
-            ! XXX constant LUE hack:
-            !===============================
-            ! cc%An_op   = 1.0e-7 * fapar_tree * f_light(layer) * forcing%PAR / kfFEC  ! molC s-1 m-2 of leaves
-            ! cc%An_cl   = 0.5e-9 * fapar_tree * f_light(layer) * forcing%PAR / kfFEC  ! molC s-1 m-2 of leaves
-            ! cc%w_scale = 0.0
-            ! cc%transp  = 0.0
-            ! cc%resl    = cc%An_cl              * mol_C * myinterface%step_seconds ! kgC tree-1 step-1
-            ! cc%gpp     = (cc%An_op + cc%An_cl) * mol_C * myinterface%step_seconds ! kgC step-1 tree-1
-            !===============================
-
             ! Light level at this layer
             ! conversion from umol m-2 s-1 to mol m-2 s-1
-            ! par_layer = f_light(layer) * forcing%PAR * 1.0e-6
+            par_layer = f_light(layer) * forcing%PAR * 1.0e-6
+            print*,'par layer ',  par_layer(:)
 
             ! test: total absorbed light per layer, integrating over crownarea
-            apar_layer(layer) = apar_layer(layer) + par_layer(layer) * fapar_tree * cc%crownarea * cc%nindivs
+            apar_layer(layer) = apar_layer(layer) + (par_layer(layer) * fapar_tree * cc%crownarea * cc%nindivs)
 
             out_pmodel = pmodel(  &
                                   kphio          = sp%kphio, &
@@ -345,8 +299,8 @@ contains
             cc%w_scale = -9999
 
             ! quantities per unit ground area
-            mygpp = fapar_tree * out_pmodel%lue * par_layer(layer)                                                                     ! g s-1 m-2
-            myrd  = fapar_tree * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )    ! mol s-1 m-2
+            myrd  = fapar_tree * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin ) ! mol s-1 m-2
+            mygpp = fapar_tree * out_pmodel%lue * par_layer(layer) ! g s-1 m-2                                                            
 
             ! converting to quantities per tree and cumulated over seconds in time step
             cc%resl = myrd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
@@ -382,9 +336,8 @@ contains
       end do cohortsloop
 
       print*,'crownarea_layer ', crownarea_layer(:)
-      print*,'apar      ', apar_layer(:)
-      ! print*,'diff light', forcing%PAR * 1.0e-6 * (f_light(1:nlayers_max) - f_light(2:nlayers_max+1))
-      print*,'diff light', par_layer(1:(nlayers_max-1)) - par_layer(2:(nlayers_max))
+      print*,'apar            ', apar_layer(:)
+      print*,'diff light      ', apar_layer(1:(nlayers_max-1)) - apar_layer(2:(nlayers_max))
 
     else
 

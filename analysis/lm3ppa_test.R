@@ -14,24 +14,12 @@ df_drivers$params_siml[[1]] <- tibble( #list
   do_U_shaped_mortality = TRUE,
   update_annualLAImax   = TRUE,
   do_closedN_run        = TRUE,
-  method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+  method_photosynth     = "pmodel", # gs_leuning or pmodel
   method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
 )
 
 bla <- runread_lm3ppa_f(
-  lm3ppa_gs_leuning_drivers,
+  df_drivers,
   ncores = 1,
   makecheck = FALSE
 )
- 
-# df_output <- run_lm3ppa_f_bysite(
-#   df_drivers$sitename[1],
-#   df_drivers$params_siml[[1]],
-#   df_drivers$siteinfo[[1]],
-#   df_drivers$forcing[[1]],
-#   df_drivers$params_tile[[1]],
-#   df_drivers$params_species[[1]],
-#   df_drivers$params_soil[[1]],
-#   df_drivers$init_cohort[[1]],
-#   df_drivers$init_soil[[1]],
-#   makecheck = TRUE)
