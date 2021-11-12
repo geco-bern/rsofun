@@ -11,7 +11,8 @@ run_pmodel_f_bysite(
   forcing,
   params_soil,
   params_modl,
-  makecheck = TRUE
+  makecheck = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -30,6 +31,9 @@ run_pmodel_f_bysite(
 
 \item{makecheck}{A logical specifying whether checks are performed 
 to verify forcings.}
+
+\item{verbose}{A logical specifying whether to print warnings.
+Defaults to TRUE.}
 }
 \description{
 Call to the Fortran P-model

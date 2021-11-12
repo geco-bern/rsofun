@@ -11,6 +11,8 @@
 #' @param params_modl Model parameters 
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings.
+#' @param verbose A logical specifying whether to print warnings.
+#' Defaults to TRUE.
 #'
 #' @import dplyr
 #' 
@@ -26,7 +28,8 @@ run_pmodel_f_bysite <- function(
   forcing,
   params_soil,
   params_modl,
-  makecheck = TRUE
+  makecheck = TRUE,
+  verbose = TRUE
   ){
   
   # base state, always execute the call
@@ -147,31 +150,34 @@ run_pmodel_f_bysite <- function(
     
     # Dates in 'forcing' do not correspond to simulation parameters
     if (nrow(forcing) != params_siml$nyeartrend * ndayyear){
-      rlang::warn(
-        "Error: Number of years data in forcing does not correspond
-         to number of simulation years (nyeartrend).\n")
-      rlang::warn(paste(" Number of years data: ",
-                        nrow(forcing)/ndayyear), "\n")
-      rlang::warn(paste(" Number of simulation years: ",
-                        params_siml$nyeartrend, "\n"))
-      rlang::warn(paste(" Site name: ", sitename, "\n"))
+      if (verbose){
+        rlang::warn(
+          "Error: Number of years data in forcing does not correspond
+       to number of simulation years (nyeartrend).\n")
+        rlang::warn(paste(" Number of years data: ",
+                          nrow(forcing)/ndayyear), "\n")
+        rlang::warn(paste(" Number of simulation years: ",
+                          params_siml$nyeartrend, "\n"))
+        rlang::warn(paste(" Site name: ", sitename, "\n"))
+      }
       
       # Overwrite params_siml$nyeartrend and 
       # params_siml$firstyeartrend based on 'forcing'
       if (nrow(forcing) %% ndayyear == 0){
         params_siml$nyeartrend <- nyeartrend_forcing
         params_siml$firstyeartrend <- firstyeartrend_forcing
-        rlang::warn(paste(" Overwriting params_siml$nyeartrend: ",
-                          params_siml$nyeartrend, "\n"))
-        rlang::warn(paste(" Overwriting params_siml$firstyeartrend: ",
-                          params_siml$firstyeartrend, "\n"))
+        if (verbose){
+          rlang::warn(paste(" Overwriting params_siml$nyeartrend: ",
+                            params_siml$nyeartrend, "\n"))
+          rlang::warn(paste(" Overwriting params_siml$firstyeartrend: ",
+                            params_siml$firstyeartrend, "\n"))
+        }
       } else {
         # something weird more fundamentally -> don't run the model
         rlang::warn(" Returning a dummy data frame.")
         continue <- FALSE
       }
     }
-    
   }
   
   if (continue){
