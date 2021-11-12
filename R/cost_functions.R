@@ -67,6 +67,72 @@ cost_rmse_kphio <- function(
   return(cost)
 }
 
+#' Root mean squared error
+#' 
+#' Root mean squared error (RMSE) cost function on
+#' the full parameter stack.
+#'
+#' @param par parameters
+#' @param obs observed values
+#' @param drivers drivers
+#' @param inverse invert the function
+#'
+#' @importFrom magrittr '%>%'
+#'
+#' @return the RMSE on the full parameter set
+#' @export
+#'
+
+cost_rmse_fullstack <- function(
+  par,
+  obs,
+  drivers,
+  inverse = FALSE 
+  ){
+  
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio           = par[1],
+    soilm_par_a     = par[2],
+    soilm_par_b     = par[3],
+    tau_acclim_tempstress = 10,
+    par_shape_tempstress  = 0.0
+    )
+
+  # run the model
+  df <- runread_pmodel_f(
+    drivers, 
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # cleanup
+  df <- df %>%
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data) %>%
+    rename(
+      'gpp_obs' = 'gpp'
+    )
+  
+  obs <- obs %>%
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data)
+  
+  # left join with observations
+  df <- dplyr::left_join(df, obs, by = c("sitename", "date"))
+  
+  # Calculate cost (RMSE)
+  cost <- sqrt( mean( (df$gpp - df$gpp_obs )^2, na.rm = TRUE ) )
+  
+  #print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost
+  
+  return(cost)
+}
+
 #' Chi-squared cost function
 #' 
 #' Chi-squared cost function on kphio
@@ -105,61 +171,7 @@ cost_chisquared_kphio <- function( par, inverse = FALSE ){
   return(cost)
 }
 
-#' Root mean squared error
-#' 
-#' Root mean squared error (RMSE) cost function on
-#' the full parameter stack.
-#'
-#' @param par parameters
-#' @param obs observed values
-#' @param drivers drivers
-#' @param inverse invert the function
-#'
-#' @importFrom magrittr '%>%'
-#'
-#' @return the RMSE on the full parameter set
-#' @export
-#'
 
-cost_rmse_fullstack <- function(
-  par,
-  obs,
-  drivers,
-  inverse = FALSE 
-  ){
-  
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  params_modl <- list(
-    kphio           = par[1],
-    soilm_par_a     = par[2],
-    soilm_par_b     = par[3],
-    vpdstress_par_a = 0.0,
-    vpdstress_par_b = 0.0,
-    vpdstress_par_m = 0
-  )
-  
-  df <- runread_pmodel_f(
-    drivers, 
-    par = params_modl, 
-    makecheck = TRUE,
-    parallel = FALSE
-  ) %>%   
-    dplyr::select(sitename, data) %>% 
-    tidyr::unnest(data) %>% 
-    dplyr::rename("gpp_mod" = "gpp") %>% 
-    dplyr::left_join(obs,
-                     by = c("sitename", "date"))
-  
-  ## Calculate cost (RMSE)
-  cost <- sqrt( mean( (df$gpp_mod - df$gpp_obs )^2, na.rm = TRUE ) )
-  
-  if (inverse){
-    cost <- 1.0 / cost
-  }
-  
-  return(cost)
-}
 
 #' Root mean squared error
 #' 
