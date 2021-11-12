@@ -39,7 +39,8 @@ cost_rmse_kphio <- function(
     drivers, 
     par = params_modl,
     makecheck = TRUE,
-    parallel = FALSE
+    parallel = FALSE,
+    verbose = FALSE
   )
   
   # cleanup
@@ -88,7 +89,7 @@ cost_rmse_fullstack <- function(
   obs,
   drivers,
   inverse = FALSE 
-){
+  ){
   
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
@@ -98,14 +99,15 @@ cost_rmse_fullstack <- function(
     soilm_par_b     = par[3],
     tau_acclim_tempstress = 10,
     par_shape_tempstress  = 0.0
-  )
-  
+    )
+
   # run the model
   df <- runread_pmodel_f(
     drivers, 
     par = params_modl,
     makecheck = TRUE,
-    parallel = FALSE
+    parallel = FALSE,
+    verbose = FALSE
   )
   
   # cleanup
@@ -132,6 +134,7 @@ cost_rmse_fullstack <- function(
   
   return(cost)
 }
+
 
 #' Chi-squared cost function
 #' 
