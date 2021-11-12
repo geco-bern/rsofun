@@ -67,6 +67,56 @@ cost_rmse_kphio <- function(
   return(cost)
 }
 
+#add by YP: cost function for all the parameters
+cost_rmse_photocold <- function(
+  par,
+  obs,
+  drivers,
+  inverse = FALSE
+){
+  
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio           = par[[1]],
+    soilm_par_a     = par[[2]],
+    soilm_par_b     = par[[3]],
+    tau_acclim_tempstress = par[[4]],
+    par_shape_tempstress  = par[[5]]
+  )
+  
+  # run the model
+  df <- runread_pmodel_f(
+    drivers, 
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # cleanup
+  df <- df %>%
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data) 
+  
+  obs <- obs %>%
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data) %>%
+    rename('gpp_obs' = 'gpp')   
+  
+  # left join with observations
+  df <- dplyr::left_join(df, obs, by = c("sitename", "date"))
+  
+  # Calculate cost (RMSE)
+  cost <- sqrt( mean( (df$gpp - df$gpp_obs )^2, na.rm = TRUE ) )
+  
+  #print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost
+  
+  return(cost)
+}
+
+
 #' Chi-squared cost function
 #' 
 #' Chi-squared cost function on kphio

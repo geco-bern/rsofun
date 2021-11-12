@@ -29,7 +29,11 @@ calib_sofun <- function(
   obs,
   settings
   ){
-
+  
+  # drivers = p_model_drivers 
+  # obs = p_model_validation
+  # settings = settings
+  
   # check input variables
   if(missing(obs) | missing(drivers) | missing(settings)){
     stop("missing input data, please check all parameters")
@@ -104,7 +108,8 @@ calib_sofun <- function(
     
     # drop last value
     bt_par <- BayesianTools::MAP(out)$parametersMAP
-    bt_par <- bt_par[1:(length(bt_par))]
+    # bt_par <- bt_par[1:(length(bt_par))]
+    bt_par <- bt_par[1:(length(settings$par))] #revised by YP
     out_optim <- list(par = bt_par)
     names(out_optim$par) <- names(settings$par)
   }

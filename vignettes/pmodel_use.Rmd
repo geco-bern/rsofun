@@ -117,7 +117,7 @@ To optimize new parameters based upon driver data and a validation dataset we mu
     targetvars          = c("gpp"),
     timescale           = list(targets_obs = "y"),
     sitenames           = "FR-Pue",
-    metric              = cost_rmse_kphio,
+    metric              = cost_rmse_photocold,
     dir_results         = "./",
     name                = "ORG",
     control = list(
@@ -147,11 +147,11 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 # calibrate the model and
 # optimize free parameters
 pars <- calib_sofun(
-    df_drivers = p_model_drivers,  
-    ddf_obs = p_model_validation,
+    drivers = p_model_drivers,  
+    obs = p_model_validation,
     settings = settings
   )
-```
+ ```
 
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 

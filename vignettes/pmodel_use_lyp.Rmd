@@ -1,6 +1,6 @@
 ---
 title: "P-model usage"
-author: "Koen Hufkens"
+author: "Koen Hufkens-->changed by YP"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -36,32 +36,38 @@ The `rsofun` package and framework includes two main models. The `pmodel` and `l
 
 The package includes two demo datasets to run and validate pmodel output. These files can be directly loaded into your workspace by typing:
 
-### (1) using the default demo data (1 site)-->add by YP 
+## using multiple sites data to do this test-->add by YP 
+These are real data from the fluxnet sites. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters.
+
+
 ```{r}
 library(rsofun)
-
-p_model_drivers
-
-p_model_validation
-```
-
-These are real data from the French FR-Pue fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters.
-### (2) using the more sites data-->add by YP 
-```{r}
 #koen put the prepared drivers in sofunCalVal package-->load it:
 #devtools::load_all("D:/Github/sofunCalVal/")-->not run at this moment becasue cannot access the euler
+#drivers of gpp simulation:
 load(paste0("D:/Github/sofunCalVal/data/","p_model_fluxnet_drivers.RDA"))
-p_model_drivers_new<-p_model_fluxnet_drivers%>%
-  dplyr::slice(1:3)
-p_model_drivers_new
-## Running the model
+#gpp based on the EC data:
+#-->gpp and gpp_unc in this datasets are the same adopt from Beni et al., 2018 New Phyto.
+#and sites number is not the same as the "p_model_fluxnet_drivers.RDA"
+load(paste0("D:/Github/sofunCalVal/data/","p_model_fluxnet_calVal.RDA")) 
+#compare the sites in two datasets:
+pos<-match(p_model_fluxnet_calval$sitename,p_model_fluxnet_drivers$sitename)
+#-->subset the drivers data from the sites have EC data:
+p_model_fluxnet_drivers_new<-p_model_fluxnet_drivers[pos,]
 ```
+
+## firstly to select 3 sites to run the first round of the processes
+```{r}
+p_model_drivers_subset<-p_model_fluxnet_drivers_new%>%
+  dplyr::slice(1:3)
+p_model_drivers_subset
+```
+
+## Running the model
 With all data prepared we can run the model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
 
 ```{r}
-
-# optimized parameters from previous
-# work
+# optimized parameters from previous work
 params_modl <- list(
     kphio           = 0.09423773,
     soilm_par_a     = 0.33349283,
@@ -70,25 +76,20 @@ params_modl <- list(
     par_shape_tempstress  = 0.0
   )
 
-# run the model for these parameters-->only for one site(default)
-output <- rsofun::runread_pmodel_f(
-  p_model_drivers,
-  par = params_modl
-  )
-#new output for 3 sites-->add by YP
-output_new<-c()
+#run the model for these parameters-->new output for 3 sites-->add by YP
+output_subset<-c()
 ##!!report to Koen-->the names of variables are not same as the demo data
-names(p_model_drivers_new)<-c("sitename","forcing","params_siml","site_info","params_soil")
+names(p_model_drivers_subset)<-c("sitename","forcing","params_siml","site_info","params_soil")
 #report error to Koen-->some sites do not have the fapar-->then model cannot run
-p_model_drivers_new<-p_model_drivers_new %>%
+p_model_drivers_subset<-p_model_drivers_subset %>%
   dplyr::filter(sitename != "AR-Vir")
 # for(i in 1:nrow(p_model_drivers_new)){
-for(i in nrow(p_model_drivers_new)){
+for(i in 1:nrow(p_model_drivers_subset)){
   output <- rsofun::runread_pmodel_f(
-  p_model_drivers_new[i,],
+  p_model_drivers_subset[i,],
   par = params_modl
   )
-output_new[[i]]<-output
+output_subset<-bind_rows(output_subset,output)
 }
 ```
 
@@ -101,50 +102,57 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 
-# we only have one site so we'll unnest
-# the main model output
-model_data <- output %>%
-  filter(sitename == "FR-Pue") %>%
+
+# the main model output-->for each site
+for (i in 1:nrow(output_subset)){
+  sitename_run<-output_subset$sitename[i]
+  model_data <- output_subset %>%
+    filter(sitename==sitename_run)%>%
   tidyr::unnest(data)
 
-validation_data <- p_model_validation %>%
+  validation_data <- p_model_fluxnet_calval %>%
+  filter(sitename==sitename_run)%>%
   tidyr::unnest(data)
 
-ggplot() +
-    geom_line(
-    data = model_data,
-    aes(
-      date,
-      gpp
-    ),
-    colour = "red"
-  ) +
-  geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    )
-  ) +
-  labs(
-    x = "Date",
-    y = "GPP"
-  )
+p_gpp<-ggplot() +
+    geom_line(data = model_data,
+    aes(date,gpp,col="modeled gpp")) +
+    geom_line(data = validation_data,
+    aes(date,gpp,col="EC gpp")) +
+    scale_color_manual("",values = c("modeled gpp"="tomato",
+    "EC gpp"="cyan2"))+
+    labs(x = "Date",y = "GPP(unit)")
+print(p_gpp)
+}
+
 ```
 
-## Calibrating model parameters
+## Calibrating model parameters-->for multiple sites
 
 To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.
 
 ```{r}
+ for (i in 1:nrow(output_subset)){
+  #(1)prepare the data(model and EC based gpp)
+  sitename_run<-output_subset$sitename[i]
+  model_drivers <- p_model_fluxnet_drivers_new %>%
+    filter(sitename==sitename_run)
+  # model_data <- output_subset %>%
+  #   filter(sitename==sitename_run)%>%
+  # tidyr::unnest(data)
+
+  validation_data <- p_model_fluxnet_calval %>%
+  filter(sitename==sitename_run)
+  
+  #(2)specify the optimization strategy:
   settings <- list(
     method              = "bayesiantools",
     targetvars          = c("gpp"),
     timescale           = list(targets_obs = "y"),
-    sitenames           = "FR-Pue",
+    sitenames           = sitename_run,
     metric              = cost_rmse_kphio,
     dir_results         = "./",
-    name                = "ORG",
+    name                = "ORG",  #!!ask Koen if this corresponds to the Beni et al., 2020
     control = list(
       sampler = "DEzs",
       settings = list(
@@ -154,28 +162,33 @@ To optimize new parameters based upon driver data and a validation dataset we mu
     ),
     par = list(
       kphio = list(lower=0.04, upper=0.1, init = 0.05),
-      a = list(lower=0, upper=5, init = 3.5),
-      b = list(lower=1, upper=5, init=3.5),
-      tau = list(lower=0, upper=15, init=1),
-      shape = list(lower=0, upper=0.1, init=0)
+      soilm_par_a = list(lower=0, upper=5, init = 3.5),
+      soilm_par_b = list(lower=1, upper=5, init=3.5),
+      tau_acclim_tempstress = list(lower=0, upper=15, init=1),
+      par_shape_tempstress = list(lower=0, upper=0.1, init=0)
       )
   )
+
+# By default `rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `BayesianTools` approach using the DEza sampler. For this example the burnin and iterations are kept artificially low. In a real scenario you will have to increase these values orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided all starting with `cost_*` but the model structure is transparent and custom cost functions can be easily written.
+# 
+# In addition starting values and ranges are provided for the free parameters in the model. Free parameters include, kphio, a, b, tau and shape. Be mindful that with newer version of rsofun additional parameters might be introduced, so re-check vignettes and model descriptions when updating existing code.
+# 
+# With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified.
+
+#(3) calibrate the model and optimize free parameters
+pars <- calib_sofun(
+    drivers = model_drivers,  
+    obs = validation_data,
+    settings = settings
+)
+
+}
+
+
+
 ```
 
-By default `rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `BayesianTools` approach using the DEza sampler. For this example the burnin and iterations are kept artificially low. In a real scenario you will have to increase these values orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided all starting with `cost_*` but the model structure is transparent and custom cost functions can be easily written.
-
-In addition starting values and ranges are provided for the free parameters in the model. Free parameters include, kphio, a, b, tau and shape. Be mindful that with newer version of rsofun additional parameters might be introduced, so re-check vignettes and model descriptions when updating existing code.
-
-With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified.
-
 ```{r eval = FALSE}
-# calibrate the model and
-# optimize free parameters
-pars <- calib_sofun(
-    df_drivers = p_model_drivers,  
-    ddf_obs = p_model_validation,
-    settings = settings
-  )
 ```
 
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
