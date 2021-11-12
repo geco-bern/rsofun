@@ -39,7 +39,8 @@ cost_rmse_kphio <- function(
     drivers, 
     par = params_modl,
     makecheck = TRUE,
-    parallel = FALSE
+    parallel = FALSE,
+    verbose = FALSE
   )
   
   # cleanup
@@ -105,7 +106,8 @@ cost_rmse_fullstack <- function(
     drivers, 
     par = params_modl,
     makecheck = TRUE,
-    parallel = FALSE
+    parallel = FALSE,
+    verbose = FALSE
   )
   
   # cleanup

@@ -116,7 +116,6 @@ To optimize new parameters based upon driver data and a validation dataset we mu
     method              = "bayesiantools",
     targetvars          = c("gpp"),
     timescale           = list(targets_obs = "y"),
-    sitenames           = "FR-Pue",
     metric              = cost_rmse_kphio,
     dir_results         = "./",
     name                = "ORG",
