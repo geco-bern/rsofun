@@ -48,7 +48,7 @@ cost_rmse_kphio <- function(
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>%
     rename(
-      'gpp_obs' = 'gpp'
+      'gpp_mod' = 'gpp'
     )
   
   obs <- obs %>%
@@ -59,9 +59,7 @@ cost_rmse_kphio <- function(
   df <- dplyr::left_join(df, obs, by = c("sitename", "date"))
   
   # Calculate cost (RMSE)
-  cost <- sqrt( mean( (df$gpp - df$gpp_obs )^2, na.rm = TRUE ) )
-  
-  #print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  cost <- sqrt( mean( (df$gpp - df$gpp_mod )^2, na.rm = TRUE ) )
   
   if (inverse) cost <- 1.0 / cost
   
