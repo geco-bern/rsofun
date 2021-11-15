@@ -169,6 +169,7 @@ contains
     ! cohorts again and we want annual output and daily
     ! output to be consistent with cohort identities.
     !---------------------------------------------
+
     !print*,'A: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
 
@@ -176,11 +177,12 @@ contains
     ! Reproduction and mortality
     !---------------------------------------------        
     ! Kill all individuals in a cohort if NSC falls below critical point
-    !print*,'B: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs 
+    ! print*,'B: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs 
     call vegn_annual_starvation( vegn )
     
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
+
     !print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_nat_mortality( vegn )
     
@@ -191,6 +193,7 @@ contains
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
+
     !print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call kill_lowdensity_cohorts( vegn )
     
@@ -205,6 +208,7 @@ contains
     !---------------------------------------------
     ! Set annual variables zero
     !---------------------------------------------
+
     !print*,'H: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call Zero_diagnostics( vegn )
     !print*,'I: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
@@ -224,8 +228,9 @@ contains
       deallocate(vegn)
 
     end if
+    
+    ! print*,'Done with biosphere for this year. Guete Rutsch!'
 
-    !print*,'Done with biosphere for this year. Guete Rutsch!'
 
   end subroutine biosphere_annual
 
