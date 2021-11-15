@@ -84,7 +84,38 @@ df_output$data[[1]]$output_annual_tile %>%
 
 ## Running the standard (p-model) lm3ppa model
 
-TODO
+Running the fast p-model implementation.
+
+```{r}
+df_output <- runread_lm3ppa_f(
+     lm3ppa_p_model_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+```
+
+### plotting output
+
+We can now visualize the model output.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# we only have one site so we'll unnest
+# the main model output
+
+df_output$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  theme_classic()+labs(x = "Year", y = "GPP")
+
+df_output$data[[1]]$output_annual_tile %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
+```
+
 
 ## Calibrating model parameters
 
