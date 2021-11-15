@@ -345,8 +345,8 @@ contains
             cc%w_scale = -9999
 
             ! quantities per unit ground area
-            mygpp = fapar_tree(i) * out_pmodel%lue * par_layer(layer)                                                              ! g s-1 m-2
-            myrd  = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst
+            mygpp = fapar_tree(i) * out_pmodel%lue * par_layer(layer)
+            myrd  = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )
 
             ! converting to quantities per tree and cumulated over seconds in time step
             cc%resl = myrd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
