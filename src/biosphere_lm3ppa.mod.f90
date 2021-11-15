@@ -95,9 +95,9 @@ contains
         doy = doy + 1
         idoy = idoy + 1
 
-         print*,'----------------------'
-         print*,'YEAR, DOY ', myinterface%steering%year, doy
-         print*,'----------------------'
+        ! print*,'----------------------'
+        ! print*,'YEAR, DOY ', myinterface%steering%year, doy
+        ! print*,'----------------------'
 
         !----------------------------------------------------------------
         ! FAST TIME STEP
@@ -217,9 +217,9 @@ contains
     iyears = iyears + 1
 
     ! stop after year 44 for fixed cut-out
-    if (iyears == 45) then
-      stop
-    end if
+    !if (iyears == 45) then
+    !  stop
+    !end if
 
     if (myinterface%steering%finalize) then
       !----------------------------------------------------------------
