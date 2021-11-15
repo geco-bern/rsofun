@@ -222,23 +222,52 @@ contains
       accuCAI = 0.0
       LAIlayer(:) = 0.0
       crownarea_layer(:) = 0.0
+
       do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
         layer = max(1, min(cc%layer, 9))
+
+        ! cc%leafarea is the effective LAI (in this case expressed per individual)
+        ! which needs to be corrected for gap fraction
         LAIlayer(layer) = LAIlayer(layer) + cc%leafarea * cc%nindivs / (1.0 - f_gap)
+
+        ! effectively the Crown Area Index or # crowns per unit surface area
         crownarea_layer(layer) = crownarea_layer(layer) + cc%crownarea * cc%nindivs
+      end do
+
+      !----------------------------------------------------------------
+      ! Get light fraction received at each crown layer, relative to top-of-canopy -> f_light(layer) 
+      !----------------------------------------------------------------
+      ! Calculate kappa according to sun zenith angle 
+      ! kappa = cc%extinct/max(cosz,0.01)
+
+      ! Use constant light extinction coefficient
+      kappa = cc%extinct
+      f_light(:) = 0.0
+      f_light(1) = 1.0
+      do i=2,layer+1
+        f_light(i) = f_light(i-1) * exp(0.0 - kappa * LAIlayer(i-1))
+      end do
+
+      ! lighten up the canopy (gaps)
+      f_light(:) = f_light(:) * (1.0 - f_gap) + f_gap
+
+      ! fraction of light absorbed by layer
+      do i=1,layer
+        f_apar(i) = f_light(i) - f_light(i+1)
+        if (f_apar(i) < 0.0 ) stop 'negative fapar'
       end do
 
       !----------------------------------------------------------------
       ! Fraction of light received at top of each layer
       !----------------------------------------------------------------      
       ! Use constant light extinction coefficient
-      kappa = cc%extinct
-      f_light(:) = 0.0
-      f_light(1) = 1.0
-      do layer = 2, (nlayers_max + 1)
-        f_light(layer) = f_light(layer - 1) * (f_gap + (1.0 - f_gap) * exp(- kappa * LAIlayer(layer - 1)))
-      end do
+      !kappa = cc%extinct
+      !f_light(:) = 0.0
+      !f_light(1) = 1.0
+      !do layer = 2, (nlayers_max + 1)
+      !  f_light(layer) = f_light(layer - 1) * (f_gap + (1.0 - f_gap) * exp(- kappa * LAIlayer(layer - 1)))
+      !end do
 
       print*,'LAIlayer(:)      ', LAIlayer(:)
       print*,'f_light(:)       ', f_light(:)
@@ -253,9 +282,6 @@ contains
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
 
-        layer = cc%layer
-        print *, layer
-
         !print*,'cc%status == LEAF_ON, cc%lai, temp_memory', cc%status == LEAF_ON, cc%lai, temp_memory      
 
         if (cc%status == LEAF_ON .and. temp_memory > -5.0) then
@@ -263,7 +289,9 @@ contains
           !----------------------------------------------------------------
           ! Get light absorbed by cohort
           !----------------------------------------------------------------
-          fapar_tree = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown
+          layer = max(1, min(cc%layer,9))
+          fapar_tree = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)
+          ! at individual-level: cc%leafarea represents leaf area index within the crown
 
           !----------------------------------------------------------------
           ! P-model call for C3 plants to get a list of variables that are 
