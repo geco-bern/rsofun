@@ -95,9 +95,9 @@ contains
         doy = doy + 1
         idoy = idoy + 1
 
-         ! print*,'----------------------'
-         ! print*,'YEAR, DOY ', myinterface%steering%year, doy
-         ! print*,'----------------------'
+         print*,'----------------------'
+         print*,'YEAR, DOY ', myinterface%steering%year, doy
+         print*,'----------------------'
 
         !----------------------------------------------------------------
         ! FAST TIME STEP
@@ -169,7 +169,8 @@ contains
     ! cohorts again and we want annual output and daily
     ! output to be consistent with cohort identities.
     !---------------------------------------------
-    ! print*,'A: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+
+    !print*,'A: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
 
     !---------------------------------------------
@@ -181,23 +182,25 @@ contains
     
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
-    ! print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+
+    !print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_nat_mortality( vegn )
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
-    ! print*,'D: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    !print*,'D: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_reproduction( vegn )
     
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
-    ! print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+
+    !print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call kill_lowdensity_cohorts( vegn )
     
-    ! print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    !print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call relayer_cohorts( vegn )
     
-    ! print*,'G: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    !print*,'G: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_mergecohorts( vegn )
 
     ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
@@ -205,12 +208,18 @@ contains
     !---------------------------------------------
     ! Set annual variables zero
     !---------------------------------------------
-    ! print*,'H: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+
+    !print*,'H: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call Zero_diagnostics( vegn )
-    ! print*,'I: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    !print*,'I: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
 
     ! update the years of model run
     iyears = iyears + 1
+
+    ! stop after year 44 for fixed cut-out
+    if (iyears == 45) then
+      stop
+    end if
 
     if (myinterface%steering%finalize) then
       !----------------------------------------------------------------
@@ -219,8 +228,9 @@ contains
       deallocate(vegn)
 
     end if
-
+    
     ! print*,'Done with biosphere for this year. Guete Rutsch!'
+
 
   end subroutine biosphere_annual
 

@@ -223,6 +223,7 @@ contains
       ftemp_kphio = calc_ftemp_kphio( (forcing%Tair - kTkelvin), .false. )  ! no C4
 
       !----------------------------------------------------------------
+
       ! Light absorption
       !----------------------------------------------------------------
       apar_layer(:) = 0.0
@@ -302,13 +303,18 @@ contains
       ! ! print*,'------------------------------'
       ! ! if (stoplater) stop 'beni'
 
+
       !----------------------------------------------------------------
       ! Photosynthesis for each cohort
       !----------------------------------------------------------------
+      accuCAI = 0.0
+
+
       cohortsloop: do i = 1, vegn%n_cohorts
 
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
+
 
         if (cc%status == LEAF_ON .and. temp_memory > -5.0) then
 
@@ -317,6 +323,7 @@ contains
           ! acclimated to slowly varying conditions
           !----------------------------------------------------------------
           if (fapar_tree(i) > 0.0 .and. forcing%PAR > 0.0) then
+
 
             out_pmodel = pmodel(  &
                                   kphio          = sp%kphio, &
@@ -339,7 +346,7 @@ contains
 
             ! quantities per unit ground area
             mygpp = fapar_tree(i) * out_pmodel%lue * par_layer(layer)                                                              ! g s-1 m-2
-            myrd  = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )    ! mol s-1 m-2
+            myrd  = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst
 
             ! converting to quantities per tree and cumulated over seconds in time step
             cc%resl = myrd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
