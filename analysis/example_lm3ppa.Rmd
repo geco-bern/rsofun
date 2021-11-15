@@ -325,7 +325,7 @@ print(packageVersion("rsofun"))
 
 ## for versions above 4.0
 df_drivers <- tibble(sitename,
-                    siteinfo = list(tibble(siteinfo)),
+                    site_info = list(tibble(siteinfo)),
                     params_siml = list(tibble(params_siml)),
                     params_tile = list(tibble(params_tile)),
                     params_species=list(tibble(params_species)),
@@ -364,23 +364,23 @@ df_drivers <- tibble(sitename,
 
 Run the model for all the sites specified in the first step.
 ```{r eval=FALSE}
-out <- run_lm3ppa_f_bysite( sitename, 
-                            params_siml, 
-                            siteinfo, 
+out <- run_lm3ppa_f_bysite( sitename,
+                            params_siml,
+                            siteinfo,
                             forcing, # ddf_input
-                            params_tile, 
-                            params_species, 
-                            params_soil, 
-                            init_cohort, 
+                            params_tile,
+                            params_species,
+                            params_soil,
+                            init_cohort,
                             init_soil,
                             makecheck = TRUE)
 
-out$output_annual_tile %>% 
+out$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   theme_classic()+labs(x = "Year", y = "GPP")
 
-out$output_annual_tile %>% 
+out$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")

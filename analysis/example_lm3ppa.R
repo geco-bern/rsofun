@@ -222,7 +222,7 @@ print(packageVersion("rsofun"))
 
 ## for versions above 4.0
 df_drivers <- tibble(sitename,
-                    siteinfo = list(tibble(siteinfo)),
+                    site_info = list(tibble(siteinfo)),
                     params_siml = list(tibble(params_siml)),
                     params_tile = list(tibble(params_tile)),
                     params_species=list(tibble(params_species)),
@@ -269,33 +269,38 @@ out <- run_lm3ppa_f_bysite( sitename,
                             init_soil,
                             makecheck = TRUE)
 
-out$output_annual_tile %>%
+gg1 <- out$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   theme_classic()+labs(x = "Year", y = "GPP")
 
-out$output_annual_tile %>%
+gg2 <- out$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 
+print(gg1)
+print(gg2)
 
 
-# ## ---------------------------------------------------------------------------------------------------------------------------
-# df_output <- runread_lm3ppa_f(
-#      df_drivers,
-#      makecheck = TRUE,
-#      parallel = FALSE
-#      )
-# 
-# df_output$data[[1]]$output_annual_tile %>% 
-#   ggplot() +
-#   geom_line(aes(x = year, y = GPP)) +
-#   theme_classic()+labs(x = "Year", y = "GPP")
-# 
-# df_output$data[[1]]$output_annual_tile %>% 
-#   ggplot() +
-#   geom_line(aes(x = year, y = plantC)) +
-#   theme_classic()+labs(x = "Year", y = "plantC")
+## ---------------------------------------------------------------------------------------------------------------------------
+## running in multi-site mode (although it's only one site)
+df_output <- runread_lm3ppa_f(
+     df_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
 
+gg1 <- df_output$data[[1]]$output_annual_tile %>%
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  theme_classic()+labs(x = "Year", y = "GPP")
+
+gg2 <- df_output$data[[1]]$output_annual_tile %>%
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
+
+print(gg1)
+print(gg2)
 
