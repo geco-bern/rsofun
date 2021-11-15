@@ -57,38 +57,39 @@ contains
     ! function return variable
     type(climate_type), dimension(ntstepsyear) :: out_climate
 
-    ! print*,'ntstepsyear', ntstepsyear
-    ! print*,'ntstepsyear_forcing', ntstepsyear_forcing
+    ! !print*,'ntstepsyear', ntstepsyear
+    ! !print*,'ntstepsyear_forcing', ntstepsyear_forcing
 
     idx_start = (climateyear_idx - 1) * ntstepsyear + 1
     idx_end   = idx_start + ntstepsyear - 1
 
     ! This is to read from ORNL file
-    out_climate%year      = int(forcing(idx_start:idx_end, 1))          
-    ! print*,'out_climate%year', out_climate(150)%year          ! Year
-    out_climate%doy       = int(forcing(idx_start:idx_end, 2))          
-    ! print*,'out_climate%doy', out_climate(150)%doy          ! day of the year
-    out_climate%hod       = real(forcing(idx_start:idx_end, 3))          
-    ! print*,'out_climate%hod', out_climate(150)%hod         ! hour of the day
-    out_climate%PAR       = real(forcing(idx_start:idx_end, 4))          
-    ! print*,'out_climate%PAR, umol/m2/s', out_climate(150)%PAR         ! umol/m2/s  (1W/m2 = 2.02 umol/m2/s )         
-    out_climate%radiation = real(forcing(idx_start:idx_end, 5))          
-    ! print*,'out_climate%radiation, W/m2', out_climate(150)%radiation         ! W/m2
-    out_climate%Tair      = real(forcing(idx_start:idx_end, 6)) + 273.15 
-    ! print*,'out_climate%Tair, K', out_climate(150)%Tair         ! air temperature, K
-    out_climate%Tsoil     = real(forcing(idx_start:idx_end, 7)) + 273.15 
-    ! print*,'out_climate%Tsoil, K', out_climate(150)%Tsoil         ! soil temperature, K
-    out_climate%RH        = real(forcing(idx_start:idx_end, 8)) * 0.01   
-    ! print*,'out_climate%RH, fraction', out_climate(150)%RH         ! relative humidity as a fraction (0.xx)
-    out_climate%rain      = real(forcing(idx_start:idx_end, 9))          
-    ! print*,'out_climate%rain, kgH2O m-2 s-1', out_climate(150)%rain         ! kgH2O m-2 s-1
-    out_climate%windU     = real(forcing(idx_start:idx_end, 10))          
-    ! print*,'out_climate%windU, (m s-1)', out_climate(150)%windU        ! wind velocity (m s-1)
-    out_climate%P_air     = real(forcing(idx_start:idx_end, 11))          
-    ! print*,'out_climate%P_air, ! pa', out_climate(150)%P_air        ! pa
+    out_climate%year      = int(forcing(idx_start:idx_end, 1))
+    out_climate%doy       = int(forcing(idx_start:idx_end, 2))
+    out_climate%hod       = real(forcing(idx_start:idx_end, 3))
+    out_climate%PAR       = real(forcing(idx_start:idx_end, 4))
+    out_climate%radiation = real(forcing(idx_start:idx_end, 5))
+    out_climate%Tair      = real(forcing(idx_start:idx_end, 6)) + 273.15
+    out_climate%Tsoil     = real(forcing(idx_start:idx_end, 7)) + 273.15
+    out_climate%RH        = real(forcing(idx_start:idx_end, 8)) * 0.01
+    out_climate%rain      = real(forcing(idx_start:idx_end, 9))
+    out_climate%windU     = real(forcing(idx_start:idx_end, 10))
+    out_climate%P_air     = real(forcing(idx_start:idx_end, 11))
     out_climate%CO2       = real(forcing(idx_start:idx_end, 12)) * 1.0e-6 
-    ! print*,'out_climate%CO2, ! mol/mol', out_climate(150)%CO2        ! mol/mol
     out_climate%soilwater = 0.8                                                   ! soil moisture, vol/vol
+
+    !print*,'out_climate%year', out_climate(150)%year          ! Year
+    !print*,'out_climate%doy', out_climate(150)%doy          ! day of the year
+    !print*,'out_climate%hod', out_climate(150)%hod         ! hour of the day
+    !print*,'out_climate%PAR, umol/m2/s', out_climate(150)%PAR         ! umol/m2/s  (1W/m2 = 2.02 umol/m2/s )         
+    !print*,'out_climate%radiation, W/m2', out_climate(150)%radiation         ! W/m2
+    !print*,'out_climate%Tair, K', out_climate(150)%Tair         ! air temperature, K
+    !print*,'out_climate%Tsoil, K', out_climate(150)%Tsoil         ! soil temperature, K
+    !print*,'out_climate%RH, fraction', out_climate(150)%RH         ! relative humidity as a fraction (0.xx)
+    !print*,'out_climate%rain, kgH2O m-2 s-1', out_climate(150)%rain         ! kgH2O m-2 s-1
+    !print*,'out_climate%windU, (m s-1)', out_climate(150)%windU        ! wind velocity (m s-1)
+    !print*,'out_climate%P_air, ! pa', out_climate(150)%P_air        ! pa
+    !print*,'out_climate%CO2, ! mol/mol', out_climate(150)%CO2        ! mol/mol
 
     do it=1,ntstepsyear
       out_climate(it)%vpd  = calc_vpd_rh( out_climate(it)%RH, (out_climate(it)%Tair - kTkelvin) )

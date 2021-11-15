@@ -881,6 +881,7 @@ contains
       ! Remove the cohorts with very few individuals
       call kill_lowdensity_cohorts( vegn )    
 
+
     endif
 
   end subroutine vegn_nat_mortality
