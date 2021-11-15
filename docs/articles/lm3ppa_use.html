@@ -54,13 +54,16 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/lm3ppa_model_structure.html">LM3PPA model structure</a>
+    </li>
+    <li>
       <a href="../articles/lm3ppa_use.html">LM3PPA usage</a>
     </li>
     <li>
       <a href="../articles/pmodel_use.html">P-model usage</a>
     </li>
     <li>
-      <a href="../articles/prepare_forcing.html">Prepare rsofun forcing</a>
+      <a href="../articles/prepare_forcing.html">Prepare forcing</a>
     </li>
   </ul>
 </li>
@@ -91,7 +94,7 @@
       <h1 data-toc-skip>LM3PPA usage</h1>
                         <h4 class="author">Koen Hufkens</h4>
             
-            <h4 class="date">2021-11-10</h4>
+            <h4 class="date">2021-11-15</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/computationales/rsofun/blob/master/vignettes/lm3ppa_use.Rmd"><code>vignettes/lm3ppa_use.Rmd</code></a></small>
       <div class="hidden name"><code>lm3ppa_use.Rmd</code></div>
@@ -170,46 +173,76 @@
 <div id="running-the-standard-p-model-lm3ppa-model" class="section level2">
 <h2 class="hasAnchor">
 <a href="#running-the-standard-p-model-lm3ppa-model" class="anchor"></a>Running the standard (p-model) lm3ppa model</h2>
-<p>TODO</p>
+<p>Running the fast p-model implementation.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">df_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runread_lm3ppa_f.html">runread_lm3ppa_f</a></span><span class="op">(</span>
+     <span class="va">lm3ppa_p_model_drivers</span>,
+     makecheck <span class="op">=</span> <span class="cn">TRUE</span>,
+     parallel <span class="op">=</span> <span class="cn">FALSE</span>
+     <span class="op">)</span></code></pre></div>
+<div id="plotting-output-1" class="section level3">
+<h3 class="hasAnchor">
+<a href="#plotting-output-1" class="anchor"></a>plotting output</h3>
+<p>We can now visualize the model output.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org">dplyr</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span>
+
+<span class="co"># we only have one site so we'll unnest</span>
+<span class="co"># the main model output</span>
+
+<span class="va">df_output</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">output_annual_tile</span> <span class="op">%&gt;%</span> 
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">GPP</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_classic</a></span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"GPP"</span><span class="op">)</span></code></pre></div>
+<p><img src="lm3ppa_use_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R">
+<span class="va">df_output</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">output_annual_tile</span> <span class="op">%&gt;%</span> 
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">plantC</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_classic</a></span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"plantC"</span><span class="op">)</span></code></pre></div>
+<p><img src="lm3ppa_use_files/figure-html/unnamed-chunk-5-2.png" width="700"></p>
+</div>
 </div>
 <div id="calibrating-model-parameters" class="section level2">
 <h2 class="hasAnchor">
 <a href="#calibrating-model-parameters" class="anchor"></a>Calibrating model parameters</h2>
 <p>To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>lm3ppa_gs_leuning_drivers<span class="sc">$</span>params_siml[[<span class="dv">1</span>]]<span class="sc">$</span>spinup <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>lm3ppa_gs_leuning_drivers<span class="sc">$</span>params_siml[[<span class="dv">1</span>]]<span class="sc">$</span>spinupyears <span class="ot">&lt;-</span> <span class="dv">10</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Mortality as DBH</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>settings <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">method              =</span> <span class="st">"bayesiantools"</span>,</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">targetvars          =</span> <span class="fu">c</span>(<span class="st">"gpp"</span>),</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">timescale           =</span> <span class="fu">list</span>(<span class="at">targets_obs =</span> <span class="st">"y"</span>),</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">sitenames           =</span> <span class="st">"CH-Lae"</span>,</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">metric              =</span> cost_rmse_lm3ppa_gsleuning,</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">dir_results         =</span> <span class="st">"./"</span>,</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">name                =</span> <span class="st">"ORG"</span>,</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">list</span>(</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">sampler =</span> <span class="st">"DEzs"</span>,</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">settings =</span> <span class="fu">list</span>(</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">burnin =</span> <span class="dv">10</span>,</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">iterations =</span> <span class="dv">50</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">par =</span> <span class="fu">list</span>(</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">phiRL =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="fl">0.5</span>, <span class="at">upper=</span><span class="dv">5</span>, <span class="at">init=</span><span class="fl">3.5</span>),</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">LAI_light =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="dv">2</span>, <span class="at">upper=</span><span class="dv">5</span>, <span class="at">init=</span><span class="fl">3.5</span>),</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">tf_base =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="fl">0.5</span>, <span class="at">upper=</span><span class="fl">1.5</span>, <span class="at">init=</span><span class="dv">1</span>),</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">par_mort =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="fl">0.1</span>, <span class="at">upper=</span><span class="dv">2</span>, <span class="at">init=</span><span class="dv">1</span>))</span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>pars <span class="ot">&lt;-</span> <span class="fu">calib_sofun</span>(</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">drivers =</span> lm3ppa_gs_leuning_drivers,</span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs =</span> lm3ppa_validation_2,</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">settings =</span> settings</span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a> Running DEzs<span class="sc">-</span>MCMC, chain  <span class="dv">1</span> iteration <span class="dv">51</span> of <span class="dv">51</span> . Current logp  <span class="fl">6.755456</span> <span class="fl">6.755456</span> <span class="fl">6.755456</span> . Please wait<span class="sc">!</span> </span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; runMCMC terminated after 1.629seconds</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>lm3ppa_gs_leuning_drivers<span class="sc">$</span>params_siml[[<span class="dv">1</span>]]<span class="sc">$</span>spinup <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>lm3ppa_gs_leuning_drivers<span class="sc">$</span>params_siml[[<span class="dv">1</span>]]<span class="sc">$</span>spinupyears <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Mortality as DBH</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>settings <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">method              =</span> <span class="st">"bayesiantools"</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">targetvars          =</span> <span class="fu">c</span>(<span class="st">"gpp"</span>),</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">timescale           =</span> <span class="fu">list</span>(<span class="at">targets_obs =</span> <span class="st">"y"</span>),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">sitenames           =</span> <span class="st">"CH-Lae"</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">metric              =</span> cost_rmse_lm3ppa_gsleuning,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">dir_results         =</span> <span class="st">"./"</span>,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">name                =</span> <span class="st">"ORG"</span>,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">list</span>(</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">sampler =</span> <span class="st">"DEzs"</span>,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">settings =</span> <span class="fu">list</span>(</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">burnin =</span> <span class="dv">10</span>,</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">iterations =</span> <span class="dv">50</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">par =</span> <span class="fu">list</span>(</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">phiRL =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="fl">0.5</span>, <span class="at">upper=</span><span class="dv">5</span>, <span class="at">init=</span><span class="fl">3.5</span>),</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">LAI_light =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="dv">2</span>, <span class="at">upper=</span><span class="dv">5</span>, <span class="at">init=</span><span class="fl">3.5</span>),</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">tf_base =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="fl">0.5</span>, <span class="at">upper=</span><span class="fl">1.5</span>, <span class="at">init=</span><span class="dv">1</span>),</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">par_mort =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="fl">0.1</span>, <span class="at">upper=</span><span class="dv">2</span>, <span class="at">init=</span><span class="dv">1</span>))</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>pars <span class="ot">&lt;-</span> <span class="fu">calib_sofun</span>(</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">drivers =</span> lm3ppa_gs_leuning_drivers,</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs =</span> lm3ppa_validation_2,</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">settings =</span> settings</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a> Running DEzs<span class="sc">-</span>MCMC, chain  <span class="dv">1</span> iteration <span class="dv">51</span> of <span class="dv">51</span> . Current logp  <span class="fl">6.755456</span> <span class="fl">6.755456</span> <span class="fl">6.755456</span> . Please wait<span class="sc">!</span> </span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; runMCMC terminated after 1.89seconds</span></span></code></pre></div>
 </div>
 </div>
   </div>
