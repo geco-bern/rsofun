@@ -95,13 +95,16 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/lm3ppa_model_structure.html">LM3PPA model structure</a>
+    </li>
+    <li>
       <a href="../articles/lm3ppa_use.html">LM3PPA usage</a>
     </li>
     <li>
       <a href="../articles/pmodel_use.html">P-model usage</a>
     </li>
     <li>
-      <a href="../articles/prepare_forcing.html">Prepare rsofun forcing</a>
+      <a href="../articles/prepare_forcing.html">Prepare forcing</a>
     </li>
   </ul>
 </li>
@@ -145,7 +148,8 @@
   <span class='va'>forcing</span>,
   <span class='va'>params_soil</span>,
   <span class='va'>params_modl</span>,
-  makecheck <span class='op'>=</span> <span class='cn'>TRUE</span>
+  makecheck <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -180,6 +184,11 @@
       <th>makecheck</th>
       <td><p>A logical specifying whether checks are performed 
 to verify forcings.</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>A logical specifying whether to print warnings.
+Defaults to TRUE.</p></td>
     </tr>
     </table>
 
