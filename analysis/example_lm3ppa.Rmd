@@ -238,27 +238,73 @@ df_soiltexture <- bind_rows(
 
 ### Get input
 
-The file has the following variables (units):
+Get repeated mean seasonal cycle as forcing. For `gs_leuning` at hourly resolution, for `pmodel` setup at daily resolution.
 
 ```{r,include=FALSE, eval=TRUE}
-#load(paste0(path.package("rsofun"), "/extdata/forcingLAE.RData"))
-
 # load("/home/khufkens/Dropbox/Research_Projects/code_repository/CES/sofunCalVal/backup/data/forcingLAE.RData")
 load("~/data/forcingLAE.RData")
 
 if (params_siml$method_photosynth == "gs_leuning"){
-  forcingLAE <- forcingLAE %>% 
-    dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
-    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-  forcing <- forcingLAE[,-c(1:3)]
-  forcing <- bind_rows(replicate(800, forcing, simplify = FALSE)) # Duplicate for the # of transient years
+  
+  
+  ## XXX Something is not working as it should here
+  
+  ## Aggregate to daily means, averaged for each day-of-year across multiple years
+  forcing <- forcingLAE %>% 
+    
+    ## remove 29 Feb (not allowed in rsofun)
+    # dplyr::filter(!(lubridate::month(datehour) == 2 & lubridate::mday(datehour) == 29)) %>% 
+    # mutate(date = lubridate::ymd(paste0(as.character(as.integer(YEAR)), "-01-01")) + lubridate::days(as.integer(DOY)-1)) %>% 
+
+    ## get mean seasonal cycle
+    dplyr::select(-DOY) %>% 
+    mutate(DOY = lubridate::yday(datehour)) %>% 
+    dplyr::group_by(DOY, HOUR) %>% 
+    summarise(across(c(YEAR, PAR, Swdown, TEMP, SoilT, RH, RAIN, WIND, PRESSURE, aCO2_AW, SWC), ~mean(.x, na.rm = TRUE))) %>% 
+    
+    ## correct to retain only one year
+    slice(1:(24*365))
+    
+  ## generate long time series by repeating one year 800 times
+  nyears <- 800
+  
+  # Duplicate for the # of transient years
+  forcing <- bind_rows(replicate(nyears, forcing, simplify = FALSE)) %>% 
+    mutate(YEAR = rep(seq(24*365), times = nyears))
+
+  # forcingLAE <- forcingLAE %>% 
+  #   dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
+  #   summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+  # forcing <- forcingLAE[,-c(1:3)]
+  # forcing <- bind_rows(replicate(800, forcing, simplify = FALSE)) # Duplicate for the # of transient years
   
 } else if (params_siml$method_photosynth == "pmodel"){ #&& dt_secs != (60*60*24)){
-  forcingLAE <- forcingLAE %>% 
-    dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour)) %>% 
-    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-  forcing <- forcingLAE[,-c(1:2)]
-  forcing <- bind_rows(replicate(800, forcing, simplify = FALSE)) # Duplicate for the # of transient years
+  
+  ## Aggregate to daily means, averaged for each day-of-year across multiple years
+  forcing <- forcingLAE %>% 
+    
+    ## remove 29 Feb (not allowed in rsofun)
+    # dplyr::filter(!(lubridate::month(datehour) == 2 & lubridate::mday(datehour) == 29)) %>% 
+    # mutate(date = lubridate::ymd(paste0(as.character(as.integer(YEAR)), "-01-01")) + lubridate::days(as.integer(DOY)-1)) %>% 
+
+    ## get mean seasonal cycle
+    dplyr::select(-DOY) %>% 
+    mutate(DOY = lubridate::yday(datehour)) %>% 
+    dplyr::group_by(DOY) %>% 
+    summarise(across(c(YEAR, HOUR, PAR, Swdown, TEMP, SoilT, RH, RAIN, WIND, PRESSURE, aCO2_AW, SWC), ~mean(.x, na.rm = TRUE))) %>% 
+    
+    ## correct to retain only one year
+    slice(1:365)
+    
+  ## generate long time series by repeating one year 800 times
+  nyears <- 800
+  startyear <- forcing %>% 
+    pull(YEAR) %>% 
+    min()
+  
+  # Duplicate for the # of transient years
+  forcing <- bind_rows(replicate(nyears, forcing, simplify = FALSE)) %>% 
+    mutate(YEAR = rep(startyear:(startyear+nyears-1), each = 365))
 }
 ```
 
