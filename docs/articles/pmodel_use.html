@@ -54,13 +54,16 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/lm3ppa_model_structure.html">LM3PPA model structure</a>
+    </li>
+    <li>
       <a href="../articles/lm3ppa_use.html">LM3PPA usage</a>
     </li>
     <li>
       <a href="../articles/pmodel_use.html">P-model usage</a>
     </li>
     <li>
-      <a href="../articles/prepare_forcing.html">Prepare rsofun forcing</a>
+      <a href="../articles/prepare_forcing.html">Prepare forcing</a>
     </li>
   </ul>
 </li>
@@ -91,7 +94,7 @@
       <h1 data-toc-skip>P-model usage</h1>
                         <h4 class="author">Koen Hufkens</h4>
             
-            <h4 class="date">2021-11-10</h4>
+            <h4 class="date">2021-11-15</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/computationales/rsofun/blob/master/vignettes/pmodel_use.Rmd"><code>vignettes/pmodel_use.Rmd</code></a></small>
       <div class="hidden name"><code>pmodel_use.Rmd</code></div>
@@ -193,7 +196,6 @@
     method              <span class="op">=</span> <span class="st">"bayesiantools"</span>,
     targetvars          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gpp"</span><span class="op">)</span>,
     timescale           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>targets_obs <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span>,
-    sitenames           <span class="op">=</span> <span class="st">"FR-Pue"</span>,
     metric              <span class="op">=</span> <span class="va">cost_rmse_kphio</span>,
     dir_results         <span class="op">=</span> <span class="st">"./"</span>,
     name                <span class="op">=</span> <span class="st">"ORG"</span>,
@@ -219,8 +221,8 @@
 <code class="sourceCode R"><span class="co"># calibrate the model and</span>
 <span class="co"># optimize free parameters</span>
 <span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calib_sofun.html">calib_sofun</a></span><span class="op">(</span>
-    df_drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,  
-    ddf_obs <span class="op">=</span> <span class="va">p_model_validation</span>,
+    drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,  
+    obs <span class="op">=</span> <span class="va">p_model_validation</span>,
     settings <span class="op">=</span> <span class="va">settings</span>
   <span class="op">)</span></code></pre></div>
 <p>When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.</p>
@@ -276,6 +278,16 @@
     y <span class="op">=</span> <span class="st">"GPP"</span>
   <span class="op">)</span></code></pre></div>
 <p><img src="pmodel_use_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R">
+<span class="co"># validation_data %&gt;% </span>
+<span class="co">#   rename(obs = gpp) %&gt;% </span>
+<span class="co">#   left_join(</span>
+<span class="co">#     model_data_new %&gt;% </span>
+<span class="co">#       dplyr::select(sitename, date, mod = gpp),</span>
+<span class="co">#     by = c("sitename", "date")</span>
+<span class="co">#   ) %&gt;% </span>
+<span class="co">#   rbeni::analyse_modobs2("mod", "obs", type = "hex")</span></code></pre></div>
 <p>For details on the optimization settings we refer to the manuals of <a href="https://cran.r-project.org/web/packages/GenSA/index.html">GenSA</a> and <a href="https://github.com/florianhartig/BayesianTools">BayesianTools</a>.</p>
 </div>
   </div>
