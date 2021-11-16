@@ -23,7 +23,7 @@ sitename <- "CH-Lae"
 
 ## ----include=TRUE, eval=TRUE------------------------------------------------------------------------------------------------
 # Take only year 2004 to 2014, corresponding to subset of data for site CH-Lae
-siteinfo <- data.frame(
+site_info <- tibble(
   sitename="CH-Lae",
   lon = 8.365,
   lat = 47.47808,
@@ -38,7 +38,6 @@ siteinfo <- data.frame(
   plant_functional_type = "Broadleaf trees"
   )
 
-site_info <- as_tibble(siteinfo)
 site_info <- siteinfo %>% 
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
@@ -56,7 +55,7 @@ params_siml <- tibble(
   do_U_shaped_mortality = TRUE,
   update_annualLAImax   = TRUE,
   do_closedN_run        = TRUE,
-  method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+  method_photosynth     = "pmodel", # gs_leuning or pmodel
   method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
   )
 
@@ -188,10 +187,11 @@ df_soiltexture <- bind_rows(
 
 
 ## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
-#load(paste0(path.package("rsofun"), "/extdata/forcingLAE.RData"))
+if(basename(getwd()) != "rsofun"){
+  stop("You are not in the rsofun project base directory!")
+}
 
- load("/home/khufkens/Dropbox/Research_Projects/code_repository/CES/sofunCalVal/backup/data/forcingLAE.RData")
-#load("~/data/forcingLAE.RData")
+load("data-raw/CH-LAE_forcing.rda")
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -224,7 +224,6 @@ print(packageVersion("rsofun"))
 ## for versions above 4.0
 df_drivers <- tibble(sitename,
                     site_info = list(tibble(site_info)),
-                    site_info = list(tibble(siteinfo)),
                     params_siml = list(tibble(params_siml)),
                     params_tile = list(tibble(params_tile)),
                     params_species=list(tibble(params_species)),
@@ -232,32 +231,7 @@ df_drivers <- tibble(sitename,
                     init_cohort=list(tibble(init_cohort)),
                     init_soil=list(tibble(init_soil)),
                     forcing=list(tibble(forcing)),
-                    .name_repair = "unique")  
-  
-# if(as.numeric(unlist(packageVersion("rsofun"))) > 4.0){
-#   df_drivers <- tibble(sitename,
-#                       siteinfo = list(tibble(siteinfo)),
-#                       params_siml = list(tibble(params_siml)),
-#                       params_tile = list(tibble(params_tile)),
-#                       params_species=list(tibble(params_species)),
-#                       params_soil=list(tibble(params_soil)),
-#                       init_cohort=list(tibble(init_cohort)),
-#                       init_soil=list(tibble(init_soil)),
-#                       forcing=list(tibble(forcing)),
-#                       .name_repair = "unique")  
-# } else {
-#   df_drivers <- tibble(sitename,
-#                     site_info = list(tibble(siteinfo)),
-#                     params_siml = list(tibble(params_siml)),
-#                     params_tile = list(tibble(params_tile)),
-#                     params_species=list(tibble(params_species)),
-#                     params_soil=list(tibble(params_soil)),
-#                     init_cohort=list(tibble(init_cohort)),
-#                     init_soil=list(tibble(init_soil)),
-#                     forcing=list(tibble(forcing)),
-#                     .name_repair = "unique")
-# }
-
+                    .name_repair = "unique")
 
 # ----eval=FALSE-------------------------------------------------------------------------------------------------------------
 out <- run_lm3ppa_f_bysite( sitename,
