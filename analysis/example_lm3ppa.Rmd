@@ -243,8 +243,8 @@ The file has the following variables (units):
 ```{r,include=FALSE, eval=TRUE}
 #load(paste0(path.package("rsofun"), "/extdata/forcingLAE.RData"))
 
-# load("/home/khufkens/Dropbox/Research_Projects/code_repository/CES/sofunCalVal/backup/data/forcingLAE.RData")
-load("~/data/forcingLAE.RData")
+load("/home/khufkens/Dropbox/Research_Projects/code_repository/CES/sofunCalVal/backup/data/forcingLAE.RData")
+#load("~/data/forcingLAE.RData")
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 

@@ -7,6 +7,7 @@ library(dplyr)
 library(tibble)
 library(rsofun)
 library(ggplot2)
+library(patchwork)
 
 if(!require(devtools)){install.packages(devtools)}
 #devtools::install_github("stineb/rbeni")
@@ -37,8 +38,8 @@ siteinfo <- data.frame(
   plant_functional_type = "Broadleaf trees"
   )
 
-siteinfo <- as_tibble(siteinfo)
-siteinfo <- siteinfo %>% 
+site_info <- as_tibble(siteinfo)
+site_info <- siteinfo %>% 
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 
@@ -55,7 +56,7 @@ params_siml <- tibble(
   do_U_shaped_mortality = TRUE,
   update_annualLAImax   = TRUE,
   do_closedN_run        = TRUE,
-  method_photosynth     = "pmodel", # gs_leuning or pmodel
+  method_photosynth     = "gs_leuning", # gs_leuning or pmodel
   method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
   )
 
@@ -189,8 +190,8 @@ df_soiltexture <- bind_rows(
 ## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 #load(paste0(path.package("rsofun"), "/extdata/forcingLAE.RData"))
 
-# load("/home/khufkens/Dropbox/Research_Projects/code_repository/CES/sofunCalVal/backup/data/forcingLAE.RData")
-load("~/data/forcingLAE.RData")
+ load("/home/khufkens/Dropbox/Research_Projects/code_repository/CES/sofunCalVal/backup/data/forcingLAE.RData")
+#load("~/data/forcingLAE.RData")
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -222,7 +223,7 @@ print(packageVersion("rsofun"))
 
 ## for versions above 4.0
 df_drivers <- tibble(sitename,
-                    siteinfo = list(tibble(siteinfo)),
+                    site_info = list(tibble(site_info)),
                     params_siml = list(tibble(params_siml)),
                     params_tile = list(tibble(params_tile)),
                     params_species=list(tibble(params_species)),
@@ -269,33 +270,33 @@ out <- run_lm3ppa_f_bysite( sitename,
                             init_soil,
                             makecheck = TRUE)
 
-out$output_annual_tile %>%
+p <- out$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   theme_classic()+labs(x = "Year", y = "GPP")
 
-out$output_annual_tile %>%
+p2 <- out$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 
+print(p/p2)
 
+## ---------------------------------------------------------------------------------------------------------------------------
+df_output <- runread_lm3ppa_f(
+     df_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
 
-# ## ---------------------------------------------------------------------------------------------------------------------------
-# df_output <- runread_lm3ppa_f(
-#      df_drivers,
-#      makecheck = TRUE,
-#      parallel = FALSE
-#      )
-# 
-# df_output$data[[1]]$output_annual_tile %>% 
-#   ggplot() +
-#   geom_line(aes(x = year, y = GPP)) +
-#   theme_classic()+labs(x = "Year", y = "GPP")
-# 
-# df_output$data[[1]]$output_annual_tile %>% 
-#   ggplot() +
-#   geom_line(aes(x = year, y = plantC)) +
-#   theme_classic()+labs(x = "Year", y = "plantC")
+df_output$data[[1]]$output_annual_tile %>%
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  theme_classic()+labs(x = "Year", y = "GPP")
+
+df_output$data[[1]]$output_annual_tile %>%
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
 
 
