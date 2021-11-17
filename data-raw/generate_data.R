@@ -29,10 +29,10 @@ siteinfo <- siteinfo %>%
 # load parameters (valid ones)
 params_siml <- tibble(
   spinup = TRUE,
-  spinupyears = 1800,
-  recycle = 1,
-  firstyeartrend = 1998,
-  nyeartrend = 1,
+  spinupyears = 700,
+  recycle = 800,
+  firstyeartrend = 2009,
+  nyeartrend = 800, # what does this do?
   outputhourly = TRUE,
   outputdaily = TRUE,
   do_U_shaped_mortality = TRUE,
@@ -118,8 +118,8 @@ params_soil <- tibble(
 )
 
 init_cohort <- tibble(
-  init_cohort_species = rep(2, 10),
-  init_cohort_nindivs = rep(1,10),
+  init_cohort_species = rep(1, 10),
+  init_cohort_nindivs = rep(0.05,10),
   init_cohort_bsw     = rep(0.05,10),
   init_cohort_bHW     = rep(0.0, 10),
   init_cohort_nsc     = rep(0.05,10)
@@ -139,21 +139,79 @@ if (is.na(args[1])){
   load(args[1])
 }
 
-forcing_leuning <- forcingLAE %>% 
-  dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
-  summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-forcing <- forcing_leuning[,-c(1:3)]
+#---- gs leuning formatting -----
+
+forcing_no_leap <- forcingLAE %>%
+  mutate(
+    DOY = lubridate::yday(datehour),
+    DAY = lubridate::day(datehour),
+    MONTH = lubridate::month(datehour)
+    ) %>%
+  filter(
+    !(MONTH == 2 && DAY == 29)
+  ) %>%
+  arrange(datehour)
+
+forcing_no_leap <- forcing_no_leap %>%
+  dplyr::group_by(YEAR) %>%
+  dplyr::mutate(
+    DOY = sort(rep(1:365,24))
+  ) %>%
+  dplyr::ungroup()
+
+forcing <- forcing_no_leap %>%
+  dplyr::group_by(DOY, HOUR) %>%
+  summarise(
+    across(
+      c(
+        YEAR,
+        PAR,
+        Swdown,
+        TEMP,
+        SoilT,
+        RH,
+        RAIN,
+        WIND,
+        PRESSURE,
+        aCO2_AW,
+        SWC),
+      ~mean(.x, na.rm = TRUE)
+      )
+    )
+
+forcing <- forcing %>%
+  select(
+    YEAR,
+    DOY,
+    HOUR,
+    PAR,
+    Swdown,
+    TEMP,
+    SoilT,
+    RH,
+    RAIN,
+    WIND,
+    PRESSURE,
+    aCO2_AW,
+    SWC
+  )
+
+nyears <- 800
+forcing <- lapply(1:nyears,function(i){
+  forcing$YEAR <- i
+  return(forcing)
+}) %>% bind_rows()
 
 lm3ppa_gs_leuning_drivers <- tibble(
   sitename,
   site_info = list(tibble(siteinfo)),
   params_siml = list(tibble(params_siml)),
   params_tile = list(tibble(params_tile)),
-  params_species=list(tibble(params_species)),
-  params_soil=list(tibble(params_soil)),
-  init_cohort=list(tibble(init_cohort)),
-  init_soil=list(tibble(init_soil)),
-  forcing=list(tibble(forcing)))
+  params_species = list(tibble(params_species)),
+  params_soil = list(tibble(params_soil)),
+  init_cohort = list(tibble(init_cohort)),
+  init_soil = list(tibble(init_soil)),
+  forcing = list(tibble(forcing)))
 
 save(lm3ppa_gs_leuning_drivers,
      file ="data/lm3ppa_gs_leuning_drivers.rda",
@@ -162,10 +220,10 @@ save(lm3ppa_gs_leuning_drivers,
 # load parameters (valid ones)
 params_siml <- tibble(
   spinup = TRUE,
-  spinupyears = 1800,
-  recycle = 1,
-  firstyeartrend = 1998,
-  nyeartrend = 1,
+  spinupyears = 700,
+  recycle = 800,
+  firstyeartrend = 2009,
+  nyeartrend = 800,
   outputhourly = TRUE,
   outputdaily = TRUE,
   do_U_shaped_mortality = TRUE,
@@ -175,21 +233,69 @@ params_siml <- tibble(
   method_mortality = "dbh"
 )
 
-forcing_p <- forcingLAE %>% 
-  dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour)) %>% 
-  summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-forcing <- forcing_p[,-c(1:2)]
+#---- p-model formatting -----
+
+forcing <- forcing_no_leap %>%
+  ungroup() %>%
+  dplyr::group_by(DOY) %>%
+  summarise(
+    across(
+      c(
+        YEAR,
+        PAR,
+        Swdown,
+        TEMP,
+        SoilT,
+        RH,
+        RAIN,
+        WIND,
+        PRESSURE,
+        aCO2_AW,
+        SWC),
+      ~mean(.x, na.rm = TRUE)
+    )
+  ) %>%
+  mutate(
+    HOUR = 11.5
+  )
+
+forcing <- forcing %>%
+  select(
+    YEAR,
+    DOY,
+    HOUR,
+    PAR,
+    Swdown,
+    TEMP,
+    SoilT,
+    RH,
+    RAIN,
+    WIND,
+    PRESSURE,
+    aCO2_AW,
+    SWC
+  )
+
+nyears <- 100
+startyear <- forcing %>% 
+  pull(YEAR) %>% 
+  min()
+
+forcing <- lapply(2009:(2009+nyears),function(i){
+  forcing$YEAR <- i
+  return(forcing)
+}) %>% bind_rows()
 
 lm3ppa_p_model_drivers <- tibble(
   sitename,
   site_info = list(tibble(siteinfo)),
   params_siml = list(tibble(params_siml)),
   params_tile = list(tibble(params_tile)),
-  params_species=list(tibble(params_species)),
-  params_soil=list(tibble(params_soil)),
-  init_cohort=list(tibble(init_cohort)),
-  init_soil=list(tibble(init_soil)),
-  forcing=list(tibble(forcing)))
+  params_species = list(tibble(params_species)),
+  params_soil = list(tibble(params_soil)),
+  init_cohort = list(tibble(init_cohort)),
+  init_soil = list(tibble(init_soil)),
+  forcing  =list(tibble(forcing)))
 
 save(lm3ppa_p_model_drivers,
      file ="data/lm3ppa_p_model_drivers.rda",

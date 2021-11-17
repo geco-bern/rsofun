@@ -53,6 +53,11 @@ The LM3-PPA is a cohort-based vegetation model which simulates vegetation dynami
 With all data prepared we can run the model using `runread_lm3ppa_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. In our case only one site will be evaluated.
 
 ```{r}
+# print parameter settings
+print(lm3ppa_gs_leuning_drivers$params_siml)
+print(head(lm3ppa_gs_leuning_drivers$forcing))
+
+# run the model
 df_output <- runread_lm3ppa_f(
      lm3ppa_gs_leuning_drivers,
      makecheck = TRUE,
@@ -87,6 +92,11 @@ df_output$data[[1]]$output_annual_tile %>%
 Running the fast p-model implementation.
 
 ```{r}
+# print parameter settings
+print(lm3ppa_p_model_drivers$params_siml)
+print(head(lm3ppa_p_model_drivers$forcing))
+
+# run the model
 df_output <- runread_lm3ppa_f(
      lm3ppa_p_model_drivers,
      makecheck = TRUE,
