@@ -241,11 +241,9 @@ df_soiltexture <- bind_rows(
 Get repeated mean seasonal cycle as forcing. For `gs_leuning` at hourly resolution, for `pmodel` setup at daily resolution.
 
 ```{r,include=FALSE, eval=TRUE}
-# load("/home/khufkens/Dropbox/Research_Projects/code_repository/CES/sofunCalVal/backup/data/forcingLAE.RData")
-load("~/data/forcingLAE.RData")
+load("../data-raw/CH-LAE_forcing.rda")
 
 if (params_siml$method_photosynth == "gs_leuning"){
-  
   
   ## XXX Something is not working as it should here
   
