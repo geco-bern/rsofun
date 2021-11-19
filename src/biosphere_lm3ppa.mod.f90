@@ -126,6 +126,8 @@ contains
           ! call getout_hourly( vegn, myinterface%climate(idata), iyears, idoy, i, out_biosphere%hourly_tile(idata) )
 
         enddo fastloop ! hourly or half-hourly
+
+        ! print*,'-----------day-------------'
         
         !-------------------------------------------------
         ! Daily calls after fast loop

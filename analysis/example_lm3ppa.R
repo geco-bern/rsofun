@@ -38,7 +38,7 @@ site_info <- tibble(
   plant_functional_type = "Broadleaf trees"
   )
 
-site_info <- siteinfo %>% 
+site_info <- site_info %>% 
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 
@@ -187,11 +187,13 @@ df_soiltexture <- bind_rows(
 
 
 ## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
-if(basename(getwd()) != "rsofun"){
-  stop("You are not in the rsofun project base directory!")
-}
+# if(basename(getwd()) != "rsofun"){
+#   stop("You are not in the rsofun project base directory!")
+# }
 
-load("data-raw/CH-LAE_forcing.rda")
+# load("data-raw/CH-LAE_forcing.rda")
+
+load("rsofun/data-raw/CH-LAE_forcing.rda")
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -236,7 +238,7 @@ df_drivers <- tibble(sitename,
 # ----eval=FALSE-------------------------------------------------------------------------------------------------------------
 out <- run_lm3ppa_f_bysite( sitename,
                             params_siml,
-                            siteinfo,
+                            site_info,
                             forcing, # ddf_input
                             params_tile,
                             params_species,
@@ -256,23 +258,30 @@ gg2 <- out$output_annual_tile %>%
   theme_classic()+labs(x = "Year", y = "plantC")
 
 print(gg1/gg2)
+ggsave("luxembourg.pdf")
 
-## ---------------------------------------------------------------------------------------------------------------------------
-df_output <- runread_lm3ppa_f(
-     df_drivers,
-     makecheck = TRUE,
-     parallel = FALSE
-     )
+# out$output_annual_tile %>% 
+#   dplyr::filter(year %in% 1000:1010) %>% 
+#   ggplot() +
+#   geom_line(aes(x = year, y = GPP)) +
+#   theme_classic()+labs(x = "Year", y = "GPP")
 
-gg1 <- df_output$data[[1]]$output_annual_tile %>%
-  ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  theme_classic()+labs(x = "Year", y = "GPP")
-
-gg2 <- df_output$data[[1]]$output_annual_tile %>%
-  ggplot() +
-  geom_line(aes(x = year, y = plantC)) +
-  theme_classic()+labs(x = "Year", y = "plantC")
-
-print(gg1/gg2)
+# ## ---------------------------------------------------------------------------------------------------------------------------
+# df_output <- runread_lm3ppa_f(
+#      df_drivers,
+#      makecheck = TRUE,
+#      parallel = FALSE
+#      )
+# 
+# gg1 <- df_output$data[[1]]$output_annual_tile %>%
+#   ggplot() +
+#   geom_line(aes(x = year, y = GPP)) +
+#   theme_classic()+labs(x = "Year", y = "GPP")
+# 
+# gg2 <- df_output$data[[1]]$output_annual_tile %>%
+#   ggplot() +
+#   geom_line(aes(x = year, y = plantC)) +
+#   theme_classic()+labs(x = "Year", y = "plantC")
+# 
+# print(gg1/gg2)
 
