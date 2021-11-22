@@ -25,7 +25,7 @@ echo "Regenerating data"
 echo "------------------------------------------------------------"
   
 # regenerate the data
-Rscript rsofun/data-raw/generate_data.R rsofun/data-raw/CH-LAE_forcing.rda
+Rscript rsofun/data-raw/generate_data_bak.R rsofun/data-raw/CH-LAE_forcing.rda
 
 echo "Compile and install the package"
 echo "------------------------------------------------------------"
@@ -46,7 +46,7 @@ then
 echo "Display results in browser"
 echo "------------------------------------------------------------"
 
-  if [ `uname` = "Linux" ]
+if [ `uname` = "Linux" ]
   then
     firefox rsofun/vignettes/lm3ppa_use.html
   else
