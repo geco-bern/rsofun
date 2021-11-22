@@ -94,7 +94,7 @@
       <h1 data-toc-skip>LM3PPA usage</h1>
                         <h4 class="author">Koen Hufkens</h4>
             
-            <h4 class="date">2021-11-15</h4>
+            <h4 class="date">2021-11-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/computationales/rsofun/blob/master/vignettes/lm3ppa_use.Rmd"><code>vignettes/lm3ppa_use.Rmd</code></a></small>
       <div class="hidden name"><code>lm3ppa_use.Rmd</code></div>
@@ -103,7 +103,7 @@
 
     
     
-<p>The <code>rsofun</code> package and framework includes two main models. The <code>pmodel</code> and <code>lm3-ppa</code> (which in part relies on pmodel compents). Here we give a short example on how to run the <code>lm3ppa</code> model on the included demo datasets to familiarize yourself with both the data structure and the outputs.</p>
+<p>The <code>rsofun</code> package and framework includes two main models. The <code>pmodel</code> and <code>lm3-ppa</code> (which in part relies on pmodel component). Here we give a short example on how to run the <code>lm3ppa</code> model on the included demo datasets to familiarize yourself with both the data structure and the outputs.</p>
 <div id="demo-data" class="section level2">
 <h2 class="hasAnchor">
 <a href="#demo-data" class="anchor"></a>Demo data</h2>
@@ -113,16 +113,16 @@
 
 <span class="va">lm3ppa_gs_leuning_drivers</span>
 <span class="co">#&gt; # A tibble: 1 × 9</span>
-<span class="co">#&gt;   sitename params_siml       params_tile  params_species params_soil init_cohort</span>
-<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;            &lt;list&gt;       &lt;list&gt;         &lt;list&gt;      &lt;list&gt;     </span>
-<span class="co">#&gt; 1 CH-Lae   &lt;tibble [1 × 12]&gt; &lt;tibble [1 … &lt;tibble [16 ×… &lt;tibble [9… &lt;tibble [1…</span>
-<span class="co">#&gt; # … with 3 more variables: init_soil &lt;list&gt;, forcing &lt;list&gt;, site_info &lt;list&gt;</span>
+<span class="co">#&gt;   sitename site_info         params_siml  params_tile params_species params_soil</span>
+<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;            &lt;list&gt;       &lt;list&gt;      &lt;list&gt;         &lt;list&gt;     </span>
+<span class="co">#&gt; 1 CH-Lae   &lt;tibble [1 × 14]&gt; &lt;tibble [1 … &lt;tibble [1… &lt;tibble [16 ×… &lt;tibble [9…</span>
+<span class="co">#&gt; # … with 3 more variables: init_cohort &lt;list&gt;, init_soil &lt;list&gt;, forcing &lt;list&gt;</span>
 <span class="va">lm3ppa_p_model_drivers</span>
 <span class="co">#&gt; # A tibble: 1 × 9</span>
-<span class="co">#&gt;   sitename params_siml       params_tile  params_species params_soil init_cohort</span>
-<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;            &lt;list&gt;       &lt;list&gt;         &lt;list&gt;      &lt;list&gt;     </span>
-<span class="co">#&gt; 1 CH-Lae   &lt;tibble [1 × 12]&gt; &lt;tibble [1 … &lt;tibble [16 ×… &lt;tibble [9… &lt;tibble [1…</span>
-<span class="co">#&gt; # … with 3 more variables: init_soil &lt;list&gt;, forcing &lt;list&gt;, site_info &lt;list&gt;</span>
+<span class="co">#&gt;   sitename site_info         params_siml  params_tile params_species params_soil</span>
+<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;            &lt;list&gt;       &lt;list&gt;      &lt;list&gt;         &lt;list&gt;     </span>
+<span class="co">#&gt; 1 CH-Lae   &lt;tibble [1 × 14]&gt; &lt;tibble [1 … &lt;tibble [1… &lt;tibble [16 ×… &lt;tibble [9…</span>
+<span class="co">#&gt; # … with 3 more variables: init_cohort &lt;list&gt;, init_soil &lt;list&gt;, forcing &lt;list&gt;</span>
 <span class="va">lm3ppa_validation</span>
 <span class="co">#&gt; # A tibble: 1 × 2</span>
 <span class="co">#&gt; # Groups:   sitename [1]</span>
@@ -140,7 +140,35 @@
 <a href="#running-the-standard-gs_leuning-lm3ppa-model" class="anchor"></a>Running the standard (gs_leuning) lm3ppa model</h2>
 <p>With all data prepared we can run the model using <code><a href="../reference/runread_lm3ppa_f.html">runread_lm3ppa_f()</a></code>. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. In our case only one site will be evaluated.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">df_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runread_lm3ppa_f.html">runread_lm3ppa_f</a></span><span class="op">(</span>
+<code class="sourceCode R"><span class="co"># print parameter settings</span>
+<span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">lm3ppa_gs_leuning_drivers</span><span class="op">$</span><span class="va">params_siml</span><span class="op">)</span>
+<span class="co">#&gt; [[1]]</span>
+<span class="co">#&gt; # A tibble: 1 × 12</span>
+<span class="co">#&gt;   spinup spinupyears recycle firstyeartrend nyeartrend outputhourly outputdaily</span>
+<span class="co">#&gt;   &lt;lgl&gt;        &lt;dbl&gt;   &lt;dbl&gt;          &lt;dbl&gt;      &lt;dbl&gt; &lt;lgl&gt;        &lt;lgl&gt;      </span>
+<span class="co">#&gt; 1 TRUE           700     800           2009        800 TRUE         TRUE       </span>
+<span class="co">#&gt; # … with 5 more variables: do_U_shaped_mortality &lt;lgl&gt;,</span>
+<span class="co">#&gt; #   update_annualLAImax &lt;lgl&gt;, do_closedN_run &lt;lgl&gt;, method_photosynth &lt;chr&gt;,</span>
+<span class="co">#&gt; #   method_mortality &lt;chr&gt;</span>
+<span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">lm3ppa_gs_leuning_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">)</span><span class="op">)</span>
+<span class="co">#&gt; [[1]]</span>
+<span class="co">#&gt; # A tibble: 7,008,000 × 13</span>
+<span class="co">#&gt;     YEAR   DOY  HOUR    PAR Swdown   TEMP SoilT    RH      RAIN  WIND PRESSURE</span>
+<span class="co">#&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;</span>
+<span class="co">#&gt;  1  2009     1     0   8.17  0.156 0.728   3.16  91.6 0.0000184  3.56   93216.</span>
+<span class="co">#&gt;  2  2009     1     1   8.16  0.158 0.780   3.20  91.5 0.0000116  3.37   93189.</span>
+<span class="co">#&gt;  3  2009     1     2   8.17  0.162 0.519   3.23  93.2 0.0000116  3.01   93184.</span>
+<span class="co">#&gt;  4  2009     1     3   8.15  0.152 0.476   3.28  92.5 0.0000116  3.31   93166.</span>
+<span class="co">#&gt;  5  2009     1     4   8.21  0.158 0.336   3.30  92.9 0.0000140  3.23   93143.</span>
+<span class="co">#&gt;  6  2009     1     5   8.20  0.161 0.278   3.30  93.8 0.0000140  2.94   93124.</span>
+<span class="co">#&gt;  7  2009     1     6   8.18  0.161 0.0966  3.28  95.4 0.0000140  2.98   93114.</span>
+<span class="co">#&gt;  8  2009     1     7   8.40  0.164 0.172   3.30  95.4 0.0000211  3.46   93111.</span>
+<span class="co">#&gt;  9  2009     1     8  42.1   8.77  0.236   3.33  95.2 0.0000211  3.31   93118.</span>
+<span class="co">#&gt; 10  2009     1     9 146.   38.7   0.152   3.41  96.1 0.0000211  3.27   93132.</span>
+<span class="co">#&gt; # … with 7,007,990 more rows, and 2 more variables: aCO2_AW &lt;dbl&gt;, SWC &lt;dbl&gt;</span>
+
+<span class="co"># run the model</span>
+<span class="va">df_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runread_lm3ppa_f.html">runread_lm3ppa_f</a></span><span class="op">(</span>
      <span class="va">lm3ppa_gs_leuning_drivers</span>,
      makecheck <span class="op">=</span> <span class="cn">TRUE</span>,
      parallel <span class="op">=</span> <span class="cn">FALSE</span>
@@ -175,7 +203,35 @@
 <a href="#running-the-standard-p-model-lm3ppa-model" class="anchor"></a>Running the standard (p-model) lm3ppa model</h2>
 <p>Running the fast p-model implementation.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">df_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runread_lm3ppa_f.html">runread_lm3ppa_f</a></span><span class="op">(</span>
+<code class="sourceCode R"><span class="co"># print parameter settings</span>
+<span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">lm3ppa_p_model_drivers</span><span class="op">$</span><span class="va">params_siml</span><span class="op">)</span>
+<span class="co">#&gt; [[1]]</span>
+<span class="co">#&gt; # A tibble: 1 × 12</span>
+<span class="co">#&gt;   spinup spinupyears recycle firstyeartrend nyeartrend outputhourly outputdaily</span>
+<span class="co">#&gt;   &lt;lgl&gt;        &lt;dbl&gt;   &lt;dbl&gt;          &lt;dbl&gt;      &lt;dbl&gt; &lt;lgl&gt;        &lt;lgl&gt;      </span>
+<span class="co">#&gt; 1 TRUE           700     800           2009        800 TRUE         TRUE       </span>
+<span class="co">#&gt; # … with 5 more variables: do_U_shaped_mortality &lt;lgl&gt;,</span>
+<span class="co">#&gt; #   update_annualLAImax &lt;lgl&gt;, do_closedN_run &lt;lgl&gt;, method_photosynth &lt;chr&gt;,</span>
+<span class="co">#&gt; #   method_mortality &lt;chr&gt;</span>
+<span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">lm3ppa_p_model_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">)</span><span class="op">)</span>
+<span class="co">#&gt; [[1]]</span>
+<span class="co">#&gt; # A tibble: 292,000 × 13</span>
+<span class="co">#&gt;     YEAR   DOY  HOUR   PAR Swdown    TEMP SoilT    RH       RAIN  WIND PRESSURE</span>
+<span class="co">#&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;</span>
+<span class="co">#&gt;  1  2009     1  11.5 107.    28.0  0.384   3.39  93.7 0.0000166   3.00   93092.</span>
+<span class="co">#&gt;  2  2009     2  11.5 102.    24.4 -1.64    2.55  92.5 0.0000232   2.97   93248.</span>
+<span class="co">#&gt;  3  2009     3  11.5 197.    46.5 -2.51    1.95  85.1 0.00000371  2.84   93684.</span>
+<span class="co">#&gt;  4  2009     4  11.5 139.    34.6 -1.82    2.20  83.5 0.0000130   2.67   93435.</span>
+<span class="co">#&gt;  5  2009     5  11.5 154.    36.2 -1.34    2.23  87.8 0.0000223   3.21   93175.</span>
+<span class="co">#&gt;  6  2009     6  11.5  99.2   25.9 -0.450   2.75  90.9 0.0000219   3.03   93282.</span>
+<span class="co">#&gt;  7  2009     7  11.5 141.    34.8  0.266   3.50  89.7 0.0000136   2.64   93511.</span>
+<span class="co">#&gt;  8  2009     8  11.5 169.    44.4  0.504   3.52  86.1 0.0000113   2.68   93443.</span>
+<span class="co">#&gt;  9  2009     9  11.5 102.    25.3  0.0869  3.49  90.3 0.0000186   2.74   93447.</span>
+<span class="co">#&gt; 10  2009    10  11.5 160.    40.5 -0.404   3.44  90.1 0.0000125   2.17   93633.</span>
+<span class="co">#&gt; # … with 291,990 more rows, and 2 more variables: aCO2_AW &lt;dbl&gt;, SWC &lt;dbl&gt;</span>
+
+<span class="co"># run the model</span>
+<span class="va">df_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runread_lm3ppa_f.html">runread_lm3ppa_f</a></span><span class="op">(</span>
      <span class="va">lm3ppa_p_model_drivers</span>,
      makecheck <span class="op">=</span> <span class="cn">TRUE</span>,
      parallel <span class="op">=</span> <span class="cn">FALSE</span>
@@ -209,40 +265,35 @@
 <h2 class="hasAnchor">
 <a href="#calibrating-model-parameters" class="anchor"></a>Calibrating model parameters</h2>
 <p>To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>lm3ppa_gs_leuning_drivers<span class="sc">$</span>params_siml[[<span class="dv">1</span>]]<span class="sc">$</span>spinup <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>lm3ppa_gs_leuning_drivers<span class="sc">$</span>params_siml[[<span class="dv">1</span>]]<span class="sc">$</span>spinupyears <span class="ot">&lt;-</span> <span class="dv">10</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Mortality as DBH</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>settings <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">method              =</span> <span class="st">"bayesiantools"</span>,</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">targetvars          =</span> <span class="fu">c</span>(<span class="st">"gpp"</span>),</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">timescale           =</span> <span class="fu">list</span>(<span class="at">targets_obs =</span> <span class="st">"y"</span>),</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">sitenames           =</span> <span class="st">"CH-Lae"</span>,</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">metric              =</span> cost_rmse_lm3ppa_gsleuning,</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">dir_results         =</span> <span class="st">"./"</span>,</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">name                =</span> <span class="st">"ORG"</span>,</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">list</span>(</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">sampler =</span> <span class="st">"DEzs"</span>,</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">settings =</span> <span class="fu">list</span>(</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">burnin =</span> <span class="dv">10</span>,</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">iterations =</span> <span class="dv">50</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">par =</span> <span class="fu">list</span>(</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">phiRL =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="fl">0.5</span>, <span class="at">upper=</span><span class="dv">5</span>, <span class="at">init=</span><span class="fl">3.5</span>),</span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">LAI_light =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="dv">2</span>, <span class="at">upper=</span><span class="dv">5</span>, <span class="at">init=</span><span class="fl">3.5</span>),</span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">tf_base =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="fl">0.5</span>, <span class="at">upper=</span><span class="fl">1.5</span>, <span class="at">init=</span><span class="dv">1</span>),</span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">par_mort =</span> <span class="fu">list</span>(<span class="at">lower=</span><span class="fl">0.1</span>, <span class="at">upper=</span><span class="dv">2</span>, <span class="at">init=</span><span class="dv">1</span>))</span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>pars <span class="ot">&lt;-</span> <span class="fu">calib_sofun</span>(</span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">drivers =</span> lm3ppa_gs_leuning_drivers,</span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs =</span> lm3ppa_validation_2,</span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">settings =</span> settings</span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a> Running DEzs<span class="sc">-</span>MCMC, chain  <span class="dv">1</span> iteration <span class="dv">51</span> of <span class="dv">51</span> . Current logp  <span class="fl">6.755456</span> <span class="fl">6.755456</span> <span class="fl">6.755456</span> . Please wait<span class="sc">!</span> </span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; runMCMC terminated after 1.89seconds</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Mortality as DBH</span>
+<span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+  method              <span class="op">=</span> <span class="st">"bayesiantools"</span>,
+  targetvars          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gpp"</span><span class="op">)</span>,
+  timescale           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>targets_obs <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span>,
+  sitenames           <span class="op">=</span> <span class="st">"CH-Lae"</span>,
+  metric              <span class="op">=</span> <span class="va">cost_rmse_lm3ppa_gsleuning</span>,
+  dir_results         <span class="op">=</span> <span class="st">"./"</span>,
+  name                <span class="op">=</span> <span class="st">"ORG"</span>,
+  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+    sampler <span class="op">=</span> <span class="st">"DEzs"</span>,
+    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+      burnin <span class="op">=</span> <span class="fl">10</span>,
+      iterations <span class="op">=</span> <span class="fl">50</span>
+    <span class="op">)</span>
+  <span class="op">)</span>,
+  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+       phiRL <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.5</span>, upper<span class="op">=</span><span class="fl">5</span>, init<span class="op">=</span><span class="fl">3.5</span><span class="op">)</span>,
+      LAI_light <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">2</span>, upper<span class="op">=</span><span class="fl">5</span>, init<span class="op">=</span><span class="fl">3.5</span><span class="op">)</span>,
+      tf_base <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.5</span>, upper<span class="op">=</span><span class="fl">1.5</span>, init<span class="op">=</span><span class="fl">1</span><span class="op">)</span>,
+      par_mort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.1</span>, upper<span class="op">=</span><span class="fl">2</span>, init<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>
+<span class="op">)</span>
+
+<span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calib_sofun.html">calib_sofun</a></span><span class="op">(</span>
+  drivers <span class="op">=</span> <span class="va">lm3ppa_gs_leuning_drivers</span>,
+  obs <span class="op">=</span> <span class="va">lm3ppa_validation_2</span>,
+  settings <span class="op">=</span> <span class="va">settings</span>
+<span class="op">)</span></code></pre></div>
 </div>
 </div>
   </div>

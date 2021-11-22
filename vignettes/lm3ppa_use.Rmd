@@ -52,7 +52,7 @@ The LM3-PPA is a cohort-based vegetation model which simulates vegetation dynami
 
 With all data prepared we can run the model using `runread_lm3ppa_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. In our case only one site will be evaluated.
 
-```{r eval = FALSE}
+```{r}
 # print parameter settings
 print(lm3ppa_gs_leuning_drivers$params_siml)
 print(head(lm3ppa_gs_leuning_drivers$forcing))
@@ -69,7 +69,7 @@ df_output <- runread_lm3ppa_f(
 
 We can now visualize the model output.
 
-```{r eval = FALSE}
+```{r}
 library(dplyr)
 library(ggplot2)
 
@@ -131,7 +131,7 @@ df_output$data[[1]]$output_annual_tile %>%
 
 To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.
 
-```{r}
+```{r eval = FALSE}
 # Mortality as DBH
 settings <- list(
   method              = "bayesiantools",
