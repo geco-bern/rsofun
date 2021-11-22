@@ -232,7 +232,8 @@ run_lm3ppa_f_bysite <- function(
           "totseedC", "totseedN", "Seedling_C",
           "Seedling_N", "MaxAge", "MaxVolume",
           "MaxDBH", "NPPL", "NPPW",
-          "n_deadtrees", "c_deadtrees", "c_turnover_time")
+          "n_deadtrees", "c_deadtrees", "m_turnover", 
+          "c_turnover_time")
     
     #---- Multi-level output, multiple matrices to be combined ----
     

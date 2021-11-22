@@ -456,16 +456,16 @@ extern SEXP lm3ppa_f_C(
     // // Output as list
     SEXP out_list = PROTECT( allocVector(VECSXP, 59) );  // maybe try  STRSXP instead of VECSXP
     
-    SET_VECTOR_ELT(out_list, 0, output_hourly_tile);
-    SET_VECTOR_ELT(out_list, 1, output_daily_tile);
-    SET_VECTOR_ELT(out_list, 2, output_daily_cohorts_year ); 
-    SET_VECTOR_ELT(out_list, 3, output_daily_cohorts_doy );  
-    SET_VECTOR_ELT(out_list, 4, output_daily_cohorts_hour );  
-    SET_VECTOR_ELT(out_list, 5, output_daily_cohorts_cID );  
-    SET_VECTOR_ELT(out_list, 6, output_daily_cohorts_PFT );  
-    SET_VECTOR_ELT(out_list, 7, output_daily_cohorts_layer );  
-    SET_VECTOR_ELT(out_list, 8, output_daily_cohorts_density );  
-    SET_VECTOR_ELT(out_list, 9, output_daily_cohorts_f_layer );  
+    SET_VECTOR_ELT(out_list, 0,  output_hourly_tile);
+    SET_VECTOR_ELT(out_list, 1,  output_daily_tile);
+    SET_VECTOR_ELT(out_list, 2,  output_daily_cohorts_year ); 
+    SET_VECTOR_ELT(out_list, 3,  output_daily_cohorts_doy );  
+    SET_VECTOR_ELT(out_list, 4,  output_daily_cohorts_hour );  
+    SET_VECTOR_ELT(out_list, 5,  output_daily_cohorts_cID );  
+    SET_VECTOR_ELT(out_list, 6,  output_daily_cohorts_PFT );  
+    SET_VECTOR_ELT(out_list, 7,  output_daily_cohorts_layer );  
+    SET_VECTOR_ELT(out_list, 8,  output_daily_cohorts_density );  
+    SET_VECTOR_ELT(out_list, 9,  output_daily_cohorts_f_layer );  
     SET_VECTOR_ELT(out_list, 10, output_daily_cohorts_LAI );  
     SET_VECTOR_ELT(out_list, 11, output_daily_cohorts_gpp );  
     SET_VECTOR_ELT(out_list, 12, output_daily_cohorts_resp );  
@@ -485,7 +485,9 @@ extern SEXP lm3ppa_f_C(
     SET_VECTOR_ELT(out_list, 26, output_daily_cohorts_rootN );  
     SET_VECTOR_ELT(out_list, 27, output_daily_cohorts_SW_N );  
     SET_VECTOR_ELT(out_list, 28, output_daily_cohorts_HW_N );  
+
     SET_VECTOR_ELT(out_list, 29, output_annual_tile);
+
     SET_VECTOR_ELT(out_list, 30, output_annual_cohorts_year);
     SET_VECTOR_ELT(out_list, 31, output_annual_cohorts_cID);
     SET_VECTOR_ELT(out_list, 32, output_annual_cohorts_PFT);
