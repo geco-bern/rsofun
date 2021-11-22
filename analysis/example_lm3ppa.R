@@ -55,7 +55,7 @@ params_siml <- tibble(
   do_U_shaped_mortality = TRUE,
   update_annualLAImax   = TRUE,
   do_closedN_run        = TRUE,
-  method_photosynth     = "gs_leuning", # gs_leuning or pmodel
+  method_photosynth     = "pmodel", # gs_leuning or pmodel
   method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
   )
 
