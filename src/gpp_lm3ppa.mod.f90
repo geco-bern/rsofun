@@ -51,7 +51,7 @@ contains
     use md_forcing_lm3ppa, only: climate_type
     use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_rd
     use md_photosynth, only: calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
-    use md_params_core, only: kTkelvin, kfFEC
+    use md_params_core, only: kTkelvin, kfFEC, c_molmass
     use md_sofunutils, only: dampen_variability
 
     type(climate_type), intent(in):: forcing
@@ -74,22 +74,18 @@ contains
     real   :: w_scale2, transp                             ! mol H20 per m2 of leaf per second
     real   :: kappa                                        ! light extinction coefficient of crown layers
     real   :: f_light(nlayers_max+1)                       ! incident light fraction at top of a given layer
-    ! real   :: f_apar(nlayers_max)                          ! absorbed light fraction at top of a given layer
     real   :: LAIlayer(nlayers_max)                        ! leaf area index per layer, corrected for gaps (representative for the tree-covered fraction)
-    ! real   :: cum_lai_layer(nlayers_max+1)                 ! cumulative leaf area index of layers above a given layer
     real   :: crownarea_layer(nlayers_max)                 ! additional GPP for lower layer cohorts due to gaps
     real   :: accuCAI, f_gap
-    real   :: myrd, mygpp, par                             ! just for temporary use
+    real   :: par                                          ! just for temporary use
     real, dimension(vegn%n_cohorts) :: fapar_tree          ! tree-level fAPAR based on LAI within the crown
-    real, dimension(nlayers_max) :: par_layer              ! incident photosynthetically active radiation at the top of each layer, attenuated by layers above (W m-2)
-    real, dimension(nlayers_max) :: apar_layer             ! absorbed photosynthetically active radiation per layer (W m-2)
+    real, dimension(nlayers_max-1) :: fapar_layer
 
-    real, dimension(vegn%n_cohorts, nlayers_max) :: wgt_cohort            ! 
-    real, dimension(nlayers_max) :: wgt_layer                           ! 
-    real, dimension(nlayers_max-1) :: fapar_layer                         ! 
-    real, dimension(vegn%n_cohorts) :: fapar_cohort        ! tree-level fAPAR based on LAI within the crown
+    ! real, dimension(vegn%n_cohorts, nlayers_max) :: wgt_cohort
+    ! real, dimension(nlayers_max) :: wgt_layer
+    ! real, dimension(vegn%n_cohorts) :: fapar_cohort        ! tree-level fAPAR based on LAI within the crown
 
-    integer:: i, layer=0, layer_old
+    integer:: i, layer=0
 
     ! local variables used for P-model part
     real :: tk, ftemp_kphio
@@ -99,78 +95,81 @@ contains
     real, save :: patm_memory
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
 
-    ! for debugging
-    real :: tmp
-    logical :: stoplater = .false.
-    real :: gpp_canop, apar_canop
-    type(cohort_type), dimension(vegn%n_cohorts) :: xx
+    ! ! for debugging
+    ! real   :: f_light_alt(nlayers_max+1)                       ! incident light fraction at top of a given layer
+    ! real :: tmp
+    ! logical :: stoplater = .false.
+    ! real :: gpp_canop, apar_canop, lue
+    ! type(cohort_type), dimension(vegn%n_cohorts) :: xx
 
     !-----------------------------------------------------------
     ! Canopy light absorption
     !-----------------------------------------------------------
-    ! Sum leaf area over cohorts in each crown layer -> LAIlayer(layer)
-    f_gap = 0.1 ! 0.1
-    accuCAI = 0.0
-    LAIlayer(:) = 0.0
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
-      layer = Max(1, Min(cc%layer, nlayers_max))
-      LAIlayer(layer) = LAIlayer(layer) + cc%leafarea * cc%nindivs / (1.0 - f_gap)
-      ! fapar_tree2(i) = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown
-    enddo
-
     ! ! Calculate kappa according to sun zenith angle 
     ! kappa = cc%extinct/max(cosz,0.01)
     
     ! Use constant light extinction coefficient
-    kappa = cc%extinct
+    kappa = 0.5         !cc%extinct
+
+    ! Sum leaf area over cohorts in each crown layer -> LAIlayer(layer)
+    f_gap = 0.1 ! 0.1
+    accuCAI = 0.0
+    LAIlayer(:) = 0.0
+    fapar_layer(:) = 0.0
+    do i = 1, vegn%n_cohorts
+      cc => vegn%cohorts(i)
+      layer = Max(1, Min(cc%layer, nlayers_max))
+      LAIlayer(layer) = LAIlayer(layer) + cc%leafarea * cc%nindivs / (1.0 - f_gap)
+      fapar_tree(i) = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown
+      fapar_layer(layer) = fapar_layer(layer) + fapar_tree(i) * cc%crownarea * cc%nindivs
+    enddo
 
     ! Get light received at each crown layer as a fraction of top-of-canopy -> f_light(layer) 
     f_light(:) = 0.0
     f_light(1) = 1.0
     do i = 2, nlayers_max
-      ! f_light(i) = f_light(i-1) * (exp(-kappa * LAIlayer(i-1)) + f_gap)
-      f_light(i) = f_light(i-1) * ((1.0 - f_gap) * exp(-kappa * LAIlayer(i-1)) + f_gap)     ! corrected version
+      ! f_light(i) = f_light(i-1) * (exp(-kappa * LAIlayer(i-1)) + f_gap)                     ! originally in LM3-PPA
+      ! f_light(i) = f_light(i-1) * ((1.0 - f_gap) * exp(-kappa * LAIlayer(i-1)) + f_gap)     ! corrected version, corresponding to original LM3-PPA approach
+      f_light(i) = f_light(i-1) * (1.0 - fapar_layer(i-1))                                    ! alternative version for conserving energy
     enddo
 
-    !-----------------------------------------------------------
-    ! Distribute absorbed light fraction to cohorts
-    !-----------------------------------------------------------
-    ! fapar per layer
-    fapar_layer(:) = f_light(1:nlayers_max-1) - f_light(2:nlayers_max)
-    ! print*,'f_light     ', f_light(:)
-    ! print*,'fapar_layer ', fapar_layer(:)
+    ! !-----------------------------------------------------------
+    ! ! Distribute absorbed light fraction to cohorts
+    ! !-----------------------------------------------------------
+    ! ! fapar per layer
+    ! ! fapar_layer(:) = f_light(1:nlayers_max-1) - f_light(2:nlayers_max)
 
-    ! distribute to cohorts by determining weights per cohort. Cohort-weight scales with N individuals.
-    wgt_cohort(:,:) = 0.0
-    wgt_layer(:) = 0.0
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
-      layer = Max(1, Min(cc%layer, nlayers_max))
-      wgt_cohort(i,layer) = cc%nindivs * cc%crownarea * (1.0 - exp(-kappa * cc%leafarea / cc%crownarea))
-      wgt_layer(layer) = wgt_layer(layer) + wgt_cohort(i,layer)
-    enddo
 
-    ! normalise weights, summing up to 1 per layer
-    do layer = 1, nlayers_max
-      if (wgt_layer(layer) > 0) then
-        wgt_cohort(:,layer) = wgt_cohort(:,layer) / wgt_layer(layer)
-      else
-        wgt_cohort(:,layer) = 0.0
-      end if
-      ! print*,'summed weights, layer:', sum(wgt_cohort(:,layer)), layer
-    end do
+    ! ! distribute to cohorts by determining weights per cohort. Cohort-weight scales with N individuals.
+    ! wgt_cohort(:,:) = 0.0
+    ! wgt_layer(:) = 0.0
+    ! do i = 1, vegn%n_cohorts
+    !   cc => vegn%cohorts(i)
+    !   layer = Max(1, Min(cc%layer, nlayers_max))
+    !   wgt_cohort(i,layer) = cc%nindivs * cc%crownarea * (1.0 - exp(-kappa * cc%leafarea / cc%crownarea))
+    !   wgt_layer(layer) = wgt_layer(layer) + wgt_cohort(i,layer)
+    ! enddo
 
-    ! distribute layer-wise fapar to cohorts by their weight
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
-      layer = Max(1, Min(cc%layer, nlayers_max))
-      fapar_cohort(i) = fapar_layer(layer) * wgt_cohort(i,layer)
-    end do
+    ! ! normalise weights, summing up to 1 per layer
+    ! do layer = 1, nlayers_max
+    !   if (wgt_layer(layer) > 0) then
+    !     wgt_cohort(:,layer) = wgt_cohort(:,layer) / wgt_layer(layer)
+    !   else
+    !     wgt_cohort(:,layer) = 0.0
+    !   end if
+    !   ! print*,'summed weights, layer:', sum(wgt_cohort(:,layer)), layer
+    ! end do
 
-    ! test ok: sum of cohorts' fapar corresponds to total fractional light absorption
-    ! print*,'sum of fapar_cohort(:), 1-f_light(bottom)', sum(fapar_cohort(:)), 1.0 - f_light(nlayers_max)
-    !-----------------------------------------------------------    
+    ! ! distribute layer-wise fapar to cohorts by their weight
+    ! do i = 1, vegn%n_cohorts
+    !   cc => vegn%cohorts(i)
+    !   layer = Max(1, Min(cc%layer, nlayers_max))
+    !   fapar_cohort(i) = fapar_layer(layer) * wgt_cohort(i,layer)
+    ! end do
+
+    ! ! test ok: sum of cohorts' fapar corresponds to total fractional light absorption
+    ! ! print*,'sum of fapar_cohort(:), 1-f_light(bottom)', sum(fapar_cohort(:)), 1.0 - f_light(nlayers_max)
+    ! !-----------------------------------------------------------    
 
     if (trim(myinterface%params_siml%method_photosynth) == "gs_leuning") then
       !===========================================================
@@ -187,7 +186,7 @@ contains
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species) )
 
-        if (cc%status == LEAF_ON .and. cc%lai > 0.1) then
+        if (cc%status == LEAF_ON) then   !.and. cc%lai > 0.1
 
           ! Convert forcing data
           layer    = Max (1, Min(cc%layer, nlayers_max))
@@ -230,6 +229,21 @@ contains
           cc%transp  = transp * mol_h2o * cc%leafarea * myinterface%step_seconds      ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
           cc%resl    = -resp         * mol_C * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
           cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
+
+
+          ! xxx debug: constant LUE of 1e-10 gC W-1
+          ! lue = cc%gpp / (rad_top * cc%leafarea * myinterface%step_seconds)
+          ! print*,'lue ', lue
+
+          ! ! xxx debug: luefix
+          ! cc%gpp = 1.0e-10 * rad_top * cc%leafarea * myinterface%step_seconds   ! kgC tree-1 step-1
+          ! cc%resl = cc%gpp * 0.1
+          ! ! print*,'cc, LA, CA, fapar, CA * fapar: ', i, cc%leafarea, cc%crownarea, fapar_tree(i), fapar_tree(i) * cc%crownarea
+
+          ! xxx debug: luefix_fapar - WORKS ONLY IF LUE IS LARGE ENOUGH, CRASHES TO ZERO OTHERWISE
+          cc%gpp = 1.0e-10 * rad_top * cc%crownarea * fapar_tree(i) * myinterface%step_seconds * 10.0
+          cc%resl = cc%gpp * 0.1
+
 
           ! print*,'----------------'
           ! print*,'Leunig rd,  cc: ', i, cc%resl
@@ -292,7 +306,7 @@ contains
           ! P-model call for C3 plants to get a list of variables that are 
           ! acclimated to slowly varying conditions
           !----------------------------------------------------------------
-          par = f_light(layer) * forcing%PAR * 1.0e-6  ! required in mol m-2 s-1, unit ground area
+          par = f_light(layer) * forcing%radiation * kfFEC * 1.0e-6
           out_pmodel = pmodel(  &
                                 kphio          = sp%kphio, &    ! ftemp_kphio * XXX
                                 beta           = params_gpp%beta, &
@@ -312,17 +326,31 @@ contains
           cc%transp  = 0.0
           cc%w_scale = -9999
 
-          ! quantities per unit ground area
-          mygpp = fapar_cohort(i) * par * out_pmodel%lue
-          myrd  = fapar_cohort(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )
+          ! ! quantities per unit ground area
+          ! mygpp = fapar_cohort(i) * par * out_pmodel%lue
+          ! myrd  = fapar_cohort(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin )
 
-          ! converting to quantities per tree and cumulated over seconds in time step
-          cc%resl = myrd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
-          cc%gpp  = mygpp * cc%crownarea * myinterface%step_seconds * 1.0e-3   ! kgC step-1 tree-1
+          ! ! converting to quantities per tree and cumulated over seconds in time step
+          ! cc%resl = myrd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
+          ! cc%gpp  = mygpp * cc%crownarea * myinterface%step_seconds * 1.0e-3   ! kgC step-1 tree-1
 
           ! xxx debug
           ! xx(i)%resl = myrd  * cc%crownarea * myinterface%step_seconds * mol_C    ! kgC step-1 tree-1 
           ! xx(i)%gpp  = mygpp * cc%crownarea * myinterface%step_seconds * 1.0e-3   ! kgC step-1 tree-1          
+
+          ! ! xxx debug: luefix_fapar_daily - WORKS
+          ! rad_top  = f_light(layer) * forcing%radiation ! downward radiation at the top of the canopy, W/m2
+          ! cc%gpp = 1.0e-10 * rad_top * cc%crownarea * fapar_tree(i) * myinterface%step_seconds * 10.0
+          ! cc%resl = cc%gpp * 0.1     
+
+          ! ! xxx debug: luefix_fapar_daily_PPFD - WORKS
+          ! cc%gpp = 0.2 * 1.0e-3 * par * cc%crownarea * fapar_tree(i) * myinterface%step_seconds
+          ! cc%resl = cc%gpp * 0.1               
+
+          ! xxx debug: luefix_fapar_daily_pmodel - WORKS
+          cc%gpp = par * fapar_tree(i) * out_pmodel%lue * cc%crownarea * myinterface%step_seconds * 1.0e-3
+          cc%resl = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin ) &
+            * cc%crownarea * myinterface%step_seconds * c_molmass * 1.0e-3
 
         else
 
@@ -351,9 +379,9 @@ contains
 
     end if
 
-    ! canopy-level totals, per unit ground area
-    ! APAR
-    apar_canop = forcing%PAR * 1.0e-6 * myinterface%step_seconds * (1.0 - f_light(nlayers_max))  ! mol m-2 step-1
+    ! ! canopy-level totals, per unit ground area
+    ! ! APAR
+    ! apar_canop = forcing%PAR * 1.0e-6 * myinterface%step_seconds * (1.0 - f_light(nlayers_max))  ! mol m-2 step-1
 
     ! ! canopy-level LUE (gC mol-1). In gs_leuning setup is on the order of 0.1 over one day
     ! gpp_canop = sum(vegn%cohorts(:)%gpp * vegn%cohorts(:)%nindivs * 1.0e3)     ! gC m-2 step-1

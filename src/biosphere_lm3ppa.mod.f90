@@ -231,8 +231,8 @@ contains
 
     end if
     
+    ! stop
     ! print*,'Done with biosphere for this year. Guete Rutsch!'
-
 
   end subroutine biosphere_annual
 

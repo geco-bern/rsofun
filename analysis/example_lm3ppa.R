@@ -55,7 +55,7 @@ params_siml <- tibble(
   do_U_shaped_mortality = TRUE,
   update_annualLAImax   = TRUE,
   do_closedN_run        = TRUE,
-  method_photosynth     = "pmodel", # gs_leuning or pmodel
+  method_photosynth     = "gs_leuning", # gs_leuning or pmodel
   method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
   )
 
@@ -245,7 +245,23 @@ out <- run_lm3ppa_f_bysite( sitename,
                             params_soil,
                             init_cohort,
                             init_soil,
-                            makecheck = TRUE)
+                            makecheck = TRUE
+                            )
+
+# ## plot forcing
+# forcing %>% 
+#   ungroup() %>% 
+#   slice(1:365*24) %>% 
+#   mutate(date=ymd(paste0(YEAR, "-01-01")) + days(as.integer(DOY)-1)) %>%  
+#   ggplot(aes(x = date, y = PAR)) + 
+#   geom_line()
+# 
+# forcing %>% 
+#   ungroup() %>% 
+#   slice(1:365*24) %>% 
+#   mutate(date=ymd(paste0(YEAR, "-01-01")) + days(as.integer(DOY)-1)) %>%  
+#   ggplot(aes(x = date, y = Swdown)) + 
+#   geom_line()
 
 gg1 <- out$output_annual_tile %>%
   ggplot() +
@@ -257,6 +273,7 @@ gg2 <- out$output_annual_tile %>%
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 
+print("Writing luxembourg.pdf")
 print(gg1/gg2)
 ggsave("luxembourg.pdf")
 
