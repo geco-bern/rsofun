@@ -112,28 +112,23 @@ ggplot() +
 To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.
 
 ```{r}
-  settings <- list(
-    method              = "bayesiantools",
-    targetvars          = c("gpp"),
-    timescale           = list(targets_obs = "y"),
-    metric              = cost_rmse_kphio,
-    dir_results         = "./",
-    name                = "ORG",
-    control = list(
-      sampler = "DEzs",
-      settings = list(
-        burnin = 1000,
-        iterations = 5000
-      )
-    ),
-    par = list(
-      kphio = list(lower=0.04, upper=0.1, init = 0.05),
-      a = list(lower=0, upper=5, init = 3.5),
-      b = list(lower=1, upper=5, init=3.5),
-      tau = list(lower=0, upper=15, init=1),
-      shape = list(lower=0, upper=0.1, init=0)
-      )
-  )
+settings <- list(
+  method              = "bayesiantools",
+  targetvars          = c("gpp"),
+  timescale           = list(targets_obs = "y"),
+  metric              = cost_rmse_kphio,
+  dir_results         = "./",
+  name                = "ORG",
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 500,
+      iterations = 1500
+    )),
+  par = list(
+    kphio = list(lower=0.04, upper=0.1, init = 0.05)
+    )
+)
 ```
 
 By default `rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `BayesianTools` approach using the DEza sampler. For this example the burnin and iterations are kept artificially low. In a real scenario you will have to increase these values orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided all starting with `cost_*` but the model structure is transparent and custom cost functions can be easily written.
@@ -157,12 +152,8 @@ When successful the optimized parameters can be used to run subsequent modelling
 ```{r}
 # reformatting the parameter list
 params_modl <- list(
-    kphio           = pars$par[1],
-    soilm_par_a     = pars$par[2],
-    soilm_par_b     = pars$par[3],
-    tau_acclim_tempstress = pars$par[4],
-    par_shape_tempstress  = pars$par[5]
-  )
+    kphio = pars$par["kphio"]
+    )
 
 # run the model for these parameters
 output_new <- rsofun::runread_pmodel_f(
