@@ -34,7 +34,7 @@ The `rsofun` package and framework includes two main models. The `pmodel` and `l
 
 The package includes two demo datasets to run and validate pmodel output. These files can be directly loaded into your workspace by typing:
 
-```{r}
+```{r eval = FALSE}
 library(rsofun)
 
 lm3ppa_gs_leuning_drivers
@@ -56,13 +56,18 @@ With all data prepared we can run the model using `runread_lm3ppa_f()`. This fun
 # print parameter settings
 print(lm3ppa_gs_leuning_drivers$params_siml)
 print(head(lm3ppa_gs_leuning_drivers$forcing))
+```
 
+```{r eval = FALSE}
 # run the model
-df_output <- runread_lm3ppa_f(
+lm3ppa_output_leuning <- runread_lm3ppa_f(
      lm3ppa_gs_leuning_drivers,
      makecheck = TRUE,
      parallel = FALSE
      )
+
+# split out the annual data
+lm3ppa_gs_leuning_output <- lm3ppa_gs_leuning_output$data[[1]]$output_annual_tile
 ```
 
 ### plotting output
@@ -70,18 +75,15 @@ df_output <- runread_lm3ppa_f(
 We can now visualize the model output.
 
 ```{r}
-library(dplyr)
-library(ggplot2)
-
 # we only have one site so we'll unnest
 # the main model output
 
-df_output$data[[1]]$output_annual_tile %>% 
+lm3ppa_gs_leuning_output %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   theme_classic()+labs(x = "Year", y = "GPP")
 
-df_output$data[[1]]$output_annual_tile %>% 
+lm3ppa_gs_leuning_output %>% 
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
@@ -95,13 +97,17 @@ Running the fast p-model implementation.
 # print parameter settings
 print(lm3ppa_p_model_drivers$params_siml)
 print(head(lm3ppa_p_model_drivers$forcing))
-
+```
+```{r eval = FALSE}
 # run the model
-df_output <- runread_lm3ppa_f(
+lm3ppa_p_model_output <- runread_lm3ppa_f(
      lm3ppa_p_model_drivers,
      makecheck = TRUE,
      parallel = FALSE
      )
+
+# split out the annual data for visuals
+lm3ppa_p_model_output <- lm3ppa_p_model_output$data[[1]]$output_annual_tile
 ```
 
 ### plotting output
@@ -109,23 +115,19 @@ df_output <- runread_lm3ppa_f(
 We can now visualize the model output.
 
 ```{r}
-library(dplyr)
-library(ggplot2)
-
 # we only have one site so we'll unnest
 # the main model output
 
-df_output$data[[1]]$output_annual_tile %>% 
+lm3ppa_p_model_output %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   theme_classic()+labs(x = "Year", y = "GPP")
 
-df_output$data[[1]]$output_annual_tile %>% 
+lm3ppa_p_model_output %>% 
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 ```
-
 
 ## Calibrating model parameters
 

@@ -81,3 +81,29 @@
 #' }
 "lm3ppa_validation_2"
 
+
+#' SOFUN LM3PPA GPP validation data
+#'
+#' Small tests dataset to validate 
+#' calibration routines
+#'
+#' @format A tibble of driver data:
+#' \describe{
+#'   \item{sitename}{site name}
+#'   \item{data}{validation dta}
+#' }
+"lm3ppa_p_model_output"
+
+
+#' SOFUN LM3PPA GPP validation data
+#'
+#' Small tests dataset to validate 
+#' calibration routines
+#'
+#' @format A tibble of driver data:
+#' \describe{
+#'   \item{sitename}{site name}
+#'   \item{data}{validation dta}
+#' }
+"lm3ppa_gs_leuning_output"
+
