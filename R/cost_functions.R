@@ -24,6 +24,9 @@ cost_rmse_kphio <- function(
   inverse = FALSE
 ){
   
+  # predefine variables for CRAN check compliance
+  sitename <- data <- NULL
+  
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
   params_modl <- list(
@@ -46,7 +49,7 @@ cost_rmse_kphio <- function(
   df <- df %>%
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>%
-    rename(
+    dplyr::rename(
       'gpp_mod' = 'gpp'
     )
   
@@ -87,6 +90,9 @@ cost_rmse_fullstack <- function(
   drivers,
   inverse = FALSE 
   ){
+  
+  # predefine variables for CRAN check compliance
+  sitename <- data <- NULL
   
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
@@ -143,31 +149,34 @@ cost_rmse_fullstack <- function(
 #' @export
 #'
 
-cost_chisquared_kphio <- function( par, inverse = FALSE ){
+cost_chisquared_kphio <- function(par, inverse = FALSE) {
   
-  ## Full stack calibration
-  out <- system(
-    paste0("echo ",
-           simsuite,
-           " ",
-           sprintf( "%f %f %f %f %f %f",
-                    par[1], 1.0, 0.0, -9999.0, -9999.0, -9999.0 ),
-           " | ./run", model ),
-    intern = TRUE )  ## single calibration parameter
+  stop("Cost function is not functional!")
   
-  # read output from calibration run
-  out <- read_fwf( outfilnam, col_positions, col_types = cols( col_double() ) )
+  # out <- system(
+  #   paste0("echo ",
+  #          simsuite,
+  #          " ",
+  #          sprintf( "%f %f %f %f %f %f",
+  #                   par[1], 1.0, 0.0, -9999.0, -9999.0, -9999.0 ),
+  #          " | ./run", model ),
+  #   intern = TRUE )
+  # out <- utils::read_fwf(
+  #   outfilnam,
+  #   col_positions,
+  #   col_types = cols(col_double())
+  #   )
   
-  ## Combine obs and mod by columns
-  out <- bind_cols( obs, out )
-  
-  ## Calculate cost (chi-squared)
-  cost <- ((out$gpp_mod - out$gpp_obs )/(out$gpp_unc))^2
-  cost <- sum(cost, na.rm = TRUE)/sum(!is.na(cost))
-  
-  if (inverse) cost <- 1.0 / cost
-  
-  return(cost)
+  # Combine obs and mod by columns
+  # out <- dplyr::bind_cols(obs, out )
+  # 
+  # ## Calculate cost (chi-squared)
+  # cost <- ((out$gpp_mod - out$gpp_obs )/(out$gpp_unc))^2
+  # cost <- sum(cost, na.rm = TRUE)/sum(!is.na(cost))
+  # 
+  # if (inverse) cost <- 1.0 / cost
+  # 
+  # return(cost)
 }
 
 
@@ -194,6 +203,9 @@ cost_rmse_vpdstress <- function(
   inverse = FALSE
 ){
   
+  # predefine variables for CRAN check compliance
+  sitename <- data <- NULL
+  
   ## execute model for this parameter set
   ## For calibrating quantum yield efficiency only
   params_modl <- list(
@@ -216,10 +228,8 @@ cost_rmse_vpdstress <- function(
     dplyr::rename("latenth_mod" = "latenth") %>% 
     dplyr::left_join(obs, by = c("sitename", "date"))
   
-  ## Calculate cost (RMSE)
+  # Calculate cost (RMSE)
   cost <- sqrt( mean( (df$latenth_mod - df$latenth_obs )^2, na.rm = TRUE ) )
-  
-  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
   if (inverse) cost <- 1.0 / cost  
   
@@ -248,8 +258,11 @@ cost_chisquared_vpdstress <- function(
   inverse = FALSE
 ) {
   
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
+  # predefine variables for CRAN check compliance
+  sitename <- data <- NULL
+  
+  # execute model for this parameter set
+  # For calibrating quantum yield efficiency only
   params_modl <- list(
     kphio           = 0.04971,
     soilm_par_a     = 1.0,
@@ -286,15 +299,16 @@ cost_chisquared_vpdstress <- function(
 #' Cost function of linearly scaled output
 #'
 #' @param par parameters
+#' @param obs observations
 #'
 #' @return A linearly scaled RMSE on all output
 #' @export
 #'
 
-cost_linscale_rmse <- function( par ){
+cost_linscale_rmse <- function(par, obs){
   
-  ## Calculate cost (RMSE). 'modobs' is a global variable.
-  cost <- sqrt(mean((par * modobs$gpp_mod - modobs$gpp_obs )^2,
+  # Calculate cost (RMSE). 'modobs' is a global variable.
+  cost <- sqrt(mean((par * obs$gpp_mod - obs$gpp_obs )^2,
                     na.rm = TRUE ))
   return(cost)
 }
@@ -315,21 +329,23 @@ cost_mae <- function(
   obs
 ){
   
-  ## execute model for this parameter set
-  outfilnam <- system(paste0("echo ", simsuite, " ",
-                             sprintf( "%f", par[1] ),
-                             " | ./run", model ), intern = TRUE )
+  stop("Cost function is not functional!")
   
-  ## read output from calibration run
-  out <- read_fwf(outfilnam, col_positions)
-  
-  ## Combine obs and mod by columns
-  out <- bind_cols(obs, out)
-  
-  ## Calculate cost (RMSE)
-  cost <- mean(abs(out$gpp_mod - out$gpp_obs), na.rm = TRUE)
-  
-  return(cost)
+  # ## execute model for this parameter set
+  # outfilnam <- system(paste0("echo ", simsuite, " ",
+  #                            sprintf( "%f", par[1] ),
+  #                            " | ./run", model ), intern = TRUE )
+  # 
+  # ## read output from calibration run
+  # out <- read_fwf(outfilnam, col_positions)
+  # 
+  # ## Combine obs and mod by columns
+  # out <- bind_cols(obs, out)
+  # 
+  # ## Calculate cost (RMSE)
+  # cost <- mean(abs(out$gpp_mod - out$gpp_obs), na.rm = TRUE)
+  # 
+  # return(cost)
 }
 
 #' LM3PPA gs leuning cost function
@@ -349,6 +365,10 @@ cost_rmse_lm3ppa_gsleuning <- function(
   inverse = FALSE 
 ){
   
+  # predefine variables for CRAN check compliance
+  GPP <- LAI <- Density12 <- plantC <- targets_obs
+  targets_mod <- error <- targets_obs <- NULL
+  
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]      <- par[1]
   drivers$params_species[[1]]$LAI_light[]  <- par[2]
@@ -364,13 +384,13 @@ cost_rmse_lm3ppa_gsleuning <- function(
   
   # Aggregate variables from the model df taking the last 500 yrs
   df_mod <- df$data[[1]]$output_annual_tile %>%
-    tail(500) %>%
-    select(
+    utils::tail(500) %>%
+    dplyr::select(
       GPP, LAI, Density12, plantC
     ) %>%
     dplyr::summarise(
       GPP = mean(GPP, na.rm = TRUE),
-      LAI = quantile(LAI, probs = 0.95, na.rm=TRUE),
+      LAI = stats::quantile(LAI, probs = 0.95, na.rm=TRUE),
       Density = mean(Density12, na.rm=TRUE),
       Biomass = mean(plantC, na.rm=TRUE)
     )
@@ -383,8 +403,8 @@ cost_rmse_lm3ppa_gsleuning <- function(
                     df_mod$Biomass)
   ) %>%
     dplyr::left_join(obs, by = "variables") %>%
-    mutate(error = targets_mod - targets_obs) %>%
-    mutate(error_rel = error / targets_obs)
+    dplyr::mutate(error = targets_mod - targets_obs) %>%
+    dplyr::mutate(error_rel = error / targets_obs)
   
   ## Calculate cost (RMSE) across the N targets
   cost <- mean(dff$error_rel^2, na.rm = TRUE)
@@ -416,6 +436,10 @@ likelihood_lm3ppa <- function(
   ...
 ) {
   
+  # predefine variables for CRAN check compliance
+  GPP <- LAI <- Density12 <- plantC <- targets_obs <- 
+  targets_mod <- error <- NULL
+  
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]      <- par[1]
   drivers$params_species[[1]]$LAI_light[]  <- par[2]
@@ -432,11 +456,11 @@ likelihood_lm3ppa <- function(
   
   # Aggregate variables from the model df taking the last 500 yrs
   df_mod <- df$data[[1]]$output_annual_tile %>%
-    tail(500) %>%
+    utils::tail(500) %>%
     dplyr::summarise(GPP = mean(GPP),
-                     LAI= quantile(LAI, probs = 0.95, na.rm=T),
-                     Density=mean(Density12),
-                     Biomass=mean(plantC))
+                     LAI = stats::quantile(LAI, probs = 0.95, na.rm=T),
+                     Density = mean(Density12),
+                     Biomass = mean(plantC))
   
   dff <- data.frame(
     variables = c("GPP","LAI","Density","Biomass"),
@@ -446,8 +470,8 @@ likelihood_lm3ppa <- function(
                     df_mod$Biomass)
   ) %>%
     dplyr::left_join(obs, by = "variables") %>%
-    mutate(error = targets_mod - targets_obs) %>%
-    mutate(error_rel = error / targets_obs)
+    dplyr::mutate(error = targets_mod - targets_obs) %>%
+    dplyr::mutate(error_rel = error / targets_obs)
   
   # singlelikelihood
   singlelikelihoods <- stats::dnorm(

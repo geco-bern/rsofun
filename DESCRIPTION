@@ -21,15 +21,15 @@ URL: https://github.com/computationales/rsofun
 BugReports: https://github.com/computationales/rsofun/issues
 License: GPL-3
 Depends:
-    R (>= 3.6)
+    R (>= 4.0)
 Imports:
     dplyr,
     purrr,
     tidyr,
+    tidyselect,
     magrittr,
     lubridate,
     GenSA,
-    rlang,
     graphics,
     grDevices,
     BayesianTools,
@@ -37,13 +37,15 @@ Imports:
     stats,
     utils
 LazyData: true
+LazyDataCompression: xz
 ByteCompile: true
+NeedsCompilation: yes
 RoxygenNote: 7.1.2
 Suggests:
     rpmodel,
-    rmarkdown,
     covr,
     testthat,
-    knitr,
-    ggplot2
+    rmarkdown,
+    ggplot2,
+    knitr
 VignetteBuilder: knitr

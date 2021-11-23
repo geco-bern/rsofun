@@ -33,13 +33,19 @@ runread_pmodel_f <- function(
   makecheck = TRUE,
   parallel = FALSE,
   ncores = 1){
+
+  # predefine variables for CRAN check compliance
+  sitename <- params_siml <- site_info <-
+  params_soil <- input <- forcing <- . <- NULL
   
   if (parallel){
 
     cl <- multidplyr::new_cluster(n = ncores) %>%
       multidplyr::cluster_assign(par = par) %>%
       multidplyr::cluster_assign(makecheck = FALSE) %>%
-      multidplyr::cluster_library(c("dplyr", "purrr", "rlang", "rsofun"))
+      multidplyr::cluster_library(
+        packages = c("dplyr", "purrr", "rsofun")
+        )
     
     # distribute to to cores, making sure all data from
     # a specific site is sent to the same core
@@ -69,7 +75,7 @@ runread_pmodel_f <- function(
      data <- df_out %>%
       dplyr::collect() %>%
       dplyr::ungroup() %>%
-      dplyr::select( data )
+      dplyr::select(data)
      
      # meta-data
      meta_data <- df_out %>%
@@ -118,7 +124,7 @@ runread_pmodel_f <- function(
 #' @return A tibble with one row for each site and outputs stored 
 #' in the nested column \code{data}
 #' @export
-#'
+#' 
 #' @examples 
 #' \dontrun{
 #'  mod <- runread_pmodel_f( df_drivers,
@@ -132,11 +138,18 @@ runread_lm3ppa_f <- function(
   ncores = 2
   ){
   
+  # predefine variables for CRAN check compliance
+  sitename <- params_siml <- site_info <- forcing
+  params_tile <- params_species <- params_soil <-
+  init_cohort <- init_soil <- data <- input <- forcing <- . <- NULL
+  
   if (parallel){
     
     cl <- multidplyr::new_cluster(ncores) %>% 
       multidplyr::cluster_assign(makecheck = FALSE) %>% 
-      multidplyr::cluster_library(c("dplyr", "purrr", "rlang", "rsofun"))
+      multidplyr::cluster_library(
+        packages = c("dplyr", "purrr", "rsofun")
+        )
     
     ## distribute to to cores, making sure all data from a specific site is sent to the same core
     df_out <- drivers %>%
@@ -150,8 +163,8 @@ runread_lm3ppa_f <- function(
                             params_soil,
                             init_cohort,
                             init_soil)) %>%
-      multidplyr::partition(cl) %>% 
-      dplyr::mutate(data = purrr::map( input, 
+      multidplyr::partition(cl) %>%
+      dplyr::mutate(data = purrr::map(input,
          ~run_lm3ppa_f_bysite(
            sitename       = .x$sitename[[1]], 
            params_siml    = .x$params_siml[[1]], 
@@ -167,8 +180,8 @@ runread_lm3ppa_f <- function(
       )) %>% 
       dplyr::collect() %>%
       dplyr::ungroup() %>%
-      dplyr::select( data )  %>% 
-      tidyr::unnest( cols = c( data ))
+      dplyr::select(data)  %>% 
+      tidyr::unnest(cols = c(data))
     
   } else {
     

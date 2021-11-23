@@ -31,6 +31,9 @@ run_lm3ppa_f_bysite <- function(
   makecheck = TRUE
   ){
   
+  # predefine variables for CRAN check compliance
+  type <- NULL
+  
   ## re-define units and naming of forcing dataframe
   forcing <- forcing[,1:13]
 
@@ -52,12 +55,12 @@ run_lm3ppa_f_bysite <- function(
     dt_days <- forcing$DOY[2] - forcing$DOY[1]
     dt_hours <- forcing$HOUR[2] - forcing$HOUR[1]
     if (dt_days!=1 && dt_hours != 0){
-      rlang::abort(
+      stop(
         "run_lm3ppa_f_bysite: time step must be daily for P-model photosynthesis setup."
         )
       } 
   } else {
-    rlang::abort(
+    stop(
       paste("run_lm3ppa_f_bysite: params_siml$method_photosynth not recognised:",
             params_siml$method_photosynth))
   }
@@ -74,7 +77,7 @@ run_lm3ppa_f_bysite <- function(
   } else if (params_siml$method_mortality == "bal"){
     code_method_mortality = 5
   } else {
-    rlang::abort(
+    stop(
       paste("run_lm3ppa_f_bysite: params_siml$method_mortality not recognised:",
             params_siml$method_mortality))
   }
