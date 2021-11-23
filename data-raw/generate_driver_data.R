@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
 library(tidyverse)
+library(rsofun)
 
 # load script arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -144,67 +145,14 @@ init_soil <- tibble( #list
 )
 
 #---- gs leuning formatting -----
-
-forcing_no_leap <- forcingLAE %>%
-  mutate(
-    DOY = lubridate::yday(datehour),
-    DAY = lubridate::day(datehour),
-    MONTH = lubridate::month(datehour)
-    ) %>%
-  filter(
-    !(MONTH == 2 && DAY == 29)
-  ) %>%
-  arrange(datehour)
-
-forcing_no_leap <- forcing_no_leap %>%
-  dplyr::group_by(YEAR) %>%
-  dplyr::mutate(
-    DOY = sort(rep(1:365,24))
-  ) %>%
-  dplyr::ungroup()
-
-forcing <- forcing_no_leap %>%
-  dplyr::group_by(DOY, HOUR) %>%
-  summarise(
-    across(
-      c(
-        YEAR,
-        PAR,
-        Swdown,
-        TEMP,
-        SoilT,
-        RH,
-        RAIN,
-        WIND,
-        PRESSURE,
-        aCO2_AW,
-        SWC),
-      ~mean(.x, na.rm = TRUE)
-      )
-    )
-
-forcing <- forcing %>%
-  select(
-    YEAR,
-    DOY,
-    HOUR,
-    PAR,
-    Swdown,
-    TEMP,
-    SoilT,
-    RH,
-    RAIN,
-    WIND,
-    PRESSURE,
-    aCO2_AW,
-    SWC
-  )
-
-nyears <- 800
-forcing <- lapply(1:nyears,function(i){
-  forcing$YEAR <- i
-  return(forcing)
-}) %>% bind_rows()
+forcing <- forcingLAE %>% 
+  dplyr::group_by(
+    lubridate::month(datehour),
+    lubridate::day(datehour),
+    lubridate::hour(datehour)) %>% 
+  summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+forcing <- forcing[,-c(1:3)]
+forcing <- bind_rows(replicate(800, forcing, simplify = FALSE))
 
 lm3ppa_gs_leuning_drivers <- tibble(
   sitename,
@@ -222,62 +170,19 @@ save(lm3ppa_gs_leuning_drivers,
      compress = "xz")
 
 #---- p-model formatting -----
-
-forcing <- forcing_no_leap %>%
-  ungroup() %>%
-  dplyr::group_by(DOY) %>%
-  summarise(
-    across(
-      c(
-        YEAR,
-        PAR,
-        Swdown,
-        TEMP,
-        SoilT,
-        RH,
-        RAIN,
-        WIND,
-        PRESSURE,
-        aCO2_AW,
-        SWC),
-      ~mean(.x, na.rm = TRUE)
-    )
-  ) %>%
-  mutate(
-    HOUR = 11.5
-  )
-
-forcing <- forcing %>%
-  select(
-    YEAR,
-    DOY,
-    HOUR,
-    PAR,
-    Swdown,
-    TEMP,
-    SoilT,
-    RH,
-    RAIN,
-    WIND,
-    PRESSURE,
-    aCO2_AW,
-    SWC
-  )
-
-nyears <- 800
-startyear <- forcing %>% 
-  pull(YEAR) %>% 
-  min()
-
-forcing <- lapply(2009:(2009+nyears),function(i){
-  forcing$YEAR <- i
-  return(forcing)
-}) %>% bind_rows()
+forcingLAE <- forcingLAE %>% 
+  dplyr::group_by(
+    lubridate::month(datehour),
+    lubridate::day(datehour)) %>% 
+  summarise_at(vars(1:13), 
+               list(~mean(., na.rm = TRUE)))
+forcing <- forcingLAE[,-c(1:2)]
+forcing <- bind_rows(replicate(800, forcing, simplify = FALSE))
 
 lm3ppa_p_model_drivers <- tibble(
   sitename,
   site_info = list(tibble(siteinfo)),
-  params_siml = list(tibble(params_siml)),
+  params_siml = list(tibble(params_siml_pmodel)),
   params_tile = list(tibble(params_tile)),
   params_species = list(tibble(params_species)),
   params_soil = list(tibble(params_soil)),
@@ -288,3 +193,26 @@ lm3ppa_p_model_drivers <- tibble(
 save(lm3ppa_p_model_drivers,
      file ="data/lm3ppa_p_model_drivers.rda",
      compress = "xz")
+
+# run the model
+lm3ppa_p_model_output <- runread_lm3ppa_f(
+  lm3ppa_p_model_drivers,
+  makecheck = TRUE,
+  parallel = FALSE
+)$data[[1]]$output_annual_tile[c('year','GPP','plantC')]
+
+save(lm3ppa_p_model_output,
+     file = "data/lm3ppa_p_model_output.rda",
+     compress = "xz")
+
+lm3ppa_gs_leuning_output <- runread_lm3ppa_f(
+  lm3ppa_gs_leuning_drivers,
+  makecheck = TRUE,
+  parallel = FALSE
+)$data[[1]]$output_annual_tile[c('year','GPP','plantC')]
+
+save(lm3ppa_gs_leuning_output,
+     file ="data/lm3ppa_gs_leuning_output.rda",
+     compress = "xz")
+
+

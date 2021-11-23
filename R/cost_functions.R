@@ -366,7 +366,7 @@ cost_rmse_lm3ppa_gsleuning <- function(
 ){
   
   # predefine variables for CRAN check compliance
-  GPP <- LAI <- Density12 <- plantC <- targets_obs
+  GPP <- LAI <- Density12 <- plantC <- targets_obs <-
   targets_mod <- error <- targets_obs <- NULL
   
   # Add changed model parameters to drivers, overwriting where necessary.

@@ -25,13 +25,14 @@ echo "Regenerating data"
 echo "------------------------------------------------------------"
   
 # regenerate the data
-Rscript rsofun/data-raw/generate_data_bak.R rsofun/data-raw/CH-LAE_forcing.rda
+Rscript rsofun/data-raw/generate_data.R rsofun/data-raw/CH-LAE_forcing.rda
 
 echo "Compile and install the package"
 echo "------------------------------------------------------------"
   
 # reinstall the package
 R CMD INSTALL rsofun
+
 
 echo "Run demo code"
 echo "------------------------------------------------------------"
