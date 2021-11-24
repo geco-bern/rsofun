@@ -1,43 +1,10 @@
 context("test calibration framework and its parameters")
 
-test_that("test calibration routine p-model", {
+test_that("test calibration routine p-model (GenSA)", {
   skip_on_cran()
 
   drivers <- p_model_drivers
   obs <- p_model_validation
-
-  settings <- list(
-    method              = "bayesiantools",
-    targetvars          = c("gpp"),
-    timescale           = list(targets_obs = "y"),
-    sitenames           = "FR-Pue",
-    metric              = cost_rmse_kphio,
-    dir_results         = "./",
-    name                = "ORG",
-    control = list(
-      sampler = "DEzs",
-      settings = list(
-        burnin = 10,
-        iterations = 50
-      )
-    ),
-    par = list(
-      kphio = list(lower=0.04, upper=0.1, init = 0.05),
-      a = list(lower=0, upper=5, init = 3.5),
-      b = list(lower=1, upper=5, init=3.5),
-      tau = list(lower=0, upper=15, init=1),
-      shape = list(lower=0, upper=0.1, init=0)
-      )
-  )
-
-  pars <- calib_sofun(
-    drivers = drivers,
-    obs = obs,
-    settings = settings
-  )
-
-  # test for correctly returned values
-  expect_type(pars, "list")
 
   settings <- list(
     method              = "gensa",
@@ -68,8 +35,7 @@ test_that("test calibration routine p-model", {
   expect_type(pars, "list")
 })
 
-
-test_that("test calibration routine lm3ppa", {
+test_that("test calibration routine lm3ppa (BayesianTools)", {
   skip_on_cran()
 
   df_drivers <- lm3ppa_gs_leuning_drivers
