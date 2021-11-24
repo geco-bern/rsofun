@@ -26,24 +26,25 @@ Imports:
     dplyr,
     purrr,
     tidyr,
+    tidyselect,
     magrittr,
     lubridate,
     GenSA,
-    rlang,
     graphics,
-    grDevices,
     BayesianTools,
     multidplyr,
     stats,
     utils
 LazyData: true
+LazyDataCompression: xz
 ByteCompile: true
+NeedsCompilation: yes
 RoxygenNote: 7.1.2
 Suggests:
     rpmodel,
-    rmarkdown,
     covr,
     testthat,
-    knitr,
-    ggplot2
+    rmarkdown,
+    ggplot2,
+    knitr
 VignetteBuilder: knitr

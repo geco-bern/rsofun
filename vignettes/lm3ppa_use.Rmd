@@ -1,12 +1,11 @@
 ---
 title: "LM3PPA usage"
 author: "Koen Hufkens"
-date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{LM3PPA usage}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include = FALSE}
@@ -34,7 +33,7 @@ The `rsofun` package and framework includes two main models. The `pmodel` and `l
 
 The package includes two demo datasets to run and validate pmodel output. These files can be directly loaded into your workspace by typing:
 
-```{r}
+```{r eval = FALSE}
 library(rsofun)
 
 lm3ppa_gs_leuning_drivers
@@ -53,11 +52,21 @@ The LM3-PPA is a cohort-based vegetation model which simulates vegetation dynami
 With all data prepared we can run the model using `runread_lm3ppa_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. In our case only one site will be evaluated.
 
 ```{r}
-df_output <- runread_lm3ppa_f(
+# print parameter settings
+print(lm3ppa_gs_leuning_drivers$params_siml)
+print(head(lm3ppa_gs_leuning_drivers$forcing))
+```
+
+```{r eval = FALSE}
+# run the model
+lm3ppa_output_leuning <- runread_lm3ppa_f(
      lm3ppa_gs_leuning_drivers,
      makecheck = TRUE,
      parallel = FALSE
      )
+
+# split out the annual data
+lm3ppa_gs_leuning_output <- lm3ppa_gs_leuning_output$data[[1]]$output_annual_tile
 ```
 
 ### plotting output
@@ -65,18 +74,15 @@ df_output <- runread_lm3ppa_f(
 We can now visualize the model output.
 
 ```{r}
-library(dplyr)
-library(ggplot2)
-
 # we only have one site so we'll unnest
 # the main model output
 
-df_output$data[[1]]$output_annual_tile %>% 
+lm3ppa_gs_leuning_output %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   theme_classic()+labs(x = "Year", y = "GPP")
 
-df_output$data[[1]]$output_annual_tile %>% 
+lm3ppa_gs_leuning_output %>% 
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
@@ -87,11 +93,20 @@ df_output$data[[1]]$output_annual_tile %>%
 Running the fast p-model implementation.
 
 ```{r}
-df_output <- runread_lm3ppa_f(
+# print parameter settings
+print(lm3ppa_p_model_drivers$params_siml)
+print(head(lm3ppa_p_model_drivers$forcing))
+```
+```{r eval = FALSE}
+# run the model
+lm3ppa_p_model_output <- runread_lm3ppa_f(
      lm3ppa_p_model_drivers,
      makecheck = TRUE,
      parallel = FALSE
      )
+
+# split out the annual data for visuals
+lm3ppa_p_model_output <- lm3ppa_p_model_output$data[[1]]$output_annual_tile
 ```
 
 ### plotting output
@@ -99,32 +114,25 @@ df_output <- runread_lm3ppa_f(
 We can now visualize the model output.
 
 ```{r}
-library(dplyr)
-library(ggplot2)
-
 # we only have one site so we'll unnest
 # the main model output
 
-df_output$data[[1]]$output_annual_tile %>% 
+lm3ppa_p_model_output %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   theme_classic()+labs(x = "Year", y = "GPP")
 
-df_output$data[[1]]$output_annual_tile %>% 
+lm3ppa_p_model_output %>% 
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 ```
 
-
 ## Calibrating model parameters
 
 To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.
 
-```{r}
-lm3ppa_gs_leuning_drivers$params_siml[[1]]$spinup <- TRUE
-lm3ppa_gs_leuning_drivers$params_siml[[1]]$spinupyears <- 10
-
+```{r eval = FALSE}
 # Mortality as DBH
 settings <- list(
   method              = "bayesiantools",

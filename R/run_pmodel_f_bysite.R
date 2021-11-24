@@ -32,6 +32,11 @@ run_pmodel_f_bysite <- function(
   verbose = TRUE
   ){
   
+  # predefine variables for CRAN check compliance
+  ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
+  fsun <- snow <- co2 <- ndep <- fapar <- patm <- 
+  tmin <- tmax <- fsand <- fclay <- forg <- fgravel <- . <- NULL
+  
   # base state, always execute the call
   continue <- TRUE
   
@@ -40,17 +45,17 @@ run_pmodel_f_bysite <- function(
   ndayyear <- 365
   
   firstyeartrend_forcing <- forcing %>%
-    ungroup() %>%
-    slice(1) %>%
-    pull(date) %>%
+    dplyr::ungroup() %>%
+    dplyr::slice(1) %>%
+    dplyr::pull(date) %>%
     lubridate::year()
   
   nyeartrend_forcing <- nrow(forcing)/ndayyear
   
   # determine number of seconds per time step
   times <- forcing %>%
-    pull(date) %>%
-    head(2)
+    dplyr::pull(date) %>%
+    utils::head(2)
   secs_per_tstep <- difftime(times[1], times[2], units = "secs") %>%
     as.integer() %>%
     abs()
@@ -103,7 +108,8 @@ run_pmodel_f_bysite <- function(
     
     data_integrity <- lapply(check_vars, function(check_var){
       if (any(is.nanull(forcing[check_var]))){
-        rlang::warn(sprintf("Error: Missing value in %s for %s", check_var, sitename))
+        warning(sprintf("Error: Missing value in %s for %s",
+                            check_var, sitename))
         return(FALSE)
       } else {
         return(TRUE)
@@ -136,7 +142,7 @@ run_pmodel_f_bysite <- function(
     
     parameter_integrity <- lapply(check_param, function(check_var){
       if (any(is.nanull(params_siml[check_var]))){
-        rlang::warn(sprintf("Error: Missing value in %s for %s",
+        warning(sprintf("Error: Missing value in %s for %s",
                             check_var, sitename))
         return(FALSE)
       } else {
@@ -151,14 +157,14 @@ run_pmodel_f_bysite <- function(
     # Dates in 'forcing' do not correspond to simulation parameters
     if (nrow(forcing) != params_siml$nyeartrend * ndayyear){
       if (verbose){
-        rlang::warn(
+        warning(
           "Error: Number of years data in forcing does not correspond
        to number of simulation years (nyeartrend).\n")
-        rlang::warn(paste(" Number of years data: ",
+        warning(paste(" Number of years data: ",
                           nrow(forcing)/ndayyear), "\n")
-        rlang::warn(paste(" Number of simulation years: ",
+        warning(paste(" Number of simulation years: ",
                           params_siml$nyeartrend, "\n"))
-        rlang::warn(paste(" Site name: ", sitename, "\n"))
+        warning(paste(" Site name: ", sitename, "\n"))
       }
       
       # Overwrite params_siml$nyeartrend and 
@@ -167,14 +173,14 @@ run_pmodel_f_bysite <- function(
         params_siml$nyeartrend <- nyeartrend_forcing
         params_siml$firstyeartrend <- firstyeartrend_forcing
         if (verbose){
-          rlang::warn(paste(" Overwriting params_siml$nyeartrend: ",
+          warning(paste(" Overwriting params_siml$nyeartrend: ",
                             params_siml$nyeartrend, "\n"))
-          rlang::warn(paste(" Overwriting params_siml$firstyeartrend: ",
+          warning(paste(" Overwriting params_siml$firstyeartrend: ",
                             params_siml$firstyeartrend, "\n"))
         }
       } else {
         # something weird more fundamentally -> don't run the model
-        rlang::warn(" Returning a dummy data frame.")
+        warning(" Returning a dummy data frame.")
         continue <- FALSE
       }
     }
@@ -246,9 +252,10 @@ run_pmodel_f_bysite <- function(
     out <- out %>%
       as.matrix() %>% 
       as.data.frame() %>% 
-      setNames(
+      stats::setNames(
         c("fapar", "gpp", "transp", "latenth", "pet", "vcmax",
-          "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue")) %>%
+          "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue")
+        ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
 
