@@ -38,10 +38,10 @@ siteinfo <- siteinfo %>%
 # load model parameters (valid ones)
 params_siml <- tibble(
   spinup = TRUE,
-  spinupyears = 700,
-  recycle = 800,
+  spinupyears = 250,
+  recycle = 1,
   firstyeartrend = 2009,
-  nyeartrend = 800,
+  nyeartrend = 1,
   outputhourly = TRUE,
   outputdaily = TRUE,
   do_U_shaped_mortality = TRUE,
@@ -152,7 +152,7 @@ forcing <- forcingLAE %>%
     lubridate::hour(datehour)) %>% 
   summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
 forcing <- forcing[,-c(1:3)]
-forcing <- bind_rows(replicate(800, forcing, simplify = FALSE))
+#forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
 
 lm3ppa_gs_leuning_drivers <- tibble(
   sitename,
@@ -178,7 +178,7 @@ forcingLAE <- forcingLAE %>%
   summarise_at(vars(1:13), 
                list(~mean(., na.rm = TRUE)))
 forcing <- forcingLAE[,-c(1:2)]
-forcing <- bind_rows(replicate(800, forcing, simplify = FALSE))
+#forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
 
 lm3ppa_p_model_drivers <- tibble(
   sitename,
