@@ -1,12 +1,11 @@
 ---
 title: "P-model usage"
 author: "Koen Hufkens"
-date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{P-model usage}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include = FALSE}

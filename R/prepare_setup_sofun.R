@@ -20,8 +20,14 @@
 #'   )
 #' }
 
-prepare_setup_sofun <- function(site_info, params_siml){
-
+prepare_setup_sofun <- function(
+  site_info,
+  params_siml
+  ){
+  
+  # predefine variables for CRAN check compliance
+  year_end <- year_start <- . <- NULL
+  
   ##-----------------------------------------------------------
   ## Ensemble: multiple site-scale simulations that "go together"
   ## In this case, <settings$name> is the name of the ensemble 

@@ -1,12 +1,11 @@
 ---
 title: "Prepare forcing"
 author: "Beni Stocker"
-date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Prepare rsofun forcing}
+  %\VignetteIndexEntry{Prepare forcing}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include = FALSE}

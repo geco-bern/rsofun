@@ -30,12 +30,12 @@ test_that("p-model quantitative check", {
   # test for correctly returned values
   expect_equal(tolerance, 0.6768124, tolerance = 0.03)
 })
-# 
+
 # test_that("p-model consistency R vs Fortran (rpmodel vs rsofun)", {
 #   skip_on_cran()
-#   
+# 
 #   df <- rsofun::p_model_drivers
-#   
+# 
 #   # set model drivers to the NPHT paper
 #   # ones
 #   params_modl <- list(
@@ -45,20 +45,20 @@ test_that("p-model quantitative check", {
 #     tau_acclim_tempstress = 10,
 #     par_shape_tempstress  = 0.0
 #   )
-#   
+# 
 #   df$forcing[[1]] <- df$forcing[[1]] %>%
 #     dplyr::mutate(dplyr::across(-c(date,doy), mean))
-#   
+# 
 #   # run the model for these parameters
 #   output <- rsofun::runread_pmodel_f(
 #     df,
 #     par = params_modl
 #   )$data[[1]]$gpp
-#   
+# 
 #   df <- df$forcing[[1]]
-#   
+# 
 #   output_rp <- apply(df, 1, function(x){
-#     out <- rpmodel::rpmodel( 
+#     out <- rpmodel::rpmodel(
 #       tc             = as.numeric(x['temp']),
 #       patm           = as.numeric(x['patm']),
 #       co2            = as.numeric(x['co2']),
@@ -76,18 +76,17 @@ test_that("p-model quantitative check", {
 #       verbose        = TRUE
 #     )
 #   })
-#   
+# 
 #   output_rp <- data.frame(do.call("rbind", output_rp))
 #   output_rp <- unlist(output_rp$gpp)
-#   
+# 
 #   plot(output_rp)
 #   plot(output)
-#   
+# 
 #   # normal tolerance ~ 0.67
 #   tolerance <- mean(abs(output - gpp), na.rm = TRUE)/
 #     mean(abs(gpp), na.rm = TRUE)
-#   
+# 
 #   # test for correctly returned values
 #   expect_equal(tolerance, 0.6768124, tolerance = 0.03)
 # })
-# 

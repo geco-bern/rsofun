@@ -1,10 +1,19 @@
 #!/usr/bin/env Rscript
 
+library(tidyverse)
+library(rsofun)
+
 # load script arguments
 args <- commandArgs(trailingOnly = TRUE)
 
-library(tidyverse)
+# load data
+if (is.na(args[1])){
+  load("data-raw/CH-LAE_forcing.rda")
+} else {
+  load(args[1])
+}
 
+# sitename
 sitename <- "CH-Lae"
 
 # Take only year 2004 to 2014, corresponding to subset of data for site CH-Lae
@@ -26,12 +35,12 @@ siteinfo <- siteinfo %>%
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 
-# load parameters (valid ones)
+# load model parameters (valid ones)
 params_siml <- tibble(
   spinup = TRUE,
-  spinupyears = 1800,
+  spinupyears = 250,
   recycle = 1,
-  firstyeartrend = 1998,
+  firstyeartrend = 2009,
   nyeartrend = 1,
   outputhourly = TRUE,
   outputdaily = TRUE,
@@ -41,6 +50,9 @@ params_siml <- tibble(
   method_photosynth = "gs_leuning",
   method_mortality = "dbh"
 )
+
+params_siml_pmodel <- params_siml
+params_siml_pmodel$method_photosynth <- "pmodel"
 
 params_tile <- tibble(
   soiltype = 3,
@@ -118,8 +130,8 @@ params_soil <- tibble(
 )
 
 init_cohort <- tibble(
-  init_cohort_species = rep(2, 10),
-  init_cohort_nindivs = rep(1,10),
+  init_cohort_species = rep(1, 10),
+  init_cohort_nindivs = rep(0.05,10),
   init_cohort_bsw     = rep(0.05,10),
   init_cohort_bHW     = rep(0.0, 10),
   init_cohort_nsc     = rep(0.05,10)
@@ -132,65 +144,77 @@ init_soil <- tibble( #list
   N_input             = 0.0008
 )
 
-# load data
-if (is.na(args[1])){
-  load("data-raw/CH-LAE_forcing.rda")
-} else {
-  load(args[1])
-}
-
-forcing_leuning <- forcingLAE %>% 
-  dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
+#---- gs leuning formatting -----
+forcing <- forcingLAE %>% 
+  dplyr::group_by(
+    lubridate::month(datehour),
+    lubridate::day(datehour),
+    lubridate::hour(datehour)) %>% 
   summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-forcing <- forcing_leuning[,-c(1:3)]
+forcing <- forcing[,-c(1:3)]
+#forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
 
 lm3ppa_gs_leuning_drivers <- tibble(
   sitename,
   site_info = list(tibble(siteinfo)),
   params_siml = list(tibble(params_siml)),
   params_tile = list(tibble(params_tile)),
-  params_species=list(tibble(params_species)),
-  params_soil=list(tibble(params_soil)),
-  init_cohort=list(tibble(init_cohort)),
-  init_soil=list(tibble(init_soil)),
-  forcing=list(tibble(forcing)))
+  params_species = list(tibble(params_species)),
+  params_soil = list(tibble(params_soil)),
+  init_cohort = list(tibble(init_cohort)),
+  init_soil = list(tibble(init_soil)),
+  forcing = list(tibble(forcing))
+  )
 
 save(lm3ppa_gs_leuning_drivers,
      file ="data/lm3ppa_gs_leuning_drivers.rda",
      compress = "xz")
 
-# load parameters (valid ones)
-params_siml <- tibble(
-  spinup = TRUE,
-  spinupyears = 1800,
-  recycle = 1,
-  firstyeartrend = 1998,
-  nyeartrend = 1,
-  outputhourly = TRUE,
-  outputdaily = TRUE,
-  do_U_shaped_mortality = TRUE,
-  update_annualLAImax = TRUE,
-  do_closedN_run = TRUE,
-  method_photosynth = "pmodel",
-  method_mortality = "dbh"
-)
-
-forcing_p <- forcingLAE %>% 
-  dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour)) %>% 
-  summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-forcing <- forcing_p[,-c(1:2)]
+#---- p-model formatting -----
+forcingLAE <- forcingLAE %>% 
+  dplyr::group_by(
+    lubridate::month(datehour),
+    lubridate::day(datehour)) %>% 
+  summarise_at(vars(1:13), 
+               list(~mean(., na.rm = TRUE)))
+forcing <- forcingLAE[,-c(1:2)]
+#forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
 
 lm3ppa_p_model_drivers <- tibble(
   sitename,
   site_info = list(tibble(siteinfo)),
-  params_siml = list(tibble(params_siml)),
+  params_siml = list(tibble(params_siml_pmodel)),
   params_tile = list(tibble(params_tile)),
-  params_species=list(tibble(params_species)),
-  params_soil=list(tibble(params_soil)),
-  init_cohort=list(tibble(init_cohort)),
-  init_soil=list(tibble(init_soil)),
-  forcing=list(tibble(forcing)))
+  params_species = list(tibble(params_species)),
+  params_soil = list(tibble(params_soil)),
+  init_cohort = list(tibble(init_cohort)),
+  init_soil = list(tibble(init_soil)),
+  forcing  =list(tibble(forcing))
+  )
 
 save(lm3ppa_p_model_drivers,
      file ="data/lm3ppa_p_model_drivers.rda",
      compress = "xz")
+
+# run the model
+lm3ppa_p_model_output <- runread_lm3ppa_f(
+  lm3ppa_p_model_drivers,
+  makecheck = TRUE,
+  parallel = FALSE
+)$data[[1]]$output_annual_tile[c('year','GPP','plantC')]
+
+save(lm3ppa_p_model_output,
+     file = "data/lm3ppa_p_model_output.rda",
+     compress = "xz")
+
+lm3ppa_gs_leuning_output <- runread_lm3ppa_f(
+  lm3ppa_gs_leuning_drivers,
+  makecheck = TRUE,
+  parallel = FALSE
+)$data[[1]]$output_annual_tile[c('year','GPP','plantC')]
+
+save(lm3ppa_gs_leuning_output,
+     file ="data/lm3ppa_gs_leuning_output.rda",
+     compress = "xz")
+
+

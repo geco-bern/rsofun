@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Initialises a tibble with dates — init_dates_dataframe • rsofun</title>
+<title>SOFUN LM3PPA GPP validation data — lm3ppa_p_model_output • rsofun</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,9 @@
 
 
 
-<meta property="og:title" content="Initialises a tibble with dates — init_dates_dataframe" />
-<meta property="og:description" content="Creates a tibble with rows for each date (ymd object from 
-library lubridate) from 'yrstart' to 'yrend'. Intervals of dates is 
-specified by argument 'freq'." />
+<meta property="og:title" content="SOFUN LM3PPA GPP validation data — lm3ppa_p_model_output" />
+<meta property="og:description" content="Small tests dataset to validate 
+calibration routines" />
 
 
 
@@ -134,82 +133,28 @@ specified by argument 'freq'." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Initialises a tibble with dates</h1>
-    <small class="dont-index">Source: <a href='https://github.com/computationales/rsofun/blob/master/R/init_dates_dataframe.R'><code>R/init_dates_dataframe.R</code></a></small>
-    <div class="hidden name"><code>init_dates_dataframe.Rd</code></div>
+    <h1>SOFUN LM3PPA GPP validation data</h1>
+    <small class="dont-index">Source: <a href='https://github.com/computationales/rsofun/blob/master/R/data.R'><code>R/data.R</code></a></small>
+    <div class="hidden name"><code>lm3ppa_p_model_output.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Creates a tibble with rows for each date (ymd object from 
-library lubridate) from 'yrstart' to 'yrend'. Intervals of dates is 
-specified by argument 'freq'.</p>
+    <p>Small tests dataset to validate 
+calibration routines</p>
     </div>
 
-    <pre class="usage"><span class='fu'>init_dates_dataframe</span><span class='op'>(</span>
-  <span class='va'>yrstart</span>,
-  <span class='va'>yrend</span>,
-  startmoy <span class='op'>=</span> <span class='fl'>1</span>,
-  startdoy <span class='op'>=</span> <span class='fl'>1</span>,
-  freq <span class='op'>=</span> <span class='st'>"days"</span>,
-  endmoy <span class='op'>=</span> <span class='fl'>12</span>,
-  enddom <span class='op'>=</span> <span class='fl'>31</span>,
-  noleap <span class='op'>=</span> <span class='cn'>FALSE</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='va'>lm3ppa_p_model_output</span></pre>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>yrstart</th>
-      <td><p>An integer defining the start year
-of dates covered by the dataframe</p></td>
-    </tr>
-    <tr>
-      <th>yrend</th>
-      <td><p>An integer defining the end year of dates
-covered by the dataframe</p></td>
-    </tr>
-    <tr>
-      <th>startmoy</th>
-      <td><p>An integer defining the start month of dates
-covered by the dataframe. Defaults to 1.</p></td>
-    </tr>
-    <tr>
-      <th>startdoy</th>
-      <td><p>An integer defining the start day-of-year of
-dates covered by the dataframe. Defaults to 1.</p></td>
-    </tr>
-    <tr>
-      <th>freq</th>
-      <td><p>A character string specifying the time steps of dates
-(in rows). Defaults to <code>"days"</code>. Any of <code>"days", "months"</code>.</p></td>
-    </tr>
-    <tr>
-      <th>endmoy</th>
-      <td><p>An integer defining the end month of dates covered
-by the dataframe. Defaults to 12.</p></td>
-    </tr>
-    <tr>
-      <th>enddom</th>
-      <td><p>An integer defining the end day-of-year of dates
-covered by the dataframe. Defaults to 31.</p></td>
-    </tr>
-    <tr>
-      <th>noleap</th>
-      <td><p>Whether leap years are ignored. Defaults to <code>FALSE</code>.</p></td>
-    </tr>
-    </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
 
-    <p>A tibble with dates.</p>
+    <p>A tibble of driver data:</p><dl>
+  <dt>sitename</dt><dd><p>site name</p></dd>
+  <dt>data</dt><dd><p>validation dta</p></dd>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span></span>
-<span class='r-in'> <span class='va'>ddf</span> <span class='op'>&lt;-</span> <span class='fu'>init_dates_dataframe</span><span class='op'>(</span> <span class='fl'>2000</span>, <span class='fl'>2003</span>, startmoy<span class='op'>=</span><span class='fl'>1</span>, startdoy<span class='op'>=</span><span class='fl'>1</span>,</span>
-<span class='r-in'>  freq<span class='op'>=</span><span class='st'>"days"</span>, endmoy<span class='op'>=</span><span class='fl'>12</span>, enddom<span class='op'>=</span><span class='fl'>31</span>, noleap<span class='op'>=</span><span class='cn'>FALSE</span> <span class='op'>)</span></span>
-<span class='r-in'><span class='op'>}</span></span>
-</pre>
+</dl>
+
+
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
