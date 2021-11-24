@@ -1,35 +1,57 @@
 library(rsofun)
+library(rpmodel)
+library(tidyverse)
 
-df_drivers <- lm3ppa_gs_leuning_drivers
-ddf_obs <- lm3ppa_validation_2
+df <- rsofun::p_model_drivers
 
-df_drivers$params_siml[[1]]$spinup <- FALSE
-
-# Mortality as DBH
-settings <- list(
-  method              = "bayesiantools",
-  targetvars          = c("gpp"),
-  timescale           = list(targets_obs = "y"),
-  sitenames           = "CH-Lae",
-  metric              = cost_rmse_lm3ppa_gsleuning,
-  dir_results         = "./",
-  name                = "ORG",
-  control = list(
-    sampler = "DEzs",
-    settings = list(
-      burnin = 1,
-      iterations = 5
-    )
-  ),
-  par = list(
-    phiRL = list(lower=0.5, upper=5, init=3.5),
-    LAI_light = list(lower=2, upper=5, init=3.5),
-    tf_base = list(lower=0.5, upper=1.5, init=1),
-    par_mort = list(lower=0.1, upper=2, init=1))
+# set model drivers to the NPHT paper
+# ones
+params_modl <- list(
+  kphio           = 0.09423773,
+  soilm_par_a     = 0.33349283,
+  soilm_par_b     = 1.45602286,
+  tau_acclim_tempstress = 10,
+  par_shape_tempstress  = 0.0
 )
 
-pars <- calib_sofun(
-  drivers = df_drivers,
-  obs = ddf_obs,
-  settings = settings
-)
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  df,
+  par = params_modl
+)$data[[1]]$gpp
+
+df <- df$forcing[[1]]
+
+output_rp <- apply(df, 1, function(x){
+  out <- rpmodel::rpmodel(
+    tc             = as.numeric(x['temp']),
+    patm           = as.numeric(x['patm']),
+    co2            = as.numeric(x['co2']),
+    fapar          = as.numeric(x['fapar']),
+    ppfd           = as.numeric(x['ppfd']),
+    vpd            = as.numeric(x['vpd']),
+    elv            = 270,
+    kphio          = 0.09423773,
+    beta           = 145,
+    c4             = FALSE,
+    method_optci   = "prentice14",
+    method_jmaxlim = "wang17",
+    do_ftemp_kphio = TRUE,
+    do_soilmstress = FALSE,
+    verbose        = TRUE
+  )
+})
+
+output_rp <- data.frame(do.call("rbind", output_rp))
+output_rp <- unlist(output_rp$gpp)
+
+par(mfrow = c(2,1))
+plot(output_rp)
+plot(output)
+
+# normal tolerance ~ 0.67
+tolerance <- mean(abs(output - gpp), na.rm = TRUE)/
+  mean(abs(gpp), na.rm = TRUE)
+
+# test for correctly returned values
+expect_equal(tolerance, 0.6768124, tolerance = 0.03)
