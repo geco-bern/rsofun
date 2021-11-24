@@ -1,6 +1,6 @@
 context("test calibration framework and its parameters")
 
-test_that("test calibration routine p-model (GenSA)", {
+test_that("test calibration routine p-model (BT)", {
   skip_on_cran()
 
   drivers <- p_model_drivers
@@ -39,7 +39,7 @@ test_that("test calibration routine p-model (GenSA)", {
   expect_type(pars, "list")
 })
 
-test_that("test calibration routine lm3ppa (BayesianTools)", {
+test_that("test calibration routine lm3ppa (gensa)", {
   skip_on_cran()
 
   df_drivers <- lm3ppa_gs_leuning_drivers
@@ -51,13 +51,13 @@ test_that("test calibration routine lm3ppa (BayesianTools)", {
     method              = "gensa",
     targetvars          = c("gpp"),
     timescale           = list(targets_obs = "y"),
-    maxit               = 10,
+    maxit               = 2,
     sitenames           = "CH-Lae",
     metric              = cost_rmse_lm3ppa_gsleuning,
     dir_results         = "./",
     name                = "ORG",
     control = list(
-      max.call = 1
+      max.call = 2
     ),
     par = list(
         phiRL = list(lower=0.5, upper=5, init=3.5),
