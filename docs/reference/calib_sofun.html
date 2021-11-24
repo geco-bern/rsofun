@@ -73,7 +73,7 @@ calibration of SOFUN model parameters." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rsofun</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.2</span>
       </span>
     </div>
 
@@ -99,7 +99,7 @@ calibration of SOFUN model parameters." />
       <a href="../articles/lm3ppa_model_structure.html">LM3PPA model structure</a>
     </li>
     <li>
-      <a href="../articles/lm3ppa_use.html">LM3PPA usage</a>
+      <a href="../articles/lm3ppa_use.html">LM3-PPA usage</a>
     </li>
     <li>
       <a href="../articles/pmodel_use.html">P-model usage</a>
@@ -170,14 +170,14 @@ See vignette_rsofun.pdf for more information and examples.</p></td>
  the calibration settings and optimised parameter values.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span> </span>
-<span class='r-in'><span class='fu'>calib_sofun</span><span class='op'>(</span></span>
-<span class='r-in'>  drivers <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>drivers</span>,</span>
-<span class='r-in'>          <span class='va'>sitename</span> <span class='op'><a href='https://rdrr.io/r/base/match.html'>%in%</a></span> <span class='va'>settings</span><span class='op'>$</span><span class='va'>sitenames</span><span class='op'>)</span>,</span>
-<span class='r-in'>  obs <span class='op'>=</span> <span class='va'>obs_calib</span>,</span>
-<span class='r-in'>  settings <span class='op'>=</span> <span class='va'>settings</span><span class='op'>)</span></span>
-<span class='r-in'><span class='op'>}</span></span>
-</pre>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span> 
+<span class='fu'>calib_sofun</span><span class='op'>(</span>
+  drivers <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>drivers</span>,
+          <span class='va'>sitename</span> <span class='op'>%in%</span> <span class='va'>settings</span><span class='op'>$</span><span class='va'>sitenames</span><span class='op'>)</span>,
+  obs <span class='op'>=</span> <span class='va'>obs_calib</span>,
+  settings <span class='op'>=</span> <span class='va'>settings</span><span class='op'>)</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

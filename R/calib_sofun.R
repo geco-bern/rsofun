@@ -51,8 +51,8 @@ calib_sofun <- function(
   if (tolower(settings$method) == "gensa"){
     
     # convert to standard cost function naming
-    cost <- eval(settings$metric)
-    
+    cost <- settings$metric
+
     # create bounds
     lower <- unlist(lapply(settings$par, function(x) x$lower))
     upper <- unlist(lapply(settings$par, function(x) x$upper))

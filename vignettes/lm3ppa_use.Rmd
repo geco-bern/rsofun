@@ -1,9 +1,9 @@
 ---
-title: "LM3PPA usage"
+title: "LM3-PPA usage"
 author: "Koen Hufkens"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{LM3PPA usage}
+  %\VignetteIndexEntry{LM3-PPA usage}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
@@ -47,7 +47,7 @@ These are real data from the Swiss CH-Lae fluxnet site. We can use these data to
 
 The LM3-PPA is a cohort-based vegetation model which simulates vegetation dynamics and biogeochemical processes (Weng et al., 2015). The model is able to link photosynthesis standard models (Farquhar et al., 1980) with tree allometry. In our formulation we retain the original model structure with the standard photosynthesis formulation (i.e. "gs_leuning") as well as an alternative "p-model" approach. Both model structures operate at different time scales, where the original input has an hourly time step our alternative p-model approach uses a daily time step. Hence, we have two different datasets as driver data (with the lm3ppa p-model input being an aggregate of the high resolution hourly data).
 
-## Running the standard (gs_leuning) lm3ppa model
+## Running the LM3-PPA model with standard photosynthesis
 
 With all data prepared we can run the model using `runread_lm3ppa_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. In our case only one site will be evaluated.
 
@@ -69,7 +69,7 @@ lm3ppa_output_leuning <- runread_lm3ppa_f(
 lm3ppa_gs_leuning_output <- lm3ppa_gs_leuning_output$data[[1]]$output_annual_tile
 ```
 
-### plotting output
+### Plotting output
 
 We can now visualize the model output.
 
@@ -88,9 +88,9 @@ lm3ppa_gs_leuning_output %>%
   theme_classic()+labs(x = "Year", y = "plantC")
 ```
 
-## Running the standard (p-model) lm3ppa model
+## Running the LM3-PPA model with P-model photosynthesis
 
-Running the fast p-model implementation.
+Running the fast P-model implementation.
 
 ```{r}
 # print parameter settings
@@ -109,7 +109,7 @@ lm3ppa_p_model_output <- runread_lm3ppa_f(
 lm3ppa_p_model_output <- lm3ppa_p_model_output$data[[1]]$output_annual_tile
 ```
 
-### plotting output
+### Plotting output
 
 We can now visualize the model output.
 
