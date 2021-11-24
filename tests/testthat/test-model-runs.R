@@ -74,7 +74,9 @@ test_that("lm3ppa leuning run check", {
   df_drivers$params_siml[[1]]$spinup <- FALSE
   
   df_output <- runread_lm3ppa_f(
-    df_drivers
+    df_drivers,
+    makecheck = FALSE,
+    parallel = FALSE
   )
   
   # test for correctly returned values
