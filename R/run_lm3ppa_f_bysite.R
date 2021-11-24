@@ -56,12 +56,14 @@ run_lm3ppa_f_bysite <- function(
     dt_hours <- forcing$HOUR[2] - forcing$HOUR[1]
     if (dt_days!=1 && dt_hours != 0){
       stop(
-        "run_lm3ppa_f_bysite: time step must be daily for P-model photosynthesis setup."
+        "run_lm3ppa_f_bysite: time step must be daily 
+         for P-model photosynthesis setup."
         )
       } 
   } else {
     stop(
-      paste("run_lm3ppa_f_bysite: params_siml$method_photosynth not recognised:",
+      paste("run_lm3ppa_f_bysite:
+            params_siml$method_photosynth not recognised:",
             params_siml$method_photosynth))
   }
 
