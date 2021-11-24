@@ -39,8 +39,7 @@ cost_rmse_kphio <- function(
     drivers, 
     par = params_modl,
     makecheck = TRUE,
-    parallel = FALSE,
-    verbose = FALSE
+    parallel = FALSE
   )
   
   # cleanup
@@ -48,7 +47,7 @@ cost_rmse_kphio <- function(
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>%
     rename(
-      'gpp_obs' = 'gpp'
+      'gpp_mod' = 'gpp'
     )
   
   obs <- obs %>%
@@ -59,9 +58,7 @@ cost_rmse_kphio <- function(
   df <- dplyr::left_join(df, obs, by = c("sitename", "date"))
   
   # Calculate cost (RMSE)
-  cost <- sqrt( mean( (df$gpp - df$gpp_obs )^2, na.rm = TRUE ) )
-  
-  #print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  cost <- sqrt( mean( (df$gpp - df$gpp_mod )^2, na.rm = TRUE ) )
   
   if (inverse) cost <- 1.0 / cost
   
@@ -106,8 +103,7 @@ cost_rmse_fullstack <- function(
     drivers, 
     par = params_modl,
     makecheck = TRUE,
-    parallel = FALSE,
-    verbose = FALSE
+    parallel = FALSE
   )
   
   # cleanup
@@ -128,7 +124,7 @@ cost_rmse_fullstack <- function(
   # Calculate cost (RMSE)
   cost <- sqrt( mean( (df$gpp - df$gpp_obs )^2, na.rm = TRUE ) )
   
-  #print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
   if (inverse) cost <- 1.0 / cost
   

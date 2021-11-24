@@ -1,3 +1,8 @@
+#!/usr/bin/env Rscript
+
+# load script arguments
+args <- commandArgs(trailingOnly = TRUE)
+
 library(tidyverse)
 
 sitename <- "CH-Lae"
@@ -55,7 +60,8 @@ params_tile <- tibble(
   f_initialBSW = 0.2,
   f_N_add = 0.02,
   tf_base = 1,
-  par_mort = 0.6
+  par_mort = 1,
+  par_mort_under = 1
 )
 
 params_species <- tibble(
@@ -126,7 +132,12 @@ init_soil <- tibble( #list
   N_input             = 0.0008
 )
 
-load("/home/khufkens/Desktop/rsofun_test/inst/extdata/forcingLAE.RData")
+# load data
+if (is.na(args[1])){
+  load("data-raw/CH-LAE_forcing.rda")
+} else {
+  load(args[1])
+}
 
 forcing_leuning <- forcingLAE %>% 
   dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
@@ -135,7 +146,7 @@ forcing <- forcing_leuning[,-c(1:3)]
 
 lm3ppa_gs_leuning_drivers <- tibble(
   sitename,
-  siteinfo = list(tibble(siteinfo)),
+  site_info = list(tibble(siteinfo)),
   params_siml = list(tibble(params_siml)),
   params_tile = list(tibble(params_tile)),
   params_species=list(tibble(params_species)),
@@ -171,7 +182,7 @@ forcing <- forcing_p[,-c(1:2)]
 
 lm3ppa_p_model_drivers <- tibble(
   sitename,
-  siteinfo = list(tibble(siteinfo)),
+  site_info = list(tibble(siteinfo)),
   params_siml = list(tibble(params_siml)),
   params_tile = list(tibble(params_tile)),
   params_species=list(tibble(params_species)),

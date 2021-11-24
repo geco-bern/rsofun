@@ -879,9 +879,8 @@ contains
       enddo
 
       ! Remove the cohorts with very few individuals
-      print*,'1'
       call kill_lowdensity_cohorts( vegn )    
-      print*,'3'
+
 
     endif
 
@@ -1776,15 +1775,14 @@ contains
       if (vegn%cohorts(i)%nindivs > mindensity) k=k+1
     enddo
 
-    !print *, k
-
-    if (k==0) then
-      !print *, "cohort too small, killing"
-      stop
-    endif
+    ! https://github.com/computationales/rsofun/issues/24
+    !if (k==0) then 
+    !  print *, "cohort too small..."
+    !  stop
+    !endif
     
     ! exclude cohorts that have low individuals
-    if (k < vegn%n_cohorts) then
+    if (k > 0 .and. k < vegn%n_cohorts) then
       allocate(cc(k))
       k=0
       do i = 1,vegn%n_cohorts

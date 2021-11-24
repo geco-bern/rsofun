@@ -37,7 +37,11 @@ run_lm3ppa_f_bysite <- function(
   params_soil <- params_soil %>%
     dplyr::select(-type)
 
-  runyears <- ifelse(params_siml$spinup, (params_siml$spinupyears + params_siml$nyeartrend), params_siml$nyeartrend)
+  runyears <- ifelse(
+    params_siml$spinup,
+    (params_siml$spinupyears + params_siml$nyeartrend),
+    params_siml$nyeartrend)
+  
   n_daily  <- params_siml$nyeartrend * 365
 
   # Types of photosynthesis model
@@ -70,7 +74,9 @@ run_lm3ppa_f_bysite <- function(
   } else if (params_siml$method_mortality == "bal"){
     code_method_mortality = 5
   } else {
-    rlang::abort(paste("run_lm3ppa_f_bysite: params_siml$method_mortality not recognised:", params_siml$method_mortality))
+    rlang::abort(
+      paste("run_lm3ppa_f_bysite: params_siml$method_mortality not recognised:",
+            params_siml$method_mortality))
   }
 
   # base state, always execute the call
@@ -226,7 +232,8 @@ run_lm3ppa_f_bysite <- function(
           "totseedC", "totseedN", "Seedling_C",
           "Seedling_N", "MaxAge", "MaxVolume",
           "MaxDBH", "NPPL", "NPPW",
-          "n_deadtrees", "c_deadtrees", "c_turnover_time")
+          "n_deadtrees", "c_deadtrees", "m_turnover", 
+          "c_turnover_time")
     
     #---- Multi-level output, multiple matrices to be combined ----
     

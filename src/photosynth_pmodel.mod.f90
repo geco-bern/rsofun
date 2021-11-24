@@ -111,7 +111,7 @@ contains
     real :: mprime              ! factor in light use model with Jmax limitation
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
     real :: lue                 ! light use efficiency (mol CO2 / mol photon)
-    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 d-1)
+    real :: gpp                 ! gross primary productivity (g CO2 m-2 d-1)
     real :: jmax                ! canopy-level maximum rate of electron transport (XXX)
     real :: jmax25              ! canopy-level maximum rate of electron transport (XXX)
     real :: vcmax               ! canopy-level maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)

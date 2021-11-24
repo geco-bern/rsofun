@@ -1,13 +1,4 @@
----
-title: "Example using LM3-PPA"
-output:
-  html_document:
-    toc: true
-    toc_float: true
-    toc_depth: 3
----
-
-```{r setup, include=FALSE}
+## ----setup, include=FALSE---------------------------------------------------------------------------------------------------
 # version 4 works for gs_leuning
 # version 4.1 with pmodel tweak doesn't
 # work for both
@@ -16,6 +7,7 @@ library(dplyr)
 library(tibble)
 library(rsofun)
 library(ggplot2)
+library(patchwork)
 
 if(!require(devtools)){install.packages(devtools)}
 #devtools::install_github("stineb/rbeni")
@@ -23,21 +15,15 @@ if(!require(devtools)){install.packages(devtools)}
 
 #devtools::install_github("tidyverse/multidplyr")
 library(multidplyr)
-```
 
-## Example
 
-### Simulation settings
-
-Manually select some sites from which we're going to use the data for evaluation and calibration.
-```{r,include=FALSE, eval=TRUE}
+## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 sitename <- "CH-Lae"
-```
 
-Create a site meta info table that contains all the site-specific information that is used to force site-simulations (e.g. starting year, number of simulations years, elevation, etc.). For FLUXNET2015 data, required meta info is provided by the `rsofun` package (data frame `rsofun::metainfo_Tier1_sites_kgclimate_fluxnet2015`).
-```{r,include=TRUE, eval=TRUE}
+
+## ----include=TRUE, eval=TRUE------------------------------------------------------------------------------------------------
 # Take only year 2004 to 2014, corresponding to subset of data for site CH-Lae
-siteinfo <- data.frame(
+site_info <- tibble(
   sitename="CH-Lae",
   lon = 8.365,
   lat = 47.47808,
@@ -52,14 +38,12 @@ siteinfo <- data.frame(
   plant_functional_type = "Broadleaf trees"
   )
 
-siteinfo <- as_tibble(siteinfo)
-siteinfo <- siteinfo %>% 
+site_info <- site_info %>% 
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
-```
 
-Now specify the simulation parameters that are identical for all site-scale simulations.
-```{r,include=TRUE, eval=TRUE}
+
+## ----include=TRUE, eval=TRUE------------------------------------------------------------------------------------------------
 params_siml <- tibble(
   spinup                = TRUE,
   spinupyears           = 700, 
@@ -74,30 +58,9 @@ params_siml <- tibble(
   method_photosynth     = "pmodel", # gs_leuning or pmodel
   method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
   )
-```
 
-#### Photosynthesis method
-The model includes two methods for estimating NPP:
-(a) "gs_leuning" the original method described for the LM3-PPA (Weng et al. 2015).
-(b) "pmodel" the implementation of the P-model (Stocker et al. 2020) within the LM3-PPA.
-The P-model which simulates acclimated photosynthetic parameters and light use efficiency for daily time steps. 
-For the implementation of the P-model in LM3-PPA, GPP is calculated at the cohort-level (not canopy-level), using light absorbed per cohort, and expressed in kg C per day and per tree (or cohort).
-PAR is the amount of light reaching the respective layer (mol m-2 s-1).
-fAPAR is attenuated based on the leaf area index within-crown of all layers above and on a fixed exponential light extinction (with k=0.75).
-LUE is simulated as gpp per unit absorbed light (g C mol−1) and depends on a fix quantum yield efficiency parameter. (kphio Long et al., 1993). 
 
-#### Mortality method
-The model allows for four different mortality functional forms: 
-(a) "dbh" as a function of size: high mortality rate for large trees (following Weng et al. 2015).
-(b) "cstarvation" as a function of tree's C balance: carbon starvation as a decreasing in the cohort’s NSC level.
-(c) "growthrate" as a function of growth rate: high mortality rate for faster growing trees.
-(d) "const_selfthin" as a constant self-thinning relationship.
-
-### Define model parameters
-
-#### Tile-level parameters
-
-```{r,include=FALSE, eval=TRUE}
+## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 params_tile <- tibble(
   soiltype     = 3,     # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   FLDCAP       = 0.4,   # soil property: field capacity 
@@ -121,11 +84,9 @@ params_tile <- tibble(
   par_mort       = 1,    # param_dbh=1 param_csv=1 param_gr=1 CAI_MAX=2
   par_mort_under = 1
   )
-```
 
-#### Species-level parameters
 
-```{r,include=FALSE, eval=TRUE}
+## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 params_species <- tibble(
   
   lifeform      = rep(1,16),                      # 0 for grasses; 1 for trees
@@ -179,12 +140,9 @@ params_species <- tibble(
   LAI_light     = rep(3.5,16)               # Light-limited crown LAI
   
   ) 
-```
 
-#### Soil parameters
 
-By layers.
-```{r,include=FALSE, eval=TRUE}
+## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 # adopted from datatypes.mod.f90 l.538
 params_soil <- tibble(
   type              = c("Coarse","Medium","Fine","CM","CF","MF","CMF","Peat","MCM"),
@@ -198,12 +156,9 @@ params_soil <- tibble(
   heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6, 1.0)
   )
 
-```
 
-#### Initial cohort specification
 
-Select the species identity of the initial cohorts and initial biomass. With `init_cohort_species = rep(2, 10)` we're selecting ten cohorts of the same species (number 2 or number 1).
-```{r,include=FALSE, eval=TRUE}
+## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 init_cohort <- tibble(
  init_cohort_species = rep(1, 10),   # indicates sps # 1 - Fagus sylvatica
  init_cohort_nindivs = rep(0.05,10),  # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
@@ -211,11 +166,9 @@ init_cohort <- tibble(
  init_cohort_bHW     = rep(0.0, 10), # initial biomass of heartwood, kg C/tree
  init_cohort_nsc     = rep(0.05,10)  # initial non-structural biomass
 )
-```
 
-#### Initial soil pools
 
-```{r,include=FALSE, eval=TRUE}
+## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 # high N input --> Deciduous
 # low  N input --> Evergreen
 init_soil <- tibble( #list
@@ -224,106 +177,55 @@ init_soil <- tibble( #list
  init_Nmineral       = 0.015,  # Mineral nitrogen pool, (kg N/m2)
  N_input             = 0.0008  # annual N input to soil N pool, kgN m-2 yr-1
 )
-```
 
-### Define soil parameters
 
-For now, this is implemented as an illustration. Should be made site-specific.
-```{r,include=FALSE, eval=TRUE}
+## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 df_soiltexture <- bind_rows(
   top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
   bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
 )
-```
 
-### Get input
 
-Get repeated mean seasonal cycle as forcing. For `gs_leuning` at hourly resolution, for `pmodel` setup at daily resolution.
+## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
+# if(basename(getwd()) != "rsofun"){
+#   stop("You are not in the rsofun project base directory!")
+# }
 
-```{r,include=FALSE, eval=TRUE}
-load("../data-raw/CH-LAE_forcing.rda")
+# load("data-raw/CH-LAE_forcing.rda")
+
+load("rsofun/data-raw/CH-LAE_forcing.rda")
 
 if (params_siml$method_photosynth == "gs_leuning"){
-  
-  ## XXX Something is not working as it should here
-  
-  ## Aggregate to daily means, averaged for each day-of-year across multiple years
-  forcing <- forcingLAE %>% 
-    
-    ## remove 29 Feb (not allowed in rsofun)
-    # dplyr::filter(!(lubridate::month(datehour) == 2 & lubridate::mday(datehour) == 29)) %>% 
-    # mutate(date = lubridate::ymd(paste0(as.character(as.integer(YEAR)), "-01-01")) + lubridate::days(as.integer(DOY)-1)) %>% 
-
-    ## get mean seasonal cycle
-    dplyr::select(-DOY) %>% 
-    mutate(DOY = lubridate::yday(datehour)) %>% 
-    dplyr::group_by(DOY, HOUR) %>% 
-    summarise(across(c(YEAR, PAR, Swdown, TEMP, SoilT, RH, RAIN, WIND, PRESSURE, aCO2_AW, SWC), ~mean(.x, na.rm = TRUE))) %>% 
-    
-    ## correct to retain only one year
-    slice(1:(24*365))
-    
-  ## generate long time series by repeating one year 800 times
-  nyears <- 800
-  
-  # Duplicate for the # of transient years
-  forcing <- bind_rows(replicate(nyears, forcing, simplify = FALSE)) %>% 
-    mutate(YEAR = rep(seq(24*365), times = nyears))
-
-  # forcingLAE <- forcingLAE %>% 
-  #   dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
-  #   summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-  # forcing <- forcingLAE[,-c(1:3)]
-  # forcing <- bind_rows(replicate(800, forcing, simplify = FALSE)) # Duplicate for the # of transient years
+  forcingLAE <- forcingLAE %>% 
+    dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour),lubridate::hour(datehour)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+  forcing <- forcingLAE[,-c(1:3)]
+  forcing <- bind_rows(replicate(800, forcing, simplify = FALSE)) # Duplicate for the # of transient years
   
 } else if (params_siml$method_photosynth == "pmodel"){ #&& dt_secs != (60*60*24)){
-  
-  ## Aggregate to daily means, averaged for each day-of-year across multiple years
-  forcing <- forcingLAE %>% 
-    
-    ## remove 29 Feb (not allowed in rsofun)
-    # dplyr::filter(!(lubridate::month(datehour) == 2 & lubridate::mday(datehour) == 29)) %>% 
-    # mutate(date = lubridate::ymd(paste0(as.character(as.integer(YEAR)), "-01-01")) + lubridate::days(as.integer(DOY)-1)) %>% 
-
-    ## get mean seasonal cycle
-    dplyr::select(-DOY) %>% 
-    mutate(DOY = lubridate::yday(datehour)) %>% 
-    dplyr::group_by(DOY) %>% 
-    summarise(across(c(YEAR, HOUR, PAR, Swdown, TEMP, SoilT, RH, RAIN, WIND, PRESSURE, aCO2_AW, SWC), ~mean(.x, na.rm = TRUE))) %>% 
-    
-    ## correct to retain only one year
-    slice(1:365)
-    
-  ## generate long time series by repeating one year 800 times
-  nyears <- 800
-  startyear <- forcing %>% 
-    pull(YEAR) %>% 
-    min()
-  
-  # Duplicate for the # of transient years
-  forcing <- bind_rows(replicate(nyears, forcing, simplify = FALSE)) %>% 
-    mutate(YEAR = rep(startyear:(startyear+nyears-1), each = 365))
+  forcingLAE <- forcingLAE %>% 
+    dplyr::group_by(lubridate::month(datehour),lubridate::day(datehour)) %>% 
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
+  forcing <- forcingLAE[,-c(1:2)]
+  forcing <- bind_rows(replicate(800, forcing, simplify = FALSE)) # Duplicate for the # of transient years
 }
-```
 
-Changing values of radiation for running simulations
 
-```{r,include=FALSE, eval=TRUE}
+## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 if (params_siml$method_photosynth == "gs_leuning"){
   forcing <- forcing %>% mutate(Swdown = Swdown*1) # levels = *1, *1.15 and *1.30
   #forcing <- forcing %>% mutate(aCO2_AW = aCO2_AW*1.30) # levels = *1, *1.15 and *1.30
 } else if (params_siml$method_photosynth == "pmodel"){ 
   forcing <- forcing %>% mutate(PAR = PAR*1) # levels = *1, *1.15 and *1.30
 }
-```
 
-Collect all drivers
-```{r,include=TRUE, eval=TRUE}
+
+## ----include=TRUE, eval=TRUE------------------------------------------------------------------------------------------------
 print(packageVersion("rsofun"))
 
 ## for versions above 4.0
 df_drivers <- tibble(sitename,
-                    site_info = list(tibble(siteinfo)),
+                    site_info = list(tibble(site_info)),
                     params_siml = list(tibble(params_siml)),
                     params_tile = list(tibble(params_tile)),
                     params_species=list(tibble(params_species)),
@@ -331,78 +233,72 @@ df_drivers <- tibble(sitename,
                     init_cohort=list(tibble(init_cohort)),
                     init_soil=list(tibble(init_soil)),
                     forcing=list(tibble(forcing)),
-                    .name_repair = "unique")  
-  
-# if(as.numeric(unlist(packageVersion("rsofun"))) > 4.0){
-#   df_drivers <- tibble(sitename,
-#                       siteinfo = list(tibble(siteinfo)),
-#                       params_siml = list(tibble(params_siml)),
-#                       params_tile = list(tibble(params_tile)),
-#                       params_species=list(tibble(params_species)),
-#                       params_soil=list(tibble(params_soil)),
-#                       init_cohort=list(tibble(init_cohort)),
-#                       init_soil=list(tibble(init_soil)),
-#                       forcing=list(tibble(forcing)),
-#                       .name_repair = "unique")  
-# } else {
-#   df_drivers <- tibble(sitename,
-#                     site_info = list(tibble(siteinfo)),
-#                     params_siml = list(tibble(params_siml)),
-#                     params_tile = list(tibble(params_tile)),
-#                     params_species=list(tibble(params_species)),
-#                     params_soil=list(tibble(params_soil)),
-#                     init_cohort=list(tibble(init_cohort)),
-#                     init_soil=list(tibble(init_soil)),
-#                     forcing=list(tibble(forcing)),
-#                     .name_repair = "unique")
-# }
-```
+                    .name_repair = "unique")
 
-### Run the model
-
-Run the model for all the sites specified in the first step.
-```{r eval=FALSE}
+# ----eval=FALSE-------------------------------------------------------------------------------------------------------------
 out <- run_lm3ppa_f_bysite( sitename,
                             params_siml,
-                            siteinfo,
+                            site_info,
                             forcing, # ddf_input
                             params_tile,
                             params_species,
                             params_soil,
                             init_cohort,
                             init_soil,
-                            makecheck = TRUE)
+                            makecheck = TRUE
+                            )
 
-out$output_annual_tile %>%
+# ## plot forcing
+# forcing %>% 
+#   ungroup() %>% 
+#   slice(1:365*24) %>% 
+#   mutate(date=ymd(paste0(YEAR, "-01-01")) + days(as.integer(DOY)-1)) %>%  
+#   ggplot(aes(x = date, y = PAR)) + 
+#   geom_line()
+# 
+# forcing %>% 
+#   ungroup() %>% 
+#   slice(1:365*24) %>% 
+#   mutate(date=ymd(paste0(YEAR, "-01-01")) + days(as.integer(DOY)-1)) %>%  
+#   ggplot(aes(x = date, y = Swdown)) + 
+#   geom_line()
+
+gg1 <- out$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   theme_classic()+labs(x = "Year", y = "GPP")
 
-out$output_annual_tile %>%
+gg2 <- out$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 
-```
+print("Writing luxembourg.pdf")
+print(gg1/gg2)
+ggsave("luxembourg.pdf")
 
-Run for the full set of sites
+# out$output_annual_tile %>% 
+#   dplyr::filter(year %in% 1000:1010) %>% 
+#   ggplot() +
+#   geom_line(aes(x = year, y = GPP)) +
+#   theme_classic()+labs(x = "Year", y = "GPP")
 
-```{r}
-df_output <- runread_lm3ppa_f(
-     df_drivers,
-     makecheck = TRUE,
-     parallel = FALSE
-     )
-
-df_output$data[[1]]$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  theme_classic()+labs(x = "Year", y = "GPP")
-
-df_output$data[[1]]$output_annual_tile %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = plantC)) +
-  theme_classic()+labs(x = "Year", y = "plantC")
-
-```
+# ## ---------------------------------------------------------------------------------------------------------------------------
+# df_output <- runread_lm3ppa_f(
+#      df_drivers,
+#      makecheck = TRUE,
+#      parallel = FALSE
+#      )
+# 
+# gg1 <- df_output$data[[1]]$output_annual_tile %>%
+#   ggplot() +
+#   geom_line(aes(x = year, y = GPP)) +
+#   theme_classic()+labs(x = "Year", y = "GPP")
+# 
+# gg2 <- df_output$data[[1]]$output_annual_tile %>%
+#   ggplot() +
+#   geom_line(aes(x = year, y = plantC)) +
+#   theme_classic()+labs(x = "Year", y = "plantC")
+# 
+# print(gg1/gg2)
 
