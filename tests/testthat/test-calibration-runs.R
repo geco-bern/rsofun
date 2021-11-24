@@ -7,7 +7,7 @@ test_that("test calibration routine p-model (GenSA)", {
   obs <- p_model_validation
 
   settings <- list(
-    method              = "gensa",
+    method              = "bayesiantools",
     targetvars          = c("gpp"),
     timescale           = list(targets_obs = "y"),
     maxit               = 10,
@@ -16,7 +16,11 @@ test_that("test calibration routine p-model (GenSA)", {
     dir_results         = "./",
     name                = "ORG",
     control = list(
-      max.call = 10
+      sampler = "DEzs",
+      settings = list(
+        burnin = 1,
+        iterations = 4
+      )
     ),
     par = list(kphio = list(lower=0.04, upper=0.09, init=0.05),
                phiRL = list(lower=0.5, upper=5, init=3.5),
@@ -40,25 +44,20 @@ test_that("test calibration routine lm3ppa (BayesianTools)", {
 
   df_drivers <- lm3ppa_gs_leuning_drivers
   ddf_obs <- lm3ppa_validation_2
-
-  df_drivers$params_siml[[1]]$spinup <- TRUE
-  df_drivers$params_siml[[1]]$spinupyears <- 2
+  df_drivers$params_siml[[1]]$spinup <- FALSE
 
   # Mortality as DBH
   settings <- list(
-    method              = "bayesiantools",
+    method              = "gensa",
     targetvars          = c("gpp"),
     timescale           = list(targets_obs = "y"),
+    maxit               = 10,
     sitenames           = "CH-Lae",
     metric              = cost_rmse_lm3ppa_gsleuning,
     dir_results         = "./",
     name                = "ORG",
     control = list(
-      sampler = "DEzs",
-      settings = list(
-        burnin = 1,
-        iterations = 4
-      )
+      max.call = 1
     ),
     par = list(
         phiRL = list(lower=0.5, upper=5, init=3.5),
