@@ -94,7 +94,6 @@
       <h1 data-toc-skip>LM3PPA usage</h1>
                         <h4 class="author">Koen Hufkens</h4>
             
-            <h4 class="date">2021-11-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/computationales/rsofun/blob/master/vignettes/lm3ppa_use.Rmd"><code>vignettes/lm3ppa_use.Rmd</code></a></small>
       <div class="hidden name"><code>lm3ppa_use.Rmd</code></div>
@@ -112,23 +111,8 @@
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/computationales/rsofun">rsofun</a></span><span class="op">)</span>
 
 <span class="va">lm3ppa_gs_leuning_drivers</span>
-<span class="co">#&gt; # A tibble: 1 × 9</span>
-<span class="co">#&gt;   sitename site_info         params_siml  params_tile params_species params_soil</span>
-<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;            &lt;list&gt;       &lt;list&gt;      &lt;list&gt;         &lt;list&gt;     </span>
-<span class="co">#&gt; 1 CH-Lae   &lt;tibble [1 × 14]&gt; &lt;tibble [1 … &lt;tibble [1… &lt;tibble [16 ×… &lt;tibble [9…</span>
-<span class="co">#&gt; # … with 3 more variables: init_cohort &lt;list&gt;, init_soil &lt;list&gt;, forcing &lt;list&gt;</span>
 <span class="va">lm3ppa_p_model_drivers</span>
-<span class="co">#&gt; # A tibble: 1 × 9</span>
-<span class="co">#&gt;   sitename site_info         params_siml  params_tile params_species params_soil</span>
-<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;            &lt;list&gt;       &lt;list&gt;      &lt;list&gt;         &lt;list&gt;     </span>
-<span class="co">#&gt; 1 CH-Lae   &lt;tibble [1 × 14]&gt; &lt;tibble [1 … &lt;tibble [1… &lt;tibble [16 ×… &lt;tibble [9…</span>
-<span class="co">#&gt; # … with 3 more variables: init_cohort &lt;list&gt;, init_soil &lt;list&gt;, forcing &lt;list&gt;</span>
-<span class="va">lm3ppa_validation</span>
-<span class="co">#&gt; # A tibble: 1 × 2</span>
-<span class="co">#&gt; # Groups:   sitename [1]</span>
-<span class="co">#&gt;   sitename data                </span>
-<span class="co">#&gt;   &lt;chr&gt;    &lt;list&gt;              </span>
-<span class="co">#&gt; 1 CH-Lae   &lt;tibble [2,920 × 3]&gt;</span></code></pre></div>
+<span class="va">lm3ppa_validation</span></code></pre></div>
 <p>These are real data from the Swiss CH-Lae fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize <code>lm3ppa</code> parameters.</p>
 </div>
 <div id="two-model-approaches" class="section level1">
@@ -146,13 +130,13 @@
 <span class="co">#&gt; # A tibble: 1 × 12</span>
 <span class="co">#&gt;   spinup spinupyears recycle firstyeartrend nyeartrend outputhourly outputdaily</span>
 <span class="co">#&gt;   &lt;lgl&gt;        &lt;dbl&gt;   &lt;dbl&gt;          &lt;dbl&gt;      &lt;dbl&gt; &lt;lgl&gt;        &lt;lgl&gt;      </span>
-<span class="co">#&gt; 1 TRUE           700     800           2009        800 TRUE         TRUE       </span>
+<span class="co">#&gt; 1 TRUE           250       1           2009          1 TRUE         TRUE       </span>
 <span class="co">#&gt; # … with 5 more variables: do_U_shaped_mortality &lt;lgl&gt;,</span>
 <span class="co">#&gt; #   update_annualLAImax &lt;lgl&gt;, do_closedN_run &lt;lgl&gt;, method_photosynth &lt;chr&gt;,</span>
 <span class="co">#&gt; #   method_mortality &lt;chr&gt;</span>
 <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">lm3ppa_gs_leuning_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt; [[1]]</span>
-<span class="co">#&gt; # A tibble: 7,008,000 × 13</span>
+<span class="co">#&gt; # A tibble: 8,760 × 13</span>
 <span class="co">#&gt;     YEAR   DOY  HOUR    PAR Swdown   TEMP SoilT    RH      RAIN  WIND PRESSURE</span>
 <span class="co">#&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;</span>
 <span class="co">#&gt;  1  2009     1     0   8.17  0.156 0.728   3.16  91.6 0.0000184  3.56   93216.</span>
@@ -165,57 +149,57 @@
 <span class="co">#&gt;  8  2009     1     7   8.40  0.164 0.172   3.30  95.4 0.0000211  3.46   93111.</span>
 <span class="co">#&gt;  9  2009     1     8  42.1   8.77  0.236   3.33  95.2 0.0000211  3.31   93118.</span>
 <span class="co">#&gt; 10  2009     1     9 146.   38.7   0.152   3.41  96.1 0.0000211  3.27   93132.</span>
-<span class="co">#&gt; # … with 7,007,990 more rows, and 2 more variables: aCO2_AW &lt;dbl&gt;, SWC &lt;dbl&gt;</span>
-
-<span class="co"># run the model</span>
-<span class="va">df_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runread_lm3ppa_f.html">runread_lm3ppa_f</a></span><span class="op">(</span>
+<span class="co">#&gt; # … with 8,750 more rows, and 2 more variables: aCO2_AW &lt;dbl&gt;, SWC &lt;dbl&gt;</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># run the model</span>
+<span class="va">lm3ppa_output_leuning</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runread_lm3ppa_f.html">runread_lm3ppa_f</a></span><span class="op">(</span>
      <span class="va">lm3ppa_gs_leuning_drivers</span>,
      makecheck <span class="op">=</span> <span class="cn">TRUE</span>,
      parallel <span class="op">=</span> <span class="cn">FALSE</span>
-     <span class="op">)</span></code></pre></div>
+     <span class="op">)</span>
+
+<span class="co"># split out the annual data</span>
+<span class="va">lm3ppa_gs_leuning_output</span> <span class="op">&lt;-</span> <span class="va">lm3ppa_gs_leuning_output</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">output_annual_tile</span></code></pre></div>
 <div id="plotting-output" class="section level3">
 <h3 class="hasAnchor">
 <a href="#plotting-output" class="anchor"></a>plotting output</h3>
 <p>We can now visualize the model output.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org">dplyr</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span>
-
-<span class="co"># we only have one site so we'll unnest</span>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># we only have one site so we'll unnest</span>
 <span class="co"># the main model output</span>
 
-<span class="va">df_output</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">output_annual_tile</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">GPP</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_classic</a></span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"GPP"</span><span class="op">)</span></code></pre></div>
-<p><img src="lm3ppa_use_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<span class="va">lm3ppa_gs_leuning_output</span> <span class="op">%&gt;%</span> 
+  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">GPP</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">theme_classic</span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"GPP"</span><span class="op">)</span></code></pre></div>
+<p><img src="lm3ppa_use_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
-<span class="va">df_output</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">output_annual_tile</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">plantC</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_classic</a></span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"plantC"</span><span class="op">)</span></code></pre></div>
-<p><img src="lm3ppa_use_files/figure-html/unnamed-chunk-3-2.png" width="700"></p>
+<span class="va">lm3ppa_gs_leuning_output</span> <span class="op">%&gt;%</span> 
+  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">plantC</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">theme_classic</span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"plantC"</span><span class="op">)</span></code></pre></div>
+<p><img src="lm3ppa_use_files/figure-html/unnamed-chunk-4-2.png" width="700"></p>
 </div>
 </div>
 <div id="running-the-standard-p-model-lm3ppa-model" class="section level2">
 <h2 class="hasAnchor">
 <a href="#running-the-standard-p-model-lm3ppa-model" class="anchor"></a>Running the standard (p-model) lm3ppa model</h2>
 <p>Running the fast p-model implementation.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># print parameter settings</span>
 <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">lm3ppa_p_model_drivers</span><span class="op">$</span><span class="va">params_siml</span><span class="op">)</span>
 <span class="co">#&gt; [[1]]</span>
 <span class="co">#&gt; # A tibble: 1 × 12</span>
 <span class="co">#&gt;   spinup spinupyears recycle firstyeartrend nyeartrend outputhourly outputdaily</span>
 <span class="co">#&gt;   &lt;lgl&gt;        &lt;dbl&gt;   &lt;dbl&gt;          &lt;dbl&gt;      &lt;dbl&gt; &lt;lgl&gt;        &lt;lgl&gt;      </span>
-<span class="co">#&gt; 1 TRUE           700     800           2009        800 TRUE         TRUE       </span>
+<span class="co">#&gt; 1 TRUE           250       1           2009          1 TRUE         TRUE       </span>
 <span class="co">#&gt; # … with 5 more variables: do_U_shaped_mortality &lt;lgl&gt;,</span>
 <span class="co">#&gt; #   update_annualLAImax &lt;lgl&gt;, do_closedN_run &lt;lgl&gt;, method_photosynth &lt;chr&gt;,</span>
 <span class="co">#&gt; #   method_mortality &lt;chr&gt;</span>
 <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">lm3ppa_p_model_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt; [[1]]</span>
-<span class="co">#&gt; # A tibble: 292,000 × 13</span>
+<span class="co">#&gt; # A tibble: 365 × 13</span>
 <span class="co">#&gt;     YEAR   DOY  HOUR   PAR Swdown    TEMP SoilT    RH       RAIN  WIND PRESSURE</span>
 <span class="co">#&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;</span>
 <span class="co">#&gt;  1  2009     1  11.5 107.    28.0  0.384   3.39  93.7 0.0000166   3.00   93092.</span>
@@ -228,44 +212,44 @@
 <span class="co">#&gt;  8  2009     8  11.5 169.    44.4  0.504   3.52  86.1 0.0000113   2.68   93443.</span>
 <span class="co">#&gt;  9  2009     9  11.5 102.    25.3  0.0869  3.49  90.3 0.0000186   2.74   93447.</span>
 <span class="co">#&gt; 10  2009    10  11.5 160.    40.5 -0.404   3.44  90.1 0.0000125   2.17   93633.</span>
-<span class="co">#&gt; # … with 291,990 more rows, and 2 more variables: aCO2_AW &lt;dbl&gt;, SWC &lt;dbl&gt;</span>
-
-<span class="co"># run the model</span>
-<span class="va">df_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runread_lm3ppa_f.html">runread_lm3ppa_f</a></span><span class="op">(</span>
+<span class="co">#&gt; # … with 355 more rows, and 2 more variables: aCO2_AW &lt;dbl&gt;, SWC &lt;dbl&gt;</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># run the model</span>
+<span class="va">lm3ppa_p_model_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runread_lm3ppa_f.html">runread_lm3ppa_f</a></span><span class="op">(</span>
      <span class="va">lm3ppa_p_model_drivers</span>,
      makecheck <span class="op">=</span> <span class="cn">TRUE</span>,
      parallel <span class="op">=</span> <span class="cn">FALSE</span>
-     <span class="op">)</span></code></pre></div>
+     <span class="op">)</span>
+
+<span class="co"># split out the annual data for visuals</span>
+<span class="va">lm3ppa_p_model_output</span> <span class="op">&lt;-</span> <span class="va">lm3ppa_p_model_output</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">output_annual_tile</span></code></pre></div>
 <div id="plotting-output-1" class="section level3">
 <h3 class="hasAnchor">
 <a href="#plotting-output-1" class="anchor"></a>plotting output</h3>
 <p>We can now visualize the model output.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org">dplyr</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span>
-
-<span class="co"># we only have one site so we'll unnest</span>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># we only have one site so we'll unnest</span>
 <span class="co"># the main model output</span>
 
-<span class="va">df_output</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">output_annual_tile</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">GPP</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_classic</a></span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"GPP"</span><span class="op">)</span></code></pre></div>
-<p><img src="lm3ppa_use_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<span class="va">lm3ppa_p_model_output</span> <span class="op">%&gt;%</span> 
+  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">GPP</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">theme_classic</span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"GPP"</span><span class="op">)</span></code></pre></div>
+<p><img src="lm3ppa_use_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
-<span class="va">df_output</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">output_annual_tile</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">plantC</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_classic</a></span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"plantC"</span><span class="op">)</span></code></pre></div>
-<p><img src="lm3ppa_use_files/figure-html/unnamed-chunk-5-2.png" width="700"></p>
+<span class="va">lm3ppa_p_model_output</span> <span class="op">%&gt;%</span> 
+  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">plantC</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">theme_classic</span><span class="op">(</span><span class="op">)</span><span class="op">+</span><span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"plantC"</span><span class="op">)</span></code></pre></div>
+<p><img src="lm3ppa_use_files/figure-html/unnamed-chunk-7-2.png" width="700"></p>
 </div>
 </div>
 <div id="calibrating-model-parameters" class="section level2">
 <h2 class="hasAnchor">
 <a href="#calibrating-model-parameters" class="anchor"></a>Calibrating model parameters</h2>
 <p>To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Mortality as DBH</span>
 <span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
   method              <span class="op">=</span> <span class="st">"bayesiantools"</span>,
