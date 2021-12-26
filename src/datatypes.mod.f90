@@ -144,7 +144,7 @@ module datatypes
   !=============== Cohort level data type =============================================================
   type :: cohort_type
 
-    ! Biological prognostic variables
+    !===== Biological prognostic variables
     integer :: ccID       = 0.0          ! cohort ID
     integer :: species    = 0.0          ! vegetation species
     real    :: gdd        = 0.0          ! for phenology
@@ -153,7 +153,7 @@ module datatypes
     integer :: firstlayer = 0.0          ! 0 = never been in the first layer; 1 = at least one year in first layer
     real    :: layerfrac  = 0.0          ! fraction of layer area occupied by this cohort
 
-    ! Population structure
+    !===== Population structure
     real :: nindivs   = 1.0          ! density of vegetation, individuals/m2
     real :: age       = 0.0          ! age of cohort, years
     real :: Volume    = 0.0
@@ -165,13 +165,13 @@ module datatypes
     real :: BA        = 0.0          ! tree basal area
     real :: BAL       = 0.0          ! basal area of larger trees
 
-    ! Organic pools
-    type(orgpool) :: pleaf                       ! leaf biomass [kg C/ind.]
-    type(orgpool) :: proot                       ! root biomass [kg C/ind.]
-    type(orgpool) :: psapw                       ! sapwood biomass [kg C/ind.]
-    type(orgpool) :: pwood                       ! heartwood (non-living) biomass [kg C/ind.]
-    type(orgpool) :: pseed                       ! biomass put aside for future progeny [kg C/ind.]
-    type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C/ind.]
+    !===== Organic pools
+    type(orgpool) :: pleaf                       ! leaf biomass [kg C(N)/ind.]
+    type(orgpool) :: proot                       ! root biomass [kg C(N)/ind.]
+    type(orgpool) :: psapw                       ! sapwood biomass [kg C(N)/ind.]
+    type(orgpool) :: pwood                       ! heartwood (non-living) biomass [kg C(N)/ind.]
+    type(orgpool) :: pseed                       ! biomass put aside for future progeny [kg C(N)/ind.]
+    type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C(N)/ind.]
 
     !===== Carbon fluxes
     real    :: gpp                = 0.0          ! gross primary productivity kg C/timestep
@@ -245,6 +245,21 @@ module datatypes
     !===== Cohorts nested inside tile
     type(cohort_type), pointer :: cohorts(:) => NULL()
 
+    !=====  Litter pools (SOFUN-structure, remain empty in original LM3-PPA)
+    type(orgpool) :: plitt_af                     ! above-ground litter, fast turnover [kg C(N)/m2]
+    type(orgpool) :: plitt_as                     ! above-ground litter, slow turnover [kg C(N)/m2]
+    type(orgpool) :: plitt_bg                     ! below-ground litter [kg C(N)/m2]
+
+    !=====  Soil organic pools (renamed: metabolicL, metabolicN -> psoil_fs; structuralL, structuralN -> psoil_sl; MicrobialC, MicrobialN -> pmicr)
+    type(orgpool) :: psoil_fs        ! soil organic matter, fast turnover [kg C(N)/m2]
+    type(orgpool) :: psoil_sl        ! soil organic matter, slow turnover [kg C(N)/m2]
+    type(orgpool) :: pmicr           ! microbial biomass (kg C(N)/m2)
+
+    !=====  Inorganic N pools
+    type(nitrogen) :: ninorg                      ! Mineral nitrogen pool (kg N/m2)   
+    type(nitrogen) :: pno3                        ! Soil nitrate pool (kg N/m2)   
+    type(nitrogen) :: pnh4                        ! Soil ammonium pool (kg N/m2)   
+
     !===== Tile-level forest inventory information
     real    :: area                               ! m2
     real    :: age                = 0.0           ! tile age
@@ -271,28 +286,13 @@ module datatypes
     real    :: gdd                = 0.0           ! growing degree-days
     real    :: tc_pheno           = 0.0           ! smoothed canopy air temperature for phenology
 
-    !=====  Litter pools (SOFUN-structure, remain empty in original LM3-PPA)
-    type(orgpool) :: plitt_af                     ! above-ground litter, fast turnover [kg C(N)/m2]
-    type(orgpool) :: plitt_as                     ! above-ground litter, slow turnover [kg C(N)/m2]
-    type(orgpool) :: plitt_bg                     ! below-ground litter [kg C(N)/m2]
-
-    !=====  Soil organic pools (renamed: metabolicL, metabolicN -> psoil_fs; structuralL, structuralN -> psoil_sl; MicrobialC, MicrobialN -> pmicr)
-    type(orgpool) :: psoil_fs        ! soil organic matter, fast turnover [kg C(N)/m2]
-    type(orgpool) :: psoil_sl        ! soil organic matter, slow turnover [kg C(N)/m2]
-    type(orgpool) :: pmicr           ! microbial biomass (kg C(N)/m2)
-
     !=====  Litter and soil carbon pools
     real    :: litter             = 0.0           ! litter flux
     real    :: n_deadtrees        = 0.0
     real    :: c_deadtrees        = 0.0
     real    :: m_turnover         = 0.0
 
-    !=====  Inorganic N pools
-    type(nitrogen) :: ninorg                      ! Mineral nitrogen pool (kg N/m2)   
-    type(nitrogen) :: pno3                        ! Soil nitrate pool (kg N/m2)   
-    type(nitrogen) :: pnh4                        ! Soil ammonium pool (kg N/m2)   
-    ! real    :: mineralN           = 0.0           ! Mineral nitrogen pool, (kg N/m2)
-
+    !=====  N-related fluxes
     real    :: totN               = 0.0
     real    :: N_input                            ! annual N input (kgN m-2 yr-1)
     real    :: N_uptake           = 0.0           ! kg N m-2 hour-1
@@ -352,7 +352,7 @@ module datatypes
     type(orgpool) :: pseed                       ! biomass put aside for future progeny [kg C m-2]
     type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C m-2]
 
-    real    :: totSeedC, totSeedN, totNewCC, totNewCN
+    real :: totSeedC, totSeedN, totNewCC, totNewCN
 
   end type vegn_tile_type
 

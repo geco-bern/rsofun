@@ -45,7 +45,7 @@ contains
     ! Climatic variable
     tair   = forcing%Tair - 273.16   ! conversion to degC
     tsoil  = forcing%tsoil - 273.16  ! conversion to degC
-    theta  = (vegn%wcl(2)-WILTPT)/(FLDCAP-WILTPT)
+    theta  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
 
     ! Photosynsthesis
     call gpp( forcing, vegn, init )
@@ -262,8 +262,8 @@ contains
         endif
 
         ! For grasses, temporary
-        if (sp%lifeform ==0 ) then
-          dSeed = dSeed + 0.15*G_LFR
+        if (sp%lifeform == 0) then
+          dSeed = dSeed + 0.15 * G_LFR
           G_LFR = 0.85 * G_LFR
           dBR   = 0.85 * dBR
           dBL   = 0.85 * dBL
@@ -530,7 +530,7 @@ contains
       endif
 
       ! Reset grass density at the first day of a growing season
-      if (cc_firstday .and. sp%lifeform ==0 .and. cc%age>2.) then
+      if (cc_firstday .and. sp%lifeform == 0 .and. cc%age > 2.0) then
         
         ! reset grass density and size for perenials
         ccNSC   = (cc%plabl%c%c12 + cc%pleaf%c%c12 + cc%psapw%c%c12 + &
@@ -545,7 +545,7 @@ contains
         cc%pleaf%c%c12 = 0.0
         cc%pwood%c%c12 = 0.0
         cc%pseed%c%c12 = 0.0
-        cc%plabl%c%c12 = ccNSC/cc%nindivs - &
+        cc%plabl%c%c12 = ccNSC / cc%nindivs - &
           (cc%pleaf%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12 + cc%proot%c%c12 + cc%pseed%c%c12)
         
         ! nitrogen pools
@@ -611,14 +611,17 @@ contains
     associate (sp => spdata(cc%species) )
     
     if (cc%status == LEAF_OFF .AND. cc%pleaf%c%c12 > 0.0) then
+
       dBL = min(leaf_fall_rate * cc%bl_max, cc%pleaf%c%c12)
       dBR = min( root_mort_rate * cc%br_max, cc%proot%c%c12)  ! Just for test: keep roots
       dBStem = 0.0 ! trees
       dNStem = 0.0 ! trees
-      if (sp%lifeform==0) then  ! grasses
+
+      if (sp%lifeform == 0) then  ! grasses
         dBStem = MIN(1.0,dBL/cc%pleaf%c%c12) * cc%psapw%c%c12
         dNStem = MIN(1.0,dBL/cc%pleaf%c%c12) * cc%psapw%n%n14
       endif
+
       ! Nitrogen out
       if (cc%pleaf%c%c12>0) then
         dNL = dBL/cc%pleaf%c%c12 * cc%pleaf%n%n14 !dBL/sp%CNleaf0
@@ -634,19 +637,20 @@ contains
 
       dAleaf = leaf_area_from_biomass(dBL,cc%species)
 
-      !       Retranslocation to NSC and NSN
+      ! Retranslocation to NSC and NSN
       cc%plabl%c%c12 = cc%plabl%c%c12 + l_fract  * (dBL + dBR + dBStem)
       cc%plabl%n%n14 = cc%plabl%n%n14 + retransN * (dNL + dNR + dNStem)
-      !       update plant pools
-      cc%pleaf%c%c12    = cc%pleaf%c%c12  - dBL
-      cc%proot%c%c12    = cc%proot%c%c12  - dBR
-      cc%psapw%c%c12   = cc%psapw%c%c12 - dBStem ! for grass
+
+      ! update plant pools
+      cc%pleaf%c%c12 = cc%pleaf%c%c12  - dBL
+      cc%proot%c%c12 = cc%proot%c%c12  - dBR
+      cc%psapw%c%c12 = cc%psapw%c%c12 - dBStem ! for grass
 
       cc%pleaf%n%n14 = cc%pleaf%n%n14 - dNL
       cc%proot%n%n14 = cc%proot%n%n14 - dNR
       cc%psapw%n%n14 = cc%psapw%n%n14 - dNStem
-      !       update NPP for leaves, fine roots, and wood
 
+      ! update NPP for leaves, fine roots, and wood
       cc%NPPleaf = cc%NPPleaf - l_fract * dBL
       cc%NPProot = cc%NPProot - l_fract * dBR
       cc%NPPwood = cc%NPPwood - l_fract * dBStem
@@ -656,7 +660,7 @@ contains
       ! Update plant size (for grasses)
       !call init_cohort_allometry( cc )
 
-      !       put C and N into soil pools:  Substraction of C and N from leaf and root pools
+      ! put C and N into soil pools:  Substraction of C and N from leaf and root pools
       loss_coarse  = (1.-l_fract) * cc%nindivs * (dBStem+dBL - dAleaf * LMAmin)
       loss_fine    = (1.-l_fract) * cc%nindivs * (dBR        + dAleaf * LMAmin)
       lossN_coarse = (1.-retransN)* cc%nindivs * (dNStem+dNL - dAleaf * sp%LNbase)
@@ -667,14 +671,15 @@ contains
       vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 +   &
       (1.-fsc_fine)*loss_fine + (1.-fsc_wood)*loss_coarse
 
-      !       Nitrogen to soil SOMs
+      ! Nitrogen to soil SOMs
       vegn%psoil_fs%n%n14  = vegn%psoil_fs%n%n14 +    &
       fsc_fine * lossN_fine + fsc_wood * lossN_coarse
       vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 +   &
       (1.-fsc_fine) * lossN_fine + (1.-fsc_wood) * lossN_coarse
 
-      !       annual N from plants to soil
+      ! annual N from plants to soil
       vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
+
     endif
     end associate
   
@@ -699,9 +704,11 @@ contains
     real :: deathrate = 0 ! mortality rate, 1/year
     real :: deadtrees ! number of trees that died over the time step
     integer :: totCC,i,k
+
     ! real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
     real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
+
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
     ! logical :: merged(vegn%n_cohorts) ! mask to skip cohorts that were already merged
     real :: cCAI
@@ -726,12 +733,6 @@ contains
       ! set calibratable mortality parameter
       CAI_max = myinterface%params_tile%par_mort
 
-      ! check if current CAI is greater than maximum CAI
-      ! print*, "CAI_max, CAI", CAI_max, vegn%CAI
-      ! ! ! xxx check whether cohorts are ranked w.r.t. height
-      ! print*, "height", vegn%cohorts%height 
-      ! print*, "vegn%n_cohorts", vegn%n_cohorts 
-
       ! Calculate cumulative CAI from shortest trees
       totCC = vegn%n_cohorts
       allocate(cai_partial(totCC))
@@ -747,8 +748,7 @@ contains
           cai_partial(i) = cai_partial(i+1) + cCAI
         end if
       enddo
-      ! write(*,*)"cai_partial", cai_partial
-      ! write(*,*)'k,totCC',k, totCC
+
       ! Kill the trees that lead to total CAI > CAI_max
       k = 0 ! for checking how many cohorts trimmed
       do i =1, totCC-1 ! at least keep the last cohort (totCC)
@@ -779,11 +779,6 @@ contains
           cai_partial(i) = cai_partial(i+1) + cCAI
         end if
       enddo
-
-      ! write(*,*)"cai_partial2", cai_partial
-      ! write(*,*)'k,totCC-2',k, totCC
-      ! end of final check
-      ! print*, "cCAI", cCAI
 
       deallocate(cai_partial)
  
@@ -839,8 +834,8 @@ contains
           param_dbh_under = myinterface%params_tile%par_mort_under
           param_dbh       = myinterface%params_tile%par_mort
 
-          if (sp%lifeform==0)then  ! for grasses
-            if(cc%layer > 1) then
+          if (sp%lifeform == 0)then  ! for grasses
+            if (cc%layer > 1) then
               deathrate = sp%mortrate_d_u
             else
               deathrate = sp%mortrate_d_c
