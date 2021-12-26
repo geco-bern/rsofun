@@ -1,9 +1,9 @@
-module md_tile_pmodel
+module md_tile
   !////////////////////////////////////////////////////////////////
   ! Holds all tile-specific variables and procedurs
   ! --------------------------------------------------------------
   use md_params_core, only: npft, nlu
-  use md_plant_pmodel, only: plant_type, plant_fluxes_type, initglobal_plant
+  use md_plant, only: plant_type, plant_fluxes_type, initglobal_plant
 
   implicit none
 
@@ -630,4 +630,4 @@ contains
 
   end subroutine diag_annual
 
-end module md_tile_pmodel
+end module md_tile

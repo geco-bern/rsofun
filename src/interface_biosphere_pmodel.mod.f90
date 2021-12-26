@@ -59,6 +59,23 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: wscal
     real, dimension(ndayyear) :: chi
     real, dimension(ndayyear) :: iwue
+
+    ! new for cnmodel: 15 additional
+    real, dimension(ndayyear) :: tsoil
+    real, dimension(ndayyear) :: cleaf
+    real, dimension(ndayyear) :: nleaf
+    real, dimension(ndayyear) :: croot
+    real, dimension(ndayyear) :: nroot
+    real, dimension(ndayyear) :: clabl
+    real, dimension(ndayyear) :: nlabl
+    real, dimension(ndayyear) :: lai
+    real, dimension(ndayyear) :: ninorg
+    real, dimension(ndayyear) :: pno3
+    real, dimension(ndayyear) :: pnh4
+    real, dimension(ndayyear) :: en2o
+    real, dimension(ndayyear) :: enleach
+    real, dimension(ndayyear) :: tmp
+
   end type outtype_biosphere
 
 end module md_interface_pmodel

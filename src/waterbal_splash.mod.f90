@@ -23,7 +23,7 @@ module md_waterbal
   !----------------------------------------------------------------
   use md_params_core, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
     kMv, kMa, kfFEC, secs_per_day, pi, dummy, kGsc, ndaymonth, kTkelvin
-  use md_tile_pmodel, only: tile_type, tile_fluxes_type
+  use md_tile, only: tile_type, tile_fluxes_type
   use md_forcing_pmodel, only: climate_type
   use md_grid, only: gridtype
   use md_interface_pmodel, only: myinterface
@@ -846,7 +846,7 @@ contains
   !   ! This requires the full arrays (all gridcells) to be stored.
   !   !-------------------------------------------------------------------------
   !   use md_params_core, only: nlu
-  !   use md_tile_pmodel, only: psoilphystype
+  !   use md_tile, only: psoilphystype
 
   !   ! arguments
   !   type( psoilphystype ), dimension(:), intent(inout) :: phy

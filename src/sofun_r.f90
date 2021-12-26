@@ -50,7 +50,7 @@ contains
     use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: nlayers_soil, ndayyear, npft
-    use md_biosphere_pmodel, only: biosphere_annual
+    use md_biosphere_cnmodel, only: biosphere_annual
 
     implicit none
 
@@ -81,7 +81,7 @@ contains
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(5), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
-    real(kind=c_double),  dimension(nt,13), intent(out) :: output
+    real(kind=c_double),  dimension(nt,27), intent(out) :: output
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -222,6 +222,22 @@ contains
         output(idx_start:idx_end,11) = dble(out_biosphere%wscal(:))
         output(idx_start:idx_end,12) = dble(out_biosphere%chi(:))
         output(idx_start:idx_end,13) = dble(out_biosphere%iwue(:))
+
+        ! new for cnmodel
+        output(idx_start:idx_end,14) = dble(out_biosphere%tsoil(:)   )
+        output(idx_start:idx_end,15) = dble(out_biosphere%lai(:)     )
+        output(idx_start:idx_end,16) = dble(out_biosphere%cleaf(:)   )
+        output(idx_start:idx_end,17) = dble(out_biosphere%nleaf(:)   )
+        output(idx_start:idx_end,18) = dble(out_biosphere%croot(:)   )
+        output(idx_start:idx_end,19) = dble(out_biosphere%nroot(:)   )
+        output(idx_start:idx_end,20) = dble(out_biosphere%clabl(:)   )
+        output(idx_start:idx_end,21) = dble(out_biosphere%nlabl(:)   )
+        output(idx_start:idx_end,22) = dble(out_biosphere%ninorg(:)  )
+        output(idx_start:idx_end,23) = dble(out_biosphere%pnh4(:)    )
+        output(idx_start:idx_end,24) = dble(out_biosphere%pno3(:)    )
+        output(idx_start:idx_end,25) = dble(out_biosphere%enleach(:) )
+        output(idx_start:idx_end,26) = dble(out_biosphere%en2o(:)    )
+        output(idx_start:idx_end,27) = dble(out_biosphere%tmp(:)     )
 
       end if
 

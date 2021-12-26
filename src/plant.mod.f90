@@ -1,4 +1,4 @@
-module md_plant_pmodel
+module md_plant
   !////////////////////////////////////////////////////////////////
   !  Module contains (constrainable) model parameters.
   !  Model parameters adopted here are from LPX C3 grass PFT
@@ -366,4 +366,4 @@ contains
   ! end subroutine initdaily_plant
 
 
-end module md_plant_pmodel
+end module md_plant

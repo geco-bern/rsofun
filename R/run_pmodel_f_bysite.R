@@ -254,8 +254,9 @@ run_pmodel_f_bysite <- function(
       as.data.frame() %>% 
       stats::setNames(
         c("fapar", "gpp", "transp", "latenth", "pet", "vcmax",
-          "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue")
-        ) %>%
+          "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue",
+          "tsoil", "cleaf", "nleaf", "croot", "nroot", "clabl", "nlabl", 
+          "lai", "ninorg", "pno3", "pnh4", "en2o", "enleach", "tmp")) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
 
@@ -263,7 +264,10 @@ run_pmodel_f_bysite <- function(
     out <- tibble(date = lubridate::ymd("2000-01-01"),
                   fapar = NA, gpp = NA, transp = NA, latenth = NA, 
                   pet = NA, vcmax = NA, jmax = NA, vcmax25 = NA, 
-                  jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, iwue = NA)
+                  jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, iwue = NA,
+                  tsoil = NA, cleaf = NA, nleaf = NA, croot = NA, nroot = NA, 
+                  clabl = NA, nlabl = NA, lai = NA, ninorg = NA, pno3 = NA, 
+                  pnh4 = NA, en2o = NA, enleach = NA, tmp = NA)
   }
     
   return(out)

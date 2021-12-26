@@ -106,6 +106,19 @@ ggplot() +
   )
 ```
 
+Test for CN-model
+```{r}
+output$data[[1]] %>% 
+  left_join(
+    p_model_drivers$forcing[[1]],
+    by = "date"
+  ) %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = temp)) + 
+  geom_line(aes(x = date, y = tsoil), color = "royalblue")
+```
+
+
 ## Calibrating model parameters
 
 To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.

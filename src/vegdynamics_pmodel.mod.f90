@@ -14,7 +14,7 @@ contains
     ! Updates canopy and tile variables
     !------------------------------------------------------------------
     use md_params_core, only: npft, nlu, nmonth, dummy
-    use md_tile_pmodel, only: tile_type
+    use md_tile, only: tile_type
     
     ! arguments
     type( tile_type ), dimension(nlu), intent(inout) :: tile

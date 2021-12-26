@@ -28,10 +28,10 @@ module md_gpp_pmodel
   !----------------------------------------------------------------
   ! load core parameters
   use md_params_core, only: nmonth, npft, nlu, c_molmass, h2o_molmass, maxgrid, ndayyear, kTkelvin, dummy
-  use md_tile_pmodel, only: tile_type, tile_fluxes_type
+  use md_tile, only: tile_type, tile_fluxes_type
   use md_interface_pmodel, only: myinterface
   use md_forcing_pmodel, only: climate_type, vegcover_type
-  use md_plant_pmodel, only: params_pft_plant
+  use md_plant, only: params_pft_plant
   use md_sofunutils, only: radians
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
