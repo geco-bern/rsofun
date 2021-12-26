@@ -59,7 +59,7 @@ print(head(lm3ppa_gs_leuning_drivers$forcing))
 
 ```{r eval = FALSE}
 # run the model
-lm3ppa_output_leuning <- runread_lm3ppa_f(
+lm3ppa_gs_leuning_output <- runread_lm3ppa_f(
      lm3ppa_gs_leuning_drivers,
      makecheck = TRUE,
      parallel = FALSE
