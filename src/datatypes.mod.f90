@@ -142,7 +142,6 @@ module datatypes
   end type
 
   !=============== Cohort level data type =============================================================
-
   type :: cohort_type
 
     ! Biological prognostic variables
@@ -272,19 +271,18 @@ module datatypes
     real    :: gdd                = 0.0           ! growing degree-days
     real    :: tc_pheno           = 0.0           ! smoothed canopy air temperature for phenology
 
+    !=====  Soil organic pools
+    type(orgpool) :: psoil_fs        ! soil organic matter, fast turnover [kg C(n)/m2]
+    type(orgpool) :: psoil_sl        ! soil organic matter, slow turnover [kg C(N)/m2]
+    type(orgpool) :: pmicr           ! microbial biomass (kg C(N)/m2)
+
     !=====  Litter and soil carbon pools
     real    :: litter             = 0.0           ! litter flux
-    real    :: MicrobialC         = 0.0           ! Microbes (kg C/m2)
-    real    :: metabolicL         = 0.0           ! fast soil carbon pool, (kg C/m2)
-    real    :: structuralL        = 0.0           ! slow soil carbon pool, (kg C/m2)
     real    :: n_deadtrees        = 0.0
     real    :: c_deadtrees        = 0.0
     real    :: m_turnover         = 0.0
 
     !=====  Nitrogen pools, Weng 2014-08-08
-    real    :: MicrobialN         = 0.0
-    real    :: metabolicN         = 0.0           ! fast soil nitrogen pool, (kg N/m2)
-    real    :: structuralN        = 0.0           ! slow soil nitrogen pool, (kg N/m2)
     real    :: mineralN           = 0.0           ! Mineral nitrogen pool, (kg N/m2)
     real    :: totN               = 0.0
     real    :: N_input                            ! annual N input (kgN m-2 yr-1)
@@ -490,6 +488,7 @@ module datatypes
   ! real :: fNSNmax(0:MSPECIES)       = 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
   ! real :: phiRL(0:MSPECIES)       = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
   ! real :: phiCSA(0:MSPECIES)        = 0.25E-4 ! ratio of sapwood area to leaf area
+  
   ! C/N ratios for plant pools
   real :: CNleaf0(0:MSPECIES)   = 25. ! C/N ratios for leaves
   real :: CNsw0(0:MSPECIES)     = 350.0 ! C/N ratios for woody biomass
@@ -498,6 +497,7 @@ module datatypes
   real :: CNseed0(0:MSPECIES)   = 20.0 ! C/N ratios for seeds
   ! real :: NfixRate0(0:MSPECIES) = 0.0 !Reference N fixation rate (0.03 kgN kgC-1 root yr-1)
   ! real :: NfixCost0(0:MSPECIES) = 12.0 ! FUN model, Fisher et al. 2010, GBC
+  
   real :: internal_gap_frac(0:MSPECIES)= 0.1 ! The gaps between trees
 
   !=============== Params_soil in R ============================================================
@@ -651,7 +651,7 @@ contains
     enddo
 
     ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation
-    sp%alphaBM    = sp%rho_wood * sp%taperfactor * PI/4. * sp%alphaHT ! 5200
+    sp%alphaBM = sp%rho_wood * sp%taperfactor * PI/4. * sp%alphaHT ! 5200
 
     ! Vmax as a function of LNbase
     sp%Vmax = 0.02 * sp%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
@@ -1051,12 +1051,12 @@ contains
       out_daily_tile%rootN     = vegn%proot%n%n14 * 1000
       out_daily_tile%SW_N      = vegn%psapw%n%n14 * 1000
       out_daily_tile%HW_N      = vegn%pwood%n%n14 * 1000
-      out_daily_tile%McrbC     = vegn%MicrobialC
-      out_daily_tile%fastSOM   = vegn%metabolicL
-      out_daily_tile%slowSOM   = vegn%structuralL
-      out_daily_tile%McrbN     = vegn%MicrobialN * 1000
-      out_daily_tile%fastSoilN = vegn%metabolicN * 1000
-      out_daily_tile%slowSoilN = vegn%structuralN * 1000
+      out_daily_tile%McrbC     = vegn%pmicr%c%c12
+      out_daily_tile%fastSOM   = vegn%psoil_fs%c%c12
+      out_daily_tile%slowSOM   = vegn%psoil_sl%c%c12
+      out_daily_tile%McrbN     = vegn%pmicr%n%n14 * 1000
+      out_daily_tile%fastSoilN = vegn%psoil_fs%n%n14 * 1000
+      out_daily_tile%slowSoilN = vegn%psoil_sl%n%n14 * 1000
       out_daily_tile%mineralN  = vegn%mineralN * 1000
       out_daily_tile%N_uptk    = vegn%dailyNup * 1000
     endif
@@ -1202,8 +1202,8 @@ contains
     plantC    = vegn%plabl%c%c12 + vegn%pseed%c%c12 + vegn%pleaf%c%c12 + vegn%proot%c%c12 + vegn%psapw%c%c12 + vegn%pwood%c%c12
     plantN    = vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 + vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14
 
-    soilC     = vegn%MicrobialC + vegn%metabolicL + vegn%structuralL
-    soilN     = vegn%MicrobialN + vegn%metabolicN + vegn%structuralN + vegn%mineralN
+    soilC     = vegn%pmicr%c%c12 + vegn%psoil_fs%c%c12 + vegn%psoil_sl%c%c12
+    soilN     = vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 + vegn%psoil_sl%n%n14 + vegn%mineralN
     vegn%totN = plantN + soilN
 
     out_annual_tile%year            = iyears
@@ -1240,12 +1240,12 @@ contains
     out_annual_tile%rootN           = vegn%proot%n%n14 * 1000
     out_annual_tile%SapwoodN        = vegn%psapw%n%n14  * 1000
     out_annual_tile%WoodN           = vegn%pwood%n%n14  * 1000
-    out_annual_tile%McrbC           = vegn%MicrobialC
-    out_annual_tile%fastSOM         = vegn%metabolicL
-    out_annual_tile%SlowSOM         = vegn%structuralL
-    out_annual_tile%McrbN           = vegn%MicrobialN * 1000
-    out_annual_tile%fastSoilN       = vegn%metabolicN * 1000
-    out_annual_tile%slowSoilN       = vegn%structuralN * 1000
+    out_annual_tile%McrbC           = vegn%pmicr%c%c12
+    out_annual_tile%fastSOM         = vegn%psoil_fs%c%c12
+    out_annual_tile%SlowSOM         = vegn%psoil_sl%c%c12
+    out_annual_tile%McrbN           = vegn%pmicr%n%n14 * 1000
+    out_annual_tile%fastSoilN       = vegn%psoil_fs%n%n14 * 1000
+    out_annual_tile%slowSoilN       = vegn%psoil_sl%n%n14 * 1000
     out_annual_tile%mineralN        = vegn%mineralN * 1000
     out_annual_tile%N_fxed          = vegn%annualfixedN * 1000
     out_annual_tile%N_uptk          = vegn%annualNup * 1000
@@ -1275,7 +1275,7 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     if(abs(vegn%totN - vegn%initialN0) * 1000 > 0.001)then
-      vegn%structuralN = vegn%structuralN - vegn%totN + vegn%initialN0
+      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 - vegn%totN + vegn%initialN0
       vegn%totN = vegn%initialN0
     endif
 

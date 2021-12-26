@@ -250,7 +250,7 @@ contains
         ! flexible allocation scheme
         ! dBL = min(LF_deficit, 0.6*G_LFR)
         if ((G_LFR-dBL) > FR_deficit) dBL = G_LFR - FR_deficit
-        dBR  = G_LFR - dBL
+        dBR = G_LFR - dBL
 
         ! calculate carbon spent on growth of sapwood growth
         if (cc%layer == 1 .AND. cc%age > sp%maturalage) then
@@ -382,14 +382,14 @@ contains
           CSAsw  = cc%bl_max/sp%LMA * sp%phiCSA * cc%height ! with Plant hydraulics, Weng, 2016-11-30
           CSAtot = 0.25 * PI * cc%DBH**2
           CSAwd  = max(0.0, CSAtot - CSAsw)
-          DBHwd  = 2*sqrt(CSAwd/PI)
+          DBHwd  = 2.0 * sqrt(CSAwd/PI)
           BSWmax = sp%alphaBM * (cc%DBH**sp%thetaBM - DBHwd**sp%thetaBM)
           dBHW   = max(cc%psapw%c%c12 - BSWmax, 0.0)
-          dNS    = dBHW/cc%psapw%c%c12 *cc%psapw%n%n14
+          dNS    = dBHW / cc%psapw%c%c12 * cc%psapw%n%n14
 
           ! update C and N of sapwood and wood
-          cc%pwood%c%c12   = cc%pwood%c%c12   + dBHW
-          cc%psapw%c%c12   = cc%psapw%c%c12   - dBHW
+          cc%pwood%c%c12   = cc%pwood%c%c12 + dBHW
+          cc%psapw%c%c12   = cc%psapw%c%c12 - dBHW
           cc%psapw%n%n14 = cc%psapw%n%n14 - dNS
           cc%pwood%n%n14 = cc%pwood%n%n14 + dNS
         endif
@@ -541,11 +541,11 @@ contains
         ! reset
         cc%nindivs = MIN(ccNSC /sp%seedlingsize, ccNSN/(sp%seedlingsize/sp%CNroot0))
         cc%psapw%c%c12 = f_initialBSW *sp%seedlingsize  ! for setting up a initial size
-        cc%proot%c%c12    = 0.25 * cc%psapw%c%c12
-        cc%pleaf%c%c12    = 0.0
-        cc%pwood%c%c12   = 0.0
+        cc%proot%c%c12 = 0.25 * cc%psapw%c%c12
+        cc%pleaf%c%c12 = 0.0
+        cc%pwood%c%c12 = 0.0
         cc%pseed%c%c12 = 0.0
-        cc%plabl%c%c12   = ccNSC/cc%nindivs - &
+        cc%plabl%c%c12 = ccNSC/cc%nindivs - &
           (cc%pleaf%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12 + cc%proot%c%c12 + cc%pseed%c%c12)
         
         ! nitrogen pools
@@ -554,7 +554,7 @@ contains
         cc%pleaf%n%n14 = 0.0
         cc%pwood%n%n14 = 0.0
         cc%pseed%n%n14 = 0.0
-        cc%plabl%n%n14   = ccNSN/cc%nindivs - &
+        cc%plabl%n%n14 = ccNSN/cc%nindivs - &
           (cc%pleaf%n%n14 + cc%psapw%n%n14 + cc%pwood%n%n14 + cc%proot%n%n14 + cc%pseed%n%n14)
 
         call rootarea_and_verticalprofile( cc )
@@ -662,15 +662,15 @@ contains
       lossN_coarse = (1.-retransN)* cc%nindivs * (dNStem+dNL - dAleaf * sp%LNbase)
       lossN_fine   = (1.-retransN)* cc%nindivs * (dNR        + dAleaf * sp%LNbase)
 
-      vegn%metabolicL = vegn%metabolicL +  &
+      vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 +  &
       fsc_fine * loss_fine + fsc_wood * loss_coarse
-      vegn%structuralL = vegn%structuralL +   &
+      vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 +   &
       (1.-fsc_fine)*loss_fine + (1.-fsc_wood)*loss_coarse
 
       !       Nitrogen to soil SOMs
-      vegn%metabolicN  = vegn%metabolicN +    &
+      vegn%psoil_fs%n%n14  = vegn%psoil_fs%n%n14 +    &
       fsc_fine * lossN_fine + fsc_wood * lossN_coarse
-      vegn%structuralN = vegn%structuralN +   &
+      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 +   &
       (1.-fsc_fine) * lossN_fine + (1.-fsc_wood) * lossN_coarse
 
       !       annual N from plants to soil
@@ -959,11 +959,11 @@ contains
     lossN_coarse = deadtrees * (cc%pwood%n%n14 + cc%psapw%n%n14 + cc%pleaf%n%n14 - cc%leafarea*sp%LNbase)
     lossN_fine   = deadtrees * (cc%proot%n%n14 + cc%pseed%n%n14 + cc%plabl%n%n14 + cc%leafarea*sp%LNbase)
 
-    vegn%metabolicL  = vegn%metabolicL + fsc_fine *loss_fine + fsc_wood *loss_coarse
-    vegn%structuralL = vegn%structuralL + (1.0-fsc_fine)*loss_fine + (1.0-fsc_wood)*loss_coarse
+    vegn%psoil_fs%c%c12  = vegn%psoil_fs%c%c12 + fsc_fine *loss_fine + fsc_wood *loss_coarse
+    vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 + (1.0-fsc_fine)*loss_fine + (1.0-fsc_wood)*loss_coarse
 
-    vegn%metabolicN = vegn%metabolicN + fsc_fine *lossN_fine + fsc_wood *lossN_coarse
-    vegn%structuralN = vegn%structuralN + (1.-fsc_fine)*lossN_fine +(1.-fsc_wood)*lossN_coarse
+    vegn%psoil_fs%n%n14 = vegn%psoil_fs%n%n14 + fsc_fine *lossN_fine + fsc_wood *lossN_coarse
+    vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 + (1.-fsc_fine)*lossN_fine +(1.-fsc_wood)*lossN_coarse
 
     ! annual N from plants to soil
     vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
@@ -1124,13 +1124,13 @@ contains
         !        failed_seeds = 0.0 ! (1. - sp%prob_g*sp%prob_e) * seedC(i)!!
 
         !        vegn%litter = vegn%litter + failed_seeds
-        !        vegn%metabolicL = vegn%metabolicL +        fsc_fine *failed_seeds
-        !        vegn%structuralL = vegn%structuralL + (1.0 - fsc_fine)*failed_seeds
+        !        vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 +        fsc_fine *failed_seeds
+        !        vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 + (1.0 - fsc_fine)*failed_seeds
 
         !      Nitrogen of seeds to soil SOMs
         !        N_failedseed= 0.0 ! (1.-sp%prob_g*sp%prob_e)   * seedN(i)
-        !        vegn%metabolicN  = vegn%metabolicN   +        fsc_fine * N_failedseed
-        !        vegn%structuralN = vegn%structuralN  + (1.0 - fsc_fine)* N_failedseed
+        !        vegn%psoil_fs%n%n14  = vegn%psoil_fs%n%n14   +        fsc_fine * N_failedseed
+        !        vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14  + (1.0 - fsc_fine)* N_failedseed
 
         !       annual N from plants to soil
         !   vegn%N_P2S_yr = vegn%N_P2S_yr + N_failedseed
@@ -1199,15 +1199,15 @@ contains
       lossN_fine   = cc%nindivs *  cc%leafarea*sp%LNbase
 
       ! Carbon to soil pools
-      vegn%metabolicL  = vegn%metabolicL  + fsc_fine *loss_fine + &
+      vegn%psoil_fs%c%c12  = vegn%psoil_fs%c%c12  + fsc_fine *loss_fine + &
         fsc_wood *loss_coarse
-      vegn%structuralL = vegn%structuralL + (1.0-fsc_fine)*loss_fine + &
+      vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 + (1.0-fsc_fine)*loss_fine + &
         (1.0-fsc_wood)*loss_coarse
 
       ! Nitrogen to soil pools
-      vegn%metabolicN = vegn%metabolicN + fsc_fine  *lossN_fine +   &
+      vegn%psoil_fs%n%n14 = vegn%psoil_fs%n%n14 + fsc_fine  *lossN_fine +   &
         fsc_wood *lossN_coarse
-      vegn%structuralN = vegn%structuralN +(1.-fsc_fine) *lossN_fine +   &
+      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 +(1.-fsc_fine) *lossN_fine +   &
         (1.-fsc_wood)*lossN_coarse
 
       ! annual N from plants to soil
@@ -1383,15 +1383,15 @@ contains
       lossN_coarse = (1.-retransN)* cc%nindivs * (dNL - dAleaf * sp%LNbase + dNStem)
       lossN_fine   = (1.-retransN)* cc%nindivs * (dNR + dAleaf * sp%LNbase)
 
-      vegn%metabolicL = vegn%metabolicL   +  &
+      vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12   +  &
         fsc_fine * loss_fine + fsc_wood * loss_coarse
-      vegn%structuralL = vegn%structuralL +  &
+      vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 +  &
         ((1.-fsc_fine)*loss_fine + (1.-fsc_wood)*loss_coarse)
 
       !    Nitrogen to soil SOMs
-      vegn%metabolicN  = vegn%metabolicN +    &
+      vegn%psoil_fs%n%n14  = vegn%psoil_fs%n%n14 +    &
         fsc_fine * lossN_fine + fsc_wood * lossN_coarse
-      vegn%structuralN = vegn%structuralN + &
+      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 + &
         (1.-fsc_fine) * lossN_fine + (1.-fsc_wood) * lossN_coarse
 
       !    annual N from plants to soil
@@ -1466,9 +1466,11 @@ contains
           cc => vegn%cohorts(i)
           cc%N_uptake  = 0.0
           if (cc%pseed%n%n14 < cc%NSNmax) then
+
             cc%N_uptake  = cc%proot%c%c12 * avgNup ! min(cc%proot%c%c12*avgNup, cc%NSNmax-cc%pseed%n%n14)
             cc%pseed%n%n14       = cc%pseed%n%n14 + cc%N_uptake
             cc%annualNup = cc%annualNup + cc%N_uptake !/cc%crownarea
+
             ! subtract N from mineral N
             vegn%mineralN = vegn%mineralN - cc%N_uptake * cc%nindivs
             vegn%N_uptake = vegn%N_uptake + cc%N_uptake * cc%nindivs
@@ -1513,14 +1515,14 @@ contains
     runoff = vegn%runoff  !* myinterface%dt_fast_yr !kgH2O m-2 yr-1 ->kgH2O m-2/time step, weng 2017-10-15
   
     ! CN ratios of soil C pools
-    CNfast = vegn%metabolicL/vegn%metabolicN
-    CNslow = vegn%structuralL/vegn%structuralN
+    CNfast = vegn%psoil_fs%c%c12/vegn%psoil_fs%n%n14
+    CNslow = vegn%psoil_sl%c%c12/vegn%psoil_sl%n%n14
 
     ! C decomposition
     A = A_function(tsoil, thetaS)
-    micr_C_loss = vegn%microbialC * (1.0 - exp(-A*phoMicrobial* myinterface%dt_fast_yr))
-    fast_L_loss = vegn%metabolicL * (1.0 - exp(-A*K1          * myinterface%dt_fast_yr))
-    slow_L_loss = vegn%structuralL* (1.0 - exp(-A*K2          * myinterface%dt_fast_yr))
+    micr_C_loss = vegn%pmicr%c%c12 * (1.0 - exp(-A*phoMicrobial* myinterface%dt_fast_yr))
+    fast_L_loss = vegn%psoil_fs%c%c12 * (1.0 - exp(-A*K1          * myinterface%dt_fast_yr))
+    slow_L_loss = vegn%psoil_sl%c%c12* (1.0 - exp(-A*K2          * myinterface%dt_fast_yr))
 
     ! Carbon use efficiencies of microbes
     NforM = fNM * vegn%mineralN
@@ -1539,11 +1541,11 @@ contains
 
     ! update C and N pools
     ! Carbon pools
-    vegn%microbialC  = vegn%microbialC - micr_C_loss &
+    vegn%pmicr%c%c12  = vegn%pmicr%c%c12 - micr_C_loss &
                       + fast_L_loss * CUEfast &
                       + slow_L_loss * CUEslow
-    vegn%metabolicL = vegn%metabolicL - fast_L_loss
-    vegn%structuralL = vegn%structuralL - slow_L_loss
+    vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 - fast_L_loss
+    vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 - slow_L_loss
 
     fDON        = 0.25 ! 0.25 ! * myinterface%dt_fast_yr ! 0.05 !* myinterface%dt_fast_yr
     runoff      = 0.2 ! 0.2 ! mm day-1
@@ -1555,17 +1557,17 @@ contains
     DON_loss    = DON_fast + DON_slow
 
     ! Update Nitrogen pools
-    vegn%microbialN= vegn%microbialC/CNm
-    vegn%metabolicN  = vegn%metabolicN  - fast_L_loss/CNfast - DON_fast
-    vegn%structuralN = vegn%structuralN - slow_L_loss/CNslow - DON_slow
+    vegn%pmicr%n%n14= vegn%pmicr%c%c12/CNm
+    vegn%psoil_fs%n%n14  = vegn%psoil_fs%n%n14  - fast_L_loss/CNfast - DON_fast
+    vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 - slow_L_loss/CNslow - DON_slow
     
     ! Mixing of microbes to litters
-    vegn%metabolicL   = vegn%metabolicL + MLmixRatio*fast_L_loss * CUEfast
-    vegn%metabolicN   = vegn%metabolicN + MLmixRatio*fast_L_loss * CUEfast/CNm
-    vegn%structuralL = vegn%structuralL + MLmixRatio*slow_L_loss * CUEslow
-    vegn%structuralN = vegn%structuralN + MLmixRatio*slow_L_loss * CUEslow/CNm
-    vegn%microbialC  = vegn%microbialC  - MLmixRatio*(fast_L_loss*CUEfast+slow_L_loss*CUEslow)
-    vegn%microbialN  = vegn%microbialC/CNm
+    vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 + MLmixRatio*fast_L_loss * CUEfast
+    vegn%psoil_fs%n%n14 = vegn%psoil_fs%n%n14 + MLmixRatio*fast_L_loss * CUEfast/CNm
+    vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 + MLmixRatio*slow_L_loss * CUEslow
+    vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 + MLmixRatio*slow_L_loss * CUEslow/CNm
+    vegn%pmicr%c%c12 = vegn%pmicr%c%c12  - MLmixRatio*(fast_L_loss*CUEfast+slow_L_loss*CUEslow)
+    vegn%pmicr%n%n14  = vegn%pmicr%c%c12/CNm
       
     ! update mineral N pool (mineralN)
     fast_N_free = MAX(0.0, fast_L_loss*(1./CNfast - CUEfast/CNm))
@@ -1587,11 +1589,11 @@ contains
                     + micr_C_loss/CNm
 
     ! Check if soil C/N is above CN0
-    fast_N_free = MAX(0. ,vegn%metabolicN  - vegn%metabolicL/CN0metabolicL)
-    slow_N_free = MAX(0. ,vegn%structuralN - vegn%structuralL/CN0structuralL)
+    fast_N_free = MAX(0.0, vegn%psoil_fs%n%n14  - vegn%psoil_fs%c%c12/CN0metabolicL)
+    slow_N_free = MAX(0.0, vegn%psoil_sl%n%n14 - vegn%psoil_sl%c%c12/CN0structuralL)
 
-    vegn%metabolicN  = vegn%metabolicN  - fast_N_free
-    vegn%structuralN = vegn%structuralN - slow_N_free
+    vegn%psoil_fs%n%n14  = vegn%psoil_fs%n%n14  - fast_N_free
+    vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 - slow_N_free
     vegn%mineralN    = vegn%mineralN + fast_N_free + slow_N_free
     vegn%annualN     = vegn%annualN  + fast_N_free + slow_N_free
     
@@ -2131,7 +2133,7 @@ contains
       vegn%n_cohorts = init_n_cohorts
       cc => null()
       do i=1,init_n_cohorts
-        cx         => vegn%cohorts(i)
+        cx => vegn%cohorts(i)
         cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
         cx%layer   = 1
         cx%species = INT(myinterface%init_cohort(i)%init_cohort_species)
@@ -2149,10 +2151,10 @@ contains
       call relayer_cohorts( vegn )
 
       ! Initial Soil pools and environmental conditions
-      vegn%metabolicL   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
-      vegn%structuralL  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
-      vegn%metabolicN   = vegn%metabolicL/CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-      vegn%structuralN  = vegn%structuralL/CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
+      vegn%psoil_fs%c%c12   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
+      vegn%psoil_sl%c%c12  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+      vegn%psoil_fs%n%n14   = vegn%psoil_fs%c%c12/CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
+      vegn%psoil_sl%n%n14  = vegn%psoil_sl%c%c12/CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
       vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
       vegn%mineralN     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
       vegn%previousN    = vegn%mineralN
@@ -2174,8 +2176,8 @@ contains
       call summarize_tile( vegn )
       vegn%initialN0 = vegn%pseed%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
       vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
-      vegn%MicrobialN + vegn%metabolicN +       &
-      vegn%structuralN + vegn%mineralN
+      vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
+      vegn%psoil_sl%n%n14 + vegn%mineralN
       vegn%totN =  vegn%initialN0
     
     else
@@ -2191,9 +2193,9 @@ contains
         cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
         cx%layer   = 1
         cx%species = INT(rand()*5)+1
-        cx%nindivs = rand()/10. ! trees/m2
-        btotal     = rand()*100.0  ! kgC /tree
-        call initialize_cohort_from_biomass(cx,btotal)
+        cx%nindivs = rand() / 10. ! trees/m2
+        btotal     = rand() * 100.0  ! kgC /tree
+        call initialize_cohort_from_biomass(cx, btotal)
       enddo
 
       ! Sorting these cohorts
@@ -2207,10 +2209,10 @@ contains
       MaxCohortID = cx%ccID
 
       ! Initial Soil pools and environmental conditions
-      vegn%metabolicL  = 0.2 ! kgC m-2
-      vegn%structuralL = 7.0 ! slow soil carbon pool, (kg C/m2)
-      vegn%metabolicN  = vegn%metabolicL/CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-      vegn%structuralN = vegn%structuralL/CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
+      vegn%psoil_fs%c%c12  = 0.2 ! kgC m-2
+      vegn%psoil_sl%c%c12 = 7.0 ! slow soil carbon pool, (kg C/m2)
+      vegn%psoil_fs%n%n14  = vegn%psoil_fs%c%c12/CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
+      vegn%psoil_sl%n%n14 = vegn%psoil_sl%c%c12/CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
       vegn%N_input     = 0.0008  ! kgN m-2 yr-1, N input to soil
       vegn%mineralN    = 0.005  ! Mineral nitrogen pool, (kg N/m2)
       vegn%previousN   = vegn%mineralN
@@ -2218,10 +2220,10 @@ contains
       ! tile
       call summarize_tile( vegn )
       vegn%initialN0 = vegn%pseed%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
-      vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
-      vegn%MicrobialN + vegn%metabolicN +       &
-      vegn%structuralN + vegn%mineralN
-      vegn%totN =  vegn%initialN0
+        vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
+        vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
+        vegn%psoil_sl%n%n14 + vegn%mineralN
+      vegn%totN = vegn%initialN0
 
     endif  ! initialization: random or pre-described
   
