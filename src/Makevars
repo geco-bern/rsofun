@@ -33,6 +33,7 @@ biosphere_pmodel.mod.o: params_core.mod.o classdefs.mod.o sofunutils.mod.o plant
 biosphere_lm3ppa.mod.o: params_core.mod.o interface_biosphere_lm3ppa.mod.o datatypes.mod.o soil_lm3ppa.mod.o vegetation_lm3ppa.mod.o
 soil_lm3ppa.mod.o: datatypes.mod.o
 vegetation_lm3ppa.mod.o: datatypes.mod.o soil_lm3ppa.mod.o gpp_lm3ppa.mod.o
+datatypes.mod.o: interface_biosphere_lm3ppa.mod.o params_core.mod.o classdefs.mod.o
 
 # Source (object) of Fortran modules
 # <modulename.mod>: <filename.o>

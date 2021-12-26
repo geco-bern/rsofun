@@ -421,9 +421,9 @@ subroutine cohort_root_properties(cohort, dz, vrl, K_r, r_r)
   z = 0
   do l = 1, size(dz)
      ! calculate the volumetric fine root biomass density [kgC/m3] for current layer
-     ! NOTE: sum(brv*dz) must be equal to cohort%br, which is achieved by normalizing
+     ! NOTE: sum(brv*dz) must be equal to cohort%proot%c%c12, which is achieved by normalizing
      ! factor
-     vbr = cohort%br * &
+     vbr = cohort%proot%c%c12 * &
           (exp(-z/cohort%root_zeta) - exp(-(z+dz(l))/cohort%root_zeta))*factor/dz(l)
      ! calculate the volumetric fine root length
      vrl(l) = vbr*spdata(sp)%srl
@@ -470,11 +470,11 @@ subroutine cohort_uptake_profile(cohort, dz, uptake_frac_max, vegn_uptake_term)
   if(sum_rf>0) &
        uptake_frac_max(:) = uptake_frac_max(:)/sum_rf
   
-  if (cohort%br <= 0) then
+  if (cohort%proot%c%c12 <= 0) then
      vegn_uptake_term(:) = 0.0
   else   
      vegn_uptake_term(:) = uptake_frac_max(:) * &
-          res_scaler * spdata(cohort%species)%root_r * cohort%br
+          res_scaler * spdata(cohort%species)%root_r * cohort%proot%c%c12
   endif
 
 end subroutine 
