@@ -1428,7 +1428,7 @@ contains
     integer :: i
 
     ! xxx try
-    vegn%mineralN = 0.2
+    vegn%ninorg%n14 = 0.2
 
     ! Nitrogen uptake parameter
     ! It considers competition here. How much N one can absorp depends on 
@@ -1436,7 +1436,7 @@ contains
     N_Roots  = 0.0
     vegn%N_uptake = 0.0
 
-    if (vegn%mineralN > 0.0) then
+    if (vegn%ninorg%n14 > 0.0) then
     
       do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
@@ -1455,7 +1455,7 @@ contains
         ! Add a temperature response equation herefor rho_N_up0 (Zhu Qing 2016)
         rho_N_up = rho_N_up0 * N_roots / (N_roots0 + N_roots) * hours_per_year * myinterface%dt_fast_yr        
 
-        totNup = rho_N_up * vegn%mineralN * exp(9000.0 * (1./298.16 - 1./tsoil)) ! kgN m-2 time step-1
+        totNup = rho_N_up * vegn%ninorg%n14 * exp(9000.0 * (1./298.16 - 1./tsoil)) ! kgN m-2 time step-1
 
         ! Below code is from BiomeE-Allocation
         avgNup = totNup / N_roots ! kgN time step-1 kg roots-1
@@ -1472,7 +1472,7 @@ contains
             cc%annualNup = cc%annualNup + cc%N_uptake !/cc%crownarea
 
             ! subtract N from mineral N
-            vegn%mineralN = vegn%mineralN - cc%N_uptake * cc%nindivs
+            vegn%ninorg%n14 = vegn%ninorg%n14 - cc%N_uptake * cc%nindivs
             vegn%N_uptake = vegn%N_uptake + cc%N_uptake * cc%nindivs
           endif
         enddo
@@ -1525,7 +1525,7 @@ contains
     slow_L_loss = vegn%psoil_sl%c%c12* (1.0 - exp(-A*K2          * myinterface%dt_fast_yr))
 
     ! Carbon use efficiencies of microbes
-    NforM = fNM * vegn%mineralN
+    NforM = fNM * vegn%ninorg%n14
 
     ! Default CUE0 adopted from BiomeE-Allocation
     if (slow_L_loss > 0.0) then  
@@ -1574,11 +1574,11 @@ contains
     slow_N_free = MAX(0.0, slow_L_loss*(1./CNslow - CUEslow/CNm))
 
 
-    N_loss = vegn%mineralN * MIN(0.25, (A * K_nitrogen * myinterface%dt_fast_yr + etaN*runoff))
+    N_loss = vegn%ninorg%n14 * MIN(0.25, (A * K_nitrogen * myinterface%dt_fast_yr + etaN*runoff))
 
     vegn%Nloss_yr = vegn%Nloss_yr + N_loss + DON_loss
 
-    vegn%mineralN = vegn%mineralN - N_loss     &
+    vegn%ninorg%n14 = vegn%ninorg%n14 - N_loss     &
                     + vegn%N_input * myinterface%dt_fast_yr  &
                     + fast_N_free + slow_N_free  &
                     + micr_C_loss/CNm
@@ -1594,11 +1594,11 @@ contains
 
     vegn%psoil_fs%n%n14  = vegn%psoil_fs%n%n14  - fast_N_free
     vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 - slow_N_free
-    vegn%mineralN    = vegn%mineralN + fast_N_free + slow_N_free
+    vegn%ninorg%n14    = vegn%ninorg%n14 + fast_N_free + slow_N_free
     vegn%annualN     = vegn%annualN  + fast_N_free + slow_N_free
     
     ! Heterotrophic respiration: decomposition of litters and SOM, kgC m-2 step-1
-    vegn%rh =  (micr_C_loss + fast_L_loss*(1.-CUEfast)+ slow_L_loss*(1.-CUEslow))
+    vegn%rh =  (micr_C_loss + fast_L_loss*(1.-CUEfast)+ slow_L_loss*(1.0-CUEslow))
 
   end subroutine SOMdecomposition
 
@@ -2156,8 +2156,8 @@ contains
       vegn%psoil_fs%n%n14   = vegn%psoil_fs%c%c12/CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
       vegn%psoil_sl%n%n14  = vegn%psoil_sl%c%c12/CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
       vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
-      vegn%mineralN     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
-      vegn%previousN    = vegn%mineralN
+      vegn%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
+      vegn%previousN    = vegn%ninorg%n14
 
       ! Soil water parameters
       vegn%soiltype = myinterface%params_tile%soiltype    
@@ -2177,7 +2177,7 @@ contains
       vegn%initialN0 = vegn%pseed%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
       vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
       vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
-      vegn%psoil_sl%n%n14 + vegn%mineralN
+      vegn%psoil_sl%n%n14 + vegn%ninorg%n14
       vegn%totN =  vegn%initialN0
     
     else
@@ -2214,15 +2214,15 @@ contains
       vegn%psoil_fs%n%n14  = vegn%psoil_fs%c%c12/CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
       vegn%psoil_sl%n%n14 = vegn%psoil_sl%c%c12/CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
       vegn%N_input     = 0.0008  ! kgN m-2 yr-1, N input to soil
-      vegn%mineralN    = 0.005  ! Mineral nitrogen pool, (kg N/m2)
-      vegn%previousN   = vegn%mineralN
+      vegn%ninorg%n14    = 0.005  ! Mineral nitrogen pool, (kg N/m2)
+      vegn%previousN   = vegn%ninorg%n14
 
       ! tile
       call summarize_tile( vegn )
       vegn%initialN0 = vegn%pseed%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
         vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
         vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
-        vegn%psoil_sl%n%n14 + vegn%mineralN
+        vegn%psoil_sl%n%n14 + vegn%ninorg%n14
       vegn%totN = vegn%initialN0
 
     endif  ! initialization: random or pre-described

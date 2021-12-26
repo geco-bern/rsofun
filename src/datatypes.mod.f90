@@ -271,8 +271,13 @@ module datatypes
     real    :: gdd                = 0.0           ! growing degree-days
     real    :: tc_pheno           = 0.0           ! smoothed canopy air temperature for phenology
 
-    !=====  Soil organic pools
-    type(orgpool) :: psoil_fs        ! soil organic matter, fast turnover [kg C(n)/m2]
+    !=====  Litter pools (SOFUN-structure, remain empty in original LM3-PPA)
+    type(orgpool) :: plitt_af                     ! above-ground litter, fast turnover [kg C(N)/m2]
+    type(orgpool) :: plitt_as                     ! above-ground litter, slow turnover [kg C(N)/m2]
+    type(orgpool) :: plitt_bg                     ! below-ground litter [kg C(N)/m2]
+
+    !=====  Soil organic pools (renamed: metabolicL, metabolicN -> psoil_fs; structuralL, structuralN -> psoil_sl; MicrobialC, MicrobialN -> pmicr)
+    type(orgpool) :: psoil_fs        ! soil organic matter, fast turnover [kg C(N)/m2]
     type(orgpool) :: psoil_sl        ! soil organic matter, slow turnover [kg C(N)/m2]
     type(orgpool) :: pmicr           ! microbial biomass (kg C(N)/m2)
 
@@ -282,8 +287,12 @@ module datatypes
     real    :: c_deadtrees        = 0.0
     real    :: m_turnover         = 0.0
 
-    !=====  Nitrogen pools, Weng 2014-08-08
-    real    :: mineralN           = 0.0           ! Mineral nitrogen pool, (kg N/m2)
+    !=====  Inorganic N pools
+    type(nitrogen) :: ninorg                      ! Mineral nitrogen pool (kg N/m2)   
+    type(nitrogen) :: pno3                        ! Soil nitrate pool (kg N/m2)   
+    type(nitrogen) :: pnh4                        ! Soil ammonium pool (kg N/m2)   
+    ! real    :: mineralN           = 0.0           ! Mineral nitrogen pool, (kg N/m2)
+
     real    :: totN               = 0.0
     real    :: N_input                            ! annual N input (kgN m-2 yr-1)
     real    :: N_uptake           = 0.0           ! kg N m-2 hour-1
@@ -1057,7 +1066,7 @@ contains
       out_daily_tile%McrbN     = vegn%pmicr%n%n14 * 1000
       out_daily_tile%fastSoilN = vegn%psoil_fs%n%n14 * 1000
       out_daily_tile%slowSoilN = vegn%psoil_sl%n%n14 * 1000
-      out_daily_tile%mineralN  = vegn%mineralN * 1000
+      out_daily_tile%mineralN  = vegn%ninorg%n14 * 1000
       out_daily_tile%N_uptk    = vegn%dailyNup * 1000
     endif
 
@@ -1203,7 +1212,7 @@ contains
     plantN    = vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 + vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14
 
     soilC     = vegn%pmicr%c%c12 + vegn%psoil_fs%c%c12 + vegn%psoil_sl%c%c12
-    soilN     = vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 + vegn%psoil_sl%n%n14 + vegn%mineralN
+    soilN     = vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 + vegn%psoil_sl%n%n14 + vegn%ninorg%n14
     vegn%totN = plantN + soilN
 
     out_annual_tile%year            = iyears
@@ -1246,7 +1255,7 @@ contains
     out_annual_tile%McrbN           = vegn%pmicr%n%n14 * 1000
     out_annual_tile%fastSoilN       = vegn%psoil_fs%n%n14 * 1000
     out_annual_tile%slowSoilN       = vegn%psoil_sl%n%n14 * 1000
-    out_annual_tile%mineralN        = vegn%mineralN * 1000
+    out_annual_tile%mineralN        = vegn%ninorg%n14 * 1000
     out_annual_tile%N_fxed          = vegn%annualfixedN * 1000
     out_annual_tile%N_uptk          = vegn%annualNup * 1000
     out_annual_tile%N_yrMin         = vegn%annualN * 1000
