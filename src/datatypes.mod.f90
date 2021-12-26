@@ -26,10 +26,6 @@ module datatypes
 
   !=============== Constants =============================================================
   logical, public, parameter :: read_from_parameter_file = .TRUE.
-  integer, public, parameter :: days_per_year            = 365
-  integer, public, parameter :: hours_per_year           = 365 * 24  
-  real,    public, parameter :: seconds_per_year         = 365. * 24. * 3600.
-  real,    public, parameter :: seconds_per_day          = 24. * 3600.
   integer, public, parameter :: max_lev                  = 3                     ! Soil layers, for soil water dynamics
   integer, public, parameter :: num_l                    = 3                     ! Soil layers
   integer, public, parameter :: LEAF_ON                  = 1
@@ -59,18 +55,6 @@ module datatypes
   !===== Soil SOM reference C/N ratios
   real, public, parameter :: CN0metabolicL               = 15.0 
   real, public, parameter :: CN0structuralL              = 40.0 
-
-  !===== Physical constants
-  real, public, parameter :: TFREEZE                     = 273.16
-  real, public, parameter :: Rugas                       = 8.314472              ! universal gas constant, J K-1 mol-1
-  real, public, parameter :: mol_C                       = 12.0e-3               ! molar mass of carbon, kg
-  real, public, parameter :: mol_air                     = 28.96440e-3           ! molar mass of air, kg
-  real, public, parameter :: mol_CO2                     = 44.00995e-3           ! molar mass of CO2,kg
-  real, public, parameter :: mol_h2o                     = 18.0e-3               ! molar mass of water, kg
-  real, public, parameter :: cpair                       = 1010.
-  real, public, parameter :: H2OLv0                      = 2.501e6               !latent heat H2O (J/kg)
-  real, public, parameter :: p_sea                       = 101325.               !1.e5 atmospheric pressure  (Pa)
-  real, public, parameter :: DENS_H2O                    = 1000.                 ! kg m-3
 
   !=============== PFT data type =============================================================
   type spec_data_type
@@ -190,14 +174,6 @@ module datatypes
     type(orgpool) :: pseed                       ! biomass put aside for future progeny [kg C/ind.]
     type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C/ind.]
 
-    !===== Carbon pools
-    ! real    :: bl                 = 0.0          ! biomass of leaves, kg C/individual
-    ! real    :: br                 = 0.0          ! biomass of fine roots, kg C/individual
-    ! real    :: bsw                = 0.0          ! biomass of sapwood, kg C/individual
-    ! real    :: bHW                = 0.0          ! biomass of heartwood, kg C/individual
-    ! real    :: seedC              = 0.0          ! biomass put aside for future progeny, kg C/individual
-    ! real    :: nsc                = 0.0          ! non-structural carbon, kg C/individual
-
     !===== Carbon fluxes
     real    :: gpp                = 0.0          ! gross primary productivity kg C/timestep
     real    :: npp                = 0.0          ! net primary productivity kg C/timestep
@@ -223,13 +199,6 @@ module datatypes
     real    :: deathratevalue
 
     !===== Nitrogen model related parameters
-    ! real    :: NSN                = 0.0           ! non-structural N pool
-    ! real    :: leafN              = 0.0
-    ! real    :: sapwN              = 0.0
-    ! real    :: woodN              = 0.0           ! N of heart wood
-    ! real    :: rootN              = 0.0           ! N of fine roots
-    ! real    :: seedN              = 0.0     
-
     real    :: NSNmax             = 0.0
     real    :: N_uptake           = 0.0
     real    :: annualNup          = 0.0
@@ -376,8 +345,6 @@ module datatypes
     type(orgpool) :: pseed                       ! biomass put aside for future progeny [kg C m-2]
     type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C m-2]
 
-    ! real    :: NSC, SeedC, leafC, rootC, SapwoodC, WoodC
-    ! real    :: NSN, SeedN, leafN, rootN, SapwoodN, WoodN
     real    :: totSeedC, totSeedN, totNewCC, totNewCN
 
   end type vegn_tile_type
@@ -428,6 +395,7 @@ module datatypes
   real   :: soiltype                                !Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   real   :: FLDCAP                                  ! vol/vol 
   real   :: WILTPT                                  ! vol/vol
+
   !===== Carbon pools
   real   :: K1                                      ! Fast soil C decomposition rate (yr-1)
   real   :: K2                                      ! slow soil C decomposition rate (yr-1)
@@ -442,14 +410,18 @@ module datatypes
   real   :: retransN                                ! retranslocation coefficient of Nitrogen
   real   :: f_initialBSW      
   real   :: f_N_add                                 ! re-fill of N for sapwood
+
   !===== Ensheng's growth parameters
   real   :: f_LFR_max  = 0.85                       ! max allocation to leaves and fine roots 
+
   !===== Leaf life span 
   real   :: c_LLS  = 28.57143                       ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
+
   !===== Calibratable parameters
   real   :: tf_base                                 ! calibratable scalar for respiration
   real   :: par_mort                                ! generic calibratable parameter for mortality module
   real   :: par_mort_under                          ! generic calibratable parameter for mortality understory module
+
   !===== deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
   real  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
   real  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
@@ -826,19 +798,6 @@ contains
     call orginit(vegn%pwood)
     call orginit(vegn%pseed)
 
-    ! vegn%NSC        = 0.0
-    ! vegn%SeedC      = 0.0
-    ! vegn%leafC      = 0.0
-    ! vegn%rootC      = 0.0
-    ! vegn%SapwoodC   = 0.0
-    ! vegn%WoodC      = 0.0
-    ! vegn%NSN        = 0.0
-    ! vegn%SeedN      = 0.0
-    ! vegn%leafN      = 0.0
-    ! vegn%rootN      = 0.0
-    ! vegn%SapwoodN   = 0.0
-    ! vegn%WoodN      = 0.0
-
     vegn%LAI        = 0.0
     vegn%CAI        = 0.0
 
@@ -852,11 +811,6 @@ contains
     vegn%MaxVolume  = 0.0
     vegn%MaxDBH     = 0.0
 
-    ! vegn%NPPL       = 0.0
-    ! vegn%NPPW       = 0.0
-    ! vegn%n_deadtrees     = 0.0
-    ! vegn%c_deadtrees     = 0.0
-
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
 
@@ -868,24 +822,9 @@ contains
       call orgcp(cc%pwood, vegn%pwood, cc%nindivs)
       call orgcp(cc%pseed, vegn%pseed, cc%nindivs)
 
-      ! vegn%NSC          = vegn%NSC      + cc%NSC       * cc%nindivs
-      ! vegn%SeedC        = vegn%SeedC    + cc%seedC     * cc%nindivs
-      ! vegn%leafC        = vegn%leafC    + cc%bl        * cc%nindivs
-      ! vegn%rootC        = vegn%rootC    + cc%br        * cc%nindivs
-      ! vegn%SapwoodC     = vegn%SapwoodC + cc%bsw       * cc%nindivs
-      ! vegn%woodC        = vegn%woodC    + cc%bHW       * cc%nindivs
-
       vegn%CAI          = vegn%CAI      + cc%crownarea * cc%nindivs
       vegn%LAI          = vegn%LAI      + cc%leafarea  * cc%nindivs
       
-      ! ! Vegn N pools
-      ! vegn%NSN          = vegn%NSN      + cc%NSN       * cc%nindivs
-      ! vegn%SeedN        = vegn%SeedN    + cc%seedN     * cc%nindivs
-      ! vegn%leafN        = vegn%leafN    + cc%leafN     * cc%nindivs
-      ! vegn%rootN        = vegn%rootN    + cc%rootN     * cc%nindivs
-      ! vegn%SapwoodN     = vegn%SapwoodN + cc%sapwN     * cc%nindivs
-      ! vegn%woodN        = vegn%woodN    + cc%woodN     * cc%nindivs
-
       ! New tile outputs
       vegn%DBH          = vegn%DBH      + cc%dbh       * cc%nindivs
       vegn%nindivs      = vegn%nindivs  + cc%nindivs

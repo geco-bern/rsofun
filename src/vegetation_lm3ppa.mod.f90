@@ -65,7 +65,7 @@ contains
       ! Maintenance respiration
       call plant_respiration( cc, forcing%tair ) ! get resp per tree per time step
 
-      cc%resp = cc%resp + (cc%resg * myinterface%step_seconds) / seconds_per_day ! put growth respiration to tot resp
+      cc%resp = cc%resp + (cc%resg * myinterface%step_seconds) / secs_per_day ! put growth respiration to tot resp
       cc%resp = cc%resp * myinterface%params_tile%tf_base          ! scaling for calibration
       cc%npp  = cc%gpp  - cc%resp       ! kgC tree-1 step-1
 
@@ -172,8 +172,8 @@ contains
           Max(cc%br_max - cc%proot%c%c12,0.0))
         N_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c%c12,0.0)/sp%CNleaf0 +  &
           Max(cc%br_max - cc%proot%c%c12,0.0)/sp%CNroot0)
-        C_push = cc%plabl%c%c12/(days_per_year*sp%tauNSC) ! max(cc%plabl%c%c12-NSCtarget, 0.0)/(days_per_year*sp%tauNSC)
-        N_push = cc%pseed%n%n14/(days_per_year*sp%tauNSC) ! 4.0 * C_push/sp%CNsw0  !
+        C_push = cc%plabl%c%c12/(ndayyear*sp%tauNSC) ! max(cc%plabl%c%c12-NSCtarget, 0.0)/(ndayyear*sp%tauNSC)
+        N_push = cc%pseed%n%n14/(ndayyear*sp%tauNSC) ! 4.0 * C_push/sp%CNsw0  !
         cc%N_growth = Min(max(0.02*cc%pseed%n%n14,0.0), N_pull+N_push)
         cc%C_growth = Min(max(0.02*cc%plabl%c%c12,0.0), C_pull+C_push) ! Max(0.0,MIN(0.02*(cc%plabl%c%c12-0.2*NSCtarget), C_pull+C_push))
         !!! cc%plabl%c%c12      = cc%plabl%c%c12 - cc%C_growth ! just an estimate, not out yet
@@ -1344,14 +1344,14 @@ contains
       else
         alpha_S = 0.0
       endif
-      dBL    = cc%pleaf%c%c12    *    alpha_L  /days_per_year
-      dNL    = cc%pleaf%n%n14 *    alpha_L  /days_per_year
+      dBL    = cc%pleaf%c%c12    *    alpha_L  /ndayyear
+      dNL    = cc%pleaf%n%n14 *    alpha_L  /ndayyear
 
-      dBStem = cc%psapw%c%c12   *    alpha_S  /days_per_year
-      dNStem = cc%psapw%n%n14 *    alpha_S  /days_per_year
+      dBStem = cc%psapw%c%c12   *    alpha_S  /ndayyear
+      dNStem = cc%psapw%n%n14 *    alpha_S  /ndayyear
 
-      dBR    = cc%proot%c%c12    * sp%alpha_FR /days_per_year
-      dNR    = cc%proot%n%n14 * sp%alpha_FR /days_per_year
+      dBR    = cc%proot%c%c12    * sp%alpha_FR /ndayyear
+      dNR    = cc%proot%n%n14 * sp%alpha_FR /ndayyear
 
       dAleaf = leaf_area_from_biomass(dBL, cc%species)
 
