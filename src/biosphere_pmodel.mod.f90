@@ -93,7 +93,7 @@ contains
         ! if (verbose) print*,'----------------------'
 
         !----------------------------------------------------------------
-        ! initialise daily updated variables 
+        ! initialise updated variables (fluxes)
         !----------------------------------------------------------------
         ! if (verbose) print*,'calling initdaily_() ...'
         call initdaily_tile_fluxes( tile_fluxes(:) )

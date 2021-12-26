@@ -152,11 +152,11 @@ contains
           p_surf   = forcing%P_air  ! Pa
           TairK    = forcing%Tair ! K
           Tair     = forcing%Tair - 273.16 ! degC
-          cana_q   = (esat(Tair) * forcing%RH * mol_h2o) / (p_surf * mol_air)  ! air specific humidity, kg/kg
+          cana_q   = (esat(Tair) * forcing%RH * h2o_molmass) / (p_surf * kMa)  ! air specific humidity, kg/kg
           cana_co2 = forcing%CO2 ! co2 concentration in canopy air space, mol CO2/mol dry air
 
           ! recalculate the water supply to mol H20 per m2 of leaf per second
-          water_supply = cc%W_supply / (cc%leafarea * myinterface%step_seconds * mol_h2o) ! mol m-2 leafarea s-1
+          water_supply = cc%W_supply / (cc%leafarea * myinterface%step_seconds * h2o_molmass * 1e-3) ! mol m-2 leafarea s-1
 
           !call get_vegn_wet_frac (cohort, fw=fw, fs=fs)
           fw = 0.0
@@ -179,9 +179,9 @@ contains
           cc%An_op   = psyn   ! molC s-1 m-2 of leaves ! net photosynthesis, mol C/(m2 of leaves s)
           cc%An_cl   = -resp  ! molC s-1 m-2 of leaves
           cc%w_scale = w_scale2
-          cc%transp  = transp * mol_h2o * cc%leafarea * myinterface%step_seconds      ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
-          cc%resl    = -resp         * mol_C * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
-          cc%gpp     = (psyn - resp) * mol_C * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
+          cc%transp  = transp * h2o_molmass * 1e-3 * cc%leafarea * myinterface%step_seconds      ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
+          cc%resl    = -resp         * c_molmass * 1e-3 * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
+          cc%gpp     = (psyn - resp) * c_molmass * 1e-3 * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
           !if (isnan(cc%gpp)) stop '"gpp" is a NaN'
 
@@ -299,6 +299,9 @@ contains
     p_surf, ws, pft, pt, ca, kappa, leaf_wet, &
     apot, acl,w_scale2, transp )
 
+    ! taking from params_core (SOFUN)
+    use md_params_core, only: kR, kTkelvin
+
     real,    intent(in)    :: rad_top ! PAR dn on top of the canopy, w/m2
     real,    intent(in)    :: rad_net ! PAR net on top of the canopy, w/m2
     real,    intent(in)    :: tl   ! leaf temperature, degK
@@ -319,6 +322,7 @@ contains
     real,    intent(out)   :: apot ! net photosynthesis, mol C/(m2 s)
     real,    intent(out)   :: acl  ! leaf respiration, mol C/(m2 s)
     real,    intent(out)   :: w_scale2,transp  ! transpiration, mol H20/(m2 of leaf s)
+    
     ! local variables     
     ! photosynthesis
     real :: vm
@@ -328,17 +332,19 @@ contains
     real :: f2, f3
     real :: coef0, coef1
     real :: Resp
+
     ! conductance related
     real :: gs
     real :: b
     real :: ds  ! humidity deficit, kg/kg
     real :: hl  ! saturated specific humidity at the leaf temperature, kg/kg
     real :: do1
+
     ! misceleneous
     real :: dum2
     real, parameter :: light_crit = 0
     real, parameter :: gs_lim = 0.25
-    real, parameter :: Rgas = 8.314 ! J mol-1 K-1, universal gas constant
+
     ! new average computations
     real :: lai_eq
     real, parameter :: rad_phot = 0.0000046 ! PAR conversion factor of J -> mol of quanta 
@@ -351,27 +357,31 @@ contains
     real :: anbar
     real :: gsbar
     real :: w_scale
-    real, parameter :: p_sea = 1.0e5 ! sea level pressure, Pa
+
     ! soil water stress
     real :: Ed, an_w, gs_w
+
     b = 0.01
     do1 = 0.09 ! kg/kg
     if (pft < 2) do1 = 0.15
+
     ! Convert Solar influx from W/(m^2s) to mol_of_quanta/(m^2s) PAR,
     ! empirical relationship from McCree is light=rn*0.0000046
     light_top = rad_top*rad_phot;
     par_net   = rad_net*rad_phot;
+
     ! calculate humidity deficit, kg/kg
     call qscomp(tl, p_surf, hl)
     ds = max(hl - ea,0.0)
-    !  ko=0.25   *exp(1400.0*(1.0/288.2-1.0/tl))*p_sea/p_surf;
-    !  kc=0.00015*exp(6000.0*(1.0/288.2-1.0/tl))*p_sea/p_surf;
+
+    !  ko=0.25   *exp(1400.0*(1.0/288.2-1.0/tl))*kPo/p_surf;
+    !  kc=0.00015*exp(6000.0*(1.0/288.2-1.0/tl))*kPo/p_surf;
     !  vm=spdata(pft)%Vmax*exp(3000.0*(1.0/288.2-1.0/tl));
     ! corrected by Weng, 2013-01-17
     ! Weng, 2013-01-10
-    ko=0.248    * exp(35948/Rgas*(1.0/298.2-1.0/tl))*p_sea/p_surf ! Weng, 2013-01-10
-    kc=0.000404 * exp(59356/Rgas*(1.0/298.2-1.0/tl))*p_sea/p_surf ! Weng, 2013-01-10
-    vm=spdata(pft)%Vmax*exp(24920/Rgas*(1.0/298.2-1.0/tl)) ! / ((layer-1)*1.0+1.0) ! Ea = 33920
+    ko=0.248    * exp(35948/kR*(1.0/298.2-1.0/tl))*kPo/p_surf ! Weng, 2013-01-10
+    kc=0.000404 * exp(59356/kR*(1.0/298.2-1.0/tl))*kPo/p_surf ! Weng, 2013-01-10
+    vm=spdata(pft)%Vmax*exp(24920/kR*(1.0/298.2-1.0/tl)) ! / ((layer-1)*1.0+1.0) ! Ea = 33920
     !decrease Vmax due to aging of temperate deciduous leaves 
     !(based on Wilson, Baldocchi and Hanson (2001)."Plant,Cell, and Environment", vol 24, 571-583)
     !! Turned off by Weng, 2013-02-01, since we can't trace new leaves
@@ -390,19 +400,19 @@ contains
     ! (A+B*LMA) = LNA, D=Vmax/LNA = 25E-6/0.0012 = 0.02 for a standard deciduous species
     !! Leaf resp as a function of nitrogen
     !  Resp=spdata(pft)%gamma_resp*0.04*spdata(pft)%LNA  & ! basal rate, mol m-2 s-1
-    !       * exp(24920/Rgas*(1.0/298.2-1.0/tl))         & ! temperature scaled
+    !       * exp(24920/kR*(1.0/298.2-1.0/tl))         & ! temperature scaled
     !       * lai                                        & ! whole canopy
     !       /((layer-1)*1.0+1.0)                         !
     !! as a function of LMA
     !  Resp=(spdata(pft)%gamma_LNbase*spdata(pft)%LNbase+spdata(pft)%gamma_LMA*spdata(pft)%LMA)  & ! basal rate, mol m-2 s-1
     !  Resp=spdata(pft)%gamma_LNbase*(2.5*spdata(pft)%LNA-1.5*spdata(pft)%LNbase)     & ! basal rate, mol m-2 s-1
     Resp = spdata(pft)%gamma_LN/seconds_per_year & ! per seconds, ! basal rate, mol m-2 s-1
-            * spdata(pft)%LNA * lai / mol_c    &     ! whole canopy, ! basal rate, mol m-2 s-1
-            * exp(24920/Rgas*(1.0/298.2-1.0/tl))     ! temperature scaled
+            * spdata(pft)%LNA * lai / (c_molmass * 1e-3)    &     ! whole canopy, ! basal rate, mol m-2 s-1
+            * exp(24920/kR*(1.0/298.2-1.0/tl))     ! temperature scaled
     !                                  &
     !       /((layer-1)*1.0+1.0)
     ! Temperature effects
-    Resp=Resp/((1.0+exp(0.4*(5.0-tl+TFREEZE)))*(1.0+exp(0.4*(tl-45.0-TFREEZE))));
+    Resp=Resp/((1.0+exp(0.4*(5.0 - tl + kTkelvin)))*(1.0+exp(0.4*(tl - 45.0 - kTkelvin))));
 
 
     ! ignore the difference in concentrations of CO2 near
@@ -437,7 +447,7 @@ contains
           ! gross photosynthesis for rubisco-limited part of the canopy
           Ag_rb  = dum2*lai_eq
 
-          Ag=(Ag_l+Ag_rb)/((1.0+exp(0.4*(5.0-tl+TFREEZE)))*(1.0+exp(0.4*(tl-45.0-TFREEZE))))
+          Ag=(Ag_l+Ag_rb)/((1.0+exp(0.4*(5.0-tl+kTkelvin)))*(1.0+exp(0.4*(tl-45.0-kTkelvin))))
           An=Ag-Resp
           anbar=An/lai
 
@@ -469,7 +479,7 @@ contains
           ! gross photosynthesis for rubisco-limited part of the canopy
           Ag_rb  = dum2*lai_eq
 
-          Ag=(Ag_l+Ag_rb) /((1.0+exp(0.4*(5.0-tl+TFREEZE)))*(1.0+exp(0.4*(tl-45.0-TFREEZE))));
+          Ag=(Ag_l+Ag_rb) /((1.0+exp(0.4*(5.0-tl+kTkelvin)))*(1.0+exp(0.4*(tl-45.0-kTkelvin))));
           An=Ag-Resp;
           anbar=An/lai
           !write(*,*)'An,Ag,AG_l,Ag_rb,lai',An,Ag, Ag_l, Ag_rb,lai
@@ -500,9 +510,9 @@ contains
     endif
 
     ! find water availability diagnostic demand
-    Ed = gs_w * ds * mol_air / mol_h2o ! ds*mol_air/mol_h2o is the humidity deficit in [mol_h2o/mol_air]
+    Ed = gs_w * ds * kMa / h2o_molmass ! ds * kMa * h2o_molmass is the humidity deficit in [mol_h2o/mol_air]
 
-    ! the factor mol_air/mol_h2o makes units of gs_w and humidity deficit ds compatible:
+    ! the factor kMa/mol_h2o makes units of gs_w and humidity deficit ds compatible:
     if (Ed>ws) then
       w_scale = ws/Ed
       gs_w = w_scale * gs_w
@@ -523,7 +533,7 @@ contains
 
     ! finally, convert units of stomatal conductance to m/s from mol/(m2 s) by
     ! multiplying it by a volume of a mole of gas
-    gs = gs * Rugas * Tl / p_surf
+    gs = gs * kR * Tl / p_surf
     !write(899, '(25(E12.4,","))') rad_net,par_net,apot*3600*12,acl*3600*12,Ed
 
   end subroutine gs_leuning
