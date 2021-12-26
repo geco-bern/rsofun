@@ -1,27 +1,12 @@
-## ----setup, include=FALSE---------------------------------------------------------------------------------------------------
-# version 4 works for gs_leuning
-# version 4.1 with pmodel tweak doesn't
-# work for both
-#devtools::install_github("stineb/rsofun@v4.0")
 library(dplyr)
 library(tibble)
 library(rsofun)
 library(ggplot2)
 library(patchwork)
-
-if(!require(devtools)){install.packages(devtools)}
-#devtools::install_github("stineb/rbeni")
-#library(ingestr)
-
-#devtools::install_github("tidyverse/multidplyr")
 library(multidplyr)
 
-
-## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 sitename <- "CH-Lae"
 
-
-## ----include=TRUE, eval=TRUE------------------------------------------------------------------------------------------------
 # Take only year 2004 to 2014, corresponding to subset of data for site CH-Lae
 site_info <- tibble(
   sitename="CH-Lae",
@@ -42,8 +27,6 @@ site_info <- site_info %>%
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 
-
-## ----include=TRUE, eval=TRUE------------------------------------------------------------------------------------------------
 params_siml <- tibble(
   spinup                = TRUE,
   spinupyears           = 700, 
@@ -59,8 +42,6 @@ params_siml <- tibble(
   method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthing
   )
 
-
-## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 params_tile <- tibble(
   soiltype     = 3,     # Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   FLDCAP       = 0.4,   # soil property: field capacity 
@@ -85,8 +66,6 @@ params_tile <- tibble(
   par_mort_under = 1
   )
 
-
-## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 params_species <- tibble(
   
   lifeform      = rep(1,16),                      # 0 for grasses; 1 for trees
@@ -113,11 +92,6 @@ params_species <- tibble(
   tc_crit       = rep(283.16,16),   # OFF
   tc_crit_on    = rep(280.16,16),   # ON
   gdd_crit      = rep(280.0,16),   # Simulations 280, 240, 200
-  # Allometry parameters
-  #alphaHT      = rep(36.0,16),   
-  #thetaHT      = rep(0.5,16),   
-  #alphaCA      = rep(150.0,16),   
-  #thetaCA      = rep(1.5,16),   
   
   seedlingsize  = rep(0.05,16),                   # initial size of seedlings #In Ensheng BiomeE: 0.05
   LNbase        = rep(0.8E-3,16),                 # kgN m-2 leaf, Vmax = 0.03125*LNbase
@@ -141,9 +115,6 @@ params_species <- tibble(
   
   ) 
 
-
-## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
-# adopted from datatypes.mod.f90 l.538
 params_soil <- tibble(
   type              = c("Coarse","Medium","Fine","CM","CF","MF","CMF","Peat","MCM"),
   GMD               = c(0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3),
@@ -156,9 +127,6 @@ params_soil <- tibble(
   heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6, 1.0)
   )
 
-
-
-## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 init_cohort <- tibble(
  init_cohort_species = rep(1, 10),   # indicates sps # 1 - Fagus sylvatica
  init_cohort_nindivs = rep(0.05,10),  # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
@@ -167,10 +135,6 @@ init_cohort <- tibble(
  init_cohort_nsc     = rep(0.05,10)  # initial non-structural biomass
 )
 
-
-## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
-# high N input --> Deciduous
-# low  N input --> Evergreen
 init_soil <- tibble( #list
  init_fast_soil_C    = 0.0,    # initial fast soil C, kg C/m2
  init_slow_soil_C    = 0.0,    # initial slow soil C, kg C/m2
@@ -179,21 +143,13 @@ init_soil <- tibble( #list
 )
 
 
-## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 df_soiltexture <- bind_rows(
   top    = tibble(layer = "top",    fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1),
   bottom = tibble(layer = "bottom", fsand = 0.4, fclay = 0.3, forg = 0.1, fgravel = 0.1)
 )
 
 
-## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
-# if(basename(getwd()) != "rsofun"){
-#   stop("You are not in the rsofun project base directory!")
-# }
-
-# load("data-raw/CH-LAE_forcing.rda")
-
-load("rsofun/data-raw/CH-LAE_forcing.rda")
+load("data-raw/CH-LAE_forcing.rda")
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -211,7 +167,6 @@ if (params_siml$method_photosynth == "gs_leuning"){
 }
 
 
-## ----include=FALSE, eval=TRUE-----------------------------------------------------------------------------------------------
 if (params_siml$method_photosynth == "gs_leuning"){
   forcing <- forcing %>% mutate(Swdown = Swdown*1) # levels = *1, *1.15 and *1.30
   #forcing <- forcing %>% mutate(aCO2_AW = aCO2_AW*1.30) # levels = *1, *1.15 and *1.30
@@ -219,8 +174,6 @@ if (params_siml$method_photosynth == "gs_leuning"){
   forcing <- forcing %>% mutate(PAR = PAR*1) # levels = *1, *1.15 and *1.30
 }
 
-
-## ----include=TRUE, eval=TRUE------------------------------------------------------------------------------------------------
 print(packageVersion("rsofun"))
 
 ## for versions above 4.0
@@ -235,7 +188,6 @@ df_drivers <- tibble(sitename,
                     forcing=list(tibble(forcing)),
                     .name_repair = "unique")
 
-# ----eval=FALSE-------------------------------------------------------------------------------------------------------------
 out <- run_lm3ppa_f_bysite( sitename,
                             params_siml,
                             site_info,
@@ -247,21 +199,6 @@ out <- run_lm3ppa_f_bysite( sitename,
                             init_soil,
                             makecheck = TRUE
                             )
-
-# ## plot forcing
-# forcing %>% 
-#   ungroup() %>% 
-#   slice(1:365*24) %>% 
-#   mutate(date=ymd(paste0(YEAR, "-01-01")) + days(as.integer(DOY)-1)) %>%  
-#   ggplot(aes(x = date, y = PAR)) + 
-#   geom_line()
-# 
-# forcing %>% 
-#   ungroup() %>% 
-#   slice(1:365*24) %>% 
-#   mutate(date=ymd(paste0(YEAR, "-01-01")) + days(as.integer(DOY)-1)) %>%  
-#   ggplot(aes(x = date, y = Swdown)) + 
-#   geom_line()
 
 gg1 <- out$output_annual_tile %>%
   ggplot() +
@@ -276,29 +213,3 @@ gg2 <- out$output_annual_tile %>%
 print("Writing luxembourg.pdf")
 print(gg1/gg2)
 ggsave("luxembourg.pdf")
-
-# out$output_annual_tile %>% 
-#   dplyr::filter(year %in% 1000:1010) %>% 
-#   ggplot() +
-#   geom_line(aes(x = year, y = GPP)) +
-#   theme_classic()+labs(x = "Year", y = "GPP")
-
-# ## ---------------------------------------------------------------------------------------------------------------------------
-# df_output <- runread_lm3ppa_f(
-#      df_drivers,
-#      makecheck = TRUE,
-#      parallel = FALSE
-#      )
-# 
-# gg1 <- df_output$data[[1]]$output_annual_tile %>%
-#   ggplot() +
-#   geom_line(aes(x = year, y = GPP)) +
-#   theme_classic()+labs(x = "Year", y = "GPP")
-# 
-# gg2 <- df_output$data[[1]]$output_annual_tile %>%
-#   ggplot() +
-#   geom_line(aes(x = year, y = plantC)) +
-#   theme_classic()+labs(x = "Year", y = "plantC")
-# 
-# print(gg1/gg2)
-

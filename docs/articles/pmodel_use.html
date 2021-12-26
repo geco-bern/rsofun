@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rsofun</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">4.2</span>
       </span>
     </div>
 
@@ -57,7 +57,7 @@
       <a href="../articles/lm3ppa_model_structure.html">LM3PPA model structure</a>
     </li>
     <li>
-      <a href="../articles/lm3ppa_use.html">LM3PPA usage</a>
+      <a href="../articles/lm3ppa_use.html">LM3-PPA usage</a>
     </li>
     <li>
       <a href="../articles/pmodel_use.html">P-model usage</a>
@@ -88,13 +88,16 @@
 
       
 
-      </header><script src="pmodel_use_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
+      </header><script src="pmodel_use_files/header-attrs-2.7/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>P-model usage</h1>
                         <h4 class="author">Koen Hufkens</h4>
             
+<<<<<<< HEAD
             <h4 class="date">2021-11-22</h4>
+=======
+>>>>>>> master
       
       <small class="dont-index">Source: <a href="https://github.com/computationales/rsofun/blob/master/vignettes/pmodel_use.Rmd"><code>vignettes/pmodel_use.Rmd</code></a></small>
       <div class="hidden name"><code>pmodel_use.Rmd</code></div>
@@ -192,28 +195,23 @@
 <a href="#calibrating-model-parameters" class="anchor"></a>Calibrating model parameters</h2>
 <p>To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R">  <span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-    method              <span class="op">=</span> <span class="st">"bayesiantools"</span>,
-    targetvars          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gpp"</span><span class="op">)</span>,
-    timescale           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>targets_obs <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span>,
-    metric              <span class="op">=</span> <span class="va">cost_rmse_kphio</span>,
-    dir_results         <span class="op">=</span> <span class="st">"./"</span>,
-    name                <span class="op">=</span> <span class="st">"ORG"</span>,
-    control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-      sampler <span class="op">=</span> <span class="st">"DEzs"</span>,
-      settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-        burnin <span class="op">=</span> <span class="fl">1000</span>,
-        iterations <span class="op">=</span> <span class="fl">5000</span>
-      <span class="op">)</span>
-    <span class="op">)</span>,
-    par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-      kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.04</span>, upper<span class="op">=</span><span class="fl">0.1</span>, init <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>,
-      a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0</span>, upper<span class="op">=</span><span class="fl">5</span>, init <span class="op">=</span> <span class="fl">3.5</span><span class="op">)</span>,
-      b <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">1</span>, upper<span class="op">=</span><span class="fl">5</span>, init<span class="op">=</span><span class="fl">3.5</span><span class="op">)</span>,
-      tau <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0</span>, upper<span class="op">=</span><span class="fl">15</span>, init<span class="op">=</span><span class="fl">1</span><span class="op">)</span>,
-      shape <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0</span>, upper<span class="op">=</span><span class="fl">0.1</span>, init<span class="op">=</span><span class="fl">0</span><span class="op">)</span>
-      <span class="op">)</span>
-  <span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+  method              <span class="op">=</span> <span class="st">"bayesiantools"</span>,
+  targetvars          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gpp"</span><span class="op">)</span>,
+  timescale           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>targets_obs <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span>,
+  metric              <span class="op">=</span> <span class="va">cost_rmse_kphio</span>,
+  dir_results         <span class="op">=</span> <span class="st">"./"</span>,
+  name                <span class="op">=</span> <span class="st">"ORG"</span>,
+  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+    sampler <span class="op">=</span> <span class="st">"DEzs"</span>,
+    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+      burnin <span class="op">=</span> <span class="fl">500</span>,
+      iterations <span class="op">=</span> <span class="fl">1500</span>
+    <span class="op">)</span><span class="op">)</span>,
+  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
+    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.04</span>, upper<span class="op">=</span><span class="fl">0.1</span>, init <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>
+    <span class="op">)</span>
+<span class="op">)</span></code></pre></div>
 <p>By default <code>rsofun</code> supports both optimization using the <code>GenSA</code> and <code>BayesianTools</code> packages. The above statement provides settings for a <code>BayesianTools</code> approach using the DEza sampler. For this example the burnin and iterations are kept artificially low. In a real scenario you will have to increase these values orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided all starting with <code>cost_*</code> but the model structure is transparent and custom cost functions can be easily written.</p>
 <p>In addition starting values and ranges are provided for the free parameters in the model. Free parameters include, kphio, a, b, tau and shape. Be mindful that with newer version of rsofun additional parameters might be introduced, so re-check vignettes and model descriptions when updating existing code.</p>
 <p>With all settings defined the optimization function <code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> can be called with driver data and observations specified.</p>
@@ -229,12 +227,8 @@
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># reformatting the parameter list</span>
 <span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-    kphio           <span class="op">=</span> <span class="va">pars</span><span class="op">$</span><span class="va">par</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,
-    soilm_par_a     <span class="op">=</span> <span class="va">pars</span><span class="op">$</span><span class="va">par</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>,
-    soilm_par_b     <span class="op">=</span> <span class="va">pars</span><span class="op">$</span><span class="va">par</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span>,
-    tau_acclim_tempstress <span class="op">=</span> <span class="va">pars</span><span class="op">$</span><span class="va">par</span><span class="op">[</span><span class="fl">4</span><span class="op">]</span>,
-    par_shape_tempstress  <span class="op">=</span> <span class="va">pars</span><span class="op">$</span><span class="va">par</span><span class="op">[</span><span class="fl">5</span><span class="op">]</span>
-  <span class="op">)</span>
+    kphio <span class="op">=</span> <span class="va">pars</span><span class="op">$</span><span class="va">par</span><span class="op">[</span><span class="st">"kphio"</span><span class="op">]</span>
+    <span class="op">)</span>
 
 <span class="co"># run the model for these parameters</span>
 <span class="va">output_new</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span>

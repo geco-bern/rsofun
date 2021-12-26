@@ -11,7 +11,7 @@ module md_photosynth
 
   private
   public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
-    calc_ftemp_inst_rd, calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
+    calc_ftemp_inst_rd, calc_ftemp_kphio_coldhard, calc_ftemp_kphio, calc_soilmstress
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -876,27 +876,94 @@ contains
   end function calc_ftemp_kphio
 
 
-  function calc_ftemp_kphio_tmin( tc, shape_par ) result( ftemp )
+  subroutine calc_ftemp_kphio_coldhard(tc, tmin, level_hard, gdd, kphio_par_a, kphio_par_b, kphio_par_c, kphio_par_d, ftemp)
     !////////////////////////////////////////////////////////////////
     ! Calculates the low temperature stress function assuming no stress
     ! at 10 deg C and above and declining below based on a calibratable
     ! parameter and a quadratic function.
     !----------------------------------------------------------------
     ! arguments
-    real, intent(in) :: tc           ! (leaf) temperature in degrees celsius
-    real, intent(in) :: shape_par    ! shape parameter for the sensitivity of the decline, some positive value
+    real, intent(in)    :: tc             ! daily mean air temperature in degrees celsius (deg C)
+    real, intent(in)    :: tmin           ! daily minimum air temperature in degrees celsius (deg C)
+    real, intent(inout) :: level_hard     ! level (temperature) to which cold hardening is adjusted (deg C)
+    real, intent(inout) :: gdd            ! growing degree days (deg)
+    real, intent(in)    :: kphio_par_a    ! unitless shape parameter for hardening function
+    real, intent(in)    :: kphio_par_b    ! unitless shape parameter for hardening function
+    real, intent(in)    :: kphio_par_c    ! unitless shape parameter for dehardening function
+    real, intent(in)    :: kphio_par_d    ! unitless shape parameter for dehardening function
+
+    ! return variable
+    real, intent(out)   :: ftemp
+
+    ! local variable
+    real :: level_hard_new
+
+    ! determine hardening level - responds instantaneously to minimum temperature
+    level_hard_new = f_hardening(tmin, kphio_par_a, kphio_par_b)
+
+    if (level_hard_new < level_hard) then
+
+      ! entering deeper hardening
+      level_hard = level_hard_new
+
+      ! re-start recovery
+      gdd = 0
+
+    end if
+
+    ! accumulate growing degree days (GDD)
+    gdd = gdd + max(0.0, (tc - 5.0))
+
+    ! de-harden based on GDD. f_stress = 1: no stress
+    level_hard = level_hard + (1.0 - level_hard) * f_dehardening(gdd, kphio_par_c, kphio_par_d)
+
+    ftemp = level_hard
+
+  end subroutine calc_ftemp_kphio_coldhard
+
+
+  function f_hardening(tmin, kphio_par_a, kphio_par_b) result(ftemp)
+    !////////////////////////////////////////////////////////////////
+    ! Hardening function of instantaneous temperature
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: tmin           ! daily minimum air temperature in degrees celsius (deg C)
+    real, intent(in)    :: kphio_par_a    ! unitless shape parameter for hardening function
+    real, intent(in)    :: kphio_par_b    ! unitless shape parameter for hardening function
 
     ! function return variable
     real :: ftemp
 
-    if (tc > 10.0) then
-      ftemp = 1.0
-    else
-      ftemp = 1.0 - (shape_par * (tc - 10.0))**2
-      if (ftemp < 0.0) ftemp = 0.0
-    end if
-    
-  end function calc_ftemp_kphio_tmin
+    ! local variables
+    real :: xx
+
+    xx = (-1.0) * tmin
+    xx = kphio_par_b * xx + kphio_par_a
+    ftemp = 1.0 / (1.0 + exp(xx))
+
+  end function f_hardening
+
+
+  function f_dehardening(gdd, kphio_par_c, kphio_par_d) result(ftemp)
+    !////////////////////////////////////////////////////////////////
+    ! Hardening function of instantaneous temperature
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: gdd           ! cumulative degree days (deg C)
+    real, intent(in)    :: kphio_par_c    ! unitless shape parameter for dehardening function
+    real, intent(in)    :: kphio_par_d    ! unitless shape parameter for dehardening function
+
+    ! function return variable
+    real :: ftemp
+
+    ! local variables
+    real :: xx
+
+    xx = (-1.0) * gdd
+    xx = kphio_par_d * (xx - kphio_par_c)
+    ftemp = 1.0 / (1.0 + exp(xx))
+
+  end function f_dehardening
 
 
   function calc_ftemp_inst_rd( tc ) result( fr )

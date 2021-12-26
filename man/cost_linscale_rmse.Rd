@@ -4,10 +4,12 @@
 \alias{cost_linscale_rmse}
 \title{Linearly scaled output}
 \usage{
-cost_linscale_rmse(par)
+cost_linscale_rmse(par, obs)
 }
 \arguments{
 \item{par}{parameters}
+
+\item{obs}{observations}
 }
 \value{
 A linearly scaled RMSE on all output

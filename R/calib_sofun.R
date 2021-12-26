@@ -51,20 +51,20 @@ calib_sofun <- function(
   if (tolower(settings$method) == "gensa"){
     
     # convert to standard cost function naming
-    cost <- eval(settings$metric)
-    
+    cost <- settings$metric
+
     # create bounds
     lower <- unlist(lapply(settings$par, function(x) x$lower))
     upper <- unlist(lapply(settings$par, function(x) x$upper))
-    pars <- unlist(lapply( settings$par, function(x) x$init))
+    pars  <- unlist(lapply(settings$par, function(x) x$init))
     
     out_optim <- GenSA::GenSA(
-      par   = pars,
-      fn    = cost,
-      lower = lower,
-      upper = upper,
+      par     = pars,
+      fn      = cost,
+      lower   = lower,
+      upper   = upper,
       control = settings$control,
-      obs = obs,
+      obs     = obs,
       drivers = drivers
     )
   } 

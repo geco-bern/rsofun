@@ -50,7 +50,7 @@ contains
     !------------------------------------------------------------------------
     use md_forcing_lm3ppa, only: climate_type
     use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_rd
-    use md_photosynth, only: calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
+    use md_photosynth, only: calc_ftemp_kphio_coldhard, calc_ftemp_kphio, calc_soilmstress
     use md_params_core, only: kTkelvin, kfFEC, c_molmass
     use md_sofunutils, only: dampen_variability
 

@@ -33,6 +33,7 @@ echo "------------------------------------------------------------"
 # reinstall the package
 R CMD INSTALL rsofun
 
+
 echo "Run demo code"
 echo "------------------------------------------------------------"
 
@@ -46,7 +47,7 @@ then
 echo "Display results in browser"
 echo "------------------------------------------------------------"
 
-  if [ `uname` = "Linux" ]
+if [ `uname` = "Linux" ]
   then
     firefox rsofun/vignettes/lm3ppa_use.html
   else

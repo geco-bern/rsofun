@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 pandoc: 2.11.4
+=======
+pandoc: 2.11.2
+>>>>>>> master
 pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
@@ -6,5 +10,9 @@ articles:
   lm3ppa_use: lm3ppa_use.html
   pmodel_use: pmodel_use.html
   prepare_forcing: prepare_forcing.html
+<<<<<<< HEAD
 last_built: 2021-11-22T16:35Z
+=======
+last_built: 2021-11-24T14:57Z
+>>>>>>> master
 

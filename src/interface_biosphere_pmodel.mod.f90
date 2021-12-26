@@ -18,8 +18,10 @@ module md_interface_pmodel
     real :: kphio
     real :: soilm_par_a
     real :: soilm_par_b
-    real :: tau_acclim_tempstress
-    real :: par_shape_tempstress
+    real :: kphio_par_a
+    real :: kphio_par_b
+    real :: kphio_par_c
+    real :: kphio_par_d
   end type paramstype_calib  
 
 

@@ -35,7 +35,7 @@ module md_gpp_pmodel
   use md_sofunutils, only: radians
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
-    calc_ftemp_inst_rd, calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
+    calc_ftemp_inst_rd, calc_ftemp_kphio_coldhard, calc_ftemp_kphio, calc_soilmstress
 
   implicit none
 
@@ -51,8 +51,10 @@ module md_gpp_pmodel
     real :: soilm_par_b
     real :: rd_to_vcmax  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
-    real :: tau_acclim_tempstress
-    real :: par_shape_tempstress
+    real :: kphio_par_a
+    real :: kphio_par_b
+    real :: kphio_par_c
+    real :: kphio_par_d
   end type paramstype_gpp
 
   ! PFT-DEPENDENT PARAMETERS
@@ -107,11 +109,11 @@ contains
     real, save :: temp_memory
     real, save :: patm_memory
     real, save :: ppfd_memory
+    real, save :: tmin_memory
 
-    real, save :: tmin_memory     ! for low temperature stress
+    real, save :: gdd
+    real, save :: level_hard
 
-    ! xxx test
-    real :: a_c, a_j, a_returned, fact_jmaxlim
     integer, save :: count
 
     !----------------------------------------------------------------
@@ -135,6 +137,9 @@ contains
       ppfd_memory = climate_acclimation%dppfd
       tmin_memory = climate_acclimation%dtmin
       ! print*,'climate_acclimation%dtmin, tmin_memory', climate_acclimation%dtmin, tmin_memory
+
+      gdd = 0.0
+      level_hard = 20.0  ! some sufficiently high number not to have cold hardening effects on the first day
     end if 
 
     ! if (count < 5) print*,'A count, tau_acclim_tempstress, dtmin, tmin_memory', count, params_gpp%tau_acclim_tempstress, climate_acclimation%dtmin, tmin_memory
@@ -162,9 +167,17 @@ contains
       !----------------------------------------------------------------
       ! Low-temperature effect on quantum yield efficiency 
       !----------------------------------------------------------------
-      ! take the slowly varying temperature for governing quantum yield variations
-      ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 ) & 
-        * calc_ftemp_kphio_tmin( climate_acclimation%dtmin, params_gpp%par_shape_tempstress )
+      call calc_ftemp_kphio_coldhard( &
+        climate_acclimation%dtemp, &
+        climate_acclimation%dtmin, &
+        level_hard, &
+        gdd, &
+        params_gpp%kphio_par_a, &
+        params_gpp%kphio_par_b, &
+        params_gpp%kphio_par_c, &
+        params_gpp%kphio_par_d, &
+        ftemp_kphio &
+        )
 
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
@@ -523,13 +536,15 @@ contains
     params_gpp%rd_to_vcmax  = 0.01400000
 
     ! Apply identical temperature ramp parameter for all PFTs
-    params_gpp%tau_acclim     = 30.0
-    params_gpp%soilm_par_a    = myinterface%params_calib%soilm_par_a     ! is provided through standard input
-    params_gpp%soilm_par_b    = myinterface%params_calib%soilm_par_b     ! is provided through standard input
+    params_gpp%tau_acclim  = 30.0
+    params_gpp%soilm_par_a = myinterface%params_calib%soilm_par_a     ! is provided through standard input
+    params_gpp%soilm_par_b = myinterface%params_calib%soilm_par_b     ! is provided through standard input
 
     ! temperature stress time scale is calibratable
-    params_gpp%tau_acclim_tempstress = myinterface%params_calib%tau_acclim_tempstress
-    params_gpp%par_shape_tempstress  = myinterface%params_calib%par_shape_tempstress
+    params_gpp%kphio_par_a = myinterface%params_calib%kphio_par_a
+    params_gpp%kphio_par_b = myinterface%params_calib%kphio_par_b
+    params_gpp%kphio_par_c = myinterface%params_calib%kphio_par_c
+    params_gpp%kphio_par_d = myinterface%params_calib%kphio_par_d
 
     ! PFT-dependent parameter(s)
     params_pft_gpp(:)%kphio = myinterface%params_calib%kphio  ! is provided through standard input
