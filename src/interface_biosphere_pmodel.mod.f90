@@ -60,7 +60,7 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: chi
     real, dimension(ndayyear) :: iwue
 
-    ! new for cnmodel: 15 additional
+    ! new for cnmodel: 23 additional
     real, dimension(ndayyear) :: tsoil
     real, dimension(ndayyear) :: cleaf
     real, dimension(ndayyear) :: nleaf
@@ -75,6 +75,13 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: en2o
     real, dimension(ndayyear) :: enleach
     real, dimension(ndayyear) :: tmp
+    real, dimension(ndayyear) :: csoil
+    real, dimension(ndayyear) :: nsoil
+    real, dimension(ndayyear) :: clitt
+    real, dimension(ndayyear) :: nlitt
+    real, dimension(ndayyear) :: nfix
+    real, dimension(ndayyear) :: nup
+    real, dimension(ndayyear) :: cex
 
   end type outtype_biosphere
 

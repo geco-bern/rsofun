@@ -115,7 +115,7 @@ output$data[[1]] %>%
   ) %>% 
   ggplot() +
   geom_line(aes(x = date, y = temp)) + 
-  geom_line(aes(x = date, y = tsoil), color = "royalblue")
+  geom_line(aes(x = date, y = tsoil), color = "red")
 ```
 
 

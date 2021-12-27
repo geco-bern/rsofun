@@ -256,7 +256,15 @@ run_pmodel_f_bysite <- function(
         c("fapar", "gpp", "transp", "latenth", "pet", "vcmax",
           "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue",
           "tsoil", "cleaf", "nleaf", "croot", "nroot", "clabl", "nlabl", 
-          "lai", "ninorg", "pno3", "pnh4", "en2o", "enleach", "tmp")) %>%
+          "lai", "ninorg", "pno3", "pnh4", "en2o", "enleach", "tmp",
+          "csoil",  
+          "nsoil",  
+          "clitt",  
+          "nlitt",  
+          "nfix",  
+          "nup",  
+          "cex"
+          )) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
 
@@ -267,7 +275,15 @@ run_pmodel_f_bysite <- function(
                   jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, iwue = NA,
                   tsoil = NA, cleaf = NA, nleaf = NA, croot = NA, nroot = NA, 
                   clabl = NA, nlabl = NA, lai = NA, ninorg = NA, pno3 = NA, 
-                  pnh4 = NA, en2o = NA, enleach = NA, tmp = NA)
+                  pnh4 = NA, en2o = NA, enleach = NA, tmp = NA,
+                  csoil = NA, 
+                  nsoil = NA, 
+                  clitt = NA, 
+                  nlitt = NA, 
+                  nfix = NA, 
+                  nup = NA, 
+                  cex = NA 
+                  )
   }
     
   return(out)

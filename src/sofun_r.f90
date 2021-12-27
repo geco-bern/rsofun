@@ -81,7 +81,7 @@ contains
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(5), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
-    real(kind=c_double),  dimension(nt,27), intent(out) :: output
+    real(kind=c_double),  dimension(nt,34), intent(out) :: output
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -238,6 +238,13 @@ contains
         output(idx_start:idx_end,25) = dble(out_biosphere%enleach(:) )
         output(idx_start:idx_end,26) = dble(out_biosphere%en2o(:)    )
         output(idx_start:idx_end,27) = dble(out_biosphere%tmp(:)     )
+        output(idx_start:idx_end,28) = dble(out_biosphere%csoil(:) )
+        output(idx_start:idx_end,29) = dble(out_biosphere%nsoil(:) )
+        output(idx_start:idx_end,30) = dble(out_biosphere%clitt(:) )
+        output(idx_start:idx_end,31) = dble(out_biosphere%nlitt(:) )
+        output(idx_start:idx_end,32) = dble(out_biosphere%nfix(:) )
+        output(idx_start:idx_end,33) = dble(out_biosphere%nup(:) )
+        output(idx_start:idx_end,34) = dble(out_biosphere%cex(:) )
 
       end if
 

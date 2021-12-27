@@ -395,6 +395,15 @@ contains
         out_biosphere%pnh4(doy)    = 0.0
         out_biosphere%en2o(doy)    = 0.0
         out_biosphere%enleach(doy) = 0.0
+
+        out_biosphere%csoil(doy)   = 0.0
+        out_biosphere%nsoil(doy)   = 0.0
+        out_biosphere%clitt(doy)   = 0.0
+        out_biosphere%nlitt(doy)   = 0.0
+        out_biosphere%nfix(doy)    = 0.0
+        out_biosphere%nup(doy)     = 0.0
+        out_biosphere%cex(doy)     = 0.0
+
         out_biosphere%tmp(doy)     = 0.0
 
         init_daily = .false.
