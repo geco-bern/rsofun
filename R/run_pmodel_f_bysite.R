@@ -200,7 +200,24 @@ run_pmodel_f_bysite <- function(
       as.numeric(params_modl$soilm_par_a),
       as.numeric(params_modl$soilm_par_b),
       as.numeric(params_modl$tau_acclim_tempstress),
-      as.numeric(params_modl$par_shape_tempstress)
+      as.numeric(params_modl$par_shape_tempstress),
+
+      as.numeric(params_modl$kbeer),
+      as.numeric(params_modl$f_nretain),
+      as.numeric(params_modl$fpc_tree_max),
+      as.numeric(params_modl$growtheff),
+      as.numeric(params_modl$r_root),
+      as.numeric(params_modl$r_sapw),
+      as.numeric(params_modl$exurate),
+      as.numeric(params_modl$k_decay_tissue),
+      as.numeric(params_modl$k_decay_leaf_width),
+      as.numeric(params_modl$k_decay_sapw),
+      as.numeric(params_modl$k_decay_root),
+      as.numeric(params_modl$r_cton_root),
+      as.numeric(params_modl$r_ntoc_root),
+      as.numeric(params_modl$ncw_min),
+      as.numeric(params_modl$r_n_cw_v),
+      as.numeric(params_modl$r_ctostructn_leaf)
       )
 
     # Soil texture as matrix (layer x texture parameter)

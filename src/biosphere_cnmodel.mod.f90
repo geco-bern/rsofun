@@ -10,6 +10,7 @@ module md_biosphere_cnmodel
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
   use md_soiltemp, only: soiltemp
+  use md_npp, only: npp
 
   implicit none
 
@@ -176,19 +177,22 @@ contains
         ! if (verbose) print*, '              drd   = ', drd(:)
         ! if (verbose) print*, '... done'
 
-        ! !----------------------------------------------------------------
-        ! ! substract autotrophic respiration to get NPP, remainder is added 
-        ! ! to labile pool (plabl)
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        ! substract autotrophic respiration to get NPP, remainder is added 
+        ! to labile pool (plabl)
+        !----------------------------------------------------------------
         ! if (verbose) print*, 'calling npp() ... '
         ! if (verbose) print*, '              with state variables:'
         ! if (verbose) print*, '              pleaf = ', pleaf(:,jpngr)
         ! if (verbose) print*, '              proot = ', proot(:,jpngr)
         ! if (verbose) print*, '              plabl = ', plabl(:,jpngr)
         ! if (baltest) orgtmp1 =  plabl(1,jpngr)
-        ! !----------------------------------------------------------------
-        ! call npp( jpngr, interface%climate(jpngr)%dtemp(day), day )
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        call npp( tile(:), &
+                  tile_fluxes(:), &
+                  myinterface%climate(doy) &
+                  )                  
+        !----------------------------------------------------------------
         ! if (verbose) print*, '              ==> returned: '
         ! if (verbose) print*, '              dnpp  = ', dnpp(:)
         ! if (verbose) print*, '              dcex  = ', dcex(:)

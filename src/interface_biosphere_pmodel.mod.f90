@@ -14,14 +14,28 @@ module md_interface_pmodel
   public interfacetype_biosphere, outtype_biosphere, myinterface  
 
   type paramstype_calib
-    ! real :: k_decay_tissue
     real :: kphio
     real :: soilm_par_a
     real :: soilm_par_b
     real :: tau_acclim_tempstress
     real :: par_shape_tempstress
+    real :: kbeer
+    real :: f_nretain
+    real :: fpc_tree_max
+    real :: growtheff
+    real :: r_root
+    real :: r_sapw
+    real :: exurate
+    real :: k_decay_tissue
+    real :: k_decay_leaf_width
+    real :: k_decay_sapw
+    real :: k_decay_root
+    real :: r_cton_root
+    real :: r_ntoc_root
+    real :: ncw_min
+    real :: r_n_cw_v
+    real :: r_ctostructn_leaf
   end type paramstype_calib  
-
 
   type interfacetype_biosphere
     integer                                 :: year

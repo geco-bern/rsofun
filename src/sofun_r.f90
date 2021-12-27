@@ -79,7 +79,7 @@ contains
     real(kind=c_double),  intent(in) :: whc
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(5), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(22), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
     real(kind=c_double),  dimension(nt,34), intent(out) :: output
 
@@ -154,6 +154,25 @@ contains
     myinterface%params_calib%soilm_par_b           = real(par(3))
     myinterface%params_calib%tau_acclim_tempstress = real(par(4))
     myinterface%params_calib%par_shape_tempstress  = real(par(5))
+
+    ! new for cnmodel
+    myinterface%params_calib%kbeer                 = real(par(7))
+    myinterface%params_calib%f_nretain             = real(par(8))
+    myinterface%params_calib%fpc_tree_max          = real(par(9))
+    myinterface%params_calib%growtheff             = real(par(10))
+    myinterface%params_calib%r_root                = real(par(11))
+    myinterface%params_calib%r_sapw                = real(par(12))
+    myinterface%params_calib%exurate               = real(par(13))
+    myinterface%params_calib%k_decay_tissue        = real(par(14))
+    myinterface%params_calib%k_decay_leaf_width    = real(par(15))
+    myinterface%params_calib%k_decay_sapw          = real(par(16))
+    myinterface%params_calib%k_decay_root          = real(par(17))
+    myinterface%params_calib%r_cton_root           = real(par(18))
+    myinterface%params_calib%r_ntoc_root           = real(par(19))
+    myinterface%params_calib%ncw_min               = real(par(20))
+    myinterface%params_calib%r_n_cw_v              = real(par(21))
+    myinterface%params_calib%r_ctostructn_leaf     = real(par(22))
+
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)
