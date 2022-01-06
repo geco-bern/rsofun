@@ -101,7 +101,6 @@ contains
       pf%dnpp = carbon( pf%dgpp - pf%drleaf - pf%drroot )
       pf%dcex = calc_cexu( pp%proot%c%c12, climate%dtemp )   
 
-
       ! !/////////////////////////////////////////////////////////////////////////
       ! ! SAFETY AND DEATH
       ! ! If negative C balance results from GPP - Rleaf - Rroot - Cex then ...
@@ -178,6 +177,10 @@ contains
       ! if (pp%plabl%n%n14 < (-1)*eps) stop 'after npp labile N is neg.'
 
       ! print*,'gpp, dclabl', doy, pf%dgpp, cminus( pf%dnpp, carbon(pf%dcex) )
+
+      ! as a short-hand
+      tile_fluxes(lu)%plant(pft) = pf
+      tile(lu)%plant(pft) = pp
 
     end do pftloop
 

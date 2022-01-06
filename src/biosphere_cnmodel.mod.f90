@@ -87,7 +87,7 @@ contains
       !----------------------------------------------------------------
       ! LOOP THROUGH DAYS
       !----------------------------------------------------------------
-      dayloop: do dm=1,ndaymonth(moy)
+      dayloop: do dm = 1, ndaymonth(moy)
         doy = doy + 1
 
         ! if (verbose) print*,'----------------------'

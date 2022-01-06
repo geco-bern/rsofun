@@ -615,7 +615,7 @@ contains
         ! Calculates decomposition rate modifier for a given water fraction
         ! according to Foley 1995
         !----------------------------------------------------------------
-        fmoist = ( 0.25 + ( 0.75 * moist ) )
+        fmoist = 0.25 + 0.75 * moist
 
       case default
 
