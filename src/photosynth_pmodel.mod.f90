@@ -761,17 +761,52 @@ contains
       
       kphio_temp = kphio * max(0.0, min(1.0, (1.0 + kphio_par_a * (dtemp - kphio_par_b)**2)))
 
-      ! old:
-      ! kphio_temp = kphio * (0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2)  ! Based on Bernacchi et al., 2003
     end if
-    
   end function calc_kphio_temp
 
+
+  subroutine calc_ftemp_kphio_coldhard(tc, tmin, level_hard, gdd, kphio_par_a, kphio_par_b, kphio_par_c, kphio_par_d, ftemp)
+    !////////////////////////////////////////////////////////////////
+    ! Calculates the low temperature stress function assuming no stress
+    ! at 10 deg C and above and declining below based on a calibratable
+    ! parameter and a quadratic function.
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: tc             ! daily mean air temperature in degrees celsius (deg C)
+    real, intent(in)    :: tmin           ! daily minimum air temperature in degrees celsius (deg C)
+    real, intent(inout) :: level_hard     ! level (temperature) to which cold hardening is adjusted (deg C)
+    real, intent(inout) :: gdd            ! growing degree days (deg)
+    real, intent(in)    :: kphio_par_a    ! unitless shape parameter for hardening function
+    real, intent(in)    :: kphio_par_b    ! unitless shape parameter for hardening function
+    real, intent(in)    :: kphio_par_c    ! unitless shape parameter for dehardening function
+    real, intent(in)    :: kphio_par_d    ! unitless shape parameter for dehardening function
+
+    ! return variable
+    real, intent(out)   :: ftemp
+
+    ! local variable
+    real :: level_hard_new
+
+    ! determine hardening level - responds instantaneously to minimum temperature
+    level_hard_new = f_hardening(tmin, kphio_par_a, kphio_par_b)
+
+    if (level_hard_new < level_hard) then
+
+      ! entering deeper hardening
+      level_hard = level_hard_new
+
+      ! re-start recovery
+      gdd = 0
+
+    end if
+    
+    ! accumulate growing degree days (GDD)
+    gdd = gdd + max(0.0, (tc - 5.0))
 
     ! de-harden based on GDD. f_stress = 1: no stress
     level_hard = level_hard + (1.0 - level_hard) * f_dehardening(gdd, kphio_par_c, kphio_par_d)
 
-    kphio_temp = level_hard
+    ftemp = level_hard
 
   end subroutine calc_ftemp_kphio_coldhard
 

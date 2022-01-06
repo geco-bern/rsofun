@@ -26,6 +26,9 @@ module md_interface_pmodel
     real :: rd_to_vcmax
     real :: tau_acclim
     real :: kc_jmax
+    real :: kphio_par_c
+    real :: kphio_par_d
+    real :: kphio_par_e
   end type paramstype_calib  
 
 
