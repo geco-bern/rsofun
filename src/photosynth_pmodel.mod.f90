@@ -938,7 +938,7 @@ contains
     real :: xx
 
     xx = (-1.0) * tmin
-    xx = kphio_par_b * xx + kphio_par_a
+    xx = kphio_par_b * (xx + kphio_par_a)
     ftemp = 1.0 / (1.0 + exp(xx))
 
   end function f_hardening
@@ -960,7 +960,7 @@ contains
     real :: xx
 
     xx = (-1.0) * gdd
-    xx = kphio_par_d * (xx - kphio_par_c)
+    xx = kphio_par_d * (xx + kphio_par_c)
     ftemp = 1.0 / (1.0 + exp(xx))
 
   end function f_dehardening

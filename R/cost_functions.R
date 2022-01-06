@@ -198,6 +198,75 @@ cost_rmse_photocold <- function(
   
   # Calculate cost (RMSE)
   cost <- sqrt( mean( (df$gpp - df$gpp_obs )^2, na.rm = TRUE ) )
+
+  #print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
+  
+  if (inverse) cost <- 1.0 / cost
+  
+  return(cost)
+}
+
+
+#' Mean squared error
+#' 
+#' Mean squared error (MSE) cost function on
+#' the photocold parameter stack.
+#'
+#' @param par parameters
+#' @param obs observed values
+#' @param drivers drivers
+#' @param inverse invert the function
+#'
+#' @importFrom magrittr '%>%'
+#'
+#' @return the MSE on the photocold parameter set
+#' @export
+#'
+
+cost_mse_photocold <- function(
+  par,
+  obs,
+  drivers,
+  inverse = FALSE 
+){
+  
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio       = par[1],
+    soilm_par_a = par[2],
+    soilm_par_b = par[3],
+    kphio_par_a = par[4],
+    kphio_par_b = par[5],
+    kphio_par_c = par[6],
+    kphio_par_d = par[7]
+  )
+  
+  # run the model
+  df <- runread_pmodel_f(
+    drivers, 
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # cleanup
+  df <- df %>%
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data) %>%
+    rename(
+      'gpp_obs' = 'gpp'
+    )
+  
+  obs <- obs %>%
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data)
+  
+  # left join with observations
+  df <- dplyr::left_join(df, obs, by = c("sitename", "date"))
+  
+  # mean squared error (MSE) to avoid overestimation particularly in mid-season
+  cost <- mean( (df$gpp - df$gpp_obs )^2, na.rm = TRUE )
   
   #print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
   
