@@ -768,6 +768,58 @@ contains
   end function calc_kphio_temp
 
 
+    ! de-harden based on GDD. f_stress = 1: no stress
+    level_hard = level_hard + (1.0 - level_hard) * f_dehardening(gdd, kphio_par_c, kphio_par_d)
+
+    kphio_temp = level_hard
+
+  end subroutine calc_ftemp_kphio_coldhard
+
+
+  function f_hardening(tmin, kphio_par_a, kphio_par_b) result(ftemp)
+    !////////////////////////////////////////////////////////////////
+    ! Hardening function of instantaneous temperature
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: tmin           ! daily minimum air temperature in degrees celsius (deg C)
+    real, intent(in)    :: kphio_par_a    ! unitless shape parameter for hardening function
+    real, intent(in)    :: kphio_par_b    ! unitless shape parameter for hardening function
+
+    ! function return variable
+    real :: ftemp
+
+    ! local variables
+    real :: xx
+
+    xx = (-1.0) * tmin
+    xx = kphio_par_b * xx + kphio_par_a
+    ftemp = 1.0 / (1.0 + exp(xx))
+
+  end function f_hardening
+
+
+  function f_dehardening(gdd, kphio_par_c, kphio_par_d) result(ftemp)
+    !////////////////////////////////////////////////////////////////
+    ! Hardening function of instantaneous temperature
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: gdd           ! cumulative degree days (deg C)
+    real, intent(in)    :: kphio_par_c    ! unitless shape parameter for dehardening function
+    real, intent(in)    :: kphio_par_d    ! unitless shape parameter for dehardening function
+
+    ! function return variable
+    real :: ftemp
+
+    ! local variables
+    real :: xx
+
+    xx = (-1.0) * gdd
+    xx = kphio_par_d * (xx - kphio_par_c)
+    ftemp = 1.0 / (1.0 + exp(xx))
+
+  end function f_dehardening
+
+
   function calc_ftemp_inst_rd( tc ) result( fr )
     !-----------------------------------------------------------------------
     ! Output:   Factor fr to correct for instantaneous temperature response
