@@ -170,7 +170,8 @@ cost_rmse_photocold <- function(
     kphio_par_a = par[4],
     kphio_par_b = par[5],
     kphio_par_c = par[6],
-    kphio_par_d = par[7]
+    kphio_par_d = par[7],
+    kphio_par_e = par[8]
     )
 
   # run the model
@@ -239,7 +240,8 @@ cost_mse_photocold <- function(
     kphio_par_a = par[4],
     kphio_par_b = par[5],
     kphio_par_c = par[6],
-    kphio_par_d = par[7]
+    kphio_par_d = par[7],
+    kphio_par_e = par[8]
   )
   
   # run the model

@@ -55,6 +55,7 @@ module md_gpp_pmodel
     real :: kphio_par_b
     real :: kphio_par_c
     real :: kphio_par_d
+    real :: kphio_par_e
   end type paramstype_gpp
 
   ! PFT-DEPENDENT PARAMETERS
@@ -176,6 +177,7 @@ contains
         params_gpp%kphio_par_b, &
         params_gpp%kphio_par_c, &
         params_gpp%kphio_par_d, &
+        params_gpp%kphio_par_e, &
         ftemp_kphio &
         )
 
@@ -545,6 +547,7 @@ contains
     params_gpp%kphio_par_b = myinterface%params_calib%kphio_par_b
     params_gpp%kphio_par_c = myinterface%params_calib%kphio_par_c
     params_gpp%kphio_par_d = myinterface%params_calib%kphio_par_d
+    params_gpp%kphio_par_e = myinterface%params_calib%kphio_par_e     ! parameter defining GDD base in dehardening function (deg C)
 
     ! PFT-dependent parameter(s)
     params_pft_gpp(:)%kphio = myinterface%params_calib%kphio  ! is provided through standard input

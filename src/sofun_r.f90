@@ -79,7 +79,7 @@ contains
     real(kind=c_double),  intent(in) :: whc
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(7), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(8), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
     real(kind=c_double),  dimension(nt,13), intent(out) :: output
 
@@ -156,6 +156,7 @@ contains
     myinterface%params_calib%kphio_par_b = real(par(5))
     myinterface%params_calib%kphio_par_c = real(par(6))
     myinterface%params_calib%kphio_par_d = real(par(7))
+    myinterface%params_calib%kphio_par_e = real(par(8))
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)

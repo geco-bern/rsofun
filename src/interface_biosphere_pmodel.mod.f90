@@ -22,6 +22,7 @@ module md_interface_pmodel
     real :: kphio_par_b
     real :: kphio_par_c
     real :: kphio_par_d
+    real :: kphio_par_e
   end type paramstype_calib  
 
 

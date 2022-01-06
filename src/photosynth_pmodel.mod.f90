@@ -876,7 +876,8 @@ contains
   end function calc_ftemp_kphio
 
 
-  subroutine calc_ftemp_kphio_coldhard(tc, tmin, level_hard, gdd, kphio_par_a, kphio_par_b, kphio_par_c, kphio_par_d, ftemp)
+  subroutine calc_ftemp_kphio_coldhard(tc, tmin, level_hard, gdd, &
+    kphio_par_a, kphio_par_b, kphio_par_c, kphio_par_d, kphio_par_e, ftemp)
     !////////////////////////////////////////////////////////////////
     ! Calculates the low temperature stress function assuming no stress
     ! at 10 deg C and above and declining below based on a calibratable
@@ -891,6 +892,7 @@ contains
     real, intent(in)    :: kphio_par_b    ! unitless shape parameter for hardening function
     real, intent(in)    :: kphio_par_c    ! unitless shape parameter for dehardening function
     real, intent(in)    :: kphio_par_d    ! unitless shape parameter for dehardening function
+    real, intent(in)    :: kphio_par_e    ! parameter defining GDD base in dehardening function (deg C)
 
     ! return variable
     real, intent(out)   :: ftemp
@@ -912,7 +914,7 @@ contains
     end if
 
     ! accumulate growing degree days (GDD)
-    gdd = gdd + max(0.0, (tc - 5.0))
+    gdd = gdd + max(0.0, (tc - kphio_par_e))
 
     ! de-harden based on GDD. f_stress = 1: no stress
     level_hard = level_hard + (1.0 - level_hard) * f_dehardening(gdd, kphio_par_c, kphio_par_d)
