@@ -36,6 +36,6 @@ settings_calib_DBH_gs <- calib_sofun(
   settings = settings_calib_DBH_gs
 )
 
-save(settings_calib_DBH_gs, file = "input_data/settings_calib_DBH_gs_uniq_euler.RData")
+save(settings_calib_DBH_gs, file = "input_data/settings_calib_DBH_gs_Rev_euler.RData")
 
 
