@@ -113,7 +113,7 @@ precalibDBH <- dff %>%
 
 ff <- precalibDBH + postcalibDBH + plot_annotation(tag_levels = 'A')
 ff
-ggsave("~/rsofun//manuscript/figures/fig_ff.png", width = 8, height = 6, dpi=300)
+ggsave("~/rsofun/manuscript/figures/fig_ff.png", width = 8, height = 6, dpi=300)
 
 # Evaluation for GR mortality 
 # GR param 1,2,3 - Calibration for param 2
@@ -221,5 +221,5 @@ precalibGR <- dff %>%
 
 gg <- precalibGR + postcalibGR + plot_annotation(tag_levels = 'A')
 gg
-ggsave("~/rsofun//manuscript/figures/fig_gg.png", width = 8, height = 6, dpi=300)
+ggsave("~/rsofun/manuscript/figures/fig_gg.png", width = 8, height = 6, dpi=300)
 

@@ -718,7 +718,12 @@ DBH param 1,2,3 - Calibration for param 2
 
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_DBH_gs.RData")
+load("~/rsofun/input_data/settings_calib_DBH_gs_1_euler.RData")
 load("~/rsofun/input_data/settings_calib_DBH_gs_2_euler.RData")
+load("~/rsofun/input_data/settings_calib_DBH_gs_3_euler.RData")
+load("~/rsofun/data/inputs/settings_calib_DBH_gs_uniq_euler.RData")
+load("~/rsofun/data/inputs/settings_calib_DBH_gs_rev_euler.RData")
+
 #calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
 #settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
 
@@ -727,6 +732,11 @@ df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_DBH_gs$par_opt["LAI
 df_drivers$params_tile[[1]]$tf_base       <-  settings_calib_DBH_gs$par_opt["tf_base"]
 df_drivers$params_tile[[1]]$par_mort      <-  settings_calib_DBH_gs$par_opt["par_mort"]
 df_drivers$params_tile[[1]]$par_mort_under<-  settings_calib_DBH_gs$par_opt["par_mort_under"]
+
+settings_calib_DBH_gs$par_opt["LAI_light"] <- 4.1263076
+settings_calib_DBH_gs$par_opt["tf_base"] <- 0.5339663
+settings_calib_DBH_gs$par_opt["par_mort_under"] <- 0.4934812
+save(settings_calib_DBH_gs, file = "~/rsofun/data/inputs/settings_calib_DBH_gs_rev_euler.RData")
 
 #df_drivers$params_species[[1]]$rho_wood  <- 600 # 300, 450, 600
 
@@ -860,6 +870,8 @@ GR param 1,2,3 - Calibration for param 2
 ```{r,fig.width = 5, fig.height = 5}
 load("~/rsofun/input_data/df_drivers_GR_gs.RData")
 load("~/rsofun/input_data/settings_calib_GR_gs_2_euler.RData")
+load("~/rsofun/input_data/settings_calib_GR_gs_uniq_euler.RData")
+
 #calib_param_gr_gs <- read.csv("~/rsofun/params_calib_gr_gs.csv")
 #settings_calib_GR_gs$par_opt <- calib_param_gr_gs[1,]
 
