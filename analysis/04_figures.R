@@ -2,7 +2,7 @@
 
 # load packages
 
-# Read model outputs
+# Read model outputs ####
 
 # DBH Mortality gs-leuning 
 ea1sa1DBHp1gl_out_annual_tile    <- read.csv("~/rsofun/data/outputs/ea1sa1DBHp1gl_out_annual_tile.csv")
@@ -60,7 +60,7 @@ ggplot() +
 
 # Exploring relationships and plotting
 
-# a) Mortality formulations
+# Mortality formulations ####
 
 # DBH
 scaleFUN <- function(x) sprintf("%.2f", x)
@@ -97,7 +97,7 @@ fig1a_gr <- ggplot(data.frame(x = c(0, 20)), aes(x)) +
 
 fig1a_gr
 
-# b) Stand develop: Stand biomass vs. time
+# Stand develop: Stand biomass vs. time ####
 
 # DBH
 fig1b_dbh <- ggplot() + 
@@ -143,7 +143,7 @@ fig1b_gr <- ggplot() +
 
 fig1b_gr
 
-# c) Growth (NPP)
+# Growth (NPP) ####
 
 # DBH
 fig1c_dbh <- ggplot() + 
@@ -189,7 +189,7 @@ fig1c_gr <- ggplot() +
 
 fig1c_gr
 
-# d) Mortality (Both mortality and biomass turnover)
+# Mortality (Both mortality and biomass turnover) ####
 
 # DBH
 fig1d_dbh <- ggplot() + 
@@ -235,7 +235,7 @@ fig1d_gr <- ggplot() +
 
 fig1d_gr
 
-# e) Relative change biomass (plantC) vs. NPP
+# Relative change biomass (plantC) vs. NPP ####
 
 #DBH
 # DBH p1
@@ -401,7 +401,7 @@ fig1e_gr <- ggplot() +
 
 fig1e_gr
 
-# f) Relative change mortality vs. NPP
+# Relative change mortality vs. NPP ####
 
 # DBH
 # DBH 1
@@ -567,7 +567,7 @@ fig1f_gr <- ggplot() +
 
 fig1f_gr
 
-# g) Relative change k vs. NPP
+# Relative change k vs. NPP ####
 
 # DBH
 # DBH 1
@@ -733,7 +733,7 @@ fig1g_gr <- ggplot() +
 
 fig1g_gr
 
-# g*) Carbon Turnover time vs. time
+# Carbon Turnover time vs. time ####
 # Plot c_turnover_time or plantC/NPP
 
 # DBH
@@ -786,7 +786,7 @@ fig1gg_gr <- ggplot() +
 
 fig1gg_gr
 
-# h) Relative longevity vs. growth rates
+# Relative longevity vs. growth rates ####
 
 # DBH
 # DBH p1
@@ -950,7 +950,54 @@ fig1h_gr <- ggplot() +
 
 fig1h_gr
 
-# i) Self-thinning relationship: From annual_tile_output: QMD and Density12
+# Distribution of tree sizes ####
+
+# DBH
+figdistr_dbh <- ggplot() +  
+  geom_smooth(data=ea1sa1DBHp1gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x1', linetype='Control'),se=F) + 
+  geom_smooth(data=ea1sa1DBHp2gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x2', linetype='Control'),se=F) +
+  geom_smooth(data=ea1sa1DBHp3gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x3', linetype='Control'),se=F) +
+  geom_smooth(data=ea2sa1DBHp1gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x1', linetype='+15%'),se=F) + 
+  geom_smooth(data=ea2sa1DBHp2gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x2', linetype='+15%'),se=F) +
+  geom_smooth(data=ea2sa1DBHp3gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x3', linetype='+15%'),se=F) +
+  geom_smooth(data=ea3sa1DBHp1gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x1', linetype='+30%'),se=F) + 
+  geom_smooth(data=ea3sa1DBHp2gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x2', linetype='+30%'),se=F) +
+  geom_smooth(data=ea3sa1DBHp3gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x3', linetype='+30%'),se=F) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                        values = c("dotted","longdash","solid")) +
+  labs(x = "DBH (cm)", y = "Log(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+                     plot.title = element_text(size = 11)) #+ 
+#scale_y_continuous(limits = c(-4.5,11.2), breaks = seq(0,10,5))
+figdistr_dbh
+
+# GR
+figdistr_gr <- ggplot() +  
+  geom_smooth(data=ea1sa1GRp1gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x1', linetype='Control'),se=F) + 
+  geom_smooth(data=ea1sa1GRp2gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x2', linetype='Control'),se=F) +
+  geom_smooth(data=ea1sa1GRp3gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x3', linetype='Control'),se=F) +
+  geom_smooth(data=ea2sa1GRp1gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x1', linetype='+15%'),se=F) + 
+  geom_smooth(data=ea2sa1GRp2gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x2', linetype='+15%'),se=F) +
+  geom_smooth(data=ea2sa1GRp3gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x3', linetype='+15%'),se=F) +
+  geom_smooth(data=ea3sa1GRp1gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x1', linetype='+30%'),se=F) + 
+  geom_smooth(data=ea3sa1GRp2gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x2', linetype='+30%'),se=F) +
+  geom_smooth(data=ea3sa1GRp3gl_out_annual_cohorts, aes(x=dbh, y=log(density), color='x3', linetype='+30%'),se=F) +
+  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                        values = c("dotted","longdash","solid")) +
+  labs(x = "DBH (cm)", y = "Log(N)") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+                     plot.title = element_text(size = 11)) 
+figdistr_gr
+
+# Self-thinning relationship: From annual_tile_output: QMD and Density12 ####
 
 # DBH
 fig2a_dbh <- ggplot() + 
@@ -1034,7 +1081,7 @@ fig2c_dbh
 
 
 
-# Arrange plots
+# Figure 1 ####
 ff1 <- fig1a_dbh + fig1b_dbh + fig1c_dbh + fig1d_dbh + fig1e_dbh + fig1f_dbh + fig1g_dbh + fig1h_dbh + 
   fig1a_gr + fig1b_gr + fig1c_gr + fig1d_gr + fig1e_gr + fig1f_gr + fig1g_gr + fig1h_gr + 
   plot_layout(ncol = 4) + 
@@ -1043,3 +1090,43 @@ ff1 <- fig1a_dbh + fig1b_dbh + fig1c_dbh + fig1d_dbh + fig1e_dbh + fig1f_dbh + f
 ff1
 ggsave("~/rsofun/manuscript/figures/fig_1.png", width = 12, height = 11, dpi=300)
 
+# Figure 2 ####
+ff2LUE <- fig2aLUE_dbh + fig2bLUE_dbh + fig2cLUE_dbh + 
+  fig2aLUE_gr + fig2bLUE_gr + fig2cLUE_gr +
+  plot_layout(ncol = 3) + 
+  plot_annotation(tag_levels = 'A') +
+  plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+ff2LUE
+ggsave("~/rsofun/vignettes_add/fig2LUE.png", width = 12, height = 9, dpi=300)
+
+ff2NPP <- fig2aNPP_dbh + fig2bNPP_dbh + fig2cNPP_dbh + 
+  fig2aNPP_gr + fig2bNPP_gr + fig2cNPP_gr +
+  plot_layout(ncol = 3) + 
+  plot_annotation(tag_levels = 'A') +
+  plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+ff2NPP
+ggsave("~/rsofun/vignettes_add/fig2NPP.png", width = 12, height = 9, dpi=300)
+
+ff2Res <- fig2aRes_dbh + fig2bRes_dbh + fig2cRes_dbh + 
+  fig2aRes_gr + fig2bRes_gr + fig2cRes_gr +
+  plot_layout(ncol = 3) + 
+  plot_annotation(tag_levels = 'A') +
+  plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+ff2Res
+ggsave("~/rsofun/vignettes_add/fig2Res.png", width = 12, height = 9, dpi=300)
+
+# Figure S1 ####
+ffs1 <- figdistr_dbh + figdistr_gr +
+  plot_layout(ncol = 2) + 
+  plot_annotation(tag_levels = 'A') +
+  plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+ffs1
+ggsave("~/rsofun/manuscript/figures/fig_S1.png", width = 9, height = 5, dpi=300)
+
+# Figure S2 ####
+ffs2 <- fig1gg_dbh + fig1gg_gr + 
+  plot_layout(ncol = 2) + 
+  plot_annotation(tag_levels = 'A') +
+  plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+ffs2
+ggsave("~/rsofun/vignettes_add/fig_S2.png", width = 9, height = 5, dpi=300)
