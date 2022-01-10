@@ -15,7 +15,8 @@ module md_plant
 
   private
   public plant_type, plant_fluxes_type, getpar_modl_plant, &
-    initglobal_plant, params_plant, params_pft_plant, ftemp, fmoist
+    initglobal_plant, params_plant, params_pft_plant, ftemp, &
+    fmoist, add_seed
     ! get_leaftraits, 
 
   !----------------------------------------------------------------
@@ -123,7 +124,11 @@ module md_plant
     
     type(carbon)   :: dnpp     ! daily net primary production (gpp-ra, npp=bp+cex) [gC/m2/d]
     type(nitrogen) :: dnup     ! daily N uptake [gN/m2/d]
-    real           :: dnup_fix ! daily N uptake by plant symbiotic N fixation [gN/m2/d]
+
+    real :: dnup_pas          ! daily N uptake by passsive uptake (transpiration) [gN/m2/d]
+    real :: dnup_act          ! daily N uptake by active uptake [gN/m2/d]
+    real :: dnup_fix          ! daily N uptake by plant symbiotic N fixation [gN/m2/d]
+    real :: dnup_ret          ! daily N "uptake" by plant symbiotic N fixation [gN/m2/d]
 
     real :: vcmax25           ! acclimated Vcmax, normalised to 25 deg C (mol CO2 m-2 s-1)
     real :: jmax25            ! acclimated Jmax, normalised to 25 deg C (mol CO2 m-2 s-1)
@@ -139,6 +144,13 @@ module md_plant
     ! real :: avcmax25_max     ! annual Vcmax, normalised to 25 deg C, annual maximum
 
   end type plant_fluxes_type
+
+  !-----------------------------------------------------------------------
+  ! Fixed parameters
+  !-----------------------------------------------------------------------
+  ! type( orgpool ), parameter :: seed = orgpool( carbon(5.0), nitrogen(0.0) )
+  type( orgpool ), parameter :: seed = orgpool( carbon(5.0), nitrogen(0.12) )
+  ! type( orgpool ), parameter :: seed = orgpool( carbon(100.0), nitrogen(1 .0) )
 
 
 contains
@@ -483,6 +495,20 @@ contains
     out_getpftparams%r_ctostructn_leaf = myinterface%params_calib%r_ctostructn_leaf
 
   end function getpftparams
+
+
+  subroutine add_seed( plant )
+    !//////////////////////////////////////////////////////////////////
+    ! To initialise plant pools, add "sapling" mass
+    !------------------------------------------------------------------
+    use md_classdefs
+
+    ! arguments
+    type(plant_type), intent(inout) :: plant
+
+    plant%plabl = orgplus( plant%plabl, seed )
+
+  end subroutine add_seed
 
 
   subroutine initglobal_plant( plant )

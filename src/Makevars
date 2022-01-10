@@ -21,7 +21,7 @@ forcing_siterun_pmodel.mod.o: params_core.mod.o params_siml_pmodel.mod.o grid_si
 forcing_siterun_lm3ppa.mod.o: params_core.mod.o params_siml_lm3ppa.mod.o grid_siterun.mod.o
 #params_soil_pmodel.mod.o: params_core.mod.o
 params_soil_lm3ppa.mod.o: params_core.mod.o
-tile.mod.o: params_core.mod.o interface_biosphere_pmodel.mod.o
+tile.mod.o: params_core.mod.o interface_biosphere_pmodel.mod.o classdefs.mod.o
 waterbal_splash.mod.o: params_core.mod.o tile.mod.o plant.mod.o sofunutils.mod.o
 gpp_pmodel.mod.o: params_core.mod.o sofunutils.mod.o plant.mod.o tile.mod.o interface_biosphere_pmodel.mod.o photosynth_pmodel.mod.o
 gpp_lm3ppa.mod.o: datatypes.mod.o soil_lm3ppa.mod.o forcing_siterun_lm3ppa.mod.o photosynth_pmodel.mod.o params_core.mod.o sofunutils.mod.o
@@ -29,13 +29,16 @@ photosynth_pmodel.mod.o: params_core.mod.o sofunutils.mod.o
 soiltemp_sitch.mod.o: params_core.mod.o sofunutils.mod.o tile.mod.o interface_biosphere_pmodel.mod.o
 plant.mod.o: classdefs.mod.o params_core.mod.o sofunutils.mod.o interface_biosphere_pmodel.mod.o lambertw.mod.o
 vegdynamics_pmodel.mod.o: params_core.mod.o tile.mod.o plant.mod.o gpp_pmodel.mod.o waterbal_splash.mod.o
+vegdynamics_cnmodel.mod.o: params_core.mod.o plant.mod.o interface_biosphere_pmodel.mod.o classdefs.mod.o phenology_lpx.mod.o interface_biosphere_pmodel.mod.o
 biosphere_pmodel.mod.o: params_core.mod.o classdefs.mod.o sofunutils.mod.o plant.mod.o waterbal_splash.mod.o gpp_pmodel.mod.o vegdynamics_pmodel.mod.o tile.mod.o interface_biosphere_pmodel.mod.o soiltemp_sitch.mod.o vegdynamics_pmodel.mod.o
 biosphere_lm3ppa.mod.o: params_core.mod.o interface_biosphere_lm3ppa.mod.o datatypes.mod.o soil_lm3ppa.mod.o vegetation_lm3ppa.mod.o
-biosphere_cnmodel.mod.o: params_core.mod.o classdefs.mod.o sofunutils.mod.o plant.mod.o waterbal_splash.mod.o gpp_pmodel.mod.o vegdynamics_pmodel.mod.o tile.mod.o interface_biosphere_pmodel.mod.o soiltemp_sitch.mod.o vegdynamics_pmodel.mod.o npp.mod.o
+biosphere_cnmodel.mod.o: params_core.mod.o classdefs.mod.o sofunutils.mod.o plant.mod.o waterbal_splash.mod.o gpp_pmodel.mod.o vegdynamics_pmodel.mod.o tile.mod.o interface_biosphere_pmodel.mod.o soiltemp_sitch.mod.o vegdynamics_cnmodel.mod.o npp.mod.o nuptake.mod.o
 soil_lm3ppa.mod.o: datatypes.mod.o
 vegetation_lm3ppa.mod.o: datatypes.mod.o soil_lm3ppa.mod.o gpp_lm3ppa.mod.o
 datatypes.mod.o: interface_biosphere_lm3ppa.mod.o params_core.mod.o classdefs.mod.o
 npp.mod.o: classdefs.mod.o params_core.mod.o plant.mod.o interface_biosphere_pmodel.mod.o plant.mod.o tile.mod.o forcing_siterun_pmodel.mod.o
+phenology_lpx.mod.o: params_core.mod.o sofunutils.mod.o plant.mod.o 
+nuptake.mod.o: params_core.mod.o classdefs.mod.o tile.mod.o plant.mod.o
 
 # Source (object) of Fortran modules
 # <modulename.mod>: <filename.o>
@@ -67,6 +70,9 @@ md_soil_lm3ppa.mod: soil_lm3ppa.o
 md_vegetation_lm3ppa.mod: vegetation_lm3ppa.o
 md_lambertw.mod: lambertw.mod.o
 md_npp.mod: npp.mod.o
+md_phenology.mod: phenology_lpx.mod.o
+md_vegdynamics_cnmodel.mod: vegdynamics_cnmodel.mod.o
+md_nuptake.mod: nuptake.mod.o
 
 # Dependency of the C wrapper
 wrappersc.o: sofun_r_mod.mod

@@ -49,7 +49,7 @@ contains
     ! use md_turnover, only: turnover_leaf, turnover_root, turnover_labl
 
     ! arguments
-    type(tile_type), dimension(nlu), intent(inout) :: tile
+    type(tile_type), dimension(nlu), intent(in) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(climate_type)  :: climate
 
@@ -180,7 +180,6 @@ contains
 
       ! as a short-hand
       tile_fluxes(lu)%plant(pft) = pf
-      tile(lu)%plant(pft) = pp
 
     end do pftloop
 

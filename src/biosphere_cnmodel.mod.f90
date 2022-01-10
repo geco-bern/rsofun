@@ -8,9 +8,10 @@ module md_biosphere_cnmodel
   use md_plant, only: getpar_modl_plant
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
-  use md_vegdynamics_pmodel, only: vegdynamics
+  use md_vegdynamics_cnmodel, only: vegdynamics
   use md_soiltemp, only: soiltemp
   use md_npp, only: npp
+  use md_nuptake, only: getpar_modl_nuptake, nuptake
 
   implicit none
 
@@ -62,6 +63,7 @@ contains
       call getpar_modl_plant()
       call getpar_modl_waterbal()
       call getpar_modl_gpp()
+      call getpar_modl_nuptake()
       ! if (verbose) print*, '... done'
 
       !----------------------------------------------------------------
@@ -148,10 +150,7 @@ contains
         ! if (verbose) print*, '              with state variables:'
         ! if (verbose) print*, '              plabl = ', plabl(:,jpngr)
         !----------------------------------------------------------------
-        call vegdynamics( tile(:), &
-                          myinterface%vegcover(doy)%dfapar, &
-                          myinterface%fpc_grid(:) &
-                          )
+        call vegdynamics( tile_fluxes(:) )
         !----------------------------------------------------------------
         ! if (verbose) print*, '              ==> returned: '
         ! if (verbose) print*, '              plabl = ', plabl(:,jpngr)
@@ -207,18 +206,18 @@ contains
         ! if (baltest .and. abs(cbal2)>eps) stop 'balance 2 not satisfied'
         ! if (verbose) print*, '... done'
 
-        ! !----------------------------------------------------------------
-        ! ! calculate N acquisition as a function of C exudation
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        ! calculate N acquisition as a function of C exudation
+        !----------------------------------------------------------------
         ! if (verbose) print*, 'calling nuptake() ... '
         ! if (verbose) print*, '              with state variables:'
         ! if (verbose) print*, '              ninorg = ', pnh4(1,jpngr)%n14 + pno3(1,jpngr)%n14
         ! if (verbose) print*, '              nlabl  = ', plabl(1,jpngr)%n%n14
         ! if (baltest) ntmp1 = pnh4(1,jpngr)%n14 + pno3(1,jpngr)%n14
         ! if (baltest) ntmp2 = plabl(1,jpngr)%n%n14
-        ! !----------------------------------------------------------------
-        ! call nuptake( jpngr )
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        call nuptake( tile(:), tile_fluxes(:) )
+        !----------------------------------------------------------------
         ! if (verbose) print*, '              ==> returned: '
         ! if (verbose) print*, '              dnup   = ', dnup(:)
         ! if (verbose) print*, '              ninorg = ', pnh4(1,jpngr)%n14 + pno3(1,jpngr)%n14

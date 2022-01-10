@@ -4,6 +4,7 @@ module md_tile
   ! --------------------------------------------------------------
   use md_params_core, only: npft, nlu
   use md_plant, only: plant_type, plant_fluxes_type, initglobal_plant
+  use md_classdefs
 
   implicit none
 
@@ -44,7 +45,14 @@ module md_tile
   ! Soil type
   !----------------------------------------------------------------
   type soil_type
-    type(psoilphystype)  :: phy      ! soil state variables
+    type(nitrogen)       :: no3
+    type(nitrogen)       :: nh4
+    type(orgpool)        :: psoil_fs
+    type(orgpool)        :: psoil_sl
+    type(orgpool)        :: plitt_af
+    type(orgpool)        :: plitt_as
+    type(orgpool)        :: plitt_bg
+    type(psoilphystype)  :: phy      ! soil physical state variables
     type(paramtype_soil) :: params   ! soil parameters
   end type soil_type
 
@@ -464,6 +472,14 @@ contains
       tile_fluxes(:)%plant(npft)%drd      = 0.0
       tile_fluxes(:)%plant(npft)%dtransp  = 0.0
       tile_fluxes(:)%plant(npft)%dlatenth = 0.0
+      tile_fluxes(:)%plant(npft)%assim    = 0.0
+
+      tile_fluxes(:)%plant(npft)%dnpp%c12 = 0.0
+      tile_fluxes(:)%plant(npft)%dnup%n14 = 0.0
+
+      tile_fluxes(:)%plant(npft)%dnup_pas = 0.0
+      tile_fluxes(:)%plant(npft)%dnup_act = 0.0
+      tile_fluxes(:)%plant(npft)%dnup_fix = 0.0
     end do
 
     ! call initdaily_plant( tile_fluxes(:)%plant(:) )

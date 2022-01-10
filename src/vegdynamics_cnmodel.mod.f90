@@ -1,4 +1,4 @@
-module md_vegdynamics
+module md_vegdynamics_cnmodel
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
 
@@ -11,46 +11,46 @@ module md_vegdynamics
 
 contains
 
-  subroutine vegdynamics( plant, temppheno )
+  subroutine vegdynamics( tile_fluxes )
     !//////////////////////////////////////////////////////////////////
     ! Updates canopy and stand variables and calls 'estab_daily' to 
     ! simulate establishment of new individuals
     !------------------------------------------------------------------
-    use md_params_core, only: npft, ndayyear
-    use md_phenology, only: temppheno_type, params_pft_pheno
-    use md_plant, only: plant_type, params_pft_plant
+    use md_params_core, only: nlu ! npft, ndayyear
+    ! use md_phenology, only: temppheno_type, params_pft_pheno
+    use md_tile, only: tile_fluxes_type
 
     ! arguments
-    type(plant_type), dimension(npft), intent(inout) :: plant
-    type(temppheno_type), dimension(npft), intent(in) :: temppheno
+    type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
+    ! type(temppheno_type), dimension(npft), intent(in) :: temppheno
 
-    ! local variables
-    integer :: pft
+    ! ! local variables
+    ! integer :: pft
 
-    do pft=1,npft
+    ! do pft=1,npft
 
-      if (params_pft_plant(pft)%grass) then
-        !----------------------------------------------------------
-        ! GRASSES, summergreen
-        !----------------------------------------------------------
+    !   ! if (params_pft_plant(pft)%grass) then
+    !   !   !----------------------------------------------------------
+    !   !   ! GRASSES, summergreen
+    !   !   !----------------------------------------------------------
 
-        if ( temppheno(pft)%sprout ) then
-          !----------------------------------------------------------
-          ! beginning of season
-          !----------------------------------------------------------
-          call estab_daily( plant(pft), pft )
+    !   !   if ( temppheno(pft)%sprout ) then
+    !   !     !----------------------------------------------------------
+    !   !     ! beginning of season
+    !   !     !----------------------------------------------------------
+    !   !     call estab_daily( plant(pft), pft )
 
-          ! stop 'adding a seed'
+    !   !     ! stop 'adding a seed'
 
-        end if
+    !   !   end if
 
-      else
+    !   ! else
 
-        stop 'estab_daily not implemented for non-summergreen'
+    !   !   stop 'estab_daily not implemented for non-summergreen'
 
-      end if
+    !   ! end if
 
-    end do
+    ! end do
 
   end subroutine vegdynamics
 
@@ -61,7 +61,7 @@ contains
     ! function of Vcmax25.
     !------------------------------------------------------------------
     use md_plant, only: plant_type, params_plant, params_pft_plant
-    use md_interface
+    use md_interface_pmodel
 
     ! arguments
     type(plant_type), intent(inout) :: plant
@@ -72,7 +72,7 @@ contains
 
     ! add C (and N) to labile pool (available for allocation)
     call add_seed( plant )
-    if ( .not. interface%steering%dofree_alloc ) params_plant%frac_leaf = 0.5
+    if ( .not. myinterface%steering%dofree_alloc ) params_plant%frac_leaf = 0.5
     
     if (params_pft_plant(pft)%grass) then
       plant%nind = 1.0
@@ -82,21 +82,6 @@ contains
 
 
   end subroutine estab_daily
-
-
-  subroutine add_seed( plant )
-    !//////////////////////////////////////////////////////////////////
-    ! To initialise plant pools, add "sapling" mass
-    !------------------------------------------------------------------
-    use md_classdefs
-    use md_plant, only: plant_type, seed
-
-    ! arguments
-    type(plant_type), intent(inout) :: plant
-
-    plant%plabl = orgplus( plant%plabl, seed )
-
-  end subroutine add_seed
 
 
   ! subroutine vegdynamics( tile, plant, solar, out_pmodel )
@@ -157,5 +142,5 @@ contains
 
   ! end subroutine vegdynamics
 
-end module md_vegdynamics
+end module md_vegdynamics_cnmodel
 
