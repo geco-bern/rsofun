@@ -154,8 +154,8 @@ contains
           ! XXX Experiment: increasing net photosynthesis 15% and 30%
           !===============================
           ! if (myinterface%steering%year>myinterface%params_siml%spinupyears) then
-          !   psyn = psyn * 1.15
-          !   resp = resp * 1.15
+          !   psyn = psyn * 1.30
+          !   resp = resp * 1.30
           ! endif
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth

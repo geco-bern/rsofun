@@ -10,7 +10,8 @@ library(multidplyr)
 # Evaluation for DBH mortality 
 # DBH param 1,2,3 - Calibration for param 2
 load("~/rsofun/data/inputs/df_drivers_DBH_gs.RData")
-load("~/rsofun/data/inputs/settings_calib_DBH_gs_uniq_euler.RData")
+#load("~/rsofun/data/inputs/settings_calib_DBH_gs_uniq_euler.RData")
+load("~/rsofun/data/inputs/settings_calib_DBH_gs_rev2_euler.RData")
 
 df_drivers$params_species[[1]]$phiRL      <-  settings_calib_DBH_gs$par_opt["phiRL"]  
 df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_DBH_gs$par_opt["LAI_light"]

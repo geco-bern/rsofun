@@ -722,7 +722,9 @@ load("~/rsofun/input_data/settings_calib_DBH_gs_1_euler.RData")
 load("~/rsofun/input_data/settings_calib_DBH_gs_2_euler.RData")
 load("~/rsofun/input_data/settings_calib_DBH_gs_3_euler.RData")
 load("~/rsofun/data/inputs/settings_calib_DBH_gs_uniq_euler.RData")
-load("~/rsofun/data/inputs/settings_calib_DBH_gs_rev_euler.RData")
+load("~/rsofun/data/inputs/settings_calib_DBH_gs_rev0_euler.RData")
+load("~/rsofun/data/inputs/settings_calib_DBH_gs_rev1_euler.RData")
+load("~/rsofun/data/inputs/settings_calib_DBH_gs_rev2_euler.RData")
 
 #calib_param_dbh_gs <- read.csv("~/rsofun/params_calib_dbh_gs.csv")
 #settings_calib_DBH_gs$par_opt <- calib_param_dbh_gs[1,]
