@@ -231,9 +231,9 @@ contains
         ! if (baltest .and. abs(nbal2)>eps) stop 'balance 2 not satisfied'
         ! if (verbose) print*, '... done'
 
-        ! !----------------------------------------------------------------
-        ! ! leaf, sapwood, and fine-root turnover
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        ! leaf, sapwood, and fine-root turnover
+        !----------------------------------------------------------------
         ! if (verbose) print*, 'calling turnover() ... '
         ! if (verbose) print*, '              with state variables:'
         ! if (verbose) print*, '              pleaf = ', pleaf(:,jpngr)
@@ -245,9 +245,9 @@ contains
         ! if (verbose) print*, '              plitt tot = ', orgplus( plitt_af(1,jpngr), plitt_as(1,jpngr), plitt_bg(1,jpngr) )
         ! if (baltest) orgtmp1 = orgplus( pleaf(1,jpngr), proot(1,jpngr), plabl(1,jpngr) )
         ! if (baltest) orgtmp2 = orgplus( plitt_af(1,jpngr), plitt_as(1,jpngr), plitt_bg(1,jpngr) )
-        ! !----------------------------------------------------------------
-        ! call turnover( jpngr, day )
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        call turnover( jpngr, day )
+        !----------------------------------------------------------------
         ! if (verbose) print*, '              ==> returned: '
         ! if (verbose) print*, '              pleaf = ', pleaf(:,jpngr)
         ! if (verbose) print*, '              proot = ', proot(:,jpngr)
