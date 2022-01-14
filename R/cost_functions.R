@@ -481,3 +481,98 @@ likelihood_lm3ppa <- function(
   
   return(sum(singlelikelihoods))
 }
+
+#' Likelihood function for the p-model
+#' 
+#' Calculates likelihoods for the p-model
+#' Bayesiantools optimization
+#' 
+#' @param par parameters
+#' @param obs observations
+#' @param drivers driver data
+#' @param inverse invert the function (1-value)
+#' 
+#' @importFrom magrittr '%>%'
+#' 
+#' @return the RMSE on the kpio parameter
+#' @export
+
+likelihood_pmodel <- function(
+  par,
+  par_names,
+  obs,
+  targets,
+  drivers,
+  inverse = FALSE
+){
+  
+  # predefine variables for CRAN check compliance
+  sitename <- data <- NULL
+  
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio           = par[1],
+    soilm_par_a     = par[2],
+    soilm_par_b     = par[3],
+    tau_acclim_tempstress = 10,
+    par_shape_tempstress  = 0.0
+  )
+  
+  # run the model
+  df <- runread_pmodel_f(
+    drivers, 
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = FALSE
+  ) %>%
+    dplyr::select(sitename, data) %>%
+    tidyr::unnest(data) %>%
+    dplyr::arrange(
+      sitename, date
+    )
+  
+  df <- df %>%
+    dplyr::mutate(
+      gpp_unc = pet
+    )
+  
+  obs <- obs %>%
+    dplyr::select(sitename, data) %>%
+    tidyr::unnest(data) %>%
+    dplyr::ungroup() %>%
+    dplyr::arrange(
+      sitename, date
+    )
+  
+  # calculate the log likelihood
+  logpost <- sapply(targets, function(i) {
+    
+    # select correct target variable
+    # based on targets list
+    predicted <- df %>%
+      select(
+        !!!i
+      )
+    
+    observed <- obs %>%
+      select(
+        !!!i
+      )
+    
+    # calculate likelihood
+    # for all targets and their
+    # error ranges
+    ll <- likelihoodIidNormal(
+      predicted,
+      observed,
+      par[grep(paste0('^err_', i,'$'), par_names)]
+      )
+    
+  }) %>% sum(.)
+  
+  # trap boundary conditions
+  if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){logpost <- -Inf}
+  
+  return(logpost)
+}
