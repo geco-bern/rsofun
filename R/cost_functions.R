@@ -532,11 +532,6 @@ likelihood_pmodel <- function(
       sitename, date
     )
   
-  df <- df %>%
-    dplyr::mutate(
-      gpp_unc = pet
-    )
-  
   obs <- obs %>%
     dplyr::select(sitename, data) %>%
     tidyr::unnest(data) %>%
