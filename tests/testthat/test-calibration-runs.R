@@ -9,7 +9,6 @@ test_that("test calibration routine p-model (BT)", {
   settings <- list(
     method              = "bayesiantools",
     targets             = c("gpp"),
-    timescale           = list(targets_obs = "y"),
     sitenames           = "FR-Pue",
     metric              = likelihood_pmodel,
     control = list(
@@ -25,6 +24,7 @@ test_that("test calibration routine p-model (BT)", {
       LAI_light = list(lower=2, upper=5, init=3.5),
       tf_base = list(lower=0.5, upper=1.5, init=1),
       par_mort = list(lower=0.1, upper=2, init=1),
+      # the observed data estimated errors
       err_gpp = list(lower = 0, upper = 30, init = 15)
     )
   )
@@ -49,13 +49,9 @@ test_that("test calibration routine lm3ppa (gensa)", {
   # Mortality as DBH
   settings <- list(
     method              = "gensa",
-    targetvars          = c("gpp"),
+    #targets             = c("gpp"),
     timescale           = list(targets_obs = "y"),
-    maxit               = 2,
-    sitenames           = "CH-Lae",
     metric              = cost_rmse_lm3ppa_gsleuning,
-    dir_results         = "./",
-    name                = "ORG",
     control = list(
       max.call = 2
     ),
@@ -75,4 +71,47 @@ test_that("test calibration routine lm3ppa (gensa)", {
   # test for correctly returned values
   expect_type(pars, "list")
 })
+
+test_that("test calibration routine lm3ppa (Bayesiantools)", {
+  skip_on_cran()
+  
+  df_drivers <- lm3ppa_gs_leuning_drivers
+  ddf_obs <- lm3ppa_validation_2
+  df_drivers$params_siml[[1]]$spinup <- FALSE
+  
+  # Mortality as DBH
+  settings <- list(
+    method              = "bayesiantools",
+    targets             = c("GPP","LAI","Density","Biomass"),
+    metric              = likelihood_lm3ppa,
+    control = list(
+      sampler = "DEzs",
+      settings = list(
+        burnin = 1,
+        iterations = 10,
+        nrChains = 3
+      )
+    ),
+    par = list(
+      phiRL = list(lower=0.5, upper=5, init=3.5),
+      LAI_light = list(lower=2, upper=5, init=3.5),
+      tf_base = list(lower=0.5, upper=1.5, init=1),
+      par_mort = list(lower=0.1, upper=2, init=1),
+      err_GPP = list(lower = 0, upper = 30, init = 15),
+      err_LAI = list(lower = 0, upper = 5, init = 3),
+      err_Density = list(lower = 0, upper = 400, init = 280),
+      err_Biomass = list(lower = 0, upper = 50, init = 45)
+    )
+  )
+  
+  pars <- calib_sofun(
+    drivers = df_drivers,
+    obs = ddf_obs,
+    settings = settings
+  )
+  
+  # test for correctly returned values
+  expect_type(pars, "list")
+})
+
 

@@ -4,36 +4,125 @@ library(tidyverse)
 source("R/cost_functions.R")
 source("R/calib_sofun.R")
 
-drivers <- p_model_drivers
-obs <- p_model_validation
+likelihood_lm3ppa_annual <- function(
+  par,
+  par_names,
+  obs,
+  targets,
+  drivers
+){
+  
+  # predefine variables for CRAN check compliance
+  GPP <- LAI <- Density12 <- plantC <- error <- NULL
+  
+  # Add changed model parameters to drivers, overwriting where necessary.
+  drivers$params_species[[1]]$phiRL[]      <- par[1]
+  drivers$params_species[[1]]$LAI_light[]  <- par[2]
+  drivers$params_tile[[1]]$tf_base         <- par[3]
+  drivers$params_tile[[1]]$par_mort        <- par[4]
 
+  # run model
+  df <- runread_lm3ppa_f(
+    drivers,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # did we spin up
+  spin_up <- drivers$params_siml[[1]]$spinup
+  
+  # drop spinup years if activated
+  # see below
+  if (spin_up){
+    spin_up_years <- drivers$params_siml[[1]]$spinupyears + 1
+  } else {
+    spin_up_years <- 0
+  }
+  
+  # Aggregate variables from the model df taking the last 500 yrs
+  # if spun up
+  df <- df$data[[1]]$output_annual_tile %>%
+    utils::tail(500 - spin_up_years) %>%
+    dplyr::summarise(
+      GPP = mean(GPP),
+      LAI = stats::quantile(LAI, probs = 0.95, na.rm=T),
+      Density = mean(Density12),
+      Biomass = mean(plantC)
+      )
+  
+  # reshuffle observed data
+  col_names <- obs$data[[1]]$variables
+  obs <- data.frame(t(obs$data[[1]]$targets_obs))
+  colnames(obs) <- col_names
+  
+  # calculate the log likelihood
+  logpost <- sapply(targets, function(i) {
+    
+    # select correct target variable
+    # based on targets list
+    predicted <- df %>%
+      select(
+        !!!i
+      )
+    
+    observed <- obs %>%
+      select(
+        !!!i
+      )
+    
+    # calculate likelihood
+    # for all targets and their
+    # error ranges
+    ll <- likelihoodIidNormal(
+      predicted,
+      observed,
+      par[grep(paste0('^err_', i,'$'), par_names)]
+    )
+    
+  })
+  
+  # sum log likelihoods
+  logpost <- sum(unlist(logpost))
+  
+  # trap boundary conditions
+  if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){logpost <- -Inf}
+  
+  return(logpost)
+}
+
+df_drivers <- lm3ppa_gs_leuning_drivers
+ddf_obs <- lm3ppa_validation_2
+df_drivers$params_siml[[1]]$spinup <- FALSE
+
+# Mortality as DBH
 settings <- list(
   method              = "bayesiantools",
-  targets             = c("gpp"),
-  timescale           = list(targets_obs = "y"),
-  sitenames           = "FR-Pue",
-  metric              = likelihood_pmodel,
+  targets             = c("GPP","LAI","Density","Biomass"),
+  metric              = likelihood_lm3ppa_annual,
   control = list(
     sampler = "DEzs",
     settings = list(
-      burnin = 10,
-      iterations = 400,
+      burnin = 1,
+      iterations = 10,
       nrChains = 3
     )
   ),
   par = list(
-    kphio = list(lower=0.04, upper=0.09, init=0.05),
     phiRL = list(lower=0.5, upper=5, init=3.5),
     LAI_light = list(lower=2, upper=5, init=3.5),
     tf_base = list(lower=0.5, upper=1.5, init=1),
     par_mort = list(lower=0.1, upper=2, init=1),
-    err_gpp = list(lower = 0, upper = 30, init = 15),
-    err_gpp_unc = list(lower = 0, upper = 1, init = 1)
+    err_GPP = list(lower = 0, upper = 30, init = 15),
+    err_LAI = list(lower = 0, upper = 5, init = 3),
+    err_Density = list(lower = 0, upper = 400, init = 280),
+    err_Biomass = list(lower = 0, upper = 50, init = 45)
   )
 )
 
-pars <- calib_sofun_2(
-  drivers = drivers,
-  obs = obs,
+pars <- calib_sofun(
+  drivers = df_drivers,
+  obs = ddf_obs,
   settings = settings
 )
+
+
