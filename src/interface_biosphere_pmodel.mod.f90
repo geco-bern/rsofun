@@ -59,6 +59,7 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: wscal
     real, dimension(ndayyear) :: chi
     real, dimension(ndayyear) :: iwue
+    real, dimension(ndayyear) :: infilt
   end type outtype_biosphere
 
 end module md_interface_pmodel

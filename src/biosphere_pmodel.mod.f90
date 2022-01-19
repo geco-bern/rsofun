@@ -191,6 +191,7 @@ contains
         out_biosphere%wscal(doy)   = tile(1)%soil%phy%wscal
         out_biosphere%chi(doy)     = tile_fluxes(1)%canopy%chi
         out_biosphere%iwue(doy)    = tile_fluxes(1)%canopy%iwue
+        out_biosphere%infilt(doy)  = tile_fluxes(1)%canopy%infilt
 
         init_daily = .false.
 

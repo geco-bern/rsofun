@@ -88,6 +88,7 @@ module md_tile_pmodel
     real :: dro             ! daily runoff (mm d-1)
     real :: dfleach         ! daily fraction of soil water going to runoff (used for calculating leaching)
     real :: dwbal           ! daily water balance as precipitation and snow melt minus runoff and evapotranspiration (mm d-1)
+    real :: infilt          ! daily liquid water infiltration into the soil (after snow melt) (mm d-1)
     real :: econ            ! water-to-energy conversion factor (m^3/J)
     real :: drn             ! daily total net radiation (J/m2/d)
     real :: drnn            ! nighttime total net radiation (J m-1 d-1)

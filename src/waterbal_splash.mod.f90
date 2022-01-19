@@ -131,6 +131,9 @@ contains
         )
       tile(lu)%soil%phy%snow = out_snow_rain%snow_updated 
 
+      ! record infiltration
+      tile_fluxes(lu)%canopy%infilt = out_snow_rain%liquid_to_soil
+
       ! Update soil moisture
       tile(lu)%soil%phy%wcont = tile(lu)%soil%phy%wcont + out_snow_rain%liquid_to_soil - tile_fluxes(lu)%canopy%daet
 
