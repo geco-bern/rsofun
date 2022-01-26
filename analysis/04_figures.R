@@ -48,9 +48,14 @@ ea3sa1DBHp3gl_out_annual_tile    <- read.csv("~/rsofun/data/outputs/ea3sa1DBHp3g
 ea3sa1DBHp3gl_out_annual_cohorts <- read.csv("~/rsofun/data/outputs/ea3sa1DBHp3gl_out_annual_cohorts.csv")
 
 ggplot() + 
-  geom_line(data=ea1sa1DBHp1gl_out_annual_tile, aes(x=year, y=NPP, color='Control'),alpha=.7) + 
-  geom_line(data=ea2sa1DBHp1gl_out_annual_tile, aes(x=year, y=NPP, color='+15'),alpha=.7) +
-  geom_line(data=ea3sa1DBHp1gl_out_annual_tile, aes(x=year, y=NPP, color='+30'),alpha=.7)
+  geom_line(data=ea1sa1DBHp1gl_out_annual_tile, aes(x=year, y=plantC, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1DBHp1gl_out_annual_tile, aes(x=year, y=plantC, color='+15'),alpha=.7) +
+  geom_line(data=ea3sa1DBHp1gl_out_annual_tile, aes(x=year, y=plantC, color='+30'),alpha=.7)
+
+ggplot() + 
+  geom_line(data=ea1sa1DBHp3gl_out_annual_tile, aes(x=year, y=MaxAge, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1DBHp3gl_out_annual_tile, aes(x=year, y=MaxAge, color='+15'),alpha=.7) +
+  geom_line(data=ea3sa1DBHp3gl_out_annual_tile, aes(x=year, y=MaxAge, color='+30'),alpha=.7)
 
 # GR Mortality gs-leuning 
 ea1sa1GRp1gl_out_annual_tile    <- read.csv("~/rsofun/data/outputs/ea1sa1GRp1gl_out_annual_tile.csv")
@@ -75,9 +80,9 @@ ea3sa1GRp3gl_out_annual_tile    <- read.csv("~/rsofun/data/outputs/ea3sa1GRp3gl_
 ea3sa1GRp3gl_out_annual_cohorts <- read.csv("~/rsofun/data/outputs/ea3sa1GRp3gl_out_annual_cohorts.csv")
 
 ggplot() + 
-  geom_line(data=ea1sa1GRp3gl_out_annual_tile, aes(x=year, y=NPP, color='Control'),alpha=.7) + 
-  geom_line(data=ea2sa1GRp3gl_out_annual_tile, aes(x=year, y=NPP, color='+15'),alpha=.7) +
-  geom_line(data=ea3sa1GRp3gl_out_annual_tile, aes(x=year, y=NPP, color='+30'),alpha=.7)
+  geom_line(data=ea1sa1GRp1gl_out_annual_tile, aes(x=year, y=MaxAge, color='Control'),alpha=.7) + 
+  geom_line(data=ea2sa1GRp1gl_out_annual_tile, aes(x=year, y=MaxAge, color='+15'),alpha=.7) +
+  geom_line(data=ea3sa1GRp1gl_out_annual_tile, aes(x=year, y=MaxAge, color='+30'),alpha=.7) 
 
 # Exploring relationships and plotting
 
@@ -87,59 +92,86 @@ ggplot() +
 scaleFUN <- function(x) sprintf("%.2f", x)
 
 fig1a_dbh <- ggplot(data.frame(x = c(0, 1.06)), aes(x)) + 
-  stat_function(fun = ~ 0.12*.x ^ 1.5, col="#009E73") +  
-  stat_function(fun = ~ 0.12*.x ^ 2.5, col="#0072B2") + 
-  stat_function(fun = ~ 0.12*.x ^ 5.0, col="#D55E00") + 
-  labs(x='DBH', y='m') +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) +
+  stat_function(fun = ~ 0.12*.x ^ 1.5, aes(colour = "r1")) + 
+  stat_function(fun = ~ 0.12*.x ^ 2.5, aes(colour = "r2")) + 
+  stat_function(fun = ~ 0.12*.x ^ 5.0, aes(colour = "r3")) +
+  scale_color_manual("Parameter", breaks = c("r1", "r2", "r3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00"),
+                     labels =c(expression(paste(italic("r")[italic("S1")])),expression(paste(italic("r")[italic("S2")])),
+                               expression(paste(italic("r")[italic("S3")])))) +
+  labs(x='DBH', y='m',title="Mortality rate") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 8.5),legend.title = element_text(size = 8.5),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = c(.17, .78),
+                     legend.direction="vertical",
+                     legend.margin = margin(.2, .2, .2, .2),
+                     legend.key.size = unit(0.7, 'lines'),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
   scale_x_continuous(limits=c(0,1.1), breaks=seq(0,1.1,0.25)) +
   scale_y_continuous(limits=c(0,0.13), breaks=seq(0,0.10,0.05)) #+
 #annotate("text", x = 1, y = 0.03, label = expression(paste("y = 0.1", x^1.5)),col="#009E73") +
 #annotate("text", x = 1, y = 0.02, label = expression(paste("y = 0.1", x^2.3)),col="#0072B2") +
 #annotate("text", x = 1, y = 0.01, label = expression(paste("y = 0.1", x^3.5)),col="#D55E00")
-
 fig1a_dbh
 
 # GR
 fig1a_gr <- ggplot(data.frame(x = c(0, 20)), aes(x)) + 
-  stat_function(fun = ~ 0.12/(1+(exp(-0.5*(.x-10)))), col="#009E73") +
-  stat_function(fun = ~ 0.12/(1+(exp(-0.8*(.x-10)))), col="#0072B2") +
-  stat_function(fun = ~ 0.12/(1+(exp(-1.4*(.x-10)))), col="#D55E00") +
-  labs(x='GR', y='m') + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) +
+  stat_function(fun = ~ 0.12/(1+(exp(-0.5*(.x-10)))), aes(colour = "r1")) +
+  stat_function(fun = ~ 0.12/(1+(exp(-0.8*(.x-10)))), aes(colour = "r2")) +
+  stat_function(fun = ~ 0.12/(1+(exp(-1.4*(.x-10)))), aes(colour = "r3")) +
+  scale_color_manual("Parameter", breaks = c("r1", "r2", "r3"), 
+                     values = c("#009E73", "#0072B2", "#D55E00"),
+                     labels =c(expression(paste(italic("r")[italic("S1")])),expression(paste(italic("r")[italic("S2")])),
+                               expression(paste(italic("r")[italic("S3")])))) +
+  labs(x='GR', y='m',title="Mortality rate") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
   scale_x_continuous(limits=c(0,20), breaks=seq(0,20,5)) +
   scale_y_continuous(limits=c(0,0.13),breaks=seq(0,0.15,0.05))
-
 fig1a_gr
 
 # Stand develop: Stand biomass vs. time ####
 
 # DBH
 fig1b_dbh <- ggplot() + 
-  geom_line(data=ea2sa1DBHp1gl_out_annual_tile, aes(x=year, y=plantC, color='x1', linetype='+15%'),alpha=.7) + 
-  geom_line(data=ea2sa1DBHp2gl_out_annual_tile, aes(x=year, y=plantC, color='x2', linetype='+15%'),alpha=.7) +
-  geom_line(data=ea2sa1DBHp3gl_out_annual_tile, aes(x=year, y=plantC, color='x3', linetype='+15%'),alpha=.7) +
-  geom_line(data=ea3sa1DBHp1gl_out_annual_tile, aes(x=year, y=plantC, color='x1', linetype='+30%'),alpha=.7) + 
-  geom_line(data=ea3sa1DBHp2gl_out_annual_tile, aes(x=year, y=plantC, color='x2', linetype='+30%'),alpha=.7) +
-  geom_line(data=ea3sa1DBHp3gl_out_annual_tile, aes(x=year, y=plantC, color='x3', linetype='+30%'),alpha=.7) +
-  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
-                     values = c("#009E73", "#0072B2", "#D55E00")) +
+  geom_line(data=ea2sa1DBHp1gl_out_annual_tile, aes(x=year, y=plantC, linetype='+15%'), col="#009E73", alpha=.7) + 
+  geom_line(data=ea2sa1DBHp2gl_out_annual_tile, aes(x=year, y=plantC, linetype='+15%'), col="#0072B2",alpha=.7) +
+  geom_line(data=ea2sa1DBHp3gl_out_annual_tile, aes(x=year, y=plantC, linetype='+15%'), col="#D55E00",alpha=.7) +
+  geom_line(data=ea3sa1DBHp1gl_out_annual_tile, aes(x=year, y=plantC, linetype='+30%'), col="#009E73",alpha=.7) + 
+  geom_line(data=ea3sa1DBHp2gl_out_annual_tile, aes(x=year, y=plantC, linetype='+30%'), col="#0072B2",alpha=.7) +
+  geom_line(data=ea3sa1DBHp3gl_out_annual_tile, aes(x=year, y=plantC, linetype='+30%'), col="#D55E00",alpha=.7) +
   scale_linetype_manual("Level of LUE", breaks = c("+15%", "+30%"), 
-                        values = c("dashed","solid")) +
-  labs(x = "Year", y = "B") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) +
+                        values = c("dashed","solid"),
+                        guide = guide_legend(override.aes = list(color = "black"))) +
+  labs(x = "t", y = "B",title="Total biomass") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 8.5),legend.title = element_text(size = 8.5),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = c(.20, .78),
+                     legend.direction="vertical",
+                     legend.margin = margin(.2, .2, .2, .2),
+                     legend.key.size = unit(1, 'lines'),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
   scale_x_continuous(limits=c(0,1500),breaks=seq(0,1500,500)) +
   scale_y_continuous(limits=c(0,65),breaks=seq(0,60,15))
-
 fig1b_dbh
 
 # GR
@@ -154,14 +186,20 @@ fig1b_gr <- ggplot() +
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("+15%", "+30%"), 
                         values = c("dashed","solid")) +
-  labs(x = "Year", y = "B") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) +
+  labs(x = "t", y = "B",title="Total biomass") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
   scale_x_continuous(limits=c(0,1500),breaks=seq(0,1500,500)) +
   scale_y_continuous(limits=c(0,65),breaks=seq(0,60,15))
-
 fig1b_gr
 
 # Growth (NPP) ####
@@ -178,14 +216,20 @@ fig1c_dbh <- ggplot() +
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("+15%", "+30%"), 
                         values = c("dashed","solid")) +
-  labs(x = "Year", y = "G") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) +
+  labs(x = "t", y = "G",title="Net Primary Productivity") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
   scale_x_continuous(limits=c(0,1500),breaks=seq(0,1500,500)) +
   scale_y_continuous(limits=c(0,2.7),breaks=seq(0,2.5,0.5))
-
 fig1c_dbh
 
 # GR
@@ -200,14 +244,20 @@ fig1c_gr <- ggplot() +
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("+15%", "+30%"), 
                         values = c("dashed","solid")) +
-  labs(x = "Year", y = "G") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) +
+  labs(x = "t", y = "G",title="Net Primary Productivity") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
   scale_x_continuous(limits=c(0,1500),breaks=seq(0,1500,500)) +
   scale_y_continuous(limits=c(0,2.7),breaks=seq(0,2.5,0.5))
-
 fig1c_gr
 
 # Mortality (Both mortality and biomass turnover) ####
@@ -224,14 +274,20 @@ fig1d_dbh <- ggplot() +
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("+15%", "+30%"), 
                         values = c("dashed","solid")) +
-  labs(x = "Year", y = "M") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) +
+  labs(x = "t", y = "M",title="Tree mortality") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
   scale_x_continuous(limits=c(0,1500),breaks=seq(0,1500,500)) +
   scale_y_continuous(limits=c(0,2.7),breaks=seq(0,2.5,0.5))
-
 fig1d_dbh
 
 # GR
@@ -246,14 +302,20 @@ fig1d_gr <- ggplot() +
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("+15%", "+30%"), 
                         values = c("dashed","solid")) +
-  labs(x = "Year", y = "M") + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) +
+  labs(x = "t", y = "M",title="Tree mortality") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
   scale_x_continuous(limits=c(0,1500),breaks=seq(0,1500,500)) +
   scale_y_continuous(limits=c(0,2.7),breaks=seq(0,2.5,0.5))
-
 fig1d_gr
 
 # Relative change biomass (plantC) vs. NPP ####
@@ -320,24 +382,31 @@ DBHp3gl_RelChange_B_NPP_15_30 <- data.frame(dNPP15_30,dB15_30)
 DBHp3gl_RelChange_B_NPP_0_30 <- data.frame(dNPP0_30,dB0_30)
 
 fig1e_dbh <- ggplot() + 
-  geom_point(data=DBHp1gl_RelChange_B_NPP_0_15, aes(x=dNPP0_15, y=dB0_15, color='x1', shape='0-15%'),size=3) + 
-  geom_point(data=DBHp1gl_RelChange_B_NPP_0_30, aes(x=dNPP0_30, y=dB0_30, color='x1', shape='0-30%'),size=3) + 
-  geom_point(data=DBHp2gl_RelChange_B_NPP_0_15, aes(x=dNPP0_15, y=dB0_15, color='x2', shape='0-15%'),size=3) + 
-  geom_point(data=DBHp2gl_RelChange_B_NPP_0_30, aes(x=dNPP0_30, y=dB0_30, color='x2', shape='0-30%'),size=3) + 
-  geom_point(data=DBHp3gl_RelChange_B_NPP_0_15, aes(x=dNPP0_15, y=dB0_15, color='x3', shape='0-15%'),size=3) + 
-  geom_point(data=DBHp3gl_RelChange_B_NPP_0_30, aes(x=dNPP0_30, y=dB0_30, color='x3', shape='0-30%'),size=3) + 
-  scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
-                     values = c("#009E73", "#0072B2", "#D55E00")) +
-  scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,17)) +  labs(x="dG/G", y="dB/B") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) + 
+  geom_point(data=DBHp1gl_RelChange_B_NPP_0_15, aes(x=dNPP0_15, y=dB0_15, shape='+15%'),col="#009E73",size=3) + 
+  geom_point(data=DBHp1gl_RelChange_B_NPP_0_30, aes(x=dNPP0_30, y=dB0_30, shape='+30%'),col="#009E73",size=3) + 
+  geom_point(data=DBHp2gl_RelChange_B_NPP_0_15, aes(x=dNPP0_15, y=dB0_15, shape='+15%'),col="#0072B2",size=3) + 
+  geom_point(data=DBHp2gl_RelChange_B_NPP_0_30, aes(x=dNPP0_30, y=dB0_30, shape='+30%'),col="#0072B2",size=3) + 
+  geom_point(data=DBHp3gl_RelChange_B_NPP_0_15, aes(x=dNPP0_15, y=dB0_15, shape='+15%'),col="#D55E00",size=3) + 
+  geom_point(data=DBHp3gl_RelChange_B_NPP_0_30, aes(x=dNPP0_30, y=dB0_30, shape='+30%'),col="#D55E00",size=3) + 
+  scale_shape_manual("Level of LUE", breaks = c("+15%","+30%"), 
+                     values = c(16,17),
+                     guide = guide_legend(override.aes = list(color = "black",size=1.6))) +  
+  labs(x = expression(frac(dG, G)), y = expression(frac(dB, B)),title="Changes in biomass") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 8.5),legend.title = element_text(size = 8.5),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = c(.20, .8),
+                     legend.direction="vertical",
+                     legend.margin = margin(.2, .2, .2, .2),
+                     legend.key.size = unit(.9, 'lines'),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) + 
   scale_x_continuous(limits = c(0,0.5),breaks=seq(0,0.5,0.1)) + 
   scale_y_continuous(limits = c(0,0.5),breaks=seq(0,0.5,0.1)) +
   geom_abline(slope=1, intercept = 0.0, linetype="dashed") 
-
 fig1e_dbh
 
 # GR
@@ -411,15 +480,22 @@ fig1e_gr <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,17)) +  labs(x="dG/G", y="dB/B") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) + 
+                     values = c(16,17)) +  
+  labs(x = expression(frac(dG, G)), y = expression(frac(dB, B)),title="Changes in biomass") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +  
   scale_x_continuous(limits = c(0.0,0.5)) + 
   scale_y_continuous(limits = c(0.0,0.5)) +
   geom_abline(slope=1, intercept = 0.0, linetype="dashed")
-
 fig1e_gr
 
 # Relative change mortality vs. NPP ####
@@ -495,11 +571,19 @@ fig1f_dbh <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,17)) +  labs(x="dG/G", y="dM/M") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) + 
+                     values = c(16,17)) +  
+  labs(x = expression(frac(dG, G)), y = expression(frac(dM, M)),title = "Changes in tree mortality") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +  
   scale_x_continuous(limits = c(0,0.5)) + 
   scale_y_continuous(limits = c(0,0.5)) +
   geom_abline(slope=1, intercept = 0.0, linetype="dashed")
@@ -577,11 +661,19 @@ fig1f_gr <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,17)) +  labs(x="dG/G", y="dM/M") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) + 
+                     values = c(16,17)) +  
+  labs(x = expression(frac(dG, G)), y = expression(frac(dM, M)),title = "Changes in tree mortality") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +  
   scale_x_continuous(limits = c(0,0.5)) + 
   scale_y_continuous(limits = c(0,0.5)) +
   geom_abline(slope=1, intercept = 0.0, linetype="dashed")
@@ -661,11 +753,19 @@ fig1g_dbh <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,17)) +  labs(x="dG/G", y="dk/k") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) + 
+                     values = c(16,17)) +  
+  labs(x = expression(frac(dG, G)), y = expression(frac(dk, k)), title = "Changes in C turnover rate") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) + 
   scale_x_continuous(limits = c(0,0.50), breaks = seq(0,0.5,0.10)) + 
   scale_y_continuous(limits = c(0,0.16), breaks = seq(0,0.15,0.05)) + 
   geom_hline(yintercept =  0.0, linetype="dashed")
@@ -743,13 +843,21 @@ fig1g_gr <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,17)) +  labs(x="dG/G", y="dk/k") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) + 
+                     values = c(16,17)) +  
+  labs(x = expression(frac(dG, G)), y = expression(frac(dk, k)),title = "Changes in C turnover rate") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) + 
   scale_x_continuous(limits = c(0,0.50), breaks = seq(0,0.5,0.10)) + 
-  scale_y_continuous(limits = c(0,0.030), breaks = seq(0,0.030,0.005)) +
+  scale_y_continuous(limits = c(0,0.16), breaks = seq(0,0.15,0.05)) + 
   geom_hline(yintercept =  0.0, linetype="dashed")
 
 fig1g_gr
@@ -772,14 +880,19 @@ fig1gg_dbh <- ggplot() +
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                         values = c("dotted","longdash","solid")) +
-  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) + 
+  labs(x = "t", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = c(.3,.19),
+                     legend.direction="horizontal",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +  
   scale_x_continuous(limits = c(450,1500), breaks = seq(500,1500,500)) + 
   scale_y_continuous(limits = c(0,32), breaks = seq(0,30,10))
-
 fig1gg_dbh
 
 # GR
@@ -797,17 +910,23 @@ fig1gg_gr <- ggplot() +
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                         values = c("dotted","longdash","solid")) +
-  labs(x = "Year", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) + 
+  labs(x = "t", y = expression(paste("Carbon turnover time ( ", tau, " , ", yr, ") "))) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="horizontal",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) + 
   scale_x_continuous(limits = c(450,1500), breaks = seq(500,1500,500)) + 
   scale_y_continuous(limits = c(0,30), breaks = seq(0,30,10))
-
 fig1gg_gr
 
 # Relative longevity vs. growth rates ####
+# longevity is maximum age at tile-level, plot mean across multiple years after spinup
 
 # DBH
 # DBH p1
@@ -819,9 +938,16 @@ dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=1300&year<=1500) %>% summarise(L30=max(MaxAge))
+L15 <- ea2sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=1300&year<=1500) %>% summarise(L15=max(MaxAge))
+L0  <- ea1sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=1300&year<=1500) %>% summarise(L0=max(MaxAge))
+dL0_15 <- (L15$L15 - L0$L0)/L0$L0
+dL15_30 <- (L30$L30 - L15$L15)/L15$L15
+dL0_30 <- (L30$L30 - L0$L0)/L0$L0
+
+#L30 <- ea3sa1DBHp1gl_out_annual_cohorts %>% dplyr::filter(year>=1500) %>% summarise(L30=max(age))
+#L15 <- ea2sa1DBHp1gl_out_annual_cohorts %>% dplyr::filter(year>=1500) %>% summarise(L15=max(age))
+#L0  <- ea1sa1DBHp1gl_out_annual_cohorts%>% dplyr::filter(year>=1500)  %>% summarise(L0=max(age))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
@@ -839,9 +965,16 @@ dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=1300&year<=1500) %>% summarise(L30=max(MaxAge))
+L15 <- ea2sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=1300&year<=1500) %>% summarise(L15=max(MaxAge))
+L0  <- ea1sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=1300&year<=1500) %>% summarise(L0=max(MaxAge))
+dL0_15 <- (L15$L15 - L0$L0)/L0$L0
+dL15_30 <- (L30$L30 - L15$L15)/L15$L15
+dL0_30 <- (L30$L30 - L0$L0)/L0$L0
+
+#L30 <- ea3sa1DBHp2gl_out_annual_cohorts %>% dplyr::filter(year>=1500) %>% summarise(L30=max(age))
+#L15 <- ea2sa1DBHp2gl_out_annual_cohorts %>% dplyr::filter(year>=1500) %>% summarise(L15=max(age))
+#L0  <- ea1sa1DBHp2gl_out_annual_cohorts%>% dplyr::filter(year>=1500)  %>% summarise(L0=max(age))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
@@ -858,9 +991,16 @@ dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=1300&year<=1500) %>% summarise(L30=max(MaxAge))
+L15 <- ea2sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=1300&year<=1500) %>% summarise(L15=max(MaxAge))
+L0  <- ea1sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=1300&year<=1500) %>% summarise(L0=max(MaxAge))
+dL0_15 <- (L15$L15 - L0$L0)/L0$L0
+dL15_30 <- (L30$L30 - L15$L15)/L15$L15
+dL0_30 <- (L30$L30 - L0$L0)/L0$L0
+
+#L30 <- ea3sa3DBHp1gl_out_annual_cohorts %>% dplyr::filter(year>=1500) %>% summarise(L30=max(age))
+#L15 <- ea2sa3DBHp1gl_out_annual_cohorts %>% dplyr::filter(year>=1500) %>% summarise(L15=max(age))
+#L0  <- ea1sa3DBHp1gl_out_annual_cohorts%>% dplyr::filter(year>=1500)  %>% summarise(L0=max(age))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
@@ -879,16 +1019,38 @@ fig1h_dbh <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,17)) +  labs(x="dG/G", y="dL/L") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) + 
+                     values = c(16,17)) +  
+  labs(x = expression(frac(dG, G)), y = expression(frac(dL, L)),title = "Changes in tree longevity") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
   scale_x_continuous(limits = c(0,0.50), breaks = seq(0,0.5,0.10)) + 
   scale_y_continuous(limits = c(-0.25,0), breaks = seq(-0.25,0,0.05)) +
   geom_hline(yintercept =  0.0, linetype="dashed")
-
 fig1h_dbh
+
+# DBH p1
+ea1sa1DBHp1gl_out_annual_tile <- ea1sa1DBHp1gl_out_annual_tile %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) 
+ea2sa1DBHp1gl_out_annual_tile <- ea2sa1DBHp1gl_out_annual_tile %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) 
+ea3sa1DBHp1gl_out_annual_tile <- ea3sa1DBHp1gl_out_annual_tile %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) 
+
+# DBH p2
+ea1sa1DBHp2gl_out_annual_tile <- ea1sa1DBHp1gl_out_annual_tile %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) 
+ea2sa1DBHp2gl_out_annual_tile <- ea2sa1DBHp1gl_out_annual_tile %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) 
+ea3sa1DBHp2gl_out_annual_tile <- ea3sa1DBHp1gl_out_annual_tile %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) 
+
+# DBH p3
+ea1sa1DBHp3gl_out_annual_tile <- ea1sa1DBHp1gl_out_annual_tile %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) 
+ea2sa1DBHp3gl_out_annual_tile <- ea2sa1DBHp1gl_out_annual_tile %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) 
+ea3sa1DBHp3gl_out_annual_tile <- ea3sa1DBHp1gl_out_annual_tile %>% mutate(MaxDBH_MaxAge = MaxDBH/MaxAge) 
 
 # GR
 # GR p1
@@ -900,9 +1062,9 @@ dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=1100&year<=1500) %>% summarise(L30=max(MaxAge))
+L15 <- ea2sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=1100&year<=1500) %>% summarise(L15=max(MaxAge))
+L0  <- ea1sa1GRp1gl_out_annual_tile %>% dplyr::filter(year>=1100&year<=1500) %>% summarise(L0=max(MaxAge))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
@@ -920,9 +1082,9 @@ dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=1100&year<=1500) %>% summarise(L30=max(MaxAge))
+L15 <- ea2sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=1100&year<=1500) %>% summarise(L15=max(MaxAge))
+L0  <- ea1sa1GRp2gl_out_annual_tile %>% dplyr::filter(year>=1100&year<=1500) %>% summarise(L0=max(MaxAge))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
@@ -939,9 +1101,9 @@ dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=1100&year<=1500) %>% summarise(L30=max(MaxAge))
+L15 <- ea2sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=1100&year<=1500) %>% summarise(L15=max(MaxAge))
+L0  <- ea1sa1GRp3gl_out_annual_tile %>% dplyr::filter(year>=1100&year<=1500) %>% summarise(L0=max(MaxAge))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
@@ -960,15 +1122,22 @@ fig1h_gr <- ggplot() +
   scale_color_manual("Parameter value", breaks = c("x1", "x2", "x3"), 
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_shape_manual("Level of LUE", breaks = c("0-15%","0-30%"), 
-                     values = c(16,17)) +  labs(x="dG/G", y="dL/L") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) + 
+                     values = c(16,17)) +  
+  labs(x = expression(frac(dG, G)), y = expression(frac(dL, L)),title = "Changes in tree longevity") + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+                     axis.title.y=element_text(angle=0, vjust = 0.5),
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) + 
   scale_x_continuous(limits = c(0,0.50), breaks = seq(0,0.5,0.10)) + 
-  scale_y_continuous(limits = c(-0.05,0), breaks = seq(-0.05,0,0.01)) +
+  scale_y_continuous(limits = c(-0.25,0), breaks = seq(-0.25,0,0.05)) +
   geom_hline(yintercept =  0.0, linetype="dashed")
-
 fig1h_gr
 
 # Distribution of tree sizes ####
@@ -988,7 +1157,7 @@ figdistr_dbh <- ggplot() +
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                         values = c("dotted","longdash","solid")) +
-  labs(x = "DBH (cm)", y = "Log(N)") + 
+  labs(x = "DBH (cm)", y = "Ln N") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
                      axis.text = element_text(size = 10),axis.title = element_text(size = 11),
                      legend.text = element_text(size = 10),legend.title = element_text(size = 11),
@@ -1011,7 +1180,7 @@ figdistr_gr <- ggplot() +
                      values = c("#009E73", "#0072B2", "#D55E00")) +
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                         values = c("dotted","longdash","solid")) +
-  labs(x = "DBH (cm)", y = "Log(N)") + 
+  labs(x = "DBH (cm)", y = "Ln N") + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
                      axis.text = element_text(size = 10),axis.title = element_text(size = 11),
                      legend.text = element_text(size = 10),legend.title = element_text(size = 11),
@@ -1276,128 +1445,26 @@ preddataLUE_DBH1 <- as.data.frame(pred)
 fig2aLUE_dbh1 <- ggplot() + 
   geom_point(data = data_DBH_p1Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
   geom_smooth(data= preddataLUE_DBH1, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size = .6) +
-  labs(x = "QMD", y = "N",
+              method = "lm",fullrange = T,size = .6, se=F) +
+  labs(x = "Ln QMD", y = "Ln N",title = expression(paste("Size-dependent mortality - ", italic("r")[italic("S1")])),
        color  = "Level of LUE", linetype = "Level of LUE") + 
-  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+  scale_linetype_manual("Level of LUE", 
+                        breaks = c("Control","+15%", "+30%"), 
+                        values = c("dotted","dashed","solid"),
+                        guide = guide_legend(override.aes = list(color = "black"))) +
+  theme_bw() +  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          axis.text = element_text(size = 10),axis.title = element_text(size = 10),
+          legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+          plot.title = element_text(size = 10),
+          legend.key = element_rect(fill = NA, color = NA),
+          legend.position = c(.15, .19),
+          legend.direction="vertical",
+          legend.margin = margin(2, 2, 2, 2),
+          legend.box.background = element_rect(color="black",size=0.2),
+          legend.box.margin = margin(1, 1, 1, 1)) +
+  scale_x_continuous(limits = c(3.0,4.5),breaks = seq(3.2,4.6,0.2)) + 
+  scale_y_continuous(limits = c(4.2,7),breaks = seq(4.5,7,.5)) 
 fig2aLUE_dbh1
-
-# as NPP change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(NPP_kg_ha_year), data = data_DBH_p1Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(NPP_kg_ha_year), data = data_DBH_p1Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-max(data_DBH_p1Den$NPP_kg_ha_year,na.rm=T)
-hist(data_DBH_p1Den$NPP_kg_ha_year)
-hist_NPP_dbh <- ggplot(data_DBH_p1Den, aes(x=NPP_kg_ha_year)) + geom_histogram(color="darkgrey", fill="#FFDB6D",binwidth=30) + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year",breaks = seq(10000,30000,1000)) +
-  scale_y_continuous("Frequency")
-hist_NPP_dbh
-
-fig2aNPP_dbh_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                           terms = c("logQMD","NPP_kg_ha_year[15000,17500,20000]"),title = "",
-                           axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Level of NPP",
-                           colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_DBH_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2aNPP_dbh_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "NPP_kg_ha_year[15000,17500,20000]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2aNPP_dbh1 <- ggplot() + 
-  geom_point(data = data_DBH_p1Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size =0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "NPP", linetype = "NPP") + 
-  scale_linetype_manual("NPP", breaks = c("15000","17500", "20000"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2aNPP_dbh1
-
-# as NPP Residuals change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(Res_NPP), data = data_DBH_p1Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(Res_NPP), data = data_DBH_p1Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-# Analysis of residuals
-ResG <- residuals(Fit_QMDInter)
-FittedG <- fitted(Fit_QMDInter)
-par(mfrow=c(2,2))
-plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
-abline(h=0) ## Homocedasticity
-plot(data_DBH_p1Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
-abline(0, 1) 
-hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
-boxplot(ResG,ylab = "Residuals")
-hist(data_DBH_p1Den$Res_NPP)
-hist_Res_dbh <- ggplot(data_DBH_p1Den, aes(x=Res_NPP)) + geom_histogram(color="darkgrey", fill="#FFDB6D") + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year") +
-  scale_y_continuous("Frequency")
-hist_Res_dbh
-
-fig2aRes_dbh_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                           terms = c("logQMD","Res_NPP[-0.2, 0, 0.2]"),title = "",
-                           axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Res_NPP",
-                           colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_DBH_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2aRes_dbh_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "Res_NPP[-0.2, 0, 0.2]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2aRes_dbh1 <- ggplot() + 
-  geom_point(data = data_DBH_p1Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="grey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size=0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "Res_NPP", linetype = "Res_NPP") + 
-  scale_linetype_manual("Res_NPP", breaks = c("-0.2","0", "0.2"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2aRes_dbh1
 
 # DBH2 ####
 ea1sa1DBHp2gl_out_annual_tile <- ea1sa1DBHp2gl_out_annual_tile %>% 
@@ -1503,129 +1570,27 @@ preddataLUE_DBH2 <- as.data.frame(pred)
 
 fig2bLUE_dbh2 <- ggplot() + 
   geom_point(data = data_DBH_p2Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddataLUE_DBH2, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size = .6) +
-  labs(x = "QMD", y = "N",
+  geom_smooth(data= preddataLUE_DBH2, aes(x=x, y=predicted, linetype=group),col="#0072B2",
+              method = "lm",fullrange = T,size = .6, se=F) +
+  labs(x = "Ln QMD", y = "Ln N",title = expression(paste("Size-dependent mortality - ", italic("r")[italic("S2")])),
        color  = "Level of LUE", linetype = "Level of LUE") + 
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                         values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                      axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
+  guides(color = "none") + 
+  scale_x_continuous(limits = c(3.0,4.5),breaks = seq(3.2,4.6,0.2)) + 
+  scale_y_continuous(limits = c(4.2,7),breaks = seq(4.5,7,.5))
+
 fig2bLUE_dbh2
-
-# as NPP change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(NPP_kg_ha_year), data = data_DBH_p2Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(NPP_kg_ha_year), data = data_DBH_p2Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-max(data_DBH_p2Den$NPP_kg_ha_year,na.rm=T)
-hist(data_DBH_p2Den$NPP_kg_ha_year)
-hist_NPP <- ggplot(data_DBH_p2Den, aes(x=NPP_kg_ha_year)) + geom_histogram(color="darkgrey", fill="#FFDB6D",binwidth=30) + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year",breaks = seq(10000,30000,1000)) +
-  scale_y_continuous("Frequency")
-hist_NPP
-
-fig2bNPP_dbh_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                             terms = c("logQMD","NPP_kg_ha_year[15000,17500,20000]"),title = "",
-                             axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Level of NPP",
-                             colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_DBH_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2bNPP_dbh_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "NPP_kg_ha_year[15000,17500,20000]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2bNPP_dbh2 <- ggplot() + 
-  geom_point(data = data_DBH_p2Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size =0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "NPP", linetype = "NPP") + 
-  scale_linetype_manual("NPP", breaks = c("15000","17500", "20000"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2bNPP_dbh2
-
-# as NPP Residuals change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(Res_NPP), data = data_DBH_p2Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(Res_NPP), data = data_DBH_p2Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-# Analysis of residuals
-ResG <- residuals(Fit_QMDInter)
-FittedG <- fitted(Fit_QMDInter)
-par(mfrow=c(2,2))
-plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
-abline(h=0) ## Homocedasticity
-plot(data_DBH_p2Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
-abline(0, 1) 
-hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
-boxplot(ResG,ylab = "Residuals")
-hist(data_DBH_p2Den$Res_NPP)
-hist_Res <- ggplot(data_DBH_p2Den, aes(x=Res_NPP)) + geom_histogram(color="darkgrey", fill="#FFDB6D") + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year") +
-  scale_y_continuous("Frequency")
-hist_Res
-
-fig2bRes_dbh_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                             terms = c("logQMD","Res_NPP[-0.2, 0, 0.2]"),title = "",
-                             axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Res_NPP",
-                             colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_DBH_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2bRes_dbh_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "Res_NPP[-0.2, 0, 0.2]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2bRes_dbh2 <- ggplot() + 
-  geom_point(data = data_DBH_p2Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size=0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "Res_NPP", linetype = "Res_NPP") + 
-  scale_linetype_manual("Res_NPP", breaks = c("-0.2","0", "0.2"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2bRes_dbh2
 
 # DBH3 ####
 ea1sa1DBHp3gl_out_annual_tile <- ea1sa1DBHp3gl_out_annual_tile %>% 
@@ -1731,129 +1696,27 @@ preddataLUE_DBH3 <- as.data.frame(pred)
 
 fig2cLUE_dbh3 <- ggplot() + 
   geom_point(data = data_DBH_p3Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddataLUE_DBH3, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size = .6) +
-  labs(x = "QMD", y = "N",
+  geom_smooth(data= preddataLUE_DBH3, aes(x=x, y=predicted, linetype=group),col="#D55E00",
+              method = "lm",fullrange = T,size = .6, se=F) +
+  labs(x = "Ln QMD", y = "Ln N",title = expression(paste("Size-dependent mortality - ", italic("r")[italic("S3")])),
        color  = "Level of LUE", linetype = "Level of LUE") + 
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                         values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                      axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                      legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                      plot.title = element_text(size = 10),
+                      legend.key = element_rect(fill = NA, color = NA),
+                      legend.position = "none",
+                      legend.direction="vertical",
+                      legend.margin = margin(2, 2, 2, 2),
+                      legend.box.background = element_rect(color="black",size=0.2),
+                      legend.box.margin = margin(1, 1, 1, 1)) +
+  guides(color = "none") + 
+  scale_x_continuous(limits = c(3.0,4.5),breaks = seq(3.2,4.6,0.2)) + 
+  scale_y_continuous(limits = c(4.2,7),breaks = seq(4.5,7,.5))
+
 fig2cLUE_dbh3
-
-# as NPP change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(NPP_kg_ha_year), data = data_DBH_p3Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(NPP_kg_ha_year), data = data_DBH_p3Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-max(data_DBH_p3Den$NPP_kg_ha_year,na.rm=T)
-hist(data_DBH_p3Den$NPP_kg_ha_year)
-hist_NPP <- ggplot(data_DBH_p3Den, aes(x=NPP_kg_ha_year)) + geom_histogram(color="darkgrey", fill="#FFDB6D",binwidth=30) + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year",breaks = seq(10000,30000,1000)) +
-  scale_y_continuous("Frequency")
-hist_NPP
-
-fig2cNPP_dbh_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                             terms = c("logQMD","NPP_kg_ha_year[15000,17500,20000]"),title = "",
-                             axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Level of NPP",
-                             colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_DBH_p3Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2cNPP_dbh_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "NPP_kg_ha_year[15000,17500,20000]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2cNPP_dbh3 <- ggplot() + 
-  geom_point(data = data_DBH_p3Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size =0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "NPP", linetype = "NPP") + 
-  scale_linetype_manual("NPP", breaks = c("15000","17500", "20000"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2cNPP_dbh3
-
-# as NPP Residuals change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(Res_NPP), data = data_DBH_p3Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(Res_NPP), data = data_DBH_p3Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-# Analysis of residuals
-ResG <- residuals(Fit_QMDInter)
-FittedG <- fitted(Fit_QMDInter)
-par(mfrow=c(2,2))
-plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
-abline(h=0) ## Homocedasticity
-plot(data_DBH_p3Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
-abline(0, 1) 
-hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
-boxplot(ResG,ylab = "Residuals")
-hist(data_DBH_p3Den$Res_NPP)
-hist_Res <- ggplot(data_DBH_p3Den, aes(x=Res_NPP)) + geom_histogram(color="darkgrey", fill="#FFDB6D") + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year") +
-  scale_y_continuous("Frequency")
-hist_Res
-
-fig2cRes_dbh_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                             terms = c("logQMD","Res_NPP[-0.2, 0, 0.2]"),title = "",
-                             axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Res_NPP",
-                             colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_DBH_p3Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2cRes_dbh_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "Res_NPP[-0.2, 0, 0.2]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2cRes_dbh3 <- ggplot() + 
-  geom_point(data = data_DBH_p3Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size=0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "Res_NPP", linetype = "Res_NPP") + 
-  scale_linetype_manual("Res_NPP", breaks = c("-0.2","0", "0.2"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2cRes_dbh3
 
 # GR
 
@@ -1962,128 +1825,25 @@ preddataLUE_GR1 <- as.data.frame(pred)
 fig2aLUE_gr1 <- ggplot() + 
   geom_point(data = data_GR_p1Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
   geom_smooth(data= preddataLUE_GR1, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size = .6) +
-  labs(x = "QMD", y = "N",
+              method = "lm",fullrange = T,size = .6, se=F) +
+  labs(x = "Ln QMD", y = "Ln N",title = expression(paste("Growth rate-dependent mortality - ", italic("r")[italic("GR1")])),
        color  = "Level of LUE", linetype = "Level of LUE") + 
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                         values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                      axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
+  guides(color = "none") + 
+scale_x_continuous(limits = c(3.6,4.4),breaks = seq(3.6,4.4,0.2)) + 
+  scale_y_continuous(limits = c(4.2,6.3),breaks = seq(4.5,6.0,.5))
 fig2aLUE_gr1
-
-# as NPP change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(NPP_kg_ha_year), data = data_GR_p1Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(NPP_kg_ha_year), data = data_GR_p1Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-max(data_GR_p1Den$NPP_kg_ha_year,na.rm=T)
-hist(data_GR_p1Den$NPP_kg_ha_year)
-hist_NPP_gr <- ggplot(data_GR_p1Den, aes(x=NPP_kg_ha_year)) + geom_histogram(color="darkgrey", fill="#FFDB6D",binwidth=30) + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year",breaks = seq(15000,30000,1000)) +
-  scale_y_continuous("Frequency")
-hist_NPP_gr
-
-fig2aNPP_gr_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                             terms = c("logQMD","NPP_kg_ha_year[17000,20000,23000]"),title = "",
-                             axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Level of NPP",
-                             colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_GR_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2aNPP_gr_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "NPP_kg_ha_year[17000,20000,23000]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2aNPP_gr1 <- ggplot() + 
-  geom_point(data = data_GR_p1Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size =0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "NPP", linetype = "NPP") + 
-  scale_linetype_manual("NPP", breaks = c("17000","20000", "23000"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2aNPP_gr1
-
-# as NPP Residuals change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(Res_NPP), data = data_GR_p1Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(Res_NPP), data = data_GR_p1Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-# Analysis of residuals
-ResG <- residuals(Fit_QMDInter)
-FittedG <- fitted(Fit_QMDInter)
-par(mfrow=c(2,2))
-plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
-abline(h=0) ## Homocedasticity
-plot(data_GR_p1Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
-abline(0, 1) 
-hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
-boxplot(ResG,ylab = "Residuals")
-hist(data_GR_p1Den$Res_NPP)
-hist_Res_gr <- ggplot(data_GR_p1Den, aes(x=Res_NPP)) + geom_histogram(color="darkgrey", fill="#FFDB6D") + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year") +
-  scale_y_continuous("Frequency")
-hist_Res_gr
-
-fig2aRes_gr_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                             terms = c("logQMD","Res_NPP[-0.2, 0, 0.2]"),title = "",
-                             axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Res_NPP",
-                             colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_GR_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2aRes_gr_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "Res_NPP[-0.2, 0, 0.2]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2aRes_gr1 <- ggplot() + 
-  geom_point(data = data_GR_p1Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="grey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size=0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "Res_NPP", linetype = "Res_NPP") + 
-  scale_linetype_manual("Res_NPP", breaks = c("-0.2","0", "0.2"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2aRes_gr1
 
 # GR2 ####
 ea1sa1GRp2gl_out_annual_tile <- ea1sa1GRp2gl_out_annual_tile %>% 
@@ -2189,129 +1949,26 @@ preddataLUE_GR2 <- as.data.frame(pred)
 
 fig2bLUE_gr2 <- ggplot() + 
   geom_point(data = data_GR_p2Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddataLUE_GR2, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size = .6) +
-  labs(x = "QMD", y = "N",
+  geom_smooth(data= preddataLUE_GR2, aes(x=x, y=predicted, linetype=group),col="#0072B2",
+              method = "lm",fullrange = T,size = .6, se=F) +
+  labs(x = "Ln QMD", y = "Ln N",title = expression(paste("Growth rate-dependent mortality - ", italic("r")[italic("GR2")])),
        color  = "Level of LUE", linetype = "Level of LUE") + 
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                         values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                      axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
+  guides(color = "none") + 
+  scale_x_continuous(limits = c(3.6,4.4),breaks = seq(3.6,4.4,0.2)) + 
+  scale_y_continuous(limits = c(4.2,6.3),breaks = seq(4.5,6.0,.5))
 fig2bLUE_gr2
-
-# as NPP change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(NPP_kg_ha_year), data = data_GR_p2Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(NPP_kg_ha_year), data = data_GR_p2Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-max(data_GR_p2Den$NPP_kg_ha_year,na.rm=T)
-hist(data_GR_p2Den$NPP_kg_ha_year)
-hist_NPP <- ggplot(data_GR_p2Den, aes(x=NPP_kg_ha_year)) + geom_histogram(color="darkgrey", fill="#FFDB6D",binwidth=30) + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year") +
-  scale_y_continuous("Frequency")
-hist_NPP
-
-fig2bNPP_gr_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                             terms = c("logQMD","NPP_kg_ha_year[17000,20000,23000]"),title = "",
-                             axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Level of NPP",
-                             colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_GR_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2bNPP_gr_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "NPP_kg_ha_year[17000,20000,23000]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2bNPP_gr2 <- ggplot() + 
-  geom_point(data = data_GR_p2Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size =0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "NPP", linetype = "NPP") + 
-  scale_linetype_manual("NPP", breaks = c("17000","20000", "23000"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2bNPP_gr2
-
-# as NPP Residuals change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(Res_NPP), data = data_GR_p2Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(Res_NPP), data = data_GR_p2Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-# Analysis of residuals
-ResG <- residuals(Fit_QMDInter)
-FittedG <- fitted(Fit_QMDInter)
-par(mfrow=c(2,2))
-plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
-abline(h=0) ## Homocedasticity
-plot(data_GR_p2Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
-abline(0, 1) 
-hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
-boxplot(ResG,ylab = "Residuals")
-hist(data_GR_p2Den$Res_NPP)
-hist_Res <- ggplot(data_GR_p2Den, aes(x=Res_NPP)) + geom_histogram(color="darkgrey", fill="#FFDB6D") + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year") +
-  scale_y_continuous("Frequency")
-hist_Res
-
-fig2bRes_gr_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                             terms = c("logQMD","Res_NPP[-0.2, 0, 0.2]"),title = "",
-                             axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Res_NPP",
-                             colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_GR_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2bRes_gr_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "Res_NPP[-0.2, 0, 0.2]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2bRes_gr2 <- ggplot() + 
-  geom_point(data = data_GR_p2Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size=0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "Res_NPP", linetype = "Res_NPP") + 
-  scale_linetype_manual("Res_NPP", breaks = c("-0.2","0", "0.2"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2bRes_gr2
 
 # GR3 ####
 ea1sa1GRp3gl_out_annual_tile <- ea1sa1GRp3gl_out_annual_tile %>% 
@@ -2417,141 +2074,41 @@ preddataLUE_GR3 <- as.data.frame(pred)
 
 fig2cLUE_gr3 <- ggplot() + 
   geom_point(data = data_GR_p3Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddataLUE_GR3, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size = .6) +
-  labs(x = "QMD", y = "N",
+  geom_smooth(data= preddataLUE_GR3, aes(x=x, y=predicted, linetype=group),col="#D55E00",
+              method = "lm",fullrange = T,size = .6, se=F) +
+  labs(x = "Ln QMD", y = "Ln N",title = expression(paste("Growth rate-dependent mortality - ", italic("r")[italic("GR3")])),
        color  = "Level of LUE", linetype = "Level of LUE") + 
   scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
                         values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                      axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+                     legend.text = element_text(size = 9),legend.title = element_text(size = 9),
+                     plot.title = element_text(size = 10),
+                     legend.key = element_rect(fill = NA, color = NA),
+                     legend.position = "none",
+                     legend.direction="vertical",
+                     legend.margin = margin(2, 2, 2, 2),
+                     legend.box.background = element_rect(color="black",size=0.2),
+                     legend.box.margin = margin(1, 1, 1, 1)) +
+  guides(color = "none") +  
+  scale_x_continuous(limits = c(3.6,4.4),breaks = seq(3.6,4.4,0.2)) + 
+  scale_y_continuous(limits = c(4.2,6.3),breaks = seq(4.5,6.0,.5))
 fig2cLUE_gr3
-
-# as NPP change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(NPP_kg_ha_year), data = data_GR_p3Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(NPP_kg_ha_year), data = data_GR_p3Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-max(data_GR_p3Den$NPP_kg_ha_year,na.rm=T)
-hist(data_GR_p3Den$NPP_kg_ha_year)
-hist_NPP <- ggplot(data_GR_p3Den, aes(x=NPP_kg_ha_year)) + geom_histogram(color="darkgrey", fill="#FFDB6D",binwidth=30) + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year") +
-  scale_y_continuous("Frequency")
-hist_NPP
-
-fig2cNPP_gr_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                             terms = c("logQMD","NPP_kg_ha_year[17000,20000,23000]"),title = "",
-                             axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Level of NPP",
-                             colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_GR_p3Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2cNPP_gr_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "NPP_kg_ha_year[17000,20000,23000]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2cNPP_gr3 <- ggplot() + 
-  geom_point(data = data_GR_p3Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size =0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "NPP", linetype = "NPP") + 
-  scale_linetype_manual("NPP", breaks = c("17000","20000", "23000"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2cNPP_gr3
-
-# as NPP Residuals change
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(Res_NPP), data = data_GR_p3Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(Res_NPP), data = data_GR_p3Den, na.action = "na.exclude")
-AICc(Fit_QMDInter,Fit_QMDNoInter)
-summary(Fit_QMDInter)
-summary(Fit_QMDNoInter)
-plot(allEffects(Fit_QMDInter))
-# Analysis of residuals
-ResG <- residuals(Fit_QMDInter)
-FittedG <- fitted(Fit_QMDInter)
-par(mfrow=c(2,2))
-plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
-abline(h=0) ## Homocedasticity
-plot(data_GR_p3Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
-abline(0, 1) 
-hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
-boxplot(ResG,ylab = "Residuals")
-hist(data_GR_p3Den$Res_NPP)
-hist_Res <- ggplot(data_GR_p3Den, aes(x=Res_NPP)) + geom_histogram(color="darkgrey", fill="#FFDB6D") + theme_bw() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
-  scale_x_continuous("NPP_kg_ha_year") +
-  scale_y_continuous("Frequency")
-hist_Res
-
-fig2cRes_gr_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                             terms = c("logQMD","Res_NPP[-0.2, 0, 0.2]"),title = "",
-                             axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Res_NPP",
-                             colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_GR_p3Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     plot.title = element_text(size = 11)) 
-fig2cRes_gr_a
-
-pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "Res_NPP[-0.2, 0, 0.2]"), full.data = TRUE)
-plot(pred, add.data = F) 
-preddata <- as.data.frame(pred)
-
-fig2cRes_gr3 <- ggplot() + 
-  geom_point(data = data_GR_p3Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
-  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
-              method = "lm",fullrange = T,size=0.6) +
-  labs(x = "QMD", y = "N",
-       color  = "Res_NPP", linetype = "Res_NPP") + 
-  scale_linetype_manual("Res_NPP", breaks = c("-0.2","0", "0.2"), 
-                        values = c("dotted","dashed","solid")) +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-                     legend.key.size = unit(1, 'cm'),
-                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
-#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
-fig2cRes_gr3
-
-
 
 # 3) Link model and observations ####
 
-# DBH
+# DBH ####
 # DBH1
 # Upward shift of the STL in the model
 preddataLUE_DBH1
+preddataLUE_DBH1 <- preddataLUE_DBH1 %>% mutate(e_predicted=exp(predicted))
 preddataLUE_DBH1_agg <- preddataLUE_DBH1 %>% group_by(x) %>% 
   mutate(STL_15=predicted-lag(predicted)) %>%
-  mutate(STL_30=predicted-lag(lag(predicted))) 
+  mutate(STL_30=predicted-lag(lag(predicted))) %>%
+  mutate(STL_15e=e_predicted-lag(e_predicted)) %>%
+  mutate(STL_30e=e_predicted-lag(lag(e_predicted))) 
+  #mutate(STL_15=(predicted-lag(predicted))/lag(predicted)) %>%
+  #mutate(STL_30=(predicted-lag(lag(predicted)))/lag(lag(predicted))) 
 
 N30 <- preddataLUE_DBH1_agg %>%
   filter(group=="+30%") %>%
@@ -2626,7 +2183,7 @@ load("~/rsofun/data/inputs/preddataRes.RData")
 preddata
 preddata_agg <- preddata %>% group_by(x) %>% 
   mutate(STL_15=predicted-lag(predicted)) %>%
-  mutate(STL_30=predicted-lag(lag(predicted))) 
+  mutate(STL_30=predicted-lag(lag(predicted)))  
 
 N30 <- preddata_agg %>%
   filter(group==1.5) %>%
@@ -2638,21 +2195,21 @@ N15 <- preddata_agg %>%
   ungroup(x) %>%
   summarise(STL_15=mean(STL_15)) %>% pull()
 
-load("~/rsofun/data/inputs/preddataGrowth.RData")
-preddata
-preddata_agg <- preddata %>% group_by(x) %>% 
-  mutate(STL_15=predicted-lag(predicted)) %>%
-  mutate(STL_30=predicted-lag(lag(predicted))) 
+load("~/rsofun/data/inputs/aggData_QMDbinsDen.RData")
+aggData_QMDbinsDen
+preddata_agg <- aggData_QMDbinsDen %>% 
+  mutate(STL_15=(e_predict15-e_predict0)) %>%
+  mutate(STL_30=(e_predict30-e_predict0)) %>%
+  dplyr::select(STL_15,STL_30)
+
+aggData_QMDbinsDen %>% 
+ summarise(predict15=max(e_predict30,na.rm=T))  
 
 N30 <- preddata_agg %>%
-  filter(group==21000) %>%
-  ungroup(x) %>%
-  summarise(STL_30=mean(STL_30)) %>% pull()
+  summarise(STL_30=mean(STL_30,na.rm=T)) %>% pull()
 
 N15 <- preddata_agg %>%
-  filter(group==18500) %>%
-  ungroup(x) %>%
-  summarise(STL_15=mean(STL_15)) %>% pull()
+  summarise(STL_15=mean(STL_15,na.rm=T)) %>% pull()
 
 fig4_dbh <- ggplot() + 
   geom_point(data=DBHp1gl_RelChange_B_NPP_0_15, aes(x=dlnB_dlnG, y=N15, color='x1', shape='0-15%'),size=3) + 
@@ -2669,8 +2226,8 @@ fig4_dbh <- ggplot() +
                      axis.text = element_text(size = 10),axis.title = element_text(size = 11),
                      legend.text = element_text(size = 10),legend.title = element_text(size = 11),
                      plot.title = element_text(size = 11)) + 
-  scale_x_continuous(limits = c(0.5,0.7),breaks=seq(0.5,0.7,0.2)) + 
-  scale_y_continuous(limits = c(0,0.2),breaks=seq(0,0.2,0.05)) +
+  #scale_x_continuous(limits = c(0.5,0.7),breaks=seq(0.5,0.7,0.2)) + 
+  #scale_y_continuous(limits = c(0,0.2),breaks=seq(0,0.2,0.05)) +
   geom_hline(yintercept = N15, linetype="dashed") +
   geom_hline(yintercept = N30, linetype="dashed") +
   geom_rect(aes(xmin=-Inf,xmax=Inf,ymin=N15,ymax=N30),fill="grey", alpha=0.2)
@@ -2678,7 +2235,7 @@ fig4_dbh
 
 # GR ####
 # GR1
-# Upward shift of the STL in the model ####
+# Upward shift of the STL in the model
 preddataLUE_GR1
 preddataLUE_GR1_agg <- preddataLUE_GR1 %>% group_by(x) %>% 
   mutate(STL_15=predicted-lag(predicted)) %>%
@@ -2694,7 +2251,7 @@ N15 <- preddataLUE_GR1_agg %>%
   ungroup(x) %>%
   summarise(STL_15=mean(STL_15)) %>% pull()
 
-# Relative change biomass (plantC) vs. NPP ####
+# Relative change biomass (plantC) vs. NPP
 GRp1gl_RelChange_B_NPP_0_15 <- GRp1gl_RelChange_B_NPP_0_15 %>%
   mutate(dlnB_dlnG = dB0_15/dNPP0_15) %>%
   mutate(N15=N15)
@@ -2703,7 +2260,7 @@ GRp1gl_RelChange_B_NPP_0_30 <- GRp1gl_RelChange_B_NPP_0_30 %>%
   mutate(N30=N30)
 
 # GR2
-# Upward shift of the STL in the model ####
+# Upward shift of the STL in the model
 preddataLUE_GR2
 preddataLUE_GR_agg2 <- preddataLUE_GR2 %>% group_by(x) %>% 
   mutate(STL_15=predicted-lag(predicted)) %>%
@@ -2719,7 +2276,7 @@ N15 <- preddataLUE_GR_agg2 %>%
   ungroup(x) %>%
   summarise(STL_15=mean(STL_15)) %>% pull()
 
-# Relative change biomass (plantC) vs. NPP ####
+# Relative change biomass (plantC) vs. NPP
 GRp2gl_RelChange_B_NPP_0_15 <- GRp2gl_RelChange_B_NPP_0_15 %>%
   mutate(dlnB_dlnG = dB0_15/dNPP0_15) %>%
   mutate(N15=N15)
@@ -2728,7 +2285,7 @@ GRp2gl_RelChange_B_NPP_0_30 <- GRp2gl_RelChange_B_NPP_0_30 %>%
   mutate(N30=N30)
 
 # GR3
-# Upward shift of the STL in the model ####
+# Upward shift of the STL in the model
 preddataLUE_GR3
 preddataLUE_GR_agg3 <- preddataLUE_GR3 %>% group_by(x) %>% 
   mutate(STL_15=predicted-lag(predicted)) %>%
@@ -2744,7 +2301,7 @@ N15 <- preddataLUE_GR_agg3 %>%
   ungroup(x) %>%
   summarise(STL_15=mean(STL_15)) %>% pull()
 
-# Relative change biomass (plantC) vs. NPP ####
+# Relative change biomass (plantC) vs. NPP
 GRp3gl_RelChange_B_NPP_0_15 <- GRp3gl_RelChange_B_NPP_0_15 %>%
   mutate(dlnB_dlnG = dB0_15/dNPP0_15) %>%
   mutate(N15=N15)
@@ -2752,7 +2309,7 @@ GRp3gl_RelChange_B_NPP_0_30 <- GRp3gl_RelChange_B_NPP_0_30 %>%
   mutate(dlnB_dlnG = dB0_30/dNPP0_30) %>%
   mutate(N30=N30)
 
-# Upward shift of the STL from observations ####
+# Upward shift of the STL from observations
 load("~/rsofun/data/inputs/preddataRes.RData")
 preddata
 preddata_agg <- preddata %>% group_by(x) %>% 
@@ -2811,42 +2368,23 @@ fig4_gr
 
 
 
-
-
-
 # Figure 1 ####
 ff1 <- fig1a_dbh + fig1b_dbh + fig1c_dbh + fig1d_dbh + fig1e_dbh + fig1f_dbh + fig1g_dbh + fig1h_dbh + 
   fig1a_gr + fig1b_gr + fig1c_gr + fig1d_gr + fig1e_gr + fig1f_gr + fig1g_gr + fig1h_gr + 
   plot_layout(ncol = 4) + 
-  plot_annotation(tag_levels = 'A') +
-  plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+  plot_annotation(tag_levels = 'A') #+
+  #plot_layout(guides = "collect") & theme(legend.position = 'bottom')
 ff1
-ggsave("~/rsofun/manuscript/figures/fig_1_Rev1.png", width = 12, height = 11, dpi=300)
+ggsave("~/rsofun/manuscript/figures/fig_1.png", width = 12, height = 11, dpi=300)
 
 # Figure 2 ####
 ff2LUE <- fig2aLUE_dbh1 + fig2bLUE_dbh2 + fig2cLUE_dbh3 + 
   fig2aLUE_gr1 + fig2bLUE_gr2 + fig2cLUE_gr3 + 
   plot_layout(ncol = 3) + 
-  plot_annotation(tag_levels = 'A') +
-  plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+  plot_annotation(tag_levels = 'A') #+
+  #plot_layout(guides = "collect") & theme(legend.position = 'bottom')
 ff2LUE
-ggsave("~/rsofun/manuscript/figures/fig2LUE.png", width = 12, height = 9, dpi=300)
-
-ff2NPP <- fig2aNPP_dbh1 + fig2bNPP_dbh2 + fig2cNPP_dbh3 + 
-  fig2aNPP_gr1 + fig2bNPP_gr2 + fig2cNPP_gr3 +
-  plot_layout(ncol = 3) + 
-  plot_annotation(tag_levels = 'A') +
-  plot_layout(guides = "collect") & theme(legend.position = 'bottom')
-ff2NPP
-ggsave("~/rsofun/manuscript/figures/fig2NPP.png", width = 12, height = 9, dpi=300)
-
-ff2Res <- fig2aRes_dbh + fig2bRes_dbh + fig2cRes_dbh + 
-  fig2aRes_gr1 + fig2bRes_gr2 + fig2cRes_gr3 +
-  plot_layout(ncol = 3) + 
-  plot_annotation(tag_levels = 'A') +
-  plot_layout(guides = "collect") & theme(legend.position = 'bottom')
-ff2Res
-ggsave("~/rsofun/manuscript/figures/fig2Res.png", width = 12, height = 9, dpi=300) 
+ggsave("~/rsofun/manuscript/figures/fig_2.png", width = 12, height = 8, dpi=300)
 
 ffhist <- hist_NPP_dbh + hist_NPP_gr +
   plot_layout(ncol = 2) + 

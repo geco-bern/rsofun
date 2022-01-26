@@ -502,6 +502,7 @@ contains
     ! update vegn GDD and tc_pheno
     vegn%gdd      = vegn%gdd + max(0.0, vegn%tc_daily - 278.15)
     vegn%tc_pheno = vegn%tc_pheno * 0.8 + vegn%Tc_daily * 0.2
+    ! print*, "vegn%gdd", vegn%gdd
 
     ! ON and OFF of phenology: change the indicator of growing season for deciduous
     cohortloop2: do i = 1,vegn%n_cohorts
@@ -804,7 +805,7 @@ contains
           ! Canopy mortality
             if (cc%bl_max > 0) then
             ! deathrate = param_nsc * 0.1 * (exp(-1.9*(cc%nsc/cc%bl_max))/(0.01+exp(-1.9*(cc%nsc/cc%bl_max)))) ! -1.9,-2.5,-3.5 cc%nsc/cc%resp
-            deathrate = param_nsc * 0.1/(1+(exp(3*((cc%nsc/cc%bl_max)-2.5)))) ! 2, 3, 5
+            deathrate = param_nsc * 0.1/(1+(exp(3*((cc%nsc/cc%bl_max)-2.5)))) ! 2, 3, 5 ! bl_max: Max. leaf biomass, kg C/individual
             endif
           endif
 
@@ -853,7 +854,7 @@ contains
                 ! deathrate = param_dbh * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh-1))/  &
                 !            (1. + exp(2.*(cc%dbh-1))))
-                deathrate = min(1.0, param_dbh * 0.1 * cc%dbh ** 1.5) ! 1.5, 2.0, 2.7 or 1.5, 2.5, 5.0
+                deathrate = min(1.0, param_dbh * 0.1 * cc%dbh ** 1.5) ! 1.5, 2.4, 4.0 or 1.5, 2.5, 5.0
               else
                 deathrate = sp%mortrate_d_c !0.01
               endif

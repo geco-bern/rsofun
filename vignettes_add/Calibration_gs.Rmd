@@ -49,7 +49,7 @@ params_siml <- tibble( #list
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
       method_photosynth     = "gs_leuning", # gs_leuning or pmodel
-      method_mortality      = "cstarvation" # dbh or cstarvation or growthrate or const_selfthing
+      method_mortality      = "cstarvation" # dbh or cstarvation or growthrate or const_selfthin
       )
 ```
 

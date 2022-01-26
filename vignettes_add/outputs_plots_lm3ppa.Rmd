@@ -310,7 +310,7 @@ ggplot() +
 ```{r}
 fig1a_dbh <- ggplot(data.frame(x = c(0, 1.05)), aes(x)) + 
   stat_function(fun = ~ 0.1*.x ^ 1.5, col="#009E73") +  
-  stat_function(fun = ~ 0.1*.x ^ 2.5, col="#0072B2") + 
+  stat_function(fun = ~ 0.1*.x ^ 2.4, col="#0072B2") + 
   stat_function(fun = ~ 0.1*.x ^ 4.0, col="#D55E00") + 
   labs(x='DBH', y='m') +
 theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
@@ -1488,9 +1488,9 @@ dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxDBH_MaxAge))
+L15 <- ea2sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxDBH_MaxAge))
+L0  <- ea1sa1DBHp1gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxDBH_MaxAge))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
@@ -1508,9 +1508,9 @@ dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxDBH_MaxAge))
+L15 <- ea2sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxDBH_MaxAge))
+L0  <- ea1sa1DBHp2gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxDBH_MaxAge))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
@@ -1527,9 +1527,9 @@ dNPP0_15 <- (NPP15$NPP15 - NPP0$NPP0)/NPP0$NPP0
 dNPP15_30 <- (NPP30$NPP30 - NPP15$NPP15)/NPP15$NPP15
 dNPP0_30 <- (NPP30$NPP30 - NPP0$NPP0)/NPP0$NPP0
 
-L30 <- ea3sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxAge))
-L15 <- ea2sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxAge))
-L0  <- ea1sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxAge))
+L30 <- ea3sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L30=mean(MaxDBH_MaxAge))
+L15 <- ea2sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L15=mean(MaxDBH_MaxAge))
+L0  <- ea1sa1DBHp3gl_out_annual_tile %>% dplyr::filter(year>=700&year<=1500) %>% summarise(L0=mean(MaxDBH_MaxAge))
 dL0_15 <- (L15$L15 - L0$L0)/L0$L0
 dL15_30 <- (L30$L30 - L15$L15)/L15$L15
 dL0_30 <- (L30$L30 - L0$L0)/L0$L0
@@ -1889,32 +1889,18 @@ leg3 <- as_ggplot(leg3)
 ##### DBH p1 
 ```{r}
 
+# DBH1 ####
 ea1sa1DBHp1gl_out_annual_tile <- ea1sa1DBHp1gl_out_annual_tile %>% 
   mutate(Mortality = "DBH") %>% 
   mutate(Parameter = "p1") %>% 
   mutate(LUE = "Control")
 
+# Convert NPP from KgC/m2/yr to KgC/ha/yr
+ea1sa1DBHp1gl_out_annual_tile$NPP_kg_ha_year <- ea1sa1DBHp1gl_out_annual_tile$NPP * 10000
+
 data_DBH_ea1p1 <- ea1sa1DBHp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
 sort(unique(data_DBH_ea1p1$QMD_bins))
-
-plot(data_DBH_ea1p1$NPP ~ data_DBH_ea1p1$QMD)
-data_DBH_ea1p1$logNPP <- log(data_DBH_ea1p1$NPP)
-FitRes = lm(logNPP ~ scale(QMD), data = data_DBH_ea1p1, na.action = "na.exclude")
-summary(FitRes)
-Res_NPP <- residuals(FitRes)
-Fitted_NPP <- fitted(FitRes)
-data_DBH_ea1p1$Res_NPP <- Res_NPP
-
-par(mfrow=c(2,2))
-plot(Res_NPP ~ Fitted_NPP, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
-abline(h=0) ## Homocedasticity
-plot(data_DBH_ea1p1$logNPP ~ Fitted_NPP, xlab="FittedG", ylab="NPP", main = "xyplot")
-abline(0, 1) 
-hist(Res_NPP, main="Histogram of residuals", xlab="Residuals") ## Normality
-boxplot(Res_NPP,ylab = "Residuals")
-
-max(data_DBH_ea1p1$NPP)
-min(data_DBH_ea1p1$Res_NPP)
+max(data_DBH_ea1p1$NPP_kg_ha_year)
 
 # Select from each QMD bins the number of plots with higher density
 # Includes a sensitivity analysis using quantiles from 0.5 to 0.9
@@ -1929,6 +1915,9 @@ ea2sa1DBHp1gl_out_annual_tile <- ea2sa1DBHp1gl_out_annual_tile %>%
   mutate(Mortality = "DBH") %>% 
   mutate(Parameter = "p1") %>% 
   mutate(LUE = "+15%")
+
+# Convert NPP from KgC/m2/yr to KgC/ha/yr
+ea2sa1DBHp1gl_out_annual_tile$NPP_kg_ha_year <- ea2sa1DBHp1gl_out_annual_tile$NPP * 10000
 
 data_DBH_ea2p1 <- ea2sa1DBHp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
 sort(unique(data_DBH_ea2p1$QMD_bins))
@@ -1946,6 +1935,9 @@ ea3sa1DBHp1gl_out_annual_tile <- ea3sa1DBHp1gl_out_annual_tile %>%
   mutate(Mortality = "DBH") %>% 
   mutate(Parameter = "p1") %>% 
   mutate(LUE = "+30%")
+
+# Convert NPP from KgC/m2/yr to KgC/ha/yr
+ea3sa1DBHp1gl_out_annual_tile$NPP_kg_ha_year <- ea3sa1DBHp1gl_out_annual_tile$NPP * 10000
 
 data_DBH_ea3p1 <- ea3sa1DBHp1gl_out_annual_tile %>% filter(year>=750) %>% mutate(QMD_bins = cut(QMD, breaks = 30)) 
 sort(unique(data_DBH_ea3p1$QMD_bins))
@@ -1966,105 +1958,164 @@ data_DBH_p1Rest <- rbind(data_DBH_ea1p1Rest, data_DBH_ea2p1Rest, data_DBH_ea3p1R
 data_DBH_p1Den <- data_DBH_p1Den %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
 data_DBH_p1Rest <- data_DBH_p1Rest %>% mutate(logDensity12=log(Density12),logQMD=log(QMD))
 
-sort(unique(data_DBH_p1$QMD_bins))
-
 ggplot() + 
   geom_point(data = data_DBH_p1, aes(x = log(QMD), y = log(Density12)), color="blue") +
   geom_point(data = data_DBH_p1Den, aes(x = log(QMD), y = log(Density12)), color="red") 
 
-# Residuals G ~ QMD
-plot(data_DBH_p1Den$NPP ~ data_DBH_p1Den$QMD)
-data_DBH_p1Den$logNPP <- log(data_DBH_p1Den$NPP)
-
-FitRes = lm(logNPP ~ scale(QMD), data = data_DBH_p1Den, na.action = "na.exclude")
+FitRes = lm(log(NPP_kg_ha_year) ~ QMD, data = data_DBH_p1Den, na.action = "na.exclude")
 summary(FitRes)
 Res_NPP <- residuals(FitRes)
 Fitted_NPP <- fitted(FitRes)
 data_DBH_p1Den$Res_NPP <- Res_NPP
 
-par(mfrow=c(2,2))
-plot(Res_NPP ~ Fitted_NPP, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
-abline(h=0) ## Homocedasticity
-plot(data_DBH_p1Den$logNPP ~ FittedG, xlab="FittedG", ylab="NPP", main = "xyplot")
-abline(0, 1) 
-hist(Res_NPP, main="Histogram of residuals", xlab="Residuals") ## Normality
-boxplot(Res_NPP,ylab = "Residuals")
-
 ### STL model
+#### as LUE change
 Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * LUE, data = data_DBH_p1Den, na.action = "na.exclude")
 Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + LUE, data = data_DBH_p1Den, na.action = "na.exclude")
-
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(NPP), data = data_DBH_p1Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(NPP), data = data_DBH_p1Den, na.action = "na.exclude")
-
-Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(Res_NPP), data = data_DBH_p1Den, na.action = "na.exclude")
-Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(Res_NPP), data = data_DBH_p1Den, na.action = "na.exclude")
-
 AICc(Fit_QMDInter,Fit_QMDNoInter)
 summary(Fit_QMDInter)
 summary(Fit_QMDNoInter)
-str(data_DBH_p1Den)
-
-# Analysis of residuals
-ResG <- residuals(Fit_QMDInter)
-FittedG <- fitted(Fit_QMDInter)
-par(mfrow=c(2,2))
-plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
-abline(h=0) ## Homocedasticity
-plot(data_DBH_p1Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
-abline(0, 1) 
-hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
-boxplot(ResG,ylab = "Residuals")
-
-plot(allEffects(Fit_QMDInter))
-plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                         terms = c("logQMD","LUE"))
-
-
-fig2a_dbh <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
-                         terms = c("logQMD","Res_NPP[-0.1,0,0.1]"),title = "",
-                         axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "LUE",
-                         colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
-  #geom_point(data = data_DBH_p1Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+plot(allEffects(Fit_QMDNoInter))
+fig2aLUE_dbh_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                           terms = c("logQMD","LUE"),title = "",
+                           axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Level of LUE",
+                           colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  #geom_point(data = data_DBH_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
-        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
-        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        plot.title = element_text(size = 11)) 
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+                     plot.title = element_text(size = 11)) 
+fig2aLUE_dbh_a
 
-fig2a_dbh
+pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "LUE"), full.data = TRUE)
+plot(pred, add.data = F) 
+preddataLUE_DBH1 <- as.data.frame(pred)
 
-# Analysis of residuals
-ResG <- residuals(Fit_QMDInter)
-FittedG <- fitted(Fit_QMDInter)
-par(mfrow=c(2,2))
-plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
-abline(h=0) ## Homocedasticity
-plot(data_DBH_p1Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
-abline(0, 1) 
-hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
-boxplot(ResG,ylab = "Residuals")
-
-ggplot() + 
-  geom_point(data= subset(ea1sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
-  geom_point(data=subset(ea2sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
-  geom_point(data=subset(ea3sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12)),alpha=.5,size=1,col="grey") + 
-  geom_smooth(data= subset(ea1sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='Control'),col="#009E73",
-              method = "lm",fullrange = T) + 
-  geom_smooth(data= subset(ea2sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+15%'),col="#009E73",
-              method = "lm",fullrange = T) +
-  geom_smooth(data= subset(ea3sa1DBHp1gl_out_annual_tile, year>=750), aes(x=log(QMD), y=log(Density12), linetype='+30%'),col="#009E73",
-              method = "lm",fullrange = T) +
-  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
-                     values = c("dotted","dashed","solid")) +
-  labs(x = "Quadratic Mean Diameter (QMD)", y = "Stand density (N)",
+fig2aLUE_dbh1 <- ggplot() + 
+  geom_point(data = data_DBH_p1Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
+  geom_smooth(data= preddataLUE_DBH1, aes(x=x, y=predicted, linetype=group),col="#009E73",
+              method = "lm",fullrange = T,size = .6) +
+  labs(x = "QMD", y = "N",
        color  = "Level of LUE", linetype = "Level of LUE") + 
+  scale_linetype_manual("Level of LUE", breaks = c("Control","+15%", "+30%"), 
+                        values = c("dotted","dashed","solid")) +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+                     legend.key.size = unit(1, 'cm'),
+                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
+#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+fig2aLUE_dbh1
+
+# as NPP change
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(NPP_kg_ha_year), data = data_DBH_p1Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(NPP_kg_ha_year), data = data_DBH_p1Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+plot(allEffects(Fit_QMDInter))
+max(data_DBH_p1Den$NPP_kg_ha_year,na.rm=T)
+hist(data_DBH_p1Den$NPP_kg_ha_year)
+hist_NPP_dbh <- ggplot(data_DBH_p1Den, aes(x=NPP_kg_ha_year)) + geom_histogram(color="darkgrey", fill="#FFDB6D",binwidth=30) + theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         axis.text = element_text(size = 10),axis.title = element_text(size = 11),
         legend.text = element_text(size = 10),legend.title = element_text(size = 11),
-        legend.key.size = unit(1, 'cm'),
-        plot.title = element_text(size = 11)) + ggtitle("a)") + guides(color = "none") #+ 
-  #scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
-  #scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
+  scale_x_continuous("NPP_kg_ha_year",breaks = seq(10000,30000,1000)) +
+  scale_y_continuous("Frequency")
+hist_NPP_dbh
+
+fig2aNPP_dbh_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                           terms = c("logQMD","NPP_kg_ha_year[15000,17500,20000]"),title = "",
+                           axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Level of NPP",
+                           colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  #geom_point(data = data_DBH_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+                     plot.title = element_text(size = 11)) 
+fig2aNPP_dbh_a
+
+pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "NPP_kg_ha_year[15000,17500,20000]"), full.data = TRUE)
+plot(pred, add.data = F) 
+preddata <- as.data.frame(pred)
+
+fig2aNPP_dbh1 <- ggplot() + 
+  geom_point(data = data_DBH_p1Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="darkgrey", inherit.aes = FALSE) +
+  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
+              method = "lm",fullrange = T,size =0.6) +
+  labs(x = "QMD", y = "N",
+       color  = "NPP", linetype = "NPP") + 
+  scale_linetype_manual("NPP", breaks = c("15000","17500", "20000"), 
+                        values = c("dotted","dashed","solid")) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+                     legend.key.size = unit(1, 'cm'),
+                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
+#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+fig2aNPP_dbh1
+
+# as NPP Residuals change
+Fit_QMDInter = lm(logDensity12 ~ scale(logQMD) * scale(Res_NPP), data = data_DBH_p1Den, na.action = "na.exclude")
+Fit_QMDNoInter = lm(logDensity12 ~ scale(logQMD) + scale(Res_NPP), data = data_DBH_p1Den, na.action = "na.exclude")
+AICc(Fit_QMDInter,Fit_QMDNoInter)
+summary(Fit_QMDInter)
+summary(Fit_QMDNoInter)
+plot(allEffects(Fit_QMDInter))
+# Analysis of residuals
+ResG <- residuals(Fit_QMDInter)
+FittedG <- fitted(Fit_QMDInter)
+par(mfrow=c(2,2))
+plot(ResG ~ FittedG, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted")
+abline(h=0) ## Homocedasticity
+plot(data_DBH_p1Den$logDensity12 ~ FittedG, xlab="FittedG", ylab="TreesPerHectareAHC1_2", main = "xyplot")
+abline(0, 1) 
+hist(ResG, main="Histogram of residuals", xlab="Residuals") ## Normality
+boxplot(ResG,ylab = "Residuals")
+hist(data_DBH_p1Den$Res_NPP)
+hist_Res_dbh <- ggplot(data_DBH_p1Den, aes(x=Res_NPP)) + geom_histogram(color="darkgrey", fill="#FFDB6D") + theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+        legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+        plot.margin = unit(c(.1,1,1,.5), "cm")) + ggtitle("") +
+  scale_x_continuous("NPP_kg_ha_year") +
+  scale_y_continuous("Frequency")
+hist_Res_dbh
+
+fig2aRes_dbh_a <- plot_model(Fit_QMDInter, type = "pred",show.data=TRUE, dot.size=1.5,
+                           terms = c("logQMD","Res_NPP[-0.2, 0, 0.2]"),title = "",
+                           axis.title = c("Quadratic Mean Diameter (QMD)","Stand density (N)"),legend.title = "Res_NPP",
+                           colors = c("#FC4E07", "#00AFBB", "#E7B800")) + 
+  #geom_point(data = data_DBH_p2Rest, aes(x = logQMD, y = logDensity12), alpha=0.2, size = 1,shape = 18, inherit.aes = FALSE) + 
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+                     plot.title = element_text(size = 11)) 
+fig2aRes_dbh_a
+
+pred <- ggpredict(Fit_QMDInter, terms = c("logQMD", "Res_NPP[-0.2, 0, 0.2]"), full.data = TRUE)
+plot(pred, add.data = F) 
+preddata <- as.data.frame(pred)
+
+fig2aRes_dbh1 <- ggplot() + 
+  geom_point(data = data_DBH_p1Den, aes(x = logQMD, y = logDensity12), alpha=0.3, size = 1,col="grey", inherit.aes = FALSE) +
+  geom_smooth(data= preddata, aes(x=x, y=predicted, linetype=group),col="#009E73",
+              method = "lm",fullrange = T,size=0.6) +
+  labs(x = "QMD", y = "N",
+       color  = "Res_NPP", linetype = "Res_NPP") + 
+  scale_linetype_manual("Res_NPP", breaks = c("-0.2","0", "0.2"), 
+                        values = c("dotted","dashed","solid")) +
+  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),legend.position = "bottom",
+                     axis.text = element_text(size = 10),axis.title = element_text(size = 11),
+                     legend.text = element_text(size = 10),legend.title = element_text(size = 11),
+                     legend.key.size = unit(1, 'cm'),
+                     plot.title = element_text(size = 11)) + guides(color = "none") #+ 
+#scale_x_continuous(limits = c(3.4,4.1),breaks = seq(3.5,4,0.1)) + 
+#scale_y_continuous(limits = c(4.5,6.5),breaks = seq(4,7,1))
+fig2aRes_dbh1
 
 ```
 

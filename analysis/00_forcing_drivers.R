@@ -19,7 +19,7 @@ FLX_HH_LAE <- read_csv("~/data/FLUXNET-2015_Tier1/20191024/HH/FLX_CH-Lae_FLUXNET
   mutate(YEAR=as.integer(YEAR),MONTH=as.numeric(MONTH),DOY=as.numeric(DOY),HOUR=as.numeric(HOUR))
 
 # Half-hourly data
-FluxForcing <- FluxForcing %>% 
+FluxForcing <- FLX_HH_LAE %>% 
   dplyr::rename(PAR=PPFD_IN,
                 Swdown=SW_IN_F,
                 TEMP=TA_F,
@@ -79,3 +79,7 @@ FluxForcing <- FluxForcing %>%
 FluxForcing <- FluxForcing %>% relocate(aCO2_AW, .after = PRESSURE) 
 forcingLAE <- FluxForcing
 save(forcingLAE, file = "~/rsofun/data/inputs/forcingLAE.RData")
+
+# For manual calib of GDD
+forpheno <- forcingLAE %>% filter(YEAR>2012) %>% group_by(YEAR, DOY) %>% summarise(meanTemp=mean(TEMP))
+write.csv(forpheno, "forpheno.csv")

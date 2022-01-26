@@ -424,8 +424,8 @@ module datatypes
   ! real :: gamma_LN(0:MSPECIES)= 70.5 ! 25.0  ! kgC kgN-1 yr-1
   ! real :: gamma_SW(0:MSPECIES)= 0.08 ! 5.0e-4 ! kgC m-2 Acambium yr-1
   ! real :: gamma_FR(0:MSPECIES)= 12.0 ! 15 !kgC kgN-1 yr-1 ! 0.6: kgC kgN-1 yr-1
-  ! real :: tc_crit(0:MSPECIES)= 283.16 ! OFF
-  ! real :: tc_crit_on(0:MSPECIES)= 280.16 ! ON
+  ! real :: tc_crit(0:MSPECIES)= 283.16 ! OFF !10 celsius
+  ! real :: tc_crit_on(0:MSPECIES)= 280.16 ! ON !7 celsius
   ! real :: gdd_crit(0:MSPECIES)= 280.0 ! Simulations 280, 240, 200
 
   !===== Allometry parameters

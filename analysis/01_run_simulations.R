@@ -33,7 +33,7 @@ params_siml <- tibble( #list
       update_annualLAImax   = TRUE,
       do_closedN_run        = TRUE,
       method_photosynth     = "gs_leuning", 
-      method_mortality      = "dbh"
+      method_mortality      = "dbh" # dbh or cstarvation or growthrate or const_selfthin
       )
 
 # Tile-level parameters
@@ -84,8 +84,8 @@ params_species <- tibble(
   gamma_SW      = rep(0.08,16),     # kgC m-2 Acambium yr-1
   gamma_FR      = rep(12.0,16),     # kgC kgN-1 yr-1
   tc_crit       = rep(283.16,16),   # OFF
-  tc_crit_on    = rep(280.16,16),   # ON
-  gdd_crit      = rep(280.0,16),    # Simulations 280, 240, 200
+  tc_crit_on    = rep(280.16,16),   # ON #280.16
+  gdd_crit      = rep(156.57,16),    # Simulations 280, 240, 200
   # Allometry parameters
   #alphaHT      = rep(36.0,16),   
   #thetaHT      = rep(0.5,16),   
@@ -103,7 +103,7 @@ params_species <- tibble(
   fNSNmax       = rep(5,16),                      # multiplier for NSNmax as sum of potential bl and br
   LMA           = c(0.05,0.17,0.11,rep(0.1,13)),  # Leaf mass per unit area. For sps: Beech-Spruce-Fir # In Ensheng rep(0.035,16)
   rho_wood      = c(590,370,350,rep(300,13)),     # In Ensheng rep(300,16),   # c(590,370,350,rep(300,13)),
-  alphaBM       = rep(5200,16),                   # c(0.19,0.15,0.09,rep(0.15,13)), # In Ensheng BiomeE: 5200.0 
+  alphaBM       = rep(0.19,16),                   # c(0.19,0.15,0.09,rep(0.15,13)), # In Ensheng BiomeE: rep(5200,16) 
   thetaBM       = c(2.36,2.30,2.54,rep(2.30,13)), # In Ensheng BiomeE: 2.5 rep(2.5,16),
   # add calibratable params
   kphio         = rep(0.05,16),
@@ -149,6 +149,7 @@ df_soiltexture <- bind_rows(
 
 ### Forcing drivers
 load("~/rsofun_local/input_data/forcingLAE.RData")
+write.csv(forcingLAE,"forcingLAE.csv")
 
 if (params_siml$method_photosynth == "gs_leuning"){
   forcingLAE <- forcingLAE %>% 
@@ -204,6 +205,11 @@ df_output$data[[1]]$output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
+
+df_output$data[[1]]$output_annual_tile %>% filter(year>=750) %>% 
+  ggplot() +
+  geom_line(aes(x = log(QMD), y = log(Density12))) +
+  theme_classic()+labs(x = "log(QMD)", y = "log(Density12)")
 
 write.csv(df_output$data[[1]]$output_annual_tile,   "~/rsofun/data/outputs/preDBHp2gs_output_annual_tile.csv")
 write.csv(df_output$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs/preDBHp2gs_output_annual_cohorts.csv")
