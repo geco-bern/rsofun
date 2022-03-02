@@ -22,17 +22,14 @@ module md_turnover
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   use md_classdefs
-  use md_params_core, only: npft, eps, nmonth
+  use md_params_core, only: nlu, npft, eps, nmonth
+  use md_tile
   use md_plant
-
-  use md_waterbal, only: solartype
-  use md_gpp, only: outtype_pmodel
-  use md_phenology, only: temppheno_type
 
   implicit none
 
   private
-  public turnover, turnover_root, turnover_leaf, turnover_labl, initoutput_turnover
+  public turnover, turnover_root, turnover_leaf, turnover_labl
 
   ! !----------------------------------------------------------------
   ! ! Module-specific output variables
@@ -42,14 +39,17 @@ module md_turnover
 
 contains
 
-  subroutine turnover( tile, tile_fluxes )
+  subroutine turnover( tile, tile_fluxes, doy )
     !////////////////////////////////////////////////////////////////
     !  Annual vegetation biomass turnover, called at the end of the
     !  year.
     !----------------------------------------------------------------
+    use md_phenology, only: shedleaves
+
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
+    integer, intent(in) :: doy
 
     ! local variables
     integer :: pft
@@ -63,10 +63,12 @@ contains
     logical, parameter :: verbose = .false.
     type( orgpool ) :: orgtmp, orgtmp2
 
-    do pft = 1, npft
+    pftloop: do pft = 1, npft
 
-      if (plant(pft)%plabl%c%c12 < -1.0 * eps) stop 'before turnover labile C is neg.'
-      if (plant(pft)%plabl%n%n14 < -1.0 * eps) stop 'before turnover labile N is neg.'
+      lu = params_pft_plant(pft)%lu_category
+
+      if (tile(lu)%plant(pft)%plabl%c%c12 < -1.0 * eps) stop 'before turnover labile C is neg.'
+      if (tile(lu)%plant(pft)%plabl%n%n14 < -1.0 * eps) stop 'before turnover labile N is neg.'
 
       !--------------------------------------------------------------
       ! Get turnover fractions
@@ -78,7 +80,7 @@ contains
 
         ! balance = plant_fluxes(pft)%dnpp%c12 - plant_fluxes(pft)%dcex
 
-        if (temppheno(pft)%shedleaves) then
+        if (shedleaves(doy,pft)) then
 
           droot = 1.0
           dleaf = 1.0
@@ -89,11 +91,12 @@ contains
         else
 
           ! Increase turnover rate towards high LAI ( when using non-zero value for k_decay_leaf_width, e.g. 0.08 )
-          dleaf =  (tile(lu)%plant(pft)%lai_ind * params_pft_plant(pft)%k_decay_leaf_width )**8 + params_pft_plant(pft)%k_decay_leaf_base
+          dleaf =  (tile(lu)%plant(pft)%lai_ind * params_pft_plant(pft)%k_decay_leaf_width )**8 &
+            + params_pft_plant(pft)%k_decay_leaf_base
 
           ! constant turnover rate
           droot = params_pft_plant(pft)%k_decay_root
-          dlabl = 0.0 !    params_pft_plant(pft)%k_decay_labl
+          dlabl = params_pft_plant(pft)%k_decay_labl
 
         end if
 
@@ -113,7 +116,7 @@ contains
       if (verbose) orgtmp  =  tile(lu)%plant(pft)%pleaf
       if (verbose) orgtmp2 =  tile(lu)%soil%plitt_af
       !--------------------------------------------------------------
-      if ( dleaf>0.0 ) call turnover_leaf( dleaf, tile(lu)%plant(pft), out_pmodel(pft,:), solar, pft ) !, jpngr
+      if ( dleaf>0.0 ) call turnover_leaf( dleaf, tile(lu), tile_fluxes(lu), pft ) !, jpngr
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
       if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%pleaf
@@ -135,16 +138,16 @@ contains
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_root() ... '
       if (verbose) print*, '              with state variables:'
-      if (verbose) print*, '              pleaf = ', plant(pft)%proot
-      if (verbose) print*, '              plitt = ', plant(pft)%plitt_bg
+      if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%proot
+      if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
       if (verbose) orgtmp  =  tile(lu)%plant(pft)%proot
       if (verbose) orgtmp2 =  tile(lu)%soil%plitt_bg
       !--------------------------------------------------------------
-      if ( droot>0.0 ) call turnover_root( droot, tile(lu)%plant(pft) )  ! pft, jpngr
+      if ( droot>0.0 ) call turnover_root( droot, tile(lu), pft )
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
-      if (verbose) print*, '              proot = ', plant(pft)%proot
-      if (verbose) print*, '              plitt = ', plant(pft)%plitt_bg
+      if (verbose) print*, '              proot = ', tile(lu)%plant(pft)%proot
+      if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
       if (verbose) print*, '              --- balance: '
       if (verbose) print*, '                  dlitt - droot                = ',  orgminus( &
                                                                                     orgminus( &
@@ -162,12 +165,12 @@ contains
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_root() ... '
       if (verbose) print*, '              with state variables:'
-      if (verbose) print*, '              pleaf = ', plant(:)%plabl
+      if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%plabl
       if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
       if (verbose) orgtmp  =  tile(lu)%plant(pft)%plabl
       if (verbose) orgtmp2 =  tile(lu)%soil%plitt_af
       !--------------------------------------------------------------
-      if ( dlabl>0.0 ) call turnover_labl( dlabl, tile(lu)%plant(pft) )  !  pft, jpngr
+      if ( dlabl>0.0 ) call turnover_labl( dlabl, tile(lu), pft )
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
       if (verbose) print*, '              plabl = ', tile(lu)%plant(:)%plabl
@@ -183,25 +186,19 @@ contains
                                                                                       tile(lu)%plant(pft)%proot &
                                                                                       ) &
                                                                                     )
-    enddo                     !pft
+    enddo pftloop
 
   end subroutine turnover
 
 
-  subroutine turnover_leaf( dleaf, plant, out_pmodel, solar, pft )  ! pft, jpngr
+  subroutine turnover_leaf( dleaf, tile, tile_fluxes, pft )
     !//////////////////////////////////////////////////////////////////
     ! Execute turnover of fraction dleaf for leaf pool
     !------------------------------------------------------------------
-    use md_params_core, only: npft, eps, nmonth
-    use md_waterbal, only: solartype
-    use md_gpp, only: outtype_pmodel
-    use md_plant, only: plant_type, get_fapar
-
     ! arguments
-    real, intent(in)    :: dleaf
-    type( plant_type ), intent(inout)  :: plant ! npft counts over PFTs in all land units (tiles)
-    type( outtype_pmodel ), dimension(nmonth), intent(in) :: out_pmodel
-    type( solartype ), intent(in)      :: solar
+    real, intent(in) :: dleaf
+    type( tile_type ), intent(inout)  :: tile
+    type( tile_fluxes_type ), intent(in) :: tile_fluxes
     integer, intent(in) :: pft
 
     ! local variables
@@ -219,26 +216,22 @@ contains
     nitr = 0
 
     ! store leaf C and N before turnover
-    lm_init = plant%pleaf
-
+    lm_init = tile%plant(pft)%pleaf
 
     ! reduce leaf C (given by turnover rate)
-    cleaf = ( 1.0 - dleaf ) *  plant%pleaf%c%c12
+    cleaf = ( 1.0 - dleaf ) * tile%plant(pft)%pleaf%c%c12
 
     ! get new LAI based on cleaf
-    ! print*,'IN TURNOVER: out_pmodel(:)%actnv_unitiabs:'
-    ! print*,out_pmodel(:)%actnv_unitiabs
-    lai_new = get_lai( pft, cleaf, solar%meanmppfd(:), out_pmodel(:)%actnv_unitiabs )
+    lai_new = get_lai( pft, cleaf, tile_fluxes%canopy%ppfd_memory, tile_fluxes%plant(pft)%actnv_unitiabs )
 
     ! update canopy state (only variable fAPAR so far implemented)
-    plant%fapar_ind = get_fapar( lai_new )
+    tile%plant(pft)%fapar_ind = get_fapar( lai_new )
 
     ! re-calculate metabolic and structural N, given new LAI and fAPAR
-    call update_leaftraits( plant, pft, lai_new, solar%meanmppfd(:), out_pmodel(:)%actnv_unitiabs )
-    ! leaftraits(pft) = get_leaftraits( pft, lai_new, solar%meanmppfd(:), out_pmodel%actnv_unitiabs )
+    call get_leaftraits( tile%plant(pft), tile_fluxes%canopy%ppfd_memory, tile_fluxes%plant(pft)%actnv_unitiabs )
 
     ! get updated leaf N
-    nleaf = plant%narea_canopy
+    nleaf = tile%plant(pft)%narea
 
     do while ( nleaf > lm_init%n%n14 )
 
@@ -248,17 +241,16 @@ contains
       cleaf = cleaf * lm_init%n%n14 / nleaf
 
       ! get new LAI based on cleaf
-      lai_new = get_lai( pft, cleaf, solar%meanmppfd(:), out_pmodel(:)%actnv_unitiabs )
+      lai_new = get_lai( pft, cleaf, tile_fluxes%canopy%ppfd_memory, tile_fluxes%plant(pft)%actnv_unitiabs )
 
       ! update canopy state (only variable fAPAR so far implemented)
-      plant%fapar_ind = get_fapar( lai_new )
+      tile%plant(pft)%fapar_ind = get_fapar( lai_new )
 
       ! re-calculate metabolic and structural N, given new LAI and fAPAR
-      call update_leaftraits( plant, pft, lai_new, solar%meanmppfd(:), out_pmodel(:)%actnv_unitiabs )
-      ! leaftraits(pft) = get_leaftraits( pft, lai_new, solar%meanmppfd(:), out_pmodel(:)%actnv_unitiabs )
+      call get_leaftraits( tile%plant(pft), tile_fluxes%canopy%ppfd_memory, tile_fluxes%plant(pft)%actnv_unitiabs )
 
       ! get updated leaf N
-      nleaf = plant%narea_canopy
+      nleaf = tile%plant(pft)%narea
 
       if (nitr>30) exit
 
@@ -269,12 +261,12 @@ contains
     ! if (nitr>0) print*,'final reduction of leaf N ', nleaf / lm_init%n%n14
 
     ! update 
-    plant%lai_ind = lai_new
-    plant%pleaf%c%c12 = cleaf
-    plant%pleaf%n%n14 = nleaf
+    tile%plant(pft)%lai_ind = lai_new
+    tile%plant(pft)%pleaf%c%c12 = cleaf
+    tile%plant(pft)%pleaf%n%n14 = nleaf
 
     ! determine C and N turned over
-    lm_turn = orgminus( lm_init, plant%pleaf )
+    lm_turn = orgminus( lm_init, tile%plant(pft)%pleaf )
 
     if ( lm_turn%c%c12 < -1.0*eps ) then
       stop 'negative turnover C'
@@ -288,107 +280,101 @@ contains
     end if
 
     ! add all organic (fixed) C to litter
-    ! call cmvRec( lm_turn%c, lm_turn%c, plant%plitt_af%c, outaCveg2lit(pft,jpngr), scale = plant%nind)
-    call cmv( lm_turn%c, lm_turn%c, plant%plitt_af%c, scale = plant%nind )
+    ! call cmvRec( lm_turn%c, lm_turn%c, tile%plant(pft)%plitt_af%c, outaCveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind))
+    call cmv( lm_turn%c, lm_turn%c, tile%soil%plitt_af%c, scale = real(tile%plant(pft)%nind) )
 
-    ! retain fraction of N
-    call nmv( nfrac( params_plant%f_nretain, lm_turn%n ), lm_turn%n, plant%plabl%n )
+    ! resorb fraction of N
+    call nmv( nfrac( params_plant%f_nretain, lm_turn%n ), lm_turn%n, tile%plant(pft)%plabl%n )
 
     ! rest goes to litter
-    ! call nmvRec( lm_turn%n, lm_turn%n, plant%plitt_af%n, outaNveg2lit(pft,jpngr), scale = plant%nind )
-    call nmv( lm_turn%n, lm_turn%n, plant%plitt_af%n, scale = plant%nind )
+    ! call nmvRec( lm_turn%n, lm_turn%n, tile%soil%plitt_af%n, outaNveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind) )
+    call nmv( lm_turn%n, lm_turn%n, tile%soil%plitt_af%n, scale = real(tile%plant(pft)%nind) )
 
   end subroutine turnover_leaf
 
 
-  subroutine turnover_root( droot, plant ) ! pft, jpngr
+  subroutine turnover_root( droot, tile, pft )
     !//////////////////////////////////////////////////////////////////
     ! Execute turnover of fraction droot for root pool
     !------------------------------------------------------------------
-    use md_plant, only: plant_type
-
     ! arguments
     real, intent(in)    :: droot
-    type( plant_type ), intent(inout) :: plant ! npft counts over PFTs in all land units (tiles)
-    ! integer, intent(in) :: pft
-    ! integer, intent(in) :: jpngr
+    type( tile_type ), intent(inout)  :: tile
+    integer, intent(in) :: pft
 
     ! local variables
     type(orgpool) :: rm_turn
 
     ! determine absolute turnover
-    rm_turn = orgfrac( droot, plant%proot ) ! root turnover
+    rm_turn = orgfrac( droot, tile%plant(pft)%proot ) ! root turnover
 
     ! reduce leaf mass and root mass
-    call orgsub( rm_turn, plant%proot )
+    call orgsub( rm_turn, tile%plant(pft)%proot )
 
     ! add all organic (fixed) C to litter
-    ! call cmvRec( rm_turn%c, rm_turn%c, plant%plitt_bg%c, outaCveg2lit(pft,jpngr), scale = plant%nind)
-    call cmv( rm_turn%c, rm_turn%c, plant%plitt_bg%c, scale = plant%nind)
+    ! call cmvRec( rm_turn%c, rm_turn%c, tile%soil%plitt_bg%c, outaCveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind))
+    call cmv( rm_turn%c, rm_turn%c, tile%soil%plitt_bg%c, scale = real(tile%plant(pft)%nind))
 
     ! retain fraction of N
-    call nmv( nfrac( params_plant%f_nretain, rm_turn%n ), rm_turn%n, plant%plabl%n )
+    call nmv( nfrac( params_plant%f_nretain, rm_turn%n ), rm_turn%n, tile%plant(pft)%plabl%n )
 
     ! rest goes to litter
-    ! call nmvRec( rm_turn%n, rm_turn%n, plant%plitt_bg%n, outaNveg2lit(pft,jpngr), scale = plant%nind )
-    call nmv( rm_turn%n, rm_turn%n, plant%plitt_bg%n, scale = plant%nind )
+    ! call nmvRec( rm_turn%n, rm_turn%n, tile%soil%plitt_bg%n, outaNveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind) )
+    call nmv( rm_turn%n, rm_turn%n, tile%soil%plitt_bg%n, scale = real(tile%plant(pft)%nind) )
 
   end subroutine turnover_root
 
 
-  subroutine turnover_labl( dlabl, plant ) ! pft, jpngr
+  subroutine turnover_labl( dlabl, tile, pft )
     !//////////////////////////////////////////////////////////////////
     ! Execute turnover of fraction dlabl for labl pool
     !------------------------------------------------------------------
-    use md_plant, only: plant_type
-
     ! arguments
     real, intent(in)    :: dlabl
-    type( plant_type ), intent(inout) :: plant ! npft counts over PFTs in all land units (tiles)
-    ! integer, intent(in) :: pft
-    ! integer, intent(in) :: jpngr
+    type( tile_type ), intent(inout)  :: tile
+    integer, intent(in) :: pft
 
     ! local variables
     type(orgpool) :: lb_turn
 
     ! detelbine absolute turnover
-    lb_turn = orgfrac( dlabl, plant%plabl ) ! labl turnover
+    lb_turn = orgfrac( dlabl, tile%plant(pft)%plabl ) ! labl turnover
 
     !! xxx think of something more plausible to put the labile C and N to
 
     ! reduce leaf mass and labl mass
-    call orgsub( lb_turn, plant%plabl )
+    call orgsub( lb_turn, tile%plant(pft)%plabl )
 
-    ! call orgmvRec( lb_turn, lb_turn, plant%plitt_af, outaCveg2lit(pft,jpngr), outaNveg2lit(pft,jpngr), scale = plant%nind )
-    call orgmv( lb_turn, lb_turn, plant%plitt_af, scale = plant%nind )
+    ! call orgmvRec( lb_turn, lb_turn, tile%plant(pft)%plitt_af, outaCveg2lit(pft,jpngr), outaNveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind) )
+    call orgmv( lb_turn, lb_turn, tile%soil%plitt_af, scale = real(tile%plant(pft)%nind) )
 
   end subroutine turnover_labl
 
 
-  subroutine initoutput_turnover( ngridcells )
-    !////////////////////////////////////////////////////////////////
-    ! Initialises all daily variables with zero.
-    ! Called at the beginning of each year by 'biosphere'.
-    !----------------------------------------------------------------
-    use md_interface, only: interface
-    use md_params_core, only: npft
+  ! subroutine initoutput_turnover( ngridcells )
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Initialises all daily variables with zero.
+  !   ! Called at the beginning of each year by 'biosphere'.
+  !   !----------------------------------------------------------------
+  !   use md_interface, only: interface
+  !   use md_params_core, only: npft
 
-    ! arguments
-    integer, intent(in) :: ngridcells
+  !   ! arguments
+  !   integer, intent(in) :: ngridcells
     
-    ! annual output variables
-    if (interface%params_siml%loutturnover) then
+  !   ! annual output variables
+  !   if (interface%params_siml%loutturnover) then
 
-      if (interface%steering%init) then
-        allocate( outaCveg2lit(npft,ngridcells) )
-        allocate( outaCveg2lit(npft,ngridcells) )
-      end if
+  !     if (interface%steering%init) then
+  !       allocate( outaCveg2lit(npft,ngridcells) )
+  !       allocate( outaCveg2lit(npft,ngridcells) )
+  !     end if
       
-      outaCveg2lit(:,:) = 0.0
-      outaCveg2lit(:,:) = 0.0
+  !     outaCveg2lit(:,:) = 0.0
+  !     outaCveg2lit(:,:) = 0.0
 
-    end if
+  !   end if
 
-  end subroutine initoutput_turnover
+  ! end subroutine initoutput_turnover
 
 end module md_turnover

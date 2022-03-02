@@ -16,8 +16,7 @@ module md_plant
   private
   public plant_type, plant_fluxes_type, getpar_modl_plant, &
     initglobal_plant, params_plant, params_pft_plant, ftemp, &
-    fmoist, add_seed
-    ! get_leaftraits, 
+    fmoist, add_seed, get_leaftraits, get_lai, get_fapar
 
   !----------------------------------------------------------------
   ! NON PFT-DEPENDENT PARAMETERS
@@ -137,6 +136,7 @@ module md_plant
     real :: gs_accl           ! acclimated stomatal conductance (xxx)
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
+    real :: actnv_unitiabs      ! metabolic leaf N per unit absorbed light (g N m-2 mol-1)
 
     ! ! annual variables
     ! real :: agpp             ! annual total gross primary production [gC/m2/yr]           
@@ -184,10 +184,10 @@ contains
     use md_lambertw, only: calc_wapr
 
     ! arguments
-    integer, intent(in)                 :: pft
-    real, intent(in)                    :: cleaf
-    real, dimension(nmonth), intent(in) :: meanmppfd
-    real, dimension(nmonth), intent(in) :: nv 
+    integer, intent(in) :: pft
+    real, intent(in) :: cleaf
+    real, intent(in) :: meanmppfd
+    real, intent(in) :: nv 
 
     ! function return variable
     real :: lai
@@ -199,32 +199,21 @@ contains
     integer :: nerror
 
 
-    if (cleaf>0.0) then
+    if (cleaf > 0.0) then
 
       ! Monthly variations in metabolic N, determined by variations in meanmppfd and nv should not result in variations in leaf traits. 
       ! In order to prevent this, assume annual maximum metabolic N, part of which is deactivated during months with lower insolation (and Rd reduced.)
-      maxnv = maxval( meanmppfd(:) * nv(:) )
-      ! print*,'meanmppfd(:): ', meanmppfd(:)
-      ! print*,'nv(:): ', nv(:)
+      maxnv = meanmppfd * nv
 
       alpha = maxnv * params_pft_plant(pft)%r_n_cw_v
       beta  = params_pft_plant(pft)%ncw_min
-      ! print*,'be'
       gamma = cleaf / ( c_molmass * params_pft_plant(pft)%r_ctostructn_leaf ) 
-      ! print*,'ni'
-      ! print*,'beta: ', beta
-      ! print*,'gamma: ', gamma
-      ! print*,'alpha: ', alpha
-      ! print*,'params_pft_plant(pft)%r_n_cw_v: ', params_pft_plant(pft)%r_n_cw_v
-      ! print*,'maxnv: ', maxnv
       arg_to_lambertw = alpha * params_plant%kbeer / beta * exp( (alpha - gamma) * params_plant%kbeer / beta )
-      ! print*,'sto'
       lai = 1.0 / (beta * params_plant%kbeer ) * &
         ( -alpha * params_plant%kbeer + &
           gamma * params_plant%kbeer + &
           beta * calc_wapr( arg_to_lambertw, 0, nerror, 9999 ) &
         )
-      ! print*,'cker'
     else
 
       lai = 0.0
@@ -281,15 +270,15 @@ contains
     use md_params_core, only: c_content_of_biomass, nmonth, n_molmass, c_molmass
 
     ! arguments
-    type( plant_type ), intent(inout)   :: plant
-    real, dimension(nmonth), intent(in) :: meanmppfd
-    real, dimension(nmonth), intent(in) :: nv
+    type( plant_type ), intent(inout) :: plant
+    real, intent(in) :: meanmppfd
+    real, intent(in) :: nv
 
     ! local variables
     real :: narea_metabolic_canopy   ! g N m-2-ground
 
     ! canopy-level, in units of gN / m2-ground 
-    narea_metabolic_canopy  = n_molmass * get_leaf_n_metabolic_canopy(  -9999.9, meanmppfd(:), nv(:), plant%fapar_ind )
+    narea_metabolic_canopy  = n_molmass * plant%fapar_ind * meanmppfd * nv
 
     ! leaf-level, in units of gN / m2-leaf 
     ! assume narea_metabolic is representative of the outer canopy, therefore divide by 1.0 (or just leave)

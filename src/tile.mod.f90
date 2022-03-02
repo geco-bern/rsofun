@@ -137,8 +137,9 @@ module md_tile
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
 
     ! radiation
-    real :: ppfd_splash
-    real :: dra              ! daily top-of-atmosphere solar radiation (J/m^2/d)
+    real :: ppfd_splash       ! photosynthetic photon flux density (PPFD) calculated by SPLASH (waterbal_splash.mod.f90) based on TOA solar radiation and cloud cover
+    real :: ppfd_memory       ! damped photosynthetic photon flux density (PPFD) 
+    real :: dra               ! daily top-of-atmosphere solar radiation (J/m^2/d)
 
     ! ! annual
     ! !----------------------------------------------------------------

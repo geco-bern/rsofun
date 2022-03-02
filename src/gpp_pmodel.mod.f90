@@ -147,6 +147,9 @@ contains
     patm_memory = dampen_variability( climate_acclimation%dpatm, params_gpp%tau_acclim, patm_memory )
     ppfd_memory = dampen_variability( climate_acclimation%dppfd, params_gpp%tau_acclim, ppfd_memory )
 
+    ! save damped PPFD for use outside this module
+    tile_fluxes(:)%canopy%ppfd_memory = ppfd_memory
+
     ! ! separate time scale for minimum temperature stress
     ! tmin_memory = dampen_variability( climate_acclimation%dtmin, params_gpp%tau_acclim_tempstress, tmin_memory )
 
@@ -202,10 +205,15 @@ contains
       lu = 1
 
       !----------------------------------------------------------------
+      ! Save metabolic N content per unit absorbed light
+      !----------------------------------------------------------------
+      tile_fluxes(lu)%plant(pft)%actnv_unitiabs = out_pmodel%actnv_unitiabs
+
+      !----------------------------------------------------------------
       ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
       !----------------------------------------------------------------
       if (do_soilmstress) then
-        soilmstress = calc_soilmstress( tile(1)%soil%phy%wscal, 0.0, params_pft_plant(1)%grass, &
+        soilmstress = calc_soilmstress( tile(lu)%soil%phy%wscal, 0.0, params_pft_plant(pft)%grass, &
         params_gpp%soilm_par_a, params_gpp%soilm_par_b )
       else
         soilmstress = 1.0

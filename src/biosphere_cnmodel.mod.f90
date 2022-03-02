@@ -6,12 +6,14 @@ module md_biosphere_cnmodel
   use md_tile, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
     getpar_modl_tile, diag_daily, diag_annual, init_annual
   use md_plant, only: getpar_modl_plant
+  use md_phenology, only: gettempphenology, getpar_modl_phenology
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_cnmodel, only: vegdynamics
   use md_soiltemp, only: soiltemp
   use md_npp, only: npp
   use md_nuptake, only: getpar_modl_nuptake, nuptake
+  use md_turnover, only: turnover
 
   implicit none
 
@@ -61,6 +63,7 @@ contains
       ! if (verbose) print*, 'getpar_modl() ...'
       call getpar_modl_tile()
       call getpar_modl_plant()
+      call getpar_modl_phenology()
       call getpar_modl_waterbal()
       call getpar_modl_gpp()
       call getpar_modl_nuptake()
@@ -79,6 +82,13 @@ contains
     ! Set annual sums to zero
     !----------------------------------------------------------------
     call init_annual( tile_fluxes(:) )
+
+    !----------------------------------------------------------------
+    ! Get phenology variables (temperature-drivenå)
+    !----------------------------------------------------------------
+    ! if (verbose) print*, 'calling gettempphenology() ...'
+    call gettempphenology( myinterface%climate(:)%dtemp )
+    ! if (verbose) print*, '... done'
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -246,7 +256,7 @@ contains
         ! if (baltest) orgtmp1 = orgplus( pleaf(1,jpngr), proot(1,jpngr), plabl(1,jpngr) )
         ! if (baltest) orgtmp2 = orgplus( plitt_af(1,jpngr), plitt_as(1,jpngr), plitt_bg(1,jpngr) )
         !----------------------------------------------------------------
-        call turnover( jpngr, day )
+        call turnover( tile(:), tile_fluxes(:), doy )
         !----------------------------------------------------------------
         ! if (verbose) print*, '              ==> returned: '
         ! if (verbose) print*, '              pleaf = ', pleaf(:,jpngr)
