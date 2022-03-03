@@ -11,7 +11,8 @@ library(multidplyr)
 # DBH param 1,2,3 - Calibration for param 2
 load("~/rsofun/data/inputs/df_drivers_DBH_gs.RData")
 #load("~/rsofun/data/inputs/settings_calib_DBH_gs_uniq_euler.RData")
-load("~/rsofun/data/inputs/settings_calib_DBH_gs_rev2_euler.RData")
+load("~/rsofun/data/inputs/settings_calib_DBH_gs_2_euler.RData")
+#load("~/rsofun/data/inputs/settings_calib_DBH_gs_rev2_euler.RData")
 
 df_drivers$params_species[[1]]$phiRL      <-  settings_calib_DBH_gs$par_opt["phiRL"]  
 df_drivers$params_species[[1]]$LAI_light  <-  settings_calib_DBH_gs$par_opt["LAI_light"]
@@ -59,6 +60,16 @@ write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs
 
 write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/data/outputs/ea3sa1DBHp3gl_out_annual_tile.csv")
 write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs/ea3sa1DBHp3gl_out_annual_cohorts.csv")
+
+# DBH p4
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/data/outputs/plus/ea1sa1DBHp4gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs/plus/ea1sa1DBHp4gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/data/outputs/plus/ea2sa1DBHp4gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs/plus/ea2sa1DBHp4gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_tile,   "~/rsofun/data/outputs/plus/ea3sa1DBHp4gl_out_annual_tile.csv")
+write.csv(df_calib_DBH_gs$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs/plus/ea3sa1DBHp4gl_out_annual_cohorts.csv")
 
 # Compare targets before and after calibration - DBH
 
@@ -167,6 +178,16 @@ write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs/
 
 write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/data/outputs/ea3sa1GRp3gl_out_annual_tile.csv")
 write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs/ea3sa1GRp3gl_out_annual_cohorts.csv")
+
+# GR p4
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/data/outputs/ea1sa1GRp4gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs/ea1sa1GRp4gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/data/outputs/ea2sa1GRp4gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs/ea2sa1GRp4gl_out_annual_cohorts.csv")
+
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_tile,   "~/rsofun/data/outputs/ea3sa1GRp4gl_out_annual_tile.csv")
+write.csv(df_calib_GR_gs$data[[1]]$output_annual_cohorts,"~/rsofun/data/outputs/ea3sa1GRp4gl_out_annual_cohorts.csv")
 
 # Compare targets before and after calibration - GR
 

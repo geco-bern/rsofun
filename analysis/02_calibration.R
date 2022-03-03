@@ -33,7 +33,12 @@ d_param_lnb0_AG <- d_param %>% dplyr::filter(equation_n==3,parameter_id==1,compo
 d_param_b1_AG <- d_param %>% dplyr::filter(equation_n==3,parameter_id==1,component_n=="Aboveground",parameter=="b1") %>% rename(SPECIES=species, b1_AG=value)
 d_param_lnb0_BG <- d_param %>% dplyr::filter(equation_n==3,parameter_id==1,component_n=="Root mass",parameter=="lnb0") %>% rename(SPECIES=species, lnb0_BG=value)
 d_param_b1_BG <- d_param %>% dplyr::filter(equation_n==3,parameter_id==1,component_n=="Root mass",parameter=="b1") %>% rename(SPECIES=species, b1_BG=value)
-LAE_data_bio <- LAE_data %>% left_join(d_param_lnb0_AG[,c(1,8)]) %>% left_join(d_param_b1_AG[,c(1,8)]) %>% left_join(d_param_lnb0_BG[,c(1,8)])  %>% left_join(d_param_b1_BG[,c(1,8)]) %>% mutate(lnb0_AG=ifelse(is.na(lnb0_AG),mean(d_param_lnb0_AG$lnb0_AG,na.rm=T),lnb0_AG)) %>% mutate(b1_AG=ifelse(is.na(b1_AG),mean(d_param_b1_AG$b1_AG,na.rm=T),b1_AG)) %>% mutate(lnb0_BG=ifelse(is.na(lnb0_BG),mean(d_param_lnb0_BG$lnb0_BG,na.rm=T),lnb0_BG)) %>% mutate(b1_BG=ifelse(is.na(b1_BG),mean(d_param_b1_BG$b1_BG,na.rm=T),b1_BG)) 
+LAE_data_bio <- LAE_data %>% left_join(d_param_lnb0_AG[,c(1,8)]) %>% left_join(d_param_b1_AG[,c(1,8)]) %>% left_join(d_param_lnb0_BG[,c(1,8)])  %>%
+  left_join(d_param_b1_BG[,c(1,8)]) %>% 
+  mutate(lnb0_AG=ifelse(is.na(lnb0_AG),mean(d_param_lnb0_AG$lnb0_AG,na.rm=T),lnb0_AG)) %>%
+  mutate(b1_AG=ifelse(is.na(b1_AG),mean(d_param_b1_AG$b1_AG,na.rm=T),b1_AG)) %>% 
+  mutate(lnb0_BG=ifelse(is.na(lnb0_BG),mean(d_param_lnb0_BG$lnb0_BG,na.rm=T),lnb0_BG)) %>%
+  mutate(b1_BG=ifelse(is.na(b1_BG),mean(d_param_b1_BG$b1_BG,na.rm=T),b1_BG)) 
 # Filter trees with DBH >= 12 cm
 LAE_data_bio <- LAE_data_bio %>% dplyr::filter(DBH_cm >= 12)
 # Calcualte Biomass
@@ -47,6 +52,7 @@ BiomassLAE <- mean(LAE_data_bio_allsps$TotalBiomass_Kg)/LAE_m2
 LAE_data <- read_csv("~/data/LWF/Laegeren/20201216_Laegeren_data.csv") # Data from Vova
 LAE_data <- LAE_data %>% mutate(DBH_cm = UMFANG/pi)
 LAE_data %>% group_by(INVYEAR) %>% summarise(nTrees=n())
+LAE_data %>% group_by(INVYEAR) %>% summarise(nTrees=n()) %>% ungroup() %>% summarise(nTrees=mean(nTrees)) %>% mutate(Treesperha=nTrees/LAE_ha)
 LAE_nTrees <- LAE_data %>% dplyr::filter(DBH_cm >= 12.0)
 # For all tree species
 LAE_allsps <- LAE_nTrees %>% group_by(INVYEAR) %>% summarise(nTrees=n())

@@ -826,7 +826,7 @@ contains
           !                  (1.*exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))/ &
           !                  (1. + exp(1*(cc%bsw+cc%bHW-cc%ABG_ys-6.0))))
           ! deathrate = param_gr * 0.1 * (exp(0.9*(cc%bsw+cc%bHW-cc%ABG_ys))/(100+exp(0.9*(cc%bsw+cc%bHW-cc%ABG_ys)))) ! 0.55,0.7,0.9
-          deathrate = param_gr * 0.1/(1+(exp(-0.8*((cc%bsw+cc%bHW-cc%ABG_ys)-10)))) ! -0.5, -0.8, -1.4
+          deathrate = param_gr * 0.1/(1+(exp(-5.0*((cc%bsw+cc%bHW-cc%ABG_ys)-10)))) ! -0.5, -0.8, -1.4, 5.0
           endif
           ! print*, "cc%dbh-cc%DBH_ys", cc%dbh-cc%DBH_ys
           ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys
@@ -854,7 +854,7 @@ contains
                 ! deathrate = param_dbh * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh-1))/  &
                 !            (1. + exp(2.*(cc%dbh-1))))
-                deathrate = min(1.0, param_dbh * 0.1 * cc%dbh ** 1.5) ! 1.5, 2.4, 4.0 or 1.5, 2.5, 5.0
+                deathrate = min(1.0, param_dbh * 0.1 * cc%dbh ** 10.0) ! 1.5, 2.5, 5.0, 12.0
               else
                 deathrate = sp%mortrate_d_c !0.01
               endif
