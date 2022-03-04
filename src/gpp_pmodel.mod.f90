@@ -163,8 +163,12 @@ contains
       ! Low-temperature effect on quantum yield efficiency 
       !----------------------------------------------------------------
       ! take the slowly varying temperature for governing quantum yield variations
-      ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 ) & 
-        * calc_ftemp_kphio_tmin( climate_acclimation%dtmin, params_gpp%par_shape_tempstress )
+      if (do_tempstress) then
+        ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 ) & 
+          * calc_ftemp_kphio_tmin( climate_acclimation%dtmin, params_gpp%par_shape_tempstress )
+      else
+        ftemp_kphio = 1.0
+      end if
 
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 

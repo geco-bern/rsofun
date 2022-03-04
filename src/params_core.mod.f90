@@ -12,6 +12,8 @@ module md_params_core
   integer, parameter :: nhoursyear = 8760        ! number of days in a year
   integer, parameter :: nmonth = 12              ! number of months in a year
   real,    parameter :: secs_per_day = 86400.0   ! number of seconds in a day
+  integer, parameter :: hours_per_year = 365 * 24  
+  real,    parameter :: seconds_per_year = 365. * 24. * 3600.
 
   ! From LM3-PPA
   integer, parameter :: nlayers_soil = 3         ! number of soil layers
@@ -26,6 +28,11 @@ module md_params_core
   integer, parameter :: nvars_annual_tile = 59
   integer, parameter :: nvars_annual_cohorts = 29
 
+  !===== Physical constants
+  real, parameter :: mol_CO2  = 44.00995e-3           ! molar mass of CO2,kg
+  real, parameter :: H2OLv0   = 2.501e6               ! latent heat H2O (J/kg)
+  real, parameter :: DENS_H2O = 1000.                 ! kg m-3
+
   ! From SOFUN
   integer, parameter :: maxgrid = 1              ! number of spatial gridcells (dummy dimension for later code extension)
   integer, parameter :: nbucket = 2              ! number of buckets for soil water model
@@ -35,7 +42,7 @@ module md_params_core
   integer, parameter :: lucrop = 2               ! ID of crop land unit
 
   integer, parameter, dimension(npft) :: pft_start = 1
-  integer, parameter, dimension(npft) :: pft_end   = 1 !3
+  integer, parameter, dimension(npft) :: pft_end   = 1
 
   integer, parameter, dimension(nmonth)   :: ndaymonth = (/31,28,31,30,31,30,31,31,30,31,30,31/) ! number of days per month
   integer, parameter, dimension(nmonth+1) :: middaymonth = (/16,44,75,105,136,166,197,228,258,289,319,350,381/) ! day of year of middle-month-day
@@ -44,7 +51,7 @@ module md_params_core
   real, parameter :: pi = 3.14159265359          ! pi - what else?
   real, parameter :: c_molmass = 12.0107         ! g C / mol C
   real, parameter :: n_molmass = 14.0067         ! g N / mol N
-  real, parameter :: h2o_molmass = 44.013        ! g H2O / mol H2O
+  real, parameter :: h2o_molmass = 18.01528      ! g H2O / mol H2O
   real, parameter :: c_content_of_biomass = 0.46 ! gC / g-dry mass
 
   real, parameter :: kTkelvin = 273.15           ! freezing point in K (= 0 deg C) 

@@ -3,6 +3,7 @@ module datatypes
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_interface_lm3ppa, only: myinterface
   use md_params_core
+  use md_classdefs
 
   ! define data types and constants
   implicit none
@@ -25,24 +26,21 @@ module datatypes
 
   !=============== Constants =============================================================
   logical, public, parameter :: read_from_parameter_file = .TRUE.
-  integer, public, parameter :: days_per_year            = 365
-  integer, public, parameter :: hours_per_year           = 365 * 24  
-  real,    public, parameter :: seconds_per_year         = 365. * 24. * 3600.
-  real,    public, parameter :: seconds_per_day          = 24. * 3600.
   integer, public, parameter :: max_lev                  = 3                     ! Soil layers, for soil water dynamics
   integer, public, parameter :: num_l                    = 3                     ! Soil layers
   integer, public, parameter :: LEAF_ON                  = 1
   integer, public, parameter :: LEAF_OFF                 = 0
   integer, public, parameter :: PT_C3                    = 0                     ! physiology types
   integer, public, parameter :: PT_C4                    = 1                     ! physiology types
+
   !===== Soil water hydrualics
-  real, public, parameter :: rzone                       = 2.0                   !m
-  real,public, parameter ::  thksl(max_lev)              = (/0.05,0.45,1.5/)     ! m, thickness of soil layers
+  real, public, parameter :: rzone                       = 2.0                   ! m
+  real,public, parameter ::  thksl(max_lev)              = (/0.05, 0.45, 1.5/)   ! m, thickness of soil layers
   real, public, parameter :: psi_wilt                    = -150.0                ! matric head at wilting
   real, public, parameter :: K_rel_min                   = 1.e-12
   real, public, parameter :: rate_fc                     = 0.1/86400             ! 0.1 mm/d drainage rate at FC
   real, public, parameter :: ws0                         = 0.02                  ! hygroscopic point
-  real, public, parameter :: Edepth                      = 0.05                  !m, the depth of soil for surface evaporation
+  real, public, parameter :: Edepth                      = 0.05                  ! m, the depth of soil for surface evaporation
   integer, public, parameter :: & ! soil types
                     Sand        = 1, &
                     LoamySand   = 2, &
@@ -53,26 +51,18 @@ module datatypes
                     Clay        = 7
   integer, public, parameter :: PHEN_DECIDIOUS           = 0                     ! phenology type
   integer, public, parameter :: PHEN_EVERGREEN           = 1                     ! phenology type
+
   !===== Soil SOM reference C/N ratios
   real, public, parameter :: CN0metabolicL               = 15.0 
   real, public, parameter :: CN0structuralL              = 40.0 
-  !===== Physical constants
-  real, public, parameter :: TFREEZE                     = 273.16
-  real, public, parameter :: Rugas                       = 8.314472              ! universal gas constant, J K-1 mol-1
-  real, public, parameter :: mol_C                       = 12.0e-3               ! molar mass of carbon, kg
-  real, public, parameter :: mol_air                     = 28.96440e-3           ! molar mass of air, kg
-  real, public, parameter :: mol_CO2                     = 44.00995e-3           ! molar mass of CO2,kg
-  real, public, parameter :: mol_h2o                     = 18.0e-3               ! molar mass of water, kg
-  real, public, parameter :: cpair                       = 1010.
-  real, public, parameter :: H2OLv0                      = 2.501e6               !latent heat H2O (J/kg)
-  real, public, parameter :: p_sea                       = 101325.               !1.e5 atmospheric pressure  (Pa)
-  real, public, parameter :: DENS_H2O                    = 1000.                 ! kg m-3
 
   !=============== PFT data type =============================================================
   type spec_data_type
+
     integer :: lifeform                           ! 0 for grasses, 1 for trees
     integer :: phenotype                          ! phenology type: 0 for deciduous, 1 for evergreen
     integer :: pt                                 ! photosynthetic physiology of species
+
     !===== Leaf traits
     real    :: LMA                                ! leaf mass per unit area, kg C/m2
     real    :: leafLS                             ! leaf life span
@@ -88,6 +78,7 @@ module datatypes
     real    :: gamma_L                            ! leaf respiration coeficient (per yr)
     real    :: gamma_LN                           ! leaf respiration coeficient per unit N
     real    :: wet_leaf_dreg                      ! wet leaf photosynthesis down-regulation
+
     !===== Root traits
     real    :: rho_FR                             ! material density of fine roots (kgC m-3)
     real    :: root_r                             ! radius of the fine roots, m
@@ -103,10 +94,12 @@ module datatypes
     ! real    :: N_roots0                         ! root biomass at half of max. N-uptake rate
     real    :: NfixRate0                          ! Reference N fixation rate (kgN kgC-1 root)
     real    :: NfixCost0                          ! Carbon cost of N fixation (kgC kgN-1)
+
     !===== Wood traits
     real    :: rho_wood                           ! woody density, kg C m-3 wood
     real    :: gamma_SW                           ! sapwood respiration rate, kgC m-2 Acambium yr-1
     real    :: taperfactor
+
     !===== Allometry
     real    :: alphaHT, thetaHT                   ! height = alphaHT * DBH ** thetaHT
     real    :: alphaCA, thetaCA                   ! crown area = alphaCA * DBH ** thetaCA
@@ -116,16 +109,19 @@ module datatypes
     real    :: phiCSA                             ! ratio of sapwood CSA to target leaf area
     real    :: tauNSC                             ! residence time of C in NSC (to define storage capacity)
     real    :: fNSNmax                            ! multilier for NSNmax
+
     !===== Default C/N ratios
     real    :: CNleaf0
     real    :: CNroot0
     real    :: CNsw0
     real    :: CNwood0
     real    :: CNseed0
+
     !===== Phenology
     real    :: tc_crit                            ! K, for turning OFF a growth season
     real    :: tc_crit_on                         ! K, for turning ON a growth season
     real    :: gdd_crit                           ! K, critical value of GDD5 for turning ON growth season
+
     !===== Vital rates
     real    :: maturalage                         ! the age that can reproduce
     real    :: v_seed                             ! fracton of G_SF to G_F
@@ -133,44 +129,50 @@ module datatypes
     real    :: prob_g,prob_e                      ! germination and establishment probabilities
     real    :: mortrate_d_c                       ! yearly mortality rate in canopy
     real    :: mortrate_d_u                       ! yearly mortality rate in understory
+
     !===== Population level variables
     real    :: LAImax, underLAImax                ! max. LAI
     real    :: LAI_light                          ! light controlled maximum LAI
     integer :: n_cc                               ! for calculating LAImax via cc%LAImax derived from cc%NSN
     real    :: layerfrac                          ! species layer fraction
     real    :: internal_gap_frac                  ! fraction of internal gaps in the canopy
+
     ! "internal" gaps are the gaps that are created within the canopy by the branch fall processes.
+
   end type
 
   !=============== Cohort level data type =============================================================
-
   type :: cohort_type
+
     !===== Biological prognostic variables
-    integer :: ccID               = 0.0          ! cohort ID
-    integer :: species            = 0.0          ! vegetation species
-    real    :: gdd                = 0.0          ! for phenology
-    integer :: status             = 0.0          ! growth status of plant: 1 for ON, 0 for OFF
-    integer :: layer              = 1.0          ! the layer of this cohort (numbered from top, top layer=1)
-    integer :: firstlayer         = 0.0          ! 0 = never been in the first layer; 1 = at least one year in first layer
-    real    :: layerfrac          = 0.0          ! fraction of layer area occupied by this cohort
-    !===== Populatin structure
-    real    :: nindivs            = 1.0          ! density of vegetation, individuals/m2
-    real    :: age                = 0.0          ! age of cohort, years
-    real    :: Volume             = 0.0
-    real    :: dbh                = 0.0          ! diameter at breast height, m
-    real    :: height             = 0.0          ! vegetation height, m
-    real    :: crownarea          = 1.0          ! crown area, m2/individual
-    real    :: leafarea           = 0.0          ! total area of leaves, m2/individual
-    real    :: lai                = 0.0          ! crown leaf area index, m2/m2
-    real    :: BA                 = 0.0          ! tree basal area
-    real    :: BAL                = 0.0          ! basal area of larger trees
-    !===== Carbon pools
-    real    :: bl                 = 0.0          ! biomass of leaves, kg C/individual
-    real    :: br                 = 0.0          ! biomass of fine roots, kg C/individual
-    real    :: bsw                = 0.0          ! biomass of sapwood, kg C/individual
-    real    :: bHW                = 0.0          ! biomass of heartwood, kg C/individual
-    real    :: seedC              = 0.0          ! biomass put aside for future progeny, kg C/individual
-    real    :: nsc                = 0.0          ! non-structural carbon, kg C/individual
+    integer :: ccID       = 0.0          ! cohort ID
+    integer :: species    = 0.0          ! vegetation species
+    real    :: gdd        = 0.0          ! for phenology
+    integer :: status     = 0.0          ! growth status of plant: 1 for ON, 0 for OFF
+    integer :: layer      = 1.0          ! the layer of this cohort (numbered from top, top layer=1)
+    integer :: firstlayer = 0.0          ! 0 = never been in the first layer; 1 = at least one year in first layer
+    real    :: layerfrac  = 0.0          ! fraction of layer area occupied by this cohort
+
+    !===== Population structure
+    real :: nindivs   = 1.0          ! density of vegetation, individuals/m2
+    real :: age       = 0.0          ! age of cohort, years
+    real :: Volume    = 0.0
+    real :: dbh       = 0.0          ! diameter at breast height, m
+    real :: height    = 0.0          ! vegetation height, m
+    real :: crownarea = 1.0          ! crown area, m2/individual
+    real :: leafarea  = 0.0          ! total area of leaves, m2/individual
+    real :: lai       = 0.0          ! crown leaf area index, m2/m2
+    real :: BA        = 0.0          ! tree basal area
+    real :: BAL       = 0.0          ! basal area of larger trees
+
+    !===== Organic pools
+    type(orgpool) :: pleaf                       ! leaf biomass [kg C(N)/ind.]
+    type(orgpool) :: proot                       ! root biomass [kg C(N)/ind.]
+    type(orgpool) :: psapw                       ! sapwood biomass [kg C(N)/ind.]
+    type(orgpool) :: pwood                       ! heartwood (non-living) biomass [kg C(N)/ind.]
+    type(orgpool) :: pseed                       ! biomass put aside for future progeny [kg C(N)/ind.]
+    type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C(N)/ind.]
+
     !===== Carbon fluxes
     real    :: gpp                = 0.0          ! gross primary productivity kg C/timestep
     real    :: npp                = 0.0          ! net primary productivity kg C/timestep
@@ -178,7 +180,8 @@ module datatypes
     real    :: resl               = 0.0          ! leaf respiration
     real    :: resr               = 0.0          ! root respiration
     real    :: resg               = 0.0          ! growth respiration
-    real    :: NPPleaf,NPProot,NPPwood           ! to record C allocated to leaf, root, and wood
+
+    real    :: NPPleaf, NPProot, NPPwood         ! to record C allocated to leaf, root, and wood
     real    :: dailyTrsp
     real    :: dailyGPP                          ! kgC/tree day-1
     real    :: dailyNPP
@@ -193,14 +196,9 @@ module datatypes
     real    :: c_deadtrees        = 0.0
     real    :: m_turnover         = 0.0
     real    :: deathratevalue
+
     !===== Nitrogen model related parameters
     real    :: NSNmax             = 0.0
-    real    :: NSN                = 0.0           ! non-structural N pool
-    real    :: leafN              = 0.0
-    real    :: sapwN              = 0.0
-    real    :: woodN              = 0.0           ! N of heart wood
-    real    :: rootN              = 0.0           ! N of fine roots
-    real    :: seedN              = 0.0           
     real    :: N_uptake           = 0.0
     real    :: annualNup          = 0.0
     real    :: fixedN                             ! fixed N at each stem per tree
@@ -212,6 +210,7 @@ module datatypes
     real    :: DBH_ys                             ! DBH at the begining of a year (growing season)
     real    :: Vol_ys
     real    :: ABG_ys
+
     !===== Water uptake-related variables
     real    :: root_length(max_lev)               ! m
     real    :: rootarea                           ! total fine root area per tree
@@ -221,8 +220,9 @@ module datatypes
     real    :: W_supply                           ! potential water uptake rate per unit time per tree
     real    :: transp                             ! transpiration rate per tree per hour
     real    :: uptake_frac(max_lev)               ! for LM3 soil water uptake, Weng, 2017-10-28
-    real    :: K_r,r_r
+    real    :: K_r, r_r
     real    :: root_zeta
+
     !===== Photosynthesis
     real    :: An_op              = 0.0           ! mol C/(m2 of leaf per year)
     real    :: An_cl              = 0.0           ! mol C/(m2 of leaf per year)
@@ -230,14 +230,37 @@ module datatypes
     real    :: C_growth           = 0.0           ! carbon gain since last growth, kg C/individual
     real    :: N_growth           = 0.0           ! Nitrogen used for plant tissue growth
     real    :: extinct            = 0.75          ! light extinction coefficient in the canopy for photosynthesis
+
   end type cohort_type
+
+
 
   !=============== Tile level data type ============================================================
   type :: vegn_tile_type
+
     integer  :: n_cohorts         = 0.0
     integer  :: n_years           = 0.0
     integer  :: n_canopycc        = 0.0
-    type(cohort_type), pointer :: cohorts(:)=>NULL()
+
+    !===== Cohorts nested inside tile
+    type(cohort_type), pointer :: cohorts(:) => NULL()
+
+    !=====  Litter pools (SOFUN-structure, remain empty in original LM3-PPA)
+    type(orgpool) :: plitt_af                     ! above-ground litter, fast turnover [kg C(N)/m2]
+    type(orgpool) :: plitt_as                     ! above-ground litter, slow turnover [kg C(N)/m2]
+    type(orgpool) :: plitt_bg                     ! below-ground litter [kg C(N)/m2]
+
+    !=====  Soil organic pools (renamed: metabolicL, metabolicN -> psoil_fs; structuralL, structuralN -> psoil_sl; MicrobialC, MicrobialN -> pmicr)
+    type(orgpool) :: psoil_fs        ! soil organic matter, fast turnover [kg C(N)/m2]
+    type(orgpool) :: psoil_sl        ! soil organic matter, slow turnover [kg C(N)/m2]
+    type(orgpool) :: pmicr           ! microbial biomass (kg C(N)/m2)
+
+    !=====  Inorganic N pools
+    type(nitrogen) :: ninorg                      ! Mineral nitrogen pool (kg N/m2)   
+    type(nitrogen) :: pno3                        ! Soil nitrate pool (kg N/m2)   
+    type(nitrogen) :: pnh4                        ! Soil ammonium pool (kg N/m2)   
+
+    !===== Tile-level forest inventory information
     real    :: area                               ! m2
     real    :: age                = 0.0           ! tile age
     real    :: nindivs                            ! New varaibles at tile level 
@@ -251,28 +274,25 @@ module datatypes
     real    :: MaxDBH
     real    :: NPPL
     real    :: NPPW
+
     !===== Leaf area index
     real    :: LAI                                ! leaf area index
     real    :: CAI                                ! crown area index
     real    :: LAIlayer(0:10)     = 0.0           ! LAI of each crown layer, max. 9
     real    :: root_distance(max_lev)             ! characteristic half-distance between fine roots, m
+
     !=====  Averaged quantities for PPA phenology
     real    :: tc_daily           = 0.0
     real    :: gdd                = 0.0           ! growing degree-days
     real    :: tc_pheno           = 0.0           ! smoothed canopy air temperature for phenology
+
     !=====  Litter and soil carbon pools
     real    :: litter             = 0.0           ! litter flux
-    real    :: MicrobialC         = 0.0           ! Microbes (kg C/m2)
-    real    :: metabolicL         = 0.0           ! fast soil carbon pool, (kg C/m2)
-    real    :: structuralL        = 0.0           ! slow soil carbon pool, (kg C/m2)
     real    :: n_deadtrees        = 0.0
     real    :: c_deadtrees        = 0.0
     real    :: m_turnover         = 0.0
-    !=====  Nitrogen pools, Weng 2014-08-08
-    real    :: MicrobialN         = 0.0
-    real    :: metabolicN         = 0.0           ! fast soil nitrogen pool, (kg N/m2)
-    real    :: structuralN        = 0.0           ! slow soil nitrogen pool, (kg N/m2)
-    real    :: mineralN           = 0.0           ! Mineral nitrogen pool, (kg N/m2)
+
+    !=====  N-related fluxes
     real    :: totN               = 0.0
     real    :: N_input                            ! annual N input (kgN m-2 yr-1)
     real    :: N_uptake           = 0.0           ! kg N m-2 hour-1
@@ -281,6 +301,7 @@ module datatypes
     real    :: N_P2S_yr           = 0.0           ! annual N from plants to soil
     real    :: previousN                          ! an weighted annual available N
     real    :: initialN0
+
     !=====  Soil water
     integer :: soiltype                           ! lookup table for soil hydrologic parameters
     real    :: FLDCAP                             ! soil property: field capacity
@@ -291,16 +312,19 @@ module datatypes
     real    :: thetaS                             ! moisture index (ws - wiltpt)/(fldcap - wiltpt)
     real    :: wcl(max_lev)                       ! volumetric soil water content for each layer                    
     real    :: soilWater                          ! kg m-2 in root zone
+
     !=====  Water uptake-related variables
     real    :: RAI                                ! root area index
     real    :: RAIL(max_lev)      = 0.0           ! Root length per layer, m of root/m
     real    :: W_uptake                           ! water uptake rate per unit time per m2
+
     !=====  Carbon fluxes
     real    :: gpp                = 0.0           ! gross primary production, kgC m-2 yr-1
     real    :: npp                = 0.0           ! net primary productivity
     real    :: resp               = 0.0           ! auto-respiration of plants
     real    :: nep                = 0.0           ! net ecosystem productivity
     real    :: rh                 = 0.0           ! soil carbon lost to the atmosphere
+
     !=====  Daily diagnostics
     real    :: dailyGPP
     real    :: dailyNPP
@@ -308,6 +332,7 @@ module datatypes
     real    :: dailyRh
     real    :: dailyNup
     real    :: dailyfixedN
+
     !=====  Annual diagnostics
     real    :: dailyPrcp     = 0.0,  annualPrcp  = 0.0                            ! mm m-2 yr-1
     real    :: dailyTrsp     = 0.0,  dailyEvap   = 0.0,   dailyRoff  = 0.0        ! mm m-2 yr-1
@@ -318,10 +343,17 @@ module datatypes
     real    :: annualRh      = 0.0
     real    :: annualNup                                                          ! accumulated N uptake kgN m-2 yr-1
     real    :: annualfixedN  = 0.0                                                ! fixed N in a tile
+
     !===== Annual reporting at tile level
-    real    :: NSC, SeedC, leafC, rootC, SapwoodC, WoodC
-    real    :: NSN, SeedN, leafN, rootN, SapwoodN, WoodN
-    real    :: totSeedC,totSeedN,totNewCC, totNewCN
+    type(orgpool) :: pleaf                       ! leaf biomass [kg C m-2]
+    type(orgpool) :: proot                       ! root biomass [kg C m-2]
+    type(orgpool) :: psapw                       ! sapwood biomass [kg C m-2]
+    type(orgpool) :: pwood                       ! heartwood (non-living) biomass [kg C m-2]
+    type(orgpool) :: pseed                       ! biomass put aside for future progeny [kg C m-2]
+    type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C m-2]
+
+    real :: totSeedC, totSeedN, totNewCC, totNewCN
+
   end type vegn_tile_type
 
   !=============== Soil data type ============================================================
@@ -370,6 +402,7 @@ module datatypes
   real   :: soiltype                                !Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   real   :: FLDCAP                                  ! vol/vol 
   real   :: WILTPT                                  ! vol/vol
+
   !===== Carbon pools
   real   :: K1                                      ! Fast soil C decomposition rate (yr-1)
   real   :: K2                                      ! slow soil C decomposition rate (yr-1)
@@ -384,14 +417,18 @@ module datatypes
   real   :: retransN                                ! retranslocation coefficient of Nitrogen
   real   :: f_initialBSW      
   real   :: f_N_add                                 ! re-fill of N for sapwood
+
   !===== Ensheng's growth parameters
   real   :: f_LFR_max  = 0.85                       ! max allocation to leaves and fine roots 
+
   !===== Leaf life span 
   real   :: c_LLS  = 28.57143                       ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
+
   !===== Calibratable parameters
   real   :: tf_base                                 ! calibratable scalar for respiration
   real   :: par_mort                                ! generic calibratable parameter for mortality module
   real   :: par_mort_under                          ! generic calibratable parameter for mortality understory module
+
   !===== deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
   real  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
   real  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
@@ -460,6 +497,7 @@ module datatypes
   ! real :: fNSNmax(0:MSPECIES)       = 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
   ! real :: phiRL(0:MSPECIES)       = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
   ! real :: phiCSA(0:MSPECIES)        = 0.25E-4 ! ratio of sapwood area to leaf area
+  
   ! C/N ratios for plant pools
   real :: CNleaf0(0:MSPECIES)   = 25. ! C/N ratios for leaves
   real :: CNsw0(0:MSPECIES)     = 350.0 ! C/N ratios for woody biomass
@@ -468,6 +506,7 @@ module datatypes
   real :: CNseed0(0:MSPECIES)   = 20.0 ! C/N ratios for seeds
   ! real :: NfixRate0(0:MSPECIES) = 0.0 !Reference N fixation rate (0.03 kgN kgC-1 root yr-1)
   ! real :: NfixCost0(0:MSPECIES) = 12.0 ! FUN model, Fisher et al. 2010, GBC
+  
   real :: internal_gap_frac(0:MSPECIES)= 0.1 ! The gaps between trees
 
   !=============== Params_soil in R ============================================================
@@ -500,7 +539,7 @@ contains
     soilpars%GMD               = myinterface%params_soil%GMD(:) ! geometric mean partice diameter, mm
     soilpars%GSD               = myinterface%params_soil%GSD(:) ! geometric standard deviation of particle size
     soilpars%vwc_sat           = myinterface%params_soil%vwc_sat(:)
-    soilpars%k_sat_ref         = myinterface%params_soil%k_sat_ref(:) ! hydraulic conductivity of saturated soil, kg/(m2 s)
+    soilpars%k_sat_ref         = myinterface%params_soil%k_sat_ref(:)   ! hydraulic conductivity of saturated soil, kg/(m2 s)
     soilpars%psi_sat_ref       = myinterface%params_soil%psi_sat_ref(:) ! saturation soil water potential, m
     soilpars%chb               = myinterface%params_soil%chb(:)       ! Soil texture parameter
     soilpars%alpha             = myinterface%params_soil%alphaSoil(:)       ! *** REPLACE LATER BY alpha(layer)
@@ -607,6 +646,7 @@ contains
 
     ! specific root area
     sp%SRA = 2.0/(sp%root_r*sp%rho_FR) ! m2/kgC
+
     ! root vertical profile
     rdepth=0.0
     do j=1,max_lev
@@ -620,12 +660,15 @@ contains
     enddo
 
     ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation
-    sp%alphaBM    = sp%rho_wood * sp%taperfactor * PI/4. * sp%alphaHT ! 5200
+    sp%alphaBM = sp%rho_wood * sp%taperfactor * PI/4. * sp%alphaHT ! 5200
+
     ! Vmax as a function of LNbase
     sp%Vmax = 0.02 * sp%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
+
     ! CN0 of leaves
     sp%LNA     = sp%LNbase +  sp%LMA/sp%CNleafsupport
     sp%CNleaf0 = sp%LMA/sp%LNA
+
     ! Leaf life span as a function of LMA
     sp%leafLS = c_LLS * sp%LMA
     if(sp%leafLS>1.0)then
@@ -633,6 +676,7 @@ contains
     else
       sp%phenotype = 0
     endif
+
     ! Leaf turnover rate, (leaf longevity as a function of LMA)
     sp%alpha_L = 1.0/sp%leafLS * sp%phenotype
 
@@ -666,13 +710,15 @@ contains
 
   !==============for diagnostics============================================
   subroutine Zero_diagnostics(vegn)
+
     ! for annual update
     type(vegn_tile_type), intent(inout) :: vegn
+
     ! local variables
-    type(cohort_type),pointer :: cc
+    type(cohort_type), pointer :: cc
     integer :: i
     
-    !daily
+    ! daily
     vegn%dailyfixedN = 0.0
     vegn%dailyPrcp   = 0.0
     vegn%dailyTrsp   = 0.0
@@ -684,7 +730,7 @@ contains
     vegn%dailyResp   = 0.0
     vegn%dailyRh     = 0.0
 
-    !annual
+    ! annual
     vegn%annualfixedN = 0.0
     vegn%annualPrcp   = 0.0
     vegn%annualTrsp   = 0.0
@@ -703,6 +749,7 @@ contains
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
+
       cc%C_growth     = 0.0
       cc%N_growth     = 0.0
       cc%gpp          = 0.0
@@ -712,6 +759,7 @@ contains
       cc%resr         = 0.0
       cc%resg         = 0.0
       cc%transp       = 0.0
+
       !daily
       cc%dailyTrsp    = 0.0
       cc%dailyGPP     = 0.0
@@ -719,6 +767,7 @@ contains
       cc%dailyResp    = 0.0
       cc%dailyNup     = 0.0
       cc%dailyfixedN  = 0.0
+
       ! annual
       cc%annualTrsp   = 0.0
       cc%annualGPP    = 0.0
@@ -731,7 +780,7 @@ contains
       cc%NPPwood      = 0.0
       cc%DBH_ys       = cc%dbh
       cc%Vol_ys       = cc%Volume
-      cc%ABG_ys       = cc%bsw+cc%bHW
+      cc%ABG_ys       = cc%psapw%c%c12 + cc%pwood%c%c12
       ! cc%n_deadtrees  = 0.0
       ! cc%c_deadtrees  = 0.0
       cc%m_turnover   = 0.0
@@ -740,28 +789,24 @@ contains
   end subroutine Zero_diagnostics
 
 
-  subroutine summarize_tile(vegn) 
+  subroutine summarize_tile( vegn ) 
     !////////////////////////////////////////////////////////////////////////
     ! for annual update
     !------------------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
+
     ! local variables
-    type(cohort_type),pointer :: cc
+    type(cohort_type), pointer :: cc
     integer :: i
 
     ! State variables
-    vegn%NSC        = 0.0
-    vegn%SeedC      = 0.0
-    vegn%leafC      = 0.0
-    vegn%rootC      = 0.0
-    vegn%SapwoodC   = 0.0
-    vegn%WoodC      = 0.0
-    vegn%NSN        = 0.0
-    vegn%SeedN      = 0.0
-    vegn%leafN      = 0.0
-    vegn%rootN      = 0.0
-    vegn%SapwoodN   = 0.0
-    vegn%WoodN      = 0.0
+    call orginit(vegn%plabl)
+    call orginit(vegn%pleaf)
+    call orginit(vegn%proot)
+    call orginit(vegn%psapw)
+    call orginit(vegn%pwood)
+    call orginit(vegn%pseed)
+
     vegn%LAI        = 0.0
     vegn%CAI        = 0.0
 
@@ -774,32 +819,21 @@ contains
     vegn%MaxAge     = 0.0
     vegn%MaxVolume  = 0.0
     vegn%MaxDBH     = 0.0
-    ! vegn%NPPL       = 0.0
-    ! vegn%NPPW       = 0.0
-    ! vegn%n_deadtrees     = 0.0
-    ! vegn%c_deadtrees     = 0.0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
 
-      ! Vegn C pools:
-      vegn%NSC          = vegn%NSC      + cc%NSC       * cc%nindivs
-      vegn%SeedC        = vegn%SeedC    + cc%seedC     * cc%nindivs
-      vegn%leafC        = vegn%leafC    + cc%bl        * cc%nindivs
-      vegn%rootC        = vegn%rootC    + cc%br        * cc%nindivs
-      vegn%SapwoodC     = vegn%SapwoodC + cc%bsw       * cc%nindivs
-      vegn%woodC        = vegn%woodC    + cc%bHW       * cc%nindivs
+      ! organic pools
+      call orgcp(cc%plabl, vegn%plabl, cc%nindivs)
+      call orgcp(cc%pleaf, vegn%pleaf, cc%nindivs)
+      call orgcp(cc%proot, vegn%proot, cc%nindivs)
+      call orgcp(cc%psapw, vegn%psapw, cc%nindivs)
+      call orgcp(cc%pwood, vegn%pwood, cc%nindivs)
+      call orgcp(cc%pseed, vegn%pseed, cc%nindivs)
+
       vegn%CAI          = vegn%CAI      + cc%crownarea * cc%nindivs
       vegn%LAI          = vegn%LAI      + cc%leafarea  * cc%nindivs
       
-      ! Vegn N pools
-      vegn%NSN          = vegn%NSN      + cc%NSN       * cc%nindivs
-      vegn%SeedN        = vegn%SeedN    + cc%seedN     * cc%nindivs
-      vegn%leafN        = vegn%leafN    + cc%leafN     * cc%nindivs
-      vegn%rootN        = vegn%rootN    + cc%rootN     * cc%nindivs
-      vegn%SapwoodN     = vegn%SapwoodN + cc%sapwN     * cc%nindivs
-      vegn%woodN        = vegn%woodN    + cc%woodN     * cc%nindivs
-
       ! New tile outputs
       vegn%DBH          = vegn%DBH      + cc%dbh       * cc%nindivs
       vegn%nindivs      = vegn%nindivs  + cc%nindivs
@@ -854,11 +888,13 @@ contains
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
+
       ! cohort daily
       cc%dailyTrsp = cc%dailyTrsp + cc%transp ! kg day-1
       cc%dailyGPP  = cc%dailygpp  + cc%gpp ! kg day-1
       cc%dailyNPP  = cc%dailyNpp  + cc%Npp ! kg day-1
       cc%dailyResp = cc%dailyResp + cc%Resp ! kg day-1
+
       ! Tile hourly
       vegn%GPP    = vegn%GPP    + cc%gpp    * cc%nindivs
       vegn%NPP    = vegn%NPP    + cc%Npp    * cc%nindivs
@@ -957,7 +993,7 @@ contains
         out_daily_cohorts(i)%cID     = cc%ccID
         out_daily_cohorts(i)%PFT     = cc%species
         out_daily_cohorts(i)%layer   = cc%layer
-        out_daily_cohorts(i)%density = cc%nindivs*10000 
+        out_daily_cohorts(i)%density = cc%nindivs * 10000 
         out_daily_cohorts(i)%f_layer = cc%layerfrac
         out_daily_cohorts(i)%LAI     = cc%LAI
         out_daily_cohorts(i)%gpp     = cc%dailygpp
@@ -966,18 +1002,18 @@ contains
         out_daily_cohorts(i)%NPPleaf = cc%NPPleaf
         out_daily_cohorts(i)%NPProot = cc%NPProot
         out_daily_cohorts(i)%NPPwood = cc%NPPwood
-        out_daily_cohorts(i)%NSC     = cc%NSC
-        out_daily_cohorts(i)%seedC   = cc%seedC
-        out_daily_cohorts(i)%leafC   = cc%bl
-        out_daily_cohorts(i)%rootC   = cc%br
-        out_daily_cohorts(i)%SW_C    = cc%bsw
-        out_daily_cohorts(i)%HW_C    = cc%bHW
-        out_daily_cohorts(i)%NSN     = cc%NSN*1000
-        out_daily_cohorts(i)%seedN   = cc%seedN*1000
-        out_daily_cohorts(i)%leafN   = cc%leafN*1000
-        out_daily_cohorts(i)%rootN   = cc%rootN*1000
-        out_daily_cohorts(i)%SW_N    = cc%sapwN*1000
-        out_daily_cohorts(i)%HW_N    = cc%woodN*1000
+        out_daily_cohorts(i)%NSC     = cc%plabl%c%c12
+        out_daily_cohorts(i)%seedC   = cc%pseed%c%c12
+        out_daily_cohorts(i)%leafC   = cc%pleaf%c%c12
+        out_daily_cohorts(i)%rootC   = cc%proot%c%c12
+        out_daily_cohorts(i)%SW_C    = cc%psapw%c%c12
+        out_daily_cohorts(i)%HW_C    = cc%pwood%c%c12
+        out_daily_cohorts(i)%NSN     = cc%plabl%n%n14 * 1000
+        out_daily_cohorts(i)%seedN   = cc%pseed%n%n14 * 1000
+        out_daily_cohorts(i)%leafN   = cc%pleaf%n%n14 * 1000
+        out_daily_cohorts(i)%rootN   = cc%proot%n%n14 * 1000
+        out_daily_cohorts(i)%SW_N    = cc%psapw%n%n14 * 1000
+        out_daily_cohorts(i)%HW_N    = cc%pwood%n%n14 * 1000
       endif
 
       ! running annual sum
@@ -1005,33 +1041,33 @@ contains
       out_daily_tile%Trsp      = vegn%dailyTrsp
       out_daily_tile%Evap      = vegn%dailyEvap
       out_daily_tile%Runoff    = vegn%dailyRoff
-      out_daily_tile%ws1       = vegn%wcl(1)*thksl(1)*1000
-      out_daily_tile%ws2       = vegn%wcl(2)*thksl(2)*1000
-      out_daily_tile%ws3       = vegn%wcl(3)*thksl(3)*1000
+      out_daily_tile%ws1       = vegn%wcl(1)*thksl(1) * 1000
+      out_daily_tile%ws2       = vegn%wcl(2)*thksl(2) * 1000
+      out_daily_tile%ws3       = vegn%wcl(3)*thksl(3) * 1000
       out_daily_tile%LAI       = vegn%LAI
       out_daily_tile%GPP       = vegn%dailyGPP
       out_daily_tile%Rauto     = vegn%dailyResp
       out_daily_tile%Rh        = vegn%dailyRh
-      out_daily_tile%NSC       = vegn%NSC
-      out_daily_tile%seedC     = vegn%SeedC
-      out_daily_tile%leafC     = vegn%leafC
-      out_daily_tile%rootC     = vegn%rootC
-      out_daily_tile%SW_C      = vegn%SapwoodC
-      out_daily_tile%HW_C      = vegn%woodC
-      out_daily_tile%NSN       = vegn%NSN*1000
-      out_daily_tile%seedN     = vegn%SeedN*1000
-      out_daily_tile%leafN     = vegn%leafN*1000
-      out_daily_tile%rootN     = vegn%rootN*1000
-      out_daily_tile%SW_N      = vegn%SapwoodN *1000
-      out_daily_tile%HW_N      = vegn%WoodN *1000
-      out_daily_tile%McrbC     = vegn%MicrobialC
-      out_daily_tile%fastSOM   = vegn%metabolicL
-      out_daily_tile%slowSOM   = vegn%structuralL
-      out_daily_tile%McrbN     = vegn%MicrobialN*1000
-      out_daily_tile%fastSoilN = vegn%metabolicN*1000
-      out_daily_tile%slowSoilN = vegn%structuralN*1000
-      out_daily_tile%mineralN  = vegn%mineralN*1000
-      out_daily_tile%N_uptk    = vegn%dailyNup*1000
+      out_daily_tile%NSC       = vegn%plabl%c%c12
+      out_daily_tile%seedC     = vegn%pseed%c%c12
+      out_daily_tile%leafC     = vegn%pleaf%c%c12
+      out_daily_tile%rootC     = vegn%proot%c%c12
+      out_daily_tile%SW_C      = vegn%psapw%c%c12
+      out_daily_tile%HW_C      = vegn%pwood%c%c12
+      out_daily_tile%NSN       = vegn%plabl%n%n14 * 1000
+      out_daily_tile%seedN     = vegn%pseed%n%n14 * 1000
+      out_daily_tile%leafN     = vegn%pleaf%n%n14 * 1000
+      out_daily_tile%rootN     = vegn%proot%n%n14 * 1000
+      out_daily_tile%SW_N      = vegn%psapw%n%n14 * 1000
+      out_daily_tile%HW_N      = vegn%pwood%n%n14 * 1000
+      out_daily_tile%McrbC     = vegn%pmicr%c%c12
+      out_daily_tile%fastSOM   = vegn%psoil_fs%c%c12
+      out_daily_tile%slowSOM   = vegn%psoil_sl%c%c12
+      out_daily_tile%McrbN     = vegn%pmicr%n%n14 * 1000
+      out_daily_tile%fastSoilN = vegn%psoil_fs%n%n14 * 1000
+      out_daily_tile%slowSoilN = vegn%psoil_sl%n%n14 * 1000
+      out_daily_tile%mineralN  = vegn%ninorg%n14 * 1000
+      out_daily_tile%N_uptk    = vegn%dailyNup * 1000
     endif
 
     ! running annual sums
@@ -1071,7 +1107,7 @@ contains
     type(outtype_annual_tile) :: out_annual_tile
     ! type(spec_data_type) :: sp
 
-    !-------local var
+    ! local variables
     type(cohort_type), pointer :: cc
     real :: treeG, fseed, fleaf=0, froot,fwood=0,dDBH, dVol
     real :: plantC, plantN, soilC, soilN
@@ -1111,63 +1147,56 @@ contains
     ! Cohorts ouput
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
-      treeG     = cc%seedC + cc%NPPleaf + cc%NPProot + cc%NPPwood
-      fseed     = cc%seedC/treeG
+      treeG     = cc%pseed%c%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
+      fseed     = cc%pseed%c%c12 / treeG
       fleaf     = cc%NPPleaf/treeG
       froot     = cc%NPProot/treeG
       fwood     = cc%NPPwood/treeG
       dDBH      = (cc%dbh - cc%DBH_ys) !*1000 to convert to mm
-      cc%Volume = (cc%bsw+cc%bHW)/spdata(cc%species)%rho_wood
+      cc%Volume = (cc%psapw%c%c12 + cc%pwood%c%c12) / spdata(cc%species)%rho_wood
       dVol      = (cc%Volume - cc%Vol_ys)
       cc%BA     = pi/4*cc%dbh*cc%dbh
-      ! print*, dDBH, "dDBH"
-      ! print*, cc%dbh, "cc%dbh"
-      ! print*, cc%DBH_ys, "cc%DBH_ys"
 
-      out_annual_cohorts(i)%year       = iyears
-      out_annual_cohorts(i)%cID        = cc%ccID
-      out_annual_cohorts(i)%PFT        = cc%species
-      out_annual_cohorts(i)%layer      = cc%layer
-      out_annual_cohorts(i)%density    = cc%nindivs*10000
-      out_annual_cohorts(i)%f_layer    = cc%layerfrac
-      out_annual_cohorts(i)%dDBH       = dDBH*100     ! *100 to convert m in cm
-      out_annual_cohorts(i)%dbh        = cc%dbh*100   ! *100 to convert m in cm
-      out_annual_cohorts(i)%height     = cc%height
-      out_annual_cohorts(i)%age        = cc%age
-      out_annual_cohorts(i)%Acrown     = cc%crownarea
-      out_annual_cohorts(i)%wood       = cc%bsw+cc%bHW
-      out_annual_cohorts(i)%nsc        = cc%nsc
-      out_annual_cohorts(i)%NSN        = cc%NSN*1000
-      out_annual_cohorts(i)%NPPtr      = treeG
-      out_annual_cohorts(i)%seed       = fseed
-      out_annual_cohorts(i)%NPPL       = fleaf
-      out_annual_cohorts(i)%NPPR       = froot
-      out_annual_cohorts(i)%NPPW       = fwood
-      out_annual_cohorts(i)%GPP        = cc%annualGPP
-      out_annual_cohorts(i)%NPP        = cc%annualNPP
-      out_annual_cohorts(i)%Rauto      = cc%annualResp
-      out_annual_cohorts(i)%N_uptk     = cc%annualNup*1000
-      out_annual_cohorts(i)%N_fix      = cc%annualfixedN*1000
-      out_annual_cohorts(i)%maxLAI     = spdata(cc%species)%LAImax
-      out_annual_cohorts(i)%Volume     = cc%Volume
+      out_annual_cohorts(i)%year        = iyears
+      out_annual_cohorts(i)%cID         = cc%ccID
+      out_annual_cohorts(i)%PFT         = cc%species
+      out_annual_cohorts(i)%layer       = cc%layer
+      out_annual_cohorts(i)%density     = cc%nindivs * 10000
+      out_annual_cohorts(i)%f_layer     = cc%layerfrac
+      out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
+      out_annual_cohorts(i)%dbh         = cc%dbh * 100   ! *100 to convert m in cm
+      out_annual_cohorts(i)%height      = cc%height
+      out_annual_cohorts(i)%age         = cc%age
+      out_annual_cohorts(i)%Acrown      = cc%crownarea
+      out_annual_cohorts(i)%wood        = cc%psapw%c%c12 + cc%pwood%c%c12
+      out_annual_cohorts(i)%nsc         = cc%plabl%c%c12
+      out_annual_cohorts(i)%NSN         = cc%plabl%n%n14 * 1000
+      out_annual_cohorts(i)%NPPtr       = treeG
+      out_annual_cohorts(i)%seed        = fseed
+      out_annual_cohorts(i)%NPPL        = fleaf
+      out_annual_cohorts(i)%NPPR        = froot
+      out_annual_cohorts(i)%NPPW        = fwood
+      out_annual_cohorts(i)%GPP         = cc%annualGPP
+      out_annual_cohorts(i)%NPP         = cc%annualNPP
+      out_annual_cohorts(i)%Rauto       = cc%annualResp
+      out_annual_cohorts(i)%N_uptk      = cc%annualNup * 1000
+      out_annual_cohorts(i)%N_fix       = cc%annualfixedN * 1000
+      out_annual_cohorts(i)%maxLAI      = spdata(cc%species)%LAImax
+      out_annual_cohorts(i)%Volume      = cc%Volume
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
-      out_annual_cohorts(i)%deathrate  = cc%deathratevalue
-
- ! print*, cc%nsc/cc%bl_max, "cc%nsc/cc%bl_max"
- ! print*, "cc%bsw+cc%bHW-cc%ABG_ys", cc%bsw+cc%bHW-cc%ABG_ys
- ! print*, out_annual_cohorts(1)%age, "out_annual_cohorts(i)%age"
+      out_annual_cohorts(i)%deathrate   = cc%deathratevalue
 
     enddo
 
     ! tile pools output
     call summarize_tile( vegn )
 
-    vegn%NPPL       = 0.0
-    vegn%NPPW       = 0.0
+    vegn%NPPL        = 0.0
+    vegn%NPPW        = 0.0
     vegn%n_deadtrees = 0 !yyy
     vegn%c_deadtrees = 0
-    vegn%m_turnover = 0
+    vegn%m_turnover  = 0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
@@ -1179,83 +1208,84 @@ contains
       vegn%m_turnover  = vegn%m_turnover     + cc%m_turnover  
     enddo
 
-    plantC    = vegn%NSC + vegn%SeedC + vegn%leafC + vegn%rootC + vegn%SapwoodC + vegn%woodC
-    plantN    = vegn%NSN + vegn%SeedN + vegn%leafN + vegn%rootN + vegn%SapwoodN + vegn%woodN
-    soilC     = vegn%MicrobialC + vegn%metabolicL + vegn%structuralL
-    soilN     = vegn%MicrobialN + vegn%metabolicN + vegn%structuralN + vegn%mineralN
+    plantC    = vegn%plabl%c%c12 + vegn%pseed%c%c12 + vegn%pleaf%c%c12 + vegn%proot%c%c12 + vegn%psapw%c%c12 + vegn%pwood%c%c12
+    plantN    = vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 + vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14
+
+    soilC     = vegn%pmicr%c%c12 + vegn%psoil_fs%c%c12 + vegn%psoil_sl%c%c12
+    soilN     = vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 + vegn%psoil_sl%n%n14 + vegn%ninorg%n14
     vegn%totN = plantN + soilN
 
-    out_annual_tile%year       = iyears
-    out_annual_tile%CAI        = vegn%CAI
-    out_annual_tile%LAI        = vegn%LAI
-    out_annual_tile%density    = vegn%nindivs*10000   !New tile out *10000 to convert in indivs/ha
-    out_annual_tile%DBH        = vegn%DBH*100         !xxx New tile out *100 to convert in cm
-    out_annual_tile%density12  = vegn%nindivs12*10000 !xxx New tile out
-    out_annual_tile%DBH12      = vegn%DBH12*100       !xxx New tile out *100 to convert in cm
-    out_annual_tile%QMD        = vegn%QMD*100         !xxx New tile out *100 to convert in cm
-    out_annual_tile%NPP        = vegn%annualNPP       !xxx New tile out
-    out_annual_tile%GPP        = vegn%annualGPP
-    out_annual_tile%Rauto      = vegn%annualResp
-    out_annual_tile%Rh         = vegn%annualRh
-    out_annual_tile%rain       = vegn%annualPrcp
-    out_annual_tile%SoilWater  = vegn%SoilWater
-    out_annual_tile%Transp     = vegn%annualTrsp
-    out_annual_tile%Evap       = vegn%annualEvap
-    out_annual_tile%Runoff     = vegn%annualRoff ! test
-    out_annual_tile%plantC     = plantC ! kg C/m2/yr
-    out_annual_tile%soilC      = soilC
-    out_annual_tile%plantN     = plantN *1000
-    out_annual_tile%soilN      = soilN * 1000
-    out_annual_tile%totN       = (plantN+soilN)*1000
-    out_annual_tile%NSC        = vegn%NSC
-    out_annual_tile%SeedC      = vegn%SeedC
-    out_annual_tile%leafC      = vegn%leafC
-    out_annual_tile%rootC      = vegn%rootC
-    out_annual_tile%SapwoodC   = vegn%SapwoodC
-    out_annual_tile%WoodC      = vegn%woodC
-    out_annual_tile%NSN        = vegn%NSN*1000
-    out_annual_tile%SeedN      = vegn%SeedN*1000
-    out_annual_tile%leafN      = vegn%leafN*1000
-    out_annual_tile%rootN      = vegn%rootN*1000
-    out_annual_tile%SapwoodN   = vegn%SapwoodN *1000
-    out_annual_tile%WoodN      = vegn%WoodN *1000
-    out_annual_tile%McrbC      = vegn%MicrobialC
-    out_annual_tile%fastSOM    = vegn%metabolicL
-    out_annual_tile%SlowSOM    = vegn%structuralL
-    out_annual_tile%McrbN      = vegn%MicrobialN*1000
-    out_annual_tile%fastSoilN  = vegn%metabolicN*1000
-    out_annual_tile%slowSoilN  = vegn%structuralN*1000
-    out_annual_tile%mineralN   = vegn%mineralN*1000
-    out_annual_tile%N_fxed     = vegn%annualfixedN*1000
-    out_annual_tile%N_uptk     = vegn%annualNup*1000
-    out_annual_tile%N_yrMin    = vegn%annualN*1000
-    out_annual_tile%N_P2S      = vegn%N_P2S_yr*1000
-    out_annual_tile%N_loss     = vegn%Nloss_yr*1000
-    out_annual_tile%totseedC   = vegn%totseedC*1000
-    out_annual_tile%totseedN   = vegn%totseedN*1000
-    out_annual_tile%Seedling_C = vegn%totNewCC*1000
-    out_annual_tile%Seedling_N = vegn%totNewCN*1000
-    out_annual_tile%MaxAge     = vegn%MaxAge     !xxx New tile out
-    out_annual_tile%MaxVolume  = vegn%MaxVolume  !xxx New tile out
-    out_annual_tile%MaxDBH     = vegn%MaxDBH     !xxx New tile out
-    out_annual_tile%NPPL       = vegn%NPPL       !xxx New tile out
-    out_annual_tile%NPPW       = vegn%NPPW       !xxx New tile out
-    out_annual_tile%n_deadtrees = vegn%n_deadtrees !xxx New tile out
-    out_annual_tile%c_deadtrees = vegn%c_deadtrees !xxx New tile out
-    out_annual_tile%m_turnover = vegn%m_turnover !xxx New tile out
-    out_annual_tile%c_turnover_time = vegn%woodC/vegn%NPPW !xxx New tile out
+    out_annual_tile%year            = iyears
+    out_annual_tile%CAI             = vegn%CAI
+    out_annual_tile%LAI             = vegn%LAI
+    out_annual_tile%density         = vegn%nindivs * 10000   !New tile out  * 10000 to convert in indivs/ha
+    out_annual_tile%DBH             = vegn%DBH * 100         !xxx New tile out  * 100 to convert in cm
+    out_annual_tile%density12       = vegn%nindivs12 * 10000 !xxx New tile out
+    out_annual_tile%DBH12           = vegn%DBH12 * 100       !xxx New tile out  * 100 to convert in cm
+    out_annual_tile%QMD             = vegn%QMD * 100         !xxx New tile out  * 100 to convert in cm
+    out_annual_tile%NPP             = vegn%annualNPP
+    out_annual_tile%GPP             = vegn%annualGPP
+    out_annual_tile%Rauto           = vegn%annualResp
+    out_annual_tile%Rh              = vegn%annualRh
+    out_annual_tile%rain            = vegn%annualPrcp
+    out_annual_tile%SoilWater       = vegn%SoilWater
+    out_annual_tile%Transp          = vegn%annualTrsp
+    out_annual_tile%Evap            = vegn%annualEvap
+    out_annual_tile%Runoff          = vegn%annualRoff
+    out_annual_tile%plantC          = plantC ! kg C/m2/yr
+    out_annual_tile%soilC           = soilC
+    out_annual_tile%plantN          = plantN  * 1000
+    out_annual_tile%soilN           = soilN  *  1000
+    out_annual_tile%totN            = (plantN+soilN) * 1000
+    out_annual_tile%NSC             = vegn%plabl%c%c12
+    out_annual_tile%SeedC           = vegn%pseed%c%c12
+    out_annual_tile%leafC           = vegn%pleaf%c%c12
+    out_annual_tile%rootC           = vegn%proot%c%c12
+    out_annual_tile%SapwoodC        = vegn%psapw%c%c12
+    out_annual_tile%WoodC           = vegn%pwood%c%c12
+    out_annual_tile%NSN             = vegn%plabl%n%n14 * 1000
+    out_annual_tile%SeedN           = vegn%pseed%n%n14 * 1000
+    out_annual_tile%leafN           = vegn%pleaf%n%n14 * 1000
+    out_annual_tile%rootN           = vegn%proot%n%n14 * 1000
+    out_annual_tile%SapwoodN        = vegn%psapw%n%n14  * 1000
+    out_annual_tile%WoodN           = vegn%pwood%n%n14  * 1000
+    out_annual_tile%McrbC           = vegn%pmicr%c%c12
+    out_annual_tile%fastSOM         = vegn%psoil_fs%c%c12
+    out_annual_tile%SlowSOM         = vegn%psoil_sl%c%c12
+    out_annual_tile%McrbN           = vegn%pmicr%n%n14 * 1000
+    out_annual_tile%fastSoilN       = vegn%psoil_fs%n%n14 * 1000
+    out_annual_tile%slowSoilN       = vegn%psoil_sl%n%n14 * 1000
+    out_annual_tile%mineralN        = vegn%ninorg%n14 * 1000
+    out_annual_tile%N_fxed          = vegn%annualfixedN * 1000
+    out_annual_tile%N_uptk          = vegn%annualNup * 1000
+    out_annual_tile%N_yrMin         = vegn%annualN * 1000
+    out_annual_tile%N_P2S           = vegn%N_P2S_yr * 1000
+    out_annual_tile%N_loss          = vegn%Nloss_yr * 1000
+    out_annual_tile%totseedC        = vegn%totseedC * 1000
+    out_annual_tile%totseedN        = vegn%totseedN * 1000
+    out_annual_tile%Seedling_C      = vegn%totNewCC * 1000
+    out_annual_tile%Seedling_N      = vegn%totNewCN * 1000
+    out_annual_tile%MaxAge          = vegn%MaxAge
+    out_annual_tile%MaxVolume       = vegn%MaxVolume
+    out_annual_tile%MaxDBH          = vegn%MaxDBH
+    out_annual_tile%NPPL            = vegn%NPPL
+    out_annual_tile%NPPW            = vegn%NPPW
+    out_annual_tile%n_deadtrees     = vegn%n_deadtrees
+    out_annual_tile%c_deadtrees     = vegn%c_deadtrees
+    out_annual_tile%m_turnover      = vegn%m_turnover
+    out_annual_tile%c_turnover_time = vegn%pwood%c%c12 / vegn%NPPW
 
     ! I cannot figure out why N losing. Hack!
-    if(myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
+    if (myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
 
   end subroutine annual_diagnostics
 
   subroutine Recover_N_balance(vegn)
     type(vegn_tile_type), intent(inout) :: vegn
 
-    if(abs(vegn%totN-vegn%initialN0)*1000>0.001)then
-      vegn%structuralN = vegn%structuralN - vegn%totN + vegn%initialN0
-      vegn%totN =  vegn%initialN0
+    if(abs(vegn%totN - vegn%initialN0) * 1000 > 0.001)then
+      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 - vegn%totN + vegn%initialN0
+      vegn%totN = vegn%initialN0
     endif
 
   end subroutine Recover_N_balance
