@@ -57,7 +57,6 @@ contains
     real :: dlabl
     real :: dleaf
     real :: droot
-    ! real :: balance
 
     ! xxx verbose
     logical, parameter :: verbose = .false.
@@ -350,31 +349,5 @@ contains
 
   end subroutine turnover_labl
 
-
-  ! subroutine initoutput_turnover( ngridcells )
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Initialises all daily variables with zero.
-  !   ! Called at the beginning of each year by 'biosphere'.
-  !   !----------------------------------------------------------------
-  !   use md_interface, only: interface
-  !   use md_params_core, only: npft
-
-  !   ! arguments
-  !   integer, intent(in) :: ngridcells
-    
-  !   ! annual output variables
-  !   if (interface%params_siml%loutturnover) then
-
-  !     if (interface%steering%init) then
-  !       allocate( outaCveg2lit(npft,ngridcells) )
-  !       allocate( outaCveg2lit(npft,ngridcells) )
-  !     end if
-      
-  !     outaCveg2lit(:,:) = 0.0
-  !     outaCveg2lit(:,:) = 0.0
-
-  !   end if
-
-  ! end subroutine initoutput_turnover
 
 end module md_turnover

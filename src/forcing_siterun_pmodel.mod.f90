@@ -17,7 +17,7 @@ module md_forcing_pmodel
   implicit none
 
   private
-  public ninput_type, landuse_type, climate_type, &
+  public landuse_type, climate_type, getlanduse, &
     getclimate, getco2, getfapar, get_fpc_grid, vegcover_type
 
   type climate_type
@@ -38,20 +38,14 @@ module md_forcing_pmodel
   end type vegcover_type
 
   type landuse_type
-    real(kind=sp), dimension(nlu)  :: lu_area
-    logical, dimension(ndayyear)   :: do_grharvest
+    real(kind=sp) :: dfharv  ! fraction of biomass harvested per day (m-2 d-1)
+    real(kind=sp) :: dno3    ! NO3 inputs per day, fertilisation (gN m-2 d-1)
+    real(kind=sp) :: dnh4    ! NH4 inputs per day, fertilisation (gN m-2 d-1)
   end type landuse_type
-
-  type ninput_type
-    real(kind=sp), dimension(ndayyear) :: dnoy
-    real(kind=sp), dimension(ndayyear) :: dnhx
-    real(kind=sp), dimension(ndayyear) :: dtot
-  end type ninput_type
 
 contains
 
   function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad, elv ) result ( out_climate )
-  ! function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
     ! to read from NetCDF. This nesting is necessary because this 
@@ -60,7 +54,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,16), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: climateyear_idx
     logical, intent(in) :: in_ppfd
     logical, intent(in) :: in_netrad
@@ -120,7 +114,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,16), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: forcingyear
     integer, intent(in) :: firstyeartrend
 
@@ -147,7 +141,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,16), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: forcingyear_idx
 
     ! function return variable
@@ -223,6 +217,37 @@ contains
     ! if (pft/=npft) stop 'GET_FPC_GRID: Adjust npft manually in params_core.mod.f90'
     
   end function get_fpc_grid
+
+
+  function getlanduse( nt, forcing, forcingyear, firstyeartrend ) result( out_landuse )
+    !////////////////////////////////////////////////////////////////
+    ! Function reads this year's annual landuse state and harvesting regime (day of above-ground harvest)
+    ! Grass harvest forcing file is read for specific year, if none is available,
+    ! use earliest forcing file available. 
+    !----------------------------------------------------------------
+    ! arguments
+    integer,  intent(in) :: nt ! number of time steps
+    real(kind=dp),  dimension(nt,16), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    integer, intent(in) :: forcingyear
+    integer, intent(in) :: firstyeartrend
+
+    ! function return variable
+    type( landuse_type ), dimension(ndayyear) :: out_landuse
+
+    ! local variables 
+    integer :: readyear_idx
+    integer :: idx_start, idx_end
+
+    readyear_idx = forcingyear - firstyeartrend + 1
+    idx_start = (readyear_idx - 1) * ndayyear + 1
+    idx_end   = idx_start + ndayyear - 1
+
+    out_landuse(:)%dfharv = real(forcing(idx_start:idx_end, 14))
+    out_landuse(:)%dno3   = real(forcing(idx_start:idx_end, 15))
+    out_landuse(:)%dnh4   = real(forcing(idx_start:idx_end, 16))
+
+  end function getlanduse
+
 
 end module md_forcing_pmodel
 

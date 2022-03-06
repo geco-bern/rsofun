@@ -4,7 +4,7 @@ module md_biosphere_cnmodel
   use md_classdefs
   use md_sofunutils, only: calc_patm
   use md_tile, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
-    getpar_modl_tile, diag_daily, diag_annual, init_annual
+    getpar_modl_tile, diag_daily, diag_annual, init_annual_tile
   use md_plant, only: getpar_modl_plant
   use md_phenology, only: gettempphenology, getpar_modl_phenology
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
@@ -14,6 +14,7 @@ module md_biosphere_cnmodel
   use md_npp, only: npp
   use md_nuptake, only: getpar_modl_nuptake, nuptake
   use md_turnover, only: turnover
+  use md_landuse, only: grharvest
 
   implicit none
 
@@ -81,7 +82,7 @@ contains
     !----------------------------------------------------------------
     ! Set annual sums to zero
     !----------------------------------------------------------------
-    call init_annual( tile_fluxes(:) )
+    call init_annual_tile( tile_fluxes(:) )
 
     !----------------------------------------------------------------
     ! Get phenology variables (temperature-drivenå)
@@ -94,7 +95,7 @@ contains
     ! LOOP THROUGH MONTHS
     !----------------------------------------------------------------
     doy = 0
-    monthloop: do moy = 1,nmonth
+    monthloop: do moy = 1, nmonth
 
       !----------------------------------------------------------------
       ! LOOP THROUGH DAYS
@@ -284,9 +285,9 @@ contains
         ! if (verbose) print*, '              mharv = ', mharv(:,jpngr)
         ! if (baltest) orgtmp1 =  orgplus( pleaf(1,jpngr), proot(1,jpngr), plabl(1,jpngr) )
         ! if (baltest) orgtmp2 =  mharv(1,jpngr)
-        ! !----------------------------------------------------------------
-        ! call grharvest( jpngr, day )
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        call grharvest( tile(:), tile_fluxes(:), doy )
+        !----------------------------------------------------------------
         ! if (verbose) print*, '              ==> returned: '
         ! if (verbose) print*, '              pleaf = ', pleaf(:,jpngr)
         ! if (verbose) print*, '              proot = ', proot(:,jpngr)
@@ -416,6 +417,9 @@ contains
         out_biosphere%nfix(doy)    = 0.0
         out_biosphere%nup(doy)     = 0.0
         out_biosphere%cex(doy)     = 0.0
+
+        out_biosphere%dcharv(doy)  = tile_fluxes(1)%canopy%dharv%c%c12
+        out_biosphere%dnharv(doy)  = tile_fluxes(1)%canopy%dharv%n%n14
 
         out_biosphere%tmp(doy)     = 0.0
 

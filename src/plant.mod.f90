@@ -16,7 +16,7 @@ module md_plant
   private
   public plant_type, plant_fluxes_type, getpar_modl_plant, &
     initglobal_plant, params_plant, params_pft_plant, ftemp, &
-    fmoist, add_seed, get_leaftraits, get_lai, get_fapar
+    fmoist, add_seed, get_leaftraits, get_lai, get_fapar, init_annual_plant
 
   !----------------------------------------------------------------
   ! NON PFT-DEPENDENT PARAMETERS
@@ -136,12 +136,9 @@ module md_plant
     real :: gs_accl           ! acclimated stomatal conductance (xxx)
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
-    real :: actnv_unitiabs      ! metabolic leaf N per unit absorbed light (g N m-2 mol-1)
+    real :: actnv_unitiabs    ! metabolic leaf N per unit absorbed light (g N m-2 mol-1)
 
-    ! ! annual variables
-    ! real :: agpp             ! annual total gross primary production [gC/m2/yr]           
-    ! real :: avcmax25_mean    ! annual Vcmax, normalised to 25 deg C, GPP-weighted mean
-    ! real :: avcmax25_max     ! annual Vcmax, normalised to 25 deg C, annual maximum
+    type(orgpool) :: dharv    ! daily total biomass harvest (g m-2 d-1)
 
   end type plant_fluxes_type
 
@@ -522,6 +519,18 @@ contains
     end do
 
   end subroutine initglobal_plant
+
+
+  subroutine init_annual_plant( plant_fluxes )
+    !////////////////////////////////////////////////////////////////
+    ! Set (iterative) annual sums to zero
+    !----------------------------------------------------------------
+    ! arguments
+    type(plant_fluxes_type), dimension(npft), intent(inout) :: plant_fluxes
+
+    ! plant_fluxes(:)%dharv = 0.0
+
+  end subroutine init_annual_plant
 
 
   subroutine initpft( plant )

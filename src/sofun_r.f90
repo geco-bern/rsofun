@@ -47,7 +47,7 @@ contains
     ! simulation's forcing as time series
     !----------------------------------------------------------------
     use md_params_siml_pmodel, only: getsteering
-    use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
+    use md_forcing_pmodel, only: getclimate, getco2, getfapar, getlanduse, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: nlayers_soil, ndayyear, npft
     use md_biosphere_cnmodel, only: biosphere_annual
@@ -80,8 +80,8 @@ contains
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(22), intent(in) :: par  ! free (calibratable) model parameters
-    real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
-    real(kind=c_double),  dimension(nt,34), intent(out) :: output
+    real(kind=c_double),  dimension(nt,16), intent(in) :: forcing
+    real(kind=c_double),  dimension(nt,36), intent(out) :: output
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -179,7 +179,7 @@ contains
     !----------------------------------------------------------------
     myinterface%fpc_grid(:) = get_fpc_grid( myinterface%params_siml )
     
-    do yr=1,myinterface%params_siml%runyears
+    yearloop: do yr = 1, myinterface%params_siml%runyears
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -199,20 +199,18 @@ contains
                                           )
 
       ! Get annual, gobally uniform CO2
-      myinterface%pco2 = getco2(  nt, &
-                                  forcing, &
-                                  myinterface%steering%forcingyear, &
-                                  myinterface%params_siml%firstyeartrend &
-                                  )
+      myinterface%pco2 = getco2(nt, &
+                                forcing, &
+                                myinterface%steering%forcingyear, &
+                                myinterface%params_siml%firstyeartrend &
+                                )
 
-      !----------------------------------------------------------------
-      ! Get prescribed fAPAR if required (otherwise set to dummy value)
-      !----------------------------------------------------------------
-      myinterface%vegcover(:) = getfapar( &
-                                        nt, &
-                                        forcing, &
-                                        myinterface%steering%forcingyear_idx &
-                                        )
+      ! Get land use forcing (dates of harvesting, fertilisation, etc.)
+      myinterface%landuse(:) = getlanduse(nt, &
+                                          forcing, &
+                                          myinterface%steering%forcingyear, &
+                                          myinterface%params_siml%firstyeartrend &
+                                          )
 
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains gridcell loop)
@@ -264,10 +262,12 @@ contains
         output(idx_start:idx_end,32) = dble(out_biosphere%nfix(:) )
         output(idx_start:idx_end,33) = dble(out_biosphere%nup(:) )
         output(idx_start:idx_end,34) = dble(out_biosphere%cex(:) )
+        output(idx_start:idx_end,35) = dble(out_biosphere%dcharv(:) )
+        output(idx_start:idx_end,36) = dble(out_biosphere%dnharv(:) )
 
       end if
 
-    enddo
+    enddo yearloop
 
   end subroutine pmodel_f
 
