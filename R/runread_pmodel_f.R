@@ -64,10 +64,10 @@ runread_pmodel_f <- function(
                                       ~run_pmodel_f_bysite(
                                         sitename       = .x$sitename[[1]], 
                                         params_siml    = .x$params_siml[[1]], 
-                                        site_info       = .x$site_info[[1]], 
+                                        site_info      = .x$site_info[[1]], 
                                         forcing        = .x$forcing[[1]], 
-                                        params_soil = .x$params_soil[[1]], 
-                                        par    = par, 
+                                        params_soil    = .x$params_soil[[1]], 
+                                        par            = par, 
                                         makecheck      = makecheck )
       ))
     

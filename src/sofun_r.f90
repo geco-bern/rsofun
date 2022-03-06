@@ -47,7 +47,7 @@ contains
     ! simulation's forcing as time series
     !----------------------------------------------------------------
     use md_params_siml_pmodel, only: getsteering
-    use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
+    use md_forcing_pmodel, only: getclimate, getco2, getfapar, getlanduse, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: nlayers_soil, ndayyear, npft
     use md_biosphere_pmodel, only: biosphere_annual
@@ -79,8 +79,8 @@ contains
     real(kind=c_double),  intent(in) :: whc
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(5), intent(in) :: par  ! free (calibratable) model parameters
-    real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
+    real(kind=c_double),  dimension(22), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(nt,16), intent(in) :: forcing
     real(kind=c_double),  dimension(nt,14), intent(out) :: output
 
     ! local variables
@@ -160,7 +160,7 @@ contains
     !----------------------------------------------------------------
     myinterface%fpc_grid(:) = get_fpc_grid( myinterface%params_siml )
     
-    do yr=1,myinterface%params_siml%runyears
+    yearloop: do yr = 1, myinterface%params_siml%runyears
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -180,20 +180,18 @@ contains
                                           )
 
       ! Get annual, gobally uniform CO2
-      myinterface%pco2 = getco2(  nt, &
-                                  forcing, &
-                                  myinterface%steering%forcingyear, &
-                                  myinterface%params_siml%firstyeartrend &
-                                  )
+      myinterface%pco2 = getco2(nt, &
+                                forcing, &
+                                myinterface%steering%forcingyear, &
+                                myinterface%params_siml%firstyeartrend &
+                                )
 
-      !----------------------------------------------------------------
-      ! Get prescribed fAPAR if required (otherwise set to dummy value)
-      !----------------------------------------------------------------
-      myinterface%vegcover(:) = getfapar( &
-                                        nt, &
-                                        forcing, &
-                                        myinterface%steering%forcingyear_idx &
-                                        )
+      ! Get land use forcing (dates of harvesting, fertilisation, etc.)
+      myinterface%landuse(:) = getlanduse(nt, &
+                                          forcing, &
+                                          myinterface%steering%forcingyear, &
+                                          myinterface%params_siml%firstyeartrend &
+                                          )
 
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains gridcell loop)
@@ -226,7 +224,7 @@ contains
 
       end if
 
-    enddo
+    enddo yearloop
 
   end subroutine pmodel_f
 
@@ -348,7 +346,7 @@ contains
     !----------------------------------------------------------------
     use md_params_siml_lm3ppa, only: getsteering
     ! use md_params_soil_lm3ppa, only: getsoil
-    use md_forcing_lm3ppa, only: getclimate, getco2, climate_type !, forcingData
+    use md_forcing_lm3ppa, only: getclimate, getco2, climate_type, getlanduse
     use md_interface_lm3ppa, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
       ndayyear, nvars_daily_tile, nvars_hourly_tile, nvars_daily_cohorts, nvars_annual_cohorts, nvars_annual_tile
@@ -414,7 +412,7 @@ contains
     integer(kind=c_int), intent(in) :: nt_annual_cohorts
 
     ! input and output arrays (naked) to be passed back to C/R
-    real(kind=c_double), dimension(nt,13), intent(in) :: forcing
+    real(kind=c_double), dimension(nt,14), intent(in) :: forcing
 
     real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
@@ -656,13 +654,19 @@ contains
       ! Get external (environmental) forcing (for lm3ppa, co2 is in myinterface%climate)
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
-      myinterface%climate(:) = getclimate( &
-                                            nt, &
+      myinterface%climate(:) = getclimate(  nt, &
                                             ntstepsyear, &
                                             forcing, &
                                             myinterface%steering%climateyear_idx &
                                             ! myinterface%steering%climateyear &
                                             )
+
+      ! Get land use forcing (dates of harvesting, fertilisation, etc.)
+      myinterface%landuse(:) = getlanduse(nt, &
+                                          forcing, &
+                                          myinterface%steering%forcingyear, &
+                                          myinterface%params_siml%firstyeartrend &
+                                          )
 
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains time loops)

@@ -80,7 +80,10 @@ run_pmodel_f_bysite <- function(
       fapar,
       patm,
       tmin,
-      tmax
+      tmax,
+      fharv,
+      dno3,
+      dnh4
       )
   
   # validate input
@@ -100,7 +103,10 @@ run_pmodel_f_bysite <- function(
       "fapar",
       "patm",
       "tmin",
-      "tmax"
+      "tmax",
+      "fharv",
+      "dno3",
+      "dnh4"
     )
     
     # create a loop to loop over a list of variables

@@ -14,7 +14,7 @@ module md_forcing_lm3ppa
   implicit none
 
   private
-  public climate_type, getclimate, getco2
+  public climate_type, getclimate, getco2, getlanduse, landuse_type
 
   type :: climate_type
     integer :: year          ! Year
@@ -33,6 +33,12 @@ module md_forcing_lm3ppa
     real    :: vpd           ! vapour pressure deficit (Pa)
   end type climate_type
 
+  type landuse_type
+    real(kind=sp) :: dfharv  ! fraction of biomass harvested per day (m-2 d-1)
+    real(kind=sp) :: dno3    ! NO3 inputs per day, fertilisation (gN m-2 d-1)
+    real(kind=sp) :: dnh4    ! NH4 inputs per day, fertilisation (gN m-2 d-1)
+  end type landuse_type
+
 contains
 
   function getclimate( nt, ntstepsyear, forcing, climateyear_idx ) result ( out_climate )
@@ -46,7 +52,7 @@ contains
     integer, intent(in) :: nt ! number of time steps
     integer, intent(in) :: ntstepsyear   ! number of time steps per year of model
     ! integer, intent(in) :: ntstepsyear_forcing  ! number of time steps per year of forcing data
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,16), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: climateyear_idx
     ! logical, intent(in) :: do_agg_climate
 
@@ -151,7 +157,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,16), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     ! type(climate_type), dimension(nt), intent(in) :: forcing
 
     integer, intent(in) :: forcingyear_idx
@@ -172,6 +178,36 @@ contains
     pco2 = real(forcing(idx_start:idx_end,12)) * 1.0e-6  ! mol/mol
 
   end function getco2
+
+
+  function getlanduse( nt, forcing, forcingyear, firstyeartrend ) result( out_landuse )
+    !////////////////////////////////////////////////////////////////
+    ! Function reads this year's annual landuse state and harvesting regime (day of above-ground harvest)
+    ! Grass harvest forcing file is read for specific year, if none is available,
+    ! use earliest forcing file available. 
+    !----------------------------------------------------------------
+    ! arguments
+    integer,  intent(in) :: nt ! number of time steps
+    real(kind=dp),  dimension(nt,16), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    integer, intent(in) :: forcingyear
+    integer, intent(in) :: firstyeartrend
+
+    ! function return variable
+    type( landuse_type ), dimension(ndayyear) :: out_landuse
+
+    ! local variables 
+    integer :: readyear_idx
+    integer :: idx_start, idx_end
+
+    readyear_idx = forcingyear - firstyeartrend + 1
+    idx_start = (readyear_idx - 1) * ndayyear + 1
+    idx_end   = idx_start + ndayyear - 1
+
+    out_landuse(:)%dfharv = real(forcing(idx_start:idx_end, 14))
+    out_landuse(:)%dno3   = real(forcing(idx_start:idx_end, 15))
+    out_landuse(:)%dnh4   = real(forcing(idx_start:idx_end, 16))
+
+  end function getlanduse  
 
 
   function calc_vpd_rh( rh, tc ) result( vpd )

@@ -6,7 +6,7 @@ module md_biosphere_pmodel
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
   use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
-    getpar_modl_tile, diag_daily, diag_annual, init_annual
+    getpar_modl_tile, diag_daily, diag_annual, init_annual_tile
   use md_plant_pmodel, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
 
@@ -74,7 +74,7 @@ contains
     !----------------------------------------------------------------
     ! Set annual sums to zero
     !----------------------------------------------------------------
-    call init_annual( tile_fluxes(:) )
+    call init_annual_tile( tile_fluxes(:) )
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS

@@ -2,7 +2,7 @@ module md_interface_lm3ppa
 
   use, intrinsic :: iso_fortran_env, dp=>real64
 
-  use md_forcing_lm3ppa, only: climate_type
+  use md_forcing_lm3ppa, only: climate_type, landuse_type
   use md_params_soil_lm3ppa, only: paramtype_soil, getsoil
   use md_params_siml_lm3ppa, only: paramstype_siml, outtype_steering
   use md_params_core, only: MSPECIES, ntstepsyear, ndayyear, MAX_INIT_COHORTS, out_max_cohorts
@@ -109,6 +109,7 @@ module md_interface_lm3ppa
     integer                                               :: steps_per_day
     real                                                  :: dt_fast_yr
     real                                                  :: step_seconds
+    type(landuse_type), dimension(ndayyear)               :: landuse
     ! type(paramstype_calib_species), dimension(0:MSPECIES) :: params_calib_species
     ! type(paramstype_calib_tile)                           :: params_calib_tile
   end type interfacetype_biosphere

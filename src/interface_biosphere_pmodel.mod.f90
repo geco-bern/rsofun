@@ -2,7 +2,8 @@ module md_interface_pmodel
 
   use, intrinsic :: iso_fortran_env, dp=>real64
 
-  use md_forcing_pmodel, only: climate_type, landuse_type, ninput_type, vegcover_type  
+  use md_forcing_pmodel, only: climate_type, landuse_type, &
+    vegcover_type
   ! use md_params_soil_pmodel, only: paramtype_soil
   use md_params_siml_pmodel, only: paramstype_siml, outtype_steering
   use md_params_core, only: nlayers_soil, ndayyear, npft
@@ -31,6 +32,7 @@ module md_interface_pmodel
     real                                    :: whc_prescr
     type(climate_type), dimension(ndayyear) :: climate
     type(vegcover_type), dimension(ndayyear):: vegcover
+    type(landuse_type), dimension(ndayyear) :: landuse
     ! type(domaininfo_type)                 :: domaininfo
     type(outtype_steering)                  :: steering
     type(paramstype_siml)                   :: params_siml

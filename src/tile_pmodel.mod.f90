@@ -3,13 +3,14 @@ module md_tile_pmodel
   ! Holds all tile-specific variables and procedurs
   ! --------------------------------------------------------------
   use md_params_core, only: npft, nlu
-  use md_plant_pmodel, only: plant_type, plant_fluxes_type, initglobal_plant
+  use md_plant_pmodel
+  use md_classdefs
 
   implicit none
 
   private
   public tile_type, tile_fluxes_type, initglobal_tile, psoilphystype, soil_type, &
-    initdaily_tile_fluxes, getpar_modl_tile, diag_daily, diag_annual, init_annual
+    initdaily_tile_fluxes, getpar_modl_tile, diag_daily, diag_annual, init_annual_tile
 
   !----------------------------------------------------------------
   ! physical soil state variables with memory from year to year (~pools)
@@ -131,6 +132,9 @@ module md_tile_pmodel
     ! radiation
     real :: ppfd_splash
     real :: dra              ! daily top-of-atmosphere solar radiation (J/m^2/d)
+
+    ! ! orgpools
+    ! type(orgpool) :: dharv    ! daily total biomass harvest (g m-2 d-1)
 
     ! ! annual
     ! !----------------------------------------------------------------
@@ -504,7 +508,7 @@ contains
   end subroutine getpar_modl_canopy
 
 
-  subroutine init_annual( tile_fluxes )
+  subroutine init_annual_tile( tile_fluxes )
     !////////////////////////////////////////////////////////////////
     ! Set (iterative) annual sums to zero
     !----------------------------------------------------------------
@@ -512,21 +516,13 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
 
     ! local
-    integer :: pft
+    integer :: lu
 
-    ! ! canopy-level
-    ! tile_fluxes(:)%canopy%agpp          = 0.0
-    ! tile_fluxes(:)%canopy%avcmax25_mean = 0.0
-    ! tile_fluxes(:)%canopy%avcmax25_max  = 0.0
-    
-    ! ! pft-level
-    ! do pft = 1,npft
-    !   tile_fluxes(:)%plant(pft)%agpp          = 0.0
-    !   tile_fluxes(:)%plant(pft)%avcmax25_mean = 0.0
-    !   tile_fluxes(:)%plant(pft)%avcmax25_max  = 0.0
-    ! end do
+    do lu = 1, nlu
+      ! call init_annual_plant(tile_fluxes(lu)%plant)
+    end do
 
-  end subroutine init_annual
+  end subroutine init_annual_tile
 
 
   subroutine diag_daily( tile, tile_fluxes )
@@ -545,7 +541,8 @@ contains
     !----------------------------------------------------------------
     ! Sum over PFTs to get canopy-level quantities
     !----------------------------------------------------------------
-    do lu=1,nlu
+    ! simple scalars (real)
+    do lu = 1, nlu
       tile_fluxes(lu)%canopy%dgpp    = sum(tile_fluxes(lu)%plant(:)%dgpp)
       tile_fluxes(lu)%canopy%drd     = sum(tile_fluxes(lu)%plant(:)%drd)
       tile_fluxes(lu)%canopy%vcmax25 = sum(tile_fluxes(lu)%plant(:)%vcmax25 * tile(lu)%plant(:)%fpc_grid)
@@ -556,6 +553,25 @@ contains
       tile_fluxes(lu)%canopy%chi     = sum(tile_fluxes(lu)%plant(:)%chi     * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%iwue    = sum(tile_fluxes(lu)%plant(:)%iwue    * tile(lu)%plant(:)%fpc_grid)
     end do
+
+    ! orgpools
+
+    ! call orginit( tile_fluxes(lu)%canopy%dharv )
+
+    ! do pft = 1, npft
+
+    !   lu = params_pft_plant(pft)%lu_category
+
+    !   tile_fluxes(lu)%canopy%dharv%c%c12 = tile_fluxes(lu)%canopy%dharv%c%c12 + &
+    !     tile_fluxes(lu)%plant(pft)%dharv%c%c12 * tile(lu)%plant(pft)%fpc_grid
+    !   tile_fluxes(lu)%canopy%dharv%n%n14 = tile_fluxes(lu)%canopy%dharv%n%n14 + &
+    !     tile_fluxes(lu)%plant(pft)%dharv%n%n14 * tile(lu)%plant(pft)%fpc_grid
+  
+    !   ! tile_fluxes(lu)%canopy%dharv = orgcp( tile_fluxes(lu)%plant(pft)%dharv, &
+    !   !                                       tile_fluxes(lu)%canopy%dharv, &
+    !   !                                       scale = tile(lu)%plant(pft)%fpc_grid ) 
+    ! end do
+
 
     ! !----------------------------------------------------------------
     ! ! Annual variables

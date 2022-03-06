@@ -89,10 +89,7 @@ module md_plant_pmodel
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
 
-    ! ! annual variables
-    ! real :: agpp             ! annual total gross primary production [gC/m2/yr]           
-    ! real :: avcmax25_mean    ! annual Vcmax, normalised to 25 deg C, GPP-weighted mean
-    ! real :: avcmax25_max     ! annual Vcmax, normalised to 25 deg C, annual maximum
+    ! type(orgpool) :: dharv    ! daily total biomass harvest (g m-2 d-1)
 
   end type plant_fluxes_type
 
