@@ -329,13 +329,13 @@ contains
         ! if (baltest .and. abs(nbal1)>eps)         stop 'balance not satisfied for N, test 1'
         ! if (verbose) print*, '... done'
 
-        ! !----------------------------------------------------------------
-        ! ! inorganic soil N dynamics (mass balance test only possible inside module)
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        ! inorganic soil N dynamics (mass balance test only possible inside module)
+        !----------------------------------------------------------------
         ! if (verbose) print*, 'calling ntransform() ... '
-        ! !----------------------------------------------------------------
-        ! call ntransform( dm, moy, jpngr, interface%ninput_field(jpngr)%dnhx(day), interface%ninput_field(jpngr)%dnoy(day), sum(interface%climate(jpngr)%dprec(:)) )
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        call ntransform( dm, moy, jpngr, interface%ninput_field(jpngr)%dnhx(day), interface%ninput_field(jpngr)%dnoy(day), sum(interface%climate(jpngr)%dprec(:)) )
+        !----------------------------------------------------------------
         ! if (verbose) print*, '... done'
 
         ! !----------------------------------------------------------------

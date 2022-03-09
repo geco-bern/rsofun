@@ -64,18 +64,34 @@ module md_tile
   ! Soil type
   !----------------------------------------------------------------
   type soil_type
-    type(nitrogen)       :: pno3
-    type(nitrogen)       :: pnh4
+
     type(orgpool)        :: psoil_fs
     type(orgpool)        :: psoil_sl
     type(orgpool)        :: plitt_af
     type(orgpool)        :: plitt_as
     type(orgpool)        :: plitt_bg
+
     type(carbon)         :: pexud
+
+    type(nitrogen)       :: pno3
+    type(nitrogen)       :: pnh4
+
+    real :: no_w             ! NO in wet microsites (split done in ntransform) [gN/m2]
+    real :: no_d             ! NO in dry microsites (split done in ntransform) [gN/m2]
+    real :: n2o_w            ! N2O in wet microsites (split done in ntransform) [gN/m2]
+    real :: n2o_d            ! N2O in dry microsites (split done in ntransform) [gN/m2]
+    real :: n2_w             ! N2 in wet microsites (split done in ntransform) [gN/m2]
+    real :: pno2             ! NO2 [gN/m2]
+
     type(psoilphystype)  :: phy      ! soil physical state variables
+    
     type(paramtype_soil) :: params   ! soil parameters
+
   end type soil_type
 
+  !----------------------------------------------------------------
+  ! Canopy-level parameters
+  !----------------------------------------------------------------
   type paramtype_canopy
     real :: kbeer             ! canopy light extinction coefficient
   end type paramtype_canopy
@@ -126,7 +142,7 @@ module md_tile
   end type tile_type
 
   !----------------------------------------------------------------
-  ! Variables with no memory
+  ! Canopy-level fluxes
   !----------------------------------------------------------------
   type canopy_fluxes_type
 
@@ -194,13 +210,27 @@ module md_tile
   end type canopy_fluxes_type
 
 
+  !----------------------------------------------------------------
+  ! Soil fluxes
+  !----------------------------------------------------------------
   type soil_fluxes_type
-    type(nitrogen) :: dnetmin           ! daily net mineralisation (gN m-2 d-1)
+  
     type(carbon)   :: drsoil            ! soil respiration (only from exudates decomp.) [gC/m2/d]
     type(carbon)   :: drhet             ! heterotrophic respiration [gC/m2/d]
+
+    type(nitrogen) :: dnetmin           ! daily net mineralisation (gN m-2 d-1)
+
+    real :: dn2o                        ! soil N2O emissions [gN/m2/d]
+    real :: dngas                       ! total daily gaseous N emissions from the soil (gN m-2 d-1)
+    real :: dnleach                     ! daily N leaching [gN/m2/d]
+    real :: dnloss                      ! total N loss (gaseous+leaching) [gN/m2/d]
+
   end type soil_fluxes_type
 
 
+  !----------------------------------------------------------------
+  ! Tile-level fluxes
+  !----------------------------------------------------------------
   type tile_fluxes_type
     type(soil_fluxes_type) :: soil
     type(canopy_fluxes_type) :: canopy
@@ -296,12 +326,21 @@ contains
 
     call ninit( soil%pno3 )
     call ninit( soil%pnh4 )
+
     call orginit( soil%psoil_fs )
     call orginit( soil%psoil_sl )
     call orginit( soil%plitt_af )
     call orginit( soil%plitt_as )
     call orginit( soil%plitt_bg )
+    
     call cinit( soil%pexud )
+
+    soil%pno2  = 0.0
+    soil%no_w  = 0.0
+    soil%no_d  = 0.0
+    soil%n2o_w = 0.0
+    soil%n2o_d = 0.0
+    soil%n2_w  = 0.0
 
     call init_tile_soil_phy( soil%phy )
     call init_tile_soil_params( soil%params )
@@ -545,14 +584,23 @@ contains
 
     ! soil
     do lu=1,nlu
+
       ! derived types
       call ninit(tile_fluxes(lu)%soil%dnetmin)
+      
       call cinit(tile_fluxes(lu)%soil%drsoil)
       call cinit(tile_fluxes(lu)%soil%drhet)
+
       call orginit(tile_fluxes(lu)%canopy%dharv)
 
       ! plant
       call init_plant_fluxes( tile_fluxes(lu)%plant(:) )
+
+      tile_fluxes(lu)%soil%dn2o = 0.0
+      tile_fluxes(lu)%soil%dngas = 0.0
+      tile_fluxes(lu)%soil%dnleach = 0.0
+      tile_fluxes(lu)%soil%dnloss = 0.0
+
     end do
 
   end subroutine init_tile_fluxes
