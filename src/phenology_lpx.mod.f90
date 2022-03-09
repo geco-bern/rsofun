@@ -2,7 +2,7 @@ module md_phenology
   !////////////////////////////////////////////////////////////////
   ! TEMPERATURE-DRIVEN PHENOLOGY 
   ! Adopted from LPX-Bern
-  ! Contains the "main" subroutine 'gettempphenology and phenology' and all 
+  ! Contains the "main" subroutine 'phenology and phenology' and all 
   ! necessary subroutines for handling input/output. 
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
@@ -12,7 +12,7 @@ module md_phenology
   implicit none
 
   private
-  public dtphen, gettempphenology, sprout, shedleaves, params_pft_pheno, &
+  public dtphen, phenology, sprout, shedleaves, params_pft_pheno, &
     getpar_modl_phenology
 
   !----------------------------------------------------------------
@@ -48,7 +48,7 @@ module md_phenology
 
 contains
 
-  subroutine gettempphenology( dtemp )
+  subroutine phenology( dtemp )
     !//////////////////////////////////////////////////////////
     ! Defines dtphen, the temperature-driven phenology
     !----------------------------------------------------------
@@ -168,7 +168,7 @@ contains
 
       endif
       
-      ! print*, 'gettempphenology: dtphen_tmp(day,pft) '
+      ! print*, 'phenology: dtphen_tmp(day,pft) '
       ! print*, dtphen(:,pft)
       ! print*, 'a' 
       ! stop
@@ -242,7 +242,7 @@ contains
     
     return
 
-  end subroutine gettempphenology
+  end subroutine phenology
 
 
   subroutine getpar_modl_phenology()

@@ -62,44 +62,45 @@ module md_interface_pmodel
   ! This is the derived type-return variable of the function biosphere(),
   ! holding variables used for the cost function in sofun_calib.f90
   type outtype_biosphere
-    real, dimension(ndayyear) :: gpp
-    real, dimension(ndayyear) :: fapar
-    real, dimension(ndayyear) :: transp
-    real, dimension(ndayyear) :: latenth
-    real, dimension(ndayyear) :: pet
-    real, dimension(ndayyear) :: vcmax
-    real, dimension(ndayyear) :: jmax
-    real, dimension(ndayyear) :: vcmax25
-    real, dimension(ndayyear) :: jmax25
-    real, dimension(ndayyear) :: gs_accl
-    real, dimension(ndayyear) :: wscal
-    real, dimension(ndayyear) :: chi
-    real, dimension(ndayyear) :: iwue
+    real :: gpp
+    real :: fapar
+    real :: transp
+    real :: latenth
+    real :: pet
+    real :: vcmax
+    real :: jmax
+    real :: vcmax25
+    real :: jmax25
+    real :: gs_accl
+    real :: wscal
+    real :: chi
+    real :: iwue
 
     ! new for cnmodel: 25 additional
-    real, dimension(ndayyear) :: tsoil
-    real, dimension(ndayyear) :: cleaf
-    real, dimension(ndayyear) :: nleaf
-    real, dimension(ndayyear) :: croot
-    real, dimension(ndayyear) :: nroot
-    real, dimension(ndayyear) :: clabl
-    real, dimension(ndayyear) :: nlabl
-    real, dimension(ndayyear) :: lai
-    real, dimension(ndayyear) :: ninorg
-    real, dimension(ndayyear) :: pno3
-    real, dimension(ndayyear) :: pnh4
-    real, dimension(ndayyear) :: en2o
-    real, dimension(ndayyear) :: enleach
-    real, dimension(ndayyear) :: tmp
-    real, dimension(ndayyear) :: csoil
-    real, dimension(ndayyear) :: nsoil
-    real, dimension(ndayyear) :: clitt
-    real, dimension(ndayyear) :: nlitt
-    real, dimension(ndayyear) :: nfix
-    real, dimension(ndayyear) :: nup
-    real, dimension(ndayyear) :: cex
-    real, dimension(ndayyear) :: dcharv
-    real, dimension(ndayyear) :: dnharv
+    real :: tsoil
+    real :: cleaf
+    real :: nleaf
+    real :: croot
+    real :: nroot
+    real :: clabl
+    real :: nlabl
+    real :: lai
+    real :: ninorg
+    real :: pno3
+    real :: pnh4
+    real :: en2o
+    real :: enleach
+    real :: tmp
+    real :: csoil
+    real :: nsoil
+    real :: clitt
+    real :: nlitt
+    real :: nfix
+    real :: nup
+    real :: cex
+    real :: netmin
+    real :: dcharv
+    real :: dnharv
 
   end type outtype_biosphere
 

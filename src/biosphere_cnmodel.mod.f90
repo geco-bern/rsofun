@@ -3,10 +3,10 @@ module md_biosphere_cnmodel
   use md_params_core
   use md_classdefs
   use md_sofunutils, only: calc_patm
-  use md_tile, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
-    getpar_modl_tile, diag_daily, diag_annual, init_annual_tile
+  use md_tile, only: tile_type, tile_fluxes_type, init_tile, init_tile_fluxes, &
+    getpar_modl_tile, diag_daily
   use md_plant, only: getpar_modl_plant
-  use md_phenology, only: gettempphenology, getpar_modl_phenology
+  use md_phenology, only: phenology, getpar_modl_phenology
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_cnmodel, only: vegdynamics
@@ -15,6 +15,7 @@ module md_biosphere_cnmodel
   use md_nuptake, only: getpar_modl_nuptake, nuptake
   use md_turnover, only: turnover
   use md_landuse, only: grharvest
+  use md_littersom, only: littersom, getpar_modl_littersom
 
   implicit none
 
@@ -42,7 +43,7 @@ contains
     use md_interface_pmodel, only: myinterface, outtype_biosphere
   
     ! return variable
-    type(outtype_biosphere) :: out_biosphere
+    type(outtype_biosphere), dimension(ndayyear) :: out_biosphere
 
     ! local variables
     integer :: dm, moy, doy
@@ -68,27 +69,23 @@ contains
       call getpar_modl_waterbal()
       call getpar_modl_gpp()
       call getpar_modl_nuptake()
+      call getpar_modl_littersom()
       ! if (verbose) print*, '... done'
 
       !----------------------------------------------------------------
       ! Initialise pool variables and/or read from restart file (not implemented)
       !----------------------------------------------------------------
       ! if (verbose) print*, 'initglobal_() ...'
-      call initglobal_tile( tile(:) )
+      call init_tile( tile(:) )
       ! if (verbose) print*, '... done'
 
     endif 
 
     !----------------------------------------------------------------
-    ! Set annual sums to zero
+    ! Get phenology variables (temperature-driven)
     !----------------------------------------------------------------
-    call init_annual_tile( tile_fluxes(:) )
-
-    !----------------------------------------------------------------
-    ! Get phenology variables (temperature-drivenå)
-    !----------------------------------------------------------------
-    ! if (verbose) print*, 'calling gettempphenology() ...'
-    call gettempphenology( myinterface%climate(:)%dtemp )
+    ! if (verbose) print*, 'calling phenology() ...'
+    call phenology( myinterface%climate(:)%dtemp )
     ! if (verbose) print*, '... done'
 
     !----------------------------------------------------------------
@@ -111,7 +108,7 @@ contains
         ! initialise updated variables (fluxes)
         !----------------------------------------------------------------
         ! if (verbose) print*,'calling initdaily_() ...'
-        call initdaily_tile_fluxes( tile_fluxes(:) )
+        call init_tile_fluxes( tile_fluxes(:) )
         ! if (verbose) print*,'... done.'
 
         !----------------------------------------------------------------
@@ -198,10 +195,7 @@ contains
         ! if (verbose) print*, '              plabl = ', plabl(:,jpngr)
         ! if (baltest) orgtmp1 =  plabl(1,jpngr)
         !----------------------------------------------------------------
-        call npp( tile(:), &
-                  tile_fluxes(:), &
-                  myinterface%climate(doy) &
-                  )                  
+        call npp( tile(:), tile_fluxes(:), myinterface%climate(doy) )                  
         !----------------------------------------------------------------
         ! if (verbose) print*, '              ==> returned: '
         ! if (verbose) print*, '              dnpp  = ', dnpp(:)
@@ -314,9 +308,9 @@ contains
         ! if (baltest) orgtmp1 = orgplus( plitt_af(1,jpngr), plitt_as(1,jpngr), plitt_bg(1,jpngr), psoil_fs(1,jpngr), psoil_sl(1,jpngr) )
         ! if (baltest) orgtmp2 = orgpool( drhet(1), nplus( pnh4(1,jpngr), pno3(1,jpngr) ) )
         ! ! if (baltest) ntmp1 = outdnetmin(1,day,jpngr)
-        ! !----------------------------------------------------------------
-        ! call littersom( jpngr, day, interface%climate(jpngr)%dtemp(day) )
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        call littersom( tile(:), tile_fluxes(:), myinterface%climate(doy), doy )
+        !----------------------------------------------------------------
         ! if (verbose) print*, '              ==> returned: '
         ! if (verbose) print*, '              plitt  = ', orgplus( plitt_af(1,jpngr), plitt_as(1,jpngr), plitt_bg(1,jpngr) )
         ! if (verbose) print*, '              psoil  = ', orgplus( psoil_fs(1,jpngr), psoil_sl(1,jpngr) )
@@ -376,52 +370,7 @@ contains
         !----------------------------------------------------------------
         ! daily diagnostics (e.g., sum over plant within canopy)
         !----------------------------------------------------------------
-        call diag_daily(tile(:), tile_fluxes(:))
-
-        !----------------------------------------------------------------
-        ! populate function return variable
-        !----------------------------------------------------------------
-        ! if (nlu>1) stop 'think about nlu > 1'
-        out_biosphere%fapar(doy)   = tile(1)%canopy%fapar
-        out_biosphere%gpp(doy)     = tile_fluxes(1)%canopy%dgpp
-        out_biosphere%transp(doy)  = tile_fluxes(1)%canopy%daet
-        out_biosphere%latenth(doy) = tile_fluxes(1)%canopy%daet_e
-        out_biosphere%pet(doy)     = tile_fluxes(1)%canopy%dpet
-        out_biosphere%vcmax(doy)   = tile_fluxes(1)%canopy%vcmax
-        out_biosphere%jmax(doy)    = tile_fluxes(1)%canopy%jmax
-        out_biosphere%vcmax25(doy) = tile_fluxes(1)%canopy%vcmax25
-        out_biosphere%jmax25(doy)  = tile_fluxes(1)%canopy%jmax25
-        out_biosphere%gs_accl(doy) = tile_fluxes(1)%canopy%gs_accl
-        out_biosphere%wscal(doy)   = tile(1)%soil%phy%wscal
-        out_biosphere%chi(doy)     = tile_fluxes(1)%canopy%chi
-        out_biosphere%iwue(doy)    = tile_fluxes(1)%canopy%iwue
-
-        out_biosphere%tsoil(doy)   = tile(1)%soil%phy%temp
-        out_biosphere%cleaf(doy)   = 0.0
-        out_biosphere%nleaf(doy)   = 0.0
-        out_biosphere%croot(doy)   = 0.0
-        out_biosphere%nroot(doy)   = 0.0
-        out_biosphere%clabl(doy)   = 0.0
-        out_biosphere%nlabl(doy)   = 0.0
-        out_biosphere%lai(doy)     = 0.0
-        out_biosphere%ninorg(doy)  = 0.0
-        out_biosphere%pno3(doy)    = 0.0
-        out_biosphere%pnh4(doy)    = 0.0
-        out_biosphere%en2o(doy)    = 0.0
-        out_biosphere%enleach(doy) = 0.0
-
-        out_biosphere%csoil(doy)   = 0.0
-        out_biosphere%nsoil(doy)   = 0.0
-        out_biosphere%clitt(doy)   = 0.0
-        out_biosphere%nlitt(doy)   = 0.0
-        out_biosphere%nfix(doy)    = 0.0
-        out_biosphere%nup(doy)     = 0.0
-        out_biosphere%cex(doy)     = 0.0
-
-        out_biosphere%dcharv(doy)  = tile_fluxes(1)%canopy%dharv%c%c12
-        out_biosphere%dnharv(doy)  = tile_fluxes(1)%canopy%dharv%n%n14
-
-        out_biosphere%tmp(doy)     = 0.0
+        call diag_daily( tile(:), tile_fluxes(:), out_biosphere(doy) )
 
         init_daily = .false.
 
@@ -429,10 +378,10 @@ contains
 
     end do monthloop
 
-    !----------------------------------------------------------------
-    ! annual diagnostics
-    !----------------------------------------------------------------
-    call diag_annual( tile(:), tile_fluxes(:) )
+    ! !----------------------------------------------------------------
+    ! ! annual diagnostics
+    ! !----------------------------------------------------------------
+    ! call diag_annual( tile(:), tile_fluxes(:) )
     
 
     ! if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'

@@ -287,6 +287,7 @@ run_pmodel_f_bysite <- function(
           "nfix",  
           "nup",  
           "cex",
+          "netmin",
           "dcharv",
           "dnharv"
           )) %>%
@@ -308,6 +309,7 @@ run_pmodel_f_bysite <- function(
                   nfix = NA, 
                   nup = NA, 
                   cex = NA,
+                  netmin = NA,
                   dcharv = NA,
                   dnharv = NA
                   )

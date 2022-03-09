@@ -15,11 +15,12 @@ module md_plant
 
   private
   public plant_type, plant_fluxes_type, getpar_modl_plant, &
-    initglobal_plant, params_plant, params_pft_plant, ftemp, &
-    fmoist, add_seed, get_leaftraits, get_lai, get_fapar, init_annual_plant
+    init_plant, params_plant, params_pft_plant, ftemp, &
+    fmoist, add_seed, get_leaftraits, get_lai, get_fapar, &
+    init_plant_fluxes
 
   !----------------------------------------------------------------
-  ! NON PFT-DEPENDENT PARAMETERS
+  ! NON PFT-DEPENDENT GLOBAL PARAMETERS
   !----------------------------------------------------------------
   type params_plant_type
     real :: kbeer             ! canopy light extinction coefficient
@@ -497,7 +498,7 @@ contains
   end subroutine add_seed
 
 
-  subroutine initglobal_plant( plant )
+  subroutine init_plant( plant )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
@@ -510,60 +511,74 @@ contains
     ! local variables
     integer :: pft
 
-    !-----------------------------------------------------------------------------
-    ! derive which PFTs are present from fpc_grid (which is prescribed)
-    !-----------------------------------------------------------------------------
+    plant(:)%fpc_grid  = 0.0
+    plant(:)%lai_ind   = 0.0
+    plant(:)%fapar_ind = 0.0
+    plant(:)%acrown    = 0.0
+
+    ! canpopy state variables
+    plant(:)%narea            = 0.0
+    plant(:)%narea_metabolic  = 0.0
+    plant(:)%narea_structural = 0.0
+    plant(:)%lma              = 0.0
+    plant(:)%sla              = 0.0
+    plant(:)%nmass            = 0.0
+    plant(:)%r_cton_leaf      = 0.0
+    plant(:)%r_ntoc_leaf      = 0.0
+
     do pft=1,npft
-      call initpft( plant(pft) )
       plant(pft)%pftno = pft
+      call orginit( plant(pft)%pleaf )
+      call orginit( plant(pft)%proot )
+      call orginit( plant(pft)%psapw )
+      call orginit( plant(pft)%pwood )
+      call orginit( plant(pft)%plabl )
     end do
 
-  end subroutine initglobal_plant
+  end subroutine init_plant
 
 
-  subroutine init_annual_plant( plant_fluxes )
+  subroutine init_plant_fluxes( plant_fluxes )
     !////////////////////////////////////////////////////////////////
-    ! Set (iterative) annual sums to zero
+    ! Initialises all flux variables at plant level
     !----------------------------------------------------------------
     ! arguments
     type(plant_fluxes_type), dimension(npft), intent(inout) :: plant_fluxes
 
-    ! plant_fluxes(:)%dharv = 0.0
+    ! local
+    integer :: pft
 
-  end subroutine init_annual_plant
+    ! daily updated variables
+    plant_fluxes(:)%dgpp = 0.0
+    plant_fluxes(:)%drd = 0.0
+    plant_fluxes(:)%assim = 0.0
+    plant_fluxes(:)%dtransp = 0.0
+    plant_fluxes(:)%dlatenth = 0.0
+    plant_fluxes(:)%drleaf = 0.0
+    plant_fluxes(:)%drroot = 0.0
+    plant_fluxes(:)%drsapw = 0.0
+    plant_fluxes(:)%drgrow = 0.0
+    plant_fluxes(:)%dcex = 0.0
+    plant_fluxes(:)%dnup_pas = 0.0
+    plant_fluxes(:)%dnup_act = 0.0
+    plant_fluxes(:)%dnup_fix = 0.0
+    plant_fluxes(:)%dnup_ret = 0.0
+    plant_fluxes(:)%vcmax25 = 0.0
+    plant_fluxes(:)%jmax25 = 0.0
+    plant_fluxes(:)%vcmax = 0.0
+    plant_fluxes(:)%jmax = 0.0
+    plant_fluxes(:)%gs_accl = 0.0
+    plant_fluxes(:)%chi = 0.0
+    plant_fluxes(:)%iwue = 0.0
+    plant_fluxes(:)%actnv_unitiabs = 0.0
 
+    do pft=1,npft
+      call orginit( plant_fluxes(pft)%dharv )
+      call cinit(   plant_fluxes(pft)%dnpp )
+      call ninit(   plant_fluxes(pft)%dnup )
+    end do
 
-  subroutine initpft( plant )
-    !////////////////////////////////////////////////////////////////
-    !  Initialisation of specified PFT on specified gridcell
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
-    !----------------------------------------------------------------
-    ! argument
-    type( plant_type ), intent(inout) :: plant
-
-    plant%fpc_grid  = 0.0
-    plant%lai_ind   = 0.0
-    plant%fapar_ind = 0.0
-    plant%acrown    = 0.0
-
-    ! canpopy state variables
-    plant%narea            = 0.0
-    plant%narea_metabolic  = 0.0
-    plant%narea_structural = 0.0
-    plant%lma              = 0.0
-    plant%sla              = 0.0
-    plant%nmass            = 0.0
-    plant%r_cton_leaf      = 0.0
-    plant%r_ntoc_leaf      = 0.0
-
-    plant%pleaf = orgpool(carbon(0.0), nitrogen(0.0))
-    plant%proot = orgpool(carbon(0.0), nitrogen(0.0))
-    plant%psapw = orgpool(carbon(0.0), nitrogen(0.0))
-    plant%pwood = orgpool(carbon(0.0), nitrogen(0.0))
-    plant%plabl = orgpool(carbon(0.0), nitrogen(0.0))
-    
-  end subroutine initpft
+  end subroutine init_plant_fluxes
 
 
   function ftemp( temp, method, ref_temp )

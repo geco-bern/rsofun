@@ -81,10 +81,10 @@ contains
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(22), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,16), intent(in) :: forcing
-    real(kind=c_double),  dimension(nt,36), intent(out) :: output
+    real(kind=c_double),  dimension(nt,37), intent(out) :: output
 
     ! local variables
-    type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
+    type(outtype_biosphere), dimension(ndayyear) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
     integer :: npft_local, yr, idx_start, idx_end
 
     !----------------------------------------------------------------
@@ -226,44 +226,45 @@ contains
         idx_start = (myinterface%steering%forcingyear_idx - 1) * ndayyear + 1
         idx_end   = idx_start + ndayyear - 1
 
-        output(idx_start:idx_end,1)  = dble(out_biosphere%fapar(:))  
-        output(idx_start:idx_end,2)  = dble(out_biosphere%gpp(:))    
-        output(idx_start:idx_end,3)  = dble(out_biosphere%transp(:)) 
-        output(idx_start:idx_end,4)  = dble(out_biosphere%latenth(:))
-        output(idx_start:idx_end,5)  = dble(out_biosphere%pet(:))
-        output(idx_start:idx_end,6)  = dble(out_biosphere%vcmax(:))  
-        output(idx_start:idx_end,7)  = dble(out_biosphere%jmax(:))    
-        output(idx_start:idx_end,8)  = dble(out_biosphere%vcmax25(:)) 
-        output(idx_start:idx_end,9)  = dble(out_biosphere%jmax25(:))
-        output(idx_start:idx_end,10) = dble(out_biosphere%gs_accl(:))
-        output(idx_start:idx_end,11) = dble(out_biosphere%wscal(:))
-        output(idx_start:idx_end,12) = dble(out_biosphere%chi(:))
-        output(idx_start:idx_end,13) = dble(out_biosphere%iwue(:))
+        output(idx_start:idx_end,1)  = dble(out_biosphere(:)%fapar)  
+        output(idx_start:idx_end,2)  = dble(out_biosphere(:)%gpp)    
+        output(idx_start:idx_end,3)  = dble(out_biosphere(:)%transp) 
+        output(idx_start:idx_end,4)  = dble(out_biosphere(:)%latenth)
+        output(idx_start:idx_end,5)  = dble(out_biosphere(:)%pet)
+        output(idx_start:idx_end,6)  = dble(out_biosphere(:)%vcmax)  
+        output(idx_start:idx_end,7)  = dble(out_biosphere(:)%jmax)    
+        output(idx_start:idx_end,8)  = dble(out_biosphere(:)%vcmax25) 
+        output(idx_start:idx_end,9)  = dble(out_biosphere(:)%jmax25)
+        output(idx_start:idx_end,10) = dble(out_biosphere(:)%gs_accl)
+        output(idx_start:idx_end,11) = dble(out_biosphere(:)%wscal)
+        output(idx_start:idx_end,12) = dble(out_biosphere(:)%chi)
+        output(idx_start:idx_end,13) = dble(out_biosphere(:)%iwue)
 
         ! new for cnmodel
-        output(idx_start:idx_end,14) = dble(out_biosphere%tsoil(:)   )
-        output(idx_start:idx_end,15) = dble(out_biosphere%lai(:)     )
-        output(idx_start:idx_end,16) = dble(out_biosphere%cleaf(:)   )
-        output(idx_start:idx_end,17) = dble(out_biosphere%nleaf(:)   )
-        output(idx_start:idx_end,18) = dble(out_biosphere%croot(:)   )
-        output(idx_start:idx_end,19) = dble(out_biosphere%nroot(:)   )
-        output(idx_start:idx_end,20) = dble(out_biosphere%clabl(:)   )
-        output(idx_start:idx_end,21) = dble(out_biosphere%nlabl(:)   )
-        output(idx_start:idx_end,22) = dble(out_biosphere%ninorg(:)  )
-        output(idx_start:idx_end,23) = dble(out_biosphere%pnh4(:)    )
-        output(idx_start:idx_end,24) = dble(out_biosphere%pno3(:)    )
-        output(idx_start:idx_end,25) = dble(out_biosphere%enleach(:) )
-        output(idx_start:idx_end,26) = dble(out_biosphere%en2o(:)    )
-        output(idx_start:idx_end,27) = dble(out_biosphere%tmp(:)     )
-        output(idx_start:idx_end,28) = dble(out_biosphere%csoil(:) )
-        output(idx_start:idx_end,29) = dble(out_biosphere%nsoil(:) )
-        output(idx_start:idx_end,30) = dble(out_biosphere%clitt(:) )
-        output(idx_start:idx_end,31) = dble(out_biosphere%nlitt(:) )
-        output(idx_start:idx_end,32) = dble(out_biosphere%nfix(:) )
-        output(idx_start:idx_end,33) = dble(out_biosphere%nup(:) )
-        output(idx_start:idx_end,34) = dble(out_biosphere%cex(:) )
-        output(idx_start:idx_end,35) = dble(out_biosphere%dcharv(:) )
-        output(idx_start:idx_end,36) = dble(out_biosphere%dnharv(:) )
+        output(idx_start:idx_end,14) = dble(out_biosphere(:)%tsoil   )
+        output(idx_start:idx_end,15) = dble(out_biosphere(:)%lai     )
+        output(idx_start:idx_end,16) = dble(out_biosphere(:)%cleaf   )
+        output(idx_start:idx_end,17) = dble(out_biosphere(:)%nleaf   )
+        output(idx_start:idx_end,18) = dble(out_biosphere(:)%croot   )
+        output(idx_start:idx_end,19) = dble(out_biosphere(:)%nroot   )
+        output(idx_start:idx_end,20) = dble(out_biosphere(:)%clabl   )
+        output(idx_start:idx_end,21) = dble(out_biosphere(:)%nlabl   )
+        output(idx_start:idx_end,22) = dble(out_biosphere(:)%ninorg  )
+        output(idx_start:idx_end,23) = dble(out_biosphere(:)%pnh4    )
+        output(idx_start:idx_end,24) = dble(out_biosphere(:)%pno3    )
+        output(idx_start:idx_end,25) = dble(out_biosphere(:)%enleach )
+        output(idx_start:idx_end,26) = dble(out_biosphere(:)%en2o    )
+        output(idx_start:idx_end,27) = dble(out_biosphere(:)%tmp     )
+        output(idx_start:idx_end,28) = dble(out_biosphere(:)%csoil )
+        output(idx_start:idx_end,29) = dble(out_biosphere(:)%nsoil )
+        output(idx_start:idx_end,30) = dble(out_biosphere(:)%clitt )
+        output(idx_start:idx_end,31) = dble(out_biosphere(:)%nlitt )
+        output(idx_start:idx_end,32) = dble(out_biosphere(:)%nfix )
+        output(idx_start:idx_end,33) = dble(out_biosphere(:)%nup )
+        output(idx_start:idx_end,34) = dble(out_biosphere(:)%cex )
+        output(idx_start:idx_end,35) = dble(out_biosphere(:)%netmin )
+        output(idx_start:idx_end,36) = dble(out_biosphere(:)%dcharv )
+        output(idx_start:idx_end,37) = dble(out_biosphere(:)%dnharv )
 
       end if
 

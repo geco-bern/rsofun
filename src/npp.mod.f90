@@ -51,7 +51,7 @@ contains
     ! arguments
     type(tile_type), dimension(nlu), intent(in) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
-    type(climate_type)  :: climate
+    type(climate_type), intent(in) :: climate
 
     ! local variables
     type(plant_fluxes_type) :: pf

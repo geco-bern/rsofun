@@ -145,8 +145,8 @@ contains
         ! Active N uptake is a function of initial N available and C exuded
         !--------------------------------------------------------------------------
         out_calc_dnup  = calc_dnup( tile_fluxes(lu)%plant(pft)%dcex, &
-                                    tile(lu)%soil%nh4%n14, &
-                                    tile(lu)%soil%no3%n14, &
+                                    tile(lu)%soil%pnh4%n14, &
+                                    tile(lu)%soil%pno3%n14, &
                                     params_pft_plant(pft)%nfixer, &
                                     tile(lu)%soil%phy%temp &
                                     )
@@ -158,8 +158,8 @@ contains
         end if
 
         ! Update
-        tile(lu)%soil%no3%n14 = tile(lu)%soil%no3%n14 - out_calc_dnup%act_no3
-        tile(lu)%soil%nh4%n14 = tile(lu)%soil%nh4%n14 - out_calc_dnup%act_nh4
+        tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 - out_calc_dnup%act_no3
+        tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 - out_calc_dnup%act_nh4
 
       end if
 

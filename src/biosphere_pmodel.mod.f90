@@ -5,8 +5,8 @@ module md_biosphere_pmodel
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
-  use md_tile, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
-    getpar_modl_tile, diag_daily, diag_annual, init_annual_tile
+  use md_tile, only: tile_type, tile_fluxes_type, init_tile, init_tile_fluxes, &
+    getpar_modl_tile, diag_daily !, diag_annual, init_annual_tile
   use md_plant, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
 
@@ -36,7 +36,7 @@ contains
     use md_interface_pmodel, only: myinterface, outtype_biosphere
   
     ! return variable
-    type(outtype_biosphere) :: out_biosphere
+    type(outtype_biosphere), dimension(ndayyear) :: out_biosphere
 
     ! local variables
     integer :: dm, moy, doy
@@ -66,15 +66,15 @@ contains
       ! Initialise pool variables and/or read from restart file (not implemented)
       !----------------------------------------------------------------
       ! if (verbose) print*, 'initglobal_() ...'
-      call initglobal_tile( tile(:) )
+      call init_tile( tile(:) )
       ! if (verbose) print*, '... done'
 
     endif 
 
-    !----------------------------------------------------------------
-    ! Set annual sums to zero
-    !----------------------------------------------------------------
-    call init_annual_tile( tile_fluxes(:) )
+    ! !----------------------------------------------------------------
+    ! ! Set annual sums to zero
+    ! !----------------------------------------------------------------
+    ! call init_annual_tile( tile_fluxes(:) )
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -96,7 +96,7 @@ contains
         ! initialise updated variables (fluxes)
         !----------------------------------------------------------------
         ! if (verbose) print*,'calling initdaily_() ...'
-        call initdaily_tile_fluxes( tile_fluxes(:) )
+        call init_tile_fluxes( tile_fluxes(:) )
         ! if (verbose) print*,'... done.'
 
         !----------------------------------------------------------------
@@ -172,25 +172,25 @@ contains
         !----------------------------------------------------------------
         ! daily diagnostics (e.g., sum over plant within canopy)
         !----------------------------------------------------------------
-        call diag_daily(tile(:), tile_fluxes(:))
+        call diag_daily( tile(:), tile_fluxes(:), out_biosphere(doy) )
 
-        !----------------------------------------------------------------
-        ! populate function return variable
-        !----------------------------------------------------------------
-        ! if (nlu>1) stop 'think about nlu > 1'
-        out_biosphere%fapar(doy)   = tile(1)%canopy%fapar
-        out_biosphere%gpp(doy)     = tile_fluxes(1)%canopy%dgpp
-        out_biosphere%transp(doy)  = tile_fluxes(1)%canopy%daet
-        out_biosphere%latenth(doy) = tile_fluxes(1)%canopy%daet_e
-        out_biosphere%pet(doy)     = tile_fluxes(1)%canopy%dpet
-        out_biosphere%vcmax(doy)   = tile_fluxes(1)%canopy%vcmax
-        out_biosphere%jmax(doy)    = tile_fluxes(1)%canopy%jmax
-        out_biosphere%vcmax25(doy) = tile_fluxes(1)%canopy%vcmax25
-        out_biosphere%jmax25(doy)  = tile_fluxes(1)%canopy%jmax25
-        out_biosphere%gs_accl(doy) = tile_fluxes(1)%canopy%gs_accl
-        out_biosphere%wscal(doy)   = tile(1)%soil%phy%wscal
-        out_biosphere%chi(doy)     = tile_fluxes(1)%canopy%chi
-        out_biosphere%iwue(doy)    = tile_fluxes(1)%canopy%iwue
+        ! !----------------------------------------------------------------
+        ! ! populate function return variable
+        ! !----------------------------------------------------------------
+        ! ! if (nlu>1) stop 'think about nlu > 1'
+        ! out_biosphere%fapar(doy)   = tile(1)%canopy%fapar
+        ! out_biosphere%gpp(doy)     = tile_fluxes(1)%canopy%dgpp
+        ! out_biosphere%transp(doy)  = tile_fluxes(1)%canopy%daet
+        ! out_biosphere%latenth(doy) = tile_fluxes(1)%canopy%daet_e
+        ! out_biosphere%pet(doy)     = tile_fluxes(1)%canopy%dpet
+        ! out_biosphere%vcmax(doy)   = tile_fluxes(1)%canopy%vcmax
+        ! out_biosphere%jmax(doy)    = tile_fluxes(1)%canopy%jmax
+        ! out_biosphere%vcmax25(doy) = tile_fluxes(1)%canopy%vcmax25
+        ! out_biosphere%jmax25(doy)  = tile_fluxes(1)%canopy%jmax25
+        ! out_biosphere%gs_accl(doy) = tile_fluxes(1)%canopy%gs_accl
+        ! out_biosphere%wscal(doy)   = tile(1)%soil%phy%wscal
+        ! out_biosphere%chi(doy)     = tile_fluxes(1)%canopy%chi
+        ! out_biosphere%iwue(doy)    = tile_fluxes(1)%canopy%iwue
 
         init_daily = .false.
 
@@ -198,10 +198,10 @@ contains
 
     end do monthloop
 
-    !----------------------------------------------------------------
-    ! annual diagnostics
-    !----------------------------------------------------------------
-    call diag_annual( tile(:), tile_fluxes(:) )
+    ! !----------------------------------------------------------------
+    ! ! annual diagnostics
+    ! !----------------------------------------------------------------
+    ! call diag_annual( tile(:), tile_fluxes(:) )
     
 
     ! if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
