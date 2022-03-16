@@ -76,7 +76,7 @@ module md_interface_pmodel
     real :: chi
     real :: iwue
 
-    ! new for cnmodel: 25 additional
+    ! new for cnmodel
     real :: tsoil
     real :: cleaf
     real :: nleaf

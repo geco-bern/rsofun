@@ -16,6 +16,7 @@ module md_biosphere_cnmodel
   use md_turnover, only: turnover
   use md_landuse, only: grharvest
   use md_littersom, only: littersom, getpar_modl_littersom
+  use md_ntransform, only: ntransform, getpar_modl_ntransform
 
   implicit none
 
@@ -70,6 +71,7 @@ contains
       call getpar_modl_gpp()
       call getpar_modl_nuptake()
       call getpar_modl_littersom()
+      call getpar_modl_ntransform()
       ! if (verbose) print*, '... done'
 
       !----------------------------------------------------------------
@@ -334,7 +336,7 @@ contains
         !----------------------------------------------------------------
         ! if (verbose) print*, 'calling ntransform() ... '
         !----------------------------------------------------------------
-        call ntransform( dm, moy, jpngr, interface%ninput_field(jpngr)%dnhx(day), interface%ninput_field(jpngr)%dnoy(day), sum(interface%climate(jpngr)%dprec(:)) )
+        call ntransform( tile(:), tile_fluxes(:), myinterface%landuse(doy), sum(myinterface%climate(:)%dprec), doy )
         !----------------------------------------------------------------
         ! if (verbose) print*, '... done'
 

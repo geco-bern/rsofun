@@ -60,7 +60,7 @@ module md_ntransform
 
 contains
 
-  subroutine ntransform( dm, mo, jpngr, dnhxdep, dnoydep, aprec )
+  subroutine ntransform( tile, tile_fluxes, landuse, aprec, doy )
     !////////////////////////////////////////////////////////////////
     !  Litter and SOM decomposition and nitrogen mineralisation.
     !  1st order decay of litter and SOM _pools, governed by temperature
@@ -78,12 +78,11 @@ contains
     ! should be water-filled pore space = ( (porosity - ice) - (total fluid water volume) ) / dz
 
     ! arguments
-    integer, intent(in) :: mo            ! month
-    integer, intent(in) :: dm            ! day of the current month
-    integer, intent(in) :: jpngr         ! grid cell number
-    real, intent(in)    :: dnhxdep       ! daily N deposition as NHx [gN/d]
-    real, intent(in)    :: dnoydep       ! daily N deposition as NOy [gN/d]
-    real, intent(in)    :: aprec         ! annual total precipitation [mm/d]
+    type(tile_type), dimension(nlu), intent(inout) :: tile
+    type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
+    type(landuse_type), intent(in) :: landuse
+    real :: aprec         ! annual total precipitation [mm/d] 
+    integer :: doy
     
     ! local variables
     integer    :: lu                     ! gridcell unit counter variable
@@ -133,7 +132,7 @@ contains
     if (verbose) print*,'              ninorg = ', tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
     if (verbose) print*,'              nloss  = ', tile_fluxes(lu)%soil%dnloss
     if (verbose) print*,'              dndep  = ', dnoydep + dnhxdep
-    if (baltest) nbal_before_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + dnloss(1) + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2 + dnoydep + dnhxdep
+    if (baltest) nbal_before_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile_fluxes(lu)%soil%dnloss + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2 + dnoydep + dnhxdep
     if (baltest) nbal_before_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + ddenitr(lu) + dnitr(lu) + dnvol(1) + dnleach(1) + dnoydep + dnhxdep
     if (verbose) print*,'executing ntransform() ... '
 
@@ -144,18 +143,18 @@ contains
     ddenitr(:) = 0.0
     dnitr(:)   = 0.0
 
-    if ( dm==1 .and. mo==1 ) then
+    if ( doy == 1 ) then
       !///////////////////////////////////////////////////////////////////////
       ! ANNUAL INITIALIZATION 
       !-----------------------------------------------------------------------
       ! Calculate soil PH using empirical relationship with annual precip
       ! Eq.5, Tab.5, XP08 (ntransform.cpp:65) (c++:aprec in mm/yr; F: mm/yr)
       !------------------------------------------------------------------
-      ph_soil = 3810.0/(762.0+aprec)+3.8
+      ph_soil = 3810.0 / (762.0 + aprec) + 3.8
 
       ! Deprotonation of NH4 to NH3 depends on soil pH
       !------------------------------------------------------------------
-      if (ph_soil>6.0) then
+      if (ph_soil > 6.0) then
         nh3max = 1.0
       else
         nh3max = 0.00001
@@ -169,16 +168,8 @@ contains
       !-------------------------------------------------------------------------
       ! Add N deposition to inorganic pools
       !-------------------------------------------------------------------------
-      ! tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 + dnoydep
-      ! tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + dnhxdep
-
-      tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 + dnoydep
-      tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + dnhxdep
-
-      ! ! xxx try: 
-      ! tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 + 10.0 / 365.0
-      ! tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + 10.0 / 365.0
-
+      tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 + landuse%dno3
+      tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + landuse%dnh4
 
       !-------------------------------------------------------------------------
       ! Record for balances
@@ -194,7 +185,7 @@ contains
       ! must rather be wtot_up which includes water below permanent wilting point (see waterbalance.F).
       !------------------------------------------------------------------
       ! reference temperature: 25°C
-      ftemp_vol = min( 1.0, ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor", ref_temp=25.0 ) )   
+      ftemp_vol = min( 1.0, ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor", ref_temp = 25.0 ) )   
 
 
       !///////////////////////////////////////////////////////////////////////
@@ -411,7 +402,7 @@ contains
     !-------------------------------------------------------------------------
     ! all pools plus all losses summed up
     lu = 1
-    if (baltest) nbal_after_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + dnloss(1) + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
+    if (baltest) nbal_after_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile_fluxes(lu)%soil%dnloss + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
     if (baltest) nbal_after_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile_fluxes(1)%soil%ddenitr + dnitr(1) + dnvol(1) + dnleach(1) - no3_inc
     if (baltest) nbal1 = nbal_after_1 - nbal_before_1
     if (baltest) nbal2 = nbal_after_2 - nbal_before_2
