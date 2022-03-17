@@ -73,7 +73,7 @@ contains
 
       ! detach photosynthesis model from plant growth
       cc%plabl%c%c12 = cc%plabl%c%c12 + cc%npp
-      cc%pseed%n%n14 = cc%pseed%n%n14 + cc%fixedN
+      cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fixedN
 
       
       end associate
@@ -122,7 +122,7 @@ contains
     Acambium = PI * cc%DBH ** exp_acambium * cc%height * 1.2
 
     ! Facultive Nitrogen fixation
-    !if (cc%pseed%n%n14 < cc%NSNmax .and. cc%plabl%c%c12 > 0.5 * NSCtarget) then
+    !if (cc%plabl%n%n14 < cc%NSNmax .and. cc%plabl%c%c12 > 0.5 * NSCtarget) then
     !   cc%fixedN = spdata(sp)%NfixRate0 * cc%proot%c%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
     !else
     !   cc%fixedN = 0.0 ! spdata(sp)%NfixRate0 * cc%proot%c%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
@@ -173,8 +173,8 @@ contains
         N_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c%c12,0.0)/sp%CNleaf0 +  &
           Max(cc%br_max - cc%proot%c%c12,0.0)/sp%CNroot0)
         C_push = cc%plabl%c%c12/(ndayyear*sp%tauNSC) ! max(cc%plabl%c%c12-NSCtarget, 0.0)/(ndayyear*sp%tauNSC)
-        N_push = cc%pseed%n%n14/(ndayyear*sp%tauNSC) ! 4.0 * C_push/sp%CNsw0  !
-        cc%N_growth = Min(max(0.02*cc%pseed%n%n14,0.0), N_pull+N_push)
+        N_push = cc%plabl%n%n14/(ndayyear*sp%tauNSC) ! 4.0 * C_push/sp%CNsw0  !
+        cc%N_growth = Min(max(0.02*cc%plabl%n%n14,0.0), N_pull+N_push)
         cc%C_growth = Min(max(0.02*cc%plabl%c%c12,0.0), C_pull+C_push) ! Max(0.0,MIN(0.02*(cc%plabl%c%c12-0.2*NSCtarget), C_pull+C_push))
         !!! cc%plabl%c%c12      = cc%plabl%c%c12 - cc%C_growth ! just an estimate, not out yet
       else ! non-growing season
@@ -334,10 +334,10 @@ contains
         endif
 
         ! update carbon pools
-        cc%pleaf%c%c12     = cc%pleaf%c%c12    + dBL
-        cc%proot%c%c12     = cc%proot%c%c12    + dBR
+        cc%pleaf%c%c12    = cc%pleaf%c%c12    + dBL
+        cc%proot%c%c12    = cc%proot%c%c12    + dBR
         cc%psapw%c%c12    = cc%psapw%c%c12   + dBSW
-        cc%pseed%c%c12  = cc%pseed%c%c12 + dSeed
+        cc%pseed%c%c12    = cc%pseed%c%c12 + dSeed
         cc%plabl%c%c12    = cc%plabl%c%c12  - dBR - dBL -dSeed - dBSW
         cc%resg = 0.5 * (dBR+dBL+dSeed+dBSW) !  daily
 
@@ -345,12 +345,12 @@ contains
         cc%pleaf%n%n14 = cc%pleaf%n%n14 + dBL   /sp%CNleaf0
         cc%proot%n%n14 = cc%proot%n%n14 + dBR   /sp%CNroot0
         cc%pseed%n%n14 = cc%pseed%n%n14 + dSeed /sp%CNseed0
-        cc%psapw%n%n14 = cc%psapw%n%n14 + f_N_add * cc%pseed%n%n14 + &
+        cc%psapw%n%n14 = cc%psapw%n%n14 + f_N_add * cc%plabl%n%n14 + &
           (cc%N_growth - dBL/sp%CNleaf0 - dBR/sp%CNroot0 - dSeed/sp%CNseed0)
         !extraN = max(0.0,cc%psapw%n%n14+cc%pwood%n%n14 - (cc%psapw%c%c12+cc%pwood%c%c12)/sp%CNsw0)
         extraN   = max(0.0,cc%psapw%n%n14 - cc%psapw%c%c12/sp%CNsw0)
         cc%psapw%n%n14 = cc%psapw%n%n14 - extraN
-        cc%pseed%n%n14   = cc%pseed%n%n14   + extraN - f_N_add*cc%pseed%n%n14 - cc%N_growth !! update NSN
+        cc%plabl%n%n14   = cc%plabl%n%n14   + extraN - f_N_add * cc%plabl%n%n14 - cc%N_growth !! update NSN
         cc%N_growth = 0.0
 
         ! accumulated C allocated to leaf, root, and wood
@@ -535,7 +535,7 @@ contains
         ! reset grass density and size for perenials
         ccNSC   = (cc%plabl%c%c12 + cc%pleaf%c%c12 + cc%psapw%c%c12 + &
           cc%pwood%c%c12 + cc%proot%c%c12 + cc%pseed%c%c12) * cc%nindivs
-        ccNSN   = (cc%pseed%n%n14 + cc%pleaf%n%n14 + cc%psapw%n%n14 + &
+        ccNSN   = (cc%plabl%n%n14 + cc%pleaf%n%n14 + cc%psapw%n%n14 + &
           cc%pwood%n%n14 + cc%proot%n%n14 + cc%pseed%n%n14) * cc%nindivs
         
         ! reset
@@ -951,6 +951,7 @@ contains
     ! Carbon and Nitrogen from plants to soil pools
     loss_coarse  = deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12 + cc%pleaf%c%c12 - cc%leafarea*LMAmin)
     loss_fine    = deadtrees * (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%proot%c%c12 + cc%leafarea*LMAmin)
+
     lossN_coarse = deadtrees * (cc%pwood%n%n14 + cc%psapw%n%n14 + cc%pleaf%n%n14 - cc%leafarea*sp%LNbase)
     lossN_fine   = deadtrees * (cc%proot%n%n14 + cc%pseed%n%n14 + cc%plabl%n%n14 + cc%leafarea*sp%LNbase)
 
@@ -1438,7 +1439,7 @@ contains
         associate (sp => spdata(cc%species))
 
         cc%NSNmax = sp%fNSNmax*(cc%bl_max/(sp%CNleaf0*sp%leafLS)+cc%br_max/sp%CNroot0) !5.0 * (cc%bl_max/sp%CNleaf0 + cc%br_max/sp%CNroot0)) !
-        if (cc%pseed%n%n14 < cc%NSNmax) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
+        if (cc%plabl%n%n14 < cc%NSNmax) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
 
         end associate
       enddo
@@ -1460,15 +1461,15 @@ contains
         do i = 1, vegn%n_cohorts
           cc => vegn%cohorts(i)
           cc%N_uptake  = 0.0
-          if (cc%pseed%n%n14 < cc%NSNmax) then
+          if (cc%plabl%n%n14 < cc%NSNmax) then
 
-            cc%N_uptake  = cc%proot%c%c12 * avgNup ! min(cc%proot%c%c12*avgNup, cc%NSNmax-cc%pseed%n%n14)
-            cc%pseed%n%n14       = cc%pseed%n%n14 + cc%N_uptake
-            cc%annualNup = cc%annualNup + cc%N_uptake !/cc%crownarea
+            cc%N_uptake    = cc%proot%c%c12 * avgNup ! min(cc%proot%c%c12*avgNup, cc%NSNmax-cc%plabl%n%n14)
+            cc%plabl%n%n14 = cc%plabl%n%n14 + cc%N_uptake
+            cc%annualNup   = cc%annualNup + cc%N_uptake !/cc%crownarea
 
             ! subtract N from mineral N
             vegn%ninorg%n14 = vegn%ninorg%n14 - cc%N_uptake * cc%nindivs
-            vegn%N_uptake = vegn%N_uptake + cc%N_uptake * cc%nindivs
+            vegn%N_uptake   = vegn%N_uptake + cc%N_uptake * cc%nindivs
           endif
         enddo
         cc =>null()
@@ -1854,7 +1855,7 @@ contains
       c2%psapw%n%n14 = x1*c1%psapw%n%n14 + x2*c2%psapw%n%n14
       c2%pwood%n%n14 = x1*c1%pwood%n%n14 + x2*c2%pwood%n%n14
       c2%pseed%n%n14 = x1*c1%pseed%n%n14 + x2*c2%pseed%n%n14
-      c2%pseed%n%n14   = x1*c1%pseed%n%n14   + x2*c2%pseed%n%n14
+      c2%plabl%n%n14 = x1*c1%plabl%n%n14 + x2*c2%plabl%n%n14
       
       !  calculate the resulting dry heat capacity
       c2%leafarea = leaf_area_from_biomass(c2%pleaf%c%c12, c2%species)
@@ -1919,7 +1920,7 @@ contains
     call rootarea_and_verticalprofile( cc )
     
     ! N pools
-    cc%pseed%n%n14    = 5.0*(cc%bl_max/sp%CNleaf0 + cc%br_max/sp%CNroot0)
+    cc%plabl%n%n14    = 5.0*(cc%bl_max/sp%CNleaf0 + cc%br_max/sp%CNroot0)
     cc%pleaf%n%n14  = cc%pleaf%c%c12/sp%CNleaf0
     cc%proot%n%n14  = cc%proot%c%c12/sp%CNroot0
     cc%psapw%n%n14  = cc%psapw%c%c12/sp%CNsw0
@@ -2169,10 +2170,10 @@ contains
       vegn%thetaS = 1.0
       ! tile
       call summarize_tile( vegn )
-      vegn%initialN0 = vegn%pseed%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
-      vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
-      vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
-      vegn%psoil_sl%n%n14 + vegn%ninorg%n14
+      vegn%initialN0 =  vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
+                        vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
+                        vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
+                        vegn%psoil_sl%n%n14 + vegn%ninorg%n14
       vegn%totN =  vegn%initialN0
     
     else
@@ -2214,7 +2215,7 @@ contains
 
       ! tile
       call summarize_tile( vegn )
-      vegn%initialN0 = vegn%pseed%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
+      vegn%initialN0 = vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
         vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
         vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
         vegn%psoil_sl%n%n14 + vegn%ninorg%n14
