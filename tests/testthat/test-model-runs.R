@@ -57,7 +57,7 @@ test_that("lm3ppa p-model run check", {
   skip_on_cran()
 
   df_drivers <- lm3ppa_p_model_drivers
-  df_drivers$params_siml[[1]]$spinup <- TRUE
+  df_drivers$params_siml[[1]]$spinup <- FALSE
 
   df_output <- runread_lm3ppa_f(
     df_drivers

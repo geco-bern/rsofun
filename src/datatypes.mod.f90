@@ -1191,7 +1191,7 @@ contains
 
     ! tile pools output
     call summarize_tile( vegn )
-
+ 
     vegn%NPPL        = 0.0
     vegn%NPPW        = 0.0
     vegn%n_deadtrees = 0 !yyy

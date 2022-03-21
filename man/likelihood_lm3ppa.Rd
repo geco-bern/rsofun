@@ -4,18 +4,16 @@
 \alias{likelihood_lm3ppa}
 \title{Log likelihood cost function for model optimization}
 \usage{
-likelihood_lm3ppa(par, par_names, obs, targets, drivers)
+likelihood_lm3ppa(par, obs, df_driver, ...)
 }
 \arguments{
-\item{par}{parameters}
+\item{par}{a vector of parameter values, this is functions specific}
 
-\item{par_names}{vector with names for the parameters}
+\item{obs}{observed data}
 
-\item{obs}{observations}
+\item{df_driver}{driver data}
 
-\item{targets}{target observations to use in calibration}
-
-\item{drivers}{driver data}
+\item{...}{extra arguments to pass to the function}
 }
 \value{
 the loglikelihood comparing observed and estimated values

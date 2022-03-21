@@ -59,7 +59,7 @@ runread_lm3ppa_f <- function(
          ~run_lm3ppa_f_bysite(
            sitename       = .x$sitename[[1]], 
            params_siml    = .x$params_siml[[1]], 
-           site_info       = .x$site_info[[1]], 
+           site_info      = .x$site_info[[1]], 
            forcing        = .x$forcing[[1]], 
            params_tile    = .x$params_tile[[1]], 
            params_species = .x$params_species[[1]], 
@@ -77,6 +77,16 @@ runread_lm3ppa_f <- function(
   } else {
     
     df_out <- drivers %>% 
+      dplyr::select(sitename, 
+                    params_siml, 
+                    site_info, 
+                    forcing, 
+                    params_tile, 
+                    params_species, 
+                    params_soil, 
+                    init_cohort, 
+                    init_soil
+                    ) %>% 
       dplyr::mutate(data = purrr::pmap(
         .,
         run_lm3ppa_f_bysite,
