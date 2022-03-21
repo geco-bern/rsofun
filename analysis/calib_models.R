@@ -2,7 +2,7 @@ library(rsofun)
 library(rpmodel)
 library(tidyverse)
 source("R/cost_functions.R")
-source("R/calib_sofun.R")
+source("R/calib_sofun_2.R")
 
 drivers <- p_model_drivers
 obs <- p_model_validation

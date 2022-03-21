@@ -488,9 +488,7 @@ likelihood_lm3ppa <- function(
 #' Bayesiantools optimization
 #' 
 #' @param par parameters
-#' @param par_names vector with names for the parameters
 #' @param obs observations
-#' @param targets target observations to use in calibration
 #' @param drivers driver data
 #' @param inverse invert the function (1-value)
 #' 
@@ -566,9 +564,7 @@ likelihood_pmodel <- function(
       par[grep(paste0('^err_', i,'$'), par_names)]
       )
     
-  })
-  
-  logpost <- sum(unlist(logpost))
+  }) %>% sum(.)
   
   # trap boundary conditions
   if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){logpost <- -Inf}
