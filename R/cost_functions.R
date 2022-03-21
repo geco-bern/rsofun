@@ -89,7 +89,7 @@ cost_rmse_fullstack <- function(
   obs,
   drivers,
   inverse = FALSE 
-  ){
+){
   
   # predefine variables for CRAN check compliance
   sitename <- data <- NULL
@@ -102,8 +102,8 @@ cost_rmse_fullstack <- function(
     soilm_par_b     = par[3],
     tau_acclim_tempstress = 10,
     par_shape_tempstress  = 0.0
-    )
-
+  )
+  
   # run the model
   df <- runread_pmodel_f(
     drivers, 
@@ -367,7 +367,7 @@ cost_rmse_lm3ppa_gsleuning <- function(
   
   # predefine variables for CRAN check compliance
   GPP <- LAI <- Density12 <- plantC <- targets_obs <-
-  targets_mod <- error <- targets_obs <- NULL
+    targets_mod <- error <- targets_obs <- NULL
   
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]      <- par[1]
@@ -420,10 +420,11 @@ cost_rmse_lm3ppa_gsleuning <- function(
 #' minimize cost functions wrap the function as such:
 #' `cost = function(...){abs(likelihood(...))}`
 #'
-#' @param par a vector of parameter values, this is functions specific
-#' @param obs observed data 
-#' @param df_driver driver data
-#' @param ... extra arguments to pass to the function
+#' @param par parameters
+#' @param par_names vector with names for the parameters
+#' @param obs observations
+#' @param targets target observations to use in calibration
+#' @param drivers driver data
 #' 
 #' @importFrom magrittr '%>%'
 #' @return the loglikelihood comparing observed and estimated values
@@ -431,14 +432,14 @@ cost_rmse_lm3ppa_gsleuning <- function(
 
 likelihood_lm3ppa <- function(
   par,
+  par_names,
   obs,
-  df_driver,
-  ...
-) {
+  targets,
+  drivers
+){
   
   # predefine variables for CRAN check compliance
-  GPP <- LAI <- Density12 <- plantC <- targets_obs <- 
-  targets_mod <- error <- NULL
+  GPP <- LAI <- Density12 <- plantC <- error <- NULL
   
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]      <- par[1]
@@ -446,40 +447,74 @@ likelihood_lm3ppa <- function(
   drivers$params_tile[[1]]$tf_base         <- par[3]
   drivers$params_tile[[1]]$par_mort        <- par[4]
   
-  obs <- obs$data[[1]]
-  
+  # run model
   df <- runread_lm3ppa_f(
     drivers,
     makecheck = TRUE,
     parallel = FALSE
   )
   
+  # did we spin up
+  spin_up <- drivers$params_siml[[1]]$spinup
+  
+  # drop spinup years if activated
+  # see below
+  if (spin_up){
+    spin_up_years <- drivers$params_siml[[1]]$spinupyears + 1
+  } else {
+    spin_up_years <- 0
+  }
+  
   # Aggregate variables from the model df taking the last 500 yrs
-  df_mod <- df$data[[1]]$output_annual_tile %>%
-    utils::tail(500) %>%
-    dplyr::summarise(GPP = mean(GPP),
-                     LAI = stats::quantile(LAI, probs = 0.95, na.rm=T),
-                     Density = mean(Density12),
-                     Biomass = mean(plantC))
+  # if spun up
+  df <- df$data[[1]]$output_annual_tile %>%
+    utils::tail(500 - spin_up_years) %>%
+    dplyr::summarise(
+      GPP = mean(GPP),
+      LAI = stats::quantile(LAI, probs = 0.95, na.rm=T),
+      Density = mean(Density12),
+      Biomass = mean(plantC)
+    )
   
-  dff <- data.frame(
-    variables = c("GPP","LAI","Density","Biomass"),
-    targets_mod = c(df_mod$GPP,
-                    df_mod$LAI,
-                    df_mod$Density,
-                    df_mod$Biomass)
-  ) %>%
-    dplyr::left_join(obs, by = "variables") %>%
-    dplyr::mutate(error = targets_mod - targets_obs) %>%
-    dplyr::mutate(error_rel = error / targets_obs)
   
-  # singlelikelihood
-  singlelikelihoods <- stats::dnorm(
-    dff$error_rel,
-    sd = 1,
-    log = TRUE)
+  # reshuffle observed data
+  col_names <- obs$data[[1]]$variables
+  obs <- data.frame(t(obs$data[[1]]$targets_obs))
+  colnames(obs) <- col_names
   
-  return(sum(singlelikelihoods))
+  # calculate the log likelihood
+  logpost <- sapply(targets, function(i) {
+    
+    # select correct target variable
+    # based on targets list
+    predicted <- df %>%
+      select(
+        !!!i
+      )
+    
+    observed <- obs %>%
+      select(
+        !!!i
+      )
+    
+    # calculate likelihood
+    # for all targets and their
+    # error ranges
+    ll <- likelihoodIidNormal(
+      predicted,
+      observed,
+      par[grep(paste0('^err_', i,'$'), par_names)]
+    )
+    
+  })
+  
+  # sum log likelihoods
+  logpost <- sum(unlist(logpost))
+  
+  # trap boundary conditions
+  if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){logpost <- -Inf}
+  
+  return(logpost)
 }
 
 #' Likelihood function for the p-model
@@ -488,9 +523,10 @@ likelihood_lm3ppa <- function(
 #' Bayesiantools optimization
 #' 
 #' @param par parameters
+#' @param par_names vector with names for the parameters
 #' @param obs observations
+#' @param targets target observations to use in calibration
 #' @param drivers driver data
-#' @param inverse invert the function (1-value)
 #' 
 #' @importFrom magrittr '%>%'
 #' 
@@ -502,8 +538,7 @@ likelihood_pmodel <- function(
   par_names,
   obs,
   targets,
-  drivers,
-  inverse = FALSE
+  drivers
 ){
   
   # predefine variables for CRAN check compliance
@@ -530,11 +565,6 @@ likelihood_pmodel <- function(
     tidyr::unnest(data) %>%
     dplyr::arrange(
       sitename, date
-    )
-  
-  df <- df %>%
-    dplyr::mutate(
-      gpp_unc = pet
     )
   
   obs <- obs %>%
@@ -567,9 +597,11 @@ likelihood_pmodel <- function(
       predicted,
       observed,
       par[grep(paste0('^err_', i,'$'), par_names)]
-      )
+    )
     
-  }) %>% sum(.)
+  })
+  
+  logpost <- sum(unlist(logpost))
   
   # trap boundary conditions
   if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){logpost <- -Inf}

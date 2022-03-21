@@ -7,7 +7,7 @@
 calib_sofun(drivers, obs, settings)
 }
 \arguments{
-\item{drivers}{asdf}
+\item{drivers}{A data frame with driver data}
 
 \item{obs}{A data frame containing observational data used for model
 calibration. Created by function \code{get_obs_calib2()}}
