@@ -96,7 +96,8 @@ calib_sofun <- function(
                   par_names = par_names,
                   obs = obs,
                   targets = settings$targets,
-                  drivers = drivers
+                  drivers = drivers,
+                  inverse = TRUE
                 ))
       },
       prior = priors,
