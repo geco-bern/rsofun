@@ -1,4 +1,5 @@
 context("test calibration framework and its parameters")
+set.seed(10)
 
 test_that("test calibration routine p-model (BT)", {
   skip_on_cran()
@@ -12,6 +13,7 @@ test_that("test calibration routine p-model (BT)", {
     control = list(
       sampler = "DEzs",
       settings = list(
+        nrChains = 1,
         burnin = 1,
         iterations = 4
         )
