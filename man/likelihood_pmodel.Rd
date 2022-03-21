@@ -4,7 +4,7 @@
 \alias{likelihood_pmodel}
 \title{Likelihood function for the p-model}
 \usage{
-likelihood_pmodel(par, par_names, obs, targets, drivers)
+likelihood_pmodel(par, par_names, obs, targets, drivers, inverse = FALSE)
 }
 \arguments{
 \item{par}{parameters}
@@ -16,6 +16,8 @@ likelihood_pmodel(par, par_names, obs, targets, drivers)
 \item{targets}{target observations to use in calibration}
 
 \item{drivers}{driver data}
+
+\item{inverse}{invert the function (1-value)}
 }
 \value{
 the RMSE on the kpio parameter
