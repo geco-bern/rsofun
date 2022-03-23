@@ -1,4 +1,4 @@
-PKG_FFLAGS = -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -O1 -Wall -Wextra -pedantic -fbacktrace -fPIC -fmax-errors=1 -ggdb -fcheck=all
+# PKG_FFLAGS = -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -O1 -Wall -Wextra -pedantic -fbacktrace -fPIC -fmax-errors=1 -ggdb -fcheck=all
 
 # C objects
 C_OBJS = wrappersc.o
