@@ -375,7 +375,7 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
 
-   !  ! Tile parameters
+    ! Tile parameters
     integer(kind=c_int), intent(in) :: soiltype
     real(kind=c_double), intent(in) :: FLDCAP
     real(kind=c_double), intent(in) :: WILTPT
@@ -416,7 +416,6 @@ contains
     real(kind=c_double), dimension(nt,13), intent(in) :: forcing
 
     real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
-
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
 
     real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_year

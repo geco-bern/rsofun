@@ -1238,9 +1238,10 @@ contains
     integer :: i ! new cohort index
     integer :: k ! old cohort index
     integer :: L ! layer index (top-down)
-    integer :: N0,N1 ! initial and final number of cohorts 
+    integer :: N0, N1 ! initial and final number of cohorts 
     real    :: frac ! fraction of the layer covered so far by the canopies
-    type(cohort_type), pointer :: cc(:), new(:)
+    type(cohort_type), pointer :: cc(:)
+    type(cohort_type), pointer :: new(:)
     real    :: nindivs
 
     !  rand_sorting = .TRUE. ! .False.
@@ -1254,7 +1255,22 @@ contains
     ! old cohorts, plus the number of layers -- since the number of full layers is 
     ! equal to the maximum number of times an input cohort can be split by a layer 
     ! boundary.
-    N1 = vegn%n_cohorts + int( sum( cc(1:N0)%nindivs * cc(1:N0)%crownarea ) )
+    
+    ! replace NaN with 0
+    where(cc(1:N0)%crownarea /= cc(1:N0)%crownarea)
+      cc(1:N0)%crownarea = 0
+    end where
+    
+    where(cc(1:N0)%nindivs /= cc(1:N0)%nindivs)
+      cc(1:N0)%nindivs = 0
+    end where
+    
+    ! calculate size of the new cohorts, correctly dealing with the NaN
+    ! values - if one ignores the NaN values these are treated as a large
+    ! negative int()
+    N1 = vegn%n_cohorts + int(sum(cc(1:N0)%nindivs * cc(1:N0)%crownarea))
+
+    ! allocate the new cohort array using the above size
     allocate(new(N1))
 
     ! copy cohort information to the new cohorts, splitting the old cohorts that 
@@ -1265,8 +1281,9 @@ contains
     frac = 0.0 
     nindivs = cc(idx(k))%nindivs
 
-    do 
-      new(i)         = cc(idx(k))
+    ! loop over all original cohorts
+    do
+      new(i) = cc(idx(k))
       new(i)%nindivs = min(nindivs,(layer_vegn_cover-frac)/cc(idx(k))%crownarea)
       new(i)%layer   = L
       if (L==1) new(i)%firstlayer = 1
@@ -1286,7 +1303,7 @@ contains
       endif
 
       ! write(*,*)i, new(i)%layer
-      i = i+1
+      i = i + 1
     
     enddo
 
