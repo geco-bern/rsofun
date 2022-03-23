@@ -375,7 +375,7 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
 
-   !  ! Tile parameters
+    ! Tile parameters
     integer(kind=c_int), intent(in) :: soiltype
     real(kind=c_double), intent(in) :: FLDCAP
     real(kind=c_double), intent(in) :: WILTPT
