@@ -5,6 +5,7 @@ test_that("test calibration routine p-model (BT)", {
   skip_on_cran()
   drivers <- p_model_drivers
   obs <- rsofun::p_model_validation
+  
   settings <- list(
     method              = "bayesiantools",
     targets             = c("gpp"),
@@ -26,11 +27,13 @@ test_that("test calibration routine p-model (BT)", {
       err_gpp = list(lower = 0, upper = 30, init = 15)
     )
   )
+  
   pars <- calib_sofun(
     drivers = drivers,
     obs = obs,
     settings = settings
   )
+  
   # test for correctly returned values
   expect_type(pars, "list")
 })
