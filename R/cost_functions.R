@@ -442,15 +442,16 @@ likelihood_lm3ppa <- function(
   GPP <- LAI <- Density12 <- plantC <- error <- NULL
   
   # Add changed model parameters to drivers, overwriting where necessary.
-  drivers$params_species[[1]]$phiRL[]      <- par[1]
+  drivers$params_species[[1]]$phiRL[]  <- par[1]
   drivers$params_species[[1]]$LAI_light[]  <- par[2]
-  drivers$params_tile[[1]]$tf_base         <- par[3]
-  drivers$params_tile[[1]]$par_mort        <- par[4]
+  
+  drivers$params_tile[[1]]$tf_base <- par[3]
+  drivers$params_tile[[1]]$par_mort <- par[4]
   
   # run model
   df <- runread_lm3ppa_f(
     drivers,
-    makecheck = TRUE,
+    makecheck = FALSE,
     parallel = FALSE
   )
   
@@ -475,7 +476,6 @@ likelihood_lm3ppa <- function(
       Density = mean(Density12),
       Biomass = mean(plantC)
     )
-  
   
   # reshuffle observed data
   col_names <- obs$data[[1]]$variables
@@ -512,7 +512,9 @@ likelihood_lm3ppa <- function(
   logpost <- sum(unlist(logpost))
   
   # trap boundary conditions
-  if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){logpost <- -Inf}
+  if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){
+      logpost <- -Inf
+    }
   
   return(logpost)
 }
