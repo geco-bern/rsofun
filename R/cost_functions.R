@@ -620,7 +620,7 @@ likelihood <- function (predicted, observed, sd)
   notNAvalues = !is.na(observed)
   return(
     sum(
-      dnorm(predicted[notNAvalues],
+      stats::dnorm(predicted[notNAvalues],
             mean = observed[notNAvalues], 
             sd = sd[notNAvalues],
             log = T)
