@@ -444,14 +444,13 @@ likelihood_lm3ppa <- function(
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]  <- par[1]
   drivers$params_species[[1]]$LAI_light[]  <- par[2]
-  
   drivers$params_tile[[1]]$tf_base <- par[3]
   drivers$params_tile[[1]]$par_mort <- par[4]
   
   # run model
   df <- runread_lm3ppa_f(
     drivers,
-    makecheck = FALSE,
+    makecheck = TRUE,
     parallel = FALSE
   )
   
@@ -592,13 +591,18 @@ likelihood_pmodel <- function(
         !!!i
       )
     
+    uncertainty <- obs %>%
+      select(
+        !!!paste0(i,"_unc")
+      )
+    
     # calculate likelihood
     # for all targets and their
     # error ranges
-    ll <- likelihoodIidNormal(
+    ll <- likelihood(
       predicted,
       observed,
-      par[grep(paste0('^err_', i,'$'), par_names)]
+      uncertainty
     )
     
   })
@@ -609,4 +613,17 @@ likelihood_pmodel <- function(
   if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){logpost <- -Inf}
   
   return(logpost)
+}
+
+likelihood <- function (predicted, observed, sd) 
+{
+  notNAvalues = !is.na(observed)
+  return(
+    sum(
+      stats::dnorm(predicted[notNAvalues],
+            mean = observed[notNAvalues], 
+            sd = sd[notNAvalues],
+            log = T)
+    )
+  )
 }
