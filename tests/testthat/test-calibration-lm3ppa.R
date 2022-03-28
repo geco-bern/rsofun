@@ -23,7 +23,7 @@ test_that("test calibration routine lm3ppa (Bayesiantools)", {
     par = list(
       phiRL = list(lower = 0.5, upper = 5, init = 3.5),
       LAI_light = list(lower = 2, upper = 5, init = 3.5),
-      tf_base = list(lower = 0.1, upper = 1, init = 0.5),
+      tf_base = list(lower = 0.2, upper = 0.8, init = 0.5),
       par_mort = list(lower = 1, upper = 2, init = 1.1),
 
       # uncertainties
