@@ -22,9 +22,7 @@ test_that("test calibration routine p-model (BT)", {
     par = list(
       a = list(lower=0.04, upper=0.09, init=0.05),
       b = list(lower=0.5, upper=5, init=3.5),
-      c = list(lower=2, upper=5, init=3.5),
-      # the observed data estimated errors
-      err_gpp = list(lower = 0, upper = 30, init = 15)
+      c = list(lower=2, upper=5, init=3.5)
     )
   )
   
