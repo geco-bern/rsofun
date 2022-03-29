@@ -65,23 +65,23 @@ module md_tile
   !----------------------------------------------------------------
   type soil_type
 
-    type(orgpool)        :: psoil_fs
-    type(orgpool)        :: psoil_sl
-    type(orgpool)        :: plitt_af
-    type(orgpool)        :: plitt_as
-    type(orgpool)        :: plitt_bg
+    type(orgpool)  :: psoil_fs
+    type(orgpool)  :: psoil_sl
+    type(orgpool)  :: plitt_af
+    type(orgpool)  :: plitt_as
+    type(orgpool)  :: plitt_bg
 
-    type(carbon)         :: pexud
+    type(carbon)   :: pexud
 
-    type(nitrogen)       :: pno3
-    type(nitrogen)       :: pnh4
+    type(nitrogen) :: pno3
+    type(nitrogen) :: pnh4
 
+    real :: pno2             ! NO2 pool [gN/m2]
     real :: no_w             ! NO in wet microsites (split done in ntransform) [gN/m2]
     real :: no_d             ! NO in dry microsites (split done in ntransform) [gN/m2]
     real :: n2o_w            ! N2O in wet microsites (split done in ntransform) [gN/m2]
     real :: n2o_d            ! N2O in dry microsites (split done in ntransform) [gN/m2]
     real :: n2_w             ! N2 in wet microsites (split done in ntransform) [gN/m2]
-    real :: pno2             ! NO2 [gN/m2]
 
     type(psoilphystype)  :: phy      ! soil physical state variables
     
@@ -220,10 +220,9 @@ module md_tile
 
     type(nitrogen) :: dnetmin           ! daily net mineralisation (gN m-2 d-1)
 
-    real :: dn2o                        ! soil N2O emissions [gN/m2/d]
-    real :: dngas                       ! total daily gaseous N emissions from the soil (gN m-2 d-1)
+    real :: dn2o                        ! soil N2O emissions (gaseous escape) [gN/m2/d]
     real :: dnleach                     ! daily N leaching [gN/m2/d]
-    real :: dnloss                      ! total N loss (gaseous+leaching) [gN/m2/d]
+    real :: dnloss                      ! total N loss (gaseous + leaching, where gaseous loss is N w.r.t. NH4 and NO3 pool decline, not gaseous escape) [gN/m2/d]
 
   end type soil_fluxes_type
 
@@ -597,7 +596,6 @@ contains
       call init_plant_fluxes( tile_fluxes(lu)%plant(:) )
 
       tile_fluxes(lu)%soil%dn2o = 0.0
-      tile_fluxes(lu)%soil%dngas = 0.0
       tile_fluxes(lu)%soil%dnleach = 0.0
       tile_fluxes(lu)%soil%dnloss = 0.0
 

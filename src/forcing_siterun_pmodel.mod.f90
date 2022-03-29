@@ -39,8 +39,8 @@ module md_forcing_pmodel
 
   type landuse_type
     real(kind=sp) :: dfharv  ! fraction of biomass harvested per day (m-2 d-1)
-    real(kind=sp) :: dno3    ! NO3 inputs per day, fertilisation (gN m-2 d-1)
-    real(kind=sp) :: dnh4    ! NH4 inputs per day, fertilisation (gN m-2 d-1)
+    real(kind=sp) :: dnoy    ! NO3 inputs per day, fertilisation (gN m-2 d-1)
+    real(kind=sp) :: dnhx    ! NH4 inputs per day, fertilisation (gN m-2 d-1)
   end type landuse_type
 
 contains
@@ -243,8 +243,8 @@ contains
     idx_end   = idx_start + ndayyear - 1
 
     out_landuse(:)%dfharv = real(forcing(idx_start:idx_end, 14))
-    out_landuse(:)%dno3   = real(forcing(idx_start:idx_end, 15))
-    out_landuse(:)%dnh4   = real(forcing(idx_start:idx_end, 16))
+    out_landuse(:)%dnoy   = real(forcing(idx_start:idx_end, 15))
+    out_landuse(:)%dnhx   = real(forcing(idx_start:idx_end, 16))
 
   end function getlanduse
 
