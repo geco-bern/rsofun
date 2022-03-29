@@ -1265,10 +1265,27 @@ contains
       cc(1:N0)%nindivs = 0
     end where
     
+    ! replace negative values on crown area
+    ! this is a fudged fix, as the problem lies
+    ! elsewhere but I'm unsure where as this is
+    ! something that only comes up once in a
+    ! while -- the crownarea calculation is 
+    ! not numerically stable (across identical setups)
+    ! where this originates is hard to track
+    where(cc(1:N0)%crownarea < 0)
+      cc(1:N0)%crownarea = 0
+    end where
+    
+    where(cc(1:N0)%nindivs < 0)
+      cc(1:N0)%nindivs = 0
+    end where
+
     ! calculate size of the new cohorts, correctly dealing with the NaN
     ! values - if one ignores the NaN values these are treated as a large
     ! negative int()
     N1 = vegn%n_cohorts + int(sum(cc(1:N0)%nindivs * cc(1:N0)%crownarea))
+    
+    write(*,*) cc(1:N0)%nindivs, cc(1:N0)%crownarea
 
     ! allocate the new cohort array using the above size
     allocate(new(N1))
@@ -1283,26 +1300,41 @@ contains
 
     ! loop over all original cohorts
     do
+      write(*,*) i, k
       new(i) = cc(idx(k))
       new(i)%nindivs = min(nindivs,(layer_vegn_cover-frac)/cc(idx(k))%crownarea)
       new(i)%layer   = L
-      if (L==1) new(i)%firstlayer = 1
+
+      if (L == 1) then
+        new(i)%firstlayer = 1
+      endif
 
       !    if (L>1)  new(i)%firstlayer = 0  ! switch off "push-down effects"
-      frac = frac+new(i)%nindivs*new(i)%crownarea
+      frac = frac + new(i)%nindivs * new(i)%crownarea
       nindivs = nindivs - new(i)%nindivs
 
-      if (abs(nindivs*cc(idx(k))%crownarea)<tolerance) then
-        new(i)%nindivs = new(i)%nindivs + nindivs ! allocate the remainder of individuals to the last cohort
-        if (k==N0) exit ! end of loop
-        k = k+1 ; nindivs = cc(idx(k))%nindivs  ! go to the next input cohort
+      write(*,*) abs(nindivs*cc(idx(k))%crownarea), frac
+
+      if (abs(nindivs*cc(idx(k))%crownarea) < tolerance) then
+
+        ! allocate the remainder of individuals to the last cohort
+        new(i)%nindivs = new(i)%nindivs + nindivs
+        
+        if (k == N0) then
+          exit ! end of loop
+        else
+          k = k + 1
+          nindivs = cc(idx(k))%nindivs
+        endif
+        
       endif
 
-      if (abs(layer_vegn_cover - frac)<tolerance) then
-        L = L+1 ; frac = 0.0              ! start new layer
+      if (abs(layer_vegn_cover - frac) < tolerance) then
+        L = L + 1
+        frac = 0.0   ! start new layer
       endif
 
-      ! write(*,*)i, new(i)%layer
+      write(*,*) i, new(i)%layer
       i = i + 1
     
     enddo
