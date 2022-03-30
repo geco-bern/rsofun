@@ -1272,13 +1272,13 @@ contains
     ! while -- the crownarea calculation is 
     ! not numerically stable (across identical setups)
     ! where this originates is hard to track
-    where(cc(1:N0)%crownarea < 0)
-      cc(1:N0)%crownarea = 0
-    end where
+    !where(cc(1:N0)%crownarea < 0)
+    !  cc(1:N0)%crownarea = 0
+    !end where
     
-    where(cc(1:N0)%nindivs < 0)
-      cc(1:N0)%nindivs = 0
-    end where
+    !where(cc(1:N0)%nindivs < 0)
+    !  cc(1:N0)%nindivs = 0
+    !end where
 
     ! calculate size of the new cohorts, correctly dealing with the NaN
     ! values - if one ignores the NaN values these are treated as a large
@@ -2237,9 +2237,9 @@ contains
         cx => vegn%cohorts(i)
         cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
         cx%layer   = 1
-        cx%species = INT(rand()*5)+1
-        cx%nindivs = rand() / 10. ! trees/m2
-        btotal     = rand() * 100.0  ! kgC /tree
+        cx%species = INT(r*5)+1
+        cx%nindivs = r / 10. ! trees/m2
+        btotal     = r * 100.0  ! kgC /tree
         call initialize_cohort_from_biomass(cx, btotal)
       enddo
 
