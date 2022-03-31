@@ -1296,6 +1296,7 @@ contains
     frac = 0.0 
     nindivs = cc(idx(k))%nindivs
 
+    write(*,*) cc(1:N0)%nindivs, cc(1:N0)%crownarea
     ! loop over all original cohorts
     do
       new(i) = cc(idx(k))
@@ -2218,51 +2219,6 @@ contains
                         vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
                         vegn%psoil_sl%n%n14 + vegn%ninorg%n14
       vegn%totN =  vegn%initialN0
-    
-    else
-      !- Generate cohorts randomly --------
-      ! Initialize plant cohorts
-      allocate(cc(1:nCohorts), STAT = istat)
-      vegn%cohorts => cc
-      vegn%n_cohorts = nCohorts
-      cc => null()
-      r = rand(rand_seed)
-      do i=1,nCohorts
-        cx => vegn%cohorts(i)
-        cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
-        cx%layer   = 1
-        cx%species = INT(r*5)+1
-        cx%nindivs = r / 10. ! trees/m2
-        btotal     = r * 100.0  ! kgC /tree
-        call initialize_cohort_from_biomass(cx, btotal)
-      enddo
-
-      ! Sorting these cohorts
-      call relayer_cohorts( vegn )
-
-      ! ID each cohort
-      do i=1,nCohorts
-        cx => vegn%cohorts(i)
-        cx%ccID = MaxCohortID + i
-      enddo
-      MaxCohortID = cx%ccID
-
-      ! Initial Soil pools and environmental conditions
-      vegn%psoil_fs%c%c12  = 0.2 ! kgC m-2
-      vegn%psoil_sl%c%c12 = 7.0 ! slow soil carbon pool, (kg C/m2)
-      vegn%psoil_fs%n%n14  = vegn%psoil_fs%c%c12/CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-      vegn%psoil_sl%n%n14 = vegn%psoil_sl%c%c12/CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-      vegn%N_input     = 0.0008  ! kgN m-2 yr-1, N input to soil
-      vegn%ninorg%n14    = 0.005  ! Mineral nitrogen pool, (kg N/m2)
-      vegn%previousN   = vegn%ninorg%n14
-
-      ! tile
-      call summarize_tile( vegn )
-      vegn%initialN0 = vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
-        vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
-        vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
-        vegn%psoil_sl%n%n14 + vegn%ninorg%n14
-      vegn%totN = vegn%initialN0
 
     endif  ! initialization: random or pre-described
   
