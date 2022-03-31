@@ -338,7 +338,7 @@ contains
     output_annual_cohorts_c_deadtrees,  &
     output_annual_cohorts_deathrate  &
     ) bind(C, name = "lm3ppa_f_")
-
+     
     !////////////////////////////////////////////////////////////////
     ! Main subroutine to handle I/O with C and R. 
     ! Receives simulation parameters, site parameters, and the full 
@@ -644,7 +644,6 @@ contains
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
-
 
     yearloop: do yr=1, myinterface%params_siml%runyears
       !----------------------------------------------------------------

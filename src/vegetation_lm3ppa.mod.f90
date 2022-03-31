@@ -765,6 +765,7 @@ contains
          exit
         endif
       enddo
+
       ! Remove the cohorts with 0 individuals, (never used b/c k<2)
       if(k >= 2) call kill_lowdensity_cohorts(vegn)
 
@@ -860,7 +861,8 @@ contains
          
         endif
 
-        deathrate = deathrate + 0.01
+        ! previous setup allowed death rates > 1 (hence negative ind)
+        deathrate = min(1.0, deathrate + 0.01) 
         deadtrees = cc%nindivs * deathrate
 
         ! record mortality rates at cohort level
@@ -871,15 +873,13 @@ contains
 
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
-        ! print*, "cc%nindivs", cc%nindivs
         ! vegn%n_deadtrees = deadtrees
         ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12)
         end associate
       enddo
 
       ! Remove the cohorts with very few individuals
-      call kill_lowdensity_cohorts( vegn )    
-
+      call kill_lowdensity_cohorts( vegn )
 
     endif
 
@@ -1264,21 +1264,6 @@ contains
     where(cc(1:N0)%nindivs /= cc(1:N0)%nindivs)
       cc(1:N0)%nindivs = 0
     end where
-    
-    ! replace negative values on crown area
-    ! this is a fudged fix, as the problem lies
-    ! elsewhere but I'm unsure where as this is
-    ! something that only comes up once in a
-    ! while -- the crownarea calculation is 
-    ! not numerically stable (across identical setups)
-    ! where this originates is hard to track
-    !where(cc(1:N0)%crownarea < 0)
-    !  cc(1:N0)%crownarea = 0
-    !end where
-    
-    !where(cc(1:N0)%nindivs < 0)
-    !  cc(1:N0)%nindivs = 0
-    !end where
 
     ! calculate size of the new cohorts, correctly dealing with the NaN
     ! values - if one ignores the NaN values these are treated as a large
@@ -1295,12 +1280,11 @@ contains
     L = 1 
     frac = 0.0 
     nindivs = cc(idx(k))%nindivs
-
-    write(*,*) cc(1:N0)%nindivs, cc(1:N0)%crownarea
+    
     ! loop over all original cohorts
     do
       new(i) = cc(idx(k))
-      new(i)%nindivs = min(nindivs,(layer_vegn_cover-frac)/cc(idx(k))%crownarea)
+      new(i)%nindivs = min(nindivs,(layer_vegn_cover - frac)/cc(idx(k))%crownarea)
       new(i)%layer   = L
 
       if (L == 1) then
@@ -1310,6 +1294,11 @@ contains
       !    if (L>1)  new(i)%firstlayer = 0  ! switch off "push-down effects"
       frac = frac + new(i)%nindivs * new(i)%crownarea
       nindivs = nindivs - new(i)%nindivs
+      
+      ! check for individuals less than 0
+      if (nindivs < 0) then
+        nindivs = 0
+      endif
 
       if ((nindivs*cc(idx(k))%crownarea) < tolerance) then
 
@@ -2172,6 +2161,7 @@ contains
       vegn%cohorts => cc
       vegn%n_cohorts = init_n_cohorts
       cc => null()
+
       do i=1,init_n_cohorts
         cx => vegn%cohorts(i)
         cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
