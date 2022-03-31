@@ -18,7 +18,7 @@ module md_forcing_pmodel
 
   private
   public landuse_type, climate_type, getlanduse, &
-    getclimate, getco2, getfapar, get_fpc_grid, vegcover_type
+    getclimate, getclimate_memory, getco2, getfapar, get_fpc_grid, vegcover_type
 
   type climate_type
     real(kind=sp) :: dtemp  ! daily mean air temperature, deg C
@@ -72,7 +72,7 @@ contains
     
     ! Test if forcing dimensions are correct
     shape_forcing = shape(forcing)
-    if (idx_end>shape_forcing(1)) then
+    if (idx_end > shape_forcing(1)) then
       ! stop 'forcing array size does not have enough rows.'
     end if
 
@@ -105,7 +105,77 @@ contains
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 13))
 
 
+    ! ! get climate with damped (and lagged) variability
+    ! climate_memory = 
+    ! do doy=1,ndayyear
+
+    ! end do
+
+
   end function getclimate
+
+
+  function getclimate_memory( climate, tau, init ) result( out )
+    !////////////////////////////////////////////////////////////////
+    ! Calculates damped (and hence lagged) climate variables as input
+    ! for P-model, determining acclimation
+    !----------------------------------------------------------------
+    ! arguments
+    type(climate_type), dimension(ndayyear), intent(in) :: climate
+    real, intent(in) :: tau
+    logical, intent(in) :: init
+
+    ! function return variable
+    type(climate_type), dimension(0:ndayyear) :: climate_memory
+    type(climate_type), dimension(ndayyear)   :: out
+
+    ! local variables
+    type(climate_type), save :: climate_memory_save
+    integer :: doy
+
+    ! in the first simulation year, run one year first as "spin-up"
+    if (init) then
+      climate_memory(0) = climate(1)
+      do doy=1,ndayyear
+        climate_memory(doy) = dampen_variability_climate( climate(doy), tau, climate_memory(doy-1) )
+      end do
+      climate_memory(0) = climate_memory(ndayyear)
+    else
+      climate_memory(0) = climate_memory_save
+    end if 
+
+    do doy=1,ndayyear
+      climate_memory(doy) = dampen_variability_climate(climate(doy), tau, climate_memory(doy-1))
+    end do
+
+    climate_memory_save = climate_memory(ndayyear)
+
+    out = climate_memory(1:ndayyear)
+
+  end function getclimate_memory
+
+
+  function dampen_variability_climate( climate, tau, climate_memory ) result( out )
+    !////////////////////////////////////////////////////////////////
+    ! Wrapper function to do the dampening by elements of 'climate'
+    !----------------------------------------------------------------
+    use md_sofunutils, only: dampen_variability
+
+    ! arguments
+    type(climate_type), intent(in) :: climate, climate_memory
+    real, intent(in) :: tau
+
+    ! function return variable
+    type(climate_type) :: out
+
+    out%dtemp = dampen_variability( climate%dtemp, tau, climate_memory%dtemp )
+    out%dvpd  = dampen_variability( climate%dvpd,  tau, climate_memory%dvpd  )
+    out%dpatm = dampen_variability( climate%dpatm, tau, climate_memory%dpatm )
+    out%dppfd = dampen_variability( climate%dppfd, tau, climate_memory%dppfd )
+    out%dtmin = dampen_variability( climate%dtmin, tau, climate_memory%dtmin )
+    out%dtmax = dampen_variability( climate%dtmax, tau, climate_memory%dtmax )
+
+  end function dampen_variability_climate
 
 
   function getco2( nt, forcing, forcingyear, firstyeartrend ) result( pco2 )

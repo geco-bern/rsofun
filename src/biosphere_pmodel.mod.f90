@@ -134,6 +134,7 @@ contains
                   tile_fluxes(:), &
                   myinterface%pco2, &
                   myinterface%climate(doy), &
+                  myinterface%climate_memory(doy), &
                   myinterface%vegcover(doy), &
                   myinterface%grid, &
                   myinterface%params_siml%soilmstress, &

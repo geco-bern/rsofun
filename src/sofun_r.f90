@@ -47,7 +47,7 @@ contains
     ! simulation's forcing as time series
     !----------------------------------------------------------------
     use md_params_siml_pmodel, only: getsteering
-    use md_forcing_pmodel, only: getclimate, getco2, getfapar, getlanduse, get_fpc_grid
+    use md_forcing_pmodel, only: getclimate, getclimate_memory, getco2, getfapar, getlanduse, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: nlayers_soil, ndayyear, npft
     use md_biosphere_cnmodel, only: biosphere_annual
@@ -179,7 +179,7 @@ contains
     !----------------------------------------------------------------
     myinterface%fpc_grid(:) = get_fpc_grid( myinterface%params_siml )
     
-    yearloop: do yr = 1, myinterface%params_siml%runyears
+    yearloop: do yr=1,myinterface%params_siml%runyears
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -197,6 +197,12 @@ contains
                                           myinterface%params_siml%in_netrad, &
                                           myinterface%grid%elv &
                                           )
+
+      ! Damped and lagged climate variables for acclimation
+      myinterface%climate_memory(:) = getclimate_memory(  myinterface%climate(:), &
+                                                          myinterface%params_calib%tau_acclim_tempstress, &
+                                                          myinterface%steering%init &
+                                                          )
 
       ! Get annual, gobally uniform CO2
       myinterface%pco2 = getco2(nt, &

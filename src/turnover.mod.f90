@@ -196,7 +196,7 @@ contains
     !------------------------------------------------------------------
     ! arguments
     real, intent(in) :: dleaf
-    type( tile_type ), intent(inout)  :: tile
+    type( tile_type ), intent(inout) :: tile
     type( tile_fluxes_type ), intent(in) :: tile_fluxes
     integer, intent(in) :: pft
 
@@ -221,13 +221,13 @@ contains
     cleaf = ( 1.0 - dleaf ) * tile%plant(pft)%pleaf%c%c12
 
     ! get new LAI based on cleaf
-    lai_new = get_lai( pft, cleaf, tile_fluxes%canopy%ppfd_memory, tile_fluxes%plant(pft)%actnv_unitiabs )
+    lai_new = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
 
     ! update canopy state (only variable fAPAR so far implemented)
     tile%plant(pft)%fapar_ind = get_fapar( lai_new )
 
     ! re-calculate metabolic and structural N, given new LAI and fAPAR
-    call get_leaftraits( tile%plant(pft), tile_fluxes%canopy%ppfd_memory, tile_fluxes%plant(pft)%actnv_unitiabs )
+    call update_leaftraits( tile%plant(pft) )
 
     ! get updated leaf N
     nleaf = tile%plant(pft)%narea
@@ -240,13 +240,13 @@ contains
       cleaf = cleaf * lm_init%n%n14 / nleaf
 
       ! get new LAI based on cleaf
-      lai_new = get_lai( pft, cleaf, tile_fluxes%canopy%ppfd_memory, tile_fluxes%plant(pft)%actnv_unitiabs )
+      lai_new = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
 
       ! update canopy state (only variable fAPAR so far implemented)
       tile%plant(pft)%fapar_ind = get_fapar( lai_new )
 
       ! re-calculate metabolic and structural N, given new LAI and fAPAR
-      call get_leaftraits( tile%plant(pft), tile_fluxes%canopy%ppfd_memory, tile_fluxes%plant(pft)%actnv_unitiabs )
+      call update_leaftraits( tile%plant(pft) )
 
       ! get updated leaf N
       nleaf = tile%plant(pft)%narea

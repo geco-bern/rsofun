@@ -27,17 +27,19 @@ module md_photosynth
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
     real :: lue                 ! light use efficiency (mol CO2 / mol photon)
     real :: gs_setpoint         ! stomatal conductance to CO2 (mol C Pa-1 m-2 s-1)
-    real :: vcmax               ! canopy-level maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
-    real :: jmax                ! canopy-level maximum rate of electron transport (mol m-2 s-1)
+    ! real :: vcmax               ! canopy-level maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
+    ! real :: jmax                ! canopy-level maximum rate of electron transport (mol m-2 s-1)
     real :: jmax25              ! canopy-level maximum rate of electron transport, normalized to 25 deg C (mol m-2 s-1)
     real :: vcmax25             ! canopy-level Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
-    real :: vcmax_unitiabs      ! Vcmax per unit absorbed light (mol CO2 m-2 s-1 mol-1)
+    ! real :: vcmax_unitiabs      ! Vcmax per unit absorbed light (mol CO2 m-2 s-1 mol-1)
     real :: vcmax25_unitiabs    ! Vcmax25 per unit absorbed light (mol CO2 m-2 s-1 mol-1)
     ! real :: ftemp_inst_vcmax    ! Instantaneous temperature response factor of Vcmax (unitless)
     ! real :: ftemp_inst_rd       ! Instantaneous temperature response factor of Rd (unitless)
     ! real :: rd                  ! Dark respiration (mol CO2 m-2 s-1)
     ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (mol CO2 m-2 s-1)
     ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
+    ! real :: rd25                ! Dark respiration at 25 deg C (mol CO2 m-2 s-1)
+    ! real :: rd25_unitiabs       ! Dark respiration at 25 deg C per unit absorbed light (mol CO2 m-2 s-1)
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
     real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
     ! real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
@@ -114,8 +116,8 @@ contains
     real :: vcmax25_unitiabs    ! Vcmax25 per unit absorbed light (mol CO2 m-2 s-1 mol-1)
     real :: ftemp_inst_vcmax    ! Instantaneous temperature response factor of Vcmax (unitless)
     real :: ftemp_inst_jmax     ! Instantaneous temperature response factor of Jmax (unitless)
-    ! real :: rd                  ! Dark respiration (mol CO2 m-2 s-1)
-    ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
+    real :: rd                  ! Dark respiration (mol CO2 m-2 s-1)
+    real :: rd_unitiabs         ! Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
     real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
@@ -220,7 +222,7 @@ contains
       vcmax_unitiabs = kphio * out_optchi%mjoc * mprime / out_optchi%mj
 
 
-    else if (method_jmaxlim=="wang17") then
+    else if (method_jmaxlim == "wang17") then
 
       ! Include effect of Jmax limitation
       mprime = calc_mprime( out_optchi%mj )
@@ -241,7 +243,7 @@ contains
       ! print*,'out_optchi%mj   : ', out_optchi%mj
       ! stop 
 
-    else if (method_jmaxlim=="smith19") then
+    else if (method_jmaxlim == "smith19") then
 
       ! mc = (ci - gammastar) / (ci + kmm)                       ! Eq. 6
       ! print(paste("mc should be equal: ", mc, out_optchi%mc ) )
@@ -277,7 +279,7 @@ contains
       vcmax_unitiabs = vcmax / ppfd
 
 
-    else if (method_jmaxlim=="none") then
+    else if (method_jmaxlim == "none") then
 
       ! Light use efficiency (gpp per unit absorbed light)
       lue = kphio * out_optchi%mj * c_molmass
@@ -319,12 +321,8 @@ contains
     ! Vcmax25 per unit absorbed light
     vcmax25_unitiabs = vcmax_unitiabs / ftemp_inst_vcmax
 
-    ! ! Dark respiration at growth temperature
-    ! ftemp_inst_rd = calc_ftemp_inst_rd( tc )
-    ! rd  = params_gpp%rd_to_vcmax * (ftemp_inst_rd / ftemp_inst_vcmax) * vcmax 
-
     !-----------------------------------------------------------------------
-    ! Corrolary preditions (This is prelimirary!)
+    ! Leaf metabolic N content
     !-----------------------------------------------------------------------
     ! active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
     actnv  = vcmax25 * n_v
@@ -332,6 +330,9 @@ contains
     ! active metabolic leaf N per unit absorbed light
     actnv_unitiabs = vcmax25_unitiabs * n_v
 
+    !-----------------------------------------------------------------------
+    ! Check for consistency with classic FvCB equations
+    !-----------------------------------------------------------------------
     ! Derive Jmax using again A_J = A_C
     if (ppfd==0.0) then
       fact_jmaxlim = 1.0
@@ -350,7 +351,9 @@ contains
       jmax25  = jmax  / ftemp_inst_jmax
     end if
 
+    !-----------------------------------------------------------------------
     ! stomatal conductance to CO2, expressed per unit absorbed light
+    !-----------------------------------------------------------------------
     if (c4) then
       ! xxx to be addressed: what's the stomatal conductance in C4?
       gs_setpoint = 9999.0
@@ -359,28 +362,20 @@ contains
     end if
 
     ! construct list for output
-    out_pmodel%gammastar        = gammastar
-    out_pmodel%kmm              = kmm
-    out_pmodel%ca               = ca
-    out_pmodel%ci               = ci
-    out_pmodel%chi              = chi
-    out_pmodel%xi               = out_optchi%xi
-    out_pmodel%iwue             = iwue
-    out_pmodel%lue              = lue
-    out_pmodel%vcmax            = vcmax
-    out_pmodel%jmax             = jmax
-    out_pmodel%vcmax25          = vcmax25
-    out_pmodel%jmax25           = jmax25
-    out_pmodel%vcmax_unitiabs   = vcmax_unitiabs
-    out_pmodel%vcmax25_unitiabs   = vcmax25_unitiabs
-    ! out_pmodel%ftemp_inst_vcmax = ftemp_inst_vcmax
-    ! out_pmodel%ftemp_inst_jmax    = ftemp_inst_jmax
-    ! out_pmodel%rd               = rd
-    ! out_pmodel%rd_unitfapar     = rd_unitfapar
-    ! out_pmodel%rd_unitiabs      = rd_unitiabs
-    out_pmodel%actnv            = actnv
-    out_pmodel%actnv_unitiabs   = actnv_unitiabs
-    out_pmodel%gs_setpoint      = gs_setpoint
+    out_pmodel%gammastar           = gammastar
+    out_pmodel%kmm                 = kmm
+    out_pmodel%ca                  = ca
+    out_pmodel%ci                  = ci
+    out_pmodel%chi                 = chi
+    out_pmodel%xi                  = out_optchi%xi
+    out_pmodel%iwue                = iwue
+    out_pmodel%lue                 = lue
+    out_pmodel%gs_setpoint         = gs_setpoint
+    out_pmodel%jmax25              = jmax25
+    out_pmodel%vcmax25             = vcmax25
+    out_pmodel%vcmax25_unitiabs    = vcmax25_unitiabs
+    out_pmodel%actnv               = actnv
+    out_pmodel%actnv_unitiabs      = actnv_unitiabs
 
   end function pmodel
 
@@ -392,27 +387,20 @@ contains
     ! function return value
     type(outtype_pmodel) :: out_pmodel
 
-    out_pmodel%gammastar        = 0.0
-    out_pmodel%kmm              = 0.0
-    out_pmodel%ca               = 0.0
-    out_pmodel%ci               = 0.0
-    out_pmodel%chi              = 0.0
-    out_pmodel%xi               = 0.0
-    out_pmodel%iwue             = 0.0
-    out_pmodel%lue              = 0.0
-    out_pmodel%vcmax            = 0.0
-    out_pmodel%jmax             = 0.0
-    out_pmodel%vcmax25          = 0.0
-    out_pmodel%jmax25           = 0.0
-    out_pmodel%vcmax_unitiabs   = 0.0
-    ! out_pmodel%ftemp_inst_vcmax = 0.0
-    ! out_pmodel%ftemp_inst_jmax  = 0.0
-    ! out_pmodel%rd               = 0.0
-    ! out_pmodel%rd_unitfapar     = 0.0
-    ! out_pmodel%rd_unitiabs      = 0.0
-    out_pmodel%actnv            = 0.0
-    out_pmodel%actnv_unitiabs   = 0.0
-    out_pmodel%gs_setpoint      = 0.0
+    out_pmodel%gammastar           = 0.0
+    out_pmodel%kmm                 = 0.0
+    out_pmodel%ca                  = 0.0
+    out_pmodel%ci                  = 0.0
+    out_pmodel%chi                 = 0.0
+    out_pmodel%xi                  = 0.0
+    out_pmodel%iwue                = 0.0
+    out_pmodel%lue                 = 0.0
+    out_pmodel%gs_setpoint         = 0.0
+    out_pmodel%jmax25              = 0.0
+    out_pmodel%vcmax25             = 0.0
+    out_pmodel%vcmax25_unitiabs    = 0.0
+    out_pmodel%actnv               = 0.0
+    out_pmodel%actnv_unitiabs      = 0.0
 
   end function zero_pmodel
 

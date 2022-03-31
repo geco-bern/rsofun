@@ -21,6 +21,9 @@ module md_littersom
   private 
   public getpar_modl_littersom, littersom
 
+  !-----------------------------------------------------------------------
+  ! Parameters determining soil organic matter dynamics
+  !-----------------------------------------------------------------------
   type paramstype_littersom
     real :: klitt_af10
     real :: klitt_as10
@@ -233,20 +236,20 @@ contains
         ! CARBON LITTER -> SOIL TRANSFER
         !----------------------------------------------------------------    
         ! record N:C ratio to override later (compensating for numerical imprecision)
-        ntoc_save_fs = ntoc( tile(lu)%soil%psoil_fs, default=0.0 )
-        ntoc_save_sl = ntoc( tile(lu)%soil%psoil_sl, default=0.0 )
+        ntoc_save_fs = ntoc( tile(lu)%soil%psoil_fs, default = 0.0 )
+        ntoc_save_sl = ntoc( tile(lu)%soil%psoil_sl, default = 0.0 )
 
         ! move fraction 'eff' of C from litter to soil
-        call ccp( cfrac( eff*params_littersom%fastfrac      , dlitt%c ), tile(lu)%soil%psoil_fs%c )
-        call ccp( cfrac( eff*(1.0-params_littersom%fastfrac), dlitt%c ), tile(lu)%soil%psoil_sl%c )
+        call ccp( cfrac( eff*params_littersom%fastfrac        , dlitt%c ), tile(lu)%soil%psoil_fs%c )
+        call ccp( cfrac( eff*(1.0 - params_littersom%fastfrac), dlitt%c ), tile(lu)%soil%psoil_sl%c )
 
         ! move fraction '(1-eff)' of C to heterotrophic respiration
-        call ccp( cfrac( (1.0-eff), dlitt%c ), tile_fluxes(lu)%soil%drhet )
+        call ccp( cfrac( (1.0 - eff), dlitt%c ), tile_fluxes(lu)%soil%drhet )
 
         ! get average litter -> soil flux for analytical soil C equilibration
         if ( myinterface%steering%average_soil ) then
           mean_insoil_fs(lu) = mean_insoil_fs(lu) + eff * params_littersom%fastfrac * dlitt%c%c12
-          mean_insoil_sl(lu) = mean_insoil_sl(lu) + eff * (1.0-params_littersom%fastfrac) * dlitt%c%c12
+          mean_insoil_sl(lu) = mean_insoil_sl(lu) + eff * (1.0 - params_littersom%fastfrac) * dlitt%c%c12
         end if
 
         !----------------------------------------------------------------    
@@ -360,8 +363,8 @@ contains
       ! Calculate daily/monthly soil decomposition to the atmosphere
 
       ! record N:C ratio to override later (compensating for numerical imprecision)
-      ntoc_save_fs = ntoc( tile(lu)%soil%psoil_fs, default=0.0 )
-      ntoc_save_sl = ntoc( tile(lu)%soil%psoil_sl, default=0.0 )
+      ntoc_save_fs = ntoc( tile(lu)%soil%psoil_fs, default = 0.0 )
+      ntoc_save_sl = ntoc( tile(lu)%soil%psoil_sl, default = 0.0 )
 
       dsoil_fs = orgfrac( (1.0 - exp(-ksoil_fs(lu))), tile(lu)%soil%psoil_fs )
       dsoil_sl = orgfrac( (1.0 - exp(-ksoil_sl(lu))), tile(lu)%soil%psoil_sl )

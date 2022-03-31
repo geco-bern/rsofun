@@ -17,6 +17,7 @@ module md_biosphere_cnmodel
   use md_landuse, only: grharvest
   use md_littersom, only: littersom, getpar_modl_littersom
   use md_ntransform, only: ntransform, getpar_modl_ntransform
+  use md_allocation, only: allocation_daily
 
   implicit none
 
@@ -94,12 +95,12 @@ contains
     ! LOOP THROUGH MONTHS
     !----------------------------------------------------------------
     doy = 0
-    monthloop: do moy = 1, nmonth
+    monthloop: do moy=1,nmonth
 
       !----------------------------------------------------------------
       ! LOOP THROUGH DAYS
       !----------------------------------------------------------------
-      dayloop: do dm = 1, ndaymonth(moy)
+      dayloop: do dm=1,ndaymonth(moy)
         doy = doy + 1
 
         ! if (verbose) print*,'----------------------'
@@ -174,6 +175,7 @@ contains
                   tile_fluxes(:), &
                   myinterface%pco2, &
                   myinterface%climate(doy), &
+                  myinterface%climate_memory(doy), &
                   myinterface%vegcover(doy), &
                   myinterface%grid, &
                   myinterface%params_siml%soilmstress, &
@@ -340,9 +342,9 @@ contains
         !----------------------------------------------------------------
         ! if (verbose) print*, '... done'
 
-        ! !----------------------------------------------------------------
-        ! ! allocation of labile pools to biomass
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        ! allocation of labile pools to biomass
+        !----------------------------------------------------------------
         ! if (verbose) print*, 'calling allocation() ... '
         ! if (verbose) print*, '              with state variables:'
         ! if (verbose) print*, '              pleaf = ', pleaf(:,jpngr)
@@ -351,9 +353,13 @@ contains
         ! if (verbose) print*, '              drgrow= ', drgrow(:)
         ! if (verbose) print*, '              dnup  = ', dnup(1)%n14
         ! if (baltest) orgtmp1 = orgminus( orgplus( pleaf(1,jpngr), proot(1,jpngr), plabl(1,jpngr), orgpool( carbon(drgrow(1)), nitrogen(0.0) ) ), orgpool(carbon(0.0),dnup(1)) )
-        ! !----------------------------------------------------------------
-        ! call allocation_daily( jpngr, day, dm, moy, interface%climate(jpngr)%dtemp(:) )
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        call allocation_daily(  tile(:), &
+                                tile_fluxes(:),&
+                                myinterface%climate(doy), &
+                                myinterface%climate_memory(doy) &
+                                )
+        !----------------------------------------------------------------
         ! if (verbose) print*, '              ==> returned: '
         ! if (verbose) print*, '              pleaf = ', pleaf(:,jpngr)
         ! if (verbose) print*, '              proot = ', proot(:,jpngr)
@@ -367,7 +373,6 @@ contains
         ! if (baltest .and. abs(orgbal1%c%c12)>eps) stop 'balance not satisfied for C'
         ! if (baltest .and. abs(orgbal1%n%n14)>eps) stop 'balance not satisfied for N'
         ! if (verbose) print*, '... done'
-
 
         !----------------------------------------------------------------
         ! daily diagnostics (e.g., sum over plant within canopy)

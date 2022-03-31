@@ -40,7 +40,7 @@ module md_gpp_pmodel
   implicit none
 
   private
-  public params_pft_gpp, gpp, getpar_modl_gpp
+  public params_pft_gpp, params_gpp, gpp, getpar_modl_gpp, calc_dgpp, calc_drd
     
   !-----------------------------------------------------------------------
   ! Uncertain (unknown) parameters. Runtime read-in
@@ -70,7 +70,7 @@ module md_gpp_pmodel
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, do_soilmstress, do_tempstress, init)
+  subroutine gpp( tile, tile_fluxes, co2, climate, climate_memory, vegcover, grid, do_soilmstress, do_tempstress, init)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -86,6 +86,7 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     real, intent(in)    :: co2                               ! atmospheric CO2 (ppm)
     type(climate_type)  :: climate
+    type(climate_type)  :: climate_memory
     type(vegcover_type) :: vegcover
     type(gridtype)      :: grid
     logical, intent(in) :: do_soilmstress                    ! whether empirical soil miosture stress function is applied to GPP
@@ -94,7 +95,7 @@ contains
 
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
-    type(climate_type)   :: climate_acclimation     ! list of climate variables to which P-model calculates acclimated traits
+    ! type(climate_type)   :: climate_acclimation     ! list of climate variables to which P-model calculates acclimated traits
     integer    :: pft
     integer    :: lu
     real       :: iabs
@@ -102,17 +103,19 @@ contains
     real       :: ftemp_kphio
     real       :: tk
 
-    real, save :: co2_memory
-    real, save :: vpd_memory
-    real, save :: temp_memory
-    real, save :: patm_memory
-    real, save :: ppfd_memory
+    real, dimension(ndayyear), save :: actnv_unitfapar_vec
 
-    real, save :: tmin_memory     ! for low temperature stress
+    ! real, save :: co2_memory
+    ! real, save :: vpd_memory
+    ! real, save :: temp_memory
+    ! real, save :: patm_memory
+    ! real, save :: ppfd_memory
 
-    ! xxx test
-    real :: a_c, a_j, a_returned, fact_jmaxlim
-    integer, save :: count
+    ! real, save :: tmin_memory     ! for low temperature stress
+
+    ! ! xxx test
+    ! real :: a_c, a_j, a_returned, fact_jmaxlim
+    ! integer, save :: count
 
     !----------------------------------------------------------------
     ! Convert daily mean environmental conditions to conditions to
@@ -120,42 +123,42 @@ contains
     ! mean) 
     !----------------------------------------------------------------
     ! climate_acclimation = calc_climate_acclimation( climate, grid, "daytime" )
-    climate_acclimation = climate
+    ! climate_acclimation = climate
 
     !----------------------------------------------------------------
     ! Calculate environmental conditions with memory, time scale 
     ! relevant for Rubisco turnover
     !----------------------------------------------------------------
-    if (init) then
-      count = 0
-      co2_memory  = co2
-      temp_memory = climate_acclimation%dtemp
-      vpd_memory  = climate_acclimation%dvpd
-      patm_memory = climate_acclimation%dpatm
-      ppfd_memory = climate_acclimation%dppfd
-      tmin_memory = climate_acclimation%dtmin
-      ! print*,'climate_acclimation%dtmin, tmin_memory', climate_acclimation%dtmin, tmin_memory
-    end if 
+    ! if (init) then
+    !   count = 0
+    !   co2_memory  = co2
+    !   temp_memory = climate_acclimation%dtemp
+    !   vpd_memory  = climate_acclimation%dvpd
+    !   patm_memory = climate_acclimation%dpatm
+    !   ppfd_memory = climate_acclimation%dppfd
+    !   tmin_memory = climate_acclimation%dtmin
+    !   ! print*,'climate_acclimation%dtmin, tmin_memory', climate_acclimation%dtmin, tmin_memory
+    ! end if 
 
-    ! if (count < 5) print*,'A count, tau_acclim_tempstress, dtmin, tmin_memory', count, params_gpp%tau_acclim_tempstress, climate_acclimation%dtmin, tmin_memory
+    ! ! if (count < 5) print*,'A count, tau_acclim_tempstress, dtmin, tmin_memory', count, params_gpp%tau_acclim_tempstress, climate_acclimation%dtmin, tmin_memory
 
-    count = count + 1
+    ! count = count + 1
 
-    co2_memory  = dampen_variability( co2,                       params_gpp%tau_acclim, co2_memory  )
-    temp_memory = dampen_variability( climate_acclimation%dtemp, params_gpp%tau_acclim, temp_memory )
-    vpd_memory  = dampen_variability( climate_acclimation%dvpd,  params_gpp%tau_acclim, vpd_memory  )
-    patm_memory = dampen_variability( climate_acclimation%dpatm, params_gpp%tau_acclim, patm_memory )
-    ppfd_memory = dampen_variability( climate_acclimation%dppfd, params_gpp%tau_acclim, ppfd_memory )
+    ! co2_memory  = dampen_variability( co2,                       params_gpp%tau_acclim, co2_memory  )
+    ! temp_memory = dampen_variability( climate_acclimation%dtemp, params_gpp%tau_acclim, temp_memory )
+    ! vpd_memory  = dampen_variability( climate_acclimation%dvpd,  params_gpp%tau_acclim, vpd_memory  )
+    ! patm_memory = dampen_variability( climate_acclimation%dpatm, params_gpp%tau_acclim, patm_memory )
+    ! ppfd_memory = dampen_variability( climate_acclimation%dppfd, params_gpp%tau_acclim, ppfd_memory )
 
-    ! save damped PPFD for use outside this module
-    tile_fluxes(:)%canopy%ppfd_memory = ppfd_memory
+    ! ! save damped PPFD for use outside this module
+    ! tile_fluxes(:)%canopy%ppfd_memory = ppfd_memory
 
     ! ! separate time scale for minimum temperature stress
     ! tmin_memory = dampen_variability( climate_acclimation%dtmin, params_gpp%tau_acclim_tempstress, tmin_memory )
 
     ! if (count < 5) print*,'B count, tau_acclim_tempstress, dtmin, tmin_memory', count, params_gpp%tau_acclim_tempstress, climate_acclimation%dtmin, tmin_memory
 
-    tk = climate_acclimation%dtemp + kTkelvin
+    tk = climate%dtemp + kTkelvin
 
 
     pftloop: do pft=1,npft
@@ -166,8 +169,8 @@ contains
       ! Low-temperature effect on quantum yield efficiency 
       !----------------------------------------------------------------
       ! take the slowly varying temperature for governing quantum yield variations
-      ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 ) & 
-        * calc_ftemp_kphio_tmin( climate_acclimation%dtmin, params_gpp%par_shape_tempstress )
+      ftemp_kphio = calc_ftemp_kphio( climate_memory%dtemp, params_pft_plant(pft)%c4 ) & 
+        * calc_ftemp_kphio_tmin( climate%dtmin, params_gpp%par_shape_tempstress )
 
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
@@ -175,7 +178,7 @@ contains
       !----------------------------------------------------------------
       if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &      ! PFT is present
           grid%dayl > 0.0 .and.                    &      ! no arctic night
-          temp_memory > -5.0 ) then                       ! minimum temp threshold to avoid fpe
+          climate_memory%dtemp > -5.0 ) then              ! minimum temp threshold to avoid fpe
 
         !----------------------------------------------------------------
         ! With fAPAR = 1.0 (full light) for simulating Vcmax25
@@ -183,11 +186,11 @@ contains
         out_pmodel = pmodel(  &
                               kphio          = params_pft_gpp(pft)%kphio * ftemp_kphio, &
                               beta           = params_gpp%beta, &
-                              ppfd           = ppfd_memory, &
-                              co2            = co2_memory, &
-                              tc             = temp_memory, &
-                              vpd            = vpd_memory, &
-                              patm           = patm_memory, &
+                              ppfd           = climate_memory%dppfd, &
+                              co2            = co2, &
+                              tc             = climate_memory%dtemp, &
+                              vpd            = climate_memory%dvpd, &
+                              patm           = climate_memory%dpatm, &
                               c4             = params_pft_plant(pft)%c4, &
                               method_optci   = "prentice14", &
                               method_jmaxlim = "wang17" &
@@ -205,11 +208,6 @@ contains
       lu = 1
 
       !----------------------------------------------------------------
-      ! Save metabolic N content per unit absorbed light
-      !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%actnv_unitiabs = out_pmodel%actnv_unitiabs
-
-      !----------------------------------------------------------------
       ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
       !----------------------------------------------------------------
       if (do_soilmstress) then
@@ -222,10 +220,15 @@ contains
       !----------------------------------------------------------------
       ! GPP
       ! This still does a linear scaling of daily GPP - knowingly wrong
-      ! but not too dangerous...
+      ! but not problematic as long as at least 10-daily GPP is evaluated
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
-        * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
+      tile_fluxes(lu)%plant(pft)%dgpp = calc_dgpp(  tile(lu)%canopy%fapar, &
+                                                    tile(lu)%plant(pft)%fpc_grid, &
+                                                    climate%dppfd, &
+                                                    out_pmodel%lue, &
+                                                    soilmstress, &
+                                                    real(myinterface%params_siml%secs_per_tstep) &
+                                                    )
       
       !! print*,'gpp',tile_fluxes(lu)%plant(pft)%dgpp
       !! print*,'fpcgrid',tile(lu)%plant(pft)%fpc_grid
@@ -238,8 +241,15 @@ contains
       !----------------------------------------------------------------
       ! Dark respiration
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
-        * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( climate%dtemp ) * c_molmass
+      tile_fluxes(lu)%plant(pft)%drd = calc_drd(  tile(lu)%canopy%fapar, &
+                                                  tile(lu)%plant(pft)%fpc_grid, &
+                                                  climate_memory%dppfd, &
+                                                  params_gpp%rd_to_vcmax &
+                                                    * out_pmodel%vcmax25_unitiabs &
+                                                    * calc_ftemp_inst_rd( climate%dtemp ), &
+                                                  soilmstress, &
+                                                  real(myinterface%params_siml%secs_per_tstep) &
+                                                  )
 
       !----------------------------------------------------------------
       ! Vcmax and Jmax
@@ -255,6 +265,18 @@ contains
       tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax(  climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%jmax25
 
       !----------------------------------------------------------------
+      ! Save quantities used for allocation
+      !----------------------------------------------------------------
+      ! take maximum metabolic leaf N per unit absorbed light of the past 'len' P-model calls
+      if (init) actnv_unitfapar_vec(:) = 0.0
+      actnv_unitfapar_vec(1:(ndayyear-1)) = actnv_unitfapar_vec(2:ndayyear)
+      actnv_unitfapar_vec(ndayyear) = out_pmodel%actnv_unitiabs * climate_memory%dppfd
+      tile(lu)%plant(pft)%actnv_unitfapar  = maxval(actnv_unitfapar_vec(:))
+
+      tile_fluxes(lu)%plant(pft)%lue              = out_pmodel%lue
+      tile_fluxes(lu)%plant(pft)%vcmax25_unitiabs = out_pmodel%vcmax25_unitiabs
+
+      !----------------------------------------------------------------
       ! Stomatal conductance
       !----------------------------------------------------------------
       tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint
@@ -265,26 +287,48 @@ contains
 
 
 
-  ! function calc_dgpp( fapar, fpc_grid, dppfd, lue, ftemp_kphio, soilmstress ) result( my_dgpp )
-  !   !//////////////////////////////////////////////////////////////////
-  !   ! Calculates daily GPP given mean daily light use efficiency following
-  !   ! a simple light use efficie model approach.
-  !   !------------------------------------------------------------------
-  !   ! arguments
-  !   real, intent(in) :: fapar       ! fraction of absorbed photosynthetically active radiation (unitless)
-  !   real, intent(in) :: fpc_grid    ! foliar projective cover, used for dividing grid cell area (unitless)
-  !   real, intent(in) :: dppfd       ! daily total photon flux density (mol m-2)
-  !   real, intent(in) :: lue         ! light use efficiency (g CO2 mol-1)
-  !   real, intent(in) :: ftemp_kphio  ! air temperature (deg C)
-  !   real, intent(in) :: soilmstress ! soil moisture stress factor (unitless)
+  function calc_dgpp( fapar, fpc_grid, dppfd, lue, soilmstress, secs_per_tstep ) result( out )
+    !//////////////////////////////////////////////////////////////////
+    ! Calculates daily GPP given mean daily light use efficiency following
+    ! a simple light use efficie model approach.
+    !------------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: fapar           ! fraction of absorbed photosynthetically active radiation (unitless)
+    real, intent(in) :: fpc_grid        ! foliar projective cover, used for dividing grid cell area (unitless)
+    real, intent(in) :: dppfd           ! daily total photon flux density (mol s-1 m-2)
+    real, intent(in) :: lue             ! light use efficiency (g CO2 mol-1)
+    real, intent(in) :: soilmstress     ! soil moisture stress factor (unitless)
+    real, intent(in) :: secs_per_tstep  ! number of seconds per time step, needed because PPFD is in units per second (s)
 
-  !   ! function return variable
-  !   real :: my_dgpp                 ! Daily total gross primary productivity (gC m-2 d-1)
+    ! function return variable
+    real :: out                         ! Daily total gross primary productivity (gC m-2 d-1)
 
-  !   ! GPP is light use efficiency multiplied by absorbed light and soil moisture stress function
-  !   my_dgpp = fapar * fpc_grid * dppfd * soilmstress * lue * ftemp_kphio
+    ! GPP is light use efficiency multiplied by absorbed light and soil moisture stress function
+    out = fapar * fpc_grid * dppfd * soilmstress * lue * secs_per_tstep
 
-  ! end function calc_dgpp
+  end function calc_dgpp
+
+
+  function calc_drd( fapar, fpc_grid, dppfd, rd_unitiabs, soilmstress, secs_per_tstep ) result( out )
+    !//////////////////////////////////////////////////////////////////
+    ! Calculates daily total dark respiration (Rd) based on monthly mean 
+    ! PPFD (assumes acclimation on a monthly time scale).
+    !------------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: fapar           ! fraction of absorbed photosynthetically active radiation
+    real, intent(in) :: fpc_grid        ! foliar projective cover
+    real, intent(in) :: dppfd           ! daily total photon flux density (mol s-1 m-2)
+    real, intent(in) :: rd_unitiabs
+    real, intent(in) :: soilmstress     ! soil moisture stress factor
+    real, intent(in) :: secs_per_tstep  ! number of seconds per time step, needed because PPFD is in units per second (s)
+
+    ! function return variable
+    real :: out
+
+    ! Dark respiration takes place during night and day (24 hours)
+    out = fapar * fpc_grid * dppfd * rd_unitiabs * soilmstress * c_molmass * secs_per_tstep
+
+  end function calc_drd
 
 
   ! function calc_dassim( dgpp, daylength ) result( my_dassim )
@@ -333,29 +377,6 @@ contains
   !   ! print*,'instantaneous gs: ', dgs 
     
   ! end function calc_dgs
-
-
-  ! function calc_drd( fapar, fpc_grid, dppfd, rd_unitiabs, ftemp_kphio, soilmstress ) result( my_drd )
-  !   !//////////////////////////////////////////////////////////////////
-  !   ! Calculates daily total dark respiration (Rd) based on monthly mean 
-  !   ! PPFD (assumes acclimation on a monthly time scale).
-  !   ! Not described in Stocker et al., XXX.
-  !   !------------------------------------------------------------------
-  !   ! arguments
-  !   real, intent(in) :: fapar           ! fraction of absorbed photosynthetically active radiation
-  !   real, intent(in) :: fpc_grid        ! foliar projective cover
-  !   real, intent(in) :: dppfd           ! daily total photon flux density (mol m-2)
-  !   real, intent(in) :: rd_unitiabs
-  !   real, intent(in) :: ftemp_kphio      ! this day's air temperature, deg C
-  !   real, intent(in) :: soilmstress     ! soil moisture stress factor
-
-  !   ! function return variable
-  !   real :: my_drd
-
-  !   ! Dark respiration takes place during night and day (24 hours)
-  !   my_drd = fapar * fpc_grid * dppfd * soilmstress * rd_unitiabs * ftemp_kphio * c_molmass
-
-  ! end function calc_drd
 
 
   ! function calc_dtransp( fapar, acrown, dppfd, transp_unitiabs, ftemp_kphio, soilmstress ) result( my_dtransp )

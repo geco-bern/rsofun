@@ -21,7 +21,7 @@ forcing_siterun_pmodel.mod.o: params_core.mod.o params_siml_pmodel.mod.o grid_si
 forcing_siterun_lm3ppa.mod.o: params_core.mod.o params_siml_lm3ppa.mod.o grid_siterun.mod.o
 #params_soil_pmodel.mod.o: params_core.mod.o
 params_soil_lm3ppa.mod.o: params_core.mod.o
-tile.mod.o: params_core.mod.o interface_biosphere_pmodel.mod.o classdefs.mod.o
+tile.mod.o: params_core.mod.o interface_biosphere_pmodel.mod.o classdefs.mod.o plant.mod.o
 waterbal_splash.mod.o: params_core.mod.o tile.mod.o plant.mod.o sofunutils.mod.o
 gpp_pmodel.mod.o: params_core.mod.o sofunutils.mod.o plant.mod.o tile.mod.o interface_biosphere_pmodel.mod.o photosynth_pmodel.mod.o
 gpp_lm3ppa.mod.o: datatypes.mod.o soil_lm3ppa.mod.o forcing_siterun_lm3ppa.mod.o photosynth_pmodel.mod.o params_core.mod.o sofunutils.mod.o
@@ -32,7 +32,7 @@ vegdynamics_pmodel.mod.o: params_core.mod.o tile.mod.o plant.mod.o gpp_pmodel.mo
 vegdynamics_cnmodel.mod.o: params_core.mod.o plant.mod.o interface_biosphere_pmodel.mod.o classdefs.mod.o phenology_lpx.mod.o interface_biosphere_pmodel.mod.o
 biosphere_pmodel.mod.o: params_core.mod.o classdefs.mod.o sofunutils.mod.o plant.mod.o waterbal_splash.mod.o gpp_pmodel.mod.o vegdynamics_pmodel.mod.o tile.mod.o interface_biosphere_pmodel.mod.o soiltemp_sitch.mod.o vegdynamics_pmodel.mod.o
 biosphere_lm3ppa.mod.o: params_core.mod.o interface_biosphere_lm3ppa.mod.o datatypes.mod.o soil_lm3ppa.mod.o vegetation_lm3ppa.mod.o
-biosphere_cnmodel.mod.o: params_core.mod.o classdefs.mod.o sofunutils.mod.o plant.mod.o waterbal_splash.mod.o gpp_pmodel.mod.o vegdynamics_pmodel.mod.o tile.mod.o interface_biosphere_pmodel.mod.o soiltemp_sitch.mod.o vegdynamics_cnmodel.mod.o npp.mod.o nuptake.mod.o turnover.mod.o landuse.mod.o littersom.mod.o ntransform.mod.o
+biosphere_cnmodel.mod.o: params_core.mod.o classdefs.mod.o sofunutils.mod.o plant.mod.o waterbal_splash.mod.o gpp_pmodel.mod.o vegdynamics_pmodel.mod.o tile.mod.o interface_biosphere_pmodel.mod.o soiltemp_sitch.mod.o vegdynamics_cnmodel.mod.o npp.mod.o nuptake.mod.o turnover.mod.o landuse.mod.o littersom.mod.o ntransform.mod.o allocation_cnmodel.mod.o
 soil_lm3ppa.mod.o: datatypes.mod.o
 vegetation_lm3ppa.mod.o: datatypes.mod.o soil_lm3ppa.mod.o gpp_lm3ppa.mod.o
 datatypes.mod.o: interface_biosphere_lm3ppa.mod.o params_core.mod.o classdefs.mod.o
@@ -43,6 +43,7 @@ turnover.mod.o: params_core.mod.o classdefs.mod.o tile.mod.o plant.mod.o
 landuse.mod.o: params_core.mod.o classdefs.mod.o tile.mod.o plant.mod.o interface_biosphere_pmodel.mod.o
 littersom.mod.o: classdefs.mod.o params_core.mod.o plant.mod.o interface_biosphere_pmodel.mod.o
 ntransform.mod.o: classdefs.mod.o params_core.mod.o tile.mod.o interface_biosphere_pmodel.mod.o rates.mod.o
+allocation_cnmodel.mod.o: classdefs.mod.o params_core.mod.o tile.mod.o plant.mod.o findroot_fzeroin.mod.o interface_biosphere_pmodel.mod.o gpp_pmodel.mod.o nuptake.mod.o npp.mod.o photosynth_pmodel.mod.o
 
 # Source (object) of Fortran modules
 # <modulename.mod>: <filename.o>
@@ -82,6 +83,8 @@ md_landuse.mod: landuse.mod.o
 md_littersom.mod: littersom.mod.o 
 md_ntransform.mod: ntransform.mod.o 
 md_rates.mod: rates.mod.o 
+md_allocation.mod: allocation_cnmodel.mod.o
+md_findroot_fzeroin.mod: findroot_fzeroin.mod.o
 
 # Dependency of the C wrapper
 wrappersc.o: sofun_r_mod.mod

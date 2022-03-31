@@ -12,24 +12,6 @@ module md_tile
   public tile_type, tile_fluxes_type, init_tile, psoilphystype, soil_type, &
     init_tile_fluxes, getpar_modl_tile, diag_daily
 
-  !-----------------------------------------------------------------------
-  ! Uncertain (unknown) parameters. Runtime read-in
-  !-----------------------------------------------------------------------
-  type params_littersom_type
-    real :: klitt_af10        ! above-ground fast (leaf) litter decay rate [1/d]
-    real :: klitt_as10        ! above-ground slow (woody) litter decay rate [1/d] 
-    real :: klitt_bg10        ! below-ground (root) litter decay rate [1/d] 
-    real :: kexu10            ! exudates decay rate [1/d]
-    real :: ksoil_fs10        ! fast soil pool decay rate [1/d]
-    real :: ksoil_sl10        ! slow soil pool decay rate [1/d]
-    real :: ntoc_crit1        ! factor for "Manzoni Equation" (XPXXX) [1]
-    real :: ntoc_crit2        ! exponent for "Manzoni Equation" (XPXXX) [1]
-    real :: cton_soil         ! C:N ratio of SOM
-    real :: ntoc_soil         ! N:C ratio of SOM, calculated as the inverse of the read-in parameter cton_soil
-    real :: fastfrac          ! fraction of litter input to fast soil pool [1]
-  end type params_littersom_type
-
-  type( params_littersom_type ) :: params_littersom
   
   !----------------------------------------------------------------
   ! physical soil state variables with memory from year to year (~pools)
@@ -85,7 +67,7 @@ module md_tile
 
     type(psoilphystype)  :: phy      ! soil physical state variables
     
-    type(paramtype_soil) :: params   ! soil parameters
+    type(paramtype_soil) :: params   ! soil structure parameters
 
   end type soil_type
 
@@ -543,7 +525,7 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
 
     ! local
-    integer :: pft, lu
+    integer :: lu
 
     ! canopy
     tile_fluxes(:)%canopy%dro = 0.0
@@ -751,8 +733,8 @@ contains
         tile_fluxes(lu)%plant(pft)%chi * tile(lu)%plant(pft)%fpc_grid
       tile_fluxes(lu)%canopy%iwue = tile_fluxes(lu)%canopy%iwue + &
         tile_fluxes(lu)%plant(pft)%iwue * tile(lu)%plant(pft)%fpc_grid
-      tile_fluxes(lu)%canopy%actnv_unitiabs = tile_fluxes(lu)%canopy%actnv_unitiabs + &
-        tile_fluxes(lu)%plant(pft)%actnv_unitiabs * tile(lu)%plant(pft)%fpc_grid
+      ! tile_fluxes(lu)%canopy%actnv_unitiabs = tile_fluxes(lu)%canopy%actnv_unitiabs + &
+      !   tile_fluxes(lu)%plant(pft)%actnv_unitiabs * tile(lu)%plant(pft)%fpc_grid
 
       ! derived types canopy-level quantities as sums
       tile_fluxes(lu)%canopy%dnpp  = cplus( tile_fluxes(lu)%canopy%dnpp, tile_fluxes(lu)%plant(pft)%dnpp )

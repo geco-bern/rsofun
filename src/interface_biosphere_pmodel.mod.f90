@@ -45,6 +45,7 @@ module md_interface_pmodel
     real, dimension(4,nlayers_soil)         :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     real                                    :: whc_prescr
     type(climate_type), dimension(ndayyear) :: climate
+    type(climate_type), dimension(ndayyear) :: climate_memory
     type(vegcover_type), dimension(ndayyear):: vegcover
     type(landuse_type), dimension(ndayyear) :: landuse
     ! type(domaininfo_type)                 :: domaininfo
