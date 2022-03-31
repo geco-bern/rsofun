@@ -1311,7 +1311,7 @@ contains
       frac = frac + new(i)%nindivs * new(i)%crownarea
       nindivs = nindivs - new(i)%nindivs
 
-      if (abs(nindivs*cc(idx(k))%crownarea) < tolerance) then
+      if ((nindivs*cc(idx(k))%crownarea) < tolerance) then
 
         ! allocate the remainder of individuals to the last cohort
         new(i)%nindivs = new(i)%nindivs + nindivs
