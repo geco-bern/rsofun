@@ -10,13 +10,13 @@ test_that("test calibration routine lm3ppa (Bayesiantools)", {
   # Mortality as DBH
   settings <- list(
     method              = "bayesiantools",
-    targets             = c("GPP"), #,"LAI","Density","Biomass"),
+    targets             = c("GPP","LAI","Density","Biomass"),
     metric              = rsofun::likelihood_lm3ppa,
     control = list(
       sampler = "DEzs",
       settings = list(
         burnin = 1,
-        iterations = 4,
+        iterations = 1000,
         nrChains = 1
       )
     ),
