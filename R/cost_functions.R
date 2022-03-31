@@ -446,7 +446,7 @@ likelihood_lm3ppa <- function(
   drivers$params_species[[1]]$LAI_light[]  <- par[2]
   drivers$params_tile[[1]]$tf_base <- par[3]
   drivers$params_tile[[1]]$par_mort <- par[4]
-  
+
   # run model
   df <- runread_lm3ppa_f(
     drivers,

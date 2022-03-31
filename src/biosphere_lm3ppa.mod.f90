@@ -184,24 +184,24 @@ contains
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
 
-    !print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    ! print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_nat_mortality( vegn )
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
-    !print*,'D: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    ! print*,'D: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_reproduction( vegn )
     
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
 
-    !print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    ! print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call kill_lowdensity_cohorts( vegn )
     
-    !print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    ! print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call relayer_cohorts( vegn )
     
-    !print*,'G: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    ! print*,'G: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_mergecohorts( vegn )
 
     ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)

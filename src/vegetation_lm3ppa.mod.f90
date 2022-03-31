@@ -765,6 +765,7 @@ contains
          exit
         endif
       enddo
+
       ! Remove the cohorts with 0 individuals, (never used b/c k<2)
       if(k >= 2) call kill_lowdensity_cohorts(vegn)
 
@@ -860,7 +861,8 @@ contains
          
         endif
 
-        deathrate = deathrate + 0.01
+        ! previous setup allowed death rates > 1 (hence negative ind)
+        deathrate = min(1.0, deathrate + 0.01) 
         deadtrees = cc%nindivs * deathrate
 
         ! record mortality rates at cohort level
@@ -871,15 +873,13 @@ contains
 
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
-        ! print*, "cc%nindivs", cc%nindivs
         ! vegn%n_deadtrees = deadtrees
         ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12)
         end associate
       enddo
 
       ! Remove the cohorts with very few individuals
-      call kill_lowdensity_cohorts( vegn )    
-
+      call kill_lowdensity_cohorts( vegn )
 
     endif
 
@@ -1264,12 +1264,12 @@ contains
     where(cc(1:N0)%nindivs /= cc(1:N0)%nindivs)
       cc(1:N0)%nindivs = 0
     end where
-    
+
     ! calculate size of the new cohorts, correctly dealing with the NaN
     ! values - if one ignores the NaN values these are treated as a large
     ! negative int()
     N1 = vegn%n_cohorts + int(sum(cc(1:N0)%nindivs * cc(1:N0)%crownarea))
-
+    
     ! allocate the new cohort array using the above size
     allocate(new(N1))
 
@@ -1280,29 +1280,45 @@ contains
     L = 1 
     frac = 0.0 
     nindivs = cc(idx(k))%nindivs
-
+    
     ! loop over all original cohorts
     do
       new(i) = cc(idx(k))
-      new(i)%nindivs = min(nindivs,(layer_vegn_cover-frac)/cc(idx(k))%crownarea)
+      new(i)%nindivs = min(nindivs,(layer_vegn_cover - frac)/cc(idx(k))%crownarea)
       new(i)%layer   = L
-      if (L==1) new(i)%firstlayer = 1
+
+      if (L == 1) then
+        new(i)%firstlayer = 1
+      endif
 
       !    if (L>1)  new(i)%firstlayer = 0  ! switch off "push-down effects"
-      frac = frac+new(i)%nindivs*new(i)%crownarea
+      frac = frac + new(i)%nindivs * new(i)%crownarea
       nindivs = nindivs - new(i)%nindivs
-
-      if (abs(nindivs*cc(idx(k))%crownarea)<tolerance) then
-        new(i)%nindivs = new(i)%nindivs + nindivs ! allocate the remainder of individuals to the last cohort
-        if (k==N0) exit ! end of loop
-        k = k+1 ; nindivs = cc(idx(k))%nindivs  ! go to the next input cohort
+      
+      ! check for individuals less than 0
+      if (nindivs < 0) then
+        nindivs = 0
       endif
 
-      if (abs(layer_vegn_cover - frac)<tolerance) then
-        L = L+1 ; frac = 0.0              ! start new layer
+      if ((nindivs*cc(idx(k))%crownarea) < tolerance) then
+
+        ! allocate the remainder of individuals to the last cohort
+        new(i)%nindivs = new(i)%nindivs + nindivs
+        
+        if (k == N0) then
+          exit ! end of loop
+        else
+          k = k + 1
+          nindivs = cc(idx(k))%nindivs
+        endif
+        
       endif
 
-      ! write(*,*)i, new(i)%layer
+      if (abs(layer_vegn_cover - frac) < tolerance) then
+        L = L + 1
+        frac = 0.0   ! start new layer
+      endif
+
       i = i + 1
     
     enddo
@@ -2145,6 +2161,7 @@ contains
       vegn%cohorts => cc
       vegn%n_cohorts = init_n_cohorts
       cc => null()
+
       do i=1,init_n_cohorts
         cx => vegn%cohorts(i)
         cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
@@ -2192,51 +2209,6 @@ contains
                         vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
                         vegn%psoil_sl%n%n14 + vegn%ninorg%n14
       vegn%totN =  vegn%initialN0
-    
-    else
-      !- Generate cohorts randomly --------
-      ! Initialize plant cohorts
-      allocate(cc(1:nCohorts), STAT = istat)
-      vegn%cohorts => cc
-      vegn%n_cohorts = nCohorts
-      cc => null()
-      r = rand(rand_seed)
-      do i=1,nCohorts
-        cx => vegn%cohorts(i)
-        cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
-        cx%layer   = 1
-        cx%species = INT(rand()*5)+1
-        cx%nindivs = rand() / 10. ! trees/m2
-        btotal     = rand() * 100.0  ! kgC /tree
-        call initialize_cohort_from_biomass(cx, btotal)
-      enddo
-
-      ! Sorting these cohorts
-      call relayer_cohorts( vegn )
-
-      ! ID each cohort
-      do i=1,nCohorts
-        cx => vegn%cohorts(i)
-        cx%ccID = MaxCohortID + i
-      enddo
-      MaxCohortID = cx%ccID
-
-      ! Initial Soil pools and environmental conditions
-      vegn%psoil_fs%c%c12  = 0.2 ! kgC m-2
-      vegn%psoil_sl%c%c12 = 7.0 ! slow soil carbon pool, (kg C/m2)
-      vegn%psoil_fs%n%n14  = vegn%psoil_fs%c%c12/CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-      vegn%psoil_sl%n%n14 = vegn%psoil_sl%c%c12/CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-      vegn%N_input     = 0.0008  ! kgN m-2 yr-1, N input to soil
-      vegn%ninorg%n14    = 0.005  ! Mineral nitrogen pool, (kg N/m2)
-      vegn%previousN   = vegn%ninorg%n14
-
-      ! tile
-      call summarize_tile( vegn )
-      vegn%initialN0 = vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
-        vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
-        vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
-        vegn%psoil_sl%n%n14 + vegn%ninorg%n14
-      vegn%totN = vegn%initialN0
 
     endif  ! initialization: random or pre-described
   
