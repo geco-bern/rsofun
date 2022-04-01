@@ -100,9 +100,15 @@ pars <- list(par = c(
 
 ))
 
-
+## add new required columns to forcing 
 p_model_drivers <- p_model_drivers %>% 
   mutate(forcing = purrr::map(forcing, ~mutate(., 
                                                fharv = 0.0,
                                                dno3 = 0.1,
                                                dnh4 = 0.1)))
+
+## run the model
+output <- runread_pmodel_f(
+  p_model_drivers,
+  par = pars
+  )

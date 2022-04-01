@@ -37,7 +37,7 @@ soil_lm3ppa.mod.o: datatypes.mod.o
 vegetation_lm3ppa.mod.o: datatypes.mod.o soil_lm3ppa.mod.o gpp_lm3ppa.mod.o
 datatypes.mod.o: interface_biosphere_lm3ppa.mod.o params_core.mod.o classdefs.mod.o
 npp.mod.o: classdefs.mod.o params_core.mod.o plant.mod.o interface_biosphere_pmodel.mod.o plant.mod.o tile.mod.o forcing_siterun_pmodel.mod.o
-phenology_lpx.mod.o: params_core.mod.o sofunutils.mod.o plant.mod.o 
+phenology_lpx.mod.o: params_core.mod.o sofunutils.mod.o plant.mod.o tile.mod.o
 nuptake.mod.o: params_core.mod.o classdefs.mod.o tile.mod.o plant.mod.o
 turnover.mod.o: params_core.mod.o classdefs.mod.o tile.mod.o plant.mod.o
 landuse.mod.o: params_core.mod.o classdefs.mod.o tile.mod.o plant.mod.o interface_biosphere_pmodel.mod.o

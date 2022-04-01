@@ -11,75 +11,74 @@ module md_vegdynamics_cnmodel
 
 contains
 
-  subroutine vegdynamics( tile_fluxes )
+  subroutine vegdynamics( tile, doy )
     !//////////////////////////////////////////////////////////////////
     ! Updates canopy and stand variables and calls 'estab_daily' to 
     ! simulate establishment of new individuals
     !------------------------------------------------------------------
-    use md_params_core, only: nlu ! npft, ndayyear
+    use md_params_core, only: nlu, npft
     ! use md_phenology, only: temppheno_type, params_pft_pheno
-    use md_tile, only: tile_fluxes_type
+    use md_tile
+    use md_plant
 
     ! arguments
-    type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
-    ! type(temppheno_type), dimension(npft), intent(in) :: temppheno
+    type(tile_type), dimension(nlu), intent(inout) :: tile
+    integer, intent(in) :: doy
 
-    ! ! local variables
-    ! integer :: pft
+    ! local variables
+    integer :: pft, lu
 
-    ! do pft=1,npft
+    do pft=1,npft
+      lu = params_pft_plant(pft)%lu_category
 
-    !   ! if (params_pft_plant(pft)%grass) then
-    !   !   !----------------------------------------------------------
-    !   !   ! GRASSES, summergreen
-    !   !   !----------------------------------------------------------
+      if (params_pft_plant(pft)%grass) then
+        !----------------------------------------------------------
+        ! GRASSES, summergreen
+        !----------------------------------------------------------
 
-    !   !   if ( temppheno(pft)%sprout ) then
-    !   !     !----------------------------------------------------------
-    !   !     ! beginning of season
-    !   !     !----------------------------------------------------------
-    !   !     call estab_daily( plant(pft), pft )
+        if ( tile(lu)%plant(pft)%pheno(doy)%sprout ) then
+          !----------------------------------------------------------
+          ! beginning of season
+          !----------------------------------------------------------
+          call estab_daily( tile(lu)%plant(pft) )
 
-    !   !     ! stop 'adding a seed'
+          ! stop 'adding a seed'
 
-    !   !   end if
+        end if
 
-    !   ! else
+      else
 
-    !   !   stop 'estab_daily not implemented for non-summergreen'
+        stop 'estab_daily not implemented for non-summergreen'
 
-    !   ! end if
+      end if
 
-    ! end do
+    end do
 
   end subroutine vegdynamics
 
 
-  subroutine estab_daily( plant, pft )
+  subroutine estab_daily( plant )
     !//////////////////////////////////////////////////////////////////
     ! Calculates leaf-level metabolic N content per unit leaf area as a
     ! function of Vcmax25.
     !------------------------------------------------------------------
-    use md_plant, only: plant_type, params_plant, params_pft_plant
+    use md_plant, only: plant_type, params_plant, params_pft_plant, add_seed
     use md_interface_pmodel
 
     ! arguments
     type(plant_type), intent(inout) :: plant
-    integer, intent(in) :: pft
 
     ! ! initialise all pools of this PFT with zero
     ! call initpft( pft, jpngr )
 
     ! add C (and N) to labile pool (available for allocation)
     call add_seed( plant )
-    if ( .not. myinterface%steering%dofree_alloc ) params_plant%frac_leaf = 0.5
     
-    if (params_pft_plant(pft)%grass) then
+    if (params_pft_plant(plant%pftno)%grass) then
       plant%nind = 1.0
     else
       stop 'estab_daily not implemented for trees'
     end if
-
 
   end subroutine estab_daily
 

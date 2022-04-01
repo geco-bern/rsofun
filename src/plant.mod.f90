@@ -69,6 +69,16 @@ module md_plant
 
   type(params_pft_plant_type), dimension(npft) :: params_pft_plant
 
+
+  !----------------------------------------------------------------
+  ! Daily phenology dates for each PFT
+  !----------------------------------------------------------------
+  type phenotype
+    real    :: dtphen       ! daily temperature-driven phenology (=dphen_t in LPX)
+    logical :: sprout       ! boolean when PFT is sprouting
+    logical :: shedleaves   ! boolean when PFT is shedding leaves
+  end type phenotype
+
   !----------------------------------------------------------------
   ! Pools and other variables with year-to-year memory
   !----------------------------------------------------------------
@@ -107,7 +117,10 @@ module md_plant
     type(orgpool) :: proot     ! root biomass [gC/ind.] (=rm_ind)
     type(orgpool) :: psapw     ! sapwood biomass [gC/ind.] (=sm_ind)
     type(orgpool) :: pwood     ! heartwood (non-living) biomass [gC/ind.] (=hm_ind)
-    type(orgpool) :: plabl     ! labile pool, temporary storage of N and C [gC/ind.] (=bm_inc but contains also N) 
+    type(orgpool) :: plabl     ! labile pool, temporary storage of N and C [gC/ind.] (=bm_inc but contains also N)
+
+    ! phenology
+    type(phenotype), dimension(ndayyear) :: pheno
 
   end type plant_type
 

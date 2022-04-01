@@ -44,8 +44,6 @@ contains
     !  Annual vegetation biomass turnover, called at the end of the
     !  year.
     !----------------------------------------------------------------
-    use md_phenology, only: shedleaves
-
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
@@ -79,7 +77,7 @@ contains
 
         ! balance = plant_fluxes(pft)%dnpp%c12 - plant_fluxes(pft)%dcex
 
-        if (shedleaves(doy,pft)) then
+        if (tile(lu)%plant(pft)%pheno(doy)%shedleaves) then
 
           droot = 1.0
           dleaf = 1.0

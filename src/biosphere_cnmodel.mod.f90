@@ -88,7 +88,7 @@ contains
     ! Get phenology variables (temperature-driven)
     !----------------------------------------------------------------
     ! if (verbose) print*, 'calling phenology() ...'
-    call phenology( myinterface%climate(:)%dtemp )
+    call phenology( tile(:), myinterface%climate(:)%dtemp )
     ! if (verbose) print*, '... done'
 
     !----------------------------------------------------------------
@@ -161,7 +161,7 @@ contains
         ! if (verbose) print*, '              with state variables:'
         ! if (verbose) print*, '              plabl = ', plabl(:,jpngr)
         !----------------------------------------------------------------
-        call vegdynamics( tile_fluxes(:) )
+        call vegdynamics( tile(:), doy )
         !----------------------------------------------------------------
         ! if (verbose) print*, '              ==> returned: '
         ! if (verbose) print*, '              plabl = ', plabl(:,jpngr)
