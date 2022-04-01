@@ -397,27 +397,28 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
+    use md_interface_pmodel, only: myinterface
 
     ! maximum nitrification rate
-    params_ntransform%maxnitr = 0.1
+    params_ntransform%maxnitr   = myinterface%params_calib%maxnitr
 
     ! maximum NO from nitrification (day-1)
-    params_ntransform%non = 0.01
+    params_ntransform%non       = myinterface%params_calib%non
 
     ! maximum N2O from nitrification (day-1)
-    params_ntransform%n2on = 0.0005
+    params_ntransform%n2on      = myinterface%params_calib%n2on
 
     ! Michaelis-Menten coefficient [gN/m2]. Use this value if soil represents top 100 cm 
-    params_ntransform%kn = 83.0
+    params_ntransform%kn        = myinterface%params_calib%kn
 
     ! Michaelis-Menten coefficient [gC/m2]. Use this value if soil represents top 100 cm 
-    params_ntransform%kdoc = 17.0
+    params_ntransform%kdoc      = myinterface%params_calib%kdoc
 
     ! docmax
-    params_ntransform%docmax = 1.0
+    params_ntransform%docmax    = myinterface%params_calib%docmax
 
-    ! Fraction of denitrification lost as N2O. Range of possible values: 0.002 - 0.047 (Xu-Ri and Prentice, 2008)
-    params_ntransform%dnitr2n2o = 0.01
+    ! Fraction of denitrification lost as N2O. Range of possible values is 0.002 - 0.047 (Xu-Ri and Prentice, 2008)
+    params_ntransform%dnitr2n2o = myinterface%params_calib%dnitr2n2o
 
   end subroutine getpar_modl_ntransform
 

@@ -370,23 +370,25 @@ contains
     ! Subroutine reads nuptake module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
+    use md_interface_pmodel, only: myinterface
+
     ! initial N uptake efficiency from soil
-    params_nuptake%eff_nup = 0.600000   ! xxx make calibratable getparreal( 'params/params_nuptake.dat', 'eff_nup' )
+    params_nuptake%eff_nup = myinterface%params_calib%eff_nup
 
     ! Minimum cost of N-fixation is 4.8 gC/gN, value from Gutschik (1981)
-    params_nuptake%minimumcostfix = 1.000000    !  xxx make calibratable getparreal( 'params/params_nuptake.dat', 'minimumcostfix' )
+    params_nuptake%minimumcostfix = myinterface%params_calib%minimumcostfix
 
     ! Optimum temperature for N fixation. Taken to be equal to optimum temperature for 
     ! nitrogenase activity as given by Houlton et al. (2008), Nature: 25.15+-0.66 
-    params_nuptake%fixoptimum = 25.15000   ! xxx make calibratable getparreal( 'params/params_nuptake.dat', 'fixoptimum' )
+    params_nuptake%fixoptimum = myinterface%params_calib%fixoptimum
  
     ! shape parameter of the N fixation function taken to be equal to nitrogenase activity 
     ! function given Houlton et al. (2008), Nature: -3.62+-0.52 
-    params_nuptake%a_param_fix = -3.62000   ! getparreal( 'params/params_nuptake.dat', 'a_param_fix' )
+    params_nuptake%a_param_fix = myinterface%params_calib%a_param_fix
 
     ! shape parameter of the N fixation function taken to be equal to nitrogenase activity 
     ! function given Houlton et al. (2008), Nature: 0.27+-0.04 
-    params_nuptake%b_param_fix = 0.270000  ! getparreal( 'params/params_nuptake.dat', 'b_param_fix' )
+    params_nuptake%b_param_fix = myinterface%params_calib%b_param_fix
 
 
   end subroutine getpar_modl_nuptake

@@ -427,40 +427,42 @@ contains
     ! Subroutine reads littersom module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
+    use md_interface_pmodel, only: myinterface
+
     ! above-ground fast (foliage and roots) litter decay rate [1/d] 
-    params_littersom%klitt_af10  = 1.2 / ndayyear
+    params_littersom%klitt_af10    = myinterface%params_calib%klitt_af10 / ndayyear
 
     ! above-ground slow (woody) litter decay rate [1/d] 
-    params_littersom%klitt_as10  = 0.35 / ndayyear
+    params_littersom%klitt_as10    = myinterface%params_calib%klitt_as10 / ndayyear
 
     ! below-ground (root) litter decay rate [1/d] 
-    params_littersom%klitt_bg10  = 0.35 / ndayyear
+    params_littersom%klitt_bg10    = myinterface%params_calib%klitt_bg10 / ndayyear
     
     ! exudates decay rate [1/d]
-    params_littersom%kexu10      = 50.0 / ndayyear
+    params_littersom%kexu10        = myinterface%params_calib%kexu10 / ndayyear
 
     ! fast soil pool decay rate [1/d]
-    params_littersom%ksoil_fs10  = 0.021 / ndayyear
+    params_littersom%ksoil_fs10    = myinterface%params_calib%ksoil_fs10 / ndayyear
 
     ! slow soil pool decay rate [1/d]    
-    params_littersom%ksoil_sl10  = 7.0e-04 / ndayyear
+    params_littersom%ksoil_sl10    = myinterface%params_calib%ksoil_sl10 / ndayyear
 
     ! factor for "Manzoni Equation" (XPXXX) [1]
-    params_littersom%ntoc_crit1  = 0.45
+    params_littersom%ntoc_crit1    = myinterface%params_calib%ntoc_crit1
 
     ! exponent for "Manzoni Equation" (XPXXX) [1]
-    params_littersom%ntoc_crit2  = 0.76
+    params_littersom%ntoc_crit2    = myinterface%params_calib%ntoc_crit2
 
-    ! params_littersom%cton_microb = 10.0
+    ! params_littersom%cton_microb = myinterface%params_calib%cton_microb 10.0
 
-    ! C:N ratio of SOM
-    params_littersom%cton_soil   = 9.77
+    ! C                            :N ratio of SOM
+    params_littersom%cton_soil     = myinterface%params_calib%cton_soil
 
-    ! N:C ratio of SOM
-    params_littersom%ntoc_soil = 1.0 / params_littersom%cton_soil
+    ! N                            :C ratio of SOM
+    params_littersom%ntoc_soil     = 1.0 / params_littersom%cton_soil
 
     ! fraction of litter input to fast soil pool [1]
-    params_littersom%fastfrac    = 0.985
+    params_littersom%fastfrac      = myinterface%params_calib%fastfrac
 
   end subroutine getpar_modl_littersom
 

@@ -80,7 +80,6 @@ contains
     out_climate(:)%dtemp   = real(forcing(idx_start:idx_end, 1))
     out_climate(:)%dprec   = real(forcing(idx_start:idx_end, 2))
     out_climate(:)%dvpd    = real(forcing(idx_start:idx_end, 3))
-    out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 11))
 
     if (in_ppfd) then
       out_climate(:)%dppfd = real(forcing(idx_start:idx_end, 4))
@@ -99,8 +98,7 @@ contains
     end if
     out_climate(:)%dsnow   = real(forcing(idx_start:idx_end, 7))
 
-    out_climate(:)%dpatm   = calc_patm( elv )    ! todo: use daily varying patm read from forcing
-
+    out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 11))
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 12))
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 13))
 

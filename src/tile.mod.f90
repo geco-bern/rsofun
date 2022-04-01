@@ -12,7 +12,6 @@ module md_tile
   public tile_type, tile_fluxes_type, init_tile, psoilphystype, soil_type, &
     init_tile_fluxes, getpar_modl_tile, diag_daily
 
-  
   !----------------------------------------------------------------
   ! physical soil state variables with memory from year to year (~pools)
   !----------------------------------------------------------------
@@ -514,7 +513,7 @@ contains
 
     ! end do
 
-  end subroutine init_tile_soil_params  
+  end subroutine init_tile_soil_params
 
 
   subroutine init_tile_fluxes( tile_fluxes )
@@ -609,12 +608,13 @@ contains
     ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
     ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------    
+    use md_interface_pmodel, only: myinterface
 
     !----------------------------------------------------------------
     ! NON-PFT DEPENDENT PARAMETERS
     !----------------------------------------------------------------
     ! canopy light extinction coefficient for Beer's Law
-    params_canopy%kbeer = 0.5 ! hard-coded
+    params_canopy%kbeer = myinterface%params_calib%kbeer
 
   end subroutine getpar_modl_canopy
 

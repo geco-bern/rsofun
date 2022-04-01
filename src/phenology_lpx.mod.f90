@@ -250,20 +250,22 @@ contains
     ! Subroutine reads nuptake module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
+    use md_interface_pmodel, only: myinterface
+
     ! local variables
     real        :: phentype
     integer     :: pft
 
     ! growing degree days base (usually 5 deg C)
-    params_pheno%gddbase = 5.0
+    params_pheno%gddbase = myinterface%params_calib%gddbase
 
     do pft = 1, npft
 
       ! ramp slope for phenology (1 for grasses: immediate phenology turning on)
-      params_pft_pheno(pft)%ramp = 0.0
+      params_pft_pheno(pft)%ramp = myinterface%params_calib%ramp
 
       ! phenology type
-      phentype = 2.0
+      phentype = myinterface%params_calib%phentype
 
       if (phentype==1.0) params_pft_pheno(pft)%evergreen   = .true.
       if (phentype==2.0) params_pft_pheno(pft)%summergreen = .true.

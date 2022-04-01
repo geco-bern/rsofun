@@ -453,28 +453,28 @@ contains
     ! NON-PFT DEPENDENT PARAMETERS
     !----------------------------------------------------------------
     ! canopy light extinction coefficient for Beer's Law
-    params_plant%kbeer = myinterface%params_calib%kbeer
+    params_plant%kbeer        = myinterface%params_calib%kbeer
 
     ! fraction of N retained at leaf abscission 
-    params_plant%f_nretain = myinterface%params_calib%f_nretain
+    params_plant%f_nretain    = myinterface%params_calib%f_nretain
     
     ! maximum fractional plant coverage of trees (sum of all tree PFTs)
     params_plant%fpc_tree_max = myinterface%params_calib%fpc_tree_max
 
-    ! growth efficiency = yield factor, central value: 0.6, range: 0.5-0.7; Zhang et al. (2009), see Li et al., 2014
-    params_plant%growtheff = myinterface%params_calib%growtheff
+    ! growth efficiency       = yield factor, central value: 0.6, range: 0.5-0.7; Zhang et al. (2009), see Li et al., 2014
+    params_plant%growtheff    = myinterface%params_calib%growtheff
 
     ! Fine-root mass specific respiration rate (gC gC-1 year-1)
-    ! Central value: 0.913 year-1 (Yan and Zhao (2007); see Li et al., 2014)
-    params_plant%r_root = myinterface%params_calib%r_root
+    ! Central value           : 0.913 year-1 (Yan and Zhao (2007); see Li et al., 2014)
+    params_plant%r_root       = myinterface%params_calib%r_root
 
     ! Sapwood specific respiration rate (gC gC-1 year-1)
-    ! Central value: 0.044 year-1 (Yan and Zhao (2007); see Li et al., 2014)
-    ! (= 0.044 nmol mol-1 s-1; range: 0.5–10, 20 nmol mol-1 s-1 (Landsberg and Sands (2010))
-    params_plant%r_sapw = myinterface%params_calib%r_sapw
+    ! Central value           : 0.044 year-1 (Yan and Zhao (2007); see Li et al., 2014)
+    ! (                       = 0.044 nmol mol-1 s-1; range: 0.5–10, 20 nmol mol-1 s-1 (Landsberg and Sands (2010))
+    params_plant%r_sapw       = myinterface%params_calib%r_sapw
 
     ! C export rate per unit root mass
-    params_plant%exurate = myinterface%params_calib%exurate
+    params_plant%exurate      = myinterface%params_calib%exurate
 
     ! ! C:N ratio of soil organic matter [1]
     ! params_plant%cton_soil = myinterface%params_calib%cton_soil
@@ -600,7 +600,7 @@ contains
     ! out_getpftparams%r_ntolma = getparreal( trim('params/params_plant_'//pftname//'.dat'), 'r_ntolma' )
 
     ! leaf decay constant, read in as [years-1], central value: 0.0 yr-1 for deciduous plants
-    out_getpftparams%k_decay_leaf_base = myinterface%params_calib%k_decay_tissue / ndayyear 
+    out_getpftparams%k_decay_leaf_base = myinterface%params_calib%k_decay_leaf_base / ndayyear 
 
     ! shape parameter for turnover function if LAI
     out_getpftparams%k_decay_leaf_width = myinterface%params_calib%k_decay_leaf_width
@@ -609,7 +609,7 @@ contains
     out_getpftparams%k_decay_sapw =  myinterface%params_calib%k_decay_sapw / ndayyear 
 
     ! root decay constant [days], read in as [years-1], central value: 1.04 (Shan et al., 1993; see Li et al., 2014)  
-    out_getpftparams%k_decay_root = myinterface%params_calib%k_decay_tissue / ndayyear 
+    out_getpftparams%k_decay_root = myinterface%params_calib%k_decay_root / ndayyear 
 
     ! root C:N and N:C ratio (gC/gN and gN/gC)
     out_getpftparams%r_cton_root = myinterface%params_calib%r_cton_root

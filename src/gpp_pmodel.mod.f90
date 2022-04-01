@@ -546,22 +546,22 @@ contains
     ! PFT-independent parameters
     !----------------------------------------------------------------
     ! unit cost of carboxylation
-    params_gpp%beta  = 146.000000
+    params_gpp%beta                  = myinterface%params_calib%beta
 
     ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
-    params_gpp%rd_to_vcmax  = 0.01400000
+    params_gpp%rd_to_vcmax           = myinterface%params_calib%rd_to_vcmax
 
     ! Apply identical temperature ramp parameter for all PFTs
-    params_gpp%tau_acclim     = 30.0
-    params_gpp%soilm_par_a    = myinterface%params_calib%soilm_par_a     ! is provided through standard input
-    params_gpp%soilm_par_b    = myinterface%params_calib%soilm_par_b     ! is provided through standard input
+    params_gpp%tau_acclim            = myinterface%params_calib%tau_acclim
+    params_gpp%soilm_par_a           = myinterface%params_calib%soilm_par_a     ! is provided through standard input
+    params_gpp%soilm_par_b           = myinterface%params_calib%soilm_par_b     ! is provided through standard input
 
     ! temperature stress time scale is calibratable
     params_gpp%tau_acclim_tempstress = myinterface%params_calib%tau_acclim_tempstress
     params_gpp%par_shape_tempstress  = myinterface%params_calib%par_shape_tempstress
 
     ! PFT-dependent parameter(s)
-    params_pft_gpp(:)%kphio = myinterface%params_calib%kphio  ! is provided through standard input
+    params_pft_gpp(                  :)%kphio = myinterface%params_calib%kphio  ! is provided through standard input
 
   end subroutine getpar_modl_gpp
 
