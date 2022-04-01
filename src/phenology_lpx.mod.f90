@@ -7,7 +7,7 @@ module md_phenology
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------  
-  use md_params_core, only: npft
+  use md_params_core, only: npft, eps
   
   implicit none
 
@@ -109,8 +109,6 @@ contains
           gdd = 0.0               ! accumulated growing degree days
           day = firstday + 1
           if (day > ndayyear) day = 1
-          ! print*,'firstday ', firstday
-          ! print*,'day ', day
           do while (day /= firstday)
             if (dtemp_int(day) > params_pheno%gddbase) then ! growing day
               gdd = gdd + dtemp_int(day) - params_pheno%gddbase
@@ -120,12 +118,11 @@ contains
                 tile(lu)%plant(pft)%pheno(day)%dtphen = 1.0
               endif
             endif
-            ! print*,'dtphen_tmp ', dtphen_tmp(day,pft)
             day = day + 1
             if (day > ndayyear) day = 1
           enddo
+
         endif
-        
 
         ! if (params_pft_plant(pft)%tree) then
         !   !----------------------------------------------------------
@@ -159,6 +156,7 @@ contains
         tile(lu)%plant(pft)%pheno(:)%dtphen = 1.0
 
       endif
+
 
       ! save monthly temperature for next year
       mtemp_pvy(:) = mtemp(:)
@@ -213,7 +211,7 @@ contains
 
         else
 
-          stop 'estab_daily not implemented for trees'
+          stop 'estab_daily not implemented for non-summergreen'
 
         end if
 
@@ -236,8 +234,8 @@ contains
     use md_interface_pmodel, only: myinterface
 
     ! local variables
-    real        :: phentype
-    integer     :: pft
+    integer :: phentype
+    integer :: pft
 
     ! growing degree days base (usually 5 deg C)
     params_pheno%gddbase = myinterface%params_calib%gddbase
@@ -248,15 +246,13 @@ contains
       params_pft_pheno(pft)%ramp = myinterface%params_calib%ramp
 
       ! phenology type
-      phentype = myinterface%params_calib%phentype
+      phentype = nint(myinterface%params_calib%phentype)
 
-      if (phentype==1.0) params_pft_pheno(pft)%evergreen   = .true.
-      if (phentype==2.0) params_pft_pheno(pft)%summergreen = .true.
-      if (phentype==3.0) params_pft_pheno(pft)%raingreen   = .true.
+      if (abs(phentype-1) < eps) params_pft_pheno(pft)%evergreen   = .true.
+      if (abs(phentype-2) < eps) params_pft_pheno(pft)%summergreen = .true.
+      if (abs(phentype-3) < eps) params_pft_pheno(pft)%raingreen   = .true.
 
     end do
- 
-    return
  
   end subroutine getpar_modl_phenology
 

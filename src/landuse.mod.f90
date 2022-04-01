@@ -9,11 +9,11 @@ module md_landuse
   implicit none
 
   private
-  public grharvest
+  public landuse
 
 contains
 
-  subroutine grharvest( tile, tile_fluxes, doy )
+  subroutine landuse( tile, tile_fluxes, doy )
     !////////////////////////////////////////////////////////////////
     ! Annual grass biomass harvest.
     !----------------------------------------------------------------
@@ -122,6 +122,6 @@ contains
 
     end do
 
-  end subroutine grharvest
+  end subroutine landuse
 
 end module md_landuse

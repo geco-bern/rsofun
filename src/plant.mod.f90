@@ -597,13 +597,15 @@ contains
       out_getpftparams%nfixer  = .true.
     end if      
 
-    ! land use category associated with PFT (provisional) 
-    if (lu_category_prov==1) then
-      out_getpftparams%lu_category = lunat
-      out_getpftparams%islu(lunat) = .true.
-    else
-      out_getpftparams%islu(lunat) = .false.
-    end if
+    out_getpftparams%lu_category = lunat
+
+    ! ! land use category associated with PFT (provisional) 
+    ! if (lu_category_prov==1) then
+    !   out_getpftparams%lu_category = lunat
+    !   out_getpftparams%islu(lunat) = .true.
+    ! else
+    !   out_getpftparams%islu(lunat) = .false.
+    ! end if
 
     ! ! leaf mass per area (gC m-2)
     ! out_getpftparams%lma = getparreal( trim('params/params_plant_'//pftname//'.dat'), 'lma' )
