@@ -57,10 +57,10 @@ contains
     real :: droot
 
     ! xxx verbose
-    logical, parameter :: verbose = .false.
+    logical, parameter :: verbose = .true.
     type( orgpool ) :: orgtmp, orgtmp2
 
-    pftloop: do pft = 1, npft
+    pftloop: do pft=1,npft
 
       lu = params_pft_plant(pft)%lu_category
 
@@ -113,7 +113,7 @@ contains
       if (verbose) orgtmp  =  tile(lu)%plant(pft)%pleaf
       if (verbose) orgtmp2 =  tile(lu)%soil%plitt_af
       !--------------------------------------------------------------
-      if ( dleaf>0.0 ) call turnover_leaf( dleaf, tile(lu), tile_fluxes(lu), pft ) !, jpngr
+      if ( dleaf > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_leaf( dleaf, tile(lu), tile_fluxes(lu), pft )
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
       if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%pleaf
@@ -135,12 +135,12 @@ contains
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_root() ... '
       if (verbose) print*, '              with state variables:'
-      if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%proot
+      if (verbose) print*, '              proot = ', tile(lu)%plant(pft)%proot
       if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
       if (verbose) orgtmp  =  tile(lu)%plant(pft)%proot
       if (verbose) orgtmp2 =  tile(lu)%soil%plitt_bg
       !--------------------------------------------------------------
-      if ( droot>0.0 ) call turnover_root( droot, tile(lu), pft )
+      if ( droot > 0.0 .and. tile(lu)%plant(pft)%proot%c%c12 > 0.0  ) call turnover_root( droot, tile(lu), pft )
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
       if (verbose) print*, '              proot = ', tile(lu)%plant(pft)%proot
@@ -157,32 +157,33 @@ contains
                                                                                       ) &
                                                                                     )
 
-      !--------------------------------------------------------------
-      ! Calculate labile turnover in this day 
-      !--------------------------------------------------------------
-      if (verbose) print*, 'calling turnover_root() ... '
-      if (verbose) print*, '              with state variables:'
-      if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%plabl
-      if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
-      if (verbose) orgtmp  =  tile(lu)%plant(pft)%plabl
-      if (verbose) orgtmp2 =  tile(lu)%soil%plitt_af
-      !--------------------------------------------------------------
-      if ( dlabl>0.0 ) call turnover_labl( dlabl, tile(lu), pft )
-      !--------------------------------------------------------------
-      if (verbose) print*, '              ==> returned: '
-      if (verbose) print*, '              plabl = ', tile(lu)%plant(:)%plabl
-      if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
-      if (verbose) print*, '              --- balance: '
-      if (verbose) print*, '                  dlitt - dlabl                = ',  orgminus( &
-                                                                                    orgminus( &
-                                                                                      tile(lu)%soil%plitt_af, &
-                                                                                      orgtmp2 &
-                                                                                      ), &
-                                                                                    orgminus( &
-                                                                                      orgtmp, &
-                                                                                      tile(lu)%plant(pft)%proot &
-                                                                                      ) &
-                                                                                    )
+      ! XXX don't waste labile C and N
+      ! !--------------------------------------------------------------
+      ! ! Calculate labile turnover in this day 
+      ! !--------------------------------------------------------------
+      ! if (verbose) print*, 'calling turnover_labl() ... '
+      ! if (verbose) print*, '              with state variables:'
+      ! if (verbose) print*, '              plabl = ', tile(lu)%plant(pft)%plabl
+      ! if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
+      ! if (verbose) orgtmp  =  tile(lu)%plant(pft)%plabl
+      ! if (verbose) orgtmp2 =  tile(lu)%soil%plitt_af
+      ! !--------------------------------------------------------------
+      ! if ( dlabl > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_labl( dlabl, tile(lu), pft )
+      ! !--------------------------------------------------------------
+      ! if (verbose) print*, '              ==> returned: '
+      ! if (verbose) print*, '              plabl = ', tile(lu)%plant(:)%plabl
+      ! if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
+      ! if (verbose) print*, '              --- balance: '
+      ! if (verbose) print*, '                  dlitt - dlabl                = ',  orgminus( &
+      !                                                                               orgminus( &
+      !                                                                                 tile(lu)%soil%plitt_af, &
+      !                                                                                 orgtmp2 &
+      !                                                                                 ), &
+      !                                                                               orgminus( &
+      !                                                                                 orgtmp, &
+      !                                                                                 tile(lu)%plant(pft)%proot &
+      !                                                                                 ) &
+      !                                                                               )
     enddo pftloop
 
   end subroutine turnover

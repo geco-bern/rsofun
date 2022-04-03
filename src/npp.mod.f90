@@ -54,8 +54,6 @@ contains
     type(climate_type), intent(in) :: climate
 
     ! local variables
-    type(plant_fluxes_type) :: pf
-    type(plant_type) :: pp
     integer :: pft
     integer :: lu
 
@@ -70,22 +68,26 @@ contains
 
       lu = params_pft_plant(pft)%lu_category
 
-      ! as a short-hand
-      pf = tile_fluxes(lu)%plant(pft)
-      pp = tile(lu)%plant(pft)
-
-      if (pp%plabl%c%c12 < 0.0) stop 'before npp labile C is neg.'
-      if (pp%plabl%n%n14 < 0.0) stop 'before npp labile N is neg.'
+      if (tile(lu)%plant(pft)%plabl%c%c12 < 0.0) stop 'before npp labile C is neg.'
+      if (tile(lu)%plant(pft)%plabl%n%n14 < 0.0) stop 'before npp labile N is neg.'
 
       !/////////////////////////////////////////////////////////////////////////
       ! MAINTENANCE RESPIRATION
       ! use function 'resp_main'
       !-------------------------------------------------------------------------
       ! fine roots should have a higher repsiration coefficient than other tissues (Franklin et al., 2007).
-      pf%drleaf = pf%drd  ! leaf respiration is given by dark respiration as calculated in P-model.       
-      pf%drroot = calc_resp_maint( pp%proot%c%c12 * pp%nind, params_plant%r_root, climate%dtemp )
+      tile_fluxes(lu)%plant(pft)%drleaf = tile_fluxes(lu)%plant(pft)%drd  ! leaf respiration is given by dark respiration as calculated in P-model.       
+      tile_fluxes(lu)%plant(pft)%drroot = calc_resp_maint(  tile(lu)%plant(pft)%proot%c%c12, &
+                                                            params_plant%r_root, &
+                                                            climate%dtemp &
+                                                            )
       if (params_pft_plant(pft)%tree) then
-        pf%drsapw = calc_resp_maint( pp%psapw%c%c12 * pp%nind, params_plant%r_sapw, climate%dtemp )
+        tile_fluxes(lu)%plant(pft)%drsapw = calc_resp_maint(  tile(lu)%plant(pft)%psapw%c%c12, &
+                                                              params_plant%r_sapw, &
+                                                              climate%dtemp &
+                                                              )
+      else
+        tile_fluxes(lu)%plant(pft)%drsapw = 0.0
       endif
 
 
@@ -98,8 +100,12 @@ contains
       ! full isotopic effects of gross exchange _fluxes.
       ! Growth respiration ('drgrow') is deduced from 'dnpp' in allocation SR.
       !-------------------------------------------------------------------------
-      pf%dnpp = carbon( pf%dgpp - pf%drleaf - pf%drroot )
-      pf%dcex = calc_cexu( pp%proot%c%c12, climate%dtemp )   
+      tile_fluxes(lu)%plant(pft)%dnpp = carbon( tile_fluxes(lu)%plant(pft)%dgpp &
+                                                - tile_fluxes(lu)%plant(pft)%drleaf &
+                                                - tile_fluxes(lu)%plant(pft)%drroot &
+                                                - tile_fluxes(lu)%plant(pft)%drsapw &
+                                                )
+      tile_fluxes(lu)%plant(pft)%dcex = calc_cexu( tile(lu)%plant(pft)%proot%c%c12, climate%dtemp )   
 
       ! !/////////////////////////////////////////////////////////////////////////
       ! ! SAFETY AND DEATH
@@ -110,18 +116,18 @@ contains
       ! !     but continuing turnover).
       ! !-------------------------------------------------------------------------
       ! ! ! This option (deactivate_root) leads to good results, the alternative leads to on-off growth. Unclear why.
-      ! ! if ( (pf%dnpp%c12 - pf%dcex) < 0.0 ) then
-      ! !   call deactivate_root( pf%dgpp, pf%drleaf, pp%plabl%c%c12, pp%proot, pf%drroot, pf%dnpp%c12, pf%dcex, dtemp, pp%plitt_bg )
+      ! ! if ( (tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex) < 0.0 ) then
+      ! !   call deactivate_root( tile_fluxes(lu)%plant(pft)%dgpp, tile_fluxes(lu)%plant(pft)%drleaf, tile(lu)%plant(pft)%plabl%c%c12, tile(lu)%plant(pft)%proot, tile_fluxes(lu)%plant(pft)%drroot, tile_fluxes(lu)%plant(pft)%dnpp%c12, tile_fluxes(lu)%plant(pft)%dcex, dtemp, tile(lu)%plant(pft)%plitt_bg )
       ! ! end if
 
       ! ! -------------------------------------------------------------------------
       ! ! the alternative formulation with shutting all fluxes down and decaying
       ! ! -------------------------------------------------------------------------
-      ! if ( (pp%plabl%c%c12 + pf%dnpp%c12 - pf%dcex) < 0.0 ) then
+      ! if ( (tile(lu)%plant(pft)%plabl%c%c12 + tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex) < 0.0 ) then
       !   ! stop exuding
-      !   pf%dcex = 0.0
+      !   tile_fluxes(lu)%plant(pft)%dcex = 0.0
 
-      !   if ( ( pp%plabl%c%c12 + pf%dnpp%c12 ) < 0.0 ) then
+      !   if ( ( tile(lu)%plant(pft)%plabl%c%c12 + tile_fluxes(lu)%plant(pft)%dnpp%c12 ) < 0.0 ) then
 
       !     ! ! after C balance has become negative wait until it gets positive again to trigger sprouting
       !     ! ! print*,'setting check_sprout = T ', doy
@@ -129,12 +135,12 @@ contains
 
       !     ! slow death
       !     ! print*,'slow death', doy
-      !     pf%dgpp   = 0.0
-      !     pf%drleaf = 0.0
-      !     pf%drroot = 0.0
-      !     pf%drd    = 0.0
-      !     pf%dcex   = 0.0
-      !     pf%dnpp   = carbon(0.0)
+      !     tile_fluxes(lu)%plant(pft)%dgpp   = 0.0
+      !     tile_fluxes(lu)%plant(pft)%drleaf = 0.0
+      !     tile_fluxes(lu)%plant(pft)%drroot = 0.0
+      !     tile_fluxes(lu)%plant(pft)%drd    = 0.0
+      !     tile_fluxes(lu)%plant(pft)%dcex   = 0.0
+      !     tile_fluxes(lu)%plant(pft)%dnpp   = carbon(0.0)
 
       !     call turnover_leaf( dleaf_die, pft, jpngr )
       !     call turnover_root( droot_die, pft, jpngr )
@@ -160,26 +166,23 @@ contains
       ! !/////////////////////////////////////////////////////////////////////////
       ! ! EXUDATES
       ! !-------------------------------------------------------------------------
-      ! call ccp( carbon( pf%dcex ), pp%pexud )
+      ! call ccp( carbon( tile_fluxes(lu)%plant(pft)%dcex ), tile(lu)%plant(pft)%pexud )
 
       ! !/////////////////////////////////////////////////////////////////////////
       ! ! TO LABILE POOL
       ! ! NPP available for growth first enters the labile pool ('plabl ').
       ! ! XXX Allocation is called here without "paying"  growth respir.?
       ! !-------------------------------------------------------------------------
-      ! tmp = pf%dnpp%c12 - pf%dcex
-      ! print*,'GPP, Rl, Rr, Cex, dC, Cl, LAI, Cb: ', pf%dgpp, pf%drleaf, pf%drroot, pf%dcex, tmp, pp%pleaf, pp%lai_ind, pp%plabl
+      ! tmp = tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex
+      ! print*,'GPP, Rl, Rr, Cex, dC, Cl, LAI, Cb: ', tile_fluxes(lu)%plant(pft)%dgpp, tile_fluxes(lu)%plant(pft)%drleaf, tile_fluxes(lu)%plant(pft)%drroot, tile_fluxes(lu)%plant(pft)%dcex, tmp, tile(lu)%plant(pft)%pleaf, tile(lu)%plant(pft)%lai_ind, tile(lu)%plant(pft)%plabl
 
-      ! call ccp( carbon( pf%dcex ), pp%pexud )
-      ! call ccp( cminus( pf%dnpp, carbon(pf%dcex) ), pp%plabl%c )
+      ! call ccp( carbon( tile_fluxes(lu)%plant(pft)%dcex ), tile(lu)%plant(pft)%pexud )
+      ! call ccp( cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) ), tile(lu)%plant(pft)%plabl%c )
 
-      ! if (pp%plabl%c%c12 < (-1)*eps) stop 'after npp labile C is neg.'
-      ! if (pp%plabl%n%n14 < (-1)*eps) stop 'after npp labile N is neg.'
+      ! if (tile(lu)%plant(pft)%plabl%c%c12 < (-1)*eps) stop 'after npp labile C is neg.'
+      ! if (tile(lu)%plant(pft)%plabl%n%n14 < (-1)*eps) stop 'after npp labile N is neg.'
 
-      ! print*,'gpp, dclabl', doy, pf%dgpp, cminus( pf%dnpp, carbon(pf%dcex) )
-
-      ! as a short-hand
-      tile_fluxes(lu)%plant(pft) = pf
+      ! print*,'gpp, dclabl', doy, tile_fluxes(lu)%plant(pft)%dgpp, cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) )
 
     end do pftloop
 

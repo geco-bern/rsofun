@@ -668,22 +668,27 @@ contains
 
     ! local variables
     integer :: pft
-
-    plant(:)%fpc_grid  = 0.0
+      
+    plant(:)%nind      = 1.0
+    plant(:)%fpc_grid  = 1.0
     plant(:)%lai_ind   = 0.0
     plant(:)%fapar_ind = 0.0
     plant(:)%acrown    = 0.0
 
     ! canpopy state variables
-    plant(:)%narea            = 0.0
-    plant(:)%narea_metabolic  = 0.0
-    plant(:)%narea_structural = 0.0
-    plant(:)%lma              = 0.0
-    plant(:)%sla              = 0.0
-    plant(:)%nmass            = 0.0
-    plant(:)%r_cton_leaf      = 0.0
-    plant(:)%r_ntoc_leaf      = 0.0
-    plant(:)%actnv_unitfapar  = 0.0
+    plant(:)%narea_metabolic_canopy  = 0.0
+    plant(:)%narea_structural_canopy = 0.0
+    plant(:)%narea_canopy            = 0.0
+    plant(:)%leafc_canopy            = 0.0
+    plant(:)%narea                   = 0.0
+    plant(:)%narea_metabolic         = 0.0
+    plant(:)%narea_structural        = 0.0
+    plant(:)%lma                     = 0.0
+    plant(:)%sla                     = 0.0
+    plant(:)%nmass                   = 0.0
+    plant(:)%r_cton_leaf             = 0.0
+    plant(:)%r_ntoc_leaf             = 0.0
+    plant(:)%actnv_unitfapar         = 0.0
 
     do pft=1,npft
       plant(pft)%pftno = pft
@@ -692,9 +697,24 @@ contains
       call orginit( plant(pft)%psapw )
       call orginit( plant(pft)%pwood )
       call orginit( plant(pft)%plabl )
+      call init_pheno(plant(pft)%pheno(:))
     end do
 
   end subroutine init_plant
+
+  
+  subroutine init_pheno( pheno )
+    !////////////////////////////////////////////////////////////////
+    !  Initialisation of phenology variables
+    !----------------------------------------------------------------
+    ! arguments
+    type(phenotype), dimension(ndayyear), intent(inout) :: pheno
+
+    pheno(:)%dtphen     = 0.0
+    pheno(:)%sprout     = .false.
+    pheno(:)%shedleaves = .false.
+
+  end subroutine init_pheno
 
 
   subroutine init_plant_fluxes( plant_fluxes )
@@ -729,6 +749,8 @@ contains
     plant_fluxes(:)%gs_accl = 0.0
     plant_fluxes(:)%chi = 0.0
     plant_fluxes(:)%iwue = 0.0
+    plant_fluxes(:)%lue = 0.0
+    plant_fluxes(:)%vcmax25_unitiabs = 0.0
 
     do pft=1,npft
       call orginit( plant_fluxes(pft)%dharv )

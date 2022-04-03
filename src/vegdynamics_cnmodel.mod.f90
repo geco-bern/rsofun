@@ -11,48 +11,63 @@ module md_vegdynamics_cnmodel
 
 contains
 
-  subroutine vegdynamics( tile, doy )
+  subroutine vegdynamics( tile, tile_fluxes, doy, init )
     !//////////////////////////////////////////////////////////////////
     ! Updates canopy and stand variables and calls 'estab_daily' to 
     ! simulate establishment of new individuals
     !------------------------------------------------------------------
-    use md_params_core, only: nlu, npft
+    use md_params_core, only: nlu, npft, ndayyear
     ! use md_phenology, only: temppheno_type, params_pft_pheno
     use md_tile
     use md_plant
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
+    type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     integer, intent(in) :: doy
+    logical, intent(in) :: init
 
     ! local variables
     integer :: pft, lu
 
+    !----------------------------------------------------------
+    ! Add seed at the beginning of the simulation
+    !----------------------------------------------------------
     do pft=1,npft
       lu = params_pft_plant(pft)%lu_category
-
-      if (params_pft_plant(pft)%grass) then
-        !----------------------------------------------------------
-        ! GRASSES, summergreen
-        !----------------------------------------------------------
-
-        if ( tile(lu)%plant(pft)%pheno(doy)%sprout ) then
-          !----------------------------------------------------------
-          ! beginning of season
-          !----------------------------------------------------------
-          call estab_daily( tile(lu)%plant(pft) )
-
-          ! stop 'adding a seed'
-
-        end if
-
-      else
-
-        stop 'estab_daily not implemented for non-summergreen'
-
+      if (doy == 1 .and. init) then
+        call init_plant( tile(lu)%plant(pft) )
+        call init_plant_fluxes( tile_fluxes(lu)%plant(pft) )
+        call estab_daily( tile(lu)%plant(pft) )
       end if
-
     end do
+
+
+    ! do pft=1,npft
+    !   lu = params_pft_plant(pft)%lu_category
+
+    !   if (params_pft_plant(pft)%grass) then
+    !     !----------------------------------------------------------
+    !     ! GRASSES, summergreen
+    !     !----------------------------------------------------------
+
+    !     if ( tile(lu)%plant(pft)%pheno(doy)%sprout ) then
+    !       !----------------------------------------------------------
+    !       ! beginning of season
+    !       !----------------------------------------------------------
+    !       call estab_daily( tile(lu)%plant(pft) )
+
+    !       ! stop 'adding a seed'
+
+    !     end if
+
+    !   else
+
+    !     stop 'estab_daily not implemented for non-summergreen'
+
+    !   end if
+
+    ! end do
 
   end subroutine vegdynamics
 

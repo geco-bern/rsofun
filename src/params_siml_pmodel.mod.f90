@@ -94,13 +94,14 @@ contains
 
     if (params_siml%do_spinup) then
 
-      if (year<=spinup_add_ninorg) then
+      if (year <= spinup_add_ninorg) then
         out_steering%add_ninorg = .true.
       else
         out_steering%add_ninorg = .false.
       end if
 
-      if (year<=params_siml%spinupyears) then
+      if (year <= params_siml%spinupyears) then
+
         ! during spinup
         out_steering%spinup = .true.
         out_steering%forcingyear = params_siml%firstyeartrend
@@ -110,6 +111,7 @@ contains
         out_steering%climateyear_idx = cycleyear
 
       else  
+
         ! during transient simulation
         out_steering%spinup = .false.
         out_steering%forcingyear =  year - params_siml%spinupyears + params_siml%firstyeartrend - 1
@@ -176,13 +178,14 @@ contains
 
     endif
 
-    if (year==1) then
+    ! boolean for initialisation
+    if (year == 1) then
       out_steering%init = .true.
     else
       out_steering%init = .false.
     endif 
 
-    if (year==params_siml%runyears) then
+    if (year == params_siml%runyears) then
       out_steering%finalize = .true.
     else
       out_steering%finalize = .false.

@@ -1,4 +1,4 @@
-module md_allocation
+module md_allocation_cnmodel
   !////////////////////////////////////////////////////////////////
   ! ALLOCATION MODULE
   ! Contains the "main" subroutine 'allocation_daily' and all 
@@ -99,7 +99,7 @@ contains
     type(outtype_zeroin)  :: out_zeroin
 
     ! xxx verbose
-    logical, parameter :: verbose = .false.
+    logical, parameter :: verbose = .true.
 
     abserr = 100.0  * XMACHEPS !*10e5
     relerr = 1000.0 * XMACHEPS !*10e5
@@ -120,10 +120,9 @@ contains
     ! end if
 
     do pft=1,npft
+      lu = params_pft_plant(pft)%lu_category
 
-      if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps .and. climate%dtemp > 0.0 ) then
-
-        lu = params_pft_plant(pft)%lu_category
+      if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps ) then
 
         if (params_pft_plant(pft)%grass) then
 
@@ -358,11 +357,15 @@ contains
             end if
 
             ! Determine allocation to roots and leaves, fraction given by 'frac_leaf'
+            ! No limitation by low temperatures or dryness
             ! avl = max( 0.0, tile(lu)%plant(pft)%plabl%c%c12 - freserve * tile(lu)%plant(pft)%pleaf%c%c12 )
             avl = kdecay_labl * tile(lu)%plant(pft)%plabl%c%c12
-            dcleaf = frac_leaf * params_plant%growtheff * avl
+            dcleaf = frac_leaf         * params_plant%growtheff * avl
             dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl
-            dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root          
+            dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
+
+            print*,'dcleaf: ', dcleaf       
+            print*,'dcroot: ', dcroot       
 
             !-------------------------------------------------------------------
             ! LEAF ALLOCATION
@@ -433,6 +436,7 @@ contains
             ! (note that NPP is added to plabl in and growth resp. is implicitly removed
             ! from plabl above)
             drgrow   = ( 1.0 - params_plant%growtheff ) * ( dcleaf + dcroot ) / params_plant%growtheff
+            tile_fluxes(lu)%plant(pft)%drgrow = drgrow
             tile_fluxes(lu)%plant(pft)%dnpp = cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(drgrow) )
 
           end if
@@ -771,7 +775,7 @@ contains
     if (clabl > 0.0 .and. nlabl > 0.0) then
 
       ! use remainder for allocation to roots
-      mydcroot = min( params_plant%growtheff * clabl, params_pft_plant(pft)%r_cton_root * nlabl )
+      mydcroot = min( mydcroot, params_plant%growtheff * clabl, params_pft_plant(pft)%r_cton_root * nlabl )
       mydnroot = min( mydcroot * params_pft_plant(pft)%r_ntoc_root, nlabl )
 
       ! update root pools
@@ -968,4 +972,4 @@ contains
 
   ! end subroutine allocate_root
 
-end module md_allocation
+end module md_allocation_cnmodel

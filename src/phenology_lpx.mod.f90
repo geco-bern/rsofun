@@ -217,9 +217,9 @@ contains
 
       end do
 
-      ! ! xxx debug
-      ! ! print*,'PHENOLOGY: overriding shedleaves'
-      ! tile(lu)%plant(pft)%pheno(:)%shedleaves = .false.
+      ! xxx debug
+      ! print*,'PHENOLOGY: overriding shedleaves'
+      tile(lu)%plant(pft)%pheno(:)%shedleaves = .false.
     
     end do pftloop
 

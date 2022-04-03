@@ -105,6 +105,8 @@ contains
 
     real, dimension(ndayyear), save :: actnv_unitfapar_vec
 
+    logical, parameter :: verbose = .true.
+
     ! real, save :: co2_memory
     ! real, save :: vpd_memory
     ! real, save :: temp_memory
@@ -160,7 +162,6 @@ contains
 
     tk = climate%dtemp + kTkelvin
 
-
     pftloop: do pft=1,npft
       
       lu = 1
@@ -183,6 +184,18 @@ contains
         !----------------------------------------------------------------
         ! With fAPAR = 1.0 (full light) for simulating Vcmax25
         !----------------------------------------------------------------
+        if (verbose) print*,'calling pmodel() with:'
+        if (verbose) print*,'        kphio         : ',          params_pft_gpp(pft)%kphio * ftemp_kphio
+        if (verbose) print*,'        beta          : ',           params_gpp%beta
+        if (verbose) print*,'        ppfd          : ',           climate_memory%dppfd
+        if (verbose) print*,'        co2           : ',            co2
+        if (verbose) print*,'        tc            : ',             climate_memory%dtemp
+        if (verbose) print*,'        vpd           : ',            climate_memory%dvpd
+        if (verbose) print*,'        patm          : ',           climate_memory%dpatm
+        if (verbose) print*,'        c4            : ',             params_pft_plant(pft)%c4
+        if (verbose) print*,'        method_optci  : ',   "prentice14"
+        if (verbose) print*,'        method_jmaxlim: ', "wang17"
+
         out_pmodel = pmodel(  &
                               kphio          = params_pft_gpp(pft)%kphio * ftemp_kphio, &
                               beta           = params_gpp%beta, &
@@ -222,7 +235,7 @@ contains
       ! This still does a linear scaling of daily GPP - knowingly wrong
       ! but not problematic as long as at least 10-daily GPP is evaluated
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%dgpp = calc_dgpp(  tile(lu)%canopy%fapar, &
+      tile_fluxes(lu)%plant(pft)%dgpp = calc_dgpp(  tile(lu)%plant(pft)%fapar_ind, &
                                                     tile(lu)%plant(pft)%fpc_grid, &
                                                     climate%dppfd, &
                                                     out_pmodel%lue, &
@@ -230,18 +243,19 @@ contains
                                                     real(myinterface%params_siml%secs_per_tstep) &
                                                     )
       
-      !! print*,'gpp',tile_fluxes(lu)%plant(pft)%dgpp
-      !! print*,'fpcgrid',tile(lu)%plant(pft)%fpc_grid
-      !! print*,'fapar',tile(lu)%canopy%fapar
-      !! print*,'ppfd', climate%dppfd
-      !! print*,'secspertstep', myinterface%params_siml%secs_per_tstep
-      !! print*,'lue', out_pmodel%lue
-      !! print*,'soilmstress', soilmstress
+      ! xxx debug
+      print*,'gpp         : ',tile_fluxes(lu)%plant(pft)%dgpp
+      print*,'fpcgrid     : ',tile(lu)%plant(pft)%fpc_grid
+      print*,'fapar       : ',tile(lu)%plant(pft)%fapar_ind
+      print*,'ppfd        : ', climate%dppfd
+      print*,'secspertstep: ', myinterface%params_siml%secs_per_tstep
+      print*,'lue         : ', out_pmodel%lue
+      print*,'soilmstress : ', soilmstress
 
       !----------------------------------------------------------------
       ! Dark respiration
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%drd = calc_drd(  tile(lu)%canopy%fapar, &
+      tile_fluxes(lu)%plant(pft)%drd = calc_drd(  tile(lu)%plant(pft)%fapar_ind, &
                                                   tile(lu)%plant(pft)%fpc_grid, &
                                                   climate_memory%dppfd, &
                                                   params_gpp%rd_to_vcmax &
@@ -272,6 +286,10 @@ contains
       actnv_unitfapar_vec(1:(ndayyear-1)) = actnv_unitfapar_vec(2:ndayyear)
       actnv_unitfapar_vec(ndayyear) = out_pmodel%actnv_unitiabs * climate_memory%dppfd
       tile(lu)%plant(pft)%actnv_unitfapar  = maxval(actnv_unitfapar_vec(:))
+
+      ! ! xxx debug
+      ! print*,'actnv_unitfapar_vec(:)'
+      ! print*,actnv_unitfapar_vec(:)
 
       tile_fluxes(lu)%plant(pft)%lue              = out_pmodel%lue
       tile_fluxes(lu)%plant(pft)%vcmax25_unitiabs = out_pmodel%vcmax25_unitiabs
@@ -553,15 +571,15 @@ contains
 
     ! Apply identical temperature ramp parameter for all PFTs
     params_gpp%tau_acclim            = myinterface%params_calib%tau_acclim
-    params_gpp%soilm_par_a           = myinterface%params_calib%soilm_par_a     ! is provided through standard input
-    params_gpp%soilm_par_b           = myinterface%params_calib%soilm_par_b     ! is provided through standard input
+    params_gpp%soilm_par_a           = myinterface%params_calib%soilm_par_a
+    params_gpp%soilm_par_b           = myinterface%params_calib%soilm_par_b
 
     ! temperature stress time scale is calibratable
     params_gpp%tau_acclim_tempstress = myinterface%params_calib%tau_acclim_tempstress
     params_gpp%par_shape_tempstress  = myinterface%params_calib%par_shape_tempstress
 
     ! PFT-dependent parameter(s)
-    params_pft_gpp(                  :)%kphio = myinterface%params_calib%kphio  ! is provided through standard input
+    params_pft_gpp(:)%kphio = myinterface%params_calib%kphio
 
   end subroutine getpar_modl_gpp
 

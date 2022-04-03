@@ -10,11 +10,6 @@ pars <- list(
   tau_acclim_tempstress = 7.35259044,
   par_shape_tempstress  = 0.09863961,
 
-  # three additional ones to P-model
-  beta                  = 146.000000,
-  rd_to_vcmax           = 0.01400000,
-  tau_acclim            = 30.000000,
-
   # Plant
   f_nretain             = 0.500000,
   fpc_tree_max          = 0.950000,
@@ -93,9 +88,17 @@ pars <- list(
   kn                    = 83.0,
   kdoc                  = 17.0,
   docmax                = 1.0,
-  dnitr2n2o             = 0.01
+  dnitr2n2o             = 0.01,
+  
+  # Additional parameters - previously forgotten
+  beta                  = 146.000000,
+  rd_to_vcmax           = 0.01400000,
+  tau_acclim            = 10,
 
-)
+  # for development
+  tmppar                = 9999
+
+  )
 
 ## add new required columns to forcing 
 p_model_drivers <- p_model_drivers %>% 
@@ -104,8 +107,20 @@ p_model_drivers <- p_model_drivers %>%
                                                dno3 = 0.1,
                                                dnh4 = 0.1)))
 
+## no spinup, 1 year transient run
+p_model_drivers$params_siml[[1]]$spinupyears <- 0
+p_model_drivers$params_siml[[1]]$nyeartrend <- 1
+p_model_drivers$forcing[[1]] <- p_model_drivers$forcing[[1]] %>% filter(lubridate::year(date) == 2007)
+
 ## run the model
 output <- runread_pmodel_f(
   p_model_drivers,
   par = pars
   )
+
+## Test plot
+library(ggplot2)
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, gpp)) + 
+  geom_line()
