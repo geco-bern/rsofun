@@ -107,9 +107,9 @@ contains
       dayloop: do dm=1,ndaymonth(moy)
         doy = doy + 1
 
-        if (verbose) print*,'----------------------'
+        if (verbose) print*,'-----------------------------------------------------------'
         if (verbose) print*,'YEAR, DOY ', myinterface%steering%year, doy
-        if (verbose) print*,'----------------------'
+        if (verbose) print*,'-----------------------------------------------------------'
 
         !----------------------------------------------------------------
         ! initialise updated variables (fluxes)
@@ -284,9 +284,9 @@ contains
         if (baltest .and. abs(orgbal1%n%n14) > eps) stop 'balance not satisfied for N'
         if (verbose) print*, '... done'
 
-        ! !----------------------------------------------------------------
-        ! ! grass / crop harvest
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        ! grass / crop harvest
+        !----------------------------------------------------------------
         if (verbose) print*, 'calling landuse() ... '
         if (verbose) print*, '              with state variables:'
         if (verbose) print*, '              pleaf = ', tile(1)%plant(1)%pleaf
@@ -375,7 +375,8 @@ contains
                               + tile_fluxes(1)%plant(1)%drgrow
         if (verbose) nbal1 = tile(1)%plant(1)%pleaf%n%n14 &
                               + tile(1)%plant(1)%proot%n%n14 &
-                              + tile(1)%plant(1)%plabl%n%n14
+                              + tile(1)%plant(1)%plabl%n%n14 &
+                              - tile_fluxes(1)%plant(1)%dnup%n14
         !----------------------------------------------------------------
         call allocation_daily(  tile(:), &
                                 tile_fluxes(:),&
@@ -404,7 +405,6 @@ contains
         if (baltest .and. abs(cbal1) > eps) stop 'balance not satisfied for C'
         if (verbose) print*, '       d( nleaf + nroot + nlabl - nup ) =', nbal1
         if (baltest .and. abs(nbal1) > eps) stop 'balance not satisfied for C'
-        ! if (baltest .and. abs(orgbal1%n%n14) > eps) stop 'balance not satisfied for N'
         if (verbose) print*, '... done'
 
         !----------------------------------------------------------------

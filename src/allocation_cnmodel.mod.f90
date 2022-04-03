@@ -73,7 +73,7 @@ contains
     integer :: usemoy        ! MOY in climate vectors to use for allocation
     integer :: usedoy        ! DOY in climate vectors to use for allocation
   
-    real    :: cavl, navl, avl
+    real    :: cavl, navl, avl, req
     real, parameter :: freserve = 0.004 ! SwissFACE results are very sensitive to this parameter!
 
     ! xxx try
@@ -364,9 +364,6 @@ contains
             dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl
             dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
 
-            print*,'dcleaf: ', dcleaf       
-            print*,'dcroot: ', dcroot       
-
             !-------------------------------------------------------------------
             ! LEAF ALLOCATION
             !-------------------------------------------------------------------
@@ -386,7 +383,7 @@ contains
                 )
 
               !-------------------------------------------------------------------  
-              ! Update leaf traits, given updated LAI and fAPAR
+              ! Update leaf traits, given updated LAI and fAPAR (leaf N is consistent with plant%narea_canopy)
               !------------------------------------------------------------------- 
               tile(lu)%plant(pft)%fapar_ind = get_fapar( tile(lu)%plant(pft)%lai_ind )
               call update_leaftraits( tile(lu)%plant(pft) )
@@ -395,8 +392,10 @@ contains
               ! If labile N gets negative, account gap as N fixation
               !-------------------------------------------------------------------  
               if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
-                tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 - tile(lu)%plant(pft)%plabl%n%n14
-                tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix - tile(lu)%plant(pft)%plabl%n%n14
+                req = abs(tile(lu)%plant(pft)%plabl%n%n14)
+                print*,'Negative labile N. required to balance:', req
+                tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
+                tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
                 tile(lu)%plant(pft)%plabl%n%n14 = 0.0
               end if
 
@@ -422,8 +421,9 @@ contains
               ! If labile N gets negative, account gap as N fixation
               !-------------------------------------------------------------------  
               if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
-                tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 - tile(lu)%plant(pft)%plabl%n%n14
-                tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix - tile(lu)%plant(pft)%plabl%n%n14
+                print*,'Negative labile N. required to balance:', req
+                tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
+                tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
                 tile(lu)%plant(pft)%plabl%n%n14 = 0.0
               end if
 

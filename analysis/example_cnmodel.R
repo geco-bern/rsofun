@@ -17,11 +17,16 @@ pars <- list(
   r_root                = 0.913000,
   r_sapw                = 0.044000,
   exurate               = 0.003000,
-  k_decay_leaf_base     = 13.0000,
+  # k_decay_leaf_base     = 13.0000,
+  # k_decay_leaf_width    = 0.00000,
+  # k_decay_root          = 13.0000,
+  # k_decay_labl          = 0.00000,
+  # k_decay_sapw          = 1.00000,
+  k_decay_leaf_base     = 0.00000,
   k_decay_leaf_width    = 0.00000,
-  k_decay_root          = 13.0000,
+  k_decay_root          = 0.00000,
   k_decay_labl          = 0.00000,
-  k_decay_sapw          = 1.00000,
+  k_decay_sapw          = 0.00000,
   r_cton_root           = 37.0000,
   r_cton_wood           = 100.000,
   ncw_min               = 0.056,
@@ -120,7 +125,19 @@ output <- runread_pmodel_f(
 
 ## Test plot
 library(ggplot2)
+
 output$data[[1]] %>% 
   as_tibble() %>% 
   ggplot(aes(date, gpp)) + 
   geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, cleaf)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, lai)) + 
+  geom_line()
+

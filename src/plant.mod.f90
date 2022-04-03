@@ -322,50 +322,16 @@ contains
     real :: mynleaf ! g N m-2-ground
 
     ! local variables
+    real :: fapar
     real :: nleaf_metabolic   ! mol N m-2
     real :: nleaf_structural  ! mol N m-2
 
-    nleaf_metabolic  = get_leaf_n_metabolic_canopy( lai, mynleaf_metabolic )
+    fapar            = get_fapar( lai )
+    nleaf_metabolic  = get_leaf_n_metabolic_canopy( fapar, mynleaf_metabolic )
     nleaf_structural = get_leaf_n_structural_canopy( pft, lai, nleaf_metabolic )
     mynleaf          = n_molmass * ( nleaf_metabolic + nleaf_structural )
 
   end function get_leaf_n_canopy
-
-
-  ! subroutine update_leaftraits( plant, meanmppfd, nv )
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Calculates leaf traits based on (predicted) metabolic Narea and
-  !   ! (prescribed) parameters that relate structural to metabolic
-  !   ! Narea and Carea to structural Narea:
-  !   ! Narea_metabolic  = predicted
-  !   ! Narea_structural = rN:C_struct * LMA
-  !   !----------------------------------------------------------------
-  !   use md_params_core, only: c_content_of_biomass, nmonth, n_molmass, c_molmass
-
-  !   ! arguments
-  !   type( plant_type ), intent(inout) :: plant
-  !   real, intent(in) :: meanmppfd
-  !   real, intent(in) :: nv
-
-  !   ! local variables
-  !   real :: narea_metabolic_canopy   ! g N m-2-ground
-
-  !   ! canopy-level, in units of gN / m2-ground 
-  !   narea_metabolic_canopy  = n_molmass * plant%fapar_ind * meanmppfd * nv
-
-  !   ! leaf-level, in units of gN / m2-leaf 
-  !   ! assume narea_metabolic is representative of the outer canopy, therefore divide by 1.0 (or just leave)
-  !   plant%narea_metabolic  = narea_metabolic_canopy / 1.0
-  !   plant%narea_structural = params_pft_plant(plant%pftno)%r_ntolma * params_pft_plant(plant%pftno)%lma
-  !   plant%narea            = plant%narea_metabolic + plant%narea_structural
-  !   plant%lma              = params_pft_plant(plant%pftno)%lma
-
-  !   ! additional traits
-  !   plant%nmass            = plant%narea / ( plant%lma / c_content_of_biomass )
-  !   plant%r_cton_leaf      = params_pft_plant(plant%pftno)%lma / plant%narea
-  !   plant%r_ntoc_leaf      = 1.0 / plant%r_cton_leaf
-
-  ! end subroutine update_leaftraits
 
 
   subroutine update_leaftraits( plant )

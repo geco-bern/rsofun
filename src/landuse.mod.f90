@@ -32,7 +32,6 @@ contains
     real :: nleaf
     real :: dleaf
     real :: dlabl
-    real :: lai_new
 
     integer :: nitr
     integer :: pft
@@ -54,16 +53,16 @@ contains
         cleaf = tile(lu)%plant(pft)%pleaf%c%c12 * (1.0 - myinterface%landuse(doy)%dfharv)
 
         ! get new LAI based on cleaf
-        lai_new = get_lai( pft, cleaf, tile(lu)%plant(pft)%actnv_unitfapar )
+        tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile(lu)%plant(pft)%actnv_unitfapar )
 
         ! update canopy state (only variable fAPAR so far implemented)
-        tile(lu)%plant(pft)%fapar_ind = get_fapar( lai_new )
+        tile(lu)%plant(pft)%fapar_ind = get_fapar( tile(lu)%plant(pft)%lai_ind )
 
         ! re-calculate metabolic and structural N, given new LAI and fAPAR
         call update_leaftraits( tile(lu)%plant(pft) )
 
         ! get updated leaf N
-        nleaf = tile(lu)%plant(pft)%narea
+        nleaf = tile(lu)%plant(pft)%narea_canopy
 
         do while ( nleaf > pleaf_init%n%n14 )
 
@@ -73,16 +72,16 @@ contains
           cleaf = cleaf * pleaf_init%n%n14 / nleaf
 
           ! get new LAI based on cleaf
-          lai_new = get_lai( pft, cleaf, tile(lu)%plant(pft)%actnv_unitfapar )
+          tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile(lu)%plant(pft)%actnv_unitfapar )
 
           ! update canopy state (only variable fAPAR so far implemented)
-          tile(lu)%plant(pft)%fapar_ind = get_fapar( lai_new )
+          tile(lu)%plant(pft)%fapar_ind = get_fapar( tile(lu)%plant(pft)%lai_ind )
 
           ! re-calculate metabolic and structural N, given new LAI and fAPAR
           call update_leaftraits( tile(lu)%plant(pft) )
 
           ! get updated leaf N
-          nleaf = tile(lu)%plant(pft)%narea
+          nleaf = tile(lu)%plant(pft)%narea_canopy
 
         end do
 
@@ -91,7 +90,6 @@ contains
         if (nitr > 0) print*,'final reduction of leaf N ', nleaf / pleaf_init%n%n14
 
         ! update 
-        tile(lu)%plant(pft)%lai_ind = lai_new
         tile(lu)%plant(pft)%pleaf%c%c12 = cleaf
         tile(lu)%plant(pft)%pleaf%n%n14 = nleaf
 

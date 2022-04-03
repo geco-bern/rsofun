@@ -184,17 +184,17 @@ contains
         !----------------------------------------------------------------
         ! With fAPAR = 1.0 (full light) for simulating Vcmax25
         !----------------------------------------------------------------
-        if (verbose) print*,'calling pmodel() with:'
-        if (verbose) print*,'        kphio         : ',          params_pft_gpp(pft)%kphio * ftemp_kphio
-        if (verbose) print*,'        beta          : ',           params_gpp%beta
-        if (verbose) print*,'        ppfd          : ',           climate_memory%dppfd
-        if (verbose) print*,'        co2           : ',            co2
-        if (verbose) print*,'        tc            : ',             climate_memory%dtemp
-        if (verbose) print*,'        vpd           : ',            climate_memory%dvpd
-        if (verbose) print*,'        patm          : ',           climate_memory%dpatm
-        if (verbose) print*,'        c4            : ',             params_pft_plant(pft)%c4
-        if (verbose) print*,'        method_optci  : ',   "prentice14"
-        if (verbose) print*,'        method_jmaxlim: ', "wang17"
+        if (verbose) print*,'           calling pmodel() with:'
+        if (verbose) print*,'                   kphio         : ',          params_pft_gpp(pft)%kphio * ftemp_kphio
+        if (verbose) print*,'                   beta          : ',           params_gpp%beta
+        if (verbose) print*,'                   ppfd          : ',           climate_memory%dppfd
+        if (verbose) print*,'                   co2           : ',            co2
+        if (verbose) print*,'                   tc            : ',             climate_memory%dtemp
+        if (verbose) print*,'                   vpd           : ',            climate_memory%dvpd
+        if (verbose) print*,'                   patm          : ',           climate_memory%dpatm
+        if (verbose) print*,'                   c4            : ',             params_pft_plant(pft)%c4
+        if (verbose) print*,'                   method_optci  : ',   "prentice14"
+        if (verbose) print*,'                   method_jmaxlim: ', "wang17"
 
         out_pmodel = pmodel(  &
                               kphio          = params_pft_gpp(pft)%kphio * ftemp_kphio, &
@@ -243,15 +243,6 @@ contains
                                                     real(myinterface%params_siml%secs_per_tstep) &
                                                     )
       
-      ! xxx debug
-      print*,'gpp         : ',tile_fluxes(lu)%plant(pft)%dgpp
-      print*,'fpcgrid     : ',tile(lu)%plant(pft)%fpc_grid
-      print*,'fapar       : ',tile(lu)%plant(pft)%fapar_ind
-      print*,'ppfd        : ', climate%dppfd
-      print*,'secspertstep: ', myinterface%params_siml%secs_per_tstep
-      print*,'lue         : ', out_pmodel%lue
-      print*,'soilmstress : ', soilmstress
-
       !----------------------------------------------------------------
       ! Dark respiration
       !----------------------------------------------------------------

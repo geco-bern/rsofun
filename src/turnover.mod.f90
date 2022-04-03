@@ -31,11 +31,11 @@ module md_turnover
   private
   public turnover, turnover_root, turnover_leaf, turnover_labl
 
-  ! !----------------------------------------------------------------
-  ! ! Module-specific output variables
-  ! !----------------------------------------------------------------
-  ! real, dimension(:,:), allocatable :: outaCveg2lit
-  ! real, dimension(:,:), allocatable :: outaNveg2lit
+  logical, parameter :: verbose = .true.
+  logical, parameter :: baltest = .true.
+  real :: cbal1, cbal2
+  real :: nbal1, nbal2
+  type( orgpool ) :: orgtmp, orgtmp2
 
 contains
 
@@ -55,10 +55,6 @@ contains
     real :: dlabl
     real :: dleaf
     real :: droot
-
-    ! xxx verbose
-    logical, parameter :: verbose = .true.
-    type( orgpool ) :: orgtmp, orgtmp2
 
     pftloop: do pft=1,npft
 
@@ -110,52 +106,48 @@ contains
       if (verbose) print*, '              with state variables:'
       if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%pleaf
       if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
-      if (verbose) orgtmp  =  tile(lu)%plant(pft)%pleaf
-      if (verbose) orgtmp2 =  tile(lu)%soil%plitt_af
+      if (verbose) cbal1 = tile(lu)%plant(pft)%pleaf%c%c12 + tile(lu)%soil%plitt_af%c%c12
+      if (verbose) nbal1 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%pleaf%n%n14 + tile(lu)%soil%plitt_af%n%n14
       !--------------------------------------------------------------
       if ( dleaf > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_leaf( dleaf, tile(lu), tile_fluxes(lu), pft )
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
       if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%pleaf
       if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
+      if (verbose) cbal2 = tile(lu)%plant(pft)%pleaf%c%c12 + tile(lu)%soil%plitt_af%c%c12
+      if (verbose) nbal2 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%pleaf%n%n14 + tile(lu)%soil%plitt_af%n%n14
+      if (verbose) cbal1 = cbal2 - cbal1
+      if (verbose) nbal1 = nbal2 - nbal1
       if (verbose) print*, '              --- balance: '
-      if (verbose) print*, '                  dlitt - dleaf                = ',  orgminus( &
-                                                                                    orgminus( &
-                                                                                      tile(lu)%soil%plitt_af, &
-                                                                                      orgtmp2 &
-                                                                                      ), &
-                                                                                    orgminus( &
-                                                                                      orgtmp, &
-                                                                                      tile(lu)%plant(pft)%pleaf &
-                                                                                      ) &
-                                                                                    )
+      if (verbose) print*, '                  d(clitt + cleaf)             = ', cbal1
+      if (verbose) print*, '                  d(nlitt + nleaf)             = ', nbal1
+      if (baltest .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
+      if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
 
       !--------------------------------------------------------------
       ! Calculate root turnover in this day 
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_root() ... '
       if (verbose) print*, '              with state variables:'
-      if (verbose) print*, '              proot = ', tile(lu)%plant(pft)%proot
+      if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%proot
       if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
-      if (verbose) orgtmp  =  tile(lu)%plant(pft)%proot
-      if (verbose) orgtmp2 =  tile(lu)%soil%plitt_bg
+      if (verbose) cbal1 = tile(lu)%plant(pft)%proot%c%c12 + tile(lu)%soil%plitt_bg%c%c12
+      if (verbose) nbal1 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%proot%n%n14 + tile(lu)%soil%plitt_bg%n%n14
       !--------------------------------------------------------------
       if ( droot > 0.0 .and. tile(lu)%plant(pft)%proot%c%c12 > 0.0  ) call turnover_root( droot, tile(lu), pft )
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
-      if (verbose) print*, '              proot = ', tile(lu)%plant(pft)%proot
+      if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%proot
       if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
+      if (verbose) cbal2 = tile(lu)%plant(pft)%proot%c%c12 + tile(lu)%soil%plitt_bg%c%c12
+      if (verbose) nbal2 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%proot%n%n14 + tile(lu)%soil%plitt_bg%n%n14
+      if (verbose) cbal1 = cbal2 - cbal1
+      if (verbose) nbal1 = nbal2 - nbal1
       if (verbose) print*, '              --- balance: '
-      if (verbose) print*, '                  dlitt - droot                = ',  orgminus( &
-                                                                                    orgminus( &
-                                                                                      tile(lu)%soil%plitt_bg, &
-                                                                                      orgtmp2 &
-                                                                                      ), &
-                                                                                    orgminus( &
-                                                                                      orgtmp, &
-                                                                                      tile(lu)%plant(pft)%proot &
-                                                                                      ) &
-                                                                                    )
+      if (verbose) print*, '                  d(clitt + croot)             = ', cbal1
+      if (verbose) print*, '                  d(nlitt + nroot)             = ', nbal1
+      if (baltest .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
+      if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
 
       ! XXX don't waste labile C and N
       ! !--------------------------------------------------------------
@@ -206,9 +198,13 @@ contains
     real :: nleaf
     real :: cleaf
     real :: dlai
-    real :: lai_new
     real :: diff
     integer :: nitr
+
+    if (verbose) print*,'                Before leaf turnover:'
+    if (verbose) print*,'                          LAI   = ', tile%plant(pft)%lai_ind
+    if (verbose) print*,'                          fapar = ', tile%plant(pft)%fapar_ind
+    if (verbose) print*,'                          pleaf = ', tile%plant(pft)%pleaf
 
     ! number of iterations to match leaf C given leaf N
     nitr = 0
@@ -220,16 +216,21 @@ contains
     cleaf = ( 1.0 - dleaf ) * tile%plant(pft)%pleaf%c%c12
 
     ! get new LAI based on cleaf
-    lai_new = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
+    tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
 
     ! update canopy state (only variable fAPAR so far implemented)
-    tile%plant(pft)%fapar_ind = get_fapar( lai_new )
+    tile%plant(pft)%fapar_ind = get_fapar( tile%plant(pft)%lai_ind )
 
     ! re-calculate metabolic and structural N, given new LAI and fAPAR
     call update_leaftraits( tile%plant(pft) )
 
     ! get updated leaf N
-    nleaf = tile%plant(pft)%narea
+    nleaf = tile%plant(pft)%narea_canopy
+
+    if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
+    if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
+    if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
+    if (verbose) print*,'                                nleaf = ', nleaf
 
     do while ( nleaf > lm_init%n%n14 )
 
@@ -239,27 +240,32 @@ contains
       cleaf = cleaf * lm_init%n%n14 / nleaf
 
       ! get new LAI based on cleaf
-      lai_new = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
+      tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
 
       ! update canopy state (only variable fAPAR so far implemented)
-      tile%plant(pft)%fapar_ind = get_fapar( lai_new )
+      tile%plant(pft)%fapar_ind = get_fapar( tile%plant(pft)%lai_ind )
 
       ! re-calculate metabolic and structural N, given new LAI and fAPAR
       call update_leaftraits( tile%plant(pft) )
 
       ! get updated leaf N
-      nleaf = tile%plant(pft)%narea
+      nleaf = tile%plant(pft)%narea_canopy
 
-      if (nitr>30) exit
+      if (verbose) print*,'                      N iteration: ', nitr
+      if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
+      if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
+      if (verbose) print*,'                                nleaf = ', nleaf
+
+      if (nitr > 30) exit
 
     end do
 
-    ! if (nitr>0) print*,'no. of iterations ', nitr
-    ! if (nitr>0) print*,'final reduction of leaf C ', cleaf / lm_init%c%c12
-    ! if (nitr>0) print*,'final reduction of leaf N ', nleaf / lm_init%n%n14
+    if (verbose .and. nitr > 0) print*,'                      ------------------'
+    if (verbose .and. nitr > 0) print*,'                      No. of iterations ', nitr
+    if (verbose .and. nitr > 0) print*,'                      final reduction of leaf C ', cleaf / lm_init%c%c12
+    if (verbose .and. nitr > 0) print*,'                      final reduction of leaf N ', nleaf / lm_init%n%n14
 
     ! update 
-    tile%plant(pft)%lai_ind = lai_new
     tile%plant(pft)%pleaf%c%c12 = cleaf
     tile%plant(pft)%pleaf%n%n14 = nleaf
 
