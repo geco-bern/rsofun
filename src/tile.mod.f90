@@ -783,24 +783,20 @@ contains
     out_biosphere%gs_accl = tile_fluxes(lu)%canopy%gs_accl
     out_biosphere%chi     = tile_fluxes(lu)%canopy%chi
     out_biosphere%iwue    = tile_fluxes(lu)%canopy%iwue
-
     out_biosphere%wscal   = tile(lu)%soil%phy%wscal
     out_biosphere%tsoil   = tile(lu)%soil%phy%temp
-    
     out_biosphere%cleaf   = tile(lu)%canopy%pleaf%c%c12
     out_biosphere%nleaf   = tile(lu)%canopy%pleaf%n%n14
     out_biosphere%croot   = tile(lu)%canopy%proot%c%c12
     out_biosphere%nroot   = tile(lu)%canopy%proot%n%n14
     out_biosphere%clabl   = tile(lu)%canopy%plabl%c%c12
     out_biosphere%nlabl   = tile(lu)%canopy%plabl%n%n14
-
     out_biosphere%lai     = tile(lu)%canopy%lai
     out_biosphere%ninorg  = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14
     out_biosphere%pno3    = tile(lu)%soil%pno3%n14
     out_biosphere%pnh4    = tile(lu)%soil%pnh4%n14
     out_biosphere%en2o    = 0.0
     out_biosphere%enleach = 0.0
-
     out_biosphere%csoil   = tile(lu)%soil%psoil_sl%c%c12 + tile(lu)%soil%psoil_fs%c%c12
     out_biosphere%nsoil   = tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%psoil_fs%n%n14 
     out_biosphere%clitt   = tile(lu)%soil%plitt_af%c%c12 + tile(lu)%soil%plitt_as%c%c12 + tile(lu)%soil%plitt_bg%c%c12
@@ -809,15 +805,9 @@ contains
     out_biosphere%nup     = 0.0
     out_biosphere%cex     = 0.0
     out_biosphere%netmin  = tile_fluxes(lu)%soil%dnetmin%n14
-
     out_biosphere%dcharv  = tile_fluxes(lu)%canopy%dharv%c%c12
     out_biosphere%dnharv  = tile_fluxes(lu)%canopy%dharv%n%n14
-
-    out_biosphere%tmp     = 0.0
-
-    ! xxx debug
-    print*,'diag_daily: tile(1)%canopy%lai, tile(1)%plant(1)%lai_ind, out_biosphere%lai', &
-      tile(1)%canopy%lai, tile(1)%plant(1)%lai_ind, out_biosphere%lai
+    out_biosphere%npp     = tile_fluxes(lu)%canopy%dnpp%c12
 
   end subroutine diag_daily
 

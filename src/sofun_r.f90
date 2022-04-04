@@ -310,7 +310,7 @@ contains
         output(idx_start:idx_end,24) = dble(out_biosphere(:)%pno3    )
         output(idx_start:idx_end,25) = dble(out_biosphere(:)%enleach )
         output(idx_start:idx_end,26) = dble(out_biosphere(:)%en2o    )
-        output(idx_start:idx_end,27) = dble(out_biosphere(:)%tmp     )
+        output(idx_start:idx_end,27) = dble(out_biosphere(:)%npp     )
         output(idx_start:idx_end,28) = dble(out_biosphere(:)%csoil )
         output(idx_start:idx_end,29) = dble(out_biosphere(:)%nsoil )
         output(idx_start:idx_end,30) = dble(out_biosphere(:)%clitt )

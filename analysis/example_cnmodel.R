@@ -111,6 +111,7 @@ tmp <- rsofun::p_model_drivers %>%
 
 ## no spinup, 1 year transient run
 tmp$params_siml[[1]]$spinupyears <- 10
+tmp$params_siml[[1]]$recycle <- 5
 # tmp$params_siml[[1]]$nyeartrend <- 1
 # tmp$forcing[[1]] <- tmp$forcing[[1]] %>% filter(lubridate::year(date) == 2007)
 
@@ -130,11 +131,25 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
+  ggplot(aes(date, npp)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
   ggplot(aes(date, cleaf)) + 
   geom_line()
 
 output$data[[1]] %>% 
   as_tibble() %>% 
   ggplot(aes(date, lai)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  mutate(year = lubridate::year(date)) %>% 
+  group_by(year) %>% 
+  summarise(npp = sum(npp, na.rm = TRUE), gpp = sum(gpp, na.rm = TRUE)) %>% 
+  mutate(cue = npp/gpp) %>% 
+  ggplot(aes(year, cue)) + 
   geom_line()
 

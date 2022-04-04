@@ -131,8 +131,6 @@ module md_interface_pmodel
     real :: wscal
     real :: chi
     real :: iwue
-
-    ! new for cnmodel
     real :: tsoil
     real :: cleaf
     real :: nleaf
@@ -146,7 +144,7 @@ module md_interface_pmodel
     real :: pnh4
     real :: en2o
     real :: enleach
-    real :: tmp
+    real :: npp
     real :: csoil
     real :: nsoil
     real :: clitt
