@@ -30,9 +30,9 @@ runread_lm3ppa_f <- function(
   ){
   
   # predefine variables for CRAN check compliance
-  sitename <- params_siml <- site_info <- forcing <-
-  params_tile <- params_species <- params_soil <-
-  init_cohort <- init_soil <- data <- input <- forcing <- . <- NULL
+  forcing <- init_cohort <- init_soil <-
+    input <- params_siml <- params_soil <- params_species <-
+    params_tile <- site_info <- sitename <- . <- NULL
   
   if (parallel){
     
@@ -45,17 +45,17 @@ runread_lm3ppa_f <- function(
     ## distribute to to cores, making sure all data from a specific site is sent to the same core
     df_out <- drivers %>%
       dplyr::group_by( id = row_number() ) %>%
-      tidyr::nest(input = c(sitename,
-                            params_siml,
-                            site_info,
-                            forcing,
-                            params_tile,
-                            params_species,
-                            params_soil,
-                            init_cohort,
-                            init_soil)) %>%
+      tidyr::nest('input' = c("sitename",
+                            "params_siml",
+                            "site_info",
+                            "forcing",
+                            "params_tile",
+                            "params_species",
+                            "params_soil",
+                            "init_cohort",
+                            "init_soil")) %>%
       multidplyr::partition(cl) %>%
-      dplyr::mutate(data = purrr::map(input,
+      dplyr::mutate('data' = purrr::map(input,
          ~run_lm3ppa_f_bysite(
            sitename       = .x$sitename[[1]], 
            params_siml    = .x$params_siml[[1]], 
@@ -71,21 +71,21 @@ runread_lm3ppa_f <- function(
       )) %>% 
       dplyr::collect() %>%
       dplyr::ungroup() %>%
-      dplyr::select(data)  %>% 
-      tidyr::unnest(cols = c(data))
+      dplyr::select('data')  %>% 
+      tidyr::unnest(cols = c('data'))
     
   } else {
     
     df_out <- drivers %>% 
-      dplyr::select(sitename, 
-                    params_siml, 
-                    site_info, 
-                    forcing, 
-                    params_tile, 
-                    params_species, 
-                    params_soil, 
-                    init_cohort, 
-                    init_soil
+      dplyr::select("sitename", 
+                    "params_siml", 
+                    "site_info", 
+                    "forcing", 
+                    "params_tile", 
+                    "params_species", 
+                    "params_soil", 
+                    "init_cohort", 
+                    "init_soil"
                     ) %>% 
       dplyr::mutate(data = purrr::pmap(
         .,
