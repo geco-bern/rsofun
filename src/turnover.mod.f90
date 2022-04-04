@@ -32,7 +32,7 @@ module md_turnover
   public turnover, turnover_root, turnover_leaf, turnover_labl
 
   logical, parameter :: verbose = .true.
-  logical, parameter :: baltest = .true.
+  logical, parameter :: baltest = .false.
   real :: cbal1, cbal2
   real :: nbal1, nbal2
   type( orgpool ) :: orgtmp, orgtmp2
@@ -73,25 +73,28 @@ contains
 
         ! balance = plant_fluxes(pft)%dnpp%c12 - plant_fluxes(pft)%dcex
 
-        if (tile(lu)%plant(pft)%pheno(doy)%shedleaves) then
+        ! if (tile(lu)%plant(pft)%pheno(doy)%shedleaves) then
 
-          droot = 1.0
-          dleaf = 1.0
-          dlabl = 1.0
+        !   droot = 1.0
+        !   dleaf = 1.0
+        !   dlabl = 1.0
 
-          stop 'shedding the fucking leaves'
+        !   stop 'shedding the fucking leaves'
           
-        else
+        ! else
 
           ! Increase turnover rate towards high LAI ( when using non-zero value for k_decay_leaf_width, e.g. 0.08 )
-          dleaf =  (tile(lu)%plant(pft)%lai_ind * params_pft_plant(pft)%k_decay_leaf_width )**8 &
-            + params_pft_plant(pft)%k_decay_leaf_base
+          ! dleaf =  (tile(lu)%plant(pft)%lai_ind * params_pft_plant(pft)%k_decay_leaf_width )**8 &
+          !   + params_pft_plant(pft)%k_decay_leaf_base
+
+          ! xxx debug
+          dleaf =  params_pft_plant(pft)%k_decay_leaf_base
 
           ! constant turnover rate
           droot = params_pft_plant(pft)%k_decay_root
           dlabl = params_pft_plant(pft)%k_decay_labl
 
-        end if
+        ! end if
 
       else
 
@@ -137,7 +140,7 @@ contains
       if ( droot > 0.0 .and. tile(lu)%plant(pft)%proot%c%c12 > 0.0  ) call turnover_root( droot, tile(lu), pft )
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
-      if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%proot
+      if (verbose) print*, '              proot = ', tile(lu)%plant(pft)%proot
       if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
       if (verbose) cbal2 = tile(lu)%plant(pft)%proot%c%c12 + tile(lu)%soil%plitt_bg%c%c12
       if (verbose) nbal2 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%proot%n%n14 + tile(lu)%soil%plitt_bg%n%n14
@@ -176,6 +179,7 @@ contains
       !                                                                                 tile(lu)%plant(pft)%proot &
       !                                                                                 ) &
       !                                                                               )
+    
     enddo pftloop
 
   end subroutine turnover
@@ -227,43 +231,45 @@ contains
     ! get updated leaf N
     nleaf = tile%plant(pft)%narea_canopy
 
-    if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
-    if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
-    if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
-    if (verbose) print*,'                                nleaf = ', nleaf
+    ! xxx debug
 
-    do while ( nleaf > lm_init%n%n14 )
+    ! if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
+    ! if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
+    ! if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
+    ! if (verbose) print*,'                                nleaf = ', nleaf
 
-      nitr = nitr + 1
+    ! do while ( nleaf > lm_init%n%n14 )
 
-      ! reduce leaf C a bit more
-      cleaf = cleaf * lm_init%n%n14 / nleaf
+    !   nitr = nitr + 1
 
-      ! get new LAI based on cleaf
-      tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
+    !   ! reduce leaf C a bit more
+    !   cleaf = cleaf * lm_init%n%n14 / nleaf
 
-      ! update canopy state (only variable fAPAR so far implemented)
-      tile%plant(pft)%fapar_ind = get_fapar( tile%plant(pft)%lai_ind )
+    !   ! get new LAI based on cleaf
+    !   tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
 
-      ! re-calculate metabolic and structural N, given new LAI and fAPAR
-      call update_leaftraits( tile%plant(pft) )
+    !   ! update canopy state (only variable fAPAR so far implemented)
+    !   tile%plant(pft)%fapar_ind = get_fapar( tile%plant(pft)%lai_ind )
 
-      ! get updated leaf N
-      nleaf = tile%plant(pft)%narea_canopy
+    !   ! re-calculate metabolic and structural N, given new LAI and fAPAR
+    !   call update_leaftraits( tile%plant(pft) )
 
-      if (verbose) print*,'                      N iteration: ', nitr
-      if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
-      if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
-      if (verbose) print*,'                                nleaf = ', nleaf
+    !   ! get updated leaf N
+    !   nleaf = tile%plant(pft)%narea_canopy
 
-      if (nitr > 30) exit
+    !   if (verbose) print*,'                      N iteration: ', nitr
+    !   if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
+    !   if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
+    !   if (verbose) print*,'                                nleaf = ', nleaf
 
-    end do
+    !   if (nitr > 30) exit
 
-    if (verbose .and. nitr > 0) print*,'                      ------------------'
-    if (verbose .and. nitr > 0) print*,'                      No. of iterations ', nitr
-    if (verbose .and. nitr > 0) print*,'                      final reduction of leaf C ', cleaf / lm_init%c%c12
-    if (verbose .and. nitr > 0) print*,'                      final reduction of leaf N ', nleaf / lm_init%n%n14
+    ! end do
+
+    ! if (verbose .and. nitr > 0) print*,'                      ------------------'
+    ! if (verbose .and. nitr > 0) print*,'                      No. of iterations ', nitr
+    ! if (verbose .and. nitr > 0) print*,'                      final reduction of leaf C ', cleaf / lm_init%c%c12
+    ! if (verbose .and. nitr > 0) print*,'                      final reduction of leaf N ', nleaf / lm_init%n%n14
 
     ! update 
     tile%plant(pft)%pleaf%c%c12 = cleaf

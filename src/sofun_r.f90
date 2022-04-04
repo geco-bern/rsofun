@@ -297,8 +297,6 @@ contains
         output(idx_start:idx_end,11) = dble(out_biosphere(:)%wscal)
         output(idx_start:idx_end,12) = dble(out_biosphere(:)%chi)
         output(idx_start:idx_end,13) = dble(out_biosphere(:)%iwue)
-
-        ! new for cnmodel
         output(idx_start:idx_end,14) = dble(out_biosphere(:)%tsoil   )
         output(idx_start:idx_end,15) = dble(out_biosphere(:)%lai     )
         output(idx_start:idx_end,16) = dble(out_biosphere(:)%cleaf   )

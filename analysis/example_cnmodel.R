@@ -17,16 +17,13 @@ pars <- list(
   r_root                = 0.913000,
   r_sapw                = 0.044000,
   exurate               = 0.003000,
-  # k_decay_leaf_base     = 13.0000,
-  # k_decay_leaf_width    = 0.00000,
-  # k_decay_root          = 13.0000,
-  # k_decay_labl          = 0.00000,
-  # k_decay_sapw          = 1.00000,
-  k_decay_leaf_base     = 0.00000,
+  
+  k_decay_leaf_base     = 1.00000,
   k_decay_leaf_width    = 0.00000,
-  k_decay_root          = 0.00000,
+  k_decay_root          = 1.00000,
   k_decay_labl          = 0.00000,
-  k_decay_sapw          = 0.00000,
+  k_decay_sapw          = 1.00000,
+  
   r_cton_root           = 37.0000,
   r_cton_wood           = 100.000,
   ncw_min               = 0.056,
@@ -106,20 +103,20 @@ pars <- list(
   )
 
 ## add new required columns to forcing 
-p_model_drivers <- p_model_drivers %>% 
+tmp <- rsofun::p_model_drivers %>% 
   mutate(forcing = purrr::map(forcing, ~mutate(., 
                                                fharv = 0.0,
                                                dno3 = 0.1,
                                                dnh4 = 0.1)))
 
 ## no spinup, 1 year transient run
-p_model_drivers$params_siml[[1]]$spinupyears <- 0
-p_model_drivers$params_siml[[1]]$nyeartrend <- 1
-p_model_drivers$forcing[[1]] <- p_model_drivers$forcing[[1]] %>% filter(lubridate::year(date) == 2007)
+tmp$params_siml[[1]]$spinupyears <- 10
+# tmp$params_siml[[1]]$nyeartrend <- 1
+# tmp$forcing[[1]] <- tmp$forcing[[1]] %>% filter(lubridate::year(date) == 2007)
 
 ## run the model
 output <- runread_pmodel_f(
-  p_model_drivers,
+  tmp,
   par = pars
   )
 

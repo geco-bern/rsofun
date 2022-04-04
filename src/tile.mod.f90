@@ -746,7 +746,7 @@ contains
       !----------------------------------------------------------------
       tile(lu)%canopy%nind = tile(lu)%canopy%nind + tile(lu)%plant(pft)%nind 
       tile(lu)%canopy%fpc_grid = tile(lu)%canopy%fpc_grid + tile(lu)%plant(pft)%fpc_grid 
-      tile(lu)%canopy%lai = tile(lu)%canopy%lai + tile(lu)%plant(pft)%lai_ind 
+      tile(lu)%canopy%lai = tile(lu)%plant(pft)%lai_ind 
       tile(lu)%canopy%fapar = tile(lu)%canopy%fapar + tile(lu)%plant(pft)%fapar_ind * tile(lu)%plant(pft)%fpc_grid
       tile(lu)%canopy%acrown = tile(lu)%canopy%acrown + tile(lu)%plant(pft)%acrown 
       tile(lu)%canopy%narea = tile(lu)%canopy%narea + tile(lu)%plant(pft)%narea 
@@ -814,6 +814,10 @@ contains
     out_biosphere%dnharv  = tile_fluxes(lu)%canopy%dharv%n%n14
 
     out_biosphere%tmp     = 0.0
+
+    ! xxx debug
+    print*,'diag_daily: tile(1)%canopy%lai, tile(1)%plant(1)%lai_ind, out_biosphere%lai', &
+      tile(1)%canopy%lai, tile(1)%plant(1)%lai_ind, out_biosphere%lai
 
   end subroutine diag_daily
 

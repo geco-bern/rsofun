@@ -49,7 +49,7 @@ contains
     ! use md_turnover, only: turnover_leaf, turnover_root, turnover_labl
 
     ! arguments
-    type(tile_type), dimension(nlu), intent(in) :: tile
+    type(tile_type), dimension(nlu), intent(inout) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(climate_type), intent(in) :: climate
 
@@ -163,24 +163,19 @@ contains
       
       ! end if
 
-      ! !/////////////////////////////////////////////////////////////////////////
-      ! ! EXUDATES
-      ! !-------------------------------------------------------------------------
-      ! call ccp( carbon( tile_fluxes(lu)%plant(pft)%dcex ), tile(lu)%plant(pft)%pexud )
 
-      ! !/////////////////////////////////////////////////////////////////////////
-      ! ! TO LABILE POOL
-      ! ! NPP available for growth first enters the labile pool ('plabl ').
-      ! ! XXX Allocation is called here without "paying"  growth respir.?
-      ! !-------------------------------------------------------------------------
+      !/////////////////////////////////////////////////////////////////////////
+      ! TO LABILE POOL
+      ! NPP available for growth first enters the labile pool ('plabl ').
+      !-------------------------------------------------------------------------
       ! tmp = tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex
       ! print*,'GPP, Rl, Rr, Cex, dC, Cl, LAI, Cb: ', tile_fluxes(lu)%plant(pft)%dgpp, tile_fluxes(lu)%plant(pft)%drleaf, tile_fluxes(lu)%plant(pft)%drroot, tile_fluxes(lu)%plant(pft)%dcex, tmp, tile(lu)%plant(pft)%pleaf, tile(lu)%plant(pft)%lai_ind, tile(lu)%plant(pft)%plabl
 
-      ! call ccp( carbon( tile_fluxes(lu)%plant(pft)%dcex ), tile(lu)%plant(pft)%pexud )
-      ! call ccp( cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) ), tile(lu)%plant(pft)%plabl%c )
+      call ccp( carbon( tile_fluxes(lu)%plant(pft)%dcex ), tile(lu)%soil%pexud )
+      call ccp( cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) ), tile(lu)%plant(pft)%plabl%c )
 
-      ! if (tile(lu)%plant(pft)%plabl%c%c12 < (-1)*eps) stop 'after npp labile C is neg.'
-      ! if (tile(lu)%plant(pft)%plabl%n%n14 < (-1)*eps) stop 'after npp labile N is neg.'
+      if (tile(lu)%plant(pft)%plabl%c%c12 < (-1)*eps) stop 'after npp labile C is neg.'
+      if (tile(lu)%plant(pft)%plabl%n%n14 < (-1)*eps) stop 'after npp labile N is neg.'
 
       ! print*,'gpp, dclabl', doy, tile_fluxes(lu)%plant(pft)%dgpp, cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) )
 

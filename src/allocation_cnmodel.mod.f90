@@ -364,6 +364,12 @@ contains
             dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl
             dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
 
+            ! ! xxx debug
+            ! avl = max( 0.0, tile(lu)%plant(pft)%plabl%c%c12 )
+            ! dcleaf = frac_leaf         * params_plant%growtheff * avl
+            ! dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl
+            ! dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
+
             !-------------------------------------------------------------------
             ! LEAF ALLOCATION
             !-------------------------------------------------------------------
@@ -476,7 +482,6 @@ contains
     ! is smaller than C:N ratio of new growth => put more to leaves
     !---------------------------------------------------------
     use md_classdefs, only: orgpool, nitrogen
-    use md_plant, only: params_pft_plant, params_plant, get_fapar
     use md_gpp_pmodel, only: calc_dgpp, calc_drd, params_gpp
     use md_nuptake, only: calc_dnup, outtype_calc_dnup
     use md_npp, only: calc_resp_maint, calc_cexu
@@ -678,7 +683,6 @@ contains
     ! - reduce labile pool by C and N increments
     !-------------------------------------------------------------------
     use md_classdefs
-    use md_plant, only: params_plant, get_leaf_n_canopy, get_lai
     use md_params_core, only: eps
 
     ! arguments
@@ -706,7 +710,11 @@ contains
 
     ! calculate canopy-level leaf N as a function of LAI
     nleaf0   = nleaf      
-    nleaf    = get_leaf_n_canopy( pft, lai, actnv_unitfapar )
+
+    ! xxx debug
+    ! nleaf    = get_leaf_n_canopy( pft, lai, actnv_unitfapar )
+    nleaf = cleaf * r_ntoc_leaf
+
     mydnleaf = nleaf - nleaf0
 
     ! depletion of labile C pool is enhanced by growth respiration
@@ -758,7 +766,6 @@ contains
     ! - update labile C and N
     !-------------------------------------------------------------------
     use md_classdefs
-    use md_plant, only: params_plant, params_pft_plant
     use md_params_core, only: eps
 
     ! arguments
@@ -831,7 +838,6 @@ contains
   !   ! r_cton = Cleaf / Nleaf
   !   !----------------------------------------------------------------
   !   ! use md_params_core, only: nmonth
-  !   use md_plant, only: params_plant, params_pft_plant
 
   !   ! arguments
   !   integer, intent(in)                 :: pft
@@ -875,7 +881,6 @@ contains
   !   ! - reduce labile pool by C and N increments
   !   !-------------------------------------------------------------------
   !   use md_classdefs
-  !   use md_plant, only: params_plant, get_lai, get_leaf_n_canopy
 
   !   ! arguments
   !   integer, intent(in)                 :: pft
@@ -934,7 +939,6 @@ contains
   !   ! ROOT ALLOCATION
   !   !-------------------------------------------------------------------
   !   use md_classdefs
-  !   use md_plant, only: params_plant, params_pft_plant
 
   !   ! arguments
   !   real, intent(inout)         :: croot, nroot

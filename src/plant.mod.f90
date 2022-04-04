@@ -17,7 +17,10 @@ module md_plant
   public plant_type, plant_fluxes_type, getpar_modl_plant, &
     init_plant, params_plant, params_pft_plant, ftemp, &
     fmoist, add_seed, update_leaftraits, get_leaftraits_init, &
-    get_lai, get_fapar, init_plant_fluxes, get_leaf_n_canopy
+    get_lai, get_fapar, init_plant_fluxes, get_leaf_n_canopy, &
+
+    ! debug
+    r_cton_leaf, r_ntoc_leaf
 
   !----------------------------------------------------------------
   ! NON PFT-DEPENDENT GLOBAL PARAMETERS
@@ -172,6 +175,9 @@ module md_plant
   type( orgpool ), parameter :: seed = orgpool( carbon(5.0), nitrogen(0.12) )
   ! type( orgpool ), parameter :: seed = orgpool( carbon(100.0), nitrogen(1 .0) )
 
+  ! xxx debug
+  real, parameter :: r_cton_leaf = 20.0
+  real, parameter :: r_ntoc_leaf = 0.05
 
 contains
 
@@ -208,6 +214,58 @@ contains
   end function get_fapar
 
 
+  ! function get_lai( pft, cleaf, actnv_unitfapar ) result( lai )
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Calculates LAI as a function of leaf-C. This is not so straight
+  !   ! forward due to the dependence of canopy-metabolic leaf N on LAI,
+  !   ! and the dependence of canopy-structural leaf N and C on canopy-
+  !   ! metabolic leaf N.
+  !   !----------------------------------------------------------------
+  !   use md_params_core, only: nmonth, c_molmass
+  !   use md_lambertw, only: calc_wapr
+
+  !   ! arguments
+  !   integer, intent(in) :: pft
+  !   real, intent(in) :: cleaf
+  !   real, intent(in) :: actnv_unitfapar 
+
+  !   ! function return variable
+  !   real :: lai
+
+  !   ! local variables
+  !   real    :: alpha, beta, gamma ! variable substitutes
+  !   real    :: arg_to_lambertw
+  !   integer :: nerror
+
+
+  !   if (cleaf > 0.0) then
+
+  !     ! Monthly variations in metabolic N, determined by variations in meanmppfd and nv should not result in variations in leaf traits. 
+  !     ! In order to prevent this, assume annual maximum metabolic N, part of which is deactivated during months with lower insolation (and Rd reduced.)
+  !     ! maxnv = actnv_unitfapar (as done before)
+
+  !     alpha = actnv_unitfapar * params_pft_plant(pft)%r_n_cw_v
+  !     beta  = params_pft_plant(pft)%ncw_min
+  !     gamma = cleaf / ( c_molmass * params_pft_plant(pft)%r_ctostructn_leaf ) 
+  !     arg_to_lambertw = alpha * params_plant%kbeer / beta * exp( (alpha - gamma) * params_plant%kbeer / beta )
+  !     lai = 1.0 / (beta * params_plant%kbeer ) * &
+  !       ( -alpha * params_plant%kbeer + &
+  !         gamma * params_plant%kbeer + &
+  !         beta * calc_wapr( arg_to_lambertw, 0, nerror, 9999 ) &
+  !       )
+  !   else
+
+  !     lai = 0.0
+
+  !   end if
+    
+  ! end function get_lai
+
+
+  ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  ! xxx debug
+  ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
   function get_lai( pft, cleaf, actnv_unitfapar ) result( lai )
     !////////////////////////////////////////////////////////////////
     ! Calculates LAI as a function of leaf-C. This is not so straight
@@ -216,7 +274,6 @@ contains
     ! metabolic leaf N.
     !----------------------------------------------------------------
     use md_params_core, only: nmonth, c_molmass
-    use md_lambertw, only: calc_wapr
 
     ! arguments
     integer, intent(in) :: pft
@@ -226,27 +283,11 @@ contains
     ! function return variable
     real :: lai
 
-    ! local variables
-    real    :: alpha, beta, gamma ! variable substitutes
-    real    :: arg_to_lambertw
-    integer :: nerror
-
-
     if (cleaf > 0.0) then
 
-      ! Monthly variations in metabolic N, determined by variations in meanmppfd and nv should not result in variations in leaf traits. 
-      ! In order to prevent this, assume annual maximum metabolic N, part of which is deactivated during months with lower insolation (and Rd reduced.)
-      ! maxnv = actnv_unitfapar (as done before)
+      ! test: assuming SLA = 0.01 m2 g-1, corresponding to LMA = 100 g m-2
+      lai = cleaf * 0.01
 
-      alpha = actnv_unitfapar * params_pft_plant(pft)%r_n_cw_v
-      beta  = params_pft_plant(pft)%ncw_min
-      gamma = cleaf / ( c_molmass * params_pft_plant(pft)%r_ctostructn_leaf ) 
-      arg_to_lambertw = alpha * params_plant%kbeer / beta * exp( (alpha - gamma) * params_plant%kbeer / beta )
-      lai = 1.0 / (beta * params_plant%kbeer ) * &
-        ( -alpha * params_plant%kbeer + &
-          gamma * params_plant%kbeer + &
-          beta * calc_wapr( arg_to_lambertw, 0, nerror, 9999 ) &
-        )
     else
 
       lai = 0.0
@@ -445,12 +486,12 @@ contains
 
     ! Fine-root mass specific respiration rate (gC gC-1 year-1)
     ! Central value           : 0.913 year-1 (Yan and Zhao (2007); see Li et al., 2014)
-    params_plant%r_root       = myinterface%params_calib%r_root
+    params_plant%r_root       = myinterface%params_calib%r_root / ndayyear
 
     ! Sapwood specific respiration rate (gC gC-1 year-1)
     ! Central value           : 0.044 year-1 (Yan and Zhao (2007); see Li et al., 2014)
     ! (                       = 0.044 nmol mol-1 s-1; range: 0.5–10, 20 nmol mol-1 s-1 (Landsberg and Sands (2010))
-    params_plant%r_sapw       = myinterface%params_calib%r_sapw
+    params_plant%r_sapw       = myinterface%params_calib%r_sapw / ndayyear
 
     ! C export rate per unit root mass
     params_plant%exurate      = myinterface%params_calib%exurate
