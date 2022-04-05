@@ -196,11 +196,10 @@ module md_tile
   !----------------------------------------------------------------
   type soil_fluxes_type
   
-    type(carbon)   :: drsoil            ! soil respiration (only from exudates decomp.) [gC/m2/d]
     type(carbon)   :: drhet             ! heterotrophic respiration [gC/m2/d]
-
     type(nitrogen) :: dnetmin           ! daily net mineralisation (gN m-2 d-1)
 
+    real :: dnfix_free                  ! free-living N fixation (balance term to satisfy soil C:N ratio)
     real :: dn2o                        ! soil N2O emissions (gaseous escape) [gN/m2/d]
     real :: dnleach                     ! daily N leaching [gN/m2/d]
     real :: dnloss                      ! total N loss (gaseous + leaching, where gaseous loss is N w.r.t. NH4 and NO3 pool decline, not gaseous escape) [gN/m2/d]
@@ -527,40 +526,40 @@ contains
     integer :: lu
 
     ! canopy
-    tile_fluxes(:)%canopy%dro = 0.0
-    tile_fluxes(:)%canopy%dfleach = 0.0
-    tile_fluxes(:)%canopy%dwbal = 0.0
-    tile_fluxes(:)%canopy%econ = 0.0
-    tile_fluxes(:)%canopy%drn = 0.0
-    tile_fluxes(:)%canopy%drnn = 0.0
-    tile_fluxes(:)%canopy%rnl = 0.0
-    tile_fluxes(:)%canopy%dcn = 0.0
-    tile_fluxes(:)%canopy%deet = 0.0
-    tile_fluxes(:)%canopy%dpet = 0.0
-    tile_fluxes(:)%canopy%dpet_e = 0.0
-    tile_fluxes(:)%canopy%daet = 0.0
-    tile_fluxes(:)%canopy%daet_e = 0.0
-    tile_fluxes(:)%canopy%daet_soil = 0.0
-    tile_fluxes(:)%canopy%daet_e_soil = 0.0
-    tile_fluxes(:)%canopy%daet_canop = 0.0
+    tile_fluxes(:)%canopy%dro          = 0.0
+    tile_fluxes(:)%canopy%dfleach      = 0.0
+    tile_fluxes(:)%canopy%dwbal        = 0.0
+    tile_fluxes(:)%canopy%econ         = 0.0
+    tile_fluxes(:)%canopy%drn          = 0.0
+    tile_fluxes(:)%canopy%drnn         = 0.0
+    tile_fluxes(:)%canopy%rnl          = 0.0
+    tile_fluxes(:)%canopy%dcn          = 0.0
+    tile_fluxes(:)%canopy%deet         = 0.0
+    tile_fluxes(:)%canopy%dpet         = 0.0
+    tile_fluxes(:)%canopy%dpet_e       = 0.0
+    tile_fluxes(:)%canopy%daet         = 0.0
+    tile_fluxes(:)%canopy%daet_e       = 0.0
+    tile_fluxes(:)%canopy%daet_soil    = 0.0
+    tile_fluxes(:)%canopy%daet_e_soil  = 0.0
+    tile_fluxes(:)%canopy%daet_canop   = 0.0
     tile_fluxes(:)%canopy%daet_e_canop = 0.0
-    tile_fluxes(:)%canopy%cpa = 0.0
-    tile_fluxes(:)%canopy%dtransp = 0.0
-    tile_fluxes(:)%canopy%dgs = 0.0
-    tile_fluxes(:)%canopy%dgc = 0.0
-    tile_fluxes(:)%canopy%dgpp = 0.0
-    tile_fluxes(:)%canopy%drd = 0.0
-    tile_fluxes(:)%canopy%assim = 0.0
-    tile_fluxes(:)%canopy%vcmax25 = 0.0
-    tile_fluxes(:)%canopy%jmax25 = 0.0
-    tile_fluxes(:)%canopy%vcmax = 0.0
-    tile_fluxes(:)%canopy%jmax = 0.0
-    tile_fluxes(:)%canopy%gs_accl = 0.0
-    tile_fluxes(:)%canopy%chi = 0.0
-    tile_fluxes(:)%canopy%iwue = 0.0
-    tile_fluxes(:)%canopy%ppfd_splash = 0.0
-    tile_fluxes(:)%canopy%ppfd_memory = 0.0
-    tile_fluxes(:)%canopy%dra = 0.0
+    tile_fluxes(:)%canopy%cpa          = 0.0
+    tile_fluxes(:)%canopy%dtransp      = 0.0
+    tile_fluxes(:)%canopy%dgs          = 0.0
+    tile_fluxes(:)%canopy%dgc          = 0.0
+    tile_fluxes(:)%canopy%dgpp         = 0.0
+    tile_fluxes(:)%canopy%drd          = 0.0
+    tile_fluxes(:)%canopy%assim        = 0.0
+    tile_fluxes(:)%canopy%vcmax25      = 0.0
+    tile_fluxes(:)%canopy%jmax25       = 0.0
+    tile_fluxes(:)%canopy%vcmax        = 0.0
+    tile_fluxes(:)%canopy%jmax         = 0.0
+    tile_fluxes(:)%canopy%gs_accl      = 0.0
+    tile_fluxes(:)%canopy%chi          = 0.0
+    tile_fluxes(:)%canopy%iwue         = 0.0
+    tile_fluxes(:)%canopy%ppfd_splash  = 0.0
+    tile_fluxes(:)%canopy%ppfd_memory  = 0.0
+    tile_fluxes(:)%canopy%dra          = 0.0
 
     ! soil
     do lu=1,nlu
@@ -568,7 +567,6 @@ contains
       ! derived types
       call ninit(tile_fluxes(lu)%soil%dnetmin)
       
-      call cinit(tile_fluxes(lu)%soil%drsoil)
       call cinit(tile_fluxes(lu)%soil%drhet)
 
       call orginit(tile_fluxes(lu)%canopy%dharv)
@@ -576,9 +574,10 @@ contains
       ! plant
       call init_plant_fluxes( tile_fluxes(lu)%plant(:) )
 
-      tile_fluxes(lu)%soil%dn2o = 0.0
-      tile_fluxes(lu)%soil%dnleach = 0.0
-      tile_fluxes(lu)%soil%dnloss = 0.0
+      tile_fluxes(lu)%soil%dnfix_free = 0.0
+      tile_fluxes(lu)%soil%dn2o       = 0.0
+      tile_fluxes(lu)%soil%dnleach    = 0.0
+      tile_fluxes(lu)%soil%dnloss     = 0.0
 
     end do
 

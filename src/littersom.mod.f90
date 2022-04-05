@@ -63,36 +63,36 @@ contains
 
     ! local variables
     integer :: lu                                   ! counter variable for landuse class
-    integer :: pft                                  ! counter variable for PFT number
 
     ! temperature/soil moisture-modified decay constants
-    real, dimension(nlu)  :: klitt_af               ! decay rate, above-ground fast (leaf) litter (= k_litter_leaf)
-    real, dimension(nlu)  :: klitt_as               ! decay rate, above-ground slow (woody) litter (= k_litter_woody)
-    real, dimension(nlu)  :: klitt_bg               ! decay rate, below-ground fast litter (= k_litter_root)
-    real, dimension(nlu)  :: kexu                   ! decay rate, exudates (= k_exu)
-    real, dimension(nlu)  :: ksoil_fs               ! decay rate, fast soil (= k_fast)
-    real, dimension(nlu)  :: ksoil_sl               ! decay rate, slow soil (= k_slow)
+    real :: klitt_af               ! decay rate, above-ground fast (leaf) litter (= k_litter_leaf)
+    real :: klitt_as               ! decay rate, above-ground slow (woody) litter (= k_litter_woody)
+    real :: klitt_bg               ! decay rate, below-ground fast litter (= k_litter_root)
+    real :: kexu                   ! decay rate, exudates (= k_exu)
+    real :: ksoil_fs               ! decay rate, fast soil (= k_fast)
+    real :: ksoil_sl               ! decay rate, slow soil (= k_slow)
 
     ! temporary _pools
     type(carbon)  :: dexu                           ! exudates decomposed in time step (= exu_decom)
     type(orgpool) :: dlitt                          ! total litter decomposed per time step
-    type(orgpool), dimension(npft) :: dlitt_af      ! above-ground fast litter decomposed per time step (= litterdag_fast)
-    type(orgpool), dimension(npft) :: dlitt_as      ! above-ground slow litter decomposed per time step (= litterdag_slow)
-    type(orgpool), dimension(npft) :: dlitt_bg      ! below-ground slow litter decomposed per time step (= litter_decom_bg)
+    type(orgpool) :: dlitt_af                       ! above-ground fast litter decomposed per time step (= litterdag_fast)
+    type(orgpool) :: dlitt_as                       ! above-ground slow litter decomposed per time step (= litterdag_slow)
+    type(orgpool) :: dlitt_bg                       ! below-ground slow litter decomposed per time step (= litter_decom_bg)
     type(orgpool) :: dsoil_sl                       ! (= cflux_fast_atmos)
     type(orgpool) :: dsoil_fs                       ! (= cflux_fast_atmos)
    
     ! temporary variables
     real :: eff                                     ! microbial growth efficiency 
     real :: ntoc_crit                               ! critical N:C ratio below which immobilisation occurrs  
-    real :: Nreq_S                                  ! N required in litter decomposition to maintain SOM C:N
-    real :: Nfix                                    ! temporary variable, N fixation implied in litter decomposition,
+    real :: nreq                                    ! N required in litter decomposition to maintain SOM C:N
+    real :: nfix                                    ! temporary variable, N fixation implied in litter decomposition,
     real :: rest                                    ! temporary variable
     real :: req                                     ! N required for litter decomposition 
     real :: avl                                     ! mineral N available as inorganic N
     real :: netmin_litt                             ! net N mineralisation from litter decomposition
+    real :: netmin_soil                             ! net N mineralisation from soil decomposition
 
-    integer, save :: invocation = 0                 ! internally counted simulation year
+    integer, save :: ncall = 0                 ! internally counted simulation year
 
     real, dimension(nlu), save :: mean_insoil_fs
     real, dimension(nlu), save :: mean_insoil_sl
@@ -101,13 +101,16 @@ contains
 
     real :: ntoc_save_fs, ntoc_save_sl
 
+    ! xxx debug
+    real :: nbal1, nbal2
+
     !-------------------------------------------------------------------------
     ! Count number of calls (one for each simulation year)
     !-------------------------------------------------------------------------
-    if (doy==1) invocation = invocation + 1
+    if (doy==1) ncall = ncall + 1
 
     ! initialise average fluxes
-    if (invocation==1 .and. doy==1) then
+    if (ncall==1 .and. doy==1) then
       mean_insoil_fs(:) = 0.0
       mean_insoil_sl(:) = 0.0
       mean_ksoil_fs(:)  = 0.0
@@ -149,19 +152,19 @@ contains
       ! Wania et al., 2009; Frolking et al., 2010; Spahni et al., 2012
       !-------------------------------------------------------------------------
       ! define decomposition _rates for current soil temperature and moisture 
-      klitt_af(lu) = params_littersom%klitt_af10 * &
+      klitt_af  = params_littersom%klitt_af10 * &
         ftemp( climate%dtemp, "lloyd_and_taylor" ) * &
         fmoist( tile(lu)%soil%phy%wscal, "foley" )
       
-      klitt_as(lu) = params_littersom%klitt_as10 * &
+      klitt_as = params_littersom%klitt_as10 * &
         ftemp( climate%dtemp, "lloyd_and_taylor" ) * &
         fmoist( tile(lu)%soil%phy%wscal, "foley" )
       
-      klitt_bg(lu) = params_littersom%klitt_bg10 * &
+      klitt_bg = params_littersom%klitt_bg10 * &
         ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor" ) * &
         fmoist( tile(lu)%soil%phy%wscal, "foley" )
       
-      kexu(lu) = params_littersom%kexu10 * &
+      kexu = params_littersom%kexu10 * &
         ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor" ) * &
         fmoist( tile(lu)%soil%phy%wscal, "foley" )
 
@@ -171,17 +174,17 @@ contains
       ! Moisture: Foley, 1995; Fang and Moncrieff, 1999; Gerten et al., 2004;
       !           Wania et al., 2009; Frolking et al., 2010; Spahni et al., 2012
       !-------------------------------------------------------------------------
-      ksoil_fs(lu) = params_littersom%ksoil_fs10 * &
+      ksoil_fs = params_littersom%ksoil_fs10 * &
         ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor" ) * &
         fmoist( tile(lu)%soil%phy%wscal, "foley" )
 
-      ksoil_sl(lu) = params_littersom%ksoil_sl10 * &
+      ksoil_sl = params_littersom%ksoil_sl10 * &
         ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor" ) * &
         fmoist( tile(lu)%soil%phy%wscal, "foley" )
 
       !////////////////////////////////////////////////////////////////
       ! LITTER DECAY
-      ! Collect PFT-specific litter decomposition into LU-specific 
+      ! Collect litter decomposition into LU-specific 
       ! pool 'dlitt'.
       ! All goes to daily updated litter decomposition pool
       !----------------------------------------------------------------
@@ -190,17 +193,25 @@ contains
       ! Initialisation of decomposing pool 
       ! (temporary, decomposition for each LU-class).
       !-------------------------------------------------------------------------
-      call orginit(dlitt)
+      call orginit( dlitt )
+
+      ! xxx debug
+      nbal1 = tile(lu)%soil%plitt_af%n%n14 + tile(lu)%soil%plitt_as%n%n14 + tile(lu)%soil%plitt_bg%n%n14 + dlitt%n%n14
 
       ! amount of litter decay
-      dlitt_af = orgfrac( 1.0 - exp( -klitt_af(lu)), tile(lu)%soil%plitt_af )
-      dlitt_as = orgfrac( 1.0 - exp( -klitt_as(lu)), tile(lu)%soil%plitt_as )
-      dlitt_bg = orgfrac( 1.0 - exp( -klitt_bg(lu)), tile(lu)%soil%plitt_bg )
+      dlitt_af = orgfrac( 1.0 - exp( -klitt_af ), tile(lu)%soil%plitt_af )
+      dlitt_as = orgfrac( 1.0 - exp( -klitt_as ), tile(lu)%soil%plitt_as )
+      dlitt_bg = orgfrac( 1.0 - exp( -klitt_bg ), tile(lu)%soil%plitt_bg )
 
       ! Update the litter _pools
-      call orgmv( dlitt_af(pft), tile(lu)%soil%plitt_af, dlitt )
-      call orgmv( dlitt_as(pft), tile(lu)%soil%plitt_as, dlitt )
-      call orgmv( dlitt_bg(pft), tile(lu)%soil%plitt_bg, dlitt )
+      call orgmv( dlitt_af, tile(lu)%soil%plitt_af, dlitt )
+      call orgmv( dlitt_as, tile(lu)%soil%plitt_as, dlitt )
+      call orgmv( dlitt_bg, tile(lu)%soil%plitt_bg, dlitt )
+
+      ! xxx debug
+      nbal2 = tile(lu)%soil%plitt_af%n%n14 + tile(lu)%soil%plitt_as%n%n14 + tile(lu)%soil%plitt_bg%n%n14 + dlitt%n%n14
+      print*,'A: nbal: ', nbal2 - nbal1
+      if (abs(nbal2 - nbal1) > eps) stop 'A: balance not satisfied for N'
   
       !////////////////////////////////////////////////////////////////
       ! EXUDATES DECAY
@@ -208,12 +219,12 @@ contains
       ! Exudates are mostly short organic compounds (poly- and mono-
       ! saccharides, amino acids, organic acids, phenolic compounds and
       ! enzymes) and are quickly respired and released as CO2.
-      ! Exudates decay goes to soil respiration 'drsoil'.
+      ! Exudates decay goes to soil respiration 'drhet'.
       ! This is executed after litter mineralisation as N fixation by 
       ! free-living bacteria is driven by exudates availability.
-      !----------------------------------------------------------------                
-      dexu = cfrac( 1.0 - exp(-kexu(lu)), tile(lu)%soil%pexud )
-      call cmv( dexu, tile(lu)%soil%pexud, tile_fluxes(lu)%soil%drsoil )
+      !----------------------------------------------------------------
+      dexu = cfrac( 1.0 - exp(-kexu), tile(lu)%soil%pexud )
+      call cmv( dexu, tile(lu)%soil%pexud, tile_fluxes(lu)%soil%drhet )
 
       !----------------------------------------------------------------
       ! Soil C:N ratio is the average PFT-specific prescribed C:N ratio
@@ -225,8 +236,10 @@ contains
         ! critical C:N ratio for net mineralisation is a function of C:N
         ! ratio of decomposing litter. Eq. 9 in Xu-Ri & Prentice, 2014
         !----------------------------------------------------------------
-        ntoc_crit = params_littersom%ntoc_crit1 * ntoc( dlitt, default=0.0 ) ** params_littersom%ntoc_crit2  ! = rCR
+        ntoc_crit = params_littersom%ntoc_crit1 * ntoc( dlitt, default = 0.0 ) ** params_littersom%ntoc_crit2  ! = rCR
         eff = ntoc_crit * params_littersom%cton_soil
+
+        if (eff > 1.0) eff = 1.0
 
         !////////////////////////////////////////////////////////////////
         ! LITTER -> SOIL FLUX AND NET MINERALISATION/IMMOBILISATION
@@ -240,15 +253,15 @@ contains
         ntoc_save_sl = ntoc( tile(lu)%soil%psoil_sl, default = 0.0 )
 
         ! move fraction 'eff' of C from litter to soil
-        call ccp( cfrac( eff*params_littersom%fastfrac        , dlitt%c ), tile(lu)%soil%psoil_fs%c )
-        call ccp( cfrac( eff*(1.0 - params_littersom%fastfrac), dlitt%c ), tile(lu)%soil%psoil_sl%c )
+        call ccp( cfrac( eff *        params_littersom%fastfrac , dlitt%c ), tile(lu)%soil%psoil_fs%c )
+        call ccp( cfrac( eff * (1.0 - params_littersom%fastfrac), dlitt%c ), tile(lu)%soil%psoil_sl%c )
 
         ! move fraction '(1-eff)' of C to heterotrophic respiration
         call ccp( cfrac( (1.0 - eff), dlitt%c ), tile_fluxes(lu)%soil%drhet )
 
         ! get average litter -> soil flux for analytical soil C equilibration
         if ( myinterface%steering%average_soil ) then
-          mean_insoil_fs(lu) = mean_insoil_fs(lu) + eff * params_littersom%fastfrac * dlitt%c%c12
+          mean_insoil_fs(lu) = mean_insoil_fs(lu) + eff *        params_littersom%fastfrac  * dlitt%c%c12
           mean_insoil_sl(lu) = mean_insoil_sl(lu) + eff * (1.0 - params_littersom%fastfrac) * dlitt%c%c12
         end if
 
@@ -256,15 +269,7 @@ contains
         ! N MINERALISATION
         !----------------------------------------------------------------    
         ! N requirement to maintain rS (SOM N:C ratio)
-        Nreq_S = dlitt%c%c12 * eff * params_littersom%ntoc_soil  ! 1/cton_soil = rS
-
-        ! ! OUTPUT COLLECTION
-        ! outanreq(lu)      = outanreq(lu)      + Nreq_S
-        ! outaclit2soil(lu) = outaclit2soil(lu) + dlitt%c%c12 * eff
-        ! outanlit2soil(lu) = outanlit2soil(lu) + Nreq_S
-
-        ! write(0,*) 'outaclit2soil(lu)',outaclit2soil(lu)
-        ! outanlit2soil(pft) = outanlit2soil(pft) + dlitt%n%n14
+        nreq = dlitt%c%c12 * eff * params_littersom%ntoc_soil  ! 1/cton_soil = rS
 
         !----------------------------------------------------------------    
         ! If N supply is sufficient, mineralisation occurrs: positive (dNLit-Nreq).
@@ -276,12 +281,11 @@ contains
         ! This corresponds to Eq. S3 in Manzoni et al., 2010, but ...
         ! rS takes the place of rB.
         !----------------------------------------------------------------    
-        netmin_litt = dlitt%n%n14 - Nreq_S
+        netmin_litt = dlitt%n%n14 - nreq
 
-        Nfix = 0.0
+        nfix = 0.0
 
-        ! OUTPUT COLLECTION
-        ! tile_fluxes(lu)%soil%dnetmin = nplus( tile_fluxes(lu)%soil%dnetmin, netmin_litt )
+        ! net mineralisation from litter decomposition is typically negative (net immobilisation)
         tile_fluxes(lu)%soil%dnetmin%n14 = tile_fluxes(lu)%soil%dnetmin%n14 + netmin_litt
         
         if (netmin_litt > 0.0) then
@@ -300,13 +304,13 @@ contains
           req = -1.0 * netmin_litt
           avl = tile(lu)%soil%pnh4%n14
 
-          if (avl>=req) then
+          if (avl >= req) then
             ! enough mineral N for immobilisation
             tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 - req
             req = 0.0
           else
             ! not enough NH4 for immobilisation
-            tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 - avl
+            tile(lu)%soil%pnh4%n14 = 0.0
             req = req - avl
 
             !----------------------------------------------------------------    
@@ -314,20 +318,20 @@ contains
             !----------------------------------------------------------------    
             avl = tile(lu)%soil%pno3%n14
 
-            if (avl>=req) then
+            if (avl >= req) then
               ! enough mineral N for immobilisation
               tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 - req
               req = 0.0
             else
               ! not enough NO3 for immobilisation
-              tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 - avl
+              tile(lu)%soil%pno3%n14 = 0.0
               req = req - avl
 
               !----------------------------------------------------------------    
               ! N fixation by free-living bacteria in litter to satisfy remainder
               !----------------------------------------------------------------    
-              Nfix = req
-              ! print*,'req ', req
+              nfix = req
+              print*,'implied N fixation: ', nfix
               req = 0.0
               ! stop 'could not get enough N upon immobilisation'
 
@@ -337,9 +341,23 @@ contains
           
         end if
 
-        ! Nreq_S (= dlitt - netmin) remains in the system: 
-        call ncp( nfrac( params_littersom%fastfrac        , nitrogen(Nreq_S) ), tile(lu)%soil%psoil_fs%n )
-        call ncp( nfrac( (1.0 - params_littersom%fastfrac), nitrogen(Nreq_S) ), tile(lu)%soil%psoil_sl%n )
+        ! record N required for balance as free-living N fixation
+        tile_fluxes(lu)%soil%dnfix_free = tile_fluxes(lu)%soil%dnfix_free + nfix
+
+        ! xxx debug
+        nbal1 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + nreq
+
+        ! Move N to soil pools
+        call ncp( nfrac( params_littersom%fastfrac        , nitrogen( nreq ) ), tile(lu)%soil%psoil_fs%n )
+        call ncp( nfrac( (1.0 - params_littersom%fastfrac), nitrogen( nreq ) ), tile(lu)%soil%psoil_sl%n )
+
+        ! tile(lu)%soil%psoil_fs%n*n14 = tile(lu)%soil%psoil_fs%c%c12 * params_littersom%ntoc_soil
+        ! tile(lu)%soil%psoil_sl%n*n14 = tile(lu)%soil%psoil_sl%c%c12 * params_littersom%ntoc_soil
+
+        ! xxx debug
+        nbal2 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14
+        print*,'C: nbal: ', nbal2 - nbal1
+        if (abs(nbal2 - nbal1) > eps) stop 'C: balance not satisfied for N'
 
         ! if ( abs( cton(tile(lu)%soil%psoil_fs) - params_littersom%cton_soil ) > 1e-5 ) then
         !   write(0,*) 'psoil_fs', cton( tile(lu)%soil%psoil_fs )
@@ -348,11 +366,6 @@ contains
         ! if ( abs( cton(tile(lu)%soil%psoil_sl) - params_littersom%cton_soil ) > 1e-5 ) then
         !   write(0,*) 'psoil_sl', cton( tile(lu)%soil%psoil_sl )
         !   stop 'B sl: C:N not ok'
-        ! end if
-
-        ! ! OUTPUT COLLECTION
-        ! if (myinterface%params_siml%loutlittersom) then
-        !   outdnfixfree(lu,doy) = outdnfixfree(lu,doy) + Nfix
         ! end if
 
       end if
@@ -366,15 +379,33 @@ contains
       ntoc_save_fs = ntoc( tile(lu)%soil%psoil_fs, default = 0.0 )
       ntoc_save_sl = ntoc( tile(lu)%soil%psoil_sl, default = 0.0 )
 
-      dsoil_fs = orgfrac( (1.0 - exp(-ksoil_fs(lu))), tile(lu)%soil%psoil_fs )
-      dsoil_sl = orgfrac( (1.0 - exp(-ksoil_sl(lu))), tile(lu)%soil%psoil_sl )
+      dsoil_fs = orgfrac( (1.0 - exp(-ksoil_fs)), tile(lu)%soil%psoil_fs )
+      dsoil_sl = orgfrac( (1.0 - exp(-ksoil_sl)), tile(lu)%soil%psoil_sl )
+
+      ! net mineralisation from soil decomposition
+      netmin_soil = dsoil_fs%n%n14 + dsoil_sl%n%n14
+
+      ! xxx debug
+      nbal1 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%pnh4%n14
 
       ! soil decay
-      tile(lu)%soil%psoil_fs = orgminus( tile(lu)%soil%psoil_fs, dsoil_fs )
-      tile(lu)%soil%psoil_sl = orgminus( tile(lu)%soil%psoil_sl, dsoil_sl )
-      
+      call orgsub( dsoil_fs, tile(lu)%soil%psoil_fs )
+      call orgsub( dsoil_sl, tile(lu)%soil%psoil_sl )
+
       ! C to heterotrophic respiration
       tile_fluxes(lu)%soil%drhet = cplus( tile_fluxes(lu)%soil%drhet, dsoil_fs%c, dsoil_sl%c )
+
+      ! all decomposing soil N adds to net mineralisation
+      tile_fluxes(lu)%soil%dnetmin%n14 = tile_fluxes(lu)%soil%dnetmin%n14 + netmin_soil
+
+      ! all decomposing soil N adds to NH4
+      tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + netmin_soil
+
+      ! xxx debug
+      nbal2 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%pnh4%n14
+      print*,'C: nbal: ', nbal2 - nbal1
+      if (abs(nbal2 - nbal1) > eps) stop 'C: balance not satisfied for N'
+
 
       ! Spinup trick: use projected soil N mineralisation before soil equilibration
       ! if ( myinterface%steering%project_nmin ) then
@@ -396,12 +427,12 @@ contains
       
       ! get average litter -> soil flux for analytical soil C equilibration
       if ( myinterface%steering%average_soil ) then
-        mean_ksoil_fs(lu) = mean_ksoil_fs(lu) + ksoil_fs(lu)
-        mean_ksoil_sl(lu) = mean_ksoil_sl(lu) + ksoil_sl(lu)
+        mean_ksoil_fs(lu) = mean_ksoil_fs(lu) + ksoil_fs
+        mean_ksoil_sl(lu) = mean_ksoil_sl(lu) + ksoil_sl
       end if
 
       ! analytical soil C equilibration
-      if ( myinterface%steering%do_soilequil .and. doy==ndayyear ) then
+      if ( myinterface%steering%do_soilequil .and. doy == ndayyear ) then
         tile(lu)%soil%psoil_fs%c%c12 = mean_insoil_fs(lu) / mean_ksoil_fs(lu)
         tile(lu)%soil%psoil_sl%c%c12 = mean_insoil_sl(lu) / mean_ksoil_sl(lu)
         tile(lu)%soil%psoil_fs%n%n14 = tile(lu)%soil%psoil_fs%c%c12 * ntoc_save_fs
@@ -412,9 +443,6 @@ contains
         mean_ksoil_sl(lu)  = 0.0
       end if
  
-      ! OUTPUT COLLECTION
-      ! tile_fluxes(lu)%soil%dnetmin = nplus( tile_fluxes(lu)%soil%dnetmin, dsoil_fs%n%n14, dsoil_sl%n%n14 )
-      tile_fluxes(lu)%soil%dnetmin%n14 = tile_fluxes(lu)%soil%dnetmin%n14 + dsoil_fs%n%n14 + dsoil_sl%n%n14
 
     enddo luloop
 

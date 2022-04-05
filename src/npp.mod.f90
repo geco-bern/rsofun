@@ -90,7 +90,6 @@ contains
         tile_fluxes(lu)%plant(pft)%drsapw = 0.0
       endif
 
-
       !/////////////////////////////////////////////////////////////////////////
       ! DAILY NPP AND C EXPORT
       ! NPP is the sum of C available for growth and for N uptake 

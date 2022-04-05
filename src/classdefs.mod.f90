@@ -93,8 +93,8 @@ contains
     outc = outc + amount%c%c12
     outn = outn + amount%n%n14
 
-    call ccp( amount%c,to%c)
-    call ncp( amount%n,to%n)
+    call ccp( amount%c,to%c )
+    call ncp( amount%n,to%n )
 
   end subroutine orgcpRec
 
@@ -123,8 +123,8 @@ contains
     !   end if
     ! end if
 
-    call csub( amount%c,from%c)
-    call nsub( amount%n,from%n)
+    call csub( amount%c, from%c )
+    call nsub( amount%n, from%n )
 
   end subroutine orgsub
 
