@@ -101,8 +101,8 @@ contains
 
     real :: ntoc_save_fs, ntoc_save_sl
 
-    ! xxx debug
-    real :: nbal1, nbal2
+    ! ! xxx debug
+    ! real :: nbal1, nbal2
 
     !-------------------------------------------------------------------------
     ! Count number of calls (one for each simulation year)
@@ -195,8 +195,8 @@ contains
       !-------------------------------------------------------------------------
       call orginit( dlitt )
 
-      ! xxx debug
-      nbal1 = tile(lu)%soil%plitt_af%n%n14 + tile(lu)%soil%plitt_as%n%n14 + tile(lu)%soil%plitt_bg%n%n14 + dlitt%n%n14
+      ! ! xxx debug
+      ! nbal1 = tile(lu)%soil%plitt_af%n%n14 + tile(lu)%soil%plitt_as%n%n14 + tile(lu)%soil%plitt_bg%n%n14 + dlitt%n%n14
 
       ! amount of litter decay
       dlitt_af = orgfrac( 1.0 - exp( -klitt_af ), tile(lu)%soil%plitt_af )
@@ -208,10 +208,10 @@ contains
       call orgmv( dlitt_as, tile(lu)%soil%plitt_as, dlitt )
       call orgmv( dlitt_bg, tile(lu)%soil%plitt_bg, dlitt )
 
-      ! xxx debug
-      nbal2 = tile(lu)%soil%plitt_af%n%n14 + tile(lu)%soil%plitt_as%n%n14 + tile(lu)%soil%plitt_bg%n%n14 + dlitt%n%n14
-      print*,'A: nbal: ', nbal2 - nbal1
-      if (abs(nbal2 - nbal1) > eps) stop 'A: balance not satisfied for N'
+      ! ! xxx debug
+      ! nbal2 = tile(lu)%soil%plitt_af%n%n14 + tile(lu)%soil%plitt_as%n%n14 + tile(lu)%soil%plitt_bg%n%n14 + dlitt%n%n14
+      ! print*,'A: nbal: ', nbal2 - nbal1
+      ! if (abs(nbal2 - nbal1) > eps) stop 'A: balance not satisfied for N'
   
       !////////////////////////////////////////////////////////////////
       ! EXUDATES DECAY
@@ -344,8 +344,8 @@ contains
         ! record N required for balance as free-living N fixation
         tile_fluxes(lu)%soil%dnfix_free = tile_fluxes(lu)%soil%dnfix_free + nfix
 
-        ! xxx debug
-        nbal1 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + nreq
+        ! ! xxx debug
+        ! nbal1 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + nreq
 
         ! Move N to soil pools
         call ncp( nfrac( params_littersom%fastfrac        , nitrogen( nreq ) ), tile(lu)%soil%psoil_fs%n )
@@ -354,10 +354,10 @@ contains
         ! tile(lu)%soil%psoil_fs%n*n14 = tile(lu)%soil%psoil_fs%c%c12 * params_littersom%ntoc_soil
         ! tile(lu)%soil%psoil_sl%n*n14 = tile(lu)%soil%psoil_sl%c%c12 * params_littersom%ntoc_soil
 
-        ! xxx debug
-        nbal2 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14
-        print*,'C: nbal: ', nbal2 - nbal1
-        if (abs(nbal2 - nbal1) > eps) stop 'C: balance not satisfied for N'
+        ! ! xxx debug
+        ! nbal2 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14
+        ! print*,'C: nbal: ', nbal2 - nbal1
+        ! if (abs(nbal2 - nbal1) > eps) stop 'C: balance not satisfied for N'
 
         ! if ( abs( cton(tile(lu)%soil%psoil_fs) - params_littersom%cton_soil ) > 1e-5 ) then
         !   write(0,*) 'psoil_fs', cton( tile(lu)%soil%psoil_fs )
@@ -385,8 +385,8 @@ contains
       ! net mineralisation from soil decomposition
       netmin_soil = dsoil_fs%n%n14 + dsoil_sl%n%n14
 
-      ! xxx debug
-      nbal1 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%pnh4%n14
+      ! ! xxx debug
+      ! nbal1 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%pnh4%n14
 
       ! soil decay
       call orgsub( dsoil_fs, tile(lu)%soil%psoil_fs )
@@ -401,10 +401,10 @@ contains
       ! all decomposing soil N adds to NH4
       tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + netmin_soil
 
-      ! xxx debug
-      nbal2 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%pnh4%n14
-      print*,'C: nbal: ', nbal2 - nbal1
-      if (abs(nbal2 - nbal1) > eps) stop 'C: balance not satisfied for N'
+      ! ! xxx debug
+      ! nbal2 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%pnh4%n14
+      ! print*,'C: nbal: ', nbal2 - nbal1
+      ! if (abs(nbal2 - nbal1) > eps) stop 'C: balance not satisfied for N'
 
 
       ! Spinup trick: use projected soil N mineralisation before soil equilibration

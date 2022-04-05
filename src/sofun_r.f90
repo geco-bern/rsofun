@@ -81,7 +81,7 @@ contains
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(75), intent(in) :: par  ! Model parameters
     real(kind=c_double),  dimension(nt,16), intent(in) :: forcing
-    real(kind=c_double),  dimension(nt,37), intent(out) :: output
+    real(kind=c_double),  dimension(nt,38), intent(out) :: output
 
     ! local variables
     type(outtype_biosphere), dimension(ndayyear) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -321,6 +321,7 @@ contains
         output(idx_start:idx_end,35) = dble(out_biosphere(:)%netmin )
         output(idx_start:idx_end,36) = dble(out_biosphere(:)%dcharv )
         output(idx_start:idx_end,37) = dble(out_biosphere(:)%dnharv )
+        output(idx_start:idx_end,38) = dble(out_biosphere(:)%drd )
 
       end if
 

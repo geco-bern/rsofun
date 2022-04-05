@@ -87,7 +87,6 @@ module md_interface_pmodel
     real :: kdoc
     real :: docmax
     real :: dnitr2n2o
-
     real :: beta
     real :: rd_to_vcmax
     real :: tau_acclim
@@ -155,6 +154,7 @@ module md_interface_pmodel
     real :: netmin
     real :: dcharv
     real :: dnharv
+    real :: drd
   end type outtype_biosphere
 
 end module md_interface_pmodel

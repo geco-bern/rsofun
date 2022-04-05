@@ -55,6 +55,7 @@ contains
     use md_findroot_fzeroin
     use md_interface_pmodel, only: myinterface
     use md_forcing_pmodel, only: climate_type
+    use md_sofunutils, only: dampen_variability
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
@@ -67,6 +68,10 @@ contains
     real :: dcroot
     real :: dnroot
     real :: drgrow
+    real :: an_unitlai
+    real, save :: an_unitlai_damped, an_unitlai_damped_prev, count
+    integer, parameter :: count_wait = 15
+    logical, save :: firstcall = .true.
 
     integer :: lu
     integer :: pft
@@ -104,6 +109,7 @@ contains
     abserr = 100.0  * XMACHEPS !*10e5
     relerr = 1000.0 * XMACHEPS !*10e5
 
+
     ! !-------------------------------------------------------------------------
     ! ! Determine day of year (DOY) and month of year (MOY) to use in climate vectors
     ! !-------------------------------------------------------------------------
@@ -121,6 +127,57 @@ contains
 
     do pft=1,npft
       lu = params_pft_plant(pft)%lu_category
+
+      if (params_pft_plant(pft)%grass) then
+        !-------------------------------------------------------------------------
+        ! Determine day when net C assimilation per unit leaf area starts declining
+        !-------------------------------------------------------------------------
+        an_unitlai = (tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd) / tile(lu)%plant(pft)%lai_ind
+        if (firstcall) then 
+          an_unitlai_damped = an_unitlai
+          an_unitlai_damped_prev = an_unitlai_damped
+          count = 0
+          firstcall = .false.
+        else
+          an_unitlai_damped_prev = an_unitlai_damped
+          an_unitlai_damped = an_unitlai   ! dampen_variability( an_unitlai, 15.0, an_unitlai_damped )
+        end if
+
+        ! after N consecutive days of declining (damped) net assimilation per unit leaf area,
+        ! stop growing and allocate to seeds instead
+        !-------------------------------------------------------------------------
+        ! print*,'an_unitlai, an_unitlai_damped, an_unitlai_damped_prev, count', &
+        !         an_unitlai, an_unitlai_damped, an_unitlai_damped_prev, count
+                
+        if (an_unitlai_damped_prev > an_unitlai_damped) then
+          print*,'declining, count: ', count
+          count = count + 1
+        else
+          count = 0
+        end if
+
+        if (count > count_wait) then
+          tile(lu)%plant(pft)%fill_seeds = .true.
+        end if
+
+        ! after N consecutive days of increasing (damped) net assimilation per unit leaf area,
+        ! re-start growing and no longer allocate to seeds
+        !-------------------------------------------------------------------------
+        if (an_unitlai_damped_prev < an_unitlai_damped) then
+          count = count + 1
+        else
+          count = 0
+        end if
+
+        if (count > count_wait) then
+          tile(lu)%plant(pft)%fill_seeds = .false.
+        end if
+
+        ! xxx debug
+        print*,'fill_seeds: ', tile(lu)%plant(pft)%fill_seeds
+
+      end if
+
 
       if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps ) then
 
@@ -399,7 +456,7 @@ contains
               !-------------------------------------------------------------------  
               if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
                 req = abs(tile(lu)%plant(pft)%plabl%n%n14)
-                print*,'Negative labile N. required to balance:', req
+                ! print*,'Negative labile N. required to balance:', req
                 tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                 tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
                 tile(lu)%plant(pft)%plabl%n%n14 = 0.0
@@ -427,7 +484,7 @@ contains
               ! If labile N gets negative, account gap as N fixation
               !-------------------------------------------------------------------  
               if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
-                print*,'Negative labile N. required to balance:', req
+                ! print*,'Negative labile N. required to balance:', req
                 tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                 tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
                 tile(lu)%plant(pft)%plabl%n%n14 = 0.0

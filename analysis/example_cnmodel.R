@@ -1,5 +1,8 @@
 library(dplyr)
 library(rsofun)
+library(ggplot2)
+library(patchwork)
+
 
 pars <- list(
 
@@ -122,7 +125,6 @@ output <- runread_pmodel_f(
   )
 
 ## Test plot
-library(ggplot2)
 
 output$data[[1]] %>% 
   as_tibble() %>% 
@@ -141,6 +143,16 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
+  ggplot(aes(date, nleaf)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, fapar)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
   ggplot(aes(date, lai)) + 
   geom_line()
 
@@ -153,3 +165,31 @@ output$data[[1]] %>%
   ggplot(aes(year, cue)) + 
   geom_line()
 
+
+
+source("analysis/get_fill_seeds.R")
+
+df_fill_seeds <- get_fill_seeds(
+  output$data[[1]]$gpp,
+  output$data[[1]]$drd,
+  output$data[[1]]$lai,
+  lubridate::yday(output$data[[1]]$date)
+  )
+
+df <- bind_cols(
+  output$data[[1]],
+  df_fill_seeds
+)
+
+gg1 <- df %>% 
+  slice(1:365) %>% 
+  ggplot(aes(date, gpp)) +
+  geom_line()
+
+gg2 <- df %>% 
+  slice(1:365) %>% 
+  ggplot() +
+  geom_line(aes(date, (gpp-drd)/lai)) +
+  geom_line(aes(date, an_max), color = "red")
+
+gg1/gg2

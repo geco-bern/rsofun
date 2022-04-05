@@ -368,7 +368,8 @@ run_pmodel_f_bysite <- function(
           "cex",
           "netmin",
           "dcharv",
-          "dnharv"
+          "dnharv",
+          "drd"
           )) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -411,7 +412,8 @@ run_pmodel_f_bysite <- function(
                   cex     = NA,
                   netmin  = NA,
                   dcharv  = NA,
-                  dnharv  = NA
+                  dnharv  = NA,
+                  drd     = NA
                   )
   }
     

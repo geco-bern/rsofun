@@ -31,7 +31,7 @@ module md_turnover
   private
   public turnover, turnover_root, turnover_leaf, turnover_labl
 
-  logical, parameter :: verbose = .true.
+  logical, parameter :: verbose = .false.
   logical, parameter :: baltest = .false.
   real :: cbal1, cbal2
   real :: nbal1, nbal2
@@ -231,45 +231,43 @@ contains
     ! get updated leaf N
     nleaf = tile%plant(pft)%narea_canopy
 
-    ! xxx debug
+    if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
+    if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
+    if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
+    if (verbose) print*,'                                nleaf = ', nleaf
 
-    ! if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
-    ! if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
-    ! if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
-    ! if (verbose) print*,'                                nleaf = ', nleaf
+    do while ( nleaf > lm_init%n%n14 )
 
-    ! do while ( nleaf > lm_init%n%n14 )
+      nitr = nitr + 1
 
-    !   nitr = nitr + 1
+      ! reduce leaf C a bit more
+      cleaf = cleaf * lm_init%n%n14 / nleaf
 
-    !   ! reduce leaf C a bit more
-    !   cleaf = cleaf * lm_init%n%n14 / nleaf
+      ! get new LAI based on cleaf
+      tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
 
-    !   ! get new LAI based on cleaf
-    !   tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
+      ! update canopy state (only variable fAPAR so far implemented)
+      tile%plant(pft)%fapar_ind = get_fapar( tile%plant(pft)%lai_ind )
 
-    !   ! update canopy state (only variable fAPAR so far implemented)
-    !   tile%plant(pft)%fapar_ind = get_fapar( tile%plant(pft)%lai_ind )
+      ! re-calculate metabolic and structural N, given new LAI and fAPAR
+      call update_leaftraits( tile%plant(pft) )
 
-    !   ! re-calculate metabolic and structural N, given new LAI and fAPAR
-    !   call update_leaftraits( tile%plant(pft) )
+      ! get updated leaf N
+      nleaf = tile%plant(pft)%narea_canopy
 
-    !   ! get updated leaf N
-    !   nleaf = tile%plant(pft)%narea_canopy
+      if (verbose) print*,'                      N iteration: ', nitr
+      if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
+      if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
+      if (verbose) print*,'                                nleaf = ', nleaf
 
-    !   if (verbose) print*,'                      N iteration: ', nitr
-    !   if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
-    !   if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
-    !   if (verbose) print*,'                                nleaf = ', nleaf
+      if (nitr > 30) exit
 
-    !   if (nitr > 30) exit
+    end do
 
-    ! end do
-
-    ! if (verbose .and. nitr > 0) print*,'                      ------------------'
-    ! if (verbose .and. nitr > 0) print*,'                      No. of iterations ', nitr
-    ! if (verbose .and. nitr > 0) print*,'                      final reduction of leaf C ', cleaf / lm_init%c%c12
-    ! if (verbose .and. nitr > 0) print*,'                      final reduction of leaf N ', nleaf / lm_init%n%n14
+    if (verbose .and. nitr > 0) print*,'                      ------------------'
+    if (verbose .and. nitr > 0) print*,'                      No. of iterations ', nitr
+    if (verbose .and. nitr > 0) print*,'                      final reduction of leaf C ', cleaf / lm_init%c%c12
+    if (verbose .and. nitr > 0) print*,'                      final reduction of leaf N ', nleaf / lm_init%n%n14
 
     ! update 
     tile%plant(pft)%pleaf%c%c12 = cleaf

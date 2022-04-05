@@ -105,7 +105,7 @@ contains
 
     real, dimension(ndayyear), save :: actnv_unitfapar_vec
 
-    logical, parameter :: verbose = .true.
+    logical, parameter :: verbose = .false.
 
     ! real, save :: co2_memory
     ! real, save :: vpd_memory

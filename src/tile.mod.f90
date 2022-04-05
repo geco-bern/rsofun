@@ -807,6 +807,7 @@ contains
     out_biosphere%dcharv  = tile_fluxes(lu)%canopy%dharv%c%c12
     out_biosphere%dnharv  = tile_fluxes(lu)%canopy%dharv%n%n14
     out_biosphere%npp     = tile_fluxes(lu)%canopy%dnpp%c12
+    out_biosphere%drd     = tile_fluxes(lu)%canopy%drd
 
   end subroutine diag_daily
 

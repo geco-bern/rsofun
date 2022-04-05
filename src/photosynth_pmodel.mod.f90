@@ -236,13 +236,13 @@ contains
       ! Vcmax per unit aborbed light
       vcmax_unitiabs = kphio * out_optchi%mjoc * mprime / out_optchi%mj
 
-      ! xxx test
-      print*,'kphio           : ', kphio
-      ! print*,'out_optchi%mjoc : ', out_optchi%mjoc 
-      print*,'mprime          : ', mprime
-      print*,'c_molmass       : ', c_molmass
-      print*,'out_optchi%mj   : ', out_optchi%mj
-      ! stop 
+      ! ! xxx debug
+      ! print*,'kphio           : ', kphio
+      ! print*,'mprime          : ', mprime
+      ! print*,'c_molmass       : ', c_molmass
+      ! print*,'out_optchi%mj   : ', out_optchi%mj
+      ! ! print*,'out_optchi%mjoc : ', out_optchi%mjoc 
+      ! ! stop 
 
     else if (method_jmaxlim == "smith19") then
 

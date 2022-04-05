@@ -112,8 +112,10 @@ module md_plant
     real :: nmass               ! leaf N per unit leaf mass, g N / g-dry mass
     real :: r_cton_leaf         ! leaf C:N ratio [gC/gN] 
     real :: r_ntoc_leaf         ! leaf N:C ratio [gN/gC]
-
     real :: actnv_unitfapar     ! metabolic leaf N per unit fAPAR (g N m-2 mol-1)
+
+    ! pheno phases
+    logical :: fill_seeds       ! switch to change from seed filling to growth period
 
     ! pools
     type(orgpool) :: pleaf     ! leaf biomass [gC/ind.] (=lm_ind)
@@ -214,58 +216,6 @@ contains
   end function get_fapar
 
 
-  ! function get_lai( pft, cleaf, actnv_unitfapar ) result( lai )
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Calculates LAI as a function of leaf-C. This is not so straight
-  !   ! forward due to the dependence of canopy-metabolic leaf N on LAI,
-  !   ! and the dependence of canopy-structural leaf N and C on canopy-
-  !   ! metabolic leaf N.
-  !   !----------------------------------------------------------------
-  !   use md_params_core, only: nmonth, c_molmass
-  !   use md_lambertw, only: calc_wapr
-
-  !   ! arguments
-  !   integer, intent(in) :: pft
-  !   real, intent(in) :: cleaf
-  !   real, intent(in) :: actnv_unitfapar 
-
-  !   ! function return variable
-  !   real :: lai
-
-  !   ! local variables
-  !   real    :: alpha, beta, gamma ! variable substitutes
-  !   real    :: arg_to_lambertw
-  !   integer :: nerror
-
-
-  !   if (cleaf > 0.0) then
-
-  !     ! Monthly variations in metabolic N, determined by variations in meanmppfd and nv should not result in variations in leaf traits. 
-  !     ! In order to prevent this, assume annual maximum metabolic N, part of which is deactivated during months with lower insolation (and Rd reduced.)
-  !     ! maxnv = actnv_unitfapar (as done before)
-
-  !     alpha = actnv_unitfapar * params_pft_plant(pft)%r_n_cw_v
-  !     beta  = params_pft_plant(pft)%ncw_min
-  !     gamma = cleaf / ( c_molmass * params_pft_plant(pft)%r_ctostructn_leaf ) 
-  !     arg_to_lambertw = alpha * params_plant%kbeer / beta * exp( (alpha - gamma) * params_plant%kbeer / beta )
-  !     lai = 1.0 / (beta * params_plant%kbeer ) * &
-  !       ( -alpha * params_plant%kbeer + &
-  !         gamma * params_plant%kbeer + &
-  !         beta * calc_wapr( arg_to_lambertw, 0, nerror, 9999 ) &
-  !       )
-  !   else
-
-  !     lai = 0.0
-
-  !   end if
-    
-  ! end function get_lai
-
-
-  ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-  ! xxx debug
-  ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
   function get_lai( pft, cleaf, actnv_unitfapar ) result( lai )
     !////////////////////////////////////////////////////////////////
     ! Calculates LAI as a function of leaf-C. This is not so straight
@@ -274,6 +224,7 @@ contains
     ! metabolic leaf N.
     !----------------------------------------------------------------
     use md_params_core, only: nmonth, c_molmass
+    use md_lambertw, only: calc_wapr
 
     ! arguments
     integer, intent(in) :: pft
@@ -283,11 +234,27 @@ contains
     ! function return variable
     real :: lai
 
+    ! local variables
+    real    :: alpha, beta, gamma ! variable substitutes
+    real    :: arg_to_lambertw
+    integer :: nerror
+
+
     if (cleaf > 0.0) then
 
-      ! test: assuming SLA = 0.01 m2 g-1, corresponding to LMA = 100 g m-2
-      lai = cleaf * 0.01
+      ! Monthly variations in metabolic N, determined by variations in meanmppfd and nv should not result in variations in leaf traits. 
+      ! In order to prevent this, assume annual maximum metabolic N, part of which is deactivated during months with lower insolation (and Rd reduced.)
+      ! maxnv = actnv_unitfapar (as done before)
 
+      alpha = actnv_unitfapar * params_pft_plant(pft)%r_n_cw_v
+      beta  = params_pft_plant(pft)%ncw_min
+      gamma = cleaf / ( c_molmass * params_pft_plant(pft)%r_ctostructn_leaf ) 
+      arg_to_lambertw = alpha * params_plant%kbeer / beta * exp( (alpha - gamma) * params_plant%kbeer / beta )
+      lai = 1.0 / (beta * params_plant%kbeer ) * &
+        ( -alpha * params_plant%kbeer + &
+          gamma * params_plant%kbeer + &
+          beta * calc_wapr( arg_to_lambertw, 0, nerror, 9999 ) &
+        )
     else
 
       lai = 0.0
@@ -295,6 +262,41 @@ contains
     end if
     
   end function get_lai
+
+
+  ! ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  ! ! xxx debug
+  ! ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+  ! function get_lai( pft, cleaf, actnv_unitfapar ) result( lai )
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Calculates LAI as a function of leaf-C. This is not so straight
+  !   ! forward due to the dependence of canopy-metabolic leaf N on LAI,
+  !   ! and the dependence of canopy-structural leaf N and C on canopy-
+  !   ! metabolic leaf N.
+  !   !----------------------------------------------------------------
+  !   use md_params_core, only: nmonth, c_molmass
+
+  !   ! arguments
+  !   integer, intent(in) :: pft
+  !   real, intent(in) :: cleaf
+  !   real, intent(in) :: actnv_unitfapar 
+
+  !   ! function return variable
+  !   real :: lai
+
+  !   if (cleaf > 0.0) then
+
+  !     ! test: assuming SLA = 0.01 m2 g-1, corresponding to LMA = 100 g m-2
+  !     lai = cleaf * 0.01
+
+  !   else
+
+  !     lai = 0.0
+
+  !   end if
+    
+  ! end function get_lai
 
 
   function get_leaf_n_metabolic_canopy( fapar, actnv_unitfapar ) result( mynleaf_metabolic )
@@ -706,6 +708,8 @@ contains
       call orginit( plant(pft)%plabl )
       call init_pheno(plant(pft)%pheno(:))
     end do
+
+    plant(:)%fill_seeds = .false.
 
   end subroutine init_plant
 
