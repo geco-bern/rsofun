@@ -13,5 +13,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh api repos/:owner/sofunCalVal/dispatches \
+          gh api repos/:computationales/sofunCalVal/dispatches \
               --raw-field event_type=render
