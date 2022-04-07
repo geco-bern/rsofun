@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Create repository dispatch event
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh api repos/:owner/sofunCalVal/dispatches \
               --raw-field event_type=render
