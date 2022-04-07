@@ -13,5 +13,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          gh api repos/:owner/ghidra-ci/dispatches \
+          gh api repos/:owner/sofunCalVal/dispatches \
               --raw-field event_type=render
