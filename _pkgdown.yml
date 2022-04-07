@@ -1,4 +1,4 @@
 template:
   package: cestemplate
-params:
-  mathjax: true
+  params:
+   mathjax: true
