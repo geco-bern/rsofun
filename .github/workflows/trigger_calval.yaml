@@ -1,8 +1,8 @@
-name: render sofunCalVal repo
-
 on:
   push:
   workflow_dispatch:
+
+name: render sofunCalVal repo
 
 jobs:
   notify:
