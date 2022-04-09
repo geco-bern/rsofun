@@ -803,7 +803,7 @@ contains
     nleaf    = get_leaf_n_canopy( pft, lai, actnv_unitfapar )
     
     ! ! xxx debug
-    ! nleaf = get_fapar( lai ) * 0.01
+    ! nleaf = get_fapar( lai ) * 0.01 + 0.01 * lai
     
     mydnleaf = nleaf - nleaf0
 

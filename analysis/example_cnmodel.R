@@ -22,9 +22,9 @@ pars <- list(
   exurate               = 0.003000,
   
   k_decay_leaf_base     = 1.00000,
-  k_decay_leaf_width    = 1.00000,
+  k_decay_leaf_width    = 0.00000,
   k_decay_root          = 1.00000,
-  k_decay_seed          = 3.00000,
+  k_decay_labl          = 0.00000,
   k_decay_sapw          = 1.00000,
   
   r_cton_root           = 37.0000,
