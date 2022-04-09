@@ -786,10 +786,6 @@ contains
     out_biosphere%tsoil   = tile(lu)%soil%phy%temp
     out_biosphere%cleaf   = tile(lu)%canopy%pleaf%c%c12
     out_biosphere%nleaf   = tile(lu)%canopy%pleaf%n%n14
-    
-    ! ! xxx debug
-    ! out_biosphere%nleaf   = tile(lu)%plant(1)%actnv_unitfapar
-
     out_biosphere%croot   = tile(lu)%canopy%proot%c%c12
     out_biosphere%nroot   = tile(lu)%canopy%proot%n%n14
     out_biosphere%clabl   = tile(lu)%canopy%plabl%c%c12

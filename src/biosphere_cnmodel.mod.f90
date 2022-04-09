@@ -107,8 +107,6 @@ contains
       dayloop: do dm=1,ndaymonth(moy)
         doy = doy + 1
 
-        print*,'doy ', doy
-
         if (verbose) print*,'-----------------------------------------------------------'
         if (verbose) print*,'YEAR, DOY ', myinterface%steering%year, doy
         if (verbose) print*,'-----------------------------------------------------------'

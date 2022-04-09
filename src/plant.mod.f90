@@ -61,7 +61,7 @@ module md_plant
     real    :: k_decay_leaf_width  ! shape parameter for turnover function if LAI
     real    :: k_decay_sapw        ! sapwood decay constant [year-1]
     real    :: k_decay_root        ! root decay constant [year-1]
-    real    :: k_decay_seed        ! labile pool decay constant [year-1]
+    real    :: k_decay_labl        ! labile pool decay constant [year-1]
     real    :: r_cton_root         ! C:N ratio in roots (gC/gN)
     real    :: r_ntoc_root         ! N:C ratio in roots (inverse of 'r_cton_root', gN/gC)
     real    :: ncw_min             ! y-axis intersection in the relationship of non-metabolic versus metabolic N per leaf area    
@@ -123,8 +123,6 @@ module md_plant
     type(orgpool) :: psapw     ! sapwood biomass [gC/ind.] (=sm_ind)
     type(orgpool) :: pwood     ! heartwood (non-living) biomass [gC/ind.] (=hm_ind)
     type(orgpool) :: plabl     ! labile pool, temporary storage of N and C [gC/ind.] (=bm_inc but contains also N)
-    type(orgpool) :: presv     ! reserves pool
-    type(orgpool) :: pseed     ! seed biomass [gC/ind.]
 
     ! phenology
     type(phenotype), dimension(ndayyear) :: pheno
@@ -395,19 +393,18 @@ contains
     type( plant_type ), intent(inout) :: plant
 
     ! local variables
-    real :: tmp_metabolic   ! mol N m-2-ground
-    real :: tmp_structural  ! mol N m-2-ground
+    real :: mynarea_metabolic_canop   ! mol N m-2-ground
+    real :: mynarea_structural_canop  ! mol N m-2-ground
 
     ! calculate quantities in units of mol N
-    plant%fapar_ind = get_fapar( plant%lai_ind )
-    tmp_metabolic  = get_leaf_n_metabolic_canopy( plant%fapar_ind, plant%actnv_unitfapar )               ! mol N m-2-ground    
-    tmp_structural = get_leaf_n_structural_canopy( plant%pftno, plant%lai_ind, tmp_metabolic ) ! mol N m-2-ground
+    mynarea_metabolic_canop  = get_leaf_n_metabolic_canopy( plant%fapar_ind, plant%actnv_unitfapar )               ! mol N m-2-ground    
+    mynarea_structural_canop = get_leaf_n_structural_canopy( plant%pftno, plant%lai_ind, mynarea_metabolic_canop ) ! mol N m-2-ground
 
     ! canopy-level, in units of gN / m2-ground 
-    plant%narea_metabolic_canopy  = n_molmass * tmp_metabolic ! g N m-2-ground 
-    plant%narea_structural_canopy = n_molmass * tmp_structural ! g N m-2-ground
-    plant%narea_canopy            = plant%narea_metabolic_canopy + plant%narea_structural_canopy  ! g N m-2-ground
-    plant%leafc_canopy            = c_molmass * params_pft_plant(plant%pftno)%r_ctostructn_leaf * tmp_structural ! g C m-2-ground
+    plant%narea_metabolic_canopy  = n_molmass * mynarea_metabolic_canop ! g N m-2-ground 
+    plant%narea_structural_canopy = n_molmass * mynarea_structural_canop ! g N m-2-ground
+    plant%narea_canopy            = n_molmass * (mynarea_metabolic_canop + mynarea_structural_canop)  ! g N m-2-ground
+    plant%leafc_canopy            = c_molmass * params_pft_plant(plant%pftno)%r_ctostructn_leaf * mynarea_structural_canop ! g C m-2-ground
 
     ! leaf-level, in units of gN / m2-leaf 
     plant%narea_metabolic  = plant%narea_metabolic_canopy / plant%lai_ind   ! g N m-2-leaf
@@ -638,8 +635,6 @@ contains
     ! root decay constant [days], read in as [years-1], central value: 1.04 (Shan et al., 1993; see Li et al., 2014)  
     out_getpftparams%k_decay_root = myinterface%params_calib%k_decay_root / ndayyear 
 
-    out_getpftparams%k_decay_seed = myinterface%params_calib%k_decay_seed / ndayyear 
-
     ! root C:N and N:C ratio (gC/gN and gN/gC)
     out_getpftparams%r_cton_root = myinterface%params_calib%r_cton_root
     out_getpftparams%r_ntoc_root = 1.0 / out_getpftparams%r_cton_root
@@ -711,8 +706,6 @@ contains
       call orginit( plant(pft)%psapw )
       call orginit( plant(pft)%pwood )
       call orginit( plant(pft)%plabl )
-      call orginit( plant(pft)%pseed )
-      call orginit( plant(pft)%presv )
       call init_pheno(plant(pft)%pheno(:))
     end do
 

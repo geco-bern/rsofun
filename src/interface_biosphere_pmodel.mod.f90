@@ -30,7 +30,7 @@ module md_interface_pmodel
     real :: k_decay_leaf_base
     real :: k_decay_leaf_width
     real :: k_decay_root
-    real :: k_decay_seed
+    real :: k_decay_labl
     real :: k_decay_sapw
     real :: r_cton_root
     real :: r_cton_wood

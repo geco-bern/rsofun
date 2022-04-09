@@ -68,23 +68,8 @@ contains
 
       lu = params_pft_plant(pft)%lu_category
 
-      if (tile(lu)%plant(pft)%plabl%c%c12 < 0.0) then 
-        print*,'clabl: ', tile(lu)%plant(pft)%plabl%c%c12
-        stop 'before npp labile C is neg.'
-      end if
-      if (tile(lu)%plant(pft)%plabl%n%n14 < 0.0) then 
-        print*,'nlabl: ', tile(lu)%plant(pft)%plabl%n%n14
-        stop 'before npp labile N is neg.'
-      end if
-
-      ! ! avoid negative
-      ! if (tile(lu)%plant(pft)%plabl%c%c12 < 0.0 .or. tile(lu)%plant(pft)%plabl%n%n14 < 0.0) then
-      !   call orgmv( orgfrac( k_transfer, tile(lu)%plant(pft)%presv ), &
-      !               tile(lu)%plant(pft)%presv, &
-      !               tile(lu)%plant(pft)%plabl &
-      !               )
-      ! end if
-
+      if (tile(lu)%plant(pft)%plabl%c%c12 < 0.0) stop 'before npp labile C is neg.'
+      if (tile(lu)%plant(pft)%plabl%n%n14 < 0.0) stop 'before npp labile N is neg.'
 
       !/////////////////////////////////////////////////////////////////////////
       ! MAINTENANCE RESPIRATION
@@ -119,9 +104,7 @@ contains
                                                 - tile_fluxes(lu)%plant(pft)%drroot &
                                                 - tile_fluxes(lu)%plant(pft)%drsapw &
                                                 )
-      tile_fluxes(lu)%plant(pft)%dcex = min(calc_cexu( tile(lu)%plant(pft)%proot%c%c12, climate%dtemp ), &
-                                            tile(lu)%plant(pft)%plabl%c%c12 &
-                                            )   
+      tile_fluxes(lu)%plant(pft)%dcex = calc_cexu( tile(lu)%plant(pft)%proot%c%c12, climate%dtemp )   
 
       ! !/////////////////////////////////////////////////////////////////////////
       ! ! SAFETY AND DEATH
@@ -190,14 +173,10 @@ contains
       call ccp( carbon( tile_fluxes(lu)%plant(pft)%dcex ), tile(lu)%soil%pexud )
       call ccp( cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) ), tile(lu)%plant(pft)%plabl%c )
 
-      if (tile(lu)%plant(pft)%plabl%c%c12 < 0.0) then 
-        print*,'clabl: ', tile(lu)%plant(pft)%plabl%c%c12
-        stop 'after npp labile C is neg.'
-      end if
-      if (tile(lu)%plant(pft)%plabl%n%n14 < 0.0) then 
-        print*,'nlabl: ', tile(lu)%plant(pft)%plabl%n%n14
-        stop 'after npp labile N is neg.'
-      end if
+      if (tile(lu)%plant(pft)%plabl%c%c12 < (-1)*eps) stop 'after npp labile C is neg.'
+      if (tile(lu)%plant(pft)%plabl%n%n14 < (-1)*eps) stop 'after npp labile N is neg.'
+
+      ! print*,'gpp, dclabl', doy, tile_fluxes(lu)%plant(pft)%dgpp, cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) )
 
     end do pftloop
 

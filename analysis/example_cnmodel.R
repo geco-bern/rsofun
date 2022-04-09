@@ -22,9 +22,9 @@ pars <- list(
   exurate               = 0.003000,
   
   k_decay_leaf_base     = 1.00000,
-  k_decay_leaf_width    = 1.00000,
+  k_decay_leaf_width    = 0.00000,
   k_decay_root          = 1.00000,
-  k_decay_seed          = 3.00000,
+  k_decay_labl          = 0.00000,
   k_decay_sapw          = 1.00000,
   
   r_cton_root           = 37.0000,
@@ -158,11 +158,6 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(cleaf, lai)) + 
-  geom_point()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
   mutate(year = lubridate::year(date)) %>% 
   group_by(year) %>% 
   summarise(npp = sum(npp, na.rm = TRUE), gpp = sum(gpp, na.rm = TRUE)) %>% 
@@ -187,17 +182,14 @@ df <- bind_cols(
 )
 
 gg1 <- df %>% 
-  slice(1:700) %>%
+  slice(1:365) %>% 
   ggplot(aes(date, gpp)) +
   geom_line()
 
 gg2 <- df %>% 
-  slice(1:700) %>%
+  slice(1:365) %>% 
   ggplot() +
   geom_line(aes(date, (gpp-drd)/lai)) +
-  geom_line(aes(date, an_max), color = "red") +
-  geom_line(aes(date, an_unitlai_damped), color = "royalblue") +
-  geom_point(aes(date, 0.01, color = drop_seeds)) +
-  geom_point(aes(date, 0, color = fill_seeds))
+  geom_line(aes(date, an_max), color = "red")
 
 gg1/gg2

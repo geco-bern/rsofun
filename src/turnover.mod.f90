@@ -29,7 +29,7 @@ module md_turnover
   implicit none
 
   private
-  public turnover, turnover_root, turnover_leaf, turnover_seed
+  public turnover, turnover_root, turnover_leaf, turnover_labl
 
   logical, parameter :: verbose = .false.
   logical, parameter :: baltest = .false.
@@ -52,7 +52,7 @@ contains
     ! local variables
     integer :: pft
     integer :: lu
-    real :: dseed
+    real :: dlabl
     real :: dleaf
     real :: droot
 
@@ -77,7 +77,7 @@ contains
 
         !   droot = 1.0
         !   dleaf = 1.0
-        !   dseed = 1.0
+        !   dlabl = 1.0
 
         !   stop 'shedding the fucking leaves'
           
@@ -88,15 +88,11 @@ contains
           !   + params_pft_plant(pft)%k_decay_leaf_base
 
           ! xxx debug
-          if (tile(lu)%plant(pft)%fill_seeds) then
-            dleaf =  params_pft_plant(pft)%k_decay_leaf_base * params_pft_plant(pft)%k_decay_leaf_width
-          else
-            dleaf =  params_pft_plant(pft)%k_decay_leaf_base
-          end if
+          dleaf =  params_pft_plant(pft)%k_decay_leaf_base
 
           ! constant turnover rate
           droot = params_pft_plant(pft)%k_decay_root
-          dseed = params_pft_plant(pft)%k_decay_seed
+          dlabl = params_pft_plant(pft)%k_decay_labl
 
         ! end if
 
@@ -107,7 +103,7 @@ contains
       endif
 
       !--------------------------------------------------------------
-      ! Calculate leaf turnover
+      ! Calculate leaf turnover in this day 
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_leaf() ... '
       if (verbose) print*, '              with state variables:'
@@ -132,7 +128,7 @@ contains
       if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
 
       !--------------------------------------------------------------
-      ! Calculate root turnover
+      ! Calculate root turnover in this day 
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_root() ... '
       if (verbose) print*, '              with state variables:'
@@ -156,33 +152,33 @@ contains
       if (baltest .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
       if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
 
-      !--------------------------------------------------------------
-      ! Seed turnover
-      !--------------------------------------------------------------
-      if (verbose) print*, 'calling turnover_seed() ... '
-      if (verbose) print*, '              with state variables:'
-      if (verbose) print*, '              pseed = ', tile(lu)%plant(pft)%pseed
-      if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
-      if (verbose) orgtmp  =  tile(lu)%plant(pft)%pseed
-      if (verbose) orgtmp2 =  tile(lu)%soil%plitt_af
-      !--------------------------------------------------------------
-      if ( dseed > 0.0 .and. tile(lu)%plant(pft)%pseed%c%c12 > 0.0 ) call turnover_seed( dseed, tile(lu), pft )
-      !--------------------------------------------------------------
-      if (verbose) print*, '              ==> returned: '
-      if (verbose) print*, '              pseed = ', tile(lu)%plant(:)%pseed
-      if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
-      if (verbose) print*, '              --- balance: '
-      if (verbose) print*, '                  dlitt - dseed                = ',  orgminus( &
-                                                                                    orgminus( &
-                                                                                      tile(lu)%soil%plitt_af, &
-                                                                                      orgtmp2 &
-                                                                                      ), &
-                                                                                    orgminus( &
-                                                                                      orgtmp, &
-                                                                                      tile(lu)%plant(pft)%pseed &
-                                                                                      ) &
-                                                                                    )  
-
+      ! XXX don't waste labile C and N
+      ! !--------------------------------------------------------------
+      ! ! Calculate labile turnover in this day 
+      ! !--------------------------------------------------------------
+      ! if (verbose) print*, 'calling turnover_labl() ... '
+      ! if (verbose) print*, '              with state variables:'
+      ! if (verbose) print*, '              plabl = ', tile(lu)%plant(pft)%plabl
+      ! if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
+      ! if (verbose) orgtmp  =  tile(lu)%plant(pft)%plabl
+      ! if (verbose) orgtmp2 =  tile(lu)%soil%plitt_af
+      ! !--------------------------------------------------------------
+      ! if ( dlabl > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_labl( dlabl, tile(lu), pft )
+      ! !--------------------------------------------------------------
+      ! if (verbose) print*, '              ==> returned: '
+      ! if (verbose) print*, '              plabl = ', tile(lu)%plant(:)%plabl
+      ! if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
+      ! if (verbose) print*, '              --- balance: '
+      ! if (verbose) print*, '                  dlitt - dlabl                = ',  orgminus( &
+      !                                                                               orgminus( &
+      !                                                                                 tile(lu)%soil%plitt_af, &
+      !                                                                                 orgtmp2 &
+      !                                                                                 ), &
+      !                                                                               orgminus( &
+      !                                                                                 orgtmp, &
+      !                                                                                 tile(lu)%plant(pft)%proot &
+      !                                                                                 ) &
+      !                                                                               )
     
     enddo pftloop
 
@@ -235,46 +231,43 @@ contains
     ! get updated leaf N
     nleaf = tile%plant(pft)%narea_canopy
 
-    ! ! xxx debug
-    ! nleaf = tile%plant(pft)%fapar_ind * 0.01
+    if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
+    if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
+    if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
+    if (verbose) print*,'                                nleaf = ', nleaf
 
-    ! if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
-    ! if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
-    ! if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
-    ! if (verbose) print*,'                                nleaf = ', nleaf
+    do while ( nleaf > lm_init%n%n14 )
 
-    ! do while ( nleaf > lm_init%n%n14 )
+      nitr = nitr + 1
 
-    !   nitr = nitr + 1
+      ! reduce leaf C a bit more
+      cleaf = cleaf * lm_init%n%n14 / nleaf
 
-    !   ! reduce leaf C a bit more
-    !   cleaf = cleaf * lm_init%n%n14 / nleaf
+      ! get new LAI based on cleaf
+      tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
 
-    !   ! get new LAI based on cleaf
-    !   tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
+      ! update canopy state (only variable fAPAR so far implemented)
+      tile%plant(pft)%fapar_ind = get_fapar( tile%plant(pft)%lai_ind )
 
-    !   ! update canopy state (only variable fAPAR so far implemented)
-    !   tile%plant(pft)%fapar_ind = get_fapar( tile%plant(pft)%lai_ind )
+      ! re-calculate metabolic and structural N, given new LAI and fAPAR
+      call update_leaftraits( tile%plant(pft) )
 
-    !   ! re-calculate metabolic and structural N, given new LAI and fAPAR
-    !   call update_leaftraits( tile%plant(pft) )
+      ! get updated leaf N
+      nleaf = tile%plant(pft)%narea_canopy
 
-    !   ! get updated leaf N
-    !   nleaf = tile%plant(pft)%narea_canopy
+      if (verbose) print*,'                      N iteration: ', nitr
+      if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
+      if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
+      if (verbose) print*,'                                nleaf = ', nleaf
 
-    !   if (verbose) print*,'                      N iteration: ', nitr
-    !   if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
-    !   if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
-    !   if (verbose) print*,'                                nleaf = ', nleaf
+      if (nitr > 30) exit
 
-    !   if (nitr > 30) exit
+    end do
 
-    ! end do
-
-    ! if (verbose .and. nitr > 0) print*,'                      ------------------'
-    ! if (verbose .and. nitr > 0) print*,'                      No. of iterations ', nitr
-    ! if (verbose .and. nitr > 0) print*,'                      final reduction of leaf C ', cleaf / lm_init%c%c12
-    ! if (verbose .and. nitr > 0) print*,'                      final reduction of leaf N ', nleaf / lm_init%n%n14
+    if (verbose .and. nitr > 0) print*,'                      ------------------'
+    if (verbose .and. nitr > 0) print*,'                      No. of iterations ', nitr
+    if (verbose .and. nitr > 0) print*,'                      final reduction of leaf C ', cleaf / lm_init%c%c12
+    if (verbose .and. nitr > 0) print*,'                      final reduction of leaf N ', nleaf / lm_init%n%n14
 
     ! update 
     tile%plant(pft)%pleaf%c%c12 = cleaf
@@ -340,28 +333,30 @@ contains
   end subroutine turnover_root
 
 
-  subroutine turnover_seed( dseed, tile, pft )
+  subroutine turnover_labl( dlabl, tile, pft )
     !//////////////////////////////////////////////////////////////////
-    ! Execute turnover of fraction dseed for labl pool
+    ! Execute turnover of fraction dlabl for labl pool
     !------------------------------------------------------------------
     ! arguments
-    real, intent(in)    :: dseed
+    real, intent(in)    :: dlabl
     type( tile_type ), intent(inout)  :: tile
     integer, intent(in) :: pft
 
     ! local variables
-    type(orgpool) :: sd_turn
+    type(orgpool) :: lb_turn
 
     ! detelbine absolute turnover
-    sd_turn = orgfrac( dseed, tile%plant(pft)%pseed ) ! labl turnover
+    lb_turn = orgfrac( dlabl, tile%plant(pft)%plabl ) ! labl turnover
+
+    !! xxx think of something more plausible to put the labile C and N to
 
     ! reduce leaf mass and labl mass
-    call orgsub( sd_turn, tile%plant(pft)%pseed )
+    call orgsub( lb_turn, tile%plant(pft)%plabl )
 
-    ! call orgmvRec( sd_turn, sd_turn, tile%plant(pft)%plitt_af, outaCveg2lit(pft,jpngr), outaNveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind) )
-    call orgmv( sd_turn, sd_turn, tile%soil%plitt_af, scale = real(tile%plant(pft)%nind) )
+    ! call orgmvRec( lb_turn, lb_turn, tile%plant(pft)%plitt_af, outaCveg2lit(pft,jpngr), outaNveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind) )
+    call orgmv( lb_turn, lb_turn, tile%soil%plitt_af, scale = real(tile%plant(pft)%nind) )
 
-  end subroutine turnover_seed
+  end subroutine turnover_labl
 
 
 end module md_turnover
