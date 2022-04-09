@@ -239,10 +239,11 @@ contains
     ! function return variable
     real :: resp_maint                    ! return value: maintenance respiration [gC/m2]
 
-    ! resp_maint = cmass * rresp * calc_tempstress( dtemp )
+    ! ! LPX-like temperature dependeneo of respiration rates
+    ! resp_maint = cmass * rresp * ftemp( dtemp, "lloyd_and_taylor" )
 
-    ! LPX-like temperature dependeneo of respiration rates
-    resp_maint = cmass * rresp * ftemp( dtemp, "lloyd_and_taylor" )
+    ! xxx debug
+    resp_maint = 0.0
 
   end function calc_resp_maint
 
@@ -258,8 +259,11 @@ contains
     ! function return variable
     real :: cexu
 
-    ! low-temperature ramp is included here to prevent negative C balance after exudation
-    cexu = params_plant%exurate * croot
+    ! ! low-temperature ramp is included here to prevent negative C balance after exudation
+    ! cexu = params_plant%exurate * croot
+
+    ! xxx debug
+    cexu = 0.0
 
   end function calc_cexu
 

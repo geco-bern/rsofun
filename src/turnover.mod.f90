@@ -231,6 +231,9 @@ contains
     ! get updated leaf N
     nleaf = tile%plant(pft)%narea_canopy
 
+    ! ! xxx debug
+    ! nleaf = cleaf * r_ntoc_leaf
+
     if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
     if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
     if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
@@ -257,7 +260,6 @@ contains
 
       ! xxx debug
       nleaf = cleaf * r_ntoc_leaf
-      
 
       if (verbose) print*,'                      N iteration: ', nitr
       if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind

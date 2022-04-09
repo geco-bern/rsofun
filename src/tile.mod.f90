@@ -769,28 +769,69 @@ contains
     ! populate function return variable
     !----------------------------------------------------------------
     ! if (nlu>1) stop 'think about nlu > 1'
+    ! lu = 1
+    ! out_biosphere%fapar   = tile(lu)%canopy%fapar
+    ! out_biosphere%gpp     = tile_fluxes(lu)%canopy%dgpp
+    ! out_biosphere%transp  = tile_fluxes(lu)%canopy%daet
+    ! out_biosphere%latenth = tile_fluxes(lu)%canopy%daet_e
+    ! out_biosphere%pet     = tile_fluxes(lu)%canopy%dpet
+    ! out_biosphere%vcmax   = tile_fluxes(lu)%canopy%vcmax
+    ! out_biosphere%jmax    = tile_fluxes(lu)%canopy%jmax
+    ! out_biosphere%vcmax25 = tile_fluxes(lu)%canopy%vcmax25
+    ! out_biosphere%jmax25  = tile_fluxes(lu)%canopy%jmax25
+    ! out_biosphere%gs_accl = tile_fluxes(lu)%canopy%gs_accl
+    ! out_biosphere%chi     = tile_fluxes(lu)%canopy%chi
+    ! out_biosphere%iwue    = tile_fluxes(lu)%canopy%iwue
+    ! out_biosphere%wscal   = tile(lu)%soil%phy%wscal
+    ! out_biosphere%tsoil   = tile(lu)%soil%phy%temp
+    ! out_biosphere%cleaf   = tile(lu)%canopy%pleaf%c%c12
+    ! out_biosphere%nleaf   = tile(lu)%canopy%pleaf%n%n14
+    ! out_biosphere%croot   = tile(lu)%canopy%proot%c%c12
+    ! out_biosphere%nroot   = tile(lu)%canopy%proot%n%n14
+    ! out_biosphere%clabl   = tile(lu)%canopy%plabl%c%c12
+    ! out_biosphere%nlabl   = tile(lu)%canopy%plabl%n%n14
+    ! out_biosphere%lai     = tile(lu)%canopy%lai
+    ! out_biosphere%ninorg  = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14
+    ! out_biosphere%pno3    = tile(lu)%soil%pno3%n14
+    ! out_biosphere%pnh4    = tile(lu)%soil%pnh4%n14
+    ! out_biosphere%en2o    = 0.0
+    ! out_biosphere%enleach = 0.0
+    ! out_biosphere%csoil   = tile(lu)%soil%psoil_sl%c%c12 + tile(lu)%soil%psoil_fs%c%c12
+    ! out_biosphere%nsoil   = tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%psoil_fs%n%n14 
+    ! out_biosphere%clitt   = tile(lu)%soil%plitt_af%c%c12 + tile(lu)%soil%plitt_as%c%c12 + tile(lu)%soil%plitt_bg%c%c12
+    ! out_biosphere%nlitt   = tile(lu)%soil%plitt_af%n%n14 + tile(lu)%soil%plitt_as%n%n14 + tile(lu)%soil%plitt_bg%n%n14
+    ! out_biosphere%nfix    = 0.0
+    ! out_biosphere%nup     = 0.0
+    ! out_biosphere%cex     = 0.0
+    ! out_biosphere%netmin  = tile_fluxes(lu)%soil%dnetmin%n14
+    ! out_biosphere%dcharv  = tile_fluxes(lu)%canopy%dharv%c%c12
+    ! out_biosphere%dnharv  = tile_fluxes(lu)%canopy%dharv%n%n14
+    ! out_biosphere%npp     = tile_fluxes(lu)%canopy%dnpp%c12
+    ! out_biosphere%drd     = tile_fluxes(lu)%canopy%drd
+
+    ! xxx debug: writing PFT-level to output
     lu = 1
-    out_biosphere%fapar   = tile(lu)%canopy%fapar
-    out_biosphere%gpp     = tile_fluxes(lu)%canopy%dgpp
+    out_biosphere%fapar   = tile(lu)%plant(1)%fapar_ind
+    out_biosphere%gpp     = tile_fluxes(lu)%plant(1)%dgpp
     out_biosphere%transp  = tile_fluxes(lu)%canopy%daet
     out_biosphere%latenth = tile_fluxes(lu)%canopy%daet_e
     out_biosphere%pet     = tile_fluxes(lu)%canopy%dpet
-    out_biosphere%vcmax   = tile_fluxes(lu)%canopy%vcmax
-    out_biosphere%jmax    = tile_fluxes(lu)%canopy%jmax
-    out_biosphere%vcmax25 = tile_fluxes(lu)%canopy%vcmax25
-    out_biosphere%jmax25  = tile_fluxes(lu)%canopy%jmax25
-    out_biosphere%gs_accl = tile_fluxes(lu)%canopy%gs_accl
-    out_biosphere%chi     = tile_fluxes(lu)%canopy%chi
-    out_biosphere%iwue    = tile_fluxes(lu)%canopy%iwue
+    out_biosphere%vcmax   = tile_fluxes(lu)%plant(1)%vcmax
+    out_biosphere%jmax    = tile_fluxes(lu)%plant(1)%jmax
+    out_biosphere%vcmax25 = tile_fluxes(lu)%plant(1)%vcmax25
+    out_biosphere%jmax25  = tile_fluxes(lu)%plant(1)%jmax25
+    out_biosphere%gs_accl = tile_fluxes(lu)%plant(1)%gs_accl
+    out_biosphere%chi     = tile_fluxes(lu)%plant(1)%chi
+    out_biosphere%iwue    = tile_fluxes(lu)%plant(1)%iwue
     out_biosphere%wscal   = tile(lu)%soil%phy%wscal
     out_biosphere%tsoil   = tile(lu)%soil%phy%temp
-    out_biosphere%cleaf   = tile(lu)%canopy%pleaf%c%c12
-    out_biosphere%nleaf   = tile(lu)%canopy%pleaf%n%n14
-    out_biosphere%croot   = tile(lu)%canopy%proot%c%c12
-    out_biosphere%nroot   = tile(lu)%canopy%proot%n%n14
-    out_biosphere%clabl   = tile(lu)%canopy%plabl%c%c12
-    out_biosphere%nlabl   = tile(lu)%canopy%plabl%n%n14
-    out_biosphere%lai     = tile(lu)%canopy%lai
+    out_biosphere%cleaf   = tile(lu)%plant(1)%pleaf%c%c12
+    out_biosphere%nleaf   = tile(lu)%plant(1)%pleaf%n%n14
+    out_biosphere%croot   = tile(lu)%plant(1)%proot%c%c12
+    out_biosphere%nroot   = tile(lu)%plant(1)%proot%n%n14
+    out_biosphere%clabl   = tile(lu)%plant(1)%plabl%c%c12
+    out_biosphere%nlabl   = tile(lu)%plant(1)%plabl%n%n14
+    out_biosphere%lai     = tile(lu)%plant(1)%lai_ind
     out_biosphere%ninorg  = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14
     out_biosphere%pno3    = tile(lu)%soil%pno3%n14
     out_biosphere%pnh4    = tile(lu)%soil%pnh4%n14
@@ -804,10 +845,10 @@ contains
     out_biosphere%nup     = 0.0
     out_biosphere%cex     = 0.0
     out_biosphere%netmin  = tile_fluxes(lu)%soil%dnetmin%n14
-    out_biosphere%dcharv  = tile_fluxes(lu)%canopy%dharv%c%c12
-    out_biosphere%dnharv  = tile_fluxes(lu)%canopy%dharv%n%n14
-    out_biosphere%npp     = tile_fluxes(lu)%canopy%dnpp%c12
-    out_biosphere%drd     = tile_fluxes(lu)%canopy%drd
+    out_biosphere%dcharv  = tile_fluxes(lu)%plant(1)%dharv%c%c12
+    out_biosphere%dnharv  = tile_fluxes(lu)%plant(1)%dharv%n%n14
+    out_biosphere%npp     = tile_fluxes(lu)%plant(1)%dnpp%c12
+    out_biosphere%drd     = tile_fluxes(lu)%plant(1)%drd    
 
   end subroutine diag_daily
 

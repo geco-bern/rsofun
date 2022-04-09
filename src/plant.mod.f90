@@ -807,12 +807,12 @@ contains
         ! Temperature response function is a modified Q10 relationship
         ! (Lloyd & Taylor 1994)
         !----------------------------------------------------------------
-        if (temp.ge.-40.0) then 
+        if (temp >= -40.0) then 
           ! avoid numerical errors
-          ftemp = exp(E0*((1.0/(ref_temp_local+Tzero-T0))-(1.0/(temp+Tzero-T0))))
+          ftemp = exp(E0 * ((1.0 / (ref_temp_local + Tzero - T0)) - (1.0/(temp + Tzero - T0))))
         else
           ! set temperature response to a constant at value of -40°C
-          ftemp = exp(E0*((1.0/(ref_temp_local+Tzero-T0))-(1.0/(-40.0+Tzero-T0))))
+          ftemp = exp(E0 * ((1.0 / (ref_temp_local + Tzero - T0)) - (1.0/(-40.0 + Tzero - T0))))
         end if
 
       case default

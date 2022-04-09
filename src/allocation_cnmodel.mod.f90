@@ -182,7 +182,7 @@ contains
       ! xxx debug
       tile(lu)%plant(pft)%fill_seeds = .false.
 
-      
+
 
       if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps ) then
 
@@ -460,11 +460,11 @@ contains
               ! If labile N gets negative, account gap as N fixation
               !-------------------------------------------------------------------  
               if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
-                req = abs(tile(lu)%plant(pft)%plabl%n%n14)
+                req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
                 ! print*,'Negative labile N. required to balance:', req
                 tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                 tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
-                tile(lu)%plant(pft)%plabl%n%n14 = 0.0
+                tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
               end if
 
             end if
@@ -472,6 +472,9 @@ contains
             !-------------------------------------------------------------------
             ! ROOT ALLOCATION
             !-------------------------------------------------------------------
+            ! xxx debug 
+            print*,'dcroot ', dcroot
+            print*,'croot before: ', tile(lu)%plant(pft)%proot%c%c12
             if (dcroot > 0.0) then
 
               call allocate_root( &
@@ -489,13 +492,16 @@ contains
               ! If labile N gets negative, account gap as N fixation
               !-------------------------------------------------------------------  
               if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
+                req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
                 ! print*,'Negative labile N. required to balance:', req
                 tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                 tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
-                tile(lu)%plant(pft)%plabl%n%n14 = 0.0
+                tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
               end if
 
             end if
+
+            print*,'croot after:  ', tile(lu)%plant(pft)%proot%c%c12
 
             !-------------------------------------------------------------------
             ! GROWTH RESPIRATION, NPP
@@ -771,7 +777,7 @@ contains
     lai = get_lai( pft, cleaf, actnv_unitfapar )
 
     ! calculate canopy-level leaf N as a function of LAI
-    nleaf0   = nleaf      
+    nleaf0   = nleaf
 
     ! xxx debug
     ! nleaf    = get_leaf_n_canopy( pft, lai, actnv_unitfapar )
@@ -832,8 +838,8 @@ contains
 
     ! arguments
     integer, intent(in) :: pft
-    real, intent(out)   :: mydcroot
-    real, intent(out)   :: mydnroot
+    real, intent(in)   :: mydcroot
+    real, intent(in)   :: mydnroot
     real, intent(inout) :: croot, nroot
     real, intent(inout) :: clabl, nlabl
     logical, intent(in) :: nignore
@@ -841,48 +847,41 @@ contains
     ! local variables
     real :: dclabl
 
-    if (clabl > 0.0 .and. nlabl > 0.0) then
+    ! print*,'in allocate_root: clabl, nlabl: ', clabl, nlabl
 
-      ! use remainder for allocation to roots
-      mydcroot = min( mydcroot, params_plant%growtheff * clabl, params_pft_plant(pft)%r_cton_root * nlabl )
-      mydnroot = min( mydcroot * params_pft_plant(pft)%r_ntoc_root, nlabl )
+    ! ! use remainder for allocation to roots
+    ! mydcroot = min( mydcroot, params_plant%growtheff * clabl, params_pft_plant(pft)%r_cton_root * nlabl )
+    ! mydnroot = min( mydcroot * params_pft_plant(pft)%r_ntoc_root, nlabl )
 
-      ! update root pools
-      croot = croot + mydcroot
-      nroot = nroot + mydnroot
+    ! update root pools
+    croot = croot + mydcroot
+    nroot = nroot + mydnroot
 
-      ! depletion of labile C pool is enhanced by growth respiration
-      dclabl = 1.0 / params_plant%growtheff * mydcroot
+    ! depletion of labile C pool is enhanced by growth respiration
+    dclabl = (1.0 / params_plant%growtheff) * mydcroot
 
-      ! substract from labile pools
-      clabl  = clabl - dclabl
-      nlabl  = nlabl - mydnroot
+    ! substract from labile pools
+    clabl  = clabl - dclabl
+    nlabl  = nlabl - mydnroot
 
-      if ( clabl < -1.0 * eps ) then
-        stop 'ALLOCATE_ROOT: trying to remove too much from labile pool: root C'
-      else if ( clabl < 0.0 ) then
+    if ( clabl < -1.0 * eps ) then
+      stop 'ALLOCATE_ROOT: trying to remove too much from labile pool: root C'
+    else if ( clabl < 0.0 ) then
+      ! numerical imprecision
+      ! print*,'numerical imprecision?'
+      ! stop 'allocate root'
+      clabl = 0.0
+    end if
+
+    if (.not. nignore) then
+      if ( nlabl < -1.0 * eps ) then
+        stop 'ALLOCATE_ROOT: trying to remove too much from labile pool: root N'
+      else if ( nlabl < 0.0 ) then
         ! numerical imprecision
         ! print*,'numerical imprecision?'
-        ! stop 'allocate root'
-        clabl = 0.0
+        ! stop 'allocate leaf'
+        nlabl = 0.0
       end if
-
-      if (.not. nignore) then
-        if ( nlabl < -1.0 * eps ) then
-          stop 'ALLOCATE_ROOT: trying to remove too much from labile pool: root N'
-        else if ( nlabl < 0.0 ) then
-          ! numerical imprecision
-          ! print*,'numerical imprecision?'
-          ! stop 'allocate leaf'
-          nlabl = 0.0
-        end if
-      end if
-
-    else
-
-      mydcroot = 0.0
-      mydnroot = 0.0
-
     end if
 
   end subroutine allocate_root

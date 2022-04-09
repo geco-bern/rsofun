@@ -133,12 +133,33 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(date, npp)) + 
+  ggplot() + 
+  geom_line(aes(date, npp)) +
+  geom_line(aes(date, gpp-drd), color = 'red')
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot() + 
+  geom_point(aes(gpp-drd, npp))
+  
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, cex)) + 
   geom_line()
 
 output$data[[1]] %>% 
   as_tibble() %>% 
   ggplot(aes(date, cleaf)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, croot)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, clabl)) + 
   geom_line()
 
 output$data[[1]] %>% 
@@ -169,7 +190,6 @@ output$data[[1]] %>%
   mutate(cue = npp/gpp) %>% 
   ggplot(aes(year, cue)) + 
   geom_line()
-
 
 
 source("analysis/get_fill_seeds.R")
