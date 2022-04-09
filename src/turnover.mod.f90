@@ -87,15 +87,12 @@ contains
           ! dleaf =  (tile(lu)%plant(pft)%lai_ind * params_pft_plant(pft)%k_decay_leaf_width )**8 &
           !   + params_pft_plant(pft)%k_decay_leaf_base
 
-          ! ! xxx debug
-          ! if (tile(lu)%plant(pft)%fill_seeds) then
-          !   dleaf =  params_pft_plant(pft)%k_decay_leaf_base * params_pft_plant(pft)%k_decay_leaf_width
-          ! else
-          !   dleaf =  params_pft_plant(pft)%k_decay_leaf_base
-          ! end if
-
           ! xxx debug
-          dleaf =  params_pft_plant(pft)%k_decay_leaf_base
+          if (tile(lu)%plant(pft)%fill_seeds) then
+            dleaf =  params_pft_plant(pft)%k_decay_leaf_base * params_pft_plant(pft)%k_decay_leaf_width
+          else
+            dleaf =  params_pft_plant(pft)%k_decay_leaf_base
+          end if
 
           ! constant turnover rate
           droot = params_pft_plant(pft)%k_decay_root
@@ -239,45 +236,45 @@ contains
     nleaf = tile%plant(pft)%narea_canopy
 
     ! ! xxx debug
-    ! nleaf = get_fapar( tile%plant(pft)%lai_ind  ) * 0.01 + 0.01 * tile%plant(pft)%lai_ind 
+    ! nleaf = tile%plant(pft)%fapar_ind * 0.01
 
-    if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
-    if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
-    if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
-    if (verbose) print*,'                                nleaf = ', nleaf
+    ! if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
+    ! if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
+    ! if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
+    ! if (verbose) print*,'                                nleaf = ', nleaf
 
-    do while ( nleaf > lm_init%n%n14 )
+    ! do while ( nleaf > lm_init%n%n14 )
 
-      nitr = nitr + 1
+    !   nitr = nitr + 1
 
-      ! reduce leaf C a bit more
-      cleaf = cleaf * lm_init%n%n14 / nleaf
+    !   ! reduce leaf C a bit more
+    !   cleaf = cleaf * lm_init%n%n14 / nleaf
 
-      ! get new LAI based on cleaf
-      tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
+    !   ! get new LAI based on cleaf
+    !   tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )
 
-      ! update canopy state (only variable fAPAR so far implemented)
-      tile%plant(pft)%fapar_ind = get_fapar( tile%plant(pft)%lai_ind )
+    !   ! update canopy state (only variable fAPAR so far implemented)
+    !   tile%plant(pft)%fapar_ind = get_fapar( tile%plant(pft)%lai_ind )
 
-      ! re-calculate metabolic and structural N, given new LAI and fAPAR
-      call update_leaftraits( tile%plant(pft) )
+    !   ! re-calculate metabolic and structural N, given new LAI and fAPAR
+    !   call update_leaftraits( tile%plant(pft) )
 
-      ! get updated leaf N
-      nleaf = tile%plant(pft)%narea_canopy
+    !   ! get updated leaf N
+    !   nleaf = tile%plant(pft)%narea_canopy
 
-      if (verbose) print*,'                      N iteration: ', nitr
-      if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
-      if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
-      if (verbose) print*,'                                nleaf = ', nleaf
+    !   if (verbose) print*,'                      N iteration: ', nitr
+    !   if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
+    !   if (verbose) print*,'                                fapar = ', tile%plant(pft)%fapar_ind
+    !   if (verbose) print*,'                                nleaf = ', nleaf
 
-      if (nitr > 30) exit
+    !   if (nitr > 30) exit
 
-    end do
+    ! end do
 
-    if (verbose .and. nitr > 0) print*,'                      ------------------'
-    if (verbose .and. nitr > 0) print*,'                      No. of iterations ', nitr
-    if (verbose .and. nitr > 0) print*,'                      final reduction of leaf C ', cleaf / lm_init%c%c12
-    if (verbose .and. nitr > 0) print*,'                      final reduction of leaf N ', nleaf / lm_init%n%n14
+    ! if (verbose .and. nitr > 0) print*,'                      ------------------'
+    ! if (verbose .and. nitr > 0) print*,'                      No. of iterations ', nitr
+    ! if (verbose .and. nitr > 0) print*,'                      final reduction of leaf C ', cleaf / lm_init%c%c12
+    ! if (verbose .and. nitr > 0) print*,'                      final reduction of leaf N ', nleaf / lm_init%n%n14
 
     ! update 
     tile%plant(pft)%pleaf%c%c12 = cleaf

@@ -395,18 +395,19 @@ contains
     type( plant_type ), intent(inout) :: plant
 
     ! local variables
-    real :: mynarea_metabolic_canop   ! mol N m-2-ground
-    real :: mynarea_structural_canop  ! mol N m-2-ground
+    real :: tmp_metabolic   ! mol N m-2-ground
+    real :: tmp_structural  ! mol N m-2-ground
 
     ! calculate quantities in units of mol N
-    mynarea_metabolic_canop  = get_leaf_n_metabolic_canopy( plant%fapar_ind, plant%actnv_unitfapar )               ! mol N m-2-ground    
-    mynarea_structural_canop = get_leaf_n_structural_canopy( plant%pftno, plant%lai_ind, mynarea_metabolic_canop ) ! mol N m-2-ground
+    plant%fapar_ind = get_fapar( plant%lai_ind )
+    tmp_metabolic  = get_leaf_n_metabolic_canopy( plant%fapar_ind, plant%actnv_unitfapar )               ! mol N m-2-ground    
+    tmp_structural = get_leaf_n_structural_canopy( plant%pftno, plant%lai_ind, tmp_metabolic ) ! mol N m-2-ground
 
     ! canopy-level, in units of gN / m2-ground 
-    plant%narea_metabolic_canopy  = n_molmass * mynarea_metabolic_canop ! g N m-2-ground 
-    plant%narea_structural_canopy = n_molmass * mynarea_structural_canop ! g N m-2-ground
-    plant%narea_canopy            = n_molmass * (mynarea_metabolic_canop + mynarea_structural_canop)  ! g N m-2-ground
-    plant%leafc_canopy            = c_molmass * params_pft_plant(plant%pftno)%r_ctostructn_leaf * mynarea_structural_canop ! g C m-2-ground
+    plant%narea_metabolic_canopy  = n_molmass * tmp_metabolic ! g N m-2-ground 
+    plant%narea_structural_canopy = n_molmass * tmp_structural ! g N m-2-ground
+    plant%narea_canopy            = plant%narea_metabolic_canopy + plant%narea_structural_canopy  ! g N m-2-ground
+    plant%leafc_canopy            = c_molmass * params_pft_plant(plant%pftno)%r_ctostructn_leaf * tmp_structural ! g C m-2-ground
 
     ! leaf-level, in units of gN / m2-leaf 
     plant%narea_metabolic  = plant%narea_metabolic_canopy / plant%lai_ind   ! g N m-2-leaf
