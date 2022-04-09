@@ -104,6 +104,7 @@ contains
     real       :: tk
 
     real, dimension(ndayyear), save :: actnv_unitfapar_vec
+    logical, save :: firstcall = .true.
 
     logical, parameter :: verbose = .false.
 
@@ -272,18 +273,24 @@ contains
       !----------------------------------------------------------------
       ! Save quantities used for allocation
       !----------------------------------------------------------------
+      tile_fluxes(lu)%plant(pft)%lue              = out_pmodel%lue
+      tile_fluxes(lu)%plant(pft)%vcmax25_unitiabs = out_pmodel%vcmax25_unitiabs
+
       ! take maximum metabolic leaf N per unit absorbed light of the past 'len' P-model calls
       if (init) actnv_unitfapar_vec(:) = 0.0
       actnv_unitfapar_vec(1:(ndayyear-1)) = actnv_unitfapar_vec(2:ndayyear)
       actnv_unitfapar_vec(ndayyear) = out_pmodel%actnv_unitiabs * climate_memory%dppfd
-      tile(lu)%plant(pft)%actnv_unitfapar  = maxval(actnv_unitfapar_vec(:))
 
-      ! ! xxx debug
-      ! print*,'actnv_unitfapar_vec(:)'
-      ! print*,actnv_unitfapar_vec(:)
-
-      tile_fluxes(lu)%plant(pft)%lue              = out_pmodel%lue
-      tile_fluxes(lu)%plant(pft)%vcmax25_unitiabs = out_pmodel%vcmax25_unitiabs
+      ! dampen maximum metabolic leaf N additionally
+      if (firstcall) then
+        tile(lu)%plant(pft)%actnv_unitfapar = out_pmodel%actnv_unitiabs * climate_memory%dppfd
+        firstcall = .false.
+      else
+        tile(lu)%plant(pft)%actnv_unitfapar = dampen_variability( maxval(actnv_unitfapar_vec(:)), &
+                                                                  365.0, &
+                                                                  tile(lu)%plant(pft)%actnv_unitfapar &
+                                                                  )
+      end if
 
       !----------------------------------------------------------------
       ! Stomatal conductance

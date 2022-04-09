@@ -165,7 +165,7 @@ contains
     myinterface%params_calib%k_decay_leaf_base     = real(par(13))
     myinterface%params_calib%k_decay_leaf_width    = real(par(14))
     myinterface%params_calib%k_decay_root          = real(par(15))
-    myinterface%params_calib%k_decay_labl          = real(par(16))
+    myinterface%params_calib%k_decay_seed          = real(par(16))
     myinterface%params_calib%k_decay_sapw          = real(par(17))
     myinterface%params_calib%r_cton_root           = real(par(18))
     myinterface%params_calib%r_cton_wood           = real(par(19))
