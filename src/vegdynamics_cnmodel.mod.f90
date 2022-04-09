@@ -88,7 +88,7 @@ contains
 
     ! add C (and N) to labile pool (available for allocation)
     call add_seed( plant )
-    
+
     if (params_pft_plant(plant%pftno)%grass) then
       plant%nind = 1.0
     else

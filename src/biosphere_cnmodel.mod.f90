@@ -50,7 +50,7 @@ contains
     ! local variables
     integer :: dm, moy, doy
     logical, save      :: init_daily            ! is true only on the first day of the simulation 
-    logical, parameter :: verbose = .false.     ! change by hand for debugging etc.
+    logical, parameter :: verbose = .true.     ! change by hand for debugging etc.
     logical, parameter :: baltest = .false.     ! change by hand for debugging etc.
     real               :: cbal1, cbal2, nbal1, nbal2
     type( orgpool )    :: orgtmp1, orgtmp2, orgtmp3, orgtmp4, orgbal1, orgbal2

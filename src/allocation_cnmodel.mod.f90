@@ -800,11 +800,11 @@ contains
 
     ! calculate canopy-level leaf N as a function of LAI
     nleaf0   = nleaf      
-    nleaf    = get_leaf_n_canopy( pft, lai, actnv_unitfapar )
     
-    ! ! xxx debug
-    ! nleaf = get_fapar( lai ) * 0.01 + 0.01 * lai
-    
+    ! xxx debug
+    ! nleaf    = get_leaf_n_canopy( pft, lai, actnv_unitfapar )
+    nleaf = cleaf * r_ntoc_leaf
+
     mydnleaf = nleaf - nleaf0
 
     ! depletion of labile C pool is enhanced by growth respiration

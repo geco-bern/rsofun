@@ -167,55 +167,55 @@ contains
       ! if (npft>1) stop 'in phenology: think of something nice'
       ! pft = 1
 
-      do day=2,ndayyear
+      ! do day=2,ndayyear
 
-        if (params_pft_pheno(pft)%summergreen) then
-          !----------------------------------------------------------
-          ! temperature-driven phenology summergreen
-          !----------------------------------------------------------
-          if ( tile(lu)%plant(pft)%pheno(day)%dtphen > 0.0 .and. tile(lu)%plant(pft)%pheno(day-1)%dtphen == 0.0 ) then
-            !----------------------------------------------------------
-            ! beginning of season (spring)
-            !----------------------------------------------------------
-            tile(lu)%plant(pft)%pheno(day-1)%sprout = .true.
-            tile(lu)%plant(pft)%pheno(day-1)%shedleaves = .false.
-            ! print*, 'sprouting on day ', day 
-            ! print*, sprout(38,pft)
+      !   if (params_pft_pheno(pft)%summergreen) then
+      !     !----------------------------------------------------------
+      !     ! temperature-driven phenology summergreen
+      !     !----------------------------------------------------------
+      !     if ( tile(lu)%plant(pft)%pheno(day)%dtphen > 0.0 .and. tile(lu)%plant(pft)%pheno(day-1)%dtphen == 0.0 ) then
+      !       !----------------------------------------------------------
+      !       ! beginning of season (spring)
+      !       !----------------------------------------------------------
+      !       tile(lu)%plant(pft)%pheno(day-1)%sprout = .true.
+      !       tile(lu)%plant(pft)%pheno(day-1)%shedleaves = .false.
+      !       ! print*, 'sprouting on day ', day 
+      !       ! print*, sprout(38,pft)
 
-          else if ( tile(lu)%plant(pft)%pheno(day)%dtphen > 0.0 ) then
-            !----------------------------------------------------------
-            ! during season (after spring and before autumn)
-            !----------------------------------------------------------
-            tile(lu)%plant(pft)%pheno(day-1)%sprout = .false.
-            tile(lu)%plant(pft)%pheno(day-1)%shedleaves = .false.
-            ! print*, 'active on day ', day
+      !     else if ( tile(lu)%plant(pft)%pheno(day)%dtphen > 0.0 ) then
+      !       !----------------------------------------------------------
+      !       ! during season (after spring and before autumn)
+      !       !----------------------------------------------------------
+      !       tile(lu)%plant(pft)%pheno(day-1)%sprout = .false.
+      !       tile(lu)%plant(pft)%pheno(day-1)%shedleaves = .false.
+      !       ! print*, 'active on day ', day
 
-          else if ( tile(lu)%plant(pft)%pheno(day)%dtphen == 0.0 .and. tile(lu)%plant(pft)%pheno(day-1)%dtphen > 0.0 ) then
-            !----------------------------------------------------------
-            ! end of season (autumn)
-            !----------------------------------------------------------
-            tile(lu)%plant(pft)%pheno(day-1)%sprout = .false.
-            tile(lu)%plant(pft)%pheno(day-1)%shedleaves = .true.
-            ! print*, 'shedding leaves on day ', day 
-            ! print*, shedleaves(345,pft)
+      !     else if ( tile(lu)%plant(pft)%pheno(day)%dtphen == 0.0 .and. tile(lu)%plant(pft)%pheno(day-1)%dtphen > 0.0 ) then
+      !       !----------------------------------------------------------
+      !       ! end of season (autumn)
+      !       !----------------------------------------------------------
+      !       tile(lu)%plant(pft)%pheno(day-1)%sprout = .false.
+      !       tile(lu)%plant(pft)%pheno(day-1)%shedleaves = .true.
+      !       ! print*, 'shedding leaves on day ', day 
+      !       ! print*, shedleaves(345,pft)
 
-          else if ( tile(lu)%plant(pft)%pheno(day)%dtphen == 0.0 ) then
-            !----------------------------------------------------------
-            ! during dormant season (after autumn and before spring)
-            !----------------------------------------------------------
-            tile(lu)%plant(pft)%pheno(day-1)%sprout = .false.
-            tile(lu)%plant(pft)%pheno(day-1)%shedleaves = .false.
-            ! print*, 'dormant on day ', day
+      !     else if ( tile(lu)%plant(pft)%pheno(day)%dtphen == 0.0 ) then
+      !       !----------------------------------------------------------
+      !       ! during dormant season (after autumn and before spring)
+      !       !----------------------------------------------------------
+      !       tile(lu)%plant(pft)%pheno(day-1)%sprout = .false.
+      !       tile(lu)%plant(pft)%pheno(day-1)%shedleaves = .false.
+      !       ! print*, 'dormant on day ', day
 
-          end if
+      !     end if
 
-        else
+      !   else
 
-          stop 'estab_daily not implemented for non-summergreen'
+      !     stop 'estab_daily not implemented for non-summergreen'
 
-        end if
+      !   end if
 
-      end do
+      ! end do
 
       ! xxx debug
       ! print*,'PHENOLOGY: overriding shedleaves'
