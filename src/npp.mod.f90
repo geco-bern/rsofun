@@ -239,11 +239,11 @@ contains
     ! function return variable
     real :: resp_maint                    ! return value: maintenance respiration [gC/m2]
 
-    ! ! LPX-like temperature dependeneo of respiration rates
-    ! resp_maint = cmass * rresp * ftemp( dtemp, "lloyd_and_taylor" )
+    ! LPX-like temperature dependeneo of respiration rates
+    resp_maint = cmass * rresp * ftemp( dtemp, "lloyd_and_taylor" )
 
-    ! xxx debug
-    resp_maint = 0.0
+    ! ! xxx debug
+    ! resp_maint = 0.0
 
   end function calc_resp_maint
 
