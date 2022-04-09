@@ -253,7 +253,11 @@ contains
       call update_leaftraits( tile%plant(pft) )
 
       ! get updated leaf N
-      nleaf = tile%plant(pft)%narea_canopy
+      ! nleaf = tile%plant(pft)%narea_canopy
+
+      ! xxx debug
+      nleaf = cleaf * r_ntoc_leaf
+      
 
       if (verbose) print*,'                      N iteration: ', nitr
       if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind

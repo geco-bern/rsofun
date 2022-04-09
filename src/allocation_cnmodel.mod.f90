@@ -179,6 +179,11 @@ contains
       end if
 
 
+      ! xxx debug
+      tile(lu)%plant(pft)%fill_seeds = .false.
+
+      
+
       if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps ) then
 
         if (params_pft_plant(pft)%grass) then

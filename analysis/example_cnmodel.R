@@ -148,6 +148,11 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
+  ggplot(aes(cleaf/nleaf, ..density..)) + 
+  geom_histogram()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
   ggplot(aes(date, fapar)) + 
   geom_line()
 
