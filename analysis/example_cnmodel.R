@@ -169,6 +169,18 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
+  ggplot(aes(date, cleaf/nleaf)) + 
+  geom_line()
+
+r_cton_leaf <- mean(output$data[[1]]$cleaf / output$data[[1]]$nleaf, na.rm = TRUE)
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(cleaf, nleaf)) + 
+  geom_point() +
+  geom_abline(slope = 1/r_cton_leaf, intercept = 0, color = "red", linetype = "dotted")
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
   ggplot(aes(cleaf/nleaf, ..density..)) + 
   geom_histogram()
 

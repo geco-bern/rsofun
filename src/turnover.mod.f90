@@ -71,30 +71,16 @@ contains
       !--------------------------------------------------------------
       if (params_pft_plant(pft)%grass) then
 
-        ! balance = plant_fluxes(pft)%dnpp%c12 - plant_fluxes(pft)%dcex
+        ! Increase turnover rate during seed filling phase
+        if (tile(lu)%plant(pft)%fill_seeds) then
+          dleaf = params_pft_plant(pft)%k_decay_leaf_base * params_pft_plant(pft)%k_decay_leaf_width
+        else
+          dleaf = params_pft_plant(pft)%k_decay_leaf_base
+        end if
 
-        ! if (tile(lu)%plant(pft)%pheno(doy)%shedleaves) then
-
-        !   droot = 1.0
-        !   dleaf = 1.0
-        !   dlabl = 1.0
-
-        !   stop 'shedding the fucking leaves'
-          
-        ! else
-
-          ! Increase turnover rate during seed filling phase
-          if (tile(lu)%plant(pft)%fill_seeds) then
-            dleaf = params_pft_plant(pft)%k_decay_leaf_base * params_pft_plant(pft)%k_decay_leaf_width
-          else
-            dleaf = params_pft_plant(pft)%k_decay_leaf_base
-          end if
-
-          ! constant turnover rate
-          droot = params_pft_plant(pft)%k_decay_root
-          dlabl = params_pft_plant(pft)%k_decay_labl
-
-        ! end if
+        ! constant turnover rate
+        droot = params_pft_plant(pft)%k_decay_root
+        dlabl = params_pft_plant(pft)%k_decay_labl
 
       else
 
@@ -228,11 +214,11 @@ contains
     ! re-calculate metabolic and structural N, given new LAI and fAPAR
     call update_leaftraits( tile%plant(pft) )
 
-    ! ! get updated leaf N
-    ! nleaf = tile%plant(pft)%narea_canopy
+    ! get updated leaf N
+    nleaf = tile%plant(pft)%narea_canopy
 
-    ! xxx debug
-    nleaf = cleaf * r_ntoc_leaf
+    ! ! xxx debug
+    ! nleaf = cleaf * r_ntoc_leaf
 
     if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
     if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind
@@ -256,10 +242,10 @@ contains
       call update_leaftraits( tile%plant(pft) )
 
       ! get updated leaf N
-      ! nleaf = tile%plant(pft)%narea_canopy
+      nleaf = tile%plant(pft)%narea_canopy
 
-      ! xxx debug
-      nleaf = cleaf * r_ntoc_leaf
+      ! ! xxx debug
+      ! nleaf = cleaf * r_ntoc_leaf
 
       if (verbose) print*,'                      N iteration: ', nitr
       if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind

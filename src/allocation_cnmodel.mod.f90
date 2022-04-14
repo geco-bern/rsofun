@@ -797,9 +797,10 @@ contains
     ! calculate canopy-level leaf N as a function of LAI
     nleaf0   = nleaf
 
-    ! xxx debug
-    ! nleaf    = get_leaf_n_canopy( pft, lai, actnv_unitfapar )
-    nleaf = cleaf * r_ntoc_leaf
+    nleaf    = get_leaf_n_canopy( pft, lai, actnv_unitfapar )
+
+    ! ! xxx debug
+    ! nleaf = cleaf * r_ntoc_leaf
 
     mydnleaf = nleaf - nleaf0
 
