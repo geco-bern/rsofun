@@ -118,11 +118,12 @@ module md_plant
     logical :: fill_seeds       ! switch to change from seed filling to growth period
 
     ! pools
-    type(orgpool) :: pleaf     ! leaf biomass [gC/ind.] (=lm_ind)
-    type(orgpool) :: proot     ! root biomass [gC/ind.] (=rm_ind)
-    type(orgpool) :: psapw     ! sapwood biomass [gC/ind.] (=sm_ind)
-    type(orgpool) :: pwood     ! heartwood (non-living) biomass [gC/ind.] (=hm_ind)
-    type(orgpool) :: plabl     ! labile pool, temporary storage of N and C [gC/ind.] (=bm_inc but contains also N)
+    type(orgpool) :: pleaf     ! leaf biomass (=lm_ind)
+    type(orgpool) :: proot     ! root biomass (=rm_ind)
+    type(orgpool) :: psapw     ! sapwood biomass (=sm_ind)
+    type(orgpool) :: pwood     ! heartwood (non-living) biomass (=hm_ind)
+    type(orgpool) :: plabl     ! labile pool, temporary storage of N and C (=bm_inc but contains also N)
+    type(orgpool) :: pseed     ! seed pool
 
     ! phenology
     type(phenotype), dimension(ndayyear) :: pheno
@@ -706,6 +707,7 @@ contains
       call orginit( plant(pft)%psapw )
       call orginit( plant(pft)%pwood )
       call orginit( plant(pft)%plabl )
+      call orginit( plant(pft)%pseed )
       call init_pheno(plant(pft)%pheno(:))
     end do
 

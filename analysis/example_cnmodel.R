@@ -139,11 +139,6 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot() + 
-  geom_point(aes(gpp-drd, npp))
-  
-output$data[[1]] %>% 
-  as_tibble() %>% 
   ggplot(aes(date, cex)) + 
   geom_line()
 
@@ -220,6 +215,7 @@ gg2 <- df %>%
   slice(1:365) %>% 
   ggplot() +
   geom_line(aes(date, (gpp-drd)/lai)) +
-  geom_line(aes(date, an_max), color = "red")
+  geom_line(aes(date, an_max), color = "red") +
+  geom_line(aes(date, an_unitlai_damped), color = "royalblue")
 
 gg1/gg2
