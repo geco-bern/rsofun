@@ -71,7 +71,8 @@ contains
     real :: an_unitlai
     real, save :: an_unitlai_damped, an_unitlai_damped_prev, count
     integer, parameter :: count_wait = 15
-    logical, save :: firstcall = .true.
+    logical, save :: firstcall1 = .true.
+    logical, save :: firstcall2 = .true.
 
     integer :: lu
     integer :: pft
@@ -84,6 +85,9 @@ contains
     ! xxx try
     real, parameter :: kdecay_labl = 0.1
     real, parameter :: frac_leaf = 0.5
+
+    real, dimension(nlu,npft,30) :: resp_vec
+    real :: keep_for_resp
 
     logical :: cont          ! true if allocation to leaves (roots) is not 100% and not 0%
     real    :: max_dcleaf_n_constraint
@@ -133,11 +137,11 @@ contains
         ! Determine day when net C assimilation per unit leaf area starts declining
         !-------------------------------------------------------------------------
         an_unitlai = (tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd) / tile(lu)%plant(pft)%lai_ind
-        if (firstcall) then 
+        if (firstcall1 .and. pft == npft .and. lu == nlu) then 
           an_unitlai_damped = an_unitlai
           an_unitlai_damped_prev = an_unitlai_damped
           count = 0
-          firstcall = .false.
+          firstcall1 = .false.
         else
           an_unitlai_damped_prev = an_unitlai_damped
           an_unitlai_damped = an_unitlai   ! dampen_variability( an_unitlai, 15.0, an_unitlai_damped )
@@ -409,6 +413,22 @@ contains
             ! Fixed allocation 
             !------------------------------------------------------------------
 
+            ! record total respiration of preceeding 30 days. keep this amount in labile pool to satisfy demand
+            if (firstcall2 .and. pft == npft .and. lu == nlu) then 
+              resp_vec(lu,pft,1:30) = tile_fluxes(lu)%plant(pft)%drleaf &
+                                     + tile_fluxes(lu)%plant(pft)%drroot &
+                                     + tile_fluxes(lu)%plant(pft)%drsapw &
+                                     + tile_fluxes(lu)%plant(pft)%dcex
+              firstcall2 = .false.
+            else
+              resp_vec(lu,pft,1:29) = resp_vec(lu,pft,2:30)
+              resp_vec(lu,pft,30) = tile_fluxes(lu)%plant(pft)%drleaf &
+                                   + tile_fluxes(lu)%plant(pft)%drroot &
+                                   + tile_fluxes(lu)%plant(pft)%drsapw &
+                                   + tile_fluxes(lu)%plant(pft)%dcex
+            end if
+            keep_for_resp = sum(resp_vec(lu,pft,:))
+
             !------------------------------------------------------------------
             ! Calculate maximum C allocatable based on current labile pool size.
             ! Maximum is the lower of all labile C and the C to be matched by all labile N,
@@ -421,7 +441,11 @@ contains
             ! Determine allocation to roots and leaves, fraction given by 'frac_leaf'
             ! No limitation by low temperatures or dryness
             ! avl = max( 0.0, tile(lu)%plant(pft)%plabl%c%c12 - freserve * tile(lu)%plant(pft)%pleaf%c%c12 )
-            avl = kdecay_labl * tile(lu)%plant(pft)%plabl%c%c12
+
+            ! xxx todo: 
+            ! keep stock of labile C to satisfy some time respiration without assimilation
+
+            avl = kdecay_labl * (tile(lu)%plant(pft)%plabl%c%c12 - keep_for_resp)
             dcleaf = frac_leaf         * params_plant%growtheff * avl
             dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl
             dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root

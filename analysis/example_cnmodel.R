@@ -134,8 +134,8 @@ output$data[[1]] %>%
 output$data[[1]] %>% 
   as_tibble() %>% 
   ggplot() + 
-  geom_line(aes(date, npp)) +
-  geom_line(aes(date, gpp-drd), color = 'red')
+  geom_line(aes(date, npp))
+  # geom_line(aes(date, gpp-drd), color = 'red')
 
 output$data[[1]] %>% 
   as_tibble() %>% 
@@ -164,6 +164,11 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
+  ggplot(aes(date, nlabl)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
   ggplot(aes(date, nleaf)) + 
   geom_line()
 
@@ -174,12 +179,12 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(date, fapar)) + 
+  ggplot(aes(date, lai)) + 
   geom_line()
 
 output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(date, lai)) + 
+  ggplot(aes(date, fapar)) + 
   geom_line()
 
 output$data[[1]] %>% 
