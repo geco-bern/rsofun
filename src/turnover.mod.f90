@@ -83,12 +83,12 @@ contains
           
         ! else
 
-          ! Increase turnover rate towards high LAI ( when using non-zero value for k_decay_leaf_width, e.g. 0.08 )
-          ! dleaf =  (tile(lu)%plant(pft)%lai_ind * params_pft_plant(pft)%k_decay_leaf_width )**8 &
-          !   + params_pft_plant(pft)%k_decay_leaf_base
 
           ! xxx debug
           dleaf =  params_pft_plant(pft)%k_decay_leaf_base
+
+          ! ! Increase turnover rate during seed filling phase
+          ! dleaf =  params_pft_plant(pft)%k_decay_leaf_base * params_pft_plant(pft)%k_decay_leaf_width
 
           ! constant turnover rate
           droot = params_pft_plant(pft)%k_decay_root
