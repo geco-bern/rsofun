@@ -228,11 +228,11 @@ contains
     ! re-calculate metabolic and structural N, given new LAI and fAPAR
     call update_leaftraits( tile%plant(pft) )
 
-    ! get updated leaf N
-    nleaf = tile%plant(pft)%narea_canopy
+    ! ! get updated leaf N
+    ! nleaf = tile%plant(pft)%narea_canopy
 
-    ! ! xxx debug
-    ! nleaf = cleaf * r_ntoc_leaf
+    ! xxx debug
+    nleaf = cleaf * r_ntoc_leaf
 
     if (verbose) print*,'                     AFTER INITIAL N TURNOVER'
     if (verbose) print*,'                                LAI   = ', tile%plant(pft)%lai_ind

@@ -103,7 +103,8 @@ contains
     real       :: ftemp_kphio
     real       :: tk
 
-    real, dimension(ndayyear), save :: actnv_unitfapar_vec
+    logical, save :: firstcall = .true.
+    real, dimension(nlu,npft,ndayyear+1), save :: actnv_unitfapar_vec
 
     logical, parameter :: verbose = .false.
 
@@ -273,14 +274,17 @@ contains
       ! Save quantities used for allocation
       !----------------------------------------------------------------
       ! take maximum metabolic leaf N per unit absorbed light of the past 'len' P-model calls
-      if (init) actnv_unitfapar_vec(:) = 0.0
-      actnv_unitfapar_vec(1:(ndayyear-1)) = actnv_unitfapar_vec(2:ndayyear)
-      actnv_unitfapar_vec(ndayyear) = out_pmodel%actnv_unitiabs * climate_memory%dppfd
-      tile(lu)%plant(pft)%actnv_unitfapar  = maxval(actnv_unitfapar_vec(:))
+      if (firstcall) then
+        actnv_unitfapar_vec(lu,pft,:) = out_pmodel%actnv_unitiabs * climate_memory%dppfd
+        if (pft == npft .and. lu == nlu) firstcall = .false.
+      else
+        actnv_unitfapar_vec(lu,pft,1:(ndayyear+1-1)) = actnv_unitfapar_vec(lu,pft,2:(ndayyear+1))
+        actnv_unitfapar_vec(lu,pft,(ndayyear+1)) = out_pmodel%actnv_unitiabs * climate_memory%dppfd
+      end if
+      tile(lu)%plant(pft)%actnv_unitfapar  = maxval(actnv_unitfapar_vec(lu,pft,:))
 
       ! ! xxx debug
-      ! print*,'actnv_unitfapar_vec(:)'
-      ! print*,actnv_unitfapar_vec(:)
+      ! print*,' tile(lu)%plant(pft)%actnv_unitfapar ',  tile(lu)%plant(pft)%actnv_unitfapar
 
       tile_fluxes(lu)%plant(pft)%lue              = out_pmodel%lue
       tile_fluxes(lu)%plant(pft)%vcmax25_unitiabs = out_pmodel%vcmax25_unitiabs

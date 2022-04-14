@@ -137,11 +137,11 @@ contains
         ! Determine day when net C assimilation per unit leaf area starts declining
         !-------------------------------------------------------------------------
         an_unitlai = (tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd) / tile(lu)%plant(pft)%lai_ind
-        if (firstcall1 .and. pft == npft .and. lu == nlu) then 
+        if (firstcall1) then 
           an_unitlai_damped = an_unitlai
           an_unitlai_damped_prev = an_unitlai_damped
           count = 0
-          firstcall1 = .false.
+          if (pft == npft .and. lu == nlu) firstcall1 = .false.
         else
           an_unitlai_damped_prev = an_unitlai_damped
           an_unitlai_damped = an_unitlai   ! dampen_variability( an_unitlai, 15.0, an_unitlai_damped )
@@ -414,12 +414,12 @@ contains
             !------------------------------------------------------------------
 
             ! record total respiration of preceeding 30 days. keep this amount in labile pool to satisfy demand
-            if (firstcall2 .and. pft == npft .and. lu == nlu) then 
-              resp_vec(lu,pft,1:30) = tile_fluxes(lu)%plant(pft)%drleaf &
+            if (firstcall2) then 
+              resp_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drleaf &
                                      + tile_fluxes(lu)%plant(pft)%drroot &
                                      + tile_fluxes(lu)%plant(pft)%drsapw &
                                      + tile_fluxes(lu)%plant(pft)%dcex
-              firstcall2 = .false.
+              if (pft == npft .and. lu == nlu) firstcall2 = .false.
             else
               resp_vec(lu,pft,1:29) = resp_vec(lu,pft,2:30)
               resp_vec(lu,pft,30) = tile_fluxes(lu)%plant(pft)%drleaf &
