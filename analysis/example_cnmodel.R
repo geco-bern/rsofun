@@ -22,7 +22,7 @@ pars <- list(
   exurate               = 0.003000,
   
   k_decay_leaf_base     = 1.00000,
-  k_decay_leaf_width    = 1.00000,
+  k_decay_leaf_width    = 2.00000,
   k_decay_root          = 1.00000,
   k_decay_labl          = 0.00000,
   k_decay_sapw          = 1.00000,
@@ -172,7 +172,7 @@ output$data[[1]] %>%
   ggplot(aes(cleaf/nleaf, ..density..)) + 
   geom_histogram()
 
-output$data[[1]] %>% 
+gg <- output$data[[1]] %>% 
   as_tibble() %>% 
   ggplot(aes(date, lai)) + 
   geom_line()
@@ -191,31 +191,34 @@ output$data[[1]] %>%
   ggplot(aes(year, cue)) + 
   geom_line()
 
+print(gg)
 
-source("analysis/get_fill_seeds.R")
+print(paste("Maximum leaf C: ", max(output$data[[1]]$cleaf)))
 
-df_fill_seeds <- get_fill_seeds(
-  output$data[[1]]$gpp,
-  output$data[[1]]$drd,
-  output$data[[1]]$lai,
-  lubridate::yday(output$data[[1]]$date)
-  )
-
-df <- bind_cols(
-  output$data[[1]],
-  df_fill_seeds
-)
-
-gg1 <- df %>% 
-  slice(1:365) %>% 
-  ggplot(aes(date, gpp)) +
-  geom_line()
-
-gg2 <- df %>% 
-  slice(1:365) %>% 
-  ggplot() +
-  geom_line(aes(date, (gpp-drd)/lai)) +
-  geom_line(aes(date, an_max), color = "red") +
-  geom_line(aes(date, an_unitlai_damped), color = "royalblue")
-
-gg1/gg2
+# source("analysis/get_fill_seeds.R")
+# 
+# df_fill_seeds <- get_fill_seeds(
+#   output$data[[1]]$gpp,
+#   output$data[[1]]$drd,
+#   output$data[[1]]$lai,
+#   lubridate::yday(output$data[[1]]$date)
+#   )
+# 
+# df <- bind_cols(
+#   output$data[[1]],
+#   df_fill_seeds
+# )
+# 
+# gg1 <- df %>% 
+#   slice(1:365) %>% 
+#   ggplot(aes(date, gpp)) +
+#   geom_line()
+# 
+# gg2 <- df %>% 
+#   slice(1:365) %>% 
+#   ggplot() +
+#   geom_line(aes(date, (gpp-drd)/lai)) +
+#   geom_line(aes(date, an_max), color = "red") +
+#   geom_line(aes(date, an_unitlai_damped), color = "royalblue")
+# 
+# gg1/gg2

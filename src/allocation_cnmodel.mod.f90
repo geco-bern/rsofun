@@ -93,7 +93,7 @@ contains
     real, dimension(nlu,npft,15), save :: an_vec
     real :: an_max
     real, save :: an_max_damped, an_max_damped_prev
-    integer, parameter :: count_wait = 1
+    integer, parameter :: count_wait = 5
 
     logical :: cont          ! true if allocation to leaves (roots) is not 100% and not 0%
     real    :: max_dcleaf_n_constraint
@@ -125,68 +125,72 @@ contains
       if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps ) then
 
         if (params_pft_plant(pft)%grass) then
-          !-------------------------------------------------------------------------
-          ! PHENOPHASE: SEED FILLING
-          ! Determine day when net C assimilation per unit leaf area starts declining
-          !-------------------------------------------------------------------------
-          ! get maximum Anet/LAI of preceeding 'ndays' days
           if (tile(lu)%plant(pft)%lai_ind > 0.0) then
+            !-------------------------------------------------------------------------
+            ! PHENOPHASE: SEED FILLING
+            ! Determine day when net C assimilation per unit leaf area starts declining
+            !-------------------------------------------------------------------------
+            ! get maximum Anet/LAI of preceeding 'ndays' days
             an_unitlai = (tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd) / tile(lu)%plant(pft)%lai_ind
+
+            if (firstcall1) then
+              an_vec(lu,pft,:) = an_unitlai
+              count_declining = 0
+              count_increasing = 0
+              if (pft == npft .and. lu == nlu) firstcall1 = .false.
+            else
+              an_vec(lu,pft,1:14) = an_vec(lu,pft,2:15)
+              an_vec(lu,pft,15) = an_unitlai
+            end if
+
+            an_max = maxval(an_vec(lu,pft,:))
+
+            ! get damped maximum Anet/LAI
+            if (firstcall2) then
+              an_max_damped = an_max
+              an_max_damped_prev = an_max
+              if (pft == npft .and. lu == nlu) firstcall2 = .false.
+            else
+              an_max_damped_prev = an_max_damped
+              an_max_damped = dampen_variability( an_max, 15.0, an_max_damped )
+            end if
+
+            ! after N consecutive days of declining (damped) net assimilation per unit leaf area,
+            ! stop growing and allocate to seeds instead
+            !-------------------------------------------------------------------------
+            if (an_max_damped_prev > an_max_damped) then
+              count_declining = count_declining + 1
+            else
+              count_declining = 0
+            end if
+
+            if (count_declining > count_wait) then
+              tile(lu)%plant(pft)%fill_seeds = .true.
+            end if
+
+            ! after N consecutive days of increasing (damped) net assimilation per unit leaf area,
+            ! re-start growing and no longer allocate to seeds
+            !-------------------------------------------------------------------------
+            if (an_max_damped_prev < an_max_damped) then
+              count_increasing = count_increasing + 1
+            else
+              count_increasing = 0
+            end if
+
+            if (count_increasing > count_wait) then
+              tile(lu)%plant(pft)%fill_seeds = .false.
+            end if
+
+            print*,'fill_seeds, lai, an_max, an_max_damped_prev, an_max_damped ', &
+              tile(lu)%plant(pft)%fill_seeds, tile(lu)%plant(pft)%lai_ind, an_max, an_max_damped_prev, an_max_damped
+
+
+            ! ! xxx debug
+            ! tile(lu)%plant(pft)%fill_seeds = .false.
+
           else
-            an_unitlai = (tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd)
-          end if
-
-          if (firstcall1) then
-            an_vec(lu,pft,:) = an_unitlai
-            count_declining = 0
-            count_increasing = 0
-            if (pft == npft .and. lu == nlu) firstcall1 = .false.
-          else
-            an_vec(lu,pft,1:14) = an_vec(lu,pft,2:15)
-            an_vec(lu,pft,15) = an_unitlai
-          end if
-
-          an_max = maxval(an_vec(lu,pft,:))
-
-          ! get damped maximum Anet/LAI
-          if (firstcall2) then
-            an_max_damped = an_max
-            an_max_damped_prev = an_max
-            if (pft == npft .and. lu == nlu) firstcall2 = .false.
-          else
-            an_max_damped_prev = an_max_damped
-            an_max_damped = dampen_variability( an_max, 15.0, an_max_damped )
-          end if
-
-
-          ! after N consecutive days of declining (damped) net assimilation per unit leaf area,
-          ! stop growing and allocate to seeds instead
-          !-------------------------------------------------------------------------
-          if (an_max_damped_prev > an_max_damped) then
-            count_declining = count_declining + 1
-          else
-            count_declining = 0
-          end if
-
-          if (count_declining > count_wait) then
-            tile(lu)%plant(pft)%fill_seeds = .true.
-          end if
-
-          ! after N consecutive days of increasing (damped) net assimilation per unit leaf area,
-          ! re-start growing and no longer allocate to seeds
-          !-------------------------------------------------------------------------
-          if (an_max_damped_prev < an_max_damped) then
-            count_increasing = count_increasing + 1
-          else
-            count_increasing = 0
-          end if
-
-          if (count_increasing > count_wait) then
             tile(lu)%plant(pft)%fill_seeds = .false.
           end if
-
-          print*,'fill_seeds, an_max, an_max_damped_prev, an_max_damped ', &
-            tile(lu)%plant(pft)%fill_seeds, an_max, an_max_damped_prev, an_max_damped
 
 
           if ( myinterface%steering%dofree_alloc ) then
