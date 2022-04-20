@@ -181,13 +181,6 @@ contains
               tile(lu)%plant(pft)%fill_seeds = .false.
             end if
 
-            print*,'fill_seeds, lai, an_max, an_max_damped_prev, an_max_damped ', &
-              tile(lu)%plant(pft)%fill_seeds, tile(lu)%plant(pft)%lai_ind, an_max, an_max_damped_prev, an_max_damped
-
-
-            ! ! xxx debug
-            ! tile(lu)%plant(pft)%fill_seeds = .false.
-
           else
             tile(lu)%plant(pft)%fill_seeds = .false.
           end if

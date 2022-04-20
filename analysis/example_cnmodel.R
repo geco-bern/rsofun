@@ -113,7 +113,7 @@ tmp <- rsofun::p_model_drivers %>%
                                                dnh4 = 0.1)))
 
 ## no spinup, 1 year transient run
-tmp$params_siml[[1]]$spinupyears <- 10
+tmp$params_siml[[1]]$spinupyears <- 1500
 tmp$params_siml[[1]]$recycle <- 5
 # tmp$params_siml[[1]]$nyeartrend <- 1
 # tmp$forcing[[1]] <- tmp$forcing[[1]] %>% filter(lubridate::year(date) == 2007)
@@ -169,6 +169,16 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
+  ggplot(aes(date, pnh4 + pno3)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, nup)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
   ggplot(aes(date, cleaf/nleaf)) + 
   geom_line()
 
@@ -192,6 +202,11 @@ gg <- output$data[[1]] %>%
 output$data[[1]] %>% 
   as_tibble() %>% 
   ggplot(aes(date, fapar)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, csoil)) + 
   geom_line()
 
 output$data[[1]] %>% 

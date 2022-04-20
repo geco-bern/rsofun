@@ -265,41 +265,6 @@ contains
   end function get_lai
 
 
-  ! ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-  ! ! xxx debug
-  ! ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-  ! function get_lai( pft, cleaf, actnv_unitfapar ) result( lai )
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Calculates LAI as a function of leaf-C. This is not so straight
-  !   ! forward due to the dependence of canopy-metabolic leaf N on LAI,
-  !   ! and the dependence of canopy-structural leaf N and C on canopy-
-  !   ! metabolic leaf N.
-  !   !----------------------------------------------------------------
-  !   use md_params_core, only: nmonth, c_molmass
-
-  !   ! arguments
-  !   integer, intent(in) :: pft
-  !   real, intent(in) :: cleaf
-  !   real, intent(in) :: actnv_unitfapar 
-
-  !   ! function return variable
-  !   real :: lai
-
-  !   if (cleaf > 0.0) then
-
-  !     ! test: assuming SLA = 0.01 m2 g-1, corresponding to LMA = 100 g m-2
-  !     lai = cleaf * 0.01
-
-  !   else
-
-  !     lai = 0.0
-
-  !   end if
-    
-  ! end function get_lai
-
-
   function get_leaf_n_metabolic_canopy( fapar, actnv_unitfapar ) result( mynleaf_metabolic )
     !////////////////////////////////////////////////////////////////
     ! Calculates metabolic leaf N at canopy-level, determined by 
