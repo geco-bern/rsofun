@@ -462,6 +462,7 @@ contains
               dcleaf = frac_leaf         * params_plant%growtheff * avl%c%c12
               dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
               dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
+              drgrow = (1.0 - params_plant%growtheff) * avl%c%c12
 
               !-------------------------------------------------------------------
               ! LEAF ALLOCATION
@@ -492,7 +493,6 @@ contains
                 !-------------------------------------------------------------------  
                 if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
                   req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
-                  ! print*,'Negative labile N. required to balance:', req
                   tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                   tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
                   tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
@@ -504,6 +504,7 @@ contains
               ! ROOT ALLOCATION
               !-------------------------------------------------------------------
               if (dcroot > 0.0) then
+
                 call allocate_root( &
                   pft, &
                   dcroot, &
@@ -520,7 +521,6 @@ contains
                 !-------------------------------------------------------------------  
                 if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
                   req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
-                  ! print*,'Negative labile N. required to balance:', req
                   tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                   tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
                   tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
@@ -528,17 +528,17 @@ contains
 
               end if
 
-              !-------------------------------------------------------------------
-              ! growth respiration
-              ! dC = y * Cavl
-              ! Cavl = dC + Rg
-              ! => Rg = dC * (1/y - 1)
-              !-------------------------------------------------------------------
-              ! add growth respiration to autotrophic respiration and substract from NPP
-              ! (note that NPP is added to plabl in and growth resp. is implicitly removed
-              ! from plabl above)
-              ! drgrow   = ( 1.0 - params_plant%growtheff ) * ( dcleaf + dcroot ) / params_plant%growtheff  ! was wrong, was it?
-              drgrow = ( dcleaf + dcroot ) * ((1.0 / params_plant%growtheff) - 1.0)
+              ! !-------------------------------------------------------------------
+              ! ! growth respiration
+              ! ! dC = y * Cavl
+              ! ! Cavl = dC + Rg
+              ! ! => Rg = dC * (1/y - 1)
+              ! !-------------------------------------------------------------------
+              ! ! add growth respiration to autotrophic respiration and substract from NPP
+              ! ! (note that NPP is added to plabl in and growth resp. is implicitly removed
+              ! ! from plabl above)
+              ! ! drgrow   = ( 1.0 - params_plant%growtheff ) * ( dcleaf + dcroot ) / params_plant%growtheff  ! was wrong, was it?
+              ! drgrow = ( dcleaf + dcroot ) * ((1.0 / params_plant%growtheff) - 1.0)
 
             end if
 

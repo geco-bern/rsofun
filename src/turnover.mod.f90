@@ -22,7 +22,7 @@ module md_turnover
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   use md_classdefs
-  use md_params_core, only: nlu, npft, eps, nmonth
+  use md_params_core, only: nlu, npft, eps, nmonth, ndayyear
   use md_tile
   use md_plant
 
@@ -52,9 +52,7 @@ contains
     ! local variables
     integer :: pft
     integer :: lu
-    real :: dlabl
-    real :: dleaf
-    real :: droot
+    real :: dlabl, dleaf, droot, dseed
 
     pftloop: do pft=1,npft
 
@@ -81,6 +79,7 @@ contains
         ! constant turnover rate
         droot = params_pft_plant(pft)%k_decay_root
         dlabl = params_pft_plant(pft)%k_decay_labl
+        dseed = 1.0 / ndayyear
 
       else
 
@@ -118,7 +117,7 @@ contains
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_root() ... '
       if (verbose) print*, '              with state variables:'
-      if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%proot
+      if (verbose) print*, '              proot = ', tile(lu)%plant(pft)%proot
       if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
       if (verbose) cbal1 = tile(lu)%plant(pft)%proot%c%c12 + tile(lu)%soil%plitt_bg%c%c12
       if (verbose) nbal1 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%proot%n%n14 + tile(lu)%soil%plitt_bg%n%n14
@@ -138,33 +137,56 @@ contains
       if (baltest .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
       if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
 
-      ! XXX don't waste labile C and N
+      !--------------------------------------------------------------
+      ! Calculate seed turnover in this day 
+      !--------------------------------------------------------------
+      if (verbose) print*, 'calling turnover_seed() ... '
+      if (verbose) print*, '              with state variables:'
+      if (verbose) print*, '              pseed = ', tile(lu)%plant(pft)%pseed
+      if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
+      if (verbose) cbal1 = tile(lu)%plant(pft)%pseed%c%c12 + tile(lu)%soil%plitt_af%c%c12
+      if (verbose) nbal1 = tile(lu)%plant(pft)%pseed%n%n14 + tile(lu)%soil%plitt_af%n%n14
+      !--------------------------------------------------------------
+      if ( dseed > 0.0 .and. tile(lu)%plant(pft)%pseed%c%c12 > 0.0  ) call turnover_seed( droot, tile(lu), pft )
+      !--------------------------------------------------------------
+      if (verbose) print*, '              ==> returned: '
+      if (verbose) print*, '              pseed = ', tile(lu)%plant(pft)%pseed
+      if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
+      if (verbose) cbal2 = tile(lu)%plant(pft)%pseed%c%c12 + tile(lu)%soil%plitt_af%c%c12
+      if (verbose) nbal2 = tile(lu)%plant(pft)%pseed%n%n14 + tile(lu)%soil%plitt_af%n%n14
+      if (verbose) cbal1 = cbal2 - cbal1
+      if (verbose) nbal1 = nbal2 - nbal1
+      if (verbose) print*, '              --- balance: '
+      if (verbose) print*, '                  d(clitt + cseed)             = ', cbal1
+      if (verbose) print*, '                  d(nlitt + nseed)             = ', nbal1
+      if (baltest .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
+      if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
+
+
       ! !--------------------------------------------------------------
-      ! ! Calculate labile turnover in this day 
+      ! ! Calculate labile turnover in this day - add to leaf respiration
       ! !--------------------------------------------------------------
       ! if (verbose) print*, 'calling turnover_labl() ... '
       ! if (verbose) print*, '              with state variables:'
       ! if (verbose) print*, '              plabl = ', tile(lu)%plant(pft)%plabl
-      ! if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
-      ! if (verbose) orgtmp  =  tile(lu)%plant(pft)%plabl
-      ! if (verbose) orgtmp2 =  tile(lu)%soil%plitt_af
+      ! if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
+      ! if (verbose) cbal1 = tile(lu)%plant(pft)%proot%c%c12 + tile(lu)%soil%plitt_bg%c%c12
+      ! if (verbose) nbal1 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%proot%n%n14 + tile(lu)%soil%plitt_bg%n%n14
       ! !--------------------------------------------------------------
       ! if ( dlabl > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_labl( dlabl, tile(lu), pft )
       ! !--------------------------------------------------------------
       ! if (verbose) print*, '              ==> returned: '
-      ! if (verbose) print*, '              plabl = ', tile(lu)%plant(:)%plabl
-      ! if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_af
+      ! if (verbose) print*, '              plabl = ', tile(lu)%plant(pft)%plabl
+      ! if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
+      ! if (verbose) cbal2 = tile(lu)%plant(pft)%proot%c%c12 + tile(lu)%soil%plitt_bg%c%c12
+      ! if (verbose) nbal2 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%proot%n%n14 + tile(lu)%soil%plitt_bg%n%n14
+      ! if (verbose) cbal1 = cbal2 - cbal1
+      ! if (verbose) nbal1 = nbal2 - nbal1
       ! if (verbose) print*, '              --- balance: '
-      ! if (verbose) print*, '                  dlitt - dlabl                = ',  orgminus( &
-      !                                                                               orgminus( &
-      !                                                                                 tile(lu)%soil%plitt_af, &
-      !                                                                                 orgtmp2 &
-      !                                                                                 ), &
-      !                                                                               orgminus( &
-      !                                                                                 orgtmp, &
-      !                                                                                 tile(lu)%plant(pft)%proot &
-      !                                                                                 ) &
-      !                                                                               )
+      ! if (verbose) print*, '                  d(clitt + croot)             = ', cbal1
+      ! if (verbose) print*, '                  d(nlitt + nroot)             = ', nbal1
+      ! if (baltest .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
+      ! if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
     
     enddo pftloop
 
@@ -323,6 +345,23 @@ contains
     call nmv( rm_turn%n, rm_turn%n, tile%soil%plitt_bg%n, scale = real(tile%plant(pft)%nind) )
 
   end subroutine turnover_root
+
+
+  subroutine turnover_seed( dseed, tile, pft )
+    !//////////////////////////////////////////////////////////////////
+    ! Execute turnover of fraction dseed for root pool
+    !------------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: dseed
+    type( tile_type ), intent(inout)  :: tile
+    integer, intent(in) :: pft
+
+    call orgmv( orgfrac( dseed, tile%plant(pft)%pseed ), &
+                tile%plant(pft)%pseed, &
+                tile%soil%plitt_af, &
+                scale = real(tile%plant(pft)%nind) )
+
+  end subroutine turnover_seed
 
 
   subroutine turnover_labl( dlabl, tile, pft )
