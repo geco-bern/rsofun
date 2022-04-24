@@ -174,7 +174,7 @@ output$data[[1]] %>%
 
 output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(date, nup)) + 
+  ggplot(aes(date, drd/gpp)) + 
   geom_line()
 
 output$data[[1]] %>% 
@@ -188,6 +188,11 @@ output$data[[1]] %>%
   ggplot(aes(cleaf, nleaf)) + 
   geom_point() +
   geom_abline(slope = 1/r_cton_leaf, intercept = 0, color = "red", linetype = "dotted")
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(cleaf, cleaf/nleaf)) + 
+  geom_point()
 
 output$data[[1]] %>% 
   as_tibble() %>% 

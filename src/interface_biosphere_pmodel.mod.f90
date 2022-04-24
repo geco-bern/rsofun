@@ -141,8 +141,8 @@ module md_interface_pmodel
     real :: ninorg
     real :: pno3
     real :: pnh4
-    real :: en2o
-    real :: enleach
+    real :: dn2o
+    real :: dnleach
     real :: npp
     real :: csoil
     real :: nsoil

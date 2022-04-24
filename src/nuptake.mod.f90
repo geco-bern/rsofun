@@ -222,6 +222,7 @@ contains
     ! in proportion to their relative shares.
     !-----------------------------------------------------------------
     n0 = nh4 + no3
+    
     ! if (n0>0.0) then
     fno3 = no3 / n0
 
@@ -231,7 +232,7 @@ contains
       !-----------------------------------------------------------------
       ! Get efficiency of BNF in gN/gC as a function of soil temperature
       !-----------------------------------------------------------------
-      eff_bnf = eff_fix( soiltemp )
+      eff_bnf = calc_eff_fix( soiltemp )
 
       !-----------------------------------------------------------------
       ! Find amount of active uptake (~Cex) for which eff_act = eff_bnf
@@ -285,7 +286,7 @@ contains
   end function calc_dnup
 
 
-  function eff_fix( soiltemp ) result( out_eff_fix )
+  function calc_eff_fix( soiltemp ) result( out_eff_fix )
     !////////////////////////////////////////////////////////////////
     ! Calculates N fixation efficiency (dNfix/dCex) as a function of 
     ! soil temperature. The functional form is chosen to be equal to
@@ -309,7 +310,7 @@ contains
       exp( params_nuptake%a_param_fix + &
            params_nuptake%b_param_fix * soiltemp * ( 1.0 - 0.5 * soiltemp / params_nuptake%fixoptimum ) )
 
-  end function eff_fix
+  end function calc_eff_fix
 
 
   ! function calc_avail_ninorg( ninorg, wtot ) result( avail_ninorg )

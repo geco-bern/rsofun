@@ -259,11 +259,8 @@ contains
     ! function return variable
     real :: cexu
 
-    ! ! low-temperature ramp is included here to prevent negative C balance after exudation
-    ! cexu = params_plant%exurate * croot
-
-    ! xxx debug
-    cexu = 0.0
+    ! low-temperature ramp is included here to prevent negative C balance after exudation
+    cexu = params_plant%exurate * croot
 
   end function calc_cexu
 
