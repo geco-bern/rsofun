@@ -66,6 +66,7 @@ contains
     real :: dcleaf
     real :: dnleaf
     real :: dcroot
+    real :: dcseed
     real :: dnroot
     real :: drgrow
     real :: an_unitlai
@@ -87,10 +88,12 @@ contains
     real, parameter :: kdecay_labl = 0.1
     real, parameter :: frac_leaf = 0.5
 
-    real, dimension(nlu,npft,30), save :: resp_vec
+    integer, parameter :: len_resp_vec = 30
+    real, dimension(nlu,npft,len_resp_vec), save :: resp_vec
     real :: frac_for_resp
 
-    real, dimension(nlu,npft,15), save :: an_vec
+    integer, parameter :: len_an_vec = 15
+    real, dimension(nlu,npft,len_an_vec), save :: an_vec
     real :: an_max
     real, save :: an_max_damped, an_max_damped_prev
     integer, parameter :: count_wait = 5
@@ -139,8 +142,8 @@ contains
               count_increasing = 0
               if (pft == npft .and. lu == nlu) firstcall1 = .false.
             else
-              an_vec(lu,pft,1:14) = an_vec(lu,pft,2:15)
-              an_vec(lu,pft,15) = an_unitlai
+              an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
+              an_vec(lu,pft,len_an_vec) = an_unitlai
             end if
 
             an_max = maxval(an_vec(lu,pft,:))
@@ -185,6 +188,11 @@ contains
             tile(lu)%plant(pft)%fill_seeds = .false.
           end if
 
+          ! initialise (to make sure)
+          dcleaf = 0.0
+          dcroot = 0.0
+          dcseed = 0.0
+          drgrow = 0.0
 
           if ( myinterface%steering%dofree_alloc ) then
             !==================================================================
@@ -393,20 +401,20 @@ contains
               nignore = .false. &
               )
 
-            !-------------------------------------------------------------------
-            ! GROWTH RESPIRATION, NPP
-            !-------------------------------------------------------------------
-            ! add growth respiration to autotrophic respiration and substract from NPP
-            ! (note that NPP is added to plabl in and growth resp. is implicitly removed
-            ! from plabl above)
-            drgrow = ( 1.0 - params_plant%growtheff ) * ( dcleaf + dcroot ) / params_plant%growtheff
-            tile_fluxes(lu)%plant(pft)%dnpp = cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(drgrow) )
 
           else
             !==================================================================
             ! Fixed allocation 
             !------------------------------------------------------------------
-            ! record total respiration of preceeding 30 days. keep this amount in labile pool to satisfy demand
+            ! update
+            if (tile(lu)%plant(pft)%pleaf%c%c12 == 0.0) then
+              call get_leaftraits_init( tile(lu)%plant(pft) )
+            end if
+
+            !------------------------------------------------------------------
+            ! record total respiration of preceeding 30 days. 
+            ! Keep this amount in labile pool to satisfy demand.
+            !------------------------------------------------------------------
             if (firstcall3) then 
               resp_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drleaf &
                                      + tile_fluxes(lu)%plant(pft)%drroot &
@@ -414,8 +422,8 @@ contains
                                      + tile_fluxes(lu)%plant(pft)%dcex
               if (pft == npft .and. lu == nlu) firstcall3 = .false.
             else
-              resp_vec(lu,pft,1:29) = resp_vec(lu,pft,2:30)
-              resp_vec(lu,pft,30) = tile_fluxes(lu)%plant(pft)%drleaf &
+              resp_vec(lu,pft,1:(len_resp_vec-1)) = resp_vec(lu,pft,2:len_resp_vec)
+              resp_vec(lu,pft,len_resp_vec) = tile_fluxes(lu)%plant(pft)%drleaf &
                                    + tile_fluxes(lu)%plant(pft)%drroot &
                                    + tile_fluxes(lu)%plant(pft)%drsapw &
                                    + tile_fluxes(lu)%plant(pft)%dcex
@@ -423,31 +431,39 @@ contains
             frac_for_resp = sum(resp_vec(lu,pft,:)) / tile(lu)%plant(pft)%plabl%c%c12
 
             !------------------------------------------------------------------
-            ! Calculate maximum C allocatable based on current labile pool size.
-            ! Maximum is the lower of all labile C and the C to be matched by all labile N,
+            ! Calculate maximum C allocatable based on current labile pool size, 
             ! discounted by the yield factor.
             !------------------------------------------------------------------
-            if (tile(lu)%plant(pft)%pleaf%c%c12 == 0.0) then
-              call get_leaftraits_init( tile(lu)%plant(pft) )
-            end if
-
             avl = orgfrac(  kdecay_labl, &
                             orgfrac( (1.0 - frac_for_resp), &
                                       tile(lu)%plant(pft)%plabl ) )
 
-            dcleaf = frac_leaf         * params_plant%growtheff * avl%c%c12
-            dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
-            dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
 
             if (tile(lu)%plant(pft)%fill_seeds) then
               !------------------------------------------------------------------
-              ! allocate to fill seeds, no growth
+              ! allocate to fill seeds, discounted by growth respiration
               !------------------------------------------------------------------
-              call orgmv( avl, &
+              ! to seeds
+              dcseed = params_plant%growtheff         * avl%c%c12
+              drgrow = (1.0 - params_plant%growtheff) * avl%c%c12
+
+              ! remove and add to seed biomass
+              call orgmv( orgpool( carbon( dcseed ), avl%n  ) , &
                           tile(lu)%plant(pft)%plabl, &
                           tile(lu)%plant(pft)%pseed &
                           )
+
+              ! ... and remove growth respiration from labile C
+              tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - drgrow
+
             else
+
+              ! amount to be allocated as real number
+              dcleaf = frac_leaf         * params_plant%growtheff * avl%c%c12
+              dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
+              dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
+              drgrow = (1.0 - params_plant%growtheff) * avl%c%c12
+
               !-------------------------------------------------------------------
               ! LEAF ALLOCATION
               !-------------------------------------------------------------------
@@ -477,7 +493,6 @@ contains
                 !-------------------------------------------------------------------  
                 if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
                   req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
-                  ! print*,'Negative labile N. required to balance:', req
                   tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                   tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
                   tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
@@ -489,6 +504,7 @@ contains
               ! ROOT ALLOCATION
               !-------------------------------------------------------------------
               if (dcroot > 0.0) then
+
                 call allocate_root( &
                   pft, &
                   dcroot, &
@@ -505,7 +521,6 @@ contains
                 !-------------------------------------------------------------------  
                 if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
                   req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
-                  ! print*,'Negative labile N. required to balance:', req
                   tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                   tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
                   tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
@@ -513,15 +528,18 @@ contains
 
               end if
 
-              !-------------------------------------------------------------------
-              ! GROWTH RESPIRATION, NPP
-              !-------------------------------------------------------------------
-              ! add growth respiration to autotrophic respiration and substract from NPP
-              ! (note that NPP is added to plabl in and growth resp. is implicitly removed
-              ! from plabl above)
-              drgrow   = ( 1.0 - params_plant%growtheff ) * ( dcleaf + dcroot ) / params_plant%growtheff
-              tile_fluxes(lu)%plant(pft)%drgrow = drgrow
-              tile_fluxes(lu)%plant(pft)%dnpp = cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(drgrow) )
+              ! !-------------------------------------------------------------------
+              ! ! growth respiration
+              ! ! dC = y * Cavl
+              ! ! Cavl = dC + Rg
+              ! ! => Rg = dC * (1/y - 1)
+              ! !-------------------------------------------------------------------
+              ! ! add growth respiration to autotrophic respiration and substract from NPP
+              ! ! (note that NPP is added to plabl in and growth resp. is implicitly removed
+              ! ! from plabl above)
+              ! ! drgrow   = ( 1.0 - params_plant%growtheff ) * ( dcleaf + dcroot ) / params_plant%growtheff  ! was wrong, was it?
+              ! drgrow = ( dcleaf + dcroot ) * ((1.0 / params_plant%growtheff) - 1.0)
+
             end if
 
           end if
@@ -532,7 +550,6 @@ contains
 
         end if
 
-      
       else
 
           dcleaf = 0.0
@@ -542,6 +559,16 @@ contains
           drgrow = 0.0
 
       end if
+
+      !-------------------------------------------------------------------
+      ! Record growth respiration, adjust NPP
+      !-------------------------------------------------------------------
+      ! add growth respiration to autotrophic respiration and substract from NPP
+      ! (note that NPP is added to plabl in and growth resp. is implicitly removed
+      ! from plabl above)
+      ! drgrow = ( 1.0 - params_plant%growtheff ) * ( dcleaf + dcroot ) / params_plant%growtheff
+      tile_fluxes(lu)%plant(pft)%drgrow = drgrow
+      tile_fluxes(lu)%plant(pft)%dnpp = cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon( drgrow ) )
 
     end do pftloop
 

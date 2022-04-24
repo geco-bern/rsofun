@@ -601,6 +601,9 @@ contains
     ! root decay constant [days], read in as [years-1], central value: 1.04 (Shan et al., 1993; see Li et al., 2014)  
     out_getpftparams%k_decay_root = myinterface%params_calib%k_decay_root / ndayyear 
 
+    ! root decay constant [days], read in as [years-1], central value: 1.04 (Shan et al., 1993; see Li et al., 2014)  
+    out_getpftparams%k_decay_labl = myinterface%params_calib%k_decay_labl / ndayyear 
+
     ! root C:N and N:C ratio (gC/gN and gN/gC)
     out_getpftparams%r_cton_root = myinterface%params_calib%r_cton_root
     out_getpftparams%r_ntoc_root = 1.0 / out_getpftparams%r_cton_root
