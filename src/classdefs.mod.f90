@@ -18,7 +18,7 @@ module md_classdefs
   public carbon, nitrogen, orgpool, orgcp, orgcpRec, orgsub, orgmv, &
     orgmvRec, orginit, cmv, cmvRec, ccp, ccpRec, csub, cinit, nmv,  &
     nmvRec, ncp, ncpRec, nsub, ninit, orgfrac, cfrac, nfrac, orgplus, &
-    cplus, nplus, orgminus, cminus, nminus, cton, ntoc
+    cplus, nplus, orgminus, cminus, nminus, cton, ntoc, get_c12_org
 
   ! Minimum precision
   real, parameter :: epsilon = 1.0e-5 
@@ -788,5 +788,20 @@ contains
     end if
 
   end function ntoc
+
+
+  function get_c12_org( pool ) result( out_c12 )
+    !////////////////////////////////////////////////////////////////
+    !  Generic function extract the C12 real number of an organic pool
+    !----------------------------------------------------------------
+    ! arguments
+    type(orgpool), intent(in) :: pool
+
+    ! function return variable
+    real :: out_c12
+
+    out_c12 = pool%c%c12
+
+  end function get_c12_org
 
 end module md_classdefs

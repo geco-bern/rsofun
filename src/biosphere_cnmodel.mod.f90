@@ -50,8 +50,8 @@ contains
     ! local variables
     integer :: dm, moy, doy
     logical, save      :: init_daily            ! is true only on the first day of the simulation 
-    logical, parameter :: verbose = .false.     ! change by hand for debugging etc.
-    logical, parameter :: baltest = .false.     ! change by hand for debugging etc.
+    logical, parameter :: verbose = .true.     ! change by hand for debugging etc.
+    logical, parameter :: baltest = .true.     ! change by hand for debugging etc.
     real               :: cbal1, cbal2, nbal1, nbal2
     type( orgpool )    :: orgtmp1, orgtmp2, orgtmp3, orgtmp4, orgbal1, orgbal2
     real               :: ntmp1, ntmp2, ctmp1, ctmp2
@@ -389,15 +389,18 @@ contains
         if (verbose) print*, '              pleaf = ', tile(1)%plant(1)%pleaf
         if (verbose) print*, '              proot = ', tile(1)%plant(1)%proot 
         if (verbose) print*, '              plabl = ', tile(1)%plant(1)%plabl
+        if (verbose) print*, '              pseed = ', tile(1)%plant(1)%pseed
         if (verbose) print*, '              drgrow= ', tile_fluxes(1)%plant(1)%drgrow
         if (verbose) print*, '              dnup  = ', tile_fluxes(1)%plant(1)%dnup%n14
         if (verbose) cbal1 = tile(1)%plant(1)%pleaf%c%c12 &
                               + tile(1)%plant(1)%proot%c%c12 &
                               + tile(1)%plant(1)%plabl%c%c12 &
+                              + tile(1)%plant(1)%pseed%c%c12 &
                               + tile_fluxes(1)%plant(1)%drgrow
         if (verbose) nbal1 = tile(1)%plant(1)%pleaf%n%n14 &
                               + tile(1)%plant(1)%proot%n%n14 &
                               + tile(1)%plant(1)%plabl%n%n14 &
+                              + tile(1)%plant(1)%pseed%n%n14 &
                               - tile_fluxes(1)%plant(1)%dnup%n14
         !----------------------------------------------------------------
         call allocation_daily(  tile(:), &
@@ -411,22 +414,25 @@ contains
         if (verbose) print*, '              pleaf = ', tile(1)%plant(1)%pleaf
         if (verbose) print*, '              proot = ', tile(1)%plant(1)%proot
         if (verbose) print*, '              plabl = ', tile(1)%plant(1)%plabl
+        if (verbose) print*, '              pseed = ', tile(1)%plant(1)%pseed
         if (verbose) print*, '              drgrow= ', tile_fluxes(1)%plant(1)%drgrow
         if (verbose) print*, '              dnup  = ', tile_fluxes(1)%plant(1)%dnup%n14
         if (verbose) print*, '   --- C balance: '
         if (verbose) cbal2 = tile(1)%plant(1)%pleaf%c%c12 &
                               + tile(1)%plant(1)%proot%c%c12 &
                               + tile(1)%plant(1)%plabl%c%c12 &
+                              + tile(1)%plant(1)%pseed%c%c12 &
                               + tile_fluxes(1)%plant(1)%drgrow
         if (verbose) cbal1 = cbal2 - cbal1
         if (verbose) nbal2 = tile(1)%plant(1)%pleaf%n%n14 &
                               + tile(1)%plant(1)%proot%n%n14 &
                               + tile(1)%plant(1)%plabl%n%n14 &
+                              + tile(1)%plant(1)%pseed%n%n14 &
                               - tile_fluxes(1)%plant(1)%dnup%n14
         if (verbose) nbal1 = nbal2 - nbal1
-        if (verbose) print*, '       d( cleaf + croot + clabl + rgrowth ) =', cbal1
+        if (verbose) print*, '       d( cleaf + croot + clabl + cseed + rgrowth ) =', cbal1
         if (baltest .and. abs(cbal1) > eps) stop 'balance not satisfied for C'
-        if (verbose) print*, '       d( nleaf + nroot + nlabl - nup ) =', nbal1
+        if (verbose) print*, '       d( nleaf + nroot + nlabl + nseed - nup ) =', nbal1
         if (baltest .and. abs(nbal1) > eps) stop 'balance not satisfied for C'
         if (verbose) print*, '... done'
 
