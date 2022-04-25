@@ -41,7 +41,7 @@ contains
     !  June 2014
     !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
-    use md_params_core, only: pft_start, pft_end
+    use md_params_core, only: pft_start, pft_end, eps
     use md_rates
     use md_interface_pmodel
     use md_forcing_pmodel, only: landuse_type
@@ -83,39 +83,24 @@ contains
     real :: nh4_w, no3_w, no2_w    ! anaerobic pools
     real :: nh4_d, no3_d, no2_d    ! aerobic pools
     real :: doc_w, no, n2o, n2     ! anaerobic pools
+    real :: dno_d, dno_w, dn2o_d, dn2o_w   ! for gaseous escape
     
     ! Variables N balance test
-    logical, parameter :: baltest_trans = .false.  ! set to false to do mass conservation test during transient simulation
-    logical :: verbose = .false.  ! set to true to activate verbose mode
+    logical, parameter :: baltest_trans = .true.  ! set to false to do mass conservation test during transient simulation
+    logical :: verbose = .true.  ! set to true to activate verbose mode
     logical :: baltest
     real :: nbal_before_1, nbal_after_1, nbal1, nbal_before_2, nbal_after_2, nbal2
     real :: no3bal_0, no3bal_1, nh4bal_0, nh4bal_1
-    real, parameter :: eps = 9.999e-8    ! numerical imprecision allowed in mass conservation tests
 
-    if (baltest_trans .and. .not. myinterface%steering%spinup) then
-      baltest = .true.
-      verbose = .true.
-    else
-      baltest = .false.
-    end if
+    ! if (baltest_trans .and. .not. myinterface%steering%spinup) then
+    !   baltest = .true.
+    !   verbose = .true.
+    ! else
+    !   baltest = .false.
+    ! end if
 
-    !-------------------------------------------------------------------------
-    ! Record for balances
-    !-------------------------------------------------------------------------
-    ! all pools plus all losses summed up
-    lu = 1
-    if (verbose) print*,'              with state variables:'
-    if (verbose) print*,'              ninorg = ', tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 &
-      + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d &
-      + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
-    if (verbose) print*,'              nloss  = ', tile_fluxes(lu)%soil%dnloss
-    if (verbose) print*,'              dndep  = ', landuse%dnoy + landuse%dnhx
-    if (baltest) nbal_before_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 &
-      + tile_fluxes(lu)%soil%dnloss + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w &
-      + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2 + landuse%dnoy + landuse%dnhx
-    if (baltest) nbal_before_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + ddenitr &
-      + dnitr + dnvol + tile_fluxes(lu)%soil%dnleach + landuse%dnoy + landuse%dnhx
-    if (verbose) print*,'executing ntransform() ... '
+    ! xxx debug
+    baltest = .true.
 
     !///////////////////////////////////////////////////////////////////////
     ! INITIALIZATION 
@@ -152,6 +137,21 @@ contains
       ! Record for balances
       !-------------------------------------------------------------------------
       ! all pools plus all losses summed up
+      if (verbose) print*,'              with state variables:'
+      if (verbose) print*,'              ninorg = ', tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 &
+        + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d &
+        + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
+      if (verbose) print*,'              nloss  = ', tile_fluxes(lu)%soil%dnloss
+      if (verbose) print*,'              dndep  = ', landuse%dnoy + landuse%dnhx
+      if (baltest) nbal_before_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile_fluxes(lu)%soil%dnloss
+      if (baltest) nbal_before_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile(lu)%soil%no_w + tile(lu)%soil%no_d & 
+      + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
+      if (verbose) print*,'executing ntransform() ... '
+
+      !-------------------------------------------------------------------------
+      ! Record for balances
+      !-------------------------------------------------------------------------
+      ! all pools plus all losses summed up
       if (verbose) print*,'              before:'
       if (verbose) print*,'              no3 = ', tile(lu)%soil%pno3%n14
       if (verbose) print*,'              no4 = ', tile(lu)%soil%pnh4%n14
@@ -176,6 +176,7 @@ contains
       tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + dnvol
 
       ! if (nh4>0.0) print*,'fvol ', dnvol / nh4 
+
 
       !///////////////////////////////////////////////////////////////////////
       ! NITRATE LEACHING
@@ -215,6 +216,7 @@ contains
 
       !///////////////////////////////////////////////////////////////////////
       ! NITRIFICATION in aerobic microsites (ntransform.cpp:123)
+      ! NH4 -> NO3 + NO + N2O
       !------------------------------------------------------------------
       ftemp_nitr = max( min( &
         (((70.0-tile(lu)%soil%phy%temp)/(70.0-38.0))**12.0) &
@@ -244,16 +246,16 @@ contains
       tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + n2o_inc + no_inc
 
       ! xxx debug
-      if (baltest) no3bal_1 = no3_w + no3_d - no3_inc
-      if (baltest) nh4bal_1 = nh4_w + nh4_d + dnitr
+      if (baltest) no3bal_1 = no3_w + no3_d - no3_inc + tile_fluxes(lu)%soil%dnleach + no_inc + n2o_inc
+      if (baltest) nh4bal_1 = nh4_w + nh4_d + dnitr + dnvol
 
       if (baltest) nbal1 = no3bal_1 - no3bal_0
       if (baltest) nbal2 = nh4bal_1 - nh4bal_0
       if (verbose) print*,'              --- preliminary balance after nitrification '
       if (verbose) print*,'              ', nbal1
       if (verbose) print*,'              ', nbal2
-      if (baltest .and. abs(nbal1)>eps) stop 'balance 1 not satisfied'
-      if (baltest .and. abs(nbal2)>eps) stop 'balance 2 not satisfied'
+      if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
+      if (baltest .and. abs(nbal2) > eps) stop 'balance 2 not satisfied'
 
 
       !///////////////////////////////////////////////////////////////////////
@@ -343,51 +345,45 @@ contains
       dno                       = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * no
       dn2                       = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * n2
 
-      ! if N loss is defined w.r.t. gaseous escape, then this is the correct formulation:
-      ! tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + dno + tile_fluxes(lu)%soil%dn2o  + dn2
-
       ! Gaseous escape of pools at dry microsites
       !------------------------------------------------------------------
-      tmp = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%no_d
-      tile(lu)%soil%no_d = tile(lu)%soil%no_d - tmp
+      dno_d = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%no_d
+      tile(lu)%soil%no_d = tile(lu)%soil%no_d - dno_d
       
-      tmp = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%n2o_d
-      tile(lu)%soil%n2o_d = tile(lu)%soil%n2o_d - tmp
+      dn2o_d = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%n2o_d
+      tile(lu)%soil%n2o_d = tile(lu)%soil%n2o_d - dn2o_d
 
       ! Gaseous escape of pools at wet microsites
       !------------------------------------------------------------------
-      tmp = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%no_w
-      tile(lu)%soil%no_w = tile(lu)%soil%no_w - tmp
+      dno_w = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%no_w
+      tile(lu)%soil%no_w = tile(lu)%soil%no_w - dno_w
       
-      tmp = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%n2o_w
-      tile(lu)%soil%n2o_w = tile(lu)%soil%n2o_w - tmp
+      dn2o_w = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%n2o_w
+      tile(lu)%soil%n2o_w = tile(lu)%soil%n2o_w - dn2o_w
                  
       tile(lu)%soil%n2_w = tile(lu)%soil%n2_w - dn2
-      
-    enddo luloop
 
-    !-------------------------------------------------------------------------
-    ! Test mass conservation
-    !-------------------------------------------------------------------------
-    ! all pools plus all losses summed up
-    lu = 1
-    if (baltest) nbal_after_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile_fluxes(lu)%soil%dnloss &
-      + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w &
-      + tile(lu)%soil%pno2
-    if (baltest) nbal_after_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + ddenitr &
-      + dnitr + dnvol + tile_fluxes(lu)%soil%dnleach - no3_inc
-    if (baltest) nbal1 = nbal_after_1 - nbal_before_1
-    if (baltest) nbal2 = nbal_after_2 - nbal_before_2
-    if (verbose) print*,'              ==> returned:'
-    if (verbose) print*,'              ninorg = ', tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 &
-      + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d &
-      + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
-    if (verbose) print*,'              nloss  = ', tile_fluxes(lu)%soil%dnloss
-    if (verbose) print*,'   --- balance: '
-    if (verbose) print*,'       d( ninorg + loss )', nbal1
-    if (verbose) print*,'       d( ninorg + loss )', nbal2
-    if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
-    if (baltest .and. abs(nbal2) > eps) stop 'balance 2 not satisfied'
+      !-------------------------------------------------------------------------
+      ! Test mass conservation
+      !-------------------------------------------------------------------------
+      ! all pools plus all losses summed up
+      if (baltest) nbal_after_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile_fluxes(lu)%soil%dnloss
+      if (baltest) nbal_after_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile(lu)%soil%no_w + tile(lu)%soil%no_d & 
+        + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2 + dno_d + dn2o_d + dno_w + dn2o_w +dn2
+      if (baltest) nbal1 = nbal_after_1 - nbal_before_1
+      if (baltest) nbal2 = nbal_after_2 - nbal_before_2
+      if (verbose) print*,'              ==> returned:'
+      if (verbose) print*,'              ninorg = ', tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 &
+        + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d &
+        + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
+      if (verbose) print*,'              nloss  = ', tile_fluxes(lu)%soil%dnloss
+      if (verbose) print*,'   --- balance: '
+      if (verbose) print*,'       d( ninorg + loss ) 1', nbal1
+      if (verbose) print*,'       d( ninorg + loss ) 2', nbal2
+      if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
+      if (baltest .and. abs(nbal2) > eps) stop 'balance 2 not satisfied'
+
+    enddo luloop
 
   end subroutine ntransform
 
