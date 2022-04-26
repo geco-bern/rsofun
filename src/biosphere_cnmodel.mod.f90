@@ -4,7 +4,7 @@ module md_biosphere_cnmodel
   use md_classdefs
   use md_sofunutils, only: calc_patm
   use md_tile, only: tile_type, tile_fluxes_type, init_tile, init_tile_fluxes, &
-    getpar_modl_tile, diag_daily
+    getpar_modl_tile, diag_daily, diag_annual, finalize_tile
   use md_plant, only: getpar_modl_plant
   use md_phenology, only: phenology, getpar_modl_phenology
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
@@ -447,10 +447,18 @@ contains
 
     end do monthloop
 
-    ! !----------------------------------------------------------------
-    ! ! annual diagnostics
-    ! !----------------------------------------------------------------
-    ! call diag_annual( tile(:), tile_fluxes(:) )
+    !----------------------------------------------------------------
+    ! annual diagnostics
+    !----------------------------------------------------------------
+    call diag_annual( tile(:), tile_fluxes(:) )
+
+    !----------------------------------------------------------------
+    ! close (experimental) files
+    !----------------------------------------------------------------
+    if (myinterface%steering%finalize) then
+      call finalize_tile()
+    end if
+
     
     if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
 

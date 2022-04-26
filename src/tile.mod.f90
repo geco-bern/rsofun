@@ -10,7 +10,7 @@ module md_tile
 
   private
   public tile_type, tile_fluxes_type, init_tile, psoilphystype, soil_type, &
-    init_tile_fluxes, getpar_modl_tile, diag_daily
+    init_tile_fluxes, getpar_modl_tile, diag_daily, diag_annual, finalize_tile
 
   !----------------------------------------------------------------
   ! physical soil state variables with memory from year to year (~pools)
@@ -241,14 +241,14 @@ contains
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     ! argument
     type( tile_type ), dimension(nlu), intent(inout) :: tile
 
     ! local variables
     integer :: lu
+    character(len=256) :: prefix
+    character(len=256) :: filnam
 
     !-----------------------------------------------------------------------------
     ! derive which PFTs are present from fpc_grid (which is prescribed)
@@ -268,7 +268,27 @@ contains
 
     end do
 
+    !-----------------------------------------------------------------------------
+    ! open files for experimental output
+    !-----------------------------------------------------------------------------
+    prefix = "./out/out_rsofun"
+
+    filnam = trim(prefix)//'.a.csoil.txt'
+    open(unit = 101, file = filnam, err = 999, status = 'unknown')
+
+    return
+    999 stop 'init_tile(): error opening output files'
+
   end subroutine init_tile
+
+
+  subroutine finalize_tile()
+    !////////////////////////////////////////////////////////////////
+    ! Closing files
+    !----------------------------------------------------------------
+    close(unit = 101)
+
+  end subroutine finalize_tile
 
 
   subroutine init_tile_canopy( canopy )
@@ -854,42 +874,32 @@ contains
   end subroutine diag_daily
 
 
-  ! subroutine diag_annual( tile, tile_fluxes )
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Daily diagnostics
-  !   ! - sum over PFTs (plant) within LU (canopy) 
-  !   ! - iterative sum over days
-  !   !----------------------------------------------------------------
-  !   use md_params_core, only: eps
+  subroutine diag_annual( tile, tile_fluxes )
+    !////////////////////////////////////////////////////////////////
+    ! Annual diagnostics
+    ! Write to (experimental) files
+    !----------------------------------------------------------------
+    use md_interface_pmodel, only: myinterface
 
-  !   ! arguments
-  !   type(tile_type), dimension(nlu), intent(inout) :: tile
-  !   type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
+    ! arguments
+    type(tile_type), dimension(nlu), intent(in) :: tile
+    type(tile_fluxes_type), dimension(nlu), intent(in) :: tile_fluxes
 
-  !   ! local
-  !   integer :: lu, pft
+    ! local
+    integer :: lu, pft
 
-  !   !----------------------------------------------------------------
-  !   ! Store plant traits required for next year's allocation
-  !   !----------------------------------------------------------------
-  !   ! pft-level
-  !   !do pft = 1,npft
-  !     !tile(:)%plant(pft)%vcmax25 = tile_fluxes(:)%plant(pft)%avcmax25
-  !   !end do
+    !////////////////////////////////////////////////////////////////
+    ! Annual output to file
+    !----------------------------------------------------------------
+    lu = 1
+    pft = 1
 
-  !   ! ! for weighted-mean vcmax25 at canopy level
-  !   !tile_fluxes(lu)%canopy%avcmax25 = tile_fluxes(lu)%canopy%avcmax25 / tile_fluxes(lu)%canopy%agpp
-  !   ! ! for weighted-mean vcmax25 at pft-level
+    ! soil C
+    write(101, 999) myinterface%steering%outyear, (tile(lu)%soil%psoil_sl%c%c12 + tile(lu)%soil%psoil_fs%c%c12)
 
-  !   ! !----------------------------------------------------------------
-  !   ! ! Divide by annual total GPP for GPP-weighted sums 
-  !   ! !----------------------------------------------------------------
-  !   ! tile_fluxes(:)%canopy%avcmax25_mean = tile_fluxes(:)%canopy%avcmax25_mean / tile_fluxes(:)%canopy%agpp
+    return
+    999 format (I4.4, F20.8)
 
-  !   ! do pft = 1,npft
-  !   !   tile_fluxes(:)%plant(pft)%avcmax25_mean = tile_fluxes(:)%plant(pft)%avcmax25_mean / tile_fluxes(:)%plant(pft)%agpp
-  !   ! end do
-
-  ! end subroutine diag_annual
+  end subroutine diag_annual
 
 end module md_tile

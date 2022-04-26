@@ -124,8 +124,11 @@ output <- runread_pmodel_f(
   par = pars
   )
 
-## Test plot
+## read (experimental) files
+aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>% 
+  setNames(c("year", "csoil"))
 
+## Test plots
 output$data[[1]] %>% 
   as_tibble() %>% 
   ggplot(aes(date, gpp)) + 

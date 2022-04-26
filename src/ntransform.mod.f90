@@ -86,8 +86,8 @@ contains
     real :: dno_d, dno_w, dn2o_d, dn2o_w   ! for gaseous escape
     
     ! Variables N balance test
-    logical, parameter :: baltest_trans = .true.  ! set to false to do mass conservation test during transient simulation
-    logical :: verbose = .true.  ! set to true to activate verbose mode
+    logical, parameter :: baltest_trans = .false.  ! set to false to do mass conservation test during transient simulation
+    logical :: verbose = .false.  ! set to true to activate verbose mode
     logical :: baltest
     real :: nbal_before_1, nbal_after_1, nbal1, nbal_before_2, nbal_after_2, nbal2
     real :: no3bal_0, no3bal_1, nh4bal_0, nh4bal_1
@@ -100,7 +100,7 @@ contains
     ! end if
 
     ! xxx debug
-    baltest = .true.
+    baltest = .false.
 
     !///////////////////////////////////////////////////////////////////////
     ! INITIALIZATION 
@@ -175,8 +175,6 @@ contains
       tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 - dnvol
       tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + dnvol
 
-      ! if (nh4>0.0) print*,'fvol ', dnvol / nh4 
-
 
       !///////////////////////////////////////////////////////////////////////
       ! NITRATE LEACHING
@@ -245,17 +243,17 @@ contains
       ! if N loss is defined w.r.t. reduction in NH4 and NO3 pools, then this is the correct formulation:
       tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + n2o_inc + no_inc
 
-      ! xxx debug
-      if (baltest) no3bal_1 = no3_w + no3_d - no3_inc + tile_fluxes(lu)%soil%dnleach + no_inc + n2o_inc
-      if (baltest) nh4bal_1 = nh4_w + nh4_d + dnitr + dnvol
+      ! ! xxx debug
+      ! if (baltest) no3bal_1 = no3_w + no3_d - no3_inc + tile_fluxes(lu)%soil%dnleach + no_inc + n2o_inc
+      ! if (baltest) nh4bal_1 = nh4_w + nh4_d + dnitr + dnvol
 
-      if (baltest) nbal1 = no3bal_1 - no3bal_0
-      if (baltest) nbal2 = nh4bal_1 - nh4bal_0
-      if (verbose) print*,'              --- preliminary balance after nitrification '
-      if (verbose) print*,'              ', nbal1
-      if (verbose) print*,'              ', nbal2
-      if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
-      if (baltest .and. abs(nbal2) > eps) stop 'balance 2 not satisfied'
+      ! if (baltest) nbal1 = no3bal_1 - no3bal_0
+      ! if (baltest) nbal2 = nh4bal_1 - nh4bal_0
+      ! if (verbose) print*,'              --- preliminary balance after nitrification '
+      ! if (verbose) print*,'              ', nbal1
+      ! if (verbose) print*,'              ', nbal2
+      ! if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
+      ! if (baltest .and. abs(nbal2) > eps) stop 'balance 2 not satisfied'
 
 
       !///////////////////////////////////////////////////////////////////////
@@ -381,7 +379,7 @@ contains
       if (verbose) print*,'       d( ninorg + loss ) 1', nbal1
       if (verbose) print*,'       d( ninorg + loss ) 2', nbal2
       if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
-      if (baltest .and. abs(nbal2) > eps) stop 'balance 2 not satisfied'
+      ! if (baltest .and. abs(nbal2) > eps) stop 'balance 2 not satisfied'
 
     enddo luloop
 
