@@ -369,7 +369,13 @@ run_pmodel_f_bysite <- function(
           "netmin",
           "dcharv",
           "dnharv",
-          "drd"
+          "drd",
+          "lma",
+          "narea",
+          "narea_v",
+          "nloss",
+          "seedc",
+          "seedn"
           )) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -413,7 +419,13 @@ run_pmodel_f_bysite <- function(
                   netmin  = NA,
                   dcharv  = NA,
                   dnharv  = NA,
-                  drd     = NA
+                  drd     = NA,
+                  lma     = NA,
+                  narea   = NA,
+                  narea_v = NA,
+                  nloss   = NA,
+                  seedc   = NA,
+                  seedn   = NA
                   )
   }
     

@@ -2,6 +2,7 @@ library(dplyr)
 library(rsofun)
 library(ggplot2)
 library(patchwork)
+library(readr)
 
 
 pars <- list(
@@ -126,7 +127,16 @@ output <- runread_pmodel_f(
 
 ## read (experimental) files
 aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>% 
-  setNames(c("year", "csoil"))
+  setNames(c("year", "csoil")) %>% 
+  left_join(
+    read_fwf(file = "out/out_rsofun.a.nsoil.txt", col_types = "in") %>% 
+      setNames(c("year", "nsoil")),
+    by = "year"
+  )
+
+aout %>% 
+  ggplot(aes(year, nsoil)) +
+  geom_line()
 
 ## Test plots
 output$data[[1]] %>% 
@@ -215,6 +225,11 @@ output$data[[1]] %>%
 output$data[[1]] %>% 
   as_tibble() %>% 
   ggplot(aes(date, csoil)) + 
+  geom_line()
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, en2o)) + 
   geom_line()
 
 output$data[[1]] %>% 

@@ -155,6 +155,12 @@ module md_interface_pmodel
     real :: dcharv
     real :: dnharv
     real :: drd
+    real :: lma
+    real :: narea
+    real :: narea_v
+    real :: nloss
+    real :: seedc
+    real :: seedn
   end type outtype_biosphere
 
 end module md_interface_pmodel

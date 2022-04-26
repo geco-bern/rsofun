@@ -276,6 +276,9 @@ contains
     filnam = trim(prefix)//'.a.csoil.txt'
     open(unit = 101, file = filnam, err = 999, status = 'unknown')
 
+    filnam = trim(prefix)//'.a.nsoil.txt'
+    open(unit = 102, file = filnam, err = 999, status = 'unknown')
+
     return
     999 stop 'init_tile(): error opening output files'
 
@@ -287,6 +290,7 @@ contains
     ! Closing files
     !----------------------------------------------------------------
     close(unit = 101)
+    close(unit = 102)
 
   end subroutine finalize_tile
 
@@ -871,6 +875,15 @@ contains
     out_biosphere%npp     = tile_fluxes(lu)%plant(pft)%dnpp%c12
     out_biosphere%drd     = tile_fluxes(lu)%plant(pft)%drd    
 
+
+    out_biosphere%lma     = tile(lu)%plant(pft)%lma
+    out_biosphere%narea   = tile(lu)%plant(pft)%narea
+    out_biosphere%narea_v = tile(lu)%plant(pft)%narea_metabolic
+    out_biosphere%nloss   = tile_fluxes(lu)%soil%dnloss
+    out_biosphere%seedc   = tile(lu)%plant(pft)%pseed%c%c12
+    out_biosphere%seedn   = tile(lu)%plant(pft)%pseed%n%n14
+
+
   end subroutine diag_daily
 
 
@@ -896,6 +909,9 @@ contains
 
     ! soil C
     write(101, 999) myinterface%steering%outyear, (tile(lu)%soil%psoil_sl%c%c12 + tile(lu)%soil%psoil_fs%c%c12)
+
+    ! soil N
+    write(102, 999) myinterface%steering%outyear, (tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%psoil_fs%n%n14)
 
     return
     999 format (I4.4, F20.8)
