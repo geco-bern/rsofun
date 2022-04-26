@@ -14,7 +14,7 @@ A modelling framework for site-scale simulations of ecosystem processes, impleme
 To install and load the rsofun package using the latest release run the following command in your R terminal: 
 ```r
 if(!require(devtools)){install.packages(devtools)}
-devtools::install_github("computationales/rsofun")
+devtools::install_github("computationales/rsofun@v4.3")
 library(rsofun)
 ```
 ## Example
