@@ -197,8 +197,7 @@ contains
         if (verbose) print*,'                   method_optci  : ',   "prentice14"
         if (verbose) print*,'                   method_jmaxlim: ', "wang17"
 
-        out_pmodel = pmodel(  &
-                              kphio          = params_pft_gpp(pft)%kphio * ftemp_kphio, &
+        out_pmodel = pmodel(  kphio          = params_pft_gpp(pft)%kphio * ftemp_kphio, &
                               beta           = params_gpp%beta, &
                               ppfd           = climate_memory%dppfd, &
                               co2            = co2, &
@@ -241,7 +240,7 @@ contains
                                                     climate%dppfd, &
                                                     out_pmodel%lue, &
                                                     soilmstress, &
-                                                    real(myinterface%params_siml%secs_per_tstep) &
+                                                    myinterface%params_siml%secs_per_tstep &
                                                     )
       
       !----------------------------------------------------------------
@@ -250,11 +249,10 @@ contains
       tile_fluxes(lu)%plant(pft)%drd = calc_drd(  tile(lu)%plant(pft)%fapar_ind, &
                                                   tile(lu)%plant(pft)%fpc_grid, &
                                                   climate_memory%dppfd, &
-                                                  params_gpp%rd_to_vcmax &
-                                                    * out_pmodel%vcmax25_unitiabs &
-                                                    * calc_ftemp_inst_rd( climate%dtemp ), &
+                                                  out_pmodel%vcmax25_unitiabs, &
+                                                  climate%dtemp, &
                                                   soilmstress, &
-                                                  real(myinterface%params_siml%secs_per_tstep) &
+                                                  myinterface%params_siml%secs_per_tstep &
                                                   )
 
       !----------------------------------------------------------------
@@ -311,18 +309,18 @@ contains
     real, intent(in) :: dppfd           ! daily total photon flux density (mol s-1 m-2)
     real, intent(in) :: lue             ! light use efficiency (g CO2 mol-1)
     real, intent(in) :: soilmstress     ! soil moisture stress factor (unitless)
-    real, intent(in) :: secs_per_tstep  ! number of seconds per time step, needed because PPFD is in units per second (s)
+    integer, intent(in) :: secs_per_tstep  ! number of seconds per time step, needed because PPFD is in units per second (s)
 
     ! function return variable
     real :: out                         ! Daily total gross primary productivity (gC m-2 d-1)
 
     ! GPP is light use efficiency multiplied by absorbed light and soil moisture stress function
-    out = fapar * fpc_grid * dppfd * soilmstress * lue * secs_per_tstep
+    out = fapar * fpc_grid * dppfd * soilmstress * lue * real(secs_per_tstep)
 
   end function calc_dgpp
 
 
-  function calc_drd( fapar, fpc_grid, dppfd, rd_unitiabs, soilmstress, secs_per_tstep ) result( out )
+  function calc_drd( fapar, fpc_grid, dppfd, vcmax25_unitiabs, temp, soilmstress, secs_per_tstep ) result( out )
     !//////////////////////////////////////////////////////////////////
     ! Calculates daily total dark respiration (Rd) based on monthly mean 
     ! PPFD (assumes acclimation on a monthly time scale).
@@ -331,15 +329,17 @@ contains
     real, intent(in) :: fapar           ! fraction of absorbed photosynthetically active radiation
     real, intent(in) :: fpc_grid        ! foliar projective cover
     real, intent(in) :: dppfd           ! daily total photon flux density (mol s-1 m-2)
-    real, intent(in) :: rd_unitiabs
+    real, intent(in) :: vcmax25_unitiabs
+    real, intent(in) :: temp            ! mean temperature (deg C)
     real, intent(in) :: soilmstress     ! soil moisture stress factor
-    real, intent(in) :: secs_per_tstep  ! number of seconds per time step, needed because PPFD is in units per second (s)
+    integer, intent(in) :: secs_per_tstep  ! number of seconds per time step, needed because PPFD is in units per second (s)
 
     ! function return variable
     real :: out
 
     ! Dark respiration takes place during night and day (24 hours)
-    out = fapar * fpc_grid * dppfd * rd_unitiabs * soilmstress * c_molmass * secs_per_tstep
+    out = fapar * fpc_grid * dppfd * vcmax25_unitiabs * params_gpp%rd_to_vcmax &
+          * calc_ftemp_inst_rd( temp ) * soilmstress * c_molmass * real(secs_per_tstep)
 
   end function calc_drd
 

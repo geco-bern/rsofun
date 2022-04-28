@@ -169,6 +169,8 @@ module md_plant
 
     type(orgpool) :: dharv    ! daily total biomass harvest (g m-2 d-1)
 
+    type(orgpool) :: alloc_leaf, alloc_root, alloc_sapw, alloc_wood
+
   end type plant_fluxes_type
 
   !-----------------------------------------------------------------------
@@ -737,6 +739,10 @@ contains
 
     do pft=1,npft
       call orginit( plant_fluxes(pft)%dharv )
+      call orginit( plant_fluxes(pft)%alloc_leaf )
+      call orginit( plant_fluxes(pft)%alloc_root )
+      call orginit( plant_fluxes(pft)%alloc_sapw )
+      call orginit( plant_fluxes(pft)%alloc_wood )
       call cinit(   plant_fluxes(pft)%dnpp )
       call ninit(   plant_fluxes(pft)%dnup )
     end do

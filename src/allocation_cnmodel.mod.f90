@@ -279,6 +279,44 @@ contains
               ! ------------------------------------------------------------------
 
               !------------------------------------------------------------------
+              ! Average over the preceeding N days:
+              ! - NO3 and NH4 availability
+              ! - (LUE * PPFD)
+              ! - C:N stoichiometry of new production
+              !------------------------------------------------------------------
+              if (firstcall3) then
+                ! initialise all vector elements with current value
+                no3_vec(lu,:) = tile(lu)%soil%pno3%n14
+                nh4_vec(lu,:) = tile(lu)%soil%pnh4%n14
+                luep_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%lue * climate%dppfd
+                cn_vec(lu,pft,:) = cton( orgplus( tile_fluxes(lu)%plant(pft)%alloc_leaf, &
+                                                  tile_fluxes(lu)%plant(pft)%alloc_root, &
+                                                  tile_fluxes(lu)%plant(pft)%alloc_sapw, &
+                                                  tile_fluxes(lu)%plant(pft)%alloc_wood  &
+                                                  ) )
+                if (lu == nlu) firstcall3 = .false.
+              else
+                ! shift elements of vector forward
+                no3_vec(lu,1:(len_navl_vec-1)) = no3_vec(lu,2:len_navl_vec)
+                nh4_vec(lu,1:(len_navl_vec-1)) = nh4_vec(lu,2:len_navl_vec)
+                luep_vec(lu,pft,1:(len_luep_vec-1)) = luep_vec(lu,pft,2:len_luep_vec)
+                cn_vec(lu,pft,1:(len_cn_vec-1)) = cn_vec(lu,pft,2:len_luep_vec)
+
+                ! put current value to end of vector
+                no3_vec(lu,len_navl_vec) = tile(lu)%soil%pno3%n14
+                nh4_vec(lu,len_navl_vec) = tile(lu)%soil%pnh4%n14
+                luep_vec(lu,pft,len_luep_vec) = tile_fluxes(lu)%plant(pft)%lue * climate%dppfd
+                rduf_vec(lu,pft,len_luep_vec) = tile_fluxes(lu)%plant(pft)%vcmax25_unitfapar * &
+                                                params_gpp%rd_to_vcmax * &
+                                                calc_ftemp_inst_rd( climate%dtemp )
+                cn_vec(lu,pft,len_cn_vec) = cton( orgplus(  tile_fluxes(lu)%plant(pft)%alloc_leaf, &
+                                                            tile_fluxes(lu)%plant(pft)%alloc_root, &
+                                                            tile_fluxes(lu)%plant(pft)%alloc_sapw, &
+                                                            tile_fluxes(lu)%plant(pft)%alloc_wood  &
+                                                            ) )
+              end if
+
+              !------------------------------------------------------------------
               ! Store state variables for optimisation
               !------------------------------------------------------------------
               state%pleaf           = tile(lu)%plant(pft)%pleaf
@@ -293,8 +331,12 @@ contains
               state%fpc_grid         = tile(lu)%plant(pft)%fpc_grid
               state%lue              = tile_fluxes(lu)%plant(pft)%lue
               state%vcmax25_unitiabs = tile_fluxes(lu)%plant(pft)%vcmax25_unitiabs
-              state%nh4              = tile(lu)%soil%pnh4%n14
-              state%no3              = tile(lu)%soil%pno3%n14
+
+              ! xxx new
+              state%cn               = sum(cn_vec(lu,pft,:)) / len_cn_vec
+              state%luep             = sum(luep_vec(lu,pft,:)) / len_luep_vec
+              state%nh4              = sum(nh4_vec(lu,:)) / len_navl_vec
+              state%no3              = sum(no3_vec(lu,:)) / len_navl_vec
 
               !------------------------------------------------------------------
               ! Optimisation by balanced growth
@@ -303,7 +345,7 @@ contains
               ! ratio, then put all to roots.
               !------------------------------------------------------------------
               cont = .true.
-              if (verbose) print*, 'check alloation: all to roots'
+              if (verbose) print*, 'check allocation: all to roots'
               eval_allroots  = eval_imbalance( min_dc )
               if (verbose) print*, 'eval_allroots', eval_allroots  
               if (eval_allroots > 0.0) then
@@ -318,9 +360,9 @@ contains
               ! then put all to leaves.
               !------------------------------------------------------------------
               if (cont) then
-                if (verbose) print*, 'check alloation: all to leaves with dcleaf =', max_dc
+                if (verbose) print*, 'check allocation: all to leaves with dcleaf =', max_dc
                 eval_allleaves = eval_imbalance( max_dc )
-                if (verbose) print*, 'eval_allleaves', eval_allleaves  
+                if (verbose) print*, 'eval_allleaves', eval_allleaves
                 if (eval_allleaves < 0.0) then
                   dcleaf = max_dc
                   cont = .false.
@@ -664,11 +706,16 @@ contains
     fpc_grid        = state%fpc_grid
     lue             = state%lue     
     vcmax25_unitiabs= state%vcmax25_unitiabs
+
+    ! xxx new
+    luep            = state%luep
+    cn              = state%cn
     nh4             = state%nh4
     no3             = state%no3
 
     !-------------------------------------------------------------------
-    ! LEAF ALLOCATION
+    ! Calculate new LAI, new labile C and N, and canopy N increment after 
+    ! adding mydcleaf to leaf pool.
     !-------------------------------------------------------------------
     call allocate_leaf( &
       usepft, &
@@ -689,7 +736,8 @@ contains
     myfapar = get_fapar( mylai )
 
     !-------------------------------------------------------------------
-    ! ROOT ALLOCATION
+    ! Calculate new root and labile C and N pools after adding mydcroot
+    ! too roots pool.
     !-------------------------------------------------------------------
     call allocate_root( &
       usepft,&
@@ -707,25 +755,27 @@ contains
     ! decay, GPP, respiration, N uptake
     !-------------------------------------------------------------------
     ! Calculate next day's C and N return after assumed allocation (tissue turnover happens before!)
-
     lu = params_pft_plant(usepft)%lu_category
 
+    ! GPP is a linear function of fAPAR, thus a saturating function of LAI. 
+    ! Here, consider the long-term average (luep = LUE * PPFD) for determining GPP with the light use efficiency
+    ! model, implemented by calc_dgpp().
     gpp = calc_dgpp(  myfapar, &
                       fpc_grid, &
-                      useppfd, &
-                      lue, &
+                      luep, &
+                      1.0, &                             ! factored into 'luep' = LUE * PPFD
                       1.0, &                             ! no soil moisture stress considered
-                      real(myinterface%params_siml%secs_per_tstep) &
+                      myinterface%params_siml%secs_per_tstep &
                       )
 
+    ! consider the long-term average Vcmax25_unitfapar(t) * (Rd25:Vcmax25) * ftemp_rd( temp(t) )
     rd = calc_drd(  myfapar, &
                     fpc_grid, &
                     useppfd, &
                     params_gpp%rd_to_vcmax * vcmax25_unitiabs * calc_ftemp_inst_rd( airtemp ), &
                     1.0, &                                 ! no soil moisture stress considered
-                    real(myinterface%params_siml%secs_per_tstep) &
+                    myinterface%params_siml%secs_per_tstep &
                     )
-
 
     mresp_root    = calc_resp_maint( croot, params_plant%r_root, airtemp )
     npp           = gpp - rd - mresp_root
