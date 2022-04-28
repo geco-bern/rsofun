@@ -284,8 +284,9 @@ contains
       ! ! xxx debug
       ! print*,' tile(lu)%plant(pft)%actnv_unitfapar ',  tile(lu)%plant(pft)%actnv_unitfapar
 
-      tile_fluxes(lu)%plant(pft)%lue              = out_pmodel%lue
-      tile_fluxes(lu)%plant(pft)%vcmax25_unitiabs = out_pmodel%vcmax25_unitiabs
+      tile_fluxes(lu)%plant(pft)%lue               = out_pmodel%lue
+      ! tile_fluxes(lu)%plant(pft)%vcmax25_unitiabs  = out_pmodel%vcmax25_unitiabs
+      tile_fluxes(lu)%plant(pft)%vcmax25_unitfapar = out_pmodel%vcmax25_unitiabs * climate_memory%dppfd
 
       !----------------------------------------------------------------
       ! Stomatal conductance
@@ -304,11 +305,11 @@ contains
     ! a simple light use efficie model approach.
     !------------------------------------------------------------------
     ! arguments
-    real, intent(in) :: fapar           ! fraction of absorbed photosynthetically active radiation (unitless)
-    real, intent(in) :: fpc_grid        ! foliar projective cover, used for dividing grid cell area (unitless)
-    real, intent(in) :: dppfd           ! daily total photon flux density (mol s-1 m-2)
-    real, intent(in) :: lue             ! light use efficiency (g CO2 mol-1)
-    real, intent(in) :: soilmstress     ! soil moisture stress factor (unitless)
+    real, intent(in) :: fapar              ! fraction of absorbed photosynthetically active radiation (unitless)
+    real, intent(in) :: fpc_grid           ! foliar projective cover, used for dividing grid cell area (unitless)
+    real, intent(in) :: dppfd              ! daily total photon flux density (mol s-1 m-2)
+    real, intent(in) :: lue                ! light use efficiency (g CO2 mol-1)
+    real, intent(in) :: soilmstress        ! soil moisture stress factor (unitless)
     integer, intent(in) :: secs_per_tstep  ! number of seconds per time step, needed because PPFD is in units per second (s)
 
     ! function return variable
@@ -326,12 +327,12 @@ contains
     ! PPFD (assumes acclimation on a monthly time scale).
     !------------------------------------------------------------------
     ! arguments
-    real, intent(in) :: fapar           ! fraction of absorbed photosynthetically active radiation
-    real, intent(in) :: fpc_grid        ! foliar projective cover
-    real, intent(in) :: dppfd           ! daily total photon flux density (mol s-1 m-2)
+    real, intent(in) :: fapar              ! fraction of absorbed photosynthetically active radiation
+    real, intent(in) :: fpc_grid           ! foliar projective cover
+    real, intent(in) :: dppfd              ! daily total photon flux density (mol s-1 m-2)
     real, intent(in) :: vcmax25_unitiabs
-    real, intent(in) :: temp            ! mean temperature (deg C)
-    real, intent(in) :: soilmstress     ! soil moisture stress factor
+    real, intent(in) :: temp               ! mean temperature (deg C)
+    real, intent(in) :: soilmstress        ! soil moisture stress factor
     integer, intent(in) :: secs_per_tstep  ! number of seconds per time step, needed because PPFD is in units per second (s)
 
     ! function return variable

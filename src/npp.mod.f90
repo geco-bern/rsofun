@@ -104,7 +104,7 @@ contains
                                                 - tile_fluxes(lu)%plant(pft)%drroot &
                                                 - tile_fluxes(lu)%plant(pft)%drsapw &
                                                 )
-      tile_fluxes(lu)%plant(pft)%dcex = calc_cexu( tile(lu)%plant(pft)%proot%c%c12, climate%dtemp )   
+      tile_fluxes(lu)%plant(pft)%dcex = calc_cexu( tile(lu)%plant(pft)%proot%c%c12 )   
 
       ! !/////////////////////////////////////////////////////////////////////////
       ! ! SAFETY AND DEATH
@@ -220,7 +220,7 @@ contains
     ! update fluxes based on corrected root mass
     rroot = calc_resp_maint( myproot%c%c12, params_plant%r_root, dtemp )
     npp   = mygpp - mydrleaf - rroot
-    cexu  = calc_cexu( myproot%c%c12 , dtemp )     
+    cexu  = calc_cexu( myproot%c%c12 )     
 
   end subroutine deactivate_root
 
@@ -248,13 +248,12 @@ contains
   end function calc_resp_maint
 
 
-  function calc_cexu( croot, dtemp ) result( cexu )
+  function calc_cexu( croot ) result( cexu )
     !/////////////////////////////////////////////////////////////////
     ! Constant exudation rate
     !-----------------------------------------------------------------
     ! arguments
     real, intent(in)           :: croot
-    real, intent(in), optional :: dtemp   ! temperature (soil or air, deg C)
 
     ! function return variable
     real :: cexu

@@ -15,6 +15,9 @@ module md_allocation_cnmodel
   use md_tile
   use md_plant
   use md_interface_pmodel, only: myinterface
+  use md_gpp_pmodel, only: calc_dgpp, calc_drd, params_gpp
+  use md_npp, only: calc_resp_maint, calc_cexu
+  use md_photosynth, only: calc_ftemp_inst_rd
 
   implicit none
 
@@ -30,14 +33,15 @@ module md_allocation_cnmodel
     type(orgpool) :: plabl
     real          :: actnv_unitfapar
     integer       :: usepft
-    real          :: useppfd
-    real          :: airtemp
     real          :: soiltemp
     real          :: fpc_grid
-    real          :: lue     
-    real          :: vcmax25_unitiabs
+    real          :: vcmax25_unitfapar
     real          :: nh4
     real          :: no3
+    real          :: luep
+    real          :: cn
+    real          :: rduf
+    real          :: rrum
   end type statetype
 
   type(statetype) :: state
@@ -84,7 +88,6 @@ contains
     real    :: cavl, navl, req
     real, parameter :: freserve = 0.004 ! SwissFACE results are very sensitive to this parameter!
 
-    ! xxx try
     real, parameter :: kdecay_labl = 0.1
     real, parameter :: frac_leaf = 0.5
 
@@ -97,6 +100,19 @@ contains
     real :: an_max
     real, save :: an_max_damped, an_max_damped_prev
     integer, parameter :: count_wait = 5
+
+    integer, parameter :: len_luep_vec = ndayyear
+    integer, parameter :: len_rrum_vec = ndayyear
+    integer, parameter :: len_rduf_vec = ndayyear
+    integer, parameter :: len_navl_vec = ndayyear
+    integer, parameter :: len_cn_vec   = ndayyear
+    
+    real, dimension(nlu,len_navl_vec),      save :: no3_vec
+    real, dimension(nlu,len_navl_vec),      save :: nh4_vec
+    real, dimension(nlu,npft,len_luep_vec), save :: luep_vec
+    real, dimension(nlu,npft,len_rduf_vec), save :: rduf_vec
+    real, dimension(nlu,npft,len_rrum_vec), save :: rrum_vec
+    real, dimension(nlu,npft,len_cn_vec),   save :: cn_vec
 
     logical :: cont          ! true if allocation to leaves (roots) is not 100% and not 0%
     real    :: max_dcleaf_n_constraint
@@ -289,6 +305,10 @@ contains
                 no3_vec(lu,:) = tile(lu)%soil%pno3%n14
                 nh4_vec(lu,:) = tile(lu)%soil%pnh4%n14
                 luep_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%lue * climate%dppfd
+                rduf_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%vcmax25_unitfapar * &
+                                     params_gpp%rd_to_vcmax * &
+                                     calc_ftemp_inst_rd( climate%dtemp )
+                rrum_vec(lu,pft,:) = calc_resp_maint( 1.0, params_plant%r_root, climate%dtemp )
                 cn_vec(lu,pft,:) = cton( orgplus( tile_fluxes(lu)%plant(pft)%alloc_leaf, &
                                                   tile_fluxes(lu)%plant(pft)%alloc_root, &
                                                   tile_fluxes(lu)%plant(pft)%alloc_sapw, &
@@ -300,15 +320,18 @@ contains
                 no3_vec(lu,1:(len_navl_vec-1)) = no3_vec(lu,2:len_navl_vec)
                 nh4_vec(lu,1:(len_navl_vec-1)) = nh4_vec(lu,2:len_navl_vec)
                 luep_vec(lu,pft,1:(len_luep_vec-1)) = luep_vec(lu,pft,2:len_luep_vec)
-                cn_vec(lu,pft,1:(len_cn_vec-1)) = cn_vec(lu,pft,2:len_luep_vec)
+                rduf_vec(lu,pft,1:(len_rduf_vec-1)) = rduf_vec(lu,pft,2:len_rduf_vec)
+                rrum_vec(lu,pft,1:(len_rrum_vec-1)) = rrum_vec(lu,pft,2:len_rrum_vec)
+                cn_vec(lu,pft,1:(len_cn_vec-1)) = cn_vec(lu,pft,2:len_cn_vec)
 
                 ! put current value to end of vector
                 no3_vec(lu,len_navl_vec) = tile(lu)%soil%pno3%n14
                 nh4_vec(lu,len_navl_vec) = tile(lu)%soil%pnh4%n14
                 luep_vec(lu,pft,len_luep_vec) = tile_fluxes(lu)%plant(pft)%lue * climate%dppfd
-                rduf_vec(lu,pft,len_luep_vec) = tile_fluxes(lu)%plant(pft)%vcmax25_unitfapar * &
+                rduf_vec(lu,pft,len_rduf_vec) = tile_fluxes(lu)%plant(pft)%vcmax25_unitfapar * &
                                                 params_gpp%rd_to_vcmax * &
                                                 calc_ftemp_inst_rd( climate%dtemp )
+                rrum_vec(lu,pft,len_rrum_vec) = calc_resp_maint( 1.0, params_plant%r_root, climate%dtemp )
                 cn_vec(lu,pft,len_cn_vec) = cton( orgplus(  tile_fluxes(lu)%plant(pft)%alloc_leaf, &
                                                             tile_fluxes(lu)%plant(pft)%alloc_root, &
                                                             tile_fluxes(lu)%plant(pft)%alloc_sapw, &
@@ -324,16 +347,16 @@ contains
               state%plabl           = tile(lu)%plant(pft)%plabl
               state%actnv_unitfapar = tile(lu)%plant(pft)%actnv_unitfapar
               state%usepft          = pft
-              state%useppfd         = climate_memory%dppfd    ! use damped and lagged climate
-              state%airtemp         = climate_memory%dtemp    ! use damped and lagged climate
               state%soiltemp        = tile(lu)%soil%phy%temp
 
               state%fpc_grid         = tile(lu)%plant(pft)%fpc_grid
-              state%lue              = tile_fluxes(lu)%plant(pft)%lue
-              state%vcmax25_unitiabs = tile_fluxes(lu)%plant(pft)%vcmax25_unitiabs
+              state%vcmax25_unitfapar = tile_fluxes(lu)%plant(pft)%vcmax25_unitfapar
 
-              ! xxx new
+              ! long-term average 
               state%cn               = sum(cn_vec(lu,pft,:)) / len_cn_vec
+              state%luep             = sum(luep_vec(lu,pft,:)) / len_luep_vec
+              state%rduf             = sum(rduf_vec(lu,pft,:)) / len_rduf_vec
+              state%rrum             = sum(rrum_vec(lu,pft,:)) / len_rrum_vec
               state%luep             = sum(luep_vec(lu,pft,:)) / len_luep_vec
               state%nh4              = sum(nh4_vec(lu,:)) / len_navl_vec
               state%no3              = sum(no3_vec(lu,:)) / len_navl_vec
@@ -630,11 +653,8 @@ contains
     ! is smaller than C:N ratio of new growth => put more to leaves
     !---------------------------------------------------------
     use md_classdefs, only: orgpool, nitrogen
-    use md_gpp_pmodel, only: calc_dgpp, calc_drd, params_gpp
     use md_nuptake, only: calc_dnup, outtype_calc_dnup
-    use md_npp, only: calc_resp_maint, calc_cexu
     use md_findroot_fzeroin
-    use md_photosynth, only: calc_ftemp_inst_rd
 
     ! arguments
     real, intent(in)              :: mydcleaf
@@ -652,14 +672,14 @@ contains
     real    :: nlabl
     real    :: actnv_unitfapar
     integer :: usepft
-    real    :: useppfd
-    real    :: airtemp
     real    :: soiltemp
     real    :: fpc_grid
-    real    :: lue
-    real    :: vcmax25_unitiabs
+    real    :: luep
     real    :: nh4
     real    :: no3
+    real    :: rduf
+    real    :: rrum
+    real    :: cn
 
     integer :: lu
 
@@ -700,14 +720,12 @@ contains
     nlabl           = state%plabl%n%n14
     actnv_unitfapar = state%actnv_unitfapar
     usepft          = state%usepft
-    useppfd         = state%useppfd
-    airtemp         = state%airtemp
     soiltemp        = state%soiltemp
     fpc_grid        = state%fpc_grid
-    lue             = state%lue     
-    vcmax25_unitiabs= state%vcmax25_unitiabs
 
     ! xxx new
+    rduf            = state%rduf
+    rrum            = state%rrum
     luep            = state%luep
     cn              = state%cn
     nh4             = state%nh4
@@ -771,15 +789,16 @@ contains
     ! consider the long-term average Vcmax25_unitfapar(t) * (Rd25:Vcmax25) * ftemp_rd( temp(t) )
     rd = calc_drd(  myfapar, &
                     fpc_grid, &
-                    useppfd, &
-                    params_gpp%rd_to_vcmax * vcmax25_unitiabs * calc_ftemp_inst_rd( airtemp ), &
+                    1.0, &
+                    rduf, &
+                    25.0, &                                ! standard temperature, factor = 1.0
                     1.0, &                                 ! no soil moisture stress considered
                     myinterface%params_siml%secs_per_tstep &
                     )
 
-    mresp_root    = calc_resp_maint( croot, params_plant%r_root, airtemp )
+    mresp_root    = croot * rrum
     npp           = gpp - rd - mresp_root
-    cexu          = calc_cexu( croot, airtemp ) 
+    cexu          = calc_cexu( croot ) 
 
     if ((clabl + npp - cexu) < 0.0 .or. (npp - cexu) < 0.0) then
       dc          = 0.0
@@ -796,32 +815,32 @@ contains
     ! C:N ratio of new assimilates and the C:N ratio 
     ! of the whole plant after allocation.
     !-------------------------------------------------------------------
-    ! >>>>>>>>>>>>>>>>>>>
-    ! INITIAL IMPLEMENTATION: C:N OF ACQUISITION IS EQUAL TO C:N OF CURRENT WHOLE-PLANT
-    if ((dn + nlabl) == 0.0) then
-      eval = -999.0
-    else if (( mydnleaf + mydnroot ) == 0.0) then
-      eval = 999.0
-    else
-      !     |---------------------------------------------------|  |-------------------------------------------------|
-      eval = params_plant%growtheff * (dc + clabl) / (dn + nlabl) - ( mydcleaf + mydcroot ) / ( mydnleaf + mydnroot )
-      !     |---------------------------------------------------|  |-------------------------------------------------|
-      !     |lab. pool C:N ratio after acq. nxt. day            |  | C:N ratio of new growth                         |
-      !     |---------------------------------------------------|  |-------------------------------------------------|
-    end if
-    !=====================
-    ! ! DOESN'T WORK PROPERLY: ALTERNATIVE IMPLEMENTATION: C:N OF ACQUISITION IS EQUAL TO C:N OF INVESTMENT
-    ! if (dn==0.0) then
-    !   eval = 999.0
-    ! else if (( mydnleaf + mydnroot )==0.0) then
+    ! ! >>>>>>>>>>>>>>>>>>>
+    ! ! INITIAL IMPLEMENTATION: C:N OF ACQUISITION IS EQUAL TO C:N OF CURRENT WHOLE-PLANT
+    ! if ((dn + nlabl) == 0.0) then
     !   eval = -999.0
+    ! else if (( mydnleaf + mydnroot ) == 0.0) then
+    !   eval = 999.0
     ! else
     !   !     |---------------------------------------------------|  |-------------------------------------------------|
-    !   eval = params_plant%growtheff * (dc) / (dn)     - ( mydcleaf + mydcroot ) / ( mydnleaf + mydnroot )
-    !   !     |---------------------------------------|   |-------------------------------------------------|
-    !   !     |lab. pool C:N ratio after acq. nxt. day|   | C:N ratio of new growth                         |
-    !   !     |---------------------------------------|   |-------------------------------------------------|
+    !   eval = params_plant%growtheff * (dc + clabl) / (dn + nlabl) - ( mydcleaf + mydcroot ) / ( mydnleaf + mydnroot )
+    !   !     |---------------------------------------------------|  |-------------------------------------------------|
+    !   !     |lab. pool C:N ratio after acq. nxt. day            |  | C:N ratio of new growth                         |
+    !   !     |---------------------------------------------------|  |-------------------------------------------------|
     ! end if
+    !=====================
+    ! ALTERNATIVE IMPLEMENTATION: C:N OF ACQUISITION IS EQUAL TO C:N OF INVESTMENT
+    if (dn == 0.0) then
+      eval = 999.0
+    else if (( mydnleaf + mydnroot ) == 0.0) then
+      eval = -999.0
+    else
+      !     |----------------------------------------|   |--------------------------------------------|
+      eval = params_plant%growtheff * dc / dn          -                      cn
+      !     |----------------------------------------|   |--------------------------------------------|
+      !     | projected C:N available for new growth |   | long-term average C:N ratio of past growth |
+      !     |----------------------------------------|   |--------------------------------------------|
+    end if
     !<<<<<<<<<<<<<<<<<<<
 
     ! if (write_logfile_eval_imbalance) write(666,*) mydcleaf, ",", eval

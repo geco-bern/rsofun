@@ -165,7 +165,7 @@ module md_plant
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
     real :: lue               ! light use efficiency (gC m-2 mol-1)
-    real :: vcmax25_unitiabs  ! acclimated Vcmax per unit absorbed light, normalised to 25 deg C (mol CO2 m-2 s-1)
+    real :: vcmax25_unitfapar ! acclimated Vcmax per unit fAPAR, normalised to 25 deg C (mol CO2 m-2 s-1)
 
     type(orgpool) :: dharv    ! daily total biomass harvest (g m-2 d-1)
 
@@ -736,7 +736,7 @@ contains
     plant_fluxes(:)%chi = 0.0
     plant_fluxes(:)%iwue = 0.0
     plant_fluxes(:)%lue = 0.0
-    plant_fluxes(:)%vcmax25_unitiabs = 0.0
+    plant_fluxes(:)%vcmax25_unitfapar = 0.0
 
     do pft=1,npft
       call orginit( plant_fluxes(pft)%dharv )
