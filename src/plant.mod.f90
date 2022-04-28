@@ -374,7 +374,8 @@ contains
     plant%narea_canopy            = n_molmass * (mynarea_metabolic_canop + mynarea_structural_canop)  ! g N m-2-ground
     plant%leafc_canopy            = c_molmass * params_pft_plant(plant%pftno)%r_ctostructn_leaf * mynarea_structural_canop ! g C m-2-ground
 
-    print*,'plant%leafc_canopy, plant%pleaf%c%c12 ', plant%leafc_canopy, plant%pleaf%c%c12
+    ! xxx debug: resolve this. should be identical.
+    ! print*,'plant%leafc_canopy, plant%pleaf%c%c12 ', plant%leafc_canopy, plant%pleaf%c%c12
 
     ! leaf-level, in units of gN / m2-leaf 
     plant%narea_metabolic  = plant%narea_metabolic_canopy / plant%lai_ind   ! g N m-2-leaf
