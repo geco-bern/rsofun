@@ -78,6 +78,7 @@ contains
     logical, save :: firstcall1 = .true.
     logical, save :: firstcall2 = .true.
     logical, save :: firstcall3 = .true.
+    logical, save :: firstcall4 = .true.
 
     integer :: lu
     integer :: pft
@@ -313,7 +314,8 @@ contains
                                                   tile_fluxes(lu)%plant(pft)%alloc_root, &
                                                   tile_fluxes(lu)%plant(pft)%alloc_sapw, &
                                                   tile_fluxes(lu)%plant(pft)%alloc_wood  &
-                                                  ) )
+                                                  ), &
+                                          default = params_pft_plant(pft)%r_cton_root )
                 if (lu == nlu) firstcall3 = .false.
               else
                 ! shift elements of vector forward
@@ -336,7 +338,8 @@ contains
                                                             tile_fluxes(lu)%plant(pft)%alloc_root, &
                                                             tile_fluxes(lu)%plant(pft)%alloc_sapw, &
                                                             tile_fluxes(lu)%plant(pft)%alloc_wood  &
-                                                            ) )
+                                                            ), &
+                                                  default = params_pft_plant(pft)%r_cton_root )
               end if
 
               !------------------------------------------------------------------
@@ -480,12 +483,12 @@ contains
             ! record total respiration of preceeding 30 days. 
             ! Keep this amount in labile pool to satisfy demand.
             !------------------------------------------------------------------
-            if (firstcall3) then 
+            if (firstcall4) then 
               resp_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drleaf &
                                      + tile_fluxes(lu)%plant(pft)%drroot &
                                      + tile_fluxes(lu)%plant(pft)%drsapw &
                                      + tile_fluxes(lu)%plant(pft)%dcex
-              if (pft == npft .and. lu == nlu) firstcall3 = .false.
+              if (pft == npft .and. lu == nlu) firstcall4 = .false.
             else
               resp_vec(lu,pft,1:(len_resp_vec-1)) = resp_vec(lu,pft,2:len_resp_vec)
               resp_vec(lu,pft,len_resp_vec) = tile_fluxes(lu)%plant(pft)%drleaf &
@@ -634,6 +637,12 @@ contains
       ! drgrow = ( 1.0 - params_plant%growtheff ) * ( dcleaf + dcroot ) / params_plant%growtheff
       tile_fluxes(lu)%plant(pft)%drgrow = drgrow
       tile_fluxes(lu)%plant(pft)%dnpp = cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon( drgrow ) )
+
+      ! record for today
+      tile_fluxes(lu)%plant(pft)%alloc_leaf = orgpool( carbon( dcleaf ), nitrogen( dnleaf ) )
+      tile_fluxes(lu)%plant(pft)%alloc_root = orgpool( carbon( dcroot ), nitrogen( dnroot ) )
+      call orginit( tile_fluxes(lu)%plant(pft)%alloc_sapw )
+      call orginit( tile_fluxes(lu)%plant(pft)%alloc_wood )
 
     end do pftloop
 
@@ -785,6 +794,7 @@ contains
                       1.0, &                             ! no soil moisture stress considered
                       myinterface%params_siml%secs_per_tstep &
                       )
+    print*,'gpp: ', gpp
 
     ! consider the long-term average Vcmax25_unitfapar(t) * (Rd25:Vcmax25) * ftemp_rd( temp(t) )
     rd = calc_drd(  myfapar, &
@@ -795,10 +805,16 @@ contains
                     1.0, &                                 ! no soil moisture stress considered
                     myinterface%params_siml%secs_per_tstep &
                     )
+    print*,'rd: ', rd
 
     mresp_root    = croot * rrum
+    print*,'mresp_root: ', mresp_root
+
     npp           = gpp - rd - mresp_root
+    print*,'npp: ', npp
+
     cexu          = calc_cexu( croot ) 
+    print*,'cexu: ', cexu
 
     if ((clabl + npp - cexu) < 0.0 .or. (npp - cexu) < 0.0) then
       dc          = 0.0
@@ -808,6 +824,8 @@ contains
 
     out_calc_dnup = calc_dnup( cexu, nh4, no3, params_pft_plant(usepft)%nfixer, soiltemp )
     dn            = out_calc_dnup%fix + out_calc_dnup%act_nh4 + out_calc_dnup%act_no3
+    print*,'dn: ', dn
+    print*,'cn: ', cn
 
     !-------------------------------------------------------------------
     ! EVALUATION QUANTITY - IS MINIMISED BY OPTIMISATION
