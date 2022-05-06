@@ -18,3 +18,7 @@
 * optimization stability BayesianTools
 * documentation
 * Bugfixes
+
+### v4.4
+
+* Bugfix on input data type p-model
