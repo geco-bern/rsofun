@@ -874,8 +874,6 @@ contains
     out_biosphere%dnharv  = tile_fluxes(lu)%plant(pft)%dharv%n%n14
     out_biosphere%npp     = tile_fluxes(lu)%plant(pft)%dnpp%c12
     out_biosphere%drd     = tile_fluxes(lu)%plant(pft)%drd    
-
-
     out_biosphere%lma     = tile(lu)%plant(pft)%lma
     out_biosphere%narea   = tile(lu)%plant(pft)%narea
     out_biosphere%narea_v = tile(lu)%plant(pft)%narea_metabolic

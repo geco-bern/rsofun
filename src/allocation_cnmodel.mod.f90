@@ -506,6 +506,8 @@ contains
                             orgfrac( (1.0 - frac_for_resp), &
                                       tile(lu)%plant(pft)%plabl ) )
 
+            ! xxx debug
+            tile(lu)%plant(pft)%fill_seeds = .false.
 
             if (tile(lu)%plant(pft)%fill_seeds) then
               !------------------------------------------------------------------

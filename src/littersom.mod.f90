@@ -406,15 +406,14 @@ contains
       ! print*,'C: nbal: ', nbal2 - nbal1
       ! if (abs(nbal2 - nbal1) > eps) stop 'C: balance not satisfied for N'
 
-
       ! Spinup trick: use projected soil N mineralisation before soil equilibration
-      ! if ( myinterface%steering%project_nmin ) then
-      !   ! projected soil N mineralisation
-      !   if (dlitt%c%c12 > 0.0) tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + eff * dlitt%c%c12 / params_littersom%cton_soil
-      ! else
-      !   ! actual soil N mineralisation
-      !   tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + dsoil_fs%n%n14 + dsoil_sl%n%n14
-      ! end if
+      if ( myinterface%steering%project_nmin ) then
+        ! projected soil N mineralisation
+        if (dlitt%c%c12 > 0.0) tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + eff * dlitt%c%c12 / params_littersom%cton_soil
+      else
+        ! actual soil N mineralisation
+        tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + dsoil_fs%n%n14 + dsoil_sl%n%n14
+      end if
 
       ! if ( tile(lu)%soil%psoil_fs%c%c12 > 0.0 .and. abs( cton( tile(lu)%soil%psoil_fs, default=0.0 ) - params_littersom%cton_soil ) > 1e-4 ) then
       !   write(0,*) 'psoil_fs', cton( tile(lu)%soil%psoil_fs )
@@ -442,7 +441,6 @@ contains
         mean_ksoil_fs(lu)  = 0.0
         mean_ksoil_sl(lu)  = 0.0
       end if
- 
 
     enddo luloop
 

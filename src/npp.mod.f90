@@ -68,8 +68,8 @@ contains
 
       lu = params_pft_plant(pft)%lu_category
 
-      if (tile(lu)%plant(pft)%plabl%c%c12 < 0.0) stop 'before npp labile C is neg.'
-      if (tile(lu)%plant(pft)%plabl%n%n14 < 0.0) stop 'before npp labile N is neg.'
+      ! if (tile(lu)%plant(pft)%plabl%c%c12 < 0.0) stop 'before npp labile C is neg.'
+      ! if (tile(lu)%plant(pft)%plabl%n%n14 < 0.0) stop 'before npp labile N is neg.'
 
       !/////////////////////////////////////////////////////////////////////////
       ! MAINTENANCE RESPIRATION
@@ -100,11 +100,12 @@ contains
       ! Growth respiration ('drgrow') is deduced from 'dnpp' in allocation SR.
       !-------------------------------------------------------------------------
       tile_fluxes(lu)%plant(pft)%dnpp = carbon( tile_fluxes(lu)%plant(pft)%dgpp &
-                                                - tile_fluxes(lu)%plant(pft)%drleaf &
-                                                - tile_fluxes(lu)%plant(pft)%drroot &
-                                                - tile_fluxes(lu)%plant(pft)%drsapw &
+                                              - tile_fluxes(lu)%plant(pft)%drleaf &
+                                              - tile_fluxes(lu)%plant(pft)%drroot &
+                                              - tile_fluxes(lu)%plant(pft)%drsapw &
                                                 )
       tile_fluxes(lu)%plant(pft)%dcex = calc_cexu( tile(lu)%plant(pft)%proot%c%c12 )   
+
 
       ! !/////////////////////////////////////////////////////////////////////////
       ! ! SAFETY AND DEATH
@@ -170,8 +171,13 @@ contains
       ! tmp = tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex
       ! print*,'GPP, Rl, Rr, Cex, dC, Cl, LAI, Cb: ', tile_fluxes(lu)%plant(pft)%dgpp, tile_fluxes(lu)%plant(pft)%drleaf, tile_fluxes(lu)%plant(pft)%drroot, tile_fluxes(lu)%plant(pft)%dcex, tmp, tile(lu)%plant(pft)%pleaf, tile(lu)%plant(pft)%lai_ind, tile(lu)%plant(pft)%plabl
 
-      call ccp( carbon( tile_fluxes(lu)%plant(pft)%dcex ), tile(lu)%soil%pexud )
-      call ccp( cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) ), tile(lu)%plant(pft)%plabl%c )
+      ! call ccp( carbon( tile_fluxes(lu)%plant(pft)%dcex ), tile(lu)%soil%pexud )
+      ! call ccp( cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) ), tile(lu)%plant(pft)%plabl%c )
+
+      tile(lu)%soil%pexud%c12 = tile(lu)%soil%pexud%c12 + tile_fluxes(lu)%plant(pft)%dcex
+      tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12     &
+                                      + tile_fluxes(lu)%plant(pft)%dnpp%c12 &
+                                      - tile_fluxes(lu)%plant(pft)%dcex
 
       if (tile(lu)%plant(pft)%plabl%c%c12 < (-1)*eps) stop 'after npp labile C is neg.'
       if (tile(lu)%plant(pft)%plabl%n%n14 < (-1)*eps) stop 'after npp labile N is neg.'
