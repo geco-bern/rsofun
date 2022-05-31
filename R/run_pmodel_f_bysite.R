@@ -254,7 +254,7 @@ run_pmodel_f_bysite <- function(
       as.data.frame() %>% 
       stats::setNames(
         c("fapar", "gpp", "transp", "latenth", "pet", "vcmax",
-          "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue")
+          "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue", "rd")
         ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -263,7 +263,7 @@ run_pmodel_f_bysite <- function(
     out <- tibble(date = lubridate::ymd("2000-01-01"),
                   fapar = NA, gpp = NA, transp = NA, latenth = NA, 
                   pet = NA, vcmax = NA, jmax = NA, vcmax25 = NA, 
-                  jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, iwue = NA)
+                  jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, iwue = NA, rd = NA)
   }
     
   return(out)
