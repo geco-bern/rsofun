@@ -1,4 +1,4 @@
-[![R build status](https://github.com/bluegreen-labs/rsofun/workflows/R-CMD-check/badge.svg)](https://github.com/bluegreen-labs/rsofun/actions)
+[![R build status](https://github.com/computationales/rsofun/workflows/R-CMD-check/badge.svg)](https://github.com/computationales/rsofun/actions)
 [![codecov](https://codecov.io/gh/bluegreen-labs/rsofun/branch/master/graph/badge.svg?token=5RJtJmDVV7)](https://codecov.io/gh/bluegreen-labs/rsofun)
 
 # rsofun
