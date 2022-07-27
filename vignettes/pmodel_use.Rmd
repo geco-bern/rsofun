@@ -13,19 +13,15 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-
 library(rsofun)
 library(dplyr)
 library(ggplot2)
-
 pars <- list(par = c(
-  kphio       = 0.09423773,
-  soilm_par_a = 0.33349283,
-  soilm_par_b = 1.45602286,
-  kphio_par_a = 0.0,
-  kphio_par_b = 0.5,
-  kphio_par_c = -50.0,
-  kphio_par_d = 0.1
+    kphio           = 0.04607080,
+    soilm_par_a     = 2.75687824,
+    soilm_par_b     = 1.68140444,
+    tau_acclim_tempstress = 7.35259044,
+    par_shape_tempstress  = 0.09863961
   ))
 ```
 
@@ -37,9 +33,7 @@ The package includes two demo datasets to run and validate pmodel output. These 
 
 ```{r}
 library(rsofun)
-
 p_model_drivers
-
 p_model_validation
 ```
 
@@ -53,15 +47,12 @@ With all data prepared we can run the model using `runread_pmodel_f()`. This fun
 # optimized parameters from previous
 # work
 params_modl <- list(
-  kphio       = 0.09423773,
-  soilm_par_a = 0.33349283,
-  soilm_par_b = 1.45602286,
-  kphio_par_a = 0.5,
-  kphio_par_b = 0.5,
-  kphio_par_c = 50.0,
-  kphio_par_d = 0.1
+    kphio           = 0.09423773,
+    soilm_par_a     = 0.33349283,
+    soilm_par_b     = 1.45602286,
+    tau_acclim_tempstress = 10,
+    par_shape_tempstress  = 0.0
   )
-
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
   p_model_drivers,
@@ -77,16 +68,13 @@ We can now visualize both the model output and the measured values together.
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-
 # we only have one site so we'll unnest
 # the main model output
 model_data <- output %>%
   filter(sitename == "FR-Pue") %>%
   tidyr::unnest(data)
-
 validation_data <- p_model_validation %>%
   tidyr::unnest(data)
-
 ggplot() +
     geom_line(
     data = model_data,
@@ -115,26 +103,20 @@ To optimize new parameters based upon driver data and a validation dataset we mu
 
 ```{r}
 settings <- list(
-  method      = "bayesiantools",
-  targetvars  = c("gpp"),
-  timescale   = list(targets_obs = "y"),
-  metric      = cost_mse_photocold,
-  dir_results = "./",
-  name        = "photocold",
-  control     = list(
+  method              = "bayesiantools",
+  targetvars          = c("gpp"),
+  timescale           = list(targets_obs = "y"),
+  metric              = cost_rmse_kphio,
+  dir_results         = "./",
+  name                = "ORG",
+  control = list(
     sampler = "DEzs",
     settings = list(
-    burnin = 1500,
-    iterations = 5000
+      burnin = 500,
+      iterations = 1500
     )),
   par = list(
-    kphio       = list(lower=0.03, upper=0.2,  init = 0.09),
-    soilm_par_a = list(lower=0.00, upper=1.0,  init = 0.33),
-    soilm_par_b = list(lower=0.00, upper=10.0, init = 1.5),
-    kphio_par_a = list(lower=-10,  upper=10,   init = 5.00),
-    kphio_par_b = list(lower=0.1,  upper=10.0, init = 0.50),
-    kphio_par_c = list(lower=1,    upper=200,  init = 50.0),
-    kphio_par_d = list(lower=0.01, upper=10,   init = 0.1)
+    kphio = list(lower=0.04, upper=0.1, init = 0.05)
     )
 )
 ```
@@ -162,19 +144,16 @@ When successful the optimized parameters can be used to run subsequent modelling
 params_modl <- list(
     kphio = pars$par["kphio"]
     )
-
 # run the model for these parameters
 output_new <- rsofun::runread_pmodel_f(
   p_model_drivers,
   par = params_modl
   )
-
 # we only have one site so we'll unnest
 # the main model output
 model_data_new <- output_new %>%
   filter(sitename == "FR-Pue") %>%
   tidyr::unnest(data)
-
   ggplot() +
     geom_line(
     data = model_data,
@@ -204,7 +183,6 @@ model_data_new <- output_new %>%
     x = "Date",
     y = "GPP"
   )
-
 # validation_data %>% 
 #   rename(obs = gpp) %>% 
 #   left_join(
@@ -216,3 +194,4 @@ model_data_new <- output_new %>%
 ```
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
+Footer
