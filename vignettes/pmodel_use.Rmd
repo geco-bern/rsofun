@@ -16,10 +16,11 @@ knitr::opts_chunk$set(
   fig.width = 7,
   fig.height = 5
 )
-
 library(rsofun)
 library(dplyr)
 library(ggplot2)
+    #TODO tau_acclim_tempstress = 7.35259044
+    #TODO par_shape_tempstress  = 0.09863961
 ```
 
 The `rsofun` package and framework includes two distinct simulation models. 
