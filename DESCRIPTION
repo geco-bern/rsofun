@@ -1,6 +1,6 @@
 Package: rsofun
 Title: SOFUN in R
-Version: 4.2
+Version: 4.3
 Authors@R: c(
             person(
               family = "Benjamin",

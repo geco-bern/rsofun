@@ -63,6 +63,7 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: chi
     real, dimension(ndayyear) :: iwue
     real, dimension(ndayyear) :: snow
+    real, dimension(ndayyear) :: rd
   end type outtype_biosphere
 
 end module md_interface_pmodel

@@ -93,7 +93,7 @@ contains
         ! if (verbose) print*,'----------------------'
 
         !----------------------------------------------------------------
-        ! initialise daily updated variables 
+        ! initialise updated variables (fluxes)
         !----------------------------------------------------------------
         ! if (verbose) print*,'calling initdaily_() ...'
         call initdaily_tile_fluxes( tile_fluxes(:) )
@@ -192,6 +192,7 @@ contains
         out_biosphere%chi(doy)     = tile_fluxes(1)%canopy%chi
         out_biosphere%iwue(doy)    = tile_fluxes(1)%canopy%iwue
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
+        out_biosphere%rd(doy)      = tile_fluxes(1)%canopy%drd
 
         init_daily = .false.
 

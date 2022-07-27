@@ -9,7 +9,7 @@ module md_biosphere_lm3ppa
   private
   public biosphere_annual
 
-  type(vegn_tile_type),  pointer :: vegn   
+  type(vegn_tile_type), pointer :: vegn   
   ! type(soil_tile_type),  pointer :: soil
   ! type(cohort_type),     pointer :: cx, cc
 
@@ -105,12 +105,11 @@ contains
         ! get daily mean temperature from hourly/half-hourly data
         vegn%Tc_daily = 0.0
         tsoil         = 0.0
-        fastloop: do i=1,myinterface%steps_per_day
+        fastloop: do i = 1,myinterface%steps_per_day
 
-          idata = simu_steps + 1
-          year0 =  myinterface%climate(idata)%year  ! Current year
+          idata         = simu_steps + 1
+          year0         = myinterface%climate(idata)%year  ! Current year
           vegn%Tc_daily = vegn%Tc_daily + myinterface%climate(idata)%Tair
-
           tsoil         = myinterface%climate(idata)%tsoil
           simu_steps    = simu_steps + 1
 
@@ -132,8 +131,8 @@ contains
         !-------------------------------------------------
         ! Daily calls after fast loop
         !-------------------------------------------------
-        vegn%Tc_daily = vegn%Tc_daily/myinterface%steps_per_day
-        tsoil         = tsoil/myinterface%steps_per_day
+        vegn%Tc_daily = vegn%Tc_daily / myinterface%steps_per_day
+        tsoil         = tsoil / myinterface%steps_per_day
         soil_theta    = vegn%thetaS
 
         ! sum over fast time steps and cohorts
@@ -185,24 +184,24 @@ contains
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
 
-    !print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    ! print*,'C: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_nat_mortality( vegn )
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
-    !print*,'D: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    ! print*,'D: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_reproduction( vegn )
     
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
 
-    !print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    ! print*,'E: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call kill_lowdensity_cohorts( vegn )
     
-    !print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    ! print*,'F: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call relayer_cohorts( vegn )
     
-    !print*,'G: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
+    ! print*,'G: vegn%cohorts(:)%nindivs', vegn%cohorts(:)%nindivs
     call vegn_mergecohorts( vegn )
 
     ! call getout_annual( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)

@@ -1,15 +1,14 @@
 library(rsofun)
-library(rpmodel)
-library(tidyverse)
-source("R/cost_functions.R")
+library(dplyr)
+#library(tidyverse)
 source("R/calib_sofun.R")
 
-likelihood_lm3ppa_annual <- function(
-  par,
-  par_names,
-  obs,
-  targets,
-  drivers
+likelihood_lm3ppa_test <- function(
+    par,
+    par_names,
+    obs,
+    targets,
+    drivers
 ){
   
   # predefine variables for CRAN check compliance
@@ -20,7 +19,7 @@ likelihood_lm3ppa_annual <- function(
   drivers$params_species[[1]]$LAI_light[]  <- par[2]
   drivers$params_tile[[1]]$tf_base         <- par[3]
   drivers$params_tile[[1]]$par_mort        <- par[4]
-
+  
   # run model
   df <- runread_lm3ppa_f(
     drivers,
@@ -48,7 +47,7 @@ likelihood_lm3ppa_annual <- function(
       LAI = stats::quantile(LAI, probs = 0.95, na.rm=T),
       Density = mean(Density12),
       Biomass = mean(plantC)
-      )
+    )
   
   # reshuffle observed data
   col_names <- obs$data[[1]]$variables
@@ -73,7 +72,7 @@ likelihood_lm3ppa_annual <- function(
     # calculate likelihood
     # for all targets and their
     # error ranges
-    ll <- likelihoodIidNormal(
+    ll <- BayesianTools::likelihoodIidNormal(
       predicted,
       observed,
       par[grep(paste0('^err_', i,'$'), par_names)]
@@ -90,6 +89,7 @@ likelihood_lm3ppa_annual <- function(
   return(logpost)
 }
 
+
 df_drivers <- lm3ppa_gs_leuning_drivers
 ddf_obs <- lm3ppa_validation_2
 df_drivers$params_siml[[1]]$spinup <- FALSE
@@ -97,25 +97,27 @@ df_drivers$params_siml[[1]]$spinup <- FALSE
 # Mortality as DBH
 settings <- list(
   method              = "bayesiantools",
-  targets             = c("GPP","LAI","Density","Biomass"),
-  metric              = likelihood_lm3ppa_annual,
+  targets             = c("GPP"),
+    metric              = likelihood_lm3ppa_test,
   control = list(
     sampler = "DEzs",
     settings = list(
       burnin = 1,
-      iterations = 10,
-      nrChains = 3
+      iterations = 10000,
+      nrChains = 1
     )
   ),
   par = list(
     phiRL = list(lower=0.5, upper=5, init=3.5),
     LAI_light = list(lower=2, upper=5, init=3.5),
-    tf_base = list(lower=0.5, upper=1.5, init=1),
-    par_mort = list(lower=0.1, upper=2, init=1),
-    err_GPP = list(lower = 0, upper = 30, init = 15),
-    err_LAI = list(lower = 0, upper = 5, init = 3),
-    err_Density = list(lower = 0, upper = 400, init = 280),
-    err_Biomass = list(lower = 0, upper = 50, init = 45)
+    tf_base = list(lower=0, upper=1, init=0.5),
+    par_mort = list(lower=0.1, upper=1, init=0.5),
+    
+    # uncertainties
+    err_GPP = list(lower = 0, upper = 1, init = 0.5),
+    err_LAI = list(lower = 0, upper = 1, init = 0.5),
+    err_Density = list(lower = 0, upper = 1, init = 0.5),
+    err_Biomass = list(lower = 0, upper = 1, init = 0.5)
   )
 )
 
@@ -124,5 +126,3 @@ pars <- calib_sofun(
   obs = ddf_obs,
   settings = settings
 )
-
-

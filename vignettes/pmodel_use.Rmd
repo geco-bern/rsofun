@@ -215,4 +215,4 @@ model_data_new <- output_new %>%
 #   rbeni::analyse_modobs2("mod", "obs", type = "hex")
 ```
 
-For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/web/packages/GenSA/index.html) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
+For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).

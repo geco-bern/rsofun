@@ -81,7 +81,7 @@ contains
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(8), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
-    real(kind=c_double),  dimension(nt,14), intent(out) :: output
+    real(kind=c_double),  dimension(nt,15), intent(out) :: output
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -225,7 +225,8 @@ contains
         output(idx_start:idx_end,11) = dble(out_biosphere%wscal(:))
         output(idx_start:idx_end,12) = dble(out_biosphere%chi(:))
         output(idx_start:idx_end,13) = dble(out_biosphere%iwue(:))
-        output(idx_start:idx_end,14) = dble(out_biosphere%snow(:))
+        output(idx_start:idx_end,14) = dble(out_biosphere%rd(:))
+        output(idx_start:idx_end,15) = dble(out_biosphere%snow(:))
 
       end if
 
@@ -342,7 +343,7 @@ contains
     output_annual_cohorts_c_deadtrees,  &
     output_annual_cohorts_deathrate  &
     ) bind(C, name = "lm3ppa_f_")
-
+     
     !////////////////////////////////////////////////////////////////
     ! Main subroutine to handle I/O with C and R. 
     ! Receives simulation parameters, site parameters, and the full 
@@ -379,7 +380,7 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
 
-   !  ! Tile parameters
+    ! Tile parameters
     integer(kind=c_int), intent(in) :: soiltype
     real(kind=c_double), intent(in) :: FLDCAP
     real(kind=c_double), intent(in) :: WILTPT
@@ -420,7 +421,6 @@ contains
     real(kind=c_double), dimension(nt,13), intent(in) :: forcing
 
     real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
-
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
 
     real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_year
@@ -649,7 +649,6 @@ contains
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
-
 
     yearloop: do yr=1, myinterface%params_siml%runyears
       !----------------------------------------------------------------

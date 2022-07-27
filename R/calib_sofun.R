@@ -3,7 +3,7 @@
 #' This is the main function that handles the 
 #' calibration of SOFUN model parameters. 
 #' 
-#' @param drivers asdf
+#' @param drivers A data frame with driver data
 #' @param obs A data frame containing observational data used for model
 #'  calibration. Created by function \code{get_obs_calib2()}
 #' @param settings A list containing model calibration settings. 

@@ -60,11 +60,11 @@ contains
     !real, optional, intent(in) :: d13C
 
     if ( present( scale ) ) then
-      call ccp( amount%c,to%c,scale )
-      call ncp( amount%n,to%n,scale )
+      call ccp( amount%c,to%c, scale )
+      call ncp( amount%n,to%n, scale )
     else
-      call ccp( amount%c,to%c)
-      call ncp( amount%n,to%n)
+      call ccp( amount%c,to%c )
+      call ncp( amount%n,to%n )
     end if
 
     ! if (present(d13C)) then
@@ -325,7 +325,7 @@ contains
     !----------------------------------------------------------------
     type(carbon), intent(inout) :: pool
 
-    pool%c12 = 0.
+    pool%c12 = 0.0
 
   end subroutine cinit
 

@@ -89,7 +89,7 @@ cost_rmse_fullstack <- function(
   obs,
   drivers,
   inverse = FALSE 
-  ){
+){
   
   # predefine variables for CRAN check compliance
   sitename <- data <- NULL
@@ -102,8 +102,8 @@ cost_rmse_fullstack <- function(
     soilm_par_b     = par[3],
     tau_acclim_tempstress = 10,
     par_shape_tempstress  = 0.0
-    )
-
+  )
+  
   # run the model
   df <- runread_pmodel_f(
     drivers, 
@@ -507,7 +507,7 @@ cost_rmse_lm3ppa_gsleuning <- function(
   
   # predefine variables for CRAN check compliance
   GPP <- LAI <- Density12 <- plantC <- targets_obs <-
-  targets_mod <- error <- targets_obs <- NULL
+    targets_mod <- error <- targets_obs <- NULL
   
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]      <- par[1]
@@ -582,11 +582,11 @@ likelihood_lm3ppa <- function(
   GPP <- LAI <- Density12 <- plantC <- error <- NULL
   
   # Add changed model parameters to drivers, overwriting where necessary.
-  drivers$params_species[[1]]$phiRL[]      <- par[1]
+  drivers$params_species[[1]]$phiRL[]  <- par[1]
   drivers$params_species[[1]]$LAI_light[]  <- par[2]
-  drivers$params_tile[[1]]$tf_base         <- par[3]
-  drivers$params_tile[[1]]$par_mort        <- par[4]
-  
+  drivers$params_tile[[1]]$tf_base <- par[3]
+  drivers$params_tile[[1]]$par_mort <- par[4]
+
   # run model
   df <- runread_lm3ppa_f(
     drivers,
@@ -615,7 +615,6 @@ likelihood_lm3ppa <- function(
       Density = mean(Density12),
       Biomass = mean(plantC)
     )
-  
   
   # reshuffle observed data
   col_names <- obs$data[[1]]$variables
@@ -652,7 +651,9 @@ likelihood_lm3ppa <- function(
   logpost <- sum(unlist(logpost))
   
   # trap boundary conditions
-  if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){logpost <- -Inf}
+  if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){
+      logpost <- -Inf
+    }
   
   return(logpost)
 }
@@ -730,14 +731,19 @@ likelihood_pmodel <- function(
         !!!i
       )
     
+    uncertainty <- obs %>%
+      select(
+        !!!paste0(i,"_unc")
+      )
+    
     # calculate likelihood
     # for all targets and their
     # error ranges
-    ll <- likelihoodIidNormal(
+    ll <- likelihood(
       predicted,
       observed,
-      par[grep(paste0('^err_', i,'$'), par_names)]
-      )
+      uncertainty
+    )
     
   })
   
@@ -747,4 +753,17 @@ likelihood_pmodel <- function(
   if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){logpost <- -Inf}
   
   return(logpost)
+}
+
+likelihood <- function (predicted, observed, sd) 
+{
+  notNAvalues = !is.na(observed)
+  return(
+    sum(
+      stats::dnorm(predicted[notNAvalues],
+            mean = observed[notNAvalues], 
+            sd = sd[notNAvalues],
+            log = T)
+    )
+  )
 }

@@ -1,11 +1,6 @@
 ---
-title: "LM3-PPA usage"
-author: "Koen Hufkens"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{LM3-PPA usage}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\usepackage[utf8]{inputenc}
+title: "LM3-PPA test quantitatively"
+author: "Beni"
 ---
 
 ```{r setup, include = FALSE}
@@ -33,7 +28,7 @@ The `rsofun` package and framework includes two main models. The `pmodel` and `l
 
 The package includes two demo datasets to run and validate pmodel output. These files can be directly loaded into your workspace by typing:
 
-```{r eval = FALSE}
+```{r eval = TRUE}
 library(rsofun)
 
 lm3ppa_gs_leuning_drivers
@@ -57,16 +52,16 @@ print(lm3ppa_gs_leuning_drivers$params_siml)
 print(head(lm3ppa_gs_leuning_drivers$forcing))
 ```
 
-```{r eval = FALSE}
+```{r eval = TRUE}
 # run the model
-lm3ppa_gs_leuning_output <- runread_lm3ppa_f(
+lm3ppa_gs_leuning_output_test <- runread_lm3ppa_f(
      lm3ppa_gs_leuning_drivers,
      makecheck = TRUE,
      parallel = FALSE
      )
 
 # split out the annual data
-lm3ppa_gs_leuning_output <- lm3ppa_gs_leuning_output$data[[1]]$output_annual_tile
+lm3ppa_gs_leuning_output_test <- lm3ppa_gs_leuning_output_test$data[[1]]$output_annual_tile
 ```
 
 ### Plotting output
@@ -77,15 +72,17 @@ We can now visualize the model output.
 # we only have one site so we'll unnest
 # the main model output
 
-lm3ppa_gs_leuning_output %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  theme_classic()+labs(x = "Year", y = "GPP")
+ggplot() +
+  geom_line(aes(x = year, y = GPP), data = lm3ppa_gs_leuning_output, size = 1.5) +
+  geom_line(aes(x = year, y = GPP), data = lm3ppa_gs_leuning_output_test, color = "red") +
+  theme_classic() + 
+  labs(x = "Year", y = "GPP")
 
-lm3ppa_gs_leuning_output %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = plantC)) +
-  theme_classic()+labs(x = "Year", y = "plantC")
+ggplot() +
+  geom_line(aes(x = year, y = plantC), data = lm3ppa_gs_leuning_output, size = 1.5) +
+  geom_line(aes(x = year, y = plantC), data = lm3ppa_gs_leuning_output_test, color = "red") +
+  theme_classic() + 
+  labs(x = "Year", y = "plantC")
 ```
 
 ## Running the LM3-PPA model with P-model photosynthesis
@@ -98,16 +95,16 @@ print(lm3ppa_p_model_drivers$params_siml)
 print(head(lm3ppa_p_model_drivers$forcing))
 ```
 
-```{r eval = FALSE}
+```{r eval = TRUE}
 # run the model
-lm3ppa_p_model_output <- runread_lm3ppa_f(
+lm3ppa_p_model_output_test <- runread_lm3ppa_f(
      lm3ppa_p_model_drivers,
      makecheck = TRUE,
      parallel = FALSE
      )
 
 # split out the annual data for visuals
-lm3ppa_p_model_output <- lm3ppa_p_model_output$data[[1]]$output_annual_tile
+lm3ppa_p_model_output_test <- lm3ppa_p_model_output_test$data[[1]]$output_annual_tile
 ```
 
 ### Plotting output
@@ -118,49 +115,16 @@ We can now visualize the model output.
 # we only have one site so we'll unnest
 # the main model output
 
-lm3ppa_p_model_output %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  theme_classic()+labs(x = "Year", y = "GPP")
+ggplot() +
+  geom_line(aes(x = year, y = GPP), data = lm3ppa_p_model_output, size = 1.5) +
+  geom_line(aes(x = year, y = GPP), data = lm3ppa_p_model_output_test, color = "red") +
+  theme_classic()+
+  labs(x = "Year", y = "GPP")
 
-lm3ppa_p_model_output %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = plantC)) +
-  theme_classic()+labs(x = "Year", y = "plantC")
-```
-
-## Calibrating model parameters
-
-To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.
-
-```{r eval = FALSE}
-# Mortality as DBH
-settings <- list(
-  method              = "bayesiantools",
-  targetvars          = c("gpp"),
-  timescale           = list(targets_obs = "y"),
-  sitenames           = "CH-Lae",
-  metric              = cost_rmse_lm3ppa_gsleuning,
-  dir_results         = "./",
-  name                = "ORG",
-  control = list(
-    sampler = "DEzs",
-    settings = list(
-      burnin = 10,
-      iterations = 50
-    )
-  ),
-  par = list(
-       phiRL = list(lower=0.5, upper=5, init=3.5),
-      LAI_light = list(lower=2, upper=5, init=3.5),
-      tf_base = list(lower=0.5, upper=1.5, init=1),
-      par_mort = list(lower=0.1, upper=2, init=1))
-)
-
-pars <- calib_sofun(
-  drivers = lm3ppa_gs_leuning_drivers,
-  obs = lm3ppa_validation_2,
-  settings = settings
-)
+ggplot() +
+  geom_line(aes(x = year, y = plantC), data = lm3ppa_p_model_output, size = 1.5) +
+  geom_line(aes(x = year, y = plantC), data = lm3ppa_p_model_output, color = "red") +
+  theme_classic()+
+  labs(x = "Year", y = "plantC")
 ```
 

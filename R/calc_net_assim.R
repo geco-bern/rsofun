@@ -39,7 +39,7 @@ calc_net_assim <- function(
 
   root_ci <- try( polyroot( c(c_quad, b_quad, a_quad) ) )
 
-  if (class(root_ci)=="try-error"){
+  if (inherits(root_ci, "try-error")){
 
     return( NA )
 
