@@ -90,15 +90,21 @@ calib_sofun <- function(
       likelihood = function(
         random_par,
         par_names = names(settings$par)) {
+        # do.call("cost",
+        #         list(
+        #           par = random_par,
+        #           par_names = par_names,
+        #           obs = obs,
+        #           targets = settings$targets,
+        #           drivers = drivers
+        #         ))
         do.call("cost",
                 list(
                   par = random_par,
-                  par_names = par_names,
                   obs = obs,
-                  targets = settings$targets,
                   drivers = drivers
                 ))
-      },
+        },
       prior = priors,
       names = names(settings$par)
     )
