@@ -425,6 +425,7 @@ cost_rmse_lm3ppa_gsleuning <- function(
 #' @param obs observations
 #' @param targets target observations to use in calibration
 #' @param drivers driver data
+#' @param inverse invert the function (used here for compatibility)
 #' 
 #' @importFrom magrittr '%>%'
 #' @return the loglikelihood comparing observed and estimated values
@@ -435,7 +436,8 @@ likelihood_lm3ppa <- function(
   par_names,
   obs,
   targets,
-  drivers
+  drivers,
+  inverse = FALSE
 ){
   
   # predefine variables for CRAN check compliance
@@ -528,6 +530,7 @@ likelihood_lm3ppa <- function(
 #' @param obs observations
 #' @param targets target observations to use in calibration
 #' @param drivers driver data
+#' @param inverse invert the function (used here for compatibility)
 #' 
 #' @importFrom magrittr '%>%'
 #' 
@@ -539,7 +542,8 @@ likelihood_pmodel <- function(
   par_names,
   obs,
   targets,
-  drivers
+  drivers,
+  inverse = FALSE
 ){
   
   # predefine variables for CRAN check compliance
