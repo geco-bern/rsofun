@@ -84,24 +84,63 @@ calib_sofun <- function(
       unlist(pars$init)
     )
     
-    # setup the bayes run, no message forwarding is provided
-    # so wrap the function in a do.call
-    setup <- BayesianTools::createBayesianSetup(
-      likelihood = function(
-        random_par,
-        par_names = names(settings$par)) {
-        do.call("cost",
-                list(
-                  par = random_par,
-                  par_names = par_names,
-                  obs = obs,
-                  targets = settings$targets,
-                  drivers = drivers
-                ))
-      },
-      prior = priors,
-      names = names(settings$par)
-    )
+    ## Hack: determine whether cost function is a bayesian-style likelihood function or a "traditional" cost function
+    ## traditional cost functions as implemented here have an argument 'inverse'. Use that to determine and if so
+    ## set it to TRUE to use the cost function.
+    ## solution with 'header' is based on https://stackoverflow.com/questions/30125590/how-can-a-function-return-its-name-and-arguments-in-r 
+    ## this may break if argument 'inverse' is abandoned and a better solution should be found eventually.
+    header <- function(x){
+      UseMethod('header', x)
+    }
+    header.function <-function(x){
+      y<-list(args(x))
+      x<-as.character(substitute(x))
+      print(sprintf('%s=%s',x,y))
+    }
+    if (grepl("inverse" , header(cost))){
+
+      # setup the bayes run, no message forwarding is provided
+      # so wrap the function in a do.call
+      setup <- BayesianTools::createBayesianSetup(
+        likelihood = function(
+          random_par,
+          par_names = names(settings$par)) {
+                do.call("cost",
+                        list(
+                          par = random_par,
+                          obs = obs,
+                          drivers = drivers,
+                          # This is a hack. BayesianTools expects a likelihood function to be calculated here, 
+                          # but we're just calculating the RMSE and return its inverse (we want the RMSE 
+                          # minimised, its inverse maximised - imitating likelihood maximisation)
+                          inverse = TRUE     
+                        ))
+              },
+          prior = priors,
+          names = names(settings$par)
+        )    
+      
+    } else {
+
+      # setup the bayes run, no message forwarding is provided
+      # so wrap the function in a do.call
+      setup <- BayesianTools::createBayesianSetup(
+        likelihood = function(
+          random_par,
+          par_names = names(settings$par)) {
+                do.call("cost",
+                        list(
+                          par = random_par,
+                          par_names = par_names,
+                          obs = obs,
+                          targets = settings$targets,
+                          drivers = drivers
+                        ))
+              },
+          prior = priors,
+          names = names(settings$par)
+        )   
+    }
     
     # set bt control parameters
     bt_settings <- settings$control$settings
