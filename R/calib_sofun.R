@@ -94,7 +94,11 @@ calib_sofun <- function(
                 list(
                   par = random_par,
                   obs = obs,
-                  drivers = drivers
+                  drivers = drivers,
+                  # This is a hack. BayesianTools expects a likelihood function to be calculated here, 
+                  # but we're just calculating the RMSE and return its inverse (we want the RMSE 
+                  # minimised, its inverse maximised - imitating likelihood maximisation)
+                  inverse = TRUE     
                 ))
       },
       prior = priors,
