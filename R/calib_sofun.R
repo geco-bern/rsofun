@@ -93,9 +93,7 @@ calib_sofun <- function(
         do.call("cost",
                 list(
                   par = random_par,
-                  par_names = par_names,
                   obs = obs,
-                  targets = settings$targets,
                   drivers = drivers
                 ))
       },

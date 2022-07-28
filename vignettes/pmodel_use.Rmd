@@ -125,7 +125,7 @@ settings <- list(
       iterations = 1500
     )),
   par = list(
-    kphio = list(lower=0.04, upper=0.1, init = 0.05)
+    kphio = list(lower=0.04, upper=0.2, init = 0.05)
     )
 )
 ```
