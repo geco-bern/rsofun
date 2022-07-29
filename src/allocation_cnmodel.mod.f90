@@ -210,6 +210,7 @@ contains
           dcroot = 0.0
           dcseed = 0.0
           drgrow = 0.0
+          
 
           if ( myinterface%steering%dofree_alloc ) then
             !==================================================================
@@ -506,8 +507,8 @@ contains
                             orgfrac( (1.0 - frac_for_resp), &
                                       tile(lu)%plant(pft)%plabl ) )
 
-            ! xxx debug
-            tile(lu)%plant(pft)%fill_seeds = .false.
+            ! ! xxx debug
+            ! tile(lu)%plant(pft)%fill_seeds = .false.
 
             if (tile(lu)%plant(pft)%fill_seeds) then
               !------------------------------------------------------------------

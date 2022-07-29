@@ -232,6 +232,29 @@ output$data[[1]] %>%
   ggplot(aes(date, en2o)) + 
   geom_line()
 
+gg1 <- output$data[[1]] %>% 
+  as_tibble() %>% 
+  slice(1:500) %>% 
+  ggplot(aes(date, drd)) + 
+  geom_line()
+
+gg2 <- output$data[[1]] %>% 
+  as_tibble() %>% 
+  slice(1:500) %>% 
+  ggplot(aes(date, drd/gpp)) + 
+  geom_line()
+
+gg3 <- output$data[[1]] %>% 
+  as_tibble() %>% 
+  mutate(cue = npp/gpp) %>% 
+  slice(1:500) %>% 
+  ggplot(aes(date, cue)) + 
+  geom_line()
+
+gg1/
+  gg2/
+  gg3
+
 output$data[[1]] %>% 
   as_tibble() %>% 
   mutate(year = lubridate::year(date)) %>% 
@@ -244,6 +267,39 @@ output$data[[1]] %>%
 print(gg)
 
 print(paste("Maximum leaf C: ", max(output$data[[1]]$cleaf)))
+
+
+cue_stress <- function(cue){
+  yy <- 1 / (1 + exp(10*(cue+0.25)))
+  return(yy)  
+}
+
+ggplot() +
+  geom_function(fun = cue_stress) +
+  xlim(-5,1) +
+  geom_vline(xintercept = 1, linetype = "dotted") +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
+tmp <- read_fwf(
+    "~/rsofun/test.txt",
+    fwf_widths(c(19,18,18), c("cue", "cue_damped", "f_deactivate")),
+    skip = 1,
+    col_types = "nn") %>% 
+  tail(6000)
+
+gg1 <- tmp %>%
+  mutate(id = 1:n()) %>% 
+  ggplot() +
+  geom_line(aes(id, cue)) +
+  geom_line(aes(id, cue_damped), color = "red") +
+  ylim(-1,1)
+gg2 <- tmp %>%
+  mutate(id = 1:n()) %>% 
+  ggplot() +
+  geom_line(aes(id, f_deactivate))
+gg1/
+  gg2
+
 
 # source("analysis/get_fill_seeds.R")
 # 

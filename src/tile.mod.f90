@@ -881,6 +881,11 @@ contains
     out_biosphere%seedc   = tile(lu)%plant(pft)%pseed%c%c12
     out_biosphere%seedn   = tile(lu)%plant(pft)%pseed%n%n14
 
+    out_biosphere%x1      = tile(lu)%plant(pft)%pseed%n%n14
+    out_biosphere%x2      = tile(lu)%plant(pft)%pseed%n%n14
+    out_biosphere%x3      = tile(lu)%plant(pft)%pseed%n%n14
+    out_biosphere%x4      = tile(lu)%plant(pft)%pseed%n%n14
+    out_biosphere%x5      = tile(lu)%plant(pft)%pseed%n%n14
 
   end subroutine diag_daily
 

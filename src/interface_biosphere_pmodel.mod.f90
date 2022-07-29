@@ -161,6 +161,11 @@ module md_interface_pmodel
     real :: nloss
     real :: seedc
     real :: seedn
+    real :: x1
+    real :: x2
+    real :: x3
+    real :: x4
+    real :: x5
   end type outtype_biosphere
 
 end module md_interface_pmodel

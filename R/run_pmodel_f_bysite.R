@@ -375,7 +375,12 @@ run_pmodel_f_bysite <- function(
           "narea_v",
           "nloss",
           "seedc",
-          "seedn"
+          "seedn",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5"
           )) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -425,7 +430,12 @@ run_pmodel_f_bysite <- function(
                   narea_v = NA,
                   nloss   = NA,
                   seedc   = NA,
-                  seedn   = NA
+                  seedn   = NA,
+                  x1      = NA,
+                  x2      = NA,
+                  x3      = NA,
+                  x4      = NA,
+                  x5      = NA
                   )
   }
     
