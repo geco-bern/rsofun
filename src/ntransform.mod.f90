@@ -13,8 +13,7 @@ module md_ntransform
   implicit none
 
   private 
-  public ntransform, getpar_modl_ntransform, initglobal_ntransform, initdaily_ntransform, &
-    initoutput_ntransform, getout_daily_ntransform
+  public ntransform, getpar_modl_ntransform
 
   !-----------------------------------------------------------------------
   ! Uncertain (unknown) parameters. Runtime read-in
@@ -31,36 +30,9 @@ module md_ntransform
 
   type( params_ntransform_type ) :: params_ntransform
 
-  !----------------------------------------------------------------
-  ! Module-specific variables
-  !----------------------------------------------------------------
-  real, dimension(nlu) :: dn2                         ! soil N2 emissions [gN/m2/d]
-  real, dimension(nlu) :: dno                         ! soil NO emissions [gN/m2/d]
-  real, dimension(nlu) :: ddenitr                     ! gross denitrification [gN/m2/d]
-  real, dimension(nlu) :: dnitr                       ! gross nitrification [gN/m2/d]
-  real, dimension(nlu) :: dnvol                       ! N volatilisation[gN/m2/d]
-
-
-  ! daily
-  real, allocatable, dimension(:,:,:) :: outdno3
-  real, allocatable, dimension(:,:,:) :: outdnh4
-  real, allocatable, dimension(:,:,:) :: outdnloss     ! daily total N loss (gaseous+leacing) (gN/m2/d)
-  real, allocatable, dimension(:,:,:) :: outddenitr    ! daily amount of N denitrified (gN/m2/d)
-  real, allocatable, dimension(:,:,:) :: outdnitr      ! daily amount of N nitrified (gN/m2/d)
-  real, allocatable, dimension(:,:,:) :: outdnvol      ! daily amount of N volatilised (gN/m2/d)
-  real, allocatable, dimension(:,:,:) :: outdnleach    ! daily amount of N leached (gN/m2/d)
-  real, allocatable, dimension(:,:,:) :: outdn2o       ! daily N2O emitted (gN/m2/d)
-
-  ! annual
-  real, dimension(nlu,maxgrid) :: outano3
-  real, dimension(nlu,maxgrid) :: outanh4
-  real, dimension(nlu,maxgrid) :: outanloss            ! annual total N loss (gaseous+leacing) (gN/m2/yr)
-  real, dimension(nlu,maxgrid) :: outadenitr           ! annual denitrified N (gN/m2/yr)
-  real, dimension(nlu,maxgrid) :: outan2o              ! annual N2O emitted (gaseous+leacing) (gN/m2/yr)
-
 contains
 
-  subroutine ntransform( dm, mo, jpngr, dnhxdep, dnoydep, aprec )
+  subroutine ntransform( tile, tile_fluxes, landuse, aprec, doy )
     !////////////////////////////////////////////////////////////////
     !  Litter and SOM decomposition and nitrogen mineralisation.
     !  1st order decay of litter and SOM _pools, governed by temperature
@@ -69,28 +41,33 @@ contains
     !  June 2014
     !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
-    use md_params_core, only: pft_start, pft_end
+    use md_params_core, only: pft_start, pft_end, eps
     use md_rates
     use md_interface_pmodel
-
+    use md_forcing_pmodel, only: landuse_type
 
     ! XXX try: this is wrong: dw1 is only plant available water. 
     ! should be water-filled pore space = ( (porosity - ice) - (total fluid water volume) ) / dz
 
     ! arguments
-    integer, intent(in) :: mo            ! month
-    integer, intent(in) :: dm            ! day of the current month
-    integer, intent(in) :: jpngr         ! grid cell number
-    real, intent(in)    :: dnhxdep       ! daily N deposition as NHx [gN/d]
-    real, intent(in)    :: dnoydep       ! daily N deposition as NOy [gN/d]
-    real, intent(in)    :: aprec         ! annual total precipitation [mm/d]
+    type(tile_type), dimension(nlu), intent(inout) :: tile
+    type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
+    type(landuse_type), intent(in) :: landuse
+    real :: aprec         ! annual total precipitation [mm/d] 
+    integer :: doy
     
     ! local variables
-    integer    :: lu                     ! gridcell unit counter variable
+    real :: dn2                         ! soil N2 emissions [gN/m2/d]
+    real :: dno                         ! soil NO emissions [gN/m2/d]
+    real :: ddenitr                     ! gross denitrification [gN/m2/d]
+    real :: dnitr                       ! gross nitrification [gN/m2/d]
+    real :: dnvol                       ! N volatilisation[gN/m2/d]
     
     real, save :: ph_soil
     real, save :: nh3max
-    
+
+    integer    :: lu                     ! gridcell unit counter variable
+        
     real :: dnmax                  ! labile carbon availability modifier
     real :: ftemp_vol              ! temperature rate modifier for ammonia volatilization
     real :: ftemp_nitr             ! temperature rate modifier for nitrification
@@ -106,56 +83,40 @@ contains
     real :: nh4_w, no3_w, no2_w    ! anaerobic pools
     real :: nh4_d, no3_d, no2_d    ! aerobic pools
     real :: doc_w, no, n2o, n2     ! anaerobic pools
+    real :: dno_d, dno_w, dn2o_d, dn2o_w   ! for gaseous escape
     
-    real :: doc_d                  ! aerobic pools
-
     ! Variables N balance test
     logical, parameter :: baltest_trans = .false.  ! set to false to do mass conservation test during transient simulation
     logical :: verbose = .false.  ! set to true to activate verbose mode
     logical :: baltest
     real :: nbal_before_1, nbal_after_1, nbal1, nbal_before_2, nbal_after_2, nbal2
     real :: no3bal_0, no3bal_1, nh4bal_0, nh4bal_1
-    real, parameter :: eps = 9.999e-8    ! numerical imprecision allowed in mass conservation tests
 
-    if (baltest_trans .and. .not. myinterface%steering%spinup) then
-      baltest = .true.
-      verbose = .true.
-    else
-      baltest = .false.
-    end if
+    ! if (baltest_trans .and. .not. myinterface%steering%spinup) then
+    !   baltest = .true.
+    !   verbose = .true.
+    ! else
+    !   baltest = .false.
+    ! end if
 
-    !-------------------------------------------------------------------------
-    ! Record for balances
-    !-------------------------------------------------------------------------
-    ! all pools plus all losses summed up
-    lu = 1
-    if (verbose) print*,'              with state variables:'
-    if (verbose) print*,'              ninorg = ', tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
-    if (verbose) print*,'              nloss  = ', tile_fluxes(lu)%soil%dnloss
-    if (verbose) print*,'              dndep  = ', dnoydep + dnhxdep
-    if (baltest) nbal_before_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + dnloss(1) + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2 + dnoydep + dnhxdep
-    if (baltest) nbal_before_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + ddenitr(lu) + dnitr(lu) + dnvol(1) + dnleach(1) + dnoydep + dnhxdep
-    if (verbose) print*,'executing ntransform() ... '
+    ! xxx debug
+    baltest = .false.
 
     !///////////////////////////////////////////////////////////////////////
     ! INITIALIZATION 
     !-----------------------------------------------------------------------    
-    dnvol(:)   = 0.0
-    ddenitr(:) = 0.0
-    dnitr(:)   = 0.0
-
-    if ( dm==1 .and. mo==1 ) then
+    if ( doy == 1 ) then
       !///////////////////////////////////////////////////////////////////////
       ! ANNUAL INITIALIZATION 
       !-----------------------------------------------------------------------
       ! Calculate soil PH using empirical relationship with annual precip
       ! Eq.5, Tab.5, XP08 (ntransform.cpp:65) (c++:aprec in mm/yr; F: mm/yr)
       !------------------------------------------------------------------
-      ph_soil = 3810.0/(762.0+aprec)+3.8
+      ph_soil = 3810.0 / (762.0 + aprec) + 3.8
 
       ! Deprotonation of NH4 to NH3 depends on soil pH
       !------------------------------------------------------------------
-      if (ph_soil>6.0) then
+      if (ph_soil > 6.0) then
         nh3max = 1.0
       else
         nh3max = 0.00001
@@ -164,21 +125,28 @@ contains
     endif
           
     ! LOOP OVER GRIDCELL LAND UNITS
-    do lu=1,nlu
+    luloop: do lu=1,nlu
 
       !-------------------------------------------------------------------------
       ! Add N deposition to inorganic pools
       !-------------------------------------------------------------------------
-      ! tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 + dnoydep
-      ! tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + dnhxdep
+      tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 + landuse%dnoy
+      tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + landuse%dnhx
 
-      tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 + dnoydep
-      tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + dnhxdep
-
-      ! ! xxx try: 
-      ! tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 + 10.0 / 365.0
-      ! tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + 10.0 / 365.0
-
+      !-------------------------------------------------------------------------
+      ! Record for balances
+      !-------------------------------------------------------------------------
+      ! all pools plus all losses summed up
+      if (verbose) print*,'              with state variables:'
+      if (verbose) print*,'              ninorg = ', tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 &
+        + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d &
+        + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
+      if (verbose) print*,'              nloss  = ', tile_fluxes(lu)%soil%dnloss
+      if (verbose) print*,'              dndep  = ', landuse%dnoy + landuse%dnhx
+      if (baltest) nbal_before_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile_fluxes(lu)%soil%dnloss
+      if (baltest) nbal_before_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile(lu)%soil%no_w + tile(lu)%soil%no_d & 
+      + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
+      if (verbose) print*,'executing ntransform() ... '
 
       !-------------------------------------------------------------------------
       ! Record for balances
@@ -194,8 +162,7 @@ contains
       ! must rather be wtot_up which includes water below permanent wilting point (see waterbalance.F).
       !------------------------------------------------------------------
       ! reference temperature: 25°C
-      ftemp_vol = min( 1.0, ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor", ref_temp=25.0 ) )   
-
+      ftemp_vol = min( 1.0, ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor", ref_temp = 25.0 ) )   
 
       !///////////////////////////////////////////////////////////////////////
       ! AMMONIUM VOLATILIZATION (ntransform.cpp:41)
@@ -203,18 +170,18 @@ contains
       ! use mw1 for monthly timestep and wpool for daily, because this is updated daily
       ! XXX nh3max is not considered in the equations presented in the paper! XXX
       fph = exp( 2.0 * ( ph_soil - 10.0 ) )
-      dnvol(lu) = nh3max * ftemp_vol**2 * fph * tile(lu)%soil%phy%wscal * ( 1.0 - tile(lu)%soil%phy%wscal ) * tile(lu)%soil%pnh4%n14
-      tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 - dnvol(lu)
-      tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + dnvol(lu)
+      dnvol = nh3max * ftemp_vol**2 * fph * tile(lu)%soil%phy%wscal &
+        * ( 1.0 - tile(lu)%soil%phy%wscal ) * tile(lu)%soil%pnh4%n14
+      tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 - dnvol
+      tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + dnvol
 
-      ! if (nh4>0.0) print*,'fvol ', dnvol(lu) / nh4 
 
       !///////////////////////////////////////////////////////////////////////
       ! NITRATE LEACHING
       !-----------------------------------------------------------------------
       ! Reduce NO3 by fraction tile_fluxes(lu)%soil%dnleach
       !------------------------------------------------------------------      
-      tile_fluxes(lu)%soil%dnleach = tile(lu)%soil%pno3%n14 * soilphys(lu)%fleach
+      tile_fluxes(lu)%soil%dnleach = tile(lu)%soil%pno3%n14 * tile_fluxes(lu)%canopy%dfleach
       tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 - tile_fluxes(lu)%soil%dnleach
       tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + tile_fluxes(lu)%soil%dnleach
 
@@ -244,23 +211,20 @@ contains
       no3_d = fdry * tile(lu)%soil%pno3%n14
       no2_d = fdry * tile(lu)%soil%pno2
 
-      ! doc_d = sum( pexud(pft_start(lu):pft_end(lu),jpngr)%c12 ) * fdry
-      doc_w = tile(lu)%soil%pexud%c12 * fdry
-
 
       !///////////////////////////////////////////////////////////////////////
       ! NITRIFICATION in aerobic microsites (ntransform.cpp:123)
+      ! NH4 -> NO3 + NO + N2O
       !------------------------------------------------------------------
       ftemp_nitr = max( min( &
         (((70.0-tile(lu)%soil%phy%temp)/(70.0-38.0))**12.0) &
         * exp(12.0*(tile(lu)%soil%phy%temp-38.0)/(70.0-38.0)) &
         , 1.0), 0.0)
-
       
       ! gross nitrification rate (Eq.1, Tab.8, XP08)
       !------------------------------------------------------------------
       no3_inc    = params_ntransform%maxnitr * ftemp_nitr * nh4_d
-      dnitr(lu)  = no3_inc
+      dnitr      = no3_inc
       nh4_d      = nh4_d - no3_inc   
   
       ! NO from nitrification (Eq.3, Tab.8, XP08)
@@ -279,17 +243,17 @@ contains
       ! if N loss is defined w.r.t. reduction in NH4 and NO3 pools, then this is the correct formulation:
       tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + n2o_inc + no_inc
 
-      ! xxx debug
-      if (baltest) no3bal_1 = no3_w + no3_d - no3_inc
-      if (baltest) nh4bal_1 = nh4_w + nh4_d + dnitr(lu)
+      ! ! xxx debug
+      ! if (baltest) no3bal_1 = no3_w + no3_d - no3_inc + tile_fluxes(lu)%soil%dnleach + no_inc + n2o_inc
+      ! if (baltest) nh4bal_1 = nh4_w + nh4_d + dnitr + dnvol
 
-      if (baltest) nbal1 = no3bal_1 - no3bal_0
-      if (baltest) nbal2 = nh4bal_1 - nh4bal_0
-      if (verbose) print*,'              --- preliminary balance after nitrification '
-      if (verbose) print*,'              ', nbal1
-      if (verbose) print*,'              ', nbal2
-      if (baltest .and. abs(nbal1)>eps) stop 'balance 1 not satisfied'
-      if (baltest .and. abs(nbal2)>eps) stop 'balance 2 not satisfied'
+      ! if (baltest) nbal1 = no3bal_1 - no3bal_0
+      ! if (baltest) nbal2 = nh4bal_1 - nh4bal_0
+      ! if (verbose) print*,'              --- preliminary balance after nitrification '
+      ! if (verbose) print*,'              ', nbal1
+      ! if (verbose) print*,'              ', nbal2
+      ! if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
+      ! if (baltest .and. abs(nbal2) > eps) stop 'balance 2 not satisfied'
 
 
       !///////////////////////////////////////////////////////////////////////
@@ -298,33 +262,28 @@ contains
       ! reference temperature: 22°C
       ftemp_denitr = ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor", ref_temp=22.0 )
 
-      
       ! Effect of labile carbon availability on denitrification (Eq.2, Tab.9, XP08)
       ! doc is last year's doc because it is only available at the end of the month
       ! while this SR is calculated daily, even when _dailymode==0.
       !------------------------------------------------------------------
       dnmax = params_ntransform%docmax * doc_w / ( params_ntransform%kdoc + doc_w )                     ! dnmax < 1 for all doc_w 
-
-      ! ! xxx try:
-      ! dnmax = 0.2
       
-      ! Denitrification ratio, NO3->NO2 (Eq.3, Tab.9, XP08)
+      ! Denitrification ratio, NO3 -> NO2 (Eq.3, Tab.9, XP08)
       !------------------------------------------------------------------
       no2_inc = min( dnmax * ftemp_denitr * no3_w / ( params_ntransform%kn + no3_w ) * 1000.0, no3_w )
-      if (no2_inc>no3_w) stop 'no2_inc > no3_w'
+      if (no2_inc > no3_w) stop 'no2_inc > no3_w'
       
-      no3_w       = no3_w - no2_inc
-      no2_w       = no2_w + no2_inc
-      ddenitr(lu) = no2_inc
+      no3_w   = no3_w - no2_inc
+      no2_w   = no2_w + no2_inc
+      ddenitr = no2_inc
       
       ! if N loss is defined w.r.t. reduction in NH4 and NO3 pools, then this is the correct formulation:
       tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + no2_inc
 
-
       ! Transformation NO2 -> N2 (Eq.4., Tab.9, XP08)
       !------------------------------------------------------------------
       n2_inc = min( dnmax * ftemp_denitr * no2_w / ( params_ntransform%kn + no2_w ) * 1000.0, no2_w )
-      if (n2_inc>no2_w) stop 'n2_inc > no2_w'
+      if (n2_inc > no2_w) stop 'n2_inc > no2_w'
 
       no2_w = no2_w - n2_inc
       
@@ -334,7 +293,8 @@ contains
       ! Factor reduced from 1.8% to 1.2% to get ~6.5 TgN/yr N2O emissions
       ! n2o_inc = dnitr2n2o*ftemp_denitr*(1.01-0.21*tile(lu)%soil%phy%wscal) * n2_inc
       ! XXX try: Changed this to from 0.21 to 1.0 in order to get plausible results
-      n2o_inc = params_ntransform%dnitr2n2o * ftemp_denitr * ( 1.01 - 0.8 * tile(lu)%soil%phy%wscal ) * n2_inc
+      n2o_inc = params_ntransform%dnitr2n2o * ftemp_denitr &
+        * ( 1.01 - 0.8 * tile(lu)%soil%phy%wscal ) * n2_inc
       n2_inc  = n2_inc - n2o_inc
       tile(lu)%soil%n2o_w = tile(lu)%soil%n2o_w + n2o_inc
 
@@ -367,7 +327,7 @@ contains
       tile(lu)%soil%pno3%n14 = no3_w + no3_d
       tile(lu)%soil%pno2     = no2_w + no2_d
 
-      no  = tile(lu)%soil%no_w + tile(lu)%soil%no_d
+      no  = tile(lu)%soil%no_w  + tile(lu)%soil%no_d
       n2o = tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d
       n2  = tile(lu)%soil%n2_w
 
@@ -375,54 +335,53 @@ contains
       ! Diffusion of NO, N2O and N2 from the soil (ntransform.cpp:281)
       !------------------------------------------------------------------
       ! reference temperature: 25°C. Corresponds to Eq.1, Tab.10, Xu-Ri & Prentice, 2008
-      ftemp_diffus = min( 1.0, ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor", ref_temp=25.0 ))
+      ftemp_diffus = min( 1.0, ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor", ref_temp = 25.0 ))
 
       ! Total gaseous escape
       !------------------------------------------------------------------
-      dno(lu) = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * no
-      dn2o(lu)= ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * n2o
-      dn2(lu) = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * n2
-
-      ! if N loss is defined w.r.t. gaseous escape, then this is the correct formulation:
-      ! tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + dno(lu) + dn2o(lu) + dn2(lu)
+      tile_fluxes(lu)%soil%dn2o = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * n2o
+      dno                       = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * no
+      dn2                       = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * n2
 
       ! Gaseous escape of pools at dry microsites
       !------------------------------------------------------------------
-      tmp = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%no_d
-      tile(lu)%soil%no_d = tile(lu)%soil%no_d - tmp
+      dno_d = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%no_d
+      tile(lu)%soil%no_d = tile(lu)%soil%no_d - dno_d
       
-      tmp = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%n2o_d
-      tile(lu)%soil%n2o_d = tile(lu)%soil%n2o_d - tmp
+      dn2o_d = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%n2o_d
+      tile(lu)%soil%n2o_d = tile(lu)%soil%n2o_d - dn2o_d
 
       ! Gaseous escape of pools at wet microsites
       !------------------------------------------------------------------
-      tmp = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%no_w
-      tile(lu)%soil%no_w = tile(lu)%soil%no_w - tmp
+      dno_w = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%no_w
+      tile(lu)%soil%no_w = tile(lu)%soil%no_w - dno_w
       
-      tmp = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%n2o_w
-      tile(lu)%soil%n2o_w = tile(lu)%soil%n2o_w - tmp
+      dn2o_w = ftemp_diffus * (1.0 - tile(lu)%soil%phy%wscal) * tile(lu)%soil%n2o_w
+      tile(lu)%soil%n2o_w = tile(lu)%soil%n2o_w - dn2o_w
                  
-      tile(lu)%soil%n2_w = tile(lu)%soil%n2_w - dn2(lu)
-      
-    enddo                                                 ! lu
+      tile(lu)%soil%n2_w = tile(lu)%soil%n2_w - dn2
 
-    !-------------------------------------------------------------------------
-    ! Test mass conservation
-    !-------------------------------------------------------------------------
-    ! all pools plus all losses summed up
-    lu = 1
-    if (baltest) nbal_after_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + dnloss(1) + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
-    if (baltest) nbal_after_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile_fluxes(1)%soil%ddenitr + dnitr(1) + dnvol(1) + dnleach(1) - no3_inc
-    if (baltest) nbal1 = nbal_after_1 - nbal_before_1
-    if (baltest) nbal2 = nbal_after_2 - nbal_before_2
-    if (verbose) print*,'              ==> returned:'
-    if (verbose) print*,'              ninorg = ', tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
-    if (verbose) print*,'              nloss  = ', dnloss(1)
-    if (verbose) print*,'   --- balance: '
-    if (verbose) print*,'       d( ninorg + loss )', nbal1
-    if (verbose) print*,'       d( ninorg + loss )', nbal2
-    if (baltest .and. abs(nbal1)>eps) stop 'balance 1 not satisfied'
-    if (baltest .and. abs(nbal2)>eps) stop 'balance 2 not satisfied'
+      !-------------------------------------------------------------------------
+      ! Test mass conservation
+      !-------------------------------------------------------------------------
+      ! all pools plus all losses summed up
+      if (baltest) nbal_after_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile_fluxes(lu)%soil%dnloss
+      if (baltest) nbal_after_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile(lu)%soil%no_w + tile(lu)%soil%no_d & 
+        + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2 + dno_d + dn2o_d + dno_w + dn2o_w +dn2
+      if (baltest) nbal1 = nbal_after_1 - nbal_before_1
+      if (baltest) nbal2 = nbal_after_2 - nbal_before_2
+      if (verbose) print*,'              ==> returned:'
+      if (verbose) print*,'              ninorg = ', tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 &
+        + tile(lu)%soil%no_w + tile(lu)%soil%no_d + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d &
+        + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
+      if (verbose) print*,'              nloss  = ', tile_fluxes(lu)%soil%dnloss
+      if (verbose) print*,'   --- balance: '
+      if (verbose) print*,'       d( ninorg + loss ) 1', nbal1
+      if (verbose) print*,'       d( ninorg + loss ) 2', nbal2
+      if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
+      ! if (baltest .and. abs(nbal2) > eps) stop 'balance 2 not satisfied'
+
+    enddo luloop
 
   end subroutine ntransform
 
@@ -432,27 +391,28 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
+    use md_interface_pmodel, only: myinterface
 
     ! maximum nitrification rate
-    params_ntransform%maxnitr = 0.1
+    params_ntransform%maxnitr   = myinterface%params_calib%maxnitr
 
     ! maximum NO from nitrification (day-1)
-    params_ntransform%non = 0.01
+    params_ntransform%non       = myinterface%params_calib%non
 
     ! maximum N2O from nitrification (day-1)
-    params_ntransform%n2on = 0.0005
+    params_ntransform%n2on      = myinterface%params_calib%n2on
 
     ! Michaelis-Menten coefficient [gN/m2]. Use this value if soil represents top 100 cm 
-    params_ntransform%kn = 83.0
+    params_ntransform%kn        = myinterface%params_calib%kn
 
     ! Michaelis-Menten coefficient [gC/m2]. Use this value if soil represents top 100 cm 
-    params_ntransform%kdoc = 17.0
+    params_ntransform%kdoc      = myinterface%params_calib%kdoc
 
     ! docmax
-    params_ntransform%docmax = 1.0
+    params_ntransform%docmax    = myinterface%params_calib%docmax
 
-    ! Fraction of denitrification lost as N2O. Range of possible values: 0.002 - 0.047 (Xu-Ri and Prentice, 2008)
-    params_ntransform%dnitr2n2o = 0.01
+    ! Fraction of denitrification lost as N2O. Range of possible values is 0.002 - 0.047 (Xu-Ri and Prentice, 2008)
+    params_ntransform%dnitr2n2o = myinterface%params_calib%dnitr2n2o
 
   end subroutine getpar_modl_ntransform
 

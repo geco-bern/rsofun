@@ -20,22 +20,76 @@ module md_interface_pmodel
     real :: soilm_par_b
     real :: tau_acclim_tempstress
     real :: par_shape_tempstress
-    real :: kbeer
     real :: f_nretain
     real :: fpc_tree_max
     real :: growtheff
     real :: r_root
     real :: r_sapw
     real :: exurate
-    real :: k_decay_tissue
+    real :: cton_soil
+    real :: k_decay_leaf_base
     real :: k_decay_leaf_width
-    real :: k_decay_sapw
     real :: k_decay_root
+    real :: k_decay_labl
+    real :: k_decay_sapw
     real :: r_cton_root
-    real :: r_ntoc_root
+    real :: r_cton_wood
     real :: ncw_min
     real :: r_n_cw_v
     real :: r_ctostructn_leaf
+    real :: kbeer
+    real :: gddbase
+    real :: ramp
+    real :: phentype
+    real :: perc_k1
+    real :: thdiff_wp
+    real :: thdiff_whc15
+    real :: thdiff_fc
+    real :: forg
+    real :: wbwp
+    real :: por
+    real :: fsand
+    real :: fclay
+    real :: fsilt
+    real :: kA
+    real :: kalb_sw
+    real :: kalb_vis
+    real :: kb
+    real :: kc
+    real :: kCw
+    real :: kd
+    real :: ke
+    real :: keps
+    real :: kWm
+    real :: kw
+    real :: komega
+    real :: maxmeltrate
+    real :: klitt_af10
+    real :: klitt_as10
+    real :: klitt_bg10
+    real :: kexu10
+    real :: ksoil_fs10
+    real :: ksoil_sl10
+    real :: ntoc_crit1
+    real :: ntoc_crit2
+    real :: cton_microb
+    real :: tmppar
+    real :: fastfrac
+    real :: eff_nup
+    real :: minimumcostfix
+    real :: fixoptimum
+    real :: a_param_fix
+    real :: b_param_fix
+    real :: maxnitr
+    real :: non
+    real :: n2on
+    real :: kn
+    real :: kdoc
+    real :: docmax
+    real :: dnitr2n2o
+    real :: beta
+    real :: rd_to_vcmax
+    real :: tau_acclim
   end type paramstype_calib  
 
   type interfacetype_biosphere
@@ -45,6 +99,7 @@ module md_interface_pmodel
     real, dimension(4,nlayers_soil)         :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     real                                    :: whc_prescr
     type(climate_type), dimension(ndayyear) :: climate
+    type(climate_type), dimension(ndayyear) :: climate_memory
     type(vegcover_type), dimension(ndayyear):: vegcover
     type(landuse_type), dimension(ndayyear) :: landuse
     ! type(domaininfo_type)                 :: domaininfo
@@ -75,8 +130,6 @@ module md_interface_pmodel
     real :: wscal
     real :: chi
     real :: iwue
-
-    ! new for cnmodel: 25 additional
     real :: tsoil
     real :: cleaf
     real :: nleaf
@@ -88,9 +141,9 @@ module md_interface_pmodel
     real :: ninorg
     real :: pno3
     real :: pnh4
-    real :: en2o
-    real :: enleach
-    real :: tmp
+    real :: dn2o
+    real :: dnleach
+    real :: npp
     real :: csoil
     real :: nsoil
     real :: clitt
@@ -101,7 +154,18 @@ module md_interface_pmodel
     real :: netmin
     real :: dcharv
     real :: dnharv
-
+    real :: drd
+    real :: lma
+    real :: narea
+    real :: narea_v
+    real :: nloss
+    real :: seedc
+    real :: seedn
+    real :: x1
+    real :: x2
+    real :: x3
+    real :: x4
+    real :: x5
   end type outtype_biosphere
 
 end module md_interface_pmodel

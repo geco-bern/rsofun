@@ -94,13 +94,14 @@ contains
 
     if (params_siml%do_spinup) then
 
-      if (year<=spinup_add_ninorg) then
+      if (year <= spinup_add_ninorg) then
         out_steering%add_ninorg = .true.
       else
         out_steering%add_ninorg = .false.
       end if
 
-      if (year<=params_siml%spinupyears) then
+      if (year <= params_siml%spinupyears) then
+
         ! during spinup
         out_steering%spinup = .true.
         out_steering%forcingyear = params_siml%firstyeartrend
@@ -110,6 +111,7 @@ contains
         out_steering%climateyear_idx = cycleyear
 
       else  
+
         ! during transient simulation
         out_steering%spinup = .false.
         out_steering%forcingyear =  year - params_siml%spinupyears + params_siml%firstyeartrend - 1
@@ -131,13 +133,16 @@ contains
       endif
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1
 
-      if ( year > 3 ) then
+      ! ! if ( year > 3 ) then
       ! if (year > (spinupyr_soilequil_1 + 1) ) then
-      ! if (out_steering%forcingyear > 2003 ) then
-        out_steering%dofree_alloc = .true.
-      else
-        out_steering%dofree_alloc = .false.
-      end if
+      !   ! if (out_steering%forcingyear > 2003 ) then
+      !   out_steering%dofree_alloc = .true.
+      ! else
+      !   out_steering%dofree_alloc = .false.
+      ! end if
+
+      ! xxx try: fixed allocation
+      out_steering%dofree_alloc = .false.
 
       if ( (year==spinupyr_soilequil_1 .or. year==spinupyr_soilequil_2 ) .and. year<=params_siml%spinupyears) then
         out_steering%do_soilequil = .true.
@@ -153,7 +158,7 @@ contains
         out_steering%average_soil = .false.
       end if
 
-      if ( year<=params_siml%spinupyears .and. year <= spinupyr_soilequil_1 ) then
+      if ( year <= params_siml%spinupyears .and. year <= spinupyr_soilequil_1 ) then
         out_steering%project_nmin = .true.
       else
         out_steering%project_nmin = .false.
@@ -173,13 +178,14 @@ contains
 
     endif
 
-    if (year==1) then
+    ! boolean for initialisation
+    if (year == 1) then
       out_steering%init = .true.
     else
       out_steering%init = .false.
     endif 
 
-    if (year==params_siml%runyears) then
+    if (year == params_siml%runyears) then
       out_steering%finalize = .true.
     else
       out_steering%finalize = .false.

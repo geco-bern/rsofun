@@ -32,8 +32,7 @@ module md_waterbal
   implicit none
 
   private
-  public waterbal, solar, &
-    getpar_modl_waterbal
+  public waterbal, solar, getpar_modl_waterbal
 
   !-----------------------------------------------------------------------
   ! Uncertain (unknown) parameters. Runtime read-in
@@ -560,43 +559,43 @@ contains
     use md_interface_pmodel, only: myinterface
 
     ! constant for dRnl (Monteith & Unsworth, 1990)
-    kA       = 107.0
+    kA          = myinterface%params_calib%kA
     
     ! shortwave albedo (Federer, 1968)
-    kalb_sw  = 0.17
+    kalb_sw     = myinterface%params_calib%kalb_sw
     
     ! visible light albedo (Sellers, 1985) xxx planetary albedo? xxx
-    kalb_vis = 0.03
+    kalb_vis    = myinterface%params_calib%kalb_vis
     
     ! constant for dRnl (Linacre, 1968)
-    kb       = 0.2
+    kb          = myinterface%params_calib%kb
     
     ! cloudy transmittivity (Linacre, 1968)
-    kc       = 0.25
+    kc          = myinterface%params_calib%kc
     
     ! supply constant, mm/hr (Federer, 1982)
-    kCw      = 1.05 
+    kCw         = myinterface%params_calib%kCw
     
     ! angular coefficient of transmittivity (Linacre, 1968)
-    kd       = 0.5
+    kd          = myinterface%params_calib%kd
     
     ! eccentricity for 2000 CE (Berger, 1978)
-    ke       = 0.0167
+    ke          = myinterface%params_calib%ke
     
     ! obliquity for 2000 CE, degrees (Berger, 1978)
-    keps     = 23.44
+    keps        = myinterface%params_calib%keps
 
     ! ! solar constant, W/m^2 (Kopp & Lean, 2011)
-    ! kGsc     = 1360.8
+    ! kGsc      = myinterface%params_calib%kGsc
     
     ! entrainment factor (Lhomme, 1997; Priestley & Taylor, 1972)
-    kw       = 0.26
+    kw          = myinterface%params_calib%kw
     
     ! longitude of perihelion for 2000 CE, degrees (Berger, 1978)
-    komega   = 283.0
+    komega      = myinterface%params_calib%komega
 
     ! maximum snow melting rate (mm d-1) (Orth et al., 2013)
-    maxmeltrate = 3.0
+    maxmeltrate = myinterface%params_calib%maxmeltrate
 
   end subroutine getpar_modl_waterbal
 

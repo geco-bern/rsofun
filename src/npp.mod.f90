@@ -46,22 +46,26 @@ contains
     ! ('rsoil'). This implies that growth respiration is "paid" also on exu-
     ! dates. 
     !-------------------------------------------------------------------------
-    ! use md_turnover, only: turnover_leaf, turnover_root, turnover_labl
+    use md_turnover, only: turnover_leaf, turnover_root
 
     ! arguments
-    type(tile_type), dimension(nlu), intent(in) :: tile
+    type(tile_type), dimension(nlu), intent(inout) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(climate_type), intent(in) :: climate
 
     ! local variables
-    type(plant_fluxes_type) :: pf
-    type(plant_type) :: pp
     integer :: pft
     integer :: lu
 
     real, parameter :: dleaf_die = 0.012
     real, parameter :: droot_die = 0.012
     real, parameter :: dlabl_die = 0.0
+
+    ! for CUE dampening, determining acceleration of turnover (tissue deactivation)
+    logical, save :: firstcall = .true.
+    integer, parameter :: len_cue_vec = 15
+    real, dimension(nlu,npft,len_cue_vec), save :: cue_vec
+    real :: f_deactivate, cue_damped
 
     ! xxx debug
     real :: tmp
@@ -70,24 +74,27 @@ contains
 
       lu = params_pft_plant(pft)%lu_category
 
-      ! as a short-hand
-      pf = tile_fluxes(lu)%plant(pft)
-      pp = tile(lu)%plant(pft)
-
-      if (pp%plabl%c%c12 < 0.0) stop 'before npp labile C is neg.'
-      if (pp%plabl%n%n14 < 0.0) stop 'before npp labile N is neg.'
+      ! if (tile(lu)%plant(pft)%plabl%c%c12 < 0.0) stop 'before npp labile C is neg.'
+      ! if (tile(lu)%plant(pft)%plabl%n%n14 < 0.0) stop 'before npp labile N is neg.'
 
       !/////////////////////////////////////////////////////////////////////////
       ! MAINTENANCE RESPIRATION
       ! use function 'resp_main'
       !-------------------------------------------------------------------------
       ! fine roots should have a higher repsiration coefficient than other tissues (Franklin et al., 2007).
-      pf%drleaf = pf%drd  ! leaf respiration is given by dark respiration as calculated in P-model.       
-      pf%drroot = calc_resp_maint( pp%proot%c%c12 * pp%nind, params_plant%r_root, climate%dtemp )
+      tile_fluxes(lu)%plant(pft)%drleaf = tile_fluxes(lu)%plant(pft)%drd  ! leaf respiration is given by dark respiration as calculated in P-model.       
+      tile_fluxes(lu)%plant(pft)%drroot = calc_resp_maint(  tile(lu)%plant(pft)%proot%c%c12, &
+                                                            params_plant%r_root, &
+                                                            climate%dtemp &
+                                                            )
       if (params_pft_plant(pft)%tree) then
-        pf%drsapw = calc_resp_maint( pp%psapw%c%c12 * pp%nind, params_plant%r_sapw, climate%dtemp )
+        tile_fluxes(lu)%plant(pft)%drsapw = calc_resp_maint(  tile(lu)%plant(pft)%psapw%c%c12, &
+                                                              params_plant%r_sapw, &
+                                                              climate%dtemp &
+                                                              )
+      else
+        tile_fluxes(lu)%plant(pft)%drsapw = 0.0
       endif
-
 
       !/////////////////////////////////////////////////////////////////////////
       ! DAILY NPP AND C EXPORT
@@ -98,8 +105,66 @@ contains
       ! full isotopic effects of gross exchange _fluxes.
       ! Growth respiration ('drgrow') is deduced from 'dnpp' in allocation SR.
       !-------------------------------------------------------------------------
-      pf%dnpp = carbon( pf%dgpp - pf%drleaf - pf%drroot )
-      pf%dcex = calc_cexu( pp%proot%c%c12, climate%dtemp )   
+      tile_fluxes(lu)%plant(pft)%dnpp = carbon( tile_fluxes(lu)%plant(pft)%dgpp &
+                                              - tile_fluxes(lu)%plant(pft)%drleaf &
+                                              - tile_fluxes(lu)%plant(pft)%drroot &
+                                              - tile_fluxes(lu)%plant(pft)%drsapw &
+                                                )
+      tile_fluxes(lu)%plant(pft)%dcex = calc_cexu( tile(lu)%plant(pft)%proot%c%c12 )   
+
+      !/////////////////////////////////////////////////////////////////////////
+      ! SAFETY AND DEATH (CUE-driven mortality)
+      ! If negative C balance results from GPP - Rleaf - Rroot then ...
+      ! ... increase tissue turnover (deactivation)
+      !-------------------------------------------------------------------------      
+      ! CUE dampening
+      if (firstcall) then
+        if (tile_fluxes(lu)%plant(pft)%dgpp < eps) then
+          cue_vec(lu,pft,:) = 0.0
+        else
+          cue_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp
+        end if
+        firstcall = .false.
+      else
+        cue_vec(lu,pft,1:(len_cue_vec-1)) = cue_vec(lu,pft,2:len_cue_vec)
+        if (tile_fluxes(lu)%plant(pft)%dgpp < eps) then
+          cue_vec(lu,pft,len_cue_vec) = 0.0
+        else
+          cue_vec(lu,pft,len_cue_vec) = tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp
+        end if
+      end if
+      cue_damped = sum( cue_vec(lu,pft,:) ) / real( len_cue_vec )
+
+      ! turnover due to CUE-driven deactivation: increase towards 1 when (damped) CUE gets negative.
+      ! note that CUE can become negative when respiration is positive and GPP tending towards zero
+      if (tile(lu)%plant(pft)%plabl%c%c12 < 1.0 * tile(lu)%plant(pft)%pleaf%c%c12) then
+        
+        f_deactivate = 0.5 * calc_cue_stress( cue_damped )   ! never deactivate 100%
+
+        if (f_deactivate > 0.001) then  ! don't call it when removing only a negiglible fraction - computational costs!
+          call turnover_leaf( f_deactivate, tile(lu), tile_fluxes(lu), pft )
+          call turnover_root( f_deactivate, tile(lu), pft )
+        else
+          f_deactivate = 0.0
+        end if
+      else
+        f_deactivate = 0.0
+      end if
+
+      ! print*,'gpp, cue, cue_damped, f_deactivate: ', &
+      !   tile_fluxes(lu)%plant(pft)%dgpp, &
+      !   tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp, &
+      !   cue_damped, &
+      !   f_deactivate   
+
+      ! xxx test
+      ! read into R with:
+      ! read_fwf(
+      !    "~/rsofun/test.txt",
+      !    fwf_widths(c(19,18,18), c("cue", "cue_damped", "f_deactivate")),
+      !    skip = 1,
+      !    col_types = "nn")
+      print*, tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp, cue_damped, f_deactivate
 
       ! !/////////////////////////////////////////////////////////////////////////
       ! ! SAFETY AND DEATH
@@ -110,18 +175,18 @@ contains
       ! !     but continuing turnover).
       ! !-------------------------------------------------------------------------
       ! ! ! This option (deactivate_root) leads to good results, the alternative leads to on-off growth. Unclear why.
-      ! ! if ( (pf%dnpp%c12 - pf%dcex) < 0.0 ) then
-      ! !   call deactivate_root( pf%dgpp, pf%drleaf, pp%plabl%c%c12, pp%proot, pf%drroot, pf%dnpp%c12, pf%dcex, dtemp, pp%plitt_bg )
+      ! ! if ( (tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex) < 0.0 ) then
+      ! !   call deactivate_root( tile_fluxes(lu)%plant(pft)%dgpp, tile_fluxes(lu)%plant(pft)%drleaf, tile(lu)%plant(pft)%plabl%c%c12, tile(lu)%plant(pft)%proot, tile_fluxes(lu)%plant(pft)%drroot, tile_fluxes(lu)%plant(pft)%dnpp%c12, tile_fluxes(lu)%plant(pft)%dcex, dtemp, tile(lu)%plant(pft)%plitt_bg )
       ! ! end if
 
       ! ! -------------------------------------------------------------------------
       ! ! the alternative formulation with shutting all fluxes down and decaying
       ! ! -------------------------------------------------------------------------
-      ! if ( (pp%plabl%c%c12 + pf%dnpp%c12 - pf%dcex) < 0.0 ) then
+      ! if ( (tile(lu)%plant(pft)%plabl%c%c12 + tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex) < 0.0 ) then
       !   ! stop exuding
-      !   pf%dcex = 0.0
+      !   tile_fluxes(lu)%plant(pft)%dcex = 0.0
 
-      !   if ( ( pp%plabl%c%c12 + pf%dnpp%c12 ) < 0.0 ) then
+      !   if ( ( tile(lu)%plant(pft)%plabl%c%c12 + tile_fluxes(lu)%plant(pft)%dnpp%c12 ) < 0.0 ) then
 
       !     ! ! after C balance has become negative wait until it gets positive again to trigger sprouting
       !     ! ! print*,'setting check_sprout = T ', doy
@@ -129,12 +194,12 @@ contains
 
       !     ! slow death
       !     ! print*,'slow death', doy
-      !     pf%dgpp   = 0.0
-      !     pf%drleaf = 0.0
-      !     pf%drroot = 0.0
-      !     pf%drd    = 0.0
-      !     pf%dcex   = 0.0
-      !     pf%dnpp   = carbon(0.0)
+      !     tile_fluxes(lu)%plant(pft)%dgpp   = 0.0
+      !     tile_fluxes(lu)%plant(pft)%drleaf = 0.0
+      !     tile_fluxes(lu)%plant(pft)%drroot = 0.0
+      !     tile_fluxes(lu)%plant(pft)%drd    = 0.0
+      !     tile_fluxes(lu)%plant(pft)%dcex   = 0.0
+      !     tile_fluxes(lu)%plant(pft)%dnpp   = carbon(0.0)
 
       !     call turnover_leaf( dleaf_die, pft, jpngr )
       !     call turnover_root( droot_die, pft, jpngr )
@@ -157,29 +222,26 @@ contains
       
       ! end if
 
-      ! !/////////////////////////////////////////////////////////////////////////
-      ! ! EXUDATES
-      ! !-------------------------------------------------------------------------
-      ! call ccp( carbon( pf%dcex ), pp%pexud )
 
-      ! !/////////////////////////////////////////////////////////////////////////
-      ! ! TO LABILE POOL
-      ! ! NPP available for growth first enters the labile pool ('plabl ').
-      ! ! XXX Allocation is called here without "paying"  growth respir.?
-      ! !-------------------------------------------------------------------------
-      ! tmp = pf%dnpp%c12 - pf%dcex
-      ! print*,'GPP, Rl, Rr, Cex, dC, Cl, LAI, Cb: ', pf%dgpp, pf%drleaf, pf%drroot, pf%dcex, tmp, pp%pleaf, pp%lai_ind, pp%plabl
+      !/////////////////////////////////////////////////////////////////////////
+      ! TO LABILE POOL
+      ! NPP available for growth first enters the labile pool ('plabl ').
+      !-------------------------------------------------------------------------
+      ! tmp = tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex
+      ! print*,'GPP, Rl, Rr, Cex, dC, Cl, LAI, Cb: ', tile_fluxes(lu)%plant(pft)%dgpp, tile_fluxes(lu)%plant(pft)%drleaf, tile_fluxes(lu)%plant(pft)%drroot, tile_fluxes(lu)%plant(pft)%dcex, tmp, tile(lu)%plant(pft)%pleaf, tile(lu)%plant(pft)%lai_ind, tile(lu)%plant(pft)%plabl
 
-      ! call ccp( carbon( pf%dcex ), pp%pexud )
-      ! call ccp( cminus( pf%dnpp, carbon(pf%dcex) ), pp%plabl%c )
+      ! call ccp( carbon( tile_fluxes(lu)%plant(pft)%dcex ), tile(lu)%soil%pexud )
+      ! call ccp( cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) ), tile(lu)%plant(pft)%plabl%c )
 
-      ! if (pp%plabl%c%c12 < (-1)*eps) stop 'after npp labile C is neg.'
-      ! if (pp%plabl%n%n14 < (-1)*eps) stop 'after npp labile N is neg.'
+      tile(lu)%soil%pexud%c12 = tile(lu)%soil%pexud%c12 + tile_fluxes(lu)%plant(pft)%dcex
+      tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12     &
+                                      + tile_fluxes(lu)%plant(pft)%dnpp%c12 &
+                                      - tile_fluxes(lu)%plant(pft)%dcex
 
-      ! print*,'gpp, dclabl', doy, pf%dgpp, cminus( pf%dnpp, carbon(pf%dcex) )
+      if (tile(lu)%plant(pft)%plabl%c%c12 < (-1)*eps) stop 'after npp labile C is neg.'
+      if (tile(lu)%plant(pft)%plabl%n%n14 < (-1)*eps) stop 'after npp labile N is neg.'
 
-      ! as a short-hand
-      tile_fluxes(lu)%plant(pft) = pf
+      ! print*,'gpp, dclabl', doy, tile_fluxes(lu)%plant(pft)%dgpp, cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon(tile_fluxes(lu)%plant(pft)%dcex) )
 
     end do pftloop
 
@@ -223,7 +285,7 @@ contains
     ! update fluxes based on corrected root mass
     rroot = calc_resp_maint( myproot%c%c12, params_plant%r_root, dtemp )
     npp   = mygpp - mydrleaf - rroot
-    cexu  = calc_cexu( myproot%c%c12 , dtemp )     
+    cexu  = calc_cexu( myproot%c%c12 )     
 
   end subroutine deactivate_root
 
@@ -242,21 +304,21 @@ contains
     ! function return variable
     real :: resp_maint                    ! return value: maintenance respiration [gC/m2]
 
-    ! resp_maint = cmass * rresp * calc_tempstress( dtemp )
-
     ! LPX-like temperature dependeneo of respiration rates
     resp_maint = cmass * rresp * ftemp( dtemp, "lloyd_and_taylor" )
+
+    ! ! xxx debug
+    ! resp_maint = 0.0
 
   end function calc_resp_maint
 
 
-  function calc_cexu( croot, dtemp ) result( cexu )
+  function calc_cexu( croot ) result( cexu )
     !/////////////////////////////////////////////////////////////////
     ! Constant exudation rate
     !-----------------------------------------------------------------
     ! arguments
     real, intent(in)           :: croot
-    real, intent(in), optional :: dtemp   ! temperature (soil or air, deg C)
 
     ! function return variable
     real :: cexu
@@ -265,5 +327,20 @@ contains
     cexu = params_plant%exurate * croot
 
   end function calc_cexu
+
+
+  !/////////////////////////////////////////////////////////////////////////
+  ! Function to increase towards 1 when (damped) CUE approaches 0.
+  !-------------------------------------------------------------------------    
+  function calc_cue_stress( cue ) result( f_deactivate )
+    ! arguments
+    real, intent(in) :: cue
+
+    ! function return variable
+    real :: f_deactivate
+
+    f_deactivate = 1.0 / (1.0 + exp(10.0 * (cue + 0.25)))
+  
+  end function
 
 end module md_npp

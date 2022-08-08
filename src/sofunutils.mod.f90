@@ -17,9 +17,9 @@ contains
     ! 
     !-------------------------------------------------------------------------
     ! arguments
-    real, intent(in)    :: var           ! fast-varying variable
-    real, intent(in)    :: tau           ! memory e-folding time scale (d)
-    real, intent(inout) :: var_memory    ! damped (low-pass filtered) variable
+    real, intent(in) :: var           ! fast-varying variable
+    real, intent(in) :: tau           ! memory e-folding time scale (d)
+    real, intent(in) :: var_memory    ! damped (low-pass filtered) variable
 
     ! function return variable
     real :: out_memory

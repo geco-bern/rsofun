@@ -10,27 +10,8 @@ module md_tile
 
   private
   public tile_type, tile_fluxes_type, init_tile, psoilphystype, soil_type, &
-    init_tile_fluxes, getpar_modl_tile, diag_daily
+    init_tile_fluxes, getpar_modl_tile, diag_daily, diag_annual, finalize_tile
 
-  !-----------------------------------------------------------------------
-  ! Uncertain (unknown) parameters. Runtime read-in
-  !-----------------------------------------------------------------------
-  type params_littersom_type
-    real :: klitt_af10        ! above-ground fast (leaf) litter decay rate [1/d]
-    real :: klitt_as10        ! above-ground slow (woody) litter decay rate [1/d] 
-    real :: klitt_bg10        ! below-ground (root) litter decay rate [1/d] 
-    real :: kexu10            ! exudates decay rate [1/d]
-    real :: ksoil_fs10        ! fast soil pool decay rate [1/d]
-    real :: ksoil_sl10        ! slow soil pool decay rate [1/d]
-    real :: ntoc_crit1        ! factor for "Manzoni Equation" (XPXXX) [1]
-    real :: ntoc_crit2        ! exponent for "Manzoni Equation" (XPXXX) [1]
-    real :: cton_soil         ! C:N ratio of SOM
-    real :: ntoc_soil         ! N:C ratio of SOM, calculated as the inverse of the read-in parameter cton_soil
-    real :: fastfrac          ! fraction of litter input to fast soil pool [1]
-  end type params_littersom_type
-
-  type( params_littersom_type ) :: params_littersom
-  
   !----------------------------------------------------------------
   ! physical soil state variables with memory from year to year (~pools)
   !----------------------------------------------------------------
@@ -65,27 +46,27 @@ module md_tile
   !----------------------------------------------------------------
   type soil_type
 
-    type(orgpool)        :: psoil_fs
-    type(orgpool)        :: psoil_sl
-    type(orgpool)        :: plitt_af
-    type(orgpool)        :: plitt_as
-    type(orgpool)        :: plitt_bg
+    type(orgpool)  :: psoil_fs
+    type(orgpool)  :: psoil_sl
+    type(orgpool)  :: plitt_af
+    type(orgpool)  :: plitt_as
+    type(orgpool)  :: plitt_bg
 
-    type(carbon)         :: pexud
+    type(carbon)   :: pexud
 
-    type(nitrogen)       :: pno3
-    type(nitrogen)       :: pnh4
+    type(nitrogen) :: pno3
+    type(nitrogen) :: pnh4
 
+    real :: pno2             ! NO2 pool [gN/m2]
     real :: no_w             ! NO in wet microsites (split done in ntransform) [gN/m2]
     real :: no_d             ! NO in dry microsites (split done in ntransform) [gN/m2]
     real :: n2o_w            ! N2O in wet microsites (split done in ntransform) [gN/m2]
     real :: n2o_d            ! N2O in dry microsites (split done in ntransform) [gN/m2]
     real :: n2_w             ! N2 in wet microsites (split done in ntransform) [gN/m2]
-    real :: pno2             ! NO2 [gN/m2]
 
     type(psoilphystype)  :: phy      ! soil physical state variables
     
-    type(paramtype_soil) :: params   ! soil parameters
+    type(paramtype_soil) :: params   ! soil structure parameters
 
   end type soil_type
 
@@ -215,15 +196,13 @@ module md_tile
   !----------------------------------------------------------------
   type soil_fluxes_type
   
-    type(carbon)   :: drsoil            ! soil respiration (only from exudates decomp.) [gC/m2/d]
     type(carbon)   :: drhet             ! heterotrophic respiration [gC/m2/d]
-
     type(nitrogen) :: dnetmin           ! daily net mineralisation (gN m-2 d-1)
 
-    real :: dn2o                        ! soil N2O emissions [gN/m2/d]
-    real :: dngas                       ! total daily gaseous N emissions from the soil (gN m-2 d-1)
+    real :: dnfix_free                  ! free-living N fixation (balance term to satisfy soil C:N ratio)
+    real :: dn2o                        ! soil N2O emissions (gaseous escape) [gN/m2/d]
     real :: dnleach                     ! daily N leaching [gN/m2/d]
-    real :: dnloss                      ! total N loss (gaseous+leaching) [gN/m2/d]
+    real :: dnloss                      ! total N loss (gaseous + leaching, where gaseous loss is N w.r.t. NH4 and NO3 pool decline, not gaseous escape) [gN/m2/d]
 
   end type soil_fluxes_type
 
@@ -262,14 +241,14 @@ contains
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     ! argument
     type( tile_type ), dimension(nlu), intent(inout) :: tile
 
     ! local variables
     integer :: lu
+    character(len=256) :: prefix
+    character(len=256) :: filnam
 
     !-----------------------------------------------------------------------------
     ! derive which PFTs are present from fpc_grid (which is prescribed)
@@ -289,7 +268,31 @@ contains
 
     end do
 
+    !-----------------------------------------------------------------------------
+    ! open files for experimental output
+    !-----------------------------------------------------------------------------
+    prefix = "./out/out_rsofun"
+
+    filnam = trim(prefix)//'.a.csoil.txt'
+    open(unit = 101, file = filnam, err = 999, status = 'unknown')
+
+    filnam = trim(prefix)//'.a.nsoil.txt'
+    open(unit = 102, file = filnam, err = 999, status = 'unknown')
+
+    return
+    999 stop 'init_tile(): error opening output files'
+
   end subroutine init_tile
+
+
+  subroutine finalize_tile()
+    !////////////////////////////////////////////////////////////////
+    ! Closing files
+    !----------------------------------------------------------------
+    close(unit = 101)
+    close(unit = 102)
+
+  end subroutine finalize_tile
 
 
   subroutine init_tile_canopy( canopy )
@@ -533,7 +536,7 @@ contains
 
     ! end do
 
-  end subroutine init_tile_soil_params  
+  end subroutine init_tile_soil_params
 
 
   subroutine init_tile_fluxes( tile_fluxes )
@@ -544,43 +547,43 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
 
     ! local
-    integer :: pft, lu
+    integer :: lu
 
     ! canopy
-    tile_fluxes(:)%canopy%dro = 0.0
-    tile_fluxes(:)%canopy%dfleach = 0.0
-    tile_fluxes(:)%canopy%dwbal = 0.0
-    tile_fluxes(:)%canopy%econ = 0.0
-    tile_fluxes(:)%canopy%drn = 0.0
-    tile_fluxes(:)%canopy%drnn = 0.0
-    tile_fluxes(:)%canopy%rnl = 0.0
-    tile_fluxes(:)%canopy%dcn = 0.0
-    tile_fluxes(:)%canopy%deet = 0.0
-    tile_fluxes(:)%canopy%dpet = 0.0
-    tile_fluxes(:)%canopy%dpet_e = 0.0
-    tile_fluxes(:)%canopy%daet = 0.0
-    tile_fluxes(:)%canopy%daet_e = 0.0
-    tile_fluxes(:)%canopy%daet_soil = 0.0
-    tile_fluxes(:)%canopy%daet_e_soil = 0.0
-    tile_fluxes(:)%canopy%daet_canop = 0.0
+    tile_fluxes(:)%canopy%dro          = 0.0
+    tile_fluxes(:)%canopy%dfleach      = 0.0
+    tile_fluxes(:)%canopy%dwbal        = 0.0
+    tile_fluxes(:)%canopy%econ         = 0.0
+    tile_fluxes(:)%canopy%drn          = 0.0
+    tile_fluxes(:)%canopy%drnn         = 0.0
+    tile_fluxes(:)%canopy%rnl          = 0.0
+    tile_fluxes(:)%canopy%dcn          = 0.0
+    tile_fluxes(:)%canopy%deet         = 0.0
+    tile_fluxes(:)%canopy%dpet         = 0.0
+    tile_fluxes(:)%canopy%dpet_e       = 0.0
+    tile_fluxes(:)%canopy%daet         = 0.0
+    tile_fluxes(:)%canopy%daet_e       = 0.0
+    tile_fluxes(:)%canopy%daet_soil    = 0.0
+    tile_fluxes(:)%canopy%daet_e_soil  = 0.0
+    tile_fluxes(:)%canopy%daet_canop   = 0.0
     tile_fluxes(:)%canopy%daet_e_canop = 0.0
-    tile_fluxes(:)%canopy%cpa = 0.0
-    tile_fluxes(:)%canopy%dtransp = 0.0
-    tile_fluxes(:)%canopy%dgs = 0.0
-    tile_fluxes(:)%canopy%dgc = 0.0
-    tile_fluxes(:)%canopy%dgpp = 0.0
-    tile_fluxes(:)%canopy%drd = 0.0
-    tile_fluxes(:)%canopy%assim = 0.0
-    tile_fluxes(:)%canopy%vcmax25 = 0.0
-    tile_fluxes(:)%canopy%jmax25 = 0.0
-    tile_fluxes(:)%canopy%vcmax = 0.0
-    tile_fluxes(:)%canopy%jmax = 0.0
-    tile_fluxes(:)%canopy%gs_accl = 0.0
-    tile_fluxes(:)%canopy%chi = 0.0
-    tile_fluxes(:)%canopy%iwue = 0.0
-    tile_fluxes(:)%canopy%ppfd_splash = 0.0
-    tile_fluxes(:)%canopy%ppfd_memory = 0.0
-    tile_fluxes(:)%canopy%dra = 0.0
+    tile_fluxes(:)%canopy%cpa          = 0.0
+    tile_fluxes(:)%canopy%dtransp      = 0.0
+    tile_fluxes(:)%canopy%dgs          = 0.0
+    tile_fluxes(:)%canopy%dgc          = 0.0
+    tile_fluxes(:)%canopy%dgpp         = 0.0
+    tile_fluxes(:)%canopy%drd          = 0.0
+    tile_fluxes(:)%canopy%assim        = 0.0
+    tile_fluxes(:)%canopy%vcmax25      = 0.0
+    tile_fluxes(:)%canopy%jmax25       = 0.0
+    tile_fluxes(:)%canopy%vcmax        = 0.0
+    tile_fluxes(:)%canopy%jmax         = 0.0
+    tile_fluxes(:)%canopy%gs_accl      = 0.0
+    tile_fluxes(:)%canopy%chi          = 0.0
+    tile_fluxes(:)%canopy%iwue         = 0.0
+    tile_fluxes(:)%canopy%ppfd_splash  = 0.0
+    tile_fluxes(:)%canopy%ppfd_memory  = 0.0
+    tile_fluxes(:)%canopy%dra          = 0.0
 
     ! soil
     do lu=1,nlu
@@ -588,7 +591,6 @@ contains
       ! derived types
       call ninit(tile_fluxes(lu)%soil%dnetmin)
       
-      call cinit(tile_fluxes(lu)%soil%drsoil)
       call cinit(tile_fluxes(lu)%soil%drhet)
 
       call orginit(tile_fluxes(lu)%canopy%dharv)
@@ -596,10 +598,10 @@ contains
       ! plant
       call init_plant_fluxes( tile_fluxes(lu)%plant(:) )
 
-      tile_fluxes(lu)%soil%dn2o = 0.0
-      tile_fluxes(lu)%soil%dngas = 0.0
-      tile_fluxes(lu)%soil%dnleach = 0.0
-      tile_fluxes(lu)%soil%dnloss = 0.0
+      tile_fluxes(lu)%soil%dnfix_free = 0.0
+      tile_fluxes(lu)%soil%dn2o       = 0.0
+      tile_fluxes(lu)%soil%dnleach    = 0.0
+      tile_fluxes(lu)%soil%dnloss     = 0.0
 
     end do
 
@@ -629,12 +631,13 @@ contains
     ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
     ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------    
+    use md_interface_pmodel, only: myinterface
 
     !----------------------------------------------------------------
     ! NON-PFT DEPENDENT PARAMETERS
     !----------------------------------------------------------------
     ! canopy light extinction coefficient for Beer's Law
-    params_canopy%kbeer = 0.5 ! hard-coded
+    params_canopy%kbeer = myinterface%params_calib%kbeer
 
   end subroutine getpar_modl_canopy
 
@@ -753,8 +756,8 @@ contains
         tile_fluxes(lu)%plant(pft)%chi * tile(lu)%plant(pft)%fpc_grid
       tile_fluxes(lu)%canopy%iwue = tile_fluxes(lu)%canopy%iwue + &
         tile_fluxes(lu)%plant(pft)%iwue * tile(lu)%plant(pft)%fpc_grid
-      tile_fluxes(lu)%canopy%actnv_unitiabs = tile_fluxes(lu)%canopy%actnv_unitiabs + &
-        tile_fluxes(lu)%plant(pft)%actnv_unitiabs * tile(lu)%plant(pft)%fpc_grid
+      ! tile_fluxes(lu)%canopy%actnv_unitiabs = tile_fluxes(lu)%canopy%actnv_unitiabs + &
+      !   tile_fluxes(lu)%plant(pft)%actnv_unitiabs * tile(lu)%plant(pft)%fpc_grid
 
       ! derived types canopy-level quantities as sums
       tile_fluxes(lu)%canopy%dnpp  = cplus( tile_fluxes(lu)%canopy%dnpp, tile_fluxes(lu)%plant(pft)%dnpp )
@@ -766,7 +769,7 @@ contains
       !----------------------------------------------------------------
       tile(lu)%canopy%nind = tile(lu)%canopy%nind + tile(lu)%plant(pft)%nind 
       tile(lu)%canopy%fpc_grid = tile(lu)%canopy%fpc_grid + tile(lu)%plant(pft)%fpc_grid 
-      tile(lu)%canopy%lai = tile(lu)%canopy%lai + tile(lu)%plant(pft)%lai_ind 
+      tile(lu)%canopy%lai = tile(lu)%plant(pft)%lai_ind 
       tile(lu)%canopy%fapar = tile(lu)%canopy%fapar + tile(lu)%plant(pft)%fapar_ind * tile(lu)%plant(pft)%fpc_grid
       tile(lu)%canopy%acrown = tile(lu)%canopy%acrown + tile(lu)%plant(pft)%acrown 
       tile(lu)%canopy%narea = tile(lu)%canopy%narea + tile(lu)%plant(pft)%narea 
@@ -790,90 +793,132 @@ contains
     ! populate function return variable
     !----------------------------------------------------------------
     ! if (nlu>1) stop 'think about nlu > 1'
+    ! lu = 1
+    ! out_biosphere%fapar   = tile(lu)%canopy%fapar
+    ! out_biosphere%gpp     = tile_fluxes(lu)%canopy%dgpp
+    ! out_biosphere%transp  = tile_fluxes(lu)%canopy%daet
+    ! out_biosphere%latenth = tile_fluxes(lu)%canopy%daet_e
+    ! out_biosphere%pet     = tile_fluxes(lu)%canopy%dpet
+    ! out_biosphere%vcmax   = tile_fluxes(lu)%canopy%vcmax
+    ! out_biosphere%jmax    = tile_fluxes(lu)%canopy%jmax
+    ! out_biosphere%vcmax25 = tile_fluxes(lu)%canopy%vcmax25
+    ! out_biosphere%jmax25  = tile_fluxes(lu)%canopy%jmax25
+    ! out_biosphere%gs_accl = tile_fluxes(lu)%canopy%gs_accl
+    ! out_biosphere%chi     = tile_fluxes(lu)%canopy%chi
+    ! out_biosphere%iwue    = tile_fluxes(lu)%canopy%iwue
+    ! out_biosphere%wscal   = tile(lu)%soil%phy%wscal
+    ! out_biosphere%tsoil   = tile(lu)%soil%phy%temp
+    ! out_biosphere%cleaf   = tile(lu)%canopy%pleaf%c%c12
+    ! out_biosphere%nleaf   = tile(lu)%canopy%pleaf%n%n14
+    ! out_biosphere%croot   = tile(lu)%canopy%proot%c%c12
+    ! out_biosphere%nroot   = tile(lu)%canopy%proot%n%n14
+    ! out_biosphere%clabl   = tile(lu)%canopy%plabl%c%c12
+    ! out_biosphere%nlabl   = tile(lu)%canopy%plabl%n%n14
+    ! out_biosphere%lai     = tile(lu)%canopy%lai
+    ! out_biosphere%ninorg  = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14
+    ! out_biosphere%pno3    = tile(lu)%soil%pno3%n14
+    ! out_biosphere%pnh4    = tile(lu)%soil%pnh4%n14
+    ! out_biosphere%en2o    = 0.0
+    ! out_biosphere%enleach = 0.0
+    ! out_biosphere%csoil   = tile(lu)%soil%psoil_sl%c%c12 + tile(lu)%soil%psoil_fs%c%c12
+    ! out_biosphere%nsoil   = tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%psoil_fs%n%n14 
+    ! out_biosphere%clitt   = tile(lu)%soil%plitt_af%c%c12 + tile(lu)%soil%plitt_as%c%c12 + tile(lu)%soil%plitt_bg%c%c12
+    ! out_biosphere%nlitt   = tile(lu)%soil%plitt_af%n%n14 + tile(lu)%soil%plitt_as%n%n14 + tile(lu)%soil%plitt_bg%n%n14
+    ! out_biosphere%nfix    = 0.0
+    ! out_biosphere%nup     = 0.0
+    ! out_biosphere%cex     = 0.0
+    ! out_biosphere%netmin  = tile_fluxes(lu)%soil%dnetmin%n14
+    ! out_biosphere%dcharv  = tile_fluxes(lu)%canopy%dharv%c%c12
+    ! out_biosphere%dnharv  = tile_fluxes(lu)%canopy%dharv%n%n14
+    ! out_biosphere%npp     = tile_fluxes(lu)%canopy%dnpp%c12
+    ! out_biosphere%drd     = tile_fluxes(lu)%canopy%drd
+
+    ! xxx debug: writing PFT-level to output
     lu = 1
-    out_biosphere%fapar   = tile(lu)%canopy%fapar
-    out_biosphere%gpp     = tile_fluxes(lu)%canopy%dgpp
+    pft = 1
+    out_biosphere%fapar   = tile(lu)%plant(pft)%fapar_ind
+    out_biosphere%gpp     = tile_fluxes(lu)%plant(pft)%dgpp
     out_biosphere%transp  = tile_fluxes(lu)%canopy%daet
     out_biosphere%latenth = tile_fluxes(lu)%canopy%daet_e
     out_biosphere%pet     = tile_fluxes(lu)%canopy%dpet
-    out_biosphere%vcmax   = tile_fluxes(lu)%canopy%vcmax
-    out_biosphere%jmax    = tile_fluxes(lu)%canopy%jmax
-    out_biosphere%vcmax25 = tile_fluxes(lu)%canopy%vcmax25
-    out_biosphere%jmax25  = tile_fluxes(lu)%canopy%jmax25
-    out_biosphere%gs_accl = tile_fluxes(lu)%canopy%gs_accl
-    out_biosphere%chi     = tile_fluxes(lu)%canopy%chi
-    out_biosphere%iwue    = tile_fluxes(lu)%canopy%iwue
-
+    out_biosphere%vcmax   = tile_fluxes(lu)%plant(pft)%vcmax
+    out_biosphere%jmax    = tile_fluxes(lu)%plant(pft)%jmax
+    out_biosphere%vcmax25 = tile_fluxes(lu)%plant(pft)%vcmax25
+    out_biosphere%jmax25  = tile_fluxes(lu)%plant(pft)%jmax25
+    out_biosphere%gs_accl = tile_fluxes(lu)%plant(pft)%gs_accl
+    out_biosphere%chi     = tile_fluxes(lu)%plant(pft)%chi
+    out_biosphere%iwue    = tile_fluxes(lu)%plant(pft)%iwue
     out_biosphere%wscal   = tile(lu)%soil%phy%wscal
     out_biosphere%tsoil   = tile(lu)%soil%phy%temp
-    
-    out_biosphere%cleaf   = tile(lu)%canopy%pleaf%c%c12
-    out_biosphere%nleaf   = tile(lu)%canopy%pleaf%n%n14
-    out_biosphere%croot   = tile(lu)%canopy%proot%c%c12
-    out_biosphere%nroot   = tile(lu)%canopy%proot%n%n14
-    out_biosphere%clabl   = tile(lu)%canopy%plabl%c%c12
-    out_biosphere%nlabl   = tile(lu)%canopy%plabl%n%n14
-
-    out_biosphere%lai     = tile(lu)%canopy%lai
+    out_biosphere%cleaf   = tile(lu)%plant(pft)%pleaf%c%c12
+    out_biosphere%nleaf   = tile(lu)%plant(pft)%pleaf%n%n14
+    out_biosphere%croot   = tile(lu)%plant(pft)%proot%c%c12
+    out_biosphere%nroot   = tile(lu)%plant(pft)%proot%n%n14
+    out_biosphere%clabl   = tile(lu)%plant(pft)%plabl%c%c12
+    out_biosphere%nlabl   = tile(lu)%plant(pft)%plabl%n%n14
+    out_biosphere%lai     = tile(lu)%plant(pft)%lai_ind
     out_biosphere%ninorg  = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14
     out_biosphere%pno3    = tile(lu)%soil%pno3%n14
     out_biosphere%pnh4    = tile(lu)%soil%pnh4%n14
-    out_biosphere%en2o    = 0.0
-    out_biosphere%enleach = 0.0
-
+    out_biosphere%dn2o    = tile_fluxes(lu)%soil%dn2o
+    out_biosphere%dnleach = tile_fluxes(lu)%soil%dnleach
     out_biosphere%csoil   = tile(lu)%soil%psoil_sl%c%c12 + tile(lu)%soil%psoil_fs%c%c12
     out_biosphere%nsoil   = tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%psoil_fs%n%n14 
     out_biosphere%clitt   = tile(lu)%soil%plitt_af%c%c12 + tile(lu)%soil%plitt_as%c%c12 + tile(lu)%soil%plitt_bg%c%c12
     out_biosphere%nlitt   = tile(lu)%soil%plitt_af%n%n14 + tile(lu)%soil%plitt_as%n%n14 + tile(lu)%soil%plitt_bg%n%n14
-    out_biosphere%nfix    = 0.0
-    out_biosphere%nup     = 0.0
-    out_biosphere%cex     = 0.0
+    out_biosphere%nfix    = tile_fluxes(lu)%plant(pft)%dnup_fix
+    out_biosphere%nup     = tile_fluxes(lu)%plant(pft)%dnup%n14
+    out_biosphere%cex     = tile_fluxes(lu)%plant(pft)%dcex
     out_biosphere%netmin  = tile_fluxes(lu)%soil%dnetmin%n14
+    out_biosphere%dcharv  = tile_fluxes(lu)%plant(pft)%dharv%c%c12
+    out_biosphere%dnharv  = tile_fluxes(lu)%plant(pft)%dharv%n%n14
+    out_biosphere%npp     = tile_fluxes(lu)%plant(pft)%dnpp%c12
+    out_biosphere%drd     = tile_fluxes(lu)%plant(pft)%drd    
+    out_biosphere%lma     = tile(lu)%plant(pft)%lma
+    out_biosphere%narea   = tile(lu)%plant(pft)%narea
+    out_biosphere%narea_v = tile(lu)%plant(pft)%narea_metabolic
+    out_biosphere%nloss   = tile_fluxes(lu)%soil%dnloss
+    out_biosphere%seedc   = tile(lu)%plant(pft)%pseed%c%c12
+    out_biosphere%seedn   = tile(lu)%plant(pft)%pseed%n%n14
 
-    out_biosphere%dcharv  = tile_fluxes(lu)%canopy%dharv%c%c12
-    out_biosphere%dnharv  = tile_fluxes(lu)%canopy%dharv%n%n14
-
-    out_biosphere%tmp     = 0.0
+    out_biosphere%x1      = tile(lu)%plant(pft)%pseed%n%n14
+    out_biosphere%x2      = tile(lu)%plant(pft)%pseed%n%n14
+    out_biosphere%x3      = tile(lu)%plant(pft)%pseed%n%n14
+    out_biosphere%x4      = tile(lu)%plant(pft)%pseed%n%n14
+    out_biosphere%x5      = tile(lu)%plant(pft)%pseed%n%n14
 
   end subroutine diag_daily
 
 
-  ! subroutine diag_annual( tile, tile_fluxes )
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Daily diagnostics
-  !   ! - sum over PFTs (plant) within LU (canopy) 
-  !   ! - iterative sum over days
-  !   !----------------------------------------------------------------
-  !   use md_params_core, only: eps
+  subroutine diag_annual( tile, tile_fluxes )
+    !////////////////////////////////////////////////////////////////
+    ! Annual diagnostics
+    ! Write to (experimental) files
+    !----------------------------------------------------------------
+    use md_interface_pmodel, only: myinterface
 
-  !   ! arguments
-  !   type(tile_type), dimension(nlu), intent(inout) :: tile
-  !   type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
+    ! arguments
+    type(tile_type), dimension(nlu), intent(in) :: tile
+    type(tile_fluxes_type), dimension(nlu), intent(in) :: tile_fluxes
 
-  !   ! local
-  !   integer :: lu, pft
+    ! local
+    integer :: lu, pft
 
-  !   !----------------------------------------------------------------
-  !   ! Store plant traits required for next year's allocation
-  !   !----------------------------------------------------------------
-  !   ! pft-level
-  !   !do pft = 1,npft
-  !     !tile(:)%plant(pft)%vcmax25 = tile_fluxes(:)%plant(pft)%avcmax25
-  !   !end do
+    !////////////////////////////////////////////////////////////////
+    ! Annual output to file
+    !----------------------------------------------------------------
+    lu = 1
+    pft = 1
 
-  !   ! ! for weighted-mean vcmax25 at canopy level
-  !   !tile_fluxes(lu)%canopy%avcmax25 = tile_fluxes(lu)%canopy%avcmax25 / tile_fluxes(lu)%canopy%agpp
-  !   ! ! for weighted-mean vcmax25 at pft-level
+    ! soil C
+    write(101, 999) myinterface%steering%outyear, (tile(lu)%soil%psoil_sl%c%c12 + tile(lu)%soil%psoil_fs%c%c12)
 
-  !   ! !----------------------------------------------------------------
-  !   ! ! Divide by annual total GPP for GPP-weighted sums 
-  !   ! !----------------------------------------------------------------
-  !   ! tile_fluxes(:)%canopy%avcmax25_mean = tile_fluxes(:)%canopy%avcmax25_mean / tile_fluxes(:)%canopy%agpp
+    ! soil N
+    write(102, 999) myinterface%steering%outyear, (tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%psoil_fs%n%n14)
 
-  !   ! do pft = 1,npft
-  !   !   tile_fluxes(:)%plant(pft)%avcmax25_mean = tile_fluxes(:)%plant(pft)%avcmax25_mean / tile_fluxes(:)%plant(pft)%agpp
-  !   ! end do
+    return
+    999 format (I4.4, F20.8)
 
-  ! end subroutine diag_annual
+  end subroutine diag_annual
 
 end module md_tile
