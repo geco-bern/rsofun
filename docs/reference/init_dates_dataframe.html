@@ -19,9 +19,9 @@ specified by argument 'freq'."><meta name="twitter:card" content="summary"><!-- 
 
       <div class="navbar-brand-container">
         <a class="external-link hidden-sm hidden-xs" href="https://computationales.ethz.ch/">
-          <img src="https://avatars.githubusercontent.com/u/93120344" id="hexlogo" alt="bluegreen labs"></a>
+          <img src="https://raw.githubusercontent.com/computationales/CES_template/main/ces_logo.png" id="hexlogo" alt="bluegreen labs"></a>
         <a class="external-link hidden-md hidden-lg" href="https://computationales.ethz.ch/">
-          <img src="https://avatars.githubusercontent.com/u/93120344" id="hexlogo" alt="bluegreen labs"></a>
+          <img src="https://raw.githubusercontent.com/computationales/CES_template/main/ces_logo.png" id="hexlogo" alt="bluegreen labs"></a>
         <a class="navbar-brand" href="../index.html">
            <i>rsofun <small>v4.3</small></i>
         </a>
@@ -81,16 +81,16 @@ specified by argument 'freq'.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">init_dates_dataframe</span><span class="op">(</span></span>
-<span>  <span class="va">yrstart</span>,</span>
-<span>  <span class="va">yrend</span>,</span>
-<span>  startmoy <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  startdoy <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  freq <span class="op">=</span> <span class="st">"days"</span>,</span>
-<span>  endmoy <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>  enddom <span class="op">=</span> <span class="fl">31</span>,</span>
-<span>  noleap <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">init_dates_dataframe</span><span class="op">(</span>
+  <span class="va">yrstart</span>,
+  <span class="va">yrend</span>,
+  startmoy <span class="op">=</span> <span class="fl">1</span>,
+  startdoy <span class="op">=</span> <span class="fl">1</span>,
+  freq <span class="op">=</span> <span class="st">"days"</span>,
+  endmoy <span class="op">=</span> <span class="fl">12</span>,
+  enddom <span class="op">=</span> <span class="fl">31</span>,
+  noleap <span class="op">=</span> <span class="cn">FALSE</span>
+<span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -98,55 +98,38 @@ specified by argument 'freq'.</p>
     <dl><dt>yrstart</dt>
 <dd><p>An integer defining the start year
 of dates covered by the dataframe</p></dd>
-
-
 <dt>yrend</dt>
 <dd><p>An integer defining the end year of dates
 covered by the dataframe</p></dd>
-
-
 <dt>startmoy</dt>
 <dd><p>An integer defining the start month of dates
 covered by the dataframe. Defaults to 1.</p></dd>
-
-
 <dt>startdoy</dt>
 <dd><p>An integer defining the start day-of-year of
 dates covered by the dataframe. Defaults to 1.</p></dd>
-
-
 <dt>freq</dt>
 <dd><p>A character string specifying the time steps of dates
 (in rows). Defaults to <code>"days"</code>. Any of <code>"days", "months"</code>.</p></dd>
-
-
 <dt>endmoy</dt>
 <dd><p>An integer defining the end month of dates covered
 by the dataframe. Defaults to 12.</p></dd>
-
-
 <dt>enddom</dt>
 <dd><p>An integer defining the end day-of-year of dates
 covered by the dataframe. Defaults to 31.</p></dd>
-
-
 <dt>noleap</dt>
 <dd><p>Whether leap years are ignored. Defaults to <code>FALSE</code>.</p></dd>
-
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>A tibble with dates.</p>
+    <p>A tibble with dates.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span> <span class="va">ddf</span> <span class="op">&lt;-</span> <span class="fu">init_dates_dataframe</span><span class="op">(</span> <span class="fl">2000</span>, <span class="fl">2003</span>, startmoy<span class="op">=</span><span class="fl">1</span>, startdoy<span class="op">=</span><span class="fl">1</span>,</span></span>
-<span class="r-in"><span>  freq<span class="op">=</span><span class="st">"days"</span>, endmoy<span class="op">=</span><span class="fl">12</span>, enddom<span class="op">=</span><span class="fl">31</span>, noleap<span class="op">=</span><span class="cn">FALSE</span> <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
+<span class="r-in"> <span class="va">ddf</span> <span class="op">&lt;-</span> <span class="fu">init_dates_dataframe</span><span class="op">(</span> <span class="fl">2000</span>, <span class="fl">2003</span>, startmoy<span class="op">=</span><span class="fl">1</span>, startdoy<span class="op">=</span><span class="fl">1</span>,</span>
+<span class="r-in">  freq<span class="op">=</span><span class="st">"days"</span>, endmoy<span class="op">=</span><span class="fl">12</span>, enddom<span class="op">=</span><span class="fl">31</span>, noleap<span class="op">=</span><span class="cn">FALSE</span> <span class="op">)</span></span>
+<span class="r-in"><span class="op">}</span></span>
 </code></pre></div>
     </div>
   </div>
@@ -166,7 +149,7 @@ covered by the dataframe. Defaults to 31.</p></dd>
                           <div class="icon fab fa-github"></div></a>
                         <a href="https://computationales.ethz.ch/" target="_blank" class="external-link">
                           <div class="icon fa fa-flask"></div></a>
-                        <a href="http://twitter.com/SteniBocker/" target="_blank" class="external-link">
+                        <a href="http://twitter.com/stineb/" target="_blank" class="external-link">
                           <div class="icon fab fa-twitter"></div></a>
                     </div>
                 </div>
@@ -199,4 +182,3 @@ covered by the dataframe. Defaults to 31.</p></dd>
   
 
   </body></html>
-
