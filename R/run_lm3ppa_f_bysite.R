@@ -34,9 +34,24 @@ run_lm3ppa_f_bysite <- function(
   # predefine variables for CRAN check compliance
   type <- NULL
   
-  ## re-define units and naming of forcing dataframe
-  forcing <- forcing[,1:13]
-
+  # select relevant columns of the forcing data
+  forcing <- forcing %>%
+    select(
+      'year',
+      'doy',
+      'hour',
+      'par',
+      'ppfd',
+      'temp',
+      'temp_soil',
+      'rh',
+      'prec',
+      'wind',
+      'patm',
+      'co2',
+      'swc'
+    )
+  
   params_soil <- params_soil %>%
     dplyr::select(-type)
 
@@ -52,8 +67,8 @@ run_lm3ppa_f_bysite <- function(
     code_method_photosynth = 1
   } else if (params_siml$method_photosynth == "pmodel"){
     code_method_photosynth = 2
-    dt_days <- forcing$DOY[2] - forcing$DOY[1]
-    dt_hours <- forcing$HOUR[2] - forcing$HOUR[1]
+    dt_days <- forcing$doy[2] - forcing$doy[1]
+    dt_hours <- forcing$hour[2] - forcing$hour[1]
     if (dt_days!=1 && dt_hours != 0){
       stop(
         "run_lm3ppa_f_bysite: time step must be daily 
@@ -94,16 +109,16 @@ run_lm3ppa_f_bysite <- function(
     # to check validity
     
     check_vars <- c(
-      "PAR",
-      "Swdown",
-      "TEMP",
-      "SoilT",
-      "RH",
-      "RAIN",
-      "WIND",
-      "PRESSURE",
-      "aCO2_AW",
-      "SWC"
+      "par",
+      "ppfd",
+      "temp",
+      "temp_soil",
+      "rh",
+      "prec",
+      "wind",
+      "patm",
+      "co2",
+      "swc"
     )
     
     data_integrity <- lapply(
@@ -204,7 +219,8 @@ run_lm3ppa_f_bysite <- function(
     # daily_tile
     output_daily_tile <- as.data.frame(lm3out[[2]], stringAsFactor = FALSE)
     
-    colnames(output_daily_tile) <- c("year", "doy", "Tc",
+    colnames(output_daily_tile) <- c(
+          "year", "doy", "Tc",
           "Prcp", "totWs", "Trsp",
           "Evap", "Runoff", "ws1",
           "ws2", "ws3", "LAI",

@@ -258,7 +258,7 @@ run_pmodel_f_bysite <- function(
       stats::setNames(
         c("fapar", "gpp", "transp", "latenth", "pet", "vcmax",
           "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", 
-          "iwue", "snow")
+          "iwue", "rd", "snow")
         ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -268,7 +268,7 @@ run_pmodel_f_bysite <- function(
                   fapar = NA, gpp = NA, transp = NA, latenth = NA, 
                   pet = NA, vcmax = NA, jmax = NA, vcmax25 = NA, 
                   jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, 
-                  iwue = NA, snow = NA)
+                  iwue = NA, rd = NA, snow = NA)
   }
     
   return(out)

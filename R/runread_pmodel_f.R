@@ -96,11 +96,14 @@ runread_pmodel_f <- function(
     
     df_out <- drivers %>% 
       dplyr::mutate(
-        data = purrr::pmap(.,
-                           run_pmodel_f_bysite,
-                           par = par,
-                           makecheck = makecheck
-        )) %>% 
+        data = list(
+          purrr::pmap(.,
+                    run_pmodel_f_bysite,
+                    par = par,
+                    makecheck = makecheck
+          )
+        )
+      ) %>% 
       dplyr::select(sitename, site_info, data)
   }
   

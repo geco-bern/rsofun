@@ -1,4 +1,5 @@
 context("test models and their parameters")
+set.seed(10)
 
 test_that("p-model run check", {
   skip_on_cran()

@@ -1,4 +1,4 @@
-[![R build status](https://github.com/bluegreen-labs/rsofun/workflows/R-CMD-check/badge.svg)](https://github.com/bluegreen-labs/rsofun/actions)
+[![R build status](https://github.com/computationales/rsofun/workflows/R-CMD-check/badge.svg)](https://github.com/computationales/rsofun/actions)
 [![codecov](https://codecov.io/gh/bluegreen-labs/rsofun/branch/master/graph/badge.svg?token=5RJtJmDVV7)](https://codecov.io/gh/bluegreen-labs/rsofun)
 
 # rsofun
@@ -14,7 +14,7 @@ A modelling framework for site-scale simulations of ecosystem processes, impleme
 To install and load the rsofun package using the latest release run the following command in your R terminal: 
 ```r
 if(!require(devtools)){install.packages(devtools)}
-devtools::install_github("stineb/rsofun")
+devtools::install_github("computationales/rsofun@v4.3")
 library(rsofun)
 ```
 ## Example

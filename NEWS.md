@@ -10,3 +10,15 @@
 
 * Canopy transfer solved for LM3-PPA with P-model
 * Bugfixes
+
+
+### v4.3
+
+* Consistent variable names p-model / lm3-ppa
+* optimization stability BayesianTools
+* documentation
+* Bugfixes
+
+### v4.4
+
+* Bugfix on input data type p-model
