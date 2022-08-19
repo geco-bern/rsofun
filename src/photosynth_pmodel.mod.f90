@@ -950,10 +950,10 @@ contains
 
   function f_dehardening(gdd, kphio_par_c, kphio_par_d) result(ftemp)
     !////////////////////////////////////////////////////////////////
-    ! Hardening function of instantaneous temperature
+    ! De-hardening function of temperature sum (cumulative degree days)
     !----------------------------------------------------------------
     ! arguments
-    real, intent(in)    :: gdd           ! cumulative degree days (deg C)
+    real, intent(in)    :: gdd            ! cumulative degree days (deg C)
     real, intent(in)    :: kphio_par_c    ! unitless shape parameter for dehardening function
     real, intent(in)    :: kphio_par_d    ! unitless shape parameter for dehardening function
 

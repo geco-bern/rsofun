@@ -141,6 +141,7 @@ calib_sofun <- function(
           names = names(settings$par)
         )   
     }
+
     
     # set bt control parameters
     bt_settings <- settings$control$settings

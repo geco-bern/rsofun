@@ -18,9 +18,9 @@ Runs the P-model and loads output in once."><meta name="twitter:card" content="s
 
       <div class="navbar-brand-container">
         <a class="external-link hidden-sm hidden-xs" href="https://computationales.ethz.ch/">
-          <img src="https://avatars.githubusercontent.com/u/93120344" id="hexlogo" alt="bluegreen labs"></a>
+          <img src="https://raw.githubusercontent.com/computationales/CES_template/main/ces_logo.png" id="hexlogo" alt="bluegreen labs"></a>
         <a class="external-link hidden-md hidden-lg" href="https://computationales.ethz.ch/">
-          <img src="https://avatars.githubusercontent.com/u/93120344" id="hexlogo" alt="bluegreen labs"></a>
+          <img src="https://raw.githubusercontent.com/computationales/CES_template/main/ces_logo.png" id="hexlogo" alt="bluegreen labs"></a>
         <a class="navbar-brand" href="../index.html">
            <i>rsofun <small>v4.3</small></i>
         </a>
@@ -79,9 +79,9 @@ Runs the P-model and loads output in once."><meta name="twitter:card" content="s
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">runread_pmodel_f</span><span class="op">(</span><span class="va">drivers</span>, <span class="va">par</span>, makecheck <span class="op">=</span> <span class="cn">TRUE</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span>, ncores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">runread_pmodel_f</span><span class="op">(</span><span class="va">drivers</span>, <span class="va">par</span>, makecheck <span class="op">=</span> <span class="cn">TRUE</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span>, ncores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">runread_pmodel_f</span><span class="op">(</span><span class="va">drivers</span>, <span class="va">par</span>, makecheck <span class="op">=</span> <span class="cn">TRUE</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span>, ncores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>
+
+<span class="fu">runread_pmodel_f</span><span class="op">(</span><span class="va">drivers</span>, <span class="va">par</span>, makecheck <span class="op">=</span> <span class="cn">TRUE</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span>, ncores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -89,61 +89,44 @@ Runs the P-model and loads output in once."><meta name="twitter:card" content="s
     <dl><dt>drivers</dt>
 <dd><p>A nested data frame with one row for each site and columns
 named according to the arguments of function `runread_pmodel_f_bysite`</p></dd>
-
-
 <dt>par</dt>
 <dd><p>A named list of model parameters</p></dd>
-
-
 <dt>makecheck</dt>
 <dd><p>A logical specifying whether checks are performed to verify
 forcings.</p></dd>
-
-
 <dt>parallel</dt>
 <dd><p>A logical specifying whether simulations are to be
 parallelised (sending data from a certain number of sites to each core).
 Defaults to <code>FALSE</code>.</p></dd>
-
-
 <dt>ncores</dt>
 <dd><p>An integer specifying the number of cores used for parallel
 computing (default = 2).</p></dd>
-
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>A data frame (tibble) with one row for each site and outputs stored
+    <p>A data frame (tibble) with one row for each site and outputs stored
+ in the nested column <code>data</code>A data frame (tibble) with one row for each site and outputs stored
  in the nested column <code>data</code></p>
-
-
-
-<p>A data frame (tibble) with one row for each site and outputs stored
- in the nested column <code>data</code></p>
-
-
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu">runread_pmodel_f</span><span class="op">(</span> </span></span>
-<span class="r-in"><span>   <span class="va">drivers</span>,</span></span>
-<span class="r-in"><span>   <span class="va">par</span>,</span></span>
-<span class="r-in"><span>   makecheck <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>   parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
-<span class="r-in"><span>   ncores <span class="op">=</span> <span class="fl">2</span> <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu">runread_pmodel_f</span><span class="op">(</span> </span></span>
-<span class="r-in"><span>   <span class="va">drivers</span>,</span></span>
-<span class="r-in"><span>   <span class="va">par</span>,</span></span>
-<span class="r-in"><span>   makecheck <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>   parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
-<span class="r-in"><span>   ncores <span class="op">=</span> <span class="fl">2</span> <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
+<span class="r-in">  <span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu">runread_pmodel_f</span><span class="op">(</span> </span>
+<span class="r-in">   <span class="va">drivers</span>,</span>
+<span class="r-in">   <span class="va">par</span>,</span>
+<span class="r-in">   makecheck <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span class="r-in">   parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span class="r-in">   ncores <span class="op">=</span> <span class="fl">2</span> <span class="op">)</span></span>
+<span class="r-in"><span class="op">}</span></span>
+<span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
+<span class="r-in">  <span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu">runread_pmodel_f</span><span class="op">(</span> </span>
+<span class="r-in">   <span class="va">drivers</span>,</span>
+<span class="r-in">   <span class="va">par</span>,</span>
+<span class="r-in">   makecheck <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span class="r-in">   parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span class="r-in">   ncores <span class="op">=</span> <span class="fl">2</span> <span class="op">)</span></span>
+<span class="r-in"><span class="op">}</span></span>
 </code></pre></div>
     </div>
   </div>
@@ -163,7 +146,7 @@ computing (default = 2).</p></dd>
                           <div class="icon fab fa-github"></div></a>
                         <a href="https://computationales.ethz.ch/" target="_blank" class="external-link">
                           <div class="icon fa fa-flask"></div></a>
-                        <a href="http://twitter.com/SteniBocker/" target="_blank" class="external-link">
+                        <a href="http://twitter.com/stineb/" target="_blank" class="external-link">
                           <div class="icon fab fa-twitter"></div></a>
                     </div>
                 </div>
@@ -196,4 +179,3 @@ computing (default = 2).</p></dd>
   
 
   </body></html>
-
