@@ -199,6 +199,9 @@ contains
     integer :: readyear_idx
     integer :: idx_start, idx_end
 
+    ! xxx debug
+    integer :: doy
+
     readyear_idx = forcingyear - firstyeartrend + 1
     idx_start = (readyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
@@ -206,6 +209,14 @@ contains
     out_landuse(:)%dfharv = real(forcing(idx_start:idx_end, 14))
     out_landuse(:)%dno3   = real(forcing(idx_start:idx_end, 15))
     out_landuse(:)%dnh4   = real(forcing(idx_start:idx_end, 16))
+
+    ! xxx debug
+    print*,'Checking whether harvested fraction read...'
+    do doy = 1, ndayyear
+      if (out_landuse(doy)%dfharv > 0) then
+        print*,'doy, harvested fraction: ', doy, out_landuse(doy)%dfharv
+      end if
+    end do
 
   end function getlanduse  
 

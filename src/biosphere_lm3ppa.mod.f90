@@ -144,6 +144,9 @@ contains
         
         ! Produce new biomass from 'carbon_gain' (is zero afterwards) and continous biomass turnover
         call vegn_growth_EW( vegn )
+
+        ! Disturbance implemented as removal (harvesting) of aboveground biomass
+        call disturb( vegn, doy )
         
         ! get daily outputs
         ! call getout_daily( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )

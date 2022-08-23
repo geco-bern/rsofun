@@ -6,6 +6,9 @@ library(ggplot2)
 ##==============================================================================
 ## Gs-Leuning photosynthesis
 ##------------------------------------------------------------------------------
+# make drivers compatible for current version
+lm3ppa_gs_leuning_drivers$forcing[[1]] <- lm3ppa_gs_leuning_drivers$forcing[[1]] %>% 
+  mutate(harv = 0, nox = 0, nhy = 0)
 
 ## ----eval = FALSE---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # run the model
@@ -37,6 +40,10 @@ lm3ppa_gs_leuning_output %>%
 ##==============================================================================
 ## P-model photosynthesis
 ##------------------------------------------------------------------------------
+# make drivers compatible for current version
+lm3ppa_p_model_drivers$forcing[[1]] <- lm3ppa_p_model_drivers$forcing[[1]] %>% 
+  mutate(harv = 0, nox = 0, nhy = 0)
+
 # run the model
 lm3ppa_p_model_output <- runread_lm3ppa_f(
      lm3ppa_p_model_drivers,

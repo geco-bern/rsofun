@@ -9,11 +9,11 @@ module md_vegetation_lm3ppa
 
   ! public subroutines
   public :: initialize_cohort_from_biomass, initialize_vegn_tile
-  public :: vegn_CNW_budget, vegn_phenology, vegn_growth_EW,update_layer_LAI ! , vegn_CNW_budget_daily
+  public :: vegn_CNW_budget, vegn_phenology, vegn_growth_EW, update_layer_LAI ! , vegn_CNW_budget_daily
   public :: vegn_reproduction, vegn_annualLAImax_update !, annual_calls
   public :: vegn_nat_mortality, vegn_species_switch !, vegn_starvation
   public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
-  public :: vegn_annual_starvation,Zero_diagnostics
+  public :: vegn_annual_starvation, Zero_diagnostics, disturb
 
 contains
 
@@ -686,7 +686,60 @@ contains
   end subroutine Seasonal_fall
 
 
-  subroutine vegn_nat_mortality (vegn)
+  subroutine disturb( vegn, doy )
+    !////////////////////////////////////////////////////////////////
+    ! Applies disturbance/harvesting on the specified day-of-year
+    ! Follows vegn_nat_mortality()
+    !---------------------------------------------------------------
+    use md_interface_lm3ppa, only: myinterface
+
+    ! arguments    
+    type(vegn_tile_type), intent(inout) :: vegn
+    integer, intent(in) :: doy
+
+    ! local vars
+    type(cohort_type), pointer :: cc => null()
+
+    ! integer :: idx(vegn%n_cohorts)
+    real :: deathrate
+    real :: deadtrees ! number of trees that died over the time step
+    integer :: i
+
+    deathrate = myinterface%landuse(doy)%dfharv
+
+    if (deathrate > 0.0) then
+
+      print*,'now killing trees, doy =', doy
+
+      do i = 1, vegn%n_cohorts
+        cc => vegn%cohorts(i)
+        associate ( sp => spdata(cc%species))
+
+        ! Take the same "deathrate" for all cohorts
+        deadtrees = cc%nindivs * deathrate
+
+        ! record mortality rates at cohort level
+        cc%deathratevalue = deathrate
+
+        ! Carbon and Nitrogen from dead plants to soil pools
+        call plant2soil( vegn, cc, deadtrees )
+
+        ! Update plant density
+        cc%nindivs = cc%nindivs - deadtrees
+        ! vegn%n_deadtrees = deadtrees
+        ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12)
+        end associate
+      enddo
+
+      ! Remove the cohorts with very few individuals
+      call kill_lowdensity_cohorts( vegn )
+
+    end if
+
+  end subroutine disturb
+
+
+  subroutine vegn_nat_mortality( vegn )
     !////////////////////////////////////////////////////////////////
     ! Determines mortality and updates tile
     !---------------------------------------------------------------
@@ -884,6 +937,7 @@ contains
     endif
 
   end subroutine vegn_nat_mortality
+
 
   subroutine vegn_annual_starvation( vegn ) ! Annual
     !////////////////////////////////////////////////////////////////

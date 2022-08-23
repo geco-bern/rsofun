@@ -49,7 +49,10 @@ run_lm3ppa_f_bysite <- function(
       'wind',
       'patm',
       'co2',
-      'swc'
+      'swc',
+      'harv',
+      'nox',
+      'nhy'
     )
   
   params_soil <- params_soil %>%
@@ -118,7 +121,10 @@ run_lm3ppa_f_bysite <- function(
       "wind",
       "patm",
       "co2",
-      "swc"
+      "swc",
+      'harv',
+      'nox',
+      'nhy'
     )
     
     data_integrity <- lapply(
