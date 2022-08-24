@@ -80,7 +80,7 @@ contains
     enddo ! all cohorts
     
     ! update soil carbon
-    call SOMdecomposition( vegn, forcing%tsoil, theta )
+    call SOMdecomposition( vegn, forcing%tsoil, theta, forcing%radiation )
     
     ! Nitrogen uptake
     call vegn_N_uptake( vegn, forcing%tsoil )
@@ -721,7 +721,7 @@ contains
         cc%deathratevalue = deathrate
 
         ! Carbon and Nitrogen from dead plants to soil pools
-        call plant2soil( vegn, cc, deadtrees )        ! XXX disturb: comment this out if biomass is to be exported from system (not added to soil).
+        ! call plant2soil( vegn, cc, deadtrees )        ! xxx disturb: comment this out if biomass is to be exported from system (not added to soil).
 
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
@@ -1568,7 +1568,7 @@ contains
   end subroutine vegn_N_uptake
 
 
-  subroutine SOMdecomposition(vegn, tsoil, thetaS)
+  subroutine SOMdecomposition( vegn, tsoil, thetaS, radiation )
     !//////////////////////////////////////////////////////////////////////
     ! Soil organic matter decomposition and N mineralization
     !
@@ -1578,9 +1578,12 @@ contains
     ! it's a new decomposition model with coupled C & N pools and variable 
     ! carbon use efficiency 
     !----------------------------------------------------------------------
+    ! arguments
     type(vegn_tile_type), intent(inout) :: vegn
     real                , intent(in)    :: tsoil ! soil temperature, deg K 
     real                , intent(in)    :: thetaS
+    real                , intent(in)    :: radiation  ! xxx disturb: added argument
+
     real :: CUE0=0.4  ! default microbial CUE
     real :: phoMicrobial = 2.5 ! turnover rate of microbes (yr-1)
     real :: CUEfast,CUEslow
@@ -1596,14 +1599,26 @@ contains
     real :: CNfast, CNslow
     real :: A  ! decomp rate reduction due to moisture and temperature    
 
+    ! xxx disturb
+    real :: kappa
+    real :: Rsoilabs
+    real :: delta_tair
+
     runoff = vegn%runoff  !* myinterface%dt_fast_yr !kgH2O m-2 yr-1 ->kgH2O m-2/time step, weng 2017-10-15
   
     ! CN ratios of soil C pools
     CNfast = vegn%psoil_fs%c%c12/vegn%psoil_fs%n%n14
     CNslow = vegn%psoil_sl%c%c12/vegn%psoil_sl%n%n14
 
+    ! xxx disturb:
+    ! add temperature as a function of the radiation reaching the ground (+5 deg C at 250 mol W m-2)
+    kappa = 0.75  ! same as in soil_lm3ppa.mod.f90
+    Rsoilabs = radiation * exp(-kappa * vegn%LAI)
+    delta_tair = 5.0 * Rsoilabs / 250.0
+    print*,'soil decomposition: delta_tair ', delta_tair
+
     ! C decomposition
-    A = A_function(tsoil, thetaS)
+    A = A_function(tsoil + delta_tair, thetaS)   ! xxx disturb: added delta_tair
     micr_C_loss = vegn%pmicr%c%c12 * (1.0 - exp(-A*phoMicrobial* myinterface%dt_fast_yr))
     fast_L_loss = vegn%psoil_fs%c%c12 * (1.0 - exp(-A*K1          * myinterface%dt_fast_yr))
     slow_L_loss = vegn%psoil_sl%c%c12* (1.0 - exp(-A*K2          * myinterface%dt_fast_yr))

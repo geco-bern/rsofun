@@ -114,6 +114,9 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
   real    :: WaterBudgetL(max_lev)
   integer :: i,j
 
+  ! xxx disturb
+  real :: delta_tair
+
   ! Soil water conditions
   !call water_supply_layer(forcing, vegn)
 
@@ -144,15 +147,19 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
 
 ! print*, forcing%radiation, kappa, vegn%LAI    ! xxx debug
 
-    ! XXX LAI should be updated before using it here.
-    print*,'TOC radiation, LAI, ground radiation', forcing%radiation, vegn%LAI, Rsoilabs
+    ! ! XXX LAI should be updated before using it here.
+    ! print*,'TOC radiation, LAI, ground radiation', forcing%radiation, vegn%LAI, Rsoilabs
 
+      Rsoilabs = forcing%radiation * exp(-kappa * vegn%LAI)
 
-      Rsoilabs = forcing%radiation * exp(-kappa*vegn%LAI)
+      ! xxx disturb:
+      ! add temperature as a function of the radiation reaching the ground (+5 deg C at 250 mol W m-2)
+      delta_tair = 5.0 * Rsoilabs / 250.0
+      TairK = forcing%Tair + delta_tair
+      Tair  = forcing%Tair - 273.16 + delta_tair
+      print*,'soil evaporation: delta_tair ', delta_tair
 
       Hgrownd = 0.0
-      TairK = forcing%Tair
-      Tair  = forcing%Tair - 273.16
       rhocp = cp * 1.0e3 * forcing%P_air * kMa * 1e-3 / (kR * TairK)
       H2OLv = H2oLv0 - 2.365e3 * Tair
       RH = forcing%RH  ! Check forcing's unit of humidity
