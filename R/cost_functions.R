@@ -615,8 +615,7 @@ likelihood_pmodel <- function(
   return(logpost)
 }
 
-likelihood <- function (predicted, observed, sd) 
-{
+likelihood <- function(predicted, observed, sd){
   notNAvalues = !is.na(observed)
   return(
     sum(
