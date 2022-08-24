@@ -223,6 +223,7 @@ contains
     call vegn_tissue_turnover( vegn )
 
     ! Allocate C_gain to tissues
+    vegn%LAI = 0.0    ! added here, otherwise LAI is the sum of current and new, Beni 24 Aug 2022
     do i = 1, vegn%n_cohorts   
       cc => vegn%cohorts(i)
 
@@ -274,7 +275,7 @@ contains
         N_demand = dBL/sp%CNleaf0 + dBR/sp%CNroot0 + dSeed/sp%CNseed0 + dBSW/sp%CNsw0
 
         !==================================
-        ! Turn off N effects on allocation  (for running the simulations)
+        ! Turn off N effects on allocation  (for running the simulations) XXX nlimit
         !==================================
         
         ! IF(cc%N_growth < N_demand)THEN
@@ -709,8 +710,6 @@ contains
 
     if (deathrate > 0.0) then
 
-      print*,'now killing trees, doy =', doy
-
       do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species))
@@ -722,7 +721,7 @@ contains
         cc%deathratevalue = deathrate
 
         ! Carbon and Nitrogen from dead plants to soil pools
-        call plant2soil( vegn, cc, deadtrees )
+        call plant2soil( vegn, cc, deadtrees )        ! XXX disturb: comment this out if biomass is to be exported from system (not added to soil).
 
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
@@ -986,9 +985,10 @@ contains
   end subroutine vegn_annual_starvation
 
 
-  subroutine plant2soil(vegn,cc,deadtrees)
+  subroutine plant2soil( vegn, cc, deadtrees )
     !////////////////////////////////////////////////////////////////
-    ! Transfer of deat biomass to litter pools
+    ! Transfer of dead biomass to litter pools. Reduction of number
+    ! of individuals per cohort must be done outside.
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
@@ -1009,7 +1009,7 @@ contains
     lossN_coarse = deadtrees * (cc%pwood%n%n14 + cc%psapw%n%n14 + cc%pleaf%n%n14 - cc%leafarea*sp%LNbase)
     lossN_fine   = deadtrees * (cc%proot%n%n14 + cc%pseed%n%n14 + cc%plabl%n%n14 + cc%leafarea*sp%LNbase)
 
-    vegn%psoil_fs%c%c12  = vegn%psoil_fs%c%c12 + fsc_fine *loss_fine + fsc_wood *loss_coarse
+    vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 + fsc_fine *loss_fine + fsc_wood *loss_coarse
     vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 + (1.0-fsc_fine)*loss_fine + (1.0-fsc_wood)*loss_coarse
 
     vegn%psoil_fs%n%n14 = vegn%psoil_fs%n%n14 + fsc_fine *lossN_fine + fsc_wood *lossN_coarse
@@ -1023,6 +1023,7 @@ contains
     cc%n_deadtrees   = deadtrees
     cc%c_deadtrees   = loss_coarse + loss_fine 
     cc%m_turnover    = cc%m_turnover + loss_coarse + loss_fine
+
     ! cc%c_deadtrees   = deadtrees * (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12) 
     
     ! vegn%n_deadtrees   = vegn%n_deadtrees + deadtrees

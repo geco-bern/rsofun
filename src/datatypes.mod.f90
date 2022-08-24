@@ -1032,7 +1032,7 @@ contains
     ! Tile level, daily
     call summarize_tile(vegn)
 
-      if (.not. myinterface%steering%spinup) then 
+    if (.not. myinterface%steering%spinup) then 
       out_daily_tile%year      = iyears
       out_daily_tile%doy       = idoy
       out_daily_tile%Tc        = vegn%tc_daily

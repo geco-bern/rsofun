@@ -210,15 +210,7 @@ contains
     out_landuse(:)%dno3   = real(forcing(idx_start:idx_end, 15))
     out_landuse(:)%dnh4   = real(forcing(idx_start:idx_end, 16))
 
-    ! xxx debug
-    print*,'Checking whether harvested fraction read...'
-    do doy = 1, ndayyear
-      if (out_landuse(doy)%dfharv > 0) then
-        print*,'doy, harvested fraction: ', doy, out_landuse(doy)%dfharv
-      end if
-    end do
-
-  end function getlanduse  
+  end function getlanduse
 
 
   function calc_vpd_rh( rh, tc ) result( vpd )

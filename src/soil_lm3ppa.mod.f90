@@ -144,13 +144,11 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
 
 ! print*, forcing%radiation, kappa, vegn%LAI    ! xxx debug
 
-      Rsoilabs = forcing%radiation * exp(-kappa*vegn%LAI)
+    ! XXX LAI should be updated before using it here.
+    print*,'TOC radiation, LAI, ground radiation', forcing%radiation, vegn%LAI, Rsoilabs
 
-! print*,'forcing%radiation', forcing%radiation
-! print*,'kappa', kappa
-! print*,'vegn%LAI', vegn%LAI
-! print*,'Rsoilabs', Rsoilabs
-! print*, 'transp', transp
+
+      Rsoilabs = forcing%radiation * exp(-kappa*vegn%LAI)
 
       Hgrownd = 0.0
       TairK = forcing%Tair
