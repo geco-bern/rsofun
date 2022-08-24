@@ -223,6 +223,7 @@ contains
     call vegn_tissue_turnover( vegn )
 
     ! Allocate C_gain to tissues
+    vegn%LAI = 0.0    ! added here, otherwise LAI is the sum of current and new, Beni 24 Aug 2022
     do i = 1, vegn%n_cohorts   
       cc => vegn%cohorts(i)
 
