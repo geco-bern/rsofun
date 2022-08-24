@@ -207,31 +207,61 @@ run_lm3ppa_f_bysite <- function(
       forcing          = as.matrix(forcing)
       )
     
+    # If simulation is very long, output gets massive.
+    # E.g., In a 3000 years-simulation 'lm3out' is 11.5 GB.
+    # In such cases (here, more than 5 GB), ignore hourly and daily outputs at tile and cohort levels
+    size_of_object_gb <- as.numeric(
+      str_remove(
+        format(
+          object.size(lm3out), 
+          units = "GB"
+        ),
+        " Gb"
+      )
+    )
+    
+    if (size_of_object_gb >= 5){
+      warning(
+        sprintf("Warning: Excessive size of output object (%s) for %s. Hourly and daily outputs at tile and cohort levels are not returned.",
+                format(
+                  object.size(lm3out), 
+                  units = "GB"
+                ), 
+                sitename))
+    }
+    
     #---- Single level output, one matrix ----
     # hourly
-    output_hourly_tile <- as.data.frame(lm3out[[1]], stringAsFactor = FALSE)
-    colnames(output_hourly_tile) <- c("year", "doy", "hour",
-          "rad", "Tair", "Prcp",
-          "GPP", "Resp", "Transp",
-          "Evap", "Runoff", "Soilwater",
-          "wcl", "FLDCAP", "WILTPT")
+    if (size_of_object_gb < 5){
+      output_hourly_tile <- as.data.frame(lm3out[[1]], stringAsFactor = FALSE)
+      colnames(output_hourly_tile) <- c("year", "doy", "hour",
+                                        "rad", "Tair", "Prcp",
+                                        "GPP", "Resp", "Transp",
+                                        "Evap", "Runoff", "Soilwater",
+                                        "wcl", "FLDCAP", "WILTPT")
+    } else {
+      output_hourly_tile <- NA
+    }
     
     # daily_tile
-    output_daily_tile <- as.data.frame(lm3out[[2]], stringAsFactor = FALSE)
-    
-    colnames(output_daily_tile) <- c(
-          "year", "doy", "Tc",
-          "Prcp", "totWs", "Trsp",
-          "Evap", "Runoff", "ws1",
-          "ws2", "ws3", "LAI",
-          "GPP", "Rauto", "Rh",
-          "NSC", "seedC", "leafC",
-          "rootC", "SW_C", "HW_C",
-          "NSN", "seedN", "leafN",
-          "rootN", "SW_N", "HW_N",
-          "McrbC", "fastSOM", "slowSOM",
-          "McrbN", "fastSoilN", "slowSoilN",
-          "mineralN", "N_uptk")
+    if (size_of_object_gb < 5){
+      output_daily_tile <- as.data.frame(lm3out[[2]], stringAsFactor = FALSE)
+      colnames(output_daily_tile) <- c(
+        "year", "doy", "Tc",
+        "Prcp", "totWs", "Trsp",
+        "Evap", "Runoff", "ws1",
+        "ws2", "ws3", "LAI",
+        "GPP", "Rauto", "Rh",
+        "NSC", "seedC", "leafC",
+        "rootC", "SW_C", "HW_C",
+        "NSN", "seedN", "leafN",
+        "rootN", "SW_N", "HW_N",
+        "McrbC", "fastSOM", "slowSOM",
+        "McrbN", "fastSoilN", "slowSoilN",
+        "mineralN", "N_uptk")
+    } else {
+      output_daily_tile <- NA
+    }
     
     # annual tile
     output_annual_tile <- as.data.frame(lm3out[[30]], stringAsFactor = FALSE)
@@ -266,38 +296,42 @@ run_lm3ppa_f_bysite <- function(
     # Cohort indices can be formatted using a matrix of the same
     # dimension as the data, enumerated by column and unraveled
     # as vector()
-    
+
     #---- daily cohorts ----
-    daily_values <- c(
-      "year","doy","hour",
-      "cID", "PFT", "layer",
-      "density","f_layer", "LAI",
-      "gpp","resp","transp",
-      "NPPleaf","NPProot", "NPPwood", "NSC",
-      "seedC", "leafC", "rootC",
-      "SW_C", "HW_C", "NSN",
-      "seedN", "leafN", "rootN",
-      "SW_N", "HW_N"
-    )
-    output_daily_cohorts <- lapply(1:length(daily_values), function(x){
-      loc <- 2 + x
-      v <- data.frame(
-        as.vector(lm3out[[loc]]),
-        stringsAsFactors = FALSE)
-      names(v) <- daily_values[x]
-      return(v)
-    })
-    
-    output_daily_cohorts <- do.call("cbind", output_daily_cohorts)
-    
-    cohort <- sort(rep(1:ncol(lm3out[[3]]),nrow(lm3out[[3]])))
-    output_daily_cohorts <- cbind(cohort, output_daily_cohorts)
-    
-    # drop rows (cohorts) with no values
-    output_daily_cohorts$year[output_daily_cohorts$year == -9999 |
-                              output_daily_cohorts$year == 0] <- NA
-    output_daily_cohorts <- 
-      output_daily_cohorts[!is.na(output_daily_cohorts$year),]
+    if (size_of_object_gb < 5){
+      daily_values <- c(
+        "year","doy","hour",
+        "cID", "PFT", "layer",
+        "density","f_layer", "LAI",
+        "gpp","resp","transp",
+        "NPPleaf","NPProot", "NPPwood", "NSC",
+        "seedC", "leafC", "rootC",
+        "SW_C", "HW_C", "NSN",
+        "seedN", "leafN", "rootN",
+        "SW_N", "HW_N"
+      )
+      output_daily_cohorts <- lapply(1:length(daily_values), function(x){
+        loc <- 2 + x
+        v <- data.frame(
+          as.vector(lm3out[[loc]]),
+          stringsAsFactors = FALSE)
+        names(v) <- daily_values[x]
+        return(v)
+      })
+      
+      output_daily_cohorts <- do.call("cbind", output_daily_cohorts)
+      
+      cohort <- sort(rep(1:ncol(lm3out[[3]]),nrow(lm3out[[3]])))
+      output_daily_cohorts <- cbind(cohort, output_daily_cohorts)
+      
+      # drop rows (cohorts) with no values
+      output_daily_cohorts$year[output_daily_cohorts$year == -9999 |
+                                  output_daily_cohorts$year == 0] <- NA
+      output_daily_cohorts <- 
+        output_daily_cohorts[!is.na(output_daily_cohorts$year),]
+    } else {
+      output_daily_cohorts <- NA
+    }
     
     #--- annual cohorts ----
     annual_values <- c(
