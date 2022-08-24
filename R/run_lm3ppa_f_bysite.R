@@ -211,14 +211,15 @@ run_lm3ppa_f_bysite <- function(
     # E.g., In a 3000 years-simulation 'lm3out' is 11.5 GB.
     # In such cases (here, more than 5 GB), ignore hourly and daily outputs at tile and cohort levels
     size_of_object_gb <- as.numeric(
-      str_remove(
+      gsub(
+        pattern = " Gb",
+        replacement = "",
         format(
           object.size(lm3out), 
           units = "GB"
-        ),
-        " Gb"
+          )
+        )
       )
-    )
     
     if (size_of_object_gb >= 5){
       warning(
