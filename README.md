@@ -17,6 +17,8 @@ if(!require(devtools)){install.packages(devtools)}
 devtools::install_github("computationales/rsofun@v4.3")
 library(rsofun)
 ```
+Problems with compilation? Make sure to have gfortran installed and paths to the compiler and libraries properly specified (see e.g., [here](https://github.com/computationales/rsofun/issues/58)). 
+
 ## Example
 
 See vignette [Example for using rsofun](./articles/example.html) for how to run the model, and the [ingestr R package](https://stineb.github.io/ingestr/) for collecting the forcing data to run rsofun.
