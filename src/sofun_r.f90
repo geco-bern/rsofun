@@ -84,7 +84,7 @@ contains
     real(kind=c_double),  dimension(nt,49), intent(out) :: output
 
     ! local variables
-    type(outtype_biosphere), dimension(ndayyear) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
+    type(outtype_biosphere), dimension(ndayyear) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function
     integer :: npft_local, yr, idx_start, idx_end
 
     !----------------------------------------------------------------
