@@ -43,6 +43,9 @@ calib_sofun <- function(
     settings$par$soilm_par_b <- NA
     settings$par$tau_acclim_tempstress <- NA
     settings$par$par_shape_tempstress <- NA
+
+    # xxx jiarui
+    settings$par$kCw <- NA
     
     return(settings$par)
   }

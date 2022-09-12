@@ -155,6 +155,10 @@ contains
     myinterface%params_calib%tau_acclim_tempstress = real(par(4))
     myinterface%params_calib%par_shape_tempstress  = real(par(5))
 
+    ! xxx jiarui
+    myinterface%params_calib%kCw                   = real(par(6))
+
+
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)
     !----------------------------------------------------------------
