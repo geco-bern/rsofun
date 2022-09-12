@@ -56,7 +56,10 @@ params_modl <- list(
     soilm_par_a     = 0.33349283,
     soilm_par_b     = 1.45602286,
     tau_acclim_tempstress = 10,
-    par_shape_tempstress  = 0.0
+    par_shape_tempstress  = 0.0,
+    
+    # xxx jiarui
+    kCw = 1.05
   )
 
 # run the model for these parameters
