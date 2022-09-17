@@ -92,7 +92,7 @@ contains
     real, parameter :: kdecay_labl = 0.1
     real, parameter :: frac_leaf = 0.5
 
-    integer, parameter :: len_resp_vec = 30
+    integer, parameter :: len_resp_vec = 60
     real, dimension(nlu,npft,len_resp_vec), save :: resp_vec
     real :: frac_for_resp
 

@@ -166,6 +166,16 @@ contains
     pftloop: do pft=1,npft
       
       lu = 1
+
+      !----------------------------------------------------------------
+      ! Set activity to zero is soil temperature is below 0
+      !----------------------------------------------------------------
+      ! xxx debug: move this somewhere else
+      if (tile(lu)%soil%phy%temp < 0.0) then
+        tile(lu)%plant(pft)%active = .false.
+      else
+        tile(lu)%plant(pft)%active = .true.
+      end if
     
       !----------------------------------------------------------------
       ! Low-temperature effect on quantum yield efficiency 
@@ -178,9 +188,18 @@ contains
       ! P-model call to get a list of variables that are 
       ! acclimated to slowly varying conditions
       !----------------------------------------------------------------
+      ! xxx debug
+      print*,'in gpp:'
+      print*,'fpc_grid ', tile(lu)%plant(pft)%fpc_grid
+      print*,'daiyl    ', grid%dayl
+      print*,'temp     ', climate_memory%dtemp
+      print*,'active   ', tile(lu)%plant(pft)%active
+      print*,'--------------------------------'
+
       if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &      ! PFT is present
           grid%dayl > 0.0 .and.                    &      ! no arctic night
-          climate_memory%dtemp > -5.0 ) then              ! minimum temp threshold to avoid fpe
+          climate_memory%dtemp > -5.0 .and.        &
+          tile(lu)%plant(pft)%active ) then              ! minimum temp threshold to avoid fpe
 
         !----------------------------------------------------------------
         ! With fAPAR = 1.0 (full light) for simulating Vcmax25

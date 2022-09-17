@@ -127,6 +127,7 @@ module md_plant
 
     ! phenology
     type(phenotype), dimension(ndayyear) :: pheno
+    logical :: active          ! whether PFT is active (replaces dtphen)
 
   end type plant_type
 

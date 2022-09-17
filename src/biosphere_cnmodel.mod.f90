@@ -155,6 +155,8 @@ contains
                        doy, &
                        init_daily &
                        )
+        if (verbose) print*, '              ==> returned: '
+        if (verbose) print*,'               soiltemp = ', tile(1)%soil%phy%temp
         if (verbose) print*, '... done'
 
         !----------------------------------------------------------------
