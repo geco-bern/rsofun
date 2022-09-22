@@ -27,7 +27,7 @@ module md_gpp_pmodel
   ! Tyler Davis.
   !----------------------------------------------------------------
   ! load core parameters
-  use md_params_core, only: nmonth, npft, nlu, c_molmass, h2o_molmass, maxgrid, ndayyear, kTkelvin, dummy
+  use md_params_core, only: nmonth, npft, nlu, c_molmass, h2o_molmass, maxgrid, ndayyear, kTkelvin, dummy, kR
   use md_tile_pmodel, only: tile_type, tile_fluxes_type
   use md_interface_pmodel, only: myinterface
   use md_forcing_pmodel, only: climate_type, vegcover_type
@@ -154,7 +154,6 @@ contains
 
     tk = climate_acclimation%dtemp + kTkelvin
 
-
     pftloop: do pft=1,npft
       
       lu = 1
@@ -252,11 +251,20 @@ contains
       tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax(  climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%jmax25
 
       !----------------------------------------------------------------
-      ! Stomatal conductance
+      ! Stomatal conductance.
+      ! Convert conductance to CO2 returned from P-model in units of 
+      ! (mol CO2 Pa-1 m-2 s-1) to conductance to H2O used for PML model
+      ! in units of (m s-1).
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint
+      tile_fluxes(lu)%plant(pft)%dgs = out_pmodel%gs_setpoint * 1.6 * kR * tk
 
     end do pftloop
+
+    !----------------------------------------------------------------
+    ! Canopy conductance.
+    !----------------------------------------------------------------
+    ! xxx This doesn't deal with multiple PFTs!
+    tile_fluxes(lu)%canopy%dgc = tile_fluxes(lu)%plant(1)%dgs * tile(lu)%canopy%lai
 
   end subroutine gpp
 

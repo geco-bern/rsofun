@@ -34,6 +34,7 @@ contains
     latitude,                  &     
     altitude,                  &     
     whc,                       &
+    vegheight,                 &
     soiltexture,               &
     nt,                        &
     par,                       &
@@ -77,6 +78,7 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
     real(kind=c_double),  intent(in) :: whc
+    real(kind=c_double),  intent(in) :: vegheight
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(5), intent(in) :: par  ! free (calibratable) model parameters
@@ -156,9 +158,10 @@ contains
     myinterface%params_calib%par_shape_tempstress  = real(par(5))
 
     !----------------------------------------------------------------
-    ! GET VEGETATION COVER (fractional projective cover by PFT)
+    ! GET VEGETATION COVER  AND HEIGHT
     !----------------------------------------------------------------
     myinterface%fpc_grid(:) = get_fpc_grid( myinterface%params_siml )
+    myinterface%vegheight   = vegheight
     
     do yr=1,myinterface%params_siml%runyears
 

@@ -9,7 +9,7 @@ module md_vegdynamics_pmodel
 
 contains
 
-  subroutine vegdynamics( tile, fapar_prescr, fpc_grid_prescr )
+  subroutine vegdynamics( tile, fapar_prescr, fpc_grid_prescr, vegheight )
     !//////////////////////////////////////////////////////////////////
     ! Updates canopy and tile variables
     !------------------------------------------------------------------
@@ -22,6 +22,7 @@ contains
     ! arguments (may be dummy)
     real, intent(in) :: fapar_prescr
     real, dimension(npft), intent(in) :: fpc_grid_prescr
+    real, intent(in) :: vegheight        ! vegetation (canopy) height (m)
 
     ! local variables
     integer :: pft, lu
@@ -38,6 +39,8 @@ contains
         if (fapar_prescr/=dummy) tile(lu)%canopy%fapar = fapar_prescr
         
         tile(lu)%plant(pft)%fpc_grid = fpc_grid_prescr(pft)
+
+        tile(lu)%canopy%height = vegheight
 
         ! ! get annually updated leaf traits (vary because of variations in light and CO2)
         ! call get_leaftraits( plant(pft), solar%meanmppfd(:), out_pmodel(pft,:)%actnv_unitiabs )

@@ -122,7 +122,8 @@ contains
         ! if (verbose) print*,'calling vegdynamics() ... '
         call vegdynamics( tile(:), &
                           myinterface%vegcover(doy)%dfapar, &
-                          myinterface%fpc_grid(:) &
+                          myinterface%fpc_grid(:), &
+                          myinterface%vegheight &
                           )
         ! if (verbose) print*,'... done'
 

@@ -62,7 +62,6 @@ module md_tile_pmodel
     real :: lai            ! leaf area index 
     real :: fapar          ! fraction of absorbed photosynthetically active radiation (unitless)
     real :: height         ! canopy height (m)
-    real :: dgc            ! canopy conductance, upscaled from leaf-level stomatal conductance (m s-1)
     real :: fpc_grid       ! fractional projective cover (sum of crownarea by canopy plants)
   end type canopy_type
 
@@ -91,9 +90,10 @@ module md_tile_pmodel
     real :: econ            ! water-to-energy conversion factor (m^3/J)
     real :: drn             ! daily total net radiation (J/m2/d)
     real :: drnn            ! nighttime total net radiation (J m-1 d-1)
-    real :: rnl             ! net longwave radiation (W m-2)
+    real :: drnl             ! net longwave radiation (W m-2)
     real :: dcn             ! daily total condensation (mm d-1)
     real :: deet            ! daily total equilibrium evapotranspiration (mm d-1)
+    real :: deet_e          ! daily total equilibrium evapotranspiration (J m-2 d-1)
     real :: dpet            ! daily total potential evapotranspiration (mm d-1)
     real :: dpet_e          ! daily total potential evapotranspiration (J m-2 d-1)
     real :: daet            ! daily total (actual) evapotranspiration (mm d-1)
@@ -107,8 +107,7 @@ module md_tile_pmodel
     real :: dtransp         ! work in progress
 
     ! biogeophysics
-    real :: dgs             ! stomatal conductance
-    real :: dgc             ! canopy conductance
+    real :: dgc             ! canopy conductance to H2O (m s-1)
 
     ! real :: rho_air         ! density of air (g m-3)
     ! real :: sat_slope       ! slope of saturation vap press temp curve, Pa/K 
@@ -220,7 +219,6 @@ contains
     canopy%lai         = 0.0
     canopy%fapar       = 0.0
     canopy%height      = 0.0
-    canopy%dgc         = 0.0
     canopy%fpc_grid    = 0.0
 
   end subroutine initglobal_canopy
@@ -444,7 +442,7 @@ contains
     tile_fluxes(:)%canopy%econ = 0.0            
     tile_fluxes(:)%canopy%drn = 0.0              
     tile_fluxes(:)%canopy%drnn = 0.0             
-    tile_fluxes(:)%canopy%rnl = 0.0             
+    tile_fluxes(:)%canopy%drnl = 0.0             
     tile_fluxes(:)%canopy%dcn = 0.0              
     tile_fluxes(:)%canopy%daet = 0.0            
     tile_fluxes(:)%canopy%daet_e = 0.0          

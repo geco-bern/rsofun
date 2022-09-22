@@ -31,6 +31,7 @@ module md_interface_pmodel
     real                                    :: whc_prescr
     type(climate_type), dimension(ndayyear) :: climate
     type(vegcover_type), dimension(ndayyear):: vegcover
+    real                                    :: vegheight
     ! type(domaininfo_type)                 :: domaininfo
     type(outtype_steering)                  :: steering
     type(paramstype_siml)                   :: params_siml

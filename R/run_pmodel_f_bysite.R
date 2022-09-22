@@ -237,6 +237,7 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
+      vegheight                 = as.numeric(site_info$vegheight),
       soiltexture               = soiltexture,
       n                         = n,
       par                       = par, 

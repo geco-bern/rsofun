@@ -31,6 +31,7 @@ module md_forcing_pmodel
     real(kind=sp) :: dppfd  ! mol m-2 d-1
     real(kind=sp) :: dnetrad! W m-2
     real(kind=sp) :: dpatm  ! Pa
+    real(kind=sp) :: dvwind ! m s-1
   end type climate_type
 
   type vegcover_type
@@ -107,6 +108,8 @@ contains
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 12))
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 13))
 
+    ! xxx pml: add wind speed to forcing
+    out_climate(:)%dvwind  = real(forcing(idx_start:idx_end, 14))
 
   end function getclimate
 
