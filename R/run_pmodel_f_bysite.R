@@ -83,7 +83,9 @@ run_pmodel_f_bysite <- function(
       tmax,
       fharv,
       dno3,
-      dnh4
+      dnh4,
+      cseed,
+      nseed
       )
   
   # validate input
@@ -106,7 +108,9 @@ run_pmodel_f_bysite <- function(
       "tmax",
       "fharv",
       "dno3",
-      "dnh4"
+      "dnh4",
+      "cseed",
+      "nseed"
     )
     
     # create a loop to loop over a list of variables

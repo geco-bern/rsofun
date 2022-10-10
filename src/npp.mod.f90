@@ -164,7 +164,8 @@ contains
       !    fwf_widths(c(19,18,18), c("cue", "cue_damped", "f_deactivate")),
       !    skip = 1,
       !    col_types = "nn")
-      print*, tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp, cue_damped, f_deactivate
+      
+      ! print*, tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp, cue_damped, f_deactivate
 
       ! !/////////////////////////////////////////////////////////////////////////
       ! ! SAFETY AND DEATH

@@ -41,6 +41,8 @@ module md_forcing_pmodel
     real(kind=sp) :: dfharv  ! fraction of biomass harvested per day (m-2 d-1)
     real(kind=sp) :: dnoy    ! NO3 inputs per day, fertilisation (gN m-2 d-1)
     real(kind=sp) :: dnhx    ! NH4 inputs per day, fertilisation (gN m-2 d-1)
+    real(kind=sp) :: cseed   ! seed C input per day (sowing) (gC m-2 d-1)
+    real(kind=sp) :: nseed   ! seed N input per day (sowing) (gN m-2 d-1)
   end type landuse_type
 
 contains
@@ -101,7 +103,6 @@ contains
     out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 11))
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 12))
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 13))
-
 
     ! ! get climate with damped (and lagged) variability
     ! climate_memory = 
@@ -313,6 +314,8 @@ contains
     out_landuse(:)%dfharv = real(forcing(idx_start:idx_end, 14))
     out_landuse(:)%dnoy   = real(forcing(idx_start:idx_end, 15))
     out_landuse(:)%dnhx   = real(forcing(idx_start:idx_end, 16))
+    out_landuse(:)%cseed  = real(forcing(idx_start:idx_end, 17))
+    out_landuse(:)%nseed  = real(forcing(idx_start:idx_end, 18))
 
   end function getlanduse
 

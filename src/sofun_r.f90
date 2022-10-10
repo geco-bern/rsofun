@@ -80,7 +80,7 @@ contains
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(75), intent(in) :: par  ! Model parameters
-    real(kind=c_double),  dimension(nt,16), intent(in) :: forcing
+    real(kind=c_double),  dimension(nt,18), intent(in) :: forcing
     real(kind=c_double),  dimension(nt,49), intent(out) :: output
 
     ! local variables
