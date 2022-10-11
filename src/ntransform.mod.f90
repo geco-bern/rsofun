@@ -404,6 +404,7 @@ contains
 
     ! Michaelis-Menten coefficient [gN/m2]. Use this value if soil represents top 100 cm 
     params_ntransform%kn        = myinterface%params_calib%kn
+    
 
     ! Michaelis-Menten coefficient [gC/m2]. Use this value if soil represents top 100 cm 
     params_ntransform%kdoc      = myinterface%params_calib%kdoc

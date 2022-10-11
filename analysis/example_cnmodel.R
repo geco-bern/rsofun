@@ -116,7 +116,7 @@ tmp <- rsofun::p_model_drivers %>%
 ## Apply some harvesting (leaf removal), and seed input
 use_cseed <- 100
 cn_seed <- 20
-use_nseed <- cseed / cn_seed
+use_nseed <- use_cseed / cn_seed
 
 tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
   mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.1, 0.0),
@@ -140,11 +140,17 @@ output <- runread_pmodel_f(
   par = pars
   )
 
+# LAI
 output$data[[1]] %>% 
   as_tibble() %>% 
   ggplot(aes(date, lai)) + 
   geom_line()
   geom_vline(data = tmp$forcing[[1]], aes(xintercept = date), col = "red")
+
+# N2O
+ggplot() + 
+  geom_line(data = output_save$data[[1]], aes(date, en2o)) + 
+  geom_line(data = output$data[[1]], aes(date, en2o), col = "red")
 
 # ## read (experimental) files
 # aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>% 
