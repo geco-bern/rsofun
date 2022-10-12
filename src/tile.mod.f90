@@ -657,6 +657,7 @@ contains
 
     ! local
     integer :: lu, pft
+    real :: tmp
 
     !----------------------------------------------------------------
     ! Initialise all canopy-level quantities that are later summed over plants
@@ -881,7 +882,14 @@ contains
     out_biosphere%seedc   = tile(lu)%plant(pft)%pseed%c%c12
     out_biosphere%seedn   = tile(lu)%plant(pft)%pseed%n%n14
 
-    out_biosphere%x1      = tile(lu)%plant(pft)%pseed%n%n14
+    ! for debugging purposes
+    if (tile(lu)%plant(pft)%fill_seeds) then
+      tmp = 1.0
+    else
+      tmp = 0.0
+    end if
+    out_biosphere%x1      = tmp
+
     out_biosphere%x2      = tile(lu)%plant(pft)%pseed%n%n14
     out_biosphere%x3      = tile(lu)%plant(pft)%pseed%n%n14
     out_biosphere%x4      = tile(lu)%plant(pft)%pseed%n%n14

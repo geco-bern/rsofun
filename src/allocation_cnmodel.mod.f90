@@ -100,7 +100,8 @@ contains
     real, dimension(nlu,npft,len_an_vec), save :: an_vec
     real :: an_max
     real, save :: an_max_damped, an_max_damped_prev
-    integer, parameter :: count_wait = 5
+    integer, parameter :: count_wait_declining = 5
+    integer, parameter :: count_wait_increasing = 15
 
     integer, parameter :: len_luep_vec = ndayyear
     integer, parameter :: len_rrum_vec = ndayyear
@@ -175,8 +176,8 @@ contains
               an_max_damped = dampen_variability( an_max, 15.0, an_max_damped )
             end if
 
-            ! after N consecutive days of declining (damped) net assimilation per unit leaf area,
-            ! stop growing and allocate to seeds instead
+            ! after N (count_wait_declining) consecutive days of declining (damped) net assimilation 
+            ! per unit leaf area, stop growing and allocate to seeds instead
             !-------------------------------------------------------------------------
             if (an_max_damped_prev > an_max_damped) then
               count_declining = count_declining + 1
@@ -184,12 +185,12 @@ contains
               count_declining = 0
             end if
 
-            if (count_declining > count_wait) then
+            if (count_declining > count_wait_declining) then
               tile(lu)%plant(pft)%fill_seeds = .true.
             end if
 
-            ! after N consecutive days of increasing (damped) net assimilation per unit leaf area,
-            ! re-start growing and no longer allocate to seeds
+            ! after N (count_wait_increasing) consecutive days of increasing (damped) net assimilation
+            ! per unit leaf area, re-start growing and no longer allocate to seeds
             !-------------------------------------------------------------------------
             if (an_max_damped_prev < an_max_damped) then
               count_increasing = count_increasing + 1
@@ -197,7 +198,7 @@ contains
               count_increasing = 0
             end if
 
-            if (count_increasing > count_wait) then
+            if (count_increasing > count_wait_increasing) then
               tile(lu)%plant(pft)%fill_seeds = .false.
             end if
 

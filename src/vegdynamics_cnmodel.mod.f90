@@ -114,12 +114,8 @@ contains
     type(plant_type), intent(inout) :: plant
     real, intent(in) :: cseed, nseed
 
-    ! xxx debug
-    if (cseed > 0.0) print*,'adding c and n (sowing): ', cseed, nseed
-
     plant%plabl%c%c12 = plant%plabl%c%c12 + cseed
     plant%plabl%n%n14 = plant%plabl%n%n14 + nseed
-
 
     if (params_pft_plant(plant%pftno)%grass) then
       plant%nind = 1.0

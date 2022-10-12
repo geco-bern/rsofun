@@ -112,60 +112,60 @@ contains
                                                 )
       tile_fluxes(lu)%plant(pft)%dcex = calc_cexu( tile(lu)%plant(pft)%proot%c%c12 )   
 
-      !/////////////////////////////////////////////////////////////////////////
-      ! SAFETY AND DEATH (CUE-driven mortality)
-      ! If negative C balance results from GPP - Rleaf - Rroot then ...
-      ! ... increase tissue turnover (deactivation)
-      !-------------------------------------------------------------------------      
-      ! CUE dampening
-      if (firstcall) then
-        if (tile_fluxes(lu)%plant(pft)%dgpp < eps) then
-          cue_vec(lu,pft,:) = 0.0
-        else
-          cue_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp
-        end if
-        firstcall = .false.
-      else
-        cue_vec(lu,pft,1:(len_cue_vec-1)) = cue_vec(lu,pft,2:len_cue_vec)
-        if (tile_fluxes(lu)%plant(pft)%dgpp < eps) then
-          cue_vec(lu,pft,len_cue_vec) = 0.0
-        else
-          cue_vec(lu,pft,len_cue_vec) = tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp
-        end if
-      end if
-      cue_damped = sum( cue_vec(lu,pft,:) ) / real( len_cue_vec )
+      ! !/////////////////////////////////////////////////////////////////////////
+      ! ! SAFETY AND DEATH (CUE-driven mortality)
+      ! ! If negative C balance results from GPP - Rleaf - Rroot then ...
+      ! ! ... increase tissue turnover (deactivation)
+      ! !-------------------------------------------------------------------------      
+      ! ! CUE dampening
+      ! if (firstcall) then
+      !   if (tile_fluxes(lu)%plant(pft)%dgpp < eps) then
+      !     cue_vec(lu,pft,:) = 0.0
+      !   else
+      !     cue_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp
+      !   end if
+      !   firstcall = .false.
+      ! else
+      !   cue_vec(lu,pft,1:(len_cue_vec-1)) = cue_vec(lu,pft,2:len_cue_vec)
+      !   if (tile_fluxes(lu)%plant(pft)%dgpp < eps) then
+      !     cue_vec(lu,pft,len_cue_vec) = 0.0
+      !   else
+      !     cue_vec(lu,pft,len_cue_vec) = tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp
+      !   end if
+      ! end if
+      ! cue_damped = sum( cue_vec(lu,pft,:) ) / real( len_cue_vec )
 
-      ! turnover due to CUE-driven deactivation: increase towards 1 when (damped) CUE gets negative.
-      ! note that CUE can become negative when respiration is positive and GPP tending towards zero
-      if (tile(lu)%plant(pft)%plabl%c%c12 < 1.0 * tile(lu)%plant(pft)%pleaf%c%c12) then
+      ! ! turnover due to CUE-driven deactivation: increase towards 1 when (damped) CUE gets negative.
+      ! ! note that CUE can become negative when respiration is positive and GPP tending towards zero
+      ! if (tile(lu)%plant(pft)%plabl%c%c12 < 1.0 * tile(lu)%plant(pft)%pleaf%c%c12) then
         
-        f_deactivate = 0.5 * calc_cue_stress( cue_damped )   ! never deactivate 100%
+      !   f_deactivate = 0.5 * calc_cue_stress( cue_damped )   ! never deactivate 100%
 
-        if (f_deactivate > 0.001) then  ! don't call it when removing only a negiglible fraction - computational costs!
-          call turnover_leaf( f_deactivate, tile(lu), tile_fluxes(lu), pft )
-          call turnover_root( f_deactivate, tile(lu), pft )
-        else
-          f_deactivate = 0.0
-        end if
-      else
-        f_deactivate = 0.0
-      end if
+      !   if (f_deactivate > 0.001) then  ! don't call it when removing only a negiglible fraction - computational costs!
+      !     call turnover_leaf( f_deactivate, tile(lu), tile_fluxes(lu), pft )
+      !     call turnover_root( f_deactivate, tile(lu), pft )
+      !   else
+      !     f_deactivate = 0.0
+      !   end if
+      ! else
+      !   f_deactivate = 0.0
+      ! end if
 
-      ! print*,'gpp, cue, cue_damped, f_deactivate: ', &
-      !   tile_fluxes(lu)%plant(pft)%dgpp, &
-      !   tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp, &
-      !   cue_damped, &
-      !   f_deactivate   
+      ! ! print*,'gpp, cue, cue_damped, f_deactivate: ', &
+      ! !   tile_fluxes(lu)%plant(pft)%dgpp, &
+      ! !   tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp, &
+      ! !   cue_damped, &
+      ! !   f_deactivate   
 
-      ! xxx test
-      ! read into R with:
-      ! read_fwf(
-      !    "~/rsofun/test.txt",
-      !    fwf_widths(c(19,18,18), c("cue", "cue_damped", "f_deactivate")),
-      !    skip = 1,
-      !    col_types = "nn")
+      ! ! xxx test
+      ! ! read into R with:
+      ! ! read_fwf(
+      ! !    "~/rsofun/test.txt",
+      ! !    fwf_widths(c(19,18,18), c("cue", "cue_damped", "f_deactivate")),
+      ! !    skip = 1,
+      ! !    col_types = "nn")
       
-      ! print*, tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp, cue_damped, f_deactivate
+      ! ! print*, tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile_fluxes(lu)%plant(pft)%dgpp, cue_damped, f_deactivate
 
       ! !/////////////////////////////////////////////////////////////////////////
       ! ! SAFETY AND DEATH

@@ -111,7 +111,8 @@ tmp <- rsofun::p_model_drivers %>%
   mutate(forcing = purrr::map(forcing, ~mutate(., 
                                                fharv = 0.0,
                                                dno3 = 0.1,
-                                               dnh4 = 0.1)))
+                                               dnh4 = 0.1
+                                               )))
 
 ## Apply some harvesting (leaf removal), and seed input
 use_cseed <- 100
@@ -119,7 +120,7 @@ cn_seed <- 20
 use_nseed <- use_cseed / cn_seed
 
 tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
-  mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.1, 0.0),
+  mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.0, 0.0),
          cseed = ifelse(month(date) == 3 & mday(date) == 15, use_cseed, 0.0),
          nseed = ifelse(month(date) == 3 & mday(date) == 15, use_nseed, 0.0))
 
@@ -143,14 +144,14 @@ output <- runread_pmodel_f(
 # LAI
 output$data[[1]] %>% 
   as_tibble() %>% 
+  filter(year(date) < 2008) %>% 
   ggplot(aes(date, lai)) + 
-  geom_line()
-  geom_vline(data = tmp$forcing[[1]], aes(xintercept = date), col = "red")
-
+  geom_line(aes(date, lai)) +
+  geom_point(aes(date, x1))
+  
 # N2O
 ggplot() + 
-  geom_line(data = output_save$data[[1]], aes(date, en2o)) + 
-  geom_line(data = output$data[[1]], aes(date, en2o), col = "red")
+  geom_line(data = output$data[[1]], aes(date, en2o))
 
 # ## read (experimental) files
 # aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>% 
@@ -181,17 +182,17 @@ ggplot() +
 #   as_tibble() %>% 
 #   ggplot(aes(date, cex)) + 
 #   geom_line()
-# 
-# output$data[[1]] %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, cleaf)) + 
-#   geom_line()
-# 
-# output$data[[1]] %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, croot)) + 
-#   geom_line()
-# 
+
+output$data[[1]] %>%
+  as_tibble() %>%
+  ggplot(aes(date, cleaf)) +
+  geom_line()
+
+output$data[[1]] %>%
+  as_tibble() %>%
+  ggplot(aes(date, croot)) +
+  geom_line()
+
 # output$data[[1]] %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, clabl)) + 
