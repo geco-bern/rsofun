@@ -14,37 +14,42 @@
 #'       \item{vpd}{Vapour pressure deficit in Pa}
 #'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in mol m$^{-2}$ d$^{-1}$}
 #'       \item{patm}{Atmospheric pressure in Pa}
-#'       \item{ccov_int}{}
+#'       \item{ccov_int}{Cloud coverage in %, interpolated (?)}
 #'       \item{ccov}{Cloud coverage in %}
 #'       \item{snow}{Snow in mm d$^{-1}$}
 #'       \item{rain}{Rain in mm d$^{-1}$}
 #'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR) measured in ...}
-#'       \item{co2}{}
-#'       \item{doy}{}
+#'       \item{co2}{Annually varying observed atmospheric CO$_2$, identical across sites}
+#'       \item{doy}{Day of the year}
 #'       \item{tmin}{Daily minimum air temperature in $^\circ$C}
 #'       \item{tmax}{Daily maximum air temperature in $^\circ$C}
 #'       }
 #'   }
 #'   \item{params_siml}{A tibble [ 1 x 18] of model parameters
 #'     \describe{
-#'       \item{spinup}{a logical value indicating ...}
-#'       \item{spinupyears}{a numeric value ...}
-#'       \item{recycle}{a numeric value ...}
-#'       \item{soilmstress}{a logical value indicating whether there is ...}
-#'       \item{tempstress}{a logical value indicating whether ...}
+#'       \item{spinup}{a logical value indicating whether this simulation does spin-up}
+#'       \item{spinupyears}{number of spin-up years}
+#'       \item{recycle}{length of standard recycling period, in days?}
+#'       \item{soilmstress}{a logical value, if TRUE an empirical soil moisture 
+#'       stress function is applied to GPP}
+#'       \item{tempstress}{a logical value, is TRUE an empirical temperature stress 
+#'       function is applied to GPP}
 #'       \item{calc_aet_fapar_vpd}{a logical value indicating ...}
-#'       \item{in_ppfd}{a logical value indicating ...}
-#'       \item{in_netrad}{a logical value ...}
-#'       \item{outdt}{a numeric value ...}
-#'       \item{ltre}{a logical value ...}
-#'       \item{ltne}{a logical value ...}
-#'       \item{ltrd}{a logical value ...}
-#'       \item{ltnd}{a logical value ...}
-#'       \item{lgr3}{a logical value ...}
-#'       \item{lgn3}{a logical value ...}
-#'       \item{lgr4}{a logical value ...}
-#'       \item{firstyeartrend}{the year ...}
-#'       \item{nyeartrend}{the number of years ...}
+#'       \item{in_ppfd}{a logical value, if TRUE PPFD is a prescribed variable, 
+#'       if FALSE PPFD is simulated internally}
+#'       \item{in_netrad}{a logical value indicating whether net radiation is precribed
+#'       (TRUE) or simulated internally (FALSE)}
+#'       \item{outdt}{an integer indicating the output periodicity}
+#'       \item{ltre}{a logical value, TRUE if evergreen tree}
+#'       \item{ltne}{a logical value, TRUE if evergreen tree and N-fixing}
+#'       \item{ltrd}{a logical value, TRUE if deciduous tree}
+#'       \item{ltnd}{a logical value, TRUE if decidious tree and N-fixing}
+#'       \item{lgr3}{a logical value, TRUE if grass with C3 photosynthetic pathway}
+#'       \item{lgn3}{a logical value, TRUE if grass with C3 photosynthetic pathway
+#'       and N-fixing}
+#'       \item{lgr4}{a logical value, TRUE if grass with C4 photosynthetic pathway}
+#'       \item{firstyeartrend}{the year AD of first transient year}
+#'       \item{nyeartrend}{the number of transient years}
 #'     }
 #'   }
 #'   \item{site_info}{A tibble [ 1 x 12 ] containing site information
