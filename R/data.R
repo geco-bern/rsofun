@@ -37,8 +37,8 @@
 #'       \item{calc_aet_fapar_vpd}{a logical value indicating ...}
 #'       \item{in_ppfd}{a logical value, if TRUE PPFD is a prescribed variable, 
 #'       if FALSE PPFD is simulated internally}
-#'       \item{in_netrad}{a logical value indicating whether net radiation is precribed
-#'       (TRUE) or simulated internally (FALSE)}
+#'       \item{in_netrad}{a logical value indicating whether net radiation is 
+#'       prescribed (TRUE) or simulated internally (FALSE)}
 #'       \item{outdt}{an integer indicating the output periodicity}
 #'       \item{ltre}{a logical value, TRUE if evergreen tree}
 #'       \item{ltne}{a logical value, TRUE if evergreen tree and N-fixing}
@@ -56,16 +56,26 @@
 #'     \describe{
 #'       \item{lon}{a numeric value indicating the longitud of the site location}
 #'       \item{lat}{a numeric value indicating the latitude of the site location}
-#'       \item{elv}{a numeric value indicating the elevation of the site location, in meters (?)}
-#'       \item{year_end}{the year ...}
-#'       \item{classid}{a character string which contains "EBF" if ... }
-#'       \item{c4}{a logical value indicating ...}
-#'       \item{whc}{a numeric value ...}
-#'       \item{koeppen_code}{a character string indicating the Koeppen-Geiger code ...}
-#'       \item{igbp_land_use}{a character string indicating ...}
-#'       \item{plant_functional_type}{a character string ...}
-#'       \item{date_start}{a Date[1:1] value indicating ...}
-#'       \item{date_end}{a Date[1:1] value indicating ...}
+#'       \item{elv}{a numeric value indicating the elevation of the site location, 
+#'       in meters}
+#'       \item{year_end}{the year in which the simulation should end, corresponding
+#'       to data availability}
+#'       \item{classid}{a character string which contains the FLUXNET2015 IGBP 
+#'       classification}
+#'       \item{c4}{a logical value indicating whether or not C4 photosynthesis 
+#'       pathway is followed. If FALSE, it's C3}
+#'       \item{whc}{a numeric value for the water holding capacity, used for simulating
+#'       the soil water balance}
+#'       \item{koeppen_code}{a character string indicating the Koeppen-Geiger
+#'       climate zone code}
+#'       \item{igbp_land_use}{a character string indicating the IGBP land cover
+#'       classification from MODIS data}
+#'       \item{plant_functional_type}{a character string describing the plant
+#'       functional type}
+#'       \item{date_start}{a Date[1:1] value indicating the start date from which
+#'       the simulation is to be done}
+#'       \item{date_end}{a Date[1:1] value indicating the end date until which the
+#'       simulation is to be done}
 #'     }
 #'   }
 #'   \item{params_soil}{A tibble [ 2 x 5 ] containing soil texture data
