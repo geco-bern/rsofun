@@ -20,6 +20,7 @@ module md_interface_pmodel
     real :: soilm_par_b
     real :: tau_acclim_tempstress
     real :: par_shape_tempstress
+    real :: whc
   end type paramstype_calib  
 
 

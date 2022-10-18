@@ -43,6 +43,7 @@ calib_sofun <- function(
     settings$par$soilm_par_b <- NA
     settings$par$tau_acclim_tempstress <- NA
     settings$par$par_shape_tempstress <- NA
+    settings$par$whc <- NA
     
     return(settings$par)
   }
@@ -56,7 +57,7 @@ calib_sofun <- function(
     # create bounds
     lower <- unlist(lapply(settings$par, function(x) x$lower))
     upper <- unlist(lapply(settings$par, function(x) x$upper))
-    pars <- unlist(lapply( settings$par, function(x) x$init))
+    pars  <- unlist(lapply(settings$par, function(x) x$init))
     
     out_optim <- GenSA::GenSA(
       par   = pars,
