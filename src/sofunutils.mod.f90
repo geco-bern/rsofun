@@ -456,6 +456,45 @@ contains
   end function monthly2daily
 
 
+  subroutine calc_reg_line(x, y, a, b)
+    !/////////////////////////////////////////////////////////////////////////
+    ! Fits a linear regression
+    ! Copied from https://gist.github.com/komasaru/f1e76fc44cd650298e2e9485620533ed
+    !-------------------------------------------------------------------------
+    ! arguments
+    real, intent(in)  :: x(:), y(:)
+    real, intent(out) :: a, b
+
+    ! local variables
+    integer :: size_x, size_y, i
+    real    :: sum_x, sum_y, sum_xx, sum_xy
+
+    size_x = size(x)
+    size_y = size(y)
+
+    if (size_x == 0 .or. size_y == 0) then
+      print *, "[calc_reg_line: ERROR] array size == 0"
+      stop
+    end if
+
+    if (size_x /= size_y) then
+      print *, "calc_reg_line: [ERROR] size(X) != size(Y)"
+      stop
+    end if
+
+    sum_x  = sum(x)
+    sum_y  = sum(y)
+    sum_xx = sum(x * x)
+    sum_xy = sum(x * y)
+
+    a = (sum_xx * sum_y - sum_xy * sum_x) &
+      / (size_x * sum_xx - sum_x * sum_x)
+
+    b = (size_x * sum_xy - sum_x * sum_y) &
+      / (size_x * sum_xx - sum_x * sum_x)
+
+  end subroutine calc_reg_line
+
   ! function read1year_daily( filename )
   !   !////////////////////////////////////////////////////////////////
   !   ! Function reads a file that contains 365 lines, each line for

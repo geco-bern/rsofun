@@ -167,6 +167,8 @@ module md_plant
     real :: lue               ! light use efficiency (gC m-2 mol-1)
     real :: vcmax25_unitfapar ! acclimated Vcmax per unit fAPAR, normalised to 25 deg C (mol CO2 m-2 s-1)
 
+    real :: debug             ! write anything into this
+
     type(orgpool) :: dharv    ! daily total biomass harvest (g m-2 d-1)
 
     type(orgpool) :: alloc_leaf, alloc_root, alloc_sapw, alloc_wood

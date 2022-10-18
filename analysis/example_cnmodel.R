@@ -142,13 +142,23 @@ output <- runread_pmodel_f(
   )
 
 # LAI
-output$data[[1]] %>% 
+gg1 <- output$data[[1]] %>% 
   as_tibble() %>% 
-  filter(year(date) < 2008) %>% 
   ggplot(aes(date, lai)) + 
-  geom_line(aes(date, lai)) +
-  geom_point(aes(date, x1))
-  
+  geom_line()
+gg2 <- output$data[[1]] %>% 
+  as_tibble() %>% 
+  mutate(f_seed = calc_f_seed((x1))) %>% 
+  ggplot(aes(date, x1)) + 
+  geom_line()
+gg1 / gg2
+
+# df <- tibble(
+#   x = 1:15,
+#   y = c(2.75753609E-06, 1.42544932E-05, 2.04479511E-05, 1.85851095E-05, 2.37835593E-05, 2.47478038E-05, 9.18351452E-06, 2.34256640E-05, 1.13146407E-05, 2.28059034E-05, 6.91168907E-06, 2.24883406E-05, 2.22943618E-05, 2.46384789E-05, 2.53433227E-05)
+# )
+# lm(y ~ x, data = df)
+
 # N2O
 ggplot() + 
   geom_line(data = output$data[[1]], aes(date, en2o))
@@ -291,6 +301,19 @@ output$data[[1]] %>%
 # 
 # print(paste("Maximum leaf C: ", max(output$data[[1]]$cleaf)))
 # 
+
+calc_f_seed <- function(an_unitlai_diff_damped){
+  yy <- 1 / (1 + exp(10*(an_unitlai_diff_damped + 1)))
+  return(yy)
+}
+
+ggplot() +
+  geom_function(fun = calc_f_seed) +
+  xlim(-5,1) +
+  geom_vline(xintercept = 1, linetype = "dotted") +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
+
 # 
 # cue_stress <- function(cue){
 #   yy <- 1 / (1 + exp(10*(cue+0.25)))
