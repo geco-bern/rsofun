@@ -41,7 +41,7 @@ p_model_drivers
 p_model_validation
 ```
 
-These are real data from the French FR-Pue FLUXNET site. Information about variable names and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters.
+These are real data from the French FR-Pue fluxnet site. Information about variable names and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters.
 
 ## Running the model
 
