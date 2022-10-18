@@ -73,9 +73,9 @@
 #'       \item{plant_functional_type}{a character string describing the plant
 #'       functional type}
 #'       \item{date_start}{a Date[1:1] value indicating the start date from which
-#'       the simulation is to be done}
+#'       the simulation is to be done, in format YYYYY-MM-DD}
 #'       \item{date_end}{a Date[1:1] value indicating the end date until which the
-#'       simulation is to be done}
+#'       simulation is to be done, in format YYYY-MM-DD}
 #'     }
 #'   }
 #'   \item{params_soil}{A tibble [ 2 x 5 ] containing soil texture data
@@ -120,11 +120,16 @@
 #'   \item{data}{a tibble [ 2,920 x 3 ] with time series for the following variables:
 #'     \describe{
 #'       \item{date}{a Date vector with format YYYY-MM-DD}
-#'       \item{gpp}{the Gross Primary Productivity (GPP) for each time stamp ... (in .units.)}
-#'       \item{gpp_unc}{the uncertainty of the GPP ...}
+#'       \item{gpp}{the Gross Primary Productivity (GPP) for each time stamp 
+#'       (in gC m$^{-2}$ d$^{-1}$)}
+#'       \item{gpp_unc}{the uncertainty of the GPP (in gC m$^{-2}$ d$^{-1}$)}
 #'     }
 #'   }
 #' }
+#' 
+#' @references Pastorello, G., Trotta, C., Canfora, E. et al. 
+#' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
+#' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
 "p_model_validation"
 
 #' SOFUN lm3ppa driver data
