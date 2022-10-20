@@ -103,6 +103,7 @@ contains
 
     integer, parameter :: len_an_vec = 15
     real, dimension(nlu,npft,len_an_vec), save :: an_vec
+    real, dimension(len_an_vec) :: tmp_vec
     real :: an_unitlai_diff_damped
     integer, dimension(len_an_vec) :: vec_idx
     real :: slope, intercept
@@ -157,109 +158,49 @@ contains
           if (tile(lu)%plant(pft)%lai_ind > 0.0) then
             !-------------------------------------------------------------------------
             ! PHENOPHASE: SEED FILLING
-            ! Determine day when net C assimilation per unit leaf area starts declining
+            ! Determine day when "absorbed" top-of-atmosphere radiation per unit leaf 
+            ! area starts declining
             !-------------------------------------------------------------------------
-            ! Get d(Anet/LAI)/(Anet/LAI): relative difference between this day's Anet/LAI relative to previous day's
-            ! an_unitlai = (tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd) / tile(lu)%plant(pft)%lai_ind
-            an_unitlai = climate%dppfd / tile(lu)%plant(pft)%lai_ind
+            ! Calculate absorbed top-of-atmosphere solar radiation per unit leaf area
+            ! Using TOA radiation here to avoid effects by daily varying cloud cover,
+            ! assuming the plant senses available radiation over the seasons based on day length.
+            an_unitlai = tile_fluxes(lu)%canopy%dra &
+                         * tile(lu)%plant(pft)%fapar_ind &
+                         / tile(lu)%plant(pft)%lai_ind
 
-            if (firstcall0) then
-              an_unitlai_prev = an_unitlai
-              if (pft == npft .and. lu == nlu) firstcall0 = .false.
-            end if
-            ! an_unitlai_reldiff = (an_unitlai - an_unitlai_prev) / an_unitlai
-            an_unitlai_reldiff = an_unitlai
-            an_unitlai_prev = an_unitlai
-
-            ! Low-pass filter of d(Anet/LAI)
+            ! Apply low-pass filter on an_unitlai
             if (firstcall1) then
-              an_vec(lu,pft,:) = an_unitlai_reldiff
+              an_vec(lu,pft,:) = an_unitlai
               if (pft == npft .and. lu == nlu) firstcall1 = .false.
             else
               an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
-              an_vec(lu,pft,len_an_vec) = an_unitlai_reldiff
+              an_vec(lu,pft,len_an_vec) = an_unitlai
             end if
 
-            ! get trend of PPFD/LAI over preceeding days
+            ! normalise by mean
+            tmp_vec = an_vec(lu,pft,:) / (sum(an_vec(lu,pft,:)) / len_an_vec)
+
+            ! get trend of an_unitlai over preceeding len_an_vec days
             vec_idx = (/ (idx, idx = 1, len_an_vec) /)
-            call calc_reg_line( real(vec_idx(:)), an_vec(lu,pft,:), intercept, slope )
-
-            ! print*,an_vec(lu,pft,:)
-            ! print*,'intercept, slope: ', intercept, slope
-            ! print*,'-------'
-
-            ! an_unitlai_reldiff_damped = sum( an_vec(lu,pft,:) ) / len_an_vec
+            call calc_reg_line( real(vec_idx(:)), tmp_vec, intercept, slope )
 
             ! calculate fraction allocated to seeds
             f_seed = calc_f_seed( slope )
 
-            tile_fluxes(lu)%plant(pft)%debug = intercept
-
-            ! print*,'slope, f_seed: ', slope, intercept, f_seed
-
-            ! switch to seed-filling if an_lai has been declining for long enough
-
-          !   if (firstcall1) then
-          !     an_vec(lu,pft,:) = an_unitlai
-          !     count_declining = 0
-          !     count_increasing = 0
-          !     if (pft == npft .and. lu == nlu) firstcall1 = .false.
-          !   else
-          !     an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
-          !     an_vec(lu,pft,len_an_vec) = an_unitlai
-          !   end if
-
-          !   an_max = maxval(an_vec(lu,pft,:))
-
-          !   ! get damped maximum Anet/LAI
-          !   if (firstcall2) then
-          !     an_max_damped = an_max
-          !     an_max_damped_prev = an_max
-          !     if (pft == npft .and. lu == nlu) firstcall2 = .false.
-          !   else
-          !     an_max_damped_prev = an_max_damped
-          !     an_max_damped = dampen_variability( an_max, 15.0, an_max_damped )
-          !   end if
-
-          !   ! after N (count_wait_declining) consecutive days of declining (damped) net assimilation 
-          !   ! per unit leaf area, stop growing and allocate to seeds instead
-          !   !-------------------------------------------------------------------------
-          !   if (an_max_damped_prev > an_max_damped) then
-          !     count_declining = count_declining + 1
-          !   else
-          !     count_declining = 0
-          !   end if
-
-          !   if (count_declining > count_wait_declining) then
-          !     tile(lu)%plant(pft)%fill_seeds = .true.
-          !   end if
-
-          !   ! after N (count_wait_increasing) consecutive days of increasing (damped) net assimilation
-          !   ! per unit leaf area, re-start growing and no longer allocate to seeds
-          !   !-------------------------------------------------------------------------
-          !   if (an_max_damped_prev < an_max_damped) then
-          !     count_increasing = count_increasing + 1
-          !   else
-          !     count_increasing = 0
-          !   end if
-
-          !   if (count_increasing > count_wait_increasing) then
-          !     tile(lu)%plant(pft)%fill_seeds = .false.
-          !   end if
+            ! record trend for test output
+            tile_fluxes(lu)%plant(pft)%debug1 = an_unitlai            
+            tile_fluxes(lu)%plant(pft)%debug2 = slope            
+            tile_fluxes(lu)%plant(pft)%debug3 = f_seed            
 
           else
             f_seed = 0.0
           end if
-
-          ! xxx debug
-          f_seed = 0.0
 
           ! initialise (to make sure)
           dcleaf = 0.0
           dcroot = 0.0
           dcseed = 0.0
           drgrow = 0.0
-          
 
           if ( myinterface%steering%dofree_alloc ) then
             !==================================================================
@@ -1061,7 +1002,13 @@ contains
 
   function calc_f_seed( xx ) result( yy )
     !////////////////////////////////////////////////////////////////
-    ! Calculates fraction of C allocated to seeds
+    ! Calculates fraction of C allocated to seeds.
+    ! Parameters are chosen so that yy is 1 when xx reaches the
+    ! minimum value over the season. xx is the 15-day trend in relative
+    ! changes in Ra * fAPAR / LAI, where Ra is the top-of-atmosphere
+    ! solar radiation. When tested for one site (forcing from FR-Pue),
+    ! xx varied between -0.01 and 0.01 over one year 
+    ! (see analysis/example_cnmodel.R)
     !----------------------------------------------------------------
     ! arguments
     real, intent(in) :: xx  ! damped relative daily change net assimilation per unit leaf area
@@ -1069,7 +1016,7 @@ contains
     ! function return variable
     real :: yy      ! fraction allocated to seeds
 
-    yy = 1.0 / (1.0 + exp(10.0 * (xx + 1.0)))
+    yy = 1.0 / (1.0 + exp( 1000.0 * xx ))
 
   end function calc_f_seed
 

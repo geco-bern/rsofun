@@ -883,11 +883,11 @@ contains
     out_biosphere%seedn   = tile(lu)%plant(pft)%pseed%n%n14
 
     ! for debugging purposes
-    out_biosphere%x1      = tile_fluxes(lu)%plant(pft)%debug
-    out_biosphere%x2      = tile(lu)%plant(pft)%pseed%n%n14
-    out_biosphere%x3      = tile(lu)%plant(pft)%pseed%n%n14
-    out_biosphere%x4      = tile(lu)%plant(pft)%pseed%n%n14
-    out_biosphere%x5      = tile(lu)%plant(pft)%pseed%n%n14
+    out_biosphere%x1      = tile_fluxes(lu)%plant(pft)%debug1
+    out_biosphere%x2      = tile_fluxes(lu)%plant(pft)%debug2
+    out_biosphere%x3      = tile_fluxes(lu)%plant(pft)%debug3
+    out_biosphere%x4      = tile_fluxes(lu)%plant(pft)%debug4
+    out_biosphere%x5      = tile_fluxes(lu)%plant(pft)%debug5
 
   end subroutine diag_daily
 

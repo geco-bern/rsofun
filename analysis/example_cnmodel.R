@@ -141,6 +141,17 @@ output <- runread_pmodel_f(
   par = pars
   )
 
+calc_f_seed <- function(an_unitlai_diff_damped){
+  yy <- 1 / (1 + exp(1000*(an_unitlai_diff_damped)))
+  return(yy)
+}
+
+ggplot() +
+  geom_function(fun = calc_f_seed) +
+  xlim(-0.02,0.02) +
+  # geom_vline(xintercept = 1, linetype = "dotted") +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
 # LAI
 gg1 <- output$data[[1]] %>% 
   as_tibble() %>% 
@@ -148,10 +159,18 @@ gg1 <- output$data[[1]] %>%
   geom_line()
 gg2 <- output$data[[1]] %>% 
   as_tibble() %>% 
-  mutate(f_seed = calc_f_seed((x1))) %>% 
-  ggplot(aes(date, x1)) + 
+  ggplot(aes(date, cseed)) + 
   geom_line()
-gg1 / gg2
+gg3 <- output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, cleaf)) + 
+  geom_line()
+gg4 <- output$data[[1]] %>% 
+  as_tibble() %>% 
+  # ggplot(aes(date, calc_f_seed(x2))) + 
+  ggplot(aes(date, x3)) + 
+  geom_line()
+gg1 / gg2 / gg3 / gg4
 
 # df <- tibble(
 #   x = 1:15,
@@ -302,16 +321,6 @@ output$data[[1]] %>%
 # print(paste("Maximum leaf C: ", max(output$data[[1]]$cleaf)))
 # 
 
-calc_f_seed <- function(an_unitlai_diff_damped){
-  yy <- 1 / (1 + exp(10*(an_unitlai_diff_damped + 1)))
-  return(yy)
-}
-
-ggplot() +
-  geom_function(fun = calc_f_seed) +
-  xlim(-5,1) +
-  geom_vline(xintercept = 1, linetype = "dotted") +
-  geom_vline(xintercept = 0, linetype = "dotted")
 
 
 # 
