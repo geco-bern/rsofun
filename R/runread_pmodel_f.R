@@ -13,8 +13,9 @@
 #' @param ncores An integer specifying the number of cores used for parallel
 #'  computing (default = 2).
 #'
-#' @return A data frame (tibble) with one row for each site and outputs stored
-#'  in the nested column \code{data}
+#' @return A data frame (tibble) with one row for each site, site information 
+#' stored in the nested column \code{site_info} and outputs stored in the nested 
+#' column \code{data}
 #' @export
 #'
 #' @examples
