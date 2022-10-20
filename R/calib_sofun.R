@@ -3,11 +3,13 @@
 #' This is the main function that handles the 
 #' calibration of SOFUN model parameters. 
 #' 
-#' @param drivers A data frame with driver data
+#' @param drivers A data frame with driver data. See \code{p_model_drivers} for 
+#' a description of the data structure.
 #' @param obs A data frame containing observational data used for model
-#'  calibration. Created by function \code{get_obs_calib2()}
+#'  calibration. See \code{p_model_validation} for a description of the data
+#'  structure.
 #' @param settings A list containing model calibration settings. 
-#'  See vignette_rsofun.pdf for more information and examples.
+#'  See [vignettes/pmodel_use.Rmd] for more information and examples.
 #'
 #' @return A complemented named list containing 
 #'  the calibration settings and optimised parameter values.
