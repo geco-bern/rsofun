@@ -16,7 +16,8 @@
 #'  forcing data time series nested inside a column named \code{"data"}
 #' @param params_soil Soil texture data descriptor
 #'
-#' @return a rsofun input data frame
+#' @return a rsofun input data frame (see \link{p_model_drivers} for a detailed
+#' description of its structure)
 #' @export
 
 collect_drivers_sofun <- function( 
