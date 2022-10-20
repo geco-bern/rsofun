@@ -64,7 +64,7 @@
 #'       classification}
 #'       \item{c4}{a logical value indicating whether or not C4 photosynthesis 
 #'       pathway is followed. If FALSE, it's C3}
-#'       \item{whc}{a numeric value for the water holding capacity, used for simulating
+#'       \item{whc}{a numeric value for the water holding capacity (mm), used for simulating
 #'       the soil water balance}
 #'       \item{koeppen_code}{a character string indicating the Koeppen-Geiger
 #'       climate zone code}
@@ -90,7 +90,7 @@
 #'   }
 #' }
 #' 
-#' @references Pastorello, G., Trotta, C., Canfora, E. et al. 
+#' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
 #' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
 #' 
@@ -114,7 +114,7 @@
 #' Small tests dataset to validate 
 #' calibration routines
 #'
-#' @format A tibble of driver data:
+#' @format A tibble of validation data:
 #' \describe{
 #'   \item{sitename}{a character string containing the site name (e.g. "FR-Pue")}
 #'   \item{data}{a tibble [ 2,920 x 3 ] with time series for the following variables:
@@ -126,8 +126,12 @@
 #'     }
 #'   }
 #' }
+#' @example require(ggplot2); require(tidyverse)
+#' p_model_validation %>% tidyr::unnest(data) 
+#'   
+#'  
 #' 
-#' @references Pastorello, G., Trotta, C., Canfora, E. et al. 
+#' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
 #' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
 "p_model_validation"
