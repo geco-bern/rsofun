@@ -5,16 +5,17 @@
 #' Root mean squared error
 #' 
 #' Root mean squared error (RMSE) cost function on
-#' the kphio parameter.
+#' the kphio (quantum yield efficiency) parameter.
 #' 
-#' @param par parameters
+#' @param par list of model parameters (\code{"kphio", "soil_m_par_a",
+#' "soilm_par_b", "tau_acclim_tempstress", "par_shape_tempstress"})
 #' @param obs observations
 #' @param drivers driver data
 #' @param inverse invert the function (1-value)
 #' 
 #' @importFrom magrittr '%>%'
 #' 
-#' @return the RMSE on the kpio parameter
+#' @return the RMSE on the kphio parameter
 #' @export
 
 cost_rmse_kphio <- function(
