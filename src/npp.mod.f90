@@ -46,7 +46,7 @@ contains
     ! ('rsoil'). This implies that growth respiration is "paid" also on exu-
     ! dates. 
     !-------------------------------------------------------------------------
-    ! use md_turnover, only: turnover_leaf, turnover_root, turnover_labl
+    use md_turnover, only: turnover_leaf, turnover_root
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
@@ -60,6 +60,12 @@ contains
     real, parameter :: dleaf_die = 0.012
     real, parameter :: droot_die = 0.012
     real, parameter :: dlabl_die = 0.0
+
+    ! for CUE dampening, determining acceleration of turnover (tissue deactivation)
+    logical, save :: firstcall = .true.
+    integer, parameter :: len_cue_vec = 15
+    real, dimension(nlu,npft,len_cue_vec), save :: cue_vec
+    real :: f_deactivate, cue_damped
 
     ! xxx debug
     real :: tmp
@@ -289,5 +295,20 @@ contains
     cexu = params_plant%exurate * croot
 
   end function calc_cexu
+
+
+  !/////////////////////////////////////////////////////////////////////////
+  ! Function to increase towards 1 when (damped) CUE approaches 0.
+  !-------------------------------------------------------------------------    
+  function calc_cue_stress( cue ) result( f_deactivate )
+    ! arguments
+    real, intent(in) :: cue
+
+    ! function return variable
+    real :: f_deactivate
+
+    f_deactivate = 1.0 / (1.0 + exp(10.0 * (cue + 0.25)))
+  
+  end function
 
 end module md_npp

@@ -20,6 +20,7 @@ contains
     ! use md_phenology, only: temppheno_type, params_pft_pheno
     use md_tile
     use md_plant
+    use md_interface_pmodel, only: myinterface
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
@@ -35,11 +36,16 @@ contains
     !----------------------------------------------------------
     do pft=1,npft
       lu = params_pft_plant(pft)%lu_category
+      
       if (doy == 1 .and. init) then
         call init_plant( tile(lu)%plant(pft) )
         call init_plant_fluxes( tile_fluxes(lu)%plant(pft) )
         call estab_daily( tile(lu)%plant(pft) )
       end if
+
+      ! add seed C and N to labile pool
+      call sowing_daily( tile(lu)%plant(pft), myinterface%landuse(doy)%cseed, myinterface%landuse(doy)%nseed )
+
     end do
 
 
@@ -78,7 +84,6 @@ contains
     ! function of Vcmax25.
     !------------------------------------------------------------------
     use md_plant, only: plant_type, params_plant, params_pft_plant, add_seed
-    use md_interface_pmodel
 
     ! arguments
     type(plant_type), intent(inout) :: plant
@@ -96,6 +101,29 @@ contains
     end if
 
   end subroutine estab_daily
+
+
+  subroutine sowing_daily( plant, cseed, nseed )
+    !//////////////////////////////////////////////////////////////////
+    ! Calculates leaf-level metabolic N content per unit leaf area as a
+    ! function of Vcmax25.
+    !------------------------------------------------------------------
+    use md_plant, only: plant_type, params_pft_plant
+
+    ! arguments
+    type(plant_type), intent(inout) :: plant
+    real, intent(in) :: cseed, nseed
+
+    plant%plabl%c%c12 = plant%plabl%c%c12 + cseed
+    plant%plabl%n%n14 = plant%plabl%n%n14 + nseed
+
+    if (params_pft_plant(plant%pftno)%grass) then
+      plant%nind = 1.0
+    else
+      stop 'sowing_daily not implemented for trees'
+    end if
+
+  end subroutine sowing_daily  
 
 
   ! subroutine vegdynamics( tile, plant, solar, out_pmodel )

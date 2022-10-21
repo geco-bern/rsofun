@@ -293,32 +293,32 @@ contains
         if (baltest .and. abs(orgbal1%n%n14) > eps) stop 'balance not satisfied for N'
         if (verbose) print*, '... done'
 
-        ! !----------------------------------------------------------------
-        ! ! grass / crop harvest
-        ! !----------------------------------------------------------------
-        ! if (verbose) print*, 'calling landuse() ... '
-        ! if (verbose) print*, '              with state variables:'
-        ! if (verbose) print*, '              pleaf = ', tile(1)%plant(1)%pleaf
-        ! if (verbose) print*, '              proot = ', tile(1)%plant(1)%proot
-        ! if (verbose) print*, '              plabl = ', tile(1)%plant(1)%plabl
-        ! if (verbose) print*, '              mharv = ', tile_fluxes(1)%plant(1)%dharv
-        ! if (verbose) orgtmp1 =  orgplus( tile(1)%plant(1)%pleaf, tile(1)%plant(1)%proot, tile(1)%plant(1)%plabl )
-        ! if (verbose) orgtmp2 =  tile_fluxes(1)%plant(1)%dharv
-        ! !----------------------------------------------------------------
-        ! call landuse( tile(:), tile_fluxes(:), doy )
-        ! !----------------------------------------------------------------
-        ! if (verbose) print*, '              ==> returned: '
-        ! if (verbose) print*, '              pleaf = ', tile(1)%plant(1)%pleaf
-        ! if (verbose) print*, '              proot = ', tile(1)%plant(1)%proot
-        ! if (verbose) print*, '              plabl = ', tile(1)%plant(1)%plabl
-        ! if (verbose) print*, '              mharv = ', tile_fluxes(1)%plant(1)%dharv
-        ! if (verbose) print*, '    --- balance: '
-        ! if (verbose) orgbal1 = orgminus( orgminus( orgtmp1, orgplus( tile(1)%plant(1)%pleaf, tile(1)%plant(1)%proot, &
-        !                         tile(1)%plant(1)%plabl ) ), orgminus( tile_fluxes(1)%plant(1)%dharv, orgtmp2 ) )
-        ! if (verbose) print*, '        dharv - dplant  = ', orgbal1
-        ! if (baltest .and. abs(orgbal1%c%c12) > eps) stop 'balance not satisfied for C'
-        ! if (baltest .and. abs(orgbal1%n%n14) > eps) stop 'balance not satisfied for N'
-        ! if (verbose) print*, '... done'
+        !----------------------------------------------------------------
+        ! grass / crop harvest
+        !----------------------------------------------------------------
+        if (verbose) print*, 'calling landuse() ... '
+        if (verbose) print*, '              with state variables:'
+        if (verbose) print*, '              pleaf = ', tile(1)%plant(1)%pleaf
+        if (verbose) print*, '              proot = ', tile(1)%plant(1)%proot
+        if (verbose) print*, '              plabl = ', tile(1)%plant(1)%plabl
+        if (verbose) print*, '              mharv = ', tile_fluxes(1)%plant(1)%dharv
+        if (verbose) orgtmp1 =  orgplus( tile(1)%plant(1)%pleaf, tile(1)%plant(1)%proot, tile(1)%plant(1)%plabl )
+        if (verbose) orgtmp2 =  tile_fluxes(1)%plant(1)%dharv
+        !----------------------------------------------------------------
+        call landuse( tile(:), tile_fluxes(:), doy )
+        !----------------------------------------------------------------
+        if (verbose) print*, '              ==> returned: '
+        if (verbose) print*, '              pleaf = ', tile(1)%plant(1)%pleaf
+        if (verbose) print*, '              proot = ', tile(1)%plant(1)%proot
+        if (verbose) print*, '              plabl = ', tile(1)%plant(1)%plabl
+        if (verbose) print*, '              mharv = ', tile_fluxes(1)%plant(1)%dharv
+        if (verbose) print*, '    --- balance: '
+        if (verbose) orgbal1 = orgminus( orgminus( orgtmp1, orgplus( tile(1)%plant(1)%pleaf, tile(1)%plant(1)%proot, &
+                                tile(1)%plant(1)%plabl ) ), orgminus( tile_fluxes(1)%plant(1)%dharv, orgtmp2 ) )
+        if (verbose) print*, '        dharv - dplant  = ', orgbal1
+        if (baltest .and. abs(orgbal1%c%c12) > eps) stop 'balance not satisfied for C'
+        if (baltest .and. abs(orgbal1%n%n14) > eps) stop 'balance not satisfied for N'
+        if (verbose) print*, '... done'
 
         ! !----------------------------------------------------------------
         ! ! litter and soil decomposition and N mineralisation
@@ -413,8 +413,7 @@ contains
         !----------------------------------------------------------------
         call allocation_daily(  tile(:), &
                                 tile_fluxes(:),&
-                                myinterface%climate(doy), &
-                                myinterface%climate_memory(doy) &
+                                myinterface%climate(doy) &
                                 )
         !----------------------------------------------------------------
         if (verbose) print*, '              ==> returned: '

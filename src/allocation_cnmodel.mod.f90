@@ -51,7 +51,7 @@ module md_allocation_cnmodel
 
 contains
 
-  subroutine allocation_daily( tile, tile_fluxes, climate, climate_memory )
+  subroutine allocation_daily( tile, tile_fluxes, climate )
     !//////////////////////////////////////////////////////////////////
     ! Finds optimal shoot:root growth ratio to balance C:N stoichiometry
     ! of a grass (no wood allocation).
@@ -59,22 +59,26 @@ contains
     use md_findroot_fzeroin
     use md_interface_pmodel, only: myinterface
     use md_forcing_pmodel, only: climate_type
-    use md_sofunutils, only: dampen_variability
+    use md_sofunutils, only: dampen_variability, calc_reg_line
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
-    type(climate_type), intent(in) :: climate, climate_memory
+    type(climate_type), intent(in) :: climate
 
     ! local variables
     real :: dcleaf
     real :: dnleaf
     real :: dcroot
     real :: dcseed
+    real :: dnseed
     real :: dnroot
     real :: drgrow
-    real :: an_unitlai
+    real, save :: an_unitlai_prev
+    real :: an_unitlai, an_unitlai_reldiff, an_unitlai_reldiff_damped, an_max
+    real :: f_seed           ! fraction allocated to seeds (unitless)
     integer, save :: count_increasing, count_declining
+    logical, save :: firstcall0 = .true.
     logical, save :: firstcall1 = .true.
     logical, save :: firstcall2 = .true.
     logical, save :: firstcall3 = .true.
@@ -82,6 +86,7 @@ contains
 
     integer :: lu
     integer :: pft
+    integer :: idx
     integer :: usemoy        ! MOY in climate vectors to use for allocation
     integer :: usedoy        ! DOY in climate vectors to use for allocation
   
@@ -98,9 +103,14 @@ contains
 
     integer, parameter :: len_an_vec = 15
     real, dimension(nlu,npft,len_an_vec), save :: an_vec
-    real :: an_max
+    real, dimension(len_an_vec) :: tmp_vec
+    real :: an_unitlai_diff_damped
+    integer, dimension(len_an_vec) :: vec_idx
+    real :: slope, intercept
+
     real, save :: an_max_damped, an_max_damped_prev
-    integer, parameter :: count_wait = 5
+    integer, parameter :: count_wait_declining = 5
+    integer, parameter :: count_wait_increasing = 15
 
     integer, parameter :: len_luep_vec = ndayyear
     integer, parameter :: len_rrum_vec = ndayyear
@@ -148,61 +158,42 @@ contains
           if (tile(lu)%plant(pft)%lai_ind > 0.0) then
             !-------------------------------------------------------------------------
             ! PHENOPHASE: SEED FILLING
-            ! Determine day when net C assimilation per unit leaf area starts declining
+            ! Determine day when "absorbed" top-of-atmosphere radiation per unit leaf 
+            ! area starts declining
             !-------------------------------------------------------------------------
-            ! get maximum Anet/LAI of preceeding 'ndays' days
-            an_unitlai = (tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd) / tile(lu)%plant(pft)%lai_ind
+            ! Calculate absorbed top-of-atmosphere solar radiation per unit leaf area
+            ! Using TOA radiation here to avoid effects by daily varying cloud cover,
+            ! assuming the plant senses available radiation over the seasons based on day length.
+            an_unitlai = tile_fluxes(lu)%canopy%dra &
+                         * tile(lu)%plant(pft)%fapar_ind &
+                         / tile(lu)%plant(pft)%lai_ind
 
+            ! Apply low-pass filter on an_unitlai
             if (firstcall1) then
               an_vec(lu,pft,:) = an_unitlai
-              count_declining = 0
-              count_increasing = 0
               if (pft == npft .and. lu == nlu) firstcall1 = .false.
             else
               an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
               an_vec(lu,pft,len_an_vec) = an_unitlai
             end if
 
-            an_max = maxval(an_vec(lu,pft,:))
+            ! normalise by mean
+            tmp_vec = an_vec(lu,pft,:) / (sum(an_vec(lu,pft,:)) / len_an_vec)
 
-            ! get damped maximum Anet/LAI
-            if (firstcall2) then
-              an_max_damped = an_max
-              an_max_damped_prev = an_max
-              if (pft == npft .and. lu == nlu) firstcall2 = .false.
-            else
-              an_max_damped_prev = an_max_damped
-              an_max_damped = dampen_variability( an_max, 15.0, an_max_damped )
-            end if
+            ! get trend of an_unitlai over preceeding len_an_vec days
+            vec_idx = (/ (idx, idx = 1, len_an_vec) /)
+            call calc_reg_line( real(vec_idx(:)), tmp_vec, intercept, slope )
 
-            ! after N consecutive days of declining (damped) net assimilation per unit leaf area,
-            ! stop growing and allocate to seeds instead
-            !-------------------------------------------------------------------------
-            if (an_max_damped_prev > an_max_damped) then
-              count_declining = count_declining + 1
-            else
-              count_declining = 0
-            end if
+            ! calculate fraction allocated to seeds
+            f_seed = calc_f_seed( slope )
 
-            if (count_declining > count_wait) then
-              tile(lu)%plant(pft)%fill_seeds = .true.
-            end if
-
-            ! after N consecutive days of increasing (damped) net assimilation per unit leaf area,
-            ! re-start growing and no longer allocate to seeds
-            !-------------------------------------------------------------------------
-            if (an_max_damped_prev < an_max_damped) then
-              count_increasing = count_increasing + 1
-            else
-              count_increasing = 0
-            end if
-
-            if (count_increasing > count_wait) then
-              tile(lu)%plant(pft)%fill_seeds = .false.
-            end if
+            ! record trend for test output
+            tile_fluxes(lu)%plant(pft)%debug1 = an_unitlai            
+            tile_fluxes(lu)%plant(pft)%debug2 = slope            
+            tile_fluxes(lu)%plant(pft)%debug3 = f_seed            
 
           else
-            tile(lu)%plant(pft)%fill_seeds = .false.
+            f_seed = 0.0
           end if
 
           ! initialise (to make sure)
@@ -506,111 +497,105 @@ contains
                             orgfrac( (1.0 - frac_for_resp), &
                                       tile(lu)%plant(pft)%plabl ) )
 
-            ! xxx debug
-            tile(lu)%plant(pft)%fill_seeds = .false.
+            ! amount to be allocated as real number
+            dcseed = f_seed * params_plant%growtheff * avl%c%c12
+            dnseed = f_seed * params_plant%growtheff * avl%n%n14
+            dcleaf = (1.0 - f_seed) * frac_leaf         * params_plant%growtheff * avl%c%c12
+            dcroot = (1.0 - f_seed) * (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
+            dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
+            drgrow = (1.0 - params_plant%growtheff) * avl%c%c12
 
-            if (tile(lu)%plant(pft)%fill_seeds) then
-              !------------------------------------------------------------------
-              ! allocate to fill seeds, discounted by growth respiration
-              !------------------------------------------------------------------
-              ! to seeds
-              dcseed = params_plant%growtheff         * avl%c%c12
-              drgrow = (1.0 - params_plant%growtheff) * avl%c%c12
+            ! ! test balance
+            ! if (abs(avl%c%c12 - dcseed - dcroot - dcleaf) > eps) then
+            !   print*, 'allocation: C balance not satisfied.', eps
+            ! end if
 
-              ! remove and add to seed biomass
-              call orgmv( orgpool( carbon( dcseed ), avl%n  ) , &
-                          tile(lu)%plant(pft)%plabl, &
-                          tile(lu)%plant(pft)%pseed &
-                          )
+            !-------------------------------------------------------------------
+            ! SEED ALLOCATION
+            !-------------------------------------------------------------------
+            call orgmv( orgpool( carbon( dcseed ), nitrogen( dnseed )  ) , &
+                        tile(lu)%plant(pft)%plabl, &
+                        tile(lu)%plant(pft)%pseed &
+                        )
+            
+            ! ... and remove growth respiration from labile C
+            tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - drgrow
 
-              ! ... and remove growth respiration from labile C
-              tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - drgrow
+            !-------------------------------------------------------------------
+            ! LEAF ALLOCATION
+            !-------------------------------------------------------------------
+            if (dcleaf > 0.0) then
 
-            else
+              call allocate_leaf( &
+                pft, &
+                dcleaf, &
+                tile(lu)%plant(pft)%pleaf%c%c12, &
+                tile(lu)%plant(pft)%pleaf%n%n14, &
+                tile(lu)%plant(pft)%plabl%c%c12, &
+                tile(lu)%plant(pft)%plabl%n%n14, &
+                tile(lu)%plant(pft)%actnv_unitfapar, &
+                tile(lu)%plant(pft)%lai_ind, &
+                dnleaf, &
+                nignore = .true. &
+                )
 
-              ! amount to be allocated as real number
-              dcleaf = frac_leaf         * params_plant%growtheff * avl%c%c12
-              dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
-              dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
-              drgrow = (1.0 - params_plant%growtheff) * avl%c%c12
+              !-------------------------------------------------------------------  
+              ! Update leaf traits, given updated LAI and fAPAR (leaf N is consistent with plant%narea_canopy)
+              !------------------------------------------------------------------- 
+              tile(lu)%plant(pft)%fapar_ind = get_fapar( tile(lu)%plant(pft)%lai_ind )
+              call update_leaftraits( tile(lu)%plant(pft) )
 
-              !-------------------------------------------------------------------
-              ! LEAF ALLOCATION
-              !-------------------------------------------------------------------
-              if (dcleaf > 0.0) then
-
-                call allocate_leaf( &
-                  pft, &
-                  dcleaf, &
-                  tile(lu)%plant(pft)%pleaf%c%c12, &
-                  tile(lu)%plant(pft)%pleaf%n%n14, &
-                  tile(lu)%plant(pft)%plabl%c%c12, &
-                  tile(lu)%plant(pft)%plabl%n%n14, &
-                  tile(lu)%plant(pft)%actnv_unitfapar, &
-                  tile(lu)%plant(pft)%lai_ind, &
-                  dnleaf, &
-                  nignore = .true. &
-                  )
-
-                !-------------------------------------------------------------------  
-                ! Update leaf traits, given updated LAI and fAPAR (leaf N is consistent with plant%narea_canopy)
-                !------------------------------------------------------------------- 
-                tile(lu)%plant(pft)%fapar_ind = get_fapar( tile(lu)%plant(pft)%lai_ind )
-                call update_leaftraits( tile(lu)%plant(pft) )
-
-                !-------------------------------------------------------------------  
-                ! If labile N gets negative, account gap as N fixation
-                !-------------------------------------------------------------------  
-                if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
-                  req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
-                  tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
-                  tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
-                  tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
-                end if
-
+              !-------------------------------------------------------------------  
+              ! If labile N gets negative, account gap as N fixation
+              !-------------------------------------------------------------------  
+              if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
+                req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
+                tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
+                tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
+                tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
               end if
-
-              !-------------------------------------------------------------------
-              ! ROOT ALLOCATION
-              !-------------------------------------------------------------------
-              if (dcroot > 0.0) then
-
-                call allocate_root( &
-                  pft, &
-                  dcroot, &
-                  dnroot, &
-                  tile(lu)%plant(pft)%proot%c%c12, &
-                  tile(lu)%plant(pft)%proot%n%n14, &
-                  tile(lu)%plant(pft)%plabl%c%c12, &
-                  tile(lu)%plant(pft)%plabl%n%n14, &
-                  nignore = .true. &
-                  )
-
-                !-------------------------------------------------------------------  
-                ! If labile N gets negative, account gap as N fixation
-                !-------------------------------------------------------------------  
-                if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
-                  req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
-                  tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
-                  tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
-                  tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
-                end if
-
-              end if
-
-              ! !-------------------------------------------------------------------
-              ! ! growth respiration
-              ! ! dC = y * Cavl
-              ! ! Cavl = dC + Rg
-              ! ! => Rg = dC * (1/y - 1)
-              ! !-------------------------------------------------------------------
-              ! ! add growth respiration to autotrophic respiration and substract from NPP
-              ! ! (note that NPP is added to plabl in and growth resp. is implicitly removed
-              ! ! from plabl above)
-              ! ! drgrow   = ( 1.0 - params_plant%growtheff ) * ( dcleaf + dcroot ) / params_plant%growtheff  ! was wrong, was it?
-              ! drgrow = ( dcleaf + dcroot ) * ((1.0 / params_plant%growtheff) - 1.0)
 
             end if
+
+            !-------------------------------------------------------------------
+            ! ROOT ALLOCATION
+            !-------------------------------------------------------------------
+            if (dcroot > 0.0) then
+
+              call allocate_root( &
+                pft, &
+                dcroot, &
+                dnroot, &
+                tile(lu)%plant(pft)%proot%c%c12, &
+                tile(lu)%plant(pft)%proot%n%n14, &
+                tile(lu)%plant(pft)%plabl%c%c12, &
+                tile(lu)%plant(pft)%plabl%n%n14, &
+                nignore = .true. &
+                )
+
+              !-------------------------------------------------------------------  
+              ! If labile N gets negative, account gap as N fixation
+              !-------------------------------------------------------------------  
+              if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
+                req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
+                tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
+                tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
+                tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
+              end if
+
+            end if
+
+            ! !-------------------------------------------------------------------
+            ! ! growth respiration
+            ! ! dC = y * Cavl
+            ! ! Cavl = dC + Rg
+            ! ! => Rg = dC * (1/y - 1)
+            ! !-------------------------------------------------------------------
+            ! ! add growth respiration to autotrophic respiration and substract from NPP
+            ! ! (note that NPP is added to plabl in and growth resp. is implicitly removed
+            ! ! from plabl above)
+            ! ! drgrow   = ( 1.0 - params_plant%growtheff ) * ( dcleaf + dcroot ) / params_plant%growtheff  ! was wrong, was it?
+            ! drgrow = ( dcleaf + dcroot ) * ((1.0 / params_plant%growtheff) - 1.0)
 
           end if
 
@@ -1013,6 +998,27 @@ contains
     end if
 
   end subroutine allocate_root
+
+
+  function calc_f_seed( xx ) result( yy )
+    !////////////////////////////////////////////////////////////////
+    ! Calculates fraction of C allocated to seeds.
+    ! Parameters are chosen so that yy is 1 when xx reaches the
+    ! minimum value over the season. xx is the 15-day trend in relative
+    ! changes in Ra * fAPAR / LAI, where Ra is the top-of-atmosphere
+    ! solar radiation. When tested for one site (forcing from FR-Pue),
+    ! xx varied between -0.01 and 0.01 over one year 
+    ! (see analysis/example_cnmodel.R)
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: xx  ! damped relative daily change net assimilation per unit leaf area
+
+    ! function return variable
+    real :: yy      ! fraction allocated to seeds
+
+    yy = 1.0 / (1.0 + exp( 1000.0 * xx ))
+
+  end function calc_f_seed
 
 
   ! function get_rcton_init( pft, meanmppfd, nv ) result( rcton )

@@ -83,7 +83,9 @@ run_pmodel_f_bysite <- function(
       tmax,
       fharv,
       dno3,
-      dnh4
+      dnh4,
+      cseed,
+      nseed
       )
   
   # validate input
@@ -106,7 +108,9 @@ run_pmodel_f_bysite <- function(
       "tmax",
       "fharv",
       "dno3",
-      "dnh4"
+      "dnh4",
+      "cseed",
+      "nseed"
     )
     
     # create a loop to loop over a list of variables
@@ -374,8 +378,13 @@ run_pmodel_f_bysite <- function(
           "narea",
           "narea_v",
           "nloss",
-          "seedc",
-          "seedn"
+          "cseed",
+          "nseed",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5"
           )) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -424,8 +433,13 @@ run_pmodel_f_bysite <- function(
                   narea   = NA,
                   narea_v = NA,
                   nloss   = NA,
-                  seedc   = NA,
-                  seedn   = NA
+                  cseed   = NA,
+                  nseed   = NA,
+                  x1      = NA,
+                  x2      = NA,
+                  x3      = NA,
+                  x4      = NA,
+                  x5      = NA
                   )
   }
     

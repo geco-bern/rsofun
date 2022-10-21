@@ -3,7 +3,7 @@ library(rsofun)
 library(ggplot2)
 library(patchwork)
 library(readr)
-
+library(lubridate)
 
 pars <- list(
 
@@ -111,7 +111,23 @@ tmp <- rsofun::p_model_drivers %>%
   mutate(forcing = purrr::map(forcing, ~mutate(., 
                                                fharv = 0.0,
                                                dno3 = 0.1,
-                                               dnh4 = 0.1)))
+                                               dnh4 = 0.1
+                                               )))
+
+## Apply some harvesting (leaf removal), and seed input
+use_cseed <- 100
+cn_seed <- 20
+use_nseed <- use_cseed / cn_seed
+
+tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
+  mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.0, 0.0),
+         cseed = ifelse(month(date) == 3 & mday(date) == 15, use_cseed, 0.0),
+         nseed = ifelse(month(date) == 3 & mday(date) == 15, use_nseed, 0.0))
+
+## check visually
+tmp$forcing[[1]] %>%
+  ggplot(aes(date, cseed)) +
+  geom_line()
 
 ## no spinup, 1 year transient run
 tmp$params_siml[[1]]$spinupyears <- 1500
@@ -125,150 +141,245 @@ output <- runread_pmodel_f(
   par = pars
   )
 
-## read (experimental) files
-aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>% 
-  setNames(c("year", "csoil")) %>% 
-  left_join(
-    read_fwf(file = "out/out_rsofun.a.nsoil.txt", col_types = "in") %>% 
-      setNames(c("year", "nsoil")),
-    by = "year"
-  )
+calc_f_seed <- function(an_unitlai_diff_damped){
+  yy <- 1 / (1 + exp(1000*(an_unitlai_diff_damped)))
+  return(yy)
+}
 
-aout %>% 
-  ggplot(aes(year, nsoil)) +
-  geom_line()
+ggplot() +
+  geom_function(fun = calc_f_seed) +
+  xlim(-0.02,0.02) +
+  # geom_vline(xintercept = 1, linetype = "dotted") +
+  geom_vline(xintercept = 0, linetype = "dotted")
 
-## Test plots
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, gpp)) + 
-  geom_line()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot() + 
-  geom_line(aes(date, npp))
-  # geom_line(aes(date, gpp-drd), color = 'red')
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, cex)) + 
-  geom_line()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, cleaf)) + 
-  geom_line()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, croot)) + 
-  geom_line()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, clabl)) + 
-  geom_line()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, nlabl)) + 
-  geom_line()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, nleaf)) + 
-  geom_line()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, pnh4 + pno3)) + 
-  geom_line()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, drd/gpp)) + 
-  geom_line()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, cleaf/nleaf)) + 
-  geom_line()
-
-r_cton_leaf <- mean(output$data[[1]]$cleaf / output$data[[1]]$nleaf, na.rm = TRUE)
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(cleaf, nleaf)) + 
-  geom_point() +
-  geom_abline(slope = 1/r_cton_leaf, intercept = 0, color = "red", linetype = "dotted")
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(cleaf, cleaf/nleaf)) + 
-  geom_point()
-
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(cleaf/nleaf, ..density..)) + 
-  geom_histogram()
-
-gg <- output$data[[1]] %>% 
+# LAI
+gg1 <- output$data[[1]] %>% 
   as_tibble() %>% 
   ggplot(aes(date, lai)) + 
   geom_line()
-
-output$data[[1]] %>% 
+gg2 <- output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(date, fapar)) + 
+  ggplot(aes(date, cseed)) + 
   geom_line()
-
-output$data[[1]] %>% 
+gg3 <- output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(date, csoil)) + 
+  ggplot(aes(date, cleaf)) + 
   geom_line()
-
-output$data[[1]] %>% 
+gg4 <- output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(date, en2o)) + 
+  # ggplot(aes(date, calc_f_seed(x2))) + 
+  ggplot(aes(date, x3)) + 
   geom_line()
+gg1 / gg2 / gg3 / gg4
 
-output$data[[1]] %>% 
-  as_tibble() %>% 
-  mutate(year = lubridate::year(date)) %>% 
-  group_by(year) %>% 
-  summarise(npp = sum(npp, na.rm = TRUE), gpp = sum(gpp, na.rm = TRUE)) %>% 
-  mutate(cue = npp/gpp) %>% 
-  ggplot(aes(year, cue)) + 
-  geom_line()
+# df <- tibble(
+#   x = 1:15,
+#   y = c(2.75753609E-06, 1.42544932E-05, 2.04479511E-05, 1.85851095E-05, 2.37835593E-05, 2.47478038E-05, 9.18351452E-06, 2.34256640E-05, 1.13146407E-05, 2.28059034E-05, 6.91168907E-06, 2.24883406E-05, 2.22943618E-05, 2.46384789E-05, 2.53433227E-05)
+# )
+# lm(y ~ x, data = df)
 
-print(gg)
+# N2O
+ggplot() + 
+  geom_line(data = output$data[[1]], aes(date, en2o))
 
-print(paste("Maximum leaf C: ", max(output$data[[1]]$cleaf)))
-
-# source("analysis/get_fill_seeds.R")
-# 
-# df_fill_seeds <- get_fill_seeds(
-#   output$data[[1]]$gpp,
-#   output$data[[1]]$drd,
-#   output$data[[1]]$lai,
-#   lubridate::yday(output$data[[1]]$date)
+# ## read (experimental) files
+# aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>% 
+#   setNames(c("year", "csoil")) %>% 
+#   left_join(
+#     read_fwf(file = "out/out_rsofun.a.nsoil.txt", col_types = "in") %>% 
+#       setNames(c("year", "nsoil")),
+#     by = "year"
 #   )
 # 
-# df <- bind_cols(
-#   output$data[[1]],
-#   df_fill_seeds
-# )
-# 
-# gg1 <- df %>% 
-#   slice(1:365) %>% 
-#   ggplot(aes(date, gpp)) +
+# aout %>% 
+#   ggplot(aes(year, nsoil)) +
 #   geom_line()
 # 
-# gg2 <- df %>% 
-#   slice(1:365) %>% 
-#   ggplot() +
-#   geom_line(aes(date, (gpp-drd)/lai)) +
-#   geom_line(aes(date, an_max), color = "red") +
-#   geom_line(aes(date, an_unitlai_damped), color = "royalblue")
+# ## Test plots
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, gpp)) + 
+#   geom_line()
 # 
-# gg1/gg2
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot() + 
+#   geom_line(aes(date, npp))
+#   # geom_line(aes(date, gpp-drd), color = 'red')
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, cex)) + 
+#   geom_line()
+
+output$data[[1]] %>%
+  as_tibble() %>%
+  ggplot(aes(date, cleaf)) +
+  geom_line()
+
+output$data[[1]] %>%
+  as_tibble() %>%
+  ggplot(aes(date, croot)) +
+  geom_line()
+
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, clabl)) + 
+#   geom_line()
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, nlabl)) + 
+#   geom_line()
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, nleaf)) + 
+#   geom_line()
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, pnh4 + pno3)) + 
+#   geom_line()
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, drd/gpp)) + 
+#   geom_line()
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, cleaf/nleaf)) + 
+#   geom_line()
+# 
+# r_cton_leaf <- mean(output$data[[1]]$cleaf / output$data[[1]]$nleaf, na.rm = TRUE)
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(cleaf, nleaf)) + 
+#   geom_point() +
+#   geom_abline(slope = 1/r_cton_leaf, intercept = 0, color = "red", linetype = "dotted")
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(cleaf, cleaf/nleaf)) + 
+#   geom_point()
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(cleaf/nleaf, ..density..)) + 
+#   geom_histogram()
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, fapar)) + 
+#   geom_line()
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, csoil)) + 
+#   geom_line()
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   ggplot(aes(date, en2o)) + 
+#   geom_line()
+# 
+# gg1 <- output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   slice(1:500) %>% 
+#   ggplot(aes(date, drd)) + 
+#   geom_line()
+# 
+# gg2 <- output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   slice(1:500) %>% 
+#   ggplot(aes(date, drd/gpp)) + 
+#   geom_line()
+# 
+# gg3 <- output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   mutate(cue = npp/gpp) %>% 
+#   slice(1:500) %>% 
+#   ggplot(aes(date, cue)) + 
+#   geom_line()
+# 
+# gg1/
+#   gg2/
+#   gg3
+# 
+# output$data[[1]] %>% 
+#   as_tibble() %>% 
+#   mutate(year = lubridate::year(date)) %>% 
+#   group_by(year) %>% 
+#   summarise(npp = sum(npp, na.rm = TRUE), gpp = sum(gpp, na.rm = TRUE)) %>% 
+#   mutate(cue = npp/gpp) %>% 
+#   ggplot(aes(year, cue)) + 
+#   geom_line()
+# 
+# print(gg)
+# 
+# print(paste("Maximum leaf C: ", max(output$data[[1]]$cleaf)))
+# 
+
+
+
+# 
+# cue_stress <- function(cue){
+#   yy <- 1 / (1 + exp(10*(cue+0.25)))
+#   return(yy)  
+# }
+# 
+# ggplot() +
+#   geom_function(fun = cue_stress) +
+#   xlim(-5,1) +
+#   geom_vline(xintercept = 1, linetype = "dotted") +
+#   geom_vline(xintercept = 0, linetype = "dotted")
+# 
+# tmp <- read_fwf(
+#     "~/rsofun/test.txt",
+#     fwf_widths(c(19,18,18), c("cue", "cue_damped", "f_deactivate")),
+#     skip = 1,
+#     col_types = "nn") %>% 
+#   tail(6000)
+# 
+# gg1 <- tmp %>%
+#   mutate(id = 1:n()) %>% 
+#   ggplot() +
+#   geom_line(aes(id, cue)) +
+#   geom_line(aes(id, cue_damped), color = "red") +
+#   ylim(-1,1)
+# gg2 <- tmp %>%
+#   mutate(id = 1:n()) %>% 
+#   ggplot() +
+#   geom_line(aes(id, f_deactivate))
+# gg1/
+#   gg2
+# 
+# 
+# # source("analysis/get_fill_seeds.R")
+# # 
+# # df_fill_seeds <- get_fill_seeds(
+# #   output$data[[1]]$gpp,
+# #   output$data[[1]]$drd,
+# #   output$data[[1]]$lai,
+# #   lubridate::yday(output$data[[1]]$date)
+# #   )
+# # 
+# # df <- bind_cols(
+# #   output$data[[1]],
+# #   df_fill_seeds
+# # )
+# # 
+# # gg1 <- df %>% 
+# #   slice(1:365) %>% 
+# #   ggplot(aes(date, gpp)) +
+# #   geom_line()
+# # 
+# # gg2 <- df %>% 
+# #   slice(1:365) %>% 
+# #   ggplot() +
+# #   geom_line(aes(date, (gpp-drd)/lai)) +
+# #   geom_line(aes(date, an_max), color = "red") +
+# #   geom_line(aes(date, an_unitlai_damped), color = "royalblue")
+# # 
+# # gg1/gg2

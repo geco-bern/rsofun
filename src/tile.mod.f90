@@ -657,6 +657,7 @@ contains
 
     ! local
     integer :: lu, pft
+    real :: tmp
 
     !----------------------------------------------------------------
     ! Initialise all canopy-level quantities that are later summed over plants
@@ -881,6 +882,12 @@ contains
     out_biosphere%seedc   = tile(lu)%plant(pft)%pseed%c%c12
     out_biosphere%seedn   = tile(lu)%plant(pft)%pseed%n%n14
 
+    ! for debugging purposes
+    out_biosphere%x1      = tile_fluxes(lu)%plant(pft)%debug1
+    out_biosphere%x2      = tile_fluxes(lu)%plant(pft)%debug2
+    out_biosphere%x3      = tile_fluxes(lu)%plant(pft)%debug3
+    out_biosphere%x4      = tile_fluxes(lu)%plant(pft)%debug4
+    out_biosphere%x5      = tile_fluxes(lu)%plant(pft)%debug5
 
   end subroutine diag_daily
 

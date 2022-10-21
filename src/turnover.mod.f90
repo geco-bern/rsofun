@@ -79,7 +79,7 @@ contains
         ! constant turnover rate
         droot = params_pft_plant(pft)%k_decay_root
         dlabl = params_pft_plant(pft)%k_decay_labl
-        dseed = 1.0 / ndayyear
+        dseed = params_pft_plant(pft)%k_decay_root * 3.0
 
       else
 
@@ -147,7 +147,7 @@ contains
       if (verbose) cbal1 = tile(lu)%plant(pft)%pseed%c%c12 + tile(lu)%soil%plitt_af%c%c12
       if (verbose) nbal1 = tile(lu)%plant(pft)%pseed%n%n14 + tile(lu)%soil%plitt_af%n%n14
       !--------------------------------------------------------------
-      if ( dseed > 0.0 .and. tile(lu)%plant(pft)%pseed%c%c12 > 0.0  ) call turnover_seed( droot, tile(lu), pft )
+      if ( dseed > 0.0 .and. tile(lu)%plant(pft)%pseed%c%c12 > 0.0  ) call turnover_seed( dseed, tile(lu), pft )
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
       if (verbose) print*, '              pseed = ', tile(lu)%plant(pft)%pseed
