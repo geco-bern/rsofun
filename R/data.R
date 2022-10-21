@@ -37,7 +37,7 @@
 #'       moisture stress function is applied to GPP.}
 #'       \item{tempstress}{A logical value, if \code{TRUE} an empirical temperature 
 #'       stress function is applied to GPP.}
-#'       \item{calc_aet_fapar_vpd}{A logical value indicating ... ?}
+#'       \item{calc_aet_fapar_vpd}{(not in use)}
 #'       \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
 #'       if \code{FALSE} PPFD is simulated internally.}
 #'       \item{in_netrad}{A logical value indicating whether net radiation is 
