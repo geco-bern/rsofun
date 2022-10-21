@@ -27,7 +27,7 @@ pars <- list(par = c(
   ))
 ```
 
-The `rsofun` package and framework includes two main models. The `pmodel` and `lm3-ppa` (which in part relies on pmodel compents). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
+The `rsofun` package and framework includes two main models. The `pmodel` and `lm3-ppa` (which in part relies on pmodel components). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
 
 ## Demo data
 
@@ -41,7 +41,7 @@ p_model_drivers
 p_model_validation
 ```
 
-These are real data from the French FR-Pue fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters.
+These are real data from the French FR-Pue fluxnet site. Information about variable names and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters.
 
 ## Running the model
 
