@@ -3,14 +3,28 @@
 #' This is the main function that handles the 
 #' calibration of SOFUN model parameters. 
 #' 
-#' @param drivers A data frame with driver data. See \code{p_model_drivers} for 
-#' a description of the data structure.
+#' @param drivers A data frame with driver data. See \code{\link{p_model_drivers}}
+#' for a description of the data structure.
 #' @param obs A data frame containing observational data used for model
-#'  calibration. See \code{p_model_validation} for a description of the data
+#'  calibration. See \code{\link{p_model_validation}} for a description of the data
 #'  structure.
 #' @param settings A list containing model calibration settings. 
-#'  See [vignettes/pmodel_use.Rmd] for more information and examples.
-#'
+#'  See the 'P-model usage' vignette for more information and examples.
+#'  \describe{
+#'   \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
+#'   and lower and upper bounds should be provided. The calibratable parameters
+#'   are 'kphio', 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' and 'par_shape_tempstress'.}
+#'   \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
+#'   or \code{'BayesianTools'}.}
+#'   \item{\code{metric}}{A cost function. See ...vignette...}
+#'   \item{\code{control}}{A list of arguments passed on to the optimization function.
+#'   If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
+#'   the list should include at least \code{settings} and \code{sampler}, see
+#'   \link[BayesianTools]{BayesianTools::runMCMC}.}
+#'   \item{\code{targets}}{Name of the observed target variable to use in calibration
+#'   (necessary if \code{method = 'BayesianTools'}).}
+#'  }
+#'  ----
 #' @return A complemented named list containing 
 #'  the calibration settings and optimised parameter values.
 #' @export
