@@ -38,7 +38,7 @@
 #'       simulating the soil water balance.}
 #' }
 #' @param forcing A data frame of forcing climate data, used as input 
-#'  (returned object by \code{\link{collect_drivers_rsofun}}).
+#'  (returned object by \code{\link{collect_drivers_sofun}}).
 #' @param params_soil A list of soil texture parameters, for the top and bottom
 #' layer of soil.
 #' \describe{
@@ -56,13 +56,15 @@
 #'   \item{par_shape_tempstress}{}
 #' }
 #' @param makecheck A logical specifying whether checks are performed 
-#'  to verify forcings.
+#'  to verify forcings. \code{TRUE} by default.
 #' @param verbose A logical specifying whether to print warnings.
-#' Defaults to TRUE.
+#' Defaults to \code{TRUE}.
 #'
 #' @import dplyr
 #' 
-#' @details Model output is provided as a tidy dataframe
+#' @details Model output is provided as a tidy dataframe, with columns 
+#' \code{"fapar", "gpp", "transp", "latenth", "pet", "vcmax",
+#' "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue", "rd"}.
 #'
 #' @export
 #' @useDynLib rsofun
