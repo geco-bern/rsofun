@@ -40,7 +40,6 @@ To format data we need to load the required libraries first.
 
 ```{r eval = FALSE}
 # Libraries
-library(tidyverse)
 library(rsofun)
 library(ingestr)
 ```
