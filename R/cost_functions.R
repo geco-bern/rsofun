@@ -7,15 +7,23 @@
 #' Root mean squared error (RMSE) cost function on
 #' the kphio (quantum yield efficiency) parameter.
 #' 
-#' @param par list of model parameters (\code{"kphio", "soil_m_par_a",
-#' "soilm_par_b", "tau_acclim_tempstress", "par_shape_tempstress"})
-#' @param obs observations
-#' @param drivers driver data
-#' @param inverse invert the function (1-value)
+#' @param par A list of model parameters. At least
+#' \code{"kphio"} must be the first element of the list.
+#' @param obs A data frame of observations.
+#' @param drivers A data frame of driver data.
+#' @param inverse A logical value indicating whether to invert the function (1-value).
 #' 
 #' @importFrom magrittr '%>%'
 #' 
-#' @return the RMSE on the kphio parameter
+#' @return The RMSE of the simulated GPP by the P-model on the \code{kphio} parameter
+#' versus the observed GPP.
+#' 
+#' @details A P-model run is performed for the value of \code{kphio} given as an
+#' argument and the remaining calibratable parameters are held constant:
+#' 
+#' \code{soilm_par_a = 1.0, soilm_par_b = 0.0, tau_acclim_tempstress = 10 } and
+#' \code{par_shape_tempstress = 0.0}.
+#' 
 #' @export
 
 cost_rmse_kphio <- function(
