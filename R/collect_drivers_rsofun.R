@@ -5,19 +5,22 @@
 #'
 #' @param site_info A data frame containing site meta info (rows for sites). 
 #'  Required columns are: \code{"sitename", "year_start", 
-#'  "year_end", "lon", "lat", "elv"}.
+#'  "year_end", "lon", "lat", "elv"}. See \code{\link{prepare_setup_sofun}} for
+#'  details.
 #' @param params_siml A nested data frame with rows for each site containing 
-#'  simulation parameters by site.
-#' @param meteo A nested data frame with rows for each site and meteo
-#'  forcing data time series nested inside a column named \code{"data"}
+#'  simulation parameters for SOFUN. See \code{\link{run_pmodel_f_bysite}} or
+#'  \code{\link{run_lm3ppa_f_bysite}}.
+#' @param meteo A nested data frame with rows for each site and meteorological
+#'  forcing data time series nested inside a column named \code{"data"}.
 #' @param fapar A nested data frame with rows for each site and fAPAR 
-#'  forcing data time series nested inside a column named \code{"data"}
+#'  forcing data time series nested inside a column named \code{"data"}.
 #' @param co2 A nested data frame with rows for each site and CO2 
-#'  forcing data time series nested inside a column named \code{"data"}
-#' @param params_soil Soil texture data descriptor
+#'  forcing data time series nested inside a column named \code{"data"}.
+#' @param params_soil Soil texture data descriptor, a data frame with columns
+#' \code{"layer", "fsand", "fclay", "forg" } and \code{"fgravel"}.
 #'
-#' @return a rsofun input data frame (see \link{p_model_drivers} for a detailed
-#' description of its structure)
+#' @return A \code{rsofun} input data frame (see \link{p_model_drivers} for a detailed
+#' description of its structure and contents).
 #' @export
 
 collect_drivers_sofun <- function( 
