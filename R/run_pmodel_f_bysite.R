@@ -29,7 +29,7 @@
 #'       \item{firstyeartrend}{The year AD of first transient year.}
 #'       \item{nyeartrend}{The number of transient years.}
 #' }
-#' @param site_info A list of site meta info.
+#' @param site_info A list of site meta info. Required:
 #' \describe{
 #'       \item{lon}{Longitud of the site location.}
 #'       \item{lat}{Latitude of the site location.}

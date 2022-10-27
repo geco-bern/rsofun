@@ -1,22 +1,22 @@
 #' Complements the setup settings
 #'
-#' Complements the settings based on the site metainfo CSV file or data frame.
+#' Complements the settings based on the site meta info CSV file or data frame.
 #'
 #' @param site_info A character string specifying the path to the site meta 
-#' information file, or a dataframe containing the site meta info. Required
+#' information file, or a data frame containing the site meta info. Required
 #' columns are:
 #' \describe{
-#' \item{\code{site_name}}{Name of the site, must be the first column of the file.}
+#' \item{\code{sitename}}{Name of the site, must be the first column of the file.}
 #' \item{\code{lon}}{Longitude of site.}
 #' \item{\code{lat}}{Latitude of site.}
 #' \item{\code{elv}}{Elevation of site, in m.}
 #' \item{\code{year_start, year_end}}{Years for which the simulation is to be done,
-#' corresponding to data abailability from site.}
+#' corresponding to data availability from site.}
 #' }
 #' @param params_siml A named list containing the simulation parameters
 #'  for SOFUN.
 #'
-#' @return A dataframe (tibble) containing the site meta information, 
+#' @return A data frame (tibble) containing the site meta information, 
 #' complemented by column \code{params_siml} which is a nested list 
 #' of complemented simulation parameters.
 #' @export
