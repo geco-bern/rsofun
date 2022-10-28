@@ -7,11 +7,11 @@
 #' Root mean squared error (RMSE) cost function on
 #' the kphio (quantum yield efficiency) parameter.
 #' 
-#' @param par A list of model parameters. At least
-#' \code{"kphio"} must be the first element of the list.
+#' @param par A list of model parameters, including at least \code{"kphio"}.
 #' @param obs A data frame of observations.
 #' @param drivers A data frame of driver data.
 #' @param inverse A logical value indicating whether to invert the function (1-value).
+#' \code{FALSE} by default.
 #' 
 #' @importFrom magrittr '%>%'
 #' 
@@ -58,6 +58,7 @@ cost_rmse_kphio <- function(
   df <- df %>%
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>%
+    tidyr::unnest(data) %>%
     dplyr::rename(
       'gpp_mod' = 'gpp'
     )
@@ -82,14 +83,20 @@ cost_rmse_kphio <- function(
 #' Root mean squared error (RMSE) cost function on
 #' the full parameter stack.
 #'
-#' @param par parameters
-#' @param obs observed values
-#' @param drivers drivers
-#' @param inverse invert the function
+#' @param par A list of model parameters including \code{"kphio", "soilm_par_a"}
+#' and \code{"soilm_par_b"}.
+#' @param obs A data frame of observed values.
+#' @param drivers A data frame of drivers.
+#' @param inverse A logical value indicating whether to invert the function. Defaults
+#' to \code{FALSE}.
 #'
 #' @importFrom magrittr '%>%'
 #'
-#' @return the RMSE on the full parameter set
+#' @return The RMSE of the simulated GPP by the P-model on the given parameter
+#' values versus the observed GPP.
+#' 
+#' @details The simulation is run for the given parameter values, but holding 
+#' \code{tau_acclim_tempstress = 10 }and\code{par_shape_tempstress = 0.0} constant.
 #' @export
 #'
 
@@ -625,6 +632,7 @@ likelihood_pmodel <- function(
 }
 
 likelihood <- function(predicted, observed, sd){
+  # Helper function
   notNAvalues = !is.na(observed)
   return(
     sum(
