@@ -1,4 +1,4 @@
-#' Creates a cost function for different simulation setups
+#' Creates a cost function for different simulation setups based on RMSE
 #' 
 #' Creates a cost function for parameter calibration, keeping non-calibrated
 #' parameter values fixed and calibrating the parameters corresponding to setups
@@ -13,6 +13,9 @@
 #' efficiency \code{kphio} is calibrated; for \code{setup = 'FULL'} it also includes
 #' the soil moisture stress parameters \code{soilm_par_a} and \code{soilm_par_b}
 #' for calibration.
+#' @param method A character string indicating the optimization method, eihter 
+#' \code{'BayesianTools'} or \code{'GenSA'}.
+#' 
 #' 
 #' @importFrom magrittr '%>%'
 #' 
@@ -43,93 +46,49 @@
 #' # Write cost function
 #' cost_rmse_kphio <- create_cost_function(
 #'   params_modl = pars,
-#'   setup = 'BRC'
+#'   setup = 'BRC',
+#'   method = 'BayesianTools'
 #'   )
 #' }
 
-create_cost_function <- function(
+create_cost_rmse <- function(
     params_modl,
-    setup){
+    setup,
+    method){
+  # predefine variables for CRAN check compliance
+  f <- NULL
+  
+  f <- "function(
+    par,
+    obs,
+    drivers
+){
+  browser()
+  # predefine variables for CRAN check compliance
+  sitename <- data <- NULL
+  
+  ## execute model for this parameter set
+  params_modl <- list(
+    kphio           = par[1],
+    soilm_par_a     = "
+  
   if(setup == "BRC"){
-    return(eval(parse(
-      text = paste0(
-        "function(
-    par,
-    obs,
-    drivers
-){
-  browser()
-  # predefine variables for CRAN check compliance
-  sitename <- data <- NULL
-  
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  params_modl <- list(
-    kphio           = par[1],
-    soilm_par_a     = ",
-        params_modl[2],
-        ",
+    f <- paste0(f,
+                params_modl[2],
+                ",
     soilm_par_b     = ",
-        params_modl[3],
-        ",
-    tau_acclim_tempstress = ",
-        params_modl[4],
-        ",
-    par_shape_tempstress  = ",
-        params_modl[5],
-        "
-  )
-  
-  # run the model
-  df <- runread_pmodel_f(
-    drivers, 
-    par = params_modl,
-    makecheck = TRUE,
-    parallel = FALSE
-  )
-  
-  # cleanup
-  df <- df %>%
-    dplyr::select(sitename, data) %>% 
-    tidyr::unnest(data) %>%
-    tidyr::unnest(data) %>%
-    dplyr::rename(
-      'gpp_mod' = 'gpp'
+                params_modl[3]
     )
-  # output[output$sitename=='FR-Pue',]$data[[1]][[1]] # alternative base R option
-  
-  obs <- obs %>%
-    dplyr::select(sitename, data) %>% 
-    tidyr::unnest(data)
-  
-  # left join with observations
-  df <- dplyr::left_join(df, obs, by = c('sitename', 'date'))
-  
-  # Calculate cost (RMSE)
-  cost <- sqrt( mean( (df$gpp - df$gpp_mod )^2, na.rm = TRUE ) )
-  
-  return(-cost)
-}"
-      )
-    )))
   } else if(setup == "FULL"){
-    return(eval(parse(
-      text = paste0(
-        "function(
-    par,
-    obs,
-    drivers
-){
-  browser()
-  # predefine variables for CRAN check compliance
-  sitename <- data <- NULL
+    f <- paste0(f,
+                "par[2],
+    soilm_par_b     = par[3]")
+  } else {
+    stop("unvalid setup, must be 'BRC' or 'FULL'")
+    }
   
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  params_modl <- list(
-    kphio           = par[1],
-    soilm_par_a     = par[2],
-    soilm_par_b     = par[3],
+  f <- paste0(f,
+        ",
     tau_acclim_tempstress = ",
         params_modl[4],
         ",
@@ -165,10 +124,19 @@ create_cost_function <- function(
   
   # Calculate cost (RMSE)
   cost <- sqrt( mean( (df$gpp - df$gpp_mod )^2, na.rm = TRUE ) )
+        
+  "
+  )
   
-  return(-cost)
-}"
-      )
-    )))
-  } else {stop("unvalid setup, must be 'BRC' or 'FULL'")}
+  if(tolower(method) == 'bayesiantools'){
+    f <- paste0(f,
+                "return(-cost)
+                }")
+  }else if(tolower(method) == 'gensa'){
+    f <- paste0(f,
+                "return(cost)
+}")
+  }
+  
+  return(eval(parse(text = f)))
 }
