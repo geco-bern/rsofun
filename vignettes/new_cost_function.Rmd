@@ -39,7 +39,8 @@ pars <- list(
 # Create the cost function
 cost_rmse_full <- create_cost_function(
   params_modl = pars,
-  setup = 'FULL'
+  setup = 'FULL',
+  method = 'BayesianTools'
 )
 ```
 
