@@ -29,6 +29,23 @@
 #' to minimize the RMSE, the opposite value, \code{-1 * RMSE}, is returned.
 #' 
 #' @export
+#' 
+#' @examples \dontrun{
+#' # Set model parameters
+#' pars <- list(
+#'   kphio          = 0.04,
+#'   soilm_par_a    = 2.8,
+#'   soilm_par_b    = 1.7,
+#'   tau_acclim_tempstress  = 7.3,
+#'   par_shape_tempstress   = 0.1
+#'   )
+#' 
+#' # Write cost function
+#' cost_rmse_kphio <- create_cost_function(
+#'   params_modl = pars,
+#'   setup = 'BRC'
+#'   )
+#' }
 
 create_cost_function <- function(
     params_modl,
