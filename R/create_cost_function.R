@@ -112,5 +112,63 @@ create_cost_function <- function(
 }"
       )
     )))
-  }
+  } else if(setup == "FULL"){
+    return(eval(parse(
+      text = paste0(
+        "function(
+    par,
+    obs,
+    drivers
+){
+  browser()
+  # predefine variables for CRAN check compliance
+  sitename <- data <- NULL
+  
+  ## execute model for this parameter set
+  ## For calibrating quantum yield efficiency only
+  params_modl <- list(
+    kphio           = par[1],
+    soilm_par_a     = par[2],
+    soilm_par_b     = par[3],
+    tau_acclim_tempstress = ",
+        params_modl[4],
+        ",
+    par_shape_tempstress  = ",
+        params_modl[5],
+        "
+  )
+  
+  # run the model
+  df <- runread_pmodel_f(
+    drivers, 
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # cleanup
+  df <- df %>%
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data) %>%
+    tidyr::unnest(data) %>%
+    dplyr::rename(
+      'gpp_mod' = 'gpp'
+    )
+  # output[output$sitename=='FR-Pue',]$data[[1]][[1]] # alternative base R option
+  
+  obs <- obs %>%
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data)
+  
+  # left join with observations
+  df <- dplyr::left_join(df, obs, by = c('sitename', 'date'))
+  
+  # Calculate cost (RMSE)
+  cost <- sqrt( mean( (df$gpp - df$gpp_mod )^2, na.rm = TRUE ) )
+  
+  return(-cost)
+}"
+      )
+    )))
+  } else {stop("unvalid setup, must be 'BRC' or 'FULL'")}
 }
