@@ -468,6 +468,7 @@ likelihood_pmodel <- function(
   ) %>%
     dplyr::select(sitename, data) %>%
     tidyr::unnest(data) %>%
+    tidyr::unnest(data) %>%
     dplyr::arrange(
       sitename, date
     )
