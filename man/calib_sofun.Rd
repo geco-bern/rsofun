@@ -22,7 +22,8 @@ See the 'P-model usage' vignette for more information and examples.
  are 'kphio', 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' and 'par_shape_tempstress'.}
  \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
  or \code{'BayesianTools'}.}
- \item{\code{metric}}{A cost function. See ...vignette...}
+ \item{\code{metric}}{A cost function. See the 'Cost functions for parameter
+ calibration' vignette for examples.}
  \item{\code{control}}{A list of arguments passed on to the optimization function.
  If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
  the list should include at least \code{settings} and \code{sampler}, see

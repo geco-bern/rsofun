@@ -17,8 +17,8 @@ efficiency \code{kphio} is calibrated; for \code{setup = 'FULL'} it also include
 the soil moisture stress parameters \code{soilm_par_a} and \code{soilm_par_b}
 for calibration.}
 
-\item{method}{A character string indicating the optimization method, eihter 
-\code{'BayesianTools'} or \code{'GenSA'}.}
+\item{method}{A character string indicating the optimization method that will
+be used, either \code{'BayesianTools'} or \code{'GenSA'}.}
 }
 \value{
 A cost function which computes the RMSE of the simulated GPP by the P-model 
@@ -37,8 +37,11 @@ The resulting cost function performs a P-model run for the value of
 \code{par} given as argument  and the remaining non-calibratable parameters
 are held constant (specified via \code{params_modl}).
 
-Since the calibration routine is based on maximizing a cost function and we want
-to minimize the RMSE, the opposite value, \code{-1 * RMSE}, is returned.
+Since the calibration routine in \code{BayesianTools} is based on maximizing 
+a cost function and we want to minimize the RMSE, the opposite value, 
+\code{(-1)*RMSE}, is returned if \code{method = 'BayesianTools'}. \code{GenSA}
+minimizes the given objective function, so the plain RMSE is returned when
+\code{method = 'GenSA'}.
 }
 \examples{
 \dontrun{
