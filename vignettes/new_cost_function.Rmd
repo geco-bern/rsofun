@@ -37,7 +37,7 @@ pars <- list(
   )
 
 # Create the cost function
-cost_rmse_full <- create_cost_function(
+cost_rmse_full <- create_cost_rmse(
   params_modl = pars,
   setup = 'FULL',
   method = 'BayesianTools'
@@ -45,6 +45,7 @@ cost_rmse_full <- create_cost_function(
 ```
 
 Now we can run the calibration routine, as follows.
+
 ```{r}
 # Define calibration settings and parameter ranges from previous work
 settings <- list(
@@ -73,3 +74,5 @@ pars_calib <- calib_sofun(
   settings = settings
 )
 ```
+
+When defining your custom cost function, you must keep in mind that `GenSa` will minimize your cost function and `BayesianTools` will maximize it, since it was developed for likelihood maximization.
