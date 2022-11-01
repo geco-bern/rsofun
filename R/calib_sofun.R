@@ -24,7 +24,7 @@
 #'   \item{\code{targets}}{Name of the observed target variable to use in calibration
 #'   (necessary if \code{method = 'BayesianTools'}).}
 #'  }
-#'  ----
+#'  
 #' @return A complemented named list containing 
 #'  the calibration settings and optimised parameter values.
 #' @export
