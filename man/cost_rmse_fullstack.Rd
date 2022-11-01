@@ -7,18 +7,25 @@
 cost_rmse_fullstack(par, obs, drivers, inverse = FALSE)
 }
 \arguments{
-\item{par}{parameters}
+\item{par}{A list of model parameters including \code{"kphio", "soilm_par_a"}
+and \code{"soilm_par_b"}.}
 
-\item{obs}{observed values}
+\item{obs}{A data frame of observed values.}
 
-\item{drivers}{drivers}
+\item{drivers}{A data frame of drivers.}
 
-\item{inverse}{invert the function}
+\item{inverse}{A logical value indicating whether to invert the function. Defaults
+to \code{FALSE}.}
 }
 \value{
-the RMSE on the full parameter set
+The RMSE of the simulated GPP by the P-model on the given parameter
+values versus the observed GPP.
 }
 \description{
 Root mean squared error (RMSE) cost function on
 the full parameter stack.
+}
+\details{
+The simulation is run for the given parameter values, but holding 
+\code{tau_acclim_tempstress = 10 }and\code{par_shape_tempstress = 0.0} constant.
 }
