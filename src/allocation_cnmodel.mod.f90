@@ -91,7 +91,12 @@ contains
     integer :: usedoy        ! DOY in climate vectors to use for allocation
   
     type(orgpool) :: avl
-    real    :: cavl, navl, req
+    real    :: cavl, navl, req, c_req, n_req, c_acq, n_acq
+
+    logical, save :: firstcall_cnbal = .true.
+    integer, parameter :: len_cnbal_vec = 365
+    real, dimension(nlu,npft,len_cnbal_vec), save :: c_acq_vec, n_acq_vec, c_req_vec, n_req_vec
+
     real, parameter :: freserve = 0.004 ! SwissFACE results are very sensitive to this parameter!
 
     real, parameter :: kdecay_labl = 0.1
@@ -155,46 +160,49 @@ contains
       if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps ) then
 
         if (params_pft_plant(pft)%grass) then
-          !-------------------------------------------------------------------------
-          ! PHENOPHASE: SEED FILLING
-          ! Determine day when "absorbed" top-of-atmosphere radiation per unit leaf 
-          ! area starts declining
-          !-------------------------------------------------------------------------
-          ! Calculate absorbed top-of-atmosphere solar radiation per unit leaf area
-          ! Using TOA radiation here to avoid effects by daily varying cloud cover,
-          ! assuming the plant senses available radiation over the seasons based on day length.
-          an_unitlai = tile_fluxes(lu)%canopy%dra &
-                       * tile(lu)%plant(pft)%fapar_ind &
-                       / tile(lu)%plant(pft)%lai_ind
+          ! !-------------------------------------------------------------------------
+          ! ! PHENOPHASE: SEED FILLING
+          ! ! Determine day when "absorbed" top-of-atmosphere radiation per unit leaf 
+          ! ! area starts declining
+          ! !-------------------------------------------------------------------------
+          ! ! Calculate absorbed top-of-atmosphere solar radiation per unit leaf area
+          ! ! Using TOA radiation here to avoid effects by daily varying cloud cover,
+          ! ! assuming the plant senses available radiation over the seasons based on day length.
+          ! an_unitlai = tile_fluxes(lu)%canopy%dra &
+          !              * tile(lu)%plant(pft)%fapar_ind &
+          !              / tile(lu)%plant(pft)%lai_ind
 
-          ! Apply low-pass filter on an_unitlai
-          if (firstcall1) then
-            an_vec(lu,pft,:) = an_unitlai
-            if (pft == npft .and. lu == nlu) firstcall1 = .false.
-          else
-            an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
-            an_vec(lu,pft,len_an_vec) = an_unitlai
-          end if
+          ! ! Apply low-pass filter on an_unitlai
+          ! if (firstcall1) then
+          !   an_vec(lu,pft,:) = an_unitlai
+          !   if (pft == npft .and. lu == nlu) firstcall1 = .false.
+          ! else
+          !   an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
+          !   an_vec(lu,pft,len_an_vec) = an_unitlai
+          ! end if
 
-          ! normalise by mean
-          tmp_vec = an_vec(lu,pft,:) / (sum(an_vec(lu,pft,:)) / len_an_vec)
+          ! ! normalise by mean
+          ! tmp_vec = an_vec(lu,pft,:) / (sum(an_vec(lu,pft,:)) / len_an_vec)
 
-          ! get trend of an_unitlai over preceeding len_an_vec days
-          vec_idx = (/ (idx, idx = 1, len_an_vec) /)
-          call calc_reg_line( real(vec_idx(:)), tmp_vec, intercept, slope )
+          ! ! get trend of an_unitlai over preceeding len_an_vec days
+          ! vec_idx = (/ (idx, idx = 1, len_an_vec) /)
+          ! call calc_reg_line( real(vec_idx(:)), tmp_vec, intercept, slope )
 
-          ! calculate fraction allocated to seeds
-          f_seed = calc_f_seed( slope )
+          ! ! calculate fraction allocated to seeds
+          ! f_seed = calc_f_seed( slope )
 
-          ! record trend for test output
-          tile_fluxes(lu)%plant(pft)%debug1 = an_unitlai            
-          tile_fluxes(lu)%plant(pft)%debug2 = slope            
-          tile_fluxes(lu)%plant(pft)%debug3 = f_seed            
+          ! ! record trend for test output
+          ! tile_fluxes(lu)%plant(pft)%debug1 = an_unitlai            
+          ! tile_fluxes(lu)%plant(pft)%debug2 = slope            
+          ! tile_fluxes(lu)%plant(pft)%debug3 = f_seed            
 
-          ! Only start filling seeds if LAI > 1
-          if (tile(lu)%plant(pft)%lai_ind < 1.0) then
-            f_seed = 0.0
-          end if
+          ! ! Only start filling seeds if LAI > 1
+          ! if (tile(lu)%plant(pft)%lai_ind < 1.0) then
+          !   f_seed = 0.0
+          ! end if
+
+          ! XXX try
+          f_seed = 0.0
 
           ! initialise (to make sure)
           dcleaf = 0.0
@@ -607,6 +615,8 @@ contains
 
       else
 
+          dcseed = 0.0
+          dnseed = 0.0
           dcleaf = 0.0
           dcroot = 0.0
           dnleaf = 0.0
@@ -614,6 +624,51 @@ contains
           drgrow = 0.0
 
       end if
+
+      !-------------------------------------------------------------------
+      ! Record acquired and required C and N
+      !-------------------------------------------------------------------
+      ! Acquired C is GPP minus respiration and minus exudation.
+      ! Growth respiration accounted for on the growth side (in c_req).
+      ! This must be identical to what's added to the labile pool in npp() SR.
+      c_acq = tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex
+
+      ! Acquired N is nitrate, ammonium uptake plus fixation
+      ! This must be identical to what's added to the labile pool in nuptake() SR.
+      n_acq = tile_fluxes(lu)%plant(pft)%dnup%n14
+
+      ! C that was built into new biomass at this time step
+      c_req = dcseed + dcleaf + dcroot + drgrow
+
+      ! N that was built into new biomass at this time step
+      n_req = dnseed + dnleaf + dnroot
+
+      ! record averages over preceeding 365 days
+      ! Apply low-pass filter on an_unitlai
+      if (firstcall_cnbal) then
+        c_acq_vec(lu,pft,:) = c_acq
+        n_acq_vec(lu,pft,:) = n_acq
+        c_req_vec(lu,pft,:) = c_req
+        n_req_vec(lu,pft,:) = n_req
+        if (pft == npft .and. lu == nlu) firstcall_cnbal = .false.
+      else
+        c_acq_vec(lu,pft,1:(len_cnbal_vec-1)) = c_acq_vec(lu,pft,2:len_cnbal_vec)
+        n_acq_vec(lu,pft,1:(len_cnbal_vec-1)) = n_acq_vec(lu,pft,2:len_cnbal_vec)
+        c_req_vec(lu,pft,1:(len_cnbal_vec-1)) = c_req_vec(lu,pft,2:len_cnbal_vec)
+        n_req_vec(lu,pft,1:(len_cnbal_vec-1)) = n_req_vec(lu,pft,2:len_cnbal_vec)
+        c_acq_vec(lu,pft,len_cnbal_vec) = c_acq
+        n_acq_vec(lu,pft,len_cnbal_vec) = n_acq
+        c_req_vec(lu,pft,len_cnbal_vec) = c_req
+        n_req_vec(lu,pft,len_cnbal_vec) = n_req
+      end if
+
+      ! take mean
+      c_acq = sum(c_acq_vec(lu,pft,:)) / len_cnbal_vec
+      n_acq = sum(n_acq_vec(lu,pft,:)) / len_cnbal_vec
+      c_req = sum(c_req_vec(lu,pft,:)) / len_cnbal_vec
+      n_req = sum(n_req_vec(lu,pft,:)) / len_cnbal_vec
+
+      print*,'Acquired C:N, Required C:N = ', c_acq / n_acq, c_req / n_req
 
       !-------------------------------------------------------------------
       ! Record growth respiration, adjust NPP

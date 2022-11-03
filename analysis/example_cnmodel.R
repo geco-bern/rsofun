@@ -82,7 +82,8 @@ pars <- list(
   fastfrac              = 0.985,
 
   # N uptake
-  eff_nup               = 0.600000,
+  # eff_nup               = 0.600000,  # original value
+  eff_nup               = 0.007000,
   minimumcostfix        = 1.000000,
   fixoptimum            = 25.15000,
   a_param_fix           = -3.62000,
@@ -117,12 +118,12 @@ tmp <- rsofun::p_model_drivers %>%
                                                )))
 
 ### Harvesting and seed input ----------
-use_cseed <- 100
+use_cseed <- 0 # 100
 cn_seed <- 20
 use_nseed <- use_cseed / cn_seed
 
 tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
-  mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.8, 0.0),
+  mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.0, 0.0),
          cseed = ifelse(month(date) == 3 & mday(date) == 15, use_cseed, 0.0),
          nseed = ifelse(month(date) == 3 & mday(date) == 15, use_nseed, 0.0))
 
@@ -137,47 +138,47 @@ tmp$params_siml[[1]]$recycle <- 5
 # tmp$params_siml[[1]]$nyeartrend <- 1
 # tmp$forcing[[1]] <- tmp$forcing[[1]] %>% filter(lubridate::year(date) == 2007)
 
-# ## Repeat same annual cycle in the forcing
-# tmp$forcing[[1]] <- tmp$forcing[[1]] %>% 
+### Synthetic forcing: Mean seasonal cycle -----------------------
+# tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
 #   filter(!(lubridate::month(date) == 2 & lubridate::mday(date) == 29))
-# df_meanann <- tmp$forcing[[1]] %>% 
-#   mutate(doy = lubridate::yday(date)) %>% 
-#   group_by(doy) %>% 
-#   summarise(across(where(is.double), .fns = mean)) %>% 
+# df_meanann <- tmp$forcing[[1]] %>%
+#   mutate(doy = lubridate::yday(date)) %>%
+#   group_by(doy) %>%
+#   summarise(across(where(is.double), .fns = mean)) %>%
 #   filter(!(doy == 366))
-# nyears <- tmp$forcing[[1]] %>% 
-#   mutate(year = lubridate::year(date)) %>% 
-#   pull(year) %>% 
-#   unique() %>% 
+# nyears <- tmp$forcing[[1]] %>%
+#   mutate(year = lubridate::year(date)) %>%
+#   pull(year) %>%
+#   unique() %>%
 #   length()
 # tmp2 <- purrr::map_dfr(
 #   as.list(seq(nyears)),
 #   ~{df_meanann}) %>%
 #   mutate(date = tmp$forcing[[1]]$date)
 
-# ## Constant climate in all days
-# df_growingseason_mean <- tmp$forcing[[1]] %>% 
-#   filter(temp > 5) %>% 
-#   summarise(across(where(is.double), .fns = mean))
-# df_mean <- tmp$forcing[[1]] %>% 
-#   summarise(across(where(is.double), .fns = mean))
-# 
-# tmp$forcing[[1]] <- tmp$forcing[[1]] %>% 
-#   mutate(temp = df_growingseason_mean$temp,
-#          prec = df_mean$prec,
-#          vpd = df_growingseason_mean$vpd,
-#          ppfd = df_mean$ppfd,
-#          patm = df_growingseason_mean$patm,
-#          ccov_int = df_growingseason_mean$ccov_int,
-#          ccov = df_growingseason_mean$ccov,
-#          snow = df_mean$snow,
-#          rain = df_mean$rain,
-#          fapar = df_mean$fapar,
-#          co2 = df_growingseason_mean$co2,
-#          tmin = df_growingseason_mean$tmin,
-#          tmax = df_growingseason_mean$tmax,
-#   )
-# 
+### Synthetic forcing: Constant climate in all days -----------------------
+df_growingseason_mean <- tmp$forcing[[1]] %>%
+  filter(temp > 5) %>%
+  summarise(across(where(is.double), .fns = mean))
+df_mean <- tmp$forcing[[1]] %>%
+  summarise(across(where(is.double), .fns = mean))
+
+tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
+  mutate(temp = df_growingseason_mean$temp,
+         prec = df_mean$prec,
+         vpd = df_growingseason_mean$vpd,
+         ppfd = df_mean$ppfd,
+         patm = df_growingseason_mean$patm,
+         ccov_int = df_growingseason_mean$ccov_int,
+         ccov = df_growingseason_mean$ccov,
+         snow = df_mean$snow,
+         rain = df_mean$rain,
+         fapar = df_mean$fapar,
+         co2 = df_growingseason_mean$co2,
+         tmin = df_growingseason_mean$tmin,
+         tmax = df_growingseason_mean$tmax,
+  )
+
 # tmp$forcing[[1]] %>% 
 #   ggplot(aes(date, co2)) +
 #   geom_line()
@@ -207,6 +208,7 @@ gg4 <- output$data[[1]] %>%
   # ggplot(aes(date, calc_f_seed(x2))) + 
   ggplot(aes(date, x3)) + 
   geom_line()
+
 gg1 / gg2 / gg3 / gg4
 
 output$data[[1]] %>% 
@@ -266,15 +268,15 @@ ggplot() +
 #   ggplot(aes(date, cex)) + 
 #   geom_line()
 
-output$data[[1]] %>%
-  as_tibble() %>%
-  ggplot(aes(date, cleaf)) +
-  geom_line()
-
-output$data[[1]] %>%
-  as_tibble() %>%
-  ggplot(aes(date, croot)) +
-  geom_line()
+# output$data[[1]] %>%
+#   as_tibble() %>%
+#   ggplot(aes(date, cleaf)) +
+#   geom_line()
+# 
+# output$data[[1]] %>%
+#   as_tibble() %>%
+#   ggplot(aes(date, croot)) +
+#   geom_line()
 
 # output$data[[1]] %>% 
 #   as_tibble() %>% 
