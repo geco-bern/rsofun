@@ -123,7 +123,7 @@ contains
       stop 'sowing_daily not implemented for trees'
     end if
 
-  end subroutine sowing_daily  
+  end subroutine sowing_daily
 
 
   ! subroutine vegdynamics( tile, plant, solar, out_pmodel )

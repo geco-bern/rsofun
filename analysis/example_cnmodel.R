@@ -5,6 +5,7 @@ library(patchwork)
 library(readr)
 library(lubridate)
 
+## Parameters ------------------------
 pars <- list(
 
   # P-model
@@ -106,6 +107,7 @@ pars <- list(
 
   )
 
+## Forcing ------------------------
 ## add new required columns to forcing 
 tmp <- rsofun::p_model_drivers %>% 
   mutate(forcing = purrr::map(forcing, ~mutate(., 
@@ -114,19 +116,19 @@ tmp <- rsofun::p_model_drivers %>%
                                                dnh4 = 0.1
                                                )))
 
-## Apply some harvesting (leaf removal), and seed input
+### Harvesting and seed input ----------
 use_cseed <- 100
 cn_seed <- 20
 use_nseed <- use_cseed / cn_seed
 
 tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
-  mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.0, 0.0),
+  mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.8, 0.0),
          cseed = ifelse(month(date) == 3 & mday(date) == 15, use_cseed, 0.0),
          nseed = ifelse(month(date) == 3 & mday(date) == 15, use_nseed, 0.0))
 
 ## check visually
 tmp$forcing[[1]] %>%
-  ggplot(aes(date, cseed)) +
+  ggplot(aes(date, fharv)) +
   geom_line()
 
 ## no spinup, 1 year transient run
@@ -135,23 +137,58 @@ tmp$params_siml[[1]]$recycle <- 5
 # tmp$params_siml[[1]]$nyeartrend <- 1
 # tmp$forcing[[1]] <- tmp$forcing[[1]] %>% filter(lubridate::year(date) == 2007)
 
-## run the model
+# ## Repeat same annual cycle in the forcing
+# tmp$forcing[[1]] <- tmp$forcing[[1]] %>% 
+#   filter(!(lubridate::month(date) == 2 & lubridate::mday(date) == 29))
+# df_meanann <- tmp$forcing[[1]] %>% 
+#   mutate(doy = lubridate::yday(date)) %>% 
+#   group_by(doy) %>% 
+#   summarise(across(where(is.double), .fns = mean)) %>% 
+#   filter(!(doy == 366))
+# nyears <- tmp$forcing[[1]] %>% 
+#   mutate(year = lubridate::year(date)) %>% 
+#   pull(year) %>% 
+#   unique() %>% 
+#   length()
+# tmp2 <- purrr::map_dfr(
+#   as.list(seq(nyears)),
+#   ~{df_meanann}) %>%
+#   mutate(date = tmp$forcing[[1]]$date)
+
+# ## Constant climate in all days
+# df_growingseason_mean <- tmp$forcing[[1]] %>% 
+#   filter(temp > 5) %>% 
+#   summarise(across(where(is.double), .fns = mean))
+# df_mean <- tmp$forcing[[1]] %>% 
+#   summarise(across(where(is.double), .fns = mean))
+# 
+# tmp$forcing[[1]] <- tmp$forcing[[1]] %>% 
+#   mutate(temp = df_growingseason_mean$temp,
+#          prec = df_mean$prec,
+#          vpd = df_growingseason_mean$vpd,
+#          ppfd = df_mean$ppfd,
+#          patm = df_growingseason_mean$patm,
+#          ccov_int = df_growingseason_mean$ccov_int,
+#          ccov = df_growingseason_mean$ccov,
+#          snow = df_mean$snow,
+#          rain = df_mean$rain,
+#          fapar = df_mean$fapar,
+#          co2 = df_growingseason_mean$co2,
+#          tmin = df_growingseason_mean$tmin,
+#          tmax = df_growingseason_mean$tmax,
+#   )
+# 
+# tmp$forcing[[1]] %>% 
+#   ggplot(aes(date, co2)) +
+#   geom_line()
+
+## Model run ------------------------
 output <- runread_pmodel_f(
   tmp,
   par = pars
   )
 
-calc_f_seed <- function(an_unitlai_diff_damped){
-  yy <- 1 / (1 + exp(1000*(an_unitlai_diff_damped)))
-  return(yy)
-}
-
-ggplot() +
-  geom_function(fun = calc_f_seed) +
-  xlim(-0.02,0.02) +
-  # geom_vline(xintercept = 1, linetype = "dotted") +
-  geom_vline(xintercept = 0, linetype = "dotted")
-
+## Visualisations  ------------------------
 # LAI
 gg1 <- output$data[[1]] %>% 
   as_tibble() %>% 
@@ -171,6 +208,23 @@ gg4 <- output$data[[1]] %>%
   ggplot(aes(date, x3)) + 
   geom_line()
 gg1 / gg2 / gg3 / gg4
+
+output$data[[1]] %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, x3)) + 
+  geom_line()
+
+calc_f_seed <- function(an_unitlai_diff_damped){
+  yy <- 1 / (1 + exp(1000*(an_unitlai_diff_damped)))
+  return(yy)
+}
+
+ggplot() +
+  geom_function(fun = calc_f_seed) +
+  xlim(-0.02,0.02) +
+  # geom_vline(xintercept = 1, linetype = "dotted") +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
 
 # df <- tibble(
 #   x = 1:15,

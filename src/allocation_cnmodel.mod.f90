@@ -155,44 +155,44 @@ contains
       if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps ) then
 
         if (params_pft_plant(pft)%grass) then
-          if (tile(lu)%plant(pft)%lai_ind > 0.0) then
-            !-------------------------------------------------------------------------
-            ! PHENOPHASE: SEED FILLING
-            ! Determine day when "absorbed" top-of-atmosphere radiation per unit leaf 
-            ! area starts declining
-            !-------------------------------------------------------------------------
-            ! Calculate absorbed top-of-atmosphere solar radiation per unit leaf area
-            ! Using TOA radiation here to avoid effects by daily varying cloud cover,
-            ! assuming the plant senses available radiation over the seasons based on day length.
-            an_unitlai = tile_fluxes(lu)%canopy%dra &
-                         * tile(lu)%plant(pft)%fapar_ind &
-                         / tile(lu)%plant(pft)%lai_ind
+          !-------------------------------------------------------------------------
+          ! PHENOPHASE: SEED FILLING
+          ! Determine day when "absorbed" top-of-atmosphere radiation per unit leaf 
+          ! area starts declining
+          !-------------------------------------------------------------------------
+          ! Calculate absorbed top-of-atmosphere solar radiation per unit leaf area
+          ! Using TOA radiation here to avoid effects by daily varying cloud cover,
+          ! assuming the plant senses available radiation over the seasons based on day length.
+          an_unitlai = tile_fluxes(lu)%canopy%dra &
+                       * tile(lu)%plant(pft)%fapar_ind &
+                       / tile(lu)%plant(pft)%lai_ind
 
-            ! Apply low-pass filter on an_unitlai
-            if (firstcall1) then
-              an_vec(lu,pft,:) = an_unitlai
-              if (pft == npft .and. lu == nlu) firstcall1 = .false.
-            else
-              an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
-              an_vec(lu,pft,len_an_vec) = an_unitlai
-            end if
-
-            ! normalise by mean
-            tmp_vec = an_vec(lu,pft,:) / (sum(an_vec(lu,pft,:)) / len_an_vec)
-
-            ! get trend of an_unitlai over preceeding len_an_vec days
-            vec_idx = (/ (idx, idx = 1, len_an_vec) /)
-            call calc_reg_line( real(vec_idx(:)), tmp_vec, intercept, slope )
-
-            ! calculate fraction allocated to seeds
-            f_seed = calc_f_seed( slope )
-
-            ! record trend for test output
-            tile_fluxes(lu)%plant(pft)%debug1 = an_unitlai            
-            tile_fluxes(lu)%plant(pft)%debug2 = slope            
-            tile_fluxes(lu)%plant(pft)%debug3 = f_seed            
-
+          ! Apply low-pass filter on an_unitlai
+          if (firstcall1) then
+            an_vec(lu,pft,:) = an_unitlai
+            if (pft == npft .and. lu == nlu) firstcall1 = .false.
           else
+            an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
+            an_vec(lu,pft,len_an_vec) = an_unitlai
+          end if
+
+          ! normalise by mean
+          tmp_vec = an_vec(lu,pft,:) / (sum(an_vec(lu,pft,:)) / len_an_vec)
+
+          ! get trend of an_unitlai over preceeding len_an_vec days
+          vec_idx = (/ (idx, idx = 1, len_an_vec) /)
+          call calc_reg_line( real(vec_idx(:)), tmp_vec, intercept, slope )
+
+          ! calculate fraction allocated to seeds
+          f_seed = calc_f_seed( slope )
+
+          ! record trend for test output
+          tile_fluxes(lu)%plant(pft)%debug1 = an_unitlai            
+          tile_fluxes(lu)%plant(pft)%debug2 = slope            
+          tile_fluxes(lu)%plant(pft)%debug3 = f_seed            
+
+          ! Only start filling seeds if LAI > 1
+          if (tile(lu)%plant(pft)%lai_ind < 1.0) then
             f_seed = 0.0
           end if
 
