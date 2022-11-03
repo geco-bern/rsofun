@@ -36,7 +36,7 @@ Imports:
     stats,
     utils
 Remotes:
-    florianhartig/BayesianTools
+    github::florianhartig/BayesianTools
 LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
