@@ -164,6 +164,7 @@ output_new <- rsofun::runread_pmodel_f(
 # the main model output
 model_data_new <- output_new %>%
   filter(sitename == "FR-Pue") %>%
+  tidyr::unnest(data) %>%
   tidyr::unnest(data)
 
   ggplot() +
