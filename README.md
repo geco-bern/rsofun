@@ -21,7 +21,7 @@ Problems with compilation? Make sure to have gfortran installed and paths to the
 
 ## Example
 
-See vignette [Example for using rsofun](./articles/example.html) for how to run the model, and the [ingestr R package](https://stineb.github.io/ingestr/) for collecting the forcing data to run rsofun.
+See vignette [Example for using rsofun](./articles/pmodel_use.html) for how to run the model, and the [ingestr R package](https://github.com/computationales/ingestr) for collecting the forcing data to run rsofun.
 
 ## Usage and contribution
 
