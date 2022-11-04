@@ -21,7 +21,7 @@
 #'   \item{\code{control}}{A list of arguments passed on to the optimization function.
 #'   If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
 #'   the list should include at least \code{settings} and \code{sampler}, see
-#'   \link{BayesianTools::runMCMC}.}
+#'   \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
 #'   \item{\code{targets}}{Name of the observed target variable to use in calibration
 #'   (necessary if \code{method = 'BayesianTools'}).}
 #'  }
