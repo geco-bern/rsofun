@@ -91,11 +91,6 @@ contains
     integer :: usedoy        ! DOY in climate vectors to use for allocation
   
     type(orgpool) :: avl
-    real    :: cavl, navl, req, c_req, n_req, c_acq, n_acq
-
-    logical, save :: firstcall_cnbal = .true.
-    integer, parameter :: len_cnbal_vec = 365
-    real, dimension(nlu,npft,len_cnbal_vec), save :: c_acq_vec, n_acq_vec, c_req_vec, n_req_vec
 
     real, parameter :: freserve = 0.004 ! SwissFACE results are very sensitive to this parameter!
 
@@ -109,13 +104,23 @@ contains
     integer, parameter :: len_an_vec = 15
     real, dimension(nlu,npft,len_an_vec), save :: an_vec
     real, dimension(len_an_vec) :: tmp_vec
-    real :: an_unitlai_diff_damped
     integer, dimension(len_an_vec) :: vec_idx
     real :: slope, intercept
 
-    real, save :: an_max_damped, an_max_damped_prev
-    integer, parameter :: count_wait_declining = 5
-    integer, parameter :: count_wait_increasing = 15
+    real    :: cavl, navl, req, c_req, n_req, c_acq, n_acq
+    logical, save :: firstcall_cnbal = .true.
+    integer, parameter :: len_cnbal_vec = 365
+
+    real, dimension(nlu,npft,len_cnbal_vec), save :: g_net_vec, r_rex_vec, n_acq_vec, c_a_l_vec, c_a_r_vec, c_a_s_vec, n_con_vec
+
+    real :: psi_c        ! return on leaf investment
+    real :: psi_n        ! return on root investment
+    real :: c_con        ! sum of C consumed to satisfy all biomass production and respiration, including growth respiration
+    real :: n_con        ! sum of N consumed to satisfy all biomass production of past N days
+    real :: r_ntoc_con   ! consumed N:C ratio (considering C allocation and respiration over N allocation)
+    real :: n_exc        ! excess N acquisition over the past N days
+    real :: n_con_corr   ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
+    real :: f_leaf       ! fraction of C allocated to leaves
 
     integer, parameter :: len_luep_vec = ndayyear
     integer, parameter :: len_rrum_vec = ndayyear
@@ -628,47 +633,88 @@ contains
       !-------------------------------------------------------------------
       ! Record acquired and required C and N
       !-------------------------------------------------------------------
-      ! Acquired C is GPP minus respiration and minus exudation.
-      ! Growth respiration accounted for on the growth side (in c_req).
-      ! This must be identical to what's added to the labile pool in npp() SR.
-      c_acq = tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex
+      ! ! Acquired C is GPP minus respiration and minus exudation.
+      ! ! Growth respiration accounted for on the growth side (in c_req).
+      ! ! This must be identical to what's added to the labile pool in npp() SR.
+      ! c_acq = tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex
 
-      ! Acquired N is nitrate, ammonium uptake plus fixation
-      ! This must be identical to what's added to the labile pool in nuptake() SR.
-      n_acq = tile_fluxes(lu)%plant(pft)%dnup%n14
+      ! ! Acquired N is nitrate, ammonium uptake plus fixation
+      ! ! This must be identical to what's added to the labile pool in nuptake() SR.
+      ! n_acq = tile_fluxes(lu)%plant(pft)%dnup%n14
 
-      ! C that was built into new biomass at this time step
-      c_req = dcseed + dcleaf + dcroot + drgrow
+      ! ! C that was built into new biomass at this time step
+      ! c_req = dcseed + dcleaf + dcroot + drgrow
 
-      ! N that was built into new biomass at this time step
-      n_req = dnseed + dnleaf + dnroot
+      ! ! N that was built into new biomass at this time step
+      ! n_req = dnseed + dnleaf + dnroot
 
       ! record averages over preceeding 365 days
       ! Apply low-pass filter on an_unitlai
       if (firstcall_cnbal) then
-        c_acq_vec(lu,pft,:) = c_acq
-        n_acq_vec(lu,pft,:) = n_acq
-        c_req_vec(lu,pft,:) = c_req
-        n_req_vec(lu,pft,:) = n_req
+
+        g_net_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
+        r_rex_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
+                            + tile_fluxes(lu)%plant(pft)%dcex
+        n_acq_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnup%n14
+        c_a_l_vec(lu,pft,:) = dcleaf
+        c_a_r_vec(lu,pft,:) = dcroot
+        c_a_s_vec(lu,pft,:) = dcseed
+        n_con_vec(lu,pft,:) = dnleaf + dnroot + dnseed
+
         if (pft == npft .and. lu == nlu) firstcall_cnbal = .false.
+
       else
-        c_acq_vec(lu,pft,1:(len_cnbal_vec-1)) = c_acq_vec(lu,pft,2:len_cnbal_vec)
+
+        g_net_vec(lu,pft,1:(len_cnbal_vec-1)) = g_net_vec(lu,pft,2:len_cnbal_vec)
+        r_rex_vec(lu,pft,1:(len_cnbal_vec-1)) = r_rex_vec(lu,pft,2:len_cnbal_vec)
         n_acq_vec(lu,pft,1:(len_cnbal_vec-1)) = n_acq_vec(lu,pft,2:len_cnbal_vec)
-        c_req_vec(lu,pft,1:(len_cnbal_vec-1)) = c_req_vec(lu,pft,2:len_cnbal_vec)
-        n_req_vec(lu,pft,1:(len_cnbal_vec-1)) = n_req_vec(lu,pft,2:len_cnbal_vec)
-        c_acq_vec(lu,pft,len_cnbal_vec) = c_acq
-        n_acq_vec(lu,pft,len_cnbal_vec) = n_acq
-        c_req_vec(lu,pft,len_cnbal_vec) = c_req
-        n_req_vec(lu,pft,len_cnbal_vec) = n_req
+        c_a_l_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_l_vec(lu,pft,2:len_cnbal_vec)
+        c_a_r_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_r_vec(lu,pft,2:len_cnbal_vec)
+        c_a_s_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_s_vec(lu,pft,2:len_cnbal_vec)
+        n_con_vec(lu,pft,1:(len_cnbal_vec-1)) = n_con_vec(lu,pft,2:len_cnbal_vec)
+
+        g_net_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
+        r_rex_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
+                                        + tile_fluxes(lu)%plant(pft)%dcex
+        n_acq_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dnup%n14
+        c_a_l_vec(lu,pft,len_cnbal_vec) = dcleaf
+        c_a_r_vec(lu,pft,len_cnbal_vec) = dcroot
+        c_a_s_vec(lu,pft,len_cnbal_vec) = dcseed
+        n_con_vec(lu,pft,len_cnbal_vec) = dnleaf + dnroot + dnseed
+
       end if
 
-      ! take mean
-      c_acq = sum(c_acq_vec(lu,pft,:)) / len_cnbal_vec
-      n_acq = sum(n_acq_vec(lu,pft,:)) / len_cnbal_vec
-      c_req = sum(c_req_vec(lu,pft,:)) / len_cnbal_vec
-      n_req = sum(n_req_vec(lu,pft,:)) / len_cnbal_vec
+      ! return on leaf investment, defined as sum of C assimilated (after leaf dark respiration, but before exudation, root and other respiration) 
+      ! divided by sum over C invested into leaf construction (ignoring growth respiration)
+      psi_c = sum( g_net_vec(lu,pft,:) ) / sum( c_a_l_vec(lu,pft,:) )
 
-      print*,'Acquired C:N, Required C:N = ', c_acq / n_acq, c_req / n_req
+      ! return on root investment, defined as sum N acquisition divided by sum of C invested into root construction (ignoring growth respiration)
+      psi_n = sum( n_acq_vec(lu,pft,:) ) / sum( c_a_r_vec(lu,pft,:) )
+
+      ! sum of C consumed to satisfy all biomass production and respiration, including growth respiration, of past N days
+      c_con = (1.0 / params_plant%growtheff) * sum( c_a_l_vec(lu,pft,:) + c_a_r_vec(lu,pft,:) + c_a_s_vec(lu,pft,:) ) &
+              + sum( r_rex_vec(lu,pft,:) )
+
+      ! sum of N consumed to satisfy all biomass production of past N days minus excess N
+      n_con = sum( n_con_vec(lu,pft,:) )
+
+      ! consumed N:C ratio (considering C allocation and respiration over N allocation), mean over preceeding N days
+      r_ntoc_con = n_con / c_con
+
+      ! excess N acquisition over the past N days
+      n_exc = sum( g_net_vec(lu,pft,:) ) * r_ntoc_con - sum( n_acq_vec(lu,pft,:) )
+
+      ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
+      n_con_corr = n_con - n_exc
+
+      ! determine balance (fraction of allocation to leaves)
+      ! psi_c * x * growtheff * c_avl / (psi_n * (1-x) * growtheff * c_avl) = c_consumed / (n_consumed - n_excess)
+      ! => solve for x (frac_leaf below)
+      ! c_consumed is c_req; n_consumed is n_con
+      f_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
+
+      print*,'f_leaf ', f_leaf
+
 
       !-------------------------------------------------------------------
       ! Record growth respiration, adjust NPP
