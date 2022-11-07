@@ -428,7 +428,6 @@ likelihood_lm3ppa <- function(
 #' Bayesiantools optimization
 #' 
 #' @param par parameters
-#' @param par_names vector with names for the parameters
 #' @param obs observations
 #' @param targets target observations to use in calibration
 #' @param drivers driver data
@@ -440,7 +439,6 @@ likelihood_lm3ppa <- function(
 
 likelihood_pmodel <- function(
   par,
-  par_names,
   obs,
   targets,
   drivers

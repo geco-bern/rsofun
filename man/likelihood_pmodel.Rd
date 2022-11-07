@@ -4,12 +4,10 @@
 \alias{likelihood_pmodel}
 \title{Likelihood function for the p-model}
 \usage{
-likelihood_pmodel(par, par_names, obs, targets, drivers)
+likelihood_pmodel(par, obs, targets, drivers)
 }
 \arguments{
 \item{par}{parameters}
-
-\item{par_names}{vector with names for the parameters}
 
 \item{obs}{observations}
 
