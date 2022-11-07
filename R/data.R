@@ -130,7 +130,7 @@
 #'     }
 #'   }
 #' }
-#' @examples require(ggplot2); require(tidyverse)
+#' @examples require(ggplot2); require(tidyr)
 #' p_model_validation %>% tidyr::unnest(data) 
 #'   
 #'  

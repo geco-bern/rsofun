@@ -31,7 +31,7 @@ Small tests dataset to validate
 calibration routines
 }
 \examples{
-require(ggplot2); require(tidyverse)
+require(ggplot2); require(tidyr)
 p_model_validation \%>\% tidyr::unnest(data) 
   
  
