@@ -95,7 +95,6 @@ contains
     real, parameter :: freserve = 0.004 ! SwissFACE results are very sensitive to this parameter!
 
     real, parameter :: kdecay_labl = 0.1
-    real, parameter :: frac_leaf = 0.5
 
     integer, parameter :: len_resp_vec = 30
     real, dimension(nlu,npft,len_resp_vec), save :: resp_vec
@@ -120,7 +119,7 @@ contains
     real :: r_ntoc_con   ! consumed N:C ratio (considering C allocation and respiration over N allocation)
     real :: n_exc        ! excess N acquisition over the past N days
     real :: n_con_corr   ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
-    real :: f_leaf       ! fraction of C allocated to leaves
+    real, save :: frac_leaf = 0.5 ! fraction of C allocated to leaves
 
     integer, parameter :: len_luep_vec = ndayyear
     integer, parameter :: len_rrum_vec = ndayyear
@@ -512,11 +511,10 @@ contains
 
             ! amount to be allocated as real number
             dcseed = f_seed * params_plant%growtheff * avl%c%c12
-            dnseed = f_seed * params_plant%growtheff * avl%n%n14
+            dnseed = f_seed * avl%n%n14
             dcleaf = (1.0 - f_seed) * frac_leaf         * params_plant%growtheff * avl%c%c12
             dcroot = (1.0 - f_seed) * (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
             dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
-            drgrow = (1.0 - params_plant%growtheff) * avl%c%c12
 
             ! ! test balance
             ! if (abs(avl%c%c12 - dcseed - dcroot - dcleaf) > eps) then
@@ -532,7 +530,8 @@ contains
                         )
             
             ! ... and remove growth respiration from labile C
-            tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - drgrow
+            tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 &
+                                            - (1.0 / params_plant%growtheff) * dcseed
 
             !-------------------------------------------------------------------
             ! LEAF ALLOCATION
@@ -562,6 +561,7 @@ contains
               ! If labile N gets negative, account gap as N fixation
               !-------------------------------------------------------------------  
               if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
+                stop 'labile N got negative'
                 req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
                 tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                 tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
@@ -590,6 +590,7 @@ contains
               ! If labile N gets negative, account gap as N fixation
               !-------------------------------------------------------------------  
               if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
+                stop 'labile N got negative'
                 req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
                 tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                 tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
@@ -633,23 +634,7 @@ contains
       !-------------------------------------------------------------------
       ! Record acquired and required C and N
       !-------------------------------------------------------------------
-      ! ! Acquired C is GPP minus respiration and minus exudation.
-      ! ! Growth respiration accounted for on the growth side (in c_req).
-      ! ! This must be identical to what's added to the labile pool in npp() SR.
-      ! c_acq = tile_fluxes(lu)%plant(pft)%dnpp%c12 - tile_fluxes(lu)%plant(pft)%dcex
-
-      ! ! Acquired N is nitrate, ammonium uptake plus fixation
-      ! ! This must be identical to what's added to the labile pool in nuptake() SR.
-      ! n_acq = tile_fluxes(lu)%plant(pft)%dnup%n14
-
-      ! ! C that was built into new biomass at this time step
-      ! c_req = dcseed + dcleaf + dcroot + drgrow
-
-      ! ! N that was built into new biomass at this time step
-      ! n_req = dnseed + dnleaf + dnroot
-
-      ! record averages over preceeding 365 days
-      ! Apply low-pass filter on an_unitlai
+      ! record values over preceeding len_cnbal_vec (365) days
       if (firstcall_cnbal) then
 
         g_net_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
@@ -713,7 +698,8 @@ contains
       ! c_consumed is c_req; n_consumed is n_con
       f_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
 
-      print*,'f_leaf ', f_leaf
+      ! record for experimental output
+      tile_fluxes(lu)%plant(pft)%debug1 = f_leaf
 
 
       !-------------------------------------------------------------------
@@ -963,9 +949,6 @@ contains
     ! - calculate canopy-level foliage N as a function of LAI 
     ! - reduce labile pool by C and N increments
     !-------------------------------------------------------------------
-    use md_classdefs
-    use md_params_core, only: eps
-
     ! arguments
     integer, intent(in)  :: pft
     real, intent(in)     :: mydcleaf
@@ -994,13 +977,10 @@ contains
 
     nleaf    = get_leaf_n_canopy( pft, lai, actnv_unitfapar )
 
-    ! ! xxx debug
-    ! nleaf = cleaf * r_ntoc_leaf
-
     mydnleaf = nleaf - nleaf0
 
     ! depletion of labile C pool is enhanced by growth respiration
-    dclabl = 1.0 / params_plant%growtheff * mydcleaf
+    dclabl = (1.0 / params_plant%growtheff) * mydcleaf
 
     ! substract from labile pools
     clabl  = clabl - dclabl
@@ -1047,9 +1027,6 @@ contains
     ! - update root C and N
     ! - update labile C and N
     !-------------------------------------------------------------------
-    use md_classdefs
-    use md_params_core, only: eps
-
     ! arguments
     integer, intent(in) :: pft
     real, intent(in)   :: mydcroot
@@ -1060,12 +1037,6 @@ contains
 
     ! local variables
     real :: dclabl
-
-    ! print*,'in allocate_root: clabl, nlabl: ', clabl, nlabl
-
-    ! ! use remainder for allocation to roots
-    ! mydcroot = min( mydcroot, params_plant%growtheff * clabl, params_pft_plant(pft)%r_cton_root * nlabl )
-    ! mydnroot = min( mydcroot * params_pft_plant(pft)%r_ntoc_root, nlabl )
 
     ! update root pools
     croot = croot + mydcroot

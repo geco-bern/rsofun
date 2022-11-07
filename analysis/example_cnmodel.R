@@ -179,9 +179,6 @@ tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
          tmax = df_growingseason_mean$tmax,
   )
 
-# tmp$forcing[[1]] %>% 
-#   ggplot(aes(date, co2)) +
-#   geom_line()
 
 ## Model run ------------------------
 output <- runread_pmodel_f(
@@ -213,7 +210,7 @@ gg1 / gg2 / gg3 / gg4
 
 output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(date, x3)) + 
+  ggplot(aes(date, x1)) + 
   geom_line()
 
 calc_f_seed <- function(an_unitlai_diff_damped){
