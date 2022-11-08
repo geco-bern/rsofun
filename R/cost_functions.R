@@ -453,7 +453,7 @@ likelihood_pmodel <- function(
     kphio           = par[1],
     soilm_par_a     = par[2],
     soilm_par_b     = par[3],
-    tau_acclim_tempstress = 10,
+    tau_acclim_tempstress = 10, # This should not be hard-coded
     par_shape_tempstress  = 0.0
   )
   
@@ -510,7 +510,8 @@ likelihood_pmodel <- function(
     
   })
   
-  logpost <- sum(unlist(logpost))
+  logpost <- sum(unlist(logpost)) # Computes log-likelihood accross several
+                                  # independent targets
   
   # trap boundary conditions
   if(is.nan(logpost) | is.na(logpost) | logpost == 0 ){logpost <- -Inf}
