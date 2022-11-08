@@ -66,7 +66,7 @@ create_cost_rmse <- function(
     obs,
     drivers
 ){
-  browser()
+  
   # predefine variables for CRAN check compliance
   sitename <- data <- NULL
   
