@@ -83,7 +83,7 @@ pars <- list(
 
   # N uptake
   # eff_nup               = 0.600000,  # original value
-  eff_nup               = 0.007000,
+  eff_nup               = 0.010000,
   minimumcostfix        = 1.000000,
   fixoptimum            = 25.15000,
   a_param_fix           = -3.62000,
@@ -210,7 +210,7 @@ gg1 / gg2 / gg3 / gg4
 
 output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(date, x1)) + 
+  ggplot(aes(date, x2)) + 
   geom_line()
 
 calc_f_seed <- function(an_unitlai_diff_damped){
