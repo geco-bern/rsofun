@@ -164,6 +164,7 @@ output_new <- rsofun::runread_pmodel_f(
 # the main model output
 model_data_new <- output_new %>%
   filter(sitename == "FR-Pue") %>%
+  tidyr::unnest(data) %>%
   tidyr::unnest(data)
 
   ggplot() +
@@ -173,7 +174,7 @@ model_data_new <- output_new %>%
       date,
       gpp
     ),
-    colour = "blue",
+    colour = "red",
     alpha = 0.3
   ) +
   geom_line(
@@ -189,7 +190,7 @@ model_data_new <- output_new %>%
       date,
       gpp
     ),
-    colour = "red"
+    colour = "blue"
   ) +
   labs(
     x = "Date",
