@@ -83,7 +83,7 @@ pars <- list(
 
   # N uptake
   # eff_nup               = 0.600000,  # original value
-  eff_nup               = 0.010000,
+  eff_nup               = 0.005000,
   minimumcostfix        = 1.000000,
   fixoptimum            = 25.15000,
   a_param_fix           = -3.62000,

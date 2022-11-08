@@ -688,7 +688,7 @@ contains
       r_ntoc_con = n_con / c_con
 
       ! excess N acquisition over the past N days
-      n_exc = sum( g_net_vec(lu,pft,:) ) * r_ntoc_con - sum( n_acq_vec(lu,pft,:) )
+      n_exc = sum( n_acq_vec(lu,pft,:) ) - sum( g_net_vec(lu,pft,:) ) * r_ntoc_con
 
       ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
       n_con_corr = n_con - n_exc
