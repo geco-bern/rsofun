@@ -19,8 +19,8 @@ pars <- list(
   f_nretain             = 0.500000,
   fpc_tree_max          = 0.950000,
   growtheff             = 0.600000,
-  r_root                = 0.913000,
-  r_sapw                = 0.044000,
+  r_root                = 2*0.913000,
+  r_sapw                = 2*0.044000,
   exurate               = 0.003000,
   
   k_decay_leaf_base     = 1.00000,
@@ -349,12 +349,12 @@ ggplot() +
 #   ggplot(aes(date, drd/gpp)) + 
 #   geom_line()
 # 
-# gg3 <- output$data[[1]] %>% 
-#   as_tibble() %>% 
-#   mutate(cue = npp/gpp) %>% 
-#   slice(1:500) %>% 
-#   ggplot(aes(date, cue)) + 
-#   geom_line()
+gg3 <- output$data[[1]] %>%
+  as_tibble() %>%
+  mutate(cue = npp/gpp) %>%
+  slice(1:500) %>%
+  ggplot(aes(date, cue)) +
+  geom_line()
 # 
 # gg1/
 #   gg2/

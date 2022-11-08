@@ -119,7 +119,8 @@ contains
     real :: r_ntoc_con   ! consumed N:C ratio (considering C allocation and respiration over N allocation)
     real :: n_exc        ! excess N acquisition over the past N days
     real :: n_con_corr   ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
-    real, save :: frac_leaf = 0.5 ! fraction of C allocated to leaves
+    real, parameter :: frac_leaf = 0.5 ! fraction of C allocated to leaves
+    real :: frac_leaf_try ! xxx try
 
     integer, parameter :: len_luep_vec = ndayyear
     integer, parameter :: len_rrum_vec = ndayyear
@@ -561,7 +562,7 @@ contains
               ! If labile N gets negative, account gap as N fixation
               !-------------------------------------------------------------------  
               if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
-                stop 'labile N got negative'
+                ! stop 'labile N got negative'
                 req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
                 tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                 tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
@@ -590,7 +591,7 @@ contains
               ! If labile N gets negative, account gap as N fixation
               !-------------------------------------------------------------------  
               if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
-                stop 'labile N got negative'
+                ! stop 'labile N got negative'
                 req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
                 tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
                 tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
@@ -696,10 +697,11 @@ contains
       ! psi_c * x * growtheff * c_avl / (psi_n * (1-x) * growtheff * c_avl) = c_consumed / (n_consumed - n_excess)
       ! => solve for x (frac_leaf below)
       ! c_consumed is c_req; n_consumed is n_con
-      f_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
+      frac_leaf_try = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
+      print*,'frac_leaf_try ', frac_leaf_try
 
       ! record for experimental output
-      tile_fluxes(lu)%plant(pft)%debug1 = f_leaf
+      tile_fluxes(lu)%plant(pft)%debug1 = frac_leaf_try
 
 
       !-------------------------------------------------------------------
