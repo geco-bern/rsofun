@@ -125,8 +125,8 @@ use_nseed <- use_cseed / cn_seed
 tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
   mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.0, 0.0),
          cseed = ifelse(month(date) == 3 & mday(date) == 15, use_cseed, 0.0),
-         nseed = ifelse(month(date) == 3 & mday(date) == 15, use_nseed, 0.0))
-
+         nseed = ifelse(month(date) == 3 & mday(date) == 15, use_nseed, 0.0)) 
+  
 ## check visually
 tmp$forcing[[1]] %>%
   ggplot(aes(date, fharv)) +
@@ -179,6 +179,10 @@ tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
          tmax = df_growingseason_mean$tmax,
   )
 
+# # increase CO2 from 2010
+# tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
+#   mutate(co2 = ifelse(year(date) > 2010, co2 * 2, co2))
+# 
 
 ## Model run ------------------------
 output <- runread_pmodel_f(
@@ -210,7 +214,7 @@ gg1 / gg2 / gg3 / gg4
 
 output$data[[1]] %>% 
   as_tibble() %>% 
-  ggplot(aes(date, x2)) + 
+  ggplot(aes(date, x1)) + 
   geom_line()
 
 calc_f_seed <- function(an_unitlai_diff_damped){
@@ -235,31 +239,36 @@ ggplot() +
 ggplot() + 
   geom_line(data = output$data[[1]], aes(date, en2o))
 
-# ## read (experimental) files
-# aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>% 
-#   setNames(c("year", "csoil")) %>% 
-#   left_join(
-#     read_fwf(file = "out/out_rsofun.a.nsoil.txt", col_types = "in") %>% 
-#       setNames(c("year", "nsoil")),
-#     by = "year"
-#   )
-# 
-# aout %>% 
-#   ggplot(aes(year, nsoil)) +
-#   geom_line()
-# 
+## read (experimental) files
+aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>%
+  setNames(c("year", "csoil")) %>%
+  left_join(
+    read_fwf(file = "out/out_rsofun.a.nsoil.txt", col_types = "in") %>%
+      setNames(c("year", "nsoil")),
+    by = "year"
+  )
+
+aout %>%
+  ggplot(aes(year, csoil)) +
+  geom_line()
+
+aout %>%
+  ggplot(aes(year, nsoil)) +
+  geom_line()
+
+
 # ## Test plots
 # output$data[[1]] %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, gpp)) + 
 #   geom_line()
 # 
-# output$data[[1]] %>% 
-#   as_tibble() %>% 
-#   ggplot() + 
-#   geom_line(aes(date, npp))
-#   # geom_line(aes(date, gpp-drd), color = 'red')
-# 
+output$data[[1]] %>%
+  as_tibble() %>%
+  ggplot() +
+  geom_line(aes(date, gpp))
+  # geom_line(aes(date, gpp-drd), color = 'red')
+
 # output$data[[1]] %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, cex)) + 

@@ -51,7 +51,9 @@ contains
     integer :: dm, moy, doy
     logical, save      :: init_daily            ! is true only on the first day of the simulation 
     logical, parameter :: verbose = .false.     ! change by hand for debugging etc.
-    logical, parameter :: baltest = .false.     ! change by hand for debugging etc.
+    logical, parameter :: verbose_nup = .false.  ! change by hand for debugging etc.
+    logical, parameter :: verbose_ls = .false.  ! change by hand for debugging etc.
+    logical, parameter :: baltest = .false.      ! change by hand for debugging etc.
     real               :: cbal1, cbal2, nbal1, nbal2
     type( orgpool )    :: orgtmp1, orgtmp2, orgtmp3, orgtmp4, orgbal1, orgbal2
     real               :: ntmp1, ntmp2, ctmp1, ctmp2
@@ -220,7 +222,7 @@ contains
         if (verbose) cbal1 = tile_fluxes(1)%plant(1)%dnpp%c12 - tile_fluxes(1)%plant(1)%dcex &
                              - (tile(1)%plant(1)%plabl%c%c12 - cbal1)
         if (verbose) print*, '        gpp - npp - ra_maint          = ', cbal1
-        if (baltest .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
+        if (baltest .and. verbose .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
         if (verbose) print*, '... done'
 
         !----------------------------------------------------------------
@@ -236,16 +238,16 @@ contains
         call nuptake( tile(:), tile_fluxes(:) )
         !----------------------------------------------------------------
         if (verbose) print*, '              ==> returned: '
-        if (verbose) print*, '              dnup   = ', tile_fluxes(1)%plant(1)%dnup
+        if (verbose) print*, '              dnup   = ', tile_fluxes(1)%plant(1)%dnup%n14
         if (verbose) print*, '              ninorg = ', tile(1)%soil%pnh4%n14 + tile(1)%soil%pno3%n14
         if (verbose) print*, '              nlabl  = ', tile(1)%plant(1)%plabl%n%n14
         if (verbose) print*, '    --- balance: '
-        if (verbose) nbal1 = tile_fluxes(1)%plant(1)%dnup_act + ( tile(1)%soil%pnh4%n14 + tile(1)%soil%pno3%n14 - ntmp1 ) 
-        if (verbose) nbal2 = ( tile(1)%plant(1)%plabl%n%n14 - ntmp2 ) + ( tile(1)%soil%pnh4%n14 + tile(1)%soil%pno3%n14 - ntmp1 )
-        if (verbose) print*, '        nup - dninorg     = ', nbal1    ! xxx weird result!
-        if (verbose) print*, '        dnlabl - dninorg  = ', nbal2
-        if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
-        if (baltest .and. abs(nbal2) > eps) stop 'balance 2 not satisfied'
+        if (verbose) nbal1 = ntmp1 - (tile(1)%soil%pnh4%n14 + tile(1)%soil%pno3%n14) - tile_fluxes(1)%plant(1)%dnup%n14
+        if (verbose) nbal2 = tile(1)%plant(1)%plabl%n%n14 - ntmp2 - tile_fluxes(1)%plant(1)%dnup%n14
+        if (verbose) print*, '        dninorg - dnup    = ', nbal1
+        if (verbose) print*, '        dnlabl - dnup     = ', nbal2
+        if (baltest .and. verbose .and. abs(nbal1) > eps) print*, 'balance 1 not satisfied'
+        if (baltest .and. verbose .and. abs(nbal2) > eps) print*, 'balance 2 not satisfied'
         if (verbose) print*, '... done'
 
         !----------------------------------------------------------------
@@ -280,12 +282,15 @@ contains
         if (verbose) print*, '              plitt af = ', tile(1)%soil%plitt_af
         if (verbose) print*, '              plitt as = ', tile(1)%soil%plitt_as
         if (verbose) print*, '              plitt bg = ', tile(1)%soil%plitt_bg
-        if (verbose) print*, '              plitt = ', orgplus( tile(1)%soil%plitt_af, tile(1)%soil%plitt_as, tile(1)%soil%plitt_bg)
+        if (verbose) print*, '              plitt = ', orgplus( tile(1)%soil%plitt_af, &
+                                                                  tile(1)%soil%plitt_as, &
+                                                                  tile(1)%soil%plitt_bg )
         if (verbose) print*, '   --- balance: '
-        if (verbose) orgbal1 = orgminus( orgminus( orgplus( tile(1)%soil%plitt_af, tile(1)%soil%plitt_as, tile(1)%soil%plitt_bg ), &
-                                                            orgtmp2   ), orgminus(   orgtmp1,   orgplus( tile(1)%plant(1)%pleaf,   &
-                                                            tile(1)%plant(1)%proot, tile(1)%plant(1)%plabl, tile(1)%plant(1)%pseed &
-                                                            ) ) )
+        if (verbose) orgbal1 = orgminus( &
+                                  orgminus( orgplus( tile(1)%soil%plitt_af, tile(1)%soil%plitt_as, tile(1)%soil%plitt_bg ), &
+                                                     orgtmp2   ), orgminus(   orgtmp1,   orgplus( tile(1)%plant(1)%pleaf,   &
+                                                     tile(1)%plant(1)%proot, tile(1)%plant(1)%plabl, tile(1)%plant(1)%pseed &
+                                                     ) ) )
         if (verbose) print*, '       dlitt - dplant                = ', orgbal1
         if (baltest .and. abs(orgbal1%c%c12) > eps) stop 'balance not satisfied for C'
         if (baltest .and. abs(orgbal1%n%n14) > eps) stop 'balance not satisfied for N'
@@ -322,22 +327,22 @@ contains
         ! ! litter and soil decomposition and N mineralisation
         ! !----------------------------------------------------------------
         ! if (verbose) print*, 'calling littersom() ... '
-        if (verbose) print*, '              with state variables:'
-        if (verbose) print*, '              plitt tot=  ', orgplus( tile(1)%soil%plitt_af, tile(1)%soil%plitt_as, &
+        if (verbose_ls) print*, '              with state variables:'
+        if (verbose_ls) print*, '              plitt tot=  ', orgplus( tile(1)%soil%plitt_af, tile(1)%soil%plitt_as, &
                                                                     tile(1)%soil%plitt_bg )
-        if (verbose) print*, '              psoil tot = ', orgplus( tile(1)%soil%psoil_fs, tile(1)%soil%psoil_sl )
-        if (verbose) print*, '              pexud     = ', tile(1)%soil%pexud
-        if (verbose) print*, '              pninorg=    ', tile(1)%soil%pnh4%n14 + tile(1)%soil%pno3%n14
-        if (verbose) print*, '              drhet     = ', tile_fluxes(1)%soil%drhet
-        if (verbose) print*, '              dnetmin   = ', tile_fluxes(1)%soil%dnetmin
-        if (verbose) cbal1 =  tile(1)%soil%plitt_af%c%c12 &
+        if (verbose_ls) print*, '              psoil tot = ', orgplus( tile(1)%soil%psoil_fs, tile(1)%soil%psoil_sl )
+        if (verbose_ls) print*, '              pexud     = ', tile(1)%soil%pexud
+        if (verbose_ls) print*, '              pninorg=    ', tile(1)%soil%pnh4%n14 + tile(1)%soil%pno3%n14
+        if (verbose_ls) print*, '              drhet     = ', tile_fluxes(1)%soil%drhet
+        if (verbose_ls) print*, '              dnetmin   = ', tile_fluxes(1)%soil%dnetmin
+        if (verbose_ls) cbal1 =  tile(1)%soil%plitt_af%c%c12 &
                             + tile(1)%soil%plitt_as%c%c12 &
                             + tile(1)%soil%plitt_bg%c%c12 &
                             + tile(1)%soil%pexud%c12 &
                             + tile(1)%soil%psoil_fs%c%c12 & 
                             + tile(1)%soil%psoil_sl%c%c12 &
                             + tile_fluxes(1)%soil%drhet%c12
-        if (verbose) nbal1 =  tile(1)%soil%plitt_af%n%n14 &
+        if (verbose_ls) nbal1 =  tile(1)%soil%plitt_af%n%n14 &
                             + tile(1)%soil%plitt_as%n%n14 &
                             + tile(1)%soil%plitt_bg%n%n14 &
                             + tile(1)%soil%psoil_fs%n%n14 & 
@@ -347,35 +352,35 @@ contains
         !----------------------------------------------------------------
         call littersom( tile(:), tile_fluxes(:), myinterface%climate(doy), doy )
         !----------------------------------------------------------------
-        if (verbose) print*, '              ==> returned: '
-        if (verbose) print*, '              plitt  = ', orgplus( tile(1)%soil%plitt_af, tile(1)%soil%plitt_as, &
+        if (verbose_ls) print*, '              ==> returned: '
+        if (verbose_ls) print*, '              plitt  = ', orgplus( tile(1)%soil%plitt_af, tile(1)%soil%plitt_as, &
                                                                   tile(1)%soil%plitt_bg )
-        if (verbose) print*, '              psoil  = ', orgplus( tile(1)%soil%psoil_fs, tile(1)%soil%psoil_sl )
-        if (verbose) print*, '              pninorg= ', tile(1)%soil%pnh4%n14 + tile(1)%soil%pno3%n14
-        if (verbose) print*, '              drhet  = ', tile_fluxes(1)%soil%drhet
-        if (verbose) print*, '              dnetmin= ', tile_fluxes(1)%soil%dnetmin
-        if (verbose) print*, '   --- balance: '
-        if (verbose) cbal2 =  tile(1)%soil%plitt_af%c%c12 &
+        if (verbose_ls) print*, '              psoil  = ', orgplus( tile(1)%soil%psoil_fs, tile(1)%soil%psoil_sl )
+        if (verbose_ls) print*, '              pninorg= ', tile(1)%soil%pnh4%n14 + tile(1)%soil%pno3%n14
+        if (verbose_ls) print*, '              drhet  = ', tile_fluxes(1)%soil%drhet
+        if (verbose_ls) print*, '              dnetmin= ', tile_fluxes(1)%soil%dnetmin
+        if (verbose_ls) print*, '   --- balance: '
+        if (verbose_ls) cbal2 =  tile(1)%soil%plitt_af%c%c12 &
                             + tile(1)%soil%plitt_as%c%c12 &
                             + tile(1)%soil%plitt_bg%c%c12 &
                             + tile(1)%soil%pexud%c12 &
                             + tile(1)%soil%psoil_fs%c%c12 & 
                             + tile(1)%soil%psoil_sl%c%c12 &
                             + tile_fluxes(1)%soil%drhet%c12
-        if (verbose) nbal2 =  tile(1)%soil%plitt_af%n%n14 &
+        if (verbose_ls) nbal2 =  tile(1)%soil%plitt_af%n%n14 &
                             + tile(1)%soil%plitt_as%n%n14 &
                             + tile(1)%soil%plitt_bg%n%n14 &
                             + tile(1)%soil%psoil_fs%n%n14 & 
                             + tile(1)%soil%psoil_sl%n%n14 &
                             + tile(1)%soil%pnh4%n14 + tile(1)%soil%pno3%n14 &
                             + tile_fluxes(1)%soil%dnfix_free
-        if (verbose) cbal1 = cbal2 - cbal1
-        if (verbose) nbal1 = nbal2 - nbal1
-        if (verbose) print*, '       d( csoil + clitt + cexu + drhet ) = ', cbal1
+        if (verbose_ls) cbal1 = cbal2 - cbal1
+        if (verbose_ls) nbal1 = nbal2 - nbal1
+        if (verbose_ls) print*, '       d( csoil + clitt + cexu + drhet ) = ', cbal1
         ! if (baltest .and. abs(cbal1) > eps .and. (.not. myinterface%steering%do_soilequil)) stop 'balance not satisfied for C'
-        if (verbose) print*, '       d( nsoil + nlitt + netmin ) = ', nbal1
+        if (verbose_ls) print*, '       d( nsoil + nlitt + netmin ) = ', nbal1
         ! if (baltest .and. abs(nbal1) > eps .and. (.not. myinterface%steering%do_soilequil)) stop 'balance not satisfied for N'
-        if (verbose) print*, '... done'
+        if (verbose_ls) print*, '... done'
 
         !----------------------------------------------------------------
         ! inorganic soil N dynamics (mass balance test only possible inside module)

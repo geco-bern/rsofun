@@ -75,6 +75,7 @@ contains
     ! temporary _pools
     type(carbon)  :: dexu                           ! exudates decomposed in time step (= exu_decom)
     type(orgpool) :: dlitt                          ! total litter decomposed per time step
+    type(orgpool) :: dsoil                          ! total soil decomposed per time step
     type(orgpool) :: dlitt_af                       ! above-ground fast litter decomposed per time step (= litterdag_fast)
     type(orgpool) :: dlitt_as                       ! above-ground slow litter decomposed per time step (= litterdag_slow)
     type(orgpool) :: dlitt_bg                       ! below-ground slow litter decomposed per time step (= litter_decom_bg)
@@ -101,8 +102,8 @@ contains
 
     real :: ntoc_save_fs, ntoc_save_sl
 
-    ! ! xxx debug
-    ! real :: nbal1, nbal2
+    ! xxx debug
+    real :: nbal1, nbal2
 
     !-------------------------------------------------------------------------
     ! Count number of calls (one for each simulation year)
@@ -189,6 +190,16 @@ contains
       ! All goes to daily updated litter decomposition pool
       !----------------------------------------------------------------
 
+      ! ! xxx debug: n_litter + n_soil + no3 + nh4 + nfix_free = const.
+      ! nbal1 = tile(lu)%soil%psoil_fs%n%n14 &
+      !       + tile(lu)%soil%psoil_sl%n%n14 &
+      !       + tile(lu)%soil%plitt_af%n%n14 &
+      !       + tile(lu)%soil%plitt_as%n%n14 &
+      !       + tile(lu)%soil%plitt_bg%n%n14 &
+      !       + tile(lu)%soil%pno3%n14 &
+      !       + tile(lu)%soil%pnh4%n14 &
+      !       + tile_fluxes(lu)%soil%dnfix_free
+
       !-------------------------------------------------------------------------
       ! Initialisation of decomposing pool 
       ! (temporary, decomposition for each LU-class).
@@ -208,7 +219,7 @@ contains
       call orgmv( dlitt_as, tile(lu)%soil%plitt_as, dlitt )
       call orgmv( dlitt_bg, tile(lu)%soil%plitt_bg, dlitt )
 
-      ! ! xxx debug
+      ! ! xxx debug - this is ok
       ! nbal2 = tile(lu)%soil%plitt_af%n%n14 + tile(lu)%soil%plitt_as%n%n14 + tile(lu)%soil%plitt_bg%n%n14 + dlitt%n%n14
       ! print*,'A: nbal: ', nbal2 - nbal1
       ! if (abs(nbal2 - nbal1) > eps) stop 'A: balance not satisfied for N'
@@ -305,10 +316,13 @@ contains
           avl = tile(lu)%soil%pnh4%n14
 
           if (avl >= req) then
+
             ! enough mineral N for immobilisation
             tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 - req
             req = 0.0
+
           else
+
             ! not enough NH4 for immobilisation
             tile(lu)%soil%pnh4%n14 = 0.0
             req = req - avl
@@ -319,10 +333,13 @@ contains
             avl = tile(lu)%soil%pno3%n14
 
             if (avl >= req) then
+
               ! enough mineral N for immobilisation
               tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 - req
               req = 0.0
+
             else
+
               ! not enough NO3 for immobilisation
               tile(lu)%soil%pno3%n14 = 0.0
               req = req - avl
@@ -354,7 +371,7 @@ contains
         ! tile(lu)%soil%psoil_fs%n*n14 = tile(lu)%soil%psoil_fs%c%c12 * params_littersom%ntoc_soil
         ! tile(lu)%soil%psoil_sl%n*n14 = tile(lu)%soil%psoil_sl%c%c12 * params_littersom%ntoc_soil
 
-        ! ! xxx debug
+        ! ! xxx debug - this is ok
         ! nbal2 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14
         ! print*,'C: nbal: ', nbal2 - nbal1
         ! if (abs(nbal2 - nbal1) > eps) stop 'C: balance not satisfied for N'
@@ -370,65 +387,65 @@ contains
 
       end if
 
+      ! ! xxx debug: n_litter + n_soil + no3 + nh4 + nfix_free = const. - is ok
+      ! nbal2 = tile(lu)%soil%psoil_fs%n%n14 &
+      !       + tile(lu)%soil%psoil_sl%n%n14 &
+      !       + tile(lu)%soil%plitt_af%n%n14 &
+      !       + tile(lu)%soil%plitt_as%n%n14 &
+      !       + tile(lu)%soil%plitt_bg%n%n14 &
+      !       + tile(lu)%soil%pno3%n14 &
+      !       + tile(lu)%soil%pnh4%n14 &
+      !       + tile_fluxes(lu)%soil%dnfix_free
+      ! print*,'nbal, dnfix_free: ', nbal2 - nbal1, tile_fluxes(lu)%soil%dnfix_free
+      ! if (abs(nbal2 - nbal1) > eps) stop 'A: balance not satisfied for N'
+
       !////////////////////////////////////////////////////////////////
       ! SOIL DECAY
       !----------------------------------------------------------------
       ! Calculate daily/monthly soil decomposition to the atmosphere
 
-      ! record N:C ratio to override later (compensating for numerical imprecision)
-      ntoc_save_fs = ntoc( tile(lu)%soil%psoil_fs, default = 0.0 )
-      ntoc_save_sl = ntoc( tile(lu)%soil%psoil_sl, default = 0.0 )
+      ! ! xxx debug: n_litter + n_soil + no3 + nh4 + nfix_free = const.
+      ! nbal1 = tile(lu)%soil%psoil_fs%n%n14 &
+      !       + tile(lu)%soil%psoil_sl%n%n14 &
+      !       + tile(lu)%soil%pnh4%n14
+      !       ! + tile(lu)%soil%pno3%n14 &
+      !       ! + tile_fluxes(lu)%soil%dnfix_free
 
+      ! decomposing amount is first added to "temporary pool" dsoil
+      call orginit( dsoil )
       dsoil_fs = orgfrac( (1.0 - exp(-ksoil_fs)), tile(lu)%soil%psoil_fs )
       dsoil_sl = orgfrac( (1.0 - exp(-ksoil_sl)), tile(lu)%soil%psoil_sl )
+      call orgmv( dsoil_fs, tile(lu)%soil%psoil_fs, dsoil )
+      call orgmv( dsoil_sl, tile(lu)%soil%psoil_sl, dsoil )
 
-      ! net mineralisation from soil decomposition
-      netmin_soil = dsoil_fs%n%n14 + dsoil_sl%n%n14
+      ! N is all mineralised to NH4
+      tile(lu)%soil%pnh4 = nplus(tile(lu)%soil%pnh4, dsoil%n)
+      tile_fluxes(lu)%soil%dnetmin = nplus(tile_fluxes(lu)%soil%dnetmin, dsoil%n)
 
-      ! ! xxx debug
-      ! nbal1 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%pnh4%n14
-
-      ! soil decay
-      call orgsub( dsoil_fs, tile(lu)%soil%psoil_fs )
-      call orgsub( dsoil_sl, tile(lu)%soil%psoil_sl )
-
-      ! C to heterotrophic respiration
-      tile_fluxes(lu)%soil%drhet = cplus( tile_fluxes(lu)%soil%drhet, dsoil_fs%c, dsoil_sl%c )
-
-      ! all decomposing soil N adds to net mineralisation
-      tile_fluxes(lu)%soil%dnetmin%n14 = tile_fluxes(lu)%soil%dnetmin%n14 + netmin_soil
-
-      ! all decomposing soil N adds to NH4
-      tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + netmin_soil
-
-      ! ! xxx debug
-      ! nbal2 = tile(lu)%soil%psoil_fs%n%n14 + tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%pnh4%n14
-      ! print*,'C: nbal: ', nbal2 - nbal1
-      ! if (abs(nbal2 - nbal1) > eps) stop 'C: balance not satisfied for N'
+      ! C is all respired (heterotropic respiration)
+      tile_fluxes(lu)%soil%drhet = cplus( tile_fluxes(lu)%soil%drhet, dsoil%c )
 
       ! Spinup trick: use projected soil N mineralisation before soil equilibration
       if ( myinterface%steering%project_nmin ) then
         ! projected soil N mineralisation
         if (dlitt%c%c12 > 0.0) tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + eff * dlitt%c%c12 / params_littersom%cton_soil
-      else
-        ! actual soil N mineralisation
-        tile(lu)%soil%pnh4%n14 = tile(lu)%soil%pnh4%n14 + dsoil_fs%n%n14 + dsoil_sl%n%n14
       end if
 
-      ! if ( tile(lu)%soil%psoil_fs%c%c12 > 0.0 .and. abs( cton( tile(lu)%soil%psoil_fs, default=0.0 ) - params_littersom%cton_soil ) > 1e-4 ) then
-      !   write(0,*) 'psoil_fs', cton( tile(lu)%soil%psoil_fs )
-      !   stop 'C fs: C:N not ok'
-      ! end if
-      ! if ( tile(lu)%soil%psoil_sl%c%c12 > 0.0 .and. abs( cton( tile(lu)%soil%psoil_sl, default=0.0 ) - params_littersom%cton_soil ) > 1e-4 ) then
-      !   write(0,*) 'psoil_sl', cton( tile(lu)%soil%psoil_sl )
-      !   stop 'C sl: C:N not ok'
-      ! end if
-      
       ! get average litter -> soil flux for analytical soil C equilibration
       if ( myinterface%steering%average_soil ) then
         mean_ksoil_fs(lu) = mean_ksoil_fs(lu) + ksoil_fs
         mean_ksoil_sl(lu) = mean_ksoil_sl(lu) + ksoil_sl
       end if
+
+      ! ! xxx debug: n_litter + n_soil + no3 + nh4 + nfix_free = const. - is ok
+      ! nbal2 = tile(lu)%soil%psoil_fs%n%n14 &
+      !       + tile(lu)%soil%psoil_sl%n%n14 &
+      !       + tile(lu)%soil%pnh4%n14
+      !       ! + tile(lu)%soil%pno3%n14 &
+      !       ! + tile_fluxes(lu)%soil%dnfix_free
+
+      ! if (.not. myinterface%steering%project_nmin) print*,'nbal : ', nbal2 - nbal1
+      ! if (abs(nbal2 - nbal1) > eps .and. (.not. myinterface%steering%project_nmin)) stop 'Balance not satisfied for N'
 
       ! analytical soil C equilibration
       if ( myinterface%steering%do_soilequil .and. doy == ndayyear ) then

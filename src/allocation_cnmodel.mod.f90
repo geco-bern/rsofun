@@ -698,13 +698,14 @@ contains
       ! => solve for x (frac_leaf below)
       ! c_consumed is c_req; n_consumed is n_con
       frac_leaf_try = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
-      print*,'n_exc, n_con, c_con, psi_c, psi_n, r_ntoc_con, n_con_corr, frac_leaf_try ', &
-              n_exc, n_con, c_con, psi_c, psi_n, r_ntoc_con, n_con_corr, frac_leaf_try
+      
+      ! print*,'n_exc, n_con, c_con, psi_c, psi_n, r_ntoc_con, n_con_corr, frac_leaf_try ', &
+      !         n_exc, n_con, c_con, psi_c, psi_n, r_ntoc_con, n_con_corr, frac_leaf_try
 
       ! record for experimental output
       tile_fluxes(lu)%plant(pft)%debug1 = frac_leaf_try
-      tile_fluxes(lu)%plant(pft)%debug1 = r_ntoc_con
-      tile_fluxes(lu)%plant(pft)%debug1 = n_exc
+      tile_fluxes(lu)%plant(pft)%debug2 = r_ntoc_con
+      tile_fluxes(lu)%plant(pft)%debug3 = n_exc
 
 
       !-------------------------------------------------------------------
