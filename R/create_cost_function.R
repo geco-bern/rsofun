@@ -25,7 +25,7 @@
 #' data frame of driver data \code{drivers}.
 #' 
 #' @details The resulting cost function performs a P-model run for the value of
-#' \code{par} given as argument  and the remaining non-calibratable parameters
+#' \code{par} given as argument and the remaining non-calibratable parameters
 #' are held constant (specified via \code{params_modl}).
 #' 
 #' Since the calibration routine in \code{BayesianTools} is based on maximizing 
@@ -141,5 +141,161 @@ create_cost_rmse <- function(
 }")
   }
   
+  return(eval(parse(text = f)))
+}
+
+#' Creates a log-likelihood cost function for several setups
+#' 
+#' Creates a cost function for parameter calibration, keeping non-calibrated
+#' parameter values fixed and calibrating the parameters corresponding to setups
+#' \code{BRC} and \code{FULL} from Stocker et al., 2020 GMD. The cost function
+#' computes the log-likelihood for the p-model fitting a given target variable 
+#' for a given set of parameters.
+#' 
+#' @param params_modl A list of model parameter values, including \code{'kphio',
+#' 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' }and \code{'par_shape_tempstress'}
+#' in that order.
+#' @param setup A character string (\code{'BRC'} or \code{'FULL'}) indicating which
+#' parameters are calibrated. For \code{setup = 'BRC'} only the quantum yield
+#' efficiency \code{kphio} is calibrated; for \code{setup = 'FULL'} it also includes
+#' the soil moisture stress parameters \code{soilm_par_a} and \code{soilm_par_b}
+#' for calibration.
+#' @param target A character string indicating the target variable for which the
+#' optimization will be done. This string must be a column name of the \code{data}
+#' data.frame belonging to the validation nested data.frame, as well as its
+#' corresponding uncertainty (for example 'gpp' and 'gpp_unc').
+#' 
+#' @importFrom magrittr '%>%'
+#' 
+#' @return A cost function which computes the log-likelihood of the simulated 
+#' GPP by the P-model versus the observed GPP. This cost function has as arguments 
+#' a list of calibratable model parameters \code{par}, a data frame of observations 
+#' \code{obs}, and a data frame of driver data \code{drivers}.
+#' 
+#' @details The resulting cost function performs a P-model run for the value of
+#' \code{par} given as argument and the remaining non-calibratable parameters
+#' are held constant (specified via \code{params_modl}).
+#' 
+#' The likelihood is calculated assuming that the predicted targets are independent
+#' normaly distributed and centered on the observations. The optimization should be run 
+#' using \code{BayesianTools}, and the likelihood is maximized.
+#' 
+#' @export
+#'
+#' @examples \dontrun{
+#' # Set model parameters
+#' pars <- list(
+#'   kphio          = 0.04,
+#'   soilm_par_a    = 2.8,
+#'   soilm_par_b    = 1.7,
+#'   tau_acclim_tempstress  = 7.3,
+#'   par_shape_tempstress   = 0.1
+#'   )
+#' 
+#' # Write cost function
+#' cost_likelihood_kphio <- create_cost_likelihood(
+#'   params_modl = pars,
+#'   setup = 'BRC',
+#'   target = 'gpp'
+#'   )
+#' }
+
+create_cost_likelihood <- function(
+    params_modl,
+    setup,
+    target
+){
+  # predefine variables for CRAN check compliance
+  f <- NULL
+  
+  f <- "function(
+    par,
+    obs,
+    drivers
+){
+  # predefine variables for CRAN check compliance
+  sitename <- data <- NULL
+  
+  ## execute model for this parameter set
+  params_modl <- list(
+    kphio           = par[1],
+    soilm_par_a     = "
+  
+  if(setup == 'BRC'){
+    f <- paste0(f,
+                params_modl[2],
+                ",
+    soilm_par_b     = ",
+                params_modl[3]
+    )
+  } else if(setup == 'FULL'){
+    f <- paste0(f,
+                "par[2],
+    soilm_par_b     = par[3]")
+  } else {
+    stop("unvalid setup, must be 'BRC' or 'FULL'")
+  }
+  
+  f <- paste0(f,
+              ",
+    tau_acclim_tempstress = ",
+              params_modl[4],
+              ",
+    par_shape_tempstress = ",
+              params_modl[5],
+              ")
+              
+   # run the model
+  df <- runread_pmodel_f(
+    drivers, 
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # cleanup
+  df <- df %>%
+    dplyr::select(sitename, data) %>%
+    tidyr::unnest(data) %>%
+    tidyr::unnest(data) %>%
+    dplyr::arrange(
+      sitename, date
+    )
+    
+  obs <- obs %>%
+    dplyr::select(sitename, data) %>%
+    tidyr::unnest(data) %>%
+    dplyr::ungroup() %>%
+    dplyr::arrange(
+      sitename, date
+    )          
+  
+  # get observations and predicted target values, without NA            
+  observed <- obs$",
+              target,
+              "
+  notNAvalues <- !is.na(observed)
+  observed <- observed[notNAvalues]
+  
+  predicted <- df$",
+              target,
+              "[notNAvalues]
+  uncertainty <- obs$",
+              target,
+              "_unc[notNAvalues]
+
+  # calculate normal log-likelihood
+  ll <- sum(stats::dnorm(
+    predicted,
+    mean = observed,
+    sd = uncertainty,
+    log = TRUE
+  ))
+  
+  # trap boundary conditions
+  if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
+  
+  return(ll)
+}")
   return(eval(parse(text = f)))
 }
