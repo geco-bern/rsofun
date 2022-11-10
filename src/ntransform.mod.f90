@@ -86,9 +86,8 @@ contains
     real :: dno_d, dno_w, dn2o_d, dn2o_w   ! for gaseous escape
     
     ! Variables N balance test
-    logical, parameter :: baltest_trans = .false.  ! set to false to do mass conservation test during transient simulation
-    logical :: verbose = .false.  ! set to true to activate verbose mode
-    logical :: baltest
+    logical, parameter :: verbose = .true.  ! set to true to activate verbose mode
+    logical, parameter :: baltest = .true.
     real :: nbal_before_1, nbal_after_1, nbal1, nbal_before_2, nbal_after_2, nbal2
     real :: no3bal_0, no3bal_1, nh4bal_0, nh4bal_1
 
@@ -98,9 +97,6 @@ contains
     ! else
     !   baltest = .false.
     ! end if
-
-    ! xxx debug
-    baltest = .false.
 
     !///////////////////////////////////////////////////////////////////////
     ! INITIALIZATION 
@@ -145,7 +141,7 @@ contains
       if (verbose) print*,'              dndep  = ', landuse%dnoy + landuse%dnhx
       if (baltest) nbal_before_1 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile_fluxes(lu)%soil%dnloss
       if (baltest) nbal_before_2 = tile(lu)%soil%pno3%n14 + tile(lu)%soil%pnh4%n14 + tile(lu)%soil%no_w + tile(lu)%soil%no_d & 
-      + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
+        + tile(lu)%soil%n2o_w + tile(lu)%soil%n2o_d + tile(lu)%soil%n2_w + tile(lu)%soil%pno2
       if (verbose) print*,'executing ntransform() ... '
 
       !-------------------------------------------------------------------------
