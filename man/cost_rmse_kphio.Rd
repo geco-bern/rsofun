@@ -7,18 +7,27 @@
 cost_rmse_kphio(par, obs, drivers, inverse = FALSE)
 }
 \arguments{
-\item{par}{parameters}
+\item{par}{A list of model parameters, including at least \code{"kphio"}.}
 
-\item{obs}{observations}
+\item{obs}{A data frame of observations.}
 
-\item{drivers}{driver data}
+\item{drivers}{A data frame of driver data.}
 
-\item{inverse}{invert the function (1-value)}
+\item{inverse}{A logical value indicating whether to invert the function (1-value).
+\code{FALSE} by default.}
 }
 \value{
-the RMSE on the kpio parameter
+The RMSE of the simulated GPP by the P-model on the \code{kphio} parameter
+versus the observed GPP.
 }
 \description{
 Root mean squared error (RMSE) cost function on
-the kphio parameter.
+the kphio (quantum yield efficiency) parameter.
+}
+\details{
+A P-model run is performed for the value of \code{kphio} given as an
+argument and the remaining calibratable parameters are held constant:
+
+\code{soilm_par_a = 1.0, soilm_par_b = 0.0, tau_acclim_tempstress = 10 } and
+\code{par_shape_tempstress = 0.0}.
 }

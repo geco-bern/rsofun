@@ -35,6 +35,8 @@ Imports:
     multidplyr,
     stats,
     utils
+Remotes:
+    github::florianhartig/BayesianTools/BayesianTools
 LazyData: true
 LazyDataCompression: xz
 ByteCompile: true

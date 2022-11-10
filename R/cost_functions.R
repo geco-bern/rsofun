@@ -5,16 +5,25 @@
 #' Root mean squared error
 #' 
 #' Root mean squared error (RMSE) cost function on
-#' the kphio parameter.
+#' the kphio (quantum yield efficiency) parameter.
 #' 
-#' @param par parameters
-#' @param obs observations
-#' @param drivers driver data
-#' @param inverse invert the function (1-value)
+#' @param par A list of model parameters, including at least \code{"kphio"}.
+#' @param obs A data frame of observations.
+#' @param drivers A data frame of driver data.
+#' @param inverse A logical value indicating whether to invert the function (1-value).
+#' \code{FALSE} by default.
 #' 
 #' @importFrom magrittr '%>%'
 #' 
-#' @return the RMSE on the kpio parameter
+#' @return The RMSE of the simulated GPP by the P-model on the \code{kphio} parameter
+#' versus the observed GPP.
+#' 
+#' @details A P-model run is performed for the value of \code{kphio} given as an
+#' argument and the remaining calibratable parameters are held constant:
+#' 
+#' \code{soilm_par_a = 1.0, soilm_par_b = 0.0, tau_acclim_tempstress = 10 } and
+#' \code{par_shape_tempstress = 0.0}.
+#' 
 #' @export
 
 cost_rmse_kphio <- function(
@@ -49,6 +58,7 @@ cost_rmse_kphio <- function(
   df <- df %>%
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>%
+    tidyr::unnest(data) %>%
     dplyr::rename(
       'gpp_mod' = 'gpp'
     )
@@ -73,14 +83,20 @@ cost_rmse_kphio <- function(
 #' Root mean squared error (RMSE) cost function on
 #' the full parameter stack.
 #'
-#' @param par parameters
-#' @param obs observed values
-#' @param drivers drivers
-#' @param inverse invert the function
+#' @param par A list of model parameters including \code{"kphio", "soilm_par_a"}
+#' and \code{"soilm_par_b"}.
+#' @param obs A data frame of observed values.
+#' @param drivers A data frame of drivers.
+#' @param inverse A logical value indicating whether to invert the function. Defaults
+#' to \code{FALSE}.
 #'
 #' @importFrom magrittr '%>%'
 #'
-#' @return the RMSE on the full parameter set
+#' @return The RMSE of the simulated GPP by the P-model on the given parameter
+#' values versus the observed GPP.
+#' 
+#' @details The simulation is run for the given parameter values, but holding 
+#' \code{tau_acclim_tempstress = 10 }and\code{par_shape_tempstress = 0.0} constant.
 #' @export
 #'
 
@@ -181,118 +197,6 @@ cost_chisquared_kphio <- function(par, inverse = FALSE) {
 
 
 
-#' Root mean squared error
-#' 
-#' Root mean squared error (RMSE) cost function on
-#' VPD stress.
-#'
-#' @param par parameters
-#' @param obs observed values
-#' @param drivers drivers
-#' @param inverse invert the function
-#'
-#' @importFrom magrittr '%>%'
-#' @return The RMSE on VPD
-#' @export
-#'
-
-cost_rmse_vpdstress <- function(
-  par,
-  obs,
-  drivers,
-  inverse = FALSE
-){
-  
-  # predefine variables for CRAN check compliance
-  sitename <- data <- NULL
-  
-  ## execute model for this parameter set
-  ## For calibrating quantum yield efficiency only
-  params_modl <- list(
-    kphio           = 0.04971,
-    soilm_par_a     = 1.0,
-    soilm_par_b     = 0.0,
-    vpdstress_par_a = par[1],
-    vpdstress_par_b = par[2],
-    vpdstress_par_m = par[3]
-  )
-  
-  df <- runread_pmodel_f(
-    drivers, 
-    par = params_modl, 
-    makecheck = TRUE,
-    parallel = FALSE
-  ) %>%   
-    dplyr::select(sitename, data) %>% 
-    tidyr::unnest(data) %>% 
-    dplyr::rename("latenth_mod" = "latenth") %>% 
-    dplyr::left_join(obs, by = c("sitename", "date"))
-  
-  # Calculate cost (RMSE)
-  cost <- sqrt( mean( (df$latenth_mod - df$latenth_obs )^2, na.rm = TRUE ) )
-  
-  if (inverse) cost <- 1.0 / cost  
-  
-  return(cost)
-}
-
-#' Chi-squared cost function
-#' 
-#' Cost function using the chi-squared statistic,
-#' after (Keenan et al., 2012 GCB)
-#'
-#' @param par parameters
-#' @param obs observed values
-#' @param drivers drivers
-#' @param inverse invert the function
-#' 
-#' @importFrom magrittr '%>%'
-#' @return The Chi-squared value on VPD
-#' @export
-#'
-
-cost_chisquared_vpdstress <- function(
-  par,
-  obs,
-  drivers,
-  inverse = FALSE
-) {
-  
-  # predefine variables for CRAN check compliance
-  sitename <- data <- NULL
-  
-  # execute model for this parameter set
-  # For calibrating quantum yield efficiency only
-  params_modl <- list(
-    kphio           = 0.04971,
-    soilm_par_a     = 1.0,
-    soilm_par_b     = 0.0,
-    vpdstress_par_a = par[1],
-    vpdstress_par_b = par[2],
-    vpdstress_par_m = par[3]
-  )
-  
-  df <- runread_pmodel_f(
-    drivers, 
-    par = params_modl, 
-    makecheck = TRUE,
-    parallel = FALSE
-  ) %>%   
-    dplyr::select(sitename, data) %>% 
-    tidyr::unnest(data) %>% 
-    dplyr::rename("latenth_mod" = "latenth") %>% 
-    dplyr::left_join(obs, by = c("sitename", "date"))
-  
-  ## Calculate cost (RMSE)
-  cost <- ((df$latenth_mod - df$latenth_obs )/(2 * df$latenth_unc))^2
-  cost <- sum(cost, na.rm = TRUE)/sum(!is.na(cost))
-  
-  # print(paste("par =", paste(par, collapse = ", " ), "cost =", cost))
-  
-  if (inverse) cost <- 1.0 / cost
-  
-  return(cost)
-}
 
 #' Linearly scaled output
 #' 
@@ -564,6 +468,7 @@ likelihood_pmodel <- function(
   ) %>%
     dplyr::select(sitename, data) %>%
     tidyr::unnest(data) %>%
+    tidyr::unnest(data) %>%
     dplyr::arrange(
       sitename, date
     )
@@ -616,6 +521,7 @@ likelihood_pmodel <- function(
 }
 
 likelihood <- function(predicted, observed, sd){
+  # Helper function
   notNAvalues = !is.na(observed)
   return(
     sum(

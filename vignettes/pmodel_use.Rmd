@@ -79,7 +79,8 @@ library(ggplot2)
 # the main model output
 model_data <- output %>%
   filter(sitename == "FR-Pue") %>%
-  tidyr::unnest(data)
+  tidyr::unnest(data) %>% # Unnests the list with one dataframe
+  tidyr::unnest(data) # Now it unnests the dataframe
 
 validation_data <- p_model_validation %>%
   tidyr::unnest(data)
@@ -114,7 +115,6 @@ To optimize new parameters based upon driver data and a validation dataset we mu
 settings <- list(
   method              = "bayesiantools",
   targetvars          = c("gpp"),
-  timescale           = list(targets_obs = "y"),
   metric              = cost_rmse_kphio,
   dir_results         = "./",
   name                = "ORG",
@@ -132,7 +132,7 @@ settings <- list(
 
 By default `rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `BayesianTools` approach using the DEza sampler. For this example the burnin and iterations are kept artificially low. In a real scenario you will have to increase these values orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided all starting with `cost_*` but the model structure is transparent and custom cost functions can be easily written.
 
-In addition starting values and ranges are provided for the free parameters in the model. Free parameters include, kphio, a, b, tau and shape. Be mindful that with newer version of rsofun additional parameters might be introduced, so re-check vignettes and model descriptions when updating existing code.
+In addition starting values and ranges are provided for the free parameters in the model. Free parameters include, kphio, a, b, tau and shape. Be mindful that with newer versions of rsofun additional parameters might be introduced, so re-check vignettes and model descriptions when updating existing code.
 
 With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified.
 
@@ -164,6 +164,7 @@ output_new <- rsofun::runread_pmodel_f(
 # the main model output
 model_data_new <- output_new %>%
   filter(sitename == "FR-Pue") %>%
+  tidyr::unnest(data) %>%
   tidyr::unnest(data)
 
   ggplot() +
