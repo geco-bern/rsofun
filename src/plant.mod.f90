@@ -175,7 +175,7 @@ module md_plant
 
     type(orgpool) :: dharv    ! daily total biomass harvest (g m-2 d-1)
 
-    type(orgpool) :: alloc_leaf, alloc_root, alloc_sapw, alloc_wood
+    type(orgpool) :: alloc_leaf, alloc_root, alloc_sapw, alloc_wood, alloc_seed
 
   end type plant_fluxes_type
 

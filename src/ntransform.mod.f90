@@ -86,8 +86,8 @@ contains
     real :: dno_d, dno_w, dn2o_d, dn2o_w   ! for gaseous escape
     
     ! Variables N balance test
-    logical, parameter :: verbose = .true.  ! set to true to activate verbose mode
-    logical, parameter :: baltest = .true.
+    logical, parameter :: verbose = .false.  ! set to true to activate verbose mode
+    logical, parameter :: baltest = .false.
     real :: nbal_before_1, nbal_after_1, nbal1, nbal_before_2, nbal_after_2, nbal2
     real :: no3bal_0, no3bal_1, nh4bal_0, nh4bal_1
 
