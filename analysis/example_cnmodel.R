@@ -133,7 +133,7 @@ tmp$forcing[[1]] %>%
   geom_line()
 
 ## no spinup, 1 year transient run
-tmp$params_siml[[1]]$spinupyears <- 1500
+tmp$params_siml[[1]]$spinupyears <- 2000
 tmp$params_siml[[1]]$recycle <- 5
 # tmp$params_siml[[1]]$nyeartrend <- 1
 # tmp$forcing[[1]] <- tmp$forcing[[1]] %>% filter(lubridate::year(date) == 2007)
@@ -179,10 +179,10 @@ tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
          tmax = df_growingseason_mean$tmax,
   )
 
-# # increase CO2 from 2010
-# tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
-#   mutate(co2 = ifelse(year(date) > 2010, co2 * 2, co2))
-# 
+# increase CO2 from 2010
+tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
+  mutate(co2 = ifelse(year(date) > 2010, co2 * 2, co2))
+
 
 ## Model run ------------------------
 output <- runread_pmodel_f(
@@ -249,6 +249,7 @@ aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>%
   )
 
 aout %>%
+  slice(1000:2008) |> 
   ggplot(aes(year, csoil)) +
   geom_line()
 

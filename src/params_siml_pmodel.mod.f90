@@ -63,7 +63,7 @@ module md_params_siml_pmodel
     logical :: average_soil    ! true in years before analytical soil equilibration, when average in and out are taken
     logical :: project_nmin    ! true in all years before analytical soil equilibration, when projected soil N mineralisation is used
     logical :: dofree_alloc    ! true if allocation is not fixed by 'frac_leaf'
-    logical :: add_ninorg      ! true in the first few years to get it started
+    logical :: closed_nbal     ! true when N balance is closed during allocation (not compensating labile N depletion by "fixation")
   end type outtype_steering
 
 contains
@@ -87,18 +87,11 @@ contains
     integer :: cycleyear
 
     integer, parameter :: spinupyr_soilequil_1 = 600   ! year of analytical soil equilibration, based on mean litter -> soil input flux
-    integer, parameter :: spinupyr_soilequil_2 = 1200  ! year of analytical soil equilibration, based on mean litter -> soil input flux
-    integer, parameter :: spinup_add_ninorg    = 100   ! year until which inorganic N is added to get it started
+    integer, parameter :: spinupyr_soilequil_2 = spinupyr_soilequil_1 + 900   ! year of analytical soil equilibration, based on mean litter -> soil input flux
 
     out_steering%year = year
 
     if (params_siml%do_spinup) then
-
-      if (year <= spinup_add_ninorg) then
-        out_steering%add_ninorg = .true.
-      else
-        out_steering%add_ninorg = .false.
-      end if
 
       if (year <= params_siml%spinupyears) then
 
@@ -133,16 +126,17 @@ contains
       endif
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1
 
-      ! ! if ( year > 3 ) then
-      ! if (year > (spinupyr_soilequil_1 + 1) ) then
-      !   ! if (out_steering%forcingyear > 2003 ) then
-      !   out_steering%dofree_alloc = .true.
-      ! else
-      !   out_steering%dofree_alloc = .false.
-      ! end if
+      if (year >= spinupyr_soilequil_1 + 300) then
+        out_steering%dofree_alloc = .true.
+      else
+        out_steering%dofree_alloc = .false.
+      end if
 
-      ! xxx try: fixed allocation
-      out_steering%dofree_alloc = .false.
+      if (year >= spinupyr_soilequil_1 + 600) then
+        out_steering%closed_nbal = .true.
+      else
+        out_steering%closed_nbal = .false.
+      end if
 
       if ( (year==spinupyr_soilequil_1 .or. year==spinupyr_soilequil_2 ) .and. year<=params_siml%spinupyears) then
         out_steering%do_soilequil = .true.
@@ -166,7 +160,8 @@ contains
 
     else
 
-      out_steering%dofree_alloc = .false.
+      out_steering%dofree_alloc = .true.
+      out_steering%closed_nbal  = .true.
       out_steering%do_soilequil = .false.
       out_steering%average_soil = .false.
       out_steering%project_nmin = .false.
@@ -190,10 +185,6 @@ contains
     else
       out_steering%finalize = .false.
     end if
-
-    ! print*, 'out_steering%climateyear'
-    ! print*, out_steering%climateyear
-    ! if (year>30) stop
 
   end function getsteering
 

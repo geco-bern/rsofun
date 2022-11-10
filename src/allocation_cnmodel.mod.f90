@@ -120,8 +120,7 @@ contains
     real :: r_ntoc_con   ! consumed N:C ratio (considering C allocation and respiration over N allocation)
     real :: n_exc        ! excess N acquisition over the past N days
     real :: n_con_corr   ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
-    real, parameter :: frac_leaf = 0.5 ! fraction of C allocated to leaves
-    real :: frac_leaf_try ! xxx try
+    real, save :: frac_leaf = 0.5 ! fraction of C allocated to leaves
 
     integer, parameter :: len_luep_vec = ndayyear
     integer, parameter :: len_rrum_vec = ndayyear
@@ -228,31 +227,31 @@ contains
           !     call get_leaftraits_init( tile(lu)%plant(pft) )
           !   end if
 
-          !   !------------------------------------------------------------------
-          !   ! Determine allocatable C, given C and N availability (labile) constraint
-          !   !------------------------------------------------------------------
-          !   max_dcleaf_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * tile(lu)%plant(pft)%r_cton_leaf
-          !   max_dcroot_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * params_pft_plant(pft)%r_cton_root ! should be obsolete as generally r_ntoc_leaf > r_ntoc_root
+            ! !------------------------------------------------------------------
+            ! ! Determine allocatable C, given C and N availability (labile) constraint
+            ! !------------------------------------------------------------------
+            ! max_dcleaf_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * tile(lu)%plant(pft)%r_cton_leaf
+            ! max_dcroot_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * params_pft_plant(pft)%r_cton_root ! should be obsolete as generally r_ntoc_leaf > r_ntoc_root
 
-          !   ! XXX THIS MAKES A HUGE DIFFERENCE
-          !   ! >>>> OPTION A (WORKS NICELY):
-          !   max_dc_buffr_constraint = max(  0.0, &
-          !                                   params_plant%growtheff &
-          !                                   * ( tile(lu)%plant(pft)%plabl%c%c12 &
-          !                                   - ( params_plant%r_root + params_plant%exurate ) * tile(lu)%plant(pft)%proot%c%c12 ) )
+            ! ! XXX THIS MAKES A HUGE DIFFERENCE
+            ! ! >>>> OPTION A (WORKS NICELY):
+            ! max_dc_buffr_constraint = max(  0.0, &
+            !                                 params_plant%growtheff &
+            !                                 * ( tile(lu)%plant(pft)%plabl%c%c12 &
+            !                                 - ( params_plant%r_root + params_plant%exurate ) * tile(lu)%plant(pft)%proot%c%c12 ) )
 
-          !   ! print*,'option A: ', max_dc_buffr_constraint
+            ! ! print*,'option A: ', max_dc_buffr_constraint
 
-          !   ! ! >>>> OPTION B (PRODUCES NON-SENSICAL ROOT RESULTS):
-          !   ! max_dc_buffr_constraint = params_plant%growtheff * tile(lu)%plant(pft)%plabl%c%c12
-          !   ! ! print*,'option B: ', max_dc_buffr_constraint
+            ! ! ! >>>> OPTION B (PRODUCES NON-SENSICAL ROOT RESULTS):
+            ! ! max_dc_buffr_constraint = params_plant%growtheff * tile(lu)%plant(pft)%plabl%c%c12
+            ! ! ! print*,'option B: ', max_dc_buffr_constraint
 
-          !   ! ! >>>> OPTION C:
-          !   ! ! works fine with freserve = 0.004
-          !   ! max_dc_buffr_constraint = max( 0.0, params_plant%growtheff * ( tile(lu)%plant(pft)%plabl%c%c12 - freserve * ( tile(lu)%plant(pft)%proot%c%c12 ) ) )
+            ! ! ! >>>> OPTION C:
+            ! ! ! works fine with freserve = 0.004
+            ! ! max_dc_buffr_constraint = max( 0.0, params_plant%growtheff * ( tile(lu)%plant(pft)%plabl%c%c12 - freserve * ( tile(lu)%plant(pft)%proot%c%c12 ) ) )
 
-          !   max_dc = min( max_dc_buffr_constraint, max_dcleaf_n_constraint, max_dcroot_n_constraint )
-          !   min_dc = 0.0
+            ! max_dc = min( max_dc_buffr_constraint, max_dcleaf_n_constraint, max_dcroot_n_constraint )
+            ! min_dc = 0.0
             
           !   ! !------------------------------------------------------------------
           !   ! ! Binary decision: this is good for quickly depleting labile pool 
@@ -511,6 +510,11 @@ contains
                             orgfrac( (1.0 - frac_for_resp), &
                                       tile(lu)%plant(pft)%plabl ) )
 
+            max_dcleaf_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * tile(lu)%plant(pft)%r_cton_leaf
+            max_dcroot_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * params_pft_plant(pft)%r_cton_root ! should be obsolete as generally r_ntoc_leaf > r_ntoc_root
+
+            avl%c%c12 = min(avl%c%c12, max_dcleaf_n_constraint, max_dcroot_n_constraint)            
+
             ! amount to be allocated as real number
             dcseed = f_seed * params_plant%growtheff * avl%c%c12
             dnseed = f_seed * avl%n%n14
@@ -552,7 +556,7 @@ contains
                 tile(lu)%plant(pft)%actnv_unitfapar, &
                 tile(lu)%plant(pft)%lai_ind, &
                 dnleaf, &
-                nignore = .true. &
+                closed_nbal = myinterface%steering%closed_nbal &
                 )
 
               !-------------------------------------------------------------------  
@@ -588,7 +592,7 @@ contains
                 tile(lu)%plant(pft)%plabl%c%c12, &
                 tile(lu)%plant(pft)%plabl%n%n14, &
                 tile_fluxes(lu)%plant(pft)%drgrow, &
-                nignore = .true. &
+                closed_nbal = myinterface%steering%closed_nbal &
                 )
 
               !-------------------------------------------------------------------  
@@ -624,78 +628,81 @@ contains
 
       end if
 
-      !-------------------------------------------------------------------
-      ! Record acquired and required C and N
-      !-------------------------------------------------------------------
-      ! record values over preceeding len_cnbal_vec (365) days
-      if (firstcall_cnbal) then
+      if ( myinterface%steering%dofree_alloc ) then
+        !-------------------------------------------------------------------
+        ! Record acquired and required C and N
+        !-------------------------------------------------------------------
+        ! record values over preceeding len_cnbal_vec (365) days
+        if (firstcall_cnbal) then
 
-        g_net_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
-        r_rex_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
-                            + tile_fluxes(lu)%plant(pft)%dcex
-        n_acq_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnup%n14
-        c_a_l_vec(lu,pft,:) = dcleaf
-        c_a_r_vec(lu,pft,:) = dcroot
-        c_a_s_vec(lu,pft,:) = dcseed
-        n_con_vec(lu,pft,:) = dnleaf + dnroot + dnseed
+          g_net_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
+          r_rex_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
+                              + tile_fluxes(lu)%plant(pft)%dcex
+          n_acq_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnup%n14
+          c_a_l_vec(lu,pft,:) = dcleaf
+          c_a_r_vec(lu,pft,:) = dcroot
+          c_a_s_vec(lu,pft,:) = dcseed
+          n_con_vec(lu,pft,:) = dnleaf + dnroot + dnseed
 
-        if (pft == npft .and. lu == nlu) firstcall_cnbal = .false.
+          if (pft == npft .and. lu == nlu) firstcall_cnbal = .false.
 
-      else
+        else
 
-        g_net_vec(lu,pft,1:(len_cnbal_vec-1)) = g_net_vec(lu,pft,2:len_cnbal_vec)
-        r_rex_vec(lu,pft,1:(len_cnbal_vec-1)) = r_rex_vec(lu,pft,2:len_cnbal_vec)
-        n_acq_vec(lu,pft,1:(len_cnbal_vec-1)) = n_acq_vec(lu,pft,2:len_cnbal_vec)
-        c_a_l_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_l_vec(lu,pft,2:len_cnbal_vec)
-        c_a_r_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_r_vec(lu,pft,2:len_cnbal_vec)
-        c_a_s_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_s_vec(lu,pft,2:len_cnbal_vec)
-        n_con_vec(lu,pft,1:(len_cnbal_vec-1)) = n_con_vec(lu,pft,2:len_cnbal_vec)
+          g_net_vec(lu,pft,1:(len_cnbal_vec-1)) = g_net_vec(lu,pft,2:len_cnbal_vec)
+          r_rex_vec(lu,pft,1:(len_cnbal_vec-1)) = r_rex_vec(lu,pft,2:len_cnbal_vec)
+          n_acq_vec(lu,pft,1:(len_cnbal_vec-1)) = n_acq_vec(lu,pft,2:len_cnbal_vec)
+          c_a_l_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_l_vec(lu,pft,2:len_cnbal_vec)
+          c_a_r_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_r_vec(lu,pft,2:len_cnbal_vec)
+          c_a_s_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_s_vec(lu,pft,2:len_cnbal_vec)
+          n_con_vec(lu,pft,1:(len_cnbal_vec-1)) = n_con_vec(lu,pft,2:len_cnbal_vec)
 
-        g_net_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
-        r_rex_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
-                                        + tile_fluxes(lu)%plant(pft)%dcex
-        n_acq_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dnup%n14
-        c_a_l_vec(lu,pft,len_cnbal_vec) = dcleaf
-        c_a_r_vec(lu,pft,len_cnbal_vec) = dcroot
-        c_a_s_vec(lu,pft,len_cnbal_vec) = dcseed
-        n_con_vec(lu,pft,len_cnbal_vec) = dnleaf + dnroot + dnseed
+          g_net_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
+          r_rex_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
+                                          + tile_fluxes(lu)%plant(pft)%dcex
+          n_acq_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dnup%n14
+          c_a_l_vec(lu,pft,len_cnbal_vec) = dcleaf
+          c_a_r_vec(lu,pft,len_cnbal_vec) = dcroot
+          c_a_s_vec(lu,pft,len_cnbal_vec) = dcseed
+          n_con_vec(lu,pft,len_cnbal_vec) = dnleaf + dnroot + dnseed
+
+        end if
+
+        ! return on leaf investment, defined as sum of C assimilated (after leaf dark respiration, but before exudation, root and other respiration) 
+        ! divided by sum over C invested into leaf construction (ignoring growth respiration)
+        psi_c = sum( g_net_vec(lu,pft,:) ) / sum( c_a_l_vec(lu,pft,:) )
+
+        ! return on root investment, defined as sum N acquisition divided by sum of C invested into root construction (ignoring growth respiration)
+        psi_n = sum( n_acq_vec(lu,pft,:) ) / sum( c_a_r_vec(lu,pft,:) )
+
+        ! sum of C consumed to satisfy all biomass production and respiration, including growth respiration, of past N days
+        c_con = (1.0 / params_plant%growtheff) * sum( c_a_l_vec(lu,pft,:) + c_a_r_vec(lu,pft,:) + c_a_s_vec(lu,pft,:) ) &
+                + sum( r_rex_vec(lu,pft,:) )
+
+        ! sum of N consumed to satisfy all biomass production of past N days minus excess N
+        n_con = sum( n_con_vec(lu,pft,:) )
+
+        ! consumed N:C ratio (considering C allocation and respiration over N allocation), mean over preceeding N days
+        r_ntoc_con = n_con / c_con
+
+        ! excess N acquisition over the past N days
+        n_exc = sum( n_acq_vec(lu,pft,:) ) - sum( g_net_vec(lu,pft,:) ) * r_ntoc_con
+
+        ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
+        n_con_corr = n_con - n_exc
+
+        ! determine balance (fraction of allocation to leaves)
+        ! psi_c * x * growtheff * c_avl / (psi_n * (1-x) * growtheff * c_avl) = c_consumed / (n_consumed - n_excess)
+        ! => solve for x (frac_leaf below)
+        ! c_consumed is c_req; n_consumed is n_con
+        frac_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
+        
+        ! print*,'n_exc, n_con, c_con, psi_c, psi_n, r_ntoc_con, n_con_corr, frac_leaf ', &
+        !         n_exc, n_con, c_con, psi_c, psi_n, r_ntoc_con, n_con_corr, frac_leaf
 
       end if
 
-      ! return on leaf investment, defined as sum of C assimilated (after leaf dark respiration, but before exudation, root and other respiration) 
-      ! divided by sum over C invested into leaf construction (ignoring growth respiration)
-      psi_c = sum( g_net_vec(lu,pft,:) ) / sum( c_a_l_vec(lu,pft,:) )
-
-      ! return on root investment, defined as sum N acquisition divided by sum of C invested into root construction (ignoring growth respiration)
-      psi_n = sum( n_acq_vec(lu,pft,:) ) / sum( c_a_r_vec(lu,pft,:) )
-
-      ! sum of C consumed to satisfy all biomass production and respiration, including growth respiration, of past N days
-      c_con = (1.0 / params_plant%growtheff) * sum( c_a_l_vec(lu,pft,:) + c_a_r_vec(lu,pft,:) + c_a_s_vec(lu,pft,:) ) &
-              + sum( r_rex_vec(lu,pft,:) )
-
-      ! sum of N consumed to satisfy all biomass production of past N days minus excess N
-      n_con = sum( n_con_vec(lu,pft,:) )
-
-      ! consumed N:C ratio (considering C allocation and respiration over N allocation), mean over preceeding N days
-      r_ntoc_con = n_con / c_con
-
-      ! excess N acquisition over the past N days
-      n_exc = sum( n_acq_vec(lu,pft,:) ) - sum( g_net_vec(lu,pft,:) ) * r_ntoc_con
-
-      ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
-      n_con_corr = n_con - n_exc
-
-      ! determine balance (fraction of allocation to leaves)
-      ! psi_c * x * growtheff * c_avl / (psi_n * (1-x) * growtheff * c_avl) = c_consumed / (n_consumed - n_excess)
-      ! => solve for x (frac_leaf below)
-      ! c_consumed is c_req; n_consumed is n_con
-      frac_leaf_try = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
-      
-      ! print*,'n_exc, n_con, c_con, psi_c, psi_n, r_ntoc_con, n_con_corr, frac_leaf_try ', &
-      !         n_exc, n_con, c_con, psi_c, psi_n, r_ntoc_con, n_con_corr, frac_leaf_try
-
       ! record for experimental output
-      tile_fluxes(lu)%plant(pft)%debug1 = frac_leaf_try
+      tile_fluxes(lu)%plant(pft)%debug1 = frac_leaf
       tile_fluxes(lu)%plant(pft)%debug2 = r_ntoc_con
       tile_fluxes(lu)%plant(pft)%debug3 = n_exc
 
@@ -931,7 +938,7 @@ contains
   ! end function eval_imbalance
 
 
-  subroutine allocate_leaf( pft, mydcleaf, cleaf, nleaf, clabl, nlabl, rgrow, actnv_unitfapar, lai, mydnleaf, nignore )
+  subroutine allocate_leaf( pft, mydcleaf, cleaf, nleaf, clabl, nlabl, rgrow, actnv_unitfapar, lai, mydnleaf, closed_nbal )
     !///////////////////////////////////////////////////////////////////
     ! LEAF ALLOCATION
     ! Sequence of steps:
@@ -949,7 +956,7 @@ contains
     real, intent(in)     :: actnv_unitfapar
     real, intent(out)    :: lai
     real, intent(out)    :: mydnleaf
-    logical, intent(in)  :: nignore
+    logical, intent(in)  :: closed_nbal
 
     ! local variables
     real :: nleaf0
@@ -991,7 +998,7 @@ contains
       clabl = 0.0
     end if
 
-    if (.not. nignore) then
+    if (closed_nbal) then
       if ( nlabl < -1.0 * eps ) then
         print*,'dcleaf       ', mydcleaf
         print*,'cleaf before ', cleaf0
@@ -1014,7 +1021,7 @@ contains
   end subroutine allocate_leaf
 
 
-  subroutine allocate_root( pft, mydcroot, mydnroot, croot, nroot, clabl, nlabl, rgrow, nignore )
+  subroutine allocate_root( pft, mydcroot, mydnroot, croot, nroot, clabl, nlabl, rgrow, closed_nbal )
     !///////////////////////////////////////////////////////////////////
     ! ROOT ALLOCATION
     ! Sequence of steps:
@@ -1029,7 +1036,7 @@ contains
     real, intent(inout) :: croot, nroot
     real, intent(inout) :: clabl, nlabl
     real, intent(inout)  :: rgrow
-    logical, intent(in) :: nignore
+    logical, intent(in) :: closed_nbal
 
     ! local variables
     real :: dclabl
@@ -1057,7 +1064,7 @@ contains
       clabl = 0.0
     end if
 
-    if (.not. nignore) then
+    if (closed_nbal) then
       if ( nlabl < -1.0 * eps ) then
         stop 'ALLOCATE_ROOT: trying to remove too much from labile pool: root N'
       else if ( nlabl < 0.0 ) then
