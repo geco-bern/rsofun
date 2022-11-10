@@ -6,12 +6,25 @@ test_that("test calibration routine lm3ppa (Bayesiantools)", {
   df_drivers <- rsofun::lm3ppa_gs_leuning_drivers
   ddf_obs <- rsofun::lm3ppa_validation_2
   df_drivers$params_siml[[1]]$spinup <- FALSE
-
+  
+  # Quick fix for changes in calib_sofun() and cost function arguments
+  # with a new cost function that fixes the obsolete parameters to the
+  # values used in this test
+  cost <- function(par, obs, drivers){
+    rsofun::likelihood_lm3ppa(par = par,
+                              par_names = c("phiRL", "LAI_light", "tf_base",
+                                            "par_mort", "err_GPP", "err_LAI",
+                                            "err_Density", "err_Biomass"),
+                              obs = obs,
+                              targets = c("GPP", "LAI", "Density", "Biomass"),
+                              drivers = drivers)
+  }
+  
   # Mortality as DBH
   settings <- list(
     method              = "bayesiantools",
     targets             = c("GPP","LAI","Density","Biomass"),
-    metric              = rsofun::likelihood_lm3ppa,
+    metric              = cost,
     control = list(
       sampler = "DEzs",
       settings = list(
