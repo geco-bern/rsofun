@@ -429,19 +429,19 @@ likelihood_lm3ppa <- function(
 #' 
 #' @param par parameters
 #' @param obs observations
-#' @param targets target observations to use in calibration
 #' @param drivers driver data
+#' @param targets target observations to use in calibration, defaults to 'gpp'
 #' 
 #' @importFrom magrittr '%>%'
 #' 
-#' @return the RMSE on the kpio parameter
+#' @return the RMSE on the kphio parameter
 #' @export
 
 likelihood_pmodel <- function(
   par,
   obs,
-  targets,
-  drivers
+  drivers,
+  targets = 'gpp'
 ){
   
   # predefine variables for CRAN check compliance

@@ -4,19 +4,19 @@
 \alias{likelihood_pmodel}
 \title{Likelihood function for the p-model}
 \usage{
-likelihood_pmodel(par, obs, targets, drivers)
+likelihood_pmodel(par, obs, drivers, targets = "gpp")
 }
 \arguments{
 \item{par}{parameters}
 
 \item{obs}{observations}
 
-\item{targets}{target observations to use in calibration}
-
 \item{drivers}{driver data}
+
+\item{targets}{target observations to use in calibration, defaults to 'gpp'}
 }
 \value{
-the RMSE on the kpio parameter
+the RMSE on the kphio parameter
 }
 \description{
 Calculates likelihoods for the p-model
