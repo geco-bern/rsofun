@@ -25,13 +25,13 @@ pars <- list(
   exurate               = 0.003000,
   
   k_decay_leaf          = 2.00000,
-  r_cton_seed           = 15.0000,
   k_decay_root          = 1.00000,
   k_decay_labl          = 0.00000,
   k_decay_sapw          = 1.00000,
   
   r_cton_root           = 37.0000,
   r_cton_wood           = 100.000,
+  r_cton_seed           = 15.0000,
   ncw_min               = 0.056,
   r_n_cw_v              = 0.4,
   r_ctostructn_leaf     = 35.0000,

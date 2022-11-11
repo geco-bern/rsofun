@@ -517,15 +517,10 @@ contains
 
             ! amount to be allocated as real number
             dcseed = f_seed * params_plant%growtheff * avl%c%c12
-            dnseed = f_seed * avl%n%n14
+            dnseed = min(avl%n%n14, dcseed * params_pft_plant(pft)%r_ntoc_seed)
             dcleaf = (1.0 - f_seed) * frac_leaf         * params_plant%growtheff * avl%c%c12
             dcroot = (1.0 - f_seed) * (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
             dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
-
-            ! ! test balance
-            ! if (abs(avl%c%c12 - dcseed - dcroot - dcleaf) > eps) then
-            !   print*, 'allocation: C balance not satisfied.', eps
-            ! end if
 
             !-------------------------------------------------------------------
             ! SEED ALLOCATION
