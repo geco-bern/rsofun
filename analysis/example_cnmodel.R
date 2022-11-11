@@ -1,4 +1,5 @@
 library(dplyr)
+library(tidyr)
 library(rsofun)
 library(ggplot2)
 library(patchwork)
@@ -179,10 +180,21 @@ tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
          tmax = df_growingseason_mean$tmax,
   )
 
-# increase CO2 from 2010
+### increase CO2 from 2010 -----------------------
 tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
-  mutate(co2 = ifelse(year(date) > 2010, co2 * 2, co2))
+  mutate(co2 = ifelse(year(date) >= 2010, co2 * 2, co2))
 
+###  repeat last year's forcing N times -----------------------
+n_ext <- 100
+for (idx in seq(n_ext)){
+  tmp$forcing[[1]] <- bind_rows(
+    tmp$forcing[[1]],
+    tmp$forcing[[1]] |> 
+      tail(365) |> 
+      mutate(date = date + years(idx))
+  )
+}
+tmp$params_siml[[1]]$nyeartrend <- tmp$params_siml[[1]]$nyeartrend + n_ext
 
 ## Model run ------------------------
 output <- runread_pmodel_f(
@@ -190,29 +202,32 @@ output <- runread_pmodel_f(
   par = pars
   )
 
+output <- output$data[[1]]
+
 ## Visualisations  ------------------------
+### Time series ---------------------------
 # LAI
-gg1 <- output$data[[1]] %>% 
+gg1 <- output %>% 
   as_tibble() %>% 
   ggplot(aes(date, lai)) + 
   geom_line()
-gg2 <- output$data[[1]] %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, cseed)) + 
-  geom_line()
-gg3 <- output$data[[1]] %>% 
+gg2 <- output %>% 
   as_tibble() %>% 
   ggplot(aes(date, cleaf)) + 
   geom_line()
-gg4 <- output$data[[1]] %>% 
+gg3 <- output %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, croot)) + 
+  geom_line()
+gg4 <- output %>% 
   as_tibble() %>% 
   # ggplot(aes(date, calc_f_seed(x2))) + 
-  ggplot(aes(date, x3)) + 
+  ggplot(aes(date, x1)) + 
   geom_line()
 
 gg1 / gg2 / gg3 / gg4
 
-output$data[[1]] %>% 
+output %>% 
   as_tibble() %>% 
   ggplot(aes(date, x1)) + 
   geom_line()
@@ -237,7 +252,7 @@ ggplot() +
 
 # N2O
 ggplot() + 
-  geom_line(data = output$data[[1]], aes(date, en2o))
+  geom_line(data = output, aes(date, en2o))
 
 ## read (experimental) files
 aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>%
@@ -259,107 +274,112 @@ aout %>%
 
 
 # ## Test plots
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, gpp)) + 
 #   geom_line()
 # 
-output$data[[1]] %>%
+output %>%
   as_tibble() %>%
   ggplot() +
   geom_line(aes(date, gpp))
   # geom_line(aes(date, gpp-drd), color = 'red')
 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, cex)) + 
 #   geom_line()
 
-# output$data[[1]] %>%
+# output %>%
 #   as_tibble() %>%
 #   ggplot(aes(date, cleaf)) +
 #   geom_line()
 # 
-# output$data[[1]] %>%
+# output %>%
 #   as_tibble() %>%
 #   ggplot(aes(date, croot)) +
 #   geom_line()
 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, clabl)) + 
 #   geom_line()
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, nlabl)) + 
 #   geom_line()
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, nleaf)) + 
 #   geom_line()
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, pnh4 + pno3)) + 
 #   geom_line()
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, drd/gpp)) + 
 #   geom_line()
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, cleaf/nleaf)) + 
 #   geom_line()
 # 
-# r_cton_leaf <- mean(output$data[[1]]$cleaf / output$data[[1]]$nleaf, na.rm = TRUE)
-# output$data[[1]] %>% 
+# r_cton_leaf <- mean(output$cleaf / output$nleaf, na.rm = TRUE)
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(cleaf, nleaf)) + 
 #   geom_point() +
 #   geom_abline(slope = 1/r_cton_leaf, intercept = 0, color = "red", linetype = "dotted")
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(cleaf, cleaf/nleaf)) + 
 #   geom_point()
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(cleaf/nleaf, ..density..)) + 
 #   geom_histogram()
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, fapar)) + 
 #   geom_line()
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, csoil)) + 
 #   geom_line()
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   ggplot(aes(date, en2o)) + 
 #   geom_line()
 # 
-# gg1 <- output$data[[1]] %>% 
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, croot)) +
+  geom_line()
+# 
+# gg1 <- output %>% 
 #   as_tibble() %>% 
 #   slice(1:500) %>% 
 #   ggplot(aes(date, drd)) + 
 #   geom_line()
 # 
-# gg2 <- output$data[[1]] %>% 
+# gg2 <- output %>% 
 #   as_tibble() %>% 
 #   slice(1:500) %>% 
 #   ggplot(aes(date, drd/gpp)) + 
 #   geom_line()
 # 
-gg3 <- output$data[[1]] %>%
+gg3 <- output %>%
   as_tibble() %>%
   mutate(cue = npp/gpp) %>%
   slice(1:500) %>%
@@ -370,7 +390,7 @@ gg3 <- output$data[[1]] %>%
 #   gg2/
 #   gg3
 # 
-# output$data[[1]] %>% 
+# output %>% 
 #   as_tibble() %>% 
 #   mutate(year = lubridate::year(date)) %>% 
 #   group_by(year) %>% 
@@ -381,7 +401,7 @@ gg3 <- output$data[[1]] %>%
 # 
 # print(gg)
 # 
-# print(paste("Maximum leaf C: ", max(output$data[[1]]$cleaf)))
+# print(paste("Maximum leaf C: ", max(output$cleaf)))
 # 
 
 
@@ -422,14 +442,14 @@ gg3 <- output$data[[1]] %>%
 # # source("analysis/get_fill_seeds.R")
 # # 
 # # df_fill_seeds <- get_fill_seeds(
-# #   output$data[[1]]$gpp,
-# #   output$data[[1]]$drd,
-# #   output$data[[1]]$lai,
-# #   lubridate::yday(output$data[[1]]$date)
+# #   output$gpp,
+# #   output$drd,
+# #   output$lai,
+# #   lubridate::yday(output$date)
 # #   )
 # # 
 # # df <- bind_cols(
-# #   output$data[[1]],
+# #   output,
 # #   df_fill_seeds
 # # )
 # # 
@@ -446,3 +466,45 @@ gg3 <- output$data[[1]] %>%
 # #   geom_line(aes(date, an_unitlai_damped), color = "royalblue")
 # # 
 # # gg1/gg2
+
+### Response ratios ---------------------------
+df_out <- output |> 
+  mutate(leaf_cn = cleaf/nleaf, root_shoot = croot/cleaf, n_inorg = pno3 + pnh4) |> 
+  select(date, gpp, vcmax, jmax, gs = gs_accl, leaf_cn, lai, cleaf, 
+         croot, root_shoot, nup, n_inorg)
+  
+df_amb <- df_out |> 
+  filter(year(date) < 2010) |> 
+  summarise(across(where(is.numeric), mean))
+
+df_ele <- df_out |> 
+  filter(year(date) %in% 2010:2012) |> 
+  summarise(across(where(is.numeric), mean))
+
+df_ele2 <- df_out |> 
+  filter(year(date) %in% 2100:2107) |> 
+  summarise(across(where(is.numeric), mean))
+
+df_exp <- bind_rows(df_amb, df_ele)
+df_rr  <- log(df_exp[2,]/df_exp[1,]) |> 
+  pivot_longer(cols = everything(), names_to = "variable", values_to = "response") |> 
+  mutate(variable = factor(variable, 
+                          levels = rev(c("gpp", "vcmax", "jmax", "gs", "leaf_cn", "lai", "cleaf", 
+                                       "croot", "root_shoot", "nup", "n_inorg"))))
+
+df_exp2 <- bind_rows(df_amb, df_ele2)
+df_rr2  <- log(df_exp2[2,]/df_exp2[1,]) |> 
+  pivot_longer(cols = everything(), names_to = "variable", values_to = "response") |> 
+  mutate(variable = factor(variable, 
+                           levels = rev(c("gpp", "vcmax", "jmax", "gs", "leaf_cn", "lai", "cleaf", 
+                                          "croot", "root_shoot", "nup", "n_inorg"))))
+
+ggplot() +
+  geom_point(aes(variable, response), data = df_rr2, size = 2, color = "grey50") +
+  geom_point(aes(variable, response), data = df_rr, size = 2) +
+  geom_hline( yintercept = 0.0, size = 0.5, linetype = "dotted" ) +
+  labs(x = "Variable", y = "Log Response Ratio") +
+  coord_flip() +
+  labs(title = "cnmodel prediction", subtitle = "Response to eCO2")
+ggsave("~/lt_cn_review/fig/response_ratios_cnmodel.png", width = 6, height = 4)
+
