@@ -180,21 +180,41 @@ tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
          tmax = df_growingseason_mean$tmax,
   )
 
-### increase CO2 from 2010 -----------------------
-tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
-  mutate(co2 = ifelse(year(date) >= 2010, co2 * 2, co2))
-
 ###  repeat last year's forcing N times -----------------------
 n_ext <- 100
+df_tmp <- tmp$forcing[[1]]
 for (idx in seq(n_ext)){
-  tmp$forcing[[1]] <- bind_rows(
-    tmp$forcing[[1]],
-    tmp$forcing[[1]] |> 
+  df_tmp <- bind_rows(
+    df_tmp,
+    df_tmp |> 
       tail(365) |> 
-      mutate(date = date + years(idx))
+      mutate(date = date + years(1))
   )
 }
 tmp$params_siml[[1]]$nyeartrend <- tmp$params_siml[[1]]$nyeartrend + n_ext
+tmp$forcing[[1]] <- df_tmp
+
+### increase CO2 from 2010 -----------------------
+elevate_co2 <- function(day){
+  yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
+  return(yy)
+}
+
+ggplot() +
+  geom_function(fun = elevate_co2) +
+  xlim(12000, 16000) +
+  # geom_vline(xintercept = 1, linetype = "dotted") +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
+tmp$forcing[[1]] <- tmp$forcing[[1]] |> 
+  mutate(date2 = as.numeric(date)) |> 
+  mutate(co2 = co2 * elevate_co2(date2)) |> 
+  select(-date2)
+
+tmp$forcing[[1]] |> 
+  # head(3000) |> 
+  ggplot(aes(date, co2)) +
+  geom_line()
 
 ## Model run ------------------------
 output <- runread_pmodel_f(
@@ -285,83 +305,88 @@ output %>%
   geom_line(aes(date, gpp))
   # geom_line(aes(date, gpp-drd), color = 'red')
 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, cex)) + 
-#   geom_line()
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, cex)) +
+  geom_line()
 
-# output %>%
-#   as_tibble() %>%
-#   ggplot(aes(date, cleaf)) +
-#   geom_line()
-# 
-# output %>%
-#   as_tibble() %>%
-#   ggplot(aes(date, croot)) +
-#   geom_line()
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, cleaf)) +
+  geom_line()
 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, clabl)) + 
-#   geom_line()
-# 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, nlabl)) + 
-#   geom_line()
-# 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, nleaf)) + 
-#   geom_line()
-# 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, pnh4 + pno3)) + 
-#   geom_line()
-# 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, drd/gpp)) + 
-#   geom_line()
-# 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, cleaf/nleaf)) + 
-#   geom_line()
-# 
-# r_cton_leaf <- mean(output$cleaf / output$nleaf, na.rm = TRUE)
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(cleaf, nleaf)) + 
-#   geom_point() +
-#   geom_abline(slope = 1/r_cton_leaf, intercept = 0, color = "red", linetype = "dotted")
-# 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(cleaf, cleaf/nleaf)) + 
-#   geom_point()
-# 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(cleaf/nleaf, ..density..)) + 
-#   geom_histogram()
-# 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, fapar)) + 
-#   geom_line()
-# 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, csoil)) + 
-#   geom_line()
-# 
-# output %>% 
-#   as_tibble() %>% 
-#   ggplot(aes(date, en2o)) + 
-#   geom_line()
-# 
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, croot)) +
+  geom_line()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, clabl)) +
+  geom_line()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, nlabl)) +
+  geom_line()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, nleaf)) +
+  geom_line()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, pnh4 + pno3)) +
+  geom_line()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, drd/gpp)) +
+  geom_line()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, cleaf/nleaf)) +
+  geom_line()
+
+r_cton_leaf <- mean(output$cleaf / output$nleaf, na.rm = TRUE)
+output %>%
+  as_tibble() %>%
+  ggplot(aes(cleaf, nleaf)) +
+  geom_point() +
+  geom_abline(slope = 1/r_cton_leaf, intercept = 0, color = "red", linetype = "dotted")
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(cleaf, cleaf/nleaf)) +
+  geom_point()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(cleaf/nleaf, ..density..)) +
+  geom_histogram()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, lai)) +
+  geom_line()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, fapar)) +
+  geom_line()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, csoil)) +
+  geom_line()
+
+output %>%
+  as_tibble() %>%
+  ggplot(aes(date, en2o)) +
+  geom_line()
+
 output %>%
   as_tibble() %>%
   ggplot(aes(date, croot)) +
@@ -506,5 +531,4 @@ ggplot() +
   labs(x = "Variable", y = "Log Response Ratio") +
   coord_flip() +
   labs(title = "cnmodel prediction", subtitle = "Response to eCO2")
-ggsave("~/lt_cn_review/fig/response_ratios_cnmodel.png", width = 6, height = 4)
 
