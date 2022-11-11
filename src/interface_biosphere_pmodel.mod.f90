@@ -27,7 +27,7 @@ module md_interface_pmodel
     real :: r_sapw
     real :: exurate
     real :: cton_soil
-    real :: k_decay_leaf_base
+    real :: k_decay_leaf
     real :: k_decay_leaf_width
     real :: k_decay_root
     real :: k_decay_labl

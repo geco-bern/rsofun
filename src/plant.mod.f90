@@ -57,7 +57,7 @@ module md_plant
     real    :: r_ntolma            ! constant ratio of structural N to C (LMA) (gN/gC)
 
     ! new for cnmodel
-    real    :: k_decay_leaf_base   ! base leaf decay constant [year-1]
+    real    :: k_decay_leaf        ! base leaf decay constant [year-1]
     real    :: k_decay_leaf_width  ! shape parameter for turnover function if LAI
     real    :: k_decay_sapw        ! sapwood decay constant [year-1]
     real    :: k_decay_root        ! root decay constant [year-1]
@@ -601,7 +601,7 @@ contains
     ! out_getpftparams%r_ntolma = getparreal( trim('params/params_plant_'//pftname//'.dat'), 'r_ntolma' )
 
     ! leaf decay constant, read in as [years-1], central value: 0.0 yr-1 for deciduous plants
-    out_getpftparams%k_decay_leaf_base = myinterface%params_calib%k_decay_leaf_base / ndayyear 
+    out_getpftparams%k_decay_leaf = myinterface%params_calib%k_decay_leaf / ndayyear 
 
     ! shape parameter for turnover function if LAI
     out_getpftparams%k_decay_leaf_width = myinterface%params_calib%k_decay_leaf_width
