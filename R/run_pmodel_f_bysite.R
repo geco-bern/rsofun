@@ -219,7 +219,7 @@ run_pmodel_f_bysite <- function(
       as.numeric(params_modl$exurate),
       as.numeric(params_modl$cton_soil),
       as.numeric(params_modl$k_decay_leaf),
-      as.numeric(params_modl$k_decay_leaf_width),
+      as.numeric(params_modl$r_cton_seed),
       as.numeric(params_modl$k_decay_root),
       as.numeric(params_modl$k_decay_labl),
       as.numeric(params_modl$k_decay_sapw),

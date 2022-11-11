@@ -25,7 +25,7 @@ pars <- list(
   exurate               = 0.003000,
   
   k_decay_leaf          = 2.00000,
-  k_decay_leaf_width    = 1.00000,
+  r_cton_seed           = 15.0000,
   k_decay_root          = 1.00000,
   k_decay_labl          = 0.00000,
   k_decay_sapw          = 1.00000,
@@ -203,7 +203,6 @@ elevate_co2 <- function(day){
 ggplot() +
   geom_function(fun = elevate_co2) +
   xlim(12000, 16000) +
-  # geom_vline(xintercept = 1, linetype = "dotted") +
   geom_vline(xintercept = 0, linetype = "dotted")
 
 tmp$forcing[[1]] <- tmp$forcing[[1]] |> 
@@ -212,7 +211,7 @@ tmp$forcing[[1]] <- tmp$forcing[[1]] |>
   select(-date2)
 
 tmp$forcing[[1]] |> 
-  # head(3000) |> 
+  head(3000) |>
   ggplot(aes(date, co2)) +
   geom_line()
 

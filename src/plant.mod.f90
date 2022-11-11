@@ -58,12 +58,13 @@ module md_plant
 
     ! new for cnmodel
     real    :: k_decay_leaf        ! base leaf decay constant [year-1]
-    real    :: k_decay_leaf_width  ! shape parameter for turnover function if LAI
     real    :: k_decay_sapw        ! sapwood decay constant [year-1]
     real    :: k_decay_root        ! root decay constant [year-1]
     real    :: k_decay_labl        ! labile pool decay constant [year-1]
     real    :: r_cton_root         ! C:N ratio in roots (gC/gN)
     real    :: r_ntoc_root         ! N:C ratio in roots (inverse of 'r_cton_root', gN/gC)
+    real    :: r_cton_seed         ! C:N ratio in seeds (gC/gN)
+    real    :: r_ntoc_seed         ! N:C ratio in seeds (gN/gC)
     real    :: ncw_min             ! y-axis intersection in the relationship of non-metabolic versus metabolic N per leaf area    
     real    :: r_n_cw_v            ! slope in the relationship of non-metabolic versus metabolic N per leaf area              
     real    :: r_ctostructn_leaf   ! constant ratio of C to structural N (mol C / mol N)
@@ -603,9 +604,6 @@ contains
     ! leaf decay constant, read in as [years-1], central value: 0.0 yr-1 for deciduous plants
     out_getpftparams%k_decay_leaf = myinterface%params_calib%k_decay_leaf / ndayyear 
 
-    ! shape parameter for turnover function if LAI
-    out_getpftparams%k_decay_leaf_width = myinterface%params_calib%k_decay_leaf_width
-
     ! sapwood decay constant [days], read in as [years-1], central value: xxx
     out_getpftparams%k_decay_sapw =  myinterface%params_calib%k_decay_sapw / ndayyear 
 
@@ -618,6 +616,10 @@ contains
     ! root C:N and N:C ratio (gC/gN and gN/gC)
     out_getpftparams%r_cton_root = myinterface%params_calib%r_cton_root
     out_getpftparams%r_ntoc_root = 1.0 / out_getpftparams%r_cton_root
+
+    ! seed C:N and N:C ratio (gC/gN and gN/gC)
+    out_getpftparams%r_cton_seed = myinterface%params_calib%r_cton_seed
+    out_getpftparams%r_ntoc_seed = 1.0 / out_getpftparams%r_cton_seed
 
     ! y-axis intersection in the relationship of non-metabolic versus metabolic N per leaf area
     out_getpftparams%ncw_min = myinterface%params_calib%ncw_min

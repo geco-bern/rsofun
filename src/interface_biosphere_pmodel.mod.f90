@@ -28,12 +28,12 @@ module md_interface_pmodel
     real :: exurate
     real :: cton_soil
     real :: k_decay_leaf
-    real :: k_decay_leaf_width
     real :: k_decay_root
     real :: k_decay_labl
     real :: k_decay_sapw
     real :: r_cton_root
     real :: r_cton_wood
+    real :: r_cton_seed
     real :: ncw_min
     real :: r_n_cw_v
     real :: r_ctostructn_leaf
