@@ -232,6 +232,7 @@ output %>%
   ggplot(aes(date, x1)) + 
   geom_line()
 
+
 calc_f_seed <- function(an_unitlai_diff_damped){
   yy <- 1 / (1 + exp(1000*(an_unitlai_diff_damped)))
   return(yy)
@@ -264,7 +265,7 @@ aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>%
   )
 
 aout %>%
-  slice(1000:2008) |> 
+  # slice(1000:2008) |> 
   ggplot(aes(year, csoil)) +
   geom_line()
 
@@ -282,7 +283,7 @@ aout %>%
 output %>%
   as_tibble() %>%
   ggplot() +
-  geom_line(aes(date, gpp))
+  geom_line(aes(date, npp))
   # geom_line(aes(date, gpp-drd), color = 'red')
 
 # output %>% 

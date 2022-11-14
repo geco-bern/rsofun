@@ -628,44 +628,45 @@ contains
 
       end if
 
+      !-------------------------------------------------------------------
+      ! Record acquired and required C and N
+      !-------------------------------------------------------------------
+      ! record values over preceeding len_cnbal_vec (365) days
+      if (firstcall_cnbal) then
+
+        g_net_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
+        r_rex_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
+                            + tile_fluxes(lu)%plant(pft)%dcex
+        n_acq_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnup%n14
+        c_a_l_vec(lu,pft,:) = dcleaf
+        c_a_r_vec(lu,pft,:) = dcroot
+        c_a_s_vec(lu,pft,:) = dcseed
+        n_con_vec(lu,pft,:) = dnleaf + dnroot + dnseed
+
+        if (pft == npft .and. lu == nlu) firstcall_cnbal = .false.
+
+      else
+
+        g_net_vec(lu,pft,1:(len_cnbal_vec-1)) = g_net_vec(lu,pft,2:len_cnbal_vec)
+        r_rex_vec(lu,pft,1:(len_cnbal_vec-1)) = r_rex_vec(lu,pft,2:len_cnbal_vec)
+        n_acq_vec(lu,pft,1:(len_cnbal_vec-1)) = n_acq_vec(lu,pft,2:len_cnbal_vec)
+        c_a_l_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_l_vec(lu,pft,2:len_cnbal_vec)
+        c_a_r_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_r_vec(lu,pft,2:len_cnbal_vec)
+        c_a_s_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_s_vec(lu,pft,2:len_cnbal_vec)
+        n_con_vec(lu,pft,1:(len_cnbal_vec-1)) = n_con_vec(lu,pft,2:len_cnbal_vec)
+
+        g_net_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
+        r_rex_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
+                                        + tile_fluxes(lu)%plant(pft)%dcex
+        n_acq_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dnup%n14
+        c_a_l_vec(lu,pft,len_cnbal_vec) = dcleaf
+        c_a_r_vec(lu,pft,len_cnbal_vec) = dcroot
+        c_a_s_vec(lu,pft,len_cnbal_vec) = dcseed
+        n_con_vec(lu,pft,len_cnbal_vec) = dnleaf + dnroot + dnseed
+
+      end if
+
       if ( myinterface%steering%dofree_alloc ) then
-        !-------------------------------------------------------------------
-        ! Record acquired and required C and N
-        !-------------------------------------------------------------------
-        ! record values over preceeding len_cnbal_vec (365) days
-        if (firstcall_cnbal) then
-
-          g_net_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
-          r_rex_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
-                              + tile_fluxes(lu)%plant(pft)%dcex
-          n_acq_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnup%n14
-          c_a_l_vec(lu,pft,:) = dcleaf
-          c_a_r_vec(lu,pft,:) = dcroot
-          c_a_s_vec(lu,pft,:) = dcseed
-          n_con_vec(lu,pft,:) = dnleaf + dnroot + dnseed
-
-          if (pft == npft .and. lu == nlu) firstcall_cnbal = .false.
-
-        else
-
-          g_net_vec(lu,pft,1:(len_cnbal_vec-1)) = g_net_vec(lu,pft,2:len_cnbal_vec)
-          r_rex_vec(lu,pft,1:(len_cnbal_vec-1)) = r_rex_vec(lu,pft,2:len_cnbal_vec)
-          n_acq_vec(lu,pft,1:(len_cnbal_vec-1)) = n_acq_vec(lu,pft,2:len_cnbal_vec)
-          c_a_l_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_l_vec(lu,pft,2:len_cnbal_vec)
-          c_a_r_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_r_vec(lu,pft,2:len_cnbal_vec)
-          c_a_s_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_s_vec(lu,pft,2:len_cnbal_vec)
-          n_con_vec(lu,pft,1:(len_cnbal_vec-1)) = n_con_vec(lu,pft,2:len_cnbal_vec)
-
-          g_net_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
-          r_rex_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
-                                          + tile_fluxes(lu)%plant(pft)%dcex
-          n_acq_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dnup%n14
-          c_a_l_vec(lu,pft,len_cnbal_vec) = dcleaf
-          c_a_r_vec(lu,pft,len_cnbal_vec) = dcroot
-          c_a_s_vec(lu,pft,len_cnbal_vec) = dcseed
-          n_con_vec(lu,pft,len_cnbal_vec) = dnleaf + dnroot + dnseed
-
-        end if
 
         ! return on leaf investment, defined as sum of C assimilated (after leaf dark respiration, but before exudation, root and other respiration) 
         ! divided by sum over C invested into leaf construction (ignoring growth respiration)
