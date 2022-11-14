@@ -47,14 +47,14 @@
 #'   )
 #' 
 #' # Write cost function
-#' cost_rmse_kphio <- create_cost_function(
+#' cost_rmse_kphio <- create_cost_rmse_pmodel(
 #'   params_modl = pars,
 #'   setup = 'BRC',
 #'   method = 'BayesianTools'
 #'   )
 #' }
 
-create_cost_rmse <- function(
+create_cost_rmse_pmodel <- function(
     params_modl,
     setup,
     method){
@@ -193,14 +193,14 @@ create_cost_rmse <- function(
 #'   )
 #' 
 #' # Write cost function
-#' cost_likelihood_kphio <- create_cost_likelihood(
+#' cost_likelihood_kphio <- create_cost_likelihood_pmodel(
 #'   params_modl = pars,
 #'   setup = 'BRC',
 #'   target = 'gpp'
 #'   )
 #' }
 
-create_cost_likelihood <- function(
+create_cost_likelihood_pmodel <- function(
     params_modl,
     setup,
     target
@@ -410,5 +410,124 @@ create_cost_likelihood_lm3ppa <- function(
   
   return(ll)
 }")
+  return(eval(parse(text = f)))
+}
+
+#' Creates a cost function for different simulation setups based on RMSE
+#' 
+#' Creates a cost function for parameter calibration, keeping non-calibrated
+#' parameter values fixed and calibrating the parameters corresponding to various
+#' setups. The cost function computes the root mean squared error (RMSE) on the 
+#' calibrated parameters.
+#' 
+#' @param params_modl A list of model parameter values, including \code{'phiRL',
+#' 'LAI_light', 'tf_base' }and \code{'par_mort'} in that order.
+#' @param setup A character string (for now, only \code{'FULL'}) indicating which
+#' parameters are calibrated.
+#' @param method A character string indicating the optimization method that will
+#' be used, either \code{'BayesianTools'} or \code{'GenSA'}.
+#' 
+#' 
+#' @importFrom magrittr '%>%'
+#' 
+#' @return A cost function which computes the RMSE of the simulated targets by the LM3PPA model 
+#' versus the observed target variables. This cost function has as arguments a list of calibratable
+#' model parameters \code{par}, a data frame of observations \code{obs}, and a
+#' data frame of driver data \code{drivers}.
+#' 
+#' @details The resulting cost function performs a LM3PPA model run for the value of
+#' \code{par} given as argument and the remaining non-calibratable parameters
+#' are held constant (specified via \code{params_modl}).
+#' 
+#' Since the calibration routine in \code{BayesianTools} is based on maximizing 
+#' a cost function and we want to minimize the RMSE, the opposite value, 
+#' \code{(-1)*RMSE}, is returned if \code{method = 'BayesianTools'}. \code{GenSA}
+#' minimizes the given objective function, so the plain RMSE is returned when
+#' \code{method = 'GenSA'}.
+#' 
+#' @export
+#' 
+#' @examples \dontrun{
+#' # Set model parameters
+#' pars <- list(
+#'   phiRL      = 0.04,
+#'   LAI_light  = 2.8,
+#'   tf_base    = 1.7,
+#'   par_mort   = 7.3
+#'   )
+#' 
+#' # Write cost function
+#' cost_rmse <- create_cost_rmse_lm3ppa(
+#'   params_modl = pars,
+#'   setup = 'FULL',
+#'   method = 'BayesianTools'
+#'   )
+#' }
+
+create_cost_rmse_lm3ppa <- function(
+    params_modl,
+    setup,
+    method){
+  # predefine variables for CRAN check compliance
+  f <- NULL
+  
+  f <- "function(
+    par,
+    obs,
+    drivers
+){
+  
+  # predefine variables for CRAN check compliance
+  GPP <- LAI <- Density12 <- plantC <- targets_obs <-
+    targets_mod <- error <- targets_obs <- NULL
+  
+  # Add changed model parameters to drivers, overwriting where necessary.
+  drivers$params_species[[1]]$phiRL[]      <- par[1]
+  drivers$params_species[[1]]$LAI_light[]  <- par[2]
+  drivers$params_tile[[1]]$tf_base         <- par[3]
+  drivers$params_tile[[1]]$par_mort        <- par[4]
+  obs <- obs$data[[1]]
+  
+  df <- runread_lm3ppa_f(
+    drivers,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # Aggregate variables from the model df taking the last 500 yrs
+  df_mod <- df$data[[1]]$output_annual_tile %>%
+    utils::tail(500) %>%
+    dplyr::select(
+      GPP, LAI, Density12, plantC
+    ) %>%
+    dplyr::summarise(
+      GPP = mean(GPP, na.rm = TRUE),
+      LAI = stats::quantile(LAI, probs = 0.95, na.rm=TRUE),
+      Density = mean(Density12, na.rm=TRUE),
+      Biomass = mean(plantC, na.rm=TRUE)
+    )
+  
+  dff <- data.frame(
+    variables = c('GPP','LAI','Density','Biomass'),
+    targets_mod = c(df_mod$GPP,
+                    df_mod$LAI,
+                    df_mod$Density,
+                    df_mod$Biomass)
+  ) %>%
+    dplyr::left_join(obs, by = 'variables') %>%
+    dplyr::mutate(error = targets_mod - targets_obs) %>%
+    dplyr::mutate(error_rel = error / targets_obs)
+  
+  ## Calculate cost (RMSE) across the N targets
+  cost <- mean(dff$error_rel^2, na.rm = TRUE)
+  
+  "
+  if(tolower(method) == 'bayesiantools'){
+    f <- paste0(f, "return(-cost)
+}")
+  }else if(tolower(method) == 'gensa'){
+    f <- paste0(f, "return(cost)
+}")
+  }
   return(eval(parse(text = f)))
 }
