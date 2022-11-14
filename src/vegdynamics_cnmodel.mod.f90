@@ -167,7 +167,7 @@ contains
 
   !           ! give it some labile C and N to pay for turnover this year (until allocation at the end of year)
   !           plant(pft)%plabl = orgplus( &
-  !             orgfrac( params_pft_plant(pft)%k_decay_leaf_base * ndayyear, plant(pft)%pleaf ), &
+  !             orgfrac( params_pft_plant(pft)%k_decay_leaf * ndayyear, plant(pft)%pleaf ), &
   !             orgfrac( params_pft_plant(pft)%k_decay_root * ndayyear, plant(pft)%proot ) &
   !             ) 
 
