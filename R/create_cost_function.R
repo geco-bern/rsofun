@@ -299,3 +299,116 @@ create_cost_likelihood <- function(
 }")
   return(eval(parse(text = f)))
 }
+
+#' Creates a log-likelihood cost function for LM3PPA with different targets
+#' 
+#' Creates a cost function for parameter calibration, which
+#' computes the log-likelihood for the LM3PPA model fitting several target 
+#' variables for a given set of parameters.
+#' 
+#' @param targets A character vector indicating the target variables for which the
+#' optimization will be done. This should be a subset of \code{c("GPP", "LAI",
+#' "Density", "Biomass")}.
+#' 
+#' @importFrom magrittr '%>%'
+#' 
+#' @return A cost function which computes the log-likelihood of the simulated 
+#' targets by the LM3PPA model versus the observed targets. This cost function has 
+#' as arguments a vector of calibratable model parameters \code{par}, a data frame of
+#' observations \code{obs}, and a data frame of driver data \code{drivers}.
+#' 
+#' @details The resulting cost function performs a LM3PPA model run for the value of
+#' \code{par} given as argument. \code{par} must always contain \code{'phiRL',
+#' 'LAI_light', 'tf_base', 'par_mort'} and the error terms corresponding to the
+#' target variables, e.g. \code{'err_GPP'} if GPP is a target. Make sure that
+#' the order of the error terms in \code{par} coincides with the order of the targets
+#' used to create the cost function.
+#' 
+#' The likelihood is calculated assuming that the 
+#' predicted targets are independent, normaly distributed and centered on the observations. 
+#' All targets have the same weight in the optimization objective. The optimization 
+#' should be run using \code{BayesianTools}, and the likelihood is maximized.
+#' 
+#' @export
+
+create_cost_likelihood_lm3ppa <- function(
+    targets
+){
+  # predefine variables for CRAN check compliance
+  f <- n <- NULL
+  f <- "function(
+  par,
+  obs,
+  drivers
+){
+  
+  # predefine variables for CRAN check compliance
+  GPP <- LAI <- Density12 <- plantC <- error <- ll <- NULL
+  
+  # Add changed model parameters to drivers, overwriting where necessary.
+  drivers$params_species[[1]]$phiRL[]  <- par[1]
+  drivers$params_species[[1]]$LAI_light[]  <- par[2]
+  drivers$params_tile[[1]]$tf_base <- par[3]
+  drivers$params_tile[[1]]$par_mort <- par[4]
+
+  # run model
+  df <- runread_lm3ppa_f(
+    drivers,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # did we spin up
+  spin_up <- drivers$params_siml[[1]]$spinup
+  
+  # drop spinup years if activated
+  # see below
+  if (spin_up){
+    spin_up_years <- drivers$params_siml[[1]]$spinupyears + 1
+  } else {
+    spin_up_years <- 0
+  }
+  
+  # Aggregate variables from the model df taking the last 500 yrs
+  # if spun up
+  df <- df$data[[1]]$output_annual_tile %>%
+    utils::tail(500 - spin_up_years) %>%
+    dplyr::summarise(
+      GPP = mean(GPP),
+      LAI = stats::quantile(LAI, probs = 0.95, na.rm=T),
+      Density = mean(Density12),
+      Biomass = mean(plantC)
+    )
+  
+  # reshuffle observed data
+  col_names <- obs$data[[1]]$variables
+  obs <- data.frame(t(obs$data[[1]]$targets_obs))
+  colnames(obs) <- col_names
+  
+  # calculate the log likelihood
+  ll <- 0"
+  
+  n <- length(targets)
+  for(i in 1:n){
+    f <- paste0(f,
+                "
+  ll <- ll + BayesianTools::likelihoodIidNormal(
+    predicted = df$", targets[i],
+                ",
+    observed = obs$", targets[i],
+                ",
+    sd = par[", 4+i, "])")
+  }
+  
+  f <- paste0(f,
+              "
+              
+  # trap boundary conditions
+  if(is.nan(ll) || is.na(ll) | ll == 0){
+    ll <- -Inf
+  }
+  
+  return(ll)
+}")
+  return(eval(parse(text = f)))
+}
