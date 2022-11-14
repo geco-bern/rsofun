@@ -17,14 +17,6 @@ knitr::opts_chunk$set(
 library(rsofun)
 library(dplyr)
 library(ggplot2)
-
-pars <- list(par = c(
-    kphio           = 0.04607080,
-    soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444,
-    tau_acclim_tempstress = 7.35259044,
-    par_shape_tempstress  = 0.09863961
-  ))
 ```
 
 The `rsofun` package and framework includes two main models. The `pmodel` and `lm3-ppa` (which in part relies on pmodel component). Here we give a short example on how to run the `lm3ppa` model on the included demo datasets to familiarize yourself with both the data structure and the outputs.
