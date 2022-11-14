@@ -312,7 +312,6 @@ cost_rmse_lm3ppa_gsleuning <- function(
   
   ## Calculate cost (RMSE) across the N targets
   cost <- mean(dff$error_rel^2, na.rm = TRUE)
-  cost <- 0.1
   
   if (inverse) cost <- 1.0 / cost
   return(cost)
