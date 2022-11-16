@@ -513,7 +513,9 @@ contains
             max_dcleaf_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * tile(lu)%plant(pft)%r_cton_leaf
             max_dcroot_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * params_pft_plant(pft)%r_cton_root ! should be obsolete as generally r_ntoc_leaf > r_ntoc_root
 
-            avl%c%c12 = min(avl%c%c12, max_dcleaf_n_constraint, max_dcroot_n_constraint)            
+            if (myinterface%steering%dofree_alloc .and. myinterface%steering%closed_nbal) then
+              avl%c%c12 = min(avl%c%c12, max_dcleaf_n_constraint, max_dcroot_n_constraint)
+            end if
 
             ! amount to be allocated as real number
             dcseed = f_seed * params_plant%growtheff * avl%c%c12

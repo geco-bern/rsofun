@@ -8,14 +8,14 @@ library(lubridate)
 
 ## Parameters ------------------------
 pars <- list(
-
+  
   # P-model
   kphio                 = 0.04607080,
   soilm_par_a           = 2.75687824,
   soilm_par_b           = 1.68140444,
   tau_acclim_tempstress = 7.35259044,
   par_shape_tempstress  = 0.09863961,
-
+  
   # Plant
   f_nretain             = 0.500000,
   fpc_tree_max          = 0.950000,
@@ -36,12 +36,12 @@ pars <- list(
   r_n_cw_v              = 0.4,
   r_ctostructn_leaf     = 35.0000,
   kbeer                 = 0.500000,
-
+  
   # Phenology (should be PFT-specific)
   gddbase               = 5.0,
   ramp                  = 0.0,
   phentype              = 2.0,
-
+  
   # Soil physics (should be derived from params_soil, fsand, fclay, forg, fgravel)
   perc_k1               = 5.0,        
   thdiff_wp             = 0.2,          
@@ -53,7 +53,7 @@ pars <- list(
   fsand                 = 0.82,      
   fclay                 = 0.06,      
   fsilt                 = 0.12,  
-
+  
   # Water and energy balance
   kA                    = 107,     
   kalb_sw               = 0.17,    
@@ -68,7 +68,7 @@ pars <- list(
   kw                    = 0.26,    
   komega                = 283.0,
   maxmeltrate           = 3.0,
-
+  
   # Soil BGC
   klitt_af10            = 1.2,
   klitt_as10            = 0.35,
@@ -81,7 +81,7 @@ pars <- list(
   cton_microb           = 10.0,
   cton_soil             = 9.77,
   fastfrac              = 0.985,
-
+  
   # N uptake
   # eff_nup               = 0.600000,  # original value
   eff_nup               = 0.005000,
@@ -89,7 +89,7 @@ pars <- list(
   fixoptimum            = 25.15000,
   a_param_fix           = -3.62000,
   b_param_fix           = 0.270000,
-
+  
   # Inorganic N transformations
   maxnitr               = 0.1,
   non                   = 0.01,
@@ -103,11 +103,11 @@ pars <- list(
   beta                  = 146.000000,
   rd_to_vcmax           = 0.01400000,
   tau_acclim            = 10,
-
+  
   # for development
   tmppar                = 9999
-
-  )
+  
+)
 
 ## Forcing ------------------------
 ## add new required columns to forcing 
@@ -116,7 +116,7 @@ tmp <- rsofun::p_model_drivers %>%
                                                fharv = 0.0,
                                                dno3 = 0.1,
                                                dnh4 = 0.1
-                                               )))
+  )))
 
 ### Harvesting and seed input ----------
 use_cseed <- 0 # 100
@@ -127,7 +127,7 @@ tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
   mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.0, 0.0),
          cseed = ifelse(month(date) == 3 & mday(date) == 15, use_cseed, 0.0),
          nseed = ifelse(month(date) == 3 & mday(date) == 15, use_nseed, 0.0)) 
-  
+
 ## check visually
 tmp$forcing[[1]] %>%
   ggplot(aes(date, fharv)) +
@@ -136,8 +136,58 @@ tmp$forcing[[1]] %>%
 ## no spinup, 1 year transient run
 tmp$params_siml[[1]]$spinupyears <- 2000
 tmp$params_siml[[1]]$recycle <- 5
-# tmp$params_siml[[1]]$nyeartrend <- 1
-# tmp$forcing[[1]] <- tmp$forcing[[1]] %>% filter(lubridate::year(date) == 2007)
+
+
+### Replace forcing with CH-Oe1 ---------------------
+filnam <- "data-raw/df_drivers_ch_oe1.rds"
+load("~/sofunCalVal/data/df_drivers_fluxnet2015_allsites.rda") # loads df_drivers_fluxnet2015_allsites
+df_drivers_ch_oe1 <- df_drivers_fluxnet2015_allsites |>
+  filter(sitename == "CH-Oe1") |>
+  mutate(forcing = purrr::map(forcing, ~mutate(.,
+                                               tmin = temp,
+                                               tmax = temp
+  )))
+
+df_ndep <- ingestr::ingest(
+  df_drivers_ch_oe1 |>
+    unnest(siteinfo) |>
+    select(sitename, lon, lat) |>
+    mutate(year_start = df_drivers_ch_oe1$params_siml[[1]]$firstyeartrend,
+           year_end = df_drivers_ch_oe1$params_siml[[1]]$firstyeartrend +
+             df_drivers_ch_oe1$params_siml[[1]]$nyeartrend - 1),
+  source    = "ndep",
+  timescale = "y",
+  dir       = "~/data/ndep_lamarque/",
+  verbose   = FALSE
+)
+
+df_ndep_mean <- df_ndep |>
+  unnest(data) |>
+  summarise(noy = mean(noy), nhx = mean(nhx))
+
+## add new required columns to forcing
+use_cseed <- 0 # 100
+cn_seed <- 20
+use_nseed <- use_cseed / cn_seed
+
+df_drivers_ch_oe1 <- df_drivers_ch_oe1 %>%
+  mutate(forcing = purrr::map(forcing, ~mutate(.,
+                                               fharv = 0.0,
+                                               dno3 = df_ndep_mean$noy,
+                                               dnh4 = df_ndep_mean$nhx)),
+         forcing = purrr::map(forcing, ~mutate(.,
+                                               fharv = 0.0,
+                                               cseed = 0.0,
+                                               nseed = 0.0)))
+
+saveRDS(df_drivers_ch_oe1, file = filnam)
+
+df_drivers_ch_oe1$params_siml[[1]]$spinupyears <- 2002
+df_drivers_ch_oe1$params_siml[[1]]$recycle <- 5
+df_drivers_ch_oe1$params_siml[[1]]$nyeartrend <- 7
+
+tmp <- df_drivers_ch_oe1 |> 
+  rename(site_info = siteinfo, params_soil = df_soiltexture)
 
 ### Synthetic forcing: Mean seasonal cycle -----------------------
 # tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
@@ -158,74 +208,73 @@ tmp$params_siml[[1]]$recycle <- 5
 #   mutate(date = tmp$forcing[[1]]$date)
 
 ### Synthetic forcing: Constant climate in all days -----------------------
-df_growingseason_mean <- tmp$forcing[[1]] %>%
-  filter(temp > 5) %>%
-  summarise(across(where(is.double), .fns = mean))
-df_mean <- tmp$forcing[[1]] %>%
-  summarise(across(where(is.double), .fns = mean))
-
-tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
-  mutate(temp = df_growingseason_mean$temp,
-         prec = df_mean$prec,
-         vpd = df_growingseason_mean$vpd,
-         ppfd = df_mean$ppfd,
-         patm = df_growingseason_mean$patm,
-         ccov_int = df_growingseason_mean$ccov_int,
-         ccov = df_growingseason_mean$ccov,
-         snow = df_mean$snow,
-         rain = df_mean$rain,
-         fapar = df_mean$fapar,
-         co2 = df_growingseason_mean$co2,
-         tmin = df_growingseason_mean$tmin,
-         tmax = df_growingseason_mean$tmax,
-  )
+# df_growingseason_mean <- tmp$forcing[[1]] %>%
+#   filter(temp > 5) %>%
+#   summarise(across(where(is.double), .fns = mean))
+# df_mean <- tmp$forcing[[1]] %>%
+#   summarise(across(where(is.double), .fns = mean))
+# 
+# tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
+#   mutate(temp = df_growingseason_mean$temp,
+#          prec = df_mean$prec,
+#          vpd = df_growingseason_mean$vpd,
+#          ppfd = df_mean$ppfd,
+#          patm = df_growingseason_mean$patm,
+#          ccov_int = df_growingseason_mean$ccov_int,
+#          ccov = df_growingseason_mean$ccov,
+#          snow = df_mean$snow,
+#          rain = df_mean$rain,
+#          fapar = df_mean$fapar,
+#          co2 = df_growingseason_mean$co2,
+#          tmin = df_growingseason_mean$tmin,
+#          tmax = df_growingseason_mean$tmax,
+#   )
 
 ###  repeat last year's forcing N times -----------------------
-n_ext <- 100
-df_tmp <- tmp$forcing[[1]]
-for (idx in seq(n_ext)){
-  df_tmp <- bind_rows(
-    df_tmp,
-    df_tmp |> 
-      tail(365) |> 
-      mutate(date = date + years(1))
-  )
-}
-tmp$params_siml[[1]]$nyeartrend <- tmp$params_siml[[1]]$nyeartrend + n_ext
-tmp$forcing[[1]] <- df_tmp
+# n_ext <- 100
+# df_tmp <- tmp$forcing[[1]]
+# for (idx in seq(n_ext)){
+#   df_tmp <- bind_rows(
+#     df_tmp,
+#     df_tmp |> 
+#       tail(365) |> 
+#       mutate(date = date + years(1))
+#   )
+# }
+# tmp$params_siml[[1]]$nyeartrend <- tmp$params_siml[[1]]$nyeartrend + n_ext
+# tmp$forcing[[1]] <- df_tmp
 
 ### increase CO2 from 2010 -----------------------
-elevate_co2 <- function(day){
-  yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
-  return(yy)
-}
-
-ggplot() +
-  geom_function(fun = elevate_co2) +
-  xlim(12000, 16000) +
-  geom_vline(xintercept = 0, linetype = "dotted")
-
-tmp$forcing[[1]] <- tmp$forcing[[1]] |> 
-  mutate(date2 = as.numeric(date)) |> 
-  mutate(co2 = co2 * elevate_co2(date2)) |> 
-  select(-date2)
-
-tmp$forcing[[1]] |> 
-  head(3000) |>
-  ggplot(aes(date, co2)) +
-  geom_line()
+# elevate_co2 <- function(day){
+#   yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
+#   return(yy)
+# }
+# 
+# ggplot() +
+#   geom_function(fun = elevate_co2) +
+#   xlim(12000, 16000) +
+#   geom_vline(xintercept = 0, linetype = "dotted")
+# 
+# tmp$forcing[[1]] <- tmp$forcing[[1]] |> 
+#   mutate(date2 = as.numeric(date)) |> 
+#   mutate(co2 = co2 * elevate_co2(date2)) |> 
+#   select(-date2)
+# 
+# tmp$forcing[[1]] |> 
+#   head(3000) |>
+#   ggplot(aes(date, co2)) +
+#   geom_line()
 
 ## Model run ------------------------
 output <- runread_pmodel_f(
   tmp,
   par = pars
-  )
+)
 
 output <- output$data[[1]]
 
 ## Visualisations  ------------------------
 ### Time series ---------------------------
-# LAI
 gg1 <- output %>% 
   as_tibble() %>% 
   ggplot(aes(date, lai)) + 
@@ -241,16 +290,33 @@ gg3 <- output %>%
 gg4 <- output %>% 
   as_tibble() %>% 
   # ggplot(aes(date, calc_f_seed(x2))) + 
-  ggplot(aes(date, x1)) + 
+  ggplot(aes(date, clabl)) + 
+  geom_line()
+
+gg5 <- output %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, gpp)) + 
+  geom_line()
+gg6 <- output %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, npp)) + 
+  geom_line()
+gg7 <- output %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, nloss)) + 
+  geom_line()
+gg8 <- output %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, ninorg)) + 
   geom_line()
 
 gg1 / gg2 / gg3 / gg4
+gg5 / gg6 / gg7 / gg8
 
 output %>% 
   as_tibble() %>% 
   ggplot(aes(date, x1)) + 
   geom_line()
-
 
 calc_f_seed <- function(an_unitlai_diff_damped){
   yy <- 1 / (1 + exp(1000*(an_unitlai_diff_damped)))
@@ -284,7 +350,7 @@ aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>%
   )
 
 aout %>%
-  # slice(1000:2008) |> 
+  slice(1000:2008) |> 
   ggplot(aes(year, csoil)) +
   geom_line()
 
@@ -302,8 +368,8 @@ aout %>%
 output %>%
   as_tibble() %>%
   ggplot() +
-  geom_line(aes(date, npp))
-  # geom_line(aes(date, gpp-drd), color = 'red')
+  geom_line(aes(date, gpp))
+# geom_line(aes(date, gpp-drd), color = 'red')
 
 output %>%
   as_tibble() %>%
@@ -497,7 +563,7 @@ df_out <- output |>
   mutate(leaf_cn = cleaf/nleaf, root_shoot = croot/cleaf, n_inorg = pno3 + pnh4) |> 
   select(date, gpp, vcmax, jmax, gs = gs_accl, leaf_cn, lai, cleaf, 
          croot, root_shoot, nup, n_inorg)
-  
+
 df_amb <- df_out |> 
   filter(year(date) < 2010) |> 
   summarise(across(where(is.numeric), mean))
@@ -514,8 +580,8 @@ df_exp <- bind_rows(df_amb, df_ele)
 df_rr  <- log(df_exp[2,]/df_exp[1,]) |> 
   pivot_longer(cols = everything(), names_to = "variable", values_to = "response") |> 
   mutate(variable = factor(variable, 
-                          levels = rev(c("gpp", "vcmax", "jmax", "gs", "leaf_cn", "lai", "cleaf", 
-                                       "croot", "root_shoot", "nup", "n_inorg"))))
+                           levels = rev(c("gpp", "vcmax", "jmax", "gs", "leaf_cn", "lai", "cleaf", 
+                                          "croot", "root_shoot", "nup", "n_inorg"))))
 
 df_exp2 <- bind_rows(df_amb, df_ele2)
 df_rr2  <- log(df_exp2[2,]/df_exp2[1,]) |> 
@@ -531,4 +597,3 @@ ggplot() +
   labs(x = "Variable", y = "Log Response Ratio") +
   coord_flip() +
   labs(title = "cnmodel prediction", subtitle = "Response to eCO2")
-

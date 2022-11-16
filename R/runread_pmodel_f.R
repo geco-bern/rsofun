@@ -98,7 +98,7 @@ runread_pmodel_f <- function(
       dplyr::mutate(
         data = purrr::pmap(.,
                            run_pmodel_f_bysite,
-                           par = par,
+                           params_modl = par,
                            makecheck = makecheck
         )) %>% 
       dplyr::select(sitename, site_info, data)
