@@ -530,7 +530,7 @@ extern SEXP lm3ppa_f_C(
 // Declarations for all functions
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
-  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
+  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   27},  // Specify number of arguments to C wrapper as the last number here
   {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   46},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };

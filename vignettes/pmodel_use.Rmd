@@ -43,6 +43,14 @@ p_model_validation
 
 These are real data from the French FR-Pue fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters.
 
+## Prepare for PML simulation
+
+Vegetation height
+```{r}
+p_model_drivers$site_info[[1]]$vegheight <- 25.0
+```
+
+
 ## Running the model
 
 With all data prepared we can run the model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
