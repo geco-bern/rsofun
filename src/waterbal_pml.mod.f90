@@ -353,6 +353,17 @@ contains
     !---------------------------------------------------------
     ! Penman-Monteith Equation for canopy transpiration; Eq. 1 in Zhang et al., 2017
     !---------------------------------------------------------
+    print*,'epsilon', epsilon
+    print*,'e_avl_canopy', e_avl_canopy
+    print*,'e_avl_canopy', e_avl_canopy
+    print*,'rho_air', rho_air
+    print*,'cp', cp
+    print*,'gamma', gamma
+    print*,'climate%dvpd', climate%dvpd
+    print*,'g_aero', g_aero
+    print*,'tile_fluxes%canopy%dgc', tile_fluxes%canopy%dgc
+    print*,'----------------------------------------------'
+
     tile_fluxes%canopy%daet_e_canop = (epsilon * e_avl_canopy + (rho_air * cp / gamma) * climate%dvpd * g_aero) &
                                       / (1.0 + epsilon + g_aero / tile_fluxes%canopy%dgc)
 
@@ -363,6 +374,10 @@ contains
     tile_fluxes%canopy%daet       = tile_fluxes%canopy%daet_e       * econ * 1000.0
     tile_fluxes%canopy%daet_soil  = tile_fluxes%canopy%daet_e_soil  * econ * 1000.0
     tile_fluxes%canopy%daet_canop = tile_fluxes%canopy%daet_e_canop * econ * 1000.0
+
+    print*,'daet_soil, daet_e_soil, daet_e_canop, daet', tile_fluxes%canopy%daet_soil, &
+            tile_fluxes%canopy%daet_e_soil, tile_fluxes%canopy%daet_e_canop, tile_fluxes%canopy%daet
+
 
   end subroutine calc_et
 
@@ -479,9 +494,12 @@ contains
 
     zom = 0.123 * h_canopy
     zov = 0.1 * zom
-    zm = 10.0                     ! measurement height for wind speed (m), must be consistent with input data information
+    ! zm = 10.0                     ! measurement height for wind speed (m), must be consistent with input data information
     d_canopy = (2.0/3.0) * h_canopy
-    g_aero = (k_karman**2 * v_wind) / (log((zm - d_canopy)/zom) * log((zm - d_canopy)/zov))
+    g_aero = (k_karman**2 * v_wind) / (log((myinterface%vegheight - d_canopy)/zom) * log((myinterface%vegheight - d_canopy)/zov))
+
+    print*,'in calc_g_aero:'
+    print*,'((zm - d_canopy)/zom) , ((zm - d_canopy)/zov)', ((zm - d_canopy)/zom) , ((zm - d_canopy)/zov)
 
   end function calc_g_aero
 

@@ -35,7 +35,8 @@ run_pmodel_f_bysite <- function(
   # predefine variables for CRAN check compliance
   ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
   fsun <- snow <- co2 <- ndep <- fapar <- patm <- 
-  tmin <- tmax <- fsand <- fclay <- forg <- fgravel <- . <- NULL
+  tmin <- tmax <- vwind <- fsand <- fclay <- forg <- 
+  fgravel <- . <- NULL
   
   # base state, always execute the call
   continue <- TRUE
@@ -80,7 +81,8 @@ run_pmodel_f_bysite <- function(
       fapar,
       patm,
       tmin,
-      tmax
+      tmax,
+      vwind
       )
   
   # validate input
@@ -100,7 +102,8 @@ run_pmodel_f_bysite <- function(
       "fapar",
       "patm",
       "tmin",
-      "tmax"
+      "tmax",
+      "vwind"
     )
     
     # create a loop to loop over a list of variables
