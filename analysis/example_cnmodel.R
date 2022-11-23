@@ -139,55 +139,55 @@ tmp$params_siml[[1]]$recycle <- 5
 
 
 ### Replace forcing with CH-Oe1 ---------------------
-filnam <- "data-raw/df_drivers_ch_oe1.rds"
-load("~/sofunCalVal/data/df_drivers_fluxnet2015_allsites.rda") # loads df_drivers_fluxnet2015_allsites
-df_drivers_ch_oe1 <- df_drivers_fluxnet2015_allsites |>
-  filter(sitename == "CH-Oe1") |>
-  mutate(forcing = purrr::map(forcing, ~mutate(.,
-                                               tmin = temp,
-                                               tmax = temp
-  )))
-
-df_ndep <- ingestr::ingest(
-  df_drivers_ch_oe1 |>
-    unnest(siteinfo) |>
-    select(sitename, lon, lat) |>
-    mutate(year_start = df_drivers_ch_oe1$params_siml[[1]]$firstyeartrend,
-           year_end = df_drivers_ch_oe1$params_siml[[1]]$firstyeartrend +
-             df_drivers_ch_oe1$params_siml[[1]]$nyeartrend - 1),
-  source    = "ndep",
-  timescale = "y",
-  dir       = "~/data/ndep_lamarque/",
-  verbose   = FALSE
-)
-
-df_ndep_mean <- df_ndep |>
-  unnest(data) |>
-  summarise(noy = mean(noy), nhx = mean(nhx))
-
-## add new required columns to forcing
-use_cseed <- 0 # 100
-cn_seed <- 20
-use_nseed <- use_cseed / cn_seed
-
-df_drivers_ch_oe1 <- df_drivers_ch_oe1 %>%
-  mutate(forcing = purrr::map(forcing, ~mutate(.,
-                                               fharv = 0.0,
-                                               dno3 = df_ndep_mean$noy,
-                                               dnh4 = df_ndep_mean$nhx)),
-         forcing = purrr::map(forcing, ~mutate(.,
-                                               fharv = 0.0,
-                                               cseed = 0.0,
-                                               nseed = 0.0)))
-
-saveRDS(df_drivers_ch_oe1, file = filnam)
-
-df_drivers_ch_oe1$params_siml[[1]]$spinupyears <- 2002
-df_drivers_ch_oe1$params_siml[[1]]$recycle <- 5
-df_drivers_ch_oe1$params_siml[[1]]$nyeartrend <- 7
-
-tmp <- df_drivers_ch_oe1 |> 
-  rename(site_info = siteinfo, params_soil = df_soiltexture)
+# filnam <- "data-raw/df_drivers_ch_oe1.rds"
+# load("~/sofunCalVal/data/df_drivers_fluxnet2015_allsites.rda") # loads df_drivers_fluxnet2015_allsites
+# df_drivers_ch_oe1 <- df_drivers_fluxnet2015_allsites |>
+#   filter(sitename == "CH-Oe1") |>
+#   mutate(forcing = purrr::map(forcing, ~mutate(.,
+#                                                tmin = temp,
+#                                                tmax = temp
+#   )))
+# 
+# df_ndep <- ingestr::ingest(
+#   df_drivers_ch_oe1 |>
+#     unnest(siteinfo) |>
+#     select(sitename, lon, lat) |>
+#     mutate(year_start = df_drivers_ch_oe1$params_siml[[1]]$firstyeartrend,
+#            year_end = df_drivers_ch_oe1$params_siml[[1]]$firstyeartrend +
+#              df_drivers_ch_oe1$params_siml[[1]]$nyeartrend - 1),
+#   source    = "ndep",
+#   timescale = "y",
+#   dir       = "~/data/ndep_lamarque/",
+#   verbose   = FALSE
+# )
+# 
+# df_ndep_mean <- df_ndep |>
+#   unnest(data) |>
+#   summarise(noy = mean(noy), nhx = mean(nhx))
+# 
+# ## add new required columns to forcing
+# use_cseed <- 0 # 100
+# cn_seed <- 20
+# use_nseed <- use_cseed / cn_seed
+# 
+# df_drivers_ch_oe1 <- df_drivers_ch_oe1 %>%
+#   mutate(forcing = purrr::map(forcing, ~mutate(.,
+#                                                fharv = 0.0,
+#                                                dno3 = df_ndep_mean$noy,
+#                                                dnh4 = df_ndep_mean$nhx)),
+#          forcing = purrr::map(forcing, ~mutate(.,
+#                                                fharv = 0.0,
+#                                                cseed = 0.0,
+#                                                nseed = 0.0)))
+# 
+# saveRDS(df_drivers_ch_oe1, file = filnam)
+# 
+# df_drivers_ch_oe1$params_siml[[1]]$spinupyears <- 2002
+# df_drivers_ch_oe1$params_siml[[1]]$recycle <- 5
+# df_drivers_ch_oe1$params_siml[[1]]$nyeartrend <- 7
+# 
+# tmp <- df_drivers_ch_oe1 |> 
+#   rename(site_info = siteinfo, params_soil = df_soiltexture)
 
 ### Synthetic forcing: Mean seasonal cycle -----------------------
 # tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
@@ -311,6 +311,25 @@ gg8 <- output %>%
   geom_line()
 
 gg1 / gg2 / gg3 / gg4
+gg5 / gg6 / gg7 / gg8
+
+gg5 <- output %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, x1)) + 
+  geom_line()
+gg6 <- output %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, x2)) + 
+  geom_line()
+gg7 <- output %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, x3)) + 
+  geom_line()
+gg8 <- output %>% 
+  as_tibble() %>% 
+  ggplot(aes(date, x4)) + 
+  geom_line()
+
 gg5 / gg6 / gg7 / gg8
 
 output %>% 

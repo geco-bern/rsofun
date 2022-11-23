@@ -110,6 +110,7 @@ contains
         if (verbose) print*,'-----------------------------------------------------------'
         if (verbose) print*,'YEAR, DOY ', myinterface%steering%year, doy
         if (verbose) print*,'-----------------------------------------------------------'
+        print*,'YEAR, DOY ', myinterface%steering%year, doy
 
         !----------------------------------------------------------------
         ! initialise updated variables (fluxes)
@@ -269,7 +270,7 @@ contains
                                         tile(1)%plant(1)%pseed )
         if (verbose) orgtmp2 = orgplus( tile(1)%soil%plitt_af, tile(1)%soil%plitt_as, tile(1)%soil%plitt_bg )
         !----------------------------------------------------------------
-        call turnover( tile(:), tile_fluxes(:), doy )
+        call turnover( tile(:), doy )
         !----------------------------------------------------------------
         if (verbose) print*, '              ==> returned: '
         if (verbose) print*, '              lai   = ', tile(1)%plant(1)%lai_ind

@@ -125,6 +125,7 @@ module md_plant
     type(orgpool) :: pwood     ! heartwood (non-living) biomass (=hm_ind)
     type(orgpool) :: plabl     ! labile pool, temporary storage of N and C (=bm_inc but contains also N)
     type(orgpool) :: pseed     ! seed pool
+    type(orgpool) :: presv     ! reserves pool
 
     ! phenology
     type(phenotype), dimension(ndayyear) :: pheno
@@ -689,6 +690,7 @@ contains
       call orginit( plant(pft)%pwood )
       call orginit( plant(pft)%plabl )
       call orginit( plant(pft)%pseed )
+      call orginit( plant(pft)%presv )
       call init_pheno(plant(pft)%pheno(:))
     end do
 

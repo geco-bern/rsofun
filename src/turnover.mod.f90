@@ -39,14 +39,13 @@ module md_turnover
 
 contains
 
-  subroutine turnover( tile, tile_fluxes, doy )
+  subroutine turnover( tile, doy )
     !////////////////////////////////////////////////////////////////
     !  Annual vegetation biomass turnover, called at the end of the
     !  year.
     !----------------------------------------------------------------
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
-    type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     integer, intent(in) :: doy
 
     ! local variables
@@ -93,7 +92,7 @@ contains
       if (verbose) cbal1 = tile(lu)%plant(pft)%pleaf%c%c12 + tile(lu)%soil%plitt_af%c%c12
       if (verbose) nbal1 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%pleaf%n%n14 + tile(lu)%soil%plitt_af%n%n14
       !--------------------------------------------------------------
-      if ( dleaf > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_leaf( dleaf, tile(lu), tile_fluxes(lu), pft )
+      if ( dleaf > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_leaf( dleaf, tile(lu), pft )
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
       if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%pleaf
@@ -189,14 +188,13 @@ contains
   end subroutine turnover
 
 
-  subroutine turnover_leaf( dleaf, tile, tile_fluxes, pft )
+  subroutine turnover_leaf( dleaf, tile, pft )
     !//////////////////////////////////////////////////////////////////
     ! Execute turnover of fraction dleaf for leaf pool
     !------------------------------------------------------------------
     ! arguments
     real, intent(in) :: dleaf
     type( tile_type ), intent(inout) :: tile
-    type( tile_fluxes_type ), intent(in) :: tile_fluxes
     integer, intent(in) :: pft
 
     ! local variables
@@ -331,7 +329,7 @@ contains
 
     ! add all organic (fixed) C to litter
     ! call cmvRec( rm_turn%c, rm_turn%c, tile%soil%plitt_bg%c, outaCveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind))
-    call cmv( rm_turn%c, rm_turn%c, tile%soil%plitt_bg%c, scale = real(tile%plant(pft)%nind))
+    call cmv( rm_turn%c, rm_turn%c, tile%soil%plitt_bg%c, scale = real(tile%plant(pft)%nind) )
 
     ! retain fraction of N
     call nmv( nfrac( params_plant%f_nretain, rm_turn%n ), rm_turn%n, tile%plant(pft)%plabl%n )
