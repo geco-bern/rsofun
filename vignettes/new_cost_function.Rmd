@@ -88,7 +88,7 @@ likelihood_pmodel <- create_cost_likelihood_pmodel(
   )
 ``` 
 
-Note that, in the definition of the calibration settings, the control parameters differ from the ones used with `GensA`. A uniform prior for the parameter is also defined.
+Note that, in the definition of the calibration settings, the control parameters differ from the ones used with `GensA`. A uniform prior for the parameter is also defined, by giving lower and upper limits.
 ```{r}
 # Define calibration settings
 settings_likelihood <- list(
@@ -117,6 +117,103 @@ pars_calib_likelihood <- calib_sofun(
 There are equivalent cost functions available for the LM3PPA model. Check out the reference pages for more details on how to use `create_cost_likelihood_lm3ppa` and `create_cost_rmse_lm3ppa`.
 
 ### Write your custom cost function 
+
 If the RMSE or normal log-likelihood cost functions that we provide do not fit your use case, you can easily write a custom one. In this section, we drive you through the main ideas with an example.
 
+All cost functions must take three arguments: a vector of calibratable parameter values `par`, a data frame of observed values which contains the target variable `obs` and a data frame of drivers used to run the model `drivers`. Since we are calibrating the parameters based on model outputs, the cost function runs the p-model and compare its output to observed validation data.
+```{r}
+function(par, obs, drivers){
+  # Your code
+}
+```
 
+In the optimization procedure, the cost function only takes as argument the parameters `par` that are fed to `calib_sofun` via `settings$par` (see previous sections). Nevertheless, within the cost function we call `runread_pmodel_f` and this function needs a full set of model parameters. Therefore, the parameters that aren't being calibrated must be hard coded inside the cost function. In this example, we only want to calibrate the soil moisture stress parameters.
+```{r}
+function(par, obs, drivers){
+  
+  # Set values for calibrated and non-calibrated model parameters
+  params_modl <- list(
+    kphio = 0.05,
+    soilm_par_a = par[1],
+    soilm_par_b = par[2],
+    tau_acclim_tempstress = 7.4,
+    par_shape_tempstress = 0.1
+  )
+  
+  # Run the model
+  df <- runread_pmodel_f(
+    drivers,
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # Your code to compute the cost
+}
+``` 
+
+The following chunk defines the final function. We clean the observations and model output and align the data according to site and date, to compute the mean absolute error (MAE). Finally, the function should return a scalar value, in this case the MAE, which we want to minimize. The GenSA optimization will minimize the cost, but if we wanted to use BayesianTools we should write `return(-cost)` because it's a maximizing routine. 
+```{r}
+cost_mae <- function(par, obs, drivers){
+
+  # Set values for calibrated and non-calibrated model parameters
+  params_modl <- list(
+    kphio = 0.05,
+    soilm_par_a = par[1],
+    soilm_par_b = par[2],
+    tau_acclim_tempstress = 7.4,
+    par_shape_tempstress = 0.1
+  )
+  
+  # Run the model
+  df <- runread_pmodel_f(
+    drivers = drivers,
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # Clean model output to compute cost
+  df <- df %>%
+    dplyr::select(sitename, data) %>%
+    tidyr::unnest(data) %>%
+    tidyr::unnest(data)
+    
+  # Clean validation data to compute cost
+  obs <- obs %>%
+    dplyr::select(sitename, data) %>%
+    tidyr::unnest(data) %>%
+    dplyr::rename('gpp_obs' = 'gpp') # rename for later
+    
+  # Left join model output with observations by site and date
+  df <- dplyr::left_join(df, obs, by = c('sitename', 'date'))
+  
+  # Compute mean absolute error
+  cost <- mean(abs(df$gpp - df$gpp_obs), na.rm = TRUE)
+  
+  # Return the computed cost
+  return(cost)
+}
+``` 
+
+As a last step, let's verify that the calibration procedure runs using this cost function.
+```{r}
+# Define calibration settings and parameter ranges
+settings_mae <- list(
+  method = 'GenSA',
+  metric = cost_mae, # our cost function
+  control = list(
+    maxit = 100),
+  par = list(
+    soilm_par_a = list(lower=0.1, upper=5, init=2.4),
+    soilm_par_b = list(lower=1, upper=2, init=1.5)
+  )
+)
+
+# Calibrate the model and optimize the free parameters
+pars_calib_mae <- calib_sofun(
+  drivers = p_model_drivers,
+  obs = p_model_validation,
+  settings = settings_mae
+)
+```
