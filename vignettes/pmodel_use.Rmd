@@ -17,6 +17,10 @@ knitr::opts_chunk$set(
 library(rsofun)
 library(dplyr)
 library(ggplot2)
+
+# fake variable as optimization isn't used
+pars <- list()
+pars$par["kphio"] <- 0.05
 ```
 
 The `rsofun` package and framework includes two main models. The `pmodel` and `lm3-ppa` (which in part relies on pmodel components). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
