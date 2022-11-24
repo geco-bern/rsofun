@@ -131,7 +131,7 @@ In the optimization procedure, the cost function only takes as argument the para
 ```{r}
 function(par, obs, drivers){
   
-  # Set values for calibrated and non-calibrated model parameters
+  # Set values for the list of calibrated and non-calibrated model parameters
   params_modl <- list(
     kphio = 0.05,
     soilm_par_a = par[1],
@@ -156,7 +156,7 @@ The following chunk defines the final function. We clean the observations and mo
 ```{r}
 cost_mae <- function(par, obs, drivers){
 
-  # Set values for calibrated and non-calibrated model parameters
+  # Set values for the list of calibrated and non-calibrated model parameters
   params_modl <- list(
     kphio = 0.05,
     soilm_par_a = par[1],
