@@ -17,14 +17,6 @@ knitr::opts_chunk$set(
 library(rsofun)
 library(dplyr)
 library(ggplot2)
-
-pars <- list(par = c(
-    kphio           = 0.04607080,
-    soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444,
-    tau_acclim_tempstress = 7.35259044,
-    par_shape_tempstress  = 0.09863961
-  ))
 ```
 
 The `rsofun` package and framework includes two main models. The `pmodel` and `lm3-ppa` (which in part relies on pmodel component). Here we give a short example on how to run the `lm3ppa` model on the included demo datasets to familiarize yourself with both the data structure and the outputs.
@@ -137,12 +129,9 @@ To optimize new parameters based upon driver data and a validation dataset we mu
 # Mortality as DBH
 settings <- list(
   method              = "bayesiantools",
-  targetvars          = c("gpp"),
-  timescale           = list(targets_obs = "y"),
-  sitenames           = "CH-Lae",
-  metric              = cost_rmse_lm3ppa_gsleuning,
-  dir_results         = "./",
-  name                = "ORG",
+  metric              = create_cost_rmse_lm3ppa(
+                          method = 'BayesianTools'
+                          ),
   control = list(
     sampler = "DEzs",
     settings = list(
