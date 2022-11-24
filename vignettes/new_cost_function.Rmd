@@ -1,5 +1,5 @@
 ---
-title: "Cost functions for parameter calibration"
+title: "Parameter calibration and cost functions"
 author: "Pepa Aran"
 date: "2022-10-20"
 output: rmarkdown::html_vignette
