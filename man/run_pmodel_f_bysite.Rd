@@ -66,7 +66,7 @@ layer of soil.
       \item{fgravel}{The fraction of gravel in the soil.}
 }}
 
-\item{params_modl}{A list of free (calibratable) model parameters.
+\item{params_modl}{A named list of free (calibratable) model parameters.
 \describe{
   \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
   \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
@@ -81,7 +81,7 @@ layer of soil.
 }}
 
 \item{makecheck}{A logical specifying whether checks are performed 
-to verify forcings. \code{TRUE} by default.}
+to verify forcings and model parameters. \code{TRUE} by default.}
 
 \item{verbose}{A logical specifying whether to print warnings.
 Defaults to \code{TRUE}.}
