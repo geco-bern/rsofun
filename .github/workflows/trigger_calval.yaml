@@ -1,5 +1,5 @@
 on:
-  push:
+  release:
   workflow_dispatch:
 
 name: render sofunCalVal repo
