@@ -129,12 +129,9 @@ To optimize new parameters based upon driver data and a validation dataset we mu
 # Mortality as DBH
 settings <- list(
   method              = "bayesiantools",
-  targetvars          = c("gpp"),
-  timescale           = list(targets_obs = "y"),
-  sitenames           = "CH-Lae",
-  metric              = cost_rmse_lm3ppa_gsleuning,
-  dir_results         = "./",
-  name                = "ORG",
+  metric              = create_cost_rmse_lm3ppa(
+                          method = 'BayesianTools'
+                          ),
   control = list(
     sampler = "DEzs",
     settings = list(
