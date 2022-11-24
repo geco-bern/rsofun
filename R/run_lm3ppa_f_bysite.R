@@ -215,7 +215,7 @@ run_lm3ppa_f_bysite <- function(
         pattern = " Gb",
         replacement = "",
         format(
-          object.size(lm3out), 
+          utils::object.size(lm3out), 
           units = "GB"
           )
         )
@@ -225,7 +225,7 @@ run_lm3ppa_f_bysite <- function(
       warning(
         sprintf("Warning: Excessive size of output object (%s) for %s. Hourly and daily outputs at tile and cohort levels are not returned.",
                 format(
-                  object.size(lm3out), 
+                  utils::object.size(lm3out), 
                   units = "GB"
                 ), 
                 sitename))
