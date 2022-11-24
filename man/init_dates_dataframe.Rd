@@ -43,7 +43,7 @@ covered by the dataframe. Defaults to 31.}
 A tibble with dates.
 }
 \description{
-Creates a tibble with rows for each date (\code{\link{lubridate::ymd}} object from 
+Creates a tibble with rows for each date (\code{\link[lubridate:ymd]{lubridate::ymd}} object from 
 library \code{lubridate}) from \code{'yrstart'} to \code{'yrend'}. Intervals of dates is 
 specified by argument \code{'freq'}.
 }
