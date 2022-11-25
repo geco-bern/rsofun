@@ -31,7 +31,7 @@ jobs:
 # gh-action from Cecilapp/GitHub-Pages-deploy
   checkout-and-deploy:
    runs-on: ubuntu-latest
-   needs: pkgdown
+   needs: blogdown
    steps:
      - name: Checkout-Deploy
        uses: actions/checkout@main
