@@ -2125,7 +2125,7 @@ contains
         LAI_nitrogen = LAIfixedN + LAImineralN
         ! spdata(i)%LAImax = MAX(LAImin, MIN(LAI_nitrogen, sp%LAI_light))
 
-        ! turn off N limitation
+        ! turn off nitrogen limitation XXX
         spdata(i)%LAImax = MAX(LAImin, sp%LAI_light)
 
         spdata(i)%underLAImax = MIN(sp%LAImax, 1.2)
@@ -2193,7 +2193,7 @@ contains
     ! -local vars -------
     type(cohort_type), dimension(:), pointer :: cc
     type(cohort_type), pointer :: cx
-    integer,parameter :: rand_seed = 86456
+    ! integer,parameter :: rand_seed = 86456
     real    :: r
     real    :: btotal
     integer :: i, istat
