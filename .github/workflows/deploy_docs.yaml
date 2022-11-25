@@ -33,7 +33,7 @@ jobs:
    runs-on: ubuntu-latest
    needs: pkgdown
    steps:
-     - name: Checkout
+     - name: Checkout-Deploy
        uses: actions/checkout@main
      - name: Download artifact
        uses: actions/download-artifact@v1.0.0
