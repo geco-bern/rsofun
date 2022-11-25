@@ -31,12 +31,12 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          cache: true
-          extra-packages: any::pkgdown, github::florianhartig/BayesianTools/BayesianTools, local::.
+          cache: false
+          extra-packages: any::pkgdown, github::florianhartig/BayesianTools/BayesianTools, github::computationales/GECO_template, local::.
           needs: website
 
-      - name: install theme
-        run: Rscript -e 'devtools::install_github("computationales/GECO_template")'
+      #- name: install theme
+      #  run: Rscript -e 'devtools::install_github("computationales/GECO_template")'
 
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
