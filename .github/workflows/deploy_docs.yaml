@@ -31,8 +31,8 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          cache: false
-          extra-packages: any::pkgdown, local::.
+          cache: true
+          extra-packages: any::pkgdown, github::florianhartig/BayesianTools/BayesianTools, local::.
           needs: website
 
       - name: install theme
