@@ -43,10 +43,16 @@
       <a href="../articles/lm3ppa_use.html">LM3-PPA usage</a>
     </li>
     <li>
+      <a href="../articles/new_cost_function.html">Parameter calibration and cost functions</a>
+    </li>
+    <li>
       <a href="../articles/pmodel_use.html">P-model usage</a>
     </li>
     <li>
       <a href="../articles/prepare_forcing.html">Prepare forcing</a>
+    </li>
+    <li>
+      <a href="../articles/reserves_labile.html">Labile pool dynamics</a>
     </li>
   </ul></li>
 <li>
@@ -87,49 +93,25 @@
         </td>
         <td><p>Collect all drivers</p></td>
       </tr><tr><td>
-          <p><code><a href="cost_chisquared_kphio.html">cost_chisquared_kphio()</a></code> </p>
+          <p><code><a href="create_cost_likelihood_lm3ppa.html">create_cost_likelihood_lm3ppa()</a></code> </p>
         </td>
-        <td><p>Chi-squared cost function</p></td>
+        <td><p>Creates a log-likelihood cost function for LM3PPA with different targets</p></td>
       </tr><tr><td>
-          <p><code><a href="cost_chisquared_vpdstress.html">cost_chisquared_vpdstress()</a></code> </p>
+          <p><code><a href="create_cost_likelihood_pmodel.html">create_cost_likelihood_pmodel()</a></code> </p>
         </td>
-        <td><p>Chi-squared cost function</p></td>
+        <td><p>Creates a log-likelihood cost function for several setups</p></td>
       </tr><tr><td>
-          <p><code><a href="cost_linscale_rmse.html">cost_linscale_rmse()</a></code> </p>
+          <p><code><a href="create_cost_rmse_lm3ppa.html">create_cost_rmse_lm3ppa()</a></code> </p>
         </td>
-        <td><p>Linearly scaled output</p></td>
+        <td><p>Creates a cost function for different simulation setups based on RMSE</p></td>
       </tr><tr><td>
-          <p><code><a href="cost_mae.html">cost_mae()</a></code> </p>
+          <p><code><a href="create_cost_rmse_pmodel.html">create_cost_rmse_pmodel()</a></code> </p>
         </td>
-        <td><p>Mean absolute error (MAE)</p></td>
-      </tr><tr><td>
-          <p><code><a href="cost_rmse_fullstack.html">cost_rmse_fullstack()</a></code> </p>
-        </td>
-        <td><p>Root mean squared error</p></td>
-      </tr><tr><td>
-          <p><code><a href="cost_rmse_kphio.html">cost_rmse_kphio()</a></code> </p>
-        </td>
-        <td><p>Root mean squared error</p></td>
-      </tr><tr><td>
-          <p><code><a href="cost_rmse_lm3ppa_gsleuning.html">cost_rmse_lm3ppa_gsleuning()</a></code> </p>
-        </td>
-        <td><p>LM3PPA gs leuning cost function</p></td>
-      </tr><tr><td>
-          <p><code><a href="cost_rmse_vpdstress.html">cost_rmse_vpdstress()</a></code> </p>
-        </td>
-        <td><p>Root mean squared error</p></td>
+        <td><p>Creates a cost function for different simulation setups based on RMSE</p></td>
       </tr><tr><td>
           <p><code><a href="init_dates_dataframe.html">init_dates_dataframe()</a></code> </p>
         </td>
         <td><p>Initialises a tibble with dates</p></td>
-      </tr><tr><td>
-          <p><code><a href="likelihood_lm3ppa.html">likelihood_lm3ppa()</a></code> </p>
-        </td>
-        <td><p>Log likelihood cost function for model optimization</p></td>
-      </tr><tr><td>
-          <p><code><a href="likelihood_pmodel.html">likelihood_pmodel()</a></code> </p>
-        </td>
-        <td><p>Likelihood function for the p-model</p></td>
       </tr><tr><td>
           <p><code><a href="lm3ppa_gs_leuning_drivers.html">lm3ppa_gs_leuning_drivers</a></code> </p>
         </td>
@@ -165,7 +147,7 @@
       </tr><tr><td>
           <p><code><a href="plot.rsofun_fit.html">plot(<i>&lt;rsofun_fit&gt;</i>)</a></code> </p>
         </td>
-        <td><p>Plotting method for fit model output</p></td>
+        <td><p>Plotting method for rsofun_fit model output</p></td>
       </tr><tr><td>
           <p><code><a href="prepare_setup_sofun.html">prepare_setup_sofun()</a></code> </p>
         </td>
@@ -179,21 +161,17 @@
         </td>
         <td><p>R wrapper for SOFUN P-model</p></td>
       </tr><tr><td>
-          <p><code><a href="runread_lm3ppa_f.html">runread_lm3ppa_f()</a></code> <code><a href="runread_lm3ppa_f.html">runread_lm3ppa_f()</a></code> </p>
+          <p><code><a href="runread_lm3ppa_f.html">runread_lm3ppa_f()</a></code> </p>
         </td>
         <td><p>Run LM3-PPA</p></td>
       </tr><tr><td>
-          <p><code><a href="runread_pmodel_f.html">runread_pmodel_f()</a></code> <code><a href="runread_pmodel_f.html">runread_pmodel_f()</a></code> </p>
+          <p><code><a href="runread_pmodel_f.html">runread_pmodel_f()</a></code> </p>
         </td>
         <td><p>Run the P-model</p></td>
       </tr><tr><td>
           <p><code><a href="summary.rsofun_fit.html">summary(<i>&lt;rsofun_fit&gt;</i>)</a></code> </p>
         </td>
-        <td><p>Print summary values for fit model output</p></td>
-      </tr><tr><td>
-          <p><code><a href="update_params.html">update_params()</a></code> </p>
-        </td>
-        <td><p>Update model parameters</p></td>
+        <td><p>Print summary values for rsofun_fit model output</p></td>
       </tr></tbody></table></div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

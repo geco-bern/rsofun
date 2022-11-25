@@ -1,10 +1,12 @@
-pandoc: '2.18'
+pandoc: 2.19.2
 pkgdown: 2.0.6
 pkgdown_sha: ~
 articles:
   lm3ppa_model_structure: lm3ppa_model_structure.html
   lm3ppa_use: lm3ppa_use.html
+  new_cost_function: new_cost_function.html
   pmodel_use: pmodel_use.html
   prepare_forcing: prepare_forcing.html
-last_built: 2022-10-26T07:06Z
+  reserves_labile: reserves_labile.html
+last_built: 2022-11-25T16:53Z
 
