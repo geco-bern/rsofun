@@ -30,7 +30,7 @@ runread_lm3ppa_f <- function(
   ){
   
   # predefine variables for CRAN check compliance
-  forcing <- init_cohort <- init_soil <-
+  forcing <- init_cohort <- init_soil <- data <-
     input <- params_siml <- params_soil <- params_species <-
     params_tile <- site_info <- sitename <- . <- NULL
   
