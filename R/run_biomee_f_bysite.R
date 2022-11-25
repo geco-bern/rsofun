@@ -1,6 +1,6 @@
-#' R wrapper for SOFUN LM3PPA
+#' R wrapper for SOFUN biomee
 #' 
-#' Call to the LM3PPA Fortran model
+#' Call to the biomee Fortran model
 #'
 #' @param sitename Site name
 #' @param params_siml Simulation parameters
@@ -18,7 +18,7 @@
 #' @export
 #' @useDynLib rsofun
 
-run_lm3ppa_f_bysite <- function(
+run_biomee_f_bysite <- function(
   sitename,
   params_siml,
   site_info,
@@ -71,13 +71,13 @@ run_lm3ppa_f_bysite <- function(
     dt_hours <- forcing$hour[2] - forcing$hour[1]
     if (dt_days!=1 && dt_hours != 0){
       stop(
-        "run_lm3ppa_f_bysite: time step must be daily 
+        "run_biomee_f_bysite: time step must be daily 
          for P-model photosynthesis setup."
         )
       } 
   } else {
     stop(
-      paste("run_lm3ppa_f_bysite:
+      paste("run_biomee_f_bysite:
             params_siml$method_photosynth not recognised:",
             params_siml$method_photosynth))
   }
@@ -95,7 +95,7 @@ run_lm3ppa_f_bysite <- function(
     code_method_mortality = 5
   } else {
     stop(
-      paste("run_lm3ppa_f_bysite: params_siml$method_mortality not recognised:",
+      paste("run_biomee_f_bysite: params_siml$method_mortality not recognised:",
             params_siml$method_mortality))
   }
 
@@ -144,7 +144,7 @@ run_lm3ppa_f_bysite <- function(
     ## C wrapper call
     lm3out <- .Call(
 
-      'lm3ppa_f_C',
+      'biomee_f_C',
 
       ## Simulation parameters
       spinup                = as.logical(params_siml$spinup),

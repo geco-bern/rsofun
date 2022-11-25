@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{object}{Input data generated using the \code{\link{run_pmodel_f_bysite}}
-or \code{\link{run_lm3ppa_f_bysite}} function,
+or \code{\link{run_biomee_f_bysite}} function,
  or generally calls which return the \code{rsofun_fit} class.}
 
 \item{...}{Additional parameters to pass.}

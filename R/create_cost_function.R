@@ -300,10 +300,10 @@ create_cost_likelihood_pmodel <- function(
   return(eval(parse(text = f)))
 }
 
-#' Creates a log-likelihood cost function for LM3PPA with different targets
+#' Creates a log-likelihood cost function for biomee with different targets
 #' 
 #' Creates a cost function for parameter calibration, which
-#' computes the log-likelihood for the LM3PPA model fitting several target 
+#' computes the log-likelihood for the biomee model fitting several target 
 #' variables for a given set of parameters.
 #' 
 #' @param targets A character vector indicating the target variables for which the
@@ -313,11 +313,11 @@ create_cost_likelihood_pmodel <- function(
 #' @importFrom magrittr '%>%'
 #' 
 #' @return A cost function which computes the log-likelihood of the simulated 
-#' targets by the LM3PPA model versus the observed targets. This cost function has 
+#' targets by the biomee model versus the observed targets. This cost function has 
 #' as arguments a vector of calibratable model parameters \code{par}, a data frame of
 #' observations \code{obs}, and a data frame of driver data \code{drivers}.
 #' 
-#' @details The resulting cost function performs a LM3PPA model run for the value of
+#' @details The resulting cost function performs a biomee model run for the value of
 #' \code{par} given as argument. \code{par} must always contain \code{'phiRL',
 #' 'LAI_light', 'tf_base', 'par_mort'} and the error terms corresponding to the
 #' target variables, e.g. \code{'err_GPP'} if GPP is a target. Make sure that
@@ -331,7 +331,7 @@ create_cost_likelihood_pmodel <- function(
 #' 
 #' @export
 
-create_cost_likelihood_lm3ppa <- function(
+create_cost_likelihood_biomee <- function(
     targets
 ){
   # predefine variables for CRAN check compliance
@@ -352,7 +352,7 @@ create_cost_likelihood_lm3ppa <- function(
   drivers$params_tile[[1]]$par_mort <- par[4]
 
   # run model
-  df <- runread_lm3ppa_f(
+  df <- runread_biomee_f(
     drivers,
     makecheck = TRUE,
     parallel = FALSE
@@ -430,12 +430,12 @@ create_cost_likelihood_lm3ppa <- function(
 #' 
 #' @importFrom magrittr '%>%'
 #' 
-#' @return A cost function which computes the RMSE of the simulated targets by the LM3PPA model 
+#' @return A cost function which computes the RMSE of the simulated targets by the biomee model 
 #' versus the observed target variables. This cost function has as arguments a list of calibratable
 #' model parameters \code{par}, a data frame of observations \code{obs}, and a
 #' data frame of driver data \code{drivers}.
 #' 
-#' @details The resulting cost function performs a LM3PPA model run for the value of
+#' @details The resulting cost function performs a biomee model run for the value of
 #' \code{par} given as argument and the remaining non-calibratable parameters
 #' are held constant (specified via \code{params_modl}).
 #' 
@@ -457,14 +457,14 @@ create_cost_likelihood_lm3ppa <- function(
 #'   )
 #' 
 #' # Write cost function
-#' cost_rmse <- create_cost_rmse_lm3ppa(
+#' cost_rmse <- create_cost_rmse_biomee(
 #'   params_modl = pars,
 #'   setup = 'FULL',
 #'   method = 'BayesianTools'
 #'   )
 #' }
 
-create_cost_rmse_lm3ppa <- function(
+create_cost_rmse_biomee <- function(
     params_modl,
     setup,
     method){
@@ -488,7 +488,7 @@ create_cost_rmse_lm3ppa <- function(
   drivers$params_tile[[1]]$par_mort        <- par[4]
   obs <- obs$data[[1]]
   
-  df <- runread_lm3ppa_f(
+  df <- runread_biomee_f(
     drivers,
     makecheck = TRUE,
     parallel = FALSE

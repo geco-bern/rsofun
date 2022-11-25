@@ -1,16 +1,16 @@
 context("test calibration framework and its parameters")
 set.seed(10)
 
-test_that("test calibration routine lm3ppa (likelihood cost + Bayesiantools)", {
+test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {
   skip_on_cran()
-  df_drivers <- rsofun::lm3ppa_gs_leuning_drivers
-  ddf_obs <- rsofun::lm3ppa_validation_2
+  df_drivers <- rsofun::biomee_gs_leuning_drivers
+  ddf_obs <- rsofun::biomee_validation_2
   df_drivers$params_siml[[1]]$spinup <- FALSE
   
   settings <- list(
     method              = "bayesiantools",
     targets             = c("GPP","LAI","Density","Biomass"),
-    metric              = rsofun::create_cost_likelihood_lm3ppa(
+    metric              = rsofun::create_cost_likelihood_biomee(
       targets = c("GPP", "LAI", "Density", "Biomass")),
     control = list(
       sampler = "DEzs",
@@ -44,16 +44,16 @@ test_that("test calibration routine lm3ppa (likelihood cost + Bayesiantools)", {
   expect_type(pars, "list")
 })
 
-test_that("test calibration routine lm3ppa (rmse cost + GenSA)", {
+test_that("test calibration routine biomee (rmse cost + GenSA)", {
   skip_on_cran()
-  df_drivers <- rsofun::lm3ppa_gs_leuning_drivers
-  ddf_obs <- rsofun::lm3ppa_validation_2
+  df_drivers <- rsofun::biomee_gs_leuning_drivers
+  ddf_obs <- rsofun::biomee_validation_2
   df_drivers$params_siml[[1]]$spinup <- FALSE
   
   settings <- list(
     method              = "gensa",
     targets             = c("GPP","LAI","Density","Biomass"),
-    metric              = rsofun::create_cost_rmse_lm3ppa(
+    metric              = rsofun::create_cost_rmse_biomee(
       params_modl = list(
         phiRL = 2.5,
         LAI_light = 2.3,

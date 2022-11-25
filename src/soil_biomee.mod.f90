@@ -1,10 +1,10 @@
-! The subroutines are from LM3PPA, the version used in Weng et al. 2016.
+! The subroutines are from BiomeESS, the version used in Weng et al. 2016.
 ! This simulator can simulate evolutionarily stable strategy (ESS) of LMA
 ! and reproduce the forest succession patterns shown in Weng et al.,
 ! 2016 Global Change Biology along the graidient of temperature. 
 
-module md_soil_lm3ppa
- use md_interface_lm3ppa, only: myinterface
+module md_soil_biomee
+ use md_interface_biomee, only: myinterface
  use datatypes
  implicit none
  private
@@ -33,7 +33,7 @@ contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 !========================================================================
 ! Weng 2017-10-18 ! compute available water for photosynthesis
 subroutine water_supply_layer( vegn)
-  use md_forcing_lm3ppa, only: climate_type
+  use md_forcing_biomee, only: climate_type
   type(vegn_tile_type), intent(inout) :: vegn
 
 !----- local var --------------
@@ -86,7 +86,7 @@ subroutine water_supply_layer( vegn)
 subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
 !     All of inputs, the unit of water is 'mm',
 !     soil moisture (soil water content) is a ratio
-  use md_forcing_lm3ppa, only: climate_type
+  use md_forcing_biomee, only: climate_type
   use md_params_core, only: kR
 
   type(vegn_tile_type), intent(inout) :: vegn
@@ -484,7 +484,7 @@ subroutine cohort_uptake_profile(cohort, dz, uptake_frac_max, vegn_uptake_term)
 end subroutine 
 ! ================================================
 
-end module md_soil_lm3ppa
+end module md_soil_biomee
 
 
 

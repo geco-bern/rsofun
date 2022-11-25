@@ -1,4 +1,4 @@
-module md_params_siml_lm3ppa
+module md_params_siml_biomee
   !////////////////////////////////////////////////////////////////
   ! Module for handling simulation parameters.
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
@@ -200,6 +200,6 @@ contains
 
   end function get_cycleyear
 
-end module md_params_siml_lm3ppa
+end module md_params_siml_biomee
 
 

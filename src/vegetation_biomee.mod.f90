@@ -1,8 +1,8 @@
-module md_vegetation_lm3ppa
+module md_vegetation_biomee
   
   use datatypes
-  use md_soil_lm3ppa
-  use md_interface_lm3ppa, only: myinterface
+  use md_soil_biomee
+  use md_interface_biomee, only: myinterface
 
   implicit none
   private
@@ -27,8 +27,8 @@ contains
     ! include Nitrogen uptake and carbon budget
     ! C_growth is calculated here to drive plant growth and reproduciton
     !---------------------------------------------------------------
-    use md_forcing_lm3ppa, only: climate_type
-    use md_gpp_lm3ppa, only: gpp
+    use md_forcing_biomee, only: climate_type
+    use md_gpp_biomee, only: gpp
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type), intent(in) :: forcing
@@ -691,7 +691,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Determines mortality and updates tile
     !---------------------------------------------------------------
-    use md_interface_lm3ppa, only: myinterface
+    use md_interface_biomee, only: myinterface
     
     !   TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
     type(vegn_tile_type), intent(inout) :: vegn
@@ -1690,7 +1690,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Ranks array x in descending order: on return, idx() contains indices
     ! of elements of array x in descending order of x values. These codes
-    ! are from Sergey Malyshev (LM3PPA, Weng et al. 2015 Biogeosciences)
+    ! are from Sergey Malyshev (biomee, Weng et al. 2015 Biogeosciences)
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     real,    intent(in)  :: x(:)
@@ -2215,4 +2215,4 @@ contains
   
   end subroutine initialize_vegn_tile
 
-end module md_vegetation_lm3ppa
+end module md_vegetation_biomee

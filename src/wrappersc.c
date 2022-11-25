@@ -117,9 +117,9 @@ extern SEXP pmodel_f_C(
 }
 
 /////////////////////////////////////////////////////////////
-// LM3PPA
+// biomee
 /////////////////////////////////////////////////////////////
-void F77_NAME(lm3ppa_f)(
+void F77_NAME(biomee_f)(
     int    *spinup, // LOGICAL can be defined as _Bool but it gives a warming
     int    *spinupyears,               
     int    *recycle,              
@@ -227,8 +227,8 @@ void F77_NAME(lm3ppa_f)(
     double *output_annual_cohorts_deathrate
     );
 
-// C wrapper function for LM3PPA
-extern SEXP lm3ppa_f_C(
+// C wrapper function for biomee
+extern SEXP biomee_f_C(
     SEXP spinup,                
     SEXP spinupyears,               
     SEXP recycle,                 
@@ -345,7 +345,7 @@ extern SEXP lm3ppa_f_C(
     SEXP output_annual_cohorts_deathrate  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     
     // Fortran subroutine call
-    F77_CALL(lm3ppa_f)(
+    F77_CALL(biomee_f)(
         LOGICAL(spinup),                
         INTEGER(spinupyears),                  
         INTEGER(recycle),                 
@@ -528,7 +528,7 @@ extern SEXP lm3ppa_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
-  {"lm3ppa_f_C",   (DL_FUNC) &lm3ppa_f_C,   46},  // Number of the SEXP variables (not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };
 
@@ -538,5 +538,5 @@ void R_init_rsofun(DllInfo *dll)
     R_useDynamicSymbols(dll, FALSE);
 
     R_RegisterCCallable("rsofun", "pmodel_f_C",  (DL_FUNC) &pmodel_f_C);
-    R_RegisterCCallable("rsofun", "lm3ppa_f_C",  (DL_FUNC) &lm3ppa_f_C);
+    R_RegisterCCallable("rsofun", "biomee_f_C",  (DL_FUNC) &biomee_f_C);
 }

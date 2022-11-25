@@ -1,4 +1,4 @@
-module md_params_soil_lm3ppa
+module md_params_soil_biomee
   !////////////////////////////////////////////////////////////////
   ! Module handling soil parameters
   !----------------------------------------------------------------
@@ -44,5 +44,5 @@ contains
 
   end function getsoil
 
-end module md_params_soil_lm3ppa
+end module md_params_soil_biomee
 

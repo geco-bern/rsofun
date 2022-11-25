@@ -1,8 +1,8 @@
-module md_biosphere_lm3ppa
+module md_biosphere_biomee
   
   use datatypes
-  use md_vegetation_lm3ppa
-  use md_soil_lm3ppa
+  use md_vegetation_biomee
+  use md_soil_biomee
   use md_params_core
   
   implicit none
@@ -24,8 +24,8 @@ contains
     ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
     ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
-    use md_interface_lm3ppa, only: myinterface, outtype_biosphere  
-    use md_gpp_lm3ppa, only: getpar_modl_gpp
+    use md_interface_biomee, only: myinterface, outtype_biosphere  
+    use md_gpp_biomee, only: getpar_modl_gpp
 
     ! return variable
     type(outtype_biosphere) :: out_biosphere
@@ -235,4 +235,4 @@ contains
 
   end subroutine biosphere_annual
 
-end module md_biosphere_lm3ppa
+end module md_biosphere_biomee

@@ -1,11 +1,11 @@
-module md_gpp_lm3ppa
+module md_gpp_biomee
   !//////////////////////////////////////////////////////////////////////
   ! GPP MODULE
   ! Uses LM3-PPA structure to call the gs_leuning() photosynthesis routine
   !------------------------------------------------------------------------
   use datatypes
-  use md_soil_lm3ppa, only: water_supply_layer
-  use md_interface_lm3ppa, only: myinterface
+  use md_soil_biomee, only: water_supply_layer
+  use md_interface_biomee, only: myinterface
 
   implicit none
 
@@ -48,7 +48,7 @@ contains
     !
     ! Subroutines from BiomeE-Allocation
     !------------------------------------------------------------------------
-    use md_forcing_lm3ppa, only: climate_type
+    use md_forcing_biomee, only: climate_type
     use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_rd
     use md_photosynth, only: calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
     use md_params_core, only: kTkelvin, kfFEC, c_molmass
@@ -607,4 +607,4 @@ contains
   END FUNCTION esat
 
 
-end module md_gpp_lm3ppa
+end module md_gpp_biomee

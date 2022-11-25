@@ -1,4 +1,4 @@
-module md_forcing_lm3ppa
+module md_forcing_biomee
   !////////////////////////////////////////////////////////////////
   ! Module contains forcing variables (climate, co2, ...), and
   ! subroutines used to read forcing input files for a specific year
@@ -195,5 +195,5 @@ contains
   end function calc_vpd_rh
 
 
-end module md_forcing_lm3ppa
+end module md_forcing_biomee
 

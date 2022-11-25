@@ -1,10 +1,10 @@
-module md_interface_lm3ppa
+module md_interface_biomee
 
   use, intrinsic :: iso_fortran_env, dp=>real64
 
-  use md_forcing_lm3ppa, only: climate_type
-  use md_params_soil_lm3ppa, only: paramtype_soil, getsoil
-  use md_params_siml_lm3ppa, only: paramstype_siml, outtype_steering
+  use md_forcing_biomee, only: climate_type
+  use md_params_soil_biomee, only: paramtype_soil, getsoil
+  use md_params_siml_biomee, only: paramstype_siml, outtype_steering
   use md_params_core, only: MSPECIES, ntstepsyear, ndayyear, MAX_INIT_COHORTS, out_max_cohorts
   use md_grid, only: gridtype !, domaininfo_type
 
@@ -311,4 +311,4 @@ module md_interface_lm3ppa
 
 contains
 
-end module md_interface_lm3ppa
+end module md_interface_biomee

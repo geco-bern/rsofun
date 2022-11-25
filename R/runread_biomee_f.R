@@ -1,6 +1,6 @@
-#' Run LM3-PPA
+#' Run BiomeE
 #'
-#' Runs the LM3-PPA model and loads output in once.
+#' Runs the BiomeE model and loads output in once.
 #'
 #' @param drivers A nested data frame with one row for each site and columns
 #'  named according to the  arguments of function `runread_pmodel_f_bysite()`
@@ -22,7 +22,7 @@
 #'   params_modl, makecheck = TRUE, parallel = FALSE, ncores = 2 )
 #' }
 
-runread_lm3ppa_f <- function(
+runread_biomee_f <- function(
   drivers,
   makecheck = TRUE,
   parallel = FALSE,
@@ -56,7 +56,7 @@ runread_lm3ppa_f <- function(
                             "init_soil")) %>%
       multidplyr::partition(cl) %>%
       dplyr::mutate('data' = purrr::map(input,
-         ~run_lm3ppa_f_bysite(
+         ~run_biomee_f_bysite(
            sitename       = .x$sitename[[1]], 
            params_siml    = .x$params_siml[[1]], 
            site_info      = .x$site_info[[1]], 
@@ -89,7 +89,7 @@ runread_lm3ppa_f <- function(
                     ) %>% 
       dplyr::mutate(data = purrr::pmap(
         .,
-        run_lm3ppa_f_bysite,
+        run_biomee_f_bysite,
         makecheck = makecheck
       )) %>% 
       dplyr::select(sitename, data) 

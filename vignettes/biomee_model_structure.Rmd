@@ -1,9 +1,9 @@
 ---
-title: "LM3PPA model structure"
-author: "Koen Hufkens"
+title: "BiomeE model structure"
+author: "Beni Stocker"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{LM3PPA model structure}
+  %\VignetteIndexEntry{BiomeE model structure}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This is a brief overview of some of the key components of the LM3PPA model structure. In particular it lays out some of the cohort based logic in calculating key fluxes and pools.
+This is a brief overview of some of the key components of the BiomeE model structure. In particular it lays out some of the cohort based logic in calculating key fluxes and pools.
 
 # Basic logic
 
