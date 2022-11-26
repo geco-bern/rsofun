@@ -1,6 +1,6 @@
 ---
 title: "BiomeE model structure"
-author: "Beni Stocker"
+author: "Koen Hufkens"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BiomeE model structure}
