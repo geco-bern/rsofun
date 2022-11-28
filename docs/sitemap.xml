@@ -46,9 +46,6 @@
     <loc>/articles/prepare_inputs_rsofun.html</loc>
   </url>
   <url>
-    <loc>/articles/reserves_labile.html</loc>
-  </url>
-  <url>
     <loc>/authors.html</loc>
   </url>
   <url>
@@ -97,9 +94,6 @@
     <loc>/reference/cost_mae.html</loc>
   </url>
   <url>
-    <loc>/reference/cost_mse_photocold.html</loc>
-  </url>
-  <url>
     <loc>/reference/cost_rmse_fullstack.html</loc>
   </url>
   <url>
@@ -109,25 +103,16 @@
     <loc>/reference/cost_rmse_lm3ppa_gsleuning.html</loc>
   </url>
   <url>
-    <loc>/reference/cost_rmse_photocold.html</loc>
-  </url>
-  <url>
     <loc>/reference/cost_rmse_vpdstress.html</loc>
   </url>
   <url>
     <loc>/reference/create_cost_likelihood_biomee.html</loc>
   </url>
   <url>
-    <loc>/reference/create_cost_likelihood_lm3ppa.html</loc>
-  </url>
-  <url>
     <loc>/reference/create_cost_likelihood_pmodel.html</loc>
   </url>
   <url>
     <loc>/reference/create_cost_rmse_biomee.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_cost_rmse_lm3ppa.html</loc>
   </url>
   <url>
     <loc>/reference/create_cost_rmse_pmodel.html</loc>
