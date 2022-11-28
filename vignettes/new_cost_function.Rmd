@@ -177,7 +177,6 @@ cost_mae <- function(par, obs, drivers){
   # Clean model output to compute cost
   df <- df %>%
     dplyr::select(sitename, data) %>%
-    tidyr::unnest(data) %>%
     tidyr::unnest(data)
     
   # Clean validation data to compute cost
