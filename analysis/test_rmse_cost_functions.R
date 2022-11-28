@@ -70,7 +70,6 @@ model_data <- runread_pmodel_f(
   par = pars
 ) %>%
   filter(sitename == "FR-Pue") %>%
-  tidyr::unnest(data) %>%
   tidyr::unnest(data)
 
 validation_data <- p_model_validation %>%
@@ -100,7 +99,6 @@ lapply(outputs, function(out){
     par = update_pars(pars, out$par)
   ) %>%
     filter(sitename == "FR-Pue") %>%
-    tidyr::unnest(data) %>%
     tidyr::unnest(data)
   
   ggplot() +
