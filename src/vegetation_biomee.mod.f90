@@ -721,12 +721,13 @@ contains
         cc%deathratevalue = deathrate
 
         ! Carbon and Nitrogen from dead plants to soil pools
-        ! call plant2soil( vegn, cc, deadtrees )        ! xxx disturb: comment this out if biomass is to be exported from system (not added to soil).
+        call plant2soil( vegn, cc, deadtrees )        ! xxx disturb: comment this out if biomass is to be exported from system (not added to soil).
 
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
         ! vegn%n_deadtrees = deadtrees
         ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12)
+        
         end associate
       enddo
 
@@ -1615,7 +1616,7 @@ contains
     kappa = 0.75  ! same as in soil_biomee.mod.f90
     Rsoilabs = radiation * exp(-kappa * vegn%LAI)
     delta_tair = 5.0 * Rsoilabs / 250.0
-    print*,'soil decomposition: delta_tair ', delta_tair
+    ! print*,'soil decomposition: delta_tair ', delta_tair
 
     ! C decomposition
     A = A_function(tsoil + delta_tair, thetaS)   ! xxx disturb: added delta_tair

@@ -157,7 +157,7 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
       delta_tair = 5.0 * Rsoilabs / 250.0
       TairK = forcing%Tair + delta_tair
       Tair  = forcing%Tair - 273.16 + delta_tair
-      print*,'soil evaporation: delta_tair ', delta_tair
+      ! print*,'soil evaporation: delta_tair ', delta_tair
 
       Hgrownd = 0.0
       rhocp = cp * 1.0e3 * forcing%P_air * kMa * 1e-3 / (kR * TairK)
