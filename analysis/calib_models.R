@@ -3,7 +3,7 @@ library(dplyr)
 #library(tidyverse)
 source("R/calib_sofun.R")
 
-likelihood_lm3ppa_test <- function(
+likelihood_biomee_test <- function(
     par,
     par_names,
     obs,
@@ -21,7 +21,7 @@ likelihood_lm3ppa_test <- function(
   drivers$params_tile[[1]]$par_mort        <- par[4]
   
   # run model
-  df <- runread_lm3ppa_f(
+  df <- runread_biomee_f(
     drivers,
     makecheck = TRUE,
     parallel = FALSE
@@ -90,15 +90,15 @@ likelihood_lm3ppa_test <- function(
 }
 
 
-df_drivers <- lm3ppa_gs_leuning_drivers
-ddf_obs <- lm3ppa_validation_2
+df_drivers <- biomee_gs_leuning_drivers
+ddf_obs <- biomee_validation_2
 df_drivers$params_siml[[1]]$spinup <- FALSE
 
 # Mortality as DBH
 settings <- list(
   method              = "bayesiantools",
   targets             = c("GPP"),
-    metric              = likelihood_lm3ppa_test,
+    metric              = likelihood_biomee_test,
   control = list(
     sampler = "DEzs",
     settings = list(

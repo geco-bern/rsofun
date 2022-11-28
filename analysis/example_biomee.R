@@ -188,7 +188,7 @@ df_drivers <- tibble(sitename,
                     forcing=list(tibble(forcing)),
                     .name_repair = "unique")
 
-out <- run_lm3ppa_f_bysite( sitename,
+out <- run_biomee_f_bysite( sitename,
                             params_siml,
                             site_info,
                             forcing, # ddf_input
