@@ -8,13 +8,13 @@
 
 ### v4.2
 
-* Canopy transfer solved for LM3-PPA with P-model
+* Canopy transfer solved for BiomeE with P-model
 * Bugfixes
 
 
 ### v4.3
 
-* Consistent variable names p-model / lm3-ppa
+* Consistent variable names p-model / biomee
 * optimization stability BayesianTools
 * documentation
 * Bugfixes

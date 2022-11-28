@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,300;0,400;0,700;1,300;1,400&amp;display=swap" rel="stylesheet">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><!-- ropensci --><link href="../ceslabs.css" rel="stylesheet">
+<script src="../pkgdown.js"></script><!-- geco --><link href="../geco.css" rel="stylesheet">
 <meta property="og:title" content="LM3PPA model structure">
 <meta property="og:description" content="rsofun">
 <meta name="twitter:card" content="summary">
@@ -41,9 +41,9 @@
 
       <div class="navbar-brand-container">
         <a class="external-link hidden-sm hidden-xs" href="https://computationales.ethz.ch/">
-          <img src="https://raw.githubusercontent.com/computationales/CES_template/main/ces_logo.png" id="hexlogo" alt="bluegreen labs"></a>
+          <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_small.png" id="hexlogo" alt="GECO"></a>
         <a class="external-link hidden-md hidden-lg" href="https://computationales.ethz.ch/">
-          <img src="https://raw.githubusercontent.com/computationales/CES_template/main/ces_logo.png" id="hexlogo" alt="bluegreen labs"></a>
+          <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
            <i>rsofun <small>v4.3</small></i>
         </a>
@@ -69,10 +69,16 @@
       <a href="../articles/lm3ppa_use.html">LM3-PPA usage</a>
     </li>
     <li>
+      <a href="../articles/new_cost_function.html">Parameter calibration and cost functions</a>
+    </li>
+    <li>
       <a href="../articles/pmodel_use.html">P-model usage</a>
     </li>
     <li>
       <a href="../articles/prepare_forcing.html">Prepare forcing</a>
+    </li>
+    <li>
+      <a href="../articles/reserves_labile.html">Labile pool dynamics</a>
     </li>
   </ul>
 </li>
@@ -128,7 +134,7 @@ fluxes and pools at times this needs to be taken into account. Most
 logic of the model follows this basic structure, with allocation,
 mortality etc imposed upon cohorts rather than explicitly on the
 individual level.</p>
-<p><img src="https://raw.githubusercontent.com/bluegreen-labs/rsofun/master/docs/canopy_diagram.png"></p>
+<p><img src="https://raw.githubusercontent.com/computationales/rsofun/master/docs/canopy_diagram.png"></p>
 <div class="section level3">
 <h3 id="variables">variables<a class="anchor" aria-label="anchor" href="#variables"></a>
 </h3>
@@ -169,7 +175,7 @@ cc%nindivs)</li>
                           <div class="icon fab fa-github"></div></a>
                         <a href="https://computationales.ethz.ch/" target="_blank" class="external-link">
                           <div class="icon fa fa-flask"></div></a>
-                        <a href="http://twitter.com/stineb/" target="_blank" class="external-link">
+                        <a href="http://twitter.com/SteniBocker/" target="_blank" class="external-link">
                           <div class="icon fab fa-twitter"></div></a>
                     </div>
                 </div>

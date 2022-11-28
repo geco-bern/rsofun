@@ -7,7 +7,7 @@ A modelling framework for site-scale simulations of ecosystem processes, impleme
 
 - P-model for leaf-level acclimation of photosynthesis from [Stocker et al. (2019)](https://www.geosci-model-dev-discuss.net/gmd-2019-200/).
 - SPLASH for bioclimatic variables, including the surface radiation budget and the soil water balance from [Davis et al. (2017)](https://doi.org/10.5194/gmd-10-689-2017).
-- LM3-PPA for comprehensive simulations of ecosystem carbon and water cycling, tree growth, and tree cohort-explicit forest dynamics following the Perfect Plasticity Approximation, from [Weng et al., (2015)](https://doi.org/10.5194/bg-12-2655-2015).
+- BiomeE for comprehensive simulations of ecosystem carbon and water cycling, tree growth, and tree cohort-explicit forest dynamics following the Perfect Plasticity Approximation, from [Weng et al., (2015)](https://doi.org/10.5194/bg-12-2655-2015).
 
 ## Installation
 
@@ -17,9 +17,11 @@ if(!require(devtools)){install.packages(devtools)}
 devtools::install_github("computationales/rsofun@v4.3")
 library(rsofun)
 ```
+Problems with compilation? Make sure to have gfortran installed and paths to the compiler and libraries properly specified (see e.g., [here](https://github.com/computationales/rsofun/issues/58)). 
+
 ## Example
 
-See vignette [Example for using rsofun](./articles/example.html) for how to run the model, and the [ingestr R package](https://stineb.github.io/ingestr/) for collecting the forcing data to run rsofun.
+See vignette [Example for using rsofun](./articles/pmodel_use.html) for how to run the model, and the [ingestr R package](https://github.com/computationales/ingestr) for collecting the forcing data to run rsofun.
 
 ## Usage and contribution
 

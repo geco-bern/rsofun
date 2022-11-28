@@ -1,0 +1,34 @@
+---
+title: "BiomeE model structure"
+author: "Koen Hufkens"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BiomeE model structure}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This is a brief overview of some of the key components of the BiomeE model structure. In particular it lays out some of the cohort based logic in calculating key fluxes and pools.
+
+# Basic logic
+
+Generally, the canopy is divided into layers and cohorts. Both cohorts and layers are determined by the diameter-at-breast-height (dbh). A cohort can grow out of one layer into the next. Conceptually within the model tracking layers is therefore only governed by a layer state variable associated with a particular cohort. In a similar fashion the model does track individuals, but only on the cohort level, as a state variable. As such, a cohort can and its properties always has a number of individuals attached to it. To determine true cohort values of fluxes and pools at times this needs to be taken into account. Most logic of the model follows this basic structure, with allocation, mortality etc imposed upon cohorts rather than explicitly on the individual level.
+
+![](https://raw.githubusercontent.com/computationales/rsofun/master/docs/canopy_diagram.png)
+
+## variables
+
+- CAI (number of crowns perunit ground area / cc%crownarea * cc%nindivs)
+
+## cohort level variables
+
+- leaf cover (m2 / individual)
+- crown area (m2 / individual)
+- individuals

@@ -1,11 +1,12 @@
 
-#' Plotting method for fit model output
+#' Plotting method for rsofun_fit model output
 #'
-#' @param x input data generated using the run_*_f_bysite() function
-#'  or generally calls which return the rsofun_fit class
-#' @param ... additional parameters to pass
-#' @return a scatterplot with fit statistics, plotting observed vs
-#'  fitted GPP data
+#' @param x Input data generated using the \code{\link{run_pmodel_f_bysite}}
+#' or \code{\link{run_biomee_f_bysite}} function,
+#' or generally calls which return the \code{rsofun_fit} class.
+#' @param ... Additional parameters to pass.
+#' @return A scatterplot with fit statistics, plotting observed vs
+#'  fitted GPP data.
 #'
 #' @export
 #' @import graphics
@@ -17,12 +18,13 @@ plot.rsofun_fit <- function(x, ...){
 }
 
 
-#' Print summary values for fit model output
+#' Print summary values for rsofun_fit model output
 #'
-#' @param object input data generated using the run_*_f_bysite() function
-#'  or generally calls which return the rsofun_fit class
-#' @param ... additional parameters to pass
-#' @return a table with fit statistics, a data frame with summary statistics
+#' @param object Input data generated using the \code{\link{run_pmodel_f_bysite}}
+#' or \code{\link{run_biomee_f_bysite}} function,
+#'  or generally calls which return the \code{rsofun_fit} class.
+#' @param ... Additional parameters to pass.
+#' @return A table with fit statistics, a data frame with summary statistics.
 
 #' @export
 

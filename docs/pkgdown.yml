@@ -1,10 +1,11 @@
-pandoc: 2.17.1.1
-pkgdown: 2.0.2
+pandoc: 2.19.2
+pkgdown: 2.0.6
 pkgdown_sha: ~
 articles:
-  lm3ppa_model_structure: lm3ppa_model_structure.html
-  lm3ppa_use: lm3ppa_use.html
+  biomee_model_structure: biomee_model_structure.html
+  biomee_use: biomee_use.html
+  new_cost_function: new_cost_function.html
   pmodel_use: pmodel_use.html
   prepare_forcing: prepare_forcing.html
-last_built: 2022-04-07T13:22Z
+last_built: 2022-11-28T07:03Z
 

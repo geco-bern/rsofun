@@ -7,7 +7,7 @@ module sofun_r_mod
   implicit none
 
   private
-  public :: pmodel_f, lm3ppa_f
+  public :: pmodel_f, biomee_f
 
 contains
 
@@ -230,7 +230,7 @@ contains
 
   !//////////////////////////////////////////////////////////////////////////
 
-  subroutine lm3ppa_f(            &
+  subroutine biomee_f(            &
     spinup,                       &   
     spinupyears,                  &        
     recycle,                      &    
@@ -336,7 +336,7 @@ contains
     output_annual_cohorts_n_deadtrees,  &
     output_annual_cohorts_c_deadtrees,  &
     output_annual_cohorts_deathrate  &
-    ) bind(C, name = "lm3ppa_f_")
+    ) bind(C, name = "biomee_f_")
      
     !////////////////////////////////////////////////////////////////
     ! Main subroutine to handle I/O with C and R. 
@@ -344,13 +344,13 @@ contains
     ! simulation's forcing as time series
     ! test xxx
     !----------------------------------------------------------------
-    use md_params_siml_lm3ppa, only: getsteering
-    ! use md_params_soil_lm3ppa, only: getsoil
-    use md_forcing_lm3ppa, only: getclimate, getco2, climate_type, getlanduse
-    use md_interface_lm3ppa, only: interfacetype_biosphere, outtype_biosphere, myinterface
+    use md_params_siml_biomee, only: getsteering
+    ! use md_params_soil_biomee, only: getsoil
+    use md_forcing_biomee, only: getclimate, getco2, climate_type, getlanduse
+    use md_interface_biomee, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
       ndayyear, nvars_daily_tile, nvars_hourly_tile, nvars_daily_cohorts, nvars_annual_cohorts, nvars_annual_tile
-    use md_biosphere_lm3ppa, only: biosphere_annual
+    use md_biosphere_biomee, only: biosphere_annual
 
     implicit none
 
@@ -511,14 +511,14 @@ contains
     myinterface%params_siml%update_annualLAImax   = update_annualLAImax      
     myinterface%params_siml%do_closedN_run        = do_closedN_run       
     
-    ! this needs to be consistent with translation to code in run_lm3ppa_f_bysite.R
+    ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
     if (code_method_photosynth == 1) then
       myinterface%params_siml%method_photosynth = "gs_leuning"
     else if (code_method_photosynth == 2) then
       myinterface%params_siml%method_photosynth = "pmodel"
     end if
 
-    ! this needs to be consistent with translation to code in run_lm3ppa_f_bysite.R
+    ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
     if (code_method_mortality == 1) then
       myinterface%params_siml%method_mortality = "cstarvation"
     else if (code_method_mortality == 2) then
@@ -651,7 +651,7 @@ contains
       myinterface%steering = getsteering( yr, myinterface%params_siml )
 
       !----------------------------------------------------------------
-      ! Get external (environmental) forcing (for lm3ppa, co2 is in myinterface%climate)
+      ! Get external (environmental) forcing (for biomee, co2 is in myinterface%climate)
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
       myinterface%climate(:) = getclimate(  nt, &
@@ -781,7 +781,7 @@ contains
     deallocate(myinterface%pco2)
     deallocate(out_biosphere%hourly_tile)
  
-  end subroutine lm3ppa_f
+  end subroutine biomee_f
 
   !////////////////////////////////////////////////////////////////
   ! Populates hourly tile-level output array passed back to C and R.
@@ -789,7 +789,7 @@ contains
   subroutine populate_outarray_hourly_tile( hourly_tile, out_hourly_tile ) !, idx_daily_start, idx_daily_end
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-    use md_interface_lm3ppa, only: outtype_hourly_tile
+    use md_interface_biomee, only: outtype_hourly_tile
     use md_params_core
 
     ! arguments
@@ -821,7 +821,7 @@ contains
   subroutine populate_outarray_daily_tile( daily_tile, out_daily_tile ) !, idx_daily_start, idx_daily_end
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-    use md_interface_lm3ppa, only: outtype_daily_tile
+    use md_interface_biomee, only: outtype_daily_tile
     use md_params_core
 
     ! arguments
@@ -873,7 +873,7 @@ contains
   subroutine populate_outarray_annual_tile( annual_tile, out_annual_tile )
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-    use md_interface_lm3ppa, only: outtype_annual_tile
+    use md_interface_biomee, only: outtype_annual_tile
     use md_params_core
 
     ! arguments

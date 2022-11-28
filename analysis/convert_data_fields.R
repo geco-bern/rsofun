@@ -1,11 +1,11 @@
-# convert LM3PPA data fields forcing data fields
+# convert BiomeE data fields forcing data fields
 # to be in line with the p-model data
 library(tidyverse)
 library(rsofun)
 
 #---- gs leuning drivers ----
-lm3ppa_gs_leuning_drivers <- rsofun::lm3ppa_gs_leuning_drivers
-lm3ppa_gs_leuning_drivers$forcing[[1]] <- lm3ppa_gs_leuning_drivers$forcing[[1]] %>%
+biomee_gs_leuning_drivers <- rsofun::biomee_gs_leuning_drivers
+biomee_gs_leuning_drivers$forcing[[1]] <- biomee_gs_leuning_drivers$forcing[[1]] %>%
   mutate(
     date = as.Date(paste(YEAR, DOY),"%Y %j"),
     snow = NA,
@@ -34,12 +34,12 @@ lm3ppa_gs_leuning_drivers$forcing[[1]] <- lm3ppa_gs_leuning_drivers$forcing[[1]]
     ccov, co2, swc
   )
 
-save(lm3ppa_gs_leuning_drivers, file = "data/lm3ppa_gs_leuning_drivers.rda", compress = "xz")
+save(biomee_gs_leuning_drivers, file = "data/biomee_gs_leuning_drivers.rda", compress = "xz")
 rm(list=ls())
 #---- p-model drivers --- 
 
-lm3ppa_p_model_drivers <- rsofun::lm3ppa_p_model_drivers
-lm3ppa_p_model_drivers$forcing[[1]] <- lm3ppa_p_model_drivers$forcing[[1]] %>%
+biomee_p_model_drivers <- rsofun::biomee_p_model_drivers
+biomee_p_model_drivers$forcing[[1]] <- biomee_p_model_drivers$forcing[[1]] %>%
   mutate(
     date = as.Date(paste(YEAR, DOY),"%Y %j"),
     snow = NA,
@@ -68,4 +68,4 @@ lm3ppa_p_model_drivers$forcing[[1]] <- lm3ppa_p_model_drivers$forcing[[1]] %>%
     ccov, co2, swc
   )
 
-save(lm3ppa_p_model_drivers, file = "data/lm3ppa_p_model_drivers.rda", compress = "xz")
+save(biomee_p_model_drivers, file = "data/biomee_p_model_drivers.rda", compress = "xz")

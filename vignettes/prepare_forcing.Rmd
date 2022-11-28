@@ -40,7 +40,7 @@ To format data we need to load the required libraries first.
 
 ```{r eval = FALSE}
 # Libraries
-library(tidyverse)
+library(dplyr)
 library(rsofun)
 library(ingestr)
 ```
@@ -233,7 +233,7 @@ output <- rsofun::runread_pmodel_f(
   par = params_modl
   )
 
-output$data[[1]] %>% 
+output$data[[1]][[1]] %>% 
   ggplot(aes(date, gpp)) +
   geom_line()
 ```

@@ -7,19 +7,31 @@
 calc_net_assim(par, args, iabs, kphio, a_unitcost)
 }
 \arguments{
-\item{par}{parameters (vcmax, gs)}
+\item{par}{A vector of parameters \code{c(vcmax, gs)}, with the maximum rate of 
+RuBisCO carboxylation (\code{vcmax}) in mol C m\eqn{^{-2}} d\eqn{^{-1}}, and 
+the stomatal conductance (\code{gs}) in mol C m\eqn{^{-2}} d\eqn{^{-1}} Pa\eqn{-1}.}
 
-\item{args}{arguments (kmm, gammastart, ns_star, ca, vpd, beta)}
+\item{args}{A vector of arguments \code{c(kmm, gammastar, ns_star, ca, vpd, beta)},
+being
+\describe{
+\item{\code{kmm}}{Michaelis-Menten coefficient for photosynthesis in Pa.}
+\item{\code{gammastar}}{Photorespiratory compensation point in Pa.}
+\item{\code{ns_star}}{Change in the viscosity of water, relative to its value
+at 25\eqn{^{o}}C, unitless.}
+\item{\code{ca}}{Ambient CO\eqn{_2} partial pressure, measured in Pa.}
+\item{\code{vpd}}{Daytime water vapour pressure deficit, measured in Pa.}
+\item{\code{beta}}{Unit cost ratio, unitless.}
+}}
 
-\item{iabs}{iabs}
+\item{iabs}{Amount of absorbed light, in mol m\eqn{^{-2}}.}
 
-\item{kphio}{kphio}
+\item{kphio}{Quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
 
-\item{a_unitcost}{cost unit}
+\item{a_unitcost}{Unit cost of transpiration ...}
 }
 \value{
-Net assimilation
+Net carbon assimilation
 }
 \description{
-Net assimilation calculation
+Net carbon assimilation calculation
 }

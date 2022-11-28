@@ -1,7 +1,7 @@
 module datatypes
   
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  use md_interface_lm3ppa, only: myinterface
+  use md_interface_biomee, only: myinterface
   use md_params_core
   use md_classdefs
 
@@ -532,7 +532,7 @@ contains
 ! ================Parameter initialization ===================
 ! =========================================================================
   subroutine initialize_soilpars()
-    use md_interface_lm3ppa, only: myinterface
+    use md_interface_biomee, only: myinterface
     ! character(len=50),intent(in) :: namelistfile
   
     ! initialize soil parameters
@@ -560,7 +560,7 @@ contains
 
   subroutine initialize_PFT_data() !namelistfile
 
-    use md_interface_lm3ppa, only: myinterface
+    use md_interface_biomee, only: myinterface
 
     ! ---- local vars ------
     integer :: i
@@ -867,8 +867,8 @@ contains
     !////////////////////////////////////////////////////////////////////////
     ! Updates sub-daily tile-level variables and takes running daily sums
     !------------------------------------------------------------------------
-    use md_forcing_lm3ppa, only: climate_type
-    use md_interface_lm3ppa, only: outtype_hourly_tile, myinterface
+    use md_forcing_biomee, only: climate_type
+    use md_interface_biomee, only: outtype_hourly_tile, myinterface
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type),intent(in):: forcing
@@ -940,8 +940,8 @@ contains
     !////////////////////////////////////////////////////////////////////////
     ! Updates daily tile-level variables and takes running annual sums
     !------------------------------------------------------------------------
-    use md_forcing_lm3ppa, only: climate_type
-    use md_interface_lm3ppa, only: outtype_daily_cohorts, outtype_daily_tile
+    use md_forcing_biomee, only: climate_type
+    use md_interface_biomee, only: outtype_daily_cohorts, outtype_daily_tile
 
     type(vegn_tile_type), intent(inout) :: vegn
     integer, intent(in) :: iyears, idoy
@@ -1099,7 +1099,7 @@ contains
     !////////////////////////////////////////////////////////////////////////
     ! Updates tile-level variables and populates annual output in once
     !------------------------------------------------------------------------
-    use md_interface_lm3ppa, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
+    use md_interface_biomee, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
 
     type(vegn_tile_type), intent(inout) :: vegn
     integer, intent(in) :: iyears
