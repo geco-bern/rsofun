@@ -189,7 +189,7 @@ tmp$params_siml[[1]]$recycle <- 5
 # tmp <- df_drivers_ch_oe1 |> 
 #   rename(site_info = siteinfo, params_soil = df_soiltexture)
 
-### Synthetic forcing: Mean seasonal cycle -----------------------
+# ## Synthetic forcing: Mean seasonal cycle -----------------------
 # tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
 #   filter(!(lubridate::month(date) == 2 & lubridate::mday(date) == 29))
 # df_meanann <- tmp$forcing[[1]] %>%
@@ -202,7 +202,7 @@ tmp$params_siml[[1]]$recycle <- 5
 #   pull(year) %>%
 #   unique() %>%
 #   length()
-# tmp2 <- purrr::map_dfr(
+# tmp <- purrr::map_dfr(
 #   as.list(seq(nyears)),
 #   ~{df_meanann}) %>%
 #   mutate(date = tmp$forcing[[1]]$date)
@@ -311,6 +311,7 @@ gg8 <- output %>%
   geom_line()
 
 gg1 / gg2 / gg3 / gg4
+
 gg5 / gg6 / gg7 / gg8
 
 gg5 <- output %>% 

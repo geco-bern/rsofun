@@ -741,26 +741,32 @@ contains
         ! source pool is presv
         cfrac_resv = flux_resv_to_labl / tile(lu)%plant(pft)%presv%c%c12
         org_resv_to_labl = orgfrac(cfrac_resv, tile(lu)%plant(pft)%presv)
-        if ( myinterface%steering%fill_reserves ) then
-          print*,'filling labile'
+
+        if ( myinterface%steering%freefill_reserves ) then
+          call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
+        else
           call orgmv(org_resv_to_labl, tile(lu)%plant(pft)%presv, tile(lu)%plant(pft)%plabl)
         end if
+        
       else
 
         ! source pool is plabl
         cfrac_labl = (-1.0) * flux_resv_to_labl / tile(lu)%plant(pft)%plabl%c%c12
         org_labl_to_resv = orgfrac(cfrac_labl, tile(lu)%plant(pft)%plabl)
-        if ( myinterface%steering%fill_reserves ) then
-          print*,'filling reserves'
+
+        if ( myinterface%steering%freefill_reserves ) then
+          call orgcp(org_labl_to_resv, tile(lu)%plant(pft)%presv)
+        else
           call orgmv(org_labl_to_resv, tile(lu)%plant(pft)%plabl, tile(lu)%plant(pft)%presv)
         end if
+
       end if
 
-      ! record for experimental output
-      tile_fluxes(lu)%plant(pft)%debug1 = tile(lu)%plant(pft)%presv%c%c12 / flux_resv_to_labl
-      tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%plabl%c%c12 / c_labl_target
-      tile_fluxes(lu)%plant(pft)%debug3 = cfrac_resv
-      tile_fluxes(lu)%plant(pft)%debug4 = cfrac_labl
+      ! ! record for experimental output
+      ! tile_fluxes(lu)%plant(pft)%debug1 = tile(lu)%plant(pft)%presv%c%c12 / flux_resv_to_labl
+      ! tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%plabl%c%c12 / c_labl_target
+      ! tile_fluxes(lu)%plant(pft)%debug3 = cfrac_resv
+      ! tile_fluxes(lu)%plant(pft)%debug4 = cfrac_labl
 
       !-------------------------------------------------------------------
       ! Adjust NPP for growth respiration

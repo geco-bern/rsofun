@@ -51,20 +51,20 @@ module md_params_siml_pmodel
 
   type outtype_steering
     integer :: year
-    integer :: forcingyear     ! year AD for which forcings are read in (=firstyeartrend during spinup)
-    integer :: forcingyear_idx ! year index for which forcings are read in (=1 during spinup)
-    integer :: climateyear     ! year AD for which climate is read in (recycling during spinup or when climate is held const.)
-    integer :: climateyear_idx ! year index for which climate is read in.
-    integer :: outyear         ! year AD written to output
-    logical :: spinup          ! is true during spinup
-    logical :: init            ! is true in first simulation year
-    logical :: finalize        ! is true in the last simulation year
-    logical :: do_soilequil    ! true in year of analytical soil equilibration (during spinup)
-    logical :: average_soil    ! true in years before analytical soil equilibration, when average in and out are taken
-    logical :: project_nmin    ! true in all years before analytical soil equilibration, when projected soil N mineralisation is used
-    logical :: dofree_alloc    ! true if allocation is not fixed by 'frac_leaf'
-    logical :: closed_nbal     ! true when N balance is closed during allocation (not compensating labile N depletion by "fixation")
-    logical :: fill_reserves   ! true when C can flow into reserves pool
+    integer :: forcingyear       ! year AD for which forcings are read in (=firstyeartrend during spinup)
+    integer :: forcingyear_idx   ! year index for which forcings are read in (=1 during spinup)
+    integer :: climateyear       ! year AD for which climate is read in (recycling during spinup or when climate is held const.)
+    integer :: climateyear_idx   ! year index for which climate is read in.
+    integer :: outyear           ! year AD written to output
+    logical :: spinup            ! is true during spinup
+    logical :: init              ! is true in first simulation year
+    logical :: finalize          ! is true in the last simulation year
+    logical :: do_soilequil      ! true in year of analytical soil equilibration (during spinup)
+    logical :: average_soil      ! true in years before analytical soil equilibration, when average in and out are taken
+    logical :: project_nmin      ! true in all years before analytical soil equilibration, when projected soil N mineralisation is used
+    logical :: dofree_alloc      ! true if allocation is not fixed by 'frac_leaf'
+    logical :: closed_nbal       ! true when N balance is closed during allocation (not compensating labile N depletion by "fixation")
+    logical :: freefill_reserves ! true when C flows into reserves pool without depleting labile pool (no mass conservation, used for spinup only)
   end type outtype_steering
 
 contains
@@ -141,7 +141,7 @@ contains
       ! end if
       out_steering%closed_nbal = .false.
 
-      if ( (year==spinupyr_soilequil_1 .or. year==spinupyr_soilequil_2 ) .and. year<=params_siml%spinupyears) then
+      if ( (year==spinupyr_soilequil_1 .or. year==spinupyr_soilequil_2 ) .and. year <= params_siml%spinupyears) then
         out_steering%do_soilequil = .true.
       else
         out_steering%do_soilequil = .false.
@@ -155,18 +155,19 @@ contains
         out_steering%average_soil = .false.
       end if
 
-      ! xxx try
-      if (year > params_siml%spinupyears + 2) then
-        out_steering%fill_reserves = .true.
-      else
-        out_steering%fill_reserves = .false.
-      end if
-
       if ( year <= params_siml%spinupyears .and. year <= spinupyr_soilequil_1 ) then
         out_steering%project_nmin = .true.
       else
         out_steering%project_nmin = .false.
       end if
+
+      ! xxx try
+      if ( year <= params_siml%spinupyears .and. year <= spinupyr_soilequil_1 ) then
+        out_steering%freefill_reserves = .true.
+      else
+        out_steering%freefill_reserves = .false.
+      end if
+
 
     else
 

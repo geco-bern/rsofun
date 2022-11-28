@@ -95,6 +95,8 @@ contains
     call phenology( tile(:), myinterface%climate(:)%dtemp )
     if (verbose) print*, '... done'
 
+    print*,'YEAR ', myinterface%steering%year
+
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
     !----------------------------------------------------------------
@@ -110,7 +112,6 @@ contains
         if (verbose) print*,'-----------------------------------------------------------'
         if (verbose) print*,'YEAR, DOY ', myinterface%steering%year, doy
         if (verbose) print*,'-----------------------------------------------------------'
-        print*,'YEAR, DOY ', myinterface%steering%year, doy
 
         !----------------------------------------------------------------
         ! initialise updated variables (fluxes)
