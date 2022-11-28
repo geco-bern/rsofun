@@ -14,5 +14,5 @@ src/*.dll
 vignettes/*.html
 
 # documentation dir
-docs/
+#docs/
 

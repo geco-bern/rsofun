@@ -89,7 +89,8 @@ likelihood_pmodel <- create_cost_likelihood_pmodel(
 ``` 
 
 Note that, in the definition of the calibration settings, the control parameters differ from the ones used with `GensA`. A uniform prior for the parameter is also defined, by giving lower and upper limits.
-```{r}
+
+```{r eval = FALSE}
 # Define calibration settings
 settings_likelihood <- list(
   method = 'BayesianTools',
@@ -197,7 +198,7 @@ cost_mae <- function(par, obs, drivers){
 ``` 
 
 As a last step, let's verify that the calibration procedure runs using this cost function.
-```{r}
+```{r eval = FALSE}
 # Define calibration settings and parameter ranges
 settings_mae <- list(
   method = 'GenSA',
