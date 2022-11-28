@@ -75,8 +75,7 @@ library(ggplot2)
 # the main model output
 model_data <- output %>%
   filter(sitename == "FR-Pue") %>%
-  tidyr::unnest(data) %>% # Unnests the list with one dataframe
-  tidyr::unnest(data) # Now it unnests the dataframe
+  tidyr::unnest(data)
 
 validation_data <- p_model_validation %>%
   tidyr::unnest(data)
@@ -161,7 +160,6 @@ output_new <- rsofun::runread_pmodel_f(
 # the main model output
 model_data_new <- output_new %>%
   filter(sitename == "FR-Pue") %>%
-  tidyr::unnest(data) %>%
   tidyr::unnest(data)
 
   ggplot() +
