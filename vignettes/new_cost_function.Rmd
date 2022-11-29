@@ -122,14 +122,14 @@ There are equivalent cost functions available for the LM3PPA model. Check out th
 If the RMSE or normal log-likelihood cost functions that we provide do not fit your use case, you can easily write a custom one. In this section, we drive you through the main ideas with an example.
 
 All cost functions must take three arguments: a vector of calibratable parameter values `par`, a data frame of observed values which contains the target variable `obs` and a data frame of drivers used to run the model `drivers`. Since we are calibrating the parameters based on model outputs, the cost function runs the p-model and compare its output to observed validation data.
-```{r}
+```{r, eval = FALSE}
 function(par, obs, drivers){
   # Your code
 }
 ```
 
 In the optimization procedure, the cost function only takes as argument the parameters `par` that are fed to `calib_sofun` via `settings$par` (see previous sections). Nevertheless, within the cost function we call `runread_pmodel_f` and this function needs a full set of model parameters. Therefore, the parameters that aren't being calibrated must be hard coded inside the cost function. In this example, we only want to calibrate the soil moisture stress parameters.
-```{r}
+```{r, eval = FALSE}
 function(par, obs, drivers){
   
   # Set values for the list of calibrated and non-calibrated model parameters
@@ -177,7 +177,6 @@ cost_mae <- function(par, obs, drivers){
   # Clean model output to compute cost
   df <- df %>%
     dplyr::select(sitename, data) %>%
-    tidyr::unnest(data) %>%
     tidyr::unnest(data)
     
   # Clean validation data to compute cost

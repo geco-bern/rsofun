@@ -112,7 +112,6 @@ create_cost_rmse_pmodel <- function(
   df <- df %>%
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>%
-    tidyr::unnest(data) %>%
     dplyr::rename(
       'gpp_mod' = 'gpp'
     )
@@ -256,7 +255,6 @@ create_cost_likelihood_pmodel <- function(
   # cleanup
   df <- df %>%
     dplyr::select(sitename, data) %>%
-    tidyr::unnest(data) %>%
     tidyr::unnest(data) %>%
     dplyr::arrange(
       sitename, date
