@@ -1,22 +1,26 @@
 #' Collect all drivers
 #'
 #' Collect all drivers for site-level simulations 
-#' into a nested data frame with one row for each site
+#' into a nested data frame with one row for each site.
 #'
 #' @param site_info A data frame containing site meta info (rows for sites). 
-#'  Required columns are: \code{"sitename", "date_start", 
-#'  "date_end", "lon", "lat", "elv"}.
+#'  Required columns are: \code{"sitename", "year_start", 
+#'  "year_end", "lon", "lat", "elv"}. See \code{\link{prepare_setup_sofun}} for
+#'  details.
 #' @param params_siml A nested data frame with rows for each site containing 
-#'  simulation parameters by site.
-#' @param meteo A nested data frame with rows for each site and meteo
-#'  forcing data time series nested inside a column named \code{"data"}
+#'  simulation parameters for SOFUN. See \code{\link{run_pmodel_f_bysite}} or
+#'  \code{\link{run_biomee_f_bysite}}.
+#' @param meteo A nested data frame with rows for each site and meteorological
+#'  forcing data time series nested inside a column named \code{"data"}.
 #' @param fapar A nested data frame with rows for each site and fAPAR 
-#'  forcing data time series nested inside a column named \code{"data"}
+#'  forcing data time series nested inside a column named \code{"data"}.
 #' @param co2 A nested data frame with rows for each site and CO2 
-#'  forcing data time series nested inside a column named \code{"data"}
-#' @param params_soil Soil texture data descriptor
+#'  forcing data time series nested inside a column named \code{"data"}.
+#' @param params_soil Soil texture data descriptor, a data frame with columns
+#' \code{"layer", "fsand", "fclay", "forg" } and \code{"fgravel"}.
 #'
-#' @return a rsofun input data frame
+#' @return A \code{rsofun} input data frame (see \link{p_model_drivers} for a detailed
+#' description of its structure and contents).
 #' @export
 
 collect_drivers_sofun <- function( 
@@ -146,7 +150,11 @@ collect_drivers_sofun <- function(
     
   ## interpolate to fill gaps in forcing time series
   myapprox <- function(vec){
-    stats::approx(vec, xout = 1:length(vec))$y
+    if(all(is.na(vec))){
+      return(vec)
+    } else {
+      stats::approx(vec, xout = 1:length(vec))$y
+    }
   }
   
   fill_na_forcing <- function(df) {

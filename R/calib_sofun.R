@@ -3,12 +3,29 @@
 #' This is the main function that handles the 
 #' calibration of SOFUN model parameters. 
 #' 
-#' @param drivers A data frame with driver data
+#' @param drivers A data frame with driver data. See \code{\link{p_model_drivers}}
+#' for a description of the data structure.
 #' @param obs A data frame containing observational data used for model
-#'  calibration. Created by function \code{get_obs_calib2()}
+#'  calibration. See \code{\link{p_model_validation}} for a description of the data
+#'  structure.
 #' @param settings A list containing model calibration settings. 
-#'  See vignette_rsofun.pdf for more information and examples.
-#'
+#'  See the 'P-model usage' vignette for more information and examples.
+#'  \describe{
+#'   \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
+#'   and lower and upper bounds should be provided. The calibratable parameters
+#'   are 'kphio', 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' and 'par_shape_tempstress'.}
+#'   \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
+#'   or \code{'BayesianTools'}.}
+#'   \item{\code{metric}}{A cost function. See the 'Cost functions for parameter
+#'   calibration' vignette for examples.}
+#'   \item{\code{control}}{A list of arguments passed on to the optimization function.
+#'   If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
+#'   the list should include at least \code{settings} and \code{sampler}, see
+#'   \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
+#'   \item{\code{targets}}{Name of the observed target variable to use in calibration
+#'   (necessary if \code{method = 'BayesianTools'}).}
+#'  }
+#'  
 #' @return A complemented named list containing 
 #'  the calibration settings and optimised parameter values.
 #' @export
@@ -84,63 +101,21 @@ calib_sofun <- function(
       unlist(pars$init)
     )
     
-    ## Hack: determine whether cost function is a bayesian-style likelihood function or a "traditional" cost function
-    ## traditional cost functions as implemented here have an argument 'inverse'. Use that to determine and if so
-    ## set it to TRUE to use the cost function.
-    ## solution with 'header' is based on https://stackoverflow.com/questions/30125590/how-can-a-function-return-its-name-and-arguments-in-r 
-    ## this may break if argument 'inverse' is abandoned and a better solution should be found eventually.
-    header <- function(x){
-      UseMethod('header', x)
-    }
-    header.function <-function(x){
-      y<-list(args(x))
-      x<-as.character(substitute(x))
-      print(sprintf('%s=%s',x,y))
-    }
-    if (grepl("inverse" , header(cost))){
-
-      # setup the bayes run, no message forwarding is provided
-      # so wrap the function in a do.call
-      setup <- BayesianTools::createBayesianSetup(
-        likelihood = function(
-          random_par,
-          par_names = names(settings$par)) {
-                do.call("cost",
-                        list(
-                          par = random_par,
-                          obs = obs,
-                          drivers = drivers,
-                          # This is a hack. BayesianTools expects a likelihood function to be calculated here, 
-                          # but we're just calculating the RMSE and return its inverse (we want the RMSE 
-                          # minimised, its inverse maximised - imitating likelihood maximisation)
-                          inverse = TRUE     
-                        ))
-              },
-          prior = priors,
-          names = names(settings$par)
-        )    
-      
-    } else {
-
-      # setup the bayes run, no message forwarding is provided
-      # so wrap the function in a do.call
-      setup <- BayesianTools::createBayesianSetup(
-        likelihood = function(
-          random_par,
-          par_names = names(settings$par)) {
-                do.call("cost",
-                        list(
-                          par = random_par,
-                          par_names = par_names,
-                          obs = obs,
-                          targets = settings$targets,
-                          drivers = drivers
-                        ))
-              },
-          prior = priors,
-          names = names(settings$par)
-        )   
-    }
+    # setup the bayes run, no message forwarding is provided
+    # so wrap the function in a do.call
+    setup <- BayesianTools::createBayesianSetup(
+      likelihood = function(
+        random_par) {
+              do.call("cost",
+                      list(
+                        par = random_par,
+                        obs = obs,
+                        drivers = drivers    
+                      ))
+            },
+        prior = priors,
+        names = names(settings$par)
+      )    
     
     # set bt control parameters
     bt_settings <- settings$control$settings

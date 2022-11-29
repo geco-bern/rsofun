@@ -17,12 +17,12 @@ init_dates_dataframe(
 }
 \arguments{
 \item{yrstart}{An integer defining the start year
-of dates covered by the dataframe}
+of dates covered by the dataframe.}
 
 \item{yrend}{An integer defining the end year of dates
-covered by the dataframe}
+covered by the dataframe.}
 
-\item{startmoy}{An integer defining the start month of dates
+\item{startmoy}{An integer defining the start month-of-year of dates
 covered by the dataframe. Defaults to 1.}
 
 \item{startdoy}{An integer defining the start day-of-year of
@@ -31,7 +31,7 @@ dates covered by the dataframe. Defaults to 1.}
 \item{freq}{A character string specifying the time steps of dates
 (in rows). Defaults to \code{"days"}. Any of \code{"days", "months"}.}
 
-\item{endmoy}{An integer defining the end month of dates covered
+\item{endmoy}{An integer defining the end month-of-year of dates covered
 by the dataframe. Defaults to 12.}
 
 \item{enddom}{An integer defining the end day-of-year of dates
@@ -43,9 +43,9 @@ covered by the dataframe. Defaults to 31.}
 A tibble with dates.
 }
 \description{
-Creates a tibble with rows for each date (ymd object from 
-library lubridate) from 'yrstart' to 'yrend'. Intervals of dates is 
-specified by argument 'freq'.
+Creates a tibble with rows for each date (\code{\link[lubridate:ymd]{lubridate::ymd}} object from 
+library \code{lubridate}) from \code{'yrstart'} to \code{'yrend'}. Intervals of dates is 
+specified by argument \code{'freq'}.
 }
 \examples{
 \dontrun{

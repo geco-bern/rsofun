@@ -54,13 +54,13 @@ test_that("p-model run check", {
   expect_type(df_output_p, "list")
 })
 
-test_that("lm3ppa p-model run check", {
+test_that("biomee p-model run check", {
   skip_on_cran()
 
-  df_drivers <- lm3ppa_p_model_drivers
+  df_drivers <- biomee_p_model_drivers
   df_drivers$params_siml[[1]]$spinup <- FALSE
 
-  df_output <- runread_lm3ppa_f(
+  df_output <- runread_biomee_f(
     df_drivers
   )
   
@@ -68,13 +68,13 @@ test_that("lm3ppa p-model run check", {
   expect_type(df_output, "list")
 })
 
-test_that("lm3ppa leuning run check", {
+test_that("biomee leuning run check", {
   skip_on_cran()
   
-  df_drivers <- lm3ppa_gs_leuning_drivers
+  df_drivers <- biomee_gs_leuning_drivers
   df_drivers$params_siml[[1]]$spinup <- FALSE
   
-  df_output <- runread_lm3ppa_f(
+  df_output <- runread_biomee_f(
     df_drivers,
     makecheck = FALSE,
     parallel = FALSE

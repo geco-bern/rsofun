@@ -16,28 +16,81 @@ run_pmodel_f_bysite(
 )
 }
 \arguments{
-\item{sitename}{Site name}
+\item{sitename}{Site name.}
 
-\item{params_siml}{Simulation parameters}
+\item{params_siml}{Simulation parameters.
+\describe{
+      \item{spinup}{A logical value indicating whether this simulation does spin-up.}
+      \item{spinupyears}{Number of spin-up years.}
+      \item{recycle}{Length of standard recycling period, in days.}
+      \item{soilmstress}{A logical value, if \code{TRUE} an empirical soil 
+      moisture stress function is applied to GPP.}
+      \item{tempstress}{A logical value, if \code{TRUE} an empirical temperature 
+      stress function is applied to GPP.}
+      \item{calc_aet_fapar_vpd}{(not in use)}
+      \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
+      if \code{FALSE} PPFD is simulated internally.}
+      \item{in_netrad}{A logical value indicating whether net radiation is 
+      prescribed (\code{TRUE}) or simulated internally (\code{FALSE}).}
+      \item{outdt}{An integer indicating the output periodicity.}
+      \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
+      \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
+      \item{ltrd}{A logical value, \code{TRUE} if deciduous tree.}
+      \item{ltnd}{A logical value, \code{TRUE} if deciduous tree and N-fixing.}
+      \item{lgr3}{A logical value, \code{TRUE} if grass with C3 photosynthetic pathway.}
+      \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
+      pathway and N-fixing.}
+      \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
+      \item{firstyeartrend}{The year AD of first transient year.}
+      \item{nyeartrend}{The number of transient years.}
+}}
 
-\item{site_info}{Site meta info}
+\item{site_info}{A list of site meta info. Required:
+\describe{
+      \item{lon}{Longitud of the site location.}
+      \item{lat}{Latitude of the site location.}
+      \item{elv}{Elevation of the site location, in meters.}
+      \item{whc}{A numeric value for the water holding capacity (in mm), used for 
+      simulating the soil water balance.}
+}}
 
-\item{forcing}{forcing (input) dataframe 
-(returned object by `prepare_input_sofun()`)}
+\item{forcing}{A data frame of forcing climate data, used as input 
+(returned object by \code{\link{collect_drivers_sofun}}).}
 
-\item{params_soil}{A list of soil texture parameters}
+\item{params_soil}{A list of soil texture parameters, for the top and bottom
+layer of soil.
+\describe{
+      \item{fsand}{The fraction of sand in the soil.}
+      \item{fclay}{The fraction of clay in the soil.}
+      \item{forg}{The fraction of organic matter in the soil.}
+      \item{fgravel}{The fraction of gravel in the soil.}
+}}
 
-\item{params_modl}{Model parameters}
+\item{params_modl}{A named list of free (calibratable) model parameters.
+\describe{
+  \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
+  \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
+  \item{soilm_par_b}{Slope of the linear soil moisture stress function (unitless).}
+  \item{tau_acclim_tempstress}{Memory e-folding time scale parameter (in hours)
+  for acclimation of photosynthesis, following Eq. 5 in Makela et al. (2004) 
+  Tree Physiology 24, 369–376}
+  \item{par_shape_tempstress}{Shape parameter for the low temperature stress
+  function affecting quantum yield efficiency. A positive (unitless) value indicating 
+  the sensitivity of the decline (assuming no decline at 10\eqn{^o}C) and 
+  above, but decreasing with a quadratic function below 10\eqn{^o}C).}
+}}
 
 \item{makecheck}{A logical specifying whether checks are performed 
-to verify forcings.}
+to verify forcings and model parameters. \code{TRUE} by default.}
 
 \item{verbose}{A logical specifying whether to print warnings.
-Defaults to TRUE.}
+Defaults to \code{TRUE}.}
 }
 \description{
 Call to the Fortran P-model
 }
 \details{
-Model output is provided as a tidy dataframe
+Model output is provided as a tidy dataframe, with columns 
+\code{"fapar", "gpp", "transp", "latenth", "pet", "vcmax",
+"jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue", "rd"}.
 }

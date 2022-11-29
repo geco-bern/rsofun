@@ -3,18 +3,21 @@
 #' Runs the P-model and loads output in once.
 #'
 #' @param drivers A nested data frame with one row for each site and columns
-#'  named according to the arguments of function `runread_pmodel_f_bysite`
-#' @param par A named list of model parameters
+#'  named according to the arguments of function \code{\link{run_pmodel_f_bysite}},
+#'  namely \code{sitename, params_siml, site_info, forcing} and \code{params_soil}.
+#' @param par A named list of model parameters, including \code{kphio, soilm_par_a,
+#' soilm_par_b, tau_acclim_tempstress} and \code{par_shape_tempstress}. 
 #' @param makecheck A logical specifying whether checks are performed to verify
-#'  forcings.
+#'  forcings. Defaults to \code{TRUE}.
 #' @param parallel A logical specifying whether simulations are to be
 #'  parallelised (sending data from a certain number of sites to each core).
 #'  Defaults to \code{FALSE}.
 #' @param ncores An integer specifying the number of cores used for parallel
-#'  computing (default = 2).
+#'  computing (by default \code{ncores = 2}).
 #'
-#' @return A data frame (tibble) with one row for each site and outputs stored
-#'  in the nested column \code{data}
+#' @return A data frame (tibble) with one row for each site, site information 
+#' stored in the nested column \code{site_info} and outputs stored in the nested 
+#' column \code{data}.
 #' @export
 #'
 #' @examples
@@ -26,7 +29,6 @@
 #'    parallel = FALSE,
 #'    ncores = 2 )
 #' }
-
 runread_pmodel_f <- function(
   drivers,
   par,
@@ -96,12 +98,10 @@ runread_pmodel_f <- function(
     
     df_out <- drivers %>% 
       dplyr::mutate(
-        data = list(
-          purrr::pmap(.,
-                    run_pmodel_f_bysite,
-                    par = par,
-                    makecheck = makecheck
-          )
+        data = purrr::pmap(.,
+        	run_pmodel_f_bysite,
+                par = par,
+                makecheck = makecheck
         )
       ) %>% 
       dplyr::select(sitename, site_info, data)

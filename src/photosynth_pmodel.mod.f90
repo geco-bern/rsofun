@@ -2,7 +2,7 @@ module md_photosynth
   !//////////////////////////////////////////////////////////////////////
   ! P-MODEL PHOTOSYNTHESIS MODULE
   ! Is in a separate module here because two different md_gpp modules 
-  ! (gpp_lm3ppa_pmodel, and gpp_pmodel) use it and interact with different 
+  ! (gpp_biomee_pmodel, and gpp_pmodel) use it and interact with different 
   ! model structures.
   !------------------------------------------------------------------------
   use md_params_core, only: kPo, c_molmass, dummy

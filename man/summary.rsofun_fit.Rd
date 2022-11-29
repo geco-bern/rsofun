@@ -2,19 +2,20 @@
 % Please edit documentation in R/methods.R
 \name{summary.rsofun_fit}
 \alias{summary.rsofun_fit}
-\title{Print summary values for fit model output}
+\title{Print summary values for rsofun_fit model output}
 \usage{
 \method{summary}{rsofun_fit}(object, ...)
 }
 \arguments{
-\item{object}{input data generated using the run_*_f_bysite() function
-or generally calls which return the rsofun_fit class}
+\item{object}{Input data generated using the \code{\link{run_pmodel_f_bysite}}
+or \code{\link{run_biomee_f_bysite}} function,
+ or generally calls which return the \code{rsofun_fit} class.}
 
-\item{...}{additional parameters to pass}
+\item{...}{Additional parameters to pass.}
 }
 \value{
-a table with fit statistics, a data frame with summary statistics
+A table with fit statistics, a data frame with summary statistics.
 }
 \description{
-Print summary values for fit model output
+Print summary values for rsofun_fit model output
 }

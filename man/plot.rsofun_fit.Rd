@@ -2,20 +2,21 @@
 % Please edit documentation in R/methods.R
 \name{plot.rsofun_fit}
 \alias{plot.rsofun_fit}
-\title{Plotting method for fit model output}
+\title{Plotting method for rsofun_fit model output}
 \usage{
 \method{plot}{rsofun_fit}(x, ...)
 }
 \arguments{
-\item{x}{input data generated using the run_*_f_bysite() function
-or generally calls which return the rsofun_fit class}
+\item{x}{Input data generated using the \code{\link{run_pmodel_f_bysite}}
+or \code{\link{run_biomee_f_bysite}} function,
+or generally calls which return the \code{rsofun_fit} class.}
 
-\item{...}{additional parameters to pass}
+\item{...}{Additional parameters to pass.}
 }
 \value{
-a scatterplot with fit statistics, plotting observed vs
- fitted GPP data
+A scatterplot with fit statistics, plotting observed vs
+ fitted GPP data.
 }
 \description{
-Plotting method for fit model output
+Plotting method for rsofun_fit model output
 }

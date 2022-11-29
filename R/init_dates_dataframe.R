@@ -1,20 +1,20 @@
 #' Initialises a tibble with dates
 #'
-#' Creates a tibble with rows for each date (ymd object from 
-#' library lubridate) from 'yrstart' to 'yrend'. Intervals of dates is 
-#' specified by argument 'freq'. 
+#' Creates a tibble with rows for each date (\code{\link[lubridate:ymd]{lubridate::ymd}} object from 
+#' library \code{lubridate}) from \code{'yrstart'} to \code{'yrend'}. Intervals of dates is 
+#' specified by argument \code{'freq'}. 
 #'
 #' @param yrstart An integer defining the start year
-#'  of dates covered by the dataframe
+#'  of dates covered by the dataframe.
 #' @param yrend An integer defining the end year of dates
-#'  covered by the dataframe
-#' @param startmoy An integer defining the start month of dates
+#'  covered by the dataframe.
+#' @param startmoy An integer defining the start month-of-year of dates
 #'  covered by the dataframe. Defaults to 1.
 #' @param startdoy An integer defining the start day-of-year of
 #'  dates covered by the dataframe. Defaults to 1.
 #' @param freq A character string specifying the time steps of dates
 #'  (in rows). Defaults to \code{"days"}. Any of \code{"days", "months"}.
-#' @param endmoy An integer defining the end month of dates covered
+#' @param endmoy An integer defining the end month-of-year of dates covered
 #'  by the dataframe. Defaults to 12.
 #' @param enddom An integer defining the end day-of-year of dates
 #'  covered by the dataframe. Defaults to 31.

@@ -5,92 +5,96 @@
 #'
 #' @format A tibble of driver data:
 #' \describe{
-#'   \item{sitename}{a character string containing the site name}
-#'   \item{forcing}{a tibble of forcing climate data, including the following variables:
+#'   \item{sitename}{A character string containing the site name.}
+#'   \item{forcing}{A tibble of forcing climate data, including the following variables:
 #'     \describe{
-#'       \item{date}{Date of the observation in YYYY-MM-DD format}
-#'       \item{temp}{Air temperature in $^\circ$C}
-#'       \item{prec}{Precipitation in mm d$^{-1}$ (sum of rain and snow)}
-#'       \item{vpd}{Vapour pressure deficit in Pa}
-#'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in mol m$^{-2}$ d$^{-1}$}
-#'       \item{patm}{Atmospheric pressure in Pa}
-#'       \item{ccov_int}{Cloud coverage in %, interpolated (?)}
-#'       \item{ccov}{Cloud coverage in %}
-#'       \item{snow}{Snow in mm d$^{-1}$}
-#'       \item{rain}{Rain in mm d$^{-1}$}
-#'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR) measured in ...}
-#'       \item{co2}{Annually varying observed atmospheric CO$_2$, identical across sites}
-#'       \item{doy}{Day of the year}
-#'       \item{tmin}{Daily minimum air temperature in $^\circ$C}
-#'       \item{tmax}{Daily maximum air temperature in $^\circ$C}
+#'       \item{date}{Date of the observation in YYYY-MM-DD format.}
+#'       \item{temp}{Air temperature in \eqn{^\circ}C.}
+#'       \item{prec}{Precipitation in mm d\eqn{^{-1}} (sum of rain and snow).}
+#'       \item{vpd}{Vapour pressure deficit in Pa.}
+#'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
+#'       mol m\eqn{^{-2}} d\eqn{^{-1}}.}
+#'       \item{patm}{Atmospheric pressure in Pa.}
+#'       \item{ccov_int}{Cloud coverage in \%, interpolated.}
+#'       \item{ccov}{Cloud coverage in \%.}
+#'       \item{snow}{Snow in mm d\eqn{^{-1}}.}
+#'       \item{rain}{Rain in mm d\eqn{^{-1}}.}
+#'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
+#'      values between 0 and 1.}
+#'       \item{co2}{Annually varying observed atmospheric CO\eqn{_2}, identical 
+#'       across sites.}
+#'       \item{doy}{Day of the year.}
+#'       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C.}
+#'       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.}
 #'       }
 #'   }
-#'   \item{params_siml}{A tibble [ 1 x 18] of model parameters
+#'   \item{params_siml}{A tibble [ 1 x 18] of model parameters.
 #'     \describe{
-#'       \item{spinup}{a logical value indicating whether this simulation does spin-up}
-#'       \item{spinupyears}{number of spin-up years}
-#'       \item{recycle}{length of standard recycling period, in days?}
-#'       \item{soilmstress}{a logical value, if TRUE an empirical soil moisture 
-#'       stress function is applied to GPP}
-#'       \item{tempstress}{a logical value, is TRUE an empirical temperature stress 
-#'       function is applied to GPP}
-#'       \item{calc_aet_fapar_vpd}{a logical value indicating ...}
-#'       \item{in_ppfd}{a logical value, if TRUE PPFD is a prescribed variable, 
-#'       if FALSE PPFD is simulated internally}
-#'       \item{in_netrad}{a logical value indicating whether net radiation is 
-#'       prescribed (TRUE) or simulated internally (FALSE)}
-#'       \item{outdt}{an integer indicating the output periodicity}
-#'       \item{ltre}{a logical value, TRUE if evergreen tree}
-#'       \item{ltne}{a logical value, TRUE if evergreen tree and N-fixing}
-#'       \item{ltrd}{a logical value, TRUE if deciduous tree}
-#'       \item{ltnd}{a logical value, TRUE if decidious tree and N-fixing}
-#'       \item{lgr3}{a logical value, TRUE if grass with C3 photosynthetic pathway}
-#'       \item{lgn3}{a logical value, TRUE if grass with C3 photosynthetic pathway
-#'       and N-fixing}
-#'       \item{lgr4}{a logical value, TRUE if grass with C4 photosynthetic pathway}
-#'       \item{firstyeartrend}{the year AD of first transient year}
-#'       \item{nyeartrend}{the number of transient years}
+#'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
+#'       \item{spinupyears}{Number of spin-up years.}
+#'       \item{recycle}{Length of standard recycling period, in days.}
+#'       \item{soilmstress}{A logical value, if \code{TRUE} an empirical soil 
+#'       moisture stress function is applied to GPP.}
+#'       \item{tempstress}{A logical value, if \code{TRUE} an empirical temperature 
+#'       stress function is applied to GPP.}
+#'       \item{calc_aet_fapar_vpd}{(not in use)}
+#'       \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
+#'       if \code{FALSE} PPFD is simulated internally.}
+#'       \item{in_netrad}{A logical value indicating whether net radiation is 
+#'       prescribed (\code{TRUE}) or simulated internally (\code{FALSE}).}
+#'       \item{outdt}{An integer indicating the output periodicity.}
+#'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
+#'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
+#'       \item{ltrd}{A logical value, \code{TRUE} if deciduous tree.}
+#'       \item{ltnd}{A logical value, \code{TRUE} if deciduous tree and N-fixing.}
+#'       \item{lgr3}{A logical value, \code{TRUE} if grass with C3 photosynthetic pathway.}
+#'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
+#'       pathway and N-fixing.}
+#'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
+#'       \item{firstyeartrend}{The year AD of first transient year.}
+#'       \item{nyeartrend}{The number of transient years.}
 #'     }
 #'   }
 #'   \item{site_info}{A tibble [ 1 x 12 ] containing site information
 #'     \describe{
-#'       \item{lon}{a numeric value indicating the longitud of the site location}
-#'       \item{lat}{a numeric value indicating the latitude of the site location}
-#'       \item{elv}{a numeric value indicating the elevation of the site location, 
-#'       in meters}
-#'       \item{year_end}{the year in which the simulation should end, corresponding
-#'       to data availability}
-#'       \item{classid}{a character string which contains the FLUXNET2015 IGBP 
-#'       classification}
-#'       \item{c4}{a logical value indicating whether or not C4 photosynthesis 
-#'       pathway is followed. If FALSE, it's C3}
-#'       \item{whc}{a numeric value for the water holding capacity, used for simulating
-#'       the soil water balance}
-#'       \item{koeppen_code}{a character string indicating the Koeppen-Geiger
-#'       climate zone code}
-#'       \item{igbp_land_use}{a character string indicating the IGBP land cover
-#'       classification from MODIS data}
-#'       \item{plant_functional_type}{a character string describing the plant
-#'       functional type}
-#'       \item{date_start}{a Date[1:1] value indicating the start date from which
-#'       the simulation is to be done, in format YYYYY-MM-DD}
-#'       \item{date_end}{a Date[1:1] value indicating the end date until which the
-#'       simulation is to be done, in format YYYY-MM-DD}
+#'       \item{lon}{Longitud of the site location.}
+#'       \item{lat}{Latitude of the site location.}
+#'       \item{elv}{Elevation of the site location, in meters.}
+#'       \item{year_start}{The year in which the simulation should start, corresponding
+#'       to data availability.}
+#'       \item{year_end}{The year in which the simulation should end, corresponding
+#'       to data availability.}
+#'       \item{classid}{A character string which contains the FLUXNET2015 IGBP 
+#'       classification.}
+#'       \item{c4}{A logical value indicating whether or not C4 photosynthesis 
+#'       pathway is followed. If \code{FALSE}, it's C3.}
+#'       \item{whc}{A numeric value for the water holding capacity (in mm), used for 
+#'       simulating the soil water balance.}
+#'       \item{koeppen_code}{A character string indicating the Koeppen-Geiger
+#'       climate zone code.}
+#'       \item{igbp_land_use}{A character string indicating the IGBP land cover
+#'       classification from MODIS data.}
+#'       \item{plant_functional_type}{A character string describing the plant
+#'       functional type.}
+#'       \item{date_start}{Date[1:1] value indicating the start date from which
+#'       the simulation is to be done, in format YYYYY-MM-DD.}
+#'       \item{date_end}{Date[1:1] value indicating the end date until which the
+#'       simulation is to be done, in format YYYY-MM-DD.}
 #'     }
 #'   }
 #'   \item{params_soil}{A tibble [ 2 x 5 ] containing soil texture data
 #'     \describe{
-#'       \item{layer}{a character string containing "top" if the data on that row 
-#'       is about the top layer of soil, or "bottom" if it's about the bottom layer}
-#'       \item{fsand}{the fraction of sand in the soil}
-#'       \item{fclay}{the fraction of clay in the soil}
-#'       \item{forg}{the fraction of organic matter in the soil}
-#'       \item{fgravel}{the fraction of gravel in the soil}
+#'       \item{layer}{A character string containing 'top' if the data on that row 
+#'       is about the top layer of soil, or 'bottom' if it's about the bottom layer.}
+#'       \item{fsand}{The fraction of sand in the soil.}
+#'       \item{fclay}{The fraction of clay in the soil.}
+#'       \item{forg}{The fraction of organic matter in the soil.}
+#'       \item{fgravel}{The fraction of gravel in the soil.}
 #'     }
 #'   }
 #' }
 #' 
-#' @references Pastorello, G., Trotta, C., Canfora, E. et al. 
+#' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
 #' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
 #' 
@@ -114,25 +118,29 @@
 #' Small tests dataset to validate 
 #' calibration routines
 #'
-#' @format A tibble of driver data:
+#' @format A tibble of validation data:
 #' \describe{
-#'   \item{sitename}{a character string containing the site name (e.g. "FR-Pue")}
-#'   \item{data}{a tibble [ 2,920 x 3 ] with time series for the following variables:
+#'   \item{sitename}{A character string containing the site name (e.g. 'FR-Pue').}
+#'   \item{data}{A tibble [ 2,920 x 3 ] with time series for the following variables:
 #'     \describe{
-#'       \item{date}{a Date vector with format YYYY-MM-DD}
-#'       \item{gpp}{the Gross Primary Productivity (GPP) for each time stamp 
-#'       (in gC m$^{-2}$ d$^{-1}$)}
-#'       \item{gpp_unc}{the uncertainty of the GPP (in gC m$^{-2}$ d$^{-1}$)}
+#'       \item{date}{Date vector with format YYYY-MM-DD.}
+#'       \item{gpp}{The observed Gross Primary Productivity (GPP) for each time stamp 
+#'       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'       \item{gpp_unc}{The uncertainty of the GPP (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
 #'     }
 #'   }
 #' }
+#' @examples require(ggplot2); require(tidyr)
+#' p_model_validation %>% tidyr::unnest(data) 
+#'   
+#'  
 #' 
-#' @references Pastorello, G., Trotta, C., Canfora, E. et al. 
+#' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
 #' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
 "p_model_validation"
 
-#' SOFUN lm3ppa driver data
+#' rsofun BiomeE driver data
 #'
 #' Small tests dataset to validate if compiled code
 #' and optimization routines can run using the
@@ -146,9 +154,9 @@
 #'   \item{soil_texture}{soil texture data}
 #'   \item{forcing}{forcing data}
 #' }
-"lm3ppa_p_model_drivers"
+"biomee_p_model_drivers"
 
-#' SOFUN lm3ppa driver data
+#' rsofun BiomeE driver data
 #'
 #' Small tests dataset to validate if compiled code
 #' and optimization routines can run using the
@@ -162,9 +170,9 @@
 #'   \item{soil_texture}{soil texture data}
 #'   \item{forcing}{forcing data}
 #' }
-"lm3ppa_gs_leuning_drivers"
+"biomee_gs_leuning_drivers"
 
-#' SOFUN LM3PPA GPP validation data
+#' rsofun BiomeE GPP validation data
 #'
 #' Small tests dataset to validate 
 #' calibration routines
@@ -174,9 +182,9 @@
 #'   \item{sitename}{site name}
 #'   \item{data}{validation dta}
 #' }
-"lm3ppa_validation"
+"biomee_validation"
 
-#' SOFUN LM3PPA GPP validation data
+#' rsofun BiomeE GPP validation data
 #'
 #' Small tests dataset to validate 
 #' calibration routines
@@ -186,10 +194,10 @@
 #'   \item{sitename}{site name}
 #'   \item{data}{validation dta}
 #' }
-"lm3ppa_validation_2"
+"biomee_validation_2"
 
 
-#' SOFUN LM3PPA GPP validation data
+#' rsofun BiomeE GPP validation data
 #'
 #' Small tests dataset to validate 
 #' calibration routines
@@ -199,10 +207,10 @@
 #'   \item{sitename}{site name}
 #'   \item{data}{validation dta}
 #' }
-"lm3ppa_p_model_output"
+"biomee_p_model_output"
 
 
-#' SOFUN LM3PPA GPP validation data
+#' rsofun BiomeE GPP validation data
 #'
 #' Small tests dataset to validate 
 #' calibration routines
@@ -212,5 +220,5 @@
 #'   \item{sitename}{site name}
 #'   \item{data}{validation dta}
 #' }
-"lm3ppa_gs_leuning_output"
+"biomee_gs_leuning_output"
 

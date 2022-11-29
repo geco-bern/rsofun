@@ -38,10 +38,13 @@ calibration of SOFUN model parameters."><meta name="twitter:card" content="summa
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/lm3ppa_model_structure.html">LM3PPA model structure</a>
+      <a href="../articles/biomee_model_structure.html">BiomeE model structure</a>
     </li>
     <li>
-      <a href="../articles/lm3ppa_use.html">LM3-PPA usage</a>
+      <a href="../articles/biomee_use.html">BiomeE usage</a>
+    </li>
+    <li>
+      <a href="../articles/new_cost_function.html">Parameter calibration and cost functions</a>
     </li>
     <li>
       <a href="../articles/pmodel_use.html">P-model usage</a>
@@ -85,17 +88,43 @@ calibration of SOFUN model parameters.</p>
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>drivers</dt>
-<dd><p>A data frame with driver data</p></dd>
+<dd><p>A data frame with driver data. See <code><a href="p_model_drivers.html">p_model_drivers</a></code>
+for a description of the data structure.</p></dd>
 
 
 <dt>obs</dt>
 <dd><p>A data frame containing observational data used for model
-calibration. Created by function <code>get_obs_calib2()</code></p></dd>
+calibration. See <code><a href="p_model_validation.html">p_model_validation</a></code> for a description of the data
+structure.</p></dd>
 
 
 <dt>settings</dt>
 <dd><p>A list containing model calibration settings. 
-See vignette_rsofun.pdf for more information and examples.</p></dd>
+See the 'P-model usage' vignette for more information and examples.</p><dl><dt><code>par</code></dt>
+<dd><p>A list of model parameters. For each parameter, an initial value 
+ and lower and upper bounds should be provided. The calibratable parameters
+ are 'kphio', 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' and 'par_shape_tempstress'.</p></dd>
+
+ <dt><code>method</code></dt>
+<dd><p>A string indicating the optimization method, either <code>'GenSA'</code>
+ or <code>'BayesianTools'</code>.</p></dd>
+
+ <dt><code>metric</code></dt>
+<dd><p>A cost function. See the 'Cost functions for parameter
+ calibration' vignette for examples.</p></dd>
+
+ <dt><code>control</code></dt>
+<dd><p>A list of arguments passed on to the optimization function.
+ If <code>method = 'GenSA'</code>, see <a href="https://rdrr.io/pkg/GenSA/man/GenSA.html" class="external-link">GenSA</a>. If <code>method = 'BayesianTools'</code>
+ the list should include at least <code>settings</code> and <code>sampler</code>, see
+ <a href="https://rdrr.io/pkg/BayesianTools/man/runMCMC.html" class="external-link">BayesianTools::runMCMC</a>.</p></dd>
+
+ <dt><code>targets</code></dt>
+<dd><p>Name of the observed target variable to use in calibration
+ (necessary if <code>method = 'BayesianTools'</code>).</p></dd>
+
+
+</dl></dd>
 
 </dl></div>
     <div id="value">

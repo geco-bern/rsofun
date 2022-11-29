@@ -10,6 +10,12 @@
     <loc>/articles/benchmark_gpp_FLUXNET2015_ensemble_EXAMPLE.html</loc>
   </url>
   <url>
+    <loc>/articles/biomee_model_structure.html</loc>
+  </url>
+  <url>
+    <loc>/articles/biomee_use.html</loc>
+  </url>
+  <url>
     <loc>/articles/example.html</loc>
   </url>
   <url>
@@ -28,6 +34,9 @@
     <loc>/articles/lm3ppa_use.html</loc>
   </url>
   <url>
+    <loc>/articles/new_cost_function.html</loc>
+  </url>
+  <url>
     <loc>/articles/pmodel_use.html</loc>
   </url>
   <url>
@@ -44,6 +53,24 @@
   </url>
   <url>
     <loc>/news/index.html</loc>
+  </url>
+  <url>
+    <loc>/reference/biomee_gs_leuning_drivers.html</loc>
+  </url>
+  <url>
+    <loc>/reference/biomee_gs_leuning_output.html</loc>
+  </url>
+  <url>
+    <loc>/reference/biomee_p_model_drivers.html</loc>
+  </url>
+  <url>
+    <loc>/reference/biomee_p_model_output.html</loc>
+  </url>
+  <url>
+    <loc>/reference/biomee_validation.html</loc>
+  </url>
+  <url>
+    <loc>/reference/biomee_validation_2.html</loc>
   </url>
   <url>
     <loc>/reference/calc_net_assim.html</loc>
@@ -77,6 +104,18 @@
   </url>
   <url>
     <loc>/reference/cost_rmse_vpdstress.html</loc>
+  </url>
+  <url>
+    <loc>/reference/create_cost_likelihood_biomee.html</loc>
+  </url>
+  <url>
+    <loc>/reference/create_cost_likelihood_pmodel.html</loc>
+  </url>
+  <url>
+    <loc>/reference/create_cost_rmse_biomee.html</loc>
+  </url>
+  <url>
+    <loc>/reference/create_cost_rmse_pmodel.html</loc>
   </url>
   <url>
     <loc>/reference/index.html</loc>
@@ -121,10 +160,16 @@
     <loc>/reference/prepare_setup_sofun.html</loc>
   </url>
   <url>
+    <loc>/reference/run_biomee_f_bysite.html</loc>
+  </url>
+  <url>
     <loc>/reference/run_lm3ppa_f_bysite.html</loc>
   </url>
   <url>
     <loc>/reference/run_pmodel_f_bysite.html</loc>
+  </url>
+  <url>
+    <loc>/reference/runread_biomee_f.html</loc>
   </url>
   <url>
     <loc>/reference/runread_lm3ppa_f.html</loc>
