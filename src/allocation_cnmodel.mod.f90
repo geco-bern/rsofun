@@ -515,7 +515,7 @@ contains
             ! Calculate maximum C allocatable based on current labile pool size, 
             ! discounted by the yield factor.
             !------------------------------------------------------------------
-            avl = orgfrac(  kdecay_labl, &
+            avl = orgfrac(  kdecay_labl * calc_ft_growth( climate%dtemp ), &
                             orgfrac( (1.0 - frac_for_resp), &
                                       tile(lu)%plant(pft)%plabl ) )
 
@@ -733,34 +733,34 @@ contains
         c_resv_target &
         )
 
-      ! Assume that the N flux goes in proportion with the C flux, depending on the source pool
-      ! If flux_resv_to_labl is positive, the source pool is presv.
-      ! If flux_resv_to_labl is negative, the source pool is plabl.
-      if (flux_resv_to_labl > 0.0) then
+      ! ! Assume that the N flux goes in proportion with the C flux, depending on the source pool
+      ! ! If flux_resv_to_labl is positive, the source pool is presv.
+      ! ! If flux_resv_to_labl is negative, the source pool is plabl.
+      ! if (flux_resv_to_labl > 0.0) then
 
-        ! source pool is presv
-        cfrac_resv = flux_resv_to_labl / tile(lu)%plant(pft)%presv%c%c12
-        org_resv_to_labl = orgfrac(cfrac_resv, tile(lu)%plant(pft)%presv)
+      !   ! source pool is presv
+      !   cfrac_resv = flux_resv_to_labl / tile(lu)%plant(pft)%presv%c%c12
+      !   org_resv_to_labl = orgfrac(cfrac_resv, tile(lu)%plant(pft)%presv)
 
-        if ( myinterface%steering%freefill_reserves ) then
-          call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
-        else
-          call orgmv(org_resv_to_labl, tile(lu)%plant(pft)%presv, tile(lu)%plant(pft)%plabl)
-        end if
+      !   if ( myinterface%steering%freefill_reserves ) then
+      !     call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
+      !   else
+      !     call orgmv(org_resv_to_labl, tile(lu)%plant(pft)%presv, tile(lu)%plant(pft)%plabl)
+      !   end if
         
-      else
+      ! else
 
-        ! source pool is plabl
-        cfrac_labl = (-1.0) * flux_resv_to_labl / tile(lu)%plant(pft)%plabl%c%c12
-        org_labl_to_resv = orgfrac(cfrac_labl, tile(lu)%plant(pft)%plabl)
+      !   ! source pool is plabl
+      !   cfrac_labl = (-1.0) * flux_resv_to_labl / tile(lu)%plant(pft)%plabl%c%c12
+      !   org_labl_to_resv = orgfrac(cfrac_labl, tile(lu)%plant(pft)%plabl)
 
-        if ( myinterface%steering%freefill_reserves ) then
-          call orgcp(org_labl_to_resv, tile(lu)%plant(pft)%presv)
-        else
-          call orgmv(org_labl_to_resv, tile(lu)%plant(pft)%plabl, tile(lu)%plant(pft)%presv)
-        end if
+      !   if ( myinterface%steering%freefill_reserves ) then
+      !     call orgcp(org_labl_to_resv, tile(lu)%plant(pft)%presv)
+      !   else
+      !     call orgmv(org_labl_to_resv, tile(lu)%plant(pft)%plabl, tile(lu)%plant(pft)%presv)
+      !   end if
 
-      end if
+      ! end if
 
       ! ! record for experimental output
       ! tile_fluxes(lu)%plant(pft)%debug1 = tile(lu)%plant(pft)%presv%c%c12 / flux_resv_to_labl
@@ -1159,6 +1159,23 @@ contains
     yy = 1.0 / (1.0 + exp( 1000.0 * xx ))
 
   end function calc_f_seed
+
+
+  function calc_ft_growth( xx ) result( yy )
+    !////////////////////////////////////////////////////////////////
+    ! Temperature limitation function to growth. Increases from around 
+    ! 0 at 0 deg C to 1 at around 10 deg C. The factor scales the 
+    ! amount of C that becomes available for growth.
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: xx  ! air temperature (deg C)
+
+    ! function return variable
+    real :: yy
+
+    yy = 1.0 / (1.0 + exp(-1.0 * (xx - 5.0)))
+
+  end function calc_ft_growth
 
 
   function calc_phi_maint(c_labl, c_labl_target) result( out )

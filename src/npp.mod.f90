@@ -56,7 +56,7 @@ contains
     ! local variables
     integer :: pft
     integer :: lu
-    real :: cavl, creq, frac_survive
+    real :: cavl, creq, frac_avl
     real, parameter :: buffer = 0.9
 
     pftloop: do pft=1,npft
@@ -98,15 +98,15 @@ contains
         ! reduce leaf and fine roots biomass such that saved respiration corresponds
         ! to amount now exceeding what can be satisfied from labile pool. 
         ! Buffer is introduced for safety - to avoid "over-depletion" of labile pool.
-        frac_survive = buffer * (cavl / creq)
-        call turnover_leaf( 1.0 - frac_survive, tile(lu), pft )
-        call turnover_root( 1.0 - frac_survive, tile(lu), pft )
-        print*,'surviving fraction: ', frac_survive
+        frac_avl = buffer * (cavl / creq)
+        ! call turnover_leaf( 1.0 - frac_avl, tile(lu), pft )
+        ! call turnover_root( 1.0 - frac_avl, tile(lu), pft )
+        print*,'surviving fraction: ', frac_avl
 
       else
 
         ! if enough labile C is available, don't reduce leaf and root biomass
-        frac_survive = 1.0
+        frac_avl = 1.0
 
       end if
 
@@ -115,17 +115,19 @@ contains
       ! use function 'resp_main'
       !-------------------------------------------------------------------------
       ! leaf respiration is given by dark respiration as calculated in P-model.
-      ! Simplification: is linearly reduced with frac_survive.
-      tile_fluxes(lu)%plant(pft)%drleaf = frac_survive * tile_fluxes(lu)%plant(pft)%drd
-      tile_fluxes(lu)%plant(pft)%drroot = calc_resp_maint(  tile(lu)%plant(pft)%proot%c%c12, &
-                                                            params_plant%r_root, &
-                                                            climate%dtemp &
-                                                            )
-      if (params_pft_plant(pft)%tree) then
-        tile_fluxes(lu)%plant(pft)%drsapw = calc_resp_maint(  tile(lu)%plant(pft)%psapw%c%c12, &
-                                                              params_plant%r_sapw, &
+      ! Simplification: is linearly reduced with frac_avl.
+      tile_fluxes(lu)%plant(pft)%drleaf = frac_avl * tile_fluxes(lu)%plant(pft)%drd
+      tile_fluxes(lu)%plant(pft)%drroot = frac_avl * &
+                                            calc_resp_maint(  tile(lu)%plant(pft)%proot%c%c12, &
+                                                              params_plant%r_root, &
                                                               climate%dtemp &
                                                               )
+      if (params_pft_plant(pft)%tree) then
+        tile_fluxes(lu)%plant(pft)%drsapw = frac_avl * &
+                                              calc_resp_maint(  tile(lu)%plant(pft)%psapw%c%c12, &
+                                                                params_plant%r_sapw, &
+                                                                climate%dtemp &
+                                                                )
       else
         tile_fluxes(lu)%plant(pft)%drsapw = 0.0
       endif
@@ -139,7 +141,7 @@ contains
       ! full isotopic effects of gross exchange _fluxes.
       ! Growth respiration ('drgrow') is deduced from 'dnpp' in allocation SR.
       !-------------------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%dcex = calc_cexu( tile(lu)%plant(pft)%proot%c%c12 )
+      tile_fluxes(lu)%plant(pft)%dcex = frac_avl * calc_cexu( tile(lu)%plant(pft)%proot%c%c12 )
 
       ! add root C export to respective (fast-decaying pool)
       tile(lu)%soil%pexud%c12 = tile(lu)%soil%pexud%c12 + tile_fluxes(lu)%plant(pft)%dcex
@@ -149,13 +151,6 @@ contains
       ! After assimilated C is added above, C required for respiration is 
       ! immediately removed
       !-------------------------------------------------------------------------
-
-      ! print*,'B: labile C available, required ', tile(lu)%plant(pft)%plabl%c%c12, &
-      !                                             tile_fluxes(lu)%plant(pft)%drleaf &
-      !                                             + tile_fluxes(lu)%plant(pft)%drroot &
-      !                                             + tile_fluxes(lu)%plant(pft)%drsapw & 
-      !                                             + tile_fluxes(lu)%plant(pft)%dcex
-
       tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12   &
                                       - tile_fluxes(lu)%plant(pft)%drleaf &
                                       - tile_fluxes(lu)%plant(pft)%drroot &

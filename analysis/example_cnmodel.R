@@ -349,6 +349,17 @@ ggplot() +
   # geom_vline(xintercept = 1, linetype = "dotted") +
   geom_vline(xintercept = 0, linetype = "dotted")
 
+calc_ft_growth <- function(temp){
+  yy <- 1 / (1 + exp(-(temp-5)))
+  return(yy)
+}
+
+ggplot() +
+  geom_function(fun = calc_ft_growth) +
+  xlim(-10, 20) +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
+
 
 # df <- tibble(
 #   x = 1:15,
