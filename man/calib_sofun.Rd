@@ -4,7 +4,7 @@
 \alias{calib_sofun}
 \title{Calibrates SOFUN model parameters}
 \usage{
-calib_sofun(drivers, obs, settings)
+calib_sofun(drivers, obs, settings, optim_out = TRUE)
 }
 \arguments{
 \item{drivers}{A data frame with driver data. See \code{\link{p_model_drivers}}
@@ -30,11 +30,16 @@ See the 'P-model usage' vignette for more information and examples.
  \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
  \item{\code{targets}}{Name of the observed target variable to use in calibration
  (necessary if \code{method = 'BayesianTools'}).}
-}}
+}
+@param optim_out A logical indicating whether the function returns the raw
+output of the optimization functions (defaults to TRUE).}
 }
 \value{
-A complemented named list containing 
- the calibration settings and optimised parameter values.
+A named list containing the calibrated parameter vector `par` and
+the output object from the optimization `mod`. For more details on this
+output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
+\href{https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html}{this post})
+and \link[GenSA]{GenSA}.
 }
 \description{
 This is the main function that handles the 
