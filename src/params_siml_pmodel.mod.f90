@@ -64,7 +64,7 @@ module md_params_siml_pmodel
     logical :: project_nmin      ! true in all years before analytical soil equilibration, when projected soil N mineralisation is used
     logical :: dofree_alloc      ! true if allocation is not fixed by 'frac_leaf'
     logical :: closed_nbal       ! true when N balance is closed during allocation (not compensating labile N depletion by "fixation")
-    logical :: freefill_reserves ! true when C flows into reserves pool without depleting labile pool (no mass conservation, used for spinup only)
+    logical :: spinup_reserves   ! true when C flows into reserves pool without depleting labile pool (no mass conservation, used for spinup only)
   end type outtype_steering
 
 contains
@@ -162,12 +162,12 @@ contains
       end if
 
       ! xxx try
-      if ( year <= params_siml%spinupyears .and. year <= spinupyr_soilequil_1 ) then
-        out_steering%freefill_reserves = .true.
+      ! if ( year <= params_siml%spinupyears .and. year <= spinupyr_soilequil_1 ) then
+      if ( year - params_siml%spinupyears > 3 ) then
+        out_steering%spinup_reserves = .false.
       else
-        out_steering%freefill_reserves = .false.
+        out_steering%spinup_reserves = .true.
       end if
-
 
     else
 

@@ -51,7 +51,7 @@ module md_allocation_cnmodel
 
 contains
 
-  subroutine allocation_daily( tile, tile_fluxes, climate )
+  subroutine allocation_daily( tile, tile_fluxes, climate, year )
     !//////////////////////////////////////////////////////////////////
     ! Finds optimal shoot:root growth ratio to balance C:N stoichiometry
     ! of a grass (no wood allocation).
@@ -65,6 +65,7 @@ contains
     type(tile_type), dimension(nlu), intent(inout) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(climate_type), intent(in) :: climate
+    integer, intent(in) :: year   ! xxx debug
 
     ! local variables
     real :: dcleaf
@@ -84,6 +85,7 @@ contains
     logical, save :: firstcall2 = .true.
     logical, save :: firstcall3 = .true.
     logical, save :: firstcall4 = .true.
+    logical, save :: firstcall_resv = .true.
 
     integer :: lu
     integer :: pft
@@ -135,10 +137,11 @@ contains
     real, dimension(nlu,npft,len_rrum_vec), save :: rrum_vec
     real, dimension(nlu,npft,len_cn_vec),   save :: cn_vec
 
-    real, parameter :: par_reserves = 0.5   ! scales reserves pool (controlling risk avoidance)
+    real, parameter :: par_resv = 0.1   ! scales reserves pool (controlling risk avoidance)
+    real, parameter :: par_labl = 0.1   ! scales labile pool (controlling risk avoidance)
     real :: c_labl_target     ! target size of labile pool (g C m-2)
     real :: c_resv_target     ! target size of reserves pool (g C m-2)
-    real :: flux_resv_to_labl ! net C flux from reserves to labile pool (g C m-2 tstep-1)
+    real :: f_resv_to_labl    ! net C flux from reserves to labile pool (g C m-2 tstep-1)
     real :: cfrac_resv        ! fraction of C pool moving from reserves to labile
     real :: cfrac_labl        ! fraction of C pool moving from labile to reserves
     type(orgpool) :: org_resv_to_labl ! organic mass moving from reserves to labile pool (g C[N] m-2 tstep-1)
@@ -161,6 +164,9 @@ contains
     logical :: findroot
 
     type(outtype_zeroin)  :: out_zeroin
+
+    ! xxx debug
+    real :: tmp
 
     ! xxx verbose
     logical, parameter :: verbose = .true.
@@ -515,6 +521,12 @@ contains
             ! Calculate maximum C allocatable based on current labile pool size, 
             ! discounted by the yield factor.
             !------------------------------------------------------------------
+            ! ! with temperature limitation on growth 
+            ! avl = orgfrac(  kdecay_labl * calc_ft_growth( climate%dtemp ), &
+            !                 orgfrac( (1.0 - frac_for_resp), &
+            !                           tile(lu)%plant(pft)%plabl ) )
+
+            ! without temperature limitation on growth
             avl = orgfrac(  kdecay_labl * calc_ft_growth( climate%dtemp ), &
                             orgfrac( (1.0 - frac_for_resp), &
                                       tile(lu)%plant(pft)%plabl ) )
@@ -717,56 +729,68 @@ contains
       ! The target labile pool size is determined by the C requirement for satisfying
       ! N days of respiration and exudation (averaged over len_cnbal_vec), where 
       ! N is the turnover time of the labile pool in days.
-      c_labl_target = (1.0 / kdecay_labl) * sum( r_rex_vec(lu,pft,:) ) / len_cnbal_vec
+      c_labl_target = par_labl * sum( r_rex_vec(lu,pft,:) )
 
       ! The target reserves pool size is determined by the current leaf plus fine 
       ! root mass
-      c_resv_target = par_reserves * (sum( c_a_l_vec(lu,pft,:) ) &
+      c_resv_target = par_resv * (sum( c_a_l_vec(lu,pft,:) ) &
                     + sum( c_a_r_vec(lu,pft,:) ) &
                     + sum( c_a_s_vec(lu,pft,:) ))
 
+      ! ! during reserves spinup phase, keep them at their target value all the time
+      ! if (.not. myinterface%steering%spinup_reserves) then
+      !   tile(lu)%plant(pft)%presv%c%c12 = c_resv_target
+      !   if (pft == npft .and. lu == nlu) firstcall_resv = .false.
+      ! end if      
+
       ! net C flux from reserves to labile pool
-      flux_resv_to_labl = calc_f_reserves_labile(&
+      f_resv_to_labl = calc_f_reserves_labile(&
         tile(lu)%plant(pft)%plabl%c%c12, &
         tile(lu)%plant(pft)%presv%c%c12, &
         c_labl_target, &
         c_resv_target &
         )
 
-      ! ! Assume that the N flux goes in proportion with the C flux, depending on the source pool
-      ! ! If flux_resv_to_labl is positive, the source pool is presv.
-      ! ! If flux_resv_to_labl is negative, the source pool is plabl.
-      ! if (flux_resv_to_labl > 0.0) then
+      ! Assume that the N flux goes in proportion with the C flux, depending on the source pool
+      ! If f_resv_to_labl is positive, the source pool is presv.
+      ! If f_resv_to_labl is negative, the source pool is plabl.
+      if (f_resv_to_labl > 0.0) then
 
-      !   ! source pool is presv
-      !   cfrac_resv = flux_resv_to_labl / tile(lu)%plant(pft)%presv%c%c12
-      !   org_resv_to_labl = orgfrac(cfrac_resv, tile(lu)%plant(pft)%presv)
+        ! source pool is presv
+        org_resv_to_labl = orgfrac(f_resv_to_labl, tile(lu)%plant(pft)%presv)
+        call orginit(org_labl_to_resv)
 
-      !   if ( myinterface%steering%freefill_reserves ) then
-      !     call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
-      !   else
-      !     call orgmv(org_resv_to_labl, tile(lu)%plant(pft)%presv, tile(lu)%plant(pft)%plabl)
-      !   end if
+        call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
+        ! if ( myinterface%steering%spinup_reserves ) then
+        !   call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
+        ! else
+        !   call orgmv(org_resv_to_labl, tile(lu)%plant(pft)%presv, tile(lu)%plant(pft)%plabl)
+        ! end if
         
-      ! else
+      else
 
-      !   ! source pool is plabl
-      !   cfrac_labl = (-1.0) * flux_resv_to_labl / tile(lu)%plant(pft)%plabl%c%c12
-      !   org_labl_to_resv = orgfrac(cfrac_labl, tile(lu)%plant(pft)%plabl)
+        ! source pool is plabl
+        org_labl_to_resv = orgfrac((-1.0) * f_resv_to_labl, tile(lu)%plant(pft)%plabl)
+        call orginit(org_resv_to_labl)
 
-      !   if ( myinterface%steering%freefill_reserves ) then
-      !     call orgcp(org_labl_to_resv, tile(lu)%plant(pft)%presv)
-      !   else
-      !     call orgmv(org_labl_to_resv, tile(lu)%plant(pft)%plabl, tile(lu)%plant(pft)%presv)
-      !   end if
+        call orgcp(org_labl_to_resv, tile(lu)%plant(pft)%presv)
+        ! if ( myinterface%steering%spinup_reserves ) then
+        !   call orgcp(org_labl_to_resv, tile(lu)%plant(pft)%presv)
+        ! else
+        !   call orgmv(org_labl_to_resv, tile(lu)%plant(pft)%plabl, tile(lu)%plant(pft)%presv)
+        ! end if
 
-      ! end if
+      end if
 
-      ! ! record for experimental output
-      ! tile_fluxes(lu)%plant(pft)%debug1 = tile(lu)%plant(pft)%presv%c%c12 / flux_resv_to_labl
-      ! tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%plabl%c%c12 / c_labl_target
-      ! tile_fluxes(lu)%plant(pft)%debug3 = cfrac_resv
-      ! tile_fluxes(lu)%plant(pft)%debug4 = cfrac_labl
+      ! xxx debug
+      tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 &
+                                        - (1.0/365.0) * tile(lu)%plant(pft)%presv%c%c12
+
+      ! record for experimental output
+      tile_fluxes(lu)%plant(pft)%debug1 = f_resv_to_labl
+      tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%plabl%c%c12 / c_labl_target
+      tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%presv%c%c12 / c_resv_target
+      tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%presv%c%c12
 
       !-------------------------------------------------------------------
       ! Adjust NPP for growth respiration
@@ -1178,57 +1202,102 @@ contains
   end function calc_ft_growth
 
 
-  function calc_phi_maint(c_labl, c_labl_target) result( out )
-    !///////////////////////////////////////////////////////////
-    ! Pull function into labile pool
-    ! Adopted from the QUINCY model (Thum et al., 2019 GMD; Eqs. S40-S42)
-    !-----------------------------------------------------------
-    real, intent(in) :: c_labl, c_labl_target
-    real, parameter :: lambda_maint = 4.0
-    real, parameter :: k_maint = 1.6
-    real :: out
-    out = exp(-(lambda_maint * c_labl / c_labl_target)**k_maint)
-  end function
+  ! function calc_phi_maint(c_labl, c_labl_target) result( out )
+  !   !///////////////////////////////////////////////////////////
+  !   ! Pull function into labile pool
+  !   ! Adopted from the QUINCY model (Thum et al., 2019 GMD; Eqs. S40-S42)
+  !   !-----------------------------------------------------------
+  !   real, intent(in) :: c_labl, c_labl_target
+  !   real, parameter :: lambda_maint = 4.0
+  !   real, parameter :: k_maint = 1.6
+  !   real :: out
+  !   out = exp(-(lambda_maint * c_labl / c_labl_target)**k_maint)
+  ! end function
 
-  function calc_phi_store(c_resv, c_resv_target) result( out )
+
+  ! function calc_phi_store(c_resv, c_resv_target) result( out )
+  !   !///////////////////////////////////////////////////////////
+  !   ! Pull function into reserves
+  !   ! Adopted from the QUINCY model (Thum et al., 2019 GMD; Eqs. S40-S42)
+  !   !-----------------------------------------------------------
+  !   real, intent(in) :: c_resv, c_resv_target
+  !   real, parameter :: lambda_store = 2.0
+  !   real, parameter :: k_store = 3.0
+  !   real :: out
+  !   out = exp(-(lambda_store * c_resv / c_resv_target)**k_store)
+  ! end function calc_phi_store
+
+
+  ! function calc_phi_store_corr(phi_maint, phi_store) result( out )
+  !   !///////////////////////////////////////////////////////////
+  !   ! Pull function into reserves, corrected for stress conditions (very low labile pool)
+  !   ! Adopted from the QUINCY model (Thum et al., 2019 GMD; Eqs. S40-S42)
+  !   !-----------------------------------------------------------
+  !   real, intent(in) :: phi_maint, phi_store
+  !   real, parameter :: k_inter = 0.75
+  !   real :: out
+  !   if (phi_maint > k_inter) then
+  !     out = phi_store * (1.0 - phi_maint) / (1.0 - k_inter)
+  !   else
+  !     out = phi_store
+  !   end if
+  ! end function calc_phi_store_corr
+
+
+  ! function calc_f_reserves_labile(c_labl, c_resv, c_labl_target, c_resv_target) result( out )
+  !   !///////////////////////////////////////////////////////////
+  !   ! Function to calculate the net flux from reserves to labile pool
+  !   ! Adopted from the QUINCY model (Thum et al., 2019 GMD; Eqs. S40-S42)
+  !   !-----------------------------------------------------------
+  !   real, intent(in) :: c_labl, c_resv, c_labl_target, c_resv_target
+  !   real, parameter :: tau_labl = 7.0
+  !   real :: out, tmp, tmp2
+  !   tmp  = calc_phi_maint(c_labl, c_labl_target)
+  !   tmp2 = calc_phi_store(c_resv, c_resv_target)
+  !   out = (1.0/tau_labl) * (tmp * c_resv - calc_phi_store_corr(tmp, tmp2) * c_labl)
+  ! end function calc_f_reserves_labile
+
+
+  function calc_l2r(c_labl, c_resv, c_labl_target, c_resv_target, f_max) result( out )
     !///////////////////////////////////////////////////////////
-    ! Pull function into reserves
-    ! Adopted from the QUINCY model (Thum et al., 2019 GMD; Eqs. S40-S42)
+    ! Function for trickling from labile to reserves
+    ! Returns the fraction of the labile pool (is source pool) 
+    ! moving from labile to reserves.
     !-----------------------------------------------------------
-    real, intent(in) :: c_resv, c_resv_target
-    real, parameter :: lambda_store = 2.0
+    real, intent(in) :: c_labl, c_resv, c_labl_target, c_resv_target, f_max
+    real :: out
+    out = max(0.0, 1.0 - c_resv / c_resv_target) * f_max / (1.0 + exp(-10.0 * (c_labl / c_labl_target - 1.5)))
+  end function calc_l2r
+
+
+  function calc_r2l(c_labl, c_resv, c_labl_target, c_resv_target, f_max) result( out )
+    !///////////////////////////////////////////////////////////
+    ! Function for refilling labile pool
+    ! Returns the fraction of the reserves pool (is source pool)
+    ! moving from reserves to labile
+    !-----------------------------------------------------------
+    real, intent(in) :: c_labl, c_resv, c_labl_target, c_resv_target, f_max
+    real, parameter :: lambda_store = 10.0
     real, parameter :: k_store = 3.0
     real :: out
-    out = exp(-(lambda_store * c_resv / c_resv_target)**k_store)
-  end function
+    out = c_resv / c_resv_target * f_max * exp(-(lambda_store * c_labl / c_labl_target)**k_store)
+  end function calc_r2l
 
-  function calc_phi_store_corr(phi_maint, phi_store) result( out )
-    !///////////////////////////////////////////////////////////
-    ! Pull function into reserves, corrected for stress conditions (very low labile pool)
-    ! Adopted from the QUINCY model (Thum et al., 2019 GMD; Eqs. S40-S42)
-    !-----------------------------------------------------------
-    real, intent(in) :: phi_maint, phi_store
-    real, parameter :: k_inter = 0.75
-    real :: out
-    if (phi_maint > k_inter) then
-      out = phi_store * (1.0 - phi_maint) / (1.0 - k_inter)
-    else
-      out = phi_store
-    end if
-  end function
 
   function calc_f_reserves_labile(c_labl, c_resv, c_labl_target, c_resv_target) result( out )
     !///////////////////////////////////////////////////////////
-    ! Function to calculate the net flux from reserves to labile pool
-    ! Adopted from the QUINCY model (Thum et al., 2019 GMD; Eqs. S40-S42)
+    ! calculates the fraction of the source pool trickling to the other pool
+    ! source pool is reserves if the net is positive, and labile if the net is negative
     !-----------------------------------------------------------
     real, intent(in) :: c_labl, c_resv, c_labl_target, c_resv_target
-    real, parameter :: tau_labl = 7.0
-    real :: out
-    out = (1.0/tau_labl) * &
-      (calc_phi_maint(c_labl, c_labl_target) * c_resv - &
-         calc_phi_store_corr(calc_phi_maint(c_labl, c_labl_target),  calc_phi_store(c_resv, c_resv_target)) * c_labl)
-  end function
+    real :: out, r2l, l2r
+    real, parameter :: f_max = 0.02
+
+    r2l = calc_r2l(c_labl, c_resv, c_labl_target, c_resv_target, f_max = f_max)
+    l2r = calc_l2r(c_labl, c_resv, c_labl_target, c_resv_target, f_max = f_max)
+    out = r2l - l2r
+
+  end function calc_f_reserves_labile
 
 
   ! function get_rcton_init( pft, meanmppfd, nv ) result( rcton )

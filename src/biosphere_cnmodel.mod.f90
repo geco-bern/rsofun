@@ -416,7 +416,8 @@ contains
         !----------------------------------------------------------------
         call allocation_daily(  tile(:), &
                                 tile_fluxes(:),&
-                                myinterface%climate(doy) &
+                                myinterface%climate(doy), &
+                                myinterface%steering%year &
                                 )
         !----------------------------------------------------------------
         if (verbose) print*, '              ==> returned: '

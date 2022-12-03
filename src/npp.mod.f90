@@ -25,7 +25,7 @@ module md_npp
   use md_tile
   use md_plant
   use md_forcing_pmodel, only: climate_type, vegcover_type
-  ! use md_interface_pmodel
+  use md_interface_pmodel, only: myinterface
 
   implicit none
 
@@ -58,6 +58,8 @@ contains
     integer :: lu
     real :: cavl, creq, frac_avl
     real, parameter :: buffer = 0.9
+    type(orgpool) :: org_resv_to_labl ! organic mass moving from reserves to labile pool (g C[N] m-2 tstep-1)
+    real :: f_resv_to_labl
 
     pftloop: do pft=1,npft
 
@@ -91,8 +93,6 @@ contains
       ! available C in labile pool
       cavl = tile(lu)%plant(pft)%plabl%c%c12
 
-      ! print*,'A: cavl, creq ', cavl, creq
-
       if (cavl < creq) then
 
         ! reduce leaf and fine roots biomass such that saved respiration corresponds
@@ -101,7 +101,19 @@ contains
         frac_avl = buffer * (cavl / creq)
         ! call turnover_leaf( 1.0 - frac_avl, tile(lu), pft )
         ! call turnover_root( 1.0 - frac_avl, tile(lu), pft )
-        print*,'surviving fraction: ', frac_avl
+        ! print*,'surviving fraction: ', frac_avl
+
+        ! transfer required C from reserves to labile
+        f_resv_to_labl = (creq - cavl) / tile(lu)%plant(pft)%presv%c%c12
+        org_resv_to_labl = orgfrac(f_resv_to_labl, tile(lu)%plant(pft)%presv)
+        print*,'refilling labile'
+
+        call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
+        ! if ( myinterface%steering%spinup_reserves ) then
+        !   call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
+        ! else
+        !   call orgmv(org_resv_to_labl, tile(lu)%plant(pft)%presv, tile(lu)%plant(pft)%plabl)
+        ! end if
 
       else
 

@@ -111,7 +111,7 @@ pars <- list(
 
 ## Forcing ------------------------
 ## add new required columns to forcing 
-tmp <- rsofun::p_model_drivers %>% 
+tmp <- rsofun::p_model_drivers |> 
   mutate(forcing = purrr::map(forcing, ~mutate(., 
                                                fharv = 0.0,
                                                dno3 = 0.1,
@@ -123,13 +123,13 @@ use_cseed <- 0 # 100
 cn_seed <- 20
 use_nseed <- use_cseed / cn_seed
 
-tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
+tmp$forcing[[1]] <- tmp$forcing[[1]] |>
   mutate(fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.0, 0.0),
          cseed = ifelse(month(date) == 3 & mday(date) == 15, use_cseed, 0.0),
          nseed = ifelse(month(date) == 3 & mday(date) == 15, use_nseed, 0.0)) 
 
 ## check visually
-tmp$forcing[[1]] %>%
+tmp$forcing[[1]] |>
   ggplot(aes(date, fharv)) +
   geom_line()
 
@@ -170,7 +170,7 @@ tmp$params_siml[[1]]$recycle <- 5
 # cn_seed <- 20
 # use_nseed <- use_cseed / cn_seed
 # 
-# df_drivers_ch_oe1 <- df_drivers_ch_oe1 %>%
+# df_drivers_ch_oe1 <- df_drivers_ch_oe1 |>
 #   mutate(forcing = purrr::map(forcing, ~mutate(.,
 #                                                fharv = 0.0,
 #                                                dno3 = df_ndep_mean$noy,
@@ -190,31 +190,31 @@ tmp$params_siml[[1]]$recycle <- 5
 #   rename(site_info = siteinfo, params_soil = df_soiltexture)
 
 # ## Synthetic forcing: Mean seasonal cycle -----------------------
-# tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
+# tmp$forcing[[1]] <- tmp$forcing[[1]] |>
 #   filter(!(lubridate::month(date) == 2 & lubridate::mday(date) == 29))
-# df_meanann <- tmp$forcing[[1]] %>%
-#   mutate(doy = lubridate::yday(date)) %>%
-#   group_by(doy) %>%
-#   summarise(across(where(is.double), .fns = mean)) %>%
+# df_meanann <- tmp$forcing[[1]] |>
+#   mutate(doy = lubridate::yday(date)) |>
+#   group_by(doy) |>
+#   summarise(across(where(is.double), .fns = mean)) |>
 #   filter(!(doy == 366))
-# nyears <- tmp$forcing[[1]] %>%
-#   mutate(year = lubridate::year(date)) %>%
-#   pull(year) %>%
-#   unique() %>%
+# nyears <- tmp$forcing[[1]] |>
+#   mutate(year = lubridate::year(date)) |>
+#   pull(year) |>
+#   unique() |>
 #   length()
 # tmp <- purrr::map_dfr(
 #   as.list(seq(nyears)),
-#   ~{df_meanann}) %>%
+#   ~{df_meanann}) |>
 #   mutate(date = tmp$forcing[[1]]$date)
 
 ### Synthetic forcing: Constant climate in all days -----------------------
-# df_growingseason_mean <- tmp$forcing[[1]] %>%
-#   filter(temp > 5) %>%
+# df_growingseason_mean <- tmp$forcing[[1]] |>
+#   filter(temp > 5) |>
 #   summarise(across(where(is.double), .fns = mean))
-# df_mean <- tmp$forcing[[1]] %>%
+# df_mean <- tmp$forcing[[1]] |>
 #   summarise(across(where(is.double), .fns = mean))
 # 
-# tmp$forcing[[1]] <- tmp$forcing[[1]] %>%
+# tmp$forcing[[1]] <- tmp$forcing[[1]] |>
 #   mutate(temp = df_growingseason_mean$temp,
 #          prec = df_mean$prec,
 #          vpd = df_growingseason_mean$vpd,
@@ -275,66 +275,46 @@ output <- output$data[[1]]
 
 ## Visualisations  ------------------------
 ### Time series ---------------------------
-gg1 <- output %>% 
-  as_tibble() %>% 
+gg1 <- output |> 
+  as_tibble() |> 
   ggplot(aes(date, lai)) + 
   geom_line()
-gg2 <- output %>% 
-  as_tibble() %>% 
+gg2 <- output |> 
+  as_tibble() |> 
   ggplot(aes(date, cleaf)) + 
   geom_line()
-gg3 <- output %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, croot)) + 
-  geom_line()
-gg4 <- output %>% 
-  as_tibble() %>% 
-  # ggplot(aes(date, calc_f_seed(x2))) + 
+gg3 <- output |> 
+  as_tibble() |> 
   ggplot(aes(date, clabl)) + 
   geom_line()
-
-gg5 <- output %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, gpp)) + 
-  geom_line()
-gg6 <- output %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, npp)) + 
-  geom_line()
-gg7 <- output %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, nloss)) + 
-  geom_line()
-gg8 <- output %>% 
-  as_tibble() %>% 
-  ggplot(aes(date, ninorg)) + 
+gg4 <- output |> 
+  as_tibble() |> 
+  ggplot(aes(date, x4)) + 
   geom_line()
 
 gg1 / gg2 / gg3 / gg4
 
-gg5 / gg6 / gg7 / gg8
-
-gg5 <- output %>% 
-  as_tibble() %>% 
+gg5 <- output |>  
+  as_tibble() |> 
   ggplot(aes(date, x1)) + 
   geom_line()
-gg6 <- output %>% 
-  as_tibble() %>% 
+gg6 <- output |> 
+  as_tibble() |> 
   ggplot(aes(date, x2)) + 
   geom_line()
-gg7 <- output %>% 
-  as_tibble() %>% 
+gg7 <- output |> 
+  as_tibble() |> 
   ggplot(aes(date, x3)) + 
   geom_line()
-gg8 <- output %>% 
-  as_tibble() %>% 
+gg8 <- output |> 
+  as_tibble() |> 
   ggplot(aes(date, x4)) + 
   geom_line()
 
 gg5 / gg6 / gg7 / gg8
 
-output %>% 
-  as_tibble() %>% 
+output |> 
+  as_tibble() |> 
   ggplot(aes(date, x1)) + 
   geom_line()
 
@@ -372,139 +352,139 @@ ggplot() +
   geom_line(data = output, aes(date, en2o))
 
 ## read (experimental) files
-aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") %>%
-  setNames(c("year", "csoil")) %>%
+aout <- read_fwf(file = "out/out_rsofun.a.csoil.txt", col_types = "in") |>
+  setNames(c("year", "csoil")) |>
   left_join(
-    read_fwf(file = "out/out_rsofun.a.nsoil.txt", col_types = "in") %>%
+    read_fwf(file = "out/out_rsofun.a.nsoil.txt", col_types = "in") |>
       setNames(c("year", "nsoil")),
     by = "year"
   )
 
-aout %>%
+aout |>
   slice(1000:2008) |> 
   ggplot(aes(year, csoil)) +
   geom_line()
 
-aout %>%
+aout |>
   ggplot(aes(year, nsoil)) +
   geom_line()
 
 
 # ## Test plots
-# output %>% 
-#   as_tibble() %>% 
+# output |> 
+#   as_tibble() |> 
 #   ggplot(aes(date, gpp)) + 
 #   geom_line()
 # 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot() +
   geom_line(aes(date, gpp))
 # geom_line(aes(date, gpp-drd), color = 'red')
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, cex)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, cleaf)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, croot)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, clabl)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, nlabl)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, nleaf)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, pnh4 + pno3)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, drd/gpp)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, cleaf/nleaf)) +
   geom_line()
 
 r_cton_leaf <- mean(output$cleaf / output$nleaf, na.rm = TRUE)
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(cleaf, nleaf)) +
   geom_point() +
   geom_abline(slope = 1/r_cton_leaf, intercept = 0, color = "red", linetype = "dotted")
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(cleaf, cleaf/nleaf)) +
   geom_point()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(cleaf/nleaf, ..density..)) +
   geom_histogram()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, lai)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, fapar)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, csoil)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, en2o)) +
   geom_line()
 
-output %>%
-  as_tibble() %>%
+output |>
+  as_tibble() |>
   ggplot(aes(date, croot)) +
   geom_line()
 # 
-# gg1 <- output %>% 
-#   as_tibble() %>% 
-#   slice(1:500) %>% 
+# gg1 <- output |> 
+#   as_tibble() |> 
+#   slice(1:500) |> 
 #   ggplot(aes(date, drd)) + 
 #   geom_line()
 # 
-# gg2 <- output %>% 
-#   as_tibble() %>% 
-#   slice(1:500) %>% 
+# gg2 <- output |> 
+#   as_tibble() |> 
+#   slice(1:500) |> 
 #   ggplot(aes(date, drd/gpp)) + 
 #   geom_line()
 # 
-gg3 <- output %>%
-  as_tibble() %>%
-  mutate(cue = npp/gpp) %>%
-  slice(1:500) %>%
+output |>
+  as_tibble() |>
+  mutate(cue = npp/gpp) |>
+  slice(1:500) |>
   ggplot(aes(date, cue)) +
   geom_line()
 # 
@@ -512,12 +492,12 @@ gg3 <- output %>%
 #   gg2/
 #   gg3
 # 
-# output %>% 
-#   as_tibble() %>% 
-#   mutate(year = lubridate::year(date)) %>% 
-#   group_by(year) %>% 
-#   summarise(npp = sum(npp, na.rm = TRUE), gpp = sum(gpp, na.rm = TRUE)) %>% 
-#   mutate(cue = npp/gpp) %>% 
+# output |> 
+#   as_tibble() |> 
+#   mutate(year = lubridate::year(date)) |> 
+#   group_by(year) |> 
+#   summarise(npp = sum(npp, na.rm = TRUE), gpp = sum(gpp, na.rm = TRUE)) |> 
+#   mutate(cue = npp/gpp) |> 
 #   ggplot(aes(year, cue)) + 
 #   geom_line()
 # 
@@ -544,17 +524,17 @@ gg3 <- output %>%
 #     "~/rsofun/test.txt",
 #     fwf_widths(c(19,18,18), c("cue", "cue_damped", "f_deactivate")),
 #     skip = 1,
-#     col_types = "nn") %>% 
+#     col_types = "nn") |> 
 #   tail(6000)
 # 
-# gg1 <- tmp %>%
-#   mutate(id = 1:n()) %>% 
+# gg1 <- tmp |>
+#   mutate(id = 1:n()) |> 
 #   ggplot() +
 #   geom_line(aes(id, cue)) +
 #   geom_line(aes(id, cue_damped), color = "red") +
 #   ylim(-1,1)
-# gg2 <- tmp %>%
-#   mutate(id = 1:n()) %>% 
+# gg2 <- tmp |>
+#   mutate(id = 1:n()) |> 
 #   ggplot() +
 #   geom_line(aes(id, f_deactivate))
 # gg1/
@@ -575,13 +555,13 @@ gg3 <- output %>%
 # #   df_fill_seeds
 # # )
 # # 
-# # gg1 <- df %>% 
-# #   slice(1:365) %>% 
+# # gg1 <- df |> 
+# #   slice(1:365) |> 
 # #   ggplot(aes(date, gpp)) +
 # #   geom_line()
 # # 
-# # gg2 <- df %>% 
-# #   slice(1:365) %>% 
+# # gg2 <- df |> 
+# #   slice(1:365) |> 
 # #   ggplot() +
 # #   geom_line(aes(date, (gpp-drd)/lai)) +
 # #   geom_line(aes(date, an_max), color = "red") +
