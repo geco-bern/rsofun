@@ -104,11 +104,15 @@ contains
         ! print*,'surviving fraction: ', frac_avl
 
         ! transfer required C from reserves to labile
-        f_resv_to_labl = (creq - cavl) / tile(lu)%plant(pft)%presv%c%c12
-        org_resv_to_labl = orgfrac(f_resv_to_labl, tile(lu)%plant(pft)%presv)
-        print*,'refilling labile'
+        f_resv_to_labl = creq - cavl
+        print*,'refilling labile, frac_avl ', frac_avl
 
-        call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
+        tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 + f_resv_to_labl
+        if (.not. myinterface%steering%spinup_reserves) then
+          tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 - f_resv_to_labl
+        end if
+
+        ! call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
         ! if ( myinterface%steering%spinup_reserves ) then
         !   call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
         ! else

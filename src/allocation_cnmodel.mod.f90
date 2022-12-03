@@ -756,35 +756,31 @@ contains
       ! If f_resv_to_labl is negative, the source pool is plabl.
       if (f_resv_to_labl > 0.0) then
 
-        ! source pool is presv
+        ! transfer C to labile, source pool is presv
         org_resv_to_labl = orgfrac(f_resv_to_labl, tile(lu)%plant(pft)%presv)
         call orginit(org_labl_to_resv)
 
-        call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
-        ! if ( myinterface%steering%spinup_reserves ) then
-        !   call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
-        ! else
-        !   call orgmv(org_resv_to_labl, tile(lu)%plant(pft)%presv, tile(lu)%plant(pft)%plabl)
-        ! end if
+        tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 + org_resv_to_labl%c%c12
+        if (.not. myinterface%steering%spinup_reserves) then
+          tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 - org_resv_to_labl%c%c12
+        end if
         
       else
 
-        ! source pool is plabl
+        ! transfer C to reserves, source pool is plabl
         org_labl_to_resv = orgfrac((-1.0) * f_resv_to_labl, tile(lu)%plant(pft)%plabl)
         call orginit(org_resv_to_labl)
 
-        call orgcp(org_labl_to_resv, tile(lu)%plant(pft)%presv)
-        ! if ( myinterface%steering%spinup_reserves ) then
-        !   call orgcp(org_labl_to_resv, tile(lu)%plant(pft)%presv)
-        ! else
-        !   call orgmv(org_labl_to_resv, tile(lu)%plant(pft)%plabl, tile(lu)%plant(pft)%presv)
-        ! end if
+        tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 + org_labl_to_resv%c%c12
+        if (.not. myinterface%steering%spinup_reserves) then
+          tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - org_labl_to_resv%c%c12
+        end if
 
       end if
 
       ! xxx debug
       tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 &
-                                        - (1.0/365.0) * tile(lu)%plant(pft)%presv%c%c12
+                                        - (1.0/3650.0) * tile(lu)%plant(pft)%presv%c%c12
 
       ! record for experimental output
       tile_fluxes(lu)%plant(pft)%debug1 = f_resv_to_labl
