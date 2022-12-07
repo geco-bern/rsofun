@@ -17,7 +17,8 @@
 #'
 #' @return A data frame (tibble) with one row for each site, site information 
 #' stored in the nested column \code{site_info} and outputs stored in the nested 
-#' column \code{data}.
+#' column \code{data}. See \code{\link{run_pmodel_f_bysite}} for a detailed 
+#' description of the outputs.
 #' @export
 #'
 #' @examples
