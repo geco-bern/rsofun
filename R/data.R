@@ -130,7 +130,7 @@
 #'     }
 #'   }
 #' }
-#' @examples require(ggplot2); require(tidyverse)
+#' @examples require(ggplot2); require(tidyr)
 #' p_model_validation %>% tidyr::unnest(data) 
 #'   
 #'  
@@ -140,7 +140,7 @@
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
 "p_model_validation"
 
-#' SOFUN lm3ppa driver data
+#' rsofun BiomeE driver data
 #'
 #' Small tests dataset to validate if compiled code
 #' and optimization routines can run using the
@@ -154,9 +154,9 @@
 #'   \item{soil_texture}{soil texture data}
 #'   \item{forcing}{forcing data}
 #' }
-"lm3ppa_p_model_drivers"
+"biomee_p_model_drivers"
 
-#' SOFUN lm3ppa driver data
+#' rsofun BiomeE driver data
 #'
 #' Small tests dataset to validate if compiled code
 #' and optimization routines can run using the
@@ -170,9 +170,9 @@
 #'   \item{soil_texture}{soil texture data}
 #'   \item{forcing}{forcing data}
 #' }
-"lm3ppa_gs_leuning_drivers"
+"biomee_gs_leuning_drivers"
 
-#' SOFUN LM3PPA GPP validation data
+#' rsofun BiomeE GPP validation data
 #'
 #' Small tests dataset to validate 
 #' calibration routines
@@ -182,9 +182,9 @@
 #'   \item{sitename}{site name}
 #'   \item{data}{validation dta}
 #' }
-"lm3ppa_validation"
+"biomee_validation"
 
-#' SOFUN LM3PPA GPP validation data
+#' rsofun BiomeE GPP validation data
 #'
 #' Small tests dataset to validate 
 #' calibration routines
@@ -194,10 +194,10 @@
 #'   \item{sitename}{site name}
 #'   \item{data}{validation dta}
 #' }
-"lm3ppa_validation_2"
+"biomee_validation_2"
 
 
-#' SOFUN LM3PPA GPP validation data
+#' rsofun BiomeE GPP validation data
 #'
 #' Small tests dataset to validate 
 #' calibration routines
@@ -207,10 +207,10 @@
 #'   \item{sitename}{site name}
 #'   \item{data}{validation dta}
 #' }
-"lm3ppa_p_model_output"
+"biomee_p_model_output"
 
 
-#' SOFUN LM3PPA GPP validation data
+#' rsofun BiomeE GPP validation data
 #'
 #' Small tests dataset to validate 
 #' calibration routines
@@ -220,5 +220,5 @@
 #'   \item{sitename}{site name}
 #'   \item{data}{validation dta}
 #' }
-"lm3ppa_gs_leuning_output"
+"biomee_gs_leuning_output"
 

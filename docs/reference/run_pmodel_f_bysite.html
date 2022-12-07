@@ -37,10 +37,13 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/lm3ppa_model_structure.html">LM3PPA model structure</a>
+      <a href="../articles/biomee_model_structure.html">BiomeE model structure</a>
     </li>
     <li>
-      <a href="../articles/lm3ppa_use.html">LM3-PPA usage</a>
+      <a href="../articles/biomee_use.html">BiomeE usage</a>
+    </li>
+    <li>
+      <a href="../articles/new_cost_function.html">Parameter calibration and cost functions</a>
     </li>
     <li>
       <a href="../articles/pmodel_use.html">P-model usage</a>
@@ -92,43 +95,154 @@
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>sitename</dt>
-<dd><p>Site name</p></dd>
+<dd><p>Site name.</p></dd>
 
 
 <dt>params_siml</dt>
-<dd><p>Simulation parameters</p></dd>
+<dd><p>Simulation parameters.</p><dl><dt>spinup</dt>
+<dd><p>A logical value indicating whether this simulation does spin-up.</p></dd>
+
+      <dt>spinupyears</dt>
+<dd><p>Number of spin-up years.</p></dd>
+
+      <dt>recycle</dt>
+<dd><p>Length of standard recycling period, in days.</p></dd>
+
+      <dt>soilmstress</dt>
+<dd><p>A logical value, if <code>TRUE</code> an empirical soil 
+      moisture stress function is applied to GPP.</p></dd>
+
+      <dt>tempstress</dt>
+<dd><p>A logical value, if <code>TRUE</code> an empirical temperature 
+      stress function is applied to GPP.</p></dd>
+
+      <dt>calc_aet_fapar_vpd</dt>
+<dd><p>(not in use)</p></dd>
+
+      <dt>in_ppfd</dt>
+<dd><p>A logical value, if <code>TRUE</code> PPFD is a prescribed variable, 
+      if <code>FALSE</code> PPFD is simulated internally.</p></dd>
+
+      <dt>in_netrad</dt>
+<dd><p>A logical value indicating whether net radiation is 
+      prescribed (<code>TRUE</code>) or simulated internally (<code>FALSE</code>).</p></dd>
+
+      <dt>outdt</dt>
+<dd><p>An integer indicating the output periodicity.</p></dd>
+
+      <dt>ltre</dt>
+<dd><p>A logical value, <code>TRUE</code> if evergreen tree.</p></dd>
+
+      <dt>ltne</dt>
+<dd><p>A logical value, <code>TRUE</code> if evergreen tree and N-fixing.</p></dd>
+
+      <dt>ltrd</dt>
+<dd><p>A logical value, <code>TRUE</code> if deciduous tree.</p></dd>
+
+      <dt>ltnd</dt>
+<dd><p>A logical value, <code>TRUE</code> if deciduous tree and N-fixing.</p></dd>
+
+      <dt>lgr3</dt>
+<dd><p>A logical value, <code>TRUE</code> if grass with C3 photosynthetic pathway.</p></dd>
+
+      <dt>lgn3</dt>
+<dd><p>A logical value, <code>TRUE</code> if grass with C3 photosynthetic
+      pathway and N-fixing.</p></dd>
+
+      <dt>lgr4</dt>
+<dd><p>A logical value, <code>TRUE</code> if grass with C4 photosynthetic pathway.</p></dd>
+
+      <dt>firstyeartrend</dt>
+<dd><p>The year AD of first transient year.</p></dd>
+
+      <dt>nyeartrend</dt>
+<dd><p>The number of transient years.</p></dd>
+
+
+</dl></dd>
 
 
 <dt>site_info</dt>
-<dd><p>Site meta info</p></dd>
+<dd><p>A list of site meta info. Required:</p><dl><dt>lon</dt>
+<dd><p>Longitud of the site location.</p></dd>
+
+      <dt>lat</dt>
+<dd><p>Latitude of the site location.</p></dd>
+
+      <dt>elv</dt>
+<dd><p>Elevation of the site location, in meters.</p></dd>
+
+      <dt>whc</dt>
+<dd><p>A numeric value for the water holding capacity (in mm), used for 
+      simulating the soil water balance.</p></dd>
+
+
+</dl></dd>
 
 
 <dt>forcing</dt>
-<dd><p>forcing (input) dataframe 
-(returned object by `prepare_input_sofun()`)</p></dd>
+<dd><p>A data frame of forcing climate data, used as input 
+(returned object by <code><a href="collect_drivers_sofun.html">collect_drivers_sofun</a></code>).</p></dd>
 
 
 <dt>params_soil</dt>
-<dd><p>A list of soil texture parameters</p></dd>
+<dd><p>A list of soil texture parameters, for the top and bottom
+layer of soil.</p><dl><dt>fsand</dt>
+<dd><p>The fraction of sand in the soil.</p></dd>
+
+      <dt>fclay</dt>
+<dd><p>The fraction of clay in the soil.</p></dd>
+
+      <dt>forg</dt>
+<dd><p>The fraction of organic matter in the soil.</p></dd>
+
+      <dt>fgravel</dt>
+<dd><p>The fraction of gravel in the soil.</p></dd>
+
+
+</dl></dd>
 
 
 <dt>params_modl</dt>
-<dd><p>Model parameters</p></dd>
+<dd><p>A named list of free (calibratable) model parameters.</p><dl><dt>kphio</dt>
+<dd><p>The quantum yield efficiency parameter, in mol mol\(^{-1}\).</p></dd>
+
+  <dt>soilm_par_a</dt>
+<dd><p>Intercept of the linear soil moisture stress function (unitless).</p></dd>
+
+  <dt>soilm_par_b</dt>
+<dd><p>Slope of the linear soil moisture stress function (unitless).</p></dd>
+
+  <dt>tau_acclim_tempstress</dt>
+<dd><p>Memory e-folding time scale parameter (in hours)
+  for acclimation of photosynthesis, following Eq. 5 in Makela et al. (2004) 
+  Tree Physiology 24, 369–376</p></dd>
+
+  <dt>par_shape_tempstress</dt>
+<dd><p>Shape parameter for the low temperature stress
+  function affecting quantum yield efficiency. A positive (unitless) value indicating 
+  the sensitivity of the decline (assuming no decline at 10\(^o\)C) and 
+  above, but decreasing with a quadratic function below 10\(^o\)C).</p></dd>
+
+
+</dl></dd>
 
 
 <dt>makecheck</dt>
 <dd><p>A logical specifying whether checks are performed 
-to verify forcings.</p></dd>
+to verify forcings and model parameters. <code>TRUE</code> by default.</p></dd>
 
 
 <dt>verbose</dt>
 <dd><p>A logical specifying whether to print warnings.
-Defaults to TRUE.</p></dd>
+Defaults to <code>TRUE</code>.</p></dd>
 
 </dl></div>
     <div id="details">
     <h2>Details</h2>
-    <p>Model output is provided as a tidy dataframe</p>
+    <p>Model output is provided as a tidy dataframe, with columns 
+<code>"fapar", "gpp", "transp", "latenth", "pet", "vcmax",
+"jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue", "rd"</code>.</p>
     </div>
 
   </div>

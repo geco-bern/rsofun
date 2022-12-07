@@ -38,10 +38,13 @@ and optimization routines can run"><meta name="twitter:card" content="summary"><
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/lm3ppa_model_structure.html">LM3PPA model structure</a>
+      <a href="../articles/biomee_model_structure.html">BiomeE model structure</a>
     </li>
     <li>
-      <a href="../articles/lm3ppa_use.html">LM3-PPA usage</a>
+      <a href="../articles/biomee_use.html">BiomeE usage</a>
+    </li>
+    <li>
+      <a href="../articles/new_cost_function.html">Parameter calibration and cost functions</a>
     </li>
     <li>
       <a href="../articles/pmodel_use.html">P-model usage</a>
@@ -85,22 +88,215 @@ and optimization routines can run</p>
     <div id="format">
     <h2>Format</h2>
     <p>A tibble of driver data:</p><dl><dt>sitename</dt>
-<dd><p>site name</p></dd>
-
-  <dt>params_siml</dt>
-<dd><p>model parameters</p></dd>
-
-  <dt>site_info</dt>
-<dd><p>site information</p></dd>
-
-  <dt>soil_texture</dt>
-<dd><p>soil texture data</p></dd>
+<dd><p>A character string containing the site name.</p></dd>
 
   <dt>forcing</dt>
-<dd><p>forcing data</p></dd>
+<dd><p>A tibble of forcing climate data, including the following variables:</p><dl><dt>date</dt>
+<dd><p>Date of the observation in YYYY-MM-DD format.</p></dd>
+
+      <dt>temp</dt>
+<dd><p>Air temperature in \(^\circ\)C.</p></dd>
+
+      <dt>prec</dt>
+<dd><p>Precipitation in mm d\(^{-1}\) (sum of rain and snow).</p></dd>
+
+      <dt>vpd</dt>
+<dd><p>Vapour pressure deficit in Pa.</p></dd>
+
+      <dt>ppfd</dt>
+<dd><p>Photosynthetic photon flux density (PPFD) in 
+      mol m\(^{-2}\) d\(^{-1}\).</p></dd>
+
+      <dt>patm</dt>
+<dd><p>Atmospheric pressure in Pa.</p></dd>
+
+      <dt>ccov_int</dt>
+<dd><p>Cloud coverage in %, interpolated.</p></dd>
+
+      <dt>ccov</dt>
+<dd><p>Cloud coverage in %.</p></dd>
+
+      <dt>snow</dt>
+<dd><p>Snow in mm d\(^{-1}\).</p></dd>
+
+      <dt>rain</dt>
+<dd><p>Rain in mm d\(^{-1}\).</p></dd>
+
+      <dt>fapar</dt>
+<dd><p>Fraction of photosynthetic active radiation (fAPAR), taking
+     values between 0 and 1.</p></dd>
+
+      <dt>co2</dt>
+<dd><p>Annually varying observed atmospheric CO\(_2\), identical 
+      across sites.</p></dd>
+
+      <dt>doy</dt>
+<dd><p>Day of the year.</p></dd>
+
+      <dt>tmin</dt>
+<dd><p>Daily minimum air temperature in \(^\circ\)C.</p></dd>
+
+      <dt>tmax</dt>
+<dd><p>Daily maximum air temperature in \(^\circ\)C.</p></dd>
+
+      
+</dl><p></p></dd>
+
+  <dt>params_siml</dt>
+<dd><p>A tibble [ 1 x 18] of model parameters.</p><dl><dt>spinup</dt>
+<dd><p>A logical value indicating whether this simulation does spin-up.</p></dd>
+
+      <dt>spinupyears</dt>
+<dd><p>Number of spin-up years.</p></dd>
+
+      <dt>recycle</dt>
+<dd><p>Length of standard recycling period, in days.</p></dd>
+
+      <dt>soilmstress</dt>
+<dd><p>A logical value, if <code>TRUE</code> an empirical soil 
+      moisture stress function is applied to GPP.</p></dd>
+
+      <dt>tempstress</dt>
+<dd><p>A logical value, if <code>TRUE</code> an empirical temperature 
+      stress function is applied to GPP.</p></dd>
+
+      <dt>calc_aet_fapar_vpd</dt>
+<dd><p>(not in use)</p></dd>
+
+      <dt>in_ppfd</dt>
+<dd><p>A logical value, if <code>TRUE</code> PPFD is a prescribed variable, 
+      if <code>FALSE</code> PPFD is simulated internally.</p></dd>
+
+      <dt>in_netrad</dt>
+<dd><p>A logical value indicating whether net radiation is 
+      prescribed (<code>TRUE</code>) or simulated internally (<code>FALSE</code>).</p></dd>
+
+      <dt>outdt</dt>
+<dd><p>An integer indicating the output periodicity.</p></dd>
+
+      <dt>ltre</dt>
+<dd><p>A logical value, <code>TRUE</code> if evergreen tree.</p></dd>
+
+      <dt>ltne</dt>
+<dd><p>A logical value, <code>TRUE</code> if evergreen tree and N-fixing.</p></dd>
+
+      <dt>ltrd</dt>
+<dd><p>A logical value, <code>TRUE</code> if deciduous tree.</p></dd>
+
+      <dt>ltnd</dt>
+<dd><p>A logical value, <code>TRUE</code> if deciduous tree and N-fixing.</p></dd>
+
+      <dt>lgr3</dt>
+<dd><p>A logical value, <code>TRUE</code> if grass with C3 photosynthetic pathway.</p></dd>
+
+      <dt>lgn3</dt>
+<dd><p>A logical value, <code>TRUE</code> if grass with C3 photosynthetic
+      pathway and N-fixing.</p></dd>
+
+      <dt>lgr4</dt>
+<dd><p>A logical value, <code>TRUE</code> if grass with C4 photosynthetic pathway.</p></dd>
+
+      <dt>firstyeartrend</dt>
+<dd><p>The year AD of first transient year.</p></dd>
+
+      <dt>nyeartrend</dt>
+<dd><p>The number of transient years.</p></dd>
+
+    
+</dl><p></p></dd>
+
+  <dt>site_info</dt>
+<dd><p>A tibble [ 1 x 12 ] containing site information</p><dl><dt>lon</dt>
+<dd><p>Longitud of the site location.</p></dd>
+
+      <dt>lat</dt>
+<dd><p>Latitude of the site location.</p></dd>
+
+      <dt>elv</dt>
+<dd><p>Elevation of the site location, in meters.</p></dd>
+
+      <dt>year_start</dt>
+<dd><p>The year in which the simulation should start, corresponding
+      to data availability.</p></dd>
+
+      <dt>year_end</dt>
+<dd><p>The year in which the simulation should end, corresponding
+      to data availability.</p></dd>
+
+      <dt>classid</dt>
+<dd><p>A character string which contains the FLUXNET2015 IGBP 
+      classification.</p></dd>
+
+      <dt>c4</dt>
+<dd><p>A logical value indicating whether or not C4 photosynthesis 
+      pathway is followed. If <code>FALSE</code>, it's C3.</p></dd>
+
+      <dt>whc</dt>
+<dd><p>A numeric value for the water holding capacity (in mm), used for 
+      simulating the soil water balance.</p></dd>
+
+      <dt>koeppen_code</dt>
+<dd><p>A character string indicating the Koeppen-Geiger
+      climate zone code.</p></dd>
+
+      <dt>igbp_land_use</dt>
+<dd><p>A character string indicating the IGBP land cover
+      classification from MODIS data.</p></dd>
+
+      <dt>plant_functional_type</dt>
+<dd><p>A character string describing the plant
+      functional type.</p></dd>
+
+      <dt>date_start</dt>
+<dd><p>Date[1:1] value indicating the start date from which
+      the simulation is to be done, in format YYYYY-MM-DD.</p></dd>
+
+      <dt>date_end</dt>
+<dd><p>Date[1:1] value indicating the end date until which the
+      simulation is to be done, in format YYYY-MM-DD.</p></dd>
+
+    
+</dl><p></p></dd>
+
+  <dt>params_soil</dt>
+<dd><p>A tibble [ 2 x 5 ] containing soil texture data</p><dl><dt>layer</dt>
+<dd><p>A character string containing 'top' if the data on that row 
+      is about the top layer of soil, or 'bottom' if it's about the bottom layer.</p></dd>
+
+      <dt>fsand</dt>
+<dd><p>The fraction of sand in the soil.</p></dd>
+
+      <dt>fclay</dt>
+<dd><p>The fraction of clay in the soil.</p></dd>
+
+      <dt>forg</dt>
+<dd><p>The fraction of organic matter in the soil.</p></dd>
+
+      <dt>fgravel</dt>
+<dd><p>The fraction of gravel in the soil.</p></dd>
+
+    
+</dl><p></p></dd>
 
 
 </dl></div>
+    <div id="source">
+    <h2>Source</h2>
+    <p>Pastorello, G., Trotta, C., Canfora, E. et al. 
+The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
+Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3</p>
+<p>University of East Anglia Climatic Research Unit; Harris, I.C.; Jones, P.D.; Osborn, T. (2021): 
+CRU TS4.05: Climatic Research Unit (CRU) Time-Series (TS) version 4.05 of high-resolution 
+gridded data of month-by-month variation in climate (Jan. 1901- Dec. 2020). 
+NERC EDS Centre for Environmental Data Analysis, date of citation. 
+https://catalogue.ceda.ac.uk/uuid/c26a65020a5e4b80b20018f148556681</p>
+<p>Weedon, G. P., G. Balsamo, N. Bellouin,S. Gomes, M. J. Best, and P. Viterbo(2014), 
+The WFDEI meteorologicalforcing data set: WATCH Forcing Datamethodology applied 
+to ERA-Interimreanalysis data,
+Water Resour. Res.,50,7505–7514, doi:10.1002/2014WR015638.</p>
+<p>Fick, S.E. and R.J. Hijmans, 2017. WorldClim 2: new 1km spatial resolution climate 
+surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.</p>
+    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

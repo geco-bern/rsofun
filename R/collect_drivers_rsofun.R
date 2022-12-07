@@ -9,7 +9,7 @@
 #'  details.
 #' @param params_siml A nested data frame with rows for each site containing 
 #'  simulation parameters for SOFUN. See \code{\link{run_pmodel_f_bysite}} or
-#'  \code{\link{run_lm3ppa_f_bysite}}.
+#'  \code{\link{run_biomee_f_bysite}}.
 #' @param meteo A nested data frame with rows for each site and meteorological
 #'  forcing data time series nested inside a column named \code{"data"}.
 #' @param fapar A nested data frame with rows for each site and fAPAR 
@@ -150,7 +150,11 @@ collect_drivers_sofun <- function(
     
   ## interpolate to fill gaps in forcing time series
   myapprox <- function(vec){
-    stats::approx(vec, xout = 1:length(vec))$y
+    if(all(is.na(vec))){
+      return(vec)
+    } else {
+      stats::approx(vec, xout = 1:length(vec))$y
+    }
   }
   
   fill_na_forcing <- function(df) {

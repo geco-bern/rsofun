@@ -48,7 +48,7 @@
 #'       \item{forg}{The fraction of organic matter in the soil.}
 #'       \item{fgravel}{The fraction of gravel in the soil.}
 #' }
-#' @param params_modl A list of free (calibratable) model parameters.
+#' @param params_modl A named list of free (calibratable) model parameters.
 #' \describe{
 #'   \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
 #'   \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
@@ -62,7 +62,7 @@
 #'   above, but decreasing with a quadratic function below 10\eqn{^o}C).}
 #' }
 #' @param makecheck A logical specifying whether checks are performed 
-#'  to verify forcings. \code{TRUE} by default.
+#'  to verify forcings and model parameters. \code{TRUE} by default.
 #' @param verbose A logical specifying whether to print warnings.
 #' Defaults to \code{TRUE}.
 #'
@@ -261,6 +261,31 @@ run_pmodel_f_bysite <- function(
         # something weird more fundamentally -> don't run the model
         warning(" Returning a dummy data frame.")
         continue <- FALSE
+      }
+    }
+    
+    # Check model parameters
+    if(all(!is.nanull(params_siml$soilmstress), !is.nanull(params_siml$tempstress))){
+      if (length(params_modl) < 1){
+        warning("Error: Missing model parameters")
+        continue <- FALSE
+      } else if (is.nanull(params_modl$kphio)){
+        warning("Error: Missing kphio parameter, cannot run model.")
+        continue <- FALSE
+      }
+      if (params_siml$soilmstress){
+        if (any(is.nanull(params_modl$soilm_par_a), 
+                is.nanull(params_modl$soilm_par_b))){
+          warning("Error: Missing soilm_par_a and soilm_par_b parameters but soilmstress = TRUE.")
+          continue <- FALSE
+        } 
+      }
+      if(params_siml$tempstress){
+        if (any(is.nanull(params_modl$tau_acclim_tempstress),
+                is.nanull(params_modl$par_shape_tempstress))){
+          warning("Error: Missing tau and shape parameters but tempstress = TRUE.")
+          continue <- FALSE
+        }
       }
     }
   }

@@ -7,7 +7,7 @@ A modelling framework for site-scale simulations of ecosystem processes, impleme
 
 - P-model for leaf-level acclimation of photosynthesis from [Stocker et al. (2019)](https://www.geosci-model-dev-discuss.net/gmd-2019-200/).
 - SPLASH for bioclimatic variables, including the surface radiation budget and the soil water balance from [Davis et al. (2017)](https://doi.org/10.5194/gmd-10-689-2017).
-- LM3-PPA for comprehensive simulations of ecosystem carbon and water cycling, tree growth, and tree cohort-explicit forest dynamics following the Perfect Plasticity Approximation, from [Weng et al., (2015)](https://doi.org/10.5194/bg-12-2655-2015).
+- BiomeE for comprehensive simulations of ecosystem carbon and water cycling, tree growth, and tree cohort-explicit forest dynamics following the Perfect Plasticity Approximation, from [Weng et al., (2015)](https://doi.org/10.5194/bg-12-2655-2015).
 
 ## Installation
 
@@ -25,7 +25,9 @@ See vignette [Example for using rsofun](./articles/pmodel_use.html) for how to r
 
 ## Usage and contribution
 
-The developer (Beni Stocker) would appreciate if your developments can be fed back to this repository. Please make pull requests. Thanks.
+The developers (Beni Stocker, Koen Hufkens, Pepa Aran) would appreciate if your developments can be fed back to this repository. Please make pull requests. Thanks.
+
+Tutorials for developing the source code are available on our [YouTube Channel](https://www.youtube.com/@geco-group/playlists) (see Playlist 'rsofun').
 
 ## References
 

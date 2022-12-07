@@ -14,7 +14,7 @@ details.}
 
 \item{params_siml}{A nested data frame with rows for each site containing 
 simulation parameters for SOFUN. See \code{\link{run_pmodel_f_bysite}} or
-\code{\link{run_lm3ppa_f_bysite}}.}
+\code{\link{run_biomee_f_bysite}}.}
 
 \item{meteo}{A nested data frame with rows for each site and meteorological
 forcing data time series nested inside a column named \code{"data"}.}
