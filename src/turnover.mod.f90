@@ -69,12 +69,12 @@ contains
       if (params_pft_plant(pft)%grass) then
 
         ! Increase turnover rate during seed filling phase
-        dleaf = params_pft_plant(pft)%k_decay_leaf
+        dleaf =  1.0 - exp( -params_pft_plant(pft)%k_decay_leaf )
 
         ! constant turnover rate
-        droot = params_pft_plant(pft)%k_decay_root
-        dlabl = params_pft_plant(pft)%k_decay_labl
-        dseed = params_pft_plant(pft)%k_decay_root * 3.0
+        droot = 1.0 - exp( -params_pft_plant(pft)%k_decay_root )
+        dlabl = 1.0 - exp( -params_pft_plant(pft)%k_decay_labl )
+        dseed = 1.0 - exp( -params_pft_plant(pft)%k_decay_root  * 3.0)
 
       else
 
@@ -193,7 +193,7 @@ contains
     ! Execute turnover of fraction dleaf for leaf pool
     !------------------------------------------------------------------
     ! arguments
-    real, intent(in) :: dleaf
+    real, intent(in) :: dleaf     ! fraction decaying
     type( tile_type ), intent(inout) :: tile
     integer, intent(in) :: pft
 
@@ -220,6 +220,7 @@ contains
 
     ! reduce leaf C (given by turnover rate)
     cleaf = ( 1.0 - dleaf ) * tile%plant(pft)%pleaf%c%c12
+    ! cleaf = tile%plant(pft)%pleaf%c%c12 * exp( - dleaf * myinterface%params_siml%secs_per_tstep )
 
     ! get new LAI based on cleaf
     tile%plant(pft)%lai_ind = get_lai( pft, cleaf, tile%plant(pft)%actnv_unitfapar )

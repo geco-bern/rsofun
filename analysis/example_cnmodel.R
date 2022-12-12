@@ -343,6 +343,49 @@ ggplot() +
   geom_vline(xintercept = 0, linetype = "dotted")
 
 
+calc_ftemp <- function(temp){
+  E0 = 308.56
+  T0 = 227.13
+  Tzero = 273.15
+  ref_temp_local = 22
+  ftemp = exp(E0 * ((1.0 / (ref_temp_local + Tzero - T0)) - (1.0 / (temp + Tzero - T0))))
+  return(ftemp)
+}
+
+ggplot() +
+  geom_function(fun = calc_ftemp) +
+  xlim(0, 40) +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
+
+
+calc_decay <- function(t){
+  k = 1/100
+  y = exp(-k * t)
+  return(y)
+}
+
+ggplot() +
+  geom_function(fun = calc_decay) +
+  geom_point(aes(x = 10, y = 0.9), col = "red" ) +
+  geom_point(aes(x = 20, y = 0.8), col = "red" ) +
+  geom_point(aes(x = 50, y = 0.5), col = "red" ) +
+  xlim(0, 500) +
+  ylim(0, 1)
+
+calc_dc <- function(t){
+  k = 1/100
+  dc = 1 - exp(-k * t)
+  return(dc)
+}
+
+ggplot() +
+  geom_function(fun = calc_dc) +
+  geom_point(aes(x = 10, y = 0.1), col = "red" ) +
+  geom_point(aes(x = 20, y = 0.2), col = "red" ) +
+  geom_point(aes(x = 50, y = 0.5), col = "red" ) +
+  xlim(0, 500) +
+  ylim(0, 1)
 
 # df <- tibble(
 #   x = 1:15,
