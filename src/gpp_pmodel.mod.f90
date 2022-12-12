@@ -178,8 +178,9 @@ contains
           grid%dayl > 0.0 .and.                    &      ! no arctic night
           temp_memory > -5.0 ) then                       ! minimum temp threshold to avoid fpe
 
-        !----------------------------------------------------------------
-        ! With fAPAR = 1.0 (full light) for simulating Vcmax25
+        !================================================================
+        ! P-model call to get acclimated quantities as a function of the
+        ! damped climate forcing.
         !----------------------------------------------------------------
         out_pmodel = pmodel(  &
                               kphio          = params_pft_gpp(pft)%kphio * ftemp_kphio, &
@@ -205,6 +206,9 @@ contains
       ! if (nlu > 1) stop 'gpp: think about nlu > 1'
       lu = 1
 
+      !================================================================
+      ! Instantaneous responses using the acclimated photosynthetic 
+      ! capacities.
       !----------------------------------------------------------------
       ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
       !----------------------------------------------------------------
@@ -223,14 +227,6 @@ contains
       tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
         * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
       
-      !! print*,'gpp',tile_fluxes(lu)%plant(pft)%dgpp
-      !! print*,'fpcgrid',tile(lu)%plant(pft)%fpc_grid
-      !! print*,'fapar',tile(lu)%canopy%fapar
-      !! print*,'ppfd', climate%dppfd
-      !! print*,'secspertstep', myinterface%params_siml%secs_per_tstep
-      !! print*,'lue', out_pmodel%lue
-      !! print*,'soilmstress', soilmstress
-
       !----------------------------------------------------------------
       ! Dark respiration
       !----------------------------------------------------------------
