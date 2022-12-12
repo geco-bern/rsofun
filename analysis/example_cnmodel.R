@@ -156,81 +156,81 @@ tmp$params_siml[[1]]$recycle <- 5
 #   ~{df_meanann}) |>
 #   mutate(date = tmp$forcing[[1]]$date)
 
-# ## Synthetic forcing: Constant climate in all days -----------------------
-# df_growingseason_mean <- tmp$forcing[[1]] |>
-#   filter(temp > 5) |>
-#   summarise(across(where(is.double), .fns = mean))
-# df_mean <- tmp$forcing[[1]] |>
-#   summarise(across(where(is.double), .fns = mean))
-# 
-# tmp$forcing[[1]] <- tmp$forcing[[1]] |>
-#   mutate(temp = df_growingseason_mean$temp,
-#          prec = df_mean$prec,
-#          vpd = df_growingseason_mean$vpd,
-#          ppfd = df_mean$ppfd,
-#          patm = df_growingseason_mean$patm,
-#          ccov_int = df_growingseason_mean$ccov_int,
-#          ccov = df_growingseason_mean$ccov,
-#          snow = df_mean$snow,
-#          rain = df_mean$rain,
-#          fapar = df_mean$fapar,
-#          co2 = df_growingseason_mean$co2,
-#          tmin = df_growingseason_mean$tmin,
-#          tmax = df_growingseason_mean$tmax,
-#   )
+## Synthetic forcing: Constant climate in all days -----------------------
+df_growingseason_mean <- tmp$forcing[[1]] |>
+  filter(temp > 5) |>
+  summarise(across(where(is.double), .fns = mean))
+df_mean <- tmp$forcing[[1]] |>
+  summarise(across(where(is.double), .fns = mean))
 
-# ##  repeat last year's forcing N times -----------------------
-# n_ext <- 100
-# df_tmp <- tmp$forcing[[1]]
-# for (idx in seq(n_ext)){
-#   df_tmp <- bind_rows(
-#     df_tmp,
-#     df_tmp |>
-#       tail(365) |>
-#       mutate(date = date + years(1))
-#   )
-# }
-# tmp$params_siml[[1]]$nyeartrend <- tmp$params_siml[[1]]$nyeartrend + n_ext
-# tmp$forcing[[1]] <- df_tmp
+tmp$forcing[[1]] <- tmp$forcing[[1]] |>
+  mutate(temp = df_growingseason_mean$temp,
+         prec = df_mean$prec,
+         vpd = df_growingseason_mean$vpd,
+         ppfd = df_mean$ppfd,
+         patm = df_growingseason_mean$patm,
+         ccov_int = df_growingseason_mean$ccov_int,
+         ccov = df_growingseason_mean$ccov,
+         snow = df_mean$snow,
+         rain = df_mean$rain,
+         fapar = df_mean$fapar,
+         co2 = df_growingseason_mean$co2,
+         tmin = df_growingseason_mean$tmin,
+         tmax = df_growingseason_mean$tmax,
+  )
 
-# ## increase CO2 from 2010 -----------------------
-# elevate_co2 <- function(day){
-#   yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
-#   return(yy)
-# }
-# 
-# ggplot() +
-#   geom_function(fun = elevate_co2) +
-#   xlim(12000, 16000) +
-#   geom_vline(xintercept = 0, linetype = "dotted")
-# 
-# tmp$forcing[[1]] <- tmp$forcing[[1]] |>
-#   mutate(date2 = as.numeric(date)) |>
-#   mutate(co2 = co2 * elevate_co2(date2)) |>
-#   select(-date2)
-# 
-# tmp$forcing[[1]] |>
-#   head(3000) |>
-#   ggplot(aes(date, co2)) +
-#   geom_line()
+##  repeat last year's forcing N times -----------------------
+n_ext <- 100
+df_tmp <- tmp$forcing[[1]]
+for (idx in seq(n_ext)){
+  df_tmp <- bind_rows(
+    df_tmp,
+    df_tmp |>
+      tail(365) |>
+      mutate(date = date + years(1))
+  )
+}
+tmp$params_siml[[1]]$nyeartrend <- tmp$params_siml[[1]]$nyeartrend + n_ext
+tmp$forcing[[1]] <- df_tmp
+
+## increase CO2 from 2010 -----------------------
+elevate_co2 <- function(day){
+  yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
+  return(yy)
+}
+
+ggplot() +
+  geom_function(fun = elevate_co2) +
+  xlim(12000, 16000) +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
+tmp$forcing[[1]] <- tmp$forcing[[1]] |>
+  mutate(date2 = as.numeric(date)) |>
+  mutate(co2 = co2 * elevate_co2(date2)) |>
+  select(-date2)
+
+tmp$forcing[[1]] |>
+  head(3000) |>
+  ggplot(aes(date, co2)) +
+  geom_line()
 
 # ## increase Ndep from 2010 -----------------------
 # elevate_ndep <- function(day){
 #   yy <- 1 - 1 / (1 + exp(0.03*(day-14610)))
 #   return(yy)
 # }
-# 
+#
 # ggplot() +
 #   geom_function(fun = elevate_ndep) +
 #   xlim(12000, 16000) +
 #   geom_vline(xintercept = 0, linetype = "dotted")
-# 
+#
 # tmp$forcing[[1]] <- tmp$forcing[[1]] |>
 #   mutate(date2 = as.numeric(date)) |>
 #   mutate(dno3 = dno3 + 1.0 * elevate_ndep(date2),
 #          dnh4 = dnh4 + 1.0 * elevate_ndep(date2)) |>
 #   select(-date2)
-# 
+#
 # tmp$forcing[[1]] |>
 #   head(3000) |>
 #   ggplot(aes(date, dno3 + dnh4)) +

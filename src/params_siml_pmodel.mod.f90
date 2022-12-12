@@ -127,19 +127,19 @@ contains
       endif
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1
 
-      ! if (year >= spinupyr_soilequil_1 + 300) then
-      !   out_steering%dofree_alloc = .true.
-      ! else
-      !   out_steering%dofree_alloc = .false.
-      ! end if
-      out_steering%dofree_alloc = .false.
+      if (year >= spinupyr_soilequil_1 + 300) then
+        out_steering%dofree_alloc = .true.
+      else
+        out_steering%dofree_alloc = .false.
+      end if
+      ! out_steering%dofree_alloc = .false.
 
-      ! if (year >= spinupyr_soilequil_1 + 600) then
-      !   out_steering%closed_nbal = .true.
-      ! else
-      !   out_steering%closed_nbal = .false.
-      ! end if
-      out_steering%closed_nbal = .false.
+      if (year >= spinupyr_soilequil_1 + 600) then
+        out_steering%closed_nbal = .true.
+      else
+        out_steering%closed_nbal = .false.
+      end if
+      ! out_steering%closed_nbal = .false.
 
       if ( (year==spinupyr_soilequil_1 .or. year==spinupyr_soilequil_2 ) .and. year <= params_siml%spinupyears) then
         out_steering%do_soilequil = .true.
