@@ -330,6 +330,19 @@ ggplot() +
   geom_vline(xintercept = 0, linetype = "dotted")
 
 
+calc_f_nup <- function(conc){
+  jmax <- 2
+  k_nup <- 1
+  yy <- jmax / (1 + jmax/(k_nup * conc))
+  return(yy)
+}
+
+ggplot() +
+  geom_function(fun = calc_f_nup) +
+  xlim(0, 100) +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
+
 
 # df <- tibble(
 #   x = 1:15,
