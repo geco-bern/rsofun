@@ -16,7 +16,7 @@ module md_biosphere_cnmodel
   use md_turnover, only: turnover
   use md_landuse, only: landuse
   use md_littersom, only: littersom, getpar_modl_littersom
-  use md_ntransform, only: ntransform, getpar_modl_ntransform
+  use md_ntransform_simpl, only: ntransform, getpar_modl_ntransform
   use md_allocation_cnmodel, only: allocation_daily
 
   implicit none

@@ -298,7 +298,7 @@ gg11 <- output |>
   geom_line()
 gg12 <- output |> 
   as_tibble() |> 
-  ggplot(aes(date, nup)) + 
+  ggplot(aes(date, nloss/nup)) + 
   geom_line()
 
 gg9 / gg10 / gg11 / gg12
