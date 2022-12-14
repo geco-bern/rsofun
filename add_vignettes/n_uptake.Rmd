@@ -1,0 +1,188 @@
+---
+title: "N uptake"
+output: html_document
+date: "2022-11-16"
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Theory
+
+This is based on McMurtrie & Näsholm, 2017 New Phytologist (doi: 10.1111/nph.14927).
+
+The root length density per unit soil volume is a function of root biomass $C_r$ and morphological parameters (density: $\rho_r$, rooting depth $z_r$, root radius $r_0$).
+$$
+l_r = \frac{C_r}{2 \pi r_0 \rho_r \ z_r}
+$$
+The half-distance between root hairs follows from $l_r$:
+$$
+r_x = \sqrt{\frac{1}{\pi l_r} + r_0^2}
+$$
+And the total root surface area is
+$$
+A_r = 2 \pi r_0 l_r
+$$
+
+The uptake flux through a unit root surface area can be modelled for a steady-state condition where a demand and supply are set equal. The "demand" flux can be modelled based on Eq. 2 in McMurtrie & Näsholm as
+$$
+j_r = \frac{j_\text{rmax}}{1 + \frac{j_\text{rmax}}{k c_{s0}}}
+$$
+The supply flux is the sum of a diffusive and an advective component. The diffusive component is taken here as being driven by the difference between inorganic N concentrations at the root surface ($c_{s0}$) and in the bulk soil $c_x$, divided by the "travel distance" of N in the soil, i.e., the half-distance between roots $r_x$. The advective component is determined by the water uptake velocity $v_0$ and the N concentration in the bulk soil.
+$$
+j_s = \frac{D(c_x - c_{s0})}{r_x} + v_0 c_x
+$$
+Setting $j_r = j_s$ yields a solution fo $c_{s0}$ from which the root area-specific N uptake flux can be calculated either from the supply or the demand function.
+
+The N concentration in the bulk soil is taken to be determined by the amount of inorganic N per unit soil surface area (the units corresponding to the CN-model formulation) divided by the root surface area and soil depth:
+$$
+c_x = \frac{N_\text{inorg}}{z_r A_r} 
+$$
+(The last point is confusing to me).
+
+This is implemented below.
+
+## Implementation
+
+```{r}
+par_fnup <- list(
+  D = 3, #D = 0.0005, # m d-1, rhizosphere diffusivity
+  j = 2000, #j = 0.0056, # Jrmax = maximum root-N influx, g N m2 d-1
+  k = 1,  #k = 0.025,  # initial slope of MM for N uptake flux = root absorbing power, m d-1, McMurtrie & Näsholm, 2017
+  f = 0       # transpiration velocity
+)
+calc_conc <- function(N, root_distance, par){
+  (sqrt((par$D*par$j - par$D*par$k*N - par$f*par$k*N*root_distance + par$j*par$k*root_distance)^2 
+    - 4*par$D*par$k*(-par$D*par$j*N - par$f*par$j*N*root_distance)) - par$D*par$j + par$D*par$k*N 
+    + par$f*par$k*N*root_distance - par$j*par$k*root_distance)/(2*par$D*par$k)  
+}
+calc_fnup_demand <- function(conc, par){
+  par$k * par$j * conc / (par$k * conc + par$j)
+}
+calc_fnup_supply <- function(conc, N, root_distance, par){
+  par$D * (N - conc) / root_distance + par$f * N
+}
+
+calc_fnup <- function(ninorg, root_distance, par){
+  conc <- calc_conc(ninorg, root_distance, par)
+  nup_demand <- calc_fnup_demand(conc, par)
+  nup_supply <- calc_fnup_supply(conc, ninorg, root_distance, par)
+  # if (abs(nup_demand - nup_supply) > 0.001){
+  #   warning("N uptake based on supply and demand equations not identical.")
+  #   out <- NA
+  # } else {
+  #   out <- nup_demand
+  # }
+  out <- nup_demand
+  return(out)
+}
+```
+
+Express it all as a function of root biomass.
+```{r}
+# rough values based on Weemstra et al., 2020 https://doi.org/10.1111/1365-2435.13520
+par_rootmorph <- list(
+  zroot = 1,
+  rho = 0.2 * 100^3,  # g m-3
+  r0 = 0.3 / (2 * 1000) # m, radius
+)
+
+calc_root_length_density <- function(croot, par){
+  croot / (par$rho * par$zroot * 2 * pi * par$r0)
+}
+
+calc_a_root <- function(croot, par){
+  2 * pi * par$r0 * calc_root_length_density(croot, par)
+}
+
+calc_root_distance <- function(root_length_density, par){
+  sqrt(1/(pi * root_length_density) + par$r0^2)
+}
+
+calc_nup <- function(croot, ninorg, par_fnup, par_rootmorph){
+  a_root <- calc_a_root(croot, par_rootmorph)
+  n_conc <- ninorg /( par_rootmorph$zroot * a_root)
+  root_length_density <- calc_root_length_density(croot, par_rootmorph)
+  root_distance <- calc_root_distance(root_length_density, par_rootmorph)
+  fnup   <- calc_fnup(n_conc, root_distance, par_fnup)
+  a_root * fnup
+}
+```
+## Visualisations
+
+```{r}
+ggplot() +
+  geom_function(fun = 
+                  function(x) 
+                    calc_fnup(x, 
+                              root_distance = 1,
+                              par = list(
+                                D = 0.0005,
+                                j = 0.0056,
+                                k = 0.025, 
+                                f = 0
+                                )
+                               )) +
+  geom_function(fun = 
+                  function(x) 
+                    calc_fnup(x, 
+                              root_distance = 1,
+                              par = list(
+                                D = 0.0005,
+                                j = 0.056,
+                                k = 0.025, 
+                                f = 0
+                                )
+                               ), color = "blue") +
+  labs(title = "N uptake as a function of Ninorg") +
+  xlim(0, 100)
+```
+
+
+Root distance as a function of root mass.
+```{r}
+ggplot() +
+  geom_function(fun = 
+                  function(x) 
+                    calc_root_distance(
+                      calc_root_length_density(x, par_rootmorph),
+                      par_rootmorph
+                      )) +
+  xlim(0, 10000)
+```
+
+The total soil column N uptake as a function of total root biomass.
+```{r}
+ggplot() +
+  geom_function(fun = 
+                  function(x) 
+                    calc_nup(x,
+                             ninorg = 1,
+                             par_fnup,
+                             par_rootmorph
+                            )) +
+
+  labs(title = "Total N uptake as a function of Croot",
+       x = "Croot") +
+  xlim(0, 10000000)
+```
+
+The N uptake fraction as a function of the root volume density.
+```{r}
+df <- tibble(croot = seq(1000)) |> 
+  mutate(volume_density = croot / (par_rootmorph$rho * par_rootmorph$zroot),
+         nup = calc_nup(croot, ninorg = 0.2, par_fnup, par_rootmorph)) |> 
+  mutate(nup_fraction = nup/0.2)
+
+df |> 
+  ggplot(aes(croot, nup_fraction)) +
+  geom_line()
+
+df |> 
+  ggplot(aes(volume_density, nup_fraction)) +
+  geom_line()
+```
