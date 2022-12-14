@@ -167,6 +167,12 @@ contains
       ! water scalar (fraction of plant-available water holding capacity; water storage at wilting point is already accounted for in tile(lu)%soil%params%whc)
       tile(lu)%soil%phy%wscal = tile(lu)%soil%phy%wcont / tile(lu)%soil%params%whc
 
+      ! ! record for experimental output
+      ! tile_fluxes(lu)%plant(1)%debug1 = tile_fluxes(lu)%canopy%daet
+      ! tile_fluxes(lu)%plant(1)%debug2 = tile(lu)%soil%params%whc
+      ! tile_fluxes(lu)%plant(1)%debug3 = tile(lu)%soil%phy%wcont
+      ! tile_fluxes(lu)%plant(1)%debug4 = tile(lu)%soil%phy%wscal
+
     end do
 
   end subroutine waterbal
@@ -197,8 +203,6 @@ contains
     !---------------------------------------------------------
     ! Berger (1978)
     call get_berger_tls( doy, grid )
-    ! grid%nu     = out_berger%nu
-    ! grid%lambda = out_berger%lambda
 
     !---------------------------------------------------------
     ! 3. Calculate distance factor (dr), unitless

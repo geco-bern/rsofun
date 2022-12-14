@@ -179,11 +179,11 @@ contains
                                               - tile_fluxes(lu)%plant(pft)%drsapw &
                                                 )
 
-      ! record for experimental output
-      tile_fluxes(lu)%plant(pft)%debug1 = tile_fluxes(lu)%plant(pft)%dnpp%c12
-      tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%plabl%c%c12
-      tile_fluxes(lu)%plant(pft)%debug3 = tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile(lu)%plant(pft)%plabl%c%c12
-      tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%presv%c%c12
+      ! ! record for experimental output
+      ! tile_fluxes(lu)%plant(pft)%debug1 = tile_fluxes(lu)%plant(pft)%dnpp%c12
+      ! tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%plabl%c%c12
+      ! tile_fluxes(lu)%plant(pft)%debug3 = tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile(lu)%plant(pft)%plabl%c%c12
+      ! tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%presv%c%c12
 
 
       if (tile(lu)%plant(pft)%plabl%c%c12 < (-1) * eps) stop 'after npp labile C is neg.'

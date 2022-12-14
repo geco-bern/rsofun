@@ -193,48 +193,48 @@ for (idx in seq(n_ext)){
 tmp$params_siml[[1]]$nyeartrend <- tmp$params_siml[[1]]$nyeartrend + n_ext
 tmp$forcing[[1]] <- df_tmp
 
-## increase CO2 from 2010 -----------------------
-elevate_co2 <- function(day){
-  yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
+# ## increase CO2 from 2010 -----------------------
+# elevate_co2 <- function(day){
+#   yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
+#   return(yy)
+# }
+# 
+# ggplot() +
+#   geom_function(fun = elevate_co2) +
+#   xlim(12000, 16000) +
+#   geom_vline(xintercept = 0, linetype = "dotted")
+# 
+# tmp$forcing[[1]] <- tmp$forcing[[1]] |>
+#   mutate(date2 = as.numeric(date)) |>
+#   mutate(co2 = co2 * elevate_co2(date2)) |>
+#   select(-date2)
+# 
+# tmp$forcing[[1]] |>
+#   head(5000) |>
+#   ggplot(aes(date, co2)) +
+#   geom_line()
+
+## increase Ndep from 2010 -----------------------
+elevate_ndep <- function(day){
+  yy <- 1 - 1 / (1 + exp(0.03*(day-14610)))
   return(yy)
 }
 
 ggplot() +
-  geom_function(fun = elevate_co2) +
+  geom_function(fun = elevate_ndep) +
   xlim(12000, 16000) +
   geom_vline(xintercept = 0, linetype = "dotted")
 
 tmp$forcing[[1]] <- tmp$forcing[[1]] |>
   mutate(date2 = as.numeric(date)) |>
-  mutate(co2 = co2 * elevate_co2(date2)) |>
+  mutate(dno3 = dno3 + 1.0 * elevate_ndep(date2),
+         dnh4 = dnh4 + 1.0 * elevate_ndep(date2)) |>
   select(-date2)
 
 tmp$forcing[[1]] |>
   head(3000) |>
-  ggplot(aes(date, co2)) +
+  ggplot(aes(date, dno3 + dnh4)) +
   geom_line()
-
-# ## increase Ndep from 2010 -----------------------
-# elevate_ndep <- function(day){
-#   yy <- 1 - 1 / (1 + exp(0.03*(day-14610)))
-#   return(yy)
-# }
-#
-# ggplot() +
-#   geom_function(fun = elevate_ndep) +
-#   xlim(12000, 16000) +
-#   geom_vline(xintercept = 0, linetype = "dotted")
-#
-# tmp$forcing[[1]] <- tmp$forcing[[1]] |>
-#   mutate(date2 = as.numeric(date)) |>
-#   mutate(dno3 = dno3 + 1.0 * elevate_ndep(date2),
-#          dnh4 = dnh4 + 1.0 * elevate_ndep(date2)) |>
-#   select(-date2)
-#
-# tmp$forcing[[1]] |>
-#   head(3000) |>
-#   ggplot(aes(date, dno3 + dnh4)) +
-#   geom_line()
 
 ## Model run ------------------------
 output <- runread_pmodel_f(
@@ -260,7 +260,7 @@ gg3 <- output |>
   geom_line()
 gg4 <- output |> 
   as_tibble() |> 
-  ggplot(aes(date, croot)) + 
+  ggplot(aes(date, croot/cleaf)) + 
   geom_line()
 
 gg1 / gg2 / gg3 / gg4
@@ -294,14 +294,35 @@ gg10 <- output |>
   geom_line()
 gg11 <- output |> 
   as_tibble() |> 
-  ggplot(aes(date, enleach)) + 
+  ggplot(aes(date, nup)) + 
   geom_line()
 gg12 <- output |> 
+  as_tibble() |> 
+  ggplot(aes(date, netmin)) + 
+  geom_line()
+
+gg9 / gg10 / gg11 / gg12
+
+gg13 <- output |>  
+  as_tibble() |> 
+  ggplot(aes(date, cleaf/nleaf)) + 
+  geom_line()
+gg14 <- output |> 
+  as_tibble() |> 
+  ggplot(aes(date, croot/nroot)) + 
+  geom_line()
+gg15 <- output |> 
+  as_tibble() |> 
+  ggplot(aes(date, npp/nup)) + 
+  geom_line()
+gg16 <- output |> 
   as_tibble() |> 
   ggplot(aes(date, nloss/nup)) + 
   geom_line()
 
-gg9 / gg10 / gg11 / gg12
+gg13 / gg14 / gg15 / gg16
+
+# xxx nloss/nup seems way too high and Ninorg is oscillating
 
 output |> 
   as_tibble() |> 

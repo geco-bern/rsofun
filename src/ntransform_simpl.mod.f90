@@ -94,7 +94,7 @@ contains
     ! from input file
     !----------------------------------------------------------------
     ! maximum nitrification rate
-    params_ndecay%kdecay_ninorg = 0.001
+    params_ndecay%kdecay_ninorg = 0.01
 
   end subroutine getpar_modl_ntransform
 

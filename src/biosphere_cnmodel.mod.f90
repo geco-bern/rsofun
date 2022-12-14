@@ -132,7 +132,7 @@ contains
         call solar( tile_fluxes(:), &
                     myinterface%grid, & 
                     myinterface%climate(doy),  &
-                    doy &
+                    180 &     ! xxx try - constant conditions  doy &
                     )
         if (verbose) print*,'... done'
 

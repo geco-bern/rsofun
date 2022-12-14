@@ -183,6 +183,14 @@ contains
         ftemp( tile(lu)%soil%phy%temp, "lloyd_and_taylor" ) * &
         fmoist( tile(lu)%soil%phy%wscal, "foley" )
 
+
+      ! ! record for experimental output
+      ! tile_fluxes(lu)%plant(1)%debug1 = ksoil_fs
+      ! tile_fluxes(lu)%plant(1)%debug2 = klitt_af
+      ! tile_fluxes(lu)%plant(1)%debug3 = tile(lu)%soil%phy%temp
+      ! tile_fluxes(lu)%plant(1)%debug4 = tile(lu)%soil%phy%wscal  ! wscal is not stable!!!
+
+
       !////////////////////////////////////////////////////////////////
       ! LITTER DECAY
       ! Collect litter decomposition into LU-specific 
@@ -461,7 +469,6 @@ contains
 
     enddo luloop
 
-  
   end subroutine littersom
 
 
