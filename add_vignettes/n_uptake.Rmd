@@ -186,3 +186,18 @@ df |>
   ggplot(aes(volume_density, nup_fraction)) +
   geom_line()
 ```
+
+The N uptake fraction as a function of (bulk soil) inorganic N.
+```{r}
+df <- tibble(ninorg = seq(0.1, 50, by = 0.01)) |> 
+  mutate(nup = calc_nup(croot = 500, ninorg, par_fnup, par_rootmorph)) |> 
+  mutate(nup_fraction = nup/ninorg)
+
+df |> 
+  ggplot(aes(ninorg, nup_fraction)) +
+  geom_line()
+
+df |> 
+  ggplot(aes(ninorg, nup)) +
+  geom_line()
+```
