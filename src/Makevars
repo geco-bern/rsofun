@@ -26,7 +26,7 @@ waterbal_splash.mod.o: params_core.mod.o tile_pmodel.mod.o plant_pmodel.mod.o so
 gpp_pmodel.mod.o: params_core.mod.o sofunutils.mod.o plant_pmodel.mod.o tile_pmodel.mod.o interface_biosphere_pmodel.mod.o photosynth_pmodel.mod.o
 gpp_biomee.mod.o: datatypes.mod.o soil_biomee.mod.o forcing_siterun_biomee.mod.o photosynth_pmodel.mod.o params_core.mod.o sofunutils.mod.o
 photosynth_pmodel.mod.o: params_core.mod.o sofunutils.mod.o
-#soiltemp_sitch.mod.o: params_core.mod.o sofunutils.mod.o tile_pmodel.mod.o interface_biosphere_pmodel.mod.o
+soiltemp_sitch.mod.o: params_core.mod.o sofunutils.mod.o tile_pmodel.mod.o interface_biosphere_pmodel.mod.o
 plant_pmodel.mod.o: params_core.mod.o sofunutils.mod.o interface_biosphere_pmodel.mod.o
 vegdynamics_pmodel.mod.o: params_core.mod.o tile_pmodel.mod.o plant_pmodel.mod.o gpp_pmodel.mod.o waterbal_splash.mod.o
 biosphere_pmodel.mod.o: params_core.mod.o classdefs.mod.o sofunutils.mod.o plant_pmodel.mod.o waterbal_splash.mod.o gpp_pmodel.mod.o vegdynamics_pmodel.mod.o tile_pmodel.mod.o interface_biosphere_pmodel.mod.o soiltemp_sitch.mod.o vegdynamics_pmodel.mod.o
@@ -57,7 +57,7 @@ md_tile_pmodel.mod: tile_pmodel.mod.o
 md_gpp_pmodel.mod: gpp_pmodel.mod.o
 md_gpp_biomee.mod: gpp_biomee.mod.o
 md_photosynth.mod: photosynth_pmodel.mod.o
-#md_soiltemp.mod: soiltemp_sitch.mod.o
+md_soiltemp.mod: soiltemp_sitch.mod.o
 md_vegdynamics_pmodel.mod: vegdynamics_pmodel.mod.o
 datatypes.mod: datatypes.o
 md_soil_biomee.mod: soil_biomee.o

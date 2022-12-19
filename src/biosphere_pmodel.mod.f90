@@ -9,6 +9,7 @@ module md_biosphere_pmodel
     getpar_modl_tile, diag_daily, diag_annual, init_annual
   use md_plant_pmodel, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
+  use md_soiltemp, only: soiltemp
 
   implicit none
 
@@ -154,19 +155,16 @@ contains
                         )
         ! if (verbose) print*,'... done'
 
-        ! !----------------------------------------------------------------
-        ! ! calculate soil temperature
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        ! calculate soil temperature
+        !----------------------------------------------------------------
         ! if (verbose) print*, 'calling soiltemp() ... '
-        ! call soiltemp(&
-        !               tile(:)%soil, &
-        !               myinterface%climate%dtemp(:), &
-        !               size(myinterface%grid), &
-        !               myinterface%steering%init, &
-        !               jpngr, & 
-        !               moy, & 
-        !               doy & 
-        !               )
+        call soiltemp(&
+                      tile(:)%soil, &
+                      myinterface%climate(:)%dtemp, &
+                      moy, & 
+                      doy & 
+                      )
         ! if (verbose) print*, '... done'
 
         !----------------------------------------------------------------
@@ -192,6 +190,7 @@ contains
         out_biosphere%chi(doy)     = tile_fluxes(1)%canopy%chi
         out_biosphere%iwue(doy)    = tile_fluxes(1)%canopy%iwue
         out_biosphere%rd(doy)      = tile_fluxes(1)%canopy%drd
+        out_biosphere%tsoil(doy)   = tile(1)%soil%phy%temp    
 
         init_daily = .false.
 
