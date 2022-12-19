@@ -25,7 +25,9 @@ See vignette [Example for using rsofun](./articles/pmodel_use.html) for how to r
 
 ## Usage and contribution
 
-The developer (Beni Stocker) would appreciate if your developments can be fed back to this repository. Please make pull requests. Thanks.
+The developers (Beni Stocker, Koen Hufkens, Pepa Aran) would appreciate if your developments can be fed back to this repository. Please make pull requests. Thanks.
+
+Tutorials for developing the source code are available on our [YouTube Channel](https://www.youtube.com/@geco-group/playlists) (see Playlist 'rsofun').
 
 ## References
 

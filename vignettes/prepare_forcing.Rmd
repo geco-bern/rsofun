@@ -233,7 +233,7 @@ output <- rsofun::runread_pmodel_f(
   par = params_modl
   )
 
-output$data[[1]][[1]] %>% 
+output$data[[1]] %>% 
   ggplot(aes(date, gpp)) +
   geom_line()
 ```
