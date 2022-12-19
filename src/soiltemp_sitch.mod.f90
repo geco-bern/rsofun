@@ -39,7 +39,7 @@ module md_soiltemp
 
 contains
 
-  subroutine soiltemp( soil, dtemp, ngridcells, jpngr, moy, doy ) 
+  subroutine soiltemp( soil, dtemp, moy, doy ) 
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil temperature based on.
     !-------------------------------------------------------------------------
@@ -51,16 +51,13 @@ contains
 
     ! arguments
     type( soil_type ), dimension(nlu), intent(inout) :: soil
-    integer, intent(in)                              :: jpngr
+    real, dimension(ndayyear), intent(in)            :: dtemp        ! daily temperature (deg C)
     integer, intent(in)                              :: moy        ! current month of year
     integer, intent(in)                              :: doy        ! current day of year
-    real, dimension(ndayyear), intent(in)            :: dtemp        ! daily temperature (deg C)
-    integer, intent(in)                              :: ngridcells
-    ! logical, intent(in)                              :: init
 
     ! local variables
-    real, dimension(:,:), allocatable, save   :: dtemp_pvy    ! daily temperature of previous year (deg C)
-    real, dimension(:,:,:), allocatable, save :: wscal_pvy    ! daily Cramer-Prentice-Alpha of previous year (unitless) 
+    real, dimension(:),   allocatable, save   :: dtemp_pvy    ! daily temperature of previous year (deg C)
+    real, dimension(:,:), allocatable, save   :: wscal_pvy    ! daily Cramer-Prentice-Alpha of previous year (unitless) 
     real, dimension(:,:), allocatable, save   :: wscal_alldays
 
     !real, dimension(ndayyear), save :: dtemp_buf        ! daily temperature vector containing values of the present day and the preceeding 364 days. Updated daily. (deg C)
@@ -75,15 +72,15 @@ contains
 
     ! in first year, use this years air temperature (available for all days in this year)
     if ( myinterface%steering%init .and. doy==1 ) then
-      if (.not.allocated(dtemp_pvy    )) allocate( dtemp_pvy(ndayyear,ngridcells) )
-      if (.not.allocated(wscal_pvy    )) allocate( wscal_pvy(nlu,ndayyear,ngridcells) )
+      if (.not.allocated(dtemp_pvy    )) allocate( dtemp_pvy(ndayyear) )
+      if (.not.allocated(wscal_pvy    )) allocate( wscal_pvy(nlu,ndayyear) )
       if (.not.allocated(wscal_alldays)) allocate( wscal_alldays(nlu,ndayyear) )
-      dtemp_pvy(:,jpngr) = dtemp(:)
+      dtemp_pvy(:) = dtemp(:)
     end if
 
     wscal_alldays(:,doy) = soil(:)%phy%wscal
 
-    avetemp = running( dtemp, doy, ndayyear, ndayyear, "mean", dtemp_pvy(:,jpngr) ) 
+    avetemp = running( dtemp, doy, ndayyear, ndayyear, "mean", dtemp_pvy(:) ) 
 
     ! get monthly mean temperature vector from daily vector
     !mtemp     = daily2monthly( dtemp,     "mean" )
@@ -100,8 +97,8 @@ contains
       pm = moy - 1
       ppm = moy - 2
     end if
-    tempthismonth = running( dtemp, doy, ndayyear, ndaymonth(pm), "mean", dtemp_pvy(:,jpngr))
-    templastmonth = running( dtemp, modulo( doy - ndaymonth(pm), ndayyear ), ndayyear, ndaymonth(ppm), "mean", dtemp_pvy(:,jpngr))
+    tempthismonth = running( dtemp, doy, ndayyear, ndaymonth(pm), "mean", dtemp_pvy(:))
+    templastmonth = running( dtemp, modulo( doy - ndaymonth(pm), ndayyear ), ndayyear, ndaymonth(ppm), "mean", dtemp_pvy(:))
 
 
     do lu=1,nlu
@@ -113,7 +110,7 @@ contains
       if (myinterface%steering%init) then
         meanw1  = running( wscal_alldays(lu,:), doy, ndayyear, ndayyear, "mean")
       else
-        meanw1  = running( wscal_alldays(lu,:), doy, ndayyear, ndayyear, "mean", wscal_pvy(lu,:,jpngr))
+        meanw1  = running( wscal_alldays(lu,:), doy, ndayyear, ndayyear, "mean", wscal_pvy(lu,:))
       end if
 
       ! In case of zero soil water, return with soil temp = air temp
@@ -156,8 +153,8 @@ contains
 
     ! save temperature for next year
     if (doy==ndayyear) then
-      dtemp_pvy(:,jpngr) = dtemp(:)
-      wscal_pvy(:,:,jpngr) = wscal_alldays(:,:)
+      dtemp_pvy(:) = dtemp(:)
+      wscal_pvy(:,:) = wscal_alldays(:,:)
     end if
 
     return

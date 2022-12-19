@@ -416,7 +416,7 @@ contains
       params%pwp          = pwp
       params%whc_dz       = whc_dz
       params%ksat         = ksat
-      params%thdiff_wp    = 0.2    ! value chosen from LPX (most soil codes have 0.2)
+      params%thdiff_wp    = 0.2 ! value chosen from LPX (most soil codes have 0.2)
       params%thdiff_whc15 = 0.6 ! value chosen from LPX (most soil codes have 0.2)
       params%thdiff_fc    = 0.4
 
