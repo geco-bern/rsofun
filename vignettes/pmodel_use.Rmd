@@ -1,6 +1,6 @@
 ---
 title: "P-model usage"
-author: "Koen Hufkens"
+author: "Koen Hufkens, Pepa Aran"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{P-model usage}
@@ -37,7 +37,7 @@ p_model_drivers
 p_model_validation
 ```
 
-These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters.
+These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters. To get your raw data into the structure used within `rsofun`, please see R packages [ingestr](https://github.com/computationales/ingestr) and [FluxDataKit](https://github.com/computationales/FluxDataKit).
 
 ## Running model
 
@@ -75,8 +75,7 @@ library(ggplot2)
 # the main model output
 model_data <- output %>%
   filter(sitename == "FR-Pue") %>%
-  tidyr::unnest(data) %>% # Unnests the list with one dataframe
-  tidyr::unnest(data) # Now it unnests the dataframe
+  tidyr::unnest(data)
 
 validation_data <- p_model_validation %>%
   tidyr::unnest(data)
@@ -161,7 +160,6 @@ output_new <- rsofun::runread_pmodel_f(
 # the main model output
 model_data_new <- output_new %>%
   filter(sitename == "FR-Pue") %>%
-  tidyr::unnest(data) %>%
   tidyr::unnest(data)
 
   ggplot() +

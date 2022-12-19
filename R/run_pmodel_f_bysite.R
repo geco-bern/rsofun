@@ -38,7 +38,8 @@
 #'       simulating the soil water balance.}
 #' }
 #' @param forcing A data frame of forcing climate data, used as input 
-#'  (returned object by \code{\link{collect_drivers_sofun}}).
+#'  (returned object by \code{\link{collect_drivers_sofun}}, see \code{\link{p_model_drivers}}
+#'  for a detailed description of its structure and contents).
 #' @param params_soil A list of soil texture parameters, for the top and bottom
 #' layer of soil.
 #' \describe{
@@ -67,9 +68,34 @@
 #'
 #' @import dplyr
 #' 
-#' @details Model output is provided as a tidy dataframe, with columns 
-#' \code{"fapar", "gpp", "transp", "latenth", "pet", "vcmax",
-#' "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue", "rd"}.
+#' @returns Model output is provided as a tidy dataframe, with columns:
+#' \describe{
+#'   \item{\code{date}}{Date of the observation in YYYY-MM-DD format.}
+#'   \item{\code{year_dec}}{Decimal representation of year and day of the year
+#'      (for example, 2007.000 corresponds to 2007-01-01 and 2007.003 to 2007-01-02.}
+#'   \item{\code{fapar}}{Fraction of photosynthetic active radiation (fAPAR), taking
+#'      values between 0 and 1.}
+#'   \item{\code{gpp}}{Gross Primary Productivity (GPP) for each time stamp 
+#'       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'   \item{\code{transp}}{Actual evapotranspiration (AET) (in mm d\eqn{^{-1}}).}
+#'   \item{\code{latenth}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'   \item{\code{pet}}{Potential evapotranspiration (PET) (in mm d\eqn{^{-1}}).}
+#'   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
+#'       (Vcmax) (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'   \item{\code{jmax}}{Maximum rate of electron transport for RuBP regeneration
+#'       (in mol CO\eqn{_2} m\eqn{^{-2}} s\eqn{^{-1}}).}
+#'   \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax), 
+#'       normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'   \item{\code{jmax25}}{Maximum rate of electron transport, normalised to 
+#'       25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
+#'   \item{\code{gs_accl}}{Acclimated stomatal conductance (in 
+#'       mol C m\eqn{^{−2}} d\eqn{^{−1}} Pa\eqn{^{−1}}).}
+#'   \item{\code{wscal}}{Relative soil water content, between 0 (permanent wilting 
+#'       point, PWP) and 1 (field capacity, FC).}
+#'   \item{\code{chi}}{Ratio of leaf-internal to ambient CO\eqn{_{2}}, ci:ca (unitless).}
+#'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
+#'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
+#'   } 
 #'
 #' @export
 #' @useDynLib rsofun

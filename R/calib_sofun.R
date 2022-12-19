@@ -25,9 +25,14 @@
 #'   \item{\code{targets}}{Name of the observed target variable to use in calibration
 #'   (necessary if \code{method = 'BayesianTools'}).}
 #'  }
+#'  @param optim_out A logical indicating whether the function returns the raw
+#'  output of the optimization functions (defaults to TRUE).
 #'  
-#' @return A complemented named list containing 
-#'  the calibration settings and optimised parameter values.
+#' @return A named list containing the calibrated parameter vector `par` and
+#' the output object from the optimization `mod`. For more details on this
+#' output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
+#' \href{https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html}{this post})
+#' and \link[GenSA]{GenSA}.
 #' @export
 #' @importFrom magrittr %>%
 #' @import GenSA BayesianTools
@@ -44,8 +49,12 @@
 calib_sofun <- function(
   drivers,
   obs,
-  settings
+  settings,
+  optim_out = TRUE
 ){
+  # predefine variables for CRAN check compliance
+  cost <- lower <- upper <- pars <- out <- out_optim <- priors <- setup <- 
+    bt_par <- bt_settings <- NULL
   
   # check input variables
   if(missing(obs) | missing(drivers) | missing(settings)){
@@ -75,7 +84,7 @@ calib_sofun <- function(
     upper <- unlist(lapply(settings$par, function(x) x$upper))
     pars <- unlist(lapply( settings$par, function(x) x$init))
     
-    out_optim <- GenSA::GenSA(
+    out <- GenSA::GenSA(
       par   = pars,
       fn    = cost,
       lower = lower,
@@ -84,6 +93,12 @@ calib_sofun <- function(
       obs = obs,
       drivers = drivers
     )
+    if(optim_out){
+      out_optim <- list(par = out$par, mod = out)
+    }else{
+      out_optim <- list(par = out$par)
+    }
+    
   } 
   
   #--- Bayesiantools ----
@@ -130,7 +145,12 @@ calib_sofun <- function(
     # drop last value
     bt_par <- BayesianTools::MAP(out)$parametersMAP
     bt_par <- bt_par[1:(length(bt_par))]
-    out_optim <- list(par = bt_par)
+    if(optim_out){
+      out_optim <- list(par = bt_par, mod = out)
+    }else{
+      out_optim <- list(par = bt_par)
+    }
+    
     names(out_optim$par) <- names(settings$par)
   }
   
