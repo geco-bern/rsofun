@@ -2115,6 +2115,44 @@ contains
   !==================== Vegetation initializations =======================
   !=======================================================================
 
+  subroutine reinitialize_vegn_tile( vegn, nCohorts )
+    !////////////////////////////////////////////////////////////////
+    ! Code from BiomeE-Allocation
+    ! copied from initialize_vegn_tile() - just parts related to re-
+    ! initialising plant pools, introducing prescribed cohorts after
+    ! disturbance
+    !---------------------------------------------------------------
+    type(vegn_tile_type), intent(inout), pointer :: vegn
+    integer, intent(in) :: nCohorts
+    ! -local vars -------
+    type(cohort_type), dimension(:), pointer :: cc
+    type(cohort_type), pointer :: cx
+
+    ! Initialize plant cohorts
+    init_n_cohorts = nCohorts ! Weng,2018-11-21
+    allocate(cc(1:init_n_cohorts), STAT = istat)
+    vegn%cohorts => cc
+    vegn%n_cohorts = init_n_cohorts
+    cc => null()
+
+    do i=1,init_n_cohorts
+      cx => vegn%cohorts(i)
+      cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
+      cx%layer   = 1
+      cx%species = INT(myinterface%init_cohort(i)%init_cohort_species)
+      cx%ccID    =  i
+      cx%plabl%c%c12     = myinterface%init_cohort(i)%init_cohort_nsc
+      cx%nindivs = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
+      cx%psapw%c%c12     = myinterface%init_cohort(i)%init_cohort_bsw
+      cx%pwood%c%c12     = myinterface%init_cohort(i)%init_cohort_bHW
+      btotal     = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
+      call initialize_cohort_from_biomass(cx,btotal)
+    enddo
+    MaxCohortID = cx%ccID
+
+  end subroutine reinitialize_vegn_tile
+
+
   subroutine initialize_vegn_tile( vegn, nCohorts )
     !////////////////////////////////////////////////////////////////
     ! Code from BiomeE-Allocation

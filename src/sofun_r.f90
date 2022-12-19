@@ -650,7 +650,10 @@ contains
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
       !----------------------------------------------------------------
-      myinterface%steering = getsteering( yr, myinterface%params_siml )
+      ! xxx pass forcing as argument here.
+      ! set myinterface%steering%reinit to true in the year after disturbance was
+      ! implemented as fharv = 1.0.
+      myinterface%steering = getsteering( yr, myinterface%params_siml, ... ) 
 
       !----------------------------------------------------------------
       ! Get external (environmental) forcing (for biomee, co2 is in myinterface%climate)

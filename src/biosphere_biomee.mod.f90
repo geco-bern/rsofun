@@ -79,6 +79,21 @@ contains
 
     endif
 
+
+    !----------------------------------------------------------------
+    ! Re-initialisation of cohorts after disturbance
+    !----------------------------------------------------------------
+    if (myinterface%steering%reinit) then ! is true in the year after disturbance
+
+      ! Initialize vegetation tile and plant cohorts
+      allocate( vegn )
+      call reinitialize_vegn_tile( vegn, nCohorts)
+      
+      ! Sort and relayer cohorts
+      call relayer_cohorts( vegn )
+
+    endif    
+
     simu_steps = 0
 
     !----------------------------------------------------------------
