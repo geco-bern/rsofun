@@ -260,7 +260,7 @@ gg3 <- output |>
   geom_line()
 gg4 <- output |> 
   as_tibble() |> 
-  ggplot(aes(date, croot/cleaf)) + 
+  ggplot(aes(date, croot)) + 
   geom_line()
 
 gg1 / gg2 / gg3 / gg4
@@ -675,3 +675,8 @@ ggplot() +
   labs(x = "Variable", y = "Log Response Ratio") +
   coord_flip() +
   labs(title = "cnmodel prediction", subtitle = "Response to eCO2")
+
+
+## Write output to file --------------------
+# write_csv(output, file = "../data/output_cnmodel_co2.csv")
+readr::write_csv(as_tibble(output), file = "~/lt_cn_review/data/output_cnmodel_nfert.csv")

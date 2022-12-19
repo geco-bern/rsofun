@@ -112,6 +112,7 @@ calc_nup <- function(croot, ninorg, par_fnup, par_rootmorph){
   a_root * fnup
 }
 ```
+
 ## Visualisations
 
 ```{r}
@@ -165,32 +166,69 @@ ggplot() +
                              par_fnup,
                              par_rootmorph
                             )) +
-
+  geom_function(fun = 
+                  function(x) 
+                    calc_nup(x,
+                             ninorg = 1,
+                             par_fnup,
+                             list(
+                               zroot = 1,
+                               rho = 0.2 * 100^3,  # g m-3
+                               r0 = 0.03 / (2 * 1000) # m, radius
+                             )
+                            ), col = "royalblue") +
   labs(title = "Total N uptake as a function of Croot",
        x = "Croot") +
-  xlim(0, 10000000)
+  xlim(0, 1000)
 ```
 
 The N uptake fraction as a function of the root volume density.
 ```{r}
 df <- tibble(croot = seq(1000)) |> 
   mutate(volume_density = croot / (par_rootmorph$rho * par_rootmorph$zroot),
-         nup = calc_nup(croot, ninorg = 0.2, par_fnup, par_rootmorph)) |> 
-  mutate(nup_fraction = nup/0.2)
+         nup = calc_nup(croot, 
+                        ninorg = 0.2, 
+                        list(
+                             D = 3,
+                             j = 2000,
+                             k = 1,
+                             f = 0
+                             ), 
+                        par_rootmorph
+                        ),
+         nup2 = calc_nup(croot, 
+                        ninorg = 0.2, 
+                        list(
+                             D = 3,
+                             j = 500,
+                             k = 1,
+                             f = 0
+                             ), 
+                        par_rootmorph
+                        )
+         ) |> 
+  mutate(nup_fraction = nup/0.2,
+         nup_fraction2 = nup2/0.2)
 
 df |> 
-  ggplot(aes(croot, nup_fraction)) +
-  geom_line()
+  ggplot() +
+  geom_line(aes(croot, nup_fraction)) +
+  geom_line(aes(croot, nup_fraction2), col = "royalblue")
 
 df |> 
-  ggplot(aes(volume_density, nup_fraction)) +
-  geom_line()
+  ggplot() +
+  geom_line(aes(volume_density, nup_fraction)) +
+  geom_line(aes(volume_density, nup_fraction2), col = "royalblue")
 ```
 
 The N uptake fraction as a function of (bulk soil) inorganic N.
 ```{r}
 df <- tibble(ninorg = seq(0.1, 50, by = 0.01)) |> 
-  mutate(nup = calc_nup(croot = 500, ninorg, par_fnup, par_rootmorph)) |> 
+  mutate(nup = calc_nup(croot = 500, 
+                        ninorg, 
+                        par_fnup, 
+                        par_rootmorph
+                        )) |> 
   mutate(nup_fraction = nup/ninorg)
 
 df |> 
