@@ -35,6 +35,7 @@ module md_tile_pmodel
     real :: whc_dz         ! water holding capacity per unit soil depth (unitless)
     real :: zr             ! apparent rooting depth (mm)
     real :: rzwsc          ! total root zone water storage capacity (mm)
+    real :: k_rzwsc        ! e-folding length scale (shape parameter) for water stress function of supply rate (mm-1)
     real :: ksat
     real :: thdiff_wp
     real :: thdiff_whc15
@@ -426,8 +427,7 @@ contains
       params%rzwsc = myinterface%rzwsc
       params%zr = myinterface%rzwsc / params%whc_dz
 
-      ! print*,'params%rzwsc', params%rzwsc
-      ! print*,'params%zr   ', params%zr   
+      params%k_rzwsc = 0.1  ! initial trial
 
     ! end do
 

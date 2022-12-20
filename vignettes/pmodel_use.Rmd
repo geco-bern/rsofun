@@ -122,8 +122,8 @@ settings <- list(
   control = list(
     sampler = "DEzs",
     settings = list(
-      burnin = 500,
-      iterations = 1500
+      burnin = 1000,
+      iterations = 3000
     )),
   par = list(
     kphio       = list(lower=0.04, upper=0.2, init = 0.05),
