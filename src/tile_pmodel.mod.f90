@@ -39,7 +39,7 @@ module md_tile_pmodel
     real :: thdiff_wp
     real :: thdiff_whc15
     real :: thdiff_fc
-  end type
+  end type paramtype_soil
 
   !----------------------------------------------------------------
   ! Soil type

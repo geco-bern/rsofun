@@ -168,7 +168,8 @@ contains
       ! water scalar (fraction of plant-available water holding capacity; water storage at wilting point is already accounted for in tile(lu)%soil%params%whc)
       ! WHC = FC - PWP
       ! WSCAL = (WCONT - PWP) / (FC - PWP)
-      tile(lu)%soil%phy%wscal = tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rzwsc
+      tile(lu)%soil%phy%wscal = (tile(lu)%soil%phy%wcont - tile(lu)%soil%params%pwp * tile(lu)%soil%params%zr) &
+                                / tile(lu)%soil%params%rzwsc
 
     end do
 
