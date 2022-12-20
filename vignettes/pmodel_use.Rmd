@@ -116,7 +116,7 @@ settings <- list(
   method              = "bayesiantools",
   metric              = create_cost_rmse_pmodel(
                           params_modl = params_modl, # fix param values
-                          setup = 'BRC',
+                          setup  = 'FULL',
                           method = 'BayesianTools'
                           ),
   control = list(
@@ -126,7 +126,9 @@ settings <- list(
       iterations = 1500
     )),
   par = list(
-    kphio = list(lower=0.04, upper=0.2, init = 0.05)
+    kphio       = list(lower=0.04, upper=0.2, init = 0.05),
+    soilm_par_a = list(lower=0.0,  upper=1.0, init = 0.05),
+    soilm_par_b = list(lower=0.0,  upper=2.0, init = 0.05)
     )
 )
 ```
@@ -151,7 +153,9 @@ When successful the optimized parameters can be used to run subsequent modelling
 
 ```{r}
 # reformatting the parameter list
-params_modl$kphio <- pars$par["kphio"]
+params_modl$kphio       <- pars$par["kphio"]
+params_modl$soilm_par_a <- pars$par["soilm_par_a"]
+params_modl$soilm_par_b <- pars$par["soilm_par_b"]
 
 # run the model for these parameters
 output_new <- rsofun::runread_pmodel_f(

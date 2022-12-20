@@ -426,6 +426,9 @@ contains
       params%rzwsc = myinterface%rzwsc
       params%zr = myinterface%rzwsc / params%whc_dz
 
+      ! print*,'params%rzwsc', params%rzwsc
+      ! print*,'params%zr   ', params%zr   
+
     ! end do
 
   end subroutine initglobal_soil_params  

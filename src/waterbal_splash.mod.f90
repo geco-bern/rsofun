@@ -171,6 +171,8 @@ contains
       tile(lu)%soil%phy%wscal = (tile(lu)%soil%phy%wcont - tile(lu)%soil%params%pwp * tile(lu)%soil%params%zr) &
                                 / tile(lu)%soil%params%rzwsc
 
+      ! print*,'wcont, wscal ', tile(lu)%soil%phy%wcont, tile(lu)%soil%phy%wscal
+
     end do
 
   end subroutine waterbal
