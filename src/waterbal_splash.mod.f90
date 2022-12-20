@@ -113,7 +113,7 @@ contains
     do lu=1,nlu
 
       ! Calculate evaporative supply rate, mm/h
-      sw = kCw * tile(lu)%soil%phy%wcont / tile(lu)%soil%params%whc
+      sw = kCw * tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rzwsc
 
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
@@ -135,18 +135,18 @@ contains
       tile(lu)%soil%phy%wcont = tile(lu)%soil%phy%wcont + out_snow_rain%liquid_to_soil - tile_fluxes(lu)%canopy%daet
 
       ! Bucket model for runoff generation
-      if (tile(lu)%soil%phy%wcont > tile(lu)%soil%params%whc) then
+      if (tile(lu)%soil%phy%wcont > tile(lu)%soil%params%rzwsc) then
         ! -----------------------------------
         ! Bucket is full 
         ! -----------------------------------
         ! determine NO3 leaching fraction 
-        tile_fluxes(lu)%canopy%dfleach = 1.0 - tile(lu)%soil%params%whc / tile(lu)%soil%phy%wcont
+        tile_fluxes(lu)%canopy%dfleach = 1.0 - tile(lu)%soil%params%rzwsc / tile(lu)%soil%phy%wcont
 
         ! add remaining water to monthly runoff total
-        tile_fluxes(lu)%canopy%dro = tile(lu)%soil%phy%wcont - tile(lu)%soil%params%whc
+        tile_fluxes(lu)%canopy%dro = tile(lu)%soil%phy%wcont - tile(lu)%soil%params%rzwsc
 
         ! set soil moisture to capacity
-        tile(lu)%soil%phy%wcont = tile(lu)%soil%params%whc
+        tile(lu)%soil%phy%wcont = tile(lu)%soil%params%rzwsc
 
       else if (tile(lu)%soil%phy%wcont < 0.0) then
         ! -----------------------------------
@@ -168,7 +168,7 @@ contains
       ! water scalar (fraction of plant-available water holding capacity; water storage at wilting point is already accounted for in tile(lu)%soil%params%whc)
       ! WHC = FC - PWP
       ! WSCAL = (WCONT - PWP) / (FC - PWP)
-      tile(lu)%soil%phy%wscal = tile(lu)%soil%phy%wcont / tile(lu)%soil%params%whc
+      tile(lu)%soil%phy%wscal = tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rzwsc
 
     end do
 

@@ -34,6 +34,9 @@ library(rsofun)
 
 p_model_drivers
 
+# p_model_drivers$site_info[[1]] <- p_model_drivers$site_info[[1]] |> 
+#   rename(rzwsc = whc)
+
 p_model_validation
 ```
 

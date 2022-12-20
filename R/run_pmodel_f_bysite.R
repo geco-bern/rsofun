@@ -34,7 +34,7 @@
 #'       \item{lon}{Longitud of the site location.}
 #'       \item{lat}{Latitude of the site location.}
 #'       \item{elv}{Elevation of the site location, in meters.}
-#'       \item{whc}{A numeric value for the water holding capacity (in mm), used for 
+#'       \item{rzwsc}{A numeric value for the total root zone water storage capacity (mm), used for 
 #'       simulating the soil water balance.}
 #' }
 #' @param forcing A data frame of forcing climate data, used as input 
@@ -340,7 +340,7 @@ run_pmodel_f_bysite <- function(
       longitude                 = as.numeric(site_info$lon),
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
-      whc                       = as.numeric(site_info$whc),
+      rzwsc                     = as.numeric(site_info$rzwsc),
       soiltexture               = soiltexture,
       n                         = n,
       par                       = par, 

@@ -30,10 +30,11 @@ module md_tile_pmodel
     real :: fclay
     real :: forg
     real :: fgravel
-    real :: fc
-    real :: pwp
-    real :: whc_dz      ! water holding capacity per unit soil depth
-    real :: whc
+    real :: fc             ! water content at field capacity (mm)
+    real :: pwp            ! water content at permanent wilting-point (mm)
+    real :: whc_dz         ! water holding capacity per unit soil depth (unitless)
+    real :: zr             ! apparent rooting depth (mm)
+    real :: rzwsc          ! total root zone water storage capacity (mm)
     real :: ksat
     real :: thdiff_wp
     real :: thdiff_whc15
@@ -236,7 +237,7 @@ contains
     call initglobal_soil_phy( soil%phy )
     call initglobal_soil_params( soil%params )
 
-    soil%phy%wscal = soil%phy%wcont / soil%params%whc
+    soil%phy%wscal = soil%phy%wcont / soil%params%rzwsc
 
 
   end subroutine initglobal_soil
@@ -420,9 +421,10 @@ contains
       params%thdiff_wp    = 0.2 ! value chosen from LPX (most soil codes have 0.2)
       params%thdiff_whc15 = 0.6 ! value chosen from LPX (most soil codes have 0.2)
       params%thdiff_fc    = 0.4
-      
-      ! overwrite
-      params%whc = myinterface%whc_prescr
+
+      ! apparent rooting depth
+      params%rzwsc = myinterface%rzwsc
+      params%zr = myinterface%rzwsc / params%whc_dz
 
     ! end do
 
