@@ -40,8 +40,8 @@ module md_photosynth
     ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
     ! real :: rd25                ! Dark respiration at 25 deg C (mol CO2 m-2 s-1)
     ! real :: rd25_unitiabs       ! Dark respiration at 25 deg C per unit absorbed light (mol CO2 m-2 s-1)
-    real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
-    real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
+    ! real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
+    ! real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
     ! real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
   end type outtype_pmodel
 
@@ -118,8 +118,8 @@ contains
     real :: ftemp_inst_jmax     ! Instantaneous temperature response factor of Jmax (unitless)
     real :: rd                  ! Dark respiration (mol CO2 m-2 s-1)
     real :: rd_unitiabs         ! Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
-    real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
-    real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
+    ! real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
+    ! real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
     ! real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
 
@@ -322,14 +322,14 @@ contains
     ! Vcmax25 per unit absorbed light
     vcmax25_unitiabs = vcmax_unitiabs / ftemp_inst_vcmax
 
-    !-----------------------------------------------------------------------
-    ! Leaf metabolic N content
-    !-----------------------------------------------------------------------
-    ! active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
-    actnv  = vcmax25 * n_v
+    ! !-----------------------------------------------------------------------
+    ! ! Leaf metabolic N content
+    ! !-----------------------------------------------------------------------
+    ! ! active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
+    ! actnv  = vcmax25 * n_v
 
-    ! active metabolic leaf N per unit absorbed light
-    actnv_unitiabs = vcmax25_unitiabs * n_v
+    ! ! active metabolic leaf N per unit absorbed light
+    ! actnv_unitiabs = vcmax25_unitiabs * n_v
 
     !-----------------------------------------------------------------------
     ! Check for consistency with classic FvCB equations
@@ -375,8 +375,8 @@ contains
     out_pmodel%jmax25              = jmax25
     out_pmodel%vcmax25             = vcmax25
     out_pmodel%vcmax25_unitiabs    = vcmax25_unitiabs
-    out_pmodel%actnv               = actnv
-    out_pmodel%actnv_unitiabs      = actnv_unitiabs
+    ! out_pmodel%actnv               = actnv
+    ! out_pmodel%actnv_unitiabs      = actnv_unitiabs
 
   end function pmodel
 
@@ -400,8 +400,8 @@ contains
     out_pmodel%jmax25              = 0.0
     out_pmodel%vcmax25             = 0.0
     out_pmodel%vcmax25_unitiabs    = 0.0
-    out_pmodel%actnv               = 0.0
-    out_pmodel%actnv_unitiabs      = 0.0
+    ! out_pmodel%actnv               = 0.0
+    ! out_pmodel%actnv_unitiabs      = 0.0
 
   end function zero_pmodel
 

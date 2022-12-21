@@ -279,10 +279,12 @@ run_pmodel_f_bysite <- function(
       as.numeric(params_modl$docmax),
       as.numeric(params_modl$dnitr2n2o),
 
-      # additional ones
+      # additional ones - need to be added to bottom, otherwise 
+      # re-arrangement of entire vector is necessary
       as.numeric(params_modl$beta),
       as.numeric(params_modl$rd_to_vcmax),
-      as.numeric(params_modl$tau_acclim)
+      as.numeric(params_modl$tau_acclim),
+      as.numeric(params_modl$nv_vcmax25)
       )
 
     # Soil texture as matrix (layer x texture parameter)

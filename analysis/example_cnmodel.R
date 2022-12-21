@@ -29,9 +29,11 @@ pars <- list(
   k_decay_labl          = 0.00000,
   k_decay_sapw          = 1.00000,
   
+  # parameters determining tissue C:N, etc.
   r_cton_root           = 37.0000,
   r_cton_wood           = 100.000,
   r_cton_seed           = 15.0000,
+  nv_vcmax25            = 5000.0,
   ncw_min               = 0.056,
   r_n_cw_v              = 0.4,
   r_ctostructn_leaf     = 35.0000,
@@ -193,48 +195,48 @@ for (idx in seq(n_ext)){
 tmp$params_siml[[1]]$nyeartrend <- tmp$params_siml[[1]]$nyeartrend + n_ext
 tmp$forcing[[1]] <- df_tmp
 
-# ## increase CO2 from 2010 -----------------------
-# elevate_co2 <- function(day){
-#   yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
-#   return(yy)
-# }
-# 
-# ggplot() +
-#   geom_function(fun = elevate_co2) +
-#   xlim(12000, 16000) +
-#   geom_vline(xintercept = 0, linetype = "dotted")
-# 
-# tmp$forcing[[1]] <- tmp$forcing[[1]] |>
-#   mutate(date2 = as.numeric(date)) |>
-#   mutate(co2 = co2 * elevate_co2(date2)) |>
-#   select(-date2)
-# 
-# tmp$forcing[[1]] |>
-#   head(5000) |>
-#   ggplot(aes(date, co2)) +
-#   geom_line()
-
-## increase Ndep from 2010 -----------------------
-elevate_ndep <- function(day){
-  yy <- 1 - 1 / (1 + exp(0.03*(day-14610)))
+## increase CO2 from 2010 -----------------------
+elevate_co2 <- function(day){
+  yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
   return(yy)
 }
 
 ggplot() +
-  geom_function(fun = elevate_ndep) +
+  geom_function(fun = elevate_co2) +
   xlim(12000, 16000) +
   geom_vline(xintercept = 0, linetype = "dotted")
 
 tmp$forcing[[1]] <- tmp$forcing[[1]] |>
   mutate(date2 = as.numeric(date)) |>
-  mutate(dno3 = dno3 + 1.0 * elevate_ndep(date2),
-         dnh4 = dnh4 + 1.0 * elevate_ndep(date2)) |>
+  mutate(co2 = co2 * elevate_co2(date2)) |>
   select(-date2)
 
 tmp$forcing[[1]] |>
-  head(3000) |>
-  ggplot(aes(date, dno3 + dnh4)) +
+  head(5000) |>
+  ggplot(aes(date, co2)) +
   geom_line()
+
+# ## increase Ndep from 2010 -----------------------
+# elevate_ndep <- function(day){
+#   yy <- 1 - 1 / (1 + exp(0.03*(day-14610)))
+#   return(yy)
+# }
+# 
+# ggplot() +
+#   geom_function(fun = elevate_ndep) +
+#   xlim(12000, 16000) +
+#   geom_vline(xintercept = 0, linetype = "dotted")
+# 
+# tmp$forcing[[1]] <- tmp$forcing[[1]] |>
+#   mutate(date2 = as.numeric(date)) |>
+#   mutate(dno3 = dno3 + 1.0 * elevate_ndep(date2),
+#          dnh4 = dnh4 + 1.0 * elevate_ndep(date2)) |>
+#   select(-date2)
+# 
+# tmp$forcing[[1]] |>
+#   head(3000) |>
+#   ggplot(aes(date, dno3 + dnh4)) +
+#   geom_line()
 
 ## Model run ------------------------
 output <- runread_pmodel_f(
@@ -256,7 +258,7 @@ gg2 <- output |>
   geom_line()
 gg3 <- output |> 
   as_tibble() |> 
-  ggplot(aes(date, clabl)) + 
+  ggplot(aes(date, cleaf/nleaf)) + 
   geom_line()
 gg4 <- output |> 
   as_tibble() |> 
@@ -639,7 +641,7 @@ output |>
 ### Response ratios ---------------------------
 df_out <- output |> 
   mutate(leaf_cn = cleaf/nleaf, root_shoot = croot/cleaf, n_inorg = pno3 + pnh4) |> 
-  select(date, gpp, vcmax, jmax, gs = gs_accl, leaf_cn, lai, cleaf, 
+  select(date, gpp, vcmax, jmax, gs = gs_accl, narea, leaf_cn, lai, cleaf, 
          croot, root_shoot, nup, n_inorg)
 
 df_amb <- df_out |> 
@@ -658,17 +660,17 @@ df_exp <- bind_rows(df_amb, df_ele)
 df_rr  <- log(df_exp[2,]/df_exp[1,]) |> 
   pivot_longer(cols = everything(), names_to = "variable", values_to = "response") |> 
   mutate(variable = factor(variable, 
-                           levels = rev(c("gpp", "vcmax", "jmax", "gs", "leaf_cn", "lai", "cleaf", 
+                           levels = rev(c("gpp", "vcmax", "jmax", "gs", "narea", "leaf_cn", "lai", "cleaf", 
                                           "croot", "root_shoot", "nup", "n_inorg"))))
 
 df_exp2 <- bind_rows(df_amb, df_ele2)
 df_rr2  <- log(df_exp2[2,]/df_exp2[1,]) |> 
   pivot_longer(cols = everything(), names_to = "variable", values_to = "response") |> 
   mutate(variable = factor(variable, 
-                           levels = rev(c("gpp", "vcmax", "jmax", "gs", "leaf_cn", "lai", "cleaf", 
+                           levels = rev(c("gpp", "vcmax", "jmax", "gs", "narea", "leaf_cn", "lai", "cleaf", 
                                           "croot", "root_shoot", "nup", "n_inorg"))))
 
-ggplot() +
+ggrr <- ggplot() +
   geom_point(aes(variable, response), data = df_rr2, size = 2, color = "grey50") +
   geom_point(aes(variable, response), data = df_rr, size = 2) +
   geom_hline( yintercept = 0.0, size = 0.5, linetype = "dotted" ) +
@@ -678,5 +680,5 @@ ggplot() +
 
 
 ## Write output to file --------------------
-# write_csv(output, file = "../data/output_cnmodel_co2.csv")
-readr::write_csv(as_tibble(output), file = "~/lt_cn_review/data/output_cnmodel_nfert.csv")
+write_csv(output, file = "data/output_cnmodel_co2.csv")
+# readr::write_csv(as_tibble(output), file = "../data/output_cnmodel_nfert.csv")

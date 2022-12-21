@@ -65,6 +65,7 @@ module md_plant
     real    :: r_ntoc_root         ! N:C ratio in roots (inverse of 'r_cton_root', gN/gC)
     real    :: r_cton_seed         ! C:N ratio in seeds (gC/gN)
     real    :: r_ntoc_seed         ! N:C ratio in seeds (gN/gC)
+    real    :: nv_vcmax25          ! relationship between Vcmax25 and metabolic leaf N (including N in other enzymes - assumed to scale with Vcmax25)
     real    :: ncw_min             ! y-axis intersection in the relationship of non-metabolic versus metabolic N per leaf area    
     real    :: r_n_cw_v            ! slope in the relationship of non-metabolic versus metabolic N per leaf area              
     real    :: r_ctostructn_leaf   ! constant ratio of C to structural N (mol C / mol N)
@@ -230,7 +231,7 @@ contains
   function get_lai( pft, cleaf, actnv_unitfapar ) result( lai )
     !////////////////////////////////////////////////////////////////
     ! Calculates LAI as a function of leaf-C. This is not so straight
-    ! forward due to the dependence of canopy-metabolic leaf N on LAI,
+    ! forward due to the dependency of canopy-metabolic leaf N on LAI,
     ! and the dependence of canopy-structural leaf N and C on canopy-
     ! metabolic leaf N.
     !----------------------------------------------------------------
@@ -621,6 +622,9 @@ contains
     ! seed C:N and N:C ratio (gC/gN and gN/gC)
     out_getpftparams%r_cton_seed = myinterface%params_calib%r_cton_seed
     out_getpftparams%r_ntoc_seed = 1.0 / out_getpftparams%r_cton_seed
+
+    ! relationship between Vcmax25 and metabolic leaf N (including N in other enzymes - assumed to scale with Vcmax25)
+    out_getpftparams%nv_vcmax25 = myinterface%params_calib%nv_vcmax25
 
     ! y-axis intersection in the relationship of non-metabolic versus metabolic N per leaf area
     out_getpftparams%ncw_min = myinterface%params_calib%ncw_min

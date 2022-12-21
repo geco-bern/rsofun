@@ -90,6 +90,7 @@ module md_interface_pmodel
     real :: beta
     real :: rd_to_vcmax
     real :: tau_acclim
+    real :: nv_vcmax25
   end type paramstype_calib  
 
   type interfacetype_biosphere
