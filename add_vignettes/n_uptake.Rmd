@@ -8,8 +8,11 @@ date: "2022-11-16"
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(scico)    # for the nice color scale
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# Full version
 
 ## Theory
 
@@ -238,4 +241,100 @@ df |>
 df |> 
   ggplot(aes(ninorg, nup)) +
   geom_line()
+```
+
+
+```{r}
+df <- expand.grid(croot = seq(from = 1, to = 1000, by = 10), 
+                  ninorg = seq(from = 1, to = 50, by = 0.5)) |> 
+  as_tibble() |> 
+  mutate(fnup = purrr::map2_dbl(croot, 
+                                ninorg, 
+                                ~calc_nup(.x, .y, par_fnup, par_rootmorph)))
+
+gg_full <- ggplot(df, aes(croot, ninorg)) + 
+  geom_tile(aes(fill = fnup)) +
+  geom_contour(aes(z = fnup), color = "grey50") +
+  scale_fill_scico(palette = 'roma') +
+  theme_classic() +
+  labs(title = "N uptake", x = "Croot", y = "Ninorg")
+gg_full
+```
+
+# Simple version
+
+## Theory
+
+The simplest representation of the fact that N uptake is saturating both with respect to the root biomass and with respect to soil inorganic N (the latter is often ignored in models) is the following:
+$$
+N_\text{up} = V_\text{C}(N_\text{inorg}) \frac{C_r}{k_C + C_r}
+$$
+where $k_C(N_\text{inorg})$ is also saturating:
+$$
+V_C(N_\text{inorg}) = V_\text{max}\frac{N_\text{inorg}}{k_V + N_\text{inorg}}
+$$
+
+## Implementation
+
+```{r}
+calc_vmax <- function(ninorg, par){
+  par$vmax * ninorg / (par$kv + ninorg)
+}
+
+calc_nup_simpl <- function(croot, ninorg, par){
+  vmax = calc_vmax(ninorg, par)
+  vmax * croot / (par$kc + croot)
+}
+```
+
+
+```{r}
+par <- list(
+  kc = 800,
+  kv = 10,
+  vmax = 20
+)
+
+ggplot() +
+  geom_function(fun = function(x) calc_nup_simpl(croot = 15, ninorg = x, par)) +
+  xlim(0, 200) + 
+  labs(x = "Ninorg", y = "Nup", title = "Croot = 15")
+```
+
+```{r}
+ggplot() +
+  geom_function(fun = function(x) calc_nup_simpl(x, ninorg = 10, par)) +
+  xlim(0, 100) + 
+  labs(x = "Croot", y = "Nup", title = "Ninorg = 10")
+```
+
+```{r}
+par <- list(
+  kc = 800,
+  kv = 10,
+  vmax = 20
+)
+
+df <- expand.grid(croot = seq(from = 1, to = 1000, by = 10), 
+                  ninorg = seq(from = 1, to = 50, by = 0.5)) |> 
+  as_tibble() |> 
+  mutate(fnup = purrr::map2_dbl(croot, 
+                                ninorg, 
+                                ~calc_nup_simpl(.x, .y, par)))
+
+gg_simpl <- ggplot(df, aes(croot, ninorg)) + 
+  geom_tile(aes(fill = fnup)) +
+  geom_contour(aes(z = fnup), color = "grey50") +
+  scale_fill_scico(palette = 'roma') +
+  theme_classic() +
+  labs(title = "N uptake", x = "Croot", y = "Ninorg")
+gg_simpl
+```
+
+
+# Comparison
+
+```{r}
+library(patchwork)
+gg_full + gg_simpl
 ```

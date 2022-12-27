@@ -24,8 +24,8 @@ pars <- list(
   r_sapw                = 2*0.044000,
   exurate               = 0.003000,
   
-  k_decay_leaf          = 2.00000,
-  k_decay_root          = 1.00000,
+  k_decay_leaf          = 2.0000,
+  k_decay_root          = 2.0000,
   k_decay_labl          = 0.00000,
   k_decay_sapw          = 1.00000,
   
@@ -36,7 +36,7 @@ pars <- list(
   nv_vcmax25            = 5000.0,
   ncw_min               = 0.056,
   r_n_cw_v              = 0.4,
-  r_ctostructn_leaf     = 35.0000,
+  r_ctostructn_leaf     = 70.0000,
   kbeer                 = 0.500000,
   
   # Phenology (should be PFT-specific)
@@ -325,6 +325,16 @@ gg16 <- output |>
 gg13 / gg14 / gg15 / gg16
 
 # xxx nloss/nup seems way too high and Ninorg is oscillating
+
+output |> 
+  as_tibble() |> 
+  ggplot(aes(croot, nup)) + 
+  geom_line()
+
+output |> 
+  as_tibble() |> 
+  ggplot(aes(ninorg, nup)) + 
+  geom_line()
 
 output |> 
   as_tibble() |> 
