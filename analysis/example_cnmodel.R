@@ -107,8 +107,12 @@ pars <- list(
   tau_acclim            = 10,
   
   # for development
-  tmppar                = 9999
-  
+  tmppar                = 9999,
+
+  # simple N uptake module parameters
+  kc = 800,
+  kv = 10,
+  vmax = 20
 )
 
 ## Forcing ------------------------

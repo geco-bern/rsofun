@@ -79,7 +79,7 @@ contains
     real(kind=c_double),  intent(in) :: whc
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(76), intent(in) :: par  ! Model parameters
+    real(kind=c_double),  dimension(79), intent(in) :: par  ! Model parameters
     real(kind=c_double),  dimension(nt,18), intent(in) :: forcing
     real(kind=c_double),  dimension(nt,49), intent(out) :: output
 
@@ -226,6 +226,9 @@ contains
     myinterface%params_calib%rd_to_vcmax           = real(par(74))
     myinterface%params_calib%tau_acclim            = real(par(75))
     myinterface%params_calib%nv_vcmax25            = real(par(76))
+    myinterface%params_calib%nuptake_kc            = real(par(77))
+    myinterface%params_calib%nuptake_kv            = real(par(78))
+    myinterface%params_calib%nuptake_vmax          = real(par(79))
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)

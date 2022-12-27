@@ -12,7 +12,7 @@ module md_biosphere_cnmodel
   use md_vegdynamics_cnmodel, only: vegdynamics
   use md_soiltemp, only: soiltemp
   use md_npp, only: npp
-  use md_nuptake, only: getpar_modl_nuptake, nuptake
+  use md_nuptake_simpl, only: getpar_modl_nuptake, nuptake
   use md_turnover, only: turnover
   use md_landuse, only: landuse
   use md_littersom, only: littersom, getpar_modl_littersom

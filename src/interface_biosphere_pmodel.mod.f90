@@ -91,6 +91,9 @@ module md_interface_pmodel
     real :: rd_to_vcmax
     real :: tau_acclim
     real :: nv_vcmax25
+    real :: nuptake_kc
+    real :: nuptake_kv
+    real :: nuptake_vmax
   end type paramstype_calib  
 
   type interfacetype_biosphere

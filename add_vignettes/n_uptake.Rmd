@@ -277,12 +277,12 @@ $$
 ## Implementation
 
 ```{r}
-calc_vmax <- function(ninorg, par){
+calc_vn <- function(ninorg, par){
   par$vmax * ninorg / (par$kv + ninorg)
 }
 
 calc_nup_simpl <- function(croot, ninorg, par){
-  vmax = calc_vmax(ninorg, par)
+  vmax = calc_vn(ninorg, par)
   vmax * croot / (par$kc + croot)
 }
 ```

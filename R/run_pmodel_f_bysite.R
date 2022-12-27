@@ -284,7 +284,13 @@ run_pmodel_f_bysite <- function(
       as.numeric(params_modl$beta),
       as.numeric(params_modl$rd_to_vcmax),
       as.numeric(params_modl$tau_acclim),
-      as.numeric(params_modl$nv_vcmax25)
+      as.numeric(params_modl$nv_vcmax25),
+
+      # additional parameters for the simple N uptake module
+      as.numeric(params_modl$nuptake_kc),
+      as.numeric(params_modl$nuptake_kv),
+      as.numeric(params_modl$nuptake_vmax)
+
       )
 
     # Soil texture as matrix (layer x texture parameter)
