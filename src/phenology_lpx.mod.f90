@@ -76,8 +76,8 @@ contains
     dtemp_int = monthly2daily( mtemp, "interpol", .false., mtemp_pvy )
 
     ! First find warmest and coldest month and mid-summer day
-    warmest=1
-    do month=1,nmonth
+    warmest = 1
+    do month = 1, nmonth
       if (mtemp(month) > mtemp(warmest)) warmest = month
     enddo
     coldest = 1
@@ -86,7 +86,7 @@ contains
     enddo
     midsummer = middaymonth( warmest )
 
-    pftloop: do pft=1,npft
+    pftloop: do pft = 1, npft
       lu = params_pft_plant(pft)%lu_category
 
       !----------------------------------------------------------
@@ -128,23 +128,23 @@ contains
         !   !----------------------------------------------------------
         !   ! TREES
         !   !----------------------------------------------------------
-        !   aphen=sum(dtphen_tmp(:))
+        !   aphen = sum(dtphen_tmp(:))
         !   if (aphen>210) then 
-        !     do d=middaymonth(coldest),middaymonth(coldest)+75
-        !       if (d<=ndayyear) then
-        !         day=d
+        !     do d=middaymonth(coldest),middaymonth(coldest) + 75
+        !       if (d <= ndayyear) then
+        !         day = d
         !       else
-        !         day=d-ndayyear      
+        !         day = d - ndayyear      
         !       endif
-        !       dtphen_tmp(day,pft)=0.0
+        !       dtphen_tmp(day,pft) = 0.0
         !     enddo
-        !     do d=middaymonth(coldest)-75,middaymonth(coldest)
-        !       if (d>=1) then
-        !         day=d
+        !     do d = middaymonth(coldest)-75,middaymonth(coldest)
+        !       if (d >= 1) then
+        !         day = d
         !       else
-        !         day=ndayyear+d
+        !         day = ndayyear + d
         !       endif
-        !       dtphen_tmp(day,pft)=0.0
+        !       dtphen_tmp(day,pft) = 0.0
         !     enddo
         !   endif
         ! endif
@@ -167,7 +167,7 @@ contains
       ! if (npft>1) stop 'in phenology: think of something nice'
       ! pft = 1
 
-      ! do day=2,ndayyear
+      ! do day = 2,ndayyear
 
       !   if (params_pft_pheno(pft)%summergreen) then
       !     !----------------------------------------------------------

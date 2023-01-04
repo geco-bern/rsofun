@@ -180,55 +180,58 @@ contains
       if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps ) then
 
         if (params_pft_plant(pft)%grass) then
-          ! !-------------------------------------------------------------------------
-          ! ! PHENOPHASE: SEED FILLING
-          ! ! Determine day when "absorbed" top-of-atmosphere radiation per unit leaf 
-          ! ! area starts declining
-          ! !-------------------------------------------------------------------------
-          ! ! Calculate absorbed top-of-atmosphere solar radiation per unit leaf area
-          ! ! Using TOA radiation here to avoid effects by daily varying cloud cover,
-          ! ! assuming the plant senses available radiation over the seasons based on day length.
-          ! an_unitlai = tile_fluxes(lu)%canopy%dra &
-          !              * tile(lu)%plant(pft)%fapar_ind &
-          !              / tile(lu)%plant(pft)%lai_ind
+          !-------------------------------------------------------------------------
+          ! PHENOPHASE: SEED FILLING
+          ! Determine day when "absorbed" top-of-atmosphere radiation per unit leaf 
+          ! area starts declining
+          !-------------------------------------------------------------------------
+          ! Calculate absorbed top-of-atmosphere solar radiation per unit leaf area
+          ! Using TOA radiation here to avoid effects by daily varying cloud cover,
+          ! assuming the plant senses available radiation over the seasons based on day length.
+          an_unitlai = tile_fluxes(lu)%canopy%dra
+                       ! * tile(lu)%plant(pft)%fapar_ind &
+                       ! / tile(lu)%plant(pft)%lai_ind
 
-          ! ! Apply low-pass filter on an_unitlai
-          ! if (firstcall1) then
-          !   an_vec(lu,pft,:) = an_unitlai
-          !   if (pft == npft .and. lu == nlu) firstcall1 = .false.
-          ! else
-          !   an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
-          !   an_vec(lu,pft,len_an_vec) = an_unitlai
-          ! end if
+          ! Apply low-pass filter on an_unitlai
+          if (firstcall1) then
+            an_vec(lu,pft,:) = an_unitlai
+            if (pft == npft .and. lu == nlu) firstcall1 = .false.
+          else
+            an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
+            an_vec(lu,pft,len_an_vec) = an_unitlai
+          end if
 
-          ! ! normalise by mean
-          ! tmp_vec = an_vec(lu,pft,:) / (sum(an_vec(lu,pft,:)) / len_an_vec)
+          ! normalise by mean
+          tmp_vec = an_vec(lu,pft,:) / (sum(an_vec(lu,pft,:)) / len_an_vec)
 
-          ! ! get trend of an_unitlai over preceeding len_an_vec days
-          ! vec_idx = (/ (idx, idx = 1, len_an_vec) /)
-          ! call calc_reg_line( real(vec_idx(:)), tmp_vec, intercept, slope )
+          ! get trend of an_unitlai over preceeding len_an_vec days
+          vec_idx = (/ (idx, idx = 1, len_an_vec) /)
+          call calc_reg_line( real(vec_idx(:)), tmp_vec, intercept, slope )
 
-          ! ! calculate fraction allocated to seeds
-          ! f_seed = calc_f_seed( slope )
+          ! calculate fraction allocated to seeds
+          f_seed = calc_f_seed( slope )
 
-          ! ! record trend for test output
-          ! tile_fluxes(lu)%plant(pft)%debug1 = an_unitlai            
-          ! tile_fluxes(lu)%plant(pft)%debug2 = slope            
-          ! tile_fluxes(lu)%plant(pft)%debug3 = f_seed            
+          ! record trend for test output
+          tile_fluxes(lu)%plant(pft)%debug1 = an_unitlai            
+          tile_fluxes(lu)%plant(pft)%debug2 = slope            
+          tile_fluxes(lu)%plant(pft)%debug3 = f_seed            
 
-          ! ! Only start filling seeds if LAI > 1
-          ! if (tile(lu)%plant(pft)%lai_ind < 1.0) then
-          !   f_seed = 0.0
-          ! end if
+          ! Only start filling seeds if LAI > 1
+          if (tile(lu)%plant(pft)%lai_ind < 1.0) then
+            f_seed = 0.0
+          end if
 
           ! XXX try
-          f_seed = 0.0
+          ! if (year < 2004) then
+            ! f_seed = 0.0
+          ! end if
 
           ! initialise (to make sure)
           dcleaf = 0.0
           dcroot = 0.0
           dcseed = 0.0
           drgrow = 0.0
+
 
           ! if ( myinterface%steering%dofree_alloc ) then
           !   !==================================================================
@@ -521,15 +524,14 @@ contains
             ! Calculate maximum C allocatable based on current labile pool size, 
             ! discounted by the yield factor.
             !------------------------------------------------------------------
-            ! ! with temperature limitation on growth 
+            ! ! witholding C for respiration
             ! avl = orgfrac(  kdecay_labl * calc_ft_growth( climate%dtemp ), &
             !                 orgfrac( (1.0 - frac_for_resp), &
             !                           tile(lu)%plant(pft)%plabl ) )
 
-            ! without temperature limitation on growth
+            ! without witholding C for respiration
             avl = orgfrac(  kdecay_labl * calc_ft_growth( climate%dtemp ), &
-                            orgfrac( (1.0 - frac_for_resp), &
-                                      tile(lu)%plant(pft)%plabl ) )
+                            tile(lu)%plant(pft)%plabl )
 
             ! additionally constrain allocatable C by available N, given the lower C:N of leaves or roots
             if (myinterface%steering%dofree_alloc .and. myinterface%steering%closed_nbal) then
@@ -545,18 +547,18 @@ contains
             dcroot = (1.0 - f_seed) * (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
             dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
 
-            !-------------------------------------------------------------------
-            ! SEED ALLOCATION
-            !-------------------------------------------------------------------
-            call orgmv( orgpool( carbon( dcseed ), nitrogen( dnseed )  ) , &
-                        tile(lu)%plant(pft)%plabl, &
-                        tile(lu)%plant(pft)%pseed &
-                        )
+            ! !-------------------------------------------------------------------
+            ! ! SEED ALLOCATION
+            ! !-------------------------------------------------------------------
+            ! call orgmv( orgpool( carbon( dcseed ), nitrogen( dnseed )  ) , &
+            !             tile(lu)%plant(pft)%plabl, &
+            !             tile(lu)%plant(pft)%pseed &
+            !             )
             
-            ! ... and remove growth respiration from labile C, update growth respiration
-            dclabl = (1.0 / params_plant%growtheff) * dcseed
-            tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - dclabl
-            tile_fluxes(lu)%plant(pft)%drgrow = tile_fluxes(lu)%plant(pft)%drgrow + dclabl - dcseed
+            ! ! ... and remove growth respiration from labile C, update growth respiration
+            ! dclabl = (1.0 / params_plant%growtheff) * dcseed
+            ! tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - dclabl
+            ! tile_fluxes(lu)%plant(pft)%drgrow = tile_fluxes(lu)%plant(pft)%drgrow + dclabl - dcseed
 
             !-------------------------------------------------------------------
             ! LEAF ALLOCATION
@@ -731,11 +733,11 @@ contains
       ! N is the turnover time of the labile pool in days.
       c_labl_target = par_labl * sum( r_rex_vec(lu,pft,:) )
 
-      ! The target reserves pool size is determined by the current leaf plus fine 
-      ! root mass
+      ! The target reserves pool size is determined by the cumulative amount of C allocated
+      ! to leaves, roots, and seeds
       c_resv_target = par_resv * (sum( c_a_l_vec(lu,pft,:) ) &
-                    + sum( c_a_r_vec(lu,pft,:) ) &
-                    + sum( c_a_s_vec(lu,pft,:) ))
+                      + sum( c_a_r_vec(lu,pft,:) ) &
+                      + sum( c_a_s_vec(lu,pft,:) ) )
 
       ! ! during reserves spinup phase, keep them at their target value all the time
       ! if (.not. myinterface%steering%spinup_reserves) then
@@ -778,9 +780,9 @@ contains
 
       end if
 
-      ! xxx debug
-      tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 &
-                                        - (1.0/3650.0) * tile(lu)%plant(pft)%presv%c%c12
+      ! ! xxx debug
+      ! tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 &
+      !                                   - (1.0/3650.0) * tile(lu)%plant(pft)%presv%c%c12
 
       ! ! record for experimental output
       ! tile_fluxes(lu)%plant(pft)%debug1 = f_resv_to_labl
@@ -1194,6 +1196,9 @@ contains
     real :: yy
 
     yy = 1.0 / (1.0 + exp(-1.0 * (xx - 5.0)))
+
+    ! ! xxx try turn off temperature limitation on growth
+    ! yy = 1.0
 
   end function calc_ft_growth
 

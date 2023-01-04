@@ -132,7 +132,7 @@ contains
         call solar( tile_fluxes(:), &
                     myinterface%grid, & 
                     myinterface%climate(doy),  &
-                    180 &     ! xxx try - constant conditions  doy &
+                    doy &
                     )
         if (verbose) print*,'... done'
 
@@ -417,7 +417,7 @@ contains
         call allocation_daily(  tile(:), &
                                 tile_fluxes(:),&
                                 myinterface%climate(doy), &
-                                myinterface%steering%year &
+                                myinterface%steering%forcingyear &
                                 )
         !----------------------------------------------------------------
         if (verbose) print*, '              ==> returned: '

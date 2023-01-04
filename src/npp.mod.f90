@@ -65,9 +65,6 @@ contains
 
       lu = params_pft_plant(pft)%lu_category
 
-      ! if (tile(lu)%plant(pft)%plabl%c%c12 < 0.0) stop 'before npp labile C is neg.'
-      ! if (tile(lu)%plant(pft)%plabl%n%n14 < 0.0) stop 'before npp labile N is neg.'
-
       !/////////////////////////////////////////////////////////////////////////
       ! LABILE POOL UPDATE
       ! Gross CO2 assimilation (GPP) is first added to the labile pool. Then, 
@@ -80,28 +77,28 @@ contains
 
       ! determine C required for respiration
       creq = tile_fluxes(lu)%plant(pft)%drd &
-           + calc_resp_maint(  tile(lu)%plant(pft)%proot%c%c12, &
-                                                            params_plant%r_root, &
-                                                            climate%dtemp &
-                                                            ) &
-           + calc_resp_maint(  tile(lu)%plant(pft)%psapw%c%c12, &
-                                                              params_plant%r_sapw, &
-                                                              climate%dtemp &
-                                                              ) &
+           + calc_resp_maint( tile(lu)%plant(pft)%proot%c%c12, &
+                              params_plant%r_root, &
+                              climate%dtemp &
+                              ) &
+           + calc_resp_maint( tile(lu)%plant(pft)%psapw%c%c12, &
+                              params_plant%r_sapw, &
+                              climate%dtemp &
+                              ) &
            + calc_cexu( tile(lu)%plant(pft)%proot%c%c12 )
 
       ! available C in labile pool
       cavl = tile(lu)%plant(pft)%plabl%c%c12
 
+
+      !-------------------------------------------------------------------------
+      ! When insufficient C is available in labile pool refill labile pool using 
+      ! reserves.
+      !-------------------------------------------------------------------------
       if (cavl < creq) then
 
-        ! reduce leaf and fine roots biomass such that saved respiration corresponds
-        ! to amount now exceeding what can be satisfied from labile pool. 
         ! Buffer is introduced for safety - to avoid "over-depletion" of labile pool.
         frac_avl = buffer * (cavl / creq)
-        ! call turnover_leaf( 1.0 - frac_avl, tile(lu), pft )
-        ! call turnover_root( 1.0 - frac_avl, tile(lu), pft )
-        ! print*,'surviving fraction: ', frac_avl
 
         ! transfer required C from reserves to labile
         f_resv_to_labl = creq - cavl
@@ -111,13 +108,6 @@ contains
         if (.not. myinterface%steering%spinup_reserves) then
           tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 - f_resv_to_labl
         end if
-
-        ! call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
-        ! if ( myinterface%steering%spinup_reserves ) then
-        !   call orgcp(org_resv_to_labl, tile(lu)%plant(pft)%plabl)
-        ! else
-        !   call orgmv(org_resv_to_labl, tile(lu)%plant(pft)%presv, tile(lu)%plant(pft)%plabl)
-        ! end if
 
       else
 
@@ -168,23 +158,16 @@ contains
       ! immediately removed
       !-------------------------------------------------------------------------
       tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12   &
-                                      - tile_fluxes(lu)%plant(pft)%drleaf &
-                                      - tile_fluxes(lu)%plant(pft)%drroot &
-                                      - tile_fluxes(lu)%plant(pft)%drsapw & 
-                                      - tile_fluxes(lu)%plant(pft)%dcex
+                                        - tile_fluxes(lu)%plant(pft)%drleaf &
+                                        - tile_fluxes(lu)%plant(pft)%drroot &
+                                        - tile_fluxes(lu)%plant(pft)%drsapw & 
+                                        - tile_fluxes(lu)%plant(pft)%dcex
 
       tile_fluxes(lu)%plant(pft)%dnpp = carbon( tile_fluxes(lu)%plant(pft)%dgpp &
                                               - tile_fluxes(lu)%plant(pft)%drleaf &
                                               - tile_fluxes(lu)%plant(pft)%drroot &
                                               - tile_fluxes(lu)%plant(pft)%drsapw &
                                                 )
-
-      ! ! record for experimental output
-      ! tile_fluxes(lu)%plant(pft)%debug1 = tile_fluxes(lu)%plant(pft)%dnpp%c12
-      ! tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%plabl%c%c12
-      ! tile_fluxes(lu)%plant(pft)%debug3 = tile_fluxes(lu)%plant(pft)%dnpp%c12 / tile(lu)%plant(pft)%plabl%c%c12
-      ! tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%presv%c%c12
-
 
       if (tile(lu)%plant(pft)%plabl%c%c12 < (-1) * eps) stop 'after npp labile C is neg.'
       if (tile(lu)%plant(pft)%plabl%n%n14 < (-1) * eps) stop 'after npp labile N is neg.'
