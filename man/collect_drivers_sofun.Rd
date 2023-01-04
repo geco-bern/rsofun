@@ -9,8 +9,9 @@ collect_drivers_sofun(site_info, params_siml, meteo, fapar, co2, params_soil)
 \arguments{
 \item{site_info}{A data frame containing site meta info (rows for sites). 
 Required columns are: \code{"sitename", "year_start", 
-"year_end", "lon", "lat", "elv"}. See \code{\link{prepare_setup_sofun}} for
-details.}
+"year_end", "lon", "lat", "elv"}. See \code{\link{prepare_setup_sofun}} and vignette
+\href{https://computationales.github.io/rsofun/articles/prepare_forcing.html}{vignette}
+for details.}
 
 \item{params_siml}{A nested data frame with rows for each site containing 
 simulation parameters for SOFUN. See \code{\link{run_pmodel_f_bysite}} or

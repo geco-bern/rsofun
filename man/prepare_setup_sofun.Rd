@@ -8,8 +8,8 @@ prepare_setup_sofun(site_info, params_siml)
 }
 \arguments{
 \item{site_info}{A character string specifying the path to the site meta 
-information file, or a data frame containing the site meta info. Required
-columns are:
+information file (see \href{https://computationales.github.io/rsofun/articles/prepare_forcing.html}{vignette}), 
+or a data frame containing the site meta info. Required columns are:
 \describe{
 \item{\code{sitename}}{Name of the site, must be the first column of the file.}
 \item{\code{lon}}{Longitude of site.}

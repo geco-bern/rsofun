@@ -5,8 +5,9 @@
 #'
 #' @param site_info A data frame containing site meta info (rows for sites). 
 #'  Required columns are: \code{"sitename", "year_start", 
-#'  "year_end", "lon", "lat", "elv"}. See \code{\link{prepare_setup_sofun}} for
-#'  details.
+#'  "year_end", "lon", "lat", "elv"}. See \code{\link{prepare_setup_sofun}} and vignette
+#'  \href{https://computationales.github.io/rsofun/articles/prepare_forcing.html}{vignette}
+#'  for details.
 #' @param params_siml A nested data frame with rows for each site containing 
 #'  simulation parameters for SOFUN. See \code{\link{run_pmodel_f_bysite}} or
 #'  \code{\link{run_biomee_f_bysite}}.
