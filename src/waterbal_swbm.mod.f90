@@ -126,7 +126,7 @@ contains
         print*,'WATERBAL: negative soil moisture'
       end if
       tile_fluxes(lu)%canopy%dro = min( &
-                                        tile(lu)%soil%phy%wcont, &
+                                        tile(lu)%soil%phy%wcont + out_snow_rain%liquid_to_soil, &
                                         (tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rzwsc)**exp_runoff &
                                           * out_snow_rain%liquid_to_soil &
                                         )
