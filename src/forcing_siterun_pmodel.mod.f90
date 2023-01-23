@@ -86,27 +86,13 @@ contains
     out_climate(:)%dtemp   = real(forcing(idx_start:idx_end, 1))
     out_climate(:)%dprec   = real(forcing(idx_start:idx_end, 2))
     out_climate(:)%dvpd    = real(forcing(idx_start:idx_end, 3))
-
-    if (in_ppfd) then
-      out_climate(:)%dppfd = real(forcing(idx_start:idx_end, 4))
-    else
-      out_climate(:)%dppfd = dummy
-    end if
-    if (in_netrad) then
-      out_climate(:)%dnetrad = real(forcing(idx_start:idx_end, 5))
-    else
-      out_climate(:)%dnetrad = dummy
-    end if
-    if ( in_netrad .and. in_ppfd ) then
-      out_climate(:)%dfsun = dummy
-    else
-      out_climate(:)%dfsun = real(forcing(idx_start:idx_end, 6))
-    end if
+    out_climate(:)%dppfd   = real(forcing(idx_start:idx_end, 4))
+    out_climate(:)%dnetrad = real(forcing(idx_start:idx_end, 5))
+    out_climate(:)%dfsun   = real(forcing(idx_start:idx_end, 6))
     out_climate(:)%dsnow   = real(forcing(idx_start:idx_end, 7))
     out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 11))
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 12))
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 13))
-
 
   end function getclimate
 

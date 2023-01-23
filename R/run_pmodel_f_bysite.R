@@ -142,7 +142,6 @@ run_pmodel_f_bysite <- function(
   # re-define units and naming of forcing dataframe
   forcing <- forcing %>% 
     dplyr::mutate(
-      netrad = -9999.9,
       fsun = (100-ccov)/100,
       ndep = 0.0
       ) %>% 
@@ -359,7 +358,7 @@ run_pmodel_f_bysite <- function(
       stats::setNames(
         c("fapar", "gpp", "transp", "latenth", "pet", "vcmax",
           "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue", "rd",
-          "tsoil")
+          "tsoil", "netrad")
         ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -369,7 +368,7 @@ run_pmodel_f_bysite <- function(
                   fapar = NA, gpp = NA, transp = NA, latenth = NA, 
                   pet = NA, vcmax = NA, jmax = NA, vcmax25 = NA, 
                   jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, 
-                  iwue = NA, rd = NA, tsoil = NA)
+                  iwue = NA, rd = NA, tsoil = NA, netrad = NA)
   }
     
   return(out)

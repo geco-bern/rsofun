@@ -2,7 +2,7 @@ module md_biosphere_pmodel
 
   use md_params_core
   use md_classdefs
-  use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
+  use md_waterbal_swbm, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
   use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
@@ -191,6 +191,7 @@ contains
         out_biosphere%iwue(doy)    = tile_fluxes(1)%canopy%iwue
         out_biosphere%rd(doy)      = tile_fluxes(1)%canopy%drd
         out_biosphere%tsoil(doy)   = tile(1)%soil%phy%temp    
+        out_biosphere%netrad(doy)  = tile_fluxes(1)%canopy%drn + tile_fluxes(1)%canopy%drnn
 
         init_daily = .false.
 

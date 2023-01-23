@@ -47,6 +47,12 @@ These are real data from the French FR-Pue fluxnet site. Information about data 
 With all data prepared we can run the model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
 
 ```{r}
+# changes for making rwsc run
+p_model_drivers$params_siml[[1]]$in_netrad <- FALSE
+# p_model_drivers$site_info[[1]] <- p_model_drivers$site_info[[1]] |> 
+#   rename(rzwsc = whc)
+p_model_drivers <- p_model_drivers |> 
+  mutate(forcing = purrr::map(forcing, ~mutate(., netrad = 80.0)))
 
 # optimized parameters from previous
 # work
@@ -63,6 +69,11 @@ output <- rsofun::runread_pmodel_f(
   p_model_drivers,
   par = params_modl
   )
+
+output$data[[1]] |>
+  ggplot() + 
+  geom_line(aes(date, pet), color = "royalblue") +
+  geom_line(aes(date, transp))
 ```
 
 ### Plotting output

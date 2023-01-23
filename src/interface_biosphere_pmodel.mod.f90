@@ -61,6 +61,7 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: iwue
     real, dimension(ndayyear) :: rd
     real, dimension(ndayyear) :: tsoil         ! soil temperature, deg C
+    real, dimension(ndayyear) :: netrad        ! J m-2 d-1
   end type outtype_biosphere
 
 end module md_interface_pmodel
