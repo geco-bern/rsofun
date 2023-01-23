@@ -34,8 +34,7 @@ module md_tile_pmodel
     real :: pwp            ! water content at permanent wilting-point (mm)
     real :: whc_dz         ! water holding capacity per unit soil depth (unitless)
     real :: zr             ! apparent rooting depth (mm)
-    real :: rzwsc          ! total root zone water storage capacity (mm)
-    real :: k_rzwsc        ! e-folding length scale (shape parameter) for water stress function of supply rate (mm-1)
+    real :: rwsc          ! total root zone water storage capacity (mm)
     real :: ksat
     real :: thdiff_wp
     real :: thdiff_whc15
@@ -238,7 +237,7 @@ contains
     call initglobal_soil_phy( soil%phy )
     call initglobal_soil_params( soil%params )
 
-    soil%phy%wscal = soil%phy%wcont / soil%params%rzwsc
+    soil%phy%wscal = soil%phy%wcont / soil%params%rwsc
 
 
   end subroutine initglobal_soil
@@ -424,10 +423,8 @@ contains
       params%thdiff_fc    = 0.4
 
       ! apparent rooting depth
-      params%rzwsc = myinterface%rzwsc
-      params%zr = myinterface%rzwsc / params%whc_dz
-
-      params%k_rzwsc = 0.1  ! initial trial
+      params%rwsc = myinterface%params_calib%rwsc
+      params%zr = params%rwsc / params%whc_dz
 
     ! end do
 

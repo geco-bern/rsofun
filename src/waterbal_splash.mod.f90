@@ -116,7 +116,7 @@ contains
       ! sw = max( 0.0, &
       !           kCw * (1.0 - exp(-1.0 / tile(lu)%soil%params%k_rzwsc * &
       !             (tile(lu)%soil%phy%wcont - tile(lu)%soil%params%pwp * tile(lu)%soil%params%zr))))
-      sw = kCW * tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rzwsc
+      sw = kCW * tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rwsc
 
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
@@ -138,18 +138,18 @@ contains
       tile(lu)%soil%phy%wcont = tile(lu)%soil%phy%wcont + out_snow_rain%liquid_to_soil - tile_fluxes(lu)%canopy%daet
 
       ! Bucket model for runoff generation      
-      if (tile(lu)%soil%phy%wcont > tile(lu)%soil%params%rzwsc) then
+      if (tile(lu)%soil%phy%wcont > tile(lu)%soil%params%rwsc) then
         ! -----------------------------------
         ! Bucket is full 
         ! -----------------------------------
         ! determine NO3 leaching fraction 
-        tile_fluxes(lu)%canopy%dfleach = 1.0 - tile(lu)%soil%params%rzwsc / tile(lu)%soil%phy%wcont
+        tile_fluxes(lu)%canopy%dfleach = 1.0 - tile(lu)%soil%params%rwsc / tile(lu)%soil%phy%wcont
 
         ! add remaining water to monthly runoff total
-        tile_fluxes(lu)%canopy%dro = tile(lu)%soil%phy%wcont - tile(lu)%soil%params%rzwsc
+        tile_fluxes(lu)%canopy%dro = tile(lu)%soil%phy%wcont - tile(lu)%soil%params%rwsc
 
         ! set soil moisture to capacity
-        tile(lu)%soil%phy%wcont = tile(lu)%soil%params%rzwsc
+        tile(lu)%soil%phy%wcont = tile(lu)%soil%params%rwsc
 
       else if (tile(lu)%soil%phy%wcont < 0.0) then
         ! -----------------------------------
@@ -172,9 +172,9 @@ contains
       ! WHC = FC - PWP
       ! WSCAL = (WCONT - PWP) / (FC - PWP)
       ! tile(lu)%soil%phy%wscal = (tile(lu)%soil%phy%wcont - tile(lu)%soil%params%pwp * tile(lu)%soil%params%zr) &
-      !                           / tile(lu)%soil%params%rzwsc
+      !                           / tile(lu)%soil%params%rwsc
 
-      tile(lu)%soil%phy%wscal = tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rzwsc
+      tile(lu)%soil%phy%wscal = tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rwsc
 
     end do
 

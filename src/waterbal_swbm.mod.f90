@@ -110,7 +110,7 @@ contains
       out_infiltr = get_infiltr( &
         out_snow_rain%liquid_to_soil, &
         tile(lu)%soil%phy%wcont, &
-        tile(lu)%soil%params%rzwsc &
+        tile(lu)%soil%params%rwsc &
         )
 
       ! XXX is 5.0 a permanent wilting point parameter? ==> should be moved to evap()
@@ -127,7 +127,7 @@ contains
       end if
       tile_fluxes(lu)%canopy%dro = min( &
                                         tile(lu)%soil%phy%wcont + out_snow_rain%liquid_to_soil, &
-                                        (tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rzwsc)**exp_runoff &
+                                        (tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rwsc)**exp_runoff &
                                           * out_snow_rain%liquid_to_soil &
                                         )
 
@@ -138,7 +138,7 @@ contains
       tile_fluxes(lu)%canopy%dfleach = tile_fluxes(lu)%canopy%dro / ( wcont_prev + out_snow_rain%liquid_to_soil )
 
       ! water scalar
-      tile(lu)%soil%phy%wscal = tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rzwsc
+      tile(lu)%soil%phy%wscal = tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rwsc
 
     end do
 
@@ -196,7 +196,7 @@ contains
     real :: rho_water                       ! density of water (g m-3)
 
     ! tmp xxx
-    real :: whc, wcont
+    real :: rwsc, wcont
 
     !---------------------------------------------------------
     ! Calculate water-to-energy conversion (econ), m^3/J
@@ -240,16 +240,16 @@ contains
     ! Daily AET, mm d-1
     !---------------------------------------------------------
     ! ET from net radiation and Eq. 2 in Orth et al., 2013, limited to <=1
-    whc = tile%soil%params%rzwsc
+    rwsc = tile%soil%params%rwsc
     wcont = tile%soil%phy%wcont
-    tile_fluxes%canopy%daet = tile_fluxes%canopy%dpet * beta * min( 1.0, ( wcont / whc )**exp_et )
+    tile_fluxes%canopy%daet = tile_fluxes%canopy%dpet * beta * min( 1.0, ( wcont / rwsc )**exp_et )
 
     ! in energy units (J m-2 d-1)
     tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)
 
     ! Derivative of ET w.r.t. soil moisture
     daet_diff = tile_fluxes%canopy%dpet * beta &
-                * min( max( 0.0, whc - wcont), ( exp_et / whc ) ) * ( wcont / whc )**( exp_et - 1.0 )
+                * min( max( 0.0, rwsc - wcont), ( exp_et / rwsc ) ) * ( wcont / rwsc )**( exp_et - 1.0 )
 
 
 ! xxxxxxxxxx
@@ -438,13 +438,15 @@ contains
     maxmeltrate = 3.0
 
     ! supply limitation factor (unitless) (Orth et al., 2013)
-    beta = 0.66
+    beta = myinterface%params_calib%beta_et
+    ! beta = 0.66
 
     ! runoff ratio exponent (unitless) (Orth et al., 2013)
     exp_runoff = 6.4
 
     ! ET ratio exponent (unitless) (Orth et al., 2013)
-    exp_et = 0.06
+    exp_et = myinterface%params_calib%exp_et
+    ! exp_et = 0.06
 
   end subroutine getpar_modl_waterbal
 

@@ -14,12 +14,14 @@ module md_interface_pmodel
   public interfacetype_biosphere, outtype_biosphere, myinterface  
 
   type paramstype_calib
-    ! real :: k_decay_tissue
     real :: kphio
     real :: soilm_par_a
     real :: soilm_par_b
     real :: tau_acclim_tempstress
     real :: par_shape_tempstress
+    real :: exp_et
+    real :: beta_et
+    real :: rwsc
   end type paramstype_calib  
 
 
@@ -28,10 +30,8 @@ module md_interface_pmodel
     real                                    :: pco2
     type(gridtype)                          :: grid
     real, dimension(4,nlayers_soil)         :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
-    real                                    :: rzwsc         ! total root zone water storage capacity (mm)
     type(climate_type), dimension(ndayyear) :: climate
     type(vegcover_type), dimension(ndayyear):: vegcover
-    ! type(domaininfo_type)                 :: domaininfo
     type(outtype_steering)                  :: steering
     type(paramstype_siml)                   :: params_siml
     real, dimension(npft)                   :: fpc_grid        ! allocatable because we don't know number of PFTs a priori
