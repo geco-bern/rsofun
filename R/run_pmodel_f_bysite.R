@@ -95,6 +95,7 @@
 #'   \item{\code{chi}}{Ratio of leaf-internal to ambient CO\eqn{_{2}}, ci:ca (unitless).}
 #'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
 #'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
+#'   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
 #'   } 
 #'
 #' @export
