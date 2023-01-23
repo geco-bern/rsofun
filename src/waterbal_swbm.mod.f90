@@ -125,10 +125,11 @@ contains
       if ( tile(lu)%soil%phy%wcont < 0.0 ) then 
         print*,'WATERBAL: negative soil moisture'
       end if
-      tile_fluxes(lu)%canopy%dro = ( min( &
-                                          1.0, &
-                                          ( ( tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rzwsc )**exp_runoff ) ) ) &
-                                    * out_snow_rain%liquid_to_soil
+      tile_fluxes(lu)%canopy%dro = min( &
+                                        tile(lu)%soil%phy%wcont, &
+                                        (tile(lu)%soil%phy%wcont / tile(lu)%soil%params%rzwsc)**exp_runoff &
+                                          * out_snow_rain%liquid_to_soil &
+                                        )
 
       ! re-calculate AET
       tile_fluxes(lu)%canopy%daet = tile_fluxes(lu)%canopy%daet + ( tile(lu)%soil%phy%wcont - wcont_prev ) * daet_diff
