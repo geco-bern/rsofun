@@ -6,7 +6,7 @@ module md_biosphere_cnmodel
   use md_tile, only: tile_type, tile_fluxes_type, init_tile, init_tile_fluxes, &
     getpar_modl_tile, diag_daily, diag_annual, finalize_tile
   use md_plant, only: getpar_modl_plant
-  use md_phenology, only: phenology, getpar_modl_phenology
+  use md_phenology, only: phenology, phenology_daily, getpar_modl_phenology
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_cnmodel, only: vegdynamics
@@ -157,6 +157,17 @@ contains
                        doy, &
                        init_daily &
                        )
+        if (verbose) print*, '... done'
+
+        !----------------------------------------------------------------
+        ! daily updated phenology state
+        !----------------------------------------------------------------
+        if (verbose) print*, 'calling phenology_daily() ... '
+        call phenology_daily( tile(:), &
+                              myinterface%climate(doy)%dtemp, &
+                              myinterface%climate(doy)%dtmin, &
+                              tile_fluxes(:) &
+                              )
         if (verbose) print*, '... done'
 
         !----------------------------------------------------------------

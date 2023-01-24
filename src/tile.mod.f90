@@ -71,15 +71,6 @@ module md_tile
   end type soil_type
 
   !----------------------------------------------------------------
-  ! Canopy-level parameters
-  !----------------------------------------------------------------
-  type paramtype_canopy
-    real :: kbeer             ! canopy light extinction coefficient
-  end type paramtype_canopy
-
-  type(paramtype_canopy) :: params_canopy
-
-  !----------------------------------------------------------------
   ! Canopy type
   ! Contains tile-level aggregated variables related to the canopy
   !----------------------------------------------------------------
@@ -112,6 +103,15 @@ module md_tile
   end type canopy_type
 
   !----------------------------------------------------------------
+  ! Canopy-level parameters
+  !----------------------------------------------------------------
+  type paramtype_canopy
+    real :: kbeer             ! canopy light extinction coefficient
+  end type paramtype_canopy
+
+  type(paramtype_canopy) :: params_canopy
+
+  !----------------------------------------------------------------
   ! Tile type with year-to-year memory
   !----------------------------------------------------------------
   type tile_type
@@ -119,8 +119,26 @@ module md_tile
     type(soil_type)                   :: soil       ! all organic, inorganic, and physical soil variables
     type(canopy_type)                 :: canopy     ! mean canopy
     type(plant_type), dimension(npft) :: plant
+    real                              :: gdd        ! growing-degree days, cumulative tempearture above base temperature (deg C)
     real                              :: rlmalpha
   end type tile_type
+
+
+
+  !----------------------------------------------------------------
+  ! Soil fluxes
+  !----------------------------------------------------------------
+  type soil_fluxes_type
+  
+    type(carbon)   :: drhet             ! heterotrophic respiration [gC/m2/d]
+    type(nitrogen) :: dnetmin           ! daily net mineralisation (gN m-2 d-1)
+
+    real :: dnfix_free                  ! free-living N fixation (balance term to satisfy soil C:N ratio)
+    real :: dn2o                        ! soil N2O emissions (gaseous escape) [gN/m2/d]
+    real :: dnleach                     ! daily N leaching [gN/m2/d]
+    real :: dnloss                      ! total N loss (gaseous + leaching, where gaseous loss is N w.r.t. NH4 and NO3 pool decline, not gaseous escape) [gN/m2/d]
+
+  end type soil_fluxes_type
 
   !----------------------------------------------------------------
   ! Canopy-level fluxes
@@ -190,23 +208,6 @@ module md_tile
 
   end type canopy_fluxes_type
 
-
-  !----------------------------------------------------------------
-  ! Soil fluxes
-  !----------------------------------------------------------------
-  type soil_fluxes_type
-  
-    type(carbon)   :: drhet             ! heterotrophic respiration [gC/m2/d]
-    type(nitrogen) :: dnetmin           ! daily net mineralisation (gN m-2 d-1)
-
-    real :: dnfix_free                  ! free-living N fixation (balance term to satisfy soil C:N ratio)
-    real :: dn2o                        ! soil N2O emissions (gaseous escape) [gN/m2/d]
-    real :: dnleach                     ! daily N leaching [gN/m2/d]
-    real :: dnloss                      ! total N loss (gaseous + leaching, where gaseous loss is N w.r.t. NH4 and NO3 pool decline, not gaseous escape) [gN/m2/d]
-
-  end type soil_fluxes_type
-
-
   !----------------------------------------------------------------
   ! Tile-level fluxes
   !----------------------------------------------------------------
@@ -267,6 +268,8 @@ contains
       call init_plant( tile(lu)%plant(:) )
 
     end do
+
+    tile(:)%gdd = 0.0
 
     !-----------------------------------------------------------------------------
     ! open files for experimental output

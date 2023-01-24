@@ -78,11 +78,15 @@ module md_plant
   !----------------------------------------------------------------
   ! Daily phenology dates for each PFT
   !----------------------------------------------------------------
-  type phenotype
-    real    :: dtphen       ! daily temperature-driven phenology (=dphen_t in LPX)
-    logical :: sprout       ! boolean when PFT is sprouting
-    logical :: shedleaves   ! boolean when PFT is shedding leaves
-  end type phenotype
+  type pheno_ann_type
+    real    :: dtphen            ! daily temperature-driven phenology (=dphen_t in LPX)
+    logical :: sprout            ! boolean when PFT is sprouting
+    logical :: shedleaves        ! boolean when PFT is shedding leaves
+  end type pheno_ann_type
+
+  type pheno_type
+    real    :: level_coldacclim  ! alternative temperature-driven phenology, governing cold acclimation of photosynthesis (hardening) and sprouting of grasses (value between 0 and 1)
+  end type pheno_type
 
   !----------------------------------------------------------------
   ! Pools and other variables with year-to-year memory
@@ -129,7 +133,8 @@ module md_plant
     type(orgpool) :: presv     ! reserves pool
 
     ! phenology
-    type(phenotype), dimension(ndayyear) :: pheno
+    type(pheno_type) :: pheno  ! phenology state, daily updated
+    type(pheno_ann_type), dimension(ndayyear) :: pheno_ann  ! phenology state, calculated a priori (containing all days of year)
 
   end type plant_type
 
@@ -695,26 +700,39 @@ contains
       call orginit( plant(pft)%plabl )
       call orginit( plant(pft)%pseed )
       call orginit( plant(pft)%presv )
-      call init_pheno(plant(pft)%pheno(:))
+      call init_pheno(plant(pft)%pheno )
+      call init_pheno_ann(plant(pft)%pheno_ann(:))
     end do
 
     plant(:)%fill_seeds = .false.
 
   end subroutine init_plant
 
-  
+
   subroutine init_pheno( pheno )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of phenology variables
     !----------------------------------------------------------------
     ! arguments
-    type(phenotype), dimension(ndayyear), intent(inout) :: pheno
+    type(pheno_type), intent(inout) :: pheno
+
+    pheno%level_coldacclim = 0.0
+
+  end subroutine init_pheno
+
+  
+  subroutine init_pheno_ann( pheno )
+    !////////////////////////////////////////////////////////////////
+    !  Initialisation of phenology variables
+    !----------------------------------------------------------------
+    ! arguments
+    type(pheno_ann_type), dimension(ndayyear), intent(inout) :: pheno
 
     pheno(:)%dtphen     = 0.0
     pheno(:)%sprout     = .false.
     pheno(:)%shedleaves = .false.
 
-  end subroutine init_pheno
+  end subroutine init_pheno_ann
 
 
   subroutine init_plant_fluxes( plant_fluxes )
