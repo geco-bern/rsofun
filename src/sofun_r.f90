@@ -33,7 +33,6 @@ contains
     longitude,                 &      
     latitude,                  &     
     altitude,                  &     
-    rzwsc,                     &
     soiltexture,               &
     nt,                        &
     par,                       &
@@ -76,7 +75,6 @@ contains
     real(kind=c_double),  intent(in) :: longitude
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
-    real(kind=c_double),  intent(in) :: rzwsc
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(8), intent(in) :: par  ! free (calibratable) model parameters
@@ -172,7 +170,6 @@ contains
       ! Get external (environmental) forcing
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
-      print*,'in_netrad ', myinterface%params_siml%in_netrad
       myinterface%climate(:) = getclimate(nt, &
                                           forcing, &
                                           myinterface%steering%climateyear_idx, &

@@ -34,7 +34,6 @@
 #'       \item{lon}{Longitud of the site location.}
 #'       \item{lat}{Latitude of the site location.}
 #'       \item{elv}{Elevation of the site location, in meters.}
-#'       \item{rzwsc}{A numeric value for the total root zone water storage capacity (mm), used for 
 #'       simulating the soil water balance.}
 #' }
 #' @param forcing A data frame of forcing climate data, used as input 
@@ -60,6 +59,9 @@
 #'   function affecting quantum yield efficiency. A positive (unitless) value indicating 
 #'   the sensitivity of the decline (assuming no decline at 10\eqn{^o}C) and 
 #'   above, but decreasing with a quadratic function below 10\eqn{^o}C).}
+#'   \item{exp_et}{Supply limitation factor (unitless) (Orth et al., 2013)}
+#'   \item{beta_et}{Evapotranspiration ratio exponent (unitless) (Orth et al., 2013)}
+#'   \item{rwsc}{Total root zone water storage capacity (mm)}
 #' }
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings and model parameters. \code{TRUE} by default.
@@ -343,7 +345,6 @@ run_pmodel_f_bysite <- function(
       longitude                 = as.numeric(site_info$lon),
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
-      rzwsc                     = as.numeric(site_info$rzwsc),
       soiltexture               = soiltexture,
       n                         = n,
       par                       = par, 
