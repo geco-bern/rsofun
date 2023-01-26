@@ -55,6 +55,7 @@ contains
 
     ! xxx debug
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
+    real, save :: tmp = 0.0
 
     ! local variables
     integer :: pft, lu
@@ -77,7 +78,7 @@ contains
         params_pft_pheno(pft)%kphio_par_e &
       )
 
-      tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%gdd
+      tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%pheno%level_coldacclim
 
     end do pftloop
 
@@ -379,7 +380,7 @@ contains
       ! parameter values adopted from results by Yunpeng Luo (photocold project)
       params_pft_pheno(pft)%kphio_par_a = 2.0    ! mid-point of hardening state vs. tmin (deg C)
       params_pft_pheno(pft)%kphio_par_b = 0.3    ! slope of hardening state vs. tmin (deg C-1)
-      params_pft_pheno(pft)%kphio_par_c = 100.0  ! mid-point of dehardening state vs. GDD (deg C)
+      params_pft_pheno(pft)%kphio_par_c = 150.0  ! mid-point of dehardening state vs. GDD (deg C)
       params_pft_pheno(pft)%kphio_par_d = 0.05   ! slope of dehardening state vs. GDD (deg C-1)
       params_pft_pheno(pft)%kphio_par_e = 5.0    ! base temperature for GDD summation (deg C)
 

@@ -208,13 +208,16 @@ contains
           vec_idx = (/ (idx, idx = 1, len_an_vec) /)
           call calc_reg_line( real(vec_idx(:)), tmp_vec, intercept, slope )
 
-          ! calculate fraction allocated to seeds
-          f_seed = calc_f_seed( slope )
+          ! change in TOA radiation per day, normalised by solar constant (in J m-2 d-1)
+          slope = (an_unitlai - an_vec(lu,pft,len_an_vec-1))/(kGsc * 24 * 60 * 60)
 
-          ! record trend for test output
-          tile_fluxes(lu)%plant(pft)%debug1 = an_unitlai            
-          tile_fluxes(lu)%plant(pft)%debug2 = slope            
-          tile_fluxes(lu)%plant(pft)%debug3 = f_seed            
+          ! calculate fraction allocated to seeds
+          f_seed = calc_f_seed( slope * 3.0 )
+
+          ! alternative: slope is daily change in an_unitlai
+          tile_fluxes(lu)%plant(pft)%debug1 = slope
+          tile_fluxes(lu)%plant(pft)%debug2 = f_seed
+
 
           ! Only start filling seeds if LAI > 1
           if (tile(lu)%plant(pft)%lai_ind < 1.0) then
@@ -530,7 +533,7 @@ contains
             !                           tile(lu)%plant(pft)%plabl ) )
 
             ! without witholding C for respiration
-            avl = orgfrac(  kdecay_labl * calc_ft_growth( climate%dtemp ), &
+            avl = orgfrac(  kdecay_labl * tile(lu)%plant(pft)%pheno%level_coldacclim, &
                             tile(lu)%plant(pft)%plabl )
 
             ! additionally constrain allocatable C by available N, given the lower C:N of leaves or roots
@@ -546,6 +549,8 @@ contains
             dcleaf = (1.0 - f_seed) * frac_leaf         * params_plant%growtheff * avl%c%c12
             dcroot = (1.0 - f_seed) * (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
             dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
+
+            tile_fluxes(lu)%plant(pft)%debug4 = dcleaf
 
             ! !-------------------------------------------------------------------
             ! ! SEED ALLOCATION
