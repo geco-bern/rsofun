@@ -235,405 +235,142 @@ contains
           dcseed = 0.0
           drgrow = 0.0
 
+          !------------------------------------------------------------------
+          ! Update leaf traits
+          !------------------------------------------------------------------
+          ! update
+          if (tile(lu)%plant(pft)%pleaf%c%c12 == 0.0) then
+            call get_leaftraits_init( tile(lu)%plant(pft) )
+          end if
 
-          ! if ( myinterface%steering%dofree_alloc ) then
-          !   !==================================================================
-          !   ! Free allocation
-          !   !------------------------------------------------------------------
-
-          !   !------------------------------------------------------------------
-          !   ! At the start of growth, use approximation to calculate leaf N
-          !   !------------------------------------------------------------------
-          !   if (tile(lu)%plant(pft)%pleaf%c%c12 == 0.0) then
-          !     call get_leaftraits_init( tile(lu)%plant(pft) )
-          !   end if
-
-            ! !------------------------------------------------------------------
-            ! ! Determine allocatable C, given C and N availability (labile) constraint
-            ! !------------------------------------------------------------------
-            ! max_dcleaf_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * tile(lu)%plant(pft)%r_cton_leaf
-            ! max_dcroot_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * params_pft_plant(pft)%r_cton_root ! should be obsolete as generally r_ntoc_leaf > r_ntoc_root
-
-            ! ! XXX THIS MAKES A HUGE DIFFERENCE
-            ! ! >>>> OPTION A (WORKS NICELY):
-            ! max_dc_buffr_constraint = max(  0.0, &
-            !                                 params_plant%growtheff &
-            !                                 * ( tile(lu)%plant(pft)%plabl%c%c12 &
-            !                                 - ( params_plant%r_root + params_plant%exurate ) * tile(lu)%plant(pft)%proot%c%c12 ) )
-
-            ! ! print*,'option A: ', max_dc_buffr_constraint
-
-            ! ! ! >>>> OPTION B (PRODUCES NON-SENSICAL ROOT RESULTS):
-            ! ! max_dc_buffr_constraint = params_plant%growtheff * tile(lu)%plant(pft)%plabl%c%c12
-            ! ! ! print*,'option B: ', max_dc_buffr_constraint
-
-            ! ! ! >>>> OPTION C:
-            ! ! ! works fine with freserve = 0.004
-            ! ! max_dc_buffr_constraint = max( 0.0, params_plant%growtheff * ( tile(lu)%plant(pft)%plabl%c%c12 - freserve * ( tile(lu)%plant(pft)%proot%c%c12 ) ) )
-
-            ! max_dc = min( max_dc_buffr_constraint, max_dcleaf_n_constraint, max_dcroot_n_constraint )
-            ! min_dc = 0.0
-            
-          !   ! !------------------------------------------------------------------
-          !   ! ! Binary decision: this is good for quickly depleting labile pool 
-          !   ! ! imbalance but leads to overshoot 
-          !   ! !------------------------------------------------------------------
-          !   ! findroot = .false.
-          !   ! if ( tile(lu)%plant(pft)%plabl%c%c12 < (tile(lu)%plant(pft)%plabl%n%n14 * leaftraits(pft)%r_cton_leaf) ) then
-          !   !   ! print*,'C is limiting -> should put more to leaves'
-          !   !   dcleaf = max_dc
-          !   ! else if ( tile(lu)%plant(pft)%plabl%c%c12 > (tile(lu)%plant(pft)%plabl%n%n14 * params_pft_plant(pft)%r_cton_root) ) then
-          !   !   ! print*,'N is limiting -> should put more to roots'
-          !   !   dcleaf = 0.0
-          !   ! else
-          !   !   ! print*,'findroot ...'
-          !   !   findroot = .true.
-          !   ! end if
-
-          !   ! !------------------------------------------------------------------
-          !   ! ! Safety brakes: if massive imbalance in labile pool accumulates,
-          !   ! ! do binary allocation as a safety measure to re-balance labile pool's
-          !   ! ! C:N ratio.
-          !   ! ! Otherwise (as long as no massive imbalance arises), find optimum
-          !   ! ! allocation, defined by newly acquired C and N (NPP-Ra-Cex, Nuptake)
-          !   ! ! are acquired in the same ratio as is needed for new tissue growth.
-          !   ! !------------------------------------------------------------------
-          !   ! if ( cton( tile(lu)%plant(pft)%plabl, default=0.0 ) > 10.0 * params_pft_plant(pft)%r_cton_root ) then
-          !   !   ! print*,'1.1.1'
-          !   !   !------------------------------------------------------------------
-          !   !   ! massive imbalance: too much C -> put all to roots
-          !   !   !------------------------------------------------------------------
-          !   !   dcleaf = 0.0
-          !   !   ! print*,'safety: all to roots', doy
-            
-          !   ! else if ( ntoc( tile(lu)%plant(pft)%plabl, default=9999.0 ) > 10.0 * leaftraits(pft)%r_ntoc_leaf ) then
-          !   !   ! print*,'1.1.2'
-          !   !   !------------------------------------------------------------------
-          !   !   ! massive imbalance: too much N -> put all to leaves
-          !   !   !------------------------------------------------------------------
-          !   !   dcleaf = max_dc
-          !   !   ! print*,'safety: all to leaves', doy
-            
-          !   ! else if (findroot) then
-          !     ! ------------------------------------------------------------------
-          !     ! No massive imbalance. determine allocation so that C:N of return is equal to C:N new tissue
-          !     ! test: if flexible allocation returns 1 or 0 for frac_leaf, then test if this is consistent with what it's set to above
-          !     ! ------------------------------------------------------------------
-
-          !     !------------------------------------------------------------------
-          !     ! Average over the preceeding N days:
-          !     ! - NO3 and NH4 availability
-          !     ! - (LUE * PPFD)
-          !     ! - C:N stoichiometry of new production
-          !     !------------------------------------------------------------------
-          !     if (firstcall3) then
-          !       ! initialise all vector elements with current value
-          !       no3_vec(lu,:) = tile(lu)%soil%pno3%n14
-          !       nh4_vec(lu,:) = tile(lu)%soil%pnh4%n14
-          !       luep_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%lue * climate%dppfd
-          !       rduf_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%vcmax25_unitfapar * &
-          !                            params_gpp%rd_to_vcmax * &
-          !                            calc_ftemp_inst_rd( climate%dtemp )
-          !       rrum_vec(lu,pft,:) = calc_resp_maint( 1.0, params_plant%r_root, climate%dtemp )
-          !       cn_vec(lu,pft,:) = cton( orgplus( tile_fluxes(lu)%plant(pft)%alloc_leaf, &
-          !                                         tile_fluxes(lu)%plant(pft)%alloc_root, &
-          !                                         tile_fluxes(lu)%plant(pft)%alloc_sapw, &
-          !                                         tile_fluxes(lu)%plant(pft)%alloc_wood  &
-          !                                         ), &
-          !                                 default = params_pft_plant(pft)%r_cton_root )
-          !       if (lu == nlu) firstcall3 = .false.
-          !     else
-          !       ! shift elements of vector forward
-          !       no3_vec(lu,1:(len_navl_vec-1)) = no3_vec(lu,2:len_navl_vec)
-          !       nh4_vec(lu,1:(len_navl_vec-1)) = nh4_vec(lu,2:len_navl_vec)
-          !       luep_vec(lu,pft,1:(len_luep_vec-1)) = luep_vec(lu,pft,2:len_luep_vec)
-          !       rduf_vec(lu,pft,1:(len_rduf_vec-1)) = rduf_vec(lu,pft,2:len_rduf_vec)
-          !       rrum_vec(lu,pft,1:(len_rrum_vec-1)) = rrum_vec(lu,pft,2:len_rrum_vec)
-          !       cn_vec(lu,pft,1:(len_cn_vec-1)) = cn_vec(lu,pft,2:len_cn_vec)
-
-          !       ! put current value to end of vector
-          !       no3_vec(lu,len_navl_vec) = tile(lu)%soil%pno3%n14
-          !       nh4_vec(lu,len_navl_vec) = tile(lu)%soil%pnh4%n14
-          !       luep_vec(lu,pft,len_luep_vec) = tile_fluxes(lu)%plant(pft)%lue * climate%dppfd
-          !       rduf_vec(lu,pft,len_rduf_vec) = tile_fluxes(lu)%plant(pft)%vcmax25_unitfapar * &
-          !                                       params_gpp%rd_to_vcmax * &
-          !                                       calc_ftemp_inst_rd( climate%dtemp )
-          !       rrum_vec(lu,pft,len_rrum_vec) = calc_resp_maint( 1.0, params_plant%r_root, climate%dtemp )
-          !       cn_vec(lu,pft,len_cn_vec) = cton( orgplus(  tile_fluxes(lu)%plant(pft)%alloc_leaf, &
-          !                                                   tile_fluxes(lu)%plant(pft)%alloc_root, &
-          !                                                   tile_fluxes(lu)%plant(pft)%alloc_sapw, &
-          !                                                   tile_fluxes(lu)%plant(pft)%alloc_wood  &
-          !                                                   ), &
-          !                                         default = params_pft_plant(pft)%r_cton_root )
-          !     end if
-
-          !     !------------------------------------------------------------------
-          !     ! Store state variables for optimisation
-          !     !------------------------------------------------------------------
-          !     state%pleaf           = tile(lu)%plant(pft)%pleaf
-          !     state%proot           = tile(lu)%plant(pft)%proot
-          !     state%plabl           = tile(lu)%plant(pft)%plabl
-          !     state%actnv_unitfapar = tile(lu)%plant(pft)%actnv_unitfapar
-          !     state%usepft          = pft
-          !     state%soiltemp        = tile(lu)%soil%phy%temp
-
-          !     state%fpc_grid         = tile(lu)%plant(pft)%fpc_grid
-          !     state%vcmax25_unitfapar = tile_fluxes(lu)%plant(pft)%vcmax25_unitfapar
-
-          !     ! long-term average 
-          !     state%cn               = sum(cn_vec(lu,pft,:)) / len_cn_vec
-          !     state%luep             = sum(luep_vec(lu,pft,:)) / len_luep_vec
-          !     state%rduf             = sum(rduf_vec(lu,pft,:)) / len_rduf_vec
-          !     state%rrum             = sum(rrum_vec(lu,pft,:)) / len_rrum_vec
-          !     state%luep             = sum(luep_vec(lu,pft,:)) / len_luep_vec
-          !     state%nh4              = sum(nh4_vec(lu,:)) / len_navl_vec
-          !     state%no3              = sum(no3_vec(lu,:)) / len_navl_vec
-
-          !     !------------------------------------------------------------------
-          !     ! Optimisation by balanced growth
-          !     ! Test I: Evaluate balance if all is put to roots.
-          !     ! If C:N ratio of return is still greater than whole-plant C:N 
-          !     ! ratio, then put all to roots.
-          !     !------------------------------------------------------------------
-          !     cont = .true.
-          !     if (verbose) print*, 'check allocation: all to roots'
-          !     eval_allroots  = eval_imbalance( min_dc )
-          !     if (verbose) print*, 'eval_allroots', eval_allroots  
-          !     if (eval_allroots > 0.0) then
-          !       dcleaf = 0.0
-          !       cont = .false.
-          !       if (verbose) print*, '* putting all to roots *'
-          !     end if
-
-          !     !------------------------------------------------------------------
-          !     ! Test II: Evaluate balance if all is put to leaves.
-          !     ! If C:N ratio of return is still lower than whole-plant C:N ratio, 
-          !     ! then put all to leaves.
-          !     !------------------------------------------------------------------
-          !     if (cont) then
-          !       if (verbose) print*, 'check allocation: all to leaves with dcleaf =', max_dc
-          !       eval_allleaves = eval_imbalance( max_dc )
-          !       if (verbose) print*, 'eval_allleaves', eval_allleaves
-          !       if (eval_allleaves < 0.0) then
-          !         dcleaf = max_dc
-          !         cont = .false.
-          !         if (verbose) print*, '* putting all to leaves *'
-          !       end if
-          !     end if
-
-          !     !------------------------------------------------------------------
-          !     ! Optimum is between 0.0 (=min_dc) and max_dc. Find root of function 
-          !     ! 'eval_imbalance()' in the interval [0.0, max_dc].
-          !     !------------------------------------------------------------------
-          !     if (cont) then
-          !       if (verbose) print*, '*** finding root of eval_imbalance ***'
-          !       ! if (write_logfile_eval_imbalance) open(unit=666,file='eval_imbalance.log',status='unknown')
-          !       out_zeroin = zeroin( eval_imbalance, abserr, relerr, nmax, min_dc, max_dc )
-          !       if ( out_zeroin%error /= 0 ) then
-          !         print*, 'error code ', out_zeroin%error
-          !         stop 'zeroin for eval_imbalance() failed'
-          !         dcleaf = 0.0
-          !       else
-          !         dcleaf = out_zeroin%root
-          !       end if
-          !       ! if (write_logfile_eval_imbalance) close(unit=666)
-          !       if (verbose) print*, 'no. of iterations   ', out_zeroin%niter
-          !       if (verbose) print*, 'dcleaf is root ', dcleaf
-          !       test = eval_imbalance( dcleaf, .true. )
-          !       if (verbose) print*, 'eval               =', test
-          !       ! if (abs(test)>1e-4) stop 'failed finding a good root'
-          !       if (verbose) print*, '----------------------------------'
-          !       ! break_after_alloc = .true.
-          !       ! stop 'after finding root'
-          !     else
-          !       ! break_after_alloc = .false.
-          !     end if
-
-          !   ! end if
-
-          !   !-------------------------------------------------------------------
-          !   ! LEAF ALLOCATION
-          !   ! - increment foliage C pool
-          !   ! - update LAI
-          !   ! - calculate canopy-level foliage N as a function of LAI 
-          !   ! - reduce labile pool by C and N increments
-          !   !-------------------------------------------------------------------
-          !   call allocate_leaf( &
-          !     pft, &
-          !     dcleaf, &
-          !     tile(lu)%plant(pft)%pleaf%c%c12, &
-          !     tile(lu)%plant(pft)%pleaf%n%n14, &
-          !     tile(lu)%plant(pft)%plabl%c%c12, &
-          !     tile(lu)%plant(pft)%plabl%n%n14, &
-          !     tile(lu)%plant(pft)%actnv_unitfapar, &
-          !     tile(lu)%plant(pft)%lai_ind, &
-          !     dnleaf, &
-          !     nignore = .false. &
-          !     )
-
-          !   !-------------------------------------------------------------------  
-          !   ! Update leaf traits with updated LAI and fapar
-          !   !-------------------------------------------------------------------
-          !   tile(lu)%plant(pft)%fapar_ind = get_fapar( tile(lu)%plant(pft)%lai_ind )
-          !   call update_leaftraits( tile(lu)%plant(pft) )
-
-          !   !-------------------------------------------------------------------
-          !   ! ROOT ALLOCATION
-          !   ! - determine root C and N increments based on remaining labile C and N
-          !   ! - update root C and N
-          !   ! - update labile C and N
-          !   !-------------------------------------------------------------------
-          !   call allocate_root( &
-          !     pft, &
-          !     dcroot, &
-          !     dnroot, &
-          !     tile(lu)%plant(pft)%proot%c%c12, &
-          !     tile(lu)%plant(pft)%proot%n%n14, &
-          !     tile(lu)%plant(pft)%plabl%c%c12, &
-          !     tile(lu)%plant(pft)%plabl%n%n14, &
-          !     nignore = .false. &
-          !     )
-
-
-          ! else
-            !==================================================================
-            ! Fixed allocation 
-            !------------------------------------------------------------------
-            ! update
-            if (tile(lu)%plant(pft)%pleaf%c%c12 == 0.0) then
-              call get_leaftraits_init( tile(lu)%plant(pft) )
-            end if
-
-            !------------------------------------------------------------------
-            ! record total respiration of preceeding 30 days. 
-            ! Keep this amount in labile pool to satisfy demand.
-            !------------------------------------------------------------------
-            if (firstcall4) then 
-              resp_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drleaf &
-                                     + tile_fluxes(lu)%plant(pft)%drroot &
-                                     + tile_fluxes(lu)%plant(pft)%drsapw &
-                                     + tile_fluxes(lu)%plant(pft)%dcex
-              if (pft == npft .and. lu == nlu) firstcall4 = .false.
-            else
-              resp_vec(lu,pft,1:(len_resp_vec-1)) = resp_vec(lu,pft,2:len_resp_vec)
-              resp_vec(lu,pft,len_resp_vec) = tile_fluxes(lu)%plant(pft)%drleaf &
+          !------------------------------------------------------------------
+          ! record total respiration of preceeding 30 days. 
+          ! Keep this amount in labile pool to satisfy demand.
+          !------------------------------------------------------------------
+          if (firstcall4) then 
+            resp_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drleaf &
                                    + tile_fluxes(lu)%plant(pft)%drroot &
                                    + tile_fluxes(lu)%plant(pft)%drsapw &
                                    + tile_fluxes(lu)%plant(pft)%dcex
-            end if
-            frac_for_resp = sum(resp_vec(lu,pft,:)) / tile(lu)%plant(pft)%plabl%c%c12
+            if (pft == npft .and. lu == nlu) firstcall4 = .false.
+          else
+            resp_vec(lu,pft,1:(len_resp_vec-1)) = resp_vec(lu,pft,2:len_resp_vec)
+            resp_vec(lu,pft,len_resp_vec) = tile_fluxes(lu)%plant(pft)%drleaf &
+                                 + tile_fluxes(lu)%plant(pft)%drroot &
+                                 + tile_fluxes(lu)%plant(pft)%drsapw &
+                                 + tile_fluxes(lu)%plant(pft)%dcex
+          end if
+          frac_for_resp = sum(resp_vec(lu,pft,:)) / tile(lu)%plant(pft)%plabl%c%c12
 
-            !------------------------------------------------------------------
-            ! Calculate maximum C allocatable based on current labile pool size, 
-            ! discounted by the yield factor.
-            !------------------------------------------------------------------
-            ! ! witholding C for respiration
-            ! avl = orgfrac(  kdecay_labl * calc_ft_growth( climate%dtemp ), &
-            !                 orgfrac( (1.0 - frac_for_resp), &
-            !                           tile(lu)%plant(pft)%plabl ) )
+          !------------------------------------------------------------------
+          ! Calculate maximum C allocatable based on current labile pool size, 
+          ! discounted by the yield factor.
+          !------------------------------------------------------------------
+          ! ! witholding C for respiration
+          ! avl = orgfrac(  kdecay_labl * calc_ft_growth( climate%dtemp ), &
+          !                 orgfrac( (1.0 - frac_for_resp), &
+          !                           tile(lu)%plant(pft)%plabl ) )
 
-            ! without witholding C for respiration
-            avl = orgfrac(  kdecay_labl * tile(lu)%plant(pft)%pheno%level_coldacclim, &
-                            tile(lu)%plant(pft)%plabl )
+          ! without witholding C for respiration
+          avl = orgfrac(  kdecay_labl * tile(lu)%plant(pft)%pheno%level_coldacclim, &
+                          tile(lu)%plant(pft)%plabl )
 
-            ! additionally constrain allocatable C by available N, given the lower C:N of leaves or roots
-            if (myinterface%steering%dofree_alloc .and. myinterface%steering%closed_nbal) then
-              max_dcleaf_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * tile(lu)%plant(pft)%r_cton_leaf
-              max_dcroot_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * params_pft_plant(pft)%r_cton_root ! should be obsolete as generally r_ntoc_leaf > r_ntoc_root
-              avl%c%c12 = min(avl%c%c12, max_dcleaf_n_constraint, max_dcroot_n_constraint)
-            end if
+          ! additionally constrain allocatable C by available N, given the lower C:N of leaves or roots
+          if (myinterface%steering%dofree_alloc .and. myinterface%steering%closed_nbal) then
+            max_dcleaf_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * tile(lu)%plant(pft)%r_cton_leaf
+            max_dcroot_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * params_pft_plant(pft)%r_cton_root ! should be obsolete as generally r_ntoc_leaf > r_ntoc_root
+            avl%c%c12 = min(avl%c%c12, max_dcleaf_n_constraint, max_dcroot_n_constraint)
+          end if
 
-            ! amount to be allocated as real number
-            dcseed = f_seed * params_plant%growtheff * avl%c%c12
-            dnseed = min(avl%n%n14, dcseed * params_pft_plant(pft)%r_ntoc_seed)
-            dcleaf = (1.0 - f_seed) * frac_leaf         * params_plant%growtheff * avl%c%c12
-            dcroot = (1.0 - f_seed) * (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
-            dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
+          ! amount to be allocated as real number
+          dcseed = f_seed * params_plant%growtheff * avl%c%c12
+          dnseed = min(avl%n%n14, dcseed * params_pft_plant(pft)%r_ntoc_seed)
+          dcleaf = (1.0 - f_seed) * frac_leaf         * params_plant%growtheff * avl%c%c12
+          dcroot = (1.0 - f_seed) * (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
+          dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
 
-            tile_fluxes(lu)%plant(pft)%debug4 = dcleaf
+          tile_fluxes(lu)%plant(pft)%debug4 = dcleaf
 
-            ! !-------------------------------------------------------------------
-            ! ! SEED ALLOCATION
-            ! !-------------------------------------------------------------------
-            ! call orgmv( orgpool( carbon( dcseed ), nitrogen( dnseed )  ) , &
-            !             tile(lu)%plant(pft)%plabl, &
-            !             tile(lu)%plant(pft)%pseed &
-            !             )
-            
-            ! ! ... and remove growth respiration from labile C, update growth respiration
-            ! dclabl = (1.0 / params_plant%growtheff) * dcseed
-            ! tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - dclabl
-            ! tile_fluxes(lu)%plant(pft)%drgrow = tile_fluxes(lu)%plant(pft)%drgrow + dclabl - dcseed
+          ! !-------------------------------------------------------------------
+          ! ! SEED ALLOCATION
+          ! !-------------------------------------------------------------------
+          ! call orgmv( orgpool( carbon( dcseed ), nitrogen( dnseed )  ) , &
+          !             tile(lu)%plant(pft)%plabl, &
+          !             tile(lu)%plant(pft)%pseed &
+          !             )
+          
+          ! ! ... and remove growth respiration from labile C, update growth respiration
+          ! dclabl = (1.0 / params_plant%growtheff) * dcseed
+          ! tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - dclabl
+          ! tile_fluxes(lu)%plant(pft)%drgrow = tile_fluxes(lu)%plant(pft)%drgrow + dclabl - dcseed
 
-            !-------------------------------------------------------------------
-            ! LEAF ALLOCATION
-            !-------------------------------------------------------------------
-            if (dcleaf > 0.0) then
+          !-------------------------------------------------------------------
+          ! LEAF ALLOCATION
+          !-------------------------------------------------------------------
+          if (dcleaf > 0.0) then
 
-              call allocate_leaf( &
-                pft, &
-                dcleaf, &
-                tile(lu)%plant(pft)%pleaf%c%c12, &
-                tile(lu)%plant(pft)%pleaf%n%n14, &
-                tile(lu)%plant(pft)%plabl%c%c12, &
-                tile(lu)%plant(pft)%plabl%n%n14, &
-                tile_fluxes(lu)%plant(pft)%drgrow, &
-                tile(lu)%plant(pft)%actnv_unitfapar, &
-                tile(lu)%plant(pft)%lai_ind, &
-                dnleaf, &
-                closed_nbal = myinterface%steering%closed_nbal &
-                )
+            call allocate_leaf( &
+              pft, &
+              dcleaf, &
+              tile(lu)%plant(pft)%pleaf%c%c12, &
+              tile(lu)%plant(pft)%pleaf%n%n14, &
+              tile(lu)%plant(pft)%plabl%c%c12, &
+              tile(lu)%plant(pft)%plabl%n%n14, &
+              tile_fluxes(lu)%plant(pft)%drgrow, &
+              tile(lu)%plant(pft)%actnv_unitfapar, &
+              tile(lu)%plant(pft)%lai_ind, &
+              dnleaf, &
+              closed_nbal = myinterface%steering%closed_nbal &
+              )
 
-              !-------------------------------------------------------------------  
-              ! Update leaf traits, given updated LAI and fAPAR (leaf N is consistent with plant%narea_canopy)
-              !------------------------------------------------------------------- 
-              tile(lu)%plant(pft)%fapar_ind = get_fapar( tile(lu)%plant(pft)%lai_ind )
-              call update_leaftraits( tile(lu)%plant(pft) )
+            !-------------------------------------------------------------------  
+            ! Update leaf traits, given updated LAI and fAPAR (leaf N is consistent with plant%narea_canopy)
+            !------------------------------------------------------------------- 
+            tile(lu)%plant(pft)%fapar_ind = get_fapar( tile(lu)%plant(pft)%lai_ind )
+            call update_leaftraits( tile(lu)%plant(pft) )
 
-              !-------------------------------------------------------------------  
-              ! If labile N gets negative, account gap as N fixation
-              !-------------------------------------------------------------------  
-              if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
-                ! stop 'labile N got negative'
-                req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
-                tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
-                tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
-                tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
-              end if
-
-            end if
-
-            !-------------------------------------------------------------------
-            ! ROOT ALLOCATION
-            !-------------------------------------------------------------------
-            if (dcroot > 0.0) then
-
-              call allocate_root( &
-                pft, &
-                dcroot, &
-                dnroot, &
-                tile(lu)%plant(pft)%proot%c%c12, &
-                tile(lu)%plant(pft)%proot%n%n14, &
-                tile(lu)%plant(pft)%plabl%c%c12, &
-                tile(lu)%plant(pft)%plabl%n%n14, &
-                tile_fluxes(lu)%plant(pft)%drgrow, &
-                closed_nbal = myinterface%steering%closed_nbal &
-                )
-
-              !-------------------------------------------------------------------  
-              ! If labile N gets negative, account gap as N fixation
-              !-------------------------------------------------------------------  
-              if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
-                ! stop 'labile N got negative'
-                req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
-                tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
-                tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
-                tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
-              end if
-
+            !-------------------------------------------------------------------  
+            ! If labile N gets negative, account gap as N fixation
+            !-------------------------------------------------------------------  
+            if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
+              ! stop 'labile N got negative'
+              req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
+              tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
+              tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
+              tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
             end if
 
-          ! end if
+          end if
+
+          !-------------------------------------------------------------------
+          ! ROOT ALLOCATION
+          !-------------------------------------------------------------------
+          if (dcroot > 0.0) then
+
+            call allocate_root( &
+              pft, &
+              dcroot, &
+              dnroot, &
+              tile(lu)%plant(pft)%proot%c%c12, &
+              tile(lu)%plant(pft)%proot%n%n14, &
+              tile(lu)%plant(pft)%plabl%c%c12, &
+              tile(lu)%plant(pft)%plabl%n%n14, &
+              tile_fluxes(lu)%plant(pft)%drgrow, &
+              closed_nbal = myinterface%steering%closed_nbal &
+              )
+
+            !-------------------------------------------------------------------  
+            ! If labile N gets negative, account gap as N fixation
+            !-------------------------------------------------------------------  
+            if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
+              ! stop 'labile N got negative'
+              req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
+              tile_fluxes(lu)%plant(pft)%dnup%n14 = tile_fluxes(lu)%plant(pft)%dnup%n14 + req
+              tile_fluxes(lu)%plant(pft)%dnup_fix = tile_fluxes(lu)%plant(pft)%dnup_fix + req
+              tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + req
+            end if
+
+          end if
 
         else
 
