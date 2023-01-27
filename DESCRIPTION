@@ -41,7 +41,7 @@ LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Suggests:
     rpmodel,
     covr,

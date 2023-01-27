@@ -25,7 +25,7 @@
 #'   \item{\code{targets}}{Name of the observed target variable to use in calibration
 #'   (necessary if \code{method = 'BayesianTools'}).}
 #'  }
-#'  @param optim_out A logical indicating whether the function returns the raw
+#' @param optim_out A logical indicating whether the function returns the raw
 #'  output of the optimization functions (defaults to TRUE).
 #'  
 #' @return A named list containing the calibrated parameter vector `par` and

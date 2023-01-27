@@ -30,8 +30,9 @@ See the 'P-model usage' vignette for more information and examples.
  \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
  \item{\code{targets}}{Name of the observed target variable to use in calibration
  (necessary if \code{method = 'BayesianTools'}).}
-}
-@param optim_out A logical indicating whether the function returns the raw
+}}
+
+\item{optim_out}{A logical indicating whether the function returns the raw
 output of the optimization functions (defaults to TRUE).}
 }
 \value{
