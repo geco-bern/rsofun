@@ -29,7 +29,8 @@ covered by the dataframe. Defaults to 1.}
 dates covered by the dataframe. Defaults to 1.}
 
 \item{freq}{A character string specifying the time steps of dates
-(in rows). Defaults to \code{"days"}. Any of \code{"days", "months"}.}
+(in rows). Defaults to \code{"days"}. Any of \code{"days", "months"}. If
+\code{freq = "months"} the 15\eqn{^{th}} day of the months is used as date.}
 
 \item{endmoy}{An integer defining the end month-of-year of dates covered
 by the dataframe. Defaults to 12.}
