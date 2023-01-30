@@ -29,8 +29,9 @@ covered by the dataframe. Defaults to 1.}
 dates covered by the dataframe. Defaults to 1.}
 
 \item{freq}{A character string specifying the time steps of dates
-(in rows). Defaults to \code{"days"}. Any of \code{"days", "months"}. If
-\code{freq = "months"} the 15\eqn{^{th}} day of the months is used as date.}
+(in rows). Defaults to \code{"days"}. Any of \code{"days", "months", "years"}. If
+\code{freq = "months"} the 15\eqn{^{th}} day of the months is used as date,
+and if \code{freq = "years"} the 1\eqn{^{st}} of January of each year is returned.}
 
 \item{endmoy}{An integer defining the end month-of-year of dates covered
 by the dataframe. Defaults to 12.}
@@ -38,15 +39,16 @@ by the dataframe. Defaults to 12.}
 \item{enddom}{An integer defining the end day-of-year of dates
 covered by the dataframe. Defaults to 31.}
 
-\item{noleap}{Whether leap years are ignored. Defaults to \code{FALSE}.}
+\item{noleap}{Whether leap years are ignored, that is, whether the 29\eqn{^{th}} 
+of February is removed. Defaults to \code{FALSE}.}
 }
 \value{
 A tibble with dates.
 }
 \description{
-Creates a tibble with rows for each date (\code{\link[lubridate:ymd]{lubridate::ymd}} object from 
-library \code{lubridate}) from \code{'yrstart'} to \code{'yrend'}. Intervals of dates is 
-specified by argument \code{'freq'}.
+Creates a tibble with rows for each date from \code{'yrstart'} to \code{'yrend'}
+in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument 
+\code{'freq'}.
 }
 \examples{
 \dontrun{
