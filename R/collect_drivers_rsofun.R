@@ -171,7 +171,7 @@ collect_drivers_sofun <- function(
     add_doy <- function(string){paste0(string, "_doy")}
     
     df_meandoy <- df %>% 
-      dplyr::mutate(doy = lubridate::yday(date)) %>% 
+      dplyr::mutate(doy = as.numeric(format(date, "%j"))) %>% 
       dplyr::group_by(doy) %>% 
       dplyr::summarise(
         dplyr::across(
@@ -190,7 +190,7 @@ collect_drivers_sofun <- function(
            "tmin_doy", "tmax_doy"))
     
     df <- df %>% 
-      dplyr::mutate(doy = lubridate::yday(date)) %>% 
+      dplyr::mutate(doy = as.numeric(format(date, "%j"))) %>% 
       dplyr::left_join(df_meandoy, by = "doy") %>% 
       dplyr::mutate(ppfd = ifelse(is.na(ppfd), ppfd_doy, ppfd),
              rain = ifelse(is.na(rain), rain_doy, rain),
