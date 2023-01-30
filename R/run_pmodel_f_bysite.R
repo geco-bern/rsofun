@@ -128,7 +128,8 @@ run_pmodel_f_bysite <- function(
     dplyr::ungroup() %>%
     dplyr::slice(1) %>%
     dplyr::pull(date) %>%
-    lubridate::year()
+    format("%Y") %>%
+    as.numeric()
   
   nyeartrend_forcing <- nrow(forcing)/ndayyear
   
@@ -366,7 +367,7 @@ run_pmodel_f_bysite <- function(
       dplyr::bind_cols(ddf,.)
 
   } else {
-    out <- tibble(date = lubridate::ymd("2000-01-01"),
+    out <- tibble(date = as.Date("2000-01-01"),
                   fapar = NA, gpp = NA, transp = NA, latenth = NA, 
                   pet = NA, vcmax = NA, jmax = NA, vcmax25 = NA, 
                   jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, 
