@@ -67,9 +67,9 @@ prepare_setup_sofun <- function(
     ## clean up and complement
     mutate(year_start = as.numeric(year_start),
            year_end = as.numeric(year_end)) %>% 
-    mutate(date_start = lubridate::ymd( 
+    mutate(date_start = as.Date( 
              paste0( as.character( site_info$year_start ), "-01-01" ) ),
-           date_end   = lubridate::ymd( 
+           date_end   = as.Date( 
              paste0( as.character( site_info$year_end ), "-12-31" ) ))
 
   ## add simulation parameters as a list nested in 'site_info'
