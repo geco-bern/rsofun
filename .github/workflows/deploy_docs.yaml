@@ -30,7 +30,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           cache: false
-          extra-packages: any::pkgdown, github::computationales/GECO_template, local::.
+          extra-packages: any::pkgdown, local::.
           needs: website
 
       - name: Build site
