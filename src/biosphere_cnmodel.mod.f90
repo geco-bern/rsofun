@@ -97,6 +97,8 @@ contains
 
     print*,'YEAR ', myinterface%steering%year
 
+    ! print*,'a presv: ', tile(1)%plant(1)%presv
+
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
     !----------------------------------------------------------------
@@ -119,6 +121,8 @@ contains
         if (verbose) print*,'calling initdaily_() ...'
         call init_tile_fluxes( tile_fluxes(:) )
         if (verbose) print*,'... done.'
+
+        ! print*,'b presv: ', tile(1)%plant(1)%presv
 
         !----------------------------------------------------------------
         ! Get radiation based on daily temperature, sunshine fraction, and 
@@ -186,6 +190,8 @@ contains
         if (verbose) print*, '              lai   = ', tile(1)%plant(1)%lai_ind
         if (verbose) print*, '... done'
 
+        ! print*,'c presv: ', tile(1)%plant(1)%presv
+
         !----------------------------------------------------------------
         ! calculate GPP
         !----------------------------------------------------------------
@@ -236,6 +242,8 @@ contains
         if (baltest .and. verbose .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
         if (verbose) print*, '... done'
 
+        ! print*,'d presv: ', tile(1)%plant(1)%presv
+
         !----------------------------------------------------------------
         ! calculate N acquisition as a function of C exudation
         !----------------------------------------------------------------
@@ -260,6 +268,8 @@ contains
         if (baltest .and. verbose .and. abs(nbal1) > eps) print*, 'balance 1 not satisfied'
         if (baltest .and. verbose .and. abs(nbal2) > eps) print*, 'balance 2 not satisfied'
         if (verbose) print*, '... done'
+
+        ! print*,'e presv: ', tile(1)%plant(1)%presv
 
         !----------------------------------------------------------------
         ! leaf, sapwood, and fine-root turnover
@@ -306,6 +316,8 @@ contains
         if (baltest .and. abs(orgbal1%c%c12) > eps) stop 'balance not satisfied for C'
         if (baltest .and. abs(orgbal1%n%n14) > eps) stop 'balance not satisfied for N'
         if (verbose) print*, '... done'
+
+        ! print*,'f presv: ', tile(1)%plant(1)%presv
 
         !----------------------------------------------------------------
         ! grass / crop harvest
@@ -393,6 +405,8 @@ contains
         ! if (baltest .and. abs(nbal1) > eps .and. (.not. myinterface%steering%do_soilequil)) stop 'balance not satisfied for N'
         if (verbose) print*, '... done'
 
+        ! print*,'g presv: ', tile(1)%plant(1)%presv
+
         !----------------------------------------------------------------
         ! inorganic soil N dynamics (mass balance test only possible inside module)
         !----------------------------------------------------------------
@@ -458,10 +472,14 @@ contains
         ! if (baltest .and. abs(nbal1) > eps) stop 'balance not satisfied for C'
         if (verbose) print*, '... done'
 
+        ! print*,'h presv: ', tile(1)%plant(1)%presv
+
         !----------------------------------------------------------------
         ! daily diagnostics (e.g., sum over plant within canopy)
         !----------------------------------------------------------------
         call diag_daily( tile(:), tile_fluxes(:), out_biosphere(doy) )
+
+        ! print*,'i presv: ', tile(1)%plant(1)%presv
 
         init_daily = .false.
 
@@ -474,12 +492,16 @@ contains
     !----------------------------------------------------------------
     call diag_annual( tile(:), tile_fluxes(:) )
 
+    ! print*,'j presv: ', tile(1)%plant(1)%presv
+
     !----------------------------------------------------------------
     ! close (experimental) files
     !----------------------------------------------------------------
     if (myinterface%steering%finalize) then
       call finalize_tile()
     end if
+
+    ! print*,'k presv: ', tile(1)%plant(1)%presv
     
     if (verbose) print*, 'Done with biosphere for this year. Guete Rutsch!'
 

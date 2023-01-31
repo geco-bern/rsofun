@@ -147,13 +147,12 @@ contains
         out_steering%do_soilequil = .false.
       end if
 
-      ! ! if ( year - params_siml%spinupyears > 3 ) then
-      ! if ( year > 30 ) then
-      !   out_steering%spinup_reserves = .false.
-      ! else
-      !   out_steering%spinup_reserves = .true.
-      ! end if
-      out_steering%spinup_reserves = .true.
+      if ( year > 30 ) then
+        out_steering%spinup_reserves = .false.
+      else
+        out_steering%spinup_reserves = .true.
+      end if
+      ! out_steering%spinup_reserves = .true.
       
       if ( year<=params_siml%spinupyears .and. ( year > ( spinupyr_soilequil_1 - params_siml%recycle ) .and. &
            year <= spinupyr_soilequil_1 .or. year > ( spinupyr_soilequil_2 - params_siml%recycle ) .and. &

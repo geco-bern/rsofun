@@ -78,7 +78,7 @@ contains
         params_pft_pheno(pft)%kphio_par_e &
       )
 
-      tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%pheno%level_coldacclim
+      ! tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%pheno%level_coldacclim
 
     end do pftloop
 

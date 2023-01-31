@@ -214,9 +214,9 @@ contains
           ! calculate fraction allocated to seeds
           f_seed = calc_f_seed( slope * 3.0 )
 
-          ! alternative: slope is daily change in an_unitlai
-          tile_fluxes(lu)%plant(pft)%debug1 = slope
-          tile_fluxes(lu)%plant(pft)%debug2 = f_seed
+          ! ! alternative: slope is daily change in an_unitlai
+          ! tile_fluxes(lu)%plant(pft)%debug1 = slope
+          ! tile_fluxes(lu)%plant(pft)%debug2 = f_seed
 
 
           ! Only start filling seeds if LAI > 1
@@ -288,8 +288,6 @@ contains
           dcleaf = (1.0 - f_seed) * frac_leaf         * params_plant%growtheff * avl%c%c12
           dcroot = (1.0 - f_seed) * (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
           dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
-
-          tile_fluxes(lu)%plant(pft)%debug4 = dcleaf
 
           ! !-------------------------------------------------------------------
           ! ! SEED ALLOCATION
@@ -428,41 +426,46 @@ contains
 
       end if
 
+
+      ! return on leaf investment, defined as sum of C assimilated (after leaf dark respiration, but before exudation, root and other respiration) 
+      ! divided by sum over C invested into leaf construction (ignoring growth respiration)
+      psi_c = sum( g_net_vec(lu,pft,:) ) / sum( c_a_l_vec(lu,pft,:) )
+
+      ! return on root investment, defined as sum N acquisition divided by sum of C invested into root construction (ignoring growth respiration)
+      psi_n = sum( n_acq_vec(lu,pft,:) ) / sum( c_a_r_vec(lu,pft,:) )
+
+      ! sum of C consumed to satisfy all biomass production and respiration, including growth respiration, of past N days
+      c_con = (1.0 / params_plant%growtheff) * sum( c_a_l_vec(lu,pft,:) + c_a_r_vec(lu,pft,:) + c_a_s_vec(lu,pft,:) ) &
+              + sum( r_rex_vec(lu,pft,:) )
+
+      ! sum of N consumed to satisfy all biomass production of past N days minus excess N
+      n_con = sum( n_con_vec(lu,pft,:) )
+
+      ! consumed N:C ratio (considering C allocation and respiration over N allocation), mean over preceeding N days
+      r_ntoc_con = n_con / c_con
+
+      ! excess N acquisition over the past N days
+      n_exc = sum( n_acq_vec(lu,pft,:) ) - sum( g_net_vec(lu,pft,:) ) * r_ntoc_con
+
+      ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
+      n_con_corr = n_con - n_exc
+
+      ! determine balance (fraction of allocation to leaves)
+      ! psi_c * x * growtheff * c_avl / (psi_n * (1-x) * growtheff * c_avl) = c_consumed / (n_consumed - n_excess)
+      ! => solve for x (frac_leaf below)
+      ! c_consumed is c_req; n_consumed is n_con
       if ( myinterface%steering%dofree_alloc ) then
-
-        ! return on leaf investment, defined as sum of C assimilated (after leaf dark respiration, but before exudation, root and other respiration) 
-        ! divided by sum over C invested into leaf construction (ignoring growth respiration)
-        psi_c = sum( g_net_vec(lu,pft,:) ) / sum( c_a_l_vec(lu,pft,:) )
-
-        ! return on root investment, defined as sum N acquisition divided by sum of C invested into root construction (ignoring growth respiration)
-        psi_n = sum( n_acq_vec(lu,pft,:) ) / sum( c_a_r_vec(lu,pft,:) )
-
-        ! sum of C consumed to satisfy all biomass production and respiration, including growth respiration, of past N days
-        c_con = (1.0 / params_plant%growtheff) * sum( c_a_l_vec(lu,pft,:) + c_a_r_vec(lu,pft,:) + c_a_s_vec(lu,pft,:) ) &
-                + sum( r_rex_vec(lu,pft,:) )
-
-        ! sum of N consumed to satisfy all biomass production of past N days minus excess N
-        n_con = sum( n_con_vec(lu,pft,:) )
-
-        ! consumed N:C ratio (considering C allocation and respiration over N allocation), mean over preceeding N days
-        r_ntoc_con = n_con / c_con
-
-        ! excess N acquisition over the past N days
-        n_exc = sum( n_acq_vec(lu,pft,:) ) - sum( g_net_vec(lu,pft,:) ) * r_ntoc_con
-
-        ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
-        n_con_corr = n_con - n_exc
-
-        ! determine balance (fraction of allocation to leaves)
-        ! psi_c * x * growtheff * c_avl / (psi_n * (1-x) * growtheff * c_avl) = c_consumed / (n_consumed - n_excess)
-        ! => solve for x (frac_leaf below)
-        ! c_consumed is c_req; n_consumed is n_con
         frac_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
-        
-        ! print*,'n_exc, n_con, c_con, psi_c, psi_n, r_ntoc_con, n_con_corr, frac_leaf ', &
-        !         n_exc, n_con, c_con, psi_c, psi_n, r_ntoc_con, n_con_corr, frac_leaf
-
       end if
+
+      ! ! compare C:N aquired and required at the level of GPP (C required includes C for respiration)
+      ! print*,'C:N acquired:', sum( g_net_vec(lu,pft,:) ) / sum( n_acq_vec(lu,pft,:) ), 'C:N required: ', c_con / n_con
+
+      ! C:N acquired:
+      tile_fluxes(lu)%plant(pft)%debug1 = sum( g_net_vec(lu,pft,:) ) / sum( n_acq_vec(lu,pft,:) )
+
+      ! C:N required
+      tile_fluxes(lu)%plant(pft)%debug2 = c_con / n_con
 
 
       !-------------------------------------------------------------------------
@@ -495,10 +498,13 @@ contains
         c_resv_target &
         )
 
+      tile_fluxes(lu)%plant(pft)%debug3 = f_resv_to_labl
+      tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%presv%c%c12
+
       ! Assume that the N flux goes in proportion with the C flux, depending on the source pool
       ! If f_resv_to_labl is positive, the source pool is presv.
       ! If f_resv_to_labl is negative, the source pool is plabl.
-      if (f_resv_to_labl > 0.0) then
+      if (f_resv_to_labl > 0.0 .and. c_labl_target > 0.0) then
 
         ! transfer C to labile, source pool is presv
         org_resv_to_labl = orgfrac(f_resv_to_labl, tile(lu)%plant(pft)%presv)
@@ -509,7 +515,7 @@ contains
           tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 - org_resv_to_labl%c%c12
         end if
         
-      else
+      else if (c_resv_target > 0.0) then
 
         ! transfer C to reserves, source pool is plabl
         org_labl_to_resv = orgfrac((-1.0) * f_resv_to_labl, tile(lu)%plant(pft)%plabl)
@@ -521,16 +527,6 @@ contains
         end if
 
       end if
-
-      ! ! xxx debug
-      ! tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 &
-      !                                   - (1.0/3650.0) * tile(lu)%plant(pft)%presv%c%c12
-
-      ! ! record for experimental output
-      ! tile_fluxes(lu)%plant(pft)%debug1 = f_resv_to_labl
-      ! tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%plabl%c%c12 / c_labl_target
-      ! tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%presv%c%c12 / c_resv_target
-      ! tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%presv%c%c12
 
       !-------------------------------------------------------------------
       ! Adjust NPP for growth respiration

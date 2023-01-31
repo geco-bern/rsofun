@@ -90,7 +90,6 @@ contains
       ! available C in labile pool
       cavl = tile(lu)%plant(pft)%plabl%c%c12
 
-
       !-------------------------------------------------------------------------
       ! When insufficient C is available in labile pool refill labile pool using 
       ! reserves.
