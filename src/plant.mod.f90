@@ -85,7 +85,8 @@ module md_plant
   end type pheno_ann_type
 
   type pheno_type
-    real    :: level_coldacclim  ! alternative temperature-driven phenology, governing cold acclimation of photosynthesis (hardening) and sprouting of grasses (value between 0 and 1)
+    real :: level_coldacclim  ! alternative temperature-driven phenology, governing cold acclimation of photosynthesis (hardening) and sprouting of grasses (value between 0 and 1)
+    real :: level_veggrowth   ! phenophase of vegetative growth vs. seed filling (implemented as withholding C from allocation and keeping it in the labile pool)
   end type pheno_type
 
   !----------------------------------------------------------------

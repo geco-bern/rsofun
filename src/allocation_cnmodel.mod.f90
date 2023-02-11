@@ -71,14 +71,11 @@ contains
     real :: dcleaf
     real :: dnleaf
     real :: dcroot
-    real :: dcseed
-    real :: dnseed
+    ! real :: dcseed
+    ! real :: dnseed
     real :: dnroot
     real :: drgrow
     real :: dclabl
-    real, save :: an_unitlai_prev
-    real :: an_unitlai, an_unitlai_reldiff, an_unitlai_reldiff_damped, an_max
-    real :: f_seed           ! fraction allocated to seeds (unitless)
     integer, save :: count_increasing, count_declining
     logical, save :: firstcall0 = .true.
     logical, save :: firstcall1 = .true.
@@ -103,17 +100,11 @@ contains
     real, dimension(nlu,npft,len_resp_vec), save :: resp_vec
     real :: frac_for_resp
 
-    integer, parameter :: len_an_vec = 15
-    real, dimension(nlu,npft,len_an_vec), save :: an_vec
-    real, dimension(len_an_vec) :: tmp_vec
-    integer, dimension(len_an_vec) :: vec_idx
-    real :: slope, intercept
-
     real    :: cavl, navl, req, c_req, n_req, c_acq, n_acq
     logical, save :: firstcall_cnbal = .true.
     integer, parameter :: len_cnbal_vec = 365
 
-    real, dimension(nlu,npft,len_cnbal_vec), save :: g_net_vec, r_rex_vec, n_acq_vec, c_a_l_vec, c_a_r_vec, c_a_s_vec, n_con_vec
+    real, dimension(nlu,npft,len_cnbal_vec), save :: g_net_vec, r_rex_vec, n_acq_vec, c_a_l_vec, c_a_r_vec, n_con_vec !, c_a_s_vec
 
     real :: psi_c        ! return on leaf investment
     real :: psi_n        ! return on root investment
@@ -180,59 +171,12 @@ contains
       if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps ) then
 
         if (params_pft_plant(pft)%grass) then
-          !-------------------------------------------------------------------------
-          ! PHENOPHASE: SEED FILLING
-          ! Determine day when "absorbed" top-of-atmosphere radiation per unit leaf 
-          ! area starts declining
-          !-------------------------------------------------------------------------
-          ! Calculate absorbed top-of-atmosphere solar radiation per unit leaf area
-          ! Using TOA radiation here to avoid effects by daily varying cloud cover,
-          ! assuming the plant senses available radiation over the seasons based on day length.
-          an_unitlai = tile_fluxes(lu)%canopy%dra
-                       ! * tile(lu)%plant(pft)%fapar_ind &
-                       ! / tile(lu)%plant(pft)%lai_ind
-
-          ! Apply low-pass filter on an_unitlai
-          if (firstcall1) then
-            an_vec(lu,pft,:) = an_unitlai
-            if (pft == npft .and. lu == nlu) firstcall1 = .false.
-          else
-            an_vec(lu,pft,1:(len_an_vec-1)) = an_vec(lu,pft,2:len_an_vec)
-            an_vec(lu,pft,len_an_vec) = an_unitlai
-          end if
-
-          ! normalise by mean
-          tmp_vec = an_vec(lu,pft,:) / (sum(an_vec(lu,pft,:)) / len_an_vec)
-
-          ! get trend of an_unitlai over preceeding len_an_vec days
-          vec_idx = (/ (idx, idx = 1, len_an_vec) /)
-          call calc_reg_line( real(vec_idx(:)), tmp_vec, intercept, slope )
-
-          ! change in TOA radiation per day, normalised by solar constant (in J m-2 d-1)
-          slope = (an_unitlai - an_vec(lu,pft,len_an_vec-1))/(kGsc * 24 * 60 * 60)
-
-          ! calculate fraction allocated to seeds
-          f_seed = calc_f_seed( slope * 3.0 )
-
-          ! ! alternative: slope is daily change in an_unitlai
-          ! tile_fluxes(lu)%plant(pft)%debug1 = slope
-          ! tile_fluxes(lu)%plant(pft)%debug2 = f_seed
-
-
-          ! Only start filling seeds if LAI > 1
-          if (tile(lu)%plant(pft)%lai_ind < 1.0) then
-            f_seed = 0.0
-          end if
-
-          ! XXX try
-          ! if (year < 2004) then
-            ! f_seed = 0.0
-          ! end if
 
           ! initialise (to make sure)
           dcleaf = 0.0
           dcroot = 0.0
-          dcseed = 0.0
+          ! dcseed = 0.0
+          ! dnseed = 0.0
           drgrow = 0.0
 
           !------------------------------------------------------------------
@@ -244,35 +188,13 @@ contains
           end if
 
           !------------------------------------------------------------------
-          ! record total respiration of preceeding 30 days. 
-          ! Keep this amount in labile pool to satisfy demand.
-          !------------------------------------------------------------------
-          if (firstcall4) then 
-            resp_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drleaf &
-                                   + tile_fluxes(lu)%plant(pft)%drroot &
-                                   + tile_fluxes(lu)%plant(pft)%drsapw &
-                                   + tile_fluxes(lu)%plant(pft)%dcex
-            if (pft == npft .and. lu == nlu) firstcall4 = .false.
-          else
-            resp_vec(lu,pft,1:(len_resp_vec-1)) = resp_vec(lu,pft,2:len_resp_vec)
-            resp_vec(lu,pft,len_resp_vec) = tile_fluxes(lu)%plant(pft)%drleaf &
-                                 + tile_fluxes(lu)%plant(pft)%drroot &
-                                 + tile_fluxes(lu)%plant(pft)%drsapw &
-                                 + tile_fluxes(lu)%plant(pft)%dcex
-          end if
-          frac_for_resp = sum(resp_vec(lu,pft,:)) / tile(lu)%plant(pft)%plabl%c%c12
-
-          !------------------------------------------------------------------
           ! Calculate maximum C allocatable based on current labile pool size, 
           ! discounted by the yield factor.
           !------------------------------------------------------------------
-          ! ! witholding C for respiration
-          ! avl = orgfrac(  kdecay_labl * calc_ft_growth( climate%dtemp ), &
-          !                 orgfrac( (1.0 - frac_for_resp), &
-          !                           tile(lu)%plant(pft)%plabl ) )
-
           ! without witholding C for respiration
-          avl = orgfrac(  kdecay_labl * tile(lu)%plant(pft)%pheno%level_coldacclim, &
+          avl = orgfrac(  kdecay_labl &
+                          * tile(lu)%plant(pft)%pheno%level_coldacclim &
+                          * tile(lu)%plant(pft)%pheno%level_veggrowth, &
                           tile(lu)%plant(pft)%plabl )
 
           ! additionally constrain allocatable C by available N, given the lower C:N of leaves or roots
@@ -283,11 +205,14 @@ contains
           end if
 
           ! amount to be allocated as real number
-          dcseed = f_seed * params_plant%growtheff * avl%c%c12
-          dnseed = min(avl%n%n14, dcseed * params_pft_plant(pft)%r_ntoc_seed)
-          dcleaf = (1.0 - f_seed) * frac_leaf         * params_plant%growtheff * avl%c%c12
-          dcroot = (1.0 - f_seed) * (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
+          ! dcseed = f_seed * params_plant%growtheff * avl%c%c12
+          ! dnseed = min(avl%n%n14, dcseed * params_pft_plant(pft)%r_ntoc_seed)
+
+          dcleaf = frac_leaf         * params_plant%growtheff * avl%c%c12
+          dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
           dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
+
+          tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%pheno%level_veggrowth
 
           ! !-------------------------------------------------------------------
           ! ! SEED ALLOCATION
@@ -378,8 +303,8 @@ contains
 
       else
 
-          dcseed = 0.0
-          dnseed = 0.0
+          ! dcseed = 0.0
+          ! dnseed = 0.0
           dcleaf = 0.0
           dcroot = 0.0
           dnleaf = 0.0
@@ -400,8 +325,8 @@ contains
         n_acq_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnup%n14
         c_a_l_vec(lu,pft,:) = dcleaf
         c_a_r_vec(lu,pft,:) = dcroot
-        c_a_s_vec(lu,pft,:) = dcseed
-        n_con_vec(lu,pft,:) = dnleaf + dnroot + dnseed
+        ! c_a_s_vec(lu,pft,:) = dcseed
+        n_con_vec(lu,pft,:) = dnleaf + dnroot ! + dnseed
 
         if (pft == npft .and. lu == nlu) firstcall_cnbal = .false.
 
@@ -412,7 +337,7 @@ contains
         n_acq_vec(lu,pft,1:(len_cnbal_vec-1)) = n_acq_vec(lu,pft,2:len_cnbal_vec)
         c_a_l_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_l_vec(lu,pft,2:len_cnbal_vec)
         c_a_r_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_r_vec(lu,pft,2:len_cnbal_vec)
-        c_a_s_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_s_vec(lu,pft,2:len_cnbal_vec)
+        ! c_a_s_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_s_vec(lu,pft,2:len_cnbal_vec)
         n_con_vec(lu,pft,1:(len_cnbal_vec-1)) = n_con_vec(lu,pft,2:len_cnbal_vec)
 
         g_net_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
@@ -421,8 +346,8 @@ contains
         n_acq_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dnup%n14
         c_a_l_vec(lu,pft,len_cnbal_vec) = dcleaf
         c_a_r_vec(lu,pft,len_cnbal_vec) = dcroot
-        c_a_s_vec(lu,pft,len_cnbal_vec) = dcseed
-        n_con_vec(lu,pft,len_cnbal_vec) = dnleaf + dnroot + dnseed
+        ! c_a_s_vec(lu,pft,len_cnbal_vec) = dcseed
+        n_con_vec(lu,pft,len_cnbal_vec) = dnleaf + dnroot ! + dnseed
 
       end if
 
@@ -435,7 +360,7 @@ contains
       psi_n = sum( n_acq_vec(lu,pft,:) ) / sum( c_a_r_vec(lu,pft,:) )
 
       ! sum of C consumed to satisfy all biomass production and respiration, including growth respiration, of past N days
-      c_con = (1.0 / params_plant%growtheff) * sum( c_a_l_vec(lu,pft,:) + c_a_r_vec(lu,pft,:) + c_a_s_vec(lu,pft,:) ) &
+      c_con = (1.0 / params_plant%growtheff) * sum( c_a_l_vec(lu,pft,:) + c_a_r_vec(lu,pft,:) ) & ! + c_a_s_vec(lu,pft,:) ) &
               + sum( r_rex_vec(lu,pft,:) )
 
       ! sum of N consumed to satisfy all biomass production of past N days minus excess N
@@ -457,6 +382,7 @@ contains
       if ( myinterface%steering%dofree_alloc ) then
         frac_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
       end if
+      tile_fluxes(lu)%plant(pft)%debug3 = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
 
       ! ! compare C:N aquired and required at the level of GPP (C required includes C for respiration)
       ! print*,'C:N acquired:', sum( g_net_vec(lu,pft,:) ) / sum( n_acq_vec(lu,pft,:) ), 'C:N required: ', c_con / n_con
@@ -467,6 +393,8 @@ contains
       ! C:N required
       tile_fluxes(lu)%plant(pft)%debug2 = c_con / n_con
 
+      ! XXX n_exc has a problem!
+      ! tile_fluxes(lu)%plant(pft)%debug4 = n_exc
 
       !-------------------------------------------------------------------------
       ! RESERVES - LABILE POOL DYNAMICS
@@ -482,7 +410,8 @@ contains
       ! to leaves, roots, and seeds
       c_resv_target = par_resv * (sum( c_a_l_vec(lu,pft,:) ) &
                       + sum( c_a_r_vec(lu,pft,:) ) &
-                      + sum( c_a_s_vec(lu,pft,:) ) )
+                      ! + sum( c_a_s_vec(lu,pft,:) ) &
+                      )
 
       ! ! during reserves spinup phase, keep them at their target value all the time
       ! if (.not. myinterface%steering%spinup_reserves) then
@@ -497,9 +426,6 @@ contains
         c_labl_target, &
         c_resv_target &
         )
-
-      tile_fluxes(lu)%plant(pft)%debug3 = f_resv_to_labl
-      tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%presv%c%c12
 
       ! Assume that the N flux goes in proportion with the C flux, depending on the source pool
       ! If f_resv_to_labl is positive, the source pool is presv.
@@ -536,7 +462,7 @@ contains
       ! record for today
       tile_fluxes(lu)%plant(pft)%alloc_leaf = orgpool( carbon( dcleaf ), nitrogen( dnleaf ) )
       tile_fluxes(lu)%plant(pft)%alloc_root = orgpool( carbon( dcroot ), nitrogen( dnroot ) )
-      tile_fluxes(lu)%plant(pft)%alloc_seed = orgpool( carbon( dcseed ), nitrogen( dnseed ) )
+      ! tile_fluxes(lu)%plant(pft)%alloc_seed = orgpool( carbon( dcseed ), nitrogen( dnseed ) )
       call orginit( tile_fluxes(lu)%plant(pft)%alloc_sapw )
       call orginit( tile_fluxes(lu)%plant(pft)%alloc_wood )
 
@@ -683,27 +609,6 @@ contains
     end if
 
   end subroutine allocate_root
-
-
-  function calc_f_seed( xx ) result( yy )
-    !////////////////////////////////////////////////////////////////
-    ! Calculates fraction of C allocated to seeds.
-    ! Parameters are chosen so that yy is 1 when xx reaches the
-    ! minimum value over the season. xx is the 15-day trend in relative
-    ! changes in Ra * fAPAR / LAI, where Ra is the top-of-atmosphere
-    ! solar radiation. When tested for one site (forcing from FR-Pue),
-    ! xx varied between -0.01 and 0.01 over one year 
-    ! (see analysis/example_cnmodel.R)
-    !----------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: xx  ! damped relative daily change net assimilation per unit leaf area
-
-    ! function return variable
-    real :: yy      ! fraction allocated to seeds
-
-    yy = 1.0 / (1.0 + exp( 1000.0 * xx ))
-
-  end function calc_f_seed
 
 
   function calc_ft_growth( xx ) result( yy )

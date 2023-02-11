@@ -7,7 +7,7 @@ module md_phenology
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------  
-  use md_params_core, only: ndayyear, maxgrid, nmonth, middaymonth, npft, nlu, eps
+  use md_params_core, only: ndayyear, maxgrid, nmonth, middaymonth, npft, nlu, eps, kGsc
   use md_sofunutils, only: daily2monthly, monthly2daily
   use md_tile
   use md_plant
@@ -53,12 +53,16 @@ contains
     real, intent(in) :: dtemp    ! daily mean temperature (deg C)
     real, intent(in) :: dtmin    ! daily minimum temperature (deg C)
 
+    ! local variables
+    real, dimension(nlu,npft), save :: dra_save
+    logical, save :: firstcall = .true.
+    real :: level_veggrowth
+    real :: diff_dra
+    integer :: pft, lu
+
     ! xxx debug
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     real, save :: tmp = 0.0
-
-    ! local variables
-    integer :: pft, lu
 
     pftloop: do pft=1,npft
       lu = params_pft_plant(pft)%lu_category
@@ -78,11 +82,58 @@ contains
         params_pft_pheno(pft)%kphio_par_e &
       )
 
-      ! tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%pheno%level_coldacclim
+      !----------------------------------------------------------------
+      ! Insolation-driven phenophases of grass growth (switching from 
+      ! vegetative growth to seed filling and back)
+      ! Top-of-atmosphere solar radiation (~day length) triggers the 
+      ! seed-filling vs. vegetative growth phenophases.
+      !----------------------------------------------------------------
+      ! Apply low-pass filter on TOA-radiation
+      if (firstcall) then
+        dra_save(lu,pft) = tile_fluxes(lu)%canopy%dra
+        if (pft == npft .and. lu == nlu) firstcall = .false.
+      end if
+      diff_dra = tile_fluxes(lu)%canopy%dra - dra_save(lu,pft)
+      tile(lu)%plant(pft)%pheno%level_veggrowth = calc_level_veggrowth( diff_dra )
+      dra_save(lu,pft) = tile_fluxes(lu)%canopy%dra
 
     end do pftloop
 
   end subroutine phenology_daily
+
+
+  function calc_level_veggrowth( diff_dra ) result( f_veggrowth )
+    !////////////////////////////////////////////////////////////////
+    ! Calculates a factor (0,1) scaling C allocated to vegetative 
+    ! growth. The remainder is not allocated and represents a "seed
+    ! filling. However, seeds are not treated separately because
+    ! no grass cohorts are modelled. C withheld from allocation
+    ! (kept as seed C) is available from allocation one this factor
+    ! is >0. 
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: diff_dra
+
+    ! function return variable
+    real :: f_seed, f_veggrowth
+
+    ! local variables
+    real, parameter :: par_f_seed = 3000.0
+    real :: diff_dra_norm
+
+    ! change in TOA radiation per day, normalised by solar constant (in J m-2 d-1)
+    diff_dra_norm = diff_dra/(kGsc * 24 * 60 * 60)
+
+    ! calculate fraction allocated to seeds (1-allocated to vegetative growth)
+    f_seed = 1.0 / (1.0 + exp( par_f_seed * diff_dra_norm ))
+    f_veggrowth = 1.0 - f_seed
+
+    ! ! Only start filling seeds if LAI > 1
+    ! if (tile(lu)%plant(pft)%lai_ind < 1.0) then
+    !   f_veggrowth = 0.0
+    ! end if
+
+  end function calc_level_veggrowth
 
 
   subroutine calc_ftemp_kphio_coldhard(tc, tmin, level_hard, gdd, &

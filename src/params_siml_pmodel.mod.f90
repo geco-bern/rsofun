@@ -128,6 +128,7 @@ contains
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1
 
       ! if (year >= spinupyr_soilequil_1 + 300) then
+      ! if (year - params_siml%spinupyears > 3) then
       !   out_steering%dofree_alloc = .true.
       ! else
       !   out_steering%dofree_alloc = .false.
