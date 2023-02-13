@@ -8,6 +8,6 @@ citEntry(
   year = "2021",
   textVersion = "Stocker (2021) rsofun: a modelling framework that implements
   the P-model for leaf-level acclimation of photosynthesis. 
-  https://github.com/computationales/rsofun",
-  url = "https://github.com/computationales/rsofun"
+  https://github.com/geco-bern/rsofun",
+  url = "https://github.com/geco-bern/rsofun"
 )
