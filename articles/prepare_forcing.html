@@ -83,7 +83,7 @@
   <a href="../news/index.html">Changelog</a>
 </li>
         <li>
-  <a href="https://github.com/computationales/rsofun/" class="external-link">
+  <a href="https://github.com/geco-bern/rsofun/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -106,7 +106,7 @@
 Stocker</h4>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/computationales/rsofun/blob/HEAD/vignettes/prepare_forcing.Rmd" class="external-link"><code>vignettes/prepare_forcing.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/geco-bern/rsofun/blob/HEAD/vignettes/prepare_forcing.Rmd" class="external-link"><code>vignettes/prepare_forcing.Rmd</code></a></small>
       <div class="hidden name"><code>prepare_forcing.Rmd</code></div>
 
     </div>
@@ -122,8 +122,8 @@ This toolset allows for the easy and consistent formatting of data.</p>
 not see a formal CRAN release. Within this context we will also give
 very limited support. Despite these caveats you might find this tool
 useful. The below routine shows you how to format data using
-<code>ingestr</code>, assuming all <a href="https://github.com/computationales/ingestr" class="external-link">source data</a> has
-been downloaded beforehand.</p>
+<code>ingestr</code>, assuming all <a href="https://github.com/geco-bern/ingestr" class="external-link">source data</a> has been
+downloaded beforehand.</p>
 <div class="section level2">
 <h2 id="preparing-driver-data">Preparing driver data<a class="anchor" aria-label="anchor" href="#preparing-driver-data"></a>
 </h2>
@@ -131,7 +131,7 @@ been downloaded beforehand.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Libraries</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/computationales/rsofun" class="external-link">rsofun</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/geco-bern/rsofun" class="external-link">rsofun</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">ingestr</span><span class="op">)</span></span></code></pre></div>
 <p>To limit the computational times we’ll use a subset of three fluxnet
 site locations. We can also use arbitrary locations if desired.</p>
@@ -289,7 +289,7 @@ This concludes the formatting of the driver data</p>
 <h2 id="running-a-simulation">Running a simulation<a class="anchor" aria-label="anchor" href="#running-a-simulation"></a>
 </h2>
 <p>With the above formatted data we can now run the model, provided some
-additional model parameters. For a model calibration routine see <a href="https://computationales.github.io/rsofun/articles/pmodel_use.html" class="external-link">this
+additional model parameters. For a model calibration routine see <a href="https://geco-bern.github.io/rsofun/articles/pmodel_use.html" class="external-link">this
 vignette</a>.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># run the model for these parameters</span></span>
