@@ -1782,7 +1782,7 @@ contains
       if (vegn%cohorts(i)%nindivs > mindensity) k=k+1
     enddo
 
-    ! https://github.com/computationales/rsofun/issues/24
+    ! https://github.com/geco-bern/rsofun/issues/24
     !if (k==0) then 
     !  print *, "cohort too small..."
     !  stop

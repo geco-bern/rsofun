@@ -31,7 +31,7 @@ However, this toolset is very dynamic in nature and therefore will not see a
 formal CRAN release. Within this context we will also give very limited support.
 Despite these caveats you might find this tool useful. The below routine shows
 you how to format data using `ingestr`, assuming all 
-[source data](https://github.com/computationales/ingestr) has been 
+[source data](https://github.com/geco-bern/ingestr) has been 
 downloaded beforehand.
 
 # Preparing driver data
@@ -215,7 +215,7 @@ p_model_fluxnet_drivers <- rsofun::collect_drivers_sofun(
 
 With the above formatted data we can now run the model, provided some additional
 model parameters. For a model calibration routine see 
-[this vignette](https://computationales.github.io/rsofun/articles/pmodel_use.html).
+[this vignette](https://geco-bern.github.io/rsofun/articles/pmodel_use.html).
 
 ```{r}
 # run the model for these parameters

@@ -17,8 +17,8 @@ Authors@R: c(
            )
 Description: Implements the SOFUN modelling framework for simulating terrestrial
               processes, including model calibration and benchmarking.
-URL: https://github.com/computationales/rsofun
-BugReports: https://github.com/computationales/rsofun/issues
+URL: https://github.com/geco-bern/rsofun
+BugReports: https://github.com/geco-bern/rsofun/issues
 License: GPL-3
 Depends:
     R (>= 3.6)
