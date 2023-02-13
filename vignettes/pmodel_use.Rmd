@@ -41,7 +41,7 @@ These are real data from the French FR-Pue fluxnet site. Information about data 
 
 ## Running model
 
-With all data prepared we can run the model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
+With all data prepared we can run the model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. 
 
 ```{r}
 
