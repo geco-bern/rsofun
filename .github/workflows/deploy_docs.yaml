@@ -13,7 +13,7 @@ name: pkgdown
 
 jobs:
   pkgdown:
-    runs-on: macOS-latest
+    runs-on: Ubuntu-latest
     timeout-minutes: 15
     # Only restrict concurrency for non-PR jobs
     concurrency:
@@ -30,14 +30,11 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           cache: false
-          extra-packages: any::pkgdown, github::computationales/GECO_template, local::.
+          extra-packages: any::pkgdown, any::devtools, local::.
           needs: website
 
-      #- name: install theme
-      #  run: Rscript -e 'devtools::install_github("computationales/GECO_template")'
-
       - name: Build site
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        run: devtools::install_github("computationales/GECO_documentation_template"); pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages 🚀
