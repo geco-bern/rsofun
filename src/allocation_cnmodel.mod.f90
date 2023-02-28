@@ -383,7 +383,7 @@ contains
       if ( myinterface%steering%dofree_alloc ) then
         frac_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
       end if
-      ! tile_fluxes(lu)%plant(pft)%debug3 = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
+      tile_fluxes(lu)%plant(pft)%debug3 = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
 
       ! ! compare C:N aquired and required at the level of GPP (C required includes C for respiration)
       ! print*,'C:N acquired:', sum( g_net_vec(lu,pft,:) ) / sum( n_acq_vec(lu,pft,:) ), 'C:N required: ', c_con / n_con
@@ -460,7 +460,7 @@ contains
 
       end if
 
-      tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%presv%c%c12
+      ! tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%presv%c%c12
 
       !-------------------------------------------------------------------
       ! Adjust NPP for growth respiration
