@@ -158,30 +158,30 @@ contains
       if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
 
 
-      ! !--------------------------------------------------------------
-      ! ! Calculate labile turnover in this day - add to leaf respiration
-      ! !--------------------------------------------------------------
-      ! if (verbose) print*, 'calling turnover_labl() ... '
-      ! if (verbose) print*, '              with state variables:'
-      ! if (verbose) print*, '              plabl = ', tile(lu)%plant(pft)%plabl
-      ! if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
-      ! if (verbose) cbal1 = tile(lu)%plant(pft)%proot%c%c12 + tile(lu)%soil%plitt_bg%c%c12
-      ! if (verbose) nbal1 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%proot%n%n14 + tile(lu)%soil%plitt_bg%n%n14
-      ! !--------------------------------------------------------------
-      ! if ( dlabl > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_labl( dlabl, tile(lu), pft )
-      ! !--------------------------------------------------------------
-      ! if (verbose) print*, '              ==> returned: '
-      ! if (verbose) print*, '              plabl = ', tile(lu)%plant(pft)%plabl
-      ! if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
-      ! if (verbose) cbal2 = tile(lu)%plant(pft)%proot%c%c12 + tile(lu)%soil%plitt_bg%c%c12
-      ! if (verbose) nbal2 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%proot%n%n14 + tile(lu)%soil%plitt_bg%n%n14
-      ! if (verbose) cbal1 = cbal2 - cbal1
-      ! if (verbose) nbal1 = nbal2 - nbal1
-      ! if (verbose) print*, '              --- balance: '
-      ! if (verbose) print*, '                  d(clitt + croot)             = ', cbal1
-      ! if (verbose) print*, '                  d(nlitt + nroot)             = ', nbal1
-      ! if (baltest .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
-      ! if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
+      !--------------------------------------------------------------
+      ! Calculate labile turnover in this day - add to leaf respiration
+      !--------------------------------------------------------------
+      if (verbose) print*, 'calling turnover_labl() ... '
+      if (verbose) print*, '              with state variables:'
+      if (verbose) print*, '              plabl = ', tile(lu)%plant(pft)%plabl
+      if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
+      if (verbose) cbal1 = tile(lu)%plant(pft)%proot%c%c12 + tile(lu)%soil%plitt_bg%c%c12
+      if (verbose) nbal1 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%proot%n%n14 + tile(lu)%soil%plitt_bg%n%n14
+      !--------------------------------------------------------------
+      if ( dlabl > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_labl( dlabl, tile(lu), pft )
+      !--------------------------------------------------------------
+      if (verbose) print*, '              ==> returned: '
+      if (verbose) print*, '              plabl = ', tile(lu)%plant(pft)%plabl
+      if (verbose) print*, '              plitt = ', tile(lu)%soil%plitt_bg
+      if (verbose) cbal2 = tile(lu)%plant(pft)%proot%c%c12 + tile(lu)%soil%plitt_bg%c%c12
+      if (verbose) nbal2 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%proot%n%n14 + tile(lu)%soil%plitt_bg%n%n14
+      if (verbose) cbal1 = cbal2 - cbal1
+      if (verbose) nbal1 = nbal2 - nbal1
+      if (verbose) print*, '              --- balance: '
+      if (verbose) print*, '                  d(clitt + croot)             = ', cbal1
+      if (verbose) print*, '                  d(nlitt + nroot)             = ', nbal1
+      if (baltest .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
+      if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
     
     enddo pftloop
 
@@ -361,10 +361,10 @@ contains
 
   subroutine turnover_labl( dlabl, tile, pft )
     !//////////////////////////////////////////////////////////////////
-    ! Execute turnover of fraction dlabl for labl pool
+    ! labile C and N turnover.
     !------------------------------------------------------------------
     ! arguments
-    real, intent(in)    :: dlabl
+    real, intent(in) :: dlabl
     type( tile_type ), intent(inout)  :: tile
     integer, intent(in) :: pft
 
@@ -376,10 +376,10 @@ contains
 
     !! xxx think of something more plausible to put the labile C and N to
 
-    ! reduce leaf mass and labl mass
+    ! reduce labile mass
     call orgsub( lb_turn, tile%plant(pft)%plabl )
 
-    ! call orgmvRec( lb_turn, lb_turn, tile%plant(pft)%plitt_af, outaCveg2lit(pft,jpngr), outaNveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind) )
+    ! call orgmvRec( lb_turn, lb_turn, tile%plant(pft)%plitt_af, outaCveg2lit(pft,jpngr), outaNveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind) 
     call orgmv( lb_turn, lb_turn, tile%soil%plitt_af, scale = real(tile%plant(pft)%nind) )
 
   end subroutine turnover_labl
