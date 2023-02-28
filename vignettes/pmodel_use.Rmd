@@ -114,7 +114,8 @@ settings <- list(
   metric              = create_cost_rmse_pmodel(
                           params_modl = params_modl, # fix param values
                           setup = 'BRC',
-                          method = 'BayesianTools'
+                          method = 'BayesianTools',
+                          target = 'gpp'
                           ),
   control = list(
     sampler = "DEzs",
