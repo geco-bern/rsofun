@@ -15,7 +15,9 @@
 #' for calibration.
 #' @param method A character string indicating the optimization method that will
 #' be used, either \code{'BayesianTools'} or \code{'GenSA'}.
-#' 
+#' @param target A character string indicating the target variable for which the
+#' optimization will be done. This string must be a column name of the \code{data}
+#' data.frame belonging to the validation nested data.frame (for example 'gpp').
 #' 
 #' @importFrom magrittr '%>%'
 #' 
@@ -57,7 +59,8 @@
 create_cost_rmse_pmodel <- function(
     params_modl,
     setup,
-    method){
+    method,
+    target){
   # predefine variables for CRAN check compliance
   f <- NULL
   
@@ -113,7 +116,11 @@ create_cost_rmse_pmodel <- function(
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>%
     dplyr::rename(
-      'gpp_mod' = 'gpp'
+      '",
+        target,
+        "_mod' = '",
+        target,
+        "'
     )
   # output[output$sitename=='FR-Pue',]$data[[1]][[1]] # alternative base R option
   
@@ -125,7 +132,11 @@ create_cost_rmse_pmodel <- function(
   df <- dplyr::left_join(df, obs, by = c('sitename', 'date'))
   
   # Calculate cost (RMSE)
-  cost <- sqrt( mean( (df$gpp - df$gpp_mod )^2, na.rm = TRUE ) )
+  cost <- sqrt( mean( (df$",
+        target,
+        " - df$",
+        target,
+        "_mod )^2, na.rm = TRUE ) )
         
   "
   )
