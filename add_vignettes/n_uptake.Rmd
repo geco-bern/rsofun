@@ -338,3 +338,28 @@ gg_simpl
 library(patchwork)
 gg_full + gg_simpl
 ```
+
+
+# Changing parameters
+
+```{r}
+par <- list(
+  kc = 300,
+  kv = 10,
+  vmax = 0.1
+)
+
+df <- expand.grid(croot = seq(from = 1, to = 500, by = 10), 
+                  ninorg = seq(from = 1, to = 25, by = 0.5)) |> 
+  as_tibble() |> 
+  mutate(fnup = purrr::map2_dbl(croot, 
+                                ninorg, 
+                                ~calc_nup_simpl(.x, .y, par)))
+
+ggplot(df, aes(croot, ninorg)) + 
+  geom_tile(aes(fill = fnup)) +
+  geom_contour(aes(z = fnup), color = "grey50") +
+  scale_fill_scico(palette = 'roma') +
+  theme_classic() +
+  labs(title = "N uptake", x = "Croot", y = "Ninorg")
+```

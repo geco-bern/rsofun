@@ -136,6 +136,7 @@ contains
       out_steering%dofree_alloc = .false.
 
       ! if (year >= spinupyr_soilequil_1 + 600) then
+      ! if (year - params_siml%spinupyears > 3) then
       !   out_steering%closed_nbal = .true.
       ! else
       !   out_steering%closed_nbal = .false.

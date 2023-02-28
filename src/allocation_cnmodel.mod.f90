@@ -188,10 +188,8 @@ contains
           end if
 
           !------------------------------------------------------------------
-          ! Calculate maximum C allocatable based on current labile pool size, 
-          ! discounted by the yield factor.
+          ! Calculate maximum C allocatable based on current labile pool size
           !------------------------------------------------------------------
-          ! without witholding C for respiration
           avl = orgfrac(  kdecay_labl &
                           * tile(lu)%plant(pft)%pheno%level_coldacclim &
                           * tile(lu)%plant(pft)%pheno%level_veggrowth, &
@@ -320,8 +318,9 @@ contains
       if (firstcall_cnbal) then
 
         g_net_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
-        r_rex_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
-                            + tile_fluxes(lu)%plant(pft)%dcex
+        r_rex_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%drroot &
+                              + tile_fluxes(lu)%plant(pft)%drsapw &
+                              + tile_fluxes(lu)%plant(pft)%dcex
         n_acq_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnup%n14
         c_a_l_vec(lu,pft,:) = dcleaf
         c_a_r_vec(lu,pft,:) = dcroot
@@ -341,8 +340,9 @@ contains
         n_con_vec(lu,pft,1:(len_cnbal_vec-1)) = n_con_vec(lu,pft,2:len_cnbal_vec)
 
         g_net_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
-        r_rex_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%drroot + tile_fluxes(lu)%plant(pft)%drsapw &
-                                        + tile_fluxes(lu)%plant(pft)%dcex
+        r_rex_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%drroot &
+                                          + tile_fluxes(lu)%plant(pft)%drsapw &
+                                          + tile_fluxes(lu)%plant(pft)%dcex
         n_acq_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dnup%n14
         c_a_l_vec(lu,pft,len_cnbal_vec) = dcleaf
         c_a_r_vec(lu,pft,len_cnbal_vec) = dcroot
@@ -371,6 +371,7 @@ contains
 
       ! excess N acquisition over the past N days
       n_exc = sum( n_acq_vec(lu,pft,:) ) - sum( g_net_vec(lu,pft,:) ) * r_ntoc_con
+      ! tile_fluxes(lu)%plant(pft)%debug3 = n_exc
 
       ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
       n_con_corr = n_con - n_exc
@@ -382,7 +383,7 @@ contains
       if ( myinterface%steering%dofree_alloc ) then
         frac_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
       end if
-      tile_fluxes(lu)%plant(pft)%debug3 = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
+      ! tile_fluxes(lu)%plant(pft)%debug3 = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
 
       ! ! compare C:N aquired and required at the level of GPP (C required includes C for respiration)
       ! print*,'C:N acquired:', sum( g_net_vec(lu,pft,:) ) / sum( n_acq_vec(lu,pft,:) ), 'C:N required: ', c_con / n_con
@@ -402,8 +403,7 @@ contains
       ! See also vignettes/reserves_labile.Rmd
       !-------------------------------------------------------------------------
       ! The target labile pool size is determined by the C requirement for satisfying
-      ! N days of respiration and exudation (averaged over len_cnbal_vec), where 
-      ! N is the turnover time of the labile pool in days.
+      ! N days of respiration and exudation (averaged over len_cnbal_vec).
       c_labl_target = par_labl * sum( r_rex_vec(lu,pft,:) )
 
       ! The target reserves pool size is determined by the cumulative amount of C allocated
@@ -432,27 +432,35 @@ contains
       ! If f_resv_to_labl is negative, the source pool is plabl.
       if (f_resv_to_labl > 0.0 .and. c_labl_target > 0.0) then
 
-        ! transfer C to labile, source pool is presv
+        ! transfer C and N to labile, source pool is presv
         org_resv_to_labl = orgfrac(f_resv_to_labl, tile(lu)%plant(pft)%presv)
         call orginit(org_labl_to_resv)
 
+        ! warning: no isotopes treatable like this
         tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 + org_resv_to_labl%c%c12
+        tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 + org_resv_to_labl%n%n14
         if (.not. myinterface%steering%spinup_reserves) then
           tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 - org_resv_to_labl%c%c12
+          tile(lu)%plant(pft)%presv%n%n14 = tile(lu)%plant(pft)%presv%n%n14 - org_resv_to_labl%n%n14
         end if
         
       else if (c_resv_target > 0.0) then
 
-        ! transfer C to reserves, source pool is plabl
+        ! transfer C and N to reserves, source pool is plabl
         org_labl_to_resv = orgfrac((-1.0) * f_resv_to_labl, tile(lu)%plant(pft)%plabl)
         call orginit(org_resv_to_labl)
 
+        ! warning: no isotopes treatable like this
         tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 + org_labl_to_resv%c%c12
+        tile(lu)%plant(pft)%presv%n%n14 = tile(lu)%plant(pft)%presv%n%n14 + org_labl_to_resv%n%n14
         if (.not. myinterface%steering%spinup_reserves) then
           tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - org_labl_to_resv%c%c12
+          tile(lu)%plant(pft)%plabl%n%n14 = tile(lu)%plant(pft)%plabl%n%n14 - org_labl_to_resv%n%n14
         end if
 
       end if
+
+      tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%presv%c%c12
 
       !-------------------------------------------------------------------
       ! Adjust NPP for growth respiration

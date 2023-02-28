@@ -110,9 +110,9 @@ pars <- list(
   tmppar                = 9999,
 
   # simple N uptake module parameters
-  kc = 800,
-  kv = 10,
-  vmax = 20
+  nuptake_kc            = 800,
+  nuptake_kv            = 10,
+  nuptake_vmax          = 20
   
 )
 

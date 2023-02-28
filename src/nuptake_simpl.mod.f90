@@ -121,8 +121,8 @@ contains
     !----------------------------------------------------------------
     use md_interface_pmodel, only: myinterface
 
-    params_nuptake%kc = myinterface%params_calib%nuptake_kc
-    params_nuptake%kv = myinterface%params_calib%nuptake_kv
+    params_nuptake%kc   = myinterface%params_calib%nuptake_kc
+    params_nuptake%kv   = myinterface%params_calib%nuptake_kv
     params_nuptake%vmax = myinterface%params_calib%nuptake_vmax
 
   end subroutine getpar_modl_nuptake  
