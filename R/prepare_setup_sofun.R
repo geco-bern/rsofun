@@ -1,6 +1,6 @@
-#' Complements the setup settings
+#' Complements the setup settings \code{site_info}
 #'
-#' Complements the settings based on the site meta info CSV file or data frame.
+#' Complements the  \code{site_info} settings based on the site meta info CSV file or data frame.
 #'
 #' @param site_info A character string specifying the path to the site meta 
 #' information file (see \href{https://computationales.github.io/rsofun/articles/prepare_forcing.html}{vignette}), 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepare_setup_sofun.R
 \name{prepare_setup_sofun}
 \alias{prepare_setup_sofun}
-\title{Complements the setup settings}
+\title{Complements the setup settings \code{site_info}}
 \usage{
 prepare_setup_sofun(site_info, params_siml)
 }
@@ -28,7 +28,7 @@ complemented by column \code{params_siml} which is a nested list
 of complemented simulation parameters.
 }
 \description{
-Complements the settings based on the site meta info CSV file or data frame.
+Complements the  \code{site_info} settings based on the site meta info CSV file or data frame.
 }
 \examples{
 \dontrun{
