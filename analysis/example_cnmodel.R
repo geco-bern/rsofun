@@ -10,9 +10,9 @@ library(lubridate)
 pars <- list(
   
   # P-model
-  kphio                 = 0.04607080,
-  soilm_par_a           = 2.75687824,
-  soilm_par_b           = 1.68140444,
+  kphio                 = 0.08,
+  soilm_par_a           = 0.0,
+  soilm_par_b           = 0.73300,
   tau_acclim_tempstress = 7.35259044,
   par_shape_tempstress  = 0.09863961,
   
@@ -24,19 +24,18 @@ pars <- list(
   r_sapw                = 2*0.044000,
   exurate               = 0.003000,
   
-  k_decay_leaf          = 2.0000,
-  k_decay_root          = 2.0000,
-  k_decay_labl          = 0.00000,
-  k_decay_sapw          = 1.00000,
+  k_decay_leaf          = 1.30000,
+  k_decay_root          = 1.30000,
+  k_decay_labl          = 1.30000,
+  k_decay_sapw          = 1.30000,
   
-  # parameters determining tissue C:N, etc.
   r_cton_root           = 37.0000,
   r_cton_wood           = 100.000,
   r_cton_seed           = 15.0000,
   nv_vcmax25            = 5000.0,
   ncw_min               = 0.056,
-  r_n_cw_v              = 0.4,
-  r_ctostructn_leaf     = 70.0000,
+  r_n_cw_v              = 0.2,
+  r_ctostructn_leaf     = 80.0000,
   kbeer                 = 0.500000,
   
   # Phenology (should be PFT-specific)
@@ -108,13 +107,14 @@ pars <- list(
   
   # for development
   tmppar                = 9999,
-
+  
   # simple N uptake module parameters
-  nuptake_kc            = 800,
+  nuptake_kc            = 300,
   nuptake_kv            = 10,
-  nuptake_vmax          = 20
+  nuptake_vmax          = 0.12
   
 )
+
 
 ## Forcing ------------------------
 ## add new required columns to forcing 
@@ -125,8 +125,11 @@ tmp <- rsofun::p_model_drivers |>
                                                dnh4 = 0.1
   )))
 
+## no soil moisture stress
+tmp$params_siml[[1]]$soilmstress <- FALSE
+
 ### Harvesting and seed input ----------
-use_cseed <- 5 # 100
+use_cseed <- 0 # 100
 cn_seed <- 20
 use_nseed <- use_cseed / cn_seed
 
@@ -163,63 +166,65 @@ tmp$params_siml[[1]]$recycle <- 5
 #   ~{df_meanann}) |>
 #   mutate(date = tmp$forcing[[1]]$date)
 
-# ## Synthetic forcing: Constant climate in all days -----------------------
-# df_growingseason_mean <- tmp$forcing[[1]] |>
-#   filter(temp > 5) |>
-#   summarise(across(where(is.double), .fns = mean))
-# df_mean <- tmp$forcing[[1]] |>
-#   summarise(across(where(is.double), .fns = mean))
-# 
-# tmp$forcing[[1]] <- tmp$forcing[[1]] |>
-#   mutate(temp = df_growingseason_mean$temp,
-#          prec = df_mean$prec,
-#          vpd = df_growingseason_mean$vpd,
-#          ppfd = df_mean$ppfd,
-#          patm = df_growingseason_mean$patm,
-#          ccov_int = df_growingseason_mean$ccov_int,
-#          ccov = df_growingseason_mean$ccov,
-#          snow = df_mean$snow,
-#          rain = df_mean$rain,
-#          fapar = df_mean$fapar,
-#          co2 = df_growingseason_mean$co2,
-#          tmin = df_growingseason_mean$tmin,
-#          tmax = df_growingseason_mean$tmax,
-#   )
+## Synthetic forcing: Constant climate in all days -----------------------
+df_growingseason_mean <- tmp$forcing[[1]] |>
+  filter(temp > 5) |>
+  summarise(across(where(is.double), .fns = mean))
+df_mean <- tmp$forcing[[1]] |>
+  summarise(across(where(is.double), .fns = mean))
 
-# ##  repeat last year's forcing N times -----------------------
-# n_ext <- 100
-# df_tmp <- tmp$forcing[[1]]
-# for (idx in seq(n_ext)){
-#   df_tmp <- bind_rows(
-#     df_tmp,
-#     df_tmp |>
-#       tail(365) |>
-#       mutate(date = date + years(1))
-#   )
-# }
-# tmp$params_siml[[1]]$nyeartrend <- tmp$params_siml[[1]]$nyeartrend + n_ext
-# tmp$forcing[[1]] <- df_tmp
+tmp$forcing[[1]] <- tmp$forcing[[1]] |>
+  mutate(temp = df_growingseason_mean$temp,
+         prec = df_mean$prec,
+         vpd = df_growingseason_mean$vpd,
+         ppfd = df_mean$ppfd,
+         patm = df_growingseason_mean$patm,
+         ccov_int = df_growingseason_mean$ccov_int,
+         ccov = df_growingseason_mean$ccov,
+         snow = df_mean$snow,
+         rain = df_mean$rain,
+         fapar = df_mean$fapar,
+         co2 = df_growingseason_mean$co2,
+         tmin = df_growingseason_mean$tmin,
+         tmax = df_growingseason_mean$tmax,
+  )
 
-# ## increase CO2 from 2010 -----------------------
-# elevate_co2 <- function(day){
-#   yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
-#   return(yy)
-# }
-# 
-# ggplot() +
-#   geom_function(fun = elevate_co2) +
-#   xlim(12000, 16000) +
-#   geom_vline(xintercept = 0, linetype = "dotted")
-# 
-# tmp$forcing[[1]] <- tmp$forcing[[1]] |>
-#   mutate(date2 = as.numeric(date)) |>
-#   mutate(co2 = co2 * elevate_co2(date2)) |>
-#   select(-date2)
-# 
-# tmp$forcing[[1]] |>
-#   head(5000) |>
-#   ggplot(aes(date, co2)) +
-#   geom_line()
+## Repeat last year's forcing N times -----------------------
+n_ext <- 100
+df_tmp <- tmp$forcing[[1]]
+for (idx in seq(n_ext)){
+  df_tmp <- bind_rows(
+    df_tmp,
+    df_tmp |>
+      tail(365) |>
+      mutate(date = date + years(1))
+  )
+}
+tmp$params_siml[[1]]$nyeartrend <- tmp$params_siml[[1]]$nyeartrend + n_ext
+tmp$forcing[[1]] <- df_tmp
+
+
+## increase CO2 from 2010 -----------------------
+elevate_co2 <- function(day){
+  yy <- 2 - 1 / (1 + exp(0.03*(day-14610)))
+  return(yy)
+}
+
+ggplot() +
+  geom_function(fun = elevate_co2) +
+  xlim(12000, 16000) +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
+tmp$forcing[[1]] <- tmp$forcing[[1]] |>
+  mutate(date2 = as.numeric(date)) |>
+  mutate(co2 = co2 * elevate_co2(date2)) |>
+  select(-date2)
+
+tmp$forcing[[1]] |>
+  head(5000) |>
+  ggplot(aes(date, co2)) +
+  geom_line()
+
 
 # ## increase Ndep from 2010 -----------------------
 # elevate_ndep <- function(day){
@@ -263,11 +268,11 @@ gg2 <- output |>
   geom_line()
 gg3 <- output |> 
   as_tibble() |> 
-  ggplot(aes(date, cleaf/nleaf)) + 
+  ggplot(aes(date, croot)) + 
   geom_line()
 gg4 <- output |> 
   as_tibble() |> 
-  ggplot(aes(date, croot)) + 
+  ggplot(aes(date, croot/cleaf)) + 
   geom_line()
 
 gg1 / gg2 / gg3 / gg4
@@ -312,15 +317,15 @@ gg9 / gg10 / gg11 / gg12
 
 gg13 <- output |>  
   as_tibble() |> 
-  ggplot(aes(date, cleaf/nleaf)) + 
+  ggplot(aes(date, npp)) + 
   geom_line()
 gg14 <- output |> 
   as_tibble() |> 
-  ggplot(aes(date, croot/nroot)) + 
+  ggplot(aes(date, npp/gpp)) + 
   geom_line()
 gg15 <- output |> 
   as_tibble() |> 
-  ggplot(aes(date, npp/nup)) + 
+  ggplot(aes(date, cleaf/nleaf)) + 
   geom_line()
 gg16 <- output |> 
   as_tibble() |> 
@@ -700,5 +705,5 @@ ggrr <- ggplot() +
 
 
 ## Write output to file --------------------
-# write_csv(output, file = "data/output_cnmodel_co2.csv")
+readr::write_csv(as_tibble(output), file = "../data/output_cnmodel_co2.csv")
 # readr::write_csv(as_tibble(output), file = "../data/output_cnmodel_nfert.csv")

@@ -195,6 +195,12 @@ contains
                           * tile(lu)%plant(pft)%pheno%level_veggrowth, &
                           tile(lu)%plant(pft)%plabl )
 
+          ! ! xxx debug
+          ! tile_fluxes(lu)%plant(pft)%debug1 = kdecay_labl
+          ! tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%pheno%level_coldacclim
+          ! tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%pheno%level_veggrowth
+          ! tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%plabl%c%c12
+
           ! additionally constrain allocatable C by available N, given the lower C:N of leaves or roots
           if (myinterface%steering%dofree_alloc .and. myinterface%steering%closed_nbal) then
             max_dcleaf_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * tile(lu)%plant(pft)%r_cton_leaf
@@ -383,16 +389,16 @@ contains
       if ( myinterface%steering%dofree_alloc ) then
         frac_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
       end if
-      tile_fluxes(lu)%plant(pft)%debug3 = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
+      ! tile_fluxes(lu)%plant(pft)%debug3 = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
 
       ! ! compare C:N aquired and required at the level of GPP (C required includes C for respiration)
       ! print*,'C:N acquired:', sum( g_net_vec(lu,pft,:) ) / sum( n_acq_vec(lu,pft,:) ), 'C:N required: ', c_con / n_con
 
       ! C:N acquired:
-      tile_fluxes(lu)%plant(pft)%debug1 = sum( g_net_vec(lu,pft,:) ) / sum( n_acq_vec(lu,pft,:) )
+      ! tile_fluxes(lu)%plant(pft)%debug1 = sum( g_net_vec(lu,pft,:) ) / sum( n_acq_vec(lu,pft,:) )
 
       ! C:N required
-      tile_fluxes(lu)%plant(pft)%debug2 = c_con / n_con
+      ! tile_fluxes(lu)%plant(pft)%debug2 = c_con / n_con
 
       ! XXX n_exc has a problem!
       ! tile_fluxes(lu)%plant(pft)%debug4 = n_exc

@@ -345,12 +345,12 @@ gg_full + gg_simpl
 ```{r}
 par <- list(
   kc = 300,
-  kv = 10,
+  kv = 50,
   vmax = 0.1
 )
 
 df <- expand.grid(croot = seq(from = 1, to = 500, by = 10), 
-                  ninorg = seq(from = 1, to = 25, by = 0.5)) |> 
+                  ninorg = seq(from = 1, to = 100, by = 0.5)) |> 
   as_tibble() |> 
   mutate(fnup = purrr::map2_dbl(croot, 
                                 ninorg, 

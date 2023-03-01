@@ -70,17 +70,20 @@ contains
       !----------------------------------------------------------------
       ! Low-temperature effect on quantum yield efficiency and grass growth
       !----------------------------------------------------------------
-      call calc_ftemp_kphio_coldhard( &
-        dtemp, &
-        dtmin, &
-        tile(lu)%plant(pft)%pheno%level_coldacclim, &   ! value updated (inout)
-        tile(lu)%gdd, &                                 ! value updated (inout)
-        params_pft_pheno(pft)%kphio_par_a, &
-        params_pft_pheno(pft)%kphio_par_b, &
-        params_pft_pheno(pft)%kphio_par_c, &
-        params_pft_pheno(pft)%kphio_par_d, &
-        params_pft_pheno(pft)%kphio_par_e &
-      )
+      ! call calc_ftemp_kphio_coldhard( &
+      !   dtemp, &
+      !   dtmin, &
+      !   tile(lu)%plant(pft)%pheno%level_coldacclim, &   ! value updated (inout)
+      !   tile(lu)%gdd, &                                 ! value updated (inout)
+      !   params_pft_pheno(pft)%kphio_par_a, &
+      !   params_pft_pheno(pft)%kphio_par_b, &
+      !   params_pft_pheno(pft)%kphio_par_c, &
+      !   params_pft_pheno(pft)%kphio_par_d, &
+      !   params_pft_pheno(pft)%kphio_par_e &
+      ! )
+
+      ! xxx try: for schematic step-change simulations
+      tile(lu)%plant(pft)%pheno%level_coldacclim = 1.0
 
       !----------------------------------------------------------------
       ! Insolation-driven phenophases of grass growth (switching from 
@@ -94,7 +97,12 @@ contains
         if (pft == npft .and. lu == nlu) firstcall = .false.
       end if
       diff_dra = tile_fluxes(lu)%canopy%dra - dra_save(lu,pft)
-      tile(lu)%plant(pft)%pheno%level_veggrowth = calc_level_veggrowth( diff_dra )
+
+      ! tile(lu)%plant(pft)%pheno%level_veggrowth = calc_level_veggrowth( diff_dra )
+
+      ! xxx try: for schematic step-change simulations
+      tile(lu)%plant(pft)%pheno%level_veggrowth = 1.0
+
       dra_save(lu,pft) = tile_fluxes(lu)%canopy%dra
 
     end do pftloop
