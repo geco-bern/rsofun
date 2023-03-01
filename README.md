@@ -1,4 +1,4 @@
-[![R build status](https://github.com/computationales/rsofun/workflows/R-CMD-check/badge.svg)](https://github.com/computationales/rsofun/actions)
+[![R build status](https://github.com/geco-bern/rsofun/workflows/R-CMD-check/badge.svg)](https://github.com/geco-bern/rsofun/actions)
 [![codecov](https://codecov.io/gh/bluegreen-labs/rsofun/branch/master/graph/badge.svg?token=5RJtJmDVV7)](https://codecov.io/gh/bluegreen-labs/rsofun)
 
 # rsofun
@@ -14,20 +14,20 @@ A modelling framework for site-scale simulations of ecosystem processes, impleme
 To install and load the rsofun package using the latest release run the following command in your R terminal: 
 ```r
 if(!require(devtools)){install.packages(devtools)}
-devtools::install_github("computationales/rsofun@v4.3")
+devtools::install_github("geco-bern/rsofun@v4.3")
 library(rsofun)
 ```
-Problems with compilation? Make sure to have gfortran installed and paths to the compiler and libraries properly specified (see e.g., [here](https://github.com/computationales/rsofun/issues/58)). 
+Problems with compilation? Make sure to have gfortran installed and paths to the compiler and libraries properly specified (see e.g., [here](https://github.com/geco-bern/rsofun/issues/58)). 
 
 ## Example
 
-See vignette [Example for using rsofun](./articles/pmodel_use.html) for how to run the model, and the [ingestr R package](https://github.com/computationales/ingestr) for collecting the forcing data to run rsofun.
+See vignette [Example for using rsofun](./articles/pmodel_use.html) for how to run the model, and the [ingestr R package](https://github.com/geco-bern/ingestr) for collecting the forcing data to run rsofun.
 
 ## Usage and contribution
 
 The developers (Beni Stocker, Koen Hufkens, Pepa Aran) would appreciate if your developments can be fed back to this repository. Please make pull requests. Thanks.
 
-Tutorials for developing the source code are available on our [YouTube Channel](https://www.youtube.com/@geco-group/playlists) (see Playlist 'rsofun').
+Tutorials for developing the source code are available on our [YouTube Channel](https://www.youtube.com/@geco-group/playlists) (see Playlist 'rsofun'). 
 
 ## References
 
