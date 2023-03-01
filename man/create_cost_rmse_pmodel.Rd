@@ -4,7 +4,7 @@
 \alias{create_cost_rmse_pmodel}
 \title{Creates a cost function for different simulation setups based on RMSE}
 \usage{
-create_cost_rmse_pmodel(params_modl, setup, method)
+create_cost_rmse_pmodel(params_modl, setup, method, target)
 }
 \arguments{
 \item{params_modl}{A list of model parameter values, including \code{'kphio',
@@ -19,6 +19,10 @@ for calibration.}
 
 \item{method}{A character string indicating the optimization method that will
 be used, either \code{'BayesianTools'} or \code{'GenSA'}.}
+
+\item{target}{A character string indicating the target variable for which the
+optimization will be done. This string must be a column name of the \code{data}
+data.frame belonging to the validation nested data.frame (for example 'gpp').}
 }
 \value{
 A cost function which computes the RMSE of the simulated GPP by the P-model 
