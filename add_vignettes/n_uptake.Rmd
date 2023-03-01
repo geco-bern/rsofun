@@ -345,8 +345,8 @@ gg_full + gg_simpl
 ```{r}
 par <- list(
   kc = 300,
-  kv = 50,
-  vmax = 0.1
+  kv = 10,
+  vmax = 0.2
 )
 
 df <- expand.grid(croot = seq(from = 1, to = 500, by = 10), 

@@ -24,10 +24,10 @@ pars <- list(
   r_sapw                = 2*0.044000,
   exurate               = 0.003000,
   
-  k_decay_leaf          = 1.30000,
-  k_decay_root          = 1.30000,
-  k_decay_labl          = 1.30000,
-  k_decay_sapw          = 1.30000,
+  k_decay_leaf          = 1.50000,
+  k_decay_root          = 1.50000,
+  k_decay_labl          = 1.50000,
+  k_decay_sapw          = 1.50000,
   
   r_cton_root           = 37.0000,
   r_cton_wood           = 100.000,
@@ -111,7 +111,7 @@ pars <- list(
   # simple N uptake module parameters
   nuptake_kc            = 300,
   nuptake_kv            = 10,
-  nuptake_vmax          = 0.12
+  nuptake_vmax          = 0.2
   
 )
 
@@ -261,6 +261,7 @@ output <- output$data[[1]]
 gg1 <- output |> 
   as_tibble() |> 
   ggplot(aes(date, lai)) + 
+  # ggplot(aes(date, (1-exp(-pars$kbeer * lai)) )) + 
   geom_line()
 gg2 <- output |> 
   as_tibble() |> 
@@ -317,11 +318,11 @@ gg9 / gg10 / gg11 / gg12
 
 gg13 <- output |>  
   as_tibble() |> 
-  ggplot(aes(date, npp)) + 
+  ggplot(aes(date, clabl)) + 
   geom_line()
 gg14 <- output |> 
   as_tibble() |> 
-  ggplot(aes(date, npp/gpp)) + 
+  ggplot(aes(date, nlabl)) + 
   geom_line()
 gg15 <- output |> 
   as_tibble() |> 
@@ -343,7 +344,12 @@ output |>
 
 output |> 
   as_tibble() |> 
-  ggplot(aes(croot, nup)) + 
+  ggplot(aes(croot/croot[1], nup/nup[1])) + 
+  geom_line()
+
+output |> 
+  as_tibble() |> 
+  ggplot(aes(cleaf/cleaf[1], gpp/gpp[1])) + 
   geom_line()
 
 output |> 
