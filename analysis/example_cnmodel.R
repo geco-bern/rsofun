@@ -24,10 +24,10 @@ pars <- list(
   r_sapw                = 2*0.044000,
   exurate               = 0.003000,
   
-  k_decay_leaf          = 1.50000,
-  k_decay_root          = 1.50000,
-  k_decay_labl          = 1.50000,
-  k_decay_sapw          = 1.50000,
+  k_decay_leaf          = 1.90000,
+  k_decay_root          = 1.90000,
+  k_decay_labl          = 1.90000,
+  k_decay_sapw          = 1.90000,
   
   r_cton_root           = 37.0000,
   r_cton_wood           = 100.000,
@@ -36,7 +36,7 @@ pars <- list(
   ncw_min               = 0.056,
   r_n_cw_v              = 0.2,
   r_ctostructn_leaf     = 80.0000,
-  kbeer                 = 0.500000,
+  kbeer                 = 0.400000,
   
   # Phenology (should be PFT-specific)
   gddbase               = 5.0,
@@ -109,8 +109,8 @@ pars <- list(
   tmppar                = 9999,
   
   # simple N uptake module parameters
-  nuptake_kc            = 300,
-  nuptake_kv            = 10,
+  nuptake_kc            = 250,
+  nuptake_kv            = 5,
   nuptake_vmax          = 0.2
   
 )
@@ -345,12 +345,12 @@ output |>
 output |> 
   as_tibble() |> 
   ggplot(aes(croot/croot[1], nup/nup[1])) + 
-  geom_line()
+  geom_point()
 
 output |> 
   as_tibble() |> 
   ggplot(aes(cleaf/cleaf[1], gpp/gpp[1])) + 
-  geom_line()
+  geom_point()
 
 output |> 
   as_tibble() |> 
@@ -680,11 +680,11 @@ df_amb <- df_out |>
   summarise(across(where(is.numeric), mean))
 
 df_ele <- df_out |> 
-  filter(year(date) %in% 2010:2012) |> 
+  filter(year(date) %in% 2010:2015) |> 
   summarise(across(where(is.numeric), mean))
 
 df_ele2 <- df_out |> 
-  filter(year(date) %in% 2100:2107) |> 
+  filter(year(date) %in% 2100:2110) |> 
   summarise(across(where(is.numeric), mean))
 
 df_exp <- bind_rows(df_amb, df_ele)
@@ -711,5 +711,6 @@ ggrr <- ggplot() +
 
 
 ## Write output to file --------------------
-readr::write_csv(as_tibble(output), file = "../data/output_cnmodel_co2.csv")
+readr::write_csv(as_tibble(df_exp), file = paste0(here::here(), "/data/df_exp_co2.csv"))
+readr::write_csv(as_tibble(output), file = paste0(here::here(), "/data/output_cnmodel_co2.csv"))
 # readr::write_csv(as_tibble(output), file = "../data/output_cnmodel_nfert.csv")

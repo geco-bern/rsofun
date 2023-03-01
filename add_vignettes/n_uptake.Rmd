@@ -343,11 +343,38 @@ gg_full + gg_simpl
 # Changing parameters
 
 ```{r}
+df_exp <- readr::read_csv(paste0(here::here(), "/data/df_exp_co2.csv"))
+# as it is
 par <- list(
-  kc = 300,
+  kc = 250,
+  kv = 10,
+  vmax = 0.15
+)
+
+# could be
+par <- list(
+  kc = 200,
   kv = 10,
   vmax = 0.2
 )
+
+# function of Croot
+ggplot() +
+  geom_function(fun = function(x) calc_nup_simpl(x, ninorg = df_exp$n_inorg[1], par)) +
+  xlim(df_exp$croot[1], df_exp$croot[2]) + 
+  labs(x = "Croot", y = "Nup", title = "Ninorg = 10")
+
+# function of Ninorg
+# df_exp <- df_exp |> 
+#   mutate(lev = c("amb", "ele")) |> 
+#   select(lev, croot, nup, n_inorg) |> 
+#   pivot_longer(c(croot, nup, n_inorg), values_to = "val", names_to = "var") |> 
+#   pivot_wider(names_from = "lev", values_from = "val")
+
+ggplot() +
+  geom_function(fun = function(x) calc_nup_simpl(croot = df_exp$croot[1], ninorg = x, par)) +
+  xlim(df_exp$n_inorg[1], df_exp$n_inorg[2]) + 
+  labs(x = "Ninorg", y = "Nup", title = "Croot = 15")
 
 df <- expand.grid(croot = seq(from = 1, to = 500, by = 10), 
                   ninorg = seq(from = 1, to = 100, by = 0.5)) |> 
@@ -361,5 +388,9 @@ ggplot(df, aes(croot, ninorg)) +
   geom_contour(aes(z = fnup), color = "grey50") +
   scale_fill_scico(palette = 'roma') +
   theme_classic() +
-  labs(title = "N uptake", x = "Croot", y = "Ninorg")
+  labs(title = "N uptake", x = "Croot", y = "Ninorg") +
+  geom_point(data = df_exp |> 
+               rename(ninorg = n_inorg,
+                      fnup = nup),
+             aes(croot, ninorg))
 ```

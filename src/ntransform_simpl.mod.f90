@@ -61,8 +61,8 @@ contains
       ! NITRATE LEACHING
       !------------------------------------------------------------------      
       tile_fluxes(lu)%soil%dnleach = tile(lu)%soil%pno3%n14 * tile_fluxes(lu)%canopy%dfleach
-      tile(lu)%soil%pno3%n14 = tile(lu)%soil%pno3%n14 - tile_fluxes(lu)%soil%dnleach
-      tile_fluxes(lu)%soil%dnloss = tile_fluxes(lu)%soil%dnloss + tile_fluxes(lu)%soil%dnleach
+      tile(lu)%soil%pno3%n14       = tile(lu)%soil%pno3%n14 - tile_fluxes(lu)%soil%dnleach
+      tile_fluxes(lu)%soil%dnloss  = tile_fluxes(lu)%soil%dnloss + tile_fluxes(lu)%soil%dnleach
 
       !------------------------------------------------------------------      
       ! GASEOUS LOSS
@@ -94,7 +94,7 @@ contains
     ! from input file
     !----------------------------------------------------------------
     ! maximum nitrification rate
-    params_ndecay%kdecay_ninorg = 0.01
+    params_ndecay%kdecay_ninorg = 0.005
 
   end subroutine getpar_modl_ntransform
 
