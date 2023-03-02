@@ -395,8 +395,7 @@ run_pmodel_f_bysite <- function(
           "x1",
           "x2",
           "x3",
-          "x4",
-          "x5"
+          "x4"
           )) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -454,8 +453,7 @@ run_pmodel_f_bysite <- function(
                   x1      = NA,
                   x2      = NA,
                   x3      = NA,
-                  x4      = NA,
-                  x5      = NA
+                  x4      = NA
                   )
   }
     

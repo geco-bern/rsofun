@@ -185,7 +185,6 @@ module md_plant
     real :: debug2             ! write anything into this
     real :: debug3             ! write anything into this
     real :: debug4             ! write anything into this
-    real :: debug5             ! write anything into this
 
     type(orgpool) :: dharv    ! daily total biomass harvest (g m-2 d-1)
 

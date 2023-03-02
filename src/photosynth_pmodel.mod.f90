@@ -123,6 +123,7 @@ contains
     ! real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
     ! real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
+    real :: asat                ! Light-saturated assimilation rate (mol CO2 m-2 s-1)
 
     ! local variables for Jmax limitation following Nick Smith's method
     real :: omega, omega_star, vcmax_unitiabs_star, tcref, jmax_over_vcmax, jmax_prime

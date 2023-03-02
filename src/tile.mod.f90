@@ -869,7 +869,7 @@ contains
     out_biosphere%gs_accl = tile_fluxes(lu)%plant(pft)%gs_accl
     out_biosphere%chi     = tile_fluxes(lu)%plant(pft)%chi
     out_biosphere%iwue    = tile_fluxes(lu)%plant(pft)%iwue
-    out_biosphere%asat    = tile_fluxes(lu)%plant(pft)%asat
+    out_biosphere%asat    = tile_fluxes(lu)%canopy%asat
     out_biosphere%wscal   = tile(lu)%soil%phy%wscal
     out_biosphere%tsoil   = tile(lu)%soil%phy%temp
     out_biosphere%cleaf   = tile(lu)%plant(pft)%pleaf%c%c12
@@ -911,7 +911,6 @@ contains
     out_biosphere%x2      = tile_fluxes(lu)%plant(pft)%debug2
     out_biosphere%x3      = tile_fluxes(lu)%plant(pft)%debug3
     out_biosphere%x4      = tile_fluxes(lu)%plant(pft)%debug4
-    out_biosphere%x5      = tile_fluxes(lu)%plant(pft)%debug5
 
   end subroutine diag_daily
 
