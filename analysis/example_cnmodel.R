@@ -671,9 +671,13 @@ output |>
 
 ### Response ratios ---------------------------
 df_out <- output |> 
-  mutate(leaf_cn = cleaf/nleaf, root_shoot = croot/cleaf, n_inorg = pno3 + pnh4) |> 
+  mutate(leaf_cn = cleaf/nleaf, 
+         root_shoot = croot/cleaf, 
+         n_inorg = pno3 + pnh4,
+         anpp = npp_leaf + npp_wood, 
+         bnpp = npp_root + cex) |> 
   select(date, gpp, vcmax, jmax, gs = gs_accl, narea, leaf_cn, lai, cleaf, 
-         croot, root_shoot, nup, n_inorg)
+         croot, root_shoot, nup, n_inorg, anpp, bnpp)
 
 df_amb <- df_out |> 
   filter(year(date) < 2010) |> 
@@ -691,15 +695,19 @@ df_exp <- bind_rows(df_amb, df_ele)
 df_rr  <- log(df_exp[2,]/df_exp[1,]) |> 
   pivot_longer(cols = everything(), names_to = "variable", values_to = "response") |> 
   mutate(variable = factor(variable, 
-                           levels = rev(c("gpp", "vcmax", "jmax", "gs", "narea", "leaf_cn", "lai", "cleaf", 
-                                          "croot", "root_shoot", "nup", "n_inorg"))))
+                           levels = rev(c("gpp", "vcmax", "jmax", "gs", "narea", 
+                                          "leaf_cn", "lai", "cleaf", "anpp",
+                                          "croot", "bnpp", "root_shoot", "nup", 
+                                          "n_inorg"))))
 
 df_exp2 <- bind_rows(df_amb, df_ele2)
 df_rr2  <- log(df_exp2[2,]/df_exp2[1,]) |> 
   pivot_longer(cols = everything(), names_to = "variable", values_to = "response") |> 
   mutate(variable = factor(variable, 
-                           levels = rev(c("gpp", "vcmax", "jmax", "gs", "narea", "leaf_cn", "lai", "cleaf", 
-                                          "croot", "root_shoot", "nup", "n_inorg"))))
+                           levels = rev(c("gpp", "vcmax", "jmax", "gs", "narea", 
+                                          "leaf_cn", "lai", "cleaf", "anpp",
+                                          "croot", "bnpp", "root_shoot", "nup", 
+                                          "n_inorg"))))
 
 ggrr <- ggplot() +
   geom_point(aes(variable, response), data = df_rr2, size = 2, color = "grey50") +

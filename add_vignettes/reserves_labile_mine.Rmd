@@ -1,0 +1,113 @@
+---
+title: "Labile pool dynamics"
+output: html_document
+date: "2022-11-16"
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Model formulation
+
+These are mine, follwoing the following principles.
+
+### Labile to reserves
+
+- When labile pool exceeds its target size, excess trickles to reserves pool
+- Reserves pool has a target size. Once it's filled up (or more), no more labile C trickles into it.
+- There is a maximum rate (`f_max`) at which labile pool trickles into reserves. `f_max` measures the maximum ratio of the labile pool that trickles. 
+- The function `calc_l2r` returns the ratio of the labile C trickling into the reserves pool per day.
+
+```{r cars}
+calc_l2r <- function(c_labl, c_resv, c_labl_target, c_resv_target, f_max){
+  yy <- max(0.0, 1.0 - c_resv/c_resv_target) * f_max / (1 + exp(-10 * (c_labl/c_labl_target - 1.5)))
+  return(yy)
+}
+```
+
+```{r}
+ggplot() +
+  geom_function(fun = function(x) calc_l2r(c_labl = x, 
+                                           c_resv = 10, 
+                                           c_labl_target = 100, 
+                                           c_resv_target = 100, 
+                                           f_max = 0.02)) +
+  labs(title = "Excess labile to reserves", 
+       subtitle = "Reserves = 1, target labile C: 100, target reserves C: 100, f_max = 0.02", 
+       x = "labile C") +
+  xlim(0, 300)
+```
+
+### Reserves to labile
+
+- When the labile pool gets depleted (attaining low values relative to its target pool size), C trickles back from reserves to labile.
+- The amount of back-trickling C scales with the ratio of C reserves to its target size. When at its target size, the trickling rate is at `f_max`.
+- The function `calc_r2l` returns the fraction of the reserves pool trickling per day,
+
+```{r}
+calc_r2l <- function(c_labl, c_resv, c_labl_target, c_resv_target, f_max){
+  lambda_store <- 10.0
+  k_store <- 3.0
+  c_resv/c_resv_target * f_max * exp(-(lambda_store * c_labl / c_labl_target)^k_store)
+}
+```
+
+```{r}
+ggplot() +
+  geom_function(fun = function(x) calc_r2l(c_labl = x, 
+                                           c_resv = 120, 
+                                           c_labl_target = 100, 
+                                           c_resv_target = 100, 
+                                           f_max = 0.02)) +
+  xlim(0, 100) +
+  labs(title = "Refill labile", 
+       subtitle = "Reserves = 100, target labile C: 100, target reserves C: 100, f_max = 0.02", 
+       x = "Labile C")
+```
+
+```{r}
+calc_r2l_net <- function(c_labl, c_resv, c_labl_target, c_resv_target, f_max = 0.02){
+  # calculates the fraction of the source pool trickling to the other pool
+  # source pool is reserves if the net is positive, and labile if the net is negative
+  r2l <- calc_r2l(c_labl, c_resv, c_labl_target, c_resv_target, f_max = f_max)
+  l2r <-  calc_l2r(c_labl, c_resv, c_labl_target, c_resv_target, f_max = f_max)
+  return(r2l - l2r)
+}
+```
+
+
+```{r}
+ggplot() +
+  geom_function(fun = function(x) calc_r2l_net(c_labl = x, 
+                                               c_resv = 50, 
+                                               c_labl_target = 100, 
+                                               c_resv_target = 100, 
+                                               f_max = 0.02)) +
+  xlim(0, 120) +
+  labs(title = "Net flux to labile", 
+       subtitle = "Reserves = 120, target labile C: 100, target reserves C: 100, f_max = 0.02", 
+       x = "Labile C")
+```
+
+```{r}
+df <- expand.grid(c_labl = seq(200), c_resv = seq(100)) |> 
+  as_tibble() |> 
+  mutate(f_net = purrr::map2_dbl(c_labl, c_resv, 
+                                 ~calc_r2l_net(c_labl = .x, 
+                                               c_resv = .y, 
+                                               c_labl_target = 100, 
+                                               c_resv_target = 100)))
+
+library(scico)
+ggplot(df, aes(c_labl, c_resv, fill= f_net)) + 
+  geom_tile() +
+  scale_fill_scico(palette = 'roma') +
+  theme_classic() +
+  labs(title = "Net C from reserves to labile (fraction of source pool)",
+       x = "Labile C (% of target)", 
+       y = "Reserves C (% of target)")
+```

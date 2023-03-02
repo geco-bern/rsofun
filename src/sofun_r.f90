@@ -326,20 +326,22 @@ contains
         output(idx_start:idx_end,36) = dble(out_biosphere(:)%dcharv )
         output(idx_start:idx_end,37) = dble(out_biosphere(:)%dnharv )
         output(idx_start:idx_end,38) = dble(out_biosphere(:)%drd )
-
         output(idx_start:idx_end,39) = dble(out_biosphere(:)%lma )
         output(idx_start:idx_end,40) = dble(out_biosphere(:)%narea )
         output(idx_start:idx_end,41) = dble(out_biosphere(:)%narea_v )
         output(idx_start:idx_end,42) = dble(out_biosphere(:)%nloss )
         output(idx_start:idx_end,43) = dble(out_biosphere(:)%seedc )
         output(idx_start:idx_end,44) = dble(out_biosphere(:)%seedn )
+        output(idx_start:idx_end,45) = dble(out_biosphere(:)%npp_leaf )
+        output(idx_start:idx_end,46) = dble(out_biosphere(:)%npp_root )
+        output(idx_start:idx_end,47) = dble(out_biosphere(:)%npp_wood )
 
         ! for development
-        output(idx_start:idx_end,45) = dble(out_biosphere(:)%x1 )
-        output(idx_start:idx_end,46) = dble(out_biosphere(:)%x2 )
-        output(idx_start:idx_end,47) = dble(out_biosphere(:)%x3 )
-        output(idx_start:idx_end,48) = dble(out_biosphere(:)%x4 )
-        output(idx_start:idx_end,49) = dble(out_biosphere(:)%x5 )
+        output(idx_start:idx_end,48) = dble(out_biosphere(:)%x1 )
+        output(idx_start:idx_end,49) = dble(out_biosphere(:)%x2 )
+        output(idx_start:idx_end,50) = dble(out_biosphere(:)%x3 )
+        output(idx_start:idx_end,51) = dble(out_biosphere(:)%x4 )
+        output(idx_start:idx_end,52) = dble(out_biosphere(:)%x5 )
 
       end if
 

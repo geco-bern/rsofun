@@ -165,6 +165,9 @@ module md_interface_pmodel
     real :: nloss
     real :: seedc
     real :: seedn
+    real :: npp_leaf
+    real :: npp_root
+    real :: npp_wood
     real :: x1
     real :: x2
     real :: x3

@@ -480,6 +480,13 @@ contains
       call orginit( tile_fluxes(lu)%plant(pft)%alloc_sapw )
       call orginit( tile_fluxes(lu)%plant(pft)%alloc_wood )
 
+      !-------------------------------------------------------------------
+      ! Record for output
+      !-------------------------------------------------------------------
+      tile_fluxes(lu)%plant(pft)%npp_leaf = dcleaf
+      tile_fluxes(lu)%plant(pft)%npp_root = dcroot
+      tile_fluxes(lu)%plant(pft)%npp_wood = 0.0
+
     end do pftloop
 
   end subroutine allocation_daily

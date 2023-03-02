@@ -344,6 +344,7 @@ gg_full + gg_simpl
 
 ```{r}
 df_exp <- readr::read_csv(paste0(here::here(), "/data/df_exp_co2.csv"))
+
 # as it is
 par <- list(
   kc = 250,
@@ -352,11 +353,11 @@ par <- list(
 )
 
 # could be
-par <- list(
-  kc = 200,
-  kv = 10,
-  vmax = 0.2
-)
+# par <- list(
+#   kc = 250,
+#   kv = 5,
+#   vmax = 0.2
+# )
 
 # function of Croot
 ggplot() +

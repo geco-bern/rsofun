@@ -176,6 +176,10 @@ module md_plant
     real :: lue               ! light use efficiency (gC m-2 mol-1)
     real :: vcmax25_unitfapar ! acclimated Vcmax per unit fAPAR, normalised to 25 deg C (mol CO2 m-2 s-1)
 
+    real :: npp_leaf          ! carbon allocated to leaves (g C m-2 d-1)
+    real :: npp_root          ! carbon allocated to roots (g C m-2 d-1)
+    real :: npp_wood          ! carbon allocated to wood (sapwood (g C m-2 d-1))
+
     real :: debug1             ! write anything into this
     real :: debug2             ! write anything into this
     real :: debug3             ! write anything into this
@@ -770,6 +774,9 @@ contains
     plant_fluxes(:)%iwue = 0.0
     plant_fluxes(:)%lue = 0.0
     plant_fluxes(:)%vcmax25_unitfapar = 0.0
+    plant_fluxes(:)%npp_leaf = 0.0
+    plant_fluxes(:)%npp_root = 0.0
+    plant_fluxes(:)%npp_wood = 0.0
 
     do pft=1,npft
       call orginit( plant_fluxes(pft)%dharv )

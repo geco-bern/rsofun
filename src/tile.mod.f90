@@ -204,6 +204,10 @@ module md_tile
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
     real :: actnv_unitiabs    ! metabolic leaf N per unit absorbed light (g N m-2 mol-1)
 
+    real :: npp_leaf          ! carbon allocated to leaves (g C m-2 d-1)
+    real :: npp_root          ! carbon allocated to roots (g C m-2 d-1)
+    real :: npp_wood          ! carbon allocated to wood (sapwood (g C m-2 d-1))
+
     type(orgpool) :: dharv    ! daily total biomass harvest (g m-2 d-1)
 
   end type canopy_fluxes_type
@@ -587,6 +591,9 @@ contains
     tile_fluxes(:)%canopy%ppfd_splash  = 0.0
     tile_fluxes(:)%canopy%ppfd_memory  = 0.0
     tile_fluxes(:)%canopy%dra          = 0.0
+    tile_fluxes(:)%canopy%npp_leaf     = 0.0
+    tile_fluxes(:)%canopy%npp_root     = 0.0
+    tile_fluxes(:)%canopy%npp_wood     = 0.0
 
     ! soil
     do lu=1,nlu
@@ -763,6 +770,13 @@ contains
       ! tile_fluxes(lu)%canopy%actnv_unitiabs = tile_fluxes(lu)%canopy%actnv_unitiabs + &
       !   tile_fluxes(lu)%plant(pft)%actnv_unitiabs * tile(lu)%plant(pft)%fpc_grid
 
+      tile_fluxes(lu)%canopy%npp_leaf = tile_fluxes(lu)%canopy%npp_leaf + &
+        tile_fluxes(lu)%plant(pft)%npp_leaf * tile(lu)%plant(pft)%fpc_grid
+      tile_fluxes(lu)%canopy%npp_root = tile_fluxes(lu)%canopy%npp_root + &
+        tile_fluxes(lu)%plant(pft)%npp_root * tile(lu)%plant(pft)%fpc_grid
+      tile_fluxes(lu)%canopy%npp_wood = tile_fluxes(lu)%canopy%npp_wood + &
+        tile_fluxes(lu)%plant(pft)%npp_wood * tile(lu)%plant(pft)%fpc_grid
+
       ! derived types canopy-level quantities as sums
       tile_fluxes(lu)%canopy%dnpp  = cplus( tile_fluxes(lu)%canopy%dnpp, tile_fluxes(lu)%plant(pft)%dnpp )
       tile_fluxes(lu)%canopy%dnup  = nplus( tile_fluxes(lu)%canopy%dnup, tile_fluxes(lu)%plant(pft)%dnup )
@@ -884,6 +898,9 @@ contains
     out_biosphere%nloss   = tile_fluxes(lu)%soil%dnloss
     out_biosphere%seedc   = tile(lu)%plant(pft)%pseed%c%c12
     out_biosphere%seedn   = tile(lu)%plant(pft)%pseed%n%n14
+    out_biosphere%npp_leaf= tile_fluxes(lu)%canopy%npp_leaf
+    out_biosphere%npp_root= tile_fluxes(lu)%canopy%npp_root
+    out_biosphere%npp_wood= tile_fluxes(lu)%canopy%npp_wood
 
     ! for debugging purposes
     out_biosphere%x1      = tile_fluxes(lu)%plant(pft)%debug1
