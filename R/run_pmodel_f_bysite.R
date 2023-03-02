@@ -26,10 +26,6 @@
 #'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
 #'       pathway and N-fixing.}
 #'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-#'       \item{firstyeartrend}{The year AD of first transient year, overwritten
-#'       to match the first year of forcing data.}
-#'       \item{nyeartrend}{The number of transient years, overwritten to match the
-#'       number of forcing years available.}
 #' }
 #' @param site_info A list of site meta info. Required:
 #' \describe{
@@ -117,6 +113,7 @@ run_pmodel_f_bysite <- function(
   # predefine variables for CRAN check compliance
   ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
   fsun <- snow <- co2 <- ndep <- fapar <- patm <- 
+  nyeartrend_forcing <- firstyeartrend_forcing <-
   tmin <- tmax <- fsand <- fclay <- forg <- fgravel <- . <- NULL
   
   # base state, always execute the call
@@ -134,11 +131,6 @@ run_pmodel_f_bysite <- function(
     as.numeric()
   
   nyeartrend_forcing <- nrow(forcing)/ndayyear
-  
-  # Overwrite params_siml$nyeartrend and 
-  # params_siml$firstyeartrend based on 'forcing'
-  params_siml$nyeartrend <- nyeartrend_forcing
-  params_siml$firstyeartrend <- firstyeartrend_forcing
   
   # determine number of seconds per time step
   times <- forcing %>%
@@ -213,8 +205,6 @@ run_pmodel_f_bysite <- function(
       "spinup",
       "spinupyears",
       "recycle",
-      "firstyeartrend",
-      "nyeartrend",
       "soilmstress",
       "tempstress",
       "in_ppfd",
@@ -242,8 +232,6 @@ run_pmodel_f_bysite <- function(
       continue <- FALSE
     }
       
-    # Overwrite params_siml$nyeartrend and 
-    # params_siml$firstyeartrend based on 'forcing'
     if (nrow(forcing) %% ndayyear != 0){
       # something weird more fundamentally -> don't run the model
       warning(" Returning a dummy data frame. Forcing data does not
@@ -309,8 +297,8 @@ run_pmodel_f_bysite <- function(
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),
-      firstyeartrend            = as.integer(params_siml$firstyeartrend),
-      nyeartrend                = as.integer(params_siml$nyeartrend),
+      firstyeartrend            = as.integer(firstyeartrend_forcing),
+      nyeartrend                = as.integer(nyeartrend_forcing),
       secs_per_tstep            = as.integer(secs_per_tstep),
       soilmstress               = as.logical(params_siml$soilmstress),
       tempstress                = as.logical(params_siml$tempstress),
@@ -336,8 +324,8 @@ run_pmodel_f_bysite <- function(
     
     # Prepare output to be a nice looking tidy data frame (tibble)
     ddf <- init_dates_dataframe(
-      yrstart = params_siml$firstyeartrend,
-      yrend = params_siml$firstyeartrend + params_siml$nyeartrend - 1,
+      yrstart = firstyeartrend_forcing,
+      yrend = firstyeartrend_forcing + nyeartrend_forcing - 1,
       noleap = TRUE)
 
     out <- out %>%
