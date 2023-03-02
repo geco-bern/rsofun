@@ -43,6 +43,7 @@ module md_photosynth
     ! real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
     ! real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
     ! real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
+    real :: asat                ! Light-saturated assimilation rate (mol CO2 m-2 s-1)
   end type outtype_pmodel
 
 
@@ -362,6 +363,16 @@ contains
       gs_setpoint = (lue / c_molmass) / ( ca - ci + 0.1 )
     end if
 
+    !-----------------------------------------------------------------------
+    ! Asat: light-saturated assimilation rate (taking 100 x PPFD)
+    !-----------------------------------------------------------------------
+    if (ppfd > 0.0) then
+      fact_jmaxlim = vcmax * (ci + 2.0 * gammastar) / (kphio * (100.0 * ppfd) * (ci + kmm))
+      asat = kphio * (100.0 * ppfd) * out_optchi%mj * fact_jmaxlim
+    else
+      asat = dummy
+    end if
+
     ! construct list for output
     out_pmodel%gammastar           = gammastar
     out_pmodel%kmm                 = kmm
@@ -375,6 +386,7 @@ contains
     out_pmodel%jmax25              = jmax25
     out_pmodel%vcmax25             = vcmax25
     out_pmodel%vcmax25_unitiabs    = vcmax25_unitiabs
+    out_pmodel%asat                = asat
     ! out_pmodel%actnv               = actnv
     ! out_pmodel%actnv_unitiabs      = actnv_unitiabs
 

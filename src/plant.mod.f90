@@ -173,6 +173,7 @@ module md_plant
     real :: gs_accl           ! acclimated stomatal conductance (xxx)
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
+    real :: asat              ! light-saturated assimilation rate (mol CO2 m-2 s-1)
     real :: lue               ! light use efficiency (gC m-2 mol-1)
     real :: vcmax25_unitfapar ! acclimated Vcmax per unit fAPAR, normalised to 25 deg C (mol CO2 m-2 s-1)
 
@@ -772,6 +773,7 @@ contains
     plant_fluxes(:)%gs_accl = 0.0
     plant_fluxes(:)%chi = 0.0
     plant_fluxes(:)%iwue = 0.0
+    plant_fluxes(:)%asat = 0.0
     plant_fluxes(:)%lue = 0.0
     plant_fluxes(:)%vcmax25_unitfapar = 0.0
     plant_fluxes(:)%npp_leaf = 0.0

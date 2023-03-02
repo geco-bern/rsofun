@@ -335,13 +335,14 @@ contains
         output(idx_start:idx_end,45) = dble(out_biosphere(:)%npp_leaf )
         output(idx_start:idx_end,46) = dble(out_biosphere(:)%npp_root )
         output(idx_start:idx_end,47) = dble(out_biosphere(:)%npp_wood )
+        output(idx_start:idx_end,48) = dble(out_biosphere(:)%npp_wood )
+        output(idx_start:idx_end,49) = dble(out_biosphere(:)%asat )
 
         ! for development
-        output(idx_start:idx_end,48) = dble(out_biosphere(:)%x1 )
-        output(idx_start:idx_end,49) = dble(out_biosphere(:)%x2 )
-        output(idx_start:idx_end,50) = dble(out_biosphere(:)%x3 )
-        output(idx_start:idx_end,51) = dble(out_biosphere(:)%x4 )
-        output(idx_start:idx_end,52) = dble(out_biosphere(:)%x5 )
+        output(idx_start:idx_end,50) = dble(out_biosphere(:)%x2 )
+        output(idx_start:idx_end,51) = dble(out_biosphere(:)%x3 )
+        output(idx_start:idx_end,52) = dble(out_biosphere(:)%x4 )
+        output(idx_start:idx_end,53) = dble(out_biosphere(:)%x5 )
 
       end if
 

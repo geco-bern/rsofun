@@ -202,6 +202,7 @@ module md_tile
     real :: gs_accl           ! acclimated stomatal conductance (xxx)
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
+    real :: asat              ! light-saturated assimilation rate (mol CO2 m-2 s-1)
     real :: actnv_unitiabs    ! metabolic leaf N per unit absorbed light (g N m-2 mol-1)
 
     real :: npp_leaf          ! carbon allocated to leaves (g C m-2 d-1)
@@ -588,6 +589,7 @@ contains
     tile_fluxes(:)%canopy%gs_accl      = 0.0
     tile_fluxes(:)%canopy%chi          = 0.0
     tile_fluxes(:)%canopy%iwue         = 0.0
+    tile_fluxes(:)%canopy%asat         = 0.0
     tile_fluxes(:)%canopy%ppfd_splash  = 0.0
     tile_fluxes(:)%canopy%ppfd_memory  = 0.0
     tile_fluxes(:)%canopy%dra          = 0.0
@@ -694,6 +696,7 @@ contains
     tile_fluxes(:)%canopy%gs_accl = 0.0
     tile_fluxes(:)%canopy%chi = 0.0
     tile_fluxes(:)%canopy%iwue = 0.0
+    tile_fluxes(:)%canopy%asat = 0.0
     tile_fluxes(:)%canopy%actnv_unitiabs = 0.0
 
     do lu=1,nlu
@@ -767,8 +770,8 @@ contains
         tile_fluxes(lu)%plant(pft)%chi * tile(lu)%plant(pft)%fpc_grid
       tile_fluxes(lu)%canopy%iwue = tile_fluxes(lu)%canopy%iwue + &
         tile_fluxes(lu)%plant(pft)%iwue * tile(lu)%plant(pft)%fpc_grid
-      ! tile_fluxes(lu)%canopy%actnv_unitiabs = tile_fluxes(lu)%canopy%actnv_unitiabs + &
-      !   tile_fluxes(lu)%plant(pft)%actnv_unitiabs * tile(lu)%plant(pft)%fpc_grid
+      tile_fluxes(lu)%canopy%asat = tile_fluxes(lu)%canopy%asat + &
+        tile_fluxes(lu)%plant(pft)%asat * tile(lu)%plant(pft)%fpc_grid
 
       tile_fluxes(lu)%canopy%npp_leaf = tile_fluxes(lu)%canopy%npp_leaf + &
         tile_fluxes(lu)%plant(pft)%npp_leaf * tile(lu)%plant(pft)%fpc_grid
@@ -866,6 +869,7 @@ contains
     out_biosphere%gs_accl = tile_fluxes(lu)%plant(pft)%gs_accl
     out_biosphere%chi     = tile_fluxes(lu)%plant(pft)%chi
     out_biosphere%iwue    = tile_fluxes(lu)%plant(pft)%iwue
+    out_biosphere%asat    = tile_fluxes(lu)%plant(pft)%asat
     out_biosphere%wscal   = tile(lu)%soil%phy%wscal
     out_biosphere%tsoil   = tile(lu)%soil%phy%temp
     out_biosphere%cleaf   = tile(lu)%plant(pft)%pleaf%c%c12

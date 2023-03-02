@@ -134,6 +134,7 @@ module md_interface_pmodel
     real :: wscal
     real :: chi
     real :: iwue
+    real :: asat
     real :: tsoil
     real :: cleaf
     real :: nleaf
