@@ -261,7 +261,8 @@ run_pmodel_f_bysite <- function(
         }
       } else {
         # something weird more fundamentally -> don't run the model
-        warning(" Returning a dummy data frame.")
+        warning(" Returning a dummy data frame. Forcing data does not
+                correspond to full years.")
         continue <- FALSE
       }
     }
