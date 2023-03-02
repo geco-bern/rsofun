@@ -31,7 +31,7 @@ In this vignette, we go over some examples on how to use these cost functions fo
 
 ### Calibration using RMSE on GPP and GenSA optimizer
 
-A simple approach to parameter calibration is to fit the one that leads to the best GPP prediction performance, in terms of the RMSE (root mean squared error) . With `create_cost_rmse_pmodel()`, we can create a cost function that corresponds to different calibration setups in Stocker et al., 2020 GMD. For example, following the `FULL` setup, we can calibrate parameters `kphio`, `soilm_par_a` and `soilm_par_b`. We must always specify which values the fixed parameters should take, i.e. the parameters that aren't calibrated, and also the optimization method, in this case `GenSA`.
+A simple approach to parameter calibration is to fit the one that leads to the best GPP prediction performance, in terms of the RMSE (root mean squared error) . With `create_cost_rmse_pmodel()`, we can create a cost function that corresponds to different calibration setups in Stocker et al., 2020 GMD. For example, following the `FULL` setup, we can calibrate parameters `kphio`, `soilm_par_a` and `soilm_par_b`. We must always specify which values the fixed parameters should take, i.e. the parameters that aren't calibrated, the optimization method, in this case `GenSA`, and also the target variable.
 
 ```{r}
 # Set parameter values
@@ -47,7 +47,8 @@ pars <- list(
 cost_rmse_full <- create_cost_rmse_pmodel(
   params_modl = pars,
   setup = 'FULL',
-  method = 'GenSA'
+  method = 'GenSA',
+  target = 'gpp'
 )
 ```
 Note that, for now, only GPP is used as a target variable for the simulation and calibration of the P-model. Each cost function should be written for a specific set of target variables.
