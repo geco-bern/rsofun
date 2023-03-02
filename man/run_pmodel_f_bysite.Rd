@@ -41,8 +41,10 @@ run_pmodel_f_bysite(
       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
       pathway and N-fixing.}
       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-      \item{firstyeartrend}{The year AD of first transient year.}
-      \item{nyeartrend}{The number of transient years.}
+      \item{firstyeartrend}{The year AD of first transient year, overwritten
+      to match the first year of forcing data.}
+      \item{nyeartrend}{The number of transient years, overwritten to match the
+      number of forcing years available.}
 }}
 
 \item{site_info}{A list of site meta info. Required:

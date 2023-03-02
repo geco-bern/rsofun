@@ -26,8 +26,10 @@
 #'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
 #'       pathway and N-fixing.}
 #'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-#'       \item{firstyeartrend}{The year AD of first transient year.}
-#'       \item{nyeartrend}{The number of transient years.}
+#'       \item{firstyeartrend}{The year AD of first transient year, overwritten
+#'       to match the first year of forcing data.}
+#'       \item{nyeartrend}{The number of transient years, overwritten to match the
+#'       number of forcing years available.}
 #' }
 #' @param site_info A list of site meta info. Required:
 #' \describe{
@@ -133,6 +135,11 @@ run_pmodel_f_bysite <- function(
   
   nyeartrend_forcing <- nrow(forcing)/ndayyear
   
+  # Overwrite params_siml$nyeartrend and 
+  # params_siml$firstyeartrend based on 'forcing'
+  params_siml$nyeartrend <- nyeartrend_forcing
+  params_siml$firstyeartrend <- firstyeartrend_forcing
+  
   # determine number of seconds per time step
   times <- forcing %>%
     dplyr::pull(date) %>%
@@ -234,37 +241,14 @@ run_pmodel_f_bysite <- function(
     if (suppressWarnings(!all(parameter_integrity))){
       continue <- FALSE
     }
-    
-    # Dates in 'forcing' do not correspond to simulation parameters
-    if (nrow(forcing) != params_siml$nyeartrend * ndayyear){
-      if (verbose){
-        warning(
-          "Error: Number of years data in forcing does not correspond
-       to number of simulation years (nyeartrend).\n")
-        warning(paste(" Number of years data: ",
-                          nrow(forcing)/ndayyear), "\n")
-        warning(paste(" Number of simulation years: ",
-                          params_siml$nyeartrend, "\n"))
-        warning(paste(" Site name: ", sitename, "\n"))
-      }
       
-      # Overwrite params_siml$nyeartrend and 
-      # params_siml$firstyeartrend based on 'forcing'
-      if (nrow(forcing) %% ndayyear == 0){
-        params_siml$nyeartrend <- nyeartrend_forcing
-        params_siml$firstyeartrend <- firstyeartrend_forcing
-        if (verbose){
-          warning(paste(" Overwriting params_siml$nyeartrend: ",
-                            params_siml$nyeartrend, "\n"))
-          warning(paste(" Overwriting params_siml$firstyeartrend: ",
-                            params_siml$firstyeartrend, "\n"))
-        }
-      } else {
-        # something weird more fundamentally -> don't run the model
-        warning(" Returning a dummy data frame. Forcing data does not
-                correspond to full years.")
-        continue <- FALSE
-      }
+    # Overwrite params_siml$nyeartrend and 
+    # params_siml$firstyeartrend based on 'forcing'
+    if (nrow(forcing) %% ndayyear != 0){
+      # something weird more fundamentally -> don't run the model
+      warning(" Returning a dummy data frame. Forcing data does not
+              correspond to full years.")
+      continue <- FALSE
     }
     
     # Check model parameters
