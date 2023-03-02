@@ -51,8 +51,6 @@
 #'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
 #'       pathway and N-fixing.}
 #'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-#'       \item{firstyeartrend}{The year AD of first transient year.}
-#'       \item{nyeartrend}{The number of transient years.}
 #'     }
 #'   }
 #'   \item{site_info}{A tibble [ 1 x 12 ] containing site information
