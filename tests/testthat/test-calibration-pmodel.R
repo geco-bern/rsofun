@@ -63,7 +63,8 @@ test_that("test calibration routine p-model (GenSA, rmse)", {
     sitenames           = "FR-Pue",
     metric              = rsofun::create_cost_rmse_pmodel(params_modl = params_fix,
                                                                 setup = "BRC",
-                                                                method = "GenSA"),
+                                                                method = "GenSA",
+                                                                target = 'gpp'),
     control = list(
       maxit = 100
     ),
