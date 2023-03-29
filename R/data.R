@@ -24,8 +24,8 @@
 #'       \item{co2}{Annually varying observed atmospheric CO\eqn{_2}, identical 
 #'       across sites.}
 #'       \item{doy}{Day of the year.}
-#'       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C.}
-#'       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.}
+#'       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C (currently not used).}
+#'       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C (currently not used).}
 #'       }
 #'   }
 #'   \item{params_siml}{A tibble [ 1 x 18] of model parameters.
