@@ -30,6 +30,11 @@
 #' \code{par} given as argument and the remaining non-calibratable parameters
 #' are held constant (specified via \code{params_modl}).
 #' 
+#' If the validation data contains a "date" column, the simulated target time series
+#' is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
+#' there should only be one observed value per site, and the outputs will be 
+#' compared to this single value representative of the site (e.g. Vcmax25).
+#' 
 #' Since the calibration routine in \code{BayesianTools} is based on maximizing 
 #' a cost function and we want to minimize the RMSE, the opposite value, 
 #' \code{(-1)*RMSE}, is returned if \code{method = 'BayesianTools'}. \code{GenSA}
@@ -52,7 +57,8 @@
 #' cost_rmse_kphio <- create_cost_rmse_pmodel(
 #'   params_modl = pars,
 #'   setup = 'BRC',
-#'   method = 'BayesianTools'
+#'   method = 'BayesianTools',
+#'   target = 'gpp'
 #'   )
 #' }
 
@@ -122,14 +128,18 @@ create_cost_rmse_pmodel <- function(
         target,
         "'
     )
-  # output[output$sitename=='FR-Pue',]$data[[1]][[1]] # alternative base R option
-  
+
   obs <- obs %>%
     dplyr::select(sitename, data) %>% 
     tidyr::unnest(data)
   
   # left join with observations
-  df <- dplyr::left_join(df, obs, by = c('sitename', 'date'))
+  if('date' %in% colnames(obs)){
+    df <- dplyr::left_join(df, obs, by = c('sitename', 'date'))
+  } else {
+    df <- dplyr::left_join(df, obs, by = c('sitename')) 
+  }
+  
   
   # Calculate cost (RMSE)
   cost <- sqrt( mean( (df$",
