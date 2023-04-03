@@ -11,17 +11,17 @@ A tibble of validation data:
   \item{data}{A tibble [ 1 x 2 ] with observations for the following variables:
     \describe{
       \item{vcmax25}{The observed maximum rate of carboxylation (Vcmax), normalised 
-    to 25$^o$ C (in mol C m^{-2} d^{-1}), aggregated over different plant species
+    to 25\eqn{^o} C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}), aggregated over different plant species
     in each site.}
-      \item{vcmax25_unc}{The uncertainty of the Vcmax25 (in mol C m^{-2} d^{-1}).}
+      \item{vcmax25_unc}{The uncertainty of the Vcmax25 (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
     }
   }
 }
 }
 \source{
-Pastorello, G., Trotta, C., Canfora, E. et al. 
-The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
-Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
+Atkin, O. K., Bloomfield, K. J., Reich, P. B., Tjoelker, M. G., Asner, G. P., Bonal, D., et al. (2015). 
+Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. 
+New Phytol. 206 (2), 614–636. doi:10.1111/nph.13253
 }
 \usage{
 p_model_validation_vcmax25
