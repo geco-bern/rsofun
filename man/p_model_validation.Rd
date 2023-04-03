@@ -28,7 +28,7 @@ p_model_validation
 }
 \description{
 Small tests dataset to validate 
-calibration routines
+calibration routines for a time series of fluxes.
 }
 \examples{
 require(ggplot2); require(tidyr)
