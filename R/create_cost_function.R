@@ -275,39 +275,49 @@ create_cost_likelihood_pmodel <- function(
   
   # cleanup
   df <- df %>%
-    dplyr::select(sitename, data) %>%
+    dplyr::select(sitename, data) %>% 
     tidyr::unnest(data) %>%
-    dplyr::arrange(
-      sitename, date
+    dplyr::rename(
+      '",
+              target,
+              "_mod' = '",
+              target,
+              "'
     )
-    
+
   obs <- obs %>%
-    dplyr::select(sitename, data) %>%
-    tidyr::unnest(data) %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange(
-      sitename, date
-    )          
+    dplyr::select(sitename, data) %>% 
+    tidyr::unnest(data)
+  
+  # left join with observations
+  if('date' %in% colnames(obs)){
+    df <- dplyr::left_join(df, obs, by = c('sitename', 'date'))
+  } else {
+    df <- dplyr::left_join(df, obs, by = c('sitename')) 
+  }
   
   # get observations and predicted target values, without NA            
-  observed <- obs$",
+  df <- df |>
+    dplyr::select(",
               target,
-              "
-  notNAvalues <- !is.na(observed)
-  observed <- observed[notNAvalues]
-  
-  predicted <- df$",
+              "_mod, ",
               target,
-              "[notNAvalues]
-  uncertainty <- obs$",
+              ", ",
               target,
-              "_unc[notNAvalues]
+              "_unc) |>
+    tidyr::drop_na()
 
   # calculate normal log-likelihood
   ll <- sum(stats::dnorm(
-    predicted,
-    mean = observed,
-    sd = uncertainty,
+    df$",
+              target,
+              "_mod,
+    mean = df$",
+              target,
+              ",
+    sd = df$",
+              target,
+              "_unc,
     log = TRUE
   ))
   
