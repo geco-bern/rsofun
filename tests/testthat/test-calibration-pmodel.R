@@ -66,7 +66,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse)", {
                                                                 method = "GenSA",
                                                                 target = 'gpp'),
     control = list(
-      maxit = 100
+      maxit = 10
     ),
     par = list(
       a = list(lower=0.04, upper=0.09, init=0.05),
