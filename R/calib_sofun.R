@@ -22,8 +22,6 @@
 #'   If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
 #'   the list should include at least \code{settings} and \code{sampler}, see
 #'   \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
-#'   \item{\code{targets}}{Name of the observed target variable to use in calibration
-#'   (necessary if \code{method = 'BayesianTools'}).}
 #'  }
 #' @param optim_out A logical indicating whether the function returns the raw
 #'  output of the optimization functions (defaults to TRUE).
