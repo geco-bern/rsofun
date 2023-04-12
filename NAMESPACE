@@ -2,6 +2,7 @@
 
 export(calc_net_assim)
 export(calib_sofun)
+export(create_cost_joint_likelihood_pmodel)
 export(create_cost_likelihood_biomee)
 export(create_cost_likelihood_pmodel)
 export(create_cost_rmse_biomee)
