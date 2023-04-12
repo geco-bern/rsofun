@@ -59,16 +59,38 @@ calib_sofun <- function(
     stop("missing input data, please check all parameters")
   }
   
-  if (nrow(obs) == 0){
-    warning("no validation data available, returning NA parameters")
-    
-    settings$par$kphio <- NA
-    settings$par$soilm_par_a <- NA
-    settings$par$soilm_par_b <- NA
-    settings$par$tau_acclim_tempstress <- NA
-    settings$par$par_shape_tempstress <- NA
-    
-    return(settings$par)
+  # check data structure
+  if(is.data.frame(obs)){
+    if (nrow(obs) == 0){
+      warning("no validation data available, returning NA parameters")
+      
+      settings$par$kphio <- NA
+      settings$par$soilm_par_a <- NA
+      settings$par$soilm_par_b <- NA
+      settings$par$tau_acclim_tempstress <- NA
+      settings$par$par_shape_tempstress <- NA
+      
+      return(settings$par)
+    }
+  }else if(is.list(obs)){
+    if(all(sapply(obs, FUN = is.data.frame))){
+      if(any(sapply(obs, FUN = function(x) nrow(x) == 0))){
+        warning("no validation data available for at least one site,
+                returning NA parameters")
+        
+        settings$par$kphio <- NA
+        settings$par$soilm_par_a <- NA
+        settings$par$soilm_par_b <- NA
+        settings$par$tau_acclim_tempstress <- NA
+        settings$par$par_shape_tempstress <- NA
+        
+        return(settings$par)
+      }
+    }else{
+      stop("at least one of the obs list elements is not a data.frame")
+    }
+  }else{
+    stop("obs must be a data.frame or a list of data.frames")
   }
   
   #--- GenSA ----
