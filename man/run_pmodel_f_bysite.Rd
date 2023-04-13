@@ -53,7 +53,7 @@ run_pmodel_f_bysite(
 }}
 
 \item{forcing}{A data frame of forcing climate data, used as input 
-(returned object by \code{\link{collect_drivers_sofun}}, see \code{\link{p_model_drivers}}
+(see \code{\link{p_model_drivers}}
 for a detailed description of its structure and contents).}
 
 \item{params_soil}{A list of soil texture parameters, for the top and bottom

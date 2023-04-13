@@ -36,7 +36,7 @@
 #'       simulating the soil water balance.}
 #' }
 #' @param forcing A data frame of forcing climate data, used as input 
-#'  (returned object by \code{\link{collect_drivers_sofun}}, see \code{\link{p_model_drivers}}
+#'  (see \code{\link{p_model_drivers}}
 #'  for a detailed description of its structure and contents).
 #' @param params_soil A list of soil texture parameters, for the top and bottom
 #' layer of soil.
