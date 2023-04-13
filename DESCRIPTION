@@ -32,7 +32,6 @@ Imports:
     dplyr,
     purrr,
     tidyr,
-    tidyselect,
     magrittr,
     GenSA,
     BayesianTools,
