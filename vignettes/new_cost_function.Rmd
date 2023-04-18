@@ -114,7 +114,7 @@ settings_likelihood <- list(
 # Calibrate the model and optimize the free parameters using
 # demo datasets
 pars_calib_likelihood <- calib_sofun(
-  drivers = p_model_drivers-vcmax25,
+  drivers = p_model_drivers_vcmax25,
   obs = p_model_validation_vcmax25,
   settings = settings_likelihood
 )
