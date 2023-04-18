@@ -91,7 +91,7 @@ likelihood_pmodel <- create_cost_likelihood_pmodel(
   setup = 'BRC',       # calibrate only kphio
   target = 'vcmax25'   # same target name as column name in dataframe
   )
-`
+```
 
 In the definition of the calibration settings, the control parameters differ from the ones used with `GenSA`. A uniform prior for the parameter is also defined, by giving lower and upper limits.
 
