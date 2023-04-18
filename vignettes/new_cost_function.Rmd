@@ -85,11 +85,13 @@ The output of `calib_sofun()` is a list containing the calibrated parameter valu
 
 Let's create a cost function to calibrate only the `kphio` parameter, taking a Bayesian estimation approach. By maximizing the normal log-likelihood, the MAP (maximum a posteriori) estimator for `kphio` is computed. This time we use Vcmax25 values for calibration, with a single value per site, instead of a GPP time series. Note that it wouldn't make sense to do the `FULL` calibration setup because Vcmax25 does not appear in the soil moisture stress functions of the P-model.
 
+```{r}
 likelihood_pmodel <- create_cost_likelihood_pmodel(
   params_modl = pars,  # reuse previous initial values
   setup = 'BRC',       # calibrate only kphio
   target = 'vcmax25'   # same target name as column name in dataframe
   )
+`
 
 In the definition of the calibration settings, the control parameters differ from the ones used with `GenSA`. A uniform prior for the parameter is also defined, by giving lower and upper limits.
 
