@@ -3,7 +3,7 @@
 \docType{data}
 \name{p_model_drivers}
 \alias{p_model_drivers}
-\title{SOFUN p-model driver data}
+\title{SOFUN p-model driver data (for fluxes)}
 \format{
 A tibble of driver data:
 \describe{

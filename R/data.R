@@ -1,4 +1,4 @@
-#' SOFUN p-model driver data
+#' SOFUN p-model driver data (for fluxes)
 #'
 #' Small tests dataset to validate if compiled code
 #' and optimization routines can run
@@ -131,8 +131,6 @@
 #' }
 #' @examples require(ggplot2); require(tidyr)
 #' p_model_validation %>% tidyr::unnest(data) 
-#'   
-#'  
 #' 
 #' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
 #' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
@@ -256,14 +254,15 @@
 #'       \item{vcmax25}{The observed maximum rate of carboxylation (Vcmax), normalised 
 #'     to 25\eqn{^o} C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}), aggregated over different plant species
 #'     in each site.}
-#'       \item{vcmax25_unc}{The uncertainty of the Vcmax25 (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'       \item{vcmax25_unc}{The uncertainty of the Vcmax25 (in mol C m\eqn{^{-2}} d\eqn{^{-1}}),
+#'       calculated as the standard deviation among Vcmax25 observations for
+#'       several species per site or as the total standard deviation across sites for
+#'       single-plant-species sites.}
 #'     }
 #'   }
 #' }
 #' @examples require(ggplot2); require(tidyr)
 #' p_model_validation_vcmax25 %>% tidyr::unnest(data) 
-#'   
-#'  
 #' 
 #' @source Atkin, O. K., Bloomfield, K. J., Reich, P. B., Tjoelker, M. G., Asner, G. P., Bonal, D., et al. (2015). 
 #' Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. 

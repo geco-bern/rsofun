@@ -33,8 +33,6 @@ calibration routines for a time series of fluxes.
 \examples{
 require(ggplot2); require(tidyr)
 p_model_validation \%>\% tidyr::unnest(data) 
-  
- 
 
 }
 \keyword{datasets}
