@@ -11,11 +11,11 @@
 #' @param settings A list containing model calibration settings. 
 #'  See the 'P-model usage' vignette for more information and examples.
 #'  \describe{
+#'   \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
+#'   or \code{'BayesianTools'}.}
 #'   \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
 #'   and lower and upper bounds should be provided. The calibratable parameters
 #'   are 'kphio', 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' and 'par_shape_tempstress'.}
-#'   \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
-#'   or \code{'BayesianTools'}.}
 #'   \item{\code{metric}}{A cost function. See the 'Cost functions for parameter
 #'   calibration' vignette for examples.}
 #'   \item{\code{control}}{A list of arguments passed on to the optimization function.
