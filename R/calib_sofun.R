@@ -15,9 +15,13 @@
 #'   or \code{'BayesianTools'}.}
 #'   \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
 #'   and lower and upper bounds should be provided. The calibratable parameters
-#'   are 'kphio', 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' and 'par_shape_tempstress'.}
+#'   are model parameters 'kphio', 'soilm_par_a', 'soilm_par_b', 
+#'   'tau_acclim_tempstress' and 'par_shape_tempstress', and error parameters
+#'   for each target variable, named 'err_gpp'.}
 #'   \item{\code{metric}}{A cost function. See the 'Cost functions for parameter
 #'   calibration' vignette for examples.}
+#'   \item{\code{targets}}{A vector of target variable names. The names must
+#'   match the column names in the P-model output.
 #'   \item{\code{control}}{A list of arguments passed on to the optimization function.
 #'   If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
 #'   the list should include at least \code{settings} and \code{sampler}, see
@@ -56,41 +60,18 @@ calib_sofun <- function(
   
   # check input variables
   if(missing(obs) | missing(drivers) | missing(settings)){
-    stop("missing input data, please check all parameters")
+    stop("missing input arguments, please check all parameters")
   }
   
   # check data structure
   if(is.data.frame(obs)){
     if (nrow(obs) == 0){
       warning("no validation data available, returning NA parameters")
-      
-      settings$par$kphio <- NA
-      settings$par$soilm_par_a <- NA
-      settings$par$soilm_par_b <- NA
-      settings$par$tau_acclim_tempstress <- NA
-      settings$par$par_shape_tempstress <- NA
-      
-      return(settings$par)
-    }
-  }else if(is.list(obs)){
-    if(all(sapply(obs, FUN = is.data.frame))){
-      if(any(sapply(obs, FUN = function(x) nrow(x) == 0))){
-        warning("no validation data available for at least one site,
-                returning NA parameters")
-        
-        settings$par$kphio <- NA
-        settings$par$soilm_par_a <- NA
-        settings$par$soilm_par_b <- NA
-        settings$par$tau_acclim_tempstress <- NA
-        settings$par$par_shape_tempstress <- NA
-        
-        return(settings$par)
-      }
-    }else{
-      stop("at least one of the obs list elements is not a data.frame")
+      return(lapply(settings$par,
+                    function(x) NA))
     }
   }else{
-    stop("obs must be a data.frame or a list of data.frames")
+    stop("obs must be a (nested) data.frame")
   }
   
   #--- GenSA ----
