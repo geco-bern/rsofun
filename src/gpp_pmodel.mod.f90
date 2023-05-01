@@ -35,7 +35,7 @@ module md_gpp_pmodel
   use md_sofunutils, only: radians
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
-    calc_ftemp_inst_rd, calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
+    calc_ftemp_inst_rd, calc_ftemp_kphio, calc_soilmstress
 
   implicit none
 
@@ -133,11 +133,7 @@ contains
       vpd_memory  = climate_acclimation%dvpd
       patm_memory = climate_acclimation%dpatm
       ppfd_memory = climate_acclimation%dppfd
-      tmin_memory = climate_acclimation%dtmin
-      ! print*,'climate_acclimation%dtmin, tmin_memory', climate_acclimation%dtmin, tmin_memory
     end if 
-
-    ! if (count < 5) print*,'A count, tau_acclim_tempstress, dtmin, tmin_memory', count, params_gpp%tau_acclim_tempstress, climate_acclimation%dtmin, tmin_memory
 
     count = count + 1
 
@@ -146,11 +142,6 @@ contains
     vpd_memory  = dampen_variability( climate_acclimation%dvpd,  params_gpp%tau_acclim, vpd_memory  )
     patm_memory = dampen_variability( climate_acclimation%dpatm, params_gpp%tau_acclim, patm_memory )
     ppfd_memory = dampen_variability( climate_acclimation%dppfd, params_gpp%tau_acclim, ppfd_memory )
-
-    ! ! separate time scale for minimum temperature stress
-    ! tmin_memory = dampen_variability( climate_acclimation%dtmin, params_gpp%tau_acclim_tempstress, tmin_memory )
-
-    ! if (count < 5) print*,'B count, tau_acclim_tempstress, dtmin, tmin_memory', count, params_gpp%tau_acclim_tempstress, climate_acclimation%dtmin, tmin_memory
 
     tk = climate_acclimation%dtemp + kTkelvin
 
@@ -164,8 +155,7 @@ contains
       !----------------------------------------------------------------
       ! take the slowly varying temperature for governing quantum yield variations
       if (do_tempstress) then
-        ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 ) & 
-          * calc_ftemp_kphio_tmin( climate_acclimation%dtmin, params_gpp%par_shape_tempstress )
+        ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 )
       else
         ftemp_kphio = 1.0
       end if
@@ -527,10 +517,6 @@ contains
     params_gpp%tau_acclim     = 30.0
     params_gpp%soilm_par_a    = myinterface%params_calib%soilm_par_a     ! is provided through standard input
     params_gpp%soilm_par_b    = myinterface%params_calib%soilm_par_b     ! is provided through standard input
-
-    ! temperature stress time scale is calibratable
-    params_gpp%tau_acclim_tempstress = myinterface%params_calib%tau_acclim_tempstress
-    params_gpp%par_shape_tempstress  = myinterface%params_calib%par_shape_tempstress
 
     ! PFT-dependent parameter(s)
     params_pft_gpp(:)%kphio = myinterface%params_calib%kphio  ! is provided through standard input
