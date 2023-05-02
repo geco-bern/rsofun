@@ -28,15 +28,15 @@ big computational resources. Hence, it is worth our time to explore which parame
 should actually be calibrated (because of they impact the simulations greatly) 
 and to examine if the calibration routines behave as expected. 
 This vignette explains how to perform a simple
-parameter sensitivity analysis for the P-model and how to interpret the outputs of the
-calibration routines using the `BayesianTools` package.
+parameter sensitivity analysis for the P-model and how to interpret the outputs 
+of the calibration routines using the `BayesianTools` package.
 
 ## Morris sensitivity analysis
 
 The Morris method for global sensitivity analysis allows to explore which parameters have the
 biggest influence on the model fit. In this example, we will quantify how different
-values of the calibratable parameters (`kphio`, `soilm_par_a`, `soilm_par_b`,
-`tau_acclim_tempstress` and `par_shape_tempstress`) lead to more variability
+values of the calibratable model parameters (`kphio`, `soilm_par_a` and `soilm_par_b`)
+lead to more variability
 in the match between GPP predicted by the P-model and GPP observations. It would
 be wise to repeat this exercise for various targets because they may be simulated
 by equations in the P-model that involve different model parameters.
@@ -57,17 +57,15 @@ We want to see how sensitive this function is to changes in the parameter values
 ```{r}
 # Define log-likelihood function
 ll_pmodel <- function(
-    par_v                   # a vector of calibratable parameters
+    par_v               # a vector of calibratable parameters including errors
 ){
 
   # get parameters into correct format
-  par_list <- as.list(par_v)
+  par_list <- as.list(par_v[-6]) # remove error parameter
   names(par_list) <- c(
     "kphio",
     "soilm_par_a",
-    "soilm_par_b",
-    "tau_acclim_tempstress",
-    "par_shape_tempstress"
+    "soilm_par_b"
   )
   
   # simulate the model for the parameter list
@@ -99,7 +97,7 @@ ll_pmodel <- function(
     stats::dnorm(
       sim.df[['gpp_mod']],                 # simulated GPP
       mean = sim.df[['gpp']],              # observed GPP
-      sd = sim.df[['gpp_unc']],            # sd of observed GPP
+      sd = par_v[6],                       # error term
       log = TRUE
     ))  
   
@@ -112,8 +110,7 @@ ll_pmodel( par_v = c(
   kphio           = 0.09423773,
   soilm_par_a     = 0.33349283,
   soilm_par_b     = 1.45602286,
-  tau_acclim_tempstress = 10,
-  par_shape_tempstress  = 0.0
+  error_gpp       = 0.9          # value from previous simulations
 ))
 ```
 
@@ -127,8 +124,7 @@ par_cal_best <- c(
     kphio           = 0.09423773,
     soilm_par_a     = 0.33349283,
     soilm_par_b     = 1.45602286,
-    tau_acclim_tempstress = 10,
-    par_shape_tempstress  = 0.0
+    error_gpp       = 0.9
   )
 
 # lower bound
@@ -136,8 +132,7 @@ par_cal_min <- c(
     kphio           = 0,
     soilm_par_a     = 0,
     soilm_par_b     = 1,
-    tau_acclim_tempstress = 0,
-    par_shape_tempstress  = -0.5
+    error_gpp       = 0.01
   )
 
 # upper bound
@@ -145,8 +140,7 @@ par_cal_max <- c(
     kphio           = 5,
     soilm_par_a     = 1,
     soilm_par_b     = 3,
-    tau_acclim_tempstress = 20,
-    par_shape_tempstress  = 0.5
+    error_gpp       = 2
   )
 ```
 
@@ -217,18 +211,149 @@ morrisOut.df |>
 
 ```
 
-
-## Interpretation of calibration routine
+## Interpretation of Bayesian calibration routine
 
 It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. We can plot the MCMC chains, returned as part of the `calib_sofun()` output, and see that they converge to a similar value and become progressively more stable. We can also see the probability density of the time series of parameter values. 
 
 ```{r}
-plot(pars$mod)
+cost_likelihood <- function(
+    par,
+    obs,
+    drivers
+){
+  # execute model for this parameter set
+  params_modl <- list(
+    kphio         = par[1],
+    soilm_par_a     = 0.33349283,
+    soilm_par_b     = 1.45602286
+  )
+  
+  # run the model
+  df <- rsofun::runread_pmodel_f(
+    drivers,
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # cleanup output
+  df <- df |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::rename('gpp_mod' = 'gpp')
+  
+  # get observation in the same format
+  obs <- obs |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data)
+  
+  # left join obs and output
+  if('date' %in% colnames(obs)){
+      df <- dplyr::left_join(df, obs, by = c('sitename', 'date')) |>
+        tidyr::drop_na()
+    } else {
+      df <- dplyr::left_join(df, obs, by = c('sitename')) |>
+        tidyr::drop_na()
+    }
+  
+  # calculate normal log-likelihood
+  ll <- sum(
+    stats::dnorm(
+      df[['gpp_mod']],                 # simulated GPP
+      mean = df[['gpp']],              # observed GPP
+      sd = par[2],                         # error term
+      log = TRUE
+    ))  
+  
+  if(is.nan(ll) | is.na(ll) | ll == 0 ){ ll <- - Inf}
+  return(ll)
+}
+
+# Define calibration settings
+settings_calib <- list(
+  method = "BayesianTools",
+  metric = cost_likelihood,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 500,
+      iterations = 2000
+    )),
+  par = list(
+    kphio = list(lower = 0, upper = 0.2, init = 0.05),
+    err_gpp = list(lower = 0.1, upper = 2, init = 0.8)
+  )
+)
+
+# calibrate parameters kphio and err_gpp (the two to which the model is most
+# sensitive)
+par_calib <- calib_sofun(
+  drivers = p_model_drivers,
+  obs = p_model_validation,
+  settings = settings_calib
+)
 ```
 
+Okay, after calibrating let's check out the result!
+```{r}
+params_new <- params_modl
+params_new$kphio <- par_calib$par[1]
+
+model_data_new <- rsofun::runread_pmodel_f(
+  p_model_drivers,
+  par = params_new
+) |>
+  dplyr::select(sitename, data) |>
+  tidyr::unnest(data) |>
+      dplyr::slice(1:110)
+
+validation_data <- p_model_validation %>%
+  tidyr::unnest(data) |>
+  dplyr::slice(1:110)          # get first month of data
+
+ggplot() +
+    geom_line(
+    data = model_data_new,
+    aes(
+      date,
+      gpp
+    ),
+    colour = "red",
+    alpha = 0.8
+  ) +
+  geom_line(
+    data = validation_data,
+    aes(
+      date,
+      gpp
+    ),
+    alpha = 0.8
+  ) +
+  geom_errorbar(
+    data = validation_data,
+    aes(x = date, ymin=gpp - 2*gpp_unc, ymax=gpp + 2*gpp_unc), width=.2,
+                 position=position_dodge(0.05)) +
+  geom_errorbar(
+    data = model_data_new,
+    aes(x = date, ymin=gpp - 2*par_calib$par[2],   # should cover ~ 95% of observations
+        ymax=gpp + 2*par_calib$par[2]), width=.2,
+                 position=position_dodge(0.05), 
+    color = 'red', alpha = 0.5) +
+  labs(
+    x = "Date",
+    y = "GPP"
+  )
+```
+
+We can observe the convergence of the MCMC below. The quantum yield efficiency
+clearly converged quite quickly
+```{r}
+plot(par_calib$mod)
+```
+
+
 For PEPA:
-Let's take a look at the different sources of error in the model. First
-we plot the observed GPP with the observation errors reported by FluxNet:
+Let's take a look at the different sources of error in the model, focusing on Vcmax25 as target.
 ```{r}
 validation_data <- p_model_validation %>%
   tidyr::unnest(data) |>
@@ -270,9 +395,7 @@ observed and simulated GPP.
 params_modl <- list(
     kphio           = 0.09423773,
     soilm_par_a     = 0.33349283,
-    soilm_par_b     = 1.45602286,
-    tau_acclim_tempstress = 10,
-    par_shape_tempstress  = 0.0
+    soilm_par_b     = 1.45602286
   )
 
 # run the model for these parameters
