@@ -11,7 +11,7 @@ module md_photosynth
 
   private
   public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
-    calc_ftemp_inst_rd, calc_ftemp_kphio_tmin, calc_ftemp_kphio, calc_soilmstress
+    calc_ftemp_inst_rd, calc_ftemp_kphio, calc_soilmstress
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -876,29 +876,6 @@ contains
     end if
     
   end function calc_ftemp_kphio
-
-
-  function calc_ftemp_kphio_tmin( tc, shape_par ) result( ftemp )
-    !////////////////////////////////////////////////////////////////
-    ! Calculates the low temperature stress function assuming no stress
-    ! at 10 deg C and above and declining below based on a calibratable
-    ! parameter and a quadratic function.
-    !----------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: tc           ! (leaf) temperature in degrees celsius
-    real, intent(in) :: shape_par    ! shape parameter for the sensitivity of the decline, some positive value
-
-    ! function return variable
-    real :: ftemp
-
-    if (tc > 10.0) then
-      ftemp = 1.0
-    else
-      ftemp = 1.0 - (shape_par * (tc - 10.0))**2
-      if (ftemp < 0.0) ftemp = 0.0
-    end if
-    
-  end function calc_ftemp_kphio_tmin
 
 
   function calc_ftemp_inst_rd( tc ) result( fr )
