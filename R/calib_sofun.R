@@ -92,7 +92,8 @@ calib_sofun <- function(
       upper = upper,
       control = settings$control,
       obs = obs,
-      drivers = drivers
+      drivers = drivers,
+      targets = settings$targets
     )
     if(optim_out){
       out_optim <- list(par = out$par, mod = out)
@@ -126,7 +127,8 @@ calib_sofun <- function(
                       list(
                         par = random_par,
                         obs = obs,
-                        drivers = drivers    
+                        drivers = drivers,
+                        targets = settings$targets
                       ))
             },
         prior = priors,
