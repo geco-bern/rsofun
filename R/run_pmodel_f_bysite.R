@@ -249,13 +249,6 @@ run_pmodel_f_bysite <- function(
           continue <- FALSE
         } 
       }
-      if(params_siml$tempstress){
-        if (any(is.nanull(params_modl$tau_acclim_tempstress),
-                is.nanull(params_modl$par_shape_tempstress))){
-          warning("Error: Missing tau and shape parameters but tempstress = TRUE.")
-          continue <- FALSE
-        }
-      }
     }
   }
   
