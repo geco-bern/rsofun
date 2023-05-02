@@ -8,9 +8,7 @@ test_that("p-model run check GPP", {
   params_modl <- list(
       kphio           = 0.05,
       soilm_par_a     = 1.0,
-      soilm_par_b     = 0.0,
-      tau_acclim_tempstress = 10,
-      par_shape_tempstress  = 0.0
+      soilm_par_b     = 0.0
   )
   
   # read in demo data
@@ -61,9 +59,7 @@ test_that("p-model run check Vcmax25", {
   params_modl <- list(
     kphio           = 0.05,
     soilm_par_a     = 1.0,
-    soilm_par_b     = 0.0,
-    tau_acclim_tempstress = 10,
-    par_shape_tempstress  = 0.0
+    soilm_par_b     = 0.0
   )
   
   # read in demo data

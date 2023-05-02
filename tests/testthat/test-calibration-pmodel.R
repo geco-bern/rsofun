@@ -8,9 +8,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
   params_fix <- list(
     kphio           = 0.04607080,
     soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444,
-    tau_acclim_tempstress = 7.35259044,
-    par_shape_tempstress  = 0.09863961
+    soilm_par_b     = 1.68140444
   )
   
   settings <- list(
@@ -52,9 +50,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse)", {
   params_fix <- list(
     kphio           = 0.04607080,
     soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444,
-    tau_acclim_tempstress = 7.35259044,
-    par_shape_tempstress  = 0.09863961
+    soilm_par_b     = 1.68140444
   )
   
   settings <- list(
@@ -92,9 +88,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, rmse)", {
   params_fix <- list(
     kphio           = 0.04607080,
     soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444,
-    tau_acclim_tempstress = 7.35259044,
-    par_shape_tempstress  = 0.09863961
+    soilm_par_b     = 1.68140444
   )
   
   settings <- list(
@@ -135,9 +129,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood maximization
   params_fix <- list(
     kphio           = 0.04607080,
     soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444,
-    tau_acclim_tempstress = 7.35259044,
-    par_shape_tempstress  = 0.09863961
+    soilm_par_b     = 1.68140444
   )
   
   settings <- list(
@@ -177,9 +169,7 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
   params_fix <- list(
     kphio           = 0.04607080,
     soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444,
-    tau_acclim_tempstress = 7.35259044,
-    par_shape_tempstress  = 0.09863961
+    soilm_par_b     = 1.68140444
   )
   
   settings <- list(
