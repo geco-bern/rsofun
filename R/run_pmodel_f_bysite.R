@@ -10,8 +10,9 @@
 #'       \item{recycle}{Length of standard recycling period, in days.}
 #'       \item{soilmstress}{A logical value, if \code{TRUE} an empirical soil 
 #'       moisture stress function is applied to GPP.}
-#'       \item{tempstress}{A logical value, if \code{TRUE} an empirical temperature 
-#'       stress function is applied to GPP.}
+#'       \item{tempstress}{A logical value, if \code{FALSE} the quantum yield efficiency
+#'       is held constant, if \code{TRUE} its dependency on temperature is parameterised 
+#'       with an empirical temperature stress function (corresponding to Bernacchi et al., 2003).}
 #'       \item{calc_aet_fapar_vpd}{(not in use)}
 #'       \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
 #'       if \code{FALSE} PPFD is simulated internally.}
