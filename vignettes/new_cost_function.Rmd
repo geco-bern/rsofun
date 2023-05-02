@@ -39,9 +39,7 @@ A simple approach to parameter calibration is to fit the one that leads to the b
 pars <- list(
     kphio           = 0.04607080,
     soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444,
-    tau_acclim_tempstress = 7.35259044,
-    par_shape_tempstress  = 0.09863961
+    soilm_par_b     = 1.68140444
   )
 
 # Create the cost function
@@ -190,9 +188,7 @@ function(par, obs, drivers){
   params_modl <- list(
     kphio = 0.05,
     soilm_par_a = par[1],
-    soilm_par_b = par[2],
-    tau_acclim_tempstress = 7.4,
-    par_shape_tempstress = 0.1
+    soilm_par_b = par[2]
   )
   
   # Run the model
@@ -215,9 +211,7 @@ cost_mae <- function(par, obs, drivers){
   params_modl <- list(
     kphio = 0.05,
     soilm_par_a = par[1],
-    soilm_par_b = par[2],
-    tau_acclim_tempstress = 7.4,
-    par_shape_tempstress = 0.1
+    soilm_par_b = par[2]
   )
   
   # Run the model
