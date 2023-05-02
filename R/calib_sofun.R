@@ -15,8 +15,7 @@
 #'   or \code{'BayesianTools'}.}
 #'   \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
 #'   and lower and upper bounds should be provided. The calibratable parameters
-#'   are model parameters 'kphio', 'soilm_par_a', 'soilm_par_b', 
-#'   'tau_acclim_tempstress' and 'par_shape_tempstress', and error parameters
+#'   are model parameters 'kphio', 'soilm_par_a' and 'soilm_par_b', and error parameters
 #'   for each target variable, named 'err_gpp'.}
 #'   \item{\code{metric}}{A cost function. See the 'Cost functions for parameter
 #'   calibration' vignette for examples.}

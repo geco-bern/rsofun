@@ -51,13 +51,6 @@
 #'   \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
 #'   \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
 #'   \item{soilm_par_b}{Slope of the linear soil moisture stress function (unitless).}
-#'   \item{tau_acclim_tempstress}{Memory e-folding time scale parameter (in hours)
-#'   for acclimation of photosynthesis, following Eq. 5 in Makela et al. (2004) 
-#'   Tree Physiology 24, 369–376}
-#'   \item{par_shape_tempstress}{Shape parameter for the low temperature stress
-#'   function affecting quantum yield efficiency. A positive (unitless) value indicating 
-#'   the sensitivity of the decline (assuming no decline at 10\eqn{^o}C) and 
-#'   above, but decreasing with a quadratic function below 10\eqn{^o}C).}
 #' }
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings and model parameters. \code{TRUE} by default.
@@ -273,13 +266,11 @@ run_pmodel_f_bysite <- function(
     # number of rows in matrix (pre-allocation of memory)
     n <- as.integer(nrow(forcing))
 
-    # Model parameters as vector
+    # Model parameters as vector in order
     par = c(
       as.numeric(params_modl$kphio),
       as.numeric(params_modl$soilm_par_a),
-      as.numeric(params_modl$soilm_par_b),
-      as.numeric(params_modl$tau_acclim_tempstress),
-      as.numeric(params_modl$par_shape_tempstress)
+      as.numeric(params_modl$soilm_par_b)
       )
 
     # Soil texture as matrix (layer x texture parameter)

@@ -6,7 +6,7 @@
 #' computes the root mean squared error (RMSE) on the calibrated parameters.
 #' 
 #' @param params_modl A list of model parameter values, including \code{'kphio',
-#' 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' }and \code{'par_shape_tempstress'}
+#' 'soilm_par_a' }and \code{'soilm_par_b'}
 #' in that order.
 #' @param setup A character string (\code{'BRC'} or \code{'FULL'}) indicating which
 #' parameters are calibrated. For \code{setup = 'BRC'} only the quantum yield
@@ -23,8 +23,9 @@
 #' 
 #' @return A cost function which computes the RMSE of the simulated GPP by the P-model 
 #' versus the observed GPP. This cost function has as arguments a list of calibratable
-#' model parameters \code{par}, a data frame of observations \code{obs}, and a
-#' data frame of driver data \code{drivers}.
+#' model parameters \code{par}, a data frame of observations \code{obs}, a
+#' data frame of driver data \code{drivers}, and a vector of target variable
+#' names \code{targets}.
 #' 
 #' @details The resulting cost function performs a P-model run for the value of
 #' \code{par} given as argument and the remaining non-calibratable parameters
@@ -48,9 +49,7 @@
 #' pars <- list(
 #'   kphio          = 0.04,
 #'   soilm_par_a    = 2.8,
-#'   soilm_par_b    = 1.7,
-#'   tau_acclim_tempstress  = 7.3,
-#'   par_shape_tempstress   = 0.1
+#'   soilm_par_b    = 1.7
 #'   )
 #' 
 #' # Write cost function
@@ -100,12 +99,6 @@ create_cost_rmse_pmodel <- function(
     }
   
   f <- paste0(f,
-        ",
-    tau_acclim_tempstress = ",
-        params_modl[4],
-        ",
-    par_shape_tempstress  = ",
-        params_modl[5],
         "
   )
   
@@ -173,7 +166,7 @@ create_cost_rmse_pmodel <- function(
 #' for a given set of parameters.
 #' 
 #' @param params_modl A list of model parameter values, including \code{'kphio',
-#' 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' }and \code{'par_shape_tempstress'}
+#' 'soilm_par_a' }and \code{'soilm_par_b'}
 #' in that order.
 #' @param setup A character string (\code{'BRC'} or \code{'FULL'}) indicating which
 #' parameters are calibrated. For \code{setup = 'BRC'} only the quantum yield
@@ -207,9 +200,7 @@ create_cost_rmse_pmodel <- function(
 #' pars <- list(
 #'   kphio          = 0.04,
 #'   soilm_par_a    = 2.8,
-#'   soilm_par_b    = 1.7,
-#'   tau_acclim_tempstress  = 7.3,
-#'   par_shape_tempstress   = 0.1
+#'   soilm_par_b    = 1.7
 #'   )
 #' 
 #' # Write cost function
@@ -257,13 +248,8 @@ create_cost_likelihood_pmodel <- function(
   }
   
   f <- paste0(f,
-              ",
-    tau_acclim_tempstress = ",
-              params_modl[4],
-              ",
-    par_shape_tempstress = ",
-              params_modl[5],
-              ")
+              "
+  )
               
    # run the model
   df <- runread_pmodel_f(
@@ -339,7 +325,7 @@ create_cost_likelihood_pmodel <- function(
 #' for a given set of parameters.
 #' 
 #' @param params_modl A list of model parameter values, including \code{'kphio',
-#' 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' }and \code{'par_shape_tempstress'}
+#' 'soilm_par_a' }and \code{'soilm_par_b'}
 #' in that order.
 #' @param setup A character string (\code{'BRC'} or \code{'FULL'}) indicating which
 #' parameters are calibrated. For \code{setup = 'BRC'} only the quantum yield
@@ -376,9 +362,7 @@ create_cost_likelihood_pmodel <- function(
 #' pars <- list(
 #'   kphio          = 0.04,
 #'   soilm_par_a    = 2.8,
-#'   soilm_par_b    = 1.7,
-#'   tau_acclim_tempstress  = 7.3,
-#'   par_shape_tempstress   = 0.1
+#'   soilm_par_b    = 1.7
 #'   )
 #' 
 #' # Write cost function
@@ -424,13 +408,8 @@ create_cost_joint_likelihood_pmodel <- function(
   }
   
   f <- paste0(f,
-              ",
-    tau_acclim_tempstress = ",
-              params_modl[4],
-              ",
-    par_shape_tempstress = ",
-              params_modl[5],
-              ")
+              "
+  )
               
   # Check if lists are named correctly
   if(any(is.null(names(obs)), is.null(names(drivers)))){
@@ -515,7 +494,7 @@ create_cost_joint_likelihood_pmodel <- function(
 #' used to create the cost function.
 #' 
 #' The likelihood is calculated assuming that the 
-#' predicted targets are independent, normaly distributed and centered on the observations. 
+#' predicted targets are independent, normally distributed and centered on the observations. 
 #' All targets have the same weight in the optimization objective. The optimization 
 #' should be run using \code{BayesianTools}, and the likelihood is maximized.
 #' 
