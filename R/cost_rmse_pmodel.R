@@ -63,7 +63,7 @@ cost_rmse_pmodel <- function(
 ){
   
   # predefine variables for CRAN check compliance
-  sitename <- data <- NULL
+  sitename <- data <- gpp_mod <- NULL
   
   ## define parameter set based on calibration setup
   if(setup == 'BRC'){
