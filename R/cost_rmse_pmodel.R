@@ -1,7 +1,8 @@
 #' Cost function computing RMSE for calibration of different simulation setups 
 #' 
 #' The cost function performs a P-model run for the input drivers and parameter
-#' values, and compares the output to observations of various targets.
+#' values, and compares the output to observations of various targets by computing
+#' the root mean squared error (RMSE).
 #' 
 #' @param par A vector of values for the parameters to be calibrated. These values 
 #' can be updated by the optimizer within the calibration routine.
@@ -17,7 +18,8 @@
 #' for calibration. 
 #' @param targets A character vector indicating the target variables for which the
 #' optimization will be done and the RMSE computed. This string must be a column 
-#' name of the \code{data} data.frame belonging to the validation nested data.frame (for example 'gpp').
+#' name of the \code{data} data.frame belonging to the validation nested data.frame 
+#' (for example 'gpp').
 #' @param par_fixed A vector of model parameter values to keep fixed during the
 #' calibration. Only necessary if \code{setup = 'BRC'}.
 #' @param target_weights A vector of weights to be used in the computation of
@@ -42,10 +44,9 @@
 #' if the date of a trait measurement is available, it will be compared to the 
 #' predicted trait on that date.
 #' 
-#'   The data.frames in the \code{'data'} column nested in \code{obs} may contain 
-#'   observations for different targets, but should be grouped into fluxes 
-#'   (measurements for a given date are compared to that day's simulated target) 
-#'   and leaf traits (measurements are compared to the growing season average target).
+#' The data.frames in the \code{'data'} column nested in \code{obs} may contain 
+#' observations for different targets, but should be grouped into fluxes (with
+#' \code{'date'} column) and leaf traits (without \code{'date'}).
 #'   
 #'   If the validation data includes the date of a measurement, simulated and
 #'   observed values in that date are compared. If the date is missing, the observed value is compared
@@ -67,7 +68,7 @@ cost_rmse_pmodel <- function(
   ## define parameter set based on calibration setup
   if(setup == 'BRC'){
     if(is.null(par_fixed)){
-      error('Error: par_fixed = NULL. 
+      stop('Error: par_fixed = NULL. 
             Parameter values for "soilm_par_a" and "soilm_par_b" must be fixed.')
     }else{
       params_modl <- list(
@@ -77,13 +78,17 @@ cost_rmse_pmodel <- function(
       )
     }
   }else if(setup == 'FULL'){
-    params_modl <- list(
-      kphio           = par[1],
-      soilm_par_a     = par[2],
-      soilm_par_b     = par[3]
-    )
+    if(length(par) < 3){
+      stop('Error: Input calibratable parameter values (par) missing, cannot run P-model')
+    }else{
+      params_modl <- list(
+        kphio           = par[1],
+        soilm_par_a     = par[2],
+        soilm_par_b     = par[3]
+      )
+    }
   }else{
-    error('Only calibration setups "BRC" and "FULL" are supported.')
+    stop('Only calibration setups "BRC" and "FULL" are supported.')
   }
   
   # run the model
