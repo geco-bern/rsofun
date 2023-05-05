@@ -15,12 +15,12 @@
 #'   or \code{'BayesianTools'}.}
 #'   \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
 #'   and lower and upper bounds should be provided. The calibratable parameters
-#'   are model parameters 'kphio', 'soilm_par_a' and 'soilm_par_b', and error parameters
-#'   for each target variable, named 'err_gpp'.}
+#'   are model parameters 'kphio', 'soilm_par_a' and 'soilm_par_b', and (if
+#'   doing Bayesian calibration) error parameters
+#'   for each target variable, named for example 'err_gpp'. This list must match
+#'   the input parameters of the calibration metric.}
 #'   \item{\code{metric}}{A cost function. See the 'Cost functions for parameter
 #'   calibration' vignette for examples.}
-#'   \item{\code{targets}}{A vector of target variable names. The names must
-#'   match the column names in the P-model output.
 #'   \item{\code{control}}{A list of arguments passed on to the optimization function.
 #'   If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
 #'   the list should include at least \code{settings} and \code{sampler}, see
@@ -28,7 +28,9 @@
 #'  }
 #' @param optim_out A logical indicating whether the function returns the raw
 #'  output of the optimization functions (defaults to TRUE).
-#'  
+#' @param ... Optional arguments passed on to the cost function specified as
+#'  \code{settings$metric}. 
+#'  . 
 #' @return A named list containing the calibrated parameter vector `par` and
 #' the output object from the optimization `mod`. For more details on this
 #' output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
@@ -48,10 +50,11 @@
 #' }
 
 calib_sofun <- function(
-  drivers,
-  obs,
-  settings,
-  optim_out = TRUE
+    drivers,
+    obs,
+    settings,
+    optim_out = TRUE,
+    ...
 ){
   # predefine variables for CRAN check compliance
   cost <- lower <- upper <- pars <- out <- out_optim <- priors <- setup <- 
@@ -92,7 +95,7 @@ calib_sofun <- function(
       control = settings$control,
       obs = obs,
       drivers = drivers,
-      targets = settings$targets
+      ...
     )
     if(optim_out){
       out_optim <- list(par = out$par, mod = out)
@@ -106,7 +109,13 @@ calib_sofun <- function(
   if (tolower(settings$method) == "bayesiantools"){
     
     # convert to standard cost function naming
-    cost <- eval(settings$metric)
+    # cost <- eval(settings$metric)
+    cost <- function(par, obs, drivers){
+      eval(settings$metric)(par = par,
+                            obs = obs,
+                            drivers = drivers,
+                            ...)
+    }
     
     # reformat parameters
     pars <- as.data.frame(do.call("rbind", settings$par), row.names = FALSE)
@@ -121,18 +130,23 @@ calib_sofun <- function(
     # so wrap the function in a do.call
     setup <- BayesianTools::createBayesianSetup(
       likelihood = function(
-        random_par) {
-              do.call("cost",
-                      list(
-                        par = random_par,
-                        obs = obs,
-                        drivers = drivers,
-                        targets = settings$targets
-                      ))
-            },
-        prior = priors,
-        names = names(settings$par)
-      )    
+    random_par) {
+        # cost(
+        #   par = random_par,
+        #   obs = obs,
+        #   drivers = drivers,
+        #   ...
+        # )
+        do.call("cost",
+                list(
+                  par = random_par,
+                  obs = obs,
+                  drivers = drivers
+                ))
+      },
+    prior = priors,
+    names = names(settings$par)
+    )    
     
     # set bt control parameters
     bt_settings <- settings$control$settings
