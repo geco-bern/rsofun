@@ -6,6 +6,7 @@
 #'  named according to the arguments of function \code{\link{run_pmodel_f_bysite}},
 #'  namely \code{sitename, params_siml, site_info, forcing} and \code{params_soil}.
 #' @param par A named list of model parameters, including \code{kphio}
+#'  and \code{soilm_par_a}. 
 #' @param makecheck A logical specifying whether checks are performed to verify
 #'  forcings. Defaults to \code{TRUE}.
 #' @param parallel A logical specifying whether simulations are to be
