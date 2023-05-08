@@ -21,7 +21,7 @@ See the 'P-model usage' vignette for more information and examples.
  or \code{'BayesianTools'}.}
  \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
  and lower and upper bounds should be provided. The calibratable parameters
- are model parameters 'kphio', 'soilm_par_a' and 'soilm_par_b', and (if
+ are model parameters 'kphio' and 'soilm_par_a', and (if
  doing Bayesian calibration) error parameters
  for each target variable, named for example 'err_gpp'. This list must match
  the input parameters of the calibration metric.}
