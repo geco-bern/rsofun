@@ -17,7 +17,6 @@ module md_interface_pmodel
     ! real :: k_decay_tissue
     real :: kphio
     real :: soilm_par_a
-    real :: soilm_par_b
   end type paramstype_calib  
 
 

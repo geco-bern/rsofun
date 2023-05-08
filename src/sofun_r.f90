@@ -151,7 +151,6 @@ contains
     !----------------------------------------------------------------
     myinterface%params_calib%kphio                 = real(par(1))
     myinterface%params_calib%soilm_par_a           = real(par(2))
-    myinterface%params_calib%soilm_par_b           = real(par(3))
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)

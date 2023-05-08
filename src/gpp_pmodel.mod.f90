@@ -204,7 +204,7 @@ contains
       !----------------------------------------------------------------
       if (do_soilmstress) then
         soilmstress = calc_soilmstress( tile(1)%soil%phy%wscal, 0.0, params_pft_plant(1)%grass, &
-        params_gpp%soilm_par_a, params_gpp%soilm_par_b )
+        params_gpp%soilm_par_a, 1.0 )
       else
         soilmstress = 1.0
       end if    
@@ -516,7 +516,6 @@ contains
     ! Apply identical temperature ramp parameter for all PFTs
     params_gpp%tau_acclim     = 30.0
     params_gpp%soilm_par_a    = myinterface%params_calib%soilm_par_a     ! is provided through standard input
-    params_gpp%soilm_par_b    = myinterface%params_calib%soilm_par_b     ! is provided through standard input
 
     ! PFT-dependent parameter(s)
     params_pft_gpp(:)%kphio = myinterface%params_calib%kphio  ! is provided through standard input
