@@ -70,7 +70,6 @@ layer of soil.
 \describe{
   \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
   \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
-  \item{soilm_par_b}{Slope of the linear soil moisture stress function (unitless).}
 }}
 
 \item{makecheck}{A logical specifying whether checks are performed 

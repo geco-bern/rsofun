@@ -51,7 +51,6 @@
 #' \describe{
 #'   \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
 #'   \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
-#'   \item{soilm_par_b}{Slope of the linear soil moisture stress function (unitless).}
 #' }
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings and model parameters. \code{TRUE} by default.
@@ -243,9 +242,8 @@ run_pmodel_f_bysite <- function(
         continue <- FALSE
       }
       if (params_siml$soilmstress){
-        if (any(is.nanull(params_modl$soilm_par_a), 
-                is.nanull(params_modl$soilm_par_b))){
-          warning("Error: Missing soilm_par_a and soilm_par_b parameters but soilmstress = TRUE.")
+        if (is.nanull(params_modl$soilm_par_a)){
+          warning("Error: Missing soilm_par_a parameter but soilmstress = TRUE.")
           continue <- FALSE
         } 
       }
@@ -263,8 +261,7 @@ run_pmodel_f_bysite <- function(
     # Model parameters as vector in order
     par = c(
       as.numeric(params_modl$kphio),
-      as.numeric(params_modl$soilm_par_a),
-      as.numeric(params_modl$soilm_par_b)
+      as.numeric(params_modl$soilm_par_a)
       )
 
     # Soil texture as matrix (layer x texture parameter)
