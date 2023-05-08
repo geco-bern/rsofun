@@ -5,8 +5,7 @@
 #' @param drivers A nested data frame with one row for each site and columns
 #'  named according to the arguments of function \code{\link{run_pmodel_f_bysite}},
 #'  namely \code{sitename, params_siml, site_info, forcing} and \code{params_soil}.
-#' @param par A named list of model parameters, including \code{kphio, soilm_par_a}
-#'  and \code{soilm_par_b}. 
+#' @param par A named list of model parameters, including \code{kphio}
 #' @param makecheck A logical specifying whether checks are performed to verify
 #'  forcings. Defaults to \code{TRUE}.
 #' @param parallel A logical specifying whether simulations are to be
