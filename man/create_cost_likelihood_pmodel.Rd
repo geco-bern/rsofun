@@ -8,7 +8,7 @@ create_cost_likelihood_pmodel(params_modl, setup, target)
 }
 \arguments{
 \item{params_modl}{A list of model parameter values, including \code{'kphio',
-'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' }and \code{'par_shape_tempstress'}
+'soilm_par_a' }and \code{'soilm_par_b'}
 in that order.}
 
 \item{setup}{A character string (\code{'BRC'} or \code{'FULL'}) indicating which
@@ -50,9 +50,7 @@ using \code{BayesianTools}, and the likelihood is maximized.
 pars <- list(
   kphio          = 0.04,
   soilm_par_a    = 2.8,
-  soilm_par_b    = 1.7,
-  tau_acclim_tempstress  = 7.3,
-  par_shape_tempstress   = 0.1
+  soilm_par_b    = 1.7
   )
 
 # Write cost function

@@ -25,8 +25,9 @@ run_pmodel_f_bysite(
       \item{recycle}{Length of standard recycling period, in days.}
       \item{soilmstress}{A logical value, if \code{TRUE} an empirical soil 
       moisture stress function is applied to GPP.}
-      \item{tempstress}{A logical value, if \code{TRUE} an empirical temperature 
-      stress function is applied to GPP.}
+      \item{tempstress}{A logical value, if \code{FALSE} the quantum yield efficiency
+      is held constant, if \code{TRUE} its dependency on temperature is parameterised 
+      with an empirical temperature stress function (corresponding to Bernacchi et al., 2003).}
       \item{calc_aet_fapar_vpd}{(not in use)}
       \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
       if \code{FALSE} PPFD is simulated internally.}
@@ -70,13 +71,6 @@ layer of soil.
   \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
   \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
   \item{soilm_par_b}{Slope of the linear soil moisture stress function (unitless).}
-  \item{tau_acclim_tempstress}{Memory e-folding time scale parameter (in hours)
-  for acclimation of photosynthesis, following Eq. 5 in Makela et al. (2004) 
-  Tree Physiology 24, 369–376}
-  \item{par_shape_tempstress}{Shape parameter for the low temperature stress
-  function affecting quantum yield efficiency. A positive (unitless) value indicating 
-  the sensitivity of the decline (assuming no decline at 10\eqn{^o}C) and 
-  above, but decreasing with a quadratic function below 10\eqn{^o}C).}
 }}
 
 \item{makecheck}{A logical specifying whether checks are performed 

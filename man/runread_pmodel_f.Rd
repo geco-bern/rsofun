@@ -11,8 +11,8 @@ runread_pmodel_f(drivers, par, makecheck = TRUE, parallel = FALSE, ncores = 1)
 named according to the arguments of function \code{\link{run_pmodel_f_bysite}},
 namely \code{sitename, params_siml, site_info, forcing} and \code{params_soil}.}
 
-\item{par}{A named list of model parameters, including \code{kphio, soilm_par_a,
-soilm_par_b, tau_acclim_tempstress} and \code{par_shape_tempstress}.}
+\item{par}{A named list of model parameters, including \code{kphio, soilm_par_a}
+and \code{soilm_par_b}.}
 
 \item{makecheck}{A logical specifying whether checks are performed to verify
 forcings. Defaults to \code{TRUE}.}

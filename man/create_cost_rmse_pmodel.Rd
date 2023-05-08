@@ -8,7 +8,7 @@ create_cost_rmse_pmodel(params_modl, setup, method, target)
 }
 \arguments{
 \item{params_modl}{A list of model parameter values, including \code{'kphio',
-'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' }and \code{'par_shape_tempstress'}
+'soilm_par_a' }and \code{'soilm_par_b'}
 in that order.}
 
 \item{setup}{A character string (\code{'BRC'} or \code{'FULL'}) indicating which
@@ -27,8 +27,9 @@ data.frame belonging to the validation nested data.frame (for example 'gpp').}
 \value{
 A cost function which computes the RMSE of the simulated GPP by the P-model 
 versus the observed GPP. This cost function has as arguments a list of calibratable
-model parameters \code{par}, a data frame of observations \code{obs}, and a
-data frame of driver data \code{drivers}.
+model parameters \code{par}, a data frame of observations \code{obs}, a
+data frame of driver data \code{drivers}, and a vector of target variable
+names \code{targets}.
 }
 \description{
 Creates a cost function for parameter calibration, keeping non-calibrated
@@ -58,9 +59,7 @@ minimizes the given objective function, so the plain RMSE is returned when
 pars <- list(
   kphio          = 0.04,
   soilm_par_a    = 2.8,
-  soilm_par_b    = 1.7,
-  tau_acclim_tempstress  = 7.3,
-  par_shape_tempstress   = 0.1
+  soilm_par_b    = 1.7
   )
 
 # Write cost function

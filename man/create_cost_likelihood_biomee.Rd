@@ -31,7 +31,7 @@ the order of the error terms in \code{par} coincides with the order of the targe
 used to create the cost function.
 
 The likelihood is calculated assuming that the 
-predicted targets are independent, normaly distributed and centered on the observations. 
+predicted targets are independent, normally distributed and centered on the observations. 
 All targets have the same weight in the optimization objective. The optimization 
 should be run using \code{BayesianTools}, and the likelihood is maximized.
 }
