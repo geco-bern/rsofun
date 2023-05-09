@@ -3,7 +3,7 @@ set.seed(10)
 
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- p_model_drivers
+  drivers <- rsofun::p_model_drivers
   obs <- rsofun::p_model_validation
   params_fix <- list(
     kphio           = 0.04607080,
@@ -15,9 +15,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     method              = "bayesiantools",
     targets             = c("gpp"),
     sitenames           = "FR-Pue",
-    metric              = rsofun::create_cost_likelihood_pmodel(params_modl = params_fix,
-                                                         setup = "FULL",
-                                                         target = 'gpp'),
+    metric              = rsofun::cost_likelihood_pmodel,
     control = list(
       sampler = "DEzs",
       settings = list(
@@ -27,16 +25,20 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
       )
     ),
     par = list(
-      a = list(lower=0.04, upper=0.09, init=0.05),
-      b = list(lower=0.5, upper=5, init=3.5),
-      c = list(lower=2, upper=5, init=3.5)
+      kphio = list(lower=0.04, upper=0.09, init=0.05),
+      soilm_par_a = list(lower=0.5, upper=5, init=3.5),
+      soilm_par_b = list(lower=2, upper=5, init=3.5),
+      err_gpp = list(lower = 0.01, upper = 4, init = 2)
     )
   )
   
-  pars <- calib_sofun(
+  pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
-    settings = settings
+    settings = settings,
+    # extra arguments for the cost function
+    setup = "FULL",
+    targets = c('gpp')
   )
   
   # test for correctly returned values
@@ -45,7 +47,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 
 test_that("test GPP calibration routine p-model (GenSA, rmse)", {
   skip_on_cran()
-  drivers <- p_model_drivers
+  drivers <- rsofun::p_model_drivers
   obs <- rsofun::p_model_validation
   params_fix <- list(
     kphio           = 0.04607080,
@@ -57,24 +59,23 @@ test_that("test GPP calibration routine p-model (GenSA, rmse)", {
     method              = "gensa",
     targets             = c("gpp"),
     sitenames           = "FR-Pue",
-    metric              = rsofun::create_cost_rmse_pmodel(params_modl = params_fix,
-                                                                setup = "BRC",
-                                                                method = "GenSA",
-                                                                target = 'gpp'),
+    metric              = rsofun::cost_rmse_pmodel,
     control = list(
       maxit = 10
     ),
     par = list(
-      a = list(lower=0.04, upper=0.09, init=0.05),
-      b = list(lower=0.5, upper=5, init=3.5),
-      c = list(lower=2, upper=5, init=3.5)
+      kphio = list(lower=0.04, upper=0.09, init=0.05)
     )
   )
   
-  pars <- calib_sofun(
+  pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
-    settings = settings
+    settings = settings,
+    # extra arguments for the cost function
+    setup = "BRC",
+    par_fixed = params_fix,
+    targets = 'gpp'
   )
   
   # test for correctly returned values
@@ -93,10 +94,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, rmse)", {
   
   settings <- list(
     method              = "bayesiantools",
-    metric              = rsofun::create_cost_rmse_pmodel(params_modl = params_fix,
-                                                                setup = "FULL",
-                                                                method = "BayesianTools",
-                                                                target = 'vcmax25'),
+    metric              = rsofun::cost_rmse_pmodel,
     control = list(
       sampler = "DEzs",
       settings = list(
@@ -112,10 +110,13 @@ test_that("test Vcmax25 calibration routine p-model (BT, rmse)", {
     )
   )
   
-  pars <- calib_sofun(
+  pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
-    settings = settings
+    settings = settings,
+    # arguments for cost function
+    setup = "FULL",
+    targets = 'vcmax25'
   )
   
   # test for correctly returned values
@@ -134,9 +135,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood maximization
   
   settings <- list(
     method              = "bayesiantools",
-    metric              = rsofun::create_cost_likelihood_pmodel(params_modl = params_fix,
-                                                                setup = "BRC",
-                                                                target = 'vcmax25'),
+    metric              = rsofun::cost_likelihood_pmodel,
     control = list(
       sampler = "DEzs",
       settings = list(
@@ -146,14 +145,19 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood maximization
       )
     ),
     par = list(
-      a = list(lower=0.04, upper=0.09, init=0.05)
+      a = list(lower=0.04, upper=0.09, init=0.05),
+      b = list (lower = 0.001, upper = 4, init = 1)
     )
   )
   
-  pars <- calib_sofun(
+  pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
-    settings = settings
+    settings = settings,
+    # arguments for cost function
+    setup = 'BRC',
+    targets = 'vcmax25',
+    par_fixed = params_fix
   )
   
   # test for correctly returned values
@@ -162,9 +166,9 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood maximization
 
 test_that("test joint calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- list(gpp = rsofun::p_model_drivers, 
+  drivers <- rbind(gpp = rsofun::p_model_drivers, 
                   vcmax25 = rsofun::p_model_drivers_vcmax25[1:5, ])
-  obs <- list(gpp = rsofun::p_model_validation,
+  obs <- rbind(gpp = rsofun::p_model_validation,
               vcmax25 = rsofun::p_model_validation_vcmax25[1:5, ])
   params_fix <- list(
     kphio           = 0.04607080,
@@ -174,10 +178,7 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
   
   settings <- list(
     method              = "bayesiantools",
-    metric              = rsofun::create_cost_joint_likelihood_pmodel(
-      params_modl = params_fix,
-      setup = "BRC"
-    ),
+    metric              = rsofun::cost_likelihood_pmodel,
     control = list(
       sampler = "DEzs",
       settings = list(
@@ -187,14 +188,19 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
       )
     ),
     par = list(
-      a = list(lower=0.04, upper=0.09, init=0.05)
+      a = list(lower=0.04, upper=0.09, init=0.05),
+      err_gpp = list(lower = 0.01, upper = 4, init = 2),
+      err_vcmax = list(lower = 0.0001, upper = 0.1, init = 0.005)
     )
   )
   
-  pars <- calib_sofun(
+  pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
-    settings = settings
+    settings = settings,
+    targets = c('gpp', 'vcmax25'),
+    setup = "BRC",
+    par_fixed = params_fix
   )
   
   # test for correctly returned values
