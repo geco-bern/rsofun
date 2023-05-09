@@ -51,6 +51,8 @@
 #'   If the validation data includes the date of a measurement, simulated and
 #'   observed values in that date are compared. If the date is missing, the observed value is compared
 #'   to the growing season average (common for leaf traits).
+#'   
+#' @export
 
 cost_rmse_pmodel <- function(
     par, # ordered vector
