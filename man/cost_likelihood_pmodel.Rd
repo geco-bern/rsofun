@@ -50,9 +50,30 @@ calibration. Only necessary if \code{setup = 'BRC'}.}
 \item{ncores}{An integer specifying the number of cores used for parallel
 computing. Defaults to 2.}
 }
+\value{
+The log-likelihood of the observed target values, assuming that they
+are independent, normally distributed and centered on the predictions
+made by the P-model run with standard deviation given as input (via `par` because
+the error terms are estimated through the calibration with `BayesianTools`,
+as shown in the "Parameter calibration and cost functions" vignette).
+}
 \description{
 The cost function performs a P-model run for the input drivers and model parameter
 values, and computes the outcome's normal log-likelihood centered at the input
 observed values and with standard deviation given as an input parameter 
 (calibratable).
+}
+\details{
+To run the P-model, all model parameters must be given. The cost
+function uses arguments \code{par} and \code{par_fixed} such that, in the
+calibration routine, \code{par} can be updated by the optimizer and 
+\code{par_fixed} kept unchanged throughout calibration.
+
+If the validation data contains a "date" column (fluxes), the simulated target time series
+is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
+there should only be one observed value per site (leaf traits), and the outputs 
+(averaged over the growing season, weighted by predicted GPP) will be 
+compared to this single value representative of the site (e.g. Vcmax25). As an exception,
+when the date of a trait measurement is available, it will be compared to the 
+trait value predicted on that date.
 }

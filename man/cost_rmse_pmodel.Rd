@@ -62,17 +62,9 @@ calibration routine, \code{par} can be updated by the optimizer and
   
 If the validation data contains a "date" column (fluxes), the simulated target time series
 is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
-there should only be one observed value per site (traits), and the outputs 
-(averaged over the growing season) will be 
-compared to this single value representative of the site (e.g. Vcmax25). As exception,
-if the date of a trait measurement is available, it will be compared to the 
-predicted trait on that date.
-
-The data.frames in the \code{'data'} column nested in \code{obs} may contain 
-observations for different targets, but should be grouped into fluxes (with
-\code{'date'} column) and leaf traits (without \code{'date'}).
-  
-  If the validation data includes the date of a measurement, simulated and
-  observed values in that date are compared. If the date is missing, the observed value is compared
-  to the growing season average (common for leaf traits).
+there should only be one observed value per site (leaf traits), and the outputs 
+(averaged over the growing season, weighted by predicted GPP) will be 
+compared to this single value representative of the site (e.g. Vcmax25). As an exception,
+when the date of a trait measurement is available, it will be compared to the 
+trait value predicted on that date.
 }
