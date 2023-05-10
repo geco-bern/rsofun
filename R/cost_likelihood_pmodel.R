@@ -116,7 +116,7 @@ cost_likelihood_pmodel <- function(
     dplyr::rowwise() |>
     dplyr::summarise(
       cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
-        setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
+        stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
     ) # gpp is used to get average trait prediction
   
   # separate validation data into fluxes and traits, site by site
