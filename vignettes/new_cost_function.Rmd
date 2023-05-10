@@ -125,13 +125,14 @@ settings_joint_likelihood <- list(
 # Run the calibration on the concatenated data
 par_calib_join <- calib_sofun(
   drivers = rbind(p_model_drivers,
-                  p_model_drivers_vcmax25),
+                  p_model_drivers_vcmax25[1:5, ]), # subset of sites
   obs = rbind(p_model_validation,
-              p_model_validation_vcmax25),
+              p_model_validation_vcmax25[1:5, ]), # subset of sites
   settings = settings_joint_likelihood,
   # arguments for the cost function
   setup = "BRC",
-  par_fixed = params_fix,
+  par_fixed = c(soilm_par_a = 0.3,    # fix parameter values from RMSE calibration
+                soilm_par_b = 1),
   targets = c('gpp', 'vcmax25')
 )
 ```
