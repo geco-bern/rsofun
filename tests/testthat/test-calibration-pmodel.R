@@ -7,8 +7,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
   obs <- rsofun::p_model_validation
   params_fix <- list(
     kphio           = 0.04607080,
-    soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444
+    soilm_par_a     = 2.75687824
   )
   
   settings <- list(
@@ -27,7 +26,6 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     par = list(
       kphio = list(lower=0.04, upper=0.09, init=0.05),
       soilm_par_a = list(lower=0.5, upper=5, init=3.5),
-      soilm_par_b = list(lower=2, upper=5, init=3.5),
       err_gpp = list(lower = 0.01, upper = 4, init = 2)
     )
   )
@@ -51,8 +49,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse)", {
   obs <- rsofun::p_model_validation
   params_fix <- list(
     kphio           = 0.04607080,
-    soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444
+    soilm_par_a     = 2.75687824
   )
   
   settings <- list(
@@ -88,8 +85,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, rmse)", {
   obs <- rsofun::p_model_validation_vcmax25[1:5, ]
   params_fix <- list(
     kphio           = 0.04607080,
-    soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444
+    soilm_par_a     = 2.75687824
   )
   
   settings <- list(
@@ -105,8 +101,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, rmse)", {
     ),
     par = list(
       a = list(lower=0.04, upper=0.09, init=0.05),
-      b = list(lower=0.5, upper=5, init=3.5),
-      c = list(lower=2, upper=5, init=3.5)
+      b = list(lower=0.5, upper=5, init=3.5)
     )
   )
   
@@ -129,8 +124,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood maximization
   obs <- rsofun::p_model_validation_vcmax25[1:5, ]
   params_fix <- list(
     kphio           = 0.04607080,
-    soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444
+    soilm_par_a     = 2.75687824
   )
   
   settings <- list(
@@ -172,8 +166,7 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
               vcmax25 = rsofun::p_model_validation_vcmax25[1:5, ])
   params_fix <- list(
     kphio           = 0.04607080,
-    soilm_par_a     = 2.75687824,
-    soilm_par_b     = 1.68140444
+    soilm_par_a     = 2.75687824
   )
   
   settings <- list(

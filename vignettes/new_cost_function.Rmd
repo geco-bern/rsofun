@@ -28,7 +28,7 @@ In this vignette, we go over some examples on how to use the `rsofun` cost funct
 
 A simple approach to parameter calibration is to find the parameter values that lead to the best prediction performance, in terms of the RMSE (root mean squared error). The function `cost_rmse_pmodel()` runs the P-model internally to calculate the RMSE between predicted target values (in this case GPP) and the corresponding observations.
 
-The implementation of `cost_rmse_pmodel()` allows flexibility in various ways. We can replicate the different calibration setups in Stocker et al., 2020 GMD. For example, following the `FULL` setup, all model parameters `kphio`, `soilm_par_a` and `soilm_par_b` are calibrated. Furthermore, the standard cost functions allow to calibrate to several targets (fluxes and leaf traits predicted by the P-model) simultaneously and to parallelize the simulations.
+The implementation of `cost_rmse_pmodel()` allows flexibility in various ways. We can replicate the different calibration setups in Stocker et al., 2020 GMD. For example, following the `FULL` setup, all model parameters `kphio` and `soilm_par_a` are calibrated. Furthermore, the standard cost functions allow to calibrate to several targets (fluxes and leaf traits predicted by the P-model) simultaneously and to parallelize the simulations.
 
 The syntax to run the calibration routine is as follows:
 ```{r}
@@ -40,8 +40,7 @@ settings_rmse <- list(
     maxit = 10),
   par = list(                         # bounds for the parameter space
     kphio = list(lower=0.04, upper=0.2, init=0.05),
-    soilm_par_a = list(lower=0.1, upper=5, init=2.4),
-    soilm_par_b = list(lower=1, upper=2, init=1.5)
+    soilm_par_a = list(lower=0.1, upper=5, init=2.4)
   )
 )
 
@@ -92,12 +91,11 @@ pars_calib_likelihood <- calib_sofun(
   # extra arguments passed ot the cost function:
   setup = "BRC",
   targets = "gpp",
-  par_fixed = c(soilm_par_a = 0.3,    # fix parameter values from RMSE calibration
-                soilm_par_b = 1)
+  par_fixed = c(soilm_par_a = 0.3)    # fix parameter value from RMSE calibration
 )
 ```
 
-Let's take a look at the code above. Since the P-model is run internally to make predictions, we must always specify which values the model parameters should take, i.e. the parameters that aren't calibrated `soilm_par_a` and `soilm_par_b` (via argument `par_fixed`).
+Let's take a look at the code above. Since the P-model is run internally to make predictions, we must always specify which values the model parameters should take, i.e. the parameter that isn't calibrated `soilm_par_a` (via argument `par_fixed`).
 In the definition of the calibration settings, the control parameters for `BayesianTools` differ from the ones used for `GenSA`. 
 
 Furthermore, there are equivalent cost functions available for the BiomeE model. Check out the reference pages for more details on how to use `cost_likelihood_biomee()` and `cost_rmse_biomee()`.
@@ -131,8 +129,7 @@ par_calib_join <- calib_sofun(
   settings = settings_joint_likelihood,
   # arguments for the cost function
   setup = "BRC",
-  par_fixed = c(soilm_par_a = 0.3,    # fix parameter values from RMSE calibration
-                soilm_par_b = 1),
+  par_fixed = c(soilm_par_a = 0.3),    # fix parameter value from RMSE calibration
   targets = c('gpp', 'vcmax25')
 )
 ```
@@ -167,8 +164,7 @@ function(par, obs, drivers){
   # Set values for the list of calibrated and non-calibrated model parameters
   params_modl <- list(
     kphio = 0.05,
-    soilm_par_a = par[1],
-    soilm_par_b = par[2]
+    soilm_par_a = par[1]
   )
   
   # Run the model
@@ -190,8 +186,7 @@ cost_mae <- function(par, obs, drivers){
   # Set values for the list of calibrated and non-calibrated model parameters
   params_modl <- list(
     kphio = 0.05,
-    soilm_par_a = par[1],
-    soilm_par_b = par[2]
+    soilm_par_a = par[1]
   )
   
   # Run the model
@@ -233,8 +228,7 @@ settings_mae <- list(
   control = list(
     maxit = 100),
   par = list(
-    soilm_par_a = list(lower=0.1, upper=5, init=2.4),
-    soilm_par_b = list(lower=1, upper=2, init=1.5)
+    soilm_par_a = list(lower=0.1, upper=5, init=2.4)
   )
 )
 

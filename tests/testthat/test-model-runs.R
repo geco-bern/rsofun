@@ -7,8 +7,7 @@ test_that("p-model run check GPP", {
   # load parameters (valid ones)
   params_modl <- list(
       kphio           = 0.05,
-      soilm_par_a     = 1.0,
-      soilm_par_b     = 0.0
+      soilm_par_a     = 1.0
   )
   
   # read in demo data
@@ -58,8 +57,7 @@ test_that("p-model run check Vcmax25", {
   # load parameters (valid ones)
   params_modl <- list(
     kphio           = 0.05,
-    soilm_par_a     = 1.0,
-    soilm_par_b     = 0.0
+    soilm_par_a     = 1.0
   )
   
   # read in demo data

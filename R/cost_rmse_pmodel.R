@@ -14,7 +14,7 @@
 #' @param setup A character string (\code{'BRC'} or \code{'FULL'}) indicating which
 #' parameters are calibrated. For \code{setup = 'BRC'} only the quantum yield
 #' efficiency \code{kphio} is calibrated; for \code{setup = 'FULL'} it also includes
-#' the soil moisture stress parameters \code{soilm_par_a} and \code{soilm_par_b}
+#' the soil moisture stress parameter \code{soilm_par_a}
 #' for calibration. 
 #' @param targets A character vector indicating the target variables for which the
 #' optimization will be done and the RMSE computed. This string must be a column 
@@ -63,12 +63,11 @@ cost_rmse_pmodel <- function(
   if(setup == 'BRC'){
     if(is.null(par_fixed)){
       stop('Error: par_fixed = NULL. 
-            Parameter values for "soilm_par_a" and "soilm_par_b" must be fixed.')
+            Parameter value for "soilm_par_a" must be fixed.')
     }else{
       params_modl <- list(
         kphio           = par[1],
-        soilm_par_a     = par_fixed['soilm_par_a'],
-        soilm_par_b     = par_fixed['soilm_par_b']
+        soilm_par_a     = par_fixed['soilm_par_a']
       )
     }
   }else if(setup == 'FULL'){
@@ -77,8 +76,7 @@ cost_rmse_pmodel <- function(
     }else{
       params_modl <- list(
         kphio           = par[1],
-        soilm_par_a     = par[2],
-        soilm_par_b     = par[3]
+        soilm_par_a     = par[2]
       )
     }
   }else{

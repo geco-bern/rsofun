@@ -32,7 +32,7 @@ for a description of the data structure.}
 \item{setup}{A character string (\code{'BRC'} or \code{'FULL'}) indicating which
 parameters are calibrated. For \code{setup = 'BRC'} only the quantum yield
 efficiency \code{kphio} is calibrated; for \code{setup = 'FULL'} it also includes
-the soil moisture stress parameters \code{soilm_par_a} and \code{soilm_par_b}
+the soil moisture stress parameter \code{soilm_par_a}
 for calibration.}
 
 \item{targets}{A character vector indicating the target variables for which the
