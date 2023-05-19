@@ -83,7 +83,7 @@ cost_likelihood_pmodel <- function(
           and in the same order.')
     }
   }else if(setup == 'FULL'){
-    if(length(par) < 3){
+    if(length(par) < 2){
       stop('Error: Input calibratable parameter values (par) missing, cannot run P-model')
     }else{
       params_modl <- list(
@@ -92,7 +92,7 @@ cost_likelihood_pmodel <- function(
       )
     }
     # Check if there are as many error terms as targets
-    if(length(targets) != (length(par) - 3)){
+    if(length(targets) != (length(par) - 2)){
       stop('There must be a calibratable error parameter per target variable,
           and in the same order.')
     }

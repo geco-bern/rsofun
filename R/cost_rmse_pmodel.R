@@ -71,7 +71,7 @@ cost_rmse_pmodel <- function(
       )
     }
   }else if(setup == 'FULL'){
-    if(length(par) < 3){
+    if(length(par) < 2){
       stop('Error: Input calibratable parameter values (par) missing, cannot run P-model')
     }else{
       params_modl <- list(
