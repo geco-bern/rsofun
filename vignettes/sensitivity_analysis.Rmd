@@ -143,10 +143,10 @@ morrisOut <- sensitivity::morris(
 
 The analysis evaluates the variability of the target function, i.e. the 
 log-likelihood, for several points across the parameter space. 
-Statistic $\mu *$ and $\sigma$ measure the average of the absolute
+Statistics $\mu *$ and $\sigma$ measure the average of the absolute
 differences between these log-likelihood values and their standard deviation,
-respectively. The higher the value of these statistics, the more influential they 
-are 
+respectively. The higher the value of these statistics for a given parameter, 
+the more influential the parameter is.  
 ```{r eval = evaluate}
 # summarise the morris output
 morrisOut.df <- data.frame(
@@ -177,71 +177,22 @@ morrisOut.df |>
 
 ## Interpretation of Bayesian calibration routine
 
-It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. We can plot the MCMC chains, returned as part of the `calib_sofun()` output, and see that they converge to a similar value and become progressively more stable. We can also see the probability density of the time series of parameter values. 
+It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. Here we show some plots and statistics that may help you assess whether the parameter calibration has converged.
 
+According to the previous sensitivity analysis, calibrating the error parameter for GPP and the quantum yield efficiency `kphio` will have the most impact on the model fit. Let's run the calibration:
 ```{r eval = evaluate}
-cost_likelihood <- function(
-    par,
-    obs,
-    drivers
-){
-  # execute model for this parameter set
-  params_modl <- list(
-    kphio         = par[1],
-    soilm_par_a     = 0.33349283,
-    soilm_par_b     = 1.45602286
-  )
-  
-  # run the model
-  df <- rsofun::runread_pmodel_f(
-    drivers,
-    par = params_modl,
-    makecheck = TRUE,
-    parallel = FALSE
-  )
-  
-  # cleanup output
-  df <- df |>
-    dplyr::select(sitename, data) |>
-    tidyr::unnest(data) |>
-    dplyr::rename('gpp_mod' = 'gpp')
-  
-  # get observation in the same format
-  obs <- obs |>
-    dplyr::select(sitename, data) |>
-    tidyr::unnest(data)
-  
-  # left join obs and output
-  if('date' %in% colnames(obs)){
-      df <- dplyr::left_join(df, obs, by = c('sitename', 'date')) |>
-        tidyr::drop_na()
-    } else {
-      df <- dplyr::left_join(df, obs, by = c('sitename')) |>
-        tidyr::drop_na()
-    }
-  
-  # calculate normal log-likelihood
-  ll <- sum(
-    stats::dnorm(
-      df[['gpp_mod']],                 # simulated GPP
-      mean = df[['gpp']],              # observed GPP
-      sd = par[2],                         # error term
-      log = TRUE
-    ))  
-  
-  if(is.nan(ll) | is.na(ll) | ll == 0 ){ ll <- - Inf}
-  return(ll)
-}
+set.seed(2023)
 
 # Define calibration settings
 settings_calib <- list(
   method = "BayesianTools",
-  metric = cost_likelihood,
+  metric = rsofun::cost_likelihood_pmodel,
   control = list(
     sampler = "DEzs",
     settings = list(
-      burnin = 500,
-      iterations = 2000
+      burnin = 0,
+      iterations = 1500,
+      startValue = 3       # number of chains to be sampled
     )),
   par = list(
     kphio = list(lower = 0, upper = 0.2, init = 0.05),
@@ -249,19 +200,61 @@ settings_calib <- list(
   )
 )
 
-# calibrate parameters kphio and err_gpp (the two to which the model is most
-# sensitive)
+# calibrate parameters kphio and err_gpp 
 par_calib <- calib_sofun(
   drivers = p_model_drivers,
   obs = p_model_validation,
-  settings = settings_calib
+  settings = settings_calib,
+  setup = "BRC",
+  par_fixed = c(
+    soilm_par_a = 0.33349283),
+  targets = "gpp"
 )
 ```
 
-Okay, after calibrating let's check out the result!
+`BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. The samples after the burnin period are then used for inference.
 ```{r eval = evaluate}
-params_new <- params_modl
-params_new$kphio <- par_calib$par[1]
+plot(par_calib$mod)
+```
+
+The posterior density plot of `err_gpp` is quite lumpy. In this case it's advisable to run the MCMC algorithm for more iterations, in order to get a better estimate of the parameter's posterior distribution. A good posterior should look more gaussian although it can be skewed. A multimodal density indicates that the MCMC is still exploring the parameter space and hasn't converged yet. 
+
+When convergence has been reached, the oscillation of the time series should look like white noise. The presence of a trend indicates that convergence hasn't been reached.
+
+Trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space is not explored fully.
+```{r eval = evaluate}
+# Define function for plotting chains separately
+plot_acf_mcmc <- function(chains, par_names){
+  # chains: from the BayesianTools output
+  n_chains <- length(chains)
+  par(mfrow = c(n_chains, length(par_names)))
+  for(i in 1:n_chains){
+    for(par_name in par_names){
+      chains[[i]][, par_name] |>
+        pacf(main = paste0("Series of ", par_name, " , chain ", i))
+    }
+  }
+}
+
+plot_acf_mcmc(par_calib$mod$chain, c("err_gpp", "kphio"))
+```
+
+Looking at the correlation between chains is helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior.
+```{r eval = evaluate}
+correlationPlot(par_calib$mod)
+```
+
+- Gelman test to compare chains.
+- Deviance Information Criterion (DIC)
+
+The `BayesianTools` package provides plot and diagnostic functions for the MCMC sampler output, that is, for our parameter calibration. 
+More details on diagnosing MCMC convergence can be found in [this vignette from BayesianTools](https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html#running-mcmc-and-smc-functions) and [this blogpost](https://theoreticalecology.wordpress.com/2011/12/09/mcmc-chain-analysis-and-convergence-diagnostics-with-coda-in-r/).
+
+```{r eval = evaluate}
+params_new <- list(
+  kphio = par_calib$par[1],
+  soilm_par_a = 0.33349283
+)
 
 model_data_new <- rsofun::runread_pmodel_f(
   p_model_drivers,
@@ -309,11 +302,12 @@ ggplot() +
   )
 ```
 
-We can observe the convergence of the MCMC below. The quantum yield efficiency
-clearly converged quite quickly
+We can visually inspect the convergence of the MCMC below, with trace and density plots of all calibrated parameters. Both the quantum yield efficiency
+and the GPP error term converged quite quickly, with very 
 ```{r eval = evaluate}
 plot(par_calib$mod)
 ```
+
 
 
 For PEPA:
@@ -358,8 +352,7 @@ observed and simulated GPP.
 # define model parameters
 params_modl <- list(
     kphio           = 0.09423773,
-    soilm_par_a     = 0.33349283,
-    soilm_par_b     = 1.45602286
+    soilm_par_a     = 0.33349283
   )
 
 # run the model for these parameters
