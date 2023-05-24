@@ -37,8 +37,7 @@ Imports:
     BayesianTools,
     multidplyr,
     stats,
-    utils,
-    sensitivity
+    utils
 LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
@@ -50,6 +49,7 @@ Suggests:
     testthat,
     rmarkdown,
     ggplot2,
-    knitr
+    knitr,
+    sensitivity
 VignetteBuilder: knitr
 Encoding: UTF-8
