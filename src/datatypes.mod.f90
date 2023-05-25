@@ -1109,7 +1109,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    real :: treeG, fseed, fleaf=0, froot,fwood=0,dDBH, dVol
+    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, dVol
     real :: plantC, plantN, soilC, soilN
     integer :: i
 
@@ -1149,13 +1149,13 @@ contains
       cc => vegn%cohorts(i)
       treeG     = cc%pseed%c%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
       fseed     = cc%pseed%c%c12 / treeG
-      fleaf     = cc%NPPleaf/treeG
-      froot     = cc%NPProot/treeG
-      fwood     = cc%NPPwood/treeG
+      fleaf     = cc%NPPleaf / treeG
+      froot     = cc%NPProot / treeG
+      fwood     = cc%NPPwood / treeG
       dDBH      = (cc%dbh - cc%DBH_ys) !*1000 to convert to mm
       cc%Volume = (cc%psapw%c%c12 + cc%pwood%c%c12) / spdata(cc%species)%rho_wood
       dVol      = (cc%Volume - cc%Vol_ys)
-      cc%BA     = pi/4*cc%dbh*cc%dbh
+      cc%BA     = pi/4 * cc%dbh * cc%dbh
 
       out_annual_cohorts(i)%year        = iyears
       out_annual_cohorts(i)%cID         = cc%ccID
@@ -1172,10 +1172,10 @@ contains
       out_annual_cohorts(i)%nsc         = cc%plabl%c%c12
       out_annual_cohorts(i)%NSN         = cc%plabl%n%n14 * 1000
       out_annual_cohorts(i)%NPPtr       = treeG
-      out_annual_cohorts(i)%seed        = fseed
-      out_annual_cohorts(i)%NPPL        = fleaf
-      out_annual_cohorts(i)%NPPR        = froot
-      out_annual_cohorts(i)%NPPW        = fwood
+      out_annual_cohorts(i)%seed        = cc%pseed%c%c12 
+      out_annual_cohorts(i)%NPPL        = cc%NPPleaf  ! fleaf
+      out_annual_cohorts(i)%NPPR        = cc%NPProot  ! froot
+      out_annual_cohorts(i)%NPPW        = cc%NPPwood  ! fwood
       out_annual_cohorts(i)%GPP         = cc%annualGPP
       out_annual_cohorts(i)%NPP         = cc%annualNPP
       out_annual_cohorts(i)%Rauto       = cc%annualResp
@@ -1201,9 +1201,9 @@ contains
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
       vegn%annualfixedN = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
-      vegn%NPPL         = vegn%NPPL          + fleaf * cc%nindivs
-      vegn%NPPW         = vegn%NPPW          + fwood * cc%nindivs 
-      vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees !yyy
+      vegn%NPPL         = vegn%NPPL          + cc%NPPleaf * cc%nindivs
+      vegn%NPPW         = vegn%NPPW          + cc%NPPwood * cc%nindivs 
+      vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees
       vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees
       vegn%m_turnover   = vegn%m_turnover    + cc%m_turnover  
     enddo
@@ -1236,7 +1236,7 @@ contains
     out_annual_tile%soilC           = soilC
     out_annual_tile%plantN          = plantN  * 1000
     out_annual_tile%soilN           = soilN  *  1000
-    out_annual_tile%totN            = (plantN+soilN) * 1000
+    out_annual_tile%totN            = (plantN + soilN) * 1000
     out_annual_tile%NSC             = vegn%plabl%c%c12
     out_annual_tile%SeedC           = vegn%pseed%c%c12
     out_annual_tile%leafC           = vegn%pleaf%c%c12
@@ -1282,12 +1282,10 @@ contains
 
   subroutine Recover_N_balance(vegn)
     type(vegn_tile_type), intent(inout) :: vegn
-
     if(abs(vegn%totN - vegn%initialN0) * 1000 > 0.001)then
       vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 - vegn%totN + vegn%initialN0
       vegn%totN = vegn%initialN0
     endif
-
   end subroutine Recover_N_balance
 
 end module datatypes
