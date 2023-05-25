@@ -245,7 +245,7 @@ module datatypes
     !===== Cohorts nested inside tile
     type(cohort_type), pointer :: cohorts(:) => NULL()
 
-    !=====  Litter pools (SOFUN-structure, remain empty in original LM3-PPA)
+    !=====  Litter pools (SOFUN-structure, remain empty in original BiomeE)
     type(orgpool) :: plitt_af                     ! above-ground litter, fast turnover [kg C(N)/m2]
     type(orgpool) :: plitt_as                     ! above-ground litter, slow turnover [kg C(N)/m2]
     type(orgpool) :: plitt_bg                     ! below-ground litter [kg C(N)/m2]

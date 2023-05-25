@@ -49,7 +49,7 @@ print(biomee_gs_leuning_drivers$params_siml)
 print(head(biomee_gs_leuning_drivers$forcing))
 ```
 
-```{r eval = FALSE}
+```{r}
 # run the model
 biomee_gs_leuning_output <- runread_biomee_f(
      biomee_gs_leuning_drivers,
@@ -90,7 +90,7 @@ print(biomee_p_model_drivers$params_siml)
 print(head(biomee_p_model_drivers$forcing))
 ```
 
-```{r eval = FALSE}
+```{r eval = TRUE}
 # run the model
 biomee_p_model_output <- runread_biomee_f(
      biomee_p_model_drivers,
