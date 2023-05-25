@@ -760,7 +760,7 @@ contains
       cc%resg         = 0.0
       cc%transp       = 0.0
 
-      !daily
+      ! daily
       cc%dailyTrsp    = 0.0
       cc%dailyGPP     = 0.0
       cc%dailyNPP     = 0.0
@@ -1205,7 +1205,7 @@ contains
       vegn%NPPW         = vegn%NPPW          + fwood * cc%nindivs 
       vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees !yyy
       vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees
-      vegn%m_turnover  = vegn%m_turnover     + cc%m_turnover  
+      vegn%m_turnover   = vegn%m_turnover    + cc%m_turnover  
     enddo
 
     plantC    = vegn%plabl%c%c12 + vegn%pseed%c%c12 + vegn%pleaf%c%c12 + vegn%proot%c%c12 + vegn%psapw%c%c12 + vegn%pwood%c%c12

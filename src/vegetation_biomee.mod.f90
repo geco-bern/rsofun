@@ -169,10 +169,10 @@ contains
           Max(cc%br_max - cc%proot%c%c12,0.0))
         N_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c%c12,0.0)/sp%CNleaf0 +  &
           Max(cc%br_max - cc%proot%c%c12,0.0)/sp%CNroot0)
-        C_push = cc%plabl%c%c12/(ndayyear*sp%tauNSC) ! max(cc%plabl%c%c12-NSCtarget, 0.0)/(ndayyear*sp%tauNSC)
-        N_push = cc%plabl%n%n14/(ndayyear*sp%tauNSC) ! 4.0 * C_push/sp%CNsw0  !
-        cc%N_growth = Min(max(0.02*cc%plabl%n%n14,0.0), N_pull+N_push)
-        cc%C_growth = Min(max(0.02*cc%plabl%c%c12,0.0), C_pull+C_push) ! Max(0.0,MIN(0.02*(cc%plabl%c%c12-0.2*NSCtarget), C_pull+C_push))
+        C_push = cc%plabl%c%c12 / (ndayyear * sp%tauNSC) ! max(cc%plabl%c%c12-NSCtarget, 0.0)/(ndayyear*sp%tauNSC)
+        N_push = cc%plabl%n%n14 / (ndayyear * sp%tauNSC) ! 4.0 * C_push/sp%CNsw0  !
+        cc%N_growth = Min(max(0.02 * cc%plabl%n%n14,0.0), N_pull + N_push)
+        cc%C_growth = Min(max(0.02 * cc%plabl%c%c12,0.0), C_pull + C_push) ! Max(0.0,MIN(0.02*(cc%plabl%c%c12-0.2*NSCtarget), C_pull+C_push))
         !!! cc%plabl%c%c12      = cc%plabl%c%c12 - cc%C_growth ! just an estimate, not out yet
       else ! non-growing season
         cc%C_growth = 0.0
@@ -225,12 +225,12 @@ contains
       cc => vegn%cohorts(i)
 
       ! call biomass_allocation( cc )
-      associate (sp => spdata(cc%species)) ! F2003
+      associate (sp => spdata(cc%species))
 
       if (cc%status == LEAF_ON) then
         
         ! Get carbon from NSC pool. This sets cc%C_growth
-        call fetch_CN_for_growth( cc ) ! Weng, 2017-10-19
+        call fetch_CN_for_growth( cc )
 
         ! Allocate carbon to the plant pools
         ! calculate the carbon spent on growth of leaves and roots
@@ -238,7 +238,7 @@ contains
         FR_deficit = max(0.0, cc%br_max - cc%proot%c%c12)
         LFR_deficit = LF_deficit + FR_deficit
         G_LFR = max(min(LF_deficit + FR_deficit,  &
-        f_LFR_max  * cc%C_growth), 0.0) ! (1.- Wood_fract_min)
+          f_LFR_max  * cc%C_growth), 0.0)
 
         ! and distribute it between roots and leaves
         dBL  = min(G_LFR, max(0.0, &
@@ -246,7 +246,6 @@ contains
                 ))
 
         ! flexible allocation scheme
-        ! dBL = min(LF_deficit, 0.6*G_LFR)
         if ((G_LFR-dBL) > FR_deficit) dBL = G_LFR - FR_deficit
         dBR = G_LFR - dBL
 
@@ -306,11 +305,11 @@ contains
 
           ! a new method, Weng, 2019-05-21
           ! same ratio reduction for leaf, root, and seed if (cc%N_growth < N_demand)
-          Nsupplyratio = MAX(0.0, MIN(1.0, cc%N_growth/N_demand))
+          Nsupplyratio = MAX(0.0, MIN(1.0, cc%N_growth / N_demand))
 
           !r_N_SD = (cc%N_growth-cc%C_growth/sp%CNsw0)/(N_demand-cc%C_growth/sp%CNsw0) ! fixed wood CN
 
-          r_N_SD = cc%N_growth/N_demand ! = Nsupplyratio
+          r_N_SD = cc%N_growth / N_demand
           if (sp%lifeform > 0 ) then ! for trees
             if (r_N_SD<=1.0 .and. r_N_SD>0.0) then
               dBSW =  dBSW + (1.0-r_N_SD) * (dBL+dBR+dSeed)
@@ -332,12 +331,12 @@ contains
         endif
 
         ! update carbon pools
-        cc%pleaf%c%c12    = cc%pleaf%c%c12    + dBL
-        cc%proot%c%c12    = cc%proot%c%c12    + dBR
-        cc%psapw%c%c12    = cc%psapw%c%c12   + dBSW
+        cc%pleaf%c%c12    = cc%pleaf%c%c12 + dBL
+        cc%proot%c%c12    = cc%proot%c%c12 + dBR
+        cc%psapw%c%c12    = cc%psapw%c%c12 + dBSW
         cc%pseed%c%c12    = cc%pseed%c%c12 + dSeed
         cc%plabl%c%c12    = cc%plabl%c%c12  - dBR - dBL -dSeed - dBSW
-        cc%resg = 0.5 * (dBR+dBL+dSeed+dBSW) !  daily
+        cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily
 
         ! update nitrogen pools, Nitrogen allocation
         cc%pleaf%n%n14 = cc%pleaf%n%n14 + dBL   /sp%CNleaf0
@@ -348,7 +347,7 @@ contains
         !extraN = max(0.0,cc%psapw%n%n14+cc%pwood%n%n14 - (cc%psapw%c%c12+cc%pwood%c%c12)/sp%CNsw0)
         extraN   = max(0.0,cc%psapw%n%n14 - cc%psapw%c%c12/sp%CNsw0)
         cc%psapw%n%n14 = cc%psapw%n%n14 - extraN
-        cc%plabl%n%n14   = cc%plabl%n%n14   + extraN - f_N_add * cc%plabl%n%n14 - cc%N_growth !! update NSN
+        cc%plabl%n%n14 = cc%plabl%n%n14 + extraN - f_N_add * cc%plabl%n%n14 - cc%N_growth !! update NSN
         cc%N_growth = 0.0
 
         ! accumulated C allocated to leaf, root, and wood
@@ -368,10 +367,6 @@ contains
         cc%leafarea  = leaf_area_from_biomass(cc%pleaf%c%c12, cc%species)
         cc%lai       = cc%leafarea/cc%crownarea !(cc%crownarea *(1.0-sp%internal_gap_frac))
         vegn%LAI     = vegn%LAI + cc%leafarea  * cc%nindivs
-
-        ! print*,'i, cc%leafarea, cc%lai, cc%nindivs, vegn%LAI ', i, cc%leafarea, cc%lai, cc%nindivs, vegn%LAI
-        ! print*,'cc%C_growth, cc%N_growth, N_demand, dBSW, dDBH, dCA ', cc%C_growth, cc%N_growth, N_demand, dBSW, dDBH, dCA
-        ! print*,'i, cc%pleaf%c%c12, cc%proot%c%c12, cc%psapw%c%c12, cc%crownarea, cc%DBH, cc%height', i, cc%pleaf%c%c12, cc%proot%c%c12, cc%psapw%c%c12, cc%crownarea, cc%DBH, cc%height
 
         call rootarea_and_verticalprofile( cc )
 
@@ -398,39 +393,37 @@ contains
         BL_u = sp%LMA*cc%crownarea*(1.0-sp%internal_gap_frac)* &
                 sp%underLAImax
 
-        ! print*,'sp%LAImax', sp%LAImax
-
         if (cc%layer == 1) cc%topyear = cc%topyear + 1.0 /365.0
 
         if (cc%layer > 1 .and. cc%firstlayer == 0) then ! changed back, Weng 2014-01-23
           cc%bl_max = BL_u
 
           ! Keep understory tree's root low and constant
-          cc%br_max = 1.8*cc%bl_max/(sp%LMA*sp%SRA) ! sp%phiRL
+          cc%br_max = 1.8 * cc%bl_max / (sp%LMA * sp%SRA) ! sp%phiRL
           !cc%br_max = sp%phiRL*cc%bl_max/(sp%LMA*sp%SRA) ! sp%phiRL
 
         else
 
-          cc%bl_max = BL_u + min(cc%topyear/5.0,1.0)*(BL_c - BL_u)
-          cc%br_max = sp%phiRL*cc%bl_max/(sp%LMA*sp%SRA)
+          cc%bl_max = BL_u + min(cc%topyear/5.0, 1.0) * (BL_c - BL_u)
+          cc%br_max = sp%phiRL * cc%bl_max/(sp%LMA * sp%SRA)
 
         endif
 
         ! Grasses have the saem bl_max regardless of their layer position
         if (sp%lifeform == 0) then
           cc%bl_max = BL_c
-          cc%br_max = sp%phiRL*cc%bl_max/(sp%LMA*sp%SRA)
+          cc%br_max = sp%phiRL * cc%bl_max/(sp%LMA * sp%SRA)
         endif ! for grasses
 
-      elseif (cc%status == LEAF_OFF .and. cc%C_growth > 0.) then
+      elseif (cc%status == LEAF_OFF .and. cc%C_growth > 0.0) then
         cc%plabl%c%c12 = cc%plabl%c%c12 + cc%C_growth
         cc%resg = 0.0
-      endif ! "cc%status == LEAF_ON"
+      endif
 
       ! reset carbon acculmulation terms
       cc%C_growth = 0
 
-      end associate ! F2003
+      end associate
     enddo
     cc => null()
 
@@ -1188,7 +1181,7 @@ contains
     type(cohort_type), pointer :: cc
 
     cc => vegn%cohorts(1)
-    associate (sp => spdata(cc%species)) ! F2003
+    associate (sp => spdata(cc%species))
 
     if (cc%pleaf%c%c12 > 0.0) then 
       ! remove all leaves to keep mass balance
