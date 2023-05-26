@@ -9,9 +9,7 @@ test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {
   
   settings <- list(
     method              = "bayesiantools",
-    targets             = c("GPP","LAI","Density","Biomass"),
-    metric              = rsofun::create_cost_likelihood_biomee(
-      targets = c("GPP", "LAI", "Density", "Biomass")),
+    metric              = rsofun::cost_likelihood_biomee,
     control = list(
       sampler = "DEzs",
       settings = list(
@@ -34,10 +32,12 @@ test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {
     )
   )
   
-  pars <- calib_sofun(
+  pars <- rsofun::calib_sofun(
     drivers = df_drivers,
     obs = ddf_obs,
-    settings = settings
+    settings = settings,
+    # arguments for cost function
+    targets = c("GPP","LAI","Density","Biomass")
   )
   
   # test for correctly returned values
@@ -52,16 +52,8 @@ test_that("test calibration routine biomee (rmse cost + GenSA)", {
   
   settings <- list(
     method              = "gensa",
-    targets             = c("GPP","LAI","Density","Biomass"),
-    metric              = rsofun::create_cost_rmse_biomee(
-      params_modl = list(
-        phiRL = 2.5,
-        LAI_light = 2.3,
-        tf_base   = 0.3,
-        par_mort  = 1.8
-      ),
-      setup = 'FULL',
-      method = 'GenSA'),
+    # targets             = c("GPP","LAI","Density","Biomass"),
+    metric              = rsofun::cost_rmse_biomee,
     control = list(
       maxit = 100
     ),
@@ -73,7 +65,7 @@ test_that("test calibration routine biomee (rmse cost + GenSA)", {
     )
   )
   
-  pars <- calib_sofun(
+  pars <- rsofun::calib_sofun(
     drivers = df_drivers,
     obs = ddf_obs,
     settings = settings

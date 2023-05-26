@@ -1,8 +1,8 @@
 #' Initialises a tibble with dates
 #'
-#' Creates a tibble with rows for each date (\code{\link[lubridate:ymd]{lubridate::ymd}} object from 
-#' library \code{lubridate}) from \code{'yrstart'} to \code{'yrend'}. Intervals of dates is 
-#' specified by argument \code{'freq'}. 
+#' Creates a tibble with rows for each date from \code{'yrstart'} to \code{'yrend'}
+#' in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument 
+#'\code{'freq'}. 
 #'
 #' @param yrstart An integer defining the start year
 #'  of dates covered by the dataframe.
@@ -13,14 +13,15 @@
 #' @param startdoy An integer defining the start day-of-year of
 #'  dates covered by the dataframe. Defaults to 1.
 #' @param freq A character string specifying the time steps of dates
-#'  (in rows). Defaults to \code{"days"}. Any of \code{"days", "months"}.
+#'  (in rows). Defaults to \code{"days"}. Any of \code{"days", "months", "years"}. If
+#'  \code{freq = "months"} the 15\eqn{^{th}} day of the months is used as date,
+#'  and if \code{freq = "years"} the 1\eqn{^{st}} of January of each year is returned.
 #' @param endmoy An integer defining the end month-of-year of dates covered
 #'  by the dataframe. Defaults to 12.
 #' @param enddom An integer defining the end day-of-year of dates
 #'  covered by the dataframe. Defaults to 31.
-#' @param noleap Whether leap years are ignored. Defaults to \code{FALSE}.
-#'
-#' @import lubridate
+#' @param noleap Whether leap years are ignored, that is, whether the 29\eqn{^{th}} 
+#' of February is removed. Defaults to \code{FALSE}.
 #' 
 #' @return A tibble with dates.
 #' @export
@@ -81,12 +82,12 @@ init_dates_dataframe <- function(
     ))
   
   # convert to decimal date
-  date_range$year_dec <- lubridate::decimal_date(date_range$date)
+  date_range$year_dec <- numeric_year(date_range$date)
 
   # leap year filter
   if (noleap) {
     date_range <- dplyr::filter(date_range,
-      !(lubridate::month(date) == 2 & lubridate::mday(date) == 29)
+      !(format(date, "%m-%d") == "02-29")
       )
     
     }

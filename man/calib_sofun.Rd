@@ -4,7 +4,7 @@
 \alias{calib_sofun}
 \title{Calibrates SOFUN model parameters}
 \usage{
-calib_sofun(drivers, obs, settings, optim_out = TRUE)
+calib_sofun(drivers, obs, settings, optim_out = TRUE, ...)
 }
 \arguments{
 \item{drivers}{A data frame with driver data. See \code{\link{p_model_drivers}}
@@ -17,22 +17,28 @@ structure.}
 \item{settings}{A list containing model calibration settings. 
 See the 'P-model usage' vignette for more information and examples.
 \describe{
- \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
- and lower and upper bounds should be provided. The calibratable parameters
- are 'kphio', 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' and 'par_shape_tempstress'.}
  \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
  or \code{'BayesianTools'}.}
+ \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
+ and lower and upper bounds should be provided. The calibratable parameters
+ are model parameters 'kphio' and 'soilm_par_a', and (if
+ doing Bayesian calibration) error parameters
+ for each target variable, named for example 'err_gpp'. This list must match
+ the input parameters of the calibration metric.}
  \item{\code{metric}}{A cost function. See the 'Cost functions for parameter
  calibration' vignette for examples.}
  \item{\code{control}}{A list of arguments passed on to the optimization function.
  If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
  the list should include at least \code{settings} and \code{sampler}, see
  \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
- \item{\code{targets}}{Name of the observed target variable to use in calibration
- (necessary if \code{method = 'BayesianTools'}).}
-}
-@param optim_out A logical indicating whether the function returns the raw
+}}
+
+\item{optim_out}{A logical indicating whether the function returns the raw
 output of the optimization functions (defaults to TRUE).}
+
+\item{...}{Optional arguments passed on to the cost function specified as
+\code{settings$metric}. 
+.}
 }
 \value{
 A named list containing the calibrated parameter vector `par` and

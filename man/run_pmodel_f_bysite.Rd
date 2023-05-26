@@ -25,8 +25,9 @@ run_pmodel_f_bysite(
       \item{recycle}{Length of standard recycling period, in days.}
       \item{soilmstress}{A logical value, if \code{TRUE} an empirical soil 
       moisture stress function is applied to GPP.}
-      \item{tempstress}{A logical value, if \code{TRUE} an empirical temperature 
-      stress function is applied to GPP.}
+      \item{tempstress}{A logical value, if \code{FALSE} the quantum yield efficiency
+      is held constant, if \code{TRUE} its dependency on temperature is parameterised 
+      with an empirical temperature stress function (corresponding to Bernacchi et al., 2003).}
       \item{calc_aet_fapar_vpd}{(not in use)}
       \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
       if \code{FALSE} PPFD is simulated internally.}
@@ -41,8 +42,6 @@ run_pmodel_f_bysite(
       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
       pathway and N-fixing.}
       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-      \item{firstyeartrend}{The year AD of first transient year.}
-      \item{nyeartrend}{The number of transient years.}
 }}
 
 \item{site_info}{A list of site meta info. Required:
@@ -55,7 +54,7 @@ run_pmodel_f_bysite(
 }}
 
 \item{forcing}{A data frame of forcing climate data, used as input 
-(returned object by \code{\link{collect_drivers_sofun}}, see \code{\link{p_model_drivers}}
+(see \code{\link{p_model_drivers}}
 for a detailed description of its structure and contents).}
 
 \item{params_soil}{A list of soil texture parameters, for the top and bottom
@@ -71,14 +70,6 @@ layer of soil.
 \describe{
   \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
   \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
-  \item{soilm_par_b}{Slope of the linear soil moisture stress function (unitless).}
-  \item{tau_acclim_tempstress}{Memory e-folding time scale parameter (in hours)
-  for acclimation of photosynthesis, following Eq. 5 in Makela et al. (2004) 
-  Tree Physiology 24, 369–376}
-  \item{par_shape_tempstress}{Shape parameter for the low temperature stress
-  function affecting quantum yield efficiency. A positive (unitless) value indicating 
-  the sensitivity of the decline (assuming no decline at 10\eqn{^o}C) and 
-  above, but decreasing with a quadratic function below 10\eqn{^o}C).}
 }}
 
 \item{makecheck}{A logical specifying whether checks are performed 

@@ -1,0 +1,251 @@
+---
+title: "Sensitivity analysis"
+author: "Pepa Aran"
+date: "2023-04-18"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Sensitivity analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(rsofun)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(sensitivity)
+
+evaluate <- ifelse(
+  Sys.info()['nodename'] == "balder" | 
+  Sys.info()['nodename'] == "dash" |
+  Sys.info()['nodename'] == "pop-os",
+  TRUE,
+  FALSE
+  )
+```
+
+Parameter calibration can have a big impact on our modeling effort and use
+big computational resources. Hence, it is worth our time to explore which parameters
+should actually be calibrated (the ones that impact the simulations greatly) 
+and to examine if the calibration routines behave as expected. 
+This vignette explains how to perform a simple
+parameter sensitivity analysis for the P-model and how to interpret the outputs 
+of the calibration using the `BayesianTools` package.
+
+## Morris sensitivity analysis
+
+The Morris method for global sensitivity analysis allows to explore which parameters have the
+biggest influence on the model fit. In this example, we will quantify how different
+values of the calibratable model parameters (`kphio` and `soilm_par_a`)
+lead to more variability
+in the match between GPP predicted by the P-model and GPP observations. It would
+be wise to repeat this exercise for various targets because they may be simulated
+by equations in the P-model that involve different model parameters.
+
+If the P-model
+has very low sensitivity to a certain parameter, calibrating it will
+not improve the model substantially. But if it's very sensitive to another parameter,
+calibrating this second parameter could improve the P-model fit greatly. We should
+spend our computational resources on calibrating the parameters to which the
+model is most sensitive.
+
+First of all, let's define a function which measures the agreement between
+GPP predictions from the P-model and GPP observations, for a set of values of
+the calibratable parameters. It computes the normal log-likelihood of 
+the GPP predictions, given the observed GPP and its uncertainty.
+We want to see how sensitive this function is to changes in the parameter values.
+
+```{r}
+# Define log-likelihood function
+ll_pmodel <- function(
+    par_v                 # a vector of all calibratable parameters including errors
+){
+  rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
+    par_v,
+    obs = rsofun::p_model_validation,
+    drivers = rsofun::p_model_drivers,
+    setup = "FULL",
+    targets = "gpp"
+  )
+}
+
+# Compute log-likelihood for a given set of parameters
+ll_pmodel( par_v = c(
+  kphio           = 0.09423773,
+  soilm_par_a     = 0.33349283,
+  error_gpp       = 0.9          # value from previous simulations
+))
+```
+
+Some parameters are constrained by their physical interpretation (e.g. `kphio > 0`)
+and it's also necessary to provide a bounded parameter space for Morris'
+method to sample the parameter space. We define the parameter space by their 
+lower and upper bounds.
+```{r eval = evaluate}
+# best parameter values (from previous literature)
+par_cal_best <- c(
+    kphio           = 0.09423773,
+    soilm_par_a     = 0.33349283,
+    error_gpp       = 1
+  )
+
+# lower bound
+par_cal_min <- c(
+    kphio           = 0,
+    soilm_par_a     = 0,
+    error_gpp       = 0.01
+  )
+
+# upper bound
+par_cal_max <- c(
+    kphio           = 5,
+    soilm_par_a     = 1,
+    error_gpp       = 4
+  )
+```
+
+We use the `morris()` function from the `{sensitivity}` package to perform
+the sensitivity analysis. As a target function, we will use the posterior
+density (log-likelihood) of the parameters given the GPP data which we obtain
+via the function `BayesianTools::createBayesianSetup()`. Note that, because of using
+a uniform prior, the posterior distribution is proportional to the GPP 
+log-likelihood (defined previously) 
+wherever the parameter values are feasible and zero outside of the parameter ranges.
+```{r eval = evaluate}
+morris_setup <- BayesianTools::createBayesianSetup(
+  likelihood = ll_pmodel,
+  prior = BayesianTools::createUniformPrior(par_cal_min, par_cal_max, par_cal_best),
+  names = names(par_cal_best)
+)
+```
+
+In the following chunk, we run the Morris sensitivity analysis, using a grid with
+`r=500` values for each parameter and a one-at-a-time design. Running the
+sensitivity analysis may take a few minutes, even for this small example dataset,
+and is still computationally cheaper than running the parameter calibration.
+```{r eval = evaluate}
+set.seed(432)
+morrisOut <- sensitivity::morris(
+  model = morris_setup$posterior$density,
+  factors = names(par_cal_best), 
+  r = 500, 
+  design = list(type = "oat", levels = 20, grid.jump = 3), 
+  binf = par_cal_min, 
+  bsup = par_cal_max, 
+  scale = TRUE)
+```
+
+The analysis evaluates the variability of the target function, i.e. the 
+log-likelihood, for several points across the parameter space. 
+Statistics $\mu *$ and $\sigma$ measure the average of the absolute
+differences between these log-likelihood values and their standard deviation,
+respectively. The higher the value of these statistics for a given parameter, 
+the more influential the parameter is.  
+```{r eval = evaluate}
+# summarise the morris output
+morrisOut.df <- data.frame(
+  parameter = names(par_cal_best),
+  mu.star = apply(abs(morrisOut$ee), 2, mean, na.rm = T),
+  sigma = apply(morrisOut$ee, 2, sd, na.rm = T)
+) %>%
+  arrange( mu.star )
+
+morrisOut.df |>
+  tidyr::pivot_longer( -parameter, names_to = "variable", values_to = "value") |>
+  ggplot(aes(
+    reorder(parameter, value),
+    value, 
+    fill = variable),
+    color = NA) +
+  geom_bar(position = position_dodge(), stat = 'identity') +
+  scale_fill_brewer("", labels = c('mu.star' = expression(mu * "*"),
+                                   'sigma' = expression(sigma))) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 6),
+    axis.title = element_blank(),
+    legend.position = c(0.05, 0.95), legend.justification = c(0.05, 0.95)
+  )
+
+```
+
+## Interpretation of Bayesian calibration routine
+
+It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. Here we show some plots and statistics that may help you assess whether the parameter calibration has converged.
+
+According to the previous sensitivity analysis, calibrating the error parameter for GPP and the quantum yield efficiency `kphio` will have the most impact on the model fit. Let's run the calibration:
+```{r eval = evaluate}
+set.seed(2023)
+
+# Define calibration settings
+settings_calib <- list(
+  method = "BayesianTools",
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 0,
+      iterations = 1500,
+      startValue = 3       # number of chains to be sampled
+    )),
+  par = list(
+    kphio = list(lower = 0, upper = 0.2, init = 0.05),
+    err_gpp = list(lower = 0.1, upper = 2, init = 0.8)
+  )
+)
+
+# calibrate parameters kphio and err_gpp 
+par_calib <- calib_sofun(
+  drivers = p_model_drivers,
+  obs = p_model_validation,
+  settings = settings_calib,
+  setup = "BRC",
+  par_fixed = c(
+    soilm_par_a = 0.33349283),
+  targets = "gpp"
+)
+```
+
+`BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. The samples after the burnin period are then used for inference.
+```{r eval = evaluate}
+plot(par_calib$mod)
+```
+
+The posterior density plot of `err_gpp` is quite lumpy. In this case it's advisable to run the MCMC algorithm for more iterations, in order to get a better estimate of the parameter's posterior distribution. A good posterior should look more gaussian although it can be skewed. A multimodal density indicates that the MCMC is still exploring the parameter space and hasn't converged yet. 
+
+When convergence has been reached, the oscillation of the time series should look like white noise. The presence of a trend indicates that convergence hasn't been reached.
+
+Trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space is not explored fully.
+```{r eval = evaluate}
+# Define function for plotting chains separately
+plot_acf_mcmc <- function(chains, par_names){
+  # chains: from the BayesianTools output
+  n_chains <- length(chains)
+  par(mfrow = c(n_chains, length(par_names)))
+  for(i in 1:n_chains){
+    for(par_name in par_names){
+      chains[[i]][, par_name] |>
+        pacf(main = paste0("Series of ", par_name, " , chain ", i))
+    }
+  }
+}
+
+plot_acf_mcmc(par_calib$mod$chain, c("err_gpp", "kphio"))
+```
+
+Looking at the correlation between chains is helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior.
+```{r eval = evaluate}
+correlationPlot(par_calib$mod)
+```
+
+- Gelman test to compare chains.
+- Deviance Information Criterion (DIC)
+
+The `BayesianTools` package provides plot and diagnostic functions for the MCMC sampler output, that is, for our parameter calibration. 
+More details on diagnosing MCMC convergence can be found in [this vignette from BayesianTools](https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html#running-mcmc-and-smc-functions) and [this blogpost](https://theoreticalecology.wordpress.com/2011/12/09/mcmc-chain-analysis-and-convergence-diagnostics-with-coda-in-r/).

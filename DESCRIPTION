@@ -32,11 +32,8 @@ Imports:
     dplyr,
     purrr,
     tidyr,
-    tidyselect,
     magrittr,
-    lubridate,
     GenSA,
-    graphics,
     BayesianTools,
     multidplyr,
     stats,
@@ -45,13 +42,14 @@ LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Suggests:
     rpmodel,
     covr,
     testthat,
     rmarkdown,
     ggplot2,
-    knitr
+    knitr,
+    sensitivity
 VignetteBuilder: knitr
 Encoding: UTF-8

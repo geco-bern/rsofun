@@ -10,8 +10,9 @@
 #'       \item{recycle}{Length of standard recycling period, in days.}
 #'       \item{soilmstress}{A logical value, if \code{TRUE} an empirical soil 
 #'       moisture stress function is applied to GPP.}
-#'       \item{tempstress}{A logical value, if \code{TRUE} an empirical temperature 
-#'       stress function is applied to GPP.}
+#'       \item{tempstress}{A logical value, if \code{FALSE} the quantum yield efficiency
+#'       is held constant, if \code{TRUE} its dependency on temperature is parameterised 
+#'       with an empirical temperature stress function (corresponding to Bernacchi et al., 2003).}
 #'       \item{calc_aet_fapar_vpd}{(not in use)}
 #'       \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
 #'       if \code{FALSE} PPFD is simulated internally.}
@@ -26,8 +27,6 @@
 #'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
 #'       pathway and N-fixing.}
 #'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-#'       \item{firstyeartrend}{The year AD of first transient year.}
-#'       \item{nyeartrend}{The number of transient years.}
 #' }
 #' @param site_info A list of site meta info. Required:
 #' \describe{
@@ -38,7 +37,7 @@
 #'       simulating the soil water balance.}
 #' }
 #' @param forcing A data frame of forcing climate data, used as input 
-#'  (returned object by \code{\link{collect_drivers_sofun}}, see \code{\link{p_model_drivers}}
+#'  (see \code{\link{p_model_drivers}}
 #'  for a detailed description of its structure and contents).
 #' @param params_soil A list of soil texture parameters, for the top and bottom
 #' layer of soil.
@@ -52,14 +51,6 @@
 #' \describe{
 #'   \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
 #'   \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
-#'   \item{soilm_par_b}{Slope of the linear soil moisture stress function (unitless).}
-#'   \item{tau_acclim_tempstress}{Memory e-folding time scale parameter (in hours)
-#'   for acclimation of photosynthesis, following Eq. 5 in Makela et al. (2004) 
-#'   Tree Physiology 24, 369–376}
-#'   \item{par_shape_tempstress}{Shape parameter for the low temperature stress
-#'   function affecting quantum yield efficiency. A positive (unitless) value indicating 
-#'   the sensitivity of the decline (assuming no decline at 10\eqn{^o}C) and 
-#'   above, but decreasing with a quadratic function below 10\eqn{^o}C).}
 #' }
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings and model parameters. \code{TRUE} by default.
@@ -115,6 +106,7 @@ run_pmodel_f_bysite <- function(
   # predefine variables for CRAN check compliance
   ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
   fsun <- snow <- co2 <- ndep <- fapar <- patm <- 
+  nyeartrend_forcing <- firstyeartrend_forcing <-
   tmin <- tmax <- fsand <- fclay <- forg <- fgravel <- . <- NULL
   
   # base state, always execute the call
@@ -128,7 +120,8 @@ run_pmodel_f_bysite <- function(
     dplyr::ungroup() %>%
     dplyr::slice(1) %>%
     dplyr::pull(date) %>%
-    lubridate::year()
+    format("%Y") %>%
+    as.numeric()
   
   nyeartrend_forcing <- nrow(forcing)/ndayyear
   
@@ -205,8 +198,6 @@ run_pmodel_f_bysite <- function(
       "spinup",
       "spinupyears",
       "recycle",
-      "firstyeartrend",
-      "nyeartrend",
       "soilmstress",
       "tempstress",
       "in_ppfd",
@@ -233,36 +224,12 @@ run_pmodel_f_bysite <- function(
     if (suppressWarnings(!all(parameter_integrity))){
       continue <- FALSE
     }
-    
-    # Dates in 'forcing' do not correspond to simulation parameters
-    if (nrow(forcing) != params_siml$nyeartrend * ndayyear){
-      if (verbose){
-        warning(
-          "Error: Number of years data in forcing does not correspond
-       to number of simulation years (nyeartrend).\n")
-        warning(paste(" Number of years data: ",
-                          nrow(forcing)/ndayyear), "\n")
-        warning(paste(" Number of simulation years: ",
-                          params_siml$nyeartrend, "\n"))
-        warning(paste(" Site name: ", sitename, "\n"))
-      }
       
-      # Overwrite params_siml$nyeartrend and 
-      # params_siml$firstyeartrend based on 'forcing'
-      if (nrow(forcing) %% ndayyear == 0){
-        params_siml$nyeartrend <- nyeartrend_forcing
-        params_siml$firstyeartrend <- firstyeartrend_forcing
-        if (verbose){
-          warning(paste(" Overwriting params_siml$nyeartrend: ",
-                            params_siml$nyeartrend, "\n"))
-          warning(paste(" Overwriting params_siml$firstyeartrend: ",
-                            params_siml$firstyeartrend, "\n"))
-        }
-      } else {
-        # something weird more fundamentally -> don't run the model
-        warning(" Returning a dummy data frame.")
-        continue <- FALSE
-      }
+    if (nrow(forcing) %% ndayyear != 0){
+      # something weird more fundamentally -> don't run the model
+      warning(" Returning a dummy data frame. Forcing data does not
+              correspond to full years.")
+      continue <- FALSE
     }
     
     # Check model parameters
@@ -275,18 +242,10 @@ run_pmodel_f_bysite <- function(
         continue <- FALSE
       }
       if (params_siml$soilmstress){
-        if (any(is.nanull(params_modl$soilm_par_a), 
-                is.nanull(params_modl$soilm_par_b))){
-          warning("Error: Missing soilm_par_a and soilm_par_b parameters but soilmstress = TRUE.")
+        if (is.nanull(params_modl$soilm_par_a)){
+          warning("Error: Missing soilm_par_a parameter but soilmstress = TRUE.")
           continue <- FALSE
         } 
-      }
-      if(params_siml$tempstress){
-        if (any(is.nanull(params_modl$tau_acclim_tempstress),
-                is.nanull(params_modl$par_shape_tempstress))){
-          warning("Error: Missing tau and shape parameters but tempstress = TRUE.")
-          continue <- FALSE
-        }
       }
     }
   }
@@ -299,13 +258,10 @@ run_pmodel_f_bysite <- function(
     # number of rows in matrix (pre-allocation of memory)
     n <- as.integer(nrow(forcing))
 
-    # Model parameters as vector
+    # Model parameters as vector in order
     par = c(
       as.numeric(params_modl$kphio),
-      as.numeric(params_modl$soilm_par_a),
-      as.numeric(params_modl$soilm_par_b),
-      as.numeric(params_modl$tau_acclim_tempstress),
-      as.numeric(params_modl$par_shape_tempstress)
+      as.numeric(params_modl$soilm_par_a)
       )
 
     # Soil texture as matrix (layer x texture parameter)
@@ -323,8 +279,8 @@ run_pmodel_f_bysite <- function(
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),
-      firstyeartrend            = as.integer(params_siml$firstyeartrend),
-      nyeartrend                = as.integer(params_siml$nyeartrend),
+      firstyeartrend            = as.integer(firstyeartrend_forcing),
+      nyeartrend                = as.integer(nyeartrend_forcing),
       secs_per_tstep            = as.integer(secs_per_tstep),
       soilmstress               = as.logical(params_siml$soilmstress),
       tempstress                = as.logical(params_siml$tempstress),
@@ -350,8 +306,8 @@ run_pmodel_f_bysite <- function(
     
     # Prepare output to be a nice looking tidy data frame (tibble)
     ddf <- init_dates_dataframe(
-      yrstart = params_siml$firstyeartrend,
-      yrend = params_siml$firstyeartrend + params_siml$nyeartrend - 1,
+      yrstart = firstyeartrend_forcing,
+      yrend = firstyeartrend_forcing + nyeartrend_forcing - 1,
       noleap = TRUE)
 
     out <- out %>%
@@ -366,7 +322,7 @@ run_pmodel_f_bysite <- function(
       dplyr::bind_cols(ddf,.)
 
   } else {
-    out <- tibble(date = lubridate::ymd("2000-01-01"),
+    out <- tibble(date = as.Date("2000-01-01"),
                   fapar = NA, gpp = NA, transp = NA, latenth = NA, 
                   pet = NA, vcmax = NA, jmax = NA, vcmax25 = NA, 
                   jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, 
