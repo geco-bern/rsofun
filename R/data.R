@@ -68,7 +68,8 @@
 #'       \item{c4}{A logical value indicating whether or not C4 photosynthesis 
 #'       pathway is followed. If \code{FALSE}, it's C3.}
 #'       \item{whc}{A numeric value for the water holding capacity (in mm), used for 
-#'       simulating the soil water balance.}
+#'       simulating the soil water balance. It is taken by the P-model as a calibratable
+#'       model parameter \code{rootzone_whc}.}
 #'       \item{koeppen_code}{A character string indicating the Koeppen-Geiger
 #'       climate zone code.}
 #'       \item{igbp_land_use}{A character string indicating the IGBP land cover
@@ -203,7 +204,8 @@
 #'       data is later aggregated across years to obtain a single year of "average"
 #'       climate forcing.}
 #'       \item{whc}{A numeric value for the water holding capacity (in mm), used for 
-#'       simulating the soil water balance.}
+#'       simulating the soil water balance. It is taken by the P-model as a calibratable
+#'       model parameter \code{rootzone_whc}.}
 #'     }
 #'   }
 #'   \item{params_soil}{A tibble [ 2 x 5 ] containing soil texture data
