@@ -509,21 +509,23 @@ contains
     !----------------------------------------------------------------
     ! PFT-independent parameters
     !----------------------------------------------------------------
-    ! unit cost of carboxylation
+    ! unit cost of carboxylation, b/a' in Eq. 3 (Stocker et al., 2020 GMD)
     params_gpp%beta = myinterface%params_calib%beta_unitcostratio ! 146.000000
 
-    ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
+    ! Ratio of Rdark to Vcmax25, fitted slope of Rd25/Vcmax25 (Wang et al., 2020 GCB, 10.1111/gcb.14980, Table S6)
     params_gpp%rd_to_vcmax = myinterface%params_calib%rd_to_vcmax ! 0.01400000
 
-    ! Jmax cost coefficient
+    ! Jmax cost coefficient, c* in Stocker et al., 2020 GMD (Eq 15) and Wang et al., 2017
     params_gpp%kc_jmax = myinterface%params_calib%kc_jmax  ! 0.41
 
-    ! Apply identical temperature ramp parameter for all PFTs
+    ! Acclimation time scale for photosynthesis (d), multiple lines of evidence suggest about monthly is alright 
     params_gpp%tau_acclim = myinterface%params_calib%tau_acclim  ! 30.0
-    params_gpp%soilm_par_a = myinterface%params_calib%soilm_par_a     ! is provided through standard input
 
-    ! PFT-dependent parameter(s)
-    params_pft_gpp(:)%kphio = myinterface%params_calib%kphio  ! is provided through standard input
+    ! Soil moisture stress parameter (Stocker et al., 2020 GMD Eq. 22)
+    params_gpp%soilm_par_a = myinterface%params_calib%soilm_par_a
+
+    ! quantum yield efficiency, phi_0 (Stocker et al., 2020 GMD Eq. 10)
+    params_pft_gpp(:)%kphio = myinterface%params_calib%kphio
 
   end subroutine getpar_modl_gpp
 
