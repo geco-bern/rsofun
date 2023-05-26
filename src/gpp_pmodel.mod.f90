@@ -53,6 +53,7 @@ module md_gpp_pmodel
     real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
     real :: tau_acclim_tempstress
     real :: par_shape_tempstress
+    real :: kc_jmax
   end type paramstype_gpp
 
   ! PFT-DEPENDENT PARAMETERS
@@ -175,6 +176,7 @@ contains
         out_pmodel = pmodel(  &
                               kphio          = params_pft_gpp(pft)%kphio * ftemp_kphio, &
                               beta           = params_gpp%beta, &
+                              kc_jmax        = params_gpp%kc_jmax, &
                               ppfd           = ppfd_memory, &
                               co2            = co2_memory, &
                               tc             = temp_memory, &
@@ -512,6 +514,9 @@ contains
 
     ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     params_gpp%rd_to_vcmax = myinterface%params_calib%rd_to_vcmax ! 0.01400000
+
+    ! Jmax cost coefficient
+    params_gpp%kc_jmax = myinterface%params_calib%kc_jmax  ! 0.41
 
     ! Apply identical temperature ramp parameter for all PFTs
     params_gpp%tau_acclim = myinterface%params_calib%tau_acclim  ! 30.0

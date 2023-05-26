@@ -23,6 +23,7 @@ module md_gpp_biomee
     real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
     real :: tau_acclim_tempstress
     real :: par_shape_tempstress
+    real :: kc_jmax
   end type paramstype_gpp
 
   ! ! PFT-DEPENDENT PARAMETERS
@@ -253,6 +254,7 @@ contains
           out_pmodel = pmodel(  &
                                 kphio          = sp%kphio, &    !  * ftemp_kphio
                                 beta           = params_gpp%beta, &
+                                kc_jmax        = params_gpp%kc_jmax, &
                                 ppfd           = par_memory(layer), &
                                 co2            = co2_memory, &
                                 tc             = temp_memory, &
@@ -591,6 +593,9 @@ contains
     ! temperature stress time scale is calibratable
     params_gpp%tau_acclim_tempstress = 20.0
     params_gpp%par_shape_tempstress  = 0.0
+
+    ! Jmax cost ratio
+    params_gpp%kc_jmax  = 0.41
 
     ! ! PFT-dependent parameter(s)
     ! params_pft_gpp%kphio = myinterface%params_species(1)%kphio  ! is provided through standard input

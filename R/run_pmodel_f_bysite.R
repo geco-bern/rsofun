@@ -264,7 +264,8 @@ run_pmodel_f_bysite <- function(
       as.numeric(params_modl$soilm_par_a),
       as.numeric(params_modl$beta_unitcostratio),
       as.numeric(params_modl$rd_to_vcmax),
-      as.numeric(params_modl$tau_acclim)
+      as.numeric(params_modl$tau_acclim),
+      as.numeric(params_modl$kc_jmax)
       )
 
     # Soil texture as matrix (layer x texture parameter)

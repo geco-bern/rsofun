@@ -65,7 +65,8 @@ params_modl <- list(
     soilm_par_b        = 1.45602286,
     beta_unitcostratio = 146.000000,
     rd_to_vcmax        = 0.01400000,
-    tau_acclim         = 30.0
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
   )
 
 # run the model for these parameters

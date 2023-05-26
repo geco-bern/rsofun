@@ -71,7 +71,7 @@ module md_photosynth
 
 contains
 
-  function pmodel( kphio, beta, ppfd, co2, tc, vpd, patm, c4, method_optci, method_jmaxlim ) result( out_pmodel )
+  function pmodel( kphio, beta, kc_jmax, ppfd, co2, tc, vpd, patm, c4, method_optci, method_jmaxlim ) result( out_pmodel )
     !//////////////////////////////////////////////////////////////////
     ! Implements the P-model, providing predictions for ci, Vcmax, and 
     ! light use efficiency, etc. 
@@ -81,6 +81,7 @@ contains
     ! arguments
     real, intent(in) :: kphio        ! apparent quantum yield efficiency       
     real, intent(in) :: beta         ! parameter for the unit cost ratio (corresponding to beta in Prentice et al., 2014)    
+    real, intent(in) :: kc_jmax      ! parameter Jmax cost ratio (corresponding to c in Prentice et al., 2014)    
     ! real, intent(in) :: fapar        ! fraction of absorbed photosynthetically active radiation (unitless) 
     real, intent(in) :: ppfd         ! photosynthetic photon flux density (mol m-2 s-1), relevant for acclimated response
     real, intent(in) :: co2          ! atmospheric CO2 concentration (ppm), relevant for acclimated response
@@ -135,8 +136,8 @@ contains
     ! local variables for Jmax limitation following Nick Smith's method
     real :: omega, omega_star, vcmax_unitiabs_star, tcref, jmax_over_vcmax, jmax_prime
 
-    real, parameter :: theta = 0.85
-    real, parameter :: c_cost = 0.05336251
+    real, parameter :: theta = 0.85          ! used only for smith19 setup
+    real, parameter :: c_cost = 0.05336251   ! used only for smith19 setup
 
     type(outtype_chi) :: out_optchi
 
@@ -222,7 +223,7 @@ contains
 
       ! Include effect of Jmax limitation.
       ! In this case, out_optchi%mj = 1, and mprime = 0.669
-      mprime = calc_mprime( out_optchi%mj )
+      mprime = calc_mprime( out_optchi%mj, kc_jmax )
 
       ! Light use efficiency (gpp per unit absorbed light)
       lue = kphio * mprime * c_molmass  ! in g CO2 m-2 s-1 / (mol light m-2 s-1)
@@ -231,10 +232,10 @@ contains
       vcmax = kphio  * ppfd * out_optchi%mjoc * mprime / out_optchi%mj
 
 
-    else if (method_jmaxlim=="wang17") then
+    else if (method_jmaxlim == "wang17") then
 
       ! Include effect of Jmax limitation
-      mprime = calc_mprime( out_optchi%mj )
+      mprime = calc_mprime( out_optchi%mj, kc_jmax )
 
       ! Light use efficiency (gpp per unit absorbed light)
       lue = kphio * mprime * c_molmass  ! in g CO2 m-2 s-1 / (mol light m-2 s-1)
@@ -607,7 +608,7 @@ contains
   end function calc_chi_c4
 
 
-  function calc_mprime( m ) result( mprime )
+  function calc_mprime( m, kc_jmax ) result( mprime )
     !-----------------------------------------------------------------------
     ! Input:  m   (unitless): factor determining LUE
     ! Output: mpi (unitless): modiefied m accounting for the co-limitation
@@ -615,15 +616,13 @@ contains
     !-----------------------------------------------------------------------
     ! argument
     real, intent(in) :: m
-
-    ! local variables
-    real, parameter :: kc = 0.41          ! Jmax cost coefficient
+    real, intent(in) :: kc_jmax
 
     ! function return variable
     real :: mprime
 
     ! square of m-prime (mpi)
-    mprime = m**2 - kc**(2.0/3.0) * (m**(4.0/3.0))
+    mprime = m**2 - kc_jmax**(2.0/3.0) * (m**(4.0/3.0))
 
     ! Check for negatives and take root of square
     if (mprime > 0) then

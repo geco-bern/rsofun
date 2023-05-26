@@ -20,6 +20,7 @@ module md_interface_pmodel
     real :: beta_unitcostratio
     real :: rd_to_vcmax
     real :: tau_acclim
+    real :: kc_jmax
   end type paramstype_calib  
 
 
