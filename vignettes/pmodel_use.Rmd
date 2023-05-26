@@ -60,9 +60,12 @@ With all data prepared we can run the model using `runread_pmodel_f()`. This fun
 # optimized parameters from previous
 # work
 params_modl <- list(
-    kphio           = 0.09423773,
-    soilm_par_a     = 0.33349283,
-    soilm_par_b     = 1.45602286
+    kphio              = 0.09423773,
+    soilm_par_a        = 0.33349283,
+    soilm_par_b        = 1.45602286,
+    beta_unitcostratio = 146.000000,
+    rd_to_vcmax        = 0.01400000,
+    tau_acclim         = 30.0
   )
 
 # run the model for these parameters

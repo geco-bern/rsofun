@@ -261,7 +261,10 @@ run_pmodel_f_bysite <- function(
     # Model parameters as vector in order
     par = c(
       as.numeric(params_modl$kphio),
-      as.numeric(params_modl$soilm_par_a)
+      as.numeric(params_modl$soilm_par_a),
+      as.numeric(params_modl$beta_unitcostratio),
+      as.numeric(params_modl$rd_to_vcmax),
+      as.numeric(params_modl$tau_acclim)
       )
 
     # Soil texture as matrix (layer x texture parameter)
