@@ -66,7 +66,8 @@ params_modl <- list(
     beta_unitcostratio = 146.000000,
     rd_to_vcmax        = 0.01400000,
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    rootzone_whc       = 240    # previously provided as p_model_drivers$site_info[[1]]$whc
   )
 
 # run the model for these parameters

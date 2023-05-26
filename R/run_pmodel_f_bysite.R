@@ -33,8 +33,6 @@
 #'       \item{lon}{Longitud of the site location.}
 #'       \item{lat}{Latitude of the site location.}
 #'       \item{elv}{Elevation of the site location, in meters.}
-#'       \item{whc}{A numeric value for the water holding capacity (in mm), used for 
-#'       simulating the soil water balance.}
 #' }
 #' @param forcing A data frame of forcing climate data, used as input 
 #'  (see \code{\link{p_model_drivers}}
@@ -51,6 +49,8 @@
 #' \describe{
 #'   \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
 #'   \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
+#'   \item{whc}{A numeric value for the water holding capacity (in mm), used for 
+#'         simulating the soil water balance.}
 #' }
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings and model parameters. \code{TRUE} by default.
@@ -301,7 +301,6 @@ run_pmodel_f_bysite <- function(
       longitude                 = as.numeric(site_info$lon),
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
-      whc                       = as.numeric(site_info$whc),
       soiltexture               = soiltexture,
       n                         = n,
       par                       = par, 
