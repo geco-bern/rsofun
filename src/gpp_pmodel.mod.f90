@@ -35,7 +35,7 @@ module md_gpp_pmodel
   use md_sofunutils, only: radians
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
-    calc_ftemp_inst_rd, calc_ftemp_kphio, calc_soilmstress
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
 
   implicit none
 
@@ -58,7 +58,9 @@ module md_gpp_pmodel
 
   ! PFT-DEPENDENT PARAMETERS
   type pftparamstype_gpp
-    real :: kphio        ! quantum efficiency (Long et al., 1993)  
+    real :: kphio        ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
+    real :: kphio_par_a  ! shape parameter of temperature-dependency of quantum yield efficiency
+    real :: kphio_par_b  ! optimal temperature of quantum yield efficiency (deg C)
   end type pftparamstype_gpp
 
   type(paramstype_gpp) :: params_gpp
@@ -71,7 +73,7 @@ module md_gpp_pmodel
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, do_soilmstress, do_tempstress, init)
+  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, do_soilmstress, init)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -90,7 +92,6 @@ contains
     type(vegcover_type) :: vegcover
     type(gridtype)      :: grid
     logical, intent(in) :: do_soilmstress                    ! whether empirical soil miosture stress function is applied to GPP
-    logical, intent(in) :: do_tempstress                     ! whether empirical temperature stress function is applied to GPP
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
 
     ! local variables
@@ -100,7 +101,7 @@ contains
     integer    :: lu
     real       :: iabs
     real       :: soilmstress
-    real       :: ftemp_kphio
+    real       :: kphio_temp          ! quantum yield efficiency after temperature influence
     real       :: tk
 
     real, save :: co2_memory
@@ -154,13 +155,17 @@ contains
       !----------------------------------------------------------------
       ! Low-temperature effect on quantum yield efficiency 
       !----------------------------------------------------------------
-      ! take the slowly varying temperature for governing quantum yield variations
-      if (do_tempstress) then
-        ftemp_kphio = calc_ftemp_kphio( temp_memory, params_pft_plant(pft)%c4 )
+      ! take the instananeously varying temperature for governing quantum yield variations
+      if (params_pft_gpp(pft)%kphio_par_a == 0.0) then
+        kphio_temp = params_pft_gpp(pft)%kphio
       else
-        ftemp_kphio = 1.0
+        kphio_temp = calc_kphio_temp( climate%dtemp, &
+                                      params_pft_plant(pft)%c4, &
+                                      params_pft_gpp(pft)%kphio, &
+                                      params_pft_gpp(pft)%kphio_par_a, &
+                                      params_pft_gpp(pft)%kphio_par_b )
       end if
-
+      
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
       ! acclimated to slowly varying conditions
@@ -174,7 +179,7 @@ contains
         ! damped climate forcing.
         !----------------------------------------------------------------
         out_pmodel = pmodel(  &
-                              kphio          = params_pft_gpp(pft)%kphio * ftemp_kphio, &
+                              kphio          = kphio_temp, &
                               beta           = params_gpp%beta, &
                               kc_jmax        = params_gpp%kc_jmax, &
                               ppfd           = ppfd_memory, &
@@ -250,7 +255,7 @@ contains
 
 
 
-  ! function calc_dgpp( fapar, fpc_grid, dppfd, lue, ftemp_kphio, soilmstress ) result( my_dgpp )
+  ! function calc_dgpp( fapar, fpc_grid, dppfd, lue, kphio_temp, soilmstress ) result( my_dgpp )
   !   !//////////////////////////////////////////////////////////////////
   !   ! Calculates daily GPP given mean daily light use efficiency following
   !   ! a simple light use efficie model approach.
@@ -260,14 +265,14 @@ contains
   !   real, intent(in) :: fpc_grid    ! foliar projective cover, used for dividing grid cell area (unitless)
   !   real, intent(in) :: dppfd       ! daily total photon flux density (mol m-2)
   !   real, intent(in) :: lue         ! light use efficiency (g CO2 mol-1)
-  !   real, intent(in) :: ftemp_kphio  ! air temperature (deg C)
+  !   real, intent(in) :: kphio_temp  ! air temperature (deg C)
   !   real, intent(in) :: soilmstress ! soil moisture stress factor (unitless)
 
   !   ! function return variable
   !   real :: my_dgpp                 ! Daily total gross primary productivity (gC m-2 d-1)
 
   !   ! GPP is light use efficiency multiplied by absorbed light and soil moisture stress function
-  !   my_dgpp = fapar * fpc_grid * dppfd * soilmstress * lue * ftemp_kphio
+  !   my_dgpp = fapar * fpc_grid * dppfd * soilmstress * lue * kphio_temp
 
   ! end function calc_dgpp
 
@@ -320,7 +325,7 @@ contains
   ! end function calc_dgs
 
 
-  ! function calc_drd( fapar, fpc_grid, dppfd, rd_unitiabs, ftemp_kphio, soilmstress ) result( my_drd )
+  ! function calc_drd( fapar, fpc_grid, dppfd, rd_unitiabs, kphio_temp, soilmstress ) result( my_drd )
   !   !//////////////////////////////////////////////////////////////////
   !   ! Calculates daily total dark respiration (Rd) based on monthly mean 
   !   ! PPFD (assumes acclimation on a monthly time scale).
@@ -331,19 +336,19 @@ contains
   !   real, intent(in) :: fpc_grid        ! foliar projective cover
   !   real, intent(in) :: dppfd           ! daily total photon flux density (mol m-2)
   !   real, intent(in) :: rd_unitiabs
-  !   real, intent(in) :: ftemp_kphio      ! this day's air temperature, deg C
+  !   real, intent(in) :: kphio_temp      ! this day's air temperature, deg C
   !   real, intent(in) :: soilmstress     ! soil moisture stress factor
 
   !   ! function return variable
   !   real :: my_drd
 
   !   ! Dark respiration takes place during night and day (24 hours)
-  !   my_drd = fapar * fpc_grid * dppfd * soilmstress * rd_unitiabs * ftemp_kphio * c_molmass
+  !   my_drd = fapar * fpc_grid * dppfd * soilmstress * rd_unitiabs * kphio_temp * c_molmass
 
   ! end function calc_drd
 
 
-  ! function calc_dtransp( fapar, acrown, dppfd, transp_unitiabs, ftemp_kphio, soilmstress ) result( my_dtransp )
+  ! function calc_dtransp( fapar, acrown, dppfd, transp_unitiabs, kphio_temp, soilmstress ) result( my_dtransp )
   !   !//////////////////////////////////////////////////////////////////
   !   ! Calculates daily transpiration. 
   !   ! Exploratory only.
@@ -354,14 +359,14 @@ contains
   !   real, intent(in) :: acrown
   !   real, intent(in) :: dppfd              ! daily total photon flux density, mol m-2
   !   real, intent(in) :: transp_unitiabs
-  !   real, intent(in) :: ftemp_kphio              ! this day's air temperature
+  !   real, intent(in) :: kphio_temp              ! this day's air temperature
   !   real, intent(in) :: soilmstress        ! soil moisture stress factor
 
   !   ! function return variable
   !   real :: my_dtransp
 
   !   ! GPP is light use efficiency multiplied by absorbed light and C-P-alpha
-  !   my_dtransp = fapar * acrown * dppfd * soilmstress * transp_unitiabs * ftemp_kphio * h2o_molmass
+  !   my_dtransp = fapar * acrown * dppfd * soilmstress * transp_unitiabs * kphio_temp * h2o_molmass
 
   ! end function calc_dtransp
 
@@ -524,8 +529,15 @@ contains
     ! Soil moisture stress parameter (Stocker et al., 2020 GMD Eq. 22)
     params_gpp%soilm_par_a = myinterface%params_calib%soilm_par_a
 
-    ! quantum yield efficiency, phi_0 (Stocker et al., 2020 GMD Eq. 10)
+    ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
     params_pft_gpp(:)%kphio = myinterface%params_calib%kphio
+
+    ! shape parameter of temperature-dependency of quantum yield efficiency
+    params_pft_gpp(:)%kphio_par_a = myinterface%params_calib%kphio_par_a
+
+    ! optimal temperature of quantum yield efficiency
+    params_pft_gpp(:)%kphio_par_b = myinterface%params_calib%kphio_par_b
+
 
   end subroutine getpar_modl_gpp
 

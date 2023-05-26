@@ -199,7 +199,6 @@ run_pmodel_f_bysite <- function(
       "spinupyears",
       "recycle",
       "soilmstress",
-      "tempstress",
       "in_ppfd",
       "in_netrad",
       "outdt",
@@ -261,12 +260,16 @@ run_pmodel_f_bysite <- function(
     # Model parameters as vector in order
     par = c(
       as.numeric(params_modl$kphio),
+      as.numeric(params_modl$kphio_par_a),
+      as.numeric(params_modl$kphio_par_b),
       as.numeric(params_modl$soilm_par_a),
       as.numeric(params_modl$beta_unitcostratio),
       as.numeric(params_modl$rd_to_vcmax),
       as.numeric(params_modl$tau_acclim),
-      as.numeric(params_modl$kc_jmax)
+      as.numeric(params_modl$kc_jmax),
+      as.numeric(params_modl$rootzone_whc)
       )
+
 
     # Soil texture as matrix (layer x texture parameter)
     soiltexture <- params_soil %>% 
@@ -287,7 +290,6 @@ run_pmodel_f_bysite <- function(
       nyeartrend                = as.integer(nyeartrend_forcing),
       secs_per_tstep            = as.integer(secs_per_tstep),
       soilmstress               = as.logical(params_siml$soilmstress),
-      tempstress                = as.logical(params_siml$tempstress),
       in_ppfd                   = as.logical(params_siml$in_ppfd),
       in_netrad                 = as.logical(params_siml$in_netrad),
       outdt                     = as.integer(params_siml$outdt),

@@ -27,7 +27,6 @@ module md_params_siml_pmodel
     logical :: is_calib             ! whether this simulation is a calibration simulation (overriding parameters and no output)
 
     logical :: soilmstress          ! when true, an empirical soil moisture stress function is applied to GPP
-    logical :: tempstress           ! when true, an empirical temperature stress function is applied to GPP
     
     character(len=256) :: runname
     character(len=256) :: sitename

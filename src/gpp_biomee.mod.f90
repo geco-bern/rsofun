@@ -24,15 +24,15 @@ module md_gpp_biomee
     real :: tau_acclim_tempstress
     real :: par_shape_tempstress
     real :: kc_jmax
+
+    ! these should be species-specific, temporary solution to put them here
+    real :: kphio        ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
+    real :: kphio_par_a  ! shape parameter of temperature-dependency of quantum yield efficiency
+    real :: kphio_par_b  ! optimal temperature of quantum yield efficiency (deg C)
+
   end type paramstype_gpp
 
-  ! ! PFT-DEPENDENT PARAMETERS
-  ! type pftparamstype_gpp
-  !   real :: kphio        ! quantum efficiency (Long et al., 1993)  
-  ! end type pftparamstype_gpp
-
   type(paramstype_gpp) :: params_gpp
-  ! type(pftparamstype_gpp), dimension(npft) :: params_pft_gpp
 
 contains
 
@@ -51,7 +51,7 @@ contains
     !------------------------------------------------------------------------
     use md_forcing_biomee, only: climate_type
     use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_rd
-    use md_photosynth, only: calc_ftemp_kphio, calc_soilmstress
+    use md_photosynth, only: calc_kphio_temp, calc_soilmstress
     use md_params_core, only: kTkelvin, kfFEC, c_molmass
     use md_sofunutils, only: dampen_variability
 
@@ -85,7 +85,7 @@ contains
     integer:: i, layer=0
 
     ! local variables used for P-model part
-    real :: tk, ftemp_kphio
+    real :: tk, kphio_temp
     real, save :: co2_memory
     real, save :: vpd_memory
     real, save :: temp_memory
@@ -235,7 +235,12 @@ contains
           !----------------------------------------------------------------
           ! Instantaneous temperature effect on quantum yield efficiency
           !----------------------------------------------------------------
-          ftemp_kphio = calc_ftemp_kphio( (forcing%Tair - kTkelvin), .false. )  ! no C4
+          kphio_temp = calc_kphio_temp( (forcing%Tair - kTkelvin), &
+                                        .false., &    ! no C4
+                                        params_gpp%kphio, &
+                                        params_gpp%kphio_par_a, &
+                                        params_gpp%kphio_par_b )
+
 
           ! photosynthetically active radiation level at this layer
           par = f_light(layer) * forcing%radiation * kfFEC * 1.0e-6
@@ -252,7 +257,7 @@ contains
           ! acclimated to slowly varying conditions
           !----------------------------------------------------------------
           out_pmodel = pmodel(  &
-                                kphio          = sp%kphio, &    !  * ftemp_kphio
+                                kphio          = kphio_temp, &
                                 beta           = params_gpp%beta, &
                                 kc_jmax        = params_gpp%kc_jmax, &
                                 ppfd           = par_memory(layer), &
@@ -597,8 +602,14 @@ contains
     ! Jmax cost ratio
     params_gpp%kc_jmax  = 0.41
 
-    ! ! PFT-dependent parameter(s)
-    ! params_pft_gpp%kphio = myinterface%params_species(1)%kphio  ! is provided through standard input
+    ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
+    params_gpp%kphio = 0.05
+
+    ! shape parameter of temperature-dependency of quantum yield efficiency
+    params_gpp%kphio_par_a = 0.0
+
+    ! optimal temperature of quantum yield efficiency
+    params_gpp%kphio_par_b = 25.0
 
   end subroutine getpar_modl_gpp
 

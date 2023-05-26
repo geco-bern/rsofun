@@ -11,7 +11,7 @@ module md_photosynth
 
   private
   public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
-    calc_ftemp_inst_rd, calc_ftemp_kphio, calc_soilmstress
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -850,7 +850,7 @@ contains
   end function calc_soilmstress
 
 
-  function calc_ftemp_kphio( dtemp, c4 ) result( ftemp )
+  function calc_kphio_temp( dtemp, c4, kphio, kphio_par_a, kphio_par_b ) result( kphio_temp )
     !////////////////////////////////////////////////////////////////
     ! Calculates the instantaneous temperature response of the quantum
     ! yield efficiency based on Bernacchi et al., 2003 PCE (Equation
@@ -859,22 +859,30 @@ contains
     ! arguments
     real, intent(in) :: dtemp    ! (leaf) temperature in degrees celsius
     logical, intent(in) :: c4
+    real, intent(in) :: kphio
+    real, intent(in) :: kphio_par_a
+    real, intent(in) :: kphio_par_b
 
     ! function return variable
-    real :: ftemp
+    real :: kphio_temp
 
     if (c4) then
-      ftemp = (-0.008 + 0.00375 * dtemp - 0.58e-4 * dtemp**2) * 8.0 ! Based on calibrated values by Shirley
-      if (ftemp < 0.0) then
-        ftemp = 0.0
+      kphio_temp = kphio * (-0.008 + 0.00375 * dtemp - 0.58e-4 * dtemp**2) * 8.0 ! Based on calibrated values by Shirley
+      if (kphio_temp < 0.0) then
+        kphio_temp = 0.0
       else
-        ftemp = ftemp
+        kphio_temp = kphio_temp
       end if    
     else
-      ftemp = 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2  ! Based on Bernacchi et al., 2003
+
+      
+      kphio_temp = max(0.0, kphio + kphio_par_a * (dtemp - kphio_par_b)**2)
+
+      ! old:
+      ! kphio_temp = kphio * (0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2)  ! Based on Bernacchi et al., 2003
     end if
     
-  end function calc_ftemp_kphio
+  end function calc_kphio_temp
 
 
   function calc_ftemp_inst_rd( tc ) result( fr )

@@ -16,6 +16,8 @@ module md_interface_pmodel
   type paramstype_calib
     ! real :: k_decay_tissue
     real :: kphio
+    real :: kphio_par_a
+    real :: kphio_par_b
     real :: soilm_par_a
     real :: beta_unitcostratio
     real :: rd_to_vcmax
