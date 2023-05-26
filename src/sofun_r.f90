@@ -18,7 +18,6 @@ contains
     firstyeartrend,            &           
     nyeartrend,                &  
     secs_per_tstep,            &     
-    soilmstress,               &        
     in_ppfd,                   &    
     in_netrad,                 &      
     outdt,                     &  
@@ -59,7 +58,6 @@ contains
     integer(kind=c_int),  intent(in) :: firstyeartrend
     integer(kind=c_int),  intent(in) :: nyeartrend
     integer(kind=c_int),  intent(in) :: secs_per_tstep
-    logical(kind=c_bool), intent(in) :: soilmstress
     logical(kind=c_bool), intent(in) :: in_ppfd
     logical(kind=c_bool), intent(in) :: in_netrad
     integer(kind=c_int),  intent(in) :: outdt
@@ -75,7 +73,7 @@ contains
     real(kind=c_double),  intent(in) :: altitude
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(10), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
     real(kind=c_double),  dimension(nt,15), intent(out) :: output
 
@@ -99,7 +97,6 @@ contains
       myinterface%params_siml%spinupyears = 0
     endif
     
-    myinterface%params_siml%soilmstress        = soilmstress
     myinterface%params_siml%in_ppfd            = in_ppfd
     myinterface%params_siml%in_netrad          = in_netrad
     myinterface%params_siml%outdt              = outdt
@@ -144,12 +141,13 @@ contains
     myinterface%params_calib%kphio              = real(par(1))
     myinterface%params_calib%kphio_par_a        = real(par(2))
     myinterface%params_calib%kphio_par_b        = real(par(3))
-    myinterface%params_calib%soilm_par_a        = real(par(4))
-    myinterface%params_calib%beta_unitcostratio = real(par(5))
-    myinterface%params_calib%rd_to_vcmax        = real(par(6))
-    myinterface%params_calib%tau_acclim         = real(par(7))
-    myinterface%params_calib%kc_jmax            = real(par(8))
-    myinterface%params_calib%rootzone_whc       = real(par(9))
+    myinterface%params_calib%soilm_thetastar    = real(par(4))
+    myinterface%params_calib%soilm_betao        = real(par(5))
+    myinterface%params_calib%beta_unitcostratio = real(par(6))
+    myinterface%params_calib%rd_to_vcmax        = real(par(7))
+    myinterface%params_calib%tau_acclim         = real(par(8))
+    myinterface%params_calib%kc_jmax            = real(par(9))
+    myinterface%params_calib%rootzone_whc       = real(par(10))
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)

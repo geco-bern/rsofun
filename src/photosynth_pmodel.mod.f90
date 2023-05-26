@@ -5,7 +5,7 @@ module md_photosynth
   ! (gpp_biomee_pmodel, and gpp_pmodel) use it and interact with different 
   ! model structures.
   !------------------------------------------------------------------------
-  use md_params_core, only: kPo, c_molmass, dummy
+  use md_params_core, only: kPo, c_molmass, dummy, eps
 
   implicit none
 
@@ -803,7 +803,7 @@ contains
   end function calc_gammastar
 
 
-  function calc_soilmstress( soilm, meanalpha, isgrass, soilm_par_a, soilm_par_b ) result( outstress )
+  function calc_soilmstress( wcont, thetastar, betao, isgrass ) result( outstress )
     !//////////////////////////////////////////////////////////////////
     ! Calculates empirically-derived stress (fractional reduction in light 
     ! use efficiency) as a function of soil moisture
@@ -812,39 +812,28 @@ contains
     !         in strongly water-stressed months
     !-----------------------------------------------------------------------
     ! argument
-    real, intent(in) :: soilm                 ! soil water content (fraction)
-    real, intent(in) :: meanalpha             ! mean annual AET/PET, average over multiple years (fraction)
-    real, intent(in) :: soilm_par_a           ! function parameter
-    real, intent(in) :: soilm_par_b           ! 
+    real, intent(in) :: wcont                 ! soil water content (mm)
+    real, intent(in) :: thetastar             ! threshold of water limitation (mm), previously 0.6 * whc_rootzone
+    real, intent(in) :: betao                 ! soil water stress at zero water rootzone water content
     logical, intent(in), optional :: isgrass  ! vegetation cover information to distinguish sensitivity to low soil moisture
 
-    real, parameter :: x0 = 0.0
-    real, parameter :: x1 = 0.6
-
-    real :: y0, beta
+    ! local variables
+    real :: shape_parameter
 
     ! function return variable
     real :: outstress
 
-    if (soilm > x1) then
+    if (wcont > thetastar) then
       outstress = 1.0
     else
 
-      y0 = (soilm_par_a + soilm_par_b * meanalpha)
-
-      ! if (present(isgrass)) then
-      !   if (isgrass) then
-      !     y0 = apar_grass + bpar_grass * meanalpha
-      !   else
-      !     y0 = apar + bpar * meanalpha
-      !   end if
-      ! else
-      !   y0 = apar + bpar * meanalpha
-      ! end if
-
-      beta = (1.0 - y0) / (x0 - x1)**2
-      outstress = 1.0 - beta * ( soilm - x1 )**2
-      outstress = max( 0.0, min( 1.0, outstress ) )
+      if (thetastar < eps) then
+        outstress = 1.0
+      else
+        shape_parameter = (betao - 1.0) / thetastar**2
+        outstress = shape_parameter * (wcont - thetastar)**2 + 1.0
+        outstress = max( 0.0, min( 1.0, outstress ) )
+      end if
     end if
 
   end function calc_soilmstress

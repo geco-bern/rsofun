@@ -137,7 +137,6 @@ contains
                   myinterface%climate(doy), &
                   myinterface%vegcover(doy), &
                   myinterface%grid, &
-                  myinterface%params_siml%soilmstress, &
                   init_daily &
                   )
 

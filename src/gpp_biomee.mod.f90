@@ -17,12 +17,10 @@ module md_gpp_biomee
   !-----------------------------------------------------------------------
   type paramstype_gpp
     real :: beta         ! Unit cost of carboxylation (dimensionless)
-    real :: soilm_par_a
-    real :: soilm_par_b
+    real :: soilm_thetastar
+    real :: soilm_betao
     real :: rd_to_vcmax  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
-    real :: tau_acclim_tempstress
-    real :: par_shape_tempstress
     real :: kc_jmax
 
     ! these should be species-specific, temporary solution to put them here
@@ -592,12 +590,8 @@ contains
 
     ! Apply identical temperature ramp parameter for all PFTs
     params_gpp%tau_acclim     = 30.0
-    params_gpp%soilm_par_a    = 1.0
-    params_gpp%soilm_par_b    = 0.0
-
-    ! temperature stress time scale is calibratable
-    params_gpp%tau_acclim_tempstress = 20.0
-    params_gpp%par_shape_tempstress  = 0.0
+    params_gpp%soilm_thetastar= 0.6 * 250
+    params_gpp%soilm_betao    = 0.0
 
     ! Jmax cost ratio
     params_gpp%kc_jmax  = 0.41

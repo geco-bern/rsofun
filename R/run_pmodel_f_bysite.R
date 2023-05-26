@@ -14,7 +14,7 @@
 #'       is held constant, if \code{TRUE} its dependency on temperature is parameterised 
 #'       with an empirical temperature stress function (corresponding to Bernacchi et al., 2003).}
 #'       \item{calc_aet_fapar_vpd}{(not in use)}
-#'       \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
+#'       \item{in_ppfd}{A logical value, if soi\code{TRUE} PPFD is a prescribed variable, 
 #'       if \code{FALSE} PPFD is simulated internally.}
 #'       \item{in_netrad}{A logical value indicating whether net radiation is 
 #'       prescribed (\code{TRUE}) or simulated internally (\code{FALSE}).}
@@ -198,7 +198,6 @@ run_pmodel_f_bysite <- function(
       "spinup",
       "spinupyears",
       "recycle",
-      "soilmstress",
       "in_ppfd",
       "in_netrad",
       "outdt",
@@ -240,12 +239,6 @@ run_pmodel_f_bysite <- function(
         warning("Error: Missing kphio parameter, cannot run model.")
         continue <- FALSE
       }
-      if (params_siml$soilmstress){
-        if (is.nanull(params_modl$soilm_par_a)){
-          warning("Error: Missing soilm_par_a parameter but soilmstress = TRUE.")
-          continue <- FALSE
-        } 
-      }
     }
   }
   
@@ -262,7 +255,8 @@ run_pmodel_f_bysite <- function(
       as.numeric(params_modl$kphio),
       as.numeric(params_modl$kphio_par_a),
       as.numeric(params_modl$kphio_par_b),
-      as.numeric(params_modl$soilm_par_a),
+      as.numeric(params_modl$soilm_thetastar),
+      as.numeric(params_modl$soilm_betao),
       as.numeric(params_modl$beta_unitcostratio),
       as.numeric(params_modl$rd_to_vcmax),
       as.numeric(params_modl$tau_acclim),
@@ -289,7 +283,6 @@ run_pmodel_f_bysite <- function(
       firstyeartrend            = as.integer(firstyeartrend_forcing),
       nyeartrend                = as.integer(nyeartrend_forcing),
       secs_per_tstep            = as.integer(secs_per_tstep),
-      soilmstress               = as.logical(params_siml$soilmstress),
       in_ppfd                   = as.logical(params_siml$in_ppfd),
       in_netrad                 = as.logical(params_siml$in_netrad),
       outdt                     = as.integer(params_siml$outdt),

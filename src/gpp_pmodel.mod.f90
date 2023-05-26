@@ -47,8 +47,8 @@ module md_gpp_pmodel
   !-----------------------------------------------------------------------
   type paramstype_gpp
     real :: beta         ! Unit cost of carboxylation (dimensionless)
-    real :: soilm_par_a
-    real :: soilm_par_b
+    real :: soilm_thetastar
+    real :: soilm_betao
     real :: rd_to_vcmax  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
     real :: tau_acclim_tempstress
@@ -73,7 +73,7 @@ module md_gpp_pmodel
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, do_soilmstress, init)
+  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, init)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -91,7 +91,6 @@ contains
     type(climate_type)  :: climate
     type(vegcover_type) :: vegcover
     type(gridtype)      :: grid
-    logical, intent(in) :: do_soilmstress                    ! whether empirical soil miosture stress function is applied to GPP
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
 
     ! local variables
@@ -209,12 +208,10 @@ contains
       !----------------------------------------------------------------
       ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
       !----------------------------------------------------------------
-      if (do_soilmstress) then
-        soilmstress = calc_soilmstress( tile(1)%soil%phy%wscal, 0.0, params_pft_plant(1)%grass, &
-        params_gpp%soilm_par_a, 1.0 )
-      else
-        soilmstress = 1.0
-      end if    
+      soilmstress = calc_soilmstress( tile(1)%soil%phy%wcont, &
+                                      params_gpp%soilm_thetastar, &
+                                      params_gpp%soilm_betao, &
+                                      params_pft_plant(1)%grass )
 
       !----------------------------------------------------------------
       ! GPP
@@ -526,8 +523,11 @@ contains
     ! Acclimation time scale for photosynthesis (d), multiple lines of evidence suggest about monthly is alright 
     params_gpp%tau_acclim = myinterface%params_calib%tau_acclim  ! 30.0
 
-    ! Soil moisture stress parameter (Stocker et al., 2020 GMD Eq. 22)
-    params_gpp%soilm_par_a = myinterface%params_calib%soilm_par_a
+    ! Re-interpreted soil moisture stress parameter, previously thetastar = 0.6
+    params_gpp%soilm_thetastar = myinterface%params_calib%soilm_thetastar
+
+    ! Re-interpreted soil moisture stress parameter, previosly determined by Eq. 22
+    params_gpp%soilm_betao = myinterface%params_calib%soilm_betao
 
     ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
     params_pft_gpp(:)%kphio = myinterface%params_calib%kphio

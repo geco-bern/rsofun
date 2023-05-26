@@ -63,8 +63,8 @@ params_modl <- list(
     kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.0,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
     kphio_par_b        = 1.0,
-    soilm_par_a        = 0.33349283,
-    soilm_par_b        = 1.45602286,
+    soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
+    soilm_betao        = 0.0,
     beta_unitcostratio = 146.000000,
     rd_to_vcmax        = 0.01400000,
     tau_acclim         = 30.0,
