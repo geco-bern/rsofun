@@ -77,6 +77,9 @@
     <li>
       <a href="../articles/prepare_forcing.html">Prepare forcing</a>
     </li>
+    <li>
+      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -114,9 +117,10 @@ Stocker</h4>
     
     
 <p>Forcing data of <code>rsofun</code> adheres to a fixed format as
-described [here]. Any data in this format will be valid
-<code>rsofun</code> input data. However to facilitate the formatting of
-these datasets you may use the internal lab tool <code>ingestr</code>.
+described <a href="https://computationales.github.io/rsofun/reference/p_model_drivers.html" class="external-link">here</a>.
+Any data in this format will be valid <code>rsofun</code> input data.
+However to facilitate the formatting of these datasets you may use the
+internal lab tool <a href="https://github.com/computationales/ingestr" class="external-link"><code>ingestr</code></a>.
 This toolset allows for the easy and consistent formatting of data.</p>
 <p>However, this toolset is very dynamic in nature and therefore will
 not see a formal CRAN release. Within this context we will also give
@@ -275,7 +279,7 @@ collect_drivers_sofun() function to merge all datasets into one nested
 dataframe, which serves as input to the <code>rsofun</code> p-model.
 This concludes the formatting of the driver data</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p_model_fluxnet_drivers</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/collect_drivers_sofun.html">collect_drivers_sofun</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">p_model_fluxnet_drivers</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu">collect_drivers_sofun</span><span class="op">(</span></span>
 <span>  site_info      <span class="op">=</span> <span class="va">fluxnet_sites</span>,</span>
 <span>  params_siml    <span class="op">=</span> <span class="va">params_siml</span>,</span>
 <span>  meteo          <span class="op">=</span> <span class="va">df_meteo</span>,</span>

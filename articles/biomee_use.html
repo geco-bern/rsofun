@@ -77,6 +77,9 @@
     <li>
       <a href="../articles/prepare_forcing.html">Prepare forcing</a>
     </li>
+    <li>
+      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -290,7 +293,7 @@ well as parameter ranges.</p>
 <code class="sourceCode R"><span><span class="co"># Mortality as DBH</span></span>
 <span><span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  method              <span class="op">=</span> <span class="st">"bayesiantools"</span>,</span>
-<span>  metric              <span class="op">=</span> <span class="fu"><a href="../reference/create_cost_rmse_biomee.html">create_cost_rmse_biomee</a></span><span class="op">(</span></span>
+<span>  metric              <span class="op">=</span> <span class="fu">create_cost_rmse_biomee</span><span class="op">(</span></span>
 <span>                          method <span class="op">=</span> <span class="st">'BayesianTools'</span></span>
 <span>                          <span class="op">)</span>,</span>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>

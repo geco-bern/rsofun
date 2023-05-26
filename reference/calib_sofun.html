@@ -52,6 +52,9 @@ calibration of SOFUN model parameters."><meta name="twitter:card" content="summa
     <li>
       <a href="../articles/prepare_forcing.html">Prepare forcing</a>
     </li>
+    <li>
+      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -82,7 +85,7 @@ calibration of SOFUN model parameters.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">calib_sofun</span><span class="op">(</span><span class="va">drivers</span>, <span class="va">obs</span>, <span class="va">settings</span>, optim_out <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">calib_sofun</span><span class="op">(</span><span class="va">drivers</span>, <span class="va">obs</span>, <span class="va">settings</span>, optim_out <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -100,14 +103,17 @@ structure.</p></dd>
 
 <dt>settings</dt>
 <dd><p>A list containing model calibration settings. 
-See the 'P-model usage' vignette for more information and examples.</p><dl><dt><code>par</code></dt>
-<dd><p>A list of model parameters. For each parameter, an initial value 
- and lower and upper bounds should be provided. The calibratable parameters
- are 'kphio', 'soilm_par_a', 'soilm_par_b', 'tau_acclim_tempstress' and 'par_shape_tempstress'.</p></dd>
-
- <dt><code>method</code></dt>
+See the 'P-model usage' vignette for more information and examples.</p><dl><dt><code>method</code></dt>
 <dd><p>A string indicating the optimization method, either <code>'GenSA'</code>
  or <code>'BayesianTools'</code>.</p></dd>
+
+ <dt><code>par</code></dt>
+<dd><p>A list of model parameters. For each parameter, an initial value 
+ and lower and upper bounds should be provided. The calibratable parameters
+ are model parameters 'kphio' and 'soilm_par_a', and (if
+ doing Bayesian calibration) error parameters
+ for each target variable, named for example 'err_gpp'. This list must match
+ the input parameters of the calibration metric.</p></dd>
 
  <dt><code>metric</code></dt>
 <dd><p>A cost function. See the 'Cost functions for parameter
@@ -119,13 +125,19 @@ See the 'P-model usage' vignette for more information and examples.</p><dl><dt><
  the list should include at least <code>settings</code> and <code>sampler</code>, see
  <a href="https://rdrr.io/pkg/BayesianTools/man/runMCMC.html" class="external-link">BayesianTools::runMCMC</a>.</p></dd>
 
- <dt><code>targets</code></dt>
-<dd><p>Name of the observed target variable to use in calibration
- (necessary if <code>method = 'BayesianTools'</code>).</p></dd>
+
+</dl></dd>
 
 
-</dl><p>@param optim_out A logical indicating whether the function returns the raw
+<dt>optim_out</dt>
+<dd><p>A logical indicating whether the function returns the raw
 output of the optimization functions (defaults to TRUE).</p></dd>
+
+
+<dt>...</dt>
+<dd><p>Optional arguments passed on to the cost function specified as
+<code>settings$metric</code>. 
+.</p></dd>
 
 </dl></div>
     <div id="value">

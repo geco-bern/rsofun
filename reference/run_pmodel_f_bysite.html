@@ -51,6 +51,9 @@
     <li>
       <a href="../articles/prepare_forcing.html">Prepare forcing</a>
     </li>
+    <li>
+      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -113,8 +116,9 @@
       moisture stress function is applied to GPP.</p></dd>
 
       <dt>tempstress</dt>
-<dd><p>A logical value, if <code>TRUE</code> an empirical temperature 
-      stress function is applied to GPP.</p></dd>
+<dd><p>A logical value, if <code>FALSE</code> the quantum yield efficiency
+      is held constant, if <code>TRUE</code> its dependency on temperature is parameterised 
+      with an empirical temperature stress function (corresponding to Bernacchi et al., 2003).</p></dd>
 
       <dt>calc_aet_fapar_vpd</dt>
 <dd><p>(not in use)</p></dd>
@@ -152,12 +156,6 @@
       <dt>lgr4</dt>
 <dd><p>A logical value, <code>TRUE</code> if grass with C4 photosynthetic pathway.</p></dd>
 
-      <dt>firstyeartrend</dt>
-<dd><p>The year AD of first transient year.</p></dd>
-
-      <dt>nyeartrend</dt>
-<dd><p>The number of transient years.</p></dd>
-
 
 </dl></dd>
 
@@ -182,7 +180,7 @@
 
 <dt>forcing</dt>
 <dd><p>A data frame of forcing climate data, used as input 
-(returned object by <code><a href="collect_drivers_sofun.html">collect_drivers_sofun</a></code>, see <code><a href="p_model_drivers.html">p_model_drivers</a></code>
+(see <code><a href="p_model_drivers.html">p_model_drivers</a></code>
 for a detailed description of its structure and contents).</p></dd>
 
 
@@ -210,20 +208,6 @@ layer of soil.</p><dl><dt>fsand</dt>
 
   <dt>soilm_par_a</dt>
 <dd><p>Intercept of the linear soil moisture stress function (unitless).</p></dd>
-
-  <dt>soilm_par_b</dt>
-<dd><p>Slope of the linear soil moisture stress function (unitless).</p></dd>
-
-  <dt>tau_acclim_tempstress</dt>
-<dd><p>Memory e-folding time scale parameter (in hours)
-  for acclimation of photosynthesis, following Eq. 5 in Makela et al. (2004) 
-  Tree Physiology 24, 369–376</p></dd>
-
-  <dt>par_shape_tempstress</dt>
-<dd><p>Shape parameter for the low temperature stress
-  function affecting quantum yield efficiency. A positive (unitless) value indicating 
-  the sensitivity of the decline (assuming no decline at 10\(^o\)C) and 
-  above, but decreasing with a quadratic function below 10\(^o\)C).</p></dd>
 
 
 </dl></dd>

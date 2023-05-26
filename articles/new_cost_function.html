@@ -77,6 +77,9 @@
     <li>
       <a href="../articles/prepare_forcing.html">Prepare forcing</a>
     </li>
+    <li>
+      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -115,137 +118,206 @@
     
 <p>The <code>rsofun</code> package allows to calibrate parameters of the
 <code>pmodel</code> and <code>biomee</code> models via the
-<code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> function and various cost functions. All cost
-functions must take three arguments:</p>
-<ul>
-<li><p><code>par</code>: A vector of calibratable model parameters. In
-each iteration of the optimization, a new set of values of
-<code>par</code> is used to run the model and compute the cost.</p></li>
-<li><p><code>obs</code>: A data frame of observations, against which to
-compare the simulationn results.</p></li>
-<li><p><code>drivers</code>: A data frame of driver data, used to run
-the simulations. In this vignette, we go over some examples on how to
-use these cost functions for parameter calibration and how to write your
-own custom one, either using our standard framework or from
-scratch.</p></li>
-</ul>
+<code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> function. The implementation of the
+calibration is fairly flexible and can be adapted to a specific use-case
+via a cost function (used as metrics for the optimization routines in
+<code><a href="../reference/calib_sofun.html">calib_sofun()</a></code>). The package provides a set of standard cost
+functions named <code>cost_*</code>, which can be used for a variety of
+calibrations (different sets of model parameters, using various target
+variables, etc.). Alternatively, it’s possible to write a more specific
+new cost function to be used together with
+<code><a href="../reference/calib_sofun.html">calib_sofun()</a></code>.</p>
+<p>In this vignette, we go over some examples on how to use the
+<code>rsofun</code> cost functions for parameter calibration and how to
+write your own custom one from scratch.</p>
 <div class="section level3">
-<h3 id="calibration-using-rmse-on-gpp-and-gensa-optimizer">Calibration using RMSE on GPP and GenSA optimizer<a class="anchor" aria-label="anchor" href="#calibration-using-rmse-on-gpp-and-gensa-optimizer"></a>
+<h3 id="calibration-to-gpp-using-rmse-and-gensa-optimizer">Calibration to GPP using RMSE and GenSA optimizer<a class="anchor" aria-label="anchor" href="#calibration-to-gpp-using-rmse-and-gensa-optimizer"></a>
 </h3>
-<p>A simple approach to parameter calibration is to fit the one that
-leads to the best GPP prediction performance, in terms of the RMSE (root
-mean squared error) . With <code><a href="../reference/create_cost_rmse_pmodel.html">create_cost_rmse_pmodel()</a></code>, we
-can create a cost function that corresponds to different calibration
+<p>A simple approach to parameter calibration is to find the parameter
+values that lead to the best prediction performance, in terms of the
+RMSE (root mean squared error). The function
+<code><a href="../reference/cost_rmse_pmodel.html">cost_rmse_pmodel()</a></code> runs the P-model internally to calculate
+the RMSE between predicted target values (in this case GPP) and the
+corresponding observations.</p>
+<p>The implementation of <code><a href="../reference/cost_rmse_pmodel.html">cost_rmse_pmodel()</a></code> allows
+flexibility in various ways. We can replicate the different calibration
 setups in Stocker et al., 2020 GMD. For example, following the
-<code>FULL</code> setup, we can calibrate parameters <code>kphio</code>,
-<code>soilm_par_a</code> and <code>soilm_par_b</code>. We must always
-specify which values the fixed parameters should take, i.e. the
-parameters that aren’t calibrated, and also the optimization method, in
-this case <code>GenSA</code>.</p>
+<code>FULL</code> setup, all model parameters <code>kphio</code> and
+<code>soilm_par_a</code> are calibrated. Furthermore, the standard cost
+functions allow to calibrate to several targets (fluxes and leaf traits
+predicted by the P-model) simultaneously and to parallelize the
+simulations.</p>
+<p>The syntax to run the calibration routine is as follows:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Set parameter values</span></span>
-<span><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    kphio           <span class="op">=</span> <span class="fl">0.04607080</span>,</span>
-<span>    soilm_par_a     <span class="op">=</span> <span class="fl">2.75687824</span>,</span>
-<span>    soilm_par_b     <span class="op">=</span> <span class="fl">1.68140444</span>,</span>
-<span>    tau_acclim_tempstress <span class="op">=</span> <span class="fl">7.35259044</span>,</span>
-<span>    par_shape_tempstress  <span class="op">=</span> <span class="fl">0.09863961</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create the cost function</span></span>
-<span><span class="va">cost_rmse_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_cost_rmse_pmodel.html">create_cost_rmse_pmodel</a></span><span class="op">(</span></span>
-<span>  params_modl <span class="op">=</span> <span class="va">pars</span>,</span>
-<span>  setup <span class="op">=</span> <span class="st">'FULL'</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">'GenSA'</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>Note that, for now, only GPP is used as a target variable for the
-simulation and calibration of the P-model. Each cost function should be
-written for a specific set of target variables.</p>
-<p>Now we can run the calibration routine, as follows.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define calibration settings and parameter ranges from previous work</span></span>
-<span><span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  method <span class="op">=</span> <span class="st">'GenSA'</span>,</span>
-<span>  metric <span class="op">=</span> <span class="va">cost_rmse_full</span>, <span class="co"># our cost function</span></span>
-<span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    maxit <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
-<span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span><span class="va">settings_rmse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  method <span class="op">=</span> <span class="st">'GenSA'</span>,                   <span class="co"># minimizes the RMSE</span></span>
+<span>  metric <span class="op">=</span> <span class="va">cost_rmse_pmodel</span>,          <span class="co"># our cost function</span></span>
+<span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>                     <span class="co"># control parameters for the optimizer</span></span>
+<span>    maxit <span class="op">=</span> <span class="fl">10</span><span class="op">)</span>,</span>
+<span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>                         <span class="co"># bounds for the parameter space</span></span>
 <span>    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.04</span>, upper<span class="op">=</span><span class="fl">0.2</span>, init<span class="op">=</span><span class="fl">0.05</span><span class="op">)</span>,</span>
-<span>    soilm_par_a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.1</span>, upper<span class="op">=</span><span class="fl">5</span>, init<span class="op">=</span><span class="fl">2.4</span><span class="op">)</span>,</span>
-<span>    soilm_par_b <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">1</span>, upper<span class="op">=</span><span class="fl">2</span>, init<span class="op">=</span><span class="fl">1.5</span><span class="op">)</span></span>
+<span>    soilm_par_a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.1</span>, upper<span class="op">=</span><span class="fl">5</span>, init<span class="op">=</span><span class="fl">2.4</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Calibrate the model and optimize the free parameters using</span></span>
 <span><span class="co"># demo datasets</span></span>
-<span><span class="va">pars_calib</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calib_sofun.html">calib_sofun</a></span><span class="op">(</span></span>
-<span>  drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,</span>
+<span><span class="va">pars_calib_rmse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calib_sofun.html">calib_sofun</a></span><span class="op">(</span></span>
+<span>  <span class="co"># calib_sofun arguments:</span></span>
+<span>  drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,  </span>
 <span>  obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span>
-<span>  settings <span class="op">=</span> <span class="va">settings</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span>  settings <span class="op">=</span> <span class="va">settings_rmse</span>,</span>
+<span>  <span class="co"># extra arguments passed to the cost function:</span></span>
+<span>  setup <span class="op">=</span> <span class="st">"FULL"</span>,           <span class="co"># calibrate all parameters</span></span>
+<span>  targets <span class="op">=</span> <span class="st">"gpp"</span>           <span class="co"># define target variable GPP</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in</span></span>
+<span><span class="co">#&gt; dplyr 1.1.0.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use `reframe()` instead.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> When switching from `summarise()` to `reframe()`, remember that `reframe()`</span></span>
+<span><span class="co">#&gt;   always returns an ungrouped data frame and adjust accordingly.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">rsofun</span> package.</span></span>
+<span><span class="co">#&gt;   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/geco-bern/rsofun/issues&gt;</span>.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span></code></pre></div>
 <p>The output of <code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> is a list containing the
-calibrated parameter values and the raw optimization output from
-<code>GenSA</code> (or from <code><a href="https://rdrr.io/pkg/BayesianTools/man/runMCMC.html" class="external-link">BayesianTools::runMCMC</a></code>, as we
-see next).</p>
+calibrated parameter values and the raw optimization output from the
+optimizer (here from <code>GenSA</code> or, as we see next, from
+<code><a href="https://rdrr.io/pkg/BayesianTools/man/runMCMC.html" class="external-link">BayesianTools::runMCMC</a></code>).</p>
 </div>
 <div class="section level3">
-<h3 id="calibration-using-simple-likelihood-function-and-bayesiantools">Calibration using simple likelihood function and BayesianTools<a class="anchor" aria-label="anchor" href="#calibration-using-simple-likelihood-function-and-bayesiantools"></a>
+<h3 id="calibration-to-gpp-using-a-simple-likelihood-function-and-bayesiantools">Calibration to GPP using a simple likelihood function and
+BayesianTools<a class="anchor" aria-label="anchor" href="#calibration-to-gpp-using-a-simple-likelihood-function-and-bayesiantools"></a>
 </h3>
-<p>Let’s create a cost function to calibrate only the <code>kphio</code>
-parameter, taking a Bayesian estimation approach. By maximizing the
-normal log-likelihood, the MAP (maximum a posteriori) estimator for
-<code>kphio</code> is computed.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">likelihood_pmodel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_cost_likelihood_pmodel.html">create_cost_likelihood_pmodel</a></span><span class="op">(</span></span>
-<span>  params_modl <span class="op">=</span> <span class="va">pars</span>,  <span class="co"># reuse previous initial values</span></span>
-<span>  setup <span class="op">=</span> <span class="st">'BRC'</span>,       <span class="co"># calibrate only kphio</span></span>
-<span>  target <span class="op">=</span> <span class="st">'gpp'</span>       <span class="co"># same target name as column name in dataframe</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p>Note that, in the definition of the calibration settings, the control
-parameters differ from the ones used with <code>GenSA</code>. A uniform
-prior for the parameter is also defined, by giving lower and upper
-limits.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>Let’s calibrate only the <code>kphio</code> parameter (setup
+<code>'BRC'</code>), taking a Bayesian calibration approach. We assume
+that the target variable (<code>'gpp'</code>) follows a normal
+distribution centered at the observations and with its standard
+deviation being a new calibratable parameter (<code>'err_gpp'</code>).
+We also assume a uniform prior distribution for all calibratable
+parameters. By maximizing the normal log-likelihood, the MAP (maximum a
+posteriori) estimators for <code>kphio</code> and <code>err_gpp</code>
+are computed. With the function <code><a href="../reference/cost_likelihood_pmodel.html">cost_likelihood_pmodel()</a></code>,
+we can easily perform this calibration, as follows:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define calibration settings</span></span>
 <span><span class="va">settings_likelihood</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  method <span class="op">=</span> <span class="st">'BayesianTools'</span>,</span>
-<span>  metric <span class="op">=</span> <span class="va">likelihood_pmodel</span>, <span class="co"># our cost function</span></span>
+<span>  metric <span class="op">=</span> <span class="va">cost_likelihood_pmodel</span>,                        <span class="co"># our cost function</span></span>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    sampler <span class="op">=</span> <span class="st">'DEzs'</span>,</span>
 <span>    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      burnin <span class="op">=</span> <span class="fl">500</span>,</span>
-<span>      iterations <span class="op">=</span> <span class="fl">1500</span></span>
+<span>      burnin <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>      iterations <span class="op">=</span> <span class="fl">15</span></span>
 <span>    <span class="op">)</span><span class="op">)</span>,</span>
 <span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.04</span>, upper<span class="op">=</span><span class="fl">0.2</span>, init<span class="op">=</span><span class="fl">0.05</span><span class="op">)</span></span>
+<span>    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.01</span>, upper<span class="op">=</span><span class="fl">0.2</span>, init<span class="op">=</span><span class="fl">0.05</span><span class="op">)</span>,    <span class="co"># uniform priors</span></span>
+<span>    err_gpp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.1</span>, upper <span class="op">=</span> <span class="fl">4</span>, init <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>   </span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Calibrate the model and optimize the free parameters using</span></span>
 <span><span class="co"># demo datasets</span></span>
 <span><span class="va">pars_calib_likelihood</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calib_sofun.html">calib_sofun</a></span><span class="op">(</span></span>
+<span>  <span class="co"># calib_sofun arguments:</span></span>
 <span>  drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,</span>
 <span>  obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span>
-<span>  settings <span class="op">=</span> <span class="va">settings_likelihood</span></span>
+<span>  settings <span class="op">=</span> <span class="va">settings_likelihood</span>,</span>
+<span>  <span class="co"># extra arguments passed ot the cost function:</span></span>
+<span>  setup <span class="op">=</span> <span class="st">"BRC"</span>,</span>
+<span>  targets <span class="op">=</span> <span class="st">"gpp"</span>,</span>
+<span>  par_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>soilm_par_a <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span>    <span class="co"># fix parameter value from RMSE calibration</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>There are equivalent cost functions available for the BiomeE model.
-Check out the reference pages for more details on how to use
-<code><a href="../reference/create_cost_likelihood_biomee.html">create_cost_likelihood_biomee()</a></code> and
-<code><a href="../reference/create_cost_rmse_biomee.html">create_cost_rmse_biomee()</a></code>.</p>
+<p>Let’s take a look at the code above. Since the P-model is run
+internally to make predictions, we must always specify which values the
+model parameters should take, i.e. the parameter that isn’t calibrated
+<code>soilm_par_a</code> (via argument <code>par_fixed</code>). In the
+definition of the calibration settings, the control parameters for
+<code>BayesianTools</code> differ from the ones used for
+<code>GenSA</code>.</p>
+<p>Furthermore, there are equivalent cost functions available for the
+BiomeE model. Check out the reference pages for more details on how to
+use <code><a href="../reference/cost_likelihood_biomee.html">cost_likelihood_biomee()</a></code> and
+<code><a href="../reference/cost_rmse_biomee.html">cost_rmse_biomee()</a></code>.</p>
+</div>
+<div class="section level3">
+<h3 id="calibration-to-gpp-and-vcmax25-using-the-joint-log-likelihood-and-bayesiantools">Calibration to GPP and Vcmax25 using the joint log-likelihood and
+BayesianTools<a class="anchor" aria-label="anchor" href="#calibration-to-gpp-and-vcmax25-using-the-joint-log-likelihood-and-bayesiantools"></a>
+</h3>
+<p>You may be interested in calibrating the model to different target
+variables simultaneously, like flux and leaf trait measurements. Here we
+present an example, where we use <code><a href="../reference/cost_likelihood_pmodel.html">cost_likelihood_pmodel()</a></code>
+to compute the joint normal likelihood of all the targets specified
+(that is, by summing the log-likelihoods of GPP and Vcmax25) and
+ultimately calibrate the <code>kphio</code> parameter. It would be
+possible to follow this workflow for several-target calibration also
+with RMSE as the optimization metric, using
+<code><a href="../reference/cost_rmse_pmodel.html">cost_rmse_pmodel()</a></code> and <code>GenSA</code> optimization.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define calibration settings for two targets</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>settings_joint_likelihood <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"BayesianTools"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">metric =</span> cost_likelihood_pmodel,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">list</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">sampler =</span> <span class="st">"DEzs"</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">settings =</span> <span class="fu">list</span>(</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">burnin =</span> <span class="dv">5</span>,             <span class="co"># kept artificially low</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">iterations =</span> <span class="dv">15</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">par =</span> <span class="fu">list</span>(<span class="at">kphio =</span> <span class="fu">list</span>(<span class="at">lower =</span> <span class="fl">0.01</span>, <span class="at">upper =</span> <span class="fl">0.2</span>, <span class="at">init =</span> <span class="fl">0.05</span>),  <span class="co"># uniform priors</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>             <span class="at">err_gpp =</span> <span class="fu">list</span>(<span class="at">lower =</span> <span class="fl">0.001</span>, <span class="at">upper =</span> <span class="dv">4</span>, <span class="at">init =</span> <span class="dv">1</span>),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">err_vcmax25 =</span> <span class="fu">list</span>(<span class="at">lower =</span> <span class="fl">0.00001</span>, <span class="at">upper =</span> <span class="fl">0.2</span>, <span class="at">init =</span> <span class="fl">0.001</span>))</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the calibration on the concatenated data</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>par_calib_join <span class="ot">&lt;-</span> <span class="fu">calib_sofun</span>(</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">drivers =</span> <span class="fu">rbind</span>(p_model_drivers,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                  p_model_drivers_vcmax25[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, ]), <span class="co"># subset of sites</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs =</span> <span class="fu">rbind</span>(p_model_validation,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>              p_model_validation_vcmax25[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, ]), <span class="co"># subset of sites</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">settings =</span> settings_joint_likelihood,</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># arguments for the cost function</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">setup =</span> <span class="st">"BRC"</span>,</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">par_fixed =</span> <span class="fu">c</span>(<span class="at">soilm_par_a =</span> <span class="fl">0.3</span>),    <span class="co"># fix parameter value from RMSE calibration</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">targets =</span> <span class="fu">c</span>(<span class="st">'gpp'</span>, <span class="st">'vcmax25'</span>)</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a> Running DEzs<span class="sc">-</span>MCMC, chain  <span class="dv">1</span> iteration <span class="dv">15</span> of <span class="dv">15</span> . Current logp  <span class="sc">-</span><span class="fl">5822.813</span> <span class="sc">-</span><span class="fl">5039.669</span> <span class="sc">-</span><span class="fl">5449.054</span> . Please wait<span class="sc">!</span> </span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; runMCMC terminated after 1.983seconds</span></span></code></pre></div>
+<p>Note that GPP predictions are directly compared to GPP observations
+on that day, but Vcmax25 predicted by the P-model (being a leaf trait)
+is averaged over the growing season and compared to a single Vcmax25
+observation taken per site. The cost functions provided in the package
+tell apart fluxes and leaf traits by the presence of a
+<code>"date"</code> column in the nested validation data frames
+<code>p_model_validation</code> and
+<code>p_model_validation_vcmax25</code>.</p>
 </div>
 <div class="section level3">
 <h3 id="write-your-custom-cost-function">Write your custom cost function<a class="anchor" aria-label="anchor" href="#write-your-custom-cost-function"></a>
 </h3>
-<p>If the RMSE or normal log-likelihood cost functions that we provide
-do not fit your use case, you can easily write a custom one. In this
-section, we drive you through the main ideas with an example.</p>
-<p>All cost functions must take three arguments: a vector of
-calibratable parameter values <code>par</code>, a data frame of observed
-values which contains the target variable <code>obs</code> and a data
-frame of drivers used to run the model <code>drivers</code>. Since we
-are calibrating the parameters based on model outputs, the cost function
-runs the p-model and compare its output to observed validation data.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<p>If the RMSE or normal log-likelihood (for one or several targets)
+cost functions that we provide do not fit your use case, you can easily
+write a custom one. In this section, we drive you through the main ideas
+with an example.</p>
+<p>All cost functions must take at least three arguments:</p>
+<ul>
+<li><p><code>par</code>: A vector of calibratable model parameters. In
+each iteration of the optimization, a new set of values of
+<code>par</code> is used to run the model and compute the cost.</p></li>
+<li><p><code>obs</code>: A data frame of observations, against which to
+compare the simulation results.</p></li>
+<li><p><code>drivers</code>: A data frame of driver data, used to run
+the simulations.</p></li>
+<li><p>Additional optional arguments can be used, like for example the
+model parameter values that should be fixed across simulations,
+etc.</p></li>
+</ul>
+<p>Since we are calibrating the parameters based on model outputs, the
+cost function runs the P-model and compare its output to observed
+validation data.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">function</span><span class="op">(</span><span class="va">par</span>, <span class="va">obs</span>, <span class="va">drivers</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="co"># Your code</span></span>
 <span><span class="op">}</span></span></code></pre></div>
@@ -257,16 +329,13 @@ sections). Nevertheless, within the cost function we call
 model parameters. Therefore, the parameters that aren’t being calibrated
 must be hard coded inside the cost function. In this example, we only
 want to calibrate the soil moisture stress parameters.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">function</span><span class="op">(</span><span class="va">par</span>, <span class="va">obs</span>, <span class="va">drivers</span><span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
 <span>  <span class="co"># Set values for the list of calibrated and non-calibrated model parameters</span></span>
 <span>  <span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    kphio <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>    soilm_par_a <span class="op">=</span> <span class="va">par</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
-<span>    soilm_par_b <span class="op">=</span> <span class="va">par</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>,</span>
-<span>    tau_acclim_tempstress <span class="op">=</span> <span class="fl">7.4</span>,</span>
-<span>    par_shape_tempstress <span class="op">=</span> <span class="fl">0.1</span></span>
+<span>    soilm_par_a <span class="op">=</span> <span class="va">par</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span>  <span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># Run the model</span></span>
@@ -286,16 +355,13 @@ function should return a scalar value, in this case the MAE, which we
 want to minimize. The GenSA optimization will minimize the cost, but if
 we wanted to use BayesianTools we should write
 <code>return(-cost)</code> because it’s a maximizing routine.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cost_mae</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">par</span>, <span class="va">obs</span>, <span class="va">drivers</span><span class="op">)</span><span class="op">{</span></span>
 <span></span>
 <span>  <span class="co"># Set values for the list of calibrated and non-calibrated model parameters</span></span>
 <span>  <span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    kphio <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>    soilm_par_a <span class="op">=</span> <span class="va">par</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
-<span>    soilm_par_b <span class="op">=</span> <span class="va">par</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>,</span>
-<span>    tau_acclim_tempstress <span class="op">=</span> <span class="fl">7.4</span>,</span>
-<span>    par_shape_tempstress <span class="op">=</span> <span class="fl">0.1</span></span>
+<span>    soilm_par_a <span class="op">=</span> <span class="va">par</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span>  <span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># Run the model</span></span>
@@ -328,7 +394,7 @@ we wanted to use BayesianTools we should write
 <span><span class="op">}</span></span></code></pre></div>
 <p>As a last step, let’s verify that the calibration procedure runs
 using this cost function.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define calibration settings and parameter ranges</span></span>
 <span><span class="va">settings_mae</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  method <span class="op">=</span> <span class="st">'GenSA'</span>,</span>
@@ -336,8 +402,7 @@ using this cost function.</p>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    maxit <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
 <span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    soilm_par_a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.1</span>, upper<span class="op">=</span><span class="fl">5</span>, init<span class="op">=</span><span class="fl">2.4</span><span class="op">)</span>,</span>
-<span>    soilm_par_b <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">1</span>, upper<span class="op">=</span><span class="fl">2</span>, init<span class="op">=</span><span class="fl">1.5</span><span class="op">)</span></span>
+<span>    soilm_par_a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.1</span>, upper<span class="op">=</span><span class="fl">5</span>, init<span class="op">=</span><span class="fl">2.4</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
