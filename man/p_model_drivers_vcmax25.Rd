@@ -34,10 +34,6 @@ A tibble of driver data:
       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}
       \item{recycle}{Length of standard recycling period, in days.}
-      \item{soilmstress}{A logical value, if \code{TRUE} an empirical soil 
-      moisture stress function is applied to GPP.}
-      \item{tempstress}{A logical value, if \code{TRUE} an empirical temperature 
-      stress function is applied to GPP.}
       \item{calc_aet_fapar_vpd}{(not in use)}
       \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
       if \code{FALSE} PPFD is simulated internally.}
@@ -66,7 +62,8 @@ A tibble of driver data:
       data is later aggregated across years to obtain a single year of "average"
       climate forcing.}
       \item{whc}{A numeric value for the water holding capacity (in mm), used for 
-      simulating the soil water balance.}
+      simulating the soil water balance. It is taken by the P-model as a calibratable
+      model parameter \code{rootzone_whc}.}
     }
   }
   \item{params_soil}{A tibble [ 2 x 5 ] containing soil texture data
