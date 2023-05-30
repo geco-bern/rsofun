@@ -246,14 +246,13 @@ run_pmodel_f_bysite <- function(
     }
     
     # Check model parameters
-    if(all(!is.nanull(params_siml$soilmstress), !is.nanull(params_siml$tempstress))){
-      if (length(params_modl) < 1){
-        warning("Error: Missing model parameters")
-        continue <- FALSE
-      } else if (is.nanull(params_modl$kphio)){
-        warning("Error: Missing kphio parameter, cannot run model.")
-        continue <- FALSE
-      }
+    if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
+                                              'soilm_thetastar', 'soilm_betao',
+                                              'beta_unitcostratio', 'rd_to_vcmax', 
+                                              'tau_acclim', 'kc_jmax', 'rootzone_whc')
+    ) != 10){
+      warning(" Returning a dummy data frame. Incorrect model parameters.")
+      continue <- FALSE
     }
   }
   
