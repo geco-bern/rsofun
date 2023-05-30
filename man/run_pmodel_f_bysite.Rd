@@ -23,13 +23,8 @@ run_pmodel_f_bysite(
       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}
       \item{recycle}{Length of standard recycling period, in days.}
-      \item{soilmstress}{A logical value, if \code{TRUE} an empirical soil 
-      moisture stress function is applied to GPP.}
-      \item{tempstress}{A logical value, if \code{FALSE} the quantum yield efficiency
-      is held constant, if \code{TRUE} its dependency on temperature is parameterised 
-      with an empirical temperature stress function (corresponding to Bernacchi et al., 2003).}
       \item{calc_aet_fapar_vpd}{(not in use)}
-      \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
+      \item{in_ppfd}{A logical value, if soi\code{TRUE} PPFD is a prescribed variable, 
       if \code{FALSE} PPFD is simulated internally.}
       \item{in_netrad}{A logical value indicating whether net radiation is 
       prescribed (\code{TRUE}) or simulated internally (\code{FALSE}).}
@@ -49,8 +44,6 @@ run_pmodel_f_bysite(
       \item{lon}{Longitud of the site location.}
       \item{lat}{Latitude of the site location.}
       \item{elv}{Elevation of the site location, in meters.}
-      \item{whc}{A numeric value for the water holding capacity (in mm), used for 
-      simulating the soil water balance.}
 }}
 
 \item{forcing}{A data frame of forcing climate data, used as input 
@@ -68,8 +61,30 @@ layer of soil.
 
 \item{params_modl}{A named list of free (calibratable) model parameters.
 \describe{
-  \item{kphio}{The quantum yield efficiency parameter, in mol mol\eqn{^{-1}}.}
-  \item{soilm_par_a}{Intercept of the linear soil moisture stress function (unitless).}
+  \item{kphio}{The quantum yield efficiency at optimal temperature, in mol mol\eqn{^{-1}}.
+   When temperature dependence is used, it corresponds to the parameter \eqn{c}.}
+  \item{kphio_par_a}{The shape parameter \eqn{a} of the temperature-dependency of
+   quantum yield efficiency, given by \eqn{\varphi_0 (T) = a (T - b)^2 + c}. 
+   If \code{kphio_par_a = 0} the ORG setup from Stocker et al.
+   2020 GMD is used, disabling the temperature dependence.}
+  \item{kphio_par_b}{The optimal temperature parameter \eqn{b} of the temperature
+   dependent quantum yield efficiency, given by 
+   \eqn{\varphi_0 (T) = a (T - b)^2 + c}, in \eqn{^o}C.}
+  \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
+   soil moisture stress function. To reproduce the setup specified in Stocker
+   et al. 2020 GMD, set \code{soilm_thetastar = 0.6 * rootzone_whc}. To
+   turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
+  \item{soilm_betao}{The intercept parameter \eqn{\beta_{0}} in the
+   soil moisture stress function. This is the parameter calibrated in Stocker
+   et al. 2020 GMD.}
+  \item{beta_unitcostratio}{The unit cost of carboxylation, corresponding to
+   \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
+  \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
+  \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
+  \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c in Prentice
+   et al. 2014).} 
+  \item{rootzone_whc}{A numeric value for the water holding capacity (in mm),  
+   used for simulating the soil water balance. This parameter should be site-specific.}
 }}
 
 \item{makecheck}{A logical specifying whether checks are performed 
