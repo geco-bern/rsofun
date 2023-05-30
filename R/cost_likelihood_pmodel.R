@@ -38,7 +38,7 @@
 #' @details To run the P-model, all model parameters must be given. The cost
 #' function uses arguments \code{par} and \code{par_fixed} such that, in the
 #' calibration routine, \code{par} can be updated by the optimizer and 
-#' \code{par_fixed} kept unchanged throughout calibration.
+#' \code{par_fixed} are kept unchanged throughout calibration.
 #' 
 #' If the validation data contains a "date" column (fluxes), the simulated target time series
 #' is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
