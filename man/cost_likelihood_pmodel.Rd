@@ -2,14 +2,13 @@
 % Please edit documentation in R/cost_likelihood_pmodel.R
 \name{cost_likelihood_pmodel}
 \alias{cost_likelihood_pmodel}
-\title{Cost function computing a log-likelihood for calibration of different
-simulation setups}
+\title{Cost function computing a log-likelihood for calibration of P-model
+parameters}
 \usage{
 cost_likelihood_pmodel(
   par,
   obs,
   drivers,
-  setup,
   targets,
   par_fixed = NULL,
   parallel = FALSE,
@@ -18,7 +17,8 @@ cost_likelihood_pmodel(
 }
 \arguments{
 \item{par}{A vector of values for the parameters to be calibrated, including
-model parameters matching the calibration \code{setup} and error terms
+a subset of model parameters (described in \code{\link{runread_pmodel_f}}),
+in order, and error terms
 for each target variable (for example \code{'gpp_err'}), in the same order as
 the targets appear in \code{targets}.}
 
@@ -29,19 +29,14 @@ to check their structure).}
 \item{drivers}{A nested data.frame of driver data. See \code{\link{p_model_drivers}}
 for a description of the data structure.}
 
-\item{setup}{A character string (\code{'BRC'} or \code{'FULL'}) indicating which
-parameters are calibrated. For \code{setup = 'BRC'} only the quantum yield
-efficiency \code{kphio} is calibrated; for \code{setup = 'FULL'} it also includes
-the soil moisture stress parameter \code{soilm_par_a}
-for calibration.}
-
 \item{targets}{A character vector indicating the target variables for which the
 optimization will be done and the RMSE computed. This string must be a column 
 name of the \code{data} data.frame belonging to the validation nested data.frame 
 (for example 'gpp').}
 
-\item{par_fixed}{A vector of model parameter values to keep fixed during the
-calibration. Only necessary if \code{setup = 'BRC'}.}
+\item{par_fixed}{A named list of model parameter values to keep fixed during the
+calibration. These should complement the input \code{par} such that all model
+parameters are passed on to \code{\link{runread_pmodel_f}}.}
 
 \item{parallel}{A logical specifying whether simulations are to be parallelised
 (sending data from a certain number of sites to each core). Defaults to
