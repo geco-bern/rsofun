@@ -12,7 +12,7 @@
 #' for each target variable (for example \code{'gpp_err'}), in the same order as
 #' the targets appear in \code{targets}.
 #' @param obs A nested data.frame of observations, with columns \code{'sitename'}
-#' and \code{'data'} (see \code{p_model_validation} or \code{p_model_validation_vcmax25}
+#' and \code{'data'} (see \code{\link{p_model_validation}} or \code{\link{p_model_validation_vcmax25}}
 #' to check their structure). 
 #' @param drivers A nested data.frame of driver data. See \code{\link{p_model_drivers}}
 #' for a description of the data structure.
