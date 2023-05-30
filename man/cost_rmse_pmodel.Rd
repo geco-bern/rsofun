@@ -2,42 +2,36 @@
 % Please edit documentation in R/cost_rmse_pmodel.R
 \name{cost_rmse_pmodel}
 \alias{cost_rmse_pmodel}
-\title{Cost function computing RMSE for calibration of different simulation setups}
+\title{Cost function computing RMSE for calibration of P-model parameters}
 \usage{
 cost_rmse_pmodel(
   par,
   obs,
   drivers,
-  setup,
   targets,
   par_fixed = NULL,
   target_weights = NULL
 )
 }
 \arguments{
-\item{par}{A vector of values for the parameters to be calibrated. These values 
-can be updated by the optimizer within the calibration routine.}
+\item{par}{A vector of values for the parameters to be calibrated (a subset of
+those described in \code{\link{runread_pmodel_f}}, in order).}
 
 \item{obs}{A nested data.frame of observations, with columns \code{'sitename'}
-and \code{'data'} (see \code{p_model_validation} or \code{p_model_validation_vcmax25}
+and \code{'data'} (see \code{\link{p_model_validation}} or \code{\link{p_model_validation_vcmax25}}
 to check their structure).}
 
 \item{drivers}{A nested data.frame of driver data. See \code{\link{p_model_drivers}}
 for a description of the data structure.}
-
-\item{setup}{A character string (\code{'BRC'} or \code{'FULL'}) indicating which
-parameters are calibrated. For \code{setup = 'BRC'} only the quantum yield
-efficiency \code{kphio} is calibrated; for \code{setup = 'FULL'} it also includes
-the soil moisture stress parameter \code{soilm_par_a}
-for calibration.}
 
 \item{targets}{A character vector indicating the target variables for which the
 optimization will be done and the RMSE computed. This string must be a column 
 name of the \code{data} data.frame belonging to the validation nested data.frame 
 (for example 'gpp').}
 
-\item{par_fixed}{A vector of model parameter values to keep fixed during the
-calibration. Only necessary if \code{setup = 'BRC'}.}
+\item{par_fixed}{A named list of model parameter values to keep fixed during the
+calibration. These should complement the input \code{par} such that all model
+parameters are passed on to \code{\link{runread_pmodel_f}}.}
 
 \item{target_weights}{A vector of weights to be used in the computation of
 the RMSE if using several targets. By default (\code{target_weights = NULL})
@@ -58,7 +52,7 @@ the root mean squared error (RMSE).
 To run the P-model, all model parameters must be given. The cost
 function uses arguments \code{par} and \code{par_fixed} such that, in the
 calibration routine, \code{par} can be updated by the optimizer and 
-\code{par_fixed} kept unchanged throughout calibration.
+\code{par_fixed} are kept unchanged throughout calibration.
   
 If the validation data contains a "date" column (fluxes), the simulated target time series
 is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
