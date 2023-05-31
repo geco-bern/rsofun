@@ -80,7 +80,7 @@ cost_rmse_pmodel <- function(
     }
   }else{
     params_modl <- as.list(par)       # all parameters calibrated
-    names(par) <- calib_param_names
+    names(params_modl) <- calib_param_names
   }
   
   # run the model

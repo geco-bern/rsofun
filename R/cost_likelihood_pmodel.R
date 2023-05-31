@@ -88,7 +88,7 @@ cost_likelihood_pmodel <- function(
     }
   }else{
     params_modl <- as.list(par[1:9])       # all parameters calibrated
-    names(par) <- calib_param_names
+    names(params_modl) <- calib_param_names
   }
   
   ## run the model
