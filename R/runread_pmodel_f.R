@@ -35,9 +35,6 @@
 #'   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
 #'   \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c in Prentice
 #'    et al. 2014).} 
-#'   \item{rootzone_whc}{A numeric value for the water holding capacity (in mm),  
-#'    used for simulating the soil water balance. This parameter should be site-specific
-#'    and was previously provided as site information (in \code{site_info$whc}).}
 #' }
 #' @param makecheck A logical specifying whether checks are performed to verify
 #'  forcings. Defaults to \code{TRUE}.

@@ -28,6 +28,8 @@
 #'       \item{lon}{Longitud of the site location.}
 #'       \item{lat}{Latitude of the site location.}
 #'       \item{elv}{Elevation of the site location, in meters.}
+#'       \item{whc}{A numeric value for the water holding capacity (in mm), used
+#'       for simulating the soil water balance.}
 #' }
 #' @param forcing A data frame of forcing climate data, used as input 
 #'  (see \code{\link{p_model_drivers}}
@@ -70,9 +72,6 @@
 #'   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
 #'   \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c in Prentice
 #'    et al. 2014).} 
-#'   \item{rootzone_whc}{A numeric value for the water holding capacity (in mm),  
-#'    used for simulating the soil water balance. This parameter should be site-specific
-#'    and was previously provided as site information (in \code{site_info$whc}).}
 #' }
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings and model parameters. \code{TRUE} by default.
@@ -256,8 +255,8 @@ run_pmodel_f_bysite <- function(
     if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
                                               'soilm_thetastar', 'soilm_betao',
                                               'beta_unitcostratio', 'rd_to_vcmax', 
-                                              'tau_acclim', 'kc_jmax', 'rootzone_whc')
-    ) != 10){
+                                              'tau_acclim', 'kc_jmax')
+    ) != 9){
       warning(" Returning a dummy data frame. Incorrect model parameters.")
       continue <- FALSE
     }
@@ -281,8 +280,7 @@ run_pmodel_f_bysite <- function(
       as.numeric(params_modl$beta_unitcostratio),
       as.numeric(params_modl$rd_to_vcmax),
       as.numeric(params_modl$tau_acclim),
-      as.numeric(params_modl$kc_jmax),
-      as.numeric(params_modl$rootzone_whc)
+      as.numeric(params_modl$kc_jmax)
       )
 
 
@@ -317,6 +315,7 @@ run_pmodel_f_bysite <- function(
       longitude                 = as.numeric(site_info$lon),
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
+      whc                       = as.numeric(site_info$whc),
       soiltexture               = soiltexture,
       n                         = n,
       par                       = par, 

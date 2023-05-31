@@ -41,9 +41,6 @@ namely \code{sitename, params_siml, site_info, forcing} and \code{params_soil}.}
   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
   \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c in Prentice
    et al. 2014).} 
-  \item{rootzone_whc}{A numeric value for the water holding capacity (in mm),  
-   used for simulating the soil water balance. This parameter should be site-specific
-   and was previously provided as site information (in \code{site_info$whc}).}
 }}
 
 \item{makecheck}{A logical specifying whether checks are performed to verify

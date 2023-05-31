@@ -63,7 +63,7 @@ cost_likelihood_pmodel <- function(
   sitename <- data <- gpp_mod <- NULL
   
   ## check input parameters
-  if( (length(par) + length(par_fixed)) != (10 + length(targets)) ){
+  if( (length(par) + length(par_fixed)) != (9 + length(targets)) ){
     stop('Error: Input calibratable and fixed parameters (par and par_fixed)
     do not match length of the required P-model parameters and target error terms.')
   }
@@ -72,7 +72,7 @@ cost_likelihood_pmodel <- function(
   calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
                          'soilm_thetastar', 'soilm_betao',
                          'beta_unitcostratio', 'rd_to_vcmax', 
-                         'tau_acclim', 'kc_jmax', 'rootzone_whc')
+                         'tau_acclim', 'kc_jmax')
   
   if(!is.null(par_fixed)){
     params_modl <- list()
@@ -87,7 +87,7 @@ cost_likelihood_pmodel <- function(
       }
     }
   }else{
-    params_modl <- as.list(par[1:10])       # all parameters calibrated
+    params_modl <- as.list(par[1:9])       # all parameters calibrated
     names(par) <- calib_param_names
   }
   

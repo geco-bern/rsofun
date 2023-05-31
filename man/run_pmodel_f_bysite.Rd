@@ -44,6 +44,8 @@ run_pmodel_f_bysite(
       \item{lon}{Longitud of the site location.}
       \item{lat}{Latitude of the site location.}
       \item{elv}{Elevation of the site location, in meters.}
+      \item{whc}{A numeric value for the water holding capacity (in mm), used
+      for simulating the soil water balance.}
 }}
 
 \item{forcing}{A data frame of forcing climate data, used as input 
@@ -89,9 +91,6 @@ layer of soil.
   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
   \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c in Prentice
    et al. 2014).} 
-  \item{rootzone_whc}{A numeric value for the water holding capacity (in mm),  
-   used for simulating the soil water balance. This parameter should be site-specific
-   and was previously provided as site information (in \code{site_info$whc}).}
 }}
 
 \item{makecheck}{A logical specifying whether checks are performed 
