@@ -65,8 +65,8 @@ params_modl <- list(
     kphio_par_b        = 1.0,
     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
     soilm_betao        = 0.0,
-    beta_unitcostratio = 146.000000,
-    rd_to_vcmax        = 0.01400000,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
     kc_jmax            = 0.41,
     rootzone_whc       = 240    # previously provided as p_model_drivers$site_info[[1]]$whc
@@ -130,18 +130,18 @@ settings <- list(
   method              = "GenSA",
   metric              = cost_rmse_pmodel,
   control = list(
-    maxit = 10),
+    maxit = 100),
   par = list(
     kphio = list(lower=0.04, upper=0.2, init = 0.05)
     )
 )
 ```
 
-By default `rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `GenSA` optimization approach. For this example the maximum number of iterations is kept artificially low. In a real scenario you will have to increase this value orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided but the model structure is transparent and custom cost functions can be easily written. More details can be found in the "Parameter calibration and cost functions" vignette.
+`rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `GenSA` optimization approach. For this example the maximum number of iterations is kept artificially low. In a real scenario you will have to increase this value orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided but the model structure is transparent and custom cost functions can be easily written. More details can be found in the "Parameter calibration and cost functions" vignette.
 
-In addition starting values and ranges are provided for the free parameters in the model. Free parameters include, `kphio`, `soilm_par_a` and `soilm_par_b`. Be mindful that with newer versions of `rsofun` additional parameters might be introduced, so re-check vignettes and model descriptions when updating existing code.
+In addition starting values and ranges are provided for the free parameters in the model. Free parameters include: parameters for the quantum yield efficiency `kphio`, `kphio_par_a` and `kphio_par_b`, soil moisture stress parameters `soilm_thetastar` and `soilm_betao`, and also `beta_unitcostratio`, `rd_to_vcmax`, `tau_acclim`, `kc_jmax` and `rootzone_whc` (see `?runread_pmodel_f`). Be mindful that with newer versions of `rsofun` additional parameters might be introduced, so re-check vignettes and function documentation when updating existing code.
 
-With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified. Extra arguments for the cost function (like which parameters should be free, what variable should be used as target to compute the root mean squared error (RMSE) and previous values for the parameters that aren't calibrated, which are needed to run the P-model).
+With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified. Extra arguments for the cost function (like what variable should be used as target to compute the root mean squared error (RMSE) and previous values for the parameters that aren't calibrated, which are needed to run the P-model).
 
 ```{r eval=FALSE}
 # calibrate the model and optimize free parameters
@@ -150,9 +150,9 @@ pars <- calib_sofun(
     obs = p_model_validation,
     settings = settings,
     # extra arguments passed to the cost function:
-    setup = "BRC",           # calibrate only kphio
-    targets = "gpp",         # define target variable GPP
-    par_fixed = params_modl  # fix non-calibrated parameters to previous values
+    targets = "gpp",             # define target variable GPP
+    par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
+                                 # values, removing kphio
   )
 ```
 
