@@ -14,8 +14,7 @@ test_that("p-model run check GPP", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41,
-    rootzone_whc       = 240    # previously provided as p_model_drivers$site_info[[1]]$whc
+    kc_jmax            = 0.41
   )
   
   # read in demo data
@@ -72,8 +71,7 @@ test_that("p-model run check Vcmax25", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41,
-    rootzone_whc       = 240    # previously provided as p_model_drivers$site_info[[1]]$whc
+    kc_jmax            = 0.41
   )
   
   # read in demo data
