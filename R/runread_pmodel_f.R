@@ -12,8 +12,7 @@
 #'    When temperature dependence is used, it corresponds to the parameter \eqn{c} (see Details).}
 #'   \item{kphio_par_a}{The shape parameter \eqn{a} of the temperature-dependency of
 #'    quantum yield efficiency (see Details).
-#'    If \code{kphio_par_a = 0} the ORG setup from Stocker et al.
-#'    2020 GMD is used, disabling the temperature dependence.}
+#'    To disable the temperature dependence, set \code{kphio_par_a = 0}.}
 #'   \item{kphio_par_b}{The optimal temperature parameter \eqn{b} of the temperature
 #'    dependent quantum yield efficiency (see Details), in \eqn{^o}C.}
 #'   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
@@ -73,8 +72,6 @@
 #' considered a constant model parameter in this package. 
 #' Hence, the FULL calibration setup cannot be 
 #' exactly replicated.
-#' 
-#'
 
 runread_pmodel_f <- function(
   drivers,
