@@ -206,8 +206,8 @@ morrisOut.df |>
 
 It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. Here we show some plots and statistics that may help you assess whether the parameter calibration has converged.
 
-According to the previous sensitivity analysis, calibrating the error parameter for GPP and the quantum yield efficiency parameters will have the most impact on the model fit. Let's run the calibration:
-```{r eval = evaluate}
+According to the previous sensitivity analysis, calibrating the error parameter for GPP and the Jmax cost ratio parameters will have the most impact on the model fit. Let's run the calibration:
+```{r eval = FALSE, include = FALSE}
 set.seed(2023)
 
 # Define calibration settings
@@ -245,8 +245,7 @@ par_calib <- calib_sofun(
 )
 ```
 
-```{r eval = FALSE, include = FALSE}
-# The same as above but for kc_jmax only. It's easier to calibrate less parameters at a time.
+```{r eval = evaluate}
 set.seed(2023)
 
 # Define calibration settings
@@ -261,9 +260,6 @@ settings_calib <- list(
       startValue = 3       # number of chains to be sampled
     )),
   par = list(
-    # kphio = list(lower = 0, upper = 0.2, init = 0.05),
-    # kphio_par_a = list(lower = -0.2, upper = 0.5, init = 0.1),
-    # kphio_par_b = list(lower = 10, upper = 40, init =25),
     kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),
     err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
   )
@@ -319,12 +315,12 @@ Looking at the correlation between chains is also helpful because parameter corr
 correlationPlot(par_calib$mod)
 ```
 
-In addition to visualizations, it's helpful to compute some convergence diagnostics, like the Gelman-Brooks-Rubin (GBR) "potential scale reduction factor" (psrf). This diagnostic compares the variance within chains to that across chains and should progressively get closer to 1. It is common in the literature to accept a GBR between 1.05 and 1.1, indicating convergence. We use the `gelman.diag` function from the `{coda}` library to compute the psrf (on the MCMC values, having removed the burnin), and we can see below that it hasn't converged yet.
+In addition to visualizations, it's helpful to compute some convergence diagnostics, like the Gelman-Brooks-Rubin (GBR) "potential scale factor" (psf). This diagnostic compares the variance within chains to that across chains and should progressively get closer to 1. It is common in the literature to accept a GBR between 1.05 and 1.1, indicating convergence. 
+
+We use the `summary` function from the `BayesianTools` library, which shows the psf next to other parameter estimations. Finally, the parameter MAP estimates can be derived from the chains (that converged) after removing the burnin period.
 
 ```{r eval = evaluate}
-coda::gelman.diag(par_calib$mod$chain, multivariate = FALSE)
+summary(par_calib$mod)
 ```
-
-Finally, the parameter MAP estimates can be derived from the chains (that converged) after removing the burnin period. These and other statistics are shown with `summary(par_calib$mod)`.
 
 More details on diagnosing MCMC convergence can be found in [this vignette from BayesianTools](https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html#running-mcmc-and-smc-functions) and [this blogpost](https://theoreticalecology.wordpress.com/2011/12/09/mcmc-chain-analysis-and-convergence-diagnostics-with-coda-in-r/).
