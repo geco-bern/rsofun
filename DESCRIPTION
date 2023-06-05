@@ -46,6 +46,7 @@ RoxygenNote: 7.2.3
 Suggests:
     rpmodel,
     covr,
+    rcmdcheck,
     testthat,
     rmarkdown,
     ggplot2,
