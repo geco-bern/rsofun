@@ -94,7 +94,7 @@ cost_rmse_pmodel <- function(
   # clean model output and unnest
   df <- df |>
     dplyr::rowwise() |>
-    dplyr::summarise(
+    dplyr::reframe(
       cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
         stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
     ) # gpp is used to get average trait prediction
