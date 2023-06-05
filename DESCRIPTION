@@ -18,7 +18,7 @@ Authors@R: c(
                family = "Aran",
                given = "Pepa",
                email = "pepa.aran@gmail.com",
-               comment = c(ORCID = ""),
+               comment = c(ORCID = "0009-0006-7176-2311"),
                role = c("aut"))
            )
 Description: Implements the SOFUN modelling framework for simulating terrestrial
