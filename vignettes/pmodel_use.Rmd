@@ -11,16 +11,19 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 5
 )
 
 library(rsofun)
 library(dplyr)
 library(ggplot2)
 
-# fake variable as optimization isn't used
+# fake variable as optimization isn't run
 pars <- list()
-pars$par["kphio"] <- 0.05
+pars$par["kphio"] <- 0.03411885
 ```
 
 The `rsofun` package and framework includes two main models. The `pmodel` and `biomee` (which in part relies on P-model components). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
@@ -60,7 +63,7 @@ With all data prepared we can run the P-model using `runread_pmodel_f()`. This f
 # work
 params_modl <- list(
     kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
-    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
+    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
     kphio_par_b        = 1.0,
     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
     soilm_betao        = 0.0,
@@ -130,7 +133,7 @@ settings <- list(
   control = list(
     maxit = 100),
   par = list(
-    kphio = list(lower=0.04, upper=0.2, init = 0.05)
+    kphio = list(lower=0.02, upper=0.2, init = 0.05)
     )
 )
 ```
