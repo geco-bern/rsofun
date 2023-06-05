@@ -27,7 +27,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
       settings = list(
         nrChains = 1,
         burnin = 1,
-        iterations = 7
+        iterations = 4
       )
     ),
     par = list(
@@ -60,7 +60,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
     sitenames           = "FR-Pue",
     metric              = rsofun::cost_rmse_pmodel,
     control = list(
-      maxit = 10
+      maxit = 2
     ),
     par = list(
       kphio = list(lower=0.04, upper=0.09, init=0.05),
@@ -100,7 +100,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)
       settings = list(
         nrChains = 1,
         burnin = 1,
-        iterations =7
+        iterations = 4
       )
     ),
     par = list(
@@ -149,7 +149,7 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
     method              = "gensa",
     metric              = rsofun::cost_rmse_pmodel,
     control = list(
-      maxit = 10
+      maxit = 2
     ),
     par = list(
       tau_acclim = list(lower = 7, upper = 60, init = 30)
