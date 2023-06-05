@@ -296,25 +296,25 @@ save(par_calib, file = "files/par_calib.rda")
 load("files/par_calib.rda")
 ```
 
-`BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. The samples after the burnin period are then used for inference.
+`BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge (we set \code{burnin = 300} above). The samples after the burnin period are then used for inference.
 ```{r fig.height = 5, fig.width = 7}
 # par(mar = c(2,2,2,2))
 plot(par_calib$mod)
 ```
 
-The posterior density plots are quite lumpy. In this case it's advisable to run the MCMC algorithm for more iterations, in order to get a better estimate of the parameters' posterior distributions. A good posterior should look more gaussian (although it can be skewed). A multimodal density indicates that the MCMC is still exploring the parameter space and hasn't converged yet. 
+The posterior density plots may be lumpy. In this case it's advisable to run the MCMC algorithm for more iterations, in order to get a better estimate of the parameters' posterior distributions. A good posterior should look more gaussian (although it can be skewed). A multimodal density indicates that the MCMC is still exploring the parameter space and hasn't converged yet. 
 
 When convergence has been reached, the oscillation of the time series should look like white noise. The presence of a trend indicates that convergence hasn't been reached.
 
-Trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space may not be explored fully.
+Trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space may not be explored fully. 
 ```{r fig.height = 5, fig.width = 7}
 # Define function for plotting chains separately
 plot_acf_mcmc <- function(chains, par_names){
   # chains: from the BayesianTools output
   n_chains <- length(chains)
   par(mfrow = c(length(par_names), n_chains))
-  for(i in 1:n_chains){
-    for(par_name in par_names){
+  for(par_name in par_names){
+    for(i in 1:n_chains){
       chains[[i]][, par_name] |>
         pacf(main = paste0("Series of ", par_name, " , chain ", i))
     }
@@ -324,7 +324,7 @@ plot_acf_mcmc <- function(chains, par_names){
 plot_acf_mcmc(par_calib$mod$chain, c("err_gpp", "kc_jmax"))
 ```
 
-Looking at the correlation between chains is also helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior.
+Looking at the correlation between chains is also helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior space. Here the correlation is very small and we saw above that the chains reached a stationary distribution quite quickly.
 ```{r fig.width=5, fig.height=5}
 correlationPlot(par_calib$mod)
 ```
