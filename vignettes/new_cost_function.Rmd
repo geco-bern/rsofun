@@ -208,7 +208,7 @@ function(par, obs, drivers){
 }
 ``` 
 
-The following chunk defines the final function. We clean the observations and model output and align the data according to site and date, to compute the mean absolute error (MAE) on GPP. Finally, the function should return a scalar value, in this case the MAE, which we want to minimize. The GenSA optimization will minimize the cost, but if we wanted to use BayesianTools we should write `return(-cost)` because it's a maximizing routine. 
+The following chunk defines the final function. We clean the observations and model output and align the data according to site and date, to compute the mean absolute error (MAE) on GPP. Finally, the function should return a scalar value, in this case the MAE, which we want to minimize. Keep in mind that the GenSA optimization will minimize the cost, but with the BayesianTools method the cost is always maximized.
 ```{r}
 cost_mae <- function(par, obs, drivers){
 
