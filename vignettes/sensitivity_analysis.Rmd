@@ -12,7 +12,8 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.align = "center"
 )
 
 library(rsofun)
@@ -21,14 +22,6 @@ library(ggplot2)
 library(tidyr)
 library(sensitivity)
 library(BayesianTools)
-
-evaluate <- ifelse(
-  Sys.info()['nodename'] == "balder" | 
-  Sys.info()['nodename'] == "dash" |
-  Sys.info()['nodename'] == "pop-os",
-  TRUE,
-  FALSE
-  )
 ```
 
 Parameter calibration can have a big impact on our modeling effort and use
@@ -93,7 +86,7 @@ Some parameters are constrained by their physical interpretation (e.g. `kphio > 
 and it's also necessary to provide a bounded parameter space for Morris'
 method to sample the parameter space. We define the parameter space by their 
 lower and upper bounds.
-```{r eval = evaluate}
+```{r}
 # best parameter values (from previous literature)
 par_cal_best <- c(
     kphio              = 0.09423773,
@@ -144,7 +137,7 @@ via the function `BayesianTools::createBayesianSetup()`. Note that, because of u
 a uniform prior, the posterior distribution is proportional to the GPP 
 log-likelihood (defined previously) 
 wherever the parameter values are feasible and zero outside of the parameter ranges.
-```{r eval = evaluate}
+```{r eval = FALSE}
 morris_setup <- BayesianTools::createBayesianSetup(
   likelihood = ll_pmodel,
   prior = BayesianTools::createUniformPrior(par_cal_min, par_cal_max, par_cal_best),
@@ -156,7 +149,7 @@ In the following chunk, we run the Morris sensitivity analysis, using a grid wit
 `r=500` values for each parameter and a one-at-a-time design. Running the
 sensitivity analysis may take a few minutes, even for this small example dataset,
 and is still computationally cheaper than running the parameter calibration.
-```{r eval = evaluate}
+```{r eval = FALSE, echo = TRUE}
 set.seed(432)
 morrisOut <- sensitivity::morris(
   model = morris_setup$posterior$density,
@@ -168,13 +161,23 @@ morrisOut <- sensitivity::morris(
   scale = TRUE)
 ```
 
+```{r eval = FALSE, echo = FALSE}
+# Save Morris sensitivity output because it takes very long to compute
+save(morrisOut, file = "files/morrisOut.rda")
+```
+
+```{r eval = TRUE, echo = FALSE}
+# Load Morris sensitivity output
+load("files/morrisOut.rda")
+```
+
 The analysis evaluates the variability of the target function, i.e. the 
 log-likelihood, for several points across the parameter space. 
 Statistics $\mu *$ and $\sigma$ measure the average of the absolute
 differences between these log-likelihood values and their standard deviation,
 respectively. The higher the value of these statistics for a given parameter, 
 the more influential the parameter is.  
-```{r eval = evaluate}
+```{r eval = TRUE, fig.width=7, fig.height=4}
 # summarise the morris output
 morrisOut.df <- data.frame(
   parameter = names(par_cal_best),
@@ -207,7 +210,7 @@ morrisOut.df |>
 It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. Here we show some plots and statistics that may help you assess whether the parameter calibration has converged.
 
 According to the previous sensitivity analysis, calibrating the error parameter for GPP and the Jmax cost ratio parameters will have the most impact on the model fit. Let's run the calibration:
-```{r eval = FALSE, include = FALSE}
+```{r eval = FALSE, echo = FALSE}
 set.seed(2023)
 
 # Define calibration settings
@@ -245,7 +248,7 @@ par_calib <- calib_sofun(
 )
 ```
 
-```{r eval = evaluate}
+```{r eval = FALSE, echo = TRUE}
 set.seed(2023)
 
 # Define calibration settings
@@ -283,8 +286,19 @@ par_calib <- calib_sofun(
 )
 ```
 
+```{r eval = FALSE, echo = FALSE}
+# Save calibration output because it takes very long to compute
+save(par_calib, file = "files/par_calib.rda")
+```
+
+```{r eval = TRUE, echo = FALSE}
+# Load calibration output
+load("files/par_calib.rda")
+```
+
 `BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. The samples after the burnin period are then used for inference.
-```{r eval = evaluate}
+```{r fig.height = 5, fig.width = 7}
+# par(mar = c(2,2,2,2))
 plot(par_calib$mod)
 ```
 
@@ -293,12 +307,12 @@ The posterior density plots are quite lumpy. In this case it's advisable to run 
 When convergence has been reached, the oscillation of the time series should look like white noise. The presence of a trend indicates that convergence hasn't been reached.
 
 Trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space may not be explored fully.
-```{r eval = evaluate}
+```{r fig.height = 5, fig.width = 7}
 # Define function for plotting chains separately
 plot_acf_mcmc <- function(chains, par_names){
   # chains: from the BayesianTools output
   n_chains <- length(chains)
-  par(mfrow = c(n_chains, length(par_names)))
+  par(mfrow = c(length(par_names), n_chains))
   for(i in 1:n_chains){
     for(par_name in par_names){
       chains[[i]][, par_name] |>
@@ -311,7 +325,7 @@ plot_acf_mcmc(par_calib$mod$chain, c("err_gpp", "kc_jmax"))
 ```
 
 Looking at the correlation between chains is also helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior.
-```{r eval = evaluate}
+```{r fig.width=5, fig.height=5}
 correlationPlot(par_calib$mod)
 ```
 
@@ -319,7 +333,7 @@ In addition to visualizations, it's helpful to compute some convergence diagnost
 
 We use the `summary` function from the `BayesianTools` library, which shows the psf next to other parameter estimations. Finally, the parameter MAP estimates can be derived from the chains (that converged) after removing the burnin period.
 
-```{r eval = evaluate}
+```{r}
 summary(par_calib$mod)
 ```
 
