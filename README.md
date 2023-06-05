@@ -1,5 +1,5 @@
 [![R build status](https://github.com/geco-bern/rsofun/workflows/R-CMD-check/badge.svg)](https://github.com/geco-bern/rsofun/actions)
-[![codecov](https://codecov.io/gh/bluegreen-labs/rsofun/branch/master/graph/badge.svg?token=5RJtJmDVV7)](https://codecov.io/gh/bluegreen-labs/rsofun)
+[![codecov](https://codecov.io/gh/geco-bern/rsofun/branch/master/graph/badge.svg)](https://codecov.io/gh/geco-bern/rsofun)
 
 # rsofun
 
