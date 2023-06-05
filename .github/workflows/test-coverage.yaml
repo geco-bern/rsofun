@@ -61,6 +61,7 @@ jobs:
           install.packages(c("remotes","devtools","DT"))
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("covr")
+          remotes::install_cran("rcmdcheck")
           devtools::build(path='.')
         shell: Rscript {0}
 
