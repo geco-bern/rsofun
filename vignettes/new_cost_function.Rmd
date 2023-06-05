@@ -31,7 +31,7 @@ A simple approach to parameter calibration is to find the parameter values that 
 The implementation of `cost_rmse_pmodel()` allows flexibility in various ways. We can simultaneously calibrate a subset of model parameters and also replicate the different calibration setups in Stocker et al., 2020 GMD. For example, following the `ORG` setup, only parameter `kphio` is calibrated. Furthermore, the standard cost functions allow to calibrate to several targets (fluxes and leaf traits predicted by the P-model) simultaneously and to parallelize the simulations. Since the P-model is run internally to make predictions, we must always specify which values the model parameters should take, i.e. the parameters that aren't calibrated (via argument `par_fixed`). 
 
 The syntax to run the calibration routine is as follows:
-```{r}
+```{r eval = FALSE}
 # Define calibration settings and parameter ranges from previous work
 settings_rmse <- list(
   method = 'GenSA',                   # minimizes the RMSE
@@ -118,7 +118,7 @@ Furthermore, there are equivalent cost functions available for the BiomeE model.
 
 You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. Here we present an example, where we use `cost_likelihood_pmodel()` to compute the joint normal likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and Vcmax25) and ultimately calibrate the `kc_jmax` parameter. It would be possible to follow this workflow for several-target calibration also with RMSE as the optimization metric, using `cost_rmse_pmodel()` and `GenSA` optimization.
 
-```{r}
+```{r eval = FALSE}
 # Define calibration settings for two targets
 settings_joint_likelihood <- list(
   method = "BayesianTools",
@@ -131,7 +131,7 @@ settings_joint_likelihood <- list(
     )),
   par = list(kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),  # uniform priors
              err_gpp = list(lower = 0.001, upper = 4, init = 1),
-             err_vcmax25 = list(lower = 0.00001, upper = 0.2, init = 0.001))
+             err_vcmax25 = list(lower = 0.000001, upper = 0.0001, init = 0.00001))
 )
 
 # Run the calibration on the concatenated data
