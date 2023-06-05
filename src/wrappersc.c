@@ -16,8 +16,6 @@ void F77_NAME(pmodel_f)(
     int    *firstyeartrend,
     int    *nyeartrend,
     int    *secs_per_tstep,
-    int    *soilmstress,
-    int    *tempstress,
     int    *in_ppfd,
     int    *in_netrad,
     int    *outdt,
@@ -47,8 +45,6 @@ extern SEXP pmodel_f_C(
     SEXP firstyeartrend,
     SEXP nyeartrend,
     SEXP secs_per_tstep,
-    SEXP soilmstress,
-    SEXP tempstress,
     SEXP in_ppfd,
     SEXP in_netrad,
     SEXP outdt,
@@ -84,8 +80,6 @@ extern SEXP pmodel_f_C(
         INTEGER(firstyeartrend),
         INTEGER(nyeartrend),
         INTEGER(secs_per_tstep),
-        LOGICAL(soilmstress),
-        LOGICAL(tempstress),
         LOGICAL(in_ppfd),
         LOGICAL(in_netrad),
         INTEGER(outdt),
@@ -527,7 +521,7 @@ extern SEXP biomee_f_C(
 // Declarations for all functions
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
-  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
+  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   24},  // Specify number of arguments to C wrapper as the last number here
   {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };

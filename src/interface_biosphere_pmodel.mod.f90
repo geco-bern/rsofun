@@ -14,9 +14,15 @@ module md_interface_pmodel
   public interfacetype_biosphere, outtype_biosphere, myinterface  
 
   type paramstype_calib
-    ! real :: k_decay_tissue
     real :: kphio
-    real :: soilm_par_a
+    real :: kphio_par_a
+    real :: kphio_par_b
+    real :: soilm_thetastar
+    real :: soilm_betao
+    real :: beta_unitcostratio
+    real :: rd_to_vcmax
+    real :: tau_acclim
+    real :: kc_jmax
   end type paramstype_calib  
 
 

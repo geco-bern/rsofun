@@ -1,5 +1,5 @@
-#' Cost function computing a log-likelihood for calibration of different
-#' simulation setups
+#' Cost function computing a log-likelihood for calibration of P-model
+#' parameters
 #' 
 #' The cost function performs a P-model run for the input drivers and model parameter
 #' values, and computes the outcome's normal log-likelihood centered at the input
@@ -7,25 +7,22 @@
 #' (calibratable).
 #' 
 #' @param par A vector of values for the parameters to be calibrated, including
-#' model parameters matching the calibration \code{setup} and error terms
+#' a subset of model parameters (described in \code{\link{runread_pmodel_f}}),
+#' in order, and error terms
 #' for each target variable (for example \code{'gpp_err'}), in the same order as
 #' the targets appear in \code{targets}.
 #' @param obs A nested data.frame of observations, with columns \code{'sitename'}
-#' and \code{'data'} (see \code{p_model_validation} or \code{p_model_validation_vcmax25}
+#' and \code{'data'} (see \code{\link{p_model_validation}} or \code{\link{p_model_validation_vcmax25}}
 #' to check their structure). 
 #' @param drivers A nested data.frame of driver data. See \code{\link{p_model_drivers}}
 #' for a description of the data structure.
-#' @param setup A character string (\code{'BRC'} or \code{'FULL'}) indicating which
-#' parameters are calibrated. For \code{setup = 'BRC'} only the quantum yield
-#' efficiency \code{kphio} is calibrated; for \code{setup = 'FULL'} it also includes
-#' the soil moisture stress parameter \code{soilm_par_a}
-#' for calibration. 
 #' @param targets A character vector indicating the target variables for which the
 #' optimization will be done and the RMSE computed. This string must be a column 
 #' name of the \code{data} data.frame belonging to the validation nested data.frame 
 #' (for example 'gpp').
-#' @param par_fixed A vector of model parameter values to keep fixed during the
-#' calibration. Only necessary if \code{setup = 'BRC'}.
+#' @param par_fixed A named list of model parameter values to keep fixed during the
+#' calibration. These should complement the input \code{par} such that all model
+#' parameters are passed on to \code{\link{runread_pmodel_f}}.
 #' @param parallel A logical specifying whether simulations are to be parallelised
 #' (sending data from a certain number of sites to each core). Defaults to
 #' \code{FALSE}.
@@ -41,7 +38,7 @@
 #' @details To run the P-model, all model parameters must be given. The cost
 #' function uses arguments \code{par} and \code{par_fixed} such that, in the
 #' calibration routine, \code{par} can be updated by the optimizer and 
-#' \code{par_fixed} kept unchanged throughout calibration.
+#' \code{par_fixed} are kept unchanged throughout calibration.
 #' 
 #' If the validation data contains a "date" column (fluxes), the simulated target time series
 #' is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
@@ -57,50 +54,44 @@ cost_likelihood_pmodel <- function(
     par,   # model parameters & error terms for each target
     obs,
     drivers,
-    setup,
     targets,
-    par_fixed = NULL, # only necessary if setup = BRC
+    par_fixed = NULL,   # non-calibrated model parameters
     parallel = FALSE,
     ncores = 2
 ){
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
   
-  ## define parameter set based on calibration setup
-  if(setup == 'BRC'){
-    if(is.null(par_fixed)){
-      stop('Error: par_fixed = NULL. 
-            Parameter value for "soilm_par_a" must be fixed.')
-    }else{
-      params_modl <- list(
-        kphio           = par[1],
-        soilm_par_a     = par_fixed['soilm_par_a']
-      )
-    }
-    # Check if there are as many error terms as targets
-    if(length(targets) != (length(par) - 1)){
-      stop('There must be a calibratable error parameter per target variable,
-          and in the same order.')
-    }
-  }else if(setup == 'FULL'){
-    if(length(par) < 2){
-      stop('Error: Input calibratable parameter values (par) missing, cannot run P-model')
-    }else{
-      params_modl <- list(
-        kphio           = par[1],
-        soilm_par_a     = par[2]
-      )
-    }
-    # Check if there are as many error terms as targets
-    if(length(targets) != (length(par) - 2)){
-      stop('There must be a calibratable error parameter per target variable,
-          and in the same order.')
-    }
-  }else{
-    stop('Only calibration setups "BRC" and "FULL" are supported.')
+  ## check input parameters
+  if( (length(par) + length(par_fixed)) != (9 + length(targets)) ){
+    stop('Error: Input calibratable and fixed parameters (par and par_fixed)
+    do not match length of the required P-model parameters and target error terms.')
   }
   
-  # run the model
+  ## define parameter set based on calibrated parameters
+  calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
+                         'soilm_thetastar', 'soilm_betao',
+                         'beta_unitcostratio', 'rd_to_vcmax', 
+                         'tau_acclim', 'kc_jmax')
+  
+  if(!is.null(par_fixed)){
+    params_modl <- list()
+    # complete with calibrated values
+    i <- 1 # start counter
+    for(par_name in calib_param_names){
+      if(is.null(par_fixed[[par_name]])){
+        params_modl[[par_name]] <- par[i]   # use calibrated par value
+        i <- i + 1                          # counter of calibrated params
+      }else{
+        params_modl[[par_name]] <- par_fixed[[par_name]]  # use fixed par value
+      }
+    }
+  }else{
+    params_modl <- as.list(par[1:9])       # all parameters calibrated
+    names(params_modl) <- calib_param_names
+  }
+  
+  ## run the model
   df <- runread_pmodel_f(
     drivers,
     par = params_modl,
@@ -109,10 +100,10 @@ cost_likelihood_pmodel <- function(
     ncores = ncores
   )
   
-  # clean model output and unnest
+  ## clean model output and unnest
   df <- df |>
     dplyr::rowwise() |>
-    dplyr::summarise(
+    dplyr::reframe(
       cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
         stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
     ) # gpp is used to get average trait prediction

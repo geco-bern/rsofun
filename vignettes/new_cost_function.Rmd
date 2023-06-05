@@ -28,19 +28,18 @@ In this vignette, we go over some examples on how to use the `rsofun` cost funct
 
 A simple approach to parameter calibration is to find the parameter values that lead to the best prediction performance, in terms of the RMSE (root mean squared error). The function `cost_rmse_pmodel()` runs the P-model internally to calculate the RMSE between predicted target values (in this case GPP) and the corresponding observations.
 
-The implementation of `cost_rmse_pmodel()` allows flexibility in various ways. We can replicate the different calibration setups in Stocker et al., 2020 GMD. For example, following the `FULL` setup, all model parameters `kphio` and `soilm_par_a` are calibrated. Furthermore, the standard cost functions allow to calibrate to several targets (fluxes and leaf traits predicted by the P-model) simultaneously and to parallelize the simulations.
+The implementation of `cost_rmse_pmodel()` allows flexibility in various ways. We can simultaneously calibrate a subset of model parameters and also replicate the different calibration setups in Stocker et al., 2020 GMD. For example, following the `ORG` setup, only parameter `kphio` is calibrated. Furthermore, the standard cost functions allow to calibrate to several targets (fluxes and leaf traits predicted by the P-model) simultaneously and to parallelize the simulations. Since the P-model is run internally to make predictions, we must always specify which values the model parameters should take, i.e. the parameters that aren't calibrated (via argument `par_fixed`). 
 
 The syntax to run the calibration routine is as follows:
-```{r}
+```{r eval = FALSE}
 # Define calibration settings and parameter ranges from previous work
 settings_rmse <- list(
   method = 'GenSA',                   # minimizes the RMSE
   metric = cost_rmse_pmodel,          # our cost function
-  control = list(                     # control parameters for the optimizer
-    maxit = 10),
+  control = list(                     # control parameters for optimizer GenSA
+    maxit = 100),                     
   par = list(                         # bounds for the parameter space
-    kphio = list(lower=0.04, upper=0.2, init=0.05),
-    soilm_par_a = list(lower=0.1, upper=5, init=2.4)
+    kphio = list(lower=0.02, upper=0.2, init=0.05)
   )
 )
 
@@ -52,7 +51,17 @@ pars_calib_rmse <- calib_sofun(
   obs = p_model_validation,
   settings = settings_rmse,
   # extra arguments passed to the cost function:
-  setup = "FULL",           # calibrate all parameters
+  par_fixed = list(         # fix all other parameters
+    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence 
+                                     # of kphio, setup ORG
+    kphio_par_b        = 1.0,
+    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  ),
   targets = "gpp"           # define target variable GPP
 )
 ```
@@ -61,23 +70,25 @@ The output of `calib_sofun()` is a list containing the calibrated parameter valu
 
 ### Calibration to GPP using a simple likelihood function and BayesianTools
 
-Let's calibrate only the `kphio` parameter (setup `'BRC'`), taking a Bayesian calibration approach. We assume that the target variable (`'gpp'`) follows a normal distribution centered at the observations and with its standard deviation being a new calibratable parameter (`'err_gpp'`). We also assume a uniform prior distribution for all calibratable parameters.
-By maximizing the normal log-likelihood, the MAP (maximum a posteriori) estimators for `kphio` and `err_gpp` are computed.  With the function `cost_likelihood_pmodel()`, we can easily perform this calibration, as follows:
+Let's calibrate the parameters involved in the temperature dependency of the quantum yield efficiency, `kphio`, `kphio_par_a` and `kphio_par_b`, taking a Bayesian calibration approach. We assume that the target variable (`'gpp'`) follows a normal distribution centered at the observations and with its standard deviation being a new calibratable parameter (`'err_gpp'`). We also assume a uniform prior distribution for all calibratable parameters.
+By maximizing the normal log-likelihood, the MAP (maximum a posteriori) estimators for all 4 parameters are computed. With the function `cost_likelihood_pmodel()`, we can easily perform this calibration, as follows:
 
 ```{r eval = FALSE}
 # Define calibration settings
 settings_likelihood <- list(
   method = 'BayesianTools',
-  metric = cost_likelihood_pmodel,                        # our cost function
-  control = list(
-    sampler = 'DEzs',
+  metric = cost_likelihood_pmodel,            # our cost function
+  control = list(                             # optimization control settings for 
+    sampler = 'DEzs',                           # BayesianTools::runMCMC
     settings = list(
-      burnin = 5,
-      iterations = 15
+      burnin = 1500,
+      iterations = 3000
     )),
   par = list(
-    kphio = list(lower=0.01, upper=0.2, init=0.05),    # uniform priors
-    err_gpp = list(lower = 0.1, upper = 4, init = 2)   
+    kphio = list(lower = 0, upper = 0.2, init = 0.05),
+    kphio_par_a = list(lower = -0.5, upper = 0.5, init = -0.1),
+    kphio_par_b = list(lower = 10, upper = 40, init =25),
+    err_gpp = list(lower = 0.1, upper = 4, init = 0.8)
   )
 )
 
@@ -89,22 +100,25 @@ pars_calib_likelihood <- calib_sofun(
   obs = p_model_validation,
   settings = settings_likelihood,
   # extra arguments passed ot the cost function:
-  setup = "BRC",
-  targets = "gpp",
-  par_fixed = c(soilm_par_a = 0.3)    # fix parameter value from RMSE calibration
+  par_fixed = list(         # fix all other parameters
+    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  ),
+  targets = "gpp"
 )
 ```
-
-Let's take a look at the code above. Since the P-model is run internally to make predictions, we must always specify which values the model parameters should take, i.e. the parameter that isn't calibrated `soilm_par_a` (via argument `par_fixed`).
-In the definition of the calibration settings, the control parameters for `BayesianTools` differ from the ones used for `GenSA`. 
 
 Furthermore, there are equivalent cost functions available for the BiomeE model. Check out the reference pages for more details on how to use `cost_likelihood_biomee()` and `cost_rmse_biomee()`.
 
 ### Calibration to GPP and Vcmax25 using the joint log-likelihood and BayesianTools
 
-You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. Here we present an example, where we use `cost_likelihood_pmodel()` to compute the joint normal likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and Vcmax25) and ultimately calibrate the `kphio` parameter. It would be possible to follow this workflow for several-target calibration also with RMSE as the optimization metric, using `cost_rmse_pmodel()` and `GenSA` optimization.
+You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. Here we present an example, where we use `cost_likelihood_pmodel()` to compute the joint normal likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and Vcmax25) and ultimately calibrate the `kc_jmax` parameter. It would be possible to follow this workflow for several-target calibration also with RMSE as the optimization metric, using `cost_rmse_pmodel()` and `GenSA` optimization.
 
-```{r}
+```{r eval = FALSE}
 # Define calibration settings for two targets
 settings_joint_likelihood <- list(
   method = "BayesianTools",
@@ -112,24 +126,32 @@ settings_joint_likelihood <- list(
   control = list(
     sampler = "DEzs",
     settings = list(
-      burnin = 5,             # kept artificially low
-      iterations = 15
+      burnin = 1500,             # kept artificially low
+      iterations = 3000
     )),
-  par = list(kphio = list(lower = 0.01, upper = 0.2, init = 0.05),  # uniform priors
+  par = list(kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),  # uniform priors
              err_gpp = list(lower = 0.001, upper = 4, init = 1),
-             err_vcmax25 = list(lower = 0.00001, upper = 0.2, init = 0.001))
+             err_vcmax25 = list(lower = 0.000001, upper = 0.0001, init = 0.00001))
 )
 
 # Run the calibration on the concatenated data
 par_calib_join <- calib_sofun(
   drivers = rbind(p_model_drivers,
-                  p_model_drivers_vcmax25[1:5, ]), # subset of sites
+                  p_model_drivers_vcmax25), 
   obs = rbind(p_model_validation,
-              p_model_validation_vcmax25[1:5, ]), # subset of sites
+              p_model_validation_vcmax25), 
   settings = settings_joint_likelihood,
   # arguments for the cost function
-  setup = "BRC",
-  par_fixed = c(soilm_par_a = 0.3),    # fix parameter value from RMSE calibration
+  par_fixed = list(         # fix parameter value from previous calibration
+    kphio              = 0.041,
+    kphio_par_a        = 0.0,
+    kphio_par_b        = 16,
+    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0
+  ),    
   targets = c('gpp', 'vcmax25')
 )
 ```
@@ -157,14 +179,21 @@ function(par, obs, drivers){
 }
 ```
 
-In the optimization procedure, the cost function only takes as argument the parameters `par` that are fed to `calib_sofun()` via `settings$par` (see previous sections). Nevertheless, within the cost function we call `runread_pmodel_f()` and this function needs a full set of model parameters. Therefore, the parameters that aren't being calibrated must be hard coded inside the cost function. In this example, we only want to calibrate the soil moisture stress parameters.
+In the optimization procedure, the cost function only takes as argument the parameters `par` that are fed to `calib_sofun()` via `settings$par` (see previous sections). Nevertheless, within the cost function we call `runread_pmodel_f()` and this function needs a full set of model parameters. Therefore, the parameters that aren't being calibrated must be hard coded inside the cost function (or passed as an argument like the `rsofun` cost functions). In this example, we only want to calibrate the soil moisture stress parameters.
 ```{r, eval = FALSE}
 function(par, obs, drivers){
   
   # Set values for the list of calibrated and non-calibrated model parameters
   params_modl <- list(
-    kphio = 0.05,
-    soilm_par_a = par[1]
+    kphio              = 0.09423773,
+    kphio_par_a        = 0.0,
+    kphio_par_b        = 25,
+    soilm_thetastar    = par[1],
+    soilm_betao        = par[2],
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
   )
   
   # Run the model
@@ -179,15 +208,23 @@ function(par, obs, drivers){
 }
 ``` 
 
-The following chunk defines the final function. We clean the observations and model output and align the data according to site and date, to compute the mean absolute error (MAE) on GPP. Finally, the function should return a scalar value, in this case the MAE, which we want to minimize. The GenSA optimization will minimize the cost, but if we wanted to use BayesianTools we should write `return(-cost)` because it's a maximizing routine. 
+The following chunk defines the final function. We clean the observations and model output and align the data according to site and date, to compute the mean absolute error (MAE) on GPP. Finally, the function should return a scalar value, in this case the MAE, which we want to minimize. Keep in mind that the GenSA optimization will minimize the cost, but with the BayesianTools method the cost is always maximized.
 ```{r}
 cost_mae <- function(par, obs, drivers){
 
   # Set values for the list of calibrated and non-calibrated model parameters
   params_modl <- list(
-    kphio = 0.05,
-    soilm_par_a = par[1]
-  )
+    kphio              = 0.09423773,
+    kphio_par_a        = 0.0,
+    kphio_par_b        = 25,
+    soilm_thetastar    = par[1],
+    soilm_betao        = par[2],
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  ) # Set values for the list of calibrated and non-calibrated model parameters
+  
   
   # Run the model
   df <- runread_pmodel_f(
@@ -228,7 +265,8 @@ settings_mae <- list(
   control = list(
     maxit = 100),
   par = list(
-    soilm_par_a = list(lower=0.1, upper=5, init=2.4)
+    soilm_thetastar = list(lower=0.0, upper=3000, init=0.6*240),
+    soilm_betao = list(lower=0, upper=1, init=0.2)
   )
 )
 
