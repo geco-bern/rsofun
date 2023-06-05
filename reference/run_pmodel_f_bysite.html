@@ -111,20 +111,11 @@
       <dt>recycle</dt>
 <dd><p>Length of standard recycling period, in days.</p></dd>
 
-      <dt>soilmstress</dt>
-<dd><p>A logical value, if <code>TRUE</code> an empirical soil 
-      moisture stress function is applied to GPP.</p></dd>
-
-      <dt>tempstress</dt>
-<dd><p>A logical value, if <code>FALSE</code> the quantum yield efficiency
-      is held constant, if <code>TRUE</code> its dependency on temperature is parameterised 
-      with an empirical temperature stress function (corresponding to Bernacchi et al., 2003).</p></dd>
-
       <dt>calc_aet_fapar_vpd</dt>
 <dd><p>(not in use)</p></dd>
 
       <dt>in_ppfd</dt>
-<dd><p>A logical value, if <code>TRUE</code> PPFD is a prescribed variable, 
+<dd><p>A logical value, if soi<code>TRUE</code> PPFD is a prescribed variable, 
       if <code>FALSE</code> PPFD is simulated internally.</p></dd>
 
       <dt>in_netrad</dt>
@@ -171,8 +162,8 @@
 <dd><p>Elevation of the site location, in meters.</p></dd>
 
       <dt>whc</dt>
-<dd><p>A numeric value for the water holding capacity (in mm), used for 
-      simulating the soil water balance.</p></dd>
+<dd><p>A numeric value for the water holding capacity (in mm), used
+      for simulating the soil water balance.</p></dd>
 
 
 </dl></dd>
@@ -204,11 +195,43 @@ layer of soil.</p><dl><dt>fsand</dt>
 
 <dt>params_modl</dt>
 <dd><p>A named list of free (calibratable) model parameters.</p><dl><dt>kphio</dt>
-<dd><p>The quantum yield efficiency parameter, in mol mol\(^{-1}\).</p></dd>
+<dd><p>The quantum yield efficiency at optimal temperature \(\varphi_0\), 
+   in mol mol\(^{-1}\).
+   When temperature dependence is used, it corresponds to the parameter \(c\) (see Details).</p></dd>
 
-  <dt>soilm_par_a</dt>
-<dd><p>Intercept of the linear soil moisture stress function (unitless).</p></dd>
+  <dt>kphio_par_a</dt>
+<dd><p>The shape parameter \(a\) of the temperature-dependency of
+   quantum yield efficiency (see Details).
+   To disable the temperature dependence, set <code>kphio_par_a = 0</code>.</p></dd>
 
+  <dt>kphio_par_b</dt>
+<dd><p>The optimal temperature parameter \(b\) of the temperature
+   dependent quantum yield efficiency (see Details), in \(^o\)C.</p></dd>
+
+  <dt>soilm_thetastar</dt>
+<dd><p>The threshold parameter \(\theta^{*}\) in the 
+   soil moisture stress function (see Details), given in mm.
+   To turn off the soil moisture stress, set <code>soilm_thetastar = 0</code>.</p></dd>
+
+  <dt>soilm_betao</dt>
+<dd><p>The intercept parameter \(\beta_{0}\) in the
+   soil moisture stress function (see Details). This is the parameter calibrated 
+   in Stocker et al. 2020 GMD.</p></dd>
+
+  <dt>beta_unitcostratio</dt>
+<dd><p>The unit cost of carboxylation, corresponding to
+   \(\beta = b / a'\) in Eq. 3 of Stocker et al. 2020 GMD.</p></dd>
+
+  <dt>rd_to_vcmax</dt>
+<dd><p>Ratio of Rdark (dark respiration) to Vcmax25.</p></dd>
+
+  <dt>tau_acclim</dt>
+<dd><p>Acclimation time scale of photosynthesis, in days.</p></dd>
+
+  <dt>kc_jmax</dt>
+<dd><p>Parameter for Jmax cost ratio (corresponding to c in Prentice
+   et al. 2014).</p></dd>
+ 
 
 </dl></dd>
 
@@ -269,7 +292,7 @@ Defaults to <code>TRUE</code>.</p></dd>
 
   <dt><code>gs_accl</code></dt>
 <dd><p>Acclimated stomatal conductance (in 
-      mol C m\(^{−2}\) d\(^{−1}\) Pa\(^{−1}\)).</p></dd>
+      mol C m\(^{-2}\) d\(^{-1}\) Pa\(^{-1}\)).</p></dd>
 
   <dt><code>wscal</code></dt>
 <dd><p>Relative soil water content, between 0 (permanent wilting 
@@ -289,6 +312,37 @@ Defaults to <code>TRUE</code>.</p></dd>
 
   
 </dl></div>
+    <div id="details">
+    <h2>Details</h2>
+    <p>Depending on the input model parameters, it's possible to run the 
+different P-model setups presented in Stocker et al. 2020 GMD. The P-model
+version implemented in this package allows more flexibility than the one
+presented in the paper, with the following functions:</p>
+<p>The temperature dependence of the quantum yield efficiency is given by:
+\(\varphi_0 (T) = a (T - b)^2 + c\). <br>
+The ORG setup can be reproduced by setting <code>kphio_par_a = 0</code>
+and calibrating the <code>kphio</code> parameter only.
+The BRC setup (which calibrates \(c_L = \frac{a_L b_L}{4}\) in Eq. 18) is more difficult to reproduce, 
+since the temperature-dependency has been reformulated and a custom cost
+function would be necessary for calibration. The new parameters
+are related to \(c_L\) as follows: <br>
+\(a = - 0.00034\) <br>
+\(b = 32.35294 c_L\) <br>
+\(c = 0.352 c_L + 0.3558824 c_L^2\)</p>
+<p>The soil moisture stress is implemented as 
+\(\beta(\theta) = \frac{\beta_0 - 1}{{\theta^{*}}^2} 
+   (\theta - \theta^{*})^2 + 1 \) if 
+   \( 0 \leq \theta \leq \theta^{*}\) and
+\(\beta(\theta) = 1\) if \( \theta &gt; \theta^{*}\). 
+In Stocker et al. 2020 GMD, the threshold plant-available soil water is set as
+\(\theta^{*}\) 
+<code>= 0.6 * whc</code> where <code>whc</code> is the site's water holding capacity. Also,
+the \(\beta\) reduction at low soil moisture (\(\beta_0 = \beta(0)\)) was parameterized
+as a linear function of mean aridity (Eq. 20 in Stocker et al. 2020 GMD) but is
+considered a constant model parameter in this package. 
+Hence, the FULL calibration setup cannot be 
+exactly replicated.</p>
+    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

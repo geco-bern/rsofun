@@ -130,11 +130,10 @@ interpret the outputs of the calibration using the
 <p>The Morris method for global sensitivity analysis allows to explore
 which parameters have the biggest influence on the model fit. In this
 example, we will quantify how different values of the calibratable model
-parameters (<code>kphio</code> and <code>soilm_par_a</code>) lead to
-more variability in the match between GPP predicted by the P-model and
-GPP observations. It would be wise to repeat this exercise for various
-targets because they may be simulated by equations in the P-model that
-involve different model parameters.</p>
+parameters lead to more variability in the match between GPP predicted
+by the P-model and GPP observations. It would be wise to repeat this
+exercise for various targets because they may be simulated by equations
+in the P-model that involve different model parameters.</p>
 <p>If the P-model has very low sensitivity to a certain parameter,
 calibrating it will not improve the model substantially. But if it’s
 very sensitive to another parameter, calibrating this second parameter
@@ -156,28 +155,24 @@ the parameter values.</p>
 <span>    <span class="va">par_v</span>,</span>
 <span>    obs <span class="op">=</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/p_model_validation.html">p_model_validation</a></span>,</span>
 <span>    drivers <span class="op">=</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/p_model_drivers.html">p_model_drivers</a></span>,</span>
-<span>    setup <span class="op">=</span> <span class="st">"FULL"</span>,</span>
 <span>    targets <span class="op">=</span> <span class="st">"gpp"</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="co"># Compute log-likelihood for a given set of parameters</span></span>
 <span><span class="fu">ll_pmodel</span><span class="op">(</span> par_v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  kphio           <span class="op">=</span> <span class="fl">0.09423773</span>,</span>
-<span>  soilm_par_a     <span class="op">=</span> <span class="fl">0.33349283</span>,</span>
-<span>  error_gpp       <span class="op">=</span> <span class="fl">0.9</span>          <span class="co"># value from previous simulations</span></span>
+<span>  kphio              <span class="op">=</span> <span class="fl">0.09423773</span>, <span class="co"># setup ORG in Stocker et al. 2020 GMD</span></span>
+<span>  kphio_par_a        <span class="op">=</span> <span class="fl">0.0</span>,        <span class="co"># set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD</span></span>
+<span>  kphio_par_b        <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>  soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fl">240</span>,  <span class="co"># to recover old setup with soil moisture stress</span></span>
+<span>  soilm_betao        <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>  beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
+<span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,      <span class="co"># value from Atkin et al. 2015 for C3 herbaceous</span></span>
+<span>  tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span>
+<span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span>,</span>
+<span>  error_gpp          <span class="op">=</span> <span class="fl">0.9</span>         <span class="co"># value from previous simulations</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in</span></span>
-<span><span class="co">#&gt; dplyr 1.1.0.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use `reframe()` instead.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> When switching from `summarise()` to `reframe()`, remember that `reframe()`</span></span>
-<span><span class="co">#&gt;   always returns an ungrouped data frame and adjust accordingly.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">rsofun</span> package.</span></span>
-<span><span class="co">#&gt;   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/geco-bern/rsofun/issues&gt;</span>.</span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span>
-<span><span class="co">#&gt; [1] -13314.72</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] -56672.71</span></span></code></pre></div>
 <p>Some parameters are constrained by their physical interpretation
 (e.g. <code>kphio &gt; 0</code>) and it’s also necessary to provide a
 bounded parameter space for Morris’ method to sample the parameter
@@ -186,23 +181,44 @@ bounds.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># best parameter values (from previous literature)</span></span>
 <span><span class="va">par_cal_best</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    kphio           <span class="op">=</span> <span class="fl">0.09423773</span>,</span>
-<span>    soilm_par_a     <span class="op">=</span> <span class="fl">0.33349283</span>,</span>
-<span>    error_gpp       <span class="op">=</span> <span class="fl">1</span></span>
+<span>    kphio              <span class="op">=</span> <span class="fl">0.09423773</span>,</span>
+<span>    kphio_par_a        <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>    kphio_par_b        <span class="op">=</span> <span class="fl">25</span>,</span>
+<span>    soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span><span class="op">*</span><span class="fl">240</span>,</span>
+<span>    soilm_betao        <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>    beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
+<span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,</span>
+<span>    tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span>
+<span>    kc_jmax            <span class="op">=</span> <span class="fl">0.41</span>,</span>
+<span>    error_gpp          <span class="op">=</span> <span class="fl">1</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># lower bound</span></span>
 <span><span class="va">par_cal_min</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    kphio           <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>    soilm_par_a     <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>    error_gpp       <span class="op">=</span> <span class="fl">0.01</span></span>
+<span>    kphio              <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>    kphio_par_a        <span class="op">=</span> <span class="op">-</span><span class="fl">0.2</span>,</span>
+<span>    kphio_par_b        <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>    soilm_thetastar    <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>    soilm_betao        <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>    beta_unitcostratio <span class="op">=</span> <span class="fl">50.0</span>,</span>
+<span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.01</span>,</span>
+<span>    tau_acclim         <span class="op">=</span> <span class="fl">7.0</span>,</span>
+<span>    kc_jmax            <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>    error_gpp          <span class="op">=</span> <span class="fl">0.01</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># upper bound</span></span>
 <span><span class="va">par_cal_max</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    kphio           <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>    soilm_par_a     <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>    error_gpp       <span class="op">=</span> <span class="fl">4</span></span>
+<span>    kphio              <span class="op">=</span> <span class="fl">5.0</span>,</span>
+<span>    kphio_par_a        <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>    kphio_par_b        <span class="op">=</span> <span class="fl">40.0</span>,</span>
+<span>    soilm_thetastar    <span class="op">=</span> <span class="fl">3000</span>,</span>
+<span>    soilm_betao        <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    beta_unitcostratio <span class="op">=</span> <span class="fl">200.0</span>,</span>
+<span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>    tau_acclim         <span class="op">=</span> <span class="fl">60.0</span>,</span>
+<span>    kc_jmax            <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>    error_gpp          <span class="op">=</span> <span class="fl">4</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 <p>We use the <code>morris()</code> function from the
 <code>{sensitivity}</code> package to perform the sensitivity analysis.
@@ -228,7 +244,7 @@ computationally cheaper than running the parameter calibration.</p>
 <span><span class="va">morrisOut</span> <span class="op">&lt;-</span> <span class="fu">sensitivity</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sensitivity/man/morris.html" class="external-link">morris</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">morris_setup</span><span class="op">$</span><span class="va">posterior</span><span class="op">$</span><span class="va">density</span>,</span>
 <span>  factors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">par_cal_best</span><span class="op">)</span>, </span>
-<span>  r <span class="op">=</span> <span class="fl">500</span>, </span>
+<span>  r <span class="op">=</span> <span class="fl">1000</span>, </span>
 <span>  design <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"oat"</span>, levels <span class="op">=</span> <span class="fl">20</span>, grid.jump <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, </span>
 <span>  binf <span class="op">=</span> <span class="va">par_cal_min</span>, </span>
 <span>  bsup <span class="op">=</span> <span class="va">par_cal_max</span>, </span>
@@ -265,6 +281,7 @@ is.</p>
 <span>    axis.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>    legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.95</span><span class="op">)</span>, legend.justification <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.95</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="interpretation-of-bayesian-calibration-routine">Interpretation of Bayesian calibration routine<a class="anchor" aria-label="anchor" href="#interpretation-of-bayesian-calibration-routine"></a>
@@ -274,9 +291,8 @@ used for the Bayesian calibration. Here we show some plots and
 statistics that may help you assess whether the parameter calibration
 has converged.</p>
 <p>According to the previous sensitivity analysis, calibrating the error
-parameter for GPP and the quantum yield efficiency <code>kphio</code>
-will have the most impact on the model fit. Let’s run the
-calibration:</p>
+parameter for GPP and the Jmax cost ratio parameters will have the most
+impact on the model fit. Let’s run the calibration:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2023</span><span class="op">)</span></span>
 <span></span>
@@ -287,24 +303,30 @@ calibration:</p>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    sampler <span class="op">=</span> <span class="st">"DEzs"</span>,</span>
 <span>    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      burnin <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>      iterations <span class="op">=</span> <span class="fl">1500</span>,</span>
+<span>      burnin <span class="op">=</span> <span class="fl">300</span>,</span>
+<span>      iterations <span class="op">=</span> <span class="fl">3000</span>,</span>
 <span>      startValue <span class="op">=</span> <span class="fl">3</span>       <span class="co"># number of chains to be sampled</span></span>
 <span>    <span class="op">)</span><span class="op">)</span>,</span>
 <span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0</span>, upper <span class="op">=</span> <span class="fl">0.2</span>, init <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>,</span>
-<span>    err_gpp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.1</span>, upper <span class="op">=</span> <span class="fl">2</span>, init <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
+<span>    kc_jmax <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.2</span>, upper <span class="op">=</span> <span class="fl">0.8</span>, init <span class="op">=</span> <span class="fl">0.41</span><span class="op">)</span>,</span>
+<span>    err_gpp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.1</span>, upper <span class="op">=</span> <span class="fl">3</span>, init <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># calibrate parameters kphio and err_gpp </span></span>
+<span><span class="co"># calibrate parameters kc_jmax and err_gpp </span></span>
 <span><span class="va">par_calib</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calib_sofun.html">calib_sofun</a></span><span class="op">(</span></span>
 <span>  drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,</span>
 <span>  obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span>
 <span>  settings <span class="op">=</span> <span class="va">settings_calib</span>,</span>
-<span>  setup <span class="op">=</span> <span class="st">"BRC"</span>,</span>
-<span>  par_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    soilm_par_a <span class="op">=</span> <span class="fl">0.33349283</span><span class="op">)</span>,</span>
+<span>  par_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    kphio <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>    kphio_par_a <span class="op">=</span> <span class="op">-</span><span class="fl">0.0001</span>,</span>
+<span>    kphio_par_b <span class="op">=</span> <span class="fl">33</span>,</span>
+<span>    soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span><span class="op">*</span><span class="fl">240</span>,</span>
+<span>    soilm_betao        <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>    beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
+<span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,</span>
+<span>    tau_acclim         <span class="op">=</span> <span class="fl">30.0</span><span class="op">)</span>,</span>
 <span>  targets <span class="op">=</span> <span class="st">"gpp"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><code>BayesianTools</code> makes it easy to produce the trace plot of
@@ -312,51 +334,97 @@ the MCMC chains and the posterior density plot for the parameters. Trace
 plots show the time series of the sampled chains, which should reach a
 stationary state. One can also choose a burnin visually, to discard the
 early iterations and keep only the samples from the stationary
-distribution to which they converge. The samples after the burnin period
-are then used for inference.</p>
+distribution to which they converge (we set above). The samples after
+the burnin period are then used for inference.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span></code></pre></div>
-<p>The posterior density plot of <code>err_gpp</code> is quite lumpy. In
-this case it’s advisable to run the MCMC algorithm for more iterations,
-in order to get a better estimate of the parameter’s posterior
-distribution. A good posterior should look more gaussian although it can
-be skewed. A multimodal density indicates that the MCMC is still
-exploring the parameter space and hasn’t converged yet.</p>
+<code class="sourceCode R"><span><span class="co"># par(mar = c(2,2,2,2))</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;"></p>
+<p>The posterior density plots may be lumpy. In this case it’s advisable
+to run the MCMC algorithm for more iterations, in order to get a better
+estimate of the parameters’ posterior distributions. A good posterior
+should look more gaussian (although it can be skewed). A multimodal
+density indicates that the MCMC is still exploring the parameter space
+and hasn’t converged yet.</p>
 <p>When convergence has been reached, the oscillation of the time series
 should look like white noise. The presence of a trend indicates that
 convergence hasn’t been reached.</p>
 <p>Trace plots can be deceiving and partial autocorrelation plots can
 throw some light. If autocorrelation is present, this can mean that the
-sampling is stuck in local maxima and the posterior parameter space is
-not explored fully.</p>
+sampling is stuck in local maxima and the posterior parameter space may
+not be explored fully.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define function for plotting chains separately</span></span>
 <span><span class="va">plot_acf_mcmc</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">chains</span>, <span class="va">par_names</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="co"># chains: from the BayesianTools output</span></span>
 <span>  <span class="va">n_chains</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">chains</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">n_chains</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">par_names</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_chains</span><span class="op">)</span><span class="op">{</span></span>
-<span>    <span class="kw">for</span><span class="op">(</span><span class="va">par_name</span> <span class="kw">in</span> <span class="va">par_names</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">par_names</span><span class="op">)</span>, <span class="va">n_chains</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="kw">for</span><span class="op">(</span><span class="va">par_name</span> <span class="kw">in</span> <span class="va">par_names</span><span class="op">)</span><span class="op">{</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_chains</span><span class="op">)</span><span class="op">{</span></span>
 <span>      <span class="va">chains</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>, <span class="va">par_name</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/r/stats/acf.html" class="external-link">pacf</a></span><span class="op">(</span>main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Series of "</span>, <span class="va">par_name</span>, <span class="st">" , chain "</span>, <span class="va">i</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span>  <span class="op">}</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="fu">plot_acf_mcmc</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">$</span><span class="va">chain</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"err_gpp"</span>, <span class="st">"kphio"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Looking at the correlation between chains is helpful because
+<span><span class="fu">plot_acf_mcmc</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">$</span><span class="va">chain</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"err_gpp"</span>, <span class="st">"kc_jmax"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;"></p>
+<p>Looking at the correlation between chains is also helpful because
 parameter correlation may slow down convergence, or the chains may
-oscillate in the multivariate posterior.</p>
+oscillate in the multivariate posterior space. Here the correlation is
+very small and we saw above that the chains reached a stationary
+distribution quite quickly.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">correlationPlot</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span></code></pre></div>
-<ul>
-<li>Gelman test to compare chains.</li>
-<li>Deviance Information Criterion (DIC)</li>
-</ul>
-<p>The <code>BayesianTools</code> package provides plot and diagnostic
-functions for the MCMC sampler output, that is, for our parameter
-calibration. More details on diagnosing MCMC convergence can be found in
-<a href="https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html#running-mcmc-and-smc-functions" class="external-link">this
+<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-14-1.png" width="480" style="display: block; margin: auto;"></p>
+<p>In addition to visualizations, it’s helpful to compute some
+convergence diagnostics, like the Gelman-Brooks-Rubin (GBR) “potential
+scale factor” (psf). This diagnostic compares the variance within chains
+to that across chains and should progressively get closer to 1. It is
+common in the literature to accept a GBR between 1.05 and 1.1,
+indicating convergence.</p>
+<p>We use the <code>summary</code> function from the
+<code>BayesianTools</code> library, which shows the psf next to other
+parameter estimations. Finally, the parameter MAP estimates can be
+derived from the chains (that converged) after removing the burnin
+period.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in</span></span>
+<span><span class="co">#&gt; dplyr 1.1.0.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use `reframe()` instead.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> When switching from `summarise()` to `reframe()`, remember that `reframe()`</span></span>
+<span><span class="co">#&gt;   always returns an ungrouped data frame and adjust accordingly.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">rsofun</span> package.</span></span>
+<span><span class="co">#&gt;   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/geco-bern/rsofun/issues&gt;</span>.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span>
+<span><span class="co">#&gt; # # # # # # # # # # # # # # # # # # # # # # # # # </span></span>
+<span><span class="co">#&gt; ## MCMC chain summary ## </span></span>
+<span><span class="co">#&gt; # # # # # # # # # # # # # # # # # # # # # # # # # </span></span>
+<span><span class="co">#&gt;  </span></span>
+<span><span class="co">#&gt; # MCMC sampler:  DEzs </span></span>
+<span><span class="co">#&gt; # Nr. Chains:  3 </span></span>
+<span><span class="co">#&gt; # Iterations per chain:  901 </span></span>
+<span><span class="co">#&gt; # Rejection rate:  0.791 </span></span>
+<span><span class="co">#&gt; # Effective sample size:  275 </span></span>
+<span><span class="co">#&gt; # Runtime:  114.502  sec. </span></span>
+<span><span class="co">#&gt;  </span></span>
+<span><span class="co">#&gt; # Parameters</span></span>
+<span><span class="co">#&gt;           psf   MAP  2.5% median 97.5%</span></span>
+<span><span class="co">#&gt; kc_jmax 1.003 0.388 0.367  0.388 0.407</span></span>
+<span><span class="co">#&gt; err_gpp 1.003 2.176 2.113  2.172 2.236</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ## DIC:  10969.53 </span></span>
+<span><span class="co">#&gt; ## Convergence </span></span>
+<span><span class="co">#&gt;  Gelman Rubin multivariate psrf:   </span></span>
+<span><span class="co">#&gt;  </span></span>
+<span><span class="co">#&gt; ## Correlations </span></span>
+<span><span class="co">#&gt;         kc_jmax err_gpp</span></span>
+<span><span class="co">#&gt; kc_jmax   1.000  -0.031</span></span>
+<span><span class="co">#&gt; err_gpp  -0.031   1.000</span></span></code></pre></div>
+<p>More details on diagnosing MCMC convergence can be found in <a href="https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html#running-mcmc-and-smc-functions" class="external-link">this
 vignette from BayesianTools</a> and <a href="https://theoreticalecology.wordpress.com/2011/12/09/mcmc-chain-analysis-and-convergence-diagnostics-with-coda-in-r/" class="external-link">this
 blogpost</a>.</p>
 </div>
