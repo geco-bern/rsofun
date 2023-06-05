@@ -36,10 +36,6 @@ A tibble of driver data:
       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}
       \item{recycle}{Length of standard recycling period, in days.}
-      \item{soilmstress}{A logical value, if \code{TRUE} an empirical soil 
-      moisture stress function is applied to GPP.}
-      \item{tempstress}{A logical value, if \code{TRUE} an empirical temperature 
-      stress function is applied to GPP.}
       \item{calc_aet_fapar_vpd}{(not in use)}
       \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
       if \code{FALSE} PPFD is simulated internally.}
@@ -70,7 +66,8 @@ A tibble of driver data:
       \item{c4}{A logical value indicating whether or not C4 photosynthesis 
       pathway is followed. If \code{FALSE}, it's C3.}
       \item{whc}{A numeric value for the water holding capacity (in mm), used for 
-      simulating the soil water balance.}
+      simulating the soil water balance. It is taken by the P-model as a calibratable
+      model parameter \code{rootzone_whc}.}
       \item{koeppen_code}{A character string indicating the Koeppen-Geiger
       climate zone code.}
       \item{igbp_land_use}{A character string indicating the IGBP land cover

@@ -30,7 +30,8 @@ contains
     lgr4,                      & 
     longitude,                 &      
     latitude,                  &     
-    altitude,                  &     
+    altitude,                  &   
+    whc,                       &
     soiltexture,               &
     nt,                        &
     par,                       &
@@ -71,9 +72,10 @@ contains
     real(kind=c_double),  intent(in) :: longitude
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
+    real(kind=c_double),  intent(in) :: whc
     real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(10), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
     real(kind=c_double),  dimension(nt,15), intent(out) :: output
 
@@ -135,6 +137,9 @@ contains
     ! myinterface%soilparams = getsoil( soiltexture )  xxx copy soilparams to tile%soil%param in subroutine getparams_tile -> getparams_soil
     myinterface%soiltexture(:,:) = real( soiltexture )
 
+    ! Overwrite whc
+    myinterface%whc_prescr = real( whc )
+    
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
     !----------------------------------------------------------------
@@ -147,7 +152,6 @@ contains
     myinterface%params_calib%rd_to_vcmax        = real(par(7))
     myinterface%params_calib%tau_acclim         = real(par(8))
     myinterface%params_calib%kc_jmax            = real(par(9))
-    myinterface%params_calib%rootzone_whc       = real(par(10))
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)

@@ -21,10 +21,13 @@ See the 'P-model usage' vignette for more information and examples.
  or \code{'BayesianTools'}.}
  \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
  and lower and upper bounds should be provided. The calibratable parameters
- are model parameters 'kphio' and 'soilm_par_a', and (if
+ include model parameters 'kphio', 'kphio_par_a', 'kphio_par_b', 'soilm_thetastar',
+ 'soilm_betao', 'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
+ and 'rootzone_whc' , and (if
  doing Bayesian calibration) error parameters
  for each target variable, named for example 'err_gpp'. This list must match
- the input parameters of the calibration metric.}
+ the input parameters of the calibration metric and the parameters should be
+ given in the order above.}
  \item{\code{metric}}{A cost function. See the 'Cost functions for parameter
  calibration' vignette for examples.}
  \item{\code{control}}{A list of arguments passed on to the optimization function.
@@ -50,13 +53,4 @@ and \link[GenSA]{GenSA}.
 \description{
 This is the main function that handles the 
 calibration of SOFUN model parameters.
-}
-\examples{
-\dontrun{ 
-calib_sofun(
-  drivers = filter(drivers,
-          sitename \%in\% settings$sitenames),
-  obs = obs_calib,
-  settings = settings)
-}
 }

@@ -422,7 +422,7 @@ contains
       params%thdiff_fc    = 0.4
       
       ! overwrite
-      params%whc = myinterface%params_calib%rootzone_whc
+      params%whc = myinterface%whc_prescr
 
     ! end do
 
