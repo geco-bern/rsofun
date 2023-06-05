@@ -93,7 +93,7 @@
 #'   \item{\code{jmax25}}{Maximum rate of electron transport, normalised to 
 #'       25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
 #'   \item{\code{gs_accl}}{Acclimated stomatal conductance (in 
-#'       mol C m\eqn{^{−2}} d\eqn{^{−1}} Pa\eqn{^{−1}}).}
+#'       mol C m\eqn{^{-2}} d\eqn{^{-1}} Pa\eqn{^{-1}}).}
 #'   \item{\code{wscal}}{Relative soil water content, between 0 (permanent wilting 
 #'       point, PWP) and 1 (field capacity, FC).}
 #'   \item{\code{chi}}{Ratio of leaf-internal to ambient CO\eqn{_{2}}, ci:ca (unitless).}
