@@ -79,7 +79,7 @@ cost_likelihood_biomee <- function(
   colnames(obs) <- col_names
   
   # calculate the log likelihood, loop over targets
-  ll <- sapply(seq(length(targets)), function(i){
+  ll <- lapply(seq(length(targets)), function(i){
     target <- targets[i]
     BayesianTools::likelihoodIidNormal(
       predicted = df[[target]],
@@ -87,6 +87,7 @@ cost_likelihood_biomee <- function(
       sd = par[4+i]
     )
   }) |>
+    unlist() |>
     sum()     # sum log-likelihoods
               
   # trap boundary conditions

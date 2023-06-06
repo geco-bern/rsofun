@@ -166,7 +166,7 @@ cost_likelihood_pmodel <- function(
   }
   
   # loop over targets
-  ll <- sapply(seq(length(targets)), function(i){
+  ll <- lapply(seq(length(targets)), function(i){
     target <- targets[i]
     # get observations and predicted target values, without NA 
     if(target %in% colnames(df_flux)){
@@ -189,6 +189,7 @@ cost_likelihood_pmodel <- function(
       log = TRUE
     ))
   }) |>
+    unlist() |>
     sum()
 
   # trap boundary conditions
