@@ -64,9 +64,9 @@ run_biomee_f_bysite <- function(
 
   # Types of photosynthesis model
     if (params_siml$method_photosynth == "gs_leuning"){
-    code_method_photosynth = 1
+    code_method_photosynth <- 1
   } else if (params_siml$method_photosynth == "pmodel"){
-    code_method_photosynth = 2
+    code_method_photosynth <- 2
     dt_days <- forcing$doy[2] - forcing$doy[1]
     dt_hours <- forcing$hour[2] - forcing$hour[1]
     if (dt_days!=1 && dt_hours != 0){
@@ -84,15 +84,15 @@ run_biomee_f_bysite <- function(
 
 # Types of mortality formulations
     if (params_siml$method_mortality == "cstarvation"){
-    code_method_mortality = 1
+    code_method_mortality <- 1
   } else if (params_siml$method_mortality == "growthrate"){
-    code_method_mortality = 2
+    code_method_mortality <- 2
   } else if (params_siml$method_mortality == "dbh"){
-    code_method_mortality = 3
+    code_method_mortality <- 3
   } else if (params_siml$method_mortality == "const_selfthin"){
-    code_method_mortality = 4
+    code_method_mortality <- 4
   } else if (params_siml$method_mortality == "bal"){
-    code_method_mortality = 5
+    code_method_mortality <- 5
   } else {
     stop(
       paste("run_biomee_f_bysite: params_siml$method_mortality not recognised:",

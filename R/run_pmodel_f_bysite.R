@@ -294,7 +294,7 @@ run_pmodel_f_bysite <- function(
     n <- as.integer(nrow(forcing))
 
     # Model parameters as vector in order
-    par = c(
+    par <- c(
       as.numeric(params_modl$kphio),
       as.numeric(params_modl$kphio_par_a),
       as.numeric(params_modl$kphio_par_b),
