@@ -68,7 +68,7 @@ cost_likelihood_biomee <- function(
     utils::tail(500 - spin_up_years) |>
     dplyr::summarise(
       GPP = mean(GPP),
-      LAI = stats::quantile(LAI, probs = 0.95, na.rm=T),
+      LAI = stats::quantile(LAI, probs = 0.95, na.rm=TRUE),
       Density = mean(Density12),
       Biomass = mean(plantC)
     )
