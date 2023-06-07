@@ -27,6 +27,20 @@
 #' should be run using \code{BayesianTools}, so the likelihood is maximized.
 #' 
 #' @export
+#' 
+#' @examples
+#' 
+#' # Compute the likelihood for a set of
+#' # BiomeE model parameter values
+#' # and the example data
+#' cost_likelihood_biomee(
+#'  par = c(3.5, 3.5, 1, 1,    # model params
+#'          0.5),              # err_GPP
+#'  obs = biomee_validation_2,
+#'  drivers = biomee_gs_leuning_drivers,
+#'  targets = c("GPP")
+#' )
+#' 
 
 cost_likelihood_biomee <- function(
   par,

@@ -44,3 +44,23 @@ Call to the biomee Fortran model
 \details{
 Model output is provided as a tidy dataframe
 }
+\examples{
+
+# Example BiomeE model run
+
+# Use example drivers data
+drivers <- biomee_gs_leuning_drivers
+
+# Run BiomeE for the first site
+mod_output <- run_biomee_f_bysite(
+ sitename = drivers$sitename[1],
+ params_siml = drivers$params_siml[[1]],
+ site_info = drivers$site_info[[1]],
+ forcing = drivers$forcing[[1]],
+ params_tile = drivers$params_tile[[1]],
+ params_species = drivers$params_species[[1]],
+ params_soil = drivers$params_soil[[1]],
+ init_cohort = drivers$init_cohort[[1]],
+ init_soil = drivers$init_soil[[1]]
+)
+}

@@ -21,6 +21,18 @@
 #' simulated values used to compute the RMSE.
 #' 
 #' @export
+#' 
+#' @examples
+#' 
+#' # Compute RMSE for a set of
+#' # model parameter values
+#' # and example data
+#' cost_rmse_biomee(
+#'  par = c(3.5, 3.5, 1, 1),
+#'  obs = biomee_validation_2,
+#'  drivers = biomee_gs_leuning_drivers
+#' )
+#'
 
 cost_rmse_biomee <- function(
     par,

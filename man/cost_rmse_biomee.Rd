@@ -31,3 +31,15 @@ Cost function for parameter calibration, which
 computes the RMSE for the biomee model fitting target variables 
 \code{'GPP','LAI','Density'} and \code{'Biomass'} for a given set of parameters.
 }
+\examples{
+
+# Compute RMSE for a set of
+# model parameter values
+# and example data
+cost_rmse_biomee(
+ par = c(3.5, 3.5, 1, 1),
+ obs = biomee_validation_2,
+ drivers = biomee_gs_leuning_drivers
+)
+
+}
