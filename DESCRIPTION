@@ -7,7 +7,7 @@ Authors@R: c(
               given = "Stocker",
               email = "benjamin.stocker@gmail.com",
               comment = c(ORCID = "0000-0002-5070-8109"),
-              role = c("aut", "cre")),
+              role = c("aut")),
             person(
                family = "Hufkens",
                given = "Koen",
@@ -15,11 +15,11 @@ Authors@R: c(
                comment = c(ORCID = "0000-0002-5070-8109"),
                role = c("aut")),
             person(
-               family = "Aran",
-               given = "Pepa",
+               family = "Arán Paredes",
+               given = "Josefa",
                email = "pepa.aran@gmail.com",
                comment = c(ORCID = "0009-0006-7176-2311"),
-               role = c("aut"))
+               role = c("aut", "cre"))
            )
 Description: Implements the SOFUN modelling framework for simulating terrestrial
               processes, including model calibration and benchmarking.
@@ -44,7 +44,6 @@ ByteCompile: true
 NeedsCompilation: yes
 RoxygenNote: 7.2.3
 Suggests:
-    rpmodel,
     covr,
     rcmdcheck,
     testthat,
