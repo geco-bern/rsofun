@@ -22,9 +22,9 @@ library(rsofun)
 p_model_fluxnet_drivers <- rsofun::p_model_drivers
 ```
 
-Forcing data of `rsofun` adheres to a fixed format as described [here](https://computationales.github.io/rsofun/reference/p_model_drivers.html). Any data
+Forcing data of `rsofun` adheres to a fixed format as described [here](https://geco-bern.github.io/rsofun/reference/biomee_p_model_drivers.html). Any data
 in this format will be valid `rsofun` input data. However to facilitate the
-formatting of these datasets you may use the internal lab tool [`ingestr`](https://github.com/computationales/ingestr). This
+formatting of these datasets you may use the internal lab tool [`ingestr`](https://github.com/geco-bern/ingestr). This
 toolset allows for the easy and consistent formatting of data.
 
 However, this toolset is very dynamic in nature and therefore will not see a
