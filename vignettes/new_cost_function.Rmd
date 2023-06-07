@@ -1,7 +1,6 @@
 ---
 title: "Parameter calibration and cost functions"
-author: "Pepa Aran"
-date: "2022-11-30"
+author: "Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Parameter calibration and cost functions}
