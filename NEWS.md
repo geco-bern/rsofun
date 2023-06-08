@@ -4,6 +4,9 @@
 * LM3-PPA to BiomeE renaming
 * cost function rewrite
 * update output format (consistency)
+* new p-model calibratable parameters
+* rewrite of temperature and soil moisture stress functions
+* documentation parameter sensitivity analysis
 
 # rsofun v4.3
 

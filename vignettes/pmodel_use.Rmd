@@ -1,6 +1,6 @@
 ---
 title: "P-model usage"
-author: "Koen Hufkens, Pepa Aran"
+author: "Koen Hufkens, Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{P-model usage}

@@ -27,6 +27,20 @@
 #' should be run using \code{BayesianTools}, so the likelihood is maximized.
 #' 
 #' @export
+#' 
+#' @examples
+#' 
+#' # Compute the likelihood for a set of
+#' # BiomeE model parameter values
+#' # and the example data
+#' cost_likelihood_biomee(
+#'  par = c(3.5, 3.5, 1, 1,    # model params
+#'          0.5),              # err_GPP
+#'  obs = biomee_validation_2,
+#'  drivers = biomee_gs_leuning_drivers,
+#'  targets = c("GPP")
+#' )
+#' 
 
 cost_likelihood_biomee <- function(
   par,
@@ -68,7 +82,7 @@ cost_likelihood_biomee <- function(
     utils::tail(500 - spin_up_years) |>
     dplyr::summarise(
       GPP = mean(GPP),
-      LAI = stats::quantile(LAI, probs = 0.95, na.rm=T),
+      LAI = stats::quantile(LAI, probs = 0.95, na.rm=TRUE),
       Density = mean(Density12),
       Biomass = mean(plantC)
     )
@@ -79,7 +93,7 @@ cost_likelihood_biomee <- function(
   colnames(obs) <- col_names
   
   # calculate the log likelihood, loop over targets
-  ll <- sapply(seq(length(targets)), function(i){
+  ll <- lapply(seq(length(targets)), function(i){
     target <- targets[i]
     BayesianTools::likelihoodIidNormal(
       predicted = df[[target]],
@@ -87,6 +101,7 @@ cost_likelihood_biomee <- function(
       sd = par[4+i]
     )
   }) |>
+    unlist() |>
     sum()     # sum log-likelihoods
               
   # trap boundary conditions

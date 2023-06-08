@@ -79,6 +79,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
     drivers = drivers,
     obs = obs,
     settings = settings,
+    optim_out = FALSE,
     # extra arguments for the cost function
     targets = 'gpp'
   )
@@ -121,6 +122,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)
     drivers = drivers,
     obs = obs,
     settings = settings,
+    optim_out = FALSE,
     # arguments for cost function
     targets = 'vcmax25'
   )

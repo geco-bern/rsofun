@@ -6,13 +6,13 @@ bibentry(bibtype = "Misc",
          author = c(
           as.person("Benjamin Stocker"),
           as.person("Koen Hufkens"),
-          as.person("Pepa Arán")
+          as.person("Josefa Arán Paredes")
          ),
          year = "2023",
          doi = "10.5281/zenodo.3712928",
          url = "https://github.com/geco-bern/rsofun",
          textVersion  =
-           paste("Stocker, Hufkens & Arán (2023).",
+           paste("Stocker, Hufkens & Arán Paredes (2023).",
                  "rsofun: a modelling framework that implements the P-model for
     leaf-level acclimation of photosynthesis",
                  "https://doi.org/10.5281/zenodo.3712928")

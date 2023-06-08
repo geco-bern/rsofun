@@ -157,3 +157,30 @@ considered a constant model parameter in this package.
 Hence, the FULL calibration setup cannot be 
 exactly replicated.
 }
+\examples{
+
+# Define model parameter values from previous work
+params_modl <- list(
+  kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
+  kphio_par_a        = 0.0,        # disable temperature-dependence of kphio
+  kphio_par_b        = 1.0,
+  soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+  soilm_betao        = 0.0,
+  beta_unitcostratio = 146.0,
+  rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+  tau_acclim         = 30.0,
+  kc_jmax            = 0.41
+)
+
+# Run the Fortran P-model 
+mod_output <- run_pmodel_f_bysite(
+  # unnest drivers example data
+  sitename = p_model_drivers$sitename[1],
+  params_siml = p_model_drivers$params_siml[[1]],
+  site_info = p_model_drivers$site_info[[1]],
+  forcing = p_model_drivers$forcing[[1]],
+  params_soil = p_model_drivers$params_soil[[1]],
+  params_modl = params_modl
+ )
+
+}

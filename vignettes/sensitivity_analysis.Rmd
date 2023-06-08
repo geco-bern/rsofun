@@ -1,7 +1,6 @@
 ---
 title: "Sensitivity analysis"
-author: "Pepa Aran"
-date: "2023-04-18"
+author: "Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Sensitivity analysis}

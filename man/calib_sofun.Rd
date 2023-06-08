@@ -54,3 +54,46 @@ and \link[GenSA]{GenSA}.
 This is the main function that handles the 
 calibration of SOFUN model parameters.
 }
+\examples{
+
+# Fix model parameters that won't be calibrated
+params_fix <- list(
+  kphio_par_a        = 0.01,
+  kphio_par_b        = 1.0,
+  soilm_thetastar    = 0.6*240,
+  soilm_betao        = 0.01,
+  beta_unitcostratio = 146,
+  rd_to_vcmax        = 0.014,
+  tau_acclim         = 30,
+  kc_jmax            = 0.41
+)
+
+# Define calibration settings
+settings <- list(
+  method = "BayesianTools",
+  par = list(
+    kphio = list(lower=0.04, upper=0.09, init=0.05),
+    err_gpp = list(lower = 0.01, upper = 4, init = 2)
+  ),
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      nrChains = 1,
+      burnin = 0,        
+      iterations = 50     # kept artificially low
+    )
+  )
+ )
+ 
+ # Run the calibration for GPP data
+ calib_output <- rsofun::calib_sofun(
+   drivers = rsofun::p_model_drivers,
+   obs = rsofun::p_model_validation,
+   settings = settings,
+   # extra arguments for the cost function
+   par_fixed = params_fix,
+   targets = c("gpp")
+ )
+
+}

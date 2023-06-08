@@ -41,6 +41,27 @@
 #' trait value predicted on that date.
 #'   
 #' @export
+#' 
+#' @examples
+#' 
+#' # Compute RMSE for a set
+#' # of model parameter values
+#' # and example data
+#' cost_rmse_pmodel(
+#'  par = c(0.05, 0.01, 0.5),  # kphio related parameters
+#'  obs = p_model_validation,
+#'  drivers = p_model_drivers,
+#'  targets = c('gpp'),
+#'  par_fixed = list(
+#'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+#'   soilm_betao        = 0.0,
+#'   beta_unitcostratio = 146.0,
+#'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+#'   tau_acclim         = 30.0,
+#'   kc_jmax            = 0.41
+#'  )
+#' )
+#' 
 
 cost_rmse_pmodel <- function(
     par,  # ordered vector of model parameters
@@ -157,7 +178,7 @@ cost_rmse_pmodel <- function(
   }
   
   # Calculate cost (RMSE) per target
-  rmse <- sapply(targets, function(target){
+  rmse <- lapply(targets, function(target){
     if(target %in% colnames(df_flux)){
       error <- (df_flux[[target]] - df_flux[[paste0(target, '_mod')]])^2
     }else{
@@ -168,7 +189,8 @@ cost_rmse_pmodel <- function(
                 (df_trait[[target]] - df_trait[[paste0(target, '_mod')]])^2)
     }
     sqrt(mean(error, na.rm = TRUE))
-  })
+  }) |>
+    unlist()
   
   # Aggregate RMSE over targets (weighted average)
   if(!is.null(target_weights)){

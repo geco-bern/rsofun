@@ -49,6 +49,29 @@
 #' trait value predicted on that date.
 #' 
 #' @export
+#' 
+#' @examples
+#' 
+#' # Compute the likelihood for a set of 
+#' # model parameter values involved in the
+#' # temperature dependence of kphio 
+#' # and example data
+#' cost_likelihood_pmodel(
+#'  par = c(0.05, 0.01, 1,     # model parameters
+#'          2),                # err_gpp
+#'  obs = p_model_validation,
+#'  drivers = p_model_drivers,
+#'  targets = c('gpp'),
+#'  par_fixed = list(
+#'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+#'   soilm_betao        = 0.0,
+#'   beta_unitcostratio = 146.0,
+#'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+#'   tau_acclim         = 30.0,
+#'   kc_jmax            = 0.41
+#'  )
+#' )
+#' 
 
 cost_likelihood_pmodel <- function(
     par,   # model parameters & error terms for each target
@@ -166,7 +189,7 @@ cost_likelihood_pmodel <- function(
   }
   
   # loop over targets
-  ll <- sapply(seq(length(targets)), function(i){
+  ll <- lapply(seq(length(targets)), function(i){
     target <- targets[i]
     # get observations and predicted target values, without NA 
     if(target %in% colnames(df_flux)){
@@ -189,6 +212,7 @@ cost_likelihood_pmodel <- function(
       log = TRUE
     ))
   }) |>
+    unlist() |>
     sum()
 
   # trap boundary conditions
