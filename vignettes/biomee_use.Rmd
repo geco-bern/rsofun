@@ -123,24 +123,18 @@ biomee_p_model_output %>%
 
 ## Calibrating model parameters
 
-To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.
+To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges. In this example, we use as cost the root mean squared error (RMSE) between simulated and observed targets (GPP, LAI, Density and Biomass) and we minimize it using the `GenSA` optimizer. 
 
 ```{r eval = FALSE}
 # Mortality as DBH
 settings <- list(
-  method              = "bayesiantools",
-  metric              = create_cost_rmse_biomee(
-                          method = 'BayesianTools'
-                          ),
+  method              = "GenSA",
+  metric              = cost_rmse_biomee,
   control = list(
-    sampler = "DEzs",
-    settings = list(
-      burnin = 10,
-      iterations = 50
-    )
+    maxit = 10
   ),
   par = list(
-       phiRL = list(lower=0.5, upper=5, init=3.5),
+      phiRL = list(lower=0.5, upper=5, init=3.5),
       LAI_light = list(lower=2, upper=5, init=3.5),
       tf_base = list(lower=0.5, upper=1.5, init=1),
       par_mort = list(lower=0.1, upper=2, init=1))
@@ -153,3 +147,56 @@ pars <- calib_sofun(
 )
 ```
 
+```{r echo = FALSE}
+# Take values from the chunk before, which was run locally
+pars <- list(
+  par = c(phiRL = 0.9709220,
+          LAI_light = 4.5722199,
+          tf_base = 0.5849346,
+          par_mort = 1.5779371)
+)
+```
+
+Using the calibrated parameter values, we can run again the BiomeE simulations.
+```{r}
+# replace parameter values by calibration output
+drivers <- biomee_p_model_drivers
+drivers$params_species[[1]]$phiRL[]  <- pars$par[1]
+drivers$params_species[[1]]$LAI_light[]  <- pars$par[2]
+drivers$params_tile[[1]]$tf_base <- pars$par[3]
+drivers$params_tile[[1]]$par_mort <- pars$par[4]
+
+# run the model with new parameter values
+biomee_p_model_output_calib <- runread_biomee_f(
+     drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+# split out the annual data
+biomee_p_model_output_calib <- biomee_p_model_output_calib$data[[1]]$output_annual_tile
+```
+
+Finally, we can visually compare the two model runs.
+```{r}
+# unnest model output for our single site
+
+ggplot() +
+  geom_line(data = biomee_p_model_output,
+            aes(x = year, y = GPP)) +
+  geom_line(data = biomee_p_model_output_calib,
+            aes(x = year, y = GPP),
+            color = "red") +
+  theme_classic() + 
+  labs(x = "Year", y = "GPP")
+
+ggplot() +
+  geom_line(data = biomee_p_model_output,
+            aes(x = year, y = plantC)) +
+  geom_line(data = biomee_p_model_output_calib,
+            aes(x = year, y = plantC),
+            color = "red") +
+  theme_classic() + 
+  labs(x = "Year", y = "plantC")
+
+```
