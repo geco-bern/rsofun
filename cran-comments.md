@@ -9,7 +9,7 @@ This package is an extension of {rpmodel} in the sense that it expands the P-mod
 
 The full documentation can be found at the github repository link: https://geco-bern.github.io/rsofun
 
-Code coverage sits at 87%, with remaining uncovered code pertaining to parallel versions of the main functions. The underlying P-model implementation is based on the {rpmodel} and the parameter calibration routines use packages {GenSA} and {BayesianTools}.
+Code coverage sits at ~93%, with remaining uncovered code pertaining to parallel versions of the main functions. The underlying P-model implementation is based on the {rpmodel} and the parameter calibration routines use packages {GenSA} and {BayesianTools}.
 
 I hope this package is useful for other earth system scientists and the larger CRAN community. Kind regards, Josefa Arán.
 
