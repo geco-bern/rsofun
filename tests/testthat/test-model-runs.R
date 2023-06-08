@@ -144,4 +144,15 @@ test_that("biomee leuning run check", {
   
   # test for correctly returned values
   expect_type(df_output, "list")
+  
+  df_output_p <- runread_biomee_f(
+    df_drivers,
+    makecheck = FALSE,
+    parallel = TRUE,
+    ncores = 1
+  )
+  
+  # test for correctly returned values
+  expect_type(df_output_p, "list")
+  
 })
