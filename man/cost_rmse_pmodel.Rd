@@ -10,7 +10,9 @@ cost_rmse_pmodel(
   drivers,
   targets,
   par_fixed = NULL,
-  target_weights = NULL
+  target_weights = NULL,
+  parallel = FALSE,
+  ncores = 2
 )
 }
 \arguments{
@@ -37,6 +39,13 @@ parameters are passed on to \code{\link{runread_pmodel_f}}.}
 the RMSE if using several targets. By default (\code{target_weights = NULL})
 the RMSE is computed separately for each target and then averaged. The provided
 weights are used to compute a weighted average of RMSE across targets.}
+
+\item{parallel}{A logical specifying whether simulations are to be parallelised
+(sending data from a certain number of sites to each core). Defaults to
+\code{FALSE}.}
+
+\item{ncores}{An integer specifying the number of cores used for parallel
+computing. Defaults to 2.}
 }
 \value{
 The root mean squared error (RMSE) between observed values and P-model

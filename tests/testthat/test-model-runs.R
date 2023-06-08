@@ -138,7 +138,8 @@ test_that("biomee leuning run check", {
   df_output <- runread_biomee_f(
     df_drivers,
     makecheck = FALSE,
-    parallel = FALSE
+    parallel = TRUE,
+    ncores = 2
   )
   
   # test for correctly returned values
