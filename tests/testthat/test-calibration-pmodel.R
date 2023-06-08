@@ -42,7 +42,9 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     settings = settings,
     # extra arguments for the cost function
     par_fixed = params_fix,
-    targets = c('gpp')
+    targets = c('gpp'),
+    parallel = TRUE,
+    ncores = 2
   )
   
   # test for correctly returned values
