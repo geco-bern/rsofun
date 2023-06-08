@@ -108,7 +108,8 @@ test_that("p-model run check Vcmax25", {
     df_drivers,
     par = params_modl,
     makecheck = TRUE,
-    parallel = TRUE
+    parallel = TRUE,
+    ncores = 1
   )
   
   # test for correctly returned values
