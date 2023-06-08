@@ -21,8 +21,8 @@ Authors@R: c(
                comment = c(ORCID = "0009-0006-7176-2311"),
                role = c("aut", "cre"))
            )
-Description: Implements the SOFUN modelling framework for simulating terrestrial
-              processes, including model calibration and benchmarking.
+Description: Implements the P-model and BiomeE modelling frameworks for 
+              simulating leaf-level photosynthesis, including model calibration.
 URL: https://github.com/geco-bern/rsofun
 BugReports: https://github.com/geco-bern/rsofun/issues
 License: GPL-3
