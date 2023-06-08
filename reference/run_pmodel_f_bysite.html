@@ -37,9 +37,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/biomee_model_structure.html">BiomeE model structure</a>
-    </li>
-    <li>
       <a href="../articles/biomee_use.html">BiomeE usage</a>
     </li>
     <li>
@@ -344,6 +341,35 @@ Hence, the FULL calibration setup cannot be
 exactly replicated.</p>
     </div>
 
+    <div id="ref-examples">
+    <h2>Examples</h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Define model parameter values from previous work</span></span></span>
+<span class="r-in"><span><span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  kphio              <span class="op">=</span> <span class="fl">0.04998</span>,    <span class="co"># setup ORG in Stocker et al. 2020 GMD</span></span></span>
+<span class="r-in"><span>  kphio_par_a        <span class="op">=</span> <span class="fl">0.0</span>,        <span class="co"># disable temperature-dependence of kphio</span></span></span>
+<span class="r-in"><span>  kphio_par_b        <span class="op">=</span> <span class="fl">1.0</span>,</span></span>
+<span class="r-in"><span>  soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fl">240</span>,  <span class="co"># old setup with soil moisture stress</span></span></span>
+<span class="r-in"><span>  soilm_betao        <span class="op">=</span> <span class="fl">0.0</span>,</span></span>
+<span class="r-in"><span>  beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span></span>
+<span class="r-in"><span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,      <span class="co"># from Atkin et al. 2015 for C3 herbaceous</span></span></span>
+<span class="r-in"><span>  tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span></span>
+<span class="r-in"><span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Run the Fortran P-model </span></span></span>
+<span class="r-in"><span><span class="va">mod_output</span> <span class="op">&lt;-</span> <span class="fu">run_pmodel_f_bysite</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="co"># unnest drivers example data</span></span></span>
+<span class="r-in"><span>  sitename <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">sitename</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  params_siml <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">params_siml</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  site_info <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  forcing <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  params_soil <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">params_soil</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  params_modl <span class="op">=</span> <span class="va">params_modl</span></span></span>
+<span class="r-in"><span> <span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top"><h2 data-toc-skip>Contents</h2>

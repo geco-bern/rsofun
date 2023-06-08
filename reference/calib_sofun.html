@@ -38,9 +38,6 @@ calibration of SOFUN model parameters."><meta name="twitter:card" content="summa
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/biomee_model_structure.html">BiomeE model structure</a>
-    </li>
-    <li>
       <a href="../articles/biomee_use.html">BiomeE usage</a>
     </li>
     <li>
@@ -154,6 +151,53 @@ output and how to evaluate it, see <a href="https://rdrr.io/pkg/BayesianTools/ma
 and <a href="https://rdrr.io/pkg/GenSA/man/GenSA.html" class="external-link">GenSA</a>.</p>
     </div>
 
+    <div id="ref-examples">
+    <h2>Examples</h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fix model parameters that won't be calibrated</span></span></span>
+<span class="r-in"><span><span class="va">params_fix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  kphio_par_a        <span class="op">=</span> <span class="fl">0.01</span>,</span></span>
+<span class="r-in"><span>  kphio_par_b        <span class="op">=</span> <span class="fl">1.0</span>,</span></span>
+<span class="r-in"><span>  soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span><span class="op">*</span><span class="fl">240</span>,</span></span>
+<span class="r-in"><span>  soilm_betao        <span class="op">=</span> <span class="fl">0.01</span>,</span></span>
+<span class="r-in"><span>  beta_unitcostratio <span class="op">=</span> <span class="fl">146</span>,</span></span>
+<span class="r-in"><span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,</span></span>
+<span class="r-in"><span>  tau_acclim         <span class="op">=</span> <span class="fl">30</span>,</span></span>
+<span class="r-in"><span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Define calibration settings</span></span></span>
+<span class="r-in"><span><span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"BayesianTools"</span>,</span></span>
+<span class="r-in"><span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.04</span>, upper<span class="op">=</span><span class="fl">0.09</span>, init<span class="op">=</span><span class="fl">0.05</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    err_gpp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.01</span>, upper <span class="op">=</span> <span class="fl">4</span>, init <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span>,</span></span>
+<span class="r-in"><span>  metric <span class="op">=</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="cost_likelihood_pmodel.html">cost_likelihood_pmodel</a></span>,</span></span>
+<span class="r-in"><span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    sampler <span class="op">=</span> <span class="st">"DEzs"</span>,</span></span>
+<span class="r-in"><span>    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      nrChains <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>      burnin <span class="op">=</span> <span class="fl">0</span>,        </span></span>
+<span class="r-in"><span>      iterations <span class="op">=</span> <span class="fl">50</span>     <span class="co"># kept artificially low</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="op">)</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span> <span class="co"># Run the calibration for GPP data</span></span></span>
+<span class="r-in"><span> <span class="va">calib_output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu">calib_sofun</span><span class="op">(</span></span></span>
+<span class="r-in"><span>   drivers <span class="op">=</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="p_model_drivers.html">p_model_drivers</a></span>,</span></span>
+<span class="r-in"><span>   obs <span class="op">=</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="p_model_validation.html">p_model_validation</a></span>,</span></span>
+<span class="r-in"><span>   settings <span class="op">=</span> <span class="va">settings</span>,</span></span>
+<span class="r-in"><span>   <span class="co"># extra arguments for the cost function</span></span></span>
+<span class="r-in"><span>   par_fixed <span class="op">=</span> <span class="va">params_fix</span>,</span></span>
+<span class="r-in"><span>   targets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gpp"</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Running DEzs-MCMC, chain  1 iteration 51 of 51 . Current logp  -8898650 -10882282 -8870826 . Please wait! </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> runMCMC terminated after 1.521seconds</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top"><h2 data-toc-skip>Contents</h2>

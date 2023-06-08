@@ -42,9 +42,6 @@ computes the RMSE for the biomee model fitting target variables
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/biomee_model_structure.html">BiomeE model structure</a>
-    </li>
-    <li>
       <a href="../articles/biomee_use.html">BiomeE usage</a>
     </li>
     <li>
@@ -124,6 +121,21 @@ The cost function performs a BiomeE model run for parameter values
 simulated values used to compute the RMSE.</p>
     </div>
 
+    <div id="ref-examples">
+    <h2>Examples</h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compute RMSE for a set of</span></span></span>
+<span class="r-in"><span><span class="co"># model parameter values</span></span></span>
+<span class="r-in"><span><span class="co"># and example data</span></span></span>
+<span class="r-in"><span><span class="fu">cost_rmse_biomee</span><span class="op">(</span></span></span>
+<span class="r-in"><span> par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3.5</span>, <span class="fl">3.5</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span> obs <span class="op">=</span> <span class="va">biomee_validation_2</span>,</span></span>
+<span class="r-in"><span> drivers <span class="op">=</span> <span class="va">biomee_gs_leuning_drivers</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3317895</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top"><h2 data-toc-skip>Contents</h2>

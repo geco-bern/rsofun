@@ -37,9 +37,6 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
-      <a href="../articles/biomee_model_structure.html">BiomeE model structure</a>
-    </li>
-    <li>
       <a href="../articles/biomee_use.html">BiomeE usage</a>
     </li>
     <li>
@@ -90,7 +87,7 @@
     <h2>Arguments</h2>
     <dl><dt>drivers</dt>
 <dd><p>A nested data frame with one row for each site and columns
-named according to the  arguments of function `runread_pmodel_f_bysite()`</p></dd>
+named according to thearguments of function `runread_biomee_f_bysite()`</p></dd>
 
 
 <dt>makecheck</dt>
@@ -114,17 +111,17 @@ computing. Defaults to 2.</p></dd>
     
 
 <p>A tibble with one row for each site and outputs stored 
-in the nested column <code>data</code></p>
-
-
+in the nested column <code>data</code>.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span> <span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span> <span class="va">df_drivers</span>,</span></span>
-<span class="r-in"><span>  <span class="va">params_modl</span>, makecheck <span class="op">=</span> <span class="cn">TRUE</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span>, ncores <span class="op">=</span> <span class="fl">2</span> <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Example BiomeE model run</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span> <span class="va">mod_output</span> <span class="op">&lt;-</span> <span class="fu">runread_biomee_f</span><span class="op">(</span> </span></span>
+<span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">biomee_gs_leuning_drivers</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </div>
