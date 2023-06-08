@@ -291,7 +291,7 @@ par_calib <- calib_sofun(
   settings = settings_calib,
   par_fixed = list(
     kphio = 0.05,
-    kphio_par_a = -0.0001,
+    kphio_par_a = -0.00005,
     kphio_par_b = 33,
     soilm_thetastar    = 0.6*240,
     soilm_betao        = 0.2,
@@ -354,3 +354,130 @@ summary(par_calib$mod)
 ```
 
 More details on diagnosing MCMC convergence can be found in [this vignette from BayesianTools](https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html#running-mcmc-and-smc-functions) and [this blogpost](https://theoreticalecology.wordpress.com/2011/12/09/mcmc-chain-analysis-and-convergence-diagnostics-with-coda-in-r/).
+
+Finally, let's see how the model performs. 
+```{r}
+# Sample kc_jmax values from the posterior distribution
+samples_kc_jmax <- getSample(par_calib$mod, 
+                             thin = 300,               # get every 10th sample
+                             whichParameters = 1,      # ignore error_gpp
+                             start = 100)              # remove burnin
+
+# Run the P-model to get the posterior GPP predictions
+pmodel_runs <- lapply(samples_kc_jmax, function(kc){
+  out <- runread_pmodel_f(
+    drivers = p_model_drivers,
+    par =  list(                      # copied from par_fixed above
+      kphio = 0.05,
+      kphio_par_a = -0.00005,
+      kphio_par_b = 33,
+      soilm_thetastar    = 0.6*240,
+      soilm_betao        = 0.2,
+      beta_unitcostratio = 146.0,
+      rd_to_vcmax        = 0.014,
+      tau_acclim         = 30.0,
+      kc_jmax            = kc)       # value from posterior
+  )
+  
+  out$data[[1]][, c("date", "gpp")]                # return gpp prediction and date
+})
+
+# Plot first year of P-model runs
+validation_data <- p_model_validation$data[[1]]
+
+posterior_plot <- ggplot() +
+  geom_line(
+    data = validation_data[1:365,],
+    aes(date, gpp),
+    alpha = 0.8
+  ) +
+  labs(
+    x = "Date",
+    y = "GPP"
+  )
+
+for(run in seq_along(pmodel_runs)){
+  posterior_plot <- posterior_plot +
+    geom_line(
+      data = pmodel_runs[[run]][1:365,],
+      aes(date, gpp),
+      alpha = 0.1,
+      color = 'blue'
+    )
+}
+
+posterior_plot
+```
+
+For simplicity, we plot the predicted GPP using the maximum a posteriori estimate
+for `kc_jmax` with a 90% credible interval based on the assumption that the
+predicted GPP follows a normal distribution with standard deviation `err_gpp`, 
+which we have also estimated. This gives a range that covers the observed GPP
+in 90% of the cases.
+
+```{r}
+ggplot(data = runread_pmodel_f(
+    drivers = p_model_drivers,
+    par =  list(                      # copied from par_fixed above
+      kphio = 0.05,
+      kphio_par_a = -0.00005,
+      kphio_par_b = 33,
+      soilm_thetastar    = 0.6*240,
+      soilm_betao        = 0.2,
+      beta_unitcostratio = 146.0,
+      rd_to_vcmax        = 0.014,
+      tau_acclim         = 30.0,
+      kc_jmax            = par_calib$par[1])       # value from posterior
+  ) |>
+      dplyr::select(sitename, data) |>
+      tidyr::unnest(data) |>
+          dplyr::slice(1:750)) +
+    geom_line(aes(
+      date,
+      gpp
+    ),
+    colour = "red",
+    alpha = 0.8
+  ) +
+  geom_errorbar(
+    aes(x = date, ymin=gpp - 2*par_calib$par[2],   # should cover ~ 95% of observations
+        ymax=gpp + 2*par_calib$par[2]), width=.2,
+                 position=position_dodge(0.05), 
+    color = 'red', alpha = 0.5) +  
+  geom_line(
+    data = validation_data[1:750, ],
+    aes(
+      date,
+      gpp
+    ),
+    alpha = 0.8
+  ) +
+  geom_errorbar(
+    data = validation_data[1:750, ],
+    aes(x = date, ymin=gpp - 2*gpp_unc, ymax=gpp + 2*gpp_unc), width=.2,
+                 position=position_dodge(0.05)) +
+
+  labs(
+    x = "Date",
+    y = "GPP"
+  )
+```
+
+```{r}
+# See max and min GPP predictions
+gpp <- data.frame(date = pmodel_runs[[1]]$date)
+for(run in seq_along(pmodel_runs)){
+  gpp <- left_join(gpp, pmodel_runs[[run]],
+                   by = join_by(date))
+}
+
+colnames(gpp) <- c("date", paste0("gpp", 1:length(pmodel_runs)))
+
+gpp |>
+  mutate(gpp_min = min(gpp1, gpp2, gpp3, gpp4, gpp5, gpp6, gpp7,
+                       gpp8, gpp9),
+         gpp_max = max(gpp1, gpp2, gpp3, gpp4, gpp5, gpp6, gpp7,
+                       gpp8, gpp9)) |>
+  select(date, gpp_min, gpp_max)
+  
+```
