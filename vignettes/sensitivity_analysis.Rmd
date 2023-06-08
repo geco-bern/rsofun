@@ -1,5 +1,5 @@
 ---
-title: "Sensitivity analysis"
+title: "Sensitivity analysis and calibration interpretation"
 author: "Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
@@ -171,9 +171,10 @@ load("files/morrisOut.rda")
 ```
 
 The analysis evaluates the variability of the target function, i.e. the 
-log-likelihood, for several points across the parameter space. 
-Statistics $\mu *$ and $\sigma$ measure the average of the absolute
-differences between these log-likelihood values and their standard deviation,
+log-likelihood, for several points across the parameter space. It is an approximation
+of the derivatives of the log-likelihood with respect to the model parameters.
+Statistics $\mu *$ and $\sigma$ can be interpreted as the mean absolute derivative
+and the standard deviation of the derivative,
 respectively. The higher the value of these statistics for a given parameter, 
 the more influential the parameter is.  
 ```{r eval = TRUE, fig.width=7, fig.height=4}
@@ -203,6 +204,22 @@ morrisOut.df |>
   )
 
 ```
+
+The outcome of the Morris sensitivity analysis depends strongly on the choice of
+parameter ranges and how parameters interact with each other in the 
+underlying model. In this example, we constrained the parameters based on 
+their physical meaning (e.g. `soilm_betao` should be in `[0,1]`) and the site FR-Pue 
+where the data is coming from (e.g. `kphio_par_b` around 25$^{o}$C).
+When observing the figure above, we notice that parameters `kphio_par_a` and 
+`kphio_par_b` have a high impact on the model fit (big $\mu *$), but also this
+dependence of GPP on the two parameters changes across the parameter space 
+(big $\sigma$). This happens because they interact in the temperature dependence
+function for the quantum yield efficiency, and they will probably be hard to
+calibrate and also require data from multiple sites.
+
+To help you interpret this sensitivity analysis, it may be wise to run it
+several times for different parameter ranges and validation data. Note how `rd_to_vcmax`
+does not affect GPP, but it would actually affect the quality of Vcmax25 predictions.
 
 ## Interpretation of Bayesian calibration routine
 
