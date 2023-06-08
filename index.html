@@ -106,7 +106,7 @@
 <div class="section level1">
 <div class="page-header"><h1 id="rsofun">rsofun<a class="anchor" aria-label="anchor" href="#rsofun"></a>
 </h1></div>
-<p>A modelling framework for site-scale simulations of ecosystem processes, implemented as an R package (low-level routines in Fortran 90). Implements the following models:</p>
+<p>An R Simulating Optimal FUNctioning (RSOFUN) framework for site-scale simulations of ecosystem processes. The package contains the following modules:</p>
 <ul>
 <li>P-model for leaf-level acclimation of photosynthesis from <a href="https://gmd.copernicus.org/preprints/gmd-2019-200/" class="external-link">Stocker et al. (2019)</a>.</li>
 <li>SPLASH for bioclimatic variables, including the surface radiation budget and the soil water balance from <a href="https://doi.org/10.5194/gmd-10-689-2017" class="external-link">Davis et al. (2017)</a>.</li>
@@ -115,23 +115,28 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>To install and load the rsofun package using the latest release run the following command in your R terminal:</p>
+<div class="section level3">
+<h3 id="stable-release">stable release<a class="anchor" aria-label="anchor" href="#stable-release"></a>
+</h3>
+<p>To install the current stable release use a CRAN repository:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="va">devtools</span><span class="op">)</span><span class="op">}</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"geco-bern/rsofun@v4.3"</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/geco-bern/rsofun" class="external-link">rsofun</a></span><span class="op">)</span></span></code></pre></div>
-<p>Problems with compilation? Make sure to have gfortran installed and paths to the compiler and libraries properly specified (see e.g., <a href="https://github.com/geco-bern/rsofun/issues/58" class="external-link">here</a>).</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"rsofun"</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/geco-bern/rsofun" class="external-link">"rsofun"</a></span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
-</h2>
-<p>See vignette <a href="./articles/pmodel_use.html">Example for using rsofun</a> for how to run the model, and the <a href="https://github.com/geco-bern/ingestr" class="external-link">ingestr R package</a> for collecting the forcing data to run rsofun.</p>
+<div class="section level3">
+<h3 id="development-release">development release<a class="anchor" aria-label="anchor" href="#development-release"></a>
+</h3>
+<p>To install the development releases of the package run the following commands:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va"><a href="https://remotes.r-lib.org" class="external-link">remotes</a></span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span><span class="op">}</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"bluegreen-labs/rsofun"</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/geco-bern/rsofun" class="external-link">"rsofun"</a></span><span class="op">)</span></span></code></pre></div>
+<p>Vignettes are not rendered by default, if you want to include additional documentation please use:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va"><a href="https://remotes.r-lib.org" class="external-link">remotes</a></span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span><span class="op">}</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"bluegreen-labs/rsofun"</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/geco-bern/rsofun" class="external-link">"rsofun"</a></span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="usage-and-contribution">Usage and contribution<a class="anchor" aria-label="anchor" href="#usage-and-contribution"></a>
-</h2>
-<p>The developers (Beni Stocker, Koen Hufkens, Pepa Aran) would appreciate if your developments can be fed back to this repository. Please make pull requests. Thanks.</p>
-<p>Tutorials for developing the source code are available on our <a href="https://www.youtube.com/@geco-group/playlists" class="external-link">YouTube Channel</a> (see Playlist ‘rsofun’).</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -139,6 +144,11 @@
 <p>Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval, D., Davis, T., and Prentice, I. C.: P-model v1.0: an optimality-based light use efficiency model for simulating ecosystem gross primary production, Geosci. Model Dev., 13, 1545–1581, <a href="https://doi.org/10.5194/gmd-13-1545-2020" class="external-link uri">https://doi.org/10.5194/gmd-13-1545-2020</a>, 2020.</p>
 <p>Davis, T. W., Prentice, I. C., Stocker, B. D., Thomas, R. T., Whitley, R. J., Wang, H., Evans, B. J., Gallego-Sala, A. V., Sykes, M. T., and Cramer, W.: Simple process-led algorithms for simulating habitats (SPLASH v.1.0): robust indices of radiation, evapotranspiration and plant-available moisture, Geoscientific Model Development, 10, 689–708, <a href="doi:10.5194/gmd-10-689-2017" class="uri">doi:10.5194/gmd-10-689-2017</a>, URL http: //www.geosci-model-dev.net/10/689/2017/, 2017.</p>
 <p>Weng, E. S., Malyshev, S., Lichstein, J. W., Farrior, C. E., Dybzinski, R., Zhang, T., Shevliakova, E., and Pacala, S. W.: Scaling from individual trees to forests in an Earth system modeling framework using a mathematically tractable model of height-structured competition, Biogeosciences, 12, 2655–2694, <a href="https://doi.org/10.5194/bg-12-2655-2015" class="external-link uri">https://doi.org/10.5194/bg-12-2655-2015</a>, 2015.</p>
+</div>
+<div class="section level2">
+<h2 id="acknowledgements">Acknowledgements<a class="anchor" aria-label="anchor" href="#acknowledgements"></a>
+</h2>
+<p>The {rsofun} is part of the LEMONTREE project and funded by Schmidt Futures and under the umbrella of the Virtual Earth System Research Institute (VESRI).</p>
 </div>
 </div>
 
