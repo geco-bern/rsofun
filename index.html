@@ -139,6 +139,65 @@
 </div>
 </div>
 <div class="section level2">
+<h2 id="use">Use<a class="anchor" aria-label="anchor" href="#use"></a>
+</h2>
+<p>Below sections show the ease of use of the package in terms of model paramter specification and running both a single run or optimizing the parameters for a given site (or multiple sites). For an in depth discussion we refer to the <a href="https://geco-bern.github.io/rsofun/articles/" class="external-link">vignettes</a>.</p>
+<div class="section level3">
+<h3 id="running-model">Running model<a class="anchor" aria-label="anchor" href="#running-model"></a>
+</h3>
+<p>With all data prepared we can run the P-model using <code><a href="reference/runread_pmodel_f.html">runread_pmodel_f()</a></code>. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># define model parameter values from previous</span></span>
+<span><span class="co"># work</span></span>
+<span><span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    kphio              <span class="op">=</span> <span class="fl">0.04998</span>,    <span class="co"># setup ORG in Stocker et al. 2020 GMD</span></span>
+<span>    kphio_par_a        <span class="op">=</span> <span class="fl">0.0</span>,        <span class="co"># set to zero to disable temperature-dependence of kphio</span></span>
+<span>    kphio_par_b        <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>    soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fl">240</span>,  <span class="co"># to recover old setup with soil moisture stress</span></span>
+<span>    soilm_betao        <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>    beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
+<span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,      <span class="co"># value from Atkin et al. 2015 for C3 herbaceous</span></span>
+<span>    tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span>
+<span>    kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># run the model for these parameters</span></span>
+<span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span></span>
+<span>  <span class="va">p_model_drivers</span>,</span>
+<span>  par <span class="op">=</span> <span class="va">params_modl</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="parameter-optimization">Parameter optimization<a class="anchor" aria-label="anchor" href="#parameter-optimization"></a>
+</h3>
+<p>To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as a cost function and parameter ranges.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  method              <span class="op">=</span> <span class="st">"GenSA"</span>,</span>
+<span>  metric              <span class="op">=</span> <span class="va">cost_rmse_pmodel</span>,</span>
+<span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    maxit <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
+<span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.02</span>, upper<span class="op">=</span><span class="fl">0.2</span>, init <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><code>rsofun</code> supports both optimization using the <code>GenSA</code> and <code>BayesianTools</code> packages. The above statement provides settings for a <code>GenSA</code> optimization approach. For this example the maximum number of iterations is kept artificially low. In a real scenario you will have to increase this value orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided but the model structure is transparent and custom cost functions can be easily written. More details can be found in the “Parameter calibration and cost functions” vignette.</p>
+<p>In addition starting values and ranges are provided for the free parameters in the model. Free parameters include: parameters for the quantum yield efficiency <code>kphio</code>, <code>kphio_par_a</code> and <code>kphio_par_b</code>, soil moisture stress parameters <code>soilm_thetastar</code> and <code>soilm_betao</code>, and also <code>beta_unitcostratio</code>, <code>rd_to_vcmax</code>, <code>tau_acclim</code> and <code>kc_jmax</code> (see <code><a href="reference/runread_pmodel_f.html">?runread_pmodel_f</a></code>). Be mindful that with newer versions of <code>rsofun</code> additional parameters might be introduced, so re-check vignettes and function documentation when updating existing code.</p>
+<p>With all settings defined the optimization function <code><a href="reference/calib_sofun.html">calib_sofun()</a></code> can be called with driver data and observations specified. Extra arguments for the cost function (like what variable should be used as target to compute the root mean squared error (RMSE) and previous values for the parameters that aren’t calibrated, which are needed to run the P-model).</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># calibrate the model and optimize free parameters</span></span>
+<span><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/calib_sofun.html">calib_sofun</a></span><span class="op">(</span></span>
+<span>    drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,  </span>
+<span>    obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span>
+<span>    settings <span class="op">=</span> <span class="va">settings</span>,</span>
+<span>    <span class="co"># extra arguments passed to the cost function:</span></span>
+<span>    targets <span class="op">=</span> <span class="st">"gpp"</span>,             <span class="co"># define target variable GPP</span></span>
+<span>    par_fixed <span class="op">=</span> <span class="va">params_modl</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>  <span class="co"># fix non-calibrated parameters to previous </span></span>
+<span>                                 <span class="co"># values, removing kphio</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <p>Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval, D., Davis, T., and Prentice, I. C.: P-model v1.0: an optimality-based light use efficiency model for simulating ecosystem gross primary production, Geosci. Model Dev., 13, 1545–1581, <a href="https://doi.org/10.5194/gmd-13-1545-2020" class="external-link uri">https://doi.org/10.5194/gmd-13-1545-2020</a>, 2020.</p>
