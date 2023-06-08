@@ -42,7 +42,7 @@ library("rsofun")
 
 ## Use
 
-Below sections show the ease of use of the package in terms of model paramter specification and running both a single run or optimizing the parameters for a given site (or multiple sites). For an in depth discussion we refer to the [vignettes](https://geco-bern.github.io/rsofun/articles/).
+Below sections show the ease of use of the package in terms of model parameter specification and running both a single run or optimizing the parameters for a given site (or multiple sites). For an in depth discussion we refer to the [vignettes](https://geco-bern.github.io/rsofun/articles/).
 
 ### Running model
 
