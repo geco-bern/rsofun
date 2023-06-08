@@ -40,6 +40,71 @@ remotes::install_github("bluegreen-labs/rsofun", build_vignettes = TRUE)
 library("rsofun")
 ```
 
+## Use
+
+Below sections show the ease of use of the package in terms of model paramter specification and running both a single run or optimizing the parameters for a given site (or multiple sites). For an in depth discussion we refer to the [vignettes](https://geco-bern.github.io/rsofun/articles/).
+
+### Running model
+
+With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
+
+``` r
+# define model parameter values from previous
+# work
+params_modl <- list(
+    kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
+    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+    kphio_par_b        = 1.0,
+    soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
+
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  p_model_drivers,
+  par = params_modl
+  )
+```
+
+### Parameter optimization
+
+To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as a cost function and parameter ranges.
+
+``` r
+settings <- list(
+  method              = "GenSA",
+  metric              = cost_rmse_pmodel,
+  control = list(
+    maxit = 100),
+  par = list(
+    kphio = list(lower=0.02, upper=0.2, init = 0.05)
+    )
+)
+```
+
+`rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `GenSA` optimization approach. For this example the maximum number of iterations is kept artificially low. In a real scenario you will have to increase this value orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided but the model structure is transparent and custom cost functions can be easily written. More details can be found in the "Parameter calibration and cost functions" vignette.
+
+In addition starting values and ranges are provided for the free parameters in the model. Free parameters include: parameters for the quantum yield efficiency `kphio`, `kphio_par_a` and `kphio_par_b`, soil moisture stress parameters `soilm_thetastar` and `soilm_betao`, and also `beta_unitcostratio`, `rd_to_vcmax`, `tau_acclim` and `kc_jmax` (see `?runread_pmodel_f`). Be mindful that with newer versions of `rsofun` additional parameters might be introduced, so re-check vignettes and function documentation when updating existing code.
+
+With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified. Extra arguments for the cost function (like what variable should be used as target to compute the root mean squared error (RMSE) and previous values for the parameters that aren't calibrated, which are needed to run the P-model).
+
+``` r
+# calibrate the model and optimize free parameters
+pars <- calib_sofun(
+    drivers = p_model_drivers,  
+    obs = p_model_validation,
+    settings = settings,
+    # extra arguments passed to the cost function:
+    targets = "gpp",             # define target variable GPP
+    par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
+                                 # values, removing kphio
+  )
+```
+
 ## References
 
 Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval, D., Davis, T., and Prentice, I. C.: P-model v1.0: an optimality-based light use efficiency model for simulating ecosystem gross primary production, Geosci. Model Dev., 13, 1545–1581, https://doi.org/10.5194/gmd-13-1545-2020, 2020.
