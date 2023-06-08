@@ -3,7 +3,7 @@
 
 # rsofun
 
-A modelling framework for site-scale simulations of ecosystem processes, implemented as an R package (low-level routines in Fortran 90). Implements the following models:
+An R Simulating Optimal FUNctioning (RSOFUN) framework for site-scale simulations of ecosystem processes. The package contains the following modules:
 
 - P-model for leaf-level acclimation of photosynthesis from [Stocker et al. (2019)](https://gmd.copernicus.org/preprints/gmd-2019-200/).
 - SPLASH for bioclimatic variables, including the surface radiation budget and the soil water balance from [Davis et al. (2017)](https://doi.org/10.5194/gmd-10-689-2017).
@@ -11,23 +11,34 @@ A modelling framework for site-scale simulations of ecosystem processes, impleme
 
 ## Installation
 
-To install and load the rsofun package using the latest release run the following command in your R terminal: 
-```r
-if(!require(devtools)){install.packages(devtools)}
-devtools::install_github("geco-bern/rsofun@v4.3")
-library(rsofun)
+### stable release
+
+To install the current stable release use a CRAN repository:
+
+``` r
+install.packages("rsofun")
+library("rsofun")
 ```
-Problems with compilation? Make sure to have gfortran installed and paths to the compiler and libraries properly specified (see e.g., [here](https://github.com/geco-bern/rsofun/issues/58)). 
 
-## Example
+### development release
 
-See vignette [Example for using rsofun](./articles/pmodel_use.html) for how to run the model, and the [ingestr R package](https://github.com/geco-bern/ingestr) for collecting the forcing data to run rsofun.
+To install the development releases of the package run the following
+commands:
 
-## Usage and contribution
+``` r
+if(!require(remotes)){install.packages("remotes")}
+remotes::install_github("bluegreen-labs/rsofun")
+library("rsofun")
+```
 
-The developers (Beni Stocker, Koen Hufkens, Pepa Aran) would appreciate if your developments can be fed back to this repository. Please make pull requests. Thanks.
+Vignettes are not rendered by default, if you want to include additional
+documentation please use:
 
-Tutorials for developing the source code are available on our [YouTube Channel](https://www.youtube.com/@geco-group/playlists) (see Playlist 'rsofun'). 
+``` r
+if(!require(remotes)){install.packages("remotes")}
+remotes::install_github("bluegreen-labs/rsofun", build_vignettes = TRUE)
+library("rsofun")
+```
 
 ## References
 
@@ -36,3 +47,7 @@ Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval
 Davis, T. W., Prentice, I. C., Stocker, B. D., Thomas, R. T., Whitley, R. J., Wang, H., Evans, B. J., Gallego-Sala, A. V., Sykes, M. T., and Cramer, W.: Simple process-led algorithms for simulating habitats (SPLASH v.1.0): robust indices of radiation, evapotranspiration and plant-available moisture, Geoscientific Model Development, 10, 689–708, doi:10.5194/gmd-10-689-2017, URL http: //www.geosci-model-dev.net/10/689/2017/, 2017.
 
 Weng, E. S., Malyshev, S., Lichstein, J. W., Farrior, C. E., Dybzinski, R., Zhang, T., Shevliakova, E., and Pacala, S. W.: Scaling from individual trees to forests in an Earth system modeling framework using a mathematically tractable model of height-structured competition, Biogeosciences, 12, 2655–2694, https://doi.org/10.5194/bg-12-2655-2015, 2015.
+
+## Acknowledgements
+
+The {rsofun} is part of the LEMONTREE project and funded by Schmidt Futures and under the umbrella of the Virtual Earth System Research Institute (VESRI).
