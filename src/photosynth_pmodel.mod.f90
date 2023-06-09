@@ -865,7 +865,7 @@ contains
     else
 
       
-      kphio_temp = max(0.0, min(1.0, kphio * (1.0 + kphio_par_a * (dtemp - kphio_par_b)**2)))
+      kphio_temp = kphio * max(0.0, min(1.0, (1.0 + kphio_par_a * (dtemp - kphio_par_b)**2)))
 
       ! old:
       ! kphio_temp = kphio * (0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2)  ! Based on Bernacchi et al., 2003
