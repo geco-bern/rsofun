@@ -44,7 +44,7 @@
 #' @import GenSA BayesianTools
 #' 
 #' @examples
-#' 
+#' \donttest{
 #' # Fix model parameters that won't be calibrated
 #' params_fix <- list(
 #'   kphio_par_a        = 0.01,
@@ -84,7 +84,7 @@
 #'    par_fixed = params_fix,
 #'    targets = c("gpp")
 #'  )
-#' 
+#' }
 
 calib_sofun <- function(
     drivers,

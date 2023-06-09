@@ -87,7 +87,7 @@ Hence, the FULL calibration setup cannot be
 exactly replicated.
 }
 \examples{
-
+\donttest{
 # Define model parameter values from previous work
 params_modl <- list(
   kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
@@ -105,5 +105,5 @@ params_modl <- list(
 output <- rsofun::runread_pmodel_f(
   drivers = rsofun::p_model_drivers,
   par = params_modl)
-
+}
 }

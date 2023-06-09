@@ -158,7 +158,7 @@ Hence, the FULL calibration setup cannot be
 exactly replicated.
 }
 \examples{
-
+\donttest{
 # Define model parameter values from previous work
 params_modl <- list(
   kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
@@ -182,5 +182,5 @@ mod_output <- run_pmodel_f_bysite(
   params_soil = p_model_drivers$params_soil[[1]],
   params_modl = params_modl
  )
-
+}
 }

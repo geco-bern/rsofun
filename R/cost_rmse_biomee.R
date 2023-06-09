@@ -23,7 +23,7 @@
 #' @export
 #' 
 #' @examples
-#' 
+#' \donttest{
 #' # Compute RMSE for a set of
 #' # model parameter values
 #' # and example data
@@ -32,7 +32,7 @@
 #'  obs = biomee_validation_2,
 #'  drivers = biomee_gs_leuning_drivers
 #' )
-#'
+#' }
 
 cost_rmse_biomee <- function(
     par,

@@ -55,7 +55,7 @@ This is the main function that handles the
 calibration of SOFUN model parameters.
 }
 \examples{
-
+\donttest{
 # Fix model parameters that won't be calibrated
 params_fix <- list(
   kphio_par_a        = 0.01,
@@ -95,5 +95,5 @@ settings <- list(
    par_fixed = params_fix,
    targets = c("gpp")
  )
-
+}
 }

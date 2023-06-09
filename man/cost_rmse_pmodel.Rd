@@ -72,7 +72,7 @@ when the date of a trait measurement is available, it will be compared to the
 trait value predicted on that date.
 }
 \examples{
-
+\donttest{
 # Compute RMSE for a set
 # of model parameter values
 # and example data
@@ -90,5 +90,5 @@ cost_rmse_pmodel(
   kc_jmax            = 0.41
  )
 )
-
+}
 }

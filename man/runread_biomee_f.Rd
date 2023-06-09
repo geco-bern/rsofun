@@ -28,10 +28,11 @@ in the nested column \code{data}.
 Runs the BiomeE model and loads output in once.
 }
 \examples{
-
+\donttest{
 # Example BiomeE model run
 
  mod_output <- runread_biomee_f( 
   drivers = biomee_gs_leuning_drivers
   )
+  }
 }

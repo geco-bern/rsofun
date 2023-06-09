@@ -17,13 +17,13 @@
 #' @export
 #' 
 #' @examples 
-#' 
+#' \donttest{
 #' # Example BiomeE model run
 #' 
 #'  mod_output <- runread_biomee_f( 
 #'   drivers = biomee_gs_leuning_drivers
 #'   )
-
+#'   }
 
 runread_biomee_f <- function(
   drivers,
