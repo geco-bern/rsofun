@@ -47,7 +47,7 @@
 #' \donttest{
 #' # Fix model parameters that won't be calibrated
 #' params_fix <- list(
-#'   kphio_par_a        = 0.01,
+#'   kphio_par_a        = 0,
 #'   kphio_par_b        = 1.0,
 #'   soilm_thetastar    = 0.6*240,
 #'   soilm_betao        = 0.01,
