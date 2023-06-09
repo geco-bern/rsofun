@@ -89,8 +89,8 @@ lower and upper bounds.
 # best parameter values (from previous literature)
 par_cal_best <- c(
     kphio              = 0.09423773,
-    kphio_par_a        = 0.1,
-    kphio_par_b        = 25,
+    kphio_par_a        = -0.0025,
+    kphio_par_b        = 20,
     soilm_thetastar    = 0.6*240,
     soilm_betao        = 0.2,
     beta_unitcostratio = 146.0,
@@ -102,8 +102,8 @@ par_cal_best <- c(
 
 # lower bound
 par_cal_min <- c(
-    kphio              = 0.0,
-    kphio_par_a        = -0.2,
+    kphio              = 0.04,
+    kphio_par_a        = -0.004,
     kphio_par_b        = 10,
     soilm_thetastar    = 0,
     soilm_betao        = 0,
@@ -116,9 +116,9 @@ par_cal_min <- c(
 
 # upper bound
 par_cal_max <- c(
-    kphio              = 5.0,
-    kphio_par_a        = 0.5,
-    kphio_par_b        = 40.0,
+    kphio              = 0.15,
+    kphio_par_a        = -0.0015,
+    kphio_par_b        = 30,
     soilm_thetastar    = 3000,
     soilm_betao        = 1,
     beta_unitcostratio = 200.0,
