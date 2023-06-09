@@ -65,7 +65,8 @@ layer of soil.
 \describe{
   \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 
    in mol mol\eqn{^{-1}}.
-   When temperature dependence is used, it corresponds to the parameter \eqn{c} (see Details).}
+   When temperature dependence is used, it corresponds to the multiplicative
+   parameter \eqn{c} (see Details).}
   \item{kphio_par_a}{The shape parameter \eqn{a} of the temperature-dependency of
    quantum yield efficiency (see Details).
    To disable the temperature dependence, set \code{kphio_par_a = 0}.}
@@ -131,23 +132,25 @@ different P-model setups presented in Stocker et al. 2020 GMD. The P-model
 version implemented in this package allows more flexibility than the one
 presented in the paper, with the following functions:
 
-The temperature dependence of the quantum yield efficiency is given by:
-\eqn{\varphi_0 (T) = a (T - b)^2 + c}. \cr
+The temperature dependence of the quantum yield efficiency is given by: \cr
+\eqn{\varphi_0 (T) = c (1 + a (T - b)^2 ) } if \eqn{0 < c (1 + a (T - b)^2 ) < 1}, \cr
+\eqn{\varphi_0 (T) = 0 } if \eqn{ c (1 + a (T - b)^2 ) \leq 0}, and  \cr
+\eqn{\varphi_0 (T) = 1 } if \eqn{ c (1 + a (T - b)^2 ) \geq 1}. \cr
 The ORG setup can be reproduced by setting \code{kphio_par_a = 0}
 and calibrating the \code{kphio} parameter only.
 The BRC setup (which calibrates \eqn{c_L = \frac{a_L b_L}{4}} in Eq. 18) is more difficult to reproduce, 
 since the temperature-dependency has been reformulated and a custom cost
 function would be necessary for calibration. The new parameters
 are related to \eqn{c_L} as follows: \cr
-\eqn{a = - 0.00034} \cr
-\eqn{b = 32.35294 c_L} \cr
-\eqn{c = 0.352 c_L + 0.3558824 c_L^2} 
+\eqn{a = -0.0004919819} \cr
+\eqn{b = 32.35294} \cr
+\eqn{c = 0.6910823 c_L} 
 
-The soil moisture stress is implemented as 
+The soil moisture stress is implemented as \cr
 \eqn{\beta(\theta) = \frac{\beta_0 - 1}{{\theta^{*}}^2} 
    (\theta - \theta^{*})^2 + 1 } if 
-   \eqn{ 0 \leq \theta \leq \theta^{*}} and
-\eqn{\beta(\theta) = 1} if \eqn{ \theta > \theta^{*}}. 
+   \eqn{ 0 \leq \theta \leq \theta^{*}} and \cr
+\eqn{\beta(\theta) = 1} if \eqn{ \theta > \theta^{*}}. \cr
 In Stocker et al. 2020 GMD, the threshold plant-available soil water is set as
 \eqn{\theta^{*}} 
 \code{= 0.6 * whc} where \code{whc} is the site's water holding capacity. Also,
