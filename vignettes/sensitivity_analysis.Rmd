@@ -227,6 +227,7 @@ It is always important to check the convergence of the MCMC algorithm used for t
 
 According to the previous sensitivity analysis, calibrating the error parameter for GPP and the Jmax cost ratio parameters will have the most impact on the model fit. Let's run the calibration:
 ```{r eval = FALSE, echo = FALSE}
+# Calibrates the kphio parameters, does not go in vignette
 set.seed(2023)
 
 # Define calibration settings
