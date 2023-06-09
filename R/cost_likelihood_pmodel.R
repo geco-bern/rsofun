@@ -57,7 +57,7 @@
 #' # temperature dependence of kphio 
 #' # and example data
 #' cost_likelihood_pmodel(
-#'  par = c(0.05, 0.01, 1,     # model parameters
+#'  par = c(0.05, -0.01, 1,     # model parameters
 #'          2),                # err_gpp
 #'  obs = p_model_validation,
 #'  drivers = p_model_drivers,
