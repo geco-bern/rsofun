@@ -82,8 +82,8 @@ layer of soil.
    \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
   \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
-  \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c in Prentice
-   et al. 2014).} 
+  \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c\eqn{^*} in
+  Stocker et al. 2020 GMD).} 
 }}
 
 \item{makecheck}{A logical specifying whether checks are performed 
