@@ -69,7 +69,7 @@ ll_pmodel <- function(
 # Compute log-likelihood for a given set of parameters
 ll_pmodel( par_v = c(
   kphio              = 0.09423773, # setup ORG in Stocker et al. 2020 GMD
-  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
+  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
   kphio_par_b        = 1.0,
   soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
   soilm_betao        = 0.0,
@@ -119,7 +119,7 @@ par_cal_max <- c(
     kphio              = 0.15,
     kphio_par_a        = -0.0015,
     kphio_par_b        = 30,
-    soilm_thetastar    = 3000,
+    soilm_thetastar    = 240,
     soilm_betao        = 1,
     beta_unitcostratio = 200.0,
     rd_to_vcmax        = 0.1,
@@ -210,12 +210,22 @@ parameter ranges and how parameters interact with each other in the
 underlying model. In this example, we constrained the parameters based on 
 their physical meaning (e.g. `soilm_betao` should be in `[0,1]`) and the site FR-Pue 
 where the data is coming from (e.g. `kphio_par_b` around 25$^{o}$C).
-When observing the figure above, we notice that parameters `kphio_par_a` and 
-`kphio_par_b` have a high impact on the model fit (big $\mu *$), but also this
+When observing the figure above, we notice that parameters `kphio` and 
+`kc_jmax` have a high impact on the model fit (big $\mu *$), but also the magnitude of this
 dependence of GPP on the two parameters changes across the parameter space 
-(big $\sigma$). This happens because they interact in the temperature dependence
-function for the quantum yield efficiency, and they will probably be hard to
+(big $\sigma$). This happens because parameters interact in the 
+light use efficiency calculation
+<!-- temperature dependence function for the quantum yield efficiency,  -->
+and they will probably be hard to
 calibrate and also require data from multiple sites.
+
+The log-likelihood is most sensitive to `err_gpp` with a very large variation in
+the magnitude of this dependencel This makes sense because for
+higher values of the standard deviation the normal likelihood is flatter 
+(and similar log-likelihood values are calculated, whether the model predictions
+using the rest of parameters are good or bad) and for lower `err_gpp` values the
+likelihood is pointy (hence good model fits achieve a big log-likelihood value and
+and poor model fits, a very small value).
 
 To help you interpret this sensitivity analysis, it may be wise to run it
 several times for different parameter ranges and validation data. Note how `rd_to_vcmax`
@@ -226,8 +236,8 @@ does not affect GPP, but it would actually affect the quality of Vcmax25 predict
 It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. Here we show some plots and statistics that may help you assess whether the parameter calibration has converged.
 
 According to the previous sensitivity analysis, calibrating the error parameter for GPP and the Jmax cost ratio parameters will have the most impact on the model fit. Let's run the calibration:
-```{r eval = FALSE, echo = FALSE}
-# Calibrates the kphio parameters, does not go in vignette
+```{r eval = FALSE, echo = TRUE}
+# Calibrates the kphio-related parameters
 set.seed(2023)
 
 # Define calibration settings
@@ -237,8 +247,8 @@ settings_calib <- list(
   control = list(
     sampler = "DEzs",
     settings = list(
-      burnin = 300,
-      iterations = 3000,
+      burnin = 1200,
+      iterations = 6000,
       startValue = 3       # number of chains to be sampled
     )),
   par = list(
@@ -265,7 +275,8 @@ par_calib <- calib_sofun(
 )
 ```
 
-```{r eval = FALSE, echo = TRUE}
+```{r eval = FALSE, echo = FALSE}
+# Calibrates kphio, betao, kc_jmax - top 3 model params
 set.seed(2023)
 
 # Define calibration settings
@@ -275,11 +286,13 @@ settings_calib <- list(
   control = list(
     sampler = "DEzs",
     settings = list(
-      burnin = 300,
-      iterations = 3000,
+      burnin = 1200,
+      iterations = 6000,
       startValue = 3       # number of chains to be sampled
     )),
   par = list(
+    kphio = list(lower = 0.04, upper = 0.15, init = 0.05),
+    soilm_betao = list(lower = 0, upper = 1, init = 0.2),
     kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),
     err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
   )
@@ -291,11 +304,9 @@ par_calib <- calib_sofun(
   obs = p_model_validation,
   settings = settings_calib,
   par_fixed = list(
-    kphio = 0.05,
-    kphio_par_a = -0.00005,
-    kphio_par_b = 33,
+    kphio_par_a = -0.0025,
+    kphio_par_b = 20,
     soilm_thetastar    = 0.6*240,
-    soilm_betao        = 0.2,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0),
@@ -314,7 +325,7 @@ load("files/par_calib.rda")
 ```
 
 `BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge (we set \code{burnin = 300} above). The samples after the burnin period are then used for inference.
-```{r fig.height = 5, fig.width = 7}
+```{r fig.height = 10, fig.width = 7}
 # par(mar = c(2,2,2,2))
 plot(par_calib$mod)
 ```
@@ -324,7 +335,7 @@ The posterior density plots may be lumpy. In this case it's advisable to run the
 When convergence has been reached, the oscillation of the time series should look like white noise. The presence of a trend indicates that convergence hasn't been reached.
 
 Trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space may not be explored fully. 
-```{r fig.height = 5, fig.width = 7}
+```{r fig.height = 10, fig.width = 7}
 # Define function for plotting chains separately
 plot_acf_mcmc <- function(chains, par_names){
   # chains: from the BayesianTools output
@@ -338,7 +349,8 @@ plot_acf_mcmc <- function(chains, par_names){
   }
 }
 
-plot_acf_mcmc(par_calib$mod$chain, c("err_gpp", "kc_jmax"))
+# plot_acf_mcmc(par_calib$mod$chain, c("err_gpp", "kc_jmax"))
+plot_acf_mcmc(par_calib$mod$chain, c("err_gpp", "kphio", "kphio_par_a", "kphio_par_b"))
 ```
 
 Looking at the correlation between chains is also helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior space. Here the correlation is very small and we saw above that the chains reached a stationary distribution quite quickly.
@@ -420,15 +432,15 @@ in 90% of the cases.
 ggplot(data = runread_pmodel_f(
     drivers = p_model_drivers,
     par =  list(                      # copied from par_fixed above
-      kphio = 0.05,
-      kphio_par_a = -0.00005,
-      kphio_par_b = 33,
+      kphio = par_calib$par[1],
+      kphio_par_a = par_calib$par[2],
+      kphio_par_b = par_calib$par[3],
       soilm_thetastar    = 0.6*240,
       soilm_betao        = 0.2,
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
       tau_acclim         = 30.0,
-      kc_jmax            = par_calib$par[1])       # value from posterior
+      kc_jmax            = 0.41)       # value from posterior
   ) |>
       dplyr::select(sitename, data) |>
       tidyr::unnest(data) |>
