@@ -186,7 +186,7 @@ ggplot() +
             aes(x = year, y = GPP)) +
   geom_line(data = biomee_p_model_output_calib,
             aes(x = year, y = GPP),
-            color = "red") +
+            color = "grey50") +
   theme_classic() + 
   labs(x = "Year", y = "GPP")
 
@@ -195,7 +195,7 @@ ggplot() +
             aes(x = year, y = plantC)) +
   geom_line(data = biomee_p_model_output_calib,
             aes(x = year, y = plantC),
-            color = "red") +
+            color = "grey50") +
   theme_classic() + 
   labs(x = "Year", y = "plantC")
 
