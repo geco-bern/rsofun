@@ -117,7 +117,7 @@ par_cal_min <- c(
 # upper bound
 par_cal_max <- c(
     kphio              = 0.15,
-    kphio_par_a        = -0.0015,
+    kphio_par_a        = -0.001,
     kphio_par_b        = 30,
     soilm_thetastar    = 240,
     soilm_betao        = 1,
@@ -178,7 +178,7 @@ and the standard deviation of the derivative,
 respectively. The higher the value of these statistics for a given parameter, 
 the more influential the parameter is.  
 ```{r eval = TRUE, fig.width=7, fig.height=4}
-# summarise the morris output
+# Summarise the morris output
 morrisOut.df <- data.frame(
   parameter = names(par_cal_best),
   mu.star = apply(abs(morrisOut$ee), 2, mean, na.rm = T),
@@ -238,7 +238,6 @@ It is always important to check the convergence of the MCMC algorithm used for t
 
 According to the previous sensitivity analysis, calibrating the error parameter for GPP and the quantum yield efficiency parameters will have a high impact on the model fit. Let's run the calibration:
 ```{r eval = FALSE, echo = TRUE}
-# Calibrates the kphio-related parameters
 set.seed(2023)
 
 # Define calibration settings
@@ -254,13 +253,13 @@ settings_calib <- list(
     )),
   par = list(
     kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
-    kphio_par_a = list(lower = -0.004, upper = -0.0015, init = -0.0025),
+    kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025),
     kphio_par_b = list(lower = 10, upper = 30, init =25),
     err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
   )
 )
 
-# calibrate parameters kphio and err_gpp 
+# Calibrate kphio-related parameters and err_gpp 
 par_calib <- calib_sofun(
   drivers = p_model_drivers,
   obs = p_model_validation,
@@ -299,7 +298,6 @@ settings_calib <- list(
   )
 )
 
-# calibrate parameters kc_jmax and err_gpp 
 par_calib <- calib_sofun(
   drivers = p_model_drivers,
   obs = p_model_validation,
@@ -327,7 +325,6 @@ load("files/par_calib.rda")
 
 `BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. We set \code{burnin = 3000} above from previous runs, and those iterations are not shown by the following trace plot. The samples after the burnin period should be used for inference.
 ```{r fig.height = 10, fig.width = 7}
-# par(mar = c(2,2,2,2))
 plot(par_calib$mod)
 ```
 
@@ -350,7 +347,6 @@ plot_acf_mcmc <- function(chains, par_names){
   }
 }
 
-# plot_acf_mcmc(par_calib$mod$chain, c("err_gpp", "kc_jmax"))
 plot_acf_mcmc(par_calib$mod$chain, c("kphio", "kphio_par_a", "kphio_par_b", "err_gpp"))
 ```
 
@@ -377,6 +373,7 @@ More details on diagnosing MCMC convergence can be found in [this vignette from 
 After we have run and checked the calibration, let's see how the model performs. 
 ```{r echo = FALSE, eval = FALSE}
 # Evaluation of the uncertainty coming from the model parameters' uncertainty
+# without the `err_gpp` uncertainty.
 
 # Sample kphio values from the posterior distribution
 samples_kphio <- getSample(par_calib$mod, 
@@ -438,85 +435,14 @@ for(run in seq_along(pmodel_runs)){
 posterior_plot
 ```
 
-For simplicity, we plot the predicted GPP using the MAP estimate
-for all calibrated parameters with a 90% credible interval based on the assumption that the
+Below we plot the first year of predicted GPP (in grey) against GPP observations (in black).
+We use the MAP estimates
+for all calibrated parameters to run the P-model and include a 90% credible interval based on the assumption that the
 predicted GPP follows a normal distribution with standard deviation `err_gpp`, 
 which we have also estimated. This gives a range that covers the observed GPP
 in 90% of the cases.
 
-```{r fig.height = 5, fig.width = 7}
-# Get GPP observations
-validation_data <- p_model_validation$data[[1]]
-
-ggplot(data = runread_pmodel_f(
-    drivers = p_model_drivers,
-    par =  list(                      # copied from par_fixed above
-      kphio = par_calib$par[1],
-      kphio_par_a = par_calib$par[2],
-      kphio_par_b = par_calib$par[3],
-      soilm_thetastar    = 0.6*240,
-      soilm_betao        = 0.2,
-      beta_unitcostratio = 146.0,
-      rd_to_vcmax        = 0.014,
-      tau_acclim         = 30.0,
-      kc_jmax            = 0.41)       # value from posterior
-  ) |>
-      dplyr::select(sitename, data) |>
-      tidyr::unnest(data) ) +
-    geom_line(aes(
-      date,
-      gpp
-    ),
-    colour = "red",
-    alpha = 0.8
-  ) +
-  geom_errorbar(
-    aes(x = date, ymin=gpp - 2*par_calib$par[2],   # should cover ~ 95% of observations
-        ymax=gpp + 2*par_calib$par[2]), width=.2,
-                 position=position_dodge(0.05), 
-    color = 'red', alpha = 0.5) +  
-  geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    ),
-    alpha = 0.8
-  ) +
-  geom_errorbar(
-    data = validation_data,
-    aes(x = date, ymin=gpp - 2*gpp_unc, ymax=gpp + 2*gpp_unc), width=.2,
-                 position=position_dodge(0.05)) +
-
-  labs(
-    x = "Date",
-    y = "GPP"
-  )
-```
-
-```{r}
-# Create data.frame for plotting
-plot_gpp_data <- runread_pmodel_f(
-    drivers = p_model_drivers,
-    par =  list(                       
-      kphio = par_calib$par[1],        # values from posterior
-      kphio_par_a = par_calib$par[2],
-      kphio_par_b = par_calib$par[3],
-      soilm_thetastar    = 0.6*240,    # copied from par_fixed above
-      soilm_betao        = 0.2,
-      beta_unitcostratio = 146.0,
-      rd_to_vcmax        = 0.014,
-      tau_acclim         = 30.0,
-      kc_jmax            = 0.41)       
-  ) |>
-    dplyr::select(sitename, data) |>
-    tidyr::unnest(data) |>
-  dplyr::select(date, gpp) |>
-  dplyr::left_join(p_model_validation$data[[1]] |>
-                     dplyr::rename(gpp_obs = gpp) |>
-                     dplyr::select(date, gpp_obs), 
-                   by = 'date')
-
+```{r fig.width=7, fig.height=5}
 # Plot observed and predicted GPP, with a 95% credible interval using err_gpp
 plot_gpp_error <- ggplot(data = runread_pmodel_f(
     drivers = p_model_drivers,
@@ -538,7 +464,7 @@ plot_gpp_error <- ggplot(data = runread_pmodel_f(
     aes(ymin = gpp - 2*par_calib$par[4], 
         ymax = gpp + 2*par_calib$par[4],
         x = date),
-    fill = 'grey40', alpha = 0.3) +
+    fill = 'grey40', alpha = 0.2) +
   geom_line(
     aes(
       date,
