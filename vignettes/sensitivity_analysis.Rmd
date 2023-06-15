@@ -332,7 +332,7 @@ The posterior density plots may be lumpy. In this case it's advisable to run the
 
 When convergence has been reached, the oscillation of the time series should look like white noise. It's normal that consecutive MCMC samples are correlated because of the sampling algorithm's nature, but the presence of a more general trend indicates that convergence hasn't been reached.
 
-Furthermore, trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space may not be explored fully. Sometimes, thinning is used to deal with this autocorrelation (see [Link and Eaton 2012](https://besjournals.onlinelibrary.wiley.com/doi/pdf/10.1111/j.2041-210X.2011.00131.x)).
+Furthermore, trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space may not be explored fully. Sometimes, thinning is used to deal with this autocorrelation.
 ```{r fig.height = 10, fig.width = 7}
 # Define function for plotting chains separately
 plot_acf_mcmc <- function(chains, par_names){
