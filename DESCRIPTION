@@ -50,6 +50,7 @@ Suggests:
     rmarkdown,
     ggplot2,
     knitr,
-    sensitivity
+    sensitivity,
+    cowplot
 VignetteBuilder: knitr
 Encoding: UTF-8
