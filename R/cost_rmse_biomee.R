@@ -15,7 +15,8 @@
 #' 
 #' @return The root mean squared error (RMSE) between the observed and simulated
 #' values of \code{'GPP','LAI','Density'} and \code{'Biomass'} (all variables
-#' have the same weight).
+#' have the same weight). Relative errors (difference divided by observed values) are used
+#' instead of absolute errors.
 #' The cost function performs a BiomeE model run for parameter values
 #' \code{par} and model drivers \code{drivers} given as arguments, producing the
 #' simulated values used to compute the RMSE.
