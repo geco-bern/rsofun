@@ -45,11 +45,15 @@ With all data prepared we can run the model using `runread_biomee_f()`. This fun
 
 ```{r}
 # print parameter settings
-print(biomee_gs_leuning_drivers$params_siml)
-print(head(biomee_gs_leuning_drivers$forcing))
+biomee_gs_leuning_drivers$params_siml
+
+# print forcing
+head(biomee_gs_leuning_drivers$forcing)
 ```
 
 ```{r}
+set.seed(2023)
+
 # run the model
 biomee_gs_leuning_output <- runread_biomee_f(
      biomee_gs_leuning_drivers,
@@ -65,19 +69,19 @@ biomee_gs_leuning_output <- biomee_gs_leuning_output$data[[1]]$output_annual_til
 
 We can now visualize the model output.
 
-```{r}
+```{r fig.width=7}
 # we only have one site so we'll unnest
 # the main model output
-
-biomee_gs_leuning_output %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  theme_classic()+labs(x = "Year", y = "GPP")
-
-biomee_gs_leuning_output %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = plantC)) +
-  theme_classic()+labs(x = "Year", y = "plantC")
+cowplot::plot_grid(
+  biomee_gs_leuning_output |>
+    ggplot() +
+    geom_line(aes(x = year, y = GPP)) +
+    theme_classic()+labs(x = "Year", y = "GPP"),
+  biomee_gs_leuning_output |>
+    ggplot() +
+    geom_line(aes(x = year, y = plantC)) +
+    theme_classic()+labs(x = "Year", y = "plantC")
+)
 ```
 
 ## Running the BiomeE model with P-model photosynthesis
@@ -86,11 +90,13 @@ Running the fast P-model implementation.
 
 ```{r}
 # print parameter settings
-print(biomee_p_model_drivers$params_siml)
-print(head(biomee_p_model_drivers$forcing))
+biomee_p_model_drivers$params_siml
+
+# print forcing for P-model
+head(biomee_p_model_drivers$forcing)
 ```
 
-```{r eval = TRUE}
+```{r}
 # run the model
 biomee_p_model_output <- runread_biomee_f(
      biomee_p_model_drivers,
@@ -106,19 +112,20 @@ biomee_p_model_output <- biomee_p_model_output$data[[1]]$output_annual_tile
 
 We can now visualize the model output.
 
-```{r}
+```{r fig.width=7}
 # we only have one site so we'll unnest
 # the main model output
 
-biomee_p_model_output %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = GPP)) +
-  theme_classic()+labs(x = "Year", y = "GPP")
-
-biomee_p_model_output %>% 
-  ggplot() +
-  geom_line(aes(x = year, y = plantC)) +
-  theme_classic()+labs(x = "Year", y = "plantC")
+cowplot::plot_grid(
+  biomee_p_model_output %>% 
+    ggplot() +
+    geom_line(aes(x = year, y = GPP)) +
+    theme_classic()+labs(x = "Year", y = "GPP"),
+  biomee_p_model_output %>% 
+    ggplot() +
+    geom_line(aes(x = year, y = plantC)) +
+    theme_classic()+labs(x = "Year", y = "plantC")
+)
 ```
 
 ## Calibrating model parameters
@@ -177,26 +184,34 @@ biomee_p_model_output_calib <- runread_biomee_f(
 biomee_p_model_output_calib <- biomee_p_model_output_calib$data[[1]]$output_annual_tile
 ```
 
-Finally, we can visually compare the two model runs.
-```{r}
+Finally, we can visually compare the two model runs. We plot the original model run in black and the run using the calibrated parameters in grey. The dashed line represents the validation data, i.e. the observed GPP and Biomass.
+```{r fig.width=7}
 # unnest model output for our single site
+cowplot::plot_grid(
+  ggplot() +
+    geom_line(data = biomee_p_model_output,
+              aes(x = year, y = GPP)) +
+    geom_line(data = biomee_p_model_output_calib,
+              aes(x = year, y = GPP),
+              color = "grey50") +
+    theme_classic() + 
+    labs(x = "Year", y = "GPP") +
+    geom_hline(yintercept = biomee_validation_2$data[[1]]$targets_obs[1],
+                lty=2),
+  
+  ggplot() +
+    geom_line(data = biomee_p_model_output,
+              aes(x = year, y = plantC)) +
+    geom_line(data = biomee_p_model_output_calib,
+              aes(x = year, y = plantC),
+              color = "grey50") +
+    theme_classic() + 
+    labs(x = "Year", y = "plantC") +
+    geom_hline(yintercept = biomee_validation_2$data[[1]]$targets_obs[4],
+               lty = 2)
+)
 
-ggplot() +
-  geom_line(data = biomee_p_model_output,
-            aes(x = year, y = GPP)) +
-  geom_line(data = biomee_p_model_output_calib,
-            aes(x = year, y = GPP),
-            color = "grey50") +
-  theme_classic() + 
-  labs(x = "Year", y = "GPP")
 
-ggplot() +
-  geom_line(data = biomee_p_model_output,
-            aes(x = year, y = plantC)) +
-  geom_line(data = biomee_p_model_output_calib,
-            aes(x = year, y = plantC),
-            color = "grey50") +
-  theme_classic() + 
-  labs(x = "Year", y = "plantC")
+
 
 ```
