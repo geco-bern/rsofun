@@ -437,7 +437,7 @@ posterior_plot
 
 Below we plot the first year of predicted GPP (in grey) against GPP observations (in black).
 We ran the P-model using the MAP estimates for all calibrated parameters and 
-computed a 90% credible interval for GPP, based on the normality assumption
+computed a 90% predictive interval for GPP (grey shade), based on the normality assumption
 with standard deviation `err_gpp`.
 
 ```{r fig.width=7, fig.height=5}
