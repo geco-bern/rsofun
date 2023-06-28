@@ -1,6 +1,6 @@
 ---
 title: "BiomeE usage"
-author: "Koen Hufkens"
+author: "Koen Hufkens, Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BiomeE usage}

@@ -436,11 +436,9 @@ posterior_plot
 ```
 
 Below we plot the first year of predicted GPP (in grey) against GPP observations (in black).
-We use the MAP estimates
-for all calibrated parameters to run the P-model and include a 90% credible interval based on the assumption that the
-predicted GPP follows a normal distribution with standard deviation `err_gpp`, 
-which we have also estimated. This gives a range that contains the true GPP
-in 90% of the cases, given the observed data.
+We ran the P-model using the MAP estimates for all calibrated parameters and 
+computed a 90% credible interval for GPP, based on the normality assumption
+with standard deviation `err_gpp`.
 
 ```{r fig.width=7, fig.height=5}
 # Plot observed and predicted GPP, with a 95% credible interval using err_gpp
