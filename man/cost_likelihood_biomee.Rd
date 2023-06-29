@@ -40,7 +40,7 @@ The optimization
 should be run using \code{BayesianTools}, so the likelihood is maximized.
 }
 \examples{
-
+\donttest{
 # Compute the likelihood for a set of
 # BiomeE model parameter values
 # and the example data
@@ -51,5 +51,5 @@ cost_likelihood_biomee(
  drivers = biomee_gs_leuning_drivers,
  targets = c("GPP")
 )
-
+}
 }

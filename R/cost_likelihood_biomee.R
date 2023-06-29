@@ -29,7 +29,7 @@
 #' @export
 #' 
 #' @examples
-#' 
+#' \donttest{
 #' # Compute the likelihood for a set of
 #' # BiomeE model parameter values
 #' # and the example data
@@ -40,7 +40,7 @@
 #'  drivers = biomee_gs_leuning_drivers,
 #'  targets = c("GPP")
 #' )
-#' 
+#' }
 
 cost_likelihood_biomee <- function(
   par,
@@ -50,7 +50,7 @@ cost_likelihood_biomee <- function(
 ){
   
   # predefine variables for CRAN check compliance
-  GPP <- LAI <- Density12 <- plantC <- error <- ll <- NULL
+  GPP <- LAI <- Density12 <- plantC <- error <- NULL
   
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]  <- par[1]

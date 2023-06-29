@@ -42,7 +42,9 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     settings = settings,
     # extra arguments for the cost function
     par_fixed = params_fix,
-    targets = c('gpp')
+    targets = c('gpp'),
+    parallel = TRUE,
+    ncores = 2
   )
   
   # test for correctly returned values
@@ -164,7 +166,9 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
     settings = settings,
     # arguments for cost function
     targets = 'vcmax25',
-    par_fixed = params_fix
+    par_fixed = params_fix,
+    parallel = TRUE,
+    ncores = 2
   )
   
   # test for correctly returned values
