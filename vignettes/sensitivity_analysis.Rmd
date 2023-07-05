@@ -195,7 +195,8 @@ morrisOut.df |>
     color = NA) +
   geom_bar(position = position_dodge(), stat = 'identity') +
   scale_fill_brewer("", labels = c('mu.star' = expression(mu * "*"),
-                                   'sigma' = expression(sigma))) +
+                                   'sigma' = expression(sigma)),
+                    palette = "Greys") +
   theme_classic() +
   theme(
     axis.text = element_text(size = 6),
