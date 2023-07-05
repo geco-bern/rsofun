@@ -349,6 +349,7 @@ settings_calib <- list(
 par_calib <- calib_sofun(
   drivers = p_model_drivers |>
     dplyr::mutate(forcing = p_model_drivers |> 
+                    select(sitename, forcing) |>
                     unnest(forcing) |> 
                     slice(1:365) |> 
                     select(-sitename) |>
@@ -570,6 +571,7 @@ run_pmodel <- function(sample_par){
   out <- runread_pmodel_f(
     drivers = p_model_drivers |>                      # run only first year of data
       dplyr::mutate(forcing = p_model_drivers |> 
+                      select(sitename, forcing) |>
                       unnest(forcing) |> 
                       slice(1:365) |> 
                       select(-sitename) |>
