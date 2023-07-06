@@ -51,10 +51,7 @@ observed values and with standard deviation given as an input parameter
       <a href="../articles/pmodel_use.html">P-model usage</a>
     </li>
     <li>
-      <a href="../articles/prepare_forcing.html">Prepare forcing</a>
-    </li>
-    <li>
-      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis</a>
+      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis and calibration interpretation</a>
     </li>
   </ul></li>
 <li>
@@ -172,13 +169,13 @@ trait value predicted on that date.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Compute the likelihood for a set of </span></span></span>
 <span class="r-in"><span><span class="co"># model parameter values involved in the</span></span></span>
 <span class="r-in"><span><span class="co"># temperature dependence of kphio </span></span></span>
 <span class="r-in"><span><span class="co"># and example data</span></span></span>
 <span class="r-in"><span><span class="fu">cost_likelihood_pmodel</span><span class="op">(</span></span></span>
-<span class="r-in"><span> par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.01</span>, <span class="fl">1</span>,     <span class="co"># model parameters</span></span></span>
+<span class="r-in"><span> par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="op">-</span><span class="fl">0.01</span>, <span class="fl">1</span>,     <span class="co"># model parameters</span></span></span>
 <span class="r-in"><span>         <span class="fl">2</span><span class="op">)</span>,                <span class="co"># err_gpp</span></span></span>
 <span class="r-in"><span> obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span></span>
 <span class="r-in"><span> drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,</span></span>
@@ -192,8 +189,8 @@ trait value predicted on that date.</p>
 <span class="r-in"><span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
 <span class="r-in"><span> <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -5396.126</span>
-<span class="r-in"><span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -7054.45</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>

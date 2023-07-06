@@ -48,10 +48,7 @@ the root mean squared error (RMSE)."><meta name="twitter:card" content="summary"
       <a href="../articles/pmodel_use.html">P-model usage</a>
     </li>
     <li>
-      <a href="../articles/prepare_forcing.html">Prepare forcing</a>
-    </li>
-    <li>
-      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis</a>
+      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis and calibration interpretation</a>
     </li>
   </ul></li>
 <li>
@@ -90,7 +87,9 @@ the root mean squared error (RMSE).</p>
 <span>  <span class="va">drivers</span>,</span>
 <span>  <span class="va">targets</span>,</span>
 <span>  par_fixed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  target_weights <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  target_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  ncores <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -131,6 +130,17 @@ the RMSE if using several targets. By default (<code>target_weights = NULL</code
 the RMSE is computed separately for each target and then averaged. The provided
 weights are used to compute a weighted average of RMSE across targets.</p></dd>
 
+
+<dt>parallel</dt>
+<dd><p>A logical specifying whether simulations are to be parallelised
+(sending data from a certain number of sites to each core). Defaults to
+<code>FALSE</code>.</p></dd>
+
+
+<dt>ncores</dt>
+<dd><p>An integer specifying the number of cores used for parallel
+computing. Defaults to 2.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -157,12 +167,12 @@ trait value predicted on that date.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Compute RMSE for a set</span></span></span>
 <span class="r-in"><span><span class="co"># of model parameter values</span></span></span>
 <span class="r-in"><span><span class="co"># and example data</span></span></span>
 <span class="r-in"><span><span class="fu">cost_rmse_pmodel</span><span class="op">(</span></span></span>
-<span class="r-in"><span> par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.01</span>, <span class="fl">0.5</span><span class="op">)</span>,  <span class="co"># kphio related parameters</span></span></span>
+<span class="r-in"><span> par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="op">-</span><span class="fl">0.01</span>, <span class="fl">0.5</span><span class="op">)</span>,  <span class="co"># kphio related parameters</span></span></span>
 <span class="r-in"><span> obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span></span>
 <span class="r-in"><span> drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,</span></span>
 <span class="r-in"><span> targets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'gpp'</span><span class="op">)</span>,</span></span>
@@ -175,8 +185,8 @@ trait value predicted on that date.</p>
 <span class="r-in"><span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
 <span class="r-in"><span> <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.09563</span>
-<span class="r-in"><span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.675192</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>

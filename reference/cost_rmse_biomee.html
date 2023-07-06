@@ -51,10 +51,7 @@ computes the RMSE for the biomee model fitting target variables
       <a href="../articles/pmodel_use.html">P-model usage</a>
     </li>
     <li>
-      <a href="../articles/prepare_forcing.html">Prepare forcing</a>
-    </li>
-    <li>
-      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis</a>
+      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis and calibration interpretation</a>
     </li>
   </ul></li>
 <li>
@@ -115,7 +112,8 @@ for example.</p></dd>
 
 <p>The root mean squared error (RMSE) between the observed and simulated
 values of <code>'GPP','LAI','Density'</code> and <code>'Biomass'</code> (all variables
-have the same weight).
+have the same weight). Relative errors (difference divided by observed values) are used
+instead of absolute errors.
 The cost function performs a BiomeE model run for parameter values
 <code>par</code> and model drivers <code>drivers</code> given as arguments, producing the
 simulated values used to compute the RMSE.</p>
@@ -123,7 +121,7 @@ simulated values used to compute the RMSE.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Compute RMSE for a set of</span></span></span>
 <span class="r-in"><span><span class="co"># model parameter values</span></span></span>
 <span class="r-in"><span><span class="co"># and example data</span></span></span>
@@ -133,7 +131,7 @@ simulated values used to compute the RMSE.</p>
 <span class="r-in"><span> drivers <span class="op">=</span> <span class="va">biomee_gs_leuning_drivers</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3317895</span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>

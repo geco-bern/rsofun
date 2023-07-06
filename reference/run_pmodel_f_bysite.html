@@ -46,10 +46,7 @@
       <a href="../articles/pmodel_use.html">P-model usage</a>
     </li>
     <li>
-      <a href="../articles/prepare_forcing.html">Prepare forcing</a>
-    </li>
-    <li>
-      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis</a>
+      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis and calibration interpretation</a>
     </li>
   </ul></li>
 <li>
@@ -194,7 +191,8 @@ layer of soil.</p><dl><dt>fsand</dt>
 <dd><p>A named list of free (calibratable) model parameters.</p><dl><dt>kphio</dt>
 <dd><p>The quantum yield efficiency at optimal temperature \(\varphi_0\), 
    in mol mol\(^{-1}\).
-   When temperature dependence is used, it corresponds to the parameter \(c\) (see Details).</p></dd>
+   When temperature dependence is used, it corresponds to the multiplicative
+   parameter \(c\) (see Details).</p></dd>
 
   <dt>kphio_par_a</dt>
 <dd><p>The shape parameter \(a\) of the temperature-dependency of
@@ -226,8 +224,8 @@ layer of soil.</p><dl><dt>fsand</dt>
 <dd><p>Acclimation time scale of photosynthesis, in days.</p></dd>
 
   <dt>kc_jmax</dt>
-<dd><p>Parameter for Jmax cost ratio (corresponding to c in Prentice
-   et al. 2014).</p></dd>
+<dd><p>Parameter for Jmax cost ratio (corresponding to c\(^*\) in
+  Stocker et al. 2020 GMD).</p></dd>
  
 
 </dl></dd>
@@ -315,22 +313,24 @@ Defaults to <code>TRUE</code>.</p></dd>
 different P-model setups presented in Stocker et al. 2020 GMD. The P-model
 version implemented in this package allows more flexibility than the one
 presented in the paper, with the following functions:</p>
-<p>The temperature dependence of the quantum yield efficiency is given by:
-\(\varphi_0 (T) = a (T - b)^2 + c\). <br>
+<p>The temperature dependence of the quantum yield efficiency is given by: <br>
+\(\varphi_0 (T) = c (1 + a (T - b)^2 ) \) if \(0 &lt; c (1 + a (T - b)^2 ) &lt; 1\), <br>
+\(\varphi_0 (T) = 0 \) if \( c (1 + a (T - b)^2 ) \leq 0\), and  <br>
+\(\varphi_0 (T) = 1 \) if \( c (1 + a (T - b)^2 ) \geq 1\). <br>
 The ORG setup can be reproduced by setting <code>kphio_par_a = 0</code>
 and calibrating the <code>kphio</code> parameter only.
 The BRC setup (which calibrates \(c_L = \frac{a_L b_L}{4}\) in Eq. 18) is more difficult to reproduce, 
 since the temperature-dependency has been reformulated and a custom cost
 function would be necessary for calibration. The new parameters
 are related to \(c_L\) as follows: <br>
-\(a = - 0.00034\) <br>
-\(b = 32.35294 c_L\) <br>
-\(c = 0.352 c_L + 0.3558824 c_L^2\)</p>
-<p>The soil moisture stress is implemented as 
+\(a = -0.0004919819\) <br>
+\(b = 32.35294\) <br>
+\(c = 0.6910823 c_L\)</p>
+<p>The soil moisture stress is implemented as <br>
 \(\beta(\theta) = \frac{\beta_0 - 1}{{\theta^{*}}^2} 
    (\theta - \theta^{*})^2 + 1 \) if 
-   \( 0 \leq \theta \leq \theta^{*}\) and
-\(\beta(\theta) = 1\) if \( \theta &gt; \theta^{*}\). 
+   \( 0 \leq \theta \leq \theta^{*}\) and <br>
+\(\beta(\theta) = 1\) if \( \theta &gt; \theta^{*}\). <br>
 In Stocker et al. 2020 GMD, the threshold plant-available soil water is set as
 \(\theta^{*}\) 
 <code>= 0.6 * whc</code> where <code>whc</code> is the site's water holding capacity. Also,
@@ -343,7 +343,7 @@ exactly replicated.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Define model parameter values from previous work</span></span></span>
 <span class="r-in"><span><span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  kphio              <span class="op">=</span> <span class="fl">0.04998</span>,    <span class="co"># setup ORG in Stocker et al. 2020 GMD</span></span></span>
@@ -367,7 +367,7 @@ exactly replicated.</p>
 <span class="r-in"><span>  params_soil <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">params_soil</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>  params_modl <span class="op">=</span> <span class="va">params_modl</span></span></span>
 <span class="r-in"><span> <span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>

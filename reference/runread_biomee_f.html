@@ -46,10 +46,7 @@
       <a href="../articles/pmodel_use.html">P-model usage</a>
     </li>
     <li>
-      <a href="../articles/prepare_forcing.html">Prepare forcing</a>
-    </li>
-    <li>
-      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis</a>
+      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis and calibration interpretation</a>
     </li>
   </ul></li>
 <li>
@@ -116,12 +113,13 @@ in the nested column <code>data</code>.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Example BiomeE model run</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="va">mod_output</span> <span class="op">&lt;-</span> <span class="fu">runread_biomee_f</span><span class="op">(</span> </span></span>
 <span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">biomee_gs_leuning_drivers</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
