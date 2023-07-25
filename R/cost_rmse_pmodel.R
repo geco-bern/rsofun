@@ -22,6 +22,11 @@
 #' the RMSE if using several targets. By default (\code{target_weights = NULL})
 #' the RMSE is computed separately for each target and then averaged. The provided
 #' weights are used to compute a weighted average of RMSE across targets.
+#' @param parallel A logical specifying whether simulations are to be parallelised
+#' (sending data from a certain number of sites to each core). Defaults to
+#' \code{FALSE}.
+#' @param ncores An integer specifying the number of cores used for parallel
+#' computing. Defaults to 2.
 #' 
 #' @return The root mean squared error (RMSE) between observed values and P-model
 #' predictions. The RMSE is computed for each target separately and then aggregated
@@ -43,12 +48,12 @@
 #' @export
 #' 
 #' @examples
-#' 
+#' \donttest{
 #' # Compute RMSE for a set
 #' # of model parameter values
 #' # and example data
 #' cost_rmse_pmodel(
-#'  par = c(0.05, 0.01, 0.5),  # kphio related parameters
+#'  par = c(0.05, -0.01, 0.5),  # kphio related parameters
 #'  obs = p_model_validation,
 #'  drivers = p_model_drivers,
 #'  targets = c('gpp'),
@@ -61,7 +66,7 @@
 #'   kc_jmax            = 0.41
 #'  )
 #' )
-#' 
+#' }
 
 cost_rmse_pmodel <- function(
     par,  # ordered vector of model parameters
@@ -69,7 +74,10 @@ cost_rmse_pmodel <- function(
     drivers,
     targets,    
     par_fixed = NULL, # non-calibrated model parameters
-    target_weights = NULL # if using several targets, how are the individual RMSE weighted? named vector
+    target_weights = NULL, # if using several targets, how are the individual 
+                           # RMSE weighted? named vector
+    parallel = FALSE,
+    ncores = 2
 ){
   
   # predefine variables for CRAN check compliance

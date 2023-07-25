@@ -8,6 +8,7 @@
 * rewrite of temperature and soil moisture stress functions
 * documentation parameter sensitivity analysis
 * documentation on the data format
+* document calibration diagnostic and model uncertainty calulation
 
 # rsofun v4.3
 

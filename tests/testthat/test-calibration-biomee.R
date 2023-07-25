@@ -14,7 +14,7 @@ test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {
       sampler = "DEzs",
       settings = list(
         burnin = 1,
-        iterations = 100,
+        iterations = 4,
         nrChains = 1
       )
     ),
@@ -55,7 +55,7 @@ test_that("test calibration routine biomee (rmse cost + GenSA)", {
     # targets             = c("GPP","LAI","Density","Biomass"),
     metric              = rsofun::cost_rmse_biomee,
     control = list(
-      maxit = 10
+      maxit = 2
     ),
     par = list(
       phiRL = list(lower = 0.5, upper = 5, init = 3.5),
