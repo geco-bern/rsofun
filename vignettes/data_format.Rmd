@@ -1,0 +1,40 @@
+---
+title: "P-model data format"
+author: "Koen Hufkens, Josefa Arán"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{P-model data format}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 5
+)
+
+library(rsofun)
+library(dplyr)
+library(ggplot2)
+
+```
+
+Overall, the package uses the {tidyverse} data paradigm (Wickham, 2017), using nested data frames (tibbles) to store model input and output, and validation data. Where possible the package uses a consistent ontogeny in terms of variables and data structures used.  Each site is defined by a site name (sitename), location specific site information (site_info), soil characteristics (params_soil), simulation parameter settings (params_siml) and environmental forcing data (forcing). Sites are grouped by row in a nested tibble.
+
+```{r}
+# call to the included p-model demo data
+rsofun::p_model_drivers
+```
+
+Here, the forcing data contains environmental variables commonly available at fluxnet (reference) or ICOS atmospheric gas exchange measurement locations or gathered from various gridded or re-analysis sources. Data are provided at a daily time step and for complete years.
+
+```{r}
+# detailed look at the forcing data
+rsofun::p_model_drivers$forcing
+```
+
+To create your own driver data it should be arranged into a tibble with the same structure as the example drivers objects. Within {rsofun} optional checks are executed to ensure that the required variables are present in the used dataset using the ‘check’ argument in the runread_pmodel_f() function calls. Throughout the package verbose output is provided (if desired) as to evaluate errors or progress when running the model on a particular dataset.
