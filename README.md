@@ -28,7 +28,7 @@ commands:
 
 ``` r
 if(!require(remotes)){install.packages("remotes")}
-remotes::install_github("bluegreen-labs/rsofun")
+remotes::install_github("geco-bern/rsofun")
 library("rsofun")
 ```
 
@@ -37,7 +37,7 @@ documentation please use:
 
 ``` r
 if(!require(remotes)){install.packages("remotes")}
-remotes::install_github("bluegreen-labs/rsofun", build_vignettes = TRUE)
+remotes::install_github("geco-bern/rsofun", build_vignettes = TRUE)
 library("rsofun")
 ```
 
