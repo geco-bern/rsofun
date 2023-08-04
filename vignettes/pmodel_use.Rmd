@@ -23,7 +23,7 @@ library(ggplot2)
 
 # fake variable as optimization isn't run
 pars <- list()
-pars$par["kphio"] <- 0.03411885
+pars$par["kphio"] <- 0.03660986
 ```
 
 The `rsofun` package and framework includes two main models. The `pmodel` and `biomee` (which in part relies on P-model components). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
@@ -83,45 +83,6 @@ output <- rsofun::runread_pmodel_f(
 ### Plotting output
 
 We can now visualize both the model output and the measured values together.
-
-```{r echo = FALSE, eval = FALSE}
-# Old plot
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-# we only have one site so we'll unnest
-# the main model output
-model_data <- output %>%
-  filter(sitename == "FR-Pue") %>%
-  tidyr::unnest(data)
-
-validation_data <- p_model_validation %>%
-  tidyr::unnest(data)
-
-ggplot() +
-    geom_line(
-    data = model_data,
-    aes(
-      date,
-      gpp
-    ),
-    colour = "red",
-    alpha = 0.8
-  ) +
-  geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    ),
-    alpha = 0.8
-  ) +
-  labs(
-    x = "Date",
-    y = "GPP"
-  )
-```
 
 ```{r}
 # Load libraries for plotting
@@ -202,56 +163,6 @@ pars <- calib_sofun(
 ```
 
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
-
-```{r eval = FALSE, echo = FALSE}
-# Old plot
-# reformatting the parameter list
-params_modl$kphio <- pars$par["kphio"]
-
-# run the model for these parameters
-output_new <- rsofun::runread_pmodel_f(
-  p_model_drivers,
-  par = params_modl
-  )
-
-# we only have one site so we'll unnest
-# the main model output
-model_data_new <- output_new %>%
-  filter(sitename == "FR-Pue") %>%
-  tidyr::unnest(data)
-
-  ggplot() +
-    geom_line(
-    data = model_data,
-    aes(
-      date,
-      gpp
-    ),
-    colour = "red",
-    alpha = 0.8
-  ) +
-  geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    ),
-    alpha = 0.8
-  ) +
-    geom_line(
-    data = model_data_new,
-    aes(
-      date,
-      gpp
-    ),
-    colour = "blue",
-    alpha = 0.7
-  ) +
-  labs(
-    x = "Date",
-    y = "GPP"
-  )
-```
 
 ```{r}
 # Update the parameter list with calibrated value
