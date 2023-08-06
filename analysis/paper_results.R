@@ -66,8 +66,24 @@ ggplot(data = df_gpp_plot) +
 
 # Figure 2 ####
 
+# Some code lines are commented out, because they create the object loaded below
+# and take a long time to run.
+# For checking reproducibility, run the commented code.
+
 # Load Morris sensitivity output from sensitivity_analysis.Rmd
 load("vignettes/files/morrisOut.rda")
+
+# Define log-likelihood function
+ll_pmodel <- function(
+    par_v                 # a vector of all calibratable parameters including errors
+){
+  rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
+    par_v,
+    obs = rsofun::p_model_validation,
+    drivers = rsofun::p_model_drivers,
+    targets = "gpp"
+  )
+}
 
 # best parameter values (from previous literature)
 par_cal_best <- c(
@@ -83,6 +99,52 @@ par_cal_best <- c(
   error_gpp          = 1
 )
 
+# lower bound
+par_cal_min <- c(
+  kphio              = 0.03,
+  kphio_par_a        = -0.004,
+  kphio_par_b        = 10,
+  soilm_thetastar    = 0,
+  soilm_betao        = 0,
+  beta_unitcostratio = 50.0,
+  rd_to_vcmax        = 0.01,
+  tau_acclim         = 7.0,
+  kc_jmax            = 0.2,
+  error_gpp          = 0.01
+)
+
+# upper bound
+par_cal_max <- c(
+  kphio              = 0.15,
+  kphio_par_a        = -0.001,
+  kphio_par_b        = 30,
+  soilm_thetastar    = 240,
+  soilm_betao        = 1,
+  beta_unitcostratio = 200.0,
+  rd_to_vcmax        = 0.1,
+  tau_acclim         = 60.0,
+  kc_jmax            = 0.8,
+  error_gpp          = 4
+)
+
+# Create BayesinaTools setup object
+morris_setup <- BayesianTools::createBayesianSetup(
+  likelihood = ll_pmodel,
+  prior = BayesianTools::createUniformPrior(par_cal_min, par_cal_max, par_cal_best),
+  names = names(par_cal_best)
+)
+
+# # Run Morris sensitivity analysis
+# set.seed(432)
+# morrisOut <- sensitivity::morris(
+#   model = morris_setup$posterior$density,
+#   factors = names(par_cal_best),
+#   r = 1000,
+#   design = list(type = "oat", levels = 20, grid.jump = 3),
+#   binf = par_cal_min,
+#   bsup = par_cal_max,
+#   scale = TRUE)
+
 # Summarise the morris output
 morrisOut.df <- data.frame(
   parameter = names(par_cal_best),
@@ -91,7 +153,7 @@ morrisOut.df <- data.frame(
 ) %>%
   arrange( mu.star )
 
-
+# Create barplot to show sensitivity analysis output
 morrisOut.df |>
   tidyr::pivot_longer( -parameter, names_to = "variable", values_to = "value") |>
   ggplot(aes(
@@ -112,11 +174,106 @@ morrisOut.df |>
 
 # Figure 3 ####
 
+# Some code lines are commented out, because they create the object loaded below
+# and take a long time to run.
+# For checking reproducibility, run the commented code.
+
 # Load calibration output from sensitivity_analysis.Rmd
 load("vignettes/files/par_calib.rda")
 
 # Load code to produce credible intervals from sensitivity_analysis.Rmd
 load("vignettes/files/pmodel_runs.rda")
+
+set.seed(2023)
+
+# Define calibration settings
+settings_calib <- list(
+  method = "BayesianTools",
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 3000,
+      iterations = 9000,
+      nrChains = 1,        # number of independent chains
+      startValue = 3       # number of internal chains to be sampled
+    )),
+  par = list(
+    kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
+    kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025),
+    kphio_par_b = list(lower = 10, upper = 30, init =25),
+    err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
+  )
+)
+
+# # Calibrate kphio-related parameters and err_gpp 
+# par_calib <- calib_sofun(
+#   drivers = p_model_drivers,
+#   obs = p_model_validation,
+#   settings = settings_calib,
+#   par_fixed = list(
+#     soilm_thetastar    = 0.6*240,
+#     soilm_betao        = 0.2,
+#     beta_unitcostratio = 146.0,
+#     rd_to_vcmax        = 0.014,
+#     tau_acclim         = 30.0,
+#     kc_jmax            = 0.41),
+#   targets = "gpp"
+# )
+
+# Evaluation of the uncertainty coming from the model parameters' uncertainty
+
+# # Sample parameter values from the posterior distribution
+# samples_par <- getSample(par_calib$mod, 
+#                          thin = 10,              # get every 10th sample
+#                          whichParameters = 1:4) |>  
+#   as.data.frame() |>
+#   dplyr::mutate(mcmc_id = 1:n()) |>
+#   tidyr::nest(.by = mcmc_id, .key = "pars")
+
+# Define function to run model for a set of sampled parameters
+run_pmodel <- function(sample_par){
+  # Function that runs the P-model for a sample of parameters
+  # and also adds the new observation error
+  
+  out <- runread_pmodel_f(
+    drivers = p_model_drivers,
+    par =  list(                      # copied from par_fixed above
+      kphio = sample_par$kphio,
+      kphio_par_a = sample_par$kphio_par_a,
+      kphio_par_b = sample_par$kphio_par_b,
+      soilm_thetastar    = 0.6*240,
+      soilm_betao        = 0.2,
+      beta_unitcostratio = 146.0,
+      rd_to_vcmax        = 0.014,
+      tau_acclim         = 30.0,
+      kc_jmax            = 0.41)       # value from posterior
+  )
+  
+  # return modelled GPP and prediction for a new GPP observation
+  gpp <- out$data[[1]][, "gpp"]
+  data.frame(gpp = gpp, 
+             gpp_obs = gpp + rnorm(n = length(gpp), mean = 0, 
+                                   sd = sample_par$err_gpp),
+             date = out$data[[1]][, "date"])
+}
+
+# set.seed(2023)
+# # Run the P-model for each set of parameters
+# pmodel_runs <- samples_par |>
+#   dplyr::mutate(sim = purrr::map(pars, ~run_pmodel(.x))) |>
+#   # format to obtain 90% credible intervals
+#   dplyr::select(mcmc_id, sim) |>
+#   tidyr::unnest(sim) |>
+#   dplyr::group_by(date) |>
+#   # compute quantiles for each day
+#   dplyr::summarise(
+#     gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
+#     gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
+#     gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
+#     gpp_obs_q05 = quantile(gpp_obs, 0.05, na.rm = TRUE),
+#     gpp_obs_q95 = quantile(gpp_obs, 0.95, na.rm = TRUE)
+#   )
 
 # Plot the credible intervals computed above
 # for the first year only
