@@ -181,6 +181,75 @@ morrisOut.df |>
 # Load calibration output from sensitivity_analysis.Rmd
 load("vignettes/files/par_calib.rda")
 
+# Define functions for plotting (re-use BayesianTools hidden code)
+getSetup <- function(x) {
+  classes <- class(x)
+  if (any(c('mcmcSampler', 'smcSampler') %in% classes)) x$setup
+  else if (any(c('mcmcSamplerList', 'smcSamplerList') %in% classes)) x[[1]]$setup
+  else stop('Can not get setup from x')
+}
+
+t_col <- function(color, percent = 50, name = NULL) {
+  #      color = color name
+  #    percent = % transparency
+  #       name = an optional name for the color
+  
+  ## Get RGB values for named color
+  rgb.val <- col2rgb(color)
+  
+  ## Make new color using input color as base and alpha set by transparency
+  t.col <- rgb(rgb.val[1], rgb.val[2], rgb.val[3],
+               max = 255,
+               alpha = (100 - percent) * 255 / 100,
+               names = name)
+  
+  ## Save the color
+  invisible(t.col)
+}
+
+plot_prior_posterior_density <- function(
+    x               # Bayesian calibration output
+){
+  # Get matrices of prior and posterior samples
+  posteriorMat <- getSample(x, parametersOnly = TRUE)
+  priorMat <-  getSetup(x)$prior$sampler(10000) # nPriorDraws = 10000
+  
+  # Parameter names
+  nPar <- ncol(posteriorMat)
+  parNames <- colnames(posteriorMat)
+  # rename columns priorMat
+  colnames(priorMat) <- parNames  
+  
+  # Create data frame for plotting
+  df_plot <- rbind(data.frame(posteriorMat, distrib = "posterior"),
+                   data.frame(priorMat, distrib = "prior")
+  )
+  df_plot$distrib <- as.factor(df_plot$distrib)
+  
+  # Plot with facet wrap
+  df_plot |>
+    tidyr::gather(variable, value, kphio:err_gpp) |>
+    ggplot(
+      aes(x = value, fill = distrib)
+    ) +
+    geom_density() +
+    theme_classic() +
+    facet_wrap( ~ variable , nrow = 2, scales = "free") +
+    theme(legend.position = "bottom",
+          axis.title.x = element_text("")) +
+    ggtitle("Marginal parameter uncertainty") +
+    scale_fill_manual(values = c("#29a274ff", t_col("#777055ff"))) # GECO colors
+  
+} 
+
+plot_prior_posterior_density(par_calib$mod)
+
+# Figure 4 ####
+
+# Some code lines are commented out, because they create the object loaded below
+# and take a long time to run.
+# For checking reproducibility, run the commented code.
+
 # Load code to produce credible intervals from sensitivity_analysis.Rmd
 load("vignettes/files/pmodel_runs.rda")
 
