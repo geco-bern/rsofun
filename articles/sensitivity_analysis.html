@@ -380,27 +380,7 @@ should look like white noise. It’s normal that consecutive MCMC samples
 are correlated because of the sampling algorithm’s nature, but the
 presence of a more general trend indicates that convergence hasn’t been
 reached.</p>
-<p>Furthermore, trace plots can be deceiving and partial autocorrelation
-plots can throw some light. If autocorrelation is present, this can mean
-that the sampling is stuck in local maxima and the posterior parameter
-space may not be explored fully. Sometimes, thinning is used to deal
-with this autocorrelation.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Define function for plotting chains separately</span></span>
-<span><span class="va">plot_acf_mcmc</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">chains</span>, <span class="va">par_names</span><span class="op">)</span><span class="op">{</span></span>
-<span>  <span class="co"># chains: from the BayesianTools output</span></span>
-<span>  <span class="va">n_chains</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">chains</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">par_names</span><span class="op">)</span>, <span class="va">n_chains</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="kw">for</span><span class="op">(</span><span class="va">par_name</span> <span class="kw">in</span> <span class="va">par_names</span><span class="op">)</span><span class="op">{</span></span>
-<span>    <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_chains</span><span class="op">)</span><span class="op">{</span></span>
-<span>      <span class="va">chains</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>, <span class="va">par_name</span><span class="op">]</span> <span class="op">|&gt;</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/stats/acf.html" class="external-link">pacf</a></span><span class="op">(</span>main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Series of "</span>, <span class="va">par_name</span>, <span class="st">" , chain "</span>, <span class="va">i</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="op">}</span></span>
-<span>  <span class="op">}</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="fu">plot_acf_mcmc</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">$</span><span class="va">chain</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kphio"</span>, <span class="st">"kphio_par_a"</span>, <span class="st">"kphio_par_b"</span>, <span class="st">"err_gpp"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;"></p>
+<!-- Furthermore, trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space may not be explored fully. Sometimes, thinning is used to deal with this autocorrelation. -->
 <p>Looking at the correlation between chains for different parameters is
 also helpful because parameter correlation may slow down convergence, or
 the chains may oscillate in the multivariate posterior space. In this
@@ -411,7 +391,7 @@ yield efficiency, <span class="math inline">\(\varphi_o(T)\)</span>. We
 can also see that <code>err_gpp</code> is correlated with
 <code>kphio</code> (to which the P-model is very sensitive), since the
 error represents how good the model fits the observed GPP.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">correlationPlot</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span>, thin <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>   <span class="co"># use all samples, no thinning</span></span></code></pre></div>
 <p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-14-1.png" width="480" style="display: block; margin: auto;"></p>
 <p>In addition to visualizations, it’s helpful to compute some
@@ -421,7 +401,7 @@ that across chains and should progressively get closer to 1. It is
 common in the literature (Gelman, A., Carlin, J.B., Stern, H.S., Rubin,
 D.B.: Bayesian Data Analysis, 2nd edn. Chapman &amp; Hall, London
 (2004)) to accept convergence with a GBR between 1.05 and 1.1.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">gelmanDiagnostics</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Potential scale reduction factors:</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -438,7 +418,7 @@ D.B.: Bayesian Data Analysis, 2nd edn. Chapman &amp; Hall, London
 (that converged) after removing the burnin period. They can be seen,
 next to other statistics, using the <code>summary</code> function from
 the <code>BayesianTools</code> library.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # # # # # # # # # # # # # # # # # # # # # # # # # </span></span>
 <span><span class="co">#&gt; ## MCMC chain summary ## </span></span>
@@ -479,7 +459,7 @@ model performs.</p>
 <p>To compute the credible intervals for GPP prediction, we ran the
 P-model for 600 samples from the posterior distribution of the
 calibrated parameters.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Evaluation of the uncertainty coming from the model parameters' uncertainty</span></span>
 <span></span>
 <span><span class="co"># Sample parameter values from the posterior distribution</span></span>
@@ -538,7 +518,7 @@ for modeled GPP (shaded in blue, very narrow) and the predictive
 credible interval for a new GPP observation (shaded in grey). We can see
 that the model uncertainty in quite small, in comparison to the data
 uncertainty.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot the credible intervals computed above</span></span>
 <span><span class="co"># for the first year only</span></span>
 <span><span class="va">plot_gpp_error</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">pmodel_runs</span> <span class="op">|&gt;</span></span>
