@@ -1,0 +1,1 @@
+The script for generating `data/p_model_drivers.rda` is in [`geco-bern/FluxDataKit/R/fdk_format_drivers.R`](https://github.com/geco-bern/FluxDataKit/blob/main/R/fdk_format_drivers.R).
