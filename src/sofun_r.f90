@@ -32,7 +32,6 @@ contains
     latitude,                  &     
     altitude,                  &   
     whc,                       &
-    soiltexture,               &
     nt,                        &
     par,                       &
     forcing,                   &
@@ -73,7 +72,6 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
     real(kind=c_double),  intent(in) :: whc
-    real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
@@ -134,10 +132,6 @@ contains
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
-    ! myinterface%soilparams = getsoil( soiltexture )  xxx copy soilparams to tile%soil%param in subroutine getparams_tile -> getparams_soil
-    myinterface%soiltexture(:,:) = real( soiltexture )
-
-    ! Overwrite whc
     myinterface%whc_prescr = real( whc )
     
     !----------------------------------------------------------------

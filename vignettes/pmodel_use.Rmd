@@ -35,6 +35,8 @@ The package includes two demo datasets to run and validate pmodel output using G
 ```{r}
 library(rsofun)
 
+# this is to deal with an error p_model_drivers.rds not being found 
+p_model_drivers <- readRDS("../data/p_model_drivers.rds")
 p_model_drivers
 
 p_model_validation

@@ -164,14 +164,16 @@ runread_pmodel_f <- function(
     
   } else {
     
+    # note that pmap() requires the object 'drivers' to have columns in the order
+    # corresponding to the order of arguments of run_pmodel_f_bysite().
     df_out <- drivers %>% 
       dplyr::mutate(
         data = purrr::pmap(.,
         	run_pmodel_f_bysite,
-                par = par,
-                makecheck = makecheck
+            params_modl = par,
+            makecheck = makecheck
         )
-      ) %>% 
+      ) |> 
       dplyr::select(sitename, site_info, data)
   }
   
