@@ -193,6 +193,7 @@ run_pmodel_f_bysite <- function(
     abs()
   
   # re-define units and naming of forcing dataframe
+  # keep the order of columns - it's critical for Fortran (reading by column number)
   forcing <- forcing %>% 
     dplyr::mutate(
       fsun = (100-ccov)/100,

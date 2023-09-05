@@ -3,7 +3,7 @@
 \docType{data}
 \name{p_model_drivers}
 \alias{p_model_drivers}
-\title{SOFUN p-model driver data (for fluxes)}
+\title{rsofun P-model driver data}
 \format{
 A tibble of driver data:
 \describe{
@@ -12,35 +12,28 @@ A tibble of driver data:
   the following variables:
     \describe{
       \item{date}{Date of the observation in YYYY-MM-DD format.}
-      \item{temp}{Air temperature in \eqn{^\circ}C.}
-      \item{prec}{Precipitation in mm d\eqn{^{-1}} (sum of rain and snow).}
+      \item{temp}{Daytime average air temperature in \eqn{^\circ}C.}
       \item{vpd}{Vapour pressure deficit in Pa.}
       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
-      mol m\eqn{^{-2}} d\eqn{^{-1}}.}
+      mol m\eqn{^{-2}} s\eqn{^{-1}}.}
+      \item{netrad}{Net radiation in W m\eqn{^{-2}}.}
       \item{patm}{Atmospheric pressure in Pa.}
-      \item{ccov_int}{Cloud coverage in \%, interpolated.}
-      \item{ccov}{Cloud coverage in \%.}
-      \item{snow}{Snow in mm d\eqn{^{-1}}.}
-      \item{rain}{Rain in mm d\eqn{^{-1}}.}
+      \item{snow}{Snow in mm s\eqn{^{-1}}.}
+      \item{rain}{Rain as precipitation in liquid form in mm s\eqn{^{-1}}.}
+      \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C.}
+      \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.}
       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
      values between 0 and 1.}
       \item{co2}{Annually varying observed atmospheric CO\eqn{_2}, identical 
       across sites.}
-      \item{doy}{Day of the year.}
-      \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C.}
-      \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.}
+      \item{ccov}{Cloud coverage in \%.}
       }
   }
-  \item{params_siml}{A tibble [ 1 x 18] of model parameters.
+  \item{params_siml}{A tibble of simulation parameters.
     \describe{
       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}
       \item{recycle}{Length of standard recycling period, in days.}
-      \item{calc_aet_fapar_vpd}{(not in use)}
-      \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
-      if \code{FALSE} PPFD is simulated internally.}
-      \item{in_netrad}{A logical value indicating whether net radiation is 
-      prescribed (\code{TRUE}) or simulated internally (\code{FALSE}).}
       \item{outdt}{An integer indicating the output periodicity.}
       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
@@ -52,42 +45,13 @@ A tibble of driver data:
       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
     }
   }
-  \item{site_info}{A tibble [ 1 x 12 ] containing site information
+  \item{site_info}{A tibble containing site meta information.
     \describe{
       \item{lon}{Longitud of the site location.}
       \item{lat}{Latitude of the site location.}
       \item{elv}{Elevation of the site location, in meters.}
-      \item{year_start}{The year in which the simulation should start, corresponding
-      to data availability.}
-      \item{year_end}{The year in which the simulation should end, corresponding
-      to data availability.}
-      \item{classid}{A character string which contains the FLUXNET2015 IGBP 
-      classification.}
-      \item{c4}{A logical value indicating whether or not C4 photosynthesis 
-      pathway is followed. If \code{FALSE}, it's C3.}
-      \item{whc}{A numeric value for the water holding capacity (in mm), used for 
-      simulating the soil water balance. It is taken by the P-model as a calibratable
-      model parameter \code{rootzone_whc}.}
-      \item{koeppen_code}{A character string indicating the Koeppen-Geiger
-      climate zone code.}
-      \item{igbp_land_use}{A character string indicating the IGBP land cover
-      classification from MODIS data.}
-      \item{plant_functional_type}{A character string describing the plant
-      functional type.}
-      \item{date_start}{Date[1:1] value indicating the start date from which
-      the simulation is to be done, in format YYYYY-MM-DD.}
-      \item{date_end}{Date[1:1] value indicating the end date until which the
-      simulation is to be done, in format YYYY-MM-DD.}
-    }
-  }
-  \item{params_soil}{A tibble [ 2 x 5 ] containing soil texture data
-    \describe{
-      \item{layer}{A character string containing 'top' if the data on that row 
-      is about the top layer of soil, or 'bottom' if it's about the bottom layer.}
-      \item{fsand}{The fraction of sand in the soil.}
-      \item{fclay}{The fraction of clay in the soil.}
-      \item{forg}{The fraction of organic matter in the soil.}
-      \item{fgravel}{The fraction of gravel in the soil.}
+      \item{whc}{A numeric value for the rooting zone water holding capacity (in mm), used for 
+      simulating the soil water balance.}
     }
   }
 }
