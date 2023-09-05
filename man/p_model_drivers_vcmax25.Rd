@@ -55,16 +55,6 @@ A tibble of model driver data:
       simulating the soil water balance.}
     }
   }
-  \item{params_soil}{A tibble [ 2 x 5 ] containing soil texture data
-    \describe{
-      \item{layer}{A character string containing 'top' if the data on that row 
-      is about the top layer of soil, or 'bottom' if it's about the bottom layer.}
-      \item{fsand}{The fraction of sand in the soil.}
-      \item{fclay}{The fraction of clay in the soil.}
-      \item{forg}{The fraction of organic matter in the soil.}
-      \item{fgravel}{The fraction of gravel in the soil.}
-    }
-  }
 }
 }
 \source{
