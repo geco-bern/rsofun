@@ -8,11 +8,6 @@
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
 #'       \item{recycle}{Length of standard recycling period, in days.}
-#'       \item{calc_aet_fapar_vpd}{(not in use)}
-#'       \item{in_ppfd}{A logical value, if soi\code{TRUE} PPFD is a prescribed variable, 
-#'       if \code{FALSE} PPFD is simulated internally.}
-#'       \item{in_netrad}{A logical value indicating whether net radiation is 
-#'       prescribed (\code{TRUE}) or simulated internally (\code{FALSE}).}
 #'       \item{outdt}{An integer indicating the output periodicity.}
 #'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
 #'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
@@ -28,20 +23,12 @@
 #'       \item{lon}{Longitud of the site location.}
 #'       \item{lat}{Latitude of the site location.}
 #'       \item{elv}{Elevation of the site location, in meters.}
-#'       \item{whc}{A numeric value for the water holding capacity (in mm), used
+#'       \item{whc}{A numeric value for the total root zone water holding capacity (in mm), used
 #'       for simulating the soil water balance.}
 #' }
 #' @param forcing A data frame of forcing climate data, used as input 
 #'  (see \code{\link{p_model_drivers}}
 #'  for a detailed description of its structure and contents).
-#' @param params_soil A list of soil texture parameters, for the top and bottom
-#' layer of soil.
-#' \describe{
-#'       \item{fsand}{The fraction of sand in the soil.}
-#'       \item{fclay}{The fraction of clay in the soil.}
-#'       \item{forg}{The fraction of organic matter in the soil.}
-#'       \item{fgravel}{The fraction of gravel in the soil.}
-#' }
 #' @param params_modl A named list of free (calibratable) model parameters.
 #' \describe{
 #'   \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 
@@ -101,6 +88,11 @@
 #'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
 #'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
 #'   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
+#'   \item{\code{netrad}}{Net radiation, calculated by SPLASH, W m\eqn{^{-2}}}
+#'   \item{\code{pet}}{Potential evapotranspiration, calculated by SPLASH following Priestly-Taylor, in mm d\eqn{^{-1}}.}
+#'   \item{\code{aet}}{Actual evapotranspiration, calculated by SPLASH following Priestly-Taylor and a simple water bucket, in mm d\eqn{^{-1}}.}
+#'   \item{\code{wcont}}{Soil water content, in mm}
+#'   \item{\code{snow}}{Snow water equivalents, in mm}
 #'   } 
 #'   
 #' @details Depending on the input model parameters, it's possible to run the 
@@ -161,7 +153,6 @@
 #'   params_siml = p_model_drivers$params_siml[[1]],
 #'   site_info = p_model_drivers$site_info[[1]],
 #'   forcing = p_model_drivers$forcing[[1]],
-#'   params_soil = p_model_drivers$params_soil[[1]],
 #'   params_modl = params_modl
 #'  )
 #' }
@@ -171,7 +162,6 @@ run_pmodel_f_bysite <- function(
   params_siml,
   site_info,
   forcing,
-  params_soil,
   params_modl,
   makecheck = TRUE,
   verbose = TRUE
@@ -208,9 +198,9 @@ run_pmodel_f_bysite <- function(
     abs()
   
   # re-define units and naming of forcing dataframe
+  # keep the order of columns - it's critical for Fortran (reading by column number)
   forcing <- forcing %>% 
     dplyr::mutate(
-      netrad = -9999.9,
       fsun = (100-ccov)/100,
       ndep = 0.0
       ) %>% 
@@ -239,7 +229,6 @@ run_pmodel_f_bysite <- function(
       "rain",
       "vpd",
       "ppfd",
-      "netrad",
       "fsun",
       "snow",
       "co2",
@@ -272,8 +261,6 @@ run_pmodel_f_bysite <- function(
       "spinup",
       "spinupyears",
       "recycle",
-      "in_ppfd",
-      "in_netrad",
       "outdt",
       "ltre",
       "ltne",
@@ -316,6 +303,12 @@ run_pmodel_f_bysite <- function(
   }
   
   if (continue){
+
+    # determine whether to read PPFD from forcing or to calculate internally
+    in_ppfd <- ifelse(any(is.na(forcing$ppfd)), FALSE, TRUE)  
+
+    # determine whether to read PPFD from forcing or to calculate internally
+    in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
     
     # convert to matrix
     forcing <- as.matrix(forcing)
@@ -336,13 +329,6 @@ run_pmodel_f_bysite <- function(
       as.numeric(params_modl$kc_jmax)
       )
 
-
-    # Soil texture as matrix (layer x texture parameter)
-    soiltexture <- params_soil %>% 
-      dplyr::select(fsand, fclay, forg, fgravel) %>% 
-      as.matrix() %>% 
-      t()
-
     ## C wrapper call
     out <- .Call(
 
@@ -355,8 +341,8 @@ run_pmodel_f_bysite <- function(
       firstyeartrend            = as.integer(firstyeartrend_forcing),
       nyeartrend                = as.integer(nyeartrend_forcing),
       secs_per_tstep            = as.integer(secs_per_tstep),
-      in_ppfd                   = as.logical(params_siml$in_ppfd),
-      in_netrad                 = as.logical(params_siml$in_netrad),
+      in_ppfd                   = as.logical(in_ppfd),
+      in_netrad                 = as.logical(in_netrad),
       outdt                     = as.integer(params_siml$outdt),
       ltre                      = as.logical(params_siml$ltre),
       ltne                      = as.logical(params_siml$ltne),
@@ -369,7 +355,6 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
-      soiltexture               = soiltexture,
       n                         = n,
       par                       = par, 
       forcing                   = forcing
@@ -385,19 +370,48 @@ run_pmodel_f_bysite <- function(
       as.matrix() %>% 
       as.data.frame() %>% 
       stats::setNames(
-        c("fapar", "gpp", "transp", "latenth", "pet", "vcmax",
-          "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue", "rd",
-          "tsoil")
+        c("fapar", 
+          "gpp", 
+          "transp", 
+          "latenth", 
+          "pet", 
+          "vcmax",
+          "jmax", 
+          "vcmax25", 
+          "jmax25", 
+          "gs_accl", 
+          "wscal", 
+          "chi", 
+          "iwue", 
+          "rd",
+          "tsoil", 
+          "netrad", 
+          "wcont", 
+          "snow")
         ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
 
   } else {
     out <- tibble(date = as.Date("2000-01-01"),
-                  fapar = NA, gpp = NA, transp = NA, latenth = NA, 
-                  pet = NA, vcmax = NA, jmax = NA, vcmax25 = NA, 
-                  jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, 
-                  iwue = NA, rd = NA, tsoil = NA)
+                  fapar = NA, 
+                  gpp = NA, 
+                  transp = NA, 
+                  latenth = NA, 
+                  pet = NA, 
+                  vcmax = NA, 
+                  jmax = NA, 
+                  vcmax25 = NA, 
+                  jmax25 = NA, 
+                  gs_accl = NA, 
+                  wscal = NA, 
+                  chi = NA, 
+                  iwue = NA, 
+                  rd = NA, 
+                  tsoil = NA, 
+                  netrad = NA,
+                  wcont = NA, 
+                  snow = NA)
   }
     
   return(out)

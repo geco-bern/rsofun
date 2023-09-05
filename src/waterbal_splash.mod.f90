@@ -93,7 +93,7 @@ module md_waterbal
 
 contains
 
-  subroutine waterbal( tile, tile_fluxes, grid, climate ) !, lai, fapar, h_canopy, g_stomata )
+  subroutine waterbal( tile, tile_fluxes, grid, climate, in_netrad )
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil water balance
     !-------------------------------------------------------------------------
@@ -102,7 +102,7 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(gridtype), intent(in)                            :: grid
     type(climate_type), intent(in)                        :: climate
-    ! integer, intent(in) :: doy          ! day of year
+    logical, intent(in)                                   :: in_netrad
 
     ! local variables
     type(outtype_snow_rain) :: out_snow_rain
@@ -118,7 +118,7 @@ contains
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
       !---------------------------------------------------------
-      call calc_et( tile_fluxes(lu), grid, climate, sw )
+      call calc_et( tile_fluxes(lu), grid, climate, sw, in_netrad )
 
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
@@ -301,7 +301,7 @@ contains
   end subroutine solar
 
 
-  subroutine calc_et( tile_fluxes, grid, climate, sw )
+  subroutine calc_et( tile_fluxes, grid, climate, sw, in_netrad )
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
@@ -309,11 +309,11 @@ contains
     use md_sofunutils, only: calc_patm
 
     ! arguments
-    ! type(tile_type), intent(inout)        :: tile
     type(tile_fluxes_type), intent(inout) :: tile_fluxes
     type(gridtype), intent(in)            :: grid
     type(climate_type), intent(in)        :: climate
     real, intent(in)                      :: sw            ! evaporative supply rate, mm/hr
+    logical, intent(in)                   :: in_netrad
 
     ! local variables
     real :: gamma                           ! psychrometric constant (Pa K-1) ! xxx Zhang et al. use it in units of (kPa K-1), probably they use sat_slope in kPa/K, too.
@@ -346,13 +346,21 @@ contains
     !---------------------------------------------------------
     ! Daily condensation, mm d-1
     !---------------------------------------------------------
-    tile_fluxes%canopy%dcn = 1000.0 * tile_fluxes%canopy%econ * abs(tile_fluxes%canopy%drnn)
+    if (in_netrad) then
+      tile_fluxes%canopy%dcn = 0.0
+    else
+      tile_fluxes%canopy%dcn = 1000.0 * tile_fluxes%canopy%econ * abs(tile_fluxes%canopy%drnn)
+    end if
 
     !---------------------------------------------------------
     ! 17. Estimate daily EET, mm d-1
     !---------------------------------------------------------
-    ! Eq. 70, SPLASH 2.0 Documentation
-    tile_fluxes%canopy%deet = 1000.0 * tile_fluxes%canopy%econ * tile_fluxes%canopy%drn
+    if (in_netrad) then
+      tile_fluxes%canopy%deet = 1000.0 * tile_fluxes%canopy%econ * climate%dnetrad * myinterface%params_siml%secs_per_tstep
+    else
+      ! Eq. 70, SPLASH 2.0 Documentation
+      tile_fluxes%canopy%deet = 1000.0 * tile_fluxes%canopy%econ * tile_fluxes%canopy%drn
+    end if
 
     !---------------------------------------------------------
     ! 18. Estimate daily PET, mm d-1

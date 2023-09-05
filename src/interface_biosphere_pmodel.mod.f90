@@ -30,7 +30,6 @@ module md_interface_pmodel
     integer                                 :: year
     real                                    :: pco2
     type(gridtype)                          :: grid
-    real, dimension(4,nlayers_soil)         :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     real                                    :: whc_prescr
     type(climate_type), dimension(ndayyear) :: climate
     type(vegcover_type), dimension(ndayyear):: vegcover
@@ -64,6 +63,10 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: iwue
     real, dimension(ndayyear) :: rd
     real, dimension(ndayyear) :: tsoil         ! soil temperature, deg C
+    real, dimension(ndayyear) :: netrad
+    real, dimension(ndayyear) :: wcont
+    real, dimension(ndayyear) :: snow
+
   end type outtype_biosphere
 
 end module md_interface_pmodel

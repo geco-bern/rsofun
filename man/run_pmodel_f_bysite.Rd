@@ -9,7 +9,6 @@ run_pmodel_f_bysite(
   params_siml,
   site_info,
   forcing,
-  params_soil,
   params_modl,
   makecheck = TRUE,
   verbose = TRUE
@@ -23,11 +22,6 @@ run_pmodel_f_bysite(
       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}
       \item{recycle}{Length of standard recycling period, in days.}
-      \item{calc_aet_fapar_vpd}{(not in use)}
-      \item{in_ppfd}{A logical value, if soi\code{TRUE} PPFD is a prescribed variable, 
-      if \code{FALSE} PPFD is simulated internally.}
-      \item{in_netrad}{A logical value indicating whether net radiation is 
-      prescribed (\code{TRUE}) or simulated internally (\code{FALSE}).}
       \item{outdt}{An integer indicating the output periodicity.}
       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
@@ -44,22 +38,13 @@ run_pmodel_f_bysite(
       \item{lon}{Longitud of the site location.}
       \item{lat}{Latitude of the site location.}
       \item{elv}{Elevation of the site location, in meters.}
-      \item{whc}{A numeric value for the water holding capacity (in mm), used
+      \item{whc}{A numeric value for the total root zone water holding capacity (in mm), used
       for simulating the soil water balance.}
 }}
 
 \item{forcing}{A data frame of forcing climate data, used as input 
 (see \code{\link{p_model_drivers}}
 for a detailed description of its structure and contents).}
-
-\item{params_soil}{A list of soil texture parameters, for the top and bottom
-layer of soil.
-\describe{
-      \item{fsand}{The fraction of sand in the soil.}
-      \item{fclay}{The fraction of clay in the soil.}
-      \item{forg}{The fraction of organic matter in the soil.}
-      \item{fgravel}{The fraction of gravel in the soil.}
-}}
 
 \item{params_modl}{A named list of free (calibratable) model parameters.
 \describe{
@@ -121,6 +106,11 @@ Model output is provided as a tidy dataframe, with columns:
   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
+  \item{\code{netrad}}{Net radiation, calculated by SPLASH, W m\eqn{^{-2}}}
+  \item{\code{pet}}{Potential evapotranspiration, calculated by SPLASH following Priestly-Taylor, in mm d\eqn{^{-1}}.}
+  \item{\code{aet}}{Actual evapotranspiration, calculated by SPLASH following Priestly-Taylor and a simple water bucket, in mm d\eqn{^{-1}}.}
+  \item{\code{wcont}}{Soil water content, in mm}
+  \item{\code{snow}}{Snow water equivalents, in mm}
   }
 }
 \description{
@@ -182,7 +172,6 @@ mod_output <- run_pmodel_f_bysite(
   params_siml = p_model_drivers$params_siml[[1]],
   site_info = p_model_drivers$site_info[[1]],
   forcing = p_model_drivers$forcing[[1]],
-  params_soil = p_model_drivers$params_soil[[1]],
   params_modl = params_modl
  )
 }

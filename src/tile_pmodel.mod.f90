@@ -313,10 +313,10 @@ contains
     ! do idx = 1, nlayers_soil
 
       ! TOP LAYER
-      fsand   = myinterface%soiltexture(1,1)
-      fclay   = myinterface%soiltexture(2,1)
-      forg    = myinterface%soiltexture(3,1)
-      fgravel = myinterface%soiltexture(4,1)
+      fsand   = 0.4 ! myinterface%soiltexture(1,1)
+      fclay   = 0.3 ! myinterface%soiltexture(2,1)
+      forg    = 0.1 ! myinterface%soiltexture(3,1)
+      fgravel = 0.1 ! myinterface%soiltexture(4,1)
 
       fsand_forg  = fsand * forg
       fclay_forg  = fclay * forg

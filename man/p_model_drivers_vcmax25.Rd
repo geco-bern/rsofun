@@ -3,9 +3,9 @@
 \docType{data}
 \name{p_model_drivers_vcmax25}
 \alias{p_model_drivers_vcmax25}
-\title{SOFUN p-model driver data (for leaf traits)}
+\title{rsofun p-model driver data (for leaf traits)}
 \format{
-A tibble of driver data:
+A tibble of model driver data:
 \describe{
   \item{sitename}{A character string containing the site names.}
   \item{forcing}{A tibble of forcing climate data for an "average" year, 
@@ -29,16 +29,11 @@ A tibble of driver data:
       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.(set equal to temp).}
       }
   }
-  \item{params_siml}{A tibble [ 1 x 18] of model parameters.
+  \item{params_siml}{A tibble containing simulation parameters.
     \describe{
       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}
       \item{recycle}{Length of standard recycling period, in days.}
-      \item{calc_aet_fapar_vpd}{(not in use)}
-      \item{in_ppfd}{A logical value, if \code{TRUE} PPFD is a prescribed variable, 
-      if \code{FALSE} PPFD is simulated internally.}
-      \item{in_netrad}{A logical value indicating whether net radiation is 
-      prescribed (\code{TRUE}) or simulated internally (\code{FALSE}).}
       \item{outdt}{An integer indicating the output periodicity.}
       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
@@ -50,20 +45,13 @@ A tibble of driver data:
       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
     }
   }
-  \item{site_info}{A tibble [ 1 x 12 ] containing site information
+  \item{site_info}{A tibble containing site meta information.
     \describe{
       \item{lon}{Longitud of the site location.}
       \item{lat}{Latitude of the site location.}
       \item{elv}{Elevation of the site location, in meters.}
-      \item{year_start}{The year in which collected forcing data starts. This
-      data is later aggregated across years to obtain a single year of "average"
-      climate forcing.}
-      \item{year_end}{The year in which collected forcing data ends. This
-      data is later aggregated across years to obtain a single year of "average"
-      climate forcing.}
-      \item{whc}{A numeric value for the water holding capacity (in mm), used for 
-      simulating the soil water balance. It is taken by the P-model as a calibratable
-      model parameter \code{rootzone_whc}.}
+      \item{whc}{A numeric value for the root zone water holding capacity (in mm), used for 
+      simulating the soil water balance.}
     }
   }
   \item{params_soil}{A tibble [ 2 x 5 ] containing soil texture data
