@@ -13,20 +13,19 @@ A tibble of driver data:
     \describe{
       \item{date}{Date of the observation in YYYY-MM-DD format.}
       \item{temp}{Daytime average air temperature in \eqn{^\circ}C.}
-      \item{vpd}{Vapour pressure deficit in Pa.}
+      \item{vpd}{Daytime average vapour pressure deficit in Pa.}
       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
       mol m\eqn{^{-2}} s\eqn{^{-1}}.}
       \item{netrad}{Net radiation in W m\eqn{^{-2}}.}
       \item{patm}{Atmospheric pressure in Pa.}
-      \item{snow}{Snow in mm s\eqn{^{-1}}.}
+      \item{snow}{Snow in water equivalents mm s\eqn{^{-1}}.}
       \item{rain}{Rain as precipitation in liquid form in mm s\eqn{^{-1}}.}
       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C.}
       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.}
       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
      values between 0 and 1.}
-      \item{co2}{Annually varying observed atmospheric CO\eqn{_2}, identical 
-      across sites.}
-      \item{ccov}{Cloud coverage in \%.}
+      \item{co2}{Atmospheric CO\eqn{_2} concentration.}
+      \item{ccov}{Cloud coverage in \%. This is only used when net radiation is not prescribed.}
       }
   }
   \item{params_siml}{A tibble of simulation parameters.
@@ -47,11 +46,10 @@ A tibble of driver data:
   }
   \item{site_info}{A tibble containing site meta information.
     \describe{
-      \item{lon}{Longitud of the site location.}
-      \item{lat}{Latitude of the site location.}
-      \item{elv}{Elevation of the site location, in meters.}
-      \item{whc}{A numeric value for the rooting zone water holding capacity (in mm), used for 
-      simulating the soil water balance.}
+      \item{lon}{Longitude of the site location in degrees east.}
+      \item{lat}{Latitude of the site location in degrees north.}
+      \item{elv}{Elevation of the site location, in meters above sea level.}
+      \item{whc}{A numeric value for the rooting zone water holding capacity (in mm)}
     }
   }
 }
