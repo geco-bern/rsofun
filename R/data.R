@@ -123,6 +123,7 @@
 #'       across sites.}
 #'       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C (set equal to temp).}
 #'       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.(set equal to temp).}
+#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}.}
 #'       }
 #'   }
 #'   \item{params_siml}{A tibble containing simulation parameters.
