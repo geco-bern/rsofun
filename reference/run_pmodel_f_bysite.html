@@ -85,7 +85,6 @@
 <span>  <span class="va">params_siml</span>,</span>
 <span>  <span class="va">site_info</span>,</span>
 <span>  <span class="va">forcing</span>,</span>
-<span>  <span class="va">params_soil</span>,</span>
 <span>  <span class="va">params_modl</span>,</span>
 <span>  makecheck <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -107,17 +106,6 @@
 
       <dt>recycle</dt>
 <dd><p>Length of standard recycling period, in days.</p></dd>
-
-      <dt>calc_aet_fapar_vpd</dt>
-<dd><p>(not in use)</p></dd>
-
-      <dt>in_ppfd</dt>
-<dd><p>A logical value, if soi<code>TRUE</code> PPFD is a prescribed variable, 
-      if <code>FALSE</code> PPFD is simulated internally.</p></dd>
-
-      <dt>in_netrad</dt>
-<dd><p>A logical value indicating whether net radiation is 
-      prescribed (<code>TRUE</code>) or simulated internally (<code>FALSE</code>).</p></dd>
 
       <dt>outdt</dt>
 <dd><p>An integer indicating the output periodicity.</p></dd>
@@ -159,7 +147,7 @@
 <dd><p>Elevation of the site location, in meters.</p></dd>
 
       <dt>whc</dt>
-<dd><p>A numeric value for the water holding capacity (in mm), used
+<dd><p>A numeric value for the total root zone water holding capacity (in mm), used
       for simulating the soil water balance.</p></dd>
 
 
@@ -170,24 +158,6 @@
 <dd><p>A data frame of forcing climate data, used as input 
 (see <code><a href="p_model_drivers.html">p_model_drivers</a></code>
 for a detailed description of its structure and contents).</p></dd>
-
-
-<dt>params_soil</dt>
-<dd><p>A list of soil texture parameters, for the top and bottom
-layer of soil.</p><dl><dt>fsand</dt>
-<dd><p>The fraction of sand in the soil.</p></dd>
-
-      <dt>fclay</dt>
-<dd><p>The fraction of clay in the soil.</p></dd>
-
-      <dt>forg</dt>
-<dd><p>The fraction of organic matter in the soil.</p></dd>
-
-      <dt>fgravel</dt>
-<dd><p>The fraction of gravel in the soil.</p></dd>
-
-
-</dl></dd>
 
 
 <dt>params_modl</dt>
@@ -308,6 +278,21 @@ Defaults to <code>TRUE</code>.</p></dd>
   <dt><code>tsoil</code></dt>
 <dd><p>Soil temperature, in \(^{o}\)C.</p></dd>
 
+  <dt><code>netrad</code></dt>
+<dd><p>Net radiation, calculated by SPLASH, W m\(^{-2}\)</p></dd>
+
+  <dt><code>pet</code></dt>
+<dd><p>Potential evapotranspiration, calculated by SPLASH following Priestly-Taylor, in mm d\(^{-1}\).</p></dd>
+
+  <dt><code>aet</code></dt>
+<dd><p>Actual evapotranspiration, calculated by SPLASH following Priestly-Taylor and a simple water bucket, in mm d\(^{-1}\).</p></dd>
+
+  <dt><code>wcont</code></dt>
+<dd><p>Soil water content, in mm</p></dd>
+
+  <dt><code>snow</code></dt>
+<dd><p>Snow water equivalents, in mm</p></dd>
+
   
 </dl></div>
     <div id="details">
@@ -367,7 +352,6 @@ exactly replicated.</p>
 <span class="r-in"><span>  params_siml <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">params_siml</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>  site_info <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>  forcing <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  params_soil <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">params_soil</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>  params_modl <span class="op">=</span> <span class="va">params_modl</span></span></span>
 <span class="r-in"><span> <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

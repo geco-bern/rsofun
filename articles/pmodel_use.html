@@ -127,11 +127,13 @@ your workspace by typing:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/geco-bern/rsofun" class="external-link">rsofun</a></span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># this is to deal with an error p_model_drivers.rds not being found </span></span>
 <span><span class="va">p_model_drivers</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 5</span></span></span>
-<span><span class="co">#&gt;   sitename forcing               params_siml       site_info         params_soil</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FR-Pue   <span style="color: #949494;">&lt;tibble [2,555 × 15]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   sitename [1]</span></span></span>
+<span><span class="co">#&gt;   sitename params_siml       site_info        forcing              </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>               </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FR-Pue   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [2,920 × 13]&gt;</span></span></span>
 <span></span>
 <span><span class="va">p_model_validation</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
@@ -241,6 +243,7 @@ together.</p>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">gpp</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"Observed"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `sitename`</span></span>
 <span><span class="va">df_gpp_plot</span><span class="op">$</span><span class="va">type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">df_gpp_plot</span><span class="op">$</span><span class="va">type</span>,</span>
 <span>                           levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'P-model output'</span>,</span>
 <span>                                      <span class="st">'Observed'</span><span class="op">)</span><span class="op">)</span></span>
@@ -343,6 +346,7 @@ fit over a more global parameter set.</p>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">gpp</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"P-model output (calibrated)"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt; Adding missing grouping variables: `sitename`</span></span>
 <span><span class="va">df_gpp_plot</span><span class="op">$</span><span class="va">type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">df_gpp_plot</span><span class="op">$</span><span class="va">type</span>,</span>
 <span>                           levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'P-model output'</span>,</span>
 <span>                                      <span class="st">'P-model output (calibrated)'</span>,</span>

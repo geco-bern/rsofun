@@ -170,7 +170,7 @@ the parameter values.</p>
 <span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span>,</span>
 <span>  error_gpp          <span class="op">=</span> <span class="fl">0.9</span>         <span class="co"># value from previous simulations</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] -44804.89</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] -31340.78</span></span></code></pre></div>
 <p>Some parameters are constrained by their physical interpretation
 (e.g. <code>kphio &gt; 0</code>) and it’s also necessary to provide a
 bounded parameter space for Morris’ method to sample the parameter
@@ -420,6 +420,17 @@ next to other statistics, using the <code>summary</code> function from
 the <code>BayesianTools</code> library.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Parameter values  0.0389836288375086 -0.00157810708594564 20.0541568480953 1.23510168085939</span></span>
+<span><span class="co">#&gt; Problem encountered in the calculation of the likelihood with parameter 0.0389836288375086-0.0015781070859456420.05415684809531.23510168085939</span></span>
+<span><span class="co">#&gt;  Error message was<span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;"> in `dplyr::mutate()`:</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In argument: `data = purrr::pmap(., run_pmodel_f_bysite, params_modl =</span></span>
+<span><span class="co">#&gt;   par, makecheck = makecheck)`.</span></span>
+<span><span class="co">#&gt; <span style="font-weight: bold;">Caused by error in `purrr::pmap()`:</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In index: 1.</span></span>
+<span><span class="co">#&gt; <span style="font-weight: bold;">Caused by error in `.f()`:</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> unused argument (params_soil = .l[[5]][[i]])</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  set result of the parameter evaluation to -Inf ParameterValues</span></span>
 <span><span class="co">#&gt; # # # # # # # # # # # # # # # # # # # # # # # # # </span></span>
 <span><span class="co">#&gt; ## MCMC chain summary ## </span></span>
 <span><span class="co">#&gt; # # # # # # # # # # # # # # # # # # # # # # # # # </span></span>
@@ -438,7 +449,7 @@ the <code>BayesianTools</code> library.</p>
 <span><span class="co">#&gt; kphio_... 1.010 20.059 19.050 20.015 21.359</span></span>
 <span><span class="co">#&gt; err_gpp   1.007  1.230  1.195  1.236  1.268</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ## DIC:  7035.39 </span></span>
+<span><span class="co">#&gt; ## DIC:  -Inf </span></span>
 <span><span class="co">#&gt; ## Convergence </span></span>
 <span><span class="co">#&gt;  Gelman Rubin multivariate psrf:   </span></span>
 <span><span class="co">#&gt;  </span></span>
