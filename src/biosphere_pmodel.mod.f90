@@ -190,6 +190,9 @@ contains
         out_biosphere%iwue(doy)    = tile_fluxes(1)%canopy%iwue
         out_biosphere%rd(doy)      = tile_fluxes(1)%canopy%drd
         out_biosphere%tsoil(doy)   = tile(1)%soil%phy%temp    
+        out_biosphere%netrad(doy)  = tile_fluxes(1)%canopy%drn
+        out_biosphere%wcont(doy)   = tile(1)%soil%phy%wcont
+        out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
 
         init_daily = .false.
 

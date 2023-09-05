@@ -88,6 +88,11 @@
 #'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
 #'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
 #'   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
+#'   \item{\code{netrad}}{Net radiation, calculated by SPLASH, J d\eqn{^{-1}}}
+#'   \item{\code{pet}}{Potential evapotranspiration, calculated by SPLASH following Priestly-Taylor, in mm d\eqn{^{-1}}.}
+#'   \item{\code{aet}}{Actual evapotranspiration, calculated by SPLASH following Priestly-Taylor and a simple water bucket, in mm d\eqn{^{-1}}.}
+#'   \item{\code{wcont}}{Soil water content, in mm}
+#'   \item{\code{snow}}{Snow water equivalents, in mm}
 #'   } 
 #'   
 #' @details Depending on the input model parameters, it's possible to run the 
@@ -366,19 +371,48 @@ run_pmodel_f_bysite <- function(
       as.matrix() %>% 
       as.data.frame() %>% 
       stats::setNames(
-        c("fapar", "gpp", "transp", "latenth", "pet", "vcmax",
-          "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", "iwue", "rd",
-          "tsoil")
+        c("fapar", 
+          "gpp", 
+          "transp", 
+          "latenth", 
+          "pet", 
+          "vcmax",
+          "jmax", 
+          "vcmax25", 
+          "jmax25", 
+          "gs_accl", 
+          "wscal", 
+          "chi", 
+          "iwue", 
+          "rd",
+          "tsoil", 
+          "netrad", 
+          "wcont", 
+          "snow")
         ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
 
   } else {
     out <- tibble(date = as.Date("2000-01-01"),
-                  fapar = NA, gpp = NA, transp = NA, latenth = NA, 
-                  pet = NA, vcmax = NA, jmax = NA, vcmax25 = NA, 
-                  jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, 
-                  iwue = NA, rd = NA, tsoil = NA)
+                  fapar = NA, 
+                  gpp = NA, 
+                  transp = NA, 
+                  latenth = NA, 
+                  pet = NA, 
+                  vcmax = NA, 
+                  jmax = NA, 
+                  vcmax25 = NA, 
+                  jmax25 = NA, 
+                  gs_accl = NA, 
+                  wscal = NA, 
+                  chi = NA, 
+                  iwue = NA, 
+                  rd = NA, 
+                  tsoil = NA, 
+                  netrad = NA,
+                  wcont = NA, 
+                  snow = NA)
   }
     
   return(out)
