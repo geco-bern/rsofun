@@ -79,17 +79,6 @@ output <- rsofun::runread_pmodel_f(
   p_model_drivers,
   par = params_modl
   )
-
-tmp <- p_model_drivers
-tmp$forcing[[1]]$netrad <- NA
-output <- rsofun::runread_pmodel_f(
-  tmp,
-  par = params_modl
-  )
-
-ggplot() + 
-  geom_line(data = p_model_drivers$forcing[[1]], aes(date, netrad)) +
-  geom_line(data = output$data[[1]], aes(date, netrad), color = "red")
 ```
 
 ### Plotting output
