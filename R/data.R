@@ -14,7 +14,9 @@
 #'       \item{vpd}{Daytime average vapour pressure deficit in Pa.}
 #'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
 #'       mol m\eqn{^{-2}} s\eqn{^{-1}}.}
-#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}.}
+#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
+#'       it indicates that net radiation should be calculated by the SPLASH
+#'       model.}
 #'       \item{patm}{Atmospheric pressure in Pa.}
 #'       \item{snow}{Snow in water equivalents mm s\eqn{^{-1}}.}
 #'       \item{rain}{Rain as precipitation in liquid form in mm s\eqn{^{-1}}.}
