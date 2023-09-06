@@ -26,7 +26,6 @@ test_that("p-model run check GPP", {
     df_drivers$params_siml[[1]],
     df_drivers$site_info[[1]],
     df_drivers$forcing[[1]], 
-    df_drivers$params_soil[[1]],
     params_modl = params_modl,
     makecheck = FALSE
   )
@@ -83,7 +82,6 @@ test_that("p-model run check Vcmax25", {
     df_drivers$params_siml[[1]],
     df_drivers$site_info[[1]],
     df_drivers$forcing[[1]], 
-    df_drivers$params_soil[[1]],
     params_modl = params_modl,
     makecheck = FALSE
   )
