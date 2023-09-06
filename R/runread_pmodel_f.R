@@ -4,7 +4,7 @@
 #'
 #' @param drivers A nested data frame with one row for each site and columns
 #'  named according to the arguments of function \code{\link{run_pmodel_f_bysite}},
-#'  namely \code{sitename, params_siml, site_info, forcing} and \code{params_soil}.
+#'  namely \code{sitename, params_siml, site_info} and \code{forcing}.
 #' @param par A named list of free (calibratable) model parameters.
 #' \describe{
 #'   \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 
@@ -106,7 +106,7 @@ runread_pmodel_f <- function(
   
   # predefine variables for CRAN check compliance
   sitename <- params_siml <- site_info <-
-    params_soil <- input <- forcing <- . <- NULL
+    input <- forcing <- . <- NULL
   
   if (parallel){
     
@@ -126,8 +126,7 @@ runread_pmodel_f <- function(
           sitename,
           params_siml,
           site_info,
-          forcing,
-          params_soil)
+          forcing)
       ) %>%
       multidplyr::partition(cl) %>% 
       dplyr::mutate(data = purrr::map(input, 
@@ -136,7 +135,6 @@ runread_pmodel_f <- function(
                                         params_siml    = .x$params_siml[[1]], 
                                         site_info       = .x$site_info[[1]], 
                                         forcing        = .x$forcing[[1]], 
-                                        params_soil = .x$params_soil[[1]], 
                                         par    = par, 
                                         makecheck      = makecheck )
       ))
