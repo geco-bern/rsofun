@@ -27,7 +27,8 @@ A tibble of driver data:
       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
      values between 0 and 1.}
       \item{co2}{Atmospheric CO\eqn{_2} concentration.}
-      \item{ccov}{Cloud coverage in \%. This is only used when net radiation is not prescribed.}
+      \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
+      net radiation are not prescribed.}
       }
   }
   \item{params_siml}{A tibble of simulation parameters.
