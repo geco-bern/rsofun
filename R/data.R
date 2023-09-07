@@ -13,7 +13,8 @@
 #'       \item{temp}{Daytime average air temperature in \eqn{^\circ}C.}
 #'       \item{vpd}{Daytime average vapour pressure deficit in Pa.}
 #'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
-#'       mol m\eqn{^{-2}} s\eqn{^{-1}}.}
+#'       mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
+#'       PPFD should be calculated by the SPLASH model.}
 #'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
 #'       it indicates that net radiation should be calculated by the SPLASH
 #'       model.}
@@ -25,7 +26,8 @@
 #'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
 #'      values between 0 and 1.}
 #'       \item{co2}{Atmospheric CO\eqn{_2} concentration.}
-#'       \item{ccov}{Cloud coverage in \%. This is only used when net radiation is not prescribed.}
+#'       \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
+#'       net radiation are not prescribed.}
 #'       }
 #'   }
 #'   \item{params_siml}{A tibble of simulation parameters.
@@ -114,9 +116,14 @@
 #'       \item{temp}{Air temperature in \eqn{^\circ}C.}
 #'       \item{vpd}{Vapour pressure deficit in Pa.}
 #'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
-#'       mol m\eqn{^{-2}} d\eqn{^{-1}}.}
+#'       mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
+#'       PPFD should be calculated by the SPLASH model.}
+#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
+#'       it indicates that net radiation should be calculated by the SPLASH
+#'       model.}
 #'       \item{patm}{Atmospheric pressure in Pa.}
-#'       \item{ccov}{Cloud coverage in \%.}
+#'       \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
+#'       net radiation are not prescribed.}
 #'       \item{snow}{Snow in mm d\eqn{^{-1}}.}
 #'       \item{rain}{Rain in mm d\eqn{^{-1}}.}
 #'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
@@ -125,7 +132,6 @@
 #'       across sites.}
 #'       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C (set equal to temp).}
 #'       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.(set equal to temp).}
-#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}.}
 #'       }
 #'   }
 #'   \item{params_siml}{A tibble containing simulation parameters.
