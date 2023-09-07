@@ -110,17 +110,17 @@ runread_pmodel_f <- function(
   
   if (parallel){
     
-    cl <- multidplyr::new_cluster(n = ncores) %>%
-      multidplyr::cluster_assign(par = par) %>%
-      multidplyr::cluster_assign(makecheck = FALSE) %>%
+    cl <- multidplyr::new_cluster(n = ncores) |>
+      multidplyr::cluster_assign(par = par) |>
+      multidplyr::cluster_assign(makecheck = FALSE) |>
       multidplyr::cluster_library(
         packages = c("dplyr", "purrr", "rsofun")
       )
     
     # distribute to to cores, making sure all data from
     # a specific site is sent to the same core
-    df_out <- drivers %>%
-      dplyr::group_by(id = row_number()) %>%
+    df_out <- drivers |>
+      dplyr::group_by(id = row_number()) |>
       tidyr::nest(
         input = c(
           sitename,
@@ -140,17 +140,17 @@ runread_pmodel_f <- function(
       ))
     
     # collect the cluster data
-    data <- df_out %>%
-      dplyr::collect() %>%
-      dplyr::ungroup() %>%
+    data <- df_out |>
+      dplyr::collect() |>
+      dplyr::ungroup() |>
       dplyr::select(data)
     
     # meta-data
-    meta_data <- df_out %>%
-      dplyr::collect() %>%
-      dplyr::ungroup() %>%
-      dplyr::select( input ) %>%
-      tidyr::unnest( cols = c( input )) %>%
+    meta_data <- df_out |>
+      dplyr::collect() |>
+      dplyr::ungroup() |>
+      dplyr::select( input ) |>
+      tidyr::unnest( cols = c( input )) |>
       dplyr::select(sitename, site_info)
     
     # combine both data and meta-data
