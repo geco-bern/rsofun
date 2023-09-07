@@ -130,10 +130,9 @@ your workspace by typing:</p>
 <span><span class="co"># this is to deal with an error p_model_drivers.rds not being found </span></span>
 <span><span class="va">p_model_drivers</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   sitename [1]</span></span></span>
 <span><span class="co">#&gt;   sitename params_siml       site_info        forcing              </span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>               </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FR-Pue   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [2,920 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FR-Pue   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [2,555 × 13]&gt;</span></span></span>
 <span></span>
 <span><span class="va">p_model_validation</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
@@ -156,19 +155,19 @@ single year of average climate (the average measurements between 2001
 and 2015 on each day of the year).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_model_drivers_vcmax25</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 72 × 5</span></span></span>
-<span><span class="co">#&gt;    sitename          forcing             site_info params_siml       params_soil</span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 10?28'N_84?02'W   <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 40?47'N_77?53'W   <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 40?48'N_77?50'W   <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 8?39'N__71?24'W   <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 9?10'N__79?51'W   <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> ALP-01            <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> ALP-30            <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> ALP-40            <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> ANBG              <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Alto Tajo NP_Arid <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 72 × 4</span></span></span>
+<span><span class="co">#&gt;    sitename          params_siml       site_info        forcing            </span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>             </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 10?28'N_84?02'W   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 40?47'N_77?53'W   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 40?48'N_77?50'W   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 8?39'N__71?24'W   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 9?10'N__79?51'W   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> ALP-01            <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> ALP-30            <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> ALP-40            <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> ANBG              <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Alto Tajo NP_Arid <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 62 more rows</span></span></span>
 <span></span>
 <span><span class="va">p_model_validation_vcmax25</span></span>
@@ -218,19 +217,7 @@ results matching the input drivers.</p>
 <span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span></span>
 <span>  <span class="va">p_model_drivers</span>,</span>
 <span>  par <span class="op">=</span> <span class="va">params_modl</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="va">tmp</span> <span class="op">&lt;-</span> <span class="va">p_model_drivers</span></span>
-<span><span class="va">tmp</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">netrad</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
-<span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span></span>
-<span>  <span class="va">tmp</span>,</span>
-<span>  par <span class="op">=</span> <span class="va">params_modl</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">netrad</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">output</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">netrad</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pmodel_use_files/figure-html/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;"></p>
+<span>  <span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="plotting-output">Plotting output<a class="anchor" aria-label="anchor" href="#plotting-output"></a>
 </h3>
@@ -255,7 +242,6 @@ together.</p>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">gpp</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"Observed"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Adding missing grouping variables: `sitename`</span></span>
 <span><span class="va">df_gpp_plot</span><span class="op">$</span><span class="va">type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">df_gpp_plot</span><span class="op">$</span><span class="va">type</span>,</span>
 <span>                           levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'P-model output'</span>,</span>
 <span>                                      <span class="st">'Observed'</span><span class="op">)</span><span class="op">)</span></span>
@@ -358,7 +344,6 @@ fit over a more global parameter set.</p>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">gpp</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"P-model output (calibrated)"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Adding missing grouping variables: `sitename`</span></span>
 <span><span class="va">df_gpp_plot</span><span class="op">$</span><span class="va">type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">df_gpp_plot</span><span class="op">$</span><span class="va">type</span>,</span>
 <span>                           levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'P-model output'</span>,</span>
 <span>                                      <span class="st">'P-model output (calibrated)'</span>,</span>

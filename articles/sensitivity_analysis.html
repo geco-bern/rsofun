@@ -406,31 +406,20 @@ D.B.: Bayesian Data Analysis, 2nd edn. Chapman &amp; Hall, London
 <span><span class="co">#&gt; Potential scale reduction factors:</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;             Point est. Upper C.I.</span></span>
-<span><span class="co">#&gt; kphio             1.00       1.00</span></span>
-<span><span class="co">#&gt; kphio_par_a       1.01       1.03</span></span>
-<span><span class="co">#&gt; kphio_par_b       1.01       1.04</span></span>
-<span><span class="co">#&gt; err_gpp           1.01       1.01</span></span>
+<span><span class="co">#&gt; kphio             1.00       1.02</span></span>
+<span><span class="co">#&gt; kphio_par_a       1.03       1.10</span></span>
+<span><span class="co">#&gt; kphio_par_b       1.02       1.05</span></span>
+<span><span class="co">#&gt; err_gpp           1.01       1.04</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Multivariate psrf</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; 1.01</span></span></code></pre></div>
+<span><span class="co">#&gt; 1.04</span></span></code></pre></div>
 <p>Finally, the parameter MAP estimates can be derived from the chains
 (that converged) after removing the burnin period. They can be seen,
 next to other statistics, using the <code>summary</code> function from
 the <code>BayesianTools</code> library.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Parameter values  0.0389836288375086 -0.00157810708594564 20.0541568480953 1.23510168085939</span></span>
-<span><span class="co">#&gt; Problem encountered in the calculation of the likelihood with parameter 0.0389836288375086-0.0015781070859456420.05415684809531.23510168085939</span></span>
-<span><span class="co">#&gt;  Error message was<span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;"> in `dplyr::mutate()`:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In argument: `data = purrr::pmap(., run_pmodel_f_bysite, params_modl =</span></span>
-<span><span class="co">#&gt;   par, makecheck = makecheck)`.</span></span>
-<span><span class="co">#&gt; <span style="font-weight: bold;">Caused by error in `purrr::pmap()`:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> In index: 1.</span></span>
-<span><span class="co">#&gt; <span style="font-weight: bold;">Caused by error in `.f()`:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> unused argument (params_soil = .l[[5]][[i]])</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;  set result of the parameter evaluation to -Inf ParameterValues</span></span>
 <span><span class="co">#&gt; # # # # # # # # # # # # # # # # # # # # # # # # # </span></span>
 <span><span class="co">#&gt; ## MCMC chain summary ## </span></span>
 <span><span class="co">#&gt; # # # # # # # # # # # # # # # # # # # # # # # # # </span></span>
@@ -438,27 +427,27 @@ the <code>BayesianTools</code> library.</p>
 <span><span class="co">#&gt; # MCMC sampler:  DEzs </span></span>
 <span><span class="co">#&gt; # Nr. Chains:  3 </span></span>
 <span><span class="co">#&gt; # Iterations per chain:  2001 </span></span>
-<span><span class="co">#&gt; # Rejection rate:  0.859 </span></span>
-<span><span class="co">#&gt; # Effective sample size:  884 </span></span>
-<span><span class="co">#&gt; # Runtime:  195.459  sec. </span></span>
+<span><span class="co">#&gt; # Rejection rate:  0.787 </span></span>
+<span><span class="co">#&gt; # Effective sample size:  897 </span></span>
+<span><span class="co">#&gt; # Runtime:  332.716  sec. </span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; # Parameters</span></span>
 <span><span class="co">#&gt;             psf    MAP   2.5% median  97.5%</span></span>
-<span><span class="co">#&gt; kphio     1.000  0.039  0.038  0.039  0.040</span></span>
-<span><span class="co">#&gt; kphio_... 1.009 -0.002 -0.002 -0.002 -0.001</span></span>
-<span><span class="co">#&gt; kphio_... 1.010 20.059 19.050 20.015 21.359</span></span>
-<span><span class="co">#&gt; err_gpp   1.007  1.230  1.195  1.236  1.268</span></span>
+<span><span class="co">#&gt; kphio     1.005  0.042  0.041  0.042  0.043</span></span>
+<span><span class="co">#&gt; kphio_... 1.028 -0.002 -0.002 -0.002 -0.001</span></span>
+<span><span class="co">#&gt; kphio_... 1.016 18.080 17.380 18.150 19.035</span></span>
+<span><span class="co">#&gt; err_gpp   1.012  1.273  1.239  1.275  1.308</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ## DIC:  -Inf </span></span>
+<span><span class="co">#&gt; ## DIC:  7159.594 </span></span>
 <span><span class="co">#&gt; ## Convergence </span></span>
 <span><span class="co">#&gt;  Gelman Rubin multivariate psrf:   </span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; ## Correlations </span></span>
 <span><span class="co">#&gt;              kphio kphio_par_a kphio_par_b err_gpp</span></span>
-<span><span class="co">#&gt; kphio        1.000      -0.071      -0.134   0.287</span></span>
-<span><span class="co">#&gt; kphio_par_a -0.071       1.000       0.781  -0.053</span></span>
-<span><span class="co">#&gt; kphio_par_b -0.134       0.781       1.000  -0.005</span></span>
-<span><span class="co">#&gt; err_gpp      0.287      -0.053      -0.005   1.000</span></span></code></pre></div>
+<span><span class="co">#&gt; kphio        1.000      -0.151      -0.146   0.228</span></span>
+<span><span class="co">#&gt; kphio_par_a -0.151       1.000       0.478  -0.027</span></span>
+<span><span class="co">#&gt; kphio_par_b -0.146       0.478       1.000   0.047</span></span>
+<span><span class="co">#&gt; err_gpp      0.228      -0.027       0.047   1.000</span></span></code></pre></div>
 <p>More details on diagnosing MCMC convergence can be found in <a href="https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html#running-mcmc-and-smc-functions" class="external-link">this
 vignette from BayesianTools</a> and <a href="https://theoreticalecology.wordpress.com/2011/12/09/mcmc-chain-analysis-and-convergence-diagnostics-with-coda-in-r/" class="external-link">this
 blogpost</a>.</p>
