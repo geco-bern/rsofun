@@ -228,7 +228,6 @@ run_pmodel_f_bysite <- function(
       "temp",
       "rain",
       "vpd",
-      "ppfd",
       "fsun",
       "snow",
       "co2",
