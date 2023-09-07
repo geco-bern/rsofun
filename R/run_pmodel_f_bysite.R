@@ -228,7 +228,6 @@ run_pmodel_f_bysite <- function(
       "temp",
       "rain",
       "vpd",
-      "fsun",
       "snow",
       "co2",
       "ndep",
@@ -308,6 +307,15 @@ run_pmodel_f_bysite <- function(
 
     # determine whether to read PPFD from forcing or to calculate internally
     in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
+    
+    # Check if fsun is available
+    if(! (in_ppfd & in_netrad)){
+      # fsun must be available when one of ppfd or netrad is missing
+      if(any(is.na(forcing$fsun))) continue <- FALSE
+    }
+  }
+  
+  if(continue){
     
     # convert to matrix
     forcing <- as.matrix(forcing)
