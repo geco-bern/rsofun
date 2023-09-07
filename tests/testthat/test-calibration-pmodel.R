@@ -207,7 +207,7 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
     par = list(
       kphio = list(lower=0.04, upper=0.09, init=0.05),
       err_gpp = list(lower = 0.01, upper = 4, init = 2),
-      err_vcmax = list(lower = 0.0001, upper = 0.1, init = 0.005)
+      err_vcmax25 = list(lower = 0.0001, upper = 0.1, init = 0.005)
     )
   )
   
