@@ -13,8 +13,11 @@
 #'       \item{temp}{Daytime average air temperature in \eqn{^\circ}C.}
 #'       \item{vpd}{Daytime average vapour pressure deficit in Pa.}
 #'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
-#'       mol m\eqn{^{-2}} s\eqn{^{-1}}.}
-#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}.}
+#'       mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
+#'       PPFD should be calculated by the SPLASH model.}
+#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
+#'       it indicates that net radiation should be calculated by the SPLASH
+#'       model.}
 #'       \item{patm}{Atmospheric pressure in Pa.}
 #'       \item{snow}{Snow in water equivalents mm s\eqn{^{-1}}.}
 #'       \item{rain}{Rain as precipitation in liquid form in mm s\eqn{^{-1}}.}
@@ -23,7 +26,8 @@
 #'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
 #'      values between 0 and 1.}
 #'       \item{co2}{Atmospheric CO\eqn{_2} concentration.}
-#'       \item{ccov}{Cloud coverage in \%. This is only used when net radiation is not prescribed.}
+#'       \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
+#'       net radiation are not prescribed.}
 #'       }
 #'   }
 #'   \item{params_siml}{A tibble of simulation parameters.
@@ -112,9 +116,14 @@
 #'       \item{temp}{Air temperature in \eqn{^\circ}C.}
 #'       \item{vpd}{Vapour pressure deficit in Pa.}
 #'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
-#'       mol m\eqn{^{-2}} d\eqn{^{-1}}.}
+#'       mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
+#'       PPFD should be calculated by the SPLASH model.}
+#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
+#'       it indicates that net radiation should be calculated by the SPLASH
+#'       model.}
 #'       \item{patm}{Atmospheric pressure in Pa.}
-#'       \item{ccov}{Cloud coverage in \%.}
+#'       \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
+#'       net radiation are not prescribed.}
 #'       \item{snow}{Snow in mm d\eqn{^{-1}}.}
 #'       \item{rain}{Rain in mm d\eqn{^{-1}}.}
 #'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
@@ -148,16 +157,6 @@
 #'       \item{elv}{Elevation of the site location, in meters.}
 #'       \item{whc}{A numeric value for the root zone water holding capacity (in mm), used for 
 #'       simulating the soil water balance.}
-#'     }
-#'   }
-#'   \item{params_soil}{A tibble [ 2 x 5 ] containing soil texture data
-#'     \describe{
-#'       \item{layer}{A character string containing 'top' if the data on that row 
-#'       is about the top layer of soil, or 'bottom' if it's about the bottom layer.}
-#'       \item{fsand}{The fraction of sand in the soil.}
-#'       \item{fclay}{The fraction of clay in the soil.}
-#'       \item{forg}{The fraction of organic matter in the soil.}
-#'       \item{fgravel}{The fraction of gravel in the soil.}
 #'     }
 #'   }
 #' }

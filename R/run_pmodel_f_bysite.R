@@ -88,11 +88,11 @@
 #'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
 #'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
 #'   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
-#'   \item{\code{netrad}}{Net radiation, calculated by SPLASH, W m\eqn{^{-2}}}
+#'   \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. If not an input driver, calculated by SPLASH.}
 #'   \item{\code{pet}}{Potential evapotranspiration, calculated by SPLASH following Priestly-Taylor, in mm d\eqn{^{-1}}.}
 #'   \item{\code{aet}}{Actual evapotranspiration, calculated by SPLASH following Priestly-Taylor and a simple water bucket, in mm d\eqn{^{-1}}.}
-#'   \item{\code{wcont}}{Soil water content, in mm}
-#'   \item{\code{snow}}{Snow water equivalents, in mm}
+#'   \item{\code{wcont}}{Soil water content, in mm.}
+#'   \item{\code{snow}}{Snow water equivalents, in mm.}
 #'   } 
 #'   
 #' @details Depending on the input model parameters, it's possible to run the 
@@ -228,8 +228,6 @@ run_pmodel_f_bysite <- function(
       "temp",
       "rain",
       "vpd",
-      "ppfd",
-      "fsun",
       "snow",
       "co2",
       "ndep",
@@ -309,6 +307,15 @@ run_pmodel_f_bysite <- function(
 
     # determine whether to read PPFD from forcing or to calculate internally
     in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
+    
+    # Check if fsun is available
+    if(! (in_ppfd & in_netrad)){
+      # fsun must be available when one of ppfd or netrad is missing
+      if(any(is.na(forcing$fsun))) continue <- FALSE
+    }
+  }
+  
+  if(continue){
     
     # convert to matrix
     forcing <- as.matrix(forcing)

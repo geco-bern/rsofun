@@ -106,11 +106,11 @@ Model output is provided as a tidy dataframe, with columns:
   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
-  \item{\code{netrad}}{Net radiation, calculated by SPLASH, W m\eqn{^{-2}}}
+  \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. If not an input driver, calculated by SPLASH.}
   \item{\code{pet}}{Potential evapotranspiration, calculated by SPLASH following Priestly-Taylor, in mm d\eqn{^{-1}}.}
   \item{\code{aet}}{Actual evapotranspiration, calculated by SPLASH following Priestly-Taylor and a simple water bucket, in mm d\eqn{^{-1}}.}
-  \item{\code{wcont}}{Soil water content, in mm}
-  \item{\code{snow}}{Snow water equivalents, in mm}
+  \item{\code{wcont}}{Soil water content, in mm.}
+  \item{\code{snow}}{Snow water equivalents, in mm.}
   }
 }
 \description{

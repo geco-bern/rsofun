@@ -138,7 +138,8 @@ contains
                   myinterface%climate(doy), &
                   myinterface%vegcover(doy), &
                   myinterface%grid, &
-                  init_daily &
+                  init_daily, &
+                  myinterface%params_siml%in_ppfd &
                   )
 
         ! if (verbose) print*,'... done'

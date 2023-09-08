@@ -27,6 +27,7 @@ A tibble of model driver data:
       across sites.}
       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C (set equal to temp).}
       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.(set equal to temp).}
+      \item{netrad}{Net radiation in W m\eqn{^{-2}}.}
       }
   }
   \item{params_siml}{A tibble containing simulation parameters.
@@ -52,16 +53,6 @@ A tibble of model driver data:
       \item{elv}{Elevation of the site location, in meters.}
       \item{whc}{A numeric value for the root zone water holding capacity (in mm), used for 
       simulating the soil water balance.}
-    }
-  }
-  \item{params_soil}{A tibble [ 2 x 5 ] containing soil texture data
-    \describe{
-      \item{layer}{A character string containing 'top' if the data on that row 
-      is about the top layer of soil, or 'bottom' if it's about the bottom layer.}
-      \item{fsand}{The fraction of sand in the soil.}
-      \item{fclay}{The fraction of clay in the soil.}
-      \item{forg}{The fraction of organic matter in the soil.}
-      \item{fgravel}{The fraction of gravel in the soil.}
     }
   }
 }
