@@ -104,13 +104,20 @@ and optimization routines can run</p>
 
       <dt>ppfd</dt>
 <dd><p>Photosynthetic photon flux density (PPFD) in 
-      mol m\(^{-2}\) d\(^{-1}\).</p></dd>
+      mol m\(^{-2}\) s\(^{-1}\). If all values are NA, it indicates that
+      PPFD should be calculated by the SPLASH model.</p></dd>
+
+      <dt>netrad</dt>
+<dd><p>Net radiation in W m\(^{-2}\). If all values are NA,
+      it indicates that net radiation should be calculated by the SPLASH
+      model.</p></dd>
 
       <dt>patm</dt>
 <dd><p>Atmospheric pressure in Pa.</p></dd>
 
       <dt>ccov</dt>
-<dd><p>Cloud coverage in %.</p></dd>
+<dd><p>Cloud coverage in %. This is only used when either PPFD or
+      net radiation are not prescribed.</p></dd>
 
       <dt>snow</dt>
 <dd><p>Snow in mm d\(^{-1}\).</p></dd>
@@ -131,9 +138,6 @@ and optimization routines can run</p>
 
       <dt>tmax</dt>
 <dd><p>Daily maximum air temperature in \(^\circ\)C.(set equal to temp).</p></dd>
-
-      <dt>netrad</dt>
-<dd><p>Net radiation in W m\(^{-2}\).</p></dd>
 
       
 </dl><p></p></dd>
