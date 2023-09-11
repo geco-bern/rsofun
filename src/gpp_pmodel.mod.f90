@@ -36,7 +36,7 @@ module md_gpp_pmodel
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
     calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
-
+  use md_photosynth_phydro, only: phydro_analytical, phydro_instantaneous_analytical
   implicit none
 
   private

@@ -11,7 +11,8 @@ module md_photosynth
 
   private
   public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, &
+    calc_viscosity_h2o, calc_density_h2o, calc_kmm, calc_gammastar
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -864,11 +865,11 @@ contains
       end if    
     else
 
-      
-      kphio_temp = kphio * max(0.0, min(1.0, (1.0 + kphio_par_a * (dtemp - kphio_par_b)**2)))
+      ! ! new  
+      ! kphio_temp = kphio * max(0.0, min(1.0, (1.0 + kphio_par_a * (dtemp - kphio_par_b)**2)))
 
       ! old:
-      ! kphio_temp = kphio * (0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2)  ! Based on Bernacchi et al., 2003
+      kphio_temp = kphio * (0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2)  ! Based on Bernacchi et al., 2003
     end if
     
   end function calc_kphio_temp
