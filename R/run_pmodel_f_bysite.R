@@ -164,7 +164,8 @@ run_pmodel_f_bysite <- function(
   forcing,
   params_modl,
   makecheck = TRUE,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
   ){
   
   # predefine variables for CRAN check compliance

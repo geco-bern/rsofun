@@ -1,0 +1,545 @@
+---
+title: "Rsofun with Phydro"
+author: "Jaideep Joshi"
+date: "2023-09-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(reshape2)
+```
+
+
+## Generate data if not already available
+
+```{r}
+generate_data = F
+```
+
+```{r}
+if (generate_data){
+
+library(FluxDataKit)
+  
+# read in sites to process
+site <- "FR-Pue"
+
+# get half-hourly data  --------------------------------------------------------
+message("- convert to FLUXNET standard CSV file")
+hhdf <- suppressWarnings(
+  try(
+    fdk_convert_lsm(
+      site = site,
+      fluxnet_format = TRUE,
+      path = "~/Downloads/flux_data_kit_beta/fluxes/"
+      )
+    )
+  )
+
+if(inherits(hhdf, "try-error")){
+  message("!!! conversion to FLUXNET failed  !!!")
+  return(NULL)
+}
+
+
+# Add date and time columns to hhdf for easier further processing.
+# ---------------------------------------------------------
+hhdf = 
+  hhdf |>
+    mutate(time = lubridate::as_datetime(TIMESTAMP_START, tz = "GMT", format="%Y%m%d%H%M")) |>
+    mutate(date = lubridate::as_date(time))
+
+# Aggregate to daily 24-hr means  ----------------------------------------------------------
+message("- downsampling FLUXNET format - 24 hr means")
+ddf_24hr_mean <-
+  try(
+    hhdf |>
+    group_by(date) |>
+    select(-TIMESTAMP_START, -TIMESTAMP_END) |>
+    summarize_all(.funs = mean)
+  )
+
+# Check aggregation
+ddf_24hr_mean %>% 
+  select(SW_IN_F_MDS, SW_OUT, LW_IN_F_MDS, LAI, FPAR, GPP_DT_VUT_REF, LE_F_MDS, TA_F_MDS, date) %>% 
+  mutate(albedo = SW_OUT/SW_IN_F_MDS) %>% 
+  melt("date") %>% 
+  ggplot(aes(y=value, x=date)) + 
+  geom_line(col="aquamarine4") + 
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free")
+
+
+# Aggregate around daily maximum ppfd for acclimating model
+# ---------------------------------------------------------
+test.3day = hhdf %>% filter(date >= as_date("2011-06-01") &
+                            date <= as_date("2011-06-03") ) 
+
+aggregate_daily_3hr_maxima = function(df){
+  # Get the time at which SW_IN is maximum
+  maxppfd <- df %>% filter(SW_IN_F_MDS == max(SW_IN_F_MDS))
+  max_t <- maxppfd$time[1]
+  
+  # Select times that lie in 3-hr interval around max_t
+  df_aroundmax <- df %>% filter(time < (max_t + 1.5*3600) & 
+                                time > (max_t - 1.5*3600) )
+
+  # take mean of selected entries
+  df_mean <- df_aroundmax |>
+    select(-TIMESTAMP_START, -TIMESTAMP_END) |>
+    summarize_all(.funs = mean)
+  
+  df_mean
+}
+
+# Test aggregation
+# ----------------
+test.3day = hhdf %>% filter(date >= as.Date("2011-06-01") &
+                            date <= as.Date("2011-06-03") ) 
+
+test.3day.3hr = test.3day %>% group_by(date) %>% do(aggregate_daily_3hr_maxima(.)) %>% ungroup()
+
+test.3day %>% select(time, SW_IN_F_MDS, NETRAD, TA_F_MDS, VPD_F_MDS, GPP_NT_VUT_REF, GPP_DT_VUT_REF, LE_F_MDS, LAI, FPAR) %>% 
+  melt("time") %>% 
+  mutate(type="hourly") %>% 
+  rbind(test.3day.3hr %>% 
+          select(time, SW_IN_F_MDS, NETRAD, TA_F_MDS, VPD_F_MDS, GPP_NT_VUT_REF, GPP_DT_VUT_REF, LE_F_MDS, LAI, FPAR) %>% 
+          melt("time") %>% 
+          mutate(type="daily")
+  ) %>% 
+  ggplot(aes(y=value, x=as.POSIXct(time))) + 
+  geom_line(data = . %>% filter(type == "hourly"), col="aquamarine4") + 
+  geom_point(data = . %>% filter(type == "daily")) + 
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free")
+
+
+
+# Apply 3hr maxima aggregation to all data
+# ----------------------------------------
+ddf_3hr_maxima <- hhdf |>
+  group_by(date) |>
+  do(aggregate_daily_3hr_maxima(.)) |>
+  ungroup()
+
+
+aggregate_daily_daylength = function(df){
+  # Get the time at which SW_IN > 0 
+  pos_ppfd <- df %>% filter(SW_IN_F_MDS > 0)
+  tmax <- max(pos_ppfd$time)
+  tmin <- min(pos_ppfd$time)
+  
+  # Select times that lie in 3-hr interval around max_t
+  df_aroundmax <- df %>% filter(time <= tmax & 
+                                time >= tmin )
+
+  # take mean of selected entries
+  df_mean <- df_aroundmax |>
+    select(-TIMESTAMP_START, -TIMESTAMP_END) |>
+    summarize_all(.funs = mean) |> 
+    mutate(daylength = difftime(tmax, tmin, units="hours") |> as.numeric())
+
+  df_mean
+}
+
+# Test aggregation
+# ----------------
+test.3day.daylen = test.3day %>% group_by(date) %>% do(aggregate_daily_daylength(.)) %>% ungroup()
+
+test.3day %>% select(time, SW_IN_F_MDS, NETRAD, TA_F_MDS, VPD_F_MDS, GPP_NT_VUT_REF, GPP_DT_VUT_REF, LE_F_MDS, LAI) %>%
+  mutate(daylength = NA) %>% 
+  melt("time") %>% 
+  mutate(type="hourly") %>% 
+  rbind(test.3day.daylen %>% 
+          select(time, SW_IN_F_MDS, NETRAD, TA_F_MDS, VPD_F_MDS, GPP_NT_VUT_REF, GPP_DT_VUT_REF, LE_F_MDS, LAI, daylength) %>% 
+          melt("time") %>% 
+          mutate(type="daily")
+  ) %>% 
+  ggplot(aes(y=value, x=as.POSIXct(time))) + 
+  geom_line(data = . %>% filter(type == "hourly"), col="aquamarine4") + 
+  geom_point(data = . %>% filter(type == "daily")) + 
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free")
+
+
+# Apply daytime mean aggregation to all data
+# ------------------------------------------
+ddf_daytime_mean <- hhdf |>
+  group_by(date) |>
+  do(aggregate_daily_daylength(.)) |>
+  ungroup()
+
+# Check daylength seasonality
+ddf_daytime_mean %>% 
+  ggplot(aes(y=daylength, x=date)) +
+  geom_line()+
+  theme_classic()
+
+
+# Calculate daily tmax and tmin from hh data
+# ------------------------------------------
+tmaxmin <- 
+  hhdf |> 
+  group_by(date) |>
+  summarize(
+    tmax = max(TA_F_MDS),
+    tmin = min(TA_F_MDS)
+  )
+
+# Creating driver object  ------------------------------------------------------
+message("- compiling drivers")
+load("../data/p_model_drivers.rda")
+
+p_hydro_drivers <- p_model_drivers
+kfFEC = 2.04
+
+# for demo, use just a subset of years
+p_hydro_drivers$forcing <- 
+  ddf_24hr_mean |>
+  dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+  dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
+  left_join(tmaxmin) |>
+  group_by(date) |>
+  summarize(
+    date = date,
+    temp = TA_F_MDS, 
+    vpd = VPD_F_MDS * 100, 
+    ppfd = SW_IN_F_MDS * kfFEC * 1e-06, 
+    netrad = NETRAD, 
+    patm = PA_F * 1000, 
+    snow = 0, 
+    rain = P_F * 48 /(60 * 60 * 24), # P_F [mm timestep-1] * 48 [timesteps day-1] / 86400 [secs day-1 ]
+    tmin = tmin, # TMIN_F_MDS, 
+    tmax = tmax, # TMAX_F_MDS, 
+    fapar = FPAR, 
+    co2 = CO2_F_MDS,
+    ccov = 0
+  ) |>
+  list()
+
+p_hydro_drivers$forcing_acclim <- 
+  ddf_3hr_maxima |>
+  dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+  dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
+  left_join(tmaxmin) |>
+  group_by(date) |>
+  summarize(
+    date = date,
+    time = time,
+    temp = TA_F_MDS, 
+    vpd = VPD_F_MDS * 100, 
+    ppfd = SW_IN_F_MDS * kfFEC * 1e-06, 
+    netrad = NETRAD, 
+    patm = PA_F * 1000, 
+    snow = 0, 
+    rain = NA, # P_F * 48 / (60 * 60 * 24), 
+    tmin = tmin, # TMIN_F_MDS, 
+    tmax = tmax, # TMAX_F_MDS, 
+    fapar = FPAR, 
+    co2 = CO2_F_MDS,
+    ccov = 0   
+  ) |>
+  list()
+
+p_hydro_drivers$forcing_daytime_mean <- 
+  ddf_daytime_mean |>
+  dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+  dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
+  left_join(tmaxmin) |>
+  group_by(date) |>
+  summarize(
+    date = date,
+    time = time,
+    temp = TA_F_MDS, 
+    vpd = VPD_F_MDS * 100, 
+    ppfd = SW_IN_F_MDS * kfFEC * 1e-06, 
+    netrad = NETRAD, 
+    patm = PA_F * 1000, 
+    snow = 0, 
+    rain = NA,  # P_F * 48 / (60 * 60 * 24), 
+    tmin = tmin, # TMIN_F_MDS, 
+    tmax = tmax, # TMAX_F_MDS, 
+    fapar = FPAR, 
+    co2 = CO2_F_MDS,
+    ccov = 0,
+    daylength = daylength
+  ) |>
+  list()
+
+
+p_hydro_drivers$forcing_halfhourly <- 
+  hhdf |>
+  dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+  dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
+  group_by(time) |>
+  summarize(
+    date = date,
+    time = time,
+    temp = TA_F_MDS, 
+    vpd = VPD_F_MDS * 100, 
+    ppfd = SW_IN_F_MDS * kfFEC * 1e-06, 
+    netrad = NETRAD, 
+    patm = PA_F * 1000, 
+    snow = 0, 
+    rain = P_F * 48 / (60 * 60 * 24), 
+    fapar = FPAR, 
+    co2 = CO2_F_MDS,
+    ccov = 0
+  ) |>
+  list()
+
+
+# write all drivers to file
+# apply compression to minimize space
+filn <- "../data/p_hydro_drivers.rda"
+message(paste0("- writing to file: ", filn))
+save(p_hydro_drivers,
+     file = filn
+     )  
+
+
+# Write validation data
+load("../data/p_model_validation.rda")
+
+p_hydro_validation <- p_model_validation
+
+p_hydro_validation$data <- 
+  ddf_24hr_mean |>
+  dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+  dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
+  group_by(date) |>
+    summarise(
+      date = date,
+      time = time,
+      gpp = GPP_DT_VUT_REF,
+      le = LE_F_MDS
+    ) |>
+  list()
+
+p_hydro_validation$data_hh <- 
+  hhdf |>
+    dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+    dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
+    group_by(time) |>
+    summarise(
+      date = date,
+      time = time,
+      gpp = GPP_DT_VUT_REF,
+      le = LE_F_MDS
+    ) |>
+  list()
+
+p_hydro_validation$data_3hr_mean <- 
+  ddf_3hr_maxima |>
+    dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+    dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
+    group_by(time) |>
+    summarise(
+      date = date,
+      time = time,
+      gpp = GPP_DT_VUT_REF,
+      le = LE_F_MDS
+    ) |>
+  list()
+
+p_hydro_validation$data_daytime_mean <- 
+  ddf_daytime_mean |>
+    dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+    dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
+    group_by(time) |>
+    summarise(
+      date = date,
+      time = time,
+      gpp = GPP_DT_VUT_REF,
+      le = LE_F_MDS
+    ) |>
+  list()
+
+
+filn <- "../data/p_hydro_validation.rda"
+message(paste0("- writing to file: ", filn))
+save(p_hydro_validation,
+     file = filn
+     )  
+
+
+}
+
+```
+
+
+## Read Phydro drivers and check 
+
+```{r}
+# rm(list=ls())
+
+load("../data/p_hydro_drivers.rda")
+load("../data/p_hydro_validation.rda")
+
+start_date = "2011-06-01"
+end_date = "2011-06-06"
+
+# Check acclimation data against half-hourly
+# ---
+p_hydro_drivers$forcing_halfhourly[[1]] %>%
+filter(date >= start_date & date <= end_date ) %>%   
+  select(time, ppfd, netrad, temp, vpd, fapar) %>% 
+  melt("time") %>% 
+  mutate(type="hourly") %>% 
+  rbind(p_hydro_drivers$forcing_acclim[[1]] %>%
+          filter(date >= start_date & date <= end_date ) %>%
+          select(time, ppfd, netrad, temp, vpd, fapar) %>% 
+          melt("time") %>% 
+          mutate(type="daily")
+  ) %>% 
+  ggplot(aes(y=value, x=as.POSIXct(time))) + 
+  geom_line(data = . %>% filter(type == "hourly"), col="aquamarine4") + 
+  geom_point(data = . %>% filter(type == "daily")) + 
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free")
+
+
+# Check daily-3hr-maxima against daytime_means against 24 hr means
+# ---
+start_date = "2011-06-01"
+end_date = "2015-06-03"
+
+p_hydro_drivers$forcing[[1]] %>%
+  filter(date >= start_date & date <= end_date ) %>%
+  select(date, ppfd, netrad, temp, vpd, fapar) %>% 
+  melt("date") %>% 
+  mutate(type="24-hr mean") %>% 
+  rbind(p_hydro_drivers$forcing_acclim[[1]] %>%
+          filter(date >= start_date & date <= end_date ) %>%
+          select(date, ppfd, netrad, temp, vpd, fapar) %>% 
+          melt("date") %>% 
+          mutate(type="3-hr maxima")
+  ) %>% 
+  rbind(p_hydro_drivers$forcing_daytime_mean[[1]] %>%
+          filter(date >= start_date & date <= end_date ) %>%
+          select(date, ppfd, netrad, temp, vpd, fapar) %>% 
+          melt("date") %>% 
+          mutate(type="daytime means")
+  ) %>% 
+  ggplot(aes(y=value, x=date)) + 
+  geom_line(aes(group=type, col=type), alpha=0.5) + 
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free")
+
+
+start_date = "2011-06-01"
+end_date = "2015-06-03"
+
+p_hydro_validation$data[[1]] %>%
+  filter(date >= start_date & date <= end_date ) %>%
+  select(date, gpp, le) %>% 
+  melt("date") %>% 
+  mutate(type="24-hr mean") %>% 
+  rbind(p_hydro_validation$data_3hr_mean[[1]] %>%
+          filter(date >= start_date & date <= end_date ) %>%
+          select(date, gpp, le) %>% 
+          melt("date") %>% 
+          mutate(type="3-hr maxima")
+  ) %>% 
+  rbind(p_hydro_validation$data_daytime_mean[[1]] %>%
+          filter(date >= start_date & date <= end_date ) %>%
+          select(date, gpp, le) %>% 
+          melt("date") %>% 
+          mutate(type="daytime means")
+  ) %>% 
+  ggplot(aes(y=value, x=date)) + 
+  geom_line(aes(group=type, col=type), alpha=0.5) + 
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free")
+
+
+```
+
+
+## Model parameters and driver data
+
+```{r}
+params_modl <- list(
+  kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
+  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+  kphio_par_b        = 1.0,
+  soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
+  soilm_betao        = 0.0,
+  beta_unitcostratio = 146.0,
+  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+  tau_acclim         = 30.0,
+  kc_jmax            = 0.41
+)
+
+p_hydro_drivers$forcing[[1]] %>% 
+  dplyr::filter(lubridate::year(date) %in% 2007:2013) %>% 
+  melt("date") %>% 
+  ggplot(aes(y=value, x=as.Date(date))) +
+  geom_line(col="aquamarine4") +
+  geom_vline(xintercept = 25, col="pink") +
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free")
+
+
+load("../data/p_model_drivers.rda")
+p_model_drivers$forcing[[1]] %>% 
+  melt("date") %>% 
+  ggplot(aes(y=value, x=as.Date(date))) +
+  geom_line(col="aquamarine4") +
+  geom_vline(xintercept = 25, col="pink") +
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free")
+```
+
+## Model run
+
+```{r}
+output <- rsofun::runread_pmodel_f(
+  p_hydro_drivers,
+  par = params_modl
+)
+```
+
+## Validate
+
+```{r}
+output$data[[1]] %>% select(date, gpp, latenth) %>% 
+  rename(le = latenth) %>% 
+  melt("date") %>% 
+  mutate(group="model") %>% 
+  rbind(p_hydro_validation$data[[1]] %>% 
+          select(date, gpp, le) %>%
+          mutate(le = le) %>% 
+          melt("date") %>% 
+          mutate(group="obs")) %>% 
+  ggplot(aes(y=value, x=as.Date(date))) +
+  geom_line(aes(group=group, col=group), alpha=0.7) +
+  geom_vline(xintercept = 25, col="pink") +
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free", nrow = 2)
+```
+
+```{r}
+output$data[[1]] %>% select(-year_dec) %>% 
+  melt("date") %>% 
+  ggplot(aes(y=value, x=as.Date(date))) +
+  geom_line(col="aquamarine4") +
+  geom_vline(xintercept = 25, col="pink") +
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free")
+```
