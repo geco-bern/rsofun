@@ -14,7 +14,8 @@ contains
   subroutine pmodel_f(         &
     spinup,                    &   
     spinupyears,               &        
-    recycle,                   &    
+    recycle,                   &
+    use_phydro,                &    
     firstyeartrend,            &           
     nyeartrend,                &  
     secs_per_tstep,            &     
@@ -55,6 +56,7 @@ contains
     logical(kind=c_bool), intent(in) :: spinup
     integer(kind=c_int),  intent(in) :: spinupyears
     integer(kind=c_int),  intent(in) :: recycle
+    logical(kind=c_bool), intent(in) :: use_phydro
     integer(kind=c_int),  intent(in) :: firstyeartrend
     integer(kind=c_int),  intent(in) :: nyeartrend
     integer(kind=c_int),  intent(in) :: secs_per_tstep
@@ -87,6 +89,7 @@ contains
     myinterface%params_siml%do_spinup      = spinup
     myinterface%params_siml%spinupyears    = spinupyears
     myinterface%params_siml%recycle        = recycle
+    myinterface%params_siml%use_phydro     = use_phydro
     myinterface%params_siml%firstyeartrend = firstyeartrend
     myinterface%params_siml%nyeartrend     = nyeartrend
 

@@ -71,20 +71,13 @@ md_tile_pmodel.mod: tile_pmodel.mod.o
 md_gpp_pmodel.mod: gpp_pmodel.mod.o
 md_gpp_biomee.mod: gpp_biomee.mod.o
 md_photosynth.mod: photosynth_pmodel.mod.o
+md_photosynth_phydro.mod: photosynth_phydro.mod.o
 md_soiltemp.mod: soiltemp_sitch.mod.o
 md_vegdynamics_pmodel.mod: vegdynamics_pmodel.mod.o
 datatypes.mod: datatypes.o
 md_soil_biomee.mod: soil_biomee.o
 md_vegetation_biomee.mod: vegetation_biomee.o
-md_precision.mod: precision.o
-md_sofunutils_plus.mod: sofunutils_plus.o
-md_phydro_physical.mod: phydro_physical.o
-md_phydro_env.mod: phydro_env.o
-md_phydro_pm.mod: phydro_pm.o
-md_phydro_transpiration.mod: phydro_transpiration.o
-md_phydro_photosynthesis.mod: phydro_photosynthesis.o
-md_phydro_solver.mod: phydro_solver.o
-md_phydro_main.mod: phydro_main.o
+
 
 # Dependency of the C wrapper
 wrappersc.o: sofun_r_mod.mod

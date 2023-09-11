@@ -36,7 +36,8 @@ module md_gpp_pmodel
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
     calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
-  use md_photosynth_phydro, only: phydro_analytical, phydro_instantaneous_analytical
+  use md_photosynth_phydro, only: phydro_analytical, phydro_instantaneous_analytical, par_plant_type, par_cost_type, &
+    phydro_result_type, par_control_type, ET_DIFFUSION, ET_PM, GS_IGF, GS_APX
   implicit none
 
   private
@@ -73,7 +74,7 @@ module md_gpp_pmodel
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, init, in_ppfd)
+  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, init, in_ppfd, use_phydro)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -93,6 +94,7 @@ contains
     type(gridtype)      :: grid
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: in_ppfd                           ! whether to use PPFD from forcing or from SPLASH output
+    logical, intent(in) :: use_phydro                        ! whether to use P-Hydro for photosynthesis and transpiration
 
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
@@ -112,6 +114,12 @@ contains
 
     real, save :: tmin_memory     ! for low temperature stress
 
+    ! Phydro inputs and outputs
+    type(par_plant_type) :: par_plant
+    type(par_cost_type) :: par_cost
+    type(phydro_result_type) :: out_phydro_acclim, out_phydro_inst
+    type(par_control_type) :: options
+  
     ! xxx test
     real :: a_c, a_j, a_returned, fact_jmaxlim
     integer, save :: count
@@ -173,12 +181,14 @@ contains
       if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &      ! PFT is present
           grid%dayl > 0.0 .and.                    &      ! no arctic night
           temp_memory > -5.0 ) then                       ! minimum temp threshold to avoid fpe
-
+        
+            
         !================================================================
         ! P-model call to get acclimated quantities as a function of the
         ! damped climate forcing.
         !----------------------------------------------------------------
-        out_pmodel = pmodel(  &
+        if (.not. use_phydro) then
+          out_pmodel = pmodel(  &
                               kphio          = kphio_temp, &
                               beta           = params_gpp%beta, &
                               kc_jmax        = params_gpp%kc_jmax, &
@@ -191,7 +201,63 @@ contains
                               method_optci   = "prentice14", &
                               method_jmaxlim = "wang17" &
                               )
+        else
+          print *, "Using P-hydro"
+          par_cost = par_cost_type(0.1, 1)
+          par_plant = par_plant_type(0.5e-16, -1, 1)
+        
+          options%et_method = ET_DIFFUSION
+          options%gs_method = GS_IGF
+        
+          out_phydro_acclim = phydro_analytical(                &
+                            tc = dble(temp_memory),            &
+                            tg = dble(temp_memory),            &
+                            ppfd = dble(ppfd_memory)*1e6,          &
+                            netrad = dble(ppfd_memory)*1e6/2.0d0,      &
+                            vpd = dble(vpd_memory),            &
+                            co2 = dble(co2_memory),            &
+                            elv = 0.0d0,                     &
+                            fapar = dble(tile(lu)%canopy%fapar),                   &
+                            kphio = dble(kphio_temp),          &
+                            psi_soil = 0.d0,                &
+                            rdark = 0.015d0,               &
+                            vwind = 3.0d0,               &
+                            par_plant = par_plant,       &
+                            par_cost = par_cost,         &
+                            par_control = options        &
+                       )
+          
+          print *, temp_memory, ppfd_memory*1e6, kphio_temp, vpd_memory
+          print *, out_phydro_acclim%a, out_phydro_acclim%gs, out_phydro_acclim%dpsi
 
+          ! out_pmodel%gammastar        = out_phydro_acclim%gammastar
+          ! out_pmodel%kmm              = out_phydro_acclim%kmm
+          ! out_pmodel%ca               = 0.0d0
+          ! out_pmodel%ci               = out_phydro_acclim%ci
+          ! out_pmodel%chi              = out_phydro_acclim%chi
+          ! out_pmodel%xi               = 0.0d0
+          ! out_pmodel%iwue             = out_phydro_acclim%a / out_phydro_acclim%gs
+          ! out_pmodel%lue              = out_phydro_acclim%a / (ppfd_memory*1e6)
+          ! ! out_pmodel%gpp              = gpp
+          ! ! out_pmodel%vcmax            = vcmax
+          ! ! out_pmodel%jmax             = jmax
+          ! out_pmodel%vcmax25          = out_phydro_acclim%vcmax25
+          ! out_pmodel%jmax25           = out_phydro_acclim%jmax25
+          ! ! out_pmodel%vcmax_unitfapar  = vcmax_unitfapar
+          ! ! out_pmodel%vcmax_unitiabs   = vcmax_unitiabs
+          ! ! out_pmodel%ftemp_inst_vcmax = ftemp_inst_vcmax
+          ! ! out_pmodel%ftemp_inst_jmax    = ftemp_inst_jmax
+          ! ! out_pmodel%rd               = rd
+          ! ! out_pmodel%rd_unitfapar     = rd_unitfapar
+          ! ! out_pmodel%rd_unitiabs      = rd_unitiabs
+          ! out_pmodel%actnv            = 0.0d0
+          ! ! out_pmodel%actnv_unitfapar  = actnv_unitfapar
+          ! ! out_pmodel%actnv_unitiabs   = actnv_unitiabs
+          ! ! out_pmodel%gs_unitiabs      = gs_unitiabs
+          ! ! out_pmodel%gs_unitfapar     = gs_unitfapar
+          ! out_pmodel%gs_setpoint      = out_phydro_acclim%gs
+                   
+        end if
       else
 
         ! PFT is not present 
@@ -219,14 +285,20 @@ contains
       ! This still does a linear scaling of daily GPP - knowingly wrong
       ! but not too dangerous...
       !----------------------------------------------------------------
-      if( in_ppfd ) then
-        ! Take input daily PPFD (in mol/m^2)
-        tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
-          * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
-      else
-        ! Take daily PPFD generated by SPLASH (in mol/m^2/d)
-        tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
-          * tile_fluxes(lu)%canopy%ppfd_splash * out_pmodel%lue * soilmstress
+      if (.not. use_phydro) then
+        if( in_ppfd ) then
+          ! Take input daily PPFD (in mol/m^2)
+          tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
+            * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
+        else
+          ! Take daily PPFD generated by SPLASH (in mol/m^2/d)
+          tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
+            * tile_fluxes(lu)%canopy%ppfd_splash * out_pmodel%lue * soilmstress
+        end if
+      else ! Using phydro 
+          ! Take input daily PPFD (in mol/m^2)
+          tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid *  &
+            (out_phydro_acclim%a*1e-6) * myinterface%params_siml%secs_per_tstep 
       end if
 
       !----------------------------------------------------------------

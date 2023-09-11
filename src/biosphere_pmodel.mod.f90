@@ -139,7 +139,8 @@ contains
                   myinterface%vegcover(doy), &
                   myinterface%grid, &
                   init_daily, &
-                  myinterface%params_siml%in_ppfd &
+                  myinterface%params_siml%in_ppfd, &
+                  myinterface%params_siml%use_phydro &
                   )
 
         ! if (verbose) print*,'... done'

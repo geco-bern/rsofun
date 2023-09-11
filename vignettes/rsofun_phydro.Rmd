@@ -507,6 +507,8 @@ p_model_drivers$forcing[[1]] %>%
 ## Model run
 
 ```{r}
+p_hydro_drivers$params_siml[[1]]$use_phydro = T
+
 output <- rsofun::runread_pmodel_f(
   p_hydro_drivers,
   par = params_modl
@@ -522,6 +524,7 @@ output$data[[1]] %>% select(date, gpp, latenth) %>%
   mutate(group="model") %>% 
   rbind(p_hydro_validation$data[[1]] %>% 
           select(date, gpp, le) %>%
+          mutate(gpp = gpp*0.864/10) %>% # convert to mol m-2 day-1
           mutate(le = le) %>% 
           melt("date") %>% 
           mutate(group="obs")) %>% 

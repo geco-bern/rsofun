@@ -260,13 +260,15 @@ run_pmodel_f_bysite <- function(
       "spinup",
       "spinupyears",
       "recycle",
+      "use_phydro",
       "outdt",
       "ltre",
       "ltne",
       "ltnd",
       "lgr3",
       "lgn3",
-      "lgr4"
+      "lgr4",
+      "use_phydro"
     )
     
     parameter_integrity <- lapply(check_param, function(check_var){
@@ -346,6 +348,7 @@ run_pmodel_f_bysite <- function(
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),
+      use_phydro                = as.logical(params_siml$use_phydro),
       firstyeartrend            = as.integer(firstyeartrend_forcing),
       nyeartrend                = as.integer(nyeartrend_forcing),
       secs_per_tstep            = as.integer(secs_per_tstep),
