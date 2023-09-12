@@ -1321,9 +1321,9 @@ module md_photosynth_phydro
   ! -------------------------------------------------------------
   ! Functions: Phydro main
   !--------------------------------------------------------------
-  function phydro_analytical(tc, tg, ppfd, netrad, vpd, co2, elv, fapar, kphio, psi_soil, rdark, vwind, &
+  function phydro_analytical(tc, tg, ppfd, netrad, vpd, co2, pa, fapar, kphio, psi_soil, rdark, vwind, &
                              par_plant, par_cost, par_control) result(res)
-    real(kind=dbl8), intent(in) :: tc, tg, ppfd, netrad, vpd, co2, elv, fapar, kphio, psi_soil, rdark, vwind
+    real(kind=dbl8), intent(in) :: tc, tg, ppfd, netrad, vpd, co2, pa, fapar, kphio, psi_soil, rdark, vwind
     type(par_plant_type), intent(in) :: par_plant
     type(par_cost_type), intent(inout) :: par_cost
     type(par_control_type), intent(in) :: par_control
@@ -1331,10 +1331,10 @@ module md_photosynth_phydro
     type(par_photosynth_type) :: par_photosynth
     type(phydro_result_type) :: res
 
-    real(kind=dbl8) :: pa, e, gs, gsprime, x, J, jmax, vcmax, a, dpsi_opt
+    real(kind=dbl8) :: e, gs, gsprime, x, J, jmax, vcmax, a, dpsi_opt
     type(dpsi_bounds_type) :: bounds
   
-    pa = calc_patm(real(elv))
+    !pa = calc_patm(real(elv))
     call create_par_photosynth(par_photosynth, tc, pa, kphio, co2, ppfd, fapar, rdark, tg, par_plant%tchome, &
                                par_control%ftemp_vj_method, par_control%ftemp_rd_method, par_control%ftemp_br_method)
     call create_par_env(par_env, tc, pa, vpd, netrad, vwind)
@@ -1390,20 +1390,20 @@ module md_photosynth_phydro
 
   end function phydro_analytical
   
-  function phydro_instantaneous_analytical(vcmax25, jmax25, tc, tg, ppfd, netrad, vpd, co2, elv, &
+  function phydro_instantaneous_analytical(vcmax25, jmax25, tc, tg, ppfd, netrad, vpd, co2, pa, &
                                            fapar, kphio, psi_soil, rdark, vwind, par_plant, par_cost, par_control) result(res)
-    real(kind=dbl8), intent(in) :: vcmax25, jmax25, tc, tg, ppfd, netrad, vpd, co2, elv, fapar, kphio, psi_soil, rdark, vwind
+    real(kind=dbl8), intent(in) :: vcmax25, jmax25, tc, tg, ppfd, netrad, vpd, co2, pa, fapar, kphio, psi_soil, rdark, vwind
     type(par_plant_type), intent(in) :: par_plant
     type(par_cost_type), intent(inout) :: par_cost
     type(par_control_type), intent(in) :: par_control
     type(par_env_type) :: par_env
     type(par_photosynth_type) :: par_photosynth
     type(phydro_result_type) :: res
-    real(kind=dbl8) :: pa, e, gs
+    real(kind=dbl8) :: e, gs
     real(kind=dbl8) :: bound, jmax, vcmax, dpsi_opt
     type(ACi_type) :: Aa, Ac, Aj
     
-    pa = calc_patm(real(elv))
+    !pa = calc_patm(real(elv))
     call create_par_photosynth(par_photosynth, tc, pa, kphio, co2, ppfd, fapar, rdark, tg, par_plant%tchome, &
                                par_control%ftemp_vj_method, par_control%ftemp_rd_method, par_control%ftemp_br_method)
     call create_par_env(par_env, tc, pa, vpd, netrad, vwind)

@@ -584,4 +584,3 @@ output_ph$data[[1]] %>% select(-year_dec) %>%
   facet_wrap(~variable, scales = "free")
 ```
 
-

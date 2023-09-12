@@ -216,7 +216,7 @@ contains
                             netrad = dble(ppfd_memory)*1e6/2.0d0*2.0d0, &
                             vpd = dble(vpd_memory), &
                             co2 = dble(co2_memory), &
-                            elv = 0.0d0, &
+                            pa = dble(patm_memory), &
                             fapar = dble(tile(lu)%canopy%fapar), &
                             kphio = dble(kphio_temp), &
                             psi_soil = 0.d0, &
@@ -278,7 +278,7 @@ contains
                             netrad = dble(climate%dppfd)*1e6/2.0d0, &
                             vpd = dble(climate%dvpd), &
                             co2 = dble(co2), &
-                            elv = 0.0d0, &
+                            pa = dble(climate%dpatm), &
                             fapar = dble(tile(lu)%canopy%fapar), &
                             kphio = dble(kphio_temp), &
                             psi_soil = 0.d0, &
