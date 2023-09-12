@@ -155,6 +155,12 @@ contains
 
     tk = climate_acclimation%dtemp + kTkelvin
 
+    par_cost = par_cost_type(0.1, 1)
+    par_plant = par_plant_type(0.5e-16, -1, 1)
+  
+    options%et_method = ET_DIFFUSION
+    options%gs_method = GS_IGF
+
 
     pftloop: do pft=1,npft
       
@@ -203,17 +209,11 @@ contains
                               )
         else
           ! print *, "Using P-hydro"
-          par_cost = par_cost_type(0.1, 1)
-          par_plant = par_plant_type(0.5e-16, -1, 1)
-        
-          options%et_method = ET_DIFFUSION
-          options%gs_method = GS_IGF
-        
           out_phydro_acclim = phydro_analytical( &
                             tc = dble(temp_memory), &
                             tg = dble(temp_memory), &
-                            ppfd = dble(ppfd_memory)*1e6, &
-                            netrad = dble(ppfd_memory)*1e6/2.0d0, &
+                            ppfd = dble(ppfd_memory)*1e6*2.0d0, &
+                            netrad = dble(ppfd_memory)*1e6/2.0d0*2.0d0, &
                             vpd = dble(vpd_memory), &
                             co2 = dble(co2_memory), &
                             elv = 0.0d0, &
@@ -290,7 +290,7 @@ contains
                           )  
 
         tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid *  &
-          (out_phydro_inst%a*1e-6) * myinterface%params_siml%secs_per_tstep 
+          (out_phydro_inst%a*1e-6*12) * myinterface%params_siml%secs_per_tstep 
       end if
 
       !----------------------------------------------------------------

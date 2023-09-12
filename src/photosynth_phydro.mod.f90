@@ -591,8 +591,10 @@ module md_photosynth_phydro
     D = (par_env%vpd / par_env%patm)
 
     if (par_env%et_method == ET_DIFFUSION) then
+        ! print *, "Using diffusion ET"
         gs = Q / (1.6d0 * D)
     else if (par_env%et_method == ET_PM) then
+        ! print *, "Using PM ET"
         ga = calc_g_aero(par_plant%h_canopy, dble(par_env%v_wind), par_plant%h_wind_measurement)
         gs = calc_gs_pm(Q, ga, par_env)
     else
@@ -977,7 +979,11 @@ module md_photosynth_phydro
   function QUADM(A, B, C)
     real(kind=dbl8) :: QUADM
     real(kind=dbl8), intent(in) :: A, B, C
-    QUADM = (-B - sqrt(B*B - 4.0d0*A*C)) / (2.0d0*A)
+    if (A == 0) then
+      QUADM = -C/B
+    else 
+      QUADM = (-B - sqrt(B*B - 4.0d0*A*C)) / (2.0d0*A)
+    end if
   end function QUADM
 
   function QUADP(A, B, C)
@@ -1022,7 +1028,7 @@ module md_photosynth_phydro
 
     ca = par_photosynth%ca
     gs = gs * 1.0d6 / par_photosynth%patm
-    gs = gs + 1.0d-12
+    gs = gs !+ 1.0d-12
     d = par_photosynth%delta
 
     phi0iabs = par_photosynth%phi0 * par_photosynth%Iabs

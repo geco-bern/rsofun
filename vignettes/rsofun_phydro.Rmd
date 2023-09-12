@@ -487,7 +487,6 @@ p_hydro_drivers$forcing[[1]] %>%
   melt("date") %>% 
   ggplot(aes(y=value, x=as.Date(date))) +
   geom_line(col="aquamarine4") +
-  geom_vline(xintercept = 25, col="pink") +
   theme_classic() +
   theme(strip.background = element_rect(color = "white", size = 1))+
   facet_wrap(~variable, scales = "free")
@@ -499,7 +498,6 @@ p_model_drivers$forcing[[1]] %>%
   melt("date") %>% 
   ggplot(aes(y=value, x=as.Date(date))) +
   geom_line(col="aquamarine4") +
-  geom_vline(xintercept = 25, col="pink") +
   theme_classic() +
   theme(strip.background = element_rect(color = "white", size = 1))+
   facet_wrap(~variable, scales = "free")
@@ -507,43 +505,83 @@ p_model_drivers$forcing[[1]] %>%
 
 ## Model run
 
-```{r}
-p_hydro_drivers$params_siml[[1]]$use_phydro = T
+### P-model run
 
-output <- rsofun::runread_pmodel_f(
+```{r}
+p_hydro_drivers$params_siml[[1]]$use_phydro = F
+
+output_p <- rsofun::runread_pmodel_f(
   p_hydro_drivers,
   par = params_modl
 )
 ```
 
-## Validate
+## P-model Validation
 
 ```{r}
-output$data[[1]] %>% select(date, gpp, latenth) %>% 
+output_p$data[[1]] %>% select(date, gpp, latenth) %>% 
   rename(le = latenth) %>% 
   melt("date") %>% 
   mutate(group="model") %>% 
   rbind(p_hydro_validation$data[[1]] %>% 
           select(date, gpp, le) %>%
-          mutate(gpp = gpp*86400/1e6) %>% # convert to mol m-2 day-1
-          mutate(le = le) %>% 
+          mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
+          mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
           melt("date") %>% 
           mutate(group="obs")) %>% 
   ggplot(aes(y=value, x=as.Date(date))) +
   geom_line(aes(group=group, col=group), alpha=0.7) +
-  geom_vline(xintercept = 25, col="pink") +
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free", nrow = 2)
+```
+
+### P-hydro run
+
+```{r}
+p_hydro_drivers$params_siml[[1]]$use_phydro = T
+
+output_ph <- rsofun::runread_pmodel_f(
+  p_hydro_drivers,
+  par = params_modl
+)
+```
+
+### P-hydro Validation
+
+```{r}
+output_ph$data[[1]] %>% select(date, gpp, latenth) %>% 
+  rename(le = latenth) %>% 
+  melt("date") %>% 
+  mutate(group="model") %>% 
+  rbind(p_hydro_validation$data[[1]] %>% 
+          select(date, gpp, le) %>%
+          mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
+          mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
+          melt("date") %>% 
+          mutate(group="obs")) %>% 
+  ggplot(aes(y=value, x=as.Date(date))) +
+  geom_line(aes(group=group, col=group), alpha=0.7) +
   theme_classic() +
   theme(strip.background = element_rect(color = "white", size = 1))+
   facet_wrap(~variable, scales = "free", nrow = 2)
 ```
 
 ```{r}
-output$data[[1]] %>% select(-year_dec) %>% 
+output_ph$data[[1]] %>% select(-year_dec) %>% 
   melt("date") %>% 
-  ggplot(aes(y=value, x=as.Date(date))) +
-  geom_line(col="aquamarine4") +
-  geom_vline(xintercept = 25, col="pink") +
+  mutate(model = "phydro") %>%
+  rbind(
+    output_p$data[[1]] %>% select(-year_dec) %>% 
+    melt("date") %>% 
+    mutate(model = "pmodel")
+  ) %>% 
+  filter(!is.infinite(value)) %>% 
+  ggplot(aes(y=value, x=as.Date(date), group=model, col=model)) +
+  geom_line(alpha=0.5) +
   theme_classic() +
   theme(strip.background = element_rect(color = "white", size = 1))+
   facet_wrap(~variable, scales = "free")
 ```
+
+
