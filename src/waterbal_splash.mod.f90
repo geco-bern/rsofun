@@ -307,7 +307,7 @@ contains
   
   end subroutine solar
 
-
+  ! JAIDEEP FIXME: I would suggest you pull this function out into biosphere_pmodel.f90, and leave the water balance module to just perform balance
   subroutine calc_et( tile_fluxes, grid, climate, sw )
     !/////////////////////////////////////////////////////////////////////////
     !
@@ -346,13 +346,16 @@ contains
     gamma = psychro( climate%dtemp, calc_patm( grid%elv ) )
     
     ! Eq. 51, SPLASH 2.0 Documentation
-    ! out_evap%econ = 1.0 / ( lv * rho_water ) ! this is to convert energy into mass (water)
-    tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma)) ! MORE PRECISELY - this is to convert energy into mass (water)
+    ! tile_fluxes%canopy%econ = 1.0 / ( lv * rho_water ) ! this is to convert energy into mass (water) - JAIDEEP: This is correct. J m-2 s-1 x (kg-1 m3) x (J-1 kg) = m3 m-2 s-1 = m s-1
+    
+    ! JAIDEEP: If it's just conversion from mass to energy, the above formula is correct. This already has the Priestly Taylor factor (s/(s+y)) built in, so this 
+    ! should not be used for mere conversion. I would suggest you use just the factor s/(s+y) separately in the respective equations for clarity.
+    tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma)) ! MORE PRECISELY - this is to convert energy into mass (water). .
 
     !---------------------------------------------------------
     ! Daily condensation, mm d-1
     !---------------------------------------------------------
-    tile_fluxes%canopy%dcn = 1000.0 * tile_fluxes%canopy%econ * abs(tile_fluxes%canopy%drnn)
+    tile_fluxes%canopy%dcn = 1000.0 * tile_fluxes%canopy%econ * abs(tile_fluxes%canopy%drnn) ! Jaideep: Why abs here? drnn must be negative (emitted from earth) for condensation right? 
 
     !---------------------------------------------------------
     ! 17. Estimate daily EET, mm d-1
@@ -365,7 +368,7 @@ contains
     !---------------------------------------------------------
     ! Eq. 72, SPLASH 2.0 Documentation
     tile_fluxes%canopy%dpet   = ( 1.0 + kw ) * tile_fluxes%canopy%deet
-    tile_fluxes%canopy%dpet_e = tile_fluxes%canopy%dpet / (tile_fluxes%canopy%econ * 1000)
+    tile_fluxes%canopy%dpet_e = tile_fluxes%canopy%dpet / (tile_fluxes%canopy%econ * 1000) ! JAIDEEP FIXME: Oops! This is a case where you should use a simple mass-energy conversion, not econ
     
     !---------------------------------------------------------
     ! 19. Calculate variable substitute (rx), (mm/hr)/(W/m^2)
@@ -393,7 +396,7 @@ contains
     ! Eq. 81, SPLASH 2.0 Documentation
     tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
       radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
-    tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)
+    tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)  ! JAIDEEP FIXME: Oops! This is a case where you should use a simple mass-energy conversion, not econ
 
     ! print*,'in waterbal: sw, hi, rx, rw, rv, hn, hi, ru ', sw, hi, rx, rw, rv, hn, hi, ru
     
