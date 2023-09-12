@@ -111,6 +111,7 @@ contains
     real, save :: temp_memory
     real, save :: patm_memory
     real, save :: ppfd_memory
+    real, save :: netrad_memory
 
     real, save :: tmin_memory     ! for low temperature stress
 
@@ -143,15 +144,17 @@ contains
       vpd_memory  = climate_acclimation%dvpd
       patm_memory = climate_acclimation%dpatm
       ppfd_memory = climate_acclimation%dppfd
+      netrad_memory = climate_acclimation%dnetrad
     end if 
 
     count = count + 1
 
-    co2_memory  = dampen_variability( co2,                       params_gpp%tau_acclim, co2_memory  )
-    temp_memory = dampen_variability( climate_acclimation%dtemp, params_gpp%tau_acclim, temp_memory )
-    vpd_memory  = dampen_variability( climate_acclimation%dvpd,  params_gpp%tau_acclim, vpd_memory  )
-    patm_memory = dampen_variability( climate_acclimation%dpatm, params_gpp%tau_acclim, patm_memory )
-    ppfd_memory = dampen_variability( climate_acclimation%dppfd, params_gpp%tau_acclim, ppfd_memory )
+    co2_memory    = dampen_variability( co2,                         params_gpp%tau_acclim, co2_memory    )
+    temp_memory   = dampen_variability( climate_acclimation%dtemp,   params_gpp%tau_acclim, temp_memory   )
+    vpd_memory    = dampen_variability( climate_acclimation%dvpd,    params_gpp%tau_acclim, vpd_memory    )
+    patm_memory   = dampen_variability( climate_acclimation%dpatm,   params_gpp%tau_acclim, patm_memory   )
+    ppfd_memory   = dampen_variability( climate_acclimation%dppfd,   params_gpp%tau_acclim, ppfd_memory   )
+    netrad_memory = dampen_variability( climate_acclimation%dnetrad, params_gpp%tau_acclim, netrad_memory )
 
     tk = climate_acclimation%dtemp + kTkelvin
 
@@ -213,7 +216,7 @@ contains
                             tc = dble(temp_memory), &
                             tg = dble(temp_memory), &
                             ppfd = dble(ppfd_memory)*1e6*2.0d0, &
-                            netrad = dble(ppfd_memory)*1e6/2.0d0*2.0d0, &
+                            netrad = dble(netrad_memory), &
                             vpd = dble(vpd_memory), &
                             co2 = dble(co2_memory), &
                             pa = dble(patm_memory), &
@@ -259,7 +262,7 @@ contains
       !----------------------------------------------------------------
       if (.not. use_phydro) then
         if( in_ppfd ) then
-          print *, "Using in_ppfd"
+          ! print *, "Using in_ppfd"
           ! Take input daily PPFD (in mol/m^2)
           tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
             * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
@@ -275,7 +278,7 @@ contains
                             tc = dble(climate%dtemp), &
                             tg = dble(temp_memory), &
                             ppfd = dble(climate%dppfd)*1e6, &
-                            netrad = dble(climate%dppfd)*1e6/2.0d0, &
+                            netrad = dble(netrad_memory), &
                             vpd = dble(climate%dvpd), &
                             co2 = dble(co2), &
                             pa = dble(climate%dpatm), &
@@ -290,7 +293,7 @@ contains
                           )  
 
         tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid *  &
-          (out_phydro_inst%a*1e-6*12) * myinterface%params_siml%secs_per_tstep 
+          (out_phydro_inst%a*1e-6*c_molmass) * myinterface%params_siml%secs_per_tstep 
       end if
 
       !----------------------------------------------------------------
@@ -320,14 +323,14 @@ contains
         tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%vcmax25
         tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax(  climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%jmax25
       else
-        tile_fluxes(lu)%plant(pft)%vcmax25 = out_phydro_inst%vcmax25
-        tile_fluxes(lu)%plant(pft)%jmax25  = out_phydro_inst%jmax25
+        tile_fluxes(lu)%plant(pft)%vcmax25 = out_phydro_acclim%vcmax25 * 1e-6
+        tile_fluxes(lu)%plant(pft)%jmax25  = out_phydro_acclim%jmax25 * 1e-6
         tile_fluxes(lu)%plant(pft)%chi     = out_phydro_inst%chi
-        tile_fluxes(lu)%plant(pft)%iwue    = out_phydro_inst%a / out_phydro_inst%gs
+        tile_fluxes(lu)%plant(pft)%iwue    = out_phydro_inst%a *1e-6 / out_phydro_inst%gs
 
         ! quantities with instantaneous temperature response
-        tile_fluxes(lu)%plant(pft)%vcmax = out_phydro_inst%vcmax
-        tile_fluxes(lu)%plant(pft)%jmax  = out_phydro_inst%jmax
+        tile_fluxes(lu)%plant(pft)%vcmax = out_phydro_inst%vcmax * 1e-6
+        tile_fluxes(lu)%plant(pft)%jmax  = out_phydro_inst%jmax * 1e-6
       end if
       
       !----------------------------------------------------------------
