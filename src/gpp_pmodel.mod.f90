@@ -74,7 +74,7 @@ module md_gpp_pmodel
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, init, in_ppfd, use_phydro)
+  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, init, in_ppfd, use_phydro, use_pml)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -95,6 +95,7 @@ contains
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: in_ppfd                           ! whether to use PPFD from forcing or from SPLASH output
     logical, intent(in) :: use_phydro                        ! whether to use P-Hydro for photosynthesis and transpiration
+    logical, intent(in) :: use_pml                           ! whether to use PML formulation for ET within Phydro
 
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
@@ -160,9 +161,15 @@ contains
     tk = climate_acclimation%dtemp + kTkelvin
 
     par_cost = par_cost_type(0.1, 1)
-    par_plant = par_plant_type(0.5e-16, -1, 1)
+    par_plant = par_plant_type(0.3e-16, -1, 1)
   
-    options%et_method = ET_DIFFUSION
+    if (use_pml) then
+      options%et_method = ET_PM
+    else 
+      options%et_method = ET_DIFFUSION
+    end if 
+    ! print *, options%et_method
+
     options%gs_method = GS_IGF
 
 

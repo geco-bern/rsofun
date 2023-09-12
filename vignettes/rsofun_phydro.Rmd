@@ -509,6 +509,7 @@ p_model_drivers$forcing[[1]] %>%
 
 ```{r}
 p_hydro_drivers$params_siml[[1]]$use_phydro = F
+p_hydro_drivers$params_siml[[1]]$use_pml = F
 
 output_p <- rsofun::runread_pmodel_f(
   p_hydro_drivers,
@@ -516,7 +517,7 @@ output_p <- rsofun::runread_pmodel_f(
 )
 ```
 
-## P-model Validation
+### P-model Validation
 
 ```{r}
 output_p$data[[1]] %>% select(date, gpp, latenth) %>% 
@@ -540,6 +541,8 @@ output_p$data[[1]] %>% select(date, gpp, latenth) %>%
 
 ```{r}
 p_hydro_drivers$params_siml[[1]]$use_phydro = T
+p_hydro_drivers$params_siml[[1]]$use_pml = F
+
 p_hydro_drivers$forcing[[1]]$netrad[is.na(p_hydro_drivers$forcing[[1]]$netrad)] = 0
 
 output_ph <- rsofun::runread_pmodel_f(
@@ -568,6 +571,38 @@ output_ph$data[[1]] %>% select(date, gpp, latenth) %>%
   facet_wrap(~variable, scales = "free", nrow = 2)
 ```
 
+### P-hydro run (with PM ET)
+
+```{r}
+p_hydro_drivers$params_siml[[1]]$use_phydro = T
+p_hydro_drivers$params_siml[[1]]$use_pml = T
+
+output_ph_pm <- rsofun::runread_pmodel_f(
+  p_hydro_drivers,
+  par = params_modl
+)
+```
+
+### P-hydro Validation (with PM ET)
+
+```{r}
+output_ph_pm$data[[1]] %>% select(date, gpp, latenth) %>% 
+  rename(le = latenth) %>% 
+  melt("date") %>% 
+  mutate(group="model") %>% 
+  rbind(p_hydro_validation$data[[1]] %>% 
+          select(date, gpp, le) %>%
+          mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
+          mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
+          melt("date") %>% 
+          mutate(group="obs")) %>% 
+  ggplot(aes(y=value, x=as.Date(date))) +
+  geom_line(aes(group=group, col=group), alpha=0.7) +
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free", nrow = 2)
+```
+
 ```{r}
 output_ph$data[[1]] %>% select(-year_dec) %>% 
   melt("date") %>% 
@@ -576,6 +611,22 @@ output_ph$data[[1]] %>% select(-year_dec) %>%
     output_p$data[[1]] %>% select(-year_dec) %>% 
     melt("date") %>% 
     mutate(model = "pmodel")
+  ) %>% 
+  filter(!is.infinite(value)) %>% 
+  ggplot(aes(y=value, x=as.Date(date), group=model, col=model)) +
+  geom_line(alpha=0.5) +
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free")
+
+
+output_ph_pm$data[[1]] %>% select(-year_dec) %>% 
+  melt("date") %>% 
+  mutate(model = "phydro_pm") %>%
+  rbind(
+    output_ph$data[[1]] %>% select(-year_dec) %>% 
+    melt("date") %>% 
+    mutate(model = "phydro_diff")
   ) %>% 
   filter(!is.infinite(value)) %>% 
   ggplot(aes(y=value, x=as.Date(date), group=model, col=model)) +

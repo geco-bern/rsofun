@@ -132,6 +132,7 @@ contains
         ! calculate GPP
         !----------------------------------------------------------------
         ! if (verbose) print*,'calling gpp() ... '
+        ! print *, "Using pml: ", myinterface%params_siml%use_pml
         call gpp( tile(:), &
                   tile_fluxes(:), &
                   myinterface%pco2, &
@@ -140,7 +141,8 @@ contains
                   myinterface%grid, &
                   init_daily, &
                   myinterface%params_siml%in_ppfd, &
-                  myinterface%params_siml%use_phydro &
+                  myinterface%params_siml%use_phydro, &
+                  myinterface%params_siml%use_pml &
                   )
 
         ! if (verbose) print*,'... done'

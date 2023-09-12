@@ -14,6 +14,7 @@ void F77_NAME(pmodel_f)(
     int    *spinupyears,
     int    *recycle,
     int    *use_phydro,
+    int    *use_pml,
     int    *firstyeartrend,
     int    *nyeartrend,
     int    *secs_per_tstep,
@@ -43,6 +44,7 @@ extern SEXP pmodel_f_C(
     SEXP spinupyears,
     SEXP recycle,
     SEXP use_phydro,
+    SEXP use_pml,
     SEXP firstyeartrend,
     SEXP nyeartrend,
     SEXP secs_per_tstep,
@@ -78,6 +80,7 @@ extern SEXP pmodel_f_C(
         INTEGER(spinupyears),
         INTEGER(recycle),
         LOGICAL(use_phydro),
+        LOGICAL(use_pml),
         INTEGER(firstyeartrend),
         INTEGER(nyeartrend),
         INTEGER(secs_per_tstep),
@@ -521,7 +524,7 @@ extern SEXP biomee_f_C(
 // Declarations for all functions
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
-  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   24},  // Specify number of arguments to C wrapper as the last number here
+  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   25},  // Specify number of arguments to C wrapper as the last number here
   {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };

@@ -16,6 +16,7 @@ contains
     spinupyears,               &        
     recycle,                   &
     use_phydro,                &    
+    use_pml,                &    
     firstyeartrend,            &           
     nyeartrend,                &  
     secs_per_tstep,            &     
@@ -57,6 +58,7 @@ contains
     integer(kind=c_int),  intent(in) :: spinupyears
     integer(kind=c_int),  intent(in) :: recycle
     logical(kind=c_bool), intent(in) :: use_phydro
+    logical(kind=c_bool), intent(in) :: use_pml
     integer(kind=c_int),  intent(in) :: firstyeartrend
     integer(kind=c_int),  intent(in) :: nyeartrend
     integer(kind=c_int),  intent(in) :: secs_per_tstep
@@ -90,6 +92,7 @@ contains
     myinterface%params_siml%spinupyears    = spinupyears
     myinterface%params_siml%recycle        = recycle
     myinterface%params_siml%use_phydro     = use_phydro
+    myinterface%params_siml%use_pml        = use_pml
     myinterface%params_siml%firstyeartrend = firstyeartrend
     myinterface%params_siml%nyeartrend     = nyeartrend
 
