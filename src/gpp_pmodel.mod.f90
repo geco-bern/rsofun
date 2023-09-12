@@ -202,61 +202,33 @@ contains
                               method_jmaxlim = "wang17" &
                               )
         else
-          print *, "Using P-hydro"
+          ! print *, "Using P-hydro"
           par_cost = par_cost_type(0.1, 1)
           par_plant = par_plant_type(0.5e-16, -1, 1)
         
           options%et_method = ET_DIFFUSION
           options%gs_method = GS_IGF
         
-          out_phydro_acclim = phydro_analytical(                &
-                            tc = dble(temp_memory),            &
-                            tg = dble(temp_memory),            &
-                            ppfd = dble(ppfd_memory)*1e6,          &
-                            netrad = dble(ppfd_memory)*1e6/2.0d0,      &
-                            vpd = dble(vpd_memory),            &
-                            co2 = dble(co2_memory),            &
-                            elv = 0.0d0,                     &
-                            fapar = dble(tile(lu)%canopy%fapar),                   &
-                            kphio = dble(kphio_temp),          &
-                            psi_soil = 0.d0,                &
-                            rdark = 0.015d0,               &
-                            vwind = 3.0d0,               &
-                            par_plant = par_plant,       &
-                            par_cost = par_cost,         &
-                            par_control = options        &
+          out_phydro_acclim = phydro_analytical( &
+                            tc = dble(temp_memory), &
+                            tg = dble(temp_memory), &
+                            ppfd = dble(ppfd_memory)*1e6, &
+                            netrad = dble(ppfd_memory)*1e6/2.0d0, &
+                            vpd = dble(vpd_memory), &
+                            co2 = dble(co2_memory), &
+                            elv = 0.0d0, &
+                            fapar = dble(tile(lu)%canopy%fapar), &
+                            kphio = dble(kphio_temp), &
+                            psi_soil = 0.d0, &
+                            rdark = dble(params_gpp%rd_to_vcmax), &
+                            vwind = 3.0d0, &
+                            par_plant = par_plant, &
+                            par_cost = par_cost, &
+                            par_control = options &
                        )
           
-          print *, temp_memory, ppfd_memory*1e6, kphio_temp, vpd_memory
-          print *, out_phydro_acclim%a, out_phydro_acclim%gs, out_phydro_acclim%dpsi
-
-          ! out_pmodel%gammastar        = out_phydro_acclim%gammastar
-          ! out_pmodel%kmm              = out_phydro_acclim%kmm
-          ! out_pmodel%ca               = 0.0d0
-          ! out_pmodel%ci               = out_phydro_acclim%ci
-          ! out_pmodel%chi              = out_phydro_acclim%chi
-          ! out_pmodel%xi               = 0.0d0
-          ! out_pmodel%iwue             = out_phydro_acclim%a / out_phydro_acclim%gs
-          ! out_pmodel%lue              = out_phydro_acclim%a / (ppfd_memory*1e6)
-          ! ! out_pmodel%gpp              = gpp
-          ! ! out_pmodel%vcmax            = vcmax
-          ! ! out_pmodel%jmax             = jmax
-          ! out_pmodel%vcmax25          = out_phydro_acclim%vcmax25
-          ! out_pmodel%jmax25           = out_phydro_acclim%jmax25
-          ! ! out_pmodel%vcmax_unitfapar  = vcmax_unitfapar
-          ! ! out_pmodel%vcmax_unitiabs   = vcmax_unitiabs
-          ! ! out_pmodel%ftemp_inst_vcmax = ftemp_inst_vcmax
-          ! ! out_pmodel%ftemp_inst_jmax    = ftemp_inst_jmax
-          ! ! out_pmodel%rd               = rd
-          ! ! out_pmodel%rd_unitfapar     = rd_unitfapar
-          ! ! out_pmodel%rd_unitiabs      = rd_unitiabs
-          ! out_pmodel%actnv            = 0.0d0
-          ! ! out_pmodel%actnv_unitfapar  = actnv_unitfapar
-          ! ! out_pmodel%actnv_unitiabs   = actnv_unitiabs
-          ! ! out_pmodel%gs_unitiabs      = gs_unitiabs
-          ! ! out_pmodel%gs_unitfapar     = gs_unitfapar
-          ! out_pmodel%gs_setpoint      = out_phydro_acclim%gs
-                   
+          ! print *, temp_memory, ppfd_memory*1e6, kphio_temp, vpd_memory
+          ! print *, out_phydro_acclim%a, out_phydro_acclim%gs, out_phydro_acclim%dpsi                  
         end if
       else
 
@@ -287,6 +259,7 @@ contains
       !----------------------------------------------------------------
       if (.not. use_phydro) then
         if( in_ppfd ) then
+          print *, "Using in_ppfd"
           ! Take input daily PPFD (in mol/m^2)
           tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
             * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
@@ -295,36 +268,81 @@ contains
           tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
             * tile_fluxes(lu)%canopy%ppfd_splash * out_pmodel%lue * soilmstress
         end if
-      else ! Using phydro 
-          ! Take input daily PPFD (in mol/m^2)
-          tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid *  &
-            (out_phydro_acclim%a*1e-6) * myinterface%params_siml%secs_per_tstep 
+      else ! Using phydro - run instantaneous model
+        out_phydro_inst = phydro_instantaneous_analytical( &
+                            vcmax25 = out_phydro_acclim%vcmax25, &
+                            jmax25 = out_phydro_acclim%jmax25, &
+                            tc = dble(climate%dtemp), &
+                            tg = dble(temp_memory), &
+                            ppfd = dble(climate%dppfd)*1e6, &
+                            netrad = dble(climate%dppfd)*1e6/2.0d0, &
+                            vpd = dble(climate%dvpd), &
+                            co2 = dble(co2), &
+                            elv = 0.0d0, &
+                            fapar = dble(tile(lu)%canopy%fapar), &
+                            kphio = dble(kphio_temp), &
+                            psi_soil = 0.d0, &
+                            rdark = dble(params_gpp%rd_to_vcmax), &
+                            vwind = 3.0d0, &
+                            par_plant = par_plant, &
+                            par_cost = par_cost, &
+                            par_control = options &
+                          )  
+
+        tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid *  &
+          (out_phydro_inst%a*1e-6) * myinterface%params_siml%secs_per_tstep 
       end if
 
       !----------------------------------------------------------------
       ! Dark respiration
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
-        * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( climate%dtemp ) * c_molmass &
-        * myinterface%params_siml%secs_per_tstep
+      if (.not. use_phydro) then
+        tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
+          * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( climate%dtemp ) * c_molmass &
+          * myinterface%params_siml%secs_per_tstep
+      else 
+        tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid &
+          * out_phydro_inst%rd * c_molmass &
+          * myinterface%params_siml%secs_per_tstep
+      end if 
 
       !----------------------------------------------------------------
       ! Vcmax and Jmax
       !----------------------------------------------------------------
       ! acclimated quantities
-      tile_fluxes(lu)%plant(pft)%vcmax25 = out_pmodel%vcmax25
-      tile_fluxes(lu)%plant(pft)%jmax25  = out_pmodel%jmax25
-      tile_fluxes(lu)%plant(pft)%chi     = out_pmodel%chi
-      tile_fluxes(lu)%plant(pft)%iwue    = out_pmodel%iwue
+      if (.not. use_phydro) then
+        tile_fluxes(lu)%plant(pft)%vcmax25 = out_pmodel%vcmax25
+        tile_fluxes(lu)%plant(pft)%jmax25  = out_pmodel%jmax25
+        tile_fluxes(lu)%plant(pft)%chi     = out_pmodel%chi
+        tile_fluxes(lu)%plant(pft)%iwue    = out_pmodel%iwue
 
-      ! quantities with instantaneous temperature response
-      tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%vcmax25
-      tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax(  climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%jmax25
+        ! quantities with instantaneous temperature response
+        tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%vcmax25
+        tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax(  climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%jmax25
+      else
+        tile_fluxes(lu)%plant(pft)%vcmax25 = out_phydro_inst%vcmax25
+        tile_fluxes(lu)%plant(pft)%jmax25  = out_phydro_inst%jmax25
+        tile_fluxes(lu)%plant(pft)%chi     = out_phydro_inst%chi
+        tile_fluxes(lu)%plant(pft)%iwue    = out_phydro_inst%a / out_phydro_inst%gs
 
+        ! quantities with instantaneous temperature response
+        tile_fluxes(lu)%plant(pft)%vcmax = out_phydro_inst%vcmax
+        tile_fluxes(lu)%plant(pft)%jmax  = out_phydro_inst%jmax
+      end if
+      
       !----------------------------------------------------------------
       ! Stomatal conductance
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint
+      if (.not. use_phydro) then
+        tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint
+      else 
+        tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs
+      end if
+
+      !-----------------------------------------------------------------
+      ! ET and latent energy (only for Phydro, since it's computed internally)
+      !-----------------------------------------------------------------
+
 
     end do pftloop
 

@@ -494,6 +494,7 @@ p_hydro_drivers$forcing[[1]] %>%
 
 
 load("../data/p_model_drivers.rda")
+load("../data/p_model_validation.rda")
 p_model_drivers$forcing[[1]] %>% 
   melt("date") %>% 
   ggplot(aes(y=value, x=as.Date(date))) +
@@ -524,7 +525,7 @@ output$data[[1]] %>% select(date, gpp, latenth) %>%
   mutate(group="model") %>% 
   rbind(p_hydro_validation$data[[1]] %>% 
           select(date, gpp, le) %>%
-          mutate(gpp = gpp*0.864/10) %>% # convert to mol m-2 day-1
+          mutate(gpp = gpp*86400/1e6) %>% # convert to mol m-2 day-1
           mutate(le = le) %>% 
           melt("date") %>% 
           mutate(group="obs")) %>% 
