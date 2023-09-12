@@ -152,7 +152,8 @@ contains
         call waterbal(  tile(:), &
                         tile_fluxes(:), &
                         myinterface%grid, &
-                        myinterface%climate(doy) &
+                        myinterface%climate(doy), &
+                        myinterface%params_siml%use_phydro &
                         )
         ! if (verbose) print*,'... done'
 

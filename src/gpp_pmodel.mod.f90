@@ -35,7 +35,7 @@ module md_gpp_pmodel
   use md_sofunutils, only: radians
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, calc_density_h2o
   use md_photosynth_phydro, only: phydro_analytical, phydro_instantaneous_analytical, par_plant_type, par_cost_type, &
     phydro_result_type, par_control_type, ET_DIFFUSION, ET_PM, GS_IGF, GS_APX
   implicit none
@@ -105,6 +105,7 @@ contains
     real       :: soilmstress
     real       :: kphio_temp          ! quantum yield efficiency after temperature influence
     real       :: tk
+    real       :: lv, rho_water       ! latent heat of vap and density of water, needed by phydro for unit conversions
 
     real, save :: co2_memory
     real, save :: vpd_memory
@@ -278,7 +279,7 @@ contains
                             tc = dble(climate%dtemp), &
                             tg = dble(temp_memory), &
                             ppfd = dble(climate%dppfd)*1e6, &
-                            netrad = dble(netrad_memory), &
+                            netrad = dble(climate%dnetrad), &
                             vpd = dble(climate%dvpd), &
                             co2 = dble(co2), &
                             pa = dble(climate%dpatm), &
@@ -305,7 +306,7 @@ contains
           * myinterface%params_siml%secs_per_tstep
       else 
         tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid &
-          * out_phydro_inst%rd * c_molmass &
+          * out_phydro_inst%rd*1e-6 * c_molmass &
           * myinterface%params_siml%secs_per_tstep
       end if 
 
@@ -342,10 +343,22 @@ contains
         tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs
       end if
 
-      !-----------------------------------------------------------------
-      ! ET and latent energy (only for Phydro, since it's computed internally)
-      !-----------------------------------------------------------------
+      !------------------------------------------------------------------------
+      ! Canopy ET and soil LE (only for Phydro, since it's computed internally)
+      !------------------------------------------------------------------------
+      if (use_phydro) then
+        ! Density of water, kg/m^3
+        rho_water = calc_density_h2o( climate%dtemp, climate%dpatm )
 
+        tile_fluxes(lu)%canopy%daet_canop = out_phydro_inst%e * 0.018015 * (1.0d0 / rho_water) &
+              * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
+        
+        tile_fluxes(lu)%canopy%daet_e_soil = out_phydro_inst%le_s_wet  &
+              * myinterface%params_siml%secs_per_tstep ! convert: J m-2 s-1 * s day-1  = J m-2 day-1
+        
+        ! print *, "Canopy ET (mm d-1) = ", tile_fluxes(lu)%canopy%daet_canop 
+        ! print *, "Soil LE (J m-2 d-1) = ", climate%dnetrad, tile_fluxes(lu)%canopy%daet_e_soil 
+      end if
 
     end do pftloop
 

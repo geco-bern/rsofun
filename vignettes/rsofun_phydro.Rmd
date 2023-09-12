@@ -540,6 +540,7 @@ output_p$data[[1]] %>% select(date, gpp, latenth) %>%
 
 ```{r}
 p_hydro_drivers$params_siml[[1]]$use_phydro = T
+p_hydro_drivers$forcing[[1]]$netrad[is.na(p_hydro_drivers$forcing[[1]]$netrad)] = 0
 
 output_ph <- rsofun::runread_pmodel_f(
   p_hydro_drivers,

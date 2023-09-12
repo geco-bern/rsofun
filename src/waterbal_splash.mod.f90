@@ -93,7 +93,7 @@ module md_waterbal
 
 contains
 
-  subroutine waterbal( tile, tile_fluxes, grid, climate )
+  subroutine waterbal( tile, tile_fluxes, grid, climate, using_phydro )
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil water balance
     !-------------------------------------------------------------------------
@@ -102,6 +102,7 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(gridtype), intent(in)                            :: grid
     type(climate_type), intent(in)                        :: climate
+    logical, intent(in)                                   :: using_phydro
 
     ! local variables
     type(outtype_snow_rain) :: out_snow_rain
@@ -117,7 +118,7 @@ contains
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
       !---------------------------------------------------------
-      call calc_et( tile_fluxes(lu), grid, climate, sw )
+      call calc_et( tile_fluxes(lu), grid, climate, sw, using_phydro )
 
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
@@ -307,8 +308,8 @@ contains
   
   end subroutine solar
 
-  ! JAIDEEP FIXME: I would suggest you pull this function out into biosphere_pmodel.f90, and leave the water balance module to just perform balance
-  subroutine calc_et( tile_fluxes, grid, climate, sw )
+
+  subroutine calc_et( tile_fluxes, grid, climate, sw, using_phydro )
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
@@ -320,12 +321,14 @@ contains
     type(gridtype), intent(in)            :: grid
     type(climate_type), intent(in)        :: climate
     real, intent(in)                      :: sw            ! evaporative supply rate, mm/hr
+    logical, intent(in)                   :: using_phydro
 
     ! local variables
     real :: gamma                           ! psychrometric constant (Pa K-1) ! xxx Zhang et al. use it in units of (kPa K-1), probably they use sat_slope in kPa/K, too.
     real :: sat_slope                       ! slope of saturation vapour pressure vs. temperature curve, Pa K-1
     real :: lv                              ! enthalpy of vaporization, J/kg
     real :: rho_water                       ! density of water (g m-3)
+    real :: energy_to_mm                    ! Conversion factor to convert energy (J m-2 day) to mass (mm day-1)
 
     real :: rx                           ! variable substitute (mm/hr)/(W/m^2)
     real :: hi, cos_hi                   ! intersection hour angle, degrees
@@ -347,7 +350,8 @@ contains
     
     ! Eq. 51, SPLASH 2.0 Documentation
     ! tile_fluxes%canopy%econ = 1.0 / ( lv * rho_water ) ! this is to convert energy into mass (water) - JAIDEEP: This is correct. J m-2 s-1 x (kg-1 m3) x (J-1 kg) = m3 m-2 s-1 = m s-1
-    
+    energy_to_mm = 1.0e3 / ( lv * rho_water ) ! (J m-2 d-1) x (kg-1 m3) x (J-1 kg) x (mm m-1) = m3 m-2 d-1 = mm d-1
+
     ! JAIDEEP: If it's just conversion from mass to energy, the above formula is correct. This already has the Priestly Taylor factor (s/(s+y)) built in, so this 
     ! should not be used for mere conversion. I would suggest you use just the factor s/(s+y) separately in the respective equations for clarity.
     tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma)) ! MORE PRECISELY - this is to convert energy into mass (water). .
@@ -393,11 +397,25 @@ contains
     !---------------------------------------------------------
     ! 21. Estimate daily AET (tile_fluxes%canopy%daet), mm d-1
     !---------------------------------------------------------
-    ! Eq. 81, SPLASH 2.0 Documentation
-    tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
-      radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
-    tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)  ! JAIDEEP FIXME: Oops! This is a case where you should use a simple mass-energy conversion, not econ
+    if (.not. using_phydro) then
+      ! Eq. 81, SPLASH 2.0 Documentation
+      tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
+        radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
+      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)  ! JAIDEEP FIXME: Oops! This is a case where you should use a simple mass-energy conversion, not econ
+    else
+      ! Fill canopy LE and soil ET using complementary values from phydro
+      tile_fluxes%canopy%daet_e_canop = tile_fluxes%canopy%daet_canop / energy_to_mm   ! mm d-1 ---> J m-2 d-1 
+      tile_fluxes%canopy%daet_soil =  tile_fluxes%canopy%daet_e_soil * energy_to_mm    ! J m-2 d-1  ---> mm d-1
+      ! ^ Note: This is under wet conditions, as returned from phydro, so multiply by sw to get actual soil ET
 
+      ! calculate totat AET = canopy_AET + sw * soil_AET_wet
+      tile_fluxes%canopy%daet = tile_fluxes%canopy%daet_canop + sw * tile_fluxes%canopy%daet_soil
+      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet_e_canop + sw * tile_fluxes%canopy%daet_e_soil
+
+      ! print *, "Canopy ET (mm d-1, J m-2 d-1) = ", tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_e_canop
+      ! print *, "Soil ET (mm d-1, J m-2 d-1) = ", tile_fluxes%canopy%daet_soil, tile_fluxes%canopy%daet_e_soil 
+
+    end if 
     ! print*,'in waterbal: sw, hi, rx, rw, rv, hn, hi, ru ', sw, hi, rx, rw, rv, hn, hi, ru
     
     ! xxx debug
