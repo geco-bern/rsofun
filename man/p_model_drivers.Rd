@@ -15,7 +15,8 @@ A tibble of driver data:
       \item{temp}{Daytime average air temperature in \eqn{^\circ}C.}
       \item{vpd}{Daytime average vapour pressure deficit in Pa.}
       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
-      mol m\eqn{^{-2}} s\eqn{^{-1}}.}
+      mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
+      PPFD should be calculated by the SPLASH model.}
       \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
       it indicates that net radiation should be calculated by the SPLASH
       model.}
