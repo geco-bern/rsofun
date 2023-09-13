@@ -87,8 +87,8 @@ Model output is provided as a tidy dataframe, with columns:
      values between 0 and 1.}
   \item{\code{gpp}}{Gross Primary Productivity (GPP) for each time stamp 
       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
-  \item{\code{transp}}{Actual evapotranspiration (AET) (in mm d\eqn{^{-1}}).}
-  \item{\code{latenth}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
+  \item{\code{aet}}{Actual evapotranspiration (AET) (in mm d\eqn{^{-1}}).}
+  \item{\code{le}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
   \item{\code{pet}}{Potential evapotranspiration (PET) (in mm d\eqn{^{-1}}).}
   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
       (Vcmax) (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
@@ -107,8 +107,6 @@ Model output is provided as a tidy dataframe, with columns:
   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
   \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. If not an input driver, calculated by SPLASH.}
-  \item{\code{pet}}{Potential evapotranspiration, calculated by SPLASH following Priestly-Taylor, in mm d\eqn{^{-1}}.}
-  \item{\code{aet}}{Actual evapotranspiration, calculated by SPLASH following Priestly-Taylor and a simple water bucket, in mm d\eqn{^{-1}}.}
   \item{\code{wcont}}{Soil water content, in mm.}
   \item{\code{snow}}{Snow water equivalents, in mm.}
   }
