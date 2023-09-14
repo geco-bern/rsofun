@@ -409,8 +409,8 @@ contains
       ! ^ Note: This is under wet conditions, as returned from phydro, so multiply by sw to get actual soil ET
 
       ! calculate totat AET = canopy_AET + sw * soil_AET_wet
-      tile_fluxes%canopy%daet = tile_fluxes%canopy%daet_canop + sw * tile_fluxes%canopy%daet_soil
-      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet_e_canop + sw * tile_fluxes%canopy%daet_e_soil
+      tile_fluxes%canopy%daet = tile_fluxes%canopy%daet_canop + (sw/kCw) * tile_fluxes%canopy%daet_soil
+      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet_e_canop + (sw/kCw) * tile_fluxes%canopy%daet_e_soil
 
       ! print *, "Canopy ET (mm d-1, J m-2 d-1) = ", tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_e_canop
       ! print *, "Soil ET (mm d-1, J m-2 d-1) = ", tile_fluxes%canopy%daet_soil, tile_fluxes%canopy%daet_e_soil 

@@ -123,6 +123,9 @@ contains
     type(phydro_result_type) :: out_phydro_acclim, out_phydro_inst
     type(par_control_type) :: options
   
+    ! Soil hydraulics
+    real        :: swp, bsoil
+
     ! xxx test
     real :: a_c, a_j, a_returned, fact_jmaxlim
     integer, save :: count
@@ -190,7 +193,14 @@ contains
                                       params_pft_gpp(pft)%kphio_par_a, &
                                       params_pft_gpp(pft)%kphio_par_b )
       end if
-      
+
+      !----------------------------------------------------------------
+      ! Convert water content to water potential, for use in phydro
+      !----------------------------------------------------------------
+      bsoil = 3
+      swp = 1 - tile(lu)%soil%phy%wscal**(-bsoil)
+      swp = min(swp, 0.0) ! clamp +ve values to 0
+
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
       ! acclimated to slowly varying conditions
@@ -230,7 +240,7 @@ contains
                             pa = dble(patm_memory), &
                             fapar = dble(tile(lu)%canopy%fapar), &
                             kphio = dble(kphio_temp), &
-                            psi_soil = 0.d0, &
+                            psi_soil = dble(swp), & !0.d0, &
                             rdark = dble(params_gpp%rd_to_vcmax), &
                             vwind = 3.0d0, &
                             par_plant = par_plant, &
@@ -280,6 +290,7 @@ contains
             * tile_fluxes(lu)%canopy%ppfd_splash * out_pmodel%lue * soilmstress
         end if
       else ! Using phydro - run instantaneous model
+        ! print *, "sw / swp = ", sw, swp
         out_phydro_inst = phydro_instantaneous_analytical( &
                             vcmax25 = out_phydro_acclim%vcmax25, &
                             jmax25 = out_phydro_acclim%jmax25, &
@@ -292,7 +303,7 @@ contains
                             pa = dble(climate%dpatm), &
                             fapar = dble(tile(lu)%canopy%fapar), &
                             kphio = dble(kphio_temp), &
-                            psi_soil = 0.d0, &
+                            psi_soil = dble(swp), & !0.d0, &
                             rdark = dble(params_gpp%rd_to_vcmax), &
                             vwind = 3.0d0, &
                             par_plant = par_plant, &
