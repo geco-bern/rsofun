@@ -108,6 +108,15 @@ runread_pmodel_f <- function(
   sitename <- params_siml <- site_info <-
     input <- forcing <- . <- NULL
   
+  # guarantee order of files
+  drivers <- drivers |>
+    dplyr::select(
+      sitename,
+      params_siml,
+      site_info,
+      forcing
+    )
+  
   if (parallel){
     
     cl <- multidplyr::new_cluster(n = ncores) |>
@@ -164,7 +173,7 @@ runread_pmodel_f <- function(
     
     # note that pmap() requires the object 'drivers' to have columns in the order
     # corresponding to the order of arguments of run_pmodel_f_bysite().
-    df_out <- drivers %>% 
+    df_out <- drivers %>%
       dplyr::mutate(
         data = purrr::pmap(.,
         	run_pmodel_f_bysite,
