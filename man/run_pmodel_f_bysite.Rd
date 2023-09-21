@@ -87,9 +87,9 @@ Model output is provided as a tidy dataframe, with columns:
      values between 0 and 1.}
   \item{\code{gpp}}{Gross Primary Productivity (GPP) for each time stamp 
       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
-  \item{\code{aet}}{Actual evapotranspiration (AET) (in mm d\eqn{^{-1}}).}
+  \item{\code{aet}}{Actual evapotranspiration (AET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
   \item{\code{le}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
-  \item{\code{pet}}{Potential evapotranspiration (PET) (in mm d\eqn{^{-1}}).}
+  \item{\code{pet}}{Potential evapotranspiration (PET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
       (Vcmax) (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
   \item{\code{jmax}}{Maximum rate of electron transport for RuBP regeneration
