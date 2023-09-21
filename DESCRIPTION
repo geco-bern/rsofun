@@ -23,7 +23,7 @@ Authors@R: c(
            )
 Description: Implements the Simulating Optimal FUNctioning framework for 
               site-scale simulations of ecosystem processes, including model 
-              calibration
+              calibration.
 URL: https://github.com/geco-bern/rsofun
 BugReports: https://github.com/geco-bern/rsofun/issues
 License: GPL-3
