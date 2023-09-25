@@ -291,7 +291,8 @@ settings_calib <- list(
     sampler = "DEzs",
     settings = list(
       burnin = 1500,
-      iterations = 6000,
+      iterations = 25000,
+      nrChains = 3,        # number of independent chains
       startValue = 3       # number of chains to be sampled
     )),
   par = list(
@@ -391,7 +392,7 @@ After we have run and checked the calibration, let's use the model and the calib
 # Sample parameter values from the posterior distribution.
 # This gets 453 samples.
 samples_par <- BayesianTools::getSample(par_calib$mod,
-                                        thin = 10,       # get every 10th sample
+                                        thin = 100,       # get every 100th sample
                                         whichParameters = 1:4) |>  
   as.data.frame() |>
   dplyr::mutate(mcmc_id = 1:n()) |>
@@ -418,10 +419,10 @@ run_pmodel <- function(sample_par){
   
   # return modelled GPP and prediction for a new GPP observation
   gpp <- out$data[[1]][, "gpp"]
-  data.frame(gpp = gpp + rnorm(n = length(gpp), 
-                               mean = 0, 
-                               sd = sample_par$err_gpp), 
-             gpp_obs = gpp,
+  data.frame(gpp_pred = gpp + rnorm(n = length(gpp), 
+                                    mean = 0, 
+                                    sd = sample_par$err_gpp),
+             gpp = gpp,
              date = out$data[[1]][, "date"])
 }
 
@@ -437,41 +438,24 @@ pmodel_runs <- samples_par |>
   
   # compute quantiles for each day
   dplyr::summarise(
+    # prediction uncertainties
+    gpp_pred_q05 = quantile(gpp_pred, 0.05, na.rm = TRUE),
+    gpp_pred_q50 = quantile(gpp_pred, 0.5, na.rm = TRUE),          # get median
+    gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE),
+    
+    # parameter uncertainty
     gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
     gpp_q50 = quantile(gpp, 0.5, na.rm = TRUE),          # get median
-    gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE)
-  )
-
-# run the model with the maximum a-posteriori parameter values
-# and assuming zero (additive) model error
-map_values <- BayesianTools::MAP(par_calib$mod)$parametersMAP
-pmodel_run_map <- runread_pmodel_f(
-    drivers = p_model_drivers,
-    par =  list(                      # copied from par_fixed above
-      kphio = map_values["kphio"],
-      kphio_par_a = -0.0025,
-      kphio_par_b = 20,
-      soilm_thetastar = 0.6*240,
-      soilm_betao = map_values["soilm_betao"],
-      beta_unitcostratio = 146.0,
-      rd_to_vcmax = 0.014,
-      tau_acclim = 30.0,
-      kc_jmax = map_values["kc_jmax"]
-      )
-  )
-pmodel_run_map <- pmodel_run_map |> 
-  unnest(data) |> 
-  slice(1:365)
+    gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE)      
+    )
 ```
 
 ```{r eval = FALSE, echo = FALSE}
 save(pmodel_runs, file = "files/pmodel_runs.rda")
-save(pmodel_run_map, file = "files/pmodel_run_map.rda")
 ```
 
 ```{r echo = FALSE, eval = TRUE}
 load("files/pmodel_runs.rda")
-load("files/pmodel_run_map.rda")
 ```
 
 Below we plot the first year of observed GPP (in black) against the simulated 
@@ -484,15 +468,23 @@ ggplot() +             # Plot only first year
   geom_ribbon(
     data = pmodel_runs |>
       dplyr::slice(1:365),
+    aes(ymin = gpp_pred_q05, 
+        ymax = gpp_pred_q95,
+        x = date),
+    fill = 'red', alpha = 0.25) +
+  geom_ribbon(
+    data = pmodel_runs |>
+      dplyr::slice(1:365),
     aes(ymin = gpp_q05, 
         ymax = gpp_q95,
         x = date),
-    fill = 'red', alpha = 0.25) +
+    fill = 'royalblue') +
   geom_line(
-    data = pmodel_run_map,
+    data = pmodel_runs |>
+      dplyr::slice(1:365),
     aes(
       date,
-      gpp
+      gpp_pred_q50
     ),
     colour = "red"
   ) +
