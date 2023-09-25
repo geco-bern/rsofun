@@ -162,15 +162,18 @@ morrisOut.df |>
     fill = variable),
     color = NA) +
   geom_bar(position = position_dodge(), stat = 'identity') +
-  scale_fill_brewer("", labels = c('mu.star' = expression(mu * "*"),
-                                   'sigma' = expression(sigma)),
-                    palette = "Greys") +
+  scale_fill_manual("", 
+                    labels = c('mu.star' = expression(mu * "*"),
+                               'sigma' = expression(sigma)),
+                    values = c('mu.star' = "#29a274ff", 
+                               'sigma' = "#777055ff")) +
   theme_classic() +
   theme(
     axis.text = element_text(size = 6),
     axis.title = element_blank(),
-    legend.position = c(0.05, 0.95), legend.justification = c(0.05, 0.95)
-  )
+    legend.position = c(0.9, 0.1), legend.justification = c(0.95, 0.05)
+  ) +
+  coord_flip()    # make horizontal
 
 # Figure 3 ####
 
