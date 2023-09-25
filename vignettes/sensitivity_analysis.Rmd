@@ -1,6 +1,6 @@
 ---
 title: "Sensitivity analysis and calibration interpretation"
-author: "Josefa Arán"
+author: "Josefa Arán and Benjamin Stocker"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Sensitivity analysis}
@@ -183,7 +183,7 @@ morrisOut.df <- data.frame(
   parameter = names(par_cal_best),
   mu.star = apply(abs(morrisOut$ee), 2, mean, na.rm = T),
   sigma = apply(morrisOut$ee, 2, sd, na.rm = T)
-) %>%
+) |>
   arrange( mu.star )
 
 morrisOut.df |>
@@ -194,16 +194,16 @@ morrisOut.df |>
     fill = variable),
     color = NA) +
   geom_bar(position = position_dodge(), stat = 'identity') +
-  scale_fill_brewer("", labels = c('mu.star' = expression(mu * "*"),
-                                   'sigma' = expression(sigma)),
-                    palette = "Greys") +
+  scale_fill_manual("",
+                    values = c("#004488", "#DDAA33"),  # from khroma::color("high contrast")
+                    labels = c('mu.star' = expression(mu * "*"),
+                               'sigma' = expression(sigma))) +
+  labs(y = "Value", x = "") +
+  coord_flip() +
   theme_classic() +
   theme(
-    axis.text = element_text(size = 6),
-    axis.title = element_blank(),
-    legend.position = c(0.05, 0.95), legend.justification = c(0.05, 0.95)
+    legend.position = c(0.75, 0.45)
   )
-
 ```
 
 The outcome of the Morris sensitivity analysis depends strongly on the choice of
@@ -232,51 +232,54 @@ several times for different parameter ranges and validation data. Note how `rd_t
 does not affect GPP, but it would actually affect dark respiration predictions,
 so trait data could also be added for validation.
 
-## Interpretation of Bayesian calibration routine
+## Bayesian model calibration and diagnostics
 
 It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. Here we show some plots and statistics that may help you assess whether the parameter calibration has converged.
 
-According to the previous sensitivity analysis, calibrating the error parameter for GPP and the quantum yield efficiency parameters will have a high impact on the model fit. Let's run the calibration:
+Now, we simultaneously calibrate a subset of the model parameters that have been identified as particularly influential above. These include the model error `gpp_error`, `kphio`, `kc_jmax` , and `soilm_betao`. By letting `soilm_betao` to be calibrated and setting a to a fixed value of -0.0025, the simulations consider a temperature-dependence of the `kphio` and a soil moisture stress effect on GPP (corresponding to model setup ‘FULL’ in (Stocker et al., 2020)). All other model parameters are held fixed in the calibration.
+
+<!-- ```{r eval = FALSE, echo = TRUE} -->
+<!-- set.seed(2023) -->
+
+<!-- # Define calibration settings -->
+<!-- settings_calib <- list( -->
+<!--   method = "BayesianTools", -->
+<!--   metric = rsofun::cost_likelihood_pmodel, -->
+<!--   control = list( -->
+<!--     sampler = "DEzs", -->
+<!--     settings = list( -->
+<!--       burnin = 3000, -->
+<!--       iterations = 9000, -->
+<!--       nrChains = 1,        # number of independent chains -->
+<!--       startValue = 3       # number of internal chains to be sampled -->
+<!--     )), -->
+<!--   par = list( -->
+<!--     kphio = list(lower = 0.03, upper = 0.15, init = 0.05), -->
+<!--     kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025), -->
+<!--     kphio_par_b = list(lower = 10, upper = 30, init =25), -->
+<!--     err_gpp = list(lower = 0.1, upper = 3, init = 0.8) -->
+<!--   ) -->
+<!-- ) -->
+
+<!-- # Calibrate kphio-related parameters and err_gpp  -->
+<!-- par_calib <- calib_sofun( -->
+<!--   drivers = p_model_drivers, -->
+<!--   obs = p_model_validation, -->
+<!--   settings = settings_calib, -->
+<!--   par_fixed = list( -->
+<!--     soilm_thetastar    = 0.6*240, -->
+<!--     soilm_betao        = 0.2, -->
+<!--     beta_unitcostratio = 146.0, -->
+<!--     rd_to_vcmax        = 0.014, -->
+<!--     tau_acclim         = 30.0, -->
+<!--     kc_jmax            = 0.41), -->
+<!--   targets = "gpp" -->
+<!-- ) -->
+<!-- ``` -->
+
+
+
 ```{r eval = FALSE, echo = TRUE}
-set.seed(2023)
-
-# Define calibration settings
-settings_calib <- list(
-  method = "BayesianTools",
-  metric = rsofun::cost_likelihood_pmodel,
-  control = list(
-    sampler = "DEzs",
-    settings = list(
-      burnin = 3000,
-      iterations = 9000,
-      nrChains = 1,        # number of independent chains
-      startValue = 3       # number of internal chains to be sampled
-    )),
-  par = list(
-    kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
-    kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025),
-    kphio_par_b = list(lower = 10, upper = 30, init =25),
-    err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
-  )
-)
-
-# Calibrate kphio-related parameters and err_gpp 
-par_calib <- calib_sofun(
-  drivers = p_model_drivers,
-  obs = p_model_validation,
-  settings = settings_calib,
-  par_fixed = list(
-    soilm_thetastar    = 0.6*240,
-    soilm_betao        = 0.2,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,
-    tau_acclim         = 30.0,
-    kc_jmax            = 0.41),
-  targets = "gpp"
-)
-```
-
-```{r eval = FALSE, echo = FALSE}
 # Calibrates kphio, betao, kc_jmax - top 3 model params
 set.seed(2023)
 
@@ -299,6 +302,7 @@ settings_calib <- list(
   )
 )
 
+tictoc::tic()
 par_calib <- calib_sofun(
   drivers = p_model_drivers,
   obs = p_model_validation,
@@ -309,9 +313,11 @@ par_calib <- calib_sofun(
     soilm_thetastar    = 0.6*240,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
-    tau_acclim         = 30.0),
+    tau_acclim         = 30.0
+    ),
   targets = "gpp"
 )
+tictoc::toc()
 ```
 
 ```{r eval = FALSE, echo = FALSE}
@@ -324,19 +330,22 @@ save(par_calib, file = "files/par_calib.rda")
 load("files/par_calib.rda")
 ```
 
-`BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. We set \code{burnin = 3000} above from previous runs, and those iterations are not shown by the following trace plot. The samples after the burnin period should be used for inference.
+`BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burn-in visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. We set \code{burnin = 3000} above from previous runs, and those iterations are not shown by the following trace plot. Only the samples after the burn-in period should be used for inference.
 ```{r fig.height = 10, fig.width = 7}
 plot(par_calib$mod)
 ```
 
 <!-- Internal recommendation: When you run the MCMC simulations with the DEzs sampler, there are two parameters that control the number of chains used: nrChains (documented for runMCMC) and startValue (documented for DEzs). The first dictates the number of independent chains to be run by the algorithm, while the second determines the number of internal chains to be run from a starting population (i.e. a population of initial parameter seeds). As Florian points out in this issue (https://github.com/florianhartig/BayesianTools/issues/224#issuecomment-877416919) the chains from within a population tend to be more correlated than those from independent "chains", and therefore internal chains should not be regarded as independent chains. This supports why for r3PG, they use nrChains=3 and startValue=3 (used by default), leading to 3*3=9 chains being plotted. For the example above, it doesn't make a big difference because the convergence is quite fast. -->
 
-The posterior density plots may be lumpy. In this case it's advisable to run the MCMC algorithm for more iterations, in order to get a better estimate of the parameters' posterior distributions. A good posterior should look more gaussian (although it can be skewed). A multimodal density indicates that the MCMC is still exploring the parameter space and hasn't converged yet. The posteriors can be plotted against the priors using `BayesianTools::marginalPlot()`.
+The posterior density plots may be lumpy. In this case it's advisable to run the MCMC algorithm for more iterations, in order to get a better estimate of the parameters' posterior distributions. A good posterior should look more gaussian (although it can be skewed). A multimodal density indicates that the MCMC is still exploring the parameter space and hasn't converged yet. The posteriors can be plotted against the priors:
 
-When convergence has been reached, the oscillation of the time series should look like white noise. It's normal that consecutive MCMC samples are correlated because of the sampling algorithm's nature, but the presence of a more general trend indicates that convergence hasn't been reached.
+```{r fig.height = 10, fig.width = 7}
+BayesianTools::marginalPlot(par_calib$mod)
+```
 
-<!-- Furthermore, trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space may not be explored fully. Sometimes, thinning is used to deal with this autocorrelation. -->
-```{r fig.height = 10, fig.width = 7, eval = FALSE, echo = FALSE}
+When convergence is reached, the oscillation of the time series should look like white noise. It's normal that consecutive MCMC samples are correlated because of the sampling algorithm's nature, but the presence of a strong autocorrelation of parameter values in the MCMC chain indicates that convergence hasn't been reached and the posterior parameter space may not be explored fully. For inference, "thinning" is used to avoid parameter sets being affected by autocorrelation. The autocorrelation structure informs the thinning parameter (see below). It is therefore instructive to investigate autocorrelation plots. The analysis below indicates that a thinning parameter of 10 largely avoids the autocorrelation issue.
+
+```{r fig.height = 10, fig.width = 7, eval = TRUE, echo = TRUE}
 # Define function for plotting chains separately
 plot_acf_mcmc <- function(chains, par_names){
   # chains: from the BayesianTools output
@@ -350,21 +359,21 @@ plot_acf_mcmc <- function(chains, par_names){
   }
 }
 
-plot_acf_mcmc(par_calib$mod$chain, c("kphio", "kphio_par_a", "kphio_par_b", "err_gpp"))
+plot_acf_mcmc(par_calib$mod$chain, c("kphio", "soilm_betao", "kc_jmax", "err_gpp"))
 ```
 
-Looking at the correlation between chains for different parameters is also helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior space. In this calibration we expect parameter samples to be somewhat correlated, especially `kphio_par_a` and `kphio_par_b` because they specify the shape of the temperature dependence of the quantum yield efficiency, $\varphi_o(T)$. We can also see that `err_gpp` is correlated with `kphio` (to which the P-model is very sensitive), since the error represents how good the model fits the observed GPP.
+A correlation of parameter values may slow down convergence, or the chains may oscillate in the multivariate posterior space. Indeed, the analysis below indicates that `soilm_betao` is correlated with both `kphio` and with `kc_jmax` and points the usefulness of extending the data and including additional, complementary, calibration target values for model calibration.
+
 ```{r fig.width=5, fig.height=5}
-correlationPlot(par_calib$mod, thin = 1)   # use all samples, no thinning
+BayesianTools::correlationPlot(par_calib$mod, thin = 10)
 ```
 
-In addition to visualizations, it's helpful to compute some convergence diagnostics, like the Gelman-Brooks-Rubin (GBR) potential scale factors. This diagnostic compares the variance within chains to that across chains and should progressively get closer to 1. It is common in the literature (Gelman, A., Carlin, J.B., Stern, H.S., Rubin, D.B.: Bayesian Data
-Analysis, 2nd edn. Chapman & Hall, London (2004)) to accept convergence with a GBR between 1.05 and 1.1.
+In addition to visualizations, it's helpful to compute some convergence diagnostics, like the Gelman-Brooks-Rubin (GBR) potential scale factors. This diagnostic compares the variance within chains to that across chains and should approach 1. It is common in the literature (Gelman, A., Carlin, J.B., Stern, H.S., Rubin, D.B.: Bayesian Data Analysis, 2nd edn. Chapman & Hall, London (2004)) to accept convergence with a GBR of below 1.05 or below 1.1.
 ```{r}
-gelmanDiagnostics(par_calib$mod)
+BayesianTools::gelmanDiagnostics(par_calib$mod)
 ```
 
-Finally, the parameter MAP estimates can be derived from the chains (that converged) after removing the burnin period. They can be seen, next to other statistics, using the `summary` function from the `BayesianTools` library.
+Finally, the maximum a-posteriori parameter estimates can be derived from the converged chains  after removing the burn-in period. They can be seen, next to other statistics, using the generic `summary()` function applied to the fitted `BayesianTools` model object.
 
 ```{r}
 summary(par_calib$mod)
@@ -372,21 +381,18 @@ summary(par_calib$mod)
 
 More details on diagnosing MCMC convergence can be found in [this vignette from BayesianTools](https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html#running-mcmc-and-smc-functions) and [this blogpost](https://theoreticalecology.wordpress.com/2011/12/09/mcmc-chain-analysis-and-convergence-diagnostics-with-coda-in-r/).
 
-### Plotting P-model output after calibration
+## Inference
 
-After we have run and checked the calibration, let's see how the model performs. 
-
-To compute the credible intervals for GPP prediction, we ran the 
-P-model for 600 samples from the posterior distribution of the calibrated 
-parameters. 
+After we have run and checked the calibration, let's use the model and the calibrated parameters to predict GPP and see how the model performs. To compute the credible intervals for GPP prediction, we run the P-model for 600 samples from the posterior distribution of the calibrated parameters (determined from the thinned MCMC chains, using a thinning parameter of 10). 
 
 ```{r echo = TRUE, eval = FALSE}
 # Evaluation of the uncertainty coming from the model parameters' uncertainty
 
-# Sample parameter values from the posterior distribution
-samples_par <- getSample(par_calib$mod, 
-                             thin = 10,              # get every 10th sample
-                             whichParameters = 1:4) |>  
+# Sample parameter values from the posterior distribution.
+# This gets 453 samples.
+samples_par <- BayesianTools::getSample(par_calib$mod,
+                                        thin = 10,       # get every 10th sample
+                                        whichParameters = 1:4) |>  
   as.data.frame() |>
   dplyr::mutate(mcmc_id = 1:n()) |>
   tidyr::nest(.by = mcmc_id, .key = "pars")
@@ -399,21 +405,23 @@ run_pmodel <- function(sample_par){
     drivers = p_model_drivers,
     par =  list(                      # copied from par_fixed above
       kphio = sample_par$kphio,
-      kphio_par_a = sample_par$kphio_par_a,
-      kphio_par_b = sample_par$kphio_par_b,
-      soilm_thetastar    = 0.6*240,
-      soilm_betao        = 0.2,
+      kphio_par_a = -0.0025,
+      kphio_par_b = 20,
+      soilm_thetastar = 0.6*240,
+      soilm_betao = sample_par$soilm_betao,
       beta_unitcostratio = 146.0,
-      rd_to_vcmax        = 0.014,
-      tau_acclim         = 30.0,
-      kc_jmax            = 0.41)       # value from posterior
+      rd_to_vcmax = 0.014,
+      tau_acclim = 30.0,
+      kc_jmax = sample_par$kc_jmax
+      )       # value from posterior
   )
   
   # return modelled GPP and prediction for a new GPP observation
   gpp <- out$data[[1]][, "gpp"]
-  data.frame(gpp = gpp, 
-             gpp_obs = gpp + rnorm(n = length(gpp), mean = 0, 
-                                   sd = sample_par$err_gpp),
+  data.frame(gpp = gpp + rnorm(n = length(gpp), 
+                               mean = 0, 
+                               sd = sample_par$err_gpp), 
+             gpp_obs = gpp,
              date = out$data[[1]][, "date"])
 }
 
@@ -421,134 +429,84 @@ set.seed(2023)
 # Run the P-model for each set of parameters
 pmodel_runs <- samples_par |>
   dplyr::mutate(sim = purrr::map(pars, ~run_pmodel(.x))) |>
+  
   # format to obtain 90% credible intervals
   dplyr::select(mcmc_id, sim) |>
   tidyr::unnest(sim) |>
   dplyr::group_by(date) |>
+  
   # compute quantiles for each day
   dplyr::summarise(
     gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
-    gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
-    gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
-    gpp_obs_q05 = quantile(gpp_obs, 0.05, na.rm = TRUE),
-    gpp_obs_q95 = quantile(gpp_obs, 0.95, na.rm = TRUE)
+    gpp_q50 = quantile(gpp, 0.5, na.rm = TRUE),          # get median
+    gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE)
   )
+
+# run the model with the maximum a-posteriori parameter values
+# and assuming zero (additive) model error
+map_values <- BayesianTools::MAP(par_calib$mod)$parametersMAP
+pmodel_run_map <- runread_pmodel_f(
+    drivers = p_model_drivers,
+    par =  list(                      # copied from par_fixed above
+      kphio = map_values["kphio"],
+      kphio_par_a = -0.0025,
+      kphio_par_b = 20,
+      soilm_thetastar = 0.6*240,
+      soilm_betao = map_values["soilm_betao"],
+      beta_unitcostratio = 146.0,
+      rd_to_vcmax = 0.014,
+      tau_acclim = 30.0,
+      kc_jmax = map_values["kc_jmax"]
+      )
+  )
+pmodel_run_map <- pmodel_run_map |> 
+  unnest(data) |> 
+  slice(1:365)
 ```
 
 ```{r eval = FALSE, echo = FALSE}
 save(pmodel_runs, file = "files/pmodel_runs.rda")
+save(pmodel_run_map, file = "files/pmodel_run_map.rda")
 ```
 
 ```{r echo = FALSE, eval = TRUE}
 load("files/pmodel_runs.rda")
+load("files/pmodel_run_map.rda")
 ```
 
 Below we plot the first year of observed GPP (in black) against the simulated 
-GPP (in grey), accompanied by the predictive credible interval for modeled GPP 
-(shaded in blue, very narrow) and the predictive credible interval for a new GPP 
-observation (shaded in grey). We can see that the model uncertainty in quite 
-small, in comparison to the data uncertainty.
+determined using values based on the maximum a-posteriori probability, and the 90% credible interval of predicted GPP (light red band).
 
 ```{r fig.width=7, fig.height=5}
 # Plot the credible intervals computed above
 # for the first year only
-plot_gpp_error <- ggplot(data = pmodel_runs |>
-    dplyr::slice(1:365)) +             # Plot only first year
+ggplot() +             # Plot only first year
   geom_ribbon(
+    data = pmodel_runs |>
+      dplyr::slice(1:365),
     aes(ymin = gpp_q05, 
         ymax = gpp_q95,
         x = date),
-    fill = 'blue', alpha = 0.5) +
-  geom_ribbon(
-    aes(ymin = gpp_obs_q05, 
-        ymax = gpp_obs_q95,
-        x = date),
-    fill = 'grey40', alpha = 0.2) +
+    fill = 'red', alpha = 0.25) +
   geom_line(
+    data = pmodel_run_map,
     aes(
       date,
       gpp
     ),
-    colour = "grey40",
-    alpha = 0.8
+    colour = "red"
   ) +
+  geom_line(
+    data = p_model_validation$data[[1]] |> 
+      slice(1:365),
+    aes(
+      date,
+      gpp
+    )) +
   theme_classic() +
-  theme(panel.grid.major.y = element_line()) +
   labs(
     x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   )
-
-# Define GPP validation data (first year)
-validation_data <- p_model_validation$data[[1]][1:365, ]
-
-# Include observations in the plot
-plot_gpp_error +  
-  geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    ),
-    alpha = 0.8
-  )
 ```
 
-<!-- Below we plot the first year of predicted GPP (in grey) against GPP observations (in black). -->
-<!-- We ran the P-model using the MAP estimates for all calibrated parameters and  -->
-<!-- computed a 90% predictive interval for GPP (grey shade), based on the normality assumption -->
-<!-- with standard deviation `err_gpp`. -->
-
-```{r fig.width=7, fig.height=5, echo = FALSE, eval = FALSE}
-# 
-# Plot observed and predicted GPP, with a 95% confidence interval using err_gpp
-plot_gpp_error <- ggplot(data = runread_pmodel_f(
-    drivers = p_model_drivers,
-    par =  list(                       
-      kphio = par_calib$par[1],        # values from posterior
-      kphio_par_a = par_calib$par[2],
-      kphio_par_b = par_calib$par[3],
-      soilm_thetastar    = 0.6*240,    # copied from par_fixed above
-      soilm_betao        = 0.2,
-      beta_unitcostratio = 146.0,
-      rd_to_vcmax        = 0.014,
-      tau_acclim         = 30.0,
-      kc_jmax            = 0.41)       
-  ) |>
-    dplyr::select(sitename, data) |>
-    tidyr::unnest(data) |>
-    dplyr::slice(1:365)) +             # Plot only first year
-  geom_ribbon(
-    aes(ymin = gpp - 2*par_calib$par[4], 
-        ymax = gpp + 2*par_calib$par[4],
-        x = date),
-    fill = 'grey40', alpha = 0.2) +
-  geom_line(
-    aes(
-      date,
-      gpp
-    ),
-    colour = "grey40",
-    alpha = 0.8
-  ) +
-  theme_classic() +
-  theme(panel.grid.major.y = element_line()) +
-  labs(
-    x = 'Date',
-    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
-  )
-
-# Define GPP validation data (first year)
-validation_data <- p_model_validation$data[[1]][1:365, ]
-
-# Include observations in the plot
-plot_gpp_error +  
-  geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    ),
-    alpha = 0.8
-  )
-```
