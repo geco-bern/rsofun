@@ -45,7 +45,7 @@ Call to the biomee Fortran model
 Model output is provided as a tidy dataframe
 }
 \examples{
-\donttest{
+\dontrun{\donttest{
 # Example BiomeE model run
 
 # Use example drivers data
@@ -63,5 +63,5 @@ mod_output <- run_biomee_f_bysite(
  init_cohort = drivers$init_cohort[[1]],
  init_soil = drivers$init_soil[[1]]
 )
-}
+}}
 }

@@ -1,5 +1,5 @@
 Package: rsofun
-Title: SOFUN in R
+Title: The P-model and BiomeE modelling framework in R
 Version: 4.4
 Authors@R: c(
             person(
@@ -7,7 +7,7 @@ Authors@R: c(
               given = "Stocker",
               email = "benjamin.stocker@gmail.com",
               comment = c(ORCID = "0000-0002-5070-8109"),
-              role = c("aut")),
+              role = c("aut", "cre")),
             person(
                family = "Hufkens",
                given = "Koen",
@@ -19,15 +19,16 @@ Authors@R: c(
                given = "Josefa",
                email = "pepa.aran@gmail.com",
                comment = c(ORCID = "0009-0006-7176-2311"),
-               role = c("aut", "cre"))
+               role = c("aut"))
            )
-Description: Implements the P-model and BiomeE modelling frameworks for 
-              simulating leaf-level photosynthesis, including model calibration.
+Description: Implements the Simulating Optimal FUNctioning framework for 
+              site-scale simulations of ecosystem processes, including model 
+              calibration.
 URL: https://github.com/geco-bern/rsofun
 BugReports: https://github.com/geco-bern/rsofun/issues
 License: GPL-3
 Depends:
-    R (>= 3.6)
+    R (>= 4.1.0)
 Imports:
     dplyr,
     purrr,
