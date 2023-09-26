@@ -233,14 +233,14 @@ Defaults to <code>TRUE</code>.</p></dd>
 <dd><p>Gross Primary Productivity (GPP) for each time stamp 
       (in gC m\(^{-2}\) d\(^{-1}\)).</p></dd>
 
-  <dt><code>transp</code></dt>
-<dd><p>Actual evapotranspiration (AET) (in mm d\(^{-1}\)).</p></dd>
+  <dt><code>aet</code></dt>
+<dd><p>Actual evapotranspiration (AET), calculated by SPLASH following Priestly-Taylor (in mm d\(^{-1}\)).</p></dd>
 
-  <dt><code>latenth</code></dt>
+  <dt><code>le</code></dt>
 <dd><p>Latent heat flux (in J m\(^{-2}\) d\(^{-1}\)).</p></dd>
 
   <dt><code>pet</code></dt>
-<dd><p>Potential evapotranspiration (PET) (in mm d\(^{-1}\)).</p></dd>
+<dd><p>Potential evapotranspiration (PET), calculated by SPLASH following Priestly-Taylor (in mm d\(^{-1}\)).</p></dd>
 
   <dt><code>vcmax</code></dt>
 <dd><p>Maximum rate of RuBisCO carboxylation 
@@ -280,12 +280,6 @@ Defaults to <code>TRUE</code>.</p></dd>
 
   <dt><code>netrad</code></dt>
 <dd><p>Net radiation, in W m\(^{-2}\). If not an input driver, calculated by SPLASH.</p></dd>
-
-  <dt><code>pet</code></dt>
-<dd><p>Potential evapotranspiration, calculated by SPLASH following Priestly-Taylor, in mm d\(^{-1}\).</p></dd>
-
-  <dt><code>aet</code></dt>
-<dd><p>Actual evapotranspiration, calculated by SPLASH following Priestly-Taylor and a simple water bucket, in mm d\(^{-1}\).</p></dd>
 
   <dt><code>wcont</code></dt>
 <dd><p>Soil water content, in mm.</p></dd>
