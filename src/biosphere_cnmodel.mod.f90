@@ -95,9 +95,7 @@ contains
     call phenology( tile(:), myinterface%climate(:)%dtemp )
     if (verbose) print*, '... done'
 
-    print*,'YEAR ', myinterface%steering%year
-
-    ! print*,'a presv: ', tile(1)%plant(1)%presv
+    ! print*,'YEAR ', myinterface%steering%year
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS

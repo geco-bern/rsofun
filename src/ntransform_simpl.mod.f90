@@ -93,8 +93,10 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
+    use md_interface_pmodel, only: myinterface
+
     ! maximum nitrification rate
-    params_ndecay%kdecay_ninorg = 0.005
+    params_ndecay%kdecay_ninorg = myinterface%params_calib%maxnitr  ! re-interpret available parameter
 
   end subroutine getpar_modl_ntransform
 
