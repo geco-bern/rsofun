@@ -289,7 +289,7 @@ settings_calib <- list(
     settings = list(
       burnin = 1500,
       iterations = 6000,
-      startValue = 3       # number of chains to be sampled
+      nrChains = 3       # number of chains to be sampled
     )),
   par = list(
     kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
