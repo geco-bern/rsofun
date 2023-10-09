@@ -23,7 +23,11 @@ Authors@R: c(
            )
 Description: Implements the Simulating Optimal FUNctioning framework for 
               site-scale simulations of ecosystem processes, including model 
-              calibration.
+              calibration. It includes Fortran modules of the P-model (Stocker
+              et al. (2020) <https://doi.org/10.5194/gmd-13-1545-2020>), SPLASH
+              (Davis et al. (2017) <https://doi.org/10.5194/gmd-10-689-2017>)
+              and BiomeE (Weng et al. (2015)
+              <https://doi.org/10.5194/bg-12-2655-2015>).
 URL: https://github.com/geco-bern/rsofun
 BugReports: https://github.com/geco-bern/rsofun/issues
 License: GPL-3
