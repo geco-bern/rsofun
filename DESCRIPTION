@@ -1,5 +1,5 @@
 Package: rsofun
-Title: The P-model and BiomeE Modelling Framework in R
+Title: The P-Model and BiomeE Modelling Framework
 Version: 4.4
 Authors@R: c(
             person(
