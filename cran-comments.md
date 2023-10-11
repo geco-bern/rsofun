@@ -25,7 +25,7 @@ I have read and agree to the CRAN policies enumerated here: https://cran.r-proje
 
 - rhub::check_on_cran() with only notes for latex elements
 
-- codecove.io code coverage at ~93%
+- codecove.io code coverage at ~72%
 
 ## Github actions R CMD check results
 
