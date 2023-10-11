@@ -1,10 +1,6 @@
 module md_ntransform_simpl
   !////////////////////////////////////////////////////////////////
-  ! INORGANIC NITROGEN DYNAMICS MODULE AFTER XURI & PRENTICE 2008
-  ! Contains the "main" subroutine 'ntransform' and all necessary 
-  ! subroutines for handling input/output. 
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! INORGANIC NITROGEN DYNAMICS MODULE, SIMPLE
   !----------------------------------------------------------------
   use md_classdefs
   use md_tile
