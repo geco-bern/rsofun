@@ -1,6 +1,6 @@
 Dear CRAN team,
 
-This is the re-submission of the {rsofun} package. We have addressed your concerns about the package title and description, and reduced the size of the .tar file to 4.8MB.
+This is the re-submission of the {rsofun} package. We have addressed your concerns about the DOIs in the description.
 
 The {rsofun} package provides the implementation of a modelling framework for site-scale simulations of ecosystem processes, with low level routines in Fortran 90. It contains the following models:
 - P-model for leaf-level acclimation of photosynthesis from Stocker et al. (2019).
