@@ -378,7 +378,9 @@ After we have run and checked the calibration, let's see how the model performs.
 
 To compute the credible intervals for GPP prediction, we ran the 
 P-model for 600 samples from the posterior distribution of the calibrated 
-parameters. 
+parameters. As a result, we obtain the posterior distribution of modeled GPP
+at each time step and also the posterior distribution of predicted GPP, which
+incorporates the Gaussian model error.
 
 ```{r echo = TRUE, eval = FALSE}
 # Evaluation of the uncertainty coming from the model parameters' uncertainty
@@ -412,7 +414,7 @@ run_pmodel <- function(sample_par){
   # return modelled GPP and prediction for a new GPP observation
   gpp <- out$data[[1]][, "gpp"]
   data.frame(gpp = gpp, 
-             gpp_obs = gpp + rnorm(n = length(gpp), mean = 0, 
+             gpp_pred = gpp + rnorm(n = length(gpp), mean = 0, 
                                    sd = sample_par$err_gpp),
              date = out$data[[1]][, "date"])
 }
@@ -430,8 +432,8 @@ pmodel_runs <- samples_par |>
     gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
     gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
     gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
-    gpp_obs_q05 = quantile(gpp_obs, 0.05, na.rm = TRUE),
-    gpp_obs_q95 = quantile(gpp_obs, 0.95, na.rm = TRUE)
+    gpp_pred_q05 = quantile(gpp_pred, 0.05, na.rm = TRUE),
+    gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE)
   )
 ```
 
@@ -443,11 +445,13 @@ save(pmodel_runs, file = "files/pmodel_runs.rda")
 load("files/pmodel_runs.rda")
 ```
 
-Below we plot the first year of observed GPP (in black) against the simulated 
-GPP (in grey), accompanied by the predictive credible interval for modeled GPP 
-(shaded in blue, very narrow) and the predictive credible interval for a new GPP 
-observation (shaded in grey). We can see that the model uncertainty in quite 
-small, in comparison to the data uncertainty.
+Below we plot the first year of observed GPP (in black) against the predicted 
+GPP (in grey), computed as the median of the posterior distribution of modeled
+GPP. This information is accompanied by the 90% credible interval for predicted 
+GPP (shaded in blue, very narrow) and the 90% predictive interval 
+(shaded in grey). We can see that the parameter uncertainty captured in the 
+credible interval is quite small, in comparison to the model uncertainty
+captured by the predictive interval.
 
 ```{r fig.width=7, fig.height=5}
 # Plot the credible intervals computed above
@@ -460,8 +464,8 @@ plot_gpp_error <- ggplot(data = pmodel_runs |>
         x = date),
     fill = 'blue', alpha = 0.5) +
   geom_ribbon(
-    aes(ymin = gpp_obs_q05, 
-        ymax = gpp_obs_q95,
+    aes(ymin = gpp_pred_q05, 
+        ymax = gpp_pred_q95,
         x = date),
     fill = 'grey40', alpha = 0.2) +
   geom_line(
