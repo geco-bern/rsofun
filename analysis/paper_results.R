@@ -368,12 +368,12 @@ plot_gpp_error <- ggplot(data = pmodel_runs |>
     aes(ymin = gpp_pred_q05, 
         ymax = gpp_pred_q95,
         x = date,
-        fill = "Predictive interval")) +
+        fill = "Model uncertainty")) +
   geom_ribbon(
     aes(ymin = gpp_q05, 
         ymax = gpp_q95,
         x = date,
-        fill = "Credible interval")) +
+        fill = "Parameter uncertainty")) +
 
   geom_line(
     aes(
@@ -405,11 +405,10 @@ plot_gpp_error +
                      values = c(t_col("black", 10),
                                 t_col("#009E73", 10))) +
   scale_fill_manual(name = "",
-                     breaks = c("Credible interval",
-                                "Predictive interval"
-                                ),
-                     values = c(t_col("#009E73", 40),
-                                t_col("#E69F00", 60)))
+                     breaks = c("Model uncertainty",
+                                "Parameter uncertainty"),
+                     values = c(t_col("#E69F00", 60),
+                                t_col("#009E73", 40)))
 
 
 # Result RMSE ####
