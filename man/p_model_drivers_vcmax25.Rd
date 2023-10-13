@@ -89,6 +89,6 @@ p_model_drivers_vcmax25
 }
 \description{
 Small tests dataset to validate if compiled code
-and optimization routines can run
+and optimization routines can run for leaf traits data
 }
 \keyword{datasets}
