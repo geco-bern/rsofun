@@ -147,45 +147,32 @@ together with observations of GPP we can also calibrate
 <code>pmodel</code> parameters.</p>
 <p>Another two datasets are provided as an example to validate the model
 against leaf traits data, rather than fluxes. Measurements of Vcmax25
-(aggregated over species) for 72 sites from Atkin et al. 2015 are given
-in <code>p_model_validation_vcmax25</code> and the corresponding forcing
+(aggregated over species) for a subset of 4 sites from the GlobResp
+database (Atkin et al., 2015) are given in
+<code>p_model_validation_vcmax25</code> and the corresponding forcing
 for the P-model is given in <code>p_model_drivers_vcmax25</code>. Since
 leaf traits are only measured once per site, the forcing used is a
 single year of average climate (the average measurements between 2001
 and 2015 on each day of the year).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_model_drivers_vcmax25</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 72 × 4</span></span></span>
-<span><span class="co">#&gt;    sitename          params_siml       site_info        forcing            </span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>             </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 10?28'N_84?02'W   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 40?47'N_77?53'W   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 40?48'N_77?50'W   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 8?39'N__71?24'W   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 9?10'N__79?51'W   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> ALP-01            <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> ALP-30            <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> ALP-40            <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> ANBG              <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Alto Tajo NP_Arid <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 62 more rows</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 4</span></span></span>
+<span><span class="co">#&gt;   sitename             params_siml       site_info        forcing            </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>             </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Reichetal_Colorado   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Reichetal_New_Mexico <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Reichetal_Venezuela  <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Reichetal_Wisconsin  <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
 <span></span>
 <span><span class="va">p_model_validation_vcmax25</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 72 × 2</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   sitename [72]</span></span></span>
-<span><span class="co">#&gt;    sitename          data            </span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>          </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 10?28'N_84?02'W   <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 40?47'N_77?53'W   <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 40?48'N_77?50'W   <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 8?39'N__71?24'W   <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 9?10'N__79?51'W   <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> ALP-01            <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> ALP-30            <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> ALP-40            <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> ANBG              <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Alto Tajo NP_Arid <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 62 more rows</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   sitename [4]</span></span></span>
+<span><span class="co">#&gt;   sitename             data            </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Reichetal_Colorado   <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Reichetal_New_Mexico <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Reichetal_Venezuela  <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Reichetal_Wisconsin  <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span></code></pre></div>
 <p>For the remainder of this vignette, we will use the GPP flux
 datasets. The workflow is exactly the same for leaf traits data.</p>
 <p>To get your raw data into the structure used within

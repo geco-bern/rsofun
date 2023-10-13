@@ -458,7 +458,9 @@ blogpost</a>.</p>
 model performs.</p>
 <p>To compute the credible intervals for GPP prediction, we ran the
 P-model for 600 samples from the posterior distribution of the
-calibrated parameters.</p>
+calibrated parameters. As a result, we obtain the posterior distribution
+of modeled GPP at each time step and also the posterior distribution of
+predicted GPP, which incorporates the Gaussian model error.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Evaluation of the uncertainty coming from the model parameters' uncertainty</span></span>
 <span></span>
@@ -491,7 +493,7 @@ calibrated parameters.</p>
 <span>  <span class="co"># return modelled GPP and prediction for a new GPP observation</span></span>
 <span>  <span class="va">gpp</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>, <span class="st">"gpp"</span><span class="op">]</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>gpp <span class="op">=</span> <span class="va">gpp</span>, </span>
-<span>             gpp_obs <span class="op">=</span> <span class="va">gpp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">gpp</span><span class="op">)</span>, mean <span class="op">=</span> <span class="fl">0</span>, </span>
+<span>             gpp_pred <span class="op">=</span> <span class="va">gpp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">gpp</span><span class="op">)</span>, mean <span class="op">=</span> <span class="fl">0</span>, </span>
 <span>                                   sd <span class="op">=</span> <span class="va">sample_par</span><span class="op">$</span><span class="va">err_gpp</span><span class="op">)</span>,</span>
 <span>             date <span class="op">=</span> <span class="va">out</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>, <span class="st">"date"</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
@@ -509,15 +511,17 @@ calibrated parameters.</p>
 <span>    gpp_q05 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gpp</span>, <span class="fl">0.05</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>    gpp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gpp</span>, <span class="fl">0.5</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,          <span class="co"># get median</span></span>
 <span>    gpp_q95 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gpp</span>, <span class="fl">0.95</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>    gpp_obs_q05 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gpp_obs</span>, <span class="fl">0.05</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>    gpp_obs_q95 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gpp_obs</span>, <span class="fl">0.95</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>    gpp_pred_q05 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gpp_pred</span>, <span class="fl">0.05</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    gpp_pred_q95 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gpp_pred</span>, <span class="fl">0.95</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 <p>Below we plot the first year of observed GPP (in black) against the
-simulated GPP (in grey), accompanied by the predictive credible interval
-for modeled GPP (shaded in blue, very narrow) and the predictive
-credible interval for a new GPP observation (shaded in grey). We can see
-that the model uncertainty in quite small, in comparison to the data
-uncertainty.</p>
+predicted GPP (in grey), computed as the median of the posterior
+distribution of modeled GPP. This information is accompanied by the 90%
+credible interval for predicted GPP (shaded in blue, very narrow) and
+the 90% predictive interval (shaded in grey). We can see that the
+parameter uncertainty captured in the credible interval is quite small,
+in comparison to the model uncertainty captured by the predictive
+interval.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot the credible intervals computed above</span></span>
 <span><span class="co"># for the first year only</span></span>
@@ -529,8 +533,8 @@ uncertainty.</p>
 <span>        x <span class="op">=</span> <span class="va">date</span><span class="op">)</span>,</span>
 <span>    fill <span class="op">=</span> <span class="st">'blue'</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">gpp_obs_q05</span>, </span>
-<span>        ymax <span class="op">=</span> <span class="va">gpp_obs_q95</span>,</span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">gpp_pred_q05</span>, </span>
+<span>        ymax <span class="op">=</span> <span class="va">gpp_pred_q95</span>,</span>
 <span>        x <span class="op">=</span> <span class="va">date</span><span class="op">)</span>,</span>
 <span>    fill <span class="op">=</span> <span class="st">'grey40'</span>, alpha <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span></span>
