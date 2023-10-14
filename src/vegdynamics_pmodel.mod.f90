@@ -1,6 +1,8 @@
 module md_vegdynamics_pmodel
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
+  use md_params_core, only: npft, nlu, nmonth, dummy
+  use md_tile_pmodel, only: tile_type
 
   implicit none
 
@@ -12,10 +14,7 @@ contains
   subroutine vegdynamics( tile, fapar_prescr, fpc_grid_prescr )
     !//////////////////////////////////////////////////////////////////
     ! Updates canopy and tile variables
-    !------------------------------------------------------------------
-    use md_params_core, only: npft, nlu, nmonth, dummy
-    use md_tile, only: tile_type
-    
+    !------------------------------------------------------------------    
     ! arguments
     type( tile_type ), dimension(nlu), intent(inout) :: tile
 

@@ -10,11 +10,15 @@ test_that("p-model quantitative check", {
   # set model drivers to the NPHT paper
   # ones
   params_modl <- list(
-    kphio           = 0.09423773,
-    soilm_par_a     = 0.33349283,
-    soilm_par_b     = 1.45602286,
-    tau_acclim_tempstress = 10,
-    par_shape_tempstress  = 0.0
+    kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
+    kphio_par_a        = 0.0,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
+    kphio_par_b        = 1.0,
+    soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
+    soilm_betao        = 0.01,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
   )
   
   # run the model for these parameters

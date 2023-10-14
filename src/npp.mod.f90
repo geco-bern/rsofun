@@ -22,10 +22,10 @@ module md_npp
   !----------------------------------------------------------------
   use md_classdefs
   use md_params_core, only: npft, ndayyear, eps, nlu
-  use md_tile
-  use md_plant
-  use md_forcing_pmodel, only: climate_type, vegcover_type
-  use md_interface_pmodel, only: myinterface
+  use md_tile_cnmodel
+  use md_plant_cnmodel
+  use md_forcing_cnmodel, only: climate_type, vegcover_type
+  use md_interface_cnmodel, only: myinterface
 
   implicit none
 

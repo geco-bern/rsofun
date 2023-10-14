@@ -13,8 +13,8 @@ module md_littersom
   !----------------------------------------------------------------
   use md_classdefs
   use md_params_core
-  use md_plant
-  use md_tile
+  use md_plant_cnmodel
+  use md_tile_cnmodel
 
   implicit none
   
@@ -52,8 +52,8 @@ contains
     !  June 2014
     !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
-    use md_forcing_pmodel, only: climate_type
+    use md_interface_cnmodel, only: myinterface
+    use md_forcing_cnmodel, only: climate_type
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
@@ -477,7 +477,7 @@ contains
     ! Subroutine reads littersom module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
+    use md_interface_cnmodel, only: myinterface
 
     ! above-ground fast (foliage and roots) litter decay rate [1/d] 
     params_littersom%klitt_af10    = myinterface%params_calib%klitt_af10 / ndayyear

@@ -1,0 +1,1090 @@
+---
+title: "Exploring parameter sensitivity and calibration"
+author: "Pepa Aran"
+date: "2023-04-27"
+output: rmarkdown::html_vignette
+---
+  
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(rsofun)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(sensitivity)
+library(BayesianTools)
+```
+
+Parameter calibration can have a big impact on our modeling effort and use
+big computational resources. Hence, it is worth our time to explore which parameters
+should actually be calibrated (because of they impact the simulations greatly) 
+and to examine if the calibration routines behave as expected. 
+This vignette explains how to perform a simple
+parameter sensitivity analysis for the P-model and how to interpret the outputs of the
+calibration routines using the `BayesianTools` package.
+
+# Morris sensitivity analysis
+ We follow the same workflow as in the *Sensitivity analysis and parameter calibration* vignette.
+ 
+## Sensitivity analysis with Vcmax25 as target
+```{r}
+# Define log-likelihood function
+ll_pmodel <- function(
+    par_v                 # a vector of all calibratable parameters including errors
+){
+  rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
+    par_v,
+    obs = rsofun::p_model_validation_vcmax25[1:5, ],     # use only 5 sites
+    drivers = rsofun::p_model_drivers_vcmax25[1:5, ],
+    targets = "vcmax25"
+  )
+}
+
+# Compute log-likelihood for a given set of parameters
+ll_pmodel( par_v = c(
+  kphio              = 0.09423773, # setup ORG in Stocker et al. 2020 GMD
+  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+  kphio_par_b        = 1.0,
+  soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
+  soilm_betao        = 0.0,
+  beta_unitcostratio = 146.0,
+  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+  tau_acclim         = 30.0,
+  kc_jmax            = 0.41,
+  error_vcmax25      = 1e-5         # value from previous simulations
+))
+```
+
+```{r}
+# best parameter values (from previous literature)
+par_cal_best <- c(
+    kphio              = 0.09423773,
+    kphio_par_a        = -0.0025,
+    kphio_par_b        = 20,
+    soilm_thetastar    = 0.6*240,
+    soilm_betao        = 0.2,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41,
+    error_vcmax25          = 1e-5
+  )
+
+# lower bound
+par_cal_min <- c(
+    kphio              = 0.03,
+    kphio_par_a        = -0.004,
+    kphio_par_b        = 10,
+    soilm_thetastar    = 0,
+    soilm_betao        = 0,
+    beta_unitcostratio = 50.0,
+    rd_to_vcmax        = 0.01,
+    tau_acclim         = 7.0,
+    kc_jmax            = 0.2,
+    error_vcmax25          = 1e-7
+  )
+
+# upper bound
+par_cal_max <- c(
+    kphio              = 0.15,
+    kphio_par_a        = -0.001,
+    kphio_par_b        = 30,
+    soilm_thetastar    = 240,
+    soilm_betao        = 1,
+    beta_unitcostratio = 200.0,
+    rd_to_vcmax        = 0.1,
+    tau_acclim         = 60.0,
+    kc_jmax            = 0.8,
+    error_vcmax25          = 1e-4
+  )
+```
+
+```{r}
+morris_setup <- BayesianTools::createBayesianSetup(
+  likelihood = ll_pmodel,
+  prior = BayesianTools::createUniformPrior(par_cal_min, par_cal_max, par_cal_best),
+  names = names(par_cal_best)
+)
+```
+
+The setup is defined, now let's perform the sensitivity analysis:
+```{r eval = FALSE}
+set.seed(432)
+morrisOutvcmax25 <- sensitivity::morris(
+  model = morris_setup$posterior$density,
+  factors = names(par_cal_best), 
+  r = 500, 
+  design = list(type = "oat", levels = 20, grid.jump = 3), 
+  binf = par_cal_min, 
+  bsup = par_cal_max, 
+  scale = TRUE)
+```
+
+```{r}
+# Load Morris senstivity results
+load("vignettes/files/morrisOutvcmax25.rda")
+```
+
+Then we can observe the results:
+```{r}
+# summarise the moris output
+morrisOutvcmax25.df <- data.frame(
+  parameter = names(par_cal_best),
+  mu.star = apply(abs(morrisOutvcmax25$ee), 2, mean, na.rm = T),
+  sigma = apply(morrisOutvcmax25$ee, 2, sd, na.rm = T)
+) %>%
+  arrange( mu.star )
+
+# plot the output
+morrisOutvcmax25.df |>
+  tidyr::gather(variable, value, -parameter) |>
+  ggplot(aes(
+    reorder(parameter, value),
+    value, 
+    fill = variable),
+    color = NA) +
+  geom_bar(position = position_dodge(), stat = 'identity') +
+  scale_fill_brewer("", labels = c('mu.star' = expression(mu * "*"),
+                                   'sigma' = expression(sigma)),
+                    palette = "Dark2") +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 6),
+    axis.title = element_blank(),
+    legend.position = c(0.05, 0.95), legend.justification = c(0.05, 0.95)
+  )
+```
+
+# Interpretation of Bayesian calibration routine - GPP and Vcmax25
+
+It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. We can plot the MCMC chains, returned as part of the `calib_sofun()` output, and see that they converge to a similar value and become progressively more stable. We can also see the probability density of the sampled parameter values. 
+
+But first, let's actually run the calibration. We do it once for the Vcmax25 data
+alone, focusing on the kphio parameters. Then we do it for both Vcmax25
+(multiple sites) and GPP data (single site). That way, we can compare the behaviour
+to the main vignette example. Throughout, we only consider 5 sites for Vcmax25
+measurements, because otherwise the runtime of the calibration is too long.
+
+```{r eval = FALSE, echo = TRUE}
+set.seed(2023)
+
+# Define calibration settings
+settings_calib <- list(
+  method = "BayesianTools",
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 3000,
+      iterations = 9000,
+      nrChains = 3,        # number of independent chains
+      startValue = 3       # number of internal chains to be sampled
+    )),
+  par = list(
+    kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
+    kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025),
+    kphio_par_b = list(lower = 10, upper = 30, init =25),
+    err_vcmax25 = list(lower = 1e-7, upper = 1e-4, init = 1e-5)
+  )
+)
+
+# Calibrate kphio-related parameters and err_gpp 
+par_calib_vcmax25 <- calib_sofun(
+  drivers = p_model_drivers_vcmax25[1:5, ],
+  obs = p_model_validation_vcmax25[1:5, ],
+  settings = settings_calib,
+  par_fixed = list(
+    soilm_thetastar    = 0.6*240,
+    soilm_betao        = 0.2,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41),
+  targets = "vcmax25"
+)
+```
+
+```{r echo = FALSE}
+load("vignettes/files/par_calib_vcmax25.rda")
+```
+
+Let's plot the calibration results.
+
+```{r}
+vcmax25_data <- p_model_validation_vcmax25 |>
+  dplyr::ungroup() |>
+  dplyr::slice(1:5) |>        # get 5 first sites
+  tidyr::unnest(data)
+
+ggplot(data = rsofun::runread_pmodel_f(
+        p_model_drivers_vcmax25[1:5, ],
+        par = list(
+          kphio = par_calib_vcmax25$par[1],
+          kphio_par_a = par_calib_vcmax25$par[2],
+          kphio_par_b = par_calib_vcmax25$par[3],
+          soilm_thetastar    = 0.6*240,
+          soilm_betao        = 0.2,
+          beta_unitcostratio = 146.0,
+          rd_to_vcmax        = 0.014,
+          tau_acclim         = 30.0,
+          kc_jmax            = 0.41)
+      ) |>
+      dplyr::select(sitename, data) |>
+      tidyr::unnest(data)) +
+    geom_line(aes(
+      date,
+      vcmax25
+    ),
+    colour = "grey40",
+    alpha = 0.8
+  ) +
+  geom_errorbar(
+    aes(x = date, ymin=vcmax25 - 2*par_calib_vcmax25$par[4],   # should cover ~ 95% of observations
+        ymax=vcmax25 + 2*par_calib_vcmax25$par[4]), width=.2,
+                 position=position_dodge(0.05), 
+    color = 'grey40', alpha = 0.2) +  
+  geom_hline(
+    data = vcmax25_data,
+    aes(
+      yintercept = vcmax25
+    ),
+    alpha = 0.8
+  ) +
+  geom_hline(
+    data = vcmax25_data,
+    aes(yintercept = vcmax25 - 2*vcmax25_unc),
+    alpha = 0.5
+    ) +
+  geom_hline(
+    data = vcmax25_data,
+    aes(yintercept = vcmax25 + 2*vcmax25_unc),
+    alpha = 0.5) +
+  labs(
+    x = "Date",
+    y = "Vcmax25"
+  ) +
+  facet_grid(~ sitename)
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, eval = FALSE}
+# Plot the credible intervals computed above
+# for the first year only
+plot_gpp_error <- ggplot(data = pmodel_runs |>
+    dplyr::slice(1:365)) +             # Plot only first year
+  geom_ribbon(
+    aes(ymin = gpp_q05, 
+        ymax = gpp_q95,
+        x = date),
+    fill = 'blue', alpha = 0.5) +
+  geom_ribbon(
+    aes(ymin = gpp_obs_q05, 
+        ymax = gpp_obs_q95,
+        x = date),
+    fill = 'grey40', alpha = 0.2) +
+  geom_line(
+    aes(
+      date,
+      gpp
+    ),
+    colour = "grey40",
+    alpha = 0.8
+  ) +
+  theme_classic() +
+  theme(panel.grid.major.y = element_line()) +
+  labs(
+    x = 'Date',
+    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
+  )
+
+# Define GPP validation data (first year)
+validation_data <- p_model_validation$data[[1]][1:365, ]
+
+# Include observations in the plot
+plot_gpp_error +  
+  geom_line(
+    data = validation_data,
+    aes(
+      date,
+      gpp
+    ),
+    alpha = 0.8
+  )
+```
+
+
+
+# Calibrating the P-model to Pue-FR data, but subsets in time
+
+## First year of GPP data
+
+Let's start by calibrating the model only to the first year of data.
+```{r eval = FALSE, echo = TRUE}
+set.seed(2023)
+
+# Define calibration settings
+settings_calib <- list(
+  method = "BayesianTools",
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 3000,
+      iterations = 9000,
+      nrChains = 3,        # number of independent chains
+      startValue = 3       # number of internal chains to be sampled
+    )),
+  par = list(
+    kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
+    kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025),
+    kphio_par_b = list(lower = 10, upper = 30, init =25),
+    err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
+  )
+)
+
+# Calibrate kphio-related parameters and err_gpp 
+par_calib <- calib_sofun(
+  drivers = p_model_drivers |>
+    dplyr::mutate(forcing = p_model_drivers |> 
+                    select(sitename, forcing) |>
+                    unnest(forcing) |> 
+                    slice(1:365) |> 
+                    select(-sitename) |>
+                    list()),
+  obs = p_model_validation |>
+    unnest(data) |>
+    slice(1:365) |>
+    nest(.by = sitename, .key = "data"),
+  settings = settings_calib,
+  par_fixed = list(
+    soilm_thetastar    = 0.6*240,
+    soilm_betao        = 0.2,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41),
+  targets = "gpp"
+)
+```
+
+We can now plot the MCMC chains:
+```{r fig.width=7, fig.height=7}
+load("vignettes/files/par_calib_gpp_first_year.rda")
+
+plot(par_calib$mod)
+gelmanDiagnostics(par_calib$mod)
+correlationPlot(par_calib$mod)
+```
+
+And finally, we compute the credible intervals for the GPP predictions and observations and plot them.
+```{r echo = FALSE, eval = FALSE}
+# Evaluation of the uncertainty coming from the model parameters' uncertainty
+# without the `err_gpp` uncertainty.
+
+# Sample parameter values from the posterior distribution
+samples_par <- getSample(par_calib$mod, 
+                             thin = 10,           # get every 10th sample
+                             whichParameters = 1:4) |>    # ignore error_gpp
+                             # whichParameters = 1:4,    # ignore error_gpp
+                             # start = 100) |>           # remove burnin
+  as.data.frame() |>
+  dplyr::mutate(mcmc_id = 1:n()) |>
+  tidyr::nest(.by = mcmc_id, .key = "pars")
+
+# Run the P-model to get the posterior GPP predictions
+
+run_pmodel <- function(sample_par){
+  # Function that runs the P-model for a sample of parameters
+  # and also adds the new observation error
+  
+  out <- runread_pmodel_f(
+    drivers = p_model_drivers |>                      # run only first year of data
+      dplyr::mutate(forcing = p_model_drivers |> 
+                      unnest(forcing) |> 
+                      slice(1:365) |> 
+                      select(-sitename) |>
+                      list()),
+    par =  list(                      # copied from par_fixed above
+      kphio = sample_par$kphio,
+      kphio_par_a = sample_par$kphio_par_a,
+      kphio_par_b = sample_par$kphio_par_b,
+      soilm_thetastar    = 0.6*240,
+      soilm_betao        = 0.2,
+      beta_unitcostratio = 146.0,
+      rd_to_vcmax        = 0.014,
+      tau_acclim         = 30.0,
+      kc_jmax            = 0.41)       # value from posterior
+  )
+  
+  # return modelled GPP and prediction for a new GPP observation
+  gpp <- out$data[[1]][, "gpp"]
+  data.frame(gpp = gpp, 
+             gpp_obs = gpp + rnorm(n = length(gpp), mean = 0, sd = sample_par$err_gpp),
+             date = out$data[[1]][, "date"])
+}
+
+set.seed(2023)
+# Run the P-model for each set of parameters
+pmodel_runs <- samples_par |>
+  dplyr::mutate(sim = purrr::map(pars, ~run_pmodel(.x))) |>
+  # format to obtain 90% credible intervals
+  dplyr::select(mcmc_id, sim) |>
+  tidyr::unnest(sim) |>
+  dplyr::group_by(date) |>
+  # compute quantiles for each day
+  dplyr::summarise(
+    gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
+    gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
+    gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
+    gpp_obs_q05 = quantile(gpp_obs, 0.05, na.rm = TRUE),
+    gpp_obs_q95 = quantile(gpp_obs, 0.95, na.rm = TRUE)
+  )
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, eval = FALSE}
+# Plot the credible intervals computed above
+# for the first year only
+plot_gpp_error <- ggplot(data = pmodel_runs |>
+    dplyr::slice(1:365)) +             # Plot only first year
+  geom_ribbon(
+    aes(ymin = gpp_q05, 
+        ymax = gpp_q95,
+        x = date),
+    fill = 'blue', alpha = 0.5) +
+  geom_ribbon(
+    aes(ymin = gpp_obs_q05, 
+        ymax = gpp_obs_q95,
+        x = date),
+    fill = 'grey40', alpha = 0.2) +
+  geom_line(
+    aes(
+      date,
+      gpp
+    ),
+    colour = "grey40",
+    alpha = 0.8
+  ) +
+  theme_classic() +
+  theme(panel.grid.major.y = element_line()) +
+  labs(
+    x = 'Date',
+    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
+  )
+
+# Define GPP validation data (first year)
+validation_data <- p_model_validation$data[[1]][1:365, ]
+
+# Include observations in the plot
+plot_gpp_error +  
+  geom_line(
+    data = validation_data,
+    aes(
+      date,
+      gpp
+    ),
+    alpha = 0.8
+  )
+```
+
+## All years of GPP except 2014
+
+Now the same, but for all years except the last one.
+```{r eval = FALSE, echo = TRUE}
+set.seed(2023)
+
+# Define calibration settings
+settings_calib <- list(
+  method = "BayesianTools",
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 3000,
+      iterations = 9000,
+      nrChains = 2,        # number of independent chains
+      startValue = 3       # number of internal chains to be sampled
+    )),
+  par = list(
+    kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
+    kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025),
+    kphio_par_b = list(lower = 10, upper = 30, init =25),
+    err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
+  )
+)
+
+# Calibrate kphio-related parameters and err_gpp 
+par_calib <- calib_sofun(
+  drivers = p_model_drivers |>
+    dplyr::mutate(forcing = p_model_drivers |> 
+                    unnest(forcing) |> 
+                    slice(1:(365*7)) |> 
+                    select(-sitename) |>
+                    list()),
+  obs = p_model_validation |>
+    unnest(data) |>
+    slice(1:(365*7)) |>
+    nest(.by = sitename, .key = "data"),
+  settings = settings_calib,
+  par_fixed = list(
+    soilm_thetastar    = 0.6*240,
+    soilm_betao        = 0.2,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41),
+  targets = "gpp"
+)
+```
+
+```{r fig.height=7, fig.width=7}
+load("vignettes/files/par_calib_gpp_minus_2014.rda")
+
+plot(par_calib$mod)
+gelmanDiagnostics(par_calib$mod)
+correlationPlot(par_calib$mod)
+```
+
+And finally we compare the credible intervals:
+```{r echo = FALSE, eval = FALSE}
+# Evaluation of the uncertainty coming from the model parameters' uncertainty
+# without the `err_gpp` uncertainty.
+
+# Sample parameter values from the posterior distribution
+samples_par <- getSample(par_calib$mod, 
+                             thin = 10,           # get every 10th sample
+                             whichParameters = 1:4) |>    # ignore error_gpp
+                             # whichParameters = 1:4,    # ignore error_gpp
+                             # start = 100) |>           # remove burnin
+  as.data.frame() |>
+  dplyr::mutate(mcmc_id = 1:n()) |>
+  tidyr::nest(.by = mcmc_id, .key = "pars")
+
+# Run the P-model to get the posterior GPP predictions
+
+run_pmodel <- function(sample_par){
+  # Function that runs the P-model for a sample of parameters
+  # and also adds the new observation error
+  
+  out <- runread_pmodel_f(
+    drivers = p_model_drivers |>                      # run only first year of data
+      dplyr::mutate(forcing = p_model_drivers |> 
+                      select(sitename, forcing) |>
+                      unnest(forcing) |> 
+                      slice(1:365) |> 
+                      select(-sitename) |>
+                      list()),
+    par =  list(                      # copied from par_fixed above
+      kphio = sample_par$kphio,
+      kphio_par_a = sample_par$kphio_par_a,
+      kphio_par_b = sample_par$kphio_par_b,
+      soilm_thetastar    = 0.6*240,
+      soilm_betao        = 0.2,
+      beta_unitcostratio = 146.0,
+      rd_to_vcmax        = 0.014,
+      tau_acclim         = 30.0,
+      kc_jmax            = 0.41)       # value from posterior
+  )
+  
+  # return modelled GPP and prediction for a new GPP observation
+  gpp <- out$data[[1]][, "gpp"]
+  data.frame(gpp = gpp, 
+             gpp_obs = gpp + rnorm(n = length(gpp), mean = 0, sd = sample_par$err_gpp),
+             date = out$data[[1]][, "date"])
+}
+
+set.seed(2023)
+# Run the P-model for each set of parameters
+pmodel_runs <- samples_par |>
+  dplyr::mutate(sim = purrr::map(pars, ~run_pmodel(.x))) |>
+  # format to obtain 90% credible intervals
+  dplyr::select(mcmc_id, sim) |>
+  tidyr::unnest(sim) |>
+  dplyr::group_by(date) |>
+  # compute quantiles for each day
+  dplyr::summarise(
+    gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
+    gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
+    gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
+    gpp_obs_q05 = quantile(gpp_obs, 0.05, na.rm = TRUE),
+    gpp_obs_q95 = quantile(gpp_obs, 0.95, na.rm = TRUE)
+  )
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, eval = FALSE}
+# Plot the credible intervals computed above
+# for the first year only
+plot_gpp_error <- ggplot(data = pmodel_runs |>
+    dplyr::slice(1:365)) +             # Plot only first year
+  geom_ribbon(
+    aes(ymin = gpp_q05, 
+        ymax = gpp_q95,
+        x = date),
+    fill = 'blue', alpha = 0.5) +
+  geom_ribbon(
+    aes(ymin = gpp_obs_q05, 
+        ymax = gpp_obs_q95,
+        x = date),
+    fill = 'grey40', alpha = 0.2) +
+  geom_line(
+    aes(
+      date,
+      gpp
+    ),
+    colour = "grey40",
+    alpha = 0.8
+  ) +
+  theme_classic() +
+  theme(panel.grid.major.y = element_line()) +
+  labs(
+    x = 'Date',
+    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
+  )
+
+# Define GPP validation data (first year)
+validation_data <- p_model_validation$data[[1]][1:365, ]
+
+# Include observations in the plot
+plot_gpp_error +  
+  geom_line(
+    data = validation_data,
+    aes(
+      date,
+      gpp
+    ),
+    alpha = 0.8
+  )
+```
+
+
+
+# Calibrate kphio params and kc_jmax 
+
+```{r}
+# Takes 5min to run
+set.seed(2023)
+ 
+# Define calibration settings
+settings_calib <- list(
+   method = "BayesianTools",
+   metric = rsofun::cost_likelihood_pmodel,
+   control = list(
+       sampler = "DEzs",
+      settings = list(
+            burnin = 3000,
+           iterations = 9000,
+           nrChains = 3,        # number of independent chains
+           startValue = 3       # number of internal chains to be sampled
+       )),
+   par = list(
+       kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
+       kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025),
+       kphio_par_b = list(lower = 10, upper = 30, init =25),
+       kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),
+       err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
+   )
+)
+
+# Calibrate kphio-related parameters and err_gpp 
+par_calib <- calib_sofun(
+   drivers = p_model_drivers,
+   obs = p_model_validation,
+   settings = settings_calib,
+   par_fixed = list(
+       soilm_thetastar    = 0.6*240,
+       soilm_betao        = 0.2,
+       beta_unitcostratio = 146.0,
+       rd_to_vcmax        = 0.014,
+       tau_acclim         = 30.0),
+   targets = "gpp"
+)
+
+save(par_calib, file = "analysis/calibration_exploration_files/par_calib_kphio_kcjmax.rda")
+```
+
+```{r echo = TRUE, eval = FALSE}
+# Takes 1min to run
+# Evaluation of the uncertainty coming from the model parameters' uncertainty
+
+# Sample parameter values from the posterior distribution
+samples_par <- getSample(par_calib$mod, 
+                             thin = 100,              # get every 10th sample
+                             whichParameters = 1:5) |>  
+  as.data.frame() |>
+  dplyr::mutate(mcmc_id = 1:n()) |>
+  tidyr::nest(.by = mcmc_id, .key = "pars")
+
+run_pmodel <- function(sample_par){
+  # Function that runs the P-model for a sample of parameters
+  # and also adds the new observation error
+  
+  out <- runread_pmodel_f(
+    drivers = p_model_drivers,
+    par =  list(                      # copied from par_fixed above
+      kphio = sample_par$kphio,
+      kphio_par_a = sample_par$kphio_par_a,
+      kphio_par_b = sample_par$kphio_par_b,
+      soilm_thetastar    = 0.6*240,
+      soilm_betao        = 0.2,
+      beta_unitcostratio = 146.0,
+      rd_to_vcmax        = 0.014,
+      tau_acclim         = 30.0,
+      kc_jmax            = sample_par$kc_jmax)       # value from posterior
+  )
+  
+  # return modelled GPP and prediction for a new GPP observation
+  gpp <- out$data[[1]][, "gpp"]
+  data.frame(gpp = gpp, 
+             gpp_obs = gpp + rnorm(n = length(gpp), mean = 0, 
+                                   sd = sample_par$err_gpp),
+             date = out$data[[1]][, "date"])
+}
+
+set.seed(2023)
+# Run the P-model for each set of parameters
+pmodel_runs <- samples_par |>
+  dplyr::mutate(sim = purrr::map(pars, ~run_pmodel(.x))) |>
+  # format to obtain 90% credible intervals
+  dplyr::select(mcmc_id, sim) |>
+  tidyr::unnest(sim) |>
+  dplyr::group_by(date) |>
+  # compute quantiles for each day
+  dplyr::summarise(
+    gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
+    gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
+    gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
+    gpp_obs_q05 = quantile(gpp_obs, 0.05, na.rm = TRUE),
+    gpp_obs_q95 = quantile(gpp_obs, 0.95, na.rm = TRUE)
+  )
+```
+
+# Old code:
+
+```{r}
+### Calibration for Vcmax25 only
+# Define calibration settings
+settings_calib_vcmax25 <- list(
+  method = "BayesianTools",
+  metric = function(par, obs, drivers){
+    cost_likelihood_pmodel(par = par, obs = obs, drivers = drivers,
+                           targets = c('vcmax25'))
+  },
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 500,
+      iterations = 1000
+    )),
+  par = list(
+    kphio = list(lower = 0, upper = 0.2, init = 0.05),
+    err_vcmax25 = list(lower = 0.000001, upper = 0.2, init = 0.01)
+  )
+)
+
+# calibrate parameters kphio and err_gpp (the two to which the model is most
+# sensitive)
+par_calib_vcmax25 <- calib_sofun(
+  drivers = p_model_drivers_vcmax25 |>
+    dplyr::slice(1:10),
+  obs = p_model_validation_vcmax25 |>
+    dplyr::slice(1:10),
+  settings = settings_calib_vcmax25
+)
+```
+
+```{r}
+### Simultaneous calibration
+# Define calibration settings
+settings_calib <- list(
+  method = "BayesianTools",
+  metric = function(par, obs, drivers){
+    cost_likelihood_pmodel(par = par, obs = obs, drivers = drivers,
+                           targets = c('gpp', 'vcmax25'))
+  },
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 500,
+      iterations = 2000
+    )),
+  par = list(
+    kphio = list(lower = 0, upper = 0.2, init = 0.05),
+    err_gpp = list(lower = 0.1, upper = 2, init = 0.8),
+    err_vcmax25 = list(lower = 0.000001, upper = 0.2, init = 0.01)
+  )
+)
+
+# calibrate parameters kphio and err_gpp (the two to which the model is most
+# sensitive)
+par_calib <- calib_sofun(
+  drivers = rbind(p_model_drivers,
+                  p_model_drivers_vcmax25 |>
+                    dplyr::slice(1:10)),
+  obs = rbind(p_model_validation, 
+              p_model_validation_vcmax25 |>
+                dplyr::slice(1:10)),
+  settings = settings_calib
+)
+```
+
+Okay, after calibrating let's check out the result!
+```{r}
+params_modl <- list(
+    kphio           = 0.0942,
+    soilm_par_a     = 0.333,
+    soilm_par_b     = 1.45,
+    tau_acclim_tempstress = 10,
+    par_shape_tempstress = 0)
+
+par(mfrow = c(3,4))
+
+gpp_data <- p_model_validation %>%
+  tidyr::unnest(data) |>
+  dplyr::slice(1:110)          # get first month of data
+
+site_vcmax <- 43:46                                 # can be changed
+vcmax25_data <- p_model_validation_vcmax25 |>
+  dplyr::ungroup() |>
+  dplyr::slice(site_vcmax) |>        # get 3 first sites
+  tidyr::unnest(data)
+
+# Plot GPP calibration ####
+params_new <- params_modl
+params_new$kphio <- par_calib_gpp$par[1]
+
+ggplot(data = rsofun::runread_pmodel_f(
+        p_model_drivers,
+        par = params_new
+      ) |>
+      dplyr::select(sitename, data) |>
+      tidyr::unnest(data) |>
+          dplyr::slice(1:110)) +
+    geom_line(aes(
+      date,
+      gpp
+    ),
+    colour = "red",
+    alpha = 0.8
+  ) +
+  geom_errorbar(
+    aes(x = date, ymin=gpp - 2*par_calib_gpp$par[2],   # should cover ~ 95% of observations
+        ymax=gpp + 2*par_calib_gpp$par[2]), width=.2,
+                 position=position_dodge(0.05), 
+    color = 'red', alpha = 0.5) +  
+  geom_line(
+    data = gpp_data,
+    aes(
+      date,
+      gpp
+    ),
+    alpha = 0.8
+  ) +
+  geom_errorbar(
+    data = validation_data,
+    aes(x = date, ymin=gpp - 2*gpp_unc, ymax=gpp + 2*gpp_unc), width=.2,
+                 position=position_dodge(0.05)) +
+
+  labs(
+    x = "Date",
+    y = "GPP"
+  )
+
+# Plot Vcmax25 calibration ####
+params_new$kphio <- par_calib_vcmax25$par[1]
+
+ggplot(data = rsofun::runread_pmodel_f(
+        p_model_drivers_vcmax25 |>
+          dplyr::slice(site_vcmax),
+        par = params_new
+      ) |>
+      dplyr::select(sitename, data) |>
+      tidyr::unnest(data)) +
+    geom_line(aes(
+      date,
+      vcmax25
+    ),
+    colour = "red",
+    alpha = 0.8
+  ) +
+  geom_errorbar(
+    aes(x = date, ymin=vcmax25 - 2*par_calib_vcmax25$par[2],   # should cover ~ 95% of observations
+        ymax=vcmax25 + 2*par_calib_vcmax25$par[2]), width=.2,
+                 position=position_dodge(0.05), 
+    color = 'red', alpha = 0.5) +  
+  geom_hline(
+    data = vcmax25_data,
+    aes(
+      yintercept = vcmax25
+    ),
+    alpha = 0.8
+  ) +
+  geom_hline(
+    data = vcmax25_data,
+    aes(yintercept = vcmax25 - 2*vcmax25_unc),
+    alpha = 0.5
+    ) +
+  geom_hline(
+    data = vcmax25_data,
+    aes(yintercept = vcmax25 + 2*vcmax25_unc),
+    alpha = 0.5) +
+  labs(
+    x = "Date",
+    y = "Vcmax25"
+  ) +
+  facet_grid(~ sitename)
+```
+
+Let's check the convergence of the MCMC chains for all the calibration setups:
+```{r}
+plot(par_calib_gpp$mod)
+plot(par_calib_vcmax25$mod)
+plot(par_calib$mod)
+```
+
+### Do the calibrated error terms make sense?
+
+Let's take a look at the different sources of error in the model, focusing on GPP as target.
+```{r eval = evaluate}
+validation_data <- p_model_validation %>%
+  tidyr::unnest(data) |>
+  dplyr::slice(1:30)          # get first month of data
+
+ggplot() +
+  #   geom_line(
+  #   data = model_data,
+  #   aes(
+  #     date,
+  #     gpp
+  #   ),
+  #   colour = "red",
+  #   alpha = 0.8
+  # ) +
+  geom_line(
+    data = validation_data,
+    aes(
+      date,
+      gpp
+    ),
+    alpha = 0.8
+  ) +
+  geom_errorbar(
+    data = validation_data,
+    aes(x = date, ymin=gpp - 2*gpp_unc, ymax=gpp + 2*gpp_unc), width=.2,
+                 position=position_dodge(0.05)) +
+  labs(
+    x = "Date",
+    y = "GPP"
+  )
+
+```
+
+Then, let's see what the average model error is, i.e. the RMSE between the 
+observed and simulated GPP.
+```{r eval = evaluate}
+# define model parameters
+params_modl <- list(
+    kphio           = 0.09423773,
+    soilm_par_a     = 0.33349283
+  )
+
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  p_model_drivers,
+  par = params_modl
+  )
+
+# clean output for plotting
+model_data <- output %>%
+  filter(sitename == "FR-Pue") %>%
+  tidyr::unnest(data) |>
+  dplyr::slice(1:30)               # first month of data
+
+# compute rmse
+rmse <- sqrt(mean((validation_data$gpp - model_data$gpp)^2, na.rm = TRUE))
+
+ggplot() +
+    geom_line(
+    data = model_data,
+    aes(
+      date,
+      gpp
+    ),
+    colour = "red",
+    alpha = 0.8
+  ) +
+  geom_line(
+    data = validation_data,
+    aes(
+      date,
+      gpp
+    ),
+    alpha = 0.8
+  ) +
+  geom_errorbar(
+    data = validation_data,
+    aes(x = date, ymin=gpp - 2*gpp_unc, ymax=gpp + 2*gpp_unc), width=.2,
+                 position=position_dodge(0.05)) +
+  geom_errorbar(
+    data = model_data,
+    aes(x = date, ymin=gpp - 2*rmse, ymax=gpp + 2*rmse), width=.2,
+                 position=position_dodge(0.05), color = 'red') +
+  labs(
+    x = "Date",
+    y = "GPP"
+  )
+```
+
+Finally, we plot the GPP observation error (from Fluxnet) and simulation error (estimated). Following what the previous plots hinted, this shows that the observation error should not be used as standard deviation of the log-likelihood used in calibration, but that this standard deviation should also be a calibratable parameter and it's closer to the RMSE in magnitude.
+```{r eval = evaluate}
+params_new <- list(
+  kphio = par_calib$par[1],
+  soilm_par_a = 0.33349283
+)
+
+model_data_new <- rsofun::runread_pmodel_f(
+  p_model_drivers,
+  par = params_new
+) |>
+  dplyr::select(sitename, data) |>
+  tidyr::unnest(data) |>
+      dplyr::slice(1:110)
+
+validation_data <- p_model_validation %>%
+  tidyr::unnest(data) |>
+  dplyr::slice(1:110)          # get first month of data
+
+ggplot() +
+    geom_line(
+    data = model_data_new,
+    aes(
+      date,
+      gpp
+    ),
+    colour = "red",
+    alpha = 0.8
+  ) +
+  geom_line(
+    data = validation_data,
+    aes(
+      date,
+      gpp
+    ),
+    alpha = 0.8
+  ) +
+  geom_errorbar(
+    data = validation_data,
+    aes(x = date, ymin=gpp - 2*gpp_unc, ymax=gpp + 2*gpp_unc), width=.2,
+                 position=position_dodge(0.05)) +
+  geom_errorbar(
+    data = model_data_new,
+    aes(x = date, ymin=gpp - 2*par_calib$par[2],   # should cover ~ 95% of observations
+        ymax=gpp + 2*par_calib$par[2]), width=.2,
+                 position=position_dodge(0.05), 
+    color = 'red', alpha = 0.5) +
+  labs(
+    x = "Date",
+    y = "GPP"
+  )
+```

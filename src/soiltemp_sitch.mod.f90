@@ -46,8 +46,8 @@ contains
     use md_params_core, only: ndayyear, nlu, ndaymonth, pi
     use md_sofunutils, only: running
     ! use md_sofunutils, only: daily2monthly
-    use md_tile, only: tile_type
-    use md_interface_pmodel, only: myinterface
+    use md_tile_cnmodel, only: tile_type
+    use md_interface_cnmodel, only: myinterface
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout)     :: tile

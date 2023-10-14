@@ -1,0 +1,1 @@
+The script for generating `data/p_model_drivers.rda` is in [`geco-bern/FluxDataKit/analysis/05_generate_demo_rsofun_drivers.R`](https://github.com/geco-bern/FluxDataKit/blob/main/analysis/05_generate_demo_rsofun_drivers.R).

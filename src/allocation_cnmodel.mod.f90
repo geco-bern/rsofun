@@ -12,12 +12,9 @@ module md_allocation_cnmodel
   !----------------------------------------------------------------
   use md_params_core
   use md_classdefs
-  use md_tile
-  use md_plant
-  use md_interface_pmodel, only: myinterface
-  use md_gpp_pmodel, only: calc_dgpp, calc_drd, params_gpp
-  use md_npp, only: calc_resp_maint, calc_cexu
-  use md_photosynth, only: calc_ftemp_inst_rd
+  use md_tile_cnmodel
+  use md_plant_cnmodel
+  use md_interface_cnmodel, only: myinterface
 
   implicit none
 
@@ -57,8 +54,7 @@ contains
     ! of a grass (no wood allocation).
     !------------------------------------------------------------------
     use md_findroot_fzeroin
-    use md_interface_pmodel, only: myinterface
-    use md_forcing_pmodel, only: climate_type
+    use md_forcing_cnmodel, only: climate_type
     use md_sofunutils, only: dampen_variability, calc_reg_line
 
     ! arguments
@@ -650,7 +646,6 @@ contains
     ! yy = 1.0
 
   end function calc_ft_growth
-
 
 
   function calc_l2r(c_labl, c_resv, c_labl_target, c_resv_target, f_max) result( out )

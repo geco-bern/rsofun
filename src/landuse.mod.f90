@@ -2,8 +2,8 @@ module md_landuse
   !////////////////////////////////////////////////////////////////
   !----------------------------------------------------------------
   use md_classdefs
-  use md_tile
-  use md_plant
+  use md_tile_cnmodel
+  use md_plant_cnmodel
   use md_params_core
     
   implicit none
@@ -17,7 +17,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Annual grass biomass harvest.
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
+    use md_interface_cnmodel, only: myinterface
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile

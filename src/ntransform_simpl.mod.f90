@@ -3,7 +3,7 @@ module md_ntransform_simpl
   ! INORGANIC NITROGEN DYNAMICS MODULE, SIMPLE
   !----------------------------------------------------------------
   use md_classdefs
-  use md_tile
+  use md_tile_cnmodel
   use md_params_core
   use md_rates
 
@@ -29,7 +29,7 @@ contains
     ! and of runoff. Similar as in BiomeE. Not distinguising between
     ! NO3 and NH4.
     !----------------------------------------------------------------
-    use md_forcing_pmodel, only: landuse_type
+    use md_forcing_cnmodel, only: landuse_type
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
@@ -89,7 +89,7 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
+    use md_interface_cnmodel, only: myinterface
 
     ! maximum nitrification rate
     params_ndecay%kdecay_ninorg = myinterface%params_calib%maxnitr  ! re-interpret available parameter

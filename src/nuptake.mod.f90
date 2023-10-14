@@ -23,8 +23,8 @@ module md_nuptake
   !----------------------------------------------------------------
   use md_params_core, only: ndayyear, nmonth, nlu, npft, maxgrid
   use md_classdefs
-  use md_tile
-  use md_plant
+  use md_tile_cnmodel
+  use md_plant_cnmodel
 
   implicit none
 
@@ -371,7 +371,7 @@ contains
     ! Subroutine reads nuptake module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
+    use md_interface_cnmodel, only: myinterface
 
     ! initial N uptake efficiency from soil
     params_nuptake%eff_nup = myinterface%params_calib%eff_nup

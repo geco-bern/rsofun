@@ -3,12 +3,12 @@ module md_biosphere_cnmodel
   use md_params_core
   use md_classdefs
   use md_sofunutils, only: calc_patm
-  use md_tile, only: tile_type, tile_fluxes_type, init_tile, init_tile_fluxes, &
+  use md_tile_cnmodel, only: tile_type, tile_fluxes_type, init_tile, init_tile_fluxes, &
     getpar_modl_tile, diag_daily, diag_annual, finalize_tile
-  use md_plant, only: getpar_modl_plant
+  use md_plant_cnmodel, only: getpar_modl_plant
   use md_phenology, only: phenology, phenology_daily, getpar_modl_phenology
-  use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
-  use md_gpp_pmodel, only: getpar_modl_gpp, gpp
+  use md_waterbal_cnmodel, only: waterbal, solar, getpar_modl_waterbal
+  use md_gpp_cnmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_cnmodel, only: vegdynamics
   use md_soiltemp, only: soiltemp
   use md_npp, only: npp
@@ -42,7 +42,7 @@ contains
     ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
     ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface, outtype_biosphere
+    use md_interface_cnmodel, only: myinterface, outtype_biosphere
   
     ! return variable
     type(outtype_biosphere), dimension(ndayyear) :: out_biosphere
@@ -134,7 +134,8 @@ contains
         call solar( tile_fluxes(:), &
                     myinterface%grid, & 
                     myinterface%climate(doy),  &
-                    doy &
+                    doy, &
+                    myinterface%params_siml%in_netrad &
                     )
         if (verbose) print*,'... done'
 
@@ -198,12 +199,10 @@ contains
                   tile_fluxes(:), &
                   myinterface%pco2, &
                   myinterface%climate(doy), &
-                  myinterface%climate_memory(doy), &
                   myinterface%vegcover(doy), &
                   myinterface%grid, &
-                  myinterface%params_siml%soilmstress, &
-                  myinterface%params_siml%tempstress, &
-                  init_daily &
+                  init_daily, &
+                  myinterface%params_siml%in_ppfd &
                   )
         !----------------------------------------------------------------
         if (verbose) print*, '              ==> returned: '

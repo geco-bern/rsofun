@@ -9,8 +9,8 @@ module md_phenology
   !----------------------------------------------------------------  
   use md_params_core, only: ndayyear, maxgrid, nmonth, middaymonth, npft, nlu, eps, kGsc
   use md_sofunutils, only: daily2monthly, monthly2daily
-  use md_tile
-  use md_plant
+  use md_tile_cnmodel
+  use md_plant_cnmodel
   
   implicit none
 
@@ -422,7 +422,7 @@ contains
     ! Subroutine reads nuptake module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
+    use md_interface_cnmodel, only: myinterface
 
     ! local variables
     integer :: phentype

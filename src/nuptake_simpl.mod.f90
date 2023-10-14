@@ -4,8 +4,8 @@ module md_nuptake_simpl
   !----------------------------------------------------------------
   use md_params_core, only: ndayyear, nmonth, nlu, npft
   use md_classdefs
-  use md_tile
-  use md_plant
+  use md_tile_cnmodel
+  use md_plant_cnmodel
 
   implicit none
 
@@ -119,7 +119,7 @@ contains
     ! Subroutine reads nuptake module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
+    use md_interface_cnmodel, only: myinterface
 
     params_nuptake%kc   = myinterface%params_calib%nuptake_kc
     params_nuptake%kv   = myinterface%params_calib%nuptake_kv

@@ -8,7 +8,7 @@ module md_ntransform
   !----------------------------------------------------------------
   use md_classdefs
   use md_params_core, only: nlu, maxgrid, ndayyear
-  use md_tile
+  use md_tile_cnmodel
 
   implicit none
 
@@ -43,8 +43,8 @@ contains
     !----------------------------------------------------------------
     use md_params_core, only: pft_start, pft_end, eps
     use md_rates
-    use md_interface_pmodel
-    use md_forcing_pmodel, only: landuse_type
+    use md_interface_cnmodel
+    use md_forcing_cnmodel, only: landuse_type
 
     ! XXX try: this is wrong: dw1 is only plant available water. 
     ! should be water-filled pore space = ( (porosity - ice) - (total fluid water volume) ) / dz
@@ -387,7 +387,7 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
+    use md_interface_cnmodel, only: myinterface
 
     ! maximum nitrification rate
     params_ntransform%maxnitr   = myinterface%params_calib%maxnitr

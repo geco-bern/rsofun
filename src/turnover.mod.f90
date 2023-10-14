@@ -23,8 +23,8 @@ module md_turnover
   !----------------------------------------------------------------
   use md_classdefs
   use md_params_core, only: nlu, npft, eps, nmonth, ndayyear
-  use md_tile
-  use md_plant
+  use md_tile_cnmodel
+  use md_plant_cnmodel
 
   implicit none
 

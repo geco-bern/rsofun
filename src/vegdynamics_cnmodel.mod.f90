@@ -1,6 +1,6 @@
 module md_vegdynamics_cnmodel
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  use md_tile_cnmodel
+  use md_plant_cnmodel
 
   implicit none
 
@@ -18,9 +18,7 @@ contains
     !------------------------------------------------------------------
     use md_params_core, only: nlu, npft, ndayyear
     ! use md_phenology, only: temppheno_type, params_pft_pheno
-    use md_tile
-    use md_plant
-    use md_interface_pmodel, only: myinterface
+    use md_interface_cnmodel, only: myinterface
 
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
@@ -83,8 +81,6 @@ contains
     ! Calculates leaf-level metabolic N content per unit leaf area as a
     ! function of Vcmax25.
     !------------------------------------------------------------------
-    use md_plant, only: plant_type, params_plant, params_pft_plant, add_seed
-
     ! arguments
     type(plant_type), intent(inout) :: plant
 
@@ -108,8 +104,6 @@ contains
     ! Calculates leaf-level metabolic N content per unit leaf area as a
     ! function of Vcmax25.
     !------------------------------------------------------------------
-    use md_plant, only: plant_type, params_pft_plant
-
     ! arguments
     type(plant_type), intent(inout) :: plant
     real, intent(in) :: cseed, nseed

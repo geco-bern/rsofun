@@ -7,7 +7,7 @@ module sofun_r_mod
   implicit none
 
   private
-  public :: pmodel_f, lm3ppa_f
+  public :: pmodel_f, cnmodel_f, biomee_f
 
 contains
 
@@ -18,8 +18,6 @@ contains
     firstyeartrend,            &           
     nyeartrend,                &  
     secs_per_tstep,            &     
-    soilmstress,               &        
-    tempstress,                &       
     in_ppfd,                   &    
     in_netrad,                 &      
     outdt,                     &  
@@ -32,9 +30,8 @@ contains
     lgr4,                      & 
     longitude,                 &      
     latitude,                  &     
-    altitude,                  &     
+    altitude,                  &   
     whc,                       &
-    soiltexture,               &
     nt,                        &
     par,                       &
     forcing,                   &
@@ -47,10 +44,10 @@ contains
     ! simulation's forcing as time series
     !----------------------------------------------------------------
     use md_params_siml_pmodel, only: getsteering
-    use md_forcing_pmodel, only: getclimate, getclimate_memory, getco2, getfapar, getlanduse, get_fpc_grid
+    use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: nlayers_soil, ndayyear, npft
-    use md_biosphere_cnmodel, only: biosphere_annual
+    use md_biosphere_pmodel, only: biosphere_annual
 
     implicit none
 
@@ -61,8 +58,6 @@ contains
     integer(kind=c_int),  intent(in) :: firstyeartrend
     integer(kind=c_int),  intent(in) :: nyeartrend
     integer(kind=c_int),  intent(in) :: secs_per_tstep
-    logical(kind=c_bool), intent(in) :: soilmstress
-    logical(kind=c_bool), intent(in) :: tempstress
     logical(kind=c_bool), intent(in) :: in_ppfd
     logical(kind=c_bool), intent(in) :: in_netrad
     integer(kind=c_int),  intent(in) :: outdt
@@ -77,14 +72,13 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
     real(kind=c_double),  intent(in) :: whc
-    real(kind=c_double),  dimension(4,nlayers_soil), intent(in) :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(79), intent(in) :: par  ! Model parameters
-    real(kind=c_double),  dimension(nt,18), intent(in) :: forcing
-    real(kind=c_double),  dimension(nt,52), intent(out) :: output
+    real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
+    real(kind=c_double),  dimension(nt,18), intent(out) :: output
 
     ! local variables
-    type(outtype_biosphere), dimension(ndayyear) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function
+    type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
     integer :: npft_local, yr, idx_start, idx_end
 
     !----------------------------------------------------------------
@@ -103,8 +97,6 @@ contains
       myinterface%params_siml%spinupyears = 0
     endif
     
-    myinterface%params_siml%soilmstress        = soilmstress
-    myinterface%params_siml%tempstress         = tempstress
     myinterface%params_siml%in_ppfd            = in_ppfd
     myinterface%params_siml%in_netrad          = in_netrad
     myinterface%params_siml%outdt              = outdt
@@ -140,95 +132,329 @@ contains
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
-    ! myinterface%soilparams = getsoil( soiltexture )  xxx copy soilparams to tile%soil%param in subroutine getparams_tile -> getparams_soil
-    myinterface%soiltexture(:,:) = real( soiltexture )
-
-    ! Overwrite whc
     myinterface%whc_prescr = real( whc )
+    
+    !----------------------------------------------------------------
+    ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
+    !----------------------------------------------------------------
+    myinterface%params_calib%kphio              = real(par(1))
+    myinterface%params_calib%kphio_par_a        = real(par(2))
+    myinterface%params_calib%kphio_par_b        = real(par(3))
+    myinterface%params_calib%soilm_thetastar    = real(par(4))
+    myinterface%params_calib%soilm_betao        = real(par(5))
+    myinterface%params_calib%beta_unitcostratio = real(par(6))
+    myinterface%params_calib%rd_to_vcmax        = real(par(7))
+    myinterface%params_calib%tau_acclim         = real(par(8))
+    myinterface%params_calib%kc_jmax            = real(par(9))
 
+    !----------------------------------------------------------------
+    ! GET VEGETATION COVER (fractional projective cover by PFT)
+    !----------------------------------------------------------------
+    myinterface%fpc_grid(:) = get_fpc_grid( myinterface%params_siml )
+    
+    do yr=1,myinterface%params_siml%runyears
+
+      !----------------------------------------------------------------
+      ! Define simulations "steering" variables (forcingyear, etc.)
+      !----------------------------------------------------------------
+      myinterface%steering = getsteering( yr, myinterface%params_siml )
+
+      !----------------------------------------------------------------
+      ! Get external (environmental) forcing
+      !----------------------------------------------------------------
+      ! Get climate variables for this year (full fields and 365 daily values for each variable)
+      myinterface%climate(:) = getclimate(nt, &
+                                          forcing, &
+                                          myinterface%steering%climateyear_idx, &
+                                          myinterface%params_siml%in_ppfd,  &
+                                          myinterface%params_siml%in_netrad, &
+                                          myinterface%grid%elv &
+                                          )
+
+      ! Get annual, gobally uniform CO2
+      myinterface%pco2 = getco2(  nt, &
+                                  forcing, &
+                                  myinterface%steering%forcingyear, &
+                                  myinterface%params_siml%firstyeartrend &
+                                  )
+
+      !----------------------------------------------------------------
+      ! Get prescribed fAPAR if required (otherwise set to dummy value)
+      !----------------------------------------------------------------
+      myinterface%vegcover(:) = getfapar( &
+                                        nt, &
+                                        forcing, &
+                                        myinterface%steering%forcingyear_idx &
+                                        )
+
+      !----------------------------------------------------------------
+      ! Call biosphere (wrapper for all modules, contains gridcell loop)
+      !----------------------------------------------------------------
+      out_biosphere = biosphere_annual() 
+      !----------------------------------------------------------------
+
+      !----------------------------------------------------------------
+      ! Populate Fortran output array which is passed back to C/R
+      !----------------------------------------------------------------
+      if (yr > myinterface%params_siml%spinupyears ) then
+
+        idx_start = (myinterface%steering%forcingyear_idx - 1) * ndayyear + 1
+        idx_end   = idx_start + ndayyear - 1
+
+        output(idx_start:idx_end,1)  = dble(out_biosphere%fapar(:))  
+        output(idx_start:idx_end,2)  = dble(out_biosphere%gpp(:))    
+        output(idx_start:idx_end,3)  = dble(out_biosphere%transp(:)) 
+        output(idx_start:idx_end,4)  = dble(out_biosphere%latenth(:))
+        output(idx_start:idx_end,5)  = dble(out_biosphere%pet(:))
+        output(idx_start:idx_end,6)  = dble(out_biosphere%vcmax(:))  
+        output(idx_start:idx_end,7)  = dble(out_biosphere%jmax(:))    
+        output(idx_start:idx_end,8)  = dble(out_biosphere%vcmax25(:)) 
+        output(idx_start:idx_end,9)  = dble(out_biosphere%jmax25(:))
+        output(idx_start:idx_end,10) = dble(out_biosphere%gs_accl(:))
+        output(idx_start:idx_end,11) = dble(out_biosphere%wscal(:))
+        output(idx_start:idx_end,12) = dble(out_biosphere%chi(:))
+        output(idx_start:idx_end,13) = dble(out_biosphere%iwue(:))
+        output(idx_start:idx_end,14) = dble(out_biosphere%rd(:))
+        output(idx_start:idx_end,15) = dble(out_biosphere%tsoil(:))
+        output(idx_start:idx_end,16) = dble(out_biosphere%netrad(:))
+        output(idx_start:idx_end,17) = dble(out_biosphere%wcont(:))
+        output(idx_start:idx_end,18) = dble(out_biosphere%snow(:))
+
+      end if
+
+    enddo
+
+  end subroutine pmodel_f
+
+
+  subroutine cnmodel_f(         &
+    spinup,                    &   
+    spinupyears,               &        
+    recycle,                   &    
+    firstyeartrend,            &           
+    nyeartrend,                &  
+    secs_per_tstep,            &     
+    in_ppfd,                   &    
+    in_netrad,                 &      
+    outdt,                     &  
+    ltre,                      & 
+    ltne,                      & 
+    ltrd,                      & 
+    ltnd,                      & 
+    lgr3,                      & 
+    lgn3,                      & 
+    lgr4,                      & 
+    longitude,                 &      
+    latitude,                  &     
+    altitude,                  &   
+    whc,                       &
+    nt,                        &
+    par,                       &
+    forcing,                   &
+    output                     &
+    ) bind(C, name = "cnmodel_f_")
+
+    !////////////////////////////////////////////////////////////////
+    ! Main subroutine to handle I/O with C and R. 
+    ! Receives simulation parameters, site parameters, and the full 
+    ! simulation's forcing as time series
+    !----------------------------------------------------------------
+    use md_params_siml_cnmodel, only: getsteering
+    use md_forcing_cnmodel, only: getclimate, getco2, getfapar, getlanduse, get_fpc_grid
+    use md_interface_cnmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
+    use md_params_core, only: nlayers_soil, ndayyear, npft
+    use md_biosphere_cnmodel, only: biosphere_annual
+
+    implicit none
+
+    ! arguments
+    logical(kind=c_bool), intent(in) :: spinup
+    integer(kind=c_int),  intent(in) :: spinupyears
+    integer(kind=c_int),  intent(in) :: recycle
+    integer(kind=c_int),  intent(in) :: firstyeartrend
+    integer(kind=c_int),  intent(in) :: nyeartrend
+    integer(kind=c_int),  intent(in) :: secs_per_tstep
+    logical(kind=c_bool), intent(in) :: in_ppfd
+    logical(kind=c_bool), intent(in) :: in_netrad
+    integer(kind=c_int),  intent(in) :: outdt
+    logical(kind=c_bool), intent(in) :: ltre
+    logical(kind=c_bool), intent(in) :: ltne
+    logical(kind=c_bool), intent(in) :: ltrd
+    logical(kind=c_bool), intent(in) :: ltnd
+    logical(kind=c_bool), intent(in) :: lgr3
+    logical(kind=c_bool), intent(in) :: lgn3
+    logical(kind=c_bool), intent(in) :: lgr4
+    real(kind=c_double),  intent(in) :: longitude
+    real(kind=c_double),  intent(in) :: latitude
+    real(kind=c_double),  intent(in) :: altitude
+    real(kind=c_double),  intent(in) :: whc
+    integer(kind=c_int),  intent(in) :: nt ! number of time steps
+    real(kind=c_double),  dimension(83), intent(in) :: par  ! Model parameters
+    real(kind=c_double),  dimension(nt,18), intent(in) :: forcing
+    real(kind=c_double),  dimension(nt,52), intent(out) :: output
+
+    ! ! pmodel------------------------------------------------------
+    ! real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
+    ! real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
+    ! real(kind=c_double),  dimension(nt,18), intent(out) :: output
+    ! !-------------------------------------------------------------
+
+    ! local variables
+    type(outtype_biosphere), dimension(ndayyear) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function
+    integer :: npft_local, yr, idx_start, idx_end
+
+    !----------------------------------------------------------------
+    ! GET SIMULATION PARAMETERS
+    !----------------------------------------------------------------
+    myinterface%params_siml%do_spinup      = spinup
+    myinterface%params_siml%spinupyears    = spinupyears
+    myinterface%params_siml%recycle        = recycle
+    myinterface%params_siml%firstyeartrend = firstyeartrend
+    myinterface%params_siml%nyeartrend     = nyeartrend
+
+    if (myinterface%params_siml%do_spinup) then
+      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend + myinterface%params_siml%spinupyears
+    else
+      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
+      myinterface%params_siml%spinupyears = 0
+    endif
+    
+    myinterface%params_siml%in_ppfd            = in_ppfd
+    myinterface%params_siml%in_netrad          = in_netrad
+    myinterface%params_siml%outdt              = outdt
+    myinterface%params_siml%ltre               = ltre
+    myinterface%params_siml%ltne               = ltne
+    myinterface%params_siml%ltrd               = ltrd
+    myinterface%params_siml%ltnd               = ltnd
+    myinterface%params_siml%lgr3               = lgr3
+    myinterface%params_siml%lgn3               = lgn3
+    myinterface%params_siml%lgr4               = lgr4
+    myinterface%params_siml%secs_per_tstep     = secs_per_tstep
+
+    ! Count PFTs to be simulated
+    npft_local = 0
+    if (myinterface%params_siml%ltre) npft_local = npft_local + 1
+    if (myinterface%params_siml%ltne) npft_local = npft_local + 1
+    if (myinterface%params_siml%ltrd) npft_local = npft_local + 1
+    if (myinterface%params_siml%ltnd) npft_local = npft_local + 1
+    if (myinterface%params_siml%lgr3) npft_local = npft_local + 1
+    if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
+    if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
+
+    ! set parameter to define that this is not a calibration run (otherwise sofun.f90 would not have been compiled, but sofun_simsuite.f90)
+    myinterface%params_siml%is_calib = .true.  ! treat paramters passed through R/C-interface the same way as calibratable parameters
+
+    !----------------------------------------------------------------
+    ! GET GRID INFORMATION
+    !----------------------------------------------------------------
+    myinterface%grid%lon = real( longitude )
+    myinterface%grid%lat = real( latitude )
+    myinterface%grid%elv = real( altitude )
+
+    !----------------------------------------------------------------
+    ! GET SOIL PARAMETERS
+    !----------------------------------------------------------------
+    myinterface%whc_prescr = real( whc )
+    
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS
     ! (not necessarily all to actually be calibrated)
     !----------------------------------------------------------------
     myinterface%params_calib%kphio                 = real(par(1))
-    myinterface%params_calib%soilm_par_a           = real(par(2))
-    myinterface%params_calib%soilm_par_b           = real(par(3))
-    myinterface%params_calib%tau_acclim_tempstress = real(par(4))
-    myinterface%params_calib%par_shape_tempstress  = real(par(5))
-    myinterface%params_calib%f_nretain             = real(par(6))
-    myinterface%params_calib%fpc_tree_max          = real(par(7))
-    myinterface%params_calib%growtheff             = real(par(8))
-    myinterface%params_calib%r_root                = real(par(9))
-    myinterface%params_calib%r_sapw                = real(par(10))
-    myinterface%params_calib%exurate               = real(par(11))
-    myinterface%params_calib%cton_soil             = real(par(12))
-    myinterface%params_calib%k_decay_leaf          = real(par(13))
-    myinterface%params_calib%r_cton_seed           = real(par(14))
-    myinterface%params_calib%k_decay_root          = real(par(15))
-    myinterface%params_calib%k_decay_labl          = real(par(16))
-    myinterface%params_calib%k_decay_sapw          = real(par(17))
-    myinterface%params_calib%r_cton_root           = real(par(18))
-    myinterface%params_calib%r_cton_wood           = real(par(19))
-    myinterface%params_calib%ncw_min               = real(par(20))
-    myinterface%params_calib%r_n_cw_v              = real(par(21))
-    myinterface%params_calib%r_ctostructn_leaf     = real(par(22))
-    myinterface%params_calib%kbeer                 = real(par(23))
-    myinterface%params_calib%gddbase               = real(par(24))
-    myinterface%params_calib%ramp                  = real(par(25))
-    myinterface%params_calib%phentype              = real(par(26))
-    myinterface%params_calib%perc_k1               = real(par(27))
-    myinterface%params_calib%thdiff_wp             = real(par(28))
-    myinterface%params_calib%thdiff_whc15          = real(par(29))
-    myinterface%params_calib%thdiff_fc             = real(par(30))
-    myinterface%params_calib%forg                  = real(par(31))
-    myinterface%params_calib%wbwp                  = real(par(32))
-    myinterface%params_calib%por                   = real(par(33))
-    myinterface%params_calib%fsand                 = real(par(34))
-    myinterface%params_calib%fclay                 = real(par(35))
-    myinterface%params_calib%fsilt                 = real(par(36))
-    myinterface%params_calib%kA                    = real(par(37))
-    myinterface%params_calib%kalb_sw               = real(par(38))
-    myinterface%params_calib%kalb_vis              = real(par(39))
-    myinterface%params_calib%kb                    = real(par(40))
-    myinterface%params_calib%kc                    = real(par(41))
-    myinterface%params_calib%kCw                   = real(par(42))
-    myinterface%params_calib%kd                    = real(par(43))
-    myinterface%params_calib%ke                    = real(par(44))
-    myinterface%params_calib%keps                  = real(par(45))
-    myinterface%params_calib%kWm                   = real(par(46))
-    myinterface%params_calib%kw                    = real(par(47))
-    myinterface%params_calib%komega                = real(par(48))
-    myinterface%params_calib%maxmeltrate           = real(par(49))
-    myinterface%params_calib%klitt_af10            = real(par(50))
-    myinterface%params_calib%klitt_as10            = real(par(51))
-    myinterface%params_calib%klitt_bg10            = real(par(52))
-    myinterface%params_calib%kexu10                = real(par(53))
-    myinterface%params_calib%ksoil_fs10            = real(par(54))
-    myinterface%params_calib%ksoil_sl10            = real(par(55))
-    myinterface%params_calib%ntoc_crit1            = real(par(56))
-    myinterface%params_calib%ntoc_crit2            = real(par(57))
-    myinterface%params_calib%cton_microb           = real(par(58))
-    myinterface%params_calib%tmppar                = real(par(59)) ! used for development
-    myinterface%params_calib%fastfrac              = real(par(60))
-    myinterface%params_calib%eff_nup               = real(par(61))
-    myinterface%params_calib%minimumcostfix        = real(par(62))
-    myinterface%params_calib%fixoptimum            = real(par(63))
-    myinterface%params_calib%a_param_fix           = real(par(64))
-    myinterface%params_calib%b_param_fix           = real(par(65))
-    myinterface%params_calib%maxnitr               = real(par(66))
-    myinterface%params_calib%non                   = real(par(67))
-    myinterface%params_calib%n2on                  = real(par(68))
-    myinterface%params_calib%kn                    = real(par(69))
-    myinterface%params_calib%kdoc                  = real(par(70))
-    myinterface%params_calib%docmax                = real(par(71))
-    myinterface%params_calib%dnitr2n2o             = real(par(72))
-    myinterface%params_calib%beta                  = real(par(73))
-    myinterface%params_calib%rd_to_vcmax           = real(par(74))
-    myinterface%params_calib%tau_acclim            = real(par(75))
-    myinterface%params_calib%nv_vcmax25            = real(par(76))
-    myinterface%params_calib%nuptake_kc            = real(par(77))
-    myinterface%params_calib%nuptake_kv            = real(par(78))
-    myinterface%params_calib%nuptake_vmax          = real(par(79))
+    myinterface%params_calib%kphio_par_a           = real(par(2))
+    myinterface%params_calib%kphio_par_b           = real(par(3))
+    myinterface%params_calib%soilm_thetastar       = real(par(4))
+    myinterface%params_calib%soilm_betao           = real(par(5))
+    myinterface%params_calib%beta_unitcostratio    = real(par(6))
+    myinterface%params_calib%rd_to_vcmax           = real(par(7))
+    myinterface%params_calib%tau_acclim            = real(par(8))
+    myinterface%params_calib%kc_jmax               = real(par(9))
+    myinterface%params_calib%f_nretain             = real(par(10))
+    myinterface%params_calib%fpc_tree_max          = real(par(11))
+    myinterface%params_calib%growtheff             = real(par(12))
+    myinterface%params_calib%r_root                = real(par(13))
+    myinterface%params_calib%r_sapw                = real(par(14))
+    myinterface%params_calib%exurate               = real(par(15))
+    myinterface%params_calib%cton_soil             = real(par(16))
+    myinterface%params_calib%k_decay_leaf          = real(par(17))
+    myinterface%params_calib%r_cton_seed           = real(par(18))
+    myinterface%params_calib%k_decay_root          = real(par(19))
+    myinterface%params_calib%k_decay_labl          = real(par(20))
+    myinterface%params_calib%k_decay_sapw          = real(par(21))
+    myinterface%params_calib%r_cton_root           = real(par(22))
+    myinterface%params_calib%r_cton_wood           = real(par(23))
+    myinterface%params_calib%ncw_min               = real(par(24))
+    myinterface%params_calib%r_n_cw_v              = real(par(25))
+    myinterface%params_calib%r_ctostructn_leaf     = real(par(26))
+    myinterface%params_calib%kbeer                 = real(par(27))
+    myinterface%params_calib%gddbase               = real(par(28))
+    myinterface%params_calib%ramp                  = real(par(29))
+    myinterface%params_calib%phentype              = real(par(30))
+    myinterface%params_calib%perc_k1               = real(par(31))
+    myinterface%params_calib%thdiff_wp             = real(par(32))
+    myinterface%params_calib%thdiff_whc15          = real(par(33))
+    myinterface%params_calib%thdiff_fc             = real(par(34))
+    myinterface%params_calib%forg                  = real(par(35))
+    myinterface%params_calib%wbwp                  = real(par(36))
+    myinterface%params_calib%por                   = real(par(37))
+    myinterface%params_calib%fsand                 = real(par(38))
+    myinterface%params_calib%fclay                 = real(par(39))
+    myinterface%params_calib%fsilt                 = real(par(40))
+    myinterface%params_calib%kA                    = real(par(41))
+    myinterface%params_calib%kalb_sw               = real(par(42))
+    myinterface%params_calib%kalb_vis              = real(par(43))
+    myinterface%params_calib%kb                    = real(par(44))
+    myinterface%params_calib%kc                    = real(par(45))
+    myinterface%params_calib%kCw                   = real(par(46))
+    myinterface%params_calib%kd                    = real(par(47))
+    myinterface%params_calib%ke                    = real(par(48))
+    myinterface%params_calib%keps                  = real(par(49))
+    myinterface%params_calib%kWm                   = real(par(50))
+    myinterface%params_calib%kw                    = real(par(51))
+    myinterface%params_calib%komega                = real(par(52))
+    myinterface%params_calib%maxmeltrate           = real(par(53))
+    myinterface%params_calib%klitt_af10            = real(par(54))
+    myinterface%params_calib%klitt_as10            = real(par(55))
+    myinterface%params_calib%klitt_bg10            = real(par(56))
+    myinterface%params_calib%kexu10                = real(par(57))
+    myinterface%params_calib%ksoil_fs10            = real(par(58))
+    myinterface%params_calib%ksoil_sl10            = real(par(59))
+    myinterface%params_calib%ntoc_crit1            = real(par(60))
+    myinterface%params_calib%ntoc_crit2            = real(par(61))
+    myinterface%params_calib%cton_microb           = real(par(62))
+    myinterface%params_calib%tmppar                = real(par(63)) ! used for development
+    myinterface%params_calib%fastfrac              = real(par(64))
+    myinterface%params_calib%eff_nup               = real(par(65))
+    myinterface%params_calib%minimumcostfix        = real(par(66))
+    myinterface%params_calib%fixoptimum            = real(par(67))
+    myinterface%params_calib%a_param_fix           = real(par(68))
+    myinterface%params_calib%b_param_fix           = real(par(69))
+    myinterface%params_calib%maxnitr               = real(par(70))
+    myinterface%params_calib%non                   = real(par(71))
+    myinterface%params_calib%n2on                  = real(par(72))
+    myinterface%params_calib%kn                    = real(par(73))
+    myinterface%params_calib%kdoc                  = real(par(74))
+    myinterface%params_calib%docmax                = real(par(75))
+    myinterface%params_calib%dnitr2n2o             = real(par(76))
+    myinterface%params_calib%zz                    = real(par(77))
+    myinterface%params_calib%xx                    = real(par(78))
+    myinterface%params_calib%yy                    = real(par(79))
+    myinterface%params_calib%nv_vcmax25            = real(par(80))
+    myinterface%params_calib%nuptake_kc            = real(par(81))
+    myinterface%params_calib%nuptake_kv            = real(par(82))
+    myinterface%params_calib%nuptake_vmax          = real(par(83))
+
+    ! ! pmodel--------------------------------------------------
+    ! myinterface%params_calib%kphio              = real(par(1))
+    ! myinterface%params_calib%kphio_par_a        = real(par(2))
+    ! myinterface%params_calib%kphio_par_b        = real(par(3))
+    ! myinterface%params_calib%soilm_thetastar    = real(par(4))
+    ! myinterface%params_calib%soilm_betao        = real(par(5))
+    ! myinterface%params_calib%beta_unitcostratio = real(par(6))
+    ! myinterface%params_calib%rd_to_vcmax        = real(par(7))
+    ! myinterface%params_calib%tau_acclim         = real(par(8))
+    ! myinterface%params_calib%kc_jmax            = real(par(9))
+    ! !---------------------------------------------------------
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)
@@ -253,12 +479,6 @@ contains
                                           myinterface%params_siml%in_netrad, &
                                           myinterface%grid%elv &
                                           )
-
-      ! Damped and lagged climate variables for acclimation
-      myinterface%climate_memory(:) = getclimate_memory(  myinterface%climate(:), &
-                                                          myinterface%params_calib%tau_acclim_tempstress, &
-                                                          myinterface%steering%init &
-                                                          )
 
       ! Get annual, gobally uniform CO2
       myinterface%pco2 = getco2(nt, &
@@ -341,15 +561,36 @@ contains
         output(idx_start:idx_end,51) = dble(out_biosphere(:)%x3 )
         output(idx_start:idx_end,52) = dble(out_biosphere(:)%x4 )
 
+        ! ! pmodel---------------------------------------------------
+        ! output(idx_start:idx_end,1)  = dble(out_biosphere%fapar(:))  
+        ! output(idx_start:idx_end,2)  = dble(out_biosphere%gpp(:))    
+        ! output(idx_start:idx_end,3)  = dble(out_biosphere%transp(:)) 
+        ! output(idx_start:idx_end,4)  = dble(out_biosphere%latenth(:))
+        ! output(idx_start:idx_end,5)  = dble(out_biosphere%pet(:))
+        ! output(idx_start:idx_end,6)  = dble(out_biosphere%vcmax(:))  
+        ! output(idx_start:idx_end,7)  = dble(out_biosphere%jmax(:))    
+        ! output(idx_start:idx_end,8)  = dble(out_biosphere%vcmax25(:)) 
+        ! output(idx_start:idx_end,9)  = dble(out_biosphere%jmax25(:))
+        ! output(idx_start:idx_end,10) = dble(out_biosphere%gs_accl(:))
+        ! output(idx_start:idx_end,11) = dble(out_biosphere%wscal(:))
+        ! output(idx_start:idx_end,12) = dble(out_biosphere%chi(:))
+        ! output(idx_start:idx_end,13) = dble(out_biosphere%iwue(:))
+        ! output(idx_start:idx_end,14) = dble(out_biosphere%rd(:))
+        ! output(idx_start:idx_end,15) = dble(out_biosphere%tsoil(:))
+        ! output(idx_start:idx_end,16) = dble(out_biosphere%netrad(:))
+        ! output(idx_start:idx_end,17) = dble(out_biosphere%wcont(:))
+        ! output(idx_start:idx_end,18) = dble(out_biosphere%snow(:))
+        ! !------------------------------------------------------------
+
       end if
 
     enddo yearloop
 
-  end subroutine pmodel_f
+  end subroutine cnmodel_f
 
   !//////////////////////////////////////////////////////////////////////////
 
-  subroutine lm3ppa_f(            &
+  subroutine biomee_f(            &
     spinup,                       &   
     spinupyears,                  &        
     recycle,                      &    
@@ -455,21 +696,21 @@ contains
     output_annual_cohorts_n_deadtrees,  &
     output_annual_cohorts_c_deadtrees,  &
     output_annual_cohorts_deathrate  &
-    ) bind(C, name = "lm3ppa_f_")
-
+    ) bind(C, name = "biomee_f_")
+     
     !////////////////////////////////////////////////////////////////
     ! Main subroutine to handle I/O with C and R. 
     ! Receives simulation parameters, site parameters, and the full 
     ! simulation's forcing as time series
     ! test xxx
     !----------------------------------------------------------------
-    use md_params_siml_lm3ppa, only: getsteering
-    ! use md_params_soil_lm3ppa, only: getsoil
-    use md_forcing_lm3ppa, only: getclimate, getco2, climate_type !, forcingData
-    use md_interface_lm3ppa, only: interfacetype_biosphere, outtype_biosphere, myinterface
+    use md_params_siml_biomee, only: getsteering
+    ! use md_params_soil_biomee, only: getsoil
+    use md_forcing_biomee, only: getclimate, getco2, climate_type !, forcingData
+    use md_interface_biomee, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
       ndayyear, nvars_daily_tile, nvars_hourly_tile, nvars_daily_cohorts, nvars_annual_cohorts, nvars_annual_tile
-    use md_biosphere_lm3ppa, only: biosphere_annual
+    use md_biosphere_biomee, only: biosphere_annual
 
     implicit none
 
@@ -493,7 +734,7 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
 
-   !  ! Tile parameters
+    ! Tile parameters
     integer(kind=c_int), intent(in) :: soiltype
     real(kind=c_double), intent(in) :: FLDCAP
     real(kind=c_double), intent(in) :: WILTPT
@@ -534,7 +775,6 @@ contains
     real(kind=c_double), dimension(nt,13), intent(in) :: forcing
 
     real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
-
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
 
     real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_year
@@ -631,14 +871,14 @@ contains
     myinterface%params_siml%update_annualLAImax   = update_annualLAImax      
     myinterface%params_siml%do_closedN_run        = do_closedN_run       
     
-    ! this needs to be consistent with translation to code in run_lm3ppa_f_bysite.R
+    ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
     if (code_method_photosynth == 1) then
       myinterface%params_siml%method_photosynth = "gs_leuning"
     else if (code_method_photosynth == 2) then
       myinterface%params_siml%method_photosynth = "pmodel"
     end if
 
-    ! this needs to be consistent with translation to code in run_lm3ppa_f_bysite.R
+    ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
     if (code_method_mortality == 1) then
       myinterface%params_siml%method_mortality = "cstarvation"
     else if (code_method_mortality == 2) then
@@ -764,7 +1004,6 @@ contains
     allocate(myinterface%pco2(ntstepsyear))
     allocate(out_biosphere%hourly_tile(ntstepsyear))
 
-
     yearloop: do yr=1, myinterface%params_siml%runyears
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -772,7 +1011,7 @@ contains
       myinterface%steering = getsteering( yr, myinterface%params_siml )
 
       !----------------------------------------------------------------
-      ! Get external (environmental) forcing (for lm3ppa, co2 is in myinterface%climate)
+      ! Get external (environmental) forcing (for biomee, co2 is in myinterface%climate)
       !----------------------------------------------------------------
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
       myinterface%climate(:) = getclimate( &
@@ -896,7 +1135,7 @@ contains
     deallocate(myinterface%pco2)
     deallocate(out_biosphere%hourly_tile)
  
-  end subroutine lm3ppa_f
+  end subroutine biomee_f
 
   !////////////////////////////////////////////////////////////////
   ! Populates hourly tile-level output array passed back to C and R.
@@ -904,7 +1143,7 @@ contains
   subroutine populate_outarray_hourly_tile( hourly_tile, out_hourly_tile ) !, idx_daily_start, idx_daily_end
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-    use md_interface_lm3ppa, only: outtype_hourly_tile
+    use md_interface_biomee, only: outtype_hourly_tile
     use md_params_core
 
     ! arguments
@@ -936,7 +1175,7 @@ contains
   subroutine populate_outarray_daily_tile( daily_tile, out_daily_tile ) !, idx_daily_start, idx_daily_end
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-    use md_interface_lm3ppa, only: outtype_daily_tile
+    use md_interface_biomee, only: outtype_daily_tile
     use md_params_core
 
     ! arguments
@@ -988,7 +1227,7 @@ contains
   subroutine populate_outarray_annual_tile( annual_tile, out_annual_tile )
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-    use md_interface_lm3ppa, only: outtype_annual_tile
+    use md_interface_biomee, only: outtype_annual_tile
     use md_params_core
 
     ! arguments

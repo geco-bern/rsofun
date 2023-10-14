@@ -1,6 +1,6 @@
 Package: rsofun
-Title: SOFUN in R
-Version: 4.2
+Title: The P-model and BiomeE Modelling Framework in R
+Version: 4.4
 Authors@R: c(
             person(
               family = "Benjamin",
@@ -12,25 +12,29 @@ Authors@R: c(
                family = "Hufkens",
                given = "Koen",
                email = "koen.hufkens@gmail.com",
-               role = c("ctb"),
-               comment = c(ORCID = "0000-0002-5070-8109"))
+               comment = c(ORCID = "0000-0002-5070-8109"),
+               role = c("aut")),
+            person(
+               family = "Arán Paredes",
+               given = "Josefa",
+               email = "pepa.aran@gmail.com",
+               comment = c(ORCID = "0009-0006-7176-2311"),
+               role = c("aut"))
            )
-Description: Implements the SOFUN modelling framework for simulating terrestrial
-              processes, including model calibration and benchmarking.
+Description: Implements the Simulating Optimal FUNctioning framework for 
+              site-scale simulations of ecosystem processes, including model 
+              calibration.
 URL: https://github.com/geco-bern/rsofun
 BugReports: https://github.com/geco-bern/rsofun/issues
 License: GPL-3
 Depends:
-    R (>= 3.6)
+    R (>= 4.1.0)
 Imports:
     dplyr,
     purrr,
     tidyr,
-    tidyselect,
     magrittr,
-    lubridate,
     GenSA,
-    graphics,
     BayesianTools,
     multidplyr,
     stats,
@@ -39,13 +43,15 @@ LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Suggests:
-    rpmodel,
     covr,
+    rcmdcheck,
     testthat,
     rmarkdown,
     ggplot2,
-    knitr
+    knitr,
+    sensitivity,
+    cowplot
 VignetteBuilder: knitr
 Encoding: UTF-8

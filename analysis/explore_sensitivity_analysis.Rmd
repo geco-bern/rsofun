@@ -1,0 +1,190 @@
+---
+title: "Explore sensitivity analysis"
+author: "Pepa Aran"
+date: "2023-08-21"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(rsofun)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(sensitivity)
+library(BayesianTools)
+```
+
+# Exploring sensitivity analyses
+
+This script explores the idea that, when keeping the GPP error term fixed, running the Morris sensitivity analysis on the log-likelihood or on the simple mean squared error (MSE) leades to an equivalent sensitivity result. This was derived by the expression of the normal log-likelihood, which shares the sum of squared errors with the MSE. Furthermore, we'll see that the marginal results of all parameters may resemble the original Morris analysis from the paper, which includes the normal standard deviation as parameter.
+
+```{r}
+# Define log-likelihood function
+ll_pmodel <- function(
+    par_v                 # a vector of all calibratable parameters fixing errors
+){
+  rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
+    par = c(par_v, err_gpp = 2),         # Fix err_gpp
+    obs = rsofun::p_model_validation,    
+    drivers = rsofun::p_model_drivers,
+    targets = "gpp"
+  )
+}
+
+# Define rmse function
+
+rmse_pmodel <- function(
+    par_v                # a vector of all calibratable parameters, without errors
+){
+  rsofun::cost_rmse_pmodel(              # reuse rmse cost function
+    par_v,
+    obs = rsofun::p_model_validation,
+    drivers = rsofun::p_model_drivers,
+    targets = "gpp"
+  )
+}
+```
+
+```{r}
+# best parameter values (from previous literature)
+par_cal_best <- c(
+    kphio              = 0.09423773,
+    kphio_par_a        = -0.0025,
+    kphio_par_b        = 20,
+    soilm_thetastar    = 0.6*240,
+    soilm_betao        = 0.2,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
+
+# lower bound
+par_cal_min <- c(
+    kphio              = 0.03,
+    kphio_par_a        = -0.004,
+    kphio_par_b        = 10,
+    soilm_thetastar    = 0,
+    soilm_betao        = 0,
+    beta_unitcostratio = 50.0,
+    rd_to_vcmax        = 0.01,
+    tau_acclim         = 7.0,
+    kc_jmax            = 0.2
+  )
+
+# upper bound
+par_cal_max <- c(
+    kphio              = 0.15,
+    kphio_par_a        = -0.001,
+    kphio_par_b        = 30,
+    soilm_thetastar    = 240,
+    soilm_betao        = 1,
+    beta_unitcostratio = 200.0,
+    rd_to_vcmax        = 0.1,
+    tau_acclim         = 60.0,
+    kc_jmax            = 0.8
+  )
+```
+
+```{r}
+morris_setup_ll <- BayesianTools::createBayesianSetup(
+  likelihood = ll_pmodel,
+  prior = BayesianTools::createUniformPrior(par_cal_min, par_cal_max, par_cal_best),
+  names = names(par_cal_best)
+)
+
+morris_setup_rmse <- BayesianTools::createBayesianSetup(
+  likelihood = rmse_pmodel,
+  prior = BayesianTools::createUniformPrior(par_cal_min, par_cal_max, par_cal_best),
+  names = names(par_cal_best)
+)
+```
+
+The setup is defined, now let's perform the sensitivity analysis:
+```{r eval = FALSE}
+set.seed(432)
+morrisOut_ll <- sensitivity::morris(
+  model = morris_setup_ll$posterior$density,
+  factors = names(par_cal_best), 
+  r = 500, 
+  design = list(type = "oat", levels = 20, grid.jump = 3), 
+  binf = par_cal_min, 
+  bsup = par_cal_max, 
+  scale = TRUE)
+```
+
+```{r eval = FALSE}
+set.seed(432)
+morrisOut_rmse <- sensitivity::morris(
+  model = morris_setup_rmse$posterior$density,
+  factors = names(par_cal_best), 
+  r = 500, 
+  design = list(type = "oat", levels = 20, grid.jump = 3), 
+  binf = par_cal_min, 
+  bsup = par_cal_max, 
+  scale = TRUE)
+```
+
+Plot outputs:
+```{r}
+# summarise the moris output
+morrisOut_ll.df <- data.frame(
+  parameter = names(par_cal_best),
+  mu.star = apply(abs(morrisOut_ll$ee), 2, mean, na.rm = T),
+  sigma = apply(morrisOut_ll$ee, 2, sd, na.rm = T)
+) %>%
+  arrange( mu.star )
+
+morrisOut_rmse.df <- data.frame(
+  parameter = names(par_cal_best),
+  mu.star = apply(abs(morrisOut_rmse$ee), 2, mean, na.rm = T),
+  sigma = apply(morrisOut_rmse$ee, 2, sd, na.rm = T)
+) %>%
+  arrange( mu.star )
+
+# plot the output
+morrisOut_ll.df |>
+  tidyr::gather(variable, value, -parameter) |>
+  ggplot(aes(
+    reorder(parameter, value),
+    value, 
+    fill = variable),
+    color = NA) +
+  geom_bar(position = position_dodge(), stat = 'identity') +
+  scale_fill_brewer("", labels = c('mu.star' = expression(mu * "*"),
+                                   'sigma' = expression(sigma)),
+                    palette = "Dark2") +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 6),
+    axis.title = element_blank(),
+    legend.position = c(0.05, 0.95), legend.justification = c(0.05, 0.95)
+  ) +
+  labs(title = "Morris sensitivity - log-likelihood")
+
+# plot the output
+morrisOut_rmse.df |>
+  tidyr::gather(variable, value, -parameter) |>
+  ggplot(aes(
+    reorder(parameter, value),
+    value, 
+    fill = variable),
+    color = NA) +
+  geom_bar(position = position_dodge(), stat = 'identity') +
+  scale_fill_brewer("", labels = c('mu.star' = expression(mu * "*"),
+                                   'sigma' = expression(sigma)),
+                    palette = "Dark2") +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 6),
+    axis.title = element_blank(),
+    legend.position = c(0.05, 0.95), legend.justification = c(0.05, 0.95)
+  ) +
+  labs(title = "Morris sensitivity - RMSE")
+```
+

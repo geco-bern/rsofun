@@ -1,7 +1,7 @@
 module md_params_core
   !////////////////////////////////////////////////////////////////
   ! Contains physical constants and other fixed parameters used for
-  ! all setups, lm3ppa and pmodel
+  ! all setups, BiomeE and P-model
   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
   ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
