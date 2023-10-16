@@ -8,7 +8,7 @@ runread_biomee_f(drivers, makecheck = TRUE, parallel = FALSE, ncores = 2)
 }
 \arguments{
 \item{drivers}{A nested data frame with one row for each site and columns
-named according to thearguments of function `runread_biomee_f_bysite()`}
+named according to the arguments of function `runread_biomee_f_bysite()`}
 
 \item{makecheck}{A logical specifying whether checks are performed to verify
 forcings.}
@@ -28,10 +28,10 @@ in the nested column \code{data}.
 Runs the BiomeE model and loads output in once.
 }
 \examples{
-\dontrun{ \donttest{
+\donttest{
 # Example BiomeE model run
 
 mod_output <- runread_biomee_f(
   drivers = biomee_gs_leuning_drivers)
-}}
+}
 }

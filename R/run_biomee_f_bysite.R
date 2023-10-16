@@ -18,8 +18,20 @@
 #' @export
 #' @useDynLib rsofun
 #' 
+#' @returns Model output is provided as a list, with elements:
+#' \describe{
+#'   \item{\code{output_hourly_tile}}{A data.frame containing hourly predictions
+#'     .}
+#'   \item{\code{output_daily_tile}}{A data.frame with 35 columns.}
+#'   \item{\code{output_daily_cohorts}}{A data.frame with daily predictions
+#'     for each canopy cohort.}
+#'   \item{\code{output_annual_tile}}{A data.frame with annual values for 59
+#'     variables.}
+#'   \item{\code{output_annual_cohorts}}{A data.frame}
+#' }
+#' 
 #' @examples
-#' \dontrun{\donttest{
+#' \donttest{
 #' # Example BiomeE model run
 #' 
 #' # Use example drivers data
@@ -37,7 +49,7 @@
 #'  init_cohort = drivers$init_cohort[[1]],
 #'  init_soil = drivers$init_soil[[1]]
 #' )
-#' }}
+#' }
 
 run_biomee_f_bysite <- function(
   sitename,

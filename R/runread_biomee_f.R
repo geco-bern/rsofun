@@ -3,7 +3,7 @@
 #' Runs the BiomeE model and loads output in once.
 #'
 #' @param drivers A nested data frame with one row for each site and columns
-#'  named according to thearguments of function `runread_biomee_f_bysite()`
+#'  named according to the arguments of function `runread_biomee_f_bysite()`
 #' @param makecheck A logical specifying whether checks are performed to verify
 #'  forcings.
 #' @param parallel A logical specifying whether simulations are to be 
@@ -17,12 +17,12 @@
 #' @export
 #' 
 #' @examples 
-#' \dontrun{ \donttest{
+#' \donttest{
 #' # Example BiomeE model run
 #' 
 #' mod_output <- runread_biomee_f(
 #'   drivers = biomee_gs_leuning_drivers)
-#' }}
+#' }
 
 runread_biomee_f <- function(
   drivers,
