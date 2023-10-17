@@ -24,7 +24,7 @@ module md_gpp_pmodel
   !
   ! Copyright (C) 2015, see LICENSE, Benjamin Stocker
   ! Written by Benjamin Stocker, partly based on Python code by
-  ! Tyler Davis.
+  ! Tyler Davis (under GPL2.1).
   !----------------------------------------------------------------
   ! load core parameters
   use md_params_core, only: nmonth, npft, nlu, c_molmass, h2o_molmass, maxgrid, ndayyear, kTkelvin, dummy
