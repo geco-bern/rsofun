@@ -249,7 +249,7 @@ settings_calib <- list(
     settings = list(
       burnin = 3000,
       iterations = 9000,
-      nrChains = 1,        # number of independent chains
+      nrChains = 3,        # number of independent chains
       startValue = 3       # number of internal chains to be sampled
     )),
   par = list(
@@ -274,6 +274,8 @@ par_calib <- calib_sofun(
     kc_jmax            = 0.41),
   targets = "gpp"
 )
+
+# This code takes 15 minutes to run
 ```
 
 ```{r eval = FALSE, echo = FALSE}
@@ -387,7 +389,7 @@ incorporates the Gaussian model error.
 
 # Sample parameter values from the posterior distribution
 samples_par <- getSample(par_calib$mod, 
-                             thin = 10,              # get every 10th sample
+                             thin = 30,              # get every 30th sample
                              whichParameters = 1:4) |>  
   as.data.frame() |>
   dplyr::mutate(mcmc_id = 1:n()) |>
