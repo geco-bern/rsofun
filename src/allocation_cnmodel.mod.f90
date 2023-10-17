@@ -58,7 +58,7 @@ module md_allocation_cnmodel
 
 contains
 
-  subroutine allocation_daily( tile, tile_fluxes, climate, c_only, init )
+  subroutine allocation_daily( tile, tile_fluxes, climate, init )
     !//////////////////////////////////////////////////////////////////
     ! Finds optimal shoot:root growth ratio to balance C:N stoichiometry
     ! of a grass (no wood allocation).
@@ -71,7 +71,6 @@ contains
     type(tile_type), dimension(nlu), intent(inout) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(climate_type), intent(in) :: climate
-    logical, intent(in) :: c_only
     logical, intent(in) :: init
 
     ! local variables
@@ -172,7 +171,7 @@ contains
     abserr = 100.0  * XMACHEPS !*10e5
     relerr = 1000.0 * XMACHEPS !*10e5
 
-    if ( init .or. c_only ) then
+    if ( init .or. .not. myinterface%steering%dofree_alloc ) then
       frac_leaf = params_allocation%frac_leaf
     end if
 
@@ -213,7 +212,7 @@ contains
           ! tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%plabl%c%c12
 
           ! additionally constrain allocatable C by available N, given the lower C:N of leaves or roots
-          if (myinterface%steering%dofree_alloc .and. myinterface%steering%closed_nbal) then
+          if ( myinterface%steering%dofree_alloc .and. myinterface%steering%closed_nbal ) then
             max_dcleaf_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * tile(lu)%plant(pft)%r_cton_leaf
             max_dcroot_n_constraint = tile(lu)%plant(pft)%plabl%n%n14 * params_pft_plant(pft)%r_cton_root ! should be obsolete as generally r_ntoc_leaf > r_ntoc_root
             avl%c%c12 = min(avl%c%c12, max_dcleaf_n_constraint, max_dcroot_n_constraint)

@@ -440,7 +440,6 @@ contains
         call allocation_daily(  tile(:), &
                                 tile_fluxes(:),&
                                 myinterface%climate(doy), &
-                                myinterface%params_siml%c_only, &
                                 init_daily &
                                 )
         !----------------------------------------------------------------
