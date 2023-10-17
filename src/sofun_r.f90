@@ -11,6 +11,12 @@ module sofun_r_mod
 
 contains
 
+  !////////////////////////////////////////////////////////////////
+  ! Main subroutine for P-model simulation
+  ! Handles I/O with C and R. 
+  ! Receives simulation parameters, site parameters, and the full 
+  ! simulation's forcing as time series
+  !----------------------------------------------------------------
   subroutine pmodel_f(         &
     spinup,                    &   
     spinupyears,               &        
@@ -38,11 +44,6 @@ contains
     output                     &
     ) bind(C, name = "pmodel_f_")
 
-    !////////////////////////////////////////////////////////////////
-    ! Main subroutine to handle I/O with C and R. 
-    ! Receives simulation parameters, site parameters, and the full 
-    ! simulation's forcing as time series
-    !----------------------------------------------------------------
     use md_params_siml_pmodel, only: getsteering
     use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
@@ -227,7 +228,14 @@ contains
   end subroutine pmodel_f
 
 
-  subroutine cnmodel_f(         &
+  !////////////////////////////////////////////////////////////////
+  ! Main subroutine for CN-model simulation
+  ! Handles I/O with C and R. 
+  ! Receives simulation parameters, site parameters, and the full 
+  ! simulation's forcing as time series
+  !----------------------------------------------------------------
+  subroutine cnmodel_f(        &
+    c_only,                    &
     spinup,                    &   
     spinupyears,               &        
     recycle,                   &    
@@ -254,11 +262,6 @@ contains
     output                     &
     ) bind(C, name = "cnmodel_f_")
 
-    !////////////////////////////////////////////////////////////////
-    ! Main subroutine to handle I/O with C and R. 
-    ! Receives simulation parameters, site parameters, and the full 
-    ! simulation's forcing as time series
-    !----------------------------------------------------------------
     use md_params_siml_cnmodel, only: getsteering
     use md_forcing_cnmodel, only: getclimate, getco2, getfapar, getlanduse, get_fpc_grid
     use md_interface_cnmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
@@ -268,6 +271,7 @@ contains
     implicit none
 
     ! arguments
+    logical(kind=c_bool), intent(in) :: c_only
     logical(kind=c_bool), intent(in) :: spinup
     integer(kind=c_int),  intent(in) :: spinupyears
     integer(kind=c_int),  intent(in) :: recycle
@@ -293,12 +297,6 @@ contains
     real(kind=c_double),  dimension(nt,18), intent(in) :: forcing
     real(kind=c_double),  dimension(nt,52), intent(out) :: output
 
-    ! ! pmodel------------------------------------------------------
-    ! real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
-    ! real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
-    ! real(kind=c_double),  dimension(nt,18), intent(out) :: output
-    ! !-------------------------------------------------------------
-
     ! local variables
     type(outtype_biosphere), dimension(ndayyear) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function
     integer :: npft_local, yr, idx_start, idx_end
@@ -306,6 +304,7 @@ contains
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
     !----------------------------------------------------------------
+    myinterface%params_siml%c_only         = c_only
     myinterface%params_siml%do_spinup      = spinup
     myinterface%params_siml%spinupyears    = spinupyears
     myinterface%params_siml%recycle        = recycle
@@ -436,25 +435,13 @@ contains
     myinterface%params_calib%kdoc                  = real(par(74))
     myinterface%params_calib%docmax                = real(par(75))
     myinterface%params_calib%dnitr2n2o             = real(par(76))
-    myinterface%params_calib%zz                    = real(par(77))
-    myinterface%params_calib%xx                    = real(par(78))
+    myinterface%params_calib%frac_leaf             = real(par(77))
+    myinterface%params_calib%frac_wood             = real(par(78))
     myinterface%params_calib%yy                    = real(par(79))
     myinterface%params_calib%nv_vcmax25            = real(par(80))
     myinterface%params_calib%nuptake_kc            = real(par(81))
     myinterface%params_calib%nuptake_kv            = real(par(82))
     myinterface%params_calib%nuptake_vmax          = real(par(83))
-
-    ! ! pmodel--------------------------------------------------
-    ! myinterface%params_calib%kphio              = real(par(1))
-    ! myinterface%params_calib%kphio_par_a        = real(par(2))
-    ! myinterface%params_calib%kphio_par_b        = real(par(3))
-    ! myinterface%params_calib%soilm_thetastar    = real(par(4))
-    ! myinterface%params_calib%soilm_betao        = real(par(5))
-    ! myinterface%params_calib%beta_unitcostratio = real(par(6))
-    ! myinterface%params_calib%rd_to_vcmax        = real(par(7))
-    ! myinterface%params_calib%tau_acclim         = real(par(8))
-    ! myinterface%params_calib%kc_jmax            = real(par(9))
-    ! !---------------------------------------------------------
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)
@@ -561,35 +548,18 @@ contains
         output(idx_start:idx_end,51) = dble(out_biosphere(:)%x3 )
         output(idx_start:idx_end,52) = dble(out_biosphere(:)%x4 )
 
-        ! ! pmodel---------------------------------------------------
-        ! output(idx_start:idx_end,1)  = dble(out_biosphere%fapar(:))  
-        ! output(idx_start:idx_end,2)  = dble(out_biosphere%gpp(:))    
-        ! output(idx_start:idx_end,3)  = dble(out_biosphere%transp(:)) 
-        ! output(idx_start:idx_end,4)  = dble(out_biosphere%latenth(:))
-        ! output(idx_start:idx_end,5)  = dble(out_biosphere%pet(:))
-        ! output(idx_start:idx_end,6)  = dble(out_biosphere%vcmax(:))  
-        ! output(idx_start:idx_end,7)  = dble(out_biosphere%jmax(:))    
-        ! output(idx_start:idx_end,8)  = dble(out_biosphere%vcmax25(:)) 
-        ! output(idx_start:idx_end,9)  = dble(out_biosphere%jmax25(:))
-        ! output(idx_start:idx_end,10) = dble(out_biosphere%gs_accl(:))
-        ! output(idx_start:idx_end,11) = dble(out_biosphere%wscal(:))
-        ! output(idx_start:idx_end,12) = dble(out_biosphere%chi(:))
-        ! output(idx_start:idx_end,13) = dble(out_biosphere%iwue(:))
-        ! output(idx_start:idx_end,14) = dble(out_biosphere%rd(:))
-        ! output(idx_start:idx_end,15) = dble(out_biosphere%tsoil(:))
-        ! output(idx_start:idx_end,16) = dble(out_biosphere%netrad(:))
-        ! output(idx_start:idx_end,17) = dble(out_biosphere%wcont(:))
-        ! output(idx_start:idx_end,18) = dble(out_biosphere%snow(:))
-        ! !------------------------------------------------------------
-
       end if
 
     enddo yearloop
 
   end subroutine cnmodel_f
 
-  !//////////////////////////////////////////////////////////////////////////
-
+  !////////////////////////////////////////////////////////////////
+  ! Main subroutine for BiomeE simulation
+  ! Handles I/O with C and R. 
+  ! Receives simulation parameters, site parameters, and the full 
+  ! simulation's forcing as time series
+  !----------------------------------------------------------------
   subroutine biomee_f(            &
     spinup,                       &   
     spinupyears,                  &        
@@ -697,16 +667,9 @@ contains
     output_annual_cohorts_c_deadtrees,  &
     output_annual_cohorts_deathrate  &
     ) bind(C, name = "biomee_f_")
-     
-    !////////////////////////////////////////////////////////////////
-    ! Main subroutine to handle I/O with C and R. 
-    ! Receives simulation parameters, site parameters, and the full 
-    ! simulation's forcing as time series
-    ! test xxx
-    !----------------------------------------------------------------
+
     use md_params_siml_biomee, only: getsteering
-    ! use md_params_soil_biomee, only: getsoil
-    use md_forcing_biomee, only: getclimate, getco2, climate_type !, forcingData
+    use md_forcing_biomee, only: getclimate, getco2, climate_type
     use md_interface_biomee, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
       ndayyear, nvars_daily_tile, nvars_hourly_tile, nvars_daily_cohorts, nvars_annual_cohorts, nvars_annual_tile
@@ -1139,6 +1102,7 @@ contains
 
   !////////////////////////////////////////////////////////////////
   ! Populates hourly tile-level output array passed back to C and R.
+  ! For BiomeE only
   !----------------------------------------------------------------
   subroutine populate_outarray_hourly_tile( hourly_tile, out_hourly_tile ) !, idx_daily_start, idx_daily_end
 
@@ -1171,6 +1135,7 @@ contains
 
   !////////////////////////////////////////////////////////////////
   ! Populates daily tile-level output array passed back to C and R.
+  ! For BiomeE only
   !----------------------------------------------------------------
   subroutine populate_outarray_daily_tile( daily_tile, out_daily_tile ) !, idx_daily_start, idx_daily_end
 
@@ -1223,6 +1188,7 @@ contains
 
   !////////////////////////////////////////////////////////////////
   ! Populates annual output tile-level array passed back to C and R.
+  ! For BiomeE only
   !----------------------------------------------------------------
   subroutine populate_outarray_annual_tile( annual_tile, out_annual_tile )
 

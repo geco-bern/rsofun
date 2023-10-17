@@ -23,6 +23,7 @@ module md_params_siml_cnmodel
     integer :: outnt           ! number of output time steps per year
     integer :: secs_per_tstep  ! number of seconds per time step (now daily => 60 * 60 * 24)
     
+    logical :: c_only               ! whether to do interactive C-N cycling
     logical :: do_spinup            ! whether this simulation does spinup 
     logical :: is_calib             ! whether this simulation is a calibration simulation (overriding parameters and no output)
 

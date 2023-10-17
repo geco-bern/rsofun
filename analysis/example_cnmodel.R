@@ -105,8 +105,8 @@ pars <- list(
   dnitr2n2o             = 0.01,
   
   # Additional parameters - previously forgotten
-  beta                  = 146.000000,
-  rd_to_vcmax           = 0.01400000,
+  frac_leaf             = 0.5,           # after wood allocation
+  frac_wood             = 0.0,           # highest priority in allocation
   tau_acclim            = 10,
   
   # for development
@@ -128,6 +128,9 @@ tmp <- rsofun::p_model_drivers |>
                                                dno3 = 0.1,
                                                dnh4 = 0.1
   )))
+
+## interactive C-N cycling
+tmp$params_siml[[1]]$c_only <- FALSE
 
 ## no soil moisture stress
 tmp$params_siml[[1]]$soilmstress <- FALSE

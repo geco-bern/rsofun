@@ -13,7 +13,7 @@ module md_ntransform_simpl
   public ntransform, getpar_modl_ntransform
 
   !-----------------------------------------------------------------------
-  ! Uncertain (unknown) parameters. Runtime read-in
+  ! Module-specific model parameters
   !-----------------------------------------------------------------------
   type params_ndecay_type
     real :: kdecay_ninorg

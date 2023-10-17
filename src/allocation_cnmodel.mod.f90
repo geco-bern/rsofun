@@ -19,10 +19,10 @@ module md_allocation_cnmodel
   implicit none
 
   private 
-  public allocation_daily
+  public allocation_daily, getpar_modl_allocation
 
   !----------------------------------------------------------------
-  ! MODULE-SPECIFIC, PRIVATE VARIABLES
+  ! Module-specific, private variables
   !----------------------------------------------------------------
   type statetype
     type(orgpool) :: pleaf
@@ -43,12 +43,22 @@ module md_allocation_cnmodel
 
   type(statetype) :: state
 
+  !-----------------------------------------------------------------------
+  ! Module-specific model parameters
+  !-----------------------------------------------------------------------
+  type params_allocation_type
+    real :: frac_leaf
+    real :: frac_wood
+  end type params_allocation_type
+
+  type( params_allocation_type ) :: params_allocation
+
   ! logical, parameter :: write_logfile_eval_imbalance = .false.
   real :: test
 
 contains
 
-  subroutine allocation_daily( tile, tile_fluxes, climate, year )
+  subroutine allocation_daily( tile, tile_fluxes, climate, c_only, init )
     !//////////////////////////////////////////////////////////////////
     ! Finds optimal shoot:root growth ratio to balance C:N stoichiometry
     ! of a grass (no wood allocation).
@@ -61,7 +71,8 @@ contains
     type(tile_type), dimension(nlu), intent(inout) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(climate_type), intent(in) :: climate
-    integer, intent(in) :: year   ! xxx debug
+    logical, intent(in) :: c_only
+    logical, intent(in) :: init
 
     ! local variables
     real :: dcleaf
@@ -102,14 +113,14 @@ contains
 
     real, dimension(nlu,npft,len_cnbal_vec), save :: g_net_vec, r_rex_vec, n_acq_vec, c_a_l_vec, c_a_r_vec, n_con_vec !, c_a_s_vec
 
-    real :: psi_c        ! return on leaf investment
-    real :: psi_n        ! return on root investment
-    real :: c_con        ! sum of C consumed to satisfy all biomass production and respiration, including growth respiration
-    real :: n_con        ! sum of N consumed to satisfy all biomass production of past N days
-    real :: r_ntoc_con   ! consumed N:C ratio (considering C allocation and respiration over N allocation)
-    real :: n_exc        ! excess N acquisition over the past N days
-    real :: n_con_corr   ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
-    real, save :: frac_leaf = 0.5 ! fraction of C allocated to leaves
+    real :: psi_c           ! return on leaf investment
+    real :: psi_n           ! return on root investment
+    real :: c_con           ! sum of C consumed to satisfy all biomass production and respiration, including growth respiration
+    real :: n_con           ! sum of N consumed to satisfy all biomass production of past N days
+    real :: r_ntoc_con      ! consumed N:C ratio (considering C allocation and respiration over N allocation)
+    real :: n_exc           ! excess N acquisition over the past N days
+    real :: n_con_corr      ! corrected sum of N consumed, after accounting for excess uptake left over from the imbalance of acquisition and utilization over the preceeeding N days
+    real, save :: frac_leaf ! fraction of C allocated to leaves
 
     integer, parameter :: len_luep_vec = ndayyear
     integer, parameter :: len_rrum_vec = ndayyear
@@ -160,6 +171,10 @@ contains
 
     abserr = 100.0  * XMACHEPS !*10e5
     relerr = 1000.0 * XMACHEPS !*10e5
+
+    if ( init .or. c_only ) then
+      frac_leaf = params_allocation%frac_leaf
+    end if
 
     pftloop: do pft=1,npft
       lu = params_pft_plant(pft)%lu_category
@@ -688,6 +703,19 @@ contains
     out = r2l - l2r
 
   end function calc_f_reserves_labile
+
+
+  subroutine getpar_modl_allocation()
+    !////////////////////////////////////////////////////////////////
+    ! Subroutine reads module-specific parameters
+    !----------------------------------------------------------------
+    use md_interface_cnmodel, only: myinterface
+
+    ! maximum nitrification rate
+    params_allocation%frac_leaf = myinterface%params_calib%frac_leaf
+    params_allocation%frac_wood = myinterface%params_calib%frac_wood
+
+  end subroutine getpar_modl_allocation
 
 
   ! function get_rcton_init( pft, meanmppfd, nv ) result( rcton )

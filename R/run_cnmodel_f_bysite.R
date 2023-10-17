@@ -5,6 +5,9 @@
 #' @param sitename Site name.
 #' @param params_siml Simulation parameters.
 #' \describe{
+#'       \item{c_only}{A logical specifying whether to simulate interactive C and N cycles. If set to \code{FALSE}, 
+#'                     constant leaf:root allocation fractions are used and required N for allocation is added from 
+#'                     an unspecified source, whereby the N mass balance is violated.} 
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
 #'       \item{recycle}{Length of standard recycling period, in days.}
@@ -15,7 +18,7 @@
 #'       \item{ltnd}{A logical value, \code{TRUE} if deciduous tree and N-fixing.}
 #'       \item{lgr3}{A logical value, \code{TRUE} if grass with C3 photosynthetic pathway.}
 #'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
-#'       pathway and N-fixing.}
+#'                   pathway and N-fixing.}
 #'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
 #' }
 #' @param site_info A list of site meta info. Required:
@@ -264,6 +267,7 @@ run_cnmodel_f_bysite <- function(
     
     # parameters to check
     check_param <- c(
+      "c_only",
       "spinup",
       "spinupyears",
       "recycle",
@@ -374,8 +378,8 @@ run_cnmodel_f_bysite <- function(
                                        'kdoc',
                                        'docmax',
                                        'dnitr2n2o',
-                                       'beta',
-                                       'rd_to_vcmax',
+                                       'frac_leaf',
+                                       'frac_wood',
                                        'tau_acclim',
                                        'nv_vcmax25',
                                        'nuptake_kc',
@@ -489,8 +493,8 @@ run_cnmodel_f_bysite <- function(
       as.numeric(params_modl$kdoc),
       as.numeric(params_modl$docmax),
       as.numeric(params_modl$dnitr2n2o),
-      as.numeric(params_modl$beta),         # xxx doubled now
-      as.numeric(params_modl$rd_to_vcmax),  # xxx doubled now
+      as.numeric(params_modl$frac_leaf),
+      as.numeric(params_modl$frac_wood),
       as.numeric(params_modl$tau_acclim),   # xxx doubled now
       as.numeric(params_modl$nv_vcmax25),
       as.numeric(params_modl$nuptake_kc),
@@ -504,6 +508,7 @@ run_cnmodel_f_bysite <- function(
       'cnmodel_f_C',
       
       ## Simulation parameters
+      c_only                    = as.logical(params_siml$c_only),
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),

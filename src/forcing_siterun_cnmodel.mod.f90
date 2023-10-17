@@ -146,7 +146,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,16), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp), dimension(nt,16), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: forcingyear_idx
 
     ! function return variable
@@ -163,7 +163,6 @@ contains
     ! ! "Correct" fAPAR
     ! print*,"WARNING: normalising fAPAR to within 0.12 and 1.0."
     ! out_vegcover(:)%dfapar = max((out_vegcover(:)%dfapar - 0.12), 0.0)/(1.0 - 0.12)
-    
 
   end function getfapar
 

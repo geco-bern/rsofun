@@ -17,7 +17,7 @@ module md_biosphere_cnmodel
   use md_landuse, only: landuse
   use md_littersom, only: littersom, getpar_modl_littersom
   use md_ntransform_simpl, only: ntransform, getpar_modl_ntransform
-  use md_allocation_cnmodel, only: allocation_daily
+  use md_allocation_cnmodel, only: allocation_daily, getpar_modl_allocation
 
   implicit none
 
@@ -77,6 +77,7 @@ contains
       call getpar_modl_nuptake()
       call getpar_modl_littersom()
       call getpar_modl_ntransform()
+      call getpar_modl_allocation()
       if (verbose) print*, '... done'
 
       !----------------------------------------------------------------
@@ -439,7 +440,8 @@ contains
         call allocation_daily(  tile(:), &
                                 tile_fluxes(:),&
                                 myinterface%climate(doy), &
-                                myinterface%steering%forcingyear &
+                                myinterface%params_siml%c_only, &
+                                init_daily &
                                 )
         !----------------------------------------------------------------
         if (verbose) print*, '              ==> returned: '

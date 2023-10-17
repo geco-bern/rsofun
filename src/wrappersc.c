@@ -111,7 +111,8 @@ extern SEXP pmodel_f_C(
 // CN-model
 /////////////////////////////////////////////////////////////
 void F77_NAME(cnmodel_f)(
-    int    *spinup, // LOGICAL can be defined as _Bool but it gives a warming  
+    int    *c_only,
+    int    *spinup, // LOGICAL can be defined as _Bool but it gives a warning  
     int    *spinupyears,
     int    *recycle,
     int    *firstyeartrend,
@@ -139,6 +140,7 @@ void F77_NAME(cnmodel_f)(
 
 // C wrapper function for P-model
 extern SEXP cnmodel_f_C(
+    SEXP c_only,
     SEXP spinup,
     SEXP spinupyears,
     SEXP recycle,
@@ -167,16 +169,13 @@ extern SEXP cnmodel_f_C(
     // Number of time steps (same in forcing and output)
     const int nt = INTEGER(n)[0] ;
 
-    // Specify output
+    // Specify output matrix dimension
     // 2nd agument to allocMatrix is number of rows, 3rd is number of columns
     SEXP output = PROTECT( allocMatrix(REALSXP, nt, 52) );
 
-    // // pmodel---------------------------------------------
-    // SEXP output = PROTECT( allocMatrix(REALSXP, nt, 18) );
-    // //----------------------------------------------------
-
     // Fortran subroutine call
     F77_CALL(cnmodel_f)(
+        LOGICAL(c_only),
         LOGICAL(spinup),
         INTEGER(spinupyears),
         INTEGER(recycle),
@@ -624,7 +623,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
-  {"cnmodel_f_C",  (DL_FUNC) &cnmodel_f_C,  23},  // Specify number of arguments to C wrapper as the last number here
+  {"cnmodel_f_C",  (DL_FUNC) &cnmodel_f_C,  24},  // Specify number of arguments to C wrapper as the last number here
   {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };
