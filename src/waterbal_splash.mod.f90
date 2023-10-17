@@ -2,6 +2,8 @@ module md_waterbal
   !////////////////////////////////////////////////////////////////
   ! Ecosystem water balance using SPLASH.
   ! Code adopted from https://doi.org/10.5281/zenodo.376293
+  ! Written by Benjamin Stocker, partly based on Python code by
+  ! Tyler Davis (under GPL2.1).
   !----------------------------------------------------------------
   use md_params_core, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
     kMv, kMa, kfFEC, secs_per_day, pi, dummy, kGsc, ndaymonth, kTkelvin
@@ -14,8 +16,7 @@ module md_waterbal
   implicit none
 
   private
-  public waterbal, solar, &
-    getpar_modl_waterbal
+  public waterbal, solar, getpar_modl_waterbal
 
   !-----------------------------------------------------------------------
   ! Uncertain (unknown) parameters. Runtime read-in
@@ -30,7 +31,6 @@ module md_waterbal
   real :: kd                ! angular coefficient of transmittivity (Linacre, 1968)
   real :: ke                ! eccentricity for 2000 CE (Berger, 1978)
   real :: keps              ! obliquity for 2000 CE, degrees (Berger, 1978)
-  ! real :: kGsc              ! solar constant, W/m^2 (Kopp & Lean, 2011)
   real :: kw                ! entrainment factor (Lhomme, 1997; Priestley & Taylor, 1972)
   real :: komega            ! longitude of perihelion for 2000 CE, degrees (Berger, 1978)
 
@@ -51,25 +51,6 @@ module md_waterbal
     real :: snow_updated     ! snow depth in water equivalents (mm)
     real :: liquid_to_soil   ! water 
   end type outtype_snow_rain
-
-
-  !----------------------------------------------------------------
-  ! MODULE-SPECIFIC, KNOWN PARAMETERS
-  !----------------------------------------------------------------
-  ! logical :: outenergy = .true.
-
-  ! !----------------------------------------------------------------
-  ! ! Module-specific rolling mean variables
-  ! !----------------------------------------------------------------
-  ! ! real, allocatable, dimension(:,:), save :: rlmalpha       ! rolling mean of annual mean alpha (AET/PET)
-  ! integer, parameter :: nyrs_rlmalpha = 5                   ! number of years for rolling mean (=width of sliding window)
-
-  ! !----------------------------------------------------------------
-  ! ! Module-specific variables for rolling annual mean calculations
-  ! !----------------------------------------------------------------
-  ! real, dimension(nlu) :: rlmalpha
-
-  ! character(len=7) :: in_ppfd       ! information whether PPFD is prescribed from meteo file for global attribute in NetCDF file
 
   logical, parameter :: splashtest = .false.
 
@@ -798,64 +779,5 @@ contains
     psychro = cp * kMa * press / (kMv * lv)
 
   end function psychro
-
-
-  ! subroutine init_rlm_waterbal()
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Initialises waterbalance-specific output variables
-  !   ! The same subroutine is used here for initialising rolling mean variables
-  !   !----------------------------------------------------------------
-
-  !   ! Rolling mean variables
-  !   rlmalpha(:) = 0.0
-
-  ! end subroutine init_rlm_waterbal
-
-
-  ! subroutine getrlm_daily_waterbal( doy )
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Collect daily output variables
-  !   ! so far not implemented for isotopes
-  !   !----------------------------------------------------------------
-
-  !   ! argument
-  !   integer, intent(in) :: doy    
-
-  !   if (evap(1)%pet > 0.0) then
-  !     rlmalpha(:)  = rlmalpha(:) + (evap(:)%aet / evap(1)%pet) / ndayyear
-  !   else
-  !     rlmalpha(:)  = rlmalpha(:) + 1.0 / ndayyear
-  !   end if
-
-  ! end subroutine getrlm_daily_waterbal
-
-
-  ! subroutine get_rlm_waterbal( phy, init )
-  !   !/////////////////////////////////////////////////////////////////////////
-  !   ! Calculates the rolling mean of relevant variables
-  !   ! This requires the full arrays (all gridcells) to be stored.
-  !   !-------------------------------------------------------------------------
-  !   use md_params_core, only: nlu
-  !   use md_tile_pmodel, only: psoilphystype
-
-  !   ! arguments
-  !   type( psoilphystype ), dimension(:), intent(inout) :: phy
-  !   logical :: init
-
-  !   ! local variables
-  !   integer, save :: ncalls
-  !   integer :: nyrs_uptonow
-  !   integer :: lu
-
-  !   if (init) ncalls = 0
-  !   ncalls = ncalls + 1
-  !   nyrs_uptonow = min( ncalls, nyrs_rlmalpha )
-
-  !   do lu=1,nlu
-  !     phy(lu)%rlmalpha = ( phy(lu)%rlmalpha * (nyrs_uptonow - 1) + rlmalpha(lu) ) / nyrs_uptonow
-  !   end do
-
-  ! end subroutine get_rlm_waterbal
-
 
 end module md_waterbal
