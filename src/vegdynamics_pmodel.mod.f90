@@ -1,9 +1,9 @@
 module md_vegdynamics_pmodel
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  !////////////////////////////////////////////////////////////////
+  ! Vegetation cover definitions for P-model simulations.
+  !---------------------------------------------------------------
   use md_params_core, only: npft, nlu, nmonth, dummy
   use md_tile_pmodel, only: tile_type
-
   implicit none
 
   private
@@ -45,6 +45,5 @@ contains
     end do
   
   end subroutine vegdynamics
-
 
 end module md_vegdynamics_pmodel

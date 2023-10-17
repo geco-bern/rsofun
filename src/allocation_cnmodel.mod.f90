@@ -1,14 +1,7 @@
 module md_allocation_cnmodel
   !////////////////////////////////////////////////////////////////
-  ! ALLOCATION MODULE
-  ! Contains the "main" subroutine 'allocation_daily' and all 
-  ! necessary subroutines for handling input/output, and auxiliary
-  ! subroutines.
-  ! Every module that implements 'allocation_daily' must contain 
-  ! this list of subroutines (names that way).
-  !   - allocation_daily
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Allocation of labile C and N to different plant pools based on
+  ! functional balance.
   !----------------------------------------------------------------
   use md_params_core
   use md_classdefs

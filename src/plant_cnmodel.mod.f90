@@ -1,6 +1,7 @@
 module md_plant_cnmodel
   !////////////////////////////////////////////////////////////////
-  ! Module defining what a plant looks like and how it behaves. 
+  ! Module specifying how a plant looks like and how it behaves
+  ! for CN-model simulations
   !----------------------------------------------------------------
   use md_classdefs
   use md_params_core, only: ndayyear, npft, nlu, lunat

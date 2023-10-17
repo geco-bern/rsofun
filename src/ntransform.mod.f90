@@ -1,10 +1,6 @@
 module md_ntransform
   !////////////////////////////////////////////////////////////////
   ! INORGANIC NITROGEN DYNAMICS MODULE AFTER XURI & PRENTICE 2008
-  ! Contains the "main" subroutine 'ntransform' and all necessary 
-  ! subroutines for handling input/output. 
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   use md_classdefs
   use md_params_core, only: nlu, maxgrid, ndayyear
@@ -34,12 +30,7 @@ contains
 
   subroutine ntransform( tile, tile_fluxes, landuse, aprec, doy )
     !////////////////////////////////////////////////////////////////
-    !  Litter and SOM decomposition and nitrogen mineralisation.
-    !  1st order decay of litter and SOM _pools, governed by temperature
-    !  and soil moisture following LPJ (Sitch et al., 2003) and 
-    !  Xu-Ri & Prentice (XXX).
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
+    ! N mineralisation based on Xu-Ri & Prentice (2008).
     !----------------------------------------------------------------
     use md_params_core, only: pft_start, pft_end, eps
     use md_rates

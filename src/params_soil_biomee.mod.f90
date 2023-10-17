@@ -1,6 +1,6 @@
 module md_params_soil_biomee
   !////////////////////////////////////////////////////////////////
-  ! Module handling soil parameters
+  ! Module handling soil parameters for BiomeE
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, mydb=>real64, mysg=>real32
   use md_params_core, only: n_dim_soil_types

@@ -22,7 +22,6 @@ params_siml_biomee.mod.o: params_core.mod.o
 forcing_siterun_pmodel.mod.o: params_core.mod.o params_siml_pmodel.mod.o grid_siterun.mod.o sofunutils.mod.o
 forcing_siterun_cnmodel.mod.o: params_core.mod.o params_siml_cnmodel.mod.o grid_siterun.mod.o sofunutils.mod.o
 forcing_siterun_biomee.mod.o: params_core.mod.o params_siml_biomee.mod.o grid_siterun.mod.o
-#params_soil_pmodel.mod.o: params_core.mod.o
 params_soil_biomee.mod.o: params_core.mod.o
 tile_pmodel.mod.o: params_core.mod.o interface_biosphere_pmodel.mod.o classdefs.mod.o plant_pmodel.mod.o
 tile_cnmodel.mod.o: params_core.mod.o interface_biosphere_cnmodel.mod.o classdefs.mod.o plant_cnmodel.mod.o

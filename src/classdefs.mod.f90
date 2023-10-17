@@ -2,15 +2,11 @@ module md_classdefs
   !////////////////////////////////////////////////////////////////
   ! Module contains Fortran 90 derived-type declarations to define
   ! material pools in SOFUN and functions applicable to pool types.
-  ! 
-  ! Pools can be 
+  ! Pools can be:
   ! - carbon, consisting of C-12
   ! - nitrogen, consisting of N-14
   ! - organic material, consisting of carbon and nitrogen (inherits
   !   their defitions).
-  !
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   implicit none
 

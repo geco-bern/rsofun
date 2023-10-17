@@ -1,32 +1,8 @@
 module md_gpp_pmodel
   !////////////////////////////////////////////////////////////////
-  ! P-MODEL MODULE
-  ! 
-  ! Contains P-model functions for calculating ci, vcmax, and light
-  ! use efficiency (LUE) as a function of ambient conditions (temperature,
-  ! vapour pressure difference, CO2, and elevation), following 
-  ! Prentice et al., 2014, and Wang et al., 2017. This is implemented
-  ! by function pmodel().
-  ! 
-  ! Outputs of pmodel() can used within a LUE model to calculate gross 
-  ! primary production by multiplying with aborbed light. This is 
-  ! implemented by function calc_dgpp().
-  !
-  ! High-level wrapper functions and subroutines (getlue(), and 
-  ! gpp()) are provided for use within SOFN.
-  !
-  ! An empirical soil moisture stress function is implemented 
-  ! following Stocker et al., 2018.
-  !
-  ! Note that getpar_modl_gpp() must be invoked prior to first
-  ! call of any other function/subroutine. An example is given 
-  ! by demo_pmodel.f90.
-  !
-  ! Copyright (C) 2015, see LICENSE, Benjamin Stocker
-  ! Written by Benjamin Stocker, partly based on Python code by
-  ! Tyler Davis.
+  ! Module containing a wrapper for using the P-model photosynthesis
+  ! scheme in the P-model setup.
   !----------------------------------------------------------------
-  ! load core parameters
   use md_params_core, only: nmonth, npft, nlu, c_molmass, h2o_molmass, maxgrid, ndayyear, kTkelvin, dummy
   use md_tile_pmodel, only: tile_type, tile_fluxes_type
   use md_interface_pmodel, only: myinterface

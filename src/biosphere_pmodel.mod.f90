@@ -1,5 +1,9 @@
 module md_biosphere_pmodel
-
+  !////////////////////////////////////////////////////////////////
+  ! Module containing loop through time steps within a year and 
+  ! calls to SRs for individual processes.
+  ! Does not contain any input/output; this is done in SR sofun.
+  !----------------------------------------------------------------
   use md_params_core
   use md_classdefs
   use md_waterbal_pmodel, only: waterbal, solar, getpar_modl_waterbal
@@ -26,12 +30,7 @@ contains
 
   function biosphere_annual() result( out_biosphere )
     !////////////////////////////////////////////////////////////////
-    ! function BIOSPHERE_annual calculates net ecosystem exchange (nee)
-    ! in response to environmental boundary conditions (atmospheric 
-    ! CO2, temperature, Nitrogen deposition. This SR "replaces" 
-    ! LPJ, also formulated as subroutine.
-    ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-    ! contact: b.stocker@imperial.ac.uk
+    ! Calculates one year of photosynthesis C and water fluxes. 
     !----------------------------------------------------------------
     use md_interface_pmodel, only: myinterface, outtype_biosphere
   

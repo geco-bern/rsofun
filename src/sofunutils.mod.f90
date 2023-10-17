@@ -1,8 +1,6 @@
 module md_sofunutils
   !/////////////////////////////////////////////////////////////////////////
-  ! Contains various utility functions for use in SOFUN, including a weather 
-  ! generator.
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
+  ! Contains various utility functions
   !-------------------------------------------------------------------------
   implicit none
 

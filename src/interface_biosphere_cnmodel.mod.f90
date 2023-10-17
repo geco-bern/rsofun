@@ -1,13 +1,15 @@
 module md_interface_cnmodel
-
+  !////////////////////////////////////////////////////////////////
+  ! Module for handling I/O (forcing, parameters, output) from 
+  ! pmodel_f to the biosphere() with the P-model implementation
+  !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64
 
   use md_forcing_cnmodel, only: climate_type, landuse_type, &
     vegcover_type, landuse_type
-  ! use md_params_soil_pmodel, only: paramtype_soil
   use md_params_siml_cnmodel, only: paramstype_siml, outtype_steering
   use md_params_core, only: nlayers_soil, ndayyear, npft
-  use md_grid, only: gridtype !, domaininfo_type
+  use md_grid, only: gridtype
 
   implicit none
 
@@ -15,28 +17,6 @@ module md_interface_cnmodel
   public interfacetype_biosphere, outtype_biosphere, myinterface  
 
   type paramstype_calib
-
-    ! ! pmodel--------------------
-    ! real :: kphio
-    ! real :: kphio_par_a
-    ! real :: kphio_par_b
-    ! real :: soilm_thetastar
-    ! real :: soilm_betao
-    ! real :: beta_unitcostratio
-    ! real :: rd_to_vcmax
-    ! real :: tau_acclim
-    ! real :: kc_jmax
-    ! !---------------------------
-
-    ! ! old cnmodel-----------------
-    ! real :: kphio
-    ! real :: soilm_par_a
-    ! real :: soilm_par_b
-    ! real :: tau_acclim_tempstress
-    ! real :: par_shape_tempstress
-    ! !---------------------------
-
-    ! new cnmodel: +4-------------
     real :: kphio
     real :: kphio_par_a
     real :: kphio_par_b
@@ -46,8 +26,6 @@ module md_interface_cnmodel
     real :: rd_to_vcmax
     real :: tau_acclim
     real :: kc_jmax
-    !---------------------------
-
     real :: f_nretain
     real :: fpc_tree_max
     real :: growtheff
@@ -198,27 +176,6 @@ module md_interface_cnmodel
     real :: x2
     real :: x3
     real :: x4
-    
-    ! ! pmodel----------------------------
-    ! real, dimension(ndayyear) :: gpp
-    ! real, dimension(ndayyear) :: fapar
-    ! real, dimension(ndayyear) :: transp
-    ! real, dimension(ndayyear) :: latenth
-    ! real, dimension(ndayyear) :: pet
-    ! real, dimension(ndayyear) :: vcmax
-    ! real, dimension(ndayyear) :: jmax
-    ! real, dimension(ndayyear) :: vcmax25
-    ! real, dimension(ndayyear) :: jmax25
-    ! real, dimension(ndayyear) :: gs_accl
-    ! real, dimension(ndayyear) :: wscal
-    ! real, dimension(ndayyear) :: chi
-    ! real, dimension(ndayyear) :: iwue
-    ! real, dimension(ndayyear) :: rd
-    ! real, dimension(ndayyear) :: tsoil         ! soil temperature, deg C
-    ! real, dimension(ndayyear) :: netrad
-    ! real, dimension(ndayyear) :: wcont
-    ! real, dimension(ndayyear) :: snow
-    ! !------------------------------------
   end type outtype_biosphere
 
 end module md_interface_cnmodel

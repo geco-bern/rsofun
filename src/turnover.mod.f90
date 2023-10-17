@@ -1,25 +1,6 @@
 module md_turnover
   !////////////////////////////////////////////////////////////////
-  ! NPP_LPJ MODULE
-  ! Contains the "main" subroutine 'npp' and all necessary 
-  ! subroutines for handling input/output. 
-  ! Every module that implements 'npp' must contain this list 
-  ! of subroutines (names that way).
-  !   - npp
-  !   - getpar_modl_npp
-  !   - initio_npp
-  !   - initoutput_npp
-  !   - getout_daily_npp
-  !   - getout_monthly_npp
-  !   - writeout_ascii_npp
-  ! Required module-independent model state variables (necessarily 
-  ! updated by 'waterbal') are:
-  !   - daily NPP ('dnpp')
-  !   - soil temperature ('xxx')
-  !   - inorganic N _pools ('no3', 'nh4')
-  !   - xxx 
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Biomass tissue turnover. Code adapted from LPX-Bern.
   !----------------------------------------------------------------
   use md_classdefs
   use md_params_core, only: nlu, npft, eps, nmonth, ndayyear

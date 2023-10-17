@@ -6,6 +6,7 @@ library(tidyr)
 library(ggplot2)
 library(sensitivity)
 library(BayesianTools)
+library(tictoc)
 
 # Figure 1 #####
 
@@ -196,7 +197,7 @@ settings_calib <- list(
     sampler = "DEzs",
     settings = list(
       burnin = 1500,
-      iterations = 6000,
+      iterations = 12000,
       nrChains = 3,       # number of independent chains
       startValue = 3      # number of internal chains to be sampled
     )),
@@ -207,6 +208,9 @@ settings_calib <- list(
     err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
   )
 )
+
+# Run calibration and measure time
+tic()
 
 par_calib <- calib_sofun(
   drivers = p_model_drivers,
@@ -221,6 +225,11 @@ par_calib <- calib_sofun(
     tau_acclim         = 30.0),
   targets = "gpp"
 )
+
+toc() # took 1555.601 sec to run
+
+# # Save result
+# saveRDS(par_calib, file = "analysis/calibration_exploration_files/par_calib_12000iterations.rsd")
 
 # Define functions for plotting (re-use BayesianTools hidden code)
 getSetup <- function(x) {
@@ -291,14 +300,11 @@ plot_prior_posterior_density(par_calib$mod)
 # and take a long time to run.
 # For checking reproducibility, run the commented code.
 
-# Load code to produce credible intervals from sensitivity_analysis.Rmd
-load("vignettes/files/pmodel_runs.rda")
-
 # Evaluation of the uncertainty coming from the model parameters' uncertainty
 
 # Sample parameter values from the posterior distribution
 samples_par <- getSample(par_calib$mod,
-                         thin = 23,              # get 600 samples in total
+                         thin = 46,              # get 600 samples in total
                          whichParameters = 1:4) |>
   as.data.frame() |>
   dplyr::mutate(mcmc_id = 1:n()) |>
@@ -326,7 +332,7 @@ run_pmodel <- function(sample_par){
   # return modelled GPP and prediction for a new GPP observation
   gpp <- out$data[[1]][, "gpp"]
   data.frame(gpp = gpp, 
-             gpp_obs = gpp + rnorm(n = length(gpp), mean = 0, 
+             gpp_pred = gpp + rnorm(n = length(gpp), mean = 0, 
                                    sd = sample_par$err_gpp),
              date = out$data[[1]][, "date"])
 }
@@ -344,52 +350,65 @@ pmodel_runs <- samples_par |>
     gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
     gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
     gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
-    gpp_obs_q05 = quantile(gpp_obs, 0.05, na.rm = TRUE),
-    gpp_obs_q95 = quantile(gpp_obs, 0.95, na.rm = TRUE)
+    gpp_pred_q05 = quantile(gpp_pred, 0.05, na.rm = TRUE),
+    gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE)
   )
 
 # Plot the credible intervals computed above
 # for the first year only
 plot_gpp_error <- ggplot(data = pmodel_runs |>
-                           dplyr::slice(1:365)) +             # Plot only first year
+                           dplyr::slice(1:365) |>
+                           dplyr::left_join(
+                             # Merge GPP validation data (first year)
+                             p_model_validation$data[[1]][1:365, ] |>
+                               dplyr::rename(gpp_obs = gpp),
+                             by = "date")
+                         ) +             # Plot only first year
+  geom_ribbon(
+    aes(ymin = gpp_pred_q05, 
+        ymax = gpp_pred_q95,
+        x = date,
+        fill = "Model uncertainty")) +
   geom_ribbon(
     aes(ymin = gpp_q05, 
         ymax = gpp_q95,
-        x = date),
-    fill = "#29a274ff", alpha = 0.9) +
-  geom_ribbon(
-    aes(ymin = gpp_obs_q05, 
-        ymax = gpp_obs_q95,
-        x = date),
-    fill = "#777055ff", alpha = 0.4) +
+        x = date,
+        fill = "Parameter uncertainty")) +
+
   geom_line(
     aes(
       date,
-      gpp
-    ),
-    colour = "#777055ff",
-    alpha = 0.8
+      gpp,
+      color = "Predictions"
+    )
+  ) +
+  geom_line(
+    aes(
+      date,
+      gpp_obs,
+      color = "Observations"
+    )
   ) +
   theme_classic() +
-  theme(panel.grid.major.y = element_line()) +
+  theme(panel.grid.major.y = element_line(),
+        legend.position = "bottom") +
   labs(
     x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   )
 
-# Define GPP validation data (first year)
-validation_data <- p_model_validation$data[[1]][1:365, ]
-
 # Include observations in the plot
 plot_gpp_error +  
-  geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    ),
-    alpha = 0.8
-  )
+  scale_color_manual(name = "",
+                     breaks = c("Observations",
+                                "Predictions"),
+                     values = c(t_col("black", 10),
+                                t_col("#009E73", 10))) +
+  scale_fill_manual(name = "",
+                     breaks = c("Model uncertainty",
+                                "Parameter uncertainty"),
+                     values = c(t_col("#E69F00", 60),
+                                t_col("#009E73", 40)))
 
 
 # Result RMSE ####

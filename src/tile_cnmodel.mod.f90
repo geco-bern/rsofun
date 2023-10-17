@@ -1,7 +1,7 @@
 module md_tile_cnmodel
   !////////////////////////////////////////////////////////////////
-  ! Holds all tile-specific variables and procedurs
-  ! --------------------------------------------------------------
+  ! Defines how a tile looks like and behaves for CN-model simulations.
+  !---------------------------------------------------------------
   use md_params_core, only: npft, nlu
   use md_plant_cnmodel
   use md_classdefs

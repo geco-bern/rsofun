@@ -1,11 +1,7 @@
 module md_plant_pmodel
   !////////////////////////////////////////////////////////////////
-  !  Module contains (constrainable) model parameters.
-  !  Model parameters adopted here are from LPX C3 grass PFT
-  !  Litter and soil turnover parameters are divided by 365 to 
-  !  convert from [1/yr] to [1/d].
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Module specifying how a plant looks like and how it behaves
+  ! for P-model simulations
   !----------------------------------------------------------------
   use md_params_core, only: ndayyear, npft, nlu, lunat
   use md_interface_pmodel, only: myinterface
@@ -177,8 +173,6 @@ contains
     !  It was necessary to separate this SR from module md_plant_pmodel
     !  because this SR uses module md_waterbal, which also uses
     !  _plant.
-    ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-    ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------    
     ! local variables
     integer :: pft
@@ -303,8 +297,6 @@ contains
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     ! argument
     type( plant_type ), dimension(npft), intent(inout) :: plant
@@ -326,8 +318,6 @@ contains
   subroutine initpft( plant )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of specified PFT on specified gridcell
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     ! argument
     type( plant_type ), intent(inout) :: plant

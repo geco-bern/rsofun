@@ -1,8 +1,6 @@
 module md_rates
   !////////////////////////////////////////////////////////////////
-  !  Module containing temperature and moisture response functions.
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Module containing temperature and moisture response functions.
   !----------------------------------------------------------------
   implicit none
 

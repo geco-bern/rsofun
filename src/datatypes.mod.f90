@@ -1,5 +1,9 @@
 module datatypes
-  
+  !////////////////////////////////////////////////////////////////
+  ! Module containing BiomeE state variable and parameter 
+  ! definitions.
+  ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
+  !----------------------------------------------------------------  
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_interface_biomee, only: myinterface
   use md_params_core

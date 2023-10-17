@@ -1,5 +1,10 @@
 module md_biosphere_biomee
-  
+  !////////////////////////////////////////////////////////////////
+  ! Module containing loop through time steps within a year and 
+  ! calls to SRs for individual processes.
+  ! Does not contain any input/output; this is done in SR sofun.
+  ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
+  !----------------------------------------------------------------
   use datatypes
   use md_vegetation_biomee
   use md_soil_biomee
@@ -17,12 +22,7 @@ contains
 
   subroutine biosphere_annual(out_biosphere)
     !////////////////////////////////////////////////////////////////
-    ! function BIOSPHERE_annual calculates net ecosystem exchange (nee)
-    ! in response to environmental boundary conditions (atmospheric 
-    ! CO2, temperature, Nitrogen deposition. This SR "replaces" 
-    ! LPJ, also formulated as subroutine.
-    ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-    ! contact: b.stocker@imperial.ac.uk
+    ! Calculates one year of vegetation dynamics. 
     !----------------------------------------------------------------
     use md_interface_biomee, only: myinterface, outtype_biosphere  
     use md_gpp_biomee, only: getpar_modl_gpp

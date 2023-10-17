@@ -2,9 +2,6 @@ module md_grid
   !////////////////////////////////////////////////////////////////
   ! Module for handling variables defining the model grid. For site-
   ! scale simulation this is trivial but still necesssary.
-  !
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
   implicit none
 
@@ -31,9 +28,6 @@ end module md_grid
 !   !////////////////////////////////////////////////////////////////
 !   ! Module for handling variables defining the model grid. For site-
 !   ! scale simulation this is trivial but still necesssary.
-!   !
-!   ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-!   ! contact: b.stocker@imperial.ac.uk
 !   !----------------------------------------------------------------
 !   implicit none
 

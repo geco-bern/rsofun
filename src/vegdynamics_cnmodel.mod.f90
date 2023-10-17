@@ -1,4 +1,7 @@
 module md_vegdynamics_cnmodel
+  !////////////////////////////////////////////////////////////////
+  ! Vegetation cover definitions for CN-model simulations.
+  !---------------------------------------------------------------
   use md_tile_cnmodel
   use md_plant_cnmodel
 

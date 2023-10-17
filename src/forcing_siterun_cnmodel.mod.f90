@@ -1,13 +1,7 @@
 module md_forcing_cnmodel
   !////////////////////////////////////////////////////////////////
-  ! Module contains forcing variables (climate, co2, ...), and
-  ! subroutines used to read forcing input files for a specific year
-  ! ('forcingyear'), specifically for site scale simulations.
-  ! This module is only used on the level of 'sofun', but not
-  ! within 'biosphere', as these variables are passed on to 'biosphere'
-  ! as arguments.
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Module containing treatment of forcing for CN-model, linking
+  ! what's obtained from R through SR pmodel_f and what's needed by biosphere SR.
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_params_core, only: ndayyear, nlu, dummy

@@ -1,8 +1,6 @@
 module md_params_siml_cnmodel
   !////////////////////////////////////////////////////////////////
-  ! Module for handling simulation parameters.
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Module for handling simulation parameters for CN-model setup.
   !----------------------------------------------------------------
   implicit none
 

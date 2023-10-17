@@ -26,3 +26,4 @@
 ^\.httr-oauth$
 ^.*-logo\..*$
 ^codemeta\.json$
+^CRAN-SUBMISSION$

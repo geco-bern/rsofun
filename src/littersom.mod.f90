@@ -1,15 +1,7 @@
 module md_littersom
   !////////////////////////////////////////////////////////////////
-  ! LPJ LITTERSOM MODULE
-  ! Contains the "main" subroutine 'littersom' and all necessary 
-  ! subroutines for handling input/output. 
-  ! Every module that implements 'littersom' must contain this list 
-  ! of subroutines (names that way).
-  ! Required module-independent model state variables (necessarily 
-  ! updated by 'littersom') are:
-  !   - xxx
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Litter and soil organic matter dynamics.
+  ! Code partly adapted from LPX-Bern.
   !----------------------------------------------------------------
   use md_classdefs
   use md_params_core
@@ -45,12 +37,8 @@ contains
 
   subroutine littersom( tile, tile_fluxes, climate, doy )
     !////////////////////////////////////////////////////////////////
-    !  Litter and SOM decomposition and nitrogen mineralisation.
-    !  1st order decay of litter and SOM _pools, governed by temperature
-    !  and soil moisture following LPJ (Sitch et al., 2003) and 
-    !  Xu-Ri & Prentice (XXX).
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
+    ! Litter and soil organic matter dynamics.
+    ! Code partly adapted from LPX-Bern.
     !----------------------------------------------------------------
     use md_interface_cnmodel, only: myinterface
     use md_forcing_cnmodel, only: climate_type
