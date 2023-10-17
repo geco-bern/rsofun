@@ -1,25 +1,7 @@
 module md_waterbal
   !////////////////////////////////////////////////////////////////
-  ! SPLASH WATERBALANCE MODULE
-  ! Contains the "main" subroutine 'waterbal' and all necessary 
-  ! subroutines for handling input/output. 
-  ! Every module that implements 'waterbal' must contain this list 
-  ! of subroutines (names that way).
-  !   - getpar_modl_waterbal
-  !   - initio_waterbal
-  !   - initoutput_waterbal
-  !   - getout_daily_waterbal
-  !   - getout_monthly_waterbal
-  !   - writeout_ascii_waterbal
-  !   - waterbal
-  ! Required module-independent model state variables (necessarily 
-  ! updated by 'waterbal') are:
-  !   - daytime net radiation ('rn')
-  !   - soil water conent ('psoilphys%wcont')
-  !   - runoff ('soilphys%dro')
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
-  ! ...
+  ! Ecosystem water balance using SPLASH.
+  ! Code adopted from https://doi.org/10.5281/zenodo.376293
   !----------------------------------------------------------------
   use md_params_core, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
     kMv, kMa, kfFEC, secs_per_day, pi, dummy, kGsc, ndaymonth, kTkelvin

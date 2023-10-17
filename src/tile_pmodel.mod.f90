@@ -1,7 +1,7 @@
 module md_tile_pmodel
   !////////////////////////////////////////////////////////////////
-  ! Holds all tile-specific variables and procedurs
-  ! --------------------------------------------------------------
+  ! Defines how a tile looks like for P-model simulations.
+  !---------------------------------------------------------------
   use md_params_core, only: npft, nlu
   use md_plant_pmodel, only: plant_type, plant_fluxes_type, initglobal_plant
 
@@ -176,8 +176,6 @@ contains
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     ! use md_interface_pmodel, only: myinterface
 
@@ -211,8 +209,6 @@ contains
   subroutine initglobal_canopy( canopy )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of specified PFT on specified gridcell
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     ! argument
     type(canopy_type), intent(inout) :: canopy
@@ -478,8 +474,6 @@ contains
     !  It was necessary to separate this SR from module md_plant
     !  because this SR uses module md_waterbal, which also uses
     !  _plant.
-    ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-    ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------    
     call getpar_modl_canopy()
 
@@ -492,8 +486,6 @@ contains
     !  It was necessary to separate this SR from module md_plant
     !  because this SR uses module md_waterbal, which also uses
     !  _plant.
-    ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-    ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------    
 
     !----------------------------------------------------------------

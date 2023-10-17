@@ -1,8 +1,10 @@
 module md_gpp_biomee
-  !//////////////////////////////////////////////////////////////////////
-  ! GPP MODULE
-  ! Uses LM3-PPA structure to call the gs_leuning() photosynthesis routine
-  !------------------------------------------------------------------------
+  !////////////////////////////////////////////////////////////////
+  ! Module containing a wrapper for using different photosynthesis
+  ! schemes within BiomeE.
+  ! Code for gs_leuning photosynthesis option is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
+  ! Code for pmodel photosynthesis option is for P-model (Stocker et al., 2020 GMD)
+  !----------------------------------------------------------------
   use datatypes
   use md_soil_biomee, only: water_supply_layer
   use md_interface_biomee, only: myinterface

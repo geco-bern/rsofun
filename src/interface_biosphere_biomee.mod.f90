@@ -1,7 +1,9 @@
 module md_interface_biomee
-
+  !////////////////////////////////////////////////////////////////
+  ! Module for handling I/O (forcing, parameters, output) from 
+  ! biome_f to the biosphere() with the BiomeE implementation
+  !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64
-
   use md_forcing_biomee, only: climate_type
   use md_params_soil_biomee, only: paramtype_soil, getsoil
   use md_params_siml_biomee, only: paramstype_siml, outtype_steering
@@ -120,7 +122,6 @@ module md_interface_biomee
   !----------------------------------------------------------------
   ! This is the derived type-return variable of the function biosphere(),
   ! holding variables used for the cost function in sofun_calib.f90
-  
   type outtype_hourly_tile ! corresponds to file fno1
     real :: year
     real :: doy

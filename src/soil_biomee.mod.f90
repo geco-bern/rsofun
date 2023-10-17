@@ -1,9 +1,11 @@
-! The subroutines are from BiomeESS, the version used in Weng et al. 2016.
-! This simulator can simulate evolutionarily stable strategy (ESS) of LMA
-! and reproduce the forest succession patterns shown in Weng et al.,
-! 2016 Global Change Biology along the graidient of temperature. 
-
 module md_soil_biomee
+  !/////////////////////////////////////////////////////////////////////////
+  ! The subroutines are from BiomeESS, the version used in Weng et al. 2016.
+  ! This simulator can simulate evolutionarily stable strategy (ESS) of LMA
+  ! and reproduce the forest succession patterns shown in Weng et al.,
+  ! 2016 Global Change Biology along the graidient of temperature. 
+  ! Code is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
+  !-------------------------------------------------------------------------
  use md_interface_biomee, only: myinterface
  use datatypes
  implicit none
