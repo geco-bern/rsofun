@@ -117,7 +117,7 @@ module md_interface_cnmodel
     real :: dnitr2n2o
     real :: frac_leaf
     real :: frac_wood
-    real :: yy
+    real :: frac_avl_labl
     real :: nv_vcmax25
     real :: nuptake_kc
     real :: nuptake_kv

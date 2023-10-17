@@ -49,11 +49,11 @@ module md_allocation_cnmodel
   type params_allocation_type
     real :: frac_leaf
     real :: frac_wood
+    real :: frac_avl_labl
   end type params_allocation_type
 
   type( params_allocation_type ) :: params_allocation
 
-  ! logical, parameter :: write_logfile_eval_imbalance = .false.
   real :: test
 
 contains
@@ -63,7 +63,6 @@ contains
     ! Finds optimal shoot:root growth ratio to balance C:N stoichiometry
     ! of a grass (no wood allocation).
     !------------------------------------------------------------------
-    use md_findroot_fzeroin
     use md_forcing_cnmodel, only: climate_type
     use md_sofunutils, only: dampen_variability, calc_reg_line
 
@@ -97,10 +96,6 @@ contains
     integer :: usedoy        ! DOY in climate vectors to use for allocation
   
     type(orgpool) :: avl
-
-    real, parameter :: freserve = 0.004 ! SwissFACE results are very sensitive to this parameter!
-
-    real, parameter :: kdecay_labl = 0.1
 
     integer, parameter :: len_resp_vec = 30
     real, dimension(nlu,npft,len_resp_vec), save :: resp_vec
@@ -144,32 +139,14 @@ contains
     type(orgpool) :: org_resv_to_labl ! organic mass moving from reserves to labile pool (g C[N] m-2 tstep-1)
     type(orgpool) :: org_labl_to_resv ! organic mass moving from labile to reserves pool (g C[N] m-2 tstep-1)
 
-    logical :: cont          ! true if allocation to leaves (roots) is not 100% and not 0%
     real    :: max_dcleaf_n_constraint
     real    :: max_dcroot_n_constraint
-    real    :: max_dc_buffr_constraint
-    real    :: max_dc_n_constraint
-    real    :: max_dc
-    real    :: min_dc
-    real    :: eval_allleaves
-    real    :: eval_allroots
-    real    :: abserr
-    real    :: relerr
-    real    :: nleaf0
-    real    :: lai0, lai1
-    integer, parameter :: nmax = 100
-    logical :: findroot
-
-    type(outtype_zeroin)  :: out_zeroin
 
     ! xxx debug
     real :: tmp
 
     ! xxx verbose
     logical, parameter :: verbose = .true.
-
-    abserr = 100.0  * XMACHEPS !*10e5
-    relerr = 1000.0 * XMACHEPS !*10e5
 
     if ( init .or. .not. myinterface%steering%dofree_alloc ) then
       frac_leaf = params_allocation%frac_leaf
@@ -200,13 +177,13 @@ contains
           !------------------------------------------------------------------
           ! Calculate maximum C allocatable based on current labile pool size
           !------------------------------------------------------------------
-          avl = orgfrac(  kdecay_labl &
+          avl = orgfrac(  params_allocation%frac_avl_labl &
                           * tile(lu)%plant(pft)%pheno%level_coldacclim &
                           * tile(lu)%plant(pft)%pheno%level_veggrowth, &
                           tile(lu)%plant(pft)%plabl )
 
           ! ! xxx debug
-          ! tile_fluxes(lu)%plant(pft)%debug1 = kdecay_labl
+          ! tile_fluxes(lu)%plant(pft)%debug1 = params_allocation%frac_avl_labl
           ! tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%pheno%level_coldacclim
           ! tile_fluxes(lu)%plant(pft)%debug3 = tile(lu)%plant(pft)%pheno%level_veggrowth
           ! tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%plabl%c%c12
@@ -257,7 +234,8 @@ contains
               tile(lu)%plant(pft)%actnv_unitfapar, &
               tile(lu)%plant(pft)%lai_ind, &
               dnleaf, &
-              closed_nbal = myinterface%steering%closed_nbal &
+              myinterface%steering%closed_nbal, &
+              tile_fluxes(lu)%plant(pft)%dnup_fix &
               )
 
             !-------------------------------------------------------------------  
@@ -293,7 +271,8 @@ contains
               tile(lu)%plant(pft)%plabl%c%c12, &
               tile(lu)%plant(pft)%plabl%n%n14, &
               tile_fluxes(lu)%plant(pft)%drgrow, &
-              closed_nbal = myinterface%steering%closed_nbal &
+              myinterface%steering%closed_nbal, &
+              tile_fluxes(lu)%plant(pft)%dnup_fix &
               )
 
             !-------------------------------------------------------------------  
@@ -502,7 +481,7 @@ contains
   end subroutine allocation_daily
 
 
-  subroutine allocate_leaf( pft, mydcleaf, cleaf, nleaf, clabl, nlabl, rgrow, actnv_unitfapar, lai, mydnleaf, closed_nbal )
+  subroutine allocate_leaf( pft, mydcleaf, cleaf, nleaf, clabl, nlabl, rgrow, actnv_unitfapar, lai, mydnleaf, closed_nbal, nfix )
     !///////////////////////////////////////////////////////////////////
     ! LEAF ALLOCATION
     ! Sequence of steps:
@@ -521,6 +500,7 @@ contains
     real, intent(out)    :: lai
     real, intent(out)    :: mydnleaf
     logical, intent(in)  :: closed_nbal
+    real, intent(inout)  :: nfix
 
     ! local variables
     real :: nleaf0
@@ -574,10 +554,9 @@ contains
         print*,'nlabl = ', nlabl
         stop 'ALLOCATE_LEAF: trying to remove too much from labile pool: leaf N'
       else if ( nlabl < 0.0 ) then
-        ! numerical imprecision
-        ! print*,'numerical imprecision?'
-        ! print*,'nlabl ', nlabl
-        ! stop 'allocate leaf'
+        ! more N used for leaf growth than available in labile N pool
+        ! assume an implied (unspecified) N source, accounted as N fixation
+        nfix = nfix - nlabl
         nlabl = 0.0
       end if
     end if  
@@ -585,7 +564,7 @@ contains
   end subroutine allocate_leaf
 
 
-  subroutine allocate_root( pft, mydcroot, mydnroot, croot, nroot, clabl, nlabl, rgrow, closed_nbal )
+  subroutine allocate_root( pft, mydcroot, mydnroot, croot, nroot, clabl, nlabl, rgrow, closed_nbal, nfix )
     !///////////////////////////////////////////////////////////////////
     ! ROOT ALLOCATION
     ! Sequence of steps:
@@ -601,6 +580,7 @@ contains
     real, intent(inout) :: clabl, nlabl
     real, intent(inout)  :: rgrow
     logical, intent(in) :: closed_nbal
+    real, intent(inout)  :: nfix
 
     ! local variables
     real :: dclabl
@@ -632,9 +612,9 @@ contains
       if ( nlabl < -1.0 * eps ) then
         stop 'ALLOCATE_ROOT: trying to remove too much from labile pool: root N'
       else if ( nlabl < 0.0 ) then
-        ! numerical imprecision
-        ! print*,'numerical imprecision?'
-        ! stop 'allocate leaf'
+        ! more N used for root growth than available in labile N pool
+        ! assume an implied (unspecified) N source, accounted as N fixation
+        nfix = nfix - nlabl
         nlabl = 0.0
       end if
     end if
@@ -711,8 +691,9 @@ contains
     use md_interface_cnmodel, only: myinterface
 
     ! maximum nitrification rate
-    params_allocation%frac_leaf = myinterface%params_calib%frac_leaf
-    params_allocation%frac_wood = myinterface%params_calib%frac_wood
+    params_allocation%frac_leaf     = myinterface%params_calib%frac_leaf
+    params_allocation%frac_wood     = myinterface%params_calib%frac_wood
+    params_allocation%frac_avl_labl = myinterface%params_calib%frac_avl_labl
 
   end subroutine getpar_modl_allocation
 

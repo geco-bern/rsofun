@@ -380,7 +380,7 @@ run_cnmodel_f_bysite <- function(
                                        'dnitr2n2o',
                                        'frac_leaf',
                                        'frac_wood',
-                                       'tau_acclim',
+                                       'frac_avl_labl',
                                        'nv_vcmax25',
                                        'nuptake_kc',
                                        'nuptake_kv',
@@ -495,7 +495,7 @@ run_cnmodel_f_bysite <- function(
       as.numeric(params_modl$dnitr2n2o),
       as.numeric(params_modl$frac_leaf),
       as.numeric(params_modl$frac_wood),
-      as.numeric(params_modl$tau_acclim),   # xxx doubled now
+      as.numeric(params_modl$frac_avl_labl),
       as.numeric(params_modl$nv_vcmax25),
       as.numeric(params_modl$nuptake_kc),
       as.numeric(params_modl$nuptake_kv),

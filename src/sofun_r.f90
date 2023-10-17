@@ -437,7 +437,7 @@ contains
     myinterface%params_calib%dnitr2n2o             = real(par(76))
     myinterface%params_calib%frac_leaf             = real(par(77))
     myinterface%params_calib%frac_wood             = real(par(78))
-    myinterface%params_calib%yy                    = real(par(79))
+    myinterface%params_calib%frac_avl_labl         = real(par(79))
     myinterface%params_calib%nv_vcmax25            = real(par(80))
     myinterface%params_calib%nuptake_kc            = real(par(81))
     myinterface%params_calib%nuptake_kv            = real(par(82))

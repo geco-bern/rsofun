@@ -107,7 +107,7 @@ pars <- list(
   # Additional parameters - previously forgotten
   frac_leaf             = 0.5,           # after wood allocation
   frac_wood             = 0.0,           # highest priority in allocation
-  tau_acclim            = 10,
+  frac_avl_labl         = 0.1,
   
   # for development
   tmppar                = 9999,
