@@ -21,7 +21,7 @@ Authors@R: c(
                comment = c(ORCID = "0009-0006-7176-2311"),
                role = c("aut")),
             person(given = "Geocomputation and Earth Observation, University of Bern",
-                role = c("cph", "fnd")))
+                role = c("cph", "fnd"))
            )
 Description: Implements the Simulating Optimal FUNctioning framework for 
               site-scale simulations of ecosystem processes, including model 
