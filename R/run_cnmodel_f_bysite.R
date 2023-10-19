@@ -214,7 +214,6 @@ run_cnmodel_f_bysite <- function(
       fsun,
       snow,
       co2,
-      ndep,
       fapar,
       patm,
       tmin,
@@ -225,7 +224,7 @@ run_cnmodel_f_bysite <- function(
       cseed,
       nseed
       )
-  
+
   # validate input
   if (makecheck){
     
@@ -236,7 +235,6 @@ run_cnmodel_f_bysite <- function(
       "vpd",
       "snow",
       "co2",
-      "ndep",
       "fapar",
       "patm",
       "tmin",

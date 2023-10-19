@@ -93,16 +93,9 @@ contains
       out_climate(:)%dfsun = real(forcing(idx_start:idx_end, 6))
     end if
     out_climate(:)%dsnow   = real(forcing(idx_start:idx_end, 7))
-    out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 11))
-    out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 12))
-    out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 13))
-
-    ! ! get climate with damped (and lagged) variability
-    ! climate_memory = 
-    ! do doy=1,ndayyear
-
-    ! end do
-
+    out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 10))
+    out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 11))
+    out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 12))
 
   end function getclimate
   
@@ -152,11 +145,7 @@ contains
     idx_start = (forcingyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
 
-    out_vegcover(:)%dfapar = real(forcing(idx_start:idx_end, 10))
-
-    ! ! "Correct" fAPAR
-    ! print*,"WARNING: normalising fAPAR to within 0.12 and 1.0."
-    ! out_vegcover(:)%dfapar = max((out_vegcover(:)%dfapar - 0.12), 0.0)/(1.0 - 0.12)
+    out_vegcover(:)%dfapar = real(forcing(idx_start:idx_end, 9))
 
   end function getfapar
 
@@ -240,11 +229,11 @@ contains
     idx_start = (readyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
 
-    out_landuse(:)%dfharv = real(forcing(idx_start:idx_end, 14))
-    out_landuse(:)%dnoy   = real(forcing(idx_start:idx_end, 15))
-    out_landuse(:)%dnhx   = real(forcing(idx_start:idx_end, 16))
-    out_landuse(:)%cseed  = real(forcing(idx_start:idx_end, 17))
-    out_landuse(:)%nseed  = real(forcing(idx_start:idx_end, 18))
+    out_landuse(:)%dfharv = real(forcing(idx_start:idx_end, 13))
+    out_landuse(:)%dnoy   = real(forcing(idx_start:idx_end, 14))
+    out_landuse(:)%dnhx   = real(forcing(idx_start:idx_end, 15))
+    out_landuse(:)%cseed  = real(forcing(idx_start:idx_end, 16))
+    out_landuse(:)%nseed  = real(forcing(idx_start:idx_end, 17))
 
   end function getlanduse
 
