@@ -52,7 +52,7 @@ run_biomee_f_bysite(
   \item{elv}{Elevation of the site location, in meters.}
 }}
 
-\item{forcing}{forcing (input) dataframe (returned object by `prepare_input_sofun()`)}
+\item{forcing}{Forcing data.frame used as input.}
 
 \item{params_tile}{Tile-level model parameters, into a single row data.frame
   with columns:
@@ -74,7 +74,7 @@ run_biomee_f_bysite(
   \item{GR_factor}{Growth respiration factor.}
   \item{l_fract}{Fraction of the carbon retained after leaf drop.}
   \item{retransN}{Retranslocation coefficient of nitrogen.}
-  \item{f_initialBSW}{}
+  \item{f_initialBSW}{Coefficient for setting up initial sapwood.}
   \item{f_N_add}{Re-fill of N for sapwood.}
   \item{tf_base}{Calibratable scalar for respiration, used to increase LUE
     levels.}
@@ -138,13 +138,13 @@ run_biomee_f_bysite(
   \item{type}{A string indicating the type of soil.}
   \item{GMD}{Geometric mean particle diameter (mm).}
   \item{GSD}{Geometric standard deviation of particle size.}
-  \item{vwc_sat}{}
+  \item{vwc_sat}{Saturated volumetric soil water content (vol/vol).}
   \item{chb}{Soil texture parameter.}
   \item{psi_sat_ref}{Saturation soil water potential (m).}
   \item{k_sat_ref}{Hydraulic conductivity of saturated soil (kg m\eqn{^{-2}} 
     s\eqn{^{-1}}).}
   \item{alphaSoil}{Vertical changes of soil property, where 1 = no change.}
-  \item{heat_capacity_dry}{}
+  \item{heat_capacity_dry}{Heat capacity dry air (J m\eqn{^{-3}} K\eqn{^{-1}}).}
 }}
 
 \item{init_cohort}{A data.frame of initial cohort specifications.
@@ -173,13 +173,205 @@ forcings.}
 Model output is provided as a list, with elements:
 \describe{
   \item{\code{output_hourly_tile}}{A data.frame containing hourly predictions
-    .}
-  \item{\code{output_daily_tile}}{A data.frame with 35 columns.}
+    .
+    \describe{
+      \item{year}{Year of the simulation.}
+      \item{doy}{Day of the year.}
+      \item{hour}{Hour of the day.}
+      \item{rad}{Radiation, in W m\eqn{^{-2}}.}
+      \item{Tair}{Air temperature, in Kelvin.}
+      \item{Prcp}{Precipitation, in mm m\eqn{^{-2}}.}
+      \item{GPP}{Gross primary production (kg C m\eqn{^{-2}} hour\eqn{^{-1}}).}
+      \item{Resp}{Plant respiration (kg C m\eqn{^{-2}} hour\eqn{^{-1}}).}
+      \item{Transp}{Transpiration (mm m\eqn{^{-2}}).}
+      \item{Evap}{Evaporation (mm m\eqn{^{-2}}).}
+      \item{Runoff}{Water runoff (mm m\eqn{^{-2}}).}
+      \item{Soilwater}{Soil water content in root zone (kg m\eqn{^{-2}}).}
+      \item{wcl}{Volumetric soil water content for each layer (vol/vol).}
+      \item{FLDCAP}{Field capacity (vol/vol).}
+      \item{WILTPT}{Wilting point (vol/vol).}
+    }}
+  \item{\code{output_daily_tile}}{A data.frame with daily outputs at a tile
+    level.
+    \describe{
+      \item{year}{Year of the simulation.}
+      \item{doy}{Day of the year.}
+      \item{Tc}{Air temperature (Kelvin).}
+      \item{Prcp}{Precipitation (mm m\eqn{^{-2}}).}
+      \item{totWs}{Soil water content in root zone (kg m\eqn{^{-2}}).}
+      \item{Trsp}{Transpiration (mm m\eqn{^{2-}}).}
+      \item{Evap}{Evaporation (mm m\eqn{^{-2}}).}
+      \item{Runoff}{Water runoff (mm m\eqn{^{-2}}).}
+      \item{ws1}{Volumetric soil water content for layer 1.}
+      \item{ws2}{Volumetric soil water content for layer 2.}
+      \item{ws3}{Volumetric soil water content for layer 3.}
+      \item{LAI}{Leaf area index (m\eqn{^2}/m\eqn{^2}).}
+      \item{GPP}{Gross primary production (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
+      \item{Rauto}{Plant autotrophic respiration (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
+      \item{Rh}{Heterotrophic respiration (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
+      \item{NSC}{Non-structural carbon (kg C m\eqn{^{-2}}).}
+      \item{seedC}{Biomass of seeds (kg C m\eqn{^{-2}}).}
+      \item{leafC}{Biomass of leaves (kg C m\eqn{^{-2}}).}
+      \item{rootC}{Biomass of fine roots (kg C m\eqn{^{-2}}).}
+      \item{SW_C}{Biomass of sapwood (kg C m\eqn{^{-2}}).}
+      \item{HW_C}{biomass of heartwood (kg C m\eqn{^{-2}}).}
+      \item{NSN}{Non-structural N pool (kg N m\eqn{^{-2}}).}
+      \item{seedN}{Nitrogen of seeds (kg N m\eqn{^{-2}}).}
+      \item{leafN}{Nitrogen of leaves (kg N m\eqn{^{-2}}).}
+      \item{rootN}{Nitrogen of roots (kg N m\eqn{^{-2}}).}
+      \item{SW_N}{Nitrogen of sapwood (kg N m\eqn{^{-2}}).}
+      \item{HW_N}{Nitrogen of heartwood (kg N m\eqn{^{-2}}).}
+      \item{McrbC}{Microbial carbon (kg C m\eqn{^{-2}}).}
+      \item{fastSOM}{Fast soil carbon pool (kg C m\eqn{^{-2}}).}
+      \item{slowSOM}{Slow soil carbon pool (kg C m\eqn{^{-2}}).}
+      \item{McrbN}{Microbial nitrogen (kg N m\eqn{^{-2}}).}
+      \item{fastSoilN}{Fast soil nitrogen pool (kg N m\eqn{^{-2}}).}
+      \item{slowSoilN}{Slow soil nitrogen pool (kg N m\eqn{^{-2}}).}
+      \item{mineralN}{Mineral nitrogen pool (kg N m\eqn{^{-2}}).}
+      \item{N_uptk}{Nitrogen uptake (kg N m\eqn{^{-2}}).}
+    }}
   \item{\code{output_daily_cohorts}}{A data.frame with daily predictions
-    for each canopy cohort.}
-  \item{\code{output_annual_tile}}{A data.frame with annual values for 59
-    variables.}
-  \item{\code{output_annual_cohorts}}{A data.frame}
+    for each canopy cohort.
+    \describe{
+      \item{year}{Year of the simulation.}
+      \item{doy}{Day of the year.}
+      \item{hour}{Hour of the day.}
+      \item{cID}{An integer indicating the cohort identity.}
+      \item{PFT}{An integer indicating the Plant Functional Type.}
+      \item{layer}{An integer indicating the crown layer, numbered from top
+        to bottom.}
+      \item{density}{Number of trees per area (trees ha\eqn{^{-1}}).}
+      \item{f_layer}{Fraction of layer area occupied by this cohort.}
+      \item{LAI}{Leaf area index (m\eqn{^2}/m\eqn{^2}).}
+      \item{gpp}{Gross primary productivity (kg C tree\eqn{^{-1}} day\eqn{^{-1}}).}
+      \item{resp}{Plant autotrophic respiration (kg C tree\eqn{^{-1}} day\eqn{^{-1}}).}
+      \item{transp}{Transpiration (mm tree\eqn{^{-1}} day\eqn{^{-1}}).}
+      \item{NPPleaf}{Carbon allocated to leaves (kg C tree\eqn{^{-1}} day\eqn{^{-1}}).}
+      \item{NPProot}{Carbon allocated to fine roots (kg C tree\eqn{^{-1}} day\eqn{^{-1}}).}
+      \item{NPPwood}{Carbon allocated to wood (kg C tree\eqn{^{-1}} day\eqn{^{-1}}).}
+      \item{NSC}{Nonstructural carbohydrates of a tree in this cohort (kg C 
+        tree\eqn{^{-1}}).}
+      \item{seedC}{Seed biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+      \item{leafC}{Leaf biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+      \item{rootC}{Fine root biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+      \item{SW_C}{Sapwood biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+      \item{HW_C}{Heartwood biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+      \item{NSN}{Nonstructural nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+      \item{seedN}{Seed nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+      \item{leafN}{Leaf nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+      \item{rootN}{Fine root nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+      \item{SW_N}{Sapwood nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+      \item{HW_N}{Heartwood nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+    }}
+  \item{\code{output_annual_tile}}{A data.frame with annual outputs at tile level.
+  \describe{
+    \item{year}{Year of the simulation.}
+    \item{CAI}{Crown area index (m\eqn{^2}/m\eqn{^2}).}
+    \item{LAI}{Leaf area index (m\eqn{^2}/m\eqn{^2}).}
+    \item{Density}{Number of trees per area (trees ha\eqn{^{-1}}).}
+    \item{DBH}{Diameter at tile level (cm).}
+    \item{Density12}{Tree density for trees with DBH > 12 cm (individuals 
+      ha\eqn{^{-1}}).}
+    \item{DBH12}{Diameter at tile level considering trees with DBH > 12 cm
+      (cm).}
+    \item{QMD}{Quadratic mean diameter at tile level considering trees with 
+      DBH > 12 cm (cm).}
+    \item{NPP}{Net primary productivity (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
+    \item{GPP}{Gross primary productivity (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
+    \item{Rauto}{Plant autotrophic respiration (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
+    \item{Rh}{Heterotrophic respiration (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
+    \item{rain}{Annual precipitation (mm m\eqn{^{-2}} yr\eqn{^{-1}}).}
+    \item{SoilWater}{Soil water content in root zone (kg m\eqn{^{-2}}).}
+    \item{Transp}{Transpiration (mm m\eqn{^{-2}} yr\eqn{^{-1}}).}
+    \item{Evap}{Evaporation (mm m\eqn{^{-2}} yr\eqn{^{-1}}).}
+    \item{Runoff}{Water runoff (mm m\eqn{^{-2}} yr\eqn{^{-1}}).}
+    \item{plantC}{Plant biomass (kg C m\eqn{^{-2}}).}
+    \item{soilC}{Soil carbon (kg C m\eqn{^{-2}}).}
+    \item{plantN}{Plant nitrogen (kg N m\eqn{^{-2}}).}
+    \item{soilN}{Soil nitrogen (kg N m\eqn{^{-2}}).}
+    \item{totN}{Total nitrogen in plant and soil (kg N m\eqn{^{-2}}).}
+    \item{NSC}{Nonstructural carbohydrates (kg C m\eqn{^{-2}}).}
+    \item{SeedC}{Seed biomass (kg C m\eqn{^{-2}}).}
+    \item{leafC}{Leaf biomass (kg C m\eqn{^{-2}}).}
+    \item{rootC}{Fine root biomass (kg C m\eqn{^{-2}}).}
+    \item{SapwoodC}{Sapwood biomass (kg C m\eqn{^{-2}}).}
+    \item{WoodC}{Heartwood biomass (kg C m\eqn{^{-2}}).}
+    \item{NSN}{Nonstructural nitrogen (kg N m\eqn{^{-2}}).}
+    \item{SeedN}{Seed nitrogen (kg N m\eqn{^{-2}}).}
+    \item{leafN}{Leaf nitrogen (kg N m\eqn{^{-2}}).}
+    \item{rootN}{Fine root nitrogen (kg N m\eqn{^{-2}}).}
+    \item{SapwoodN}{Sapwood nitrogen (kg N m\eqn{^{-2}}).}
+    \item{WoodN}{Heartwood nitrogen (kg N m\eqn{^{-2}}).}
+    \item{McrbC}{Microbial carbon (kg C m\eqn{^{-2}}).}
+    \item{fastSOM}{Fast soil carbon pool (kg C m\eqn{^{-2}}).}
+    \item{SlowSOM}{Slow soil carbon pool (kg C m\eqn{^{-2}}).}
+    \item{McrbN}{Microbial nitrogen (kg N m\eqn{^{-2}}).}
+    \item{fastSoilN}{Fast soil nitrogen pool (kg N m\eqn{^{-2}}).}
+    \item{slowsoilN}{Slow soil nitrogen pool (kg N m\eqn{^{-2}}).}
+    \item{mineralN}{Mineral nitrogen pool (kg N m\eqn{^{-2}}).}
+    \item{N_fxed}{Nitrogen fixation (kg N m\eqn{^{-2}}).}
+    \item{N_uptk}{Nitrogen uptake (kg N m\eqn{^{-2}}).}
+    \item{N_yrMin}{Annual available nitrogen (kg N m\eqn{^{-2}}).}
+    \item{N_P25}{Annual nitrogen from plants to soil (kg N m\eqn{^{-2}}).}
+    \item{N_loss}{Annual nitrogen loss (kg N m\eqn{^{-2}}).}
+    \item{totseedC}{Total seed carbon (kg C m\eqn{^{-2}}).}
+    \item{totseedN}{Total seed nitrogen (kg N m\eqn{^{-2}}).}
+    \item{Seedling_C}{Total carbon from all compartments but seeds 
+      (kg C m\eqn{^{-2}}).}
+    \item{Seeling_N}{Total nitrogen from all compartments but seeds
+      (kg N m\eqn{^{-2}}).}
+    \item{MaxAge}{Age of the oldest tree in the tile (years).}
+    \item{MaxVolume}{Maximum volumne of a tree in the tile (m\eqn{^3}).}
+    \item{MaxDBH}{Maximum DBH of a tree in the tile (m).}
+    \item{NPPL}{Growth of a tree, including carbon allocated to leaves
+      (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
+    \item{NPPW}{Growth of a tree, including carbon allocated to sapwood
+      (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
+    \item{n_deadtrees}{Number of trees that died (trees m\eqn{^{-2}} year\eqn{^{-1}}).}
+    \item{c_deadtrees}{Carbon biomass of trees that died (kg C 
+      m\eqn{^{-2}} year\eqn{^{-1}}).}
+    \item{m_turnover}{Continuous biomass turnover (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
+    \item{c_turnover_time}{Carbon turnover rate, calculated as the ratio
+      between plant biomass and NPP (year\eqn{^{-1}}).}
+  }}
+  \item{\code{output_annual_cohorts}}{A data.frame of annual outputs at the
+    cohort level.
+  \describe{
+    \item{year}{Year of the simulation.}
+    \item{cID}{An integer indicating the cohort identity.}
+    \item{PFT}{An integer indicating the Plant Functional Type.}
+    \item{layer}{An integer indicating the crown layer, numbered from top to 
+      bottom.}
+    \item{density}{Number of trees per area (trees ha\eqn{^{-1}}).}
+    \item{f_layer}{Fraction of layer area occupied by this cohort.}
+    \item{dDBH}{Diameter growth of a tree in this cohort (cm year\eqn{^{-1}}).}
+    \item{dbh}{Tree diameter (cm).}
+    \item{height}{Tree height (m).}
+    \item{age}{Age of the cohort (years).}
+    \item{Acrow}{Crown area of a tree in this cohort (m\eqn{^2}).}
+    \item{wood}{Sum of sapwood and heartwood biomass of a tree in this cohort
+     (kg C tree\eqn{^{-1}}).}
+    \item{nsc}{Nonstructural carbohydrates in a tree (kg C tree\eqn{^{-1}}).}
+    \item{NSN}{Nonstructural nitrogen of a tree (kg N tree\eqn{^{-1}}).}
+    \item{NPPtr}{Total growth of a tree, including carbon allocated to seeds, 
+      leaves, fine roots, and sapwood (kg C tree\eqn{^{-1}} year\eqn{^{-1}}).}
+    \item{seed}{Fraction of carbon allocated to seeds to total growth.}
+    \item{NPPL}{Fraction of carbon allocated to leaves to total growth.}
+    \item{NPPR}{Fraction of carbon allocated to fine roots to total growth.}
+    \item{NPPW}{Fraction of carbon allocated to sapwood to total growth.}
+    \item{GPP_yr}{Gross primary productivity of a tree (kg C tree\eqn{^{-1}} 
+      year\eqn{^{-1}}).}
+    \item{NPP_yr}{Net primary productivity of a tree (kg C tree\eqn{^{-1}} 
+      year\eqn{^{-1}}).}
+    \item{Rauto}{Plant autotrophic respiration (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
+    \item{N_uptk}{Nitrogen uptake (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
+    \item{N_fix}{Nitrogen fixation (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
+    \item{maxLAI}{Maximum leaf area index for a tree (m\eqn{^2} m\eqn{^{-2}}).}
+    \item{Volume}{Tree volume (m\eqn{^3}).}
+    \item{n_deadtrees}{Number of trees that died (trees yr\eqn{^{-1}}).}
+    \item{c_deadtrees}{Carbon biomass of trees that died (kg C yr\eqn{^{-1}}).}
+    \item{deathrate}{Mortality rate of this cohort (yr\eqn{^{-1}}).}
+  }}
 }
 }
 \description{
