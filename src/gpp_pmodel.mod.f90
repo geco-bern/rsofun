@@ -124,7 +124,7 @@ contains
     type(par_control_type) :: options
   
     ! Soil hydraulics
-    real        :: swp, bsoil
+    real        :: swp
 
     ! xxx test
     real :: a_c, a_j, a_returned, fact_jmaxlim
@@ -163,9 +163,6 @@ contains
 
     tk = climate_acclimation%dtemp + kTkelvin
 
-    par_cost = par_cost_type(0.1, 1)
-    par_plant = par_plant_type(0.3e-16, -1, 1)
-  
     if (use_pml) then
       options%et_method = ET_PM
     else 
@@ -197,8 +194,7 @@ contains
       !----------------------------------------------------------------
       ! Convert water content to water potential, for use in phydro
       !----------------------------------------------------------------
-      bsoil = 3
-      swp = 1 - tile(lu)%soil%phy%wscal**(-bsoil)
+      swp = 1 - tile(lu)%soil%phy%wscal**(-params_pft_plant(pft)%bsoil)
       swp = min(swp, 0.0) ! clamp +ve values to 0
 
       !----------------------------------------------------------------
@@ -229,6 +225,14 @@ contains
                               method_jmaxlim = "wang17" &
                               )
         else
+          par_cost = par_cost_type(params_pft_plant(pft)%phydro_alpha, &
+                                   params_pft_plant(pft)%phydro_gamma)
+          par_plant = par_plant_type(params_pft_plant(pft)%phydro_K_plant, &
+                                     params_pft_plant(pft)%phydro_p50_plant, &
+                                     params_pft_plant(pft)%phydro_b_plant)
+          par_plant%h_canopy = myinterface%canopy_height
+          par_plant%h_wind_measurement = myinterface%reference_height
+      
           ! print *, "Using P-hydro"
           out_phydro_acclim = phydro_analytical( &
                             tc = dble(temp_memory), &

@@ -32,6 +32,8 @@ void F77_NAME(pmodel_f)(
     double *latitude,
     double *altitude,
     double *whc,
+    double *canopy_height,    
+    double *reference_height,
     int    *nt,
     double *par,
     double *forcing,
@@ -62,6 +64,8 @@ extern SEXP pmodel_f_C(
     SEXP latitude,
     SEXP altitude,
     SEXP whc,
+    SEXP canopy_height,    
+    SEXP reference_height,
     SEXP n,
     SEXP par,
     SEXP forcing
@@ -98,6 +102,8 @@ extern SEXP pmodel_f_C(
         REAL(latitude),
         REAL(altitude),
         REAL(whc),
+        REAL(canopy_height),    
+        REAL(reference_height),
         INTEGER(n),
         REAL(par),
         REAL(forcing),
@@ -524,7 +530,7 @@ extern SEXP biomee_f_C(
 // Declarations for all functions
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
-  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   25},  // Specify number of arguments to C wrapper as the last number here
+  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   27},  // Specify number of arguments to C wrapper as the last number here
   {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };

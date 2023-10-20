@@ -23,6 +23,12 @@ module md_interface_pmodel
     real :: rd_to_vcmax
     real :: tau_acclim
     real :: kc_jmax
+    real :: phydro_K_plant   
+    real :: phydro_p50_plant 
+    real :: phydro_b_plant   
+    real :: phydro_alpha     
+    real :: phydro_gamma     
+    real :: bsoil            
   end type paramstype_calib  
 
 
@@ -31,6 +37,8 @@ module md_interface_pmodel
     real                                    :: pco2
     type(gridtype)                          :: grid
     real                                    :: whc_prescr
+    real                                    :: canopy_height
+    real                                    :: reference_height
     type(climate_type), dimension(ndayyear) :: climate
     type(vegcover_type), dimension(ndayyear):: vegcover
     ! type(domaininfo_type)                 :: domaininfo

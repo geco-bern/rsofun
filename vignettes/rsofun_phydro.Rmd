@@ -14,10 +14,10 @@ library(tidyverse)
 library(reshape2)
 ```
 
-
 ## Generate data if not already available
 
 ```{r}
+site <- "GF-Guy"
 generate_data = F
 ```
 
@@ -27,31 +27,47 @@ if (generate_data){
 library(FluxDataKit)
   
 # read in sites to process
-site <- "FR-Pue"
+ystart = 2004
+yend = 2020
 
-# get half-hourly data  --------------------------------------------------------
-message("- convert to FLUXNET standard CSV file")
-hhdf <- suppressWarnings(
+# get metadata
+# --------------------------------------------------------
+meta <- suppressWarnings(
   try(
     fdk_convert_lsm(
       site = site,
       fluxnet_format = TRUE,
-      path = "~/Downloads/flux_data_kit_beta/fluxes/"
+      path = "~/Downloads/flux_data_kit_beta/fluxes/",
+      meta_data = T
       )
     )
   )
 
-if(inherits(hhdf, "try-error")){
-  message("!!! conversion to FLUXNET failed  !!!")
-  return(NULL)
-}
 
+# get half-hourly data  --------------------------------------------------------
+# message("- convert to FLUXNET standard CSV file")
+# hhdf <- suppressWarnings(
+#   try(
+#     fdk_convert_lsm(
+#       site = site,
+#       fluxnet_format = TRUE,
+#       path = "~/Downloads/flux_data_kit_beta/fluxes/"
+#       )
+#     )
+#   )
+# 
+# if(inherits(hhdf, "try-error")){
+#   message("!!! conversion to FLUXNET failed  !!!")
+#   return(NULL)
+# }
+
+hhdf <- readr::read_csv(paste0("~/Downloads/flux_data_kit_beta/fluxnet_csv/FLX_",site,"_PLUMBER_FULLSET_HH_",ystart,"_",yend,"_2-3.csv"))
 
 # Add date and time columns to hhdf for easier further processing.
 # ---------------------------------------------------------
 hhdf = 
   hhdf |>
-    mutate(time = lubridate::as_datetime(TIMESTAMP_START, tz = "GMT", format="%Y%m%d%H%M")) |>
+    mutate(time = lubridate::as_datetime(as.character(TIMESTAMP_START), tz = "GMT", format="%Y%m%d%H%M")) |>
     mutate(date = lubridate::as_date(time))
 
 # Aggregate to daily 24-hr means  ----------------------------------------------------------
@@ -199,12 +215,17 @@ message("- compiling drivers")
 load("../data/p_model_drivers.rda")
 
 p_hydro_drivers <- p_model_drivers
+p_hydro_drivers$sitename[[1]] = site
+p_hydro_drivers$site_info[[1]] = tibble(lon=meta[[1]]$longitude, lat=meta[[1]]$latitude, elv = meta[[1]]$elevation, whc = 90, canopy_height=meta[[1]]$canopy_height, reference_height = meta[[1]]$reference_height)
 kfFEC = 2.04
+
+start_year = 2000
+end_year = 2020
 
 # for demo, use just a subset of years
 p_hydro_drivers$forcing <- 
   ddf_24hr_mean |>
-  dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+  dplyr::filter(lubridate::year(date) %in% start_year:end_year) |>
   dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
   left_join(tmaxmin) |>
   group_by(date) |>
@@ -227,7 +248,7 @@ p_hydro_drivers$forcing <-
 
 p_hydro_drivers$forcing_acclim <- 
   ddf_3hr_maxima |>
-  dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+  dplyr::filter(lubridate::year(date) %in% start_year:end_year) |>
   dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
   left_join(tmaxmin) |>
   group_by(date) |>
@@ -251,7 +272,7 @@ p_hydro_drivers$forcing_acclim <-
 
 p_hydro_drivers$forcing_daytime_mean <- 
   ddf_daytime_mean |>
-  dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+  dplyr::filter(lubridate::year(date) %in% start_year:end_year) |>
   dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
   left_join(tmaxmin) |>
   group_by(date) |>
@@ -277,7 +298,7 @@ p_hydro_drivers$forcing_daytime_mean <-
 
 p_hydro_drivers$forcing_halfhourly <- 
   hhdf |>
-  dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+  dplyr::filter(lubridate::year(date) %in% start_year:end_year) |>
   dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
   group_by(time) |>
   summarize(
@@ -299,7 +320,7 @@ p_hydro_drivers$forcing_halfhourly <-
 
 # write all drivers to file
 # apply compression to minimize space
-filn <- "../data/p_hydro_drivers.rda"
+filn <- paste0("../data/",site,"_p_hydro_drivers.rda")
 message(paste0("- writing to file: ", filn))
 save(p_hydro_drivers,
      file = filn
@@ -310,10 +331,11 @@ save(p_hydro_drivers,
 load("../data/p_model_validation.rda")
 
 p_hydro_validation <- p_model_validation
+p_hydro_validation$sitename[[1]] = site
 
 p_hydro_validation$data <- 
   ddf_24hr_mean |>
-  dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+  dplyr::filter(lubridate::year(date) %in% start_year:end_year) |>
   dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
   group_by(date) |>
     summarise(
@@ -326,7 +348,7 @@ p_hydro_validation$data <-
 
 p_hydro_validation$data_hh <- 
   hhdf |>
-    dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+    dplyr::filter(lubridate::year(date) %in% start_year:end_year) |>
     dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
     group_by(time) |>
     summarise(
@@ -339,7 +361,7 @@ p_hydro_validation$data_hh <-
 
 p_hydro_validation$data_3hr_mean <- 
   ddf_3hr_maxima |>
-    dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+    dplyr::filter(lubridate::year(date) %in% start_year:end_year) |>
     dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
     group_by(time) |>
     summarise(
@@ -352,7 +374,7 @@ p_hydro_validation$data_3hr_mean <-
 
 p_hydro_validation$data_daytime_mean <- 
   ddf_daytime_mean |>
-    dplyr::filter(lubridate::year(date) %in% 2007:2014) |>
+    dplyr::filter(lubridate::year(date) %in% start_year:end_year) |>
     dplyr::filter(!(lubridate::mday(date) == 29 & lubridate::month(date) == 2)) |>
     group_by(time) |>
     summarise(
@@ -364,7 +386,7 @@ p_hydro_validation$data_daytime_mean <-
   list()
 
 
-filn <- "../data/p_hydro_validation.rda"
+filn <- paste0("../data/",site,"_p_hydro_validation.rda")
 message(paste0("- writing to file: ", filn))
 save(p_hydro_validation,
      file = filn
@@ -375,14 +397,16 @@ save(p_hydro_validation,
 
 ```
 
-
-## Read Phydro drivers and check 
+## Read Phydro drivers and check
 
 ```{r}
 # rm(list=ls())
 
-load("../data/p_hydro_drivers.rda")
-load("../data/p_hydro_validation.rda")
+load(paste0("../data/",site,"_p_hydro_drivers.rda"))
+load(paste0("../data/",site,"_p_hydro_validation.rda"))
+
+p_hydro_drivers$forcing[[1]]$netrad[is.na(p_hydro_drivers$forcing[[1]]$netrad)] = 0
+p_hydro_drivers$forcing[[1]]$patm[p_hydro_drivers$forcing[[1]]$patm < 0] = 1.0135e5
 
 start_date = "2011-06-01"
 end_date = "2011-06-06"
@@ -466,8 +490,21 @@ p_hydro_validation$data[[1]] %>%
 
 ```
 
-
 ## Model parameters and driver data
+
+Liu et al 21 nature climate change alexandra konings
+
+Qs:
+
+"Compound extremes are more reliably simulated with a hydraulics-explicit model"
+
+1.  disaggregating SM and VPD - compund stress
+
+Kim novick Nat CC - interactions between VPD and SM with flux data
+
+plot model bias \~ SM, VPD, T, does bias increase at extremes?
+
+How to test interactions.
 
 ```{r}
 params_modl <- list(
@@ -479,11 +516,17 @@ params_modl <- list(
   beta_unitcostratio = 146.0,
   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
   tau_acclim         = 30.0,
-  kc_jmax            = 0.41
+  kc_jmax            = 0.41,
+  phydro_K_plant     = 3e-16,
+  phydro_p50_plant   = -1,
+  phydro_b_plant     = 1,
+  phydro_alpha       = 0.1,
+  phydro_gamma       = 1,
+  bsoil              = 3
 )
 
 p_hydro_drivers$forcing[[1]] %>% 
-  dplyr::filter(lubridate::year(date) %in% 2007:2013) %>% 
+  # dplyr::filter(lubridate::year(date) %in% 2007:2013) %>% 
   melt("date") %>% 
   ggplot(aes(y=value, x=as.Date(date))) +
   geom_line(col="aquamarine4") +
@@ -492,15 +535,15 @@ p_hydro_drivers$forcing[[1]] %>%
   facet_wrap(~variable, scales = "free")
 
 
-load("../data/p_model_drivers.rda")
-load("../data/p_model_validation.rda")
-p_model_drivers$forcing[[1]] %>% 
-  melt("date") %>% 
-  ggplot(aes(y=value, x=as.Date(date))) +
-  geom_line(col="aquamarine4") +
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free")
+# load("../data/p_model_drivers.rda")
+# load("../data/p_model_validation.rda")
+# p_model_drivers$forcing[[1]] %>% 
+#   melt("date") %>% 
+#   ggplot(aes(y=value, x=as.Date(date))) +
+#   geom_line(col="aquamarine4") +
+#   theme_classic() +
+#   theme(strip.background = element_rect(color = "white", size = 1))+
+#   facet_wrap(~variable, scales = "free")
 ```
 
 ## Model run
@@ -543,8 +586,6 @@ output_p$data[[1]] %>% select(date, gpp, latenth) %>%
 p_hydro_drivers$params_siml[[1]]$use_phydro = T
 p_hydro_drivers$params_siml[[1]]$use_pml = F
 
-p_hydro_drivers$forcing[[1]]$netrad[is.na(p_hydro_drivers$forcing[[1]]$netrad)] = 0
-
 output_ph <- rsofun::runread_pmodel_f(
   p_hydro_drivers,
   par = params_modl
@@ -569,6 +610,24 @@ output_ph$data[[1]] %>% select(date, gpp, latenth) %>%
   theme_classic() +
   theme(strip.background = element_rect(color = "white", size = 1))+
   facet_wrap(~variable, scales = "free", nrow = 2)
+```
+
+```{r}
+
+output_ph$data[[1]] %>% select(date, gpp, latenth) %>% 
+  rename(le = latenth) %>% 
+  melt("date", value.name = "pred") %>% 
+  left_join(p_hydro_validation$data[[1]] %>% 
+          select(date, gpp, le) %>%
+          mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
+          mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
+          melt("date", value.name = "obs")) %>% 
+  ggplot(aes(y=obs, x=pred)) +
+  geom_point(alpha=0.7) +
+  geom_abline(slope=1, intercept=0, col="red")+
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free", nrow = 1)
 ```
 
 ### P-hydro run (with PM ET)
@@ -604,6 +663,24 @@ output_ph_pm$data[[1]] %>% select(date, gpp, latenth) %>%
 ```
 
 ```{r}
+
+output_ph_pm$data[[1]] %>% select(date, gpp, latenth) %>% 
+  rename(le = latenth) %>% 
+  melt("date", value.name = "pred") %>% 
+  left_join(p_hydro_validation$data[[1]] %>% 
+          select(date, gpp, le) %>%
+          mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
+          mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
+          melt("date", value.name = "obs")) %>% 
+  ggplot(aes(y=obs, x=pred)) +
+  geom_point(alpha=0.7) +
+  geom_abline(slope=1, intercept=0, col="red")+
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~variable, scales = "free", nrow = 1)
+```
+
+```{r}
 output_ph$data[[1]] %>% select(-year_dec) %>% 
   melt("date") %>% 
   mutate(model = "phydro") %>%
@@ -635,4 +712,3 @@ output_ph_pm$data[[1]] %>% select(-year_dec) %>%
   theme(strip.background = element_rect(color = "white", size = 1))+
   facet_wrap(~variable, scales = "free")
 ```
-

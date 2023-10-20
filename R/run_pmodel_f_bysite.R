@@ -293,15 +293,39 @@ run_pmodel_f_bysite <- function(
     }
     
     # Check model parameters
-    if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
-                                              'soilm_thetastar', 'soilm_betao',
-                                              'beta_unitcostratio', 'rd_to_vcmax', 
-                                              'tau_acclim', 'kc_jmax')
-    ) != 9){
-      warning(" Returning a dummy data frame. Incorrect model parameters.")
-      continue <- FALSE
+    if (!params_siml$use_phydro){
+      # P-model needs 9 parameters
+      if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
+                                                'soilm_thetastar', 'soilm_betao',
+                                                'beta_unitcostratio', 'rd_to_vcmax', 
+                                                'tau_acclim', 'kc_jmax')
+             ) != 9){
+        warning(" Returning a dummy data frame. Incorrect model parameters.")
+        continue <- FALSE
+      }
+    }
+    else {
+      # P-hydro needs 12 parameters
+      if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
+                                         'rd_to_vcmax', 'tau_acclim', 'kc_jmax',
+                                         'phydro_K_plant', 'phydro_p50_plant', 'phydro_b_plant',
+                                         'phydro_alpha', 'phydro_gamma',
+                                         'bsoil')
+             ) != 12){
+        warning(" Returning a dummy data frame. Incorrect model parameters.")
+        continue <- FALSE
+      }
     }
   }
+  
+  # If PML is used, then ensure that site info has reference height and canopy height
+  if (params_siml$use_phydro & 
+      params_siml$use_pml){
+    
+    continue = !is.nanull(site_info$canopy_height) & 
+               !is.nanull(site_info$reference_height)
+  }
+  
   
   if (continue){
 
@@ -327,16 +351,43 @@ run_pmodel_f_bysite <- function(
     n <- as.integer(nrow(forcing))
 
     # Model parameters as vector in order
+    # Fortran code will take in all parameters since the FORTRAN interface cannot be conditional.
+    # But in this preprocessing step, parameters not relevant to the chosen model will be set to dummy value
+    dummy_val = 1e20
     par <- c(
       as.numeric(params_modl$kphio),
       as.numeric(params_modl$kphio_par_a),
       as.numeric(params_modl$kphio_par_b),
-      as.numeric(params_modl$soilm_thetastar),
-      as.numeric(params_modl$soilm_betao),
-      as.numeric(params_modl$beta_unitcostratio),
+      ifelse(params_siml$use_phydro, 
+             no  = as.numeric(params_modl$soilm_thetastar),
+             yes = dummy_val),
+      ifelse(params_siml$use_phydro, 
+             no  = as.numeric(params_modl$soilm_betao),
+             yes = dummy_val),
+      ifelse(params_siml$use_phydro, 
+             no  = as.numeric(params_modl$beta_unitcostratio),
+             yes = dummy_val),
       as.numeric(params_modl$rd_to_vcmax),
       as.numeric(params_modl$tau_acclim),
-      as.numeric(params_modl$kc_jmax)
+      as.numeric(params_modl$kc_jmax),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$phydro_K_plant),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$phydro_p50_plant),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$phydro_b_plant),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$phydro_alpha),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$phydro_gamma),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$bsoil)
       )
 
     ## C wrapper call
@@ -367,6 +418,8 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
+      canopy_height             = as.numeric(site_info$canopy_height),
+      reference_height          = as.numeric(site_info$reference_height),
       n                         = n,
       par                       = par, 
       forcing                   = forcing
