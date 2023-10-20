@@ -167,9 +167,9 @@ run_pmodel_f_bysite <- function(
   
   # predefine variables for CRAN check compliance
   ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
-  fsun <- snow <- co2 <- ndep <- fapar <- patm <- 
+  fsun <- snow <- co2 <- fapar <- patm <- 
   nyeartrend_forcing <- firstyeartrend_forcing <-
-  tmin <- tmax <- fsand <- fclay <- forg <- fgravel <- . <- NULL
+  tmin <- tmax <- . <- NULL
   
   # base state, always execute the call
   continue <- TRUE
@@ -198,10 +198,7 @@ run_pmodel_f_bysite <- function(
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
   forcing <- forcing %>% 
-    dplyr::mutate(
-      fsun = (100-ccov)/100,
-      ndep = 0.0
-      ) %>% 
+    dplyr::mutate(fsun = (100-ccov)/100) %>% 
     dplyr::select(
       temp,
       rain,
@@ -211,7 +208,6 @@ run_pmodel_f_bysite <- function(
       fsun,
       snow,
       co2,
-      ndep,
       fapar,
       patm,
       tmin,
@@ -228,7 +224,6 @@ run_pmodel_f_bysite <- function(
       "vpd",
       "snow",
       "co2",
-      "ndep",
       "fapar",
       "patm",
       "tmin",

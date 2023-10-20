@@ -1,24 +1,6 @@
 module md_soiltemp
   !////////////////////////////////////////////////////////////////
-  ! SITCH SOILTEMP MODULE
-  ! Contains the "main" subroutine 'soiltemp' and all necessary 
-  ! subroutines for handling input/output. 
-  ! Every module that implements 'soiltemp' must contain this list 
-  ! of subroutines (names that way), in order to be exchangeable
-  ! with this module:
-  !   - getpar_modl_soiltemp
-  !   - initio_soiltemp
-  !   - initoutput_soiltemp
-  !   - getout_daily_soiltemp
-  !   - getout_monthly_soiltemp
-  !   - writeout_ascii_soiltemp
-  !   - soiltemp
-  ! Required module-independent model state variables (necessarily 
-  ! updated by 'waterbal') are:
-  !   - soil moisture ('dwtot')
-  !   - soil temperature ('soiltemp')
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Soil temperature based on LPJ (Sitch et al., 2003)
   !----------------------------------------------------------------
   use md_params_core, only: nlu, maxgrid
 
