@@ -187,7 +187,7 @@ contains
     !---------------------------------------------------------
     ! 6.a Calculate day length from sunset hour angle, seconds
     !---------------------------------------------------------
-    grid%dayl = 24.0 * 60 * 60 * hs / 180.0  ! hs is in degrees (pi = 180 deg)
+    tile_fluxes(:)%canopy%dayl = 24.0 * 60 * 60 * hs / 180.0  ! hs is in degrees (pi = 180 deg)
 
     !---------------------------------------------------------
     ! 7. Calculate daily extraterrestrial solar radiation (dra), J/m^2/d

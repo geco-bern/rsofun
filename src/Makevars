@@ -26,7 +26,7 @@ params_soil_biomee.mod.o: params_core.mod.o
 tile_pmodel.mod.o: params_core.mod.o interface_biosphere_pmodel.mod.o classdefs.mod.o plant_pmodel.mod.o
 tile_cnmodel.mod.o: params_core.mod.o interface_biosphere_cnmodel.mod.o classdefs.mod.o plant_cnmodel.mod.o
 waterbal_splash_pmodel.mod.o: params_core.mod.o tile_pmodel.mod.o plant_pmodel.mod.o sofunutils.mod.o
-waterbal_splash_cnmodel.mod.o: params_core.mod.o tile_cnmodel.mod.o plant_pmodel.mod.o sofunutils.mod.o
+waterbal_splash_cnmodel.mod.o: params_core.mod.o tile_cnmodel.mod.o plant_cnmodel.mod.o sofunutils.mod.o
 gpp_pmodel.mod.o: params_core.mod.o sofunutils.mod.o plant_pmodel.mod.o tile_pmodel.mod.o interface_biosphere_pmodel.mod.o photosynth_pmodel.mod.o
 gpp_cnmodel.mod.o: params_core.mod.o sofunutils.mod.o plant_cnmodel.mod.o tile_cnmodel.mod.o interface_biosphere_pmodel.mod.o photosynth_pmodel.mod.o
 gpp_biomee.mod.o: datatypes.mod.o soil_biomee.mod.o forcing_siterun_biomee.mod.o photosynth_pmodel.mod.o params_core.mod.o sofunutils.mod.o

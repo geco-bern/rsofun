@@ -173,6 +173,7 @@ module md_tile_cnmodel
     ! radiation
     real :: ppfd_memory       ! damped photosynthetic photon flux density (PPFD) 
     real :: dra               ! daily top-of-atmosphere solar radiation (J/m^2/d)
+    real :: dayl              ! day length (s)
 
     ! remaining elements, corresponding to plant_fluxes_type
     real :: dgpp              ! daily gross primary production [gC/m2/d]           
