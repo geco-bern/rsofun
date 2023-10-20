@@ -12,8 +12,9 @@
 #' @param ncores An integer specifying the number of cores used for parallel 
 #' computing. Defaults to 2.
 #'
-#' @return A tibble with one row for each site and outputs stored 
-#' in the nested column \code{data}.
+#' @return A tibble with one row for each site and model outputs stored 
+#' in the nested column \code{data}. See `run_biomee_f_bysite()` for a
+#' description of the BiomeE output variables.
 #' @export
 #' 
 #' @examples 

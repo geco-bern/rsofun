@@ -21,8 +21,9 @@ Defaults to \code{FALSE}.}
 computing. Defaults to 2.}
 }
 \value{
-A tibble with one row for each site and outputs stored 
-in the nested column \code{data}.
+A tibble with one row for each site and model outputs stored 
+in the nested column \code{data}. See `run_biomee_f_bysite()` for a
+description of the
 }
 \description{
 Runs the BiomeE model and loads output in once.
