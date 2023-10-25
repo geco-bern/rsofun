@@ -51,7 +51,7 @@ in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument
 \code{'freq'}.
 }
 \examples{
-\dontrun{
+\donttest{
  ddf <- init_dates_dataframe( 2000, 2003, startmoy=1, startdoy=1,
   freq="days", endmoy=12, enddom=31, noleap=FALSE )
 }

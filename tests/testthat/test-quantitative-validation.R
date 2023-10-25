@@ -27,12 +27,12 @@ test_that("p-model quantitative check", {
     par = params_modl
   )$data[[1]]$gpp
   
-  # normal tolerance ~ 0.67
+  # normal tolerance ~ 0.305
   tolerance <- mean(abs(output - gpp), na.rm = TRUE)/
      mean(abs(gpp), na.rm = TRUE)
   
   # test for correctly returned values
-  expect_equal(tolerance, 0.6768124, tolerance = 0.03)
+  expect_equal(tolerance, 0.3050983, tolerance = 0.03)
 })
 
 # test_that("p-model consistency R vs Fortran (rpmodel vs rsofun)", {

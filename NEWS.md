@@ -11,6 +11,7 @@
 * documentation parameter sensitivity analysis
 * documentation on the data format
 * document calibration diagnostic and model uncertainty calculation
+* more transparent licensing and copyright statements in COPYING file
 
 # rsofun v4.3
 

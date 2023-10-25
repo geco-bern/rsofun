@@ -228,8 +228,8 @@ par_calib <- calib_sofun(
 
 toc() # took 1555.601 sec to run
 
-# # Save result
-# saveRDS(par_calib, file = "analysis/calibration_exploration_files/par_calib_12000iterations.rsd")
+# Save result
+saveRDS(par_calib, file = "analysis/calibration_exploration_files/par_calib_12000iterations.rda")
 
 # Define functions for plotting (re-use BayesianTools hidden code)
 getSetup <- function(x) {
@@ -362,6 +362,12 @@ plot_gpp_error <- ggplot(data = pmodel_runs |>
                              # Merge GPP validation data (first year)
                              p_model_validation$data[[1]][1:365, ] |>
                                dplyr::rename(gpp_obs = gpp),
+                             by = "date") |>
+                           dplyr::left_join(
+                             # Merge GPP before calibration
+                             output$data[[1]][1:365, ] |>
+                               dplyr::select(date, gpp) |>
+                               dplyr::rename(gpp_no_calib = gpp),
                              by = "date")
                          ) +             # Plot only first year
   geom_ribbon(
@@ -374,7 +380,15 @@ plot_gpp_error <- ggplot(data = pmodel_runs |>
         ymax = gpp_q95,
         x = date,
         fill = "Parameter uncertainty")) +
-
+  
+  # geom_line(
+  #   aes(
+  #     date,
+  #     gpp_no_calib,
+  #     color = "Non-calibrated predictions"
+  #   ), 
+  #   lty = 2
+  # ) +
   geom_line(
     aes(
       date,
@@ -401,9 +415,11 @@ plot_gpp_error <- ggplot(data = pmodel_runs |>
 plot_gpp_error +  
   scale_color_manual(name = "",
                      breaks = c("Observations",
-                                "Predictions"),
+                                "Predictions",
+                                "Non-calibrated predictions"),
                      values = c(t_col("black", 10),
-                                t_col("#009E73", 10))) +
+                                t_col("#E69F00", 10),
+                                t_col("#56B4E9", 10))) +
   scale_fill_manual(name = "",
                      breaks = c("Model uncertainty",
                                 "Parameter uncertainty"),
