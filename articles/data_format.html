@@ -127,7 +127,7 @@ parameter settings (params_siml) and environmental forcing data
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
 <span><span class="co">#&gt;   sitename params_siml       site_info        forcing              </span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>               </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FR-Pue   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [2,555 × 13]&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FR-Pue   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [2,190 × 13]&gt;</span></span></span></code></pre></div>
 <p>Here, the forcing data contains environmental variables commonly
 available at fluxnet (reference) or ICOS atmospheric gas exchange
 measurement locations or gathered from various gridded or re-analysis
@@ -137,7 +137,7 @@ years.</p>
 <code class="sourceCode R"><span><span class="co"># detailed look at the forcing data</span></span>
 <span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/p_model_drivers.html">p_model_drivers</a></span><span class="op">$</span><span class="va">forcing</span></span>
 <span><span class="co">#&gt; [[1]]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,555 × 13</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,190 × 13</span></span></span>
 <span><span class="co">#&gt;    date        temp   vpd     ppfd netrad   patm  snow    rain  tmin  tmax fapar</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2007-01-01 10.0  183.   1.06<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   4.17 9.99<span style="color: #949494;">e</span>4     0 2.55<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>  7.12 13.0  0.605</span></span>
@@ -150,7 +150,7 @@ years.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2007-01-08 10.7  273.   7.17<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>  -<span style="color: #BB0000;">3.00</span> 9.89<span style="color: #949494;">e</span>4     0 0   <span style="color: #949494;"> </span>    7.04 12.0  0.597</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2007-01-09 16.4  682.   1.88<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   9.94 9.91<span style="color: #949494;">e</span>4     0 0   <span style="color: #949494;"> </span>    9.46 19.0  0.598</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2007-01-10 11.4   26.0  2.77<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>  -<span style="color: #BB0000;">6.41</span> 9.94<span style="color: #949494;">e</span>4     0 0   <span style="color: #949494;"> </span>    8.98 12.0  0.598</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2,545 more rows</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2,180 more rows</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: co2 &lt;dbl&gt;, ccov &lt;dbl&gt;</span></span></span></code></pre></div>
 <p>To create your own driver data it should be arranged into a tibble
 with the same structure as the example drivers objects. Within {rsofun}

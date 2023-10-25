@@ -97,53 +97,921 @@
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>sitename</dt>
-<dd><p>Site name</p></dd>
+<dd><p>Site name.</p></dd>
 
 
 <dt>params_siml</dt>
-<dd><p>Simulation parameters</p></dd>
+<dd><p>Simulation parameters.</p><dl><dt>spinup</dt>
+<dd><p>A logical value indicating whether this simulation does spin-up.</p></dd>
+
+  <dt>spinupyears</dt>
+<dd><p>Number of spin-up years.</p></dd>
+
+  <dt>recycle</dt>
+<dd><p>Length of standard recycling period (days).</p></dd>
+
+  <dt>firstyeartrend</dt>
+<dd><p>First transient year.</p></dd>
+
+  <dt>nyeartrend</dt>
+<dd><p>Number of transient years.</p></dd>
+
+  <dt>outputhourly</dt>
+<dd><p>A logical value indicating whether hourly output is
+    produced.</p></dd>
+
+  <dt>outputdaily</dt>
+<dd><p>A logical value indicating whether daily output is produced.</p></dd>
+
+  <dt>do_U_shaped_mortality</dt>
+<dd><p>A logical value indicating whether U-shaped 
+    mortality is used.</p></dd>
+
+  <dt>update_annualLAImax</dt>
+<dd><p>A logical value indicating whether updating 
+    LAImax according to mineral N in soil.</p></dd>
+
+  <dt>do_closedN_run</dt>
+<dd><p>A logical value indicating whether doing N closed 
+    runs to recover N balance.</p></dd>
+
+  <dt>code_method_photosynth</dt>
+<dd><p>String specifying the method of photosynthesis 
+    used in the model, either "pmodel" or "gs_leuning".</p></dd>
+
+  <dt>code_method_mortality</dt>
+<dd><p>String indicating the type of mortality in the 
+    model. One of the following: "dbh" is size-dependent mortality, "const_selfthin" 
+    is constant self thinning (in development), "cstarvation" is carbon starvation, and
+    "growthrate" is growth rate dependent mortality.</p></dd>
+
+
+</dl></dd>
 
 
 <dt>site_info</dt>
-<dd><p>Site meta info</p></dd>
+<dd><p>Site meta info in a data.frame.</p><dl><dt>sitename</dt>
+<dd><p>Name of the site.</p></dd>
+
+  <dt>lon</dt>
+<dd><p>Longitud of the site location.</p></dd>
+
+  <dt>lat</dt>
+<dd><p>Latitude of the site location.</p></dd>
+
+  <dt>elv</dt>
+<dd><p>Elevation of the site location, in meters.</p></dd>
+
+
+</dl></dd>
 
 
 <dt>forcing</dt>
-<dd><p>forcing (input) dataframe (returned object by `prepare_input_sofun()`)</p></dd>
+<dd><p>Forcing data.frame used as input.</p></dd>
 
 
 <dt>params_tile</dt>
-<dd><p>Tile-level model parameters</p></dd>
+<dd><p>Tile-level model parameters, into a single row data.frame
+  with columns:</p><dl><dt>soiltype</dt>
+<dd><p>Integer indicating the type of soil: Sand = 1, LoamySand = 2,
+    SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7.</p></dd>
+
+  <dt>FLDCAP</dt>
+<dd><p>Field capacity (vol/vol). Water remaining in a soil after it 
+    has been thoroughly saturated and allowed to drain freely.</p></dd>
+
+  <dt>WILTPT</dt>
+<dd><p>Wilting point (vol/vol). Water content of a soil at which 
+  plants wilt and fail to recover.</p></dd>
+
+  <dt>K1</dt>
+<dd><p>Fast soil C decomposition rate (year\(^{-1}\)).</p></dd>
+
+  <dt>K2</dt>
+<dd><p>Slow soil C decomposition rate (year\(^{-1}\)).</p></dd>
+
+  <dt>K_nitrogen</dt>
+<dd><p>Mineral Nitrogen turnover rate (year\(^{-1}\)).</p></dd>
+
+  <dt>MLmixRatio</dt>
+<dd><p>Ratio of C and N returned to litters from microbes.</p></dd>
+
+  <dt>etaN</dt>
+<dd><p>N loss rate through runoff (organic and mineral) (year\(^{-1}\)).</p></dd>
+
+  <dt>LMAmin</dt>
+<dd><p>Minimum LMA, leaf mass per unit area, kg C m\(^{-2}\).</p></dd>
+
+  <dt>fsc_fine</dt>
+<dd><p>Fraction of fast turnover carbon in fine biomass.</p></dd>
+
+  <dt>fsc_wood</dt>
+<dd><p>Fraction of fast turnover carbon in wood biomass.</p></dd>
+
+  <dt>GR_factor</dt>
+<dd><p>Growth respiration factor.</p></dd>
+
+  <dt>l_fract</dt>
+<dd><p>Fraction of the carbon retained after leaf drop.</p></dd>
+
+  <dt>retransN</dt>
+<dd><p>Retranslocation coefficient of nitrogen.</p></dd>
+
+  <dt>f_initialBSW</dt>
+<dd><p>Coefficient for setting up initial sapwood.</p></dd>
+
+  <dt>f_N_add</dt>
+<dd><p>Re-fill of N for sapwood.</p></dd>
+
+  <dt>tf_base</dt>
+<dd><p>Calibratable scalar for respiration, used to increase LUE
+    levels.</p></dd>
+
+  <dt>par_mort</dt>
+<dd><p>Canopy mortality parameter.</p></dd>
+
+  <dt>par_mort_under</dt>
+<dd><p>Parameter for understory mortality.</p></dd>
+
+
+</dl></dd>
 
 
 <dt>params_species</dt>
-<dd><p>Species-specific model parameters</p></dd>
+<dd><p>A data.frame containing species-specific model parameters,
+  with one species per row. The columns of this data.frame are:</p><dl><dt>lifeform</dt>
+<dd><p>Integer set to 0 for grasses and 1 for trees.</p></dd>
+
+  <dt>phenotype</dt>
+<dd><p>Integer set to 0 for deciduous and 1 for evergreen.</p></dd>
+
+  <dt>pt</dt>
+<dd><p>Integer indicating the type of plant according to photosynthesis: 
+    0 for C3; 1 for C4</p></dd>
+
+  <dt>alpha_FR</dt>
+<dd><p>Fine root turnonver rate (year\(^{-1}\)).</p></dd>
+
+  <dt>rho_FR</dt>
+<dd><p>Material density of fine roots (kg C m\(^{-3}\)).</p></dd>
+
+  <dt>root_r</dt>
+<dd><p>Radious of the fine roots, in m.</p></dd>
+
+  <dt>root_zeta</dt>
+<dd><p>e-folding parameter of root vertical distribution, in m.</p></dd>
+
+  <dt>Kw_root</dt>
+<dd><p>Fine root water conductivity (mol m\(^{-2}\)
+    s\(^{-1}\) MPa\(^{-1}\)).</p></dd>
+
+  <dt>leaf_size</dt>
+<dd><p>Characteristic leaf size.</p></dd>
+
+  <dt>Vmax</dt>
+<dd><p>Max RuBisCo rate, in mol m\(^{-2}\) s\(^{-1}\).</p></dd>
+
+  <dt>Vannual</dt>
+<dd><p>Annual productivity per unit area at full sun (kg C 
+    m\(^{-2}\) year\(^{-2}\)).</p></dd>
+
+  <dt>wet_leaf_dreg</dt>
+<dd><p>Wet leaf photosynthesis down-regulation.</p></dd>
+
+  <dt>m_cond</dt>
+<dd><p>Factor of stomatal conductance.</p></dd>
+
+  <dt>alpha_phot</dt>
+<dd><p>Photosynthesis efficiency.</p></dd>
+
+  <dt>gamma_L</dt>
+<dd><p>Leaf respiration coefficient, in year\(^{-1}\).</p></dd>
+
+  <dt>gamma_LN</dt>
+<dd><p>Leaf respiration coefficient per unit N.</p></dd>
+
+  <dt>gamma_SW</dt>
+<dd><p>Sapwood respiration rate, in kg C m\(^{-2}\) year\(^{-1}\).</p></dd>
+
+  <dt>gamma_FR</dt>
+<dd><p>Fine root respiration rate, kg C kg C\(^{-1}\) 
+    year\(^{-1}\).</p></dd>
+
+  <dt>tc_crit</dt>
+<dd><p>Critical temperature triggerng offset of phenology, in Kelvin.</p></dd>
+
+  <dt>tc_crit_on</dt>
+<dd><p>Critical temperature triggerng onset of phenology, in Kelvin.</p></dd>
+
+  <dt>gdd_crit</dt>
+<dd><p>Critical value of GDD5 for turning ON growth season.</p></dd>
+
+  <dt>betaON</dt>
+<dd><p>Critical soil moisture for phenology onset.</p></dd>
+
+  <dt>betaOFF</dt>
+<dd><p>Critical soil moisture for phenology offset.</p></dd>
+
+  <dt>seedlingsize</dt>
+<dd><p>Initial size of seedlings, in kg C per individual.</p></dd>
+
+  <dt>LNbase</dt>
+<dd><p>Basal leaf N per unit area, in kg N m\(^{-2}\).</p></dd>
+
+  <dt>lAImax</dt>
+<dd><p>Maximum crown LAI (leaf area index).</p></dd>
+
+  <dt>Nfixrate0</dt>
+<dd><p>Reference N fixation rate (kg N kg C\(^{-1}\) root).</p></dd>
+
+  <dt>NfixCost0</dt>
+<dd><p>Carbon cost of N fixation (kg C kg N\(^{-1}\)).</p></dd>
+
+  <dt>phiCSA</dt>
+<dd><p>Ratio of sapwood area to leaf area.</p></dd>
+
+  <dt>mortrate_d_c</dt>
+<dd><p>Canopy tree mortality rate (year\(^{-1}\)).</p></dd>
+
+  <dt>mortrate_d_u</dt>
+<dd><p>Understory tree mortality rate (year\(^{-1}\)).</p></dd>
+
+  <dt>maturalage</dt>
+<dd><p>Age at which trees can reproduce (years).</p></dd>
+
+  <dt>v_seed</dt>
+<dd><p>Fraction of G_SF to G_F.</p></dd>
+
+  <dt>fNSmax</dt>
+<dd><p>Multiplier for NSNmax as sum of potential bl and br.</p></dd>
+
+  <dt>LMA</dt>
+<dd><p>Leaf mass per unit area (kg C m\(^{-2}\)).</p></dd>
+
+  <dt>rho_wood</dt>
+<dd><p>Wood density (kg C m\(^{-3}\)).</p></dd>
+
+  <dt>alphaBM</dt>
+<dd><p>Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM).</p></dd>
+
+  <dt>thetaBM</dt>
+<dd><p>Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM).</p></dd>
+
+  <dt>kphio</dt>
+<dd><p>Quantum yield efficiency \(\varphi_0\), 
+   in mol mol\(^{-1}\).</p></dd>
+
+  <dt>phiRL</dt>
+<dd><p>Ratio of fine root to leaf area.</p></dd>
+
+  <dt>LAI_light</dt>
+<dd><p>Maximum LAI limited by light.</p></dd>
+
+
+</dl></dd>
 
 
 <dt>params_soil</dt>
-<dd><p>Soil parameters (per soil layer)</p></dd>
+<dd><p>A tibble of soil parameters (one row per soil layer).</p><dl><dt>type</dt>
+<dd><p>A string indicating the type of soil.</p></dd>
+
+  <dt>GMD</dt>
+<dd><p>Geometric mean particle diameter (mm).</p></dd>
+
+  <dt>GSD</dt>
+<dd><p>Geometric standard deviation of particle size.</p></dd>
+
+  <dt>vwc_sat</dt>
+<dd><p>Saturated volumetric soil water content (vol/vol).</p></dd>
+
+  <dt>chb</dt>
+<dd><p>Soil texture parameter.</p></dd>
+
+  <dt>psi_sat_ref</dt>
+<dd><p>Saturation soil water potential (m).</p></dd>
+
+  <dt>k_sat_ref</dt>
+<dd><p>Hydraulic conductivity of saturated soil (kg m\(^{-2}\) 
+    s\(^{-1}\)).</p></dd>
+
+  <dt>alphaSoil</dt>
+<dd><p>Vertical changes of soil property, where 1 = no change.</p></dd>
+
+  <dt>heat_capacity_dry</dt>
+<dd><p>Heat capacity dry air (J m\(^{-3}\) K\(^{-1}\)).</p></dd>
+
+
+</dl></dd>
 
 
 <dt>init_cohort</dt>
-<dd><p>Initial size of individuals in each of the N initally present cohorts</p></dd>
+<dd><p>A data.frame of initial cohort specifications.</p><dl><dt>init_cohort_species</dt>
+<dd><p>Indicates different species.</p></dd>
+
+  <dt>init_cohort_nindivs</dt>
+<dd><p>Initial individual density, in individuals per 
+    m\(^{2}\).</p></dd>
+
+  <dt>init_cohort_bsw</dt>
+<dd><p>Initial biomass of sapwood, in kg C per individual.</p></dd>
+
+  <dt>init_cohort_bHW</dt>
+<dd><p>Initial biomass of heartwood, in kg C per tree.</p></dd>
+
+  <dt>init_cohort_nsc</dt>
+<dd><p>Initial non-structural biomass.</p></dd>
+
+
+</dl></dd>
 
 
 <dt>init_soil</dt>
-<dd><p>Initial soil pool sizes</p></dd>
+<dd><p>A data.frame of initial soil pools.</p><dl><dt>init_fast_soil_C</dt>
+<dd><p>Initial fast soil carbon, in kg C m\(^{-2}\).</p></dd>
+
+  <dt>init_slow_soil_C</dt>
+<dd><p>Initial slow soil carbon, in kg C m\(^{-2}\).</p></dd>
+
+  <dt>init_Nmineral</dt>
+<dd><p>Mineral nitrogen pool, in kg N m\(^{-2}\).</p></dd>
+
+  <dt>N_input</dt>
+<dd><p>Annual nitrogen input to soil N pool, in kg N m\(^{-2}\) 
+    year\(^{-1}\).</p></dd>
+
+
+</dl></dd>
 
 
 <dt>makecheck</dt>
-<dd><p>A logical specifying whether checks are performed to verify forcings.</p></dd>
+<dd><p>A logical specifying whether checks are performed to verify 
+forcings.</p></dd>
 
 </dl></div>
-    <div id="details">
-    <h2>Details</h2>
-    <p>Model output is provided as a tidy dataframe</p>
-    </div>
+    <div id="value">
+    <h2>Value</h2>
+    
+
+<p>Model output is provided as a list, with elements:</p><dl><dt><code>output_hourly_tile</code></dt>
+<dd><p>A data.frame containing hourly predictions
+    .</p><dl><dt>year</dt>
+<dd><p>Year of the simulation.</p></dd>
+
+      <dt>doy</dt>
+<dd><p>Day of the year.</p></dd>
+
+      <dt>hour</dt>
+<dd><p>Hour of the day.</p></dd>
+
+      <dt>rad</dt>
+<dd><p>Radiation, in W m\(^{-2}\).</p></dd>
+
+      <dt>Tair</dt>
+<dd><p>Air temperature, in Kelvin.</p></dd>
+
+      <dt>Prcp</dt>
+<dd><p>Precipitation, in mm m\(^{-2}\).</p></dd>
+
+      <dt>GPP</dt>
+<dd><p>Gross primary production (kg C m\(^{-2}\) hour\(^{-1}\)).</p></dd>
+
+      <dt>Resp</dt>
+<dd><p>Plant respiration (kg C m\(^{-2}\) hour\(^{-1}\)).</p></dd>
+
+      <dt>Transp</dt>
+<dd><p>Transpiration (mm m\(^{-2}\)).</p></dd>
+
+      <dt>Evap</dt>
+<dd><p>Evaporation (mm m\(^{-2}\)).</p></dd>
+
+      <dt>Runoff</dt>
+<dd><p>Water runoff (mm m\(^{-2}\)).</p></dd>
+
+      <dt>Soilwater</dt>
+<dd><p>Soil water content in root zone (kg m\(^{-2}\)).</p></dd>
+
+      <dt>wcl</dt>
+<dd><p>Volumetric soil water content for each layer (vol/vol).</p></dd>
+
+      <dt>FLDCAP</dt>
+<dd><p>Field capacity (vol/vol).</p></dd>
+
+      <dt>WILTPT</dt>
+<dd><p>Wilting point (vol/vol).</p></dd>
+
+    
+</dl></dd>
+
+  <dt><code>output_daily_tile</code></dt>
+<dd><p>A data.frame with daily outputs at a tile
+    level.</p><dl><dt>year</dt>
+<dd><p>Year of the simulation.</p></dd>
+
+      <dt>doy</dt>
+<dd><p>Day of the year.</p></dd>
+
+      <dt>Tc</dt>
+<dd><p>Air temperature (Kelvin).</p></dd>
+
+      <dt>Prcp</dt>
+<dd><p>Precipitation (mm m\(^{-2}\)).</p></dd>
+
+      <dt>totWs</dt>
+<dd><p>Soil water content in root zone (kg m\(^{-2}\)).</p></dd>
+
+      <dt>Trsp</dt>
+<dd><p>Transpiration (mm m\(^{2-}\)).</p></dd>
+
+      <dt>Evap</dt>
+<dd><p>Evaporation (mm m\(^{-2}\)).</p></dd>
+
+      <dt>Runoff</dt>
+<dd><p>Water runoff (mm m\(^{-2}\)).</p></dd>
+
+      <dt>ws1</dt>
+<dd><p>Volumetric soil water content for layer 1.</p></dd>
+
+      <dt>ws2</dt>
+<dd><p>Volumetric soil water content for layer 2.</p></dd>
+
+      <dt>ws3</dt>
+<dd><p>Volumetric soil water content for layer 3.</p></dd>
+
+      <dt>LAI</dt>
+<dd><p>Leaf area index (m\(^2\)/m\(^2\)).</p></dd>
+
+      <dt>GPP</dt>
+<dd><p>Gross primary production (kg C m\(^{-2}\) day\(^{-1}\)).</p></dd>
+
+      <dt>Rauto</dt>
+<dd><p>Plant autotrophic respiration (kg C m\(^{-2}\) day\(^{-1}\)).</p></dd>
+
+      <dt>Rh</dt>
+<dd><p>Heterotrophic respiration (kg C m\(^{-2}\) day\(^{-1}\)).</p></dd>
+
+      <dt>NSC</dt>
+<dd><p>Non-structural carbon (kg C m\(^{-2}\)).</p></dd>
+
+      <dt>seedC</dt>
+<dd><p>Biomass of seeds (kg C m\(^{-2}\)).</p></dd>
+
+      <dt>leafC</dt>
+<dd><p>Biomass of leaves (kg C m\(^{-2}\)).</p></dd>
+
+      <dt>rootC</dt>
+<dd><p>Biomass of fine roots (kg C m\(^{-2}\)).</p></dd>
+
+      <dt>SW_C</dt>
+<dd><p>Biomass of sapwood (kg C m\(^{-2}\)).</p></dd>
+
+      <dt>HW_C</dt>
+<dd><p>biomass of heartwood (kg C m\(^{-2}\)).</p></dd>
+
+      <dt>NSN</dt>
+<dd><p>Non-structural N pool (kg N m\(^{-2}\)).</p></dd>
+
+      <dt>seedN</dt>
+<dd><p>Nitrogen of seeds (kg N m\(^{-2}\)).</p></dd>
+
+      <dt>leafN</dt>
+<dd><p>Nitrogen of leaves (kg N m\(^{-2}\)).</p></dd>
+
+      <dt>rootN</dt>
+<dd><p>Nitrogen of roots (kg N m\(^{-2}\)).</p></dd>
+
+      <dt>SW_N</dt>
+<dd><p>Nitrogen of sapwood (kg N m\(^{-2}\)).</p></dd>
+
+      <dt>HW_N</dt>
+<dd><p>Nitrogen of heartwood (kg N m\(^{-2}\)).</p></dd>
+
+      <dt>McrbC</dt>
+<dd><p>Microbial carbon (kg C m\(^{-2}\)).</p></dd>
+
+      <dt>fastSOM</dt>
+<dd><p>Fast soil carbon pool (kg C m\(^{-2}\)).</p></dd>
+
+      <dt>slowSOM</dt>
+<dd><p>Slow soil carbon pool (kg C m\(^{-2}\)).</p></dd>
+
+      <dt>McrbN</dt>
+<dd><p>Microbial nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+      <dt>fastSoilN</dt>
+<dd><p>Fast soil nitrogen pool (kg N m\(^{-2}\)).</p></dd>
+
+      <dt>slowSoilN</dt>
+<dd><p>Slow soil nitrogen pool (kg N m\(^{-2}\)).</p></dd>
+
+      <dt>mineralN</dt>
+<dd><p>Mineral nitrogen pool (kg N m\(^{-2}\)).</p></dd>
+
+      <dt>N_uptk</dt>
+<dd><p>Nitrogen uptake (kg N m\(^{-2}\)).</p></dd>
+
+    
+</dl></dd>
+
+  <dt><code>output_daily_cohorts</code></dt>
+<dd><p>A data.frame with daily predictions
+    for each canopy cohort.</p><dl><dt>year</dt>
+<dd><p>Year of the simulation.</p></dd>
+
+      <dt>doy</dt>
+<dd><p>Day of the year.</p></dd>
+
+      <dt>hour</dt>
+<dd><p>Hour of the day.</p></dd>
+
+      <dt>cID</dt>
+<dd><p>An integer indicating the cohort identity.</p></dd>
+
+      <dt>PFT</dt>
+<dd><p>An integer indicating the Plant Functional Type.</p></dd>
+
+      <dt>layer</dt>
+<dd><p>An integer indicating the crown layer, numbered from top
+        to bottom.</p></dd>
+
+      <dt>density</dt>
+<dd><p>Number of trees per area (trees ha\(^{-1}\)).</p></dd>
+
+      <dt>f_layer</dt>
+<dd><p>Fraction of layer area occupied by this cohort.</p></dd>
+
+      <dt>LAI</dt>
+<dd><p>Leaf area index (m\(^2\)/m\(^2\)).</p></dd>
+
+      <dt>gpp</dt>
+<dd><p>Gross primary productivity (kg C tree\(^{-1}\) day\(^{-1}\)).</p></dd>
+
+      <dt>resp</dt>
+<dd><p>Plant autotrophic respiration (kg C tree\(^{-1}\) day\(^{-1}\)).</p></dd>
+
+      <dt>transp</dt>
+<dd><p>Transpiration (mm tree\(^{-1}\) day\(^{-1}\)).</p></dd>
+
+      <dt>NPPleaf</dt>
+<dd><p>Carbon allocated to leaves (kg C tree\(^{-1}\) day\(^{-1}\)).</p></dd>
+
+      <dt>NPProot</dt>
+<dd><p>Carbon allocated to fine roots (kg C tree\(^{-1}\) day\(^{-1}\)).</p></dd>
+
+      <dt>NPPwood</dt>
+<dd><p>Carbon allocated to wood (kg C tree\(^{-1}\) day\(^{-1}\)).</p></dd>
+
+      <dt>NSC</dt>
+<dd><p>Nonstructural carbohydrates of a tree in this cohort (kg C 
+        tree\(^{-1}\)).</p></dd>
+
+      <dt>seedC</dt>
+<dd><p>Seed biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
+
+      <dt>leafC</dt>
+<dd><p>Leaf biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
+
+      <dt>rootC</dt>
+<dd><p>Fine root biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
+
+      <dt>SW_C</dt>
+<dd><p>Sapwood biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
+
+      <dt>HW_C</dt>
+<dd><p>Heartwood biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
+
+      <dt>NSN</dt>
+<dd><p>Nonstructural nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
+      <dt>seedN</dt>
+<dd><p>Seed nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
+      <dt>leafN</dt>
+<dd><p>Leaf nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
+      <dt>rootN</dt>
+<dd><p>Fine root nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
+      <dt>SW_N</dt>
+<dd><p>Sapwood nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
+      <dt>HW_N</dt>
+<dd><p>Heartwood nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
+    
+</dl></dd>
+
+  <dt><code>output_annual_tile</code></dt>
+<dd><p>A data.frame with annual outputs at tile level.</p><dl><dt>year</dt>
+<dd><p>Year of the simulation.</p></dd>
+
+    <dt>CAI</dt>
+<dd><p>Crown area index (m\(^2\)/m\(^2\)).</p></dd>
+
+    <dt>LAI</dt>
+<dd><p>Leaf area index (m\(^2\)/m\(^2\)).</p></dd>
+
+    <dt>Density</dt>
+<dd><p>Number of trees per area (trees ha\(^{-1}\)).</p></dd>
+
+    <dt>DBH</dt>
+<dd><p>Diameter at tile level (cm).</p></dd>
+
+    <dt>Density12</dt>
+<dd><p>Tree density for trees with DBH &gt; 12 cm (individuals 
+      ha\(^{-1}\)).</p></dd>
+
+    <dt>DBH12</dt>
+<dd><p>Diameter at tile level considering trees with DBH &gt; 12 cm
+      (cm).</p></dd>
+
+    <dt>QMD</dt>
+<dd><p>Quadratic mean diameter at tile level considering trees with 
+      DBH &gt; 12 cm (cm).</p></dd>
+
+    <dt>NPP</dt>
+<dd><p>Net primary productivity (kg C m\(^{-2}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>GPP</dt>
+<dd><p>Gross primary productivity (kg C m\(^{-2}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>Rauto</dt>
+<dd><p>Plant autotrophic respiration (kg C m\(^{-2}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>Rh</dt>
+<dd><p>Heterotrophic respiration (kg C m\(^{-2}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>rain</dt>
+<dd><p>Annual precipitation (mm m\(^{-2}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>SoilWater</dt>
+<dd><p>Soil water content in root zone (kg m\(^{-2}\)).</p></dd>
+
+    <dt>Transp</dt>
+<dd><p>Transpiration (mm m\(^{-2}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>Evap</dt>
+<dd><p>Evaporation (mm m\(^{-2}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>Runoff</dt>
+<dd><p>Water runoff (mm m\(^{-2}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>plantC</dt>
+<dd><p>Plant biomass (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>soilC</dt>
+<dd><p>Soil carbon (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>plantN</dt>
+<dd><p>Plant nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>soilN</dt>
+<dd><p>Soil nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>totN</dt>
+<dd><p>Total nitrogen in plant and soil (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>NSC</dt>
+<dd><p>Nonstructural carbohydrates (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>SeedC</dt>
+<dd><p>Seed biomass (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>leafC</dt>
+<dd><p>Leaf biomass (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>rootC</dt>
+<dd><p>Fine root biomass (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>SapwoodC</dt>
+<dd><p>Sapwood biomass (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>WoodC</dt>
+<dd><p>Heartwood biomass (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>NSN</dt>
+<dd><p>Nonstructural nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>SeedN</dt>
+<dd><p>Seed nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>leafN</dt>
+<dd><p>Leaf nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>rootN</dt>
+<dd><p>Fine root nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>SapwoodN</dt>
+<dd><p>Sapwood nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>WoodN</dt>
+<dd><p>Heartwood nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>McrbC</dt>
+<dd><p>Microbial carbon (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>fastSOM</dt>
+<dd><p>Fast soil carbon pool (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>SlowSOM</dt>
+<dd><p>Slow soil carbon pool (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>McrbN</dt>
+<dd><p>Microbial nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>fastSoilN</dt>
+<dd><p>Fast soil nitrogen pool (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>slowsoilN</dt>
+<dd><p>Slow soil nitrogen pool (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>mineralN</dt>
+<dd><p>Mineral nitrogen pool (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>N_fxed</dt>
+<dd><p>Nitrogen fixation (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>N_uptk</dt>
+<dd><p>Nitrogen uptake (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>N_yrMin</dt>
+<dd><p>Annual available nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>N_P25</dt>
+<dd><p>Annual nitrogen from plants to soil (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>N_loss</dt>
+<dd><p>Annual nitrogen loss (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>totseedC</dt>
+<dd><p>Total seed carbon (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>totseedN</dt>
+<dd><p>Total seed nitrogen (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>Seedling_C</dt>
+<dd><p>Total carbon from all compartments but seeds 
+      (kg C m\(^{-2}\)).</p></dd>
+
+    <dt>Seeling_N</dt>
+<dd><p>Total nitrogen from all compartments but seeds
+      (kg N m\(^{-2}\)).</p></dd>
+
+    <dt>MaxAge</dt>
+<dd><p>Age of the oldest tree in the tile (years).</p></dd>
+
+    <dt>MaxVolume</dt>
+<dd><p>Maximum volumne of a tree in the tile (m\(^3\)).</p></dd>
+
+    <dt>MaxDBH</dt>
+<dd><p>Maximum DBH of a tree in the tile (m).</p></dd>
+
+    <dt>NPPL</dt>
+<dd><p>Growth of a tree, including carbon allocated to leaves
+      (kg C m\(^{-2}\) year\(^{-1}\)).</p></dd>
+
+    <dt>NPPW</dt>
+<dd><p>Growth of a tree, including carbon allocated to sapwood
+      (kg C m\(^{-2}\) year\(^{-1}\)).</p></dd>
+
+    <dt>n_deadtrees</dt>
+<dd><p>Number of trees that died (trees m\(^{-2}\) year\(^{-1}\)).</p></dd>
+
+    <dt>c_deadtrees</dt>
+<dd><p>Carbon biomass of trees that died (kg C 
+      m\(^{-2}\) year\(^{-1}\)).</p></dd>
+
+    <dt>m_turnover</dt>
+<dd><p>Continuous biomass turnover (kg C m\(^{-2}\) year\(^{-1}\)).</p></dd>
+
+    <dt>c_turnover_time</dt>
+<dd><p>Carbon turnover rate, calculated as the ratio
+      between plant biomass and NPP (year\(^{-1}\)).</p></dd>
+
+  
+</dl></dd>
+
+  <dt><code>output_annual_cohorts</code></dt>
+<dd><p>A data.frame of annual outputs at the
+    cohort level.</p><dl><dt>year</dt>
+<dd><p>Year of the simulation.</p></dd>
+
+    <dt>cID</dt>
+<dd><p>An integer indicating the cohort identity.</p></dd>
+
+    <dt>PFT</dt>
+<dd><p>An integer indicating the Plant Functional Type.</p></dd>
+
+    <dt>layer</dt>
+<dd><p>An integer indicating the crown layer, numbered from top to 
+      bottom.</p></dd>
+
+    <dt>density</dt>
+<dd><p>Number of trees per area (trees ha\(^{-1}\)).</p></dd>
+
+    <dt>f_layer</dt>
+<dd><p>Fraction of layer area occupied by this cohort.</p></dd>
+
+    <dt>dDBH</dt>
+<dd><p>Diameter growth of a tree in this cohort (cm year\(^{-1}\)).</p></dd>
+
+    <dt>dbh</dt>
+<dd><p>Tree diameter (cm).</p></dd>
+
+    <dt>height</dt>
+<dd><p>Tree height (m).</p></dd>
+
+    <dt>age</dt>
+<dd><p>Age of the cohort (years).</p></dd>
+
+    <dt>Acrow</dt>
+<dd><p>Crown area of a tree in this cohort (m\(^2\)).</p></dd>
+
+    <dt>wood</dt>
+<dd><p>Sum of sapwood and heartwood biomass of a tree in this cohort
+     (kg C tree\(^{-1}\)).</p></dd>
+
+    <dt>nsc</dt>
+<dd><p>Nonstructural carbohydrates in a tree (kg C tree\(^{-1}\)).</p></dd>
+
+    <dt>NSN</dt>
+<dd><p>Nonstructural nitrogen of a tree (kg N tree\(^{-1}\)).</p></dd>
+
+    <dt>NPPtr</dt>
+<dd><p>Total growth of a tree, including carbon allocated to seeds, 
+      leaves, fine roots, and sapwood (kg C tree\(^{-1}\) year\(^{-1}\)).</p></dd>
+
+    <dt>seed</dt>
+<dd><p>Fraction of carbon allocated to seeds to total growth.</p></dd>
+
+    <dt>NPPL</dt>
+<dd><p>Fraction of carbon allocated to leaves to total growth.</p></dd>
+
+    <dt>NPPR</dt>
+<dd><p>Fraction of carbon allocated to fine roots to total growth.</p></dd>
+
+    <dt>NPPW</dt>
+<dd><p>Fraction of carbon allocated to sapwood to total growth.</p></dd>
+
+    <dt>GPP_yr</dt>
+<dd><p>Gross primary productivity of a tree (kg C tree\(^{-1}\) 
+      year\(^{-1}\)).</p></dd>
+
+    <dt>NPP_yr</dt>
+<dd><p>Net primary productivity of a tree (kg C tree\(^{-1}\) 
+      year\(^{-1}\)).</p></dd>
+
+    <dt>Rauto</dt>
+<dd><p>Plant autotrophic respiration (kg C tree\(^{-1}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>N_uptk</dt>
+<dd><p>Nitrogen uptake (kg N tree\(^{-1}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>N_fix</dt>
+<dd><p>Nitrogen fixation (kg N tree\(^{-1}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>maxLAI</dt>
+<dd><p>Maximum leaf area index for a tree (m\(^2\) m\(^{-2}\)).</p></dd>
+
+    <dt>Volume</dt>
+<dd><p>Tree volume (m\(^3\)).</p></dd>
+
+    <dt>n_deadtrees</dt>
+<dd><p>Number of trees that died (trees yr\(^{-1}\)).</p></dd>
+
+    <dt>c_deadtrees</dt>
+<dd><p>Carbon biomass of trees that died (kg C yr\(^{-1}\)).</p></dd>
+
+    <dt>deathrate</dt>
+<dd><p>Mortality rate of this cohort (yr\(^{-1}\)).</p></dd>
+
+  
+</dl></dd>
+
+
+</dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># Example BiomeE model run</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Use example drivers data</span></span></span>
+<span class="r-in"><span><span class="va">drivers</span> <span class="op">&lt;-</span> <span class="va">biomee_gs_leuning_drivers</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Run BiomeE for the first site</span></span></span>
+<span class="r-in"><span><span class="va">mod_output</span> <span class="op">&lt;-</span> <span class="fu">run_biomee_f_bysite</span><span class="op">(</span></span></span>
+<span class="r-in"><span> sitename <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">sitename</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> params_siml <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_siml</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> site_info <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> forcing <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> params_tile <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_tile</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> params_species <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_species</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> params_soil <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_soil</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> init_cohort <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">init_cohort</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> init_soil <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">init_soil</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+</code></pre></div>
     </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

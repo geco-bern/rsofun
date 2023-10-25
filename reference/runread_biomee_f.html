@@ -87,7 +87,7 @@
     <h2>Arguments</h2>
     <dl><dt>drivers</dt>
 <dd><p>A nested data frame with one row for each site and columns
-named according to thearguments of function `runread_biomee_f_bysite()`</p></dd>
+named according to the arguments of function `runread_biomee_f_bysite()`</p></dd>
 
 
 <dt>makecheck</dt>
@@ -110,13 +110,20 @@ computing. Defaults to 2.</p></dd>
     <h2>Value</h2>
     
 
-<p>A tibble with one row for each site and outputs stored 
-in the nested column <code>data</code>.</p>
+<p>A tibble with one row for each site and model outputs stored 
+in the nested column <code>data</code>. See `run_biomee_f_bysite()` for a
+description of the BiomeE output variables.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># Example BiomeE model run</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">mod_output</span> <span class="op">&lt;-</span> <span class="fu">runread_biomee_f</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">biomee_gs_leuning_drivers</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+</code></pre></div>
     </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

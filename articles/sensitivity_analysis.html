@@ -170,7 +170,7 @@ the parameter values.</p>
 <span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span>,</span>
 <span>  error_gpp          <span class="op">=</span> <span class="fl">0.9</span>         <span class="co"># value from previous simulations</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] -31340.78</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] -22357.04</span></span></code></pre></div>
 <p>Some parameters are constrained by their physical interpretation
 (e.g. <code>kphio &gt; 0</code>) and it’s also necessary to provide a
 bounded parameter space for Morris’ method to sample the parameter
@@ -331,7 +331,7 @@ a high impact on the model fit. Let’s run the calibration:</p>
 <span>    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>      burnin <span class="op">=</span> <span class="fl">3000</span>,</span>
 <span>      iterations <span class="op">=</span> <span class="fl">9000</span>,</span>
-<span>      nrChains <span class="op">=</span> <span class="fl">1</span>,        <span class="co"># number of independent chains</span></span>
+<span>      nrChains <span class="op">=</span> <span class="fl">3</span>,        <span class="co"># number of independent chains</span></span>
 <span>      startValue <span class="op">=</span> <span class="fl">3</span>       <span class="co"># number of internal chains to be sampled</span></span>
 <span>    <span class="op">)</span><span class="op">)</span>,</span>
 <span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -355,7 +355,9 @@ a high impact on the model fit. Let’s run the calibration:</p>
 <span>    tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span>
 <span>    kc_jmax            <span class="op">=</span> <span class="fl">0.41</span><span class="op">)</span>,</span>
 <span>  targets <span class="op">=</span> <span class="st">"gpp"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># This code takes 15 minutes to run</span></span></code></pre></div>
 <p><code>BayesianTools</code> makes it easy to produce the trace plot of
 the MCMC chains and the posterior density plot for the parameters. Trace
 plots show the time series of the sampled chains, which should reach a
@@ -406,14 +408,14 @@ D.B.: Bayesian Data Analysis, 2nd edn. Chapman &amp; Hall, London
 <span><span class="co">#&gt; Potential scale reduction factors:</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;             Point est. Upper C.I.</span></span>
-<span><span class="co">#&gt; kphio             1.00       1.02</span></span>
-<span><span class="co">#&gt; kphio_par_a       1.03       1.10</span></span>
-<span><span class="co">#&gt; kphio_par_b       1.02       1.05</span></span>
-<span><span class="co">#&gt; err_gpp           1.01       1.04</span></span>
+<span><span class="co">#&gt; kphio             1.00       1.01</span></span>
+<span><span class="co">#&gt; kphio_par_a       1.01       1.01</span></span>
+<span><span class="co">#&gt; kphio_par_b       1.01       1.02</span></span>
+<span><span class="co">#&gt; err_gpp           1.02       1.05</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Multivariate psrf</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; 1.04</span></span></code></pre></div>
+<span><span class="co">#&gt; 1.03</span></span></code></pre></div>
 <p>Finally, the parameter MAP estimates can be derived from the chains
 (that converged) after removing the burnin period. They can be seen,
 next to other statistics, using the <code>summary</code> function from
@@ -425,29 +427,29 @@ the <code>BayesianTools</code> library.</p>
 <span><span class="co">#&gt; # # # # # # # # # # # # # # # # # # # # # # # # # </span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; # MCMC sampler:  DEzs </span></span>
-<span><span class="co">#&gt; # Nr. Chains:  3 </span></span>
+<span><span class="co">#&gt; # Nr. Chains:  9 </span></span>
 <span><span class="co">#&gt; # Iterations per chain:  2001 </span></span>
-<span><span class="co">#&gt; # Rejection rate:  0.787 </span></span>
-<span><span class="co">#&gt; # Effective sample size:  897 </span></span>
-<span><span class="co">#&gt; # Runtime:  332.716  sec. </span></span>
+<span><span class="co">#&gt; # Rejection rate:  0.802 </span></span>
+<span><span class="co">#&gt; # Effective sample size:  2181 </span></span>
+<span><span class="co">#&gt; # Runtime:  942.881  sec. </span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; # Parameters</span></span>
-<span><span class="co">#&gt;             psf    MAP   2.5% median  97.5%</span></span>
-<span><span class="co">#&gt; kphio     1.005  0.042  0.041  0.042  0.043</span></span>
-<span><span class="co">#&gt; kphio_... 1.028 -0.002 -0.002 -0.002 -0.001</span></span>
-<span><span class="co">#&gt; kphio_... 1.016 18.080 17.380 18.150 19.035</span></span>
-<span><span class="co">#&gt; err_gpp   1.012  1.273  1.239  1.275  1.308</span></span>
+<span><span class="co">#&gt;               psf    MAP   2.5% median  97.5%</span></span>
+<span><span class="co">#&gt; kphio       1.004  0.046  0.045  0.046  0.047</span></span>
+<span><span class="co">#&gt; kphio_par_a 1.005 -0.002 -0.002 -0.002 -0.002</span></span>
+<span><span class="co">#&gt; kphio_par_b 1.008 17.256 16.638 17.262 17.957</span></span>
+<span><span class="co">#&gt; err_gpp     1.022  1.175  1.140  1.174  1.214</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ## DIC:  7159.594 </span></span>
+<span><span class="co">#&gt; ## DIC:  5738.56 </span></span>
 <span><span class="co">#&gt; ## Convergence </span></span>
-<span><span class="co">#&gt;  Gelman Rubin multivariate psrf:   </span></span>
+<span><span class="co">#&gt;  Gelman Rubin multivariate psrf:  1.035 </span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; ## Correlations </span></span>
 <span><span class="co">#&gt;              kphio kphio_par_a kphio_par_b err_gpp</span></span>
-<span><span class="co">#&gt; kphio        1.000      -0.151      -0.146   0.228</span></span>
-<span><span class="co">#&gt; kphio_par_a -0.151       1.000       0.478  -0.027</span></span>
-<span><span class="co">#&gt; kphio_par_b -0.146       0.478       1.000   0.047</span></span>
-<span><span class="co">#&gt; err_gpp      0.228      -0.027       0.047   1.000</span></span></code></pre></div>
+<span><span class="co">#&gt; kphio        1.000      -0.294       0.027   0.142</span></span>
+<span><span class="co">#&gt; kphio_par_a -0.294       1.000       0.285   0.013</span></span>
+<span><span class="co">#&gt; kphio_par_b  0.027       0.285       1.000   0.022</span></span>
+<span><span class="co">#&gt; err_gpp      0.142       0.013       0.022   1.000</span></span></code></pre></div>
 <p>More details on diagnosing MCMC convergence can be found in <a href="https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html#running-mcmc-and-smc-functions" class="external-link">this
 vignette from BayesianTools</a> and <a href="https://theoreticalecology.wordpress.com/2011/12/09/mcmc-chain-analysis-and-convergence-diagnostics-with-coda-in-r/" class="external-link">this
 blogpost</a>.</p>
@@ -466,7 +468,7 @@ predicted GPP, which incorporates the Gaussian model error.</p>
 <span></span>
 <span><span class="co"># Sample parameter values from the posterior distribution</span></span>
 <span><span class="va">samples_par</span> <span class="op">&lt;-</span> <span class="fu">getSample</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span>, </span>
-<span>                             thin <span class="op">=</span> <span class="fl">10</span>,              <span class="co"># get every 10th sample</span></span>
+<span>                             thin <span class="op">=</span> <span class="fl">30</span>,              <span class="co"># get every 30th sample</span></span>
 <span>                             whichParameters <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>mcmc_id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
