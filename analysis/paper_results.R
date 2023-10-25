@@ -229,7 +229,7 @@ par_calib <- calib_sofun(
 toc() # took 1555.601 sec to run
 
 # Save result
-saveRDS(par_calib, file = "analysis/calibration_exploration_files/par_calib_12000iterations.rsd")
+saveRDS(par_calib, file = "analysis/calibration_exploration_files/par_calib_12000iterations.rda")
 
 # Define functions for plotting (re-use BayesianTools hidden code)
 getSetup <- function(x) {
