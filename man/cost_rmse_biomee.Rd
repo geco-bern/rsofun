@@ -33,7 +33,6 @@ computes the RMSE for the biomee model fitting target variables
 \code{'GPP','LAI','Density'} and \code{'Biomass'} for a given set of parameters.
 }
 \examples{
-\donttest{
 # Compute RMSE for a set of
 # model parameter values
 # and example data
@@ -42,5 +41,4 @@ cost_rmse_biomee(
  obs = biomee_validation_2,
  drivers = biomee_gs_leuning_drivers
 )
-}
 }
