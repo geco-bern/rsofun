@@ -51,7 +51,6 @@
 #' @export
 #' 
 #' @examples
-#' \donttest{
 #' # Compute the likelihood for a set of 
 #' # model parameter values involved in the
 #' # temperature dependence of kphio 
@@ -71,7 +70,6 @@
 #'   kc_jmax            = 0.41
 #'  )
 #' )
-#' }
 
 cost_likelihood_pmodel <- function(
     par,   # model parameters & error terms for each target
