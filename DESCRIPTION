@@ -20,6 +20,18 @@ Authors@R: c(
                email = "pepa.aran@gmail.com",
                comment = c(ORCID = "0009-0006-7176-2311"),
                role = c("aut")),
+            person(
+               family = "Marqués",
+               given = "Laura",
+               email = "lauramarqueslopez@gmail.com",
+               comment = c(ORCID = "0000-0002-3593-5557"),
+               role = c("ctb")),
+            person(
+               family = "Weng",
+               given = "Ensheng",
+               email = "wengensheng@gmail.com",
+               comment = c(ORCID = "0000-0002-1858-4847"),
+               role = c("ctb")),
             person(given = "Geocomputation and Earth Observation, University of Bern",
                 role = c("cph", "fnd"))
            )
