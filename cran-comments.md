@@ -3,16 +3,8 @@ Dear CRAN team,
 This is the re-submission of the {rsofun} package. We have addressed the following
 concerns voiced by Benjamin Altman:
 
-- Corrected the software naming in package title and description.
-- Added a \value field to all the exported functions, explaining the object returned
-  by each function.
-- Removed \dontrun statements in the documentation examples, now \donttest
-  is used for examples that have long runtimes.
-- Included license and copyright statements in a COPYING file. The original authors
-  of the software borrowed for this package were contacted and permissions to use
-  parts of their code were discussed, as well as the copyright and license that
-  accompany their code. The direct authors of this package are listed in the
-  DESCRIPTION file.
+- Removed \donttest statements in the documentation examples that took < 5 min to run.
+- Included Ensheng Weng and Laura Marqués as package contributors.
 
 ---
 
