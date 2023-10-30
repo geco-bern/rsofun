@@ -48,7 +48,6 @@
 #' @export
 #' 
 #' @examples
-#' \donttest{
 #' # Compute RMSE for a set
 #' # of model parameter values
 #' # and example data
@@ -66,7 +65,6 @@
 #'   kc_jmax            = 0.41
 #'  )
 #' )
-#' }
 
 cost_rmse_pmodel <- function(
     par,  # ordered vector of model parameters

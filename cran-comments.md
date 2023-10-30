@@ -1,18 +1,10 @@
 Dear CRAN team,
 
 This is the re-submission of the {rsofun} package. We have addressed the following
-concerns voiced by Benjamin Altman:
+concerns flagged by the automatic checks:
 
-- Corrected the software naming in package title and description.
-- Added a \value field to all the exported functions, explaining the object returned
-  by each function.
-- Removed \dontrun statements in the documentation examples, now \donttest
-  is used for examples that have long runtimes.
-- Included license and copyright statements in a COPYING file. The original authors
-  of the software borrowed for this package were contacted and permissions to use
-  parts of their code were discussed, as well as the copyright and license that
-  accompany their code. The direct authors of this package are listed in the
-  DESCRIPTION file.
+- Wrapped examples running the BiomeE model in \donttest because they took 16 sec to run in the Windows pre-test. 
+- Reviewed DESCRIPTION file for misspelled words. The NOTE in the pre-tests is a false positive.
 
 ---
 
