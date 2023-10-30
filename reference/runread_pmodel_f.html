@@ -196,8 +196,7 @@ exactly replicated.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># Define model parameter values from previous work</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Define model parameter values from previous work</span></span></span>
 <span class="r-in"><span><span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  kphio              <span class="op">=</span> <span class="fl">0.04998</span>,    <span class="co"># setup ORG in Stocker et al. 2020 GMD</span></span></span>
 <span class="r-in"><span>  kphio_par_a        <span class="op">=</span> <span class="fl">0.0</span>,        <span class="co"># disable temperature-dependence of kphio</span></span></span>
@@ -214,7 +213,6 @@ exactly replicated.</p>
 <span class="r-in"><span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu">runread_pmodel_f</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  drivers <span class="op">=</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="p_model_drivers.html">p_model_drivers</a></span>,</span></span>
 <span class="r-in"><span>  par <span class="op">=</span> <span class="va">params_modl</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
