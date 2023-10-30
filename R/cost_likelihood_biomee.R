@@ -29,6 +29,7 @@
 #' @export
 #' 
 #' @examples
+#' \donttest{
 #' # Compute the likelihood for a set of
 #' # BiomeE model parameter values
 #' # and the example data
@@ -39,6 +40,7 @@
 #'  drivers = biomee_gs_leuning_drivers,
 #'  targets = c("GPP")
 #' )
+#' }
 
 cost_likelihood_biomee <- function(
   par,

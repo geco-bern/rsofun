@@ -352,6 +352,7 @@
 #' }
 #' 
 #' @examples
+#' \donttest{
 #' # Example BiomeE model run
 #' 
 #' # Use example drivers data
@@ -369,6 +370,7 @@
 #'  init_cohort = drivers$init_cohort[[1]],
 #'  init_soil = drivers$init_soil[[1]]
 #' )
+#' }
 
 run_biomee_f_bysite <- function(
   sitename,
