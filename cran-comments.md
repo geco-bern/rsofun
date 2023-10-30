@@ -1,10 +1,10 @@
 Dear CRAN team,
 
 This is the re-submission of the {rsofun} package. We have addressed the following
-concerns voiced by Benjamin Altman:
+concerns flagged by the automatic checks:
 
-- Removed \donttest statements in the documentation examples that took < 5 min to run.
-- Included Ensheng Weng and Laura Marqués as package contributors.
+- Wrapped examples running the BiomeE model in \donttest because they took 16 sec to run in the Windows pre-test. 
+- Reviewed DESCRIPTION file for misspelled words. The NOTE in the pre-tests is a false positive.
 
 ---
 
