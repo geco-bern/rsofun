@@ -39,7 +39,6 @@ contains
     ! arguments
     integer, intent(in) :: nt ! number of time steps
     integer, intent(in) :: ntstepsyear   ! number of time steps per year of model
-    ! integer, intent(in) :: ntstepsyear_forcing  ! number of time steps per year of forcing data
     real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: climateyear_idx
     ! logical, intent(in) :: do_agg_climate
@@ -50,9 +49,6 @@ contains
 
     ! function return variable
     type(climate_type), dimension(ntstepsyear) :: out_climate
-
-    ! !print*,'ntstepsyear', ntstepsyear
-    ! !print*,'ntstepsyear_forcing', ntstepsyear_forcing
 
     idx_start = (climateyear_idx - 1) * ntstepsyear + 1
     idx_end   = idx_start + ntstepsyear - 1

@@ -15,8 +15,6 @@ $(SHLIB): $(FT_OBJS) $(C_OBJS)
 sofun_r.o: interface_biosphere_pmodel.mod.o interface_biosphere_biomee.mod.o params_core.mod.o params_core.mod.o params_soil_biomee.mod.o params_siml_pmodel.mod.o params_siml_biomee.mod.o
 interface_biosphere_pmodel.mod.o: forcing_siterun_pmodel.mod.o params_siml_pmodel.mod.o params_core.mod.o
 interface_biosphere_biomee.mod.o: forcing_siterun_biomee.mod.o params_soil_biomee.mod.o params_siml_biomee.mod.o params_core.mod.o
-params_siml_pmodel.mod.o: params_core.mod.o
-params_siml_biomee.mod.o: params_core.mod.o
 forcing_siterun_pmodel.mod.o: params_core.mod.o params_siml_pmodel.mod.o grid_siterun.mod.o sofunutils.mod.o
 forcing_siterun_biomee.mod.o: params_core.mod.o params_siml_biomee.mod.o grid_siterun.mod.o
 params_soil_biomee.mod.o: params_core.mod.o
@@ -33,13 +31,14 @@ biosphere_biomee.mod.o: params_core.mod.o interface_biosphere_biomee.mod.o datat
 soil_biomee.mod.o: datatypes.mod.o
 vegetation_biomee.mod.o: datatypes.mod.o soil_biomee.mod.o gpp_biomee.mod.o
 datatypes.mod.o: interface_biosphere_biomee.mod.o params_core.mod.o classdefs.mod.o
+sofunutils.mod.o: params_core.mod.o
 
 # Source (object) of Fortran modules
 # <modulename.mod>: <filename.o>
 sofun_r_mod.mod: sofun_r.o
+md_params_core.mod: params_core.mod.o
 md_params_siml_pmodel.mod: params_siml_pmodel.mod.o
 md_params_siml_biomee.mod: params_siml_biomee.mod.o
-md_params_core.mod: params_core.mod.o
 md_forcing_pmodel.mod: forcing_siterun_pmodel.mod.o
 md_forcing_biomee.mod: forcing_siterun_biomee.mod.o
 md_params_soil_biomee.mod: params_soil_biomee.mod.o
