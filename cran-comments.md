@@ -3,8 +3,7 @@ Dear CRAN team,
 This is the re-submission of the {rsofun} package. We have addressed the following
 concerns flagged by the automatic checks:
 
-- Wrapped examples running the BiomeE model in \donttest because they took 16 sec to run in the Windows pre-test. 
-- Reviewed DESCRIPTION file for misspelled words. The NOTE in the pre-tests is a false positive.
+- Modified code in Fortran modules to fix compilation issues raised by Prof. Ripley.
 
 ---
 
