@@ -143,6 +143,9 @@ morrisOut <- sensitivity::morris(
   bsup = par_cal_max,
   scale = TRUE)
 
+# Save results
+saveRDS(morrisOut, "analysis/paper_results_files/morrisOut_paper.rda")
+
 # Summarise the morris output
 morrisOut.df <- data.frame(
   parameter = names(par_cal_best),
@@ -191,7 +194,7 @@ settings_calib <- list(
     sampler = "DEzs",
     settings = list(
       burnin = 1500,
-      iterations = 6000,
+      iterations = 12000,
       nrChains = 3,       # number of independent chains
       startValue = 3      # number of internal chains to be sampled
     )),
@@ -223,7 +226,7 @@ par_calib <- calib_sofun(
 toc() # took 552.854 sec to run
 
 # Save result
-saveRDS(par_calib, file = "analysis/calibration_exploration_files/par_calib_paper.rda")
+saveRDS(par_calib, file = "analysis/paper_results_files/par_calib_paper.rda")
 
 # Define functions for plotting (re-use BayesianTools hidden code)
 getSetup <- function(x) {
@@ -347,6 +350,8 @@ pmodel_runs <- samples_par |>
     gpp_pred_q05 = quantile(gpp_pred, 0.05, na.rm = TRUE),
     gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE)
   )
+
+saveRDS(pmodel_runs, file = "analysis/paper_results_files/pmodel_runs_paper.rda")
 
 # Plot the credible intervals computed above
 # for the first year only
