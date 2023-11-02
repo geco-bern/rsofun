@@ -1,3 +1,7 @@
+# rsofun v4.4.1
+
+* bugfix Fortran modules
+
 # rsofun v4.4
 
 * bugfix on input data type P-model

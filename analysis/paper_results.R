@@ -8,7 +8,7 @@ library(sensitivity)
 library(BayesianTools)
 library(tictoc)
 
-# Figure 1 #####
+# Figure 1 - removed #####
 
 # define model parameter values from Stocker et al 2020
 params_modl <- list(
@@ -71,9 +71,6 @@ ggplot(data = df_gpp_plot) +
 # and take a long time to run.
 # For checking reproducibility, run the commented code.
 
-# Load Morris sensitivity output from sensitivity_analysis.Rmd
-load("vignettes/files/morrisOut.rda")
-
 # Define log-likelihood function
 ll_pmodel <- function(
     par_v                 # a vector of all calibratable parameters including errors
@@ -135,16 +132,19 @@ morris_setup <- BayesianTools::createBayesianSetup(
   names = names(par_cal_best)
 )
 
-# # Run Morris sensitivity analysis
-# set.seed(432)
-# morrisOut <- sensitivity::morris(
-#   model = morris_setup$posterior$density,
-#   factors = names(par_cal_best),
-#   r = 1000,
-#   design = list(type = "oat", levels = 20, grid.jump = 3),
-#   binf = par_cal_min,
-#   bsup = par_cal_max,
-#   scale = TRUE)
+# Run Morris sensitivity analysis
+set.seed(432)
+morrisOut <- sensitivity::morris(
+  model = morris_setup$posterior$density,
+  factors = names(par_cal_best),
+  r = 1000,
+  design = list(type = "oat", levels = 20, grid.jump = 3),
+  binf = par_cal_min,
+  bsup = par_cal_max,
+  scale = TRUE)
+
+# Save results
+saveRDS(morrisOut, "analysis/paper_results_files/morrisOut_paper.rda")
 
 # Summarise the morris output
 morrisOut.df <- data.frame(
@@ -181,9 +181,6 @@ morrisOut.df |>
 # Some code lines are commented out, because they create the object loaded below
 # and take a long time to run.
 # For checking reproducibility, run the commented code.
-
-# Load calibration output from sensitivity_analysis.Rmd
-load("vignettes/files/par_calib.rda")
 
 # Code to produce file
 # Calibrates kphio, betao, kc_jmax - top 3 model params
@@ -226,10 +223,10 @@ par_calib <- calib_sofun(
   targets = "gpp"
 )
 
-toc() # took 1555.601 sec to run
+toc() # took 552.854 sec to run
 
 # Save result
-saveRDS(par_calib, file = "analysis/calibration_exploration_files/par_calib_12000iterations.rda")
+saveRDS(par_calib, file = "analysis/paper_results_files/par_calib_paper.rda")
 
 # Define functions for plotting (re-use BayesianTools hidden code)
 getSetup <- function(x) {
@@ -353,6 +350,8 @@ pmodel_runs <- samples_par |>
     gpp_pred_q05 = quantile(gpp_pred, 0.05, na.rm = TRUE),
     gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE)
   )
+
+saveRDS(pmodel_runs, file = "analysis/paper_results_files/pmodel_runs_paper.rda")
 
 # Plot the credible intervals computed above
 # for the first year only
