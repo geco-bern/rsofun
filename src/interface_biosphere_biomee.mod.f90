@@ -102,7 +102,7 @@ module md_interface_biomee
     type(outtype_steering)                                :: steering
     type(paramstype_siml)                                 :: params_siml
     real, dimension(:), allocatable                       :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
-    type(paramstype_species), dimension(0:MSPECIES)       :: params_species
+    type(paramstype_species), dimension(1:(MSPECIES+1))       :: params_species
     type(paramtype_soil)                                  :: params_soil
     type(paramstype_tile)                                 :: params_tile
     type(inittype_cohort), dimension(MAX_INIT_COHORTS)    :: init_cohort
