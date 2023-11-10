@@ -32,15 +32,9 @@ module md_plant_pmodel
     logical :: nfixer              ! whether plant is capable of symbiotically fixing N
     logical :: c3                  ! whether plant follows C3 photosynthesis
     logical :: c4                  ! whether plant follows C4 photosynthesis
-    real    :: sla                 ! specific leaf area (m2 gC-1)
+    real    :: sla                 ! specific leaf area (m2 gC-1) FIXME (JAIDEEP):  Probably SLA and LMA dont belong here, but in plant_type
     real    :: lma                 ! leaf mass per area (gC m-2)
     real    :: r_ntolma            ! constant ratio of structural N to C (LMA) (gN/gC)
-    real    :: phydro_K_plant      ! Phydro: Plant conductivity 
-    real    :: phydro_p50_plant    ! Phydro: Plant P50
-    real    :: phydro_b_plant      ! Phydro: shape parameter of vulnerability curve
-    real    :: phydro_alpha        ! Phydro: Cost of Jmax
-    real    :: phydro_gamma        ! Phydro: Cost of hydraulics
-    real    :: bsoil               ! Phydro: parameter converting RZWSC to predawn water potential (depends on rooting system hence PFT specific)
   end type params_pft_plant_type
 
   type(params_pft_plant_type), dimension(npft) :: params_pft_plant
@@ -72,6 +66,12 @@ module md_plant_pmodel
     real :: r_cton_leaf         ! leaf C:N ratio [gC/gN] 
     real :: r_ntoc_leaf         ! leaf N:C ratio [gN/gC]
 
+    real :: phydro_K_plant      ! Phydro: Plant conductivity 
+    real :: phydro_p50_plant    ! Phydro: Plant P50
+    real :: phydro_b_plant      ! Phydro: shape parameter of vulnerability curve
+    real :: phydro_alpha        ! Phydro: Cost of Jmax
+    real :: phydro_gamma        ! Phydro: Cost of hydraulics
+    real :: bsoil               ! Phydro: parameter converting RZWSC to predawn water potential (depends on rooting system hence PFT specific)
   end type plant_type
 
 
@@ -230,15 +230,6 @@ contains
       pft = pft + 1
       params_pft_plant(pft) = getpftparams( 'gr4' )
     end if
-
-    ! Phydro parameters - see definitions above
-    ! FIXME: For now, these are set to be the same for each PFT, but that should change eventually
-    params_pft_plant(:)%phydro_K_plant   = myinterface%params_calib%phydro_K_plant  
-    params_pft_plant(:)%phydro_p50_plant = myinterface%params_calib%phydro_p50_plant
-    params_pft_plant(:)%phydro_b_plant   = myinterface%params_calib%phydro_b_plant  
-    params_pft_plant(:)%phydro_alpha     = myinterface%params_calib%phydro_alpha    
-    params_pft_plant(:)%phydro_gamma     = myinterface%params_calib%phydro_gamma    
-    params_pft_plant(:)%bsoil            = myinterface%params_calib%bsoil           
     
     npft_site = pft
     ! if (npft_site==0) stop 'PLANT:GETPAR_MODL_PLANT: PFT name not valid. See run/<simulationname>.sofun.parameter'
@@ -363,6 +354,14 @@ contains
     plant%nmass            = 0.0
     plant%r_cton_leaf      = 0.0
     plant%r_ntoc_leaf      = 0.0
+
+    ! Phydro parameters - see definitions above
+    plant%phydro_K_plant   = myinterface%params_calib%phydro_K_plant  
+    plant%phydro_p50_plant = myinterface%params_calib%phydro_p50_plant
+    plant%phydro_b_plant   = myinterface%params_calib%phydro_b_plant  
+    plant%phydro_alpha     = myinterface%params_calib%phydro_alpha    
+    plant%phydro_gamma     = myinterface%params_calib%phydro_gamma    
+    plant%bsoil            = myinterface%params_calib%bsoil           
 
   end subroutine initpft
 

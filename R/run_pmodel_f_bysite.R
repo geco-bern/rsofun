@@ -294,24 +294,24 @@ run_pmodel_f_bysite <- function(
     
     # Check model parameters
     if (!params_siml$use_phydro){
-      # P-model needs 9 parameters
+      # P-model needs 10 parameters
       if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
                                                 'soilm_thetastar', 'soilm_betao',
                                                 'beta_unitcostratio', 'rd_to_vcmax', 
-                                                'tau_acclim', 'kc_jmax')
-             ) != 9){
+                                                'tau_acclim', 'kc_jmax', 'whc')
+             ) != 10){
         warning(" Returning a dummy data frame. Incorrect model parameters.")
         continue <- FALSE
       }
     }
     else {
-      # P-hydro needs 12 parameters
+      # P-hydro needs 13 parameters
       if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
                                          'rd_to_vcmax', 'tau_acclim', 'kc_jmax',
                                          'phydro_K_plant', 'phydro_p50_plant', 'phydro_b_plant',
                                          'phydro_alpha', 'phydro_gamma',
-                                         'bsoil')
-             ) != 12){
+                                         'bsoil', 'whc')
+             ) != 13){
         warning(" Returning a dummy data frame. Incorrect model parameters.")
         continue <- FALSE
       }
@@ -387,7 +387,8 @@ run_pmodel_f_bysite <- function(
              yes = params_modl$phydro_gamma),
       ifelse(params_siml$use_phydro, 
              no  = dummy_val,
-             yes = params_modl$bsoil)
+             yes = params_modl$bsoil),
+      as.numeric(params_modl$whc)
       )
 
     ## C wrapper call
@@ -417,7 +418,6 @@ run_pmodel_f_bysite <- function(
       longitude                 = as.numeric(site_info$lon),
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
-      whc                       = as.numeric(site_info$whc),
       canopy_height             = as.numeric(site_info$canopy_height),
       reference_height          = as.numeric(site_info$reference_height),
       n                         = n,

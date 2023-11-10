@@ -194,7 +194,7 @@ contains
       !----------------------------------------------------------------
       ! Convert water content to water potential, for use in phydro
       !----------------------------------------------------------------
-      swp = 1 - tile(lu)%soil%phy%wscal**(-params_pft_plant(pft)%bsoil)
+      swp = 1 - tile(lu)%soil%phy%wscal**(-tile(lu)%plant(pft)%bsoil)
       swp = min(swp, 0.0) ! clamp +ve values to 0
 
       !----------------------------------------------------------------
@@ -225,11 +225,11 @@ contains
                               method_jmaxlim = "wang17" &
                               )
         else
-          par_cost = par_cost_type(params_pft_plant(pft)%phydro_alpha, &
-                                   params_pft_plant(pft)%phydro_gamma)
-          par_plant = par_plant_type(params_pft_plant(pft)%phydro_K_plant, &
-                                     params_pft_plant(pft)%phydro_p50_plant, &
-                                     params_pft_plant(pft)%phydro_b_plant)
+          par_cost = par_cost_type(tile(lu)%plant(pft)%phydro_alpha, &
+                                   tile(lu)%plant(pft)%phydro_gamma)
+          par_plant = par_plant_type(tile(lu)%plant(pft)%phydro_K_plant, &
+                                     tile(lu)%plant(pft)%phydro_p50_plant, &
+                                     tile(lu)%plant(pft)%phydro_b_plant)
           par_plant%h_canopy = myinterface%canopy_height
           par_plant%h_wind_measurement = myinterface%reference_height
       

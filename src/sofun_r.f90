@@ -33,7 +33,6 @@ contains
     longitude,                 &      
     latitude,                  &     
     altitude,                  &   
-    whc,                       &
     canopy_height,             &
     reference_height,          &
     nt,                        &
@@ -77,11 +76,10 @@ contains
     real(kind=c_double),  intent(in) :: longitude
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
-    real(kind=c_double),  intent(in) :: whc
     real(kind=c_double),  intent(in) :: canopy_height
     real(kind=c_double),  intent(in) :: reference_height
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(15), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(16), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
     real(kind=c_double),  dimension(nt,18), intent(out) :: output
 
@@ -142,7 +140,11 @@ contains
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
-    myinterface%whc_prescr = real( whc )
+    !myinterface%whc_prescr = real( whc )
+
+    !----------------------------------------------------------------
+    ! Other site-specific PARAMETERS
+    !----------------------------------------------------------------
     myinterface%canopy_height = real (canopy_height)
     myinterface%reference_height = real (reference_height)
     
@@ -164,6 +166,7 @@ contains
     myinterface%params_calib%phydro_alpha       = real(par(13))
     myinterface%params_calib%phydro_gamma       = real(par(14))
     myinterface%params_calib%bsoil              = real(par(15))
+    myinterface%params_calib%whc                = real(par(16))
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)

@@ -422,7 +422,8 @@ contains
       params%thdiff_fc    = 0.4
       
       ! overwrite
-      params%whc = myinterface%whc_prescr
+      !params%whc = myinterface%whc_prescr
+      params%whc = myinterface%params_calib%whc
 
     ! end do
 

@@ -28,7 +28,8 @@ module md_interface_pmodel
     real :: phydro_b_plant   
     real :: phydro_alpha     
     real :: phydro_gamma     
-    real :: bsoil            
+    real :: bsoil
+    real :: whc       
   end type paramstype_calib  
 
 
@@ -36,7 +37,7 @@ module md_interface_pmodel
     integer                                 :: year
     real                                    :: pco2
     type(gridtype)                          :: grid
-    real                                    :: whc_prescr
+    ! real                                    :: whc_prescr
     real                                    :: canopy_height
     real                                    :: reference_height
     type(climate_type), dimension(ndayyear) :: climate

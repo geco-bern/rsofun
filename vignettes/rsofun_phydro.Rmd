@@ -216,7 +216,14 @@ load("../data/p_model_drivers.rda")
 
 p_hydro_drivers <- p_model_drivers
 p_hydro_drivers$sitename[[1]] = site
-p_hydro_drivers$site_info[[1]] = tibble(lon=meta[[1]]$longitude, lat=meta[[1]]$latitude, elv = meta[[1]]$elevation, whc = 90, canopy_height=meta[[1]]$canopy_height, reference_height = meta[[1]]$reference_height)
+p_hydro_drivers$site_info[[1]] = 
+    tibble(
+       lon=meta[[1]]$longitude, 
+       lat=meta[[1]]$latitude, 
+       elv = meta[[1]]$elevation,
+       canopy_height=meta[[1]]$canopy_height, 
+       reference_height = meta[[1]]$reference_height
+    )
 kfFEC = 2.04
 
 start_year = 2000
@@ -517,12 +524,13 @@ params_modl <- list(
   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
   tau_acclim         = 30.0,
   kc_jmax            = 0.41,
-  phydro_K_plant     = 3e-16,
+  phydro_K_plant     = 0.3e-16,
   phydro_p50_plant   = -1,
   phydro_b_plant     = 1,
   phydro_alpha       = 0.1,
   phydro_gamma       = 1,
-  bsoil              = 3
+  bsoil              = 3,
+  whc                = 90
 )
 
 p_hydro_drivers$forcing[[1]] %>% 
