@@ -85,17 +85,31 @@ cost_likelihood_pmodel <- function(
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
   
+  using_phydro = drivers$params_siml[[1]]$use_phydro
+  
+  # FIXME Jaideep: Instead of checking the number of params, 
+  #    it might be better to check for presence of each param in par and par_fixed
   ## check input parameters
-  if( (length(par) + length(par_fixed)) != (10 + length(targets)) ){
+  expected_params = ifelse(using_phydro, yes=13, no=10)
+  if( (length(par) + length(par_fixed)) != (expected_params + length(targets)) ){
     stop(paste0('Error: Input calibratable and fixed parameters (par = ',length(par),' and par_fixed = ',length(par_fixed),')
-    do not match length of the required P-model parameters (10).'))
+    do not match length of the required P-model parameters (',expected_params + length(targets),').'))
   }
   
+  
   ## define parameter set based on calibrated parameters
-  calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
-                         'soilm_thetastar', 'soilm_betao',
-                         'beta_unitcostratio', 'rd_to_vcmax', 
-                         'tau_acclim', 'kc_jmax', 'whc')
+  if (using_phydro){
+    calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
+                           'rd_to_vcmax', 'tau_acclim', 'kc_jmax',
+                           'phydro_K_plant', 'phydro_p50_plant', 'phydro_b_plant',
+                           'phydro_alpha', 'phydro_gamma',
+                           'bsoil', 'whc')
+  } else {
+    calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
+                           'soilm_thetastar', 'soilm_betao',
+                           'beta_unitcostratio', 'rd_to_vcmax', 
+                           'tau_acclim', 'kc_jmax', 'whc')
+  }
   
   if(!is.null(par_fixed)){
     params_modl <- list()
@@ -110,7 +124,7 @@ cost_likelihood_pmodel <- function(
       }
     }
   }else{
-    params_modl <- as.list(par[1:9])       # all parameters calibrated
+    params_modl <- as.list(par[1:expected_params])       # all parameters calibrated
     names(params_modl) <- calib_param_names
   }
   

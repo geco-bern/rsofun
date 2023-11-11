@@ -25,6 +25,11 @@ site <- "GF-Guy"
 load(paste0("../data/",site,"_p_hydro_drivers.rda"))
 load(paste0("../data/",site,"_p_hydro_validation.rda"))
 
+p_hydro_validation$data[[1]] = p_hydro_validation$data[[1]] %>% 
+  rename(latenth=le) %>% 
+  mutate(gpp = gpp*86400/1e6*12) %>% # convert to [gC m-2 day-1]
+  mutate(latenth = latenth*86400)    # convert [W m-2] to [J m-2 day-1]
+
 p_hydro_drivers$forcing[[1]]$netrad[is.na(p_hydro_drivers$forcing[[1]]$netrad)] = 0
 p_hydro_drivers$forcing[[1]]$patm[p_hydro_drivers$forcing[[1]]$patm < 0] = 1.0135e5
 
@@ -40,14 +45,13 @@ plot_pmodel = function(params_modl){
     par = params_modl
   )
   
-  output_p$data[[1]] %>% select(date, gpp, latenth) %>% 
-    rename(le = latenth) %>% 
+  p1 = output_p$data[[1]] %>% select(date, gpp, latenth) %>% 
     melt("date") %>% 
     mutate(group="model") %>% 
     rbind(p_hydro_validation$data[[1]] %>% 
-            select(date, gpp, le) %>%
-            mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
-            mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
+            select(date, gpp, latenth) %>%
+            # mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
+            # mutate(latenth = latenth*86400) %>%  # convert W m-2 to J m-2 day-1 
             melt("date") %>% 
             mutate(group="obs")) %>% 
     ggplot(aes(y=value, x=as.Date(date))) +
@@ -55,6 +59,23 @@ plot_pmodel = function(params_modl){
     theme_classic() +
     theme(strip.background = element_rect(color = "white", size = 1))+
     facet_wrap(~variable, scales = "free", nrow = 2)
+  
+  p2 = output_p$data[[1]] %>% select(date, gpp, latenth) %>% 
+    melt("date", value.name = "pred") %>% 
+    left_join(p_hydro_validation$data[[1]] %>% 
+            select(date, gpp, latenth) %>%
+            # mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
+            # mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
+            melt("date", value.name = "obs")) %>% 
+    ggplot(aes(y=obs, x=pred)) +
+    geom_point(alpha=0.7) +
+    geom_abline(slope=1, intercept=0, col="red")+
+    theme_classic() +
+    theme(strip.background = element_rect(color = "white", size = 1))+
+    facet_wrap(~variable, scales = "free", nrow = 1)
+  
+  print(p1)
+  print(p2)
 }
 ```
 
@@ -123,7 +144,7 @@ pars_calib_rmse <- calib_sofun(
   targets = "gpp"           # define target variable GPP
 )
 
-print(pars_calib_rmse)
+print(pars_calib_rmse, max=20)
 
 params_modl_opt = params_modl
 params_modl_opt$kphio = pars_calib_rmse$par
@@ -182,6 +203,121 @@ print(pars_calib_bayes)
 
 params_modl_opt = params_modl
 params_modl_opt$kphio = pars_calib_bayes$par[["kphio"]]
+plot_pmodel(params_modl_opt)
+
+```
+
+### P-hydro calibration (GenSA)
+
+```{r}
+p_hydro_drivers$params_siml[[1]]$use_phydro = T
+p_hydro_drivers$params_siml[[1]]$use_pml = F
+
+# Define calibration settings and parameter ranges from previous work
+settings_rmse <- list(
+  method = 'GenSA',                   # minimizes the RMSE
+  metric = cost_rmse_pmodel,          # our cost function
+  control = list(                     # control parameters for optimizer GenSA
+    maxit = 100),                     
+  par = list(
+    kphio = list(lower=0.04, upper=0.09, init=0.05),
+    phydro_K_plant = list(lower=0.05e-16, upper=5e-16, init=0.3e-16)
+  ),
+  parallel = T,
+  ncores = 8
+)
+
+# Calibrate the model and optimize the free parameters using
+# demo datasets
+pars_calib_rmse <- calib_sofun(
+  # calib_sofun arguments:
+  drivers = p_hydro_drivers,  
+  obs = p_hydro_validation,
+  settings = settings_rmse,
+  # extra arguments passed to the cost function:
+  par_fixed = list(         # fix all other parameters
+    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+    kphio_par_b        = 1.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41,
+    # phydro_K_plant     = 0.3e-16,
+    phydro_p50_plant   = -1,
+    phydro_b_plant     = 1,
+    phydro_alpha       = 0.1,
+    phydro_gamma       = 1,
+    bsoil              = 3,
+    whc                = 90  
+  ),
+  targets = c("gpp", "latenth"),           # define target variable GPP
+  target_weights = c(1, 1e-6)
+)
+
+print(pars_calib_rmse, max=20)
+
+params_modl_opt = params_modl
+params_modl_opt$kphio = pars_calib_rmse$par[["kphio"]]
+params_modl_opt$phydro_K_plant = pars_calib_rmse$par[["phydro_K_plant"]]
+plot_pmodel(params_modl_opt)
+
+```
+
+### P-hydro calibration (BayesianTools)
+
+```{r}
+p_hydro_drivers$params_siml[[1]]$use_phydro = T
+p_hydro_drivers$params_siml[[1]]$use_pml = F
+
+# Define calibration settings and parameter ranges from previous work
+settings_bayes <- list(
+  method = "BayesianTools",
+  par = list(
+    kphio = list(lower=0.04, upper=0.09, init=0.05),
+    phydro_K_plant = list(lower=0.05e-16, upper=5e-16, init=0.3e-16),
+    err_gpp = list(lower = 0.01, upper = 4, init = 2),
+    err_le = list(lower = 0.01e7, upper = 4e7, init = 2e7)
+  ),
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      nrChains = 1,
+      burnin = 1000,        
+      iterations = 1300     # kept artificially low
+    )
+  )
+)
+
+# Calibrate the model and optimize the free parameters using
+# demo datasets
+pars_calib_bayes <- calib_sofun(
+  # calib_sofun arguments:
+  drivers = p_hydro_drivers,  
+  obs = p_hydro_validation,
+  settings = settings_bayes,
+  # extra arguments passed to the cost function:
+  par_fixed = list(         # fix all other parameters
+    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+    kphio_par_b        = 1.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41,
+    # phydro_K_plant     = 0.3e-16,
+    phydro_p50_plant   = -1,
+    phydro_b_plant     = 1,
+    phydro_alpha       = 0.1,
+    phydro_gamma       = 1,
+    bsoil              = 3,
+    whc                = 90  
+  ),
+  targets = c("gpp", "latenth")           # define target variable GPP
+)
+
+print(pars_calib_bayes)
+
+params_modl_opt = params_modl
+params_modl_opt$kphio = pars_calib_bayes$par[["kphio"]]
+params_modl_opt$phydro_K_plant = pars_calib_bayes$par[["phydro_K_plant"]]
 plot_pmodel(params_modl_opt)
 
 ```
