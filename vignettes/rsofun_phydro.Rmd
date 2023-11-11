@@ -515,7 +515,7 @@ How to test interactions.
 
 ```{r}
 params_modl <- list(
-  kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
+  kphio              = 0.089 # 0.11, #0.04998,    # setup ORG in Stocker et al. 2020 GMD
   kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
   kphio_par_b        = 1.0,
   soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
