@@ -1,8 +1,10 @@
 ---
-title: "Rsofun with Phydro"
+title: "Generate input data for rsofun Phydro"
 author: "Jaideep Joshi"
-date: "2023-09-07"
+date: "2023-11-12"
 output: html_document
+params: 
+  output_dir: "."
 ---
 
 ```{r setup, include=FALSE}
@@ -12,29 +14,19 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(reshape2)
-```
-
-## Generate data if not already available
-
-```{r}
-
-
-```
-
-```{r}
-site <- "GF-Guy"
-generate_data = F
-
-out_path = "~/Downloads/fluxdatakit_oct3/Phydro_drivers/"
-```
-
-```{r}
-if (generate_data){
-
 library(FluxDataKit)
-  
+```
+
+
+```{r}
+site <- "CH-Dav"
+```
+
+
+```{r}
 lsm_path = "~/Downloads/fluxdatakit_oct3/FLUXDATAKIT_LSM/"
 csv_path = "~/Downloads/fluxdatakit_oct3/FLUXDATAKIT_FLUXNET/"
+out_path = "~/Downloads/fluxdatakit_oct3/Phydro_drivers/"
 
 files_csv = list.files(csv_path)
 files_lsm = list.files(lsm_path)
@@ -85,6 +77,11 @@ hhdf =
     mutate(time = lubridate::as_datetime(as.character(TIMESTAMP_START), tz = "GMT", format="%Y%m%d%H%M")) |>
     mutate(date = lubridate::as_date(time))
 
+if (!("SW_OUT" %in% colnames(hhdf))) {
+  hhdf$SW_OUT = NA
+}
+  
+
 # Aggregate to daily 24-hr means  ----------------------------------------------------------
 message("- downsampling FLUXNET format - 24 hr means")
 ddf_24hr_mean <-
@@ -97,23 +94,31 @@ ddf_24hr_mean <-
 
 # Check aggregation
 ddf_24hr_mean %>% 
-  select(SW_IN_F_MDS, SW_OUT, LW_IN_F_MDS, LAI, FPAR, GPP_DT_VUT_REF, LE_F_MDS, TA_F_MDS, date) %>% 
   mutate(albedo = SW_OUT/SW_IN_F_MDS) %>% 
+  select(SW_IN_F_MDS, NETRAD, LW_IN_F_MDS, LAI, FPAR, GPP_DT_VUT_REF, LE_F_MDS, TA_F_MDS, date) %>% 
   melt("date") %>% 
   ggplot(aes(y=value, x=date)) + 
   geom_line(col="aquamarine4") + 
   theme_classic() +
   theme(strip.background = element_rect(color = "white", size = 1))+
   facet_wrap(~variable, scales = "free")
+
+ddf_24hr_mean %>% filter(!is.na(NETRAD)) %>% pull(date) %>% summary()
 ```
 
 ```{r}
 valid_years = read.csv(text = "
     sitename  , start_year ,  end_year \n
+    CH-Dav    , 2000       ,  2010     \n
+    DE-Hai    , 2000       ,  2020     \n
+    DE-Tha    , 2000       ,  2020     \n
+    FR-LBr    , 2000       ,  2008     \n
+    FR-Pue    , 2000       ,  2015     \n
     GF-Guy    , 2004       ,  2015     \n
-    FR-Pue    , 2004       ,  2020     \n
-    FI-Hyy    , 2004       ,  2020     \n
-    CH-Dav    , 2004       ,  2020     \n
+    NL-Loo    , 2000       ,  2014     \n
+    US-Me2    , 2002       ,  2020     \n
+    US-NR1    , 2000       ,  2016     \n
+    US-Ton    , 2001       ,  2014     \n
     ", 
     header=T, strip.white=T)
 
@@ -177,6 +182,11 @@ ddf_3hr_maxima <- hhdf |>
 aggregate_daily_daylength = function(df){
   # Get the time at which SW_IN > 0 
   pos_ppfd <- df %>% filter(SW_IN_F_MDS > 10)
+  # if SW_IN is unavailable in that year calc daylength based on NETRAD
+  if (nrow(pos_ppfd) < 2){
+    pos_ppfd <- df %>% filter(NETRAD > 25)
+  }
+  
   tmax <- max(pos_ppfd$time)
   tmin <- min(pos_ppfd$time)
   
@@ -367,6 +377,7 @@ save(p_hydro_drivers,
      )  
 
 
+# JJ Note: The gpp and latenth units here are different from the demo dataset supplied with rsofun. Here the units are matched to the output units from rsofun (see conversion below)
 # Write validation data
 load("../data/p_model_validation.rda")
 
@@ -384,7 +395,7 @@ p_hydro_validation$data <-
       gpp = GPP_DT_VUT_REF,
       latenth = LE_F_MDS
     ) |>
-  mutate(gpp = gpp*86400/1e6*12)  |>    # convert to [gC m-2 day-1]
+  mutate(gpp = gpp*86400/1e6*12)  |>    # convert [umol m-2 s-1] to [gC m-2 day-1]
   mutate(latenth = latenth*86400) |>    # convert [W m-2] to [J m-2 day-1]
   list()
 
@@ -399,7 +410,7 @@ p_hydro_validation$data_hh <-
       gpp = GPP_DT_VUT_REF,
       latenth = LE_F_MDS
     ) |>
-  mutate(gpp = gpp*86400/1e6*12)  |>    # convert to [gC m-2 day-1]
+  mutate(gpp = gpp*86400/1e6*12)  |>    # convert [umol m-2 s-1] to [gC m-2 day-1]
   mutate(latenth = latenth*86400) |>    # convert [W m-2] to [J m-2 day-1]
   list()
 
@@ -414,7 +425,7 @@ p_hydro_validation$data_3hr_mean <-
       gpp = GPP_DT_VUT_REF,
       latenth = LE_F_MDS
     ) |>
-  mutate(gpp = gpp*86400/1e6*12)  |>    # convert to [gC m-2 day-1]
+  mutate(gpp = gpp*86400/1e6*12)  |>    # convert [umol m-2 s-1] to [gC m-2 day-1]
   mutate(latenth = latenth*86400) |>    # convert [W m-2] to [J m-2 day-1]
   list()
 
@@ -429,7 +440,7 @@ p_hydro_validation$data_daytime_mean <-
       gpp = GPP_DT_VUT_REF,
       latenth = LE_F_MDS
     ) |>
-  mutate(gpp = gpp*86400/1e6*12)  |>    # convert to [gC m-2 day-1]
+  mutate(gpp = gpp*86400/1e6*12)  |>    # convert [umol m-2 s-1] to [gC m-2 day-1]
   mutate(latenth = latenth*86400) |>    # convert [W m-2] to [J m-2 day-1]
   list()
 
@@ -440,324 +451,5 @@ save(p_hydro_validation,
      file = filn
      )  
 
-
-}
-
 ```
 
-## Read Phydro drivers and check
-
-```{r}
-# rm(list=ls())
-
-load(paste0("../data/",site,"_p_hydro_drivers.rda"))
-load(paste0("../data/",site,"_p_hydro_validation.rda"))
-
-p_hydro_drivers$forcing[[1]]$netrad[is.na(p_hydro_drivers$forcing[[1]]$netrad)] = 0
-p_hydro_drivers$forcing[[1]]$patm[p_hydro_drivers$forcing[[1]]$patm < 0] = 1.0135e5
-
-start_date = "2011-06-01"
-end_date = "2011-06-06"
-
-# Check acclimation data against half-hourly
-# ---
-p_hydro_drivers$forcing_halfhourly[[1]] %>%
-filter(date >= start_date & date <= end_date ) %>%   
-  select(time, ppfd, netrad, temp, vpd, fapar) %>% 
-  melt("time") %>% 
-  mutate(type="hourly") %>% 
-  rbind(p_hydro_drivers$forcing_acclim[[1]] %>%
-          filter(date >= start_date & date <= end_date ) %>%
-          select(time, ppfd, netrad, temp, vpd, fapar) %>% 
-          melt("time") %>% 
-          mutate(type="daily")
-  ) %>% 
-  ggplot(aes(y=value, x=as.POSIXct(time))) + 
-  geom_line(data = . %>% filter(type == "hourly"), col="aquamarine4") + 
-  geom_point(data = . %>% filter(type == "daily")) + 
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free")
-
-
-# Check daily-3hr-maxima against daytime_means against 24 hr means
-# ---
-start_date = "2011-06-01"
-end_date = "2015-06-03"
-
-p_hydro_drivers$forcing[[1]] %>%
-  filter(date >= start_date & date <= end_date ) %>%
-  select(date, ppfd, netrad, temp, vpd, fapar) %>% 
-  melt("date") %>% 
-  mutate(type="24-hr mean") %>% 
-  rbind(p_hydro_drivers$forcing_acclim[[1]] %>%
-          filter(date >= start_date & date <= end_date ) %>%
-          select(date, ppfd, netrad, temp, vpd, fapar) %>% 
-          melt("date") %>% 
-          mutate(type="3-hr maxima")
-  ) %>% 
-  rbind(p_hydro_drivers$forcing_daytime_mean[[1]] %>%
-          filter(date >= start_date & date <= end_date ) %>%
-          select(date, ppfd, netrad, temp, vpd, fapar) %>% 
-          melt("date") %>% 
-          mutate(type="daytime means")
-  ) %>% 
-  ggplot(aes(y=value, x=date)) + 
-  geom_line(aes(group=type, col=type), alpha=0.5) + 
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free")
-
-
-start_date = "2011-06-01"
-end_date = "2015-06-03"
-
-p_hydro_validation$data[[1]] %>%
-  filter(date >= start_date & date <= end_date ) %>%
-  select(date, gpp, le) %>% 
-  melt("date") %>% 
-  mutate(type="24-hr mean") %>% 
-  rbind(p_hydro_validation$data_3hr_mean[[1]] %>%
-          filter(date >= start_date & date <= end_date ) %>%
-          select(date, gpp, le) %>% 
-          melt("date") %>% 
-          mutate(type="3-hr maxima")
-  ) %>% 
-  rbind(p_hydro_validation$data_daytime_mean[[1]] %>%
-          filter(date >= start_date & date <= end_date ) %>%
-          select(date, gpp, le) %>% 
-          melt("date") %>% 
-          mutate(type="daytime means")
-  ) %>% 
-  ggplot(aes(y=value, x=date)) + 
-  geom_line(aes(group=type, col=type), alpha=0.5) + 
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free")
-
-
-```
-
-## Model parameters and driver data
-
-Liu et al 21 nature climate change alexandra konings
-
-Qs:
-
-"Compound extremes are more reliably simulated with a hydraulics-explicit model"
-
-1.  disaggregating SM and VPD - compund stress
-
-Kim novick Nat CC - interactions between VPD and SM with flux data
-
-plot model bias \~ SM, VPD, T, does bias increase at extremes?
-
-How to test interactions.
-
-```{r}
-params_modl <- list(
-  kphio              = 0.089, # 0.11, #0.04998,    # setup ORG in Stocker et al. 2020 GMD
-  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
-  kphio_par_b        = 1.0,
-  soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-  soilm_betao        = 0.0,
-  beta_unitcostratio = 146.0,
-  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-  tau_acclim         = 30.0,
-  kc_jmax            = 0.41,
-  phydro_K_plant     = 0.3e-16,
-  phydro_p50_plant   = -1,
-  phydro_b_plant     = 1,
-  phydro_alpha       = 0.1,
-  phydro_gamma       = 1,
-  bsoil              = 3,
-  whc                = 90
-)
-
-p_hydro_drivers$forcing[[1]] %>% 
-  # dplyr::filter(lubridate::year(date) %in% 2007:2013) %>% 
-  melt("date") %>% 
-  ggplot(aes(y=value, x=as.Date(date))) +
-  geom_line(col="aquamarine4") +
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free")
-
-
-# load("../data/p_model_drivers.rda")
-# load("../data/p_model_validation.rda")
-# p_model_drivers$forcing[[1]] %>% 
-#   melt("date") %>% 
-#   ggplot(aes(y=value, x=as.Date(date))) +
-#   geom_line(col="aquamarine4") +
-#   theme_classic() +
-#   theme(strip.background = element_rect(color = "white", size = 1))+
-#   facet_wrap(~variable, scales = "free")
-```
-
-## Model run
-
-### P-model run
-
-```{r}
-p_hydro_drivers$params_siml[[1]]$use_phydro = F
-p_hydro_drivers$params_siml[[1]]$use_pml = F
-
-output_p <- rsofun::runread_pmodel_f(
-  p_hydro_drivers,
-  par = params_modl
-)
-```
-
-### P-model Validation
-
-```{r}
-output_p$data[[1]] %>% select(date, gpp, latenth) %>% 
-  rename(le = latenth) %>% 
-  melt("date") %>% 
-  mutate(group="model") %>% 
-  rbind(p_hydro_validation$data[[1]] %>% 
-          select(date, gpp, le) %>%
-          mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
-          mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
-          melt("date") %>% 
-          mutate(group="obs")) %>% 
-  ggplot(aes(y=value, x=as.Date(date))) +
-  geom_line(aes(group=group, col=group), alpha=0.7) +
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free", nrow = 2)
-```
-
-### P-hydro run
-
-```{r}
-p_hydro_drivers$params_siml[[1]]$use_phydro = T
-p_hydro_drivers$params_siml[[1]]$use_pml = F
-
-output_ph <- rsofun::runread_pmodel_f(
-  p_hydro_drivers,
-  par = params_modl
-)
-```
-
-### P-hydro Validation
-
-```{r}
-output_ph$data[[1]] %>% select(date, gpp, latenth) %>% 
-  rename(le = latenth) %>% 
-  melt("date") %>% 
-  mutate(group="model") %>% 
-  rbind(p_hydro_validation$data[[1]] %>% 
-          select(date, gpp, le) %>%
-          mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
-          mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
-          melt("date") %>% 
-          mutate(group="obs")) %>% 
-  ggplot(aes(y=value, x=as.Date(date))) +
-  geom_line(aes(group=group, col=group), alpha=0.7) +
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free", nrow = 2)
-```
-
-```{r}
-
-output_ph$data[[1]] %>% select(date, gpp, latenth) %>% 
-  rename(le = latenth) %>% 
-  melt("date", value.name = "pred") %>% 
-  left_join(p_hydro_validation$data[[1]] %>% 
-          select(date, gpp, le) %>%
-          mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
-          mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
-          melt("date", value.name = "obs")) %>% 
-  ggplot(aes(y=obs, x=pred)) +
-  geom_point(alpha=0.7) +
-  geom_abline(slope=1, intercept=0, col="red")+
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free", nrow = 1)
-```
-
-### P-hydro run (with PM ET)
-
-```{r}
-p_hydro_drivers$params_siml[[1]]$use_phydro = T
-p_hydro_drivers$params_siml[[1]]$use_pml = T
-
-output_ph_pm <- rsofun::runread_pmodel_f(
-  p_hydro_drivers,
-  par = params_modl
-)
-```
-
-### P-hydro Validation (with PM ET)
-
-```{r}
-output_ph_pm$data[[1]] %>% select(date, gpp, latenth) %>% 
-  rename(le = latenth) %>% 
-  melt("date") %>% 
-  mutate(group="model") %>% 
-  rbind(p_hydro_validation$data[[1]] %>% 
-          select(date, gpp, le) %>%
-          mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
-          mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
-          melt("date") %>% 
-          mutate(group="obs")) %>% 
-  ggplot(aes(y=value, x=as.Date(date))) +
-  geom_line(aes(group=group, col=group), alpha=0.7) +
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free", nrow = 2)
-```
-
-```{r}
-
-output_ph_pm$data[[1]] %>% select(date, gpp, latenth) %>% 
-  rename(le = latenth) %>% 
-  melt("date", value.name = "pred") %>% 
-  left_join(p_hydro_validation$data[[1]] %>% 
-          select(date, gpp, le) %>%
-          mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
-          mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
-          melt("date", value.name = "obs")) %>% 
-  ggplot(aes(y=obs, x=pred)) +
-  geom_point(alpha=0.7) +
-  geom_abline(slope=1, intercept=0, col="red")+
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free", nrow = 1)
-```
-
-```{r}
-output_ph$data[[1]] %>% select(-year_dec) %>% 
-  melt("date") %>% 
-  mutate(model = "phydro") %>%
-  rbind(
-    output_p$data[[1]] %>% select(-year_dec) %>% 
-    melt("date") %>% 
-    mutate(model = "pmodel")
-  ) %>% 
-  filter(!is.infinite(value)) %>% 
-  ggplot(aes(y=value, x=as.Date(date), group=model, col=model)) +
-  geom_line(alpha=0.5) +
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free")
-
-
-output_ph_pm$data[[1]] %>% select(-year_dec) %>% 
-  melt("date") %>% 
-  mutate(model = "phydro_pm") %>%
-  rbind(
-    output_ph$data[[1]] %>% select(-year_dec) %>% 
-    melt("date") %>% 
-    mutate(model = "phydro_diff")
-  ) %>% 
-  filter(!is.infinite(value)) %>% 
-  ggplot(aes(y=value, x=as.Date(date), group=model, col=model)) +
-  geom_line(alpha=0.5) +
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free")
-```

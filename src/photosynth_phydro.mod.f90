@@ -1420,13 +1420,26 @@ module md_photosynth_phydro
     
     bound = calc_dpsi_bound_inst(psi_soil, par_plant, par_env, par_photosynth, par_cost)
     dpsi_opt = zero(0.0d0, 0.99d0 * bound, profit_fun_inst, 1.0d-6)
-    
-    e = calc_sapflux(dpsi_opt, psi_soil, par_plant, par_env)
+    if (dpsi_opt .ne. dpsi_opt) print *, "Dspi_opt is NaN", dpsi_opt
+    if (dpsi_opt-1 .eq. dpsi_opt) print *, "Dspi_opt is Inf", dpsi_opt
+
+    ! FIXME Jaideep: This is a super hacky way to avoid NaNs in the calculation of e,
+    !    which seem to happen when dpsi_opt is extremely small, ~1e-6
+    if (dpsi_opt .lt. 1.0d-5) then
+      e = 0
+    else  
+      e = calc_sapflux(dpsi_opt, psi_soil, par_plant, par_env)
+    end if
+    if (e .ne. e) then
+      print *, "E is NaN", tc, psi_soil, dpsi_opt, e
+      e = 0
+    end if
+
     gs = calc_gs_from_Q(e, psi_soil, par_plant, par_env)
     Aa = calc_assimilation_limiting(vcmax, jmax, gs, par_photosynth)
     Ac = calc_assim_rubisco_limited(gs, vcmax, par_photosynth)
     Aj = calc_assim_light_limited(gs, jmax, par_photosynth)
-    
+
     res%a = Aa%a
     res%e = e
     res%ci = Aa%ci
