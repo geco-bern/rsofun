@@ -1,9 +1,10 @@
 Dear CRAN team,
 
-This is the re-submission of the {rsofun} package. We have addressed the following
-concerns flagged by the automatic checks:
+This is the re-submission of the {rsofun} package. We have addressed the following concerns:
 
-- Modified code in Fortran modules to fix compilation issues raised by Prof. Ripley.
+- Modified code to fix zero-indexing in Fortran-derived types. 
+
+We were not able to reproduce the error shown by Prof. Ligges but have tried to solve the issue anyways, and our checks pass cleanly. If other issues arise or this one is still present, we would need to be provided with the configuration of the machine used to run the checks on CRAN's end. This way, we could reproduce the error and see if our changes get rid of it.
 
 ---
 
