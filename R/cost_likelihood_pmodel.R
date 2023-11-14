@@ -111,6 +111,7 @@ cost_likelihood_pmodel <- function(
                            'tau_acclim', 'kc_jmax', 'whc')
   }
   
+  # FIXME Jaideep: Here it is assumed that the params in par will appear in exactly the same order in settings as in the list above. Better to do this in an order-independent way.
   if(!is.null(par_fixed)){
     params_modl <- list()
     # complete with calibrated values
