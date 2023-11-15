@@ -113,7 +113,7 @@ valid_years = read.csv(text = "
     DE-Hai    , 2000       ,  2020     \n
     DE-Tha    , 2000       ,  2020     \n
     FR-LBr    , 2000       ,  2008     \n
-    FR-Pue    , 2000       ,  2015     \n
+    FR-Pue    , 2000       ,  2013     \n
     GF-Guy    , 2004       ,  2015     \n
     NL-Loo    , 2000       ,  2014     \n
     US-Me2    , 2002       ,  2020     \n

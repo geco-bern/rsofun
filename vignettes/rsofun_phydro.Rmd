@@ -554,6 +554,10 @@ plot model bias \~ SM, VPD, T, does bias increase at extremes?
 
 How to test interactions.
 
+2. site scale calibrations - generalizability of params, systematic variation in hydraulic traits with climate? Within-site Variation in hydraulic traits? Relative CV of params - e.g. hyd traits vary but cost params are relatively constant? 
+
+3. uncertainty in WHC and b for hydrualic response? 
+
 ```{r}
 params_modl <- list(
   kphio              = 0.089, # 0.11, #0.04998,    # setup ORG in Stocker et al. 2020 GMD
