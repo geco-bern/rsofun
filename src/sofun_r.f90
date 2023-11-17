@@ -193,6 +193,13 @@ contains
                                           myinterface%params_siml%in_netrad &
                                           )
 
+      myinterface%climate_acclimation(:) = getclimate(nt, &
+                                          forcing_acclim, &
+                                          myinterface%steering%climateyear_idx, &
+                                          myinterface%params_siml%in_ppfd,  &
+                                          myinterface%params_siml%in_netrad &
+                                          )
+
       ! Get annual, gobally uniform CO2
       myinterface%pco2 = getco2(  nt, &
                                   forcing, &

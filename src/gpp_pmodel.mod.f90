@@ -50,7 +50,12 @@ module md_gpp_pmodel
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, init, in_ppfd, use_phydro, use_pml)
+  ! function wscal_to_swp(wscal, bsoil) result (soilwp)
+  !   real, intent(in) :: wscal, bsoil
+  !   soilwp = 1 - wscal**(-bsoil)
+  ! end function
+
+  subroutine gpp( tile, tile_fluxes, co2, climate, climate_acclimation, vegcover, grid, init, in_ppfd, use_phydro, use_pml)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -66,6 +71,7 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     real, intent(in)    :: co2                               ! atmospheric CO2 (ppm)
     type(climate_type)  :: climate
+    type(climate_type)  :: climate_acclimation
     type(vegcover_type) :: vegcover
     type(gridtype)      :: grid
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
@@ -75,7 +81,7 @@ contains
 
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
-    type(climate_type)   :: climate_acclimation     ! list of climate variables to which P-model calculates acclimated traits
+    ! type(climate_type)   :: climate_acclimation     ! list of climate variables to which P-model calculates acclimated traits
     integer    :: pft
     integer    :: lu
     real       :: iabs
@@ -90,6 +96,7 @@ contains
     real, save :: patm_memory
     real, save :: ppfd_memory
     real, save :: netrad_memory
+    real, dimension(npft), save :: swp_memory
 
     real, save :: tmin_memory     ! for low temperature stress
 
@@ -100,7 +107,7 @@ contains
     type(par_control_type) :: options
   
     ! Soil hydraulics
-    real        :: swp
+    real, dimension(npft)  :: swp
 
     ! xxx test
     real :: a_c, a_j, a_returned, fact_jmaxlim
@@ -112,7 +119,19 @@ contains
     ! mean) 
     !----------------------------------------------------------------
     ! climate_acclimation = calc_climate_acclimation( climate, grid, "daytime" )
-    climate_acclimation = climate
+    ! climate_acclimation = climate
+
+    !----------------------------------------------------------------
+    ! Convert water content to water potential, for use in phydro
+    ! JJ Note: This is not making much sense... if wscal is the same, then how do different plants
+    !          experience different swp? Because some vertical wscal profile is inherent, which 
+    !          interacts with the root distribution??
+    !----------------------------------------------------------------
+    do pft = 1,npft
+      swp(pft) = 1 - tile(1)%soil%phy%wscal**(-tile(1)%plant(pft)%bsoil)  ! Assuming lu = 1, otherwise, use tile(lu) and a 2D array
+      swp(pft) = min(swp(pft), 0.0) ! clamp +ve values to 0
+    end do
+
 
     !----------------------------------------------------------------
     ! Calculate environmental conditions with memory, time scale 
@@ -126,6 +145,9 @@ contains
       patm_memory = climate_acclimation%dpatm
       ppfd_memory = climate_acclimation%dppfd
       netrad_memory = climate_acclimation%dnetrad
+      do pft = 1,npft
+        swp_memory(pft) = swp(pft)
+      end do
     end if 
 
     count = count + 1
@@ -136,6 +158,9 @@ contains
     patm_memory   = dampen_variability( climate_acclimation%dpatm,   params_gpp%tau_acclim, patm_memory   )
     ppfd_memory   = dampen_variability( climate_acclimation%dppfd,   params_gpp%tau_acclim, ppfd_memory   )
     netrad_memory = dampen_variability( climate_acclimation%dnetrad, params_gpp%tau_acclim, netrad_memory )
+    do pft = 1,npft
+      swp_memory(pft) = dampen_variability(swp(pft), params_gpp%tau_acclim, swp_memory(pft) )
+    end do
 
     tk = climate_acclimation%dtemp + kTkelvin
 
@@ -166,12 +191,6 @@ contains
                                       params_pft_gpp(pft)%kphio_par_a, &
                                       params_pft_gpp(pft)%kphio_par_b )
       end if
-
-      !----------------------------------------------------------------
-      ! Convert water content to water potential, for use in phydro
-      !----------------------------------------------------------------
-      swp = 1 - tile(lu)%soil%phy%wscal**(-tile(lu)%plant(pft)%bsoil)
-      swp = min(swp, 0.0) ! clamp +ve values to 0
 
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
@@ -213,14 +232,14 @@ contains
           out_phydro_acclim = phydro_analytical( &
                             tc = dble(temp_memory), &
                             tg = dble(temp_memory), &
-                            ppfd = dble(ppfd_memory)*1e6*2.0d0, &
+                            ppfd = dble(ppfd_memory)*1e6, &
                             netrad = dble(netrad_memory), &
                             vpd = dble(vpd_memory), &
                             co2 = dble(co2_memory), &
                             pa = dble(patm_memory), &
                             fapar = dble(tile(lu)%canopy%fapar), &
                             kphio = dble(kphio_temp), &
-                            psi_soil = dble(swp), & !0.d0, &
+                            psi_soil = dble(swp_memory(pft)), & !0.d0, &
                             rdark = dble(params_gpp%rd_to_vcmax), &
                             vwind = 3.0d0, &
                             par_plant = par_plant, &
@@ -283,7 +302,7 @@ contains
                             pa = dble(climate%dpatm), &
                             fapar = dble(tile(lu)%canopy%fapar), &
                             kphio = dble(kphio_temp), &
-                            psi_soil = dble(swp), & !0.d0, &
+                            psi_soil = dble(swp(pft)), & !0.d0, &
                             rdark = dble(params_gpp%rd_to_vcmax), &
                             vwind = 3.0d0, &
                             par_plant = par_plant, &

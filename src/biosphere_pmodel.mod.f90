@@ -136,6 +136,7 @@ contains
                   tile_fluxes(:), &
                   myinterface%pco2, &
                   myinterface%climate(doy), &
+                  myinterface%climate_acclimation(doy), &
                   myinterface%vegcover(doy), &
                   myinterface%grid, &
                   init_daily, &

@@ -44,6 +44,7 @@ module md_interface_pmodel
     real                                    :: canopy_height
     real                                    :: reference_height
     type(climate_type), dimension(ndayyear) :: climate
+    type(climate_type), dimension(ndayyear) :: climate_acclimation
     type(vegcover_type), dimension(ndayyear):: vegcover
     ! type(domaininfo_type)                 :: domaininfo
     type(outtype_steering)                  :: steering

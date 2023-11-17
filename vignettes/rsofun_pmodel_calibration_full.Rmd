@@ -18,7 +18,7 @@ library(rsofun)
 ## Generate data if not already available
 
 ```{r}
-site <- "FR-Pue"
+site <- "GF-Guy"
 ```
 
 ```{r}
