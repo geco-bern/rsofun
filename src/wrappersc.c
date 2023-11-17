@@ -36,6 +36,7 @@ void F77_NAME(pmodel_f)(
     int    *nt,
     double *par,
     double *forcing,
+    double *forcing_acclim,
     double *output
     );
 
@@ -66,7 +67,8 @@ extern SEXP pmodel_f_C(
     SEXP reference_height,
     SEXP n,
     SEXP par,
-    SEXP forcing
+    SEXP forcing,
+    SEXP forcing_acclim
     ){
 
     // Number of time steps (same in forcing and output)
@@ -104,6 +106,7 @@ extern SEXP pmodel_f_C(
         INTEGER(n),
         REAL(par),
         REAL(forcing),
+        REAL(forcing_acclim),
         REAL(output)
         );
 
@@ -527,7 +530,7 @@ extern SEXP biomee_f_C(
 // Declarations for all functions
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
-  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   26},  // Specify number of arguments to C wrapper as the last number here
+  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   27},  // Specify number of arguments to C wrapper as the last number here
   {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };

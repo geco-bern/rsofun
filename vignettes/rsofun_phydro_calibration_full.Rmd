@@ -124,6 +124,7 @@ params_modl <- list(
   whc                = 7.819509e+02 #200
 )
 
+plot_pmodel(params_modl)
 output_p <- rsofun::runread_pmodel_f(
     p_hydro_drivers,
     par = params_modl

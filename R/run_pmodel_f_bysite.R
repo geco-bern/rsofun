@@ -158,6 +158,7 @@ run_pmodel_f_bysite <- function(
   params_siml,
   site_info,
   forcing,
+  forcing_acclim,
   params_modl,
   makecheck = TRUE,
   verbose = TRUE,
@@ -196,23 +197,28 @@ run_pmodel_f_bysite <- function(
   
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
+  columns_ordered = c(
+    "temp",
+    "rain",
+    "vpd",
+    "ppfd",
+    "netrad",
+    "fsun",
+    "snow",
+    "co2",
+    "fapar",
+    "patm",
+    "tmin",
+    "tmax"
+  )
   forcing <- forcing %>% 
     dplyr::mutate(fsun = (100-ccov)/100) %>% 
-    dplyr::select(
-      temp,
-      rain,
-      vpd,
-      ppfd,
-      netrad,
-      fsun,
-      snow,
-      co2,
-      fapar,
-      patm,
-      tmin,
-      tmax
-      )
+    dplyr::select(all_of(columns_ordered))
   
+  forcing_acclim <- forcing_acclim %>% 
+    dplyr::mutate(fsun = (100-ccov)/100) %>% 
+    dplyr::select(all_of(columns_ordered))
+
   # validate input
   if (makecheck){
     
@@ -228,6 +234,15 @@ run_pmodel_f_bysite <- function(
       "tmin",
       "tmax"
     )
+    # list variable to check for
+    check_vars_acclim <- c(
+      "temp",
+      "vpd",
+      "co2",
+      "ppfd",
+      "fapar",
+      "patm"
+    )
     
     # create a loop to loop over a list of variables
     # to check validity
@@ -241,8 +256,21 @@ run_pmodel_f_bysite <- function(
         return(TRUE)
       }
     })
+    data_integrity_acclim <- lapply(check_vars_acclim, function(check_var){
+      if (any(is.nanull(forcing_acclim[check_var]))){
+        warning(sprintf("Error: Missing value %s in acclimation dataset for %s",
+                        check_var, sitename))
+        return(FALSE)
+      } else {
+        return(TRUE)
+      }
+    })
     
+        
     if (suppressWarnings(!all(data_integrity))){
+      continue <- FALSE
+    }
+    if (suppressWarnings(!all(data_integrity_acclim))){
       continue <- FALSE
     }
     
@@ -279,6 +307,12 @@ run_pmodel_f_bysite <- function(
     if (nrow(forcing) %% ndayyear != 0){
       # something weird more fundamentally -> don't run the model
       warning(" Returning a dummy data frame. Forcing data does not
+              correspond to full years.")
+      continue <- FALSE
+    }
+    if (nrow(forcing_acclim) %% ndayyear != 0){
+      # something weird more fundamentally -> don't run the model
+      warning(" Returning a dummy data frame. Acclimation Forcing data does not
               correspond to full years.")
       continue <- FALSE
     }
@@ -337,6 +371,7 @@ run_pmodel_f_bysite <- function(
     
     # convert to matrix
     forcing <- as.matrix(forcing)
+    forcing_acclim <- as.matrix(forcing_acclim)
     
     # number of rows in matrix (pre-allocation of memory)
     n <- as.integer(nrow(forcing))
@@ -413,7 +448,8 @@ run_pmodel_f_bysite <- function(
       reference_height          = as.numeric(site_info$reference_height),
       n                         = n,
       par                       = par, 
-      forcing                   = forcing
+      forcing                   = forcing,
+      forcing_acclim            = forcing_acclim
       )
     
     # Prepare output to be a nice looking tidy data frame (tibble)

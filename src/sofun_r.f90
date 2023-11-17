@@ -38,6 +38,7 @@ contains
     nt,                        &
     par,                       &
     forcing,                   &
+    forcing_acclim,            &
     output                     &
     ) bind(C, name = "pmodel_f_")
 
@@ -80,7 +81,8 @@ contains
     real(kind=c_double),  intent(in) :: reference_height
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(16), intent(in) :: par  ! free (calibratable) model parameters
-    real(kind=c_double),  dimension(nt,12), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
+    real(kind=c_double),  dimension(nt,12), intent(in) :: forcing  ! array containing all temporally varying forcing data for instantaneous model (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
+    real(kind=c_double),  dimension(nt,12), intent(in) :: forcing_acclim  ! array containing all temporally varying forcing data for acclimating model (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
     real(kind=c_double),  dimension(nt,18), intent(out) :: output
 
     ! local variables
