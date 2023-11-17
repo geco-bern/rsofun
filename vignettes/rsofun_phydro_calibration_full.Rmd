@@ -53,12 +53,15 @@ get_density <- function(x, y, ...) {
   return(dens$z[ii])
 }
 
-plot_pmodel = function(params_m, out_filename){
+plot_pmodel = function(params_m, out_filename=""){
   output_p <- rsofun::runread_pmodel_f(
     p_hydro_drivers,
     par = params_m
   )
-  save(output_p, file = paste0(data_dir, "/", site, "_", out_filename))
+  output_p$data[[1]] = output_p$data[[1]] %>% rename(latenth = le)
+  if (out_filename != ""){
+    save(output_p, file = paste0(data_dir, "/", site, "_", out_filename))
+  }
   
   p1 = output_p$data[[1]] %>% select(date, gpp, latenth) %>% 
     melt("date") %>% 
@@ -103,7 +106,7 @@ plot_pmodel = function(params_m, out_filename){
 
 ```{r}
 params_modl <- list(
-  kphio              = 0.089, # 0.11, #0.04998,    
+  kphio              = 7.013438e-02, # 0.089, # 0.11, #0.04998,    
   kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
   kphio_par_b        = 1.0,
   # soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
@@ -112,13 +115,13 @@ params_modl <- list(
   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
   tau_acclim         = 30.0,
   kc_jmax            = 0.41,
-  phydro_K_plant     = 0.3e-16,
-  phydro_p50_plant   = -1,
+  phydro_K_plant     = 1.421218e-16 , #0.3e-16,
+  phydro_p50_plant   = -2.506519e+00, #-1,
   phydro_b_plant     = 1,
-  phydro_alpha       = 0.1,
-  phydro_gamma       = 1,
-  bsoil              = 3,
-  whc                = 200
+  phydro_alpha       = 1.334564e-01, #0.1,
+  phydro_gamma       = 1.889438e+00, #1,
+  bsoil              = 3.193891e+00, #3,
+  whc                = 7.819509e+02 #200
 )
 
 output_p <- rsofun::runread_pmodel_f(
