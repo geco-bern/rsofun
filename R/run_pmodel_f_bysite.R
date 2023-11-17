@@ -69,9 +69,9 @@
 #'      values between 0 and 1.}
 #'   \item{\code{gpp}}{Gross Primary Productivity (GPP) for each time stamp 
 #'       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
-#'   \item{\code{transp}}{Actual evapotranspiration (AET) (in mm d\eqn{^{-1}}).}
-#'   \item{\code{latenth}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
-#'   \item{\code{pet}}{Potential evapotranspiration (PET) (in mm d\eqn{^{-1}}).}
+#'   \item{\code{aet}}{Actual evapotranspiration (AET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
+#'   \item{\code{le}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'   \item{\code{pet}}{Potential evapotranspiration (PET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
 #'   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
 #'       (Vcmax) (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
 #'   \item{\code{jmax}}{Maximum rate of electron transport for RuBP regeneration
@@ -89,8 +89,6 @@
 #'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
 #'   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
 #'   \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. If not an input driver, calculated by SPLASH.}
-#'   \item{\code{pet}}{Potential evapotranspiration, calculated by SPLASH following Priestly-Taylor, in mm d\eqn{^{-1}}.}
-#'   \item{\code{aet}}{Actual evapotranspiration, calculated by SPLASH following Priestly-Taylor and a simple water bucket, in mm d\eqn{^{-1}}.}
 #'   \item{\code{wcont}}{Soil water content, in mm.}
 #'   \item{\code{snow}}{Snow water equivalents, in mm.}
 #'   } 
@@ -132,7 +130,6 @@
 #' @useDynLib rsofun
 #'
 #' @examples
-#' \donttest{
 #' # Define model parameter values from previous work
 #' params_modl <- list(
 #'   kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
@@ -155,7 +152,6 @@
 #'   forcing = p_model_drivers$forcing[[1]],
 #'   params_modl = params_modl
 #'  )
-#' }
 
 run_pmodel_f_bysite <- function(
   sitename,
@@ -170,9 +166,9 @@ run_pmodel_f_bysite <- function(
   
   # predefine variables for CRAN check compliance
   ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
-  fsun <- snow <- co2 <- ndep <- fapar <- patm <- 
+  fsun <- snow <- co2 <- fapar <- patm <- 
   nyeartrend_forcing <- firstyeartrend_forcing <-
-  tmin <- tmax <- fsand <- fclay <- forg <- fgravel <- . <- NULL
+  tmin <- tmax <- . <- NULL
   
   # base state, always execute the call
   continue <- TRUE
@@ -201,10 +197,7 @@ run_pmodel_f_bysite <- function(
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
   forcing <- forcing %>% 
-    dplyr::mutate(
-      fsun = (100-ccov)/100,
-      ndep = 0.0
-      ) %>% 
+    dplyr::mutate(fsun = (100-ccov)/100) %>% 
     dplyr::select(
       temp,
       rain,
@@ -214,7 +207,6 @@ run_pmodel_f_bysite <- function(
       fsun,
       snow,
       co2,
-      ndep,
       fapar,
       patm,
       tmin,
@@ -231,7 +223,6 @@ run_pmodel_f_bysite <- function(
       "vpd",
       "snow",
       "co2",
-      "ndep",
       "fapar",
       "patm",
       "tmin",
@@ -437,8 +428,8 @@ run_pmodel_f_bysite <- function(
       stats::setNames(
         c("fapar", 
           "gpp", 
-          "transp", 
-          "latenth", 
+          "aet", 
+          "le", 
           "pet", 
           "vcmax",
           "jmax", 

@@ -1,5 +1,8 @@
 module md_interface_pmodel
-
+  !////////////////////////////////////////////////////////////////
+  ! Module for handling I/O (forcing, parameters, output) from 
+  ! pmodel_f to the biosphere() with the P-model implementation
+  !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64
 
   use md_forcing_pmodel, only: climate_type, landuse_type, ninput_type, vegcover_type  

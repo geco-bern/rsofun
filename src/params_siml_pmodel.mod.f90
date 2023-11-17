@@ -1,8 +1,6 @@
 module md_params_siml_pmodel
   !////////////////////////////////////////////////////////////////
-  ! Module for handling simulation parameters.
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Module for handling simulation parameters for P-model.
   !----------------------------------------------------------------
   implicit none
 
@@ -73,8 +71,6 @@ contains
     ! simulation year (setting booleans for opening files, doing   
     ! spinup etc.)
     !----------------------------------------------------------------
-    use md_params_core, only: dummy
-
     ! arguments
     integer, intent(in) :: year ! simulation year, starts counting from 1, starting at the beginning of spinup
     type( paramstype_siml ), intent(in) :: params_siml
@@ -114,12 +110,6 @@ contains
         out_steering%forcingyear =  year - params_siml%spinupyears + params_siml%firstyeartrend - 1
         out_steering%forcingyear_idx =  year - params_siml%spinupyears
 
-        ! if (params_siml%const_clim_year/=int(dummy)) then
-        !   ! constant climate year specified
-        !   cycleyear = get_cycleyear( year, params_siml%spinupyears, params_siml%recycle )
-        !   out_steering%climateyear = cycleyear + params_siml%const_clim_year - 1
-        !   out_steering%climateyear_idx = cycleyear + params_siml%const_clim_year - params_siml%firstyeartrend
-        
         ! else
           ! constant climate year not specified
           out_steering%climateyear = out_steering%forcingyear

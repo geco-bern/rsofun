@@ -1,13 +1,7 @@
 module md_forcing_biomee
   !////////////////////////////////////////////////////////////////
-  ! Module contains forcing variables (climate, co2, ...), and
-  ! subroutines used to read forcing input files for a specific year
-  ! ('forcingyear'), specifically for site scale simulations.
-  ! This module is only used on the level of 'sofun', but not
-  ! within 'biosphere', as these variables are passed on to 'biosphere'
-  ! as arguments.
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Module containing treatment of forcing for BiomeE, linking
+  ! what's obtained from R through SR biomee_f and what's needed by BiomeE.
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_params_core, only: ntstepsyear, ndayyear, kTkelvin
@@ -45,7 +39,6 @@ contains
     ! arguments
     integer, intent(in) :: nt ! number of time steps
     integer, intent(in) :: ntstepsyear   ! number of time steps per year of model
-    ! integer, intent(in) :: ntstepsyear_forcing  ! number of time steps per year of forcing data
     real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: climateyear_idx
     ! logical, intent(in) :: do_agg_climate
@@ -56,9 +49,6 @@ contains
 
     ! function return variable
     type(climate_type), dimension(ntstepsyear) :: out_climate
-
-    ! !print*,'ntstepsyear', ntstepsyear
-    ! !print*,'ntstepsyear_forcing', ntstepsyear_forcing
 
     idx_start = (climateyear_idx - 1) * ntstepsyear + 1
     idx_end   = idx_start + ntstepsyear - 1

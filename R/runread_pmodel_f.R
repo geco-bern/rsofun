@@ -77,7 +77,6 @@
 #' exactly replicated.
 #' 
 #' @examples
-#' \donttest{
 #' # Define model parameter values from previous work
 #' params_modl <- list(
 #'   kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
@@ -95,7 +94,6 @@
 #' output <- rsofun::runread_pmodel_f(
 #'   drivers = rsofun::p_model_drivers,
 #'   par = params_modl)
-#' }
 
 runread_pmodel_f <- function(
   drivers,
@@ -107,6 +105,15 @@ runread_pmodel_f <- function(
   # predefine variables for CRAN check compliance
   sitename <- params_siml <- site_info <-
     input <- forcing <- . <- NULL
+  
+  # guarantee order of files
+  drivers <- drivers |>
+    dplyr::select(
+      sitename,
+      params_siml,
+      site_info,
+      forcing
+    )
   
   if (parallel){
     
@@ -164,7 +171,7 @@ runread_pmodel_f <- function(
     
     # note that pmap() requires the object 'drivers' to have columns in the order
     # corresponding to the order of arguments of run_pmodel_f_bysite().
-    df_out <- drivers %>% 
+    df_out <- drivers %>%
       dplyr::mutate(
         data = purrr::pmap(.,
         	run_pmodel_f_bysite,

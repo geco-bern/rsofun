@@ -6,8 +6,9 @@ library(tidyr)
 library(ggplot2)
 library(sensitivity)
 library(BayesianTools)
+library(tictoc)
 
-# Figure 1 #####
+# Figure 1 - removed #####
 
 # define model parameter values from Stocker et al 2020
 params_modl <- list(
@@ -70,9 +71,6 @@ ggplot(data = df_gpp_plot) +
 # and take a long time to run.
 # For checking reproducibility, run the commented code.
 
-# Load Morris sensitivity output from sensitivity_analysis.Rmd
-load("vignettes/files/morrisOut.rda")
-
 # Define log-likelihood function
 ll_pmodel <- function(
     par_v                 # a vector of all calibratable parameters including errors
@@ -134,16 +132,19 @@ morris_setup <- BayesianTools::createBayesianSetup(
   names = names(par_cal_best)
 )
 
-# # Run Morris sensitivity analysis
-# set.seed(432)
-# morrisOut <- sensitivity::morris(
-#   model = morris_setup$posterior$density,
-#   factors = names(par_cal_best),
-#   r = 1000,
-#   design = list(type = "oat", levels = 20, grid.jump = 3),
-#   binf = par_cal_min,
-#   bsup = par_cal_max,
-#   scale = TRUE)
+# Run Morris sensitivity analysis
+set.seed(432)
+morrisOut <- sensitivity::morris(
+  model = morris_setup$posterior$density,
+  factors = names(par_cal_best),
+  r = 1000,
+  design = list(type = "oat", levels = 20, grid.jump = 3),
+  binf = par_cal_min,
+  bsup = par_cal_max,
+  scale = TRUE)
+
+# Save results
+saveRDS(morrisOut, "analysis/paper_results_files/morrisOut_paper.rda")
 
 # Summarise the morris output
 morrisOut.df <- data.frame(
@@ -162,15 +163,18 @@ morrisOut.df |>
     fill = variable),
     color = NA) +
   geom_bar(position = position_dodge(), stat = 'identity') +
-  scale_fill_brewer("", labels = c('mu.star' = expression(mu * "*"),
-                                   'sigma' = expression(sigma)),
-                    palette = "Greys") +
+  scale_fill_manual("", 
+                    labels = c('mu.star' = expression(mu * "*"),
+                               'sigma' = expression(sigma)),
+                    values = c('mu.star' = "#29a274ff", 
+                               'sigma' = "#777055ff")) +
   theme_classic() +
   theme(
     axis.text = element_text(size = 6),
     axis.title = element_blank(),
-    legend.position = c(0.05, 0.95), legend.justification = c(0.05, 0.95)
-  )
+    legend.position = c(0.9, 0.1), legend.justification = c(0.95, 0.05)
+  ) +
+  coord_flip()    # make horizontal
 
 # Figure 3 ####
 
@@ -178,8 +182,51 @@ morrisOut.df |>
 # and take a long time to run.
 # For checking reproducibility, run the commented code.
 
-# Load calibration output from sensitivity_analysis.Rmd
-load("vignettes/files/par_calib.rda")
+# Code to produce file
+# Calibrates kphio, betao, kc_jmax - top 3 model params
+set.seed(2023)
+
+# Define calibration settings
+settings_calib <- list(
+  method = "BayesianTools",
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 1500,
+      iterations = 12000,
+      nrChains = 3,       # number of independent chains
+      startValue = 3      # number of internal chains to be sampled
+    )),
+  par = list(
+    kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
+    soilm_betao = list(lower = 0, upper = 1, init = 0.2),
+    kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),
+    err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
+  )
+)
+
+# Run calibration and measure time
+tic()
+
+par_calib <- calib_sofun(
+  drivers = p_model_drivers,
+  obs = p_model_validation,
+  settings = settings_calib,
+  par_fixed = list(
+    kphio_par_a = -0.0025,
+    kphio_par_b = 20,
+    soilm_thetastar    = 0.6*240,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 30.0),
+  targets = "gpp"
+)
+
+toc() # took 552.854 sec to run
+
+# Save result
+saveRDS(par_calib, file = "analysis/paper_results_files/par_calib_paper.rda")
 
 # Define functions for plotting (re-use BayesianTools hidden code)
 getSetup <- function(x) {
@@ -250,55 +297,15 @@ plot_prior_posterior_density(par_calib$mod)
 # and take a long time to run.
 # For checking reproducibility, run the commented code.
 
-# Load code to produce credible intervals from sensitivity_analysis.Rmd
-load("vignettes/files/pmodel_runs.rda")
-
-set.seed(2023)
-
-# Define calibration settings
-settings_calib <- list(
-  method = "BayesianTools",
-  metric = rsofun::cost_likelihood_pmodel,
-  control = list(
-    sampler = "DEzs",
-    settings = list(
-      burnin = 3000,
-      iterations = 9000,
-      nrChains = 1,        # number of independent chains
-      startValue = 3       # number of internal chains to be sampled
-    )),
-  par = list(
-    kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
-    kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025),
-    kphio_par_b = list(lower = 10, upper = 30, init =25),
-    err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
-  )
-)
-
-# # Calibrate kphio-related parameters and err_gpp 
-# par_calib <- calib_sofun(
-#   drivers = p_model_drivers,
-#   obs = p_model_validation,
-#   settings = settings_calib,
-#   par_fixed = list(
-#     soilm_thetastar    = 0.6*240,
-#     soilm_betao        = 0.2,
-#     beta_unitcostratio = 146.0,
-#     rd_to_vcmax        = 0.014,
-#     tau_acclim         = 30.0,
-#     kc_jmax            = 0.41),
-#   targets = "gpp"
-# )
-
 # Evaluation of the uncertainty coming from the model parameters' uncertainty
 
-# # Sample parameter values from the posterior distribution
-# samples_par <- getSample(par_calib$mod, 
-#                          thin = 10,              # get every 10th sample
-#                          whichParameters = 1:4) |>  
-#   as.data.frame() |>
-#   dplyr::mutate(mcmc_id = 1:n()) |>
-#   tidyr::nest(.by = mcmc_id, .key = "pars")
+# Sample parameter values from the posterior distribution
+samples_par <- getSample(par_calib$mod,
+                         thin = 46,              # get 600 samples in total
+                         whichParameters = 1:4) |>
+  as.data.frame() |>
+  dplyr::mutate(mcmc_id = 1:n()) |>
+  tidyr::nest(.by = mcmc_id, .key = "pars")
 
 # Define function to run model for a set of sampled parameters
 run_pmodel <- function(sample_par){
@@ -309,83 +316,114 @@ run_pmodel <- function(sample_par){
     drivers = p_model_drivers,
     par =  list(                      # copied from par_fixed above
       kphio = sample_par$kphio,
-      kphio_par_a = sample_par$kphio_par_a,
-      kphio_par_b = sample_par$kphio_par_b,
+      kphio_par_a = -0.0025,
+      kphio_par_b = 20,
       soilm_thetastar    = 0.6*240,
-      soilm_betao        = 0.2,
+      soilm_betao        = sample_par$soilm_betao,
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
       tau_acclim         = 30.0,
-      kc_jmax            = 0.41)       # value from posterior
+      kc_jmax            = sample_par$kc_jmax)       # value from posterior
   )
   
   # return modelled GPP and prediction for a new GPP observation
   gpp <- out$data[[1]][, "gpp"]
   data.frame(gpp = gpp, 
-             gpp_obs = gpp + rnorm(n = length(gpp), mean = 0, 
+             gpp_pred = gpp + rnorm(n = length(gpp), mean = 0, 
                                    sd = sample_par$err_gpp),
              date = out$data[[1]][, "date"])
 }
 
-# set.seed(2023)
-# # Run the P-model for each set of parameters
-# pmodel_runs <- samples_par |>
-#   dplyr::mutate(sim = purrr::map(pars, ~run_pmodel(.x))) |>
-#   # format to obtain 90% credible intervals
-#   dplyr::select(mcmc_id, sim) |>
-#   tidyr::unnest(sim) |>
-#   dplyr::group_by(date) |>
-#   # compute quantiles for each day
-#   dplyr::summarise(
-#     gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
-#     gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
-#     gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
-#     gpp_obs_q05 = quantile(gpp_obs, 0.05, na.rm = TRUE),
-#     gpp_obs_q95 = quantile(gpp_obs, 0.95, na.rm = TRUE)
-#   )
+set.seed(2023)
+# Run the P-model for each set of parameters
+pmodel_runs <- samples_par |>
+  dplyr::mutate(sim = purrr::map(pars, ~run_pmodel(.x))) |>
+  # format to obtain 90% credible intervals
+  dplyr::select(mcmc_id, sim) |>
+  tidyr::unnest(sim) |>
+  dplyr::group_by(date) |>
+  # compute quantiles for each day
+  dplyr::summarise(
+    gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
+    gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
+    gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
+    gpp_pred_q05 = quantile(gpp_pred, 0.05, na.rm = TRUE),
+    gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE)
+  )
+
+saveRDS(pmodel_runs, file = "analysis/paper_results_files/pmodel_runs_paper.rda")
 
 # Plot the credible intervals computed above
 # for the first year only
 plot_gpp_error <- ggplot(data = pmodel_runs |>
-                           dplyr::slice(1:365)) +             # Plot only first year
+                           dplyr::slice(1:365) |>
+                           dplyr::left_join(
+                             # Merge GPP validation data (first year)
+                             p_model_validation$data[[1]][1:365, ] |>
+                               dplyr::rename(gpp_obs = gpp),
+                             by = "date") |>
+                           dplyr::left_join(
+                             # Merge GPP before calibration
+                             output$data[[1]][1:365, ] |>
+                               dplyr::select(date, gpp) |>
+                               dplyr::rename(gpp_no_calib = gpp),
+                             by = "date")
+                         ) +             # Plot only first year
+  geom_ribbon(
+    aes(ymin = gpp_pred_q05, 
+        ymax = gpp_pred_q95,
+        x = date,
+        fill = "Model uncertainty")) +
   geom_ribbon(
     aes(ymin = gpp_q05, 
         ymax = gpp_q95,
-        x = date),
-    fill = 'blue', alpha = 0.5) +
-  geom_ribbon(
-    aes(ymin = gpp_obs_q05, 
-        ymax = gpp_obs_q95,
-        x = date),
-    fill = 'grey40', alpha = 0.2) +
+        x = date,
+        fill = "Parameter uncertainty")) +
+  
+  # geom_line(
+  #   aes(
+  #     date,
+  #     gpp_no_calib,
+  #     color = "Non-calibrated predictions"
+  #   ), 
+  #   lty = 2
+  # ) +
   geom_line(
     aes(
       date,
-      gpp
-    ),
-    colour = "grey40",
-    alpha = 0.8
+      gpp,
+      color = "Predictions"
+    )
+  ) +
+  geom_line(
+    aes(
+      date,
+      gpp_obs,
+      color = "Observations"
+    )
   ) +
   theme_classic() +
-  theme(panel.grid.major.y = element_line()) +
+  theme(panel.grid.major.y = element_line(),
+        legend.position = "bottom") +
   labs(
     x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   )
 
-# Define GPP validation data (first year)
-validation_data <- p_model_validation$data[[1]][1:365, ]
-
 # Include observations in the plot
 plot_gpp_error +  
-  geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    ),
-    alpha = 0.8
-  )
+  scale_color_manual(name = "",
+                     breaks = c("Observations",
+                                "Predictions",
+                                "Non-calibrated predictions"),
+                     values = c(t_col("black", 10),
+                                t_col("#E69F00", 10),
+                                t_col("#56B4E9", 10))) +
+  scale_fill_manual(name = "",
+                     breaks = c("Model uncertainty",
+                                "Parameter uncertainty"),
+                     values = c(t_col("#E69F00", 60),
+                                t_col("#009E73", 40)))
 
 
 # Result RMSE ####
@@ -400,8 +438,8 @@ plot_gpp_error +
 ## update parameter values
 params_modl_calib <- params_modl
 params_modl_calib$kphio <- par_calib$par[1]
-params_modl_calib$kphio_par_a <- par_calib$par[2]
-params_modl_calib$kphio_par_b <- par_calib$par[3]
+params_modl_calib$soilm_betao <- par_calib$par[2]
+params_modl_calib$kc_jmax <- par_calib$par[3]
 params_modl_calib$err_gpp <- par_calib$par[4]
 
 # run the model for these parameters

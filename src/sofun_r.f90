@@ -80,7 +80,7 @@ contains
     real(kind=c_double),  intent(in) :: reference_height
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(16), intent(in) :: par  ! free (calibratable) model parameters
-    real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
+    real(kind=c_double),  dimension(nt,12), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
     real(kind=c_double),  dimension(nt,18), intent(out) :: output
 
     ! local variables
@@ -188,8 +188,7 @@ contains
                                           forcing, &
                                           myinterface%steering%climateyear_idx, &
                                           myinterface%params_siml%in_ppfd,  &
-                                          myinterface%params_siml%in_netrad, &
-                                          myinterface%grid%elv &
+                                          myinterface%params_siml%in_netrad &
                                           )
 
       ! Get annual, gobally uniform CO2

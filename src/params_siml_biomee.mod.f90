@@ -1,8 +1,6 @@
 module md_params_siml_biomee
   !////////////////////////////////////////////////////////////////
-  ! Module for handling simulation parameters.
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Module for handling simulation parameters for BiomeE.
   !----------------------------------------------------------------
   implicit none
 
@@ -60,8 +58,6 @@ contains
     ! simulation year (setting booleans for opening files, doing   
     ! spinup etc.)
     !----------------------------------------------------------------
-    use md_params_core, only: dummy
-
     ! arguments
     integer, intent(in) :: year ! simulation year, starts counting from 1, starting at the beginning of spinup
     type( paramstype_siml ), intent(in) :: params_siml

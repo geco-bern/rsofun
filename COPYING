@@ -1,0 +1,15 @@
+Copyright 2023, Geocomputation and Earth Observation, University of Bern
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+Model code for BiomeE (Fortran modules datatypes.mod.f90, vegetation_biomee.mod.f90, soil_biomee.mod.f90) are written by Ensheng Weng and are adapted from https://doi.org/10.5281/zenodo.7125963.
+
+Model code for SPLASH (Fortran modules waterbal_splash_pmodel.mod.f90, waterbal_splash_cnmodel.mod.f90) and P-model (parts of Fortran module photosynth_pmodel.mod.f90) are partly based on Python code by Tyler Davis (published under GPL2.1) and are adapted from https://doi.org/10.5281/zenodo.376293.
+
+Model code for interactive C-N cycling (parts of Fortran modules littersom.mod.f90, ntransform.mod.f90, phenology_lpx.mod.f90, soiltemp_sitch.mod.f90) are adapted from LPX-Bern.

@@ -7,7 +7,7 @@
 \format{
 A tibble of validation data:
 \describe{
-  \item{sitename}{A character string containing the site names (e.g. 'ALP-01').}
+  \item{sitename}{A character string containing the site names (e.g. 'Reichetal_Colorado').}
   \item{data}{A tibble [ 1 x 2 ] with observations for the following variables:
     \describe{
       \item{vcmax25}{The observed maximum rate of carboxylation (Vcmax), normalised 

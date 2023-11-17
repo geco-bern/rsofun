@@ -1,14 +1,21 @@
+# rsofun v4.4.1
+
+* bugfix Fortran modules
+
 # rsofun v4.4
 
-* Bugfix on input data type p-model
+* bugfix on input data type P-model
 * LM3-PPA to BiomeE renaming
 * cost function rewrite
 * update output format (consistency)
+* add water balance variables to P-model output
 * new p-model calibratable parameters
 * rewrite of temperature and soil moisture stress functions
+* update simulation parameters to take netrad, ppfd and ccov as input forcing
 * documentation parameter sensitivity analysis
 * documentation on the data format
-* document calibration diagnostic and model uncertainty calulation
+* document calibration diagnostic and model uncertainty calculation
+* more transparent licensing and copyright statements in COPYING file
 
 # rsofun v4.3
 

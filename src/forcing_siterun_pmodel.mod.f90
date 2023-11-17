@@ -1,13 +1,7 @@
 module md_forcing_pmodel
   !////////////////////////////////////////////////////////////////
-  ! Module contains forcing variables (climate, co2, ...), and
-  ! subroutines used to read forcing input files for a specific year
-  ! ('forcingyear'), specifically for site scale simulations.
-  ! This module is only used on the level of 'sofun', but not
-  ! within 'biosphere', as these variables are passed on to 'biosphere'
-  ! as arguments.
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
+  ! Module containing treatment of forcing for P-model, linking
+  ! what's obtained from R through SR pmodel_f and what's needed by biosphere SR.
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_params_core, only: ndayyear, nlu, dummy
@@ -50,8 +44,7 @@ module md_forcing_pmodel
 
 contains
 
-  function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad, elv ) result ( out_climate )
-  ! function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
+  function getclimate( nt, forcing, climateyear_idx, in_ppfd, in_netrad ) result ( out_climate )
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
     ! to read from NetCDF. This nesting is necessary because this 
@@ -64,7 +57,6 @@ contains
     integer, intent(in) :: climateyear_idx
     logical, intent(in) :: in_ppfd
     logical, intent(in) :: in_netrad
-    real, intent(in) :: elv
 
     ! local variables
     integer :: idx_start, idx_end
@@ -78,7 +70,7 @@ contains
     
     ! Test if forcing dimensions are correct
     shape_forcing = shape(forcing)
-    if (idx_end>shape_forcing(1)) then
+    if (idx_end > shape_forcing(1)) then
       ! stop 'forcing array size does not have enough rows.'
     end if
 
@@ -103,10 +95,9 @@ contains
       out_climate(:)%dfsun = real(forcing(idx_start:idx_end, 6))
     end if
     out_climate(:)%dsnow   = real(forcing(idx_start:idx_end, 7))
-    out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 11))
-    out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 12))
-    out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 13))
-
+    out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 10))
+    out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 11))
+    out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 12))
 
   end function getclimate
 
@@ -156,7 +147,7 @@ contains
     idx_start = (forcingyear_idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
 
-    out_vegcover(:)%dfapar = real(forcing(idx_start:idx_end, 10))
+    out_vegcover(:)%dfapar = real(forcing(idx_start:idx_end, 9))
 
     ! ! "Correct" fAPAR
     ! print*,"WARNING: normalising fAPAR to within 0.12 and 1.0."
