@@ -1,9 +1,8 @@
 Dear CRAN team,
 
-This is the re-submission of the {rsofun} package. We have addressed the following
-concerns flagged by the automatic checks:
+This is the re-submission of the {rsofun} package. We have removed non-default lower bound specification in derived type, in order to fix the compilation issues that appeared in the Debian check.
 
-- Modified code in Fortran modules to fix compilation issues raised by Prof. Ripley.
+We were not able to reproduce the error shown by Prof. Ligges but have tried to solve the issue anyways, and our checks pass cleanly. If other issues arise or this one is still present, we would need to be provided with the configuration of the machine used to run the checks on CRAN's end. This way, we could reproduce the error and see if our changes get rid of it.
 
 ---
 
@@ -16,7 +15,7 @@ This package is an extension of {rpmodel} in the sense that it expands the P-mod
 
 The full documentation can be found at the github repository link: https://geco-bern.github.io/rsofun
 
-Code coverage sits at ~72%, with remaining uncovered code pertaining to minor input data format checks of the main functions. The underlying P-model implementation is based on the {rpmodel} and the parameter calibration routines use packages {GenSA} and {BayesianTools}.
+Code coverage sits at ~76%, with remaining uncovered code pertaining to minor input data format checks of the main functions. The underlying P-model implementation is based on the {rpmodel} and the parameter calibration routines use packages {GenSA} and {BayesianTools}.
 
 I hope this package is useful for other earth system scientists and the larger CRAN community. Kind regards, Josefa Arán.
 
@@ -32,7 +31,7 @@ I have read and agree to the CRAN policies enumerated here: https://cran.r-proje
 
 - rhub::check_on_cran() with only notes for latex elements
 
-- codecove.io code coverage at ~72%
+- codecove.io code coverage at ~76%
 
 ## Github actions R CMD check results
 

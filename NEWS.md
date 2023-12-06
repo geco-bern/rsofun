@@ -1,6 +1,6 @@
 # rsofun v4.4.1
 
-* bugfix Fortran modules
+* bugfix Fortran modules and derived types
 
 # rsofun v4.4
 
