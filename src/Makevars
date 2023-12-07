@@ -7,6 +7,9 @@ C_OBJS = wrappersc.o
 # Fortran objects: refer to file names <name.o>, order reflects dependency structure
 FT_OBJS = params_core.mod.o sofunutils.mod.o grid_siterun.mod.o params_siml_pmodel.mod.o params_siml_biomee.mod.o forcing_siterun_pmodel.mod.o forcing_siterun_biomee.mod.o params_soil_biomee.mod.o interface_biosphere_pmodel.mod.o interface_biosphere_biomee.mod.o tile_pmodel.mod.o plant_pmodel.mod.o soiltemp_sitch.mod.o waterbal_splash.mod.o vegdynamics_pmodel.mod.o gpp_pmodel.mod.o gpp_biomee.mod.o photosynth_pmodel.mod.o biosphere_pmodel.mod.o biosphere_biomee.mod.o vegetation_biomee.mod.o soil_biomee.mod.o sofun_r.o  
 
+# Flags for the Fortran compiler, suggested by Prof. Ligges
+# PKG_FFLAGS = -fc-prototypes-external -fpic -g -O2 -mtune=native -Wall -pedantic -flto=10 -c
+
 all: $(SHLIB) clean
 
 $(SHLIB): $(FT_OBJS) $(C_OBJS)
