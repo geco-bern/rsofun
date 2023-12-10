@@ -6,6 +6,9 @@ C_OBJS = wrappersc.o
 # Fortran objects: refer to file names <name.o>, order reflects dependency structure
 FT_OBJS = params_core.mod.o sofunutils.mod.o grid_siterun.mod.o params_siml_pmodel.mod.o params_siml_cnmodel.mod.o params_siml_biomee.mod.o forcing_siterun_pmodel.mod.o forcing_siterun_cnmodel.mod.o forcing_siterun_biomee.mod.o params_soil_biomee.mod.o interface_biosphere_pmodel.mod.o interface_biosphere_cnmodel.mod.o interface_biosphere_biomee.mod.o tile_pmodel.mod.o tile_cnmodel.mod.o plant_pmodel.mod.o plant_cnmodel.mod.o soiltemp_sitch.mod.o waterbal_splash_pmodel.mod.o waterbal_splash_cnmodel.mod.o vegdynamics_pmodel.mod.o gpp_pmodel.mod.o gpp_cnmodel.mod.o gpp_biomee.mod.o photosynth_pmodel.mod.o biosphere_pmodel.mod.o biosphere_cnmodel.mod.o biosphere_biomee.mod.o vegetation_biomee.mod.o soil_biomee.mod.o sofun_r.o  
 
+# Flags for the Fortran compiler, suggested by Prof. Ligges
+# PKG_FFLAGS = -fc-prototypes-external -fpic -g -O2 -mtune=native -Wall -pedantic -flto=10 -c
+
 all: $(SHLIB) clean
 
 $(SHLIB): $(FT_OBJS) $(C_OBJS)
@@ -52,14 +55,15 @@ littersom.mod.o: classdefs.mod.o params_core.mod.o plant_cnmodel.mod.o interface
 ntransform.mod.o: classdefs.mod.o params_core.mod.o tile_cnmodel.mod.o interface_biosphere_pmodel.mod.o rates.mod.o
 ntransform_simpl.mod.o: classdefs.mod.o params_core.mod.o tile_cnmodel.mod.o interface_biosphere_pmodel.mod.o rates.mod.o
 allocation_cnmodel.mod.o: classdefs.mod.o params_core.mod.o tile_cnmodel.mod.o plant_cnmodel.mod.o findroot_fzeroin.mod.o interface_biosphere_pmodel.mod.o gpp_pmodel.mod.o nuptake.mod.o npp.mod.o photosynth_pmodel.mod.o
+sofunutils.mod.o: params_core.mod.o
 
 # Source (object) of Fortran modules
 # <modulename.mod>: <filename.o>
 sofun_r_mod.mod: sofun_r.o
+md_params_core.mod: params_core.mod.o
 md_params_siml_pmodel.mod: params_siml_pmodel.mod.o
 md_params_siml_cnmodel.mod: params_siml_cnmodel.mod.o
 md_params_siml_biomee.mod: params_siml_biomee.mod.o
-md_params_core.mod: params_core.mod.o
 md_forcing_pmodel.mod: forcing_siterun_pmodel.mod.o
 md_forcing_cnmodel.mod: forcing_siterun_cnmodel.mod.o
 md_forcing_biomee.mod: forcing_siterun_biomee.mod.o

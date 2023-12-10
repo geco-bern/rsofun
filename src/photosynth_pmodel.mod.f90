@@ -5,7 +5,7 @@ module md_photosynth
   ! (gpp_biomee_pmodel, and gpp_pmodel) use it and interact with different 
   ! model structures.
   !------------------------------------------------------------------------
-  use md_params_core, only: kPo, c_molmass, dummy, eps
+  use md_params_core
 
   implicit none
 
@@ -819,8 +819,6 @@ contains
     !
     ! Ref:      Wang Han et al. (in prep.)
     !-----------------------------------------------------------------------
-    use md_params_core, only: kR           ! Universal gas constant, J/mol/K
-
     ! arguments
     real, intent(in) :: tcleaf
     real, intent(in) :: tcgrowth
@@ -871,8 +869,6 @@ contains
     ! photosynthesis: a reanalysis of data from 36 species, Plant, Cell and Environment, 
     ! 30,1176â1190, 2007.
     !-----------------------------------------------------------------------
-    use md_params_core, only: kR           ! Universal gas constant, J/mol/K
-
     ! arguments
     real, intent(in) :: tcleaf
     real, intent(in) :: tcgrowth
@@ -919,8 +915,6 @@ contains
     !
     ! T_ref is 25 deg C (=298.13 K) per default.
     !-----------------------------------------------------------------------
-    use md_params_core, only: kR           ! Universal gas constant, J/mol/K
-
     ! arguments
     real, intent(in) :: tk                 ! temperature (Kelvin)
     real, intent(in) :: dha                ! activation energy (J/mol)

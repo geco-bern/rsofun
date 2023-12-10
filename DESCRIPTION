@@ -1,12 +1,12 @@
 Package: rsofun
 Title: The P-Model and BiomeE Modelling Framework
-Version: 4.4
+Version: 4.4.1
 Authors@R: c(
             person(
               family = "Benjamin",
               given = "Stocker",
               email = "benjamin.stocker@gmail.com",
-              comment = c(ORCID = "0000-0002-5070-8109"),
+              comment = c(ORCID = "0000-0003-2697-9096"),
               role = c("aut", "cre")),
             person(
                family = "Hufkens",
@@ -20,12 +20,24 @@ Authors@R: c(
                email = "pepa.aran@gmail.com",
                comment = c(ORCID = "0009-0006-7176-2311"),
                role = c("aut")),
+            person(
+               family = "Marqués",
+               given = "Laura",
+               email = "lauramarqueslopez@gmail.com",
+               comment = c(ORCID = "0000-0002-3593-5557"),
+               role = c("ctb")),
+            person(
+               family = "Weng",
+               given = "Ensheng",
+               email = "wengensheng@gmail.com",
+               comment = c(ORCID = "0000-0002-1858-4847"),
+               role = c("ctb")),
             person(given = "Geocomputation and Earth Observation, University of Bern",
                 role = c("cph", "fnd"))
            )
 Description: Implements the Simulating Optimal FUNctioning framework for 
               site-scale simulations of ecosystem processes, including model 
-              calibration. It contains Fortran modules for the P-model (Stocker
+              calibration. It contains 'Fortran 90' modules for the P-model (Stocker
               et al. (2020) <doi:10.5194/gmd-13-1545-2020>), SPLASH
               (Davis et al. (2017) <doi:10.5194/gmd-10-689-2017>)
               and BiomeE (Weng et al. (2015)

@@ -570,69 +570,69 @@ contains
     integer :: i
 
     ! initialize vegetation data structure
-    spdata%pt            = myinterface%params_species(:)%pt
-    spdata%phenotype     = myinterface%params_species(:)%phenotype 
-    spdata%Vmax          = myinterface%params_species(:)%Vmax
-    spdata%Vannual       = myinterface%params_species(:)%Vannual
-    spdata%m_cond        = myinterface%params_species(:)%m_cond
-    spdata%alpha_phot    = myinterface%params_species(:)%alpha_phot
-    spdata%wet_leaf_dreg = myinterface%params_species(:)%wet_leaf_dreg
-    spdata%gamma_L       = myinterface%params_species(:)%gamma_L
-    spdata%gamma_LN      = myinterface%params_species(:)%gamma_LN
-    spdata%gamma_SW      = myinterface%params_species(:)%gamma_SW
-    spdata%gamma_FR      = myinterface%params_species(:)%gamma_FR
-    spdata%rho_FR        = myinterface%params_species(:)%rho_FR
-    spdata%root_r        = myinterface%params_species(:)%root_r
-    spdata%root_zeta     = myinterface%params_species(:)%root_zeta
-    spdata%Kw_root       = myinterface%params_species(:)%Kw_root
-    ! spdata%rho_N_up0   = rho_N_up0
-    ! spdata%N_roots0    = N_roots0
-    spdata%leaf_size     = myinterface%params_species(:)%leaf_size
-    spdata%tc_crit       = myinterface%params_species(:)%tc_crit
-    spdata%gdd_crit      = myinterface%params_species(:)%gdd_crit
+    spdata(0:MSPECIES)%pt            = myinterface%params_species(1:(MSPECIES+1))%pt
+    spdata(0:MSPECIES)%phenotype     = myinterface%params_species(1:(MSPECIES+1))%phenotype 
+    spdata(0:MSPECIES)%Vmax          = myinterface%params_species(1:(MSPECIES+1))%Vmax
+    spdata(0:MSPECIES)%Vannual       = myinterface%params_species(1:(MSPECIES+1))%Vannual
+    spdata(0:MSPECIES)%m_cond        = myinterface%params_species(1:(MSPECIES+1))%m_cond
+    spdata(0:MSPECIES)%alpha_phot    = myinterface%params_species(1:(MSPECIES+1))%alpha_phot
+    spdata(0:MSPECIES)%wet_leaf_dreg = myinterface%params_species(1:(MSPECIES+1))%wet_leaf_dreg
+    spdata(0:MSPECIES)%gamma_L       = myinterface%params_species(1:(MSPECIES+1))%gamma_L
+    spdata(0:MSPECIES)%gamma_LN      = myinterface%params_species(1:(MSPECIES+1))%gamma_LN
+    spdata(0:MSPECIES)%gamma_SW      = myinterface%params_species(1:(MSPECIES+1))%gamma_SW
+    spdata(0:MSPECIES)%gamma_FR      = myinterface%params_species(1:(MSPECIES+1))%gamma_FR
+    spdata(0:MSPECIES)%rho_FR        = myinterface%params_species(1:(MSPECIES+1))%rho_FR
+    spdata(0:MSPECIES)%root_r        = myinterface%params_species(1:(MSPECIES+1))%root_r
+    spdata(0:MSPECIES)%root_zeta     = myinterface%params_species(1:(MSPECIES+1))%root_zeta
+    spdata(0:MSPECIES)%Kw_root       = myinterface%params_species(1:(MSPECIES+1))%Kw_root
+    ! spdata(0:MSPECIES)%rho_N_up0   = rho_N_up0
+    ! spdata(0:MSPECIES)%N_roots0    = N_roots0
+    spdata(0:MSPECIES)%leaf_size     = myinterface%params_species(1:(MSPECIES+1))%leaf_size
+    spdata(0:MSPECIES)%tc_crit       = myinterface%params_species(1:(MSPECIES+1))%tc_crit
+    spdata(0:MSPECIES)%gdd_crit      = myinterface%params_species(1:(MSPECIES+1))%gdd_crit
 
     ! Plant traits
-    spdata%LMA           = myinterface%params_species(:)%LMA ! leaf mass per unit area, kg C/m2
-    spdata%LNbase        = myinterface%params_species(:)%LNbase   ! Basal leaf nitrogen per unit area, kg N/m2
-    spdata%CNleafsupport = CNleafsupport
-    spdata%lifeform      = myinterface%params_species(:)%lifeform
-    spdata%alphaHT       = alphaHT
-    spdata%thetaHT       = thetaHT
-    spdata%alphaCA       = alphaCA
-    spdata%thetaCA       = thetaCA
-    spdata%alphaBM       = myinterface%params_species(:)%alphaBM
-    spdata%thetaBM       = myinterface%params_species(:)%thetaBM
-    spdata%maturalage    = myinterface%params_species(:)%maturalage
-    spdata%v_seed        = v_seed
-    spdata%seedlingsize  = myinterface%params_species(:)%seedlingsize
-    spdata%prob_g        = prob_g
-    spdata%prob_e        = prob_e
-    spdata%mortrate_d_c  = myinterface%params_species(:)%mortrate_d_c
-    spdata%mortrate_d_u  = myinterface%params_species(:)%mortrate_d_u
-    spdata%rho_wood      = myinterface%params_species(:)%rho_wood
-    spdata%taperfactor   = taperfactor
-    spdata%LAImax        = myinterface%params_species(:)%LAImax
-    spdata%underLAImax   = LAImax
-    spdata%tauNSC        = tauNSC
-    spdata%fNSNmax       = myinterface%params_species(:)%fNSNmax
-    spdata%kphio         = myinterface%params_species(:)%kphio     
-    spdata%phiRL         = myinterface%params_species(:)%phiRL     
-    spdata%phiCSA        = myinterface%params_species(:)%phiCSA
-    spdata%LAI_light     = myinterface%params_species(:)%LAI_light
+    spdata(0:MSPECIES)%LMA           = myinterface%params_species(1:(MSPECIES+1))%LMA ! leaf mass per unit area, kg C/m2
+    spdata(0:MSPECIES)%LNbase        = myinterface%params_species(1:(MSPECIES+1))%LNbase   ! Basal leaf nitrogen per unit area, kg N/m2
+    spdata(0:MSPECIES)%CNleafsupport = CNleafsupport
+    spdata(0:MSPECIES)%lifeform      = myinterface%params_species(1:(MSPECIES+1))%lifeform
+    spdata(0:MSPECIES)%alphaHT       = alphaHT
+    spdata(0:MSPECIES)%thetaHT       = thetaHT
+    spdata(0:MSPECIES)%alphaCA       = alphaCA
+    spdata(0:MSPECIES)%thetaCA       = thetaCA
+    spdata(0:MSPECIES)%alphaBM       = myinterface%params_species(1:(MSPECIES+1))%alphaBM
+    spdata(0:MSPECIES)%thetaBM       = myinterface%params_species(1:(MSPECIES+1))%thetaBM
+    spdata(0:MSPECIES)%maturalage    = myinterface%params_species(1:(MSPECIES+1))%maturalage
+    spdata(0:MSPECIES)%v_seed        = v_seed
+    spdata(0:MSPECIES)%seedlingsize  = myinterface%params_species(1:(MSPECIES+1))%seedlingsize
+    spdata(0:MSPECIES)%prob_g        = prob_g
+    spdata(0:MSPECIES)%prob_e        = prob_e
+    spdata(0:MSPECIES)%mortrate_d_c  = myinterface%params_species(1:(MSPECIES+1))%mortrate_d_c
+    spdata(0:MSPECIES)%mortrate_d_u  = myinterface%params_species(1:(MSPECIES+1))%mortrate_d_u
+    spdata(0:MSPECIES)%rho_wood      = myinterface%params_species(1:(MSPECIES+1))%rho_wood
+    spdata(0:MSPECIES)%taperfactor   = taperfactor
+    spdata(0:MSPECIES)%LAImax        = myinterface%params_species(1:(MSPECIES+1))%LAImax
+    spdata(0:MSPECIES)%underLAImax   = LAImax
+    spdata(0:MSPECIES)%tauNSC        = tauNSC
+    spdata(0:MSPECIES)%fNSNmax       = myinterface%params_species(1:(MSPECIES+1))%fNSNmax
+    spdata(0:MSPECIES)%kphio         = myinterface%params_species(1:(MSPECIES+1))%kphio     
+    spdata(0:MSPECIES)%phiRL         = myinterface%params_species(1:(MSPECIES+1))%phiRL     
+    spdata(0:MSPECIES)%phiCSA        = myinterface%params_species(1:(MSPECIES+1))%phiCSA
+    spdata(0:MSPECIES)%LAI_light     = myinterface%params_species(1:(MSPECIES+1))%LAI_light
 
     ! root turnover rate
-    spdata%alpha_FR      = myinterface%params_species(:)%alpha_FR
+    spdata(0:MSPECIES)%alpha_FR      = myinterface%params_species(1:(MSPECIES+1))%alpha_FR
 
     ! Nitrogen Weng 2012-10-24
     ! spdata%CNleaf0 = CNleaf0
-    spdata%CNsw0     = CNsw0
-    spdata%CNwood0   = CNwood0
-    spdata%CNroot0   = CNroot0
-    spdata%CNseed0   = CNseed0
-    spdata%Nfixrate0 = myinterface%params_species(:)%Nfixrate0
-    spdata%NfixCost0 = myinterface%params_species(:)%NfixCost0
+    spdata(0:MSPECIES)%CNsw0     = CNsw0
+    spdata(0:MSPECIES)%CNwood0   = CNwood0
+    spdata(0:MSPECIES)%CNroot0   = CNroot0
+    spdata(0:MSPECIES)%CNseed0   = CNseed0
+    spdata(0:MSPECIES)%Nfixrate0 = myinterface%params_species(1:(MSPECIES+1))%Nfixrate0
+    spdata(0:MSPECIES)%NfixCost0 = myinterface%params_species(1:(MSPECIES+1))%NfixCost0
 
-    spdata%internal_gap_frac = internal_gap_frac
+    spdata(0:MSPECIES)%internal_gap_frac = internal_gap_frac
     do i = 0, MSPECIES
       call init_derived_species_data(spdata(i))
     enddo

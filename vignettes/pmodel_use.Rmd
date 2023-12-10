@@ -23,7 +23,7 @@ library(ggplot2)
 
 # fake variable as optimization isn't run
 pars <- list()
-pars$par["kphio"] <- 0.04121871  #0.03660986
+pars$par["kphio"] <- 0.04478049
 ```
 
 The `rsofun` package and framework includes two main models. The `pmodel` and `biomee` (which in part relies on P-model components). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.

@@ -1,3 +1,7 @@
+# rsofun v4.4.1
+
+* bugfix Fortran modules and derived types
+
 # rsofun v4.4
 
 * bugfix on input data type P-model
@@ -11,6 +15,7 @@
 * documentation parameter sensitivity analysis
 * documentation on the data format
 * document calibration diagnostic and model uncertainty calculation
+* more transparent licensing and copyright statements in COPYING file
 
 # rsofun v4.3
 
