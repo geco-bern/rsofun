@@ -19,9 +19,11 @@ SFLAGS="`"${R_HOME}/bin/R" CMD config FCFLAGS`"
 # Use --version output to determine the compiler
 # A different compiler will either accept --version and print something
 # else or fail due to "unknown argument". In both cases the branch will
-# not be taken
+# 
+# use this routine to create the header / start of the Makevars file
 if "$FC" --version 2>/dev/null | grep -q 'flang-new version 17'; then
 echo "PKG_FCFLAGS =  $SFLAGS -fc-prototypes-external" > src/Makevars
 fi
 
+# Complete the Makevars file with known system agnostic settings
 cat src/Makevars.in >> src/Makevars
