@@ -3,7 +3,9 @@ Dear CRAN team,
 This is the re-submission of the {rsofun} package v4.4.1. 
 
 In order to correct the outcome of the automatic CRAN checks, we have removed the 
--fc-prototypes-external flag for flang compilers.
+-fc-prototypes-external flag for flang compilers. Our local and GitHub checks
+pass, and we hope that the previous changes on the Fortran code alone correct
+the failure of our previous release.
 
 Thank you for your time and support.
 
