@@ -2,13 +2,8 @@ Dear CRAN team,
 
 This is the re-submission of the {rsofun} package v4.4.1. 
 
-In order to correct the compilation errors that ocurred in the CRAN checks, we have:
-- Removed non-default lower bound specification in derived type objects. 
-- Included the -fc-prototypes-external flag for flang compilers, as suggested by Prof. Ligges.
-- Consulted with the R-dev-pkg mailing list and used other packages as example, creating configure and Makevars.win files to avoid compilation issues.
-
-Our tests pass cleanly and hope that we have not missed anything that the CRAN
-checks would capture. 
+In order to correct the outcome of the automatic CRAN checks, we have removed the 
+-fc-prototypes-external flag for flang compilers.
 
 Thank you for your time and support.
 
