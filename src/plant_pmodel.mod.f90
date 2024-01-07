@@ -68,6 +68,7 @@ module md_plant_pmodel
     real :: phydro_alpha        ! Phydro: Cost of Jmax
     real :: phydro_gamma        ! Phydro: Cost of hydraulics
     real :: bsoil               ! Phydro: parameter converting RZWSC to predawn water potential (depends on rooting system hence PFT specific)
+    real :: Ssoil               ! Phydro: parameter converting RZWSC to predawn water potential (depends on rooting system hence PFT specific)
   end type plant_type
 
 
@@ -352,6 +353,7 @@ contains
     plant%phydro_alpha     = myinterface%params_calib%phydro_alpha    
     plant%phydro_gamma     = myinterface%params_calib%phydro_gamma    
     plant%bsoil            = myinterface%params_calib%bsoil           
+    plant%Ssoil            = myinterface%params_calib%Ssoil           
 
   end subroutine initpft
 

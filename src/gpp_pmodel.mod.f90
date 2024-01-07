@@ -105,7 +105,8 @@ contains
     type(par_cost_type) :: par_cost
     type(phydro_result_type) :: out_phydro_acclim, out_phydro_inst
     type(par_control_type) :: options
-  
+    real :: pxx_plant  ! water potential at xx percent remaining conductivity, where xx is a small number 
+
     ! Soil hydraulics
     real, dimension(npft)  :: swp
 
@@ -128,8 +129,12 @@ contains
     !          interacts with the root distribution??
     !----------------------------------------------------------------
     do pft = 1,npft
-      swp(pft) = 1 - tile(1)%soil%phy%wscal**(-tile(1)%plant(pft)%bsoil)  ! Assuming lu = 1, otherwise, use tile(lu) and a 2D array
+      pxx_plant = tile(1)%plant(pft)%phydro_p50_plant * (log(0.03)/log(0.5))^(1.0d0/tile(1)%plant(pft)%phydro_b_plant) ! Currently xx set to 3%
+      swp(pft) = (tile(1)%soil%params%whc / tile(1)%plant(pft)%Ssoil)**(-tile(1)%plant(pft)%bsoil) &
+                -(tile(1)%soil%phy%wcont  / tile(1)%plant(pft)%Ssoil)**(-tile(1)%plant(pft)%bsoil)  ! Assuming lu = 1, otherwise, use tile(lu) and a 2D array
       swp(pft) = min(swp(pft), 0.0) ! clamp +ve values to 0
+      swp(pft) = max(swp(pft), pxx_plant) ! clamp -ve values to a minimum of pxx
+      !          ^ this clamping is for numerical stability only 
     end do
 
 

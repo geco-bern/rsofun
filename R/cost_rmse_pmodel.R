@@ -86,7 +86,7 @@ cost_rmse_pmodel <- function(
   # FIXME Jaideep: Instead of checking the number of params, 
   #    it might be better to check for presence of each param in par and par_fixed
   ## check input parameters
-  expected_params = ifelse(using_phydro, yes=13, no=10)
+  expected_params = ifelse(using_phydro, yes=14, no=10)
   if( (length(par) + length(par_fixed)) != (expected_params) ){
     stop(paste0('Error: Input calibratable and fixed parameters (par = ',length(par),' and par_fixed = ',length(par_fixed),')
     do not match length of the required P-model parameters (',expected_params + length(targets),').'))
@@ -98,7 +98,7 @@ cost_rmse_pmodel <- function(
                            'rd_to_vcmax', 'tau_acclim', 'kc_jmax',
                            'phydro_K_plant', 'phydro_p50_plant', 'phydro_b_plant',
                            'phydro_alpha', 'phydro_gamma',
-                           'bsoil', 'whc')
+                           'bsoil', 'Ssoil', 'whc')
   } else {
     calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
                            'soilm_thetastar', 'soilm_betao',

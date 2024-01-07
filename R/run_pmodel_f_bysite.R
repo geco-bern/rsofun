@@ -330,13 +330,13 @@ run_pmodel_f_bysite <- function(
       }
     }
     else {
-      # P-hydro needs 13 parameters
+      # P-hydro needs 14 parameters
       if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
                                          'rd_to_vcmax', 'tau_acclim', 'kc_jmax',
                                          'phydro_K_plant', 'phydro_p50_plant', 'phydro_b_plant',
                                          'phydro_alpha', 'phydro_gamma',
-                                         'bsoil', 'whc')
-             ) != 13){
+                                         'bsoil', 'Ssoil', 'whc')
+             ) != 14){
         warning(" Returning a dummy data frame. Incorrect model parameters.")
         continue <- FALSE
       }
@@ -414,6 +414,9 @@ run_pmodel_f_bysite <- function(
       ifelse(params_siml$use_phydro, 
              no  = dummy_val,
              yes = params_modl$bsoil),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$Ssoil),
       as.numeric(params_modl$whc)
       )
 

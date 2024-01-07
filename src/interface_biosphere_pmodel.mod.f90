@@ -32,6 +32,7 @@ module md_interface_pmodel
     real :: phydro_alpha     
     real :: phydro_gamma     
     real :: bsoil
+    real :: Ssoil
     real :: whc       
   end type paramstype_calib  
 

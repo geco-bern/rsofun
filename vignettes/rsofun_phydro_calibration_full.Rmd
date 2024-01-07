@@ -143,9 +143,9 @@ settings_bayes <- list(
   par = list(
     kphio = list(lower=0.04, upper=0.09, init=0.05),
     phydro_K_plant = list(lower=0.05e-16, upper=5e-16, init=0.3e-16),
-    phydro_p50_plant = list(lower=-4, upper=-0.1, init=-1),
+    phydro_p50_plant = list(lower=-3, upper=-0.1, init=-1),
     phydro_alpha = list(lower=0.06, upper=0.15, init=0.1),
-    phydro_gamma = list(lower=0.05, upper=2, init=1),
+    phydro_gamma = list(lower=0.5, upper=2, init=1),
     bsoil = list(lower=1, upper=5, init=3),
     whc = list(lower=10, upper=1000, init=500),
     err_gpp = list(lower = 0.01, upper = 4, init = 2),
