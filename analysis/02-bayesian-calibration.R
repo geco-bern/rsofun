@@ -56,7 +56,7 @@ plot_prior_posterior_density <- function(
   df_plot$distrib <- as.factor(df_plot$distrib)
   
   # Plot with facet wrap
-  df_plot |>
+  gg <- df_plot |>
     tidyr::gather(variable, value, kphio:err_gpp) |>
     ggplot(
       aes(x = value, fill = distrib)
@@ -66,9 +66,9 @@ plot_prior_posterior_density <- function(
     facet_wrap( ~ variable , nrow = 2, scales = "free") +
     theme(legend.position = "bottom",
           axis.title.x = element_text("")) +
-    ggtitle("Marginal parameter uncertainty") +
     scale_fill_manual(values = c("#29a274ff", t_col("#777055ff"))) # GECO colors
   
+  return(gg)
 }
 
 # Set random seed for reproducibility
@@ -114,4 +114,7 @@ par_calib <- calib_sofun(
 toc() # Stop measuring time
 
 # Plot prior and posterior distributions
-plot_prior_posterior_density(par_calib$mod)
+gg <- plot_prior_posterior_density(par_calib$mod)
+
+# ggsave("./analysis/paper_results_files/prior_posterior.pdf", plot = gg, width = 6, height = 5)
+# ggsave("./analysis/paper_results_files/prior_posterior.png", plot = gg, width = 6, height = 5)

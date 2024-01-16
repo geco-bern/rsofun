@@ -1,6 +1,7 @@
 # Script getting the uncertainty estimation, using the
 # output from 02-bayesian-calibration.R
 getwd()
+
 # Load libraries
 library(rsofun)
 library(dplyr)
@@ -79,12 +80,6 @@ plot_gpp_error <- ggplot(data = pmodel_runs |>
                              # Merge GPP validation data (first year)
                              p_model_validation$data[[1]][1:365, ] |>
                                dplyr::rename(gpp_obs = gpp),
-                             by = "date") |>
-                           dplyr::left_join(
-                             # Merge GPP before calibration
-                             output$data[[1]][1:365, ] |>
-                               dplyr::select(date, gpp) |>
-                               dplyr::rename(gpp_no_calib = gpp),
                              by = "date")
 ) +             # Plot only first year
   geom_ribbon(
@@ -121,7 +116,7 @@ plot_gpp_error <- ggplot(data = pmodel_runs |>
   )
 
 # Include observations in the plot
-plot_gpp_error +  
+plot_gpp_error <- plot_gpp_error +  
   scale_color_manual(name = "",
                      breaks = c("Observations",
                                 "Predictions",
@@ -134,3 +129,6 @@ plot_gpp_error +
                                "Parameter uncertainty"),
                     values = c(t_col("#E69F00", 60),
                                t_col("#009E73", 40)))
+
+# ggsave("./analysis/paper_results_files/gpp_predictions_observations.pdf", plot = plot_gpp_error, width = 6, height = 5)
+# ggsave("./analysis/paper_results_files/gpp_predictions_observations.png", plot = plot_gpp_error, width = 6, height = 5)
