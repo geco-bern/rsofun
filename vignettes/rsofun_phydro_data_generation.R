@@ -36,14 +36,24 @@ if (length(args)==0) {
   site = args[1]
 }
 
+if (length(args)>1) {
+  root_data_dir = "~/Downloads/fluxdatakit_oct3"
+}else{
+  root_data_dir = args[2]
+}
+
+
+
+
 print(getwd())
 
 #' 
 #' 
 ## --------------------------------------------------------------------
-lsm_path = "~/Downloads/fluxdatakit_oct3/FLUXDATAKIT_LSM/"
-csv_path = "~/Downloads/fluxdatakit_oct3/FLUXDATAKIT_FLUXNET/"
-out_path = "~/Downloads/fluxdatakit_oct3/Phydro_drivers_3/"
+
+lsm_path = paste0(root_data_dir, "/FLUXDATAKIT_LSM/")
+csv_path = paste0(root_data_dir, "/FLUXDATAKIT_FLUXNET/")
+out_path = paste0(root_data_dir, "/phydro_drivers/")
 
 dir.create(out_path, showWarnings = F)
 dir.create(paste0(out_path, "data_gen_figures/"), showWarnings = F)

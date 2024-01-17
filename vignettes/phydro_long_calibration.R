@@ -22,9 +22,21 @@ if (length(args)==0) {
   site = args[1]
 }
 
-data_dir = "~/Downloads/fluxdatakit_oct3/Phydro_drivers_3/"
-out_dir = "~/Downloads/fluxdatakit_oct3/phydro_output/"
-figures_dir = "~/Downloads/fluxdatakit_oct3/phydro_output/figures/"
+if (length(args)>1) {
+  root_data_dir = "~/Downloads/fluxdatakit_oct3"
+}else{
+  root_data_dir = args[2]
+}
+
+if (length(args)>2) {
+  out_dir = "~/Downloads/fluxdatakit_oct3/phydro_output"
+}else{
+  out_dir = args[3]
+}
+
+
+data_dir = paste0(root_data_dir, "/phydro_drivers/")
+figures_dir = paste0(out_dir, "/figures/")
 
 dir.create(out_dir, showWarnings = F)
 dir.create(figures_dir, showWarnings = F)
@@ -216,7 +228,7 @@ settings_bayes <- list(
     settings = list(
       nrChains = 1,
       burnin = 500,        
-      iterations = 2000     # kept artificially low
+      iterations = 1000     # kept artificially low
     )
   )
 )
