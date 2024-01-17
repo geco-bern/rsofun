@@ -14,11 +14,11 @@ do
 	(
 	if [ "$generate_data" = true ]; then
 		echo "Generating data for site" $SITE
-		Rscript rsofun_phydro_data_generation.R $SITE
+		Rscript rsofun_phydro_data_generation.R $SITE /data/scratch/jaideep/fluxdata
 	fi
 
 	echo "Running calibration for site" $SITE
-	Rscript phydro_long_calibration.R $SITE
+	Rscript phydro_long_calibration.R $SITE /data/scratch/jaideep/fluxdata /data/scratch/jaideep/phydro_output
 	) &
 
 	# allow to execute up to $NCORES jobs in parallel
