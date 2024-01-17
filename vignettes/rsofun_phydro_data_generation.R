@@ -36,13 +36,13 @@ if (length(args)==0) {
   site = args[1]
 }
 
-if (length(args)>1) {
+if (length(args)<2) {
   root_data_dir = "~/Downloads/fluxdatakit_oct3"
 }else{
   root_data_dir = args[2]
 }
 
-
+print(args)
 
 
 print(getwd())

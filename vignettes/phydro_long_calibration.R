@@ -22,16 +22,16 @@ if (length(args)==0) {
   site = args[1]
 }
 
-if (length(args)>1) {
+if (length(args)<2) {
   root_data_dir = "~/Downloads/fluxdatakit_oct3"
 }else{
   root_data_dir = args[2]
 }
 
-if (length(args)>2) {
-  out_dir = "~/Downloads/fluxdatakit_oct3/phydro_output"
+if (length(args)<3) {
+  out_dir = "~/Downloads/fluxdatakit_oct3/phydro_output/"
 }else{
-  out_dir = args[3]
+  out_dir = paste0(args[3],"/")
 }
 
 
@@ -226,9 +226,9 @@ settings_bayes <- list(
   control = list(
     sampler = "DEzs",
     settings = list(
-      nrChains = 1,
-      burnin = 500,        
-      iterations = 1000     # kept artificially low
+      nrChains = 3,
+      burnin = 10000,        
+      iterations = 50000     # kept artificially low
     )
   )
 )
