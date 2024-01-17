@@ -129,7 +129,7 @@ contains
     !          interacts with the root distribution??
     !----------------------------------------------------------------
     do pft = 1,npft
-      pxx_plant = tile(1)%plant(pft)%phydro_p50_plant * (log(0.03)/log(0.5))^(1.0d0/tile(1)%plant(pft)%phydro_b_plant) ! Currently xx set to 3%
+      pxx_plant = tile(1)%plant(pft)%phydro_p50_plant * (log(0.03)/log(0.5))**(1.0d0/tile(1)%plant(pft)%phydro_b_plant) ! Currently xx set to 3%
       swp(pft) = (tile(1)%soil%params%whc / tile(1)%plant(pft)%Ssoil)**(-tile(1)%plant(pft)%bsoil) &
                 -(tile(1)%soil%phy%wcont  / tile(1)%plant(pft)%Ssoil)**(-tile(1)%plant(pft)%bsoil)  ! Assuming lu = 1, otherwise, use tile(lu) and a 2D array
       swp(pft) = min(swp(pft), 0.0) ! clamp +ve values to 0

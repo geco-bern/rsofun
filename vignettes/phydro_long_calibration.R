@@ -4,6 +4,7 @@ library(reshape2)
 library(rsofun)
 library(BayesianTools)
 library(tictoc)
+library(ncdf4)
 
 plot_only = F
 
@@ -44,7 +45,8 @@ p_hydro_drivers$params_siml[[1]]$use_pml = F
 
 
 get_density <- function(x, y, ...) {
-  dens <- MASS::kde2d(x, y, ...)
+  df = tibble(x=x, y=y) %>% drop_na
+  dens <- MASS::kde2d(df$x, df$y, ...)
   ix <- findInterval(x, dens$x)
   iy <- findInterval(y, dens$y)
   ii <- cbind(ix, iy)
@@ -118,7 +120,7 @@ params_modl <- list(
   phydro_b_plant     = 1,
   phydro_alpha       = 1.334564e-01, #0.1,
   phydro_gamma       = 1.889438e+00, #1,
-  bsoil              = 3.193891e+00, #3,
+  bsoil              = 3, #3,
   Ssoil              = 3.193891e+02, #3,
   whc                = 7.819509e+02 #200
 )
@@ -131,32 +133,90 @@ plot_pmodel(output_p)
 
 
 ## P-hydro full calibration (BayesianTools)
+# nc = nc_open("~/Downloads/cwdx80.nc")
+# lons = ncvar_get(nc, "lon")
+# lats = ncvar_get(nc, "lat")
+# S80 = ncvar_get(nc, "cwdx80")
+# 
+# site_lon = p_hydro_drivers$site_info[[1]]$lon
+# site_lat = p_hydro_drivers$site_info[[1]]$lat
+# 
+# lonid = which(lons > site_lon)[1]-1
+# latid = which(lats > site_lat)[1]-1 
+# n = 1
+# S80_slice = S80[(lonid-n):(lonid+n), (latid-n):(latid+n)]
+# whc_site = mean(as.numeric(S80_slice, na.rm=T))
+# whc_site_sd = sd(as.numeric(S80_slice, na.rm=T))
+
+whc_site = p_hydro_drivers$site_info[[1]]$whc
+whc_site_sd = p_hydro_drivers$site_info[[1]]$whc_sd
+
+# image(x=lons, y=lats, z=log(1+S80), col = scales::viridis_pal()(100))
+# points(x=site_lon, y=site_lat, pch=20, col="red")
 
 p_hydro_drivers$params_siml[[1]]$use_phydro = T
 p_hydro_drivers$params_siml[[1]]$use_pml = F
 
+parjj = read.csv("ancillary_data/fitted_params_Joshi_et_al_2022.csv")
+parjj = parjj %>% mutate(K.scalar = K.scalar*1e-16)
+pars_joshi2022 = parjj %>% 
+  filter(Species != "Helianthus annuus") %>% 
+  select(K.scalar, P50, alpha, gamma, A.G, Species) %>% 
+  filter(A.G != "") %>% pivot_longer(cols=c("K.scalar", "P50", "alpha", "gamma")) %>% 
+  group_by(A.G, name) %>% 
+  summarize(mean=mean(value), sd=sd(value), n=length(value))
+
+
+uniform_range = function(lower, upper){
+  list(lower= lower, upper=upper, mean = (upper+lower)/2, sd = (upper-lower)*10)
+}
+gaussian_range = function(mean, sd){
+  if (mean > 0) list(lower= max(mean-5*sd, 0), upper=mean+5*sd, mean = mean, sd = sd)
+  else          list(lower= mean-5*sd, upper=min(mean+5*sd, 0), mean = mean, sd = sd)
+}
+
 # Define calibration settings and parameter ranges from previous work
 settings_bayes <- list(
   method = "BayesianTools",
+  # par = list(
+  #   kphio = list(lower=0.04, upper=0.09, init=0.05),
+  #   phydro_K_plant = list(lower=0.05e-16, upper=0.3e-16, init=0.15e-16),
+  #   phydro_p50_plant = list(lower=-3, upper=-0.5, init=-1),
+  #   phydro_alpha = list(lower=0.06, upper=0.15, init=0.1),
+  #   phydro_gamma = list(lower=0.5, upper=1.5, init=1),
+  #   bsoil = list(lower=0.1, upper=10, init=3),
+  #   Ssoil = list(lower=0.1, upper=1000, init=10),
+  #   whc = list(lower=10, upper=5000, init=1000),
+  #   err_gpp = list(lower = 0.01, upper = 4, init = 2),
+  #   err_le = list(lower = 0.1e6, upper = 10e6, init = 2e6)
+  # ),
   par = list(
-    kphio = list(lower=0.04, upper=0.09, init=0.05),
-    phydro_K_plant = list(lower=0.05e-16, upper=5e-16, init=0.3e-16),
-    phydro_p50_plant = list(lower=-3, upper=-0.5, init=-1),
-    phydro_alpha = list(lower=0.06, upper=0.15, init=0.1),
-    phydro_gamma = list(lower=0.5, upper=1.5, init=1),
-    bsoil = list(lower=0.1, upper=10, init=3),
-    Ssoil = list(lower=0.1, upper=1000, init=10),
-    whc = list(lower=10, upper=5000, init=1000),
-    err_gpp = list(lower = 0.01, upper = 4, init = 2),
-    err_le = list(lower = 0.1e6, upper = 10e6, init = 2e6)
+    kphio = uniform_range(lower=0.04, upper=0.09),
+    # phydro_K_plant = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="K.scalar") %>% pull(mean),
+    #                                 sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="K.scalar") %>% pull(sd)),
+    # phydro_p50_plant = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="P50") %>% pull(mean),
+    #                                   sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="P50") %>% pull(sd)),
+    phydro_K_plant = uniform_range(lower=0.1e-16, 5e-16),
+    phydro_p50_plant = uniform_range(lower=-4, -0.3),
+    # phydro_alpha = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(mean),
+    #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(sd)),
+    # phydro_gamma = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(mean),
+    #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(sd)),
+    phydro_alpha = gaussian_range(mean = 0.11, sd = 0.02),
+    phydro_gamma = uniform_range(lower = 0.1, upper = 2),
+    #bsoil = uniform_range(lower=0.1, upper=10),
+    Ssoil = uniform_range(lower = 0, upper = whc_site+whc_site_sd),
+    whc = gaussian_range(mean = whc_site, sd = whc_site_sd),
+    err_gpp = uniform_range(lower = 0.01, upper = 4),
+    err_le = uniform_range(lower = 0.1e6, upper = 10e6)
   ),
   metric = rsofun::cost_likelihood_pmodel,
   control = list(
     sampler = "DEzs",
     settings = list(
-      nrChains = 3,
-      burnin = 10000,        
-      iterations = 20000     # kept artificially low
+      nrChains = 1,
+      burnin = 500,        
+      iterations = 2000     # kept artificially low
     )
   )
 )
@@ -187,10 +247,10 @@ if (!plot_only){
       kc_jmax            = 0.41,
       # phydro_K_plant     = 0.3e-16,
       # phydro_P50_plant     = -1,
-      phydro_b_plant     = 1
+      phydro_b_plant     = 1,
       # phydro_alpha       = 0.1,
       # phydro_gamma       = 1
-      # bsoil              = 3,
+      bsoil              = 3
       # Ssoil              = 40,
       # whc                = 90  
     ),
@@ -237,7 +297,7 @@ params_modl_opt$phydro_K_plant   = pars_calib_bayes$par[["phydro_K_plant"]]
 params_modl_opt$phydro_p50_plant = pars_calib_bayes$par[["phydro_p50_plant"]]
 params_modl_opt$phydro_alpha     = pars_calib_bayes$par[["phydro_alpha"]]
 params_modl_opt$phydro_gamma     = pars_calib_bayes$par[["phydro_gamma"]]
-params_modl_opt$bsoil            = pars_calib_bayes$par[["bsoil"]]
+# params_modl_opt$bsoil            = pars_calib_bayes$par[["bsoil"]]
 params_modl_opt$Ssoil            = pars_calib_bayes$par[["Ssoil"]]
 params_modl_opt$whc              = pars_calib_bayes$par[["whc"]]
 
