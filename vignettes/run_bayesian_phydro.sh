@@ -4,11 +4,14 @@ NCORES=50
 
 # declare -a arr=$( ls ~/Downloads/fluxdatakit_oct3/FLUXDATAKIT_FLUXNET/*HH* | awk -F "_" '{print $4}' )
 
-declare -a arr=$( cat site_list.txt )
+declare -a arr=$( cat site_list_2.txt )
 
 generate_data=true
+
 data_path=/data/scratch/jaideep/fluxdata
 out_path=/data/scratch/jaideep/phydro_output
+# data_path=~/Downloads/fluxdatakit_oct3
+# out_path=~/Downloads/fluxdatakit_oct3/phydro_output
 
 for SITE in ${arr[@]}
 do
@@ -16,11 +19,11 @@ do
 	(
 	if [ "$generate_data" = true ]; then
 		echo "Generating data for site" $SITE
-		Rscript rsofun_phydro_data_generation.R $SITE $data_path > out_data_gen_$SITE.txt
+		Rscript rsofun_phydro_data_generation.R $SITE $data_path 
 	fi
 
 	echo "Running calibration for site" $SITE
-	Rscript phydro_long_calibration.R $SITE $data_path $out_path > out_calib_$SITE.txt
+	Rscript phydro_long_calibration.R $SITE $data_path $out_path 
 	) &
 
 	# allow to execute up to $NCORES jobs in parallel

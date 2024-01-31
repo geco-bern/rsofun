@@ -200,6 +200,11 @@ contains
         out_biosphere%wcont(doy)   = tile(1)%soil%phy%wcont
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
 
+        ! Additional outputs for coupled model and phydro
+        out_biosphere%latenth_soil(doy) = tile_fluxes(1)%canopy%daet_e_soil
+        out_biosphere%dpsi(doy)    = tile_fluxes(1)%plant(1)%dpsi
+        out_biosphere%psi_leaf(doy)    = tile_fluxes(1)%plant(1)%psi_leaf
+
         init_daily = .false.
 
       end do dayloop

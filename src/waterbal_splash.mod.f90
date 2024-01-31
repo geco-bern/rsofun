@@ -278,6 +278,7 @@ contains
     !-------------------------------------------------------------------------  
     use md_params_core, only: ndayyear, pi, dummy
     use md_sofunutils, only: calc_patm
+    use md_sofunutils, only: dampen_variability
 
     ! arguments
     type(tile_fluxes_type), intent(inout) :: tile_fluxes
@@ -292,7 +293,10 @@ contains
     real :: lv                              ! enthalpy of vaporization, J/kg
     real :: rho_water                       ! density of water (g m-3)
     real :: energy_to_mm                    ! Conversion factor to convert energy (J m-2 day) to mass (mm day-1)
-
+    real :: f_soil_aet                      ! Fractional reduction of soil AET due to moisture limitation
+    real :: p_over_pet                      ! P/PET
+    real, save :: p_over_pet_memory = 1.0   ! precipitation over equilibrium evapotranspiration, damped variability
+  
     real :: rx                           ! variable substitute (mm/hr)/(W/m^2)
     real :: hi, cos_hi                   ! intersection hour angle, degrees
 
@@ -368,13 +372,23 @@ contains
     else
       ! Fill canopy LE and soil ET using complementary values from phydro
       tile_fluxes%canopy%daet_e_canop = tile_fluxes%canopy%daet_canop / energy_to_mm   ! mm d-1 ---> J m-2 d-1 
-      tile_fluxes%canopy%daet_soil =  tile_fluxes%canopy%daet_e_soil * energy_to_mm    ! J m-2 d-1  ---> mm d-1
+      tile_fluxes%canopy%dpet_soil =  tile_fluxes%canopy%dpet_e_soil * energy_to_mm    ! J m-2 d-1  ---> mm d-1
       ! ^ Note: This is under wet conditions, as returned from phydro, so multiply by sw to get actual soil ET
 
-      ! calculate totat AET = canopy_AET + sw * soil_AET_wet
-      tile_fluxes%canopy%daet = tile_fluxes%canopy%daet_canop + (sw/kCw) * tile_fluxes%canopy%daet_soil
-      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet_e_canop + (sw/kCw) * tile_fluxes%canopy%daet_e_soil
+      ! calculate totat AET = canopy_AET + f * soil_AET_wet, where f = running_avg(P/PET)
+      p_over_pet = (climate%dprec*86400) / (tile_fluxes%canopy%dpet_soil + 1e-6)
+      p_over_pet_memory = dampen_variability(p_over_pet , 30.0, p_over_pet_memory )   ! corresponds to f in Zhang et al., 2017 Eq. 9
+      f_soil_aet = sw/kCw ! min(p_over_pet_memory, 1.0)   ! previously was sw/kCw 
+      
+      tile_fluxes%canopy%daet_soil = f_soil_aet * tile_fluxes%canopy%dpet_soil
+      tile_fluxes%canopy%daet_e_soil = tile_fluxes%canopy%daet_soil / energy_to_mm
 
+      tile_fluxes%canopy%daet = tile_fluxes%canopy%daet_canop + tile_fluxes%canopy%daet_soil        
+      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet_e_canop + tile_fluxes%canopy%daet_e_soil        
+
+      ! print *, "P (mm d-1), PET (mm d-1), P/PET, Avg(P/PET), f_soil_aet = ", (climate%dprec*86400), &
+      !           tile_fluxes%canopy%dpet_soil, p_over_pet, &
+      !           p_over_pet_memory, f_soil_aet
       ! print *, "Canopy ET (mm d-1, J m-2 d-1) = ", tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_e_canop
       ! print *, "Soil ET (mm d-1, J m-2 d-1) = ", tile_fluxes%canopy%daet_soil, tile_fluxes%canopy%daet_e_soil 
 

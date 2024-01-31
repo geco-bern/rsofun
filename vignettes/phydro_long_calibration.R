@@ -7,6 +7,7 @@ library(tictoc)
 library(ncdf4)
 
 plot_only = F
+debug = T
 
 tic("phydro")
 
@@ -101,9 +102,26 @@ plot_pmodel = function(output_p, out_filename_prefix=""){
     facet_wrap(~variable, scales = "free", nrow = 1)+
     labs(colour="Density")
   
+  p3 = output_p$data[[1]] %>% 
+    mutate(vcmax25 = vcmax25*1e6,  # mol m-2 s-1 --> umol m-2 s-1
+           le = le / 86400,         # J m-2 day-1 --> W m-2
+           le_soil = le_soil / 86400,         # J m-2 day-1 --> W m-2
+           psi_soil = psi_leaf+dpsi
+           ) %>% 
+    select(date, gpp, vcmax25, le, le_soil, dpsi, psi_soil, psi_leaf, gs_accl) %>% 
+    drop_na %>% 
+    melt("date") %>% 
+    group_by(variable) %>% 
+    ggplot(aes(y=value, x=as.Date(date))) +
+    geom_line(alpha=0.5, col="cyan4") +
+    theme_classic() +
+    theme(strip.background = element_rect(color = "white", size = 1))+
+    facet_wrap(~variable, scales = "free", nrow = 2)
+  
   if (out_filename_prefix == ""){
     print(p1)
     print(p2)
+    print(p3)
   }
   else{
     cairo_pdf(filename = paste0(out_filename_prefix, "_timeseries.pdf"), height=5, width=7)
@@ -111,6 +129,9 @@ plot_pmodel = function(output_p, out_filename_prefix=""){
     dev.off()
     cairo_pdf(filename = paste0(out_filename_prefix, "_pred_vs_obs.pdf"), height=3.5, width=7)
     print(p2)
+    dev.off()
+    cairo_pdf(filename = paste0(out_filename_prefix, "_all_predictions.pdf"), height=3.5, width=7)
+    print(p3)
     dev.off()
     
   }
@@ -174,10 +195,34 @@ parjj = parjj %>% mutate(K.scalar = K.scalar*1e-16)
 pars_joshi2022 = parjj %>% 
   filter(Species != "Helianthus annuus") %>% 
   select(K.scalar, P50, alpha, gamma, A.G, Species) %>% 
-  filter(A.G != "") %>% pivot_longer(cols=c("K.scalar", "P50", "alpha", "gamma")) %>% 
+  filter(A.G != "") %>% 
+  # mutate(A.G = case_match(A.G,
+  #                              "M. Angiosperm" ~ "Angiosperm",
+  #                              .default = A.G)) %>% 
+  pivot_longer(cols=c("K.scalar", "P50", "alpha", "gamma")) %>% 
   group_by(A.G, name) %>% 
   summarize(mean=mean(value), sd=sd(value), n=length(value))
 
+
+# igbp = "WSA"
+type = p_hydro_drivers$site_info[[1]]$IGBP_veg_short %>% 
+  case_match(c("WSA", "EBF", "DBF") ~ "Angiosperm",
+             c("ENF") ~ "Gymnosperm",
+             c("OSH", "CSH") ~ "Shrub",
+             c("GRA", "CRO", "SAV") ~ "Shrub",
+             c("MF", "WET") ~ "Angiosperm")
+
+message("type = ", p_hydro_drivers$site_info[[1]]$IGBP_veg_short, " --> " ,type, "\n")
+
+gamma_mean = pars_joshi2022 %>% 
+  filter(A.G == type & name == "gamma") %>% 
+  pull(mean)
+
+gamma_sd = pars_joshi2022 %>% 
+  filter(A.G == "Angiosperm" & name == "gamma") %>% 
+  pull(sd)
+
+print(c(gamma_mean, gamma_sd))
 
 uniform_range = function(lower, upper){
   list(lower= lower, upper=upper, mean = (upper+lower)/2, sd = (upper-lower)*10)
@@ -215,7 +260,8 @@ settings_bayes <- list(
     # phydro_gamma = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(mean),
     #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(sd)),
     phydro_alpha = gaussian_range(mean = 0.11, sd = 0.02),
-    phydro_gamma = uniform_range(lower = 0.1, upper = 2),
+    # phydro_gamma = uniform_range(lower = 0.1, upper = 2),
+    phydro_gamma = gaussian_range(mean = gamma_mean, sd = gamma_sd),
     #bsoil = uniform_range(lower=0.1, upper=10),
     Ssoil = uniform_range(lower = 0, upper = whc_site+whc_site_sd),
     whc = gaussian_range(mean = whc_site, sd = whc_site_sd),
@@ -226,9 +272,9 @@ settings_bayes <- list(
   control = list(
     sampler = "DEzs",
     settings = list(
-      nrChains = 3,
-      burnin = 10000,        
-      iterations = 50000     # kept artificially low
+      nrChains =   ifelse(debug, yes = 1,    no = 3    ),
+      burnin =     ifelse(debug, yes = 300,  no = 10000),        
+      iterations = ifelse(debug, yes = 1200, no = 50000)     # kept artificially low
     )
   )
 )
@@ -245,6 +291,7 @@ calib_file =paste0(file_prefix, "_mcmc_output.rda")
 if (!plot_only){
   # Calibrate the model and optimize the free parameters using
   # demo datasets
+  message("Begin calibration...")
   pars_calib_bayes <- calib_sofun(
     # calib_sofun arguments:
     drivers = p_hydro_drivers,  

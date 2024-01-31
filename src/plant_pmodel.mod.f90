@@ -91,6 +91,10 @@ module md_plant_pmodel
     real :: gs_accl           ! acclimated stomatal conductance (xxx)
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
+    
+    ! FIXME Jaideep: These are not fluxes, but I dunno where else to put these
+    real :: dpsi              ! soil-to-leaf water potential difference (MPa)
+    real :: psi_leaf          ! leaf water potential (MPa)
 
     ! ! annual variables
     ! real :: agpp             ! annual total gross primary production [gC/m2/yr]           

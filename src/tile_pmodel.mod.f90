@@ -102,6 +102,8 @@ module md_tile_pmodel
     real :: daet_e_soil     ! daily soil evaporation (J m-2 d-1)
     real :: daet_canop      ! daily canopy transpiration (mm d-1)
     real :: daet_e_canop    ! daily canopy transpiration (J m-2 d-1)
+    real :: dpet_soil       ! daily potential evaporation from soil (J m-2 d-1)
+    real :: dpet_e_soil     ! daily potential evaporation from soil (mm d-1)
     real :: cpa             ! alpha = equilibrium ET over potential ET (EET/PET, unitless)
 
     real :: dtransp         ! work in progress
@@ -146,6 +148,7 @@ module md_tile_pmodel
 
   end type canopy_fluxes_type
 
+  ! JAI FIXME: Add a soil fluxes type to store soil aet etc? (these are currently stored in canopy)
   type tile_fluxes_type
     type(canopy_fluxes_type) :: canopy
     type(plant_fluxes_type), dimension(npft) :: plant

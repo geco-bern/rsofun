@@ -25,6 +25,22 @@ read_meta_fdk = function (site, path, meta_data = FALSE,
     df$time <- time_date
     if ("IGBP_veg_short" %in% colnames(df)) {
       df$IGBP_veg_short <- trimws(df$IGBP_veg_short)
+      
+      df$IGBP_veg_short = case_match(df$IGBP_veg_short,
+                                     "Woody Savannas" ~ "WSA",
+                                     "Savannas" ~ "SAV",
+                                     "Permanent Wetlands" ~ "WET",
+                                     "Open Shrublands" ~ "OSH",
+                                     "Closed Shrublands" ~ "CSH",
+                                     "Grasslands" ~ "GRA",
+                                     "Evergreen Needleleaf Forest" ~ "ENF",
+                                     "Evergreen Broadleaf Forest" ~ "EBF",
+                                     "Deciduous Broadleaf Forest" ~ "DBF",
+                                     "Mixed Forest" ~ "MF",
+                                     "Croplands" ~ "CRO",
+                                     "Cropland/Natural Vegetation Mosaic" ~ "MF",
+                                     "Urban and Built-Up" ~ NA,
+                                     .default = df$IGBP_veg_short)
     }
     else {
       warning("Column 'IGBP_veg_short' does not exist in the data frame. Assigning NA.")

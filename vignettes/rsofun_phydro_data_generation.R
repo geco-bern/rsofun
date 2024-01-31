@@ -128,16 +128,16 @@ ddf_24hr_mean <-
 # Check aggregation
 cairo_pdf(filename = paste0(figures_prefix, "_fig1_ddf_24hr_mean.pdf"))
 # png(filename = paste0(figures_prefix, "_fig1_ddf_24hr_mean.png"), height=700*3, width=700*3, res = 300)
-ddf_24hr_mean %>%
+p1 = ddf_24hr_mean %>%
   mutate(albedo = SW_OUT/SW_IN_F_MDS) %>%
-  select(SW_IN_F_MDS, NETRAD, LW_IN_F_MDS, LAI, FPAR, GPP_DT_VUT_REF, LE_F_MDS, TA_F_MDS, date) %>%
+  select(SW_IN_F_MDS, NETRAD, LW_IN_F_MDS, LAI, FPAR, GPP_DT_VUT_REF, LE_F_MDS, TA_F_MDS, P_F, date) %>%
   melt("date") %>%
   ggplot(aes(y=value, x=date)) +
   geom_line(col="aquamarine4") +
   theme_classic() +
   theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free") %>%
-  print()
+  facet_wrap(~variable, scales = "free")
+p1 %>% print()
 dev.off()
 
 ddf_24hr_mean %>% filter(!is.na(NETRAD)) %>% pull(date) %>% summary()
@@ -195,7 +195,7 @@ aggregate_daily_3hr_maxima = function(df){
 test.3day.3hr = test.3day %>% group_by(date) %>% do(aggregate_daily_3hr_maxima(.)) %>% ungroup()
 
 cairo_pdf(filename = paste0(figures_prefix, "_fig2_3hr_maxima_sample.pdf"))
-test.3day %>% select(time, SW_IN_F_MDS, NETRAD, TA_F_MDS, VPD_F_MDS, GPP_NT_VUT_REF, GPP_DT_VUT_REF, LE_F_MDS, LAI, FPAR) %>%
+p2 = test.3day %>% select(time, SW_IN_F_MDS, NETRAD, TA_F_MDS, VPD_F_MDS, GPP_NT_VUT_REF, GPP_DT_VUT_REF, LE_F_MDS, LAI, FPAR) %>%
   melt("time") %>%
   mutate(type="hourly") %>%
   rbind(test.3day.3hr %>%
@@ -208,8 +208,8 @@ test.3day %>% select(time, SW_IN_F_MDS, NETRAD, TA_F_MDS, VPD_F_MDS, GPP_NT_VUT_
   geom_point(data = . %>% filter(type == "daily")) +
   theme_classic() +
   theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free") %>%
-  print()
+  facet_wrap(~variable, scales = "free")
+p2 %>% print()
 dev.off()
 
 #'
@@ -253,7 +253,7 @@ aggregate_daily_daylength = function(df){
 test.3day.daylen = test.3day %>% group_by(date) %>% do(aggregate_daily_daylength(.)) %>% ungroup()
 
 cairo_pdf(filename = paste0(figures_prefix, "_fig3_daytime_sample.pdf"))
-test.3day %>% select(time, SW_IN_F_MDS, NETRAD, TA_F_MDS, VPD_F_MDS, GPP_NT_VUT_REF, GPP_DT_VUT_REF, LE_F_MDS, LAI) %>%
+p3 = test.3day %>% select(time, SW_IN_F_MDS, NETRAD, TA_F_MDS, VPD_F_MDS, GPP_NT_VUT_REF, GPP_DT_VUT_REF, LE_F_MDS, LAI) %>%
   mutate(daylength = NA) %>%
   melt("time") %>%
   mutate(type="hourly") %>%
@@ -267,8 +267,8 @@ test.3day %>% select(time, SW_IN_F_MDS, NETRAD, TA_F_MDS, VPD_F_MDS, GPP_NT_VUT_
   geom_point(data = . %>% filter(type == "daily")) +
   theme_classic() +
   theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~variable, scales = "free") %>%
-  print()
+  facet_wrap(~variable, scales = "free")
+p3 %>% print()
 dev.off()
 
 #'
@@ -283,11 +283,11 @@ ddf_daytime_mean <- hhdf |>
 
 # Check daylength seasonality
 cairo_pdf(filename = paste0(figures_prefix, "_fig4_daylenth_seasonality.pdf"))
-ddf_daytime_mean %>%
+p4 = ddf_daytime_mean %>%
   ggplot(aes(y=daylength, x=date)) +
   geom_line()+
-  theme_classic() %>%
-  print()
+  theme_classic()
+p4 %>% print()
 dev.off()
 
 #'
@@ -528,7 +528,7 @@ save(p_hydro_validation,
 #'
 
 cairo_pdf(filename = paste0(figures_prefix, "_fig5_phydro_drivers.pdf"), height=5, width=10)
-p_hydro_drivers$forcing[[1]] %>%
+p5 = p_hydro_drivers$forcing[[1]] %>%
   select(date, ppfd, netrad, temp, vpd, fapar, rain) %>%
   melt("date") %>%
   mutate(type="24-hr mean") %>%
@@ -547,5 +547,6 @@ p_hydro_drivers$forcing[[1]] %>%
   theme_classic() +
   theme(strip.background = element_rect(color = "white", size = 1))+
   facet_wrap(~variable, scales = "free")
+p5 %>% print()
 dev.off()
 

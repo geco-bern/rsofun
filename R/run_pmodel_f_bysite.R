@@ -482,7 +482,10 @@ run_pmodel_f_bysite <- function(
           "tsoil", 
           "netrad", 
           "wcont", 
-          "snow")
+          "snow",
+          "le_soil",
+          "dpsi",
+          "psi_leaf")
         ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -491,8 +494,8 @@ run_pmodel_f_bysite <- function(
     out <- tibble(date = as.Date("2000-01-01"),
                   fapar = NA, 
                   gpp = NA, 
-                  transp = NA, 
-                  latenth = NA, 
+                  aet = NA, 
+                  le = NA, 
                   pet = NA, 
                   vcmax = NA, 
                   jmax = NA, 
@@ -506,7 +509,11 @@ run_pmodel_f_bysite <- function(
                   tsoil = NA, 
                   netrad = NA,
                   wcont = NA, 
-                  snow = NA)
+                  snow = NA,
+                  le_soil = NA,
+                  dpsi = NA,
+                  psi_leaf = NA
+                  )
   }
     
   return(out)

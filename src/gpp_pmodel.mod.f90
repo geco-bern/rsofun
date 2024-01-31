@@ -365,6 +365,14 @@ contains
         tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs
       end if
 
+      !----------------------------------------------------------------
+      ! Water potentials
+      !----------------------------------------------------------------
+      if (use_phydro) then
+        tile_fluxes(lu)%plant(pft)%psi_leaf = out_phydro_inst%psi_l
+        tile_fluxes(lu)%plant(pft)%dpsi = out_phydro_inst%dpsi
+      end if
+
       !------------------------------------------------------------------------
       ! Canopy ET and soil LE (only for Phydro, since it's computed internally)
       !------------------------------------------------------------------------
@@ -375,7 +383,7 @@ contains
         tile_fluxes(lu)%canopy%daet_canop = out_phydro_inst%e * 0.018015 * (1.0d0 / rho_water) &
               * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
         
-        tile_fluxes(lu)%canopy%daet_e_soil = out_phydro_inst%le_s_wet  &
+        tile_fluxes(lu)%canopy%dpet_e_soil = out_phydro_inst%le_s_wet  &
               * myinterface%params_siml%secs_per_tstep ! convert: J m-2 s-1 * s day-1  = J m-2 day-1
         
         ! print *, "Canopy ET (mm d-1) = ", tile_fluxes(lu)%canopy%daet_canop 
