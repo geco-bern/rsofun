@@ -97,7 +97,7 @@ morrisOut.df <- data.frame(
   arrange( mu.star )
 
 # Create barplot to show sensitivity analysis output
-morrisOut.df |>
+gg <- morrisOut.df |>
   tidyr::pivot_longer( -parameter, names_to = "variable", values_to = "value") |>
   ggplot(aes(
     reorder(parameter, value),
@@ -117,3 +117,6 @@ morrisOut.df |>
     legend.position = c(0.9, 0.1), legend.justification = c(0.95, 0.05)
   ) +
   coord_flip()    # make horizontal
+
+# ggsave("./analysis/paper_results_files/morris.pdf", plot = gg, width = 5, height = 3)
+# ggsave("./analysis/paper_results_files/morris.png", plot = gg, width = 5, height = 3)
