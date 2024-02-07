@@ -282,7 +282,7 @@ module datatypes
     !===== Leaf area index
     real    :: LAI                                ! leaf area index
     real    :: CAI                                ! crown area index
-    real    :: LAIlayer(0:10)     = 0.0           ! LAI of each crown layer, max. 9
+    ! real    :: LAIlayer(0:10)     = 0.0           ! LAI of each crown layer, max. 9
     real    :: root_distance(max_lev)             ! characteristic half-distance between fine roots, m
 
     !=====  Averaged quantities for PPA phenology

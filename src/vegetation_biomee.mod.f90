@@ -12,7 +12,7 @@ module md_vegetation_biomee
 
   ! public subroutines
   public :: initialize_cohort_from_biomass, initialize_vegn_tile
-  public :: vegn_CNW_budget, vegn_phenology, vegn_growth_EW,update_layer_LAI ! , vegn_CNW_budget_daily
+  public :: vegn_CNW_budget, vegn_phenology, vegn_growth_EW ! , update_layer_LAI ! , vegn_CNW_budget_daily
   public :: vegn_reproduction, vegn_annualLAImax_update !, annual_calls
   public :: vegn_nat_mortality, vegn_species_switch !, vegn_starvation
   public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
@@ -434,27 +434,28 @@ contains
   end subroutine vegn_growth_EW
 
 
-  subroutine update_layer_LAI( vegn )
-    !////////////////////////////////////////////////////////////////
-    ! Updates LAI per canopy layer
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn
+  ! The routine is never called, therefore commented out
+  ! subroutine update_layer_LAI( vegn )
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Updates LAI per canopy layer
+  !   ! Code from BiomeE-Allocation
+  !   !---------------------------------------------------------------
+  !   type(vegn_tile_type), intent(inout) :: vegn
 
-    ! local variables
-    type(cohort_type), pointer :: cc
-    integer :: i, layer
+  !   ! local variables
+  !   type(cohort_type), pointer :: cc
+  !   integer :: i, layer
 
-    ! update accumulative LAI for each corwn layer
-    vegn%LAI      = 0.0
-    vegn%LAIlayer = 0.0
-    do i = 1, vegn%n_cohorts
-     cc => vegn%cohorts(i)
-     layer = Max (1, Min(cc%layer,9)) ! between 1~9
-     vegn%LAIlayer(layer) = vegn%LAIlayer(layer) + cc%leafarea * cc%nindivs !/(1.0-sp%internal_gap_frac)
-    enddo
+  !   ! update accumulative LAI for each corwn layer
+  !   vegn%LAI      = 0.0
+  !   vegn%LAIlayer = 0.0
+  !   do i = 1, vegn%n_cohorts
+  !     cc => vegn%cohorts(i)
+  !     layer = Max (1, Min(cc%layer,9)) ! between 1~9
+  !     vegn%LAIlayer(layer) = vegn%LAIlayer(layer) + cc%leafarea * cc%nindivs !/(1.0-sp%internal_gap_frac)
+  !   enddo
   
-  end subroutine update_layer_LAI
+  ! end subroutine update_layer_LAI
 
 
   subroutine rootarea_and_verticalprofile( cc )
