@@ -12,19 +12,20 @@ An R Simulating Optimal FUNctioning (RSOFUN) framework for site-scale simulation
 
 ## Installation
 
-### stable release
+### Stable release
 
 To install the current stable release use a CRAN repository:
+
+**WARNING: rsofun is not currently available on CRAN.** We're working on it. Until it's available again, the command below will not work.
 
 ``` r
 install.packages("rsofun")
 library("rsofun")
 ```
 
-### development release
+### Development release
 
-To install the development releases of the package run the following
-commands:
+To install the latest development release of the package run the following commands to install rsofun directly from GitHub:
 
 ``` r
 if(!require(remotes)){install.packages("remotes")}
@@ -32,8 +33,10 @@ remotes::install_github("geco-bern/rsofun")
 library("rsofun")
 ```
 
-Vignettes are not rendered by default, if you want to include additional
-documentation please use:
+**NOTE:** Installing from GitHub requires compilation of Fortran and C source code contained in {rsofun}. To enable compiling source code, install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) on Windows, or [Xcode](https://developer.apple.com/xcode/) and the [GNU Fortran compiler on Mac](https://github.com/fxcoudert/gfortran-for-macOS) (see also 'Mandatory tools' [here](https://mac.r-project.org/tools/)). On Linux, the gfortran compiler is usually installed already.
+
+
+Vignettes are not rendered by default, if you want to include additional documentation please use:
 
 ``` r
 if(!require(remotes)){install.packages("remotes")}
