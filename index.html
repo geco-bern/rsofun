@@ -121,21 +121,23 @@
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="section level3">
-<h3 id="stable-release">stable release<a class="anchor" aria-label="anchor" href="#stable-release"></a>
+<h3 id="stable-release">Stable release<a class="anchor" aria-label="anchor" href="#stable-release"></a>
 </h3>
 <p>To install the current stable release use a CRAN repository:</p>
+<p><strong>WARNING: rsofun is not currently available on CRAN.</strong> We’re working on it. Until it’s available again, the command below will not work.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"rsofun"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/geco-bern/rsofun" class="external-link">"rsofun"</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="development-release">development release<a class="anchor" aria-label="anchor" href="#development-release"></a>
+<h3 id="development-release">Development release<a class="anchor" aria-label="anchor" href="#development-release"></a>
 </h3>
-<p>To install the development releases of the package run the following commands:</p>
+<p>To install the latest development release of the package run the following commands to install rsofun directly from GitHub:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va"><a href="https://remotes.r-lib.org" class="external-link">remotes</a></span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span><span class="op">}</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"geco-bern/rsofun"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/geco-bern/rsofun" class="external-link">"rsofun"</a></span><span class="op">)</span></span></code></pre></div>
+<p><strong>NOTE:</strong> Installing from GitHub requires compilation of Fortran and C source code contained in {rsofun}. To enable compiling source code, install <a href="https://cran.r-project.org/bin/windows/Rtools/" class="external-link">Rtools</a> on Windows, or <a href="https://developer.apple.com/xcode/" class="external-link">Xcode</a> and the <a href="https://github.com/fxcoudert/gfortran-for-macOS" class="external-link">GNU Fortran compiler on Mac</a> (see also ‘Mandatory tools’ <a href="https://mac.r-project.org/tools/" class="external-link">here</a>). On Linux, the gfortran compiler is usually installed already.</p>
 <p>Vignettes are not rendered by default, if you want to include additional documentation please use:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va"><a href="https://remotes.r-lib.org" class="external-link">remotes</a></span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span><span class="op">}</span></span>
