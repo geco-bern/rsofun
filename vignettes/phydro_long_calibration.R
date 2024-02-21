@@ -373,7 +373,21 @@ save(output_p_opt, file=paste0(file_prefix, "_phydro_output.rda"))
 
 plot_pmodel(output_p_opt, out_filename_prefix = fig_file_prefix)
 
-rmse = 
+# Calculate R2 and RMSE
+output_p_opt$data[[1]] %>% select(date, gpp, le) %>% 
+  drop_na %>% 
+  melt("date", value.name = "pred") %>% 
+  left_join(p_hydro_validation$data[[1]] %>% 
+              select(date, gpp, le) %>%
+              drop_na %>% 
+              # mutate(gpp = gpp*86400/1e6*12) %>% # convert to gC m-2 day-1
+              # mutate(le = le*86400) %>%  # convert W m-2 to J m-2 day-1 
+              melt("date", value.name = "obs")) %>% 
+  group_by(variable) %>% 
+  summarize(r2 = cor(pred,obs)^2, 
+            nrmse = sqrt(sum(pred-obs)^2/length(pred-obs))/mean(obs),
+            site = site) %>% 
+  write.csv(file=paste0(file_prefix, "_r2_nrmse.csv"), row.names = F)
 
 toc()
 
