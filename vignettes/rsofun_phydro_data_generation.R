@@ -31,7 +31,7 @@ args = commandArgs(trailingOnly=TRUE)
 #site <- "GF-Guy"
 if (length(args)==0) {
   #stop("At least one argument must be supplied: site name", call.=FALSE)
-  site = "GF-Guy"
+  site = "FR-Pue"
 }else{
   site = args[1]
 }

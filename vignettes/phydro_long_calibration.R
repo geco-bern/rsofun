@@ -18,7 +18,7 @@ args = commandArgs(trailingOnly=TRUE)
 #site <- "GF-Guy"
 if (length(args)==0) {
   #stop("At least one argument must be supplied: site name", call.=FALSE)
-  site = "GF-Guy"
+  site = "FR-Pue"
 }else{
   site = args[1]
 }
@@ -30,7 +30,7 @@ if (length(args)<2) {
 }
 
 if (length(args)<3) {
-  out_dir = "~/Downloads/fluxdatakit_oct3/phydro_output/"
+  out_dir = "~/Downloads/fluxdatakit_oct3/phydro_output_fixedkphio/"
 }else{
   out_dir = paste0(args[3],"/")
 }
@@ -219,55 +219,77 @@ gamma_mean = pars_joshi2022 %>%
   pull(mean)
 
 gamma_sd = pars_joshi2022 %>% 
-  filter(A.G == "Angiosperm" & name == "gamma") %>% 
-  pull(sd)
+  filter(A.G == type & name == "gamma") %>% 
+  pull(sd) %>% c(0.2) %>% max()
+
 
 print(c(gamma_mean, gamma_sd))
 
 uniform_range = function(lower, upper){
   list(lower= lower, upper=upper, mean = (upper+lower)/2, sd = (upper-lower)*10)
 }
+
 gaussian_range = function(mean, sd){
   if (mean > 0) list(lower= max(mean-5*sd, 0), upper=mean+5*sd, mean = mean, sd = sd)
   else          list(lower= mean-5*sd, upper=min(mean+5*sd, 0), mean = mean, sd = sd)
 }
 
+# par = list(
+#   kphio = list(lower=0.04, upper=0.09, init=0.05),
+#   phydro_K_plant = list(lower=0.05e-16, upper=0.3e-16, init=0.15e-16),
+#   phydro_p50_plant = list(lower=-3, upper=-0.5, init=-1),
+#   phydro_alpha = list(lower=0.06, upper=0.15, init=0.1),
+#   phydro_gamma = list(lower=0.5, upper=1.5, init=1),
+#   bsoil = list(lower=0.1, upper=10, init=3),
+#   Ssoil = list(lower=0.1, upper=1000, init=10),
+#   whc = list(lower=10, upper=5000, init=1000),
+#   err_gpp = list(lower = 0.01, upper = 4, init = 2),
+#   err_le = list(lower = 0.1e6, upper = 10e6, init = 2e6)
+# ),
+
+pars_calib = list(
+  # kphio = uniform_range(lower=0.005, upper=0.09),
+  # phydro_K_plant = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="K.scalar") %>% pull(mean),
+  #                                 sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="K.scalar") %>% pull(sd)),
+  # phydro_p50_plant = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="P50") %>% pull(mean),
+  #                                   sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="P50") %>% pull(sd)),
+  phydro_K_plant = uniform_range(lower=0.1e-16, 1e-16),
+  phydro_p50_plant = uniform_range(lower=-4, -0.3),
+  # phydro_alpha = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(mean),
+  #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(sd)),
+  # phydro_gamma = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(mean),
+  #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(sd)),
+  phydro_alpha = gaussian_range(mean = 0.11, sd = 0.02),
+  # phydro_gamma = uniform_range(lower = 0.1, upper = 2),
+  phydro_gamma = gaussian_range(mean = gamma_mean, sd = gamma_sd),
+  #bsoil = uniform_range(lower=0.1, upper=10),
+  Ssoil = uniform_range(lower = 0, upper = whc_site+whc_site_sd),
+  whc = gaussian_range(mean = whc_site, sd = whc_site_sd),
+  err_gpp = uniform_range(lower = 0.01, upper = 4),
+  err_le = uniform_range(lower = 0.1e6, upper = 10e6)
+)
+
+pars_fixed = list(         # fix all other parameters
+  kphio              = 0.045,
+  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+  kphio_par_b        = 1.0,
+  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+  tau_acclim         = 30.0,
+  kc_jmax            = 0.41,
+  # phydro_K_plant     = 0.3e-16,
+  # phydro_P50_plant     = -1,
+  phydro_b_plant     = 1,
+  # phydro_alpha       = 0.1,
+  # phydro_gamma       = 1
+  bsoil              = 3
+  # Ssoil              = 40,
+  # whc                = 90  
+)
+
 # Define calibration settings and parameter ranges from previous work
 settings_bayes <- list(
   method = "BayesianTools",
-  # par = list(
-  #   kphio = list(lower=0.04, upper=0.09, init=0.05),
-  #   phydro_K_plant = list(lower=0.05e-16, upper=0.3e-16, init=0.15e-16),
-  #   phydro_p50_plant = list(lower=-3, upper=-0.5, init=-1),
-  #   phydro_alpha = list(lower=0.06, upper=0.15, init=0.1),
-  #   phydro_gamma = list(lower=0.5, upper=1.5, init=1),
-  #   bsoil = list(lower=0.1, upper=10, init=3),
-  #   Ssoil = list(lower=0.1, upper=1000, init=10),
-  #   whc = list(lower=10, upper=5000, init=1000),
-  #   err_gpp = list(lower = 0.01, upper = 4, init = 2),
-  #   err_le = list(lower = 0.1e6, upper = 10e6, init = 2e6)
-  # ),
-  par = list(
-    kphio = uniform_range(lower=0.04, upper=0.09),
-    # phydro_K_plant = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="K.scalar") %>% pull(mean),
-    #                                 sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="K.scalar") %>% pull(sd)),
-    # phydro_p50_plant = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="P50") %>% pull(mean),
-    #                                   sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="P50") %>% pull(sd)),
-    phydro_K_plant = uniform_range(lower=0.1e-16, 5e-16),
-    phydro_p50_plant = uniform_range(lower=-4, -0.3),
-    # phydro_alpha = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(mean),
-    #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(sd)),
-    # phydro_gamma = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(mean),
-    #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(sd)),
-    phydro_alpha = gaussian_range(mean = 0.11, sd = 0.02),
-    # phydro_gamma = uniform_range(lower = 0.1, upper = 2),
-    phydro_gamma = gaussian_range(mean = gamma_mean, sd = gamma_sd),
-    #bsoil = uniform_range(lower=0.1, upper=10),
-    Ssoil = uniform_range(lower = 0, upper = whc_site+whc_site_sd),
-    whc = gaussian_range(mean = whc_site, sd = whc_site_sd),
-    err_gpp = uniform_range(lower = 0.01, upper = 4),
-    err_le = uniform_range(lower = 0.1e6, upper = 10e6)
-  ),
+  par = pars_calib,
   metric = rsofun::cost_likelihood_pmodel,
   control = list(
     sampler = "DEzs",
@@ -298,21 +320,7 @@ if (!plot_only){
     obs = p_hydro_validation,
     settings = settings_bayes,
     # extra arguments passed to the cost function:
-    par_fixed = list(         # fix all other parameters
-      kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
-      kphio_par_b        = 1.0,
-      rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-      tau_acclim         = 30.0,
-      kc_jmax            = 0.41,
-      # phydro_K_plant     = 0.3e-16,
-      # phydro_P50_plant     = -1,
-      phydro_b_plant     = 1,
-      # phydro_alpha       = 0.1,
-      # phydro_gamma       = 1
-      bsoil              = 3
-      # Ssoil              = 40,
-      # whc                = 90  
-    ),
+    par_fixed = pars_fixed,
     targets = c("gpp", "le")           # define target variable GPP
   )
   
@@ -349,16 +357,12 @@ pars_calib_bayes$par %>%
   mutate(site = site) %>% 
   write.csv(file = paste0(file_prefix, "_MAP.csv"), row.names = F)
 
-params_modl_opt = params_modl
+params_modl_opt = c(pars_calib_bayes$par, pars_fixed)
 
-params_modl_opt$kphio            = pars_calib_bayes$par[["kphio"]]
-params_modl_opt$phydro_K_plant   = pars_calib_bayes$par[["phydro_K_plant"]]
-params_modl_opt$phydro_p50_plant = pars_calib_bayes$par[["phydro_p50_plant"]]
-params_modl_opt$phydro_alpha     = pars_calib_bayes$par[["phydro_alpha"]]
-params_modl_opt$phydro_gamma     = pars_calib_bayes$par[["phydro_gamma"]]
-# params_modl_opt$bsoil            = pars_calib_bayes$par[["bsoil"]]
-params_modl_opt$Ssoil            = pars_calib_bayes$par[["Ssoil"]]
-params_modl_opt$whc              = pars_calib_bayes$par[["whc"]]
+if(params_modl_opt %>% names() %>% duplicated %>% any()){
+  message("Duplicated entries in optimal params")
+  stop()
+}
 
 output_p_opt <- rsofun::runread_pmodel_f(
   p_hydro_drivers,
@@ -369,6 +373,7 @@ save(output_p_opt, file=paste0(file_prefix, "_phydro_output.rda"))
 
 plot_pmodel(output_p_opt, out_filename_prefix = fig_file_prefix)
 
+rmse = 
 
 toc()
 

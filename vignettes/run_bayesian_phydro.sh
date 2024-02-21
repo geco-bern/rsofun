@@ -1,15 +1,15 @@
 #!/bin/bash
 
-NCORES=50
+NCORES=70
 
 # declare -a arr=$( ls ~/Downloads/fluxdatakit_oct3/FLUXDATAKIT_FLUXNET/*HH* | awk -F "_" '{print $4}' )
 
 declare -a arr=$( cat site_list_2.txt )
 
-generate_data=true
+generate_data=false
 
 data_path=/data/scratch/jaideep/fluxdata
-out_path=/data/scratch/jaideep/phydro_output
+out_path=/data/scratch/jaideep/phydro_output_fixedkphio
 # data_path=~/Downloads/fluxdatakit_oct3
 # out_path=~/Downloads/fluxdatakit_oct3/phydro_output
 
