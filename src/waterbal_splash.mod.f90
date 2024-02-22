@@ -294,8 +294,9 @@ contains
     real :: rho_water                       ! density of water (g m-3)
     real :: energy_to_mm                    ! Conversion factor to convert energy (J m-2 day) to mass (mm day-1)
     real :: f_soil_aet                      ! Fractional reduction of soil AET due to moisture limitation
-    real :: p_over_pet                      ! P/PET
-    real, save :: p_over_pet_memory = 1.0   ! precipitation over equilibrium evapotranspiration, damped variability
+    real :: p_over_pet_memory               ! P/PET
+    real, save :: p_memory = 0.0            ! precipitation, damped variability
+    real, save :: pet_memory = 0.0          ! equilibrium evapotranspiration, damped variability
   
     real :: rx                           ! variable substitute (mm/hr)/(W/m^2)
     real :: hi, cos_hi                   ! intersection hour angle, degrees
@@ -376,9 +377,11 @@ contains
       ! ^ Note: This is under wet conditions, as returned from phydro, so multiply by sw to get actual soil ET
 
       ! calculate totat AET = canopy_AET + f * soil_AET_wet, where f = running_avg(P/PET)
-      p_over_pet = (climate%dprec*86400) / (tile_fluxes%canopy%dpet_soil + 1e-6)
-      p_over_pet_memory = dampen_variability(p_over_pet , 30.0, p_over_pet_memory )   ! corresponds to f in Zhang et al., 2017 Eq. 9
-      f_soil_aet = sw/kCw ! min(p_over_pet_memory, 1.0)   ! previously was sw/kCw 
+      ! p_over_pet = (climate%dprec*86400) / (tile_fluxes%canopy%dpet_soil + 1e-6)
+      p_memory   = dampen_variability(climate%dprec*86400, 30.0, p_memory )   ! corresponds to f in Zhang et al., 2017 Eq. 9
+      pet_memory = dampen_variability(tile_fluxes%canopy%dpet_soil, 30.0, pet_memory )   ! corresponds to f in Zhang et al., 2017 Eq. 9
+      p_over_pet_memory = p_memory/(pet_memory + 1e-6)   ! corresponds to f in Zhang et al., 2017 Eq. 9
+      f_soil_aet = min(p_over_pet_memory, 1.0)   ! previously was sw/kCw 
       
       tile_fluxes%canopy%daet_soil = f_soil_aet * tile_fluxes%canopy%dpet_soil
       tile_fluxes%canopy%daet_e_soil = tile_fluxes%canopy%daet_soil / energy_to_mm

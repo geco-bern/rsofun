@@ -7,7 +7,7 @@ library(tictoc)
 library(ncdf4)
 
 plot_only = F
-debug = T
+debug = F
 
 tic("phydro")
 
@@ -220,7 +220,7 @@ gamma_mean = pars_joshi2022 %>%
 
 gamma_sd = pars_joshi2022 %>% 
   filter(A.G == type & name == "gamma") %>% 
-  pull(sd) %>% c(0.2) %>% max()
+  pull(sd) %>% c(0.1) %>% max()
 
 
 print(c(gamma_mean, gamma_sd))
@@ -369,6 +369,13 @@ output_p_opt <- rsofun::runread_pmodel_f(
   par = params_modl_opt
 )
 plot_pmodel(output_p_opt)
+
+output_p_opt$data[[1]] =
+  p_hydro_validation$data[[1]] %>% 
+  select(date, gpp, le) %>% 
+  rename(gpp_obs = gpp, le_obs = le) %>% 
+  right_join(output_p_opt$data[[1]])
+
 save(output_p_opt, file=paste0(file_prefix, "_phydro_output.rda"))
 
 plot_pmodel(output_p_opt, out_filename_prefix = fig_file_prefix)

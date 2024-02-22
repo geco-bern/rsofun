@@ -13,7 +13,7 @@ source("vignettes/read_meta_fdk.R")
 
 root_data_dir = "~/Downloads/fluxdatakit_oct3"
 lsm_path = paste0(root_data_dir, "/FLUXDATAKIT_LSM/")
-out_dir = "~/Desktop/phydro_output_3"
+out_dir = "~/Desktop/phydro_output_4_fixedkphio/"
 data_dir = paste0(root_data_dir, "/phydro_drivers/")
 figures_dir = paste0(out_dir, "/figures/")
 
@@ -72,12 +72,13 @@ all_data = map_all_sites %>%
 
 ## FANCY PAIRS PLOT ##
 all_data %>% 
-  select(kphio:whc, IGBP_veg_short) %>% 
+  select(phydro_K_plant:whc, IGBP_veg_short) %>% 
   mutate(phydro_K_plant = log10(phydro_K_plant),
          whc = log10(whc),
          Ssoil = log10(Ssoil),
-         phydro_p50_plant = log10(-phydro_p50_plant),
-         phydro_alpha = log10(phydro_alpha)) %>% 
+         # phydro_p50_plant = log10(-phydro_p50_plant),
+         # phydro_alpha = log10(phydro_alpha)
+         ) %>% 
   filter(IGBP_veg_short %in% c("SAV", "OSH", "GRA", "ENF", "EBF", "DBF", "CRO")) %>% 
   mutate(IGBP_veg_short = factor(IGBP_veg_short)) %>% 
   scatterPlotMatrix(distribType = 1, regressionType = 1, rotateTitle = F, zAxisDim = "IGBP_veg_short",
@@ -134,13 +135,25 @@ read_phydro_output = function(site){
     filter(stringr::str_detect(files, site)) %>% 
     filter(stringr::str_detect(files, "phydro_output.rda")) %>% 
     pull(files)
-  
+
   load(file)
   
   output_p_opt$data[[1]] %>% 
     select(date, gpp, le, jmax25, dpsi, psi_leaf) %>% 
     mutate(SITE_ID = site)
 }
+
+read_obs = function(site){
+  file_obs = tibble(files=list.files(data_dir, full.names = T)) %>% 
+    filter(stringr::str_detect(files, site)) %>% 
+    filter(stringr::str_detect(files, "p_hydro_validation.rda")) %>% 
+    pull(files)
+  
+  load(file_obs)
+  
+  p_hydro_validation$data[[1]] 
+}
+
 
 sites_phydro = tibble(files=list.files(out_dir)) %>% 
   filter(stringr::str_detect(files, "phydro_output.rda")) %>% 
@@ -157,6 +170,7 @@ vod_phydro = vod %>% left_join(phydro_out) %>%
 sites_vod_phydro = vod_phydro %>% group_by(SITE_ID) %>% count() %>% arrange(desc(n)) %>% pull(SITE_ID)
 
 for (i in seq(1,length(sites_vod_phydro), by=20)){
+  print(
   vod_phydro %>% 
     filter(SITE_ID %in% sites_vod_phydro[i:(i+20-1)]) %>% 
     mutate(vod_ratio = log(vod_night/vod_day)) %>% 
@@ -166,6 +180,7 @@ for (i in seq(1,length(sites_vod_phydro), by=20)){
     scale_colour_viridis_c()+
     facet_wrap("SITE_ID", scales="free")+
     guides(color="none")
+  )
 }
 
 
