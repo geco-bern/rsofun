@@ -170,7 +170,7 @@ the parameter values.</p>
 <span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span>,</span>
 <span>  error_gpp          <span class="op">=</span> <span class="fl">0.9</span>         <span class="co"># value from previous simulations</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] -22357.04</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] -45306.56</span></span></code></pre></div>
 <p>Some parameters are constrained by their physical interpretation
 (e.g. <code>kphio &gt; 0</code>) and it’s also necessary to provide a
 bounded parameter space for Morris’ method to sample the parameter
@@ -279,7 +279,13 @@ parameter, the more influential the parameter is.</p>
 <span>    axis.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>,</span>
 <span>    axis.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>    legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.95</span><span class="op">)</span>, legend.justification <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.95</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<span>  <span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: A numeric `legend.position` argument in `theme()` was deprecated in ggplot2</span></span>
+<span><span class="co">#&gt; 3.5.0.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use the `legend.position.inside` argument of `theme()` instead.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span></code></pre></div>
 <p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>The outcome of the Morris sensitivity analysis depends strongly on
 the choice of parameter ranges and how parameters interact with each
@@ -440,7 +446,7 @@ the <code>BayesianTools</code> library.</p>
 <span><span class="co">#&gt; kphio_par_b 1.008 17.256 16.638 17.262 17.957</span></span>
 <span><span class="co">#&gt; err_gpp     1.022  1.175  1.140  1.174  1.214</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ## DIC:  5738.56 </span></span>
+<span><span class="co">#&gt; ## DIC:  5022.956 </span></span>
 <span><span class="co">#&gt; ## Convergence </span></span>
 <span><span class="co">#&gt;  Gelman Rubin multivariate psrf:  1.035 </span></span>
 <span><span class="co">#&gt;  </span></span>
