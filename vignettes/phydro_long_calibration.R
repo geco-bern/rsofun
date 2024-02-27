@@ -225,6 +225,18 @@ gamma_sd = pars_joshi2022 %>%
 
 print(c(gamma_mean, gamma_sd))
 
+p50x_data = read.csv("ancillary_data/P50X2.csv")
+
+p50x_site = p50x_data %>% filter(IGBP_Guessed == p_hydro_drivers$site_info[[1]]$IGBP_veg_short)
+print(p50x_site)
+if (nrow(p50x_site > 0)){
+  p50xmean = mean(p50x_site$P50_mean)
+  p50xsd = mean(p50x_site$P50_sd)
+} else {
+  p50xmean = -3
+  p50xsd = 1
+}
+
 uniform_range = function(lower, upper){
   list(lower= lower, upper=upper, mean = (upper+lower)/2, sd = (upper-lower)*10)
 }
@@ -248,13 +260,14 @@ gaussian_range = function(mean, sd){
 # ),
 
 pars_calib = list(
-  # kphio = uniform_range(lower=0.005, upper=0.09),
+  kphio = uniform_range(lower=0.005, upper=0.09),
   # phydro_K_plant = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="K.scalar") %>% pull(mean),
   #                                 sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="K.scalar") %>% pull(sd)),
   # phydro_p50_plant = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="P50") %>% pull(mean),
   #                                   sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="P50") %>% pull(sd)),
   phydro_K_plant = uniform_range(lower=0.1e-16, 1e-16),
-  phydro_p50_plant = uniform_range(lower=-4, -0.3),
+  # phydro_p50_plant = uniform_range(lower=-4, -0.3),
+  phydro_p50_plant = gaussian_range(mean = p50xmean/3, sd = p50xsd/3),  
   # phydro_alpha = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(mean),
   #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(sd)),
   # phydro_gamma = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(mean),
@@ -270,7 +283,7 @@ pars_calib = list(
 )
 
 pars_fixed = list(         # fix all other parameters
-  kphio              = 0.045,
+  # kphio              = 0.045,
   kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
   kphio_par_b        = 1.0,
   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous

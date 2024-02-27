@@ -13,7 +13,7 @@ source("vignettes/read_meta_fdk.R")
 
 root_data_dir = "~/Downloads/fluxdatakit_oct3"
 lsm_path = paste0(root_data_dir, "/FLUXDATAKIT_LSM/")
-out_dir = "~/Desktop/phydro_output_4_fixedkphio/"
+out_dir = "~/Desktop/phydro_output_5_fixedkphio/"
 data_dir = paste0(root_data_dir, "/phydro_drivers/")
 figures_dir = paste0(out_dir, "/figures/")
 
@@ -139,7 +139,7 @@ read_phydro_output = function(site){
   load(file)
   
   output_p_opt$data[[1]] %>% 
-    select(date, gpp, le, jmax25, dpsi, psi_leaf) %>% 
+    select(date, gpp, le, jmax25, dpsi, psi_leaf, gpp_obs, le_obs) %>% 
     mutate(SITE_ID = site)
 }
 
@@ -174,7 +174,7 @@ for (i in seq(1,length(sites_vod_phydro), by=20)){
   vod_phydro %>% 
     filter(SITE_ID %in% sites_vod_phydro[i:(i+20-1)]) %>% 
     mutate(vod_ratio = log(vod_night/vod_day)) %>% 
-    ggplot(aes(y=vod_ratio, x=dpsi)) +
+    ggplot(aes(y=gpp, x=gpp_obs)) +
     geom_pointdensity() + 
     geom_smooth(method="lm", formula=y~0+x, col="orange", linewidth=0.5)+
     scale_colour_viridis_c()+
