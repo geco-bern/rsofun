@@ -91,6 +91,7 @@
 #'   \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. WARNING: this is currently ignored as a model forcing. Instead, net radiation is internally calculated by SPLASH.}
 #'   \item{\code{wcont}}{Soil water content, in mm.}
 #'   \item{\code{snow}}{Snow water equivalents, in mm.}
+#'   \item{\code{cond}}{Water input by condensation, in mm d\eqn{^{-1}}}
 #'   } 
 #'   
 #' @details Depending on the input model parameters, it's possible to run the 
@@ -386,7 +387,8 @@ run_pmodel_f_bysite <- function(
           "tsoil", 
           "netrad", 
           "wcont", 
-          "snow")
+          "snow",
+          "cond")
         ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -410,7 +412,8 @@ run_pmodel_f_bysite <- function(
                   tsoil = NA, 
                   netrad = NA,
                   wcont = NA, 
-                  snow = NA)
+                  snow = NA,
+                  cond = NA)
   }
     
   return(out)

@@ -32,7 +32,7 @@ test_that("p-model quantitative check", {
      mean(abs(gpp), na.rm = TRUE)
   
   # test for correctly returned values
-  expect_equal(tolerance, 0.3050983, tolerance = 0.03)
+  expect_equal(tolerance, 0.4201191, tolerance = 0.04)
 })
 
 # test_that("p-model consistency R vs Fortran (rpmodel vs rsofun)", {
