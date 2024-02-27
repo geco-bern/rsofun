@@ -106,7 +106,7 @@ Model output is provided as a tidy dataframe, with columns:
   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
-  \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. If not an input driver, calculated by SPLASH.}
+  \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. WARNING: this is currently ignored as a model forcing. Instead, net radiation is internally calculated by SPLASH.}
   \item{\code{wcont}}{Soil water content, in mm.}
   \item{\code{snow}}{Snow water equivalents, in mm.}
   }
