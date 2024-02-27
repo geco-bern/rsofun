@@ -1,8 +1,13 @@
 Dear CRAN team,
 
-This is the re-submission of the {rsofun} package. We have removed non-default lower bound specification in derived type, in order to fix the compilation issues that appeared in the Debian check.
+This is the re-submission of the {rsofun} package v4.4.1. 
 
-We were not able to reproduce the error shown by Prof. Ligges but have tried to solve the issue anyways, and our checks pass cleanly. If other issues arise or this one is still present, we would need to be provided with the configuration of the machine used to run the checks on CRAN's end. This way, we could reproduce the error and see if our changes get rid of it.
+In order to correct the outcome of the automatic CRAN checks, we have removed the 
+-fc-prototypes-external flag for flang compilers. Our local and GitHub checks
+pass, and we hope that the previous changes on the Fortran code alone correct
+the failure of our previous release.
+
+Thank you for your time and support.
 
 ---
 
