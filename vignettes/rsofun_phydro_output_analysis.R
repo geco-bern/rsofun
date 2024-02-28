@@ -9,11 +9,12 @@ library(scatterPlotMatrix)
 library(ggpointdensity)
 
 plot_only = F
+
 source("vignettes/read_meta_fdk.R")
 
 root_data_dir = "~/Downloads/fluxdatakit_oct3"
 lsm_path = paste0(root_data_dir, "/FLUXDATAKIT_LSM/")
-out_dir = "~/Desktop/phydro_output_5_fixedkphio/"
+out_dir = "~/Desktop/phydro_output_6_p50priors/"
 data_dir = paste0(root_data_dir, "/phydro_drivers/")
 figures_dir = paste0(out_dir, "/figures/")
 
@@ -114,6 +115,33 @@ all_data %>%
   geom_abline(slope = 1)
 
 
+r2_all_sites = tibble(filename=list.files(out_dir, full.names = T)) %>% 
+  filter(str_detect(filename, "r2_nrmse.csv")) %>% 
+  pull(filename) %>% 
+  map_df(~read.csv(.)) 
+
+world <- map_data("world")
+r2_all_sites %>% 
+  left_join(sites_meta, by=c("site"="sitename")) %>% 
+  ggplot() +
+  theme_classic()+
+  geom_map(
+    data = world, map = world,
+    aes(long, lat, map_id = region),
+    color = "black", fill= "grey90", size=0.05
+  ) +
+  geom_point(aes(x=longitude, y=latitude, color=r2))+
+  scale_color_gradient2(mid = "cyan", midpoint = 0.5, low = "red", high="blue", limits=c(0,1))+
+  facet_wrap(~variable, nrow = 2)
+
+r2_all_sites %>% 
+  left_join(sites_meta, by=c("site"="sitename")) %>% 
+  select(variable, r2, IGBP_veg_short) %>% 
+  ggplot(aes(x=IGBP_veg_short, y=r2, fill=IGBP_veg_short)) + 
+  geom_violin(scale = "width", width=0.4) + 
+  facet_wrap(~variable, nrow=2)
+  
+
 #### Water potentials analysis ####
 
 vod_day = readxl::read_excel("~/Downloads/AMSR_fluxnet_data.xlsx", sheet = "VOD_ASC_filtered_qa(1_30_PM)")
@@ -174,7 +202,7 @@ for (i in seq(1,length(sites_vod_phydro), by=20)){
   vod_phydro %>% 
     filter(SITE_ID %in% sites_vod_phydro[i:(i+20-1)]) %>% 
     mutate(vod_ratio = log(vod_night/vod_day)) %>% 
-    ggplot(aes(y=gpp, x=gpp_obs)) +
+    ggplot(aes(y=vod_ratio, x=le_obs)) +
     geom_pointdensity() + 
     geom_smooth(method="lm", formula=y~0+x, col="orange", linewidth=0.5)+
     scale_colour_viridis_c()+

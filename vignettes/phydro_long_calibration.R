@@ -204,15 +204,15 @@ pars_joshi2022 = parjj %>%
   summarize(mean=mean(value), sd=sd(value), n=length(value))
 
 
-# igbp = "WSA"
-type = p_hydro_drivers$site_info[[1]]$IGBP_veg_short %>% 
+igbp = p_hydro_drivers$site_info[[1]]$IGBP_veg_short # "WSA"
+type = igbp %>% 
   case_match(c("WSA", "EBF", "DBF") ~ "Angiosperm",
              c("ENF") ~ "Gymnosperm",
              c("OSH", "CSH") ~ "Shrub",
              c("GRA", "CRO", "SAV") ~ "Shrub",
              c("MF", "WET") ~ "Angiosperm")
 
-message("type = ", p_hydro_drivers$site_info[[1]]$IGBP_veg_short, " --> " ,type, "\n")
+message("type = ", igbp, " --> " ,type, "\n")
 
 gamma_mean = pars_joshi2022 %>% 
   filter(A.G == type & name == "gamma") %>% 
@@ -227,7 +227,7 @@ print(c(gamma_mean, gamma_sd))
 
 p50x_data = read.csv("ancillary_data/P50X2.csv")
 
-p50x_site = p50x_data %>% filter(IGBP_Guessed == p_hydro_drivers$site_info[[1]]$IGBP_veg_short)
+p50x_site = p50x_data %>% filter(IGBP_Guessed == igbp)
 print(p50x_site)
 if (nrow(p50x_site > 0)){
   p50xmean = mean(p50x_site$P50_mean)
@@ -272,7 +272,7 @@ pars_calib = list(
   #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(sd)),
   # phydro_gamma = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(mean),
   #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(sd)),
-  phydro_alpha = gaussian_range(mean = 0.11, sd = 0.02),
+  phydro_alpha = gaussian_range(mean = 0.1, sd = 0.005),
   # phydro_gamma = uniform_range(lower = 0.1, upper = 2),
   phydro_gamma = gaussian_range(mean = gamma_mean, sd = gamma_sd),
   #bsoil = uniform_range(lower=0.1, upper=10),
@@ -343,7 +343,7 @@ if (!plot_only){
   load(calib_file)
 }
 
-fig_file_prefix = paste0(figures_dir, site, "_nchains_",
+fig_file_prefix = paste0(figures_dir, site, "_", igbp, "_nchains_",
                          settings_bayes$control$settings$nrChains,
                          "_nsteps_",
                          settings_bayes$control$settings$iterations,
