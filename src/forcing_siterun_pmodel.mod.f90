@@ -89,11 +89,7 @@ contains
     else
       out_climate(:)%dnetrad = dummy
     end if
-    if ( in_netrad .and. in_ppfd ) then
-      out_climate(:)%dfsun = dummy
-    else
-      out_climate(:)%dfsun = real(forcing(idx_start:idx_end, 6))
-    end if
+    out_climate(:)%dfsun   = real(forcing(idx_start:idx_end, 6))
     out_climate(:)%dsnow   = real(forcing(idx_start:idx_end, 7))
     out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 10))
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 11))

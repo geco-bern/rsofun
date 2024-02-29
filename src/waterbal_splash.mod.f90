@@ -237,23 +237,26 @@ contains
     ! 13. Calculate daytime total net radiation (tile_fluxes%canopy%drn), J m-2 d-1
     !---------------------------------------------------------
     ! Eq. 53, SPLASH 2.0 Documentation
-    if (in_netrad) then
-      tile_fluxes(:)%canopy%drn = climate%dnetrad * myinterface%params_siml%secs_per_tstep
-    else
-      tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
-    end if
+    ! if (in_netrad) then
+    !   tile_fluxes(:)%canopy%drn = climate%dnetrad * myinterface%params_siml%secs_per_tstep
+    ! else
+    !   tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
+    ! end if
+    tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
 
     !---------------------------------------------------------
     ! 14. Calculate nighttime total net radiation (tile_fluxes(:)%canopy%drnn), J m-2 d-1
     !---------------------------------------------------------
     ! Eq. 56, SPLASH 2.0 Documentation
     ! adopted bugfix from Python version (iss#13)
-    if (in_netrad) then
-      tile_fluxes(:)%canopy%drnn = 0.0
-    else  
-      tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
-        tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
-    end if
+    ! if (in_netrad) then
+    !   tile_fluxes(:)%canopy%drnn = 0.0
+    ! else  
+    !   tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
+    !     tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
+    ! end if
+    tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
+      tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
 
     ! if (splashtest) then
     !   print*,'transmittivity, tau: ', tau
@@ -357,8 +360,6 @@ contains
     tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
       radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
     tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)
-
-    ! print*,'in waterbal: sw, hi, rx, rw, rv, hn, hi, ru ', sw, hi, rx, rw, rv, hn, hi, ru
     
     ! xxx debug
     ! if (splashtest) then

@@ -194,6 +194,7 @@ contains
                                      / myinterface%params_siml%secs_per_tstep                 ! output in W m-2 
         out_biosphere%wcont(doy)   = tile(1)%soil%phy%wcont
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
+        out_biosphere%cond(doy)    = tile_fluxes(1)%canopy%dcn
 
         init_daily = .false.
 
