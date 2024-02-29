@@ -536,7 +536,7 @@ contains
     ! shortwave albedo (Federer, 1968)
     kalb_sw  = 0.17
     
-    ! visible light albedo (Sellers, 1985) xxx planetary albedo? xxx
+    ! visible light albedo (Sellers, 1985)
     kalb_vis = 0.03
     
     ! constant for dRnl (Linacre, 1968)
