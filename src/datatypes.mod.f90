@@ -867,7 +867,7 @@ contains
   end subroutine summarize_tile
 
 
-  subroutine hourly_diagnostics(vegn, forcing, iyears, idoy, ihour)  ! , out_hourly_tile
+  subroutine hourly_diagnostics(vegn, forcing)  !, iyears, idoy, ihour, out_hourly_tile
     !////////////////////////////////////////////////////////////////////////
     ! Updates sub-daily tile-level variables and takes running daily sums
     !------------------------------------------------------------------------
@@ -876,7 +876,7 @@ contains
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type),intent(in):: forcing
-    integer, intent(in) :: iyears, idoy, ihour
+    ! integer, intent(in) :: iyears, idoy, ihour
     ! type(outtype_hourly_tile),intent(out) :: out_hourly_tile 
 
     ! local variables
