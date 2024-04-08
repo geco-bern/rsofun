@@ -43,7 +43,6 @@ contains
     integer:: i
     real   :: tair, tsoil  ! temperature of soil, degC
     real   :: theta        ! soil wetness, unitless
-    integer :: iyears
 
     ! Climatic variable
     tair   = forcing%Tair - 273.16   ! conversion to degC
@@ -718,10 +717,10 @@ contains
     real :: dn ! number of trees that died due to CAI_partial>CAI_max
     real :: param_dbh_under 
     real :: param_nsc_under 
-    real :: param_gr_under
+    ! real :: param_gr_under
     real :: param_dbh 
     real :: param_nsc 
-    real :: param_gr
+    ! real :: param_gr
     real :: CAI_max
 
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
@@ -813,24 +812,24 @@ contains
             endif
           endif
 
-        else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
+        ! else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           
-          ! set calibratable parameter
-          param_gr_under = myinterface%params_tile%par_mort_under
-          param_gr       = myinterface%params_tile%par_mort
+        !   ! set calibratable parameter
+        !   param_gr_under = myinterface%params_tile%par_mort_under
+        !   param_gr       = myinterface%params_tile%par_mort
 
-          ! Understory mortality
-          if (cc%layer > 1) then !
-            deathrate = param_gr_under * sp%mortrate_d_u * &
-                     (1. + A_mort*exp(B_mort*cc%dbh))/ &
-                     (1. +        exp(B_mort*cc%dbh)) 
-          else  
-          ! Canopy mortality
-          ! deathrate = param_gr * 0.05 *    &
-          !                  (1.*exp(1*(cc%psapw%c%c12+cc%pwood%c%c12-cc%ABG_ys-6.0))/ &
-          !                  (1. + exp(1*(cc%psapw%c%c12+cc%pwood%c%c12-cc%ABG_ys-6.0))))
-          deathrate = min(1.0, param_dbh * 0.015 * cc%dbh ** 1.5) ! 1.5, 1.6, 1.7
-          endif
+        !   ! Understory mortality
+        !   if (cc%layer > 1) then !
+        !     deathrate = param_gr_under * sp%mortrate_d_u * &
+        !              (1. + A_mort*exp(B_mort*cc%dbh))/ &
+        !              (1. +        exp(B_mort*cc%dbh)) 
+        !   else  
+        !   ! Canopy mortality
+        !   ! deathrate = param_gr * 0.05 *    &
+        !   !                  (1.*exp(1*(cc%psapw%c%c12+cc%pwood%c%c12-cc%ABG_ys-6.0))/ &
+        !   !                  (1. + exp(1*(cc%psapw%c%c12+cc%pwood%c%c12-cc%ABG_ys-6.0))))
+        !   deathrate = min(1.0, param_dbh * 0.015 * cc%dbh ** 1.5) ! 1.5, 1.6, 1.7
+        !   endif
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
@@ -838,7 +837,7 @@ contains
           param_dbh_under = myinterface%params_tile%par_mort_under
           param_dbh       = myinterface%params_tile%par_mort
 
-          if (sp%lifeform == 0)then  ! for grasses
+          if (sp%lifeform == 0) then  ! for grasses
             if (cc%layer > 1) then
               deathrate = sp%mortrate_d_u
             else
@@ -851,7 +850,7 @@ contains
                      (1.0 +        exp(B_mort*cc%dbh)) 
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
-              if(myinterface%params_siml%do_U_shaped_mortality)then
+              if (myinterface%params_siml%do_U_shaped_mortality) then
                 ! deathrate = param_dbh * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh-1))/  &
                 !            (1. + exp(2.*(cc%dbh-1))))
@@ -2142,7 +2141,7 @@ contains
     type(cohort_type), dimension(:), pointer :: cc
     type(cohort_type), pointer :: cx
     integer,parameter :: rand_seed = 86456
-    real    :: r
+    ! real    :: r
     real    :: btotal
     integer :: i, istat
     ! integer :: io           ! i/o status for the namelist
@@ -2171,65 +2170,65 @@ contains
     par_mort_under  = myinterface%params_tile%par_mort_under  !calibratable
 
     !  Read parameters from the parameter file (namelist)
-    if (read_from_parameter_file) then
 
-      ! Initialize plant cohorts
-      init_n_cohorts = nCohorts ! Weng,2018-11-21
-      allocate(cc(1:init_n_cohorts), STAT = istat)
-      vegn%cohorts => cc
-      vegn%n_cohorts = init_n_cohorts
-      cc => null()
+    ! Initialize plant cohorts
+    init_n_cohorts = nCohorts ! Weng,2018-11-21
+    allocate(cc(1:init_n_cohorts), STAT = istat)
+    vegn%cohorts => cc
+    vegn%n_cohorts = init_n_cohorts
+    cc => null()
 
-      do i=1,init_n_cohorts
-        cx => vegn%cohorts(i)
-        cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
-        cx%layer   = 1
-        cx%species = INT(myinterface%init_cohort(i)%init_cohort_species)
-        cx%ccID    =  i
-        cx%plabl%c%c12     = myinterface%init_cohort(i)%init_cohort_nsc
-        cx%nindivs = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
-        cx%psapw%c%c12     = myinterface%init_cohort(i)%init_cohort_bsw
-        cx%pwood%c%c12     = myinterface%init_cohort(i)%init_cohort_bHW
-        btotal     = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
-        call initialize_cohort_from_biomass(cx,btotal)
-      enddo
-      MaxCohortID = cx%ccID
+    cx => vegn%cohorts(1)  ! to avoid compiler warning
+    do i=1,init_n_cohorts
+      cx => vegn%cohorts(i)
+      cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
+      cx%layer   = 1
+      cx%species = INT(myinterface%init_cohort(i)%init_cohort_species)
+      cx%ccID    =  i
+      cx%plabl%c%c12     = myinterface%init_cohort(i)%init_cohort_nsc
+      cx%nindivs = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
+      cx%psapw%c%c12     = myinterface%init_cohort(i)%init_cohort_bsw
+      cx%pwood%c%c12     = myinterface%init_cohort(i)%init_cohort_bHW
+      btotal     = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
+      call initialize_cohort_from_biomass(cx,btotal)
+    enddo
+    MaxCohortID = cx%ccID
 
-      ! Sorting these cohorts
-      call relayer_cohorts( vegn )
+    ! Sorting these cohorts
+    call relayer_cohorts( vegn )
 
-      ! Initial Soil pools and environmental conditions
-      vegn%psoil_fs%c%c12   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
-      vegn%psoil_sl%c%c12  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
-      vegn%psoil_fs%n%n14   = vegn%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-      vegn%psoil_sl%n%n14  = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-      vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
-      vegn%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
-      vegn%previousN    = vegn%ninorg%n14
+    ! Initial Soil pools and environmental conditions
+    vegn%psoil_fs%c%c12   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
+    vegn%psoil_sl%c%c12  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+    vegn%psoil_fs%n%n14   = vegn%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
+    vegn%psoil_sl%n%n14  = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
+    vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
+    vegn%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
+    vegn%previousN    = vegn%ninorg%n14
 
-      ! Soil water parameters
-      vegn%soiltype = myinterface%params_tile%soiltype    
-      vegn%FLDCAP = myinterface%params_tile%FLDCAP  
-      vegn%WILTPT = myinterface%params_tile%WILTPT  
+    ! Soil water parameters
+    vegn%soiltype = myinterface%params_tile%soiltype    
+    vegn%FLDCAP = myinterface%params_tile%FLDCAP  
+    vegn%WILTPT = myinterface%params_tile%WILTPT  
 
-      ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
-      vegn%wcl = myinterface%params_tile%FLDCAP  
-      ! Update soil water
-      vegn%SoilWater = 0.0
-      do i=1, max_lev
-        vegn%SoilWater = vegn%SoilWater + vegn%wcl(i)*thksl(i)*1000.0
-      enddo
-      vegn%thetaS = 1.0
-      ! tile
-      call summarize_tile( vegn )
-      vegn%initialN0 =  vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
-                        vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
-                        vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
-                        vegn%psoil_sl%n%n14 + vegn%ninorg%n14
-      vegn%totN =  vegn%initialN0
+    ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
+    vegn%wcl = myinterface%params_tile%FLDCAP  
 
-    endif  ! initialization: random or pre-described
-  
+    ! Update soil water
+    vegn%SoilWater = 0.0
+    do i=1, max_lev
+      vegn%SoilWater = vegn%SoilWater + vegn%wcl(i)*thksl(i)*1000.0
+    enddo
+    vegn%thetaS = 1.0
+
+    ! tile
+    call summarize_tile( vegn )
+    vegn%initialN0 =  vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
+                      vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
+                      vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
+                      vegn%psoil_sl%n%n14 + vegn%ninorg%n14
+    vegn%totN =  vegn%initialN0
+
   end subroutine initialize_vegn_tile
 
 end module md_vegetation_biomee

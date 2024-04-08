@@ -38,7 +38,6 @@ module md_waterbal
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
   !----------------------------------------------------------------
   real :: dr                           ! distance factor
-  real :: delta                        ! declination angle 
   real :: hs                           ! sunset hour angle
   real :: hn                           ! net radiation cross-over hour angle
   real :: tau                          ! transmittivity (unitless)
@@ -137,7 +136,7 @@ contains
   end subroutine waterbal
 
 
-  subroutine solar( tile_fluxes, grid, climate, doy, in_netrad )
+  subroutine solar( tile_fluxes, grid, climate, doy ) 
     !/////////////////////////////////////////////////////////////////////////
     ! This subroutine calculates daily PPFD. Code is an extract of the subroutine
     ! 'evap', adopted from the evap() function in GePiSaT (Python version). 
@@ -151,7 +150,7 @@ contains
     type(gridtype), intent(inout)                         :: grid
     type(climate_type), intent(in)                        :: climate
     integer, intent(in)                                   :: doy        ! day of year
-    logical, intent(in)                                   :: in_netrad
+    ! logical, intent(in)                                   :: in_netrad
 
     !---------------------------------------------------------
     ! 2. Calculate heliocentric longitudes (nu and lambda), degrees
@@ -172,7 +171,7 @@ contains
     dr = calc_dr( grid%nu )
 
     !---------------------------------------------------------
-    ! 4. Calculate declination angle (delta), degrees
+    ! 4. Calculate declination angle, degrees
     !---------------------------------------------------------
     grid%decl_angle = calc_decl_angle( grid%lambda )
 
@@ -529,8 +528,6 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
-
     ! constant for dRnl (Monteith & Unsworth, 1990)
     kA       = 107.0
     
