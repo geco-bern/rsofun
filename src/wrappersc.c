@@ -269,7 +269,7 @@ extern SEXP biomee_f_C(
     ){
 
     // // Number of time steps (same in forcing and output)
-    const int nt = INTEGER(n)[0];
+    // const int nt = INTEGER(n)[0];
     const int nt_daily = INTEGER(n_daily)[0];
     const int nt_annual = INTEGER(n_annual)[0];
     const int nt_annual_cohorts = INTEGER(n_annual_cohorts)[0];
