@@ -1,6 +1,10 @@
 # PKG_FFLAGS = -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -O1 -Wall -Wextra -pedantic -fbacktrace -fPIC -fmax-errors=1 -ggdb -fcheck=all
 # PKG_FFLAGS = -fbounds-check
 
+# Add package flags:
+# -frecursive: to avoid "Warning: Array 'out_biosphere' at (1) is larger than limit ..."
+PKG_FFLAGS = -frecursive
+
 # C objects
 C_OBJS = wrappersc.o
 
