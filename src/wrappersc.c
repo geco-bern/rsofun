@@ -157,7 +157,7 @@ void F77_NAME(biomee_f)(
     int    *nt_annual,                
     int    *nt_annual_cohorts,                
     double *forcing,                  
-    double *output_hourly_tile,   
+    // double *output_hourly_tile,   
     double *output_daily_tile,    
     double *output_daily_cohorts_year,
     double *output_daily_cohorts_doy,
@@ -275,7 +275,7 @@ extern SEXP biomee_f_C(
     const int nt_annual_cohorts = INTEGER(n_annual_cohorts)[0];
 
     // // Specify output
-    SEXP output_hourly_tile            = PROTECT( allocMatrix(REALSXP, nt,       15) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    // SEXP output_hourly_tile            = PROTECT( allocMatrix(REALSXP, nt,       15) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_daily_tile             = PROTECT( allocMatrix(REALSXP, nt_daily, 35) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_daily_cohorts_year     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_doy      = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
@@ -383,7 +383,7 @@ extern SEXP biomee_f_C(
         INTEGER(n_annual),                
         INTEGER(n_annual_cohorts),                
         REAL(forcing),             
-        REAL(output_hourly_tile),  
+        // REAL(output_hourly_tile),  
         REAL(output_daily_tile),    
         REAL(output_daily_cohorts_year),
         REAL(output_daily_cohorts_doy),
@@ -445,71 +445,69 @@ extern SEXP biomee_f_C(
         );
 
     // // Output as list
-    SEXP out_list = PROTECT( allocVector(VECSXP, 59) );  // maybe try  STRSXP instead of VECSXP
+    SEXP out_list = PROTECT( allocVector(VECSXP, 58) );  // maybe try  STRSXP instead of VECSXP
     
-    SET_VECTOR_ELT(out_list, 0,  output_hourly_tile);
-    SET_VECTOR_ELT(out_list, 1,  output_daily_tile);
-    SET_VECTOR_ELT(out_list, 2,  output_daily_cohorts_year ); 
-    SET_VECTOR_ELT(out_list, 3,  output_daily_cohorts_doy );  
-    SET_VECTOR_ELT(out_list, 4,  output_daily_cohorts_hour );  
-    SET_VECTOR_ELT(out_list, 5,  output_daily_cohorts_cID );  
-    SET_VECTOR_ELT(out_list, 6,  output_daily_cohorts_PFT );  
-    SET_VECTOR_ELT(out_list, 7,  output_daily_cohorts_layer );  
-    SET_VECTOR_ELT(out_list, 8,  output_daily_cohorts_density );  
-    SET_VECTOR_ELT(out_list, 9,  output_daily_cohorts_f_layer );  
-    SET_VECTOR_ELT(out_list, 10, output_daily_cohorts_LAI );  
-    SET_VECTOR_ELT(out_list, 11, output_daily_cohorts_gpp );  
-    SET_VECTOR_ELT(out_list, 12, output_daily_cohorts_resp );  
-    SET_VECTOR_ELT(out_list, 13, output_daily_cohorts_transp );  
-    SET_VECTOR_ELT(out_list, 14, output_daily_cohorts_NPPleaf );  
-    SET_VECTOR_ELT(out_list, 15, output_daily_cohorts_NPProot );  
-    SET_VECTOR_ELT(out_list, 16, output_daily_cohorts_NPPwood );  
-    SET_VECTOR_ELT(out_list, 17, output_daily_cohorts_NSC );  
-    SET_VECTOR_ELT(out_list, 18, output_daily_cohorts_seedC );  
-    SET_VECTOR_ELT(out_list, 19, output_daily_cohorts_leafC );  
-    SET_VECTOR_ELT(out_list, 20, output_daily_cohorts_rootC );  
-    SET_VECTOR_ELT(out_list, 21, output_daily_cohorts_SW_C );  
-    SET_VECTOR_ELT(out_list, 22, output_daily_cohorts_HW_C );  
-    SET_VECTOR_ELT(out_list, 23, output_daily_cohorts_NSN );  
-    SET_VECTOR_ELT(out_list, 24, output_daily_cohorts_seedN );  
-    SET_VECTOR_ELT(out_list, 25, output_daily_cohorts_leafN );  
-    SET_VECTOR_ELT(out_list, 26, output_daily_cohorts_rootN );  
-    SET_VECTOR_ELT(out_list, 27, output_daily_cohorts_SW_N );  
-    SET_VECTOR_ELT(out_list, 28, output_daily_cohorts_HW_N );  
+    // SET_VECTOR_ELT(out_list, 0,  output_hourly_tile);
+    SET_VECTOR_ELT(out_list, 0,  output_daily_tile);
+    SET_VECTOR_ELT(out_list, 1,  output_daily_cohorts_year ); 
+    SET_VECTOR_ELT(out_list, 2,  output_daily_cohorts_doy );  
+    SET_VECTOR_ELT(out_list, 3,  output_daily_cohorts_hour );  
+    SET_VECTOR_ELT(out_list, 4,  output_daily_cohorts_cID );  
+    SET_VECTOR_ELT(out_list, 5,  output_daily_cohorts_PFT );  
+    SET_VECTOR_ELT(out_list, 6,  output_daily_cohorts_layer );  
+    SET_VECTOR_ELT(out_list, 7,  output_daily_cohorts_density );  
+    SET_VECTOR_ELT(out_list, 8,  output_daily_cohorts_f_layer );  
+    SET_VECTOR_ELT(out_list, 9,  output_daily_cohorts_LAI );  
+    SET_VECTOR_ELT(out_list, 10, output_daily_cohorts_gpp );  
+    SET_VECTOR_ELT(out_list, 11, output_daily_cohorts_resp );  
+    SET_VECTOR_ELT(out_list, 12, output_daily_cohorts_transp );  
+    SET_VECTOR_ELT(out_list, 13, output_daily_cohorts_NPPleaf );  
+    SET_VECTOR_ELT(out_list, 14, output_daily_cohorts_NPProot );  
+    SET_VECTOR_ELT(out_list, 15, output_daily_cohorts_NPPwood );  
+    SET_VECTOR_ELT(out_list, 16, output_daily_cohorts_NSC );  
+    SET_VECTOR_ELT(out_list, 17, output_daily_cohorts_seedC );  
+    SET_VECTOR_ELT(out_list, 18, output_daily_cohorts_leafC );  
+    SET_VECTOR_ELT(out_list, 19, output_daily_cohorts_rootC );  
+    SET_VECTOR_ELT(out_list, 20, output_daily_cohorts_SW_C );  
+    SET_VECTOR_ELT(out_list, 21, output_daily_cohorts_HW_C );  
+    SET_VECTOR_ELT(out_list, 22, output_daily_cohorts_NSN );  
+    SET_VECTOR_ELT(out_list, 23, output_daily_cohorts_seedN );  
+    SET_VECTOR_ELT(out_list, 24, output_daily_cohorts_leafN );  
+    SET_VECTOR_ELT(out_list, 25, output_daily_cohorts_rootN );  
+    SET_VECTOR_ELT(out_list, 26, output_daily_cohorts_SW_N );  
+    SET_VECTOR_ELT(out_list, 27, output_daily_cohorts_HW_N );  
+    SET_VECTOR_ELT(out_list, 28, output_annual_tile);
+    SET_VECTOR_ELT(out_list, 29, output_annual_cohorts_year);
+    SET_VECTOR_ELT(out_list, 30, output_annual_cohorts_cID);
+    SET_VECTOR_ELT(out_list, 31, output_annual_cohorts_PFT);
+    SET_VECTOR_ELT(out_list, 32, output_annual_cohorts_layer);
+    SET_VECTOR_ELT(out_list, 33, output_annual_cohorts_density);
+    SET_VECTOR_ELT(out_list, 34, output_annual_cohorts_f_layer);
+    SET_VECTOR_ELT(out_list, 35, output_annual_cohorts_dDBH);
+    SET_VECTOR_ELT(out_list, 36, output_annual_cohorts_dbh);
+    SET_VECTOR_ELT(out_list, 37, output_annual_cohorts_height);
+    SET_VECTOR_ELT(out_list, 38, output_annual_cohorts_age);
+    SET_VECTOR_ELT(out_list, 39, output_annual_cohorts_Acrown);
+    SET_VECTOR_ELT(out_list, 40, output_annual_cohorts_wood);
+    SET_VECTOR_ELT(out_list, 41, output_annual_cohorts_nsc);
+    SET_VECTOR_ELT(out_list, 42, output_annual_cohorts_NSN);
+    SET_VECTOR_ELT(out_list, 43, output_annual_cohorts_NPPtr);
+    SET_VECTOR_ELT(out_list, 44, output_annual_cohorts_seed);
+    SET_VECTOR_ELT(out_list, 45, output_annual_cohorts_NPPL);
+    SET_VECTOR_ELT(out_list, 46, output_annual_cohorts_NPPR);
+    SET_VECTOR_ELT(out_list, 47, output_annual_cohorts_NPPW);
+    SET_VECTOR_ELT(out_list, 48, output_annual_cohorts_GPP);
+    SET_VECTOR_ELT(out_list, 49, output_annual_cohorts_NPP);
+    SET_VECTOR_ELT(out_list, 50, output_annual_cohorts_Rauto);
+    SET_VECTOR_ELT(out_list, 51, output_annual_cohorts_N_uptk);
+    SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_N_fix);
+    SET_VECTOR_ELT(out_list, 53, output_annual_cohorts_maxLAI);
+    SET_VECTOR_ELT(out_list, 54, output_annual_cohorts_Volume);
+    SET_VECTOR_ELT(out_list, 55, output_annual_cohorts_n_deadtrees);
+    SET_VECTOR_ELT(out_list, 56, output_annual_cohorts_c_deadtrees);
+    SET_VECTOR_ELT(out_list, 57, output_annual_cohorts_deathrate);
 
-    SET_VECTOR_ELT(out_list, 29, output_annual_tile);
-
-    SET_VECTOR_ELT(out_list, 30, output_annual_cohorts_year);
-    SET_VECTOR_ELT(out_list, 31, output_annual_cohorts_cID);
-    SET_VECTOR_ELT(out_list, 32, output_annual_cohorts_PFT);
-    SET_VECTOR_ELT(out_list, 33, output_annual_cohorts_layer);
-    SET_VECTOR_ELT(out_list, 34, output_annual_cohorts_density);
-    SET_VECTOR_ELT(out_list, 35, output_annual_cohorts_f_layer);
-    SET_VECTOR_ELT(out_list, 36, output_annual_cohorts_dDBH);
-    SET_VECTOR_ELT(out_list, 37, output_annual_cohorts_dbh);
-    SET_VECTOR_ELT(out_list, 38, output_annual_cohorts_height);
-    SET_VECTOR_ELT(out_list, 39, output_annual_cohorts_age);
-    SET_VECTOR_ELT(out_list, 40, output_annual_cohorts_Acrown);
-    SET_VECTOR_ELT(out_list, 41, output_annual_cohorts_wood);
-    SET_VECTOR_ELT(out_list, 42, output_annual_cohorts_nsc);
-    SET_VECTOR_ELT(out_list, 43, output_annual_cohorts_NSN);
-    SET_VECTOR_ELT(out_list, 44, output_annual_cohorts_NPPtr);
-    SET_VECTOR_ELT(out_list, 45, output_annual_cohorts_seed);
-    SET_VECTOR_ELT(out_list, 46, output_annual_cohorts_NPPL);
-    SET_VECTOR_ELT(out_list, 47, output_annual_cohorts_NPPR);
-    SET_VECTOR_ELT(out_list, 48, output_annual_cohorts_NPPW);
-    SET_VECTOR_ELT(out_list, 49, output_annual_cohorts_GPP);
-    SET_VECTOR_ELT(out_list, 50, output_annual_cohorts_NPP);
-    SET_VECTOR_ELT(out_list, 51, output_annual_cohorts_Rauto);
-    SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_N_uptk);
-    SET_VECTOR_ELT(out_list, 53, output_annual_cohorts_N_fix);
-    SET_VECTOR_ELT(out_list, 54, output_annual_cohorts_maxLAI);
-    SET_VECTOR_ELT(out_list, 55, output_annual_cohorts_Volume);
-    SET_VECTOR_ELT(out_list, 56, output_annual_cohorts_n_deadtrees);
-    SET_VECTOR_ELT(out_list, 57, output_annual_cohorts_c_deadtrees);
-    SET_VECTOR_ELT(out_list, 58, output_annual_cohorts_deathrate);
-
-    UNPROTECT(60);
+    UNPROTECT(59);
 
     return out_list;
 }

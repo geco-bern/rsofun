@@ -303,7 +303,7 @@ module md_interface_biomee
   end type outtype_annual_cohorts
 
   type outtype_biosphere
-    type(outtype_hourly_tile), dimension(:), allocatable              :: hourly_tile      !fn01
+    ! type(outtype_hourly_tile), dimension(:), allocatable              :: hourly_tile      !fn01
     type(outtype_daily_tile), dimension(ndayyear)                     :: daily_tile       !fno4
     type(outtype_daily_cohorts), dimension(ndayyear,out_max_cohorts)  :: daily_cohorts    !fno3
     type(outtype_annual_tile)                                         :: annual_tile      !fno5

@@ -275,7 +275,7 @@ contains
     nt_annual,                    &    
     nt_annual_cohorts,            &    
     forcing,                      &     
-    output_hourly_tile,           &
+    ! output_hourly_tile,           &
     output_daily_tile,            &
     output_daily_cohorts_year,    &
     output_daily_cohorts_doy,     &
@@ -412,7 +412,7 @@ contains
     ! input and output arrays (naked) to be passed back to C/R
     real(kind=c_double), dimension(nt,13), intent(in) :: forcing
 
-    real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
+    ! real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
 
     real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_year
@@ -640,7 +640,7 @@ contains
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
-    allocate(out_biosphere%hourly_tile(ntstepsyear))
+    ! allocate(out_biosphere%hourly_tile(ntstepsyear))
 
     yearloop: do yr=1, myinterface%params_siml%runyears
       !----------------------------------------------------------------
@@ -672,11 +672,11 @@ contains
       !----------------------------------------------------------------
       ! Output out_hourly_tile (calling subroutine)
       !----------------------------------------------------------------
-      if (.not. myinterface%steering%spinup) then  
-        idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
-        idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
-        ! call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
-      end if
+      ! if (.not. myinterface%steering%spinup) then  
+      !   idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
+      !   idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
+      !   ! call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
+      ! end if
 
       !----------------------------------------------------------------
       ! Output out_daily_tile (calling subroutine)
@@ -771,7 +771,7 @@ contains
 
     deallocate(myinterface%climate)
     deallocate(myinterface%pco2)
-    deallocate(out_biosphere%hourly_tile)
+    ! deallocate(out_biosphere%hourly_tile)
  
   end subroutine biomee_f
 

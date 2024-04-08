@@ -118,7 +118,7 @@ contains
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
          
-          call hourly_diagnostics( vegn, myinterface%climate(idata), iyears, idoy, i , out_biosphere%hourly_tile(idata))
+          call hourly_diagnostics( vegn, myinterface%climate(idata), iyears, idoy, i)  ! , out_biosphere%hourly_tile(idata)
          
           init = .false.
          
