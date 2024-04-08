@@ -1925,18 +1925,18 @@ contains
     sameSpecies  = c1%species == c2%species
     
     sameLayer    = (c1%layer == c2%layer) .or. & ! .and. (c1%firstlayer == c2%firstlayer)
-      ((spdata(c1%species)%lifeform ==0) .and. &
-       (spdata(c2%species)%lifeform ==0) .and. &
-       (c1%layer>1 .and.c2%layer>1))
+      ((spdata(c1%species)%lifeform == 0) .and. &
+       (spdata(c2%species)%lifeform == 0) .and. &
+       (c1%layer > 1 .and.c2%layer > 1))
     
     sameSizeTree = (spdata(c1%species)%lifeform > 0).and.  &
       (spdata(c2%species)%lifeform > 0).and.  &
       ((abs(c1%DBH - c2%DBH)/c2%DBH < 0.2 ) .or.  &
-      (abs(c1%DBH - c2%DBH)        < 0.001))  ! it'll be always true for grasses
+      (abs(c1%DBH - c2%DBH) < 0.001))  ! it'll be always true for grasses
     
-    sameSizeGrass= (spdata(c1%species)%lifeform ==0) .and. &
-      (spdata(c2%species)%lifeform ==0) .and. &
-      ((c1%DBH == c2%DBH).and.c1%age> 2. .and. c2%age>2.)  ! it'll be always true for grasses
+    sameSizeGrass= (spdata(c1%species)%lifeform == 0) .and. &
+      (spdata(c2%species)%lifeform == 0) .and. &
+      (abs(c1%DBH - c2%DBH) < eps .and. c1%age > 2. .and. c2%age > 2.)  ! it'll be always true for grasses
     
     sameSize = sameSizeTree .OR. sameSizeGrass
     lowDensity  = .FALSE. ! c1%nindivs < mindensity 

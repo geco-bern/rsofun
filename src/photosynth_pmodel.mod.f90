@@ -332,7 +332,7 @@ contains
     actnv  = vcmax25 * n_v
 
     ! Derive Jmax using again A_J = A_C
-    if (ppfd==0.0) then
+    if (ppfd < eps) then
       fact_jmaxlim = 1.0
       jmax = 0.0
       jmax25 = 0.0
@@ -897,7 +897,6 @@ contains
     ! loal parameters
     real, parameter :: apar = 0.1012
     real, parameter :: bpar = 0.0005
-    real, parameter :: tk25 = 298.15 ! 25 deg C in Kelvin
 
     ! local variables
     real :: tk                  ! temperature (Kelvin)
