@@ -150,11 +150,19 @@ forcing <- forcingLAE %>%
     lubridate::month(datehour),
     lubridate::day(datehour),
     lubridate::hour(datehour)) %>% 
-  summarise_at(vars(1:13), list(~mean(., na.rm = TRUE)))
-forcing <- forcing[,-c(1:3)]
+  summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>%
+  rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
+  ungroup()
+forcing <- forcing %>%
+  rename(year=YEAR, doy= DOY, hour=HOUR, par=PAR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, rh=RH,
+         prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW, swc=SWC) %>%
+  mutate(snow=NA,vpd=NA, ccov_int=NA,ccov=NA,
+         date = make_date(year,month,day)) %>% 
+  select(-c(month,day)) %>%
+  relocate(date,year,doy,hour,temp,temp_soil,prec,snow,vpd,rh,ppfd,par,patm,wind,ccov_int,ccov,co2,swc)
 #forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
 
-lm3ppa_gs_leuning_drivers <- tibble(
+biomee_gs_leuning_drivers <- tibble(
   sitename,
   site_info = list(tibble(siteinfo)),
   params_siml = list(tibble(params_siml)),
@@ -166,21 +174,29 @@ lm3ppa_gs_leuning_drivers <- tibble(
   forcing = list(tibble(forcing))
   )
 
-save(lm3ppa_gs_leuning_drivers,
-     file ="data/lm3ppa_gs_leuning_drivers.rda",
+save(biomee_gs_leuning_drivers,
+     file ="data/biomee_gs_leuning_drivers.rda",
      compress = "xz")
 
 #---- p-model formatting -----
-forcingLAE <- forcingLAE %>% 
+forcing <- forcingLAE %>% 
   dplyr::group_by(
     lubridate::month(datehour),
     lubridate::day(datehour)) %>% 
   summarise_at(vars(1:13), 
-               list(~mean(., na.rm = TRUE)))
-forcing <- forcingLAE[,-c(1:2)]
+               list(~mean(., na.rm = TRUE))) %>%
+  rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
+  ungroup()
+forcing <- forcing %>%
+  rename(year=YEAR, doy= DOY, hour=HOUR, par=PAR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, rh=RH,
+         prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW, swc=SWC) %>%
+  mutate(snow=NA,vpd=NA, ccov_int=NA,ccov=NA,
+         date = make_date(year,month,day)) %>% 
+  select(-c(month,day)) %>%
+  relocate(date,year,doy,hour,temp,temp_soil,prec,snow,vpd,rh,ppfd,par,patm,wind,ccov_int,ccov,co2,swc)
 #forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
 
-lm3ppa_p_model_drivers <- tibble(
+biomee_p_model_drivers <- tibble(
   sitename,
   site_info = list(tibble(siteinfo)),
   params_siml = list(tibble(params_siml_pmodel)),
@@ -192,29 +208,51 @@ lm3ppa_p_model_drivers <- tibble(
   forcing  =list(tibble(forcing))
   )
 
-save(lm3ppa_p_model_drivers,
-     file ="data/lm3ppa_p_model_drivers.rda",
+save(biomee_p_model_drivers,
+     file ="data/biomee_p_model_drivers.rda",
      compress = "xz")
 
-# run the model
-lm3ppa_p_model_output <- runread_lm3ppa_f(
-  lm3ppa_p_model_drivers,
+# run the model gs-leuning
+biomee_gs_leuning_output <- runread_biomee_f(
+  biomee_gs_leuning_drivers,
   makecheck = TRUE,
   parallel = FALSE
 )$data[[1]]$output_annual_tile[c('year','GPP','plantC')]
 
-save(lm3ppa_p_model_output,
-     file = "data/lm3ppa_p_model_output.rda",
+cowplot::plot_grid(
+  biomee_gs_leuning_output %>% 
+    ggplot() +
+    geom_line(aes(x = year, y = GPP)) +
+    theme_classic()+labs(x = "Year", y = "GPP"),
+  biomee_gs_leuning_output %>% 
+    ggplot() +
+    geom_line(aes(x = year, y = plantC)) +
+    theme_classic()+labs(x = "Year", y = "plantC")
+)
+
+save(biomee_gs_leuning_output,
+     file ="data/biomee_gs_leuning_output.rda",
      compress = "xz")
 
-lm3ppa_gs_leuning_output <- runread_lm3ppa_f(
-  lm3ppa_gs_leuning_drivers,
+# run the model p-model
+biomee_p_model_output <- runread_biomee_f(
+  biomee_p_model_drivers,
   makecheck = TRUE,
   parallel = FALSE
 )$data[[1]]$output_annual_tile[c('year','GPP','plantC')]
 
-save(lm3ppa_gs_leuning_output,
-     file ="data/lm3ppa_gs_leuning_output.rda",
-     compress = "xz")
+cowplot::plot_grid(
+  biomee_p_model_output %>% 
+    ggplot() +
+    geom_line(aes(x = year, y = GPP)) +
+    theme_classic()+labs(x = "Year", y = "GPP"),
+  biomee_p_model_output %>% 
+    ggplot() +
+    geom_line(aes(x = year, y = plantC)) +
+    theme_classic()+labs(x = "Year", y = "plantC")
+)
 
+save(biomee_p_model_output,
+     file = "data/biomee_p_model_output.rda",
+     compress = "xz")
 
