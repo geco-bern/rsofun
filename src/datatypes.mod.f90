@@ -247,6 +247,10 @@ module datatypes
     integer  :: n_years           = 0.0
     integer  :: n_canopycc        = 0.0
 
+    !===== For reseting vegetation
+    integer :: n_initialCC = 0
+    type(cohort_type), pointer :: initialCC(:)=>NULL()
+
     !===== Cohorts nested inside tile
     type(cohort_type), pointer :: cohorts(:) => NULL()
 

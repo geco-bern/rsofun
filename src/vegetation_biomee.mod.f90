@@ -16,7 +16,7 @@ module md_vegetation_biomee
   public :: vegn_reproduction, vegn_annualLAImax_update !, annual_calls
   public :: vegn_nat_mortality, vegn_species_switch !, vegn_starvation
   public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
-  public :: vegn_annual_starvation,Zero_diagnostics
+  public :: vegn_annual_starvation,Zero_diagnostics, reset_vegn_initial
 
 contains
 
@@ -1982,6 +1982,39 @@ contains
   
   end subroutine initialize_cohort_from_biomass
 
+  !============= Reset to Initial Vegetation States =====================
+   !Weng, 12/20/2022
+   subroutine reset_vegn_initial(vegn)
+    type(vegn_tile_type),intent(inout),pointer :: vegn
+
+    !--------local vars -------
+    type(cohort_type),dimension(:), pointer :: cc,cc1
+    type(cohort_type), pointer :: cp
+    integer :: i, istat
+
+    !Reset to initial plant cohorts
+    allocate(cc(1:vegn%n_initialCC), STAT = istat)
+    cc1 => vegn%cohorts ! Remember the current cohorts in vegn
+    cc = vegn%initialCC ! Copy the initial cohorts to a new cohor array
+    vegn%cohorts => cc  ! Set the vegn%cohorts as the initial cohorts
+    vegn%n_cohorts = vegn%n_initialCC ! size(vegn%cohorts)
+
+    !Release memory
+    deallocate(cc1) ! Remove the old cohorts
+    cc => null()
+
+    ! Relayering and summary
+    call relayer_cohorts(vegn)
+    call summarize_tile(vegn)
+
+    ! ID each cohort
+    do i=1, vegn%n_cohorts
+       cp => vegn%cohorts(i)
+       cp%ccID = MaxCohortID + i
+    enddo
+    MaxCohortID = cp%ccID
+
+   end subroutine reset_vegn_initial
 
   ! subroutine annual_calls( vegn )
   !   !////////////////////////////////////////////////////////////////
@@ -2231,6 +2264,13 @@ contains
       vegn%totN =  vegn%initialN0
 
     endif  ! initialization: random or pre-described
+
+    ! For reset: Keep initial plant cohorts
+    allocate(cc(1:init_n_cohorts), STAT = istat)
+    cc = vegn%cohorts
+    vegn%initialCC   => cc
+    vegn%n_initialCC = init_n_cohorts
+    cc => null()
   
   end subroutine initialize_vegn_tile
 
