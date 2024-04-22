@@ -120,7 +120,9 @@ void F77_NAME(biomee_f)(
     int    *outputdaily,                   
     int    *do_U_shaped_mortality,             
     int    *update_annualLAImax,                   
-    int    *do_closedN_run,                   
+    int    *do_closedN_run, 
+    int    *do_reset_veg,    
+    int    *dist_frequency,                     
     int    *code_method_photosynth,
     int    *code_method_mortality,                   
     double *longitude,                  
@@ -235,6 +237,8 @@ extern SEXP biomee_f_C(
     SEXP do_U_shaped_mortality,             
     SEXP update_annualLAImax,                   
     SEXP do_closedN_run,  
+    SEXP do_reset_veg, 
+    SEXP dist_frequency,  
     SEXP code_method_photosynth,
     SEXP code_method_mortality,                
     SEXP longitude,                  
@@ -357,6 +361,8 @@ extern SEXP biomee_f_C(
         LOGICAL(do_U_shaped_mortality),                
         LOGICAL(update_annualLAImax),                   
         LOGICAL(do_closedN_run),    
+        LOGICAL(do_reset_veg),
+        INTEGER(dist_frequency),
         INTEGER(code_method_photosynth),
         INTEGER(code_method_mortality),              
         REAL(longitude),                  
@@ -539,7 +545,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of the SEXP variables (not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   48},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };
 

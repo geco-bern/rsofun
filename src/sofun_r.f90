@@ -238,7 +238,9 @@ contains
     outputdaily,                  &         
     do_U_shaped_mortality,        &                   
     update_annualLAImax,          &                 
-    do_closedN_run,               &            
+    do_closedN_run,               &  
+    do_reset_veg,                 &   
+    dist_frequency,               &   
     code_method_photosynth,       &
     code_method_mortality,        &             
     longitude,                    &      
@@ -369,6 +371,8 @@ contains
     logical(kind=c_bool), intent(in) :: do_U_shaped_mortality
     logical(kind=c_bool), intent(in) :: update_annualLAImax
     logical(kind=c_bool), intent(in) :: do_closedN_run
+    logical(kind=c_bool), intent(in) :: do_reset_veg
+    integer(kind=c_int),  intent(in) :: dist_frequency
     integer(kind=c_int),  intent(in) :: code_method_photosynth
     integer(kind=c_int),  intent(in) :: code_method_mortality
 
@@ -517,7 +521,9 @@ contains
     myinterface%params_siml%outputdaily           = outputdaily
     myinterface%params_siml%do_U_shaped_mortality = do_U_shaped_mortality
     myinterface%params_siml%update_annualLAImax   = update_annualLAImax      
-    myinterface%params_siml%do_closedN_run        = do_closedN_run       
+    myinterface%params_siml%do_closedN_run        = do_closedN_run 
+    myinterface%params_siml%do_reset_veg          = do_reset_veg  
+    myinterface%params_siml%dist_frequency        = dist_frequency           
     
     ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
     if (code_method_photosynth == 1) then

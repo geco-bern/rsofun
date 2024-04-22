@@ -47,6 +47,8 @@ params_siml <- tibble(
   do_U_shaped_mortality = TRUE,
   update_annualLAImax = TRUE,
   do_closedN_run = TRUE,
+  do_reset_veg = FALSE, # TRUE
+  dist_frequency = 0, # 100, 75, 50, 25, 15, 10
   method_photosynth = "gs_leuning",
   method_mortality = "dbh"
 )
