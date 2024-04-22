@@ -310,27 +310,32 @@ contains
     output_annual_cohorts_PFT,    &
     output_annual_cohorts_layer,  &
     output_annual_cohorts_density,&
-    output_annual_cohorts_f_layer,&
+    output_annual_cohorts_flayer, &
+    output_annual_cohorts_DBH,    &
     output_annual_cohorts_dDBH,   &
-    output_annual_cohorts_dbh,    &
     output_annual_cohorts_height, &
     output_annual_cohorts_age,    &
+    output_annual_cohorts_BA,     &
+    output_annual_cohorts_dBA,    &
     output_annual_cohorts_Acrown, &
-    output_annual_cohorts_wood,   &
+    output_annual_cohorts_Aleaf,  &
     output_annual_cohorts_nsc,    &
-    output_annual_cohorts_NSN,    &
-    output_annual_cohorts_NPPtr,  &
-    output_annual_cohorts_seed,   &
-    output_annual_cohorts_NPPL,   &
-    output_annual_cohorts_NPPR,   &
-    output_annual_cohorts_NPPW,   &
+    output_annual_cohorts_nsn,    &
+    output_annual_cohorts_seedC,  &
+    output_annual_cohorts_leafC,  &
+    output_annual_cohorts_rootC,  &
+    output_annual_cohorts_sapwC,  &
+    output_annual_cohorts_woodC,  &
+    output_annual_cohorts_treeG,  &
+    output_annual_cohorts_fseed,  &
+    output_annual_cohorts_fleaf,  &
+    output_annual_cohorts_froot,  &
+    output_annual_cohorts_fwood,  &
     output_annual_cohorts_GPP,    &
     output_annual_cohorts_NPP,    &
     output_annual_cohorts_Rauto,  &
-    output_annual_cohorts_N_uptk, &
-    output_annual_cohorts_N_fix,  &
-    output_annual_cohorts_maxLAI, &
-    output_annual_cohorts_Volume, &
+    output_annual_cohorts_Nupt,   &
+    output_annual_cohorts_Nfix,   &
     output_annual_cohorts_n_deadtrees,  &
     output_annual_cohorts_c_deadtrees,  &
     output_annual_cohorts_deathrate  &
@@ -450,27 +455,32 @@ contains
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_PFT
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_layer
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_density
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_f_layer
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_flayer
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_DBH
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_dDBH
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_dbh
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_height
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_age
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_BA
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_dBA
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Acrown
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_wood
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Aleaf
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_nsc
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_NSN
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_NPPtr
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_seed
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_NPPL
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_NPPR
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_NPPW
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_nsn
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_seedC
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_leafC
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_rootC
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_sapwC
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_woodC
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_treeG
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_fseed
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_fleaf
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_froot
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_fwood
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_GPP
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_NPP
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Rauto
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_N_uptk
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_N_fix
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_maxLAI
-    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Volume
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Nupt
+    real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Nfix
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_n_deadtrees
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_c_deadtrees
     real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_deathrate
@@ -740,35 +750,38 @@ contains
       ! To get outputs for all runyears idx=yr and also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(runyears)
        idx =  yr
 
-        output_annual_cohorts_year(idx, :)       = dble(out_biosphere%annual_cohorts(:)%year) !xxx commented out for calibration!
-        output_annual_cohorts_cID(idx, :)        = dble(out_biosphere%annual_cohorts(:)%cID)
-        output_annual_cohorts_PFT(idx, :)        = dble(out_biosphere%annual_cohorts(:)%PFT)
-        output_annual_cohorts_layer(idx, :)      = dble(out_biosphere%annual_cohorts(:)%layer)
-        output_annual_cohorts_density(idx, :)    = dble(out_biosphere%annual_cohorts(:)%density)
-        output_annual_cohorts_f_layer(idx, :)    = dble(out_biosphere%annual_cohorts(:)%f_layer)
-        output_annual_cohorts_dDBH(idx, :)       = dble(out_biosphere%annual_cohorts(:)%dDBH)
-        output_annual_cohorts_dbh(idx, :)        = dble(out_biosphere%annual_cohorts(:)%dbh)
-        output_annual_cohorts_height(idx, :)     = dble(out_biosphere%annual_cohorts(:)%height)
-        output_annual_cohorts_age(idx, :)        = dble(out_biosphere%annual_cohorts(:)%age)
-        output_annual_cohorts_Acrown(idx, :)     = dble(out_biosphere%annual_cohorts(:)%Acrown)
-        output_annual_cohorts_wood(idx, :)       = dble(out_biosphere%annual_cohorts(:)%wood)
-        output_annual_cohorts_nsc(idx, :)        = dble(out_biosphere%annual_cohorts(:)%nsc)
-        output_annual_cohorts_NSN(idx, :)        = dble(out_biosphere%annual_cohorts(:)%NSN)
-        output_annual_cohorts_NPPtr(idx, :)      = dble(out_biosphere%annual_cohorts(:)%NPPtr)
-        output_annual_cohorts_seed(idx, :)       = dble(out_biosphere%annual_cohorts(:)%seed)
-        output_annual_cohorts_NPPL(idx, :)       = dble(out_biosphere%annual_cohorts(:)%NPPL)
-        output_annual_cohorts_NPPR(idx, :)       = dble(out_biosphere%annual_cohorts(:)%NPPR)
-        output_annual_cohorts_NPPW(idx, :)       = dble(out_biosphere%annual_cohorts(:)%NPPW)
-        output_annual_cohorts_GPP(idx, :)        = dble(out_biosphere%annual_cohorts(:)%GPP)
-        output_annual_cohorts_NPP(idx, :)        = dble(out_biosphere%annual_cohorts(:)%NPP)
-        output_annual_cohorts_Rauto(idx, :)      = dble(out_biosphere%annual_cohorts(:)%Rauto)
-        output_annual_cohorts_N_uptk(idx, :)     = dble(out_biosphere%annual_cohorts(:)%N_uptk)
-        output_annual_cohorts_N_fix(idx, :)      = dble(out_biosphere%annual_cohorts(:)%N_fix)
-        output_annual_cohorts_maxLAI(idx, :)     = dble(out_biosphere%annual_cohorts(:)%maxLAI)
-        output_annual_cohorts_Volume(idx, :)     = dble(out_biosphere%annual_cohorts(:)%Volume)
-        output_annual_cohorts_n_deadtrees(idx, :) = dble(out_biosphere%annual_cohorts(:)%n_deadtrees)
-        output_annual_cohorts_c_deadtrees(idx, :) = dble(out_biosphere%annual_cohorts(:)%c_deadtrees)
-        output_annual_cohorts_deathrate(idx, :)  = dble(out_biosphere%annual_cohorts(:)%deathrate)
+        output_annual_cohorts_year(idx, :)        = dble(out_biosphere%annual_cohorts(:)%year) !xxx commented out for calibration!
+        output_annual_cohorts_cID(idx, :)         = dble(out_biosphere%annual_cohorts(:)%cID)
+        output_annual_cohorts_PFT(idx, :)         = dble(out_biosphere%annual_cohorts(:)%PFT)
+        output_annual_cohorts_layer(idx, :)       = dble(out_biosphere%annual_cohorts(:)%layer)
+        output_annual_cohorts_density(idx, :)     = dble(out_biosphere%annual_cohorts(:)%density)
+        output_annual_cohorts_flayer(idx, :)      = dble(out_biosphere%annual_cohorts(:)%flayer)
+        output_annual_cohorts_dbh(idx, :)         = dble(out_biosphere%annual_cohorts(:)%DBH)
+        output_annual_cohorts_dDBH(idx, :)        = dble(out_biosphere%annual_cohorts(:)%dDBH)
+        output_annual_cohorts_height(idx, :)      = dble(out_biosphere%annual_cohorts(:)%height)
+        output_annual_cohorts_age(idx, :)         = dble(out_biosphere%annual_cohorts(:)%age)
+        output_annual_cohorts_BA(idx, :)          = dble(out_biosphere%annual_cohorts(:)%BA)
+        output_annual_cohorts_BA(idx, :)          = dble(out_biosphere%annual_cohorts(:)%dBA)
+        output_annual_cohorts_Acrown(idx, :)      = dble(out_biosphere%annual_cohorts(:)%Acrown)
+        output_annual_cohorts_Aleaf(idx, :)       = dble(out_biosphere%annual_cohorts(:)%Aleaf)
+        output_annual_cohorts_nsc(idx, :)         = dble(out_biosphere%annual_cohorts(:)%nsc)
+        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%nsn)
+        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%seedC)
+        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%leafC)
+        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%rootC)
+        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%sapwC)
+        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%woodC)
+        output_annual_cohorts_treeG(idx, :)       = dble(out_biosphere%annual_cohorts(:)%treeG)
+        output_annual_cohorts_fseed(idx, :)       = dble(out_biosphere%annual_cohorts(:)%fseed)
+        output_annual_cohorts_fleaf(idx, :)       = dble(out_biosphere%annual_cohorts(:)%fleaf)
+        output_annual_cohorts_froot(idx, :)       = dble(out_biosphere%annual_cohorts(:)%froot)
+        output_annual_cohorts_fwood(idx, :)       = dble(out_biosphere%annual_cohorts(:)%fwood)
+        output_annual_cohorts_GPP(idx, :)         = dble(out_biosphere%annual_cohorts(:)%GPP)
+        output_annual_cohorts_NPP(idx, :)         = dble(out_biosphere%annual_cohorts(:)%NPP)
+        output_annual_cohorts_Rauto(idx, :)       = dble(out_biosphere%annual_cohorts(:)%Rauto)
+        output_annual_cohorts_Nupt(idx, :)        = dble(out_biosphere%annual_cohorts(:)%Nupt)
+        output_annual_cohorts_Nfix(idx, :)        = dble(out_biosphere%annual_cohorts(:)%Nfix)
+        output_annual_cohorts_deathrate(idx, :)   = dble(out_biosphere%annual_cohorts(:)%deathrate)
 
        !end if
 

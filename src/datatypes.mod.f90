@@ -160,7 +160,6 @@ module datatypes
     !===== Population structure
     real :: nindivs   = 1.0          ! density of vegetation, individuals/m2
     real :: age       = 0.0          ! age of cohort, years
-    real :: Volume    = 0.0
     real :: dbh       = 0.0          ! diameter at breast height, m
     real :: height    = 0.0          ! vegetation height, m
     real :: crownarea = 1.0          ! crown area, m2/individual
@@ -168,6 +167,7 @@ module datatypes
     real :: lai       = 0.0          ! crown leaf area index, m2/m2
     real :: BA        = 0.0          ! tree basal area
     real :: BAL       = 0.0          ! basal area of larger trees
+    real :: Volume    = 0.0
 
     !===== Organic pools
     type(orgpool) :: pleaf                       ! leaf biomass [kg C(N)/ind.]
@@ -212,6 +212,7 @@ module datatypes
     real    :: CSAsw              = 0.0
     real    :: topyear            = 0.0           ! the years that a plant in top layer
     real    :: DBH_ys                             ! DBH at the begining of a year (growing season)
+    real    :: BA_ys
     real    :: Vol_ys
     real    :: ABG_ys
 
@@ -783,6 +784,7 @@ contains
       cc%NPProot      = 0.0
       cc%NPPwood      = 0.0
       cc%DBH_ys       = cc%dbh
+      cc%BA_ys        = cc%BA
       cc%Vol_ys       = cc%Volume
       cc%ABG_ys       = cc%psapw%c%c12 + cc%pwood%c%c12
       ! cc%n_deadtrees  = 0.0
@@ -1113,40 +1115,45 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, dVol
+    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, dBA, dVol
     real :: plantC, plantN, soilC, soilN
     integer :: i
 
     ! re-initialise to avoid elements not updated when number 
     ! of cohorts declines from one year to the next
-    out_annual_cohorts(:)%year       = dummy
-    out_annual_cohorts(:)%cID        = dummy
-    out_annual_cohorts(:)%PFT        = dummy
-    out_annual_cohorts(:)%layer      = dummy
-    out_annual_cohorts(:)%density    = dummy
-    out_annual_cohorts(:)%f_layer    = dummy
-    out_annual_cohorts(:)%dDBH       = dummy
-    out_annual_cohorts(:)%dbh        = dummy
-    out_annual_cohorts(:)%height     = dummy
-    out_annual_cohorts(:)%age        = dummy
-    out_annual_cohorts(:)%Acrown     = dummy
-    out_annual_cohorts(:)%wood       = dummy
-    out_annual_cohorts(:)%nsc        = dummy
-    out_annual_cohorts(:)%NSN        = dummy
-    out_annual_cohorts(:)%NPPtr      = dummy
-    out_annual_cohorts(:)%seed       = dummy
-    out_annual_cohorts(:)%NPPL       = dummy
-    out_annual_cohorts(:)%NPPR       = dummy
-    out_annual_cohorts(:)%NPPW       = dummy
-    out_annual_cohorts(:)%GPP        = dummy
-    out_annual_cohorts(:)%NPP        = dummy
-    out_annual_cohorts(:)%N_uptk     = dummy
-    out_annual_cohorts(:)%N_fix      = dummy
-    out_annual_cohorts(:)%maxLAI     = dummy
-    out_annual_cohorts(:)%Volume     = dummy
+    out_annual_cohorts(:)%year        = dummy
+    out_annual_cohorts(:)%cID         = dummy
+    out_annual_cohorts(:)%PFT         = dummy
+    out_annual_cohorts(:)%layer       = dummy
+    out_annual_cohorts(:)%density     = dummy
+    out_annual_cohorts(:)%flayer      = dummy
+    out_annual_cohorts(:)%DBH         = dummy
+    out_annual_cohorts(:)%dDBH        = dummy
+    out_annual_cohorts(:)%height      = dummy
+    out_annual_cohorts(:)%age         = dummy
+    out_annual_cohorts(:)%BA          = dummy
+    out_annual_cohorts(:)%dBA         = dummy
+    out_annual_cohorts(:)%Acrown      = dummy
+    out_annual_cohorts(:)%Aleaf       = dummy
+    out_annual_cohorts(:)%nsc         = dummy
+    out_annual_cohorts(:)%nsn         = dummy
+    out_annual_cohorts(:)%seedC       = dummy
+    out_annual_cohorts(:)%leafC       = dummy
+    out_annual_cohorts(:)%rootC       = dummy
+    out_annual_cohorts(:)%sapwC       = dummy
+    out_annual_cohorts(:)%woodC       = dummy
+    out_annual_cohorts(:)%treeG       = dummy
+    out_annual_cohorts(:)%fseed       = dummy
+    out_annual_cohorts(:)%fleaf       = dummy
+    out_annual_cohorts(:)%froot       = dummy
+    out_annual_cohorts(:)%fwood       = dummy
+    out_annual_cohorts(:)%GPP         = dummy
+    out_annual_cohorts(:)%NPP         = dummy
+    out_annual_cohorts(:)%Nupt        = dummy
+    out_annual_cohorts(:)%Nfix        = dummy
     out_annual_cohorts(:)%n_deadtrees = dummy
     out_annual_cohorts(:)%c_deadtrees = dummy
-    out_annual_cohorts(:)%deathrate = dummy
+    out_annual_cohorts(:)%deathrate   = dummy
 
     ! Cohorts ouput
     do i = 1, vegn%n_cohorts
@@ -1156,37 +1163,43 @@ contains
       fleaf     = cc%NPPleaf / treeG
       froot     = cc%NPProot / treeG
       fwood     = cc%NPPwood / treeG
-      dDBH      = (cc%dbh - cc%DBH_ys) !*1000 to convert to mm
+      dDBH      = cc%dbh - cc%DBH_ys !in m
+      cc%BA     = pi/4 * cc%dbh * cc%dbh
+      dBA       = cc%BA - cc%BA_ys
       cc%Volume = (cc%psapw%c%c12 + cc%pwood%c%c12) / spdata(cc%species)%rho_wood
       dVol      = (cc%Volume - cc%Vol_ys)
-      cc%BA     = pi/4 * cc%dbh * cc%dbh
 
       out_annual_cohorts(i)%year        = iyears
       out_annual_cohorts(i)%cID         = cc%ccID
       out_annual_cohorts(i)%PFT         = cc%species
       out_annual_cohorts(i)%layer       = cc%layer
       out_annual_cohorts(i)%density     = cc%nindivs * 10000
-      out_annual_cohorts(i)%f_layer     = cc%layerfrac
-      out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
+      out_annual_cohorts(i)%flayer     = cc%layerfrac
       out_annual_cohorts(i)%dbh         = cc%dbh * 100   ! *100 to convert m in cm
+      out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
       out_annual_cohorts(i)%height      = cc%height
       out_annual_cohorts(i)%age         = cc%age
+      out_annual_cohorts(i)%BA          = cc%BA
+      out_annual_cohorts(i)%dBA         = dBA
       out_annual_cohorts(i)%Acrown      = cc%crownarea
-      out_annual_cohorts(i)%wood        = cc%psapw%c%c12 + cc%pwood%c%c12
+      out_annual_cohorts(i)%Aleaf       = cc%leafarea
       out_annual_cohorts(i)%nsc         = cc%plabl%c%c12
-      out_annual_cohorts(i)%NSN         = cc%plabl%n%n14 * 1000
-      out_annual_cohorts(i)%NPPtr       = treeG
-      out_annual_cohorts(i)%seed        = cc%pseed%c%c12 
-      out_annual_cohorts(i)%NPPL        = cc%NPPleaf  ! fleaf
-      out_annual_cohorts(i)%NPPR        = cc%NPProot  ! froot
-      out_annual_cohorts(i)%NPPW        = cc%NPPwood  ! fwood
+      out_annual_cohorts(i)%nsn         = cc%plabl%n%n14 * 1000
+      out_annual_cohorts(i)%seedC       = cc%pseed%c%c12
+      out_annual_cohorts(i)%leafC       = cc%pleaf%c%c12
+      out_annual_cohorts(i)%rootC       = cc%proot%c%c12
+      out_annual_cohorts(i)%sapwC       = cc%psapw%c%c12
+      out_annual_cohorts(i)%woodC       = cc%pwood%c%c12
+      out_annual_cohorts(i)%treeG       = treeG
+      out_annual_cohorts(i)%fseed       = fseed 
+      out_annual_cohorts(i)%fleaf       = fleaf
+      out_annual_cohorts(i)%froot       = froot
+      out_annual_cohorts(i)%fwood       = fwood
       out_annual_cohorts(i)%GPP         = cc%annualGPP
       out_annual_cohorts(i)%NPP         = cc%annualNPP
       out_annual_cohorts(i)%Rauto       = cc%annualResp
-      out_annual_cohorts(i)%N_uptk      = cc%annualNup * 1000
-      out_annual_cohorts(i)%N_fix       = cc%annualfixedN * 1000
-      out_annual_cohorts(i)%maxLAI      = spdata(cc%species)%LAImax
-      out_annual_cohorts(i)%Volume      = cc%Volume
+      out_annual_cohorts(i)%Nupt        = cc%annualNup * 1000
+      out_annual_cohorts(i)%Nfix        = cc%annualfixedN * 1000
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
       out_annual_cohorts(i)%deathrate   = cc%deathratevalue
