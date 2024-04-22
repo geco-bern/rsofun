@@ -213,11 +213,13 @@ save(biomee_p_model_drivers,
      compress = "xz")
 
 # run the model gs-leuning
-biomee_gs_leuning_output <- runread_biomee_f(
+out <- runread_biomee_f(
   biomee_gs_leuning_drivers,
   makecheck = TRUE,
-  parallel = FALSE
-)$data[[1]]$output_annual_tile[c('year','GPP','plantC')]
+  parallel = FALSE)
+
+biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 
 cowplot::plot_grid(
   biomee_gs_leuning_output %>% 
@@ -235,11 +237,13 @@ save(biomee_gs_leuning_output,
      compress = "xz")
 
 # run the model p-model
-biomee_p_model_output <- runread_biomee_f(
+out <- runread_biomee_f(
   biomee_p_model_drivers,
   makecheck = TRUE,
-  parallel = FALSE
-)$data[[1]]$output_annual_tile[c('year','GPP','plantC')]
+  parallel = FALSE)
+
+biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 
 cowplot::plot_grid(
   biomee_p_model_output %>% 
