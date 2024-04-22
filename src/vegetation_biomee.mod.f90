@@ -970,9 +970,11 @@ contains
     ! record mortality
     ! cohort level
     cc%n_deadtrees = deadtrees
-    cc%c_deadtrees = loss_coarse + loss_fine 
-    ! cc%m_turnover  = cc%m_turnover + loss_coarse + loss_fine
-    cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
+    !cc%c_deadtrees = loss_coarse + loss_fine 
+    cc%c_deadtrees    = deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + &
+           cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12) 
+    cc%m_turnover  = cc%m_turnover + loss_coarse + loss_fine
+    !cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
 
     ! cc%c_deadtrees   = deadtrees * (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12) 
     

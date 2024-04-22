@@ -199,7 +199,7 @@ module datatypes
     real    :: n_deadtrees        = 0.0
     real    :: c_deadtrees        = 0.0
     real    :: m_turnover         = 0.0
-    real    :: deathratevalue
+    real    :: deathratevalue     = 0.0
 
     !===== Nitrogen model related parameters
     real    :: NSNmax             = 0.0
@@ -1200,7 +1200,7 @@ contains
       out_annual_cohorts(i)%Rauto       = cc%annualResp
       out_annual_cohorts(i)%Nupt        = cc%annualNup * 1000
       out_annual_cohorts(i)%Nfix        = cc%annualfixedN * 1000
-      out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
+      out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees ! dead trees/m2
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
       out_annual_cohorts(i)%deathrate   = cc%deathratevalue
 
