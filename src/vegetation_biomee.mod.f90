@@ -16,6 +16,7 @@ module md_vegetation_biomee
   public :: vegn_reproduction, vegn_annualLAImax_update !, annual_calls
   public :: vegn_nat_mortality, vegn_species_switch !, vegn_starvation
   public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
+  public :: kill_old_grass
   public :: vegn_annual_starvation,Zero_diagnostics, reset_vegn_initial
 
 contains
@@ -232,6 +233,9 @@ contains
       associate (sp => spdata(cc%species))
 
       if (cc%status == LEAF_ON) then
+
+        !update leaf age 
+        cc%leaf_age = cc%leaf_age + 1.0/365.0
         
         ! Get carbon from NSC pool. This sets cc%C_growth
         call fetch_CN_for_growth( cc )
@@ -340,6 +344,7 @@ contains
         cc%psapw%c%c12    = cc%psapw%c%c12 + dBSW
         cc%pseed%c%c12    = cc%pseed%c%c12 + dSeed
         cc%plabl%c%c12    = cc%plabl%c%c12 - dBR - dBL - dSeed - dBSW
+        cc%leaf_age = (1.0 - dBL/cc%pleaf%c%c12) * cc%leaf_age !NEW
         cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily
 
         ! update nitrogen pools, Nitrogen allocation
@@ -490,6 +495,7 @@ contains
     integer :: i
     ! real    :: grassdensity   ! for grasses only
     ! real    :: BL_u,BL_c
+    integer :: GrassMaxL = 3 
     real    :: ccNSC, ccNSN
     logical :: cc_firstday = .false.
     logical :: TURN_ON_life = .false., TURN_OFF_life
@@ -526,7 +532,8 @@ contains
       endif
 
       ! Reset grass density at the first day of a growing season
-      if (cc_firstday .and. sp%lifeform == 0 .and. cc%age > 2.0) then
+      ! if (cc_firstday .and. sp%lifeform == 0 .and. cc%age > 2.0) then
+      if  (sp%lifeform ==0 .and. (cc_firstday .and. cc%age>0.5)) then
         
         ! reset grass density and size for perenials
         ccNSC   = (cc%plabl%c%c12 + cc%pleaf%c%c12 + cc%psapw%c%c12 + &
@@ -565,7 +572,8 @@ contains
 
     enddo cohortloop2
 
-    if (TURN_ON_life) call relayer_cohorts( vegn )
+    ! if (TURN_ON_life) call relayer_cohorts( vegn )
+    if (cc_firstday) call relayer_cohorts(vegn)
 
     ! OFF of a growing season
     cohortloop3: do i = 1,vegn%n_cohorts
@@ -1864,6 +1872,54 @@ contains
     endif
   end subroutine kill_lowdensity_cohorts
 
+  subroutine kill_old_grass(vegn)
+  ! kill old grass cohorts
+  ! Weng, 01/22/2023
+  type(vegn_tile_type), intent(inout) :: vegn
+
+  ! ---- local vars
+  type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
+  logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
+  real, parameter :: mindensity = 0.25E-4
+  logical :: OldGrass
+  integer :: i,j,k
+
+ ! calculate the number of cohorts that are not old grass
+  k = 0
+  do i = 1, vegn%n_cohorts
+    cx =>vegn%cohorts(i)
+    associate(sp=>spdata(cx%species))
+      OldGrass = (sp%lifeform ==0 .and. cx%age > 3.0)
+      if (.not. OldGrass) k=k+1
+    end associate
+  enddo
+  if (k==0)then
+     write(*,*)'in kill_old_grass: All cohorts are old grass, No action!'
+     !stop
+  endif
+
+  ! exclude cohorts that are old grass
+  if (k>0 .and. k<vegn%n_cohorts)then
+     allocate(cc(k))
+     j=0
+     do i = 1,vegn%n_cohorts
+        cx =>vegn%cohorts(i)
+        associate(sp=>spdata(cx%species))
+        OldGrass = (sp%lifeform ==0 .and. cx%age > 3.0)
+        if (.not. OldGrass) then
+           j=j+1
+           cc(j) = cx
+        else
+           ! Carbon and Nitrogen from plants to soil pools
+           call plant2soil(vegn,cx,cx%nindivs)
+        endif
+        end associate
+     enddo
+     vegn%n_cohorts = j
+     deallocate (vegn%cohorts)
+     vegn%cohorts=>cc
+  endif
+  end subroutine kill_old_grass
 
   subroutine merge_cohorts(c1, c2)
     !////////////////////////////////////////////////////////////////
@@ -2219,6 +2275,7 @@ contains
         cx => vegn%cohorts(i)
         cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
         cx%layer   = 1
+        cx%age = 0
         cx%species = INT(myinterface%init_cohort(i)%init_cohort_species)
         cx%ccID    =  i
         cx%plabl%c%c12     = myinterface%init_cohort(i)%init_cohort_nsc

@@ -156,7 +156,8 @@ module datatypes
     integer :: layer      = 1.0          ! the layer of this cohort (numbered from top, top layer=1)
     integer :: firstlayer = 0.0          ! 0 = never been in the first layer; 1 = at least one year in first layer
     real    :: layerfrac  = 0.0          ! fraction of layer area occupied by this cohort
-
+    real    :: leaf_age   = 0.0          ! leaf age (years)
+    
     !===== Population structure
     real :: nindivs   = 1.0          ! density of vegetation, individuals/m2
     real :: age       = 0.0          ! age of cohort, years

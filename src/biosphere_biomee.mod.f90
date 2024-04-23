@@ -181,6 +181,8 @@ contains
     ! Re-organize cohorts
     !---------------------------------------------
     call kill_lowdensity_cohorts( vegn )
+
+    call kill_old_grass( vegn ) 
     
     call relayer_cohorts( vegn )
     
