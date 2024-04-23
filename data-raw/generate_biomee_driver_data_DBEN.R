@@ -82,6 +82,7 @@ params_species <- tibble(
   lifeform      = rep(1,16),
   phenotype     = c(0,1,1,rep(1,13)),
   pt            = rep(0,16),
+  # Root parameters
   alpha_FR      = rep(1.2,16),
   rho_FR        = rep(200,16),
   root_r        = rep(2.9E-4,16), 
