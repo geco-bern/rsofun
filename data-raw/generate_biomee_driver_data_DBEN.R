@@ -100,6 +100,8 @@ params_species <- tibble(
   tc_crit       = rep(283.16,16),
   tc_crit_on    = rep(280.16,16),
   gdd_crit      = rep(280.0,16),
+  betaON        = rep(0,2,16),     
+  betaOFF       = rep(0,1,16), 
   seedlingsize  = rep(0.05,16),
   LNbase        = rep(0.8E-3,16),
   lAImax        = rep(3.5,16),

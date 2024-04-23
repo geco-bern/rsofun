@@ -125,6 +125,8 @@ module datatypes
     real    :: tc_crit                            ! K, for turning OFF a growth season
     real    :: tc_crit_on                         ! K, for turning ON a growth season
     real    :: gdd_crit                           ! K, critical value of GDD5 for turning ON growth season
+    real    :: betaON                             ! Critical soil moisture for PhenoON
+    real    :: betaOFF                            ! Critical soil moisture for PhenoOFF
 
     !===== Vital rates
     real    :: maturalage                         ! the age that can reproduce
@@ -157,7 +159,7 @@ module datatypes
     integer :: firstlayer = 0.0          ! 0 = never been in the first layer; 1 = at least one year in first layer
     real    :: layerfrac  = 0.0          ! fraction of layer area occupied by this cohort
     real    :: leaf_age   = 0.0          ! leaf age (years)
-    
+
     !===== Population structure
     real :: nindivs   = 1.0          ! density of vegetation, individuals/m2
     real :: age       = 0.0          ! age of cohort, years
@@ -474,6 +476,8 @@ module datatypes
   ! real :: tc_crit(0:MSPECIES)= 283.16 ! OFF
   ! real :: tc_crit_on(0:MSPECIES)= 280.16 ! ON
   ! real :: gdd_crit(0:MSPECIES)= 280.0 ! Simulations 280, 240, 200
+  ! real :: betaON(0:MSPECIES)  != 0.2  ! Critical soil moisture for phenology ON
+  ! real :: betaOFF(0:MSPECIES) != 0.1  ! Critical soil moisture for phenology OFF
 
   !===== Allometry parameters
   real :: alphaHT(0:MSPECIES)      = 36.0
@@ -596,7 +600,9 @@ contains
     spdata(0:MSPECIES)%leaf_size     = myinterface%params_species(1:(MSPECIES+1))%leaf_size
     spdata(0:MSPECIES)%tc_crit       = myinterface%params_species(1:(MSPECIES+1))%tc_crit
     spdata(0:MSPECIES)%gdd_crit      = myinterface%params_species(1:(MSPECIES+1))%gdd_crit
-
+    spdata(0:MSPECIES)%betaON        = myinterface%params_species(1:(MSPECIES+1))%betaON
+    spdata(0:MSPECIES)%betaOFF       = myinterface%params_species(1:(MSPECIES+1))%betaOFF
+    
     ! Plant traits
     spdata(0:MSPECIES)%LMA           = myinterface%params_species(1:(MSPECIES+1))%LMA ! leaf mass per unit area, kg C/m2
     spdata(0:MSPECIES)%LNbase        = myinterface%params_species(1:(MSPECIES+1))%LNbase   ! Basal leaf nitrogen per unit area, kg N/m2

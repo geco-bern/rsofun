@@ -403,7 +403,7 @@ contains
     real(kind=c_double), intent(in) :: par_mort_under
 
     ! naked arrays
-    real(kind=c_double), dimension(0:MSPECIES,38), intent(in)       :: params_species
+    real(kind=c_double), dimension(0:MSPECIES,40), intent(in)       :: params_species
     real(kind=c_double), dimension(n_dim_soil_types,8), intent(in)  :: params_soil
     real(kind=c_double), dimension(MAX_INIT_COHORTS,5),  intent(in) :: init_cohort
 
@@ -595,23 +595,25 @@ contains
     myinterface%params_species(:)%tc_crit       = real( params_species(:,19))
     myinterface%params_species(:)%tc_crit_on    = real( params_species(:,20))
     myinterface%params_species(:)%gdd_crit      = real( params_species(:,21))
-    myinterface%params_species(:)%seedlingsize  = real( params_species(:,22))
-    myinterface%params_species(:)%LNbase        = real( params_species(:,23))
-    myinterface%params_species(:)%laimax        = real( params_species(:,24))
-    myinterface%params_species(:)%Nfixrate0     = real( params_species(:,25))
-    myinterface%params_species(:)%NfixCost0     = real( params_species(:,26))
-    myinterface%params_species(:)%phiCSA        = real( params_species(:,27))
-    myinterface%params_species(:)%mortrate_d_c  = real( params_species(:,28))
-    myinterface%params_species(:)%mortrate_d_u  = real( params_species(:,29))
-    myinterface%params_species(:)%maturalage    = real( params_species(:,30))
-    myinterface%params_species(:)%fNSNmax       = real( params_species(:,31))
-    myinterface%params_species(:)%LMA           = real( params_species(:,32)) ! prescribed
-    myinterface%params_species(:)%rho_wood      = real( params_species(:,33)) ! prescribed
-    myinterface%params_species(:)%alphaBM       = real( params_species(:,34)) ! prescribed
-    myinterface%params_species(:)%thetaBM       = real( params_species(:,35)) ! prescribed
-    myinterface%params_species(:)%kphio         = real( params_species(:,36)) ! calibratable
-    myinterface%params_species(:)%phiRL         = real( params_species(:,37)) ! calibratable
-    myinterface%params_species(:)%LAI_light     = real( params_species(:,38)) ! calibratable
+    myinterface%params_species(:)%betaON        = real( params_species(:,22))
+    myinterface%params_species(:)%betaOFF       = real( params_species(:,23))
+    myinterface%params_species(:)%seedlingsize  = real( params_species(:,24))
+    myinterface%params_species(:)%LNbase        = real( params_species(:,25))
+    myinterface%params_species(:)%laimax        = real( params_species(:,26))
+    myinterface%params_species(:)%Nfixrate0     = real( params_species(:,27))
+    myinterface%params_species(:)%NfixCost0     = real( params_species(:,28))
+    myinterface%params_species(:)%phiCSA        = real( params_species(:,29))
+    myinterface%params_species(:)%mortrate_d_c  = real( params_species(:,30))
+    myinterface%params_species(:)%mortrate_d_u  = real( params_species(:,31))
+    myinterface%params_species(:)%maturalage    = real( params_species(:,32))
+    myinterface%params_species(:)%fNSNmax       = real( params_species(:,33))
+    myinterface%params_species(:)%LMA           = real( params_species(:,34)) ! prescribed
+    myinterface%params_species(:)%rho_wood      = real( params_species(:,35)) ! prescribed
+    myinterface%params_species(:)%alphaBM       = real( params_species(:,36)) ! prescribed
+    myinterface%params_species(:)%thetaBM       = real( params_species(:,37)) ! prescribed
+    myinterface%params_species(:)%kphio         = real( params_species(:,38)) ! calibratable
+    myinterface%params_species(:)%phiRL         = real( params_species(:,39)) ! calibratable
+    myinterface%params_species(:)%LAI_light     = real( params_species(:,40)) ! calibratable
 
     ! Initial cohort sizes
     myinterface%init_cohort(:)%init_cohort_species = real(init_cohort(:,1))

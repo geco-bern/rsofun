@@ -60,6 +60,8 @@ module md_interface_biomee
     real    :: tc_crit
     real    :: tc_crit_on
     real    :: gdd_crit
+    real    :: betaON
+    real    :: betaOFF
     real    :: seedlingsize
     real    :: LNbase
     real    :: laimax
