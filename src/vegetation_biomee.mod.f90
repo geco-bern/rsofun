@@ -2235,7 +2235,7 @@ contains
     integer,parameter :: rand_seed = 86456
     real    :: r
     real    :: btotal
-    integer :: i, istat
+    integer :: i, istat, init_n_cohorts
     ! integer :: io           ! i/o status for the namelist
     ! integer :: ierr         ! error code, returned by i/o routines
     ! integer :: nml_unit

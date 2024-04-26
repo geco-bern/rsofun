@@ -157,6 +157,7 @@ params_soil <- tibble(
 )
 
 init_cohort <- tibble(
+  init_n_cohorts = 1,   # number of PFTs
   init_cohort_species = rep(1, 10),    # indicates sps # 1 - Fagus sylvatica
   init_cohort_nindivs = rep(0.05,10),  # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
   init_cohort_bl      = rep(0.0,10),   # initial biomass of leaves, kg C/individual

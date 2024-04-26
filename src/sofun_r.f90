@@ -405,7 +405,7 @@ contains
     ! naked arrays
     real(kind=c_double), dimension(0:MSPECIES,55), intent(in)       :: params_species
     real(kind=c_double), dimension(n_dim_soil_types,8), intent(in)  :: params_soil
-    real(kind=c_double), dimension(MAX_INIT_COHORTS,8),  intent(in) :: init_cohort
+    real(kind=c_double), dimension(MAX_INIT_COHORTS,9),  intent(in) :: init_cohort
 
     ! initial soil pool size
     real(kind=c_double), intent(in) :: init_fast_soil_C
@@ -633,14 +633,15 @@ contains
 
 
     ! Initial cohort sizes
-    myinterface%init_cohort(:)%init_cohort_species = int(init_cohort(:,1))
-    myinterface%init_cohort(:)%init_cohort_nindivs = real(init_cohort(:,2))
-    myinterface%init_cohort(:)%init_cohort_bl      = real(init_cohort(:,3))
-    myinterface%init_cohort(:)%init_cohort_br      = real(init_cohort(:,4))
-    myinterface%init_cohort(:)%init_cohort_bsw     = real(init_cohort(:,5))
-    myinterface%init_cohort(:)%init_cohort_bHW     = real(init_cohort(:,6))
-    myinterface%init_cohort(:)%init_cohort_seedC   = real(init_cohort(:,7))
-    myinterface%init_cohort(:)%init_cohort_nsc     = real(init_cohort(:,8))
+    myinterface%init_cohort(:)%init_n_cohorts      = int(init_cohort(:,1))
+    myinterface%init_cohort(:)%init_cohort_species = int(init_cohort(:,2))
+    myinterface%init_cohort(:)%init_cohort_nindivs = real(init_cohort(:,3))
+    myinterface%init_cohort(:)%init_cohort_bl      = real(init_cohort(:,4))
+    myinterface%init_cohort(:)%init_cohort_br      = real(init_cohort(:,5))
+    myinterface%init_cohort(:)%init_cohort_bsw     = real(init_cohort(:,6))
+    myinterface%init_cohort(:)%init_cohort_bHW     = real(init_cohort(:,7))
+    myinterface%init_cohort(:)%init_cohort_seedC   = real(init_cohort(:,8))
+    myinterface%init_cohort(:)%init_cohort_nsc     = real(init_cohort(:,9))
 
     ! Initial soil pools
     myinterface%init_soil%init_fast_soil_C = real( init_fast_soil_C )

@@ -97,7 +97,8 @@ module md_interface_biomee
   end type paramstype_species
 
   type inittype_cohort 
-    real :: init_cohort_species
+    integer :: init_n_cohorts
+    integer :: init_cohort_species
     real :: init_cohort_nindivs
     real :: init_cohort_bl
     real :: init_cohort_br

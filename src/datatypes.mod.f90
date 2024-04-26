@@ -528,7 +528,7 @@ module datatypes
 
   !=============== Initial cohort specifications in R ============================================
   ! Initial values passed through R 
-  integer :: init_n_cohorts                        = MAX_INIT_COHORTS
+  ! integer :: init_n_cohorts                        = MAX_INIT_COHORTS
   ! integer :: init_cohort_species(MAX_INIT_COHORTS) = 2
   ! real    :: init_cohort_nindivs(MAX_INIT_COHORTS) = 1.0  ! initial individual density, individual/m2
   ! real    :: init_cohort_bl(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of leaves, kg C/individual
