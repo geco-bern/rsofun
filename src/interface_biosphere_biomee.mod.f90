@@ -62,20 +62,35 @@ module md_interface_biomee
     real    :: gdd_crit
     real    :: betaON
     real    :: betaOFF
-    real    :: seedlingsize
-    real    :: LNbase
-    real    :: laimax
-    real    :: Nfixrate0
-    real    :: NfixCost0
-    real    :: phiCSA
-    real    :: mortrate_d_c
-    real    :: mortrate_d_u
-    real    :: maturalage
-    real    :: fNSNmax
-    real    :: LMA       ! prescribed by sps
-    real    :: rho_wood  ! prescribed by sps
+    real    :: alphaHT   ! prescribed by sps
+    real    :: thetaHT   ! prescribed by sps
+    real    :: alphaCA   ! prescribed by sps
+    real    :: thetaCA   ! prescribed by sps
     real    :: alphaBM   ! prescribed by sps
     real    :: thetaBM   ! prescribed by sps
+    real    :: seedlingsize
+    real    :: maturalage
+    real    :: v_seed
+    real    :: mortrate_d_c
+    real    :: mortrate_d_u
+    real    :: LMA       ! prescribed by sps
+    real    :: leafLS
+    real    :: LNbase
+    real    :: CNleafsupport
+    real    :: rho_wood  ! prescribed by sps
+    real    :: taperfactor
+    real    :: lAImax
+    real    :: tauNSC
+    real    :: fNSNmax
+    real    :: phiCSA
+    real    :: CNleaf0
+    real    :: CNsw0
+    real    :: CNwood0
+    real    :: CNroot0
+    real    :: CNseed0
+    real    :: Nfixrate0
+    real    :: NfixCost0
+    real    :: internal_gap_frac
     real    :: kphio     ! calibratable
     real    :: phiRL     ! calibratable
     real    :: LAI_light ! calibratable

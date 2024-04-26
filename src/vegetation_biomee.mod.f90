@@ -1475,8 +1475,8 @@ contains
     ! local variables
     type(cohort_type),pointer :: cc
 
-    real    :: rho_N_up0 = 0.1 ! 0.05 ! hourly N uptake rate, fraction of the total mineral N
-    real    :: N_roots0  = 0.4  ! root biomass at half max N-uptake rate,kg C m-2
+    real    :: rho_N_up0 = 0.1 ! hourly N uptake rate, fraction of the total mineral N
+    real    :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate,kg C m-2
 
     real    :: totNup    ! kgN m-2
     real    :: avgNup
