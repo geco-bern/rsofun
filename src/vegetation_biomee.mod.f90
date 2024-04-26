@@ -2265,7 +2265,7 @@ contains
     if (read_from_parameter_file) then
 
       ! Initialize plant cohorts
-      init_n_cohorts = nCohorts ! Weng,2018-11-21
+      init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts !nCohorts !Weng,2018-11-21
       allocate(cc(1:init_n_cohorts), STAT = istat)
       vegn%cohorts => cc
       vegn%n_cohorts = init_n_cohorts
