@@ -709,7 +709,7 @@ contains
 
     ! real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
-    real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
+    ! real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
 
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
     ! logical :: merged(vegn%n_cohorts) ! mask to skip cohorts that were already merged
@@ -1789,7 +1789,7 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc(:) ! array to hold new cohorts
     logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
-    real, parameter :: mindensity = 1.0E-6
+    ! real, parameter :: mindensity = 1.0E-6
     integer :: i,j,k
     allocate(cc(vegn%n_cohorts))
     merged(:)=.FALSE. ; k = 0
@@ -1920,7 +1920,7 @@ contains
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(cohort_type), intent(in) :: c1,c2
-    real, parameter :: mindensity = 1.0E-4
+    ! real, parameter :: mindensity = 1.0E-4
     logical :: sameSpecies, sameLayer, sameSize, sameSizeTree, sameSizeGrass, lowDensity
     sameSpecies  = c1%species == c2%species
     
@@ -2140,13 +2140,8 @@ contains
     ! -local vars -------
     type(cohort_type), dimension(:), pointer :: cc
     type(cohort_type), pointer :: cx
-    integer,parameter :: rand_seed = 86456
-    ! real    :: r
     real    :: btotal
     integer :: i, istat
-    ! integer :: io           ! i/o status for the namelist
-    ! integer :: ierr         ! error code, returned by i/o routines
-    ! integer :: nml_unit
 
     ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
     soiltype    = myinterface%params_tile%soiltype 

@@ -291,7 +291,7 @@ contains
 
     ! from David's code
     real, parameter :: depth    =  30.0
-    real, parameter :: topsoil  =  1.0
+    ! real, parameter :: topsoil  =  1.0
 
     ! calibrated paramters according to David Sandoval's PhD project report 
     real, parameter :: c_wp = 0.2018 ! 0.1437904

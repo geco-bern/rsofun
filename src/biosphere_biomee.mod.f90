@@ -33,13 +33,13 @@ contains
     ! ! local variables
     integer :: dm, moy, doy
     logical, save :: init = .true.   ! is true only on the first day of the simulation 
-    logical, parameter :: verbose = .false.       ! change by hand for debugging etc.
+    ! logical, parameter :: verbose = .false.       ! change by hand for debugging etc.
 
     !----------------------------------------------------------------
     ! Biome-E stuff
     !----------------------------------------------------------------
-    integer, parameter :: rand_seed = 86456
-    integer, parameter :: totalyears = 10
+    ! integer, parameter :: rand_seed = 86456
+    ! integer, parameter :: totalyears = 10
     integer, parameter :: nCohorts = 1
     real    :: tsoil, soil_theta
     integer :: year0

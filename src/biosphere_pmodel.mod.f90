@@ -41,7 +41,7 @@ contains
     ! local variables
     integer :: dm, moy, doy
     logical, save           :: init_daily            ! is true only on the first day of the simulation 
-    logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
+    ! logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
 
     !----------------------------------------------------------------
     ! INITIALISATIONS

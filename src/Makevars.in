@@ -5,7 +5,7 @@
 # -frecursive: to avoid "Warning: Array 'out_biosphere' at (1) is larger than limit ..."
 # -fbounds-check: https://scicomp.stackexchange.com/questions/36045/ifort-everithing-ok-but-with-gfortran-segmentation-fault
 # -Wall -Wextra -Wpedantic: to get more warnings
-# PKG_FFLAGS = -frecursive -fbounds-check -Wall -Wextra -Wpedantic
+PKG_FFLAGS = -frecursive -fbounds-check -Wall -Wextra -Wpedantic
 
 # C objects
 C_OBJS = wrappersc.o

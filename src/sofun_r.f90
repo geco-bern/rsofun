@@ -46,7 +46,7 @@ contains
     use md_params_siml_pmodel, only: getsteering
     use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
-    use md_params_core, only: nlayers_soil, ndayyear, npft
+    use md_params_core
     use md_biosphere_pmodel, only: biosphere_annual
 
     implicit none
@@ -79,7 +79,7 @@ contains
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
-    integer :: npft_local, yr, idx_start, idx_end
+    integer :: yr, idx_start, idx_end ! npft_local
 
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
@@ -109,15 +109,15 @@ contains
     myinterface%params_siml%lgr4               = lgr4
     myinterface%params_siml%secs_per_tstep     = secs_per_tstep
 
-    ! Count PFTs to be simulated
-    npft_local = 0
-    if (myinterface%params_siml%ltre) npft_local = npft_local + 1
-    if (myinterface%params_siml%ltne) npft_local = npft_local + 1
-    if (myinterface%params_siml%ltrd) npft_local = npft_local + 1
-    if (myinterface%params_siml%ltnd) npft_local = npft_local + 1
-    if (myinterface%params_siml%lgr3) npft_local = npft_local + 1
-    if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
-    if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
+    ! ! Count PFTs to be simulated
+    ! npft_local = 0
+    ! if (myinterface%params_siml%ltre) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%ltne) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%ltrd) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%ltnd) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%lgr3) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
 
     ! set parameter to define that this is not a calibration run (otherwise sofun.f90 would not have been compiled, but sofun_simsuite.f90)
     myinterface%params_siml%is_calib = .true.  ! treat paramters passed through R/C-interface the same way as calibratable parameters
@@ -346,8 +346,7 @@ contains
     ! use md_params_soil_biomee, only: getsoil
     use md_forcing_biomee, only: getclimate, getco2, climate_type !, forcingData
     use md_interface_biomee, only: interfacetype_biosphere, outtype_biosphere, myinterface
-    use md_params_core, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
-      ndayyear, nvars_daily_tile, nvars_hourly_tile, nvars_daily_cohorts, nvars_annual_cohorts, nvars_annual_tile
+    use md_params_core
     use md_biosphere_biomee, only: biosphere_annual
 
     implicit none
@@ -629,7 +628,7 @@ contains
     !----------------------------------------------------------------
     timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
     timestep_d = real(forcing(2,2)) - real(forcing(1,2))  ! This takes the day of year (a numeric) from the forcing file
-    if (timestep==0.0 .and. timestep_d==1.0) then
+    if (abs(timestep) < eps .and. abs(timestep_d - 1.0) < eps) then
       ! forcing is daily
       timestep = 24.0
     end if

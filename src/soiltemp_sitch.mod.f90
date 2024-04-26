@@ -2,7 +2,7 @@ module md_soiltemp
   !////////////////////////////////////////////////////////////////
   ! Soil temperature based on LPJ (Sitch et al., 2003)
   !----------------------------------------------------------------
-  use md_params_core, only: nlu, maxgrid
+  use md_params_core
 
   implicit none
 
@@ -96,9 +96,8 @@ contains
       end if
 
       ! In case of zero soil water, return with soil temp = air temp
-      if (meanw1==0.0) then
+      if (abs(meanw1 - 0.0) < eps) then
         soil(lu)%phy%temp = dtemp(doy)
-        ! dtemp_soil(lu,jpngr) = dtemp(doy)
         return
       endif
 

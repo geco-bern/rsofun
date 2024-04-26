@@ -3,7 +3,7 @@ module md_gpp_pmodel
   ! Module containing a wrapper for using the P-model photosynthesis
   ! scheme.
   !----------------------------------------------------------------
-  use md_params_core, only: nmonth, npft, nlu, c_molmass, h2o_molmass, maxgrid, ndayyear, kTkelvin, dummy
+  use md_params_core
   use md_tile_pmodel, only: tile_type, tile_fluxes_type
   use md_interface_pmodel, only: myinterface
   use md_forcing_pmodel, only: climate_type, vegcover_type
@@ -120,7 +120,7 @@ contains
       ! Low-temperature effect on quantum yield efficiency 
       !----------------------------------------------------------------
       ! take the instananeously varying temperature for governing quantum yield variations
-      if (params_pft_gpp(pft)%kphio_par_a == 0.0) then
+      if (abs(params_pft_gpp(pft)%kphio_par_a) < eps) then
         kphio_temp = params_pft_gpp(pft)%kphio
       else
         kphio_temp = calc_kphio_temp( climate%dtemp, &

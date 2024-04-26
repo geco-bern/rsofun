@@ -5,8 +5,7 @@ module md_waterbal
   ! Written by Benjamin Stocker, partly based on Python code by
   ! Tyler Davis (under GPL2.1).
   !----------------------------------------------------------------
-  use md_params_core, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
-    kMv, kMa, kfFEC, secs_per_day, pi, dummy, kGsc, ndaymonth, kTkelvin
+  use md_params_core
   use md_tile_pmodel, only: tile_type, tile_fluxes_type
   use md_forcing_pmodel, only: climate_type
   use md_grid, only: gridtype
@@ -277,7 +276,6 @@ contains
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
-    use md_params_core, only: ndayyear, pi, dummy
     use md_sofunutils, only: calc_patm
 
     ! arguments
@@ -412,7 +410,7 @@ contains
       melt = 0.0
     end if 
 
-    if (sn==dummy) then
+    if (abs(sn - dummy) < eps) then
       fsnow = max( min( 1.0,  1.0 - ( 1.0 / 2.0 ) * tc ), 0.0 )
       out_snow_rain%snow_updated   = snow + fsnow * pr - melt
       out_snow_rain%liquid_to_soil = pr * ( 1.0 - fsnow ) + melt
