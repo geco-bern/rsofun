@@ -157,11 +157,14 @@ params_soil <- tibble(
 )
 
 init_cohort <- tibble(
-  init_cohort_species = rep(1, 10),
-  init_cohort_nindivs = rep(0.05,10),
-  init_cohort_bsw     = rep(0.05,10),
-  init_cohort_bHW     = rep(0.0, 10),
-  init_cohort_nsc     = rep(0.05,10)
+  init_cohort_species = rep(1, 10),    # indicates sps # 1 - Fagus sylvatica
+  init_cohort_nindivs = rep(0.05,10),  # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
+  init_cohort_bl      = rep(0.0,10),   # initial biomass of leaves, kg C/individual
+  init_cohort_br      = rep(0.0, 10),  # initial biomass of fine roots, kg C/individual
+  init_cohort_bsw     = rep(0.05,10),  # initial biomass of sapwood, kg C/individual
+  init_cohort_bHW     = rep(0.0, 10),  # initial biomass of heartwood, kg C/tree
+  init_cohort_seedC   = rep(0.0, 10),  # initial biomass of seeds, kg C/individual
+  init_cohort_nsc     = rep(0.05,10)   # initial non-structural biomass
 )
 
 init_soil <- tibble( #list

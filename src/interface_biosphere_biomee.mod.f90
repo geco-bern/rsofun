@@ -99,8 +99,11 @@ module md_interface_biomee
   type inittype_cohort 
     real :: init_cohort_species
     real :: init_cohort_nindivs
+    real :: init_cohort_bl
+    real :: init_cohort_br
     real :: init_cohort_bsw
     real :: init_cohort_bHW
+    real :: init_cohort_seedC
     real :: init_cohort_nsc
   end type inittype_cohort
 
