@@ -47,6 +47,8 @@ params_siml <- tibble(
   do_U_shaped_mortality = TRUE,
   update_annualLAImax = TRUE,
   do_closedN_run = TRUE,
+  do_reset_veg = FALSE, # TRUE
+  dist_frequency = 0, # 100, 75, 50, 25, 15, 10
   method_photosynth = "gs_leuning",
   method_mortality = "dbh"
 )
@@ -80,6 +82,7 @@ params_species <- tibble(
   lifeform      = rep(1,16),
   phenotype     = c(0,1,1,rep(1,13)),
   pt            = rep(0,16),
+  # Root parameters
   alpha_FR      = rep(1.2,16),
   rho_FR        = rep(200,16),
   root_r        = rep(2.9E-4,16), 
@@ -98,6 +101,8 @@ params_species <- tibble(
   tc_crit       = rep(283.16,16),
   tc_crit_on    = rep(280.16,16),
   gdd_crit      = rep(280.0,16),
+  betaON        = rep(0,2,16),     
+  betaOFF       = rep(0,1,16), 
   seedlingsize  = rep(0.05,16),
   LNbase        = rep(0.8E-3,16),
   lAImax        = rep(3.5,16),
@@ -172,7 +177,7 @@ biomee_gs_leuning_drivers <- tibble(
   init_cohort = list(tibble(init_cohort)),
   init_soil = list(tibble(init_soil)),
   forcing = list(tibble(forcing))
-  )
+)
 
 save(biomee_gs_leuning_drivers,
      file ="data/biomee_gs_leuning_drivers.rda",
@@ -206,18 +211,20 @@ biomee_p_model_drivers <- tibble(
   init_cohort = list(tibble(init_cohort)),
   init_soil = list(tibble(init_soil)),
   forcing  =list(tibble(forcing))
-  )
+)
 
 save(biomee_p_model_drivers,
      file ="data/biomee_p_model_drivers.rda",
      compress = "xz")
 
 # run the model gs-leuning
-biomee_gs_leuning_output <- runread_biomee_f(
+out <- runread_biomee_f(
   biomee_gs_leuning_drivers,
   makecheck = TRUE,
-  parallel = FALSE
-)$data[[1]]$output_annual_tile[c('year','GPP','plantC')]
+  parallel = FALSE)
+
+biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 
 cowplot::plot_grid(
   biomee_gs_leuning_output %>% 
@@ -235,11 +242,13 @@ save(biomee_gs_leuning_output,
      compress = "xz")
 
 # run the model p-model
-biomee_p_model_output <- runread_biomee_f(
+out <- runread_biomee_f(
   biomee_p_model_drivers,
   makecheck = TRUE,
-  parallel = FALSE
-)$data[[1]]$output_annual_tile[c('year','GPP','plantC')]
+  parallel = FALSE)
+
+biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 
 cowplot::plot_grid(
   biomee_p_model_output %>% 
