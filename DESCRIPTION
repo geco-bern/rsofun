@@ -69,6 +69,7 @@ Suggests:
     rmarkdown,
     ggplot2,
     knitr,
-    sensitivity
+    sensitivity,
+    stringr
 VignetteBuilder: knitr
 Encoding: UTF-8
