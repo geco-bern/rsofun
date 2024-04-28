@@ -138,6 +138,14 @@ contains
       wscal_pvy(:,:) = wscal_alldays(:,:)
     end if
 
+    ! free memory on the last simulation year and day
+    if ( myinterface%steering%finalize .and. doy == ndayyear ) then
+      if (allocated(dtemp_pvy    )) deallocate( dtemp_pvy )
+      if (allocated(wscal_pvy    )) deallocate( wscal_pvy )
+      if (allocated(wscal_alldays)) deallocate( wscal_alldays )
+      dtemp_pvy(:) = dtemp(:)
+    end if    
+
     return
 
   end subroutine soiltemp
