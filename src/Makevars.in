@@ -5,7 +5,8 @@
 # -frecursive: to avoid "Warning: Array 'out_biosphere' at (1) is larger than limit ..."
 # -fbounds-check: https://scicomp.stackexchange.com/questions/36045/ifort-everithing-ok-but-with-gfortran-segmentation-fault
 # -Wall -Wextra -Wpedantic: to get more warnings
-# PKG_FFLAGS = -frecursive -fbounds-check -Wall -Wextra -Wpedantic -g -O0
+# -fsanitize=address: Using the Address Sanitizer https://rstudio.github.io/r-manuals/r-exts/Debugging.html#using-the-address-sanitizer
+# PKG_FFLAGS = -frecursive -fbounds-check -Wall -Wextra -Wpedantic -g -O0 -fsanitize=address
 
 # C objects
 C_OBJS = wrappersc.o

@@ -197,7 +197,7 @@ contains
       !----------------------------------------------------------------
       ! Finazlize run: deallocating memory
       !----------------------------------------------------------------
-      deallocate(vegn)
+      deallocate( vegn )
 
     end if
     
