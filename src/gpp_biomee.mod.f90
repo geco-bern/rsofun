@@ -76,7 +76,6 @@ contains
     real   :: kappa                                        ! light extinction coefficient of crown layers
     real   :: f_light(nlayers_max+1)                       ! incident light fraction at top of a given layer
     real   :: LAIlayer(nlayers_max)                        ! leaf area index per layer, corrected for gaps (representative for the tree-covered fraction)
-    real   :: crownarea_layer(nlayers_max)                 ! additional GPP for lower layer cohorts due to gaps
     real   :: accuCAI, f_gap
     real   :: par                                          ! just for temporary use
     real, dimension(vegn%n_cohorts) :: fapar_tree          ! tree-level fAPAR based on LAI within the crown
@@ -577,12 +576,6 @@ contains
   subroutine getpar_modl_gpp()
     !////////////////////////////////////////////////////////////////
     ! Subroutine reads module-specific parameters from input file.
-    !----------------------------------------------------------------
-    ! local variables
-    integer :: pft
-
-    !----------------------------------------------------------------
-    ! PFT-independent parameters
     !----------------------------------------------------------------
     ! unit cost of carboxylation
     params_gpp%beta  = 146.000000

@@ -33,13 +33,13 @@ contains
     ! ! local variables
     integer :: dm, moy, doy
     logical, save :: init = .true.   ! is true only on the first day of the simulation 
-    logical, parameter :: verbose = .false.       ! change by hand for debugging etc.
+    ! logical, parameter :: verbose = .false.       ! change by hand for debugging etc.
 
     !----------------------------------------------------------------
     ! Biome-E stuff
     !----------------------------------------------------------------
-    integer, parameter :: rand_seed = 86456
-    integer, parameter :: totalyears = 10
+    ! integer, parameter :: rand_seed = 86456
+    ! integer, parameter :: totalyears = 10
     integer, parameter :: nCohorts = 1
     real    :: tsoil, soil_theta
     integer :: year0
@@ -119,7 +119,7 @@ contains
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
          
-          call hourly_diagnostics( vegn, myinterface%climate(idata), iyears, idoy, i , out_biosphere%hourly_tile(idata))
+          call hourly_diagnostics( vegn, myinterface%climate(idata) )  !, iyears, idoy, i, out_biosphere%hourly_tile(idata)
          
           init = .false.
          
@@ -205,6 +205,12 @@ contains
 
     !if (iyears == 700 .or. iyears == 800) &
     !     call reset_vegn_initial(vegn) 
+    
+    if (myinterface%steering%finalize) then
+      !----------------------------------------------------------------
+      ! Finazlize run: deallocating memory
+      !----------------------------------------------------------------
+      deallocate( vegn )
 
     if(myinterface%params_siml%do_reset_veg) then
 

@@ -159,7 +159,7 @@ void F77_NAME(biomee_f)(
     int    *nt_annual,                
     int    *nt_annual_cohorts,                
     double *forcing,                  
-    double *output_hourly_tile,   
+    // double *output_hourly_tile,   
     double *output_daily_tile,    
     double *output_daily_cohorts_year,
     double *output_daily_cohorts_doy,
@@ -278,13 +278,13 @@ extern SEXP biomee_f_C(
     ){
 
     // // Number of time steps (same in forcing and output)
-    const int nt = INTEGER(n)[0];
+    // const int nt = INTEGER(n)[0];
     const int nt_daily = INTEGER(n_daily)[0];
     const int nt_annual = INTEGER(n_annual)[0];
     const int nt_annual_cohorts = INTEGER(n_annual_cohorts)[0];
 
     // // Specify output
-    SEXP output_hourly_tile            = PROTECT( allocMatrix(REALSXP, nt,       15) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
+    // SEXP output_hourly_tile            = PROTECT( allocMatrix(REALSXP, nt,       15) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_daily_tile             = PROTECT( allocMatrix(REALSXP, nt_daily, 35) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_daily_cohorts_year     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_daily_cohorts_doy      = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
@@ -399,7 +399,7 @@ extern SEXP biomee_f_C(
         INTEGER(n_annual),                
         INTEGER(n_annual_cohorts),                
         REAL(forcing),             
-        REAL(output_hourly_tile),  
+        // REAL(output_hourly_tile),  
         REAL(output_daily_tile),    
         REAL(output_daily_cohorts_year),
         REAL(output_daily_cohorts_doy),

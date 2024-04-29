@@ -500,7 +500,7 @@ run_biomee_f_bysite <- function(
   if (continue) {
 
     ## C wrapper call
-    lm3out <- .Call(
+    biomeeout <- .Call(
 
       'biomee_f_C',
 
@@ -569,14 +569,14 @@ run_biomee_f_bysite <- function(
       )
     
     # If simulation is very long, output gets massive.
-    # E.g., In a 3000 years-simulation 'lm3out' is 11.5 GB.
+    # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
     # In such cases (here, more than 5 GB), ignore hourly and daily outputs at tile and cohort levels
     size_of_object_gb <- as.numeric(
       gsub(
         pattern = " Gb",
         replacement = "",
         format(
-          utils::object.size(lm3out), 
+          utils::object.size(biomeeout), 
           units = "GB"
           )
         )
@@ -587,28 +587,28 @@ run_biomee_f_bysite <- function(
         sprintf("Warning: Excessive size of output object (%s) for %s. 
                 Hourly and daily outputs at tile and cohort levels are not returned.",
                 format(
-                  utils::object.size(lm3out), 
+                  utils::object.size(biomeeout), 
                   units = "GB"
                 ), 
                 sitename))
     }
     
     #---- Single level output, one matrix ----
-    # hourly
-    if (size_of_object_gb < 5){
-      output_hourly_tile <- as.data.frame(lm3out[[1]], stringAsFactor = FALSE)
-      colnames(output_hourly_tile) <- c("year", "doy", "hour",
-                                        "rad", "Tair", "Prcp",
-                                        "GPP", "Resp", "Transp",
-                                        "Evap", "Runoff", "Soilwater",
-                                        "wcl", "FLDCAP", "WILTPT")
-    } else {
-      output_hourly_tile <- NA
-    }
+    # # hourly
+    # if (size_of_object_gb < 5){
+    #   output_hourly_tile <- as.data.frame(biomeeout[[1]], stringAsFactor = FALSE)
+    #   colnames(output_hourly_tile) <- c("year", "doy", "hour",
+    #                                     "rad", "Tair", "Prcp",
+    #                                     "GPP", "Resp", "Transp",
+    #                                     "Evap", "Runoff", "Soilwater",
+    #                                     "wcl", "FLDCAP", "WILTPT")
+    # } else {
+    #   output_hourly_tile <- NA
+    # }
     
     # daily_tile
     if (size_of_object_gb < 5){
-      output_daily_tile <- as.data.frame(lm3out[[2]], stringAsFactor = FALSE)
+      output_daily_tile <- as.data.frame(biomeeout[[1]], stringAsFactor = FALSE)
       colnames(output_daily_tile) <- c(
         "year", "doy", "Tc",
         "Prcp", "totWs", "Trsp",
@@ -627,7 +627,7 @@ run_biomee_f_bysite <- function(
     }
     
     # annual tile
-    output_annual_tile <- as.data.frame(lm3out[[30]], stringAsFactor = FALSE)
+    output_annual_tile <- as.data.frame(biomeeout[[29]], stringAsFactor = FALSE)
     colnames(output_annual_tile) <- c("year", "CAI", "LAI",
           "Density", "DBH", "Density12",
           "DBH12", "QMD", "NPP",
@@ -674,9 +674,9 @@ run_biomee_f_bysite <- function(
         "SW_N", "HW_N"
       )
       output_daily_cohorts <- lapply(1:length(daily_values), function(x){
-        loc <- 2 + x
+        loc <- 1 + x
         v <- data.frame(
-          as.vector(lm3out[[loc]]),
+          as.vector(biomeeout[[loc]]),
           stringsAsFactors = FALSE)
         names(v) <- daily_values[x]
         return(v)
@@ -684,7 +684,7 @@ run_biomee_f_bysite <- function(
       
       output_daily_cohorts <- do.call("cbind", output_daily_cohorts)
       
-      cohort <- sort(rep(1:ncol(lm3out[[3]]),nrow(lm3out[[3]])))
+      cohort <- sort(rep(1:ncol(biomeeout[[3]]),nrow(biomeeout[[3]])))
       output_daily_cohorts <- cbind(cohort, output_daily_cohorts)
       
       # drop rows (cohorts) with no values
@@ -711,9 +711,9 @@ run_biomee_f_bysite <- function(
     )
     
     output_annual_cohorts <- lapply(1:length(annual_values), function(x){
-      loc <- 30 + x
+      loc <- 29 + x
       v <- data.frame(
-        as.vector(lm3out[[loc]]),
+        as.vector(biomeeout[[loc]]),
         stringsAsFactors = FALSE)
       names(v) <- annual_values[x]
       return(v)
@@ -733,7 +733,7 @@ run_biomee_f_bysite <- function(
     
     # format the output in a structured list
     out <- list(
-      output_hourly_tile = output_hourly_tile,
+      # output_hourly_tile = output_hourly_tile,
       output_daily_tile = output_daily_tile,
       output_daily_cohorts = output_daily_cohorts,
       output_annual_tile = output_annual_tile,

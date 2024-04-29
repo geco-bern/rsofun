@@ -44,7 +44,6 @@ contains
     integer:: i
     real   :: tair, tsoil  ! temperature of soil, degC
     real   :: theta        ! soil wetness, unitless
-    integer :: iyears
 
     ! Climatic variable
     tair   = forcing%Tair - 273.16   ! conversion to degC
@@ -718,7 +717,7 @@ contains
 
     ! real :: nindivs_new, frac_new
     real, dimension(:), allocatable :: cai_partial != 0.0 !max_cohorts
-    real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
+    ! real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
 
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth 
     ! logical :: merged(vegn%n_cohorts) ! mask to skip cohorts that were already merged
@@ -726,10 +725,10 @@ contains
     real :: dn ! number of trees that died due to CAI_partial>CAI_max
     real :: param_dbh_under 
     real :: param_nsc_under 
-    real :: param_gr_under
+    ! real :: param_gr_under
     real :: param_dbh 
     real :: param_nsc 
-    real :: param_gr
+    ! real :: param_gr
     real :: CAI_max
 
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
@@ -821,24 +820,24 @@ contains
             endif
           endif
 
-        else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
+        ! else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
           
-          ! set calibratable parameter
-          param_gr_under = myinterface%params_tile%par_mort_under
-          param_gr       = myinterface%params_tile%par_mort
+        !   ! set calibratable parameter
+        !   param_gr_under = myinterface%params_tile%par_mort_under
+        !   param_gr       = myinterface%params_tile%par_mort
 
-          ! Understory mortality
-          if (cc%layer > 1) then !
-            deathrate = param_gr_under * sp%mortrate_d_u * &
-                     (1. + A_mort*exp(B_mort*cc%dbh))/ &
-                     (1. +        exp(B_mort*cc%dbh)) 
-          else  
-          ! Canopy mortality
-          ! deathrate = param_gr * 0.05 *    &
-          !                  (1.*exp(1*(cc%psapw%c%c12+cc%pwood%c%c12-cc%ABG_ys-6.0))/ &
-          !                  (1. + exp(1*(cc%psapw%c%c12+cc%pwood%c%c12-cc%ABG_ys-6.0))))
-          deathrate = min(1.0, param_dbh * 0.015 * cc%dbh ** 1.5) ! 1.5, 1.6, 1.7
-          endif
+        !   ! Understory mortality
+        !   if (cc%layer > 1) then !
+        !     deathrate = param_gr_under * sp%mortrate_d_u * &
+        !              (1. + A_mort*exp(B_mort*cc%dbh))/ &
+        !              (1. +        exp(B_mort*cc%dbh)) 
+        !   else  
+        !   ! Canopy mortality
+        !   ! deathrate = param_gr * 0.05 *    &
+        !   !                  (1.*exp(1*(cc%psapw%c%c12+cc%pwood%c%c12-cc%ABG_ys-6.0))/ &
+        !   !                  (1. + exp(1*(cc%psapw%c%c12+cc%pwood%c%c12-cc%ABG_ys-6.0))))
+        !   deathrate = min(1.0, param_dbh * 0.015 * cc%dbh ** 1.5) ! 1.5, 1.6, 1.7
+        !   endif
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
@@ -846,7 +845,7 @@ contains
           param_dbh_under = myinterface%params_tile%par_mort_under
           param_dbh       = myinterface%params_tile%par_mort
 
-          if (sp%lifeform == 0)then  ! for grasses
+          if (sp%lifeform == 0) then  ! for grasses
             if (cc%layer > 1) then
               deathrate = sp%mortrate_d_u
             else
@@ -859,7 +858,7 @@ contains
                      (1.0 +        exp(B_mort*cc%dbh)) 
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
-              if(myinterface%params_siml%do_U_shaped_mortality)then
+              if (myinterface%params_siml%do_U_shaped_mortality) then
                 ! deathrate = param_dbh * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh-1))/  &
                 !            (1. + exp(2.*(cc%dbh-1))))
@@ -1800,7 +1799,7 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc(:) ! array to hold new cohorts
     logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
-    real, parameter :: mindensity = 1.0E-6
+    ! real, parameter :: mindensity = 1.0E-6
     integer :: i,j,k
     allocate(cc(vegn%n_cohorts))
     merged(:)=.FALSE. ; k = 0
@@ -1979,23 +1978,23 @@ contains
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(cohort_type), intent(in) :: c1,c2
-    real, parameter :: mindensity = 1.0E-4
+    ! real, parameter :: mindensity = 1.0E-4
     logical :: sameSpecies, sameLayer, sameSize, sameSizeTree, sameSizeGrass, lowDensity
     sameSpecies  = c1%species == c2%species
     
     sameLayer    = (c1%layer == c2%layer) .or. & ! .and. (c1%firstlayer == c2%firstlayer)
-      ((spdata(c1%species)%lifeform ==0) .and. &
-       (spdata(c2%species)%lifeform ==0) .and. &
-       (c1%layer>1 .and.c2%layer>1))
+      ((spdata(c1%species)%lifeform == 0) .and. &
+       (spdata(c2%species)%lifeform == 0) .and. &
+       (c1%layer > 1 .and.c2%layer > 1))
     
     sameSizeTree = (spdata(c1%species)%lifeform > 0).and.  &
       (spdata(c2%species)%lifeform > 0).and.  &
       ((abs(c1%DBH - c2%DBH)/c2%DBH < 0.2 ) .or.  &
-      (abs(c1%DBH - c2%DBH)        < 0.001))  ! it'll be always true for grasses
+      (abs(c1%DBH - c2%DBH) < 0.001))  ! it'll be always true for grasses
     
-    sameSizeGrass= (spdata(c1%species)%lifeform ==0) .and. &
-      (spdata(c2%species)%lifeform ==0) .and. &
-      ((c1%DBH == c2%DBH).and.c1%age> 2. .and. c2%age>2.)  ! it'll be always true for grasses
+    sameSizeGrass= (spdata(c1%species)%lifeform == 0) .and. &
+      (spdata(c2%species)%lifeform == 0) .and. &
+      (abs(c1%DBH - c2%DBH) < eps .and. c1%age > 2. .and. c2%age > 2.)  ! it'll be always true for grasses
     
     sameSize = sameSizeTree .OR. sameSizeGrass
     lowDensity  = .FALSE. ! c1%nindivs < mindensity 
@@ -2232,8 +2231,6 @@ contains
     ! -local vars -------
     type(cohort_type), dimension(:), pointer :: cc
     type(cohort_type), pointer :: cx
-    integer,parameter :: rand_seed = 86456
-    real    :: r
     real    :: btotal
     integer :: i, istat, init_n_cohorts
     ! integer :: io           ! i/o status for the namelist
@@ -2262,8 +2259,8 @@ contains
     par_mort_under  = myinterface%params_tile%par_mort_under  !calibratable
 
     !  Read parameters from the parameter file (namelist)
-    if (read_from_parameter_file) then
 
+! xxx seems new from d-ben - missing if?
       ! Initialize plant cohorts
       init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts !nCohorts !Weng,2018-11-21
       allocate(cc(1:init_n_cohorts), STAT = istat)
@@ -2320,14 +2317,14 @@ contains
                         vegn%psoil_sl%n%n14 + vegn%ninorg%n14
       vegn%totN =  vegn%initialN0
 
-    endif  ! initialization: random or pre-described
-
     ! For reset: Keep initial plant cohorts
     allocate(cc(1:init_n_cohorts), STAT = istat)
     cc = vegn%cohorts
     vegn%initialCC   => cc
     vegn%n_initialCC = init_n_cohorts
     cc => null()
+    
+    ! xxx up to here new from d-ben
   
   end subroutine initialize_vegn_tile
 

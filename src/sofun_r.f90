@@ -46,7 +46,7 @@ contains
     use md_params_siml_pmodel, only: getsteering
     use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
-    use md_params_core, only: nlayers_soil, ndayyear, npft
+    use md_params_core
     use md_biosphere_pmodel, only: biosphere_annual
 
     implicit none
@@ -79,7 +79,7 @@ contains
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
-    integer :: npft_local, yr, idx_start, idx_end
+    integer :: yr, idx_start, idx_end ! npft_local
 
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
@@ -109,15 +109,15 @@ contains
     myinterface%params_siml%lgr4               = lgr4
     myinterface%params_siml%secs_per_tstep     = secs_per_tstep
 
-    ! Count PFTs to be simulated
-    npft_local = 0
-    if (myinterface%params_siml%ltre) npft_local = npft_local + 1
-    if (myinterface%params_siml%ltne) npft_local = npft_local + 1
-    if (myinterface%params_siml%ltrd) npft_local = npft_local + 1
-    if (myinterface%params_siml%ltnd) npft_local = npft_local + 1
-    if (myinterface%params_siml%lgr3) npft_local = npft_local + 1
-    if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
-    if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
+    ! ! Count PFTs to be simulated
+    ! npft_local = 0
+    ! if (myinterface%params_siml%ltre) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%ltne) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%ltrd) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%ltnd) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%lgr3) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
+    ! if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
 
     ! set parameter to define that this is not a calibration run (otherwise sofun.f90 would not have been compiled, but sofun_simsuite.f90)
     myinterface%params_siml%is_calib = .true.  ! treat paramters passed through R/C-interface the same way as calibratable parameters
@@ -277,7 +277,7 @@ contains
     nt_annual,                    &    
     nt_annual_cohorts,            &    
     forcing,                      &     
-    output_hourly_tile,           &
+    ! output_hourly_tile,           &
     output_daily_tile,            &
     output_daily_cohorts_year,    &
     output_daily_cohorts_doy,     &
@@ -353,8 +353,7 @@ contains
     ! use md_params_soil_biomee, only: getsoil
     use md_forcing_biomee, only: getclimate, getco2, climate_type !, forcingData
     use md_interface_biomee, only: interfacetype_biosphere, outtype_biosphere, myinterface
-    use md_params_core, only: n_dim_soil_types, MSPECIES, MAX_INIT_COHORTS, ntstepsyear, out_max_cohorts, &
-      ndayyear, nvars_daily_tile, nvars_hourly_tile, nvars_daily_cohorts, nvars_annual_cohorts, nvars_annual_tile
+    use md_params_core
     use md_biosphere_biomee, only: biosphere_annual
 
     implicit none
@@ -421,7 +420,7 @@ contains
     ! input and output arrays (naked) to be passed back to C/R
     real(kind=c_double), dimension(nt,13), intent(in) :: forcing
 
-    real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
+    ! real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
 
     real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_year
@@ -495,8 +494,8 @@ contains
     integer                 :: yr
     
     integer :: idx
-    integer :: idx_hourly_start
-    integer :: idx_hourly_end
+    ! integer :: idx_hourly_start
+    ! integer :: idx_hourly_end
     integer :: idx_daily_start
     integer :: idx_daily_end
 
@@ -668,7 +667,7 @@ contains
     !----------------------------------------------------------------
     timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
     timestep_d = real(forcing(2,2)) - real(forcing(1,2))  ! This takes the day of year (a numeric) from the forcing file
-    if (timestep==0.0 .and. timestep_d==1.0) then
+    if (abs(timestep) < eps .and. abs(timestep_d - 1.0) < eps) then
       ! forcing is daily
       timestep = 24.0
     end if
@@ -679,7 +678,7 @@ contains
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
-    allocate(out_biosphere%hourly_tile(ntstepsyear))
+    ! allocate(out_biosphere%hourly_tile(ntstepsyear))
 
     yearloop: do yr=1, myinterface%params_siml%runyears
       !----------------------------------------------------------------
@@ -711,11 +710,11 @@ contains
       !----------------------------------------------------------------
       ! Output out_hourly_tile (calling subroutine)
       !----------------------------------------------------------------
-      if (.not. myinterface%steering%spinup) then  
-        idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
-        idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
-        ! call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
-      end if
+      ! if (.not. myinterface%steering%spinup) then  
+      !   idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
+      !   idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
+      !   ! call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
+      ! end if
 
       !----------------------------------------------------------------
       ! Output out_daily_tile (calling subroutine)
@@ -726,38 +725,38 @@ contains
         idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1  
         idx_daily_end   = idx_daily_start + ndayyear - 1
 
-        ! call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end,:)) !xxx commented out for calibration!
+        call populate_outarray_daily_tile( out_biosphere%daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end,:))
 
         !----------------------------------------------------------------
         ! Output out_daily_cohorts (without subroutine)
         !----------------------------------------------------------------
-        ! output_daily_cohorts_year(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%year) !xxx commented out for calibration!
-        ! output_daily_cohorts_doy(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%doy)
-        ! output_daily_cohorts_hour(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%hour)
-        ! output_daily_cohorts_cID(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%cID)
-        ! output_daily_cohorts_PFT(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%PFT)
-        ! output_daily_cohorts_layer(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%layer)
-        ! output_daily_cohorts_density(idx_daily_start:idx_daily_end,:) = dble(out_biosphere%daily_cohorts(:,:)%density)
-        ! output_daily_cohorts_f_layer(idx_daily_start:idx_daily_end,:) = dble(out_biosphere%daily_cohorts(:,:)%f_layer)
-        ! output_daily_cohorts_LAI(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%LAI)
-        ! output_daily_cohorts_gpp(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%gpp)
-        ! output_daily_cohorts_resp(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%resp)
-        ! output_daily_cohorts_transp(idx_daily_start:idx_daily_end,:)  = dble(out_biosphere%daily_cohorts(:,:)%transp)
-        ! output_daily_cohorts_NPPleaf(idx_daily_start:idx_daily_end,:) = dble(out_biosphere%daily_cohorts(:,:)%NPPleaf)
-        ! output_daily_cohorts_NPProot(idx_daily_start:idx_daily_end,:) = dble(out_biosphere%daily_cohorts(:,:)%NPProot)
-        ! output_daily_cohorts_NPPwood(idx_daily_start:idx_daily_end,:) = dble(out_biosphere%daily_cohorts(:,:)%NPPwood)    
-        ! output_daily_cohorts_NSC(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%NSC)
-        ! output_daily_cohorts_seedC(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%seedC)
-        ! output_daily_cohorts_leafC(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%leafC)
-        ! output_daily_cohorts_rootC(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%rootC)
-        ! output_daily_cohorts_SW_C(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%SW_C)
-        ! output_daily_cohorts_HW_C(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%HW_C)
-        ! output_daily_cohorts_NSN(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%NSN)
-        ! output_daily_cohorts_seedN(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%seedN)
-        ! output_daily_cohorts_leafN(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%leafN)
-        ! output_daily_cohorts_rootN(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%rootN)
-        ! output_daily_cohorts_SW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%SW_N)
-        ! output_daily_cohorts_HW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%HW_N)
+        output_daily_cohorts_year(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%year)
+        output_daily_cohorts_doy(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%doy)
+        output_daily_cohorts_hour(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%hour)
+        output_daily_cohorts_cID(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%cID)
+        output_daily_cohorts_PFT(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%PFT)
+        output_daily_cohorts_layer(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%layer)
+        output_daily_cohorts_density(idx_daily_start:idx_daily_end,:) = dble(out_biosphere%daily_cohorts(:,:)%density)
+        output_daily_cohorts_f_layer(idx_daily_start:idx_daily_end,:) = dble(out_biosphere%daily_cohorts(:,:)%f_layer)
+        output_daily_cohorts_LAI(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%LAI)
+        output_daily_cohorts_gpp(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%gpp)
+        output_daily_cohorts_resp(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%resp)
+        output_daily_cohorts_transp(idx_daily_start:idx_daily_end,:)  = dble(out_biosphere%daily_cohorts(:,:)%transp)
+        output_daily_cohorts_NPPleaf(idx_daily_start:idx_daily_end,:) = dble(out_biosphere%daily_cohorts(:,:)%NPPleaf)
+        output_daily_cohorts_NPProot(idx_daily_start:idx_daily_end,:) = dble(out_biosphere%daily_cohorts(:,:)%NPProot)
+        output_daily_cohorts_NPPwood(idx_daily_start:idx_daily_end,:) = dble(out_biosphere%daily_cohorts(:,:)%NPPwood)    
+        output_daily_cohorts_NSC(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%NSC)
+        output_daily_cohorts_seedC(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%seedC)
+        output_daily_cohorts_leafC(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%leafC)
+        output_daily_cohorts_rootC(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%rootC)
+        output_daily_cohorts_SW_C(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%SW_C)
+        output_daily_cohorts_HW_C(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%HW_C)
+        output_daily_cohorts_NSN(idx_daily_start:idx_daily_end,:)     = dble(out_biosphere%daily_cohorts(:,:)%NSN)
+        output_daily_cohorts_seedN(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%seedN)
+        output_daily_cohorts_leafN(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%leafN)
+        output_daily_cohorts_rootN(idx_daily_start:idx_daily_end,:)   = dble(out_biosphere%daily_cohorts(:,:)%rootN)
+        output_daily_cohorts_SW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%SW_N)
+        output_daily_cohorts_HW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere%daily_cohorts(:,:)%HW_N)
 
       end if
 
@@ -818,40 +817,40 @@ contains
 
     deallocate(myinterface%climate)
     deallocate(myinterface%pco2)
-    deallocate(out_biosphere%hourly_tile)
+    ! deallocate(out_biosphere%hourly_tile)
  
   end subroutine biomee_f
 
-  !////////////////////////////////////////////////////////////////
-  ! Populates hourly tile-level output array passed back to C and R.
-  !----------------------------------------------------------------
-  subroutine populate_outarray_hourly_tile( hourly_tile, out_hourly_tile ) !, idx_daily_start, idx_daily_end
+  ! !////////////////////////////////////////////////////////////////
+  ! ! Populates hourly tile-level output array passed back to C and R.
+  ! !----------------------------------------------------------------
+  ! subroutine populate_outarray_hourly_tile( hourly_tile, out_hourly_tile ) !, idx_daily_start, idx_daily_end
 
-    use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-    use md_interface_biomee, only: outtype_hourly_tile
-    use md_params_core
+  !   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
+  !   use md_interface_biomee, only: outtype_hourly_tile
+  !   use md_params_core
 
-    ! arguments
-    type(outtype_hourly_tile), dimension(ntstepsyear), intent(in) :: hourly_tile    ! dimension(ntstepsyear)
-    real(kind=dp), dimension(ntstepsyear, nvars_hourly_tile), intent(inout) :: out_hourly_tile
+  !   ! arguments
+  !   type(outtype_hourly_tile), dimension(ntstepsyear), intent(in) :: hourly_tile    ! dimension(ntstepsyear)
+  !   real(kind=dp), dimension(ntstepsyear, nvars_hourly_tile), intent(inout) :: out_hourly_tile
 
-    out_hourly_tile(:, 1)  = dble(hourly_tile(:)%year)
-    out_hourly_tile(:, 2)  = dble(hourly_tile(:)%doy)
-    out_hourly_tile(:, 3)  = dble(hourly_tile(:)%hour)
-    out_hourly_tile(:, 4)  = dble(hourly_tile(:)%rad)
-    out_hourly_tile(:, 5)  = dble(hourly_tile(:)%Tair)
-    out_hourly_tile(:, 6)  = dble(hourly_tile(:)%Prcp)
-    out_hourly_tile(:, 7)  = dble(hourly_tile(:)%GPP)
-    out_hourly_tile(:, 8)  = dble(hourly_tile(:)%Resp)
-    out_hourly_tile(:, 9)  = dble(hourly_tile(:)%Transp)
-    out_hourly_tile(:, 10) = dble(hourly_tile(:)%Evap)
-    out_hourly_tile(:, 11) = dble(hourly_tile(:)%Runoff)
-    out_hourly_tile(:, 12) = dble(hourly_tile(:)%Soilwater)
-    out_hourly_tile(:, 13) = dble(hourly_tile(:)%wcl)
-    out_hourly_tile(:, 14) = dble(hourly_tile(:)%FLDCAP)
-    out_hourly_tile(:, 15) = dble(hourly_tile(:)%WILTPT)
+  !   out_hourly_tile(:, 1)  = dble(hourly_tile(:)%year)
+  !   out_hourly_tile(:, 2)  = dble(hourly_tile(:)%doy)
+  !   out_hourly_tile(:, 3)  = dble(hourly_tile(:)%hour)
+  !   out_hourly_tile(:, 4)  = dble(hourly_tile(:)%rad)
+  !   out_hourly_tile(:, 5)  = dble(hourly_tile(:)%Tair)
+  !   out_hourly_tile(:, 6)  = dble(hourly_tile(:)%Prcp)
+  !   out_hourly_tile(:, 7)  = dble(hourly_tile(:)%GPP)
+  !   out_hourly_tile(:, 8)  = dble(hourly_tile(:)%Resp)
+  !   out_hourly_tile(:, 9)  = dble(hourly_tile(:)%Transp)
+  !   out_hourly_tile(:, 10) = dble(hourly_tile(:)%Evap)
+  !   out_hourly_tile(:, 11) = dble(hourly_tile(:)%Runoff)
+  !   out_hourly_tile(:, 12) = dble(hourly_tile(:)%Soilwater)
+  !   out_hourly_tile(:, 13) = dble(hourly_tile(:)%wcl)
+  !   out_hourly_tile(:, 14) = dble(hourly_tile(:)%FLDCAP)
+  !   out_hourly_tile(:, 15) = dble(hourly_tile(:)%WILTPT)
 
-  end subroutine populate_outarray_hourly_tile
+  ! end subroutine populate_outarray_hourly_tile
 
 
   !////////////////////////////////////////////////////////////////
