@@ -1892,10 +1892,10 @@ contains
       if (.not. OldGrass) k=k+1
     end associate
   enddo
-  if (k==0)then
-     write(*,*)'in kill_old_grass: All cohorts are old grass, No action!'
-     !stop
-  endif
+  ! if (k==0)then
+  !    write(*,*)'in kill_old_grass: All cohorts are old grass, No action!'
+  !    !stop
+  ! endif
 
   ! exclude cohorts that are old grass
   if (k>0 .and. k<vegn%n_cohorts)then

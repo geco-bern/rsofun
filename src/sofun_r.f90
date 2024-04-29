@@ -768,17 +768,11 @@ contains
       !----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)
       !----------------------------------------------------------------
-      
-      ! To get outputs only after spinupyears make if below and 
-      ! also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(params_siml$nyeartrend)
+      if (.not. myinterface%steering%spinup) then  ! To get outputs only after spinupyears
 
-      !if (.not. myinterface%steering%spinup) then  ! To get outputs only after spinupyears
-      !idx =  yr - myinterface%params_siml%spinupyears
-        
-      ! To get outputs for all runyears idx=yr and also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(runyears)
-       idx =  yr
+        idx =  yr - myinterface%params_siml%spinupyears
 
-        output_annual_cohorts_year(idx, :)        = dble(out_biosphere%annual_cohorts(:)%year) !xxx commented out for calibration!
+        output_annual_cohorts_year(idx, :)        = dble(out_biosphere%annual_cohorts(:)%year)
         output_annual_cohorts_cID(idx, :)         = dble(out_biosphere%annual_cohorts(:)%cID)
         output_annual_cohorts_PFT(idx, :)         = dble(out_biosphere%annual_cohorts(:)%PFT)
         output_annual_cohorts_layer(idx, :)       = dble(out_biosphere%annual_cohorts(:)%layer)
@@ -794,11 +788,11 @@ contains
         output_annual_cohorts_Aleaf(idx, :)       = dble(out_biosphere%annual_cohorts(:)%Aleaf)
         output_annual_cohorts_nsc(idx, :)         = dble(out_biosphere%annual_cohorts(:)%nsc)
         output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%nsn)
-        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%seedC)
-        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%leafC)
-        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%rootC)
-        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%sapwC)
-        output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere%annual_cohorts(:)%woodC)
+        output_annual_cohorts_seedC(idx, :)       = dble(out_biosphere%annual_cohorts(:)%seedC)
+        output_annual_cohorts_leafC(idx, :)       = dble(out_biosphere%annual_cohorts(:)%leafC)
+        output_annual_cohorts_rootC(idx, :)       = dble(out_biosphere%annual_cohorts(:)%rootC)
+        output_annual_cohorts_sapwC(idx, :)       = dble(out_biosphere%annual_cohorts(:)%sapwC)
+        output_annual_cohorts_woodC(idx, :)       = dble(out_biosphere%annual_cohorts(:)%woodC)
         output_annual_cohorts_treeG(idx, :)       = dble(out_biosphere%annual_cohorts(:)%treeG)
         output_annual_cohorts_fseed(idx, :)       = dble(out_biosphere%annual_cohorts(:)%fseed)
         output_annual_cohorts_fleaf(idx, :)       = dble(out_biosphere%annual_cohorts(:)%fleaf)
@@ -811,7 +805,7 @@ contains
         output_annual_cohorts_Nfix(idx, :)        = dble(out_biosphere%annual_cohorts(:)%Nfix)
         output_annual_cohorts_deathrate(idx, :)   = dble(out_biosphere%annual_cohorts(:)%deathrate)
 
-       !end if
+       end if
 
     end do yearloop
 
