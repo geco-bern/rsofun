@@ -167,7 +167,7 @@ settings <- list(
 
 pars <- calib_sofun(
   drivers = biomee_gs_leuning_drivers,
-  obs = biomee_validation_2,
+  obs = biomee_validation,
   settings = settings
 )
 ```
@@ -223,7 +223,7 @@ cowplot::plot_grid(
               color = "grey50") +
     theme_classic() + 
     labs(x = "Year", y = "GPP") +
-    geom_hline(yintercept = biomee_validation_2$data[[1]]$targets_obs[1],
+    geom_hline(yintercept = biomee_validation$data[[1]]$targets_obs[1],
                 lty=2),        # plot observation
   
   ggplot() +
@@ -234,7 +234,7 @@ cowplot::plot_grid(
               color = "grey50") +
     theme_classic() + 
     labs(x = "Year", y = "plantC") +
-    geom_hline(yintercept = biomee_validation_2$data[[1]]$targets_obs[4],
+    geom_hline(yintercept = biomee_validation$data[[1]]$targets_obs[4],
                lty = 2)        # plot observation
 )
 
