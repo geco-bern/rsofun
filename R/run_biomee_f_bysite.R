@@ -19,6 +19,10 @@
 #'     LAImax according to mineral N in soil.}
 #'   \item{do_closedN_run}{A logical value indicating whether doing N closed 
 #'     runs to recover N balance.}
+#'   \item{do_reset_veg}{A logical value indicating whether reseting vegetation 
+#'     for disturbance runs.}
+#'   \item{dist_frequency}{Value indicating the frequency of the disturbance event (in years) 
+#'     (e.g. 100 indicates a disturbance event occurs every 100 years, i.e., at a rate of 0.01)}
 #'   \item{code_method_photosynth}{String specifying the method of photosynthesis 
 #'     used in the model, either "pmodel" or "gs_leuning".}
 #'   \item{code_method_mortality}{String indicating the type of mortality in the 
@@ -511,6 +515,8 @@ run_biomee_f_bysite <- function(
       do_U_shaped_mortality = as.logical(params_siml$do_U_shaped_mortality),
       update_annualLAImax   = as.logical(params_siml$update_annualLAImax),
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
+      do_reset_veg          = as.logical(params_siml$do_reset_veg),
+      dist_frequency        = as.integer(params_siml$dist_frequency),
       code_method_photosynth= as.integer(code_method_photosynth),
       code_method_mortality = as.integer(code_method_mortality),
       
@@ -557,7 +563,8 @@ run_biomee_f_bysite <- function(
       n                = as.integer(nrow(forcing)), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       n_daily          = as.integer(n_daily), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       n_annual         = as.integer(runyears), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
-      n_annual_cohorts = as.integer(params_siml$nyeartrend), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
+      #n_annual_cohorts = as.integer(params_siml$nyeartrend), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
+      n_annual_cohorts = as.integer(runyears), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       forcing          = as.matrix(forcing)
       )
     
@@ -693,13 +700,13 @@ run_biomee_f_bysite <- function(
     annual_values <- c(
       "year","cID",
       "PFT","layer","density",
-      "f_layer","dDBH","dbh",
-      "height","age","Acrown",
-      "wood","nsc","NSN","NPPtr",
-      "seed","NPPL","NPPR","NPPW",
-      "GPP_yr","NPP_yr","Rauto",
-      "N_uptk","N_fix","maxLAI",
-      "Volume","n_deadtrees",
+      "flayer","DBH","dDBH","height",
+      "age","BA","dBA","Acrown","Aleaf",
+      "nsc","seedC","leafC","rootC",
+      "sapwC","woodC","nsn","treeG",
+      "fseed","fleaf","froot","fwood",
+      "GPP","NPP","Rauto",
+      "Nupt","Nfix","n_deadtrees",
       "c_deadtrees","deathrate"
     )
     

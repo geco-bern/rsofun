@@ -16,7 +16,8 @@ module md_vegetation_biomee
   public :: vegn_reproduction, vegn_annualLAImax_update !, annual_calls
   public :: vegn_nat_mortality, vegn_species_switch !, vegn_starvation
   public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
-  public :: vegn_annual_starvation,Zero_diagnostics
+  public :: kill_old_grass
+  public :: vegn_annual_starvation,Zero_diagnostics, reset_vegn_initial
 
 contains
 
@@ -232,6 +233,9 @@ contains
       associate (sp => spdata(cc%species))
 
       if (cc%status == LEAF_ON) then
+
+        !update leaf age 
+        cc%leaf_age = cc%leaf_age + 1.0/365.0
         
         ! Get carbon from NSC pool. This sets cc%C_growth
         call fetch_CN_for_growth( cc )
@@ -340,6 +344,7 @@ contains
         cc%psapw%c%c12    = cc%psapw%c%c12 + dBSW
         cc%pseed%c%c12    = cc%pseed%c%c12 + dSeed
         cc%plabl%c%c12    = cc%plabl%c%c12 - dBR - dBL - dSeed - dBSW
+        cc%leaf_age = (1.0 - dBL/cc%pleaf%c%c12) * cc%leaf_age !NEW
         cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily
 
         ! update nitrogen pools, Nitrogen allocation
@@ -490,6 +495,7 @@ contains
     integer :: i
     ! real    :: grassdensity   ! for grasses only
     ! real    :: BL_u,BL_c
+    integer :: GrassMaxL = 3 
     real    :: ccNSC, ccNSN
     logical :: cc_firstday = .false.
     logical :: TURN_ON_life = .false., TURN_OFF_life
@@ -526,7 +532,8 @@ contains
       endif
 
       ! Reset grass density at the first day of a growing season
-      if (cc_firstday .and. sp%lifeform == 0 .and. cc%age > 2.0) then
+      ! if (cc_firstday .and. sp%lifeform == 0 .and. cc%age > 2.0) then
+      if  (sp%lifeform ==0 .and. (cc_firstday .and. cc%age>0.5)) then
         
         ! reset grass density and size for perenials
         ccNSC   = (cc%plabl%c%c12 + cc%pleaf%c%c12 + cc%psapw%c%c12 + &
@@ -565,7 +572,8 @@ contains
 
     enddo cohortloop2
 
-    if (TURN_ON_life) call relayer_cohorts( vegn )
+    ! if (TURN_ON_life) call relayer_cohorts( vegn )
+    if (cc_firstday) call relayer_cohorts(vegn)
 
     ! OFF of a growing season
     cohortloop3: do i = 1,vegn%n_cohorts
@@ -970,9 +978,11 @@ contains
     ! record mortality
     ! cohort level
     cc%n_deadtrees = deadtrees
-    cc%c_deadtrees = loss_coarse + loss_fine 
-    ! cc%m_turnover  = cc%m_turnover + loss_coarse + loss_fine
-    cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
+    !cc%c_deadtrees = loss_coarse + loss_fine 
+    cc%c_deadtrees    = deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + &
+           cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12) 
+    cc%m_turnover  = cc%m_turnover + loss_coarse + loss_fine
+    !cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
 
     ! cc%c_deadtrees   = deadtrees * (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12) 
     
@@ -1465,8 +1475,8 @@ contains
     ! local variables
     type(cohort_type),pointer :: cc
 
-    real    :: rho_N_up0 = 0.1 ! 0.05 ! hourly N uptake rate, fraction of the total mineral N
-    real    :: N_roots0  = 0.4  ! root biomass at half max N-uptake rate,kg C m-2
+    real    :: rho_N_up0 = 0.1 ! hourly N uptake rate, fraction of the total mineral N
+    real    :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate,kg C m-2
 
     real    :: totNup    ! kgN m-2
     real    :: avgNup
@@ -1862,6 +1872,54 @@ contains
     endif
   end subroutine kill_lowdensity_cohorts
 
+  subroutine kill_old_grass(vegn)
+  ! kill old grass cohorts
+  ! Weng, 01/22/2023
+  type(vegn_tile_type), intent(inout) :: vegn
+
+  ! ---- local vars
+  type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
+  logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
+  real, parameter :: mindensity = 0.25E-4
+  logical :: OldGrass
+  integer :: i,j,k
+
+ ! calculate the number of cohorts that are not old grass
+  k = 0
+  do i = 1, vegn%n_cohorts
+    cx =>vegn%cohorts(i)
+    associate(sp=>spdata(cx%species))
+      OldGrass = (sp%lifeform ==0 .and. cx%age > 3.0)
+      if (.not. OldGrass) k=k+1
+    end associate
+  enddo
+  if (k==0)then
+     write(*,*)'in kill_old_grass: All cohorts are old grass, No action!'
+     !stop
+  endif
+
+  ! exclude cohorts that are old grass
+  if (k>0 .and. k<vegn%n_cohorts)then
+     allocate(cc(k))
+     j=0
+     do i = 1,vegn%n_cohorts
+        cx =>vegn%cohorts(i)
+        associate(sp=>spdata(cx%species))
+        OldGrass = (sp%lifeform ==0 .and. cx%age > 3.0)
+        if (.not. OldGrass) then
+           j=j+1
+           cc(j) = cx
+        else
+           ! Carbon and Nitrogen from plants to soil pools
+           call plant2soil(vegn,cx,cx%nindivs)
+        endif
+        end associate
+     enddo
+     vegn%n_cohorts = j
+     deallocate (vegn%cohorts)
+     vegn%cohorts=>cc
+  endif
+  end subroutine kill_old_grass
 
   subroutine merge_cohorts(c1, c2)
     !////////////////////////////////////////////////////////////////
@@ -1980,6 +2038,39 @@ contains
   
   end subroutine initialize_cohort_from_biomass
 
+  !============= Reset to Initial Vegetation States =====================
+   !Weng, 12/20/2022
+   subroutine reset_vegn_initial(vegn)
+    type(vegn_tile_type),intent(inout),pointer :: vegn
+
+    !--------local vars -------
+    type(cohort_type),dimension(:), pointer :: cc,cc1
+    type(cohort_type), pointer :: cp
+    integer :: i, istat
+
+    !Reset to initial plant cohorts
+    allocate(cc(1:vegn%n_initialCC), STAT = istat)
+    cc1 => vegn%cohorts ! Remember the current cohorts in vegn
+    cc = vegn%initialCC ! Copy the initial cohorts to a new cohor array
+    vegn%cohorts => cc  ! Set the vegn%cohorts as the initial cohorts
+    vegn%n_cohorts = vegn%n_initialCC ! size(vegn%cohorts)
+
+    !Release memory
+    deallocate(cc1) ! Remove the old cohorts
+    cc => null()
+
+    ! Relayering and summary
+    call relayer_cohorts(vegn)
+    call summarize_tile(vegn)
+
+    ! ID each cohort
+    do i=1, vegn%n_cohorts
+       cp => vegn%cohorts(i)
+       cp%ccID = MaxCohortID + i
+    enddo
+    MaxCohortID = cp%ccID
+
+   end subroutine reset_vegn_initial
 
   ! subroutine annual_calls( vegn )
   !   !////////////////////////////////////////////////////////////////
@@ -2144,7 +2235,7 @@ contains
     integer,parameter :: rand_seed = 86456
     real    :: r
     real    :: btotal
-    integer :: i, istat
+    integer :: i, istat, init_n_cohorts
     ! integer :: io           ! i/o status for the namelist
     ! integer :: ierr         ! error code, returned by i/o routines
     ! integer :: nml_unit
@@ -2174,7 +2265,7 @@ contains
     if (read_from_parameter_file) then
 
       ! Initialize plant cohorts
-      init_n_cohorts = nCohorts ! Weng,2018-11-21
+      init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts !nCohorts !Weng,2018-11-21
       allocate(cc(1:init_n_cohorts), STAT = istat)
       vegn%cohorts => cc
       vegn%n_cohorts = init_n_cohorts
@@ -2184,6 +2275,7 @@ contains
         cx => vegn%cohorts(i)
         cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
         cx%layer   = 1
+        cx%age = 0
         cx%species = INT(myinterface%init_cohort(i)%init_cohort_species)
         cx%ccID    =  i
         cx%plabl%c%c12     = myinterface%init_cohort(i)%init_cohort_nsc
@@ -2229,6 +2321,13 @@ contains
       vegn%totN =  vegn%initialN0
 
     endif  ! initialization: random or pre-described
+
+    ! For reset: Keep initial plant cohorts
+    allocate(cc(1:init_n_cohorts), STAT = istat)
+    cc = vegn%cohorts
+    vegn%initialCC   => cc
+    vegn%n_initialCC = init_n_cohorts
+    cc => null()
   
   end subroutine initialize_vegn_tile
 
