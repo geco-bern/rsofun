@@ -10,7 +10,7 @@
 #' Make sure that
 #' the order of the error terms in \code{par} coincides with the order provided in
 #' the \code{targets} argument.
-#' @param obs A nested data frame of observations, following the structure of \code{biomee_validation_2},
+#' @param obs A nested data frame of observations, following the structure of \code{biomee_validation},
 #' for example.
 #' @param drivers A nested data frame of driver data, for example \code{biomee_gs_leuning_drivers}.
 #' @param targets A character vector indicating the target variables for which the
@@ -36,7 +36,7 @@
 #' cost_likelihood_biomee(
 #'  par = c(3.5, 3.5, 1, 1,    # model params
 #'          0.5),              # err_GPP
-#'  obs = biomee_validation_2,
+#'  obs = biomee_validation,
 #'  drivers = biomee_gs_leuning_drivers,
 #'  targets = c("GPP")
 #' )

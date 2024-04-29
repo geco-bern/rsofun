@@ -164,7 +164,7 @@ settings <- list(
 
 pars <- calib_sofun(
   drivers = biomee_gs_leuning_drivers,
-  obs = biomee_validation_2,
+  obs = biomee_validation,
   settings = settings
 )
 ```
@@ -232,8 +232,4 @@ ggplot() +
   labs(x = "Year", y = "plantC") +
   geom_hline(yintercept = biomee_validation_2$data[[1]]$targets_obs[4],
              lty = 2)        # plot observation
-
-
-
-
 ```

@@ -120,7 +120,9 @@ void F77_NAME(biomee_f)(
     int    *outputdaily,                   
     int    *do_U_shaped_mortality,             
     int    *update_annualLAImax,                   
-    int    *do_closedN_run,                   
+    int    *do_closedN_run, 
+    int    *do_reset_veg,    
+    int    *dist_frequency,                     
     int    *code_method_photosynth,
     int    *code_method_mortality,                   
     double *longitude,                  
@@ -192,27 +194,32 @@ void F77_NAME(biomee_f)(
     double *output_annual_cohorts_PFT,
     double *output_annual_cohorts_layer,
     double *output_annual_cohorts_density,
-    double *output_annual_cohorts_f_layer,
+    double *output_annual_cohorts_flayer,
+    double *output_annual_cohorts_DBH,
     double *output_annual_cohorts_dDBH,
-    double *output_annual_cohorts_dbh,
     double *output_annual_cohorts_height,
     double *output_annual_cohorts_age,
+    double *output_annual_cohorts_BA,
+    double *output_annual_cohorts_dBA,
     double *output_annual_cohorts_Acrown,
-    double *output_annual_cohorts_wood,
+    double *output_annual_cohorts_Aleaf,
     double *output_annual_cohorts_nsc,
-    double *output_annual_cohorts_NSN,
-    double *output_annual_cohorts_NPPtr,
-    double *output_annual_cohorts_seed,
-    double *output_annual_cohorts_NPPL,
-    double *output_annual_cohorts_NPPR,
-    double *output_annual_cohorts_NPPW,
+    double *output_annual_cohorts_nsn,
+    double *output_annual_cohorts_seedC,
+    double *output_annual_cohorts_leafC,
+    double *output_annual_cohorts_rootC,
+    double *output_annual_cohorts_sapwC,
+    double *output_annual_cohorts_woodC,
+    double *output_annual_cohorts_treeG,
+    double *output_annual_cohorts_fseed,
+    double *output_annual_cohorts_fleaf,
+    double *output_annual_cohorts_froot,
+    double *output_annual_cohorts_fwood,
     double *output_annual_cohorts_GPP,
     double *output_annual_cohorts_NPP,
     double *output_annual_cohorts_Rauto,
-    double *output_annual_cohorts_N_uptk,
-    double *output_annual_cohorts_N_fix,
-    double *output_annual_cohorts_maxLAI,
-    double *output_annual_cohorts_Volume,
+    double *output_annual_cohorts_Nupt,
+    double *output_annual_cohorts_Nfix,
     double *output_annual_cohorts_n_deadtrees,
     double *output_annual_cohorts_c_deadtrees,
     double *output_annual_cohorts_deathrate
@@ -230,6 +237,8 @@ extern SEXP biomee_f_C(
     SEXP do_U_shaped_mortality,             
     SEXP update_annualLAImax,                   
     SEXP do_closedN_run,  
+    SEXP do_reset_veg, 
+    SEXP dist_frequency,  
     SEXP code_method_photosynth,
     SEXP code_method_mortality,                
     SEXP longitude,                  
@@ -310,27 +319,32 @@ extern SEXP biomee_f_C(
     SEXP output_annual_cohorts_PFT     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_layer   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_density = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_f_layer = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_flayer  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_DBH     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_dDBH    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_dbh     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_height  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_age     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_BA      = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_dBA     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_Acrown  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_wood    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_Aleaf   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_nsc     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_NSN     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_NPPtr   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_seed    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_NPPL    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_NPPR    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_NPPW    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_nsn     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_seedC   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_leafC   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_rootC   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_sapwC   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_woodC   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_treeG   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_fseed   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_fleaf   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_froot   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_fwood   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_GPP     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_NPP     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_Rauto   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_N_uptk  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_N_fix   = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_maxLAI  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
-    SEXP output_annual_cohorts_Volume  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_Nupt    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
+    SEXP output_annual_cohorts_Nfix    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_n_deadtrees  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_c_deadtrees  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_deathrate  = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
@@ -347,6 +361,8 @@ extern SEXP biomee_f_C(
         LOGICAL(do_U_shaped_mortality),                
         LOGICAL(update_annualLAImax),                   
         LOGICAL(do_closedN_run),    
+        LOGICAL(do_reset_veg),
+        INTEGER(dist_frequency),
         INTEGER(code_method_photosynth),
         INTEGER(code_method_mortality),              
         REAL(longitude),                  
@@ -418,96 +434,108 @@ extern SEXP biomee_f_C(
         REAL(output_annual_cohorts_PFT),
         REAL(output_annual_cohorts_layer),
         REAL(output_annual_cohorts_density),
-        REAL(output_annual_cohorts_f_layer),
+        REAL(output_annual_cohorts_flayer),
+        REAL(output_annual_cohorts_DBH),
         REAL(output_annual_cohorts_dDBH),
-        REAL(output_annual_cohorts_dbh),
         REAL(output_annual_cohorts_height),
         REAL(output_annual_cohorts_age),
+        REAL(output_annual_cohorts_BA),
+        REAL(output_annual_cohorts_dBA),
         REAL(output_annual_cohorts_Acrown),
-        REAL(output_annual_cohorts_wood),
+        REAL(output_annual_cohorts_Aleaf),
         REAL(output_annual_cohorts_nsc),
-        REAL(output_annual_cohorts_NSN),
-        REAL(output_annual_cohorts_NPPtr),
-        REAL(output_annual_cohorts_seed),
-        REAL(output_annual_cohorts_NPPL),
-        REAL(output_annual_cohorts_NPPR),
-        REAL(output_annual_cohorts_NPPW),
+        REAL(output_annual_cohorts_nsn),
+        REAL(output_annual_cohorts_seedC),
+        REAL(output_annual_cohorts_leafC),
+        REAL(output_annual_cohorts_rootC),
+        REAL(output_annual_cohorts_sapwC),
+        REAL(output_annual_cohorts_woodC),
+        REAL(output_annual_cohorts_treeG),
+        REAL(output_annual_cohorts_fseed),
+        REAL(output_annual_cohorts_fleaf),
+        REAL(output_annual_cohorts_froot),
+        REAL(output_annual_cohorts_fwood),
         REAL(output_annual_cohorts_GPP),
         REAL(output_annual_cohorts_NPP),
         REAL(output_annual_cohorts_Rauto),
-        REAL(output_annual_cohorts_N_uptk),
-        REAL(output_annual_cohorts_N_fix),
-        REAL(output_annual_cohorts_maxLAI),
-        REAL(output_annual_cohorts_Volume),
+        REAL(output_annual_cohorts_Nupt),
+        REAL(output_annual_cohorts_Nfix),
         REAL(output_annual_cohorts_n_deadtrees),
         REAL(output_annual_cohorts_c_deadtrees),
         REAL(output_annual_cohorts_deathrate)
         );
 
     // // Output as list
-    SEXP out_list = PROTECT( allocVector(VECSXP, 58) );  // maybe try  STRSXP instead of VECSXP
+    SEXP out_list = PROTECT( allocVector(VECSXP, 64) );  // maybe try  STRSXP instead of VECSXP
     
-    // SET_VECTOR_ELT(out_list, 0,  output_hourly_tile);
-    SET_VECTOR_ELT(out_list, 0,  output_daily_tile);
-    SET_VECTOR_ELT(out_list, 1,  output_daily_cohorts_year ); 
-    SET_VECTOR_ELT(out_list, 2,  output_daily_cohorts_doy );  
-    SET_VECTOR_ELT(out_list, 3,  output_daily_cohorts_hour );  
-    SET_VECTOR_ELT(out_list, 4,  output_daily_cohorts_cID );  
-    SET_VECTOR_ELT(out_list, 5,  output_daily_cohorts_PFT );  
-    SET_VECTOR_ELT(out_list, 6,  output_daily_cohorts_layer );  
-    SET_VECTOR_ELT(out_list, 7,  output_daily_cohorts_density );  
-    SET_VECTOR_ELT(out_list, 8,  output_daily_cohorts_f_layer );  
-    SET_VECTOR_ELT(out_list, 9,  output_daily_cohorts_LAI );  
-    SET_VECTOR_ELT(out_list, 10, output_daily_cohorts_gpp );  
-    SET_VECTOR_ELT(out_list, 11, output_daily_cohorts_resp );  
-    SET_VECTOR_ELT(out_list, 12, output_daily_cohorts_transp );  
-    SET_VECTOR_ELT(out_list, 13, output_daily_cohorts_NPPleaf );  
-    SET_VECTOR_ELT(out_list, 14, output_daily_cohorts_NPProot );  
-    SET_VECTOR_ELT(out_list, 15, output_daily_cohorts_NPPwood );  
-    SET_VECTOR_ELT(out_list, 16, output_daily_cohorts_NSC );  
-    SET_VECTOR_ELT(out_list, 17, output_daily_cohorts_seedC );  
-    SET_VECTOR_ELT(out_list, 18, output_daily_cohorts_leafC );  
-    SET_VECTOR_ELT(out_list, 19, output_daily_cohorts_rootC );  
-    SET_VECTOR_ELT(out_list, 20, output_daily_cohorts_SW_C );  
-    SET_VECTOR_ELT(out_list, 21, output_daily_cohorts_HW_C );  
-    SET_VECTOR_ELT(out_list, 22, output_daily_cohorts_NSN );  
-    SET_VECTOR_ELT(out_list, 23, output_daily_cohorts_seedN );  
-    SET_VECTOR_ELT(out_list, 24, output_daily_cohorts_leafN );  
-    SET_VECTOR_ELT(out_list, 25, output_daily_cohorts_rootN );  
-    SET_VECTOR_ELT(out_list, 26, output_daily_cohorts_SW_N );  
-    SET_VECTOR_ELT(out_list, 27, output_daily_cohorts_HW_N );  
-    SET_VECTOR_ELT(out_list, 28, output_annual_tile);
-    SET_VECTOR_ELT(out_list, 29, output_annual_cohorts_year);
-    SET_VECTOR_ELT(out_list, 30, output_annual_cohorts_cID);
-    SET_VECTOR_ELT(out_list, 31, output_annual_cohorts_PFT);
-    SET_VECTOR_ELT(out_list, 32, output_annual_cohorts_layer);
-    SET_VECTOR_ELT(out_list, 33, output_annual_cohorts_density);
-    SET_VECTOR_ELT(out_list, 34, output_annual_cohorts_f_layer);
-    SET_VECTOR_ELT(out_list, 35, output_annual_cohorts_dDBH);
-    SET_VECTOR_ELT(out_list, 36, output_annual_cohorts_dbh);
-    SET_VECTOR_ELT(out_list, 37, output_annual_cohorts_height);
-    SET_VECTOR_ELT(out_list, 38, output_annual_cohorts_age);
-    SET_VECTOR_ELT(out_list, 39, output_annual_cohorts_Acrown);
-    SET_VECTOR_ELT(out_list, 40, output_annual_cohorts_wood);
-    SET_VECTOR_ELT(out_list, 41, output_annual_cohorts_nsc);
-    SET_VECTOR_ELT(out_list, 42, output_annual_cohorts_NSN);
-    SET_VECTOR_ELT(out_list, 43, output_annual_cohorts_NPPtr);
-    SET_VECTOR_ELT(out_list, 44, output_annual_cohorts_seed);
-    SET_VECTOR_ELT(out_list, 45, output_annual_cohorts_NPPL);
-    SET_VECTOR_ELT(out_list, 46, output_annual_cohorts_NPPR);
-    SET_VECTOR_ELT(out_list, 47, output_annual_cohorts_NPPW);
-    SET_VECTOR_ELT(out_list, 48, output_annual_cohorts_GPP);
-    SET_VECTOR_ELT(out_list, 49, output_annual_cohorts_NPP);
-    SET_VECTOR_ELT(out_list, 50, output_annual_cohorts_Rauto);
-    SET_VECTOR_ELT(out_list, 51, output_annual_cohorts_N_uptk);
-    SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_N_fix);
-    SET_VECTOR_ELT(out_list, 53, output_annual_cohorts_maxLAI);
-    SET_VECTOR_ELT(out_list, 54, output_annual_cohorts_Volume);
-    SET_VECTOR_ELT(out_list, 55, output_annual_cohorts_n_deadtrees);
-    SET_VECTOR_ELT(out_list, 56, output_annual_cohorts_c_deadtrees);
-    SET_VECTOR_ELT(out_list, 57, output_annual_cohorts_deathrate);
+    SET_VECTOR_ELT(out_list, 0,  output_hourly_tile);
+    SET_VECTOR_ELT(out_list, 1,  output_daily_tile);
+    SET_VECTOR_ELT(out_list, 2,  output_daily_cohorts_year ); 
+    SET_VECTOR_ELT(out_list, 3,  output_daily_cohorts_doy );  
+    SET_VECTOR_ELT(out_list, 4,  output_daily_cohorts_hour );  
+    SET_VECTOR_ELT(out_list, 5,  output_daily_cohorts_cID );  
+    SET_VECTOR_ELT(out_list, 6,  output_daily_cohorts_PFT );  
+    SET_VECTOR_ELT(out_list, 7,  output_daily_cohorts_layer );  
+    SET_VECTOR_ELT(out_list, 8,  output_daily_cohorts_density );  
+    SET_VECTOR_ELT(out_list, 9,  output_daily_cohorts_f_layer );  
+    SET_VECTOR_ELT(out_list, 10, output_daily_cohorts_LAI );  
+    SET_VECTOR_ELT(out_list, 11, output_daily_cohorts_gpp );  
+    SET_VECTOR_ELT(out_list, 12, output_daily_cohorts_resp );  
+    SET_VECTOR_ELT(out_list, 13, output_daily_cohorts_transp );  
+    SET_VECTOR_ELT(out_list, 14, output_daily_cohorts_NPPleaf );  
+    SET_VECTOR_ELT(out_list, 15, output_daily_cohorts_NPProot );  
+    SET_VECTOR_ELT(out_list, 16, output_daily_cohorts_NPPwood );  
+    SET_VECTOR_ELT(out_list, 17, output_daily_cohorts_NSC );  
+    SET_VECTOR_ELT(out_list, 18, output_daily_cohorts_seedC );  
+    SET_VECTOR_ELT(out_list, 19, output_daily_cohorts_leafC );  
+    SET_VECTOR_ELT(out_list, 20, output_daily_cohorts_rootC );  
+    SET_VECTOR_ELT(out_list, 21, output_daily_cohorts_SW_C );  
+    SET_VECTOR_ELT(out_list, 22, output_daily_cohorts_HW_C );  
+    SET_VECTOR_ELT(out_list, 23, output_daily_cohorts_NSN );  
+    SET_VECTOR_ELT(out_list, 24, output_daily_cohorts_seedN );  
+    SET_VECTOR_ELT(out_list, 25, output_daily_cohorts_leafN );  
+    SET_VECTOR_ELT(out_list, 26, output_daily_cohorts_rootN );  
+    SET_VECTOR_ELT(out_list, 27, output_daily_cohorts_SW_N );  
+    SET_VECTOR_ELT(out_list, 28, output_daily_cohorts_HW_N );  
 
-    UNPROTECT(59);
+    SET_VECTOR_ELT(out_list, 29, output_annual_tile);
+
+    SET_VECTOR_ELT(out_list, 30, output_annual_cohorts_year);
+    SET_VECTOR_ELT(out_list, 31, output_annual_cohorts_cID);
+    SET_VECTOR_ELT(out_list, 32, output_annual_cohorts_PFT);
+    SET_VECTOR_ELT(out_list, 33, output_annual_cohorts_layer);
+    SET_VECTOR_ELT(out_list, 34, output_annual_cohorts_density);
+    SET_VECTOR_ELT(out_list, 35, output_annual_cohorts_flayer);
+    SET_VECTOR_ELT(out_list, 36, output_annual_cohorts_DBH);
+    SET_VECTOR_ELT(out_list, 37, output_annual_cohorts_dDBH);
+    SET_VECTOR_ELT(out_list, 38, output_annual_cohorts_height);
+    SET_VECTOR_ELT(out_list, 39, output_annual_cohorts_age);
+    SET_VECTOR_ELT(out_list, 40, output_annual_cohorts_BA);
+    SET_VECTOR_ELT(out_list, 41, output_annual_cohorts_dBA);
+    SET_VECTOR_ELT(out_list, 42, output_annual_cohorts_Acrown);
+    SET_VECTOR_ELT(out_list, 43, output_annual_cohorts_Aleaf);
+    SET_VECTOR_ELT(out_list, 44, output_annual_cohorts_nsc);
+    SET_VECTOR_ELT(out_list, 45, output_annual_cohorts_nsn);
+    SET_VECTOR_ELT(out_list, 46, output_annual_cohorts_seedC);
+    SET_VECTOR_ELT(out_list, 47, output_annual_cohorts_leafC);
+    SET_VECTOR_ELT(out_list, 48, output_annual_cohorts_rootC);
+    SET_VECTOR_ELT(out_list, 49, output_annual_cohorts_sapwC);
+    SET_VECTOR_ELT(out_list, 50, output_annual_cohorts_woodC);
+    SET_VECTOR_ELT(out_list, 51, output_annual_cohorts_treeG);
+    SET_VECTOR_ELT(out_list, 52, output_annual_cohorts_fseed);
+    SET_VECTOR_ELT(out_list, 53, output_annual_cohorts_fleaf);
+    SET_VECTOR_ELT(out_list, 54, output_annual_cohorts_froot);
+    SET_VECTOR_ELT(out_list, 55, output_annual_cohorts_fwood);
+    SET_VECTOR_ELT(out_list, 56, output_annual_cohorts_GPP);
+    SET_VECTOR_ELT(out_list, 57, output_annual_cohorts_NPP);
+    SET_VECTOR_ELT(out_list, 58, output_annual_cohorts_Rauto);
+    SET_VECTOR_ELT(out_list, 59, output_annual_cohorts_Nupt);
+    SET_VECTOR_ELT(out_list, 60, output_annual_cohorts_Nfix);
+    SET_VECTOR_ELT(out_list, 61, output_annual_cohorts_n_deadtrees);
+    SET_VECTOR_ELT(out_list, 62, output_annual_cohorts_c_deadtrees);
+    SET_VECTOR_ELT(out_list, 63, output_annual_cohorts_deathrate);
+    
+    UNPROTECT(65);
 
     return out_list;
 }
@@ -517,7 +545,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of the SEXP variables (not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   48},  // Number of the SEXP variables (not the output)
   {NULL,         NULL,                0}
 };
 

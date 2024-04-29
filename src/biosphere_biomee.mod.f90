@@ -45,6 +45,7 @@ contains
     integer :: year0
     integer :: i
     integer :: idata
+    !integer :: nfrequency
     integer, save :: simu_steps !, datalines
     integer, save :: iyears
     integer, save :: idays
@@ -180,6 +181,8 @@ contains
     ! Re-organize cohorts
     !---------------------------------------------
     call kill_lowdensity_cohorts( vegn )
+
+    call kill_old_grass( vegn ) 
     
     call relayer_cohorts( vegn )
     
@@ -193,12 +196,45 @@ contains
     ! update the years of model run
     iyears = iyears + 1
 
+    !---------------------------------------------
+    ! Reset vegetation to initial conditions
+    !---------------------------------------------
+
+    !if (iyears > myinterface%params_siml%spinupyears+31 .and. rand(0)<0.40) &
+    !     call reset_vegn_initial(vegn) ! 0.01, 0.02, 0.04, 0.08, 0.20, 0.40
+
+    !if (iyears == 700 .or. iyears == 800) &
+    !     call reset_vegn_initial(vegn) 
+    
     if (myinterface%steering%finalize) then
       !----------------------------------------------------------------
       ! Finazlize run: deallocating memory
       !----------------------------------------------------------------
       deallocate( vegn )
 
+    if(myinterface%params_siml%do_reset_veg) then
+
+    if (iyears==myinterface%params_siml%spinupyears + 31)  then
+      call reset_vegn_initial(vegn)
+    endif
+
+    ! nfrequency = 50 ! 100,75,50,25,15,10 
+
+    if(myinterface%params_siml%dist_frequency > 0) then
+        do i = myinterface%params_siml%spinupyears + 31 + myinterface%params_siml%dist_frequency, &
+        myinterface%params_siml%spinupyears + myinterface%params_siml%nyeartrend, &
+        myinterface%params_siml%dist_frequency
+      if (iyears == i) call reset_vegn_initial(vegn)
+    enddo
+    endif
+
+    endif
+
+    !----------------------------------------------------------------
+    ! Finalize run: deallocating memory
+    !----------------------------------------------------------------
+    if (myinterface%steering%finalize) then  
+      deallocate(vegn)
     end if
     
   end subroutine biosphere_annual
