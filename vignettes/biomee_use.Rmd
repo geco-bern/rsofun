@@ -23,7 +23,7 @@ The `rsofun` package and framework includes two main models. The `pmodel` and `b
 
 ## Demo data
 
-The package includes two demo datasets to run and validate pmodel output. These files can be directly loaded into your workspace by typing:
+The package includes two demo datasets to run. These files can be directly loaded into your workspace by typing:
 
 ```{r eval = FALSE}
 library(rsofun)
@@ -218,9 +218,7 @@ ggplot() +
             aes(x = year, y = GPP),
             color = "grey50") +
   theme_classic() + 
-  labs(x = "Year", y = "GPP") +
-  geom_hline(yintercept = biomee_validation_2$data[[1]]$targets_obs[1],
-              lty=2)        # plot observation
+  labs(x = "Year", y = "GPP")
 
 ggplot() +
   geom_line(data = biomee_p_model_output,
@@ -229,7 +227,5 @@ ggplot() +
             aes(x = year, y = plantC),
             color = "grey50") +
   theme_classic() + 
-  labs(x = "Year", y = "plantC") +
-  geom_hline(yintercept = biomee_validation_2$data[[1]]$targets_obs[4],
-             lty = 2)        # plot observation
+  labs(x = "Year", y = "plantC")
 ```
