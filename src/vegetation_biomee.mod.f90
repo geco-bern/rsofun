@@ -1346,9 +1346,34 @@ contains
     
     enddo
 
+    !--------------------------------- 
+    ! THIS CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
     ! replace the array of cohorts
     deallocate(vegn%cohorts)
     vegn%cohorts => new 
+    !--------------------------------- 
+
+    ! !--------------------------------- 
+    ! ! Ensheng's suggested modification (email 29 Apr 2024)
+    ! ! THIS CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
+    ! ! replace the array of cohorts
+    ! deallocate(vegn%cohorts)
+    ! vegn%cohorts => new
+    ! ! Let new points to null()
+    ! new => null()
+    ! !---------------------------------
+
+    ! !--------------------------------- 
+    ! ! Ensheng's ALTERNATIVE suggested modification (email 29 Apr 2024)
+    ! ! THIS ALSO CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
+    ! ! replace the array of cohorts
+    ! vegn%cohorts => new
+    ! deallocate(cc) ! Release the memory of the old cohort array
+    ! ! Let new and cc point to null
+    ! new => null()
+    ! cc => null()
+    ! !---------------------------------
+
     vegn%n_cohorts = i
 
     ! update layer fraction for each cohort
@@ -2260,62 +2285,64 @@ contains
 
     !  Read parameters from the parameter file (namelist)
 
-! xxx seems new from d-ben - missing if?
-      ! Initialize plant cohorts
-      init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts !nCohorts !Weng,2018-11-21
-      allocate(cc(1:init_n_cohorts), STAT = istat)
-      vegn%cohorts => cc
-      vegn%n_cohorts = init_n_cohorts
-      cc => null()
+    ! xxx seems new from d-ben - missing if?
+    ! Initialize plant cohorts
+    init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts !nCohorts !Weng,2018-11-21
+    allocate(cc(1:init_n_cohorts), STAT = istat)
+    vegn%cohorts => cc
+    vegn%n_cohorts = init_n_cohorts
+    cc => null()
 
-      do i=1,init_n_cohorts
-        cx => vegn%cohorts(i)
-        cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
-        cx%layer   = 1
-        cx%age = 0
-        cx%species = INT(myinterface%init_cohort(i)%init_cohort_species)
-        cx%ccID    =  i
-        cx%plabl%c%c12     = myinterface%init_cohort(i)%init_cohort_nsc
-        cx%nindivs = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
-        cx%psapw%c%c12     = myinterface%init_cohort(i)%init_cohort_bsw
-        cx%pwood%c%c12     = myinterface%init_cohort(i)%init_cohort_bHW
-        btotal     = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
-        call initialize_cohort_from_biomass(cx,btotal)
-      enddo
-      MaxCohortID = cx%ccID
+    do i=1,init_n_cohorts
+      cx => vegn%cohorts(i)
+      cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
+      cx%layer   = 1
+      cx%age = 0
+      cx%species = INT(myinterface%init_cohort(i)%init_cohort_species)
+      cx%ccID    =  i
+      cx%plabl%c%c12     = myinterface%init_cohort(i)%init_cohort_nsc
+      cx%nindivs = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
+      cx%psapw%c%c12     = myinterface%init_cohort(i)%init_cohort_bsw
+      cx%pwood%c%c12     = myinterface%init_cohort(i)%init_cohort_bHW
+      btotal     = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
+      call initialize_cohort_from_biomass(cx,btotal)
+    enddo
+    MaxCohortID = cx%ccID
 
-      ! Sorting these cohorts
-      call relayer_cohorts( vegn )
+    ! Sorting these cohorts
+    call relayer_cohorts( vegn )
 
-      ! Initial Soil pools and environmental conditions
-      vegn%psoil_fs%c%c12   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
-      vegn%psoil_sl%c%c12  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
-      vegn%psoil_fs%n%n14   = vegn%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-      vegn%psoil_sl%n%n14  = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-      vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
-      vegn%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
-      vegn%previousN    = vegn%ninorg%n14
+    ! Initial Soil pools and environmental conditions
+    vegn%psoil_fs%c%c12   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
+    vegn%psoil_sl%c%c12  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+    vegn%psoil_fs%n%n14   = vegn%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
+    vegn%psoil_sl%n%n14  = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
+    vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
+    vegn%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
+    vegn%previousN    = vegn%ninorg%n14
 
-      ! Soil water parameters
-      vegn%soiltype = myinterface%params_tile%soiltype    
-      vegn%FLDCAP = myinterface%params_tile%FLDCAP  
-      vegn%WILTPT = myinterface%params_tile%WILTPT  
+    ! Soil water parameters
+    vegn%soiltype = myinterface%params_tile%soiltype    
+    vegn%FLDCAP = myinterface%params_tile%FLDCAP  
+    vegn%WILTPT = myinterface%params_tile%WILTPT  
 
-      ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
-      vegn%wcl = myinterface%params_tile%FLDCAP  
-      ! Update soil water
-      vegn%SoilWater = 0.0
-      do i=1, max_lev
-        vegn%SoilWater = vegn%SoilWater + vegn%wcl(i)*thksl(i)*1000.0
-      enddo
-      vegn%thetaS = 1.0
-      ! tile
-      call summarize_tile( vegn )
-      vegn%initialN0 =  vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
-                        vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
-                        vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
-                        vegn%psoil_sl%n%n14 + vegn%ninorg%n14
-      vegn%totN =  vegn%initialN0
+    ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
+    vegn%wcl = myinterface%params_tile%FLDCAP
+
+    ! Update soil water
+    vegn%SoilWater = 0.0
+    do i=1, max_lev
+      vegn%SoilWater = vegn%SoilWater + vegn%wcl(i)*thksl(i)*1000.0
+    enddo
+    vegn%thetaS = 1.0
+    
+    ! tile
+    call summarize_tile( vegn )
+    vegn%initialN0 =  vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
+                      vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
+                      vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
+                      vegn%psoil_sl%n%n14 + vegn%ninorg%n14
+    vegn%totN =  vegn%initialN0
 
     ! For reset: Keep initial plant cohorts
     allocate(cc(1:init_n_cohorts), STAT = istat)
@@ -2323,9 +2350,9 @@ contains
     vegn%initialCC   => cc
     vegn%n_initialCC = init_n_cohorts
     cc => null()
-    
+
     ! xxx up to here new from d-ben
-  
+
   end subroutine initialize_vegn_tile
 
 end module md_vegetation_biomee
