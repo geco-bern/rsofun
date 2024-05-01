@@ -32,6 +32,7 @@ module md_waterbal
   real :: keps              ! obliquity for 2000 CE, degrees (Berger, 1978)
   real :: kw                ! entrainment factor (Lhomme, 1997; Priestley & Taylor, 1972)
   real :: komega            ! longitude of perihelion for 2000 CE, degrees (Berger, 1978)
+  real :: ksoil             ! parameter for soil moisture, calculated as  - ln(1 -y) / critical   where y is the soil moisture value (0.95) and critical is the depth (100 mm)
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -128,7 +129,7 @@ contains
       ! water scalar (fraction of plant-available water holding capacity; water storage at wilting point is already accounted for in tile(lu)%soil%params%whc)
       ! WHC = FC - PWP
       ! WSCAL = (WCONT - PWP) / (FC - PWP)
-      tile(lu)%soil%phy%wscal = tile(lu)%soil%phy%wcont / tile(lu)%soil%params%whc
+      tile(lu)%soil%phy%wscal =   1 - exp(- ksoil * tile(lu)%soil%phy%wcont)
 
     end do
 
@@ -564,6 +565,8 @@ contains
 
     ! maximum snow melting rate (mm d-1) (Orth et al., 2013)
     maxmeltrate = 3.0
+
+    ksoil = 0.03
 
   end subroutine getpar_modl_waterbal
 
