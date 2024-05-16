@@ -563,8 +563,8 @@ run_biomee_f_bysite <- function(
       n                = as.integer(nrow(forcing)), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       n_daily          = as.integer(n_daily), 
       n_annual         = as.integer(runyears), 
-      #n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
-      n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
+      n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
+      #n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
       forcing          = as.matrix(forcing)
       )
     
