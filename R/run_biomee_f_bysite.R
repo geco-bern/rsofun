@@ -561,10 +561,10 @@ run_biomee_f_bysite <- function(
       init_Nmineral    = as.numeric(init_soil$init_Nmineral),
       N_input          = as.numeric(init_soil$N_input),
       n                = as.integer(nrow(forcing)), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
-      n_daily          = as.integer(n_daily), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
-      n_annual         = as.integer(runyears), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
-      #n_annual_cohorts = as.integer(params_siml$nyeartrend), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
-      n_annual_cohorts = as.integer(runyears), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
+      n_daily          = as.integer(n_daily), 
+      n_annual         = as.integer(runyears), 
+      #n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
+      n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
       forcing          = as.matrix(forcing)
       )
     
