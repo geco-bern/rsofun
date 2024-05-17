@@ -310,7 +310,7 @@ contains
     
     ! Eq. 51, SPLASH 2.0 Documentation
     ! out_evap%econ = 1.0 / ( lv * rho_water ) ! this is to convert energy into mass (water)
-    tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma)) ! MORE PRECISELY - this is to convert energy into mass (water)
+    tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma))  ! MORE PRECISELY - this is to convert energy into mass (water)
 
     !---------------------------------------------------------
     ! Daily condensation, mm d-1

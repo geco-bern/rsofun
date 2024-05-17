@@ -763,8 +763,8 @@ contains
     vegn%annualN      = 0.0
     vegn%Nloss_yr     = 0.0
     vegn%annualNup    = 0.0
-    ! vegn%n_deadtrees  = 0.0 !xxx
-    ! vegn%c_deadtrees  = 0.0
+    vegn%n_deadtrees  = 0.0
+    vegn%c_deadtrees  = 0.0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
@@ -801,8 +801,8 @@ contains
       cc%BA_ys        = cc%BA
       cc%Vol_ys       = cc%Volume
       cc%ABG_ys       = cc%psapw%c%c12 + cc%pwood%c%c12
-      ! cc%n_deadtrees  = 0.0
-      ! cc%c_deadtrees  = 0.0
+      cc%n_deadtrees  = 0.0
+      cc%c_deadtrees  = 0.0
       cc%m_turnover   = 0.0
     enddo
   

@@ -38,14 +38,11 @@ contains
     !----------------------------------------------------------------
     ! Biome-E stuff
     !----------------------------------------------------------------
-    ! integer, parameter :: rand_seed = 86456
-    ! integer, parameter :: totalyears = 10
-    integer, parameter :: nCohorts = 1
     real    :: tsoil, soil_theta
     integer :: year0
     integer :: i
     integer :: idata
-    !integer :: nfrequency
+    !integer :: nfrequency ! disturbances
     integer, save :: simu_steps !, datalines
     integer, save :: iyears
     integer, save :: idays
@@ -61,7 +58,7 @@ contains
 
       ! Initialize vegetation tile and plant cohorts
       allocate( vegn )
-      call initialize_vegn_tile( vegn, nCohorts)
+      call initialize_vegn_tile( vegn )
       
       ! Sort and relayer cohorts
       call relayer_cohorts( vegn )

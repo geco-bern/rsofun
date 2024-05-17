@@ -494,7 +494,6 @@ contains
     integer :: i
     ! real    :: grassdensity   ! for grasses only
     ! real    :: BL_u,BL_c
-    integer :: GrassMaxL = 3 
     real    :: ccNSC, ccNSN
     logical :: cc_firstday = .false.
     logical :: TURN_ON_life = .false., TURN_OFF_life
@@ -983,18 +982,6 @@ contains
     cc%m_turnover  = cc%m_turnover + loss_coarse + loss_fine
     !cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
 
-    ! cc%c_deadtrees   = deadtrees * (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12) 
-    
-    ! vegn%n_deadtrees   = vegn%n_deadtrees + deadtrees
-    ! vegn%c_deadtrees   = vegn%c_deadtrees + deadtrees * (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12)
-    
-    ! ! print*, "vegn%n_deadtrees", vegn%n_deadtrees
-    ! print*, "deadtrees", deadtrees
-    ! print*, "cc%n_deadtrees", cc%n_deadtrees
-    ! print*, "vegn%n_deadtrees", vegn%n_deadtrees
-    ! print*, "vegn%n_deadtrees", vegn%n_deadtrees
-    ! print*, "vegn%c_deadtrees", vegn%c_deadtrees
-
     end associate
 
   end subroutine plant2soil
@@ -1350,7 +1337,7 @@ contains
     ! THIS CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
     ! replace the array of cohorts
     deallocate(vegn%cohorts)
-    vegn%cohorts => new 
+    vegn%cohorts => new
     !--------------------------------- 
 
     ! !--------------------------------- 
@@ -1897,52 +1884,54 @@ contains
   end subroutine kill_lowdensity_cohorts
 
   subroutine kill_old_grass(vegn)
-  ! kill old grass cohorts
-  ! Weng, 01/22/2023
-  type(vegn_tile_type), intent(inout) :: vegn
+    !////////////////////////////////////////////////////////////////
+    ! Kill old grass cohorts
+    ! Weng, 01/22/2023
+    !---------------------------------------------------------------
+    type(vegn_tile_type), intent(inout) :: vegn
 
-  ! ---- local vars
-  type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
-  logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
-  real, parameter :: mindensity = 0.25E-4
-  logical :: OldGrass
-  integer :: i,j,k
+    ! ---- local vars
+    type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
+    logical :: OldGrass
+    integer :: i,j,k
 
- ! calculate the number of cohorts that are not old grass
-  k = 0
-  do i = 1, vegn%n_cohorts
-    cx =>vegn%cohorts(i)
-    associate(sp=>spdata(cx%species))
-      OldGrass = (sp%lifeform ==0 .and. cx%age > 3.0)
-      if (.not. OldGrass) k=k+1
-    end associate
-  enddo
-  ! if (k==0)then
-  !    write(*,*)'in kill_old_grass: All cohorts are old grass, No action!'
-  !    !stop
-  ! endif
+    ! calculate the number of cohorts that are not old grass
+    k = 0
+    do i = 1, vegn%n_cohorts
+      cx =>vegn%cohorts(i)
+      associate(sp=>spdata(cx%species))
+        OldGrass = (sp%lifeform ==0 .and. cx%age > 3.0)
+        if (.not. OldGrass) k=k+1
+      end associate
+    enddo
 
-  ! exclude cohorts that are old grass
-  if (k>0 .and. k<vegn%n_cohorts)then
-     allocate(cc(k))
-     j=0
-     do i = 1,vegn%n_cohorts
+    ! if (k==0)then
+    !    write(*,*)'in kill_old_grass: All cohorts are old grass, No action!'
+    !    !stop
+    ! endif
+
+    ! exclude cohorts that are old grass
+    if (k>0 .and. k<vegn%n_cohorts) then
+      allocate(cc(k))
+      j=0
+      do i = 1,vegn%n_cohorts
         cx =>vegn%cohorts(i)
         associate(sp=>spdata(cx%species))
-        OldGrass = (sp%lifeform ==0 .and. cx%age > 3.0)
-        if (.not. OldGrass) then
-           j=j+1
-           cc(j) = cx
-        else
-           ! Carbon and Nitrogen from plants to soil pools
-           call plant2soil(vegn,cx,cx%nindivs)
-        endif
+          OldGrass = (sp%lifeform ==0 .and. cx%age > 3.0)
+          if (.not. OldGrass) then
+            j=j+1
+            cc(j) = cx
+          else
+            ! Carbon and Nitrogen from plants to soil pools
+            call plant2soil(vegn,cx,cx%nindivs)
+          endif
         end associate
-     enddo
-     vegn%n_cohorts = j
-     deallocate (vegn%cohorts)
-     vegn%cohorts=>cc
-  endif
+      enddo
+      vegn%n_cohorts = j
+      deallocate (vegn%cohorts)
+      vegn%cohorts=>cc
+    endif
+
   end subroutine kill_old_grass
 
   subroutine merge_cohorts(c1, c2)
@@ -2247,12 +2236,11 @@ contains
   !==================== Vegetation initializations =======================
   !=======================================================================
 
-  subroutine initialize_vegn_tile( vegn, nCohorts )
+  subroutine initialize_vegn_tile( vegn )
     !////////////////////////////////////////////////////////////////
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout), pointer :: vegn
-    integer, intent(in) :: nCohorts
     ! -local vars -------
     type(cohort_type), dimension(:), pointer :: cc
     type(cohort_type), pointer :: cx
@@ -2287,7 +2275,7 @@ contains
 
     ! xxx seems new from d-ben - missing if?
     ! Initialize plant cohorts
-    init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts !nCohorts !Weng,2018-11-21
+    init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts
     allocate(cc(1:init_n_cohorts), STAT = istat)
     vegn%cohorts => cc
     vegn%n_cohorts = init_n_cohorts
@@ -2295,17 +2283,17 @@ contains
 
     do i=1,init_n_cohorts
       cx => vegn%cohorts(i)
-      cx%status  = LEAF_OFF ! ON=1, OFF=0 ! ON
-      cx%layer   = 1
-      cx%age = 0
-      cx%species = INT(myinterface%init_cohort(i)%init_cohort_species)
-      cx%ccID    =  i
-      cx%plabl%c%c12     = myinterface%init_cohort(i)%init_cohort_nsc
-      cx%nindivs = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
-      cx%psapw%c%c12     = myinterface%init_cohort(i)%init_cohort_bsw
-      cx%pwood%c%c12     = myinterface%init_cohort(i)%init_cohort_bHW
-      btotal     = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
-      call initialize_cohort_from_biomass(cx,btotal)
+      cx%status      = LEAF_OFF ! ON=1, OFF=0 ! ON
+      cx%layer       = 1
+      cx%age         = 0
+      cx%species     = INT(myinterface%init_cohort(i)%init_cohort_species)
+      cx%ccID        =  i
+      cx%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
+      cx%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
+      cx%psapw%c%c12 = myinterface%init_cohort(i)%init_cohort_bsw
+      cx%pwood%c%c12 = myinterface%init_cohort(i)%init_cohort_bHW
+      btotal         = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
+      call initialize_cohort_from_biomass(cx, btotal)
     enddo
     MaxCohortID = cx%ccID
 

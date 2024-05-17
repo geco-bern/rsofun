@@ -3,16 +3,16 @@ library(dplyr)
 library(ggplot2)
 library(purrr)
 
+## BiomeE (original with gs-leuning) -----------
 nruns <- 3
-
-test_biomee <- function(){
+test_biomee_gs_leuning <- function(){
   # run the model
   biomee_gs_leuning_output <- runread_biomee_f(
     biomee_gs_leuning_drivers,
     makecheck = TRUE,
     parallel = FALSE
   )
-  
+
   # split out the annual data
   any(!is.na(biomee_gs_leuning_output$data[[1]]$output_annual_tile$GPP) & biomee_gs_leuning_output$data[[1]]$output_annual_tile$GPP > 0.0)
 }
@@ -20,19 +20,51 @@ test_biomee <- function(){
 # TRUE if simulation passed
 vec_test <- purrr::map_lgl(
   1:nruns,
-  ~test_biomee()
+  ~test_biomee_gs_leuning()
 )
 
 # did any simulation fail?
 if (any(!vec_test)){
   stop(
-    "At least one BiomeE simulation failed."
+    "At least one BiomeE-gs-leuning simulation failed."
   )
 } else {
   message(
-    "All BiomeE simulations passed."
+    "All BiomeE-gs-leuning simulations passed."
   )
 }
+
+## BiomeEP -------------------
+nruns <- 10
+test_biomeep <- function(){
+  # run the model
+  biomee_p_model_output <- runread_biomee_f(
+    biomee_p_model_drivers,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # split out the annual data
+  any(!is.na(biomee_p_model_output$data[[1]]$output_annual_tile$GPP) & biomee_p_model_output$data[[1]]$output_annual_tile$GPP > 0.0)
+}
+
+# TRUE if simulation passed
+vec_test <- purrr::map_lgl(
+  1:nruns,
+  ~test_biomeep()
+)
+
+# did any simulation fail?
+if (any(!vec_test)){
+  stop(
+    "At least one BiomeEP simulation failed."
+  )
+} else {
+  message(
+    "All BiomeEP simulations passed."
+  )
+}
+
 
 # OLD BUG RELATED TO NET RADIATION AND EVAPOTRANSPIRATION - SOLVED BY NOT USING PRESCRIBED NET RADIATION IN COMBINATION WITH SPLASH
 # library(rsofun)

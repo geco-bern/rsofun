@@ -768,17 +768,12 @@ contains
       !----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)
       !----------------------------------------------------------------
-
       ! To get outputs only after spinupyears make if below and 
       ! also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(params_siml$nyeartrend)
 
       if (.not. myinterface%steering%spinup) then  
 
         idx =  yr - myinterface%params_siml%spinupyears
-
-      ! To get outputs for all runyears idx=yr and also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(runyears)
-       
-       !idx =  yr
 
         output_annual_cohorts_year(idx, :)        = dble(out_biosphere%annual_cohorts(:)%year)
         output_annual_cohorts_cID(idx, :)         = dble(out_biosphere%annual_cohorts(:)%cID)
@@ -791,7 +786,7 @@ contains
         output_annual_cohorts_height(idx, :)      = dble(out_biosphere%annual_cohorts(:)%height)
         output_annual_cohorts_age(idx, :)         = dble(out_biosphere%annual_cohorts(:)%age)
         output_annual_cohorts_BA(idx, :)          = dble(out_biosphere%annual_cohorts(:)%BA)
-        output_annual_cohorts_BA(idx, :)          = dble(out_biosphere%annual_cohorts(:)%dBA)
+        output_annual_cohorts_dBA(idx, :)         = dble(out_biosphere%annual_cohorts(:)%dBA)
         output_annual_cohorts_Acrown(idx, :)      = dble(out_biosphere%annual_cohorts(:)%Acrown)
         output_annual_cohorts_Aleaf(idx, :)       = dble(out_biosphere%annual_cohorts(:)%Aleaf)
         output_annual_cohorts_nsc(idx, :)         = dble(out_biosphere%annual_cohorts(:)%nsc)
@@ -812,6 +807,8 @@ contains
         output_annual_cohorts_Nupt(idx, :)        = dble(out_biosphere%annual_cohorts(:)%Nupt)
         output_annual_cohorts_Nfix(idx, :)        = dble(out_biosphere%annual_cohorts(:)%Nfix)
         output_annual_cohorts_deathrate(idx, :)   = dble(out_biosphere%annual_cohorts(:)%deathrate)
+        output_annual_cohorts_n_deadtrees(idx, :) = dble(out_biosphere%annual_cohorts(:)%n_deadtrees)
+        output_annual_cohorts_c_deadtrees(idx, :) = dble(out_biosphere%annual_cohorts(:)%c_deadtrees)
 
        end if
 
