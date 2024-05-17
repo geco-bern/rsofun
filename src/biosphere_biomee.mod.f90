@@ -20,15 +20,27 @@ module md_biosphere_biomee
 
 contains
 
-  subroutine biosphere_annual(out_biosphere)
+  subroutine biosphere_annual( &
+    out_biosphere_daily_tile, &
+    out_biosphere_daily_cohorts, &
+    out_biosphere_annual_tile, &
+    out_biosphere_annual_cohorts &
+    )
     !////////////////////////////////////////////////////////////////
     ! Calculates one year of vegetation dynamics. 
     !----------------------------------------------------------------
-    use md_interface_biomee, only: myinterface, outtype_biosphere  
+    use md_interface_biomee, only: myinterface, &
+      outtype_daily_tile, &
+      outtype_daily_cohorts, &
+      outtype_annual_tile, &
+      outtype_annual_cohorts
     use md_gpp_biomee, only: getpar_modl_gpp
 
-    ! return variable
-    type(outtype_biosphere) :: out_biosphere
+    ! return variables
+    type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
+    type(outtype_daily_cohorts),  dimension(ndayyear,out_max_cohorts), intent(out) :: out_biosphere_daily_cohorts
+    type(outtype_annual_tile)                                        , intent(out) :: out_biosphere_annual_tile
+    type(outtype_annual_cohorts), dimension(out_max_cohorts)         , intent(out) :: out_biosphere_annual_cohorts
 
     ! ! local variables
     integer :: dm, moy, doy
@@ -116,7 +128,7 @@ contains
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
          
-          call hourly_diagnostics( vegn, myinterface%climate(idata) )  !, iyears, idoy, i, out_biosphere%hourly_tile(idata)
+          call hourly_diagnostics( vegn, myinterface%climate(idata) )
          
           init = .false.
          
@@ -132,7 +144,7 @@ contains
         soil_theta    = vegn%thetaS
 
         ! sum over fast time steps and cohorts
-        call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy)  )
+        call daily_diagnostics( vegn, iyears, idoy, out_biosphere_daily_cohorts(doy,:), out_biosphere_daily_tile(doy)  )
         
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
@@ -158,7 +170,7 @@ contains
     ! cohorts again and we want annual output and daily
     ! output to be consistent with cohort identities.
     !---------------------------------------------
-    call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
+    call annual_diagnostics( vegn, iyears, out_biosphere_annual_cohorts(:), out_biosphere_annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
