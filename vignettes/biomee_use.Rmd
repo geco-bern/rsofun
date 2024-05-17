@@ -92,9 +92,9 @@ biomee_gs_leuning_output |>
   theme_classic()+labs(x = "Year", y = "plantC")
 ```
 
-## Running the BiomeE model with P-model photosynthesis
+## Running the BiomeEP model
 
-Running the fast P-model implementation.
+Running the fast P-model implementation with P-model photosynthesis.
 
 ```{r}
 # print parameter settings
@@ -135,12 +135,14 @@ We can now visualize the model output.
 biomee_p_model_output %>% 
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
-  theme_classic()+labs(x = "Year", y = "GPP")
+  theme_classic() + 
+  labs(x = "Year", y = "GPP")
 
 biomee_p_model_output %>% 
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
-  theme_classic()+labs(x = "Year", y = "plantC")
+  theme_classic() + 
+  labs(x = "Year", y = "plantC")
 ```
 
 ## Calibrating model parameters
