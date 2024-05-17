@@ -610,44 +610,108 @@ run_biomee_f_bysite <- function(
     if (size_of_object_gb < 5){
       output_daily_tile <- as.data.frame(biomeeout[[1]], stringAsFactor = FALSE)
       colnames(output_daily_tile) <- c(
-        "year", "doy", "Tc",
-        "Prcp", "totWs", "Trsp",
-        "Evap", "Runoff", "ws1",
-        "ws2", "ws3", "LAI",
-        "GPP", "Rauto", "Rh",
-        "NSC", "seedC", "leafC",
-        "rootC", "SW_C", "HW_C",
-        "NSN", "seedN", "leafN",
-        "rootN", "SW_N", "HW_N",
-        "McrbC", "fastSOM", "slowSOM",
-        "McrbN", "fastSoilN", "slowSoilN",
-        "mineralN", "N_uptk")
+        "year", 
+        "doy", 
+        "Tc",
+        "Prcp", 
+        "totWs", 
+        "Trsp",
+        "Evap", 
+        "Runoff", 
+        "ws1",
+        "ws2", 
+        "ws3", 
+        "LAI",
+        "GPP", 
+        "Rauto", 
+        "Rh",
+        "NSC", 
+        "seedC", 
+        "leafC",
+        "rootC", 
+        "SW_C", 
+        "HW_C",
+        "NSN", 
+        "seedN", 
+        "leafN",
+        "rootN", 
+        "SW_N", 
+        "HW_N",
+        "McrbC", 
+        "fastSOM", 
+        "slowSOM",
+        "McrbN", 
+        "fastSoilN", 
+        "slowSoilN",
+        "mineralN", 
+        "N_uptk")
     } else {
       output_daily_tile <- NA
     }
     
     # annual tile
-    output_annual_tile <- as.data.frame(biomeeout[[29]], stringAsFactor = FALSE)
-    colnames(output_annual_tile) <- c("year", "CAI", "LAI",
-          "Density", "DBH", "Density12",
-          "DBH12", "QMD", "NPP",
-          "GPP", "Rauto", "Rh",
-          "rain", "SoilWater","Transp",
-          "Evap", "Runoff", "plantC",
-          "soilC", "plantN", "soilN",
-          "totN", "NSC", "SeedC", "leafC",
-          "rootC", "SapwoodC", "WoodC",
-          "NSN", "SeedN", "leafN",
-          "rootN", "SapwoodN", "WoodN",
-          "McrbC", "fastSOM", "SlowSOM",
-          "McrbN", "fastSoilN", "slowSoilN",
-          "mineralN", "N_fxed", "N_uptk",
-          "N_yrMin", "N_P2S", "N_loss",
-          "totseedC", "totseedN", "Seedling_C",
-          "Seedling_N", "MaxAge", "MaxVolume",
-          "MaxDBH", "NPPL", "NPPW",
-          "n_deadtrees", "c_deadtrees", "m_turnover", 
-          "c_turnover_time")
+    output_annual_tile <- as.data.frame(biomeeout[[2]], stringAsFactor = FALSE)
+    colnames(output_annual_tile) <- c(
+			"year", 
+			"CAI", 
+			"LAI",
+			"Density", 
+			"DBH", 
+			"Density12",
+			"DBH12", 
+			"QMD", 
+			"NPP",
+			"GPP", 
+			"Rauto", 
+			"Rh",
+			"rain", 
+			"SoilWater","
+			Transp",
+			"Evap", 
+			"Runoff", 
+			"plantC",
+			"soilC", 
+			"plantN", 
+			"soilN",
+			"totN", 
+			"NSC", 
+			"SeedC", 
+			"leafC",
+			"rootC", 
+			"SapwoodC", 
+			"WoodC",
+			"NSN", 
+			"SeedN", 
+			"leafN",
+			"rootN", 
+			"SapwoodN", 
+			"WoodN",
+			"McrbC", 
+			"fastSOM", 
+			"SlowSOM",
+			"McrbN", 
+			"fastSoilN", 
+			"slowSoilN",
+			"mineralN", 
+			"N_fxed", 
+			"N_uptk",
+			"N_yrMin", 
+			"N_P2S", 
+			"N_loss",
+			"totseedC", 
+			"totseedN", 
+			"Seedling_C",
+			"Seedling_N", 
+			"MaxAge", 
+			"MaxVolume",
+			"MaxDBH", 
+			"NPPL", 
+			"NPPW",
+			"n_deadtrees", 
+			"c_deadtrees", 
+			"m_turnover", 
+			"c_turnover_time"
+		)
     
     #---- Multi-level output, multiple matrices to be combined ----
     
@@ -661,57 +725,97 @@ run_biomee_f_bysite <- function(
     # as vector()
 
     #---- daily cohorts ----
-    if (size_of_object_gb < 5){
-      daily_values <- c(
-        "year","doy","hour",
-        "cID", "PFT", "layer",
-        "density","f_layer", "LAI",
-        "gpp","resp","transp",
-        "NPPleaf","NPProot", "NPPwood", "NSC",
-        "seedC", "leafC", "rootC",
-        "SW_C", "HW_C", "NSN",
-        "seedN", "leafN", "rootN",
-        "SW_N", "HW_N"
-      )
-      output_daily_cohorts <- lapply(1:length(daily_values), function(x){
-        loc <- 1 + x
-        v <- data.frame(
-          as.vector(biomeeout[[loc]]),
-          stringsAsFactors = FALSE)
-        names(v) <- daily_values[x]
-        return(v)
-      })
+    # if (size_of_object_gb < 5){
+    #   daily_values <- c(
+    #     "year","
+    #     doy","
+    #     hour"
+    #     "cID", 
+    #     "PFT", 
+    #     "layer"
+    #     "density","
+    #     f_layer", 
+    #     "LAI"
+    #     "gpp","
+    #     resp","
+    #     transp"
+    #     "NPPleaf","
+    #     NPProot", 
+    #     "NPPwood", 
+    #     "NSC"
+    #     "seedC", 
+    #     "leafC", 
+    #     "rootC"
+    #     "SW_C", 
+    #     "HW_C", 
+    #     "NSN"
+    #     "seedN", 
+    #     "leafN", 
+    #     "rootN"
+    #     "SW_N", 
+    #     "HW_N"
+    #   )
+    #   output_daily_cohorts <- lapply(1:length(daily_values), function(x){
+    #     loc <- 1 + x
+    #     v <- data.frame(
+    #       as.vector(biomeeout[[loc]]),
+    #       stringsAsFactors = FALSE)
+    #     names(v) <- daily_values[x]
+    #     return(v)
+    #   })
       
-      output_daily_cohorts <- do.call("cbind", output_daily_cohorts)
+    #   output_daily_cohorts <- do.call("cbind", output_daily_cohorts)
       
-      cohort <- sort(rep(1:ncol(biomeeout[[3]]),nrow(biomeeout[[3]])))
-      output_daily_cohorts <- cbind(cohort, output_daily_cohorts)
+    #   cohort <- sort(rep(1:ncol(biomeeout[[3]]),nrow(biomeeout[[3]])))
+    #   output_daily_cohorts <- cbind(cohort, output_daily_cohorts)
       
-      # drop rows (cohorts) with no values
-      output_daily_cohorts$year[output_daily_cohorts$year == -9999 |
-                                  output_daily_cohorts$year == 0] <- NA
-      output_daily_cohorts <- 
-        output_daily_cohorts[!is.na(output_daily_cohorts$year),]
-    } else {
-      output_daily_cohorts <- NA
-    }
+    #   # drop rows (cohorts) with no values
+    #   output_daily_cohorts$year[output_daily_cohorts$year == -9999 |
+    #                               output_daily_cohorts$year == 0] <- NA
+    #   output_daily_cohorts <- output_daily_cohorts[!is.na(output_daily_cohorts$year),]
+    # } else {
+    #   output_daily_cohorts <- NA
+    # }
     
     #--- annual cohorts ----
     annual_values <- c(
-      "year","cID",
-      "PFT","layer","density",
-      "flayer","DBH","dDBH","height",
-      "age","BA","dBA","Acrown","Aleaf",
-      "nsc","seedC","leafC","rootC",
-      "sapwC","woodC","nsn","treeG",
-      "fseed","fleaf","froot","fwood",
-      "GPP","NPP","Rauto",
-      "Nupt","Nfix","n_deadtrees",
-      "c_deadtrees","deathrate"
+      "year",
+      "cID",
+      "PFT",
+      "layer",
+      "density",
+      "flayer",
+      "DBH",
+      "dDBH",
+      "height",
+      "age",
+      "BA",
+      "dBA",
+      "Acrown",
+      "Aleaf",
+      "nsc",
+      "seedC",
+      "leafC",
+      "rootC",
+      "sapwC",
+      "woodC",
+      "nsn",
+      "treeG",
+      "fseed",
+      "fleaf",
+      "froot",
+      "fwood",
+      "GPP",
+      "NPP",
+      "Rauto",
+      "Nupt",
+      "Nfix",
+      "n_deadtrees",
+      "c_deadtrees",
+      "deathrate"
     )
-    
     output_annual_cohorts <- lapply(1:length(annual_values), function(x){
-      loc <- 29 + x
+      loc <- 2 + x
       v <- data.frame(
         as.vector(biomeeout[[loc]]),
         stringsAsFactors = FALSE)
@@ -735,7 +839,7 @@ run_biomee_f_bysite <- function(
     out <- list(
       # output_hourly_tile = output_hourly_tile,
       output_daily_tile = output_daily_tile,
-      output_daily_cohorts = output_daily_cohorts,
+      # output_daily_cohorts = output_daily_cohorts,
       output_annual_tile = output_annual_tile,
       output_annual_cohorts = output_annual_cohorts)
     
