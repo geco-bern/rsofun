@@ -1846,7 +1846,7 @@ contains
     ! local variables
     type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
     ! logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
-    real, parameter :: mindensity = 0.25E-4
+    real, parameter :: mindensity = 1.0E-6 !0.25E-4
     integer :: i,k
 
     ! calculate the number of cohorts with indivs>mindensity
@@ -2273,8 +2273,8 @@ contains
 
     !  Read parameters from the parameter file (namelist)
 
-    ! xxx seems new from d-ben - missing if?
     ! Initialize plant cohorts
+    ! init_n_cohorts = nCohorts ! Weng,2018-11-21
     init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts
     allocate(cc(1:init_n_cohorts), STAT = istat)
     vegn%cohorts => cc

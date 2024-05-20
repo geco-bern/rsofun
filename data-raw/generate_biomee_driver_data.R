@@ -13,7 +13,6 @@ if (is.na(args[1])){
   load(args[1])
 }
 
-# sitename
 sitename <- "CH-Lae"
 
 # Take only year 2004 to 2014, corresponding to subset of data for site CH-Lae
