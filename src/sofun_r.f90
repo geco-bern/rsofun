@@ -788,9 +788,13 @@ contains
       ! To get outputs only after spinupyears make if below and 
       ! also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(params_siml$nyeartrend)
 
-      if (.not. myinterface%steering%spinup) then  
+      !if (.not. myinterface%steering%spinup) then  
 
-        idx =  yr - myinterface%params_siml%spinupyears
+        !idx =  yr - myinterface%params_siml%spinupyears
+
+      ! To get outputs for all runyears idx=yr and also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(runyears)
+       
+       idx =  yr
 
         output_annual_cohorts_year(idx, :)        = dble(out_biosphere_annual_cohorts(:)%year)
         output_annual_cohorts_cID(idx, :)         = dble(out_biosphere_annual_cohorts(:)%cID)
@@ -827,7 +831,7 @@ contains
         output_annual_cohorts_n_deadtrees(idx, :) = dble(out_biosphere_annual_cohorts(:)%n_deadtrees)
         output_annual_cohorts_c_deadtrees(idx, :) = dble(out_biosphere_annual_cohorts(:)%c_deadtrees)
 
-       end if
+       !end if
 
     end do yearloop
 
