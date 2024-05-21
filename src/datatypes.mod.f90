@@ -1092,10 +1092,10 @@ contains
 
     ! running annual sums
     vegn%annualNup  = vegn%annualNup  + vegn%dailyNup
-    vegn%annualGPP  = vegn%annualGPP  + vegn%dailygpp
-    vegn%annualNPP  = vegn%annualNPP  + vegn%dailynpp
-    vegn%annualResp = vegn%annualResp + vegn%dailyresp
-    vegn%annualRh   = vegn%annualRh   + vegn%dailyrh
+    vegn%annualGPP  = vegn%annualGPP  + vegn%dailyGPP
+    vegn%annualNPP  = vegn%annualNPP  + vegn%dailyNpp
+    vegn%annualResp = vegn%annualResp + vegn%dailyResp
+    vegn%annualRh   = vegn%annualRh   + vegn%dailyRh
     vegn%annualPrcp = vegn%annualPrcp + vegn%dailyPrcp
     vegn%annualTrsp = vegn%annualTrsp + vegn%dailytrsp
     vegn%annualEvap = vegn%annualEvap + vegn%dailyevap
@@ -1189,7 +1189,7 @@ contains
       out_annual_cohorts(i)%layer       = cc%layer
       out_annual_cohorts(i)%density     = cc%nindivs * 10000
       out_annual_cohorts(i)%flayer     = cc%layerfrac
-      out_annual_cohorts(i)%dbh         = cc%dbh * 100   ! *100 to convert m in cm
+      out_annual_cohorts(i)%DBH         = cc%dbh * 100   ! *100 to convert m in cm
       out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
       out_annual_cohorts(i)%height      = cc%height
       out_annual_cohorts(i)%age         = cc%age

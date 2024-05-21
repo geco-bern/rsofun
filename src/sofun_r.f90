@@ -802,7 +802,7 @@ contains
         output_annual_cohorts_layer(idx, :)       = dble(out_biosphere_annual_cohorts(:)%layer)
         output_annual_cohorts_density(idx, :)     = dble(out_biosphere_annual_cohorts(:)%density)
         output_annual_cohorts_flayer(idx, :)      = dble(out_biosphere_annual_cohorts(:)%flayer)
-        output_annual_cohorts_dbh(idx, :)         = dble(out_biosphere_annual_cohorts(:)%DBH)
+        output_annual_cohorts_DBH(idx, :)         = dble(out_biosphere_annual_cohorts(:)%DBH)
         output_annual_cohorts_dDBH(idx, :)        = dble(out_biosphere_annual_cohorts(:)%dDBH)
         output_annual_cohorts_height(idx, :)      = dble(out_biosphere_annual_cohorts(:)%height)
         output_annual_cohorts_age(idx, :)         = dble(out_biosphere_annual_cohorts(:)%age)
