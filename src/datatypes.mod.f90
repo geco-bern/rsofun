@@ -125,6 +125,8 @@ module datatypes
     real    :: tc_crit                            ! K, for turning OFF a growth season
     real    :: tc_crit_on                         ! K, for turning ON a growth season
     real    :: gdd_crit                           ! K, critical value of GDD5 for turning ON growth season
+    real    :: betaON                             ! Critical soil moisture for PhenoON
+    real    :: betaOFF                            ! Critical soil moisture for PhenoOFF
 
     !===== Vital rates
     real    :: maturalage                         ! the age that can reproduce
@@ -156,11 +158,11 @@ module datatypes
     integer :: layer      = 1.0          ! the layer of this cohort (numbered from top, top layer=1)
     integer :: firstlayer = 0.0          ! 0 = never been in the first layer; 1 = at least one year in first layer
     real    :: layerfrac  = 0.0          ! fraction of layer area occupied by this cohort
+    real    :: leaf_age   = 0.0          ! leaf age (years)
 
     !===== Population structure
     real :: nindivs   = 1.0          ! density of vegetation, individuals/m2
     real :: age       = 0.0          ! age of cohort, years
-    real :: Volume    = 0.0
     real :: dbh       = 0.0          ! diameter at breast height, m
     real :: height    = 0.0          ! vegetation height, m
     real :: crownarea = 1.0          ! crown area, m2/individual
@@ -168,6 +170,7 @@ module datatypes
     real :: lai       = 0.0          ! crown leaf area index, m2/m2
     real :: BA        = 0.0          ! tree basal area
     real :: BAL       = 0.0          ! basal area of larger trees
+    real :: Volume    = 0.0
 
     !===== Organic pools
     type(orgpool) :: pleaf                       ! leaf biomass [kg C(N)/ind.]
@@ -199,7 +202,7 @@ module datatypes
     real    :: n_deadtrees        = 0.0
     real    :: c_deadtrees        = 0.0
     real    :: m_turnover         = 0.0
-    real    :: deathratevalue
+    real    :: deathratevalue     = 0.0
 
     !===== Nitrogen model related parameters
     real    :: NSNmax             = 0.0
@@ -212,6 +215,7 @@ module datatypes
     real    :: CSAsw              = 0.0
     real    :: topyear            = 0.0           ! the years that a plant in top layer
     real    :: DBH_ys                             ! DBH at the begining of a year (growing season)
+    real    :: BA_ys
     real    :: Vol_ys
     real    :: ABG_ys
 
@@ -245,6 +249,10 @@ module datatypes
     integer  :: n_cohorts         = 0.0
     integer  :: n_years           = 0.0
     integer  :: n_canopycc        = 0.0
+
+    !===== For reseting vegetation
+    integer :: n_initialCC = 0
+    type(cohort_type), pointer :: initialCC(:)=>NULL()
 
     !===== Cohorts nested inside tile
     type(cohort_type), pointer :: cohorts(:) => NULL()
@@ -468,18 +476,20 @@ module datatypes
   ! real :: tc_crit(0:MSPECIES)= 283.16 ! OFF
   ! real :: tc_crit_on(0:MSPECIES)= 280.16 ! ON
   ! real :: gdd_crit(0:MSPECIES)= 280.0 ! Simulations 280, 240, 200
+  ! real :: betaON(0:MSPECIES)  != 0.2  ! Critical soil moisture for phenology ON
+  ! real :: betaOFF(0:MSPECIES) != 0.1  ! Critical soil moisture for phenology OFF
 
   !===== Allometry parameters
-  real :: alphaHT(0:MSPECIES)      = 36.0
-  real :: thetaHT(0:MSPECIES)      = 0.5 
-  real :: alphaCA(0:MSPECIES)      = 150.0
-  real :: thetaCA(0:MSPECIES)      = 1.5
+  ! real :: alphaHT(0:MSPECIES)      = 36.0
+  ! real :: thetaHT(0:MSPECIES)      = 0.5 
+  ! real :: alphaCA(0:MSPECIES)      = 150.0
+  ! real :: thetaCA(0:MSPECIES)      = 1.5
   ! real :: alphaBM(0:MSPECIES)      = !In Ensheng BiomeE: 5200.0
   ! real :: thetaBM(0:MSPECIES)      = 2.36 ! Beech (2.36); Spruce (2.30); Fir (2.45) In Ensheng BiomeE: 2.5
 
   !===== Reproduction parameters
   ! real :: maturalage(0:MSPECIES) = 5.0  ! year
-  real :: v_seed(0:MSPECIES)       = 0.1  ! fraction of allocation to wood+seeds
+  ! real :: v_seed(0:MSPECIES)       = 0.1  ! fraction of allocation to wood+seeds
   ! real :: seedlingsize(0:MSPECIES) = 0.05 ! kgC
   real :: prob_g(0:MSPECIES)       = 1.0
   real :: prob_e(0:MSPECIES)       = 1.0
@@ -490,42 +500,42 @@ module datatypes
 
   !===== Leaf parameters
   ! real :: LMA(0:MSPECIES)         = 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2 LMA = 1/SLA 0.05 for Fagus
-  real :: leafLS(0:MSPECIES) = 1.0
+  ! real :: leafLS(0:MSPECIES) = 1.0
   ! real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
-  real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
+  ! real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
   ! real :: rho_wood(0:MSPECIES)      = 590.0 ! kgC m-3 (Simulations: 300, 600, 800) Beech (590); Spruce (370); Fir (350)
-  real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
-  real :: LAImax(0:MSPECIES)        != 3.5 ! maximum LAI for a tree
+  ! real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
+  ! real :: LAImax(0:MSPECIES)        != 3.5 ! maximum LAI for a tree
   ! real :: LAI_light(0:MSPECIES)     != 4.0 ! maximum LAI limited by light
-  real :: tauNSC(0:MSPECIES)        = 3 ! 3 ! NSC residence time,years
+  ! real :: tauNSC(0:MSPECIES)        = 3 ! 3 ! NSC residence time,years
   ! real :: fNSNmax(0:MSPECIES)       = 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
   ! real :: phiRL(0:MSPECIES)       = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
   ! real :: phiCSA(0:MSPECIES)        = 0.25E-4 ! ratio of sapwood area to leaf area
   
   ! C/N ratios for plant pools
-  real :: CNleaf0(0:MSPECIES)   = 25. ! C/N ratios for leaves
-  real :: CNsw0(0:MSPECIES)     = 350.0 ! C/N ratios for woody biomass
-  real :: CNwood0(0:MSPECIES)   = 350.0 ! C/N ratios for woody biomass
-  real :: CNroot0(0:MSPECIES)   = 40.0 ! C/N ratios for leaves ! Gordon & Jackson 2000
-  real :: CNseed0(0:MSPECIES)   = 20.0 ! C/N ratios for seeds
+  ! real :: CNleaf0(0:MSPECIES)   = 25. ! C/N ratios for leaves
+  ! real :: CNsw0(0:MSPECIES)     = 350.0 ! C/N ratios for woody biomass
+  ! real :: CNwood0(0:MSPECIES)   = 350.0 ! C/N ratios for woody biomass
+  ! real :: CNroot0(0:MSPECIES)   = 40.0 ! C/N ratios for leaves ! Gordon & Jackson 2000
+  ! real :: CNseed0(0:MSPECIES)   = 20.0 ! C/N ratios for seeds
   ! real :: NfixRate0(0:MSPECIES) = 0.0 !Reference N fixation rate (0.03 kgN kgC-1 root yr-1)
   ! real :: NfixCost0(0:MSPECIES) = 12.0 ! FUN model, Fisher et al. 2010, GBC
   
-  real :: internal_gap_frac(0:MSPECIES)= 0.1 ! The gaps between trees
+  ! real :: internal_gap_frac(0:MSPECIES)= 0.1 ! The gaps between trees
 
   !=============== Params_soil in R ============================================================
   ! Soil parameters passed through R : paramX(n_dim_soil_types)
 
   !=============== Initial cohort specifications in R ============================================
   ! Initial values passed through R 
-  integer :: init_n_cohorts                        = MAX_INIT_COHORTS
+  ! integer :: init_n_cohorts                        = MAX_INIT_COHORTS
   ! integer :: init_cohort_species(MAX_INIT_COHORTS) = 2
   ! real    :: init_cohort_nindivs(MAX_INIT_COHORTS) = 1.0  ! initial individual density, individual/m2
-  real    :: init_cohort_bl(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of leaves, kg C/individual
-  real    :: init_cohort_br(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of fine roots, kg C/individual
+  ! real    :: init_cohort_bl(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of leaves, kg C/individual
+  ! real    :: init_cohort_br(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of fine roots, kg C/individual
   ! real    :: init_cohort_bsw(MAX_INIT_COHORTS)     = 0.05 ! initial biomass of sapwood, kg C/individual
   ! real    :: init_cohort_bHW(MAX_INIT_COHORTS)     = 0.0  ! initial biomass of heartwood, kg C/tree
-  real    :: init_cohort_seedC(MAX_INIT_COHORTS)   = 0.0  ! initial biomass of seeds, kg C/individual
+  ! real    :: init_cohort_seedC(MAX_INIT_COHORTS)   = 0.0  ! initial biomass of seeds, kg C/individual
   ! real    :: init_cohort_nsc(MAX_INIT_COHORTS)     = 0.05 ! initial non-structural biomass, kg C/
 
   !=============== Initial soil pools in R ======================================================
@@ -570,69 +580,74 @@ contains
     integer :: i
 
     ! initialize vegetation data structure
-    spdata(0:MSPECIES)%pt            = myinterface%params_species(1:(MSPECIES+1))%pt
+    spdata(0:MSPECIES)%lifeform      = myinterface%params_species(1:(MSPECIES+1))%lifeform
     spdata(0:MSPECIES)%phenotype     = myinterface%params_species(1:(MSPECIES+1))%phenotype 
-    spdata(0:MSPECIES)%Vmax          = myinterface%params_species(1:(MSPECIES+1))%Vmax
-    spdata(0:MSPECIES)%Vannual       = myinterface%params_species(1:(MSPECIES+1))%Vannual
-    spdata(0:MSPECIES)%m_cond        = myinterface%params_species(1:(MSPECIES+1))%m_cond
-    spdata(0:MSPECIES)%alpha_phot    = myinterface%params_species(1:(MSPECIES+1))%alpha_phot
-    spdata(0:MSPECIES)%wet_leaf_dreg = myinterface%params_species(1:(MSPECIES+1))%wet_leaf_dreg
-    spdata(0:MSPECIES)%gamma_L       = myinterface%params_species(1:(MSPECIES+1))%gamma_L
-    spdata(0:MSPECIES)%gamma_LN      = myinterface%params_species(1:(MSPECIES+1))%gamma_LN
-    spdata(0:MSPECIES)%gamma_SW      = myinterface%params_species(1:(MSPECIES+1))%gamma_SW
-    spdata(0:MSPECIES)%gamma_FR      = myinterface%params_species(1:(MSPECIES+1))%gamma_FR
+    spdata(0:MSPECIES)%pt            = myinterface%params_species(1:(MSPECIES+1))%pt
+    ! Root parameters
+    spdata(0:MSPECIES)%alpha_FR      = myinterface%params_species(1:(MSPECIES+1))%alpha_FR ! root turnover rate
     spdata(0:MSPECIES)%rho_FR        = myinterface%params_species(1:(MSPECIES+1))%rho_FR
     spdata(0:MSPECIES)%root_r        = myinterface%params_species(1:(MSPECIES+1))%root_r
     spdata(0:MSPECIES)%root_zeta     = myinterface%params_species(1:(MSPECIES+1))%root_zeta
     spdata(0:MSPECIES)%Kw_root       = myinterface%params_species(1:(MSPECIES+1))%Kw_root
-    ! spdata(0:MSPECIES)%rho_N_up0   = rho_N_up0
-    ! spdata(0:MSPECIES)%N_roots0    = N_roots0
+    ! spdata%rho_N_up0   = rho_N_up0
+    ! spdata%N_roots0    = N_roots0
     spdata(0:MSPECIES)%leaf_size     = myinterface%params_species(1:(MSPECIES+1))%leaf_size
+    ! Photosynthesis parameters
+    spdata(0:MSPECIES)%Vmax          = myinterface%params_species(1:(MSPECIES+1))%Vmax
+    spdata(0:MSPECIES)%Vannual       = myinterface%params_species(1:(MSPECIES+1))%Vannual
+    spdata(0:MSPECIES)%wet_leaf_dreg = myinterface%params_species(1:(MSPECIES+1))%wet_leaf_dreg
+    spdata(0:MSPECIES)%m_cond        = myinterface%params_species(1:(MSPECIES+1))%m_cond
+    spdata(0:MSPECIES)%alpha_phot    = myinterface%params_species(1:(MSPECIES+1))%alpha_phot
+    spdata(0:MSPECIES)%gamma_L       = myinterface%params_species(1:(MSPECIES+1))%gamma_L
+    spdata(0:MSPECIES)%gamma_LN      = myinterface%params_species(1:(MSPECIES+1))%gamma_LN
+    spdata(0:MSPECIES)%gamma_SW      = myinterface%params_species(1:(MSPECIES+1))%gamma_SW
+    spdata(0:MSPECIES)%gamma_FR      = myinterface%params_species(1:(MSPECIES+1))%gamma_FR
     spdata(0:MSPECIES)%tc_crit       = myinterface%params_species(1:(MSPECIES+1))%tc_crit
+    spdata(0:MSPECIES)%tc_crit_on    = myinterface%params_species(1:(MSPECIES+1))%tc_crit_on
     spdata(0:MSPECIES)%gdd_crit      = myinterface%params_species(1:(MSPECIES+1))%gdd_crit
-
-    ! Plant traits
-    spdata(0:MSPECIES)%LMA           = myinterface%params_species(1:(MSPECIES+1))%LMA ! leaf mass per unit area, kg C/m2
-    spdata(0:MSPECIES)%LNbase        = myinterface%params_species(1:(MSPECIES+1))%LNbase   ! Basal leaf nitrogen per unit area, kg N/m2
-    spdata(0:MSPECIES)%CNleafsupport = CNleafsupport
-    spdata(0:MSPECIES)%lifeform      = myinterface%params_species(1:(MSPECIES+1))%lifeform
-    spdata(0:MSPECIES)%alphaHT       = alphaHT
-    spdata(0:MSPECIES)%thetaHT       = thetaHT
-    spdata(0:MSPECIES)%alphaCA       = alphaCA
-    spdata(0:MSPECIES)%thetaCA       = thetaCA
+    spdata(0:MSPECIES)%betaON        = myinterface%params_species(1:(MSPECIES+1))%betaON
+    spdata(0:MSPECIES)%betaOFF       = myinterface%params_species(1:(MSPECIES+1))%betaOFF
+    ! Allometry parameters
+    spdata(0:MSPECIES)%alphaHT       = myinterface%params_species(1:(MSPECIES+1))%alphaHT
+    spdata(0:MSPECIES)%thetaHT       = myinterface%params_species(1:(MSPECIES+1))%thetaHT
+    spdata(0:MSPECIES)%alphaCA       = myinterface%params_species(1:(MSPECIES+1))%alphaCA
+    spdata(0:MSPECIES)%thetaCA       = myinterface%params_species(1:(MSPECIES+1))%thetaCA
     spdata(0:MSPECIES)%alphaBM       = myinterface%params_species(1:(MSPECIES+1))%alphaBM
     spdata(0:MSPECIES)%thetaBM       = myinterface%params_species(1:(MSPECIES+1))%thetaBM
-    spdata(0:MSPECIES)%maturalage    = myinterface%params_species(1:(MSPECIES+1))%maturalage
-    spdata(0:MSPECIES)%v_seed        = v_seed
+    ! Reproduction parameters
     spdata(0:MSPECIES)%seedlingsize  = myinterface%params_species(1:(MSPECIES+1))%seedlingsize
+    spdata(0:MSPECIES)%maturalage    = myinterface%params_species(1:(MSPECIES+1))%maturalage
+    spdata(0:MSPECIES)%v_seed        = myinterface%params_species(1:(MSPECIES+1))%v_seed
     spdata(0:MSPECIES)%prob_g        = prob_g
     spdata(0:MSPECIES)%prob_e        = prob_e
+    ! Mortality parameters
     spdata(0:MSPECIES)%mortrate_d_c  = myinterface%params_species(1:(MSPECIES+1))%mortrate_d_c
     spdata(0:MSPECIES)%mortrate_d_u  = myinterface%params_species(1:(MSPECIES+1))%mortrate_d_u
+    ! Plant traits
+    spdata(0:MSPECIES)%LMA           = myinterface%params_species(1:(MSPECIES+1))%LMA ! leaf mass per unit area, kg C/m2
+    spdata(0:MSPECIES)%leafLS        = myinterface%params_species(1:(MSPECIES+1))%leafLS
+    spdata(0:MSPECIES)%LNbase        = myinterface%params_species(1:(MSPECIES+1))%LNbase   ! Basal leaf nitrogen per unit area, kg N/m2
+    spdata(0:MSPECIES)%CNleafsupport = myinterface%params_species(1:(MSPECIES+1))%CNleafsupport
     spdata(0:MSPECIES)%rho_wood      = myinterface%params_species(1:(MSPECIES+1))%rho_wood
-    spdata(0:MSPECIES)%taperfactor   = taperfactor
+    spdata(0:MSPECIES)%taperfactor   = myinterface%params_species(1:(MSPECIES+1))%taperfactor
     spdata(0:MSPECIES)%LAImax        = myinterface%params_species(1:(MSPECIES+1))%LAImax
-    spdata(0:MSPECIES)%underLAImax   = LAImax
-    spdata(0:MSPECIES)%tauNSC        = tauNSC
+    spdata(0:MSPECIES)%underLAImax   = myinterface%params_species(1:(MSPECIES+1))%LAImax
+    spdata(0:MSPECIES)%tauNSC        = myinterface%params_species(1:(MSPECIES+1))%tauNSC
     spdata(0:MSPECIES)%fNSNmax       = myinterface%params_species(1:(MSPECIES+1))%fNSNmax
     spdata(0:MSPECIES)%kphio         = myinterface%params_species(1:(MSPECIES+1))%kphio     
     spdata(0:MSPECIES)%phiRL         = myinterface%params_species(1:(MSPECIES+1))%phiRL     
     spdata(0:MSPECIES)%phiCSA        = myinterface%params_species(1:(MSPECIES+1))%phiCSA
     spdata(0:MSPECIES)%LAI_light     = myinterface%params_species(1:(MSPECIES+1))%LAI_light
-
-    ! root turnover rate
-    spdata(0:MSPECIES)%alpha_FR      = myinterface%params_species(1:(MSPECIES+1))%alpha_FR
-
     ! Nitrogen Weng 2012-10-24
-    ! spdata%CNleaf0 = CNleaf0
-    spdata(0:MSPECIES)%CNsw0     = CNsw0
-    spdata(0:MSPECIES)%CNwood0   = CNwood0
-    spdata(0:MSPECIES)%CNroot0   = CNroot0
-    spdata(0:MSPECIES)%CNseed0   = CNseed0
+    spdata(0:MSPECIES)%CNleaf0   = myinterface%params_species(1:(MSPECIES+1))%CNleaf0
+    spdata(0:MSPECIES)%CNsw0     = myinterface%params_species(1:(MSPECIES+1))%CNsw0
+    spdata(0:MSPECIES)%CNwood0   = myinterface%params_species(1:(MSPECIES+1))%CNwood0
+    spdata(0:MSPECIES)%CNroot0   = myinterface%params_species(1:(MSPECIES+1))%CNroot0
+    spdata(0:MSPECIES)%CNseed0   = myinterface%params_species(1:(MSPECIES+1))%CNseed0
     spdata(0:MSPECIES)%Nfixrate0 = myinterface%params_species(1:(MSPECIES+1))%Nfixrate0
     spdata(0:MSPECIES)%NfixCost0 = myinterface%params_species(1:(MSPECIES+1))%NfixCost0
+    spdata(0:MSPECIES)%internal_gap_frac = myinterface%params_species(1:(MSPECIES+1))%internal_gap_frac    
 
-    spdata(0:MSPECIES)%internal_gap_frac = internal_gap_frac
     do i = 0, MSPECIES
       call init_derived_species_data(spdata(i))
     enddo
@@ -748,8 +763,8 @@ contains
     vegn%annualN      = 0.0
     vegn%Nloss_yr     = 0.0
     vegn%annualNup    = 0.0
-    ! vegn%n_deadtrees  = 0.0 !xxx
-    ! vegn%c_deadtrees  = 0.0
+    vegn%n_deadtrees  = 0.0
+    vegn%c_deadtrees  = 0.0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
@@ -783,10 +798,11 @@ contains
       cc%NPProot      = 0.0
       cc%NPPwood      = 0.0
       cc%DBH_ys       = cc%dbh
+      cc%BA_ys        = cc%BA
       cc%Vol_ys       = cc%Volume
       cc%ABG_ys       = cc%psapw%c%c12 + cc%pwood%c%c12
-      ! cc%n_deadtrees  = 0.0
-      ! cc%c_deadtrees  = 0.0
+      cc%n_deadtrees  = 0.0
+      cc%c_deadtrees  = 0.0
       cc%m_turnover   = 0.0
     enddo
   
@@ -867,7 +883,7 @@ contains
   end subroutine summarize_tile
 
 
-  subroutine hourly_diagnostics(vegn, forcing, iyears, idoy, ihour, out_hourly_tile)
+  subroutine hourly_diagnostics(vegn, forcing)  !, iyears, idoy, ihour, out_hourly_tile
     !////////////////////////////////////////////////////////////////////////
     ! Updates sub-daily tile-level variables and takes running daily sums
     !------------------------------------------------------------------------
@@ -876,8 +892,8 @@ contains
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type),intent(in):: forcing
-    integer, intent(in) :: iyears, idoy, ihour
-    type(outtype_hourly_tile),intent(out) :: out_hourly_tile 
+    ! integer, intent(in) :: iyears, idoy, ihour
+    ! type(outtype_hourly_tile),intent(out) :: out_hourly_tile 
 
     ! local variables
     type(cohort_type), pointer :: cc    ! current cohort
@@ -908,23 +924,23 @@ contains
     ! NEP is equal to NNP minus soil respiration
     vegn%nep = vegn%npp - vegn%rh ! kgC m-2 hour-1; time step is hourly
 
-     if (.not. myinterface%steering%spinup) then
-      out_hourly_tile%year      =  iyears    
-      out_hourly_tile%doy       =  idoy   
-      out_hourly_tile%hour      =  ihour    
-      out_hourly_tile%rad       =  forcing%radiation    !forcingData 
-      out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
-      out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
-      out_hourly_tile%GPP       =  vegn%GPP  
-      out_hourly_tile%Resp      =  vegn%resp   
-      out_hourly_tile%Transp    =  vegn%transp
-      out_hourly_tile%Evap      =  vegn%evap   
-      out_hourly_tile%Runoff    =  vegn%runoff   
-      out_hourly_tile%Soilwater =  vegn%soilwater
-      out_hourly_tile%wcl       =  vegn%wcl(1)    
-      out_hourly_tile%FLDCAP    =  vegn%FLDCAP
-      out_hourly_tile%WILTPT    =  vegn%WILTPT
-    end if
+    !  if (.not. myinterface%steering%spinup) then
+    !   out_hourly_tile%year      =  iyears    
+    !   out_hourly_tile%doy       =  idoy   
+    !   out_hourly_tile%hour      =  ihour    
+    !   out_hourly_tile%rad       =  forcing%radiation    !forcingData 
+    !   out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
+    !   out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
+    !   out_hourly_tile%GPP       =  vegn%GPP  
+    !   out_hourly_tile%Resp      =  vegn%resp   
+    !   out_hourly_tile%Transp    =  vegn%transp
+    !   out_hourly_tile%Evap      =  vegn%evap   
+    !   out_hourly_tile%Runoff    =  vegn%runoff   
+    !   out_hourly_tile%Soilwater =  vegn%soilwater
+    !   out_hourly_tile%wcl       =  vegn%wcl(1)    
+    !   out_hourly_tile%FLDCAP    =  vegn%FLDCAP
+    !   out_hourly_tile%WILTPT    =  vegn%WILTPT
+    ! end if
 
     ! Daily summary:
     vegn%dailyNup  = vegn%dailyNup  + vegn%N_uptake
@@ -940,7 +956,7 @@ contains
   end subroutine hourly_diagnostics
 
 
-  subroutine daily_diagnostics( vegn , iyears, idoy, out_daily_cohorts, out_daily_tile)
+  subroutine daily_diagnostics( vegn , iyears, idoy, out_daily_tile )  ! , out_daily_cohorts 
     !////////////////////////////////////////////////////////////////////////
     ! Updates daily tile-level variables and takes running annual sums
     !------------------------------------------------------------------------
@@ -949,76 +965,76 @@ contains
 
     type(vegn_tile_type), intent(inout) :: vegn
     integer, intent(in) :: iyears, idoy
-    type(outtype_daily_cohorts), dimension(out_max_cohorts), intent(out) :: out_daily_cohorts
+    ! type(outtype_daily_cohorts), dimension(out_max_cohorts), intent(out) :: out_daily_cohorts
     type(outtype_daily_tile), intent(out) :: out_daily_tile
 
     ! local variables
     type(cohort_type), pointer :: cc    ! current cohort
     integer :: i
 
-    if (.not. myinterface%steering%spinup) then 
-      out_daily_cohorts(:)%year    = dummy
-      out_daily_cohorts(:)%doy     = dummy
-      out_daily_cohorts(:)%hour    = dummy
-      out_daily_cohorts(:)%cID     = dummy
-      out_daily_cohorts(:)%PFT     = dummy
-      out_daily_cohorts(:)%layer   = dummy
-      out_daily_cohorts(:)%density = dummy
-      out_daily_cohorts(:)%f_layer = dummy
-      out_daily_cohorts(:)%LAI     = dummy
-      out_daily_cohorts(:)%gpp     = dummy
-      out_daily_cohorts(:)%resp    = dummy
-      out_daily_cohorts(:)%transp  = dummy
-      out_daily_cohorts(:)%NPPleaf = dummy
-      out_daily_cohorts(:)%NPProot = dummy
-      out_daily_cohorts(:)%NPPwood = dummy
-      out_daily_cohorts(:)%NSC     = dummy
-      out_daily_cohorts(:)%seedC   = dummy
-      out_daily_cohorts(:)%leafC   = dummy
-      out_daily_cohorts(:)%rootC   = dummy
-      out_daily_cohorts(:)%SW_C    = dummy
-      out_daily_cohorts(:)%HW_C    = dummy
-      out_daily_cohorts(:)%NSN     = dummy
-      out_daily_cohorts(:)%seedN   = dummy
-      out_daily_cohorts(:)%leafN   = dummy
-      out_daily_cohorts(:)%rootN   = dummy
-      out_daily_cohorts(:)%SW_N    = dummy
-      out_daily_cohorts(:)%HW_N    = dummy
-    endif
+    ! if (.not. myinterface%steering%spinup) then 
+    !   out_daily_cohorts(:)%year    = dummy
+    !   out_daily_cohorts(:)%doy     = dummy
+    !   out_daily_cohorts(:)%hour    = dummy
+    !   out_daily_cohorts(:)%cID     = dummy
+    !   out_daily_cohorts(:)%PFT     = dummy
+    !   out_daily_cohorts(:)%layer   = dummy
+    !   out_daily_cohorts(:)%density = dummy
+    !   out_daily_cohorts(:)%f_layer = dummy
+    !   out_daily_cohorts(:)%LAI     = dummy
+    !   out_daily_cohorts(:)%gpp     = dummy
+    !   out_daily_cohorts(:)%resp    = dummy
+    !   out_daily_cohorts(:)%transp  = dummy
+    !   out_daily_cohorts(:)%NPPleaf = dummy
+    !   out_daily_cohorts(:)%NPProot = dummy
+    !   out_daily_cohorts(:)%NPPwood = dummy
+    !   out_daily_cohorts(:)%NSC     = dummy
+    !   out_daily_cohorts(:)%seedC   = dummy
+    !   out_daily_cohorts(:)%leafC   = dummy
+    !   out_daily_cohorts(:)%rootC   = dummy
+    !   out_daily_cohorts(:)%SW_C    = dummy
+    !   out_daily_cohorts(:)%HW_C    = dummy
+    !   out_daily_cohorts(:)%NSN     = dummy
+    !   out_daily_cohorts(:)%seedN   = dummy
+    !   out_daily_cohorts(:)%leafN   = dummy
+    !   out_daily_cohorts(:)%rootN   = dummy
+    !   out_daily_cohorts(:)%SW_N    = dummy
+    !   out_daily_cohorts(:)%HW_N    = dummy
+    ! endif
 
     ! cohorts output
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
 
-      if (.not. myinterface%steering%spinup) then 
-        out_daily_cohorts(i)%year    = iyears
-        out_daily_cohorts(i)%doy     = idoy
-        out_daily_cohorts(i)%hour    = i !1.0
-        out_daily_cohorts(i)%cID     = cc%ccID
-        out_daily_cohorts(i)%PFT     = cc%species
-        out_daily_cohorts(i)%layer   = cc%layer
-        out_daily_cohorts(i)%density = cc%nindivs * 10000 
-        out_daily_cohorts(i)%f_layer = cc%layerfrac
-        out_daily_cohorts(i)%LAI     = cc%LAI
-        out_daily_cohorts(i)%gpp     = cc%dailygpp
-        out_daily_cohorts(i)%resp    = cc%dailyresp
-        out_daily_cohorts(i)%transp  = cc%dailytrsp
-        out_daily_cohorts(i)%NPPleaf = cc%NPPleaf
-        out_daily_cohorts(i)%NPProot = cc%NPProot
-        out_daily_cohorts(i)%NPPwood = cc%NPPwood
-        out_daily_cohorts(i)%NSC     = cc%plabl%c%c12
-        out_daily_cohorts(i)%seedC   = cc%pseed%c%c12
-        out_daily_cohorts(i)%leafC   = cc%pleaf%c%c12
-        out_daily_cohorts(i)%rootC   = cc%proot%c%c12
-        out_daily_cohorts(i)%SW_C    = cc%psapw%c%c12
-        out_daily_cohorts(i)%HW_C    = cc%pwood%c%c12
-        out_daily_cohorts(i)%NSN     = cc%plabl%n%n14 * 1000
-        out_daily_cohorts(i)%seedN   = cc%pseed%n%n14 * 1000
-        out_daily_cohorts(i)%leafN   = cc%pleaf%n%n14 * 1000
-        out_daily_cohorts(i)%rootN   = cc%proot%n%n14 * 1000
-        out_daily_cohorts(i)%SW_N    = cc%psapw%n%n14 * 1000
-        out_daily_cohorts(i)%HW_N    = cc%pwood%n%n14 * 1000
-      endif
+      ! if (.not. myinterface%steering%spinup) then 
+      !   out_daily_cohorts(i)%year    = iyears
+      !   out_daily_cohorts(i)%doy     = idoy
+      !   out_daily_cohorts(i)%hour    = i !1.0
+      !   out_daily_cohorts(i)%cID     = cc%ccID
+      !   out_daily_cohorts(i)%PFT     = cc%species
+      !   out_daily_cohorts(i)%layer   = cc%layer
+      !   out_daily_cohorts(i)%density = cc%nindivs * 10000 
+      !   out_daily_cohorts(i)%f_layer = cc%layerfrac
+      !   out_daily_cohorts(i)%LAI     = cc%LAI
+      !   out_daily_cohorts(i)%gpp     = cc%dailygpp
+      !   out_daily_cohorts(i)%resp    = cc%dailyresp
+      !   out_daily_cohorts(i)%transp  = cc%dailytrsp
+      !   out_daily_cohorts(i)%NPPleaf = cc%NPPleaf
+      !   out_daily_cohorts(i)%NPProot = cc%NPProot
+      !   out_daily_cohorts(i)%NPPwood = cc%NPPwood
+      !   out_daily_cohorts(i)%NSC     = cc%plabl%c%c12
+      !   out_daily_cohorts(i)%seedC   = cc%pseed%c%c12
+      !   out_daily_cohorts(i)%leafC   = cc%pleaf%c%c12
+      !   out_daily_cohorts(i)%rootC   = cc%proot%c%c12
+      !   out_daily_cohorts(i)%SW_C    = cc%psapw%c%c12
+      !   out_daily_cohorts(i)%HW_C    = cc%pwood%c%c12
+      !   out_daily_cohorts(i)%NSN     = cc%plabl%n%n14 * 1000
+      !   out_daily_cohorts(i)%seedN   = cc%pseed%n%n14 * 1000
+      !   out_daily_cohorts(i)%leafN   = cc%pleaf%n%n14 * 1000
+      !   out_daily_cohorts(i)%rootN   = cc%proot%n%n14 * 1000
+      !   out_daily_cohorts(i)%SW_N    = cc%psapw%n%n14 * 1000
+      !   out_daily_cohorts(i)%HW_N    = cc%pwood%n%n14 * 1000
+      ! endif
 
       ! running annual sum
       cc%annualGPP  = cc%annualGPP  + cc%dailyGPP
@@ -1113,40 +1129,45 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, dVol
+    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, dBA, dVol
     real :: plantC, plantN, soilC, soilN
     integer :: i
 
     ! re-initialise to avoid elements not updated when number 
     ! of cohorts declines from one year to the next
-    out_annual_cohorts(:)%year       = dummy
-    out_annual_cohorts(:)%cID        = dummy
-    out_annual_cohorts(:)%PFT        = dummy
-    out_annual_cohorts(:)%layer      = dummy
-    out_annual_cohorts(:)%density    = dummy
-    out_annual_cohorts(:)%f_layer    = dummy
-    out_annual_cohorts(:)%dDBH       = dummy
-    out_annual_cohorts(:)%dbh        = dummy
-    out_annual_cohorts(:)%height     = dummy
-    out_annual_cohorts(:)%age        = dummy
-    out_annual_cohorts(:)%Acrown     = dummy
-    out_annual_cohorts(:)%wood       = dummy
-    out_annual_cohorts(:)%nsc        = dummy
-    out_annual_cohorts(:)%NSN        = dummy
-    out_annual_cohorts(:)%NPPtr      = dummy
-    out_annual_cohorts(:)%seed       = dummy
-    out_annual_cohorts(:)%NPPL       = dummy
-    out_annual_cohorts(:)%NPPR       = dummy
-    out_annual_cohorts(:)%NPPW       = dummy
-    out_annual_cohorts(:)%GPP        = dummy
-    out_annual_cohorts(:)%NPP        = dummy
-    out_annual_cohorts(:)%N_uptk     = dummy
-    out_annual_cohorts(:)%N_fix      = dummy
-    out_annual_cohorts(:)%maxLAI     = dummy
-    out_annual_cohorts(:)%Volume     = dummy
+    out_annual_cohorts(:)%year        = dummy
+    out_annual_cohorts(:)%cID         = dummy
+    out_annual_cohorts(:)%PFT         = dummy
+    out_annual_cohorts(:)%layer       = dummy
+    out_annual_cohorts(:)%density     = dummy
+    out_annual_cohorts(:)%flayer      = dummy
+    out_annual_cohorts(:)%DBH         = dummy
+    out_annual_cohorts(:)%dDBH        = dummy
+    out_annual_cohorts(:)%height      = dummy
+    out_annual_cohorts(:)%age         = dummy
+    out_annual_cohorts(:)%BA          = dummy
+    out_annual_cohorts(:)%dBA         = dummy
+    out_annual_cohorts(:)%Acrown      = dummy
+    out_annual_cohorts(:)%Aleaf       = dummy
+    out_annual_cohorts(:)%nsc         = dummy
+    out_annual_cohorts(:)%nsn         = dummy
+    out_annual_cohorts(:)%seedC       = dummy
+    out_annual_cohorts(:)%leafC       = dummy
+    out_annual_cohorts(:)%rootC       = dummy
+    out_annual_cohorts(:)%sapwC       = dummy
+    out_annual_cohorts(:)%woodC       = dummy
+    out_annual_cohorts(:)%treeG       = dummy
+    out_annual_cohorts(:)%fseed       = dummy
+    out_annual_cohorts(:)%fleaf       = dummy
+    out_annual_cohorts(:)%froot       = dummy
+    out_annual_cohorts(:)%fwood       = dummy
+    out_annual_cohorts(:)%GPP         = dummy
+    out_annual_cohorts(:)%NPP         = dummy
+    out_annual_cohorts(:)%Nupt        = dummy
+    out_annual_cohorts(:)%Nfix        = dummy
     out_annual_cohorts(:)%n_deadtrees = dummy
     out_annual_cohorts(:)%c_deadtrees = dummy
-    out_annual_cohorts(:)%deathrate = dummy
+    out_annual_cohorts(:)%deathrate   = dummy
 
     ! Cohorts ouput
     do i = 1, vegn%n_cohorts
@@ -1156,38 +1177,44 @@ contains
       fleaf     = cc%NPPleaf / treeG
       froot     = cc%NPProot / treeG
       fwood     = cc%NPPwood / treeG
-      dDBH      = (cc%dbh - cc%DBH_ys) !*1000 to convert to mm
+      dDBH      = cc%dbh - cc%DBH_ys !in m
+      cc%BA     = pi/4 * cc%dbh * cc%dbh
+      dBA       = cc%BA - cc%BA_ys
       cc%Volume = (cc%psapw%c%c12 + cc%pwood%c%c12) / spdata(cc%species)%rho_wood
       dVol      = (cc%Volume - cc%Vol_ys)
-      cc%BA     = pi/4 * cc%dbh * cc%dbh
 
       out_annual_cohorts(i)%year        = iyears
       out_annual_cohorts(i)%cID         = cc%ccID
       out_annual_cohorts(i)%PFT         = cc%species
       out_annual_cohorts(i)%layer       = cc%layer
       out_annual_cohorts(i)%density     = cc%nindivs * 10000
-      out_annual_cohorts(i)%f_layer     = cc%layerfrac
-      out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
+      out_annual_cohorts(i)%flayer     = cc%layerfrac
       out_annual_cohorts(i)%dbh         = cc%dbh * 100   ! *100 to convert m in cm
+      out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
       out_annual_cohorts(i)%height      = cc%height
       out_annual_cohorts(i)%age         = cc%age
+      out_annual_cohorts(i)%BA          = cc%BA
+      out_annual_cohorts(i)%dBA         = dBA
       out_annual_cohorts(i)%Acrown      = cc%crownarea
-      out_annual_cohorts(i)%wood        = cc%psapw%c%c12 + cc%pwood%c%c12
+      out_annual_cohorts(i)%Aleaf       = cc%leafarea
       out_annual_cohorts(i)%nsc         = cc%plabl%c%c12
-      out_annual_cohorts(i)%NSN         = cc%plabl%n%n14 * 1000
-      out_annual_cohorts(i)%NPPtr       = treeG
-      out_annual_cohorts(i)%seed        = cc%pseed%c%c12 
-      out_annual_cohorts(i)%NPPL        = cc%NPPleaf  ! fleaf
-      out_annual_cohorts(i)%NPPR        = cc%NPProot  ! froot
-      out_annual_cohorts(i)%NPPW        = cc%NPPwood  ! fwood
+      out_annual_cohorts(i)%nsn         = cc%plabl%n%n14 * 1000
+      out_annual_cohorts(i)%seedC       = cc%pseed%c%c12
+      out_annual_cohorts(i)%leafC       = cc%pleaf%c%c12
+      out_annual_cohorts(i)%rootC       = cc%proot%c%c12
+      out_annual_cohorts(i)%sapwC       = cc%psapw%c%c12
+      out_annual_cohorts(i)%woodC       = cc%pwood%c%c12
+      out_annual_cohorts(i)%treeG       = treeG
+      out_annual_cohorts(i)%fseed       = fseed 
+      out_annual_cohorts(i)%fleaf       = fleaf
+      out_annual_cohorts(i)%froot       = froot
+      out_annual_cohorts(i)%fwood       = fwood
       out_annual_cohorts(i)%GPP         = cc%annualGPP
       out_annual_cohorts(i)%NPP         = cc%annualNPP
       out_annual_cohorts(i)%Rauto       = cc%annualResp
-      out_annual_cohorts(i)%N_uptk      = cc%annualNup * 1000
-      out_annual_cohorts(i)%N_fix       = cc%annualfixedN * 1000
-      out_annual_cohorts(i)%maxLAI      = spdata(cc%species)%LAImax
-      out_annual_cohorts(i)%Volume      = cc%Volume
-      out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
+      out_annual_cohorts(i)%Nupt        = cc%annualNup * 1000
+      out_annual_cohorts(i)%Nfix        = cc%annualfixedN * 1000
+      out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees ! dead trees/m2
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
       out_annual_cohorts(i)%deathrate   = cc%deathratevalue
 

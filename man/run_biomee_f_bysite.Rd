@@ -36,6 +36,10 @@ run_biomee_f_bysite(
     LAImax according to mineral N in soil.}
   \item{do_closedN_run}{A logical value indicating whether doing N closed 
     runs to recover N balance.}
+  \item{do_reset_veg}{A logical value indicating whether reseting vegetation 
+    for disturbance runs.}
+  \item{dist_frequency}{Value indicating the frequency of the disturbance event (in years) 
+    (e.g. 100 indicates a disturbance event occurs every 100 years, i.e., at a rate of 0.01)}
   \item{code_method_photosynth}{String specifying the method of photosynthesis 
     used in the model, either "pmodel" or "gs_leuning".}
   \item{code_method_mortality}{String indicating the type of mortality in the 
