@@ -1,0 +1,86 @@
+&vegn_parameters_nml
+soiltype     = 3,
+FLDCAP       = 0.4,
+WILTPT       = 0.05,
+K1           =  2.0,  ! turnover rate of fast SOM per year
+K2           =  0.1   ! 0.12 ! 0.2, ! 0.075 ! turnover rate of slow SOM per year
+K_nitrogen   = 0.0, ! 1.2 ! 2.5 ! rate of a year, 2.5
+etaN         = 0.0, ! 0.025 ! loss rate with runoff
+MLmixRatio   = 0.6, ! 0.8 ! fraction of microbes to litter
+l_fract      =0.0,
+retransN     = 0.0,
+f_N_add      = 0.02, 
+f_initialBSW = 0.005,
+! alpha_FR =  1.2; gamma_FR = 12.0; dSlowSOM = 2.5 * iSOM + 1.5; rho_N_up0 = 0.1
+
+! species       0        1         2         3         4       5         6         7       8         9         10
+lifeform      = 0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1,    ! 0: grass; 1 Woody
+phenotype     = 0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        0,    ! 0: Deciduous; 1 Evergreen
+pt            = 1,       0,        0,        0,        0,      0,        0,        0,      0,        0,        0,    ! 0: C3; 1: C4
+seedlingsize  = 0.02,    0.05,     0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05,  ! initial size of seedlings
+LMA           = 0.035,   0.14,     0.14,     0.14,     0.14,   0.14,     0.14,     0.14,   0.14,     0.14,     0.035,! Leaf mass per unit area
+phiRL         = 4.0,     1.0,      2.0,      3.0,      4.0,     5.0,     6.0,      7.0,    8.0,      9.0,      3.0,
+LNbase        = 0.8E-3,  0.8E-3,   0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3, 0.8E-3,   0.8E-3,   0.8E-3,   ! kgN m-2 leaf, Vmax = 0.03125*LNbase
+! laimax      = 3.0,     1.2,      1.2,      1.2,      1.2,    1.2,      1.2,      1.2,    1.2,      1.2,      1.2,  ! maximum crown LAI
+laimax        = 3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8,  ! maximum crown LAI
+LAI_light     = 3.0,     3.5,      3.5,      3.5,      3.5,    3.5,      3.5,      3.5,    3.5,      3.5,      3.8,  ! Light-limited crown LAI
+! CNleafsupport = 60.,     60.,      60.,      60.,      60.,    60.,      60.,      60.,    60.,      60.,      60.,  ! C/N ratio of leaf support tissues
+Nfixrate0     = 0.0,     0.0,      0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,  ! 0.03 kgN kgRootC-1 yr-1
+NfixCost0     = 12.,     12.,      12.,      12.,      12.,    12.,      12.,      12.,    12.,      12.,      12.,  ! 12, 24 gC/gN
+phiCSA        = 1.25E-4, 0.25E-4,  0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4,0.25E-4,  0.25E-4,  0.25E-4,
+mortrate_d_c  = 0.02,    0.02,     0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,    ! canopy tree mortality rate, year-1
+mortrate_d_u  = 0.2,     0.08,     0.08,     0.08,     0.08,   0.08,     0.08,     0.08,   0.08,     0.08,     0.08,    ! understory tree mortality rate, year-1
+maturalage    = 0.5,     5,        5,        5,        5,      5,        5,        5,      5,        5,        5,
+fNSNmax       = 5,       5,        5,        5,        5,      5,        5,        5,      5,        5,        5, !xxx
+/
+ 
+ &soil_data_nml
+GMD               = 0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007,0.3, 0.3, !0.3, 0.3,
+GSD               = 5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4, !xxx
+vwc_sat           = 0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445, !xxx
+chb               = 2.2, 2.64, 3.31, 4.38, 5.12, 6.58, 14.95, 6.4, 6.4, !6.4, 6.4,
+psi_sat_ref       = -600., -790., -910., -1580., -1680., -1880., -5980., -790., -790., !-790., -790., ! Pa
+k_sat_ref         = 130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2, ! mol/(s MPa m)
+alphaSoil         = 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,  !xxx
+heat_capacity_dry = 1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6, 1.0, !xxx
+ /
+
+ &initial_state_nml
+!!   plant
+ ! init_n_cohorts      = 1, ! 8, ! total 9
+ init_cohort_species = 1,      2,        3,        4,      5,        6,        7,      8,        9,       10,
+ init_cohort_nindivs = 0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02,
+ init_cohort_bsw     = 0.2,    0.2,      0.2,      0.2,    0.2,      0.2,      0.2,    0.2,      0.2,     0.2,
+ init_cohort_bHW     = 0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0,
+ init_cohort_nsc     = 0.5,    0.5,      0.5,      0.5,    0.5,      0.5,      0.5,    0.5,      0.5,     0.5,
+
+!  Soil
+ init_fast_soil_C    = 0.15   ! kg C m-2    ! C/N = 15, 0.75 kg SOM ~ 50 gN
+ init_slow_soil_C    = 16.0   ! kg C m-2    ! C/N = 40
+ init_Nmineral       = 2.5E-3, ! kg N m-2
+ N_input             = 0.0E-3 ! 2.4E-3, ! kg N m-2 yr-1, N deposit: 0.8 g N m-2 yr-1
+                               ! high N input --> Deciduous
+                               ! low  N input --> Evergreen
+
+! Model run
+ filepath_in = '/Users/lmarques/sofun/input/'
+ climfile    =  'ORNL_forcing.txt' !'US-WCrforcing.txt' !   'CA-Manforcing.txt' !
+               ! 'CA-Manforcing.txt'   !  'US-WBWforcing.txt'
+               !   'US-Dk1forcing.txt' ! CA-Obsforcing.txt
+               !   'ORNL_forcing.txt'  ! 'KNZ_amb.csv' !  'KNZ_irr.csv' !
+! model_run_years       =  1800, ! 1200,
+equi_days             =  0,
+outputhourly          =  .False., ! .True. !
+outputdaily           =  .True.,  ! .False. ! .True.
+do_U_shaped_mortality =  .False., ! .True. !
+update_annualLAImax   =  .False., ! .True. !
+do_closedN_run        =  .True.,
+spinup                = .True.,
+spinupyears           = 1793, ! use multiples of 11 for ORNL and 9 for WCr
+recycle               = 11, ! 9 (US-WCrforcing) or 11 (ORNL_forcing)
+firstyeartrend        = 1998,
+nyeartrend            = 11, !before 11
+longitude             = 0.0,
+latitude              = 0.0,
+altitude              = 0.0,
+ /
