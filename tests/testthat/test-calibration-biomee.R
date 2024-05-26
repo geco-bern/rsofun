@@ -4,7 +4,7 @@ set.seed(10)
 test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {
   skip_on_cran()
   df_drivers <- rsofun::biomee_gs_leuning_drivers
-  ddf_obs <- rsofun::biomee_validation_2
+  ddf_obs <- rsofun::biomee_validation
   df_drivers$params_siml[[1]]$spinup <- FALSE
   
   settings <- list(
@@ -47,7 +47,7 @@ test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {
 test_that("test calibration routine biomee (rmse cost + GenSA)", {
   skip_on_cran()
   df_drivers <- rsofun::biomee_gs_leuning_drivers
-  ddf_obs <- rsofun::biomee_validation_2
+  ddf_obs <- rsofun::biomee_validation
   df_drivers$params_siml[[1]]$spinup <- FALSE
   
   settings <- list(

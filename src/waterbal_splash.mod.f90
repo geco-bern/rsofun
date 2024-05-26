@@ -5,8 +5,7 @@ module md_waterbal
   ! Written by Benjamin Stocker, partly based on Python code by
   ! Tyler Davis (under GPL2.1).
   !----------------------------------------------------------------
-  use md_params_core, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
-    kMv, kMa, kfFEC, secs_per_day, pi, dummy, kGsc, ndaymonth, kTkelvin
+  use md_params_core
   use md_tile_pmodel, only: tile_type, tile_fluxes_type
   use md_forcing_pmodel, only: climate_type
   use md_grid, only: gridtype
@@ -38,7 +37,6 @@ module md_waterbal
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
   !----------------------------------------------------------------
   real :: dr                           ! distance factor
-  real :: delta                        ! declination angle 
   real :: hs                           ! sunset hour angle
   real :: hn                           ! net radiation cross-over hour angle
   real :: tau                          ! transmittivity (unitless)
@@ -137,7 +135,7 @@ contains
   end subroutine waterbal
 
 
-  subroutine solar( tile_fluxes, grid, climate, doy, in_netrad )
+  subroutine solar( tile_fluxes, grid, climate, doy ) 
     !/////////////////////////////////////////////////////////////////////////
     ! This subroutine calculates daily PPFD. Code is an extract of the subroutine
     ! 'evap', adopted from the evap() function in GePiSaT (Python version). 
@@ -151,7 +149,7 @@ contains
     type(gridtype), intent(inout)                         :: grid
     type(climate_type), intent(in)                        :: climate
     integer, intent(in)                                   :: doy        ! day of year
-    logical, intent(in)                                   :: in_netrad
+    ! logical, intent(in)                                   :: in_netrad
 
     !---------------------------------------------------------
     ! 2. Calculate heliocentric longitudes (nu and lambda), degrees
@@ -172,7 +170,7 @@ contains
     dr = calc_dr( grid%nu )
 
     !---------------------------------------------------------
-    ! 4. Calculate declination angle (delta), degrees
+    ! 4. Calculate declination angle, degrees
     !---------------------------------------------------------
     grid%decl_angle = calc_decl_angle( grid%lambda )
 
@@ -237,23 +235,26 @@ contains
     ! 13. Calculate daytime total net radiation (tile_fluxes%canopy%drn), J m-2 d-1
     !---------------------------------------------------------
     ! Eq. 53, SPLASH 2.0 Documentation
-    if (in_netrad) then
-      tile_fluxes(:)%canopy%drn = climate%dnetrad * myinterface%params_siml%secs_per_tstep
-    else
-      tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
-    end if
+    ! if (in_netrad) then
+    !   tile_fluxes(:)%canopy%drn = climate%dnetrad * myinterface%params_siml%secs_per_tstep
+    ! else
+    !   tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
+    ! end if
+    tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
 
     !---------------------------------------------------------
     ! 14. Calculate nighttime total net radiation (tile_fluxes(:)%canopy%drnn), J m-2 d-1
     !---------------------------------------------------------
     ! Eq. 56, SPLASH 2.0 Documentation
     ! adopted bugfix from Python version (iss#13)
-    if (in_netrad) then
-      tile_fluxes(:)%canopy%drnn = 0.0
-    else  
-      tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
-        tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
-    end if
+    ! if (in_netrad) then
+    !   tile_fluxes(:)%canopy%drnn = 0.0
+    ! else  
+    !   tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
+    !     tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
+    ! end if
+    tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
+      tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
 
     ! if (splashtest) then
     !   print*,'transmittivity, tau: ', tau
@@ -275,7 +276,6 @@ contains
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
-    use md_params_core, only: ndayyear, pi, dummy
     use md_sofunutils, only: calc_patm
 
     ! arguments
@@ -310,7 +310,7 @@ contains
     
     ! Eq. 51, SPLASH 2.0 Documentation
     ! out_evap%econ = 1.0 / ( lv * rho_water ) ! this is to convert energy into mass (water)
-    tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma)) ! MORE PRECISELY - this is to convert energy into mass (water)
+    tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma))  ! MORE PRECISELY - this is to convert energy into mass (water)
 
     !---------------------------------------------------------
     ! Daily condensation, mm d-1
@@ -357,8 +357,6 @@ contains
     tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
       radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
     tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)
-
-    ! print*,'in waterbal: sw, hi, rx, rw, rv, hn, hi, ru ', sw, hi, rx, rw, rv, hn, hi, ru
     
     ! xxx debug
     ! if (splashtest) then
@@ -412,7 +410,7 @@ contains
       melt = 0.0
     end if 
 
-    if (sn==dummy) then
+    if (abs(sn - dummy) < eps) then
       fsnow = max( min( 1.0,  1.0 - ( 1.0 / 2.0 ) * tc ), 0.0 )
       out_snow_rain%snow_updated   = snow + fsnow * pr - melt
       out_snow_rain%liquid_to_soil = pr * ( 1.0 - fsnow ) + melt
@@ -528,8 +526,6 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
-
     ! constant for dRnl (Monteith & Unsworth, 1990)
     kA       = 107.0
     

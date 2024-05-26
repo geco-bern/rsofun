@@ -18,9 +18,8 @@ A tibble of model driver data:
       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
       mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
       PPFD should be calculated by the SPLASH model.}
-      \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
-      it indicates that net radiation should be calculated by the SPLASH
-      model.}
+      \item{netrad}{Net radiation in W m\eqn{^{-2}}. This is currently 
+      ignored as a model forcing.}
       \item{patm}{Atmospheric pressure in Pa.}
       \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
       net radiation are not prescribed.}

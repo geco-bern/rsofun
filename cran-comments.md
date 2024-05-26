@@ -1,9 +1,13 @@
 Dear CRAN team,
 
-This is the re-submission of the {rsofun} package. We have addressed the following
-concerns flagged by the automatic checks:
+This is the re-submission of the {rsofun} package v4.4.1. 
 
-- Modified code in Fortran modules to fix compilation issues raised by Prof. Ripley.
+In order to correct the outcome of the automatic CRAN checks, we have removed the 
+-fc-prototypes-external flag for flang compilers. Our local and GitHub checks
+pass, and we hope that the previous changes on the Fortran code alone correct
+the failure of our previous release.
+
+Thank you for your time and support.
 
 ---
 
@@ -16,7 +20,7 @@ This package is an extension of {rpmodel} in the sense that it expands the P-mod
 
 The full documentation can be found at the github repository link: https://geco-bern.github.io/rsofun
 
-Code coverage sits at ~72%, with remaining uncovered code pertaining to minor input data format checks of the main functions. The underlying P-model implementation is based on the {rpmodel} and the parameter calibration routines use packages {GenSA} and {BayesianTools}.
+Code coverage sits at ~76%, with remaining uncovered code pertaining to minor input data format checks of the main functions. The underlying P-model implementation is based on the {rpmodel} and the parameter calibration routines use packages {GenSA} and {BayesianTools}.
 
 I hope this package is useful for other earth system scientists and the larger CRAN community. Kind regards, Josefa Arán.
 
@@ -32,7 +36,7 @@ I have read and agree to the CRAN policies enumerated here: https://cran.r-proje
 
 - rhub::check_on_cran() with only notes for latex elements
 
-- codecove.io code coverage at ~72%
+- codecove.io code coverage at ~76%
 
 ## Github actions R CMD check results
 
