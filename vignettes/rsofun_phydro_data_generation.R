@@ -31,13 +31,13 @@ args = commandArgs(trailingOnly=TRUE)
 #site <- "GF-Guy"
 if (length(args)==0) {
   #stop("At least one argument must be supplied: site name", call.=FALSE)
-  site = "FR-Pue"
+  site = "AU-ASM"
 }else{
   site = args[1]
 }
 
 if (length(args)<2) {
-  root_data_dir = "~/Downloads/fluxdatakit_oct3"
+  root_data_dir = "~/Downloads/fluxdatakit_v3.0"
 }else{
   root_data_dir = args[2]
 }
@@ -308,11 +308,11 @@ tmaxmin <-
 message("- compiling drivers")
 load("../data/p_model_drivers.rda")
 
-
-nc = nc_open("ancillary_data/cwdx80.nc")
+## READ WHC from file ##
+nc = nc_open("ancillary_data/cwdx80_forcing.nc")
 lons = ncvar_get(nc, "lon")
 lats = ncvar_get(nc, "lat")
-S80 = ncvar_get(nc, "cwdx80")
+S80 = ncvar_get(nc, "cwdx80_forcing")
 
 site_lon = meta[[1]]$longitude
 site_lat = meta[[1]]$latitude
@@ -323,6 +323,24 @@ n = 1
 S80_slice = S80[(lonid-n):(lonid+n), (latid-n):(latid+n)]
 whc_site = mean(as.numeric(S80_slice, na.rm=T))
 whc_site_sd = sd(as.numeric(S80_slice, na.rm=T))
+
+## READ WHC_1m FROM FILE ##
+
+nc = nc_open("ancillary_data/whc_1m.nc")
+lons = ncvar_get(nc, "lon")
+lats = ncvar_get(nc, "lat")
+whc1m = ncvar_get(nc, "whc_1m")
+
+site_lon = meta[[1]]$longitude
+site_lat = meta[[1]]$latitude
+
+lonid = which(lons > site_lon)[1]-1
+latid = which(lats > site_lat)[1]-1
+n = 1
+whc1m_slice = whc1m[(lonid-n):(lonid+n), (latid-n):(latid+n)]
+whc1m_site = mean(as.numeric(whc1m_slice, na.rm=T))
+whc1m_site_sd = sd(as.numeric(whc1m_slice, na.rm=T))
+
 
 
 p_hydro_drivers <- p_model_drivers

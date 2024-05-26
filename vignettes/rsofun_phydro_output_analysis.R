@@ -14,7 +14,8 @@ source("vignettes/read_meta_fdk.R")
 
 root_data_dir = "~/Downloads/fluxdatakit_oct3"
 lsm_path = paste0(root_data_dir, "/FLUXDATAKIT_LSM/")
-out_dir = "~/Desktop/phydro_output_6_p50priors/"
+out_dir = "~/Desktop/phydro_output_13_p50prior_fixedalpha0.08_s113/"
+# out_dir = "~/Desktop/phydro_output_11_p50prior_narrowalpha_s113/"
 data_dir = paste0(root_data_dir, "/phydro_drivers/")
 figures_dir = paste0(out_dir, "/figures/")
 
@@ -73,10 +74,11 @@ all_data = map_all_sites %>%
 
 ## FANCY PAIRS PLOT ##
 all_data %>% 
-  select(phydro_K_plant:whc, IGBP_veg_short) %>% 
+  left_join(sites_meta) %>% 
+  select(kphio:whc, IGBP_veg_short) %>% 
   mutate(phydro_K_plant = log10(phydro_K_plant),
-         whc = log10(whc),
-         Ssoil = log10(Ssoil),
+         # whc = log10(whc),
+         # Ssoil = log10(Ssoil),
          # phydro_p50_plant = log10(-phydro_p50_plant),
          # phydro_alpha = log10(phydro_alpha)
          ) %>% 
@@ -93,12 +95,13 @@ all_data %>% group_by(IGBP_veg_short) %>% summarize(count=length(IGBP_veg_short)
 right_join(all_data) %>% 
   filter(count > 2) %>% 
   select(kphio:whc, IGBP_veg_short, sitename) %>% 
-  mutate(phydro_K_plant = log10(phydro_K_plant),
-         whc = log10(whc),
-         Ssoil = log10(Ssoil),
-         # kphio = log10(kphio),
-         # phydro_gamma = log10(phydro_gamma)
-         ) %>%
+  mutate(
+    # phydro_K_plant = log10(phydro_K_plant),
+    whc = log10(whc),
+    # Ssoil = log10(Ssoil),
+    # kphio = log10(kphio),
+    # phydro_gamma = log10(phydro_gamma)
+  ) %>%
   pivot_longer(cols = !c(sitename, IGBP_veg_short)) %>% 
   ggplot(aes(x=IGBP_veg_short, y=value, fill=IGBP_veg_short)) + 
   geom_violin() + 
@@ -106,13 +109,13 @@ right_join(all_data) %>%
   facet_wrap(facets = "name", scales = "free") +
   coord_flip() 
 
-all_data %>% 
-  filter(IGBP_veg_short %in% c("SAV", "OSH", "GRA", "ENF", "EBF", "DBF", "CRO")) %>% 
-  ggplot(aes(group=IGBP_veg_short, x=Ssoil, y=whc, col=IGBP_veg_short)) + 
-  geom_point()+
-  geom_smooth(method="lm", se=F)+
-  scale_x_log10()+scale_y_log10()+
-  geom_abline(slope = 1)
+# all_data %>% 
+#   filter(IGBP_veg_short %in% c("SAV", "OSH", "GRA", "ENF", "EBF", "DBF", "CRO")) %>% 
+#   ggplot(aes(group=IGBP_veg_short, x=Ssoil, y=whc, col=IGBP_veg_short)) + 
+#   geom_point()+
+#   geom_smooth(method="lm", se=F)+
+#   scale_x_log10()+scale_y_log10()+
+#   geom_abline(slope = 1)
 
 
 r2_all_sites = tibble(filename=list.files(out_dir, full.names = T)) %>% 
@@ -140,7 +143,25 @@ r2_all_sites %>%
   ggplot(aes(x=IGBP_veg_short, y=r2, fill=IGBP_veg_short)) + 
   geom_violin(scale = "width", width=0.4) + 
   facet_wrap(~variable, nrow=2)
-  
+
+for (var in c("kphio", "phydro_K_plant", "phydro_p50_plant", "phydro_alpha", "phydro_gamma", "bsoil", "whc")){
+print(
+map_all_sites %>% 
+  left_join(sites_meta, by=c("site"="sitename")) %>% 
+  select(kphio:whc, site, latitude, longitude) %>% 
+  pivot_longer(cols = kphio:whc, names_to = "variable", values_to = "value") %>% 
+  filter(variable == var) %>% 
+  ggplot() +
+  theme_classic()+
+  geom_map(
+    data = world, map = world,
+    aes(x=long, y=lat, map_id = region),
+    color = "black", fill= "grey90", size=0.05
+  ) +
+  geom_point(aes(x=longitude, y=latitude, color=value))+
+  ggtitle(var)
+)
+}
 
 #### Water potentials analysis ####
 
@@ -167,7 +188,7 @@ read_phydro_output = function(site){
   load(file)
   
   output_p_opt$data[[1]] %>% 
-    select(date, gpp, le, jmax25, dpsi, psi_leaf, gpp_obs, le_obs) %>% 
+    select(date, gpp, le, le_soil, jmax25, dpsi, psi_leaf, gpp_obs, le_obs) %>% 
     mutate(SITE_ID = site)
 }
 
@@ -202,7 +223,7 @@ for (i in seq(1,length(sites_vod_phydro), by=20)){
   vod_phydro %>% 
     filter(SITE_ID %in% sites_vod_phydro[i:(i+20-1)]) %>% 
     mutate(vod_ratio = log(vod_night/vod_day)) %>% 
-    ggplot(aes(y=vod_ratio, x=le_obs)) +
+    ggplot(aes(y=vod_ratio, x=dpsi)) +
     geom_pointdensity() + 
     geom_smooth(method="lm", formula=y~0+x, col="orange", linewidth=0.5)+
     scale_colour_viridis_c()+
@@ -220,6 +241,18 @@ site_min_psisoil =
   phydro_out %>% 
   group_by(SITE_ID) %>% 
   summarize(psi_min = min(psi_leaf+dpsi))
+
+site_max_dpsi = 
+  phydro_out %>% 
+  group_by(SITE_ID) %>% 
+  summarize(dpsi_max = max(dpsi))
+
+site_max_dpsi %>% 
+  left_join(sites_meta, by=c("SITE_ID"="sitename")) %>% 
+  select(dpsi_max, IGBP_veg_short) %>% 
+  ggplot(aes(x=IGBP_veg_short, y=dpsi_max, fill=IGBP_veg_short)) + 
+  geom_violin(scale = "width", width=0.4) 
+  
 
 for (i in seq(1,length(sites_phydro), by=20)){
   cairo_pdf(filename = paste0("vignettes/figures/psi_leaf_vs_soil_",i,".pdf"))
@@ -267,3 +300,57 @@ phydro_out %>%
   ggplot(aes(x=`(Intercept)`, y=psi_soil))+
   geom_point() +
   geom_smooth(method="lm")
+
+le_soil_by_le = phydro_out %>% group_by(SITE_ID) %>% summarize(le_soil_pc = mean(le_soil)/mean(le))
+le_soil_by_le %>% 
+  left_join(sites_meta, by=c("SITE_ID"="sitename")) %>% 
+  select(le_soil_pc, SITE_ID, latitude, longitude) %>% 
+  ggplot() +
+  theme_classic()+
+  geom_map(
+    data = world, map = world,
+    aes(x=long, y=lat, map_id = region),
+    color = "black", fill= "grey90", size=0.05
+  ) +
+  geom_point(aes(x=longitude, y=latitude, color=le_soil_pc))+
+  ggtitle("le_soil_pc")
+
+
+all_data %>% 
+  left_join(le_soil_by_le, by=c("sitename"="SITE_ID")) %>% 
+  left_join(r2_all_sites, by=c("sitename"="site")) %>% 
+  ggplot(aes(x=le_soil_pc, y=r2))+
+  geom_point()+
+  facet_wrap(~variable)
+
+all_data %>% 
+  left_join(le_soil_by_le, by=c("sitename"="SITE_ID")) %>% 
+  left_join(r2_all_sites, by=c("sitename"="site")) %>% 
+  select(-r2) %>% 
+  pivot_wider(names_from = variable, values_from=nrmse, names_prefix = "nrmse_") %>% 
+  mutate(nrmse_diff = nrmse_le - nrmse_gpp) %>% 
+  ggplot(aes(x=le_soil_pc, y=nrmse_diff, colour=IGBP_veg_short))+
+  geom_point()
+
+all_data %>% 
+  left_join(le_soil_by_le, by=c("sitename"="SITE_ID")) %>% 
+  left_join(r2_all_sites, by=c("sitename"="site")) %>% 
+  select(-r2) %>% 
+  pivot_wider(names_from = variable, values_from=nrmse, names_prefix = "nrmse_") %>% 
+  mutate(nrmse_diff = nrmse_le - nrmse_gpp) %>% 
+  filter(le_soil_pc > 0.75 & nrmse_diff < 0) %>% View()
+
+all_data %>% 
+  left_join(le_soil_by_le, by=c("sitename"="SITE_ID")) %>% 
+  ggplot(aes(x=le_soil_pc, y=phydro_p50_plant))+
+  geom_point()
+
+all_data %>% 
+  left_join(le_soil_by_le, by=c("sitename"="SITE_ID")) %>% 
+  ggplot(aes(x=le_soil_pc, y=phydro_alpha))+
+  geom_point()
+
+all_data %>% 
+  left_join(le_soil_by_le, by=c("sitename"="SITE_ID")) %>% 
+  ggplot(aes(x=le_soil_pc, y=phydro_K_plant))+
+  geom_point()
