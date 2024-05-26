@@ -86,6 +86,7 @@ contains
       end if
     else
       ! stop 'RUNNING: declare valid method.'
+      runningval = sum(valbuf((lenval-lenper+1):lenval))
     end if
 
   end function running

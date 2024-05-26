@@ -15,9 +15,8 @@
 #'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
 #'       mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
 #'       PPFD should be calculated by the SPLASH model.}
-#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
-#'       it indicates that net radiation should be calculated by the SPLASH
-#'       model.}
+#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. This is currently 
+#'       ignored as a model forcing.}
 #'       \item{patm}{Atmospheric pressure in Pa.}
 #'       \item{snow}{Snow in water equivalents mm s\eqn{^{-1}}.}
 #'       \item{rain}{Rain as precipitation in liquid form in mm s\eqn{^{-1}}.}
@@ -118,9 +117,8 @@
 #'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
 #'       mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
 #'       PPFD should be calculated by the SPLASH model.}
-#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
-#'       it indicates that net radiation should be calculated by the SPLASH
-#'       model.}
+#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. This is currently 
+#'       ignored as a model forcing.}
 #'       \item{patm}{Atmospheric pressure in Pa.}
 #'       \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
 #'       net radiation are not prescribed.}
@@ -244,7 +242,7 @@
 #' }
 "biomee_gs_leuning_drivers"
 
-#' rsofun BiomeE GPP validation data
+#' rsofun BiomeE targets validation data
 #'
 #' Small tests dataset to validate 
 #' calibration routines
@@ -266,21 +264,7 @@
 #'   \item{sitename}{site name}
 #'   \item{data}{validation dta}
 #' }
-"biomee_validation_2"
-
-
-#' rsofun BiomeE GPP validation data
-#'
-#' Small tests dataset to validate 
-#' calibration routines
-#'
-#' @format A tibble of driver data:
-#' \describe{
-#'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
-#' }
 "biomee_p_model_output"
-
 
 #' rsofun BiomeE GPP validation data
 #'

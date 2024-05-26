@@ -88,9 +88,10 @@
 #'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
 #'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
 #'   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
-#'   \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. If not an input driver, calculated by SPLASH.}
+#'   \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. WARNING: this is currently ignored as a model forcing. Instead, net radiation is internally calculated by SPLASH.}
 #'   \item{\code{wcont}}{Soil water content, in mm.}
 #'   \item{\code{snow}}{Snow water equivalents, in mm.}
+#'   \item{\code{cond}}{Water input by condensation, in mm d\eqn{^{-1}}}
 #'   } 
 #'   
 #' @details Depending on the input model parameters, it's possible to run the 
@@ -358,8 +359,9 @@ run_pmodel_f_bysite <- function(
     in_ppfd <- ifelse(any(is.na(forcing$ppfd)), FALSE, TRUE)  
 
     # determine whether to read PPFD from forcing or to calculate internally
-    in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
-    
+    # in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
+    in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
+
     # Check if fsun is available
     if(! (in_ppfd & in_netrad)){
       # fsun must be available when one of ppfd or netrad is missing
@@ -483,6 +485,7 @@ run_pmodel_f_bysite <- function(
           "netrad", 
           "wcont", 
           "snow",
+          "cond",
           "le_soil",
           "dpsi",
           "psi_leaf")
@@ -510,6 +513,7 @@ run_pmodel_f_bysite <- function(
                   netrad = NA,
                   wcont = NA, 
                   snow = NA,
+                  cond = NA,
                   le_soil = NA,
                   dpsi = NA,
                   psi_leaf = NA
