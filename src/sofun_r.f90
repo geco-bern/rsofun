@@ -943,7 +943,7 @@ contains
     out_annual_tile(3)  = dble(annual_tile%LAI)
     out_annual_tile(4)  = dble(annual_tile%density)
     out_annual_tile(5)  = dble(annual_tile%DBH)
-    out_annual_tile(6)  = dble(annual_tile%Density12)
+    out_annual_tile(6)  = dble(annual_tile%density12)
     out_annual_tile(7)  = dble(annual_tile%DBH12)
     out_annual_tile(8)  = dble(annual_tile%QMD)
     out_annual_tile(9)  = dble(annual_tile%NPP)

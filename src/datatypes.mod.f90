@@ -763,8 +763,8 @@ contains
     vegn%annualN      = 0.0
     vegn%Nloss_yr     = 0.0
     vegn%annualNup    = 0.0
-    vegn%n_deadtrees  = 0.0
-    vegn%c_deadtrees  = 0.0
+    !vegn%n_deadtrees  = 0.0
+    !vegn%c_deadtrees  = 0.0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
@@ -801,8 +801,8 @@ contains
       cc%BA_ys        = cc%BA
       cc%Vol_ys       = cc%Volume
       cc%ABG_ys       = cc%psapw%c%c12 + cc%pwood%c%c12
-      cc%n_deadtrees  = 0.0
-      cc%c_deadtrees  = 0.0
+      !cc%n_deadtrees  = 0.0
+      !cc%c_deadtrees  = 0.0
       cc%m_turnover   = 0.0
     enddo
   
@@ -1188,7 +1188,7 @@ contains
       out_annual_cohorts(i)%PFT         = cc%species
       out_annual_cohorts(i)%layer       = cc%layer
       out_annual_cohorts(i)%density     = cc%nindivs * 10000
-      out_annual_cohorts(i)%flayer     = cc%layerfrac
+      out_annual_cohorts(i)%flayer      = cc%layerfrac
       out_annual_cohorts(i)%DBH         = cc%dbh * 100   ! *100 to convert m in cm
       out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
       out_annual_cohorts(i)%height      = cc%height
@@ -1225,7 +1225,7 @@ contains
  
     vegn%NPPL        = 0.0
     vegn%NPPW        = 0.0
-    vegn%n_deadtrees = 0 !yyy
+    vegn%n_deadtrees = 0 
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 

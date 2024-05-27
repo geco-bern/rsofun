@@ -1846,7 +1846,7 @@ contains
     ! local variables
     type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
     ! logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
-    real, parameter :: mindensity = 0 !1.0E-6 !0.25E-4
+    real, parameter :: mindensity = 1.0E-6 !0.25E-4
     integer :: i,k
 
     ! calculate the number of cohorts with indivs>mindensity

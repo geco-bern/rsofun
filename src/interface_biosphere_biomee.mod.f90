@@ -235,7 +235,7 @@ module md_interface_biomee
     real :: LAI
     real :: density
     real :: DBH
-    real :: Density12
+    real :: density12
     real :: DBH12
     real :: QMD
     real :: NPP
