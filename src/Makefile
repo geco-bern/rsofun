@@ -11,7 +11,7 @@
 # Source file of main program
 MAIN=sofun.f90
 
-MAIN_LM3PPA=sofun_lm3ppa.f90
+MAIN_BIOMEE=main_biomee.f90
 
 ## Use different main program source file when executing all simulations belonging to a given simsuite at once
 MAIN_SIMSUITE=sofun_simsuite.f90
@@ -46,11 +46,11 @@ GSWBM_MODS=params_core.mod.f90 classdefs.mod.f90 sofunutils.mod.f90 io_netcdf.mo
 # List of source code files for reduced setup, executing the C-only model
 CMODEL_MODS=params_core.mod.f90 classdefs.mod.f90 sofunutils.mod.f90 io_netcdf.mod.f90 rates.mod.f90 params_siml.mod.f90 params_domain_siterun.mod.f90 grid_siterun.mod.f90 params_soil.mod.f90 forcing_siterun_pmodel.mod.f90 interface_biosphere.mod.f90 tile_cmodel.mod.f90 waterbal_splash.mod.f90 soiltemp_sitch.mod.f90 lambertw.mod.f90 plant_cmodel.mod.f90 gpp_pmodel.mod.f90 phenology_lpx.mod.f90 vegdynamics_fix.mod.f90 turnover.mod.f90 npp.mod.f90 littersom_lpj.mod.f90 allocation_cmodel.mod.f90 biosphere_cmodel.mod.f90
 
-# List of source code files for 'lm3ppa' setup, using gs_Leuning() photosynthesis (straight implementation of BiomeE-Allocation model code)
-LM3PPA_MODS=params_core_lm3ppa.mod.f90 classdefs.mod.f90 params_siml_lm3ppa.mod.f90 grid_siterun_lm3ppa.mod.f90 params_soil_lm3ppa.mod.f90 forcing_siterun_lm3ppa.mod.f90 interface_biosphere_lm3ppa.mod.f90 datatypes.mod.f90 soil.mod.f90 gpp_lm3ppa_leuning.mod.f90 vegetation.mod.f90 biosphere_lm3ppa.mod.f90 #tile_pmodel.mod.f90 plant_pmodel.mod.f90 waterbal_splash.mod.f90 soiltemp_sitch.mod.f90 gpp_pmodel.mod.f90 vegdynamics_pmodel.mod.f90 biosphere_pmodel.mod.f90
+# List of source code files for 'biomee' setup, using gs_Leuning() photosynthesis (straight implementation of BiomeE-Allocation model code)
+BIOMEE_MODS=params_core.mod.f90 csofunutils.mod.f90 lassdefs.mod.f90 params_siml_biomee.mod.f90 grid_siterun.mod.f90 params_soil_biomee.mod.f90 forcing_siterun_biomee.mod.f90 interface_biosphere_biomee.mod.f90 datatypes.mod.f90 soil_biomee.mod.f90 photosynth_pmodel.mod.f90 gpp_biomee.mod.f90 vegetation.mod.f90 biosphere_biomee.mod.f90 #tile_pmodel.mod.f90 plant_pmodel.mod.f90 waterbal_splash.mod.f90 soiltemp_sitch.mod.f90 gpp_pmodel.mod.f90 vegdynamics_pmodel.mod.f90 biosphere_pmodel.mod.f90
 
-# List of source code files for 'lm3ppa' setup, using P-model photosynthesis (rest is BiomeE-Allocation model code)
-LM3PPA_PMODEL_MODS=params_core_lm3ppa.mod.f90 sofunutils.mod.f90 classdefs.mod.f90 params_siml_lm3ppa.mod.f90 grid_siterun_lm3ppa.mod.f90 params_soil_lm3ppa.mod.f90 forcing_siterun_lm3ppa.mod.f90 interface_biosphere_lm3ppa.mod.f90 datatypes.mod.f90 soil.mod.f90 photosynth_pmodel.mod.f90 gpp_lm3ppa_pmodel.mod.f90 vegetation.mod.f90 biosphere_lm3ppa.mod.f90 #tile_pmodel.mod.f90 plant_pmodel.mod.f90 waterbal_splash.mod.f90 soiltemp_sitch.mod.f90 gpp_pmodel.mod.f90 vegdynamics_pmodel.mod.f90 biosphere_pmodel.mod.f90
+# List of source code files for 'biomee' setup, using P-model photosynthesis (rest is BiomeE-Allocation model code)
+BIOMEE_PMODEL_MODS=params_core.mod.f90 sofunutils.mod.f90 classdefs.mod.f90 params_siml_biomee.mod.f90 grid_siterun.mod.f90 params_soil_biomee.mod.f90 forcing_siterun_biomee.mod.f90 interface_biosphere_biomee.mod.f90 datatypes.mod.f90 soil_biomee.mod.f90 photosynth_pmodel.mod.f90 gpp_biomee.mod.f90 vegetation.mod.f90 biosphere_biomee.mod.f90 #tile_pmodel.mod.f90 plant_pmodel.mod.f90 waterbal_splash.mod.f90 soiltemp_sitch.mod.f90 gpp_pmodel.mod.f90 vegdynamics_pmodel.mod.f90 biosphere_pmodel.mod.f90
 
 # List of source code files for reduced setup, executing the full CN-only model:
 CNMODEL_MODS=params_core.mod.f90 classdefs.mod.f90 sofunutils.mod.f90 params_siml.mod.f90 params_domain.mod.f90 grid_siterun.mod.f90 params_soil.mod.f90 forcing_siterun.mod.f90 interface_biosphere.mod.f90 rates.mod.f90 waterbal_splash.mod.f90 soiltemp_sitch.mod.f90 lambertw.mod.f90 plant.mod.f90 gpp_pmodel.mod.f90 phenology_lpx.mod.f90 findroot_fzeroin.mod.f90 turnover.mod.f90 npp.mod.f90 vegdynamics_fix.mod.f90 ntransform_xuri.mod.f90 littersom_lpj.mod.f90 nuptake.mod.f90 allocation_cnmodel.mod.f90 landuse.mod.f90
@@ -108,15 +108,15 @@ CMODEL_MODOBJS=$(CMODEL_MODS:.f90=.o)
 DBGCMODEL_OBJS=$(MAIN:.f90=.do)
 DBGCMODEL_MODOBJS=$(CMODEL_MODS:.f90=.do)
 
-LM3PPA_OBJS=$(MAIN_LM3PPA:.f90=.o)
-LM3PPA_MODOBJS=$(LM3PPA_MODS:.f90=.o)
-DBGLM3PPA_OBJS=$(MAIN_LM3PPA:.f90=.do)
-DBGLM3PPA_MODOBJS=$(LM3PPA_MODS:.f90=.do)
+BIOMEE_OBJS=$(MAIN_BIOMEE:.f90=.o)
+BIOMEE_MODOBJS=$(BIOMEE_MODS:.f90=.o)
+DBGBIOMEE_OBJS=$(MAIN_BIOMEE:.f90=.do)
+DBGBIOMEE_MODOBJS=$(BIOMEE_MODS:.f90=.do)
 
-LM3PPA_OBJS=$(MAIN_LM3PPA:.f90=.o)
-LM3PPA_PMODEL_MODOBJS=$(LM3PPA_PMODEL_MODS:.f90=.o)
-DBGLM3PPA_OBJS=$(MAIN_LM3PPA:.f90=.do)
-DBGLM3PPA_PMODEL_MODOBJS=$(LM3PPA_PMODEL_MODS:.f90=.do)
+BIOMEE_OBJS=$(MAIN_BIOMEE:.f90=.o)
+BIOMEE_PMODEL_MODOBJS=$(BIOMEE_PMODEL_MODS:.f90=.o)
+DBGBIOMEE_OBJS=$(MAIN_BIOMEE:.f90=.do)
+DBGBIOMEE_PMODEL_MODOBJS=$(BIOMEE_PMODEL_MODS:.f90=.do)
 
 SIMSUITE_OBJS=$(MAIN_SIMSUITE:.f90=.o)
 SIMSUITE_MODOBJS=$(CMODEL_MODS:.f90=.o)
@@ -263,18 +263,18 @@ dbgcmodel: $(DBGCMODEL_MODOBJS) $(DBGCMODEL_OBJS)
 	ar r $(ARCHIVE) $(DBGCMODEL_MODOBJS) $(DBGCMODEL_OBJS) 
 
 # Implementation of BiomeE model
-lm3ppa: $(LM3PPA_MODOBJS) $(LM3PPA_OBJS)
+biomee: $(BIOMEE_MODOBJS) $(BIOMEE_OBJS)
 	# $(MAKE) -C cdfcode
 	-rm $(ARCHIVE)
 	# cp $(CDFARCHIVE) $(ARCHIVE)
-	ar r $(ARCHIVE) $(LM3PPA_MODOBJS) $(LM3PPA_OBJS) 
+	ar r $(ARCHIVE) $(BIOMEE_MODOBJS) $(BIOMEE_OBJS) 
 
 # Implementation of BiomeE model with P-model photosynthesis
-lm3ppa_pmodel: $(LM3PPA_PMODEL_MODOBJS) $(LM3PPA_OBJS)
+biomee_pmodel: $(BIOMEE_PMODEL_MODOBJS) $(BIOMEE_OBJS)
 		# $(MAKE) -C cdfcode
 		-rm $(ARCHIVE)
 		# cp $(CDFARCHIVE) $(ARCHIVE)
-		ar r $(ARCHIVE) $(LM3PPA_PMODEL_MODOBJS) $(LM3PPA_OBJS) 	
+		ar r $(ARCHIVE) $(BIOMEE_PMODEL_MODOBJS) $(BIOMEE_OBJS) 	
 
 # full model setup: CN-model
 cnmodel: $(CNMODEL_MODOBJS) $(CNMODEL_OBJS)
@@ -417,13 +417,13 @@ $(DBGCMODEL_MODOBJS): %.do: %.f90
 $(DBGCMODEL_OBJS): %.do: %.f90
 	$(FCOM) -c -o $@ $(DEBUGFLAGS) $*.f90
 
-$(LM3PPA_MODOBJS): %.o: %.f90
+$(BIOMEE_MODOBJS): %.o: %.f90
 	$(FCOM) -c -o $@ $(COMPFLAGS) $*.f90
 
-$(LM3PPA_PMODEL_MODOBJS): %.o: %.f90
+$(BIOMEE_PMODEL_MODOBJS): %.o: %.f90
 	$(FCOM) -c -o $@ $(COMPFLAGS) $*.f90
 
-$(LM3PPA_OBJS): %.o: %.f90
+$(BIOMEE_OBJS): %.o: %.f90
 	$(FCOM) -c -o $@ $(COMPFLAGS) $*.f90
 
 $(SIMSUITE_MODOBJS): %.o: %.f90

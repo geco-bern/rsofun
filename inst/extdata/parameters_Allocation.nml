@@ -1,17 +1,23 @@
 &vegn_parameters_nml
-soiltype     = 3,
-FLDCAP       = 0.4,
-WILTPT       = 0.05,
-K1           =  2.0,  ! turnover rate of fast SOM per year
-K2           =  0.1   ! 0.12 ! 0.2, ! 0.075 ! turnover rate of slow SOM per year
-K_nitrogen   = 0.0, ! 1.2 ! 2.5 ! rate of a year, 2.5
-etaN         = 0.0, ! 0.025 ! loss rate with runoff
-MLmixRatio   = 0.6, ! 0.8 ! fraction of microbes to litter
-l_fract      =0.0,
-retransN     = 0.0,
-f_N_add      = 0.02, 
-f_initialBSW = 0.005,
-! alpha_FR =  1.2; gamma_FR = 12.0; dSlowSOM = 2.5 * iSOM + 1.5; rho_N_up0 = 0.1
+soiltype = 3,
+FLDCAP = 0.4,
+WILTPT = 0.05,
+K1 = 2.0,
+K2 = 0.05,
+K_nitrogen = 8.0,
+MLmixRatio = 0.8,
+etaN = 0.025,
+LMAmin = 0.02,
+fsc_fine = 1.0,
+fsc_wood = 0.0,
+GR_factor = 0.33,
+l_fract = 0.0,
+retransN = 0.0,
+f_initialBSW = 0.2,
+f_N_add = 0.02,
+tf_base = 1,
+par_mort = 1,
+par_mort_under = 1
 
 ! species       0        1         2         3         4       5         6         7       8         9         10
 lifeform      = 0,       1,        1,        1,        1,      1,        1,        1,      1,        1,        1,    ! 0: grass; 1 Woody
@@ -46,41 +52,52 @@ heat_capacity_dry = 1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6, 1.0,
  /
 
  &initial_state_nml
-!!   plant
- ! init_n_cohorts      = 1, ! 8, ! total 9
+ init_n_cohorts      = 1, 
  init_cohort_species = 1,      2,        3,        4,      5,        6,        7,      8,        9,       10,
- init_cohort_nindivs = 0.02,   0.02,     0.02,     0.02,   0.02,     0.02,     0.02,   0.02,     0.02,    0.02,
- init_cohort_bsw     = 0.2,    0.2,      0.2,      0.2,    0.2,      0.2,      0.2,    0.2,      0.2,     0.2,
+ init_cohort_nindivs = 0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,    0.05,
+ init_cohort_bl      = 0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0,
+ init_cohort_br      = 0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0,
+ init_cohort_bsw     = 0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,    0.05,
  init_cohort_bHW     = 0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0,
- init_cohort_nsc     = 0.5,    0.5,      0.5,      0.5,    0.5,      0.5,      0.5,    0.5,      0.5,     0.5,
+ init_cohort_seedC   = 0.0,    0.0,      0.0,      0.0,    0.0,      0.0,      0.0,    0.0,      0.0,     0.0,
+ init_cohort_nsc     = 0.05,   0.05,     0.05,     0.05,   0.05,     0.05,     0.05,   0.05,     0.05,    0.05,
 
 !  Soil
- init_fast_soil_C    = 0.15   ! kg C m-2    ! C/N = 15, 0.75 kg SOM ~ 50 gN
- init_slow_soil_C    = 16.0   ! kg C m-2    ! C/N = 40
- init_Nmineral       = 2.5E-3, ! kg N m-2
- N_input             = 0.0E-3 ! 2.4E-3, ! kg N m-2 yr-1, N deposit: 0.8 g N m-2 yr-1
-                               ! high N input --> Deciduous
-                               ! low  N input --> Evergreen
+ init_fast_soil_C    = 0.0,
+ init_slow_soil_C    = 0.0,
+ init_Nmineral       = 0.015,
+ N_input             = 0.0008
+
 
 ! Model run
- filepath_in = '/Users/lmarques/sofun/input/'
- climfile    =  'ORNL_forcing.txt' !'US-WCrforcing.txt' !   'CA-Manforcing.txt' !
-               ! 'CA-Manforcing.txt'   !  'US-WBWforcing.txt'
-               !   'US-Dk1forcing.txt' ! CA-Obsforcing.txt
-               !   'ORNL_forcing.txt'  ! 'KNZ_amb.csv' !  'KNZ_irr.csv' !
-! model_run_years       =  1800, ! 1200,
-equi_days             =  0,
-outputhourly          =  .False., ! .True. !
-outputdaily           =  .True.,  ! .False. ! .True.
-do_U_shaped_mortality =  .False., ! .True. !
-update_annualLAImax   =  .False., ! .True. !
-do_closedN_run        =  .True.,
-spinup                = .True.,
-spinupyears           = 1793, ! use multiples of 11 for ORNL and 9 for WCr
-recycle               = 11, ! 9 (US-WCrforcing) or 11 (ORNL_forcing)
-firstyeartrend        = 1998,
-nyeartrend            = 11, !before 11
-longitude             = 0.0,
-latitude              = 0.0,
-altitude              = 0.0,
+ filepath_in = '/home/laura/rsofun/data-raw/'
+ climfile    =  'ORNL_forcing.txt' 
+
+ sitename = "CH-Lae",
+ longitude = 8.365,
+ latitude = 47.47808,
+ altitude = 700,
+ year_start = 2004,
+ year_end = 2014,
+ classid = NA,
+ c4 = FALSE,
+ whc = NA,
+ koeppen_code = NA,
+ igbp_land_use = "Mixed Forests",
+ plant_functional_type = "Broadleaf trees"
+ spinup = .True.,
+ spinupyears = 250,
+ recycle = 1,
+ firstyeartrend = 2009,
+ nyeartrend = 1,
+ outputhourly = .True.,
+ outputdaily = .True.,
+ do_U_shaped_mortality = .True.,
+ update_annualLAImax = .True.,
+ do_closedN_run = .True.,
+ do_reset_veg = .False., 
+ dist_frequency = 0, # 100, 75, 50, 25, 15, 10
+ method_photosynth = "gs_leuning",
+ method_mortality = "dbh"
+ method_photosynth <- "pmodel"
  /

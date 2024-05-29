@@ -59,17 +59,71 @@ contains
     integer, save :: iyears
     integer, save :: idays
     integer, save :: idoy
+    
+    character(len=150) :: plantcohorts, plantCNpools, soilCNpools, allpools, faststepfluxes  ! output file names
+    character(len=50) :: filepath_out, filesuffix
+    character(len=50) :: parameterfile(10), chaSOM(10)
+
+    !------------------------------------------------------------------------
+    ! Create output files
+    ! XXX add this to output instead
+    !------------------------------------------------------------------------
+    filepath_out   = '/home/laura/rsofun/output/'
+    filesuffix     = '_test.csv' ! tag for simulation experiments
+    plantcohorts   = trim(filepath_out)//'Annual_cohorts'//trim(filesuffix)  ! has 22 columns
+    plantCNpools   = trim(filepath_out)//'Daily_cohorts'//trim(filesuffix)  ! daily has 27 columns
+    soilCNpools    = trim(filepath_out)//'Daily_tile'//trim(filesuffix)
+    allpools       = trim(filepath_out)//'Annual_tile'//trim(filesuffix)
+    faststepfluxes = trim(filepath_out)//'Hourly_tile'//trim(filesuffix) ! hourly, has 15 columns and 
+
+    fno1=91
+    fno2=101
+    fno3=102
+    fno4=103
+    fno5=104
+    open(fno1, file=trim(faststepfluxes), ACTION='write', IOSTAT=istat1)
+    open(fno2, file=trim(plantcohorts),   ACTION='write', IOSTAT=istat1)
+    open(fno3, file=trim(plantCNpools),   ACTION='write', IOSTAT=istat2)
+    open(fno4, file=trim(soilCNpools),    ACTION='write', IOSTAT=istat3)
+    open(fno5, file=trim(allpools),       ACTION='write', IOSTAT=istat3)
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
     if (myinterface%steering%init) then ! is true for the first year
 
+      !------------------------------------------------------------------------
+      ! Translation to LM3-PPA variables
+      !------------------------------------------------------------------------
+      
+      ! daily tile
+      write(fno2,'(2(a5,","),55(a10,","))')  'year','doy',     &
+      'Tc','Prcp', 'totWs',  'Trsp', 'Evap','Runoff',          &
+      'ws1','ws2','ws3', 'LAI','GPP', 'Rauto', 'Rh',           &
+      'NSC','seedC','leafC','rootC','SW_C','HW_C',             &
+      'NSN','seedN','leafN','rootN','SW_N','HW_N',             &
+      'McrbC', 'fastSOM',   'slowSOM',                         &
+      'McrbN', 'fastSoilN', 'slowSoilN',                       &
+      'mineralN', 'N_uptk'
+      
+      ! annual tile
+      write(fno5,'(1(a5,","),80(a12,","))')  'year',           &
+      'CAI','LAI','GPP', 'Rauto',   'Rh',                      &
+      'rain','SoilWater','Transp','Evap','Runoff',             &
+      'plantC','soilC',    'plantN', 'soilN','totN',           &
+      'NSC', 'SeedC', 'leafC', 'rootC', 'SapwoodC', 'WoodC',   &
+      'NSN', 'SeedN', 'leafN', 'rootN', 'SapwoodN', 'WoodN',   &
+      'McrbC','fastSOM',   'SlowSOM',                          &
+      'McrbN','fastSoilN', 'slowSoilN',                        &
+      'mineralN', 'N_fxed','N_uptk','N_yrMin','N_P2S','N_loss',&
+      'totseedC','totseedN','Seedling_C','Seedling_N'
+
       ! Parameter initialization: Initialize PFT parameters
       call initialize_PFT_data()
 
       ! Initialize vegetation tile and plant cohorts
       allocate( vegn )
+      
       call initialize_vegn_tile( vegn )
       
       ! Sort and relayer cohorts
@@ -82,7 +136,6 @@ contains
       call getpar_modl_gpp()
 
       year0  = myinterface%climate(1)%year  ! forcingData(1)%year
-
       iyears = 1
       idoy   = 0
       idays  = 0
@@ -161,6 +214,9 @@ contains
     !----------------------------------------------------------------
     idoy = 0
 
+    print*,'sim. year  ', iyears
+    print*,'real year: ', year0
+
     if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update( vegn )
     
     !---------------------------------------------
@@ -237,7 +293,14 @@ contains
     ! Finalize run: deallocating memory
     !----------------------------------------------------------------
     if (myinterface%steering%finalize) then  
+      close(91)
+      close(101)
+      close(102)
+      close(103)
+      close(104)
+
       deallocate(vegn)
+
     end if
     
   end subroutine biosphere_annual

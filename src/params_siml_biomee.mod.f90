@@ -198,5 +198,3 @@ contains
   end function get_cycleyear
 
 end module md_params_siml_biomee
-
-

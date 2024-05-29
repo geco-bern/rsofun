@@ -1,23 +1,24 @@
 program main
   !////////////////////////////////////////////////////////////////
-  ! Main subroutine to handle I/O with C and R. 
+  ! Main program for SOFUN, used for single-site simulations 
   ! Receives simulation parameters, site parameters, and the full 
   ! simulation's forcing as time series
   ! test xxx
   !----------------------------------------------------------------
   use md_params_siml_biomee, only: getsteering
-  ! use md_params_soil_biomee, only: getsoil
   use md_forcing_biomee, only: getclimate, &
     getco2, &
     climate_type
   use md_interface_biomee, only: interfacetype_biosphere, &
     myinterface, &
+    outtype_biosphere, &
     outtype_daily_tile, &
     outtype_daily_cohorts, &
     outtype_annual_tile, &
     outtype_annual_cohorts
   use md_params_core
   use md_biosphere_biomee, only: biosphere_annual
+  use datatypes
 
   implicit none
 
@@ -27,6 +28,7 @@ program main
   integer(kind=c_int),  intent(in) :: recycle
   integer(kind=c_int),  intent(in) :: firstyeartrend
   integer(kind=c_int),  intent(in) :: nyeartrend
+  integer(kind=c_int),  intent(in) :: runyears
 
   logical(kind=c_bool), intent(in) :: outputhourly
   logical(kind=c_bool), intent(in) :: outputdaily
@@ -80,6 +82,35 @@ program main
   integer(kind=c_int), intent(in) :: nt_annual
   integer(kind=c_int), intent(in) :: nt_annual_cohorts
 
+  !----------------------------------------------------------------
+  ! LOCAL VARIABLES READ FROM/TO FILE/OUTPUT
+  !----------------------------------------------------------------
+  ! local variables
+  integer :: datalines
+  integer :: yr_data   ! Years of the forcing data
+  integer :: totyears
+  integer :: totdays
+  integer :: days_data ! days of the forcing data
+  real    :: timestep  ! hour, Time step of forcing data, usually hourly (1.0)
+  integer :: ntstepsyear_forcing                 ! 365*48 when half-hourly inputs, 365*24 when hourly inputs
+  type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
+  integer :: yr
+  logical, parameter :: verbose = .false.
+  integer :: iday
+
+  character(len=100) :: namelistfile = '/home/laura/rsofun/inst/extdata/parameters_Allocation.nml'
+
+  ! output arrays (naked) to be passed back to C/R
+  !real, dimension(:,:), allocatable  :: out_hourly_tile 
+  !real, dimension(:,:), allocatable  :: out_daily_tile       !fno4
+  !real, dimension(:,:,:), allocatable:: out_daily_cohorts    !fno3
+  real, dimension(:,:), allocatable  :: out_annual_tile      !fno5
+  real, dimension(:,:,:), allocatable:: out_annual_cohorts   !fno2
+
+  ! whether fast time step processes are simulated. If .false., then C, N, and W balance is simulated daily.
+  logical, parameter :: daily = .true.
+
+! xxxx !!!!!!!!!!!!!!!!!!!
   ! input and output arrays (naked) to be passed back to C/R
   real(kind=c_double), dimension(nt,13), intent(in) :: forcing
 
@@ -295,17 +326,9 @@ program main
     myinterface%params_siml%method_mortality = "bal"
   end if
 
-  !----------------------------------------------------------------
-  ! READ FORCING FILE
-  !----------------------------------------------------------------
-  call read_FACEforcing( forcingData, datalines, days_data, yr_data, timestep ) !! ORNL
-
-  !----------------------------------------------------------------
-  ! GET GRID INFORMATION
-  !----------------------------------------------------------------
-  myinterface%grid%lon = real( longitude )
-  myinterface%grid%lat = real( latitude )
-  myinterface%grid%elv = real( altitude )   
+  myinterface%grid%lon = longitude
+  myinterface%grid%lat = latitude
+  myinterface%grid%elv = altitude
 
   ! Tile parameters
   myinterface%params_tile%soiltype     = int(soiltype)
@@ -329,72 +352,72 @@ program main
   myinterface%params_tile%par_mort_under  = real( par_mort_under )
 
   ! Species parameters
-  myinterface%params_species(:)%lifeform      = lifeform XXX
-  myinterface%params_species(:)%phenotype     = int(  params_species(:,2))
-  myinterface%params_species(:)%pt            = int(  params_species(:,3))
-  myinterface%params_species(:)%alpha_FR      = real( params_species(:,4))
-  myinterface%params_species(:)%rho_FR        = real( params_species(:,5))
-  myinterface%params_species(:)%root_r        = real( params_species(:,6))
-  myinterface%params_species(:)%root_zeta     = real( params_species(:,7))
-  myinterface%params_species(:)%Kw_root       = real( params_species(:,8))
-  myinterface%params_species(:)%leaf_size     = real( params_species(:,9))
-  myinterface%params_species(:)%Vmax          = real( params_species(:,10))
-  myinterface%params_species(:)%Vannual       = real( params_species(:,11))
-  myinterface%params_species(:)%wet_leaf_dreg = real( params_species(:,12))
-  myinterface%params_species(:)%m_cond        = real( params_species(:,13))
-  myinterface%params_species(:)%alpha_phot    = real( params_species(:,14))
-  myinterface%params_species(:)%gamma_L       = real( params_species(:,15))
-  myinterface%params_species(:)%gamma_LN      = real( params_species(:,16))
-  myinterface%params_species(:)%gamma_SW      = real( params_species(:,17))
-  myinterface%params_species(:)%gamma_FR      = real( params_species(:,18))
-  myinterface%params_species(:)%tc_crit       = real( params_species(:,19))
-  myinterface%params_species(:)%tc_crit_on    = real( params_species(:,20))
-  myinterface%params_species(:)%gdd_crit      = real( params_species(:,21))
-  myinterface%params_species(:)%betaON        = real( params_species(:,22))
-  myinterface%params_species(:)%betaOFF       = real( params_species(:,23))
-  myinterface%params_species(:)%alphaHT       = real( params_species(:,24)) ! prescribed
-  myinterface%params_species(:)%thetaHT       = real( params_species(:,25)) ! prescribed
-  myinterface%params_species(:)%alphaCA       = real( params_species(:,26)) ! prescribed
-  myinterface%params_species(:)%thetaCA       = real( params_species(:,27)) ! prescribed
-  myinterface%params_species(:)%alphaBM       = real( params_species(:,28)) ! prescribed
-  myinterface%params_species(:)%thetaBM       = real( params_species(:,29)) ! prescribed
-  myinterface%params_species(:)%seedlingsize  = real( params_species(:,30))
-  myinterface%params_species(:)%maturalage    = real( params_species(:,31))
-  myinterface%params_species(:)%v_seed        = real( params_species(:,32))
-  myinterface%params_species(:)%mortrate_d_c  = real( params_species(:,33))
-  myinterface%params_species(:)%mortrate_d_u  = real( params_species(:,34))
-  myinterface%params_species(:)%LMA           = real( params_species(:,35)) ! prescribed
-  myinterface%params_species(:)%leafLS        = real( params_species(:,36))
-  myinterface%params_species(:)%LNbase        = real( params_species(:,37))
-  myinterface%params_species(:)%CNleafsupport = real( params_species(:,38))
-  myinterface%params_species(:)%rho_wood      = real( params_species(:,39)) ! prescribed
-  myinterface%params_species(:)%taperfactor   = real( params_species(:,40))
-  myinterface%params_species(:)%lAImax        = real( params_species(:,41))
-  myinterface%params_species(:)%tauNSC        = real( params_species(:,42))
-  myinterface%params_species(:)%fNSNmax       = real( params_species(:,43))
-  myinterface%params_species(:)%phiCSA        = real( params_species(:,44))
-  myinterface%params_species(:)%CNleaf0       = real( params_species(:,45))
-  myinterface%params_species(:)%CNsw0         = real( params_species(:,46))
-  myinterface%params_species(:)%CNwood0       = real( params_species(:,47))
-  myinterface%params_species(:)%CNroot0       = real( params_species(:,48))
-  myinterface%params_species(:)%CNseed0       = real( params_species(:,49))
-  myinterface%params_species(:)%Nfixrate0     = real( params_species(:,50))
-  myinterface%params_species(:)%NfixCost0     = real( params_species(:,51))
-  myinterface%params_species(:)%internal_gap_frac  = real( params_species(:,52))
-  myinterface%params_species(:)%kphio         = real( params_species(:,53)) ! calibratable
-  myinterface%params_species(:)%phiRL         = real( params_species(:,54)) ! calibratable
-  myinterface%params_species(:)%LAI_light     = real( params_species(:,55)) ! calibratable
+  myinterface%params_species%lifeform(:)          = lifeform
+  myinterface%params_species%phenotype(:)         = phenotype
+  myinterface%params_species%pt(:)                = pt
+  myinterface%params_species%alpha_FR(:)          = ralpha_FR
+  myinterface%params_species%rho_FR(:)            = rho_FR
+  myinterface%params_species%root_r(:)            = root_r
+  myinterface%params_species%root_zeta(:)         = root_zeta
+  myinterface%params_species%Kw_root(:)           = Kw_root
+  myinterface%params_species%leaf_size(:)         = leaf_size
+  myinterface%params_species%Vmax(:)              = Vmax
+  myinterface%params_species%Vannual(:)           = Vannual
+  myinterface%params_species%wet_leaf_dreg(:)     = wet_leaf_dreg
+  myinterface%params_species%m_cond(:)            = m_cond
+  myinterface%params_species%alpha_phot(:)        = alpha_phot
+  myinterface%params_species%gamma_L(:)           = gamma_L
+  myinterface%params_species%gamma_LN(:)          = gamma_LN
+  myinterface%params_species%gamma_SW(:)          = gamma_SW
+  myinterface%params_species%gamma_FR(:)          = gamma_FR
+  myinterface%params_species%tc_crit(:)           = tc_crit
+  myinterface%params_species%tc_crit_on(:)        = tc_crit_on
+  myinterface%params_species%gdd_crit(:)          = gdd_crit
+  myinterface%params_species%betaON(:)            = betaON
+  myinterface%params_species%betaOFF(:)           = betaOFF
+  myinterface%params_species%alphaHT(:)           = alphaHT
+  myinterface%params_species%thetaHT(:)           = thetaHT
+  myinterface%params_species%alphaCA(:)           = alphaCA
+  myinterface%params_species%thetaCA(:)           = thetaCA
+  myinterface%params_species%alphaBM(:)           = alphaBM
+  myinterface%params_species%thetaBM(:)           = thetaBM
+  myinterface%params_species%seedlingsize(:)      = seedlingsize
+  myinterface%params_species%maturalage(:)        = maturalage
+  myinterface%params_species%v_seed(:)            = v_seed
+  myinterface%params_species%mortrate_d_c(:)      = mortrate_d_c
+  myinterface%params_species%mortrate_d_u(:)      = mortrate_d_u
+  myinterface%params_species%LMA(:)               = LMA
+  myinterface%params_species%leafLS(:)            = leafLS
+  myinterface%params_species%LNbase(:)            = LNbase
+  myinterface%params_species%CNleafsupport(:)     = CNleafsupport
+  myinterface%params_species%rho_wood(:)          = rho_wood
+  myinterface%params_species%taperfactor(:)       = taperfactor
+  myinterface%params_species%lAImax(:)            = lAImax
+  myinterface%params_species%tauNSC(:)            = tauNSC
+  myinterface%params_species%fNSNmax(:)           = fNSNmax
+  myinterface%params_species%phiCSA(:)            = phiCSA
+  myinterface%params_species%CNleaf0(:)           = CNleaf0
+  myinterface%params_species%CNsw0(:)             = CNsw0
+  myinterface%params_species%CNwood0(:)           = CNwood0
+  myinterface%params_species%CNroot0(:)           = CNroot0
+  myinterface%params_species%CNseed0(:)           = CNseed0
+  myinterface%params_species%Nfixrate0(:)         = Nfixrate0
+  myinterface%params_species%NfixCost0(:)         = NfixCost0
+  myinterface%params_species%internal_gap_frac(:) = internal_gap_frac
+  myinterface%params_species%kphio(:)             = kphio
+  myinterface%params_species%phiRL(:)             = phiRL
+  myinterface%params_species%LAI_light(:)         = LAI_light
 
   ! Initial cohort sizes
-  myinterface%init_cohort(:)%init_n_cohorts      = int(init_cohort(:,1))
-  myinterface%init_cohort(:)%init_cohort_species = int(init_cohort(:,2))
-  myinterface%init_cohort(:)%init_cohort_nindivs = real(init_cohort(:,3))
-  myinterface%init_cohort(:)%init_cohort_bl      = real(init_cohort(:,4))
-  myinterface%init_cohort(:)%init_cohort_br      = real(init_cohort(:,5))
-  myinterface%init_cohort(:)%init_cohort_bsw     = real(init_cohort(:,6))
-  myinterface%init_cohort(:)%init_cohort_bHW     = real(init_cohort(:,7))
-  myinterface%init_cohort(:)%init_cohort_seedC   = real(init_cohort(:,8))
-  myinterface%init_cohort(:)%init_cohort_nsc     = real(init_cohort(:,9))
+  myinterface%init_cohort%init_n_cohorts(:)      = int(init_cohort(:,1))
+  myinterface%init_cohort%init_cohort_species(:) = int(init_cohort(:,2))
+  myinterface%init_cohort%init_cohort_nindivs(:) = real(init_cohort(:,3))
+  myinterface%init_cohort%init_cohort_bl(:)      = real(init_cohort(:,4))
+  myinterface%init_cohort%init_cohort_br(:)      = real(init_cohort(:,5))
+  myinterface%init_cohort%init_cohort_bsw(:)     = real(init_cohort(:,6))
+  myinterface%init_cohort%init_cohort_bHW(:)     = real(init_cohort(:,7))
+  myinterface%init_cohort%init_cohort_seedC(:)   = real(init_cohort(:,8))
+  myinterface%init_cohort%init_cohort_nsc(:)     = real(init_cohort(:,9))
 
   ! Initial soil pools
   myinterface%init_soil%init_fast_soil_C = real( init_fast_soil_C )
@@ -417,6 +440,11 @@ program main
   myinterface%params_soil%heat_capacity_dry(:) = real(params_soil(:,8))
 
   !----------------------------------------------------------------
+  ! READ FORCING FILE
+  !----------------------------------------------------------------
+  call read_FACEforcing( forcingData, datalines, days_data, yr_data, timestep ) !! ORNL
+
+  !----------------------------------------------------------------
   ! INTERPRET FORCING
   !----------------------------------------------------------------
   timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
@@ -432,8 +460,14 @@ program main
 
   allocate(myinterface%climate(ntstepsyear))
   allocate(myinterface%pco2(ntstepsyear))
-  ! allocate(out_biosphere_hourly_tile(ntstepsyear))
+  allocate(out_biosphere%hourly_tile(ntstepsyear))
 
+  allocate(out_hourly_tile(     ntstepsyear * myinterface%params_siml%nyeartrend,  nvars_hourly_tile                        ))
+  allocate(out_daily_cohorts(   ndayyear * myinterface%params_siml%nyeartrend,     out_max_cohorts,    nvars_daily_cohorts  ))
+  allocate(out_daily_tile(      ndayyear * myinterface%params_siml%nyeartrend,     nvars_daily_tile                         ))
+  allocate(out_annual_cohorts(  myinterface%params_siml%runyears,                  out_max_cohorts,    nvars_annual_cohorts ))
+  allocate(out_annual_tile(     myinterface%params_siml%runyears,                  nvars_annual_tile                        ))
+  
   yearloop: do yr=1, myinterface%params_siml%runyears
     !----------------------------------------------------------------
     ! Define simulations "steering" variables (forcingyear, etc.)
@@ -575,7 +609,16 @@ program main
 
   deallocate(myinterface%climate)
   deallocate(myinterface%pco2)
-  ! deallocate(out_biosphere_hourly_tile)
+  deallocate(out_biosphere%hourly_tile)
+  deallocate(out_hourly_tile)
+  deallocate(out_daily_cohorts)
+  deallocate(out_daily_tile)
+  deallocate(out_annual_cohorts)
+  deallocate(out_annual_tile)
+
+  100  format (A,I6,I6,F8.2)
+  777  format (F20.8,F20.8)
+  999  format (I4.4)
 
 contains
 
@@ -600,8 +643,8 @@ contains
     integer :: m,n
     integer :: idx_climatedata
 
-    character(len=80) :: filepath_in = '/Users/bestocke/sofun/input/'
-    character(len=80) :: climfile    = 'ORNL_forcing.txt'
+    character(len=80) :: filepath_in = '/home/laura/rsofun/data-raw/'
+    character(len=80) :: climfile    = 'CHLAE_forcing.txt'
 
     climfile=trim(filepath_in)//trim(climfile)
     write(*,*)'inputfile: ',climfile
