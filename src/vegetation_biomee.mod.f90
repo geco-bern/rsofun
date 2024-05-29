@@ -871,7 +871,7 @@ contains
         endif
 
         ! previous setup allowed death rates > 1 (hence negative ind)
-        deathrate = min(1.0, deathrate + 0.01) 
+        deathrate = min(1.0, deathrate + 0.01)  
         deadtrees = cc%nindivs * deathrate
 
         ! record mortality rates at cohort level
