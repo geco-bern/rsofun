@@ -8,7 +8,7 @@ module md_forcing_biomee
   implicit none
 
   private
-  public climate_type, getclimate, getco2
+  public climate_type, getclimate, getco2, forcingData
 
   type :: climate_type
     integer :: year          ! Year
@@ -26,6 +26,9 @@ module md_forcing_biomee
     real    :: soilwater     ! soil moisture, vol/vol
     real    :: vpd           ! vapour pressure deficit (Pa)
   end type climate_type
+
+  ! Input forcing data
+  type(climate_type), pointer, save :: forcingData(:)
 
 contains
 

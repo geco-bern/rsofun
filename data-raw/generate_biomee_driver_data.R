@@ -57,25 +57,25 @@ params_siml_pmodel <- params_siml
 params_siml_pmodel$method_photosynth <- "pmodel"
 
 params_tile <- tibble(
-  soiltype = 3,
-  FLDCAP = 0.4,
-  WILTPT = 0.05,
-  K1 = 2.0,
-  K2 = 0.05,
-  K_nitrogen = 8.0,
-  MLmixRatio = 0.8,
-  etaN = 0.025,
-  LMAmin = 0.02,
-  fsc_fine = 1.0,
-  fsc_wood = 0.0,
-  GR_factor = 0.33,
-  l_fract = 0.0,
-  retransN = 0.0,
-  f_initialBSW = 0.2,
-  f_N_add = 0.02,
-  tf_base = 1,
-  par_mort = 1,
-  par_mort_under = 1
+  soiltype          = 3,
+  FLDCAP           = 0.4,
+  WILTPT           = 0.05,
+  K1               = 2.0,
+  K2               = 0.05,
+  K_nitrogen       = 8.0,
+  MLmixRatio       = 0.8,
+  etaN             = 0.025,
+  LMAmin           = 0.02,
+  fsc_fine         = 1.0,
+  fsc_wood         = 0.0,
+  GR_factor        = 0.33,
+  l_fract          = 0.0,
+  retransN         = 0.0,
+  f_initialBSW     = 0.2,
+  f_N_add          = 0.02,
+  tf_base          = 1,
+  par_mort         = 1,
+  par_mort_under   = 1
 )
 
 params_species <- tibble(
@@ -102,8 +102,8 @@ params_species <- tibble(
   tc_crit       = rep(283.16,16),
   tc_crit_on    = rep(280.16,16),
   gdd_crit      = rep(280.0,16),
-  betaON        = rep(0,2,16),     
-  betaOFF       = rep(0,1,16), 
+  betaON        = rep(0.2,16),     
+  betaOFF       = rep(0.1,16), 
   # Allometry parameters
   alphaHT       = rep(36,16),                   
   thetaHT       = rep(0.5,16),                   

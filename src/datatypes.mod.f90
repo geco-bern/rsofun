@@ -241,8 +241,6 @@ module datatypes
 
   end type cohort_type
 
-
-
   !=============== Tile level data type ============================================================
   type :: vegn_tile_type
 
@@ -410,11 +408,11 @@ module datatypes
   integer :: MaxCohortID = 0
 
   !=============== Params_tile in R =============================================================
+  !!!!! Paramaeters Alocation
   !===== Soil water properties
   real   :: soiltype                                !Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
   real   :: FLDCAP                                  ! vol/vol 
   real   :: WILTPT                                  ! vol/vol
-
   !===== Carbon pools
   real   :: K1                                      ! Fast soil C decomposition rate (yr-1)
   real   :: K2                                      ! slow soil C decomposition rate (yr-1)
@@ -446,97 +444,148 @@ module datatypes
   real  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
   real  :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
   
-  !=============== Params_species in R ======================================================
+  !=============== Params_species  ======================================================
 
-  ! integer :: lifeform(0:MSPECIES) = 1 ! life form of PFTs: 0 for grasses, 1 for trees
-  ! integer :: phenotype(0:MSPECIES)= 0 ! 0 for Deciduous, 1 for evergreen
-  ! integer :: pt(0:MSPECIES) = 0 ! 0 for C3, 1 for C4
-
+  integer :: lifeform(0:MSPECIES) 
+  integer :: phenotype(0:MSPECIES) 
+  integer :: pt(0:MSPECIES) 
+ 
   !===== Root parameters
-  ! real :: alpha_FR(0:MSPECIES)         = 1.2 ! Fine root turnover rate yr-1
-  ! real :: rho_FR(0:MSPECIES)           = 200 ! material density of fine roots (kgC m-3)
-  ! real :: root_r(0:MSPECIES)           = 2.9E-4
-  ! real :: root_zeta(0:MSPECIES)        = 0.29 
-  ! real :: Kw_root(0:MSPECIES)          = 6.3E-8 * (1000000.0/18.0)*1.e-6 ! 3.5e-09 mol /(s m2 Mpa) 
-  ! !real :: rho_N_up0(0:MSPECIES)       = 0.5 ! fraction of mineral N per hour
-  ! !real :: N_roots0(0:MSPECIES)        = 0.3 ! kgC m-2
-  ! real :: leaf_size(0:MSPECIES)        = 0.04 
+  real :: alpha_FR(0:MSPECIES)          ! Fine root turnover rate yr-1
+  real :: rho_FR(0:MSPECIES)           ! material density of fine roots (kgC m-3)
+  real :: root_r(0:MSPECIES)           
+  real :: root_zeta(0:MSPECIES)       
+  real :: Kw_root(0:MSPECIES)          ! 3.5e-09 mol /(s m2 Mpa) 
+  !real :: rho_N_up0(0:MSPECIES)       = 0.5 ! fraction of mineral N per hour
+  !real :: N_roots0(0:MSPECIES)        = 0.3 ! kgC m-2
+  real :: leaf_size(0:MSPECIES)        
 
   !===== Photosynthesis parameters
-  ! real :: Vmax(0:MSPECIES)= 35.0E-6 ! mol m-2 s-1
-  ! real :: Vannual(0:MSPECIES) = 1.2 ! kgC m-2 yr-1
-  ! real :: wet_leaf_dreg(0:MSPECIES) = 0.3 ! wet leaf photosynthesis down-regulation: 0.3 means
+  real :: Vmax(0:MSPECIES)              ! mol m-2 s-1
+  real :: Vannual(0:MSPECIES)          ! kgC m-2 yr-1
+  real :: wet_leaf_dreg(0:MSPECIES)    ! wet leaf photosynthesis down-regulation: 0.3 means
   !       ! photosynthesis of completely wet leaf will be 30% less than that of dry one
-  ! real :: m_cond(0:MSPECIES)= 7.0 
-  ! real :: alpha_phot(0:MSPECIES)=  0.06 
-  ! real :: gamma_L(0:MSPECIES)= 0.02 
-  ! real :: gamma_LN(0:MSPECIES)= 70.5 ! 25.0  ! kgC kgN-1 yr-1
-  ! real :: gamma_SW(0:MSPECIES)= 0.08 ! 5.0e-4 ! kgC m-2 Acambium yr-1
-  ! real :: gamma_FR(0:MSPECIES)= 12.0 ! 15 !kgC kgN-1 yr-1 ! 0.6: kgC kgN-1 yr-1
-  ! real :: tc_crit(0:MSPECIES)= 283.16 ! OFF
-  ! real :: tc_crit_on(0:MSPECIES)= 280.16 ! ON
-  ! real :: gdd_crit(0:MSPECIES)= 280.0 ! Simulations 280, 240, 200
-  ! real :: betaON(0:MSPECIES)  != 0.2  ! Critical soil moisture for phenology ON
-  ! real :: betaOFF(0:MSPECIES) != 0.1  ! Critical soil moisture for phenology OFF
+  real :: m_cond(0:MSPECIES)           
+  real :: alpha_phot(0:MSPECIES)        
+  real :: gamma_L(0:MSPECIES)
+  real :: gamma_LN(0:MSPECIES) ! 25.0  ! kgC kgN-1 yr-1
+  real :: gamma_SW(0:MSPECIES) ! 5.0e-4 ! kgC m-2 Acambium yr-1
+  real :: gamma_FR(0:MSPECIES) ! 15 !kgC kgN-1 yr-1 ! 0.6: kgC kgN-1 yr-1
+  real :: tc_crit(0:MSPECIES)! OFF
+  real :: tc_crit_on(0:MSPECIES) ! ON
+  real :: gdd_crit(0:MSPECIES)! Simulations 280, 240, 200
+  real :: betaON(0:MSPECIES)  != 0.2  ! Critical soil moisture for phenology ON
+  real :: betaOFF(0:MSPECIES) != 0.1  ! Critical soil moisture for phenology OFF
 
   !===== Allometry parameters
-  ! real :: alphaHT(0:MSPECIES)      = 36.0
-  ! real :: thetaHT(0:MSPECIES)      = 0.5 
-  ! real :: alphaCA(0:MSPECIES)      = 150.0
-  ! real :: thetaCA(0:MSPECIES)      = 1.5
-  ! real :: alphaBM(0:MSPECIES)      = !In Ensheng BiomeE: 5200.0
-  ! real :: thetaBM(0:MSPECIES)      = 2.36 ! Beech (2.36); Spruce (2.30); Fir (2.45) In Ensheng BiomeE: 2.5
+  real :: alphaHT(0:MSPECIES)     
+  real :: thetaHT(0:MSPECIES)     
+  real :: alphaCA(0:MSPECIES)     
+  real :: thetaCA(0:MSPECIES)     
+  real :: alphaBM(0:MSPECIES)     
+  real :: thetaBM(0:MSPECIES)     ! Beech (2.36); Spruce (2.30); Fir (2.45) In Ensheng BiomeE: 2.5
 
   !===== Reproduction parameters
-  ! real :: maturalage(0:MSPECIES) = 5.0  ! year
-  ! real :: v_seed(0:MSPECIES)       = 0.1  ! fraction of allocation to wood+seeds
-  ! real :: seedlingsize(0:MSPECIES) = 0.05 ! kgC
+  real :: maturalage(0:MSPECIES)   != 5.0  ! year
+  real :: v_seed(0:MSPECIES)       != 0.1  ! fraction of allocation to wood+seeds
+  real :: seedlingsize(0:MSPECIES) != 0.05 ! kgC
   real :: prob_g(0:MSPECIES)       = 1.0
   real :: prob_e(0:MSPECIES)       = 1.0
 
   !===== Mortality
-  ! real :: mortrate_d_c(0:MSPECIES) = 0.01 ! yearly
-  ! real :: mortrate_d_u(0:MSPECIES) = 0.075
+  real :: mortrate_d_c(0:MSPECIES) != 0.01 ! yearly
+  real :: mortrate_d_u(0:MSPECIES) != 0.075
 
   !===== Leaf parameters
-  ! real :: LMA(0:MSPECIES)         = 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2 LMA = 1/SLA 0.05 for Fagus
-  ! real :: leafLS(0:MSPECIES) = 1.0
-  ! real :: LNbase(0:MSPECIES)        = 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
-  ! real :: CNleafsupport(0:MSPECIES) = 80.0 ! CN ratio of leaf supporting tissues
-  ! real :: rho_wood(0:MSPECIES)      = 590.0 ! kgC m-3 (Simulations: 300, 600, 800) Beech (590); Spruce (370); Fir (350)
-  ! real :: taperfactor(0:MSPECIES)   = 0.75 ! taper factor, from a cylinder to a tree
-  ! real :: LAImax(0:MSPECIES)        != 3.5 ! maximum LAI for a tree
-  ! real :: LAI_light(0:MSPECIES)     != 4.0 ! maximum LAI limited by light
-  ! real :: tauNSC(0:MSPECIES)        = 3 ! 3 ! NSC residence time,years
-  ! real :: fNSNmax(0:MSPECIES)       = 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
-  ! real :: phiRL(0:MSPECIES)       = 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
-  ! real :: phiCSA(0:MSPECIES)        = 0.25E-4 ! ratio of sapwood area to leaf area
+  real :: LMA(0:MSPECIES)           != 0.035  ! (Simulations: 0.035, 0.085, 0.135) leaf mass per unit area, kg C/m2 LMA = 1/SLA 0.05 for Fagus
+  real :: leafLS(0:MSPECIES)        != 1.0
+  real :: LNbase(0:MSPECIES)        != 0.8E-3 !functional nitrogen per unit leaf area, kg N/m2
+  real :: CNleafsupport(0:MSPECIES) != 80.0 ! CN ratio of leaf supporting tissues
+  real :: rho_wood(0:MSPECIES)      != 590.0 ! kgC m-3 (Simulations: 300, 600, 800) Beech (590); Spruce (370); Fir (350)
+  real :: taperfactor(0:MSPECIES)   != 0.75 ! taper factor, from a cylinder to a tree
+  real :: LAImax(0:MSPECIES)        !!= 3.5 ! maximum LAI for a tree
+  real :: LAI_light(0:MSPECIES)     !!= 4.0 ! maximum LAI limited by light
+  real :: tauNSC(0:MSPECIES)        != 3 ! 3 ! NSC residence time,years
+  real :: fNSNmax(0:MSPECIES)       != 5 ! 5 ! multilier for NSNmax as sum of potential bl and br
+  real :: phiCSA(0:MSPECIES)        != 0.25E-4 ! ratio of sapwood area to leaf area
   
   ! C/N ratios for plant pools
-  ! real :: CNleaf0(0:MSPECIES)   = 25. ! C/N ratios for leaves
-  ! real :: CNsw0(0:MSPECIES)     = 350.0 ! C/N ratios for woody biomass
-  ! real :: CNwood0(0:MSPECIES)   = 350.0 ! C/N ratios for woody biomass
-  ! real :: CNroot0(0:MSPECIES)   = 40.0 ! C/N ratios for leaves ! Gordon & Jackson 2000
-  ! real :: CNseed0(0:MSPECIES)   = 20.0 ! C/N ratios for seeds
-  ! real :: NfixRate0(0:MSPECIES) = 0.0 !Reference N fixation rate (0.03 kgN kgC-1 root yr-1)
-  ! real :: NfixCost0(0:MSPECIES) = 12.0 ! FUN model, Fisher et al. 2010, GBC
+  real :: CNleaf0(0:MSPECIES)   != 25. ! C/N ratios for leaves
+  real :: CNsw0(0:MSPECIES)     != 350.0 ! C/N ratios for woody biomass
+  real :: CNwood0(0:MSPECIES)   != 350.0 ! C/N ratios for woody biomass
+  real :: CNroot0(0:MSPECIES)   != 40.0 ! C/N ratios for leaves ! Gordon & Jackson 2000
+  real :: CNseed0(0:MSPECIES)   != 20.0 ! C/N ratios for seeds
+  real :: NfixRate0(0:MSPECIES) != 0.0 !Reference N fixation rate (0.03 kgN kgC-1 root yr-1)
+  real :: NfixCost0(0:MSPECIES) != 12.0 ! FUN model, Fisher et al. 2010, GBC
   
-  ! real :: internal_gap_frac(0:MSPECIES)= 0.1 ! The gaps between trees
+  real :: internal_gap_frac(0:MSPECIES)  != 0.1 ! The gaps between trees
+  real :: kphio(0:MSPECIES)            
+  real :: phiRL(0:MSPECIES)         != 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
+
+  real    :: GMD                                ! geometric mean partice diameter, mm
+  real    :: GSD                                ! geometric standard deviation of particle size
+ ! real    :: vwc_wilt
+  !real    :: vwc_fc
+  real    :: vwc_sat
+  real    :: chb                                ! Soil texture parameter
+  real    :: psi_sat_ref                        ! saturation soil water potential, m
+  real    :: k_sat_ref                          ! hydraulic conductivity of saturated soil, kg/(m2 s)
+  !real    :: vlc_min
+  real    :: alphaSoil                            ! vertical changes of soil property, 1: no change
+  real    :: heat_capacity_dry
+  !real    :: tfreeze
 
   !=============== Params_soil in R ============================================================
   ! Soil parameters passed through R : paramX(n_dim_soil_types)
 
   !=============== Initial cohort specifications in R ============================================
   ! Initial values passed through R 
-  ! integer :: init_n_cohorts                        = MAX_INIT_COHORTS
-  ! integer :: init_cohort_species(MAX_INIT_COHORTS) = 2
-  ! real    :: init_cohort_nindivs(MAX_INIT_COHORTS) = 1.0  ! initial individual density, individual/m2
-  ! real    :: init_cohort_bl(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of leaves, kg C/individual
-  ! real    :: init_cohort_br(MAX_INIT_COHORTS)      = 0.0  ! initial biomass of fine roots, kg C/individual
-  ! real    :: init_cohort_bsw(MAX_INIT_COHORTS)     = 0.05 ! initial biomass of sapwood, kg C/individual
-  ! real    :: init_cohort_bHW(MAX_INIT_COHORTS)     = 0.0  ! initial biomass of heartwood, kg C/tree
-  ! real    :: init_cohort_seedC(MAX_INIT_COHORTS)   = 0.0  ! initial biomass of seeds, kg C/individual
-  ! real    :: init_cohort_nsc(MAX_INIT_COHORTS)     = 0.05 ! initial non-structural biomass, kg C/
+  integer :: init_n_cohorts                        != MAX_INIT_COHORTS
+  integer :: init_cohort_species(MAX_INIT_COHORTS) != 2
+  real    :: init_cohort_nindivs(MAX_INIT_COHORTS) != 1.0  ! initial individual density, individual/m2
+  real    :: init_cohort_bl(MAX_INIT_COHORTS)      != 0.0  ! initial biomass of leaves, kg C/individual
+  real    :: init_cohort_br(MAX_INIT_COHORTS)      != 0.0  ! initial biomass of fine roots, kg C/individual
+  real    :: init_cohort_bsw(MAX_INIT_COHORTS)     != 0.05 ! initial biomass of sapwood, kg C/individual
+  real    :: init_cohort_bHW(MAX_INIT_COHORTS)     != 0.0  ! initial biomass of heartwood, kg C/tree
+  real    :: init_cohort_seedC(MAX_INIT_COHORTS)   != 0.0  ! initial biomass of seeds, kg C/individual
+  real    :: init_cohort_nsc(MAX_INIT_COHORTS)     != 0.05 ! initial non-structural biomass, kg C/
+  !  initial soil Carbon and Nitrogen for a vegn tile, Weng 2012-10-24
+  real   :: init_fast_soil_C  != 0.0  ! initial fast soil C, kg C/m2
+  real   :: init_slow_soil_C  != 0.0  ! initial slow soil C, kg C/m2
+  real   :: init_Nmineral     != 0.015  ! Mineral nitrogen pool, (kg N/m2)
+  real   :: N_input           != 0.0008 ! annual N input to soil N pool, kgN m-2 yr-1
+
+  character(len=80) :: filepath_in 
+  character(len=160) :: climfile 
+  !integer   :: model_run_years = 100 
+  !integer   :: runyears = 100  
+  integer   :: equi_days       = 0 ! 100 * 365
+  character(len=80) :: sitename 
+  real   :: longitude
+  real   :: latitude
+  real   :: altitude
+  integer :: year_start
+  integer :: year_end
+  character(len=80) :: classid 
+  logical   :: c4 = .False.
+  character(len=80) :: whc 
+  character(len=160) :: koeppen_code 
+  character(len=160) :: igbp_land_use 
+  character(len=160) :: plant_functional_type 
+  logical   :: spinup = .False.
+  integer :: spinupyears
+  integer :: recycle
+  integer :: firstyeartrend
+  integer :: nyeartrend
+  logical   :: outputhourly 
+  logical   :: outputdaily  
+  logical   :: do_U_shaped_mortality
+  logical   :: update_annualLAImax 
+  logical   :: do_closedN_run 
+  logical   :: do_reset_veg 
+  real      :: dist_frequency
+  character(len=80) :: method_photosynth 
+  character(len=80) :: method_mortality 
 
   !=============== Initial soil pools in R ======================================================
   !  initial soil Carbon and Nitrogen for a vegn tile, Weng 2012-10-24 passed through R
@@ -548,6 +597,12 @@ contains
   subroutine initialize_soilpars()
     use md_interface_biomee, only: myinterface
     ! character(len=50),intent(in) :: namelistfile
+
+    ! ---- local vars
+    integer :: io           ! i/o status for the namelist
+    integer :: ierr         ! error code, returned by i/o routines
+    integer :: i
+    integer :: nml_unit
   
     ! initialize soil parameters
     soilpars%GMD               = myinterface%params_soil%GMD(:) ! geometric mean partice diameter, mm
@@ -576,8 +631,11 @@ contains
 
     use md_interface_biomee, only: myinterface
 
-    ! ---- local vars ------
+    ! ---- local vars
+    integer :: io           ! i/o status for the namelist
+    integer :: ierr         ! error code, returned by i/o routines
     integer :: i
+    integer :: nml_unit
 
     ! initialize vegetation data structure
     spdata(0:MSPECIES)%lifeform      = myinterface%params_species(1:(MSPECIES+1))%lifeform
@@ -882,7 +940,7 @@ contains
   end subroutine summarize_tile
 
 
-  subroutine hourly_diagnostics(vegn, forcing)  !, iyears, idoy, ihour, out_hourly_tile
+  subroutine hourly_diagnostics(vegn, forcing, iyears, idoy, ihour, iday, fno1, out_hourly_tile)
     !////////////////////////////////////////////////////////////////////////
     ! Updates sub-daily tile-level variables and takes running daily sums
     !------------------------------------------------------------------------
@@ -891,8 +949,8 @@ contains
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type),intent(in):: forcing
-    ! integer, intent(in) :: iyears, idoy, ihour
-    ! type(outtype_hourly_tile),intent(out) :: out_hourly_tile 
+    integer, intent(in) :: iyears, idoy, ihour, iday, fno1
+    type(outtype_hourly_tile),intent(out) :: out_hourly_tile 
 
     ! local variables
     type(cohort_type), pointer :: cc    ! current cohort
@@ -955,7 +1013,7 @@ contains
   end subroutine hourly_diagnostics
 
 
-  subroutine daily_diagnostics( vegn , iyears, idoy, out_daily_tile )  ! , out_daily_cohorts 
+  subroutine daily_diagnostics(vegn, forcing, iyears, idoy, iday, fno3, fno4, out_daily_cohorts, out_daily_tile)
     !////////////////////////////////////////////////////////////////////////
     ! Updates daily tile-level variables and takes running annual sums
     !------------------------------------------------------------------------
@@ -963,8 +1021,9 @@ contains
     use md_interface_biomee, only: outtype_daily_cohorts, outtype_daily_tile
 
     type(vegn_tile_type), intent(inout) :: vegn
-    integer, intent(in) :: iyears, idoy
-    ! type(outtype_daily_cohorts), dimension(out_max_cohorts), intent(out) :: out_daily_cohorts
+    type(climate_type),intent(in):: forcing
+    integer, intent(in) :: iyears, idoy, iday, fno3, fno4
+    type(outtype_daily_cohorts), dimension(out_max_cohorts), intent(out) :: out_daily_cohorts
     type(outtype_daily_tile), intent(out) :: out_daily_tile
 
     ! local variables

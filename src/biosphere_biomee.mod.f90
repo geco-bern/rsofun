@@ -15,14 +15,14 @@ module md_biosphere_biomee
   public biosphere_annual
 
   type(vegn_tile_type), pointer :: vegn   
-  ! type(soil_tile_type),  pointer :: soil
-  ! type(cohort_type),     pointer :: cx, cc
+  type(soil_tile_type),  pointer :: soil
+  type(cohort_type),     pointer :: cx, cc
 
 contains
 
-  subroutine biosphere_annual( &
+  subroutine biosphere_annual(  &
     out_biosphere_daily_tile, &
-    ! out_biosphere_daily_cohorts, &
+    out_biosphere_daily_cohorts, &
     out_biosphere_annual_tile, &
     out_biosphere_annual_cohorts &
     )
@@ -37,8 +37,10 @@ contains
     use md_gpp_biomee, only: getpar_modl_gpp
 
     ! return variables
+    ! return variable
+    !type(outtype_biosphere), intent(inout) :: out_biosphere
     type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
-    ! type(outtype_daily_cohorts),  dimension(ndayyear,out_max_cohorts), intent(out) :: out_biosphere_daily_cohorts
+    type(outtype_daily_cohorts),  dimension(ndayyear,out_max_cohorts), intent(out) :: out_biosphere_daily_cohorts
     type(outtype_annual_tile)                                        , intent(out) :: out_biosphere_annual_tile
     type(outtype_annual_cohorts), dimension(out_max_cohorts)         , intent(out) :: out_biosphere_annual_cohorts
 
@@ -59,7 +61,8 @@ contains
     integer, save :: iyears
     integer, save :: idays
     integer, save :: idoy
-    
+    integer :: istat1, istat3, fno2, fno5
+
     character(len=150) :: plantcohorts, plantCNpools, soilCNpools, allpools, faststepfluxes  ! output file names
     character(len=50) :: filepath_out, filesuffix
     character(len=50) :: parameterfile(10), chaSOM(10)
@@ -76,15 +79,15 @@ contains
     allpools       = trim(filepath_out)//'Annual_tile'//trim(filesuffix)
     faststepfluxes = trim(filepath_out)//'Hourly_tile'//trim(filesuffix) ! hourly, has 15 columns and 
 
-    fno1=91
+    !fno1=91
     fno2=101
-    fno3=102
-    fno4=103
+    !fno3=102
+    !fno4=103
     fno5=104
-    open(fno1, file=trim(faststepfluxes), ACTION='write', IOSTAT=istat1)
+    !open(fno1, file=trim(faststepfluxes), ACTION='write', IOSTAT=istat1)
     open(fno2, file=trim(plantcohorts),   ACTION='write', IOSTAT=istat1)
-    open(fno3, file=trim(plantCNpools),   ACTION='write', IOSTAT=istat2)
-    open(fno4, file=trim(soilCNpools),    ACTION='write', IOSTAT=istat3)
+    !open(fno3, file=trim(plantCNpools),   ACTION='write', IOSTAT=istat2)
+    !open(fno4, file=trim(soilCNpools),    ACTION='write', IOSTAT=istat3)
     open(fno5, file=trim(allpools),       ACTION='write', IOSTAT=istat3)
 
     !----------------------------------------------------------------
@@ -226,7 +229,7 @@ contains
     ! cohorts again and we want annual output and daily
     ! output to be consistent with cohort identities.
     !---------------------------------------------
-    call annual_diagnostics( vegn, iyears, out_biosphere_annual_cohorts(:), out_biosphere_annual_tile )
+    call annual_diagnostics( vegn, iyears, fno2, fno5, out_biosphere_annual_cohorts(:), out_biosphere_annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality

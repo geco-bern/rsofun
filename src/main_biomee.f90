@@ -8,7 +8,7 @@ program main
   use md_params_siml_biomee, only: getsteering
   use md_forcing_biomee, only: getclimate, &
     getco2, &
-    climate_type
+    climate_type, forcingData
   use md_interface_biomee, only: interfacetype_biosphere, &
     myinterface, &
     outtype_biosphere, &
@@ -23,64 +23,70 @@ program main
   implicit none
 
   ! Simulation parameters
-  logical(kind=c_bool), intent(in) :: spinup
-  integer(kind=c_int),  intent(in) :: spinupyears
-  integer(kind=c_int),  intent(in) :: recycle
-  integer(kind=c_int),  intent(in) :: firstyeartrend
-  integer(kind=c_int),  intent(in) :: nyeartrend
-  integer(kind=c_int),  intent(in) :: runyears
+  !logical :: spinup
+  !integer :: spinupyears
+  !integer :: recycle
+  !integer :: firstyeartrend
+  !integer :: nyeartrend
+  !integer :: runyears
 
-  logical(kind=c_bool), intent(in) :: outputhourly
-  logical(kind=c_bool), intent(in) :: outputdaily
-  logical(kind=c_bool), intent(in) :: do_U_shaped_mortality
-  logical(kind=c_bool), intent(in) :: update_annualLAImax
-  logical(kind=c_bool), intent(in) :: do_closedN_run
-  logical(kind=c_bool), intent(in) :: do_reset_veg
-  integer(kind=c_int),  intent(in) :: dist_frequency
-  integer(kind=c_int),  intent(in) :: code_method_photosynth
-  integer(kind=c_int),  intent(in) :: code_method_mortality
+  !logical :: outputhourly
+  !logical :: outputdaily
+  !logical :: do_U_shaped_mortality
+  !logical :: update_annualLAImax
+  !logical :: do_closedN_run
+  !logical :: do_reset_veg
+  !integer :: dist_frequency
+  !integer :: code_method_photosynth
+  !integer :: code_method_mortality
 
   ! site information
-  real(kind=c_double),  intent(in) :: longitude
-  real(kind=c_double),  intent(in) :: latitude
-  real(kind=c_double),  intent(in) :: altitude
+  !real :: longitude
+  !real :: latitude
+  !real :: altitude
+  
+  integer :: idx
+  ! integer :: idx_hourly_start
+  ! integer :: idx_hourly_end
+  integer :: idx_daily_start
+  integer :: idx_daily_end
 
   ! Tile parameters
-  integer(kind=c_int), intent(in) :: soiltype
-  real(kind=c_double), intent(in) :: FLDCAP
-  real(kind=c_double), intent(in) :: WILTPT
-  real(kind=c_double), intent(in) :: K1
-  real(kind=c_double), intent(in) :: K2
-  real(kind=c_double), intent(in) :: K_nitrogen
-  real(kind=c_double), intent(in) :: MLmixRatio
-  real(kind=c_double), intent(in) :: etaN
-  real(kind=c_double), intent(in) :: LMAmin
-  real(kind=c_double), intent(in) :: fsc_fine
-  real(kind=c_double), intent(in) :: fsc_wood
-  real(kind=c_double), intent(in) :: GR_factor
-  real(kind=c_double), intent(in) :: l_fract
-  real(kind=c_double), intent(in) :: retransN
-  real(kind=c_double), intent(in) :: f_initialBSW
-  real(kind=c_double), intent(in) :: f_N_add
-  real(kind=c_double), intent(in) :: tf_base
-  real(kind=c_double), intent(in) :: par_mort
-  real(kind=c_double), intent(in) :: par_mort_under
+  !integer :: soiltype
+  !real :: FLDCAP
+  !real :: WILTPT
+  !real :: K1
+  !real :: K2
+  !real :: K_nitrogen
+  !real :: MLmixRatio
+  !real :: etaN
+  !real :: LMAmin
+  !real :: fsc_fine
+  !real :: fsc_wood
+  !real :: GR_factor
+  !real :: l_fract
+  !real :: retransN
+  !real :: f_initialBSW
+  !real :: f_N_add
+  !real :: tf_base
+  !real :: par_mort
+  !real :: par_mort_under
 
   ! naked arrays
-  real(kind=c_double), dimension(0:MSPECIES,55), intent(in)       :: params_species
-  real(kind=c_double), dimension(n_dim_soil_types,8), intent(in)  :: params_soil
-  real(kind=c_double), dimension(MAX_INIT_COHORTS,9),  intent(in) :: init_cohort
+  real, dimension(0:MSPECIES,55)      :: params_species
+  real, dimension(n_dim_soil_types,8) :: params_soil
+  real, dimension(MAX_INIT_COHORTS,9) :: init_cohort
 
   ! initial soil pool size
-  real(kind=c_double), intent(in) :: init_fast_soil_C
-  real(kind=c_double), intent(in) :: init_slow_soil_C
-  real(kind=c_double), intent(in) :: init_Nmineral
-  real(kind=c_double), intent(in) :: N_input
+  !real :: init_fast_soil_C
+  !real :: init_slow_soil_C
+  !real :: init_Nmineral
+  !real :: N_input
 
-  integer(kind=c_int), intent(in) :: nt
-  integer(kind=c_int), intent(in) :: nt_daily
-  integer(kind=c_int), intent(in) :: nt_annual
-  integer(kind=c_int), intent(in) :: nt_annual_cohorts
+  integer :: nt
+  integer :: nt_daily
+  integer :: nt_annual
+  integer :: nt_annual_cohorts
 
   !----------------------------------------------------------------
   ! LOCAL VARIABLES READ FROM/TO FILE/OUTPUT
@@ -91,7 +97,7 @@ program main
   integer :: totyears
   integer :: totdays
   integer :: days_data ! days of the forcing data
-  real    :: timestep  ! hour, Time step of forcing data, usually hourly (1.0)
+  real    :: timestep, timestep_d  ! hour, Time step of forcing data, usually hourly (1.0)
   integer :: ntstepsyear_forcing                 ! 365*48 when half-hourly inputs, 365*24 when hourly inputs
   type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
   integer :: yr
@@ -108,14 +114,14 @@ program main
   real, dimension(:,:,:), allocatable:: out_annual_cohorts   !fno2
 
   ! whether fast time step processes are simulated. If .false., then C, N, and W balance is simulated daily.
-  logical, parameter :: daily = .true.
+  !logical, parameter :: daily = .true.
 
 ! xxxx !!!!!!!!!!!!!!!!!!!
   ! input and output arrays (naked) to be passed back to C/R
-  real(kind=c_double), dimension(nt,13), intent(in) :: forcing
+  !real(kind=c_double), dimension(nt,13), intent(in) :: forcing
 
   ! real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
-  real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
+  !real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
 
   ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_year
   ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_doy
@@ -145,58 +151,48 @@ program main
   ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_SW_N
   ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_HW_N
 
-  real(kind=c_double), dimension(nt_annual,nvars_annual_tile), intent(out) :: output_annual_tile ! nvars_annual_tile = 51
-
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_year
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_cID
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_PFT
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_layer
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_density
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_flayer
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_DBH
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_dDBH
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_height
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_age
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_BA
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_dBA
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Acrown
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Aleaf
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_nsc
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_nsn
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_seedC
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_leafC
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_rootC
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_sapwC
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_woodC
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_treeG
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_fseed
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_fleaf
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_froot
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_fwood
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_GPP
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_NPP
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Rauto
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Nupt
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Nfix
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_n_deadtrees
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_c_deadtrees
-  real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_deathrate
+  !real(kind=c_double), dimension(nt_annual,nvars_annual_tile), intent(out) :: output_annual_tile ! nvars_annual_tile = 51
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_year
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_cID
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_PFT
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_layer
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_density
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_flayer
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_DBH
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_dDBH
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_height
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_age
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_BA
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_dBA
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Acrown
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Aleaf
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_nsc
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_nsn
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_seedC
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_leafC
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_rootC
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_sapwC
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_woodC
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_treeG
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_fseed
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_fleaf
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_froot
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_fwood
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_GPP
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_NPP
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Rauto
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Nupt
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_Nfix
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_n_deadtrees
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_c_deadtrees
+  !real(kind=c_double), dimension(nt_annual_cohorts,out_max_cohorts), intent(out) :: output_annual_cohorts_deathrate
 
   ! local variables
   ! type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
-  type(outtype_daily_tile),     dimension(ndayyear)                 :: out_biosphere_daily_tile
+  !type(outtype_daily_tile),     dimension(ndayyear)                 :: out_biosphere_daily_tile
   ! type(outtype_daily_cohorts),  dimension(ndayyear,out_max_cohorts) :: out_biosphere_daily_cohorts
-  type(outtype_annual_tile)                                         :: out_biosphere_annual_tile
-  type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: out_biosphere_annual_cohorts
-
-  real                    :: timestep, timestep_d
-  integer                 :: yr
-  
-  integer :: idx
-  ! integer :: idx_hourly_start
-  ! integer :: idx_hourly_end
-  integer :: idx_daily_start
-  integer :: idx_daily_end
+  !type(outtype_annual_tile)                                         :: out_biosphere_annual_tile
+  !type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: out_biosphere_annual_cohorts
 
   !----------------------------------------------------------------
   ! DECLARATIONS TO READ FROM NAMELIST FILE
@@ -205,35 +201,87 @@ program main
   integer :: ierr         ! error code, returned by i/o routines
   integer :: i
   integer :: nml_unit
-
   integer :: j
 
   namelist /vegn_parameters_nml/  &
-  soiltype, FLDCAP, WILTPT, &
-  pt, phenotype, lifeform, &
-  Vmax, Vannual,wet_leaf_dreg,   &
-  gamma_L, gamma_LN, gamma_SW, gamma_FR,  &
-  rho_FR, root_r, root_zeta,Kw_root, &
-  !rho_N_up0, N_roots0, &
-  leaf_size, leafLS, LAImax, LAI_light,   &
-  LMA, LNbase, CNleafsupport, c_LLS,      &
-  K1,K2, K_nitrogen, etaN, MLmixRatio,    &
-  LMAmin, fsc_fine, fsc_wood, &
-  GR_factor, l_fract, retransN,f_N_add,   &
-  f_initialBSW,f_LFR_max,  &
-  gdd_crit,tc_crit, tc_crit_on, &
-  alphaHT, thetaHT, alphaCA, thetaCA, alphaBM, thetaBM, &
-  maturalage, v_seed, seedlingsize, prob_g,prob_e,      &
-  mortrate_d_c, mortrate_d_u, A_mort, B_mort,DBHtp,     &
-  phiRL, phiCSA, rho_wood, taperfactor, &
-  tauNSC, fNSNmax, understory_lai_factor, &
-  CNleaf0,CNsw0,CNwood0,CNroot0,CNseed0, &
-  NfixRate0, NfixCost0,  &
-  internal_gap_frac
+  soiltype        ,&
+  FLDCAP          ,&
+  WILTPT          ,&
+  K1              ,&
+  K2              ,&
+  K_nitrogen      ,&
+  MLmixRatio      ,&
+  etaN            ,&
+  LMAmin          ,&
+  fsc_fine        ,&
+  fsc_wood        ,&
+  GR_factor       ,&
+  l_fract         ,&
+  retransN        ,&
+  f_initialBSW    ,&
+  f_N_add         ,& 
+  tf_base         ,&
+  par_mort        ,&
+  par_mort_under  ,&
+  lifeform        ,&
+  phenotype       ,&
+  pt              ,&
+  alpha_FR        ,&
+  rho_FR          ,&
+  root_r          ,&
+  root_zeta       ,&
+  Kw_root         ,&
+  leaf_size       ,&
+  Vmax            ,&
+  Vannual         ,&
+  wet_leaf_dreg   ,&
+  m_cond          ,&
+  alpha_phot      ,&
+  gamma_L         ,&
+  gamma_LN        ,&
+  gamma_SW        ,&
+  gamma_FR        ,&
+  tc_crit         ,&
+  tc_crit_on      ,&
+  gdd_crit        ,&
+  betaON          ,&
+  betaOFF         ,&
+  alphaHT         ,&       
+  thetaHT         ,&        
+  alphaCA         ,&        
+  thetaCA         ,&        
+  alphaBM         ,&         
+  thetaBM         ,&
+  seedlingsize    ,&
+  maturalage      ,&
+  v_seed          ,&
+  mortrate_d_c    ,&     
+  mortrate_d_u    ,&
+  LMA             ,&
+  leafLS          ,&
+  LNbase          ,&
+  CNleafsupport   ,&
+  rho_wood        ,&
+  taperfactor     ,&
+  lAImax          ,&
+  tauNSC          ,&
+  fNSNmax         ,&     
+  phiCSA          ,&
+  CNleaf0         ,&
+  CNsw0           ,&
+  CNwood0         ,&
+  CNroot0         ,&
+  CNseed0         ,&
+  Nfixrate0       ,&
+  NfixCost0       ,&
+  internal_gap_frac,&     
+  kphio           ,&
+  phiRL           ,&
+  LAI_light     
 
   namelist /soil_data_nml/ &
-  GMD, GSD, vwc_sat,k_sat_ref, psi_sat_ref, &
-  chb, alphaSoil,heat_capacity_dry
+  GMD, GSD, vwc_sat,chb, psi_sat_ref, &
+  k_sat_ref, alphaSoil,heat_capacity_dry
 
   namelist /initial_state_nml/ &
   init_n_cohorts, init_cohort_species, init_cohort_nindivs, &
@@ -242,14 +290,17 @@ program main
   init_fast_soil_C, init_slow_soil_C,    & 
   init_Nmineral, N_input,  &
   filepath_in,climfile, &
-  equi_days, &
+  sitename, longitude, latitude, altitude, &
+  year_start, year_end, classid,c4, whc, &
+  koeppen_code, igbp_land_use, plant_functional_type, &
+  spinup, spinupyears, recycle, firstyeartrend, nyeartrend, &
+  !equi_days, &
   outputhourly, &
   outputdaily, &
   do_U_shaped_mortality, &
   update_annualLAImax, &
   do_closedN_run, &
-  spinup, spinupyears, recycle, firstyeartrend, nyeartrend, &
-  longitude, latitude, altitude
+  do_reset_veg, dist_frequency, method_photosynth, method_photosynth
 
   !----------------------------------------------------------------
   ! READ FROM NAMELIST FILE
@@ -306,138 +357,119 @@ program main
   myinterface%params_siml%do_reset_veg          = do_reset_veg  
   myinterface%params_siml%dist_frequency        = dist_frequency           
   
-  ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
-  if (code_method_photosynth == 1) then
-    myinterface%params_siml%method_photosynth = "gs_leuning"
-  else if (code_method_photosynth == 2) then
-    myinterface%params_siml%method_photosynth = "pmodel"
-  end if
-
-  ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
-  if (code_method_mortality == 1) then
-    myinterface%params_siml%method_mortality = "cstarvation"
-  else if (code_method_mortality == 2) then
-    myinterface%params_siml%method_mortality = "growthrate"
-  else if (code_method_mortality == 3) then
-    myinterface%params_siml%method_mortality = "dbh"
-  else if (code_method_mortality == 4) then
-    myinterface%params_siml%method_mortality = "const_selfthin"
-  else if (code_method_mortality == 5) then
-    myinterface%params_siml%method_mortality = "bal"
-  end if
 
   myinterface%grid%lon = longitude
   myinterface%grid%lat = latitude
   myinterface%grid%elv = altitude
 
   ! Tile parameters
-  myinterface%params_tile%soiltype     = int(soiltype)
-  myinterface%params_tile%FLDCAP       = real( FLDCAP )
-  myinterface%params_tile%WILTPT       = real( WILTPT )
-  myinterface%params_tile%K1           = real( K1 )
-  myinterface%params_tile%K2           = real( K2 )
-  myinterface%params_tile%K_nitrogen   = real( K_nitrogen )
-  myinterface%params_tile%MLmixRatio   = real( MLmixRatio )
-  myinterface%params_tile%etaN         = real( etaN )
-  myinterface%params_tile%LMAmin       = real( LMAmin )
-  myinterface%params_tile%fsc_fine     = real( fsc_fine )
-  myinterface%params_tile%fsc_wood     = real( fsc_wood )
-  myinterface%params_tile%GR_factor    = real( GR_factor )
-  myinterface%params_tile%l_fract      = real( l_fract )
-  myinterface%params_tile%retransN     = real( retransN )
-  myinterface%params_tile%f_initialBSW = real( f_initialBSW )
-  myinterface%params_tile%f_N_add      = real( f_N_add )
-  myinterface%params_tile%tf_base      = real( tf_base )
-  myinterface%params_tile%par_mort     = real( par_mort )
-  myinterface%params_tile%par_mort_under  = real( par_mort_under )
+  myinterface%params_tile%soiltype        = soiltype 
+  myinterface%params_tile%FLDCAP          = FLDCAP 
+  myinterface%params_tile%WILTPT          = WILTPT 
+  myinterface%params_tile%K1              = K1 
+  myinterface%params_tile%K2              = K2 
+  myinterface%params_tile%K_nitrogen      = K_nitrogen 
+  myinterface%params_tile%MLmixRatio      = MLmixRatio 
+  myinterface%params_tile%etaN            = etaN 
+  myinterface%params_tile%LMAmin          = LMAmin 
+  myinterface%params_tile%fsc_fine        = fsc_fine 
+  myinterface%params_tile%fsc_wood        = fsc_wood 
+  myinterface%params_tile%GR_factor       = GR_factor 
+  myinterface%params_tile%l_fract         = l_fract 
+  myinterface%params_tile%retransN        = retransN 
+  myinterface%params_tile%f_initialBSW    = f_initialBSW 
+  myinterface%params_tile%f_N_add         = f_N_add
+  myinterface%params_tile%tf_base         = tf_base 
+  myinterface%params_tile%par_mort        = par_mort 
+  myinterface%params_tile%par_mort_under  = par_mort_under 
 
   ! Species parameters
-  myinterface%params_species%lifeform(:)          = lifeform
-  myinterface%params_species%phenotype(:)         = phenotype
-  myinterface%params_species%pt(:)                = pt
-  myinterface%params_species%alpha_FR(:)          = ralpha_FR
-  myinterface%params_species%rho_FR(:)            = rho_FR
-  myinterface%params_species%root_r(:)            = root_r
-  myinterface%params_species%root_zeta(:)         = root_zeta
-  myinterface%params_species%Kw_root(:)           = Kw_root
-  myinterface%params_species%leaf_size(:)         = leaf_size
-  myinterface%params_species%Vmax(:)              = Vmax
-  myinterface%params_species%Vannual(:)           = Vannual
-  myinterface%params_species%wet_leaf_dreg(:)     = wet_leaf_dreg
-  myinterface%params_species%m_cond(:)            = m_cond
-  myinterface%params_species%alpha_phot(:)        = alpha_phot
-  myinterface%params_species%gamma_L(:)           = gamma_L
-  myinterface%params_species%gamma_LN(:)          = gamma_LN
-  myinterface%params_species%gamma_SW(:)          = gamma_SW
-  myinterface%params_species%gamma_FR(:)          = gamma_FR
-  myinterface%params_species%tc_crit(:)           = tc_crit
-  myinterface%params_species%tc_crit_on(:)        = tc_crit_on
-  myinterface%params_species%gdd_crit(:)          = gdd_crit
-  myinterface%params_species%betaON(:)            = betaON
-  myinterface%params_species%betaOFF(:)           = betaOFF
-  myinterface%params_species%alphaHT(:)           = alphaHT
-  myinterface%params_species%thetaHT(:)           = thetaHT
-  myinterface%params_species%alphaCA(:)           = alphaCA
-  myinterface%params_species%thetaCA(:)           = thetaCA
-  myinterface%params_species%alphaBM(:)           = alphaBM
-  myinterface%params_species%thetaBM(:)           = thetaBM
-  myinterface%params_species%seedlingsize(:)      = seedlingsize
-  myinterface%params_species%maturalage(:)        = maturalage
-  myinterface%params_species%v_seed(:)            = v_seed
-  myinterface%params_species%mortrate_d_c(:)      = mortrate_d_c
-  myinterface%params_species%mortrate_d_u(:)      = mortrate_d_u
-  myinterface%params_species%LMA(:)               = LMA
-  myinterface%params_species%leafLS(:)            = leafLS
-  myinterface%params_species%LNbase(:)            = LNbase
-  myinterface%params_species%CNleafsupport(:)     = CNleafsupport
-  myinterface%params_species%rho_wood(:)          = rho_wood
-  myinterface%params_species%taperfactor(:)       = taperfactor
-  myinterface%params_species%lAImax(:)            = lAImax
-  myinterface%params_species%tauNSC(:)            = tauNSC
-  myinterface%params_species%fNSNmax(:)           = fNSNmax
-  myinterface%params_species%phiCSA(:)            = phiCSA
-  myinterface%params_species%CNleaf0(:)           = CNleaf0
-  myinterface%params_species%CNsw0(:)             = CNsw0
-  myinterface%params_species%CNwood0(:)           = CNwood0
-  myinterface%params_species%CNroot0(:)           = CNroot0
-  myinterface%params_species%CNseed0(:)           = CNseed0
-  myinterface%params_species%Nfixrate0(:)         = Nfixrate0
-  myinterface%params_species%NfixCost0(:)         = NfixCost0
-  myinterface%params_species%internal_gap_frac(:) = internal_gap_frac
-  myinterface%params_species%kphio(:)             = kphio
-  myinterface%params_species%phiRL(:)             = phiRL
-  myinterface%params_species%LAI_light(:)         = LAI_light
+  myinterface%params_species%lifeform(:)          = lifeform(:)
+  myinterface%params_species%phenotype(:)         = phenotype(:)
+  myinterface%params_species%pt(:)                = pt(:)
+  myinterface%params_species%alpha_FR(:)          = ralpha_FR(:)
+  myinterface%params_species%rho_FR(:)            = rho_FR(:)
+  myinterface%params_species%root_r(:)            = root_r(:)
+  myinterface%params_species%root_zeta(:)         = root_zeta(:)
+  myinterface%params_species%Kw_root(:)           = Kw_root(:)
+  myinterface%params_species%leaf_size(:)         = leaf_size(:)
+  myinterface%params_species%Vmax(:)              = Vmax(:)
+  myinterface%params_species%Vannual(:)           = Vannual(:)
+  myinterface%params_species%wet_leaf_dreg(:)     = wet_leaf_dreg(:)
+  myinterface%params_species%m_cond(:)            = m_cond(:)
+  myinterface%params_species%alpha_phot(:)        = alpha_phot(:)
+  myinterface%params_species%gamma_L(:)           = gamma_L(:)
+  myinterface%params_species%gamma_LN(:)          = gamma_LN(:)
+  myinterface%params_species%gamma_SW(:)          = gamma_SW(:)
+  myinterface%params_species%gamma_FR(:)          = gamma_FR(:)
+  myinterface%params_species%tc_crit(:)           = tc_crit(:)
+  myinterface%params_species%tc_crit_on(:)        = tc_crit_on(:)
+  myinterface%params_species%gdd_crit(:)          = gdd_crit(:)
+  myinterface%params_species%betaON(:)            = betaON(:)
+  myinterface%params_species%betaOFF(:)           = betaOFF(:)
+  myinterface%params_species%alphaHT(:)           = alphaHT(:)
+  myinterface%params_species%thetaHT(:)           = thetaHT(:)
+  myinterface%params_species%alphaCA(:)           = alphaCA(:)
+  myinterface%params_species%thetaCA(:)           = thetaCA(:)
+  myinterface%params_species%alphaBM(:)           = alphaBM(:)
+  myinterface%params_species%thetaBM(:)           = thetaBM(:)
+  myinterface%params_species%seedlingsize(:)      = seedlingsize(:)
+  myinterface%params_species%maturalage(:)        = maturalage(:)
+  myinterface%params_species%v_seed(:)            = v_seed(:)
+  myinterface%params_species%mortrate_d_c(:)      = mortrate_d_c(:)
+  myinterface%params_species%mortrate_d_u(:)      = mortrate_d_u(:)
+  myinterface%params_species%LMA(:)               = LMA(:)
+  myinterface%params_species%leafLS(:)            = leafLS(:)
+  myinterface%params_species%LNbase(:)            = LNbase(:)
+  myinterface%params_species%CNleafsupport(:)     = CNleafsupport(:)
+  myinterface%params_species%rho_wood(:)          = rho_wood(:)
+  myinterface%params_species%taperfactor(:)       = taperfactor(:)
+  myinterface%params_species%lAImax(:)            = lAImax(:)
+  myinterface%params_species%tauNSC(:)            = tauNSC(:)
+  myinterface%params_species%fNSNmax(:)           = fNSNmax(:)
+  myinterface%params_species%phiCSA(:)            = phiCSA(:)
+  myinterface%params_species%CNleaf0(:)           = CNleaf0(:)
+  myinterface%params_species%CNsw0(:)             = CNsw0(:)
+  myinterface%params_species%CNwood0(:)           = CNwood0(:)
+  myinterface%params_species%CNroot0(:)           = CNroot0(:)
+  myinterface%params_species%CNseed0(:)           = CNseed0(:)
+  myinterface%params_species%Nfixrate0(:)         = Nfixrate0(:)
+  myinterface%params_species%NfixCost0(:)         = NfixCost0(:)
+  myinterface%params_species%internal_gap_frac(:) = internal_gap_frac(:)
+  myinterface%params_species%kphio(:)             = kphio(:)
+  myinterface%params_species%phiRL(:)             = phiRL(:)
+  myinterface%params_species%LAI_light(:)         = LAI_light(:)
 
   ! Initial cohort sizes
-  myinterface%init_cohort%init_n_cohorts(:)      = int(init_cohort(:,1))
-  myinterface%init_cohort%init_cohort_species(:) = int(init_cohort(:,2))
-  myinterface%init_cohort%init_cohort_nindivs(:) = real(init_cohort(:,3))
-  myinterface%init_cohort%init_cohort_bl(:)      = real(init_cohort(:,4))
-  myinterface%init_cohort%init_cohort_br(:)      = real(init_cohort(:,5))
-  myinterface%init_cohort%init_cohort_bsw(:)     = real(init_cohort(:,6))
-  myinterface%init_cohort%init_cohort_bHW(:)     = real(init_cohort(:,7))
-  myinterface%init_cohort%init_cohort_seedC(:)   = real(init_cohort(:,8))
-  myinterface%init_cohort%init_cohort_nsc(:)     = real(init_cohort(:,9))
+  myinterface%init_cohort%init_n_cohorts(:)      = init_n_cohorts(:)
+  myinterface%init_cohort%init_cohort_species(:) = init_cohort_species(:)
+  myinterface%init_cohort%init_cohort_nindivs(:) = init_cohort_nindivs(:)
+  myinterface%init_cohort%init_cohort_bl(:)      = init_cohort_bl(:)
+  myinterface%init_cohort%init_cohort_br(:)      = init_cohort_br(:)
+  myinterface%init_cohort%init_cohort_bsw(:)     = init_cohort_bsw(:)
+  myinterface%init_cohort%init_cohort_bHW(:)     = init_cohort_bHW(:)
+  myinterface%init_cohort%init_cohort_seedC(:)   = init_cohort_seedC(:)
+  myinterface%init_cohort%init_cohort_nsc(:)     = init_cohort_nsc(:)
 
   ! Initial soil pools
-  myinterface%init_soil%init_fast_soil_C = real( init_fast_soil_C )
-  myinterface%init_soil%init_slow_soil_C = real( init_slow_soil_C )
-  myinterface%init_soil%init_Nmineral    = real( init_Nmineral )
-  myinterface%init_soil%N_input          = real( N_input )
+  myinterface%init_soil%init_fast_soil_C = init_fast_soil_C 
+  myinterface%init_soil%init_slow_soil_C = init_slow_soil_C 
+  myinterface%init_soil%init_Nmineral    = init_Nmineral 
+  myinterface%init_soil%N_input          = N_input 
 
   !----------------------------------------------------------------
   ! GET SOIL PARAMETERS
   !----------------------------------------------------------------
   !myinterface%params_soil = getsoil( params_soil )
 
-  myinterface%params_soil%GMD(:)               = real(params_soil(:,1))
-  myinterface%params_soil%GSD(:)               = real(params_soil(:,2))
-  myinterface%params_soil%vwc_sat(:)           = real(params_soil(:,3))
-  myinterface%params_soil%chb(:)               = real(params_soil(:,4))
-  myinterface%params_soil%psi_sat_ref(:)       = real(params_soil(:,5))
-  myinterface%params_soil%k_sat_ref(:)         = real(params_soil(:,6))
-  myinterface%params_soil%alphaSoil(:)         = real(params_soil(:,7))
-  myinterface%params_soil%heat_capacity_dry(:) = real(params_soil(:,8))
+  myinterface%params_soil%GMD               = GMD
+  myinterface%params_soil%GSD               = GSD
+  myinterface%params_soil%vwc_sat           = vwc_sat
+  myinterface%params_soil%chb               = chb
+  myinterface%params_soil%psi_sat_ref       = psi_sat_ref
+  myinterface%params_soil%k_sat_ref         = k_sat_ref
+  myinterface%params_soil%alphaSoil         = alphaSoil
+  myinterface%params_soil%heat_capacity_dry = heat_capacity_dry
 
   !----------------------------------------------------------------
   ! READ FORCING FILE
@@ -481,7 +513,7 @@ program main
     myinterface%climate(:) = getclimate( &
                                           nt, &
                                           ntstepsyear, &
-                                          forcing, &
+                                          forcingData, &
                                           myinterface%steering%climateyear_idx &
                                           ! myinterface%steering%climateyear &
                                           )
