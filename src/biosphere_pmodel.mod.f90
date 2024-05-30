@@ -111,8 +111,8 @@ contains
         call solar( tile_fluxes(:), &
                     myinterface%grid, & 
                     myinterface%climate(doy),  &
-                    doy &
-                    ! myinterface%params_siml%in_netrad &
+                    doy, &
+                    myinterface%params_siml%in_netrad &
                     )
         ! if (verbose) print*,'... done'
 

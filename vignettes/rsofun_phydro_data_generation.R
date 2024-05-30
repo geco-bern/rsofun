@@ -37,7 +37,7 @@ if (length(args)==0) {
 }
 
 if (length(args)<2) {
-  root_data_dir = "~/Downloads/fluxdatakit_v3.0"
+  root_data_dir = "~/Downloads/fluxdatakit_oct3"
 }else{
   root_data_dir = args[2]
 }

@@ -136,7 +136,7 @@ contains
   end subroutine waterbal
 
 
-  subroutine solar( tile_fluxes, grid, climate, doy ) 
+  subroutine solar( tile_fluxes, grid, climate, doy, in_netrad ) 
     !/////////////////////////////////////////////////////////////////////////
     ! This subroutine calculates daily PPFD. Code is an extract of the subroutine
     ! 'evap', adopted from the evap() function in GePiSaT (Python version). 
@@ -150,7 +150,7 @@ contains
     type(gridtype), intent(inout)                         :: grid
     type(climate_type), intent(in)                        :: climate
     integer, intent(in)                                   :: doy        ! day of year
-    ! logical, intent(in)                                   :: in_netrad
+    logical, intent(in)                                   :: in_netrad
 
     !---------------------------------------------------------
     ! 2. Calculate heliocentric longitudes (nu and lambda), degrees
@@ -173,7 +173,7 @@ contains
     !---------------------------------------------------------
     ! 4. Calculate declination angle, degrees
     !---------------------------------------------------------
-    grid%decl_angle = calc_decl_angle( grid%lambda )
+    ! 4. Calculate declination angle, degrees
 
     !---------------------------------------------------------
     ! 5. Calculate variable substitutes (ru and rv), unitless
@@ -236,26 +236,28 @@ contains
     ! 13. Calculate daytime total net radiation (tile_fluxes%canopy%drn), J m-2 d-1
     !---------------------------------------------------------
     ! Eq. 53, SPLASH 2.0 Documentation
-    ! if (in_netrad) then
-    !   tile_fluxes(:)%canopy%drn = climate%dnetrad * myinterface%params_siml%secs_per_tstep
-    ! else
-    !   tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
-    ! end if
-    tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
+    ! Jaideep Note: reverted this change for testing against old phydro
+    if (in_netrad) then
+      tile_fluxes(:)%canopy%drn = climate%dnetrad * myinterface%params_siml%secs_per_tstep
+    else
+      tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
+    end if
+    ! tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
 
     !---------------------------------------------------------
     ! 14. Calculate nighttime total net radiation (tile_fluxes(:)%canopy%drnn), J m-2 d-1
     !---------------------------------------------------------
     ! Eq. 56, SPLASH 2.0 Documentation
     ! adopted bugfix from Python version (iss#13)
-    ! if (in_netrad) then
-    !   tile_fluxes(:)%canopy%drnn = 0.0
-    ! else  
-    !   tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
-    !     tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
-    ! end if
-    tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
-      tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
+    ! Jaideep Note: reverted this change for testing against old phydro
+    if (in_netrad) then
+      tile_fluxes(:)%canopy%drnn = 0.0
+    else  
+      tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
+        tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
+    end if
+    ! tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
+    !   tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
 
     ! if (splashtest) then
     !   print*,'transmittivity, tau: ', tau
@@ -322,7 +324,7 @@ contains
 
     ! JAIDEEP: If it's just conversion from mass to energy, the above formula is correct. This already has the Priestly Taylor factor (s/(s+y)) built in, so this 
     ! should not be used for mere conversion. I would suggest you use just the factor s/(s+y) separately in the respective equations for clarity.
-    tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma))  ! MORE PRECISELY - this is to convert energy into mass (water). .
+    tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma)) ! MORE PRECISELY - this is to convert energy into mass (water). .
 
     !---------------------------------------------------------
     ! Daily condensation, mm d-1
@@ -566,8 +568,6 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    ! constant for dRnl (Monteith & Unsworth, 1990)
-    kA       = 107.0
     
     ! shortwave albedo (Federer, 1968)
     kalb_sw  = 0.17

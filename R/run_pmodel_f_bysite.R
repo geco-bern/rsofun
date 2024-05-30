@@ -359,8 +359,9 @@ run_pmodel_f_bysite <- function(
     in_ppfd <- ifelse(any(is.na(forcing$ppfd)), FALSE, TRUE)  
 
     # determine whether to read PPFD from forcing or to calculate internally
-    # in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
-    in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
+    # Jaideep Note: phydro uses input netrad, so dont enforce internal calculation
+    in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
+    # in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
 
     # Check if fsun is available
     if(! (in_ppfd & in_netrad)){

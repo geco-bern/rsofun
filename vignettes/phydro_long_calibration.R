@@ -6,7 +6,7 @@ library(BayesianTools)
 library(tictoc)
 library(ncdf4)
 
-plot_only = F
+plot_only = T
 debug = F
 
 tic("phydro")
@@ -18,7 +18,7 @@ args = commandArgs(trailingOnly=TRUE)
 #site <- "GF-Guy"
 if (length(args)==0) {
   #stop("At least one argument must be supplied: site name", call.=FALSE)
-  site = "FR-Pue"
+  site = "AU-ASM"
 }else{
   site = args[1]
 }
@@ -30,7 +30,7 @@ if (length(args)<2) {
 }
 
 if (length(args)<3) {
-  out_dir = "~/Downloads/fluxdatakit_oct3/phydro_output_fixedkphio/"
+  out_dir = "~/Downloads/fluxdatakit_oct3/phydro_output_test/"
 }else{
   out_dir = paste0(args[3],"/")
 }
@@ -272,11 +272,11 @@ pars_calib = list(
   #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(sd)),
   # phydro_gamma = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(mean),
   #                               sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="gamma") %>% pull(sd)),
-  phydro_alpha = gaussian_range(mean = 0.1, sd = 0.005),
+  # phydro_alpha = gaussian_range(mean = 0.1, sd = 0.005),
   # phydro_gamma = uniform_range(lower = 0.1, upper = 2),
   phydro_gamma = gaussian_range(mean = gamma_mean, sd = gamma_sd),
   #bsoil = uniform_range(lower=0.1, upper=10),
-  Ssoil = uniform_range(lower = 0, upper = whc_site+whc_site_sd),
+  # Ssoil = uniform_range(lower = 0, upper = whc_site+whc_site_sd),
   whc = gaussian_range(mean = whc_site, sd = whc_site_sd),
   err_gpp = uniform_range(lower = 0.01, upper = 4),
   err_le = uniform_range(lower = 0.1e6, upper = 10e6)
@@ -292,10 +292,10 @@ pars_fixed = list(         # fix all other parameters
   # phydro_K_plant     = 0.3e-16,
   # phydro_P50_plant     = -1,
   phydro_b_plant     = 1,
-  # phydro_alpha       = 0.1,
+  phydro_alpha       = 0.08,
   # phydro_gamma       = 1
-  bsoil              = 3
-  # Ssoil              = 40,
+  bsoil              = 3,
+  Ssoil              = 113
   # whc                = 90  
 )
 
