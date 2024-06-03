@@ -11,11 +11,11 @@ program main
     climate_type, forcingData
   use md_interface_biomee, only: interfacetype_biosphere, &
     myinterface, &
-    outtype_biosphere, &
-    outtype_daily_tile, &
-    outtype_daily_cohorts, &
-    outtype_annual_tile, &
-    outtype_annual_cohorts
+    outtype_biosphere
+    !outtype_daily_tile, &
+    !outtype_daily_cohorts, &
+    !outtype_annual_tile, &
+    !outtype_annual_cohorts
   use md_params_core
   use md_biosphere_biomee, only: biosphere_annual
   use datatypes
@@ -46,8 +46,8 @@ program main
   !real :: altitude
   
   integer :: idx
-  ! integer :: idx_hourly_start
-  ! integer :: idx_hourly_end
+  integer :: idx_hourly_start
+  integer :: idx_hourly_end
   integer :: idx_daily_start
   integer :: idx_daily_end
 
@@ -107,14 +107,14 @@ program main
   character(len=100) :: namelistfile = '/home/laura/rsofun/inst/extdata/parameters_Allocation.nml'
 
   ! output arrays (naked) to be passed back to C/R
-  !real, dimension(:,:), allocatable  :: out_hourly_tile 
-  !real, dimension(:,:), allocatable  :: out_daily_tile       !fno4
-  !real, dimension(:,:,:), allocatable:: out_daily_cohorts    !fno3
+  real, dimension(:,:), allocatable  :: out_hourly_tile 
+  real, dimension(:,:), allocatable  :: out_daily_tile       !fno4
+  real, dimension(:,:,:), allocatable:: out_daily_cohorts    !fno3
   real, dimension(:,:), allocatable  :: out_annual_tile      !fno5
   real, dimension(:,:,:), allocatable:: out_annual_cohorts   !fno2
 
   ! whether fast time step processes are simulated. If .false., then C, N, and W balance is simulated daily.
-  !logical, parameter :: daily = .true.
+  logical, parameter :: daily = .true.
 
 ! xxxx !!!!!!!!!!!!!!!!!!!
   ! input and output arrays (naked) to be passed back to C/R
@@ -384,72 +384,72 @@ program main
   myinterface%params_tile%par_mort_under  = par_mort_under 
 
   ! Species parameters
-  myinterface%params_species%lifeform(:)          = lifeform(:)
-  myinterface%params_species%phenotype(:)         = phenotype(:)
-  myinterface%params_species%pt(:)                = pt(:)
-  myinterface%params_species%alpha_FR(:)          = ralpha_FR(:)
-  myinterface%params_species%rho_FR(:)            = rho_FR(:)
-  myinterface%params_species%root_r(:)            = root_r(:)
-  myinterface%params_species%root_zeta(:)         = root_zeta(:)
-  myinterface%params_species%Kw_root(:)           = Kw_root(:)
-  myinterface%params_species%leaf_size(:)         = leaf_size(:)
-  myinterface%params_species%Vmax(:)              = Vmax(:)
-  myinterface%params_species%Vannual(:)           = Vannual(:)
-  myinterface%params_species%wet_leaf_dreg(:)     = wet_leaf_dreg(:)
-  myinterface%params_species%m_cond(:)            = m_cond(:)
-  myinterface%params_species%alpha_phot(:)        = alpha_phot(:)
-  myinterface%params_species%gamma_L(:)           = gamma_L(:)
-  myinterface%params_species%gamma_LN(:)          = gamma_LN(:)
-  myinterface%params_species%gamma_SW(:)          = gamma_SW(:)
-  myinterface%params_species%gamma_FR(:)          = gamma_FR(:)
-  myinterface%params_species%tc_crit(:)           = tc_crit(:)
-  myinterface%params_species%tc_crit_on(:)        = tc_crit_on(:)
-  myinterface%params_species%gdd_crit(:)          = gdd_crit(:)
-  myinterface%params_species%betaON(:)            = betaON(:)
-  myinterface%params_species%betaOFF(:)           = betaOFF(:)
-  myinterface%params_species%alphaHT(:)           = alphaHT(:)
-  myinterface%params_species%thetaHT(:)           = thetaHT(:)
-  myinterface%params_species%alphaCA(:)           = alphaCA(:)
-  myinterface%params_species%thetaCA(:)           = thetaCA(:)
-  myinterface%params_species%alphaBM(:)           = alphaBM(:)
-  myinterface%params_species%thetaBM(:)           = thetaBM(:)
-  myinterface%params_species%seedlingsize(:)      = seedlingsize(:)
-  myinterface%params_species%maturalage(:)        = maturalage(:)
-  myinterface%params_species%v_seed(:)            = v_seed(:)
-  myinterface%params_species%mortrate_d_c(:)      = mortrate_d_c(:)
-  myinterface%params_species%mortrate_d_u(:)      = mortrate_d_u(:)
-  myinterface%params_species%LMA(:)               = LMA(:)
-  myinterface%params_species%leafLS(:)            = leafLS(:)
-  myinterface%params_species%LNbase(:)            = LNbase(:)
-  myinterface%params_species%CNleafsupport(:)     = CNleafsupport(:)
-  myinterface%params_species%rho_wood(:)          = rho_wood(:)
-  myinterface%params_species%taperfactor(:)       = taperfactor(:)
-  myinterface%params_species%lAImax(:)            = lAImax(:)
-  myinterface%params_species%tauNSC(:)            = tauNSC(:)
-  myinterface%params_species%fNSNmax(:)           = fNSNmax(:)
-  myinterface%params_species%phiCSA(:)            = phiCSA(:)
-  myinterface%params_species%CNleaf0(:)           = CNleaf0(:)
-  myinterface%params_species%CNsw0(:)             = CNsw0(:)
-  myinterface%params_species%CNwood0(:)           = CNwood0(:)
-  myinterface%params_species%CNroot0(:)           = CNroot0(:)
-  myinterface%params_species%CNseed0(:)           = CNseed0(:)
-  myinterface%params_species%Nfixrate0(:)         = Nfixrate0(:)
-  myinterface%params_species%NfixCost0(:)         = NfixCost0(:)
-  myinterface%params_species%internal_gap_frac(:) = internal_gap_frac(:)
-  myinterface%params_species%kphio(:)             = kphio(:)
-  myinterface%params_species%phiRL(:)             = phiRL(:)
-  myinterface%params_species%LAI_light(:)         = LAI_light(:)
+  myinterface%params_species(:)%lifeform          = lifeform
+  myinterface%params_species(:)%phenotype         = phenotype
+  myinterface%params_species(:)%pt                = pt
+  myinterface%params_species(:)%alpha_FR          = alpha_FR
+  myinterface%params_species(:)%rho_FR            = rho_FR
+  myinterface%params_species(:)%root_r            = root_r
+  myinterface%params_species(:)%root_zeta         = root_zeta
+  myinterface%params_species(:)%Kw_root           = Kw_root
+  myinterface%params_species(:)%leaf_size         = leaf_size
+  myinterface%params_species(:)%Vmax              = Vmax
+  myinterface%params_species(:)%Vannual           = Vannual
+  myinterface%params_species(:)%wet_leaf_dreg     = wet_leaf_dreg
+  myinterface%params_species(:)%m_cond            = m_cond
+  myinterface%params_species(:)%alpha_phot        = alpha_phot
+  myinterface%params_species(:)%gamma_L           = gamma_L
+  myinterface%params_species(:)%gamma_LN          = gamma_LN
+  myinterface%params_species(:)%gamma_SW          = gamma_SW
+  myinterface%params_species(:)%gamma_FR          = gamma_FR
+  myinterface%params_species(:)%tc_crit           = tc_crit
+  myinterface%params_species(:)%tc_crit_on        = tc_crit_on
+  myinterface%params_species(:)%gdd_crit          = gdd_crit
+  myinterface%params_species(:)%betaON            = betaON
+  myinterface%params_species(:)%betaOFF           = betaOFF
+  myinterface%params_species(:)%alphaHT           = alphaHT
+  myinterface%params_species(:)%thetaHT           = thetaHT
+  myinterface%params_species(:)%alphaCA           = alphaCA
+  myinterface%params_species(:)%thetaCA           = thetaCA
+  myinterface%params_species(:)%alphaBM           = alphaBM
+  myinterface%params_species(:)%thetaBM           = thetaBM
+  myinterface%params_species(:)%seedlingsize      = seedlingsize
+  myinterface%params_species(:)%maturalage        = maturalage
+  myinterface%params_species(:)%v_seed            = v_seed
+  myinterface%params_species(:)%mortrate_d_c      = mortrate_d_c
+  myinterface%params_species(:)%mortrate_d_u      = mortrate_d_u
+  myinterface%params_species(:)%LMA               = LMA
+  myinterface%params_species(:)%leafLS            = leafLS
+  myinterface%params_species(:)%LNbase            = LNbase
+  myinterface%params_species(:)%CNleafsupport     = CNleafsupport
+  myinterface%params_species(:)%rho_wood          = rho_wood
+  myinterface%params_species(:)%taperfactor       = taperfactor
+  myinterface%params_species(:)%lAImax            = lAImax
+  myinterface%params_species(:)%tauNSC            = tauNSC
+  myinterface%params_species(:)%fNSNmax           = fNSNmax
+  myinterface%params_species(:)%phiCSA            = phiCSA
+  myinterface%params_species(:)%CNleaf0           = CNleaf0
+  myinterface%params_species(:)%CNsw0             = CNsw0
+  myinterface%params_species(:)%CNwood0           = CNwood0
+  myinterface%params_species(:)%CNroot0           = CNroot0
+  myinterface%params_species(:)%CNseed0           = CNseed0
+  myinterface%params_species(:)%Nfixrate0         = Nfixrate0
+  myinterface%params_species(:)%NfixCost0         = NfixCost0
+  myinterface%params_species(:)%internal_gap_frac = internal_gap_frac
+  myinterface%params_species(:)%kphio             = kphio
+  myinterface%params_species(:)%phiRL             = phiRL
+  myinterface%params_species(:)%LAI_light         = LAI_light
 
   ! Initial cohort sizes
-  myinterface%init_cohort%init_n_cohorts(:)      = init_n_cohorts(:)
-  myinterface%init_cohort%init_cohort_species(:) = init_cohort_species(:)
-  myinterface%init_cohort%init_cohort_nindivs(:) = init_cohort_nindivs(:)
-  myinterface%init_cohort%init_cohort_bl(:)      = init_cohort_bl(:)
-  myinterface%init_cohort%init_cohort_br(:)      = init_cohort_br(:)
-  myinterface%init_cohort%init_cohort_bsw(:)     = init_cohort_bsw(:)
-  myinterface%init_cohort%init_cohort_bHW(:)     = init_cohort_bHW(:)
-  myinterface%init_cohort%init_cohort_seedC(:)   = init_cohort_seedC(:)
-  myinterface%init_cohort%init_cohort_nsc(:)     = init_cohort_nsc(:)
+  myinterface%init_cohort(:)%init_n_cohorts      = init_n_cohorts
+  myinterface%init_cohort(:)%init_cohort_species = init_cohort_species
+  myinterface%init_cohort(:)%init_cohort_nindivs = init_cohort_nindivs
+  myinterface%init_cohort(:)%init_cohort_bl      = init_cohort_bl
+  myinterface%init_cohort(:)%init_cohort_br      = init_cohort_br
+  myinterface%init_cohort(:)%init_cohort_bsw     = init_cohort_bsw
+  myinterface%init_cohort(:)%init_cohort_bHW     = init_cohort_bHW
+  myinterface%init_cohort(:)%init_cohort_seedC   = init_cohort_seedC
+  myinterface%init_cohort(:)%init_cohort_nsc     = init_cohort_nsc
 
   ! Initial soil pools
   myinterface%init_soil%init_fast_soil_C = init_fast_soil_C 
@@ -479,12 +479,14 @@ program main
   !----------------------------------------------------------------
   ! INTERPRET FORCING
   !----------------------------------------------------------------
-  timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
-  timestep_d = real(forcing(2,2)) - real(forcing(1,2))  ! This takes the day of year (a numeric) from the forcing file
-  if (abs(timestep) < eps .and. abs(timestep_d - 1.0) < eps) then
+  !timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
+  !timestep_d = real(forcing(2,2)) - real(forcing(1,2))  ! This takes the day of year (a numeric) from the forcing file
+  
+  !if (abs(timestep) < eps .and. abs(timestep_d - 1.0) < eps) then
     ! forcing is daily
-    timestep = 24.0
-  end if
+    !timestep = 24.0
+  !end if
+  if (daily) timestep = 24.0
   myinterface%steps_per_day = int(24.0/timestep)
   myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
   myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
@@ -492,7 +494,7 @@ program main
 
   allocate(myinterface%climate(ntstepsyear))
   allocate(myinterface%pco2(ntstepsyear))
-  allocate(out_biosphere%hourly_tile(ntstepsyear))
+  !allocate(out_biosphere%hourly_tile(ntstepsyear))
 
   allocate(out_hourly_tile(     ntstepsyear * myinterface%params_siml%nyeartrend,  nvars_hourly_tile                        ))
   allocate(out_daily_cohorts(   ndayyear * myinterface%params_siml%nyeartrend,     out_max_cohorts,    nvars_daily_cohorts  ))
@@ -515,17 +517,18 @@ program main
                                           ntstepsyear, &
                                           forcingData, &
                                           myinterface%steering%climateyear_idx &
-                                          ! myinterface%steering%climateyear &
+                                          !myinterface%steering%climateyear &
                                           )
 
     !----------------------------------------------------------------
     ! Call biosphere (wrapper for all modules, contains time loops)
     !----------------------------------------------------------------
     call biosphere_annual( &
-      out_biosphere_daily_tile, &
+       out_biosphere &
+      !out_biosphere_daily_tile, &
       ! out_biosphere_daily_cohorts, &
-      out_biosphere_annual_tile, &
-      out_biosphere_annual_cohorts &
+      !out_biosphere_annual_tile, &
+      !out_biosphere_annual_cohorts &
       )
 
     !----------------------------------------------------------------
@@ -535,11 +538,12 @@ program main
     !----------------------------------------------------------------
     ! Output out_hourly_tile (calling subroutine)
     !----------------------------------------------------------------
-    ! if (.not. myinterface%steering%spinup) then  
-    !   idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
-    !   idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
+     if (.not. myinterface%steering%spinup) then  
+       idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
+       idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
     !   ! call populate_outarray_hourly_tile( out_biosphere_hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
-    ! end if
+        call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), out_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
+     end if
 
     !----------------------------------------------------------------
     ! Output out_daily_tile (calling subroutine)
@@ -550,7 +554,8 @@ program main
       idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1  
       idx_daily_end   = idx_daily_start + ndayyear - 1
 
-      call populate_outarray_daily_tile( out_biosphere_daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end,:))
+      !call populate_outarray_daily_tile( out_biosphere_daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end,:))
+      call populate_outarray_daily_tile( out_biosphere%daily_tile(:), out_daily_tile(idx_daily_start:idx_daily_end, :) )
 
       !----------------------------------------------------------------
       ! Output out_daily_cohorts (without subroutine)
@@ -585,10 +590,15 @@ program main
 
     end if
 
+    if (.not. myinterface%steering%spinup) then  
+      call populate_outarray_daily_cohorts( out_biosphere%daily_cohorts(:,:), out_daily_cohorts(idx_daily_start:idx_daily_end,:,:) )
+    end if
+
     !----------------------------------------------------------------
     ! Output out_annual_tile (calling subroutine)
     !----------------------------------------------------------------
-    call populate_outarray_annual_tile( out_biosphere_annual_tile, output_annual_tile(yr,:) )
+    !call populate_outarray_annual_tile( out_biosphere_annual_tile, output_annual_tile(yr,:) )
+    call populate_outarray_annual_tile( out_biosphere%annual_tile, out_annual_tile(yr,:) )
 
     !----------------------------------------------------------------
     ! Output output_annual_cohorts (without subroutine)
@@ -596,52 +606,53 @@ program main
     ! To get outputs only after spinupyears make if below and 
     ! also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(params_siml$nyeartrend)
 
-    if (.not. myinterface%steering%spinup) then  
+    call populate_outarray_annual_cohorts( out_biosphere%annual_cohorts(:), out_annual_cohorts(yr,:,:) )
 
-      idx =  yr - myinterface%params_siml%spinupyears
+    !if (.not. myinterface%steering%spinup) then  
 
-      output_annual_cohorts_year(idx, :)        = dble(out_biosphere_annual_cohorts(:)%year)
-      output_annual_cohorts_cID(idx, :)         = dble(out_biosphere_annual_cohorts(:)%cID)
-      output_annual_cohorts_PFT(idx, :)         = dble(out_biosphere_annual_cohorts(:)%PFT)
-      output_annual_cohorts_layer(idx, :)       = dble(out_biosphere_annual_cohorts(:)%layer)
-      output_annual_cohorts_density(idx, :)     = dble(out_biosphere_annual_cohorts(:)%density)
-      output_annual_cohorts_flayer(idx, :)      = dble(out_biosphere_annual_cohorts(:)%flayer)
-      output_annual_cohorts_dbh(idx, :)         = dble(out_biosphere_annual_cohorts(:)%DBH)
-      output_annual_cohorts_dDBH(idx, :)        = dble(out_biosphere_annual_cohorts(:)%dDBH)
-      output_annual_cohorts_height(idx, :)      = dble(out_biosphere_annual_cohorts(:)%height)
-      output_annual_cohorts_age(idx, :)         = dble(out_biosphere_annual_cohorts(:)%age)
-      output_annual_cohorts_BA(idx, :)          = dble(out_biosphere_annual_cohorts(:)%BA)
-      output_annual_cohorts_dBA(idx, :)         = dble(out_biosphere_annual_cohorts(:)%dBA)
-      output_annual_cohorts_Acrown(idx, :)      = dble(out_biosphere_annual_cohorts(:)%Acrown)
-      output_annual_cohorts_Aleaf(idx, :)       = dble(out_biosphere_annual_cohorts(:)%Aleaf)
-      output_annual_cohorts_nsc(idx, :)         = dble(out_biosphere_annual_cohorts(:)%nsc)
-      output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere_annual_cohorts(:)%nsn)
-      output_annual_cohorts_seedC(idx, :)       = dble(out_biosphere_annual_cohorts(:)%seedC)
-      output_annual_cohorts_leafC(idx, :)       = dble(out_biosphere_annual_cohorts(:)%leafC)
-      output_annual_cohorts_rootC(idx, :)       = dble(out_biosphere_annual_cohorts(:)%rootC)
-      output_annual_cohorts_sapwC(idx, :)       = dble(out_biosphere_annual_cohorts(:)%sapwC)
-      output_annual_cohorts_woodC(idx, :)       = dble(out_biosphere_annual_cohorts(:)%woodC)
-      output_annual_cohorts_treeG(idx, :)       = dble(out_biosphere_annual_cohorts(:)%treeG)
-      output_annual_cohorts_fseed(idx, :)       = dble(out_biosphere_annual_cohorts(:)%fseed)
-      output_annual_cohorts_fleaf(idx, :)       = dble(out_biosphere_annual_cohorts(:)%fleaf)
-      output_annual_cohorts_froot(idx, :)       = dble(out_biosphere_annual_cohorts(:)%froot)
-      output_annual_cohorts_fwood(idx, :)       = dble(out_biosphere_annual_cohorts(:)%fwood)
-      output_annual_cohorts_GPP(idx, :)         = dble(out_biosphere_annual_cohorts(:)%GPP)
-      output_annual_cohorts_NPP(idx, :)         = dble(out_biosphere_annual_cohorts(:)%NPP)
-      output_annual_cohorts_Rauto(idx, :)       = dble(out_biosphere_annual_cohorts(:)%Rauto)
-      output_annual_cohorts_Nupt(idx, :)        = dble(out_biosphere_annual_cohorts(:)%Nupt)
-      output_annual_cohorts_Nfix(idx, :)        = dble(out_biosphere_annual_cohorts(:)%Nfix)
-      output_annual_cohorts_deathrate(idx, :)   = dble(out_biosphere_annual_cohorts(:)%deathrate)
-      output_annual_cohorts_n_deadtrees(idx, :) = dble(out_biosphere_annual_cohorts(:)%n_deadtrees)
-      output_annual_cohorts_c_deadtrees(idx, :) = dble(out_biosphere_annual_cohorts(:)%c_deadtrees)
+      !idx =  yr - myinterface%params_siml%spinupyears
 
-     end if
+      !output_annual_cohorts_year(idx, :)        = dble(out_biosphere_annual_cohorts(:)%year)
+      !output_annual_cohorts_cID(idx, :)         = dble(out_biosphere_annual_cohorts(:)%cID)
+      !output_annual_cohorts_PFT(idx, :)         = dble(out_biosphere_annual_cohorts(:)%PFT)
+      !output_annual_cohorts_layer(idx, :)       = dble(out_biosphere_annual_cohorts(:)%layer)
+      !output_annual_cohorts_density(idx, :)     = dble(out_biosphere_annual_cohorts(:)%density)
+      !output_annual_cohorts_flayer(idx, :)      = dble(out_biosphere_annual_cohorts(:)%flayer)
+      !output_annual_cohorts_dbh(idx, :)         = dble(out_biosphere_annual_cohorts(:)%DBH)
+      !output_annual_cohorts_dDBH(idx, :)        = dble(out_biosphere_annual_cohorts(:)%dDBH)
+      !output_annual_cohorts_height(idx, :)      = dble(out_biosphere_annual_cohorts(:)%height)
+      !output_annual_cohorts_age(idx, :)         = dble(out_biosphere_annual_cohorts(:)%age)
+      !output_annual_cohorts_BA(idx, :)          = dble(out_biosphere_annual_cohorts(:)%BA)
+      !output_annual_cohorts_dBA(idx, :)         = dble(out_biosphere_annual_cohorts(:)%dBA)
+      !output_annual_cohorts_Acrown(idx, :)      = dble(out_biosphere_annual_cohorts(:)%Acrown)
+      !output_annual_cohorts_Aleaf(idx, :)       = dble(out_biosphere_annual_cohorts(:)%Aleaf)
+      !output_annual_cohorts_nsc(idx, :)         = dble(out_biosphere_annual_cohorts(:)%nsc)
+      !output_annual_cohorts_nsn(idx, :)         = dble(out_biosphere_annual_cohorts(:)%nsn)
+      !output_annual_cohorts_seedC(idx, :)       = dble(out_biosphere_annual_cohorts(:)%seedC)
+      !output_annual_cohorts_leafC(idx, :)       = dble(out_biosphere_annual_cohorts(:)%leafC)
+      !output_annual_cohorts_rootC(idx, :)       = dble(out_biosphere_annual_cohorts(:)%rootC)
+      !output_annual_cohorts_sapwC(idx, :)       = dble(out_biosphere_annual_cohorts(:)%sapwC)
+      !output_annual_cohorts_woodC(idx, :)       = dble(out_biosphere_annual_cohorts(:)%woodC)
+      !output_annual_cohorts_treeG(idx, :)       = dble(out_biosphere_annual_cohorts(:)%treeG)
+      !output_annual_cohorts_fseed(idx, :)       = dble(out_biosphere_annual_cohorts(:)%fseed)
+      !output_annual_cohorts_fleaf(idx, :)       = dble(out_biosphere_annual_cohorts(:)%fleaf)
+      !output_annual_cohorts_froot(idx, :)       = dble(out_biosphere_annual_cohorts(:)%froot)
+      !output_annual_cohorts_fwood(idx, :)       = dble(out_biosphere_annual_cohorts(:)%fwood)
+      !output_annual_cohorts_GPP(idx, :)         = dble(out_biosphere_annual_cohorts(:)%GPP)
+      !output_annual_cohorts_NPP(idx, :)         = dble(out_biosphere_annual_cohorts(:)%NPP)
+      !output_annual_cohorts_Rauto(idx, :)       = dble(out_biosphere_annual_cohorts(:)%Rauto)
+      !output_annual_cohorts_Nupt(idx, :)        = dble(out_biosphere_annual_cohorts(:)%Nupt)
+      !output_annual_cohorts_Nfix(idx, :)        = dble(out_biosphere_annual_cohorts(:)%Nfix)
+      !output_annual_cohorts_deathrate(idx, :)   = dble(out_biosphere_annual_cohorts(:)%deathrate)
+      !output_annual_cohorts_n_deadtrees(idx, :) = dble(out_biosphere_annual_cohorts(:)%n_deadtrees)
+      !output_annual_cohorts_c_deadtrees(idx, :) = dble(out_biosphere_annual_cohorts(:)%c_deadtrees)
+
+     !end if
 
   end do yearloop
 
   deallocate(myinterface%climate)
   deallocate(myinterface%pco2)
-  deallocate(out_biosphere%hourly_tile)
   deallocate(out_hourly_tile)
   deallocate(out_daily_cohorts)
   deallocate(out_daily_tile)
@@ -653,6 +664,252 @@ program main
   999  format (I4.4)
 
 contains
+
+  ! !////////////////////////////////////////////////////////////////
+  ! ! Populates hourly tile-level output array passed back to C and R.
+  ! !----------------------------------------------------------------
+   subroutine populate_outarray_hourly_tile( hourly_tile, out_hourly_tile ) !, idx_daily_start, idx_daily_end
+
+     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
+     use md_interface_biomee, only: outtype_hourly_tile
+     use md_params_core
+
+     ! arguments
+     type(outtype_hourly_tile), dimension(ntstepsyear), intent(in) :: hourly_tile    ! dimension(ntstepsyear)
+     real, dimension(ntstepsyear, nvars_hourly_tile), intent(inout) :: out_hourly_tile
+
+     out_hourly_tile(:, 1)  = dble(hourly_tile(:)%year)
+     out_hourly_tile(:, 2)  = dble(hourly_tile(:)%doy)
+     out_hourly_tile(:, 3)  = dble(hourly_tile(:)%hour)
+     out_hourly_tile(:, 4)  = dble(hourly_tile(:)%rad)
+     out_hourly_tile(:, 5)  = dble(hourly_tile(:)%Tair)
+     out_hourly_tile(:, 6)  = dble(hourly_tile(:)%Prcp)
+     out_hourly_tile(:, 7)  = dble(hourly_tile(:)%GPP)
+     out_hourly_tile(:, 8)  = dble(hourly_tile(:)%Resp)
+     out_hourly_tile(:, 9)  = dble(hourly_tile(:)%Transp)
+     out_hourly_tile(:, 10) = dble(hourly_tile(:)%Evap)
+     out_hourly_tile(:, 11) = dble(hourly_tile(:)%Runoff)
+     out_hourly_tile(:, 12) = dble(hourly_tile(:)%Soilwater)
+     out_hourly_tile(:, 13) = dble(hourly_tile(:)%wcl)
+     out_hourly_tile(:, 14) = dble(hourly_tile(:)%FLDCAP)
+     out_hourly_tile(:, 15) = dble(hourly_tile(:)%WILTPT)
+
+   end subroutine populate_outarray_hourly_tile
+
+
+  !////////////////////////////////////////////////////////////////
+  ! Populates daily tile-level output array passed back to C and R.
+  !----------------------------------------------------------------
+  subroutine populate_outarray_daily_tile( daily_tile, out_daily_tile ) !, idx_daily_start, idx_daily_end
+
+    use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
+    use md_interface_biomee, only: outtype_daily_tile
+    use md_params_core
+
+    ! arguments
+    type(outtype_daily_tile), dimension(ndayyear), intent(in) :: daily_tile
+    real, dimension(ndayyear, nvars_daily_tile), intent(inout) :: out_daily_tile
+
+    out_daily_tile(:, 1)  = dble(daily_tile(:)%year) 
+    out_daily_tile(:, 2)  = dble(daily_tile(:)%doy)
+    out_daily_tile(:, 3)  = dble(daily_tile(:)%Tc)
+    out_daily_tile(:, 4)  = dble(daily_tile(:)%Prcp)
+    out_daily_tile(:, 5)  = dble(daily_tile(:)%totWs)
+    out_daily_tile(:, 6)  = dble(daily_tile(:)%Trsp)
+    out_daily_tile(:, 7)  = dble(daily_tile(:)%Evap)
+    out_daily_tile(:, 8)  = dble(daily_tile(:)%Runoff)
+    out_daily_tile(:, 9)  = dble(daily_tile(:)%ws1)
+    out_daily_tile(:, 10) = dble(daily_tile(:)%ws2)
+    out_daily_tile(:, 11) = dble(daily_tile(:)%ws3)
+    out_daily_tile(:, 12) = dble(daily_tile(:)%LAI)
+    out_daily_tile(:, 13) = dble(daily_tile(:)%GPP)
+    out_daily_tile(:, 14) = dble(daily_tile(:)%Rauto)
+    out_daily_tile(:, 15) = dble(daily_tile(:)%Rh)
+    out_daily_tile(:, 16) = dble(daily_tile(:)%NSC)
+    out_daily_tile(:, 17) = dble(daily_tile(:)%seedC)
+    out_daily_tile(:, 18) = dble(daily_tile(:)%leafC)
+    out_daily_tile(:, 19) = dble(daily_tile(:)%rootC)
+    out_daily_tile(:, 20) = dble(daily_tile(:)%SW_C)
+    out_daily_tile(:, 21) = dble(daily_tile(:)%HW_C)
+    out_daily_tile(:, 22) = dble(daily_tile(:)%NSN)
+    out_daily_tile(:, 23) = dble(daily_tile(:)%seedN)
+    out_daily_tile(:, 24) = dble(daily_tile(:)%leafN)
+    out_daily_tile(:, 25) = dble(daily_tile(:)%rootN)
+    out_daily_tile(:, 26) = dble(daily_tile(:)%SW_N)
+    out_daily_tile(:, 27) = dble(daily_tile(:)%HW_N)
+    out_daily_tile(:, 28) = dble(daily_tile(:)%McrbC)
+    out_daily_tile(:, 29) = dble(daily_tile(:)%fastSOM)
+    out_daily_tile(:, 30) = dble(daily_tile(:)%slowSOM)
+    out_daily_tile(:, 31) = dble(daily_tile(:)%McrbN)
+    out_daily_tile(:, 32) = dble(daily_tile(:)%fastSoilN)
+    out_daily_tile(:, 33) = dble(daily_tile(:)%slowSoilN)
+    out_daily_tile(:, 34) = dble(daily_tile(:)%mineralN)
+    out_daily_tile(:, 35) = dble(daily_tile(:)%N_uptk)
+
+  end subroutine populate_outarray_daily_tile
+
+    subroutine populate_outarray_daily_cohorts( daily_cohorts, out_daily_cohorts ) 
+
+    use md_interface_biomee, only: outtype_daily_cohorts
+
+    ! arguments
+    type(outtype_daily_cohorts), dimension(ndayyear, out_max_cohorts), intent(in) :: daily_cohorts
+    real, dimension(ndayyear, out_max_cohorts,nvars_daily_cohorts), intent(inout) :: out_daily_cohorts
+    !real, dimension(:,:,:), allocatable, intent(inout) :: out_daily_cohorts
+
+    out_daily_cohorts(:,:, 1)  = daily_cohorts(:,:)%year
+    out_daily_cohorts(:,:, 2)  = daily_cohorts(:,:)%doy
+    out_daily_cohorts(:,:, 3)  = daily_cohorts(:,:)%hour
+    out_daily_cohorts(:,:, 4)  = daily_cohorts(:,:)%cID
+    out_daily_cohorts(:,:, 5)  = daily_cohorts(:,:)%PFT
+    out_daily_cohorts(:,:, 6)  = daily_cohorts(:,:)%layer
+    out_daily_cohorts(:,:, 7)  = daily_cohorts(:,:)%density
+    out_daily_cohorts(:,:, 8)  = daily_cohorts(:,:)%f_layer
+    out_daily_cohorts(:,:, 9)  = daily_cohorts(:,:)%LAI
+    out_daily_cohorts(:,:, 10) = daily_cohorts(:,:)%gpp
+    out_daily_cohorts(:,:, 11) = daily_cohorts(:,:)%resp
+    out_daily_cohorts(:,:, 12) = daily_cohorts(:,:)%transp
+    out_daily_cohorts(:,:, 13) = daily_cohorts(:,:)%NPPleaf
+    out_daily_cohorts(:,:, 14) = daily_cohorts(:,:)%NPProot
+    out_daily_cohorts(:,:, 15) = daily_cohorts(:,:)%NPPwood    
+    out_daily_cohorts(:,:, 16) = daily_cohorts(:,:)%NSC
+    out_daily_cohorts(:,:, 17) = daily_cohorts(:,:)%seedC
+    out_daily_cohorts(:,:, 18) = daily_cohorts(:,:)%leafC
+    out_daily_cohorts(:,:, 19) = daily_cohorts(:,:)%rootC
+    out_daily_cohorts(:,:, 20) = daily_cohorts(:,:)%SW_C
+    out_daily_cohorts(:,:, 21) = daily_cohorts(:,:)%HW_C
+    out_daily_cohorts(:,:, 22) = daily_cohorts(:,:)%NSN
+    out_daily_cohorts(:,:, 23) = daily_cohorts(:,:)%seedN
+    out_daily_cohorts(:,:, 24) = daily_cohorts(:,:)%leafN
+    out_daily_cohorts(:,:, 25) = daily_cohorts(:,:)%rootN
+    out_daily_cohorts(:,:, 26) = daily_cohorts(:,:)%SW_N
+    out_daily_cohorts(:,:, 27) = daily_cohorts(:,:)%HW_N
+
+  end subroutine populate_outarray_daily_cohorts
+
+
+  !////////////////////////////////////////////////////////////////
+  ! Populates annual output tile-level array passed back to C and R.
+  !----------------------------------------------------------------
+  subroutine populate_outarray_annual_tile( annual_tile, out_annual_tile )
+
+    use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
+    use md_interface_biomee, only: outtype_annual_tile
+    use md_params_core
+
+    ! arguments
+    type(outtype_annual_tile), intent(in) :: annual_tile
+    real, dimension(nvars_annual_tile), intent(inout) :: out_annual_tile
+
+    out_annual_tile(1)  = dble(annual_tile%year)
+    out_annual_tile(2)  = dble(annual_tile%CAI)
+    out_annual_tile(3)  = dble(annual_tile%LAI)
+    out_annual_tile(4)  = dble(annual_tile%density)
+    out_annual_tile(5)  = dble(annual_tile%DBH)
+    out_annual_tile(6)  = dble(annual_tile%density12)
+    out_annual_tile(7)  = dble(annual_tile%DBH12)
+    out_annual_tile(8)  = dble(annual_tile%QMD)
+    out_annual_tile(9)  = dble(annual_tile%NPP)
+    out_annual_tile(10) = dble(annual_tile%GPP)
+    out_annual_tile(11) = dble(annual_tile%Rauto)
+    out_annual_tile(12) = dble(annual_tile%Rh)
+    out_annual_tile(13) = dble(annual_tile%rain)
+    out_annual_tile(14) = dble(annual_tile%SoilWater)
+    out_annual_tile(15) = dble(annual_tile%Transp)
+    out_annual_tile(16) = dble(annual_tile%Evap)
+    out_annual_tile(17) = dble(annual_tile%Runoff)
+    out_annual_tile(18) = dble(annual_tile%plantC)
+    out_annual_tile(19) = dble(annual_tile%soilC)
+    out_annual_tile(20) = dble(annual_tile%plantN)
+    out_annual_tile(21) = dble(annual_tile%soilN)
+    out_annual_tile(22) = dble(annual_tile%totN)
+    out_annual_tile(23) = dble(annual_tile%NSC)
+    out_annual_tile(24) = dble(annual_tile%SeedC)
+    out_annual_tile(25) = dble(annual_tile%leafC)
+    out_annual_tile(26) = dble(annual_tile%rootC)
+    out_annual_tile(27) = dble(annual_tile%SapwoodC)
+    out_annual_tile(28) = dble(annual_tile%WoodC)
+    out_annual_tile(29) = dble(annual_tile%NSN)
+    out_annual_tile(30) = dble(annual_tile%SeedN)
+    out_annual_tile(31) = dble(annual_tile%leafN)
+    out_annual_tile(32) = dble(annual_tile%rootN)
+    out_annual_tile(33) = dble(annual_tile%SapwoodN)
+    out_annual_tile(34) = dble(annual_tile%WoodN)
+    out_annual_tile(35) = dble(annual_tile%McrbC)
+    out_annual_tile(36) = dble(annual_tile%fastSOM)
+    out_annual_tile(37) = dble(annual_tile%SlowSOM)
+    out_annual_tile(38) = dble(annual_tile%McrbN)
+    out_annual_tile(39) = dble(annual_tile%fastSoilN)
+    out_annual_tile(40) = dble(annual_tile%slowSoilN)
+    out_annual_tile(41) = dble(annual_tile%mineralN)
+    out_annual_tile(42) = dble(annual_tile%N_fxed)
+    out_annual_tile(43) = dble(annual_tile%N_uptk)
+    out_annual_tile(44) = dble(annual_tile%N_yrMin)
+    out_annual_tile(45) = dble(annual_tile%N_P2S)
+    out_annual_tile(46) = dble(annual_tile%N_loss)
+    out_annual_tile(47) = dble(annual_tile%totseedC)
+    out_annual_tile(48) = dble(annual_tile%totseedN)
+    out_annual_tile(49) = dble(annual_tile%Seedling_C)
+    out_annual_tile(50) = dble(annual_tile%Seedling_N)
+    out_annual_tile(51) = dble(annual_tile%MaxAge)
+    out_annual_tile(52) = dble(annual_tile%MaxVolume)
+    out_annual_tile(53) = dble(annual_tile%MaxDBH)
+    out_annual_tile(54) = dble(annual_tile%NPPL)
+    out_annual_tile(55) = dble(annual_tile%NPPW)
+    out_annual_tile(56) = dble(annual_tile%n_deadtrees)
+    out_annual_tile(57) = dble(annual_tile%c_deadtrees)
+    out_annual_tile(58) = dble(annual_tile%m_turnover)
+    out_annual_tile(59) = dble(annual_tile%c_turnover_time)
+
+  end subroutine populate_outarray_annual_tile
+
+  subroutine populate_outarray_annual_cohorts( annual_cohorts, out_annual_cohorts ) 
+
+    use md_interface_biomee, only: outtype_annual_cohorts
+
+    ! arguments
+    type(outtype_annual_cohorts), dimension(out_max_cohorts), intent(in) :: annual_cohorts
+    real, dimension(out_max_cohorts,nvars_annual_cohorts), intent(inout) :: out_annual_cohorts    
+
+    out_annual_cohorts(:, 1)  = annual_cohorts(:)%year
+    out_annual_cohorts(:, 2)  = annual_cohorts(:)%cID
+    out_annual_cohorts(:, 3)  = annual_cohorts(:)%PFT
+    out_annual_cohorts(:, 4)  = annual_cohorts(:)%layer
+    out_annual_cohorts(:, 5)  = annual_cohorts(:)%density
+    out_annual_cohorts(:, 6)  = annual_cohorts(:)%flayer
+    out_annual_cohorts(:, 7)  = annual_cohorts(:)%DBH
+    out_annual_cohorts(:, 8)  = annual_cohorts(:)%dDBH
+    out_annual_cohorts(:, 9)  = annual_cohorts(:)%height
+    out_annual_cohorts(:, 10)  = annual_cohorts(:)%age
+    out_annual_cohorts(:, 11)  = annual_cohorts(:)%BA
+    out_annual_cohorts(:, 12)  = annual_cohorts(:)%dBA
+    out_annual_cohorts(:, 13)  = annual_cohorts(:)%Acrown
+    out_annual_cohorts(:, 14)  = annual_cohorts(:)%Aleaf
+    out_annual_cohorts(:, 15)  = annual_cohorts(:)%nsc
+    out_annual_cohorts(:, 16)  = annual_cohorts(:)%nsn
+    out_annual_cohorts(:, 17)  = annual_cohorts(:)%seedC
+    out_annual_cohorts(:, 18)  = annual_cohorts(:)%leafC
+    out_annual_cohorts(:, 19)  = annual_cohorts(:)%rootC
+    out_annual_cohorts(:, 20)  = annual_cohorts(:)%sapwC
+    out_annual_cohorts(:, 21)  = annual_cohorts(:)%woodC
+    out_annual_cohorts(:, 22)  = annual_cohorts(:)%treeG
+    out_annual_cohorts(:, 23)  = annual_cohorts(:)%fseed
+    out_annual_cohorts(:, 24)  = annual_cohorts(:)%fleaf
+    out_annual_cohorts(:, 25)  = annual_cohorts(:)%froot
+    out_annual_cohorts(:, 26)  = annual_cohorts(:)%fwood
+    out_annual_cohorts(:, 27)  = annual_cohorts(:)%GPP
+    out_annual_cohorts(:, 28)  = annual_cohorts(:)%NPP
+    out_annual_cohorts(:, 29)  = annual_cohorts(:)%Rauto
+    out_annual_cohorts(:, 30)  = annual_cohorts(:)%Nupt
+    out_annual_cohorts(:, 31)  = annual_cohorts(:)%Nfix
+    out_annual_cohorts(:, 32)  = annual_cohorts(:)%n_deadtrees
+    out_annual_cohorts(:, 33)  = annual_cohorts(:)%c_deadtrees
+    out_annual_cohorts(:, 34)  = annual_cohorts(:)%deathrate
+
+
+
+
+  end subroutine populate_outarray_annual_cohorts
 
   !========================================================================
   ! read in forcing data (Users need to write their own data input procedure)
@@ -676,7 +933,7 @@ contains
     integer :: idx_climatedata
 
     character(len=80) :: filepath_in = '/home/laura/rsofun/data-raw/'
-    character(len=80) :: climfile    = 'CHLAE_forcing.txt'
+    character(len=80) :: climfile    = 'ORNL_forcing.txt'
 
     climfile=trim(filepath_in)//trim(climfile)
     write(*,*)'inputfile: ',climfile
@@ -701,7 +958,7 @@ contains
         doy = doy_data(m-1)
       endif
       if(doy /= doy_data(m)) idays = idays + 1
-      !write(*,*)year_data(m),doy_data(m),hour_data(m)
+      write(*,*)year_data(m),doy_data(m),hour_data(m)
     enddo ! end of reading the forcing file
 
     timestep = hour_data(2) - hour_data(1)
@@ -729,7 +986,7 @@ contains
     days_data = days_data - 3
 
     ! print*,'3'
-    ! print*,'datalines', datalines
+    print*,'datalines', datalines
     ! print*,'size(input_data)', shape(input_data)
     ! print*,'length(climateData)', size(climateData)
     idx_climatedata = 0

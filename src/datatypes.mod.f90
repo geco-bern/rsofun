@@ -939,7 +939,6 @@ contains
 
   end subroutine summarize_tile
 
-
   subroutine hourly_diagnostics(vegn, forcing, iyears, idoy, ihour, iday, fno1, out_hourly_tile)
     !////////////////////////////////////////////////////////////////////////
     ! Updates sub-daily tile-level variables and takes running daily sums
@@ -949,7 +948,7 @@ contains
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type),intent(in):: forcing
-    integer, intent(in) :: iyears, idoy, ihour, iday, fno1
+    integer, intent(in) :: iyears, idoy, ihour, fno1, iday
     type(outtype_hourly_tile),intent(out) :: out_hourly_tile 
 
     ! local variables
@@ -981,23 +980,33 @@ contains
     ! NEP is equal to NNP minus soil respiration
     vegn%nep = vegn%npp - vegn%rh ! kgC m-2 hour-1; time step is hourly
 
-    !  if (.not. myinterface%steering%spinup) then
-    !   out_hourly_tile%year      =  iyears    
-    !   out_hourly_tile%doy       =  idoy   
-    !   out_hourly_tile%hour      =  ihour    
-    !   out_hourly_tile%rad       =  forcing%radiation    !forcingData 
-    !   out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
-    !   out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
-    !   out_hourly_tile%GPP       =  vegn%GPP  
-    !   out_hourly_tile%Resp      =  vegn%resp   
-    !   out_hourly_tile%Transp    =  vegn%transp
-    !   out_hourly_tile%Evap      =  vegn%evap   
-    !   out_hourly_tile%Runoff    =  vegn%runoff   
-    !   out_hourly_tile%Soilwater =  vegn%soilwater
-    !   out_hourly_tile%wcl       =  vegn%wcl(1)    
-    !   out_hourly_tile%FLDCAP    =  vegn%FLDCAP
-    !   out_hourly_tile%WILTPT    =  vegn%WILTPT
-    ! end if
+      if (.not. myinterface%steering%spinup) then
+       out_hourly_tile%year      =  iyears    
+       out_hourly_tile%doy       =  idoy   
+       out_hourly_tile%hour      =  ihour    
+       out_hourly_tile%rad       =  forcing%radiation    !forcingData 
+       out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
+       out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
+       out_hourly_tile%GPP       =  vegn%GPP  
+       out_hourly_tile%Resp      =  vegn%resp   
+       out_hourly_tile%Transp    =  vegn%transp
+       out_hourly_tile%Evap      =  vegn%evap   
+       out_hourly_tile%Runoff    =  vegn%runoff   
+       out_hourly_tile%Soilwater =  vegn%soilwater
+       out_hourly_tile%wcl       =  vegn%wcl(1)    
+       out_hourly_tile%FLDCAP    =  vegn%FLDCAP
+       out_hourly_tile%WILTPT    =  vegn%WILTPT
+
+      write(fno1,'(3(I5,","),25(E11.4,","),25(F8.2,","))')  &
+      iyears, idoy, ihour,      &
+      forcing%radiation,    &  !forcingData 
+      forcing%Tair,         &  !forcingData 
+      forcing%rain,         &  !forcingData 
+      vegn%GPP,vegn%resp,vegn%transp,  &
+      vegn%evap,vegn%runoff,vegn%soilwater, &
+      vegn%wcl(1),vegn%FLDCAP,vegn%WILTPT
+
+     end if
 
     ! Daily summary:
     vegn%dailyNup  = vegn%dailyNup  + vegn%N_uptake
@@ -1011,7 +1020,6 @@ contains
     vegn%dailyPrcp = vegn%dailyPrcp + forcing%rain * myinterface%step_seconds
 
   end subroutine hourly_diagnostics
-
 
   subroutine daily_diagnostics(vegn, forcing, iyears, idoy, iday, fno3, fno4, out_daily_cohorts, out_daily_tile)
     !////////////////////////////////////////////////////////////////////////

@@ -6,7 +6,7 @@ module md_soil_biomee
   ! 2016 Global Change Biology along the graidient of temperature. 
   ! Code is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !-------------------------------------------------------------------------
- use md_interface_biomee, only: myinterface
+ use md_interface_biomee!, only: myinterface
  use datatypes
  implicit none
  private

@@ -21,28 +21,30 @@ module md_biosphere_biomee
 contains
 
   subroutine biosphere_annual(  &
-    out_biosphere_daily_tile, &
-    out_biosphere_daily_cohorts, &
-    out_biosphere_annual_tile, &
-    out_biosphere_annual_cohorts &
+    out_biosphere &
+    !out_biosphere_daily_tile, &
+    !out_biosphere_daily_cohorts, &
+    !out_biosphere_annual_tile, &
+    !out_biosphere_annual_cohorts &
     )
     !////////////////////////////////////////////////////////////////
     ! Calculates one year of vegetation dynamics. 
     !----------------------------------------------------------------
     use md_interface_biomee, only: myinterface, &
-      outtype_daily_tile, &
-      ! outtype_daily_cohorts, &
-      outtype_annual_tile, &
-      outtype_annual_cohorts
-    use md_gpp_biomee, only: getpar_modl_gpp
+      outtype_biosphere 
+      !outtype_daily_tile, &
+      !outtype_daily_cohorts, &
+      !outtype_annual_tile, &
+      !outtype_annual_cohorts
+    !use md_gpp_biomee, only: getpar_modl_gpp
+    use md_params_core, only: ntstepsyear
 
     ! return variables
-    ! return variable
-    !type(outtype_biosphere), intent(inout) :: out_biosphere
-    type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
-    type(outtype_daily_cohorts),  dimension(ndayyear,out_max_cohorts), intent(out) :: out_biosphere_daily_cohorts
-    type(outtype_annual_tile)                                        , intent(out) :: out_biosphere_annual_tile
-    type(outtype_annual_cohorts), dimension(out_max_cohorts)         , intent(out) :: out_biosphere_annual_cohorts
+    type(outtype_biosphere), intent(inout) :: out_biosphere
+    !type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
+    !type(outtype_daily_cohorts),  dimension(ndayyear,out_max_cohorts), intent(out) :: out_biosphere_daily_cohorts
+    !type(outtype_annual_tile)                                        , intent(out) :: out_biosphere_annual_tile
+    !type(outtype_annual_cohorts), dimension(out_max_cohorts)         , intent(out) :: out_biosphere_annual_cohorts
 
     ! ! local variables
     integer :: dm, moy, doy
@@ -58,10 +60,10 @@ contains
     integer :: idata
     !integer :: nfrequency ! disturbances
     integer, save :: simu_steps !, datalines
-    integer, save :: iyears
+    integer, save :: iyears, ihour, iday
     integer, save :: idays
     integer, save :: idoy
-    integer :: istat1, istat3, fno2, fno5
+    integer :: istat1, istat2, istat3, fno1,fno2,fno3,fno4,fno5
 
     character(len=150) :: plantcohorts, plantCNpools, soilCNpools, allpools, faststepfluxes  ! output file names
     character(len=50) :: filepath_out, filesuffix
@@ -79,15 +81,15 @@ contains
     allpools       = trim(filepath_out)//'Annual_tile'//trim(filesuffix)
     faststepfluxes = trim(filepath_out)//'Hourly_tile'//trim(filesuffix) ! hourly, has 15 columns and 
 
-    !fno1=91
+    fno1=91
     fno2=101
-    !fno3=102
-    !fno4=103
+    fno3=102
+    fno4=103
     fno5=104
-    !open(fno1, file=trim(faststepfluxes), ACTION='write', IOSTAT=istat1)
+    open(fno1, file=trim(faststepfluxes), ACTION='write', IOSTAT=istat1)
     open(fno2, file=trim(plantcohorts),   ACTION='write', IOSTAT=istat1)
-    !open(fno3, file=trim(plantCNpools),   ACTION='write', IOSTAT=istat2)
-    !open(fno4, file=trim(soilCNpools),    ACTION='write', IOSTAT=istat3)
+    open(fno3, file=trim(plantCNpools),   ACTION='write', IOSTAT=istat2)
+    open(fno4, file=trim(soilCNpools),    ACTION='write', IOSTAT=istat3)
     open(fno5, file=trim(allpools),       ACTION='write', IOSTAT=istat3)
 
     !----------------------------------------------------------------
@@ -99,6 +101,30 @@ contains
       ! Translation to LM3-PPA variables
       !------------------------------------------------------------------------
       
+       ! hourly tile
+      write(fno1,'(5(a8,","),25(a12,","))')                    &
+      'year','doy','hour','rad',                               &
+      'Tair','Prcp', 'GPP', 'Resp',                            &
+      'Transp','Evap','Runoff','Soilwater',                    &
+      'wcl','FLDCAP','WILTPT'
+
+      ! annual cohorts
+      write(fno2,'(3(a5,","),25(a9,","))') 'year',             &
+      'cID','PFT','layer','density', 'f_layer',                &
+      'dDBH','dbh','height','Acrown',                          &
+      'wood','nsc', 'NSN','NPPtr','seed',                      &
+      'NPPL','NPPR','NPPW','GPP_yr','NPP_yr',                  &
+      'N_uptk','N_fix','maxLAI'
+      
+      ! daily cohorts
+      write(fno3,'(5(a5,","),25(a8,","))')                     &
+      'year','doy','hour','cID','PFT',                         &
+      'layer','density', 'f_layer', 'LAI',                     &
+      'gpp','resp','transp',                                   &
+      'NPPleaf','NPProot','NPPwood',                           &
+      'NSC','seedC','leafC','rootC','SW_C','HW_C',             &
+      'NSN','seedN','leafN','rootN','SW_N','HW_N'
+
       ! daily tile
       write(fno2,'(2(a5,","),55(a10,","))')  'year','doy',     &
       'Tc','Prcp', 'totWs',  'Trsp', 'Evap','Runoff',          &
@@ -136,7 +162,7 @@ contains
       call Zero_diagnostics( vegn )
 
       ! module-specific parameter specification
-      call getpar_modl_gpp()
+      !call getpar_modl_gpp()
 
       year0  = myinterface%climate(1)%year  ! forcingData(1)%year
       iyears = 1
@@ -184,8 +210,9 @@ contains
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
          
-          call hourly_diagnostics( vegn, myinterface%climate(idata) )
-         
+          !call hourly_diagnostics( vegn, myinterface%climate(idata), fno1)
+          call hourly_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, ihour, iday, fno1, out_biosphere%hourly_tile(idata) )
+
           init = .false.
          
         enddo fastloop ! hourly or half-hourly
@@ -200,8 +227,8 @@ contains
         soil_theta    = vegn%thetaS
 
         ! sum over fast time steps and cohorts
-        call daily_diagnostics( vegn, iyears, idoy, out_biosphere_daily_tile(doy)  )  ! , out_biosphere_daily_cohorts(doy,:)
-        
+        !call daily_diagnostics( vegn, iyears, idoy, fno3, fno4, out_biosphere_daily_tile(doy) )  ! , out_biosphere_daily_cohorts(doy,:)
+        !call daily_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, fno3, fno4, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
         
@@ -229,7 +256,8 @@ contains
     ! cohorts again and we want annual output and daily
     ! output to be consistent with cohort identities.
     !---------------------------------------------
-    call annual_diagnostics( vegn, iyears, fno2, fno5, out_biosphere_annual_cohorts(:), out_biosphere_annual_tile )
+    !call annual_diagnostics( vegn, iyears, fno2, fno5, out_biosphere_annual_cohorts(:), out_biosphere_annual_tile )
+    call annual_diagnostics(vegn, iyears, fno2, fno5, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
 
     !---------------------------------------------
     ! Reproduction and mortality

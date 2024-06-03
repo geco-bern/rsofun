@@ -5,7 +5,7 @@ module md_vegetation_biomee
   !---------------------------------------------------------------  
   use datatypes
   use md_soil_biomee
-  use md_interface_biomee, only: myinterface
+  use md_interface_biomee!, only: myinterface
 
   implicit none
   private

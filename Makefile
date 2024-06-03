@@ -33,7 +33,7 @@ ifeq ($(PROFILE),benilaptop)
 	NETCDF_LIB = /opt/local/lib
 
 	# LIBS = -L $(NETCDF_LIB) -lgfortran #-lnetcdf -lnetcdff  # avoiding netcdf library
-	LIBS = -L $(NETCDF_LIB) -lnetcdf -lnetcdff -lgfortran
+	LIBS = -L $(NETCDF_LIB) -lgfortran #-lnetcdf -lnetcdff 
 
 else
 
@@ -64,7 +64,7 @@ else
 			NETCDF_INC = /cluster/apps/netcdf/4.3.2/x86_64/gcc_4.8.2/serial/include
 			NETCDF_LIB = /cluster/apps/netcdf/4.3.2/x86_64/gcc_4.8.2/serial/lib
 
-			LIBS = -L $(NETCDF_LIB) -lnetcdf -lnetcdff -lgfortran # On Beni's laptop
+			LIBS = -L $(NETCDF_LIB) -lgfortran #-lnetcdf -lnetcdff # On Beni's laptop
 
 		else
 
