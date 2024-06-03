@@ -986,7 +986,7 @@ contains
     days_data = days_data - 3
 
     ! print*,'3'
-    print*,'datalines', datalines
+    ! print*,'datalines', datalines
     ! print*,'size(input_data)', shape(input_data)
     ! print*,'length(climateData)', size(climateData)
     idx_climatedata = 0
