@@ -184,6 +184,10 @@ forcing <- forcingLAE %>%
   summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>%
   rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
   ungroup()
+
+forcing <- forcing[,c(4:16)]
+write.csv(forcing, "/home/laura/rsofun/data-raw/CHLAE_forcing.csv")
+
 forcing <- forcing %>%
   rename(year=YEAR, doy= DOY, hour=HOUR, par=PAR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, rh=RH,
          prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW, swc=SWC) %>%
