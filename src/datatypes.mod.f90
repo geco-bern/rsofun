@@ -522,17 +522,17 @@ module datatypes
   real :: kphio(0:MSPECIES)            
   real :: phiRL(0:MSPECIES)         != 3.5 ! ratio of fine root area to leaf area (Root:Shoot ratio simulations: 3.5, 5, 7)
 
-  real    :: GMD                                ! geometric mean partice diameter, mm
-  real    :: GSD                                ! geometric standard deviation of particle size
+  real    :: GMD(1:9)                           ! geometric mean partice diameter, mm
+  real    :: GSD(1:9)                                ! geometric standard deviation of particle size
  ! real    :: vwc_wilt
   !real    :: vwc_fc
-  real    :: vwc_sat
-  real    :: chb                                ! Soil texture parameter
-  real    :: psi_sat_ref                        ! saturation soil water potential, m
-  real    :: k_sat_ref                          ! hydraulic conductivity of saturated soil, kg/(m2 s)
+  real    :: vwc_sat(1:9)
+  real    :: chb(1:9)                                ! Soil texture parameter
+  real    :: psi_sat_ref(1:9)                       ! saturation soil water potential, m
+  real    :: k_sat_ref(1:9)                          ! hydraulic conductivity of saturated soil, kg/(m2 s)
   !real    :: vlc_min
-  real    :: alphaSoil                            ! vertical changes of soil property, 1: no change
-  real    :: heat_capacity_dry
+  real    :: alphaSoil(1:9)                            ! vertical changes of soil property, 1: no change
+  real    :: heat_capacity_dry(1:9)
   !real    :: tfreeze
 
   !=============== Params_soil in R ============================================================
@@ -555,15 +555,13 @@ module datatypes
   real   :: init_Nmineral     != 0.015  ! Mineral nitrogen pool, (kg N/m2)
   real   :: N_input           != 0.0008 ! annual N input to soil N pool, kgN m-2 yr-1
 
-  character(len=80) :: filepath_in 
-  character(len=160) :: climfile 
-  !integer   :: model_run_years = 100 
-  !integer   :: runyears = 100  
+  character(len=80) :: filepath_in = '/home/laura/rsofun/data-raw/' 
+  character(len=160) :: climfile    = 'ORNL_forcing.txt' 
   integer   :: equi_days       = 0 ! 100 * 365
   character(len=80) :: sitename 
-  real   :: longitude
-  real   :: latitude
-  real   :: altitude
+  !real   :: longitude
+  !real   :: latitude
+  !real   :: altitude
   integer :: year_start
   integer :: year_end
   character(len=80) :: classid 
@@ -572,11 +570,11 @@ module datatypes
   character(len=160) :: koeppen_code 
   character(len=160) :: igbp_land_use 
   character(len=160) :: plant_functional_type 
-  logical   :: spinup = .False.
-  integer :: spinupyears
-  integer :: recycle
-  integer :: firstyeartrend
-  integer :: nyeartrend
+  !logical   :: spinup = .False.
+  !integer :: spinupyears
+  !integer :: recycle
+  !integer :: firstyeartrend
+  !integer :: nyeartrend
   logical   :: outputhourly 
   logical   :: outputdaily  
   logical   :: do_U_shaped_mortality

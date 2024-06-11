@@ -23,12 +23,12 @@ program main
   implicit none
 
   ! Simulation parameters
-  !logical :: spinup
-  !integer :: spinupyears
-  !integer :: recycle
-  !integer :: firstyeartrend
-  !integer :: nyeartrend
-  !integer :: runyears
+  logical :: spinup
+  integer :: spinupyears
+  integer :: recycle
+  integer :: firstyeartrend
+  integer :: nyeartrend
+  integer :: runyears
 
   !logical :: outputhourly
   !logical :: outputdaily
@@ -41,9 +41,9 @@ program main
   !integer :: code_method_mortality
 
   ! site information
-  !real :: longitude
-  !real :: latitude
-  !real :: altitude
+  real :: longitude
+  real :: latitude
+  real :: altitude
   
   integer :: idx
   integer :: idx_hourly_start
@@ -280,27 +280,57 @@ program main
   LAI_light     
 
   namelist /soil_data_nml/ &
-  GMD, GSD, vwc_sat,chb, psi_sat_ref, &
-  k_sat_ref, alphaSoil,heat_capacity_dry
+  GMD, &
+  GSD, &
+  vwc_sat,&
+  chb, &
+  psi_sat_ref, &
+  k_sat_ref, &
+  alphaSoil, &
+  heat_capacity_dry
 
   namelist /initial_state_nml/ &
-  init_n_cohorts, init_cohort_species, init_cohort_nindivs, &
-  init_cohort_bl, init_cohort_br, init_cohort_bsw, &
-  init_cohort_bHW, init_cohort_seedC, init_cohort_nsc, &
-  init_fast_soil_C, init_slow_soil_C,    & 
-  init_Nmineral, N_input,  &
-  filepath_in,climfile, &
-  sitename, longitude, latitude, altitude, &
-  year_start, year_end, classid,c4, whc, &
-  koeppen_code, igbp_land_use, plant_functional_type, &
-  spinup, spinupyears, recycle, firstyeartrend, nyeartrend, &
-  !equi_days, &
+  init_n_cohorts,      &
+  init_cohort_species, &
+  init_cohort_nindivs, &
+  init_cohort_bl,      &
+  init_cohort_br, &
+  init_cohort_bsw, &
+  init_cohort_bHW, &
+  init_cohort_seedC, &
+  init_cohort_nsc, &
+  init_fast_soil_C, &
+  init_slow_soil_C,    & 
+  init_Nmineral, &
+  N_input,  &
+  filepath_in, &
+  climfile, &
+  sitename, &
+  longitude, &
+  latitude, &
+  altitude, &
+  year_start, &
+  year_end, &
+  classid,&
+  c4, &
+  whc, &
+  koeppen_code, &
+  igbp_land_use, &
+  plant_functional_type, &
+  spinup, &
+  spinupyears, &
+  recycle, &
+  firstyeartrend, &
+  nyeartrend, &
   outputhourly, &
   outputdaily, &
   do_U_shaped_mortality, &
   update_annualLAImax, &
   do_closedN_run, &
-  do_reset_veg, dist_frequency, method_photosynth, method_photosynth
+  do_reset_veg,  &
+  dist_frequency,  &
+  method_photosynth,  &
+  method_mortality
 
   !----------------------------------------------------------------
   ! READ FROM NAMELIST FILE
@@ -474,7 +504,12 @@ program main
   !----------------------------------------------------------------
   ! READ FORCING FILE
   !----------------------------------------------------------------
-  call read_FACEforcing( forcingData, datalines, days_data, yr_data, timestep ) !! ORNL
+  !call read_FACEforcing( forcingData, datalines, days_data, yr_data, timestep ) !! ORNL
+
+  print*,'runyears  ', myinterface%params_siml%runyears
+  print*,'params_tile%soiltype  ', myinterface%params_tile%soiltype
+  print*,'params_species%LMA  ', myinterface%params_species%LMA
+  print*,'spinupyears  ', myinterface%params_siml%spinupyears
 
   !----------------------------------------------------------------
   ! INTERPRET FORCING
@@ -963,6 +998,7 @@ contains
 
     timestep = hour_data(2) - hour_data(1)
     write(*,*)"forcing", datalines, yr_data, timestep, myinterface%dt_fast_yr
+
     if (timestep==1.0)then
       write(*,*)"the data frequency is hourly"
     elseif(timestep==0.5)then
