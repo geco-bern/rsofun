@@ -387,7 +387,6 @@ program main
   myinterface%params_siml%do_reset_veg          = do_reset_veg  
   myinterface%params_siml%dist_frequency        = dist_frequency           
   
-
   myinterface%grid%lon = longitude
   myinterface%grid%lat = latitude
   myinterface%grid%elv = altitude
@@ -504,7 +503,7 @@ program main
   !----------------------------------------------------------------
   ! READ FORCING FILE
   !----------------------------------------------------------------
-  !call read_FACEforcing( forcingData, datalines, days_data, yr_data, timestep ) !! ORNL
+  call read_FACEforcing( forcingData, datalines, days_data, yr_data, timestep ) !! ORNL
 
   print*,'runyears  ', myinterface%params_siml%runyears
   print*,'params_tile%soiltype  ', myinterface%params_tile%soiltype
@@ -941,9 +940,6 @@ contains
     out_annual_cohorts(:, 33)  = annual_cohorts(:)%c_deadtrees
     out_annual_cohorts(:, 34)  = annual_cohorts(:)%deathrate
 
-
-
-
   end subroutine populate_outarray_annual_cohorts
 
   !========================================================================
@@ -1009,8 +1005,8 @@ contains
     endif
     close(11)    ! close forcing file
 
-    ! print*,'1'
-    ! print*,'input par', input_data(1,10)
+    print*,'1'
+    print*,'input par', input_data(1,10)
 
     ! Put the data into forcing 
     datalines = m - 1
