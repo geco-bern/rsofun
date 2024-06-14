@@ -173,8 +173,8 @@ contains
     !---------------------------------------------------------
     ! 4. Calculate declination angle, degrees
     !---------------------------------------------------------
-    ! 4. Calculate declination angle, degrees
-
+    grid%decl_angle = calc_decl_angle( grid%lambda )
+    
     !---------------------------------------------------------
     ! 5. Calculate variable substitutes (ru and rv), unitless
     !---------------------------------------------------------
@@ -568,6 +568,8 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
+    ! constant for dRnl (Monteith & Unsworth, 1990)
+    kA       = 107.0
     
     ! shortwave albedo (Federer, 1968)
     kalb_sw  = 0.17
