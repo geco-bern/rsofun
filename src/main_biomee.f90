@@ -509,6 +509,7 @@ program main
   print*,'params_tile%soiltype  ', myinterface%params_tile%soiltype
   print*,'params_species%LMA  ', myinterface%params_species%LMA
   print*,'spinupyears  ', myinterface%params_siml%spinupyears
+  print*,'timestep  ',timestep
 
   !----------------------------------------------------------------
   ! INTERPRET FORCING
@@ -520,8 +521,12 @@ program main
     ! forcing is daily
     !timestep = 24.0
   !end if
-  if (daily) timestep = 24.0
+  !if (daily) timestep = 24.0
+  timestep = 24.0
+  print*,'timestep 2 ',timestep
+  print*,'myinterface%steps_per_day ',myinterface%steps_per_day
   myinterface%steps_per_day = int(24.0/timestep)
+  print*,'myinterface%steps_per_day ',myinterface%steps_per_day
   myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
   myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
   ntstepsyear = myinterface%steps_per_day * 365
