@@ -60,7 +60,7 @@ contains
     do i = 1, vegn%n_cohorts
 
       cc => vegn%cohorts(i)
-      associate ( sp => spdata(cc%species) )
+      ! associate ( sp => spdata(cc%species) )
 
       ! increment the cohort age
       cc%age = cc%age + myinterface%dt_fast_yr
@@ -76,7 +76,7 @@ contains
       cc%plabl%c%c12 = cc%plabl%c%c12 + cc%npp
       cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fixedN
 
-      end associate
+      ! end associate
     enddo ! all cohorts
     
     ! update soil carbon

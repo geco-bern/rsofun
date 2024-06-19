@@ -8,6 +8,8 @@
 # -fsanitize=address: Using the Address Sanitizer https://rstudio.github.io/r-manuals/r-exts/Debugging.html#using-the-address-sanitizer
 # PKG_FFLAGS = -frecursive -fbounds-check -Wall -Wextra -Wpedantic -g -O0 -fsanitize=address
 
+# PKG_FFLAGS = -g -fsanitize=address
+
 # C objects
 C_OBJS = wrappersc.o
 
