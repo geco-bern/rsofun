@@ -26,7 +26,7 @@ module md_classdefs
 
   ! Carbon, so far contains only c12 (to be extended for c13)
   type carbon
-   real :: c12
+   real :: c12 
   end type carbon
 
   type nitrogen

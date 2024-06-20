@@ -147,19 +147,29 @@ contains
       'mineralN', 'N_fxed','N_uptk','N_yrMin','N_P2S','N_loss',&
       'totseedC','totseedN','Seedling_C','Seedling_N'
 
+      print*,'A.'
+
       ! Parameter initialization: Initialize PFT parameters
       call initialize_PFT_data()
+
+      print*,'B.'
 
       ! Initialize vegetation tile and plant cohorts
       allocate( vegn )
       
       call initialize_vegn_tile( vegn )
       
+      print*,'C.'
+
       ! Sort and relayer cohorts
       call relayer_cohorts( vegn )
 
+      print*,'D.'
+
       ! initialise outputs 
       call Zero_diagnostics( vegn )
+
+      print*,'E.'
 
       ! module-specific parameter specification
       !call getpar_modl_gpp()
@@ -171,13 +181,27 @@ contains
 
     endif
 
+    print*,'F.'
+
     simu_steps = 0
+
+              print*,'init_n_cohorts AA', init_n_cohorts
+    print*, "vegn%psoil_fs%c%c12",vegn%psoil_fs%c%c12
+    print*, "vegn%psoil_fs%c%c12",myinterface%init_soil%init_fast_soil_C
+    print*, "vegn%psoil_sl%c%c12",vegn%psoil_sl%c%c12
+    print*, "vegn%psoil_sl%c%c12",myinterface%init_soil%init_slow_soil_C
+    print*, "CN0metabolicL",CN0metabolicL
+    print*, "CN0structuralL",CN0structuralL
+    print*, "Cvegn%N_input",vegn%N_input
+    print*, "Cvegn%N_input",myinterface%init_soil%N_input
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
     !----------------------------------------------------------------
     doy = 0
     monthloop: do moy=1,nmonth
+
+    print*,'G.'
 
       !----------------------------------------------------------------
       ! LOOP THROUGH DAYS
@@ -186,6 +210,8 @@ contains
         
         doy = doy + 1
         idoy = idoy + 1
+
+    !print*,'H.'
 
         ! print*,'----------------------'
         ! print*,'YEAR, DOY ', myinterface%steering%year, doy
@@ -197,7 +223,12 @@ contains
         ! get daily mean temperature from hourly/half-hourly data
         vegn%Tc_daily = 0.0
         tsoil         = 0.0
+
+    !print*,'I.'
+
         fastloop: do i = 1,myinterface%steps_per_day
+
+    !print*,'J.'
 
           idata         = simu_steps + 1
           year0         = myinterface%climate(idata)%year  ! Current year
@@ -205,11 +236,15 @@ contains
           tsoil         = myinterface%climate(idata)%tsoil
           simu_steps    = simu_steps + 1
 
+    !print*,'K.'
+
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
-         
+
+    !print*,'L.' 
+
           !call hourly_diagnostics( vegn, myinterface%climate(idata), fno1)
           call hourly_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, ihour, iday, fno1, out_biosphere%hourly_tile(idata) )
 
@@ -236,6 +271,8 @@ contains
         call vegn_growth_EW( vegn )
 
       end do dayloop
+
+    print*,'M.' 
 
     end do monthloop
 

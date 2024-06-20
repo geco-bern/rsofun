@@ -707,6 +707,7 @@ contains
     do i = 0, MSPECIES
       call init_derived_species_data(spdata(i))
     enddo
+
   end subroutine initialize_pft_data
 
   subroutine init_derived_species_data(sp)
@@ -721,28 +722,33 @@ contains
     ! specific root area
     sp%SRA = 2.0/(sp%root_r*sp%rho_FR) ! m2/kgC
 
+    !print*,'sp%root_r*sp%rho_FR', sp%root_r*sp%rho_FR
+
     ! root vertical profile
     rdepth=0.0
     do j=1,max_lev
       rdepth(j) = rdepth(j-1)+thksl(j)
       sp%root_frac(j) = exp(-rdepth(j-1)/sp%root_zeta)- &
                        exp(-rdepth(j)  /sp%root_zeta)
+
+    !print*,'sp%root_zeta', sp%root_zeta
+
     enddo
     residual = exp(-rdepth(max_lev)/sp%root_zeta)
     do j=1,max_lev
       sp%root_frac(j) = sp%root_frac(j) + residual*thksl(j)/rdepth(max_lev)
+    !print*,'F.'
+    !print*,'rdepth(max_lev)', rdepth(max_lev)
+
     enddo
 
     ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation
     sp%alphaBM = sp%rho_wood * sp%taperfactor * PI/4. * sp%alphaHT ! 5200
-
     ! Vmax as a function of LNbase
     sp%Vmax = 0.02 * sp%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
-
     ! CN0 of leaves
     sp%LNA     = sp%LNbase +  sp%LMA/sp%CNleafsupport
     sp%CNleaf0 = sp%LMA/sp%LNA
-
     ! Leaf life span as a function of LMA
     sp%leafLS = c_LLS * sp%LMA
     if(sp%leafLS>1.0)then
