@@ -5,7 +5,7 @@ module md_vegetation_biomee
   !---------------------------------------------------------------  
   use datatypes
   use md_soil_biomee
-  use md_interface_biomee, only: myinterface
+  use md_interface_biomee!, only: myinterface
 
   implicit none
   private
@@ -33,7 +33,6 @@ contains
     !---------------------------------------------------------------
     use md_forcing_biomee, only: climate_type
     use md_gpp_biomee, only: gpp
-
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type), intent(in) :: forcing
     ! is true on the very first simulation day (first subroutine call of each gridcell)
@@ -52,7 +51,7 @@ contains
 
     ! Photosynsthesis
     call gpp( forcing, vegn, init )
-    
+
     ! Update soil water
     call SoilWaterDynamicsLayer( forcing, vegn )
     
@@ -81,10 +80,12 @@ contains
     
     ! update soil carbon
     call SOMdecomposition( vegn, forcing%tsoil, theta )
-    
+  
     ! Nitrogen uptake
     call vegn_N_uptake( vegn, forcing%tsoil )
-    
+   
+       !print*,'10'
+
   end subroutine vegn_CNW_budget
 
   !========================================================================
@@ -1582,15 +1583,36 @@ contains
 
     runoff = vegn%runoff  !* myinterface%dt_fast_yr !kgH2O m-2 yr-1 ->kgH2O m-2/time step, weng 2017-10-15
   
+    !print*,'1'
+
     ! CN ratios of soil C pools
     CNfast = vegn%psoil_fs%c%c12 / vegn%psoil_fs%n%n14
     CNslow = vegn%psoil_sl%c%c12 / vegn%psoil_sl%n%n14
+    !print*,'2'
 
     ! C decomposition
     A = A_function(tsoil, thetaS)
+
+    !print*,'3'
+
+    !print*,'init_n_cohorts CC', init_n_cohorts
+    !print*, "vegn%psoil_fs%c%c12",vegn%psoil_fs%c%c12
+    !print*, "vegn%psoil_fs%c%c12",myinterface%init_soil%init_fast_soil_C
+    !print*, "vegn%psoil_sl%c%c12",vegn%psoil_sl%c%c12
+    !print*, "vegn%psoil_sl%c%c12",myinterface%init_soil%init_slow_soil_C
+
+    !print*, "CNfast", CNfast
+    !print*, "CNslow", CNslow
+
+    !print*, "CN0metabolicL",CN0metabolicL
+    !print*, "CN0structuralL",CN0structuralL
+    !print*, "Cvegn%N_input",vegn%N_input
+    !print*, "Cvegn%N_input",myinterface%init_soil%N_input
+
     micr_C_loss = vegn%pmicr%c%c12    * (1.0 - exp(-A*phoMicrobial* myinterface%dt_fast_yr))
     fast_L_loss = vegn%psoil_fs%c%c12 * (1.0 - exp(-A*K1          * myinterface%dt_fast_yr))
     slow_L_loss = vegn%psoil_sl%c%c12 * (1.0 - exp(-A*K2          * myinterface%dt_fast_yr))
+
 
     ! Carbon use efficiencies of microbes
     NforM = fNM * vegn%ninorg%n14
@@ -2271,9 +2293,17 @@ contains
     par_mort    = myinterface%params_tile%par_mort  !calibratable
     par_mort_under  = myinterface%params_tile%par_mort_under  !calibratable
 
-    !  Read parameters from the parameter file (namelist)
-
-    ! xxx seems new from d-ben - missing if?
+    ! Get variables set to 0 !xxx
+    call orginit(vegn%psoil_fs)
+    call orginit(vegn%psoil_sl)
+    call orginit(vegn%pmicr)
+    call orginit(vegn%plitt_af)
+    call orginit(vegn%plitt_as)
+    call orginit(vegn%plitt_bg)
+    call ninit(vegn%ninorg)
+    call ninit(vegn%pno3)
+    call ninit(vegn%pnh4)
+    
     ! Initialize plant cohorts
     init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts
     allocate(cc(1:init_n_cohorts), STAT = istat)
@@ -2282,6 +2312,7 @@ contains
     cc => null()
 
     do i=1,init_n_cohorts
+      
       cx => vegn%cohorts(i)
       cx%status      = LEAF_OFF ! ON=1, OFF=0 ! ON
       cx%layer       = 1
@@ -2293,7 +2324,9 @@ contains
       cx%psapw%c%c12 = myinterface%init_cohort(i)%init_cohort_bsw
       cx%pwood%c%c12 = myinterface%init_cohort(i)%init_cohort_bHW
       btotal         = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
+      
       call initialize_cohort_from_biomass(cx, btotal)
+
     enddo
     MaxCohortID = cx%ccID
 
@@ -2302,12 +2335,22 @@ contains
 
     ! Initial Soil pools and environmental conditions
     vegn%psoil_fs%c%c12   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
-    vegn%psoil_sl%c%c12  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+    vegn%psoil_sl%c%c12   = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
     vegn%psoil_fs%n%n14   = vegn%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-    vegn%psoil_sl%n%n14  = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-    vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
-    vegn%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
-    vegn%previousN    = vegn%ninorg%n14
+    vegn%psoil_sl%n%n14   = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
+    vegn%N_input          = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
+    vegn%ninorg%n14       = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
+    vegn%previousN        = vegn%ninorg%n14
+
+    print*,'init_n_cohorts BB', init_n_cohorts
+    print*, "vegn%psoil_fs%c%c12",vegn%psoil_fs%c%c12
+    print*, "vegn%psoil_fs%c%c12",myinterface%init_soil%init_fast_soil_C
+    print*, "vegn%psoil_sl%c%c12",vegn%psoil_sl%c%c12
+    print*, "vegn%psoil_sl%c%c12",myinterface%init_soil%init_slow_soil_C
+    print*, "CN0metabolicL",CN0metabolicL
+    print*, "CN0structuralL",CN0structuralL
+    print*, "Cvegn%N_input",vegn%N_input
+    print*, "Cvegn%N_input",myinterface%init_soil%N_input
 
     ! Soil water parameters
     vegn%soiltype = myinterface%params_tile%soiltype    
@@ -2338,8 +2381,6 @@ contains
     vegn%initialCC   => cc
     vegn%n_initialCC = init_n_cohorts
     cc => null()
-
-    ! xxx up to here new from d-ben
 
   end subroutine initialize_vegn_tile
 

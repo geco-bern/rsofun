@@ -17,7 +17,7 @@ ifeq ($(PROFILE),benilaptop)
 	# Compiler and options
 	FCOM=gfortran
 	CPPFLAGS=-cpp -E
-	COMPFLAGS=-g -O1 -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -pedantic-errors # For lm3ppa compilation, use -O0 or -O1 (not -O2 or above)
+	COMPFLAGS=-g -O1 -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -pedantic-errors # For biomee compilation, use -O0 or -O1 (not -O2 or above)
     # COMPFLAGS=-g -O2 -fdefault-real-8 -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -pedantic-errors # double precision by default
 	# COMPFLAGS=-g -O0 -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -Wall -Wextra -fcheck=all -fbacktrace # for debug setup
 
@@ -33,7 +33,7 @@ ifeq ($(PROFILE),benilaptop)
 	NETCDF_LIB = /opt/local/lib
 
 	# LIBS = -L $(NETCDF_LIB) -lgfortran #-lnetcdf -lnetcdff  # avoiding netcdf library
-	LIBS = -L $(NETCDF_LIB) -lnetcdf -lnetcdff -lgfortran
+	LIBS = -L $(NETCDF_LIB) -lgfortran #-lnetcdf -lnetcdff 
 
 else
 
@@ -64,7 +64,7 @@ else
 			NETCDF_INC = /cluster/apps/netcdf/4.3.2/x86_64/gcc_4.8.2/serial/include
 			NETCDF_LIB = /cluster/apps/netcdf/4.3.2/x86_64/gcc_4.8.2/serial/lib
 
-			LIBS = -L $(NETCDF_LIB) -lnetcdf -lnetcdff -lgfortran # On Beni's laptop
+			LIBS = -L $(NETCDF_LIB) -lgfortran #-lnetcdf -lnetcdff # On Beni's laptop
 
 		else
 
@@ -127,8 +127,8 @@ DEBUGFLAGS += -I$(NETCDF_INC)
 EXE                 = runsofun
 SPLASH_EXE          = runsplash
 SWBM_EXE            = runswbm
-LM3PPA_EXE          = runlm3ppa
-LM3PPA_PMODEL_EXE   = runlm3ppa_pmodel
+BIOMEE_EXE          = runbiomee
+BIOMEE_PMODEL_EXE   = runbiomee_pmodel
 PMODEL_EXE          = runpmodel
 PMODEL_DEMO_EXE     = rundemo_pmodel
 PMODEL_SWBM_EXE     = runpmodel_swbm
@@ -220,14 +220,14 @@ cmodel_simsuite:
 	 $(FCOM) -o $(CMODEL_SIMSUITE_EXE) $(COMPFLAGS) $(ARCHIVES) $(LIBS)
 
 # implementation of the BiomeE-Allocation model  
-lm3ppa:
-	 $(MAKE) lm3ppa -C src
-	 $(FCOM) -o $(LM3PPA_EXE) $(COMPFLAGS) $(ARCHIVES) $(LIBS)
+biomee:
+	 $(MAKE) biomee -C src
+	 $(FCOM) -o $(BIOMEE_EXE) $(COMPFLAGS) $(ARCHIVES) $(LIBS)
 
 # implementation of the BiomeE-Allocation model  
-lm3ppa_pmodel:
-	 $(MAKE) lm3ppa_pmodel -C src
-	 $(FCOM) -o $(LM3PPA_PMODEL_EXE) $(COMPFLAGS) $(ARCHIVES) $(LIBS)
+biomee_pmodel:
+	 $(MAKE) biomee_pmodel -C src
+	 $(FCOM) -o $(BIOMEE_PMODEL_EXE) $(COMPFLAGS) $(ARCHIVES) $(LIBS)
 
 # reduced model setup: fixed allocation, no litter, soil and inorganic C and N dynamics
 tmodel: 
@@ -242,7 +242,7 @@ cnmodel:
 # clean: remove exe and .o and .do files
 .PHONY: clean
 clean:
-	-rm $(EXE) $(SPLASH_EXE) $(SWBM_EXE) $(PMODEL_EXE) $(GPMODEL_EXE) $(GSWBM_EXE) $(GSPLASH_EXE) $(CMODEL_EXE) $(TMODEL_EXE) $(CNMODEL_EXE) $(CALIB_EXE) $(CMODEL_SIMSUITE_EXE) $(PMODEL_SIMSUITE_EXE) $(LM3PPA_EXE)  $(LM3PPA_PMODEL_EXE)
+	-rm $(EXE) $(SPLASH_EXE) $(SWBM_EXE) $(PMODEL_EXE) $(GPMODEL_EXE) $(GSWBM_EXE) $(GSPLASH_EXE) $(CMODEL_EXE) $(TMODEL_EXE) $(CNMODEL_EXE) $(CALIB_EXE) $(CMODEL_SIMSUITE_EXE) $(PMODEL_SIMSUITE_EXE) $(BIOMEE_EXE)  $(BIOMEE_PMODEL_EXE)
 	$(MAKE) clean -C src
 # include libraries when necessary
 #	$(MAKE) clean -C lpj/cdfcode
