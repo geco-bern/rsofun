@@ -885,12 +885,12 @@ contains
     integer :: i
 
     ! State variables
-    call orginit(vegn%plabl)
-    call orginit(vegn%pleaf)
-    call orginit(vegn%proot)
-    call orginit(vegn%psapw)
-    call orginit(vegn%pwood)
-    call orginit(vegn%pseed)
+    !call orginit(vegn%plabl)
+    !call orginit(vegn%pleaf)
+    !call orginit(vegn%proot)
+    !call orginit(vegn%psapw)
+    !call orginit(vegn%pwood)
+    !call orginit(vegn%pseed)
 
     vegn%LAI        = 0.0
     vegn%CAI        = 0.0
@@ -957,11 +957,12 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type),intent(in):: forcing
     integer, intent(in) :: iyears, idoy, ihour, fno1, iday
-    type(outtype_hourly_tile),intent(out) :: out_hourly_tile 
+    type(outtype_hourly_tile) :: out_hourly_tile 
 
     ! local variables
     type(cohort_type), pointer :: cc    ! current cohort
     integer :: i
+    integer :: ntstepsyear
 
     vegn%age = vegn%age + myinterface%dt_fast_yr
 
@@ -985,36 +986,39 @@ contains
       vegn%Resp   = vegn%Resp   + cc%Resp   * cc%nindivs
     enddo
 
+      print*,'hourly diag test1 '
+
     ! NEP is equal to NNP minus soil respiration
     vegn%nep = vegn%npp - vegn%rh ! kgC m-2 hour-1; time step is hourly
 
-      if (.not. myinterface%steering%spinup) then
-       out_hourly_tile%year      =  iyears    
-       out_hourly_tile%doy       =  idoy   
-       out_hourly_tile%hour      =  ihour    
-       out_hourly_tile%rad       =  forcing%radiation    !forcingData 
-       out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
-       out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
-       out_hourly_tile%GPP       =  vegn%GPP  
-       out_hourly_tile%Resp      =  vegn%resp   
-       out_hourly_tile%Transp    =  vegn%transp
-       out_hourly_tile%Evap      =  vegn%evap   
-       out_hourly_tile%Runoff    =  vegn%runoff   
-       out_hourly_tile%Soilwater =  vegn%soilwater
-       out_hourly_tile%wcl       =  vegn%wcl(1)    
-       out_hourly_tile%FLDCAP    =  vegn%FLDCAP
-       out_hourly_tile%WILTPT    =  vegn%WILTPT
+      !if (.not. myinterface%steering%spinup) then
 
-      write(fno1,'(3(I5,","),25(E11.4,","),25(F8.2,","))')  &
-      iyears, idoy, ihour,      &
-      forcing%radiation,    &  !forcingData 
-      forcing%Tair,         &  !forcingData 
-      forcing%rain,         &  !forcingData 
-      vegn%GPP,vegn%resp,vegn%transp,  &
-      vegn%evap,vegn%runoff,vegn%soilwater, &
-      vegn%wcl(1),vegn%FLDCAP,vegn%WILTPT
+       !out_hourly_tile%year      =  iyears    
+       !out_hourly_tile%doy       =  idoy   
+       !out_hourly_tile%hour      =  ihour    
+       !out_hourly_tile%rad       =  forcing%radiation    !forcingData 
+       !out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
+       !out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
+       !out_hourly_tile%GPP       =  vegn%GPP  
+       !out_hourly_tile%Resp      =  vegn%resp   
+       !out_hourly_tile%Transp    =  vegn%transp
+       !out_hourly_tile%Evap      =  vegn%evap   
+       !out_hourly_tile%Runoff    =  vegn%runoff   
+       !out_hourly_tile%Soilwater =  vegn%soilwater
+       !out_hourly_tile%wcl       =  vegn%wcl(1)    
+       !out_hourly_tile%FLDCAP    =  vegn%FLDCAP
+       !out_hourly_tile%WILTPT    =  vegn%WILTPT
 
-     end if
+      !write(fno1,'(3(I5,","),25(E11.4,","),25(F8.2,","))')  &
+      !iyears, idoy, ihour,      &
+      !forcing%radiation,    &  !forcingData 
+      !forcing%Tair,         &  !forcingData 
+      !forcing%rain,         &  !forcingData 
+      !vegn%GPP,vegn%resp,vegn%transp,  &
+      !vegn%evap,vegn%runoff,vegn%soilwater, &
+      !vegn%wcl(1),vegn%FLDCAP,vegn%WILTPT
+
+     !end if
 
     ! Daily summary:
     vegn%dailyNup  = vegn%dailyNup  + vegn%N_uptake
@@ -1026,6 +1030,8 @@ contains
     vegn%dailyEvap = vegn%dailyEvap + vegn%evap
     vegn%dailyRoff = vegn%dailyRoff + vegn%runoff
     vegn%dailyPrcp = vegn%dailyPrcp + forcing%rain * myinterface%step_seconds
+
+    !print*,'hourly_diagnostics() : vegn%evap, vegn%dailyEvap ', vegn%evap, vegn%dailyEvap
 
   end subroutine hourly_diagnostics
 
@@ -1039,51 +1045,22 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type),intent(in):: forcing
     integer, intent(in) :: iyears, idoy, iday, fno3, fno4
-    type(outtype_daily_cohorts), dimension(out_max_cohorts), intent(out) :: out_daily_cohorts
-    type(outtype_daily_tile), intent(out) :: out_daily_tile
+    type(outtype_daily_cohorts), dimension(out_max_cohorts) :: out_daily_cohorts
+    type(outtype_daily_tile) :: out_daily_tile
 
     ! local variables
     type(cohort_type), pointer :: cc    ! current cohort
     integer :: i
-
-     if (.not. myinterface%steering%spinup) then 
-       out_daily_cohorts(:)%year    = dummy
-       out_daily_cohorts(:)%doy     = dummy
-       out_daily_cohorts(:)%hour    = dummy
-       out_daily_cohorts(:)%cID     = dummy
-       out_daily_cohorts(:)%PFT     = dummy
-       out_daily_cohorts(:)%layer   = dummy
-       out_daily_cohorts(:)%density = dummy
-       out_daily_cohorts(:)%f_layer = dummy
-       out_daily_cohorts(:)%LAI     = dummy
-       out_daily_cohorts(:)%gpp     = dummy
-       out_daily_cohorts(:)%resp    = dummy
-       out_daily_cohorts(:)%transp  = dummy
-       out_daily_cohorts(:)%NPPleaf = dummy
-       out_daily_cohorts(:)%NPProot = dummy
-       out_daily_cohorts(:)%NPPwood = dummy
-       out_daily_cohorts(:)%NSC     = dummy
-       out_daily_cohorts(:)%seedC   = dummy
-       out_daily_cohorts(:)%leafC   = dummy
-       out_daily_cohorts(:)%rootC   = dummy
-       out_daily_cohorts(:)%SW_C    = dummy
-       out_daily_cohorts(:)%HW_C    = dummy
-       out_daily_cohorts(:)%NSN     = dummy
-       out_daily_cohorts(:)%seedN   = dummy
-       out_daily_cohorts(:)%leafN   = dummy
-       out_daily_cohorts(:)%rootN   = dummy
-       out_daily_cohorts(:)%SW_N    = dummy
-       out_daily_cohorts(:)%HW_N    = dummy
-     endif
 
     ! cohorts output
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
 
        if (.not. myinterface%steering%spinup) then 
+
          out_daily_cohorts(i)%year    = iyears
          out_daily_cohorts(i)%doy     = idoy
-         out_daily_cohorts(i)%hour    = i !1.0
+         out_daily_cohorts(i)%hour    = i 
          out_daily_cohorts(i)%cID     = cc%ccID
          out_daily_cohorts(i)%PFT     = cc%species
          out_daily_cohorts(i)%layer   = cc%layer
@@ -1108,6 +1085,16 @@ contains
          out_daily_cohorts(i)%rootN   = cc%proot%n%n14 * 1000
          out_daily_cohorts(i)%SW_N    = cc%psapw%n%n14 * 1000
          out_daily_cohorts(i)%HW_N    = cc%pwood%n%n14 * 1000
+
+          !write(fno3,'(6(I5,","),1(F8.1,","),25(F12.4,","))')  &
+          !iyears,idoy,i, cc%ccID,cc%species,cc%layer,   &
+          !cc%nindivs*10000, cc%layerfrac, cc%LAI, &
+          !cc%dailygpp,cc%dailyresp,cc%dailytrsp, &
+          !cc%NPPleaf,cc%NPProot,cc%NPPwood, &
+          !cc%NSC, cc%seedC, cc%bl, cc%br, cc%bsw, cc%bHW, &
+          !cc%NSN*1000, cc%seedN*1000, cc%leafN*1000, &
+          !cc%rootN*1000,cc%sapwN*1000,cc%woodN*1000
+
        endif
 
       ! running annual sum
@@ -1127,6 +1114,7 @@ contains
     call summarize_tile(vegn)
 
       if (.not. myinterface%steering%spinup) then 
+
       out_daily_tile%year      = iyears
       out_daily_tile%doy       = idoy
       out_daily_tile%Tc        = vegn%tc_daily
@@ -1162,6 +1150,21 @@ contains
       out_daily_tile%slowSoilN = vegn%psoil_sl%n%n14 * 1000
       out_daily_tile%mineralN  = vegn%ninorg%n14 * 1000
       out_daily_tile%N_uptk    = vegn%dailyNup * 1000
+
+      !write(fno4,'(2(I5,","),60(F12.6,","))') iyears, idoy,  &
+      !vegn%tc_daily, vegn%dailyPrcp, vegn%soilwater,      &
+      !vegn%dailyTrsp, vegn%dailyEvap,vegn%dailyRoff,      &
+      !vegn%wcl(1)*thksl(1)*1000.,vegn%wcl(2)*thksl(2)*1000., &
+      !vegn%wcl(3)*thksl(3)*1000., &
+      !vegn%LAI,vegn%dailyGPP, vegn%dailyResp, vegn%dailyRh, &
+      !vegn%NSC, vegn%SeedC, vegn%leafC, vegn%rootC,  &
+      !vegn%SapwoodC, vegn%woodC,                     &
+      !vegn%NSN*1000, vegn%SeedN*1000, vegn%leafN*1000,  &
+      !vegn%rootN*1000, vegn%SapwoodN *1000,  vegn%WoodN *1000,  &
+      !vegn%MicrobialC, vegn%metabolicL, vegn%structuralL, &
+      !vegn%MicrobialN*1000, vegn%metabolicN*1000, vegn%structuralN*1000, &
+      !vegn%mineralN*1000, vegn%dailyNup*1000
+
     endif
 
     ! running annual sums
@@ -1187,7 +1190,6 @@ contains
     vegn%dailyRoff = 0.0
 
   end subroutine daily_diagnostics
-
 
   subroutine annual_diagnostics(vegn, iyears, fno2, fno5, out_annual_cohorts, out_annual_tile)
     !////////////////////////////////////////////////////////////////////////
@@ -1294,19 +1296,44 @@ contains
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
       out_annual_cohorts(i)%deathrate   = cc%deathratevalue
 
-    ! print*,'out_annual_cohorts(i)%year ', out_annual_cohorts%year
+      !print*,'Acrown ', cc%crownarea
+      !print*,'out_annual_cohorts(i)%Acrown ', out_annual_cohorts%Acrown
 
       write(fno2,'(2(I7,","),2(I4,","),1(F9.1,","),45(F12.4,","))') &
-        iyears, cc%ccID,cc%species,cc%layer,                &
-        cc%nindivs*10000, cc%layerfrac,cc%dbh * 100,        &
-        dDBH * 100,cc%height,cc%age, cc%BA, dBA,            &
-        cc%crownarea, cc%leafarea, cc%plabl%c%c12,          &
-        cc%plabl%n%n14 * 1000,cc%pseed%c%c12,cc%pleaf%c%c12,&
-        cc%proot%c%c12, cc%psapw%c%c12, cc%pwood%c%c12,     &
-        treeG,fseed, fleaf, froot, fwood,                   &
-        cc%annualGPP,cc%annualNPP, cc%annualResp,           &
-        cc%annualNup*1000,cc%annualfixedN*1000,             &
-        cc%n_deadtrees, cc%c_deadtrees, cc%deathratevalue  
+        iyears, &
+        cc%ccID,&
+        cc%species,&
+        cc%layer, &
+        cc%nindivs*10000, &
+        cc%layerfrac,&
+        cc%dbh * 100,        &
+        dDBH * 100,&
+        cc%height,&
+        cc%age, &
+        cc%BA, &
+        dBA,  &
+        cc%crownarea, &
+        cc%leafarea, &
+        cc%plabl%c%c12,          &
+        cc%plabl%n%n14 * 1000,&
+        cc%pseed%c%c12,&
+        cc%pleaf%c%c12,&
+        cc%proot%c%c12, &
+        cc%psapw%c%c12, &
+        cc%pwood%c%c12,     &
+        treeG,&
+        fseed, &
+        fleaf, &
+        froot, &
+        fwood, &
+        cc%annualGPP,&
+        cc%annualNPP, &
+        cc%annualResp, &
+        cc%annualNup*1000,&
+        cc%annualfixedN*1000, &
+        cc%n_deadtrees, &
+        cc%c_deadtrees, &
+        cc%deathratevalue  
 
     enddo
 
@@ -1330,7 +1357,6 @@ contains
     enddo
 
     print*,'iyears, cc%ccID', iyears, cc%ccID
-
 
     plantC    = vegn%plabl%c%c12 + vegn%pseed%c%c12 + vegn%pleaf%c%c12 + vegn%proot%c%c12 + vegn%psapw%c%c12 + vegn%pwood%c%c12
     
@@ -1399,41 +1425,76 @@ contains
     out_annual_tile%Seedling_N      = vegn%totNewCN * 1000
     out_annual_tile%MaxAge          = vegn%MaxAge
     out_annual_tile%MaxVolume       = vegn%MaxVolume
-
-            print*,'iyears 2', iyears
-
     out_annual_tile%MaxDBH          = vegn%MaxDBH
     out_annual_tile%NPPL            = vegn%NPPL
     out_annual_tile%NPPW            = vegn%NPPW
     out_annual_tile%n_deadtrees     = vegn%n_deadtrees
     out_annual_tile%c_deadtrees     = vegn%c_deadtrees
-
     out_annual_tile%m_turnover      = vegn%m_turnover
     out_annual_tile%c_turnover_time = vegn%pwood%c%c12 !/ vegn%NPPW   xxxxxx
 
-    !write(fno5,'(1(I5,","),27(F9.4,","),6(F9.3,","),18(F10.4,","))') &
-    !iyears, vegn%CAI, vegn%LAI, vegn%nindivs * 10000,                &
-    !vegn%DBH * 100, vegn%nindivs12 * 10000, vegn%DBH12 * 100,        &
-    !vegn%QMD * 100, vegn%annualNPP, vegn%annualGPP, vegn%annualResp, &
-    !vegn%annualRh, vegn%annualPrcp, vegn%SoilWater, vegn%annualTrsp, &
-    !vegn%annualEvap, vegn%annualRoff, plantC, soilC, plantN  * 1000, &
-    !soilN  *  1000, (plantN + soilN) * 1000, vegn%plabl%c%c12,       &
-    !vegn%pseed%c%c12, vegn%pleaf%c%c12, vegn%proot%c%c12,            &
-    !vegn%psapw%c%c12, vegn%pwood%c%c12, vegn%plabl%n%n14 * 1000,     &
-    !vegn%pseed%n%n14 * 1000, vegn%pleaf%n%n14 * 1000,                &
-    !vegn%proot%n%n14 * 1000, vegn%psapw%n%n14  * 1000,               &
-    !vegn%pwood%n%n14  * 1000, vegn%pmicr%c%c12, vegn%psoil_fs%c%c12, &
-    !vegn%psoil_sl%c%c12, vegn%pmicr%n%n14 * 1000,                    &
-    !vegn%psoil_fs%n%n14 * 1000, vegn%psoil_sl%n%n14 * 1000,          &
-    !vegn%ninorg%n14 * 1000, vegn%annualfixedN * 1000,                &
-    !vegn%annualNup * 1000, vegn%annualN * 1000, vegn%N_P2S_yr * 1000,&
-    !vegn%Nloss_yr * 1000, vegn%totseedC * 1000, vegn%totseedN * 1000,&
-    !vegn%totNewCC * 1000, vegn%totNewCN * 1000, vegn%MaxAge,         &
-    !vegn%MaxVolume, vegn%MaxDBH, vegn%NPPL, vegn%NPPW,               &
-    !vegn%n_deadtrees, vegn%c_deadtrees, vegn%m_turnover,             &
-    !vegn%pwood%c%c12 / vegn%NPPW
+    write(fno5,'(1(I5,","),27(F9.4,","),6(F9.3,","),18(F10.4,","))') &
+    iyears, &
+    vegn%CAI, &
+    vegn%LAI, &
+    vegn%nindivs * 10000,                &
+    vegn%DBH * 100, &
+    vegn%nindivs12 * 10000, &
+    vegn%DBH12 * 100,       &
+    vegn%QMD * 100, &
+    vegn%annualNPP, &
+    vegn%annualGPP, &
+    vegn%annualResp, &
+    vegn%annualRh, &
+    vegn%annualPrcp, &
+    vegn%SoilWater, &
+    vegn%annualTrsp, &
+    vegn%annualEvap, &
+    vegn%annualRoff, &
+    plantC, &
+    soilC, &
+    plantN  * 1000, &
+    soilN  *  1000,&
+    (plantN + soilN) * 1000,&
+    vegn%plabl%c%c12,       &
+    vegn%pseed%c%c12,&
+    vegn%pleaf%c%c12,&
+    vegn%proot%c%c12, &
+    vegn%psapw%c%c12, &
+    vegn%pwood%c%c12, &
+    vegn%plabl%n%n14 * 1000,     &
+    vegn%pseed%n%n14 * 1000, &
+    vegn%pleaf%n%n14 * 1000,&
+    vegn%proot%n%n14 * 1000, &
+    vegn%psapw%n%n14  * 1000, &
+    vegn%pmicr%c%c12, &
+    vegn%psoil_fs%c%c12, &
+    vegn%psoil_sl%c%c12, &
+    vegn%pmicr%n%n14 * 1000,&
+    vegn%psoil_fs%n%n14 * 1000, &
+    vegn%psoil_sl%n%n14 * 1000, &
+    vegn%ninorg%n14 * 1000, &
+    vegn%annualfixedN * 1000,&
+    vegn%annualNup * 1000, &
+    vegn%annualN * 1000, &
+    vegn%N_P2S_yr * 1000,&
+    vegn%Nloss_yr * 1000, &
+    vegn%totseedC * 1000, &
+    vegn%totseedN * 1000,&
+    vegn%totNewCC * 1000, &
+    vegn%totNewCN * 1000, &
+    vegn%MaxAge,         &
+    vegn%MaxVolume, &
+    vegn%MaxDBH, &
+    vegn%NPPL, &
+    vegn%NPPW,               &
+    vegn%n_deadtrees, &
+    vegn%c_deadtrees, &
+    vegn%m_turnover,             &
+    vegn%pwood%c%c12 !/ vegn%NPPW
 
-    print*,'iyears 2', iyears
+    !print*,'CAI', vegn%CAI
+    !print*,'CAI', out_annual_tile%CAI 
 
     ! I cannot figure out why N losing. Hack!
     if (myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)

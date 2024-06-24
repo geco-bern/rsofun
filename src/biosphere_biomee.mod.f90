@@ -253,10 +253,7 @@ contains
       ! module-specific parameter specification
       !call getpar_modl_gpp()
 
-      year0  = myinterface%climate(1)%year  ! forcingData(1)%year
-
-      print*, "myinterface%climate(1)%year", myinterface%climate(1)%year
-      
+      year0  = myinterface%climate(1)%year  ! forcingData(1)%year      
       iyears = 1
       idoy   = 0
       idays  = 0
@@ -264,6 +261,10 @@ contains
     endif
 
     print*,'F.'
+
+    print*, "myinterface%climate(1)%year", myinterface%climate(1)%year
+    print*, "iyears", iyears
+
 
     simu_steps = 0
 
@@ -275,6 +276,7 @@ contains
 
     print*,'G.'
 
+    !print*,'CAI G.', vegn%CAI
 
     !print*,'init_n_cohorts AA', init_n_cohorts
     !print*, "vegn%psoil_fs%c%c12",vegn%psoil_fs%c%c12
@@ -294,8 +296,6 @@ contains
         doy = doy + 1
         idoy = idoy + 1
 
-    !print*,'H.'
-
         ! print*,'----------------------'
         ! print*,'YEAR, DOY ', myinterface%steering%year, doy
         ! print*,'----------------------'
@@ -307,11 +307,9 @@ contains
         vegn%Tc_daily = 0.0
         tsoil         = 0.0
 
-    !print*,'I.'
 
         fastloop: do i = 1,myinterface%steps_per_day
 
-    !print*,'J.'
 
           idata         = simu_steps + 1
           year0         = myinterface%climate(idata)%year  ! Current year
@@ -319,25 +317,23 @@ contains
           tsoil         = myinterface%climate(idata)%tsoil
           simu_steps    = simu_steps + 1
 
-    !print*,'K.'
-
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
 
-    print*,'G1.' 
+          print*,'G 2.'
 
           !call hourly_diagnostics( vegn, myinterface%climate(idata), fno1)
-          !call hourly_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, ihour, iday, fno1, out_biosphere%hourly_tile(idata) )
+          call hourly_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, ihour, idays, fno1, out_biosphere%hourly_tile(idata) )
 
-          init = .false.
+          print*,'G 3.'
+
+          !init = .false.
          
-         print*,'G1.2.' 
-
         enddo fastloop ! hourly or half-hourly
 
-          print*,'G2.' 
+        print*,'G 4.'
 
         ! print*,'-----------day-------------'
         
@@ -350,16 +346,19 @@ contains
 
         ! sum over fast time steps and cohorts
         !call daily_diagnostics( vegn, iyears, idoy, fno3, fno4, out_biosphere_daily_tile(doy) )  ! , out_biosphere_daily_cohorts(doy,:)
-        !call daily_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, fno3, fno4, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
+        call daily_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, idays, fno3, fno4, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
+
+        print*,'G 5.'
+
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
-      
-          print*,'G3.' 
 
+        print*,'G 6.'
+      
         ! Produce new biomass from 'carbon_gain' (is zero afterwards) and continous biomass turnover
         call vegn_growth_EW( vegn )
 
-          print*,'G4.' 
+        print*,'G 7.'
 
       end do dayloop
 
