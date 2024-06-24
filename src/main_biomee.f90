@@ -577,24 +577,24 @@ program main
     !----------------------------------------------------------------
     ! Output out_hourly_tile (calling subroutine)
     !----------------------------------------------------------------
-     if (.not. myinterface%steering%spinup) then  
-       idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
-       idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
-    !   ! call populate_outarray_hourly_tile( out_biosphere_hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
-        call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), out_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
-     end if
+     !if (.not. myinterface%steering%spinup) then  
+     !  idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
+     !  idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
+       ! call populate_outarray_hourly_tile( out_biosphere_hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
+       ! call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), out_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
+     !end if
 
     !----------------------------------------------------------------
     ! Output out_daily_tile (calling subroutine)
     !----------------------------------------------------------------
     ! Output only for transient years
-    if (.not. myinterface%steering%spinup) then  
+    !if (.not. myinterface%steering%spinup) then  
 
-      idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1  
-      idx_daily_end   = idx_daily_start + ndayyear - 1
+     ! idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1  
+     ! idx_daily_end   = idx_daily_start + ndayyear - 1
 
       !call populate_outarray_daily_tile( out_biosphere_daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end,:))
-      call populate_outarray_daily_tile( out_biosphere%daily_tile(:), out_daily_tile(idx_daily_start:idx_daily_end, :) )
+      !call populate_outarray_daily_tile( out_biosphere%daily_tile(:), out_daily_tile(idx_daily_start:idx_daily_end, :) )
 
       !----------------------------------------------------------------
       ! Output out_daily_cohorts (without subroutine)
@@ -627,11 +627,11 @@ program main
       ! output_daily_cohorts_SW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere_daily_cohorts(:,:)%SW_N)
       ! output_daily_cohorts_HW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere_daily_cohorts(:,:)%HW_N)
 
-    end if
+    !end if
 
-    if (.not. myinterface%steering%spinup) then  
-      call populate_outarray_daily_cohorts( out_biosphere%daily_cohorts(:,:), out_daily_cohorts(idx_daily_start:idx_daily_end,:,:) )
-    end if
+    !if (.not. myinterface%steering%spinup) then  
+    !  call populate_outarray_daily_cohorts( out_biosphere%daily_cohorts(:,:), out_daily_cohorts(idx_daily_start:idx_daily_end,:,:) )
+    !end if
 
     !----------------------------------------------------------------
     ! Output out_annual_tile (calling subroutine)

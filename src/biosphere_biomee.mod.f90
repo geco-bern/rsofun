@@ -109,12 +109,41 @@ contains
       'wcl','FLDCAP','WILTPT'
 
       ! annual cohorts
-      write(fno2,'(3(a5,","),25(a9,","))') 'year',             &
-      'cID','PFT','layer','density', 'f_layer',                &
-      'dDBH','dbh','height','Acrown',                          &
-      'wood','nsc', 'NSN','NPPtr','seed',                      &
-      'NPPL','NPPR','NPPW','GPP_yr','NPP_yr',                  &
-      'N_uptk','N_fix','maxLAI'
+      write(fno2,'(3(a5,","),25(a9,","))') &
+      'year', &
+      'cID', &
+      'PFT', &
+      'layer', &
+      'density', &
+      'flayer', &
+      'dbh', &
+      'dDBH', &
+      'height', &
+      'age', &
+      'BA', &
+      'dBA', &
+      'Acrown', &
+      'Aleaf', &
+      'nsc', &
+      'nsn', &
+      'seedC', &
+      'leafC', &
+      'rootC', &
+      'sapwC', &
+      'woodC', &
+      'treeG', &
+      'fseed', &
+      'fleaf', &
+      'froot', &
+      'fwood', &
+      'GPP', &
+      'NPP', &
+      'Rauto', &
+      'Nupt', &
+      'Nfix', &
+      'n_deadtrees', &
+      'c_deadtrees', &
+      'deathrate'
       
       ! daily cohorts
       write(fno3,'(5(a5,","),25(a8,","))')                     &
@@ -126,7 +155,7 @@ contains
       'NSN','seedN','leafN','rootN','SW_N','HW_N'
 
       ! daily tile
-      write(fno2,'(2(a5,","),55(a10,","))')  'year','doy',     &
+      write(fno4,'(2(a5,","),55(a10,","))')  'year','doy',     &
       'Tc','Prcp', 'totWs',  'Trsp', 'Evap','Runoff',          &
       'ws1','ws2','ws3', 'LAI','GPP', 'Rauto', 'Rh',           &
       'NSC','seedC','leafC','rootC','SW_C','HW_C',             &
@@ -134,18 +163,68 @@ contains
       'McrbC', 'fastSOM',   'slowSOM',                         &
       'McrbN', 'fastSoilN', 'slowSoilN',                       &
       'mineralN', 'N_uptk'
-      
+
       ! annual tile
-      write(fno5,'(1(a5,","),80(a12,","))')  'year',           &
-      'CAI','LAI','GPP', 'Rauto',   'Rh',                      &
-      'rain','SoilWater','Transp','Evap','Runoff',             &
-      'plantC','soilC',    'plantN', 'soilN','totN',           &
-      'NSC', 'SeedC', 'leafC', 'rootC', 'SapwoodC', 'WoodC',   &
-      'NSN', 'SeedN', 'leafN', 'rootN', 'SapwoodN', 'WoodN',   &
-      'McrbC','fastSOM',   'SlowSOM',                          &
-      'McrbN','fastSoilN', 'slowSoilN',                        &
-      'mineralN', 'N_fxed','N_uptk','N_yrMin','N_P2S','N_loss',&
-      'totseedC','totseedN','Seedling_C','Seedling_N'
+      write(fno5,'(1(a5,","),80(a12,","))')  &
+      'year', &
+      'CAI', &
+      'LAI',&
+      'density', &
+      'DBH', &
+      'density12',&
+      'DBH12', &
+      'QMD', &
+      'NPP', &
+      'GPP', &
+      'Rauto', &
+      'Rh', &
+      'rain', &
+      'SoilWater', &
+      'Transp', &
+      'Evap', &
+      'Runoff', &
+      'plantC', &
+      'soilC', &
+      'plantN', &
+      'soilN', &
+      'totN', &
+      'NSC', &
+      'SeedC', &
+      'leafC', &
+      'rootC', &
+      'SapwoodC', &
+      'WoodC', &
+      'NSN', &
+      'SeedN', &
+      'leafN', &
+      'rootN', &
+      'SapwoodN', &
+      'WoodN', &
+      'McrbC', &
+      'fastSOM', &
+      'SlowSOM', &
+      'McrbN', &
+      'fastSoilN', &
+      'slowSoilN', &
+      'mineralN', &
+      'N_fxed', &
+      'N_uptk', &
+      'N_yrMin', &
+      'N_P2S', &
+      'N_loss', &
+      'totseedC', &
+      'totseedN', &
+      'Seedling_C', &
+      'Seedling_N', &
+      'MaxAge', &
+      'MaxVolume', &
+      'MaxDBH', &
+      'NPPL', &
+      'NPPW', &
+      'n_deadtrees', &
+      'c_deadtrees', &
+      'm_turnover', &
+      'c_turnover_time'
 
       print*,'A.'
 
@@ -175,6 +254,9 @@ contains
       !call getpar_modl_gpp()
 
       year0  = myinterface%climate(1)%year  ! forcingData(1)%year
+
+      print*, "myinterface%climate(1)%year", myinterface%climate(1)%year
+      
       iyears = 1
       idoy   = 0
       idays  = 0
@@ -185,16 +267,6 @@ contains
 
     simu_steps = 0
 
-              print*,'init_n_cohorts AA', init_n_cohorts
-    print*, "vegn%psoil_fs%c%c12",vegn%psoil_fs%c%c12
-    print*, "vegn%psoil_fs%c%c12",myinterface%init_soil%init_fast_soil_C
-    print*, "vegn%psoil_sl%c%c12",vegn%psoil_sl%c%c12
-    print*, "vegn%psoil_sl%c%c12",myinterface%init_soil%init_slow_soil_C
-    print*, "CN0metabolicL",CN0metabolicL
-    print*, "CN0structuralL",CN0structuralL
-    print*, "Cvegn%N_input",vegn%N_input
-    print*, "Cvegn%N_input",myinterface%init_soil%N_input
-
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
     !----------------------------------------------------------------
@@ -202,6 +274,17 @@ contains
     monthloop: do moy=1,nmonth
 
     print*,'G.'
+
+
+    !print*,'init_n_cohorts AA', init_n_cohorts
+    !print*, "vegn%psoil_fs%c%c12",vegn%psoil_fs%c%c12
+    !print*, "vegn%psoil_fs%c%c12",myinterface%init_soil%init_fast_soil_C
+    !print*, "vegn%psoil_sl%c%c12",vegn%psoil_sl%c%c12
+    !print*, "vegn%psoil_sl%c%c12",myinterface%init_soil%init_slow_soil_C
+    !print*, "CN0metabolicL",CN0metabolicL
+    !print*, "CN0structuralL",CN0structuralL
+    !print*, "Cvegn%N_input",vegn%N_input
+    !print*, "Cvegn%N_input",myinterface%init_soil%N_input
 
       !----------------------------------------------------------------
       ! LOOP THROUGH DAYS
@@ -243,14 +326,18 @@ contains
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
 
-    !print*,'L.' 
+    print*,'G1.' 
 
           !call hourly_diagnostics( vegn, myinterface%climate(idata), fno1)
-          call hourly_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, ihour, iday, fno1, out_biosphere%hourly_tile(idata) )
+          !call hourly_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, ihour, iday, fno1, out_biosphere%hourly_tile(idata) )
 
           init = .false.
          
+         print*,'G1.2.' 
+
         enddo fastloop ! hourly or half-hourly
+
+          print*,'G2.' 
 
         ! print*,'-----------day-------------'
         
@@ -266,15 +353,21 @@ contains
         !call daily_diagnostics(vegn, myinterface%climate(idata), iyears, idoy, fno3, fno4, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy) )
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
-        
+      
+          print*,'G3.' 
+
         ! Produce new biomass from 'carbon_gain' (is zero afterwards) and continous biomass turnover
         call vegn_growth_EW( vegn )
 
+          print*,'G4.' 
+
       end do dayloop
 
-    print*,'M.' 
+    print*,'H.' 
 
     end do monthloop
+
+    print*,'I.' 
 
     !----------------------------------------------------------------
     ! Annual calls
@@ -286,6 +379,8 @@ contains
 
     if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update( vegn )
     
+    print*,'J.' 
+
     !---------------------------------------------
     ! Get annual diagnostics and outputs in once. 
     ! Needs to be called here 
@@ -296,35 +391,52 @@ contains
     !call annual_diagnostics( vegn, iyears, fno2, fno5, out_biosphere_annual_cohorts(:), out_biosphere_annual_tile )
     call annual_diagnostics(vegn, iyears, fno2, fno5, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile)
 
+    print*,'K.' 
     !---------------------------------------------
     ! Reproduction and mortality
     !---------------------------------------------        
     ! Kill all individuals in a cohort if NSC falls below critical point
     call vegn_annual_starvation( vegn )
+
+    print*,'L.' 
     
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
 
     call vegn_nat_mortality( vegn )
+
+    print*,'M.' 
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
     call vegn_reproduction( vegn )
     
+    print*,'N.' 
+
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
     call kill_lowdensity_cohorts( vegn )
 
+    print*,'O.' 
+
     call kill_old_grass( vegn ) 
+
+    print*,'P.' 
     
     call relayer_cohorts( vegn )
+
+    print*,'Q.' 
     
     call vegn_mergecohorts( vegn )
+
+    print*,'R.' 
 
     !---------------------------------------------
     ! Set annual variables zero
     !---------------------------------------------
     call Zero_diagnostics( vegn )
+
+    print*,'S.' 
 
     ! update the years of model run
     iyears = iyears + 1
@@ -371,6 +483,7 @@ contains
 
     end if
     
+    print*,'T.' 
   end subroutine biosphere_annual
 
 end module md_biosphere_biomee
