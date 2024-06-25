@@ -1299,7 +1299,8 @@ contains
       !print*,'Acrown ', cc%crownarea
       !print*,'out_annual_cohorts(i)%Acrown ', out_annual_cohorts%Acrown
 
-      write(fno2,'(2(I7,","),2(I4,","),1(F9.1,","),45(F12.4,","))') &
+      write(fno2,'(2(I7,","),2(I4,","),1(F9.1,","),100(F12.4,","))') &
+      !write(fno5,'(20(a5,","),100(a9,","))')                &    
         iyears, &
         cc%ccID,&
         cc%species,&
@@ -1433,7 +1434,8 @@ contains
     out_annual_tile%m_turnover      = vegn%m_turnover
     out_annual_tile%c_turnover_time = vegn%pwood%c%c12 !/ vegn%NPPW   xxxxxx
 
-    write(fno5,'(1(I5,","),27(F9.4,","),6(F9.3,","),18(F10.4,","))') &
+    !write(fno5,'(1(I5,","),27(F9.4,","),6(F9.3,","),18(F10.4,","))') &
+    write(fno5,'(10(a5,","),150(a9,","))')                &    
     iyears, &
     vegn%CAI, &
     vegn%LAI, &

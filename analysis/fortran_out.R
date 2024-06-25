@@ -1,6 +1,11 @@
 
-biomee_output_annual_tile <- read.csv("/home/laura/rsofun/output/Annual_cohorts_test.csv",sep=",", header = FALSE)
-biomee_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
+biomee_output_annual_tile <- read.csv("/home/laura/rsofun/output/Annual_tile_test.csv",sep=",", header = F)
+biomee_output_annual_tile
+str(biomee_output_annual_tile)
+biomee_output_annual_cohorts <- read.csv("/home/laura/rsofun/output/Annual_cohorts_test.csv",sep=",", header = F)
+biomee_output_annual_cohorts
+str(biomee_output_annual_cohorts)
+
 
 cowplot::plot_grid(
   biomee_gs_leuning_output %>% 
