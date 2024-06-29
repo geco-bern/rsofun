@@ -350,6 +350,9 @@ run_pmodel_f_bysite <- function(
     
     continue = !is.nanull(site_info$canopy_height) & 
                !is.nanull(site_info$reference_height)
+  } else {
+    site_info$canopy_height = NA
+    site_info$reference_height = NA 
   }
   
   

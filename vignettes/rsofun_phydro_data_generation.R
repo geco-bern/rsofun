@@ -28,10 +28,14 @@ source("read_meta_fdk.R")
 ## --------------------------------------------------------------------
 args = commandArgs(trailingOnly=TRUE)
 
+# FR-LBr
+# FI-Hyy
+# CH-Dav
+
 #site <- "GF-Guy"
 if (length(args)==0) {
   #stop("At least one argument must be supplied: site name", call.=FALSE)
-  site = "AU-ASM"
+  site = "CH-Dav"
 }else{
   site = args[1]
 }

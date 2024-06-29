@@ -16,8 +16,6 @@ params_modl <- list(
 p_model_drivers_test = p_model_drivers
 p_model_drivers_test$params_siml[[1]]$use_phydro = F
 p_model_drivers_test$params_siml[[1]]$use_pml = F
-p_model_drivers_test$site_info[[1]]$canopy_height = 20
-p_model_drivers_test$site_info[[1]]$reference_height = 22
 p_model_drivers_test$forcing[[1]]$netrad = NA
 p_model_drivers_test$forcing_acclim = p_model_drivers_test$forcing
 

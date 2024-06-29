@@ -3,8 +3,8 @@ library(ggpointdensity)
 
 setwd("~/codes/rsofun")
 
-load("data/AU-ASM_p_hydro_drivers.rda")
-load("data/AU-ASM_p_hydro_validation.rda")
+# load("data/AU-ASM_p_hydro_drivers.rda")
+# load("data/AU-ASM_p_hydro_validation.rda")
 
 p_hydro_validation$data[[1]] = p_hydro_validation$data[[1]] %>%
   rename(le=latenth) 
