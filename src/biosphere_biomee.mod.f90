@@ -20,31 +20,41 @@ module md_biosphere_biomee
 
 contains
 
-  subroutine biosphere_annual(out_biosphere)
+  subroutine biosphere_annual( &
+    out_biosphere_daily_tile, &
+    ! out_biosphere_daily_cohorts, &
+    out_biosphere_annual_tile, &
+    out_biosphere_annual_cohorts &
+    )
     !////////////////////////////////////////////////////////////////
     ! Calculates one year of vegetation dynamics. 
     !----------------------------------------------------------------
-    use md_interface_biomee, only: myinterface, outtype_biosphere  
+    use md_interface_biomee, only: myinterface, &
+      outtype_daily_tile, &
+      ! outtype_daily_cohorts, &
+      outtype_annual_tile, &
+      outtype_annual_cohorts
     use md_gpp_biomee, only: getpar_modl_gpp
 
-    ! return variable
-    type(outtype_biosphere) :: out_biosphere
+    ! return variables
+    type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
+    ! type(outtype_daily_cohorts),  dimension(ndayyear,out_max_cohorts), intent(out) :: out_biosphere_daily_cohorts
+    type(outtype_annual_tile)                                        , intent(out) :: out_biosphere_annual_tile
+    type(outtype_annual_cohorts), dimension(out_max_cohorts)         , intent(out) :: out_biosphere_annual_cohorts
 
     ! ! local variables
     integer :: dm, moy, doy
     logical, save :: init = .true.   ! is true only on the first day of the simulation 
-    logical, parameter :: verbose = .false.       ! change by hand for debugging etc.
+    ! logical, parameter :: verbose = .false.       ! change by hand for debugging etc.
 
     !----------------------------------------------------------------
     ! Biome-E stuff
     !----------------------------------------------------------------
-    integer, parameter :: rand_seed = 86456
-    integer, parameter :: totalyears = 10
-    integer, parameter :: nCohorts = 1
     real    :: tsoil, soil_theta
     integer :: year0
     integer :: i
     integer :: idata
+    !integer :: nfrequency ! disturbances
     integer, save :: simu_steps !, datalines
     integer, save :: iyears
     integer, save :: idays
@@ -60,7 +70,7 @@ contains
 
       ! Initialize vegetation tile and plant cohorts
       allocate( vegn )
-      call initialize_vegn_tile( vegn, nCohorts)
+      call initialize_vegn_tile( vegn )
       
       ! Sort and relayer cohorts
       call relayer_cohorts( vegn )
@@ -118,7 +128,7 @@ contains
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
          
-          call hourly_diagnostics( vegn, myinterface%climate(idata), iyears, idoy, i , out_biosphere%hourly_tile(idata))
+          call hourly_diagnostics( vegn, myinterface%climate(idata) )
          
           init = .false.
          
@@ -134,7 +144,7 @@ contains
         soil_theta    = vegn%thetaS
 
         ! sum over fast time steps and cohorts
-        call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy)  )
+        call daily_diagnostics( vegn, iyears, idoy, out_biosphere_daily_tile(doy)  )  ! , out_biosphere_daily_cohorts(doy,:)
         
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
@@ -160,7 +170,7 @@ contains
     ! cohorts again and we want annual output and daily
     ! output to be consistent with cohort identities.
     !---------------------------------------------
-    call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
+    call annual_diagnostics( vegn, iyears, out_biosphere_annual_cohorts(:), out_biosphere_annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
@@ -180,6 +190,8 @@ contains
     ! Re-organize cohorts
     !---------------------------------------------
     call kill_lowdensity_cohorts( vegn )
+
+    call kill_old_grass( vegn ) 
     
     call relayer_cohorts( vegn )
     
@@ -193,12 +205,39 @@ contains
     ! update the years of model run
     iyears = iyears + 1
 
-    if (myinterface%steering%finalize) then
-      !----------------------------------------------------------------
-      ! Finazlize run: deallocating memory
-      !----------------------------------------------------------------
-      deallocate(vegn)
+    ! !---------------------------------------------
+    ! ! Reset vegetation to initial conditions
+    ! !---------------------------------------------
 
+    ! !if (iyears > myinterface%params_siml%spinupyears+31 .and. rand(0)<0.40) &
+    ! !     call reset_vegn_initial(vegn) ! 0.01, 0.02, 0.04, 0.08, 0.20, 0.40
+
+    ! !if (iyears == 700 .or. iyears == 800) &
+    ! !     call reset_vegn_initial(vegn) 
+
+    ! if(myinterface%params_siml%do_reset_veg) then
+
+    ! if (iyears==myinterface%params_siml%spinupyears + 31)  then
+    !   call reset_vegn_initial(vegn)
+    ! endif
+
+    ! ! nfrequency = 50 ! 100,75,50,25,15,10 
+
+    ! if(myinterface%params_siml%dist_frequency > 0) then
+    !     do i = myinterface%params_siml%spinupyears + 31 + myinterface%params_siml%dist_frequency, &
+    !     myinterface%params_siml%spinupyears + myinterface%params_siml%nyeartrend, &
+    !     myinterface%params_siml%dist_frequency
+    !   if (iyears == i) call reset_vegn_initial(vegn)
+    ! enddo
+    ! endif
+
+    ! endif
+
+    !----------------------------------------------------------------
+    ! Finalize run: deallocating memory
+    !----------------------------------------------------------------
+    if (myinterface%steering%finalize) then  
+      deallocate(vegn)
     end if
     
   end subroutine biosphere_annual

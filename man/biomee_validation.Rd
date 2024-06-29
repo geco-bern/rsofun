@@ -3,7 +3,7 @@
 \docType{data}
 \name{biomee_validation}
 \alias{biomee_validation}
-\title{rsofun BiomeE GPP validation data}
+\title{rsofun BiomeE targets validation data}
 \format{
 A tibble of driver data:
 \describe{

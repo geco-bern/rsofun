@@ -2,6 +2,9 @@ module md_vegdynamics_pmodel
   !////////////////////////////////////////////////////////////////
   ! Vegetation cover definitions for P-model simulations.
   !---------------------------------------------------------------
+  use md_params_core
+  use md_tile_pmodel, only: tile_type
+
   implicit none
 
   private
@@ -13,8 +16,6 @@ contains
     !//////////////////////////////////////////////////////////////////
     ! Updates canopy and tile variables
     !------------------------------------------------------------------
-    use md_params_core, only: npft, nlu, nmonth, dummy
-    use md_tile_pmodel, only: tile_type
     
     ! arguments
     type( tile_type ), dimension(nlu), intent(inout) :: tile
@@ -35,7 +36,7 @@ contains
         ! Override interactively simulated fAPAR and foliar projective cover with data
         ! if (sum(fpc_grid_prescr(:))==0.0) print*,'sum of fpc_grid',sum(fpc_grid_prescr(:))
 
-        if (fapar_prescr/=dummy) tile(lu)%canopy%fapar = fapar_prescr
+        if (abs(fapar_prescr - dummy) > 0.0) tile(lu)%canopy%fapar = fapar_prescr
         
         tile(lu)%plant(pft)%fpc_grid = fpc_grid_prescr(pft)
 

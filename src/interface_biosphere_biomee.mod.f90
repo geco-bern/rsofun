@@ -13,7 +13,7 @@ module md_interface_biomee
   implicit none
 
   private
-  public  myinterface, interfacetype_biosphere, outtype_biosphere, outtype_hourly_tile, &
+  public  myinterface, interfacetype_biosphere, outtype_hourly_tile, &
     outtype_annual_cohorts, outtype_daily_cohorts, outtype_daily_tile, outtype_annual_tile
 
   type paramstype_tile
@@ -60,30 +60,51 @@ module md_interface_biomee
     real    :: tc_crit
     real    :: tc_crit_on
     real    :: gdd_crit
-    real    :: seedlingsize
-    real    :: LNbase
-    real    :: laimax
-    real    :: Nfixrate0
-    real    :: NfixCost0
-    real    :: phiCSA
-    real    :: mortrate_d_c
-    real    :: mortrate_d_u
-    real    :: maturalage
-    real    :: fNSNmax
-    real    :: LMA       ! prescribed by sps
-    real    :: rho_wood  ! prescribed by sps
+    real    :: betaON
+    real    :: betaOFF
+    real    :: alphaHT   ! prescribed by sps
+    real    :: thetaHT   ! prescribed by sps
+    real    :: alphaCA   ! prescribed by sps
+    real    :: thetaCA   ! prescribed by sps
     real    :: alphaBM   ! prescribed by sps
     real    :: thetaBM   ! prescribed by sps
+    real    :: seedlingsize
+    real    :: maturalage
+    real    :: v_seed
+    real    :: mortrate_d_c
+    real    :: mortrate_d_u
+    real    :: LMA       ! prescribed by sps
+    real    :: leafLS
+    real    :: LNbase
+    real    :: CNleafsupport
+    real    :: rho_wood  ! prescribed by sps
+    real    :: taperfactor
+    real    :: lAImax
+    real    :: tauNSC
+    real    :: fNSNmax
+    real    :: phiCSA
+    real    :: CNleaf0
+    real    :: CNsw0
+    real    :: CNwood0
+    real    :: CNroot0
+    real    :: CNseed0
+    real    :: Nfixrate0
+    real    :: NfixCost0
+    real    :: internal_gap_frac
     real    :: kphio     ! calibratable
     real    :: phiRL     ! calibratable
     real    :: LAI_light ! calibratable
   end type paramstype_species
 
   type inittype_cohort 
-    real :: init_cohort_species
+    integer :: init_n_cohorts
+    integer :: init_cohort_species
     real :: init_cohort_nindivs
+    real :: init_cohort_bl
+    real :: init_cohort_br
     real :: init_cohort_bsw
     real :: init_cohort_bHW
+    real :: init_cohort_seedC
     real :: init_cohort_nsc
   end type inittype_cohort
 
@@ -276,39 +297,44 @@ module md_interface_biomee
     real :: PFT
     real :: layer
     real :: density
-    real :: f_layer
+    real :: flayer
+    real :: DBH
     real :: dDBH
-    real :: dbh
     real :: height
     real :: age
+    real :: BA
+    real :: dBA
     real :: Acrown
-    real :: wood
+    real :: Aleaf
     real :: nsc
-    real :: NSN
-    real :: NPPtr
-    real :: seed
-    real :: NPPL
-    real :: NPPR
-    real :: NPPW
+    real :: nsn
+    real :: seedC
+    real :: leafC
+    real :: rootC
+    real :: sapwC
+    real :: woodC
+    real :: treeG
+    real :: fseed
+    real :: fleaf
+    real :: froot
+    real :: fwood
     real :: GPP
     real :: NPP
     real :: Rauto
-    real :: N_uptk
-    real :: N_fix
-    real :: maxLAI
-    real :: Volume
+    real :: Nupt
+    real :: Nfix
     real :: n_deadtrees
     real :: c_deadtrees
     real :: deathrate
   end type outtype_annual_cohorts
 
-  type outtype_biosphere
-    type(outtype_hourly_tile), dimension(:), allocatable              :: hourly_tile      !fn01
-    type(outtype_daily_tile), dimension(ndayyear)                     :: daily_tile       !fno4
-    type(outtype_daily_cohorts), dimension(ndayyear,out_max_cohorts)  :: daily_cohorts    !fno3
-    type(outtype_annual_tile)                                         :: annual_tile      !fno5
-    type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: annual_cohorts   !fno2
-  end type outtype_biosphere
+  ! type outtype_biosphere
+  !   ! type(outtype_hourly_tile), dimension(:), allocatable            :: hourly_tile      !fn01
+  !   type(outtype_daily_tile), dimension(ndayyear)                     :: daily_tile       !fno4
+  !   type(outtype_daily_cohorts), dimension(ndayyear,out_max_cohorts)  :: daily_cohorts    !fno3
+  !   type(outtype_annual_tile)                                         :: annual_tile      !fno5
+  !   type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: annual_cohorts   !fno2
+  ! end type outtype_biosphere
 
 contains
 

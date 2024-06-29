@@ -3,7 +3,7 @@ module md_gpp_pmodel
   ! Module containing a wrapper for using the P-model photosynthesis
   ! scheme.
   !----------------------------------------------------------------
-  use md_params_core, only: nmonth, npft, nlu, c_molmass, h2o_molmass, maxgrid, ndayyear, kTkelvin, dummy
+  use md_params_core
   use md_tile_pmodel, only: tile_type, tile_fluxes_type
   use md_interface_pmodel, only: myinterface
   use md_forcing_pmodel, only: climate_type, vegcover_type
@@ -11,8 +11,9 @@ module md_gpp_pmodel
   use md_sofunutils, only: radians
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
-
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, calc_density_h2o
+  use md_photosynth_phydro, only: phydro_analytical, phydro_instantaneous_analytical, par_plant_type, par_cost_type, &
+    phydro_result_type, par_control_type, ET_DIFFUSION, ET_PM, GS_IGF, GS_APX
   implicit none
 
   private
@@ -42,14 +43,14 @@ module md_gpp_pmodel
   type(paramstype_gpp) :: params_gpp
   type(pftparamstype_gpp), dimension(npft) :: params_pft_gpp
 
-  !----------------------------------------------------------------
-  ! Module-specific state variables
-  !----------------------------------------------------------------
-  real, dimension(npft) :: dassim           ! daily leaf-level assimilation rate (per unit leaf area) [gC/m2/d]
-
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, vegcover, grid, init, in_ppfd)
+  ! function wscal_to_swp(wscal, bsoil) result (soilwp)
+  !   real, intent(in) :: wscal, bsoil
+  !   soilwp = 1 - wscal**(-bsoil)
+  ! end function
+
+  subroutine gpp( tile, tile_fluxes, co2, climate, climate_acclimation, grid, init, in_ppfd, use_phydro, use_pml)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -65,28 +66,42 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     real, intent(in)    :: co2                               ! atmospheric CO2 (ppm)
     type(climate_type)  :: climate
-    type(vegcover_type) :: vegcover
+    type(climate_type)  :: climate_acclimation
     type(gridtype)      :: grid
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: in_ppfd                           ! whether to use PPFD from forcing or from SPLASH output
+    logical, intent(in) :: use_phydro                        ! whether to use P-Hydro for photosynthesis and transpiration
+    logical, intent(in) :: use_pml                           ! whether to use PML formulation for ET within Phydro
 
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
-    type(climate_type)   :: climate_acclimation     ! list of climate variables to which P-model calculates acclimated traits
+    ! type(climate_type)   :: climate_acclimation     ! list of climate variables to which P-model calculates acclimated traits
     integer    :: pft
     integer    :: lu
-    real       :: iabs
     real       :: soilmstress
     real       :: kphio_temp          ! quantum yield efficiency after temperature influence
     real       :: tk
+    real       :: lv, rho_water       ! latent heat of vap and density of water, needed by phydro for unit conversions
 
     real, save :: co2_memory
     real, save :: vpd_memory
     real, save :: temp_memory
     real, save :: patm_memory
     real, save :: ppfd_memory
+    real, save :: netrad_memory
+    real, dimension(npft), save :: swp_memory
 
     real, save :: tmin_memory     ! for low temperature stress
+
+    ! Phydro inputs and outputs
+    type(par_plant_type) :: par_plant
+    type(par_cost_type) :: par_cost
+    type(phydro_result_type) :: out_phydro_acclim, out_phydro_inst
+    type(par_control_type) :: options
+    real :: pxx_plant  ! water potential at xx percent remaining conductivity, where xx is a small number 
+
+    ! Soil hydraulics
+    real, dimension(npft)  :: swp
 
     ! xxx test
     real :: a_c, a_j, a_returned, fact_jmaxlim
@@ -98,7 +113,23 @@ contains
     ! mean) 
     !----------------------------------------------------------------
     ! climate_acclimation = calc_climate_acclimation( climate, grid, "daytime" )
-    climate_acclimation = climate
+    ! climate_acclimation = climate
+
+    !----------------------------------------------------------------
+    ! Convert water content to water potential, for use in phydro
+    ! JJ Note: This is not making much sense... if wscal is the same, then how do different plants
+    !          experience different swp? Because some vertical wscal profile is inherent, which 
+    !          interacts with the root distribution??
+    !----------------------------------------------------------------
+    do pft = 1,npft
+      pxx_plant = tile(1)%plant(pft)%phydro_p50_plant * (log(0.03)/log(0.5))**(1.0d0/tile(1)%plant(pft)%phydro_b_plant) ! Currently xx set to 3%
+      swp(pft) = (tile(1)%soil%params%whc / tile(1)%plant(pft)%Ssoil)**(-tile(1)%plant(pft)%bsoil) &
+                -(tile(1)%soil%phy%wcont  / tile(1)%plant(pft)%Ssoil)**(-tile(1)%plant(pft)%bsoil)  ! Assuming lu = 1, otherwise, use tile(lu) and a 2D array
+      swp(pft) = min(swp(pft), 0.0) ! clamp +ve values to 0
+      swp(pft) = max(swp(pft), pxx_plant) ! clamp -ve values to a minimum of pxx
+      !          ^ this clamping is for numerical stability only 
+    end do
+
 
     !----------------------------------------------------------------
     ! Calculate environmental conditions with memory, time scale 
@@ -111,17 +142,34 @@ contains
       vpd_memory  = climate_acclimation%dvpd
       patm_memory = climate_acclimation%dpatm
       ppfd_memory = climate_acclimation%dppfd
+      netrad_memory = climate_acclimation%dnetrad
+      do pft = 1,npft
+        swp_memory(pft) = swp(pft)
+      end do
     end if 
 
     count = count + 1
 
-    co2_memory  = dampen_variability( co2,                       params_gpp%tau_acclim, co2_memory  )
-    temp_memory = dampen_variability( climate_acclimation%dtemp, params_gpp%tau_acclim, temp_memory )
-    vpd_memory  = dampen_variability( climate_acclimation%dvpd,  params_gpp%tau_acclim, vpd_memory  )
-    patm_memory = dampen_variability( climate_acclimation%dpatm, params_gpp%tau_acclim, patm_memory )
-    ppfd_memory = dampen_variability( climate_acclimation%dppfd, params_gpp%tau_acclim, ppfd_memory )
+    co2_memory    = dampen_variability( co2,                         params_gpp%tau_acclim, co2_memory    )
+    temp_memory   = dampen_variability( climate_acclimation%dtemp,   params_gpp%tau_acclim, temp_memory   )
+    vpd_memory    = dampen_variability( climate_acclimation%dvpd,    params_gpp%tau_acclim, vpd_memory    )
+    patm_memory   = dampen_variability( climate_acclimation%dpatm,   params_gpp%tau_acclim, patm_memory   )
+    ppfd_memory   = dampen_variability( climate_acclimation%dppfd,   params_gpp%tau_acclim, ppfd_memory   )
+    netrad_memory = dampen_variability( climate_acclimation%dnetrad, params_gpp%tau_acclim, netrad_memory )
+    do pft = 1,npft
+      swp_memory(pft) = dampen_variability(swp(pft), params_gpp%tau_acclim, swp_memory(pft) )
+    end do
 
     tk = climate_acclimation%dtemp + kTkelvin
+
+    if (use_pml) then
+      options%et_method = ET_PM
+    else 
+      options%et_method = ET_DIFFUSION
+    end if 
+    ! print *, options%et_method
+
+    options%gs_method = GS_IGF
 
 
     pftloop: do pft=1,npft
@@ -132,7 +180,7 @@ contains
       ! Low-temperature effect on quantum yield efficiency 
       !----------------------------------------------------------------
       ! take the instananeously varying temperature for governing quantum yield variations
-      if (params_pft_gpp(pft)%kphio_par_a == 0.0) then
+      if (abs(params_pft_gpp(pft)%kphio_par_a) < eps) then
         kphio_temp = params_pft_gpp(pft)%kphio
       else
         kphio_temp = calc_kphio_temp( climate%dtemp, &
@@ -141,7 +189,7 @@ contains
                                       params_pft_gpp(pft)%kphio_par_a, &
                                       params_pft_gpp(pft)%kphio_par_b )
       end if
-      
+
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
       ! acclimated to slowly varying conditions
@@ -149,12 +197,14 @@ contains
       if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &      ! PFT is present
           grid%dayl > 0.0 .and.                    &      ! no arctic night
           temp_memory > -5.0 ) then                       ! minimum temp threshold to avoid fpe
-
+        
+            
         !================================================================
         ! P-model call to get acclimated quantities as a function of the
         ! damped climate forcing.
         !----------------------------------------------------------------
-        out_pmodel = pmodel(  &
+        if (.not. use_phydro) then
+          out_pmodel = pmodel(  &
                               kphio          = kphio_temp, &
                               beta           = params_gpp%beta, &
                               kc_jmax        = params_gpp%kc_jmax, &
@@ -167,7 +217,37 @@ contains
                               method_optci   = "prentice14", &
                               method_jmaxlim = "wang17" &
                               )
-
+        else
+          par_cost = par_cost_type(tile(lu)%plant(pft)%phydro_alpha, &
+                                   tile(lu)%plant(pft)%phydro_gamma)
+          par_plant = par_plant_type(tile(lu)%plant(pft)%phydro_K_plant, &
+                                     tile(lu)%plant(pft)%phydro_p50_plant, &
+                                     tile(lu)%plant(pft)%phydro_b_plant)
+          par_plant%h_canopy = myinterface%canopy_height
+          par_plant%h_wind_measurement = myinterface%reference_height
+      
+          ! print *, "Using P-hydro"
+          out_phydro_acclim = phydro_analytical( &
+                            tc = dble(temp_memory), &
+                            tg = dble(temp_memory), &
+                            ppfd = dble(ppfd_memory)*1e6, &
+                            netrad = dble(netrad_memory), &
+                            vpd = dble(vpd_memory), &
+                            co2 = dble(co2_memory), &
+                            pa = dble(patm_memory), &
+                            fapar = dble(tile(lu)%canopy%fapar), &
+                            kphio = dble(kphio_temp), &
+                            psi_soil = dble(swp_memory(pft)), & !0.d0, &
+                            rdark = dble(params_gpp%rd_to_vcmax), &
+                            vwind = 3.0d0, &
+                            par_plant = par_plant, &
+                            par_cost = par_cost, &
+                            par_control = options &
+                       )
+          
+          ! print *, temp_memory, ppfd_memory*1e6, kphio_temp, vpd_memory
+          ! print *, out_phydro_acclim%a, out_phydro_acclim%gs, out_phydro_acclim%dpsi                  
+        end if
       else
 
         ! PFT is not present 
@@ -187,48 +267,120 @@ contains
       !----------------------------------------------------------------
       soilmstress = calc_soilmstress( tile(1)%soil%phy%wcont, &
                                       params_gpp%soilm_thetastar, &
-                                      params_gpp%soilm_betao, &
-                                      params_pft_plant(1)%grass )
+                                      params_gpp%soilm_betao )
 
       !----------------------------------------------------------------
       ! GPP
       ! This still does a linear scaling of daily GPP - knowingly wrong
       ! but not too dangerous...
       !----------------------------------------------------------------
-      if( in_ppfd ) then
-        ! Take input daily PPFD (in mol/m^2)
-        tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
-          * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
-      else
-        ! Take daily PPFD generated by SPLASH (in mol/m^2/d)
-        tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
-          * tile_fluxes(lu)%canopy%ppfd_splash * out_pmodel%lue * soilmstress
+      if (.not. use_phydro) then
+        if( in_ppfd ) then
+          ! print *, "Using in_ppfd"
+          ! Take input daily PPFD (in mol/m^2)
+          tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
+            * climate%dppfd * myinterface%params_siml%secs_per_tstep * out_pmodel%lue * soilmstress
+        else
+          ! Take daily PPFD generated by SPLASH (in mol/m^2/d)
+          tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
+            * tile_fluxes(lu)%canopy%ppfd_splash * out_pmodel%lue * soilmstress
+        end if
+      else ! Using phydro - run instantaneous model
+        ! print *, "sw / swp = ", sw, swp
+        out_phydro_inst = phydro_instantaneous_analytical( &
+                            vcmax25 = out_phydro_acclim%vcmax25, &
+                            jmax25 = out_phydro_acclim%jmax25, &
+                            tc = dble(climate%dtemp), &
+                            tg = dble(temp_memory), &
+                            ppfd = dble(climate%dppfd)*1e6, &
+                            netrad = dble(climate%dnetrad), &
+                            vpd = dble(climate%dvpd), &
+                            co2 = dble(co2), &
+                            pa = dble(climate%dpatm), &
+                            fapar = dble(tile(lu)%canopy%fapar), &
+                            kphio = dble(kphio_temp), &
+                            psi_soil = dble(swp(pft)), & !0.d0, &
+                            rdark = dble(params_gpp%rd_to_vcmax), &
+                            vwind = 3.0d0, &
+                            par_plant = par_plant, &
+                            par_cost = par_cost, &
+                            par_control = options &
+                          )  
+
+        tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid *  &
+          (out_phydro_inst%a*1e-6*c_molmass) * myinterface%params_siml%secs_per_tstep 
       end if
 
       !----------------------------------------------------------------
       ! Dark respiration
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
-        * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( climate%dtemp ) * c_molmass &
-        * myinterface%params_siml%secs_per_tstep
+      if (.not. use_phydro) then
+        tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
+          * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( climate%dtemp ) * c_molmass &
+          * myinterface%params_siml%secs_per_tstep
+      else 
+        tile_fluxes(lu)%plant(pft)%drd = tile(lu)%plant(pft)%fpc_grid &
+          * out_phydro_inst%rd*1e-6 * c_molmass &
+          * myinterface%params_siml%secs_per_tstep
+      end if 
 
       !----------------------------------------------------------------
       ! Vcmax and Jmax
       !----------------------------------------------------------------
       ! acclimated quantities
-      tile_fluxes(lu)%plant(pft)%vcmax25 = out_pmodel%vcmax25
-      tile_fluxes(lu)%plant(pft)%jmax25  = out_pmodel%jmax25
-      tile_fluxes(lu)%plant(pft)%chi     = out_pmodel%chi
-      tile_fluxes(lu)%plant(pft)%iwue    = out_pmodel%iwue
+      if (.not. use_phydro) then
+        tile_fluxes(lu)%plant(pft)%vcmax25 = out_pmodel%vcmax25
+        tile_fluxes(lu)%plant(pft)%jmax25  = out_pmodel%jmax25
+        tile_fluxes(lu)%plant(pft)%chi     = out_pmodel%chi
+        tile_fluxes(lu)%plant(pft)%iwue    = out_pmodel%iwue
 
-      ! quantities with instantaneous temperature response
-      tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%vcmax25
-      tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax(  climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%jmax25
+        ! quantities with instantaneous temperature response
+        tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%vcmax25
+        tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax(  climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%jmax25
+      else
+        tile_fluxes(lu)%plant(pft)%vcmax25 = out_phydro_acclim%vcmax25 * 1e-6
+        tile_fluxes(lu)%plant(pft)%jmax25  = out_phydro_acclim%jmax25 * 1e-6
+        tile_fluxes(lu)%plant(pft)%chi     = out_phydro_inst%chi
+        tile_fluxes(lu)%plant(pft)%iwue    = out_phydro_inst%a *1e-6 / out_phydro_inst%gs
 
+        ! quantities with instantaneous temperature response
+        tile_fluxes(lu)%plant(pft)%vcmax = out_phydro_inst%vcmax * 1e-6
+        tile_fluxes(lu)%plant(pft)%jmax  = out_phydro_inst%jmax * 1e-6
+      end if
+      
       !----------------------------------------------------------------
       ! Stomatal conductance
       !----------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint
+      if (.not. use_phydro) then
+        tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint
+      else 
+        tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs
+      end if
+
+      !----------------------------------------------------------------
+      ! Water potentials
+      !----------------------------------------------------------------
+      if (use_phydro) then
+        tile_fluxes(lu)%plant(pft)%psi_leaf = out_phydro_inst%psi_l
+        tile_fluxes(lu)%plant(pft)%dpsi = out_phydro_inst%dpsi
+      end if
+
+      !------------------------------------------------------------------------
+      ! Canopy ET and soil LE (only for Phydro, since it's computed internally)
+      !------------------------------------------------------------------------
+      if (use_phydro) then
+        ! Density of water, kg/m^3
+        rho_water = calc_density_h2o( climate%dtemp, climate%dpatm )
+
+        tile_fluxes(lu)%canopy%daet_canop = out_phydro_inst%e * 0.018015 * (1.0d0 / rho_water) &
+              * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
+        
+        tile_fluxes(lu)%canopy%dpet_e_soil = out_phydro_inst%le_s_wet  &
+              * myinterface%params_siml%secs_per_tstep ! convert: J m-2 s-1 * s day-1  = J m-2 day-1
+        
+        ! print *, "Canopy ET (mm d-1) = ", tile_fluxes(lu)%canopy%daet_canop 
+        ! print *, "Soil LE (J m-2 d-1) = ", climate%dnetrad, tile_fluxes(lu)%canopy%daet_e_soil 
+      end if
 
     end do pftloop
 
@@ -488,12 +640,6 @@ contains
   subroutine getpar_modl_gpp()
     !////////////////////////////////////////////////////////////////
     ! Subroutine reads module-specific parameters from input file.
-    !----------------------------------------------------------------
-    ! local variables
-    integer :: pft
-
-    !----------------------------------------------------------------
-    ! PFT-independent parameters
     !----------------------------------------------------------------
     ! unit cost of carboxylation, b/a' in Eq. 3 (Stocker et al., 2020 GMD)
     params_gpp%beta = myinterface%params_calib%beta_unitcostratio ! 146.000000

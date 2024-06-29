@@ -53,7 +53,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,12), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: climateyear_idx
     logical, intent(in) :: in_ppfd
     logical, intent(in) :: in_netrad
@@ -104,7 +104,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,12), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: forcingyear
     integer, intent(in) :: firstyeartrend
 
@@ -131,7 +131,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,12), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: forcingyear_idx
 
     ! function return variable

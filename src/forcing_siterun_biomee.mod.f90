@@ -45,7 +45,6 @@ contains
 
     ! local variables
     integer :: idx_start, idx_end, it
-    real, parameter :: timestep = 1.0
 
     ! function return variable
     type(climate_type), dimension(ntstepsyear) :: out_climate
@@ -151,7 +150,6 @@ contains
 
     ! local variables 
     integer :: idx_start, idx_end!, year
-    real, parameter :: timestep = 1.0
 
     idx_start = (forcingyear_idx - 1) * ntstepsyear + 1
     idx_end   = idx_start + ntstepsyear - 1

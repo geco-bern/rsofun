@@ -104,7 +104,12 @@ runread_pmodel_f <- function(
   
   # predefine variables for CRAN check compliance
   sitename <- params_siml <- site_info <-
-    input <- forcing <- . <- NULL
+    input <- forcing <- forcing_acclim <- . <- NULL
+  
+  # If acclimation dataset has not been separately provided, use the same forcing data
+  if (is.null(drivers$forcing_acclim)){
+    drivers$forcing_acclim = drivers$forcing
+  }
   
   # guarantee order of files
   drivers <- drivers |>
@@ -112,7 +117,8 @@ runread_pmodel_f <- function(
       sitename,
       params_siml,
       site_info,
-      forcing
+      forcing,
+      forcing_acclim
     )
   
   if (parallel){
@@ -133,7 +139,8 @@ runread_pmodel_f <- function(
           sitename,
           params_siml,
           site_info,
-          forcing)
+          forcing,
+          forcing_acclim)
       ) %>%
       multidplyr::partition(cl) %>% 
       dplyr::mutate(data = purrr::map(input, 
@@ -141,7 +148,8 @@ runread_pmodel_f <- function(
                                         sitename       = .x$sitename[[1]], 
                                         params_siml    = .x$params_siml[[1]], 
                                         site_info       = .x$site_info[[1]], 
-                                        forcing        = .x$forcing[[1]], 
+                                        forcing        = .x$forcing[[1]],
+                                        forcing_acclim = .x$forcing_acclim[[1]],
                                         par    = par, 
                                         makecheck      = makecheck )
       ))

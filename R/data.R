@@ -242,7 +242,7 @@
 #' }
 "biomee_gs_leuning_drivers"
 
-#' rsofun BiomeE GPP validation data
+#' rsofun BiomeE targets validation data
 #'
 #' Small tests dataset to validate 
 #' calibration routines
@@ -264,21 +264,7 @@
 #'   \item{sitename}{site name}
 #'   \item{data}{validation dta}
 #' }
-"biomee_validation_2"
-
-
-#' rsofun BiomeE GPP validation data
-#'
-#' Small tests dataset to validate 
-#' calibration routines
-#'
-#' @format A tibble of driver data:
-#' \describe{
-#'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
-#' }
 "biomee_p_model_output"
-
 
 #' rsofun BiomeE GPP validation data
 #'

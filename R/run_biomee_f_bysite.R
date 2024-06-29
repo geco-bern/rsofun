@@ -19,6 +19,10 @@
 #'     LAImax according to mineral N in soil.}
 #'   \item{do_closedN_run}{A logical value indicating whether doing N closed 
 #'     runs to recover N balance.}
+#'   \item{do_reset_veg}{A logical value indicating whether reseting vegetation 
+#'     for disturbance runs.}
+#'   \item{dist_frequency}{Value indicating the frequency of the disturbance event (in years) 
+#'     (e.g. 100 indicates a disturbance event occurs every 100 years, i.e., at a rate of 0.01)}
 #'   \item{code_method_photosynth}{String specifying the method of photosynthesis 
 #'     used in the model, either "pmodel" or "gs_leuning".}
 #'   \item{code_method_mortality}{String indicating the type of mortality in the 
@@ -496,7 +500,7 @@ run_biomee_f_bysite <- function(
   if (continue) {
 
     ## C wrapper call
-    lm3out <- .Call(
+    biomeeout <- .Call(
 
       'biomee_f_C',
 
@@ -511,6 +515,8 @@ run_biomee_f_bysite <- function(
       do_U_shaped_mortality = as.logical(params_siml$do_U_shaped_mortality),
       update_annualLAImax   = as.logical(params_siml$update_annualLAImax),
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
+      do_reset_veg          = as.logical(params_siml$do_reset_veg),
+      dist_frequency        = as.integer(params_siml$dist_frequency),
       code_method_photosynth= as.integer(code_method_photosynth),
       code_method_mortality = as.integer(code_method_mortality),
       
@@ -555,21 +561,22 @@ run_biomee_f_bysite <- function(
       init_Nmineral    = as.numeric(init_soil$init_Nmineral),
       N_input          = as.numeric(init_soil$N_input),
       n                = as.integer(nrow(forcing)), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
-      n_daily          = as.integer(n_daily), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
-      n_annual         = as.integer(runyears), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
-      n_annual_cohorts = as.integer(params_siml$nyeartrend), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
+      n_daily          = as.integer(n_daily), 
+      n_annual         = as.integer(runyears), 
+      n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
+      #n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
       forcing          = as.matrix(forcing)
       )
     
     # If simulation is very long, output gets massive.
-    # E.g., In a 3000 years-simulation 'lm3out' is 11.5 GB.
+    # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
     # In such cases (here, more than 5 GB), ignore hourly and daily outputs at tile and cohort levels
     size_of_object_gb <- as.numeric(
       gsub(
         pattern = " Gb",
         replacement = "",
         format(
-          utils::object.size(lm3out), 
+          utils::object.size(biomeeout), 
           units = "GB"
           )
         )
@@ -580,67 +587,131 @@ run_biomee_f_bysite <- function(
         sprintf("Warning: Excessive size of output object (%s) for %s. 
                 Hourly and daily outputs at tile and cohort levels are not returned.",
                 format(
-                  utils::object.size(lm3out), 
+                  utils::object.size(biomeeout), 
                   units = "GB"
                 ), 
                 sitename))
     }
     
     #---- Single level output, one matrix ----
-    # hourly
-    if (size_of_object_gb < 5){
-      output_hourly_tile <- as.data.frame(lm3out[[1]], stringAsFactor = FALSE)
-      colnames(output_hourly_tile) <- c("year", "doy", "hour",
-                                        "rad", "Tair", "Prcp",
-                                        "GPP", "Resp", "Transp",
-                                        "Evap", "Runoff", "Soilwater",
-                                        "wcl", "FLDCAP", "WILTPT")
-    } else {
-      output_hourly_tile <- NA
-    }
+    # # hourly
+    # if (size_of_object_gb < 5){
+    #   output_hourly_tile <- as.data.frame(biomeeout[[1]], stringAsFactor = FALSE)
+    #   colnames(output_hourly_tile) <- c("year", "doy", "hour",
+    #                                     "rad", "Tair", "Prcp",
+    #                                     "GPP", "Resp", "Transp",
+    #                                     "Evap", "Runoff", "Soilwater",
+    #                                     "wcl", "FLDCAP", "WILTPT")
+    # } else {
+    #   output_hourly_tile <- NA
+    # }
     
     # daily_tile
     if (size_of_object_gb < 5){
-      output_daily_tile <- as.data.frame(lm3out[[2]], stringAsFactor = FALSE)
+      output_daily_tile <- as.data.frame(biomeeout[[1]], stringAsFactor = FALSE)
       colnames(output_daily_tile) <- c(
-        "year", "doy", "Tc",
-        "Prcp", "totWs", "Trsp",
-        "Evap", "Runoff", "ws1",
-        "ws2", "ws3", "LAI",
-        "GPP", "Rauto", "Rh",
-        "NSC", "seedC", "leafC",
-        "rootC", "SW_C", "HW_C",
-        "NSN", "seedN", "leafN",
-        "rootN", "SW_N", "HW_N",
-        "McrbC", "fastSOM", "slowSOM",
-        "McrbN", "fastSoilN", "slowSoilN",
-        "mineralN", "N_uptk")
+        "year", 
+        "doy", 
+        "Tc",
+        "Prcp", 
+        "totWs", 
+        "Trsp",
+        "Evap", 
+        "Runoff", 
+        "ws1",
+        "ws2", 
+        "ws3", 
+        "LAI",
+        "GPP", 
+        "Rauto", 
+        "Rh",
+        "NSC", 
+        "seedC", 
+        "leafC",
+        "rootC", 
+        "SW_C", 
+        "HW_C",
+        "NSN", 
+        "seedN", 
+        "leafN",
+        "rootN", 
+        "SW_N", 
+        "HW_N",
+        "McrbC", 
+        "fastSOM", 
+        "slowSOM",
+        "McrbN", 
+        "fastSoilN", 
+        "slowSoilN",
+        "mineralN", 
+        "N_uptk")
     } else {
       output_daily_tile <- NA
     }
     
     # annual tile
-    output_annual_tile <- as.data.frame(lm3out[[30]], stringAsFactor = FALSE)
-    colnames(output_annual_tile) <- c("year", "CAI", "LAI",
-          "Density", "DBH", "Density12",
-          "DBH12", "QMD", "NPP",
-          "GPP", "Rauto", "Rh",
-          "rain", "SoilWater","Transp",
-          "Evap", "Runoff", "plantC",
-          "soilC", "plantN", "soilN",
-          "totN", "NSC", "SeedC", "leafC",
-          "rootC", "SapwoodC", "WoodC",
-          "NSN", "SeedN", "leafN",
-          "rootN", "SapwoodN", "WoodN",
-          "McrbC", "fastSOM", "SlowSOM",
-          "McrbN", "fastSoilN", "slowSoilN",
-          "mineralN", "N_fxed", "N_uptk",
-          "N_yrMin", "N_P2S", "N_loss",
-          "totseedC", "totseedN", "Seedling_C",
-          "Seedling_N", "MaxAge", "MaxVolume",
-          "MaxDBH", "NPPL", "NPPW",
-          "n_deadtrees", "c_deadtrees", "m_turnover", 
-          "c_turnover_time")
+    output_annual_tile <- as.data.frame(biomeeout[[2]], stringAsFactor = FALSE)
+    colnames(output_annual_tile) <- c(
+			"year", 
+			"CAI", 
+			"LAI",
+			"Density", 
+			"DBH", 
+			"Density12",
+			"DBH12", 
+			"QMD", 
+			"NPP",
+			"GPP", 
+			"Rauto", 
+			"Rh",
+			"rain", 
+			"SoilWater","
+			Transp",
+			"Evap", 
+			"Runoff", 
+			"plantC",
+			"soilC", 
+			"plantN", 
+			"soilN",
+			"totN", 
+			"NSC", 
+			"SeedC", 
+			"leafC",
+			"rootC", 
+			"SapwoodC", 
+			"WoodC",
+			"NSN", 
+			"SeedN", 
+			"leafN",
+			"rootN", 
+			"SapwoodN", 
+			"WoodN",
+			"McrbC", 
+			"fastSOM", 
+			"SlowSOM",
+			"McrbN", 
+			"fastSoilN", 
+			"slowSoilN",
+			"mineralN", 
+			"N_fxed", 
+			"N_uptk",
+			"N_yrMin", 
+			"N_P2S", 
+			"N_loss",
+			"totseedC", 
+			"totseedN", 
+			"Seedling_C",
+			"Seedling_N", 
+			"MaxAge", 
+			"MaxVolume",
+			"MaxDBH", 
+			"NPPL", 
+			"NPPW",
+			"n_deadtrees", 
+			"c_deadtrees", 
+			"m_turnover", 
+			"c_turnover_time"
+		)
     
     #---- Multi-level output, multiple matrices to be combined ----
     
@@ -654,59 +725,99 @@ run_biomee_f_bysite <- function(
     # as vector()
 
     #---- daily cohorts ----
-    if (size_of_object_gb < 5){
-      daily_values <- c(
-        "year","doy","hour",
-        "cID", "PFT", "layer",
-        "density","f_layer", "LAI",
-        "gpp","resp","transp",
-        "NPPleaf","NPProot", "NPPwood", "NSC",
-        "seedC", "leafC", "rootC",
-        "SW_C", "HW_C", "NSN",
-        "seedN", "leafN", "rootN",
-        "SW_N", "HW_N"
-      )
-      output_daily_cohorts <- lapply(1:length(daily_values), function(x){
-        loc <- 2 + x
-        v <- data.frame(
-          as.vector(lm3out[[loc]]),
-          stringsAsFactors = FALSE)
-        names(v) <- daily_values[x]
-        return(v)
-      })
+    # if (size_of_object_gb < 5){
+    #   daily_values <- c(
+    #     "year","
+    #     doy","
+    #     hour"
+    #     "cID", 
+    #     "PFT", 
+    #     "layer"
+    #     "density","
+    #     f_layer", 
+    #     "LAI"
+    #     "gpp","
+    #     resp","
+    #     transp"
+    #     "NPPleaf","
+    #     NPProot", 
+    #     "NPPwood", 
+    #     "NSC"
+    #     "seedC", 
+    #     "leafC", 
+    #     "rootC"
+    #     "SW_C", 
+    #     "HW_C", 
+    #     "NSN"
+    #     "seedN", 
+    #     "leafN", 
+    #     "rootN"
+    #     "SW_N", 
+    #     "HW_N"
+    #   )
+    #   output_daily_cohorts <- lapply(1:length(daily_values), function(x){
+    #     loc <- 1 + x
+    #     v <- data.frame(
+    #       as.vector(biomeeout[[loc]]),
+    #       stringsAsFactors = FALSE)
+    #     names(v) <- daily_values[x]
+    #     return(v)
+    #   })
       
-      output_daily_cohorts <- do.call("cbind", output_daily_cohorts)
+    #   output_daily_cohorts <- do.call("cbind", output_daily_cohorts)
       
-      cohort <- sort(rep(1:ncol(lm3out[[3]]),nrow(lm3out[[3]])))
-      output_daily_cohorts <- cbind(cohort, output_daily_cohorts)
+    #   cohort <- sort(rep(1:ncol(biomeeout[[3]]),nrow(biomeeout[[3]])))
+    #   output_daily_cohorts <- cbind(cohort, output_daily_cohorts)
       
-      # drop rows (cohorts) with no values
-      output_daily_cohorts$year[output_daily_cohorts$year == -9999 |
-                                  output_daily_cohorts$year == 0] <- NA
-      output_daily_cohorts <- 
-        output_daily_cohorts[!is.na(output_daily_cohorts$year),]
-    } else {
-      output_daily_cohorts <- NA
-    }
+    #   # drop rows (cohorts) with no values
+    #   output_daily_cohorts$year[output_daily_cohorts$year == -9999 |
+    #                               output_daily_cohorts$year == 0] <- NA
+    #   output_daily_cohorts <- output_daily_cohorts[!is.na(output_daily_cohorts$year),]
+    # } else {
+    #   output_daily_cohorts <- NA
+    # }
     
     #--- annual cohorts ----
     annual_values <- c(
-      "year","cID",
-      "PFT","layer","density",
-      "f_layer","dDBH","dbh",
-      "height","age","Acrown",
-      "wood","nsc","NSN","NPPtr",
-      "seed","NPPL","NPPR","NPPW",
-      "GPP_yr","NPP_yr","Rauto",
-      "N_uptk","N_fix","maxLAI",
-      "Volume","n_deadtrees",
-      "c_deadtrees","deathrate"
+      "year",
+      "cID",
+      "PFT",
+      "layer",
+      "density",
+      "flayer",
+      "DBH",
+      "dDBH",
+      "height",
+      "age",
+      "BA",
+      "dBA",
+      "Acrown",
+      "Aleaf",
+      "nsc",
+      "seedC",
+      "leafC",
+      "rootC",
+      "sapwC",
+      "woodC",
+      "nsn",
+      "treeG",
+      "fseed",
+      "fleaf",
+      "froot",
+      "fwood",
+      "GPP",
+      "NPP",
+      "Rauto",
+      "Nupt",
+      "Nfix",
+      "n_deadtrees",
+      "c_deadtrees",
+      "deathrate"
     )
-    
     output_annual_cohorts <- lapply(1:length(annual_values), function(x){
-      loc <- 30 + x
+      loc <- 2 + x
       v <- data.frame(
-        as.vector(lm3out[[loc]]),
+        as.vector(biomeeout[[loc]]),
         stringsAsFactors = FALSE)
       names(v) <- annual_values[x]
       return(v)
@@ -726,9 +837,9 @@ run_biomee_f_bysite <- function(
     
     # format the output in a structured list
     out <- list(
-      output_hourly_tile = output_hourly_tile,
+      # output_hourly_tile = output_hourly_tile,
       output_daily_tile = output_daily_tile,
-      output_daily_cohorts = output_daily_cohorts,
+      # output_daily_cohorts = output_daily_cohorts,
       output_annual_tile = output_annual_tile,
       output_annual_cohorts = output_annual_cohorts)
     

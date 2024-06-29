@@ -9,9 +9,11 @@ run_pmodel_f_bysite(
   params_siml,
   site_info,
   forcing,
+  forcing_acclim,
   params_modl,
   makecheck = TRUE,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{

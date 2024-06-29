@@ -61,7 +61,7 @@ LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Suggests:
     covr,
     rcmdcheck,
@@ -69,7 +69,6 @@ Suggests:
     rmarkdown,
     ggplot2,
     knitr,
-    sensitivity,
-    cowplot
+    sensitivity
 VignetteBuilder: knitr
 Encoding: UTF-8

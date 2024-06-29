@@ -155,10 +155,12 @@ calib_sofun <- function(
     # reformat parameters
     pars <- as.data.frame(do.call("rbind", settings$par), row.names = FALSE)
     
-    priors  <- BayesianTools::createUniformPrior(
+    priors  <- BayesianTools::createTruncatedNormalPrior(
+      unlist(pars$mean),
+      unlist(pars$sd),
       unlist(pars$lower),
-      unlist(pars$upper),
-      unlist(pars$init)
+      unlist(pars$upper)
+      # unlist(pars$init)
     )
     
     # setup the bayes run, no message forwarding is provided
