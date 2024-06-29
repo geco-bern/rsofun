@@ -83,10 +83,20 @@ cost_likelihood_phydro <- function(
         mean()
       
       # calculate actual dpsi intercept by fitting lm (might not work)
-      mod = d_filt |> with(lm(psi_leaf~psi_soil))
-      mods = summary(mod)
-      int_reg = -mod$coefficients[1]
-      p_slope = mods$coefficients[2,4]
+      dat_lm = d_filt |> 
+        select(psi_leaf, psi_soil) |> 
+        drop_na
+      
+      if (nrow(dat_lm) > 5){
+        mod = dat_lm |>
+          with(lm(psi_leaf~psi_soil))
+        mods = summary(mod)
+        int_reg = -mod$coefficients[1]
+        p_slope = mods$coefficients[2,4]
+      } else {
+        int_reg = 0
+        p_slope = 1
+      }
       
       # if lm gives good fit, return actual intercept, else return wet-regime mean
       dpsi_int = ifelse(p_slope < 0.05, 
