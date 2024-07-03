@@ -279,8 +279,8 @@ contains
     !print*,'CAI G.', vegn%CAI
 
     !print*,'init_n_cohorts AA', init_n_cohorts
-    !print*, "vegn%psoil_fs%c%c12",vegn%psoil_fs%c%c12
-    !print*, "vegn%psoil_fs%c%c12",myinterface%init_soil%init_fast_soil_C
+    print*, "vegn%psoil_fs%c%c12",vegn%psoil_fs%c%c12
+    print*, "vegn%psoil_fs%c%c12",myinterface%init_soil%init_fast_soil_C
     !print*, "vegn%psoil_sl%c%c12",vegn%psoil_sl%c%c12
     !print*, "vegn%psoil_sl%c%c12",myinterface%init_soil%init_slow_soil_C
     !print*, "CN0metabolicL",CN0metabolicL

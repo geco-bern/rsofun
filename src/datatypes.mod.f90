@@ -986,7 +986,7 @@ contains
       vegn%Resp   = vegn%Resp   + cc%Resp   * cc%nindivs
     enddo
 
-      print*,'hourly diag test1 '
+      !print*,'hourly diag test1 '
 
     ! NEP is equal to NNP minus soil respiration
     vegn%nep = vegn%npp - vegn%rh ! kgC m-2 hour-1; time step is hourly
