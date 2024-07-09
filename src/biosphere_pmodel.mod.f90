@@ -10,7 +10,7 @@ module md_biosphere_pmodel
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
   use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
-    getpar_modl_tile, diag_daily, diag_annual, init_annual
+    getpar_modl_tile, diag_daily !, init_annual
   use md_plant_pmodel, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
   use md_soiltemp, only: soiltemp
@@ -41,7 +41,7 @@ contains
     ! local variables
     integer :: dm, moy, doy
     logical, save           :: init_daily            ! is true only on the first day of the simulation 
-    logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
+    ! logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
@@ -71,10 +71,10 @@ contains
 
     endif 
 
-    !----------------------------------------------------------------
-    ! Set annual sums to zero
-    !----------------------------------------------------------------
-    call init_annual( tile_fluxes(:) )
+    ! !----------------------------------------------------------------
+    ! ! Set annual sums to zero
+    ! !----------------------------------------------------------------
+    ! call init_annual( tile_fluxes(:) )
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -131,16 +131,18 @@ contains
         ! calculate GPP
         !----------------------------------------------------------------
         ! if (verbose) print*,'calling gpp() ... '
+        ! print *, "Using pml: ", myinterface%params_siml%use_pml
         call gpp( tile(:), &
                   tile_fluxes(:), &
                   myinterface%pco2, &
                   myinterface%climate(doy), &
-                  myinterface%vegcover(doy), &
+                  myinterface%climate_acclimation(doy), &
                   myinterface%grid, &
                   init_daily, &
-                  myinterface%params_siml%in_ppfd &
+                  myinterface%params_siml%in_ppfd, &
+                  myinterface%params_siml%use_phydro, &
+                  myinterface%params_siml%use_pml &
                   )
-
         ! if (verbose) print*,'... done'
 
         !----------------------------------------------------------------
@@ -150,7 +152,8 @@ contains
         call waterbal(  tile(:), &
                         tile_fluxes(:), &
                         myinterface%grid, &
-                        myinterface%climate(doy) &
+                        myinterface%climate(doy), &
+                        myinterface%params_siml%use_phydro &
                         )
         ! if (verbose) print*,'... done'
 
@@ -195,6 +198,10 @@ contains
         out_biosphere%wcont(doy)   = tile(1)%soil%phy%wcont
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
         out_biosphere%cond(doy)    = tile_fluxes(1)%canopy%dcn
+        ! Additional outputs for coupled model and phydro
+        out_biosphere%latenth_soil(doy) = tile_fluxes(1)%canopy%daet_e_soil
+        out_biosphere%dpsi(doy)    = tile_fluxes(1)%plant(1)%dpsi
+        out_biosphere%psi_leaf(doy)    = tile_fluxes(1)%plant(1)%psi_leaf
 
         init_daily = .false.
 
@@ -202,12 +209,11 @@ contains
 
     end do monthloop
 
-    !----------------------------------------------------------------
-    ! annual diagnostics
-    !----------------------------------------------------------------
-    call diag_annual( tile(:), tile_fluxes(:) )
+    ! !----------------------------------------------------------------
+    ! ! annual diagnostics
+    ! !----------------------------------------------------------------
+    ! call diag_annual( tile(:), tile_fluxes(:) )
     
-
     ! if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
 
   end function biosphere_annual

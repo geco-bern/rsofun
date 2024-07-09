@@ -8,6 +8,8 @@ module md_classdefs
   ! - organic material, consisting of carbon and nitrogen (inherits
   !   their defitions).
   !----------------------------------------------------------------
+  use md_params_core
+
   implicit none
 
   private
@@ -16,8 +18,8 @@ module md_classdefs
     nmvRec, ncp, ncpRec, nsub, ninit, orgfrac, cfrac, nfrac, orgplus, &
     cplus, nplus, orgminus, cminus, nminus, cton, ntoc
 
-  ! Minimum precision
-  real, parameter :: epsilon = 1.0e-5 
+  ! ! Minimum precision
+  ! real, parameter :: epsilon = 1.0e-5 
 
   ! additional checks
   logical, parameter :: check_sanity = .false.
@@ -49,7 +51,6 @@ contains
     !  Generic SR to "copy" organic mass to pool (e.g. for output).
     !  Does NOT substract amount moved ('amount') from source
     !----------------------------------------------------------------
-
     type(orgpool), intent(in) :: amount
     type(orgpool), intent(inout) :: to
     real, optional, intent(in) :: scale
@@ -727,7 +728,7 @@ contains
     real :: out_cton
 
     if (present(default)) then
-      if (pool%n%n14==0.0) then
+      if (pool%n%n14 < eps) then
         out_cton = default
       else
         out_cton = pool%c%c12 / pool%n%n14
@@ -763,7 +764,7 @@ contains
     real :: out_ntoc
 
     if (present(default)) then
-      if (pool%c%c12==0.0) then
+      if (pool%c%c12 < eps) then
         out_ntoc = default
       else
         out_ntoc = pool%n%n14 / pool%c%c12

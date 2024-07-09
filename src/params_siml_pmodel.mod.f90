@@ -23,6 +23,8 @@ module md_params_siml_pmodel
     
     logical :: do_spinup            ! whether this simulation does spinup 
     logical :: is_calib             ! whether this simulation is a calibration simulation (overriding parameters and no output)
+    logical :: use_phydro           ! Whether phydro should be used for photosynthesis/transpiration calculations
+    logical :: use_pml              ! Whether Penmann-Monteith-Leuning formulation should be used for ET within phydro
 
     character(len=256) :: runname
     character(len=256) :: sitename

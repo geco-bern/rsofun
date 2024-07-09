@@ -285,7 +285,7 @@ subroutine soil_data_beta(soil, vegn, soil_beta, soil_water_supply, &
                   (0.75*(soil%w_fc(l)-soil%w_wilt(l)))))
      enddo
      soil_beta(k) = sum(cc%uptake_frac(:))
-     if (soil_beta(k) /= 0) then
+     if (soil_beta(k) > eps) then
           cc%uptake_frac(:) = cc%uptake_frac(:) / soil_beta(k)
      else
           cc%uptake_frac(:) = uptake_frac_max(:)
