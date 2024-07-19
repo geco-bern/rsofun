@@ -33,6 +33,8 @@ module md_forcing_biomee
 contains
 
   function getclimate( nt, ntstepsyear, forcing, climateyear_idx ) result ( out_climate )
+  !function getclimate( nt, forcing, climateyear_idx, climateyear ) result ( out_climate )
+
     !////////////////////////////////////////////////////////////////
     ! This function invokes file format specific "sub-functions/routines"
     ! to read from NetCDF. This nesting is necessary because this 
@@ -53,8 +55,21 @@ contains
     ! function return variable
     type(climate_type), dimension(ntstepsyear) :: out_climate
 
+    print*,'idx_start 1', idx_start
+    print*,'climateyear_idx', climateyear_idx
+    print*,'ntstepsyear', ntstepsyear
+    print*,'idx_end', idx_end
+
     idx_start = (climateyear_idx - 1) * ntstepsyear + 1
+
+    print*,'idx_start 2', idx_start
+    print*,'ntstepsyear 2', ntstepsyear
+
+
     idx_end   = idx_start + ntstepsyear - 1
+
+    print*,'idx_end 2', idx_end
+
 
     out_climate(:) = forcing(idx_start:idx_end) 
 

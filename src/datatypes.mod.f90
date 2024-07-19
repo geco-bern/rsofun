@@ -885,12 +885,12 @@ contains
     integer :: i
 
     ! State variables
-    !call orginit(vegn%plabl)
-    !call orginit(vegn%pleaf)
-    !call orginit(vegn%proot)
-    !call orginit(vegn%psapw)
-    !call orginit(vegn%pwood)
-    !call orginit(vegn%pseed)
+    call orginit(vegn%plabl)
+    call orginit(vegn%pleaf)
+    call orginit(vegn%proot)
+    call orginit(vegn%psapw)
+    call orginit(vegn%pwood)
+    call orginit(vegn%pseed)
 
     vegn%LAI        = 0.0
     vegn%CAI        = 0.0
@@ -1396,25 +1396,25 @@ contains
     out_annual_tile%plantN          = plantN  * 1000
     out_annual_tile%soilN           = soilN  *  1000
     out_annual_tile%totN            = (plantN + soilN) * 1000
-    out_annual_tile%NSC             = vegn%plabl%c%c12
-    out_annual_tile%SeedC           = vegn%pseed%c%c12
-    out_annual_tile%leafC           = vegn%pleaf%c%c12
-    out_annual_tile%rootC           = vegn%proot%c%c12
-    out_annual_tile%SapwoodC        = vegn%psapw%c%c12
-    out_annual_tile%WoodC           = vegn%pwood%c%c12
-    out_annual_tile%NSN             = vegn%plabl%n%n14 * 1000
-    out_annual_tile%SeedN           = vegn%pseed%n%n14 * 1000
-    out_annual_tile%leafN           = vegn%pleaf%n%n14 * 1000
-    out_annual_tile%rootN           = vegn%proot%n%n14 * 1000
-    out_annual_tile%SapwoodN        = vegn%psapw%n%n14  * 1000
-    out_annual_tile%WoodN           = vegn%pwood%n%n14  * 1000
-    out_annual_tile%McrbC           = vegn%pmicr%c%c12
-    out_annual_tile%fastSOM         = vegn%psoil_fs%c%c12
-    out_annual_tile%SlowSOM         = vegn%psoil_sl%c%c12
-    out_annual_tile%McrbN           = vegn%pmicr%n%n14 * 1000
-    out_annual_tile%fastSoilN       = vegn%psoil_fs%n%n14 * 1000
-    out_annual_tile%slowSoilN       = vegn%psoil_sl%n%n14 * 1000
-    out_annual_tile%mineralN        = vegn%ninorg%n14 * 1000
+    out_annual_tile%NSC             = vegn%plabl%c%c12 !vegn%NSC             
+    out_annual_tile%SeedC           = vegn%pseed%c%c12 !vegn%seedC
+    out_annual_tile%leafC           = vegn%pleaf%c%c12 !vegn%leafC            
+    out_annual_tile%rootC           = vegn%proot%c%c12 !vegn%rootC            
+    out_annual_tile%SapwoodC        = vegn%psapw%c%c12 !vegn%sapwoodC         
+    out_annual_tile%WoodC           = vegn%pwood%c%c12 !vegn%WoodC      
+    out_annual_tile%NSN             = vegn%plabl%n%n14 * 1000 !vegn%NSN * 1000       
+    out_annual_tile%SeedN           = vegn%pseed%n%n14 * 1000 !vegn%seedN * 1000     
+    out_annual_tile%leafN           = vegn%pleaf%n%n14 * 1000 !vegn%leafN * 1000     
+    out_annual_tile%rootN           = vegn%proot%n%n14 * 1000 !vegn%rootN * 1000     
+    out_annual_tile%SapwoodN        = vegn%psapw%n%n14  * 1000 !vegn%sapwoodN * 1000  
+    out_annual_tile%WoodN           = vegn%pwood%n%n14  * 1000 !vegn%soodN * 1000     
+    out_annual_tile%McrbC           = vegn%pmicr%c%c12 !vegn%mcrbC            
+    out_annual_tile%fastSOM         = vegn%psoil_fs%c%c12 !vegn%fastSOM          
+    out_annual_tile%SlowSOM         = vegn%psoil_sl%c%c12 !vegn%slowSOM          
+    out_annual_tile%McrbN           = vegn%pmicr%n%n14 * 1000 !vegn%mcrbN * 1000     
+    out_annual_tile%fastSoilN       = vegn%psoil_fs%n%n14 * 1000 !vegn%fastSoilN * 1000 
+    out_annual_tile%slowSoilN       = vegn%psoil_sl%n%n14 * 1000 !vegn%slowSoilN * 1000 
+    out_annual_tile%mineralN        = vegn%ninorg%n14 * 1000 !vegn%mineralN * 1000  
     out_annual_tile%N_fxed          = vegn%annualfixedN * 1000
     out_annual_tile%N_uptk          = vegn%annualNup * 1000
     out_annual_tile%N_yrMin         = vegn%annualN * 1000
