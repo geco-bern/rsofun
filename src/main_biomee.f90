@@ -541,6 +541,10 @@ program main
   allocate(out_annual_cohorts(  myinterface%params_siml%runyears,                  out_max_cohorts,    nvars_annual_cohorts ))
   allocate(out_annual_tile(     myinterface%params_siml%runyears,                  nvars_annual_tile                        ))
   
+  !print*,'myinterface%params_siml%runyears AA',myinterface%params_siml%runyears
+  !print*,'nvars_annual_tile',nvars_annual_tile
+  !print*,'nvars_annual_cohorts',nvars_annual_cohorts
+
   yearloop: do yr=1, myinterface%params_siml%runyears
     !----------------------------------------------------------------
     ! Define simulations "steering" variables (forcingyear, etc.)
@@ -577,24 +581,24 @@ program main
     !----------------------------------------------------------------
     ! Output out_hourly_tile (calling subroutine)
     !----------------------------------------------------------------
-     if (.not. myinterface%steering%spinup) then  
-       idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
-       idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
-    !   ! call populate_outarray_hourly_tile( out_biosphere_hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
-        call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), out_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
-     end if
+     !if (.not. myinterface%steering%spinup) then  
+     !  idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
+     !  idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
+       ! call populate_outarray_hourly_tile( out_biosphere_hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
+       ! call populate_outarray_hourly_tile( out_biosphere%hourly_tile(:), out_hourly_tile(idx_hourly_start:idx_hourly_end, :) )
+     !end if
 
     !----------------------------------------------------------------
     ! Output out_daily_tile (calling subroutine)
     !----------------------------------------------------------------
     ! Output only for transient years
-    if (.not. myinterface%steering%spinup) then  
+    !if (.not. myinterface%steering%spinup) then  
 
-      idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1  
-      idx_daily_end   = idx_daily_start + ndayyear - 1
+     ! idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1  
+     ! idx_daily_end   = idx_daily_start + ndayyear - 1
 
       !call populate_outarray_daily_tile( out_biosphere_daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end,:))
-      call populate_outarray_daily_tile( out_biosphere%daily_tile(:), out_daily_tile(idx_daily_start:idx_daily_end, :) )
+      !call populate_outarray_daily_tile( out_biosphere%daily_tile(:), out_daily_tile(idx_daily_start:idx_daily_end, :) )
 
       !----------------------------------------------------------------
       ! Output out_daily_cohorts (without subroutine)
@@ -627,17 +631,19 @@ program main
       ! output_daily_cohorts_SW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere_daily_cohorts(:,:)%SW_N)
       ! output_daily_cohorts_HW_N(idx_daily_start:idx_daily_end,:)    = dble(out_biosphere_daily_cohorts(:,:)%HW_N)
 
-    end if
+    !end if
 
-    if (.not. myinterface%steering%spinup) then  
-      call populate_outarray_daily_cohorts( out_biosphere%daily_cohorts(:,:), out_daily_cohorts(idx_daily_start:idx_daily_end,:,:) )
-    end if
+    !if (.not. myinterface%steering%spinup) then  
+    !  call populate_outarray_daily_cohorts( out_biosphere%daily_cohorts(:,:), out_daily_cohorts(idx_daily_start:idx_daily_end,:,:) )
+    !end if
 
     !----------------------------------------------------------------
     ! Output out_annual_tile (calling subroutine)
     !----------------------------------------------------------------
     !call populate_outarray_annual_tile( out_biosphere_annual_tile, output_annual_tile(yr,:) )
     call populate_outarray_annual_tile( out_biosphere%annual_tile, out_annual_tile(yr,:) )
+    !print*,'b'
+    !print*,out_annual_tile(yr,1:5)
 
     !----------------------------------------------------------------
     ! Output output_annual_cohorts (without subroutine)
@@ -646,6 +652,9 @@ program main
     ! also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(params_siml$nyeartrend)
 
     call populate_outarray_annual_cohorts( out_biosphere%annual_cohorts(:), out_annual_cohorts(yr,:,:) )
+     !print*,'c'
+     !print*,size(out_annual_cohorts(yr,:,6))
+     !print*,out_annual_cohorts(yr,:,4)
 
     !if (.not. myinterface%steering%spinup) then  
 
@@ -840,65 +849,65 @@ contains
     type(outtype_annual_tile), intent(in) :: annual_tile
     real, dimension(nvars_annual_tile), intent(inout) :: out_annual_tile
 
-    out_annual_tile(1)  = dble(annual_tile%year)
-    out_annual_tile(2)  = dble(annual_tile%CAI)
-    out_annual_tile(3)  = dble(annual_tile%LAI)
-    out_annual_tile(4)  = dble(annual_tile%density)
-    out_annual_tile(5)  = dble(annual_tile%DBH)
-    out_annual_tile(6)  = dble(annual_tile%density12)
-    out_annual_tile(7)  = dble(annual_tile%DBH12)
-    out_annual_tile(8)  = dble(annual_tile%QMD)
-    out_annual_tile(9)  = dble(annual_tile%NPP)
-    out_annual_tile(10) = dble(annual_tile%GPP)
-    out_annual_tile(11) = dble(annual_tile%Rauto)
-    out_annual_tile(12) = dble(annual_tile%Rh)
-    out_annual_tile(13) = dble(annual_tile%rain)
-    out_annual_tile(14) = dble(annual_tile%SoilWater)
-    out_annual_tile(15) = dble(annual_tile%Transp)
-    out_annual_tile(16) = dble(annual_tile%Evap)
-    out_annual_tile(17) = dble(annual_tile%Runoff)
-    out_annual_tile(18) = dble(annual_tile%plantC)
-    out_annual_tile(19) = dble(annual_tile%soilC)
-    out_annual_tile(20) = dble(annual_tile%plantN)
-    out_annual_tile(21) = dble(annual_tile%soilN)
-    out_annual_tile(22) = dble(annual_tile%totN)
-    out_annual_tile(23) = dble(annual_tile%NSC)
-    out_annual_tile(24) = dble(annual_tile%SeedC)
-    out_annual_tile(25) = dble(annual_tile%leafC)
-    out_annual_tile(26) = dble(annual_tile%rootC)
-    out_annual_tile(27) = dble(annual_tile%SapwoodC)
-    out_annual_tile(28) = dble(annual_tile%WoodC)
-    out_annual_tile(29) = dble(annual_tile%NSN)
-    out_annual_tile(30) = dble(annual_tile%SeedN)
-    out_annual_tile(31) = dble(annual_tile%leafN)
-    out_annual_tile(32) = dble(annual_tile%rootN)
-    out_annual_tile(33) = dble(annual_tile%SapwoodN)
-    out_annual_tile(34) = dble(annual_tile%WoodN)
-    out_annual_tile(35) = dble(annual_tile%McrbC)
-    out_annual_tile(36) = dble(annual_tile%fastSOM)
-    out_annual_tile(37) = dble(annual_tile%SlowSOM)
-    out_annual_tile(38) = dble(annual_tile%McrbN)
-    out_annual_tile(39) = dble(annual_tile%fastSoilN)
-    out_annual_tile(40) = dble(annual_tile%slowSoilN)
-    out_annual_tile(41) = dble(annual_tile%mineralN)
-    out_annual_tile(42) = dble(annual_tile%N_fxed)
-    out_annual_tile(43) = dble(annual_tile%N_uptk)
-    out_annual_tile(44) = dble(annual_tile%N_yrMin)
-    out_annual_tile(45) = dble(annual_tile%N_P2S)
-    out_annual_tile(46) = dble(annual_tile%N_loss)
-    out_annual_tile(47) = dble(annual_tile%totseedC)
-    out_annual_tile(48) = dble(annual_tile%totseedN)
-    out_annual_tile(49) = dble(annual_tile%Seedling_C)
-    out_annual_tile(50) = dble(annual_tile%Seedling_N)
-    out_annual_tile(51) = dble(annual_tile%MaxAge)
-    out_annual_tile(52) = dble(annual_tile%MaxVolume)
-    out_annual_tile(53) = dble(annual_tile%MaxDBH)
-    out_annual_tile(54) = dble(annual_tile%NPPL)
-    out_annual_tile(55) = dble(annual_tile%NPPW)
-    out_annual_tile(56) = dble(annual_tile%n_deadtrees)
-    out_annual_tile(57) = dble(annual_tile%c_deadtrees)
-    out_annual_tile(58) = dble(annual_tile%m_turnover)
-    out_annual_tile(59) = dble(annual_tile%c_turnover_time)
+    out_annual_tile(1)  = annual_tile%year
+    out_annual_tile(2)  = annual_tile%CAI
+    out_annual_tile(3)  = annual_tile%LAI
+    out_annual_tile(4)  = annual_tile%density
+    out_annual_tile(5)  = annual_tile%DBH
+    out_annual_tile(6)  = annual_tile%density12
+    out_annual_tile(7)  = annual_tile%DBH12
+    out_annual_tile(8)  = annual_tile%QMD
+    out_annual_tile(9)  = annual_tile%NPP
+    out_annual_tile(10) = annual_tile%GPP
+    out_annual_tile(11) = annual_tile%Rauto
+    out_annual_tile(12) = annual_tile%Rh
+    out_annual_tile(13) = annual_tile%rain
+    out_annual_tile(14) = annual_tile%SoilWater
+    out_annual_tile(15) = annual_tile%Transp
+    out_annual_tile(16) = annual_tile%Evap
+    out_annual_tile(17) = annual_tile%Runoff
+    out_annual_tile(18) = annual_tile%plantC
+    out_annual_tile(19) = annual_tile%soilC
+    out_annual_tile(20) = annual_tile%plantN
+    out_annual_tile(21) = annual_tile%soilN
+    out_annual_tile(22) = annual_tile%totN
+    out_annual_tile(23) = annual_tile%NSC
+    out_annual_tile(24) = annual_tile%SeedC
+    out_annual_tile(25) = annual_tile%leafC
+    out_annual_tile(26) = annual_tile%rootC
+    out_annual_tile(27) = annual_tile%SapwoodC
+    out_annual_tile(28) = annual_tile%WoodC
+    out_annual_tile(29) = annual_tile%NSN
+    out_annual_tile(30) = annual_tile%SeedN
+    out_annual_tile(31) = annual_tile%leafN
+    out_annual_tile(32) = annual_tile%rootN
+    out_annual_tile(33) = annual_tile%SapwoodN
+    out_annual_tile(34) = annual_tile%WoodN
+    out_annual_tile(35) = annual_tile%McrbC
+    out_annual_tile(36) = annual_tile%fastSOM
+    out_annual_tile(37) = annual_tile%SlowSOM
+    out_annual_tile(38) = annual_tile%McrbN
+    out_annual_tile(39) = annual_tile%fastSoilN
+    out_annual_tile(40) = annual_tile%slowSoilN
+    out_annual_tile(41) = annual_tile%mineralN
+    out_annual_tile(42) = annual_tile%N_fxed
+    out_annual_tile(43) = annual_tile%N_uptk
+    out_annual_tile(44) = annual_tile%N_yrMin
+    out_annual_tile(45) = annual_tile%N_P2S
+    out_annual_tile(46) = annual_tile%N_loss
+    out_annual_tile(47) = annual_tile%totseedC
+    out_annual_tile(48) = annual_tile%totseedN
+    out_annual_tile(49) = annual_tile%Seedling_C
+    out_annual_tile(50) = annual_tile%Seedling_N
+    out_annual_tile(51) = annual_tile%MaxAge
+    out_annual_tile(52) = annual_tile%MaxVolume
+    out_annual_tile(53) = annual_tile%MaxDBH
+    out_annual_tile(54) = annual_tile%NPPL
+    out_annual_tile(55) = annual_tile%NPPW
+    out_annual_tile(56) = annual_tile%n_deadtrees
+    out_annual_tile(57) = annual_tile%c_deadtrees
+    out_annual_tile(58) = annual_tile%m_turnover
+    out_annual_tile(59) = annual_tile%c_turnover_time
 
   end subroutine populate_outarray_annual_tile
 
@@ -972,7 +981,7 @@ contains
     character(len=80) :: climfile    = 'ORNL_forcing.txt'
 
     climfile=trim(filepath_in)//trim(climfile)
-    write(*,*)'inputfile: ',climfile
+    !write(*,*)'inputfile: ',climfile
 
     ! open forcing data
     open(11,file=climfile,status='old',ACTION='read',IOSTAT=istat2)
