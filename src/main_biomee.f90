@@ -104,7 +104,7 @@ program main
   logical, parameter :: verbose = .false.
   integer :: iday
 
-  character(len=100) :: namelistfile = '/home/laura/rsofun/inst/extdata/parameters_Allocation.nml'
+  character(len=100) :: namelistfile = 'inst/extdata/parameters_Allocation.nml'
 
   ! output arrays (naked) to be passed back to C/R
   real, dimension(:,:), allocatable  :: out_hourly_tile 
@@ -977,7 +977,7 @@ contains
     integer :: m,n
     integer :: idx_climatedata
 
-    character(len=80) :: filepath_in = '/home/laura/rsofun/data-raw/'
+    character(len=80) :: filepath_in = 'data-raw/'
     character(len=80) :: climfile    = 'ORNL_forcing.txt'
 
     climfile=trim(filepath_in)//trim(climfile)
