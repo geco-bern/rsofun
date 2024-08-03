@@ -9,7 +9,7 @@ declare -a arr=$( cat site_list_2.txt )
 generate_data=false
 
 data_path=/data/scratch/jaideep/fluxdata
-out_path=/data/scratch/jaideep/phydro_output_fixedkphio
+out_path=/data/scratch/jaideep/phydro_output_14_p50prior_fixedalpha0.08_s113_calibdpsi1
 # data_path=~/Downloads/fluxdatakit_oct3
 # out_path=~/Downloads/fluxdatakit_oct3/phydro_output
 

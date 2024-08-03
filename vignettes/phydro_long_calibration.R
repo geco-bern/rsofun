@@ -6,7 +6,7 @@ library(BayesianTools)
 library(tictoc)
 library(ncdf4)
 
-plot_only = T
+plot_only = F
 debug = F
 
 tic("phydro")
@@ -265,7 +265,7 @@ pars_calib = list(
   #                                 sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="K.scalar") %>% pull(sd)),
   # phydro_p50_plant = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="P50") %>% pull(mean),
   #                                   sd = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="P50") %>% pull(sd)),
-  phydro_K_plant = uniform_range(lower=0.1e-16, 1e-16),
+  phydro_K_plant = uniform_range(lower=0.1e-16, 5e-16),
   # phydro_p50_plant = uniform_range(lower=-4, -0.3),
   phydro_p50_plant = gaussian_range(mean = p50xmean/3, sd = p50xsd/3),  
   # phydro_alpha = gaussian_range(mean = pars_joshi2022 %>% filter(A.G=="Gymnosperm", name=="alpha") %>% pull(mean),
@@ -276,8 +276,9 @@ pars_calib = list(
   # phydro_gamma = uniform_range(lower = 0.1, upper = 2),
   phydro_gamma = gaussian_range(mean = gamma_mean, sd = gamma_sd),
   #bsoil = uniform_range(lower=0.1, upper=10),
-  # Ssoil = uniform_range(lower = 0, upper = whc_site+whc_site_sd),
-  whc = gaussian_range(mean = whc_site, sd = whc_site_sd),
+  #Ssoil = uniform_range(lower = 0, upper = whc_site+whc_site_sd),
+  #whc = gaussian_range(mean = whc_site, sd = whc_site_sd),
+  whc = uniform_range(lower = 115, upper = 1116),
   err_gpp = uniform_range(lower = 0.01, upper = 4),
   err_le = uniform_range(lower = 0.1e6, upper = 10e6)
 )
@@ -295,7 +296,7 @@ pars_fixed = list(         # fix all other parameters
   phydro_alpha       = 0.08,
   # phydro_gamma       = 1
   bsoil              = 3,
-  Ssoil              = 113
+  Ssoil              = 113.313   # 1%ile of cwdx80_forcing
   # whc                = 90  
 )
 
@@ -303,7 +304,7 @@ pars_fixed = list(         # fix all other parameters
 settings_bayes <- list(
   method = "BayesianTools",
   par = pars_calib,
-  metric = rsofun::cost_likelihood_pmodel,
+  metric = rsofun::cost_likelihood_phydro,
   control = list(
     sampler = "DEzs",
     settings = list(
@@ -410,5 +411,6 @@ output_p_opt$data[[1]] %>% select(date, gpp, le) %>%
   write.csv(file=paste0(file_prefix, "_r2_nrmse.csv"), row.names = F)
 
 toc()
+
 
 
