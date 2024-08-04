@@ -1,5 +1,5 @@
 ---
-title: "P-model usage"
+title: "P-model usage (new data)"
 author: "Koen Hufkens, Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
@@ -36,9 +36,35 @@ The package includes two demo datasets to run and validate pmodel output using G
 library(rsofun)
 
 # this is to deal with an error p_model_drivers.rds not being found 
-p_model_drivers
+p_model_drivers = readRDS("/data/scratch/jaideep/FluxDataKit/v2023.10.3/p_model_drivers.rds") |> filter(sitename == "FR-Pue") |> 
+  rowwise() |> 
+  # manipulate all forcing variables, filter years and gapfill missing values
+  mutate(across(
+           starts_with("forcing"),
+           ~.x |> 
+             filter(lubridate::year(date) >= 2007 & 
+                      lubridate::year(date) <= 2012) |> 
+             mutate(rain = ifelse(is.na(rain), yes=0, no=rain)) |>
+             list()
+           )) |>
+  mutate(site_info = site_info |> 
+           # Set WHC from demo data just to check match, new data has 4981.0
+           mutate(whc=432) |>
+           list())
 
-p_model_validation
+p_model_validation = readRDS("/data/scratch/jaideep/FluxDataKit/v2023.10.3/p_model_validation.rds") |> 
+  filter(sitename == "FR-Pue") |> 
+  rowwise() |>
+  # Use NT GPP as gpp, and filter years across all data columns
+  mutate(across(
+    starts_with("data"),
+    ~ .x |> 
+         rename(gpp = gpp_nt) |> 
+         filter(lubridate::year(date) >= 2007 & 
+                  lubridate::year(date) <= 2012) |>
+         list()
+    ))
+
 ```
 
 ### Visualize drivers
@@ -62,8 +88,6 @@ p_model_drivers$forcing[[1]] |>
     facet_wrap(~name, scales = "free")+
     ggtitle(p_model_drivers$sitename[[1]])
 
-
-p_model_drivers$site_info |> print()
 ```
 
 These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `pmodel` parameters.
@@ -80,7 +104,7 @@ For the remainder of this vignette, we will use the GPP flux datasets. The workf
 
 To get your raw data into the structure used within `rsofun`, please see R packages [ingestr](https://github.com/geco-bern/ingestr) and [FluxDataKit](https://github.com/geco-bern/FluxDataKit).
 
-## Running model
+## Running P-model
 
 With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
 
@@ -236,3 +260,4 @@ ggplot(data = df_gpp_plot) +
 ```
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
+
