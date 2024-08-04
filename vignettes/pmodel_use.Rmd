@@ -36,7 +36,12 @@ The package includes two demo datasets to run and validate pmodel output using G
 library(rsofun)
 
 # this is to deal with an error p_model_drivers.rds not being found 
-p_model_drivers
+p_model_drivers = p_model_drivers |> 
+  rowwise() |> 
+  mutate(params_siml = params_siml |> 
+           mutate(use_phydro = F,
+                  use_pml = F) |>
+           list())
 
 p_model_validation
 ```
@@ -85,8 +90,11 @@ To get your raw data into the structure used within `rsofun`, please see R packa
 With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
 
 ```{r}
-# define model parameter values from previous
-# work
+# define model parameter values from previous work
+# ------------------------------------------------------
+# Note that in the phydro branch of rsofun,
+#    whc must be included in params_modl, rather than in site_info
+# ------------------------------------------------------
 params_modl <- list(
     kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
@@ -96,7 +104,8 @@ params_modl <- list(
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    whc                = p_model_drivers$site_info[[1]]$whc
   )
 
 # run the model for these parameters
