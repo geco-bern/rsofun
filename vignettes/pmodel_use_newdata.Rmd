@@ -304,12 +304,46 @@ print(
 
 ## P-hydro model run
 
+For phydro, we must use the 3-hr daily max forcing as the acclimation forcing. So lets rename it i nthe data,
+
+```{r}
+p_model_drivers <- p_model_drivers |> 
+  rename(forcing_acclim = forcing_3hrmax) |> 
+  rowwise() |>
+  mutate(forcing_acclim = forcing_acclim |> 
+           mutate(
+            across(-date,
+                    ~zoo::na.approx(.x, na.rm = FALSE)
+                   )
+            ) |> 
+           list()
+         )
+
+p_model_drivers$forcing_acclim[[1]] |>
+    # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
+    dplyr::select(date, co2, ppfd, netrad, temp, vpd, fapar, rain, ccov) |>
+    tidyr::pivot_longer(-date) |>
+    dplyr::mutate(type="24-hr mean") |>
+    rbind(p_model_validation$data_3hrmax[[1]] |>
+            # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
+            dplyr::select(date, gpp) |>
+            tidyr::pivot_longer(-date) |>
+            dplyr::mutate(type="obs (24 hr)")
+    ) |>
+    ggplot(aes(y=value, x=date)) +
+    geom_line(aes(group=type, col=type), alpha=0.5) +
+    theme_classic() +
+    theme(strip.background = element_rect(color = "white", size = 1))+
+    facet_wrap(~name, scales = "free")+
+    ggtitle(p_model_drivers$sitename[[1]])
+```
+
 ```{r}
 p_model_drivers$params_siml[[1]]$use_phydro = T
 
 # define model parameter values
 params_modl <- list(
-  kphio              = 0.0488,
+  kphio              = 0.0288,
   kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
   kphio_par_b        = 1.0,
   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
