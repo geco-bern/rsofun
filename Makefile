@@ -7,12 +7,14 @@
 # Select configuration profile
 # Set PROFILE to one of benilaptop, cx1, euler, pgi, or beniimac
 ##################################
-PROFILE=benilaptop
+PROFILE=m1
 
 ##################
-# pgf profile
+# Profiles
 ##################
-ifeq ($(PROFILE),benilaptop)
+ifeq ($(PROFILE),m1)
+
+	# Mac M1 arm64
 
 	# Compiler and options
 	FCOM=gfortran
@@ -28,47 +30,54 @@ ifeq ($(PROFILE),benilaptop)
 	# # System libraries
 	# LIBS = -L $(NETCDF_LIB) -lnetcdf -lnetcdff
 
-	# On Beni's laptop, use this (display by nc-config --libdir and nc-config --includedir)
-	NETCDF_INC = /opt/local/include
-	NETCDF_LIB = /opt/local/lib
+	NETCDF_INC = /opt/homebrew/include
+	NETCDF_LIB = /opt/homebrew/lib
 
-	# LIBS = -L $(NETCDF_LIB) -lgfortran #-lnetcdf -lnetcdff  # avoiding netcdf library
-	LIBS = -L $(NETCDF_LIB) -lgfortran #-lnetcdf -lnetcdff 
+	LIBS = -L -lgfortran #-lnetcdf -lnetcdff 
 
 else
 
-	ifeq ($(PROFILE),cx1)
+	ifeq ($(PROFILE),benilaptop)
 
 		# Compiler and options
-		FCOM=ifort
-		CPPFLAGS=-e -fpp -preprocess_only -E
-		COMPFLAGS=-O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -extend_source -free -g -traceback ##-r8 -i4 -align -pc64 -fp-model strict 
-		DEBUGFLAGS=-O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -extend_source -free -warn all -implicitnone -g -traceback -fpe0 -fpstkchk -CU
+		FCOM=gfortran
+		CPPFLAGS=-cpp -E
+		COMPFLAGS=-g -O1 -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -pedantic-errors # For biomee compilation, use -O0 or -O1 (not -O2 or above)
+	    # COMPFLAGS=-g -O2 -fdefault-real-8 -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -pedantic-errors # double precision by default
+		#COMPFLAGS=-g -O0 -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -Wall -Wextra -fcheck=all -fbacktrace # for debug setup
 
-		# On Imperial CX1, use this:
-		NETCDF_INC = /apps/netcdf/4.0.1-mcmodel-medium/include
-		NETCDF_LIB = /apps/netcdf/4.0.1-mcmodel-medium/lib -lnetcdf
+		# COMPFLAGS=-g -O0 -r8 -Mextend -Mbounds -Minfo -Minform=inform -Kieee -Ktrap=fp -Mfreeform  # debug flags, real8
+		#COMPFLAGS= -Mextend -Mdalign -Kieee -Ktrap=fp -O2 -Mprof=lines # to analyze computation time by subroutines
+		# DEBUGFLAGS=-g -O0 -Mextend -Mbounds -Minfo -Minform=inform -Kieee -Ktrap=fp -Mfreeform
 
-		LIBS = -L$(NETCDF_LIB) -lnetcdf
+		# # System libraries
+		# LIBS = -L $(NETCDF_LIB) -lnetcdf -lnetcdff
+
+		# On Beni's laptop, use this (display by nc-config --libdir and nc-config --includedir)
+		NETCDF_INC = /opt/local/include
+		NETCDF_LIB = /opt/local/lib
+
+		LIBS = -L $(NETCDF_LIB) -lgfortran #-lnetcdf -lnetcdff 
+
 
 	else
 
-		ifeq ($(PROFILE),euler)
+		ifeq ($(PROFILE),pgi)
 
-			# gfortran compiler
-			FCOM=gfortran
-			CPPFLAGS=-cpp -E
-			COMPFLAGS=-g -O2 -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow ## for normal setup
+			# Compiler and options
+			FCOM=pgf95 
+			CPPFLAGS=-E
+			COMPFLAGS=-r8 -Mextend -Mfreeform -Mdalign -Kieee -Ktrap=fp -O2
+			# COMPFLAGS=-g -O0 -r8 -Mextend -Mbounds -Minfo -Minform=inform -Kieee -Ktrap=fp -Mfreeform  # debug flags, real8
+			#COMPFLAGS= -Mextend -Mdalign -Kieee -Ktrap=fp -O2 -Mprof=lines # to analyze computation time by subroutines
+			DEBUGFLAGS=-g -O0 -Mextend -Mbounds -Minfo -Minform=inform -Kieee -Ktrap=fp -Mfreeform
 
-			# On ETH Scicomp EULER
-			NETCDF_INC = /cluster/apps/netcdf/4.3.2/x86_64/gcc_4.8.2/serial/include
-			NETCDF_LIB = /cluster/apps/netcdf/4.3.2/x86_64/gcc_4.8.2/serial/lib
+		    # System libraries
+			LIBS = -L $(NETCDF_LIB) -lnetcdf -lnetcdff
 
-			LIBS = -L $(NETCDF_LIB) -lgfortran #-lnetcdf -lnetcdff # On Beni's laptop
+		else	
 
-		else
-
-			ifeq ($(PROFILE),beniimac)
+			ifeq ($(PROFILE),m1)
 
 				FCOM=gfortran
 				CPPFLAGS=-cpp -E
@@ -79,31 +88,14 @@ else
 
 				LIBS = -L $(NETCDF_LIB) -lnetcdf -lnetcdff -lgfortran # On Beni's work computer
 
-			else
+			else			
 
-				ifeq ($(PROFILE),pgi)
-	
-					# Compiler and options
-					FCOM=pgf95 
-					CPPFLAGS=-E
-					COMPFLAGS=-r8 -Mextend -Mfreeform -Mdalign -Kieee -Ktrap=fp -O2
-					# COMPFLAGS=-g -O0 -r8 -Mextend -Mbounds -Minfo -Minform=inform -Kieee -Ktrap=fp -Mfreeform  # debug flags, real8
-					#COMPFLAGS= -Mextend -Mdalign -Kieee -Ktrap=fp -O2 -Mprof=lines # to analyze computation time by subroutines
-					DEBUGFLAGS=-g -O0 -Mextend -Mbounds -Minfo -Minform=inform -Kieee -Ktrap=fp -Mfreeform
-
-				    # System libraries
-					LIBS = -L $(NETCDF_LIB) -lnetcdf -lnetcdff
-
-				else				
-
-					# Error: select valid profile
-					$(error 'ERROR. Select a valid configuration profile in the Makefile (e.g. PROFILE=gfor).')
-
-				endif
+				# Error: select valid profile
+				$(error 'ERROR. Select a valid configuration profile in the Makefile (e.g. PROFILE=gfor).')
 
 			endif
 
-		endif		
+		endif
 
 	endif	
 
@@ -119,9 +111,9 @@ endif
 #COMPFLAGS += $(shell mpif90 --showme:compile)
 #DEBUGFLAGS += $(shell mpif90 --showme:compile)
 
-# Add library include files to compiler flags
-COMPFLAGS += -I$(NETCDF_INC)
-DEBUGFLAGS += -I$(NETCDF_INC)
+# # Add NetCDF library include files to compiler flags
+# COMPFLAGS += -I$(NETCDF_INC)
+# DEBUGFLAGS += -I$(NETCDF_INC)
 
 # name of executable
 EXE                 = runsofun
@@ -227,7 +219,7 @@ biomee:
 # implementation of the BiomeE-Allocation model  
 biomee_pmodel:
 	 $(MAKE) biomee_pmodel -C src
-	 $(FCOM) -o $(BIOMEE_PMODEL_EXE) $(COMPFLAGS) $(ARCHIVES) $(LIBS)
+	 $(FCOM) -o $(BIOMEE_PMODEL_EXE) $(COMPFLAGS) $(ARCHIVES) #$(LIBS)
 
 # reduced model setup: fixed allocation, no litter, soil and inorganic C and N dynamics
 tmodel: 
