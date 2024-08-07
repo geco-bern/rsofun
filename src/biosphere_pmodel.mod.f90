@@ -153,6 +153,7 @@ contains
                         tile_fluxes(:), &
                         myinterface%grid, &
                         myinterface%climate(doy), &
+                        tile(:)%canopy%fapar, &
                         myinterface%params_siml%use_phydro &
                         )
         ! if (verbose) print*,'... done'
@@ -199,6 +200,7 @@ contains
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
         out_biosphere%cond(doy)    = tile_fluxes(1)%canopy%dcn
         ! Additional outputs for coupled model and phydro
+        out_biosphere%latenth_canopy(doy) = tile_fluxes(1)%canopy%daet_e_canop
         out_biosphere%latenth_soil(doy) = tile_fluxes(1)%canopy%daet_e_soil
         out_biosphere%dpsi(doy)    = tile_fluxes(1)%plant(1)%dpsi
         out_biosphere%psi_leaf(doy)    = tile_fluxes(1)%plant(1)%psi_leaf

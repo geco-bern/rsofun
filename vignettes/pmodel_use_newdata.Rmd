@@ -35,8 +35,11 @@ The package includes two demo datasets to run and validate pmodel output using G
 ```{r}
 library(rsofun)
 
+drivers_path = "/data/scratch/jaideep/FluxDataKit/v4.0"
+
 # this is to deal with an error p_model_drivers.rds not being found 
-p_model_drivers = readRDS("/data/scratch/jaideep/FluxDataKit/v2023.10.3/p_model_drivers.rds") |> filter(sitename == "FR-Pue") |> 
+p_model_drivers = readRDS(file.path(drivers_path, "p_model_drivers.rds")) |> 
+  filter(sitename == "FR-Pue") |> 
   rowwise() |> 
   # manipulate all forcing variables, filter years and gapfill missing values
   mutate(across(
@@ -44,22 +47,23 @@ p_model_drivers = readRDS("/data/scratch/jaideep/FluxDataKit/v2023.10.3/p_model_
            ~.x |> 
              filter(lubridate::year(date) >= 2007 & 
                       lubridate::year(date) <= 2012) |> 
-             mutate(rain = ifelse(is.na(rain), yes=0, no=rain)) |>
+             # mutate(rain = ifelse(is.na(rain), yes=0, no=rain)) |>
              list()
            )) |>
   mutate(site_info = site_info |> 
-           # Set WHC from demo data just to check match, new data has 4981.0
+           # Set WHC from demo data just to check match, new data has ~250
            mutate(whc=432) |>
            list())
 
-p_model_validation = readRDS("/data/scratch/jaideep/FluxDataKit/v2023.10.3/p_model_validation.rds") |> 
+p_model_validation = readRDS(file.path(drivers_path, "p_model_validation.rds")) |>
   filter(sitename == "FR-Pue") |> 
   rowwise() |>
   # Use NT GPP as gpp, and filter years across all data columns
   mutate(across(
     starts_with("data"),
     ~ .x |> 
-         rename(gpp = gpp_nt) |> 
+         mutate(gpp = gpp_nt,
+                le = le_corr*86400) |> 
          filter(lubridate::year(date) >= 2007 & 
                   lubridate::year(date) <= 2012) |>
          list()
@@ -181,6 +185,17 @@ ggplot(data = df_gpp_plot) +
   )
 ```
 
+## Plot all outputs
+
+```{r}
+output$data[[1]] |>
+  pivot_longer(-date) |> 
+  ggplot(aes(x=date, y=value)) +
+  geom_line()+
+  facet_wrap(~name, scales="free_y")
+```
+
+
 ## Calibrating model parameters
 
 To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as a cost function and parameter ranges.
@@ -279,7 +294,6 @@ get_density <- function(x, y, ...) {
 print(
   output$data[[1]] %>% 
     select(date, gpp, le) %>% 
-    mutate(le = le/86400) %>% # convert J m-2 d-1 to W m-2
     pivot_longer(-date) %>% 
     mutate(type="pred") %>% 
     rbind(
@@ -308,23 +322,14 @@ For phydro, we must use the 3-hr daily max forcing as the acclimation forcing. S
 
 ```{r}
 p_model_drivers <- p_model_drivers |> 
-  rename(forcing_acclim = forcing_3hrmax) |> 
-  rowwise() |>
-  mutate(forcing_acclim = forcing_acclim |> 
-           mutate(
-            across(-date,
-                    ~zoo::na.approx(.x, na.rm = FALSE)
-                   )
-            ) |> 
-           list()
-         )
+  rename(forcing_acclim = forcing_3hrmax)
 
 p_model_drivers$forcing_acclim[[1]] |>
     # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
     dplyr::select(date, co2, ppfd, netrad, temp, vpd, fapar, rain, ccov) |>
     tidyr::pivot_longer(-date) |>
     dplyr::mutate(type="24-hr mean") |>
-    rbind(p_model_validation$data_3hrmax[[1]] |>
+    rbind(p_model_validation$data[[1]] |>
             # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
             dplyr::select(date, gpp) |>
             tidyr::pivot_longer(-date) |>
@@ -349,7 +354,7 @@ params_modl <- list(
   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
   tau_acclim         = 30.0,
   kc_jmax            = 0.41,
-  phydro_K_plant     = 2.18e-17,
+  phydro_K_plant     = 5e-17,
   phydro_p50_plant   = -0.46,
   phydro_gamma       = 0.065,
   phydro_b_plant     = 1,
@@ -374,7 +379,6 @@ output <- rsofun::runread_pmodel_f(
 print(
 output$data[[1]] %>% 
   select(date, gpp, le, aet, pet, netrad, wcont) %>% 
-  mutate(le = le/86400) %>% # convert J m-2 d-1 to W m-2
   pivot_longer(-date) %>% 
   mutate(type="pred") %>% 
   rbind(
@@ -402,7 +406,6 @@ get_density <- function(x, y, ...) {
 print(
   output$data[[1]] %>% 
     select(date, gpp, le) %>% 
-    mutate(le = le/86400) %>% # convert J m-2 d-1 to W m-2
     pivot_longer(-date) %>% 
     mutate(type="pred") %>% 
     rbind(
@@ -423,4 +426,14 @@ print(
     facet_wrap(~name, scales = "free", nrow = 1)+
     labs(colour="Density")
 )
+```
+
+Plot all outputs
+
+```{r}
+output$data[[1]] |>
+  pivot_longer(-date) |> 
+  ggplot(aes(x=date, y=value)) +
+  geom_line()+
+  facet_wrap(~name, scales="free_y")
 ```

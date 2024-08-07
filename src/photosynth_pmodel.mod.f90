@@ -810,6 +810,8 @@ contains
   end function calc_gammastar
 
 
+  ! TODO: Reformulate to calculate betao online so that stess = 0 @ wcont = 0 
+  !       -- not needed, just set betao = 0
   function calc_soilmstress( wcont, thetastar, betao ) result( outstress )
     !//////////////////////////////////////////////////////////////////
     ! Calculates empirically-derived stress (fractional reduction in light 

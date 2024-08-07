@@ -81,6 +81,7 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: wcont
     real, dimension(ndayyear) :: snow
     real, dimension(ndayyear) :: cond
+    real, dimension(ndayyear) :: latenth_canopy
     real, dimension(ndayyear) :: latenth_soil
     real, dimension(ndayyear) :: dpsi
     real, dimension(ndayyear) :: psi_leaf

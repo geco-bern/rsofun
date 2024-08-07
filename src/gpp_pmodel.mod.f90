@@ -352,9 +352,11 @@ contains
       ! Stomatal conductance
       !----------------------------------------------------------------
       if (.not. use_phydro) then
-        tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint
+        tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint 
       else 
-        tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs
+        ! Jaideep: Note that unit of gs_accl here is mol m-2 s-1. 
+        ! Jaideep FIXME: It's too complicated to convert it to unit as in pmodel, but should be done at some point
+        tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs 
       end if
 
       !----------------------------------------------------------------
@@ -366,17 +368,27 @@ contains
       end if
 
       !------------------------------------------------------------------------
-      ! Canopy ET and soil LE (only for Phydro, since it's computed internally)
+      ! Canopy ET 
       !------------------------------------------------------------------------
-      if (use_phydro) then
-        ! Density of water, kg/m^3
-        rho_water = calc_density_h2o( climate%dtemp, climate%dpatm )
+      ! Density of water, kg/m^3
+      rho_water = calc_density_h2o( climate%dtemp, climate%dpatm )
 
+      ! Jaideep TODO FIXME: PM can be used here instead of 1.6gsD
+      if (.not.use_phydro) then
+        ! Note here that stomatal conductance is already normalized by patm (=gs/patm) so E = 1.6 * (gs/patm) * vpd, which is the same as 1.6 gs (vpd/patm)
+        ! but it is expressed per unit absorbed light, so multiply by PPFD*fapar
+        tile_fluxes(lu)%canopy%daet_canop = (1.6 &
+              * out_pmodel%gs_setpoint * tile(lu)%canopy%fapar * climate%dppfd &
+              * climate%dvpd) * 0.018015 * (1.0d0 / rho_water) &
+              * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
+        
+      else
         tile_fluxes(lu)%canopy%daet_canop = out_phydro_inst%e * 0.018015 * (1.0d0 / rho_water) &
               * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
         
-        tile_fluxes(lu)%canopy%dpet_e_soil = out_phydro_inst%le_s_wet  &
-              * myinterface%params_siml%secs_per_tstep ! convert: J m-2 s-1 * s day-1  = J m-2 day-1
+        ! ~~ This has been moved to waterbal_splash ~~
+        ! tile_fluxes(lu)%canopy%dpet_e_soil = out_phydro_inst%le_s_wet  &
+        !       * myinterface%params_siml%secs_per_tstep ! convert: J m-2 s-1 * s day-1  = J m-2 day-1
         
         ! print *, "Canopy ET (mm d-1) = ", tile_fluxes(lu)%canopy%daet_canop 
         ! print *, "Soil LE (J m-2 d-1) = ", climate%dnetrad, tile_fluxes(lu)%canopy%daet_e_soil 
