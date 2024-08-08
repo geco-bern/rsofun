@@ -4,7 +4,7 @@
 \alias{cost_rmse_biomee}
 \title{RMSE cost function for BiomeE}
 \usage{
-cost_rmse_biomee(par, obs, drivers)
+cost_rmse_biomee(par, obs, drivers, verbose = FALSE)
 }
 \arguments{
 \item{par}{A vector containing parameter values for \code{'phiRL',
@@ -14,6 +14,10 @@ cost_rmse_biomee(par, obs, drivers)
 for example.}
 
 \item{drivers}{A nested data frame of driver data, for example \code{biomee_gs_leuning_drivers}.}
+
+\item{verbose}{A logical specifying whether to print parameter and cost (RMSE) 
+values during each iteration of the calibration as message. Defaults to 
+\code{FALSE}}
 }
 \value{
 The root mean squared error (RMSE) between the observed and simulated

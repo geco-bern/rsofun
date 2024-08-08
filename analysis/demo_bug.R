@@ -3,7 +3,8 @@ library(dplyr)
 library(ggplot2)
 library(purrr)
 
-## BiomeE (original with gs-leuning) -----------
+## BiomeE -----------
+# original with gs-leuning photosynthesis
 nruns <- 3
 test_biomee_gs_leuning <- function(){
   # run the model
@@ -26,7 +27,13 @@ vec_test <- purrr::map_lgl(
 # did any simulation fail?
 if (any(!vec_test)){
   stop(
-    "At least one BiomeE-gs-leuning simulation failed."
+    paste(
+      "At least one BiomeE-gs-leuning simulation failed. Successful run? ",
+      paste(
+        vec_test,
+        collapse = ", "
+      )
+    )
   )
 } else {
   message(
@@ -57,7 +64,13 @@ vec_test <- purrr::map_lgl(
 # did any simulation fail?
 if (any(!vec_test)){
   stop(
-    "At least one BiomeEP simulation failed."
+    paste(
+      "At least one BiomeEP simulation failed. Successful run? ",
+      paste(
+        vec_test,
+        collapse = ", "
+      )
+    )
   )
 } else {
   message(

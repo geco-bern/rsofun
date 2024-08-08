@@ -27,6 +27,9 @@
 #' \code{FALSE}.
 #' @param ncores An integer specifying the number of cores used for parallel
 #' computing. Defaults to 2.
+#' @param verbose A logical specifying whether to print parameter and cost (RMSE) 
+#' values during each iteration of the calibration as message. Defaults to 
+#' \code{FALSE}
 #' 
 #' @return The root mean squared error (RMSE) between observed values and P-model
 #' predictions. The RMSE is computed for each target separately and then aggregated
@@ -75,7 +78,8 @@ cost_rmse_pmodel <- function(
     target_weights = NULL, # if using several targets, how are the individual 
                            # RMSE weighted? named vector
     parallel = FALSE,
-    ncores = 2
+    ncores = 2,
+    verbose = FALSE
 ){
   
   # predefine variables for CRAN check compliance
@@ -203,6 +207,18 @@ cost_rmse_pmodel <- function(
     cost <- sum(rmse * target_weights)
   }else{
     cost <- mean(rmse, na.rm = TRUE)
+  }
+  
+  if (verbose){
+    message(
+      paste("Par = ", paste(params_modl, collapse = ", "))
+    )
+    message(
+      paste("RMSE = ", cost)
+    )
+    message(
+      paste("--------------------------")
+    )
   }
 
   return(cost)

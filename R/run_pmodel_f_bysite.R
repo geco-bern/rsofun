@@ -221,6 +221,9 @@ run_pmodel_f_bysite <- function(
       "temp",
       "rain",
       "vpd",
+      "ppfd",
+      "netrad",
+      "fsun",
       "snow",
       "co2",
       "fapar",
@@ -282,7 +285,7 @@ run_pmodel_f_bysite <- function(
     }
     
     # Check model parameters
-    if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
+    if ( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
                                               'soilm_thetastar', 'soilm_betao',
                                               'beta_unitcostratio', 'rd_to_vcmax', 
                                               'tau_acclim', 'kc_jmax')
@@ -302,13 +305,13 @@ run_pmodel_f_bysite <- function(
     in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
 
     # Check if fsun is available
-    if(! (in_ppfd & in_netrad)){
+    if (! (in_ppfd & in_netrad)){
       # fsun must be available when one of ppfd or netrad is missing
-      if(any(is.na(forcing$fsun))) continue <- FALSE
+      if (any(is.na(forcing$fsun))) continue <- FALSE
     }
   }
   
-  if(continue){
+  if (continue){
     
     # convert to matrix
     forcing <- as.matrix(forcing)

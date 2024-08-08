@@ -28,6 +28,9 @@
 #' \code{FALSE}.
 #' @param ncores An integer specifying the number of cores used for parallel
 #' computing. Defaults to 2.
+#' @param verbose A logical specifying whether to print parameter and log-likelihood 
+#' values during each iteration of the calibration as message. Defaults to 
+#' \code{FALSE}
 #' 
 #' @return The log-likelihood of the observed target values, assuming that they
 #' are independent, normally distributed and centered on the predictions
@@ -78,7 +81,8 @@ cost_likelihood_pmodel <- function(
     targets,
     par_fixed = NULL,   # non-calibrated model parameters
     parallel = FALSE,
-    ncores = 2
+    ncores = 2,
+    verbose = FALSE
 ){
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
@@ -215,6 +219,18 @@ cost_likelihood_pmodel <- function(
 
   # trap boundary conditions
   if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
+
+  if (verbose){
+    message(
+      paste("Par = ", paste(params_modl, collapse = ", "))
+    )
+    message(
+      paste("Log-likelihood = ", ll)
+    )
+    message(
+      paste("--------------------------")
+    )
+  }
   
   return(ll)
 }

@@ -12,7 +12,8 @@ cost_likelihood_pmodel(
   targets,
   par_fixed = NULL,
   parallel = FALSE,
-  ncores = 2
+  ncores = 2,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -44,6 +45,10 @@ parameters are passed on to \code{\link{runread_pmodel_f}}.}
 
 \item{ncores}{An integer specifying the number of cores used for parallel
 computing. Defaults to 2.}
+
+\item{verbose}{A logical specifying whether to print parameter and log-likelihood 
+values during each iteration of the calibration as message. Defaults to 
+\code{FALSE}}
 }
 \value{
 The log-likelihood of the observed target values, assuming that they

@@ -4,7 +4,7 @@
 \alias{cost_likelihood_biomee}
 \title{Log-likelihood cost function for BiomeE with different targets}
 \usage{
-cost_likelihood_biomee(par, obs, drivers, targets)
+cost_likelihood_biomee(par, obs, drivers, targets, verbose = FALSE)
 }
 \arguments{
 \item{par}{A vector containing parameter values for \code{'phiRL',
@@ -22,6 +22,10 @@ for example.}
 \item{targets}{A character vector indicating the target variables for which the
 optimization will be done. This should be a subset of \code{c("GPP", "LAI",
 "Density", "Biomass")}.}
+
+\item{verbose}{A logical specifying whether to print parameter and log-likelihood 
+values during each iteration of the calibration as message. Defaults to 
+\code{FALSE}}
 }
 \value{
 The log-likelihood of the simulated 

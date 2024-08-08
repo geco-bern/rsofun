@@ -12,6 +12,9 @@
 #' @param obs A nested data frame of observations, following the structure of \code{biomee_validation},
 #' for example.
 #' @param drivers A nested data frame of driver data, for example \code{biomee_gs_leuning_drivers}.
+#' @param verbose A logical specifying whether to print parameter and cost (RMSE) 
+#' values during each iteration of the calibration as message. Defaults to 
+#' \code{FALSE}
 #' 
 #' @return The root mean squared error (RMSE) between the observed and simulated
 #' values of \code{'GPP','LAI','Density'} and \code{'Biomass'} (all variables
@@ -38,7 +41,8 @@
 cost_rmse_biomee <- function(
     par,
     obs,
-    drivers
+    drivers,
+    verbose = FALSE
 ){
   
   # predefine variables for CRAN check compliance
@@ -84,6 +88,18 @@ cost_rmse_biomee <- function(
   
   ## Calculate cost (RMSE) across the N targets
   cost <- mean(dff$error_rel^2, na.rm = TRUE)
+  
+  if (verbose){
+    message(
+      paste("Par = ", paste(drivers$params_species, collapse = ", "))
+    )
+    message(
+      paste("RMSE = ", cost)
+    )
+    message(
+      paste("--------------------------")
+    )
+  }
   
   return(cost)
 }
