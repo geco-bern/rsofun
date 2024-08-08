@@ -16,6 +16,9 @@
 #' @param targets A character vector indicating the target variables for which the
 #' optimization will be done. This should be a subset of \code{c("GPP", "LAI",
 #' "Density", "Biomass")}.
+#' @param verbose A logical specifying whether to print parameter and log-likelihood 
+#' values during each iteration of the calibration as message. Defaults to 
+#' \code{FALSE}
 #' 
 #' @return The log-likelihood of the simulated 
 #' targets by the biomee model versus the observed targets. 
@@ -46,7 +49,8 @@ cost_likelihood_biomee <- function(
   par,
   obs,
   drivers,
-  targets
+  targets,
+  verbose = FALSE
 ){
   
   # predefine variables for CRAN check compliance
@@ -107,6 +111,18 @@ cost_likelihood_biomee <- function(
   # trap boundary conditions
   if(is.nan(ll) || is.na(ll) | ll == 0){
     ll <- -Inf
+  }
+
+  if (verbose){
+    message(
+      paste("Par = ", paste(drivers$params_species, collapse = ", "))
+    )
+    message(
+      paste("Log-likelihood = ", ll)
+    )
+    message(
+      paste("--------------------------")
+    )
   }
   
   return(ll)

@@ -12,7 +12,8 @@ cost_rmse_pmodel(
   par_fixed = NULL,
   target_weights = NULL,
   parallel = FALSE,
-  ncores = 2
+  ncores = 2,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -46,6 +47,10 @@ weights are used to compute a weighted average of RMSE across targets.}
 
 \item{ncores}{An integer specifying the number of cores used for parallel
 computing. Defaults to 2.}
+
+\item{verbose}{A logical specifying whether to print parameter and cost (RMSE) 
+values during each iteration of the calibration as message. Defaults to 
+\code{FALSE}}
 }
 \value{
 The root mean squared error (RMSE) between observed values and P-model

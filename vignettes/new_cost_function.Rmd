@@ -61,7 +61,8 @@ pars_calib_rmse <- calib_sofun(
     tau_acclim         = 30.0,
     kc_jmax            = 0.41
   ),
-  targets = "gpp"           # define target variable GPP
+  targets = "gpp",           # define target variable GPP
+  verbose = FALSE            # set to TRUE to print parameter and cost values during each iteration of the calibration
 )
 ```
 
