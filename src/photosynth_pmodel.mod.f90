@@ -812,7 +812,7 @@ contains
 
   ! TODO: Reformulate to calculate betao online so that stess = 0 @ wcont = 0 
   !       -- not needed, just set betao = 0
-  function calc_soilmstress( wcont, thetastar, betao ) result( outstress )
+  function calc_soilmstress( wcont, thetastar, whc ) result( outstress )
     !//////////////////////////////////////////////////////////////////
     ! Calculates empirically-derived stress (fractional reduction in light 
     ! use efficiency) as a function of soil moisture
@@ -821,12 +821,14 @@ contains
     !         in strongly water-stressed months
     !-----------------------------------------------------------------------
     ! argument
-    real, intent(in) :: wcont                 ! soil water content (mm)
-    real, intent(in) :: thetastar             ! threshold of water limitation (mm), previously 0.6 * whc_rootzone
-    real, intent(in) :: betao                 ! soil water stress at zero water rootzone water content
+    real, intent(in) :: wcont                 ! root-zone water content (mm)
+    real, intent(in) :: thetastar             ! threshold of water limitation (mm), a global constant treated as model parameter
+    real, intent(in) :: whc                   ! total root zone water storage capacity (mm), site-specific
 
     ! local variables
     real :: shape_parameter
+    real :: betao = 0.0                       ! soil water stress at zero water rootzone water content, taken to be zero (no water, no activity)
+    real :: thetastar_eff                     ! effective root-zone moisture limitation limitation threshold (mm)
 
     ! function return variable
     real :: outstress
@@ -835,13 +837,20 @@ contains
       outstress = 1.0
     else
 
-      if (thetastar < eps) then
+      if (whc < thetastar) then
+        thetastar_eff = whc
+      else
+        thetastar_eff = thetastar
+      end if
+
+      if (thetastar_eff < eps) then
         outstress = 1.0
       else
-        shape_parameter = (betao - 1.0) / thetastar**2
-        outstress = shape_parameter * (wcont - thetastar)**2 + 1.0
+        shape_parameter = (betao - 1.0) / thetastar_eff**2
+        outstress = shape_parameter * (wcont - thetastar_eff)**2 + 1.0
         outstress = max( 0.0, min( 1.0, outstress ) )
       end if
+
     end if
 
   end function calc_soilmstress

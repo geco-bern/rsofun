@@ -19,6 +19,7 @@ knitr::opts_chunk$set(
 
 library(rsofun)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 
 # fake variable as optimization isn't run
@@ -99,7 +100,7 @@ params_modl <- list(
     kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
     kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
+    soilm_thetastar    = 0.6 * p_model_drivers$site_info[[1]]$whc,
     soilm_betao        = 0.0,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
@@ -120,45 +121,56 @@ output <- rsofun::runread_pmodel_f(
 We can now visualize both the model output and the measured values together.
 
 ```{r}
-# Load libraries for plotting
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-# Create data.frame for plotting
-df_gpp_plot <- rbind(
-  output |>
-    filter(sitename == "FR-Pue") |>
-    unnest(data) |>
-    select(date, gpp) |>
-    mutate(type = "P-model output"),
-  p_model_validation |>
-    filter(sitename == "FR-Pue") |>
-    unnest(data) |>
-    select(date, gpp) |>
-    mutate(type = "Observed")
-)
-df_gpp_plot$type <- factor(df_gpp_plot$type,
-                           levels = c('P-model output',
-                                      'Observed'))
+# Create dataframe for plotting
+df_plot <- output |>
+  unnest(data) |>
+  select(date, gpp_mod = gpp) %>% 
+  left_join(
+    p_model_validation |>
+      unnest(data) %>% 
+      select(date, gpp_obs = gpp),
+    by = join_by(date)
+  )
 
 # Plot GPP
-ggplot(data = df_gpp_plot) +
+df_plot %>% 
+  tidyr::pivot_longer(c(gpp_mod, gpp_obs), names_to = "type", values_to = "gpp") %>% 
+  ggplot() +
   geom_line(
     aes(x = date,
         y = gpp,
-        color = type),
-    alpha = 0.7
+        color = type)
   ) +
-  scale_color_manual(values = c(
-    'P-model output'='grey70',
-    'Observed'='black')) +
+  scale_color_manual(
+    values = c(
+      "gpp_mod" = 'tomato',
+      "gpp_obs" = 'grey20'
+      ),
+    labels = c(
+      "gpp_mod" = "P-model output",
+      "gpp_obs" = "Observed"
+    )) +
   theme_classic() +
-  theme(panel.grid.major.y = element_line()) +
+  theme() +
   labs(
     x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")")),
     colour = ""
+  )
+
+df_plot %>% 
+  ggplot(aes(x = gpp_mod, y = gpp_obs)) +
+  geom_hex(bins = 50, show.legend = FALSE) +
+  theme_classic() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  geom_vline(xintercept = 0, linetype = "dotted") +
+  khroma::scale_fill_batlowW(trans = "log", reverse = TRUE) +
+  xlim(-0.5, 10) + 
+  ylim(-0.5, 10) +
+  labs(
+    x = expression(paste("P-model GPP (g C m"^-2, "s"^-1, ")")),
+    y = expression(paste("Observed GPP (g C m"^-2, "s"^-1, ")"))
   )
 ```
 
@@ -170,11 +182,14 @@ To optimize new parameters based upon driver data and a validation dataset we mu
 settings <- list(
   method              = "GenSA",
   metric              = cost_rmse_pmodel,
-  control = list(
-    maxit = 100),
+  control = list(maxit = 3000),
   par = list(
-    kphio = list(lower=0.02, upper=0.2, init = 0.05)
-    )
+    kphio = list(lower = 0.03, upper = 0.99, init = 0.05),
+    kphio_par_a = list(lower = -0.005, upper = 0, init = -0.0025),
+    kphio_par_b = list(lower = 10, upper = 30, init = 20),
+    soilm_thetastar = list(lower = 10, upper = 200, init = 100),
+    whc = list(lower = 10, upper = 1000, init = 400)
+  )
 )
 ```
 
@@ -187,60 +202,96 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 ```{r eval=FALSE}
 # calibrate the model and optimize free parameters
 pars <- calib_sofun(
-    drivers = p_model_drivers,  
-    obs = p_model_validation,
-    settings = settings,
-    # extra arguments passed to the cost function:
-    targets = "gpp",             # define target variable GPP
-    par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
-                                 # values, removing kphio
+  drivers = p_model_drivers,  
+  obs = p_model_validation,
+  settings = settings,
+  # extra arguments passed to the cost function:
+  targets = "gpp",             # define target variable GPP
+  # fix non-calibrated parameters to previous 
+  par_fixed = list(
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
   )
+)
 ```
 
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 
 ```{r}
 # Update the parameter list with calibrated value
-params_modl$kphio <- pars$par["kphio"]
+params_modl <- list(
+    kphio = 0.039632387,
+    kphio_par_a = -0.002595878,
+    kphio_par_b = 13.919139015,
+    soilm_thetastar = 20.599254283,
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41,
+    whc = 284.920442210
+  )
 
-# Run the model for these parameters
+# Run the model with calibrated parameters
 output_new <- rsofun::runread_pmodel_f(
   p_model_drivers,
   par = params_modl
   )
 
-# Update data.frame for plotting
-df_gpp_plot <- rbind(
-  df_gpp_plot,
-  output_new |>
-    filter(sitename == "FR-Pue") |>
-    unnest(data) |>
-    select(date, gpp) |>
-    mutate(type = "P-model output (calibrated)")
-)
-df_gpp_plot$type <- factor(df_gpp_plot$type,
-                           levels = c('P-model output',
-                                      'P-model output (calibrated)',
-                                      'Observed'))
+# Update dataframe for plotting
+df_plot <- output_new |>
+  unnest(data) |>
+  select(date, gpp_mod = gpp) %>% 
+  left_join(
+    p_model_validation |>
+      unnest(data) %>% 
+      select(date, gpp_obs = gpp),
+    by = join_by(date)
+  )
 
 # Plot GPP
-ggplot(data = df_gpp_plot) +
+df_plot %>% 
+  tidyr::pivot_longer(c(gpp_mod, gpp_obs), names_to = "type", values_to = "gpp") %>% 
+  ggplot() +
   geom_line(
     aes(x = date,
         y = gpp,
-        color = type),
-    alpha = 0.7
+        color = type)
   ) +
-  scale_color_manual(values = c(
-    'P-model output'='grey70',
-    'P-model output (calibrated)'='grey40',
-    'Observed'='black')) +
+  scale_color_manual(
+    values = c(
+      "gpp_mod" = 'tomato',
+      "gpp_obs" = 'grey20'
+      ),
+    labels = c(
+      "gpp_mod" = "P-model output",
+      "gpp_obs" = "Observed"
+    )) +
   theme_classic() +
-  theme(panel.grid.major.y = element_line()) +
+  theme() +
   labs(
     x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")")),
     colour = ""
+  )
+
+# plot modelled vs observed
+df_plot %>% 
+  ggplot(aes(x = gpp_mod, y = gpp_obs)) +
+  geom_hex(bins = 50, show.legend = FALSE) +
+  theme_classic() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  geom_vline(xintercept = 0, linetype = "dotted") +
+  khroma::scale_fill_batlowW(trans = "log", reverse = TRUE) +
+  xlim(-0.5, 10) + 
+  ylim(-0.5, 10) +
+  labs(
+    x = expression(paste("P-model GPP (g C m"^-2, "s"^-1, ")")),
+    y = expression(paste("Observed GPP (g C m"^-2, "s"^-1, ")"))
   )
 ```
 
