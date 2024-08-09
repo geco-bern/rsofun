@@ -73,7 +73,7 @@ contains
     ! Create output files
     ! XXX add this to output instead
     !------------------------------------------------------------------------
-    filepath_out   = '/home/laura/rsofun/output/'
+    filepath_out   = 'output/'
     filesuffix     = '_test.csv' ! tag for simulation experiments
     plantcohorts   = trim(filepath_out)//'Annual_cohorts'//trim(filesuffix)  ! has 22 columns
     plantCNpools   = trim(filepath_out)//'Daily_cohorts'//trim(filesuffix)  ! daily has 27 columns
@@ -86,6 +86,7 @@ contains
     fno3=102
     fno4=103
     fno5=104
+
     open(fno1, file=trim(faststepfluxes), ACTION='write', IOSTAT=istat1)
     open(fno2, file=trim(plantcohorts),   ACTION='write', IOSTAT=istat1)
     open(fno3, file=trim(plantCNpools),   ACTION='write', IOSTAT=istat2)
@@ -477,9 +478,7 @@ contains
       close(102)
       close(103)
       close(104)
-
       deallocate(vegn)
-
     end if
     
     print*,'T.' 

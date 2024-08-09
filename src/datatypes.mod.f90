@@ -26,7 +26,7 @@ module datatypes
   !=============== Public parameters =======================================================
   public :: MaxCohortID, K1, K2, K_nitrogen, etaN, MLmixRatio, &
             fsc_fine, fsc_wood, LMAmin, GR_factor, tf_base, par_mort, par_mort_under, l_fract, &
-            retransN, f_initialBSW,f_N_add, A_mort, B_mort,DBHtp
+            retransN, f_initialBSW, f_N_add, A_mort, B_mort, DBHtp
 
   !=============== Constants =============================================================
   logical, public, parameter :: read_from_parameter_file = .TRUE.

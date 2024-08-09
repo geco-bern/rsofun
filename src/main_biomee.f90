@@ -3,7 +3,6 @@ program main
   ! Main program for SOFUN, used for single-site simulations 
   ! Receives simulation parameters, site parameters, and the full 
   ! simulation's forcing as time series
-  ! test xxx
   !----------------------------------------------------------------
   use md_params_siml_biomee, only: getsteering
   use md_forcing_biomee, only: getclimate, &
@@ -116,7 +115,6 @@ program main
   ! whether fast time step processes are simulated. If .false., then C, N, and W balance is simulated daily.
   logical, parameter :: daily = .true.
 
-! xxxx !!!!!!!!!!!!!!!!!!!
   ! input and output arrays (naked) to be passed back to C/R
   !real(kind=c_double), dimension(nt,13), intent(in) :: forcing
 
@@ -334,21 +332,21 @@ program main
 
   !----------------------------------------------------------------
   ! READ FROM NAMELIST FILE
-  !----------------------------------------------------------------
+  !----------------------------------------------------------------  
   ! Vegetation parameters: tile and species
-  if(read_from_parameter_file)then
+  if (read_from_parameter_file) then
     nml_unit = 999
     open(nml_unit, file=trim(namelistfile), form='formatted', action='read', status='old')
-    read (nml_unit, nml=vegn_parameters_nml, iostat=io, end=10)
+    read(nml_unit, nml=vegn_parameters_nml, iostat=io, end=10)
   10    close (nml_unit)
   endif
   write(*,nml=vegn_parameters_nml)
 
   ! Soil parameters
-  if(read_from_parameter_file)then
+  if (read_from_parameter_file) then
     nml_unit = 999
     open(nml_unit, file=trim(namelistfile), form='formatted', action='read', status='old')
-    read (nml_unit, nml=soil_data_nml, iostat=io, end=20)
+    read(nml_unit, nml=soil_data_nml, iostat=io, end=20)
   20   close (nml_unit)
     write (*, nml=soil_data_nml)
   endif
@@ -358,7 +356,7 @@ program main
   ! --- Generate cohorts according to "initial_state_nml" ---
   nml_unit = 999
   open(nml_unit, file=trim(namelistfile), form='formatted', action='read', status='old')
-  read (nml_unit, nml=initial_state_nml, iostat=io, end=30)
+  read(nml_unit, nml=initial_state_nml, iostat=io, end=30)
   30    close (nml_unit)
   write(*,nml=initial_state_nml)
 
@@ -503,13 +501,20 @@ program main
   !----------------------------------------------------------------
   ! READ FORCING FILE
   !----------------------------------------------------------------
-  call read_FACEforcing( forcingData, datalines, days_data, yr_data, timestep ) !! ORNL
+  call read_FACEforcing(forcingData, datalines, days_data, yr_data, timestep) !! ORNL
 
-  print*,'runyears  ', myinterface%params_siml%runyears
-  print*,'params_tile%soiltype  ', myinterface%params_tile%soiltype
-  print*,'params_species%LMA  ', myinterface%params_species%LMA
-  print*,'spinupyears  ', myinterface%params_siml%spinupyears
-  print*,'timestep  ',timestep
+  ! xxx debug
+  ! at this stage test whether stable (identical between runs):
+  ! - forcingData
+  ! - myinterface
+
+  print*,'myinterface%init_cohort(:): ', myinterface%init_cohort(:)
+
+  ! open(unit = 101, file = 'debugout.txt', err = 666, status = 'unknown')
+  ! write(101, *) myinterface
+  ! close(unit = 101)
+
+  stop 'hoi'
 
   !----------------------------------------------------------------
   ! INTERPRET FORCING
@@ -545,7 +550,8 @@ program main
   !print*,'nvars_annual_tile',nvars_annual_tile
   !print*,'nvars_annual_cohorts',nvars_annual_cohorts
 
-  yearloop: do yr=1, myinterface%params_siml%runyears
+  ! yearloop: do yr=1, myinterface%params_siml%runyears
+  yearloop: do yr=1, 1 ! xxx debug
     !----------------------------------------------------------------
     ! Define simulations "steering" variables (forcingyear, etc.)
     !----------------------------------------------------------------
@@ -652,9 +658,9 @@ program main
     ! also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(params_siml$nyeartrend)
 
     call populate_outarray_annual_cohorts( out_biosphere%annual_cohorts(:), out_annual_cohorts(yr,:,:) )
-     !print*,'c'
-     !print*,size(out_annual_cohorts(yr,:,6))
-     !print*,out_annual_cohorts(yr,:,4)
+    !print*,'c'
+    !print*,size(out_annual_cohorts(yr,:,6))
+    !print*,out_annual_cohorts(yr,:,4)
 
     !if (.not. myinterface%steering%spinup) then  
 
@@ -697,6 +703,8 @@ program main
 
      !end if
 
+    stop 'killing it here.'
+
   end do yearloop
 
   deallocate(myinterface%climate)
@@ -710,6 +718,7 @@ program main
   100  format (A,I6,I6,F8.2)
   777  format (F20.8,F20.8)
   999  format (I4.4)
+  666  stop 'error opening output files'
 
 contains
 
@@ -796,7 +805,7 @@ contains
 
   end subroutine populate_outarray_daily_tile
 
-    subroutine populate_outarray_daily_cohorts( daily_cohorts, out_daily_cohorts ) 
+  subroutine populate_outarray_daily_cohorts( daily_cohorts, out_daily_cohorts ) 
 
     use md_interface_biomee, only: outtype_daily_cohorts
 
@@ -996,22 +1005,22 @@ contains
       m=m+1
       read(11,*,IOSTAT=istat3)year_data(m),doy_data(m),hour_data(m),   &
       (input_data(n,m),n=1,niterms)
-      if(istat3<0)exit
-      if(m == 1) then
+      if (istat3<0)exit
+      if (m == 1) then
         doy = doy_data(m)
       else
         doy = doy_data(m-1)
       endif
-      if(doy /= doy_data(m)) idays = idays + 1
+      if (doy /= doy_data(m)) idays = idays + 1
       write(*,*)year_data(m),doy_data(m),hour_data(m)
     enddo ! end of reading the forcing file
 
     timestep = hour_data(2) - hour_data(1)
     write(*,*)"forcing", datalines, yr_data, timestep, myinterface%dt_fast_yr
 
-    if (timestep==1.0)then
+    if (timestep==1.0) then
       write(*,*)"the data frequency is hourly"
-    elseif(timestep==0.5)then
+    elseif (timestep==0.5) then
       write(*,*)"the data frequency is half hourly"
     else
       write(*,*)"Please check time step!"
