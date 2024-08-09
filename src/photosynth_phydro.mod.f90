@@ -3,7 +3,7 @@ module md_photosynth_phydro
   use md_sofunutils, only: calc_patm, zero, gammad
   
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Definitions: Precision 
   !--------------------------------------------------------------
   implicit none
@@ -12,7 +12,7 @@ module md_photosynth_phydro
   integer, parameter :: flt4=SELECTED_REAL_KIND(6,37)
   integer, parameter :: dbl8=SELECTED_REAL_KIND(15,307)
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Definitions: Environment
   !--------------------------------------------------------------
   ! list of methods to calculate gs
@@ -45,7 +45,7 @@ module md_photosynth_phydro
   !   ! module procedure :: print_par_env
   ! end interface
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Definitions: Phydro transpiration
   !--------------------------------------------------------------
   type par_plant_type
@@ -61,7 +61,7 @@ module md_photosynth_phydro
   end type par_plant_type
 
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Definitions: Phydro photosynthesis
   !--------------------------------------------------------------
 
@@ -101,10 +101,9 @@ module md_photosynth_phydro
   end type ACi_type
 
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Definitions: Phydro solver
   !--------------------------------------------------------------
-
   type par_cost_type
     real (kind = dbl8) :: alpha
     real (kind = dbl8) :: gamma
@@ -123,10 +122,9 @@ module md_photosynth_phydro
     real (kind = dbl8) ::  dJ_dchi
   end type dfdx_type
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Definitions: Phydro main
   !--------------------------------------------------------------
-
   type phydro_result_type
     real(kind = dbl8) :: a
     real(kind = dbl8) :: e
@@ -162,11 +160,9 @@ module md_photosynth_phydro
     integer(kind = int4) :: scale_alpha     = 0
   end type par_control_type
 
+contains
 
-
-  contains
-
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Functions: Physical relationships
   !--------------------------------------------------------------
   function calc_esat(TdegC, patm) result(esatval)
@@ -247,7 +243,7 @@ module md_photosynth_phydro
     slope = 17.269 * 237.3 * 610.78 * exp(tc * 17.269 / (tc + 237.3)) / ((tc + 237.3)**2)
   end function calc_sat_slope
    
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Functions: Environment
   !--------------------------------------------------------------
   ! Constructor for ParEnv
@@ -301,7 +297,7 @@ module md_photosynth_phydro
     write(*, *) "   lv = ", this%lv, " [J kg-1]"
   end subroutine print_par_env
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Functions: PM 
   !--------------------------------------------------------------
  
@@ -417,7 +413,7 @@ module md_photosynth_phydro
     dE_dgs = (E_plus - E) / 1.0e-6
   end function calc_dE_dgs_pm_num
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Functions: Phydro transpiration
   !--------------------------------------------------------------
   ! Constructors for par plant
@@ -615,7 +611,6 @@ module md_photosynth_phydro
     Qprime = K * P(psi_soil - dpsi, par_plant%psi50, par_plant%b)
   end function calc_Qprime_analytical
 
-
   function calc_Qprime_approx(dpsi, psi_soil, par_plant, par_env) result(Qprime)
     type(par_plant_type) :: par_plant
     type(par_env_type) :: par_env
@@ -741,7 +736,7 @@ module md_photosynth_phydro
     gsprime = Qprime / Eprime
   end function calc_gsprime_from_dpsi
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Functions: Phydro photosynthesis
   !--------------------------------------------------------------
   subroutine create_par_photosynth(this, tc, patm, kphio, co2, ppfd, fapar, rdark25, tcgrowth, tchome, &
@@ -1062,7 +1057,7 @@ module md_photosynth_phydro
     end if
   end function calc_assimilation_limiting  
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Functions: Phydro solver
   !--------------------------------------------------------------
 
@@ -1318,7 +1313,7 @@ module md_photosynth_phydro
   end function calc_dpsi_bound_inst
 
 
-  ! -------------------------------------------------------------
+  !--------------------------------------------------------------
   ! Functions: Phydro main
   !--------------------------------------------------------------
   function phydro_analytical(tc, tg, ppfd, netrad, vpd, co2, pa, fapar, kphio, psi_soil, rdark, vwind, &
