@@ -83,7 +83,7 @@ contains
     real(kind=c_double),  dimension(17), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,12), intent(in) :: forcing  ! array containing all temporally varying forcing data for instantaneous model (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
     real(kind=c_double),  dimension(nt,12), intent(in) :: forcing_acclim  ! array containing all temporally varying forcing data for acclimating model (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
-    real(kind=c_double),  dimension(nt,22), intent(out) :: output
+    real(kind=c_double),  dimension(nt,23), intent(out) :: output
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -250,9 +250,10 @@ contains
         output(idx_start:idx_end,17) = dble(out_biosphere%wcont(:))
         output(idx_start:idx_end,18) = dble(out_biosphere%snow(:))
         output(idx_start:idx_end,19) = dble(out_biosphere%cond(:))
-        output(idx_start:idx_end,20) = dble(out_biosphere%latenth_soil(:))
-        output(idx_start:idx_end,21) = dble(out_biosphere%dpsi(:))
-        output(idx_start:idx_end,22) = dble(out_biosphere%psi_leaf(:))
+        output(idx_start:idx_end,20) = dble(out_biosphere%latenth_canopy(:))
+        output(idx_start:idx_end,21) = dble(out_biosphere%latenth_soil(:))
+        output(idx_start:idx_end,22) = dble(out_biosphere%dpsi(:))
+        output(idx_start:idx_end,23) = dble(out_biosphere%psi_leaf(:))
 
       end if
 

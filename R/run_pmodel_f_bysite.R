@@ -490,6 +490,7 @@ run_pmodel_f_bysite <- function(
           "wcont", 
           "snow",
           "cond",
+          "le_canopy",
           "le_soil",
           "dpsi",
           "psi_leaf")
@@ -518,6 +519,7 @@ run_pmodel_f_bysite <- function(
                   wcont = NA, 
                   snow = NA,
                   cond = NA,
+                  le_canopy = NA,
                   le_soil = NA,
                   dpsi = NA,
                   psi_leaf = NA

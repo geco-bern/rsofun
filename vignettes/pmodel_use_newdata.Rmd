@@ -1,5 +1,5 @@
 ---
-title: "P-model usage"
+title: "P-model usage (new data)"
 author: "Koen Hufkens, Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
@@ -35,15 +35,40 @@ The package includes two demo datasets to run and validate pmodel output using G
 ```{r}
 library(rsofun)
 
+drivers_path = "/data/scratch/jaideep/FluxDataKit/v4.0"
+
 # this is to deal with an error p_model_drivers.rds not being found 
-p_model_drivers = p_model_drivers |> 
+p_model_drivers = readRDS(file.path(drivers_path, "p_model_drivers.rds")) |> 
+  filter(sitename == "FR-Pue") |> 
   rowwise() |> 
-  mutate(params_siml = params_siml |> 
-           mutate(use_phydro = F,
-                  use_pml = F) |>
+  # manipulate all forcing variables, filter years and gapfill missing values
+  mutate(across(
+           starts_with("forcing"),
+           ~.x |> 
+             filter(lubridate::year(date) >= 2007 & 
+                      lubridate::year(date) <= 2012) |> 
+             # mutate(rain = ifelse(is.na(rain), yes=0, no=rain)) |>
+             list()
+           )) |>
+  mutate(site_info = site_info |> 
+           # Set WHC from demo data just to check match, new data has ~250
+           mutate(whc=432) |>
            list())
 
-p_model_validation
+p_model_validation = readRDS(file.path(drivers_path, "p_model_validation.rds")) |>
+  filter(sitename == "FR-Pue") |> 
+  rowwise() |>
+  # Use NT GPP as gpp, and filter years across all data columns
+  mutate(across(
+    starts_with("data"),
+    ~ .x |> 
+         mutate(gpp = gpp_nt,
+                le = le_corr*86400) |> 
+         filter(lubridate::year(date) >= 2007 & 
+                  lubridate::year(date) <= 2012) |>
+         list()
+    ))
+
 ```
 
 ### Visualize drivers
@@ -67,8 +92,6 @@ p_model_drivers$forcing[[1]] |>
     facet_wrap(~name, scales = "free")+
     ggtitle(p_model_drivers$sitename[[1]])
 
-
-p_model_drivers$site_info |> print()
 ```
 
 These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `pmodel` parameters.
@@ -85,7 +108,7 @@ For the remainder of this vignette, we will use the GPP flux datasets. The workf
 
 To get your raw data into the structure used within `rsofun`, please see R packages [ingestr](https://github.com/geco-bern/ingestr) and [FluxDataKit](https://github.com/geco-bern/FluxDataKit).
 
-## Running model
+## Running P-model
 
 With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
 
@@ -161,6 +184,17 @@ ggplot(data = df_gpp_plot) +
     colour = ""
   )
 ```
+
+## Plot all outputs
+
+```{r}
+output$data[[1]] |>
+  pivot_longer(-date) |> 
+  ggplot(aes(x=date, y=value)) +
+  geom_line()+
+  facet_wrap(~name, scales="free_y")
+```
+
 
 ## Calibrating model parameters
 
@@ -245,3 +279,161 @@ ggplot(data = df_gpp_plot) +
 ```
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
+
+```{r}
+get_density <- function(x, y, ...) {
+  df = tibble(x=x, y=y) %>% drop_na
+  dens <- MASS::kde2d(df$x, df$y, ...)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
+
+
+print(
+  output$data[[1]] %>% 
+    select(date, gpp, le) %>% 
+    pivot_longer(-date) %>% 
+    mutate(type="pred") %>% 
+    rbind(
+      p_model_validation$data[[1]] %>% 
+        select(date, gpp, le) %>% 
+        pivot_longer(-date) %>% 
+        mutate(type="obs")
+    ) %>% 
+    pivot_wider(names_from = type, values_from = value) %>% 
+    group_by(name) %>% 
+    reframe(obs = obs, pred = pred, density=scale(get_density(pred, obs,n=100))) %>%  
+    ggplot(aes(y=obs, x=pred, colour=density)) +
+    scale_color_viridis_c() +
+    geom_point(alpha=0.7) +
+    geom_abline(slope=1, intercept=0, col="red")+
+    theme_classic() +
+    theme(strip.background = element_rect(color = "white", size = 1))+
+    facet_wrap(~name, scales = "free", nrow = 1)+
+    labs(colour="Density")
+)
+```
+
+## P-hydro model run
+
+For phydro, we must use the 3-hr daily max forcing as the acclimation forcing. So lets rename it i nthe data,
+
+```{r}
+p_model_drivers <- p_model_drivers |> 
+  rename(forcing_acclim = forcing_3hrmax)
+
+p_model_drivers$forcing_acclim[[1]] |>
+    # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
+    dplyr::select(date, co2, ppfd, netrad, temp, vpd, fapar, rain, ccov) |>
+    tidyr::pivot_longer(-date) |>
+    dplyr::mutate(type="24-hr mean") |>
+    rbind(p_model_validation$data[[1]] |>
+            # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
+            dplyr::select(date, gpp) |>
+            tidyr::pivot_longer(-date) |>
+            dplyr::mutate(type="obs (24 hr)")
+    ) |>
+    ggplot(aes(y=value, x=date)) +
+    geom_line(aes(group=type, col=type), alpha=0.5) +
+    theme_classic() +
+    theme(strip.background = element_rect(color = "white", size = 1))+
+    facet_wrap(~name, scales = "free")+
+    ggtitle(p_model_drivers$sitename[[1]])
+```
+
+```{r}
+p_model_drivers$params_siml[[1]]$use_phydro = T
+
+# define model parameter values
+params_modl <- list(
+  kphio              = 0.0288,
+  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+  kphio_par_b        = 1.0,
+  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+  tau_acclim         = 30.0,
+  kc_jmax            = 0.41,
+  phydro_K_plant     = 5e-17,
+  phydro_p50_plant   = -0.46,
+  phydro_gamma       = 0.065,
+  phydro_b_plant     = 1,
+  phydro_alpha       = 0.08,
+  bsoil              = 3,
+  Ssoil              = 113,
+  whc                = 253
+)
+
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  p_model_drivers,
+  par = params_modl
+)
+
+```
+
+## Plot Phydro outputs
+
+```{r}
+
+print(
+output$data[[1]] %>% 
+  select(date, gpp, le, aet, pet, netrad, wcont) %>% 
+  pivot_longer(-date) %>% 
+  mutate(type="pred") %>% 
+  rbind(
+    p_model_validation$data[[1]] %>% 
+      select(date, gpp, le) %>% 
+      pivot_longer(-date) %>% 
+      mutate(type="obs")
+  ) %>% 
+  ggplot(aes(x=date, y=value, group=type, col=type)) +
+  theme_classic()+
+  geom_line(alpha=0.6) +
+  facet_wrap(~name, scales="free")
+)
+
+get_density <- function(x, y, ...) {
+  df = tibble(x=x, y=y) %>% drop_na
+  dens <- MASS::kde2d(df$x, df$y, ...)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
+
+
+print(
+  output$data[[1]] %>% 
+    select(date, gpp, le) %>% 
+    pivot_longer(-date) %>% 
+    mutate(type="pred") %>% 
+    rbind(
+      p_model_validation$data[[1]] %>% 
+        select(date, gpp, le) %>% 
+        pivot_longer(-date) %>% 
+        mutate(type="obs")
+    ) %>% 
+    pivot_wider(names_from = type, values_from = value) %>% 
+    group_by(name) %>% 
+    reframe(obs = obs, pred = pred, density=scale(get_density(pred, obs,n=100))) %>%  
+    ggplot(aes(y=obs, x=pred, colour=density)) +
+    scale_color_viridis_c() +
+    geom_point(alpha=0.7) +
+    geom_abline(slope=1, intercept=0, col="red")+
+    theme_classic() +
+    theme(strip.background = element_rect(color = "white", size = 1))+
+    facet_wrap(~name, scales = "free", nrow = 1)+
+    labs(colour="Density")
+)
+```
+
+Plot all outputs
+
+```{r}
+output$data[[1]] |>
+  pivot_longer(-date) |> 
+  ggplot(aes(x=date, y=value)) +
+  geom_line()+
+  facet_wrap(~name, scales="free_y")
+```
