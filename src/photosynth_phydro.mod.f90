@@ -18,7 +18,7 @@ module md_photosynth_phydro
   ! list of methods to calculate gs
   integer (kind = int4), parameter :: GS_IGF = 0, GS_QNG = 1, GS_APX = 2, GS_APX2 = 3
   
-  integer (kind = int4), parameter :: ET_DIFFUSION = 0, ET_PM = 1
+  integer (kind = int4), parameter :: T_DIFFUSION = 0, T_PM = 1
 
   ! Define the data type for ParEnv
   type par_env_type
@@ -35,7 +35,7 @@ module md_photosynth_phydro
     real(kind = dbl8) :: epsilon     ! Slope of saturation-pressure - temp curve [Pa K-1]
     real(kind = dbl8) :: lv          ! Latent heat of vaporization of water [J kg-1]
     integer(kind = int4) :: gs_method = GS_IGF ! GsMethod
-    integer(kind = int4) :: et_method = ET_DIFFUSION  ! ETMethod
+    integer(kind = int4) :: et_method = T_DIFFUSION  ! ETMethod
   end type par_env_type
 
   ! ! Interface for member subroutines
@@ -155,7 +155,7 @@ module md_photosynth_phydro
 
   type par_control_type
     integer(kind = int4) :: gs_method       = GS_IGF
-    integer(kind = int4) :: et_method       = ET_DIFFUSION
+    integer(kind = int4) :: et_method       = T_DIFFUSION
     integer(kind = int4) :: ftemp_vj_method = FV_kumarathunge19
     integer(kind = int4) :: ftemp_rd_method = FR_heskel16
     integer(kind = int4) :: ftemp_br_method = FB_atkin15
@@ -260,7 +260,7 @@ module md_photosynth_phydro
     this%Rn = Rn
     this%v_wind = v_wind
     this%gs_method = GS_IGF 
-    this%et_method = ET_DIFFUSION
+    this%et_method = T_DIFFUSION
     call calc_temp_dependencies(this)
   end subroutine create_par_env
 
@@ -590,10 +590,10 @@ module md_photosynth_phydro
 
     D = (par_env%vpd / par_env%patm)
 
-    if (par_env%et_method == ET_DIFFUSION) then
+    if (par_env%et_method == T_DIFFUSION) then
         ! print *, "Using diffusion ET"
         gs = Q / (1.6d0 * D)
-    else if (par_env%et_method == ET_PM) then
+    else if (par_env%et_method == T_PM) then
         ! print *, "Using PM ET"
         ga = calc_g_aero(par_plant%h_canopy, dble(par_env%v_wind), par_plant%h_wind_measurement)
         gs = calc_gs_pm(Q, ga, par_env)
@@ -691,9 +691,9 @@ module md_photosynth_phydro
     type(par_env_type) :: par_env
     real(kind=dbl8) :: gs, dE_dgs
 
-    if (par_env%et_method == ET_DIFFUSION) then
+    if (par_env%et_method == T_DIFFUSION) then
         dE_dgs = calc_dE_dgs_dif(par_env)
-    else if (par_env%et_method == ET_PM) then
+    else if (par_env%et_method == T_PM) then
         dE_dgs = calc_dE_dgs_pm_from_gs(gs, par_plant, par_env)
     else
         write(*,*) "Unknown et_method:", par_env%et_method
@@ -707,9 +707,9 @@ module md_photosynth_phydro
     type(par_env_type) :: par_env
     real(kind=dbl8) :: dpsi, psi_soil, dE_dgs
 
-    if (par_env%et_method == ET_DIFFUSION) then
+    if (par_env%et_method == T_DIFFUSION) then
         dE_dgs = calc_dE_dgs_dif(par_env)
-    else if (par_env%et_method == ET_PM) then
+    else if (par_env%et_method == T_PM) then
         dE_dgs = calc_dE_dgs_pm_from_dpsi(dpsi, psi_soil, par_plant, par_env)
     else
         write(*,*) "Unknown et_method:", par_env%et_method
@@ -1224,7 +1224,7 @@ module md_photosynth_phydro
     iabsb = zero(use_bound*0.001, use_bound*0.99, f1, 1D-6);
        
     ! If using PM, find max dpsi from max possible transpiration 
-    if (par_env%et_method == ET_PM) then
+    if (par_env%et_method == T_PM) then
       ga = calc_g_aero(par_plant%h_canopy, dble(par_env%v_wind), par_plant%h_wind_measurement);
       Qmax = calc_max_transpiration_pm(ga, par_env);
       max_dpsi = calc_dpsi_from_sapflux(Qmax, psi_soil, par_plant, par_env);
@@ -1308,7 +1308,7 @@ module md_photosynth_phydro
     bound = 100.0d0
   
     ! If using PM, find max dpsi from max possible transpiration 
-    if (par_env%et_method == ET_PM) then
+    if (par_env%et_method == T_PM) then
       ga = calc_g_aero(par_plant%h_canopy, dble(par_env%v_wind), par_plant%h_wind_measurement)
       Qmax = calc_max_transpiration_pm(ga, par_env)
       max_dpsi = calc_dpsi_from_sapflux(Qmax, psi_soil, par_plant, par_env)

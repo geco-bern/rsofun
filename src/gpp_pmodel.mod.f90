@@ -13,7 +13,7 @@ module md_gpp_pmodel
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
     calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, calc_density_h2o
   use md_photosynth_phydro, only: phydro_analytical, phydro_instantaneous_analytical, par_plant_type, par_cost_type, &
-    phydro_result_type, par_control_type, ET_DIFFUSION, ET_PM, GS_IGF, GS_APX
+    phydro_result_type, par_control_type, T_DIFFUSION, T_PM, GS_IGF, GS_APX
   implicit none
 
   private
@@ -163,9 +163,9 @@ contains
     tk = climate_acclimation%dtemp + kTkelvin
 
     if (use_pml) then
-      options%et_method = ET_PM
+      options%et_method = T_PM
     else 
-      options%et_method = ET_DIFFUSION
+      options%et_method = T_DIFFUSION
     end if 
     ! print *, options%et_method
 

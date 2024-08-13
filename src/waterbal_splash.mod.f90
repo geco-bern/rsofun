@@ -17,6 +17,8 @@ module md_waterbal
   private
   public waterbal, solar, getpar_modl_waterbal
 
+  integer, parameter :: int4=SELECTED_INT_KIND(4)
+
   !-----------------------------------------------------------------------
   ! Uncertain (unknown) parameters. Runtime read-in
   !-----------------------------------------------------------------------
@@ -51,6 +53,8 @@ module md_waterbal
   end type outtype_snow_rain
 
   logical, parameter :: splashtest = .false.
+
+  integer (kind = int4), parameter :: ET_PT = 0, ET_PT_DIFFUSIOM = 1, ET_PT_PM = 2
 
 contains
 
@@ -369,6 +373,7 @@ contains
     !---------------------------------------------------------
     ! 21. Estimate daily AET (tile_fluxes%canopy%daet), mm d-1
     !---------------------------------------------------------
+    ! TODO: 3 options: SPLASH only, 1.6gsD + SPLASH for soil, PM + SPLASH for soil 
     ! JAIDEEP FIXME: soil PET calcs should be identical for P and Phydro, but depending on whether in_netrad is used or not, 
     !     when implementing in_netrad condition, uncomment the lines marked by arrows
     ! if (.not. in_netrad) then  <--------------------
