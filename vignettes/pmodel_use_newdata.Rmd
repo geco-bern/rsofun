@@ -33,47 +33,58 @@ The `rsofun` package and framework includes two main models. The `pmodel` and `b
 The package includes two demo datasets to run and validate pmodel output using GPP observations. These files can be directly loaded into your workspace by typing:
 
 ```{r}
-library(rsofun)
+# library(rsofun)
+# 
+# drivers_path = "/data/scratch/jaideep/FluxDataKit/v4.0"
+# 
+# # this is to deal with an error p_model_drivers.rds not being found 
+# p_model_drivers = readRDS(file.path(drivers_path, "p_model_drivers.rds")) |> 
+#   filter(sitename == "FR-Pue") |> 
+#   rowwise() |> 
+#   # manipulate all forcing variables, filter years and gapfill missing values
+#   mutate(across(
+#            starts_with("forcing"),
+#            ~.x |> 
+#              filter(lubridate::year(date) >= 2007 & 
+#                       lubridate::year(date) <= 2012) |> 
+#              # mutate(rain = ifelse(is.na(rain), yes=0, no=rain)) |>
+#              list()
+#            )) |>
+#   mutate(site_info = site_info |> 
+#            # Set WHC from demo data just to check match, new data has ~250
+#            mutate(whc=432) |>
+#            list()) |>
+#   mutate(params_siml = params_siml |> 
+#          # First try with setting use_gs to false
+#          mutate(use_gs=F) |>
+#          list())
+# 
+# 
+# p_model_validation = readRDS(file.path(drivers_path, "p_model_validation.rds")) |>
+#   filter(sitename == "FR-Pue") |> 
+#   rowwise() |>
+#   # Use NT GPP as gpp, and filter years across all data columns
+#   mutate(across(
+#     starts_with("data"),
+#     ~ .x |> 
+#          mutate(gpp = gpp_nt,
+#                 le = le_corr*86400) |> 
+#          filter(lubridate::year(date) >= 2007 & 
+#                   lubridate::year(date) <= 2012) |>
+#          list()
+#     ))
+# 
+# saveRDS(p_model_drivers, file = here::here("data/p_model_drivers_newformat.rds"))
+# 
+# saveRDS(p_model_validation, file = here::here("data/p_model_validation_newformat.rds"))
+```
 
-drivers_path = "/data/scratch/jaideep/FluxDataKit/v4.0"
+### Read drivers
 
-# this is to deal with an error p_model_drivers.rds not being found 
-p_model_drivers = readRDS(file.path(drivers_path, "p_model_drivers.rds")) |> 
-  filter(sitename == "FR-Pue") |> 
-  rowwise() |> 
-  # manipulate all forcing variables, filter years and gapfill missing values
-  mutate(across(
-           starts_with("forcing"),
-           ~.x |> 
-             filter(lubridate::year(date) >= 2007 & 
-                      lubridate::year(date) <= 2012) |> 
-             # mutate(rain = ifelse(is.na(rain), yes=0, no=rain)) |>
-             list()
-           )) |>
-  mutate(site_info = site_info |> 
-           # Set WHC from demo data just to check match, new data has ~250
-           mutate(whc=432) |>
-           list()) |>
-  mutate(params_siml = params_siml |> 
-         # First try with setting use_gs to false
-         mutate(use_gs=F) |>
-         list())
+```{r}
+p_model_drivers = readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
 
-
-p_model_validation = readRDS(file.path(drivers_path, "p_model_validation.rds")) |>
-  filter(sitename == "FR-Pue") |> 
-  rowwise() |>
-  # Use NT GPP as gpp, and filter years across all data columns
-  mutate(across(
-    starts_with("data"),
-    ~ .x |> 
-         mutate(gpp = gpp_nt,
-                le = le_corr*86400) |> 
-         filter(lubridate::year(date) >= 2007 & 
-                  lubridate::year(date) <= 2012) |>
-         list()
-    ))
-
+p_model_validation = readRDS(file = here::here("data/p_model_validation_newformat.rds"))
 ```
 
 ### Visualize drivers
