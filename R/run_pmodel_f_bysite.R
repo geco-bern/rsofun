@@ -275,6 +275,19 @@ run_pmodel_f_bysite <- function(
       continue <- FALSE
     }
     
+    if (!("use_gs" %in% colnames(params_siml))){
+      warning("Parameter use_gs not set. Assuming FALSE")
+      params_siml$use_gs = FALSE
+    }
+    if (!("use_phydro" %in% colnames(params_siml))){
+      warning("Parameter use_phydro not set. Assuming FALSE")
+      params_siml$use_phydro = FALSE
+    }
+    if (!("use_pml" %in% colnames(params_siml))){
+      warning("Parameter use_pml not set. Assuming FALSE")
+      params_siml$use_pml = FALSE
+    }
+    
     # parameters to check
     check_param <- c(
       "spinup",
