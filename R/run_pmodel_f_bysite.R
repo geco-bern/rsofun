@@ -281,6 +281,7 @@ run_pmodel_f_bysite <- function(
       "spinupyears",
       "recycle",
       "use_phydro",
+      "use_gs",
       "use_pml",
       "outdt",
       "ltre",
@@ -345,9 +346,7 @@ run_pmodel_f_bysite <- function(
   }
   
   # If PML is used, then ensure that site info has reference height and canopy height
-  if (params_siml$use_phydro & 
-      params_siml$use_pml){
-    
+  if (params_siml$use_pml){
     continue = !is.nanull(site_info$canopy_height) & 
                !is.nanull(site_info$reference_height)
   } else {
@@ -436,6 +435,7 @@ run_pmodel_f_bysite <- function(
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),
       use_phydro                = as.logical(params_siml$use_phydro),
+      use_gs                    = as.logical(params_siml$use_gs),
       use_pml                   = as.logical(params_siml$use_pml),
       firstyeartrend            = as.integer(firstyeartrend_forcing),
       nyeartrend                = as.integer(nyeartrend_forcing),

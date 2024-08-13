@@ -161,7 +161,7 @@ contains
                         myinterface%climate(doy), &
                         tile(:)%canopy%fapar, &
                         myinterface%params_siml%use_phydro, &
-                        .true., & ! myinterface%params_siml%use_gs &
+                        myinterface%params_siml%use_gs, &
                         myinterface%params_siml%use_pml &
                         )
         ! if (verbose) print*,'... done'
