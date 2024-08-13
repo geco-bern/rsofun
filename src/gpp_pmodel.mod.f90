@@ -71,7 +71,7 @@ contains
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: in_ppfd                           ! whether to use PPFD from forcing or from SPLASH output
     logical, intent(in) :: use_phydro                        ! whether to use P-Hydro for photosynthesis and transpiration
-    logical, intent(in) :: use_pml                           ! whether to use PML formulation for ET within Phydro
+    logical, intent(in) :: use_pml                           ! whether to use uncoupled PM formulation for canopy transpiration (whether to plug gs into PM equation. Alternatively, 1.6gsD will be used)
 
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
@@ -162,14 +162,9 @@ contains
 
     tk = climate_acclimation%dtemp + kTkelvin
 
-    if (use_pml) then
-      options%et_method = T_PM
-    else 
-      options%et_method = T_DIFFUSION
-    end if 
-    ! print *, options%et_method
-
+    options%et_method = T_DIFFUSION ! This is method used for calculating transpiration for plant-level water balance within Phydro. Always set to T_DIFFUSION
     options%gs_method = GS_IGF
+    ! print *, options%et_method
 
 
     pftloop: do pft=1,npft
@@ -352,9 +347,10 @@ contains
       ! Stomatal conductance
       !----------------------------------------------------------------
       if (.not. use_phydro) then
-        tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint 
+        ! Jaideep NOTE: I have applied the soilmstress factor to gs here because it is needed in calculating canopy transpiration
+        tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint * soilmstress
       else 
-        ! Jaideep: Note that unit of gs_accl here is mol m-2 s-1. 
+        ! Jaideep NOTE: unit of gs_accl here is mol m-2 s-1. 
         ! Jaideep FIXME: It's too complicated to convert it to unit as in pmodel, but should be done at some point
         tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs 
       end if
@@ -368,30 +364,46 @@ contains
       end if
 
       !------------------------------------------------------------------------
-      ! Canopy ET 
+      ! Canopy Transpiration per PFT
       !------------------------------------------------------------------------
+      ! JAIDEEP NOTE: This computation is done here because it needs PFT-level properties, which are aggregated by 
+      !               diag_daily before calling waterbal_splash
+
       ! Density of water, kg/m^3
       rho_water = calc_density_h2o( climate%dtemp, climate%dpatm )
 
-      ! Jaideep TODO FIXME: PM can be used here instead of 1.6gsD
-      if (.not.use_phydro) then
-        ! Note here that stomatal conductance is already normalized by patm (=gs/patm) so E = 1.6 * (gs/patm) * vpd, which is the same as 1.6 gs (vpd/patm)
-        ! but it is expressed per unit absorbed light, so multiply by PPFD*fapar
-        tile_fluxes(lu)%canopy%daet_canop = (1.6 &
-              * out_pmodel%gs_setpoint * tile(lu)%canopy%fapar * climate%dppfd &
-              * climate%dvpd) * 0.018015 * (1.0d0 / rho_water) &
-              * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
-        
-      else
-        tile_fluxes(lu)%canopy%daet_canop = out_phydro_inst%e * 0.018015 * (1.0d0 / rho_water) &
-              * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
-        
-        ! ~~ This has been moved to waterbal_splash ~~
-        ! tile_fluxes(lu)%canopy%dpet_e_soil = out_phydro_inst%le_s_wet  &
-        !       * myinterface%params_siml%secs_per_tstep ! convert: J m-2 s-1 * s day-1  = J m-2 day-1
-        
-        ! print *, "Canopy ET (mm d-1) = ", tile_fluxes(lu)%canopy%daet_canop 
-        ! print *, "Soil LE (J m-2 d-1) = ", climate%dnetrad, tile_fluxes(lu)%canopy%daet_e_soil 
+      if (use_pml) then
+        ! We plug Pmodel/Phydro-derived gs into the PM equation to calculate T (note this is uncoupled PM-transpiration)
+        ! use PFT-specific gs for this calculation: tile_fluxes(lu)%plant(pft)%gs_accl
+
+        ! TODO: Fill this in
+        ! tile_fluxes(lu)%plant(pft)%dtransp = PM_EQUATION(tile_fluxes(lu)%plant(pft)%gs_accl)
+
+      else 
+        ! We plug Pmodel/Phydro-derived gs into T = 1.6gsD
+        if (.not. use_phydro) then
+          ! Using P-model gs
+          ! Note here that stomatal conductance is already normalized by patm (=gs/patm) so E = 1.6 * (gs/patm) * vpd, which is the same as 1.6 gs (vpd/patm)
+          ! but it is expressed per unit absorbed light, so multiply by PPFD*fapar
+          tile_fluxes(lu)%plant(pft)%dtransp = (1.6 &                                           ! 1.6
+                * tile_fluxes(lu)%plant(pft)%gs_accl * tile(lu)%canopy%fapar * climate%dppfd &  ! gs
+                * climate%dvpd) &                                                               ! D
+                * 0.018015 * (1.0d0 / rho_water) &
+                * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
+          
+        else
+          ! Using Phydro gs
+          tile_fluxes(lu)%plant(pft)%dtransp = out_phydro_inst%e &  ! Phydro e is 1.6 gs D
+                * 0.018015 * (1.0d0 / rho_water) & 
+                * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
+          
+          ! ~~ This has been moved to waterbal_splash ~~
+          ! tile_fluxes(lu)%canopy%dpet_e_soil = out_phydro_inst%le_s_wet  &
+          !       * myinterface%params_siml%secs_per_tstep ! convert: J m-2 s-1 * s day-1  = J m-2 day-1
+          
+          ! print *, "Canopy ET (mm d-1) = ", tile_fluxes(lu)%canopy%daet_canop 
+          ! print *, "Soil LE (J m-2 d-1) = ", climate%dnetrad, tile_fluxes(lu)%canopy%daet_e_soil 
+        end if
       end if
 
     end do pftloop

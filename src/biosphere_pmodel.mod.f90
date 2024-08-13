@@ -146,6 +146,12 @@ contains
         ! if (verbose) print*,'... done'
 
         !----------------------------------------------------------------
+        ! daily diagnostics (e.g., sum over plant within canopy)
+        !----------------------------------------------------------------
+        ! Jaideep NOTE: This is moved here because waterbal requires aggregated canopy transpiration.
+        call diag_daily(tile(:), tile_fluxes(:))
+
+        !----------------------------------------------------------------
         ! get soil moisture, and runoff
         !----------------------------------------------------------------
         ! if (verbose) print*,'calling waterbal() ... '
@@ -154,7 +160,9 @@ contains
                         myinterface%grid, &
                         myinterface%climate(doy), &
                         tile(:)%canopy%fapar, &
-                        myinterface%params_siml%use_phydro &
+                        myinterface%params_siml%use_phydro, &
+                        .true., & ! myinterface%params_siml%use_gs &
+                        myinterface%params_siml%use_pml &
                         )
         ! if (verbose) print*,'... done'
 
@@ -169,11 +177,6 @@ contains
                       doy & 
                       )
         ! if (verbose) print*, '... done'
-
-        !----------------------------------------------------------------
-        ! daily diagnostics (e.g., sum over plant within canopy)
-        !----------------------------------------------------------------
-        call diag_daily(tile(:), tile_fluxes(:))
 
         !----------------------------------------------------------------
         ! populate function return variable
