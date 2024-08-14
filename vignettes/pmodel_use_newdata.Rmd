@@ -1,6 +1,6 @@
 ---
-title: "P-model usage (new data)"
-author: "Koen Hufkens, Josefa Arán"
+title: "P-model usage (new data and new ET options)"
+author: "Koen Hufkens, Josefa Arán, Jaideep Joshi"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{P-model usage}
@@ -33,42 +33,58 @@ The `rsofun` package and framework includes two main models. The `pmodel` and `b
 The package includes two demo datasets to run and validate pmodel output using GPP observations. These files can be directly loaded into your workspace by typing:
 
 ```{r}
-library(rsofun)
+# library(rsofun)
+# 
+# drivers_path = "/data/scratch/jaideep/FluxDataKit/v4.0"
+# 
+# # this is to deal with an error p_model_drivers.rds not being found 
+# p_model_drivers = readRDS(file.path(drivers_path, "p_model_drivers.rds")) |> 
+#   filter(sitename == "FR-Pue") |> 
+#   rowwise() |> 
+#   # manipulate all forcing variables, filter years and gapfill missing values
+#   mutate(across(
+#            starts_with("forcing"),
+#            ~.x |> 
+#              filter(lubridate::year(date) >= 2007 & 
+#                       lubridate::year(date) <= 2012) |> 
+#              # mutate(rain = ifelse(is.na(rain), yes=0, no=rain)) |>
+#              list()
+#            )) |>
+#   mutate(site_info = site_info |> 
+#            # Set WHC from demo data just to check match, new data has ~250
+#            mutate(whc=432) |>
+#            list()) |>
+#   mutate(params_siml = params_siml |> 
+#          # First try with setting use_gs to false
+#          mutate(use_gs=F) |>
+#          list())
+# 
+# 
+# p_model_validation = readRDS(file.path(drivers_path, "p_model_validation.rds")) |>
+#   filter(sitename == "FR-Pue") |> 
+#   rowwise() |>
+#   # Use NT GPP as gpp, and filter years across all data columns
+#   mutate(across(
+#     starts_with("data"),
+#     ~ .x |> 
+#          mutate(gpp = gpp_nt,
+#                 le = le_corr*86400) |> 
+#          filter(lubridate::year(date) >= 2007 & 
+#                   lubridate::year(date) <= 2012) |>
+#          list()
+#     ))
+# 
+# saveRDS(p_model_drivers, file = here::here("data/p_model_drivers_newformat.rds"))
+# 
+# saveRDS(p_model_validation, file = here::here("data/p_model_validation_newformat.rds"))
+```
 
-drivers_path = "/data/scratch/jaideep/FluxDataKit/v4.0"
+### Read drivers
 
-# this is to deal with an error p_model_drivers.rds not being found 
-p_model_drivers = readRDS(file.path(drivers_path, "p_model_drivers.rds")) |> 
-  filter(sitename == "FR-Pue") |> 
-  rowwise() |> 
-  # manipulate all forcing variables, filter years and gapfill missing values
-  mutate(across(
-           starts_with("forcing"),
-           ~.x |> 
-             filter(lubridate::year(date) >= 2007 & 
-                      lubridate::year(date) <= 2012) |> 
-             # mutate(rain = ifelse(is.na(rain), yes=0, no=rain)) |>
-             list()
-           )) |>
-  mutate(site_info = site_info |> 
-           # Set WHC from demo data just to check match, new data has ~250
-           mutate(whc=432) |>
-           list())
+```{r}
+p_model_drivers = readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
 
-p_model_validation = readRDS(file.path(drivers_path, "p_model_validation.rds")) |>
-  filter(sitename == "FR-Pue") |> 
-  rowwise() |>
-  # Use NT GPP as gpp, and filter years across all data columns
-  mutate(across(
-    starts_with("data"),
-    ~ .x |> 
-         mutate(gpp = gpp_nt,
-                le = le_corr*86400) |> 
-         filter(lubridate::year(date) >= 2007 & 
-                  lubridate::year(date) <= 2012) |>
-         list()
-    ))
-
+p_model_validation = readRDS(file = here::here("data/p_model_validation_newformat.rds"))
 ```
 
 ### Visualize drivers
@@ -280,7 +296,8 @@ ggplot(data = df_gpp_plot) +
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
 
-```{r}
+
+```{r, echo=F}
 get_density <- function(x, y, ...) {
   df = tibble(x=x, y=y) %>% drop_na
   dens <- MASS::kde2d(df$x, df$y, ...)
@@ -289,7 +306,30 @@ get_density <- function(x, y, ...) {
   ii <- cbind(ix, iy)
   return(dens$z[ii])
 }
+```
 
+## Run and plot Pmodel (Pmodel GPP + Priestly Taylor ET)
+
+Set `use_gs` flag to FALSE in params_siml so that Priestly-Taylor formulation will be used in calculation of ET (Pmodel gs will not be used).
+
+```{r}
+p_model_drivers <- 
+  p_model_drivers |> 
+    mutate(
+      params_siml = params_siml |> 
+        mutate(use_gs = FALSE) |>
+        list()
+      )
+```
+
+Run the model and plot outputs
+
+```{r}
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  p_model_drivers,
+  par = params_modl
+)
 
 print(
   output$data[[1]] %>% 
@@ -316,9 +356,61 @@ print(
 )
 ```
 
-## P-hydro model run
 
-For phydro, we must use the 3-hr daily max forcing as the acclimation forcing. So lets rename it i nthe data,
+## Gs-coupled P-model run
+
+Set `use_gs` flag to TRUE in params_siml so that the internally predicted stomatal conductance ($G_s$) from P-model will be used in calculation of ET. ET is a weighted average of canopy transpiration ($T$) and soil evaporation. Canopy transpiration is calculated as 
+$$
+T = 1.6 \; G_s \; \text{VPD}
+$$
+
+```{r}
+p_model_drivers <- 
+  p_model_drivers |> 
+    mutate(
+      params_siml = params_siml |> 
+        mutate(use_gs = TRUE) |>
+        list()
+      )
+```
+
+Run the model and plot outputs
+
+```{r}
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  p_model_drivers,
+  par = params_modl
+)
+
+print(
+  output$data[[1]] %>% 
+    select(date, gpp, le) %>% 
+    pivot_longer(-date) %>% 
+    mutate(type="pred") %>% 
+    rbind(
+      p_model_validation$data[[1]] %>% 
+        select(date, gpp, le) %>% 
+        pivot_longer(-date) %>% 
+        mutate(type="obs")
+    ) %>% 
+    pivot_wider(names_from = type, values_from = value) %>% 
+    group_by(name) %>% 
+    reframe(obs = obs, pred = pred, density=scale(get_density(pred, obs,n=100))) %>%  
+    ggplot(aes(y=obs, x=pred, colour=density)) +
+    scale_color_viridis_c() +
+    geom_point(alpha=0.7) +
+    geom_abline(slope=1, intercept=0, col="red")+
+    theme_classic() +
+    theme(strip.background = element_rect(color = "white", size = 1))+
+    facet_wrap(~name, scales = "free", nrow = 1)+
+    labs(colour="Density")
+)
+```
+
+## Gs-coupled P-hydro run
+
+For P-hydro, we must use the 3-hr daily max forcing as the acclimation forcing. So let's rename it in the data.
 
 ```{r}
 p_model_drivers <- p_model_drivers |> 
@@ -343,9 +435,21 @@ p_model_drivers$forcing_acclim[[1]] |>
     ggtitle(p_model_drivers$sitename[[1]])
 ```
 
-```{r}
-p_model_drivers$params_siml[[1]]$use_phydro = T
+For P-hydro runs, we always set `use_phydro = T` and `use_gs = T`.
 
+```{r}
+p_model_drivers <- 
+  p_model_drivers |> 
+    mutate(
+      params_siml = params_siml |> 
+        mutate(
+          use_phydro = TRUE,
+          use_gs = TRUE
+        ) |>
+        list())
+```
+
+```{r}
 # define model parameter values
 params_modl <- list(
   kphio              = 0.0288,
@@ -375,22 +479,21 @@ output <- rsofun::runread_pmodel_f(
 ## Plot Phydro outputs
 
 ```{r}
-
 print(
-output$data[[1]] %>% 
-  select(date, gpp, le, aet, pet, netrad, wcont) %>% 
-  pivot_longer(-date) %>% 
-  mutate(type="pred") %>% 
-  rbind(
-    p_model_validation$data[[1]] %>% 
-      select(date, gpp, le) %>% 
-      pivot_longer(-date) %>% 
-      mutate(type="obs")
-  ) %>% 
-  ggplot(aes(x=date, y=value, group=type, col=type)) +
-  theme_classic()+
-  geom_line(alpha=0.6) +
-  facet_wrap(~name, scales="free")
+  output$data[[1]] %>% 
+    select(date, gpp, le, aet, pet, netrad, wcont) %>% 
+    pivot_longer(-date) %>% 
+    mutate(type="pred") %>% 
+    rbind(
+      p_model_validation$data[[1]] %>% 
+        select(date, gpp, le) %>% 
+        pivot_longer(-date) %>% 
+        mutate(type="obs")
+    ) %>% 
+    ggplot(aes(x=date, y=value, group=type, col=type)) +
+    theme_classic()+
+    geom_line(alpha=0.6) +
+    facet_wrap(~name, scales="free")
 )
 
 get_density <- function(x, y, ...) {
@@ -401,7 +504,6 @@ get_density <- function(x, y, ...) {
   ii <- cbind(ix, iy)
   return(dens$z[ii])
 }
-
 
 print(
   output$data[[1]] %>% 

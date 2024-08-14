@@ -83,8 +83,13 @@ cost_likelihood_pmodel <- function(
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
   
-  using_phydro = drivers$params_siml[[1]]$use_phydro
-  
+  if (!("use_phydro" %in% colnames(drivers$params_siml[[1]]))){
+    warning("Parameter use_phydro not set. Assuming FALSE")
+    using_phydro = FALSE
+  } else {
+    using_phydro = drivers$params_siml[[1]]$use_phydro
+  }
+
   # FIXME Jaideep: Instead of checking the number of params, 
   #    it might be better to check for presence of each param in par and par_fixed
   ## check input parameters
