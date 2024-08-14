@@ -18,7 +18,7 @@ module md_photosynth_phydro
   ! list of methods to calculate gs
   integer (kind = int4), parameter :: GS_IGF = 0, GS_QNG = 1, GS_APX = 2, GS_APX2 = 3
   
-  integer (kind = int4), parameter :: ET_DIFFUSION = 0, ET_PM = 1
+  integer (kind = int4), parameter :: T_DIFFUSION = 0, T_PM = 1
 
   ! Define the data type for ParEnv
   type par_env_type
@@ -35,7 +35,7 @@ module md_photosynth_phydro
     real(kind = dbl8) :: epsilon     ! Slope of saturation-pressure - temp curve [Pa K-1]
     real(kind = dbl8) :: lv          ! Latent heat of vaporization of water [J kg-1]
     integer(kind = int4) :: gs_method = GS_IGF ! GsMethod
-    integer(kind = int4) :: et_method = ET_DIFFUSION  ! ETMethod
+    integer(kind = int4) :: et_method = T_DIFFUSION  ! ETMethod
   end type par_env_type
 
   ! ! Interface for member subroutines
@@ -155,14 +155,21 @@ module md_photosynth_phydro
 
   type par_control_type
     integer(kind = int4) :: gs_method       = GS_IGF
-    integer(kind = int4) :: et_method       = ET_DIFFUSION
+    integer(kind = int4) :: et_method       = T_DIFFUSION
     integer(kind = int4) :: ftemp_vj_method = FV_kumarathunge19
     integer(kind = int4) :: ftemp_rd_method = FR_heskel16
     integer(kind = int4) :: ftemp_br_method = FB_atkin15
     integer(kind = int4) :: scale_alpha     = 0
   end type par_control_type
 
-
+  ! The following global variables are temporary variables used by the functions passed to zero. 
+  ! These are replacements of variables that could have been implicitly accessible to nested functions (lambdas)
+  real (kind = dbl8)        :: lambda_vcmax, lambda_jmax, lambda_psi_soil, lambda_Q
+  real (kind = dbl8)        :: lambda_y, lambda_ca, lambda_gstar
+  type(par_plant_type)      :: lambda_par_plant
+  type(par_env_type)        :: lambda_par_env
+  type(par_photosynth_type) :: lambda_par_photosynth
+  type(par_cost_type)       :: lambda_par_cost
 
   contains
 
@@ -260,7 +267,7 @@ module md_photosynth_phydro
     this%Rn = Rn
     this%v_wind = v_wind
     this%gs_method = GS_IGF 
-    this%et_method = ET_DIFFUSION
+    this%et_method = T_DIFFUSION
     call calc_temp_dependencies(this)
   end subroutine create_par_env
 
@@ -556,25 +563,38 @@ module md_photosynth_phydro
   !                                 _ps-dpsi 
   ! Calculate dpsi that solves    _/   K(psi') dpsi' = Q
   !                             ps
+
+  ! Replacement of nested function used in the function further below
+  function lambda_f(dpsi) 
+    real(kind=dbl8), intent(in) :: dpsi
+    real(kind=dbl8) :: lambda_f
+    lambda_f = calc_sapflux(dpsi, lambda_psi_soil, lambda_par_plant, lambda_par_env) - lambda_Q;
+  end function lambda_f
+
   function calc_dpsi_from_sapflux(Q, psi_soil, par_plant, par_env) result(dpsi)
     type(par_plant_type) :: par_plant
     type(par_env_type) :: par_env
     real(kind=dbl8) :: Q, psi_soil, dpsi, Qmax
     
+    lambda_psi_soil = psi_soil
+    lambda_par_plant = par_plant
+    lambda_par_env = par_env
+    lambda_Q = Q
+
     Qmax = calc_max_sapflux(psi_soil, par_plant, par_env);
     if (Q > Qmax) then
       dpsi = 999999999.0_dbl8
     else
-      dpsi = zero(0.0_dbl8, 100.0_dbl8, f, 1e-6_dbl8)
+      dpsi = zero(0.0_dbl8, 100.0_dbl8, lambda_f, 1e-6_dbl8)
     endif
   
-    contains
+    ! contains
     
-      function f(dpsi) 
-        real(kind=dbl8), intent(in) :: dpsi
-        real(kind=dbl8) :: f      
-        f = calc_sapflux(dpsi, psi_soil, par_plant, par_env) - Q;
-      end function f
+    !   function f(dpsi) 
+    !     real(kind=dbl8), intent(in) :: dpsi
+    !     real(kind=dbl8) :: f      
+    !     f = calc_sapflux(dpsi, psi_soil, par_plant, par_env) - Q;
+    !   end function f
 
   end function calc_dpsi_from_sapflux
   
@@ -590,10 +610,10 @@ module md_photosynth_phydro
 
     D = (par_env%vpd / par_env%patm)
 
-    if (par_env%et_method == ET_DIFFUSION) then
+    if (par_env%et_method == T_DIFFUSION) then
         ! print *, "Using diffusion ET"
         gs = Q / (1.6d0 * D)
-    else if (par_env%et_method == ET_PM) then
+    else if (par_env%et_method == T_PM) then
         ! print *, "Using PM ET"
         ga = calc_g_aero(par_plant%h_canopy, dble(par_env%v_wind), par_plant%h_wind_measurement)
         gs = calc_gs_pm(Q, ga, par_env)
@@ -691,9 +711,9 @@ module md_photosynth_phydro
     type(par_env_type) :: par_env
     real(kind=dbl8) :: gs, dE_dgs
 
-    if (par_env%et_method == ET_DIFFUSION) then
+    if (par_env%et_method == T_DIFFUSION) then
         dE_dgs = calc_dE_dgs_dif(par_env)
-    else if (par_env%et_method == ET_PM) then
+    else if (par_env%et_method == T_PM) then
         dE_dgs = calc_dE_dgs_pm_from_gs(gs, par_plant, par_env)
     else
         write(*,*) "Unknown et_method:", par_env%et_method
@@ -707,9 +727,9 @@ module md_photosynth_phydro
     type(par_env_type) :: par_env
     real(kind=dbl8) :: dpsi, psi_soil, dE_dgs
 
-    if (par_env%et_method == ET_DIFFUSION) then
+    if (par_env%et_method == T_DIFFUSION) then
         dE_dgs = calc_dE_dgs_dif(par_env)
-    else if (par_env%et_method == ET_PM) then
+    else if (par_env%et_method == T_PM) then
         dE_dgs = calc_dE_dgs_pm_from_dpsi(dpsi, psi_soil, par_plant, par_env)
     else
         write(*,*) "Unknown et_method:", par_env%et_method
@@ -1187,6 +1207,27 @@ module md_photosynth_phydro
   end
 
 
+  !----------------------------------------------
+  ! calc_dspi_bounds() and its two nested functions
+  !----------------------------------------------
+  function lambda_f2(dpsi) result(gg)
+    real(kind = dbl8), intent(in) :: dpsi
+    real(kind = dbl8) :: gg, gsprime
+    gsprime = calc_gsprime_from_dpsi(dpsi, lambda_psi_soil, lambda_par_plant, lambda_par_env)
+    gg = (-2*dpsi*lambda_y + (lambda_ca + 2*lambda_gstar)*gsprime)
+  end
+
+  function lambda_f1(dpsi) result(J)
+    real(kind = dbl8), intent(in) :: dpsi
+    real(kind = dbl8) :: J, gs, x, Q, gsprime
+    Q = calc_sapflux(dpsi, lambda_psi_soil, lambda_par_plant, lambda_par_env);
+    gs = calc_gs_from_Q(Q, lambda_psi_soil, lambda_par_plant, lambda_par_env);
+    gsprime = calc_gsprime(dpsi, gs, lambda_psi_soil, lambda_par_plant, lambda_par_env);
+    x = calc_x_from_dpsi(dpsi,gsprime, lambda_par_photosynth, lambda_par_cost);
+    J = calc_J(gs, x, lambda_par_photosynth)-4.0d0*lambda_par_photosynth%phi0*lambda_par_photosynth%Iabs;
+  end
+
+
   function calc_dpsi_bound(psi_soil, par_plant, par_env, par_photosynth, par_cost) result(bounds)
     real (kind = dbl8), intent(in) :: psi_soil
     type(par_plant_type), intent(in) :: par_plant
@@ -1217,14 +1258,25 @@ module md_photosynth_phydro
     del = b*b-4*a*c;
 
     appo2 = (-b-sqrt(del))/(2*a)
-    ex = zero(0.0d0, 10.0d0, f2, 1d-6)
+
+    ! set temporary values used by lambda_f1 and lambda_f2
+    lambda_psi_soil = psi_soil
+    lambda_par_plant = par_plant
+    lambda_par_env = par_env
+    lambda_par_photosynth = par_photosynth
+    lambda_par_cost = par_cost
+    lambda_y = y
+    lambda_ca = ca
+    lambda_gstar = gstar
+
+    ex = zero(0.0d0, 10.0d0, lambda_f2, 1d-6)
 
     use_bound = ex
     
-    iabsb = zero(use_bound*0.001, use_bound*0.99, f1, 1D-6);
+    iabsb = zero(use_bound*0.001, use_bound*0.99, lambda_f1, 1D-6);
        
     ! If using PM, find max dpsi from max possible transpiration 
-    if (par_env%et_method == ET_PM) then
+    if (par_env%et_method == T_PM) then
       ga = calc_g_aero(par_plant%h_canopy, dble(par_env%v_wind), par_plant%h_wind_measurement);
       Qmax = calc_max_transpiration_pm(ga, par_env);
       max_dpsi = calc_dpsi_from_sapflux(Qmax, psi_soil, par_plant, par_env);
@@ -1234,24 +1286,24 @@ module md_photosynth_phydro
 
     bounds = dpsi_bounds_type(ex, appo2, iabsb)
 
-    contains
-
-    function f2(dpsi) result(gg)
-      real(kind = dbl8), intent(in) :: dpsi
-      real(kind = dbl8) :: gg, gsprime
-      gsprime = calc_gsprime_from_dpsi(dpsi, psi_soil, par_plant, par_env)
-      gg = (-2*dpsi*y + (ca + 2*gstar)*gsprime)
-    end
-
-    function f1(dpsi) result(J)
-      real(kind = dbl8), intent(in) :: dpsi
-      real(kind = dbl8) :: J, gs, x, Q, gsprime
-      Q = calc_sapflux(dpsi, psi_soil, par_plant, par_env);
-      gs = calc_gs_from_Q(Q, psi_soil, par_plant, par_env);
-      gsprime = calc_gsprime(dpsi, gs, psi_soil, par_plant, par_env);
-      x = calc_x_from_dpsi(dpsi,gsprime, par_photosynth, par_cost);
-      J = calc_J(gs, x, par_photosynth)-4.0d0*par_photosynth%phi0*par_photosynth%Iabs;
-    end
+    ! contains
+    !
+    ! function f2(dpsi) result(gg)
+    !   real(kind = dbl8), intent(in) :: dpsi
+    !   real(kind = dbl8) :: gg, gsprime
+    !   gsprime = calc_gsprime_from_dpsi(dpsi, psi_soil, par_plant, par_env)
+    !   gg = (-2*dpsi*y + (ca + 2*gstar)*gsprime)
+    ! end
+    !
+    ! function f1(dpsi) result(J)
+    !   real(kind = dbl8), intent(in) :: dpsi
+    !   real(kind = dbl8) :: J, gs, x, Q, gsprime
+    !   Q = calc_sapflux(dpsi, psi_soil, par_plant, par_env);
+    !   gs = calc_gs_from_Q(Q, psi_soil, par_plant, par_env);
+    !   gsprime = calc_gsprime(dpsi, gs, psi_soil, par_plant, par_env);
+    !   x = calc_x_from_dpsi(dpsi,gsprime, par_photosynth, par_cost);
+    !   J = calc_J(gs, x, par_photosynth)-4.0d0*par_photosynth%phi0*par_photosynth%Iabs;
+    ! end
 
   end
 
@@ -1308,7 +1360,7 @@ module md_photosynth_phydro
     bound = 100.0d0
   
     ! If using PM, find max dpsi from max possible transpiration 
-    if (par_env%et_method == ET_PM) then
+    if (par_env%et_method == T_PM) then
       ga = calc_g_aero(par_plant%h_canopy, dble(par_env%v_wind), par_plant%h_wind_measurement)
       Qmax = calc_max_transpiration_pm(ga, par_env)
       max_dpsi = calc_dpsi_from_sapflux(Qmax, psi_soil, par_plant, par_env)
@@ -1321,6 +1373,15 @@ module md_photosynth_phydro
   ! -------------------------------------------------------------
   ! Functions: Phydro main
   !--------------------------------------------------------------
+  function lambda_profit_fun(dpsi) result(profit)
+    real(kind = dbl8), intent(in) :: dpsi
+    real(kind = dbl8) :: profit
+    type(dfdx_type) :: dfdx_res
+    dfdx_res = dFdx(dpsi, dble(lambda_psi_soil), lambda_par_plant, lambda_par_env, &
+                    lambda_par_photosynth, lambda_par_cost)
+    profit = dfdx_res%dPdx
+  end  
+
   function phydro_analytical(tc, tg, ppfd, netrad, vpd, co2, pa, fapar, kphio, psi_soil, rdark, vwind, &
                              par_plant, par_cost, par_control) result(res)
     real(kind=dbl8), intent(in) :: tc, tg, ppfd, netrad, vpd, co2, pa, fapar, kphio, psi_soil, rdark, vwind
@@ -1344,7 +1405,14 @@ module md_photosynth_phydro
     par_env%et_method = par_control%et_method
     
     bounds = calc_dpsi_bound(dble(psi_soil), par_plant, par_env, par_photosynth, par_cost)
-    dpsi_opt = zero(bounds%Iabs_bound * 0.001, bounds%Iabs_bound * 0.999, profit_fun, 1.0d-6)
+    
+    lambda_psi_soil = psi_soil
+    lambda_par_plant = par_plant
+    lambda_par_env = par_env
+    lambda_par_photosynth = par_photosynth
+    lambda_par_cost = par_cost
+
+    dpsi_opt = zero(bounds%Iabs_bound * 0.001, bounds%Iabs_bound * 0.999, lambda_profit_fun, 1.0d-6)
     
     e = calc_sapflux(dpsi_opt, dble(psi_soil), par_plant, par_env)
     gs = calc_gs_from_Q(e, dble(psi_soil), par_plant, par_env)
@@ -1378,18 +1446,26 @@ module md_photosynth_phydro
     res%le = e * 0.018015d0 * par_env%lv
     res%le_s_wet = (1.0d0 - fapar) * netrad * (par_env%epsilon / (1.0d0 + par_env%epsilon))
   
-    contains
+    ! contains
 
-    function profit_fun(dpsi)
-      real(kind = dbl8), intent(in) :: dpsi
-      real(kind = dbl8) :: profit_fun
-      type(dfdx_type) :: dfdx_res
-      dfdx_res = dFdx(dpsi, dble(psi_soil), par_plant, par_env, par_photosynth, par_cost)
-      profit_fun = dfdx_res%dPdx
-    end  
+    ! function profit_fun(dpsi)
+    !   real(kind = dbl8), intent(in) :: dpsi
+    !   real(kind = dbl8) :: profit_fun
+    !   type(dfdx_type) :: dfdx_res
+    !   dfdx_res = dFdx(dpsi, dble(psi_soil), par_plant, par_env, par_photosynth, par_cost)
+    !   profit_fun = dfdx_res%dPdx
+    ! end  
 
   end function phydro_analytical
   
+
+  function lambda_profit_fun_inst(dpsi) result(profit)
+    real(kind = dbl8), intent(in) :: dpsi
+    real(kind = dbl8) :: profit
+    profit = calc_dP_ddpsi(dpsi, lambda_vcmax, lambda_jmax, lambda_psi_soil, &
+                           lambda_par_plant, lambda_par_env, lambda_par_photosynth, lambda_par_cost)
+  end  
+
   function phydro_instantaneous_analytical(vcmax25, jmax25, tc, tg, ppfd, netrad, vpd, co2, pa, &
                                            fapar, kphio, psi_soil, rdark, vwind, par_plant, par_cost, par_control) result(res)
     real(kind=dbl8), intent(in) :: vcmax25, jmax25, tc, tg, ppfd, netrad, vpd, co2, pa, fapar, kphio, psi_soil, rdark, vwind
@@ -1419,7 +1495,17 @@ module md_photosynth_phydro
     jmax = jmax25 * par_photosynth%fT_jmax
     
     bound = calc_dpsi_bound_inst(psi_soil, par_plant, par_env, par_photosynth, par_cost)
-    dpsi_opt = zero(0.0d0, 0.99d0 * bound, profit_fun_inst, 1.0d-6)
+    
+    lambda_vcmax = vcmax
+    lambda_jmax = jmax
+    lambda_psi_soil = psi_soil
+    lambda_par_plant = par_plant
+    lambda_par_env = par_env
+    lambda_par_photosynth = par_photosynth
+    lambda_par_cost = par_cost
+    
+    dpsi_opt = zero(0.0d0, 0.99d0 * bound, lambda_profit_fun_inst, 1.0d-6)
+
     if (dpsi_opt .ne. dpsi_opt) print *, "Dspi_opt is NaN", dpsi_opt
     if (dpsi_opt-1 .eq. dpsi_opt) print *, "Dspi_opt is Inf", dpsi_opt
 
@@ -1462,13 +1548,13 @@ module md_photosynth_phydro
     res%le = e * 0.018015d0 * par_env%lv
     res%le_s_wet = (1.0d0 - fapar) * netrad * (par_env%epsilon / (1.0d0 + par_env%epsilon))
   
-    contains
+    ! contains
 
-    function profit_fun_inst(dpsi)
-      real(kind = dbl8), intent(in) :: dpsi
-      real(kind = dbl8) :: profit_fun_inst
-      profit_fun_inst = calc_dP_ddpsi(dpsi, vcmax, jmax, psi_soil, par_plant, par_env, par_photosynth, par_cost)
-    end  
+    ! function profit_fun_inst(dpsi)
+    !   real(kind = dbl8), intent(in) :: dpsi
+    !   real(kind = dbl8) :: profit_fun_inst
+    !   profit_fun_inst = calc_dP_ddpsi(dpsi, vcmax, jmax, psi_soil, par_plant, par_env, par_photosynth, par_cost)
+    ! end  
 
 
   end function phydro_instantaneous_analytical

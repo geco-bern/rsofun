@@ -17,6 +17,8 @@ module md_waterbal
   private
   public waterbal, solar, getpar_modl_waterbal
 
+  integer, parameter :: int4=SELECTED_INT_KIND(4)
+
   !-----------------------------------------------------------------------
   ! Uncertain (unknown) parameters. Runtime read-in
   !-----------------------------------------------------------------------
@@ -52,9 +54,11 @@ module md_waterbal
 
   logical, parameter :: splashtest = .false.
 
+  integer (kind = int4), parameter :: ET_PT = 0, ET_PT_DIFFUSIOM = 1, ET_PT_PM = 2
+
 contains
 
-  subroutine waterbal( tile, tile_fluxes, grid, climate, fapar, using_phydro )
+  subroutine waterbal( tile, tile_fluxes, grid, climate, fapar, using_phydro, using_gs, using_pml )
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil water balance
     !-------------------------------------------------------------------------
@@ -65,6 +69,8 @@ contains
     type(climate_type), intent(in)                        :: climate
     real, dimension(nlu), intent(in)                      :: fapar
     logical, intent(in)                                   :: using_phydro
+    logical, intent(in)                                   :: using_gs
+    logical, intent(in)                                   :: using_pml
 
     ! local variables
     type(outtype_snow_rain) :: out_snow_rain
@@ -80,7 +86,7 @@ contains
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
       !---------------------------------------------------------
-      call calc_et( tile_fluxes(lu), grid, climate, sw, fapar(lu), using_phydro )
+      call calc_et( tile_fluxes(lu), grid, climate, sw, fapar(lu), using_phydro, using_gs, using_pml )
 
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
@@ -276,7 +282,7 @@ contains
   end subroutine solar
 
 
-  subroutine calc_et( tile_fluxes, grid, climate, sw, fapar, using_phydro )
+  subroutine calc_et( tile_fluxes, grid, climate, sw, fapar, using_phydro, using_gs, using_pml )
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
@@ -290,6 +296,8 @@ contains
     real, intent(in)                      :: sw            ! evaporative supply rate, mm/hr
     real, intent(in)                      :: fapar          
     logical, intent(in)                   :: using_phydro
+    logical, intent(in)                   :: using_gs   ! Should Pmodel/Phydro gs be used in ET calc? (otherwise, PT formulation will be used)
+    logical, intent(in)                   :: using_pml  ! If using Pmodel/Phydro gs, should ET be calculated using PM equation (otherwise, diffusion equation will be used)
 
     ! local variables
     real :: gamma                           ! psychrometric constant (Pa K-1) ! xxx Zhang et al. use it in units of (kPa K-1), probably they use sat_slope in kPa/K, too.
@@ -344,7 +352,7 @@ contains
     !---------------------------------------------------------
     ! Eq. 72, SPLASH 2.0 Documentation
     tile_fluxes%canopy%dpet   = ( 1.0 + kw ) * tile_fluxes%canopy%deet
-    tile_fluxes%canopy%dpet_e = tile_fluxes%canopy%dpet / (tile_fluxes%canopy%econ * 1000) ! JAIDEEP FIXME: Oops! This is a case where you should use a simple mass-energy conversion, not econ
+    tile_fluxes%canopy%dpet_e = tile_fluxes%canopy%dpet / energy_to_mm ! JAIDEEP FIXME [resolved]: Oops! This is a case where you should use a simple mass-energy conversion, not econ
     
     !---------------------------------------------------------
     ! 19. Calculate variable substitute (rx), (mm/hr)/(W/m^2)
@@ -369,22 +377,25 @@ contains
     !---------------------------------------------------------
     ! 21. Estimate daily AET (tile_fluxes%canopy%daet), mm d-1
     !---------------------------------------------------------
+    ! TODO: 3 options: SPLASH only, 1.6gsD + SPLASH for soil, PM + SPLASH for soil 
     ! JAIDEEP FIXME: soil PET calcs should be identical for P and Phydro, but depending on whether in_netrad is used or not, 
     !     when implementing in_netrad condition, uncomment the lines marked by arrows
-    ! if (.not. in_netrad) then  <--------------------
-    !   ! Eq. 81, SPLASH 2.0 Documentation
-    !   tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
-    !     radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi))) ! JAIDEEP FIXME: Technically correct, but for clarity, apply radians to just (hn-hi) ?
-    !   tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)  ! JAIDEEP FIXME: Oops! This is a case where you should use a simple mass-energy conversion, not econ
-    !    ^ these should become dpet_soil and dpet_e_soil, with 1-fapar multipled to rx
-    ! else  <------------------
+    if (.not. using_gs) then  
+      ! When not using stomatal conductance, we use Priestly-Taylor formulation for the whole gridcell using all of incoming net radiation
+      ! Eq. 81, SPLASH 2.0 Documentation
+      tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
+        radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi))) ! JAIDEEP FIXME: Technically correct, but for clarity, apply radians to just (hn-hi) ?
+      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / energy_to_mm  ! JAIDEEP FIXME [resolved]: Oops! This is a case where you should use a simple mass-energy conversion, not econ
+    else  
+      ! Else we use: ET = Pmodel-Transpiration (T) + (1-fapar) * Leuning-Soil-Evaporation (S)
+      ! NOTE: T was calculated in gpp_pmodel and stored in tile_fluxes%plant(pft)%dtransp, which was aggegated into tile_fluxes%canopy%dtransp by diag_daily()
+      tile_fluxes%canopy%daet_canop = tile_fluxes%canopy%dtransp
+      tile_fluxes%canopy%daet_e_canop = tile_fluxes%canopy%daet_canop / energy_to_mm   ! mm d-1 ---> J m-2 d-1 
+
       ! tile_fluxes%canopy%dpet_e_soil = (1.0d0 - fapar) * netrad * (par_env%epsilon / (1.0d0 + par_env%epsilon))
       tile_fluxes%canopy%dpet_soil = (1.0d0 - fapar) * tile_fluxes%canopy%drn * tile_fluxes%canopy%econ * 1.0d3 !  1000*econ converts energy into mm evaporation
       tile_fluxes%canopy%dpet_e_soil =  tile_fluxes%canopy%dpet_soil / energy_to_mm    ! mm d-1 ---> J m-2 d-1
       ! ^ Note: This is under wet conditions, so multiply by reduction factor (below) to get actual soil ET
-
-      ! Fill canopy LE from T_canopy calculated in gpp_pmodel
-      tile_fluxes%canopy%daet_e_canop = tile_fluxes%canopy%daet_canop / energy_to_mm   ! mm d-1 ---> J m-2 d-1 
 
       ! calculate totat AET = canopy_AET + f * soil_AET_wet, where f = running_avg(P/PET)
       ! p_over_pet = (climate%dprec*86400) / (tile_fluxes%canopy%dpet_soil + 1e-6)
@@ -396,8 +407,8 @@ contains
       tile_fluxes%canopy%daet_soil = f_soil_aet * tile_fluxes%canopy%dpet_soil
       tile_fluxes%canopy%daet_e_soil = tile_fluxes%canopy%daet_soil / energy_to_mm
 
-      tile_fluxes%canopy%daet = tile_fluxes%canopy%daet_canop + tile_fluxes%canopy%daet_soil        
-      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet_e_canop + tile_fluxes%canopy%daet_e_soil        
+      tile_fluxes%canopy%daet = tile_fluxes%canopy%daet_canop + tile_fluxes%canopy%daet_soil 
+      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet_e_canop + tile_fluxes%canopy%daet_e_soil
 
       ! print *, "P (mm d-1), PET (mm d-1), P/PET, Avg(P/PET), f_soil_aet = ", (climate%dprec*86400), &
       !           tile_fluxes%canopy%dpet_soil, p_over_pet, &
@@ -405,7 +416,7 @@ contains
       ! print *, "Canopy ET (mm d-1, J m-2 d-1) = ", tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_e_canop
       ! print *, "Soil ET (mm d-1, J m-2 d-1) = ", tile_fluxes%canopy%daet_soil, tile_fluxes%canopy%daet_e_soil 
 
-    ! end if <------------------
+    end if
 
     ! print*,'in waterbal: sw, hi, rx, rw, rv, hn, hi, ru ', sw, hi, rx, rw, rv, hn, hi, ru
     

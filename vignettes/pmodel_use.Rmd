@@ -41,6 +41,7 @@ p_model_drivers = p_model_drivers |>
   rowwise() |> 
   mutate(params_siml = params_siml |> 
            mutate(use_phydro = F,
+                  use_gs = F,
                   use_pml = F) |>
            list())
 
