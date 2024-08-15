@@ -359,14 +359,23 @@ run_pmodel_f_bysite <- function(
   }
   
   # If PML is used, then ensure that site info has reference height and canopy height
-  if (params_siml$use_pml){
-    continue = !is.nanull(site_info$canopy_height) & 
-               !is.nanull(site_info$reference_height)
-  } else {
-    site_info$canopy_height = NA
-    site_info$reference_height = NA 
+  avl_canopy_height = !is.nanull(site_info$canopy_height)
+  if (!avl_canopy_height){
+    if (params_siml$use_pml){
+      continue <- FALSE
+    } else {
+      site_info$canopy_height <- NA
+    }
   }
-  
+
+  avl_reference_height = !is.nanull(site_info$reference_height)
+  if (!avl_reference_height){
+    if (params_siml$use_pml){
+      continue <- FALSE
+    } else {
+      site_info$reference_height <- NA
+    }
+  }
   
   if (continue){
 

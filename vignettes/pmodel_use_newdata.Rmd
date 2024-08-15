@@ -1,6 +1,6 @@
 ---
 title: "P-model usage (new data and new ET options)"
-author: "Koen Hufkens, Josefa Arán, Jaideep Joshi"
+author: "Koen Hufkens, Josefa Arán, Jaideep Joshi, Benjamin Stocker"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{P-model usage}
@@ -20,10 +20,137 @@ knitr::opts_chunk$set(
 library(rsofun)
 library(dplyr)
 library(ggplot2)
+library(ggthemes)
+library(RColorBrewer)
 
 # fake variable as optimization isn't run
 pars <- list()
 pars$par["kphio"] <- 0.04478049
+
+# model-vs-obs evaluation function
+analyse_modobs <- function(
+    df,
+    mod,
+    obs,
+    relative = FALSE,
+    xlim = NULL,
+    ylim = NULL,
+    use_factor = NULL,
+    shortsubtitle = FALSE,
+    plot_subtitle = TRUE,
+    plot_linmod = TRUE,
+    ...
+    ){
+  
+  ## rename to 'mod' and 'obs' and remove rows with NA in mod or obs
+  df <- df %>%
+    as_tibble() %>%
+    ungroup() %>%
+    dplyr::select(mod = mod, obs = obs) %>%
+    tidyr::drop_na(mod, obs)
+
+  ## get linear regression (coefficients)
+  linmod <- lm(obs ~ mod, data = df)
+
+  ## construct metrics table using the 'yardstick' library
+  df_metrics <- df %>%
+    yardstick::metrics(obs, mod) %>%
+    dplyr::bind_rows(tibble(.metric = "n", .estimator = "standard", .estimate = summarise(df, numb = n()) %>% unlist())) %>%
+    dplyr::bind_rows(tibble(.metric = "slope", .estimator = "standard", .estimate = coef(linmod)[2])) %>%
+    # dplyr::bind_rows( tibble( .metric = "nse",      .estimator = "standard", .estimate = hydroGOF::NSE( obs, mod, na.rm=TRUE ) ) ) %>%
+    dplyr::bind_rows(tibble(.metric = "mean_obs", .estimator = "standard", .estimate = summarise(df, mean = mean(obs, na.rm = TRUE)) %>% unlist())) %>%
+    dplyr::bind_rows(tibble(
+      .metric = "prmse", .estimator = "standard",
+      .estimate = dplyr::filter(., .metric == "rmse") %>% dplyr::select(.estimate) %>% unlist() /
+        dplyr::filter(., .metric == "mean_obs") %>%
+        dplyr::select(.estimate) %>%
+        unlist()
+    )) %>%
+    dplyr::bind_rows(tibble(
+      .metric = "pmae", .estimator = "standard",
+      .estimate = dplyr::filter(., .metric == "mae") %>% dplyr::select(.estimate) %>% unlist() /
+        dplyr::filter(., .metric == "mean_obs") %>%
+        dplyr::select(.estimate) %>%
+        unlist()
+    )) %>%
+    dplyr::bind_rows(tibble(.metric = "bias", .estimator = "standard", .estimate = dplyr::summarise(df, mean((mod - obs), na.rm = TRUE)) %>% unlist())) %>%
+    dplyr::bind_rows(tibble(.metric = "pbias", .estimator = "standard", .estimate = dplyr::summarise(df, mean((mod - obs) / obs, na.rm = TRUE)) %>% unlist()))
+
+  rsq_val <- df_metrics %>%
+    dplyr::filter(.metric == "rsq") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  rmse_val <- df_metrics %>%
+    dplyr::filter(.metric == "rmse") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  mae_val <- df_metrics %>%
+    dplyr::filter(.metric == "mae") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  bias_val <- df_metrics %>%
+    dplyr::filter(.metric == "bias") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  slope_val <- df_metrics %>%
+    dplyr::filter(.metric == "slope") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  n_val <- df_metrics %>%
+    dplyr::filter(.metric == "n") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+
+  if (relative) {
+    rmse_val <- rmse_val / mean(df$obs, na.rm = TRUE)
+    bias_val <- bias_val / mean(df$obs, na.rm = TRUE)
+  }
+
+  rsq_lab <- format(rsq_val, digits = 2)
+  rmse_lab <- format(rmse_val, digits = 3)
+  mae_lab <- format(mae_val, digits = 3)
+  bias_lab <- format(bias_val, digits = 3)
+  slope_lab <- format(slope_val, digits = 3)
+  n_lab <- format(n_val, digits = 3)
+
+  results <- tibble(rsq = rsq_val, rmse = rmse_val, mae = mae_val, bias = bias_val, slope = slope_val, n = n_val)
+
+  if (shortsubtitle) {
+    subtitle <- bquote(italic(R)^2 == .(rsq_lab) ~ ~
+                         RMSE == .(rmse_lab))
+  } else {
+    subtitle <- bquote(italic(R)^2 == .(rsq_lab) ~ ~
+                         RMSE == .(rmse_lab) ~ ~
+                         bias == .(bias_lab) ~ ~
+                         slope == .(slope_lab) ~ ~
+                         italic(N) == .(n_lab))
+  }
+
+  ## ggplot hexbin
+  gg <- df %>%
+    ggplot2::ggplot(aes(x = mod, y = obs)) +
+    geom_hex() +
+    scale_fill_gradientn(
+      colours = colorRampPalette(c("gray65", "navy", "red", "yellow"))(5)
+    ) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+    # coord_fixed() +
+    # xlim(0,NA) +
+    # ylim(0,NA) +
+    theme_classic() +
+    labs(x = mod, y = obs)
+
+  if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
+  if (plot_linmod) gg <- gg + geom_smooth(method = "lm", color = "red", size = 0.5, se = FALSE)
+    
+  return(list(df_metrics = df_metrics, gg = gg, linmod = linmod, results = results))
+}
 ```
 
 The `rsofun` package and framework includes two main models. The `pmodel` and `biomee` (which in part relies on P-model components). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
@@ -308,9 +435,9 @@ get_density <- function(x, y, ...) {
 }
 ```
 
-## Run and plot Pmodel (Pmodel GPP + Priestly Taylor ET)
+## P-model with SPLASH AET
 
-Set `use_gs` flag to FALSE in params_siml so that Priestly-Taylor formulation will be used in calculation of ET (Pmodel gs will not be used).
+Set `use_gs` flag to `FALSE` in params_siml so that Priestly-Taylor formulation will be used in calculation of ET (P-model gs will not be used).
 
 ```{r}
 p_model_drivers <- 
@@ -333,33 +460,40 @@ output <- rsofun::runread_pmodel_f(
 ```
 
 ```{r}
-output$data[[1]] %>% 
-  select(date, gpp, le) %>% 
-  pivot_longer(-date) %>% 
-  mutate(type="pred") %>% 
-  rbind(
+df_plot <- output$data[[1]] %>% 
+  select(date, gpp_mod = gpp, le_mod = le) %>% 
+  left_join(
     p_model_validation$data[[1]] %>% 
-      select(date, gpp, le) %>% 
-      pivot_longer(-date) %>% 
-      mutate(type="obs")
-  ) %>% 
-  pivot_wider(names_from = type, values_from = value) %>% 
-  group_by(name) %>% 
-  reframe(obs = obs, pred = pred, density=scale(get_density(pred, obs,n=100))) %>%  
-  ggplot(aes(y=obs, x=pred, colour=density)) +
-  scale_color_viridis_c() +
-  geom_point(alpha=0.7) +
-  geom_abline(slope=1, intercept=0, col="red")+
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~name, scales = "free", nrow = 1)+
-  labs(colour="Density")  
+      select(date, gpp_obs = gpp, le_obs = le),
+    by = join_by(date)
+  ) |> 
+  as_tibble()
+
+out_gpp <- analyse_modobs(
+  df_plot,
+  "gpp_mod",
+  "gpp_obs"
+)
+out_gpp$gg +
+  labs(
+    title = "GPP"
+  )
+
+out_le <- analyse_modobs(
+  df_plot,
+  "le_mod",
+  "le_obs"
+)
+out_le$gg +
+  labs(
+    title = "LE"
+  )
 ```
 
 
-## Gs-coupled P-model run
+## P-model with Gs-coupled diffusion ET
 
-Set `use_gs` flag to TRUE in params_siml so that the internally predicted stomatal conductance ($G_s$) from P-model will be used in calculation of ET. ET is a weighted average of canopy transpiration ($T$) and soil evaporation. Canopy transpiration is calculated as 
+Set `use_gs` flag to TRUE in params_siml so that the internally predicted stomatal conductance ($G_s$) from P-model will be used in calculation of ET. ET is a weighted average of canopy transpiration ($T$) and soil evaporation. Canopy transpiration is calculated using the diffusion equation as:
 $$
 T = 1.6 \; G_s \; \text{VPD}
 $$
@@ -387,30 +521,96 @@ output <- rsofun::runread_pmodel_f(
 Plot outputs. 
 
 ```{r}
-output$data[[1]] %>% 
-  select(date, gpp, le) %>% 
-  pivot_longer(-date) %>% 
-  mutate(type="pred") %>% 
-  rbind(
+df_plot <- output$data[[1]] %>% 
+  select(date, gpp_mod = gpp, le_mod = le) %>% 
+  left_join(
     p_model_validation$data[[1]] %>% 
-      select(date, gpp, le) %>% 
-      pivot_longer(-date) %>% 
-      mutate(type="obs")
-  ) %>% 
-  pivot_wider(names_from = type, values_from = value) %>% 
-  group_by(name) %>% 
-  reframe(obs = obs, pred = pred, density=scale(get_density(pred, obs,n=100))) %>%  
-  ggplot(aes(y=obs, x=pred, colour=density)) +
-  scale_color_viridis_c() +
-  geom_point(alpha=0.7) +
-  geom_abline(slope=1, intercept=0, col="red")+
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~name, scales = "free", nrow = 1)+
-  labs(colour="Density")
+      select(date, gpp_obs = gpp, le_obs = le),
+    by = join_by(date)
+  ) |> 
+  as_tibble()
+
+out_gpp <- analyse_modobs(
+  df_plot,
+  "gpp_mod",
+  "gpp_obs"
+)
+
+out_le <- analyse_modobs(
+  df_plot,
+  "le_mod",
+  "le_obs"
+)
+
+out_gpp$gg +
+  labs(
+    title = "GPP"
+  )
+out_le$gg +
+  labs(
+    title = "LE"
+  )
 ```
 
-## Gs-coupled P-hydro run
+## P-model with PML ET
+
+Set `use_gs` flag to TRUE in params_siml so that the internally predicted stomatal conductance ($G_s$) from P-model will be used in calculation of ET. ET is a weighted average of canopy transpiration ($T$) and soil evaporation. Canopy transpiration is calculated using the diffusion equation as:
+$$
+T = 1.6 \; G_s \; \text{VPD}
+$$
+
+```{r}
+p_model_drivers$params_siml[[1]]$use_gs <- TRUE
+p_model_drivers$params_siml[[1]]$use_pml <- TRUE
+p_model_drivers$params_siml[[1]]$use_phydro <- FALSE
+```
+
+Run the model.
+
+```{r}
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  p_model_drivers,
+  par = params_modl
+)
+```
+
+Plot outputs. 
+
+```{r}
+df_plot <- output$data[[1]] %>% 
+  select(date, gpp_mod = gpp, le_mod = le) %>% 
+  left_join(
+    p_model_validation$data[[1]] %>% 
+      select(date, gpp_obs = gpp, le_obs = le),
+    by = join_by(date)
+  ) |> 
+  as_tibble()
+
+out_gpp <- analyse_modobs(
+  df_plot,
+  "gpp_mod",
+  "gpp_obs"
+)
+
+out_le <- analyse_modobs(
+  df_plot,
+  "le_mod",
+  "le_obs"
+)
+
+out_gpp$gg +
+  labs(
+    title = "GPP"
+  )
+out_le$gg +
+  labs(
+    title = "LE"
+  )
+```
+
+
+## P-hydro run with diffusion
 
 For P-hydro, we must use the 3-hr daily max forcing as the acclimation forcing. So let's rename it in the data.
 
@@ -481,55 +681,35 @@ output <- rsofun::runread_pmodel_f(
 ## Plot Phydro outputs
 
 ```{r}
-print(
-  output$data[[1]] %>% 
-    select(date, gpp, le, aet, pet, netrad, wcont) %>% 
-    pivot_longer(-date) %>% 
-    mutate(type="pred") %>% 
-    rbind(
-      p_model_validation$data[[1]] %>% 
-        select(date, gpp, le) %>% 
-        pivot_longer(-date) %>% 
-        mutate(type="obs")
-    ) %>% 
-    ggplot(aes(x=date, y=value, group=type, col=type)) +
-    theme_classic()+
-    geom_line(alpha=0.6) +
-    facet_wrap(~name, scales="free")
+df_plot <- output$data[[1]] %>% 
+  select(date, gpp_mod = gpp, le_mod = le) %>% 
+  left_join(
+    p_model_validation$data[[1]] %>% 
+      select(date, gpp_obs = gpp, le_obs = le),
+    by = join_by(date)
+  ) |> 
+  as_tibble()
+
+out_gpp <- analyse_modobs(
+  df_plot,
+  "gpp_mod",
+  "gpp_obs"
 )
 
-get_density <- function(x, y, ...) {
-  df = tibble(x=x, y=y) %>% drop_na
-  dens <- MASS::kde2d(df$x, df$y, ...)
-  ix <- findInterval(x, dens$x)
-  iy <- findInterval(y, dens$y)
-  ii <- cbind(ix, iy)
-  return(dens$z[ii])
-}
-
-print(
-  output$data[[1]] %>% 
-    select(date, gpp, le) %>% 
-    pivot_longer(-date) %>% 
-    mutate(type="pred") %>% 
-    rbind(
-      p_model_validation$data[[1]] %>% 
-        select(date, gpp, le) %>% 
-        pivot_longer(-date) %>% 
-        mutate(type="obs")
-    ) %>% 
-    pivot_wider(names_from = type, values_from = value) %>% 
-    group_by(name) %>% 
-    reframe(obs = obs, pred = pred, density=scale(get_density(pred, obs,n=100))) %>%  
-    ggplot(aes(y=obs, x=pred, colour=density)) +
-    scale_color_viridis_c() +
-    geom_point(alpha=0.7) +
-    geom_abline(slope=1, intercept=0, col="red")+
-    theme_classic() +
-    theme(strip.background = element_rect(color = "white", size = 1))+
-    facet_wrap(~name, scales = "free", nrow = 1)+
-    labs(colour="Density")
+out_le <- analyse_modobs(
+  df_plot,
+  "le_mod",
+  "le_obs"
 )
+
+out_gpp$gg +
+  labs(
+    title = "GPP"
+  )
+out_le$gg +
+  labs(
+    title = "LE"
+  )
 ```
 
 Plot all outputs

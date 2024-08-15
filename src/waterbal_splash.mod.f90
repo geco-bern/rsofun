@@ -462,6 +462,22 @@ contains
         tile_fluxes%canopy%daet_e_canop = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
           * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
 
+
+        ! print*,'-----------------------'
+        ! print*,'canopy_height ', myinterface%canopy_height
+        ! print*,'dwind ', climate%dwind
+        ! print*,'reference_height ', myinterface%reference_height
+        ! print*,'epsilon ', epsilon
+        ! print*,'fapar   ', fapar
+        ! print*,'net rad ', tile_fluxes%canopy%drn
+        ! print*,'rho_watr', rho_water
+        ! print*,'cp      ', cp
+        ! print*,'gamma   ', gamma
+        ! print*,'ga      ', ga
+        ! print*,'vpd     ', climate%dvpd
+        ! print*,'gw      ', gw
+        ! print*,'-----------------------'
+
         ! ! W m-2 ---> mol m-2 s-1
         ! tile_fluxes%canopy%daet_canop = tile_fluxes%canopy%daet_e_canop &
         !   * (55.5 / par_env%lv)
@@ -469,6 +485,8 @@ contains
         ! W m-2 ---> kg m-2 s-1
         ! XXX test: these units don't convert
         tile_fluxes%canopy%daet_canop = tile_fluxes%canopy%daet_e_canop * energy_to_mm
+
+        ! print*,'PML: tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil ', tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil
 
       else
         !---------------------------------------------------------
@@ -478,6 +496,8 @@ contains
         ! the canopy-level sum (weighted over PFTs by their fractional coverage)
         tile_fluxes%canopy%daet_canop = tile_fluxes%canopy%dtransp
         tile_fluxes%canopy%daet_e_canop = tile_fluxes%canopy%daet_canop / energy_to_mm   ! mm d-1 ---> J m-2 d-1 
+
+        ! print*,'DIF: tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil ', tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil
 
       end if
 
