@@ -28,7 +28,7 @@ module md_photosynth
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
     real :: lue                 ! light use efficiency (mol CO2 / mol photon)
     ! real :: assim               ! leaf-level assimilation rate (mol CO2 m-2 s-1)
-    real :: gs_setpoint         ! stomatal conductance to CO2 (mol C Pa-1 m-2 s-1)
+    real :: gs_setpoint         ! stomatal conductance to CO2 per unit absorbed light (mol C Pa-1 m-2 s-1)
     ! real :: gs_unitfapar        ! stomatal conductance to CO2 per unit fapar (mol C Pa-1 m-2 s-1)
     ! real :: gs_unitiabs         ! stomatal conductance to CO2 per unit absorbed light (mol C Pa-1 m-2 s-1)
     ! real :: gpp                 ! gross primary productivity (g CO2 m-2 d-1)
@@ -100,7 +100,7 @@ contains
     real :: kmm                 ! Michaelis-Menten coefficient (Pa)
     real :: gammastar           ! photorespiratory compensation point - Gamma-star (Pa)
     real :: ca                  ! ambient CO2 partial pressure, (Pa)
-    real :: gs_setpoint         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
+    real :: gs_setpoint         ! stomatal conductance to CO2 per unit absorbed light (mol CO2 Pa-1 m-2 s-1)
     ! real :: gs_unitfapar        ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
     ! real :: gs_unitiabs         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
     real :: ci                  ! leaf-internal partial pressure, (Pa)
@@ -355,7 +355,7 @@ contains
       ! xxx to be addressed: what's the stomatal conductance in C4?
       gs_setpoint = 9999.0
     else
-      gs_setpoint = (lue / c_molmass) / ( ca - ci + 0.1 )
+      gs_setpoint = (lue / c_molmass) / (ca - ci)
     end if
 
 

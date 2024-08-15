@@ -102,8 +102,6 @@ module md_tile_pmodel
     real :: daet_e_soil     ! daily soil evaporation (J m-2 d-1)
     real :: daet_canop      ! daily canopy transpiration (mm d-1)
     real :: daet_e_canop    ! daily canopy transpiration (J m-2 d-1)
-    real :: dpet_soil       ! daily potential evaporation from soil (J m-2 d-1)
-    real :: dpet_e_soil     ! daily potential evaporation from soil (mm d-1)
     real :: cpa             ! alpha = equilibrium ET over potential ET (EET/PET, unitless)
 
     real :: dtransp         ! work in progress
@@ -542,10 +540,13 @@ contains
     !----------------------------------------------------------------
     ! Sum over PFTs to get canopy-level quantities
     !----------------------------------------------------------------
+    ! xxx test
+    print*,'Reasonable? tile(lu)%plant(:)%fpc_grid ', tile(lu)%plant(:)%fpc_grid
+    
     do lu=1,nlu
-      tile_fluxes(lu)%canopy%dgpp    = sum(tile_fluxes(lu)%plant(:)%dgpp)
-      tile_fluxes(lu)%canopy%dtransp = sum(tile_fluxes(lu)%plant(:)%dtransp)
-      tile_fluxes(lu)%canopy%drd     = sum(tile_fluxes(lu)%plant(:)%drd)
+      tile_fluxes(lu)%canopy%dgpp    = sum(tile_fluxes(lu)%plant(:)%dgpp    * tile(lu)%plant(:)%fpc_grid)
+      tile_fluxes(lu)%canopy%dtransp = sum(tile_fluxes(lu)%plant(:)%dtransp * tile(lu)%plant(:)%fpc_grid)
+      tile_fluxes(lu)%canopy%drd     = sum(tile_fluxes(lu)%plant(:)%drd     * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%vcmax25 = sum(tile_fluxes(lu)%plant(:)%vcmax25 * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%jmax25  = sum(tile_fluxes(lu)%plant(:)%jmax25  * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%vcmax   = sum(tile_fluxes(lu)%plant(:)%vcmax   * tile(lu)%plant(:)%fpc_grid)

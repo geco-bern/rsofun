@@ -25,10 +25,11 @@ module md_forcing_pmodel
     real(kind=sp) :: dppfd  ! mol m-2 d-1
     real(kind=sp) :: dnetrad! W m-2
     real(kind=sp) :: dpatm  ! Pa
+    real(kind=sp) :: dwind  ! m s-1
   end type climate_type
 
   type vegcover_type
-    real :: dfapar ! fraction of absorbed photosynthetically active radiation
+    real :: dfapar     ! fraction of absorbed photosynthetically active radiation
   end type vegcover_type
 
   type landuse_type
@@ -94,6 +95,7 @@ contains
     out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 10))
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 11))
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 12))
+    out_climate(:)%dwind   = 2.0  ! xxx try
 
   end function getclimate
 

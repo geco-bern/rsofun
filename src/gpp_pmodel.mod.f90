@@ -344,16 +344,19 @@ contains
       end if
       
       !----------------------------------------------------------------
-      ! Stomatal conductance
+      ! Stomatal conductance to CO2
       !----------------------------------------------------------------
-      if (.not. use_phydro) then
-        ! Jaideep NOTE: I have applied the soilmstress factor to gs here because it is needed in calculating canopy transpiration
-        tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint * soilmstress
-      else 
-        ! Jaideep NOTE: unit of gs_accl here is mol m-2 s-1. 
-        ! Jaideep FIXME: It's too complicated to convert it to unit as in pmodel, but should be done at some point
-        tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs 
-      end if
+      ! Apply soil moisture stress function to stomatal conductance
+      tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint * soilmstress
+
+      ! if (.not. use_phydro) then
+      !   ! Jaideep NOTE: I have applied the soilmstress factor to gs here because it is needed in calculating canopy transpiration
+      !   tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint * soilmstress
+      ! else 
+      !   ! Jaideep NOTE: unit of gs_accl here is mol m-2 s-1. 
+      !   ! Jaideep FIXME: It's too complicated to convert it to unit as in pmodel, but should be done at some point
+      !   tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs 
+      ! end if
 
       !----------------------------------------------------------------
       ! Water potentials
@@ -385,17 +388,18 @@ contains
           ! Using P-model gs
           ! Note here that stomatal conductance is already normalized by patm (=gs/patm) so E = 1.6 * (gs/patm) * vpd, which is the same as 1.6 gs (vpd/patm)
           ! but it is expressed per unit absorbed light, so multiply by PPFD*fapar
+          ! dtransp is in mm d-1
           tile_fluxes(lu)%plant(pft)%dtransp = (1.6 &                                           ! 1.6
-                * tile_fluxes(lu)%plant(pft)%gs_accl * tile(lu)%canopy%fapar * climate%dppfd &  ! gs
-                * climate%dvpd) &                                                               ! D
-                * 0.018015 * (1.0d0 / rho_water) &
-                * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
+            * tile_fluxes(lu)%plant(pft)%gs_accl * tile(lu)%canopy%fapar * climate%dppfd &  ! gs
+            * climate%dvpd) &                                                               ! D
+            * h2o_molmass * (1.0d0 / rho_water) &
+            * myinterface%params_siml%secs_per_tstep  ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
           
         else
           ! Using Phydro gs
           tile_fluxes(lu)%plant(pft)%dtransp = out_phydro_inst%e &  ! Phydro e is 1.6 gs D
-                * 0.018015 * (1.0d0 / rho_water) & 
-                * myinterface%params_siml%secs_per_tstep * 1000 ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
+            * h2o_molmass * (1.0d0 / rho_water) & 
+            * myinterface%params_siml%secs_per_tstep  ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
           
           ! ~~ This has been moved to waterbal_splash ~~
           ! tile_fluxes(lu)%canopy%dpet_e_soil = out_phydro_inst%le_s_wet  &

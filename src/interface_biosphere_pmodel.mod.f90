@@ -41,7 +41,6 @@ module md_interface_pmodel
     integer                                 :: year
     real                                    :: pco2
     type(gridtype)                          :: grid
-    ! real                                    :: whc_prescr
     real                                    :: canopy_height
     real                                    :: reference_height
     type(climate_type), dimension(ndayyear) :: climate

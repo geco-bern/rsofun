@@ -150,8 +150,8 @@ contains
     !----------------------------------------------------------------
     ! Other site-specific PARAMETERS
     !----------------------------------------------------------------
-    myinterface%canopy_height = real (canopy_height)
-    myinterface%reference_height = real (reference_height)
+    myinterface%canopy_height = real(canopy_height)
+    myinterface%reference_height = real(reference_height)
     
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)

@@ -231,7 +231,7 @@ contains
        my_tc * (2.050632750e-3 +   &
        my_tc * (-1.631537093e-4 +  &
        my_tc * (6.212300300e-6 -   &
-       my_tc * (8.830478888e-8 -   &
+       my_tc * (8.830478888e-8 -   &    ! XXX FIXME (beni): should be a + not - ?
        my_tc * 5.071307038e-10))))) * 1e3
        
   end function calc_cp_moist_air
