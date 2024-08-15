@@ -330,30 +330,30 @@ output <- rsofun::runread_pmodel_f(
   p_model_drivers,
   par = params_modl
 )
+```
 
-print(
-  output$data[[1]] %>% 
-    select(date, gpp, le) %>% 
-    pivot_longer(-date) %>% 
-    mutate(type="pred") %>% 
-    rbind(
-      p_model_validation$data[[1]] %>% 
-        select(date, gpp, le) %>% 
-        pivot_longer(-date) %>% 
-        mutate(type="obs")
-    ) %>% 
-    pivot_wider(names_from = type, values_from = value) %>% 
-    group_by(name) %>% 
-    reframe(obs = obs, pred = pred, density=scale(get_density(pred, obs,n=100))) %>%  
-    ggplot(aes(y=obs, x=pred, colour=density)) +
-    scale_color_viridis_c() +
-    geom_point(alpha=0.7) +
-    geom_abline(slope=1, intercept=0, col="red")+
-    theme_classic() +
-    theme(strip.background = element_rect(color = "white", size = 1))+
-    facet_wrap(~name, scales = "free", nrow = 1)+
-    labs(colour="Density")
-)
+```{r}
+output$data[[1]] %>% 
+  select(date, gpp, le) %>% 
+  pivot_longer(-date) %>% 
+  mutate(type="pred") %>% 
+  rbind(
+    p_model_validation$data[[1]] %>% 
+      select(date, gpp, le) %>% 
+      pivot_longer(-date) %>% 
+      mutate(type="obs")
+  ) %>% 
+  pivot_wider(names_from = type, values_from = value) %>% 
+  group_by(name) %>% 
+  reframe(obs = obs, pred = pred, density=scale(get_density(pred, obs,n=100))) %>%  
+  ggplot(aes(y=obs, x=pred, colour=density)) +
+  scale_color_viridis_c() +
+  geom_point(alpha=0.7) +
+  geom_abline(slope=1, intercept=0, col="red")+
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~name, scales = "free", nrow = 1)+
+  labs(colour="Density")  
 ```
 
 
@@ -374,7 +374,7 @@ p_model_drivers <-
       )
 ```
 
-Run the model and plot outputs
+Run the model.
 
 ```{r}
 # run the model for these parameters
@@ -382,30 +382,32 @@ output <- rsofun::runread_pmodel_f(
   p_model_drivers,
   par = params_modl
 )
+```
 
-print(
-  output$data[[1]] %>% 
-    select(date, gpp, le) %>% 
-    pivot_longer(-date) %>% 
-    mutate(type="pred") %>% 
-    rbind(
-      p_model_validation$data[[1]] %>% 
-        select(date, gpp, le) %>% 
-        pivot_longer(-date) %>% 
-        mutate(type="obs")
-    ) %>% 
-    pivot_wider(names_from = type, values_from = value) %>% 
-    group_by(name) %>% 
-    reframe(obs = obs, pred = pred, density=scale(get_density(pred, obs,n=100))) %>%  
-    ggplot(aes(y=obs, x=pred, colour=density)) +
-    scale_color_viridis_c() +
-    geom_point(alpha=0.7) +
-    geom_abline(slope=1, intercept=0, col="red")+
-    theme_classic() +
-    theme(strip.background = element_rect(color = "white", size = 1))+
-    facet_wrap(~name, scales = "free", nrow = 1)+
-    labs(colour="Density")
-)
+Plot outputs. 
+
+```{r}
+output$data[[1]] %>% 
+  select(date, gpp, le) %>% 
+  pivot_longer(-date) %>% 
+  mutate(type="pred") %>% 
+  rbind(
+    p_model_validation$data[[1]] %>% 
+      select(date, gpp, le) %>% 
+      pivot_longer(-date) %>% 
+      mutate(type="obs")
+  ) %>% 
+  pivot_wider(names_from = type, values_from = value) %>% 
+  group_by(name) %>% 
+  reframe(obs = obs, pred = pred, density=scale(get_density(pred, obs,n=100))) %>%  
+  ggplot(aes(y=obs, x=pred, colour=density)) +
+  scale_color_viridis_c() +
+  geom_point(alpha=0.7) +
+  geom_abline(slope=1, intercept=0, col="red")+
+  theme_classic() +
+  theme(strip.background = element_rect(color = "white", size = 1))+
+  facet_wrap(~name, scales = "free", nrow = 1)+
+  labs(colour="Density")
 ```
 
 ## Gs-coupled P-hydro run

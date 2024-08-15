@@ -44,7 +44,7 @@ module md_plant_pmodel
     integer :: pftno
 
     ! canopy
-    real :: fpc_grid            ! fractional projective cover
+    real :: fpc_grid            ! fractional projective cover, sum over all PFTs must add up to 1 (even if there is bare ground, that's treated by fAPAR)
     real :: lai_ind             ! fraction of absorbed photosynthetically active radiation
     real :: fapar_ind           ! fraction of absorbed photosynthetically active radiation
     real :: acrown              ! crown area

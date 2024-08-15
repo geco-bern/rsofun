@@ -540,9 +540,6 @@ contains
     !----------------------------------------------------------------
     ! Sum over PFTs to get canopy-level quantities
     !----------------------------------------------------------------
-    ! xxx test
-    print*,'Reasonable? tile(lu)%plant(:)%fpc_grid ', tile(lu)%plant(:)%fpc_grid
-    
     do lu=1,nlu
       tile_fluxes(lu)%canopy%dgpp    = sum(tile_fluxes(lu)%plant(:)%dgpp    * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%dtransp = sum(tile_fluxes(lu)%plant(:)%dtransp * tile(lu)%plant(:)%fpc_grid)

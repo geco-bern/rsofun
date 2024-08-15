@@ -212,6 +212,18 @@ contains
                               method_optci   = "prentice14", &
                               method_jmaxlim = "wang17" &
                               )
+
+          ! print*,'kphio', kphio_temp 
+          ! print*,'beta', params_gpp%beta 
+          ! print*,'kc_jmax', params_gpp%kc_jmax 
+          ! print*,'ppfd', ppfd_memory 
+          ! print*,'co2', co2_memory 
+          ! print*,'tc', temp_memory 
+          ! print*,'vpd', vpd_memory 
+          ! print*,'patm', patm_memory 
+          ! print*,'c4', params_pft_plant(pft)%c4 
+          ! print*,'-------------------------------'
+
         else
           par_cost = par_cost_type(tile(lu)%plant(pft)%phydro_alpha, &
                                    tile(lu)%plant(pft)%phydro_gamma)
@@ -240,8 +252,6 @@ contains
                             par_control = options &
                        )
           
-          ! print *, temp_memory, ppfd_memory*1e6, kphio_temp, vpd_memory
-          ! print *, out_phydro_acclim%a, out_phydro_acclim%gs, out_phydro_acclim%dpsi                  
         end if
       else
 
@@ -346,17 +356,14 @@ contains
       !----------------------------------------------------------------
       ! Stomatal conductance to CO2
       !----------------------------------------------------------------
-      ! Apply soil moisture stress function to stomatal conductance
-      tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint * soilmstress
-
-      ! if (.not. use_phydro) then
-      !   ! Jaideep NOTE: I have applied the soilmstress factor to gs here because it is needed in calculating canopy transpiration
-      !   tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint * soilmstress
-      ! else 
-      !   ! Jaideep NOTE: unit of gs_accl here is mol m-2 s-1. 
-      !   ! Jaideep FIXME: It's too complicated to convert it to unit as in pmodel, but should be done at some point
-      !   tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs 
-      ! end if
+      if (.not. use_phydro) then
+        ! Jaideep NOTE: I have applied the soilmstress factor to gs here because it is needed in calculating canopy transpiration
+        tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint * soilmstress
+      else 
+        ! Jaideep NOTE: unit of gs_accl here is mol m-2 s-1. 
+        ! Jaideep FIXME: It's too complicated to convert it to unit as in pmodel, but should be done at some point
+        tile_fluxes(lu)%plant(pft)%gs_accl = out_phydro_inst%gs 
+      end if
 
       !----------------------------------------------------------------
       ! Water potentials
@@ -375,39 +382,27 @@ contains
       ! Density of water, kg/m^3
       rho_water = calc_density_h2o( climate%dtemp, climate%dpatm )
 
-      if (use_pml) then
-        ! We plug Pmodel/Phydro-derived gs into the PM equation to calculate T (note this is uncoupled PM-transpiration)
-        ! use PFT-specific gs for this calculation: tile_fluxes(lu)%plant(pft)%gs_accl
+      ! We plug Pmodel/Phydro-derived gs into T = 1.6gsD
+      if (.not. use_phydro) then
+        ! Using P-model gs
+        ! Note here that stomatal conductance is already normalized by patm (=gs/patm) so E = 1.6 * (gs/patm) * vpd, which is the same as 1.6 gs (vpd/patm)
+        ! but it is expressed per unit absorbed light, so multiply by PPFD*fapar
+        ! dtransp is in mm d-1
+        tile_fluxes(lu)%plant(pft)%dtransp = (1.6 &                                           ! 1.6
+          * tile_fluxes(lu)%plant(pft)%gs_accl * tile(lu)%canopy%fapar * climate%dppfd &  ! gs
+          * climate%dvpd) &                                                               ! D
+          * h2o_molmass * (1.0d0 / rho_water) &
+          * myinterface%params_siml%secs_per_tstep  ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
 
-        ! TODO: Fill this in
-        ! tile_fluxes(lu)%plant(pft)%dtransp = PM_EQUATION(tile_fluxes(lu)%plant(pft)%gs_accl)
-
-      else 
-        ! We plug Pmodel/Phydro-derived gs into T = 1.6gsD
-        if (.not. use_phydro) then
-          ! Using P-model gs
-          ! Note here that stomatal conductance is already normalized by patm (=gs/patm) so E = 1.6 * (gs/patm) * vpd, which is the same as 1.6 gs (vpd/patm)
-          ! but it is expressed per unit absorbed light, so multiply by PPFD*fapar
-          ! dtransp is in mm d-1
-          tile_fluxes(lu)%plant(pft)%dtransp = (1.6 &                                           ! 1.6
-            * tile_fluxes(lu)%plant(pft)%gs_accl * tile(lu)%canopy%fapar * climate%dppfd &  ! gs
-            * climate%dvpd) &                                                               ! D
-            * h2o_molmass * (1.0d0 / rho_water) &
-            * myinterface%params_siml%secs_per_tstep  ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
-          
-        else
-          ! Using Phydro gs
-          tile_fluxes(lu)%plant(pft)%dtransp = out_phydro_inst%e &  ! Phydro e is 1.6 gs D
-            * h2o_molmass * (1.0d0 / rho_water) & 
-            * myinterface%params_siml%secs_per_tstep  ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
-          
-          ! ~~ This has been moved to waterbal_splash ~~
-          ! tile_fluxes(lu)%canopy%dpet_e_soil = out_phydro_inst%le_s_wet  &
-          !       * myinterface%params_siml%secs_per_tstep ! convert: J m-2 s-1 * s day-1  = J m-2 day-1
-          
-          ! print *, "Canopy ET (mm d-1) = ", tile_fluxes(lu)%canopy%daet_canop 
-          ! print *, "Soil LE (J m-2 d-1) = ", climate%dnetrad, tile_fluxes(lu)%canopy%daet_e_soil 
-        end if
+        ! print*,'tile_fluxes(lu)%plant(pft)%gs_accl ', tile_fluxes(lu)%plant(pft)%gs_accl
+        ! print*,'tile_fluxes(lu)%plant(pft)%dtransp ', tile_fluxes(lu)%plant(pft)%dtransp
+        
+      else
+        ! Using Phydro gs
+        tile_fluxes(lu)%plant(pft)%dtransp = out_phydro_inst%e &  ! Phydro e is 1.6 gs D
+          * h2o_molmass * (1.0d0 / rho_water) & 
+          * myinterface%params_siml%secs_per_tstep  ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
+      
       end if
 
     end do pftloop

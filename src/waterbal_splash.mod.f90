@@ -399,7 +399,7 @@ contains
       ! Eq. 81, SPLASH 2.0 Documentation
       tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
         radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi))) ! JAIDEEP FIXME: Technically correct, but for clarity, apply radians to just (hn-hi) ?
-      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / energy_to_mm  ! JAIDEEP FIXME [resolved]: Oops! This is a case where you should use a simple mass-energy conversion, not econ
+      tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / energy_to_mm
     
       if (using_pml) then
         print*,'Warning: simulation parameter use_pml == .true. but not used in combination with SPLASH-AET (using_gs == .false.).'
@@ -413,8 +413,8 @@ contains
       !---------------------------------------------------------
       ! Potential soil evaporation
       !---------------------------------------------------------
-      ! potential soil evaporation, not limited by history of P/PET
-      dpet_soil = (1.0 - fapar) * tile_fluxes%canopy%drn * tile_fluxes%canopy%econ * 1.0 !  1000 * econ converts energy into mm evaporation
+      ! potential soil evaporation, not limited by history of P/PET (mm d-1)
+      dpet_soil = (1.0 - fapar) * tile_fluxes%canopy%drn * tile_fluxes%canopy%econ * 1000.0  ! econ converts energy into mm evaporation
 
       !---------------------------------------------------------
       ! soil moisture limitation factor 
@@ -424,8 +424,13 @@ contains
       ! but a continuous dampening (low pass filter, using dampen_variability()) is applied here instead of a running sum.
       p_memory   = dampen_variability(climate%dprec * secs_per_day, 30.0, p_memory )
       pet_memory = dampen_variability(dpet_soil, 30.0, pet_memory )
-      p_over_pet_memory = p_memory/(pet_memory + 1e-6)  ! corresponds to f in Zhang et al., 2017 Eq. 9, (+ 1e-6) to avoid division by zero
-      f_soil_aet = max(min(p_over_pet_memory, 1.0), 0.0)
+
+      if (pet_memory > 0.0) then
+        p_over_pet_memory = p_memory / pet_memory  ! corresponds to f in Zhang et al., 2017 Eq. 9, (+ 1e-6) to avoid division by zero
+        f_soil_aet = max(min(p_over_pet_memory, 1.0), 0.0)
+      else
+        f_soil_aet = 1.0
+      end if
       
       !---------------------------------------------------------
       ! Actual soil evaporation (mm d-1 and J d-1)
@@ -479,14 +484,9 @@ contains
       tile_fluxes%canopy%daet = tile_fluxes%canopy%daet_canop + tile_fluxes%canopy%daet_soil 
       tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet_e_canop + tile_fluxes%canopy%daet_e_soil
 
-      ! print *, "P (mm d-1), PET (mm d-1), P/PET, Avg(P/PET), f_soil_aet = ", (climate%dprec*86400), &
-      !           tile_fluxes%canopy%dpet_soil, p_over_pet, &
-      !           p_over_pet_memory, f_soil_aet
-      ! print *, "Canopy ET (mm d-1, J m-2 d-1) = ", tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_e_canop
-      ! print *, "Soil ET (mm d-1, J m-2 d-1) = ", tile_fluxes%canopy%daet_soil, tile_fluxes%canopy%daet_e_soil 
+      ! print*,'waterbal: tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil ', tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil
 
     end if
-
     
     ! xxx debug
     ! if (splashtest) then

@@ -185,23 +185,47 @@ contains
     ! get binary information of PFT presence from simulation parameters
     fpc_grid_field(:) = 0.0
 
-    ! Code below must follow the same structure as in 'plant_pmodel.mod.f90'
+    ! Code below must follow the same structure as in plant_pmodel.mod.f90, getpar_modl_plant()
     pft = 0
     if ( params_siml%ltre ) then
-      ! xxx dirty: call all non-grass vegetation types 'TrE', see indeces above
+      ! Consider all non-grass vegetation types 'TrE', see indeces above
       pft = pft + 1
+      fpc_grid_field(:) = 0.0
+      fpc_grid_field(pft) = 1.0
+    end if 
+
+    if ( params_siml%ltne ) then
+      ! Consider all non-grass vegetation types 'TNE', see indeces above
+      pft = pft + 1
+      fpc_grid_field(:) = 0.0
+      fpc_grid_field(pft) = 1.0
+    end if 
+
+    if ( params_siml%ltrd ) then
+      ! Consider all non-grass vegetation types 'TrE', see indeces above
+      pft = pft + 1
+      fpc_grid_field(:) = 0.0
+      fpc_grid_field(pft) = 1.0
+    end if 
+
+    if ( params_siml%ltnd ) then
+      ! Consider all non-grass vegetation types 'TrE', see indeces above
+      pft = pft + 1
+      fpc_grid_field(:) = 0.0
       fpc_grid_field(pft) = 1.0
     end if 
 
     if ( params_siml%lgr3 ) then
-      ! xxx dirty: call all grass vegetation types 'Gr3'
+      ! Consider all grass vegetation types 'Gr3'
       pft = pft + 1
+      fpc_grid_field(:) = 0.0
       fpc_grid_field(pft) = 1.0
     end if
 
     if ( params_siml%lgr4 ) then
-      ! xxx dirty: call all grass vegetation types 'Gr3'
+      ! Consider all grass vegetation types 'Gr3'
       pft = pft + 1
+      fpc_grid_field(:) = 0.0
       fpc_grid_field(pft) = 1.0
     end if
 
