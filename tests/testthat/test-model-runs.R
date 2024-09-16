@@ -18,14 +18,16 @@ test_that("p-model run check GPP", {
   )
   
   # read in demo data
-  df_drivers <- p_model_drivers
+  #df_drivers <- p_model_drivers # TODO: NOT YET UPDATED FOR PHYDRO
+  df_drivers <- readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
   
   # run the SOFUN Fortran P-model
-  mod <- run_pmodel_f_bysite( 
+  mod <- run_pmodel_f_bysite(
     df_drivers$sitename[1],
     df_drivers$params_siml[[1]],
     df_drivers$site_info[[1]],
-    df_drivers$forcing[[1]], 
+    forcing        = df_drivers$forcing[[1]],
+    forcing_acclim = df_drivers$forcing[[1]],
     params_modl = params_modl,
     makecheck = FALSE
   )
@@ -74,14 +76,27 @@ test_that("p-model run check Vcmax25", {
   )
   
   # read in demo data
-  df_drivers <- p_model_drivers_vcmax25
+  df_drivers <- p_model_drivers_vcmax25 |>
+    # TODO: NOT YET UPDATED FOR PHYDRO
+    # # specify additionally needed params_siml flags:
+    mutate(params_siml = purrr::map(params_siml, \(x)
+                                  mutate(x,
+                                         use_pml    = TRUE,
+                                         use_gs     = TRUE,
+                                         use_phydro = FALSE))) |>
+    # specify additionally needed site info:
+    mutate(site_info = purrr::map(site_info, \(x)
+                                  mutate(x,
+                                         canopy_height = 5,
+                                         reference_height = 10)))
   
   # run the SOFUN Fortran P-model
   mod <- run_pmodel_f_bysite( 
     df_drivers$sitename[1],
     df_drivers$params_siml[[1]],
     df_drivers$site_info[[1]],
-    df_drivers$forcing[[1]], 
+    forcing        = df_drivers$forcing[[1]],
+    forcing_acclim = df_drivers$forcing[[1]],
     params_modl = params_modl,
     makecheck = FALSE
   )
