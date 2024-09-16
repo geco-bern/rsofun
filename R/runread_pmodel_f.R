@@ -107,7 +107,7 @@ runread_pmodel_f <- function(
     input <- forcing <- forcing_acclim <- . <- NULL
   
   # If acclimation dataset has not been separately provided, use the same forcing data
-  if (is.null(drivers$forcing_acclim)){
+  if (!rlang::has_name(drivers, "forcing_acclim")){
     drivers$forcing_acclim = drivers$forcing
   }
   
