@@ -826,8 +826,8 @@ contains
     real, intent(in) :: whc                   ! total root zone water storage capacity (mm), site-specific
 
     ! local variables
+    real, parameter :: betao = 0.0            ! soil water stress at zero water rootzone water content, taken to be zero (no water, no activity)
     real :: shape_parameter
-    real :: betao = 0.0                       ! soil water stress at zero water rootzone water content, taken to be zero (no water, no activity)
     real :: thetastar_eff                     ! effective root-zone moisture limitation limitation threshold (mm)
 
     ! function return variable

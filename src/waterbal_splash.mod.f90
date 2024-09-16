@@ -45,6 +45,7 @@ module md_waterbal
   real :: ru                           ! variable substitute for u
   real :: rv                           ! variable substitute for v
   real :: rw                           ! variable substitute (W/m^2)
+  real :: energy_to_mm                 ! Conversion factor to convert energy (J m-2 day) to mass (mm day-1)
 
   ! holds return variables of function get_snow_rain()
   type outtype_snow_rain
@@ -104,6 +105,7 @@ contains
 
       ! Bucket model for runoff generation
       if (tile(lu)%soil%phy%wcont > tile(lu)%soil%params%whc) then
+
         ! -----------------------------------
         ! Bucket is full 
         ! -----------------------------------
@@ -122,6 +124,7 @@ contains
         ! -----------------------------------
         ! set soil moisture to zero
         tile_fluxes(lu)%canopy%daet = tile_fluxes(lu)%canopy%daet + tile(lu)%soil%phy%wcont
+        tile_fluxes(lu)%canopy%daet_e = tile_fluxes(lu)%canopy%daet / energy_to_mm
         tile(lu)%soil%phy%wcont        = 0.0
         tile_fluxes(lu)%canopy%dro     = 0.0
         tile_fluxes(lu)%canopy%dfleach = 0.0
@@ -305,7 +308,6 @@ contains
     real :: lv                              ! enthalpy of vaporization, J/kg
     real :: cp                              ! heat capacity of moist air, J kg-1 K-1
     real :: rho_water                       ! density of water (g m-3)
-    real :: energy_to_mm                    ! Conversion factor to convert energy (J m-2 day) to mass (mm day-1)
     real :: f_soil_aet                      ! Fractional reduction of soil AET due to moisture limitation
     real :: p_over_pet_memory               ! P/PET
     real, save :: p_memory = 0.0            ! precipitation, damped variability
@@ -431,6 +433,8 @@ contains
       else
         f_soil_aet = 1.0
       end if
+
+      ! print*,'water limitation on soil evaporation: ', f_soil_aet
       
       !---------------------------------------------------------
       ! Actual soil evaporation (mm d-1 and J d-1)
@@ -455,13 +459,13 @@ contains
         ! Convert stomatal conductance to CO2 [mol Pa-1 m-2 s-1] to 
         ! stomatal conductance to water [m s-1]
         ! Adopted from photosynth_phydro.mod.f90
+        ! print*,'in waterbal: gs_accl ', tile_fluxes%canopy%gs_accl
         gw = tile_fluxes%canopy%gs_accl * 1.6 * kR * (climate%dtemp + kTkelvin)
         
         ! latent energy flux from canopy (W m-2) 
         ! See also calc_transpiration_pm() in photosynth_phydro.mod.f90
         tile_fluxes%canopy%daet_e_canop = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
           * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
-
 
         ! print*,'-----------------------'
         ! print*,'canopy_height ', myinterface%canopy_height

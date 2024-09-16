@@ -272,7 +272,9 @@ contains
       !----------------------------------------------------------------
       soilmstress = calc_soilmstress( tile(1)%soil%phy%wcont, &
                                       params_gpp%soilm_thetastar, &
-                                      params_gpp%soilm_betao )
+                                      tile(lu)%soil%params%whc )
+
+      print*,'soilmstress ', soilmstress
 
       !----------------------------------------------------------------
       ! GPP
@@ -359,6 +361,8 @@ contains
       if (.not. use_phydro) then
         ! Jaideep NOTE: I have applied the soilmstress factor to gs here because it is needed in calculating canopy transpiration
         tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint * soilmstress
+
+        ! print*,'in gpp: soilmstress, gs_accl ', soilmstress, tile_fluxes(lu)%plant(pft)%gs_accl
       else 
         ! Jaideep NOTE: unit of gs_accl here is mol m-2 s-1. 
         ! Jaideep FIXME: It's too complicated to convert it to unit as in pmodel, but should be done at some point
