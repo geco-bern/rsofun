@@ -123,8 +123,13 @@ contains
         ! Bucket is empty
         ! -----------------------------------
         ! set soil moisture to zero
+        ! and reduce total actual evapotranspiration (daet) by reducing canopy transpiration (daet_canop)
         tile_fluxes(lu)%canopy%daet = tile_fluxes(lu)%canopy%daet + tile(lu)%soil%phy%wcont
+        tile_fluxes(lu)%canopy%daet_canop = tile_fluxes(lu)%canopy%daet_canop + tile(lu)%soil%phy%wcont
+        
         tile_fluxes(lu)%canopy%daet_e = tile_fluxes(lu)%canopy%daet / energy_to_mm
+        tile_fluxes(lu)%canopy%daet_e_canop = tile_fluxes(lu)%canopy%daet_canop / energy_to_mm 
+
         tile(lu)%soil%phy%wcont        = 0.0
         tile_fluxes(lu)%canopy%dro     = 0.0
         tile_fluxes(lu)%canopy%dfleach = 0.0
