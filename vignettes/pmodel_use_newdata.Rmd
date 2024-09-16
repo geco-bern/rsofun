@@ -135,9 +135,10 @@ analyse_modobs <- function(
   ## ggplot hexbin
   gg <- df %>%
     ggplot2::ggplot(aes(x = mod, y = obs)) +
-    geom_hex() +
+    geom_hex(bins = 60) +
     scale_fill_gradientn(
-      colours = colorRampPalette(c("gray65", "navy", "red", "yellow"))(5)
+      colours = colorRampPalette(c("gray65", "navy", "red", "yellow"))(5),
+      trans = "log"
     ) +
     geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
     # coord_fixed() +
