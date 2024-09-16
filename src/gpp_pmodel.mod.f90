@@ -274,7 +274,7 @@ contains
                                       params_gpp%soilm_thetastar, &
                                       tile(lu)%soil%params%whc )
 
-      print*,'soilmstress ', soilmstress
+      ! print*,'soilmstress ', soilmstress
 
       !----------------------------------------------------------------
       ! GPP
