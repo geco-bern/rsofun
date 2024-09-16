@@ -64,6 +64,7 @@ NeedsCompilation: yes
 RoxygenNote: 7.3.1
 Suggests:
     covr,
+    cwd,
     rcmdcheck,
     testthat,
     rmarkdown,
@@ -72,5 +73,7 @@ Suggests:
     sensitivity,
     hexbin, 
     khroma
+Remotes:
+    geco-bern/cwd
 VignetteBuilder: knitr
 Encoding: UTF-8
