@@ -2,6 +2,24 @@
 [![codecov](https://codecov.io/gh/geco-bern/rsofun/branch/master/graph/badge.svg)](https://app.codecov.io/gh/geco-bern/rsofun)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3712928.svg)](https://doi.org/10.5281/zenodo.3712928)
 
+# Info for branch `fixmemorybug`
+
+Compile Fortran-native setup from repository's main directory by:
+```sh
+make biomee_pmodel
+```
+The compilation options are specified in `./Makefile`. This option compiles the BiomeE model with P-model for photosynthesis. This creates the bug (also without P-model for photosynthesis).
+
+If it doesn't exist yet, create a folder for model outputs before running the model.
+```sh
+mkdir output
+```
+
+Run model from repository's main directory by:
+```sh
+./runbiomee_pmodel
+```
+
 # rsofun
 
 An R Simulating Optimal FUNctioning (RSOFUN) framework for site-scale simulations of ecosystem processes. The package contains the following modules:
