@@ -3,7 +3,11 @@ set.seed(10)
 
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_drivers
+  #drivers <- rsofun::p_model_drivers # TODO: NOT YET UPDATED FOR PHYDRO
+  drivers <- readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
+  drivers$params_siml[[1]]$use_gs     <- TRUE
+  
+  
   obs <- rsofun::p_model_validation
   params_fix <- list(
     # kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
@@ -52,7 +56,9 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 
 test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_drivers
+  #drivers <- rsofun::p_model_drivers # TODO: NOT YET UPDATED FOR PHYDRO
+  drivers <- readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
+  drivers$params_siml[[1]]$use_gs     <- TRUE
   obs <- rsofun::p_model_validation
   
   settings <- list(

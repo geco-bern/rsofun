@@ -150,7 +150,7 @@
 #'   params_modl = params_modl
 #'  )
 
-run_pmodel_f_bysite <- function(
+run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in runread_pmodel_f.R. This redunduncy should be reduced.
   sitename,
   params_siml,
   site_info,
@@ -329,24 +329,11 @@ run_pmodel_f_bysite <- function(
     }
     
     # Check model parameters
+    # The different models need these parameters:
     if (!params_siml$use_phydro){
-      # P-model needs these parameters:
-      param_names_sorted <- c(
-        'beta_unitcostratio', 'kc_jmax', 
-        'kphio', 'kphio_par_a', 'kphio_par_b',
-        'rd_to_vcmax', 
-        'soilm_thetastar',
-        'tau_acclim', 'whc')
+      param_names_sorted <- rsofun:::required_param_names$p_model
     } else {
-      # P-hydro model needs these parameters:
-      param_names_sorted <- c(
-        "bsoil", "kc_jmax", 
-        "kphio", "kphio_par_a", "kphio_par_b", 
-        "phydro_alpha", "phydro_b_plant", "phydro_gamma", 
-        "phydro_K_plant", "phydro_p50_plant", 
-        "rd_to_vcmax", 
-        "Ssoil", 
-        "tau_acclim", "whc")
+      param_names_sorted <- rsofun:::required_param_names$phydro_model
     }
     if (!identical(sort(names(params_modl)), param_names_sorted)){
       warning(" Returning a dummy data frame. Incorrect model parameters.")
@@ -549,3 +536,23 @@ run_pmodel_f_bysite <- function(
 .onUnload <- function(libpath) {
   library.dynam.unload("rsofun", libpath)
 }
+
+# For internal use and checks. (NOTE we could add a docstring similar to `p_model_validation`, but it is currently not needed.)
+required_param_names <- list(
+  phydro_model = c( # P-hydro model needs these parameters:
+  'bsoil', 'kc_jmax', 
+  'kphio', 'kphio_par_a', 'kphio_par_b', 
+  'phydro_alpha', 'phydro_b_plant', 'phydro_gamma', 
+  'phydro_K_plant', 'phydro_p50_plant', 
+  'rd_to_vcmax', 
+  'Ssoil', 
+  'tau_acclim', 'whc'),
+  p_model = c(# P-model needs these parameters:
+  'beta_unitcostratio', 'kc_jmax', 
+  'kphio', 'kphio_par_a', 'kphio_par_b',
+  'rd_to_vcmax', 
+  'soilm_thetastar',
+  'tau_acclim', 'whc'),
+  biomee_model = c(# Biomee-model needs these parameters:
+  'TODO')
+)

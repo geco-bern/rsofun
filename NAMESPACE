@@ -2,7 +2,7 @@
 
 export(calib_sofun)
 export(cost_likelihood_biomee)
-export(cost_likelihood_phydro)
+export(cost_likelihood_phydromodel)
 export(cost_likelihood_pmodel)
 export(cost_rmse_biomee)
 export(cost_rmse_pmodel)

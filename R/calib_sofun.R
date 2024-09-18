@@ -148,16 +148,16 @@ calib_sofun <- function(
       eval(settings$metric)(par = par,
                             obs = obs,
                             drivers = drivers,
-                            ...)
+                            ...) # the dots contain: par_fixed, targets, parallel, ncores
     }
     
     # reformat parameters
-    pars <- as.data.frame(do.call("rbind", settings$par), row.names = FALSE)
-    
+    pars <- as.data.frame(do.call("rbind", settings$par)) # use rownames later on
+
     priors  <- BayesianTools::createTruncatedNormalPrior(
-      unlist(pars$mean),
-      unlist(pars$sd),
-      unlist(pars$lower),
+      unlist(pars$mean),   # NOTE: This needs a value otherwise: Error in `parallelSampler(1000)`: sampler provided doesn't work
+      unlist(pars$sd),     # NOTE: This needs a value otherwise: Error in `parallelSampler(1000)`: sampler provided doesn't work
+      unlist(pars$lower),          # As a workaround BayesianTools::createUniformPrior could be used
       unlist(pars$upper)
       # unlist(pars$init)
     )
@@ -165,24 +165,16 @@ calib_sofun <- function(
     # setup the bayes run, no message forwarding is provided
     # so wrap the function in a do.call
     setup <- BayesianTools::createBayesianSetup(
-      likelihood = function(
-    random_par) {
-        # cost(
-        #   par = random_par,
-        #   obs = obs,
-        #   drivers = drivers,
-        #   ...
-        # )
+      likelihood = function(random_par) {
         do.call("cost",
                 list(
-                  par = random_par,
+                  par = setNames(random_par, rownames(pars)),
                   obs = obs,
                   drivers = drivers
-                ))
-      },
-    prior = priors,
-    names = names(settings$par)
-    )    
+                ))},
+      prior = priors,
+      names = rownames(pars)
+    )
     
     # set bt control parameters
     bt_settings <- settings$control$settings
@@ -193,7 +185,7 @@ calib_sofun <- function(
       sampler = settings$control$sampler,
       settings = bt_settings
     )
-    
+
     # drop last value
     bt_par <- BayesianTools::MAP(out)$parametersMAP
     bt_par <- bt_par[1:(length(bt_par))]
