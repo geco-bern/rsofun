@@ -330,27 +330,27 @@ run_pmodel_f_bysite <- function(
     
     # Check model parameters
     if (!params_siml$use_phydro){
-      # P-model needs 9 parameters
-      if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
-                                                'soilm_thetastar',
-                                                'beta_unitcostratio', 'rd_to_vcmax', 
-                                                'tau_acclim', 'kc_jmax', 'whc')
-             ) != 9){
-        warning(" Returning a dummy data frame. Incorrect model parameters.")
-        continue <- FALSE
-      }
+      # P-model needs these parameters:
+      param_names_sorted <- c(
+        'beta_unitcostratio', 'kc_jmax', 
+        'kphio', 'kphio_par_a', 'kphio_par_b',
+        'rd_to_vcmax', 
+        'soilm_thetastar',
+        'tau_acclim', 'whc')
+    } else {
+      # P-hydro model needs these parameters:
+      param_names_sorted <- c(
+        "bsoil", "kc_jmax", 
+        "kphio", "kphio_par_a", "kphio_par_b", 
+        "phydro_alpha", "phydro_b_plant", "phydro_gamma", 
+        "phydro_K_plant", "phydro_p50_plant", 
+        "rd_to_vcmax", 
+        "Ssoil", 
+        "tau_acclim", "whc")
     }
-    else {
-      # P-hydro needs 14 parameters
-      if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
-                                         'rd_to_vcmax', 'tau_acclim', 'kc_jmax',
-                                         'phydro_K_plant', 'phydro_p50_plant', 'phydro_b_plant',
-                                         'phydro_alpha', 'phydro_gamma',
-                                         'bsoil', 'Ssoil', 'whc')
-             ) != 14){
-        warning(" Returning a dummy data frame. Incorrect model parameters.")
-        continue <- FALSE
-      }
+    if (!identical(sort(names(params_modl)), param_names_sorted)){
+      warning(" Returning a dummy data frame. Incorrect model parameters.")
+      continue <- FALSE
     }
   }
   
