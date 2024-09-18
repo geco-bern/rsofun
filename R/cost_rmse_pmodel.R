@@ -58,7 +58,6 @@
 #'  targets = c('gpp'),
 #'  par_fixed = list(
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-#'   soilm_betao        = 0.0,
 #'   beta_unitcostratio = 146.0,
 #'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
 #'   tau_acclim         = 30.0,
@@ -101,7 +100,7 @@ cost_rmse_pmodel <- function(
                            'bsoil', 'Ssoil', 'whc')
   } else {
     calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
-                           'soilm_thetastar', 'soilm_betao',
+                           'soilm_thetastar', 
                            'beta_unitcostratio', 'rd_to_vcmax', 
                            'tau_acclim', 'kc_jmax', 'whc')
   }

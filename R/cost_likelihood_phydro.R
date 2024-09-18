@@ -31,7 +31,7 @@ cost_likelihood_phydro <- function(
                            'bsoil', 'Ssoil', 'whc')
   } else {
     calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
-                           'soilm_thetastar', 'soilm_betao',
+                           'soilm_thetastar', 
                            'beta_unitcostratio', 'rd_to_vcmax', 
                            'tau_acclim', 'kc_jmax', 'whc')
   }

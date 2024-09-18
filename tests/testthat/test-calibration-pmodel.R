@@ -10,7 +10,6 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
     kphio_par_b        = 1.0,
     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-    soilm_betao        = 0.01,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
@@ -69,7 +68,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
       kphio_par_a = list(lower = 0, upper = 1, init = 0.2),
       kphio_par_b = list(lower = 10, upper = 40, init =25),
       soilm_thetastar = list(lower = 0, upper = 3000, init = 0.6*240),
-      soilm_betao = list(lower = 0, upper = 1, init = 0.2),
+      # TODO: should we replace fitting sample_par$soilm_betao with sample_par$whc?
       beta_unitcostratio = list(lower = 50, upper = 200, init = 146),
       rd_to_vcmax = list(lower = 0.01, upper = 0.1, init = 0.014),
       tau_acclim = list(lower = 7, upper = 60, init = 30),
@@ -111,7 +110,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)
       kphio_par_a = list(lower = 0, upper = 1, init = 0.2),
       kphio_par_b = list(lower = 10, upper = 40, init =25),
       soilm_thetastar = list(lower = 0, upper = 3000, init = 0.6*240),
-      soilm_betao = list(lower = 0, upper = 1, init = 0.2),
+      # TODO: should we replace fitting sample_par$soilm_betao with sample_par$whc?
       beta_unitcostratio = list(lower = 50, upper = 200, init = 146),
       rd_to_vcmax = list(lower = 0.01, upper = 0.1, init = 0.014),
       tau_acclim = list(lower = 7, upper = 60, init = 30),
@@ -142,7 +141,6 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
     kphio_par_b        = 1.0,
     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-    soilm_betao        = 0.01,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     # tau_acclim         = 30.0,
@@ -186,7 +184,6 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
     kphio_par_b        = 1.0,
     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-    soilm_betao        = 0.01,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,

@@ -43,9 +43,6 @@
 #'   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
 #'    soil moisture stress function (see Details), given in mm.
 #'    To turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
-#'   \item{soilm_betao}{The intercept parameter \eqn{\beta_{0}} in the
-#'    soil moisture stress function (see Details). This is the parameter calibrated 
-#'    in Stocker et al. 2020 GMD.}
 #'   \item{beta_unitcostratio}{The unit cost of carboxylation, corresponding to
 #'    \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
 #'   \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
@@ -137,7 +134,6 @@
 #'   kphio_par_a        = 0.0,        # disable temperature-dependence of kphio
 #'   kphio_par_b        = 1.0,
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-#'   soilm_betao        = 0.0,
 #'   beta_unitcostratio = 146.0,
 #'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
 #'   tau_acclim         = 30.0,
@@ -334,12 +330,12 @@ run_pmodel_f_bysite <- function(
     
     # Check model parameters
     if (!params_siml$use_phydro){
-      # P-model needs 10 parameters
+      # P-model needs 9 parameters
       if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
-                                                'soilm_thetastar', 'soilm_betao',
+                                                'soilm_thetastar',
                                                 'beta_unitcostratio', 'rd_to_vcmax', 
                                                 'tau_acclim', 'kc_jmax', 'whc')
-             ) != 10){
+             ) != 9){
         warning(" Returning a dummy data frame. Incorrect model parameters.")
         continue <- FALSE
       }
@@ -414,9 +410,7 @@ run_pmodel_f_bysite <- function(
       ifelse(params_siml$use_phydro, 
              no  = as.numeric(params_modl$soilm_thetastar),
              yes = dummy_val),
-      ifelse(params_siml$use_phydro, 
-             no  = as.numeric(params_modl$soilm_betao),
-             yes = dummy_val),
+      dummy_val, # formerly soilm_betao #TODO: replace this position with whc
       ifelse(params_siml$use_phydro, 
              no  = as.numeric(params_modl$beta_unitcostratio),
              yes = dummy_val),
@@ -444,7 +438,7 @@ run_pmodel_f_bysite <- function(
       ifelse(params_siml$use_phydro, 
              no  = dummy_val,
              yes = params_modl$Ssoil),
-      as.numeric(params_modl$whc)
+      as.numeric(params_modl$whc) #TODO: move whc to former position of soilm_betao
       )
 
     ## C wrapper call

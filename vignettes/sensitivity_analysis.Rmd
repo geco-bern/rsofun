@@ -72,7 +72,6 @@ ll_pmodel( par_v = c(
   kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
   kphio_par_b        = 1.0,
   soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-  soilm_betao        = 0.0,
   beta_unitcostratio = 146.0,
   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
   tau_acclim         = 30.0,
@@ -93,7 +92,6 @@ par_cal_best <- c(
     kphio_par_a        = -0.0025,
     kphio_par_b        = 20,
     soilm_thetastar    = 0.6*240,
-    soilm_betao        = 0.2,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0,
@@ -108,7 +106,6 @@ par_cal_min <- c(
     kphio_par_a        = -0.004,
     kphio_par_b        = 10,
     soilm_thetastar    = 0,
-    soilm_betao        = 0,
     beta_unitcostratio = 50.0,
     rd_to_vcmax        = 0.01,
     tau_acclim         = 7.0,
@@ -123,7 +120,6 @@ par_cal_max <- c(
     kphio_par_a        = -0.001,
     kphio_par_b        = 30,
     soilm_thetastar    = 240,
-    soilm_betao        = 1,
     beta_unitcostratio = 200.0,
     rd_to_vcmax        = 0.1,
     tau_acclim         = 60.0,
@@ -213,7 +209,7 @@ morrisOut.df |>
 The outcome of the Morris sensitivity analysis depends strongly on the choice of
 parameter ranges and how parameters interact with each other in the 
 underlying model. In this example, we constrained the parameters based on 
-their physical meaning (e.g. `soilm_betao` should be in `[0,1]`) and the site FR-Pue 
+their physical meaning and the site FR-Pue 
 where the data is coming from (e.g. `kphio_par_b` around 25$^{o}$C).
 When observing the figure above, we notice that parameters `kphio` and 
 `kc_jmax` have a high impact on the model fit (big $\mu *$), but also the magnitude of this
@@ -271,7 +267,6 @@ par_calib <- calib_sofun(
   settings = settings_calib,
   par_fixed = list(
     soilm_thetastar    = 0.6*240,
-    soilm_betao        = 0.2,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0,
@@ -299,7 +294,6 @@ settings_calib <- list(
     )),
   par = list(
     kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
-    soilm_betao = list(lower = 0, upper = 1, init = 0.2),
     kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),
     err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
   )
@@ -410,7 +404,6 @@ run_pmodel <- function(sample_par){
       kphio_par_a = sample_par$kphio_par_a,
       kphio_par_b = sample_par$kphio_par_b,
       soilm_thetastar    = 0.6*240,
-      soilm_betao        = 0.2,
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
       tau_acclim         = 30.0,
@@ -519,7 +512,6 @@ plot_gpp_error <- ggplot(data = runread_pmodel_f(
       kphio_par_a = par_calib$par[2],
       kphio_par_b = par_calib$par[3],
       soilm_thetastar    = 0.6*240,    # copied from par_fixed above
-      soilm_betao        = 0.2,
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
       tau_acclim         = 30.0,

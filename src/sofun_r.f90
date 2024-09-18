@@ -160,7 +160,7 @@ contains
     myinterface%params_calib%kphio_par_a        = real(par(2))
     myinterface%params_calib%kphio_par_b        = real(par(3))
     myinterface%params_calib%soilm_thetastar    = real(par(4))
-    myinterface%params_calib%soilm_betao        = real(par(5))
+    ! # TODO move whc to position nr 5
     myinterface%params_calib%beta_unitcostratio = real(par(6))
     myinterface%params_calib%rd_to_vcmax        = real(par(7))
     myinterface%params_calib%tau_acclim         = real(par(8))

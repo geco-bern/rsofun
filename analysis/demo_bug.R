@@ -76,7 +76,6 @@ if (any(!vec_test)){
 #   kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
 #   kphio_par_b        = 1.0,
 #   soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-#   soilm_betao        = 0.0,
 #   beta_unitcostratio = 146.0,
 #   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
 #   tau_acclim         = 30.0,

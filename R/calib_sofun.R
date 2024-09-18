@@ -16,7 +16,7 @@
 #'   \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
 #'   and lower and upper bounds should be provided. The calibratable parameters
 #'   include model parameters 'kphio', 'kphio_par_a', 'kphio_par_b', 'soilm_thetastar',
-#'   'soilm_betao', 'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
+#'   'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
 #'   and 'rootzone_whc' , and (if
 #'   doing Bayesian calibration) error parameters
 #'   for each target variable, named for example 'err_gpp'. This list must match
@@ -49,7 +49,6 @@
 #'   kphio_par_a        = 0,
 #'   kphio_par_b        = 1.0,
 #'   soilm_thetastar    = 0.6*240,
-#'   soilm_betao        = 0.01,
 #'   beta_unitcostratio = 146,
 #'   rd_to_vcmax        = 0.014,
 #'   tau_acclim         = 30,

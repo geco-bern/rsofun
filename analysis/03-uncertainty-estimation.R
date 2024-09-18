@@ -41,7 +41,7 @@ run_pmodel <- function(sample_par){
       kphio_par_a = -0.0025,
       kphio_par_b = 20,
       soilm_thetastar    = 0.6*240,
-      soilm_betao        = sample_par$soilm_betao,
+      # TODO: should we replace fitting sample_par$soilm_betao with sample_par$whc?
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
       tau_acclim         = 30.0,

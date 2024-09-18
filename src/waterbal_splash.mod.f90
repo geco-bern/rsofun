@@ -474,6 +474,7 @@ contains
         ! Convert stomatal conductance to CO2 [mol Pa-1 m-2 s-1] to 
         ! stomatal conductance to water [m s-1]
         ! Adopted from photosynth_phydro.mod.f90
+        ! gs_accl was computed using soilmstress in ggp_pmodel.mod.f90
         ! print*,'in waterbal: gs_accl ', tile_fluxes%canopy%gs_accl
         gw = tile_fluxes%canopy%gs_accl * 1.6 * kR * (climate%dtemp + kTkelvin)
         
