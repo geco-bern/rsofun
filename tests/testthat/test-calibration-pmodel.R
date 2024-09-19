@@ -102,7 +102,20 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
 
 test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)", {
   skip_on_cran()
-  drivers <- p_model_drivers_vcmax25
+  drivers <- rsofun::p_model_drivers_vcmax25 |>
+    # TODO: NOT YET UPDATED FOR PHYDRO
+    # # specify additionally needed params_siml flags:
+    dplyr::mutate(params_siml = purrr::map(params_siml, \(x)
+                                    dplyr::mutate(x,
+                                           use_pml    = TRUE,
+                                           use_gs     = TRUE,
+                                           use_phydro = FALSE))) |>
+    # specify additionally needed site info:
+    dplyr::mutate(site_info = purrr::map(site_info, \(x)
+                                  dplyr::mutate(x,
+                                         canopy_height = 5,
+                                         reference_height = 10)))
+  
   obs <- rsofun::p_model_validation_vcmax25
   
   settings <- list(
@@ -136,8 +149,12 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)
     settings = settings,
     optim_out = FALSE,
     # arguments for cost function
+    par_fixed = list(whc= 2000), # site info, water holding capacity in mm
     targets = 'vcmax25'
   )
+  # plot(pars$mod)
+  # print(pars$mod)
+  # summary(pars$mod)
   
   # test for correctly returned values
   expect_type(pars, "list")
@@ -145,7 +162,20 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)
 
 test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
   skip_on_cran()
-  drivers <- p_model_drivers_vcmax25
+  drivers <- rsofun::p_model_drivers_vcmax25 |>
+    # TODO: NOT YET UPDATED FOR PHYDRO
+    # # specify additionally needed params_siml flags:
+    dplyr::mutate(params_siml = purrr::map(params_siml, \(x)
+                                    dplyr::mutate(x,
+                                           use_pml    = TRUE,
+                                           use_gs     = TRUE,
+                                           use_phydro = FALSE))) |>
+    # specify additionally needed site info:
+    dplyr::mutate(site_info = purrr::map(site_info, \(x)
+                                  dplyr::mutate(x,
+                                         canopy_height = 5,
+                                         reference_height = 10)))
+  
   obs <- rsofun::p_model_validation_vcmax25
   params_fix <- list(
     kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
@@ -155,7 +185,8 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     # tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    whc                = 2000 # site info, water holding capacity in mm
   )
   
   settings <- list(
@@ -186,8 +217,27 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
 
 test_that("test joint calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- rbind(gpp = rsofun::p_model_drivers, 
-                  vcmax25 = rsofun::p_model_drivers_vcmax25)
+  drivers <- rbind(
+    gpp     = # TODO: rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO 
+      readRDS(file = here::here("data/p_model_drivers_newformat.rds")), 
+    vcmax25 = rsofun::p_model_drivers_vcmax25  |>
+      # TODO: NOT YET UPDATED FOR PHYDRO
+      # # specify additionally needed params_siml flags:
+      dplyr::mutate(params_siml = purrr::map(params_siml, \(x)
+                                      dplyr::mutate(x,
+                                             use_pml    = TRUE,
+                                             use_gs     = TRUE,
+                                             use_phydro = FALSE))) |>
+      # specify additionally needed site info:
+      dplyr::mutate(site_info = purrr::map(site_info, \(x)
+                                    dplyr::mutate(x,
+                                           canopy_height = 5,
+                                           reference_height = 10))) |>
+      dplyr::mutate(forcing_24h = forcing,
+             forcing_daytime = forcing,
+             forcing_3hrmax = forcing) # TODO: this is just to make it work
+    )
+  
   obs <- rbind(gpp = rsofun::p_model_validation,
               vcmax25 = rsofun::p_model_validation_vcmax25)
   params_fix <- list(
@@ -198,7 +248,9 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    whc                = 2000 # site info, water holding capacity in mm
+                              # TODO: since whc is a model parameter we need to provide it. However currently there is no way to vary it for the different sites.
   )
   
   settings <- list(
@@ -218,7 +270,7 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
       err_vcmax25 = list(lower = 0.0001, upper = 0.1, init = 0.005)
     )
   )
-  
+  # debug(rsofun::runread_pmodel_f)
   pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
@@ -226,7 +278,10 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
     targets = c('gpp', 'vcmax25'),
     par_fixed = params_fix
   )
-  
+  # plot(pars$mod)
+  # print(pars$mod)
+  # summary(pars$mod)
+
   # test for correctly returned values
   expect_type(pars, "list")
 })

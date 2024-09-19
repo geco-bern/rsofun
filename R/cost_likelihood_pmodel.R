@@ -99,8 +99,8 @@ cost_likelihood_pmodel <- function(
   }
   
   ## split calibrated parameters into model and error parameters
-  par_calibrated_model      <- par[ ! names(par) %in% c("err_gpp") ] # consider only model parameters for the check
-  # par_calibrated_errormodel <- par[   names(par) %in% c("err_gpp") ]
+  par_calibrated_model      <- par[ ! names(par) %in% c("err_gpp", "err_vcmax25") ] # consider only model parameters for the check
+  # par_calibrated_errormodel <- par[   names(par) %in% c("err_gpp", "err_vcmax25") ]
   # par_fixed
   
   ## check parameters
