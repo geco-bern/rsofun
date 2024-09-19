@@ -107,85 +107,86 @@ runread_pmodel_f <- function( # TODO: Above docstring appears duplicated in run_
     drivers$forcing_acclim = drivers$forcing
   }
   
-  # guarantee order of files
-  drivers <- drivers |>
-    dplyr::select(
-      sitename,
-      params_siml,
-      site_info,
-      forcing,
-      forcing_acclim
-    )
+      # #############################################
+      # # for multicore development: ncores <- 12; parallel <- TRUE
+      # # test rowwise with multidplyr:
+      # pretend_to_run_model_f_bysite <- function(){
+      #   data.frame(msg    = "I pretend to be results.",
+      #              worker = paste0("Written data by worker with jobid: ", Sys.getpid()))
+      # }
+      # cl_test <- multidplyr::new_cluster(n = ncores) |>
+      #   multidplyr::cluster_library(c("dplyr")) |>
+      #   multidplyr::cluster_assign(pretend_to_run_model_f_bysite = pretend_to_run_model_f_bysite)
+      # 
+      # df_out_test <- data.frame(sitename = 1:100) |>
+      #   # rowwise() |> # In 2024: rowwise was not supported by multidplyr:.
+      #                  #          https://github.com/tidyverse/multidplyr/issues/140
+      #                  #          workaround with row_number():
+      #   dplyr::group_by(rowwise = row_number()) |>
+      #   {\(.) if (parallel) multidplyr::partition(., cl_test) else . }() |>
+      #   mutate(data = list(pretend_to_run_model_f_bysite())) |>
+      #   collect() |>
+      #   ungroup() |> arrange(rowwise) |> select(-rowwise)
+      # 
+      # df_out_test |> unnest(data) |> group_by(worker) |> summarise(sites = paste0(sitename, collapse = ","))
+      # #############################################
   
-  if (parallel){
-    
+  # Setup cluster if requested
+  if (parallel){ # distributing sites/driverrows over multiple cores
+  # if (ncores > 1){ # distributing sites/driverrows over multiple cores # TODO: get rid of argument parallel and simply use ncores
     cl <- multidplyr::new_cluster(n = ncores) |>
-      multidplyr::cluster_assign(par = par) |>
-      multidplyr::cluster_assign(makecheck = FALSE) |>
-      multidplyr::cluster_library(
-        packages = c("dplyr", "purrr", "rsofun")
-      )
-    
-    # distribute to to cores, making sure all data from
-    # a specific site is sent to the same core
-    df_out <- drivers |>
-      dplyr::group_by(id = row_number()) |>
-      tidyr::nest(
-        input = c(
-          sitename,
-          params_siml,
-          site_info,
-          forcing,
-          forcing_acclim)
-      ) %>%
-      multidplyr::partition(cl) %>% 
-      dplyr::mutate(data = purrr::map(input, 
-                                      ~run_pmodel_f_bysite(
-                                        sitename       = .x$sitename[[1]], 
-                                        params_siml    = .x$params_siml[[1]], 
-                                        site_info       = .x$site_info[[1]], 
-                                        forcing        = .x$forcing[[1]],
-                                        forcing_acclim = .x$forcing_acclim[[1]],
-                                        par    = par, 
-                                        makecheck      = makecheck )
-      ))
-    
-    # collect the cluster data
-    data <- df_out |>
-      dplyr::collect() |>
-      dplyr::ungroup() |>
-      dplyr::select(data)
-    
-    # meta-data
-    meta_data <- df_out |>
-      dplyr::collect() |>
-      dplyr::ungroup() |>
-      dplyr::select( input ) |>
-      tidyr::unnest( cols = c( input )) |>
-      dplyr::select(sitename, site_info)
-    
-    # combine both data and meta-data
-    # this implicitly assumes that the order
-    # between the two functions above does
-    # not alter! There is no way of checking
-    # in the current setup
-    df_out <- bind_cols(meta_data, data)
-    
-  } else {
-    df_out <- drivers |>
-      rowwise() |> mutate(
-        data = list(
-          run_pmodel_f_bysite(
-            # using corresponding data.frame columns:
-            sitename       = sitename,
-            params_siml    = params_siml,
-            site_info      = site_info,
-            forcing        = forcing,
-            forcing_acclim = forcing_acclim,
-            # using variables from scope
-            params_modl = par, makecheck = makecheck, verbose = TRUE)))  |> 
-      dplyr::select(sitename, site_info, data)
+      multidplyr::cluster_library(c("dplyr", "purrr", "rsofun")) |>
+      multidplyr::cluster_assign(
+        par = par,
+        makecheck = FALSE) # TODO: why are we here overriding the function argument `makecheck`? 
+                           #       Are we implicitly assuming that when parallel==TRUE
+                           #       we need to reduce computational load?
   }
+  
+  # Run simulations
+  df_out <- drivers |>
+    # parallelize if requested
+    {\(.) if (parallel) multidplyr::partition(., cl) else . }() |> 
+    # run simulations for each row of the driver data
+    dplyr::group_by(rowwise = row_number()) |>
+    # rowwise() |> # In 2024: rowwise was not supported by multidplyr.
+    #                         See https://github.com/tidyverse/multidplyr/issues/140
+    #                         Hence, workaround with group_by(rowwise = row_number()).
+    mutate(
+      data = list(
+        # call model by site:
+        run_pmodel_f_bysite(
+          # using corresponding data.frame columns:
+          sitename       = sitename[[1]],         # [[1]] needed for rowwise-workaround
+          params_siml    = params_siml[[1]],      # [[1]] needed for rowwise-workaround
+          site_info      = site_info[[1]],        # [[1]] needed for rowwise-workaround
+          forcing        = forcing[[1]],          # [[1]] needed for rowwise-workaround
+          forcing_acclim = forcing_acclim[[1]],   # [[1]] needed for rowwise-workaround
+          # using variables from scope
+          params_modl = par, makecheck = makecheck, verbose = TRUE)))  |> 
+    # gather all results
+    collect() |> ungroup() |> arrange(rowwise) |> select(-rowwise) |>
+    # only keep site_info and data
+    dplyr::select(sitename, site_info, data)
+  
+  # Previously, single core, was simply rowwise. This is however covered by the unique code above.
+  # df_out <- drivers |>
+  #   rowwise() |> mutate(
+  #     data = list(
+  #       run_pmodel_f_bysite(
+  #         # using corresponding data.frame columns:
+  #         sitename       = sitename,
+  #         params_siml    = params_siml,
+  #         site_info      = site_info,
+  #         forcing        = forcing,
+  #         forcing_acclim = forcing_acclim,
+  #         # using variables from scope
+  #         params_modl = par, makecheck = makecheck, verbose = TRUE)))  |> 
+  #   dplyr::select(sitename, site_info, data)
+  # identical(ungroup(df_out_singlecore), df_out_multicore)            # TRUE
+  # identical(df_out_singlecore$sitename, df_out_multicore$sitename)   # TRUE
+  # identical(df_out_singlecore$site_info, df_out_multicore$site_info) # TRUE
+  # identical(df_out_singlecore$data, df_out_multicore$data)           # TRUE
   
   return(df_out)
 }
