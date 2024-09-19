@@ -172,17 +172,18 @@ runread_pmodel_f <- function( # TODO: Above docstring appears duplicated in run_
     df_out <- bind_cols(meta_data, data)
     
   } else {
-    
-    # note that pmap() requires the object 'drivers' to have columns in the order
-    # corresponding to the order of arguments of run_pmodel_f_bysite().
-    df_out <- drivers %>%
-      dplyr::mutate(
-        data = purrr::pmap(.,
-        	run_pmodel_f_bysite,
-            params_modl = par,
-            makecheck = makecheck
-        )
-      ) |> 
+    df_out <- drivers |>
+      rowwise() |> mutate(
+        data = list(
+          run_pmodel_f_bysite(
+            # using corresponding data.frame columns:
+            sitename       = sitename,
+            params_siml    = params_siml,
+            site_info      = site_info,
+            forcing        = forcing,
+            forcing_acclim = forcing_acclim,
+            # using variables from scope
+            params_modl = par, makecheck = makecheck, verbose = TRUE)))  |> 
       dplyr::select(sitename, site_info, data)
   }
   
