@@ -17,7 +17,8 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    whc                = 2000 # site info, water holding capacity in mm
   )
   
   settings <- list(
@@ -34,11 +35,11 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
       )
     ),
     par = list(
-      kphio = list(lower=0.04, upper=0.09, init=0.05),
-      err_gpp = list(lower = 0.01, upper = 4, init = 2)
+      kphio   = list(lower = 0.04, upper = 0.09, init = 0.05),
+      err_gpp = list(lower = 0.01, upper = 4,    init = 2)
     )
   )
-  
+
   pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
@@ -49,6 +50,9 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     parallel = TRUE,
     ncores = 2
   )
+  # plot(pars$mod)
+  # print(pars$mod)
+  # summary(pars$mod)
   
   # test for correctly returned values
   expect_type(pars, "list")
@@ -88,6 +92,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
     settings = settings,
     optim_out = FALSE,
     # extra arguments for the cost function
+    par_fixed = list(whc= 2000), # site info, water holding capacity in mm
     targets = 'gpp'
   )
   

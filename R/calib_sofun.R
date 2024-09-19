@@ -119,7 +119,7 @@ calib_sofun <- function(
     # create bounds
     lower <- unlist(lapply(settings$par, function(x) x$lower))
     upper <- unlist(lapply(settings$par, function(x) x$upper))
-    pars <- unlist(lapply( settings$par, function(x) x$init))
+    pars  <- unlist(lapply(settings$par, function(x) x$init))
     
     out <- GenSA::GenSA(
       par   = pars,
@@ -154,10 +154,15 @@ calib_sofun <- function(
     # reformat parameters
     pars <- as.data.frame(do.call("rbind", settings$par)) # use rownames later on
 
-    priors  <- BayesianTools::createTruncatedNormalPrior(
-      unlist(pars$mean),   # NOTE: This needs a value otherwise: Error in `parallelSampler(1000)`: sampler provided doesn't work
-      unlist(pars$sd),     # NOTE: This needs a value otherwise: Error in `parallelSampler(1000)`: sampler provided doesn't work
-      unlist(pars$lower),          # As a workaround BayesianTools::createUniformPrior could be used
+    # priors  <- BayesianTools::createTruncatedNormalPrior(
+    #   unlist(pars$mean),   # NOTE: This needs a value otherwise: Error in `parallelSampler(1000)`: sampler provided doesn't work
+    #   unlist(pars$sd),     # NOTE: This needs a value otherwise: Error in `parallelSampler(1000)`: sampler provided doesn't work
+    #   unlist(pars$lower),          # As a workaround BayesianTools::createUniformPrior could be used
+    #   unlist(pars$upper)
+    #   # unlist(pars$init)
+    # )
+    priors  <- BayesianTools::createUniformPrior( # workaround for TruncatedNormalPrior, this does not require mean and sd
+      unlist(pars$lower),
       unlist(pars$upper)
       # unlist(pars$init)
     )
