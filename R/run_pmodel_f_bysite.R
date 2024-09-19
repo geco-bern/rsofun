@@ -331,12 +331,19 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
     # Check model parameters
     # The different models need these parameters:
     if (!params_siml$use_phydro){
-      param_names_sorted <- rsofun:::required_param_names$p_model
+      required_param_names <- rsofun:::required_param_names$p_model
     } else {
-      param_names_sorted <- rsofun:::required_param_names$phydro_model
+      required_param_names <- rsofun:::required_param_names$phydro_model
     }
-    if (!identical(sort(names(params_modl)), param_names_sorted)){
-      warning(" Returning a dummy data frame. Incorrect model parameters.")
+
+    ## check parameters
+    if (!identical(sort(names(params_modl)), required_param_names)){
+      warning(sprintf(paste0(" Returning a dummy data frame. Incorrect model parameters.",
+                             "Received params do not match required model parameters:",
+                             "\n         params_model (received): c(%s)",
+                             "\n         required:                c(%s)"),
+                   paste0(sort(names(params_modl)), collapse = ", "),
+                   paste0(sort(required_param_names), collapse = ", ")))
       continue <- FALSE
     }
   }
