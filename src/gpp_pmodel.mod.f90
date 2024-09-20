@@ -274,8 +274,6 @@ contains
                                       params_gpp%soilm_thetastar, &
                                       tile(lu)%soil%params%whc )
 
-      print*,'soilmstress ', soilmstress
-
       !----------------------------------------------------------------
       ! GPP
       ! This still does a linear scaling of daily GPP - knowingly wrong

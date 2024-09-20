@@ -43,7 +43,7 @@ output_whc1 <- rsofun::runread_pmodel_f(
 ## ----------------------------------------------------------------------------------------------------------------------
 # run the model for WHC divided by 10
 params_modl2 <- params_modl
-params_modl2$whc <- p_model_drivers$site_info[[1]]$whc * 0.1
+params_modl2$whc <- p_model_drivers$site_info[[1]]$whc * 0.5
 
 output_whc2 <- rsofun::runread_pmodel_f(
   p_model_drivers,
@@ -55,13 +55,13 @@ output_whc2 <- rsofun::runread_pmodel_f(
 tmp <- output_whc1 |> 
   select(data) |> 
   unnest(data) |> 
-  select(date, le, le_soil, le_canopy, aet, wcont) |> 
+  select(date, le, le_soil, le_canopy, aet, pet, wcont) |> 
   mutate(whc = "orig") |> 
   bind_rows(
     output_whc2 |> 
       select(data) |> 
       unnest(data) |> 
-      select(date, le, le_soil, le_canopy, aet, wcont) |> 
+      select(date, le, le_soil, le_canopy, aet, pet, wcont) |> 
       mutate(whc = "small")
   ) |> 
   mutate(doy = lubridate::yday(date)) |> 
@@ -94,8 +94,14 @@ tmp |>
 
 tmp |> 
   ggplot(aes(doy, wcont, color = whc)) + 
-  geom_hline(yintercept = c(0, p_model_drivers$site_info[[1]]$whc, p_model_drivers$site_info[[1]]$whc * 0.1), color = "grey") +
+  geom_hline(yintercept = c(0, p_model_drivers$site_info[[1]]$whc, p_model_drivers$site_info[[1]]$whc * 0.5), color = "grey") +
   geom_line() + 
   scale_color_okabeito() +
   theme_classic()
 
+tmp |> 
+  ggplot(aes(doy, aet/pet, color = whc)) + 
+  geom_line() + 
+  scale_color_okabeito() +
+  theme_classic() +
+  ylim(0, 1)
