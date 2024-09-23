@@ -579,7 +579,6 @@ contains
     ! unit cost of carboxylation, b/a' in Eq. 3 (Stocker et al., 2020 GMD)
     params_gpp%beta  = 146.000000
 
-    ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     ! Ratio of Rdark to Vcmax25, fitted slope of Rd25/Vcmax25 (Wang et al., 2020 GCB, 10.1111/gcb.14980, Table S6)
     params_gpp%rd_to_vcmax  = 0.01400000
 
