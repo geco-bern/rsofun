@@ -20,7 +20,6 @@ module md_gpp_biomee
   type paramstype_gpp
     real :: beta         ! Unit cost of carboxylation (dimensionless)
     real :: soilm_thetastar
-    real :: soilm_betao
     real :: rd_to_vcmax  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
     real :: kc_jmax
@@ -577,19 +576,21 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Subroutine reads module-specific parameters from input file.
     !----------------------------------------------------------------
-    ! unit cost of carboxylation
+    ! unit cost of carboxylation, b/a' in Eq. 3 (Stocker et al., 2020 GMD)
     params_gpp%beta  = 146.000000
 
-    ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
+    ! Ratio of Rdark to Vcmax25, fitted slope of Rd25/Vcmax25 (Wang et al., 2020 GCB, 10.1111/gcb.14980, Table S6)
     params_gpp%rd_to_vcmax  = 0.01400000
 
-    ! Apply identical temperature ramp parameter for all PFTs
-    params_gpp%tau_acclim     = 30.0
-    params_gpp%soilm_thetastar= 0.6 * 250
-    params_gpp%soilm_betao    = 0.0
-
-    ! Jmax cost ratio
+    ! Jmax cost coefficient, c* in Stocker et al., 2020 GMD (Eq 15) and Wang et al., 2017
     params_gpp%kc_jmax  = 0.41
+
+    ! Apply identical temperature ramp parameter for all PFTs
+    ! Acclimation time scale for photosynthesis (d), multiple lines of evidence suggest about monthly is alright 
+    params_gpp%tau_acclim     = 30.0
+
+    ! Re-interpreted soil moisture stress parameter, previously thetastar = 0.6
+    params_gpp%soilm_thetastar= 0.6 * 250
 
     ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
     params_gpp%kphio = 0.05

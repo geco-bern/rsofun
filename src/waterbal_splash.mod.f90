@@ -123,8 +123,19 @@ contains
         ! Bucket is empty
         ! -----------------------------------
         ! set soil moisture to zero
-        tile_fluxes(lu)%canopy%daet = tile_fluxes(lu)%canopy%daet + tile(lu)%soil%phy%wcont
-        tile_fluxes(lu)%canopy%daet_e = tile_fluxes(lu)%canopy%daet / energy_to_mm
+        ! and reduce total actual evapotranspiration (daet) by reducing canopy transpiration (daet_canop)
+        tile_fluxes(lu)%canopy%daet_canop = tile_fluxes(lu)%canopy%daet_canop + tile(lu)%soil%phy%wcont *  &
+                                            (tile_fluxes(lu)%canopy%daet_canop/ tile_fluxes(lu)%canopy%daet)
+                                            ! Is this numerically stable?
+        tile_fluxes(lu)%canopy%daet_soil  = tile_fluxes(lu)%canopy%daet_soil  + tile(lu)%soil%phy%wcont * & 
+                                            (tile_fluxes(lu)%canopy%daet_soil / tile_fluxes(lu)%canopy%daet) 
+                                            ! Is this numerically stable?
+        tile_fluxes(lu)%canopy%daet       = tile_fluxes(lu)%canopy%daet       + tile(lu)%soil%phy%wcont
+        
+        tile_fluxes(lu)%canopy%daet_e_canop = tile_fluxes(lu)%canopy%daet_canop / energy_to_mm 
+        tile_fluxes(lu)%canopy%daet_e_soil  = tile_fluxes(lu)%canopy%daet_soil  / energy_to_mm 
+        tile_fluxes(lu)%canopy%daet_e       = tile_fluxes(lu)%canopy%daet       / energy_to_mm
+        
         tile(lu)%soil%phy%wcont        = 0.0
         tile_fluxes(lu)%canopy%dro     = 0.0
         tile_fluxes(lu)%canopy%dfleach = 0.0
@@ -390,6 +401,7 @@ contains
     
     !---------------------------------------------------------
     ! Estimate daily AET (tile_fluxes%canopy%daet), mm d-1
+    ! Estimate daily LE  (tile_fluxes%canopy%daet_e), J d-1
     !---------------------------------------------------------
     ! JAIDEEP FIXME: soil PET calcs should be identical for P and Phydro, but depending on whether in_netrad is used or not, 
     !     when implementing in_netrad condition, uncomment the lines marked by arrows
@@ -442,6 +454,9 @@ contains
       tile_fluxes%canopy%daet_soil = f_soil_aet * dpet_soil
       tile_fluxes%canopy%daet_e_soil = tile_fluxes%canopy%daet_soil / energy_to_mm
 
+      !---------------------------------------------------------
+      ! Actual canopy evaporation (mm d-1 and J d-1)
+      !---------------------------------------------------------
       if (using_pml) then
         !---------------------------------------------------------
         ! Canopy transpiration using the Penman-Monteith equation
@@ -459,6 +474,7 @@ contains
         ! Convert stomatal conductance to CO2 [mol Pa-1 m-2 s-1] to 
         ! stomatal conductance to water [m s-1]
         ! Adopted from photosynth_phydro.mod.f90
+        ! gs_accl was computed using soilmstress in ggp_pmodel.mod.f90
         ! print*,'in waterbal: gs_accl ', tile_fluxes%canopy%gs_accl
         gw = max(tile_fluxes%canopy%gs_accl * 1.6 * kR * (climate%dtemp + kTkelvin), eps)
         

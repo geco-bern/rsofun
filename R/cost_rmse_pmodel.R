@@ -58,7 +58,6 @@
 #'  targets = c('gpp'),
 #'  par_fixed = list(
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-#'   soilm_betao        = 0.0,
 #'   beta_unitcostratio = 146.0,
 #'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
 #'   tau_acclim         = 30.0,
@@ -77,56 +76,48 @@ cost_rmse_pmodel <- function(
     parallel = FALSE,
     ncores = 2
 ){
-  
+  # NOTE(fabian): These different cost functions share a LOT of code in common. Consider consolidation for maintainability?
+
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
   
-  using_phydro = drivers$params_siml[[1]]$use_phydro
+  if (!("use_phydro" %in% colnames(drivers$params_siml[[1]]))){
+    warning("Parameter use_phydro not set. Assuming FALSE")
+    using_phydro = FALSE
+  } else {
+    using_phydro = drivers$params_siml[[1]]$use_phydro
+  }
   
-  # FIXME Jaideep: Instead of checking the number of params, 
-  #    it might be better to check for presence of each param in par and par_fixed
-  ## check input parameters
-  expected_params = ifelse(using_phydro, yes=14, no=10)
-  if( (length(par) + length(par_fixed)) != (expected_params) ){
-    stop(paste0('Error: Input calibratable and fixed parameters (par = ',length(par),' and par_fixed = ',length(par_fixed),')
-    do not match length of the required P-model parameters (',expected_params + length(targets),').'))
+  ## define required parameter set based on model parameters
+  if (!using_phydro){
+    required_param_names <- rsofun:::required_param_names$p_model
+  } else {
+    required_param_names <- rsofun:::required_param_names$phydro_model
   }
 
-  ## define parameter set based on calibrated parameters
-  if (using_phydro){
-    calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
-                           'rd_to_vcmax', 'tau_acclim', 'kc_jmax',
-                           'phydro_K_plant', 'phydro_p50_plant', 'phydro_b_plant',
-                           'phydro_alpha', 'phydro_gamma',
-                           'bsoil', 'Ssoil', 'whc')
-  } else {
-    calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
-                           'soilm_thetastar', 'soilm_betao',
-                           'beta_unitcostratio', 'rd_to_vcmax', 
-                           'tau_acclim', 'kc_jmax', 'whc')
+  ## split calibrated parameters into model and error parameters
+  par_calibrated_model      <- par[ ! names(par) %in% c("err_gpp") ] # consider only model parameters for the check
+  # par_calibrated_errormodel <- par[   names(par) %in% c("err_gpp") ]
+  # par_fixed
+  
+  ## check parameters
+  if (!identical(sort(c(names(par_calibrated_model), names(par_fixed))), required_param_names)){
+    stop(sprintf(paste0("Error: Input calibratable and fixed parameters do not ",
+                        "match required model parameters:",
+                        "\n         par:       c(%s)",
+                        "\n         par_fixed: c(%s)",
+                        "\n         required:  c(%s)"),
+                 paste0(sort(names(par_calibrated_model)), collapse = ", "),
+                 paste0(sort(names(par_fixed)), collapse = ", "),
+                 paste0(sort(required_param_names), collapse = ", ")))
   }
   
-  
-  if(!is.null(par_fixed)){
-    params_modl <- list()
-    # complete with calibrated values
-    i <- 1 # start counter
-    for(par_name in calib_param_names){
-      if(is.null(par_fixed[[par_name]])){
-        params_modl[[par_name]] <- par[i]   # use calibrated par value
-        i <- i + 1                          # counter of calibrated params
-      }else{
-        params_modl[[par_name]] <- par_fixed[[par_name]]  # use fixed par value
-      }
-    }
-  }else{
-    params_modl <- as.list(par)       # all parameters calibrated
-    names(params_modl) <- calib_param_names
-  }
-  
-  # print(par)
-  
-  # run the model
+  # Combine fixed and estimated params to result in all the params required to run the model
+  # This basically uses all params except those of the error model of the observations
+  params_modl <- c(par, par_fixed)[required_param_names]
+
+
+  ## run the model
   df <- runread_pmodel_f(
     drivers, 
     par = params_modl,
@@ -134,7 +125,7 @@ cost_rmse_pmodel <- function(
     parallel = FALSE
   )
   
-  # clean model output and unnest
+  ## clean model output and unnest
   df <- df |>
     dplyr::rowwise() |>
     dplyr::reframe(

@@ -21,7 +21,6 @@ module md_interface_pmodel
     real :: kphio_par_a
     real :: kphio_par_b
     real :: soilm_thetastar
-    real :: soilm_betao
     real :: beta_unitcostratio
     real :: rd_to_vcmax
     real :: tau_acclim

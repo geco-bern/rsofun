@@ -25,7 +25,6 @@ module md_gpp_pmodel
   type paramstype_gpp
     real :: beta         ! Unit cost of carboxylation (dimensionless)
     real :: soilm_thetastar
-    real :: soilm_betao
     real :: rd_to_vcmax  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
     real :: tau_acclim_tempstress
@@ -680,9 +679,6 @@ contains
 
     ! Re-interpreted soil moisture stress parameter, previously thetastar = 0.6
     params_gpp%soilm_thetastar = myinterface%params_calib%soilm_thetastar
-
-    ! Re-interpreted soil moisture stress parameter, previosly determined by Eq. 22
-    params_gpp%soilm_betao = myinterface%params_calib%soilm_betao
 
     ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
     params_pft_gpp(:)%kphio = myinterface%params_calib%kphio

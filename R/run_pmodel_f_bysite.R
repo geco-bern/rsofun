@@ -43,9 +43,6 @@
 #'   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
 #'    soil moisture stress function (see Details), given in mm.
 #'    To turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
-#'   \item{soilm_betao}{The intercept parameter \eqn{\beta_{0}} in the
-#'    soil moisture stress function (see Details). This is the parameter calibrated 
-#'    in Stocker et al. 2020 GMD.}
 #'   \item{beta_unitcostratio}{The unit cost of carboxylation, corresponding to
 #'    \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
 #'   \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
@@ -137,7 +134,6 @@
 #'   kphio_par_a        = 0.0,        # disable temperature-dependence of kphio
 #'   kphio_par_b        = 1.0,
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-#'   soilm_betao        = 0.0,
 #'   beta_unitcostratio = 146.0,
 #'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
 #'   tau_acclim         = 30.0,
@@ -154,7 +150,7 @@
 #'   params_modl = params_modl
 #'  )
 
-run_pmodel_f_bysite <- function(
+run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in runread_pmodel_f.R. This redunduncy should be reduced.
   sitename,
   params_siml,
   site_info,
@@ -333,28 +329,22 @@ run_pmodel_f_bysite <- function(
     }
     
     # Check model parameters
+    # The different models need these parameters:
     if (!params_siml$use_phydro){
-      # P-model needs 10 parameters
-      if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
-                                                'soilm_thetastar', 'soilm_betao',
-                                                'beta_unitcostratio', 'rd_to_vcmax', 
-                                                'tau_acclim', 'kc_jmax', 'whc')
-             ) != 10){
-        warning(" Returning a dummy data frame. Incorrect model parameters.")
-        continue <- FALSE
-      }
+      required_param_names <- rsofun:::required_param_names$p_model
+    } else {
+      required_param_names <- rsofun:::required_param_names$phydro_model
     }
-    else {
-      # P-hydro needs 14 parameters
-      if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
-                                         'rd_to_vcmax', 'tau_acclim', 'kc_jmax',
-                                         'phydro_K_plant', 'phydro_p50_plant', 'phydro_b_plant',
-                                         'phydro_alpha', 'phydro_gamma',
-                                         'bsoil', 'Ssoil', 'whc')
-             ) != 14){
-        warning(" Returning a dummy data frame. Incorrect model parameters.")
-        continue <- FALSE
-      }
+
+    ## check parameters
+    if (!identical(sort(names(params_modl)), required_param_names)){
+      warning(sprintf(paste0(" Returning a dummy data frame. Incorrect model parameters.",
+                             "Received params do not match required model parameters:",
+                             "\n         params_model (received): c(%s)",
+                             "\n         required:                c(%s)"),
+                   paste0(sort(names(params_modl)), collapse = ", "),
+                   paste0(sort(required_param_names), collapse = ", ")))
+      continue <- FALSE
     }
   }
   
@@ -414,9 +404,7 @@ run_pmodel_f_bysite <- function(
       ifelse(params_siml$use_phydro, 
              no  = as.numeric(params_modl$soilm_thetastar),
              yes = dummy_val),
-      ifelse(params_siml$use_phydro, 
-             no  = as.numeric(params_modl$soilm_betao),
-             yes = dummy_val),
+      dummy_val, # formerly soilm_betao #TODO: replace this position with whc
       ifelse(params_siml$use_phydro, 
              no  = as.numeric(params_modl$beta_unitcostratio),
              yes = dummy_val),
@@ -444,7 +432,7 @@ run_pmodel_f_bysite <- function(
       ifelse(params_siml$use_phydro, 
              no  = dummy_val,
              yes = params_modl$Ssoil),
-      as.numeric(params_modl$whc)
+      as.numeric(params_modl$whc) #TODO: move whc to former position of soilm_betao
       )
 
     ## C wrapper call
@@ -555,3 +543,23 @@ run_pmodel_f_bysite <- function(
 .onUnload <- function(libpath) {
   library.dynam.unload("rsofun", libpath)
 }
+
+# For internal use and checks. (NOTE we could add a docstring similar to `p_model_validation`, but it is currently not needed.)
+required_param_names <- list(
+  phydro_model = c( # P-hydro model needs these parameters:
+  'bsoil', 'kc_jmax', 
+  'kphio', 'kphio_par_a', 'kphio_par_b', 
+  'phydro_alpha', 'phydro_b_plant', 'phydro_gamma', 
+  'phydro_K_plant', 'phydro_p50_plant', 
+  'rd_to_vcmax', 
+  'Ssoil', 
+  'tau_acclim', 'whc'),
+  p_model = c(# P-model needs these parameters:
+  'beta_unitcostratio', 'kc_jmax', 
+  'kphio', 'kphio_par_a', 'kphio_par_b',
+  'rd_to_vcmax', 
+  'soilm_thetastar',
+  'tau_acclim', 'whc'),
+  biomee_model = c(# Biomee-model needs these parameters:
+  'TODO')
+)

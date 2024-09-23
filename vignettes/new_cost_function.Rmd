@@ -55,7 +55,6 @@ pars_calib_rmse <- calib_sofun(
                                      # of kphio, setup ORG
     kphio_par_b        = 1.0,
     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
@@ -101,7 +100,6 @@ pars_calib_likelihood <- calib_sofun(
   # extra arguments passed ot the cost function:
   par_fixed = list(         # fix all other parameters
     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
@@ -146,7 +144,6 @@ par_calib_join <- calib_sofun(
     kphio_par_a        = 0.0,
     kphio_par_b        = 16,
     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0
@@ -264,8 +261,7 @@ settings_mae <- list(
   control = list(
     maxit = 100),
   par = list(
-    soilm_thetastar = list(lower=0.0, upper=3000, init=0.6*240),
-    soilm_betao = list(lower=0, upper=1, init=0.2)
+    soilm_thetastar = list(lower=0.0, upper=3000, init=0.6*240)
   )
 )
 
