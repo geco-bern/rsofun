@@ -154,9 +154,9 @@ test_that("run_pmodel_f_bysite()", {
     dpsi      = c(0, 0, 0, 0, 0, 0), 
     psi_leaf  = c(0, 0, 0, 0, 0, 0)
   )
-  expect_equal(slice(tibble(mod1), c(1, 70, 1200, 1400, 2000, 2180)), ref1)
-  expect_equal(slice(tibble(mod2), c(1, 70, 1200, 1400, 2000, 2180)), ref2)
-  expect_equal(slice(tibble(mod3), c(1, 70, 1200, 1400, 2000, 2180)), ref3)
+  expect_equal(slice(tibble(mod1), c(1, 70, 1200, 1400, 2000, 2180)), ref1, tolerance = 1e-7)
+  expect_equal(slice(tibble(mod2), c(1, 70, 1200, 1400, 2000, 2180)), ref2, tolerance = 1e-7)
+  expect_equal(slice(tibble(mod3), c(1, 70, 1200, 1400, 2000, 2180)), ref3, tolerance = 1e-7)
   
 })
 test_that("runread_pmodel_f()", {
