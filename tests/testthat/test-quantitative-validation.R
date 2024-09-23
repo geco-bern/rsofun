@@ -1,6 +1,6 @@
 context("Test model output (values)")
 
-test_that("p-model quantitative check", {
+test_that("p-model quantitative check versus observations (FR-Pue)", {
   skip_on_cran()
   
   # grab gpp data from the validation set
@@ -17,21 +17,33 @@ test_that("p-model quantitative check", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    whc                = 2000 # site info, water holding capacity in mm: TODO: does this make sense with soilm_thetastar in mm units?
   )
   
+  #df_drivers <- p_model_drivers # TODO: NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
+  df_drivers <- readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
+
   # run the model for these parameters
-  output <- rsofun::runread_pmodel_f(
-    rsofun::p_model_drivers,
+  res <- rsofun::runread_pmodel_f(
+    drivers = df_drivers,
     par = params_modl
-  )$data[[1]]$gpp
+  )
+  output <- res$data[[1]]$gpp
+
+  # ggplot(data = tibble(res$data[[1]]), mapping = aes(x = date, y = gpp)) +
+  #   geom_line() +
+  #   geom_point(data = tibble(p_model_validation$data[[1]]), 
+  #              mapping = aes(color = "observation")) + theme_classic()
+  # 
   
   # normal tolerance ~ 0.305
   tolerance <- mean(abs(output - gpp), na.rm = TRUE)/
      mean(abs(gpp), na.rm = TRUE)
   
   # test for correctly returned values
-  expect_equal(tolerance, 0.4201191, tolerance = 0.04)
+  # expect_equal(tolerance, 0.4201191, tolerance = 0.04) # before PHYDRO
+  expect_equal(tolerance, 0.4863206, tolerance = 0.04)
 })
 
 # test_that("p-model consistency R vs Fortran (rpmodel vs rsofun)", {
