@@ -104,7 +104,7 @@ runread_pmodel_f <- function( # TODO: Above docstring appears duplicated in run_
   
   # If acclimation dataset has not been separately provided, use the same forcing data
   if (!rlang::has_name(drivers, "forcing_acclim")){
-    drivers$forcing_acclim = drivers$forcing
+    drivers$forcing_acclim <- drivers$forcing
   }
   
       # #############################################
