@@ -178,7 +178,9 @@ calib_sofun <- function(
                   drivers = drivers
                 ))},
       prior = priors,
-      names = rownames(pars)
+      names = rownames(pars),
+      parallel = TRUE, 
+      parallelOptions = list(variables = "all", packages = "all", dlls = NULL), # TODO: this default option might be tweaked
     )
     
     # set bt control parameters
