@@ -3,7 +3,7 @@ title: "P-model usage (new data and new ET options)"
 author: "Koen Hufkens, Josefa Arán, Jaideep Joshi, Benjamin Stocker"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{P-model usage}
+  %\VignetteIndexEntry{P-model usage (new data and new ET options)}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 library(rsofun)
 library(dplyr)
 library(ggplot2)
-library(ggthemes)
+# library(ggthemes)
 library(RColorBrewer)
 
 # fake variable as optimization isn't run
@@ -46,7 +46,7 @@ analyse_modobs <- function(
   df <- df %>%
     as_tibble() %>%
     ungroup() %>%
-    dplyr::select(mod = mod, obs = obs) %>%
+    dplyr::select(mod = mod, obs = obs) %>% # TODO: lifecycle::last_lifecycle_warnings()
     tidyr::drop_na(mod, obs)
 
   ## get linear regression (coefficients)
@@ -148,7 +148,7 @@ analyse_modobs <- function(
     labs(x = mod, y = obs)
 
   if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
-  if (plot_linmod) gg <- gg + geom_smooth(method = "lm", color = "red", size = 0.5, se = FALSE)
+  if (plot_linmod) gg <- gg + geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE)
     
   return(list(df_metrics = df_metrics, gg = gg, linmod = linmod, results = results))
 }
@@ -232,7 +232,7 @@ p_model_drivers$forcing[[1]] |>
     ggplot(aes(y=value, x=date)) +
     geom_line(aes(group=type, col=type), alpha=0.5) +
     theme_classic() +
-    theme(strip.background = element_rect(color = "white", size = 1))+
+    theme(strip.background = element_rect(color = "white", linewidth = 1))+
     facet_wrap(~name, scales = "free")+
     ggtitle(p_model_drivers$sitename[[1]])
 
@@ -374,7 +374,7 @@ pars <- calib_sofun(
   )
 ```
 
-When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
+When successful, the optimized parameters can be used to run subsequent modelling efforts, in the present case slightly improving the model fit over a more global parameter set.
 
 ```{r}
 # Update the parameter list with calibrated value

@@ -21,6 +21,7 @@ library(rsofun)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(khroma)
 
 # fake variable as optimization isn't run
 pars <- list()

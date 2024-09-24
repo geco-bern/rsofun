@@ -77,7 +77,7 @@ ll_pmodel( par_v = c(
   tau_acclim         = 30.0,
   kc_jmax            = 0.41,
   whc                = 430,
-  error_gpp          = 0.9         # value from previous simulations
+  err_gpp          = 0.9         # value from previous simulations
 ))
 ```
 
@@ -97,7 +97,7 @@ par_cal_best <- c(
     tau_acclim         = 30.0,
     kc_jmax            = 0.41,
     whc                = 430,
-    error_gpp          = 1
+    err_gpp          = 1
   )
 
 # lower bound
@@ -111,7 +111,7 @@ par_cal_min <- c(
     tau_acclim         = 7.0,
     kc_jmax            = 0.2,
     whc                = 430,
-    error_gpp          = 0.01
+    err_gpp          = 0.01
   )
 
 # upper bound
@@ -125,7 +125,7 @@ par_cal_max <- c(
     tau_acclim         = 60.0,
     kc_jmax            = 0.8,
     whc                = 430,
-    error_gpp          = 4
+    err_gpp          = 4
   )
 ```
 
