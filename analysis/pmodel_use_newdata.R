@@ -6,8 +6,8 @@ library(tidyr)
 library(khroma)
 
 ## ----------------------------------------------------------------------------------------------------------------------
-p_model_drivers = readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
-p_model_validation = readRDS(file = here::here("data/p_model_validation_newformat.rds"))
+p_model_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+# p_model_validation <- rsofun::p_model_validation_format2024_08
 
 ## ----------------------------------------------------------------------------------------------------------------------
 # define model parameter values from previous work

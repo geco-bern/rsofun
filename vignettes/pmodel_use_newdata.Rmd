@@ -201,18 +201,20 @@ The package includes two demo datasets to run and validate pmodel output using G
 #                   lubridate::year(date) <= 2012) |>
 #          list()
 #     ))
-# 
-# saveRDS(p_model_drivers, file = here::here("data/p_model_drivers_newformat.rds"))
-# 
-# saveRDS(p_model_validation, file = here::here("data/p_model_validation_newformat.rds"))
+#
+# Save to subfolder data/ and export it to make it available for package users:
+# p_model_drivers_format2024_08 <- p_model_drivers
+# usethis::use_data(p_model_drivers_format2024_08)  # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+# p_model_validation_format2024_08 <- p_model_validation
+# usethis::use_data(p_model_validation_format2024_08) 
 ```
 
 ### Read drivers
 
 ```{r}
-p_model_drivers = readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
+p_model_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
 
-p_model_validation = readRDS(file = here::here("data/p_model_validation_newformat.rds"))
+p_model_validation <- rsofun::p_model_validation_format2024_08
 ```
 
 ### Visualize drivers
@@ -243,9 +245,9 @@ These are real data from the French FR-Pue fluxnet site. Information about data 
 Another two datasets are provided as an example to validate the model against leaf traits data, rather than fluxes. Measurements of Vcmax25 (aggregated over species) for a subset of 4 sites from the GlobResp database (Atkin et al., 2015) are given in `p_model_validation_vcmax25` and the corresponding forcing for the P-model is given in `p_model_drivers_vcmax25`. Since leaf traits are only measured once per site, the forcing used is a single year of average climate (the average measurements between 2001 and 2015 on each day of the year).
 
 ```{r}
-p_model_drivers_vcmax25
+rsofun::p_model_drivers_vcmax25
 
-p_model_validation_vcmax25
+rsofun::p_model_validation_vcmax25
 ```
 
 For the remainder of this vignette, we will use the GPP flux datasets. The workflow is exactly the same for leaf traits data.

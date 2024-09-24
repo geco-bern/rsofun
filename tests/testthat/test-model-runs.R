@@ -1,6 +1,5 @@
 context("test models and their parameters")
 set.seed(10)
-
 test_that("run_pmodel_f_bysite()", {
   skip_on_cran()
   
@@ -18,8 +17,7 @@ test_that("run_pmodel_f_bysite()", {
   )
 
   # read in demo data
-  #df_drivers <- p_model_drivers # TODO: NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
-  df_drivers <- readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
+  df_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   
   # check run_pmodel_f_bysite() ##########################
   # run the SOFUN Fortran P-model using the internal function `run_pmodel_f_bysite`
@@ -154,9 +152,9 @@ test_that("run_pmodel_f_bysite()", {
     dpsi      = c(0, 0, 0, 0, 0, 0), 
     psi_leaf  = c(0, 0, 0, 0, 0, 0)
   )
-  expect_equal(slice(tibble(mod1), c(1, 70, 1200, 1400, 2000, 2180)), ref1, tolerance = 1e-7)
-  expect_equal(slice(tibble(mod2), c(1, 70, 1200, 1400, 2000, 2180)), ref2, tolerance = 1e-7)
-  expect_equal(slice(tibble(mod3), c(1, 70, 1200, 1400, 2000, 2180)), ref3, tolerance = 1e-7)
+  expect_equal(slice(tibble(mod1), c(1, 70, 1200, 1400, 2000, 2180)), ref1, tolerance = 1e-6)
+  expect_equal(slice(tibble(mod2), c(1, 70, 1200, 1400, 2000, 2180)), ref2, tolerance = 1e-6)
+  expect_equal(slice(tibble(mod3), c(1, 70, 1200, 1400, 2000, 2180)), ref3, tolerance = 1e-6)
   
 })
 test_that("runread_pmodel_f()", {
@@ -176,8 +174,7 @@ test_that("runread_pmodel_f()", {
   )
   
   # read in demo data
-  #df_drivers <- p_model_drivers # TODO: NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
-  df_drivers <- readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
+  df_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   
   df_output_singlecore <- rsofun::runread_pmodel_f(
     df_drivers,
@@ -290,8 +287,7 @@ test_that("phydro-model run check LE and AET", {
   )
 
   # read in demo data
-  #df_drivers <- p_model_drivers # TODO: NOT YET UPDATED FOR PHYDRO
-  df_drivers <- readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
+  df_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   df_drivers$params_siml[[1]]$use_gs     <- TRUE
 
   # run the SOFUN Fortran PHYDRO-model

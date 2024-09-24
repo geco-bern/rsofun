@@ -21,9 +21,8 @@ test_that("p-model quantitative check versus observations (FR-Pue)", {
     whc                = 2000 # site info, water holding capacity in mm: TODO: does this make sense with soilm_thetastar in mm units?
   )
   
-  #df_drivers <- p_model_drivers # TODO: NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
-  df_drivers <- readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
-
+  df_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  
   # run the model for these parameters
   res <- rsofun::runread_pmodel_f(
     drivers = df_drivers,

@@ -3,8 +3,7 @@ set.seed(10)
 
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  #drivers <- rsofun::p_model_drivers # TODO: NOT YET UPDATED FOR PHYDRO
-  drivers <- readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
+  drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   drivers$params_siml[[1]]$use_gs     <- TRUE
   
   
@@ -60,8 +59,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 
 test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   skip_on_cran()
-  #drivers <- rsofun::p_model_drivers # TODO: NOT YET UPDATED FOR PHYDRO
-  drivers <- readRDS(file = here::here("data/p_model_drivers_newformat.rds"))
+  drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   drivers$params_siml[[1]]$use_gs     <- TRUE
   obs <- rsofun::p_model_validation
   
@@ -218,8 +216,7 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
 test_that("test joint calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
   drivers <- rbind(
-    gpp     = # TODO: rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO 
-      readRDS(file = here::here("data/p_model_drivers_newformat.rds")), 
+    gpp     =   rsofun::p_model_drivers_format2024_08, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
     vcmax25 = rsofun::p_model_drivers_vcmax25  |>
       # TODO: NOT YET UPDATED FOR PHYDRO
       # # specify additionally needed params_siml flags:
@@ -270,7 +267,6 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
       err_vcmax25 = list(lower = 0.0001, upper = 0.1, init = 0.005)
     )
   )
-  # debug(rsofun::runread_pmodel_f)
   pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
