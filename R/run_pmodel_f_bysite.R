@@ -346,7 +346,15 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
                    paste0(sort(required_param_names), collapse = ", ")))
       continue <- FALSE
     }
+    if (!is.list(params_modl)){  # stopifnot(is.list(params_modl))
+      warning(sprintf(paste0(" Returning a dummy data frame. Model parameters not provided as named list but as:",
+                             "\n         %s"),
+                      str(par)))
+      continue <- FALSE
+    }
   }
+  stopifnot(is.list(params_modl))
+  
   
   # If PML is used, then ensure that site info has reference height and canopy height
   avl_canopy_height = !is.nanull(site_info$canopy_height)

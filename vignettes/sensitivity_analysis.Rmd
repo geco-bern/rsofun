@@ -59,25 +59,26 @@ ll_pmodel <- function(
     par_v                 # a vector of all calibratable parameters including errors
 ){
   rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
-    par_v,
+    as.list(par_v), # must be a named list
     obs = rsofun::p_model_validation,
-    drivers = rsofun::p_model_drivers,
+    drivers = readRDS(file = here::here("data/p_model_drivers_newformat.rds")), #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
     targets = "gpp"
   )
 }
 
 # Compute log-likelihood for a given set of parameters
-ll_pmodel( par_v = c(
-  kphio              = 0.09423773, # setup ORG in Stocker et al. 2020 GMD
-  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
-  kphio_par_b        = 1.0,
-  soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-  beta_unitcostratio = 146.0,
-  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-  tau_acclim         = 30.0,
-  kc_jmax            = 0.41,
-  whc                = 430,
-  err_gpp          = 0.9         # value from previous simulations
+ll_pmodel( 
+  par_v = c(
+    kphio              = 0.09423773, # setup ORG in Stocker et al. 2020 GMD
+    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+    kphio_par_b        = 1.0,
+    soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41,
+    whc                = 430,
+    err_gpp            = 0.9         # value from previous simulations
 ))
 ```
 
@@ -125,7 +126,7 @@ par_cal_max <- c(
     tau_acclim         = 60.0,
     kc_jmax            = 0.8,
     whc                = 600,
-    err_gpp          = 4
+    err_gpp            = 4
   )
 ```
 
@@ -201,7 +202,7 @@ morrisOut.df |>
   theme(
     axis.text = element_text(size = 6),
     axis.title = element_blank(),
-    legend.position = c(0.05, 0.95), legend.justification = c(0.05, 0.95)
+    legend.position.inside = c(0.05, 0.95), legend.justification = c(0.05, 0.95)
   )
 
 ```
@@ -268,7 +269,7 @@ settings_calib <- list(
 
 # Calibrate kphio-related parameters and err_gpp 
 par_calib <- calib_sofun(
-  drivers = p_model_drivers,
+  drivers = readRDS(file = here::here("data/p_model_drivers_newformat.rds")), #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
   obs = p_model_validation,
   settings = settings_calib,
   par_fixed = list(
@@ -276,7 +277,8 @@ par_calib <- calib_sofun(
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41),
+    kc_jmax            = 0.41,
+    whc                = 430),
   targets = "gpp"
 )
 
@@ -284,7 +286,7 @@ par_calib <- calib_sofun(
 ```
 
 ```{r eval = FALSE, echo = FALSE}
-# Calibrates kphio, betao, kc_jmax - top 3 model params
+# Calibrates kphio, kc_jmax, soilm_thetastar - top 3 model params # TODO: redefined for PHYDRO the parameters () instead of (kphio, betao, kc_jmax)
 set.seed(2023)
 
 # Define calibration settings
@@ -299,23 +301,24 @@ settings_calib <- list(
       nrChains = 3       # number of chains to be sampled
     )),
   par = list(
-    kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
-    kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),
-    err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
+    kphio           = list(lower = 0.03, upper = 0.15, init = 0.05),
+    kc_jmax         = list(lower = 0.2, upper = 0.8, init = 0.41),
+    soilm_thetastar = list(lower = 0.0, upper = 1.0 * 240, init = 0.6 * 240),
+    err_gpp         = list(lower = 0.1, upper = 3, init = 0.8)
   )
 )
 
 par_calib <- calib_sofun(
-  drivers = p_model_drivers,
+  drivers = readRDS(file = here::here("data/p_model_drivers_newformat.rds")), #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
   obs = p_model_validation,
   settings = settings_calib,
   par_fixed = list(
     kphio_par_a = -0.0025,
     kphio_par_b = 20,
-    soilm_thetastar    = 0.6*240,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
-    tau_acclim         = 30.0),
+    tau_acclim         = 30.0,
+    whc                = 430),
   targets = "gpp"
 )
 ```
@@ -350,13 +353,12 @@ plot_acf_mcmc <- function(chains, par_names){
   par(mfrow = c(length(par_names), n_chains))
   for(par_name in par_names){
     for(i in 1:n_chains){
-      chains[[i]][, par_name] |>
+      getSample(chains[[1]])[,par_name] |> # alternatively: as_tibble(getSample(chains[[i]]))[par_name] |>
         pacf(main = paste0("Series of ", par_name, " , chain ", i))
     }
   }
 }
-
-plot_acf_mcmc(par_calib$mod$chain, c("kphio", "kphio_par_a", "kphio_par_b", "err_gpp"))
+plot_acf_mcmc(par_calib$mod, par_names = c("kphio", "kphio_par_a", "kphio_par_b", "err_gpp"))
 ```
 
 Looking at the correlation between chains for different parameters is also helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior space. In this calibration we expect parameter samples to be somewhat correlated, especially `kphio_par_a` and `kphio_par_b` because they specify the shape of the temperature dependence of the quantum yield efficiency, $\varphi_o(T)$. We can also see that `err_gpp` is correlated with `kphio` (to which the P-model is very sensitive), since the error represents how good the model fits the observed GPP.
@@ -393,9 +395,8 @@ incorporates the Gaussian model error.
 
 # Sample parameter values from the posterior distribution
 samples_par <- getSample(par_calib$mod, 
-                             thin = 30,              # get every 30th sample
-                             whichParameters = 1:4) |>  
-  as.data.frame() |>
+                             thin = 30) |>  # get every 30th sample
+  tidyr::as_tibble() |>
   dplyr::mutate(mcmc_id = 1:n()) |>
   tidyr::nest(.by = mcmc_id, .key = "pars")
 
@@ -404,7 +405,7 @@ run_pmodel <- function(sample_par){
   # and also adds the new observation error
   
   out <- runread_pmodel_f(
-    drivers = p_model_drivers,
+    drivers = readRDS(file = here::here("data/p_model_drivers_newformat.rds")), #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
     par =  list(                      # copied from par_fixed above
       kphio = sample_par$kphio,
       kphio_par_a = sample_par$kphio_par_a,
@@ -413,6 +414,7 @@ run_pmodel <- function(sample_par){
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
       tau_acclim         = 30.0,
+      whc                = 430,
       kc_jmax            = 0.41)       # value from posterior
   )
   
@@ -512,7 +514,7 @@ plot_gpp_error +
 # 
 # Plot observed and predicted GPP, with a 95% confidence interval using err_gpp
 plot_gpp_error <- ggplot(data = runread_pmodel_f(
-    drivers = p_model_drivers,
+    drivers = readRDS(file = here::here("data/p_model_drivers_newformat.rds")), #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
     par =  list(                       
       kphio = par_calib$par[1],        # values from posterior
       kphio_par_a = par_calib$par[2],
@@ -521,6 +523,7 @@ plot_gpp_error <- ggplot(data = runread_pmodel_f(
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
       tau_acclim         = 30.0,
+      whc                = 430,
       kc_jmax            = 0.41)       
   ) |>
     dplyr::select(sitename, data) |>

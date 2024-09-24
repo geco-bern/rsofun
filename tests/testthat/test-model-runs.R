@@ -236,7 +236,7 @@ test_that("p-model run check Vcmax25", {
                                          reference_height = 10)))
   
   # run the SOFUN Fortran P-model
-  mod <- run_pmodel_f_bysite( 
+  mod <- rsofun::run_pmodel_f_bysite( 
     df_drivers$sitename[1],
     df_drivers$params_siml[[1]],
     df_drivers$site_info[[1]],
