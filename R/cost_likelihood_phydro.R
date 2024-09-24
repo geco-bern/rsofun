@@ -89,8 +89,8 @@ cost_likelihood_phydromodel <- function(
   } else {
     using_phydro = drivers$params_siml[[1]]$use_phydro
   }
-  
-  ## define required parameter set based on calibrated parameters
+
+  ## define required parameter set based on model parameters
   if (!using_phydro){
     required_param_names <- rsofun:::required_param_names$p_model
   } else {
@@ -235,40 +235,38 @@ cost_likelihood_phydromodel <- function(
     df_trait <- data.frame()
   }
   
-  # loop over targets
-  ll <- lapply(seq(length(targets)), function(i){
-    target <- targets[i]
-    # get observations and predicted target values, without NA 
-    if(target %in% colnames(df_flux)){
-      df_target <- df_flux[, c(paste0(target, '_mod'), target)] |>
-        tidyr::drop_na()
-    }else{
-      df_target <- data.frame()
+  # loop over targets to compute log-likelihood ll
+  ll_df <- data.frame(target = targets, 
+                      ll     = NaN)
+  for (target in targets){
+    # check (needed?):
+    if(target %in% colnames(df_flux) & target %in% colnames(df_trait)) {stop(
+      sprintf("Target '%s' cannot be simultatneously in df_flux and df_trait.", target))
     }
-    if(target %in% colnames(df_trait)){
-      df_target <- rbind(df_target,
-                         df_trait[, c(paste0(target, '_mod'), target)] |>
-                           tidyr::drop_na())
+    
+    # get observations and predicted target values, without NA 
+    df_target <- if(target %in% colnames(df_flux)){
+      df_flux[, c(paste0(target, '_mod'), target)] |> tidyr::drop_na()
+    }else{
+      df_trait[, c(paste0(target, '_mod'), target)] |> tidyr::drop_na()
     }
     
     # calculate normal log-likelihood
-    ll <- sum(stats::dnorm(
-      df_target[[paste0(target, '_mod')]],
-      mean = df_target[[target]],
-      sd = par[length(par)-length(targets) + i],
-      log = TRUE
-    ))
-  }) |>
-    unlist() |>
-    sum()
-  
+    ll_df[ll_df$target == target, 'll'] <- 
+      sum(stats::dnorm(
+        x    = df_target[[paste0(target, '_mod')]], # model
+        mean = df_target[[target]],                 # obs
+        sd   = par[[paste0('err_', target)]],       # error model
+        log  = TRUE))
+  }
+  ll <- sum(ll_df$ll)
+
   # compute ll for dpsi using a Gaussian prior with mean 1 and sd 0.33
   ll_dpsi = sum(stats::dnorm(
-    df_flux[['dpsi_int_mod']],
-    mean = df_flux[['dpsi_int']],
-    sd = 0.33,
-    log = TRUE
-  ))
+    x    = df_flux[['dpsi_int_mod']],   # model
+    mean = df_flux[['dpsi_int']],       # obs
+    sd   = 0.33,                        # error model
+    log  = TRUE))
   
   ll <- ll + ll_dpsi 
   
@@ -277,3 +275,4 @@ cost_likelihood_phydromodel <- function(
   
   return(ll)
 }
+

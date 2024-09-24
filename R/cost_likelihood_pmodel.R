@@ -193,34 +193,31 @@ cost_likelihood_pmodel <- function(
     df_trait <- data.frame()
   }
   
-  # loop over targets
-  ll <- lapply(seq(length(targets)), function(i){
-    target <- targets[i]
-    # get observations and predicted target values, without NA 
-    if(target %in% colnames(df_flux)){
-      df_target <- df_flux[, c(paste0(target, '_mod'), target)] |>
-        tidyr::drop_na()
-    }else{
-      df_target <- data.frame()
+  # loop over targets to compute log-likelihood ll
+  ll_df <- data.frame(target = targets, 
+                      ll     = NaN)
+  for (target in targets){
+    # check (needed?):
+    if(target %in% colnames(df_flux) & target %in% colnames(df_trait)) {stop(
+      sprintf("Target '%s' cannot be simultatneously in df_flux and df_trait.", target))
     }
-    if(target %in% colnames(df_trait)){
-      df_target <- rbind(df_target,
-                         df_trait[, c(paste0(target, '_mod'), target)] |>
-                           tidyr::drop_na())
+    
+    # get observations and predicted target values, without NA 
+    df_target <- if(target %in% colnames(df_flux)){
+      df_flux[, c(paste0(target, '_mod'), target)] |> tidyr::drop_na()
+    }else{
+      df_trait[, c(paste0(target, '_mod'), target)] |> tidyr::drop_na()
     }
     
     # calculate normal log-likelihood
-    ll <- sum(stats::dnorm(
-      df_target[[paste0(target, '_mod')]],
-      mean = df_target[[target]],
-      sd = par[length(par)-length(targets) + i],
-      log = TRUE
-    ))
-  }) |>
-    unlist() |>
-    sum()
-  # TODO(fabian): make above ll more robust by using advantages of named vector `par`
-  #               instead of relying on an expected order
+    ll_df[ll_df$target == target, 'll'] <- 
+      sum(stats::dnorm(
+        x    = df_target[[paste0(target, '_mod')]], # model
+        mean = df_target[[target]],                 # obs
+        sd   = par[[paste0('err_', target)]],       # error model
+        log  = TRUE))
+  }
+  ll <- sum(ll_df$ll)
 
   # trap boundary conditions
   if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
