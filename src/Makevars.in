@@ -1,18 +1,26 @@
-# PKG_FFLAGS = -ffree-line-length-0 -fbacktrace -ffpe-trap=invalid,zero,overflow -O1 -Wall -Wextra -pedantic -fbacktrace -fPIC -fmax-errors=1 -ggdb -fcheck=all
-# PKG_FFLAGS = -fbounds-check
-
-# Add package flags:
+# Add package flags
+# For debugging purpose, the following can be added to your local ~/.R/Makevars file
+#PKG_FFLAGS = -frecursive -fbounds-check -fcheck=all -Wall -Wextra -pedantic -g -O0 -fbacktrace
 # -frecursive: to avoid "Warning: Array 'out_biosphere' at (1) is larger than limit ..."
 # -fbounds-check: https://scicomp.stackexchange.com/questions/36045/ifort-everithing-ok-but-with-gfortran-segmentation-fault
 # -Wall -Wextra -Wpedantic: to get more warnings
-# -fsanitize=address: Using the Address Sanitizer https://rstudio.github.io/r-manuals/r-exts/Debugging.html#using-the-address-sanitizer
-# PKG_FFLAGS = -frecursive -fbounds-check -Wall -Wextra -Wpedantic -g -O0 -fsanitize=address
+# -fbacktrace: Specify that, when a runtime error is encountered, the Fortran runtime library should output a backtrace of the error. This option only has influence for compilation of the Fortran main program.
+# -fcheck=all: enable "run-time tests", such as, for instance, array bounds checks.
 
 # C objects
 C_OBJS = wrappersc.o
 
 # Fortran objects: refer to file names <name.o>, order reflects dependency structure
-FT_OBJS = params_core.mod.o sofunutils.mod.o grid_siterun.mod.o params_siml_pmodel.mod.o params_siml_biomee.mod.o forcing_siterun_pmodel.mod.o forcing_siterun_biomee.mod.o params_soil_biomee.mod.o interface_biosphere_pmodel.mod.o interface_biosphere_biomee.mod.o tile_pmodel.mod.o plant_pmodel.mod.o soiltemp_sitch.mod.o waterbal_splash.mod.o vegdynamics_pmodel.mod.o gpp_pmodel.mod.o gpp_biomee.mod.o photosynth_pmodel.mod.o biosphere_pmodel.mod.o biosphere_biomee.mod.o vegetation_biomee.mod.o soil_biomee.mod.o sofun_r.o  
+FT_OBJS = params_core.mod.o sofunutils.mod.o grid_siterun.mod.o params_siml_pmodel.mod.o params_siml_biomee.mod.o forcing_siterun_pmodel.mod.o forcing_siterun_biomee.mod.o params_soil_biomee.mod.o interface_biosphere_pmodel.mod.o interface_biosphere_biomee.mod.o tile_pmodel.mod.o plant_pmodel.mod.o soiltemp_sitch.mod.o waterbal_splash.mod.o vegdynamics_pmodel.mod.o gpp_pmodel.mod.o gpp_biomee.mod.o photosynth_pmodel.mod.o biosphere_pmodel.mod.o biosphere_biomee.mod.o vegetation_biomee.mod.o soil_biomee.mod.o sofun_r.o
+
+# Link-time optimization
+# See https://cran.r-project.org/doc/manuals/R-admin.html#LTO-with-GCC-1
+#LTO_OPT = -flto
+#LTO_FC_OPT = -flto
+#AR = gcc-ar
+#NM = gcc-nm
+#UserNM_ = gcc-nm
+#RANLIB=gcc-ranlib
 
 all: $(SHLIB) clean
 

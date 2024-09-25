@@ -2292,6 +2292,9 @@ contains
       cx%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
       cx%psapw%c%c12 = myinterface%init_cohort(i)%init_cohort_bsw
       cx%pwood%c%c12 = myinterface%init_cohort(i)%init_cohort_bHW
+      cx%pleaf%c%c12 = myinterface%init_cohort(i)%init_cohort_bl
+      cx%proot%c%c12 = myinterface%init_cohort(i)%init_cohort_br
+      cx%pseed%c%c12 = myinterface%init_cohort(i)%init_cohort_seedC
       btotal         = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
       call initialize_cohort_from_biomass(cx, btotal)
     enddo
