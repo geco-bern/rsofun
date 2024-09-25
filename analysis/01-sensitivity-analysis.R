@@ -3,8 +3,8 @@
 # Load libraries
 library(rsofun)
 library(dplyr)
-library(tidyr)
 library(ggplot2)
+library(tidyr)
 library(sensitivity)
 library(BayesianTools)
 
@@ -13,13 +13,12 @@ set.seed(432)
 
 # Define log-likelihood function
 ll_pmodel <- function(
-    par_v                 # a vector of all calibratable parameters 
-                          # including errors
+    par_v                 # a vector of all calibratable parameters including errors
 ){
   rsofun::cost_likelihood_pmodel(        # likelihood cost function from package
-    par_v,
+    as.list(par_v),                      # must be a named list
     obs = rsofun::p_model_validation,    # example data from package
-    drivers = rsofun::p_model_drivers,
+    drivers = rsofun::p_model_drivers_format2024_08, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
     targets = "gpp"
   )
 }
@@ -36,7 +35,8 @@ par_cal_best <- c(
   rd_to_vcmax        = 0.014,
   tau_acclim         = 30.0,
   kc_jmax            = 0.41,
-  error_gpp          = 1
+  whc                = 430,
+  err_gpp            = 1
 )
 
 # lower bound
@@ -49,7 +49,8 @@ par_cal_min <- c(
   rd_to_vcmax        = 0.01,
   tau_acclim         = 7.0,
   kc_jmax            = 0.2,
-  error_gpp          = 0.01
+  whc                = 300,
+  err_gpp            = 0.01
 )
 
 # upper bound
@@ -62,7 +63,8 @@ par_cal_max <- c(
   rd_to_vcmax        = 0.1,
   tau_acclim         = 60.0,
   kc_jmax            = 0.8,
-  error_gpp          = 4
+  whc                = 300,
+  err_gpp            = 4
 )
 
 # Create BayesinaTools setup object
