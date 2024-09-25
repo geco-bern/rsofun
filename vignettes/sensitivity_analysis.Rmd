@@ -59,8 +59,8 @@ ll_pmodel <- function(
     par_v                 # a vector of all calibratable parameters including errors
 ){
   rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
-    as.list(par_v), # must be a named list
-    obs = rsofun::p_model_validation,
+    as.list(par_v),                      # must be a named list
+    obs = rsofun::p_model_validation,    # example data from package
     drivers = rsofun::p_model_drivers_format2024_08, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
     targets = "gpp"
   )

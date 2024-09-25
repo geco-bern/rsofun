@@ -38,7 +38,7 @@ The package includes two demo datasets to run and validate pmodel output using G
 library(rsofun)
 
 # this is to deal with an error p_model_drivers.rds not being found 
-p_model_drivers = p_model_drivers |> 
+p_model_drivers = rsofun::p_model_drivers |> 
   rowwise() |> 
   mutate(params_siml = params_siml |> 
            mutate(use_phydro = F,
