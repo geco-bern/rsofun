@@ -79,7 +79,8 @@ settings <- list(
     settings = list(
       nrChains = 1,
       burnin = 0,        
-      iterations = 50     # kept artificially low
+      iterations = 50,    # kept artificially low,
+      whc        = 432
     )
   )
  )
