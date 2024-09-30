@@ -2081,7 +2081,7 @@ contains
        cp => vegn%cohorts(i)
        cp%ccID = MaxCohortID + i
     enddo
-    MaxCohortID = cp%ccID
+    if (vegn%n_cohorts > 0) MaxCohortID = cp%ccID
 
    end subroutine reset_vegn_initial
 
@@ -2298,7 +2298,7 @@ contains
       btotal         = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
       call initialize_cohort_from_biomass(cx, btotal)
     enddo
-    MaxCohortID = cx%ccID
+    if (init_n_cohorts > 0) MaxCohortID = cx%ccID
 
     ! Sorting these cohorts
     call relayer_cohorts( vegn )

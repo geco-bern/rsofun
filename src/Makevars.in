@@ -1,11 +1,15 @@
 # Add package flags
 # For debugging purpose, the following can be added to your local ~/.R/Makevars file
-#PKG_FFLAGS = -frecursive -fbounds-check -fcheck=all -Wall -Wextra -pedantic -g -O0 -fbacktrace
+#PKG_FFLAGS = -frecursive -fbounds-check -fcheck=all -Wall -Wextra -pedantic -g -O0 -fbacktrace -ffpe-trap=invalid,zero,overflow -finit-real=snan -finit-integer=-9999999 -finit-derived
 # -frecursive: to avoid "Warning: Array 'out_biosphere' at (1) is larger than limit ..."
 # -fbounds-check: https://scicomp.stackexchange.com/questions/36045/ifort-everithing-ok-but-with-gfortran-segmentation-fault
 # -Wall -Wextra -Wpedantic: to get more warnings
 # -fbacktrace: Specify that, when a runtime error is encountered, the Fortran runtime library should output a backtrace of the error. This option only has influence for compilation of the Fortran main program.
 # -fcheck=all: enable "run-time tests", such as, for instance, array bounds checks.
+# -ffpe-trap=invalid,zero,overflow: Traps usual FP exceptions (for better debugging)
+# The following are useful for debugging uninitialized values. It should not be used in production!
+# -finit-real=snan -finit-integer=-9999999: Initialize uninitialized values to NaN for reals, and -9999999 for integers.
+# -finit-derived: applies the settings above to fields in derive types too
 
 # C objects
 C_OBJS = wrappersc.o
