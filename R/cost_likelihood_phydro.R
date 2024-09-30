@@ -51,23 +51,37 @@
 #' @export
 #' 
 #' @examples
-#' # Compute the likelihood for a set of 
+#' # Compute the likelihood for a set of
 #' # model parameter values involved in the
-#' # temperature dependence of kphio 
+#' # temperature dependence of kphio
 #' # and example data
-#' cost_likelihood_phydromodel(
-#'  par = c(0.05, -0.01, 1,     # model parameters
-#'          2),                # err_gpp
-#'  obs = p_model_validation,
-#'  drivers = p_model_drivers,
-#'  targets = c('gpp'),
-#'  par_fixed = list(
-#'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-#'   beta_unitcostratio = 146.0,
-#'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
-#'   tau_acclim         = 30.0,
-#'   kc_jmax            = 0.41
-#'  )
+#' library(dplyr)
+#' cost_likelihood_phydromodel(        # reuse likelihood cost function
+#'   par = list(
+#'     kphio              = 0.0288,
+#'     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+#'     kphio_par_b        = 1.0,
+#'     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+#'     tau_acclim         = 30.0,
+#'     kc_jmax            = 0.41,
+#'     phydro_K_plant     = 5e-17,
+#'     phydro_p50_plant   = -0.46,
+#'     phydro_gamma       = 0.065,
+#'     phydro_b_plant     = 1,
+#'     phydro_alpha       = 0.08,
+#'     bsoil              = 3,
+#'     Ssoil              = 113,
+#'     whc                = 253,
+#'     # kphio              = 0.09423773, # setup ORG in Stocker et al. 2020 GMD
+#'     # kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+#'     # kphio_par_b        = 1.0,
+#'     err_gpp            = 0.9         # value from previous simulations
+#'   ),                          # must be a named list
+#'   obs     = p_model_validation,   # example data from package
+#'   drivers = p_model_drivers_format2024_08 %>%
+#'     ungroup() %>% dplyr::mutate(params_siml = purrr::map(params_siml, ~mutate(.x, use_phydro = TRUE, use_pml = TRUE, use_gs = TRUE))),
+#'   targets = "gpp",
+#'   par_fixed = list()
 #' )
 cost_likelihood_phydromodel <- function(
     par,   # model parameters & error terms for each target

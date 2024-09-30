@@ -72,7 +72,8 @@ Suggests:
     knitr,
     sensitivity,
     hexbin, 
-    khroma
+    khroma,
+    yardstick
 Remotes:
     geco-bern/cwd
 VignetteBuilder: knitr

@@ -51,25 +51,29 @@
 #' @export
 #' 
 #' @examples
-#' # Compute the likelihood for a set of 
+#' # Compute the likelihood for a set of
 #' # model parameter values involved in the
-#' # temperature dependence of kphio 
+#' # temperature dependence of kphio
 #' # and example data
-#' cost_likelihood_pmodel(
-#'  par = c(0.05, -0.01, 1,     # model parameters
-#'          2),                # err_gpp
-#'  obs = p_model_validation,
-#'  drivers = p_model_drivers,
-#'  targets = c('gpp'),
-#'  par_fixed = list(
-#'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-#'   beta_unitcostratio = 146.0,
-#'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
-#'   tau_acclim         = 30.0,
-#'   kc_jmax            = 0.41
-#'  )
+#' cost_likelihood_pmodel(        # reuse likelihood cost function
+#'   par = list(
+#'     kphio              = 0.09423773, # setup ORG in Stocker et al. 2020 GMD
+#'     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+#'     kphio_par_b        = 1.0,
+#'     err_gpp            = 0.9         # value from previous simulations
+#'   ),                          # must be a named list
+#'   obs = p_model_validation,   # example data from package
+#'   drivers = p_model_drivers_format2024_08, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
+#'   targets = "gpp",
+#'   par_fixed = list(
+#'     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
+#'     beta_unitcostratio = 146.0,
+#'     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+#'     tau_acclim         = 30.0,
+#'     kc_jmax            = 0.41,
+#'     whc                = 430
+#'   )
 #' )
-
 cost_likelihood_pmodel <- function(
     par,   # model parameters & error terms for each target
     obs,

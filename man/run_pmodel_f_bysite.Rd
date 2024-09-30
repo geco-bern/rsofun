@@ -158,16 +158,18 @@ params_modl <- list(
   beta_unitcostratio = 146.0,
   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
   tau_acclim         = 30.0,
-  kc_jmax            = 0.41
+  kc_jmax            = 0.41,
+  whc                = 240
 )
 
-# Run the Fortran P-model 
+# Run the Fortran P-model
 mod_output <- run_pmodel_f_bysite(
   # unnest drivers example data
-  sitename = p_model_drivers$sitename[1],
-  params_siml = p_model_drivers$params_siml[[1]],
-  site_info = p_model_drivers$site_info[[1]],
-  forcing = p_model_drivers$forcing[[1]],
+  sitename = p_model_drivers_format2024_08$sitename[1],
+  params_siml = p_model_drivers_format2024_08$params_siml[[1]],
+  site_info = p_model_drivers_format2024_08$site_info[[1]],
+  forcing = p_model_drivers_format2024_08$forcing[[1]],
+  forcing_acclim = p_model_drivers_format2024_08$forcing_daytime[[1]],
   params_modl = params_modl
  )
 }

@@ -52,16 +52,17 @@
 #' # of model parameter values
 #' # and example data
 #' cost_rmse_pmodel(
-#'  par = c(0.05, -0.01, 0.5),  # kphio related parameters
+#'  par = c(kphio = 0.05, kphio_par_a = -0.01, kphio_par_b = 0.5),  # kphio related parameters
 #'  obs = p_model_validation,
-#'  drivers = p_model_drivers,
+#'  drivers = p_model_drivers_format2024_08,
 #'  targets = c('gpp'),
 #'  par_fixed = list(
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
 #'   beta_unitcostratio = 146.0,
 #'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
 #'   tau_acclim         = 30.0,
-#'   kc_jmax            = 0.41
+#'   kc_jmax            = 0.41,
+#'   whc                = 240
 #'  )
 #' )
 

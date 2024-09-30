@@ -63,7 +63,8 @@ params_fix <- list(
   beta_unitcostratio = 146,
   rd_to_vcmax        = 0.014,
   tau_acclim         = 30,
-  kc_jmax            = 0.41
+  kc_jmax            = 0.41,
+  whc                = 432
 )
 
 # Define calibration settings
@@ -78,13 +79,12 @@ settings <- list(
     sampler = "DEzs",
     settings = list(
       nrChains = 1,
-      burnin = 0,        
-      iterations = 50,    # kept artificially low,
-      whc        = 432
+      burnin = 0,
+      iterations = 50    # kept artificially low,
     )
   )
  )
- 
+
  # Run the calibration for GPP data
  calib_output <- rsofun::calib_sofun(
    drivers = rsofun::p_model_drivers,
