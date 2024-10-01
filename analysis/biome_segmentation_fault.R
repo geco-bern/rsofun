@@ -68,3 +68,5 @@ biomeextimes <- function(drivers,n){
 # run the model n times 
 n = 5
 res = biomeextimes(biomee_p_model_drivers,n)
+
+# always after clearing the environment, the first run yields a slightly different value
