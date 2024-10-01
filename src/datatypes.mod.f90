@@ -220,7 +220,6 @@ module datatypes
     real    :: ABG_ys
 
     !===== Water uptake-related variables
-    real    :: root_length(max_lev)               ! m
     real    :: rootarea                           ! total fine root area per tree
     real    :: rootdepth                          ! maximum depth of fine roots
     real    :: rootareaL(max_lev) = 0.0           ! Root length per layer, m of root/m

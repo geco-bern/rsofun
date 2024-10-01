@@ -66,5 +66,5 @@ biomeextimes <- function(drivers,n){
 }
 
 # run the model n times 
-n = 500
+n = 5
 res = biomeextimes(biomee_p_model_drivers,n)
