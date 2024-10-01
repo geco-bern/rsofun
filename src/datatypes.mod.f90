@@ -257,10 +257,10 @@ module datatypes
     !===== Cohorts nested inside tile
     type(cohort_type), pointer :: cohorts(:) => NULL()
 
-    !=====  Litter pools (SOFUN-structure, remain empty in original BiomeE)
-    type(orgpool) :: plitt_af                     ! above-ground litter, fast turnover [kg C(N)/m2]
-    type(orgpool) :: plitt_as                     ! above-ground litter, slow turnover [kg C(N)/m2]
-    type(orgpool) :: plitt_bg                     ! below-ground litter [kg C(N)/m2]
+    ! !=====  Litter pools (SOFUN-structure, remain empty in original BiomeE)
+    ! type(orgpool) :: plitt_af                     ! above-ground litter, fast turnover [kg C(N)/m2]
+    ! type(orgpool) :: plitt_as                     ! above-ground litter, slow turnover [kg C(N)/m2]
+    ! type(orgpool) :: plitt_bg                     ! below-ground litter [kg C(N)/m2]
 
     !=====  Soil organic pools (renamed: metabolicL, metabolicN -> psoil_fs; structuralL, structuralN -> psoil_sl; MicrobialC, MicrobialN -> pmicr)
     type(orgpool) :: psoil_fs        ! soil organic matter, fast turnover [kg C(N)/m2]
@@ -269,8 +269,8 @@ module datatypes
 
     !=====  Inorganic N pools
     type(nitrogen) :: ninorg                      ! Mineral nitrogen pool (kg N/m2)   
-    type(nitrogen) :: pno3                        ! Soil nitrate pool (kg N/m2)   
-    type(nitrogen) :: pnh4                        ! Soil ammonium pool (kg N/m2)   
+    ! type(nitrogen) :: pno3                        ! Soil nitrate pool (kg N/m2)   
+    ! type(nitrogen) :: pnh4                        ! Soil ammonium pool (kg N/m2)   
 
     !===== Tile-level forest inventory information
     real    :: area                               ! m2

@@ -2047,6 +2047,7 @@ contains
     cc%proot%n%n14  = cc%proot%c%c12 / sp%CNroot0
     cc%psapw%n%n14  = cc%psapw%c%c12 / sp%CNsw0
     cc%pwood%n%n14  = cc%pwood%c%c12 / sp%CNwood0
+    cc%pseed%n%n14  = cc%pseed%c%c12 / sp%CNseed0
     end associate
   
   end subroutine initialize_cohort_from_biomass
@@ -2288,8 +2289,8 @@ contains
       cx%age         = 0
       cx%species     = INT(myinterface%init_cohort(i)%init_cohort_species)
       cx%ccID        =  i
-      cx%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
       cx%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
+      cx%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
       cx%psapw%c%c12 = myinterface%init_cohort(i)%init_cohort_bsw
       cx%pwood%c%c12 = myinterface%init_cohort(i)%init_cohort_bHW
       cx%pleaf%c%c12 = myinterface%init_cohort(i)%init_cohort_bl
@@ -2304,18 +2305,22 @@ contains
     call relayer_cohorts( vegn )
 
     ! Initial Soil pools and environmental conditions
-    vegn%psoil_fs%c%c12   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
-    vegn%psoil_sl%c%c12  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
-    vegn%psoil_fs%n%n14   = vegn%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-    vegn%psoil_sl%n%n14  = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-    vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
+    vegn%psoil_fs%c%c12 = myinterface%init_soil%init_fast_soil_C ! kgC m-2
+    vegn%psoil_sl%c%c12 = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+    vegn%psoil_fs%n%n14 = vegn%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
+    vegn%psoil_sl%n%n14 = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
+    vegn%N_input        = myinterface%init_soil%N_input        ! kgN m-2 yr-1, N input to soil
     vegn%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
-    vegn%previousN    = vegn%ninorg%n14
+    vegn%previousN      = vegn%ninorg%n14
+
+    ! debug: adding microbial biomass initialisation
+    vegn%pmicr%c%c12 = 0.0 ! to do: add to: myinterface%init_soil%xxxxx
+    vegn%pmicr%n%n14 = 0.0 ! to do: add to: myinterface%init_soil%xxxxx
 
     ! Soil water parameters
     vegn%soiltype = myinterface%params_tile%soiltype    
-    vegn%FLDCAP = myinterface%params_tile%FLDCAP  
-    vegn%WILTPT = myinterface%params_tile%WILTPT  
+    vegn%FLDCAP   = myinterface%params_tile%FLDCAP  
+    vegn%WILTPT   = myinterface%params_tile%WILTPT  
 
     ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
     vegn%wcl = myinterface%params_tile%FLDCAP

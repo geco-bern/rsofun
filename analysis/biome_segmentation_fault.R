@@ -53,6 +53,8 @@ biomeextimes <- function(drivers,n){
   )$data[[1]]$output_annual_tile['plantC'] %>%
      slice(tail(row_number(), 1))
 
+    print(paste("Plant C", out))
+    
   if(is.na(out)|out==0){
     print(out$plantC)
     stop("Error: Simulation failed")
