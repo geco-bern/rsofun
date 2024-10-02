@@ -841,7 +841,6 @@ contains
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
-
       ! organic pools
       call orgcp(cc%plabl, vegn%plabl, cc%nindivs)
       call orgcp(cc%pleaf, vegn%pleaf, cc%nindivs)

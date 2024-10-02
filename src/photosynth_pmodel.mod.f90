@@ -302,21 +302,6 @@ contains
 
     end if
 
-    ! XXX PMODEL_TEST: ok
-    ! print*,'mj ', out_optchi%mj
-
-    ! XXX PMODEL_TEST: ok
-    ! print*,'chi ', chi
-
-    ! XXX PMODEL_TEST: ok
-    ! print*,'mprime ', mprime
-
-    ! XXX PMODEL_TEST: ok
-    ! print*,'lue ', lue
-
-    ! XXX PMODEL_TEST: ok
-    ! print*,'kphio ', kphio
-
     !-----------------------------------------------------------------------
     ! Corrolary preditions (This is prelimirary!)
     !-----------------------------------------------------------------------

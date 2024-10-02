@@ -76,6 +76,7 @@ contains
       cc%plabl%c%c12 = cc%plabl%c%c12 + cc%npp
       cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fixedN
 
+
       end associate
     enddo ! all cohorts
     
@@ -134,11 +135,9 @@ contains
     
     ! LeafN    = spdata(sp)%LNA * cc%leafarea  ! gamma_SW is sapwood respiration rate (kgC m-2 Acambium yr-1)
     r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * myinterface%dt_fast_yr ! kgC tree-1 step-1
-    r_root   = fnsc*spdata(sp)%gamma_FR  * cc%proot%n%n14 * tf * myinterface%dt_fast_yr ! root respiration ~ root N    
+    r_root   = fnsc*spdata(sp)%gamma_FR  * cc%proot%n%n14 * tf * myinterface%dt_fast_yr ! root respiration ~ root N
     cc%resp = cc%resl + r_stem + r_root + r_Nfix   !kgC tree-1 step-1
     cc%resr = r_root + r_Nfix ! tree-1 step-1
-
-    ! print*, 'tf',  tf  ! xxx debug
 
   end subroutine plant_respiration
 
