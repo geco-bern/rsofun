@@ -162,8 +162,8 @@ cost_likelihood_phydromodel <- function(
       
       # calculate actual dpsi intercept by fitting lm (might not work)
       dat_lm = d_filt |> 
-        select(psi_leaf, psi_soil) |> 
-        drop_na()
+        dplyr::select(psi_leaf, psi_soil) |> 
+        tidyr::drop_na()
       
       if (nrow(dat_lm) > 5){
         mod = dat_lm |>
