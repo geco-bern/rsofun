@@ -212,7 +212,7 @@ contains
     real :: dNS    ! Nitrogen from SW to HW
     ! real :: sw2nsc = 0.0 ! conversion of sapwood to non-structural carbon
     real :: BL_u, BL_c
-    real :: LFR_deficit, LF_deficit, FR_deficit
+    real :: LF_deficit, FR_deficit
     real :: N_demand,Nsupplyratio,extraN
     real :: r_N_SD
     logical :: do_editor_scheme = .False.
@@ -242,7 +242,6 @@ contains
         ! calculate the carbon spent on growth of leaves and roots
         LF_deficit = max(0.0, cc%bl_max - cc%pleaf%c%c12)
         FR_deficit = max(0.0, cc%br_max - cc%proot%c%c12)
-        LFR_deficit = LF_deficit + FR_deficit
         G_LFR = max(min(LF_deficit + FR_deficit,  &
           f_LFR_max  * cc%C_growth), 0.0)
 

@@ -89,7 +89,7 @@ contains
     real, save :: vpd_memory
     real, save :: temp_memory
     real, save :: patm_memory
-    real, dimension(nlayers_max), save :: par_memory = -1.0 ! We initialize par_memory to a dummy value used to detect the need for initialization, as the initialization process using init flags is error prone given the dunmaic the adjuction of layers.
+    real, dimension(nlayers_max), save :: par_memory
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
 
     !-----------------------------------------------------------
@@ -210,6 +210,7 @@ contains
         temp_memory = (forcing%Tair - kTkelvin)
         vpd_memory  = forcing%vpd
         patm_memory = forcing%P_air
+        par_memory = -1.0 ! We initialize par_memory to a dummy value used to detect the need for initialization, as the initialization process using init flags is error prone given the dunmaic the adjuction of layers.
       end if 
       
       co2_memory  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, co2_memory )
