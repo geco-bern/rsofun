@@ -463,6 +463,8 @@ contains
       tile_fluxes(:)%plant(npft)%drd      = 0.0
       tile_fluxes(:)%plant(npft)%dtransp  = 0.0
       tile_fluxes(:)%plant(npft)%dlatenth = 0.0
+      tile_fluxes(:)%plant(npft)%dpsi     = 0.0
+      tile_fluxes(:)%plant(npft)%psi_leaf = 0.0
     end do
 
     ! call initdaily_plant( tile_fluxes(:)%plant(:) )
