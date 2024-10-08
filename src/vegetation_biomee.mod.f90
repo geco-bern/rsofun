@@ -76,6 +76,7 @@ contains
       cc%plabl%c%c12 = cc%plabl%c%c12 + cc%npp
       cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fixedN
 
+
       end associate
     enddo ! all cohorts
     
@@ -134,11 +135,9 @@ contains
     
     ! LeafN    = spdata(sp)%LNA * cc%leafarea  ! gamma_SW is sapwood respiration rate (kgC m-2 Acambium yr-1)
     r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * myinterface%dt_fast_yr ! kgC tree-1 step-1
-    r_root   = fnsc*spdata(sp)%gamma_FR  * cc%proot%n%n14 * tf * myinterface%dt_fast_yr ! root respiration ~ root N    
+    r_root   = fnsc*spdata(sp)%gamma_FR  * cc%proot%n%n14 * tf * myinterface%dt_fast_yr ! root respiration ~ root N
     cc%resp = cc%resl + r_stem + r_root + r_Nfix   !kgC tree-1 step-1
     cc%resr = r_root + r_Nfix ! tree-1 step-1
-
-    ! print*, 'tf',  tf  ! xxx debug
 
   end subroutine plant_respiration
 
@@ -213,7 +212,7 @@ contains
     real :: dNS    ! Nitrogen from SW to HW
     ! real :: sw2nsc = 0.0 ! conversion of sapwood to non-structural carbon
     real :: BL_u, BL_c
-    real :: LFR_deficit, LF_deficit, FR_deficit
+    real :: LF_deficit, FR_deficit
     real :: N_demand,Nsupplyratio,extraN
     real :: r_N_SD
     logical :: do_editor_scheme = .False.
@@ -243,7 +242,6 @@ contains
         ! calculate the carbon spent on growth of leaves and roots
         LF_deficit = max(0.0, cc%bl_max - cc%pleaf%c%c12)
         FR_deficit = max(0.0, cc%br_max - cc%proot%c%c12)
-        LFR_deficit = LF_deficit + FR_deficit
         G_LFR = max(min(LF_deficit + FR_deficit,  &
           f_LFR_max  * cc%C_growth), 0.0)
 
@@ -2047,6 +2045,7 @@ contains
     cc%proot%n%n14  = cc%proot%c%c12 / sp%CNroot0
     cc%psapw%n%n14  = cc%psapw%c%c12 / sp%CNsw0
     cc%pwood%n%n14  = cc%pwood%c%c12 / sp%CNwood0
+    cc%pseed%n%n14  = cc%pseed%c%c12 / sp%CNseed0
     end associate
   
   end subroutine initialize_cohort_from_biomass
@@ -2081,7 +2080,7 @@ contains
        cp => vegn%cohorts(i)
        cp%ccID = MaxCohortID + i
     enddo
-    MaxCohortID = cp%ccID
+    if (vegn%n_cohorts > 0) MaxCohortID = cp%ccID
 
    end subroutine reset_vegn_initial
 
@@ -2288,31 +2287,38 @@ contains
       cx%age         = 0
       cx%species     = INT(myinterface%init_cohort(i)%init_cohort_species)
       cx%ccID        =  i
-      cx%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
       cx%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
+      cx%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
       cx%psapw%c%c12 = myinterface%init_cohort(i)%init_cohort_bsw
       cx%pwood%c%c12 = myinterface%init_cohort(i)%init_cohort_bHW
+      cx%pleaf%c%c12 = myinterface%init_cohort(i)%init_cohort_bl
+      cx%proot%c%c12 = myinterface%init_cohort(i)%init_cohort_br
+      cx%pseed%c%c12 = myinterface%init_cohort(i)%init_cohort_seedC
       btotal         = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
       call initialize_cohort_from_biomass(cx, btotal)
     enddo
-    MaxCohortID = cx%ccID
+    if (init_n_cohorts > 0) MaxCohortID = cx%ccID
 
     ! Sorting these cohorts
     call relayer_cohorts( vegn )
 
     ! Initial Soil pools and environmental conditions
-    vegn%psoil_fs%c%c12   = myinterface%init_soil%init_fast_soil_C ! kgC m-2
-    vegn%psoil_sl%c%c12  = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
-    vegn%psoil_fs%n%n14   = vegn%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-    vegn%psoil_sl%n%n14  = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-    vegn%N_input      = myinterface%init_soil%N_input   ! kgN m-2 yr-1, N input to soil
+    vegn%psoil_fs%c%c12 = myinterface%init_soil%init_fast_soil_C ! kgC m-2
+    vegn%psoil_sl%c%c12 = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+    vegn%psoil_fs%n%n14 = vegn%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
+    vegn%psoil_sl%n%n14 = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
+    vegn%N_input        = myinterface%init_soil%N_input        ! kgN m-2 yr-1, N input to soil
     vegn%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
-    vegn%previousN    = vegn%ninorg%n14
+    vegn%previousN      = vegn%ninorg%n14
+
+    ! debug: adding microbial biomass initialisation
+    vegn%pmicr%c%c12 = 0.0 ! to do: add to: myinterface%init_soil%xxxxx
+    vegn%pmicr%n%n14 = 0.0 ! to do: add to: myinterface%init_soil%xxxxx
 
     ! Soil water parameters
     vegn%soiltype = myinterface%params_tile%soiltype    
-    vegn%FLDCAP = myinterface%params_tile%FLDCAP  
-    vegn%WILTPT = myinterface%params_tile%WILTPT  
+    vegn%FLDCAP   = myinterface%params_tile%FLDCAP  
+    vegn%WILTPT   = myinterface%params_tile%WILTPT  
 
     ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
     vegn%wcl = myinterface%params_tile%FLDCAP

@@ -210,6 +210,7 @@ contains
         temp_memory = (forcing%Tair - kTkelvin)
         vpd_memory  = forcing%vpd
         patm_memory = forcing%P_air
+        par_memory = -1.0 ! We initialize par_memory to a dummy value used to detect the need for initialization, as the initialization process using init flags is error prone given the dunmaic the adjuction of layers.
       end if 
       
       co2_memory  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, co2_memory )
@@ -230,26 +231,25 @@ contains
         ! get canopy layer of this cohort
         layer = max(1, min(cc%layer, nlayers_max))
 
-        if (cc%status == LEAF_ON .and. temp_memory > -5.0 .and. forcing%PAR > 0.0) then
-          !----------------------------------------------------------------
-          ! Instantaneous temperature effect on quantum yield efficiency
-          !----------------------------------------------------------------
-          kphio_temp = calc_kphio_temp( (forcing%Tair - kTkelvin), &
-                                        .false., &    ! no C4
-                                        params_gpp%kphio, &
-                                        params_gpp%kphio_par_a, &
-                                        params_gpp%kphio_par_b )
+        !----------------------------------------------------------------
+        ! Instantaneous temperature effect on quantum yield efficiency
+        !----------------------------------------------------------------
+        kphio_temp = calc_kphio_temp( (forcing%Tair - kTkelvin), &
+                .false., &    ! no C4
+                params_gpp%kphio, &
+                params_gpp%kphio_par_a, &
+                params_gpp%kphio_par_b )
 
+        ! photosynthetically active radiation level at this layer
+        par = f_light(layer) * forcing%radiation * kfFEC * 1.0e-6
+        ! slowly varying light conditions per layer, relevant for acclimation (P-model quantities)
+        if (par_memory(layer) == -1.0) then
+          par_memory(layer) = par
+        else
+          par_memory(layer) = dampen_variability(par, params_gpp%tau_acclim, par_memory(layer))
+        end if
 
-          ! photosynthetically active radiation level at this layer
-          par = f_light(layer) * forcing%radiation * kfFEC * 1.0e-6
-
-          ! slowly varying light conditions per layer, relevant for acclimation (P-model quantities)
-          if (init) then 
-            par_memory(layer) = par
-          else
-            par_memory(layer) = dampen_variability(par, params_gpp%tau_acclim, par_memory(layer))
-          end if 
+        if (cc%status == LEAF_ON .and. forcing%PAR > 0.0) then
 
           !----------------------------------------------------------------
           ! P-model call for C3 plants to get a list of variables that are 
