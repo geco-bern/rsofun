@@ -679,8 +679,6 @@ contains
     myinterface%params_species(:)%phiRL         = real( params_species(:,54)) ! calibratable
     myinterface%params_species(:)%LAI_light     = real( params_species(:,55)) ! calibratable
 
-
-
     ! Initial cohort sizes
     myinterface%init_cohort(:)%init_n_cohorts      = int(init_cohort(:,1))
     myinterface%init_cohort(:)%init_cohort_species = int(init_cohort(:,2))

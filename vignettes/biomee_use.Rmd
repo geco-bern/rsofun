@@ -152,8 +152,8 @@ To optimize new parameters based upon driver data and a validation dataset we mu
 ```{r eval = FALSE}
 # Mortality as DBH
 settings <- list(
-  method              = "GenSA",
-  metric              = cost_rmse_biomee,
+  method = "GenSA",
+  metric = cost_rmse_biomee,
   control = list(
     maxit = 10
   ),
@@ -164,8 +164,9 @@ settings <- list(
       par_mort = list(lower=0.1, upper=2, init=1))
 )
 
+# Using BiomeEP (with P-model for photosynthesis)
 pars <- calib_sofun(
-  drivers = biomee_gs_leuning_drivers,
+  drivers = biomee_p_model_drivers,
   obs = biomee_validation,
   settings = settings
 )
@@ -174,10 +175,10 @@ pars <- calib_sofun(
 ```{r echo = FALSE}
 # Take values from the chunk before, which was run locally
 pars <- list(
-  par = c(phiRL = 0.9709220,
-          LAI_light = 4.5722199,
-          tf_base = 0.5849346,
-          par_mort = 1.5779371)
+  par = c(phiRL = 2.0492210,
+          LAI_light = 4.5462360,
+          tf_base = 0.5006033,
+          par_mort = 1.9317278)
 )
 ```
 
