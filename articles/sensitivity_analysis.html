@@ -19,12 +19,10 @@
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><!-- geco --><link href="../geco.css" rel="stylesheet">
 <meta property="og:title" content="Sensitivity analysis and calibration interpretation">
-<meta property="og:description" content="rsofun">
-<meta name="twitter:card" content="summary">
 <!-- Mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.6/MathJax.js" async integrity="sha256-nlrDrBTHxJJlDDX22AS33xYI1OJHnGMDhiYMSe2U0e0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.6/config/TeX-AMS-MML_HTMLorMML.js" async integrity="sha256-4zys9A4hMQmtq2EUL+JRoXc0NZi8jVJMzb8onewOaSQ=" crossorigin="anonymous"></script>
 </head>
 <body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -58,7 +56,7 @@
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
@@ -85,7 +83,7 @@
         <li>
   <a href="https://github.com/geco-bern/rsofun/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul>
@@ -96,7 +94,7 @@
 </div>
 <!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
@@ -107,7 +105,7 @@ interpretation</h1>
 Arán</h4>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/geco-bern/rsofun/blob/HEAD/vignettes/sensitivity_analysis.Rmd" class="external-link"><code>vignettes/sensitivity_analysis.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/geco-bern/rsofun/blob/master/vignettes/sensitivity_analysis.Rmd" class="external-link"><code>vignettes/sensitivity_analysis.Rmd</code></a></small>
       <div class="hidden name"><code>sensitivity_analysis.Rmd</code></div>
 
     </div>
@@ -250,10 +248,14 @@ computationally cheaper than running the parameter calibration.</p>
 <p>The analysis evaluates the variability of the target function,
 i.e. the log-likelihood, for several points across the parameter space.
 It is an approximation of the derivatives of the log-likelihood with
-respect to the model parameters. Statistics <span class="math inline">\(\mu *\)</span> and <span class="math inline">\(\sigma\)</span> can be interpreted as the mean
-absolute derivative and the standard deviation of the derivative,
-respectively. The higher the value of these statistics for a given
-parameter, the more influential the parameter is.</p>
+respect to the model parameters. Statistics
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>*</mo></mrow><annotation encoding="application/x-tex">\mu *</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>
+can be interpreted as the mean absolute derivative and the standard
+deviation of the derivative, respectively. The higher the value of these
+statistics for a given parameter, the more influential the parameter
+is.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Summarise the morris output</span></span>
 <span><span class="va">morrisOut.df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -293,13 +295,18 @@ other in the underlying model. In this example, we constrained the
 parameters based on their physical meaning
 (e.g. <code>soilm_betao</code> should be in <code>[0,1]</code>) and the
 site FR-Pue where the data is coming from (e.g. <code>kphio_par_b</code>
-around 25<span class="math inline">\(^{o}\)</span>C). When observing the
-figure above, we notice that parameters <code>kphio</code> and
-<code>kc_jmax</code> have a high impact on the model fit (big <span class="math inline">\(\mu *\)</span>), but also the magnitude of this
-dependence of GPP on the two parameters changes across the parameter
-space (big <span class="math inline">\(\sigma\)</span>). This happens
-because parameters interact in the light use efficiency calculation and
-the calibration may be harder and require data from several sites.</p>
+around
+25<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mi>o</mi></msup><annotation encoding="application/x-tex">^{o}</annotation></semantics></math>C).
+When observing the figure above, we notice that parameters
+<code>kphio</code> and <code>kc_jmax</code> have a high impact on the
+model fit (big
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>*</mo></mrow><annotation encoding="application/x-tex">\mu *</annotation></semantics></math>),
+but also the magnitude of this dependence of GPP on the two parameters
+changes across the parameter space (big
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>).
+This happens because parameters interact in the light use efficiency
+calculation and the calibration may be harder and require data from
+several sites.</p>
 <p>The log-likelihood is most sensitive to <code>err_gpp</code> with a
 very large variation in the magnitude of this dependence. This makes
 sense because for higher values of the standard deviation the normal
@@ -395,8 +402,9 @@ the chains may oscillate in the multivariate posterior space. In this
 calibration we expect parameter samples to be somewhat correlated,
 especially <code>kphio_par_a</code> and <code>kphio_par_b</code> because
 they specify the shape of the temperature dependence of the quantum
-yield efficiency, <span class="math inline">\(\varphi_o(T)\)</span>. We
-can also see that <code>err_gpp</code> is correlated with
+yield efficiency,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>φ</mi><mi>o</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>T</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\varphi_o(T)</annotation></semantics></math>.
+We can also see that <code>err_gpp</code> is correlated with
 <code>kphio</code> (to which the P-model is very sensitive), since the
 error represents how good the model fits the observed GPP.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -584,9 +592,7 @@ interval.</p>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
-    </nav>
-</div>
+      </div>
 
 </div>
 
@@ -634,10 +640,10 @@ interval.</p>
       </footer>
 </div>
 
-  
 
 
-  
+
+
 
   </body>
 </html>

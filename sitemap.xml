@@ -1,96 +1,34 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>/404.html</loc>
-  </url>
-  <url>
-    <loc>/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>/articles/biomee_use.html</loc>
-  </url>
-  <url>
-    <loc>/articles/data_format.html</loc>
-  </url>
-  <url>
-    <loc>/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>/articles/new_cost_function.html</loc>
-  </url>
-  <url>
-    <loc>/articles/pmodel_use.html</loc>
-  </url>
-  <url>
-    <loc>/articles/sensitivity_analysis.html</loc>
-  </url>
-  <url>
-    <loc>/authors.html</loc>
-  </url>
-  <url>
-    <loc>/index.html</loc>
-  </url>
-  <url>
-    <loc>/news/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/biomee_gs_leuning_drivers.html</loc>
-  </url>
-  <url>
-    <loc>/reference/biomee_gs_leuning_output.html</loc>
-  </url>
-  <url>
-    <loc>/reference/biomee_p_model_drivers.html</loc>
-  </url>
-  <url>
-    <loc>/reference/biomee_p_model_output.html</loc>
-  </url>
-  <url>
-    <loc>/reference/biomee_validation.html</loc>
-  </url>
-  <url>
-    <loc>/reference/calib_sofun.html</loc>
-  </url>
-  <url>
-    <loc>/reference/cost_likelihood_biomee.html</loc>
-  </url>
-  <url>
-    <loc>/reference/cost_likelihood_pmodel.html</loc>
-  </url>
-  <url>
-    <loc>/reference/cost_rmse_biomee.html</loc>
-  </url>
-  <url>
-    <loc>/reference/cost_rmse_pmodel.html</loc>
-  </url>
-  <url>
-    <loc>/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/init_dates_dataframe.html</loc>
-  </url>
-  <url>
-    <loc>/reference/p_model_drivers.html</loc>
-  </url>
-  <url>
-    <loc>/reference/p_model_drivers_vcmax25.html</loc>
-  </url>
-  <url>
-    <loc>/reference/p_model_validation.html</loc>
-  </url>
-  <url>
-    <loc>/reference/p_model_validation_vcmax25.html</loc>
-  </url>
-  <url>
-    <loc>/reference/run_biomee_f_bysite.html</loc>
-  </url>
-  <url>
-    <loc>/reference/run_pmodel_f_bysite.html</loc>
-  </url>
-  <url>
-    <loc>/reference/runread_biomee_f.html</loc>
-  </url>
-  <url>
-    <loc>/reference/runread_pmodel_f.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/LICENSE.html</loc></url>
+<url><loc>/articles/biomee_use.html</loc></url>
+<url><loc>/articles/data_format.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/articles/new_cost_function.html</loc></url>
+<url><loc>/articles/pmodel_use.html</loc></url>
+<url><loc>/articles/sensitivity_analysis.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/news/index.html</loc></url>
+<url><loc>/reference/biomee_gs_leuning_drivers.html</loc></url>
+<url><loc>/reference/biomee_gs_leuning_output.html</loc></url>
+<url><loc>/reference/biomee_p_model_drivers.html</loc></url>
+<url><loc>/reference/biomee_p_model_output.html</loc></url>
+<url><loc>/reference/biomee_validation.html</loc></url>
+<url><loc>/reference/calib_sofun.html</loc></url>
+<url><loc>/reference/cost_likelihood_biomee.html</loc></url>
+<url><loc>/reference/cost_likelihood_pmodel.html</loc></url>
+<url><loc>/reference/cost_rmse_biomee.html</loc></url>
+<url><loc>/reference/cost_rmse_pmodel.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/init_dates_dataframe.html</loc></url>
+<url><loc>/reference/p_model_drivers.html</loc></url>
+<url><loc>/reference/p_model_drivers_vcmax25.html</loc></url>
+<url><loc>/reference/p_model_validation.html</loc></url>
+<url><loc>/reference/p_model_validation_vcmax25.html</loc></url>
+<url><loc>/reference/run_biomee_f_bysite.html</loc></url>
+<url><loc>/reference/run_pmodel_f_bysite.html</loc></url>
+<url><loc>/reference/runread_biomee_f.html</loc></url>
+<url><loc>/reference/runread_pmodel_f.html</loc></url>
 </urlset>
+
