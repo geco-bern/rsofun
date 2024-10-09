@@ -44,18 +44,17 @@ contains
 
     ! ! local variables
     integer :: dm, moy, doy
-    logical, save :: init = .true.   ! is true only on the first day of the simulation 
+    logical, save :: init  ! is true only on the first day of the simulation
     ! logical, parameter :: verbose = .false.       ! change by hand for debugging etc.
 
     !----------------------------------------------------------------
     ! Biome-E stuff
     !----------------------------------------------------------------
     real    :: tsoil, soil_theta
-    integer :: year0
     integer :: i
     integer :: idata
     !integer :: nfrequency ! disturbances
-    integer, save :: simu_steps !, datalines
+    integer :: simu_steps !, datalines
     integer, save :: iyears
     integer, save :: idays
     integer, save :: idoy
@@ -81,11 +80,10 @@ contains
       ! module-specific parameter specification
       call getpar_modl_gpp()
 
-      year0  = myinterface%climate(1)%year  ! forcingData(1)%year
-
       iyears = 1
       idoy   = 0
       idays  = 0
+      init = .true.
 
     endif
 
@@ -118,7 +116,6 @@ contains
         fastloop: do i = 1,myinterface%steps_per_day
 
           idata         = simu_steps + 1
-          year0         = myinterface%climate(idata)%year  ! Current year
           vegn%Tc_daily = vegn%Tc_daily + myinterface%climate(idata)%Tair
           tsoil         = myinterface%climate(idata)%tsoil
           simu_steps    = simu_steps + 1
