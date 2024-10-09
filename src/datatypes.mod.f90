@@ -364,6 +364,7 @@ module datatypes
     type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C m-2]
 
     real :: totSeedC, totSeedN, totNewCC, totNewCN
+    real :: WDgrow, WDmort, WDrepr, WDkill, WDmgrt, WDdstb ! for DBEN wood fluxes
 
   end type vegn_tile_type
 
@@ -1168,8 +1169,10 @@ contains
     out_annual_cohorts(:)%deathrate   = dummy
 
     ! Cohorts ouput
+    vegn%WDgrow = 0.0
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
+      vegn%WDgrow = vegn%WDgrow + cc%NPPwood * cc%nindivs
       treeG     = cc%pseed%c%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
       fseed     = cc%pseed%c%c12 / treeG
       fleaf     = cc%NPPleaf / treeG

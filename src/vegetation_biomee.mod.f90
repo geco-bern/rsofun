@@ -793,7 +793,8 @@ contains
       deallocate(cai_partial)
  
     else
-
+      vegn%WDmort = 0.0
+      
       do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species))
@@ -880,6 +881,10 @@ contains
 
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
+
+        ! Record wood C mortality
+        vegn%WDmort = vegn%WDmort + (cc%psapw%c%c12 + cc%pwood%c%c12)*deadtrees
+
         ! vegn%n_deadtrees = deadtrees
         ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12)
         end associate
