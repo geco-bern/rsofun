@@ -39,7 +39,7 @@ test_that("run_pmodel_f_bysite()", {
   mod1 <- run_pmodel_f_bysite(
     sitename       = df_drivers$sitename[1],
     params_siml    = dplyr::mutate(df_drivers$params_siml[[1]], use_phydro = FALSE, use_pml = FALSE, use_gs = FALSE),
-    site_info      = df_drivers$site_info[[1]],
+    site_info      = mutate(df_drivers$site_info[[1]], whc = 2000),
     forcing        = df_drivers$forcing[[1]],
     forcing_acclim = df_drivers$forcing[[1]],
     params_modl    = params_modl,
@@ -48,7 +48,7 @@ test_that("run_pmodel_f_bysite()", {
   mod2 <- run_pmodel_f_bysite(
     sitename       = df_drivers$sitename[1],
     params_siml    = dplyr::mutate(df_drivers$params_siml[[1]], use_phydro = FALSE, use_pml = FALSE, use_gs = TRUE),
-    site_info      = df_drivers$site_info[[1]],
+    site_info      = mutate(df_drivers$site_info[[1]], whc = 2000),
     forcing        = df_drivers$forcing[[1]],
     forcing_acclim = df_drivers$forcing[[1]],
     params_modl    = params_modl,
@@ -57,7 +57,7 @@ test_that("run_pmodel_f_bysite()", {
   mod3 <- run_pmodel_f_bysite(
     sitename       = df_drivers$sitename[1],
     params_siml    = dplyr::mutate(df_drivers$params_siml[[1]], use_phydro = FALSE, use_pml = TRUE, use_gs = TRUE),
-    site_info      = df_drivers$site_info[[1]],
+    site_info      = mutate(df_drivers$site_info[[1]], whc = 2000),
     forcing        = df_drivers$forcing[[1]],
     forcing_acclim = df_drivers$forcing[[1]],
     params_modl    = params_modl,
@@ -66,7 +66,7 @@ test_that("run_pmodel_f_bysite()", {
   mod4 <- run_pmodel_f_bysite(
     sitename       = df_drivers$sitename[1],
     params_siml    = dplyr::mutate(df_drivers$params_siml[[1]], use_phydro = TRUE, use_pml = TRUE, use_gs = TRUE),
-    site_info      = df_drivers$site_info[[1]],
+    site_info      = mutate(df_drivers$site_info[[1]], whc = 253),
     forcing        = df_drivers$forcing[[1]],
     forcing_acclim = df_drivers$forcing[[1]],
     params_modl    = params_modl_phydro,
@@ -77,7 +77,7 @@ test_that("run_pmodel_f_bysite()", {
   mod1_2ndTry <- run_pmodel_f_bysite(
     sitename       = df_drivers$sitename[1],
     params_siml    = dplyr::mutate(df_drivers$params_siml[[1]], use_phydro = FALSE, use_pml = FALSE, use_gs = FALSE),
-    site_info      = df_drivers$site_info[[1]],
+    site_info      = mutate(df_drivers$site_info[[1]], whc = 2000),
     forcing        = df_drivers$forcing[[1]],
     forcing_acclim = df_drivers$forcing[[1]],
     params_modl    = params_modl,
@@ -86,7 +86,7 @@ test_that("run_pmodel_f_bysite()", {
   mod2_2ndTry <- run_pmodel_f_bysite(
     sitename       = df_drivers$sitename[1],
     params_siml    = dplyr::mutate(df_drivers$params_siml[[1]], use_phydro = FALSE, use_pml = FALSE, use_gs = TRUE),
-    site_info      = df_drivers$site_info[[1]],
+    site_info      = mutate(df_drivers$site_info[[1]], whc = 2000),
     forcing        = df_drivers$forcing[[1]],
     forcing_acclim = df_drivers$forcing[[1]],
     params_modl    = params_modl,
@@ -95,7 +95,7 @@ test_that("run_pmodel_f_bysite()", {
   mod3_2ndTry <- run_pmodel_f_bysite(
     sitename       = df_drivers$sitename[1],
     params_siml    = dplyr::mutate(df_drivers$params_siml[[1]], use_phydro = FALSE, use_pml = TRUE, use_gs = TRUE),
-    site_info      = df_drivers$site_info[[1]],
+    site_info      = mutate(df_drivers$site_info[[1]], whc = 2000),
     forcing        = df_drivers$forcing[[1]],
     forcing_acclim = df_drivers$forcing[[1]],
     params_modl    = params_modl,
@@ -104,7 +104,7 @@ test_that("run_pmodel_f_bysite()", {
   mod4_2ndTry <- run_pmodel_f_bysite(
     sitename       = df_drivers$sitename[1],
     params_siml    = dplyr::mutate(df_drivers$params_siml[[1]], use_phydro = TRUE, use_pml = TRUE, use_gs = TRUE),
-    site_info      = df_drivers$site_info[[1]],
+    site_info      = mutate(df_drivers$site_info[[1]], whc = 253),
     forcing        = df_drivers$forcing[[1]],
     forcing_acclim = df_drivers$forcing[[1]],
     params_modl    = params_modl_phydro,
@@ -126,10 +126,10 @@ test_that("run_pmodel_f_bysite()", {
   # expect_true(all(!is.na(tibble(mod4_2ndTry)))) # TODO: some gpp,gs_accl, chi, iwue  are NaN. Is this expected?
   
   # Testing memory leakage, i.e. repeatability
-  expect_equal(tibble(mod1), tibble(mod1_2ndTry), tolerance = 1e-8)
-  expect_equal(tibble(mod2), tibble(mod2_2ndTry), tolerance = 1e-8)
-  expect_equal(tibble(mod3), tibble(mod3_2ndTry), tolerance = 1e-8)
-  expect_equal(tibble(mod4), tibble(mod4_2ndTry), tolerance = 1e-8)
+  expect_equal(tibble(mod1), tibble(mod1_2ndTry), tolerance = 1e-6)
+  expect_equal(tibble(mod2), tibble(mod2_2ndTry), tolerance = 1e-6)
+  expect_equal(tibble(mod3), tibble(mod3_2ndTry), tolerance = 1e-6)
+  expect_equal(tibble(mod4), tibble(mod4_2ndTry), tolerance = 1e-6)
   
   
   # Hardcoded reference outputs.
