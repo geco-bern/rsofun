@@ -12,8 +12,7 @@ test_that("run_pmodel_f_bysite()", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,   # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41,
-    whc                = 2000     # site info, water holding capacity in mm
+    kc_jmax            = 0.41
   )
   params_modl_phydro <- list(
     kphio              = 0.0288,
@@ -28,12 +27,12 @@ test_that("run_pmodel_f_bysite()", {
     phydro_b_plant     = 1,
     phydro_alpha       = 0.08,
     bsoil              = 3,
-    Ssoil              = 113,
-    whc                = 253
+    Ssoil              = 113
   )
 
   # read in demo data
   df_drivers <- rsofun::p_model_drivers_format2024_08
+  lapply(df_drivers$site_info, function(x) within(x, whc <- 2000))
   
   # check run_pmodel_f_bysite() ##########################
   # run the SOFUN Fortran P-model using the internal function `run_pmodel_f_bysite`
@@ -276,8 +275,7 @@ test_that("runread_pmodel_f()", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41,
-    whc                = 2000 # site info, water holding capacity in mm
+    kc_jmax            = 0.41
   )
   
   # read in demo data
@@ -404,19 +402,19 @@ test_that("phydro-model run check LE and AET", {
       drivers = df_drivers |>
         tidyr::unnest(site_info) |> mutate(whc = 432) |>
         tidyr::nest(site_info = !c(sitename, params_siml, starts_with("forcing"))),
-      par = purrr::assign_in(params_modl, "whc", 432)
+      par = params_modl
     ) |> mutate(sitename = paste0(sitename, "_432mm")),
     rsofun::runread_pmodel_f(
       drivers = df_drivers |>
         tidyr::unnest(site_info) |> mutate(whc = 5) |>
         tidyr::nest(site_info = !c(sitename, params_siml, starts_with("forcing"))),
-      par = purrr::assign_in(params_modl, "whc", 5)
+      par = params_modl
     ) |> mutate(sitename = paste0(sitename, "_5mm")),
     rsofun::runread_pmodel_f(
       drivers = df_drivers |>
         tidyr::unnest(site_info) |> mutate(whc = 5000) |>
         tidyr::nest(site_info = !c(sitename, params_siml, starts_with("forcing"))),
-      par = purrr::assign_in(params_modl, "whc", 5000)
+      par = params_modl
     ) |> mutate(sitename = paste0(sitename, "_5000mm"))
   )
 

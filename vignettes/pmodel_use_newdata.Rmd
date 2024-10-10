@@ -260,10 +260,6 @@ With all data prepared we can run the P-model using `runread_pmodel_f()`. This f
 
 ```{r}
 # define model parameter values from previous work
-# ------------------------------------------------------
-# Note that in the phydro branch of rsofun,
-#    whc must be included in params_modl, rather than in site_info
-# ------------------------------------------------------
 params_modl <- list(
     kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
@@ -272,8 +268,7 @@ params_modl <- list(
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41,
-    whc                = rsofun::p_model_drivers_format2024_08$site_info[[1]]$whc
+    kc_jmax            = 0.41
   )
 
 # run the model for these parameters
@@ -633,8 +628,7 @@ params_modl <- list(
   phydro_b_plant     = 1,
   phydro_alpha       = 0.08,
   bsoil              = 3,
-  Ssoil              = 113,
-  whc                = 253
+  Ssoil              = 113
 )
 
 # run the model for these parameters

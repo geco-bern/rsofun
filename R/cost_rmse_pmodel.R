@@ -96,8 +96,17 @@ cost_rmse_pmodel <- function(
     required_param_names <- rsofun:::required_param_names$phydro_model
   }
 
+  ## if WHC is treated as calibratable, remove it from par and overwrite site 
+  ## info with the same value for (calibrated) WHC for all sites.
+  if ("whc" %in% names(par)){
+    overwrite_whc <- par[["whc"]]
+    par <- par[ ! names(par) %in% c("whc") ]
+    lapply(drivers$site_info, function(x) within(x, whc <- overwrite_whc))
+  }
+  
   ## split calibrated parameters into model and error parameters
-  par_calibrated_model      <- par[ ! names(par) %in% c("err_gpp") ] # consider only model parameters for the check
+  par_calibrated_model <- par[ ! names(par) %in% c("err_gpp") ] # consider only model parameters for the check
+
   # par_calibrated_errormodel <- par[   names(par) %in% c("err_gpp") ]
   # par_fixed
   
@@ -116,7 +125,6 @@ cost_rmse_pmodel <- function(
   # Combine fixed and estimated params to result in all the params required to run the model
   # This basically uses all params except those of the error model of the observations
   params_modl <- c(par, par_fixed)[required_param_names]
-
 
   ## run the model
   df <- runread_pmodel_f(

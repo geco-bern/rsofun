@@ -413,7 +413,6 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
       ifelse(params_siml$use_phydro, 
              no  = as.numeric(params_modl$soilm_thetastar),
              yes = dummy_val),
-      dummy_val, # formerly soilm_betao #TODO: replace this position with whc
       ifelse(params_siml$use_phydro, 
              no  = as.numeric(params_modl$beta_unitcostratio),
              yes = dummy_val),
@@ -440,8 +439,7 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
              yes = params_modl$bsoil),
       ifelse(params_siml$use_phydro, 
              no  = dummy_val,
-             yes = params_modl$Ssoil),
-      as.numeric(params_modl$whc) #TODO: move whc to former position of soilm_betao
+             yes = params_modl$Ssoil)
       )
 
     ## C wrapper call
@@ -472,6 +470,7 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
       longitude                 = as.numeric(site_info$lon),
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
+      whc                       = as.numeric(site_info$whc),
       canopy_height             = as.numeric(site_info$canopy_height),
       reference_height          = as.numeric(site_info$reference_height),
       n                         = n,
@@ -556,19 +555,30 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
 # For internal use and checks. (NOTE we could add a docstring similar to `p_model_validation`, but it is currently not needed.)
 required_param_names <- list(
   phydro_model = c( # P-hydro model needs these parameters:
-  'bsoil', 'kc_jmax', 
-  'kphio', 'kphio_par_a', 'kphio_par_b', 
-  'phydro_alpha', 'phydro_b_plant', 'phydro_gamma', 
-  'phydro_K_plant', 'phydro_p50_plant', 
+  'bsoil', 
+  'kc_jmax', 
+  'kphio', 
+  'kphio_par_a', 
+  'kphio_par_b', 
+  'phydro_alpha', 
+  'phydro_b_plant', 
+  'phydro_gamma', 
+  'phydro_K_plant', 
+  'phydro_p50_plant', 
   'rd_to_vcmax', 
   'Ssoil', 
-  'tau_acclim', 'whc'),
+  'tau_acclim'
+  ),
   p_model = c(# P-model needs these parameters:
-  'beta_unitcostratio', 'kc_jmax', 
-  'kphio', 'kphio_par_a', 'kphio_par_b',
+  'beta_unitcostratio', 
+  'kc_jmax', 
+  'kphio', 
+  'kphio_par_a', 
+  'kphio_par_b',
   'rd_to_vcmax', 
   'soilm_thetastar',
-  'tau_acclim', 'whc'),
+  'tau_acclim'
+  ),
   biomee_model = c(# Biomee-model needs these parameters:
   'TODO')
 )
