@@ -146,6 +146,7 @@ module md_tile_pmodel
 
   end type canopy_fluxes_type
 
+  ! JAI FIXME: Add a soil fluxes type to store soil aet etc? (these are currently stored in canopy)
   type tile_fluxes_type
     type(canopy_fluxes_type) :: canopy
     type(plant_fluxes_type), dimension(npft) :: plant
@@ -461,6 +462,8 @@ contains
       tile_fluxes(:)%plant(npft)%drd      = 0.0
       tile_fluxes(:)%plant(npft)%dtransp  = 0.0
       tile_fluxes(:)%plant(npft)%dlatenth = 0.0
+      tile_fluxes(:)%plant(npft)%dpsi     = 0.0
+      tile_fluxes(:)%plant(npft)%psi_leaf = 0.0
     end do
 
     ! call initdaily_plant( tile_fluxes(:)%plant(:) )
@@ -539,8 +542,9 @@ contains
     ! Sum over PFTs to get canopy-level quantities
     !----------------------------------------------------------------
     do lu=1,nlu
-      tile_fluxes(lu)%canopy%dgpp    = sum(tile_fluxes(lu)%plant(:)%dgpp)
-      tile_fluxes(lu)%canopy%drd     = sum(tile_fluxes(lu)%plant(:)%drd)
+      tile_fluxes(lu)%canopy%dgpp    = sum(tile_fluxes(lu)%plant(:)%dgpp    * tile(lu)%plant(:)%fpc_grid)
+      tile_fluxes(lu)%canopy%dtransp = sum(tile_fluxes(lu)%plant(:)%dtransp * tile(lu)%plant(:)%fpc_grid)
+      tile_fluxes(lu)%canopy%drd     = sum(tile_fluxes(lu)%plant(:)%drd     * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%vcmax25 = sum(tile_fluxes(lu)%plant(:)%vcmax25 * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%jmax25  = sum(tile_fluxes(lu)%plant(:)%jmax25  * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%vcmax   = sum(tile_fluxes(lu)%plant(:)%vcmax   * tile(lu)%plant(:)%fpc_grid)
