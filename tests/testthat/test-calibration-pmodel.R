@@ -250,8 +250,8 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
       sampler = "DEzs",
       settings = list(
         nrChains = 1,
-        burnin = 1,
-        iterations = 4
+        burnin = 50,     # this was selected deliberately low for computational efficiency
+        iterations = 200 # this was selected deliberately low for computational efficiency
       )
     ),
     par = list(
@@ -260,6 +260,7 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
       err_vcmax25 = list(lower = 0.0001, upper = 0.1, init = 0.005)
     )
   )
+  set.seed(10)
   pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
@@ -273,4 +274,19 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
 
   # test for correctly returned values
   expect_type(pars, "list")
+  
+  # test for same numeric results:
+    # Hardcoded reference outputs.
+    # NOTE: this is expected to change reasonably frequently whenever something is
+    #       changed in the model.
+    #       If this is expected, please update the hardcoded reference values below.
+    #       To do so, simply use the commented code, making use of dput(). Thanks!
+    # dput(pars$par)
+  # print(dput(pars$par))
+  ref_pars <- c(kphio       = 0.0453,
+                err_gpp     = 1.51,
+                err_vcmax25 = 0.0060)
+  expect_equal(pars$par, ref_pars, tolerance = 0.1)
+  
 })
+
