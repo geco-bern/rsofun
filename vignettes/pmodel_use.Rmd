@@ -22,10 +22,119 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(khroma)
+library(cowplot)
 
-# fake variable as optimization isn't run
-pars <- list()
-pars$par["kphio"] <- 0.04478049
+# define function for evaluation plots
+plot_eval <- function(df, is_gpp = TRUE){
+  
+  use_col <- ifelse(is_gpp, "tomato", "royalblue")
+  use_lab <- ifelse(
+    is_gpp,
+    expression(paste("GPP (g C m"^-2, "s"^-1, ")")), 
+    expression(paste("LE (W m"^-2, ")"))
+    )
+  use_lab_obs <- ifelse(
+    is_gpp,
+    expression(paste("Observed GPP (g C m"^-2, "s"^-1, ")")), 
+    expression(paste("Observed LE (W m"^-2, ")"))
+    )
+  use_lab_mod <- ifelse(
+    is_gpp,
+    expression(paste("Modeled GPP (g C m"^-2, "s"^-1, ")")), 
+    expression(paste("Modeled LE (W m"^-2, ")"))
+    )
+  lims <- ifelse(
+    is_gpp,
+    c(-0.5, 10),
+    c(-20, 175)
+  )
+   
+  # Plot GPP observed and modelled quartiles by day-of-year
+  gg1 <- df |> 
+    tidyr::pivot_longer(c(mod, obs), names_to = "type", values_to = "var") |> 
+    mutate(doy = lubridate::yday(date)) |> 
+    group_by(doy, type) |> 
+    summarise(
+      var_q25 = quantile(var, probs = c(0.25), na.rm = TRUE),
+      var_q75 = quantile(var, probs = c(0.75), na.rm = TRUE)
+      ) |> 
+    ggplot() +
+    geom_ribbon(
+      aes(
+        x = doy,
+        ymin = var_q25,
+        ymax = var_q75,
+        fill = type
+        ),
+      alpha = 0.75
+    ) +
+    scale_fill_manual(
+      name = "",
+      values = c(
+        "mod" = use_col,
+        "obs" = 'grey20'
+        ),
+      labels = c(
+        "mod" = "Mod.",
+        "obs" = "Obs."
+      )) +
+    theme_classic() +
+    theme() +
+    labs(
+      x = 'Date',
+      y = use_lab,
+      colour = ""
+    )
+  
+  # get fit metrics
+  rsq_val <- yardstick::rsq(df, mod, obs) |> pull(.estimate)
+  rmse_val <- yardstick::rmse(df, mod, obs) |> pull(.estimate)
+  bias_val <- mean(df$mod - df$obs, na.rm = TRUE)
+  linmod <- lm(obs ~ mod + 0, data = df)
+  slope_val <- coef(linmod)
+  n_val <- df |> tidyr::drop_na() |> nrow()
+  
+  rsq_lab <- format(rsq_val, digits = 3)
+  rmse_lab <- format(rmse_val, digits = 3)
+  bias_lab <- format(bias_val, digits = 3)
+  slope_lab <- format(slope_val, digits = 3)
+  n_lab <- n_val
+  
+  subtitle <- bquote(italic(R)^2 == .(rsq_lab) ~ ~
+                    RMSE == .(rmse_lab) ~ ~
+                    bias == .(bias_lab) ~ ~
+                    slope == .(slope_lab) ~ ~
+                    italic(N) == .(n_lab))
+  
+  # plot modelled vs. observed (actually the reverse)
+  gg2 <- df |> 
+    ggplot(aes(x = mod, y = obs)) +
+    geom_hex(bins = 50, show.legend = FALSE) +
+    theme_classic() +
+    geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_vline(xintercept = 0, linetype = "dotted")+ 
+    geom_smooth(method = "lm", formula = y ~ x + 0, color = "red", size = 0.5, se = FALSE) +
+    xlim(lims[1], lims[2]) + 
+    ylim(lims[1], lims[2]) +
+    labs(
+      x = use_lab_mod,
+      y = use_lab_obs,
+      subtitle = subtitle
+    )
+  
+  if (is_gpp){
+    gg2 <- gg2 +
+      khroma::scale_fill_batlowW(trans = "log", reverse = TRUE)
+  } else {
+    gg2 <- gg2 +
+      khroma::scale_fill_davos(trans = "log", reverse = TRUE)
+
+  }
+  
+  out <- cowplot::plot_grid(gg1, gg2, nrow = 1)
+  return(out)
+}
 ```
 
 The `rsofun` package and framework includes two main models. The `pmodel` and `biomee` (which in part relies on P-model components). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
@@ -63,14 +172,14 @@ With all data prepared we can run the P-model using `runread_pmodel_f()`. This f
 #    whc must be included in params_modl, rather than in site_info
 # ------------------------------------------------------
 params_modl <- list(
-    kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
-    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * p_model_drivers$site_info[[1]]$whc,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+  kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
+  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+  kphio_par_b        = 1.0,
+  soilm_thetastar    = 0.6 * p_model_drivers$site_info[[1]]$whc,
+  beta_unitcostratio = 146.0,
+  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+  tau_acclim         = 30.0,
+  kc_jmax            = 0.41
   )
 
 # run the model for these parameters
@@ -88,88 +197,15 @@ We can now visualize both the model output and the measured values together.
 # Create dataframe for plotting
 df_plot <- output |>
   unnest(data) |>
-  select(date, gpp_mod = gpp) |> 
+  select(date, mod = gpp) |> 
   left_join(
     p_model_validation |>
       unnest(data) |> 
-      select(date, gpp_obs = gpp),
+      select(date, obs = gpp),
     by = join_by(date)
   )
 
-# Plot GPP observed and modelled quartiles by day-of-year
-df_plot |> 
-  tidyr::pivot_longer(c(gpp_mod, gpp_obs), names_to = "type", values_to = "gpp") |> 
-  mutate(doy = lubridate::yday(date)) |> 
-  group_by(doy, type) |> 
-  summarise(
-    gpp_q25 = quantile(gpp, probs = c(0.25), na.rm = TRUE),
-    gpp_q75 = quantile(gpp, probs = c(0.75), na.rm = TRUE)
-    ) |> 
-  ggplot() +
-  geom_ribbon(
-    aes(
-      x = doy,
-      ymin = gpp_q25,
-      ymax = gpp_q75,
-      fill = type
-      ),
-    alpha = 0.75
-  ) +
-  scale_fill_manual(
-    name = "",
-    values = c(
-      "gpp_mod" = 'tomato',
-      "gpp_obs" = 'grey20'
-      ),
-    labels = c(
-      "gpp_mod" = "P-model, calibrated",
-      "gpp_obs" = "Observed"
-    )) +
-  theme_classic() +
-  theme() +
-  labs(
-    x = 'Date',
-    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")")),
-    colour = ""
-  )
-
-# get fit metrics
-rsq_val <- yardstick::rsq(df_plot, gpp_mod, gpp_obs) |> pull(.estimate)
-rmse_val <- yardstick::rmse(df_plot, gpp_mod, gpp_obs) |> pull(.estimate)
-bias_val <- mean(df_plot$gpp_mod - df_plot$gpp_obs, na.rm = TRUE)
-linmod <- lm(gpp_obs ~ gpp_mod + 0, data = df_plot)
-slope_val <- coef(linmod)
-n_val <- df_plot |> tidyr::drop_na() |> nrow()
-
-rsq_lab <- format(rsq_val, digits = 3)
-rmse_lab <- format(rmse_val, digits = 3)
-bias_lab <- format(bias_val, digits = 3)
-slope_lab <- format(slope_val, digits = 3)
-n_lab <- n_val
-
-subtitle <- bquote(italic(R)^2 == .(rsq_lab) ~ ~
-                  RMSE == .(rmse_lab) ~ ~
-                  bias == .(bias_lab) ~ ~
-                  slope == .(slope_lab) ~ ~
-                  italic(N) == .(n_lab))
-
-# plot modelled vs. observed (actually the reverse)
-df_plot |> 
-  ggplot(aes(x = gpp_mod, y = gpp_obs)) +
-  geom_hex(bins = 50, show.legend = FALSE) +
-  theme_classic() +
-  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
-  geom_hline(yintercept = 0, linetype = "dotted") +
-  geom_vline(xintercept = 0, linetype = "dotted")+ 
-  geom_smooth(method = "lm", formula = y ~ x + 0, color = "red", size = 0.5, se = FALSE) +
-  khroma::scale_fill_batlowW(trans = "log", reverse = TRUE) +
-  xlim(-0.5, 10) + 
-  ylim(-0.5, 10) +
-  labs(
-    x = expression(paste("P-model GPP (g C m"^-2, "s"^-1, ")")),
-    y = expression(paste("Observed GPP (g C m"^-2, "s"^-1, ")")),
-    subtitle = subtitle
-  )
+plot_eval(df_plot)
 ```
 
 ## Calibrating model parameters
@@ -182,11 +218,14 @@ settings <- list(
   metric               = cost_rmse_pmodel,
   control = list(maxit = 3000),
   par = list(
+    # all model parameters are calibratable
     kphio = list(lower = 0.03, upper = 0.99, init = 0.05),
     kphio_par_a = list(lower = -0.005, upper = 0, init = -0.0025),
     kphio_par_b = list(lower = 10, upper = 30, init = 20),
     soilm_thetastar = list(lower = 10, upper = 200, init = 100),
-    # WHC is ambiguous variable: provided as site info, but used as calibration. That's intentional
+    
+    # WHC is exceptional: provided as site info to enable specification 
+    # by site in multi-site simulations, but also calibratable.
     whc = list(lower = 10, upper = 1000, init = 400)
   )
 )
@@ -201,11 +240,14 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 ```{r eval=FALSE, warning=FALSE}
 # calibrate the model and optimize free parameters
 pars <- calib_sofun(
+  
   drivers = p_model_drivers,  
   obs = p_model_validation,
   settings = settings,
+  
   # extra arguments passed to the cost function:
   targets = "gpp",             # define target variable GPP
+  
   # fix non-calibrated parameters to previous 
   par_fixed = list(
     beta_unitcostratio = 146.0,
@@ -231,7 +273,9 @@ params_modl <- list(
   kc_jmax            = 0.41
   )
 
-p_model_drivers$site_info[[1]]$whc <- pars$mod$par[["whc"]]
+# root zone total water holding capacity (whc) is calibrated, but specified as
+# a site parameter in the P-model call with function runread_pmodel_f()
+p_model_drivers$site_info[[1]]$whc <- 512  # approximate value, should re-calibrate this
 
 # Run the model with calibrated parameters
 output_new <- rsofun::runread_pmodel_f(
@@ -242,88 +286,136 @@ output_new <- rsofun::runread_pmodel_f(
 # Update dataframe for plotting
 df_plot <- output_new |>
   unnest(data) |>
-  select(date, gpp_mod = gpp) |> 
+  select(date, mod = gpp) |> 
   left_join(
     p_model_validation |>
       unnest(data) |> 
-      select(date, gpp_obs = gpp),
+      select(date, obs = gpp),
     by = join_by(date)
   )
 
-# Plot GPP observed and modelled quartiles by day-of-year
-df_plot |> 
-  tidyr::pivot_longer(c(gpp_mod, gpp_obs), names_to = "type", values_to = "gpp") |> 
-  mutate(doy = lubridate::yday(date)) |> 
-  group_by(doy, type) |> 
-  summarise(
-    gpp_q25 = quantile(gpp, probs = c(0.25), na.rm = TRUE),
-    gpp_q75 = quantile(gpp, probs = c(0.75), na.rm = TRUE)
-    ) |> 
-  ggplot() +
-  geom_ribbon(
-    aes(
-      x = doy,
-      ymin = gpp_q25,
-      ymax = gpp_q75,
-      fill = type
-      ),
-    alpha = 0.75
-  ) +
-  scale_fill_manual(
-    name = "",
-    values = c(
-      "gpp_mod" = 'tomato',
-      "gpp_obs" = 'grey20'
-      ),
-    labels = c(
-      "gpp_mod" = "P-model, calibrated",
-      "gpp_obs" = "Observed"
-    )) +
-  theme_classic() +
-  theme() +
-  labs(
-    x = 'Date',
-    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")")),
-    colour = ""
-  )
-
-# get fit metrics
-rsq_val <- yardstick::rsq(df_plot, gpp_mod, gpp_obs) |> pull(.estimate)
-rmse_val <- yardstick::rmse(df_plot, gpp_mod, gpp_obs) |> pull(.estimate)
-bias_val <- mean(df_plot$gpp_mod - df_plot$gpp_obs, na.rm = TRUE)
-linmod <- lm(gpp_obs ~ gpp_mod + 0, data = df_plot)
-slope_val <- coef(linmod)
-n_val <- df_plot |> tidyr::drop_na() |> nrow()
-
-rsq_lab <- format(rsq_val, digits = 3)
-rmse_lab <- format(rmse_val, digits = 3)
-bias_lab <- format(bias_val, digits = 3)
-slope_lab <- format(slope_val, digits = 3)
-n_lab <- n_val
-
-subtitle <- bquote(italic(R)^2 == .(rsq_lab) ~ ~
-                  RMSE == .(rmse_lab) ~ ~
-                  bias == .(bias_lab) ~ ~
-                  slope == .(slope_lab) ~ ~
-                  italic(N) == .(n_lab))
-
-# plot modelled vs. observed (actually the reverse)
-df_plot |> 
-  ggplot(aes(x = gpp_mod, y = gpp_obs)) +
-  geom_hex(bins = 50, show.legend = FALSE) +
-  theme_classic() +
-  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
-  geom_hline(yintercept = 0, linetype = "dotted") +
-  geom_vline(xintercept = 0, linetype = "dotted")+ 
-  geom_smooth(method = "lm", formula = y ~ x + 0, color = "red", size = 0.5, se = FALSE) +
-  khroma::scale_fill_batlowW(trans = "log", reverse = TRUE) +
-  xlim(-0.5, 10) + 
-  ylim(-0.5, 10) +
-  labs(
-    x = expression(paste("P-model GPP (g C m"^-2, "s"^-1, ")")),
-    y = expression(paste("Observed GPP (g C m"^-2, "s"^-1, ")")),
-    subtitle = subtitle
-  )
+plot_eval(df_plot)
 ```
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
+
+## Water-carbon coupled simulations
+
+### SPLASH AET
+
+In the standard-setup, SPLASH is used for the water balance and ET. 
+
+Simulations shown above are using the standard-setup. It is selected by setting `use_gs = FALSE` in `params_siml`. 
+
+Here are the comparisons of modelled and observed ET.
+```{r}
+# Create dataframe for plotting
+df_plot <- output |>
+  unnest(data) |>
+  mutate(le =  le / (24 * 60 * 60)) |> 
+  select(date, mod = le) |> 
+  left_join(
+    p_model_validation |>
+      unnest(data) |> 
+      select(date, obs = le),
+    by = join_by(date)
+  )
+
+plot_eval(df_plot, is_gpp = FALSE)
+```
+
+### Gs-coupled diffusion ET
+
+Set `use_gs = TRUE` in `params_siml` so that the internally predicted stomatal conductance ($G_s$) from P-model will be used in calculation of ET. ET is a weighted average of canopy transpiration ($T$) and soil evaporation. Canopy transpiration is calculated using the diffusion equation as:
+$$
+T = 1.6 \; G_s \; \text{VPD}
+$$
+
+Run the model.
+
+```{r}
+drivers_tmp <- p_model_drivers |> 
+  mutate(
+    params_siml = purrr::map(
+      params_siml,
+      ~mutate(
+        ., 
+        use_gs = TRUE,
+        use_pml = FALSE,
+        use_phydro = FALSE
+        )
+      ))
+
+# run the model with the same model parameters
+output <- rsofun::runread_pmodel_f(
+  drivers_tmp,
+  par = params_modl
+)
+```
+
+Plot outputs for LE. 
+
+```{r}
+# Create dataframe for plotting
+df_plot <- output |>
+  unnest(data) |>
+  mutate(le =  le / (24 * 60 * 60)) |> 
+  select(date, mod = le) |> 
+  left_join(
+    p_model_validation |>
+      unnest(data) |> 
+      select(date, obs = le),
+    by = join_by(date)
+  )
+
+plot_eval(df_plot, is_gpp = FALSE)
+```
+
+### Penman-Monteith ET
+
+Set `use_gs` flag to TRUE in params_siml so that the internally predicted stomatal conductance ($G_s$) from P-model will be used in calculation of ET. ET is a weighted average of canopy transpiration ($T$) and soil evaporation. Canopy transpiration is calculated using the diffusion equation as:
+$$
+\lambda E = \frac{s(R_n - G) + \rho c_p D_a G_\mathrm{ah}}{s + \gamma (1 + G_\mathrm{ah}/G_\mathrm{sw})}
+$$
+
+Run the model.
+
+```{r}
+drivers_tmp <- p_model_drivers |> 
+  mutate(
+    params_siml = purrr::map(
+      params_siml,
+      ~mutate(
+        ., 
+        use_gs = TRUE,
+        use_pml = TRUE,
+        use_phydro = FALSE
+        )
+      ))
+
+# run the model with the same model parameters
+output <- rsofun::runread_pmodel_f(
+  drivers_tmp,
+  par = params_modl
+)
+```
+
+Plot outputs. 
+
+```{r}
+# Create dataframe for plotting
+df_plot <- output |>
+  unnest(data) |>
+  mutate(le =  le / (24 * 60 * 60)) |> 
+  select(date, mod = le) |> 
+  left_join(
+    p_model_validation |>
+      unnest(data) |> 
+      select(date, obs = le),
+    by = join_by(date)
+  )
+
+plot_eval(df_plot, is_gpp = FALSE)
+```
+
+
