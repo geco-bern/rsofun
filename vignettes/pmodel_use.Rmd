@@ -35,57 +35,22 @@ The `rsofun` package and framework includes two main models. The `pmodel` and `b
 The package includes two demo datasets to run and validate pmodel output using GPP observations. These files can be directly loaded into your workspace by typing:
 
 ```{r}
-library(rsofun)
-
-# this is to deal with an error p_model_drivers.rds not being found 
-p_model_drivers = rsofun::p_model_drivers |> 
-  rowwise() |> 
-  mutate(params_siml = params_siml |> 
-           mutate(use_phydro = F,
-                  use_gs = F,
-                  use_pml = F) |>
-           list())
-
+p_model_drivers
 p_model_validation
 ```
 
-### Visualize drivers
-
-```{r}
-p_model_drivers$forcing[[1]] |>
-  # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
-  dplyr::select(date, co2, ppfd, netrad, temp, vpd, fapar, rain, ccov) |>
-  tidyr::pivot_longer(-date) |>
-  dplyr::mutate(type="24-hr mean") |>
-  rbind(p_model_validation$data[[1]] |>
-          # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
-          dplyr::select(date, gpp) |>
-          tidyr::pivot_longer(-date) |>
-          dplyr::mutate(type="obs (24 hr)")
-  ) |>
-  ggplot(aes(y=value, x=date)) +
-  geom_line(aes(group=type, col=type)) +
-  theme_classic() +
-  theme(strip.background = element_rect(color = "white", size = 1))+
-  facet_wrap(~name, scales = "free")+
-  ggtitle(p_model_drivers$sitename[[1]])
-  
-p_model_drivers$site_info |> print()
-```
-
-These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `pmodel` parameters.
+These are data from the French FR-Pue FLUXNET site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `pmodel` parameters.
 
 Another two datasets are provided as an example to validate the model against leaf traits data, rather than fluxes. Measurements of Vcmax25 (aggregated over species) for a subset of 4 sites from the GlobResp database (Atkin et al., 2015) are given in `p_model_validation_vcmax25` and the corresponding forcing for the P-model is given in `p_model_drivers_vcmax25`. Since leaf traits are only measured once per site, the forcing used is a single year of average climate (the average measurements between 2001 and 2015 on each day of the year).
 
 ```{r}
 p_model_drivers_vcmax25
-
 p_model_validation_vcmax25
 ```
 
 For the remainder of this vignette, we will use the GPP flux datasets. The workflow is exactly the same for leaf traits data.
 
-To get your raw data into the structure used within `rsofun`, please see R packages [ingestr](https://github.com/geco-bern/ingestr) and [FluxDataKit](https://github.com/geco-bern/FluxDataKit).
+The script `data-raw/generate_pmodel_driver_data.R` implements the subsetting of rsofun driver data to the demo data provided through this package.
 
 ## Running model
 
