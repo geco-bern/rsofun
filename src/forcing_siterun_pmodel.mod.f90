@@ -25,10 +25,11 @@ module md_forcing_pmodel
     real(kind=sp) :: dppfd  ! mol m-2 d-1
     real(kind=sp) :: dnetrad! W m-2
     real(kind=sp) :: dpatm  ! Pa
+    real(kind=sp) :: dwind  ! m s-1
   end type climate_type
 
   type vegcover_type
-    real :: dfapar ! fraction of absorbed photosynthetically active radiation
+    real :: dfapar     ! fraction of absorbed photosynthetically active radiation
   end type vegcover_type
 
   type landuse_type
@@ -53,7 +54,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,12), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: climateyear_idx
     logical, intent(in) :: in_ppfd
     logical, intent(in) :: in_netrad
@@ -94,6 +95,7 @@ contains
     out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 10))
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 11))
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 12))
+    out_climate(:)%dwind   = real(forcing(idx_start:idx_end, 13))
 
   end function getclimate
 
@@ -104,7 +106,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,13), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,12), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: forcingyear
     integer, intent(in) :: firstyeartrend
 
@@ -131,7 +133,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
+    real(kind=dp),  dimension(nt,12), intent(in)  :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition) 
     integer, intent(in) :: forcingyear_idx
 
     ! function return variable
@@ -183,23 +185,47 @@ contains
     ! get binary information of PFT presence from simulation parameters
     fpc_grid_field(:) = 0.0
 
-    ! Code below must follow the same structure as in 'plant_pmodel.mod.f90'
+    ! Code below must follow the same structure as in plant_pmodel.mod.f90, getpar_modl_plant()
     pft = 0
     if ( params_siml%ltre ) then
-      ! xxx dirty: call all non-grass vegetation types 'TrE', see indeces above
+      ! Consider all non-grass vegetation types 'TrE', see indeces above
       pft = pft + 1
+      fpc_grid_field(:) = 0.0
+      fpc_grid_field(pft) = 1.0
+    end if 
+
+    if ( params_siml%ltne ) then
+      ! Consider all non-grass vegetation types 'TNE', see indeces above
+      pft = pft + 1
+      fpc_grid_field(:) = 0.0
+      fpc_grid_field(pft) = 1.0
+    end if 
+
+    if ( params_siml%ltrd ) then
+      ! Consider all non-grass vegetation types 'TrE', see indeces above
+      pft = pft + 1
+      fpc_grid_field(:) = 0.0
+      fpc_grid_field(pft) = 1.0
+    end if 
+
+    if ( params_siml%ltnd ) then
+      ! Consider all non-grass vegetation types 'TrE', see indeces above
+      pft = pft + 1
+      fpc_grid_field(:) = 0.0
       fpc_grid_field(pft) = 1.0
     end if 
 
     if ( params_siml%lgr3 ) then
-      ! xxx dirty: call all grass vegetation types 'Gr3'
+      ! Consider all grass vegetation types 'Gr3'
       pft = pft + 1
+      fpc_grid_field(:) = 0.0
       fpc_grid_field(pft) = 1.0
     end if
 
     if ( params_siml%lgr4 ) then
-      ! xxx dirty: call all grass vegetation types 'Gr3'
+      ! Consider all grass vegetation types 'Gr3'
       pft = pft + 1
+      fpc_grid_field(:) = 0.0
       fpc_grid_field(pft) = 1.0
     end if
 

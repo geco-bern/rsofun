@@ -1,7 +1,7 @@
-#' Cost function computing a log-likelihood for calibration of P-model
+#' Cost function computing a log-likelihood for calibration of Phydro-model
 #' parameters
 #' 
-#' The cost function performs a P-model run for the input drivers and model parameter
+#' The cost function performs a Phydro-model run for the input drivers and model parameter
 #' values, and computes the outcome's normal log-likelihood centered at the input
 #' observed values and with standard deviation given as an input parameter 
 #' (calibratable).
@@ -55,26 +55,35 @@
 #' # model parameter values involved in the
 #' # temperature dependence of kphio
 #' # and example data
-#' cost_likelihood_pmodel(        # reuse likelihood cost function
+#' library(dplyr)
+#' cost_likelihood_phydromodel(        # reuse likelihood cost function
 #'   par = list(
-#'     kphio              = 0.09423773, # setup ORG in Stocker et al. 2020 GMD
+#'     kphio              = 0.0288,
 #'     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
 #'     kphio_par_b        = 1.0,
-#'     err_gpp            = 0.9         # value from previous simulations
-#'   ),                          # must be a named list
-#'   obs = p_model_validation,   # example data from package
-#'   drivers = p_model_drivers_format2024_08, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
-#'   targets = "gpp",
-#'   par_fixed = list(
-#'     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-#'     beta_unitcostratio = 146.0,
 #'     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
 #'     tau_acclim         = 30.0,
 #'     kc_jmax            = 0.41,
-#'     whc                = 430
-#'   )
+#'     phydro_K_plant     = 5e-17,
+#'     phydro_p50_plant   = -0.46,
+#'     phydro_gamma       = 0.065,
+#'     phydro_b_plant     = 1,
+#'     phydro_alpha       = 0.08,
+#'     bsoil              = 3,
+#'     Ssoil              = 113,
+#'     whc                = 253,
+#'     # kphio              = 0.09423773, # setup ORG in Stocker et al. 2020 GMD
+#'     # kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+#'     # kphio_par_b        = 1.0,
+#'     err_gpp            = 0.9         # value from previous simulations
+#'   ),                          # must be a named list
+#'   obs     = p_model_validation,   # example data from package
+#'   drivers = p_model_drivers_format2024_08 %>%
+#'     ungroup() %>% dplyr::mutate(params_siml = purrr::map(params_siml, ~mutate(.x, use_phydro = TRUE, use_pml = TRUE, use_gs = TRUE))),
+#'   targets = "gpp",
+#'   par_fixed = list()
 #' )
-cost_likelihood_pmodel <- function(
+cost_likelihood_phydromodel <- function(
     par,   # model parameters & error terms for each target
     obs,
     drivers,
@@ -103,8 +112,8 @@ cost_likelihood_pmodel <- function(
   }
   
   ## split calibrated parameters into model and error parameters
-  par_calibrated_model      <- par[ ! names(par) %in% c("err_gpp", "err_vcmax25") ] # consider only model parameters for the check
-  # par_calibrated_errormodel <- par[   names(par) %in% c("err_gpp", "err_vcmax25") ]
+  par_calibrated_model      <- par[ ! names(par) %in% c("err_gpp") ] # consider only model parameters for the check
+  # par_calibrated_errormodel <- par[   names(par) %in% c("err_gpp") ]
   # par_fixed
   
   ## check parameters
@@ -132,12 +141,54 @@ cost_likelihood_pmodel <- function(
     ncores = ncores
   )
   
+  ## Calculate dpsi intercept from outputs
+  df <- df |> 
+    mutate(dpsi_int = purrr::map(.x=data, .f=function(d){
+      # Remove extremeties (potentially spurious values)
+      d_filt = d |> 
+        mutate(psi_soil = psi_leaf + dpsi) |> 
+        filter(psi_soil > min(psi_soil)+0.01) |>
+        filter(psi_soil < max(psi_soil)-0.01)
+      
+      # calculate psi_soil threshold for "wet" regime
+      psi_soil_max <- d_filt |>
+        with(quantile(psi_soil, probs = 0.95))
+      
+      # calculate dpsi intercept as mean of dpsi in wet regime
+      int_q = d_filt |>
+        filter(psi_soil >= psi_soil_max) |>
+        pull(dpsi) |>
+        mean()
+      
+      # calculate actual dpsi intercept by fitting lm (might not work)
+      dat_lm = d_filt |> 
+        dplyr::select(psi_leaf, psi_soil) |> 
+        tidyr::drop_na()
+      
+      if (nrow(dat_lm) > 5){
+        mod = dat_lm |>
+          with(lm(psi_leaf~psi_soil))
+        mods = summary(mod)
+        int_reg = -mod$coefficients[1]
+        p_slope = mods$coefficients[2,4]
+      } else {
+        int_reg = 0
+        p_slope = 1
+      }
+      
+      # if lm gives good fit, return actual intercept, else return wet-regime mean
+      dpsi_int = ifelse(p_slope < 0.05, 
+                        yes = int_reg, 
+                        no = int_q)
+      dpsi_int
+    })) 
+  
   ## clean model output and unnest
   df <- df |>
     dplyr::rowwise() |>
     dplyr::reframe(
-      cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
-        stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
+      cbind(sitename, data[, c('date', unique(c('gpp', targets)))], dpsi_int) |>
+        stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod'), 'dpsi_int_mod'))
     ) # gpp is used to get average trait prediction
   
   # separate validation data into fluxes and traits, site by site
@@ -150,7 +201,8 @@ cost_likelihood_pmodel <- function(
     obs_flux <- obs[is_flux, ] |>
       dplyr::select(sitename, data) |>
       tidyr::unnest(data) |>
-      dplyr::select(any_of(c('sitename', 'date', targets)))
+      dplyr::select(any_of(c('sitename', 'date', targets))) |>
+      mutate(dpsi_int = 1)
     
     if(ncol(obs_flux) < 3){
       warning("Dated observations (fluxes) are missing for the chosen targets.")
@@ -223,6 +275,15 @@ cost_likelihood_pmodel <- function(
   }
   ll <- sum(ll_df$ll)
 
+  # compute ll for dpsi using a Gaussian prior with mean 1 and sd 0.33
+  ll_dpsi = sum(stats::dnorm(
+    x    = df_flux[['dpsi_int_mod']],   # model
+    mean = df_flux[['dpsi_int']],       # obs
+    sd   = 0.33,                        # error model
+    log  = TRUE))
+  
+  ll <- ll + ll_dpsi 
+  
   # trap boundary conditions
   if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
   

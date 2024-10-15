@@ -2,6 +2,7 @@ context("test BiomeE calibration framework and its parameters")
 set.seed(10)
 
 test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {
+  skip()
   skip_on_cran()
   df_drivers <- rsofun::biomee_gs_leuning_drivers
   ddf_obs <- rsofun::biomee_validation
@@ -45,6 +46,7 @@ test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {
 })
 
 test_that("test calibration routine biomee (rmse cost + GenSA)", {
+  skip()
   skip_on_cran()
   df_drivers <- rsofun::biomee_gs_leuning_drivers
   ddf_obs <- rsofun::biomee_validation

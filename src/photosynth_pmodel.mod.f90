@@ -11,7 +11,8 @@ module md_photosynth
 
   private
   public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, &
+    calc_viscosity_h2o, calc_density_h2o, calc_kmm, calc_gammastar
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -27,7 +28,7 @@ module md_photosynth
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
     real :: lue                 ! light use efficiency (mol CO2 / mol photon)
     ! real :: assim               ! leaf-level assimilation rate (mol CO2 m-2 s-1)
-    real :: gs_setpoint         ! stomatal conductance to CO2 (mol C Pa-1 m-2 s-1)
+    real :: gs_setpoint         ! stomatal conductance to CO2 per unit absorbed light (mol C Pa-1 m-2 s-1)
     ! real :: gs_unitfapar        ! stomatal conductance to CO2 per unit fapar (mol C Pa-1 m-2 s-1)
     ! real :: gs_unitiabs         ! stomatal conductance to CO2 per unit absorbed light (mol C Pa-1 m-2 s-1)
     ! real :: gpp                 ! gross primary productivity (g CO2 m-2 d-1)
@@ -99,7 +100,7 @@ contains
     real :: kmm                 ! Michaelis-Menten coefficient (Pa)
     real :: gammastar           ! photorespiratory compensation point - Gamma-star (Pa)
     real :: ca                  ! ambient CO2 partial pressure, (Pa)
-    real :: gs_setpoint         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
+    real :: gs_setpoint         ! stomatal conductance to CO2 per unit absorbed light (mol CO2 Pa-1 m-2 s-1)
     ! real :: gs_unitfapar        ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
     ! real :: gs_unitiabs         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
     real :: ci                  ! leaf-internal partial pressure, (Pa)
@@ -339,7 +340,7 @@ contains
       ! xxx to be addressed: what's the stomatal conductance in C4?
       gs_setpoint = 9999.0
     else
-      gs_setpoint = (lue / c_molmass) / ( ca - ci + 0.1 )
+      gs_setpoint = (lue / c_molmass) / (ca - ci)
     end if
 
 
@@ -794,7 +795,9 @@ contains
   end function calc_gammastar
 
 
-  function calc_soilmstress( wcont, thetastar, betao ) result( outstress )
+  ! TODO: Reformulate to calculate betao online so that stess = 0 @ wcont = 0 
+  !       -- not needed, just set betao = 0
+  function calc_soilmstress( wcont, thetastar, whc ) result( outstress )
     !//////////////////////////////////////////////////////////////////
     ! Calculates empirically-derived stress (fractional reduction in light 
     ! use efficiency) as a function of soil moisture
@@ -803,12 +806,14 @@ contains
     !         in strongly water-stressed months
     !-----------------------------------------------------------------------
     ! argument
-    real, intent(in) :: wcont                 ! soil water content (mm)
-    real, intent(in) :: thetastar             ! threshold of water limitation (mm), previously 0.6 * whc_rootzone
-    real, intent(in) :: betao                 ! soil water stress at zero water rootzone water content
+    real, intent(in) :: wcont                 ! root-zone water content (mm)
+    real, intent(in) :: thetastar             ! threshold of water limitation (mm), a global constant treated as model parameter
+    real, intent(in) :: whc                   ! total root zone water storage capacity (mm), site-specific
 
     ! local variables
+    real, parameter :: betao = 0.0            ! soil water stress at zero water rootzone water content, taken to be zero (no water, no activity)
     real :: shape_parameter
+    real :: thetastar_eff                     ! effective root-zone moisture limitation limitation threshold (mm)
 
     ! function return variable
     real :: outstress
@@ -817,13 +822,20 @@ contains
       outstress = 1.0
     else
 
-      if (thetastar < eps) then
+      if (whc < thetastar) then
+        thetastar_eff = whc
+      else
+        thetastar_eff = thetastar
+      end if
+
+      if (thetastar_eff < eps) then
         outstress = 1.0
       else
-        shape_parameter = (betao - 1.0) / thetastar**2
-        outstress = shape_parameter * (wcont - thetastar)**2 + 1.0
+        shape_parameter = (betao - 1.0) / thetastar_eff**2
+        outstress = shape_parameter * (wcont - thetastar_eff)**2 + 1.0
         outstress = max( 0.0, min( 1.0, outstress ) )
       end if
+
     end if
 
   end function calc_soilmstress

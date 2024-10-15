@@ -88,7 +88,6 @@ settings_calib <- list(
     )),
   par = list(
     kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
-    soilm_betao = list(lower = 0, upper = 1, init = 0.2),
     kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),
     err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
   )

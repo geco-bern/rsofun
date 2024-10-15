@@ -13,6 +13,9 @@ void F77_NAME(pmodel_f)(
     int    *spinup, // LOGICAL can be defined as _Bool but it gives a warming  
     int    *spinupyears,
     int    *recycle,
+    int    *use_phydro,
+    int    *use_gs,
+    int    *use_pml,
     int    *firstyeartrend,
     int    *nyeartrend,
     int    *secs_per_tstep,
@@ -30,9 +33,12 @@ void F77_NAME(pmodel_f)(
     double *latitude,
     double *altitude,
     double *whc,
+    double *canopy_height,    
+    double *reference_height,
     int    *nt,
     double *par,
     double *forcing,
+    double *forcing_acclim,
     double *output
     );
 
@@ -41,6 +47,9 @@ extern SEXP pmodel_f_C(
     SEXP spinup,
     SEXP spinupyears,
     SEXP recycle,
+    SEXP use_phydro,
+    SEXP use_gs,
+    SEXP use_pml,
     SEXP firstyeartrend,
     SEXP nyeartrend,
     SEXP secs_per_tstep,
@@ -58,9 +67,12 @@ extern SEXP pmodel_f_C(
     SEXP latitude,
     SEXP altitude,
     SEXP whc,
+    SEXP canopy_height,    
+    SEXP reference_height,
     SEXP n,
     SEXP par,
-    SEXP forcing
+    SEXP forcing,
+    SEXP forcing_acclim
     ){
 
     // Number of time steps (same in forcing and output)
@@ -68,13 +80,16 @@ extern SEXP pmodel_f_C(
 
     // Specify output
     // 2nd agument to allocMatrix is number of rows, 3rd is number of columns
-    SEXP output = PROTECT( allocMatrix(REALSXP, nt, 19) );
+    SEXP output = PROTECT( allocMatrix(REALSXP, nt, 23) );
 
     // Fortran subroutine call
     F77_CALL(pmodel_f)(
         LOGICAL(spinup),
         INTEGER(spinupyears),
         INTEGER(recycle),
+        LOGICAL(use_phydro),
+        LOGICAL(use_gs),
+        LOGICAL(use_pml),
         INTEGER(firstyeartrend),
         INTEGER(nyeartrend),
         INTEGER(secs_per_tstep),
@@ -92,9 +107,12 @@ extern SEXP pmodel_f_C(
         REAL(latitude),
         REAL(altitude),
         REAL(whc),
+        REAL(canopy_height),    
+        REAL(reference_height),
         INTEGER(n),
         REAL(par),
         REAL(forcing),
+        REAL(forcing_acclim),
         REAL(output)
         );
 
@@ -542,7 +560,7 @@ extern SEXP biomee_f_C(
 // Declarations for all functions
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
-  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
+  {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   29},  // Specify number of arguments to C wrapper as the last number here
   {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   48},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
   {NULL,         NULL,                0}
 };

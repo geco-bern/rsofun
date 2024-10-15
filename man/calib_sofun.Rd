@@ -22,7 +22,7 @@ See the 'P-model usage' vignette for more information and examples.
  \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
  and lower and upper bounds should be provided. The calibratable parameters
  include model parameters 'kphio', 'kphio_par_a', 'kphio_par_b', 'soilm_thetastar',
- 'soilm_betao', 'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
+ 'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
  and 'rootzone_whc' , and (if
  doing Bayesian calibration) error parameters
  for each target variable, named for example 'err_gpp'. This list must match
@@ -60,11 +60,11 @@ params_fix <- list(
   kphio_par_a        = 0,
   kphio_par_b        = 1.0,
   soilm_thetastar    = 0.6*240,
-  soilm_betao        = 0.01,
   beta_unitcostratio = 146,
   rd_to_vcmax        = 0.014,
   tau_acclim         = 30,
-  kc_jmax            = 0.41
+  kc_jmax            = 0.41,
+  whc                = 432
 )
 
 # Define calibration settings
@@ -79,12 +79,12 @@ settings <- list(
     sampler = "DEzs",
     settings = list(
       nrChains = 1,
-      burnin = 0,        
-      iterations = 50     # kept artificially low
+      burnin = 0,
+      iterations = 50    # kept artificially low,
     )
   )
  )
- 
+
  # Run the calibration for GPP data
  calib_output <- rsofun::calib_sofun(
    drivers = rsofun::p_model_drivers,
