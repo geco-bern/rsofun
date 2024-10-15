@@ -335,6 +335,9 @@ contains
     ! Used when using_gs == .true.
     real :: dpet_soil                       ! potential soil evaporation (not limited by soil moisture), mm d-1
 
+    real, parameter :: k_beer = 0.5
+    real :: lai_fapar
+
     !---------------------------------------------------------
     ! Calculate water-to-energy conversion (econ), m^3/J
     !---------------------------------------------------------
@@ -477,7 +480,8 @@ contains
         ! gs_accl was computed using soilmstress in ggp_pmodel.mod.f90
         ! print*,'in waterbal: gs_accl ', tile_fluxes%canopy%gs_accl
         ! introduced scaling with LAI
-        gw = 2.0 * max(-1.0/0.5 * log(1.0 - fapar) * tile_fluxes%canopy%gs_accl * 1.6 * kR * (climate%dtemp + kTkelvin), eps)
+        lai_fapar = -1.0 / k_beer * log(1.0 - fapar)
+        gw = max(2.0 * lai_fapar * tile_fluxes%canopy%gs_accl * 1.6 * kR * (climate%dtemp + kTkelvin), eps)
         
         ! latent energy flux from canopy (W m-2) 
         ! See also calc_transpiration_pm() in photosynth_phydro.mod.f90

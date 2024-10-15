@@ -391,9 +391,9 @@ contains
         ! Note here that stomatal conductance is already normalized by patm (=gs/patm) so E = 1.6 * (gs/patm) * vpd, which is the same as 1.6 gs (vpd/patm)
         ! but it is expressed per unit absorbed light, so multiply by PPFD*fapar
         ! dtransp is in mm d-1
-        tile_fluxes(lu)%plant(pft)%dtransp = (1.6 &                                           ! 1.6
-          * tile_fluxes(lu)%plant(pft)%gs_accl * tile(lu)%canopy%fapar * climate%dppfd &  ! gs
-          * climate%dvpd) &                                                               ! D
+        tile_fluxes(lu)%plant(pft)%dtransp = (1.6 &                       ! 1.6
+          * tile_fluxes(lu)%plant(pft)%gs_accl * tile(lu)%canopy%fapar &  ! gs
+          * climate%dvpd) &                                               ! D
           * h2o_molmass * (1.0d0 / rho_water) &
           * myinterface%params_siml%secs_per_tstep  ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
 
