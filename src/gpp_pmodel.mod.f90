@@ -279,6 +279,7 @@ contains
       ! but not too dangerous...
       !----------------------------------------------------------------
       if (.not. use_phydro) then
+
         if( in_ppfd ) then
           ! print *, "Using in_ppfd"
           ! Take input daily PPFD (in mol/m^2)
@@ -289,6 +290,7 @@ contains
           tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
             * tile_fluxes(lu)%canopy%ppfd_splash * out_pmodel%lue * soilmstress
         end if
+
       else ! Using phydro - run instantaneous model
         ! print *, "sw / swp = ", sw, swp
         out_phydro_inst = phydro_instantaneous_analytical( &
@@ -357,7 +359,7 @@ contains
       !----------------------------------------------------------------
       if (.not. use_phydro) then
         ! Jaideep NOTE: I have applied the soilmstress factor to gs here because it is needed in calculating canopy transpiration
-        tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint * soilmstress
+        tile_fluxes(lu)%plant(pft)%gs_accl = climate%dppfd * out_pmodel%gs_setpoint * soilmstress
 
         ! print*,'in gpp: soilmstress, gs_accl ', soilmstress, tile_fluxes(lu)%plant(pft)%gs_accl
       else 
