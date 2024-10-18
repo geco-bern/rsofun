@@ -364,7 +364,7 @@ module datatypes
     type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C m-2]
 
     real :: totSeedC, totSeedN, totNewCC, totNewCN
-    real :: WDgrow, WDmort, WDrepr, WDkill, WDmgrt, WDdstb ! for DBEN wood fluxes
+    real :: WDgrow, WDmort, WDrepr, WDkill !, WDmgrt, WDdstb ! for DBEN wood fluxes
 
   end type vegn_tile_type
 
@@ -765,6 +765,7 @@ contains
     vegn%annualNup    = 0.0
     !vegn%n_deadtrees  = 0.0
     !vegn%c_deadtrees  = 0.0
+    vegn%m_turnover   = 0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
@@ -803,7 +804,7 @@ contains
       cc%ABG_ys       = cc%psapw%c%c12 + cc%pwood%c%c12
       !cc%n_deadtrees  = 0.0
       !cc%c_deadtrees  = 0.0
-      cc%m_turnover   = 0.0
+      !cc%m_turnover   = 0.0
     enddo
   
   end subroutine Zero_diagnostics
@@ -1170,6 +1171,7 @@ contains
 
     ! Cohorts ouput
     vegn%WDgrow = 0.0
+
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
       vegn%WDgrow = vegn%WDgrow + cc%NPPwood * cc%nindivs
@@ -1306,6 +1308,10 @@ contains
     out_annual_tile%c_deadtrees     = vegn%c_deadtrees
     out_annual_tile%m_turnover      = vegn%m_turnover
     out_annual_tile%c_turnover_time = vegn%pwood%c%c12 / vegn%NPPW
+    out_annual_tile%WDgrow          = vegn%WDgrow
+    out_annual_tile%WDmort          = vegn%WDmort
+    out_annual_tile%WDrepr          = vegn%WDrepr
+    out_annual_tile%WDkill          = vegn%WDkill
 
     ! I cannot figure out why N losing. Hack!
     if (myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)

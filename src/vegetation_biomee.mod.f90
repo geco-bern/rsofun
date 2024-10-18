@@ -344,6 +344,8 @@ contains
         cc%leaf_age = (1.0 - dBL/cc%pleaf%c%c12) * cc%leaf_age !NEW
         cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily
 
+        !vegn%WDgrow = vegn%WDgrow + cc%psapw%c%c12 *cc%nindivs
+
         ! update nitrogen pools, Nitrogen allocation
         cc%pleaf%n%n14 = cc%pleaf%n%n14 + dBL   /sp%CNleaf0
         cc%proot%n%n14 = cc%proot%n%n14 + dBR   /sp%CNroot0
@@ -860,7 +862,7 @@ contains
                 ! deathrate = param_dbh * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh-1))/  &
                 !            (1. + exp(2.*(cc%dbh-1))))
-                deathrate = min(1.0, param_dbh * cc%dbh ** 1.5) ! 1.5, 2.5, 5
+                deathrate = min(1.0, param_dbh * cc%dbh ** 2.5) ! 1.5, 2.5, 5
               else
                 deathrate = sp%mortrate_d_c !0.01
               endif
@@ -883,7 +885,7 @@ contains
         cc%nindivs = cc%nindivs - deadtrees
 
         ! Record wood C mortality
-        vegn%WDmort = vegn%WDmort + (cc%psapw%c%c12 + cc%pwood%c%c12)*deadtrees
+        if (sp%lifeform == 1) vegn%WDmort = vegn%WDmort + (cc%psapw%c%c12 + cc%pwood%c%c12)*deadtrees
 
         ! vegn%n_deadtrees = deadtrees
         ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12)
@@ -1010,6 +1012,7 @@ contains
     integer :: i, k ! cohort indices
 
     ! Looping through all reproductable cohorts and Check if reproduction happens
+    vegn%WDrepr = 0.0
     reproPFTs = -999 ! the code of reproductive PFT
     vegn%totseedC = 0.0
     vegn%totseedN = 0.0
@@ -1124,7 +1127,12 @@ contains
           cc%psapw%n%n14 + cc%pwood%n%n14 + cc%plabl%n%n14)
 
         call init_cohort_allometry( cc )
-        !        ! seeds fail
+
+        ! Record wood C in seedlings
+        if(sp%lifeform == 1) vegn%WDrepr = vegn%WDrepr + &
+          (cc%psapw%c%c12 + cc%pwood%c%c12)*cc%nindivs
+
+        !! seeds fail
         !cc%nindivs = cc%nindivs * sp%prob_g * sp%prob_e
         !       put failed seeds to soil carbon pools
         !        failed_seeds = 0.0 ! (1. - sp%prob_g*sp%prob_e) * seedC(i)!!
@@ -1469,8 +1477,8 @@ contains
       vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
 
       ! record continuous biomass turnover (not linked to mortality)
-      ! cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine
-      cc%m_turnover = cc%m_turnover + (1.0 - l_fract) * cc%nindivs * dBStem
+       cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine
+      ! cc%m_turnover = cc%m_turnover + (1.0 - l_fract) * cc%nindivs * dBStem
 
       end associate
     enddo
@@ -1849,7 +1857,7 @@ contains
     ! local variables
     type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
     ! logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
-    real, parameter :: mindensity = 1.0E-10 !1.0E-6 !0.25E-4
+    real, parameter :: mindensity = 1.0E-6 !1.0E-6 !0.25E-4
     integer :: i,k
 
     ! calculate the number of cohorts with indivs>mindensity
@@ -1865,6 +1873,7 @@ contains
     !endif
     
     ! exclude cohorts that have low individuals
+    vegn%WDkill = 0.0
     if (k > 0 .and. k < vegn%n_cohorts) then
       allocate(cc(k))
       k = 0
@@ -1875,6 +1884,9 @@ contains
           k = k + 1
           cc(k) = cx
         else
+          ! Record wood killed
+          if(sp%lifeform == 1) vegn%WDkill = vegn%WDkill + &
+          (cx%psapw%c%c12 + cx%pwood%c%c12)*cx%nindivs
           ! Carbon and Nitrogen from plants to soil pools
           call plant2soil(vegn, cx, cx%nindivs)
         endif

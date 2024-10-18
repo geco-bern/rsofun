@@ -710,7 +710,11 @@ run_biomee_f_bysite <- function(
 			"n_deadtrees", 
 			"c_deadtrees", 
 			"m_turnover", 
-			"c_turnover_time"
+			"c_turnover_time",
+			"WDgrow",
+			"WDmort",
+			"WDrepr",
+			"WDkill"
 		)
     
     #---- Multi-level output, multiple matrices to be combined ----
