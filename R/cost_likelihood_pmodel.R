@@ -51,21 +51,25 @@
 #' @export
 #' 
 #' @examples
-#' # Compute the likelihood for a set of 
+#' # Compute the likelihood for a set of
 #' # model parameter values involved in the
-#' # temperature dependence of kphio 
+#' # temperature dependence of kphio
 #' # and example data
-#' cost_likelihood_pmodel(
-#'  par = c(0.05, -0.01, 1,     # model parameters
-#'          2),                # err_gpp
-#'  obs = p_model_validation,
+#' cost_likelihood_pmodel(        # reuse likelihood cost function
+#'  par = list(
+#'     kphio              = 0.05,
+#'     kphio_par_a        = -0.01,
+#'     kphio_par_b        = 1.0,
+#'     err_gpp            = 2.0
+#'  ),                          # must be a named list
+#'  obs = p_model_validation,   # example data from package
 #'  drivers = p_model_drivers,
-#'  targets = c('gpp'),
+#'  targets = c("gpp"),
 #'  par_fixed = list(
-#'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+#'   soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
 #'   soilm_betao        = 0.0,
 #'   beta_unitcostratio = 146.0,
-#'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+#'   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
 #'   tau_acclim         = 30.0,
 #'   kc_jmax            = 0.41
 #'  )
@@ -80,38 +84,43 @@ cost_likelihood_pmodel <- function(
     parallel = FALSE,
     ncores = 2
 ){
+  # NOTE(fabian): These different cost functions share a LOT of code in common. Consider consolidation for maintainability?
+
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
   
-  ## check input parameters
-  if( (length(par) + length(par_fixed)) != (9 + length(targets)) ){
-    stop('Error: Input calibratable and fixed parameters (par and par_fixed)
-    do not match length of the required P-model parameters and target error terms.')
+  ## define required parameter set based on model parameters
+  required_param_names <- c(# P-model needs these parameters:
+                  'beta_unitcostratio', 
+                  'kc_jmax', 
+                  'kphio', 
+                  'kphio_par_a', 
+                  'kphio_par_b',
+                  'rd_to_vcmax', 
+                  'soilm_betao', 'soilm_thetastar',
+                  'tau_acclim')
+
+  ## split calibrated parameters into model and error parameters
+  par_calibrated_model      <- par[ ! names(par) %in% c("err_gpp", "err_vcmax25") ] # consider only model parameters for the check
+  # par_calibrated_errormodel <- par[   names(par) %in% c("err_gpp", "err_vcmax25") ]
+  # par_fixed
+  
+  ## check parameters
+  if (!identical(sort(c(names(par_calibrated_model), names(par_fixed))), required_param_names)){
+    stop(sprintf(paste0("Error: Input calibratable and fixed parameters do not ",
+                        "match required model parameters:",
+                        "\n         par:       c(%s)",
+                        "\n         par_fixed: c(%s)",
+                        "\n         required:  c(%s)"),
+                 paste0(sort(names(par_calibrated_model)), collapse = ", "),
+                 paste0(sort(names(par_fixed)), collapse = ", "),
+                 paste0(sort(required_param_names), collapse = ", ")))
   }
   
-  ## define parameter set based on calibrated parameters
-  calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
-                         'soilm_thetastar', 'soilm_betao',
-                         'beta_unitcostratio', 'rd_to_vcmax', 
-                         'tau_acclim', 'kc_jmax')
-  
-  if(!is.null(par_fixed)){
-    params_modl <- list()
-    # complete with calibrated values
-    i <- 1 # start counter
-    for(par_name in calib_param_names){
-      if(is.null(par_fixed[[par_name]])){
-        params_modl[[par_name]] <- par[i]   # use calibrated par value
-        i <- i + 1                          # counter of calibrated params
-      }else{
-        params_modl[[par_name]] <- par_fixed[[par_name]]  # use fixed par value
-      }
-    }
-  }else{
-    params_modl <- as.list(par[1:9])       # all parameters calibrated
-    names(params_modl) <- calib_param_names
-  }
-  
+  # Combine fixed and estimated params to result in all the params required to run the model
+  # This basically uses all params except those of the error model of the observations
+  params_modl <- c(par, par_fixed)[required_param_names]
+
   ## run the model
   df <- runread_pmodel_f(
     drivers,
@@ -186,32 +195,31 @@ cost_likelihood_pmodel <- function(
     df_trait <- data.frame()
   }
   
-  # loop over targets
-  ll <- lapply(seq(length(targets)), function(i){
-    target <- targets[i]
-    # get observations and predicted target values, without NA 
-    if(target %in% colnames(df_flux)){
-      df_target <- df_flux[, c(paste0(target, '_mod'), target)] |>
-        tidyr::drop_na()
-    }else{
-      df_target <- data.frame()
+  # loop over targets to compute log-likelihood ll
+  ll_df <- data.frame(target = targets, 
+                      ll     = NaN)
+  for (target in targets){
+    # check (needed?):
+    if(target %in% colnames(df_flux) & target %in% colnames(df_trait)) {stop(
+      sprintf("Target '%s' cannot be simultaneously in df_flux and df_trait.", target))
     }
-    if(target %in% colnames(df_trait)){
-      df_target <- rbind(df_target,
-                         df_trait[, c(paste0(target, '_mod'), target)] |>
-                           tidyr::drop_na())
+    
+    # get observations and predicted target values, without NA 
+    df_target <- if(target %in% colnames(df_flux)){
+      df_flux[, c(paste0(target, '_mod'), target)] |> tidyr::drop_na()
+    }else{
+      df_trait[, c(paste0(target, '_mod'), target)] |> tidyr::drop_na()
     }
     
     # calculate normal log-likelihood
-    ll <- sum(stats::dnorm(
-      df_target[[paste0(target, '_mod')]],
-      mean = df_target[[target]],
-      sd = par[length(par)-length(targets) + i],
-      log = TRUE
-    ))
-  }) |>
-    unlist() |>
-    sum()
+    ll_df[ll_df$target == target, 'll'] <- 
+      sum(stats::dnorm(
+        x    = df_target[[paste0(target, '_mod')]], # model
+        mean = df_target[[target]],                 # obs
+        sd   = par[[paste0('err_', target)]],       # error model
+        log  = TRUE))
+  }
+  ll <- sum(ll_df$ll)
 
   # trap boundary conditions
   if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
