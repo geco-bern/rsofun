@@ -1,7 +1,7 @@
 context("test P-model and BiomeE likelihood frameworks")
 set.seed(10)
 
-# test_that("test likelihood calculations", {
+test_that("test likelihood calculations", {
   library(BayesianTools)
   # par_cal_best <- c(
   #   kphio              = 0.09423773,
@@ -115,6 +115,30 @@ set.seed(10)
                                       -0.903165645611412, 
                                       -0.90316542572855))
   
+  # test p-model likelihood with only fixed parameters
+  ll_pmodel_fixed <- rsofun::cost_likelihood_pmodel(
+    obs     = rbind(p_model_validation, p_model_validation_vcmax25), # example data from package 
+    drivers = rbind(p_model_drivers, p_model_drivers_vcmax25),       # example data from package
+    par = c(),
+    # arguments for the cost function
+    par_fixed = list(         # fix parameter value from previous calibration
+      kc_jmax = 0.8,
+      kphio              = 0.041,
+      kphio_par_a        = 0.0,
+      kphio_par_b        = 16,
+      soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+      soilm_betao        = 0.0,
+      beta_unitcostratio = 146.0,
+      rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+      tau_acclim         = 30.0,
+      err_gpp = 0.2, err_vcmax25 = 3.0
+    ), 
+    targets = c('gpp', 'vcmax25')
+  )
+  testthat::expect_equal(object = ll_pmodel_fixed,
+                         # expected was generated with dput(ll_pmodel_fixed)
+                         expected = -336583.32327482)
+  
   
   # Test rsofun::cost_likelihood_biomee()
   # parBiomeE_cal_best <- c(
@@ -122,21 +146,21 @@ set.seed(10)
   #   LAI_light          = 3.5,
   #   tf_base            = 1,
   #   par_mort           = 1,
-  #   err_gpp          = 1
+  #   err_GPP          = 1
   # )
   # parBiomeE_cal_min <- c(
   #   phiRL              = 0.1,
   #   LAI_light          = 0.1,
   #   tf_base            = 0.1,
   #   par_mort           = 0.1,
-  #   err_gpp          = 0.01
+  #   err_GPP          = 0.01
   # )
   # parBiomeE_cal_max <- c(
   #   phiRL              = 7.0,
   #   LAI_light          = 7.0,
   #   tf_base            = 2.0,
   #   par_mort           = 2.0,
-  #   err_gpp          = 4
+  #   err_GPP          = 4
   # )
   # prior_BiomeE <- createUniformPrior(lower = parBiomeE_cal_min, upper = parBiomeE_cal_max, best = parBiomeE_cal_best)
   # test_params_BiomeE <- prior_BiomeE$sampler(4) |> as.data.frame() |>
@@ -146,14 +170,13 @@ set.seed(10)
     LAI_light = c(4.83413460890297, 4.89137732107192, 6.25084221335128, 1.65691818702035), 
     tf_base = c(0.986252965405583, 1.52580757206306, 0.278885046485811, 0.125027264398523), 
     par_mort = c(1.64211843877565, 0.579043845250271, 1.28934027748182, 1.11228716920596), 
-    err_gpp = c(2.9679689736967, 3.70911861001514, 1.16307689385489, 0.195016647893935))
-  # undebug(rsofun::cost_likelihood_biomee)
+    err_GPP = c(2.9679689736967, 3.70911861001514, 1.16307689385489, 0.195016647893935)) # TODO: in BiomeE output is uppercase GPP, but in p-model it is lowercase
   ll_values_BiomeE <- apply(test_params_BiomeE, 1, function(par_v) { # par_v is a vector
     rsofun::cost_likelihood_biomee(    # likelihood cost function from package
       par = par_v,                     # must be named
       obs = rsofun::biomee_validation, # example data from package
       drivers = rsofun::biomee_gs_leuning_drivers,
-      targets = c('GPP'))
+      targets = c('GPP')) # TODO: in BiomeE output is uppercase GPP, but in p-model it is lowercase
   })
   testthat::expect_equal(object = ll_values_BiomeE, 
                          # expected was generated with dput(ll_values_BiomeE)
@@ -162,7 +185,7 @@ set.seed(10)
                                       -1.07594190198439,
                                       -13.548057740458))
   # Test rsofun::cost_rmse_biomee()
-  rmse_values_BiomeE <- apply(dplyr::select(test_params_BiomeE, -err_gpp), 1, function(par_v) { # par_v is a vector
+  rmse_values_BiomeE <- apply(dplyr::select(test_params_BiomeE, -err_GPP), 1, function(par_v) { # par_v is a vector
     rsofun::cost_rmse_biomee(     # likelihood cost function from package
       par = par_v,                      # must be named
       obs = rsofun::biomee_validation, # example data from package
@@ -181,10 +204,11 @@ set.seed(10)
   #                        order(ll_values_BiomeE))
   
   # Test multi-site BiomeE loglikelihood (NOTE: pseudo-multi-site for lack of input data)
+  # undebug(rsofun::cost_likelihood_biomee)
   ll_values_BiomeE_multisite <- apply(test_params_BiomeE, 1, function(par_v) { # par_v is a vector
     rsofun::cost_likelihood_biomee(    # likelihood cost function from package
       par = par_v,                     # must be named
-      obs = dplyr::bind_rows(rsofun::biomee_validation, mutate(rsofun::biomee_validation, sitename = 'CH-Lae_copy')), # example data from package
+      obs     = dplyr::bind_rows(rsofun::biomee_validation, mutate(rsofun::biomee_validation, sitename = 'CH-Lae_copy')), # example data from package
       drivers = dplyr::bind_rows(rsofun::biomee_gs_leuning_drivers, mutate(rsofun::biomee_gs_leuning_drivers, sitename = 'CH-Lae_copy')), # example data from package
       targets = c('GPP'))
   })
@@ -196,26 +220,6 @@ set.seed(10)
                                       -2.15188380396878,
                                       -27.096115480916))
 })
-
-
-# TODO: also make fixed error parameters work
-rsofun::cost_likelihood_pmodel(
-  par = list(err_gpp = 0.2, err_vcmax25 = 3),
-  # arguments for the cost function
-  par_fixed = list(         # fix parameter value from previous calibration
-    kc_jmax = 0.8,
-    kphio              = 0.041,
-    kphio_par_a        = 0.0,
-    kphio_par_b        = 16,
-    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0
-    # err_gpp = 0.2, err_vcmax25 = 3 # TODO: make this work. I.e. remove err_XXX parameters from the check also from par_fixed.
-  ),    
-  targets = c('gpp', 'vcmax25')
-)
 
 # example from the Trotsiuk, Hartig, Forrester paper:
 ###   #' r3pg_sim <- function( par_df, ...){

@@ -153,7 +153,7 @@ calib_sofun <- function(
     }
     
     # reformat parameters
-    pars <- as.data.frame(do.call("rbind", settings$par), row.names = FALSE)
+    pars <- as.data.frame(do.call("rbind", settings$par)) # use rownames later on
     
     priors  <- BayesianTools::createUniformPrior(
       unlist(pars$lower),
@@ -166,22 +166,15 @@ calib_sofun <- function(
     setup <- BayesianTools::createBayesianSetup(
       likelihood = function(
     random_par) {
-        # cost(
-        #   par = random_par,
-        #   obs = obs,
-        #   drivers = drivers,
-        #   ...
-        # )
         do.call("cost",
                 list(
-                  par = random_par,
+                  par = setNames(random_par, rownames(pars)),
                   obs = obs,
                   drivers = drivers
-                ))
-      },
+                ))},
     prior = priors,
-    names = names(settings$par)
-    )    
+    names = rownames(pars)
+    )
     
     # set bt control parameters
     bt_settings <- settings$control$settings
